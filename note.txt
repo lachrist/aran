@@ -1,0 +1,221 @@
+
+1) aran.shadows as global object
+================================
+
+Complex transformation to detect
+  - defined => remain intact
+  - undefined strict mode => remain intact (will throw error)
+  - undefined => affect aran.shadows instead of the global object
+  - current strict mode
+
+
+x = 1
+>>>
+(function () {
+  try {
+    x
+    return false /* defined */
+  } catch (e) {
+    try { return {a:1, a:1} /* undefined */ } catch (e) { x = 1 /* undefined strict mode */ }
+  } 
+} ()) ? (aran.shadows.x = 1) : (x = 1)
+
+
+
+2) let window as global object
+==============================
+
+o[a] >>> (o===window)?(aran.get_window(o,a)):(aran.get(o,a))
+o[a] = 1 >>> (o===window)?(aran.set_window(o,a)):(aran.set(o,a))
+
+
+with (new Proxy (o, aran.with_handlers)) {
+  
+}
+
+proxy 
+
+
+// ista 
+// rv 
+// woda
+// saner
+
+
+
+
+
+
+
+
+
+//     // <node> >>> window.aran.<wrapper>(<node>)
+//     function wrap (wrapper, node) {
+//       var copy = window.aran.extract(node)
+//       node.type = "CallExpression"
+//       node.callee = shadow(wrapper)
+//       node.arguments = [copy]
+//     }
+
+//     function property (node) {
+//       if (node.computed) { return node.property }
+//       if (node.property.type === "Identifier") { return {type:Literal, value:node.property.name} }
+//       throw new Error("MemberExpression not computed and not being idenfifier: "+node)
+//     }
+
+//     function shadow (name) {
+//       return {
+//         "type": "MemberExpression",
+//         "computed": false,
+//         "object": {
+//           "type": "MemberExpression",
+//           "computed": false,
+//           "object": {
+//             "type": "Identifier",
+//             "name": "window"
+//           },
+//           "property": {
+//             "type": "Identifier",
+//             "name": "aran"
+//           }
+//         },
+//         "property": {
+//           "type": "Identifier",
+//           "name": name
+//         }
+//       }
+//     }
+
+//     // Is an identifier used for a declaration
+//     function is_declaration (infos) {
+//       if (infos.type === "ObjectPattern" || infos.type === "ArrayPattern") { return true }
+//       if (infos.type === "ArrowExpression" || infos.type === "FunctionExpression" || infos.type === "FunctionDeclaration") {
+//         if (infos.prop === "params" || infos.prop === "rest" || infos.prop === "id") { return true }
+//       }
+//       if (infos.type === "VariableDeclarator" && infos.prop === "id") { return true }
+//       if (infos.type === "CatchClause" && infos.prop === "param") { return true }
+//       return false
+//     }
+
+//     // callee(argument1, argument2, ...)
+//     function mk_call (callee, arguments) {
+//       return {
+//         type:"CallExpression",
+//         callee:callee,
+//         arguments:arguments
+//       }
+//     }
+
+//     // window.aran.<name>
+//     function mk_aran (name) {
+//       return {
+//         "type": "MemberExpression",
+//         "computed": false,
+//         "object": {
+//           "type": "MemberExpression",
+//           "computed": false,
+//           "object": {
+//             "type": "Identifier",
+//             "name": "window"
+//           },
+//           "property": {
+//             "type": "Identifier",
+//             "name": "aran"
+//           }
+//         },
+//         "property": {
+//           "type": "Identifier",
+//           "name": name
+//         }
+//       }
+//     }
+
+
+//   } ())
+
+//   x -> resolve("x", x)
+
+
+
+
+//       // Object properties should be left intact: {a:1}.a
+//       if (infos.type === "MemberExpression" && infos.prop === "property") { return null }
+//       if (infos.type === "Property" && infos.prop === "key") { return null}
+//       if (is_declaration(infos)) {
+//         // var window = 1 >>> var $window = 1
+//         // var $window = 1 >>> var $$window = 1
+//         if (/\$*window/.test(node.name)) { node.name = "$"+node.name }
+//       } else {
+//         // window >>> window.aran.shadows
+//         if (node.name === "window") { return subst(mk_aran("shadows")) }
+//         // $window >>> $$window
+//         if (/\$+window/.test(node.name)) { node.name = "$"+node.name }
+//         // x >>> (x === window.x) ? window.aran.shadows.x : x
+//         subst({
+//           type: "ConditionalExpression",
+//           test: {
+//             type: "BinaryExpression",
+//             operator: "===",
+//             left: node,
+//             right: {
+//               type: "MemberExpression",
+//               computed: false,
+//               object: {
+//                 type: "Identifier",
+//                 name: "window" },
+//               property: node } },
+//           consequent: {
+//             type: "MemberExpression",
+//             computed: false,
+//             object: mk_aran("shadows"),
+//             property: node },
+//           alternate: node
+//         })
+//       }
+//     }
+
+//     // this >>> (this===window) ? window.aran.shadows : this 
+//     visitor.ThisExpression = function (node, substitute) {
+//       substitute({
+//         type: "ConditionalExpression",
+//         test: {
+//           type: "BinaryExpression",
+//           operator: "===",
+//           left: node,
+//           right: {
+//             type: "Identifier",
+//             name: "window" } },
+//         consequent: mk_aran("shadows"),
+//         alternate: node
+//       })
+//     }
+
+
+//   // Global object resolution
+//   // Catch top level edit
+//   var x = 1             =>  top_level ? (window.aran.shadows.x = 1) : (var x = 1)
+//   // Catch window rename, add a dollar to it
+//   var [($)n]window = 1  =>  var [($)n]window = 1 => apply previous rule
+//   // Catch identifiers reaching the global scope
+//   x                     =>  (typeof x === "undefined" || window.x === x)
+//                             ? (window.aran.shadows.hasOwnProperty(x) ? window.aran.shadows.x : throw("Unbound"))
+//                             : x
+//   // Catch window call and add a dollar to it
+//   [($)n]window          =>  [($)n+1]window => apply identifier rule
+//   // Catch this when refering to window
+//   this                  =>  (this===window) ? window.aran.shadows : this
+
+
+//   // Litteral
+//   [x,y,z] => window.aran.array([x,y,z])
+//   {a:1,b:2,c:3} => window.aran.object({{a:1,b:2,c:3})
+//   1 => window.aran.number(1)
+//   "abc" => window.aran.string("abc")
+//   /abc/g => window.aran.regex(/abc/g)
+
+//   // Operators
+//   1+2 => window.aran.plus(1,2)
+//   1-y => window.aran.minus(1,y)
+//   x || y => window.aran.or(x,y)
+
+// } ())
