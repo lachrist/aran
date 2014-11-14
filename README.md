@@ -3,7 +3,7 @@ Aran
 
 Aran is an extensive JavaScript instrumenter that aims to be complient to the entire ECMAScript5 specification.
 Usage:
-  node main.js ./samples/options.js < ./samples/in.html > ./samples/out.html
+    node main.js ./samples/options.js < ./samples/in.html > ./samples/out.html
 
 Proxy usage
 -----------
