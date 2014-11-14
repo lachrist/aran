@@ -26,16 +26,19 @@ var is_js = false
 
 process.stdin.pipe(new htmlparser.Parser({
   onopentag: function(tag, attrs) {
+    open_tag(tag, attrs)
     if (tag === "script") {
       if (attrs.src) {
-        out.write("</script>aran.load(\"")
+        out.write("aran.load(\"")
         out.write(attrs.src)
         out.write("\", ")
         out.write(attrs.async)
-        out.write(")</script>")
-      } else { is_js = true }
+        out.write(")")
+      } else {
+        is_js = true
+        out.write("aran.compile(\"")
+      }
     } else if (tag === "html") {
-      open_tag("html", attrs)
       out.write("<script>")
       out.write(js_escape(esprima))
       out.write(js_escape(escodegen))
@@ -44,19 +47,20 @@ process.stdin.pipe(new htmlparser.Parser({
       out.write(js_escape(options))
       out.write(js_escape(aran))
       out.write("</script>")
-    } else {
-      open_tag(tag, attrs)
     }
   },
   // text nodes are not decoded (&lt; does not become <)
   ontext: function(text) {
-    if (is_js) {
-      out.write("<script>eval(aran.compile(\"")
-      out.write(string_escape(text))
-      out.write("\"))</script>")
-    } else { out.write(text) }
+    if (is_js) { text = string_escape(js_escape(text)) }
+    out.write(text)
   },
-  onclosetag: function(tag) { (tag === "script") ? (is_js = false) : close_tag(tag) }
+  onclosetag: function(tag) {
+    if (tag === "script") {
+      is_js = false
+      out.write("\")")
+    }
+    close_tag(tag)
+  }
 }))
 
 function open_tag (tag, attrs) {

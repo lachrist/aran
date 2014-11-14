@@ -206,7 +206,7 @@
   //
   // [[has_test, consequent_lengths]]
   //
-  // TODO
+  // TODO update examples
   // switch (<expr>) {}                                 >>> [[], []]
   // switch (<expr>) {case<expr>:}                      >>> [[true], [0]]
   // switch (<expr>) {case<expr>:<stmt>}                >>> [[true], [1]]
@@ -217,17 +217,15 @@
   // switch (<expr>) {case<expr>: case<expr>: default:} >>> [[true,true,false], [0,0,0]]
   // etc...
   miley.SwitchStatement = function (node) {
-    var exprs = [node.discriminant]
     var stmts = []
-    var have_test = []
-    var consequent_lengths = []
+    var exprs = [node.discriminant]
+    var cases = []
     node.cases.forEach(function (c) {
-      if (c.test) { exprs.push(c.test) }
       stmts = stmts.concat(c.consequent)
-      have_test.push(Boolean(c.test))
-      consequent_lengths.push(c.consequent.length)
+      if (c.test) { exprs.push(c.test) }
+      cases.push([Boolean(c.test), c.consequent.length])
     })
-    return { stmts:stmts, exprs:exprs, infos:[are_default, consequent_lengths] }
+    return { stmts:stmts, exprs:exprs, infos:[cases] }
   }
 
 
@@ -241,7 +239,8 @@
   // return;        >>> [false]
   // return <expr>; >>> [true]
   miley.ReturnStatement = function (node) {
-    return { stmts:[], exprs:[], infos:[Boolean(node.argument)] }
+    var exprs = node.argument?[node.argument]:[]
+    return { stmts:[], exprs:exprs, infos:[Boolean(node.argument)] }
   }
 
 
@@ -274,24 +273,23 @@
   //
   // [catch_parameter, try_length, catch_length, finally_length]
   //
-  // try {} catch (ID) {}                              >>> ["ID", 0, 0, -1]
-  // try {} finally {}                                 >>> [null, 0, -1, 0]
-  // try {<stmt>} catch (ID) {}                        >>> ["ID", 1, 0, -1]
-  // try {<stmt><stmt>} catch (ID) {}                  >>> ["ID", 2, 0, -1]
-  // try {} catch (ID) {<stmt>}                        >>> ["ID", 0, 1, -1]
+  // try {} catch (ID) {}                              >>> ["ID", 0, 0, null]
+  // try {} finally {}                                 >>> [null, 0, null, 0]
+  // try {<stmt>} catch (ID) {}                        >>> ["ID", 1, 0, null]
+  // try {<stmt><stmt>} catch (ID) {}                  >>> ["ID", 2, 0, null]
+  // try {} catch (ID) {<stmt>}                        >>> ["ID", 0, 1, null]
   // try {<stmt>} catch (ID) {<stmt>} finally {<stmt>} >>> ["ID", 1, 1, 1]
   // etc..
   miley.TryStatement = function (node) {
-    var stmts = node.block.slice()
-    var infos = node.block.body.length
+    var stmts = node.block.body.slice()
     if (node.handler) {
-      infos = [node.handler.param.name, node.block.body.length, node.handler.body.length]
+      var infos = [node.handler.param.name, node.block.body.length, node.handler.body.length]
       stmts = stmts.concat(node.handler.body)
-    } else { infos = [null, node.block.body.length, -1] }
+    } else { var infos = [null, node.block.body.length, null] }
     if (node.finalizer) {
-      infos.push(node.finalizer.body.length())
+      infos.push(node.finalizer.body.length)
       stmts = stmts.concat(node.finalizer.body)
-    } else { infos.push(-1) }
+    } else { infos.push(null) }
     return { stmts:stmts, exprs:[], infos:infos }
   }
 
@@ -343,8 +341,8 @@
     var exprs = []
     var infos = [node.init, node.test, node.update].map(Boolean)
     if (node.init) {
-      if (node.init!=="VariableDeclaration") { exprs.push(node.init) }
-      else { infos = infos.push(declaration(exprs)) }
+      if (node.init.type !== "VariableDeclaration") { exprs.push(node.init) }
+      else { infos = infos.concat(declaration(node.init, exprs)) }
     }
     if (node.test) { exprs.push(node.test) }
     if (node.update) { exprs.push(node.update) }
@@ -376,8 +374,11 @@
       var is_init = Boolean(node.left.declarations[0].init)
       infos = [true, is_init, node.left.declarations[0].id.name]
       if (is_init) { exprs.push(node.left.declarations[0].init) }
-    } else { infos = left(node.left, exprs).unshift(false) }
-    return { stmts:node.body, exprs:exprs, infos:infos }
+    } else {
+      infos = left(node.left, exprs)
+      infos.unshift(false)
+    }
+    return { stmts:[node.body], exprs:exprs, infos:infos }
   }
 
 
@@ -482,22 +483,15 @@
   //   value: Expression;
   //   kind: "init" | "get" | "set";
   // }
-  //
-  // [[]]
-  //
-  // TODO
   miley.ObjectExpression = function (node) {
     var exprs = []
-    var kinds = []
-    var are_identifier = []
-    var properties = []
+    var props = []
     node.properties.forEach(function (p) {
       exprs.push(p.value)
-      kinds.push(p.kind)
-      are_identifier.push(p.key.type === "Identifier")
-      properties.push(p.key.type==="Identifier"?p.key.name:p.key.value)
+      var is_id = p.key.type === "Identifier"
+      props.push([p.kind, is_id, is_id?p.key.name:p.key.value])
     })
-    return { stmts:[], exprs:exprs, infos:[kinds, are_identifier, properties] }
+    return { stmts:[], exprs:exprs, infos:[props] }
   }
 
 
@@ -543,7 +537,7 @@
   // (<expr>, <expr>) >>> [2]
   // etc...
   miley.SequenceExpression = function (node) {
-    return { stmts:[], exprs:node.expressions.slice(), infos:[node.expressions.length()] }
+    return { stmts:[], exprs:node.expressions.slice(), infos:[node.expressions.length] }
   }
 
 
@@ -566,7 +560,9 @@
   miley.UnaryExpression = function (node) {
     if (node.operator === "delete") {
       var exprs = []
-      return { stmts:[], exprs:exprs, infos:left(node.argument, exprs).unshift("delete") }
+      var infos = left(node.argument, exprs)
+      infos.unshift("delete")
+      return { stmts:[], exprs:exprs, infos:infos }
     }
     return { stmts:[], exprs:[node.argument], infos:[node.operator] }
   }
@@ -614,7 +610,9 @@
   // <expr>[<expr>] OP <expr> >>> [OP, false, null]
   miley.AssignmentExpression = function (node) {
     var exprs = [node.right]
-    return { stmts:[], exprs:exprs, infos:left(node.left, exprs).unshift(node.operator) }
+    var infos = left(node.left, exprs)
+    infos.unshift(node.operator)
+    return { stmts:[], exprs:exprs, infos:infos }
   }
 
 
@@ -635,7 +633,9 @@
   // <expr>[expr] OP >>> [OP, false, null]
   miley.UpdateExpression = function (node) {
     var exprs = []
-    return { stmts:[], exprs:exprs, infos:left(node.left, exprs).unshift(node.operator) }
+    var infos = left(node.left, exprs)
+    infos.unshift(node.operator)
+    return { stmts:[], exprs:exprs, infos:infos }
   }
 
 
@@ -684,9 +684,11 @@
   // new <expr>(<expr>)        >>> [1]
   // new <expr>(<expr>,<expr>) >>> [2]
   miley.NewExpression = function (node) {
+    var exprs = node.arguments.slice()
+    exprs.unshift(node.callee)
     return {
       stmts:[],
-      exprs:[node.arguments.slice().unshift(node.callee)],
+      exprs:exprs,
       infos:[node.arguments.length]
     }
   }
@@ -704,9 +706,11 @@
   // <expr>(<expr>)        >>> [1]
   // <expr>(<expt>,<expr>) >>> [2]
   miley.CallExpression = function (node) {
+    var exprs = node.arguments.slice()
+    exprs.unshift(node.callee)
     return {
       stmts:[],
-      exprs:[node.arguments.slice().unshift(node.callee)],
+      exprs:exprs,
       infos:[node.arguments.length]
     }
   }
@@ -762,4 +766,4 @@
   }
 
 
-} ())
+} ());
