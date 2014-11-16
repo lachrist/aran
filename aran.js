@@ -342,7 +342,7 @@
       deleteProperty: function (_, k) { return delete window["$"+k] },
       preventExtensions: function () { return Object.preventExtensions(window) },
       has: function (_, k) { return ("$"+k) in window },
-      get: function (_, k) { return window["$"+k] = v },
+      get: function (_, k) { return window["$"+k] },
       set: function (_, k, v) { return window["$"+k] = v },
       enumerate: function (_) {
         var keys = []
