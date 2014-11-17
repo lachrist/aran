@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Aran</title>
+      <style>
+      #main {
+        width: 500px;
+        margin: auto;
+      }
+      .code {
+        font-family: "Lucida Console", Monaco, monospace;
+      }
+      .error {
+        color: red;
+      }
+      button {
+        margin-bottom: 30px;
+      }
+    </style>
+    <script src="lib/esprima.js"></script>
+    <script src="lib/escodegen.browser.js"></script>
+    <script src="miley.js"></script>
+    <script>window.aran={}</script>
+    <script src="aran.js"></script>
+    <script>
+
+      function instr () {
+        document.getElementById("instr-code").value = aran.compile(document.getElementById("code").value)
+      }
+
+      function reinit () {
+        delete aran.saved_window
+        for (var k in window) { if (String(k)[0] === "$") { delete window[k] } }
+        window.eval(document.getElementById("options").value)
+      }
+
+      function run () {
+        var code = document.getElementById("instr-code").value
+        try { var res = window.eval(code) } catch (e) {
+          document.getElementById("result").className = "code error"
+          document.getElementById("result").innerText = String(e)
+          return
+        }
+        document.getElementById("result").className = "code"
+        try { res = JSON.stringify(res) } catch (e) { res = String(res) }
+        document.getElementById("result").innerText = res
+      }
+
+    </script>
+  </head>
+  <body>
+    <div id="main">
+      <label>Options: </label><br/>
+      <textarea id="options" class="code" cols="70" rows="10"></textarea><br/>
+      <button id="reinit" onclick="reinit()">(Re)Initialize</button><br/>
+      <label>JavaScript code:</label><br/>
+      <textarea id="code" class="code" cols="70" rows="10"></textarea><br/>
+      <button id="instr" onclick="instr()">Instrument</button><br/>
+      <label>Instrumented code:</label><br/>
+      <textarea id="instr-code" class="code" cols="70" rows="10"></textarea><br/>
+      <button id="run" onclick="run()">Run</button><br/>
+      <label>Result:</label><br/>
+      <p id="result"></p>
+    </div>
+  </body>
+</html>

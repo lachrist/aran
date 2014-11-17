@@ -15,8 +15,8 @@ if (process.argv.length !== 3) {
   throw new Error("Usage: node main.js options.js 1< in.html 1> out.html")
 }
 
-var esprima = fs.readFileSync("esprima.js").toString()
-var escodegen = fs.readFileSync("escodegen.browser.js").toString()
+var esprima = fs.readFileSync("./lib/esprima.js").toString()
+var escodegen = fs.readFileSync("./lib/escodegen.browser.js").toString()
 var miley = fs.readFileSync("miley.js").toString()
 var options = fs.readFileSync(process.argv[2]).toString()
 var aran = fs.readFileSync("aran.js").toString()
