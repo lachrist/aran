@@ -39,7 +39,7 @@
         try { var res = window.eval(code) } catch (e) {
           document.getElementById("result").className = "code error"
           document.getElementById("result").innerText = String(e)
-          return
+          throw e;
         }
         document.getElementById("result").className = "code"
         try { res = JSON.stringify(res) } catch (e) { res = String(res) }
