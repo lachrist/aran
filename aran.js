@@ -416,7 +416,8 @@
     if (!node.computed) {
       if (node.property.type !== "Identifier") { throw new Error(node) }
       node.computed = true
-      node.property = literal(node.property.name)
+      if (aran.traps.wrap) { node.property = call(shadow("traps", "wrap"), [literal(node.property.name)]) }
+      else { node.property = literal(node.property.name) }
     }
   }
 
@@ -720,6 +721,7 @@
     return call(shadow("traps", "apply"), [node.callee, array(node.arguments)])
   }
 
+  // TODO consistency with non-computed property
   // EXPR.ID      >>> aran.traps.get(EXPR, "ID")
   // EXPR1[EXPR2] >>> aran.traps.get(EXPR1, EXPR2)
   expr_traps.MemberExpression = function (node) {
