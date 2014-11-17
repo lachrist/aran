@@ -38,12 +38,12 @@
         var code = document.getElementById("instr-code").value
         try { var res = window.eval(code) } catch (e) {
           document.getElementById("result").className = "code error"
-          document.getElementById("result").innerText = String(e)
+          document.getElementById("result").textContent = String(e)
           throw e;
         }
         document.getElementById("result").className = "code"
         try { res = JSON.stringify(res) } catch (e) { res = String(res) }
-        document.getElementById("result").innerText = res
+        document.getElementById("result").textContent = res
       }
 
     </script>
