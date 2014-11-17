@@ -36,7 +36,7 @@ process.stdin.pipe(new htmlparser.Parser({
         out.write(")")
       } else {
         is_js = true
-        out.write("aran.compile(\"")
+        out.write("eval(aran.compile(\"")
       }
     } else if (tag === "html") {
       out.write("<script>")
@@ -57,7 +57,7 @@ process.stdin.pipe(new htmlparser.Parser({
   onclosetag: function(tag) {
     if (tag === "script") {
       is_js = false
-      out.write("\")")
+      out.write("\"))")
     }
     close_tag(tag)
   }
