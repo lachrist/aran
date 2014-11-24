@@ -20,7 +20,7 @@
     <script src="lib/esprima.js"></script>
     <script src="lib/escodegen.browser.js"></script>
     <script src="miley.js"></script>
-    <script>window.aran={}</script>
+    <script>window.aran={}; window.aran.traps = {}; window.aran.hooks = {};</script>
     <script src="aran.js"></script>
     <script>
 
@@ -42,7 +42,8 @@
           throw e;
         }
         document.getElementById("result").className = "code"
-        try { res = JSON.stringify(res) } catch (e) { res = String(res) }
+        if (res === "undefined") { res = "undefined" }
+        else { try { res = JSON.stringify(res) } catch (e) { res = String(res) } }
         document.getElementById("result").textContent = res
       }
 
@@ -51,8 +52,8 @@
   <body>
     <div id="main">
       <label>Options: </label><br/>
-      <textarea id="options" class="code" cols="70" rows="10"></textarea><br/>
-      <button id="reinit" onclick="reinit()">(Re)Initialize</button><br/>
+      <textarea id="options" class="code" cols="70" rows="10" >aran.hooks = {};&#10;aran.traps = {};</textarea><br/>
+      <button id="reinit" onclick="reinit()">Reinitialize</button><br/>
       <label>JavaScript code:</label><br/>
       <textarea id="code" class="code" cols="70" rows="10"></textarea><br/>
       <button id="instr" onclick="instr()">Instrument</button><br/>

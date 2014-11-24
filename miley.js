@@ -633,7 +633,7 @@
   // <expr>[expr] OP >>> [OP, false, null]
   miley.UpdateExpression = function (node) {
     var exprs = []
-    var infos = left(node.left, exprs)
+    var infos = left(node.argument, exprs)
     infos.unshift(node.operator)
     return { stmts:[], exprs:exprs, infos:infos }
   }
