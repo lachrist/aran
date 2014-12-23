@@ -14,26 +14,6 @@
 // window.$window
 // window.$eval
 
-// Require:
-//
-// aran
-// aran.traps
-//   wrap
-//   unwrap
-//   unary
-//   binary
-//   delete
-//   new
-//   apply
-//   get
-//   set
-//   enumerate
-//   
-// aran.hooks.<Mozilla-parser-api>
-// miley
-// exprima
-// escodegen
-
 
 (function () {
 
@@ -138,7 +118,7 @@
     visit_stmt = function (node, decls) { return visit(node, true) }
     visit_expr = function (node) { return visit(node, false) }
     function visit (node, is_stmt) {
-      var parts = miley(node)
+      var parts = aran.miley(node)
       // Hooks //
       if (aran.hooks[node.type]) {
         var copy = extract(node)
@@ -202,177 +182,6 @@
     for (k in o1) { o2[k] = o1[k] }
   }
 
-  //////////////
-  // Builders //
-  //////////////
-
-  function nodify (x) {
-    if (x === null) { return {type:"Literal", value:x} }
-    if (x instanceof RegExp) { return {type:"Literal", value:x} }
-    if (["boolean", "string", "number"].indexOf(typeof x) !== -1) { return {type:"Literal", value:x} }
-    if (x instanceof Array) { return { type:"ArrayExpression", elements:x.map(nodify) } }
-    if (typeof x !== "object") { throw new Error ("Unknown type for "+x) }
-    var node = {type:"ObjectExpression", properties:[]}
-    for (var k in x) {
-      node.properties.push({
-        type: "Property",
-        key: {type:"Identifier", name:k},
-        value: nodify(x[k]),
-        kind: "init"
-      })
-    }
-    return node
-  }
-
-  function wrap (node) {
-    if (!aran.traps.wrap) { return node }
-    return call(shadow("traps", "wrap"), [node])
-  }
-
-  function unwrap (node) {
-    if (!aran.traps.unwrap) { return node }
-    return call(shadow("traps", "unwrap"), [node])
-  }
-
-  function shadow () {
-    var node = identifier("aran")
-    for (var i in arguments) {
-      node = member(node, arguments[i])
-    }
-    return node
-  }
-
-  function empty () {
-    return { type: "EmptyStatement" }
-  }
-
-  function identifier (name) {
-    return {
-      type: "Identifier",
-      name: name
-    }
-  }
-
-  function literal (value) {
-    return {
-      type: "Literal",
-      value: value
-    }
-  }
-
-  function member (object, k) {
-    return {
-      type: "MemberExpression",
-      computed: (typeof k !== "string"),
-      object:object,
-      property: (typeof k === "string")?identifier(k):k
-    }
-  }
-
-  function block (body) {
-    return {
-      type: "BlockStatement",
-      body: body
-    }
-  }
-
-  function call (callee, arguments) {
-    return {
-      type: "CallExpression",
-      callee: callee,
-      arguments: arguments
-    }
-  }
-
-  function array (elements) {
-    return {
-      type: "ArrayExpression",
-      elements: elements
-    }
-  }
-
-  function declaration (id, init) {
-    return {
-      type: "VariableDeclaration",
-      kind: "var",
-      declarations: [{type:"VariableDeclarator", id:id, init:init}]
-    }
-  }
-
-  function conditional (test, consequent, alternate) {
-    return {
-      type: "ConditionalExpression",
-      test: test,
-      consequent: consequent,
-      alternate: alternate
-    }
-  }
-
-  function sequence (expressions) {
-    return {
-      type: "SequenceExpression",
-      expressions: expressions
-    }
-  }
-
-  function assignment (left, right) {
-    return {
-      type: "AssignmentExpression",
-      operator: "=",
-      left: left,
-      right: right
-    }
-  }
-
-  function expr_stmt (expression) {
-    return {
-      type: "ExpressionStatement",
-      expression: expression
-    }
-  }
-
-  function try_stmt (try_stmts, catch_clause, finally_stmts) {
-    return {
-      type: "TryStatement",
-      block: block(try_stmts),
-      guardedHandlers: [],
-      handlers: catch_clause?[catch_clause]:[],
-      finalizer: finally_stmts?block(finally_stmts):null
-    }
-  }
-
-  function binary (operator, left, right) {
-    return {
-      type: "BinaryExpression",
-      operator: operator,
-      left: left,
-      right: right
-    }
-  }
-
-  function for_stmt (init, test, update, body) {
-    return {
-      type: "ForStatement",
-      init: init,
-      test: test,
-      update: update,
-      body: body
-    }
-  }
-
-  function push (x) { return call(shadow("push"), [x]) }
-  function push1 (x) { return call(shadow("push1"), [x]) }
-  function push2 (x) { return call(shadow("push2"), [x]) }
-  function push3 (x) { return call(shadow("push3"), [x]) }
-  function pop () { return call(shadow("pop"), []) }
-  function pop1 () { return call(shadow("pop1"), []) }
-  function pop2 () { return call(shadow("pop2"), []) }
-  function pop3 () { return call(shadow("pop3"), []) }
-  function get () { return call(shadow("get"), []) }
-  function get1 () { return call(shadow("get1"), []) }
-  function get2 () { return call(shadow("get2"), []) }
-  function get3 () { return call(shadow("get3"), []) }
-
   ////////////
   // Stacks //
   ////////////
@@ -421,6 +230,7 @@
   ////////////////////
 
   aran.with = function (o) {
+    if (!window.Proxy) { window.alert("JavaScript proxies are needed to support \"with\" statements") }
     var handlers = {}
     if (aran.traps.binary) {
       handlers.has = function (o, k) { return aran.traps.binary("in", String(k).substring(1), o) }
@@ -437,10 +247,9 @@
     } else {
       handlers.set = function (o, k, v) { return o[String(k).substring(1)] = v }
     }
-    if (!window.Proxy) { window.alert("JavaScript proxies are needed to support \"with\" statements") }
     return new Proxy(o, handlers)
   }
-  
+
   // aran.for_left = function (o) {
   //   if (!window.Proxy) { window.alert("JavaScript proxies are needed to suport for-in statement with member expression as left parts") }
   //   return new Proxy(o, { set: function (o, k, v) { return aran.traps.set(o, k, v) } })
@@ -474,50 +283,50 @@
   // if (EXPR) STMT             >>> if (aran.traps.unwrap(EXPR)) STMT
   // if (EXPR) STMT1 else STMT2 >>> if (aran.traps.unwrap(EXPR)) STMT1 else STMT2
   stmt_traps.IfStatement = function (node) {
-    node.test = unwrap(node.test)
+    node.test = azir.trap("unwrap", node.test)
   }
 
   // with (EXPR) STMT >>> with (aran.with(EXPR)) STMT
   stmt_traps.WithStatement = function (node) {
-    inject(call(shadow("with"), [extract(node.test)]), node.test)
+    inject(azir.shadow("with", [extract(node.test)]), node.test)
   }
 
   // switch (EXPR0) { case EXPR:STMT } >>> switch (aran.traps.unwrap(EXPR0)) { case aran.traps.unwrap(EXPR1): STMT }
   // etc...
   stmt_traps.SwitchStatement = function (node) {
-    node.discriminant = unwrap(node.discriminant)
-    node.cases.forEach(function (c) { if (c.test) { c.test = unwrap(c.test) } })
+    node.discriminant = azir.trap("unwrap", node.discriminant)
+    node.cases.forEach(function (c) { if (c.test) { c.test = azir.trap("unwrap", c.test) } })
   }
 
   // try {} catch (ID) {} finally {} >>> try { aran.mark() } catch ($ID) {} finally { aran.ummark() }
   stmt_traps.TryStatement = function (node) {
-    node.block.body.unshift(expr_stmt(call(shadow("mark"), [])))
+    node.block.body.unshift(azir.expr_stmt(azir.shadow("mark", [])))
     if (node.handler) { node.handler.param.name = "$"+node.handler.param.name }
-    if (!node.finalizer) { node.finalizer = block([]) }
-    node.finalizer.body.unshift(expr_stmt(call(shadow("unmark"), [])))
+    if (!node.finalizer) { node.finalizer = azir.block([]) }
+    node.finalizer.body.unshift(azir.expr_stmt(azir.shadow("unmark", [])))
   }
 
   // while (EXPR) STMT >>> while (aran.unwrap(EXPR)) STMT
   stmt_traps.WhileStatement = function (node) {
-    node.test = unwrap(node.test)
+    node.test = azir.trap("unwrap", node.test)
   }
 
   // do STMT while (EXPR) >>> do STMT while (aran.unwrap(EXPR))
   stmt_traps.DoWhileStatement = function (node) {
-    node.test = unwrap(node.test)
+    node.test = azir.trap("unwrap", node.test)
   }
 
   // for (EXPR1 ; EXPR2 ; EXPR3) STMT >>> for (EXPR1 ; aran.traps.unwrap(EXPR2) ; EXPR3) STMT
   // for (var ID1,ID2; EXPR2; EXPR3) STMT >>> for (var $ID1,$ID2; EXPR2; EXPR3) STMT
   // etc...
   stmt_traps.ForStatement = function (node) {
-    if (node.test) { unwrap(node.test) }
+    if (node.test) { azir.trap("unwrap", node.test) }
     if (node.init && node.init.type === "VariableDeclaration") {
       node.init.declarations.forEach(function (d) { d.name = "$"+d.name })
     }
   }
 
-  // for (var ID=EXPR1 in EXPR2) <STMT> >>> {
+  // for (var ID=EXPR1 in EXPR2) STMT >>> {
   //   var $ID=EXPR1;
   //   aran.push3(aran.traps.enumerate(EXPR2));
   //   try {
@@ -531,7 +340,7 @@
   //   }
   // }
   //
-  // for (EXPR1[EXPR2] in EXPR3) <STMT> >>> {
+  // for (EXPR1[EXPR2] in EXPR3) STMT >>> {
   //   aran.push1(EXPR1);
   //   aran.push2(EXPR2);
   //   aran.push3(aran.traps.enumerate(EXPR3));
@@ -567,37 +376,37 @@
     // Pre-try
     if (decl) { node.body.push(decl) }
     else if (obj) {
-      node.body.push(expr_stmt(push1(obj)))
-      node.body.push(expr_stmt(push1(prop)))
+      node.body.push(azir.expr_stmt(push1(obj)))
+      node.body.push(azir.expr_stmt(push1(prop)))
     }
-    if (aran.traps.enumerate) { var arg = call(shadow("traps", "enumerate"), [copy.right]) }
-    else if (aran.traps.unwrap) { var arg = call(shadow("enumerate"), [unwrap(copy.right)]) }
-    else { var arg = call(shadow("enumerate"), [copy.right]) }
-    node.body.push(expr_stmt(push3(arg)))
+    if (aran.traps.enumerate) { var arg = azir.trap("enumerate", [copy.right]) }
+    else if (aran.traps.unwrap) { var arg = azir.shadow("enumerate", [azir.trap("unwrap", copy.right)]) }
+    else { var arg = azir.shadow("enumerate", [copy.right]) }
+    node.body.push(azir.expr_stmt(azir.push3(arg)))
     // Try statements
-    var init = call(shadow("push"), [literal(0)])
-    var test = binary("<", get(), member(get3(), "length"))
-    var update = call(shadow("push"), [binary("+", pop(), literal(1))])
-    var elem = member(get3(), get())
+    var init = azir.shadow("push", [azir.literal(0)])
+    var test = azirt.binary("<", get(), azir.member(azir.get3(), "length"))
+    var update = azir.shadow("push", [azir.binary("+", azir.pop(), azir.literal(1))])
+    var elem = azir.member(azir.get3(), azir.get())
     if (obj) {
       if (aran.traps.set) {
-        var ass = expr_stmt(call(shadow("traps", "set"), [get1, get2, elem]))
+        var ass = azir.expr_stmt(azir.trap("set", [azir.get1, azir.get2, elem]))
       } else {
-        var ass = expr_stmt(assignment(member(get1, get2), elem))
+        var ass = azir.expr_stmt(azir.assignment(azir.member(azir.get1(), azir.get2), elem))
       }
     } else {
-      var ass = expr_stmt(assignment(identifier(name), elem))
+      var ass = azir.expr_stmt(azir.assignment(azir.identifier(name), elem))
     }
-    var body = block([ass, copy.body])
+    var body = azir.block([ass, copy.body])
     // Finally statements
-    var finally_stmts = [expr_stmt(pop())]
+    var finally_stmts = [azir.expr_stmt(azir.pop())]
     if (obj) {
-      finally_stmts.push(expr_stmt(pop1()))
-      finally_stmts.push(expr_stmt(pop2()))
+      finally_stmts.push(azir.expr_stmt(azir.pop1()))
+      finally_stmts.push(azir.expr_stmt(azir.pop2()))
     }
-    finally_stmts.push(expr_stmt(pop3()))
+    finally_stmts.push(azir.expr_stmt(azir.pop3()))
     // Assemble
-    node.body.push(try_stmt([for_stmt(init, test, update, body)], null, finally_stmts))
+    node.body.push(azir.try_stmt([azir.for_stmt(init, test, update, body)], null, finally_stmts))
   }
 
   // function ID (ID1,ID2) {} >>> var $ID = aran.traps.wrap(function ID (ID1,ID2) {})
@@ -605,7 +414,7 @@
   stmt_traps.FunctionDeclaration = function (node) {
     node.type = "FunctionExpression"
     node.params.forEach(function (p) { p.name = "$"+p.name })
-    inject(declaration(identifier("$"+node.id.name), wrap(extract(node))), node)
+    inject(azir.declaration(azir.identifier("$"+node.id.name), azir.trap("wrap", extract(node))), node)
   }
 
   // var ID1=EXPR1, ID2=EXPR2 >>> var $ID1=EXPR1, $ID2=EXPR2
@@ -622,16 +431,20 @@
 
   // this >>> this===window?aran.saved_window:this
   expr_traps.ThisExpression = function (node) {
-    return conditional(binary("===", node, identifier("window")), shadow("saved_window"), node)
+    return azir.conditional(azir.binary("===", node, azir.identifier("window")), member(identifier("aran"), "saved_window"), node)
   }
 
   // [EXPR1,,EXPR2] >>> aran.traps.wrap([EXPR1,,EXPR2])
   // etc...
-  expr_traps.ArrayExpression = wrap
+  expr_traps.ArrayExpression = function (node) {
+    return azir.trap("wrap", node)
+  }
 
   // {ID1:EXPR2, ID2:EXPR2} >>> aran.traps.wrap({ID1:EXPR2, ID2:EXPR2})
   // etc...
-  expr_traps.ObjectExpression = wrap
+  expr_traps.ObjectExpression = function (node) {
+    return azir.trap("wrap", node)
+  }
 
   // function (ID1, ID2) {} = aran.traps.wrap(function ($ID1,$ID2) {})
   // etc...
@@ -648,13 +461,13 @@
   expr_traps.UnaryExpression = function (node) {
     if (node.operator !== "delete") {
       if (!aran.traps.unary) { return node }
-      return call(shadow("traps", "unary"), [literal(node.operator), node.argument])
+      return azir.trap("unary", [azir.literal(node.operator), node.argument])
     }
     if (!aran.traps.delete) { return node }
-    var args = [literal(node.operator)]
+    var args = [azir.literal(node.operator)]
     if (node.argument.type === "Identifier") {
-      args.push(shadow("saved_window"))
-      args.push(literal(node.argument.name))
+      args.push(azir.member(azir.identifier("aran", "saved_window")))
+      args.push(azir.literal(node.argument.name))
     } else if (node.argument.type === "MemberExpression") {
       compute_member(node.argument)
       args.push(node.argument.object)
@@ -662,13 +475,13 @@
     } else {
       args.push(node)
     }
-    return call(shadow("traps", "delete"), args)
+    return azir.trap("delete", args)
   }
 
   // EXPR1 OP EXPR2 >>> aran.traps.binary("OP", EXPR1, EXPR2)
   expr_traps.BinaryExpression = function (node) {
     if (!aran.traps.binary) { return node }
-    return call(shadow("traps", "binary"), [literal(node.operator), node.left, node.right])
+    return azir.traps("binary", [azir.literal(node.operator), node.left, node.right])
   }
 
   // ID = <EXPR>                >>> $ID = <EXPR>
@@ -686,26 +499,26 @@
       compute_member(node.left)
       if (node.operator === "=") {
         if (!aran.traps.set) { return node }
-        return call(shadow("traps", "set"), [node.left.object, node.left.property, node.right])
+        return azir.trap("set", [node.left.object, node.left.property, node.right])
       }
     } else {
       throw new Error(node)
     }
-    var op = literal(node.operator.replace("=", ""))
+    var op = azir.literal(node.operator.replace("=", ""))
     if (node.left.type === "Identifier") {
       if (!aran.traps.binary) { return node }
       node.operator = "="
-      node.right = call(shadow("traps", "binary"), [op, identifier(node.left.name), node.right])
+      node.right = azir.trap("binary", [op, azir.identifier(node.left.name), node.right])
       return node
     }
     if (node.left.type !== "MemberExpression") { throw new Error (node) }
     compute_member(node.left)
-    var seq1 = push1(node.left.object)
-    var seq2 = push2(node.left.property)
+    var seq1 = azir.push1(node.left.object)
+    var seq2 = azir.push2(node.left.property)
     var get, val, seq3
-    (aran.traps.get)?(get=call(shadow("traps", "get"), [pop1(), pop2()])):(get=member(pop1(), pop2()));
-    (aran.traps.binary)?(val=call(shadow("traps", "binary"), [op, get, node.right])):(val=binary(op.value, get, node.right));
-    (aran.traps.set)?(seq3=call(shadow("traps", "set"), [get1(), get2(), val])):(seq3=assignment(member(get1(), get2()), val));
+    (aran.traps.get)?(get=azir.trap("get", [azir.pop1(), azir.pop2()])):(get=azir.member(azir.pop1(), azir.pop2()));
+    (aran.traps.binary)?(val=azir.trap("binary", [op, get, node.right])):(val=azir.binary(op.value, get, node.right));
+    (aran.traps.set)?(seq3=azir.trap("set", [azir.get1(), azir.get2(), val])):(seq3=azir.assignment(azir.member(azir.get1(), azir.get2()), val));
     return sequence([seq1, seq2, seq3])
   }
 
@@ -730,7 +543,7 @@
     if (node.argument.type === "Identifier") {
       node.argument.name = "$"+node.argument.name
       if (!aran.traps.binary) { return node }
-      var ass = assignment(node.argument, call(shadow("traps", "binary"), [literal(op), identifier(node.argument.name), literal(1)]))
+      var ass = azir.assignment(node.argument, azir.trap("binary", [azir.literal(op), azir.identifier(node.argument.name), azir.literal(1)]))
       if (node.prefix) { return ass }
       return sequence([push(identifier(node.argument.name)), ass, pop()])
     }
@@ -772,18 +585,21 @@
   }
 
   // eval(EXPR1, EXPR2) >>> (aran.push([EXPR1, EXPR2]), ($eval===aran.seval) ? eval(aran.compile(aran.unwrap(aran.pop()[0]))) : aran.traps.call($eval, aran.pop()))
-  // EXPR(EXPR1, EXPR2) >>> aran.traps.apply(EXPR, [EXPR1, EXPR2])
+  // EXPR(EXPR1, EXPR2) >>> aran.traps.apply(EXPR, $window, [EXPR1, EXPR2])
+  // EXPR1[EXPR2](EXPR3, EXPR4) >>> aran.traps.apply(aran.traps.get(aran.push(EXPR1), EXPR2), aran.pop(), [EXPR1, EXPR2])
   // etc...
   expr_traps.CallExpression = function (node) {
-    if (node.callee.type !== "Identifier" || node.callee.name !== "eval") {
-      if (!aran.traps.apply) { return node }
-      return call(shadow("traps", "apply"), [node.callee, array(node.arguments)])
+    if (node.callee.type === "Identifier" && node.callee.name === "eval") {
+      var test = binary("===", identifier("$eval"), shadow("saved_eval"))
+      var cons = call(identifier("eval"), [call(shadow("compile"), [unwrap(member(pop(), literal(0)))])])
+      if (aran.traps.apply) { var alt = call(shadow("traps", "apply"), [identifier("$eval"), pop()]) }
+      else { var alt = call(member(unwrap(identifier("$eval")), "apply"), [identifier("window"), pop()]) }
+      return sequence([push(array(node.arguments)), conditional(test, cons, alt)])
     }
-    var test = binary("===", identifier("$eval"), shadow("saved_eval"))
-    var cons = call(identifier("eval"), [call(shadow("compile"), [unwrap(member(pop(), literal(0)))])])
-    if (aran.traps.apply) { var alt = call(shadow("traps", "apply"), [identifier("$eval"), pop()]) }
-    else { var alt = call(member(unwrap(identifier("$eval")), "apply"), [identifier("window"), pop()]) }
-    return sequence([push(array(node.arguments)), conditional(test, cons, alt)])
+    if (node.callee.type !== "MemberExpression") {
+      if (!aran.traps.apply) { return node }
+      return call(shadow("traps", "apply"), [node.callee, id("$window"), array(node.arguments)])
+    }
   }
 
   // EXPR.ID      >>> aran.traps.get(EXPR, "ID")

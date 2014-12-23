@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // !! Node must be called from aran directory !!
 // Don't use the same name for in.html and out.html !!
 // usage: node aran.js linvail.js 1< in.html 1> out.html

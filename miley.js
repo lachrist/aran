@@ -55,7 +55,7 @@
 
 
   var miley = {}
-  window.miley = function (node) {
+  aran.miley = function (node) {
     if (miley[node.type]) return miley[node.type](node)
     throw new Error(node)
   }
@@ -700,19 +700,26 @@
   //   arguments: [ Expression ];
   // }
   //
-  // [arguments_length]
+  // [arguments_length, is_member, is_computed]
   //
-  // <expr>()              >>> [0]
-  // <expr>(<expr>)        >>> [1]
-  // <expr>(<expt>,<expr>) >>> [2]
+  // <expr>()                      >>> [0, false]
+  // <expr>(<expr>)                >>> [1, false]
+  // <expr>(<expr>,<expr>)         >>> [2, false]
+  // <expr>.<id>(<expr>,<expr>)    >>> [2, true, false]
+  // <expr>[<expr>](<expr>,<expr>) >>> [2, true, true]
   miley.CallExpression = function (node) {
     var exprs = node.arguments.slice()
-    exprs.unshift(node.callee)
-    return {
-      stmts:[],
-      exprs:exprs,
-      infos:[node.arguments.length]
+    var is_member = node.callee.type === "MemberExpression"
+    var infos = [node.arguments.length, is_member]
+    if (is_member) {
+      var is_computed = node.callee.computed
+      infos.push(is_computed)
+      if (is_computed) { exprs.unshift(node.property) }
+      exprs.unshift(node.callee.object)
+    } else {
+      exprs.unshift(node.callee)
     }
+    return { stmts:[], exprs:exprs, infos:infos }
   }
 
 
