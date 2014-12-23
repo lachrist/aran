@@ -51,12 +51,16 @@ In this part of the readme, arguments starting with a upper case character are e
     * `Identifier(Name)`
     * `Literal(Value)`
   * `aran.traps`
-    * `wrap(Value)`: should returned a wrapper around the raw value `Value`. 
+    * `wrap(Value)`: should return a wrapper around the raw value `Value`. 
     * `unwrap(value)`: should return the raw value inside the wrapper `value`. 
     * `unary(Operator, argument)`: should return a wrapper around the result of the unary operation specified by the raw string `Operator`.
-      ```Operator ::= "-" | "+" | "!" | "~" | "typeof" | "void"```
+
+        ```Operator ::= "-" | "+" | "!" | "~" | "typeof" | "void"```
+
     * `binary(Operator, argument1, argument2)`: should return a wrapper around the result of the binary operation specified by the raw string `Operator`.
-      ```Operator ::= "==" | "!=" | "===" | "!==" | "<" | "<=" | ">" | ">=" | "<<" | ">>" | ">>>" | "+" | "-" | "*" | "/" | "%" | "|" | "^" | "&" | "in" | "instanceof" | ".."```
+        
+        ```Operator ::= "==" | "!=" | "===" | "!==" | "<" | "<=" | ">" | ">=" | "<<" | ">>" | ">>>" | "+" | "-" | "*" | "/" | "%" | "|" | "^" | "&" | "in" | "instanceof" | ".."```
+
     * `apply(function, this, Arguments)`: function application, `Arguments` is raw array of wrapped values.
   * `aran.object`
     * `get(object, property)`:
