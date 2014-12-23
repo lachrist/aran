@@ -11,10 +11,9 @@ This line will transform the specified HTML file so that any JavaScript code inc
 ## Interface
 
 Below are the functions that might be defined within the `linvail.js` file.
-All hooks are optional ; if you plan to build up a shadow interpreter then pretty much all the traps and the object-related functions should be defined.
 In this part of the readme, arguments starting with a upper case character are expected to be raw values, while arguments starting with a lower case character are expected to be wrapped values.
 
-  * `aran.hooks`
+  * `aran.hooks`: Hooks are functions that are called before executing statement/expression of a given mozilla-parser type (https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API). All hooks are optional.
     * `Program(StmtCounter)`
     * `EmptyStatement()`
     * `BlockStatement(StmtCounter)`
@@ -50,7 +49,7 @@ In this part of the readme, arguments starting with a upper case character are e
     * `MemberExpression(MaybeProperty)`
     * `Identifier(Name)`
     * `Literal(Value)`
-  * `aran.traps`
+  * `aran.traps`: Traps are designed to easily implement shadow execution. Unlike hooks, traps have a semantic impact on the program. Some traps are inserted into JavaScript code (e.g. `unary`) some others are used to build up the global object (e.g. `define`). Once `wrap` is defined and return a modified value, you probably want all other traps to be implemented as well.
     * `wrap(Value)`: should return a wrapper around the raw value `Value`. 
     * `unwrap(value)`: should return the raw value inside the wrapper `value`. 
     * `unary(Operator, argument)`: should return a wrapper around the result of the unary operation specified by the raw string `Operator`.
@@ -62,16 +61,15 @@ In this part of the readme, arguments starting with a upper case character are e
         ```Operator ::= "==" | "!=" | "===" | "!==" | "<" | "<=" | ">" | ">=" | "<<" | ">>" | ">>>" | "+" | "-" | "*" | "/" | "%" | "|" | "^" | "&" | "in" | "instanceof" | ".."```
 
     * `apply(function, this, Arguments)`: function application, `Arguments` is raw array of wrapped values.
-  * `aran.object`
-    * `get(object, property)`:
-    * `set(object, property, value)`: 
-    * `delete(object, property)`: 
-    * `enumerate(object)`:
-    * `create(prototype)`:
-    * `define(object, property, descriptor)`:
-    * `freeze(object)`:
-    * `seal(object)`:
-    * `prevext(object)`:
+    * `get(object, property)`: access the field of an object.
+    * `set(object, property, value)`: mutate the field of an object. 
+    * `delete(object, property)`: remove the field of an object.
+    * `enumerate(object)`: enumerate all the field of an object (including prototype's fields).
+    * `create(prototype)`: create a new object with a given prototype.
+    * `define(object, property, descriptor)`: define a new field for the given object.
+    * `prevext(object)`: prevent new field from being added to the object.
+    * `seal(object)`: prevent new field from being added to the object and mark all its property as non-configurable.
+    * `freeze(object)`: set an object completely imutable.
 
 ## Demo
 
