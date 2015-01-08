@@ -1,10 +1,9 @@
 { "name" : "aran"
-, "version" : "0.0.0"
-, "dependencies": {"htmlparser2":">=3.8.2", "esprima":">=1.2.2", "escodegen":">=1.4.3"}
-, "files" : ["lib", "aran.js", "demo.html", "env.js", "leymi.js", "miley.js", "run.js"]
+, "version" : "0.0.1"
+, "dependencies": {"esprima":"*", "escodegen":"*"}
+, "files" : ["aran.js", "global.js", "miley.js", "ptah.js", "stack.js", "util.js", "with.js"]
 , "main": "aran.js"
-, "bin": "run.js"
-, "description" : "Aran is an extensive JavaScript instrumenter that aims to be complient to the entire ECMAScript5 specification."
+, "description" : "Aran embeds a JS compiler for performing instrumentation or shadow execution"
 , "keywords" : ["Instrumenter", "ECMAScript5", "Shadow Execution"]
 , "homepage": "http://github.com/lachrist/aran"
 , "author" : {"name":"Laurent Christophe", "email":"lachrist@vub.ac.be"}
