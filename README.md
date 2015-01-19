@@ -83,7 +83,7 @@ Empty object creation | `object()` | `{}`| `aran.traps.object()`
 Empty array creation | `array()` | `[]` | `aran.traps.array()`
 Function creation | `function(Function)` | `function f () {}` | `aran.traps.function(function () {})`
 Regexp creation | `regexp(Regexp)` | `/bar/` | `aran.traps.regex(/bar/)`
-String representation | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))
+String representation | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
 Boolean representation | `booleanize(value)` | `x?:y:z` | `aran.traps.booleanize(x)?y:z`
 Unary operation | `unary(Operator, argument)` | `!x` | `aran.traps.unary('!', x)`
 Binary operation | `binary(Operator, left, right)` | `x+y` | `aran.traps.binary('+', x, y)`
