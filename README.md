@@ -5,9 +5,11 @@ Aran is a npm module for facilitating the development of JavaScript dynamic anal
 **Attention, Aran uses ECMAScript6 Harmony Proxies which is currently supported by Node (with the `--harmony` flag) and Firefox; so this module will NOT work on Safari, Chrome and Internet Explorer!!!**
 
 This module exposes a function that expects three arguments:
+
 * `sandbox`: a value used as the global object for evaluating the code to be analyzed.
 * `hooks`: a set of functions used for tracing purposes.
 * `traps`: a set of functions for modifying most of JavaScript semantic.
+
 And returns a function that will perform the dynamic analysis on any given code string.
 
 ```javascript
@@ -29,7 +31,7 @@ As stated above, the sandbox parameter will act in all point as if it was the gl
 
 ## Hooks
 
-Hooks are functions that are called before executing statement / expression of a given Mozilla-Parser type (https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API). Hooks only receive static information and their return value is never used. All hooks are optional.
+Hooks are functions that are called before executing statement / expression of a given Mozilla-Parser type as described at https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API. Hooks only receive static information and their return value is never used. All hooks are optional.
 
 * `Program(StmtCounter)`
 * `EmptyStatement()`
@@ -71,26 +73,24 @@ Hooks are functions that are called before executing statement / expression of a
 
 Unlike hooks, traps are designed to modify the semantic of the targeted code. They are useful for implementing shadow execution and in general, any dynamic analysis that requires runtime values. Traps have been designed to provide a minimal interface to pilot JavaScript semantic ; that is that many non-fundamental statements / expressions of JavaScript such as `x++` have been destructed to be expressed with simpler concepts. All traps are optional.
 
-
 Trigger | Trap | Target | Transformed
 :-------|:-----|:-------|:-----------
 Primitive creation | `wrap(Primitive)` | `'foo'` | `aran.traps.wrap('foo')`
-* Empty object creation | `object()` | `{}`| `aran.traps.object()`
-* Empty array creation | `array()` | `[]` | `aran.traps.array()`
+Empty object creation | `object()` | `{}`| `aran.traps.object()`
+Empty array creation | `array()` | `[]` | `aran.traps.array()`
 Function creation | `function(Function)` | `function f () {}` | `aran.traps.function(function () {})`
-* Regexp creation | `regexp(Regexp)` | `/bar/` | `aran.traps.regex(/bar/)`
+Regexp creation | `regexp(Regexp)` | `/bar/` | `aran.traps.regex(/bar/)`
 Conversion to string | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
 Conversion to boolean | `booleanize(value)` | `x?:y:z` | `aran.traps.booleanize(x)?y:z`
 Unary operation | `unary(Operator, argument)` | `!x` | `aran.traps.unary('!', x)`
 Binary operation | `binary(Operator, left, right)` | `x+y` | `aran.traps.binary('+', x, y)`
-* Function application | `apply(function, this, Arguments)` | `f(x, y)` | `aran.traps.apply(f, undefined, [x,y])`
+Function application | `apply(function, this, Arguments)` | `f(x, y)` | `aran.traps.apply(f, undefined, [x,y])`
 Construction | `construct(function, Arguments)` | `new F(x, y)` | `aran.traps.construct(F, [x,y])`
 Property reading | `get(object, property)` | `o[k]` | `aran.traps.get(o, k)`
 Property writing | `set(object, property)` | `o[k] = v` | `aran.traps.set(o, k, v)`
 Accessor property definition | `accessor(object, property, setter, getter)` | `{x: get () {} }` | Its complicated...
 Property deletion | `delete(object, property)` | `delete o[k]` | `aran.traps.delete(o, k)`
-* Property enumeration | `enumerate(object)` | `for ... in` | Its complicated...
-
+Property enumeration | `enumerate(object)` | `for ... in` | Its complicated...
 
 Additional remarks:
 
@@ -141,7 +141,7 @@ Additional remarks:
     * `@IFLAG` is a boolean indicating whether `@FLAGS` contains the character `i`;
     * `@MFLAG` is a boolean indicating whether `@FLAGS` contains the character `m`;
 
-* The conversion to string is only used for direct call to `eval` as defined at http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1).
+* The conversion to string is only used for direct call to `eval` as defined at http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
 
 * Valid unary operators:
   
