@@ -95,54 +95,54 @@ Accessor property definition | `accessor(object, property, setter, getter)` | `{
 Property deletion | `delete(object, property)` | `delete o[k]` | `aran.traps.delete(o, k)`
 Property enumeration | `enumerate(object)` | `for ... in` | 
 
-    * `wrap(Data)`: should return a wrapper around the literal data (i.e.: `null`, `true`, `false`, number, strings).
-    
-    * `stringify(value)`: should return a string representation of the given value, used only for direct `eval` call (cf. http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1).
-    
-    * `booleanize(value)`: should return a boolean representation of the given value, used for conditional branching.
-    
-    * `unary(Operator, argument)`: should return a wrapper around the result of the unary operation specified by the raw string `Operator`.
+* `wrap(Data)`: should return a wrapper around the literal data (i.e.: `null`, `true`, `false`, number, strings).
 
-        ```Operator ::= "-" | "+" | "!" | "~" | "typeof" | "void"```
+* `stringify(value)`: should return a string representation of the given value, used only for direct `eval` call (cf. http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1).
 
-    * `binary(Operator, left, right)`: should return a wrapper around the result of the binary operation specified by the raw string `Operator`.
-        
-        ```Operator ::= "==" | "!=" | "===" | "!==" | "<" | "<=" | ">" | ">=" | "<<" | ">>" | ">>>" | "+" | "-" | "*" | "/" | "%" | "|" | "^" | "&" | "in" | "instanceof" | ".."```
+* `booleanize(value)`: should return a boolean representation of the given value, used for conditional branching.
 
-    * `apply(function, this, Arguments)`: trap for applying `function` to the raw array of wrapped values `Arguments`.
+* `unary(Operator, argument)`: should return a wrapper around the result of the unary operation specified by the raw string `Operator`.
 
-    to the application from `this` is `Arguments` is raw array of wrapped values.
+    ```Operator ::= "-" | "+" | "!" | "~" | "typeof" | "void"```
+
+* `binary(Operator, left, right)`: should return a wrapper around the result of the binary operation specified by the raw string `Operator`.
     
-    * `construct(function, Arguments)`: trap for construction ; `Arguments` is a raw array of wrapped values.
-    
-    * `get(object, property)`: should read the property of an object.
-    
-    * `set(object, property, value)`: should write the property of an object.
-    
-    * `accessor(object, property, getter, setter)`: should define a data descriptor property.
-    
-    * `delete(object, property)`: should remove the property of an object.
-    
-    * `enumerate(object)`: enumerate all the property of an object (including prototype's properties).
-    
-    * `object()`: create a new object with:
+    ```Operator ::= "==" | "!=" | "===" | "!==" | "<" | "<=" | ">" | ">=" | "<<" | ">>" | ">>>" | "+" | "-" | "*" | "/" | "%" | "|" | "^" | "&" | "in" | "instanceof" | ".."```
+
+* `apply(function, this, Arguments)`: trap for applying `function` to the raw array of wrapped values `Arguments`.
+
+to the application from `this` is `Arguments` is raw array of wrapped values.
+
+* `construct(function, Arguments)`: trap for construction ; `Arguments` is a raw array of wrapped values.
+
+* `get(object, property)`: should read the property of an object.
+
+* `set(object, property, value)`: should write the property of an object.
+
+* `accessor(object, property, getter, setter)`: should define a data descriptor property.
+
+* `delete(object, property)`: should remove the property of an object.
+
+* `enumerate(object)`: enumerate all the property of an object (including prototype's properties).
+
+* `object()`: create a new object with:
+    * `Object.prototype` as prototype (`__proto__`).
+
+* `array()`: create a new array with:
+    * `Array.prototype` as prototype (`__proto__`).
+    * `{writable:true, enumerable:false, configurable:false, value:0}` as `length`
+
+* `function(Function)`: create a new function with:
+    * `Object.prototype` as prototype (`__proto__`).
+    * `{writable:false, enumerable:false, configurable:false, value:<arg-num>}` as `length` where `<arg-num>` is the number of formal parameter of `Function`.
+    * `{writable:true, enumearble:false, configurable:false, value:<prototype>}` as `prototype` where `<prototype>` is a fresh object with:
         * `Object.prototype` as prototype (`__proto__`).
-    
-    * `array()`: create a new array with:
-        * `Array.prototype` as prototype (`__proto__`).
-        * `{writable:true, enumerable:false, configurable:false, value:0}` as `length`
-    
-    * `function(Function)`: create a new function with:
-        * `Object.prototype` as prototype (`__proto__`).
-        * `{writable:false, enumerable:false, configurable:false, value:<arg-num>}` as `length` where `<arg-num>` is the number of formal parameter of `Function`.
-        * `{writable:true, enumearble:false, configurable:false, value:<prototype>}` as `prototype` where `<prototype>` is a fresh object with:
-            * `Object.prototype` as prototype (`__proto__`).
-            * `{writable:true, enumerable:false, configurable:true, value:<constructor>}` as `constructor` where `<constructor>` is the return value of the function creation such that: `(new F()).constructor === F`.
-    
-    * `regexp(Regexp)`: create a new regular expression with:
-        * `Regexp.prototype` as prototype (`__proto__`).
-        * `{writable:false, enumerable:false, configurable:false, value:<regexp>}` as `source` where `<regexp>` is the string representation of `regexp`.
-        * `{writable:false, enumerable:false, configurable:false, value:<global>}` as `global` where `<global>` is a boolean indicating whether the flag contained the character `g`.
-        * `{writable:false, enumerable:false, configurable:false, value:<ignore>}` as `ignoreCase` where `<ignore>` is a boolean indicating whether the flag contained the character `i`.
-        * `{writable:false, enumerable:false, configurable:false, value:<multiline>}` as `multiline` where `<multiline>` is a boolean indicating whether the flag contained the character `m`.
-        * `{writable:true, enumerable:false, configurable:false, value:<last>}` as `lastIndex` where `<last>` specifies the position at which to start the next match.
+        * `{writable:true, enumerable:false, configurable:true, value:<constructor>}` as `constructor` where `<constructor>` is the return value of the function creation such that: `(new F()).constructor === F`.
+
+* `regexp(Regexp)`: create a new regular expression with:
+    * `Regexp.prototype` as prototype (`__proto__`).
+    * `{writable:false, enumerable:false, configurable:false, value:<regexp>}` as `source` where `<regexp>` is the string representation of `regexp`.
+    * `{writable:false, enumerable:false, configurable:false, value:<global>}` as `global` where `<global>` is a boolean indicating whether the flag contained the character `g`.
+    * `{writable:false, enumerable:false, configurable:false, value:<ignore>}` as `ignoreCase` where `<ignore>` is a boolean indicating whether the flag contained the character `i`.
+    * `{writable:false, enumerable:false, configurable:false, value:<multiline>}` as `multiline` where `<multiline>` is a boolean indicating whether the flag contained the character `m`.
+    * `{writable:true, enumerable:false, configurable:false, value:<last>}` as `lastIndex` where `<last>` specifies the position at which to start the next match.
