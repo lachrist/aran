@@ -114,7 +114,7 @@ Additional remarks:
     assert(JSON.stringify(Object.getOwnPropertyDescriptor(xs, 'length')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
     ```
 
-Moreover the `length` property of JavaScript arrays have a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
+    Moreover the `length` property of JavaScript arrays have a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
 
 * Function creation should satisfy the following assertions:
 
@@ -127,7 +127,7 @@ Moreover the `length` property of JavaScript arrays have a special behavior desc
     assert(f.prototype.constructor === f);
     ```
 
-Where `@#PARAMS` is the number of formal parameters.
+    Where `@#PARAMS` is the number of formal parameters.
 
 * Regexp creation should statisfy the following assertions:
 
@@ -140,7 +140,7 @@ Where `@#PARAMS` is the number of formal parameters.
     assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'lastIndex')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
     ```
 
-Where:
+    Where:
     * `@GFLAG` is a boolean indicating whether `@FLAGS` contains the character `g`;
     * `@IFLAG` is a boolean indicating whether `@FLAGS` contains the character `i`;
     * `@MFLAG` is a boolean indicating whether `@FLAGS` contains the character `m`;
