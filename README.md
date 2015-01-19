@@ -73,76 +73,84 @@ Hooks are functions that are called before executing statement / expression of a
 
 ### Traps
 
-Unlike hooks, traps may modify the semantic of the targeted code. They are useful for implementing shadow execution and in general, any dynamic analysis that requires runtime values. Traps have been designed to provide a minimal interface to pilot JavaScript semantic ; that is that many non-fundamental features of JavaScript such as `x++` have been destructed to be expressed with simpler concepts. All traps are optional.
+Unlike hooks, traps may modify the semantic of the targeted code. They are useful for implementing shadow execution and in general, any dynamic analysis that requires runtime values. Traps have been designed to provide a minimal interface to pilot JavaScript semantic ; that is that many non-fundamental statements / expressions of JavaScript such as `x++` have been destructed to be expressed with simpler concepts. All traps are optional.
 
 
 Trigger | Trap | Target | Transformed
 :-------|:-----|:-------|:-----------
 Primitive creation | `wrap(Primitive)` | `'foo'` | `aran.traps.wrap('foo')`
-Empty object creation | `object()` | `{}`| `aran.traps.object()`
-Empty array creation | `array()` | `[]` | `aran.traps.array()`
+* Empty object creation | `object()` | `{}`| `aran.traps.object()`
+* Empty array creation | `array()` | `[]` | `aran.traps.array()`
 Function creation | `function(Function)` | `function f () {}` | `aran.traps.function(function () {})`
-Regexp creation | `regexp(Regexp)` | `/bar/` | `aran.traps.regex(/bar/)`
-String representation | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
-Boolean representation | `booleanize(value)` | `x?:y:z` | `aran.traps.booleanize(x)?y:z`
+* Regexp creation | `regexp(Regexp)` | `/bar/` | `aran.traps.regex(/bar/)`
+Conversion to string | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
+Conversion to boolean | `booleanize(value)` | `x?:y:z` | `aran.traps.booleanize(x)?y:z`
 Unary operation | `unary(Operator, argument)` | `!x` | `aran.traps.unary('!', x)`
 Binary operation | `binary(Operator, left, right)` | `x+y` | `aran.traps.binary('+', x, y)`
-Function application | `apply(function, this, Arguments)` | `f(x, y)` | `aran.traps.apply(f, undefined, [x,y])`
+* Function application | `apply(function, this, Arguments)` | `f(x, y)` | `aran.traps.apply(f, undefined, [x,y])`
 Construction | `construct(function, Arguments)` | `new F(x, y)` | `aran.traps.construct(F, [x,y])`
 Property reading | `get(object, property)` | `o[k]` | `aran.traps.get(o, k)`
 Property writing | `set(object, property)` | `o[k] = v` | `aran.traps.set(o, k, v)`
-Accessor property definition | `accessor(object, property, setter, getter)` | `{x: get () {} }` |
+Accessor property definition | `accessor(object, property, setter, getter)` | `{x: get () {} }` | Its complicated...
 Property deletion | `delete(object, property)` | `delete o[k]` | `aran.traps.delete(o, k)`
-Property enumeration | `enumerate(object)` | `for ... in` | 
+* Property enumeration | `enumerate(object)` | `for ... in` | Its complicated...
 
-* `wrap(Data)`: should return a wrapper around the literal data (i.e.: `null`, `true`, `false`, number, strings).
 
-* `stringify(value)`: should return a string representation of the given value, used only for direct `eval` call (cf. http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1).
+Additional remarks:
 
-* `booleanize(value)`: should return a boolean representation of the given value, used for conditional branching.
+* Primitive creation: concerns `null`, `false`, `true`, numbers and strings.
 
-* `unary(Operator, argument)`: should return a wrapper around the result of the unary operation specified by the raw string `Operator`.
+* Empty object creation should satisfy the following assertion:
 
+    ```javascript
+    assert(Object.getPrototypeOf({}) === Object.prototype);
+    ```
+
+* Empty array creation should satisfy the following assertions:
+
+    ```javascript
+    var xs = [];
+    assert(Object.getPrototypeOf(xs) === Array.prototype);
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(xs, 'length')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
+    ```
+
+Moreover the `length` property of JavaScript arrays have a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
+
+* Function creation should satisfy the following assertions:
+
+    ```javascript
+    var f = function (@PARAMS) { @BODY };
+    assert(Object.getPrototypeOf(f) === Function.prototype);
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f, 'length')) === '{"value":@#PARAMS, "writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f, 'prototype')) === '{"value":{},"writable":true,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f.prototype, 'constructor')) === '{"writable":true,"enumerable":false,"configurable":true}');
+    assert(f.prototype.constructor === f);
+    ```
+
+Where `@#PARAMS` is the number of formal parameters.
+
+* Regexp creation should statisfy the following assertions:
+
+    ```javascript
+    var r = /@PATTERN/@FLAGS;
+    assert(Object.getPrototypeOf(r) === Regexp.prototype);
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'global')) === '{"value":@GFLAG,"writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'ignoreCase')) === '{"value":@IFLAG,"writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'multiline')) === '{"value":@MFLAG,"writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'lastIndex')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
+    ```
+
+Where:
+    * `@GFLAG` is a boolean indicating whether `@FLAGS` contains the character `g`;
+    * `@IFLAG` is a boolean indicating whether `@FLAGS` contains the character `i`;
+    * `@MFLAG` is a boolean indicating whether `@FLAGS` contains the character `m`;
+
+* Conversion to string: only used for direct call to `eval` (cf http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1).
+
+* Valid unary operators: 
+  
     ```Operator ::= "-" | "+" | "!" | "~" | "typeof" | "void"```
 
-* `binary(Operator, left, right)`: should return a wrapper around the result of the binary operation specified by the raw string `Operator`.
-    
+* Valid binary operators:
+
     ```Operator ::= "==" | "!=" | "===" | "!==" | "<" | "<=" | ">" | ">=" | "<<" | ">>" | ">>>" | "+" | "-" | "*" | "/" | "%" | "|" | "^" | "&" | "in" | "instanceof" | ".."```
-
-* `apply(function, this, Arguments)`: trap for applying `function` to the raw array of wrapped values `Arguments`.
-
-to the application from `this` is `Arguments` is raw array of wrapped values.
-
-* `construct(function, Arguments)`: trap for construction ; `Arguments` is a raw array of wrapped values.
-
-* `get(object, property)`: should read the property of an object.
-
-* `set(object, property, value)`: should write the property of an object.
-
-* `accessor(object, property, getter, setter)`: should define a data descriptor property.
-
-* `delete(object, property)`: should remove the property of an object.
-
-* `enumerate(object)`: enumerate all the property of an object (including prototype's properties).
-
-* `object()`: create a new object with:
-    * `Object.prototype` as prototype (`__proto__`).
-
-* `array()`: create a new array with:
-    * `Array.prototype` as prototype (`__proto__`).
-    * `{writable:true, enumerable:false, configurable:false, value:0}` as `length`
-
-* `function(Function)`: create a new function with:
-    * `Object.prototype` as prototype (`__proto__`).
-    * `{writable:false, enumerable:false, configurable:false, value:<arg-num>}` as `length` where `<arg-num>` is the number of formal parameter of `Function`.
-    * `{writable:true, enumearble:false, configurable:false, value:<prototype>}` as `prototype` where `<prototype>` is a fresh object with:
-        * `Object.prototype` as prototype (`__proto__`).
-        * `{writable:true, enumerable:false, configurable:true, value:<constructor>}` as `constructor` where `<constructor>` is the return value of the function creation such that: `(new F()).constructor === F`.
-
-* `regexp(Regexp)`: create a new regular expression with:
-    * `Regexp.prototype` as prototype (`__proto__`).
-    * `{writable:false, enumerable:false, configurable:false, value:<regexp>}` as `source` where `<regexp>` is the string representation of `regexp`.
-    * `{writable:false, enumerable:false, configurable:false, value:<global>}` as `global` where `<global>` is a boolean indicating whether the flag contained the character `g`.
-    * `{writable:false, enumerable:false, configurable:false, value:<ignore>}` as `ignoreCase` where `<ignore>` is a boolean indicating whether the flag contained the character `i`.
-    * `{writable:false, enumerable:false, configurable:false, value:<multiline>}` as `multiline` where `<multiline>` is a boolean indicating whether the flag contained the character `m`.
-    * `{writable:true, enumerable:false, configurable:false, value:<last>}` as `lastIndex` where `<last>` specifies the position at which to start the next match.

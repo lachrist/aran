@@ -171,7 +171,6 @@ exports.ContinueStatement = function (node) {
   return { stmts:[], exprs:[], infos:[label?label.name:null] }
 }
 
-
 // interface WithStatement <: Statement {
 //   type: "WithStatement";
 //   object: Expression;
