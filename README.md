@@ -1,8 +1,8 @@
 # Aran
 
-Aran is a npm module for facilitating the development of JavaScript dynamic analysis tools. Aran is based on a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) to enable amongst other things: sandboxing, tracing and symbolic execution. To install it simply run: "npm install aran".
+Aran is a npm module for facilitating the development of JavaScript dynamic analysis tools. Aran is based on a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: sandboxing, tracing and symbolic execution. To install it, simply run: `npm install aran`.
 
-**Attention, Aran uses ECMAScript6 Harmony Proxies which is currently supported by Node (with the `--harmony` flag) and Firefox; so this module will NOT work on Safari, Chrome and Internet Explorer!!!**
+**Attention, Aran uses ECMAScript6 Harmony Proxies which is currently supported by Node (with the `--harmony` flag) and Firefox; this module will NOT work on Safari, Chrome and Internet Explorer!!!**
 
 This module exposes a function that expects three arguments:
 
@@ -18,16 +18,16 @@ var sandbox = ...
 var hooks = ...
 var traps = ...
 var run = Aran(sandbox, hooks, traps)
-// use run to build sandbox.eval and sandbox.Function
+// use run to build sandbox.eval and sandbox.Function (e.g. sandbox.eval = run)
 var code = ...
 var result = run(code)
 ```
 
-Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has to be run along the code being analyzed to intercept and transform every bit of JavaScript code. Having application code evaluated without resorting to `Aran` will compromise the validity of the application's analysis. It is the responsibility of the user to make sure that dynamic code evaluation finally resort to the `Aran` evaluating function.
+Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has to be run along the code being analyzed to intercept and transform every bit of JavaScript code. Having application code evaluated without resorting to `Aran` will compromise the validity of the application's analysis. It is the responsibility of the user to make sure that dynamic code evaluation eventually resort to `Aran`.
 
 ## Sandbox
 
-As stated above, the sandbox parameter will act in all point as if it was the global object of the code being analyzed. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `get`, `set` and `binary` are implemented, the sandbox parameter can be of any type, otherwise it is expected to be a JavaScript object.
+As stated above, the sandbox parameter will act in all point as if it was the global object of the code being analyzed. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `get`, `set` and `binary` are implemented, the sandbox parameter can be of any type, otherwise should probably be a JavaScript object.
 
 ## Hooks
 
@@ -71,7 +71,7 @@ Hooks are functions that are called before executing statement / expression of a
 
 ## Traps
 
-Unlike hooks, traps are designed to modify the semantic of the targeted code. They are useful for implementing shadow execution and in general, any dynamic analysis that requires runtime values. Traps have been designed to provide a minimal interface to pilot JavaScript semantic ; that is that many non-fundamental statements / expressions of JavaScript such as `x++` have been destructed to be expressed with simpler concepts. All traps are optional.
+Unlike hooks, traps are designed to modify the semantic of the code being analyzed. They are useful for implementing shadow execution and, in general, any dynamic analysis that requires runtime values. Traps have been designed to provide a minimal interface for piloting JavaScript semantic. That is that many non-fundamental JavaScript statements / expressions of such as `x++` have been destructed to be expressed with simpler concepts. All traps are optional.
 
 Trigger | Trap | Target | Transformed
 :-------|:-----|:-------|:-----------
@@ -94,7 +94,7 @@ Property enumeration | `enumerate(object)` | `for ... in` | Its complicated...
 
 Additional remarks:
 
-* Primitive creation: concerns `null`, `false`, `true`, numbers and strings.
+* Primitive creation concerns `null`, `false`, `true`, numbers and strings.
 
 * Empty object creation should satisfy the following assertion:
 
@@ -110,7 +110,7 @@ Additional remarks:
     assert(JSON.stringify(Object.getOwnPropertyDescriptor(xs, 'length')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
     ```
 
-    Moreover the `length` property of JavaScript arrays have a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
+    Moreover the `length` property of JavaScript arrays has a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
 
 * Function creation should satisfy the following assertions:
 
@@ -141,12 +141,8 @@ Additional remarks:
     * `@IFLAG` is a boolean indicating whether `@FLAGS` contains the character `i`;
     * `@MFLAG` is a boolean indicating whether `@FLAGS` contains the character `m`;
 
-* The conversion to string is only used for direct call to `eval` as defined at http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
+* The conversion to string is only used for direct call to `eval` as defined in http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
 
-* Valid unary operators:
-  
-    ```Operator ::= "-" | "+" | "!" | "~" | "typeof" | "void"```
+* Valid unary operators are: `"-"`, `"+"`, `"!"`, `"~"`, `"typeof"` and `"void"`
 
-* Valid binary operators:
-
-    ```Operator ::= "==" | "!=" | "===" | "!==" | "<" | "<=" | ">" | ">=" | "<<" | ">>" | ">>>" | "+" | "-" | "*" | "/" | "%" | "|" | "^" | "&" | "in" | "instanceof" | ".."```
+* Valid binary operators are: `"=="`, `"!="`, `"==="`, `"!=="`, `"<"`, `"<="`, `">"`, `">="`, `"<<"`, `">>"`, `">>>"`, `"+"`, `"-"`, `"*"`, `"/"`, `"%"`, `"|"`, `"^"`, `"&"`, `"in"`, `"instanceof"` and `".."`.
