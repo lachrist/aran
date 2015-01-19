@@ -20,7 +20,10 @@ var traps = ...
 var run = Aran(sandbox, hooks, traps)
 // use run to build sandbox.eval and sandbox.Function (e.g. sandbox.eval = run)
 var code = ...
-var result = run(code)
+var object = run(code)
+var result = object.result
+var error = object.error
+var compiled = object.compiled
 ```
 
 Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has to be run along the code being analyzed to intercept and transform every bit of JavaScript code. Having application code evaluated without resorting to `Aran` will compromise the validity of the application's analysis. It is the responsibility of the user to make sure that dynamic code evaluation eventually resort to `Aran`.

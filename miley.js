@@ -45,15 +45,9 @@ function declaration (node, exprs) {
   return declarations
 }
 
-///////////
-// exports //
-///////////
-
-exports.exports = function (node) {
-  if (exports[node.type]) return exports[node.type](node)
-  throw new Error(node)
-}
-
+/////////////
+// Exports //
+/////////////
 
 // interface Program <: Node {
 //   type: "Program";

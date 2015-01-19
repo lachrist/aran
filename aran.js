@@ -1,18 +1,4 @@
 
-// Output:
-//
-// aran.compile
-// aran.with
-// aran.for
-// aran.push[1->3]
-// aran.pop[1->3]
-// aran.mark
-// aran.unmark
-// aran.swindow
-// aran.seval
-// window.$window
-// window.$eval
-
 if (!Proxy) { throw new Error("Proxies (http://soft.vub.ac.be/~tvcutsem/proxies/) are required for aran to work...") }
 
 var Escodegen = require("escodegen")
@@ -20,10 +6,6 @@ var Esprima = require("esprima")
 
 var Stack = require("./stack.js")
 var Compile = require("./compile.js")
-var With = require("./with.js")
-var Util = require("./util.js")
-var Miley = require("./miley.js")
-var Ptah = require("./ptah.js")
 
 module.exports = function (global, hooks, traps) {
 
@@ -54,8 +36,8 @@ module.exports = function (global, hooks, traps) {
     get: function (o, k) { return get(o, unescape(k)) },
     set: function (o, k, v) { return set(o, unescape(k), v) },
     has: function (o, k) {
-        if (k === "aran") { return false }
-        return has(o, unescape(k))
+      if (k === "aran") { return false }
+      return has(o, unescape(k))
     }
   }
   aran.with = function (o) { return new Proxy(o, handlers) }
@@ -64,6 +46,13 @@ module.exports = function (global, hooks, traps) {
 
   Compile(aran)
 
-  return function (code) { with (global) { return eval(aran.compile(code)) } }
+  return function (code) {
+    var o = {compiled:aran.compile(code)}
+    aran.mark()
+    try { with(global) { o.result = eval(o.compiled) } }
+    catch (e) { o.error = e }
+    aran.unmark()
+    return o
+  }
 
 }

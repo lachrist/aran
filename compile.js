@@ -1,4 +1,11 @@
 
+var Esprima = require("esprima")
+var Escodegen = require("escodegen")
+
+var Util = require("./util.js")
+var Miley = require("./miley.js")
+var Ptah = require("./ptah.js")
+
 module.exports = function (aran) {
 
   var ptraps = Ptah.trap(aran)
@@ -20,7 +27,7 @@ module.exports = function (aran) {
     visit_stmt = function (node) { return visit(node, true) }
     visit_expr = function (node) { return visit(node, false) }
     function visit (node, is_stmt) {
-      var parts = Miley(node)
+      var parts = Miley[node.type](node)
       // Hooks //
       if (aran.hooks[node.type]) {
         var copy = Util.extract(node)
@@ -39,12 +46,12 @@ module.exports = function (aran) {
       if (node.type === "FunctionDeclaration") {
         var body = node.body
         var decl = node
-        node = Ptah.extract(node)
+        node = Util.extract(node)
         decl.type = "EmptyStatement"
       }
       // Traps //
       if (is_stmt) { stmts[node.type](node) }
-      else { Util.inject(exprs[node.type](extract(node)), node) }
+      else { Util.inject(exprs[node.type](Util.extract(node)), node) }
       // Recursion //
       parts.exprs.forEach(visit_expr)
       var decls = Util.flaten(parts.stmts.map(visit_stmt))
@@ -434,25 +441,6 @@ module.exports = function (aran) {
     return ptraps.get(node.object, node.property)
   }
 
-
-
-var p = new Proxy([], {
-  getPrototypeOf:function (t) {console.log("getPrototypeOf"); return Object.getPrototypeOf(t)},
-  setPrototypeOf:function (t, p) {console.log("setPrototypeOf"); return Object.setPrototypeOf(t, p)},
-  isExtensible:function (t) {console.log("isExtensible"); return Object.isExtensible(t)},
-  preventExtension:function (t) {console.log("preventExtension"); return Object.preventExtension(t)},
-  getOwnPropertyDescriptor:function (t, p) {console.log("getOwnPropertyDescriptor"); return Object.getOwnPropertyDescriptor(t, p) },
-  defineProperty:function(t, p, d) {console.log("defineProperty"); return Object.defineProperty(t, p, d) },
-  has:function (t, p) {console.log("has"); return o in t},
-  get:function (t, p) {console.log("get"); return t[p]},
-  set:function (t, p, v) {console.log("set"); return t[p]=v},
-  deleteProperty:function (t, p) {console.log("deleteProperty"); return delete t[p]},
-  enumerate:function (t) {console.log("enumerate")},
-  ownKeys:function (t) {console.log("ownKeys"); return Object.getOwnPropertyNames(t)},
-  apply:function (t, th, args) {console.log("apply"); return t.apply(th, args)},
-  construct:function (t, args) {console.log("construct"); return new t(args)}
-})
-
   // ID >>> $ID
   exprs.Identifier = function (node) {
     node.name = "$"+node.name
@@ -463,3 +451,5 @@ var p = new Proxy([], {
   exprs.Literal = function (node) {
     return ptraps.wrap(node)
   }
+
+}
