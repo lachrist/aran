@@ -35,41 +35,41 @@ As stated above, the sandbox parameter will act in all point as if it was the gl
 
 Hooks are functions that are called before executing statement / expression of a given Mozilla-Parser type (https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API). Hooks only receive static information and their return value is never used. All hooks are optional.
 
-    * `Program(StmtCounter)`
-    * `EmptyStatement()`
-    * `BlockStatement(StmtCounter)`
-    * `ExpressionStatement()`
-    * `IfStatement(HasAlternate)`
-    * `LabeledStatement(Label)`
-    * `BreakStatement(Label)`
-    * `ContinueStatement(Label)`
-    * `WithStatement()`
-    * `SwitchStatement`
-    * `ReturnStatement(HasValue)`
-    * `ThrowStatement()`
-    * `TryStatement`
-    * `WhileStatement()`
-    * `DoWhileStatement()`
-    * `ForStatement(HasInit, HasTest, HasUpdate, Declarations)`
-    * `ForInStatement`
-    * `FunctionDeclaration(Name, Parameters, BodyLength)`
-    * `VariableDeclaration(Declarations)`
-    * `ThisExpression()`
-    * `ArrayExpression`
-    * `ObjectExpression`
-    * `FunctionExpression(Name, Parameters, BodyLength)`
-    * `SequenceExpression(ExprCounter)`
-    * `UnaryExpression(Operator, MaybeIdentifier)`
-    * `BinaryExpression(Operator)`
-    * `AssignmentExpression(MaybeIdentifier)`
-    * `UpdateExpression(MaybeIdentifier)`
-    * `LogicalExpression(Operator)`
-    * `ConditionalExpression()`
-    * `NewExpression(ArgumentCounter)`
-    * `CallExpression(ArgumentCounter)`
-    * `MemberExpression(MaybeProperty)`
-    * `Identifier(Name)`
-    * `Literal(Value)`
+* `Program(StmtCounter)`
+* `EmptyStatement()`
+* `BlockStatement(StmtCounter)`
+* `ExpressionStatement()`
+* `IfStatement(HasAlternate)`
+* `LabeledStatement(Label)`
+* `BreakStatement(Label)`
+* `ContinueStatement(Label)`
+* `WithStatement()`
+* `SwitchStatement`
+* `ReturnStatement(HasValue)`
+* `ThrowStatement()`
+* `TryStatement`
+* `WhileStatement()`
+* `DoWhileStatement()`
+* `ForStatement(HasInit, HasTest, HasUpdate, Declarations)`
+* `ForInStatement`
+* `FunctionDeclaration(Name, Parameters, BodyLength)`
+* `VariableDeclaration(Declarations)`
+* `ThisExpression()`
+* `ArrayExpression`
+* `ObjectExpression`
+* `FunctionExpression(Name, Parameters, BodyLength)`
+* `SequenceExpression(ExprCounter)`
+* `UnaryExpression(Operator, MaybeIdentifier)`
+* `BinaryExpression(Operator)`
+* `AssignmentExpression(MaybeIdentifier)`
+* `UpdateExpression(MaybeIdentifier)`
+* `LogicalExpression(Operator)`
+* `ConditionalExpression()`
+* `NewExpression(ArgumentCounter)`
+* `CallExpression(ArgumentCounter)`
+* `MemberExpression(MaybeProperty)`
+* `Identifier(Name)`
+* `Literal(Value)`
 
 ### Traps
 
