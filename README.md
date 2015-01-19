@@ -83,15 +83,15 @@ Empty object creation | `object()` | `{}`| `aran.traps.object()`
 Empty array creation | `array()` | `[]` | `aran.traps.array()`
 Function creation | `function(Function)` | `function f () {}` | `aran.traps.function(function () {})`
 Regexp creation | `regexp(Regexp)` | `/bar/` | `aran.traps.regex(/bar/)`
-String representation | `stringify(value)` | `eval(x)` | eval(aran.compile(aran.traps.stringify(x)))
+String representation | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))
 Boolean representation | `booleanize(value)` | `x?:y:z` | `aran.traps.booleanize(x)?y:z`
 Unary operation | `unary(Operator, argument)` | `!x` | `aran.traps.unary('!', x)`
 Binary operation | `binary(Operator, left, right)` | `x+y` | aran.traps.binary('+', x, y)
-Function application | `apply(function, this, Arguments)` | f(x, y) | aran.traps.apply(f, undefined, [x,y])
-Construction | `construct(function, Arguments)` | new F(x, y) | aran.traps.construct(F, [x,y])
+Function application | `apply(function, this, Arguments)` | `f(x, y) | aran.traps.apply(f, undefined, [x,y])
+Construction | `construct(function, Arguments)` | `new F(x, y)` | aran.traps.construct(F, [x,y])
 Property reading | `get(object, property)` | `o[k]` | aran.traps.get(o, k)
 Property writing | `set(object, property)` | `o[k] = v` | aran.traps.set(o, k, v)
-Accessor property definition | `accessor(object, property, setter, getter)` | {x: get () {} } |
+Accessor property definition | `accessor(object, property, setter, getter)` | `{x: get () {} } |
 Property deletion | `delete(object, property)` | `delete o[k]` | aran.traps.delete(o, k)
 Property enumeration | `enumerate(object)` | `for ... in` | 
 
