@@ -5,9 +5,9 @@ Aran is a npm module for facilitating the development of JavaScript dynamic anal
 **Attention, Aran uses ECMAScript6 Harmony Proxies which is currently supported by Node (with the `--harmony` flag) and Firefox; so this module will NOT work on Safari, Chrome and Internet Explorer!!!**
 
 This module exposes a function that expects three arguments:
-    * `sandbox`: a value used as the global object for evaluating the code to be analyzed.
-    * `hooks`: a set of functions used for tracing purposes.
-    * `traps`: a set of functions for modifying most of JavaScript semantic.
+* `sandbox`: a value used as the global object for evaluating the code to be analyzed.
+* `hooks`: a set of functions used for tracing purposes.
+* `traps`: a set of functions for modifying most of JavaScript semantic.
 And returns a function that will perform the dynamic analysis on any given code string.
 
 ```javascript
@@ -23,15 +23,11 @@ var result = run(code)
 
 Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has to be run along the code being analyzed to intercept and transform every bit of JavaScript code. Having application code evaluated without resorting to `Aran` will compromise the validity of the application's analysis. It is the responsibility of the user to make sure that dynamic code evaluation finally resort to the `Aran` evaluating function.
 
-## Interface
-
-In this section are listed the functions for piloting the analysis ; arguments starting with an upper case character are expected to be raw values, while arguments starting with a lower case character are expected to be wrapped values.
-
-### Sandbox
+## Sandbox
 
 As stated above, the sandbox parameter will act in all point as if it was the global object of the code being analyzed. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `get`, `set` and `binary` are implemented, the sandbox parameter can be of any type, otherwise it is expected to be a JavaScript object.
 
-### Hooks
+## Hooks
 
 Hooks are functions that are called before executing statement / expression of a given Mozilla-Parser type (https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API). Hooks only receive static information and their return value is never used. All hooks are optional.
 
@@ -71,9 +67,9 @@ Hooks are functions that are called before executing statement / expression of a
 * `Identifier(Name)`
 * `Literal(Value)`
 
-### Traps
+## Traps
 
-Unlike hooks, traps may modify the semantic of the targeted code. They are useful for implementing shadow execution and in general, any dynamic analysis that requires runtime values. Traps have been designed to provide a minimal interface to pilot JavaScript semantic ; that is that many non-fundamental statements / expressions of JavaScript such as `x++` have been destructed to be expressed with simpler concepts. All traps are optional.
+Unlike hooks, traps are designed to modify the semantic of the targeted code. They are useful for implementing shadow execution and in general, any dynamic analysis that requires runtime values. Traps have been designed to provide a minimal interface to pilot JavaScript semantic ; that is that many non-fundamental statements / expressions of JavaScript such as `x++` have been destructed to be expressed with simpler concepts. All traps are optional.
 
 
 Trigger | Trap | Target | Transformed
@@ -145,9 +141,9 @@ Additional remarks:
     * `@IFLAG` is a boolean indicating whether `@FLAGS` contains the character `i`;
     * `@MFLAG` is a boolean indicating whether `@FLAGS` contains the character `m`;
 
-* Conversion to string: only used for direct call to `eval` (cf http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1).
+* The conversion to string is only used for direct call to `eval` as defined at http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1).
 
-* Valid unary operators: 
+* Valid unary operators:
   
     ```Operator ::= "-" | "+" | "!" | "~" | "typeof" | "void"```
 
