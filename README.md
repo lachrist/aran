@@ -78,12 +78,10 @@ Unlike hooks, traps may modify the semantic of the targeted code. They are usefu
 
 Trigger | Trap | Target | Transformed | Remark
 :-------|:-----|:-------|:------------|:------
-Primitive creation | `wrap(Primitive)` | `'foo'` | `aran.traps.wrap('foo')` | Primitive values correspond to: `null`, `false`, `true`, numbers and strings.
-Empty object creation | `object()` | `{}`| `aran.traps.object()` | The returned object should have `Object.prototype` as prototype (`__proto__`).
-Empty array creation | `array()` | `[]` | `aran.traps.array()` | The returned array should have
-* `Array.prototype` as prototype (`__proto__`).
-* `{writable:true, enumerable:false, configurable:false, value:0}` as `length`
-Function creation | `function(Function)` | `function f () {}` | `aran.traps.function(function () {})` |
+Primitive creation | `wrap(Primitive)` | `'foo'` | `aran.traps.wrap('foo')`
+Empty object creation | `object()` | `{}`| `aran.traps.object()`
+Empty array creation | `array()` | `[]` | `aran.traps.array()`
+Function creation | `function(Function)` | `function f () {}` | `aran.traps.function(function () {})`
 Regexp creation | `regexp(Regexp)` | `/bar/` | `aran.traps.regex(/bar/)`
 String representation | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
 Boolean representation | `booleanize(value)` | `x?:y:z` | `aran.traps.booleanize(x)?y:z`
