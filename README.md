@@ -76,8 +76,8 @@ Hooks are functions that are called before executing statement / expression of a
 Unlike hooks, traps may modify the semantic of the targeted code. They are useful for implementing shadow execution and in general, any dynamic analysis that requires runtime values. Traps have been designed to provide a minimal interface to pilot JavaScript semantic ; that is that many non-fundamental features of JavaScript such as `x++` have been destructed to be expressed with simpler concepts. All traps are optional.
 
 
-Trigger | Trap | Target | Transformed | Remark
-:-------|:-----|:-------|:------------|:------
+Trigger | Trap | Target | Transformed
+:-------|:-----|:-------|:-----------
 Primitive creation | `wrap(Primitive)` | `'foo'` | `aran.traps.wrap('foo')`
 Empty object creation | `object()` | `{}`| `aran.traps.object()`
 Empty array creation | `array()` | `[]` | `aran.traps.array()`
