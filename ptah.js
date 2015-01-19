@@ -198,31 +198,28 @@ exports.trap = function (aran) {
   
   function trap (name, args) { return exports.call(exports.member(shadow("traps"), name), args) }
 
-  var o = {}
+  var wrap =   aran.traps.wrap   ? function (x) { return trap("wrap", [x]) }   : function (x) { return x }
+  var unwrap = aran.traps.unwrap ? function (x) { return trap("unwrap", [x]) } : function (x) { return x } 
 
-  if (aran.traps.wrap) { o.wrap = function (x) { return trap("wrap", [x]) } }
-  else { o.wrap = function (x) { return x } }
-
-  if (aran.traps.unwrap) { o.unwrap = function (x) { return trap("unwrap", [x]) } }
-  else { o.unwrap = function (x) { return x } }
+  var o = {wrap:wrap, unwrap:unwrap}
 
   if (aran.traps.get) { o.get = function (o, k) { return trap("get", [o, k]) } }
-  else { o.get = function (o, k) { return exports.member(o, k) } }
+  else { o.get = function (o, k) { return exports.member(unwrap(o), unwrap(k)) } }
 
   if (aran.traps.set) { o.set = function (o, k) { return trap("set", [o, k, v]) } }
-  else { o.get = function (o, k) { return exports.assignment(exports.member(o, k), v) } }
+  else { o.get = function (o, k) { return exports.assignment(exports.member(unwrap(o), unwrap(k)), v) } }
 
   if (aran.traps.unary) { o.unary = function (op, arg) { return trap("unary", [o, k, v]) } }
-  else { o.unary = function (op, arg) { return exports.unary(op, arg) } }
+  else { o.unary = function (op, arg) { return wrap(exports.unary(op, unwrap(arg))) } }
 
   if (aran.traps.delete) { o.delete = function (o, k) { return trap("delete", [o, k])} }
-  else { o.delete = function (o, k) { return exports.unary("delete", exports.member(o, k)) } }
+  else { o.delete = function (o, k) { return wrap(exports.unary("delete", exports.member(unwrap(o), unwrap(k)))) } }
 
   if (aran.traps.binary) { o.binary = function (op, arg1, arg2) { return trap("binary", [op, arg1, arg2]) } }
-  else { o.binary = function (op, arg1, arg2) { return exports.binary(op, arg1, arg2) } }
+  else { o.binary = function (op, arg1, arg2) { return wrap(exports.binary(op, unwrap(arg1), unwrap(arg2))) } }
 
   if (aran.traps.apply) { o.apply = function (fct, th, args) { return trap("apply", [fct, th, args] )}}
-  else { o.call = function (fct, th, args) { return /*TODO*/ } }
+  else { o.apply = function (fct, th, args) { return exports.call(shadow("apply"), [fct, th, args]) } }
 
   return o
   

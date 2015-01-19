@@ -32,10 +32,10 @@ module.exports = function (aran) {
 
   aran.unmark = function () {
     var mark = marks.pop()
-    while (stack.pop() !== mark)
-    while (stack1.pop() !== mark)
-    while (stack2.pop() !== mark)
-    while (stack3.pop() !== mark)
+    while (stack.pop() !== mark);
+    while (stack1.pop() !== mark);
+    while (stack2.pop() !== mark);
+    while (stack3.pop() !== mark);
   }
 
 }

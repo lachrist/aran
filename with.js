@@ -21,19 +21,3 @@ module.exports = function (aran) {
   aran.with = function (o) { return new Proxy(o, handlers) }
 
 }
-
-
-  // aran.enumerate = function (o) {
-  //   if (aran.traps.unwrap(aran.traps.binary("===", o, aran.traps.wrap(null)))) { return aran.traps.array() }
-  //   if (aran.traps.unwrap(aran.traps.binary("===", aran.traps.unary("typeof", o), aran.traps.wrap("object")))) { return aran.traps.array() }
-  //   return aran.traps.binary(
-  //     "+",
-  //     aran.traps.apply(aran.traps.get(aran.traps.get(aran.global, aran.traps.wrap("Object")), aran.traps.wrap("keys")), o),
-  //     aran.enumerate(aran.traps.get(o, aran.traps.wrap("__proto__")))
-  //   )
-  // }
-
-  // aran.for_left = function (o) {
-  //   if (!window.Proxy) { window.alert("JavaScript proxies are needed to suport for-in statement with member expression as left parts") }
-  //   return new Proxy(o, { set: function (o, k, v) { return aran.traps.set(o, k, v) } })
-  // }
