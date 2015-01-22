@@ -23,7 +23,8 @@ module.exports = function (aran) {
   aran.get3 = function () { return stack2[stack2.length] }
 
   aran.mark = function () {
-    var mark = marks.push({})
+    var mark = {}
+    marks.push(mark)
     stack.push(mark)
     stack1.push(mark)
     stack2.push(mark)

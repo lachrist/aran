@@ -1,9 +1,5 @@
 
-/////////////
-// Generic //
-/////////////
-
-exports.nodify = function (x) {
+function nodify (x) {
   if (x === null) { return {type:"Literal", value:x} }
   if (x instanceof RegExp) { return {type:"Literal", value:x} }
   if (["boolean", "string", "number"].indexOf(typeof x) !== -1) { return {type:"Literal", value:x} }
@@ -21,6 +17,8 @@ exports.nodify = function (x) {
   return node
 }
 
+exports.nodify = nodify
+
 exports.empty = function () {
   return { type: "EmptyStatement" }
 }
@@ -29,6 +27,14 @@ exports.identifier = function (name) {
   return {
     type: "Identifier",
     name: name
+  }
+}
+
+exports.new = function (fct, args) {
+  return {
+    type: "NewExpression",
+    callee: fct,
+    arguments: args
   }
 }
 
@@ -104,14 +110,14 @@ exports.assignment = function (left, right) {
   }
 }
 
-exports.expr_stmt = function (expression) {
+exports.exprstmt = function (expression) {
   return {
     type: "ExpressionStatement",
     expression: expression
   }
 }
 
-exports.try_stmt = function (try_stmts, catch_clause, finally_stmts) {
+exports.try = function (try_stmts, catch_clause, finally_stmts) {
   return {
     type: "TryStatement",
     block: block(try_stmts),
@@ -130,7 +136,7 @@ exports.binary = function (operator, left, right) {
   }
 }
 
-exports.for_stmt = function (init, test, update, body) {
+exports.for = function (init, test, update, body) {
   return {
     type: "ForStatement",
     init: init,
@@ -140,119 +146,59 @@ exports.for_stmt = function (init, test, update, body) {
   }
 }
 
-exports.data_descr = function (configurable, enumerable, writable, value) {
-  return {
-    type: "ObjectExpression",
-    properties: [{
-      type:"property",
-      kind:"init",
-      name:{type:"identifier", name:"configurable"},
-      value:{type:"literal", value:configurable}
-    }, {
-      type:"property",
-      kind:"init",
-      name:{type:"identifier", name:"enumerable"},
-      value:{type:"literal", value:enumerable}
-    }, {
-      type:"property",
-      kind:"init",
-      name:{type:"identifier", name:"writable"},
-      value:{type:"literal", value:writable}
-    }, {
-      type:"property",
-      kind:"init",
-      name:{type:"identifier", name:"value"},
-      value:value
-    }]
-  }
-}
+// exports.data_descr = function (configurable, enumerable, writable, value) {
+//   return {
+//     type: "ObjectExpression",
+//     properties: [{
+//       type:"property",
+//       kind:"init",
+//       name:{type:"identifier", name:"configurable"},
+//       value:{type:"literal", value:configurable}
+//     }, {
+//       type:"property",
+//       kind:"init",
+//       name:{type:"identifier", name:"enumerable"},
+//       value:{type:"literal", value:enumerable}
+//     }, {
+//       type:"property",
+//       kind:"init",
+//       name:{type:"identifier", name:"writable"},
+//       value:{type:"literal", value:writable}
+//     }, {
+//       type:"property",
+//       kind:"init",
+//       name:{type:"identifier", name:"value"},
+//       value:value
+//     }]
+//   }
+// }
 
-exports.acce_descr = function (configurable, enumerable, get, set) {
-    return {
-    type: "ObjectExpression",
-    properties: [{
-      type:"property",
-      kind:"init",
-      name:{type:"identifier", name:"configurable"},
-      value:{type:"literal", value:configurable}
-    }, {
-      type:"property",
-      kind:"init",
-      name:{type:"identifier", name:"enumerable"},
-      value:{type:"literal", value:enumerable}
-    }, {
-      type:"property",
-      kind:"init",
-      name:{type:"identifier", name:"get"},
-      value:get
-    }, {
-      type:"property",
-      kind:"init",
-      name:{type:"identifier", name:"set"},
-      value:set
-    }]
-  }
-}
+// exports.acce_descr = function (configurable, enumerable, get, set) {
+//     return {
+//     type: "ObjectExpression",
+//     properties: [{
+//       type:"property",
+//       kind:"init",
+//       name:{type:"identifier", name:"configurable"},
+//       value:{type:"literal", value:configurable}
+//     }, {
+//       type:"property",
+//       kind:"init",
+//       name:{type:"identifier", name:"enumerable"},
+//       value:{type:"literal", value:enumerable}
+//     }, {
+//       type:"property",
+//       kind:"init",
+//       name:{type:"identifier", name:"get"},
+//       value:get
+//     }, {
+//       type:"property",
+//       kind:"init",
+//       name:{type:"identifier", name:"set"},
+//       value:set
+//     }]
+//   }
+// }
 
-exports.trap = function (aran) {
-  
-  function trap (name, args) { return exports.call(exports.member(shadow("traps"), name), args) }
 
-  var wrap =   aran.traps.wrap   ? function (x) { return trap("wrap", [x]) }   : function (x) { return x }
-  var unwrap = aran.traps.unwrap ? function (x) { return trap("unwrap", [x]) } : function (x) { return x } 
 
-  var o = {wrap:wrap, unwrap:unwrap}
-
-  if (aran.traps.get) { o.get = function (o, k) { return trap("get", [o, k]) } }
-  else { o.get = function (o, k) { return exports.member(unwrap(o), unwrap(k)) } }
-
-  if (aran.traps.set) { o.set = function (o, k) { return trap("set", [o, k, v]) } }
-  else { o.get = function (o, k) { return exports.assignment(exports.member(unwrap(o), unwrap(k)), v) } }
-
-  if (aran.traps.unary) { o.unary = function (op, arg) { return trap("unary", [o, k, v]) } }
-  else { o.unary = function (op, arg) { return wrap(exports.unary(op, unwrap(arg))) } }
-
-  if (aran.traps.delete) { o.delete = function (o, k) { return trap("delete", [o, k])} }
-  else { o.delete = function (o, k) { return wrap(exports.unary("delete", exports.member(unwrap(o), unwrap(k)))) } }
-
-  if (aran.traps.binary) { o.binary = function (op, arg1, arg2) { return trap("binary", [op, arg1, arg2]) } }
-  else { o.binary = function (op, arg1, arg2) { return wrap(exports.binary(op, unwrap(arg1), unwrap(arg2))) } }
-
-  if (aran.traps.apply) { o.apply = function (fct, th, args) { return trap("apply", [fct, th, args] )}}
-  else { o.apply = function (fct, th, args) { return exports.call(shadow("apply"), [fct, th, args]) } }
-
-  return o
-  
-}
-
-///////////////////
-// Aran-Specific //
-///////////////////
-
-var shadow = function (name) { return member(exports.identifier("aran"), name) }
-
-exports.shadow = shadow
-
-//exports.shadow_prototype = function (name) { return exports.member(shadow("prototypes"), name) }
-
-exports.with = function (x) { return exports.call(shadow("with"), [x]) }
-
-exports.hook = function (name, args) { return exports.call(exports.member(shadow("hooks"), name), args) }
-
-exports.mark = function () { return exports.call(shadow("mark"), []) }
-exports.unmark = function () { return exports.call(shadow("unmark"), []) }
-
-exports.push = function (x) { return exports.call(shadow("push"), [x]) }
-exports.push1 = function (x) { return exports.call(shadow("push1"), [x]) }
-exports.push2 = function (x) { return exports.call(shadow("push2"), [x]) }
-exports.push3 = function (x) { return exports.call(shadow("push3"), [x]) }
-
-exports.pop = function () { return exports.call(shadow("pop"), []) }
-exports.pop1 = function () { return exports.call(shadow("pop1"), []) }
-exports.pop2 = function () { return exports.call(shadow("pop2"), []) }
-exports.pop3 = function () { return exports.call(shadow("pop3"), []) }
-
-exports.get = function () { return exports.call(shadow("get"), []) }
-exports.get1 = function () { return exports.call(shadow("get1"), []) }
-exports.get2 = function () { return exports.call(shadow("get2"), []) }
-exports.get3 = function () { return exports.call(shadow("get3"), []) }

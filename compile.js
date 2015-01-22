@@ -1,20 +1,57 @@
 
 var Esprima = require("esprima")
+var Esvalid = require("esvalid")
 var Escodegen = require("escodegen")
 
 var Util = require("./util.js")
 var Miley = require("./miley.js")
 var Ptah = require("./ptah.js")
+var Pstack = require("./pstack.js")
+var Ptrap = require("./ptrap.js")
 
 module.exports = function (aran) {
 
-  var ptraps = Ptah.trap(aran)
+  var ptrap = Ptrap(aran)
 
   aran.compile = function (code) {
     var ast = Esprima.parse(code)
     ast.body.forEach(visit_stmt)
-    if (aran.hooks.program) { ast.body.unshift(Ptah.expr_stmt(Ptah.hook("program", [Ptah.literal(ast.body.length)]))) }
+    if (aran.hooks.program) { ast.body.unshift(Ptah.exprstmt(phook("Program", [Ptah.literal(ast.body.length)]))) }
+    var errors = Esvalid.errors(ast)
+    if (errors.length > 0) { throw errors[0] }
     return Escodegen.generate(ast)
+  }
+
+  /////////////
+  // Helpers //
+  /////////////
+
+  function escape (s) {
+    if (/^\$*aran$/.test(s)) { return "$"+s }
+    return s
+  }
+
+  function escape_id (id) {
+    id.name = escape(id.name)
+  }
+
+  function escape_decl (decl) {
+    decl.id.name = escape(decl.id.name)
+  }
+
+  function compute_member (node) {
+    if (!node.computed) {
+      node.computed = true
+      node.property = ptrap.wrap(Ptah.literal(node.property.name))
+    }
+  }
+
+  function pshadow (name) {
+    return Ptah.member(Ptah.identifier("aran"), name)
+  }
+
+  function phook (name, args) {
+    return Ptah.call(Ptah.member(pshadow("hooks"), name), args)
   }
 
   //////////////
@@ -31,10 +68,10 @@ module.exports = function (aran) {
       // Hooks //
       if (aran.hooks[node.type]) {
         var copy = Util.extract(node)
-        var hook = Ptah.hook(copy.type, parts.infos.map(nodify))
+        var hook = phook(copy.type, parts.infos.map(Ptah.nodify))
         if (is_stmt) {
           node.type = "BlockStatement"
-          node.body = [Ptah.expr_stmt(hook), copy]
+          node.body = [Ptah.exprstmt(hook), copy]
         } else {
           node.type = "SequenceExpression"
           node.expressions = [hook, copy]
@@ -64,95 +101,70 @@ module.exports = function (aran) {
     }
   } ())
 
-  /////////////
-  // Helpers //
-  /////////////
-
-  function escape (s) {
-    if (/^\$*aran$/.test(s)) { return "$"+s }
-    return s
-  }
-
-  function compute_member (node) {
-    if (!node.computed) {
-      node.computed = true
-      node.property = ptraps.wrap(Ptah.literal(node.property.name))
-    }
-  }
-
-  // function (ID1, ID2) BODY >>>
-  //   aran.push1(aran.traps.wrap(function ($ID1,$ID2) BODY))
-  //   aran.traps.set(aran.get1(), aran.traps.wrap("__proto__"), aran.prototypes.function)
-  //   aran.traps.define(aran.get1(), "length", {writable:false, enumerable:false, configurable:false, value: 2})
-  //   aran.push2(aran.traps.object())
-  //   aran.traps.set(aran.get2(), aran.traps.wrap("__proto__"), aran.prototypes.object)
-  //   aran.traps.define(aran.get2(), "constructor", {writable:true, enumerable:false, configurable:true, value:aran.get1()})
-  //   aran.traps.define(aran.get1(), "prototype", {writable:true, enumerable:false, configurable:false, value:aran.pop2()})
-  //   aran.pop1()
-  // etc...
-  function visit_fct (node) {
-    node.params.forEach(function (p) { p.name = "$"+p.name })
-    var exprs = []
-    exprs.push(Ptah.push1(ptraps.wrap(node)))
-    exprs.push(ptraps.set(Ptah.get1(), ptraps.wrap(Ptah.literal("__proto__")), Ptah.member(Ptah.shadow("prototypes"), "function")))
-    exprs.push(ptraps.define(Ptah.get1(), Ptah.literal("length"), Ptah.data_descr(false, false, false, ptraps.wrap(Ptah.literal(node.params.length)))))
-    exprs.push(Ptah.push2(ptraps.object()))
-    exprs.push(ptraps.set(Ptah.get2(), ptraps.wrap(Ptah.literal("__proto__")), Ptah.member(Ptah.shadow("prototypes"), "object")))
-    exprs.push(ptraps.define(Ptah.get2(), Ptah.literal("constructor"), Ptah.data_descr(true, false, true, Ptah.get1())))
-    exprs.push(ptraps.define(Ptah.get1(), Ptah.literal("prototype"), Ptah.data_descr(false, false, true, Ptah.pop2())))
-    exprs.push(pop1())
-    return Ptah.sequence(exprs)
-  }
-
   /////////////////////////
   // Statement Compilers //
   /////////////////////////
 
   var stmts = {}
 
-  // if (EXPR) STMT             >>> if (aran.traps.unwrap(EXPR)) STMT
-  // if (EXPR) STMT1 else STMT2 >>> if (aran.traps.unwrap(EXPR)) STMT1 else STMT2
+  stmts.EmptyStatement = Util.nil
+
+  stmts.BlockStatement = Util.nil
+
+  stmts.ExpressionStatement = Util.nil
+
+  // if (EXPR) STMT             >>> if (aran.traps.booleanize(EXPR)) STMT
+  // if (EXPR) STMT1 else STMT2 >>> if (aran.traps.booleanize(EXPR)) STMT1 else STMT2
   stmts.IfStatement = function (node) {
-    node.test = ptraps.wrap(node.text)
+    node.test = ptrap.booleanize(node.test)
   }
+
+  stmts.LabeledStatement = Util.nil
+
+  stmts.BreakStatement = Util.nil
+
+  stmts.ContinueStatement = Util.nil
 
   // with (EXPR) STMT >>> with (aran.with(EXPR)) STMT
   stmts.WithStatement = function (node) {
-    node.test = Ptah.with(node.test)
+    node.object = Ptah.call(pshadow("with"), [node.object])
   }
 
-  // switch (EXPR0) { case EXPR:STMT } >>> switch (aran.traps.unwrap(EXPR0)) { case aran.traps.unwrap(EXPR1): STMT }
-  // etc...
-  stmts.SwitchStatement = function (node) {
-    node.discriminant = ptraps.unwrap(node.discriminant)
-    node.cases.forEach(function (c) { if (c.test) { c.test = ptraps.unwrap(c.test) } })
-  }
+  // TODO
+  // dificult to prevent label clash
+  // has to perform upfront parsing to find break
+  // switchlabel: { if (descriminant === CASE1) ... }
+  // stmts.SwitchStatement = function (node) {}
 
-  // try {} catch (ID) {} finally {} >>> try { aran.mark() } catch ($ID) {} finally { aran.ummark() }
+  stmts.ReturnStatement = Util.nil
+
+  stmts.ThrowStatement = Util.nil
+
+  // try {} catch (ID) {} finally {} >>> try { aran.mark() } catch (#ID) {} finally { aran.ummark() }
   stmts.TryStatement = function (node) {
-    node.block.body.unshift(Ptah.expr_stmt(Ptah.mark()))
-    if (node.handler) { node.handler.param.name = "$"+node.handler.param.name }
+    node.block.body.unshift(Ptah.exprstmt(Pstack.mark()))
+    if (node.handler) { node.handler.param.name = escape(node.handler.param.name) }
     if (!node.finalizer) { node.finalizer = Ptah.block([]) }
-    node.finalizer.body.unshift(Ptah.expr_stmt(Ptah.unmark()))
+    node.finalizer.body.unshift(Ptah.exprstmt(Pstack.unmark()))
   }
 
-  // while (EXPR) STMT >>> while (aran.unwrap(EXPR)) STMT
+  // while (EXPR) STMT >>> while (aran.traps.booleanize(EXPR)) STMT
   stmts.WhileStatement = function (node) {
-    node.test = ptraps.unwrap(node.test)
+    node.test = ptrap.booleanize(node.test)
   }
 
-  // do STMT while (EXPR) >>> do STMT while (aran.unwrap(EXPR))
+  // do STMT while (EXPR) >>> do STMT while (aran.traps.booleanize(EXPR))
   stmts.DoWhileStatement = function (node) {
-    node.test = ptraps.unwrap(node.test)
+    node.test = ptrap.booleanize(node.test)
   }
 
-  // for (EXPR1 ; EXPR2 ; EXPR3) STMT >>> for (EXPR1 ; aran.traps.unwrap(EXPR2) ; EXPR3) STMT
-  // for (var ID1,ID2; EXPR2; EXPR3) STMT >>> for (var $ID1,$ID2; EXPR2; EXPR3) STMT
+  // for (EXPR1 ; EXPR2 ; EXPR3) STMT >>> for (EXPR1 ; aran.traps.booleanize(EXPR2) ; EXPR3) STMT
+  // for (var ID1,ID2; EXPR2; EXPR3) STMT >>> for (var #ID1,#ID2; EXPR2; EXPR3) STMT
   // etc...
   stmts.ForStatement = function (node) {
-    if (node.test) { node.test = ptraps.unwrap(node.test) }
+    if (node.test) { node.test = ptrap.booleanize(node.test) }
     if (node.init && node.init.type === "VariableDeclaration") {
-      node.init.declarations.forEach(function (d) { d.name = "$"+d.name })
+      node.init.declarations.forEach(escape_decl)
     }
   }
 
@@ -240,16 +252,17 @@ module.exports = function (aran) {
   //   node.body.push(azir.try_stmt([azir.for_stmt(init, test, update, body)], null, finally_stmts))
   // }
 
-  // function ID (ID1,ID2) {} >>> var $ID = ...
-  // cf visit_fct
+  // function ID (ID1,ID2) {} >>> var #ID = aran.traps.wrap(function (#ID1, #ID2) {})
+  // etc...
   stmts.FunctionDeclaration = function (node) {
-    Util.inject(Ptah.declaration("$"+node.id.name, visit_fct(extract(node))), node)
+    node.params.forEach(escape_id)
+    Util.inject(Ptah.declaration(escape(node.id.name), ptrap.wrap(extract(node))), node)
   }
 
-  // var ID1=EXPR1, ID2=EXPR2 >>> var $ID1=EXPR1, $ID2=EXPR2
+  // var ID1=EXPR1, ID2=EXPR2 >>> var #ID1=EXPR1, #ID2=EXPR2
   // etc...
   stmts.VariableDeclaration = function (node) {
-    node.declarations.forEach(function (d) { d.id.name = "$"+d.id.name })
+    node.declarations.forEach(escape_decl)
   }
 
   //////////////////////////
@@ -258,165 +271,118 @@ module.exports = function (aran) {
 
   var exprs = {}
 
-  // this >>> this===global?aran.global:this
+  // this >>> this===aran.global ? aran.sandbox : this
   exprs.ThisExpression = function (node) {
-    return Ptah.conditional(Ptah.binary("===", node, Ptah.identifier("global")), Ptah.shadow("global"), node)
+    return Ptah.conditional(Ptah.binary("===", node, pshadow("global")), pshadow("sandbox"), node)
   }
 
-  // [EXPR1,,EXPR2] >>>
-  //   aran.push(aran.traps.array())
-  //   aran.traps.set(aran.get(), aran.traps.wrap("__proto__"), aran.prototype.array)
-  //   aran.traps.set(aran.get(), aran.traps.wrap(0), EXPR1)
-  //   aran.traps.set(aran.get(), aran.traps.wrap(2), EXPR2)
-  //   aran.pop()
-  // 
+  // [EXPR1,,EXPR2] >>> aran.traps.wrap([EXPR1,,EXPR2])
   // etc...
-  exprs.ArrayExpression = function (node) {
-    var exprs = []
-    exprs.push(Ptah.push(ptraps.array()))
-    exprs.push(Ptah.ptraps.set(Ptah.get(), ptraps.wrap(Ptah.literal("__proto__")), Ptah.member(Ptah.shadow("prototype"), "array")))
-    for (var i=0; i<elements.length; i++) {
-      if (elements[i]) {
-        exprs.push(Ptah.ptraps("set", [Ptah.get(), ptraps.wrap(Ptah.literal(i)), elements[i]]))
-      }
-    }
-    exprs.push(Ptah.pop())
-    return Ptah.sequence(exprs)
-  }
+  exprs.ArrayExpression = ptrap.wrap
 
-  // {ID1:EXPR2, ID2:EXPR2, get ID3 EXPR3, set ID3 EXPR4} >>>
-  //   aran.push(aran.traps.object())
-  //   aran.traps.set(aran.get(), aran.traps.wrap("__proto__"), aran.prototypes.object),
-  //   aran.traps.set(aran.get(), aran.traps.wrap("ID1"), EXPR1),
-  //   aran.traps.set(aran.get(), aran.traps.wrap("ID2"), EXPR2),
-  //   aran.traps.define(aran.get(), "ID3", {configurable:true, enumerable:true, get:EXPR3, set:EXPR4})
-  //   aran.pop()
+  // {x:EXPR} >>> aran.traps.wrap({x:EXPR})
   // etc...
-  exprs.ObjectExpression = function (node) {
-    var exprs = [Ptah.push(ptraps.object())]
-    exprs.push(ptraps.set(Ptah.get(), ptraps.wrap("__proto__"), Ptah.member(Ptah.shadow("prototypes"), "object")))
-    var props = {}
-    for (var i=0; i<node.properties.length; i++) {
-      var key = (node.properties[i].key.type==="Identifier") ? node.properties[i].key.name : String(node.properties[i].key.value)
-      if (node.properties[i].kind === "init") {
-        exprs.push(ptraps.set(Ptah.get(), ptraps.wrap(Ptah.literal(key)), node.properties[i].value))
-      } else {
-        if (!props[key]) { props[key] = Ptah.object(Ptah.property("configurable", Ptah.literal(true)), Ptah.property("enumerable", Ptah.literal(true))) }
-        props[key].properties.push(Ptah.property(node.properties[i].kind, node.properties[i].value))
-      } 
-    }
-    for (key in prop) { exprs.push(ptraps.define(Ptah.get(), Ptah.literal(key), props[key])) }
-    exprs.push(Ptah.pop())
-    return Ptah.sequence(exprs)
+  exprs.ObjectExpression = ptrap.wrap
+
+  // function (ID) {} >>> aran.traps.wrap(function (#ID) {})
+  exprs.FunctionExpression = function (node) {
+    node.params.forEach(escape_id)
+    return ptrap.wrap(node)
   }
 
-  // cf visit_fct
-  exprs.FunctionExpression = visit_fct
-
+  exprs.sequence = Util.identity
+  
   // void EXPR           >>> aran.traps.unary("void", EXPR)
-  // delete ID           >>> aran.traps.delete("delete", aran.global, "ID")
-  // delete EXPR.ID      >>> aran.traps.delete("delete", EXPR, "ID")
-  // delete EXPR1[EXPR2] >>> aran.traps.delete("delete", EXPR1, EXPR2)
-  // delete EXPR         >>> aran.traps.delete("delete", EXPR)
+  // delete EXPR1[EXPR2] >>> aran.traps.delete(EXPR1, EXPR2)
+  // etc...
   exprs.UnaryExpression = function (node) {
-    if (node.operator !== "delete") { return ptraps.unary(Ptah.literal(node.operator), node.argument) }
-    if (node.argument.type === "Identifier") { return ptraps.delete(Ptah.shadow("global"), Ptah.literal(node.argument.name)) }
-    if (node.argument.type === "MemberExpression") {
+    if (node.operator === "delete" && node.argument.type === "MemberExpression") {
       compute_member(node.argument)
-      return ptraps.delete(node.argument.object, node.argument.property)
+      return ptrap.delete(node.argument.object, node.argument.property)
     }
-    return node.argument
+    return ptrap.unary(node.operator, node.argument)
+    // TODO typeof ID && delete ID
   }
 
   // EXPR1 OP EXPR2 >>> aran.traps.binary("OP", EXPR1, EXPR2)
   exprs.BinaryExpression = function (node) {
-    return ptraps.binary(Ptah.literal(node.operator), node.left, node.right)
+    return ptrap.binary(node.operator, node.left, node.right)
   }
 
-  // ID = <EXPR>                >>> $ID = <EXPR>
-  // ID OP= <EXPR>              >>> $ID = aran.traps.binary("OP", $ID, <EXPR>)
+  // ID = <EXPR>                >>> #ID = <EXPR>
+  // ID OP= <EXPR>              >>> #ID = aran.traps.binary("OP", #ID, <EXPR>)
   // <EXPR1>[<EXPR2>] = <EXPR3> >>> aran.traps.set(<EXPR1>, <EXPR2>, <EXPR3>)
   // <EXPR1>[<EXPR2>] OP= <EXPR3> >>> aran.traps.set(aran.push1(EXPR1), aran.push2(EXPR2), aran.traps.binary("OP", aran.trap.get(aran.pop1(), aran.pop2()), EXPR3))
   exprs.AssignmentExpression = function (node) {
     if (node.left.type === "Identifier") {
-      node.left.name = "$"+node.left.name
+      escape_id(node.left)
       if (node.operator === "=") { return node }
     } else if (node.left.type === "MemberExpression") {
       compute_member(node.left)
-      if (node.operator === "=") { return ptraps.set(node.left.object, node.left.property, node.right) }
+      if (node.operator === "=") { return ptrap.set(node.left.object, node.left.property, node.right) }
     } else { throw new Error(node) }
-    var op = Ptah.literal(node.operator.replace("=", ""))
+    var op = node.operator.replace("=", "")
     if (node.left.type === "Identifier") {
       node.operator = "="
-      node.right = ptraps.binary(op, Ptah.identifier(node.left.name), node.right)
+      node.right = ptrap.binary(op, Ptah.identifier(node.left.name), node.right)
       return node
     }
-    return ptraps.set(Ptah.push1(node.left.object), Ptah.push2(node.left.property), ptraps.binary(op, ptraps.get(Ptah.pop1(), Ptah.pop2()), node.right))
+    return ptraps.set(Pstack.push1(node.left.object), Pstack.push2(node.left.property), ptrap.binary(op, ptrap.get(Pstack.pop1(), Pstack.pop2()), node.right))
   }
 
-  // ++ID           >>> $ID=aran.traps.binary("+", $ID, 1)
-  // ID++           >>> (aran.push($ID), $ID=aran.traps.binary("+", $ID, 1), aran.pop())
-  // ++EXPR1[EXPR2] >>> aran.traps.set(aran.push1(EXPR1), aran.push2(EXPR2), aran.traps.binary("+", aran.traps.get(aran.pop1(), aran.pop2()), 1))
+  // ++ID           >>> $ID=aran.traps.binary("+", #ID, aran.traps.wrap(1))
+  // ID++           >>> (#ID = arent.traps.binary("+", aran.push(#ID), aran.traps.wrap(1), aran.pop())
+  // ++EXPR1[EXPR2] >>> aran.traps.set(
+  //   aran.push1(EXPR1),
+  //   aran.push2(EXPR2),
+  //   aran.traps.binary("+", aran.traps.get(aran.pop1(), aran.pop2()), aran.traps.wrap(1)))
   // EXPR1[EXPR2]++ >>> (
-  //   aran.push3(aran.traps.get(aran.push1(EXPR1), aran.push2(EXPR2))),
-  //   aran.traps.set(aran.pop1(), aran.pop2(), aran.traps.binary("+", aran.get3(), 1)),
+  //   aran.traps.set(
+  //     aran.push1(EXPR1),
+  //     aran.push2(EXPR2),
+  //     aran.push3(aran.traps.binary("+", aran.push3(aran.traps.get(aran.pop1(), aran.pop2())), aran.traps.wrap(1))),
   //   aran.pop3()
   // )
   // etc...
   exprs.UpdateExpression = function (node) {
-    var op = literal(node.operator)
+    var op = node.operator
     if (node.argument.type === "Identifier") {
-      function id () { return Ptah.identifier("$"+node.argument.name) }
-      var ass = Ptah.assignment(id(), ptraps.binary(op, id(), Ptah.literal(1)))
-      if (node.prefix) { return ass }
-      return sequence([Ptah.push(id()), ass, Ptah.pop()])
+      function id () { return Ptah.identifier(escape(node.argument.name)) }
+      if (node.prefix) { return Ptah.assignment(id(), ptrap.binary(op, id(), ptrap.wrap(Ptah.literal(1)))) }
+      return Ptah.sequence([Ptah.assignment(id(), ptrap.binary(op, Pstack.push(id()), ptrap.wrap(Ptah.literal(1)))), Pstack.pop()])
     }
     if (!node.argument.type === "MemberExpression") { throw new Error (node) }
     compute_member(node.argument)
-    if (node.prefix) {
-      var val = ptraps.binary(op, ptraps.get(Ptah.pop1(), Ptah.pop2()), Ptah.literal(1))
-      return ptraps.set(Ptah.push1(node.argument.object), Ptah.push2(node.argument.property), val)
-    }
-    var val = ptraps.get(Ptah.push1(node.argument.object), Ptah.push2(node.argument.property))
-    var ass = ptraps.set(Ptah.pop1(), Ptah.pop2(), ptraps.binary(op, Ptah.get3(), 1))
-    return sequence([Ptah.push3(val), ass, Ptah.pop3()])
+    var val = ptrap.binary(op, ptrap.get(Pstack.pop1(), Pstack.pop2()), ptrap.wrap(Ptah.literal(1)))
+    if (node.prefix) { return ptrap.set(Pstack.push1(node.argument.object), Pstack.push2(node.argument.property), val) }
+    return Ptah.sequence([ptrap.set(Pstack.push1(node.argument.object), Pstack.push2(node.argument.property), Pstack.push3(val)), Pstack.pop3()])
   }
 
-  // EXPR1 && EXPR2 >>> (aran.push(EXPR1), aran.traps.unwrap(aran.get()) ? (aran.pop(),EXPR2) : aran.pop())
-  // EXPR1 || EXPR2 >>> (aran.push(EXPR1), aran.traps.unwrap(aran.get()) ? aran.pop() : (aran.pop(),EXPR2))
+  // EXPR1 || EXPR2 >>> (aran.traps.booleanize(aran.push(EXPR1)) ? aran.pop() : (aran.pop(),EXPR2))
+  // EXPR1 && EXPR2 >>> (aran.traps.booleanize(aran.push(EXPR1)) ? (aran.pop(),EXPR2) : aran.pop())
   exprs.LogicalExpression = function (node) {
-    var test = ptraps.unwrap(Ptah.get())
-    var cons = sequence([Path.pop(), node.right])
-    var alt = Ptah.pop()
-    if (node === "||") { var saved = cons; cons=alt; alt=saved }
-    return Ptah.sequence([Ptah.push(node.left), Ptah.conditional(test, cons, alt)])
+    var test = ptrap.booleanize(Pstack.push(node.left))
+    var seq = Ptah.sequence([Pstack.pop(), node.right])
+    if (node.operator === "||") { return Ptah.conditional(test, Pstack.pop(), seq) }
+    if (node.operator === "&&") { return Ptah.conditional(test, seq, Pstack.pop()) }
+    throw new Error(node)
   }
 
-  // EXPR1 ? EXPR2 : EXPR3 >>> aran.traps.unwrap(EXPR1) ? EXPR2 : EXPR3
+  // EXPR1 ? EXPR2 : EXPR3 >>> aran.traps.booleanize(EXPR1) ? EXPR2 : EXPR3
   exprs.ConditionalExpression = function (node) {
-    node.test = ptraps.unwrap(node.test)
+    node.test = ptrap.booleanize(node.test)
     return node
   }
 
-  // new EXPR(EXPR1, EXPR2) >>>
-  //   aran.traps.set(aran.push1(aran.traps.object()), aran.traps.wrap("__proto__"), aran.traps.get(aran.push2(EXPR), aran.traps.wrap("prototype")))
-  //   aran.push3(aran.traps.apply(aran.pop2(), aran.get1(), [EXPR1, EXPR2]))
-  //   aran.traps.unwrap(aran.traps.binary("===", aran.traps.wrap("object"), aran.traps.unary("typeof", aran.traps.get3())))
-  //     ? aran.get3() ? (aran.pop1(), aran.pop3())  : (aran.pop3(), aran.pop1())
-  //     : (aran.pop3(), aran.pop1())
-  // etc..
+  // new EXPR(EXPR1, EXPR2) >>> aran.traps.new(EXPR, [EXPR1, EXPR2])
+  // etc...
   exprs.NewExpression = function (node) {
-    var set_proto = ptraps.set(Ptah.push1(ptraps.object()), ptraps.wrap("__proto__"), ptraps.get(Ptah.push2(node.callee), ptraps.wrap("prototype")))
-    var construct = ptraps.apply(Ptah.pop2(), Ptah.pop1(), node.arguments)
-    var test = ptraps.unwrap(ptraps.binary(Ptah.literal("==="), ptraps.wrap(Ptah.literal("object")), ptraps.unary(Ptah.literal("typeof"), Ptah.get3())))
-    var cons = Ptah.conditional(Ptah.get3(), Ptah.sequence([Ptah.pop1(), Ptah.pop3()]), Ptah.sequence([Ptah.pop3(), Ptah.pop1()]))
-    var alte = Ptah.sequence([Ptah.pop3(), Ptah.pop1()])
-    return Ptah.sequence([set_proto, construct, Ptah.conditional(test, cons, alt)])
+    return ptrap.new(node.callee, node.arguments)
   }
 
-  // eval(EXPR1, EXPR2) >>> (aran.push([EXPR1, EXPR2]), ($eval===aran.seval) ? eval(aran.compile(aran.unwrap(aran.pop()[0]))) : aran.traps.call($eval, aran.pop()))
-  // EXPR(EXPR1, EXPR2) >>> aran.traps.apply(EXPR, aran.global, [EXPR1, EXPR2])
+  // EXPR(EXPR1, EXPR2) >>> aran.traps.apply(EXPR, aran.undefined, [EXPR1, EXPR2])
   // EXPR1[EXPR2](EXPR3, EXPR4) >>> aran.traps.apply(aran.traps.get(aran.push(EXPR1), EXPR2), aran.pop(), [EXPR1, EXPR2])
+  // eval(EXPR1, EXPR2) >>> (aran.push([EXPR1, EXPR2]), (eval===aran.seval) ? eval(aran.compile(aran.unwrap(aran.pop()[0]))) : aran.traps.call($eval, aran.pop()))
   // etc...
   exprs.CallExpression = function (node) {
     if (node.callee.type === "Identifier" && node.callee.name === "eval") {
@@ -429,27 +395,27 @@ module.exports = function (aran) {
       // else { var alt = call(member(unwrap(identifier("$eval")), "apply"), [identifier("window"), pop()]) }
       // return sequence([push(array(node.arguments)), conditional(test, cons, alt)])
     }
-    if (node.callee.type !== "MemberExpression") { return ptraps.apply(node.callee, Ptah.identifier("undefined"), node.arguments) }
+    if (node.callee.type !== "MemberExpression") { return ptrap.apply(node.callee, pshadow("undefined"), node.arguments) }
     compute_member(node.callee)
-    return ptraps.apply(ptraps.get(Ptah.push(node.callee.object), node.callee.property), Ptah.pop(), node.arguments)
+    return ptrap.apply(ptrap.get(Pstack.push(node.callee.object), node.callee.property), Pstack.pop(), node.arguments)
   }
 
   // EXPR.ID      >>> aran.traps.get(EXPR, "ID")
   // EXPR1[EXPR2] >>> aran.traps.get(EXPR1, EXPR2)
   exprs.MemberExpression = function (node) {
     compute_member
-    return ptraps.get(node.object, node.property)
+    return ptrap.get(node.object, node.property)
   }
 
   // ID >>> $ID
   exprs.Identifier = function (node) {
-    node.name = "$"+node.name
+    node.name = escape(node.name)
     return node
   }
 
   // LIT >>> aran.traps.wrap(LIT)
   exprs.Literal = function (node) {
-    return ptraps.wrap(node)
+    return ptrap.wrap(node)
   }
 
 }

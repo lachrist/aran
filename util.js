@@ -21,3 +21,7 @@ exports.inject = function (o1, o2) {
   for (k in o2) { delete o2[k] }
   for (k in o1) { o2[k] = o1[k] }
 }
+
+exports.identity = function (x) { return x }
+
+exports.nil = function () {}
