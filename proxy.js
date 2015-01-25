@@ -56,7 +56,7 @@ module.exports = function (aran) {
   var booleanize = aran.traps.booleanize || Util.identity
 
   var has = function (o, k) { return unescape(k) in o }
-  if (aran.traps.binary) { has = function (o, k) { return booleanize(aran.traps.binary("in", k, o)) } }
+  if (aran.traps.binary) { has = function (o, k) { return booleanize(aran.traps.binary("in", unescape(k), o)) } }
 
   var get = function (o, k) { return o[unescape(k)] }
   if (aran.traps.get) { get = function (o, k) { return aran.traps.get(o, wrap(unescape(k))) } }

@@ -8,19 +8,21 @@ var Proxy = require("./proxy.js")
 
 module.exports = function (sandbox, hooks, traps) {
 
-  var aran = {sandbox:sandbox, hooks:hooks, traps:traps, global:this, undefined:undefined}
+  var aran = {sandbox:sandbox, hooks:hooks, traps:traps, undefined:undefined}
+  if (typeof window !== "undefined") { aran.global = window }
+  else if (typeof global !== "undefined") { aran.global = global }
+  else { throw new Error("Could not find the global object") }
 
   Stack(aran)
   Compile(aran)
   Proxy(aran)
 
   return function (code) {
-    var o = {compiled:aran.compile(code)}
-    aran.compiled = o.compiled
+    aran.compiled = aran.compile(code)
+    if (aran.global.compiled !== undefined) { aran.global.compiled = aran.compiled }
     aran.mark()
-    try { o.result = eval("with (aran.proxy) { "+aran.compiled+" }") } catch (e) { o.error = e }
-    aran.unmark()
-    return o
+    try { var result = eval("with (aran.proxy) { "+aran.compiled+" }") } finally { aran.unmark() }
+    return result
   }
 
 }

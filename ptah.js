@@ -127,6 +127,14 @@ exports.try = function (try_stmts, catch_clause, finally_stmts) {
   }
 }
 
+exports.unary = function (operator, argument) {
+  return {
+    type: "UnaryExpression",
+    operator: operator,
+    argument: argument
+  }
+}
+
 exports.binary = function (operator, left, right) {
   return {
     type: "BinaryExpression",

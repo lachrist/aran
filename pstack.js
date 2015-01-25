@@ -1,12 +1,12 @@
 
 var Ptah = require("./ptah.js")
 
-function shadow (names, args) { return Ptah.call(Ptah.member(Ptah.identifier("aran"), name), args) }
+function shadow (name, args) { return Ptah.call(Ptah.member(Ptah.identifier("aran"), name), args) }
 
 exports.mark = function () { return shadow("mark", []) }
 exports.unmark = function () { return shadow("unmark", []) }
 
-exports.push = function (x) { return shadow("push" [x]) }
+exports.push = function (x) { return shadow("push", [x]) }
 exports.push1 = function (x) { return shadow("push1", [x]) }
 exports.push2 = function (x) { return shadow("push2", [x]) }
 exports.push3 = function (x) { return shadow("push3", [x]) }

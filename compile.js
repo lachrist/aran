@@ -15,10 +15,15 @@ module.exports = function (aran) {
 
   aran.compile = function (code) {
     var ast = Esprima.parse(code)
-    ast.body.forEach(visit_stmt)
-    if (aran.hooks.program) { ast.body.unshift(Ptah.exprstmt(phook("Program", [Ptah.literal(ast.body.length)]))) }
+    var hook = phook("Program", [Ptah.literal(ast.body.length)])
+    Util.prepend(Util.flaten(ast.body.map(visit_stmt)), ast.body)
+    if (aran.hooks.program) { ast.body.unshift(Ptah.exprstmt(hook)) }
     var errors = Esvalid.errors(ast)
-    if (errors.length > 0) { throw errors[0] }
+    if (errors.length > 0) {
+      errors[0].message = "Aran internal compilation error "+errors[0].message
+      console.dir(ast)
+      throw errors[0]
+    }
     return Escodegen.generate(ast)
   }
 
@@ -58,48 +63,41 @@ module.exports = function (aran) {
   // Visitors //
   //////////////
 
-  var visit_stmt
-  var visit_expr
-  (function () {
-    visit_stmt = function (node) { return visit(node, true) }
-    visit_expr = function (node) { return visit(node, false) }
-    function visit (node, is_stmt) {
-      var parts = Miley[node.type](node)
-      // Hooks //
-      if (aran.hooks[node.type]) {
-        var copy = Util.extract(node)
-        var hook = phook(copy.type, parts.infos.map(Ptah.nodify))
-        if (is_stmt) {
-          node.type = "BlockStatement"
-          node.body = [Ptah.exprstmt(hook), copy]
-        } else {
-          node.type = "SequenceExpression"
-          node.expressions = [hook, copy]
-        }
-        node = copy
-      }
-      // Declarations //
-      if (node.type === "FunctionExpression") { var body = node.body }
-      if (node.type === "FunctionDeclaration") {
-        var body = node.body
-        var decl = node
-        node = Util.extract(node)
-        decl.type = "EmptyStatement"
-      }
-      // Traps //
-      if (is_stmt) { stmts[node.type](node) }
-      else { Util.inject(exprs[node.type](Util.extract(node)), node) }
-      // Recursion //
-      parts.exprs.forEach(visit_expr)
-      var decls = Util.flaten(parts.stmts.map(visit_stmt))
-      if (body) {
-        Util.prepend(decls, body)
-        if (decl) { return [node] }
-        return []
-      }
-      return decls
+  function visit_expr (node) {
+    var parts = Miley[node.type](node)
+    if (aran.hooks[node.type]) {
+      var copy = Util.extract(node)
+      node.type = "SequenceExpression"
+      node.expressions = [phook(copy.type, parts.infos.map(Ptah.nodify)), copy]
+      node = copy
     }
-  } ())
+    var body = (node.type === "FunctionDeclaration") ? node.body : null
+    Util.inject(exprs[node.type](Util.extract(node)), node)
+    parts.exprs.forEach(visit_expr)
+    var decls = parts.stmts.forEach(visit_stmt)
+    if (!body) { return decls }
+    Util.prepend(decls, node.body)
+    return []
+  }
+
+  function visit_stmt (node) {
+    var parts = Miley[node.type](node)
+    if (aran.hooks[node.type]) {
+      var copy = Util.extract(node)
+      node.type = "BlockStatement"
+      node.body = [Ptah.exprstmt(phook(copy.type, parts.infos.map(Ptah.nodify))), copy]
+      node = copy
+    }
+    var body = (node.type === "FunctionDeclaration") ? node.body : null
+    stmts[node.type](node)
+    parts.exprs.forEach(visit_expr)
+    var decls = Util.flaten(parts.stmts.map(visit_stmt))
+    if (!body) { return decls }
+    Util.prepend(decls, node.body)
+    copy = Util.extract(node)
+    node.type = "EmptyStatement"
+    return [copy]
+  }
 
   /////////////////////////
   // Statement Compilers //
@@ -255,8 +253,9 @@ module.exports = function (aran) {
   // function ID (ID1,ID2) {} >>> var #ID = aran.traps.wrap(function (#ID1, #ID2) {})
   // etc...
   stmts.FunctionDeclaration = function (node) {
+    node.type = "FunctionExpression"
     node.params.forEach(escape_id)
-    Util.inject(Ptah.declaration(escape(node.id.name), ptrap.wrap(extract(node))), node)
+    Util.inject(Ptah.declaration(escape(node.id.name), ptrap.wrap(Util.extract(node))), node)
   }
 
   // var ID1=EXPR1, ID2=EXPR2 >>> var #ID1=EXPR1, #ID2=EXPR2
@@ -340,12 +339,12 @@ module.exports = function (aran) {
   //   aran.traps.set(
   //     aran.push1(EXPR1),
   //     aran.push2(EXPR2),
-  //     aran.push3(aran.traps.binary("+", aran.push3(aran.traps.get(aran.pop1(), aran.pop2())), aran.traps.wrap(1))),
+  //     aran.traps.binary("+", aran.push3(aran.traps.get(aran.pop1(), aran.pop2())), aran.traps.wrap(1))),
   //   aran.pop3()
   // )
   // etc...
   exprs.UpdateExpression = function (node) {
-    var op = node.operator
+    var op = node.operator.substring(1)
     if (node.argument.type === "Identifier") {
       function id () { return Ptah.identifier(escape(node.argument.name)) }
       if (node.prefix) { return Ptah.assignment(id(), ptrap.binary(op, id(), ptrap.wrap(Ptah.literal(1)))) }
@@ -353,9 +352,20 @@ module.exports = function (aran) {
     }
     if (!node.argument.type === "MemberExpression") { throw new Error (node) }
     compute_member(node.argument)
-    var val = ptrap.binary(op, ptrap.get(Pstack.pop1(), Pstack.pop2()), ptrap.wrap(Ptah.literal(1)))
-    if (node.prefix) { return ptrap.set(Pstack.push1(node.argument.object), Pstack.push2(node.argument.property), val) }
-    return Ptah.sequence([ptrap.set(Pstack.push1(node.argument.object), Pstack.push2(node.argument.property), Pstack.push3(val)), Pstack.pop3()])
+    if (node.prefix) {
+      return ptrap.set(
+        Pstack.push1(node.argument.object),
+        Pstack.push2(node.argument.property),
+        ptrap.binary(op, ptrap.get(Pstack.pop1(), Pstack.pop2()), ptrap.wrap(Ptah.literal(1)))
+      )
+    }
+    return Ptah.sequence([
+      ptrap.set(
+        Pstack.push1(node.argument.object),
+        Pstack.push2(node.argument.property),
+        ptrap.binary(op, Pstack.push3(ptrap.get(Pstack.pop1(), Pstack.pop2())), ptrap.wrap(Ptah.literal(1)))),
+      Pstack.pop3()
+    ])
   }
 
   // EXPR1 || EXPR2 >>> (aran.traps.booleanize(aran.push(EXPR1)) ? aran.pop() : (aran.pop(),EXPR2))
@@ -395,6 +405,7 @@ module.exports = function (aran) {
       // else { var alt = call(member(unwrap(identifier("$eval")), "apply"), [identifier("window"), pop()]) }
       // return sequence([push(array(node.arguments)), conditional(test, cons, alt)])
     }
+    if (!aran.traps.apply) { return node }
     if (node.callee.type !== "MemberExpression") { return ptrap.apply(node.callee, pshadow("undefined"), node.arguments) }
     compute_member(node.callee)
     return ptrap.apply(ptrap.get(Pstack.push(node.callee.object), node.callee.property), Pstack.pop(), node.arguments)
@@ -403,7 +414,7 @@ module.exports = function (aran) {
   // EXPR.ID      >>> aran.traps.get(EXPR, "ID")
   // EXPR1[EXPR2] >>> aran.traps.get(EXPR1, EXPR2)
   exprs.MemberExpression = function (node) {
-    compute_member
+    compute_member(node)
     return ptrap.get(node.object, node.property)
   }
 
