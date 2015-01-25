@@ -43,8 +43,6 @@
 
 var Util = require("./util.js")
 
-if (!Proxy) { throw new Error("Proxies (http://soft.vub.ac.be/~tvcutsem/proxies/) are required for aran to work...") }
-
 function unescape (s) {
   if (/^\$+aran$/.test(s)) { return s.substring(1) }
   return s
