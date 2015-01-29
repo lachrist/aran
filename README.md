@@ -85,6 +85,8 @@ Function creation | `function(Function)` | `function () {}` | `aran.traps.functi
 Regexp creation | `regexp(Regexp)` | `/abc/g` | `aran.traps.regexp(/abc/g)`
 Conversion to boolean | `booleanize(Test, value)` | `x?:y:z` | `aran.traps.booleanize('?:', x)?y:z`
 Conversion to string | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
+Throw an exception | `throw(value)` | `throw x` | aran.traps.throw(x)
+Catch an exception | `catch(value)` | `try {} catch (e) {}` | `try {} catch (e) { e = aran.traps.catch(e) }` 
 Unary operation | `unary(Operator, argument)` | `!x` | `aran.traps.unary('!', x)`
 Binary operation | `binary(Operator, left, right)` | `x+y` | `aran.traps.binary('+', x, y)`
 Function application | `apply(function, this, Arguments)` | `f(x, y)` | `aran.traps.apply(f, undefined, [x,y])`
