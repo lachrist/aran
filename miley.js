@@ -11,19 +11,19 @@
 //
 // [is_identifier, name]
 //
-// ID             >>> [true, "ID"]
-// <expr>.ID      >>> [false, "ID"]
-// <expr>[<expr>] >>> [false, null]
+// ID             >>> ["ID", null]
+// <expr>.ID      >>> [null, "ID"]
+// <expr>[<expr>] >>> [null, null]
 function left (node, exprs) {
-  if (node.type === "Identifier") { return [true, node.name] }
+  if (node.type === "Identifier") { return [node.name, null] }
   if (node.type !== "MemberExpression") { throw new Error(node) }
   exprs.push(node.object)
   if (node.computed) {
     exprs.push(node.property)
-    return [false, null]
+    return [null, null]
   }
   if (node.property.type !== "Identifier") { throw new Error(node) }
-  return [false, node.property.name]
+  return [null, node.property.name]
 }
 
 // Helper for variable declarations used in:

@@ -36,41 +36,43 @@ As stated above, the sandbox parameter will act in all point as if it was the gl
 
 Hooks are functions that are called before executing statement / expression of a given Mozilla-Parser type as described at https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API. Hooks only receive static information and their return value is never used. All hooks are optional.
 
-* `Program(StmtCounter)`
-* `EmptyStatement()`
-* `BlockStatement(StmtCounter)`
-* `ExpressionStatement()`
-* `IfStatement(HasAlternate)`
-* `LabeledStatement(Label)`
-* `BreakStatement(Label)`
-* `ContinueStatement(Label)`
-* `WithStatement()`
-* `SwitchStatement`
-* `ReturnStatement(HasValue)`
-* `ThrowStatement()`
-* `TryStatement`
-* `WhileStatement()`
-* `DoWhileStatement()`
-* `ForStatement(HasInit, HasTest, HasUpdate, Declarations)`
-* `ForInStatement`
-* `FunctionDeclaration(Name, Parameters, BodyLength)`
-* `VariableDeclaration(Declarations)`
-* `ThisExpression()`
-* `ArrayExpression`
-* `ObjectExpression`
-* `FunctionExpression(Name, Parameters, BodyLength)`
-* `SequenceExpression(ExprCounter)`
-* `UnaryExpression(Operator, MaybeIdentifier)`
-* `BinaryExpression(Operator)`
-* `AssignmentExpression(MaybeIdentifier)`
-* `UpdateExpression(MaybeIdentifier)`
-* `LogicalExpression(Operator)`
-* `ConditionalExpression()`
-* `NewExpression(ArgumentCounter)`
-* `CallExpression(ArgumentCounter)`
-* `MemberExpression(MaybeProperty)`
-* `Identifier(Name)`
-* `Literal(Value)`
+Hook | Target | Inserted hook
+:----|:-------|:-------------
+`Program(StmtCounter)` | `STMT1 STMT2` | `aran.hooks.Program(2)`
+`EmptyStatement()` | `;` | `aran.traps.EmptyStatement()`
+`BlockStatement(StmtCounter)` | `{STMT1 STMT2}` | `aran.hooks.BlockStatement(2)`
+`ExpressionStatement()` | TODO | TODO
+`IfStatement(HasAlternate)` | `if (x) STMT` | `aran.hooks.IfStatement(false)`
+`LabeledStatement(Label)` | `ID:STMT` | `aran.hooks.LabeledStatement(ID)`
+`BreakStatement([Label])` | `break;` | `aran.hooks.BreakStatement(null)`
+`ContinueStatement([Label])` | `continue ID;` | `aran.hooks.ContinueStatement(ID)`
+`WithStatement()` | `with(EXPR) STMT` | `aran.hooks.WithStatement()`
+`SwitchStatement(Cases::(isDefault, Length))` | `switch (EXPR1) { case EXPR2: STMT1 STMT2 default: STMT3 }` |  `aran.hooks.SwitchStatement([[false, 2], [true, 1]])`
+`ReturnStatement(HasValue)` | `return EXPR;` | `aran.hooks.ReturnStatement(true)`
+`ThrowStatement()` | `throw EXPR;` | `aran.hooks.ThrowStatement()`
+`TryStatement(Parameter, [TryLength], [CatchLength]; [FinallyLength])` | `try {STMT1 STMT2} catch (ID) {}` | `aran.hooks.TryStatement(ID, 2, 0, undefined)`
+`WhileStatement()` | `while(EXPR) STMT` | `aran.hooks.WhileStatement()`
+`DoWhileStatement()` | do STMT while(EXPR) | `aran.hooks.DoWhileStatement`
+`ForStatement(HasInit, HasTest, HasUpdate, Declarations::(Identifier, HasInitializer))` | `for (var ID1;ID2=EXPR1; ; EXPR) STMT` | aran.hooks.ForStatement(true, false, true, [[ID1, false], [ID2, true]])`
+`ForInStatement([Identifier], [Property])` | `for (EXPR1.ID in EXPR2) STMT` | `aran.hooks.ForInStatement(undefined, ID)` 
+`FunctionDeclaration([Name], Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', [ID1, ID2], 2)`
+`VariableDeclaration(Declarations)` | `var ID1, ID2=EXPR;` | `aran.hooks.VariableDeclaration([[ID1, false], [ID2, true]])`
+`ThisExpression()` | `this` | aran.hooks.ThisExpression()
+`ArrayExpression(Elements::(HasInitializer))` | `[EXPR1, , EXPR2]` | aran.hooks.ArrayExpression()
+`ObjectExpression(Properties::(Name, Kind))` | TODO | TODO
+`FunctionExpression(Name, Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', [ID1, ID2], 2)`
+`SequenceExpression(ExprCounter)` | `(EXPR1, EXPR2)` | `aran.hooks.SequenceExpression(2)`
+`UnaryExpression(Operator, [Identifier], [Property])` | `!EXPR` | `aran.hooks.UnaryExpression('!', undefined, undefined)`
+`BinaryExpression(Operator)` | `EXPR1 + EXPR2` | aran.hooks.BinaryExpression('+', EXPR1, EXPR2)`
+`AssignmentExpression(Operator, [Identifier], [Property])` | `EXPR1.ID += EXPR2` | `aran.hooks.AssignmentExpression('+=', undefined, ID)` 
+`UpdateExpression(isPrefix, [Identifier], [Property])` | `ID++` | `aran.hooks.UpdateExpression(false, ID, undefined)`
+`LogicalExpression(Operator)` | `EXPR1 || EXPR2` | `aran.hooks.LogicalExpression('||')`
+`ConditionalExpression()` | EXPR1 ? EXPR2 : EXPR2 | `aran.hooks.ConditionalExpression()`
+`NewExpression(ArgumentCounter)` | new EXPR1(EXPR2, EXPR3) | `aran.hooks.NewExpression(2)`
+`CallExpression(ArgumentCounter)` | TODO | TODO
+`MemberExpression([Property])` | EXPR[EXPR] | `aran.hooks.MemberExpression(undefined)`
+`Identifier(Name)` | `ID` | `aran.hooks.Identifier(ID)`
+`Literal(Value)` | `'foo'` | `aran.hooks.Literal('foo')`
 
 ## Traps
 
@@ -85,7 +87,7 @@ Function creation | `function(Function)` | `function () {}` | `aran.traps.functi
 Regexp creation | `regexp(Regexp)` | `/abc/g` | `aran.traps.regexp(/abc/g)`
 Conversion to boolean | `booleanize(Test, value)` | `x?:y:z` | `aran.traps.booleanize('?:', x)?y:z`
 Conversion to string | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
-Throw an exception | `throw(value)` | `throw x` | aran.traps.throw(x)
+Throw an exception | `throw(value)` | `throw x` | `aran.traps.throw(x)`
 Catch an exception | `catch(value)` | `try {} catch (e) {}` | `try {} catch (e) { e = aran.traps.catch(e) }` 
 Unary operation | `unary(Operator, argument)` | `!x` | `aran.traps.unary('!', x)`
 Binary operation | `binary(Operator, left, right)` | `x+y` | `aran.traps.binary('+', x, y)`
@@ -126,7 +128,7 @@ Additional remarks:
 
     Moreover the `length` property of JavaScript arrays has a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
 
-* `array`: user-defined functions verify below assertions:
+* `function`: user-defined functions verify below assertions:
 
     ```javascript
     var f = function (@PARAMS) { @BODY };
