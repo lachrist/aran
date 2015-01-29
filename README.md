@@ -53,23 +53,23 @@ Hook | Target | Hook inserted before
 `TryStatement(Parameter, MaybeTryLength, MaybeCatchLength; MaybeFinallyLength)` | `try {STMT1 STMT2} catch (ID) {}` | `aran.hooks.TryStatement('ID', 2, 0, undefined)`
 `WhileStatement()` | `while(EXPR) STMT` | `aran.hooks.WhileStatement()`
 `DoWhileStatement()` | `do STMT while(EXPR)` | `aran.hooks.DoWhileStatement()`
-`ForStatement(HasInit, HasTest, HasUpdate, Declarations::[Identifier, HasInitializer])` | `for (var ID1;ID2=EXPR1; ; EXPR) STMT` | `aran.hooks.ForStatement(true, false, true, [['ID1', false], ['ID2', true]])`
+`ForStatement(HasInit, HasTest, HasUpdate, MaybeDeclarations::[Identifier, HasInitializer])` | `for (var ID1, ID2=EXPR1; ; EXPR) STMT` | `aran.hooks.ForStatement(true, false, true, [['ID1', false], ['ID2', true]])`
 `ForInStatement(MaybeIdentifier, MaybeProperty)` | `for (EXPR1.ID in EXPR2) STMT` | `aran.hooks.ForInStatement(undefined, 'ID')` 
 `FunctionDeclaration(MaybeName, Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', ['ID1', 'ID2'], 2)`
 `VariableDeclaration(Declarations::[Identifier, HasInitializer])` | `var ID1, ID2=EXPR;` | `aran.hooks.VariableDeclaration([['ID1', false], ['ID2', true]])`
 `ThisExpression()` | `this` | aran.hooks.ThisExpression()
 `ArrayExpression(Elements::[HasInitializer])` | `[EXPR1, , EXPR2]` | aran.hooks.ArrayExpression()
-`ObjectExpression(Properties::(Name, Kind))` | TODO | TODO
+`ObjectExpression` | to-be-determined | to-be-determined
 `FunctionExpression(Name, Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', ['ID1', 'ID2'], 2)`
-`SequenceExpression(ExprCounter)` | `(EXPR1, EXPR2)` | `aran.hooks.SequenceExpression(2)`
+`SequenceExpression(Length)` | `(EXPR1, EXPR2)` | `aran.hooks.SequenceExpression(2)`
 `UnaryExpression(Operator, MaybeIdentifier, MaybeProperty)` | `!EXPR` | `aran.hooks.UnaryExpression('!', undefined, undefined)`
-`BinaryExpression(Operator)` | `EXPR1 + EXPR2` | aran.hooks.BinaryExpression('+', EXPR1, EXPR2)`
+`BinaryExpression(Operator)` | `EXPR1 + EXPR2` | `aran.hooks.BinaryExpression('+')`
 `AssignmentExpression(Operator, MaybeIdentifier, MaybeProperty)` | `EXPR1.ID += EXPR2` | `aran.hooks.AssignmentExpression('+=', undefined, 'ID')` 
-`UpdateExpression(isPrefix, MaybeIdentifier], MaybeProperty)` | `ID++` | `aran.hooks.UpdateExpression(false, 'ID', undefined)`
+`UpdateExpression(isPrefix, MaybeIdentifier, MaybeProperty)` | `ID++` | `aran.hooks.UpdateExpression(false, 'ID', undefined)`
 `LogicalExpression(Operator)` | `EXPR1 || EXPR2` | `aran.hooks.LogicalExpression('||')`
-`ConditionalExpression()` | EXPR1 ? EXPR2 : EXPR2 | `aran.hooks.ConditionalExpression()`
-`NewExpression(ArgumentCounter)` | new EXPR1(EXPR2, EXPR3) | `aran.hooks.NewExpression(2)`
-`CallExpression(ArgumentCounter)` | TODO | TODO
+`ConditionalExpression()` | `EXPR1 ? EXPR2 : EXPR2` | `aran.hooks.ConditionalExpression()`
+`NewExpression(Length)` | `new EXPR1(EXPR2, EXPR3)` | `aran.hooks.NewExpression(2)`
+`CallExpression(Length, isMember, [Property])` | `EXPR1.ID(EXPR2, EXPR3)` | `aran.hooks(2, true, ID)`
 `MemberExpression(MaybeProperty)` | EXPR[EXPR] | `aran.hooks.MemberExpression(undefined)`
 `Identifier(Name)` | `ID` | `aran.hooks.Identifier('ID')`
 `Literal(Value)` | `'foo'` | `aran.hooks.Literal('foo')`
