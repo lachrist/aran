@@ -117,12 +117,12 @@ exports.exprstmt = function (expression) {
   }
 }
 
-exports.try = function (try_stmts, catch_clause, finally_stmts) {
+exports.try = function (try_stmts, catch_param, catch_stmts, finally_stmts) {
   return {
     type: "TryStatement",
-    block: block(try_stmts),
+    block: {type:"BlockStatement", body:try_stmts},
     guardedHandlers: [],
-    handlers: catch_clause?[catch_clause]:[],
+    handlers: catch_param?[{type:"CatchClause", param:catch_param, body:{type:"BlockStatement", body:catch_stmts}}]:[],
     finalizer: finally_stmts?block(finally_stmts):null
   }
 }

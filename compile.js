@@ -166,13 +166,12 @@ module.exports = function (aran) {
     }
   }
 
-  // TODO would like to remove enumerate
-  // for (var ID=EXPR1 in EXPR2) STMT >>> {
-  //   var $ID=EXPR1;
+  // for ([var] ID=EXPR1 in EXPR2) STMT >>> {
+  //   [var] #ID=EXPR1;
   //   aran.push3(aran.traps.enumerate(EXPR2));
   //   try {
   //     for (aran.push(0); aran.get()<aran.get3().length; aran.push(aran.get()+1)) {
-  //       $ID = aran.get3()[aran.get()];
+  //       #ID = aran.get3()[aran.get()];
   //       STMT
   //     }
   //   } finally {
@@ -200,6 +199,20 @@ module.exports = function (aran) {
   //
   // etc...
   // stmts.ForInStatement = function (node) {
+  //   if (node.left.type === "MemberExpression") {
+  //     compute_member(node.left)
+  //     var stmts = []
+  //     stmts.push(Pstack.push1(node.left.object))
+  //     stmts.push(Pstack.push2(node.left.property))
+  //     stmts.push(Pstack.push3(node.right))
+  //     var finally_stmts = []
+  //     finally_stmts.push()
+  //     stmts.push(Ptah.try(), )
+  //     return Ptah.block(stmts)
+  //   }
+
+
+
   //   if (node.left.type === "MemberExpression") {
   //     compute_member(node.left)
   //     var obj = node.left.object

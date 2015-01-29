@@ -78,13 +78,17 @@ Unlike hooks, traps are designed to modify the semantic of the code being analyz
 
 Trigger | Trap | Target | Transformed
 :-------|:-----|:-------|:-----------
-Value creation | `wrap(Value)` | `'foo'` | `aran.traps.wrap('foo')`
+Primitive creation | `primitive(Value)` | `'foo'` | `aran.traps.primitive('foo')`
+Object creation | `object(Object)` | `{a:x}` | `aran.traps.object({a:x})`
+Array creation | `array(Array)` | `[x,y,z]` | `aran.traps.array([x,y,z])`
+Function creation | `function(Function)` | `function () {}` | `aran.traps.function(function () {})`
+Regexp creation | `regexp(Regexp)` | `/abc/g` | `aran.traps.regexp(/abc/g)`
+Conversion to boolean | `booleanize(Test, value)` | `x?:y:z` | `aran.traps.booleanize('?:', x)?y:z`
 Conversion to string | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
-Conversion to boolean | `booleanize(value)` | `x?:y:z` | `aran.traps.booleanize(x)?y:z`
 Unary operation | `unary(Operator, argument)` | `!x` | `aran.traps.unary('!', x)`
 Binary operation | `binary(Operator, left, right)` | `x+y` | `aran.traps.binary('+', x, y)`
 Function application | `apply(function, this, Arguments)` | `f(x, y)` | `aran.traps.apply(f, undefined, [x,y])`
-Instantiation | new(function, Arguments)` | `new F(x, y)` | `aran.traps.new(F, [x,y])`
+Instantiation | `new(function, Arguments)` | `new F(x, y)` | `aran.traps.new(F, [x,y])`
 Property reading | `get(object, property)` | `o[k]` | `aran.traps.get(o, k)`
 Property writing | `set(object, property)` | `o[k] = v` | `aran.traps.set(o, k, v)`
 Property deletion | `delete(object, property)` | `delete o[k]` | `aran.traps.delete(o, k)`
@@ -100,59 +104,95 @@ Accessor property definition | `accessor(object, property, setter, getter)` | `{
 
 Additional remarks:
 
-* The `wrap` trap is invoked whenever a literal value appears in the code ; in ECMAScript5, literal values are:
+* `primitive`: primitive creation arise on the following literals: `null`, `false`, `true`, numbers and strings.
 
-    * Primitives, i.e.: `null`, `false`, `true`, numbers and strings.
+* `object`: literal objects verify the below assertion:
 
-    * Objects (containing wrapped values) which should satisfy the following assertion:
+    ```javascript
+    assert(Object.getPrototypeOf({}) === Object.prototype);
+    ```
 
-        ```javascript
-        assert(Object.getPrototypeOf({}) === Object.prototype);
-        ```
+    Note that ECMAScript5 enables accessor properties to be defined directly within object initializers ; see: defined http://www.ecma-international.org/ecma-262/5.1/#sec-11.1.5. In that case, accessors are unwrapped functions.
 
-        Note that ECMAScript5 enables accessor properties to be defined directly within object initializers ; see: defined http://www.ecma-international.org/ecma-262/5.1/#sec-11.1.5. In that case, accessors are unwrapped functions.
+* `array`: literal arrays verify below assertions:
 
-    * Arrays (containing wrapped values) which should satisfy the following assertions:
+    ```javascript
+    var xs = [];
+    assert(Object.getPrototypeOf(xs) === Array.prototype);
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(xs, 'length')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
+    ```
 
-        ```javascript
-        var xs = [];
-        assert(Object.getPrototypeOf(xs) === Array.prototype);
-        assert(JSON.stringify(Object.getOwnPropertyDescriptor(xs, 'length')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
-        ```
+    Moreover the `length` property of JavaScript arrays has a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
 
-        Moreover the `length` property of JavaScript arrays has a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
+* `array`: user-defined functions verify below assertions:
 
-    * Function which should satisfy the following assertions:
+    ```javascript
+    var f = function (@PARAMS) { @BODY };
+    assert(Object.getPrototypeOf(f) === Function.prototype);
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f, 'length')) === '{"value":@#PARAMS, "writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f, 'prototype')) === '{"value":{},"writable":true,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f.prototype, 'constructor')) === '{"writable":true,"enumerable":false,"configurable":true}');
+    assert(f.prototype.constructor === f);
+    ```
 
-        ```javascript
-        var f = function (@PARAMS) { @BODY };
-        assert(Object.getPrototypeOf(f) === Function.prototype);
-        assert(JSON.stringify(Object.getOwnPropertyDescriptor(f, 'length')) === '{"value":@#PARAMS, "writable":false,"enumerable":false,"configurable":false}');
-        assert(JSON.stringify(Object.getOwnPropertyDescriptor(f, 'prototype')) === '{"value":{},"writable":true,"enumerable":false,"configurable":false}');
-        assert(JSON.stringify(Object.getOwnPropertyDescriptor(f.prototype, 'constructor')) === '{"writable":true,"enumerable":false,"configurable":true}');
-        assert(f.prototype.constructor === f);
-        ```
+    Where `@#PARAMS` is the number of formal parameters.
 
-        Where `@#PARAMS` is the number of formal parameters.
+* `regexp`: literal regular expressions verify below assertions:
 
-    * Regular expression which should statisfy the following assertions:
+    ```javascript
+    var r = /@PATTERN/@FLAGS;
+    assert(Object.getPrototypeOf(r) === Regexp.prototype);
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'global')) === '{"value":@GFLAG,"writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'ignoreCase')) === '{"value":@IFLAG,"writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'multiline')) === '{"value":@MFLAG,"writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'lastIndex')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
+    ```
 
-        ```javascript
-        var r = /@PATTERN/@FLAGS;
-        assert(Object.getPrototypeOf(r) === Regexp.prototype);
-        assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'global')) === '{"value":@GFLAG,"writable":false,"enumerable":false,"configurable":false}');
-        assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'ignoreCase')) === '{"value":@IFLAG,"writable":false,"enumerable":false,"configurable":false}');
-        assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'multiline')) === '{"value":@MFLAG,"writable":false,"enumerable":false,"configurable":false}');
-        assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'lastIndex')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
-        ```
+    Where:
+    * `@GFLAG` is a boolean indicating whether `@FLAGS` contains the character `g`;
+    * `@IFLAG` is a boolean indicating whether `@FLAGS` contains the character `i`;
+    * `@MFLAG` is a boolean indicating whether `@FLAGS` contains the character `m`;
 
-        Where:
-        * `@GFLAG` is a boolean indicating whether `@FLAGS` contains the character `g`;
-        * `@IFLAG` is a boolean indicating whether `@FLAGS` contains the character `i`;
-        * `@MFLAG` is a boolean indicating whether `@FLAGS` contains the character `m`;
+* `booleanize`: valid `Test` parameters are:
+    * `'if'`
+    * `'if-else'`
+    * `'while'`
+    * `'do-while'`
+    * `'for'`
+    * `'?:'`
+    * `'||'`
+    * `'&&'`
 
-* The conversion to string is only used for direct call to `eval` as defined in http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
+* `stringify`: this trap is only call for perofrming direct call to `eval` as defined in http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
 
-* Valid unary operators are: `"-"`, `"+"`, `"!"`, `"~"`, `"typeof"` and `"void"`
+* `unary`: valid `Operator` are:
+    * `"-"`
+    * `"+"`
+    * `"!"`
+    * `"~"`
+    * `"typeof"`
+    * `"void"`
 
-* Valid binary operators are: `"=="`, `"!="`, `"==="`, `"!=="`, `"<"`, `"<="`, `">"`, `">="`, `"<<"`, `">>"`, `">>>"`, `"+"`, `"-"`, `"*"`, `"/"`, `"%"`, `"|"`, `"^"`, `"&"`, `"in"`, `"instanceof"` and `".."`.
+* `binary`: valid `Operator` are:
+    * `"=="`
+    * `"!="`
+    * `"==="`
+    * `"!=="`
+    * `"<"`
+    * `"<="`
+    * `">"`
+    * `">="`
+    * `"<<"`
+    * `">>"`
+    * `">>>"`
+    * `"+"`
+    * `"-"`
+    * `"*"`
+    * `"/"`
+    * `"%"`
+    * `"|"`
+    * `"^"`
+    * `"&"`
+    * `"in"`
+    * `"instanceof"`
+    * `".."`.
