@@ -36,8 +36,8 @@ As stated above, the sandbox parameter will act in all point as if it was the gl
 
 Hooks are functions that are called before executing statement / expression of a given Mozilla-Parser type as described at https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API. Hooks only receive static information and their return value is never used. All hooks are optional.
 
-Hook | Target | Inserted hook
-:----|:-------|:-------------
+Hook | Target | Hook inserted before
+:----|:-------|:--------------------
 `Program(StmtCounter)` | `STMT1 STMT2` | `aran.hooks.Program(2)`
 `EmptyStatement()` | `;` | `aran.traps.EmptyStatement()`
 `BlockStatement(StmtCounter)` | `{STMT1 STMT2}` | `aran.hooks.BlockStatement(2)`
@@ -47,30 +47,30 @@ Hook | Target | Inserted hook
 `BreakStatement([Label])` | `break;` | `aran.hooks.BreakStatement(null)`
 `ContinueStatement([Label])` | `continue ID;` | `aran.hooks.ContinueStatement(ID)`
 `WithStatement()` | `with(EXPR) STMT` | `aran.hooks.WithStatement()`
-`SwitchStatement(Cases::(isDefault, Length))` | `switch (EXPR1) { case EXPR2: STMT1 STMT2 default: STMT3 }` |  `aran.hooks.SwitchStatement([[false, 2], [true, 1]])`
+`SwitchStatement(Cases::[IsDefault, Length])` | `switch (EXPR1) { case EXPR2: STMT1 STMT2 default: STMT3 }` |  `aran.hooks.SwitchStatement([[false, 2], [true, 1]])`
 `ReturnStatement(HasValue)` | `return EXPR;` | `aran.hooks.ReturnStatement(true)`
 `ThrowStatement()` | `throw EXPR;` | `aran.hooks.ThrowStatement()`
-`TryStatement(Parameter, [TryLength], [CatchLength]; [FinallyLength])` | `try {STMT1 STMT2} catch (ID) {}` | `aran.hooks.TryStatement(ID, 2, 0, undefined)`
+`TryStatement(Parameter, MaybeTryLength, MaybeCatchLength; MaybeFinallyLength)` | `try {STMT1 STMT2} catch (ID) {}` | `aran.hooks.TryStatement(ID, 2, 0, undefined)`
 `WhileStatement()` | `while(EXPR) STMT` | `aran.hooks.WhileStatement()`
 `DoWhileStatement()` | do STMT while(EXPR) | `aran.hooks.DoWhileStatement`
 `ForStatement(HasInit, HasTest, HasUpdate, Declarations::(Identifier, HasInitializer))` | `for (var ID1;ID2=EXPR1; ; EXPR) STMT` | aran.hooks.ForStatement(true, false, true, [[ID1, false], [ID2, true]])`
-`ForInStatement([Identifier], [Property])` | `for (EXPR1.ID in EXPR2) STMT` | `aran.hooks.ForInStatement(undefined, ID)` 
-`FunctionDeclaration([Name], Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', [ID1, ID2], 2)`
+`ForInStatement(MaybeIdentifier, MaybeProperty)` | `for (EXPR1.ID in EXPR2) STMT` | `aran.hooks.ForInStatement(undefined, ID)` 
+`FunctionDeclaration(MaybeName, Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', [ID1, ID2], 2)`
 `VariableDeclaration(Declarations)` | `var ID1, ID2=EXPR;` | `aran.hooks.VariableDeclaration([[ID1, false], [ID2, true]])`
 `ThisExpression()` | `this` | aran.hooks.ThisExpression()
-`ArrayExpression(Elements::(HasInitializer))` | `[EXPR1, , EXPR2]` | aran.hooks.ArrayExpression()
+`ArrayExpression(Elements::[HasInitializer])` | `[EXPR1, , EXPR2]` | aran.hooks.ArrayExpression()
 `ObjectExpression(Properties::(Name, Kind))` | TODO | TODO
 `FunctionExpression(Name, Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', [ID1, ID2], 2)`
 `SequenceExpression(ExprCounter)` | `(EXPR1, EXPR2)` | `aran.hooks.SequenceExpression(2)`
-`UnaryExpression(Operator, [Identifier], [Property])` | `!EXPR` | `aran.hooks.UnaryExpression('!', undefined, undefined)`
+`UnaryExpression(Operator, MaybeIdentifier, MaybeProperty)` | `!EXPR` | `aran.hooks.UnaryExpression('!', undefined, undefined)`
 `BinaryExpression(Operator)` | `EXPR1 + EXPR2` | aran.hooks.BinaryExpression('+', EXPR1, EXPR2)`
-`AssignmentExpression(Operator, [Identifier], [Property])` | `EXPR1.ID += EXPR2` | `aran.hooks.AssignmentExpression('+=', undefined, ID)` 
-`UpdateExpression(isPrefix, [Identifier], [Property])` | `ID++` | `aran.hooks.UpdateExpression(false, ID, undefined)`
+`AssignmentExpression(Operator, MaybeIdentifier, MaybeProperty)` | `EXPR1.ID += EXPR2` | `aran.hooks.AssignmentExpression('+=', undefined, ID)` 
+`UpdateExpression(isPrefix, MaybeIdentifier], MaybeProperty)` | `ID++` | `aran.hooks.UpdateExpression(false, ID, undefined)`
 `LogicalExpression(Operator)` | `EXPR1 || EXPR2` | `aran.hooks.LogicalExpression('||')`
 `ConditionalExpression()` | EXPR1 ? EXPR2 : EXPR2 | `aran.hooks.ConditionalExpression()`
 `NewExpression(ArgumentCounter)` | new EXPR1(EXPR2, EXPR3) | `aran.hooks.NewExpression(2)`
 `CallExpression(ArgumentCounter)` | TODO | TODO
-`MemberExpression([Property])` | EXPR[EXPR] | `aran.hooks.MemberExpression(undefined)`
+`MemberExpression(MaybeProperty)` | EXPR[EXPR] | `aran.hooks.MemberExpression(undefined)`
 `Identifier(Name)` | `ID` | `aran.hooks.Identifier(ID)`
 `Literal(Value)` | `'foo'` | `aran.hooks.Literal('foo')`
 
