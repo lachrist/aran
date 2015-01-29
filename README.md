@@ -38,14 +38,14 @@ Hooks are functions that are called before executing statement / expression of a
 
 Hook | Target | Hook inserted before
 :----|:-------|:--------------------
-`Program(StmtCounter)` | `STMT1 STMT2` | `aran.hooks.Program(2)`
+`Program(Length)` | `STMT1 STMT2` | `aran.hooks.Program(2)`
 `EmptyStatement()` | `;` | `aran.traps.EmptyStatement()`
-`BlockStatement(StmtCounter)` | `{STMT1 STMT2}` | `aran.hooks.BlockStatement(2)`
+`BlockStatement(Length)` | `{STMT1 STMT2}` | `aran.hooks.BlockStatement(2)`
 `ExpressionStatement()` | TODO | TODO
 `IfStatement(HasAlternate)` | `if (x) STMT` | `aran.hooks.IfStatement(false)`
 `LabeledStatement(Label)` | `ID:STMT` | `aran.hooks.LabeledStatement(ID)`
-`BreakStatement([Label])` | `break;` | `aran.hooks.BreakStatement(null)`
-`ContinueStatement([Label])` | `continue ID;` | `aran.hooks.ContinueStatement(ID)`
+`BreakStatement(MaybeLabel)` | `break;` | `aran.hooks.BreakStatement(null)`
+`ContinueStatement(MaybeLabel)` | `continue ID;` | `aran.hooks.ContinueStatement(ID)`
 `WithStatement()` | `with(EXPR) STMT` | `aran.hooks.WithStatement()`
 `SwitchStatement(Cases::[IsDefault, Length])` | `switch (EXPR1) { case EXPR2: STMT1 STMT2 default: STMT3 }` |  `aran.hooks.SwitchStatement([[false, 2], [true, 1]])`
 `ReturnStatement(HasValue)` | `return EXPR;` | `aran.hooks.ReturnStatement(true)`
