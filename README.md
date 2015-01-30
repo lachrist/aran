@@ -34,7 +34,7 @@ As stated above, the sandbox parameter will act in all point as if it was the gl
 
 ## Hooks
 
-Hooks are functions that are called before executing statement / expression of a given Mozilla-Parser type as described at https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API. Hooks only receive static information and their return value is never used. All hooks are optional.
+Hooks are functions that are called before executing statement / expression of a given Mozilla-Parser type as described at https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API. Hooks only receive static syntactical information and their return value is never used. All hooks are optional.
 
 Hook | Target | Hook inserted before
 :----|:-------|:--------------------
@@ -59,7 +59,7 @@ Hook | Target | Hook inserted before
 `VariableDeclaration(Declarations::[Identifier, HasInitializer])` | `var ID1, ID2=EXPR;` | `aran.hooks.VariableDeclaration([['ID1', false], ['ID2', true]])`
 `ThisExpression()` | `this` | aran.hooks.ThisExpression()
 `ArrayExpression(Elements::[HasInitializer])` | `[EXPR1, , EXPR2]` | aran.hooks.ArrayExpression()
-`ObjectExpression` | to-be-determined | to-be-determined
+`ObjectExpression(Properties::[Name, Kind, MaybeBodyLength])` | `{ID1:EXPR1, get ID2 () { STMT1 STMT2 } }` | `aran.hooks.ObjectExpression([['ID1', 'init', undefined], ['ID2', 'get', 2]])`
 `FunctionExpression(Name, Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', ['ID1', 'ID2'], 2)`
 `SequenceExpression(Length)` | `(EXPR1, EXPR2)` | `aran.hooks.SequenceExpression(2)`
 `UnaryExpression(Operator, MaybeIdentifier, MaybeProperty)` | `!EXPR` | `aran.hooks.UnaryExpression('!', undefined, undefined)`
@@ -70,7 +70,7 @@ Hook | Target | Hook inserted before
 `ConditionalExpression()` | `EXPR1 ? EXPR2 : EXPR2` | `aran.hooks.ConditionalExpression()`
 `NewExpression(Length)` | `new EXPR1(EXPR2, EXPR3)` | `aran.hooks.NewExpression(2)`
 `CallExpression(Length, isMember, [Property])` | `EXPR1.ID(EXPR2, EXPR3)` | `aran.hooks(2, true, ID)`
-`MemberExpression(MaybeProperty)` | EXPR[EXPR] | `aran.hooks.MemberExpression(undefined)`
+`MemberExpression(MaybeProperty)` | `EXPR[EXPR]` | `aran.hooks.MemberExpression(undefined)`
 `Identifier(Name)` | `ID` | `aran.hooks.Identifier('ID')`
 `Literal(Value)` | `'foo'` | `aran.hooks.Literal('foo')`
 
@@ -97,14 +97,6 @@ Property reading | `get(object, property)` | `o[k]` | `aran.traps.get(o, k)`
 Property writing | `set(object, property)` | `o[k] = v` | `aran.traps.set(o, k, v)`
 Property deletion | `delete(object, property)` | `delete o[k]` | `aran.traps.delete(o, k)`
 Property enumeration | `enumerate(object)` | `for ... in` | Its complicated...
-
-<!-- Primitive creation | `wrap(Primitive)` | `'foo'` | `aran.traps.wrap('foo')`
-Empty object creation | `object()` | `{}`| `aran.traps.object()`
-Empty array creation | `array()` | `[]` | `aran.traps.array()`
-Function creation | `function(Function)` | `function f () {}` | `aran.traps.function(function () {})`
-Regexp creation | `regexp(Regexp)` | `/bar/` | `aran.traps.regex(/bar/)`
-Accessor property definition | `accessor(object, property, setter, getter)` | `{x: get () {} }` | Its complicated...
- -->
 
 Additional remarks:
 
