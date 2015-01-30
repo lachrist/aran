@@ -44,33 +44,33 @@ Hook | Target | Hook inserted before
 `ExpressionStatement()` | `EXPR;` | `aran.hooks.ExpressionStatement()`
 `IfStatement(HasAlternate)` | `if (EXPR) STMT` | `aran.hooks.IfStatement(false)`
 `LabeledStatement(Label)` | `ID: STMT` | `aran.hooks.LabeledStatement('ID')`
-`BreakStatement(MaybeLabel)` | `break;` | `aran.hooks.BreakStatement(undefined)`
+`BreakStatement(MaybeLabel)` | `break;` | `aran.hooks.BreakStatement(null)`
 `ContinueStatement(MaybeLabel)` | `continue ID;` | `aran.hooks.ContinueStatement('ID')`
 `WithStatement()` | `with(EXPR) STMT` | `aran.hooks.WithStatement()`
 `SwitchStatement(Cases::[IsDefault, Length])` | `switch (EXPR1) { case EXPR2: STMT1 STMT2 default: STMT3 }` |  `aran.hooks.SwitchStatement([[false, 2], [true, 1]])`
 `ReturnStatement(HasValue)` | `return EXPR;` | `aran.hooks.ReturnStatement(true)`
 `ThrowStatement()` | `throw EXPR;` | `aran.hooks.ThrowStatement()`
-`TryStatement(Parameter, MaybeTryLength, MaybeCatchLength; MaybeFinallyLength)` | `try {STMT1 STMT2} catch (ID) {}` | `aran.hooks.TryStatement('ID', 2, 0, undefined)`
+`TryStatement(TryLength, MaybeCatchParameter, MaybeCatchLength, MaybeFinallyLength)` | `try {STMT1 STMT2} catch (ID) {}` | `aran.hooks.TryStatement('ID', 2, 0, null)`
 `WhileStatement()` | `while(EXPR) STMT` | `aran.hooks.WhileStatement()`
 `DoWhileStatement()` | `do STMT while(EXPR)` | `aran.hooks.DoWhileStatement()`
 `ForStatement(HasInit, HasTest, HasUpdate, MaybeDeclarations::[Identifier, HasInitializer])` | `for (var ID1, ID2=EXPR1; ; EXPR) STMT` | `aran.hooks.ForStatement(true, false, true, [['ID1', false], ['ID2', true]])`
-`ForInStatement(MaybeIdentifier, MaybeProperty)` | `for (EXPR1.ID in EXPR2) STMT` | `aran.hooks.ForInStatement(undefined, 'ID')` 
+`ForInStatement(MaybeDeclaration::(Identifier, HasInitializer), MaybeIdentifier, MaybeProperty)` | `for (var ID = EXPR1 in EXPR2) STMT` | `aran.hooks.ForInStatement([ID, true], null, null)` 
 `FunctionDeclaration(MaybeName, Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', ['ID1', 'ID2'], 2)`
 `VariableDeclaration(Declarations::[Identifier, HasInitializer])` | `var ID1, ID2=EXPR;` | `aran.hooks.VariableDeclaration([['ID1', false], ['ID2', true]])`
-`ThisExpression()` | `this` | aran.hooks.ThisExpression()
-`ArrayExpression(Elements::[HasInitializer])` | `[EXPR1, , EXPR2]` | aran.hooks.ArrayExpression()
-`ObjectExpression(Properties::[Name, Kind, MaybeBodyLength])` | `{ID1:EXPR1, get ID2 () { STMT1 STMT2 } }` | `aran.hooks.ObjectExpression([['ID1', 'init', undefined], ['ID2', 'get', 2]])`
+`ThisExpression()` | `this` | `aran.hooks.ThisExpression()`
+`ArrayExpression(Elements::[HasInitializer])` | `[EXPR1, , EXPR2]` | `aran.hooks.ArrayExpression([true, false, true])`
+`ObjectExpression(Properties::[Name, Kind, MaybeBodyLength])` | `{ID1:EXPR1, get ID2 () { STMT1 STMT2 } }` | `aran.hooks.ObjectExpression([['ID1', 'init', null], ['ID2', 'get', 2]])`
 `FunctionExpression(Name, Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', ['ID1', 'ID2'], 2)`
 `SequenceExpression(Length)` | `(EXPR1, EXPR2)` | `aran.hooks.SequenceExpression(2)`
-`UnaryExpression(Operator, MaybeIdentifier, MaybeProperty)` | `!EXPR` | `aran.hooks.UnaryExpression('!', undefined, undefined)`
+`UnaryExpression(Operator, MaybeIdentifier, MaybeProperty)` | `!EXPR` | `aran.hooks.UnaryExpression('!', null, null)`
 `BinaryExpression(Operator)` | `EXPR1 + EXPR2` | `aran.hooks.BinaryExpression('+')`
-`AssignmentExpression(Operator, MaybeIdentifier, MaybeProperty)` | `EXPR1.ID += EXPR2` | `aran.hooks.AssignmentExpression('+=', undefined, 'ID')` 
-`UpdateExpression(isPrefix, MaybeIdentifier, MaybeProperty)` | `ID++` | `aran.hooks.UpdateExpression(false, 'ID', undefined)`
+`AssignmentExpression(Operator, MaybeIdentifier, MaybeProperty)` | `EXPR1.ID += EXPR2` | `aran.hooks.AssignmentExpression('+=', null, 'ID')` 
+`UpdateExpression(IsPrefix, MaybeIdentifier, MaybeProperty)` | `ID++` | `aran.hooks.UpdateExpression(false, 'ID', null)`
 `LogicalExpression(Operator)` | `EXPR1 || EXPR2` | `aran.hooks.LogicalExpression('||')`
 `ConditionalExpression()` | `EXPR1 ? EXPR2 : EXPR2` | `aran.hooks.ConditionalExpression()`
 `NewExpression(Length)` | `new EXPR1(EXPR2, EXPR3)` | `aran.hooks.NewExpression(2)`
-`CallExpression(Length, isMember, [Property])` | `EXPR1.ID(EXPR2, EXPR3)` | `aran.hooks(2, true, ID)`
-`MemberExpression(MaybeProperty)` | `EXPR[EXPR]` | `aran.hooks.MemberExpression(undefined)`
+`CallExpression(Length, IsMember, MaybeProperty)` | `EXPR1.ID(EXPR2, EXPR3)` | `aran.hooks(2, true, ID)`
+`MemberExpression(MaybeProperty)` | `EXPR[EXPR]` | `aran.hooks.MemberExpression(null)`
 `Identifier(Name)` | `ID` | `aran.hooks.Identifier('ID')`
 `Literal(Value)` | `'foo'` | `aran.hooks.Literal('foo')`
 
@@ -83,9 +83,10 @@ Trigger | Trap | Target | Transformed
 Primitive creation | `primitive(Value)` | `'foo'` | `aran.traps.primitive('foo')`
 Object creation | `object(Object)` | `{a:x}` | `aran.traps.object({a:x})`
 Array creation | `array(Array)` | `[x,y,z]` | `aran.traps.array([x,y,z])`
-Function creation | `function(Function)` | `function () {}` | `aran.traps.function(function () {})`
+Arguments creation | `arguments(Arguments)` | `function () {}` | `aran.traps.function(function () { arguments = aran.traps.arguments(arguments) })`
+Function creation | `function(Function)` | `function () {}` | `aran.traps.function(function () { arguments = aran.traps.arguments(arguments) })`
 Regexp creation | `regexp(Regexp)` | `/abc/g` | `aran.traps.regexp(/abc/g)`
-Conversion to boolean | `booleanize(Test, value)` | `x?:y:z` | `aran.traps.booleanize('?:', x)?y:z`
+Conversion to boolean | `booleanize(value, Test)` | `x?:y:z` | `aran.traps.booleanize(x, '?:')?y:z`
 Conversion to string | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
 Throw an exception | `throw(value)` | `throw x` | `aran.traps.throw(x)`
 Catch an exception | `catch(value)` | `try {} catch (e) {}` | `try {} catch (e) { e = aran.traps.catch(e) }` 
@@ -96,6 +97,7 @@ Instantiation | `new(function, Arguments)` | `new F(x, y)` | `aran.traps.new(F, 
 Property reading | `get(object, property)` | `o[k]` | `aran.traps.get(o, k)`
 Property writing | `set(object, property)` | `o[k] = v` | `aran.traps.set(o, k, v)`
 Property deletion | `delete(object, property)` | `delete o[k]` | `aran.traps.delete(o, k)`
+Binding removal | `erase(Result, Name)` | `delete x` | `aran.traps.erase(delete x, 'x')` 
 Property enumeration | `enumerate(object)` | `for ... in` | Its complicated...
 
 Additional remarks:
@@ -191,4 +193,4 @@ Additional remarks:
     * `"&"`
     * `"in"`
     * `"instanceof"`
-    * `".."`.
+    * `".."`

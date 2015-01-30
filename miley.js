@@ -269,14 +269,21 @@ exports.ThrowStatement = function (node) {
 // etc..
 exports.TryStatement = function (node) {
   var stmts = node.block.body.slice()
+  var infos = [stmts.length]
   if (node.handler) {
-    var infos = [node.handler.param.name, node.block.body.length, node.handler.body.length]
+    infos.push(node.handler.param.name)
+    infos.push(node.handler.body.length)
     stmts = stmts.concat(node.handler.body)
-  } else { var infos = [null, node.block.body.length, null] }
+  } else {
+    infos.push(null)
+    infos.push(null)
+  }
   if (node.finalizer) {
     infos.push(node.finalizer.body.length)
     stmts = stmts.concat(node.finalizer.body)
-  } else { infos.push(null) }
+  } else {
+    infos.push(null)
+  }
   return { stmts:stmts, exprs:[], infos:infos }
 }
 
@@ -329,7 +336,7 @@ exports.ForStatement = function (node) {
   var infos = [node.init, node.test, node.update].map(Boolean)
   if (node.init) {
     if (node.init.type !== "VariableDeclaration") { exprs.push(node.init) }
-    else { infos = infos.concat(declaration(node.init, exprs)) }
+    else { infos = infos.push(declaration(node.init, exprs)) }
   }
   if (node.test) { exprs.push(node.test) }
   if (node.update) { exprs.push(node.update) }
@@ -345,25 +352,27 @@ exports.ForStatement = function (node) {
 //   each: boolean;
 // }
 //
-// [is_declaration, is_identifier/is_initialized, name]
+// [maybe_declaration, maybe_identifier, maybe_property]
 //
-// for (var ID in <expr>) <stmt>          >>> [true, false, "ID"]
-// for (var ID=<expr> in <expr>) <stmt>   >>> [true, true, "ID"]
-// for (ID in <expr>) <stmt>              >>> [false, true, "ID"]
-// for (<expr>.ID in <expr>) <stmt>       >>> [false, false, "ID"]
-// for (<expr>[<expr>] in <expr>) <stmt>  >>> [false, false, null]
+// for (var ID in <expr>) <stmt>          >>> [["ID", false], null, null]
+// for (var ID=<expr> in <expr>) <stmt>   >>> [["ID",true], null, null]
+// for (ID in <expr>) <stmt>              >>> [null, "ID", null]
+// for (<expr>.ID in <expr>) <stmt>       >>> [null, null, "ID"]
+// for (<expr>[<expr>] in <expr>) <stmt>  >>> [null, null, null]
 exports.ForInStatement = function (node) {
-  var has_var = node.left.type === "VariableDeclaration"
-  var exprs = []
-  var infos
-  if (has_var) {
-    if (node.left.declarations.length != 1) { throw new Error(node) }
-    var is_init = Boolean(node.left.declarations[0].init)
-    infos = [true, is_init, node.left.declarations[0].id.name]
-    if (is_init) { exprs.push(node.left.declarations[0].init) }
+  var exprs = [node.right]
+  if (node.left.type === "VariableDeclaration") {
+    var init = exprs.unshift(node.left.declarations[0].init
+    var infos = [[node.left.declarations[0].id.name, Boolean(init)], null, null]
+    if (init) { exprs.unshift(init) }
+  } else if (node.left.type === "Identifier") {
+    var infos = [null, node.left.type.name, null]
+  } else if (node.left.type === "MemberExpression") {
+    var infos = [null, null, node.left.computed?null:node.left.property.name]
+    exprs.push(node.left.object)
+    if (node.left.computed) { exprs.push(node.left.property) }
   } else {
-    infos = left(node.left, exprs)
-    infos.unshift(false)
+    throw new Error(node)
   }
   return { stmts:[node.body], exprs:exprs, infos:infos }
 }
@@ -414,13 +423,13 @@ exports.FunctionDeclaration = function (node) {
 //
 // [[initialized,name]]
 //
-// var ID;              >>> [["ID"], [false]]
-// var ID=<expr>;       >>> [["ID"], [true]]
-// var ID1, ID2=<expr>; >>> [["ID1","ID2"], [false, true]]
+// var ID;              >>> [["ID", false]]
+// var ID=<expr>;       >>> [["ID", true]]
+// var ID1, ID2=<expr>; >>> [["ID1", false], ["ID2", true]]
 // etc...
 exports.VariableDeclaration = function (node) {
   var exprs = []
-  return { stmts:[], exprs:exprs, infos:[declaration(node, exprs)] } 
+  return { stmts:[], exprs:exprs, infos:declaration(node, exprs) }
 }
 
 
@@ -470,15 +479,25 @@ exports.ArrayExpression = function (node) {
 //   value: Expression;
 //   kind: "init" | "get" | "set";
 // }
+//
+//
 exports.ObjectExpression = function (node) {
+  var stmts = []
   var exprs = []
-  var props = []
-  node.properties.forEach(function (p) {
-    exprs.push(p.value)
-    var is_id = p.key.type === "Identifier"
-    props.push([p.kind, is_id, is_id?p.key.name:p.key.value])
+  var infos = node.properties.map(function (p) {
+    var info = [p.kind]
+    if (p.key.type === "Identifer") { infos.unshift(p.key.name) }
+    else { infos.unshift(JSON.stringify(p.key.value)) }
+    if (p.kind !== "init") {
+      info.push(p.value.body.body.length)
+      stmts.push(p.value.body.body.slice())
+    } else {
+      info.push(null)
+      exprs.push(p.value)
+    }
+    return info
   })
-  return { stmts:[], exprs:exprs, infos:[props] }
+  return { stmts:stmts, exprs:exprs, infos:infos }
 }
 
 
@@ -538,18 +557,23 @@ exports.SequenceExpression = function (node) {
 //   "-" | "+" | "!" | "~" | "typeof" | "void" | "delete"
 // }
 //
-// [operator, is_identifier, name]
+// [operator, maybe_identifier, maybe_property]
 //
-// OP <expr>             >>> [OP]
-// delete ID             >>> [delete, true, ID]
-// delete <expr>.ID      >>> [delete, false, ID]
-// delete <expr>[<expr>] >>> [delete, false, null]
+// typeof ID             >>> ["typeof", "ID", null]
+// delete ID             >>> ["delete", "ID", null]
+// delete <expr>.ID      >>> ["delete", null, "ID"]
+// delete <expr>[<expr>] >>> ["delete", null, null]
+// delete <expr>         >>> ["delete"]
+// OP <expr>             >>> ["OP"]
 exports.UnaryExpression = function (node) {
-  if (node.operator === "delete") {
-    var exprs = []
-    var infos = left(node.argument, exprs)
-    infos.unshift("delete")
-    return { stmts:[], exprs:exprs, infos:infos }
+  if (node.operator === "typeof" && node.argument.type === "Identifier") { return {stmts:[], exprs:[], ["typeof", node.argument.name]} }
+  if (node.operator === "delete" && node.argument.type === "Identifier") { return {stmts:[], exprs:[], ["delete", node.argument.name, null]} }
+  if (node.operator === "delete" && node.argument.type === "MemberExpression") {
+    if (node.argument.computed) {
+      return {stmts:[], exprs:[node.argument.object, node.argument.property], infos:["delete", null, null]}
+    } else {
+      return {stmts:[], exprs:[node.argument.object], infos:["delete", null, node.argument.property.name]}
+    }
   }
   return { stmts:[], exprs:[node.argument], infos:[node.operator] }
 }
@@ -572,7 +596,7 @@ exports.UnaryExpression = function (node) {
 //
 // [operator]
 //
-// <expr> OP <expr> >>> [OP]
+// <expr> OP <expr> >>> ["OP"]
 exports.BinaryExpression = function (node) {
   return { stmts:[], exprs:[node.left, node.right], infos:[node.operator] }
 }
@@ -592,9 +616,9 @@ exports.BinaryExpression = function (node) {
 //
 // [operator, is_identifier, name]
 //
-// ID OP <expr>             >>> [OP, true, ID] 
-// <expr>.ID OP <expr>      >>> [OP, false, ID]
-// <expr>[<expr>] OP <expr> >>> [OP, false, null]
+// ID OP <expr>             >>> ["OP", "ID", null] 
+// <expr>.ID OP <expr>      >>> ["OP", null, "ID"]
+// <expr>[<expr>] OP <expr> >>> ["OP", null, null]
 exports.AssignmentExpression = function (node) {
   var exprs = [node.right]
   var infos = left(node.left, exprs)
@@ -615,9 +639,9 @@ exports.AssignmentExpression = function (node) {
 //
 // [operator, is_identifier, name]
 //
-// ID OP           >>> [OP, true, "ID"]
-// <expr>.ID OP    >>> [OP, false, "ID"]
-// <expr>[expr] OP >>> [OP, false, null]
+// ID OP           >>> [OP, "ID", null]
+// <expr>.ID OP    >>> [OP, null, "ID"]
+// <expr>[expr] OP >>> [OP, null, null]
 exports.UpdateExpression = function (node) {
   var exprs = []
   var infos = left(node.argument, exprs)
@@ -687,13 +711,13 @@ exports.NewExpression = function (node) {
 //   arguments: [ Expression ];
 // }
 //
-// [arguments_length, is_member, is_computed]
+// [arguments_length, is_member, maybe_property]
 //
-// <expr>()                      >>> [0, false]
-// <expr>(<expr>)                >>> [1, false]
-// <expr>(<expr>,<expr>)         >>> [2, false]
-// <expr>.<id>(<expr>,<expr>)    >>> [2, true, false]
-// <expr>[<expr>](<expr>,<expr>) >>> [2, true, true]
+// <expr>()                      >>> [0, false, null]
+// <expr>(<expr>)                >>> [1, false, null]
+// <expr>(<expr>,<expr>)         >>> [2, false, null]
+// <expr>.ID(<expr>,<expr>)      >>> [2, true, "ID"]
+// <expr>[<expr>](<expr>,<expr>) >>> [2, true, null]
 exports.CallExpression = function (node) {
   var exprs = node.arguments.slice()
   var is_member = node.callee.type === "MemberExpression"

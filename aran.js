@@ -19,6 +19,7 @@ module.exports = function (sandbox, hooks, traps) {
 
   return function (code) {
     aran.compiled = aran.compile(code)
+    if (!aran.eval) { aran.eval = sandbox.eval }
     if (aran.global.compiled !== undefined) { aran.global.compiled = aran.compiled }
     aran.mark()
     try { var result = eval("with (aran.proxy) { "+aran.compiled+" }") } finally { aran.unmark() }

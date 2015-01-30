@@ -61,6 +61,15 @@ exports.block = function (body) {
   }
 }
 
+exports.function = function (params, body) {
+  return {
+    type: "FunctionExpression",
+    id: null,
+    params: params.map(function (p) { return {type:"Identifier", name:p} }),
+    body: {type:"BlockStatement", body:body},
+  }
+}
+
 exports.call = function (callee, arguments) {
   return {
     type: "CallExpression",
@@ -122,7 +131,7 @@ exports.try = function (try_stmts, catch_param, catch_stmts, finally_stmts) {
     type: "TryStatement",
     block: {type:"BlockStatement", body:try_stmts},
     guardedHandlers: [],
-    handlers: catch_param?[{type:"CatchClause", param:catch_param, body:{type:"BlockStatement", body:catch_stmts}}]:[],
+    handlers: catch_param?[{type:"CatchClause", param:{type:"Identifier", name:catch_param}, body:{type:"BlockStatement", body:catch_stmts}}]:[],
     finalizer: finally_stmts?block(finally_stmts):null
   }
 }
@@ -151,6 +160,13 @@ exports.for = function (init, test, update, body) {
     test: test,
     update: update,
     body: body
+  }
+}
+
+exports.return = function (argument) {
+  return {
+    type: "ReturnStatement",
+    argument: argument
   }
 }
 
