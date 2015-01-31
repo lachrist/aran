@@ -1,4 +1,6 @@
 
+var Error = require("./error.js")
+
 /////////////
 // Helpers //
 /////////////
@@ -16,14 +18,14 @@
 // <expr>[<expr>] >>> [null, null]
 function left (node, exprs) {
   if (node.type === "Identifier") { return [node.name, null] }
-  if (node.type !== "MemberExpression") { throw new Error(node) }
+  if (node.type !== "MemberExpression") { Error("Invalid left-hand side", node) }
   exprs.push(node.object)
   if (node.computed) {
     exprs.push(node.property)
     return [null, null]
   }
-  if (node.property.type !== "Identifier") { throw new Error(node) }
-  return [null, node.property.name]
+  if (node.property.type === "Identifier") { return [null, node.property.name] }
+  Error("Member expression uncomputed without identifier", node)
 }
 
 // Helper for variable declarations used in:
@@ -49,6 +51,12 @@ function declaration (node, exprs) {
 // Exports //
 /////////////
 
+var miley = {}
+module.exports = function (node, exprs, stmts) {
+  if (!miley[node.type]) { Error("Unsopported node type", node) }
+  return miley[node.type](node, exprs, stmts)
+}
+
 // interface Program <: Node {
 //   type: "Program";
 //   body: [ Statement ];
@@ -59,8 +67,9 @@ function declaration (node, exprs) {
 //              >>> []
 // <stmt>       >>> [1]
 // <stmt><stmt> >>> [2]
-exports.Program = function (node) {
-  return { stmts:node.body.slice(), exprs:[], infos:[node.body.length] }
+miley.Program = function (node, exprs, stmts) {
+  Util.append(stmts, node.body)
+  return [node.body.length]
 }
 
 
@@ -71,8 +80,8 @@ exports.Program = function (node) {
 // []
 //
 // ; >>> []
-exports.EmptyStatement = function (node) {
-  return { stmts:[], exprs:[], infos:[] }
+miley.EmptyStatement = function (node, exprs, stmts) {
+  return []
 }
 
 
@@ -87,8 +96,9 @@ exports.EmptyStatement = function (node) {
 // {<stmt>}       >>> [1]
 // {<stmt><stmt>} >>> [2]
 // etc...
-exports.BlockStatement = function (node) {
-  return { stmts:node.body.slice(), exprs:[], infos:[node.body.length] }
+miley.BlockStatement = function (node, exprs, stmts) {
+  Util.append(stmts, node.body)
+  return [node.body.length]
 }
 
 
@@ -100,8 +110,9 @@ exports.BlockStatement = function (node) {
 // []
 //
 // <expr>; >>> []
-exports.ExpressionStatement = function (node) {
-  return { stmts:[], exprs:[node.expression], infos:[] }
+miley.ExpressionStatement = function (node, exprs, stmts) {
+  exprs.push(node.expression)
+  return []
 }
 
 
@@ -116,11 +127,12 @@ exports.ExpressionStatement = function (node) {
 //
 // if (<expr>) <stmt>             >>> [false]
 // if (<expr>) <stmt> else <stmt> >>> [true]
-exports.IfStatement = function (node) {
-  var stmts = [node.consequent]
+miley.IfStatement = function (node, exprs, stmts) {
+  exprs.push(node.test)
+  stmts.push(node.consequent)
   var alt = Boolean(node.alternate)
   if (alt) { stmts.push(node.alternate) }
-  return { stmts:stmts, exprs:[node.test], infos:[alt] }
+  return [alt]
 }
 
 
@@ -133,8 +145,9 @@ exports.IfStatement = function (node) {
 // [label]
 //
 // ID:<stmt> >>> ["ID"]
-exports.LabeledStatement = function (node) {
-  return { stmts:[node.body], exprs:[], infos:[node.label.name] }
+miley.LabeledStatement = function (node, exprs, stmts) {
+  stmts.push(node.body)
+  return [node.label.name]
 }
 
 
@@ -147,8 +160,8 @@ exports.LabeledStatement = function (node) {
 //
 // break;    >>> [null]
 // break ID; >>> ["ID"]
-exports.BreakStatement = function (node) {
-  return { stmts:[], exprs:[], infos:[node.label?node.label.name:null] }
+miley.BreakStatement = function (node, exprs, stmts) {
+  return [node.label?node.label.name:null]
 }
 
 
@@ -161,8 +174,8 @@ exports.BreakStatement = function (node) {
 //
 // continue;    >>> [null]
 // continue ID; >>> ["ID"]
-exports.ContinueStatement = function (node) {
-  return { stmts:[], exprs:[], infos:[label?label.name:null] }
+miley.ContinueStatement = function (node, exprs, stmts) {
+  return [node.label?node.label.name:null]
 }
 
 // interface WithStatement <: Statement {
@@ -174,8 +187,10 @@ exports.ContinueStatement = function (node) {
 // []
 //
 // with (<expr>) <stmt> >>> []
-exports.WithStatement = function (node) {
-  return { stmts:[node.body], exprs:[node.object], infos:[] }
+miley.WithStatement = function (node, exprs, stmts) {
+  exprs.push(node.object)
+  stmts.push(node.body)
+  return []
 }
 
 
@@ -203,16 +218,13 @@ exports.WithStatement = function (node) {
 // switch (<expr>) {default:<stmt>}                   >>> [[false], [1]]
 // switch (<expr>) {case<expr>: case<expr>: default:} >>> [[true,true,false], [0,0,0]]
 // etc...
-exports.SwitchStatement = function (node) {
-  var stmts = []
-  var exprs = [node.discriminant]
-  var cases = []
-  node.cases.forEach(function (c) {
-    stmts = stmts.concat(c.consequent)
+miley.SwitchStatement = function (node, exprs, stmts) {
+  exprs.push(node.discriminant)
+  return [node.cases.map(function (c) {
     if (c.test) { exprs.push(c.test) }
-    cases.push([Boolean(c.test), c.consequent.length])
-  })
-  return { stmts:stmts, exprs:exprs, infos:[cases] }
+    Util.append(stmts, c.consequent)
+    return [Boolean(c.test), c.consequent.length]
+  })]
 }
 
 
@@ -225,9 +237,9 @@ exports.SwitchStatement = function (node) {
 //
 // return;        >>> [false]
 // return <expr>; >>> [true]
-exports.ReturnStatement = function (node) {
-  var exprs = node.argument?[node.argument]:[]
-  return { stmts:[], exprs:exprs, infos:[Boolean(node.argument)] }
+miley.ReturnStatement = function (node, exprs, stmts) {
+  if (node.argument) { exprs.push(node.argument) }
+  return [Boolean(node.argument)]
 }
 
 
@@ -239,8 +251,9 @@ exports.ReturnStatement = function (node) {
 // []
 //
 // throw <expr>; >>> []
-exports.ThrowStatement = function (node) {
-  return { stmts:[], exprs:[node.argument], infos:[] }
+miley.ThrowStatement = function (node, exprs, stmts) {
+  exprs.push(node.argument)
+  return []
 }
 
 
@@ -267,24 +280,24 @@ exports.ThrowStatement = function (node) {
 // try {} catch (ID) {<stmt>}                        >>> ["ID", 0, 1, null]
 // try {<stmt>} catch (ID) {<stmt>} finally {<stmt>} >>> ["ID", 1, 1, 1]
 // etc..
-exports.TryStatement = function (node) {
-  var stmts = node.block.body.slice()
+miley.TryStatement = function (node, exprs, stmts) {
+  Util.append(stmts, node.block.body)
   var infos = [stmts.length]
   if (node.handler) {
     infos.push(node.handler.param.name)
     infos.push(node.handler.body.length)
-    stmts = stmts.concat(node.handler.body)
+    Util.append(stmts, node.handler.body)
   } else {
     infos.push(null)
     infos.push(null)
   }
   if (node.finalizer) {
     infos.push(node.finalizer.body.length)
-    stmts = stmts.concat(node.finalizer.body)
+    Util.append(stmts, node.finalizer.body)
   } else {
     infos.push(null)
   }
-  return { stmts:stmts, exprs:[], infos:infos }
+  return infos
 }
 
 
@@ -297,8 +310,10 @@ exports.TryStatement = function (node) {
 // []
 //
 // while (<expr>) <stmt> >>> []
-exports.WhileStatement = function (node) {
-  return { stmts:[node.body], exprs:[node.test], infos:[] }
+miley.WhileStatement = function (node, exprs, stmts) {
+  exprs.push(node.test)
+  stmts.push(node.body)
+  return []
 }
 
 
@@ -311,8 +326,10 @@ exports.WhileStatement = function (node) {
 // []
 //
 // do <stmt> while (<expr>) >>> []
-exports.DoWhileStatement = function (node) {
-  return { stmts:[node.body], exprs:[node.test], infos:[] }
+miley.DoWhileStatement = function (node, exprs, stmts) {
+  stmts.push(node.body)
+  exprs.push(node.test)
+  return []
 }
 
 
@@ -331,8 +348,7 @@ exports.DoWhileStatement = function (node) {
 // for (;<expr>;)                    >>> [false, true, false]
 // for (var ID=<expr>;;)             >>> [true, false, false, [["ID",true]]]
 // for (var ID1=<expr>, ID2;;)       >>> [true, false, false, [["ID1",true],["ID2",false]]]
-exports.ForStatement = function (node) {
-  var exprs = []
+miley.ForStatement = function (node, exprs, stmts) {
   var infos = [node.init, node.test, node.update].map(Boolean)
   if (node.init) {
     if (node.init.type !== "VariableDeclaration") { exprs.push(node.init) }
@@ -340,7 +356,8 @@ exports.ForStatement = function (node) {
   }
   if (node.test) { exprs.push(node.test) }
   if (node.update) { exprs.push(node.update) }
-  return { stmts:[node.body], exprs:exprs, infos:infos }
+  stmts.push(node.body)
+  return infos
 }
 
 
@@ -359,10 +376,10 @@ exports.ForStatement = function (node) {
 // for (ID in <expr>) <stmt>              >>> [null, "ID", null]
 // for (<expr>.ID in <expr>) <stmt>       >>> [null, null, "ID"]
 // for (<expr>[<expr>] in <expr>) <stmt>  >>> [null, null, null]
-exports.ForInStatement = function (node) {
-  var exprs = [node.right]
+miley.ForInStatement = function (node, exprs, stmts) {
   if (node.left.type === "VariableDeclaration") {
-    var init = exprs.unshift(node.left.declarations[0].init
+    if (node.left.declarations.length !== 1) { Error("Not unique variable declaration in for-in statement", node) }
+    var init = node.left.declarations[0].init
     var infos = [[node.left.declarations[0].id.name, Boolean(init)], null, null]
     if (init) { exprs.unshift(init) }
   } else if (node.left.type === "Identifier") {
@@ -372,9 +389,11 @@ exports.ForInStatement = function (node) {
     exprs.push(node.left.object)
     if (node.left.computed) { exprs.push(node.left.property) }
   } else {
-    throw new Error(node)
+    Error("Wrong left-hand side in for-in statement", node)
   }
-  return { stmts:[node.body], exprs:exprs, infos:infos }
+  exprs.push(node.right)
+  stmts.push(node.body)
+  return infos
 }
 
 
@@ -397,16 +416,13 @@ exports.ForInStatement = function (node) {
 // function ID0 (ID1) {}          >>> ["ID0", 0, ["ID1"]]
 // function ID0 (ID1, ID2) {}     >>> ["ID0", 0, ["ID1", "ID2"]]
 // etc...
-exports.FunctionDeclaration = function (node) {
-  return {
-    stmts:node.body.body.slice(),
-    exprs:[],
-    infos:[
-      node.id.name,
-      node.params.map(function (p) { return p.name }),
-      node.body.body.length
-    ]
-  }
+miley.FunctionDeclaration = function (node, exprs, stmts) {
+  Util.append(stmts, node.body.body)
+  return [
+    node.id.name,
+    node.params.map(function (p) { return p.name }),
+    node.body.body.length
+  ]
 }
 
 
@@ -427,10 +443,7 @@ exports.FunctionDeclaration = function (node) {
 // var ID=<expr>;       >>> [["ID", true]]
 // var ID1, ID2=<expr>; >>> [["ID1", false], ["ID2", true]]
 // etc...
-exports.VariableDeclaration = function (node) {
-  var exprs = []
-  return { stmts:[], exprs:exprs, infos:declaration(node, exprs) }
-}
+miley.VariableDeclaration = declaration
 
 
 // interface ThisExpression <: Expression {
@@ -440,8 +453,8 @@ exports.VariableDeclaration = function (node) {
 // []
 //
 // this >>> []
-exports.ThisExpression = function (node) {
-  return { stmts:[], exprs:[], infos:[] }
+miley.ThisExpression = function (node, exprs, stmts) {
+  return []
 }
 
 
@@ -458,14 +471,12 @@ exports.ThisExpression = function (node) {
 // [<expr>,]       >>> [[true, false]]
 // [,,<expr>]      >>> [[false, false, true]]
 // etc...
-exports.ArrayExpression = function (node) {
+miley.ArrayExpression = function (node, exprs, stmts) {
   var exprs = []
-  var are_present = []
-  node.elements.forEach(function (e) {
+  return [node.elements.map(function (e) {
     if (e) { exprs.push(e) }
-    are_present.push(Boolean(e))
-  })
-  return { stmts:[], exprs:exprs, infos:[are_present] }
+    return Boolean(e)
+  })]
 }
 
 
@@ -481,13 +492,11 @@ exports.ArrayExpression = function (node) {
 // }
 //
 //
-exports.ObjectExpression = function (node) {
-  var stmts = []
-  var exprs = []
-  var infos = node.properties.map(function (p) {
+miley.ObjectExpression = function (node, exprs, stmts) {
+  return [node.properties.map(function (p) {
     var info = [p.kind]
     if (p.key.type === "Identifer") { infos.unshift(p.key.name) }
-    else { infos.unshift(JSON.stringify(p.key.value)) }
+    else { info.unshift(JSON.stringify(p.key.value)) }
     if (p.kind !== "init") {
       info.push(p.value.body.body.length)
       stmts.push(p.value.body.body.slice())
@@ -496,8 +505,7 @@ exports.ObjectExpression = function (node) {
       exprs.push(p.value)
     }
     return info
-  })
-  return { stmts:stmts, exprs:exprs, infos:infos }
+  })]
 }
 
 
@@ -518,16 +526,13 @@ exports.ObjectExpression = function (node) {
 // function ID () {}            >>> ["ID", [], 0]
 // function (ID1, ID2) {<stmt>} >>> [null, ["ID1", "ID2"], 1]
 // etc..
-exports.FunctionExpression = function (node) {
-  return {
-    stmts:node.body.body.slice(),
-    exprs:[],
-    infos:[
-      node.id?node.id.name:null,
-      node.params.map(function (p) { return p.name }),
-      node.body.body.length
-    ]
-  }
+miley.FunctionExpression = function (node, exprs, stmts) {
+  Util.append(stmts, node.body.body)
+  return [
+    node.id?node.id.name:null,
+    node.params.map(function (p) { return p.name }),
+    node.body.body.length
+  ]
 }
 
 
@@ -542,8 +547,9 @@ exports.FunctionExpression = function (node) {
 // (<expr>)         >>> [1]
 // (<expr>, <expr>) >>> [2]
 // etc...
-exports.SequenceExpression = function (node) {
-  return { stmts:[], exprs:node.expressions.slice(), infos:[node.expressions.length] }
+miley.SequenceExpression = function (node, exprs, stmts) {
+  Util.append(exprs, node.expressions)
+  return [node.expressions.length]
 }
 
 
@@ -565,17 +571,20 @@ exports.SequenceExpression = function (node) {
 // delete <expr>[<expr>] >>> ["delete", null, null]
 // delete <expr>         >>> ["delete"]
 // OP <expr>             >>> ["OP"]
-exports.UnaryExpression = function (node) {
-  if (node.operator === "typeof" && node.argument.type === "Identifier") { return {stmts:[], exprs:[], ["typeof", node.argument.name]} }
-  if (node.operator === "delete" && node.argument.type === "Identifier") { return {stmts:[], exprs:[], ["delete", node.argument.name, null]} }
+miley.UnaryExpression = function (node, exprs, stmts) {
+  if (node.operator === "typeof" && node.argument.type === "Identifier") { return ["typeof", node.argument.name] }
+  if (node.operator === "delete" && node.argument.type === "Identifier") { return ["delete", node.argument.name, null] }
   if (node.operator === "delete" && node.argument.type === "MemberExpression") {
+    exprs.push(node.argument.object)
     if (node.argument.computed) {
-      return {stmts:[], exprs:[node.argument.object, node.argument.property], infos:["delete", null, null]}
+      exprs.push(node.argument.property)
+      return ["delete", null, null]
     } else {
-      return {stmts:[], exprs:[node.argument.object], infos:["delete", null, node.argument.property.name]}
+      return ["delete", null, node.argument.property.name]
     }
   }
-  return { stmts:[], exprs:[node.argument], infos:[node.operator] }
+  exprs.push(node.argument)
+  return [node.operator]
 }
 
 
@@ -597,8 +606,10 @@ exports.UnaryExpression = function (node) {
 // [operator]
 //
 // <expr> OP <expr> >>> ["OP"]
-exports.BinaryExpression = function (node) {
-  return { stmts:[], exprs:[node.left, node.right], infos:[node.operator] }
+miley.BinaryExpression = function (node, exprs, stmts) {
+  exprs.push(node.left)
+  exprs.push(node.right)
+  return [node.operator]
 }
 
 
@@ -619,11 +630,11 @@ exports.BinaryExpression = function (node) {
 // ID OP <expr>             >>> ["OP", "ID", null] 
 // <expr>.ID OP <expr>      >>> ["OP", null, "ID"]
 // <expr>[<expr>] OP <expr> >>> ["OP", null, null]
-exports.AssignmentExpression = function (node) {
-  var exprs = [node.right]
+miley.AssignmentExpression = function (node, exprs, stmts) {
   var infos = left(node.left, exprs)
+  exprs.push(node.right)
   infos.unshift(node.operator)
-  return { stmts:[], exprs:exprs, infos:infos }
+  return infos
 }
 
 
@@ -642,11 +653,10 @@ exports.AssignmentExpression = function (node) {
 // ID OP           >>> [OP, "ID", null]
 // <expr>.ID OP    >>> [OP, null, "ID"]
 // <expr>[expr] OP >>> [OP, null, null]
-exports.UpdateExpression = function (node) {
-  var exprs = []
+miley.UpdateExpression = function (node, exprs, stmts) {
   var infos = left(node.argument, exprs)
   infos.unshift(node.operator)
-  return { stmts:[], exprs:exprs, infos:infos }
+  return infos
 }
 
 
@@ -663,8 +673,10 @@ exports.UpdateExpression = function (node) {
 // [operator]
 //
 // <expr> OP <expr> >>> [OP]
-exports.LogicalExpression = function (node) {
-  return { stmts:[], exprs:[node.left, node.right], infos:[node.operator] }
+miley.LogicalExpression = function (node, exprs, stmts) {
+  exprs.push(node.left)
+  exprs.push(node.right)
+  return [node.operator]
 }
 
 
@@ -678,8 +690,11 @@ exports.LogicalExpression = function (node) {
 // []
 //
 // <expr>?<expr>:<expr> >>> []
-exports.ConditionalExpression = function (node) {
-  return { stmts:[], exprs:[node.test, node.alternate, node.consequent], infos:[] }
+miley.ConditionalExpression = function (node, exprs, stmts) {
+  exprs.push(node.test)
+  exprs.push(node.consequent)
+  exprs.push(node.alternate)
+  return []
 }
 
 
@@ -694,14 +709,10 @@ exports.ConditionalExpression = function (node) {
 // new <expr>()              >>> [0]
 // new <expr>(<expr>)        >>> [1]
 // new <expr>(<expr>,<expr>) >>> [2]
-exports.NewExpression = function (node) {
-  var exprs = node.arguments.slice()
-  exprs.unshift(node.callee)
-  return {
-    stmts:[],
-    exprs:exprs,
-    infos:[node.arguments.length]
-  }
+miley.NewExpression = function (node, exprs, stmts) {
+  exprs.push(node.callee)
+  Util.append(exprs, node.arguments)
+  return [node.arguments.length]
 }
 
 
@@ -713,24 +724,25 @@ exports.NewExpression = function (node) {
 //
 // [arguments_length, is_member, maybe_property]
 //
+// eval(<expr>)                  >>> [1, false, null]
 // <expr>()                      >>> [0, false, null]
 // <expr>(<expr>)                >>> [1, false, null]
 // <expr>(<expr>,<expr>)         >>> [2, false, null]
 // <expr>.ID(<expr>,<expr>)      >>> [2, true, "ID"]
 // <expr>[<expr>](<expr>,<expr>) >>> [2, true, null]
-exports.CallExpression = function (node) {
-  var exprs = node.arguments.slice()
+miley.CallExpression = function (node, exprs, stmts) {
   var is_member = node.callee.type === "MemberExpression"
   var infos = [node.arguments.length, is_member]
   if (is_member) {
     var is_computed = node.callee.computed
-    infos.push(is_computed)
-    if (is_computed) { exprs.unshift(node.property) }
+    if (is_computed) { exprs.unshift(node.callee.property) }
+    infos.push(is_computed?null:node.callee.property.name)
     exprs.unshift(node.callee.object)
-  } else {
+  } else if (node.callee.type !== "Identifier" || node.callee.name !== "eval") {
     exprs.unshift(node.callee)
   }
-  return { stmts:[], exprs:exprs, infos:infos }
+  Util.append(exprs, node.arguments)
+  return infos
 }
 
 
@@ -745,16 +757,16 @@ exports.CallExpression = function (node) {
 //
 // <expr>.ID      >>> ["ID"]
 // <expr>[<expr>] >>> [null]
-exports.MemberExpression = function (node) {
-  var exprs = [node.object]
+miley.MemberExpression = function (node, exprs, stmts) {
+  exprs.push(node.object)
   var infos = []
   if (node.computed) {
     exprs.push(node.property)
   } else {
-    if (node.property.type !== "Identifier") { throw new Error(node) }
+    if (node.property.type !== "Identifier") { Error("Member expression uncomputed without identifier", node) }
     infos.push(node.property.name)
   }
-  return { stmts:[], exprs:exprs, infos:infos }
+  return infos
 }
 
 
@@ -766,8 +778,8 @@ exports.MemberExpression = function (node) {
 // [name]
 //
 // ID >>> ["ID"]
-exports.Identifier = function (node) {
-  return { stmts:[], exprs:[], infos:[node.name] }
+miley.Identifier = function (node, exprs, stmts) {
+  return [node.name]
 }
 
 
@@ -779,6 +791,6 @@ exports.Identifier = function (node) {
 // [value]
 //
 // LIT >>> [LIT]
-exports.Literal = function (node) {
-  return { stmts:[], exprs:[], infos:[node.value] }
+miley.Literal = function (node, exprs, stmts) {
+  return [node.value]
 }

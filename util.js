@@ -3,8 +3,12 @@ exports.flaten = function (xss) {
   return xss.reduce(function (xs, ys) { return xs.concat(ys) }, [])
 }
 
+exports.append = function (xs, ys) {
+  for (var i=0; i<ys.length; i++) { xs.push(ys[i])}
+}
+
 exports.prepend = function (xs, ys) {
-  for (var i=xs.length-1; i>=0; i--) { ys.unshift(xs[i]) }
+  for (var i=ys.length-1; i>=0; i--) { xs.unshift(ys[i]) }
 }
 
 exports.extract = function (o1) {
@@ -17,9 +21,11 @@ exports.extract = function (o1) {
 }
 
 exports.inject = function (o1, o2) {
-  var k
-  for (k in o2) { delete o2[k] }
-  for (k in o1) { o2[k] = o1[k] }
+  if (o1 !== o2) {
+    var k
+    for (k in o2) { delete o2[k] }
+    for (k in o1) { o2[k] = o1[k] }
+  }
 }
 
 exports.identity = function (x) { return x }

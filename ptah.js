@@ -132,7 +132,7 @@ exports.try = function (try_stmts, catch_param, catch_stmts, finally_stmts) {
     block: {type:"BlockStatement", body:try_stmts},
     guardedHandlers: [],
     handlers: catch_param?[{type:"CatchClause", param:{type:"Identifier", name:catch_param}, body:{type:"BlockStatement", body:catch_stmts}}]:[],
-    finalizer: finally_stmts?block(finally_stmts):null
+    finalizer: finally_stmts?{type:"BlockStatement", body:finally_stmts}:null
   }
 }
 
@@ -163,10 +163,28 @@ exports.for = function (init, test, update, body) {
   }
 }
 
+exports.if = function (test, consequent, alternate) {
+  return {
+    type: "IfStatement",
+    test: test,
+    consequent: consequent,
+    alternate: alternate
+  }
+}
+
 exports.return = function (argument) {
   return {
     type: "ReturnStatement",
     argument: argument
+  }
+}
+
+exports.label = function (label, body) {
+  if (typeof label === "string") { label = {type:"Identifier", name:label} }
+  return {
+    type: "LabeledStatement",
+    label: label,
+    body: body
   }
 }
 

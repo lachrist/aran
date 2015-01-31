@@ -21,10 +21,8 @@ exports.push = function (type) {
 }
 
 exports.get = function () {
-  if (labels[labels.length-1]) { {type:"Identifier", name:labels[labels.length-1]} }
+  if (labels[labels.length-1]) { return {type:"Identifier", name:labels[labels.length-1]} }
   return null
 }
 
-exports.pop = function () {
-  labeld.pop()
-}
+exports.pop = function () { labels.pop() }

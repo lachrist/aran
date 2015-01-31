@@ -24,7 +24,7 @@ module.exports = function (aran) {
     set:        aran.traps.set        ? function (o, p, v) { return trap("set", [o, p, v]) }                        : function set (o, p, v) { return Ptah.assignment(Ptah.member(o, p), v) },
     delete:     aran.traps.delete     ? function (o, p) { return trap("delete", [o, p]) }                           : function del (o, p) { return Ptah.unary("delete", Ptah.member(o, p)) },
     erase:      aran.traps.erase      ? function (x, name) { return trap("erase", [Ptah.literal(name), x]) }        : Util.identity,
-    apply: function (f, o, xs) { return trap("apply", [f, o, Ptah.array(xs)]) }
+    apply: function (f, o, xs) { return trap("apply", [f, o, Ptah.array(xs)]) },
     enumerate: function (o) { return trap("enumerate", [o]) }
   }
 

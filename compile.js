@@ -4,7 +4,8 @@ var Esvalid = require("esvalid")
 var Escodegen = require("escodegen")
 
 var Util = require("./util.js")
-var Miley = require("./miley.js")
+var Error = require("./error.js")
+var Ezreal = require("./ezreal.js")
 var Ptah = require("./ptah.js")
 var Pstack = require("./pstack.js")
 var Ptrap = require("./ptrap.js")
@@ -20,11 +21,7 @@ module.exports = function (aran) {
     Util.prepend(Util.flaten(ast.body.map(visit_stmt)), ast.body)
     if (aran.hooks.program) { ast.body.unshift(Ptah.exprstmt(hook)) }
     var errors = Esvalid.errors(ast)
-    if (errors.length > 0) {
-      errors[0].message = "Aran internal compilation error "+errors[0].message
-      console.dir(ast)
-      throw errors[0]
-    }
+    if (errors.length > 0) { Error("Aran internal compilation error", errors.map(function (e) { return e.message }), errors) }
     return Escodegen.generate(ast)
   }
 
@@ -65,7 +62,7 @@ module.exports = function (aran) {
       id.name = escape(id.name)
     })
     if (!args) {
-      node.body.body.unshift(Path.assignment(Ptah.identifier(esc_args), ptrap.arguments(Ptah.identifier(esc_args))))
+      node.body.body.unshift(Ptah.exprstmt(Ptah.assignment(Ptah.identifier(esc_args), ptrap.arguments(Ptah.identifier(esc_args)))))
     }
     return ptrap.function(node)
   }
@@ -74,41 +71,61 @@ module.exports = function (aran) {
   // Visitors //
   //////////////
 
-  function visit_expr (node) {
+
+  var ez = Ezreal()
+
+
+  while (stmts[0]) {
     var pushed = Switch.push(node.type)
-    var parts = Miley[node.type](node)
+    parts = Miley(node)
     if (aran.hooks[node.type]) {
       var copy = Util.extract(node)
       node.type = "SequenceExpression"
       node.expressions = [phook(copy.type, parts.infos.map(Ptah.nodify)), copy]
       node = copy
     }
-    var body = node.type === "FunctionDeclaration" ? node.body : null
-    Util.inject(exprs[node.type](Util.extract(node)), node)
+  }
+
+  function visit_expr (node) {
+    console.log(node.type)
+    var pushed = Switch.push(node.type)
+    var parts = Miley(node)
+    if (aran.hooks[node.type]) {
+      var copy = Util.extract(node)
+      node.type = "SequenceExpression"
+      node.expressions = [phook(copy.type, parts.infos.map(Ptah.nodify)), copy]
+      node = copy
+    }
+    var body = node.type === "FunctionExpression" ? node.body.body : null
+    if (!exprs[node.type]) { Error("Unsupported expression type", node) }
+    Util.inject(exprs[node.type](node), node)
     parts.exprs.forEach(visit_expr)
-    var decls = parts.stmts.forEach(visit_stmt)
-    if (!body) { return decls }
-    Util.prepend(decls, node.body)
+    if (body) {
+      var decls = Util.flaten(parts.stmts.map(visit_stmt))
+      Util.prepend(body, decls)
+    } else if (parts.stmts.length > 0) {
+      Error("Expressions that are not FunctionExpression should not contain any statement", node)
+    }
     if (pushed) { Switch.pop() }
-    return []
   }
 
   function visit_stmt (node) {
+    console.log(node.type)
     var pushed = Switch.push(node.type)
-    else if (lab) { labels.push(null) }
-    var parts = Miley[node.type](node)
+    var parts = Miley(node)
     if (aran.hooks[node.type]) {
       var copy = Util.extract(node)
       node.type = "BlockStatement"
       node.body = [Ptah.exprstmt(phook(copy.type, parts.infos.map(Ptah.nodify))), copy]
       node = copy
     }
-    var body = node.type === "FunctionDeclaration" ? node.body : null
+    var body = node.type === "FunctionDeclaration" ? node.body.body : null
+    if (!stmts[node.type]) { Error("Unsupported statement type", node) }
     stmts[node.type](node)
     parts.exprs.forEach(visit_expr)
     var decls = Util.flaten(parts.stmts.map(visit_stmt))
     if (!body) { return decls }
-    Util.prepend(decls, node.body)
+    Util.prepend(body, decls)
     copy = Util.extract(node)
     node.type = "EmptyStatement"
     if (pushed) { Switch.pop() }
@@ -151,18 +168,24 @@ module.exports = function (aran) {
     node.object = Ptah.call(pshadow("with"), [node.object])
   }
 
-  // TODO
-  // dificult to prevent label clash
-  // has to perform upfront parsing to find break
-  // switch (EXPR1) { case EXPR2: STMT1 break; default: STMT2 } >>> switchX: {
-  //   aran.push(EXPR1);
-  //   if (aran.traps.binary("===", aran.pop(), EXPR2) { STMT1 break switchX; }
-  //   STMT2
+  // switch (EXPR1) { case EXPR2: STMT1 break; default: STMT2 } >>> try {
+  //   switchX: {
+  //     aran.push(EXPR1);
+  //     if (aran.traps.binary("===", aran.get(), EXPR2) { STMT1 break switchX; }
+  //     STMT2
+  //   }
+  // } finally {
+  //   aran.pop()
   // }
+  // etc...
   stmts.SwitchStatement = function (node) {
-
+    var stmts = Util.flaten(node.cases.map(function (c) {
+      if (!c.test) { return c.consequent }
+      return [Ptah.if(ptrap.binary("===", Pstack.get(), c.test), Ptah.block(c.consequent))]
+    }))
+    stmts.unshift(Ptah.exprstmt(Pstack.push(node.discriminant)))
+    Util.inject(Ptah.try([Ptah.label(Switch.get(), Ptah.block(stmts))], null, null, [Ptah.exprstmt(Pstack.pop())]), node)
   }
-
 
   stmts.ReturnStatement = Util.nil
 
@@ -258,13 +281,13 @@ module.exports = function (aran) {
     }
     var stmts = []
     if (node.left.type === "VariableDeclaration") {
-      if (node.left.declarations.length !== 1) { throw new Error(node) }
+      if (node.left.declarations.length !== 1) { Error("Not unique variable declaration in a for-in statement", node) }
       var name = node.left.declarations[0].id.name
-      stmts.push(node.left); 
+      stmts.push(node.left)
     } else if (node.left.type === "Identifier") {
       var name = node.left.name
-    } else (node.left !== "Identifier") {
-      throw new Error(node)
+    } else {
+      Error("Wrong left-hand side in for-in statement", node)
     }
     stmts.push(Pstack.push3(ptrap.enumerate(node.right)))
     var ass = Ptah.assignment(Ptah.identifier(name), Ptah.member(Pstack.get3(), Pstack.get1()))
@@ -276,7 +299,8 @@ module.exports = function (aran) {
   // function ID (ID1,ID2) {} >>> var #ID = aran.traps.function(function (#ID1, #ID2) {})
   // etc...
   stmts.FunctionDeclaration = function (node) {
-    Util.inject(Ptah.declaration(escape(node.id.name), visit_fct(Util.extract(node))), node)
+    node.type = "FunctionExpression"
+    Util.inject(Ptah.declaration(escape(node.id.name), visit_fct(node)), node)
   }
 
   // var ID1=EXPR1, ID2=EXPR2 >>> var #ID1=EXPR1, #ID2=EXPR2
@@ -307,7 +331,7 @@ module.exports = function (aran) {
   // function (ID) {} >>> aran.traps.function(function (#ID) { arguments=aran.traps.arguments(arguments) })
   exprs.FunctionExpression = visit_fct
 
-  exprs.sequence = Util.identity
+  exprs.SequenceExpression = Util.identity
   
   // void EXPR           >>> aran.traps.unary("void", EXPR)
   // delete EXPR1[EXPR2] >>> aran.traps.delete(EXPR1, EXPR2)
@@ -347,14 +371,16 @@ module.exports = function (aran) {
     } else if (node.left.type === "MemberExpression") {
       compute_member(node.left)
       if (node.operator === "=") { return ptrap.set(node.left.object, node.left.property, node.right) }
-    } else { throw new Error(node) }
+    } else {
+      Error("Wrong left-hand side in assignment expression", node)
+    }
     var op = node.operator.replace("=", "")
     if (node.left.type === "Identifier") {
       node.operator = "="
       node.right = ptrap.binary(op, Ptah.identifier(node.left.name), node.right)
       return node
     }
-    return ptraps.set(Pstack.push1(node.left.object), Pstack.push2(node.left.property), ptrap.binary(op, ptrap.get(Pstack.pop1(), Pstack.pop2()), node.right))
+    return ptrap.set(Pstack.push1(node.left.object), Pstack.push2(node.left.property), ptrap.binary(op, ptrap.get(Pstack.pop1(), Pstack.pop2()), node.right))
   }
 
   // ++ID           >>> $ID=aran.traps.binary("+", #ID, aran.traps.primitive(1))
@@ -379,7 +405,7 @@ module.exports = function (aran) {
       if (node.prefix) { return Ptah.assignment(id(), ptrap.binary(op, id(), one())) }
       return Ptah.sequence([Ptah.assignment(id(), ptrap.binary(op, Pstack.push(id()), one())), Pstack.pop()])
     }
-    if (!node.argument.type === "MemberExpression") { throw new Error (node) }
+    if (!node.argument.type === "MemberExpression") { Error("Wrong left-hand side in update expression", node) }
     compute_member(node.argument)
     if (node.prefix) {
       return ptrap.set(
@@ -392,7 +418,7 @@ module.exports = function (aran) {
       ptrap.set(
         Pstack.push1(node.argument.object),
         Pstack.push2(node.argument.property),
-        ptrap.binary(op, Pstack.push3(ptrap.get(Pstack.pop1(), Pstack.pop2())), one()),
+        ptrap.binary(op, Pstack.push3(ptrap.get(Pstack.pop1(), Pstack.pop2())), one())),
       Pstack.pop3()
     ])
   }
@@ -404,7 +430,7 @@ module.exports = function (aran) {
     var seq = Ptah.sequence([Pstack.pop(), node.right])
     if (node.operator === "||") { return Ptah.conditional(test, Pstack.pop(), seq) }
     if (node.operator === "&&") { return Ptah.conditional(test, seq, Pstack.pop()) }
-    throw new Error(node)
+    Error("Invalid logical operator", node)
   }
 
   // EXPR1 ? EXPR2 : EXPR3 >>> aran.traps.booleanize(EXPR1) ? EXPR2 : EXPR3
