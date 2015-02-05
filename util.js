@@ -31,3 +31,15 @@ exports.inject = function (o1, o2) {
 exports.identity = function (x) { return x }
 
 exports.nil = function () {}
+
+exports.error = function () {
+  var msg = ""
+  for (var i=0; i<arguments.length; i++) {
+    try {
+      msg = msg + JSON.stringify(arguments[i]) + "\n"
+    } catch (e) {
+      msg = msg + arguments[i]
+    }
+  }
+  throw new Error(msg)
+}

@@ -86,7 +86,7 @@ Array creation | `array(Array)` | `[x,y,z]` | `aran.traps.array([x,y,z])`
 Arguments creation | `arguments(Arguments)` | `function () {}` | `aran.traps.function(function () { arguments = aran.traps.arguments(arguments) })`
 Function creation | `function(Function)` | `function () {}` | `aran.traps.function(function () { arguments = aran.traps.arguments(arguments) })`
 Regexp creation | `regexp(Regexp)` | `/abc/g` | `aran.traps.regexp(/abc/g)`
-Conversion to boolean | `booleanize(value, Test)` | `x?:y:z` | `aran.traps.booleanize(x, '?:')?y:z`
+Conversion to boolean | `booleanize(value, Usage)` | `x?:y:z` | `aran.traps.booleanize(x, '?:')?y:z`
 Conversion to string | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
 Throw an exception | `throw(value)` | `throw x` | `throw aran.traps.throw(x)`
 Catch an exception | `catch(value)` | `try {} catch (e) {}` | `try {} catch (e) { e = aran.traps.catch(e) }` 
@@ -151,46 +151,50 @@ Additional remarks:
     * `@IFLAG` is a boolean indicating whether `@FLAGS` contains the character `i`;
     * `@MFLAG` is a boolean indicating whether `@FLAGS` contains the character `m`;
 
-* `booleanize`: valid `Test` parameters are:
+* `booleanize`: valid `Usage` parameters are:
     * `'if'`
     * `'if-else'`
     * `'while'`
     * `'do-while'`
     * `'for'`
     * `'?:'`
-    * `'||'`
-    * `'&&'`
+    * `'has-ID'`
 
-* `stringify`: this trap is only call for perofrming direct call to `eval` as defined in http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
+    The last value `'has-ID'` occurs whenever the scope lookup hits an object, i.e. a `with` statement or finally the global object.
+    For instance `with ({x:1}) x` will trigger the `booleanize` trap a `Usage` parameter set to `has-x`.
+    In the case of a `with` statement, a false value will make the lookup propagate to the enclosing scope.
+    In the case of the global object, a false value will trigger a reference error.
+
+* `stringify`: this trap is only call for performing direct call to `eval` as defined in http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
 
 * `unary`: valid `Operator` are:
-    * `"-"`
-    * `"+"`
-    * `"!"`
-    * `"~"`
-    * `"typeof"`
-    * `"void"`
+    * `'-'`
+    * `'+'`
+    * `'!'`
+    * `'~'`
+    * `'typeof'`
+    * `'void'`
 
 * `binary`: valid `Operator` are:
-    * `"=="`
-    * `"!="`
-    * `"==="`
-    * `"!=="`
-    * `"<"`
-    * `"<="`
-    * `">"`
-    * `">="`
-    * `"<<"`
-    * `">>"`
-    * `">>>"`
-    * `"+"`
-    * `"-"`
-    * `"*"`
-    * `"/"`
-    * `"%"`
-    * `"|"`
-    * `"^"`
-    * `"&"`
-    * `"in"`
-    * `"instanceof"`
-    * `".."`
+    * `'=='`
+    * `'!='`
+    * `'===`
+    * `'!=='`
+    * `'<'`
+    * `'<='`
+    * `'>'`
+    * `'>='`
+    * `'<<'`
+    * `'>>'`
+    * `'>>>'`
+    * `'+'`
+    * `'-'`
+    * `'*'`
+    * `'/'`
+    * `'%'`
+    * `'|'`
+    * `'^'`
+    * `'&'`
+    * `'in'`
+    * `'instanceof'`
+    * `'..'`

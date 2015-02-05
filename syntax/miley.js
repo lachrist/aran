@@ -1,5 +1,10 @@
 
-var Error = require("./error.js")
+/*
+ * Miley and here wrecking ball well deconstruct Mozilla Parser expressions and statements.
+ * See: https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API.
+ */
+
+var Error = require("../error.js")
 
 /////////////
 // Helpers //
@@ -18,14 +23,14 @@ var Error = require("./error.js")
 // <expr>[<expr>] >>> [null, null]
 function left (node, exprs) {
   if (node.type === "Identifier") { return [node.name, null] }
-  if (node.type !== "MemberExpression") { Error("Invalid left-hand side", node) }
+  if (node.type !== "MemberExpression") { Error.esprima("Invalid left-hand side", node) }
   exprs.push(node.object)
   if (node.computed) {
     exprs.push(node.property)
     return [null, null]
   }
   if (node.property.type === "Identifier") { return [null, node.property.name] }
-  Error("Member expression uncomputed without identifier", node)
+  Error.esprima("Member expression uncomputed and property is not an identifier", node)
 }
 
 // Helper for variable declarations used in:
@@ -52,9 +57,9 @@ function declaration (node, exprs) {
 /////////////
 
 var miley = {}
-module.exports = function (node, exprs, stmts) {
-  if (!miley[node.type]) { Error("Unsopported node type", node) }
-  return miley[node.type](node, exprs, stmts)
+module.exports = function (node, stmts, exprs) {
+  if (!miley[node.type]) { Error.esprima("Unknwon node type", node) }
+  return miley[node.type](node, stmts, exprs)
 }
 
 // interface Program <: Node {
@@ -67,7 +72,7 @@ module.exports = function (node, exprs, stmts) {
 //              >>> []
 // <stmt>       >>> [1]
 // <stmt><stmt> >>> [2]
-miley.Program = function (node, exprs, stmts) {
+miley.Program = function (node, stmts, exprs) {
   Util.append(stmts, node.body)
   return [node.body.length]
 }
@@ -80,7 +85,7 @@ miley.Program = function (node, exprs, stmts) {
 // []
 //
 // ; >>> []
-miley.EmptyStatement = function (node, exprs, stmts) {
+miley.EmptyStatement = function (node, stmts, exprs) {
   return []
 }
 
@@ -96,7 +101,7 @@ miley.EmptyStatement = function (node, exprs, stmts) {
 // {<stmt>}       >>> [1]
 // {<stmt><stmt>} >>> [2]
 // etc...
-miley.BlockStatement = function (node, exprs, stmts) {
+miley.BlockStatement = function (node, stmts, exprs) {
   Util.append(stmts, node.body)
   return [node.body.length]
 }
@@ -110,7 +115,7 @@ miley.BlockStatement = function (node, exprs, stmts) {
 // []
 //
 // <expr>; >>> []
-miley.ExpressionStatement = function (node, exprs, stmts) {
+miley.ExpressionStatement = function (node, stmts, exprs) {
   exprs.push(node.expression)
   return []
 }
@@ -127,7 +132,7 @@ miley.ExpressionStatement = function (node, exprs, stmts) {
 //
 // if (<expr>) <stmt>             >>> [false]
 // if (<expr>) <stmt> else <stmt> >>> [true]
-miley.IfStatement = function (node, exprs, stmts) {
+miley.IfStatement = function (node, stmts, exprs) {
   exprs.push(node.test)
   stmts.push(node.consequent)
   var alt = Boolean(node.alternate)
@@ -145,7 +150,7 @@ miley.IfStatement = function (node, exprs, stmts) {
 // [label]
 //
 // ID:<stmt> >>> ["ID"]
-miley.LabeledStatement = function (node, exprs, stmts) {
+miley.LabeledStatement = function (node, stmts, exprs) {
   stmts.push(node.body)
   return [node.label.name]
 }
@@ -160,7 +165,7 @@ miley.LabeledStatement = function (node, exprs, stmts) {
 //
 // break;    >>> [null]
 // break ID; >>> ["ID"]
-miley.BreakStatement = function (node, exprs, stmts) {
+miley.BreakStatement = function (node, stmts, exprs) {
   return [node.label?node.label.name:null]
 }
 
@@ -174,7 +179,7 @@ miley.BreakStatement = function (node, exprs, stmts) {
 //
 // continue;    >>> [null]
 // continue ID; >>> ["ID"]
-miley.ContinueStatement = function (node, exprs, stmts) {
+miley.ContinueStatement = function (node, stmts, exprs) {
   return [node.label?node.label.name:null]
 }
 
@@ -187,7 +192,7 @@ miley.ContinueStatement = function (node, exprs, stmts) {
 // []
 //
 // with (<expr>) <stmt> >>> []
-miley.WithStatement = function (node, exprs, stmts) {
+miley.WithStatement = function (node, stmts, exprs) {
   exprs.push(node.object)
   stmts.push(node.body)
   return []
@@ -218,7 +223,7 @@ miley.WithStatement = function (node, exprs, stmts) {
 // switch (<expr>) {default:<stmt>}                   >>> [[false], [1]]
 // switch (<expr>) {case<expr>: case<expr>: default:} >>> [[true,true,false], [0,0,0]]
 // etc...
-miley.SwitchStatement = function (node, exprs, stmts) {
+miley.SwitchStatement = function (node, stmts, exprs) {
   exprs.push(node.discriminant)
   return [node.cases.map(function (c) {
     if (c.test) { exprs.push(c.test) }
@@ -237,7 +242,7 @@ miley.SwitchStatement = function (node, exprs, stmts) {
 //
 // return;        >>> [false]
 // return <expr>; >>> [true]
-miley.ReturnStatement = function (node, exprs, stmts) {
+miley.ReturnStatement = function (node, stmts, exprs) {
   if (node.argument) { exprs.push(node.argument) }
   return [Boolean(node.argument)]
 }
@@ -251,7 +256,7 @@ miley.ReturnStatement = function (node, exprs, stmts) {
 // []
 //
 // throw <expr>; >>> []
-miley.ThrowStatement = function (node, exprs, stmts) {
+miley.ThrowStatement = function (node, stmts, exprs) {
   exprs.push(node.argument)
   return []
 }
@@ -280,7 +285,7 @@ miley.ThrowStatement = function (node, exprs, stmts) {
 // try {} catch (ID) {<stmt>}                        >>> ["ID", 0, 1, null]
 // try {<stmt>} catch (ID) {<stmt>} finally {<stmt>} >>> ["ID", 1, 1, 1]
 // etc..
-miley.TryStatement = function (node, exprs, stmts) {
+miley.TryStatement = function (node, stmts, exprs) {
   Util.append(stmts, node.block.body)
   var infos = [stmts.length]
   if (node.handler) {
@@ -310,7 +315,7 @@ miley.TryStatement = function (node, exprs, stmts) {
 // []
 //
 // while (<expr>) <stmt> >>> []
-miley.WhileStatement = function (node, exprs, stmts) {
+miley.WhileStatement = function (node, stmts, exprs) {
   exprs.push(node.test)
   stmts.push(node.body)
   return []
@@ -326,7 +331,7 @@ miley.WhileStatement = function (node, exprs, stmts) {
 // []
 //
 // do <stmt> while (<expr>) >>> []
-miley.DoWhileStatement = function (node, exprs, stmts) {
+miley.DoWhileStatement = function (node, stmts, exprs) {
   stmts.push(node.body)
   exprs.push(node.test)
   return []
@@ -348,7 +353,7 @@ miley.DoWhileStatement = function (node, exprs, stmts) {
 // for (;<expr>;)                    >>> [false, true, false]
 // for (var ID=<expr>;;)             >>> [true, false, false, [["ID",true]]]
 // for (var ID1=<expr>, ID2;;)       >>> [true, false, false, [["ID1",true],["ID2",false]]]
-miley.ForStatement = function (node, exprs, stmts) {
+miley.ForStatement = function (node, stmts, exprs) {
   var infos = [node.init, node.test, node.update].map(Boolean)
   if (node.init) {
     if (node.init.type !== "VariableDeclaration") { exprs.push(node.init) }
@@ -376,9 +381,9 @@ miley.ForStatement = function (node, exprs, stmts) {
 // for (ID in <expr>) <stmt>              >>> [null, "ID", null]
 // for (<expr>.ID in <expr>) <stmt>       >>> [null, null, "ID"]
 // for (<expr>[<expr>] in <expr>) <stmt>  >>> [null, null, null]
-miley.ForInStatement = function (node, exprs, stmts) {
+miley.ForInStatement = function (node, stmts, exprs) {
   if (node.left.type === "VariableDeclaration") {
-    if (node.left.declarations.length !== 1) { Error("Not unique variable declaration in for-in statement", node) }
+    if (node.left.declarations.length !== 1) { Error.esprima("Not unique variable declaration in for-in statement", node) }
     var init = node.left.declarations[0].init
     var infos = [[node.left.declarations[0].id.name, Boolean(init)], null, null]
     if (init) { exprs.unshift(init) }
@@ -389,7 +394,7 @@ miley.ForInStatement = function (node, exprs, stmts) {
     exprs.push(node.left.object)
     if (node.left.computed) { exprs.push(node.left.property) }
   } else {
-    Error("Wrong left-hand side in for-in statement", node)
+    Error.esprima("Wrong left-hand side in for-in statement", node)
   }
   exprs.push(node.right)
   stmts.push(node.body)
@@ -416,7 +421,7 @@ miley.ForInStatement = function (node, exprs, stmts) {
 // function ID0 (ID1) {}          >>> ["ID0", 0, ["ID1"]]
 // function ID0 (ID1, ID2) {}     >>> ["ID0", 0, ["ID1", "ID2"]]
 // etc...
-miley.FunctionDeclaration = function (node, exprs, stmts) {
+miley.FunctionDeclaration = function (node, stmts, exprs) {
   Util.append(stmts, node.body.body)
   return [
     node.id.name,
@@ -453,7 +458,7 @@ miley.VariableDeclaration = declaration
 // []
 //
 // this >>> []
-miley.ThisExpression = function (node, exprs, stmts) {
+miley.ThisExpression = function (node, stmts, exprs) {
   return []
 }
 
@@ -471,7 +476,7 @@ miley.ThisExpression = function (node, exprs, stmts) {
 // [<expr>,]       >>> [[true, false]]
 // [,,<expr>]      >>> [[false, false, true]]
 // etc...
-miley.ArrayExpression = function (node, exprs, stmts) {
+miley.ArrayExpression = function (node, stmts, exprs) {
   var exprs = []
   return [node.elements.map(function (e) {
     if (e) { exprs.push(e) }
@@ -492,7 +497,7 @@ miley.ArrayExpression = function (node, exprs, stmts) {
 // }
 //
 //
-miley.ObjectExpression = function (node, exprs, stmts) {
+miley.ObjectExpression = function (node, stmts, exprs) {
   return [node.properties.map(function (p) {
     var info = [p.kind]
     if (p.key.type === "Identifer") { infos.unshift(p.key.name) }
@@ -526,7 +531,7 @@ miley.ObjectExpression = function (node, exprs, stmts) {
 // function ID () {}            >>> ["ID", [], 0]
 // function (ID1, ID2) {<stmt>} >>> [null, ["ID1", "ID2"], 1]
 // etc..
-miley.FunctionExpression = function (node, exprs, stmts) {
+miley.FunctionExpression = function (node, stmts, exprs) {
   Util.append(stmts, node.body.body)
   return [
     node.id?node.id.name:null,
@@ -547,7 +552,7 @@ miley.FunctionExpression = function (node, exprs, stmts) {
 // (<expr>)         >>> [1]
 // (<expr>, <expr>) >>> [2]
 // etc...
-miley.SequenceExpression = function (node, exprs, stmts) {
+miley.SequenceExpression = function (node, stmts, exprs) {
   Util.append(exprs, node.expressions)
   return [node.expressions.length]
 }
@@ -571,7 +576,7 @@ miley.SequenceExpression = function (node, exprs, stmts) {
 // delete <expr>[<expr>] >>> ["delete", null, null]
 // delete <expr>         >>> ["delete"]
 // OP <expr>             >>> ["OP"]
-miley.UnaryExpression = function (node, exprs, stmts) {
+miley.UnaryExpression = function (node, stmts, exprs) {
   if (node.operator === "typeof" && node.argument.type === "Identifier") { return ["typeof", node.argument.name] }
   if (node.operator === "delete" && node.argument.type === "Identifier") { return ["delete", node.argument.name, null] }
   if (node.operator === "delete" && node.argument.type === "MemberExpression") {
@@ -606,7 +611,7 @@ miley.UnaryExpression = function (node, exprs, stmts) {
 // [operator]
 //
 // <expr> OP <expr> >>> ["OP"]
-miley.BinaryExpression = function (node, exprs, stmts) {
+miley.BinaryExpression = function (node, stmts, exprs) {
   exprs.push(node.left)
   exprs.push(node.right)
   return [node.operator]
@@ -630,7 +635,7 @@ miley.BinaryExpression = function (node, exprs, stmts) {
 // ID OP <expr>             >>> ["OP", "ID", null] 
 // <expr>.ID OP <expr>      >>> ["OP", null, "ID"]
 // <expr>[<expr>] OP <expr> >>> ["OP", null, null]
-miley.AssignmentExpression = function (node, exprs, stmts) {
+miley.AssignmentExpression = function (node, stmts, exprs) {
   var infos = left(node.left, exprs)
   exprs.push(node.right)
   infos.unshift(node.operator)
@@ -653,7 +658,7 @@ miley.AssignmentExpression = function (node, exprs, stmts) {
 // ID OP           >>> [OP, "ID", null]
 // <expr>.ID OP    >>> [OP, null, "ID"]
 // <expr>[expr] OP >>> [OP, null, null]
-miley.UpdateExpression = function (node, exprs, stmts) {
+miley.UpdateExpression = function (node, stmts, exprs) {
   var infos = left(node.argument, exprs)
   infos.unshift(node.operator)
   return infos
@@ -673,7 +678,7 @@ miley.UpdateExpression = function (node, exprs, stmts) {
 // [operator]
 //
 // <expr> OP <expr> >>> [OP]
-miley.LogicalExpression = function (node, exprs, stmts) {
+miley.LogicalExpression = function (node, stmts, exprs) {
   exprs.push(node.left)
   exprs.push(node.right)
   return [node.operator]
@@ -690,7 +695,7 @@ miley.LogicalExpression = function (node, exprs, stmts) {
 // []
 //
 // <expr>?<expr>:<expr> >>> []
-miley.ConditionalExpression = function (node, exprs, stmts) {
+miley.ConditionalExpression = function (node, stmts, exprs) {
   exprs.push(node.test)
   exprs.push(node.consequent)
   exprs.push(node.alternate)
@@ -709,7 +714,7 @@ miley.ConditionalExpression = function (node, exprs, stmts) {
 // new <expr>()              >>> [0]
 // new <expr>(<expr>)        >>> [1]
 // new <expr>(<expr>,<expr>) >>> [2]
-miley.NewExpression = function (node, exprs, stmts) {
+miley.NewExpression = function (node, stmts, exprs) {
   exprs.push(node.callee)
   Util.append(exprs, node.arguments)
   return [node.arguments.length]
@@ -730,7 +735,7 @@ miley.NewExpression = function (node, exprs, stmts) {
 // <expr>(<expr>,<expr>)         >>> [2, false, null]
 // <expr>.ID(<expr>,<expr>)      >>> [2, true, "ID"]
 // <expr>[<expr>](<expr>,<expr>) >>> [2, true, null]
-miley.CallExpression = function (node, exprs, stmts) {
+miley.CallExpression = function (node, stmts, exprs) {
   var is_member = node.callee.type === "MemberExpression"
   var infos = [node.arguments.length, is_member]
   if (is_member) {
@@ -757,13 +762,13 @@ miley.CallExpression = function (node, exprs, stmts) {
 //
 // <expr>.ID      >>> ["ID"]
 // <expr>[<expr>] >>> [null]
-miley.MemberExpression = function (node, exprs, stmts) {
+miley.MemberExpression = function (node, stmts, exprs) {
   exprs.push(node.object)
   var infos = []
   if (node.computed) {
     exprs.push(node.property)
   } else {
-    if (node.property.type !== "Identifier") { Error("Member expression uncomputed without identifier", node) }
+    if (node.property.type !== "Identifier") { Error.esprima("Member expression uncomputed without identifier", node) }
     infos.push(node.property.name)
   }
   return infos
@@ -778,7 +783,7 @@ miley.MemberExpression = function (node, exprs, stmts) {
 // [name]
 //
 // ID >>> ["ID"]
-miley.Identifier = function (node, exprs, stmts) {
+miley.Identifier = function (node, stmts, exprs) {
   return [node.name]
 }
 
@@ -791,6 +796,6 @@ miley.Identifier = function (node, exprs, stmts) {
 // [value]
 //
 // LIT >>> [LIT]
-miley.Literal = function (node, exprs, stmts) {
+miley.Literal = function (node, stmts, exprs) {
   return [node.value]
 }

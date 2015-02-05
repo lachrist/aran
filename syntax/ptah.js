@@ -1,10 +1,17 @@
 
-function nodify (x) {
+/*
+ * The egyptian god Ptah will help you construct generic Mozilla parser node as describred in:
+ * https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API.
+ */
+
+var Error = require("../error.js")
+
+exports.nodify = function (x) {
   if (x === null) { return {type:"Literal", value:x} }
   if (x instanceof RegExp) { return {type:"Literal", value:x} }
   if (["boolean", "string", "number"].indexOf(typeof x) !== -1) { return {type:"Literal", value:x} }
   if (x instanceof Array) { return { type:"ArrayExpression", elements:x.map(nodify) } }
-  if (typeof x !== "object") { throw new Error ("Unknown type for "+x) }
+  if (typeof x !== "object") { Error.internal("Unknown type", x) }
   var node = {type:"ObjectExpression", properties:[]}
   for (var k in x) {
     node.properties.push({
@@ -17,8 +24,6 @@ function nodify (x) {
   return node
 }
 
-exports.nodify = nodify
-
 exports.empty = function () {
   return { type: "EmptyStatement" }
 }
@@ -28,6 +33,10 @@ exports.identifier = function (name) {
     type: "Identifier",
     name: name
   }
+}
+
+exports.this = function () {
+  return { type:"ThisExpression" }
 }
 
 exports.new = function (fct, args) {
@@ -45,12 +54,13 @@ exports.literal = function (value) {
   }
 }
 
-exports.member = function (object, k) {
+exports.member = function (object, property) {
+  if (typeof property === "string") { property = {type:"Identifier", name:property} }
   return {
     type: "MemberExpression",
-    computed: (typeof k !== "string"),
-    object:object,
-    property: (typeof k === "string")?exports.identifier(k):k
+    computed: property.type !== "Identifier",
+    object: object,
+    property: property
   }
 }
 
@@ -86,7 +96,7 @@ exports.array = function (elements) {
 }
 
 exports.declaration = function (id, init) {
-  if (typeof id === "string") { id = exports.identifier(id) }
+  if (typeof id === "string") { id = {type:"Identifier", name id} }
   return {
     type: "VariableDeclaration",
     kind: "var",
@@ -111,6 +121,7 @@ exports.sequence = function (expressions) {
 }
 
 exports.assignment = function (left, right) {
+  if (typeof left === "string") { left = {type:"Identifier", name:left} }
   return {
     type: "AssignmentExpression",
     operator: "=",
@@ -187,60 +198,3 @@ exports.label = function (label, body) {
     body: body
   }
 }
-
-// exports.data_descr = function (configurable, enumerable, writable, value) {
-//   return {
-//     type: "ObjectExpression",
-//     properties: [{
-//       type:"property",
-//       kind:"init",
-//       name:{type:"identifier", name:"configurable"},
-//       value:{type:"literal", value:configurable}
-//     }, {
-//       type:"property",
-//       kind:"init",
-//       name:{type:"identifier", name:"enumerable"},
-//       value:{type:"literal", value:enumerable}
-//     }, {
-//       type:"property",
-//       kind:"init",
-//       name:{type:"identifier", name:"writable"},
-//       value:{type:"literal", value:writable}
-//     }, {
-//       type:"property",
-//       kind:"init",
-//       name:{type:"identifier", name:"value"},
-//       value:value
-//     }]
-//   }
-// }
-
-// exports.acce_descr = function (configurable, enumerable, get, set) {
-//     return {
-//     type: "ObjectExpression",
-//     properties: [{
-//       type:"property",
-//       kind:"init",
-//       name:{type:"identifier", name:"configurable"},
-//       value:{type:"literal", value:configurable}
-//     }, {
-//       type:"property",
-//       kind:"init",
-//       name:{type:"identifier", name:"enumerable"},
-//       value:{type:"literal", value:enumerable}
-//     }, {
-//       type:"property",
-//       kind:"init",
-//       name:{type:"identifier", name:"get"},
-//       value:get
-//     }, {
-//       type:"property",
-//       kind:"init",
-//       name:{type:"identifier", name:"set"},
-//       value:set
-//     }]
-//   }
-// }
-
-
-
