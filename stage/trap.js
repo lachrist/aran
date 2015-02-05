@@ -3,6 +3,8 @@
  * Intercept the evaluation of some expressions/statements.
  */
 
+var Util = require("../util.js")
+
 var Ptah = require("../syntax/ptah.js")
 var Nasus = require("../syntax/nasus.js")
 var Shadow = require("../syntax/shadow.js")
@@ -18,6 +20,8 @@ function property (member) { member.computed?member.property:Ptah.literal(member
 /////////////
 
 module.exports = function (traps) {
+
+  if (!traps) { return {stmt:Util.nil, expr:Util.nil} }
 
   var booleanize = traps.booleanize ? function (test, place) { return Shadow("traps", "booleanize", [test, place]) } : Util.identity
 
@@ -191,7 +195,7 @@ module.exports = function (traps) {
   }
 
   exprs.Literal = function (node) {
-    if (node.regex) { if (traps.regex) { return trap("regexp", [node]) }
+    if (traps.regexp) { if (node.regex) { return trap("regexp", [node]) } }
     if (traps.primitive) { return trap("primitive", [node]) }
     return node
   }

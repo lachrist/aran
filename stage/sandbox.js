@@ -12,7 +12,7 @@ function escape_decl (decl) { escape(decl.id) }
 
 module.exports = function (sandbox, next) {
 
-  if (!sandbox) { return {stmt:next.stmt, expr:next:expr} }
+  if (!sandbox) { return {stmt:next.stmt, expr:next.expr} }
 
   function stmt (stmt) {
     switch (stmt.type) {

@@ -6,6 +6,7 @@ var Escodegen = require("escodegen")
 var Error = require("../error.js")
 
 var Shadow = require("../syntax/shadow.js")
+var Miley = require("../syntax/miley.js")
 
 var Hoist = require("../stage/hoist.js")
 var Hook = require("../stage/hook.js")

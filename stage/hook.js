@@ -8,11 +8,13 @@ var Shadow = require("../syntax/ptah.js")
 
 module.exports = function (hooks, next) {
 
+  if (!hooks) { return {stmt:next.stmt, expr:next.expr} }
+
   function stmt (stmt) {
     if (!hooks[stmt.type]) { return next.stmt(stmt) }
     var copy = Util.extract(stmt)
     stmt.type = "BlockStatement"
-    stmt.body = [Ptah.exprstmt(Shadow("hooks", copy.type, Ptah.nodify(copy.infos)), copy]
+    stmt.body = [Ptah.exprstmt(Shadow("hooks", copy.type, Ptah.nodify(copy.infos))), copy]
     next.stmt(copy)
   }
 

@@ -96,7 +96,7 @@ exports.array = function (elements) {
 }
 
 exports.declaration = function (id, init) {
-  if (typeof id === "string") { id = {type:"Identifier", name id} }
+  if (typeof id === "string") { id = {type:"Identifier", name:id} }
   return {
     type: "VariableDeclaration",
     kind: "var",

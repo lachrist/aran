@@ -9,7 +9,7 @@ var Nasus = require("../syntax/nasus.js")
 
 function escape (id) { if (/^\$*switch/.test(id.name)) { id.name="$"+id.name } }
 
-module.exports = function (next) {
+module.exports = function (mark, next) {
 
   var labels = []
 
@@ -43,6 +43,6 @@ module.exports = function (next) {
     next.stmt(stmt)
   }
 
-  function {stmt:stmt, expr:next.expr}
+  return {stmt:stmt, expr:next.expr}
 
 }

@@ -75,6 +75,6 @@ module.exports = function (next) {
     next.expr(expr)
   }
 
-  return {stmt:next.stmt; expr:expr}
+  return {stmt:next.stmt, expr:expr}
 
 }

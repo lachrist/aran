@@ -21,7 +21,7 @@ module.exports = function (next) {
     next.stmt(stmt)
   }
 
-  return {stmt:stmt, expr:expr.next}
+  return {stmt:stmt, expr:next.expr}
 
 }
 

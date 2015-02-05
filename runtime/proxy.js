@@ -10,10 +10,7 @@ module.exports = function (aran) {
   if (!aran.global.Proxy) { Error.external("ECMAscript6 proxies are needed to support sandboxing") }
 
   var has = function (o, k) { return unescape(k) in o }
-  if (aran.traps.binary) {
-    if (aran.traps.booleanize) { has = function (o, k) { return aran.traps.booleanize(aran.traps.binary("in", unescape(k), o), "has-"+unescape(k)) } }
-    else { has = function (o, k) { return aran.traps.binary("in", unescape(k), o) } }
-  }
+  if (aran.traps.exist) { has = function (o, k) { aran.traps.exist(o, unescape(k)) } }
 
   var get = function (o, k) { return o[unescape(k)] }
   if (aran.traps.get) { get = function (o, k) { return aran.traps.get(o, unescape(k)) } }

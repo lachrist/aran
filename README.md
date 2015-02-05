@@ -97,8 +97,9 @@ Instantiation | `new(function, Arguments)` | `new F(x, y)` | `aran.traps.new(F, 
 Property reading | `get(object, property)` | `o[k]` | `aran.traps.get(o, k)`
 Property writing | `set(object, property)` | `o[k] = v` | `aran.traps.set(o, k, v)`
 Property deletion | `delete(object, property)` | `delete o[k]` | `aran.traps.delete(o, k)`
-Binding removal | `erase(Result, Name)` | `delete x` | `aran.traps.erase(delete x, 'x')` 
 Property enumeration | `enumerate(object)` | `for ... in` | Its complicated...
+Binding existence | `exist(object, Identifier)` | Its complicated... | Its complicated...
+Binding removal | `erase(Result, Identifier)` | `delete x` | `aran.traps.erase(delete x, 'x')`
 
 Additional remarks:
 
@@ -158,14 +159,8 @@ Additional remarks:
     * `'do-while'`
     * `'for'`
     * `'?:'`
-    * `'has-ID'`
 
-    The last value `'has-ID'` occurs whenever the scope lookup hits an object, i.e. a `with` statement or finally the global object.
-    For instance `with ({x:1}) x` will trigger the `booleanize` trap a `Usage` parameter set to `has-x`.
-    In the case of a `with` statement, a false value will make the lookup propagate to the enclosing scope.
-    In the case of the global object, a false value will trigger a reference error.
-
-* `stringify`: this trap is only call for performing direct call to `eval` as defined in http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
+* `stringify`: only call for performing direct call to `eval` as defined in http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
 
 * `unary`: valid `Operator` are:
     * `'-'`
@@ -198,3 +193,7 @@ Additional remarks:
     * `'in'`
     * `'instanceof'`
     * `'..'`
+
+* `get`, `set`, `delete`: The `property` parameter can either be: (i) a raw string if came from a static property access, (ii) a wrapped value if it came from a computed member expression.
+
+* `exist`: triggered when the scope lookup hits a `with` statement or the global object. The value returned by this trap should indcate whether the identifier exists in the environment-object. In the case of a `with` statement, a false value will make the lookup propagate to the enclosing scope. In the case of the global object, a false value will trigger a reference error.
