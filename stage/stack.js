@@ -9,14 +9,15 @@
  */
 
 var Nasus = require("../syntax/nasus.js")
+var Ptah = require("../syntax/ptah.js")
 
 module.exports = function (next) {
 
   function stmt (type, stmt) {
     if (type === "Try") {
-      stmt.block.body.unshift(Pstack.mark())
+      stmt.block.body.unshift(Ptah.exprstmt(Nasus.mark()))
       if (!stmt.finalizer) { stmt.finalizer = Ptah.block([]) }
-      stmt.finalizer.body.unshift(Pstack.unmark())
+      stmt.finalizer.body.unshift(Ptah.exprstmt(Nasus.unmark()))
     }
     next.stmt(type, stmt)
   }

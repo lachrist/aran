@@ -14,17 +14,11 @@ module.exports = function (mark, next) {
 
   var push, get, pop
   (function () {
-    var labels = []
-    var push = function (x) { labels.push(x) }
-    var pop = function () { labels.pop() }
-    var get = function () { return labels[labels.length-1] }
+    var labels = [0]
+    push = function (x) { labels.push(x) }
+    pop = function () { labels.pop() }
+    get = function () { return labels[labels.length-1] }
   } ())
-  
-  function prgm (stmts) {
-    mark(pop)
-    push(0)
-    next.prgm(stmts)
-  }
   
   function stmt (type, stmt) {
      if (type === "Switch") {

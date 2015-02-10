@@ -17,7 +17,7 @@ module.exports = function (traps) {
 
   if (!traps) { return {prgm:Util.nil, stmt:Util.nil, expr:Util.nil} }
 
-  function stmt (type, stmt) { if (stmts[type]) { stmts[stmt.type](stmt) } }
+  function stmt (type, stmt) { if (stmts[type]) { stmts[type](stmt) } }
 
   function expr (type, expr) {
     if (exprs[type]) {
@@ -34,7 +34,7 @@ module.exports = function (traps) {
 
   function property (member) { return member.computed?member.property:Ptah.literal(member.property.name) }
 
-  function forin = function (type, node) {
+  function forin (type, node) {
     if (!traps.enumerate) { return }
     var stmts = []
     if (type === "DeclarationForIn") { stmts.push(node.left) }
@@ -142,14 +142,14 @@ module.exports = function (traps) {
     if (traps.arguments) {
       var check = true
       node.params.forEach(function (id) { if (id.name === "arguments") { check = false } })
-      if (check) { node.body.body.unshift(Ptah.exprstmt(Ptah.assignment("arguments", Shadow("traps", "arguments", [])))) }
+      if (check) { node.body.body.unshift(Ptah.exprstmt(Ptah.assignment("arguments", Shadow("traps", "arguments", [Ptah.identifier("arguments")])))) }
     }
     if (traps.function) { return Shadow("traps", "function", [Util.extract(node)]) }
   }
 
   exprs.MemberAssignment = function (node) { if (traps.set) { return Shadow("traps", "set", [node.left.object, property(node.left), node.right]) } }
 
-  exprs.IdentifierTypeof = function (node) { if (traps.unary) { return Shadow("traps", "unary", [Ptah.literal("typeof"), Ptah.call(Ptah.function([], [Ptah.try([Ptah.return(node.argument)], "error", [Ptah.return(Shadow("undefined"))])]), [])]) }
+  exprs.IdentifierTypeof = function (node) { if (traps.unary) { return Shadow("traps", "unary", [Ptah.literal("typeof"), Ptah.call(Ptah.function([], [Ptah.try([Ptah.return(node.argument)], "error", [Ptah.return(Shadow("undefined"))])]), [])]) } }
 
   exprs.IdentifierDelete = function (node) { if (traps.unary) { return Shadow("traps", "delete", [Ptah.literal(node.argument.name), Util.extract(node)]) } }
 

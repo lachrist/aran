@@ -6,56 +6,44 @@
 var Util = require("../util.js")
 var Ptah = require("../syntax/ptah.js")
 
-module.exports = function (next) {
+module.exports = function (mark, next) {
 
-  var push, get
+  var push, hoist, pop
   (function () {
     var bodies = []
-    function pop () {
-      var body = bodies.pop()
-      for (var i=0; i<body.length; i++) {
-        if (body[i] === null) {
-          body.splice(i,1)
-          return
-        }
-      }
-    }
-    push = function (body, ondone) {
-      ondone(pop)
+    var buffers = []
+    push = function (body) {
+      mark(pop)
       bodies.push(body)
-      body.unshift(null)
-      return body
+      buffers.push([])
     }
-    get = function (body) { return bodies[bodies.length-1] }
+    hoist = function (stmt) { buffers[buffers.length-1].push(stmt) }
+    pop = function () {
+      Array.prototype.unshift.apply(bodies.pop(), buffers.pop())
+    }
   } ())
 
-  function prgm (stmts) {
-    push(stmts)
-    next.prgm(stmts)
+  function prgm (prgm) {
+    push(prgm.body)
+    next.prgm(prgm)
   }
 
-  function stmt (type, stmt, ondone) {
-    if (type !== "Function") { return next.stmt(type, stmt, ondone) }
-    var parent = get()
-    push(stmt.body.body, ondone)
-    // Function Expression //
+  function stmt (type, stmt) {
+    if (type !== "Definition") { return next.stmt(type, stmt) }
     var copy = Util.extract(stmt)
     copy.type = "FunctionExpression"
-    // Declaration //
+    stmt.type = "EmptyStatement"
     var decl = Ptah.declaration(copy.id.name, copy)
-    for (var i=0; parent[i] !== null; i++) ;
-    parent.splice(i, 0, decl)
-    // Empty Statement //
-    stmt.type="EmptyStatement"
-    // Next
+    hoist(decl)
+    push(copy.body.body)
     next.stmt("Empty", stmt)
     next.stmt("Declaration", decl)
     next.expr("Function", copy)
   }
 
-  function expr (type, expr, ondone) {
-    if (type === "Function") { push(expr.body.body, ondone) }
-    next.expr(type, expr, ondone)
+  function expr (type, expr) {
+    if (type === "Function") { push(expr.body.body) }
+    next.expr(type, expr)
   }
 
   return {prgm:prgm, stmt:stmt, expr:expr}

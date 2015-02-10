@@ -1,6 +1,6 @@
 { "name" : "aran"
 , "version" : "0.0.1"
-, "dependencies": {"esprima":"*", "esvisit":"*", "esvalid":"*" "escodegen":"*"}
+, "dependencies": {"esprima":"*", "esvisit":"*", "esvalid":"*", "escodegen":"*"}
 , "files" : ["runtime.js", "stage.js", "syntax.js", "error.js", "main.js", "util.js"]
 , "main": "main.js"
 , "description" : "Aran embeds a JS compiler for performing instrumentation or shadow execution"

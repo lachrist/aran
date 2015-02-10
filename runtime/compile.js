@@ -15,38 +15,23 @@ var Switch = require("../stage/switch.js")
 var Trap = require("../stage/trap.js")
 
 module.exports = function (aran) {
-fer = []
 
-  function expression (type, node) { compile.expr(type, node) }
   function statement (type, node) { compile.stmt(type, node) }
-  var push = Esvisit(statement, expression)
+  function expression (type, node) { compile.expr(type, node) }
 
-  var compile = Hook(aran.hooks, Hoist(mark, Switch(mark, Stack(Sandbox(aran.sandbox, Reduce(Trap(aran.traps)))))))
-
-
-
-
+  var push = Esvisit.Prepare(statement, expression)
+  var compile = Hook(aran.hooks, push, Hoist(push, Switch(push, Stack(Sandbox(aran.sandbox, Reduce(Trap(aran.traps)))))))
 
   aran.compile = function (code) {
     var ast = Esprima.parse(code)
-    stmts.push(ast)
-    while (stmt = stmts.pop()) {
-      if (typeof stmt === "function") { stmt() }
-      else {
-        stmt.infos = Miley(stmt, buffer, exprs)
-        compile.stmt(stmt)
-        while(stmt = buffer.pop()) { stmts.push(stmt) }
-      }
-      while (expr = exprs.pop()) {
-        expr.infos = Miley(expr, buffer, exprs)
-        compile.expr(expr)
-        while(stmt = buffer.pop()) { stmts.push(stmt) }
-      }
-    }
+    compile.prgm(ast)
+    push(ast)
     console.log(JSON.stringify(ast))
     var errors = Esvalid.errors(ast)
     if (errors.length > 0) { Error.internal("Compilation error", errors.map(function (e) { return e.message }), errors) }
-    return Escodegen.generate(ast)
+    code =  Escodegen.generate(ast)
+    console.log(code)
+    return code
   }
 
 }

@@ -7,23 +7,14 @@ var Ptah = require("../syntax/ptah.js")
 var Shadow = require("../syntax/shadow.js")
 
 function escape (id) { if (/^\$*aran$/.test(id.name)) { id.name = "$"+id.name } }
-
-function escape_decl (decl) { escape(decl.id) }
+function descape (decl) { escape(decl.id) }
 
 module.exports = function (sandbox, next) {
 
   if (!sandbox) { return {prgm:nexr.prgm, stmt:next.stmt, expr:next.expr} }
 
   function stmt (type, stmt) {
-    switch (type) {
-      case "DeclarationFor":   stmt.init.declarations.forEach(escape_decl)
-      case "DeclarationForIn": escape_decl(stmt.left.declarations[0])
-      case "IdentifierForIn":  escape(stmt.left)
-      case "Declaration":      stmt.declarations.forEach(escape_decl)
-      case "Definition":       escape(stmt.idl); stmt.params.forEach(escape)
-      case "With":             stmt.object = Shadow("proxy", [stmt.object])
-      case "Try":              if (stmt.CatchClause) { escape(stmt.CatchClause.param) }
-    }
+    if (stmts[type]) { stmts[type](stmt) }
     next.stmt(type, stmt)
   }
 
@@ -35,15 +26,27 @@ module.exports = function (sandbox, next) {
       expr.alternate = Ptah.this()
       return
     }
-    switch (type) {
-      case "Function": expr.params.forEach(escape)
-      case "IdentifierTypeof": escape(expr.argument)
-      case "IdentifierDelete": escape(expr.argument)
-      case "IdentifierAssignment": escape(expr.left)
-      case "IdentifierUpdate": escape(expr.left)
-      case "Identifier": escape(expr)
-    }
+    if (exprs[type]) { exprs[type](expr) }
     next.expr(type, expr)
+  }
+
+  var stmts = {
+    DeclarationFor: function (stmt) { stmt.init.declarations.forEach(descape) },
+    DeclarationForIn: function (stmt) { descape(stmt.left.declarations[0]) },
+    IdentifierForIn: function (stmt) { escape(stmt.left) },
+    Declaration: function (stmt) { stmt.declarations.forEach(descape) },
+    Definition: function (stmt) { escape(stmt.id); stmt.params.forEach(escape) },
+    With: function (stmt) { stmt.object = Shadow("with", [stmt.object]) },
+    Try: function (stmt) { if (stmt.CatchClause) { escape(stmt.CatchClause.param) } }
+  }
+
+  var exprs = {
+    Function: function (expr) { expr.params.forEach(escape) },
+    IdentifierTypeof: function (expr) { escape(expr.argument) },
+    IdentifierDelete: function (expr) { escape(expr.argument) },
+    IdentifierAssignment: function (expr) { escape(expr.left) },
+    IdentifierUpdate: function (expr) { escape(expr.argument) },
+    Identifier: function (expr) { escape(expr) }
   }
 
   return {prgm:next.prgm, stmt:stmt, expr:expr}

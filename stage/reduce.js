@@ -6,6 +6,7 @@
 
 var Ptah = require("../syntax/ptah.js")
 var Nasus = require("../syntax/nasus.js")
+var Util =require("../util.js")
 
 function pushm (member) { return Ptah.member(Nasus.push1(member.object), member.computed?Nasus.push2(member.property):member.property.name) }
 function popm (member) { return Ptah.member(Nasus.pop1(), member.computed?Nasus.pop2():member.property.name) }
@@ -17,8 +18,8 @@ module.exports = function (next) {
     // LogicalExpression //
     if (type === "Logical") {
       expr.type = "ConditionalExpression"
-      expr.test = Nasus.push(node.left)
-      var seq = Ptah.sequence([Nasus.pop(), node.right])
+      expr.test = Nasus.push(expr.left)
+      var seq = Ptah.sequence([Nasus.pop(), expr.right])
       if (expr.operator === "||") { (expr.consequent = Nasus.pop(), expr.alternate = seq) }
       else if (expr.operator === "&&") { (expr.consequent = seq, expr.alternate = Nasus.pop()) }
       else { Error("Invalid logical operator", expr) }
@@ -27,38 +28,50 @@ module.exports = function (next) {
     if (type === "IdentifierAssignment" && expr.operator !== "=") {
       expr.operator = "="
       expr.right = Ptah.binary(op, Ptah.identifier(expr.left.name), expr.right)
+      next.expr("Identifier", expr.right.left)
       next.expr("Binary", expr.right)
-      next.expr("Identifier" expr.right.left)
     }
     // MemberAssignment //
     if (type === "MemberAssignment" && expr.operator !== "=") {
       expr.operator = "="
       expr.right = Ptah.binary(op, popm(expr.left), expr.right)
       expr.left = pushm(expr.left)
-      next.expr("Binary", expr.right)
       next.expr("Member", expr.right.left)
+      next.expr("Binary", expr.right)
     }
     // IdentifierUpdate //
     if (type === "IdentifierUpdate") {
-      type = "IdentifierAssignment"
-      expr.type = "AsssignmentExpression"
+      var type = "IdentifierAssignment"
+      expr.type = "AssignmentExpression"
       expr.operator = "="
       expr.left = expr.argument
-      expr.right = Ptah.binary(op, Ptah.identifier(expr.left.name), Ptah.literal(1))
+      var identifier = Ptah.identifier(expr.left.name)
+      expr.right = Ptah.binary(op, (expr.prefix?Util.identity:Nasus.push)(identifier), Ptah.literal(1))
+      next.expr("Literal", expr.right.right)
+      next.expr("Identifier", identifier)
       next.expr("Binary", expr.right)
-      next.expr("Identifier", expr.right.left)
-      nexr.expr("Literal", expr.right.right)
+      if (!expr.prefix) {
+        var copy = Util.extract(expr)
+        Util.inject(Ptah.sequence([copy, Nasus.pop()]), expr)
+        expr = copy
+      }
     }
     // MemberUpdate //
     if (type === "MemberUpdate") {
-      type = "MemberAssignment"
-      expr.type = "AsssignmentExpression"
+      var type = "MemberAssignment"
+      expr.type = "AssignmentExpression"
       expr.operator = "="
       expr.left = pushm(expr.argument)
-      expr.right = Ptah.binary(op, popm(expr.argument), Ptah.literal(1))
+      var member = popm(expr.argument)
+      expr.right = Ptah.binary(op, (expr.prefix?Util.identity:Nasus.push)(member), Ptah.literal(1))
+      next.expr("Literal", expr.right.right)
+      next.expr("Member", member)
       next.expr("Binary", expr.right)
-      next.expr("Identifier", expr.right.left)
-      nexr.expr("Literal", expr.right.right)
+      if (!expr.prefix) {
+        var copy = Util.extract(expr)
+        Util.inject(Ptah.sequence([copy, Nasus.pop()]), expr)
+        expr = copy
+      }
     }
     // Remaing //
     next.expr(type, expr)
