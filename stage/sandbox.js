@@ -12,39 +12,40 @@ function escape_decl (decl) { escape(decl.id) }
 
 module.exports = function (sandbox, next) {
 
-  if (!sandbox) { return {stmt:next.stmt, expr:next.expr} }
+  if (!sandbox) { return {prgm:nexr.prgm, stmt:next.stmt, expr:next.expr} }
 
-  function stmt (stmt) {
-    switch (stmt.type) {
-      case "ForStatement": if (stmt.init && stmt.init.type === "VariableDeclaration") { stmt.init.declarations.forEach(escape_decl) } break
-      case "ForInStatement": if (stmt.left.type === "VariableDeclaration") { escape_decl(stmt.left.declarations[0]) } else if (stmt.left.type === "Identifier") { escape(stmt.left) } break
-      case "VariableDeclaration": stmt.declarations.forEach(escape_decl); break
-      case "FunctionDeclaration": escape(stmt.id); stmt.params.forEach(escape); break
-      case "WithStatement": stmt.object = Shadow("proxy", [stmt.object]); break
-      case "TryStatement": if (stmt.CatchClause) { escape(stmt.CatchClause.param) } break
+  function stmt (type, stmt) {
+    switch (type) {
+      case "DeclarationFor":   stmt.init.declarations.forEach(escape_decl)
+      case "DeclarationForIn": escape_decl(stmt.left.declarations[0])
+      case "IdentifierForIn":  escape(stmt.left)
+      case "Declaration":      stmt.declarations.forEach(escape_decl)
+      case "Definition":       escape(stmt.idl); stmt.params.forEach(escape)
+      case "With":             stmt.object = Shadow("proxy", [stmt.object])
+      case "Try":              if (stmt.CatchClause) { escape(stmt.CatchClause.param) }
     }
-    next.stmt(stmt)
+    next.stmt(type, stmt)
   }
 
-  function expr (expr) {
-    if (expr.type === "ThisExpression") {
-      var copy = Util.extract(expr)
+  function expr (type, expr) {
+    if (type === "This") {
       expr.type = "ConditionalExpression"
-      expr.test = Ptah.binary("===", copy, Shadow("global"))
+      expr.test = Ptah.binary("===", Ptah.this(), Shadow("global"))
       expr.consequent = Shadow("sandbox")
       expr.alternate = Ptah.this()
       return
     }
-    switch (expr.type) {
-      case "FunctionExpression": expr.params.forEach(escape); break
-      case "UnaryExpression": if (expr.argument.type === "Identifier" && (expr.operator === "delete" || expr.operator === "typeof")) { escape(expr.argument) } break
-      case "AssignmentExpression": if (expr.left === "Identifier") { escape(expr.left) } break
-      case "UpdateExpression": if (expr.left === "Identifier") { escape(expr.left) } break
-      case "Identifier": escape(expr); break
+    switch (type) {
+      case "Function": expr.params.forEach(escape)
+      case "IdentifierTypeof": escape(expr.argument)
+      case "IdentifierDelete": escape(expr.argument)
+      case "IdentifierAssignment": escape(expr.left)
+      case "IdentifierUpdate": escape(expr.left)
+      case "Identifier": escape(expr)
     }
-    next.expr(expr)
+    next.expr(type, expr)
   }
 
-  return {stmt:stmt, expr:expr}
+  return {prgm:next.prgm, stmt:stmt, expr:expr}
 
 }

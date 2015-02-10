@@ -12,16 +12,16 @@ var Nasus = require("../syntax/nasus.js")
 
 module.exports = function (next) {
 
-  function stmt (stmt) {
-    if (stmt.type === "TryStatement") {
+  function stmt (type, stmt) {
+    if (type === "Try") {
       stmt.block.body.unshift(Pstack.mark())
       if (!stmt.finalizer) { stmt.finalizer = Ptah.block([]) }
-      stmt.finalizer.body.unshift(Pstacl.unmark())
+      stmt.finalizer.body.unshift(Pstack.unmark())
     }
-    next.stmt(stmt)
+    next.stmt(type, stmt)
   }
 
-  return {stmt:stmt, expr:next.expr}
+  return {prgm:next.prgm, stmt:stmt, expr:next.expr}
 
 }
 

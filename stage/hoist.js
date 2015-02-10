@@ -3,53 +3,61 @@
  * Hoist function declarations and express them in term of variable declarations.
  */
 
+var Util = require("../util.js")
 var Ptah = require("../syntax/ptah.js")
 
-module.exports = function (mark, next) {
+module.exports = function (next) {
 
-  var bodies = []
-
-  function pop () {
-    var body = bodies.pop()
-    for (var i=0; i<body.length; i++) {
-      if (body[i] === null) {
-        body.splice(i,1)
-        i--
-      }
-    }
-  }
-
-  function stmt (stmt) {
-    if (stmt.type === "FunctionDeclaration") {
-      mark(pop)
-      // Function Expression //
-      var expr = Util.extract(stmt)
-      expr.type = "FunctionExpression"
-      expr.body.body.unshift(null)
-      bodies.push(expr.body.body)
-      next.expr(expr)
-      // Declaration //
-      var decl = Ptah.declaration(expr.name, expr)
-      var body = bodies[bodies.length-2]
+  var push, get
+  (function () {
+    var bodies = []
+    function pop () {
+      var body = bodies.pop()
       for (var i=0; i<body.length; i++) {
-        if (body[i] === null) { return body.splice(i, 0, decl) }
+        if (body[i] === null) {
+          body.splice(i,1)
+          return
+        }
       }
-      insert(decl, bodies[bodies.length-2])
-      next.stmt(decl)
-      // Empty Statement //
-      stmt.type="EmptyStatement"
     }
-    next.stmt(stmt)
+    push = function (body, ondone) {
+      ondone(pop)
+      bodies.push(body)
+      body.unshift(null)
+      return body
+    }
+    get = function (body) { return bodies[bodies.length-1] }
+  } ())
+
+  function prgm (stmts) {
+    push(stmts)
+    next.prgm(stmts)
   }
 
-  function expr (expr) {
-    if (expr.type === "FunctionExpression") {
-      mark(pop)
-      bodies.push(expr.body.body)
-    }
-    next.expr(expr)
+  function stmt (type, stmt, ondone) {
+    if (type !== "Function") { return next.stmt(type, stmt, ondone) }
+    var parent = get()
+    push(stmt.body.body, ondone)
+    // Function Expression //
+    var copy = Util.extract(stmt)
+    copy.type = "FunctionExpression"
+    // Declaration //
+    var decl = Ptah.declaration(copy.id.name, copy)
+    for (var i=0; parent[i] !== null; i++) ;
+    parent.splice(i, 0, decl)
+    // Empty Statement //
+    stmt.type="EmptyStatement"
+    // Next
+    next.stmt("Empty", stmt)
+    next.stmt("Declaration", decl)
+    next.expr("Function", copy)
   }
 
-  return {stmt:stmt, expr:expr}
+  function expr (type, expr, ondone) {
+    if (type === "Function") { push(expr.body.body, ondone) }
+    next.expr(type, expr, ondone)
+  }
+
+  return {prgm:prgm, stmt:stmt, expr:expr}
 
 }

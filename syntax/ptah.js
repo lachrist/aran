@@ -8,16 +8,17 @@ var Error = require("../error.js")
 
 exports.nodify = function (x) {
   if (x === null) { return {type:"Literal", value:x} }
+  if (x === undefined) { return {type:"Identifier", name:"undefined"} }
   if (x instanceof RegExp) { return {type:"Literal", value:x} }
   if (["boolean", "string", "number"].indexOf(typeof x) !== -1) { return {type:"Literal", value:x} }
-  if (x instanceof Array) { return { type:"ArrayExpression", elements:x.map(nodify) } }
+  if (Array.isArray(x)) { return { type:"ArrayExpression", elements:x.map(exports.nodify) } }
   if (typeof x !== "object") { Error.internal("Unknown type", x) }
   var node = {type:"ObjectExpression", properties:[]}
   for (var k in x) {
     node.properties.push({
       type: "Property",
       key: {type:"Identifier", name:k},
-      value: nodify(x[k]),
+      value: exports.nodify(x[k]),
       kind: "init"
     })
   }

@@ -4,6 +4,7 @@
  * See: https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API.
  */
 
+var Util = require("../util.js")
 var Error = require("../error.js")
 
 /////////////
@@ -43,7 +44,7 @@ function left (node, exprs) {
 // var ID=<expr>;       >>> [["ID",true]]
 // var ID1, ID2=<expr>; >>> [["ID1",false],["ID2",true]]
 // etc...
-function declaration (node, exprs) {
+function declaration (node, stmts, exprs) {
   var declarations = []
   node.declarations.forEach(function (d) {
     declarations.push([d.id.name,Boolean(d.init)])
@@ -357,7 +358,7 @@ miley.ForStatement = function (node, stmts, exprs) {
   var infos = [node.init, node.test, node.update].map(Boolean)
   if (node.init) {
     if (node.init.type !== "VariableDeclaration") { exprs.push(node.init) }
-    else { infos = infos.push(declaration(node.init, exprs)) }
+    else { infos = infos.push(declaration(node.init, stmts, exprs)) }
   }
   if (node.test) { exprs.push(node.test) }
   if (node.update) { exprs.push(node.update) }

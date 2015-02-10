@@ -22,9 +22,8 @@ exports.extract = function (o1) {
 
 exports.inject = function (o1, o2) {
   if (o1 !== o2) {
-    var k
-    for (k in o2) { delete o2[k] }
-    for (k in o1) { o2[k] = o1[k] }
+    for (var k in o2) { delete o2[k] }
+    for (var k in o1) { o2[k] = o1[k] }
   }
 }
 

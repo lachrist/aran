@@ -8,41 +8,46 @@ var Ptah = require("../syntax/ptah.js")
 var Nasus = require("../syntax/nasus.js")
 
 function escape (id) { if (/^\$*switch/.test(id.name)) { id.name="$"+id.name } }
+function mask (type) { return ["While", "DoWhile", "DeclarationFor", "For", "DeclarationForIn", "IdentifierForIn", "MemberForIn"].indexOf(type) !== -1 }
 
 module.exports = function (mark, next) {
 
-  var labels = []
-
-  function pop () { labels.pop() }
-
-  function stmt (stmt) {
-    switch (stmt.type) {
-      case "SwitchStatement":
-        var copy = Util.extract(stmt)
-        var stmts = [Ptah.exprstmt(Nasus.push(copy.discriminant))]
-        stmt.type = "TryStatement"
-        stmt.block = Ptah.block(stmts)
-        stmt.handler = null
-        stmt.finalizer = Ptah.block([Ptah.exprstmt(Nasus.pop())])
-        copy.cases.forEach(function (c) {
-          if (!c.test) { for (var i=0; i<c.consequent.length; i++) { stmts.push(c.consequent[i]) } }
-          else { stmts.push(Ptah.if(Ptah.binary("===", Nasus.get(), c.test), Ptah.block(c.consequent))) }
-        })
-        break
-      case "BreakStatement":
-        if (stmt.label) { escape(stmt.label) }
-        else if (labels[labels.length-1]) { stmt.label = Ptah.identifier("switch"+labels[labels.length-1]) }
-        break
-      case "ContinueStatement": if (stmt.label) { escape(stmt.label) } break
-      case "LabeledStatement": escape(stmt.label); break
-      case "WhileStatement": mark(pop); labels.push(0); break
-      case "DoWhileStatement": mark(pop); labels.push(0); break
-      case "ForStatement": mark(pop); labels.push(0); break
-      case "ForInStatement": mark(pop); labels.push(0); break
+  var push, get, pop
+  (function () {
+    var labels = []
+    var push = function (x) { labels.push(x) }
+    var pop = function () { labels.pop() }
+    var get = function () { return labels[labels.length-1] }
+  } ())
+  
+  function prgm (stmts) {
+    mark(pop)
+    push(0)
+    next.prgm(stmts)
+  }
+  
+  function stmt (type, stmt) {
+     if (type === "Switch") {
+      var stmts = [Ptah.exprstmt(Nasus.push(stmt.discriminant))]
+      stmt.type = "LabeledStatement"
+      stmt.body = Ptah.try(Ptah.block(stmts), null, null, Ptah.block([Ptah.exprstmt(Nasus.pop())]))
+      stmt.cases.forEach(function (c) {
+        if (!c.test) { for (var i=0; i<c.consequent.length; i++) { stmts.push(c.consequent[i]) } }
+        else {
+          var cond = Ptah.if(Ptah.binary("===", Nasus.get(), c.test), Ptah.block(c.consequent))
+          stmts.push(cond)
+          next.stmt("If", cond)
+          next.stmt("Binary", cond.test)
+        }
+      })
+      return
     }
-    next.stmt(stmt)
+    if (stmt.label) { escape(stmt.label) }
+    else if (type === "Break" && get()) { stmt.label = Ptah.identifier("switch"+get()) }
+    else if (mask(type)) { (mark(pop), push(0)) }
+    next.stmt(type, stmt)
   }
 
-  return {stmt:stmt, expr:next.expr}
+  return {prgm:next.prgm, stmt:stmt, expr:next.expr}
 
 }
