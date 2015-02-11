@@ -33,7 +33,7 @@ module.exports = function (mark, next) {
     stmt.type = "EmptyStatement"
     hoist(next.stmt("Declaration", Ptah.declaration(copy.id.name, copy)))
     push(copy.body.body)
-    return (next.stmt(next.expr("Function", copy)), next.stmt("Empty", stmt))
+    return (next.expr("Function", copy), next.stmt("Empty", stmt))
   }
 
   function expr (type, expr) {

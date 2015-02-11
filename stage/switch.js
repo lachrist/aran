@@ -4,6 +4,8 @@
  * Empty BreakStatements jumps at the end of the conditionals.
  */
 
+ var Util = require("../util.js")
+
 var Ptah = require("../syntax/ptah.js")
 var Nasus = require("../syntax/nasus.js")
 
@@ -17,22 +19,23 @@ module.exports = function (mark, next) {
     var counter = 0
     var labels = [0]
     function pop () { labels.pop() }
-    mask = function () { (labeld.push(0), mark(pop)) }
+    mask = function () { (labels.push(0), mark(pop)) }
     incr = function () { (labels.push(++counter), mark(pop)) } 
     get = function () { return labels[labels.length-1] }
   } ())
   
   function stmt (type, stmt) {
-     if (type === "Switch") {
+    if (type === "Break") {
+      //yolo
+    }
+    if (type === "Switch") {
       incr()
       var stmts = [Ptah.exprstmt(Nasus.push(stmt.discriminant))]
-      stmt.type = "LabeledStatement"
-      stmt.label = Ptah.identifier("switch"+get())
-      stmt.body = Ptah.try(stmts, null, null, [Ptah.exprstmt(Nasus.pop())])
       stmt.cases.forEach(function (c) {
         if (!c.test) { for (var i=0; i<c.consequent.length; i++) { stmts.push(c.consequent[i]) } }
         else { stmts.push(next.stmt("If", Ptah.if(next.stmt("Binary", Ptah.binary("===", Nasus.get(), c.test)), Ptah.block(c.consequent)))) }
       })
+      Util.inject(Ptah.label("switch"+get(), Ptah.try(stmts, null, null, [Ptah.exprstmt(Nasus.pop())])), stmt)
       return stmt
     }
     if (stmt.label) { escape(stmt.label) }

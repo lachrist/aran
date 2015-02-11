@@ -15,7 +15,7 @@ var Shadow = require("../syntax/shadow.js")
 
 module.exports = function (traps) {
 
-  if (!traps) { return { prgm:Util.identity, stmt:Util.second, expr:Util.second }
+  if (!traps) { return { prgm:Util.identity, stmt:Util.second, expr:Util.second } }
 
   function stmt (type, stmt) {
     if (stmts[type]) { stmts[type](stmt) }

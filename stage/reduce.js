@@ -27,7 +27,7 @@ module.exports = function (next) {
     if (expr.operator === "||") { (expr.consequent = Nasus.pop(), expr.alternate = seq) }
     else if (expr.operator === "&&") { (expr.consequent = seq, expr.alternate = Nasus.pop()) }
     else { Error("Invalid logical operator", expr) }
-    return next("Conditional", expr)
+    return next.expr("Conditional", expr)
   }
 
   exprs.IdentifierAssignment = function (expr) {
@@ -54,7 +54,7 @@ module.exports = function (next) {
     var get = (prefix?Util.identity:Nasus.push)(next.expr("Identifier", Ptah.identifier(expr.left.name)))
     expr.right = next.expr("Binary", Ptah.binary(op, get, next.expr("Literal", Ptah.literal(1))))
     next.expr("IdentifierAssignment", expr)
-    if (!prefix) { return Util.inject(Ptah.sequence([Util.extract(expr), Nasus.pop()]), expr) }
+    if (!prefix) { Util.inject(Ptah.sequence([Util.extract(expr), Nasus.pop()]), expr) }
     return expr
   }
 
@@ -67,7 +67,7 @@ module.exports = function (next) {
     var get = (prefix?Util.identity:Nasus.push)(next.expr("Member", popm(expr.argument)))
     expr.right = next.expr("Binary", Ptah.binary(op, get, next.expr("Literal", Ptah.literal(1))))
     next.expr("MemberAssignment", expr)
-    if (!prefix) { return Util.inject(Ptah.sequence([Util.extract(expr), Nasus.pop()]), expr) }
+    if (!prefix) { Util.inject(Ptah.sequence([Util.extract(expr), Nasus.pop()]), expr) }
     return expr
   }
 

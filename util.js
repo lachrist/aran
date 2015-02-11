@@ -11,6 +11,14 @@ exports.prepend = function (xs, ys) {
   for (var i=ys.length-1; i>=0; i--) { xs.unshift(ys[i]) }
 }
 
+exports.log = function (mess) {
+  for (var i=1; i<arguments.length; i++) {
+    try { mess = mess+"\n    "+JSON.stringify(arguments[i]) }
+    catch (e) { mess = mess+"\n    "+arguments[i] }
+  }
+  console.log(mess)
+}
+
 exports.extract = function (o1) {
   var o2 = {}
   for (var k in o1) {

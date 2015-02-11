@@ -4,6 +4,7 @@ var Esvisit = require("esvisit")
 var Esvalid = require("esvalid")
 var Escodegen = require("escodegen")
 
+var Util = require("../util.js")
 var Error = require("../error.js")
 
 var Hoist = require("../stage/hoist.js")
@@ -26,12 +27,9 @@ module.exports = function (aran) {
     var ast = Esprima.parse(code)
     compile.prgm(ast)
     push(ast)
-    console.log(JSON.stringify(ast))
     var errors = Esvalid.errors(ast)
-    if (errors.length > 0) { Error.internal("Compilation error", errors.map(function (e) { return e.message }), errors) }
-    code =  Escodegen.generate(ast)
-    console.log(code)
-    return code
+    if (errors.length > 0) { Util.log("Compilation warning", errors.map(function (e) { return e.message }), errors) }
+    return Escodegen.generate(ast)
   }
 
 }
