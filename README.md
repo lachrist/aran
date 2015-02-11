@@ -30,7 +30,7 @@ Note that JavaScript features dynamic code evaluation through the infamous `eval
 
 ## Demonstraction
 
-See https://github/lachrist/aran-demo!
+See https://github.com/lachrist/aran-demo!
 
 ## Sandbox
 
@@ -38,7 +38,7 @@ As stated above, the sandbox parameter will act in all point as if it was the gl
 
 ## Hooks
 
-Hooks are functions that are called before executing statements and expressions. Hooks follow the AST types descibed in https://github.com/lachrist/esvisit and will recieved the corresponding syntactic information. All hooks are optional. 
+Hooks are functions that are called before executing statements and expressions. Hooks follow the AST types described in https://github.com/lachrist/esvisit and will recieved the corresponding syntactic information. All hooks are optional. 
 
 ## Traps
 
