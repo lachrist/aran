@@ -19,7 +19,7 @@ module.exports = function (next) {
       if (!stmt.finalizer) { stmt.finalizer = Ptah.block([]) }
       stmt.finalizer.body.unshift(Ptah.exprstmt(Nasus.unmark()))
     }
-    next.stmt(type, stmt)
+    return next.stmt(type, stmt)
   }
 
   return {prgm:next.prgm, stmt:stmt, expr:next.expr}

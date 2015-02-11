@@ -11,23 +11,23 @@ function descape (decl) { escape(decl.id) }
 
 module.exports = function (sandbox, next) {
 
-  if (!sandbox) { return {prgm:nexr.prgm, stmt:next.stmt, expr:next.expr} }
+  if (!sandbox) { return {prgm:next.prgm, stmt:next.stmt, expr:next.expr} }
 
   function stmt (type, stmt) {
     if (stmts[type]) { stmts[type](stmt) }
-    next.stmt(type, stmt)
+    return next.stmt(type, stmt)
   }
 
   function expr (type, expr) {
     if (type === "This") {
       expr.type = "ConditionalExpression"
-      expr.test = Ptah.binary("===", Ptah.this(), Shadow("global"))
-      expr.consequent = Shadow("sandbox")
-      expr.alternate = Ptah.this()
-      return
+      expr.test = Ptah.binary("===", Nasus.push(next.expr("This", Ptah.this())), Shadow("global"))
+      expr.consequent = Ptah.sequence(Nasus.pop(), Shadow("sandbox"))
+      expr.alternate = Nasus.pop()
+      return expr
     }
     if (exprs[type]) { exprs[type](expr) }
-    next.expr(type, expr)
+    return next.expr(type, expr)
   }
 
   var stmts = {

@@ -15,15 +15,19 @@ var Shadow = require("../syntax/shadow.js")
 
 module.exports = function (traps) {
 
-  if (!traps) { return {prgm:Util.nil, stmt:Util.nil, expr:Util.nil} }
+  if (!traps) { return { prgm:Util.identity, stmt:Util.second, expr:Util.second }
 
-  function stmt (type, stmt) { if (stmts[type]) { stmts[type](stmt) } }
+  function stmt (type, stmt) {
+    if (stmts[type]) { stmts[type](stmt) }
+    return stmt
+  }
 
   function expr (type, expr) {
     if (exprs[type]) {
       var res = exprs[type](expr)
       if (res) { Util.inject(res, expr) }
     }
+    return expr
   }
 
   /////////////
@@ -197,6 +201,6 @@ module.exports = function (traps) {
   // Return //
   ////////////
 
-  return {prgm:Util.nil, stmt:stmt, expr:expr}
+  return {prgm:Util.identity, stmt:stmt, expr:expr}
 
 }

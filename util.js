@@ -29,6 +29,8 @@ exports.inject = function (o1, o2) {
 
 exports.identity = function (x) { return x }
 
+exports.second = function (x, y) { return y }
+
 exports.nil = function () {}
 
 exports.error = function () {

@@ -8,19 +8,17 @@ var Ptah = require("../syntax/ptah.js")
 
 module.exports = function (mark, next) {
 
-  var push, hoist, pop
+  var push, hoist
   (function () {
     var bodies = []
     var buffers = []
+    function pop () { Array.prototype.unshift.apply(bodies.pop(), buffers.pop()) }
     push = function (body) {
       mark(pop)
       bodies.push(body)
       buffers.push([])
     }
     hoist = function (stmt) { buffers[buffers.length-1].push(stmt) }
-    pop = function () {
-      Array.prototype.unshift.apply(bodies.pop(), buffers.pop())
-    }
   } ())
 
   function prgm (prgm) {
@@ -33,17 +31,14 @@ module.exports = function (mark, next) {
     var copy = Util.extract(stmt)
     copy.type = "FunctionExpression"
     stmt.type = "EmptyStatement"
-    var decl = Ptah.declaration(copy.id.name, copy)
-    hoist(decl)
+    hoist(next.stmt("Declaration", Ptah.declaration(copy.id.name, copy)))
     push(copy.body.body)
-    next.stmt("Empty", stmt)
-    next.stmt("Declaration", decl)
-    next.expr("Function", copy)
+    return (next.stmt(next.expr("Function", copy)), next.stmt("Empty", stmt))
   }
 
   function expr (type, expr) {
     if (type === "Function") { push(expr.body.body) }
-    next.expr(type, expr)
+    return next.expr(type, expr)
   }
 
   return {prgm:prgm, stmt:stmt, expr:expr}
