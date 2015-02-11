@@ -15,6 +15,12 @@ var Stack = require("../stage/stack.js")
 var Switch = require("../stage/switch.js")
 var Trap = require("../stage/trap.js")
 
+function summarize (error) {
+  var sum = error.message+" for node:";
+  for (var key in error.node) { sum += " "+key+":"+error.node[key] }
+  return sum
+}
+
 module.exports = function (aran) {
 
   function statement (type, node) { compile.stmt(type, node) }
@@ -28,7 +34,7 @@ module.exports = function (aran) {
     compile.prgm(ast)
     push(ast)
     var errors = Esvalid.errors(ast)
-    if (errors.length > 0) { Util.log("Compilation warning", errors.map(function (e) { return e.message }), errors) }
+    if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
     return Escodegen.generate(ast)
   }
 

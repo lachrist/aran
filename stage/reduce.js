@@ -31,17 +31,21 @@ module.exports = function (next) {
   }
 
   exprs.IdentifierAssignment = function (expr) {
-    var op = expr.operator[0]
-    expr.operator = "="
-    expr.right = next.expr("Binary", Ptah.binary(op, next.expr("Identifier", Ptah.identifier(expr.left.name)), expr.right))
+    if (expr.operator !== "=") {
+      var op = expr.operator.replace("=", "")
+      expr.operator = "="
+      expr.right = next.expr("Binary", Ptah.binary(op, next.expr("Identifier", Ptah.identifier(expr.left.name)), expr.right))
+    }
     return next.expr("IdentifierAssignment", expr)
   }
 
   exprs.MemberAssignment = function (expr) {
-    var op = expr.operator[0]
-    expr.operator = "="
-    expr.right = next.expr("Binary", Ptah.binary(op, next.expr("Member", popm(expr.left)), expr.right))
-    expr.left = pushm(expr.left)
+    if (expr.operator !== "=") {
+      var op = expr.operator.replace("=", "")
+      expr.operator = "="
+      expr.right = next.expr("Binary", Ptah.binary(op, next.expr("Member", popm(expr.left)), expr.right))
+      expr.left = pushm(expr.left)
+    }
     return next.expr("MemberAssignment", expr)
   }
 

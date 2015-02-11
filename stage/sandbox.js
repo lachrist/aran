@@ -4,6 +4,7 @@
  */
 
 var Ptah = require("../syntax/ptah.js")
+var Nasus = require("../syntax/nasus.js")
 var Shadow = require("../syntax/shadow.js")
 
 function escape (id) { if (/^\$*aran$/.test(id.name)) { id.name = "$"+id.name } }
