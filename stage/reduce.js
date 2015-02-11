@@ -2,6 +2,7 @@
 /*
  * Get rid of simpliest JavaScript syntactic sugar
  * i.e.: LogicalExpression, UpdateExpression and AssignmentExpression
+ * TODO: Try to reduce code duplication and yet have a simple code...
  */
 
 var Ptah = require("../syntax/ptah.js")

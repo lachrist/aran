@@ -34,6 +34,7 @@ module.exports = function (traps) {
   // Helpers //
   /////////////
 
+
   var booleanize = traps.booleanize ? function (test, place) { return Shadow("traps", "booleanize", [test, Ptah.literal(place)]) } : Util.identity
 
   function property (member) { return member.computed?member.property:Ptah.literal(member.property.name) }
@@ -157,8 +158,6 @@ module.exports = function (traps) {
   }
 
   exprs.MemberAssignment = function (node) { if (traps.set) { return Shadow("traps", "set", [node.left.object, property(node.left), node.right]) } }
-
-  exprs.IdentifierTypeof = function (node) { if (traps.unary) { return Shadow("traps", "unary", [Ptah.literal("typeof"), Ptah.call(Ptah.function([], [Ptah.try([Ptah.return(node.argument)], "error", [Ptah.return(Shadow("undefined"))])]), [])]) } }
 
   exprs.IdentifierDelete = function (node) { if (traps.unary) { return Shadow("traps", "delete", [Ptah.literal(node.argument.name), Util.extract(node)]) } }
 

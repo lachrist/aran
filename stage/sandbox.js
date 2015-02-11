@@ -23,9 +23,14 @@ module.exports = function (sandbox, next) {
     if (type === "This") {
       expr.type = "ConditionalExpression"
       expr.test = Ptah.binary("===", Nasus.push(next.expr("This", Ptah.this())), Shadow("global"))
-      expr.consequent = Ptah.sequence(Nasus.pop(), Shadow("sandbox"))
+      expr.consequent = Ptah.sequence([Nasus.pop(), Shadow("sandbox")])
       expr.alternate = Nasus.pop()
       return expr
+    }
+    if (type === "IdentifierTypeof") {
+      escape(expr.argument)
+      expr.argument = Ptah.call(Ptah.function([], [Ptah.try([Ptah.return(expr.argument)], "error", [Ptah.return(Shadow("undefined"))])]), [])
+      return next.expr("Unary", expr)
     }
     if (exprs[type]) { exprs[type](expr) }
     return next.expr(type, expr)
@@ -43,7 +48,6 @@ module.exports = function (sandbox, next) {
 
   var exprs = {
     Function: function (expr) { expr.params.forEach(escape) },
-    IdentifierTypeof: function (expr) { escape(expr.argument) },
     IdentifierDelete: function (expr) { escape(expr.argument) },
     IdentifierAssignment: function (expr) { escape(expr.left) },
     IdentifierUpdate: function (expr) { escape(expr.argument) },

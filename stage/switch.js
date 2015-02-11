@@ -25,15 +25,12 @@ module.exports = function (mark, next) {
   } ())
   
   function stmt (type, stmt) {
-    if (type === "Break") {
-      //yolo
-    }
     if (type === "Switch") {
       incr()
       var stmts = [Ptah.exprstmt(Nasus.push(stmt.discriminant))]
       stmt.cases.forEach(function (c) {
         if (!c.test) { for (var i=0; i<c.consequent.length; i++) { stmts.push(c.consequent[i]) } }
-        else { stmts.push(next.stmt("If", Ptah.if(next.stmt("Binary", Ptah.binary("===", Nasus.get(), c.test)), Ptah.block(c.consequent)))) }
+        else { stmts.push(next.stmt("If", Ptah.if(next.expr("Binary", Ptah.binary("===", Nasus.get(), c.test)), Ptah.block(c.consequent)))) }
       })
       Util.inject(Ptah.label("switch"+get(), Ptah.try(stmts, null, null, [Ptah.exprstmt(Nasus.pop())])), stmt)
       return stmt
