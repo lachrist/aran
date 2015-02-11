@@ -14,19 +14,23 @@ And returns a function that will perform the dynamic analysis on any given code 
 
 ```javascript
 var Aran = require('aran');
-var sandbox = ...
-var hooks = ...
-var traps = ...
+(window||global).compiled = true; // Get the last compiled code
+var sandbox = ...                   // An object to mock the global object
+var hooks = ...                     // An object containings function for tracing purpose
+var traps = ...                     // An object containings function for modifying JS semantic 
 var run = Aran(sandbox, hooks, traps)
-// use run to build sandbox.eval and sandbox.Function (e.g. sandbox.eval = run)
+// You should use run to build sandbox.eval and sandbox.Function (e.g. sandbox.eval = run) //
 var code = ...
-var object = run(code)
-var result = object.result
-var error = object.error
-var compiled = object.compiled
+var result = run(code)
+console.log((window||global).compiled)
+console.log(result)
 ```
 
 Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has to be run along the code being analyzed to intercept and transform every bit of JavaScript code. Having application code evaluated without resorting to `Aran` will compromise the validity of the application's analysis. It is the responsibility of the user to make sure that dynamic code evaluation eventually resort to `Aran`.
+
+## Demonstraction
+
+See https://github/lachrist/aran-demo!
 
 ## Sandbox
 
@@ -34,45 +38,7 @@ As stated above, the sandbox parameter will act in all point as if it was the gl
 
 ## Hooks
 
-Hooks are functions that are called before executing statement / expression of a given Mozilla-Parser type as described at https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API. Hooks only receive static syntactical information and their return value is never used. All hooks are optional.
-
-Hook | Target | Hook inserted before
-:----|:-------|:--------------------
-`Program(Length)` | `STMT1 STMT2` | `aran.hooks.Program(2)`
-`EmptyStatement()` | `;` | `aran.traps.EmptyStatement()`
-`BlockStatement(Length)` | `{STMT1 STMT2}` | `aran.hooks.BlockStatement(2)`
-`ExpressionStatement()` | `EXPR;` | `aran.hooks.ExpressionStatement()`
-`IfStatement(HasAlternate)` | `if (EXPR) STMT` | `aran.hooks.IfStatement(false)`
-`LabeledStatement(Label)` | `ID: STMT` | `aran.hooks.LabeledStatement('ID')`
-`BreakStatement(MaybeLabel)` | `break;` | `aran.hooks.BreakStatement(null)`
-`ContinueStatement(MaybeLabel)` | `continue ID;` | `aran.hooks.ContinueStatement('ID')`
-`WithStatement()` | `with(EXPR) STMT` | `aran.hooks.WithStatement()`
-`SwitchStatement(Cases::[IsDefault, Length])` | `switch (EXPR1) { case EXPR2: STMT1 STMT2 default: STMT3 }` |  `aran.hooks.SwitchStatement([[false, 2], [true, 1]])`
-`ReturnStatement(HasValue)` | `return EXPR;` | `aran.hooks.ReturnStatement(true)`
-`ThrowStatement()` | `throw EXPR;` | `aran.hooks.ThrowStatement()`
-`TryStatement(TryLength, MaybeCatchParameter, MaybeCatchLength, MaybeFinallyLength)` | `try {STMT1 STMT2} catch (ID) {}` | `aran.hooks.TryStatement('ID', 2, 0, null)`
-`WhileStatement()` | `while(EXPR) STMT` | `aran.hooks.WhileStatement()`
-`DoWhileStatement()` | `do STMT while(EXPR)` | `aran.hooks.DoWhileStatement()`
-`ForStatement(HasInit, HasTest, HasUpdate, MaybeDeclarations::[Identifier, HasInitializer])` | `for (var ID1, ID2=EXPR1; ; EXPR) STMT` | `aran.hooks.ForStatement(true, false, true, [['ID1', false], ['ID2', true]])`
-`ForInStatement(MaybeDeclaration::(Identifier, HasInitializer), MaybeIdentifier, MaybeProperty)` | `for (var ID = EXPR1 in EXPR2) STMT` | `aran.hooks.ForInStatement([ID, true], null, null)` 
-`FunctionDeclaration(MaybeName, Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', ['ID1', 'ID2'], 2)`
-`VariableDeclaration(Declarations::[Identifier, HasInitializer])` | `var ID1, ID2=EXPR;` | `aran.hooks.VariableDeclaration([['ID1', false], ['ID2', true]])`
-`ThisExpression()` | `this` | `aran.hooks.ThisExpression()`
-`ArrayExpression(Elements::[HasInitializer])` | `[EXPR1, , EXPR2]` | `aran.hooks.ArrayExpression([true, false, true])`
-`ObjectExpression(Properties::[Name, Kind, MaybeBodyLength])` | `{ID1:EXPR1, get ID2 () { STMT1 STMT2 } }` | `aran.hooks.ObjectExpression([['ID1', 'init', null], ['ID2', 'get', 2]])`
-`FunctionExpression(Name, Parameters, BodyLength)` | `function f (ID1, ID2) {STMT1 STMT2}` | `aran.hooks.FunctionDeclaration('f', ['ID1', 'ID2'], 2)`
-`SequenceExpression(Length)` | `(EXPR1, EXPR2)` | `aran.hooks.SequenceExpression(2)`
-`UnaryExpression(Operator, MaybeIdentifier, MaybeProperty)` | `!EXPR` | `aran.hooks.UnaryExpression('!', null, null)`
-`BinaryExpression(Operator)` | `EXPR1 + EXPR2` | `aran.hooks.BinaryExpression('+')`
-`AssignmentExpression(Operator, MaybeIdentifier, MaybeProperty)` | `EXPR1.ID += EXPR2` | `aran.hooks.AssignmentExpression('+=', null, 'ID')` 
-`UpdateExpression(IsPrefix, MaybeIdentifier, MaybeProperty)` | `ID++` | `aran.hooks.UpdateExpression(false, 'ID', null)`
-`LogicalExpression(Operator)` | `EXPR1 || EXPR2` | `aran.hooks.LogicalExpression('||')`
-`ConditionalExpression()` | `EXPR1 ? EXPR2 : EXPR2` | `aran.hooks.ConditionalExpression()`
-`NewExpression(Length)` | `new EXPR1(EXPR2, EXPR3)` | `aran.hooks.NewExpression(2)`
-`CallExpression(Length, IsMember, MaybeProperty)` | `EXPR1.ID(EXPR2, EXPR3)` | `aran.hooks(2, true, ID)`
-`MemberExpression(MaybeProperty)` | `EXPR[EXPR]` | `aran.hooks.MemberExpression(null)`
-`Identifier(Name)` | `ID` | `aran.hooks.Identifier('ID')`
-`Literal(Value)` | `'foo'` | `aran.hooks.Literal('foo')`
+Hooks are functions that are called before executing statements and expressions. Hooks follow the AST types descibed in https://github.com/lachrist/esvisit and will recieved the corresponding syntactic information. All hooks are optional. 
 
 ## Traps
 
