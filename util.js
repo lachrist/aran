@@ -16,7 +16,7 @@ exports.log = function (mess) {
     try { mess = mess+"\n    "+JSON.stringify(arguments[i]) }
     catch (e) { mess = mess+"\n    "+arguments[i] }
   }
-  console.log(mess)
+  console.log(mess+"\n\n")
 }
 
 exports.extract = function (o1) {

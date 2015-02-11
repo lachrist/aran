@@ -7,20 +7,20 @@ module.exports = function (aran) {
   var stack2 = []
   var stack3 = []
 
-  aran.push = function (x) { return (stack.push(x), x) }
+  aran.push  = function (x) { return (stack .push(x), x) }
   aran.push1 = function (x) { return (stack1.push(x), x) }
   aran.push2 = function (x) { return (stack2.push(x), x) }
   aran.push3 = function (x) { return (stack3.push(x), x) }
 
-  aran.pop = function () { return stack.pop() }
+  aran.pop  = function () { return stack .pop() }
   aran.pop1 = function () { return stack1.pop() }
   aran.pop2 = function () { return stack2.pop() }
   aran.pop3 = function () { return stack3.pop() }
 
-  aran.get = function () { return stack[stack1.length] }
-  aran.get1 = function () { return stack1[stack1.length] }
-  aran.get2 = function () { return stack2[stack2.length] }
-  aran.get3 = function () { return stack3[stack3.length] }
+  aran.get  = function () { return stack [stack .length-1] }
+  aran.get1 = function () { return stack1[stack1.length-1] }
+  aran.get2 = function () { return stack2[stack2.length-1] }
+  aran.get3 = function () { return stack3[stack3.length-1] }
 
   aran.mark = function () {
     var mark = {}

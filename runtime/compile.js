@@ -35,7 +35,10 @@ module.exports = function (aran) {
     push(ast)
     var errors = Esvalid.errors(ast)
     if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
-    return Escodegen.generate(ast)
+    console.log(JSON.stringify(ast))
+    var code =  Escodegen.generate(ast)
+    console.log(code)
+    return code
   }
 
 }

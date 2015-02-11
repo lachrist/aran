@@ -40,29 +40,34 @@ module.exports = function (traps) {
 
   function forin (type, node) {
     if (!traps.enumerate) { return }
-    var stmts = []
-    if (type === "DeclarationForIn") { stmts.push(node.left) }
+    var pushes = [Nasus.push(Ptah.literal(0))]
+    var pops = [Nasus.pop()]
     if (type === "MemberForIn") {
-      stmts.push1(Ptah.exprstmt(Nasus.push(node.left.object)))
-      stmts.push2(Ptah.exprstmt(Nasus.push(property(node.left.property))))
+      pushes.push(Nasus.push1(node.left.object))
+      pushes.push(Nasus.push2(property(node.left.property)))
+      pops.push(Nasus.pop1())
+      pops.push(Nasus.pop2())
     }
-    stmts.push(Ptah.exprstmt(Nasus.push3(Shadow("traps", "enumerate", [node.right]))))
+    pushes.push(Nasus.push3(Shadow("traps", "enumerate", [node.right])))
+    pops.push(Nasus.pop3())
     var right = Ptah.member(Nasus.get3(), Nasus.get())
     var ass
-    if (type === "DeclarationIn") { ass = Ptah.assignment(node.left.declarations[0].id.name, right) }
+    if (type === "DeclarationForIn") { ass = Ptah.assignment(node.left.declarations[0].id.name, right) }
     if (type === "IdentifierForIn") { ass = Ptah.assignment(node.left.name, right) }
     if (type === "MemberForIn") {
       if (traps.set) { ass = Shadow("traps", "set", [Nasus.get1(), Nasus.get2(), right]) }
-      else { ass = Ptah.assignment(node.left, right) }
+      else { ass = Ptah.assignment(Ptah.member(Nasus.get1(), Nasus.get2()), right) }
     }
-    var pops = [Nasus.pop(), Nasus.pop3()]
-    if (type === "MemberExpression") { (pops.push(Nasus.pop1()), pops.push(Nasus.pop2())) }
-    var init = Nasus.push(Ptah.literal(0))
-    var test = Ptah.binary("<", Nasus.get(), Ptah.member(Nasus.get3(), "length"))
-    var incr = Nasus.push(Ptah.binary("+", Nasus.pop(), Ptah.literal(1)))
-    var loop = Ptah.for(init, test, incr, Ptah.block([Ptah.exprstmt(ass), node.body]))
-    stmts.push(Ptah.try([loop]), null, null, pops.map(Ptah.exprstmt))
-    Util.inject(Ptah.block([stmts]), node)
+    var trystmts = [Ptah.for(
+      null,
+      Ptah.binary("<", Nasus.get(), Ptah.member(Nasus.get3(), "length")),
+      Nasus.push(Ptah.binary("+", Nasus.pop(), Ptah.literal(1))),
+      Ptah.block([Ptah.exprstmt(ass), node.body])
+    )]
+    if (type === "DeclarationForIn") { trystmts.unshift(node.left) }
+    var stmts = pushes.map(Ptah.exprstmt)
+    stmts.push(Ptah.try(trystmts, null, null, pops.map(Ptah.exprstmt)))
+    Util.inject(Ptah.block(stmts), node)
   }
 
   ///////////////
@@ -86,9 +91,9 @@ module.exports = function (traps) {
   stmts.For = function (node) { if (node.test) { node.test = booleanize(node.test, "for") } }
 
   // for (var ID=EXPR1 in EXPR2) STMT >>> {
-  //   var #ID=EXPR1;
-  //   aran.push3(aran.traps.enumerate(EXPR2));
   //   try {
+  //     var #ID=EXPR1;
+  //     aran.push3(aran.traps.enumerate(EXPR2));
   //     for (aran.push(0); aran.get()<aran.get3().length; aran.push(aran.pop()+1)) {
   //       #ID = aran.get3()[aran.get()];
   //       STMT
@@ -100,9 +105,9 @@ module.exports = function (traps) {
   // }
   stmts.DeclarationForIn = function (node) { forin("DeclarationForIn", node) }
 
-  // for (ID in EXPR2) STMT >>> {
-  //   aran.push3(aran.traps.enumerate(EXPR2));
+  // for (ID in EXPR2) STMT >>> { 
   //   try {
+  //     aran.push3(aran.traps.enumerate(EXPR2));
   //     for (aran.push(0); aran.get()<aran.get3().length; aran.push(aran.pop()+1)) {
   //       #ID = aran.get3()[aran.get()];
   //       STMT
@@ -115,10 +120,10 @@ module.exports = function (traps) {
   stmts.IdentifierForIn = function (node) { forin("IdentifierForIn", node) }
 
   // for (EXPR1[EXPR2] in EXPR3) STMT >>> {
-  //   aran.push1(EXPR1);
-  //   aran.push2(EXPR2);
-  //   aran.push3(aran.traps.enumerate(EXPR3));
   //   try {
+  //     aran.push1(EXPR1);
+  //     aran.push2(EXPR2);
+  //     aran.push3(aran.traps.enumerate(EXPR3));
   //     for (aran.push(0); aran.get()<aran.get3().length; aran.push(aran.pop()+1)) {
   //       aran.set(aran.get1(), aran.get2(), aran.get3()[aran.get()]);
   //       STMT
