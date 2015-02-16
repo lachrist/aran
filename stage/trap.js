@@ -194,7 +194,7 @@ module.exports = function (traps) {
 
   exprs.New = function (node) { if (traps.new) { return Shadow("traps", "new", [node.callee, Ptah.array(node.arguments)]) } }
 
-  exprs.Member = function (node) { if (traps.get) { Shadow("traps", "get", [node.object, property(node)]) } }
+  exprs.Member = function (node) { if (traps.get) { return Shadow("traps", "get", [node.object, property(node)]) } }
 
   exprs.Literal = function (node) {
     if (node.regex) { if (traps.regexp) { return Shadow("traps", "regexp", [Util.extract(node)]) } }
