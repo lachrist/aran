@@ -183,6 +183,7 @@ module.exports = function (traps) {
     return Ptah.conditional(test, cons, alt)
   }
 
+  // TODO breaks when traps.apply is not defined
   exprs.MemberCall = function (node) {
     var get = traps.get
       ? Shadow("traps", "get", [Nasus.push(node.callee.object), property(node.callee)])
