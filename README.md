@@ -163,3 +163,19 @@ Additional remarks:
 * `get`, `set`, `delete`: The `property` parameter can either be: (i) a raw string if came from a static property access, (ii) a wrapped value if it came from a computed member expression.
 
 * `exist`: triggered when the scope lookup hits a `with` statement or the global object. The value returned by this trap should indcate whether the identifier exists in the environment-object. In the case of a `with` statement, a false value will make the lookup propagate to the enclosing scope. In the case of the global object, a false value will trigger a reference error.
+
+
+## ToDo
+
+* Support strict mode.
+* Support last valued expression e.g.: `eval('if (true) 1; else 2;')`.
+* Figure out what to do with `undefined` (there so many place where it can appear that `undefined` is simply not caught).
+  1. Unbound this argument
+  2. No return statement
+  3. Uninitialized variable
+  4. Uninitialized property
+  5. Null array element
+* Add code location to hooks (first figure what a code location exactly is in JavaScript).
+* Hoist variable declarations (for now, only functions are hoisted).
+* Problaly, initialize top level variable declarations (`var x` is different from `var x = undefined`).
+* Remove implicit assumptions made by compilation stages.
