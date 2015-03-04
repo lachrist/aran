@@ -1,6 +1,6 @@
 { "name" : "aran"
 , "description" : "Aran embeds a JS compiler for performing instrumentation or shadow execution"
-, "version" : "0.0.9"
+, "version" : "0.0.10"
 , "author" : {"name":"Laurent Christophe", "email":"lachrist@vub.ac.be"}
 , "repository": "lachrist/aran"
 , "license" : "MIT"
