@@ -1,5 +1,5 @@
 { "name" : "aran"
-, "version" : "0.0.5"
+, "version" : "0.0.6"
 , "dependencies": {"esprima":"*", "esvisit":"*", "esvalid":"*", "escodegen":"*"}
 , "files" : ["runtime", "stage", "syntax", "error.js", "main.js", "util.js"]
 , "main": "main.js"

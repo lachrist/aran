@@ -1,6 +1,4 @@
 
-
-
 #Aran
 
 <img align="right" hspace="10" vspace="10" src="https://github.com/lachrist/aran/blob/master/img/aran.png" alt="aran-logo" title="Aran Linvail"/>
