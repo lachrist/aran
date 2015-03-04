@@ -1,10 +1,10 @@
 { "name" : "aran"
-, "version" : "0.0.7"
+, "version" : "0.0.8"
 , "dependencies": {"esprima":"*", "esvisit":"*", "esvalid":"*", "escodegen":"*"}
 , "files" : ["runtime", "stage", "syntax", "error.js", "main.js", "util.js"]
 , "main": "main.js"
 , "description" : "Aran embeds a JS compiler for performing instrumentation or shadow execution"
-, "keywords" : ["Instrumenter", "ECMAScript5", "Shadow Execution"]
+, "keywords" : ["JavaScript", "Instrumentation", "Sandboxing", "Monitoring", "Tracing", "Shadow Execution", "ECMAScript5"]
 , "homepage": "http://github.com/lachrist/aran"
 , "author" : {"name":"Laurent Christophe", "email":"lachrist@vub.ac.be"}
 , "license" : "MIT"
