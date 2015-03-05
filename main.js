@@ -14,13 +14,14 @@ module.exports = function (sandbox, hooks, traps) {
   Proxy(aran)
   Compile(aran)
 
+  new Function ("aran", "")
+
   return function (code) {
     var compiled = aran.compile(code)
     if (!aran.eval) { aran.eval = sandbox ? ((aran.traps&&aran.traps.get) ? aran.traps.get(sandbox, "eval") : sandbox.eval) : aran.global.eval }
     if (aran.global.compiled !== undefined) { aran.global.compiled = compiled }
-    if (sandbox) { compiled = "with (aran.proxy) { "+compiled+" }" }
-    aran.mark()
-    try { return eval(compiled) } finally { aran.unmark() }
+    var run = new Function ("aran", sandbox ? ("with (aran.proxy) { "+compiled+" }") : compiled)
+    try { return run(aran) } finally { aran.unmark() }
   }
 
 }
