@@ -183,15 +183,17 @@ module.exports = function (traps) {
     return Ptah.conditional(test, cons, alt)
   }
 
-  // TODO breaks when traps.apply is not defined
   exprs.MemberCall = function (node) {
-    var get = traps.get
-      ? Shadow("traps", "get", [Nasus.push(node.callee.object), property(node.callee)])
-      : Ptah.member(Nasus.push(node.callee.object), property(node.callee))
-    return Shadow("traps", "apply", [get, Nasus.pop(), Ptah.array(node.arguments)])
+    if (traps.apply) {
+      var get = traps.get
+        ? Shadow("traps", "get", [Nasus.push(node.callee.object), property(node.callee)])
+        : Ptah.member(Nasus.push(node.callee.object), property(node.callee))
+      return Shadow("traps", "apply", [get, Nasus.pop(), Ptah.array(node.arguments)])
+    }
+    if (traps.get) { node.callee = Shadow("traps", "get", node.collee.object, property(node.callee.property)) }
   }
 
-  exprs.Call = function (node) { if (traps.apply) { return Shadow("traps", "apply", [node.callee, Shadow("undefined"), Ptah.array(node.arguments)]) } }
+  exprs.Call =  function (node) { if (traps.apply) { return Shadow("traps", "apply", [node.callee, Shadow("undefined"), Ptah.array(node.arguments)]) } }
 
   exprs.New = function (node) { if (traps.new) { return Shadow("traps", "new", [node.callee, Ptah.array(node.arguments)]) } }
 
