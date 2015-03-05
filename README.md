@@ -179,3 +179,4 @@ Additional remarks:
 * Hoist variable declarations (for now, only functions are hoisted).
 * Problaly, initialize top level variable declarations (`var x` is different from `var x = undefined`).
 * Remove implicit assumptions made by compilation stages.
+* Statically optimize traps insertion (for now traps existence are checked during compilation while they could be checked only once).
