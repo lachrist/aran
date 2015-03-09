@@ -79,7 +79,7 @@ module.exports = function (traps) {
 
   stmts.If = function (node) { node.test = booleanize(node.test, node.alternate?"if-else":"if") }
 
-  stmts.Return = function (node) { if (!node.arguments) { node.arguments = Shadow("traps", "primitive", [Shadow("undefined")]) } }
+  stmts.Return = function (node) { if (!node.argument) { node.argument = Shadow("traps", "primitive", [Shadow("undefined")]) } }
 
   stmts.Throw = function (node) { if (traps.throw) { node.argument = Shadow("traps", "throw", [node.argument]) } }
 
