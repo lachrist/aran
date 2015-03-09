@@ -89,7 +89,8 @@ Additional remarks:
 
     Moreover the `length` property of JavaScript arrays has a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
 
-* `arguments`: keep in mind that arguments track the changes made on the (it is basically an alias)
+* `arguments`: arguments objects verify the below assertions:
+
    ```javascript
    assert(Object.getPrototypeOf(arguments) === Object.prototype);
    assert(JSON.stringify(Object.getOwnPropertyDescriptor(arguments, 'length')) === '{"value":@#ARG,"writable":true,"enumerable":false,"configurable":true}');
