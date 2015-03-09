@@ -7,7 +7,7 @@
 
 var Ptah = require("../syntax/ptah.js")
 var Nasus = require("../syntax/nasus.js")
-var Util =require("../util.js")
+var Util = require("../util.js")
 
 function pushm (member) { return Ptah.member(Nasus.push1(member.object), member.computed?Nasus.push2(member.property):member.property.name) }
 function popm (member) { return Ptah.member(Nasus.pop1(), member.computed?Nasus.pop2():member.property.name) }

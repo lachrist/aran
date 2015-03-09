@@ -12,6 +12,7 @@ var Hook = require("../stage/hook.js")
 var Reduce = require("../stage/reduce.js")
 var Sandbox = require("../stage/sandbox.js")
 var Stack = require("../stage/stack.js")
+var Strict = require("../stage/strict.js")
 var Switch = require("../stage/switch.js")
 var Trap = require("../stage/trap.js")
 
@@ -27,7 +28,15 @@ module.exports = function (aran) {
   function expression (type, node) { compile.expr(type, node) }
 
   var push = Esvisit.Prepare(statement, expression)
-  var compile = Hook(aran.hooks, push, Hoist(push, Switch(push, Stack(Sandbox(aran.sandbox, Reduce(Trap(aran.traps)))))))
+  var compile =
+    Hook(aran.hooks, push,
+      Strict(
+        Hoist(push,
+          Switch(push,
+            Stack(
+              Sandbox(aran.sandbox,
+                Reduce(
+                  Trap(aran.traps))))))))
 
   aran.compile = function (code) {
     var ast = Esprima.parse(code)
