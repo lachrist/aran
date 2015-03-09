@@ -89,6 +89,20 @@ Additional remarks:
 
     Moreover the `length` property of JavaScript arrays has a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
 
+* `arguments`: keep in mind that arguments track the changes made on the (it is basically an alias)
+   ```javascript
+   assert(Object.getPrototypeOf(arguments) === Object.prototype);
+   assert(JSON.stringify(Object.getOwnPropertyDescriptor(arguments, 'length')) === '{"value":@#ARG,"writable":true,"enumerable":false,"configurable":true}');
+   assert(JSON.stringify(Object.getOwnPropertyDescriptor(arguments, 'callee')) === '{"writable":true,"enumerable":false,"configurable":true}');
+   assert(JSON.stringify(Object.getOwnPropertyDescriptor(arguments, "0")) === '{"value":@ARG0,"writable":true,"enumerable":true,"configurable":true}');
+   ```
+
+   Where `@#PARAMS` is the number of passed arguments.
+   Where `@ARG0` is the value of the first passed parguments (if any).
+   Also, the value of `arguments.callee` is set to the called function.
+   Attention, `arguments` points to the same locations as the ones pointed by the formal parameters ; changing the value of a formal parameter also change the value of the corresponding argument's number field.
+   The behaviors described above do not hold in strict mode (which is ignored by Aran anyway).
+
 * `function`: user-defined functions verify below assertions:
 
     ```javascript
