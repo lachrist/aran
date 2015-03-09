@@ -79,6 +79,8 @@ module.exports = function (traps) {
 
   stmts.If = function (node) { node.test = booleanize(node.test, node.alternate?"if-else":"if") }
 
+  stmts.Return = function (node) { if (!node.arguments) { node.arguments = Shadow("traps", "primitive", [Shadow("undefined")]) } }
+
   stmts.Throw = function (node) { if (traps.throw) { node.argument = Shadow("traps", "throw", [node.argument]) } }
 
   stmts.Try = function (node) { if (node.handler && traps.catch) { node.handler.body.body.unshift(Ptah.exprstmt(Ptah.assignment(node.handler.param.name, Shadow("traps", "catch", [Ptah.identifier(node.handler.param.name)])))) } }
@@ -154,6 +156,7 @@ module.exports = function (traps) {
       node.params.forEach(function (id) { if (id.name === "arguments") { check = false } })
       if (check) { node.body.body.unshift(Ptah.exprstmt(Ptah.assignment("arguments", Shadow("traps", "arguments", [Ptah.identifier("arguments")])))) }
     }
+    node.body.body.push(Ptah.return(Shadow("traps", "primitive", [Shadow("undefined")])))
     if (traps.function) { return Shadow("traps", "function", [Util.extract(node)]) }
   }
 
