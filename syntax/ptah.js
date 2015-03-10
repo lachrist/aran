@@ -101,7 +101,24 @@ exports.declaration = function (id, init) {
   return {
     type: "VariableDeclaration",
     kind: "var",
-    declarations: [{type:"VariableDeclarator", id:id, init:init}]
+    declarations: [{type:"VariableDeclarator", id:id, init:init||null}]
+  }
+}
+
+exports.declarations = function (declarators) {
+  return {
+    type: "VariableDeclaration",
+    kind: "var",
+    declarations: declarators
+  }
+}
+
+exports.declarator = function (id, init) {
+  if (typeof id === "string") { id = {type:"Identifier", name:id} }
+  return {
+    type: "VariableDeclarator",
+    id: id,
+    init: init||null
   }
 }
 

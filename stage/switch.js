@@ -23,7 +23,7 @@ module.exports = function (mark, next) {
     incr = function () { (labels.push(++counter), mark(pop)) } 
     get = function () { return labels[labels.length-1] }
   } ())
-  
+
   function stmt (type, stmt) {
     if (type === "Switch") {
       incr()

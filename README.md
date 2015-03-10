@@ -186,9 +186,10 @@ Additional remarks:
 * Support last valued expression e.g.: `eval('if (true) 1; else 2;')`.
 * Figure out what to do with `undefined` (there so many place where it can appear that `undefined` is simply not caught).
   1. Unbound this argument (in strict mode)
-  2. No return statement
-  3. Empty return statement
-  4. Uninitialized variable
+  2. Unbound parameters
+  3. No return statement
+  4. Empty return statement
+  5. Uninitialized variable
 * Add code location to hooks (first figure what a code location exactly is in JavaScript).
 * Hoist variable declarations (for now, only functions are hoisted).
 * Problaly, initialize top level variable declarations (`var x` is different from `var x = undefined`).

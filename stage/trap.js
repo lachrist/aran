@@ -9,6 +9,8 @@ var Ptah = require("../syntax/ptah.js")
 var Nasus = require("../syntax/nasus.js")
 var Shadow = require("../syntax/shadow.js")
 
+function getname (id) { return id.name }
+
 /////////////
 // Exports //
 /////////////
@@ -79,7 +81,7 @@ module.exports = function (traps) {
 
   stmts.If = function (node) { node.test = booleanize(node.test, node.alternate?"if-else":"if") }
 
-  stmts.Return = function (node) { if (!node.argument) { node.argument = Shadow("traps", "primitive", [Shadow("undefined")]) } }
+  stmts.Return = function (node) { if (traps.primitive && !node.argument) { node.argument = Shadow("traps", "primitive", [Shadow("undefined")]) } }
 
   stmts.Throw = function (node) { if (traps.throw) { node.argument = Shadow("traps", "throw", [node.argument]) } }
 
@@ -89,24 +91,7 @@ module.exports = function (traps) {
 
   stmts.DoWhile = function (node) { node.test = booleanize(node.test, "do-while") }
 
-  stmts.DeclarationFor = function (node) { if (node.test) { node.test = booleanize(node.test, "for") } }
-
   stmts.For = function (node) { if (node.test) { node.test = booleanize(node.test, "for") } }
-
-  // for (var ID=EXPR1 in EXPR2) STMT >>> {
-  //   try {
-  //     var #ID=EXPR1;
-  //     aran.push3(aran.traps.enumerate(EXPR2));
-  //     for (aran.push(0); aran.get()<aran.get3().length; aran.push(aran.pop()+1)) {
-  //       #ID = aran.get3()[aran.get()];
-  //       STMT
-  //     }
-  //   } finally {
-  //     aran.pop();
-  //     aran.pop3();
-  //   }
-  // }
-  stmts.DeclarationForIn = function (node) { forin("DeclarationForIn", node) }
 
   // for (ID in EXPR2) STMT >>> { 
   //   try {
@@ -150,13 +135,42 @@ module.exports = function (traps) {
 
   exprs.Object = function (node) { if (traps.object) { return Shadow("traps", "object", [Util.extract(node)]) } }
 
+  function initialize (fct) {
+    var check = false
+    var names = fct.params.map(function (p) {
+      if (p.name === "arguments") { check = true }
+      return p.name
+    })
+    fct.body.body[0].
+    names.
+    fct.params.concat(fct.body.body[0].declarations)
+    fct.parameters.forEach(function (p) { ret})
+    if (aran.traps.primitive) {
+      return Ptah.block(parameters.concat(variables).map(function (name) {
+        return Ptah.if(
+          Ptah.binary("===", Ptah.identifier(name), Shadow("undefined")),
+          Ptah.assignment(name, Shadow("traps", "primitive", [Shadow("undefined")]))
+        )
+      }))
+    }
+  }
+
   exprs.Function = function (node) {
     if (traps.arguments) {
       var check = true
       node.params.forEach(function (id) { if (id.name === "arguments") { check = false } })
       if (check) { node.body.body.unshift(Ptah.exprstmt(Ptah.assignment("arguments", Shadow("traps", "arguments", [Ptah.identifier("arguments")])))) }
     }
-    node.body.body.push(Ptah.return(Shadow("traps", "primitive", [Shadow("undefined")])))
+    if (traps.primitive) {
+      node.params.forEach(function (id) {
+        node.body.body.unshift(Ptah.exprstmt(Ptah.assignment(id.name, Ptah.conditional(
+          Ptah.binary("===", Ptah.identifier(id.name), Shadow("undefined")),
+          Shadow("traps", "primitive", [Shadow("undefined")]),
+          Ptah.identifier(id.name)
+        ))))
+      })
+      node.body.body.push(Ptah.return(Shadow("traps", "primitive", [Shadow("undefined")])))
+    }
     if (traps.function) { return Shadow("traps", "function", [Util.extract(node)]) }
   }
 
