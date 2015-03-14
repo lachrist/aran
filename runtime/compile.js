@@ -5,15 +5,11 @@ var Esvalid = require("esvalid")
 var Escodegen = require("escodegen")
 
 var Util = require("../util.js")
-var Error = require("../error.js")
 
-var Hoist = require("../stage/hoist.js")
 var Hook = require("../stage/hook.js")
-var Reduce = require("../stage/reduce.js")
 var Sandbox = require("../stage/sandbox.js")
-var Stack = require("../stage/stack.js")
-var Strict = require("../stage/strict.js")
-var Switch = require("../stage/switch.js")
+var Sanitize = require("../stage/sanitize.js")
+var Hoist = require("../stage/hoist.js")
 var Trap = require("../stage/trap.js")
 
 function summarize (error) {
@@ -24,30 +20,52 @@ function summarize (error) {
 
 module.exports = function (aran) {
 
-  function statement (type, node) { compile.stmt(type, node) }
-  function expression (type, node) { compile.expr(type, node) }
+  var stages = []
 
-  var push = Esvisit.Prepare(statement, expression)
-  var compile =
-    Hook(aran.hooks, push,
-      Strict(
-        Hoist(push,
-          Switch(push,
-            Stack(
-              Sandbox(aran.sandbox,
-                Reduce(
-                  Trap(aran.traps))))))))
+  if (aran.hooks) {
+    stages.push
+  }
+
+  var hook = Hook(aran.hooks)
+  var sandbox = Sandbox(aran.sandbox)
+  var sanitize = Sanitize(function (marker) { sanitizepush(marker) })
+  var hoist = Sanitize(function (marker) { hoistpush(marker) })
+  var trap = Trap(aran.traps)
+
+  var hookpush = Esvisit.Prepare(hook.statement, hook.expression)
+  var sandboxpush = Esvisit.Prepare(sandbox.statement, sandbox.expression)
+  var sanitizepush = Esvisit.Prepare(sanitize.statement, sanitize.expression)
+  var trappush = Esvisit.Prepare(trap.statement, trap.expression)
 
   aran.compile = function (code) {
-    var ast = Esprima.parse(code)
-    compile.prgm(ast)
-    push(ast)
+    var ast = Esprima.parse(code, {range:Boolean(aran.hooks&&(aran.hooks.MinRange||aran.hooks.MaxRange))})
+    // Hook //
+    if (aran.hooks) {
+      hook.program(ast)
+      hookpush(ast)
+    }
+    // Sandbox //
+    if (aran.sandbox) {
+      sandbox.program(ast)
+      sandboxpush(ast)      
+    }
+    // Traps //
+    if (aran.traps) {
+      // Sanitize //
+      sanitize.program(ast)
+      sanitizepush(ast)
+      // Hoist //
+      hoist.program(ast)
+      hoistpush(ast)
+      // Trap //
+      trap.program(ast)
+      trappush(ast)
+    }
+    // Check for syntactic errors //
     var errors = Esvalid.errors(ast)
     if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
-    console.log(JSON.stringify(ast))
-    var code =  Escodegen.generate(ast)
-    console.log(code)
-    return code
+    // Output code //
+    return Escodegen.generate(ast)
   }
 
 }

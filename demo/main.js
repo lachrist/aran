@@ -1,0 +1,2 @@
+
+window.Aran = require('aran')

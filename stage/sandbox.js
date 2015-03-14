@@ -3,6 +3,8 @@
  * Make sure no identifier from the target code shadows aran.
  */
 
+var Esvisit = require("esvisit")
+var Util = require("../util.js")
 var Ptah = require("../syntax/ptah.js")
 var Nasus = require("../syntax/nasus.js")
 var Shadow = require("../syntax/shadow.js")
@@ -10,43 +12,50 @@ var Shadow = require("../syntax/shadow.js")
 function escape (id) { if (/^\$*aran$/.test(id.name)) { id.name = "$"+id.name } }
 function descape (decl) { escape(decl.id) }
 
-module.exports = function (sandbox, next) {
+module.exports = function (visit, mark, sandbox) {
 
-  if (!sandbox) { return {prgm:next.prgm, stmt:next.stmt, expr:next.expr} }
+  function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } }
 
-  function stmt (type, stmt) {
-    if (stmts[type]) { stmts[type](stmt) }
-    return next.stmt(type, stmt)
-  }
-
-  function expr (type, expr) {
+  function expression (type, expr) {
     if (type === "This") {
-      expr.type = "ConditionalExpression"
-      expr.test = Ptah.binary("===", Nasus.push(next.expr("This", Ptah.this())), Shadow("global"))
-      expr.consequent = Ptah.sequence([Nasus.pop(), Shadow("sandbox")])
-      expr.alternate = Nasus.pop()
-      return expr
+      return Esvisit.BE.Conditional(
+        Esvisit.BE.Binary(
+          "===",
+          Esvisit.BE.This(),
+          Shadow("global")),
+        Esvisit.BE.Sequence([
+          Nasus.pop(),
+          Shadow("sandbox")]),
+        Esvisit.BE.This())
     }
     if (type === "IdentifierTypeof") {
       escape(expr.argument)
-      expr.argument = Ptah.call(Ptah.function([], [Ptah.try([Ptah.return(expr.argument)], "error", [Ptah.return(Shadow("undefined"))])]), [])
-      return next.expr("Unary", expr)
+      return Esvisit.BE.Unary(
+        "typeof",
+        Esvisit.BE.Call(
+          Esvisit.BE.Function(
+            [],
+            [Esvisit.BS.Try(
+              [Esvisit.BS.Return(Esvisit.BE.Identifier(expr.arguement.name))],
+              "_",
+              [],
+              null)]),
+          []))
     }
-    if (exprs[type]) { exprs[type](expr) }
-    return next.expr(type, expr)
+    if (expressions[type]) { return expresssions[type](expr) }
   }
 
-  var stmts = {
+  var statements = {
     DeclarationFor: function (stmt) { stmt.init.declarations.forEach(descape) },
     DeclarationForIn: function (stmt) { descape(stmt.left.declarations[0]) },
     IdentifierForIn: function (stmt) { escape(stmt.left) },
     Declaration: function (stmt) { stmt.declarations.forEach(descape) },
-    Definition: function (stmt) { escape(stmt.id); stmt.params.forEach(escape) },
+    Definition: function (stmt) { (escape(stmt.id), stmt.params.forEach(escape)) },
     With: function (stmt) { stmt.object = Shadow("with", [stmt.object]) },
-    Try: function (stmt) { if (stmt.CatchClause) { escape(stmt.CatchClause.param) } }
+    Try: function (stmt) { if (stmt.handlers[0]) { escape(stmt.handlers[0].param) } }
   }
 
-  var exprs = {
+  var expressions = {
     Function: function (expr) { expr.params.forEach(escape) },
     IdentifierDelete: function (expr) { escape(expr.argument) },
     IdentifierAssignment: function (expr) { escape(expr.left) },
@@ -54,6 +63,6 @@ module.exports = function (sandbox, next) {
     Identifier: function (expr) { escape(expr) }
   }
 
-  return {prgm:next.prgm, stmt:stmt, expr:expr}
+  return function (ast) { visit(ast, statement, expression) }
 
 }

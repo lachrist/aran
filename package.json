@@ -4,6 +4,7 @@
 , "author" : {"name":"Laurent Christophe", "email":"lachrist@vub.ac.be"}
 , "repository": "lachrist/aran"
 , "license" : "MIT"
+, "scripts": { "test": "mocha --harmony" }
 , "dependencies": {"esprima":"*", "esvisit":"*", "esvalid":"*", "escodegen":"*"}
 , "files" : ["runtime", "stage", "syntax", "error.js", "main.js", "util.js"]
 , "main": "main.js"

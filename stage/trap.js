@@ -4,46 +4,36 @@
  */
 
 var Util = require("../util.js")
-
+var Esvisit = require("esvisit")
 var Ptah = require("../syntax/ptah.js")
 var Nasus = require("../syntax/nasus.js")
 var Shadow = require("../syntax/shadow.js")
-
-function getname (id) { return id.name }
 
 /////////////
 // Exports //
 /////////////
 
-module.exports = function (traps) {
+module.exports = function (visit, mark, traps) {
 
-  if (!traps) { return { prgm:Util.identity, stmt:Util.second, expr:Util.second } }
-
-  function stmt (type, stmt) {
-    if (stmts[type]) { stmts[type](stmt) }
-    return stmt
-  }
-
-  function expr (type, expr) {
-    if (exprs[type]) {
-      var res = exprs[type](expr)
-      if (res) { Util.inject(res, expr) }
-    }
-    return expr
-  }
+  function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } }
+  function expression (type, expr) { if (expressions[type]) { return expressions[type](expr) } }
 
   /////////////
   // Helpers //
   /////////////
 
+  function booleanize (test, place) {
+    if (!traps.booleanize) { return test }
+    return Shadow("traps", "booleanize", [test, Esvisit.BE.literal(place)])
+  }
 
-  var booleanize = traps.booleanize ? function (test, place) { return Shadow("traps", "booleanize", [test, Ptah.literal(place)]) } : Util.identity
+  function undef(place) { return Shadow("traps", "undefined", [Esvisit.BE.Literal(place)]) }
 
-  function property (member) { return member.computed?member.property:Ptah.literal(member.property.name) }
+  function property (member) { return member.computed ? member.property : Esvisit.BE.Literal(member.property.name) }
 
   function forin (type, node) {
     if (!traps.enumerate) { return }
-    var pushes = [Nasus.push(Ptah.literal(0))]
+    var pushes = [Nasus.push(Esvisit.BE.Literal(0))]
     var pops = [Nasus.pop()]
     if (type === "MemberForIn") {
       pushes.push(Nasus.push1(node.left.object))
@@ -53,24 +43,22 @@ module.exports = function (traps) {
     }
     pushes.push(Nasus.push3(Shadow("traps", "enumerate", [node.right])))
     pops.push(Nasus.pop3())
-    var right = Ptah.member(Nasus.get3(), Nasus.get())
+    var right = Esvisit.BE.Member(Nasus.get3(), Nasus.get())
     var ass
-    if (type === "DeclarationForIn") { ass = Ptah.assignment(node.left.declarations[0].id.name, right) }
-    if (type === "IdentifierForIn") { ass = Ptah.assignment(node.left.name, right) }
+    if (type === "IdentifierForIn") { ass = Esvisit.BE.IdentifierAssignment(node.left.name, right) }
     if (type === "MemberForIn") {
       if (traps.set) { ass = Shadow("traps", "set", [Nasus.get1(), Nasus.get2(), right]) }
-      else { ass = Ptah.assignment(Ptah.member(Nasus.get1(), Nasus.get2()), right) }
+      else { ass = Esvisit.BE.MemberAssignment(Nasus.get1(), Nasus.get2(), right) }
     }
-    var trystmts = [Ptah.for(
+    var trystmts = [Esvisit.BE.For(
       null,
-      Ptah.binary("<", Nasus.get(), Ptah.member(Nasus.get3(), "length")),
-      Nasus.push(Ptah.binary("+", Nasus.pop(), Ptah.literal(1))),
-      Ptah.block([Ptah.exprstmt(ass), node.body])
+      Esvisit.BE.binary("<", Nasus.get(), Esvisit.BE.Member(Nasus.get3(), "length")),
+      Nasus.push(Esvisit.BE.Binary("+", Nasus.pop(), Esvisit.BE.Literal(1))),
+      Esvisit.BS.Block([Esvisit.BS.Expression(ass), node.body])
     )]
-    if (type === "DeclarationForIn") { trystmts.unshift(node.left) }
-    var stmts = pushes.map(Ptah.exprstmt)
-    stmts.push(Ptah.try(trystmts, null, null, pops.map(Ptah.exprstmt)))
-    Util.inject(Ptah.block(stmts), node)
+    var stmts = pushes.map(Esvisit.BS.Expression)
+    stmts.push(Esvisit.BE.Try(trystmts, null, null, pops.map(Esvisit.BS.Expression)))
+    return Esvisit.BE.Block(stmts)
   }
 
   ///////////////
@@ -81,17 +69,25 @@ module.exports = function (traps) {
 
   stmts.If = function (node) { node.test = booleanize(node.test, node.alternate?"if-else":"if") }
 
-  stmts.Return = function (node) { if (traps.primitive && !node.argument) { node.argument = Shadow("traps", "primitive", [Shadow("undefined")]) } }
+  statements.Return = function (node) { if (traps.undefined && !node.argument) { node.argument = undef("empty-return") } }
 
-  stmts.Throw = function (node) { if (traps.throw) { node.argument = Shadow("traps", "throw", [node.argument]) } }
+  statements.Throw = function (node) { if (traps.throw) { node.argument = Shadow("traps", "throw", [node.argument]) } }
 
-  stmts.Try = function (node) { if (node.handler && traps.catch) { node.handler.body.body.unshift(Ptah.exprstmt(Ptah.assignment(node.handler.param.name, Shadow("traps", "catch", [Ptah.identifier(node.handler.param.name)])))) } }
+  statements.Try = function (node) {
+    if (node.handlers[0] && traps.catch) {
+      node.handlers[0].body.body.unshift(bs.Expression(be.IdentifierAssignment(
+        "=",
+        node.handlers[0].param.name,
+        Shadow("traps", "catch", [be.Identifier(node.handlers[0].param.name)]))
+      ))
+    }
+  }
 
-  stmts.While = function (node) { node.test = booleanize(node.test, "while") }
+  statements.While = function (node) { node.test = booleanize(node.test, "while") }
 
-  stmts.DoWhile = function (node) { node.test = booleanize(node.test, "do-while") }
+  statements.DoWhile = function (node) { node.test = booleanize(node.test, "do-while") }
 
-  stmts.For = function (node) { if (node.test) { node.test = booleanize(node.test, "for") } }
+  statements.For = function (node) { if (node.test) { node.test = booleanize(node.test, "for") } }
 
   // for (ID in EXPR2) STMT >>> { 
   //   try {
@@ -105,7 +101,7 @@ module.exports = function (traps) {
   //     aran.pop3();
   //   }
   // }
-  stmts.IdentifierForIn = function (node) { forin("IdentifierForIn", node) }
+  statements.IdentifierForIn = function (node) { return forin("IdentifierForIn", node) }
 
   // for (EXPR1[EXPR2] in EXPR3) STMT >>> {
   //   try {
@@ -123,108 +119,107 @@ module.exports = function (traps) {
   //     aran.pop3();
   //   }
   // }
-  stmts.MemberForIn = function (node) { forin("MemberForIn", node) }
+  statements.MemberForIn = function (node) { return forin("MemberForIn", node) }
 
   ////////////////
   // Expression //
   ////////////////
 
-  var exprs = {}
+  var expressions = {}
 
-  exprs.Array = function (node) { if (traps.array) { return Shadow("traps", "array", [Util.extract(node)]) } }
+  expressions.Array = function (node) { if (traps.array) { return Shadow("traps", "array", [Esvisit.BE.Array(node.elements)]) } }
 
-  exprs.Object = function (node) { if (traps.object) { return Shadow("traps", "object", [Util.extract(node)]) } }
+  expressions.Object = function (node) { if (traps.object) { return Shadow("traps", "object", [Esvisit.BE.Object(node.properties)]) } }
 
-  function initialize (fct) {
-    var check = false
-    var names = fct.params.map(function (p) {
-      if (p.name === "arguments") { check = true }
-      return p.name
-    })
-    fct.body.body[0].
-    names.
-    fct.params.concat(fct.body.body[0].declarations)
-    fct.parameters.forEach(function (p) { ret})
-    if (aran.traps.primitive) {
-      return Ptah.block(parameters.concat(variables).map(function (name) {
-        return Ptah.if(
-          Ptah.binary("===", Ptah.identifier(name), Shadow("undefined")),
-          Ptah.assignment(name, Shadow("traps", "primitive", [Shadow("undefined")]))
-        )
-      }))
-    }
-  }
-
-  exprs.Function = function (node) {
+  expressions.Function = function (node) {
     if (traps.arguments) {
       var check = true
       node.params.forEach(function (id) { if (id.name === "arguments") { check = false } })
-      if (check) { node.body.body.unshift(Ptah.exprstmt(Ptah.assignment("arguments", Shadow("traps", "arguments", [Ptah.identifier("arguments")])))) }
+      if (check) { node.body.body.unshift(Esvisit.BS.Expression(Esvisit.BE.IdentifierAssignment("arguments", Shadow("traps", "arguments", [Esvisit.BE.Identifier("arguments")])))) }
     }
-    if (traps.primitive) {
-      node.params.forEach(function (id) {
-        node.body.body.unshift(Ptah.exprstmt(Ptah.assignment(id.name, Ptah.conditional(
-          Ptah.binary("===", Ptah.identifier(id.name), Shadow("undefined")),
-          Shadow("traps", "primitive", [Shadow("undefined")]),
-          Ptah.identifier(id.name)
-        ))))
-      })
-      node.body.body.push(Ptah.return(Shadow("traps", "primitive", [Shadow("undefined")])))
+    if (traps.undefined) {
+      node.body.body.unshift(Esvisit.BS.Block(node.params.map(function (id) {
+        return Esvisit.BS.If(
+          Esvisit.BE.Binary(
+            "===",
+            Esvisit.BE.Identifier(id.name),
+            Shadow("undefined"))
+          Esvisit.BS.Expression(
+            Esvisit.BE.IdentifierAssignment(
+              "=",
+              Esvisit.BE.Identifier(id.name),
+              undef("argument"))))
+      })))
+      node.body.body.push(Esvisit.BS.Return(undef("return")))
     }
-    if (traps.function) { return Shadow("traps", "function", [Util.extract(node)]) }
+    if (traps.function) { return Shadow("traps", "function", [Esvisit.BE.Function(node.params, node.body.body)]) }
   }
 
-  exprs.MemberAssignment = function (node) { if (traps.set) { return Shadow("traps", "set", [node.left.object, property(node.left), node.right]) } }
+  expressions.MemberAssignment = function (node) { if (traps.set) { return Shadow("traps", "set", [node.left.object, property(node.left), node.right]) } }
 
-  exprs.IdentifierDelete = function (node) { if (traps.unary) { return Shadow("traps", "delete", [Ptah.literal(node.argument.name), Util.extract(node)]) } }
+  expressions.IdentifierDelete = function (node) { if (traps.unary) { return Shadow("traps", "erase", [Esvisit.BE.Literal(node.argument.name), Util.copy(node)]) } }
 
-  exprs.MemberDelete = function (node) { if (traps.delete) { return Shadow("traps", "delete", [node.argument.object, property(node.argument)]) } }
+  expressions.MemberDelete = function (node) { if (traps.delete) { return Shadow("traps", "delete", [node.argument.object, property(node.argument)]) } }
 
-  exprs.Unary = function (node) { if (traps.unary) { return Shadow("traps", "unary", [Ptah.literal(node.operator), node.argument]) } }
+  expressions.Unary = function (node) { if (traps.unary) { return Shadow("traps", "unary", [Esvisit.BE.Literal(node.operator), node.argument]) } }
 
-  exprs.Binary = function (node) { return Shadow("traps", "binary", [Ptah.literal(node.operator), node.left, node.right]) }
+  expressions.Binary = function (node) { return Shadow("traps", "binary", [Esvisit.BE.Literal(node.operator), node.left, node.right]) }
 
-  exprs.Conditional = function (node) { node.test = booleanize(node.test, "?:") }
+  expressions.Conditional = function (node) { node.test = booleanize(node.test, "?:") }
 
-  // eval(EXPR1, EXPR2) >>> (aran.push(eval)===aran.eval)
-  //   ? (aran.pop(), eval(aran.compile(aran.stringify(EXPR1, EXPR2))))
-  //   : aran.traps.apply(aran.pop(), aran.undefined, [EXPR1, EXPR2])
+  // eval(EXPR1, EXPR2) >>> (eval===aran.eval)
+  //   ? eval(aran.compile(aran.stringify(EXPR1, EXPR2)))
+  //   : aran.traps.apply(eval, aran.undefined, [EXPR1, EXPR2])
   // WARNING arguments duplication in eval case (should be the only place where aliazing occurs)
-  exprs.EvalCall = function (node) {
-    var test = Ptah.binary("===", Ptah.push(node.callee.name), Shadow("eval"))
-    var cons = Ptah.sequence([
-      Nasus.pop(),
-      Ptah.call(Ptah.identifier("eval"), [Ptah.call(Shadow("compile"), [Shadow("traps", "stringify", [node.arguments])])])
-    ])
-    var alt = traps.apply ? Shadow("traps", "apply", [Nasus.pop(), Shadow("undefined"), Ptah.array(node.arguments)]) : Ptah.call(Nasus.pop(), node.arguments)
-    return Ptah.conditional(test, cons, alt)
+  expressions.EvalCall = function (node) {
+    var args = [Esvisit.BE.Identifier("eval"), traps.undefined?undef("context"):Shadow("undefined"), node.arguments]
+    return Esvisit.BE.Conditional(
+      Esvisit.BE.Binary(
+        "===",
+        Esvisit.BE.Identifier(node.callee.name),
+        Shadow("eval"))
+      Esvisit.BE.EvalCall(
+        Shadow("compile"),
+        [traps.stringify ? Shadow("traps", "stringify", node.arguments) : node.arguments])
+      traps.apply
+        ? Shadow("traps", "apply", args)
+        : (traps.undefined
+           ? Shadow("apply", args)
+           : Esvisit.BE.EvalCall(node.arguments)))
   }
 
-  exprs.MemberCall = function (node) {
-    if (traps.apply) {
-      var get = traps.get
-        ? Shadow("traps", "get", [Nasus.push(node.callee.object), property(node.callee)])
-        : Ptah.member(Nasus.push(node.callee.object), property(node.callee))
-      return Shadow("traps", "apply", [get, Nasus.pop(), Ptah.array(node.arguments)])
-    }
-    if (traps.get) { node.callee = Shadow("traps", "get", node.collee.object, property(node.callee.property)) }
+  // EXPR1.EXPR2(ARGS)
+  //   traps.apply && traps.get >>> aran.traps.apply(aran.traps.get(aran.push(EXPR1), EXPR2), Nasus.pop(), [ARGS])
+  //                  traps.get >>> aran.apply(aran.aran.traps.get(aran.push(EXPR1), EXPR2), Nasus.pop(), [ARGS])
+  //   traps.apply              >>> aran.traps.apply(Nasus.push(EXPR1).EXPR2, Nasus.pop(), [ARGS]) 
+  //                            >>> EXPR1.EXPR2(ARGS)
+  expressions.MemberCall = function (node) {
+    var get = traps.get
+      ? Shadow("traps", "get", [Nasus.push(node.callee.object), property(node.callee)])
+      : Esvisit.BE.Member(Nasus.push(node.callee.object), property(node.callee))
+    if (traps.apply) { return Shadow("traps", "apply", [get, Nasus.pop(), Esvisit.BE.Array(node.arguments)]) }
+    if (traps.get) { return Shadow("apply", [get, Nasus.pop(), Esvisit.BE.Array(node.arguments)]) }
   }
 
-  exprs.Call =  function (node) { if (traps.apply) { return Shadow("traps", "apply", [node.callee, Shadow("undefined"), Ptah.array(node.arguments)]) } }
+  expressions.Call =  function (node) {
+    var args = [node.callee, traps.undefined?undef("context"):Shadow("undefined"), Esvisit.BE.Array(node.arguments)]
+    if (traps.apply) { return Shadow("traps", "apply", args) }
+    if (traps.undefined) { return Shadow("apply", args) }
+  }
 
-  exprs.New = function (node) { if (traps.new) { return Shadow("traps", "new", [node.callee, Ptah.array(node.arguments)]) } }
+  expressions.New = function (node) { if (traps.new) { return Shadow("traps", "new", [node.callee, Esvisit.BE.Array(node.arguments)]) } }
 
-  exprs.Member = function (node) { if (traps.get) { return Shadow("traps", "get", [node.object, property(node)]) } }
+  expressions.Member = function (node) { if (traps.get) { return Shadow("traps", "get", [node.object, property(node)]) } }
 
-  exprs.Literal = function (node) {
-    if (node.regex) { if (traps.regexp) { return Shadow("traps", "regexp", [Util.extract(node)]) } }
-    else if (traps.primitive) { return Shadow("traps", "primitive", [Util.extract(node)]) }
+  expressions.Literal = function (node) {
+    if (node.regex) { if (traps.regexp) { return Shadow("traps", "regexp", [Esvisit.BE.Literal(node.regex.pattern), Esvisit.BE.Literal(node.regex.flags)]) } }
+    else if (traps.primitive) { return Shadow("traps", "primitive", [Esvisit.BE.Literal(node.value)]) }
   }
 
   ////////////
   // Return //
   ////////////
 
-  return {prgm:Util.identity, stmt:stmt, expr:expr}
+  return function (ast) { visit(ast, expression, statement) }
 
 }

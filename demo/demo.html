@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Aran in Action</title>
+      <style>
+      #main {
+        font-family: Helvetica, 'Open Sans', Arial, sans-serif;
+        font-weight: lighter;
+        width: 1000px;
+        margin: auto;
+      }
+      .code {
+        font-family: "Lucida Console", Monaco, monospace;
+        font-size: 12px;
+      }
+      #error {
+        color: red;
+        margin-left: 10px;
+      }
+      #result {
+        color: green;
+        margin-left: 10px;
+      }
+      h1 {
+        text-align: center;
+      }
+      p {
+        text-align: justify;
+      }
+      label {
+        display: block;
+        margin-right: 10px;
+      }
+      textarea {
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+      button {
+        padding: 8px;
+        margin-bottom: 30px;
+        font-size: 14px
+      }
+      button::-moz-focus-inner {
+        padding: 8px;
+      }
+      #enjoy {
+        margin-bottom: 30px;
+      }
+      #master-div {
+        margin-right: 20px;
+      }
+      #master-div, #target-div {
+        display: inline-block;
+      }
+    </style>
+    <script src="bundle.js"></script>
+    <script>
+      function assert (x) { if (!x) { throw new Error("Assertion violation") } }
+      window.onload = function () {
+        // Fetch elements
+        var select = document.getElementById("select")
+        var master = document.getElementById("master")
+        var init = document.getElementById("init")
+        var target = document.getElementById("target")
+        var run = document.getElementById("run")
+        var compiled = document.getElementById("compiled")
+        var result_label = document.getElementById("result-label")
+        var result = document.getElementById("result")
+        var error_label = document.getElementById("error-label")
+        var error = document.getElementById("error")
+        // Master-select
+        for (var name in window.masters) {
+          var option = document.createElement("option")
+          option.textContent = name
+          option.value = name
+          select.appendChild(option)
+        }
+        select.onchange = function () { master.value = window.masters[select.value] }
+        select.value = "Empty"
+        master.value = window.masters.Empty
+        // Initialize
+        init.onclick = function () {
+          var sandbox, hooks, traps
+          try { eval(master.value) } catch (e) { return alert("Error in master: "+e) }
+          try { var analyze = window.Aran(sandbox, hooks, traps) } catch (e) { alert("Aran internal error: "+e); throw e }
+          run.disabled = false
+          run.onclick = function () {
+            window.compiled = ""
+            try { var res = analyze(target.value) } catch (e) { var err = e }
+            compiled.value = window.compiled
+            result_label.style.visibility = "hidden"
+            error_label.style.visibility = "hidden"
+            if (res !== undefined) {
+              result_label.style.visibility = "visible"
+              result.textContent = res
+              console.dir(res)
+            }
+            if (err !== undefined) {
+              error_label.style.visibility = "visible"
+              error.textContent = err
+              console.dir(err)
+              throw err
+            }
+          }
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="main">
+      <h1>Aran in Action</h1>
+      <p>
+        Welcome the to <a href="https://github.com/lachrist/aran">Aran</a> demonstration page; Aran is a source-to-source code transformer for building JavaScript dynamic analaysis tools. Here, you may experiment Aran's possibilities and construct your own JavaScript dynamic analysis. In Aran, you construct a dynamic analysis by defining three parameters: <span class="code">sandbox</span>, <span class="code">hooks</span> and <span class="code">traps</span>, see <a href="https://github.com/lachrist/aran">https://github/lachrist/aran</a> for more documentation. These parameters can be specified in the master text field and are entered into the system by clicking on the (Re)Initialize button. The analysis can be triggered multiple times on arbitrary JavaScript target code by clicking on the Run/Analyze button.
+      </p>
+      <p id="enjoy">Enjoy!</p>
+      <div>
+        <div id="master-div">
+          <label>Master: <select id="select"></select></label>
+          <textarea id="master" class="code" cols="65" rows="15" wrap="off"></textarea><br/>
+          <button id="init">(Re) Initialize</button><br/>
+        </div>
+        <div id="target-div">
+          <label>Target:</label>
+          <textarea id="target" class="code" cols="65" rows="15" wrap="off"></textarea><br/>
+          <button id="run" disabled>Run/Analyze</button><br/>
+        </div>
+      </div>
+      <div id="compiled-div">
+        <label>Compiled:</label>
+        <textarea id="compiled" class="code" cols="110" rows="15" wrap="off" readonly></textarea><br/>
+      </div>
+      <div id="output-div">
+        <label id="result-label" style="visibility:hidden">Result:<span id="result" class="code"></span></label>
+        <label id="error-label" style="visibility:hidden">Error:<span id="error" class="code"></span></label>
+      </div>
+    </div>
+  </body>
+</html>

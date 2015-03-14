@@ -19,21 +19,35 @@ exports.log = function (mess) {
   console.log(mess+"\n\n")
 }
 
-exports.extract = function (o1) {
+exports.last = function (xs) {
+  return xs[xs.length-1]
+}
+
+exports.copy = function (o1) {
+  var keys = Object.keys(o)
+  var length = keys.length
   var o2 = {}
-  for (var k in o1) {
-    o2[k] = o1[k]
-    delete o1[k]
-  }
+  for (var i=0; i<length; i++) { o2[keys[i]] = o1[keys[i]]}
   return o2
 }
 
-exports.inject = function (o1, o2) {
-  if (o1 !== o2) {
-    for (var k in o2) { delete o2[k] }
-    for (var k in o1) { o2[k] = o1[k] }
-  }
-}
+// exports.extract = function (o1) {
+//   var o2 = {}
+//   for (var k in o1) {
+//     o2[k] = o1[k]
+//     delete o1[k]
+//   }
+//   return o2
+// }
+
+// exports.inject = function (o1, o2) {
+//   if (o1 !== o2) {
+//     for (var k in o2) { delete o2[k] }
+//     for (var k in o1) { o2[k] = o1[k] }
+//   }
+// }
+
+exports.constant = function (c) { return function () { return c} }
 
 exports.identity = function (x) { return x }
 

@@ -1,120 +1,79 @@
 
 /*
- * Hoist function declarations and express them in term of variable declarations.
- * TODO: Hoist variables declarations as well.
+ * Hoist variable declaration and function definition.
+ * This can be considered as part of JS sanitization,
+ * but this code has bad interaction with code on 
+ * sanitization file. So I prefered to simply perform
+ * another compilation pass. 
  */
 
+var Esvisit = require("esvisit")
+var Nasus = require("../syntax/nasus.js")
 var Util = require("../util.js")
-var Ptah = require("../syntax/ptah.js")
-var Shadow = require("../syntax/shadow.js")
 
-// We have to initialize all declarations, otherwise it triggers a 'has' trap in top level proxy.
-function initialize (d) { if (!d.init) { d.init = Shadow(Shadow("undefined") } }
+module.exports = function (visit, mark) {
 
-module.exports = function (mark, next) {
+  var bodies = []
+  var declaratorss = []
+  var assignmentss = []
 
-  // push: enter a body; get notified when jumping out of it //
-  // hoist: hoist a declaration //
-  // top: tell whether we are at the top level body //
-  var push, hoistvar, hoistdef;
-  (function () {
-    var bodies = []       // head is the program body, tail is nested function bodies
-    var declarations = [] // hoisted declaration for each body //
-    var namess = []
-    var valuess = []
-    // jump out of a body: unshift body with hoisted statements //
-    function pop () {
-      var body = bodies.pop()
-      var names = namess.pop()
-      var values = valuess.pop()
-      var expressions = []
-      for (var i = 0; i<names.length; i++) {
-        expressions[i] = values[i] ? Ptah.assignment(names[i], values[i]) : Ptah.conditional(
-          Ptah.binary("===", Ptah.identifier(names[i]), Shadow("undefined"))
-          Ptah.binary()
-        )
-        if (values[i]) { expressions[i] =  }
-        else { expre}
-      }
-      values.map(function (v) {  })
-      if (!bodies.length) { body.unshift(Shadow("aran", "enddeclaration", [])) }
-      body.unshift(Ptah.declarations(names.map(Ptah.declarator)))
-      if (!bodies.length) { body.unshift(Shadow("aran", "begindeclaration", [])) }
-
-
-      bodies.unshift()
-      bodies.unshift(Shadow("aran", "enddeclaration", []))
-      bodies.pop().unshift(declarations.pop())
-      
-      
-
-    }
-    push = function (body) {
-      top = false
-      mark(pop)
-      bodies.push(body)
-      buffers.push([])
-    }
-    function hoist (name, value) { declarations[declarations.length-1].declarations.push(Ptah.declarator(name, value)) }
-    hoistdef = hoist
-    // TODO refine when it top level
-    hoistvar = function (name) {
-      namess[namess.length-1].push(name)
-      
-      hoist(name, top?null:next.expr("Literal", Shadow("undefined")))
-    }
-  } ())
-
-  function prgm (prgm) {
-    push(prgm.body)
-    next.prgm(prgm)
+  function pop () {
+    var body = bodies.pop()
+    body.unshift(Esvisit.BS.Expression(Esvisit.BE.Sequence(assignmentss.pop())))
+    body.unshift(Esvisit.BS.Declaration(declaratorss.pop()))
+  }
+  
+  function enterbody (body) {
+    bodies.push(body)
+    declaratorss.push([])
+    assignmentss.push([])
+    mark(pop)
+  }
+  
+  function hoistdeclarator (declarator) {
+    Util.last(declaratorss).push(Esvisit.BuildDeclarator(declarator.id.name))
+    if (declarator.init) { return Esvisit.BE.IdentifierAssignment("=", declarator.id.name, declarator.init) }
+    return null
   }
 
-  function stmt (type, stmt) {
-    if (stmts[type]) { type = stmts[type](stmt) }
-    if (type) { next.stmt(type, stmt) }
-    return stmt
+  function hoistdeclaration (declaration) { return Esvisit.BE.Sequence(declaration.declarations.map(hoistdeclarator).filter(Util.identity)) }
+
+  statements.Definition = function (stmt) {
+    enterbody(stmt.body.body)
+    Util.last(declaratorss).push(Esvisit.BuildDeclarator(stmt.id.name))
+    Util.last(assignmentss).push(Esvisit.IdentifierAssignment(
+      "=",
+      stmt.id.name,
+      Esvisit.BE.Function(stmt.params, stmt.body.body)))
+    return Esvisit.BS.Empty()
   }
 
-  function expr (type, expr) {
-    if (type === "Function") { push(expr.body.body) }
-    return next.expr(type, expr)
+  statements.Declaration = function (stmt) { return Esvisit.BS.Expression(hoistdeclaration(stmt)) }
+
+  statements.DeclarationFor = function (stmt) {
+    return Esvisit.BS.For(
+      hoistdeclaration(stmt),
+      stmt.test,
+      stmt.update,
+      stmt.body
+    )
   }
 
-  function declarator (d) {
-    hoist(d.id.name)
-    if (!d.init) { return null }
-    return next.expr("Assignment", Ptah.assignment(d.id.name, d.init))
+  statements.DeclarationForIn = function (stmt) {
+    var assignment = hoistdeclarator(stmt.left.declarations[0])
+    return Esvisit.BS.IdentifierForIn(
+      stmt.left.declarations[0].id.name,
+      assignment ? Esvisit.BE.Sequence([assignment, stmt.right]) : stmt.right,
+      stmt.body
+    )
   }
 
-  var stmts = {}
+  function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } },
+  function expression (type, expr) { if ([Esvisit.Type(expr)] === "Function") { enterbody(stmt.body.body) } }
 
-  stmts.Definition = function (stmt) {
-    var copy = Util.extract(stmt)
-    copy.type = "FunctionExpression"
-    stmt.type = "EmptyStatement"
-    hoist(copy.id.name, copy)
-    push(copy.body.body)
-    next.expr("Function", copy)
-    return "Empty"
+  return function (ast) {
+    enterbody(ast.body)
+    Esvisit.Visit(ast, statement, expression)
   }
-
-  stmts.Declaration = function (stmt) {
-    Util.inject(Ptah.exprstmt(Ptah.sequence(stmt.declarations.map(declarator).filter(Util.identity))), stmt)
-  }
-
-  stmts.DeclarationForIn = function (stmt) {
-    var assignment = declarator(stmt.left)
-    if (assignment) { stmt.right = Ptah.sequence([assignment, stmt.right]) }
-    stmt.left = Ptah.identifier(name)
-    return "IdentifierForIn"
-  }
-
-  stmts.DeclarationFor = function (stmt) {
-    stmt.init = Ptah.sequence(stmt.init.declarations.map(declarator).filter(Util.identity))
-    return "For"
-  }
-
-  return {prgm:prgm, stmt:stmt, expr:expr}
 
 }
