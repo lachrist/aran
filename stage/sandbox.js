@@ -5,7 +5,6 @@
 
 var Esvisit = require("esvisit")
 var Util = require("../util.js")
-var Ptah = require("../syntax/ptah.js")
 var Nasus = require("../syntax/nasus.js")
 var Shadow = require("../syntax/shadow.js")
 

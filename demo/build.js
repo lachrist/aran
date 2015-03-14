@@ -1,21 +1,21 @@
 
-var fs = require("fs")
-var browserify = require("browserify")
+var FS = require("fs")
+var Browserify = require("browserify")
 
-var ws = fs.createWriteStream("./bundle.js")
+var ws = FS.createWriteStream(__dirname+"/bundle.js")
 ws.write("window.masters = {};\n")
 
-fs.readdir("./masters", function (err, names) {
+FS.readdir(__dirname+"/../analyses", function (err, names) {
   if (err) { throw err }
   var o = {}
   var done = 0
   names.forEach(function (name) {
-    fs.readFile("./masters/"+name, {encoding:"utf8"}, function (err, str) {
+    FS.readFile(__dirname+"/../analyses/"+name, {encoding:"utf8"}, function (err, str) {
       if (err) { throw err }
       ws.write("window.masters."+name.replace("\.js", "")+" = "+JSON.stringify(str)+";\n")
       if (++done === names.length) {
-        var b = browserify()
-        b.add("./main.js")
+        var b = Browserify()
+        b.add(__dirname+"/main.js")
         b.bundle().pipe(ws)
       }
     })

@@ -1,6 +1,8 @@
 
 var Esvisit = require("esvisit")
+var Util = require("../util.js")
 var Nodify = require("../syntax/nodify.js")
+var Shadow = require("../syntax/shadow.js")
 
 module.exports = function (visit, mark, hooks) {
 

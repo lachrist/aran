@@ -29,7 +29,7 @@ module.exports = function (visit, mark) {
 
   statements.Try = function (stmt) {
     stmt.block.body.unshift(Esvisit.BS.Expression(Nasus.mark()))
-    if (!stmt.finalizer) { stmt.finalizer = {type:"Block", []} }
+    if (!stmt.finalizer) { stmt.finalizer = {type:"Block", body:[]} }
     stmt.finalizer.body.unshift(Esvisit.BS.Expression(Nasus.unmark()))
   }
 
@@ -144,7 +144,7 @@ module.exports = function (visit, mark) {
       Shadow("object"),
       "defineProperties",
       [Esvisit.BE.Object(datadescriptors), Esvisit.BE.Object(accessordescriptors)]
-    }
+    )
   }
 
   ////////////

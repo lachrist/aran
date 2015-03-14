@@ -16,7 +16,7 @@ exports.second = function (x, y) { return y }
 ////////////
 
 exports.copy = function (o1) {
-  var keys = Object.keys(o)
+  var keys = Object.keys(o1)
   var length = keys.length
   var o2 = {}
   for (var i=0; i<length; i++) { o2[keys[i]] = o1[keys[i]]}

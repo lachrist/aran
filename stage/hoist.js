@@ -68,7 +68,7 @@ module.exports = function (visit, mark) {
     )
   }
 
-  function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } },
+  function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } }
   function expression (type, expr) { if ([Esvisit.Type(expr)] === "Function") { enterbody(stmt.body.body) } }
 
   return function (ast) {

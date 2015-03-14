@@ -1,2 +1,2 @@
 
-window.Aran = require('aran')
+window.Aran = require("..")

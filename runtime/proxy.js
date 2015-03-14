@@ -1,13 +1,11 @@
 
-var Error = require("../error.js")
-
 function unescape (str) { if (/^\$*aran$/.test(str)) { return str.substring(1) } return str }
 
 module.exports = function (aran) {
 
   if (!aran.sandbox) { return }
 
-  if (!aran.global.Proxy) { Error.external("ECMAscript6 proxies are needed to support sandboxing") }
+  if (!aran.global.Proxy) { throw new Error("ECMAscript6 proxies are needed to support sandboxing") }
 
   var has = function (o, k) { return unescape(k) in o }
   if (aran.traps && aran.traps.exist) { has = function (o, k) { return aran.traps.exist(o, unescape(k)) } }
@@ -24,7 +22,7 @@ module.exports = function (aran) {
       if (has(o, k)) { return true }
       throw new ReferenceError("Sandbox reference Error: "+unescape(k)+" is not defined")
     },
-    get: get
+    get: get,
     set: set
   })
 

@@ -1,5 +1,5 @@
 
-var sandbox = {}
+exports.sandbox = {}
 
 var excluded = ["eval", "Function"]
 

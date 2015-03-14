@@ -6,7 +6,7 @@
 , "license" : "MIT"
 , "scripts": { "test": "mocha --harmony" }
 , "dependencies": {"esprima":"*", "esvisit":"*", "esvalid":"*", "escodegen":"*"}
-, "files" : ["runtime", "stage", "syntax", "error.js", "main.js", "util.js"]
+, "files" : ["main.js", "util.js", "runtime", "stage", "syntax"]
 , "main": "main.js"
 , "keywords" : ["JavaScript", "Instrumentation", "Sandboxing", "Monitoring", "Tracing", "Shadow Execution", "ECMAScript5"]
 }

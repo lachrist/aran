@@ -1,10 +1,10 @@
 
-var sandbox = {}
+exports.sandbox = {}
 
 function wrap (x) { return {meta:0, actual:x} }
 function unwrap (x) { return x.actual }
 
-var traps = {
+exports.traps = {
   primitive: wrap,
   object: wrap,
   array: wrap,

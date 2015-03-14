@@ -1,6 +1,4 @@
 
-
-
 module.exports = function (aran) {
 
   if (!("eval" in aran)) {

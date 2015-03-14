@@ -5,7 +5,6 @@
 
 var Util = require("../util.js")
 var Esvisit = require("esvisit")
-var Ptah = require("../syntax/ptah.js")
 var Nasus = require("../syntax/nasus.js")
 var Shadow = require("../syntax/shadow.js")
 
@@ -143,7 +142,7 @@ module.exports = function (visit, mark, traps) {
           Esvisit.BE.Binary(
             "===",
             Esvisit.BE.Identifier(id.name),
-            Shadow("undefined"))
+            Shadow("undefined")),
           Esvisit.BS.Expression(
             Esvisit.BE.IdentifierAssignment(
               "=",
@@ -177,10 +176,10 @@ module.exports = function (visit, mark, traps) {
       Esvisit.BE.Binary(
         "===",
         Esvisit.BE.Identifier(node.callee.name),
-        Shadow("eval"))
+        Shadow("eval")),
       Esvisit.BE.EvalCall(
         Shadow("compile"),
-        [traps.stringify ? Shadow("traps", "stringify", node.arguments) : node.arguments])
+        [traps.stringify ? Shadow("traps", "stringify", node.arguments) : node.arguments]),
       traps.apply
         ? Shadow("traps", "apply", args)
         : (traps.undefined

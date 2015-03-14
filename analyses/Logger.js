@@ -1,8 +1,9 @@
-var sandbox = window;
+
+exports.sandbox = {};
 
 function log (msg) { console.log(msg) }
 
-var hooks = new Proxy({}, {
+exports.hooks = new Proxy({}, {
   get: function (_, type) {
     return function () {
       var msg = 'hooks.'+type;
@@ -18,8 +19,9 @@ function logtrap (name) {
   log(msg)
 }
 
-var traps = {
+exports.traps = {
   primitive: function (x) { logtrap('primitive', x); return x; },
+  undefined: function (u) { logtrap('undefined', u): return undefined },
   object: function (x) { logtrap('object', x); return x; },
   array: function (x) { logtrap('array', x); return x; },
   arguments: function (x) { logtrap('arguments', x); return x; },
