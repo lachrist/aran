@@ -39,4 +39,12 @@ module.exports = function (aran) {
     while (stack3.pop() !== mark);
   }
 
+  aran.flush = function () {
+    while (marks.pop());
+    while (stack.pop());
+    while (stack1.pop());
+    while (stack2.pop());
+    while (stack3.pop());
+  }
+
 }

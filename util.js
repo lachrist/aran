@@ -1,27 +1,19 @@
 
-exports.flaten = function (xss) {
-  return xss.reduce(function (xs, ys) { return xs.concat(ys) }, [])
-}
+//////////////
+// Function //
+//////////////
 
-exports.append = function (xs, ys) {
-  for (var i=0; i<ys.length; i++) { xs.push(ys[i])}
-}
+exports.nil = function () {}
 
-exports.prepend = function (xs, ys) {
-  for (var i=ys.length-1; i>=0; i--) { xs.unshift(ys[i]) }
-}
+exports.constant = function (c) { return function () { return c} }
 
-exports.log = function (mess) {
-  for (var i=1; i<arguments.length; i++) {
-    try { mess = mess+"\n    "+JSON.stringify(arguments[i]) }
-    catch (e) { mess = mess+"\n    "+arguments[i] }
-  }
-  console.log(mess+"\n\n")
-}
+exports.identity = function (x) { return x }
 
-exports.last = function (xs) {
-  return xs[xs.length-1]
-}
+exports.second = function (x, y) { return y }
+
+////////////
+// Object //
+////////////
 
 exports.copy = function (o1) {
   var keys = Object.keys(o)
@@ -47,13 +39,37 @@ exports.copy = function (o1) {
 //   }
 // }
 
-exports.constant = function (c) { return function () { return c} }
+///////////
+// Array //
+///////////
 
-exports.identity = function (x) { return x }
+exports.last = function (xs) {
+  return xs[xs.length-1]
+}
 
-exports.second = function (x, y) { return y }
+exports.append = function (xs, ys) {
+  for (var i=0; i<ys.length; i++) { xs.push(ys[i])}
+}
 
-exports.nil = function () {}
+exports.prepend = function (xs, ys) {
+  for (var i=ys.length-1; i>=0; i--) { xs.unshift(ys[i]) }
+}
+
+exports.flaten = function (xss) {
+  return xss.reduce(function (xs, ys) { return xs.concat(ys) }, [])
+}
+
+/////////
+// Log //
+/////////
+
+exports.log = function (mess) {
+  for (var i=1; i<arguments.length; i++) {
+    try { mess = mess+"\n    "+JSON.stringify(arguments[i]) }
+    catch (e) { mess = mess+"\n    "+arguments[i] }
+  }
+  console.log(mess+"\n\n")
+}
 
 exports.error = function () {
   var msg = ""
@@ -66,3 +82,18 @@ exports.error = function () {
   }
   throw new Error(msg)
 }
+
+function error (blame, message, arguments) {
+  var args = []
+  for (var i=1; i<arguments.length; i++) { args.push(arguments[i]) }
+  var error = new Error(message)
+  error.blame = blame
+  error.data = args
+  throw error
+}
+
+exports.esprima = function (message) { error("esprima", message, arguments) }
+
+exports.internal = function (message) { error("internal", message, arguments) }
+
+exports.external = function (message) { error("external", message, arguments) }
