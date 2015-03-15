@@ -56,51 +56,73 @@
     </style>
     <script src="bundle.js"></script>
     <script>
+      console.log(JSON.stringify(masters))
       function assert (x) { if (!x) { throw new Error("Assertion violation") } }
       window.onload = function () {
-        // Fetch elements
-        var select = document.getElementById("select")
-        var master = document.getElementById("master")
-        var init = document.getElementById("init")
-        var target = document.getElementById("target")
-        var run = document.getElementById("run")
-        var compiled = document.getElementById("compiled")
-        var result_label = document.getElementById("result-label")
-        var result = document.getElementById("result")
-        var error_label = document.getElementById("error-label")
-        var error = document.getElementById("error")
-        // Master-select
-        for (var name in window.masters) {
+        for (var name in masters) {
           var option = document.createElement("option")
           option.textContent = name
           option.value = name
-          select.appendChild(option)
+          document.getElementById("select").appendChild(option)
         }
-        select.onchange = function () { master.value = window.masters[select.value] }
-        select.value = "Empty"
-        master.value = window.masters.Empty
+        document.getElementById("select").onchange = function () { master.value = masters[select.value] }
+        document.getElementById("select").value = "Empty"
+        document.getElementById("master").value = masters.Empty
         // Initialize
-        init.onclick = function () {
-          var sandbox, hooks, traps
-          try { eval(master.value) } catch (e) { return alert("Error in master: "+e) }
-          try { var analyze = window.Aran(sandbox, hooks, traps) } catch (e) { alert("Aran internal error: "+e); throw e }
-          run.disabled = false
-          run.onclick = function () {
-            window.compiled = ""
-            try { var res = analyze(target.value) } catch (e) { var err = e }
-            compiled.value = window.compiled
-            result_label.style.visibility = "hidden"
-            error_label.style.visibility = "hidden"
-            if (res !== undefined) {
-              result_label.style.visibility = "visible"
-              result.textContent = res
-              console.dir(res)
+        document.getElementById("init").onclick = function () {
+          var exports = {}
+          try { eval(document.getElementById("master").value) } catch (e) { throw (alert("Error when running master: "+e), e) }
+          try { var analyze = Aran(exports.sandbox, exports.hooks, exports.traps) } catch (e) { throw (alert("Error when setting up Aran: "+e),e) }
+          document.getElementById("run").disabled = false
+          document.getElementById("run").onclick = function () {
+            // Cleanup
+            document.getElementById("compiled").value = ""
+            document.getElementById("result-label").style.visibility = "hidden"
+            document.getElementById("error-label").style.visibility = "hidden"
+            document.getElementById("time-label").style.visibility = "hidden"
+            document.getElementById("aran-result-label").style.visibility = "hidden"
+            document.getElementById("aran-error-label").style.visibility = "hidden"
+            document.getElementById("aran-time-label").style.visibility = "hidden"
+            // Run original
+            if (document.getElementById("comparison").value) {
+              var start = performance.now()
+              try { var result = window.eval(target.value) } catch (e) { var error = e }
+              var end = performance.now()
             }
-            if (err !== undefined) {
-              error_label.style.visibility = "visible"
-              error.textContent = err
-              console.dir(err)
-              throw err
+            // Run Aran
+            var input = {code:target.value}
+            var aranstart = performance.now()
+            try { var aranresult = analyze(o) } catch (e) { var aranerror = e }
+            var aranend = performance.now()
+            // Output compiled code
+            document.getElementById("compiled").value = input.compiled
+            // Output results
+            if (result !== undefined) {
+              document.getElementById("result-label").style.visibility = "visible"
+              document.getElementById("result").textContent = result
+            }
+            if (error !== undefined) {
+              document.getElementById("error-label").style.visibility = "visible"
+              document.getElementById("error").textContent = error
+              console.dir(error)
+            }
+            if (start && end) {
+              document.getElementById("time-label").style.visibility = "visible"
+              document.getElementById("time").textContent = (Math.round(1000*(start-end))/1000)+"ms"
+            }
+            // Output aran results
+            if (aranresult !== undefined) {
+              document.getElementById("aran-result-label").style.visibility = "visible"
+              document.getElementById("aran-result").textContent = aranresult
+            }
+            if (aranerror !== undefined) {
+              document.getElementById("aran-error-label").style.visibility = "visible"
+              document.getElementById("aran-error").textContent = aranerror
+              console.dir(aranerror)
+            }
+            if (aranstart && aranend) {
+              document.getElementById("aran-time-label").style.visibility = "visible"
+              document.getElementById("aran-time").textContent = (Math.round(1000*(aranstart-aranend))/1000)+"ms"
             }
           }
         }
@@ -123,7 +145,8 @@
         <div id="target-div">
           <label>Target:</label>
           <textarea id="target" class="code" cols="65" rows="15" wrap="off"></textarea><br/>
-          <button id="run" disabled>Run/Analyze</button><br/>
+          <button id="run" style="display:inline-block" disabled>Run/Analyze</button>
+          <label style="display:inline-block"><input id="comparison" type="checkbox" checked>Compare with uninstrumented code</label><br/>
         </div>
       </div>
       <div id="compiled-div">
@@ -133,6 +156,10 @@
       <div id="output-div">
         <label id="result-label" style="visibility:hidden">Result:<span id="result" class="code"></span></label>
         <label id="error-label" style="visibility:hidden">Error:<span id="error" class="code"></span></label>
+        <label id="time-label" style="visibility:hidden">Time:<span id="time" class="code"></span></label>
+        <label id="aran-result-label" style="visibility:hidden">Aran result:<span id="aran-result" class="code"></span></label>
+        <label id="aran-error-label" style="visibility:hidden">Aran error:<span id="aran-error" class="code"></span></label>
+        <label id="aran-time-label" style="visibility:hidden">Aran time:<span id="aran-time" class="code"></span></label>
       </div>
     </div>
   </body>

@@ -9,6 +9,7 @@ FS.readdir(__dirname+"/../analyses", function (err, names) {
   if (err) { throw err }
   var o = {}
   var done = 0
+  names = names.filter(function (name) { return name !== ".DS_Store"})
   names.forEach(function (name) {
     FS.readFile(__dirname+"/../analyses/"+name, {encoding:"utf8"}, function (err, str) {
       if (err) { throw err }

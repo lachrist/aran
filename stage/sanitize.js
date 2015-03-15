@@ -37,7 +37,7 @@ module.exports = function (visit, mark) {
   // Reduce //
   ////////////
 
-  (function () {
+  //(function () {
 
     function pushobject (member) { return Nasus.push1(member.object) }
     function pushproperty (member) { return member.computed ? Nasus.push2(member.property) : member.property.name }
@@ -107,7 +107,7 @@ module.exports = function (visit, mark) {
       return Esvisist.BE.Sequence([ass, Nasus.pop3()])
     }
 
-  } ())
+  //} ())
 
   ////////////
   // Strict //
@@ -151,7 +151,7 @@ module.exports = function (visit, mark) {
   // Switch //
   ////////////
 
-  (function () {
+  //(function () {
 
     function escape (id) { if (/^\$*switch/.test(id.name)) { id.name="$"+id.name } }
 
@@ -168,7 +168,7 @@ module.exports = function (visit, mark) {
         if (!c.test) { for (var i=0; i<c.consequent.length; i++) { stmts.push(c.consequent[i]) } }
         else { stmts.push(Esvisit.BS.If(Esvisit.BE.Binary("===", Nasus.get(), c.test), Esvisit.BS.Block(c.consequent))) }
       })
-      return bs.Label("switch"+get(), bs.Try(stmts, null, null, [Esvisist.Halt(bs.Expression(Nasus.pop()))]))
+      return Esvisit.BS.Label("switch"+get(), Esvisit.BS.Try(stmts, null, null, [Esvisist.Halt(bs.Expression(Nasus.pop()))]))
     }
 
     statements.Label = function (stmt) { escape(stmt.label) }
@@ -184,7 +184,7 @@ module.exports = function (visit, mark) {
     statements.IdentifierForIn = mask
     statements.MemberForIn = mask
 
-  } ())
+  //} ())
 
   ////////////
   // Return //

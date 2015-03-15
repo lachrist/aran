@@ -53,12 +53,18 @@ var types = [
 ]
 
 exports.hooks = {}
-exports.hooks.MinRange = true
-exports.hooks.MaxRange = true
+exports.hooks.StartRange = true
+exports.hooks.EndRange = true
+exports.hooks.StartLoc = true
+exports.hooks.EndLoc = true
 types.forEach(function (type) {
-  exports.hooks[type] = function (min, max) {
+  exports.hooks[type] = function (startrange, endrange, startloc, endloc) {
     var infos = []
-    for (var i=2; i<arguments.length; i++) { infos.push(arguments[i]) }
-    console.log(type+": begin at "+min+"; end at "+max+"; infos "+JSON.stringify(infos))
+    for (var i=4; i<arguments.length; i++) { infos.push(arguments[i]) }
+    var msg = type+":"
+    msg += " range "+startrange+"->"+endrange+";"
+    msg += " loc "+startloc+"->"+endloc+";"
+    msg += " infos "+JSON.stringify(infos)
+    console.log(msg)
   }
 })

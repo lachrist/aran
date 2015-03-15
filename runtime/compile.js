@@ -20,6 +20,10 @@ function summarize (error) {
 
 module.exports = function (aran) {
 
+  var options = {
+    range: Boolean(aran.hooks&&(aran.hooks.StartRange||aran.hooks.EndRange)),
+    loc: Boolean(aran.hooks&&(aran.hooks.StartLoc||aran.hooks.EndLoc))
+  }
   var esv = Esvisit.Prepare()
   var stages = []
   if (aran.hooks) { stages.push(Hook(esv.visit, esv.mark, aran.hooks)) }
@@ -31,7 +35,7 @@ module.exports = function (aran) {
   }
 
   aran.compile = function (code) {
-    var ast = Esprima.parse(code, {range:Boolean(aran.hooks&&(aran.hooks.MinRange||aran.hooks.MaxRange))})
+    var ast = Esprima.parse(code, options)
     for (var i=0; i<stages.length; i++) { stages[i](ast) }
     var errors = Esvalid.errors(ast)
     if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
