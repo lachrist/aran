@@ -8,49 +8,80 @@
  */
 
 var Esvisit = require("esvisit")
-var Nasus = require("../syntax/nasus.js")
 var Util = require("../util.js")
+var Nasus = require("../syntax/nasus.js")
+var Shadow = require("../syntax/shadow.js")
+var Nodify = require("../syntax/nodify.js")
 
-module.exports = function (visit, mark) {
+module.exports = function (visit, mark, sandboxed) {
 
+  var local
   var bodies = []
-  var declaratorss = []
-  var assignmentss = []
+  var variabless = []
+  var definitionss = []
+  var onstatements = {}
+  var onexpressions = {}
+
+  function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }
+  function onexpression (type, expr) { if (onstatements[type]) { return onexpressions[type](expr) } }
+
+  function popdefinitions () {
+    var definitions = definitionss.pop()
+    if (definitions.length === 0) { return Esvisit.BS.Empty() }
+    if (definitions.length === 1) { return Esvisit.BS.Expression(definitions[0]) }
+    return Esvisit.BS.Expression(Esvisit.BE.Sequence(definitions))
+  }
+
+  function popvariables () {
+    var variables = variabless.pop()
+    if (!variables.length) { return Esvisit.BS.Empty() }
+    return Esvisit.BS.Declaration(variables.map(function (v) { return Esvisit.BuildDeclarator(v) }))
+  }
 
   function pop () {
     var body = bodies.pop()
-    body.unshift(Esvisit.BS.Expression(Esvisit.BE.Sequence(assignmentss.pop())))
-    body.unshift(Esvisit.BS.Declaration(declaratorss.pop()))
+    body.unshift(popdefinitions())
+    body.unshift(popvariables())
   }
-  
+
   function enterbody (body) {
     bodies.push(body)
-    declaratorss.push([])
-    assignmentss.push([])
+    variabless.push([])
+    definitionss.push([])
     mark(pop)
   }
-  
+
   function hoistdeclarator (declarator) {
-    Util.last(declaratorss).push(Esvisit.BuildDeclarator(declarator.id.name))
+    Util.last(variabless).push(declarator.id.name)
     if (declarator.init) { return Esvisit.BE.IdentifierAssignment("=", declarator.id.name, declarator.init) }
     return null
   }
 
-  function hoistdeclaration (declaration) { return Esvisit.BE.Sequence(declaration.declarations.map(hoistdeclarator).filter(Util.identity)) }
+  function hoistdeclaration (declaration) {
+    var assignments = declaration.declarations.map(hoistdeclarator).filter(Util.identity)
+    if (assignments.length === 0) { return null }
+    if (assignments.length === 1) { return assignments[0] }
+    return Esvisit.BE.Sequence(assignments)
+  }
 
-  statements.Definition = function (stmt) {
-    enterbody(stmt.body.body)
-    Util.last(declaratorss).push(Esvisit.BuildDeclarator(stmt.id.name))
-    Util.last(assignmentss).push(Esvisit.IdentifierAssignment(
+  onstatements.Definition = function (stmt) {
+    debugger
+    Util.last(variabless).push(stmt.id.name)
+    Util.last(definitionss).push(Esvisit.BE.IdentifierAssignment(
       "=",
       stmt.id.name,
-      Esvisit.BE.Function(stmt.params, stmt.body.body)))
+      Esvisit.BE.Function(stmt.params.map(function (id) { return id.name }), stmt.body.body)))
+    enterbody(stmt.body.body)
     return Esvisit.BS.Empty()
   }
 
-  statements.Declaration = function (stmt) { return Esvisit.BS.Expression(hoistdeclaration(stmt)) }
+  onstatements.Declaration = function (stmt) {
+    var expression = hoistdeclaration(stmt)
+    if (expression) { return Esvisit.BS.Expression(expression) }
+    return Esvisit.BS.Empty()
+  }
 
-  statements.DeclarationFor = function (stmt) {
+  onstatements.DeclarationFor = function (stmt) {
     return Esvisit.BS.For(
       hoistdeclaration(stmt),
       stmt.test,
@@ -59,7 +90,7 @@ module.exports = function (visit, mark) {
     )
   }
 
-  statements.DeclarationForIn = function (stmt) {
+  onstatements.DeclarationForIn = function (stmt) {
     var assignment = hoistdeclarator(stmt.left.declarations[0])
     return Esvisit.BS.IdentifierForIn(
       stmt.left.declarations[0].id.name,
@@ -68,12 +99,23 @@ module.exports = function (visit, mark) {
     )
   }
 
-  function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } }
-  function expression (type, expr) { if ([Esvisit.Type(expr)] === "Function") { enterbody(stmt.body.body) } }
+  onexpressions.Function = function (expr) { enterbody(stmt.body.body) }
 
-  return function (ast) {
-    enterbody(ast.body)
-    Esvisit.Visit(ast, statement, expression)
+  onexpressions.EvalCall = function (expr) {
+    return Esvisit.BE.Conditional(
+      Esvisit.Halt(Esvisit.BE.Binary("===", Esvisit.BE.Identifier("eval"), Shadow("eval"))),
+      Esvisit.Halt(Esvisit.BE.EvalCall([Shadow("compile", expr.arguments.slice().unshift(Esvisit.BE.Literal(local||bodies.length)))])),
+      Esvisit.BE.EvalCall(expr.arguments))
+  }
+
+  return function (loc, ast) {
+    local = loc
+    variabless.push([])
+    definitionss.push([])
+    visit(ast, onstatement, onexpression)
+    debugger
+    ast.body.unshift(popdefinitions())
+    ast.body.unshift((sandboxed&&!local)?Shadow("declare", Nodify(variabless.pop())):popvariables())
   }
 
 }

@@ -13,6 +13,8 @@ function descape (decl) { escape(decl.id) }
 
 module.exports = function (visit, mark, sandbox) {
 
+  if (!sandbox) { return Util.nil }
+
   function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } }
 
   function expression (type, expr) {
@@ -41,12 +43,16 @@ module.exports = function (visit, mark, sandbox) {
               null)]),
           []))
     }
+    if (type === "EvalCall") {
+      return Esvisit.BE.Sequence([
+        Shadow("local", [Esvisit.BE.Literal()]),
+        Esvisit.BE.EvalCall(expr.arguments)
+      ])
+    }
     if (expressions[type]) { return expresssions[type](expr) }
   }
 
   var statements = {
-    DeclarationFor: function (stmt) { stmt.init.declarations.forEach(descape) },
-    DeclarationForIn: function (stmt) { descape(stmt.left.declarations[0]) },
     IdentifierForIn: function (stmt) { escape(stmt.left) },
     Declaration: function (stmt) { stmt.declarations.forEach(descape) },
     Definition: function (stmt) { (escape(stmt.id), stmt.params.forEach(escape)) },
@@ -59,9 +65,12 @@ module.exports = function (visit, mark, sandbox) {
     IdentifierDelete: function (expr) { escape(expr.argument) },
     IdentifierAssignment: function (expr) { escape(expr.left) },
     IdentifierUpdate: function (expr) { escape(expr.argument) },
-    Identifier: function (expr) { escape(expr) }
+    Identifier: function (expr) { escape(expr) },
   }
 
-  return function (ast) { visit(ast, statement, expression) }
+  return function (local, ast) {
+    visit(ast, statement, expression)
+    if (!local) { ast.body = [Esvisit.Ignore(Esvisit.BS.With(Shadow("proxy"), Esvisit.BS.Block(ast.body)))] }
+  }
 
 }

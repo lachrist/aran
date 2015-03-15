@@ -3,7 +3,7 @@ var Aran = require("../..")
 var Expressions = require("../expressions.js")
 var Statements = require("../Statements.js")
 
-var hooks = require("../../analyses/DemoHooks").hooks
+var hooks = require("../../master/LogHooks").hooks
 
 var aran = Aran(null, hooks, null)
 

@@ -6,6 +6,8 @@ var Shadow = require("../syntax/shadow.js")
 
 module.exports = function (visit, mark, hooks) {
 
+  if (!hooks) { return Util.nil }
+
   function hook (type, range, loc, infos) {
     if (hooks.EndLoc) { infos.unshift(loc.end.line+"-"+loc.end.column) }
     if (hooks.StartLoc) { infos.unshift(loc.start.line+"-"+loc.start.column) }

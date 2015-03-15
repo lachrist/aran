@@ -5,13 +5,13 @@ var Browserify = require("browserify")
 var ws = FS.createWriteStream(__dirname+"/bundle.js")
 ws.write("window.masters = {};\n")
 
-FS.readdir(__dirname+"/../analyses", function (err, names) {
+FS.readdir(__dirname+"/../master", function (err, names) {
   if (err) { throw err }
   var o = {}
   var done = 0
   names = names.filter(function (name) { return name !== ".DS_Store"})
   names.forEach(function (name) {
-    FS.readFile(__dirname+"/../analyses/"+name, {encoding:"utf8"}, function (err, str) {
+    FS.readFile(__dirname+"/../master/"+name, {encoding:"utf8"}, function (err, str) {
       if (err) { throw err }
       ws.write("window.masters."+name.replace("\.js", "")+" = "+JSON.stringify(str)+";\n")
       if (++done === names.length) {

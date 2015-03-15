@@ -2,7 +2,7 @@
 var General = require("./runtime/general.js")
 var Stack = require("./runtime/stack.js")
 var Compile = require("./runtime/compile.js")
-var Proxy = require("./runtime/proxy.js")
+var Sandbox = require("./runtime/sandbox.js")
 var Preserve = require("./runtime/preserve.js")
 
 module.exports = function (sandbox, hooks, traps) {
@@ -11,15 +11,16 @@ module.exports = function (sandbox, hooks, traps) {
 
   General(aran)
   Stack(aran)
-  Proxy(aran)
-  Compile(aran)
+  if (sandbox) { Sandbox(aran) }
+  var globalcompile = Compile(aran)
+  var globaleval = eval
 
   return function (x) {
     Preserve(aran)
     aran.flush()
-    var code = x.code || x
-    var compiled = (x.compiled = aran.compile(code))
-    return (new Function("aran", sandbox ? ("with (aran.proxy) { "+compiled+" }") : compiled))(aran)
+    var code = (typeof x.code === "string") ? x.code : x
+    aran.global.aran = aran
+    return globaleval(x.compiled = globalcompile(code))
   }
 
 }

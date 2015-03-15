@@ -1,31 +1,5 @@
 
 
-
-exports.Empty = ";"
-exports.Strict = "'use strict';"
-exports.Block = "{}"
-exports.Expression = "1;"
-exports.If = "if (true) {} else {throw 'If'}"
-exports.Label = "a:{}"
-exports.Break = "a:{break a; throw 0}"
-exports.Continue = "var b=true; while (b) {b=false;continue;throw'Continue'}"
-exports.With = "with ({a:1}) {if (a!==1) {throw 'With'}}"
-exports.Switch = "var i=0;\nswitch (2) {\n  case 1: throw 'Switch1';\n  case 2: i++;\n  default: i++;break;\n  case 2: throw 'Switch2';\n}\nif(i!==2) {throw 'Switch3'}"
-exports.Return = "(function () { return; throw 'Return'})()"
-exports.Throw = "try {throw 'Throw'} catch (e) {}"
-exports.Try = "try {throw 'Try'} catch (e) {}"
-exports.While = "var i=0; while (i<3) {i++}; if (i!==3) {throw 'While'}"
-exports.DoWhile = "var i=0; do {i++} while (i<3); if (i!==3) {throw 'DoWhile'}"
-exports.DeclarationFor = "for (var i=0; i<3; i++) {} if (i!==3) {throw 'DeclarationFor'}"
-exports.For = "var i; for (i=0; i<3; i++) {} if (i!==3) {throw 'For'}"
-exports.IdentifierForIn = "var k; for (k in {a:1}) {}; if (k!=='a') {throw 'IdentifierForIn'}"
-exports.MemberForIn = "var o = {}; for (o.a in {a:1}) {}; if (o.a!=='a') { throw 'MemberForin'}"
-exports.DeclarationForIn = "for (var k in {a:1}) {}; if (k!=='a') {throw 'IdentifierForIn'}"
-exports.Definition = "f(); function f () {}"
-exports.Declaration = "var x,y=1; x; if (y!==1) {throw 'Declaration'}"
-
-
-
 exports.This = "var o = {f:function () {if (this!==o) {throw'This'}}}; o.f()"
 exports.Array = "if ([1,2,3][0]!==1) {throw'Array'}"
 exports.Object = "var o = {a:1, b:2, get c () {return 1}, set c (v) {}}; o.c=666; if (o.c!==1) {throw 'Object'}"
@@ -49,3 +23,5 @@ exports.Call = "function f () {return 1} if (f()!==1) {throw'Call'}"
 exports.Member = "if ({a:1}.a!==1) {throw'Member'}"
 exports.Identifier = "var x=1; if (x!==1) {throw'Identifier'}"
 exports.Literal = "null; true; false; 1; -1; 'a'; /abc/g;"
+
+

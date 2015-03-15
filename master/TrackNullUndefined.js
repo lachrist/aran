@@ -70,60 +70,64 @@ exports.traps = {
   binary: function (op, val1, val2) { return eval("unwrap(val1)"+op+"unwrap(val2)") }
 }
 
-var types = [
-  // Statement Types //
-  "Empty",
-  "Strict",
-  "Block",
-  "Expression",
-  "If",
-  "Label",
-  "Break",
-  "Continue",
-  "With",
-  "Switch",
-  "Return",
-  "Throw",
-  "Try",
-  "While",
-  "DoWhile",
-  "DeclarationFor",
-  "For",
-  "IdentifierForIn",
-  "MemberForIn",
-  "DeclarationForIn",
-  "Definition",
-  "Declaration",
-  // Expression Types //
-  "This",
-  "Array",
-  "Object",
-  "Function",
-  "Sequence",
-  "IdentifierTypeof",
-  "IdentifierDelete",
-  "MemberDelete",
-  "Unary",
-  "Binary",
-  "IdentifierAssignment",
-  "MemberAssignment",
-  "IdentiferUpdate",
-  "MemberUpdate",
-  "Logical",
-  "Conditional",
-  "New",
-  "MemberCall",
-  "EvalCall",
-  "Call",
-  "Member",
-  "Identifier",
-  "Literal"
-]
-
 var hooks = {StartLoc:true}
 
 function track (startloc) { loc = startloc }
 
-types.forEach(function (type) { hooks[type] = track })
+types().forEach(function (type) { hooks[type] = track })
 
 exports.hooks = hooks
+
+
+
+function types () {
+  return [
+    // Statement Types //
+    "Empty",
+    "Strict",
+    "Block",
+    "Expression",
+    "If",
+    "Label",
+    "Break",
+    "Continue",
+    "With",
+    "Switch",
+    "Return",
+    "Throw",
+    "Try",
+    "While",
+    "DoWhile",
+    "DeclarationFor",
+    "For",
+    "IdentifierForIn",
+    "MemberForIn",
+    "DeclarationForIn",
+    "Definition",
+    "Declaration",
+    // Expression Types //
+    "This",
+    "Array",
+    "Object",
+    "Function",
+    "Sequence",
+    "IdentifierTypeof",
+    "IdentifierDelete",
+    "MemberDelete",
+    "Unary",
+    "Binary",
+    "IdentifierAssignment",
+    "MemberAssignment",
+    "IdentiferUpdate",
+    "MemberUpdate",
+    "Logical",
+    "Conditional",
+    "New",
+    "MemberCall",
+    "EvalCall",
+    "Call",
+    "Member",
+    "Identifier",
+    "Literal"
+  ]
+}
