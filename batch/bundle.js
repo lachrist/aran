@@ -1,15 +1,117 @@
-window.masters = {};
-window.masters.Counter = "\nexports.sandbox = {}\n\nfunction wrap (x) { return {meta:0, actual:x} }\nfunction unwrap (x) { return x.actual }\n\nexports.traps = {\n  primitive: wrap,\n  object: wrap,\n  array: wrap,\n  arguments: wrap,\n  function: wrap,\n  regexp: wrap,\n  booleanize: unwrap,\n  stringify: unwrap,\n  unary: function (op, x)       {  return {meta:x.meta+1, actual: eval(op+'x.actual')} },\n  binary: function (op, x1, x2) { return {meta:x1.meta+x2.meta+1, actual:eval('x1.actual '+op+' x2.actual')} },\n  apply: function (f, o, xs)    { f.meta++; return f.actual.apply(o, xs); },\n};\n";
-window.masters.LogHooks = "\n// Log all the executed statements/expressions. For more information about\n// the node types listed below, see: https://github.com/lachrist/esvisit.\n\nexports.hooks = {}\nexports.hooks.StartRange = true\nexports.hooks.EndRange = true\nexports.hooks.StartLoc = true\nexports.hooks.EndLoc = true\ntypes().forEach(function (type) {\n  exports.hooks[type] = function (startrange, endrange, startloc, endloc) {\n    var infos = []\n    for (var i=4; i<arguments.length; i++) { infos.push(arguments[i]) }\n    var msg = type+\":\"\n    msg += \" range \"+startrange+\"->\"+endrange+\";\"\n    msg += \" loc \"+startloc+\"->\"+endloc+\";\"\n    msg += \" infos \"+JSON.stringify(infos)\n    console.log(msg)\n  }\n})\n\nfunction types () {\n  return [\n    // Statement Types //\n    \"Empty\",\n    \"Strict\",\n    \"Block\",\n    \"Expression\",\n    \"If\",\n    \"Label\",\n    \"Break\",\n    \"Continue\",\n    \"With\",\n    \"Switch\",\n    \"Return\",\n    \"Throw\",\n    \"Try\",\n    \"While\",\n    \"DoWhile\",\n    \"DeclarationFor\",\n    \"For\",\n    \"IdentifierForIn\",\n    \"MemberForIn\",\n    \"DeclarationForIn\",\n    \"Definition\",\n    \"Declaration\",\n    // Expression Types //\n    \"This\",\n    \"Array\",\n    \"Object\",\n    \"Function\",\n    \"Sequence\",\n    \"IdentifierTypeof\",\n    \"IdentifierDelete\",\n    \"MemberDelete\",\n    \"Unary\",\n    \"Binary\",\n    \"IdentifierAssignment\",\n    \"MemberAssignment\",\n    \"IdentiferUpdate\",\n    \"MemberUpdate\",\n    \"Logical\",\n    \"Conditional\",\n    \"New\",\n    \"MemberCall\",\n    \"EvalCall\",\n    \"Call\",\n    \"Member\",\n    \"Identifier\",\n    \"Literal\"\n  ]\n}";
-window.masters.Empty = "\n// This analysis does absolutely nothing!\n// *yay*\n";
-window.masters.LogTraps = "\n// Log all the language-level operations intercepted by aran.\n// For more information about the trap listed below, see https://github.com/lachrist/aran.\n// The traps implemented below are transparent in the sens that simply forward runtime value.\n// However you are can provide aribtrary code and heavily modify JS semantic.\n\nfunction log (trap, x) {\n  var xs = []\n  for (var i=1; i<arguments.length; i++) { xs.push(arguments[i]) }\n  try { console.log(trap+\": \"+JSON.stringify(xs)) }\n  catch (e) { console.log(trap+\": [JSON-incompatiable data]\") }\n  return x\n}\n\nexports.traps = {\n  primitive: function (x) { return log(\"primitive\", x) },\n  undefined: function (u) { return (log(\"undefined\", u), undefined) },\n  object: function (x) { return log(\"object\", x) },\n  array: function (x) { return log(\"array\", x) },\n  arguments: function (x) { return log(\"arguments\", x) },\n  function: function (x) { return log(\"function\", x) },\n  regexp: function (x) { return log(\"regexp\", x) },\n  booleanize: function (x, u) { return log(\"booleanize\", x, u) },\n  stringify: function (x) { return log(\"stringify\", x) },\n  throw: function (x) { return log(\"throw\", x) },\n  catch: function (x) { return log(\"catch\", x) },\n  unary: function (op, x) { return (log(\"unary\", op, x), eval(op+\" x\")) },\n  binary: function (op, x1, x2) { return (log(\"binary\", op, x1, x2), eval(\"x1 \"+op+\" x2\")) },\n  apply: function (f, o, xs) { return (log(\"apply\", f, o, xs), f.apply(o, xs)) },\n  new: function (f, xs) {\n    log(\"new\", f, xs)\n    function F() { return f.apply(this, xs) }\n    F.prototype = f.prototype;\n    return new F()\n  },\n  get: function (o, p) { return (log(\"get\", o, p), o[p]) },\n  set: function (o, p, v) { return (log(\"set\", o, p, v), o[p]=v) },\n  delete: function (o, p) { return (log(\"delete\", o, p), delete o[p]) },\n  enumerate: function (o) {\n    log(\"enumerate\", o)\n    var ps = []\n    for (p in o) { ps.push(p) }\n    return ps\n  },\n  erase: function (r, p) { return log(\"erase\", r, p) },\n  exist: function (o, p) { return (log(\"exist\", o, p), p in o) }\n};\n";
-window.masters.LogSandbox = "\n// Prevent the instrumented code to access ANY property of the global object.\n// This includes: 'Object', 'Function' and even 'undefined'.\n// This analyze uses Harmony proxy to record operation made to the empty sandbox.\n\nfunction log (op, p) { console.log(op+\" \"+p) }\n\nexports.sandbox = new Proxy({}, {\n  get: function (s, p) { return (log(\"Get\", p), s[p]) },\n  has: function (s, p) { return (log(\"Set\", p), s[p]=v) },\n  set: function (s, p, v) { return (log(\"Has\", p), p in s) },\n  deleteProperty: function (s, p) { return (log(\"Delete\", p), delete s[p]) }\n})\n";
-window.masters.Logger = "\nexports.sandbox = {};\n\nfunction log (msg) { console.log(msg) }\n\nexports.hooks = new Proxy({}, {\n  get: function (_, type) {\n    return function () {\n      var msg = 'hooks.'+type;\n      for (var i=0; i<arguments.length; i++) { msg = msg+' '+arguments[i] }\n      log(msg)\n    }\n  }\n});\n\nfunction logtrap (name) {\n  var msg = 'traps.'+name\n  for (var i=1; i<arguments.length; i++) { msg = msg+' '+arguments[i] }\n  log(msg)\n}\n\nexports.traps = {\n  primitive: function (x) { logtrap('primitive', x); return x; },\n  undefined: function (u) { logtrap('undefined', u): return undefined },\n  object: function (x) { logtrap('object', x); return x; },\n  array: function (x) { logtrap('array', x); return x; },\n  arguments: function (x) { logtrap('arguments', x); return x; },\n  function: function (x) { logtrap('function', x); return x; },\n  regexp: function (x) { logtrap('regexp', x); return x; },\n  booleanize: function (x, u) { logtrap('booleanize', x, u); return x; },\n  stringify: function (x) { logtrap('stringify', x); return x; },\n  throw: function (x) { logtrap('throw', x); return x; },\n  catch: function (x) { logtrap('catch', x); return x; },\n  unary: function (op, x) { logtrap('unary', op, x); return eval(op+' x'); },\n  binary: function (op, x1, x2) { logtrap('binary', op, x1, x2); return eval('x1 '+op+' x2'); },\n  apply: function (f, o, xs) { logtrap('apply', f, o, xs); return f.apply(o, xs); },\n  new: function (f, xs) {\n    logtrap('new', f, xs);\n    var o = Object.create(f.prototype);\n    var x = f.apply(o, xs);\n    if (typeof x === 'object' && x !== null) { return x }\n    return o;\n  },\n  get: function (o, p) { logtrap('get', o, p); return o[p]; },\n  set: function (o, p, v) { logtrap('set', o, p, v); return o[p]=v; },\n  delete: function (o, p) { logtrap('delete', o, p); return delete o[p]; },\n  enumerate: function (o) {\n    logtrap('enumerate', o);\n    var ps = [];\n    for (p in o) { ps.push(p) }\n    return ps;\n  },\n  erase: function (r, p) { logtrap('erase', r, p); return r; },\n  exist: function (o, p) { logtrap('exist', o, p); return p in o; }\n};\n";
-window.masters.TrackNullUndefined = "\n// Fetch the global object //\nif (typeof global !== \"undefined\") { var glob = global }\nelse if (typeof window !== \"undefined\") { var glob = window }\nelse { throw new Error(\"Cannot find the global object...\") }\n\n// Check if WeakMaps are supported //\nif (!glob.WeakMap) { throw new Error(\"Harmony WeakMaps are needed to perform this analysis\") } \n\n// Will contain the function defined within the instrumented code //\nvar fcts = new WeakMap()\n\n// Will contain the wrapper around null/undefined create within the instrumented code //\nvar voids = new WeakMap()\n\n// Will contain the current program location //\nvar loc = \"prelude\"\n\nvar savedundefined = undefined\nglob.undefined = wrap(savedundefined)\n\nfunction wrap (val) {\n  if (val !== savedundefined && val !== null) { return val }\n  var w = {val:val, loc:loc}\n  voids.set(w, true)\n  return w\n}\nfunction unwrap (w) { if (voids.has(w)) { return w.val } }\nfunction print (w) { return w.val+\"@\"+w.loc }\n\n// Simulate: 'new cons(args)'\nfunction construct (cons, args) {\n  function Cons() { return f.apply(this, xs) }\n  Cons.prototype = cons.prototype;\n  return new Cons()\n}\n\nexports.traps = {\n  primitive: wrap,\n  undefined: wrap,\n  booleanize: unwrap,\n  stringify: unwrap,\n  get: function (obj, prop) {\n    prop = unwrap(prop)\n    if (voids.has(obj)) { throw new TypeError(\"Cannot read property \"+prop+\" of \"+print(obj)) }\n    return obj[prop]\n  },\n  set: function (obj, prop, val) {\n    prop = unwrap(prop)\n    if (voids.has(obj)) { throw new TypeError(\"Cannot set property \"+prop+\" of \"+print(obj)) }\n    return obj[prop] = val\n  },\n  delete: function (obj, prop) {\n    prop = unwrap(prop)\n    if (voids.has(obj)) { throw new TypeError(\"Connor delete property \"+prop+\" of \"+print(obj)) }\n    return delete obj[prop]\n  },\n  function: function (fct) { return (fcts.set(fct, true), fct) },\n  call: function (fct, th, args) {\n    if (voids.has(fct)) { throw new TypeError(print(fct)+\" is not a function\") }\n    if (fcts.has(fct)) { return fct.apply(th, args) }\n    return wrap(fct.apply(unwrap(th), arg.map(unwrap)))\n  },\n  new: function (fct, args) {\n    if (voids.has(fct)) { throw new TypeError(print(fct)+\" is not a constructor\") }\n    if (fcts.has(fct)) { return construct(fct, args) }\n    return wrap(construct(fct, arg.map(unwrap)))\n  },\n  unary: function (op, val) { return eval(op+\"unwrap(val)\") },\n  binary: function (op, val1, val2) { return eval(\"unwrap(val1)\"+op+\"unwrap(val2)\") }\n}\n\nvar hooks = {StartLoc:true}\n\nfunction track (startloc) { loc = startloc }\n\ntypes().forEach(function (type) { hooks[type] = track })\n\nexports.hooks = hooks\n\n\n\nfunction types () {\n  return [\n    // Statement Types //\n    \"Empty\",\n    \"Strict\",\n    \"Block\",\n    \"Expression\",\n    \"If\",\n    \"Label\",\n    \"Break\",\n    \"Continue\",\n    \"With\",\n    \"Switch\",\n    \"Return\",\n    \"Throw\",\n    \"Try\",\n    \"While\",\n    \"DoWhile\",\n    \"DeclarationFor\",\n    \"For\",\n    \"IdentifierForIn\",\n    \"MemberForIn\",\n    \"DeclarationForIn\",\n    \"Definition\",\n    \"Declaration\",\n    // Expression Types //\n    \"This\",\n    \"Array\",\n    \"Object\",\n    \"Function\",\n    \"Sequence\",\n    \"IdentifierTypeof\",\n    \"IdentifierDelete\",\n    \"MemberDelete\",\n    \"Unary\",\n    \"Binary\",\n    \"IdentifierAssignment\",\n    \"MemberAssignment\",\n    \"IdentiferUpdate\",\n    \"MemberUpdate\",\n    \"Logical\",\n    \"Conditional\",\n    \"New\",\n    \"MemberCall\",\n    \"EvalCall\",\n    \"Call\",\n    \"Member\",\n    \"Identifier\",\n    \"Literal\"\n  ]\n}\n";
-window.masters.Sandbox = "\nexports.sandbox = {}\n\nvar excluded = [\"eval\", \"Function\"]\n\nfor (var key in window) {\n  if (excluded.indexOf(key) === -1) {\n    sandbox[key] = window[key]\n  }\n}\n";
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
 window.Aran = require("..")
+
+window.onload = function () {
+  document.getElementById("masters").onchange = checkfiles
+  document.getElementById("targets").onchange = checkfiles
+  document.getElementById("run").onclick = pre
+}
+
+function prepare () {
+  var exports = {}
+  eval(arguments[0])
+  return Aran(exports.sandbox, exports.hooks, exports.traps)
+}
+
+function print (x) {
+  if (x === undefined) { return "undefined" }
+  try { return JSON.stringify(x) } catch (e) { return String(e) }
+}
+
+function checkefiles () {
+  document.getElementById("run").disabled =
+    !(document.getElementById("masters").files.length || document.getElementById("targets").files.length)
+}
+
+function pre () {
+  document.getElementById("output-div").visibility = "hidden"
+  document.getElementById("progress-span").visibility = "visible"
+  document.getElementById("masters").disabled = true
+  document.getElementById("targets").disabled = true
+  document.getElementById("run").disabled = true
+  var masters = {}
+  var targets = {}
+  var rdv = 0
+  function populate (obj) {
+    return function (file) {
+      rdv++
+      var reader = new FileReader()
+      reader.readAsText(file, "UTF-8")
+      reader.onload = function () {
+        obj[file.name] = reader.result
+        if (!--rdv) { benchmarkall(masters, targets) }
+      }
+    }
+  }
+  document.getElementById("masters").files.forEach(populate(masters))
+  document.getElementById("targets").files.forEach(populate(targets))
+}
+
+function benchmarkall (masters, targets) {
+  var masterkeys = Object.keys(masters)
+  var targetkeys = Object.keys(targets)
+  var results = []
+  var i=0
+  var j=0
+  function update (done) { document.getElementById("progress-span").textContent = "["+done+"/"+(masterkeys.length*targetkeys.length)+"]" }
+  update(0)
+  var interval = setInterval(function () {
+    if (j === targetkeys.length) { (j = 0, i++) }
+    if (i === masterkeys.length) { return (clearInterval(interval), post(results)) }
+    var result = run(masters[masterkeys[i]], targets[targetkeys[j]])
+    result.master = masterkeys[i]
+    result.target = targetkeys[j]
+    results.push(result)
+    j++
+    update(i*masterkeys.length+j)
+  }, 5)
+}
+
+function benchmark (master, target) {
+  var result = {}
+  var input = {code:target}
+  var aran = prepare(master)
+  // Original
+  result.time = performance.now()
+  result.result = window.eval(target)
+  result.time = result.time - performance.now()
+  result.time = String(Math.round(1000*result.time)/1000)
+  result.result = print(result.result)
+  result.loc = targets[targetkeys[i]].split("\n").length
+  // Aran
+  result.arantime = performance.now()
+  result.aranresult = aran(input)
+  result.arantime = result.arantime - performance.now()
+  result.arantime = String(Math.round(1000*result.arantime)/1000)
+  result.aranresult = print(result.aranresult)
+  result.aranloc = input.compiled.split("\n").length
+  // Return
+  return result
+}
+
+function post (results) {
+  var headers = ["master", "target", "time", "arantime", "result", "aranresult", "error", "aranerror", "loc", "aranloc"]
+  var table = document.getElementById("output-table")
+  var row
+  var cell
+  document.getElementById("output-json").textContent = JSON.stringify(results)
+  while (table.firstChild) { table.removeChild(table.firstChild) }
+  for (var i=0; i<results.length; i++) {
+    row = document.createElement("tr") 
+    for (var j=0; j<headers.length; i++) {
+      cell = document.createElement("td")
+      cell.textContent = results[i][headers[j]]
+      row.appendChild(cell)
+    }
+    table.appendChild(row)
+  }
+  document.getElementById("progress-span").visibility = "hidden"
+  document.getElementById("output-div").style.visibility = "visible"
+  document.getElementById("masters").disabled = false
+  document.getElementById("targets").disabled = false
+  document.getElementById("run").disabled = false
+}
 
 },{"..":2}],2:[function(require,module,exports){
 

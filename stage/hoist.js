@@ -113,7 +113,6 @@ module.exports = function (visit, mark, sandboxed) {
     variabless.push([])
     definitionss.push([])
     visit(ast, onstatement, onexpression)
-    debugger
     ast.body.unshift(popdefinitions())
     ast.body.unshift((sandboxed&&!local)?Shadow("declare", Nodify(variabless.pop())):popvariables())
   }

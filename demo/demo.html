@@ -14,14 +14,6 @@
         font-family: "Lucida Console", Monaco, monospace;
         font-size: 12px;
       }
-      #error {
-        color: red;
-        margin-left: 10px;
-      }
-      #result {
-        color: green;
-        margin-left: 10px;
-      }
       h1 {
         text-align: center;
       }
@@ -30,7 +22,9 @@
       }
       label {
         display: block;
-        margin-right: 10px;
+      }
+      #output-div label {
+        margin: 10px;
       }
       textarea {
         margin-top: 5px;
@@ -50,84 +44,11 @@
       #master-div {
         margin-right: 20px;
       }
-      #master-div, #target-div {
+      #master-div, #target-div, #compiled-div, #output-div {
         display: inline-block;
       }
     </style>
     <script src="bundle.js"></script>
-    <script>
-      function assert (x) { if (!x) { throw new Error("Assertion violation") } }
-      window.onload = function () {
-        for (var name in masters) {
-          var option = document.createElement("option")
-          option.textContent = name
-          option.value = name
-          document.getElementById("select").appendChild(option)
-        }
-        document.getElementById("select").onchange = function () { master.value = masters[select.value] }
-        document.getElementById("select").value = "Empty"
-        document.getElementById("master").value = masters.Empty
-        // Initialize
-        document.getElementById("init").onclick = function () {
-          var exports = {}
-          try { eval(document.getElementById("master").value) } catch (e) { throw (alert("Error when running master: "+e), e) }
-          try { var aran = Aran(exports.sandbox, exports.hooks, exports.traps) } catch (e) { throw (alert("Error when setting up Aran: "+e),e) }
-          document.getElementById("run").disabled = false
-          document.getElementById("run").onclick = function () {
-            // Cleanup
-            document.getElementById("compiled").value = ""
-            document.getElementById("result-label").style.display = "none"
-            document.getElementById("error-label").style.display = "none"
-            document.getElementById("time-label").style.display = "none"
-            document.getElementById("aran-result-label").style.display = "none"
-            document.getElementById("aran-error-label").style.display = "none"
-            document.getElementById("aran-time-label").style.display = "none"
-            // Run original
-            if (document.getElementById("comparison").value) {
-              var start = performance.now()
-              try { var result = window.eval(target.value) } catch (e) { var error = e }
-              var end = performance.now()
-            }
-            // Run Aran
-            var input = {code:target.value}
-            var aranstart = performance.now()
-            try { var aranresult = aran(input) } catch (e) { var aranerror = e }
-            var aranend = performance.now()
-            // Output compiled code
-            document.getElementById("compiled").value = input.compiled
-            // Output results
-            if (result !== undefined) {
-              document.getElementById("result-label").style.display = "block"
-              document.getElementById("result").textContent = result
-            }
-            if (error !== undefined) {
-              document.getElementById("error-label").style.display = "block"
-              document.getElementById("error").textContent = error
-            }
-            if (start && end) {
-              document.getElementById("time-label").style.display = "block"
-              document.getElementById("time").textContent = (Math.round(1000*(end-start))/1000)+"ms"
-            }
-            // Output aran results
-            if (aranresult !== undefined) {
-              document.getElementById("aran-result-label").style.display = "block"
-              document.getElementById("aran-result").textContent = aranresult
-            }
-            if (aranerror !== undefined) {
-              document.getElementById("aran-error-label").style.display = "block"
-              document.getElementById("aran-error").textContent = aranerror
-            }
-            if (aranstart && aranend) {
-              document.getElementById("aran-time-label").style.display = "block"
-              document.getElementById("aran-time").textContent = (Math.round(1000*(aranend-aranstart))/1000)+"ms"
-            }
-            // Throws error
-            if (error) { console.dir(error); throw(error) }
-            if (aranerror) { console.dir(aranerror); throw(aranerror) }
-          }
-        }
-      }
-    </script>
   </head>
   <body>
     <div id="main">
@@ -145,21 +66,21 @@
         <div id="target-div">
           <label>Target:</label>
           <textarea id="target" class="code" cols="65" rows="15" wrap="off"></textarea><br/>
-          <button id="run" style="display:inline-block" disabled>Run/Analyze</button>
+          <button id="run" style="display:inline-block" disabled>Instrument &amp; Run</button>
           <label style="display:inline-block"><input id="comparison" type="checkbox" checked>Compare with uninstrumented code</label><br/>
         </div>
       </div>
       <div id="compiled-div">
         <label>Compiled:</label>
-        <textarea id="compiled" class="code" cols="110" rows="15" wrap="off" readonly></textarea><br/>
+        <textarea id="compiled" class="code" cols="100" rows="15" wrap="off" readonly></textarea><br/>
       </div>
-      <div id="output-div">
-        <label id="result-label" style="display:none">Result: <span id="result" class="code"></span></label>
-        <label id="error-label" style="display:none">Error: <span id="error" class="code"></span></label>
-        <label id="time-label" style="display:none">Time: <span id="time" class="code"></span></label>
-        <label id="aran-result-label" style="display:none">Aran result: <span id="aran-result" class="code"></span></label>
-        <label id="aran-error-label" style="display:none">Aran error: <span id="aran-error" class="code"></span></label>
-        <label id="aran-time-label" style="display:none">Aran time: <span id="aran-time" class="code"></span></label>
+      <div style="visibility:hidden" id="output-div">
+        <label id="result-label">Result: <span id="result" class="code"></span></label>
+        <label id="error-label">Error: <span id="error" class="code"></span></label>
+        <label id="time-label">Time: <span id="time" class="code"></span></label>
+        <label id="aran-result-label">Aran result: <span id="aran-result" class="code"></span></label>
+        <label id="aran-error-label">Aran error: <span id="aran-error" class="code"></span></label>
+        <label id="aran-time-label">Aran time: <span id="aran-time" class="code"></span></label>
       </div>
     </div>
   </body>

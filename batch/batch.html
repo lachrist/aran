@@ -1,0 +1,56 @@
+</<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Batch Aran!</title>
+    <style>
+      #main {
+        font-family: Helvetica, 'Open Sans', Arial, sans-serif;
+        font-weight: lighter;
+        width: 1000px;
+        margin: auto;
+      }
+      h1 {
+        text-align: center;
+      }
+      p {
+        text-align: justify;
+      }
+      li {
+        margin: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="main">
+      <h1>Batch Aran</h1>
+      <p>Perform a cross product between multiple master files and multiple target files (both in utf-8 format).</p>
+      <ul>
+        <li><label>Masters: <input id="masters" type="file" id="input" multiple></label></li>
+        <li><label>Targets: <input id="targets" type="file" id="input" multiple></label></li>
+      </ul>
+      <button disabled id="run">Run</button><span style="visibility:hidden" id="progress-span"></span>
+      <div style="visibility:hidden" id="output-div">
+        <table>
+          <thead>
+            <tr>
+              <th>Master</th>
+              <th>Target</th>
+              <th>Time [ms]</th>
+              <th>Aran time [ms]</th>
+              <th>Result</th>
+              <th>Aran result</th>
+              <th>Error</th>
+              <th>Aran error</th>
+              <th>LoC</th>
+              <th>Aran LoC</th>
+            </tr>
+          </thead>
+          <tbody id="output-table"></tbody>
+        </table>
+        <textarea id="output-table"></textarea>
+      </div>
+    </main>
+  </body>
+  <script src="bundle.js"></script>
+</html>
