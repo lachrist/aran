@@ -10,11 +10,11 @@ This module exposes a function that expects three arguments:
 * `hooks`: a set of functions used for tracing purposes.
 * `traps`: a set of functions for intercepting runtime values.
 
-Aran returns a function that will perform the dynamic analysis on any given code string.
+Aran returns a function that will perform the dynamic analysis on any given code string. In the snippet below, we setup a simple yet powerful analysis that can be deployed to browsers using building tools such as `browserify`.
 
 ```javascript
 var Aran = require('aran');
-/* A very strict sandbox that only allow Math access */
+/* Very strict sandbox that only allow Math access */
 var sandbox = {
   undefined: undefined,
   Math:Math
@@ -60,10 +60,13 @@ Download the files `demo/demo.html` and `demo/bundle.js` and put them into the s
 
 As stated above, the sandbox parameter will act in all point as if it was the global object of the code being analyzed. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `has`, `get`, `set` and `delete` are implemented, the sandbox can be of any type, otherwise it should be a JavaScript object. Two sandbox properties have a particular status:
   * `eval`: Letting the target code accessing the original `eval` function enables direct eval call ; any other value will prevent the target to perform direct eval call. Roughly, `eval(x)` is compiled into a conditional expression where the consequent is a direct eval call and the alternative a normal function call:
+    
     ```javascript
     (eval === aran.eval) ? eval(aran.compile(x)) : eval(x)
     ```
+  
   * `undefined`: Because of `undefined` omnipresence, it does not really makes sense to rule it out of the sandbox. If the sandbox does not contain an undefined entry (i.e.: `sandobx['undefined'] = undefined`), it will merely prevent the target code to explicitely access `undefined` using an identifier. If you want to intercept any appearance of `undefined` (undefined arguments, empty return, etc) you should implement `traps.undefined` instead. Assuming that the sandbox verifies `sandbox['undefined'] = undefined`, the trap will be trigger on explicit `undefined` reference as well. More technically, `undefined` identifiers are compiled into the below conditional: 
+    
     ```javascript
     (undefined === aran.undefined) ? aran.traps.undefined('identifier') : undefined
     ``` 
