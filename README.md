@@ -14,23 +14,22 @@ And returns a function that will perform the dynamic analysis on any given code 
 
 ```javascript
 var Aran = require('aran');
-(window||global).compiled = true; // Get the last compiled code
-var sandbox = ...                   // An object to mock the global object
-var hooks = ...                     // An object containings function for tracing purpose
-var traps = ...                     // An object containings function for modifying JS semantic 
+var sandbox = ...       // An object to mock the global object
+var hooks = ...         // An object containings function for tracing purpose
+var traps = ...         // An object containings function for intercepting runtime values
 var run = Aran(sandbox, hooks, traps)
-// You should use run to build sandbox.eval and sandbox.Function (e.g. sandbox.eval = run) //
-var code = ...
-var result = run(code)
-console.log((window||global).compiled)
+var input = {code:...}
+var result = run(input)
+console.log(input.compiled)
 console.log(result)
 ```
 
 Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has to be run along the code being analyzed to intercept and transform every bit of JavaScript code. Having application code evaluated without resorting to `Aran` will compromise the validity of the application's analysis. It is the responsibility of the user to make sure that dynamic code evaluation eventually resort to `Aran`.
 
-## Demonstraction
+## Demonstration
 
-See https://github.com/lachrist/aran-demo!
+Download the files `demo/demo.html` and `demo/bundle.js` and put them into the same directory. Then simply open `demo.html` with a recent version of Firefox. 
+<img src="demo.png" align="center" alt="demo" title="Demonstration"/>
 
 ## Sandbox
 
