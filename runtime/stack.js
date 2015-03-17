@@ -1,4 +1,13 @@
 
+// Setup runtime stack to provide temporary memory
+// Define:
+//   - aran.push{1,2,3}
+//   - aran.get{1,2,3}
+//   - aran.pop{1,2,3}
+//   - aran.mark
+//   - aran.unmark
+//   - aran.flush
+
 module.exports = function (aran) {
 
   var marks = []

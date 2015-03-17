@@ -1,9 +1,9 @@
 window.masters = {};
 window.masters.Empty = "\n// This analysis does absolutely nothing!\n// *yay*\n";
 window.masters.LogAll = "";
+window.masters.LogSandbox = "\n// Prevent the instrumented code to access ANY property of the global object.\n// This includes: 'Object', 'Function' and even 'undefined'.\n// This master uses Harmony proxy to record operation made to the empty sandbox.\n\nfunction log (op, p) { console.log(op+\" \"+p) }\n\nexports.sandbox = new Proxy({}, {\n  has: function (s, p) { return (log(\"Has\", p), p in s) },\n  get: function (s, p) { return (log(\"Get\", p), s[p]) },\n  set: function (s, p, v) { return (log(\"Set\", p), s[p]=v) },\n  deleteProperty: function (s, p) { return (log(\"Delete\", p), delete s[p]) }\n})\n";
+window.masters.LogTraps = "\n// Log all the language-level operations intercepted by aran.\n// For more information about the trap listed below, see https://github.com/lachrist/aran.\n// The below implementation is transparent in the sense that it simply forward runtime value.\n// However you are can provide aribtrary code and heavily modify JS semantic.\n\nfunction log (trap, x) {\n  var xs = []\n  for (var i=1; i<arguments.length; i++) { xs.push(arguments[i]) }\n  try { console.log(trap+\": \"+JSON.stringify(xs)) }\n  catch (e) { console.log(trap+\": [JSON-incompatiable data]\") }\n  return x\n}\n\nexports.traps = {\n  primitive: function (x) { return log(\"primitive\", x) },\n  undefined: function (u) { return (log(\"undefined\", u), undefined) },\n  object: function (x) { return log(\"object\", x) },\n  array: function (x) { return log(\"array\", x) },\n  arguments: function (x) { return log(\"arguments\", x) },\n  function: function (x) { return log(\"function\", x) },\n  regexp: function (x) { return log(\"regexp\", x) },\n  booleanize: function (x, u) { return log(\"booleanize\", x, u) },\n  stringify: function (x) { return log(\"stringify\", x) },\n  throw: function (x) { return log(\"throw\", x) },\n  catch: function (x) { return log(\"catch\", x) },\n  unary: function (op, x) { return (log(\"unary\", op, x), eval(op+\" x\")) },\n  binary: function (op, x1, x2) { return (log(\"binary\", op, x1, x2), eval(\"x1 \"+op+\" x2\")) },\n  apply: function (f, o, xs) { return (log(\"apply\", f, o, xs), f.apply(o, xs)) },\n  new: function (f, xs) {\n    log(\"new\", f, xs)\n    function F() { return f.apply(this, xs) }\n    F.prototype = f.prototype;\n    return new F()\n  },\n  has: function (o, p) { return (log(\"has\", o, p), p in o) },\n  get: function (o, p) { return (log(\"get\", o, p), o[p]) },\n  set: function (o, p, v) { return (log(\"set\", o, p, v), o[p]=v) },\n  delete: function (o, p) { return (log(\"delete\", o, p), delete o[p]) },\n  enumerate: function (o) {\n    log(\"enumerate\", o)\n    var ps = []\n    for (p in o) { ps.push(p) }\n    return ps\n  },\n  erase: function (r, p) { return log(\"erase\", r, p) },\n};\n";
 window.masters.LogHooks = "\n// Log all the executed statements/expressions. For more information about\n// the node types listed below, see: https://github.com/lachrist/esvisit.\n\nexports.hooks = {}\nexports.hooks.StartRange = true\nexports.hooks.EndRange = true\nexports.hooks.StartLoc = true\nexports.hooks.EndLoc = true\ntypes().forEach(function (type) {\n  exports.hooks[type] = function (startrange, endrange, startloc, endloc) {\n    var infos = []\n    for (var i=4; i<arguments.length; i++) { infos.push(arguments[i]) }\n    var msg = type+\":\"\n    msg += \" range \"+startrange+\"->\"+endrange+\";\"\n    msg += \" loc \"+startloc+\"->\"+endloc+\";\"\n    msg += \" infos \"+JSON.stringify(infos)\n    console.log(msg)\n  }\n})\n\nfunction types () {\n  return [\n    // Statement Types //\n    \"Empty\",\n    \"Strict\",\n    \"Block\",\n    \"Expression\",\n    \"If\",\n    \"Label\",\n    \"Break\",\n    \"Continue\",\n    \"With\",\n    \"Switch\",\n    \"Return\",\n    \"Throw\",\n    \"Try\",\n    \"While\",\n    \"DoWhile\",\n    \"DeclarationFor\",\n    \"For\",\n    \"IdentifierForIn\",\n    \"MemberForIn\",\n    \"DeclarationForIn\",\n    \"Definition\",\n    \"Declaration\",\n    // Expression Types //\n    \"This\",\n    \"Array\",\n    \"Object\",\n    \"Function\",\n    \"Sequence\",\n    \"IdentifierTypeof\",\n    \"IdentifierDelete\",\n    \"MemberDelete\",\n    \"Unary\",\n    \"Binary\",\n    \"IdentifierAssignment\",\n    \"MemberAssignment\",\n    \"IdentiferUpdate\",\n    \"MemberUpdate\",\n    \"Logical\",\n    \"Conditional\",\n    \"New\",\n    \"MemberCall\",\n    \"EvalCall\",\n    \"Call\",\n    \"Member\",\n    \"Identifier\",\n    \"Literal\"\n  ]\n}\n";
-window.masters.LogTraps = "\n// Log all the language-level operations intercepted by aran.\n// For more information about the trap listed below, see https://github.com/lachrist/aran.\n// The below implementation is transparent in the sense that it simply forward runtime value.\n// However you are can provide aribtrary code and heavily modify JS semantic.\n\nfunction log (trap, x) {\n  var xs = []\n  for (var i=1; i<arguments.length; i++) { xs.push(arguments[i]) }\n  try { console.log(trap+\": \"+JSON.stringify(xs)) }\n  catch (e) { console.log(trap+\": [JSON-incompatiable data]\") }\n  return x\n}\n\nexports.traps = {\n  primitive: function (x) { return log(\"primitive\", x) },\n  undefined: function (u) { return (log(\"undefined\", u), undefined) },\n  object: function (x) { return log(\"object\", x) },\n  array: function (x) { return log(\"array\", x) },\n  arguments: function (x) { return log(\"arguments\", x) },\n  function: function (x) { return log(\"function\", x) },\n  regexp: function (x) { return log(\"regexp\", x) },\n  booleanize: function (x, u) { return log(\"booleanize\", x, u) },\n  stringify: function (x) { return log(\"stringify\", x) },\n  throw: function (x) { return log(\"throw\", x) },\n  catch: function (x) { return log(\"catch\", x) },\n  unary: function (op, x) { return (log(\"unary\", op, x), eval(op+\" x\")) },\n  binary: function (op, x1, x2) { return (log(\"binary\", op, x1, x2), eval(\"x1 \"+op+\" x2\")) },\n  apply: function (f, o, xs) { return (log(\"apply\", f, o, xs), f.apply(o, xs)) },\n  new: function (f, xs) {\n    log(\"new\", f, xs)\n    function F() { return f.apply(this, xs) }\n    F.prototype = f.prototype;\n    return new F()\n  },\n  get: function (o, p) { return (log(\"get\", o, p), o[p]) },\n  set: function (o, p, v) { return (log(\"set\", o, p, v), o[p]=v) },\n  delete: function (o, p) { return (log(\"delete\", o, p), delete o[p]) },\n  enumerate: function (o) {\n    log(\"enumerate\", o)\n    var ps = []\n    for (p in o) { ps.push(p) }\n    return ps\n  },\n  erase: function (r, p) { return log(\"erase\", r, p) },\n  exist: function (o, p) { return (log(\"exist\", o, p), p in o) }\n};\n";
-window.masters.LogSandbox = "\n// Prevent the instrumented code to access ANY property of the global object.\n// This includes: 'Object', 'Function' and even 'undefined'.\n// This master uses Harmony proxy to record operation made to the empty sandbox.\n\nfunction log (op, p) { console.log(op+\" \"+p) }\n\nexports.sandbox = new Proxy({}, {\n  has: function (s, p) { return (log(\"Set\", p), p in s) },\n  get: function (s, p) { return (log(\"Get\", p), s[p]) },\n  set: function (s, p, v) { return (log(\"Has\", p), s[p]=v) },\n  deleteProperty: function (s, p) { return (log(\"Delete\", p), delete s[p]) }\n})\n";
 window.masters.TrackNullUndefined = "\n// Fetch the global object //\nif (typeof global !== \"undefined\") { var glob = global }\nelse if (typeof window !== \"undefined\") { var glob = window }\nelse { throw new Error(\"Cannot find the global object...\") }\n\n// Check if WeakMaps are supported //\nif (!glob.WeakMap) { throw new Error(\"Harmony WeakMaps are needed to perform this analysis\") } \n\n// Will contain the function defined within the instrumented code //\nvar fcts = new WeakMap()\n\n// Will contain the wrapper around null/undefined create within the instrumented code //\nvar voids = new WeakMap()\n\n// Will contain the current program location //\nvar loc = \"prelude\"\n\nvar savedundefined = undefined\nglob.undefined = wrap(savedundefined)\n\nfunction wrap (val) {\n  if (val !== savedundefined && val !== null) { return val }\n  var w = {val:val, loc:loc}\n  voids.set(w, true)\n  return w\n}\nfunction unwrap (w) { if (voids.has(w)) { return w.val } }\nfunction print (w) { return w.val+\"@\"+w.loc }\n\n// Simulate: 'new cons(args)'\nfunction construct (cons, args) {\n  function Cons() { return f.apply(this, xs) }\n  Cons.prototype = cons.prototype;\n  return new Cons()\n}\n\nexports.traps = {\n  primitive: wrap,\n  undefined: wrap,\n  booleanize: unwrap,\n  stringify: unwrap,\n  get: function (obj, prop) {\n    prop = unwrap(prop)\n    if (voids.has(obj)) { throw new TypeError(\"Cannot read property \"+prop+\" of \"+print(obj)) }\n    return obj[prop]\n  },\n  set: function (obj, prop, val) {\n    prop = unwrap(prop)\n    if (voids.has(obj)) { throw new TypeError(\"Cannot set property \"+prop+\" of \"+print(obj)) }\n    return obj[prop] = val\n  },\n  delete: function (obj, prop) {\n    prop = unwrap(prop)\n    if (voids.has(obj)) { throw new TypeError(\"Connor delete property \"+prop+\" of \"+print(obj)) }\n    return delete obj[prop]\n  },\n  function: function (fct) { return (fcts.set(fct, true), fct) },\n  call: function (fct, th, args) {\n    if (voids.has(fct)) { throw new TypeError(print(fct)+\" is not a function\") }\n    if (fcts.has(fct)) { return fct.apply(th, args) }\n    return wrap(fct.apply(unwrap(th), arg.map(unwrap)))\n  },\n  new: function (fct, args) {\n    if (voids.has(fct)) { throw new TypeError(print(fct)+\" is not a constructor\") }\n    if (fcts.has(fct)) { return construct(fct, args) }\n    return wrap(construct(fct, arg.map(unwrap)))\n  },\n  unary: function (op, val) { return eval(op+\"unwrap(val)\") },\n  binary: function (op, val1, val2) { return eval(\"unwrap(val1)\"+op+\"unwrap(val2)\") }\n}\n\nvar hooks = {StartLoc:true}\n\nfunction track (startloc) { loc = startloc }\n\ntypes().forEach(function (type) { hooks[type] = track })\n\nexports.hooks = hooks\n\n\n\nfunction types () {\n  return [\n    // Statement Types //\n    \"Empty\",\n    \"Strict\",\n    \"Block\",\n    \"Expression\",\n    \"If\",\n    \"Label\",\n    \"Break\",\n    \"Continue\",\n    \"With\",\n    \"Switch\",\n    \"Return\",\n    \"Throw\",\n    \"Try\",\n    \"While\",\n    \"DoWhile\",\n    \"DeclarationFor\",\n    \"For\",\n    \"IdentifierForIn\",\n    \"MemberForIn\",\n    \"DeclarationForIn\",\n    \"Definition\",\n    \"Declaration\",\n    // Expression Types //\n    \"This\",\n    \"Array\",\n    \"Object\",\n    \"Function\",\n    \"Sequence\",\n    \"IdentifierTypeof\",\n    \"IdentifierDelete\",\n    \"MemberDelete\",\n    \"Unary\",\n    \"Binary\",\n    \"IdentifierAssignment\",\n    \"MemberAssignment\",\n    \"IdentiferUpdate\",\n    \"MemberUpdate\",\n    \"Logical\",\n    \"Conditional\",\n    \"New\",\n    \"MemberCall\",\n    \"EvalCall\",\n    \"Call\",\n    \"Member\",\n    \"Identifier\",\n    \"Literal\"\n  ]\n}\n";
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
@@ -12354,9 +12354,29 @@ expressions.Function = function (paramnames, bodystmts) {
     id: null,
     params: paramnames.map(identifier),
     defaults: [],
-    body: block(bodystmts),
     generator: false,
-    expression: false
+    expression: false,
+    body: block(bodystmts),
+  }
+}
+
+expressions.HoistedFunction = function (paramnames, variables, bodystmts) {
+  var seen = {}
+  paramnames.forEach(function (name) { seen[name] = true })
+  variables = variables.filter(function (name) { return seen[name] ? false : (seen[name]=true) })
+  var declarators = variables.map(function (name) { return { type:"VariableDeclarator", id:identifier(name), init:null} })
+  bodystmts.unshift(declarators.length
+    ? {type:"VariableDeclaration", kind:"var", declarations:declarators}
+    : {type:"EmptyStatement"})
+  return {
+    $type: "HoistedFunction",
+    type: "FunctionExpression",
+    id: null,
+    params: paramnames.map(identifier),
+    defaults: [],
+    generator: false,
+    expression: false,
+    body: block(bodystmts)
   }
 }
 
@@ -12507,7 +12527,7 @@ expressions.Call = function (callee, arguments) {
   return {
     $type: "Call",
     type: "CallExpression",
-    callee: member(calleeobject, calleeproperty),
+    callee: callee,
     arguments: arguments
   }
 }
@@ -12856,6 +12876,7 @@ var exprs = {
     }
   },
   Function: function (n, p, pm) { nodes(n.body.body, p) },
+  HoistedFunction: function (n, p, pm) { for (var i=1; i<n.body.body.length; i++) { p(n.body.body[i]) } },
   Sequence: function (n, p, pm) { nodes(n.expressions, p) },
   IdentifierTypeof: nil,
   IdentifierDelete: nil,
@@ -12886,11 +12907,11 @@ var Escodegen = require("escodegen")
 
 var Util = require("../util.js")
 
-var Hook = require("../stage/hook.js")
+var Hooks = require("../stage/hooks.js")
 var Sanitize = require("../stage/sanitize.js")
 var Hoist = require("../stage/hoist.js")
 var Sandbox = require("../stage/sandbox.js")
-var Trap = require("../stage/trap.js")
+var Traps = require("../stage/traps.js")
 
 function summarize (error) {
   var sum = error.message+" for node:";
@@ -12906,19 +12927,22 @@ module.exports = function (aran) {
   }
 
   var esv = Esvisit.Prepare()
-  var hookstage = Hook(esv.visit, esv.mark, aran.hooks)
-  var sanitizestage = Sanitize(esv.visit, esv.mark)
-  var hoiststage = Hoist(esv.visit, esv.mark, Boolean(aran.sandbox))
-  var sandboxstage = Sandbox(esv.visit, esv.mark, Boolean(aran.sandbox))
-  var trapstage = Trap(esv.visit, esv.mark, aran.traps)
+  var hooksstage    = aran.hooks   ? Hooks(esv.visit, esv.mark, aran.hooks)     : Util.nil
+  var sanitizestage =                Sanitize(esv.visit, esv.mark)
+  var hoiststage    =                Hoist(esv.visit, esv.mark)
+  var sandboxstage  = aran.sandbox ? Sandbox(esv.visit, esv.mark, aran.sandbox) : Util.nil
+  var trapsstage    = aran.traps   ? Traps(esv.visit, esv.mark, aran.traps)     : Util.nil
 
   function compile (local, code) {
     var ast = Esprima.parse(code, options)
-    hookstage(ast)
+    var topvars = []
+    hooksstage(ast)
     sanitizestage(ast)
-    hoiststage(local, ast)
-    sandboxstage(local, ast)
-    trapstage(ast)
+    hoiststage(local, ast, topvars)
+    sandboxstage(local, ast, topvars)
+    trapsstage(ast, topvars)
+    var declarators = topvars.map(function (name) { return Esvisit.BuildDeclarator(name, null) })
+    if (declarators.length) { ast.body.unshift(Esvisit.BS.Declaration(declarators)) }
     var errors = Esvalid.errors(ast)
     if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
     return Escodegen.generate(ast)
@@ -12933,7 +12957,7 @@ module.exports = function (aran) {
 
 }
 
-},{"../stage/hoist.js":40,"../stage/hook.js":41,"../stage/sandbox.js":42,"../stage/sanitize.js":43,"../stage/trap.js":44,"../util.js":48,"escodegen":5,"esprima":23,"esvalid":24,"esvisit":32}],36:[function(require,module,exports){
+},{"../stage/hoist.js":40,"../stage/hooks.js":41,"../stage/sandbox.js":42,"../stage/sanitize.js":43,"../stage/traps.js":44,"../util.js":48,"escodegen":5,"esprima":23,"esvalid":24,"esvisit":32}],36:[function(require,module,exports){
 (function (global){
 
 module.exports = function (aran) {
@@ -12962,6 +12986,7 @@ module.exports = function (aran) {
   if (aran.preserved) { return }
   aran.preserved = {}
   if (aran.sandbox) {
+    if (has(aran.sandbox, "undefined")) { aran.preserved.eval = get(aran.sandbox, "eval") }
     if (has(aran.sandbox, "eval")) { aran.preserved.eval = get(aran.sandbox, "eval") }
     if (has(aran.sandbox, "Object")) {
       var object = get(aran.sandbox, "Object")
@@ -12985,37 +13010,41 @@ module.exports = function (aran) {
   if (!aran.global.Proxy) { throw new Error("Harmony Proxies are needed to support sandboxing") }
 
   var has = function (o, k) { return unescape(k) in o }
-  if (aran.traps && aran.traps.exist) { has = function (o, k) { return aran.traps.exist(o, unescape(k)) } }
+  if (aran.traps&&aran.traps.exist) { has = function (o, k) { return aran.traps.exist(o, unescape(k)) } }
 
   var get = function (o, k) { return o[unescape(k)] }
-  if (aran.traps && aran.traps.get) { get = function (o, k) { return aran.traps.get(o, unescape(k)) } }
+  if (aran.traps&&aran.traps.get) { get = function (o, k) { return aran.traps.get(o, unescape(k)) } }
 
   var set = function (o, k, v) { return o[unescape(k)]=v }
-  if (aran.traps && aran.traps.set) { set = function (o, k, v) { return aran.traps.set(o, unescape(k), v) } }
+  if (aran.traps&&aran.traps.set) { set = function (o, k, v) { return aran.traps.set(o, unescape(k), v) } }
+
+  var del = function (o, k) { return delete o[unescape(k)] }
+  if (aran.traps&&aran.traps.delete) { del = function (o, k) { return aran.traps.delete(o, unescape(k)) } }
 
   aran.declare = function (vs) {
     for (var i=0; i<vs.length; i++) {
       if (!has(aran.sandbox, vs[i])) {
-        set(aran.sandbox, vs[i], (aran.traps&&aran.traps.undefined)?aran.traps.undefined("global"):undefined)
+        set(aran.sandbox, vs[i], (aran.traps&&aran.traps.undefined)?aran.traps.undefined("global:"+vs[i]):undefined)
       }
     }
   }
 
   aran.proxy = aran.global.Proxy(aran.sandbox, {
-    has: function (g, k) {
-      if (k === "aran") { return false }
-      if (has(g, k)) { return true }
+    has: function (s, k) { return k !== "aran" }, // delete ID trigger has
+    get: function (s, k) {
+      if (has(s, k)) { return get(s, k) }
       throw new ReferenceError("Sandbox reference Error: "+unescape(k)+" is not defined")
     },
-    get: get,
-    set: set
+    set: set,
+    deleteProperty: del
   })
 
   aran.with = function (o) {
     return aran.global.Proxy(o, {
       has: function (o, k) { return (k === "aran") ? false : has(o,k) },
       get: get,
-      set: set
+      set: set,
+      deleteProperty: del
     })
   }
 
@@ -13089,10 +13118,9 @@ var Nasus = require("../syntax/nasus.js")
 var Shadow = require("../syntax/shadow.js")
 var Nodify = require("../syntax/nodify.js")
 
-module.exports = function (visit, mark, sandboxed) {
+module.exports = function (visit, mark) {
 
   var local
-  var bodies = []
   var variabless = []
   var definitionss = []
   var onstatements = {}
@@ -13101,64 +13129,51 @@ module.exports = function (visit, mark, sandboxed) {
   function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }
   function onexpression (type, expr) { if (onexpressions[type]) { return onexpressions[type](expr) } }
 
-  function popdefinitions () {
-    var definitions = definitionss.pop()
-    if (definitions.length === 0) { return Esvisit.BS.Empty() }
-    if (definitions.length === 1) { return Esvisit.BS.Expression(definitions[0]) }
-    return Esvisit.BS.Expression(Esvisit.BE.Sequence(definitions))
-  }
-
-  function popvariables () {
-    var variables = variabless.pop()
-    if (!variables.length) { return Esvisit.BS.Empty() }
-    return Esvisit.BS.Declaration(variables.map(function (v) { return Esvisit.BuildDeclarator(v) }))
-  }
-
-  function pop () {
-    var body = bodies.pop()
-    body.unshift(popdefinitions())
-    body.unshift(popvariables())
-  }
-
-  function enterbody (body) {
-    bodies.push(body)
-    variabless.push([])
-    definitionss.push([])
-    mark(pop)
-  }
-
   function hoistdeclarator (declarator) {
     Util.last(variabless).push(declarator.id.name)
     if (declarator.init) { return Esvisit.BE.IdentifierAssignment("=", declarator.id.name, declarator.init) }
     return null
   }
 
-  function hoistdeclaration (declaration) {
-    var assignments = declaration.declarations.map(hoistdeclarator).filter(Util.identity)
-    if (assignments.length === 0) { return null }
-    if (assignments.length === 1) { return assignments[0] }
-    return Esvisit.BE.Sequence(assignments)
+  function popdefinitions (stmts) {
+    var definitions = definitionss.pop()
+    var assignments = Object.keys(definitions).map(function (name) { return Esvisit.BE.IdentifierAssignment("=", name, definitions[name]) })
+    if (assignments.length === 1) { stmts.unshift(Esvisit.BS.Expression(assignments[0])) }
+    else if (assignments.length) { stmts.unshift(Esvisit.BS.Expression(Esvisit.BE.Sequence(assignments))) }
+  }
+
+  function enterfunction (fct) {
+    variabless.push([])
+    definitionss.push({})
+    mark(function () {
+      popdefinitions(fct.body.body)
+      Util.inject(Esvisit.BE.HoistedFunction(
+        fct.params.map(function (id) { return id.name }),
+        variabless.pop(),
+        fct.body.body
+      ), fct)
+    })
   }
 
   onstatements.Definition = function (stmt) {
+    stmt = Util.copy(stmt)
+    Util.last(definitionss)[stmt.id.name] = stmt
     Util.last(variabless).push(stmt.id.name)
-    Util.last(definitionss).push(Esvisit.BE.IdentifierAssignment(
-      "=",
-      stmt.id.name,
-      Esvisit.BE.Function(stmt.params.map(function (id) { return id.name }), stmt.body.body)))
-    enterbody(stmt.body.body)
+    enterfunction(stmt)
     return Esvisit.BS.Empty()
   }
 
   onstatements.Declaration = function (stmt) {
-    var expression = hoistdeclaration(stmt)
-    if (expression) { return Esvisit.BS.Expression(expression) }
-    return Esvisit.BS.Empty()
+    var assignments = stmt.declarations.map(hoistdeclarator).filter(Util.identity)
+    if (assignments.length === 0) { return Esvisit.BS.Empty() }
+    if (assignments.length === 1) { return Esvisit.BS.Expression(assignments[0]) }
+    return Esvisit.BS.Expression(Esvisit.BE.Sequence(assignments))
   }
 
   onstatements.DeclarationFor = function (stmt) {
+    var assignments = stmt.init.declarations.map(hoistdeclarator).filter(Util.identity)
     return Esvisit.BS.For(
-      hoistdeclaration(stmt.init),
+      assignments.length ? ((assignments.length===1) ? assignments[0] : Esvisit.BE.Sequence(assignments)) : null,
       stmt.test,
       stmt.update,
       stmt.body
@@ -13174,24 +13189,24 @@ module.exports = function (visit, mark, sandboxed) {
     )
   }
 
-  onexpressions.Function = function (expr) { enterbody(expr.body.body) }
+  onexpressions.Function = enterfunction
 
   onexpressions.EvalCall = function (expr) {
     var shallowcopy = expr.arguments.slice()
-    shallowcopy.unshift(Esvisit.BE.Literal(Boolean(local||bodies.length)))
+    shallowcopy.unshift(Esvisit.BE.Literal(Boolean(local||(variabless.length>1))))
     return Esvisit.BE.Conditional(
       Esvisit.Halt(Esvisit.BE.Binary("===", Esvisit.BE.Identifier("eval"), Shadow("preserved", "eval"))),
       Esvisit.Halt(Esvisit.BE.EvalCall([Shadow("compile", shallowcopy)])),
       Esvisit.BE.EvalCall(expr.arguments))
   }
 
-  return function (loc, ast) {
+  return function (loc, ast, topvars) {
     local = loc
-    variabless.push([])
-    definitionss.push([])
+    variabless.push(topvars)
+    definitionss.push({})
     visit(ast, onstatement, onexpression)
-    ast.body.unshift(popdefinitions())
-    ast.body.unshift((sandboxed&&!local)?Esvisit.BS.Expression(Shadow("declare", [Nodify(variabless.pop())])):popvariables())
+    popdefinitions(ast.body)
+    variabless.pop()
   }
 
 }
@@ -13205,8 +13220,6 @@ var Shadow = require("../syntax/shadow.js")
 
 module.exports = function (visit, mark, hooks) {
 
-  if (!hooks) { return Util.nil }
-
   function hook (type, range, loc, infos) {
     if (hooks.EndLoc) { infos.unshift(loc.end.line+"-"+loc.end.column) }
     if (hooks.StartLoc) { infos.unshift(loc.start.line+"-"+loc.start.column) }
@@ -13215,7 +13228,7 @@ module.exports = function (visit, mark, hooks) {
     return Esvisit.Halt(Shadow("hooks", type, infos.map(Nodify)))
   }
 
-  function statement (type, stmt) {
+  function onstatement (type, stmt) {
     if (hooks[type]) {
       return Esvisit.BS.Block([
         Esvisit.BS.Expression(hook(type, stmt.range, stmt.loc, Esvisit.ExtractStatement(stmt))),
@@ -13223,7 +13236,7 @@ module.exports = function (visit, mark, hooks) {
     }
   }
 
-  function expression (type, expr) {
+  function onexpression (type, expr) {
     if (hooks[type]) {
       return Esvisit.BE.Sequence([
         hook(type, expr.range, expr.loc, Esvisit.ExtractExpression(expr)),
@@ -13233,7 +13246,7 @@ module.exports = function (visit, mark, hooks) {
 
   return function (ast) {
     if (hooks.Program) { node.body.unshift(Esvisit.BS.Expression(hook("Program", ast.loc, ast.range, [node.body.length]))) }
-    visit(ast, statement, expression)
+    visit(ast, onstatement, onexpression)
   }
 
 }
@@ -13248,78 +13261,77 @@ var Esvisit = require("esvisit")
 var Util = require("../util.js")
 var Nasus = require("../syntax/nasus.js")
 var Shadow = require("../syntax/shadow.js")
+var Nodify = require("../syntax/nodify.js")
 
 function escape (id) { if (/^\$*aran$/.test(id.name)) { id.name = "$"+id.name } }
-function descape (decl) { escape(decl.id) }
 
-module.exports = function (visit, mark, sandboxed) {
+module.exports = function (visit, mark, sandbox) {
 
-  if (!sandboxed) { return Util.nil }
+  var onstatements = {}
+  var onexpressions = {}
+  function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }
+  function onexpression (type, expr) { if (onexpressions[type]) { return onexpressions[type](expr) } }
 
-  var local
+  ////////////////
+  // Statements //
+  ////////////////
 
-  function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } }
+  onstatements.IdentifierForIn = function (stmt) { escape(stmt.left) }
+  onstatements.With = function (stmt) { stmt.object = Shadow("with", [stmt.object]) }
+  onstatements.Try = function (stmt) { if (stmt.handlers[0]) { escape(stmt.handlers[0].param) } }
 
-  function expression (type, expr) {
-    if (type === "This") {
-      return Esvisit.BE.Conditional(
-        Esvisit.BE.Binary(
-          "===",
-          Esvisit.BE.This(),
-          Shadow("global")),
-        Esvisit.BE.Sequence([
-          Nasus.pop(),
-          Shadow("sandbox")]),
-        Esvisit.BE.This())
-    }
-    if (type === "IdentifierTypeof") {
-      escape(expr.argument)
-      return Esvisit.BE.Unary(
-        "typeof",
-        Esvisit.BE.Call(
-          Esvisit.BE.Function(
-            [],
-            [Esvisit.BS.Try(
-              [Esvisit.BS.Return(Esvisit.BE.Identifier(expr.arguement.name))],
-              "_",
-              [],
-              null)]),
-          []))
-    }
-    if (type === "EvalCall") {
-      return Esvisit.BE.Sequence([
-        Shadow("local", [Esvisit.BE.Literal(local)]),
-        Esvisit.BE.EvalCall(expr.arguments)
-      ])
-    }
-    if (expressions[type]) { return expressions[type](expr) }
+  /////////////////
+  // Expressions //
+  /////////////////
+
+  onexpressions.HoistedFunction = function (expr) {
+    expr.params.forEach(escape)
+    if (expr.body.body[0].declarations) { expr.body.body[0].declarations.forEach(function (dec) { escape(dec.id) }) }
   }
 
-  var statements = {
-    IdentifierForIn: function (stmt) { escape(stmt.left) },
-    Declaration: function (stmt) { stmt.declarations.forEach(descape) },
-    Definition: function (stmt) { (escape(stmt.id), stmt.params.forEach(escape)) },
-    With: function (stmt) { stmt.object = Shadow("with", [stmt.object]) },
-    Try: function (stmt) { if (stmt.handlers[0]) { escape(stmt.handlers[0].param) } }
+  onexpressions.This = function (expr) {
+    return Esvisit.BE.Conditional(
+      Esvisit.BE.Binary(
+        "===",
+        Esvisit.BE.This(),
+        Shadow("global")),
+      Esvisit.BE.Sequence([
+        Nasus.pop(),
+        Shadow("sandbox")]),
+      Esvisit.BE.This())
   }
 
-  var expressions = {
-    Function: function (expr) { expr.params.forEach(escape) },
-    IdentifierDelete: function (expr) { escape(expr.argument) },
-    IdentifierAssignment: function (expr) { escape(expr.left) },
-    IdentifierUpdate: function (expr) { escape(expr.argument) },
-    Identifier: function (expr) { escape(expr) },
+  // delete ID >>> (function () { try { return delete ID } catch (_) { return true }} ())
+
+  onexpression.IdentifierDelete = function (expr) {
+    return Esvisit.BE.Call(
+      Esvisit.Function ())
   }
 
-  return function (loc, ast) {
-    local = loc
-    visit(ast, statement, expression)
-    if (!local) { ast.body = [Esvisit.Ignore(Esvisit.BS.With(Shadow("proxy"), Esvisit.BS.Block(ast.body)))] }
+  onexpressions.identifier = escape
+
+  onexpressions.IdentifierDelete = function (expr) { escape(expr.argument) }
+
+  onexpressions.IdentifierAssignment = function (expr) { escape(expr.left) }
+
+  ////////////
+  // Return //
+  ////////////
+
+  return function (local, ast, topvars) {
+    visit(ast, onstatement, onexpression)
+    if (!local) {
+      ast.body = [
+        Esvisit.BS.Expression(Shadow("declare", [Nodify(topvars)])),
+        Esvisit.Ignore(Esvisit.BS.With(Shadow("proxy"), Esvisit.BS.Block(ast.body)))
+      ]
+      topvars.length = 0
+    }
   }
 
 }
 
-},{"../syntax/nasus.js":45,"../syntax/shadow.js":47,"../util.js":48,"esvisit":32}],43:[function(require,module,exports){
+},{"../syntax/nasus.js":45,"../syntax/nodify.js":46,"../syntax/shadow.js":47,"../util.js":48,"esvisit":32}],43:[function(require,module,exports){
 
 /*
  * Sanitize JavaScript to simplify trap insertion:
@@ -13345,41 +13357,64 @@ var Util = require("../util.js")
 
 module.exports = function (visit, mark) {
 
-  var expressions = {}
-  var statements = {}
+  var onexpressions = {}
+  var onstatements = {}
 
-  function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } }
-  function expression (type, expr) { if (expressions[type]) { return expressions[type](expr) } }
+  function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }
+  function onexpression (type, expr) { if (onexpressions[type]) { return onexpressions[type](expr) } }
 
   ////////////////////////
   // Stack Preservation //
   ////////////////////////
 
-  statements.Try = function (stmt) {
+  onstatements.Try = function (stmt) {
     stmt.block.body.unshift(Esvisit.BS.Expression(Nasus.mark()))
     if (!stmt.finalizer) { stmt.finalizer = {type:"Block", body:[]} }
     stmt.finalizer.body.unshift(Esvisit.BS.Expression(Nasus.unmark()))
   }
 
+  /////////////
+  // Logical //
+  ///////////// 
+
+  onexpressions.Logical = function (expr) {
+    return Esvisit.BE.Conditional(
+      Nasus.push(expr.left),
+      (expr.operator === "||") ? Nasus.pop() : Esvisit.BE.Sequence([Nasus.pop(), expr.right]),
+      (expr.operator === "||") ? Esvisit.BE.Sequence([Nasus.pop(), expr.right]) : Nasus.pop()
+    )
+  }
+
   ////////////
-  // Reduce //
+  // Typeof //
   ////////////
 
-  var reducemodule = function () {
+  // typeof ID >>> (typeof function () { try {return ID} catch (_) {} } ())
+  onexpressions.IdentifierTypeof = function (expr) {
+    return Esvisit.BE.Unary(
+      "typeof",
+      Esvisit.BE.Call(
+        Esvisit.BE.Function(
+          [],
+          [Esvisit.BS.Try(
+            [Esvisit.BS.Return(Esvisit.BE.Identifier(expr.argument.name))],
+            "_",
+            [],
+            null)]),
+        []))
+  }
+
+  //////////////////
+  // Assignments //
+  /////////////////
+
+  var assignmentmodule = function () {
 
     function pushobject (member) { return Nasus.push1(member.object) }
     function pushproperty (member) { return member.computed ? Nasus.push2(member.property) : member.property.name }
     function popmember (member) { return Esvisit.BE.Member(Nasus.pop1(), member.computed ? Nasus.pop2() : member.property.name) }
 
-    expressions.Logical = function (expr) {
-      return Esvisit.BE.Conditional(
-        Nasus.push(expr.left),
-        (expr.operator === "||") ? Nasus.pop() : Esvisit.BE.Sequence([Nasus.pop(), expr.right]),
-        (expr.operator === "||") ? Esvisit.BE.Sequence([Nasus.pop(), expr.right]) : Nasus.pop()
-      )
-    }
-
-    expressions.IdentifierAssignment = function (expr) {
+    onexpressions.IdentifierAssignment = function (expr) {
       if (expr.operator === "=") { return }
       return Esvisit.BE.IdentifierAssignment(
         "=",
@@ -13392,7 +13427,7 @@ module.exports = function (visit, mark) {
       )
     }
 
-    expressions.MemberAssignment = function (expr) {
+    onexpressions.MemberAssignment = function (expr) {
       if (expr.operator === "=") { return }
       return Esvisit.BE.MemberAssignment(
         "=",
@@ -13406,7 +13441,7 @@ module.exports = function (visit, mark) {
       )
     }
 
-    expressions.IdentifierUpdate = function (expr) {
+    onexpressions.IdentifierUpdate = function (expr) {
       var ass = Esvisit.BE.IdentifierAssignment(
         "=",
         expr.argument.name,
@@ -13420,7 +13455,7 @@ module.exports = function (visit, mark) {
       return Esvisit.BE.Sequence([ass, Nasus.pop()])
     }
 
-    expressions.MemberUpdate = function (expr) {
+    onexpressions.MemberUpdate = function (expr) {
       var ass = Esvisit.BE.MemberAssignment(
         "=",
         pushobject(expr.argument),
@@ -13437,19 +13472,19 @@ module.exports = function (visit, mark) {
 
   }
 
-  reducemodule()
+  assignmentmodule()
 
   ////////////
   // Strict //
   ////////////
 
-  statements.Strict = function (stmt) { return Esvisit.BS.Empty() }
+  onstatements.Strict = function (stmt) { return Esvisit.BS.Empty() }
 
   //////////////////////
   // Inline Accessors //
   //////////////////////
 
-  expressions.Object = function (expr) {
+  onexpressions.Object = function (expr) {
     var hasaccessor = false
     var accessors = {}
     var datadescriptors = []
@@ -13490,7 +13525,7 @@ module.exports = function (visit, mark) {
     function pop () { stack.pop() }
     function get () { return Util.last(stack) ? ("switch"+Util.last(stack)) : null }
 
-    statements.Switch = function (stmt) {
+    onstatements.Switch = function (stmt) {
       stack.push(++counter)
       mark(pop)
       var stmts = [Esvisit.BS.Expression(Nasus.push(stmt.discriminant))]
@@ -13501,18 +13536,18 @@ module.exports = function (visit, mark) {
       return Esvisit.BS.Label(get(), Esvisit.BS.Try(stmts, null, null, [Esvisit.Halt(Esvisit.BS.Expression(Nasus.pop()))]))
     }
 
-    statements.Label = function (stmt) { escape(stmt.label) }
-    statements.Continue = function (stmt) { if (stmt.label) { escape(stmt.label) } }
-    statements.Break = function (stmt) {
+    onstatements.Label = function (stmt) { escape(stmt.label) }
+    onstatements.Continue = function (stmt) { if (stmt.label) { escape(stmt.label) } }
+    onstatements.Break = function (stmt) {
       if (stmt.label) { escape(stmt.label) }
       else if (get()) { return Esvisit.BS.Break(get()) }
     }
 
-    statements.While = mask
-    statements.DoWhile = mask
-    statements.For = mask
-    statements.IdentifierForIn = mask
-    statements.MemberForIn = mask
+    onstatements.While = mask
+    onstatements.DoWhile = mask
+    onstatements.For = mask
+    onstatements.IdentifierForIn = mask
+    onstatements.MemberForIn = mask
 
   }
 
@@ -13522,7 +13557,7 @@ module.exports = function (visit, mark) {
   // Return //
   ////////////
 
-  return function (ast) { visit(ast, statement, expression) }
+  return function (ast) { visit(ast, onstatement, onexpression) }
 
 }
 
@@ -13543,8 +13578,6 @@ var Shadow = require("../syntax/shadow.js")
 
 module.exports = function (visit, mark, traps) {
 
-  if (!traps) { return Util.nil }
-
   function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }
   function onexpression (type, expr) { if (onexpressions[type]) { return onexpressions[type](expr) } }
 
@@ -13554,10 +13587,13 @@ module.exports = function (visit, mark, traps) {
 
   function booleanize (test, place) {
     if (!traps.booleanize) { return test }
-    return Shadow("traps", "booleanize", [test, Esvisit.BE.literal(place)])
+    return Shadow("traps", "booleanize", [test, Esvisit.BE.Literal(place)])
   }
 
-  function undef(place) { return Shadow("traps", "undefined", [Esvisit.BE.Literal(place)]) }
+  function undef(place) {
+    if (!traps.undefined) { return Shadow("undefined") }
+    return Shadow("traps", "undefined", [Esvisit.BE.Literal(place)])
+  }
 
   function property (member) { return member.computed ? member.property : Esvisit.BE.Literal(member.property.name) }
 
@@ -13567,7 +13603,7 @@ module.exports = function (visit, mark, traps) {
     var pops = [Nasus.pop()]
     if (type === "MemberForIn") {
       pushes.push(Nasus.push1(node.left.object))
-      pushes.push(Nasus.push2(property(node.left.property)))
+      pushes.push(Nasus.push2(property(node.left)))
       pops.push(Nasus.pop1())
       pops.push(Nasus.pop2())
     }
@@ -13580,9 +13616,9 @@ module.exports = function (visit, mark, traps) {
       if (traps.set) { ass = Shadow("traps", "set", [Nasus.get1(), Nasus.get2(), right]) }
       else { ass = Esvisit.BE.MemberAssignment(Nasus.get1(), Nasus.get2(), right) }
     }
-    var trystmts = [Esvisit.BE.For(
+    var trystmts = [Esvisit.BS.For(
       null,
-      Esvisit.BE.binary("<", Nasus.get(), Esvisit.BE.Member(Nasus.get3(), "length")),
+      Esvisit.BE.Binary("<", Nasus.get(), Esvisit.BE.Member(Nasus.get3(), "length")),
       Nasus.push(Esvisit.BE.Binary("+", Nasus.pop(), Esvisit.BE.Literal(1))),
       Esvisit.BS.Block([Esvisit.BS.Expression(ass), node.body])
     )]
@@ -13591,11 +13627,7 @@ module.exports = function (visit, mark, traps) {
     return Esvisit.BE.Block(stmts)
   }
 
-  function call (node) {
-    var args = [node.callee, traps.undefined?undef("context"):Shadow("undefined"), Esvisit.BE.Array(node.arguments)]
-    if (traps.apply) { return Shadow("traps", "apply", args) }
-    if (traps.undefined) { return Shadow("apply", args) }
-  }
+  function call (node) { if (traps.apply) { return Shadow("traps", "apply", [node.callee, Shadow("global", Esvisit.BE.Array(node.arguments))]) } }
 
   ///////////////
   // Statement //
@@ -13605,16 +13637,16 @@ module.exports = function (visit, mark, traps) {
 
   onstatements.If = function (node) { node.test = booleanize(node.test, node.alternate?"if-else":"if") }
 
-  onstatements.Return = function (node) { if (traps.undefined && !node.argument) { node.argument = undef("empty-return") } }
+  onstatements.Return = function (node) { if (!node.argument) { node.argument = undef("empty-return") } }
 
   onstatements.Throw = function (node) { if (traps.throw) { node.argument = Shadow("traps", "throw", [node.argument]) } }
 
   onstatements.Try = function (node) {
     if (node.handlers[0] && traps.catch) {
-      node.handlers[0].body.body.unshift(bs.Expression(be.IdentifierAssignment(
+      node.handlers[0].body.body.unshift(Esvisit.BS.Expression(Esvisit.BE.IdentifierAssignment(
         "=",
         node.handlers[0].param.name,
-        Shadow("traps", "catch", [be.Identifier(node.handlers[0].param.name)]))
+        Shadow("traps", "catch", [Esvisit.BE.Identifier(node.handlers[0].param.name)]))
       ))
     }
   }
@@ -13667,14 +13699,14 @@ module.exports = function (visit, mark, traps) {
 
   onexpressions.Object = function (node) { if (traps.object) { return Shadow("traps", "object", [Esvisit.BE.Object(node.properties)]) } }
 
-  onexpressions.Function = function (node) {
+  onexpressions.HoistedFunction = function (node) {
     if (traps.arguments) {
       var check = true
       node.params.forEach(function (id) { if (id.name === "arguments") { check = false } })
-      if (check) { node.body.body.unshift(Esvisit.BS.Expression(Esvisit.BE.IdentifierAssignment("arguments", Shadow("traps", "arguments", [Esvisit.BE.Identifier("arguments")])))) }
+      if (check) { node.body.body.splice(1, 0, Esvisit.BS.Expression(Esvisit.BE.IdentifierAssignment("arguments", Shadow("traps", "arguments", [Esvisit.BE.Identifier("arguments")])))) }
     }
     if (traps.undefined) {
-      node.body.body.unshift(Esvisit.BS.Block(node.params.map(function (id) {
+      node.body.body.splice(1, 0, (Esvisit.BS.Block(node.params.map(function (id) {
         return Esvisit.BS.If(
           Esvisit.BE.Binary(
             "===",
@@ -13684,9 +13716,13 @@ module.exports = function (visit, mark, traps) {
             Esvisit.BE.IdentifierAssignment(
               "=",
               Esvisit.BE.Identifier(id.name),
-              undef("argument"))))
-      })))
-      node.body.body.push(Esvisit.BS.Return(undef("return")))
+              undef("argument:"+id.name))))
+      }))))
+      if (node.body.body[0].declarations) {
+        var assignments = node.body.body[0].declarations.map(function (dec) { return Esvisit.BE.IdentifierAssignment("=", dec.id.name, undef("variable:"+dec.id.name)) })
+        if (assignments.length === 1) { node.body.body.splice(1, 0, Esvisit.BS.Expression(assignments[0])) }
+        else if (assignments.length) { node.body.body.splice(1, 0, Esvisit.BS.Expression(Esvisit.BE.Sequence(assignments))) }
+      }
     }
     if (traps.function) { return Shadow("traps", "function", [Esvisit.BE.Function(node.params, node.body.body)]) }
   }
@@ -13703,13 +13739,13 @@ module.exports = function (visit, mark, traps) {
 
   onexpressions.Conditional = function (node) { node.test = booleanize(node.test, "?:") }
 
-  // We direct eval call in stage/hoist.js
+  // We handle direct eval call in stage/hoist.js
   onexpressions.EvalCall = call
 
   // EXPR1.EXPR2(ARGS)
   //   traps.apply && traps.get >>> aran.traps.apply(aran.traps.get(aran.push(EXPR1), EXPR2), Nasus.pop(), [ARGS])
   //                  traps.get >>> aran.apply(aran.aran.traps.get(aran.push(EXPR1), EXPR2), Nasus.pop(), [ARGS])
-  //   traps.apply              >>> aran.traps.apply(Nasus.push(EXPR1).EXPR2, Nasus.pop(), [ARGS]) 
+  //   traps.apply              >>> aran.traps.apply(Nasus.push(EXPR1).EXPR2, Nasus.pop(), [ARGS])
   //                            >>> EXPR1.EXPR2(ARGS)
   onexpressions.MemberCall = function (node) {
     var get = traps.get
@@ -13730,11 +13766,38 @@ module.exports = function (visit, mark, traps) {
     else if (traps.primitive) { return Shadow("traps", "primitive", [Esvisit.BE.Literal(node.value)]) }
   }
 
+  // undefined >>> (undefined === aran.undefined) ? aran.traps.undefined("identifier") : undefined
+  onexpressions.Identifier = function (node) {
+    if (traps.undefined && (node.name === "undefined")) {
+      return Esvisit.BE.Conditional(
+        Esvisit.BE.Binary(
+          "===",
+          Esvisit.BE.Identifier("undefined"),
+          Shadow("undefined")),
+        undef("identifier"),
+        Esvisit.BE.Identifier("undefined"))
+    }
+  }
+
   ////////////
   // Return //
   ////////////
 
-  return function (ast) { visit(ast, onexpression, onstatement) }
+  // var x = x===undefined ? aran.traps.undefined("variable:x") : x
+  return function (ast, topvars) {
+    visit(ast, onstatement, onexpression)
+    var declarators = topvars.map(function (name) {
+      return Esvisit.BuildDeclarator(name, (!traps.undefined) ? null : Esvisit.BE.Conditional(
+        Esvisit.BE.Binary(
+          "===",
+          Esvisit.BE.Identifier(name),
+          Shadow("undefined")),
+        undef("variable:"+name),
+        Esvisit.BE.Identifier(name)))
+    })
+    if (declarators.length) { ast.body.unshift(Esvisit.BS.Declaration(declarators)) }
+    topvars.length = 0
+  }
 
 }
 
@@ -13823,21 +13886,13 @@ exports.copy = function (o1) {
   return o2
 }
 
-// exports.extract = function (o1) {
-//   var o2 = {}
-//   for (var k in o1) {
-//     o2[k] = o1[k]
-//     delete o1[k]
-//   }
-//   return o2
-// }
+exports.inject = function (o1, o2) { Object.keys(o1).forEach(function (k) { o2[k] = o1[k] }) }
 
-// exports.inject = function (o1, o2) {
-//   if (o1 !== o2) {
-//     for (var k in o2) { delete o2[k] }
-//     for (var k in o1) { o2[k] = o1[k] }
-//   }
-// }
+exports.copy = function (o1) {
+  var o2 = {}
+  Object.keys(o1).forEach(function (k) { o2[k] = o1[k] })
+  return o2
+}
 
 ///////////
 // Array //

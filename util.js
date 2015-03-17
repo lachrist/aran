@@ -23,21 +23,13 @@ exports.copy = function (o1) {
   return o2
 }
 
-// exports.extract = function (o1) {
-//   var o2 = {}
-//   for (var k in o1) {
-//     o2[k] = o1[k]
-//     delete o1[k]
-//   }
-//   return o2
-// }
+exports.inject = function (o1, o2) { Object.keys(o1).forEach(function (k) { o2[k] = o1[k] }) }
 
-// exports.inject = function (o1, o2) {
-//   if (o1 !== o2) {
-//     for (var k in o2) { delete o2[k] }
-//     for (var k in o1) { o2[k] = o1[k] }
-//   }
-// }
+exports.copy = function (o1) {
+  var o2 = {}
+  Object.keys(o1).forEach(function (k) { o2[k] = o1[k] })
+  return o2
+}
 
 ///////////
 // Array //

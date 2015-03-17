@@ -7,74 +7,72 @@ var Esvisit = require("esvisit")
 var Util = require("../util.js")
 var Nasus = require("../syntax/nasus.js")
 var Shadow = require("../syntax/shadow.js")
+var Nodify = require("../syntax/nodify.js")
 
 function escape (id) { if (/^\$*aran$/.test(id.name)) { id.name = "$"+id.name } }
-function descape (decl) { escape(decl.id) }
 
-module.exports = function (visit, mark, sandboxed) {
+module.exports = function (visit, mark, sandbox) {
 
-  if (!sandboxed) { return Util.nil }
+  var onstatements = {}
+  var onexpressions = {}
+  function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }
+  function onexpression (type, expr) { if (onexpressions[type]) { return onexpressions[type](expr) } }
 
-  var local
+  ////////////////
+  // Statements //
+  ////////////////
 
-  function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } }
+  onstatements.IdentifierForIn = function (stmt) { escape(stmt.left) }
+  onstatements.With = function (stmt) { stmt.object = Shadow("with", [stmt.object]) }
+  onstatements.Try = function (stmt) { if (stmt.handlers[0]) { escape(stmt.handlers[0].param) } }
 
-  function expression (type, expr) {
-    if (type === "This") {
-      return Esvisit.BE.Conditional(
-        Esvisit.BE.Binary(
-          "===",
-          Esvisit.BE.This(),
-          Shadow("global")),
-        Esvisit.BE.Sequence([
-          Nasus.pop(),
-          Shadow("sandbox")]),
-        Esvisit.BE.This())
-    }
-    if (type === "IdentifierTypeof") {
-      escape(expr.argument)
-      return Esvisit.BE.Unary(
-        "typeof",
-        Esvisit.BE.Call(
-          Esvisit.BE.Function(
-            [],
-            [Esvisit.BS.Try(
-              [Esvisit.BS.Return(Esvisit.BE.Identifier(expr.argument.name))],
-              "_",
-              [],
-              null)]),
-          []))
-    }
-    // IdentifierDelete is also a special case :((
-    if (type === "EvalCall") {
-      return Esvisit.BE.Sequence([
-        Shadow("local", [Esvisit.BE.Literal(local)]),
-        Esvisit.BE.EvalCall(expr.arguments)
-      ])
-    }
-    if (expressions[type]) { return expressions[type](expr) }
+  /////////////////
+  // Expressions //
+  /////////////////
+
+  onexpressions.HoistedFunction = function (expr) {
+    expr.params.forEach(escape)
+    if (expr.body.body[0].declarations) { expr.body.body[0].declarations.forEach(function (dec) { escape(dec.id) }) }
   }
 
-  var statements = {
-    IdentifierForIn: function (stmt) { escape(stmt.left) },
-    Declaration: function (stmt) { stmt.declarations.forEach(descape) },
-    Definition: function (stmt) { (escape(stmt.id), stmt.params.forEach(escape)) },
-    With: function (stmt) { stmt.object = Shadow("with", [stmt.object]) },
-    Try: function (stmt) { if (stmt.handlers[0]) { escape(stmt.handlers[0].param) } }
+  onexpressions.This = function (expr) {
+    return Esvisit.BE.Conditional(
+      Esvisit.BE.Binary(
+        "===",
+        Esvisit.BE.This(),
+        Shadow("global")),
+      Esvisit.BE.Sequence([
+        Nasus.pop(),
+        Shadow("sandbox")]),
+      Esvisit.BE.This())
   }
 
-  var expressions = {
-    Function: function (expr) { expr.params.forEach(escape) },
-    IdentifierDelete: function (expr) { escape(expr.argument) },
-    IdentifierAssignment: function (expr) { escape(expr.left) },
-    IdentifierUpdate: function (expr) { escape(expr.argument) },
-    Identifier: function (expr) { escape(expr) },
+  // delete ID >>> (function () { try { return delete ID } catch (_) { return true }} ())
+
+  onexpression.IdentifierDelete = function (expr) {
+    return Esvisit.BE.Call(
+      Esvisit.Function ())
   }
 
-  return function (loc, ast) {
-    local = loc
-    visit(ast, statement, expression)
-    if (!local) { ast.body = [Esvisit.Ignore(Esvisit.BS.With(Shadow("proxy"), Esvisit.BS.Block(ast.body)))] }
+  onexpressions.identifier = escape
+
+  onexpressions.IdentifierDelete = function (expr) { escape(expr.argument) }
+
+  onexpressions.IdentifierAssignment = function (expr) { escape(expr.left) }
+
+  ////////////
+  // Return //
+  ////////////
+
+  return function (local, ast, topvars) {
+    visit(ast, onstatement, onexpression)
+    if (!local) {
+      ast.body = [
+        Esvisit.BS.Expression(Shadow("declare", [Nodify(topvars)])),
+        Esvisit.Ignore(Esvisit.BS.With(Shadow("proxy"), Esvisit.BS.Block(ast.body)))
+      ]
+      topvars.length = 0
+    }
   }
 
 }

@@ -23,41 +23,64 @@ var Util = require("../util.js")
 
 module.exports = function (visit, mark) {
 
-  var expressions = {}
-  var statements = {}
+  var onexpressions = {}
+  var onstatements = {}
 
-  function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } }
-  function expression (type, expr) { if (expressions[type]) { return expressions[type](expr) } }
+  function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }
+  function onexpression (type, expr) { if (onexpressions[type]) { return onexpressions[type](expr) } }
 
   ////////////////////////
   // Stack Preservation //
   ////////////////////////
 
-  statements.Try = function (stmt) {
+  onstatements.Try = function (stmt) {
     stmt.block.body.unshift(Esvisit.BS.Expression(Nasus.mark()))
     if (!stmt.finalizer) { stmt.finalizer = {type:"Block", body:[]} }
     stmt.finalizer.body.unshift(Esvisit.BS.Expression(Nasus.unmark()))
   }
 
+  /////////////
+  // Logical //
+  ///////////// 
+
+  onexpressions.Logical = function (expr) {
+    return Esvisit.BE.Conditional(
+      Nasus.push(expr.left),
+      (expr.operator === "||") ? Nasus.pop() : Esvisit.BE.Sequence([Nasus.pop(), expr.right]),
+      (expr.operator === "||") ? Esvisit.BE.Sequence([Nasus.pop(), expr.right]) : Nasus.pop()
+    )
+  }
+
   ////////////
-  // Reduce //
+  // Typeof //
   ////////////
 
-  var reducemodule = function () {
+  // typeof ID >>> (typeof function () { try {return ID} catch (_) {} } ())
+  onexpressions.IdentifierTypeof = function (expr) {
+    return Esvisit.BE.Unary(
+      "typeof",
+      Esvisit.BE.Call(
+        Esvisit.BE.Function(
+          [],
+          [Esvisit.BS.Try(
+            [Esvisit.BS.Return(Esvisit.BE.Identifier(expr.argument.name))],
+            "_",
+            [],
+            null)]),
+        []))
+  }
+
+  //////////////////
+  // Assignments //
+  /////////////////
+
+  var assignmentmodule = function () {
 
     function pushobject (member) { return Nasus.push1(member.object) }
     function pushproperty (member) { return member.computed ? Nasus.push2(member.property) : member.property.name }
     function popmember (member) { return Esvisit.BE.Member(Nasus.pop1(), member.computed ? Nasus.pop2() : member.property.name) }
 
-    expressions.Logical = function (expr) {
-      return Esvisit.BE.Conditional(
-        Nasus.push(expr.left),
-        (expr.operator === "||") ? Nasus.pop() : Esvisit.BE.Sequence([Nasus.pop(), expr.right]),
-        (expr.operator === "||") ? Esvisit.BE.Sequence([Nasus.pop(), expr.right]) : Nasus.pop()
-      )
-    }
-
-    expressions.IdentifierAssignment = function (expr) {
+    onexpressions.IdentifierAssignment = function (expr) {
       if (expr.operator === "=") { return }
       return Esvisit.BE.IdentifierAssignment(
         "=",
@@ -70,7 +93,7 @@ module.exports = function (visit, mark) {
       )
     }
 
-    expressions.MemberAssignment = function (expr) {
+    onexpressions.MemberAssignment = function (expr) {
       if (expr.operator === "=") { return }
       return Esvisit.BE.MemberAssignment(
         "=",
@@ -84,7 +107,7 @@ module.exports = function (visit, mark) {
       )
     }
 
-    expressions.IdentifierUpdate = function (expr) {
+    onexpressions.IdentifierUpdate = function (expr) {
       var ass = Esvisit.BE.IdentifierAssignment(
         "=",
         expr.argument.name,
@@ -98,7 +121,7 @@ module.exports = function (visit, mark) {
       return Esvisit.BE.Sequence([ass, Nasus.pop()])
     }
 
-    expressions.MemberUpdate = function (expr) {
+    onexpressions.MemberUpdate = function (expr) {
       var ass = Esvisit.BE.MemberAssignment(
         "=",
         pushobject(expr.argument),
@@ -115,19 +138,19 @@ module.exports = function (visit, mark) {
 
   }
 
-  reducemodule()
+  assignmentmodule()
 
   ////////////
   // Strict //
   ////////////
 
-  statements.Strict = function (stmt) { return Esvisit.BS.Empty() }
+  onstatements.Strict = function (stmt) { return Esvisit.BS.Empty() }
 
   //////////////////////
   // Inline Accessors //
   //////////////////////
 
-  expressions.Object = function (expr) {
+  onexpressions.Object = function (expr) {
     var hasaccessor = false
     var accessors = {}
     var datadescriptors = []
@@ -151,7 +174,7 @@ module.exports = function (visit, mark) {
       if (accessors[key].set) { descriptors.push(Esvisit.BuildInitProperty("set", accessors[key].set)) }
       accessordescriptors.push(Esvisit.BuildInitProperty(key, Esvisit.BE.Object(descriptors)))
     }
-    return Shadow("preserved", "defineproperties", [Esvisit.BE.Object(datadescriptors), Esvisit.BE.Object(accessordescriptors)])
+    return Shadow("defineproperties", [Esvisit.BE.Object(datadescriptors), Esvisit.BE.Object(accessordescriptors)])
   }
 
   ////////////
@@ -168,7 +191,7 @@ module.exports = function (visit, mark) {
     function pop () { stack.pop() }
     function get () { return Util.last(stack) ? ("switch"+Util.last(stack)) : null }
 
-    statements.Switch = function (stmt) {
+    onstatements.Switch = function (stmt) {
       stack.push(++counter)
       mark(pop)
       var stmts = [Esvisit.BS.Expression(Nasus.push(stmt.discriminant))]
@@ -179,18 +202,18 @@ module.exports = function (visit, mark) {
       return Esvisit.BS.Label(get(), Esvisit.BS.Try(stmts, null, null, [Esvisit.Halt(Esvisit.BS.Expression(Nasus.pop()))]))
     }
 
-    statements.Label = function (stmt) { escape(stmt.label) }
-    statements.Continue = function (stmt) { if (stmt.label) { escape(stmt.label) } }
-    statements.Break = function (stmt) {
+    onstatements.Label = function (stmt) { escape(stmt.label) }
+    onstatements.Continue = function (stmt) { if (stmt.label) { escape(stmt.label) } }
+    onstatements.Break = function (stmt) {
       if (stmt.label) { escape(stmt.label) }
       else if (get()) { return Esvisit.BS.Break(get()) }
     }
 
-    statements.While = mask
-    statements.DoWhile = mask
-    statements.For = mask
-    statements.IdentifierForIn = mask
-    statements.MemberForIn = mask
+    onstatements.While = mask
+    onstatements.DoWhile = mask
+    onstatements.For = mask
+    onstatements.IdentifierForIn = mask
+    onstatements.MemberForIn = mask
 
   }
 
@@ -200,6 +223,6 @@ module.exports = function (visit, mark) {
   // Return //
   ////////////
 
-  return function (ast) { visit(ast, statement, expression) }
+  return function (ast) { visit(ast, onstatement, onexpression) }
 
 }

@@ -33,6 +33,7 @@ exports.traps = {
     F.prototype = f.prototype;
     return new F()
   },
+  has: function (o, p) { return (log("has", o, p), p in o) },
   get: function (o, p) { return (log("get", o, p), o[p]) },
   set: function (o, p, v) { return (log("set", o, p, v), o[p]=v) },
   delete: function (o, p) { return (log("delete", o, p), delete o[p]) },
@@ -43,5 +44,4 @@ exports.traps = {
     return ps
   },
   erase: function (r, p) { return log("erase", r, p) },
-  exist: function (o, p) { return (log("exist", o, p), p in o) }
 };

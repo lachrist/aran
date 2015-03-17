@@ -14,8 +14,6 @@ var Shadow = require("../syntax/shadow.js")
 
 module.exports = function (visit, mark, traps) {
 
-  if (!traps) { return Util.nil }
-
   function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }
   function onexpression (type, expr) { if (onexpressions[type]) { return onexpressions[type](expr) } }
 
@@ -23,12 +21,15 @@ module.exports = function (visit, mark, traps) {
   // Helpers //
   /////////////
 
-  function booleanize (test, place) {
+  function booleanize (test, cause) {
     if (!traps.booleanize) { return test }
-    return Shadow("traps", "booleanize", [test, Esvisit.BE.literal(place)])
+    return Shadow("traps", "booleanize", [test, Esvisit.BE.Literal(cause)])
   }
 
-  function undef(place) { return Shadow("traps", "undefined", [Esvisit.BE.Literal(place)]) }
+  function undef(cause) {
+    if (!traps.undefined) { return Shadow("undefined") }
+    return Shadow("traps", "undefined", [Esvisit.BE.Literal(cause)])
+  }
 
   function property (member) { return member.computed ? member.property : Esvisit.BE.Literal(member.property.name) }
 
@@ -38,7 +39,7 @@ module.exports = function (visit, mark, traps) {
     var pops = [Nasus.pop()]
     if (type === "MemberForIn") {
       pushes.push(Nasus.push1(node.left.object))
-      pushes.push(Nasus.push2(property(node.left.property)))
+      pushes.push(Nasus.push2(property(node.left)))
       pops.push(Nasus.pop1())
       pops.push(Nasus.pop2())
     }
@@ -51,9 +52,9 @@ module.exports = function (visit, mark, traps) {
       if (traps.set) { ass = Shadow("traps", "set", [Nasus.get1(), Nasus.get2(), right]) }
       else { ass = Esvisit.BE.MemberAssignment(Nasus.get1(), Nasus.get2(), right) }
     }
-    var trystmts = [Esvisit.BE.For(
+    var trystmts = [Esvisit.BS.For(
       null,
-      Esvisit.BE.binary("<", Nasus.get(), Esvisit.BE.Member(Nasus.get3(), "length")),
+      Esvisit.BE.Binary("<", Nasus.get(), Esvisit.BE.Member(Nasus.get3(), "length")),
       Nasus.push(Esvisit.BE.Binary("+", Nasus.pop(), Esvisit.BE.Literal(1))),
       Esvisit.BS.Block([Esvisit.BS.Expression(ass), node.body])
     )]
@@ -62,11 +63,7 @@ module.exports = function (visit, mark, traps) {
     return Esvisit.BE.Block(stmts)
   }
 
-  function call (node) {
-    var args = [node.callee, traps.undefined?undef("context"):Shadow("undefined"), Esvisit.BE.Array(node.arguments)]
-    if (traps.apply) { return Shadow("traps", "apply", args) }
-    if (traps.undefined) { return Shadow("apply", args) }
-  }
+  function call (node) { if (traps.apply) { return Shadow("traps", "apply", [node.callee, Shadow("global", Esvisit.BE.Array(node.arguments))]) } }
 
   ///////////////
   // Statement //
@@ -76,16 +73,16 @@ module.exports = function (visit, mark, traps) {
 
   onstatements.If = function (node) { node.test = booleanize(node.test, node.alternate?"if-else":"if") }
 
-  onstatements.Return = function (node) { if (traps.undefined && !node.argument) { node.argument = undef("empty-return") } }
+  onstatements.Return = function (node) { if (!node.argument) { node.argument = undef("empty-return") } }
 
   onstatements.Throw = function (node) { if (traps.throw) { node.argument = Shadow("traps", "throw", [node.argument]) } }
 
   onstatements.Try = function (node) {
     if (node.handlers[0] && traps.catch) {
-      node.handlers[0].body.body.unshift(bs.Expression(be.IdentifierAssignment(
+      node.handlers[0].body.body.unshift(Esvisit.BS.Expression(Esvisit.BE.IdentifierAssignment(
         "=",
         node.handlers[0].param.name,
-        Shadow("traps", "catch", [be.Identifier(node.handlers[0].param.name)]))
+        Shadow("traps", "catch", [Esvisit.BE.Identifier(node.handlers[0].param.name)]))
       ))
     }
   }
@@ -138,14 +135,14 @@ module.exports = function (visit, mark, traps) {
 
   onexpressions.Object = function (node) { if (traps.object) { return Shadow("traps", "object", [Esvisit.BE.Object(node.properties)]) } }
 
-  onexpressions.Function = function (node) {
+  onexpressions.HoistedFunction = function (node) {
     if (traps.arguments) {
       var check = true
       node.params.forEach(function (id) { if (id.name === "arguments") { check = false } })
-      if (check) { node.body.body.unshift(Esvisit.BS.Expression(Esvisit.BE.IdentifierAssignment("arguments", Shadow("traps", "arguments", [Esvisit.BE.Identifier("arguments")])))) }
+      if (check) { node.body.body.splice(1, 0, Esvisit.BS.Expression(Esvisit.BE.IdentifierAssignment("arguments", Shadow("traps", "arguments", [Esvisit.BE.Identifier("arguments")])))) }
     }
     if (traps.undefined) {
-      node.body.body.unshift(Esvisit.BS.Block(node.params.map(function (id) {
+      node.body.body.splice(1, 0, (Esvisit.BS.Block(node.params.map(function (id) {
         return Esvisit.BS.If(
           Esvisit.BE.Binary(
             "===",
@@ -155,9 +152,13 @@ module.exports = function (visit, mark, traps) {
             Esvisit.BE.IdentifierAssignment(
               "=",
               Esvisit.BE.Identifier(id.name),
-              undef("argument"))))
-      })))
-      node.body.body.push(Esvisit.BS.Return(undef("return")))
+              undef("argument-"+id.name))))
+      }))))
+      if (node.body.body[0].declarations) {
+        var assignments = node.body.body[0].declarations.map(function (dec) { return Esvisit.BE.IdentifierAssignment("=", dec.id.name, undef("variable-"+dec.id.name)) })
+        if (assignments.length === 1) { node.body.body.splice(1, 0, Esvisit.BS.Expression(assignments[0])) }
+        else if (assignments.length) { node.body.body.splice(1, 0, Esvisit.BS.Expression(Esvisit.BE.Sequence(assignments))) }
+      }
     }
     if (traps.function) { return Shadow("traps", "function", [Esvisit.BE.Function(node.params, node.body.body)]) }
   }
@@ -174,13 +175,13 @@ module.exports = function (visit, mark, traps) {
 
   onexpressions.Conditional = function (node) { node.test = booleanize(node.test, "?:") }
 
-  // We direct eval call in stage/hoist.js
+  // We handle direct eval call in stage/hoist.js
   onexpressions.EvalCall = call
 
   // EXPR1.EXPR2(ARGS)
   //   traps.apply && traps.get >>> aran.traps.apply(aran.traps.get(aran.push(EXPR1), EXPR2), Nasus.pop(), [ARGS])
   //                  traps.get >>> aran.apply(aran.aran.traps.get(aran.push(EXPR1), EXPR2), Nasus.pop(), [ARGS])
-  //   traps.apply              >>> aran.traps.apply(Nasus.push(EXPR1).EXPR2, Nasus.pop(), [ARGS]) 
+  //   traps.apply              >>> aran.traps.apply(Nasus.push(EXPR1).EXPR2, Nasus.pop(), [ARGS])
   //                            >>> EXPR1.EXPR2(ARGS)
   onexpressions.MemberCall = function (node) {
     var get = traps.get
@@ -201,10 +202,37 @@ module.exports = function (visit, mark, traps) {
     else if (traps.primitive) { return Shadow("traps", "primitive", [Esvisit.BE.Literal(node.value)]) }
   }
 
+  // undefined >>> (undefined === aran.undefined) ? aran.traps.undefined("identifier") : undefined
+  onexpressions.Identifier = function (node) {
+    if (traps.undefined && (node.name === "undefined")) {
+      return Esvisit.BE.Conditional(
+        Esvisit.BE.Binary(
+          "===",
+          Esvisit.BE.Identifier("undefined"),
+          Shadow("undefined")),
+        undef("identifier"),
+        Esvisit.BE.Identifier("undefined"))
+    }
+  }
+
   ////////////
   // Return //
   ////////////
 
-  return function (ast) { visit(ast, onexpression, onstatement) }
+  // var x = x === aran.undefined ? aran.traps.undefined("variable-x") : x
+  return function (ast, topvars) {
+    visit(ast, onstatement, onexpression)
+    var declarators = topvars.map(function (name) {
+      return Esvisit.BuildDeclarator(name, (!traps.undefined) ? null : Esvisit.BE.Conditional(
+        Esvisit.BE.Binary(
+          "===",
+          Esvisit.BE.Identifier(name),
+          Shadow("undefined")),
+        undef("variable-"+name),
+        Esvisit.BE.Identifier(name)))
+    })
+    if (declarators.length) { ast.body.unshift(Esvisit.BS.Declaration(declarators)) }
+    topvars.length = 0
+  }
 
 }

@@ -1,4 +1,6 @@
 
+// Assemble compilations stages and define aran.compile
+
 var Esprima = require("esprima")
 var Esvisit = require("esvisit")
 var Esvalid = require("esvalid")
@@ -6,11 +8,11 @@ var Escodegen = require("escodegen")
 
 var Util = require("../util.js")
 
-var Hook = require("../stage/hook.js")
+var Hooks = require("../stage/hooks.js")
 var Sanitize = require("../stage/sanitize.js")
 var Hoist = require("../stage/hoist.js")
 var Sandbox = require("../stage/sandbox.js")
-var Trap = require("../stage/trap.js")
+var Traps = require("../stage/traps.js")
 
 function summarize (error) {
   var sum = error.message+" for node:";
@@ -26,19 +28,22 @@ module.exports = function (aran) {
   }
 
   var esv = Esvisit.Prepare()
-  var hookstage = Hook(esv.visit, esv.mark, aran.hooks)
-  var sanitizestage = Sanitize(esv.visit, esv.mark)
-  var hoiststage = Hoist(esv.visit, esv.mark, Boolean(aran.sandbox))
-  var sandboxstage = Sandbox(esv.visit, esv.mark, Boolean(aran.sandbox))
-  var trapstage = Trap(esv.visit, esv.mark, aran.traps)
+  var hooksstage    = aran.hooks   ? Hooks(esv.visit, esv.mark, aran.hooks)     : Util.nil
+  var sanitizestage =                Sanitize(esv.visit, esv.mark)
+  var hoiststage    =                Hoist(esv.visit, esv.mark)
+  var sandboxstage  = aran.sandbox ? Sandbox(esv.visit, esv.mark, aran.sandbox) : Util.nil
+  var trapsstage    = aran.traps   ? Traps(esv.visit, esv.mark, aran.traps)     : Util.nil
 
   function compile (local, code) {
     var ast = Esprima.parse(code, options)
-    hookstage(ast)
+    var topvars = []
+    hooksstage(ast)
     sanitizestage(ast)
-    hoiststage(local, ast)
-    sandboxstage(local, ast)
-    trapstage(ast)
+    hoiststage(local, ast, topvars)
+    sandboxstage(local, ast, topvars)
+    trapsstage(ast, topvars)
+    var declarators = topvars.map(function (name) { return Esvisit.BuildDeclarator(name, null) })
+    if (declarators.length) { ast.body.unshift(Esvisit.BS.Declaration(declarators)) }
     var errors = Esvalid.errors(ast)
     if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
     return Escodegen.generate(ast)

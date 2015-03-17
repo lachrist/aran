@@ -6,8 +6,6 @@ var Shadow = require("../syntax/shadow.js")
 
 module.exports = function (visit, mark, hooks) {
 
-  if (!hooks) { return Util.nil }
-
   function hook (type, range, loc, infos) {
     if (hooks.EndLoc) { infos.unshift(loc.end.line+"-"+loc.end.column) }
     if (hooks.StartLoc) { infos.unshift(loc.start.line+"-"+loc.start.column) }
@@ -16,7 +14,7 @@ module.exports = function (visit, mark, hooks) {
     return Esvisit.Halt(Shadow("hooks", type, infos.map(Nodify)))
   }
 
-  function statement (type, stmt) {
+  function onstatement (type, stmt) {
     if (hooks[type]) {
       return Esvisit.BS.Block([
         Esvisit.BS.Expression(hook(type, stmt.range, stmt.loc, Esvisit.ExtractStatement(stmt))),
@@ -24,7 +22,7 @@ module.exports = function (visit, mark, hooks) {
     }
   }
 
-  function expression (type, expr) {
+  function onexpression (type, expr) {
     if (hooks[type]) {
       return Esvisit.BE.Sequence([
         hook(type, expr.range, expr.loc, Esvisit.ExtractExpression(expr)),
@@ -34,7 +32,7 @@ module.exports = function (visit, mark, hooks) {
 
   return function (ast) {
     if (hooks.Program) { node.body.unshift(Esvisit.BS.Expression(hook("Program", ast.loc, ast.range, [node.body.length]))) }
-    visit(ast, statement, expression)
+    visit(ast, onstatement, onexpression)
   }
 
 }

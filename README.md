@@ -34,7 +34,11 @@ See https://github.com/lachrist/aran-demo!
 
 ## Sandbox
 
-As stated above, the sandbox parameter will act in all point as if it was the global object of the code being analyzed. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `get`, `set` and `binary` are implemented, the sandbox parameter can be of any type, otherwise should probably be a JavaScript object.
+As stated above, the sandbox parameter will act in all point as if it was the global object of the code being analyzed. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `has`, `get`, `set` and `delete` are implemented, the sandbox parameter can be of any type, otherwise should probably be a JavaScript object.
+
+Two sandbox properties have a particular status:
+  * `eval`: letting the target code accessing the original `eval` function enable direct eval call, any other value will prevent the target to perform direct eval call.
+  * `undefined`: hidding merely prevent the target code to access the `undefined` value with an identifier named `'undefined'`, if you want to catch all appearance of the `undefined` value you should use `traps.undefined` instead.
 
 ## Hooks
 
@@ -42,98 +46,53 @@ Hooks are functions that are called before executing statements and expressions.
 
 ## Traps
 
-Unlike hooks, traps are designed to modify the semantic of the code being analyzed. They are useful for implementing shadow execution and, in general, any dynamic analysis that requires runtime values. Traps have been designed to provide a minimal interface for piloting JavaScript semantic. That is that many non-fundamental JavaScript statements / expressions of such as `x++` have been destructed to be expressed with simpler concepts. All traps are optional.
+Unlike hooks, traps are designed to modify the semantic of the code being analyzed. They are useful for implementing shadow execution and, in general, any dynamic analysis that requires runtime values. Traps have been designed to provide a minimal interface for piloting JavaScript semantic. That is that many non-fundamental JavaScript statements / expressions of such as `x++` have been destructed to be expressed with simpler concepts. All traps are optional. Traps are listed in the table below, traps arguments that start with a capital letters are raw (unintercepted) value, while traps arguments that start with a lower case letter are intercepted values.
 
-Trigger | Trap | Target | Transformed
-:-------|:-----|:-------|:-----------
-Primitive creation | `primitive(Value)` | `'foo'` | `aran.traps.primitive('foo')`
-Object creation | `object(Object)` | `{a:x}` | `aran.traps.object({a:x})`
-Array creation | `array(Array)` | `[x,y,z]` | `aran.traps.array([x,y,z])`
-Arguments creation | `arguments(Arguments)` | `function () {}` | `aran.traps.function(function () { arguments = aran.traps.arguments(arguments) })`
-Function creation | `function(Function)` | `function () {}` | `aran.traps.function(function () { arguments = aran.traps.arguments(arguments) })`
-Regexp creation | `regexp(Regexp)` | `/abc/g` | `aran.traps.regexp(/abc/g)`
-Conversion to boolean | `booleanize(value, Usage)` | `x?:y:z` | `aran.traps.booleanize(x, '?:')?y:z`
-Conversion to string | `stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
-Throw an exception | `throw(value)` | `throw x` | `throw aran.traps.throw(x)`
-Catch an exception | `catch(value)` | `try {} catch (e) {}` | `try {} catch (e) { e = aran.traps.catch(e) }` 
-Unary operation | `unary(Operator, argument)` | `!x` | `aran.traps.unary('!', x)`
-Binary operation | `binary(Operator, left, right)` | `x+y` | `aran.traps.binary('+', x, y)`
-Function application | `apply(function, this, Arguments)` | `f(x, y)` | `aran.traps.apply(f, undefined, [x,y])`
-Instantiation | `new(function, Arguments)` | `new F(x, y)` | `aran.traps.new(F, [x,y])`
-Property reading | `get(object, property)` | `o[k]` | `aran.traps.get(o, k)`
-Property writing | `set(object, property)` | `o[k] = v` | `aran.traps.set(o, k, v)`
-Property deletion | `delete(object, property)` | `delete o[k]` | `aran.traps.delete(o, k)`
-Property enumeration | `enumerate(object)` | `for ... in` | Its complicated...
-Binding existence | `exist(object, Identifier)` | Its complicated... | Its complicated...
-Binding removal | `erase(Result, Identifier)` | `delete x` | `aran.traps.erase(delete x, 'x')`
+ Trap | Target | Transformed
+:-----|:-------|:-----------
+`primitive(Value)` | `'foo'` | `aran.traps.primitive('foo')`
+`undefined(Cause)` | `return` | `return aran.traps.undefined('empty-return')`
+`object(Object)` | `{a:x}` | `aran.traps.object({a:x})`
+`array(Array)` | `[x,y,z]` | `aran.traps.array([x,y,z])`
+`arguments(Arguments)` | `function () {}` | `aran.traps.function(function () { arguments = aran.traps.arguments(arguments) })`
+`function(Function)` | `function () {}` | `aran.traps.function(function () { arguments = aran.traps.arguments(arguments) })`
+`regexp(Pattern, Flags)` | `/abc/g` | `aran.traps.regexp("abc", "g")`
+`booleanize(value, Cause)` | `x?:y:z` | `aran.traps.booleanize(x, '?:')?y:z`
+`stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
+`throw(exception)` | `throw x` | `throw aran.traps.throw(x)`
+`catch([E/e]xception)` | `try {} catch (e) {}` | `try {} catch (e) { e = aran.traps.catch(e) }`
+`unary(Operator, argument)` | `!x` | `aran.traps.unary('!', x)`
+`binary(Operator, left, right)` | `x+y` | `aran.traps.binary('+', x, y)`
+`apply(function, this, Arguments)` | `f(x, y)` | `aran.traps.apply(f, undefined, [x,y])`
+`new(function, Arguments)` | `new F(x, y)` | `aran.traps.new(F, [x,y])`
+`get(object, [P/p]roperty)` | `o[k]` | `aran.traps.get(o, k)`
+`set(object, [P/p]roperty)` | `o[k] = v` | `aran.traps.set(o, k, v)`
+`delete(object, [P/p]roperty)` | `delete o[k]` | `aran.traps.delete(o, k)`
+`enumerate(object)` | `for ... in` | Its complicated...
+`exist(object, Property)` | Its complicated... | Its complicated...
+`erase(Identifier, Result)` | `delete x` | `aran.traps.erase('x', delete x)`
 
-Additional remarks:
+### Remarks
 
-* `primitive`: primitive creation arise on the following literals: `null`, `false`, `true`, numbers and strings.
+* `primitive`: primitive creation arise on the following literals:
+    * `null`
+    * `false`
+    * `true`
+    * numbers
+    * strings
 
-* `object`: literal objects verify the below assertion:
+* `undefined`: valid `Cause` parameters are:
+    * `'empty-return'`: return statement without argument.
+    * `'no-return'`: function ending without any return statement.
+    * `'argument-ID'`: `ID` is the name of the argument being undefined.
+    * `'variable-ID'`: `ID` is the name of the variable being undefined.
+    * `identifier`: identifier named `'undefined'` accessing the `undefined` value.
 
-    ```javascript
-    assert(Object.getPrototypeOf({}) === Object.prototype);
-    ```
+* `object`: guaranteed to contain plan data field whose values have been recursively intercepted. In particular, inline accessors (see: http://www.ecma-international.org/ecma-262/5.1/#sec-11.1.5) have been deplaced to a call to `Object.defineProperties`.
 
-    Note that ECMAScript5 enables accessor properties to be defined directly within object initializers ; see: defined http://www.ecma-international.org/ecma-262/5.1/#sec-11.1.5. In that case, accessors are unwrapped functions.
+* `array`: elements have been intercepted.
 
-* `array`: literal arrays verify below assertions:
-
-    ```javascript
-    var xs = [];
-    assert(Object.getPrototypeOf(xs) === Array.prototype);
-    assert(JSON.stringify(Object.getOwnPropertyDescriptor(xs, 'length')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
-    ```
-
-    Moreover the `length` property of JavaScript arrays has a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
-
-* `arguments`: arguments objects verify the below assertions:
-
-   ```javascript
-   assert(Object.getPrototypeOf(arguments) === Object.prototype);
-   assert(JSON.stringify(Object.getOwnPropertyDescriptor(arguments, 'length')) === '{"value":@#ARG,"writable":true,"enumerable":false,"configurable":true}');
-   assert(JSON.stringify(Object.getOwnPropertyDescriptor(arguments, 'callee')) === '{"writable":true,"enumerable":false,"configurable":true}');
-   assert(JSON.stringify(Object.getOwnPropertyDescriptor(arguments, "0")) === '{"value":@ARG0,"writable":true,"enumerable":true,"configurable":true}');
-   ```
-
-   Where `@#PARAMS` is the number of passed arguments.
-   Where `@ARG0` is the value of the first passed parguments (if any).
-   Also, the value of `arguments.callee` is set to the called function.
-   Attention, `arguments` points to the same locations as the ones pointed by the formal parameters ; changing the value of a formal parameter also change the value of the corresponding argument's number field.
-   The behaviors described above do not hold in strict mode (which is ignored by Aran anyway).
-
-* `function`: user-defined functions verify below assertions:
-
-    ```javascript
-    var f = function (@PARAMS) { @BODY };
-    assert(Object.getPrototypeOf(f) === Function.prototype);
-    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f, 'length')) === '{"value":@#PARAMS, "writable":false,"enumerable":false,"configurable":false}');
-    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f, 'prototype')) === '{"value":{},"writable":true,"enumerable":false,"configurable":false}');
-    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f.prototype, 'constructor')) === '{"writable":true,"enumerable":false,"configurable":true}');
-    assert(f.prototype.constructor === f);
-    ```
-
-    Where `@#PARAMS` is the number of formal parameters.
-
-* `regexp`: literal regular expressions verify below assertions:
-
-    ```javascript
-    var r = /@PATTERN/@FLAGS;
-    assert(Object.getPrototypeOf(r) === Regexp.prototype);
-    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'global')) === '{"value":@GFLAG,"writable":false,"enumerable":false,"configurable":false}');
-    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'ignoreCase')) === '{"value":@IFLAG,"writable":false,"enumerable":false,"configurable":false}');
-    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'multiline')) === '{"value":@MFLAG,"writable":false,"enumerable":false,"configurable":false}');
-    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'lastIndex')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
-    ```
-
-    Where:
-    * `@GFLAG` is a boolean indicating whether `@FLAGS` contains the character `g`;
-    * `@IFLAG` is a boolean indicating whether `@FLAGS` contains the character `i`;
-    * `@MFLAG` is a boolean indicating whether `@FLAGS` contains the character `m`;
-
-* `booleanize`: valid `Usage` parameters are:
+* `booleanize`: valid `Cause` parameters are:
     * `'if'`
     * `'if-else'`
     * `'while'`
@@ -141,7 +100,7 @@ Additional remarks:
     * `'for'`
     * `'?:'`
 
-* `stringify`: only call for performing direct call to `eval` as defined in http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
+* `stringify`: only used to perform direct call to `eval` as defined in http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
 
 * `unary`: valid `Operator` are:
     * `'-'`
@@ -175,23 +134,75 @@ Additional remarks:
     * `'instanceof'`
     * `'..'`
 
-* `get`, `set`, `delete`: The `property` parameter can either be: (i) a raw string if came from a static property access, (ii) a wrapped value if it came from a computed member expression.
+* `get`, `set`, `delete`: The `property` parameter can either be:
+    * A raw string if it came from a static property access (e.g. `o.a`).
+    * A wrapped value if it came from a computed member expression (e.g. `o["a"]`).
 
-* `exist`: triggered when the scope lookup hits a `with` statement or the global object. The value returned by this trap should indcate whether the identifier exists in the environment-object. In the case of a `with` statement, a false value will make the lookup propagate to the enclosing scope. In the case of the global object, a false value will trigger a reference error.
+* `exist`: triggered when scope lookup hits a `with` statement or the global object. The value returned by this trap should indcate whether the identifier exists in the environment-object. In the case of a `with` statement, a false value will make the lookup propagate to the enclosing scope. In the case of the global object, a false value will trigger a reference error.
 
+
+### Precision concerning JavaScript
+
+You are free to return the value you want from trap calls, however be aware that doing so carelessly will most likely result into a modification of JavaScript semantic. For instance you are free to say that `1+1 = 11` (JCVD was right after all) but the target program will not behave the same after instrumentation. For those of you who want to stick close to JavaScript semantic here is a list of things to keep in mind when implementing traps:
+
+* `object`: object literals verify below assertions:
+
+    ```javascript
+    var o = {a:1}
+    assert(Object.getPrototypeOf(o) === Object.prototype);
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(o, 'a')) === '{"value":1,"writable":true,"enumerable":true,"configurable":true}')
+    ```
+
+* `array`: array literals verify below assertions:
+
+    ```javascript
+    var xs = [1,2,3];
+    assert(Object.getPrototypeOf(xs) === Array.prototype);
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(xs, 1)) === '{"value":2,"writable":true,"enumerable":true,"configurable":true}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(xs, 'length')) === '{"value":3,"writable":true,"enumerable":false,"configurable":false}');
+    ```
+
+    N.B.: The `length` property of JavaScript arrays has a special behavior described in http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.
+
+* `arguments`: pure data objects whose keys are numbers ; arguments objects verify the below assertions:
+
+   ```javascript
+   function f (x1, x2) {
+     assert(Object.getPrototypeOf(arguments) === Object.prototype);
+     assert(arguments.callee === f);
+     assert(JSON.stringify(Object.getOwnPropertyDescriptor(arguments, 'callee')) === '{"writable":true,"enumerable":false,"configurable":true}');
+     assert(JSON.stringify(Object.getOwnPropertyDescriptor(arguments, 'length')) === '{"value":5,"writable":true,"enumerable":false,"configurable":true}');
+     assert(JSON.stringify(Object.getOwnPropertyDescriptor(arguments, 1)) === '{"value":12,"writable":true,"enumerable":true,"configurable":true}');
+   }
+   f(11,12,13,14,15);
+   ```
+
+   N.B.: The `arguments` object points to the same locations as the ones pointed by the formal parameters ; changing the value of a formal parameter also change the value of the corresponding argument's number field. Consequently, if `traps.undefined` is implemented, undefined arguments will be updated.  The behaviors described above do not hold in strict mode (which is ignored by Aran anyway).
+
+* `function`: function literals verify below assertions:
+
+    ```javascript
+    var f = function (x, y, z) { return x+y+z };
+    assert(Object.getPrototypeOf(f) === Function.prototype);
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f, 'length')) === '{"value":3,"writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f, 'prototype')) === '{"value":{},"writable":true,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(f.prototype, 'constructor')) === '{"writable":true,"enumerable":false,"configurable":true}');
+    assert(f.prototype.constructor === f);
+    ```
+
+* `regexp`: regular expression literals verify below assertions:
+
+    ```javascript
+    var r = /abc/gi;
+    assert(Object.getPrototypeOf(r) === RegExp.prototype);
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'global')) === '{"value":true,"writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'ignoreCase')) === '{"value":true,"writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'multiline')) === '{"value":false,"writable":false,"enumerable":false,"configurable":false}');
+    assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'lastIndex')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
+    ```
 
 ## ToDo
 
 * Support strict mode (currently being ignored).
 * Support last valued expression e.g.: `eval('if (true) 1; else 2;')`.
-* Figure out what to do with `undefined` (there so many place where it can appear that `undefined` is simply not caught).
-  1. Unbound this argument (in strict mode)
-  2. Unbound parameters
-  3. No return statement
-  4. Empty return statement
-  5. Uninitialized variable
-* Add code location to hooks (first figure what a code location exactly is in JavaScript).
-* Hoist variable declarations (for now, only functions are hoisted).
-* Problaly, initialize top level variable declarations (`var x` is different from `var x = undefined`).
-* Remove implicit assumptions made by compilation stages.
 * Statically optimize traps insertion (for now traps existence are checked during compilation while they could be checked only once).
