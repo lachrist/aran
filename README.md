@@ -10,21 +10,45 @@ This module exposes a function that expects three arguments:
 * `hooks`: a set of functions used for tracing purposes.
 * `traps`: a set of functions for intercepting runtime values.
 
-And returns a function that will perform the dynamic analysis on any given code string.
+Aran returns a function that will perform the dynamic analysis on any given code string.
 
 ```javascript
 var Aran = require('aran');
-var sandbox = ...
-var hooks = ...
-var traps = ...
-var run = Aran(sandbox, hooks, traps)
-var input = {code:...}
-var result = run(input)
-console.log(input.compiled)
-console.log(result)
+/* A very strict sandbox that only allow Math access */
+var sandbox = {
+  undefined: undefined,
+  Math:Math
+};
+/* Trace binary operations */
+var hooks = {
+  MinLoc: true,
+  Binary: function (loc, op) { console.log('Binary operation '+op+' at '+loc) }
+};
+/* Disable unary operations; count function calls */
+var fcts = [];
+var traps = {
+  unary: function (op, arg) { throw new Error('Unary operation disabled') }
+  function: function (fct) {
+    fcts.push(fct);
+    fct.__counter__ = 0;
+    return fct;
+  },
+  apply: function (fct, th, args) {
+    fct.__counter__++;
+    return fct.apply(th, args);
+  }
+};
+/* Run Aran and show results */
+var run = Aran(sandbox, hooks, traps);
+var target = ...;
+var input = {code:target};
+var result = run(input);
+console.log(input.compiled);
+console.log(result);
+console.log(fcts.map(function (fct) {return fct.__counter__ }));
 ```
 
-Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has been designed to be run along the code being instrumented which enables to intercept and transform every bit of JavaScript code being evaluated at runtime. Aran is sufficiently robust to be used for security purposes however be aware that unintercepted code have the ability to mess things up. For instance running `delete window.Aran` cannot be good for Aran's health.
+Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has been designed to be run along the code being instrumented and intercept every bit of JavaScript code. Running unintercepted JavaScript code can easily mess things up, for instance `aran.sandbox.dangerous = window.dangerous` will allow sanboxed code to access a dangerous field of the global object.
 
 ## Demonstration
 
@@ -34,15 +58,23 @@ Download the files `demo/demo.html` and `demo/bundle.js` and put them into the s
 
 ## Sandbox
 
-As stated above, the sandbox parameter will act in all point as if it was the global object of the code being analyzed. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `has`, `get`, `set` and `delete` are implemented, the sandbox parameter can be of any type, otherwise should probably be a JavaScript object.
-
-Two sandbox properties have a particular status:
-  * `eval`: letting the target code accessing the original `eval` function enable direct eval call, any other value will prevent the target to perform direct eval call.
-  * `undefined`: hidding merely prevent the target code to access the `undefined` value with an identifier named `'undefined'`, if you want to catch all appearance of the `undefined` value you should use `traps.undefined` instead.
+As stated above, the sandbox parameter will act in all point as if it was the global object of the code being analyzed. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `has`, `get`, `set` and `delete` are implemented, the sandbox can be of any type, otherwise it should be a JavaScript object. Two sandbox properties have a particular status:
+  * `eval`: Letting the target code accessing the original `eval` function enables direct eval call ; any other value will prevent the target to perform direct eval call. Roughly, `eval(x)` is compiled into a conditional expression where the consequent is a direct eval call and the alternative a normal function call:
+    ```javascript
+    (eval === aran.eval) ? eval(aran.compile(x)) : eval(x)
+    ```
+  * `undefined`: Because of `undefined` omnipresence, it does not really makes sense to rule it out of the sandbox. If the sandbox does not contain an undefined entry (i.e.: `sandobx['undefined'] = undefined`), it will merely prevent the target code to explicitely access `undefined` using an identifier. If you want to intercept any appearance of `undefined` (undefined arguments, empty return, etc) you should implement `traps.undefined` instead. Assuming that the sandbox verifies `sandbox['undefined'] = undefined`, the trap will be trigger on explicit `undefined` reference as well. More technically, `undefined` identifiers are compiled into the below conditional: 
+    ```javascript
+    (undefined === aran.undefined) ? aran.traps.undefined('identifier') : undefined
+    ``` 
 
 ## Hooks
 
-Hooks are functions that are called before executing statements and expressions. Hooks follow the AST types described in https://github.com/lachrist/esvisit and will recieved the corresponding syntactic information. All hooks are optional. 
+Hooks are functions that are called before executing statements and expressions. Hooks follow the AST types described in https://github.com/lachrist/esvisit and will recieved the corresponding syntactic information. All hooks are optional. Additionally you can specify four properties:
+  * `MinRange`
+  * `MaxRange` 
+  * `MinLoc`
+  * `MaxLoc` 
 
 ## Traps
 
