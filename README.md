@@ -1,22 +1,22 @@
 # Aran <img src="aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
 
-Aran is a npm module for facilitating the development of JavaScript dynamic analysis tools. Aran is based on a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: sandboxing, tracing and symbolic execution. To install it, simply run: `npm install aran`.
+Aran is a npm module for facilitating the instrumentation of JavaScript programs. Aran is based on a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: sandboxing, tracing and symbolic execution. To install: `npm install aran`.
 
-**Attention, Aran uses ECMAScript6 Harmony Proxies which is currently supported by Node (with the `--harmony` flag) and Firefox; this module will NOT work on Safari, Chrome and Internet Explorer!!!**
+**Attention, Aran uses ECMAScript6 Harmony Proxies which is currently only well supported by Firefox; sanboxing and `with` statements will make Aran crash on Node, Safari, Chrome and Internet Explorer!!!**
 
 This module exposes a function that expects three arguments:
 
-* `sandbox`: a value used as the global object for evaluating the code to be analyzed.
+* `sandbox`: a value used to mock the global object for the code being instrumented.
 * `hooks`: a set of functions used for tracing purposes.
-* `traps`: a set of functions for modifying most of JavaScript semantic.
+* `traps`: a set of functions for intercepting runtime values.
 
 And returns a function that will perform the dynamic analysis on any given code string.
 
 ```javascript
 var Aran = require('aran');
-var sandbox = ...       // An object to mock the global object
-var hooks = ...         // An object containings function for tracing purpose
-var traps = ...         // An object containings function for intercepting runtime values
+var sandbox = ...
+var hooks = ...
+var traps = ...
 var run = Aran(sandbox, hooks, traps)
 var input = {code:...}
 var result = run(input)
@@ -24,11 +24,12 @@ console.log(input.compiled)
 console.log(result)
 ```
 
-Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has to be run along the code being analyzed to intercept and transform every bit of JavaScript code. Having application code evaluated without resorting to `Aran` will compromise the validity of the application's analysis. It is the responsibility of the user to make sure that dynamic code evaluation eventually resort to `Aran`.
+Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has been designed to be run along the code being instrumented which enables to intercept and transform every bit of JavaScript code being evaluated at runtime. Aran is sufficiently robust to be used for security purposes however be aware that unintercepted code have the ability to mess things up. For instance running `delete window.Aran` cannot be good for Aran's health.
 
 ## Demonstration
 
-Download the files `demo/demo.html` and `demo/bundle.js` and put them into the same directory. Then simply open `demo.html` with a recent version of Firefox. 
+Download the files `demo/demo.html` and `demo/bundle.js` and put them into the same directory. Then simply open `demo.html` with a recent version of Firefox. The master text field allows you to specify the parameters `sandbox`, `hooks` and `traps` using the variable `exports`. Input the code you want to instrument in the target text field.
+
 <img src="demo.png" align="center" alt="demo" title="Demonstration"/>
 
 ## Sandbox
