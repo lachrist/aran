@@ -42,11 +42,11 @@ function run () {
     var aranend = performance.now()
     // Output results
     document.getElementById("compiled").value = input.compiled
-    document.getElementById("result").textContent = print(result)
-    document.getElementById("error").textContent = print(error)
+    document.getElementById("result").textContent = String(result)
+    document.getElementById("error").textContent = String(error)
     document.getElementById("time").textContent = (Math.round(1000*(end-start))/1000)+"ms"
-    document.getElementById("aran-result").textContent = print(aranresult)
-    document.getElementById("aran-error").textContent = print(aranerror)
+    document.getElementById("aran-result").textContent = String(aranresult)
+    document.getElementById("aran-error").textContent = String(aranerror)
     document.getElementById("aran-time").textContent = (Math.round(1000*(aranend-aranstart))/1000)+"ms"
     document.getElementById("output-div").style.visibility = "visible"
     // Throws error for debugging purpose

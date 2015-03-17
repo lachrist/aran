@@ -11,7 +11,13 @@
  *   + Get rid of switches
  */
 
+// N.B. I made explicit module patterns, since 
+// anonymous module pattern (i.e. '(function () {} ())')
+// calls statements.Try (and throws a: stmt not defined).
+// I have really no idea why it does that...
+
 var Esvisit = require("esvisit")
+var Shadow = require("../syntax/shadow.js")
 var Nasus = require("../syntax/nasus.js")
 var Util = require("../util.js")
 
@@ -37,14 +43,14 @@ module.exports = function (visit, mark) {
   // Reduce //
   ////////////
 
-  //(function () {
+  var reducemodule = function () {
 
     function pushobject (member) { return Nasus.push1(member.object) }
     function pushproperty (member) { return member.computed ? Nasus.push2(member.property) : member.property.name }
     function popmember (member) { return Esvisit.BE.Member(Nasus.pop1(), member.computed ? Nasus.pop2() : member.property.name) }
 
     expressions.Logical = function (expr) {
-      return be.Conditional(
+      return Esvisit.BE.Conditional(
         Nasus.push(expr.left),
         (expr.operator === "||") ? Nasus.pop() : Esvisit.BE.Sequence([Nasus.pop(), expr.right]),
         (expr.operator === "||") ? Esvisit.BE.Sequence([Nasus.pop(), expr.right]) : Nasus.pop()
@@ -104,22 +110,25 @@ module.exports = function (visit, mark) {
         )
       )
       if (expr.prefix) { return ass }
-      return Esvisist.BE.Sequence([ass, Nasus.pop3()])
+      return Esvisit.BE.Sequence([ass, Nasus.pop3()])
     }
 
-  //} ())
+  }
+
+  reducemodule()
 
   ////////////
   // Strict //
   ////////////
 
-  statements.Strict = function (stmt) { return Esvisit.BE.Empty() }
+  statements.Strict = function (stmt) { return Esvisit.BS.Empty() }
 
   //////////////////////
   // Inline Accessors //
   //////////////////////
 
   expressions.Object = function (expr) {
+    var hasaccessor = false
     var accessors = {}
     var datadescriptors = []
     var accessordescriptors = []
@@ -127,10 +136,12 @@ module.exports = function (visit, mark) {
       var key = p.key.name || p.key.value
       if (p.kind === "init") { datadescriptors.push(Esvisit.BuildInitProperty(key, p.value)) }
       else {
+        hasaccessor = true
         if (!accessors[key]) { accessors[key] = {} }
-        accessors[key][p.kind] = Esvisit.BE.Function(p.value.params, p.value.body.body)
+        accessors[key][p.kind] = Esvisit.BE.Function((p.kind==="get")?[]:[p.value.params[0].name], p.value.body.body)
       }
     })
+    if (!hasaccessor) { return }
     for (var key in accessors) {
       var descriptors = [
         Esvisit.BuildInitProperty("configurable", Esvisit.BE.Literal(true)),
@@ -140,18 +151,14 @@ module.exports = function (visit, mark) {
       if (accessors[key].set) { descriptors.push(Esvisit.BuildInitProperty("set", accessors[key].set)) }
       accessordescriptors.push(Esvisit.BuildInitProperty(key, Esvisit.BE.Object(descriptors)))
     }
-    return Esvisit.BE.MembreCall(
-      Shadow("object"),
-      "defineProperties",
-      [Esvisit.BE.Object(datadescriptors), Esvisit.BE.Object(accessordescriptors)]
-    )
+    return Shadow("preserved", "defineproperties", [Esvisit.BE.Object(datadescriptors), Esvisit.BE.Object(accessordescriptors)])
   }
 
   ////////////
   // Switch //
   ////////////
 
-  //(function () {
+  var switchmodule = function () {
 
     function escape (id) { if (/^\$*switch/.test(id.name)) { id.name="$"+id.name } }
 
@@ -159,8 +166,9 @@ module.exports = function (visit, mark) {
     var stack = [null]
     function mask (stmt) { (stack.push(null), mark(pop)) }
     function pop () { stack.pop() }
+    function get () { return Util.last(stack) ? ("switch"+Util.last(stack)) : null }
 
-    statements.Switch = function (stmt, mark) {
+    statements.Switch = function (stmt) {
       stack.push(++counter)
       mark(pop)
       var stmts = [Esvisit.BS.Expression(Nasus.push(stmt.discriminant))]
@@ -168,14 +176,14 @@ module.exports = function (visit, mark) {
         if (!c.test) { for (var i=0; i<c.consequent.length; i++) { stmts.push(c.consequent[i]) } }
         else { stmts.push(Esvisit.BS.If(Esvisit.BE.Binary("===", Nasus.get(), c.test), Esvisit.BS.Block(c.consequent))) }
       })
-      return Esvisit.BS.Label("switch"+get(), Esvisit.BS.Try(stmts, null, null, [Esvisist.Halt(bs.Expression(Nasus.pop()))]))
+      return Esvisit.BS.Label(get(), Esvisit.BS.Try(stmts, null, null, [Esvisit.Halt(Esvisit.BS.Expression(Nasus.pop()))]))
     }
 
     statements.Label = function (stmt) { escape(stmt.label) }
     statements.Continue = function (stmt) { if (stmt.label) { escape(stmt.label) } }
     statements.Break = function (stmt) {
       if (stmt.label) { escape(stmt.label) }
-      else if (stack[stack.length-1]) { stmt.label = {type:"Identifier", name:"switch"+stack[stack.length-1]} }
+      else if (get()) { return Esvisit.BS.Break(get()) }
     }
 
     statements.While = mask
@@ -184,7 +192,9 @@ module.exports = function (visit, mark) {
     statements.IdentifierForIn = mask
     statements.MemberForIn = mask
 
-  //} ())
+  }
+
+  switchmodule()
 
   ////////////
   // Return //

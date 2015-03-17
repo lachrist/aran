@@ -1,7 +1,7 @@
 
 (function () {
   var c = false
-  var f = 
+  var f = false
   try {
     throw 'ok'
     throw 'BOUM'

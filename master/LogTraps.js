@@ -1,7 +1,7 @@
 
 // Log all the language-level operations intercepted by aran.
 // For more information about the trap listed below, see https://github.com/lachrist/aran.
-// The traps implemented below are transparent in the sens that simply forward runtime value.
+// The below implementation is transparent in the sense that it simply forward runtime value.
 // However you are can provide aribtrary code and heavily modify JS semantic.
 
 function log (trap, x) {

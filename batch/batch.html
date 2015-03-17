@@ -19,6 +19,22 @@
       li {
         margin: 10px;
       }
+      button {
+        padding: 8px;
+        margin-bottom: 30px;
+        margin-right: 20px;
+        font-size: 14px
+      }
+      button::-moz-focus-inner {
+        padding: 8px;
+      }
+      table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+      }
+      th, td {
+        padding: 5px;
+      }
     </style>
   </head>
   <body>
@@ -29,26 +45,23 @@
         <li><label>Masters: <input id="masters" type="file" id="input" multiple></label></li>
         <li><label>Targets: <input id="targets" type="file" id="input" multiple></label></li>
       </ul>
-      <button disabled id="run">Run</button><span style="visibility:hidden" id="progress-span"></span>
-      <div style="visibility:hidden" id="output-div">
+      <button disabled id="run">Run</button><span style="visibility:hidden" id="feedback"></span>
+      <div style="visibility:hidden" id="output">
         <table>
           <thead>
             <tr>
               <th>Master</th>
               <th>Target</th>
-              <th>Time [ms]</th>
-              <th>Aran time [ms]</th>
-              <th>Result</th>
-              <th>Aran result</th>
-              <th>Error</th>
-              <th>Aran error</th>
               <th>LoC</th>
               <th>Aran LoC</th>
+              <th>Error</th>
+              <th>Aran error</th>
+              <th>Time [ms]</th>
+              <th>Aran time [ms]</th>
             </tr>
           </thead>
-          <tbody id="output-table"></tbody>
+          <tbody id="table"></tbody>
         </table>
-        <textarea id="output-table"></textarea>
       </div>
     </main>
   </body>

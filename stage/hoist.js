@@ -23,7 +23,7 @@ module.exports = function (visit, mark, sandboxed) {
   var onexpressions = {}
 
   function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }
-  function onexpression (type, expr) { if (onstatements[type]) { return onexpressions[type](expr) } }
+  function onexpression (type, expr) { if (onexpressions[type]) { return onexpressions[type](expr) } }
 
   function popdefinitions () {
     var definitions = definitionss.pop()
@@ -65,7 +65,6 @@ module.exports = function (visit, mark, sandboxed) {
   }
 
   onstatements.Definition = function (stmt) {
-    debugger
     Util.last(variabless).push(stmt.id.name)
     Util.last(definitionss).push(Esvisit.BE.IdentifierAssignment(
       "=",
@@ -83,7 +82,7 @@ module.exports = function (visit, mark, sandboxed) {
 
   onstatements.DeclarationFor = function (stmt) {
     return Esvisit.BS.For(
-      hoistdeclaration(stmt),
+      hoistdeclaration(stmt.init),
       stmt.test,
       stmt.update,
       stmt.body
@@ -99,12 +98,14 @@ module.exports = function (visit, mark, sandboxed) {
     )
   }
 
-  onexpressions.Function = function (expr) { enterbody(stmt.body.body) }
+  onexpressions.Function = function (expr) { enterbody(expr.body.body) }
 
   onexpressions.EvalCall = function (expr) {
+    var shallowcopy = expr.arguments.slice()
+    shallowcopy.unshift(Esvisit.BE.Literal(Boolean(local||bodies.length)))
     return Esvisit.BE.Conditional(
-      Esvisit.Halt(Esvisit.BE.Binary("===", Esvisit.BE.Identifier("eval"), Shadow("eval"))),
-      Esvisit.Halt(Esvisit.BE.EvalCall([Shadow("compile", expr.arguments.slice().unshift(Esvisit.BE.Literal(local||bodies.length)))])),
+      Esvisit.Halt(Esvisit.BE.Binary("===", Esvisit.BE.Identifier("eval"), Shadow("preserved", "eval"))),
+      Esvisit.Halt(Esvisit.BE.EvalCall([Shadow("compile", shallowcopy)])),
       Esvisit.BE.EvalCall(expr.arguments))
   }
 
@@ -114,7 +115,7 @@ module.exports = function (visit, mark, sandboxed) {
     definitionss.push([])
     visit(ast, onstatement, onexpression)
     ast.body.unshift(popdefinitions())
-    ast.body.unshift((sandboxed&&!local)?Shadow("declare", Nodify(variabless.pop())):popvariables())
+    ast.body.unshift((sandboxed&&!local)?Esvisit.BS.Expression(Shadow("declare", [Nodify(variabless.pop())])):popvariables())
   }
 
 }

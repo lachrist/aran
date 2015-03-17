@@ -10,6 +10,6 @@ module.exports = function (aran) {
   aran.apply = function (fct, th, args) { return aran.global.Function.prototype.apply.bind(fct)(th, args) }
   
   // Undefined //
-  aran.undefined = undefined
+  aran.undefined = aran.global.undefined
 
 }

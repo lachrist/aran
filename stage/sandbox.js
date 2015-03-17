@@ -11,9 +11,11 @@ var Shadow = require("../syntax/shadow.js")
 function escape (id) { if (/^\$*aran$/.test(id.name)) { id.name = "$"+id.name } }
 function descape (decl) { escape(decl.id) }
 
-module.exports = function (visit, mark, sandbox) {
+module.exports = function (visit, mark, sandboxed) {
 
-  if (!sandbox) { return Util.nil }
+  if (!sandboxed) { return Util.nil }
+
+  var local
 
   function statement (type, stmt) { if (statements[type]) { return statements[type](stmt) } }
 
@@ -37,19 +39,20 @@ module.exports = function (visit, mark, sandbox) {
           Esvisit.BE.Function(
             [],
             [Esvisit.BS.Try(
-              [Esvisit.BS.Return(Esvisit.BE.Identifier(expr.arguement.name))],
+              [Esvisit.BS.Return(Esvisit.BE.Identifier(expr.argument.name))],
               "_",
               [],
               null)]),
           []))
     }
+    // IdentifierDelete is also a special case :((
     if (type === "EvalCall") {
       return Esvisit.BE.Sequence([
-        Shadow("local", [Esvisit.BE.Literal()]),
+        Shadow("local", [Esvisit.BE.Literal(local)]),
         Esvisit.BE.EvalCall(expr.arguments)
       ])
     }
-    if (expressions[type]) { return expresssions[type](expr) }
+    if (expressions[type]) { return expressions[type](expr) }
   }
 
   var statements = {
@@ -68,7 +71,8 @@ module.exports = function (visit, mark, sandbox) {
     Identifier: function (expr) { escape(expr) },
   }
 
-  return function (local, ast) {
+  return function (loc, ast) {
+    local = loc
     visit(ast, statement, expression)
     if (!local) { ast.body = [Esvisit.Ignore(Esvisit.BS.With(Shadow("proxy"), Esvisit.BS.Block(ast.body)))] }
   }

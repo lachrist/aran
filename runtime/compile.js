@@ -29,7 +29,7 @@ module.exports = function (aran) {
   var hookstage = Hook(esv.visit, esv.mark, aran.hooks)
   var sanitizestage = Sanitize(esv.visit, esv.mark)
   var hoiststage = Hoist(esv.visit, esv.mark, Boolean(aran.sandbox))
-  var sandboxstage = Sandbox(esv.visit, esv.mark, aran.sandbox)
+  var sandboxstage = Sandbox(esv.visit, esv.mark, Boolean(aran.sandbox))
   var trapstage = Trap(esv.visit, esv.mark, aran.traps)
 
   function compile (local, code) {
@@ -37,6 +37,7 @@ module.exports = function (aran) {
     hookstage(ast)
     sanitizestage(ast)
     hoiststage(local, ast)
+    sandboxstage(local, ast)
     trapstage(ast)
     var errors = Esvalid.errors(ast)
     if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
@@ -44,7 +45,7 @@ module.exports = function (aran) {
   }
 
   aran.compile = function (local, code) {
-    if (aran.traps.stringify) { code = aran.traps.stringify(code) }
+    if (aran.traps&&aran.traps.stringify) { code = aran.traps.stringify(code) }
     return compile(local, code)
   }
 
