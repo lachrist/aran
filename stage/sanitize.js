@@ -55,17 +55,21 @@ module.exports = function (visit, mark) {
   // Typeof //
   ////////////
 
-  // typeof ID >>> (typeof function () { try {return ID} catch (_) {} } ())
+  // typeof ID >>> (typeof function () {
+  //   aran.mark ()
+  //   try {return ID} catch (_) {}
+  // } ())
   onexpressions.IdentifierTypeof = function (expr) {
     return Esvisit.BE.Unary(
       "typeof",
       Esvisit.BE.Call(
         Esvisit.BE.Function(
+          null,
           [],
-          [Esvisit.BS.Try(
+          [Esvisit.BS.Expression(Nasus.mark()), Esvisit.BS.Try(
             [Esvisit.BS.Return(Esvisit.BE.Identifier(expr.argument.name))],
             "_",
-            [],
+            [Esvisit.BS.Expression(Nasus.unmark())],
             null)]),
         []))
   }
@@ -161,7 +165,7 @@ module.exports = function (visit, mark) {
       else {
         hasaccessor = true
         if (!accessors[key]) { accessors[key] = {} }
-        accessors[key][p.kind] = Esvisit.BE.Function((p.kind==="get")?[]:[p.value.params[0].name], p.value.body.body)
+        accessors[key][p.kind] = Esvisit.BE.Function(null, (p.kind==="get")?[]:[p.value.params[0].name], p.value.body.body)
       }
     })
     if (!hasaccessor) { return }
@@ -174,7 +178,7 @@ module.exports = function (visit, mark) {
       if (accessors[key].set) { descriptors.push(Esvisit.BuildInitProperty("set", accessors[key].set)) }
       accessordescriptors.push(Esvisit.BuildInitProperty(key, Esvisit.BE.Object(descriptors)))
     }
-    return Shadow("defineproperties", [Esvisit.BE.Object(datadescriptors), Esvisit.BE.Object(accessordescriptors)])
+    return Esvisit.BE.Call(Shadow("defineproperties"), [Esvisit.BE.Object(datadescriptors), Esvisit.BE.Object(accessordescriptors)])
   }
 
   ////////////

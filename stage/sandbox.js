@@ -35,6 +35,7 @@ module.exports = function (visit, mark, sandbox) {
     if (expr.body.body[0].declarations) { expr.body.body[0].declarations.forEach(function (dec) { escape(dec.id) }) }
   }
 
+  // this >>> (this === aran.global) ? aran.sandbox : this
   onexpressions.This = function (expr) {
     return Esvisit.BE.Conditional(
       Esvisit.BE.Binary(
@@ -47,18 +48,19 @@ module.exports = function (visit, mark, sandbox) {
       Esvisit.BE.This())
   }
 
-  // delete ID >>> (function () { try { return delete ID } catch (_) { return true }} ())
-
+  // delete ID >>> (aran.predelete(), aran.push(delete ID), aran.postdelete(), aran.pop())
   onexpression.IdentifierDelete = function (expr) {
-    return Esvisit.BE.Call(
-      Esvisit.Function ())
+    escape(expr.argument)
+    return Esvisit.BE.Sequence([
+      Shadow("predelete", []),
+      Nasus.push(Util.copy(expr)),
+      Shadow("postdelete", []),
+      Nasus.pop()])
   }
 
-  onexpressions.identifier = escape
-
-  onexpressions.IdentifierDelete = function (expr) { escape(expr.argument) }
-
   onexpressions.IdentifierAssignment = function (expr) { escape(expr.left) }
+
+  onexpressions.identifier = escape
 
   ////////////
   // Return //

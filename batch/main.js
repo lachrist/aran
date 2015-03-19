@@ -13,6 +13,8 @@ function prepare () {
   return Aran(exports.sandbox, exports.hooks, exports.traps)
 }
 
+function round (x) { return Math.round(1000*x)/1000 }
+
 function print (x) {
   if (x === undefined) { return "undefined" }
   if (typeof x === "string") { return JSON.stringify(x) }
@@ -64,6 +66,11 @@ function checkmasters (masters) {
 }
 
 function benchmarkall (masters, targets) {
+  function progress () {
+    var done = i*targetkeys.length+j
+    var todo = masterkeys.length*targetkeys.length
+    return "Applying "+masterkeys[i]+" on "+targetkeys[j]+" ("+done+"/"+todo+")"
+  }
   function update (done) { document.getElementById("feedback").textContent = done+"/"+(masterkeys.length*targetkeys.length)+"..." }
   var masterkeys = Object.keys(masters)
   var targetkeys = Object.keys(targets)
@@ -71,16 +78,15 @@ function benchmarkall (masters, targets) {
   var i = 0
   var j = 0
   checkmasters(masters)
-  update(0)
   var interval = setInterval(function () {
     if (j === targetkeys.length) { (j = 0, i++) }
     if (i === masterkeys.length) { return (clearInterval(interval), post(results)) }
+    document.getElementById("feedback").textContent = progress()
     var result = benchmark(masters[masterkeys[i]], targets[targetkeys[j]])
     result.master = masterkeys[i]
     result.target = targetkeys[j]
     results.push(result)
     j++
-    update(i*targetkeys.length+j)
   }, 5)
 }
 
@@ -91,12 +97,12 @@ function benchmark (master, target) {
   // Original
   result.time = performance.now()
   try { window.eval(target) } catch (e) { result.error = print(e) }
-  result.time = Math.round(1000*(performance.now()-result.time))/1000
+  result.time = round(performance.now()-result.time)
   result.loc = target.split("\n").length
   // Aran
   result.arantime = performance.now()
   try { aran(input) } catch (e) { result.aranerror = print(e) }
-  result.arantime = Math.round(1000*(performance.now()-result.arantime))/1000
+  result.arantime = round(performance.now()-result.arantime)
   result.aranloc = ("compiled" in input) ? input.compiled.split("\n").length : null
   // Return
   return result
@@ -107,17 +113,24 @@ function post (results) {
   var table = document.getElementById("table")
   var row
   var cell
+  var time = 0
+  var arantime = 0
   while (table.firstChild) { table.removeChild(table.firstChild) }
   for (var i=0; i<results.length; i++) {
+    time = time + results[i].time
+    arantime = arantime + results[i].arantime
     row = document.createElement("tr") 
     for (var j=0; j<headers.length; j++) {
       cell = document.createElement("td")
       cell.textContent = results[i][headers[j]]
       row.appendChild(cell)
     }
+    cell = document.createElement("td")
+    cell.textContent = round(results[i].arantime/results[i].time)
+    row.appendChild(cell)
     table.appendChild(row)
   }
-  document.getElementById("feedback").style.visibility = "hidden"
+  document.getElementById("feedback").textContent = "Average slowdown factor: "+round(arantime/time)
   document.getElementById("output").style.visibility = "visible"
   document.getElementById("masters").disabled = false
   document.getElementById("targets").disabled = false

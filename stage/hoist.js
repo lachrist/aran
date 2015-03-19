@@ -43,6 +43,7 @@ module.exports = function (visit, mark) {
     mark(function () {
       popdefinitions(fct.body.body)
       Util.inject(Esvisit.BE.HoistedFunction(
+        fct.id ? fct.id.name : null,
         fct.params.map(function (id) { return id.name }),
         variabless.pop(),
         fct.body.body

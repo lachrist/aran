@@ -16,6 +16,6 @@ module.exports = function (aran) {
   aran.apply = function (fct, th, args) { return aran.global.Function.prototype.apply.bind(fct)(th, args) }
   aran.undefined = aran.global.undefined
   aran.eval = aran.global.eval
-  aran.defineproperties = aran.Object.defineProperties
+  aran.defineproperties = aran.global.Object.defineProperties
 
 }

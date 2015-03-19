@@ -45,7 +45,8 @@
         <li><label>Masters: <input id="masters" type="file" id="input" multiple></label></li>
         <li><label>Targets: <input id="targets" type="file" id="input" multiple></label></li>
       </ul>
-      <button disabled id="run">Run</button><span style="visibility:hidden" id="feedback"></span>
+      <button disabled id="run">Run</button>
+      <span style="visibility:hidden" id="feedback"></span>
       <div style="visibility:hidden" id="output">
         <table>
           <thead>
@@ -55,9 +56,10 @@
               <th>LoC</th>
               <th>Aran LoC</th>
               <th>Error</th>
-              <th>Aran error</th>
+              <th>Aran Error</th>
               <th>Time [ms]</th>
-              <th>Aran time [ms]</th>
+              <th>Aran Time [ms]</th>
+              <th>Slowdown Factor</th>
             </tr>
           </thead>
           <tbody id="table"></tbody>

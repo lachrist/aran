@@ -47,10 +47,10 @@ module.exports = function (visit, mark, traps) {
     pops.push(Nasus.pop3())
     var right = Esvisit.BE.Member(Nasus.get3(), Nasus.get())
     var ass
-    if (type === "IdentifierForIn") { ass = Esvisit.BE.IdentifierAssignment(node.left.name, right) }
+    if (type === "IdentifierForIn") { ass = Esvisit.BE.IdentifierAssignment("=", node.left.name, right) }
     if (type === "MemberForIn") {
       if (traps.set) { ass = Shadow("traps", "set", [Nasus.get1(), Nasus.get2(), right]) }
-      else { ass = Esvisit.BE.MemberAssignment(Nasus.get1(), Nasus.get2(), right) }
+      else { ass = Esvisit.BE.MemberAssignment("=", Nasus.get1(), Nasus.get2(), right) }
     }
     var trystmts = [Esvisit.BS.For(
       null,
@@ -59,11 +59,11 @@ module.exports = function (visit, mark, traps) {
       Esvisit.BS.Block([Esvisit.BS.Expression(ass), node.body])
     )]
     var stmts = pushes.map(Esvisit.BS.Expression)
-    stmts.push(Esvisit.BE.Try(trystmts, null, null, pops.map(Esvisit.BS.Expression)))
-    return Esvisit.BE.Block(stmts)
+    stmts.push(Esvisit.BS.Try(trystmts, null, null, pops.map(Esvisit.BS.Expression)))
+    return Esvisit.BS.Block(stmts)
   }
 
-  function call (node) { if (traps.apply) { return Shadow("traps", "apply", [node.callee, Shadow("global", Esvisit.BE.Array(node.arguments))]) } }
+  function call (node) { if (traps.apply) { return Shadow("traps", "apply", [node.callee, Shadow("global"), Esvisit.BE.Array(node.arguments)]) } }
 
   ///////////////
   // Statement //
@@ -139,39 +139,53 @@ module.exports = function (visit, mark, traps) {
     if (traps.arguments) {
       var check = true
       node.params.forEach(function (id) { if (id.name === "arguments") { check = false } })
-      if (check) { node.body.body.splice(1, 0, Esvisit.BS.Expression(Esvisit.BE.IdentifierAssignment("arguments", Shadow("traps", "arguments", [Esvisit.BE.Identifier("arguments")])))) }
+      if (check) { node.body.body.splice(1, 0, Esvisit.BS.Expression(Esvisit.BE.IdentifierAssignment("=", "arguments", Shadow("traps", "arguments", [Esvisit.BE.Identifier("arguments")])))) }
     }
     if (traps.undefined) {
-      node.body.body.splice(1, 0, (Esvisit.BS.Block(node.params.map(function (id) {
-        return Esvisit.BS.If(
-          Esvisit.BE.Binary(
-            "===",
-            Esvisit.BE.Identifier(id.name),
-            Shadow("undefined")),
-          Esvisit.BS.Expression(
-            Esvisit.BE.IdentifierAssignment(
-              "=",
+      if (node.params.length) {
+        node.body.body.splice(1, 0, Esvisit.BS.Block(node.params.map(function (id) {
+          return Esvisit.BS.If(
+            Esvisit.BE.Binary(
+              "===",
               Esvisit.BE.Identifier(id.name),
-              undef("argument-"+id.name))))
-      }))))
+              Shadow("undefined")),
+            Esvisit.BS.Expression(
+              Esvisit.BE.IdentifierAssignment(
+                "=",
+                id.name,
+                undef("argument-"+id.name))))
+        })))
+      }
       if (node.body.body[0].declarations) {
         var assignments = node.body.body[0].declarations.map(function (dec) { return Esvisit.BE.IdentifierAssignment("=", dec.id.name, undef("variable-"+dec.id.name)) })
         if (assignments.length === 1) { node.body.body.splice(1, 0, Esvisit.BS.Expression(assignments[0])) }
         else if (assignments.length) { node.body.body.splice(1, 0, Esvisit.BS.Expression(Esvisit.BE.Sequence(assignments))) }
       }
+      node.body.body.push(Esvisit.BS.Return(undef("no-return")))
     }
-    if (traps.function) { return Shadow("traps", "function", [Esvisit.BE.Function(node.params, node.body.body)]) }
+    if (traps.function) { return Shadow("traps", "function", [Util.copy(node)]) }
   }
 
   onexpressions.MemberAssignment = function (node) { if (traps.set) { return Shadow("traps", "set", [node.left.object, property(node.left), node.right]) } }
 
-  onexpressions.IdentifierDelete = function (node) { if (traps.unary) { return Shadow("traps", "erase", [Esvisit.BE.Literal(node.argument.name), Util.copy(node)]) } }
-
-  onexpressions.MemberDelete = function (node) { if (traps.delete) { return Shadow("traps", "delete", [node.argument.object, property(node.argument)]) } }
+  // delete ID >>> (aran.push(delete ID), aran.deleted() ? (aran.pop(), aran.deleteresult()) : erase("ID", aran.pop()))
+  onexpressions.IdentifierDelete = function (node) {
+    if (traps.delete) {
+      return Esvisit.BE.Sequence([
+        Nasus.push(Util.copy(node)),
+        Esvisit.BE.Conditional(
+          Shadow("deleted", []),
+          Esvisit.BE.Sequence([Nasus.pop(), Shadow("deleteresult", [])]),
+          traps.erase ? Shadow("traps", "erase", [Esvisit.BE.Literal(node.argument.name), Nasus.pop()]) : Nasus.pop())])
+    }
+    if (traps.erase) { return Shadow("traps", "erase", [Esvisit.BE.Literal(node.argument.name), Util.copy(node)]) }
+  }
 
   onexpressions.Unary = function (node) { if (traps.unary) { return Shadow("traps", "unary", [Esvisit.BE.Literal(node.operator), node.argument]) } }
 
-  onexpressions.Binary = function (node) { return Shadow("traps", "binary", [Esvisit.BE.Literal(node.operator), node.left, node.right]) }
+  onexpressions.MemberDelete = function (node) { if (traps.delete) { return Shadow("traps", "delete", [node.argument.object, property(node.argument)]) } }
+
+  onexpressions.Binary = function (node) { if (traps.binary) { return Shadow("traps", "binary", [Esvisit.BE.Literal(node.operator), node.left, node.right]) } }
 
   onexpressions.Conditional = function (node) { node.test = booleanize(node.test, "?:") }
 
@@ -210,7 +224,7 @@ module.exports = function (visit, mark, traps) {
           "===",
           Esvisit.BE.Identifier("undefined"),
           Shadow("undefined")),
-        undef("identifier"),
+        undef("explicit"),
         Esvisit.BE.Identifier("undefined"))
     }
   }
