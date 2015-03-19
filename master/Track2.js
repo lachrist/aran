@@ -65,21 +65,17 @@ exports.traps = {
     return wrap(fct.apply(unwrap(th), args.map(unwrap)), "built-in-function", args)
   },
   new: function (fct, args) {
-    debugger
     if (wrapped(fct)) { throw new TypeError(print(fct)+" is not a constructor") }
+    if (!fct.__location__) { return new fct(...args.map(unwrap)) }
+    location = fct.__location__
     var o = Object.create(fct.prototype)
-    if (fct.__location__) {
-      location = fct.__location__
-      var res = fct.apply(o, args)
-      if (res.__void__) { return o }
-    } else {
-      var res = wrap(fct.apply(o, args.map(unwrap)), "built-in-constructor", args)
-    }
+    var res = fct.apply(o, args)
+    if (res.__void__) { return o }
     if (typeof res !== "object") { return o }
     return res
   },
-  unary: function (op, val) { return wrap(unaries[op](unwrap(val)), "unary-"+op, [val]) },
-  binary: function (op, val1, val2) { return wrap(binaries[op](unwrap(val1), unwrap(val2)), "binary-"+op, [val1, val2]) }
+  unary: function (op, val) { return unaries[op](unwrap(val)) },
+  binary: function (op, val1, val2) { return binaries[op](unwrap(val1), unwrap(val2)) }
 }
 
 ////////////////////////////////////////////////////
@@ -96,13 +92,6 @@ types.forEach(function (type) { exports.hooks[type] = track })
 /////////////
 // General //
 /////////////
-
-// Simulate: new cons(args) //
-function construct (cons, args) {
-  function Cons() { return cons.apply(this, args) }
-  Cons.prototype = cons.prototype;
-  return new Cons()
-}
 
 // Unary operations //
 var unaries = {
