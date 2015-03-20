@@ -1,8 +1,8 @@
 # Aran <img src="aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
 
-Aran is a npm module for facilitating the instrumentation of JavaScript programs. Aran is based on a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: sandboxing, tracing and symbolic execution. To install: `npm install aran`.
+Aran is a npm module for facilitating the instrumentation of JavaScript programs. Aran is based on a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: profiling, tracing, sandboxing, and symbolic execution. To install: `npm install aran`.
 
-**Attention, Aran uses ECMAScript6 Harmony Proxies which is currently only well supported by Firefox; sanboxing and `with` statements will make Aran crash on Node, Safari, Chrome and Internet Explorer!!!**
+**Aran uses ECMAScript6 Harmony Proxies which are currently only fully supported by Firefox; sanboxing and `with` statements will make Aran crash on Node, Safari, Chrome and Internet Explorer!**
 
 This module exposes a function that expects three arguments:
 
@@ -17,7 +17,7 @@ var Aran = require('aran');
 /* Very strict sandbox that only allow Math access */
 var sandbox = {
   undefined: undefined,
-  Math:Math
+  Math: Math
 };
 /* Trace binary operations */
 var hooks = {
@@ -45,27 +45,27 @@ var input = {code:target};
 var result = run(input);
 console.log(input.compiled);
 console.log(result);
-console.log(fcts.map(function (fct) {return fct.__counter__ }));
+console.log(fcts.map(function (fct) { return fct.name+": "+fct.__counter__ }));
 ```
 
-Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has been designed to be run along the code being instrumented and intercept every bit of JavaScript code. Running unintercepted JavaScript code can easily mess things up, for instance `aran.sandbox.dangerous = window.dangerous` will allow sanboxed code to access a dangerous field of the global object.
+Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has been designed to be run along the code being instrumented so it can instrument on the fly code evaluated at runtime. Statements that escape the instrumentation can easily mess things up, for instance `aran = null` will discard all information related to the current analysis.
 
 ## Demonstration
 
-Download the files `demo/demo.html` and `demo/bundle.js` and put them into the same directory. Then simply open `demo.html` with a recent version of Firefox. The master text field allows you to specify the parameters `sandbox`, `hooks` and `traps` using the variable `exports`. Input the code you want to instrument in the target text field.
+Download the files `demo/demo.html` and `demo/bundle.js` and put them into the same directory. Then simply open `demo.html` with a recent version of Firefox. In the master text field, you can specify aran's parameters using exports: `exports.sandbox`, `exports.hooks` and `exports.traps`. Note that there is a set of built-in analyses available through the drop-down list. The target text field expects the code to be instrumented.
 
 <img src="demo.png" align="center" alt="demo" title="Demonstration"/>
 
 ## Sandbox
 
-As stated above, the sandbox parameter will act in all point as if it was the global object of the code being analyzed. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `has`, `get`, `set` and `delete` are implemented, the sandbox can be of any type, otherwise it should be a JavaScript object. Two sandbox properties have a particular status:
-  * `eval`: Letting the target code accessing the original `eval` function enables direct eval call (see: http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1) ; any other value will prevent the target to perform direct eval call. Roughly, `eval(x)` is compiled into a conditional expression where the consequent is a direct eval call and the alternative a normal function call:
+As stated above, the sandbox parameter will act in all point as if it was the global object of the code being instrumented. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `has`, `get`, `set` and `delete` are implemented, the sandbox can be of any type, otherwise it should be a JavaScript object. Two sandbox properties have a particular status:
+  * `eval`: Letting the target code accessing the built-in `window.eval` function enables direct eval calls (see: http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1) ; any other value will prevent the target to perform direct eval call. Roughly, `eval(x)` is compiled into a conditional expression where the consequent is a direct eval call and the alternative a normal function call:
     
     ```javascript
     (eval === aran.eval) ? eval(aran.compile(x)) : eval(x)
     ```
   
-  * `undefined`: Because of `undefined` omnipresence, it does not really makes sense to rule it out of the sandbox. If the sandbox does not contain an undefined entry (i.e.: `sandobx['undefined'] = undefined`), it will merely prevent the target code to explicitely access `undefined` using an identifier. If you want to intercept any apparation of `undefined` (e.g.: undefined arguments, empty returns, etc), you should implement `traps.undefined` instead. Assuming that the sandbox verifies `sandbox['undefined'] = undefined`, the trap will be triggered on explicit `undefined` reference as well. More technically, `undefined` identifiers are compiled into the below conditional: 
+  * `undefined`: Because `undefined` is omnipresent in JavaScript, it does not really make sense to rule it out of the sandbox. If the sandbox does not contain an undefined entry (i.e.: `sandobx['undefined'] = undefined`), it will merely prevent the target code to explicitely access `undefined` using an identifier. If you want to intercept any apparation of `undefined` (e.g.: undefined arguments, empty returns, etc), you should implement `traps.undefined` instead. Assuming that the sandbox verifies `sandbox['undefined'] = undefined`, the trap will be triggered on explicit `undefined` reference as well. More technically, `undefined` identifiers are compiled into the below conditional:
     
     ```javascript
     (undefined === aran.undefined) ? aran.traps.undefined('identifier') : undefined
@@ -73,7 +73,7 @@ As stated above, the sandbox parameter will act in all point as if it was the gl
 
 ## Hooks
 
-Hooks are functions that are called before executing statements and expressions. Although Aran uses Esprima which follows Mozilla node types (see: https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API), hooks follow the AST types described in https://github.com/lachrist/esvisit which better represent JavaScript semantic. All hooks are optional and independent. Each hook will be called with syntactic information described in https://github.com/lachrist/esvisit. For instance `o.f(x)` will trigger the `hooks.MemberCall('f', 1)` where the first argument is the name of the property (if not computed) and the second argument is the number of passed argument. Those syntactic information can completed with code location:
+Hooks are functions called before executing statements and expressions. Although Aran uses Esprima which follows Mozilla node types (see: https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API), hooks follow the AST types described in https://github.com/lachrist/esvisit which better represent JavaScript semantic. All hooks are optional and independent. Each hook will be called with syntactic information described in https://github.com/lachrist/esvisit. For instance `o.f(x)` triggers `hooks.MemberCall('f', 1)` where the first argument is the name of the property (if not computed) and the second argument is the number of passed argument. Those syntactic information can completed with code location:
   1. `StartRange`: The index where the statement / expression start.
   2. `EnRange`: The index where the statement / expression end.
   3. `StartLoc`: The `line-column` where the statement / expression start.
@@ -89,13 +89,13 @@ For instance:
   hooks.MemberCall = function (StartRange, EndRange, StartLoc, EndLoc, MaybeProperty, ArgumentsLength) {
     console.log('MemberCall '+MaybeProperty+' ArgumentsLength');
     console.log('  Range: '+StartRange+' -> '+EndRange);
-    console.log('  Loc:'+StartLoc+' -> '+EndLoc);
+    console.log('  Loc: '+StartLoc+' -> '+EndLoc);
   }
   ```
 
 ## Traps
 
-Unlike hooks, traps are designed to modify the semantic of the code being analyzed. They are useful for implementing shadow execution and, in general, any dynamic techniques that require runtime values. Traps have been designed to provide a minimal interface for piloting JavaScript semantic. That is that many non-fundamental JavaScript statements / expressions such as `x++` have been deconstructed to be expressed with simpler concepts. All traps are optional and independent. Traps are listed in the table below. Traps arguments that start with a capital letters are raw (unintercepted) value, while traps arguments that start with a lower case letter are intercepted values.
+Unlike hooks, traps are designed to modify the semantic of the code being analyzed. They are useful for implementing shadow execution and, in general, any dynamic techniques that require runtime values. Traps have been designed to provide a minimal interface for piloting JavaScript semantic. That is that many non-fundamental JavaScript statements / expressions such as `x++` have been desugared to be expressed with simpler concepts. All traps are optional and independent. Traps are listed in the table below. Traps arguments that start with a capital letters are raw (unintercepted) value, while traps arguments that start with a lower case letter are intercepted values.
 
  Trap | Target | Transformed
 :-----|:-------|:-----------
@@ -115,13 +115,13 @@ Unlike hooks, traps are designed to modify the semantic of the code being analyz
 `apply(function, this, Arguments)` | `f(x, y)` | `aran.traps.apply(f, undefined, [x,y])`
 `new(function, Arguments)` | `new F(x, y)` | `aran.traps.new(F, [x,y])`
 `get(object, [P/p]roperty)` | `o[k]` | `aran.traps.get(o, k)`
-`set(object, [P/p]roperty)` | `o[k] = v` | `aran.traps.set(o, k, v)`
+`set(object, [P/p]roperty, value)` | `o[k] = v` | `aran.traps.set(o, k, v)`
 `delete(object, [P/p]roperty)` | `delete o[k]` | `aran.traps.delete(o, k)`
 `enumerate(object)` | `for ... in` | Its complicated...
 `exist(object, Property)` | Its complicated... | Its complicated...
 `erase(Identifier, Result)` | `delete x` | `aran.traps.erase('x', delete x)`
 
-### Remarks
+### Remarks on traps
 
 * `primitive`: primitive creation arise on the following literals:
     * `null`
@@ -135,9 +135,9 @@ Unlike hooks, traps are designed to modify the semantic of the code being analyz
     * `'no-return'`: function ending without any return statement.
     * `'argument-ID'`: `ID` is the name of the argument being undefined.
     * `'variable-ID'`: `ID` is the name of the variable being undefined.
-    * `explicit`: identifier named `'undefined'` accessing the `undefined` value.
+    * `'explicit'`: identifier named `'undefined'` accessing the `undefined` value.
 
-* `object`: guaranteed to contain plan data field whose values have been recursively intercepted. In particular, inline accessors (see: http://www.ecma-international.org/ecma-262/5.1/#sec-11.1.5) have been deplaced to a call to `Object.defineProperties`.
+* `object`: guaranteed to contain plain data field whose values have been recursively intercepted. In particular, inline accessors (see: http://www.ecma-international.org/ecma-262/5.1/#sec-11.1.5) have been deplaced within to `Object.defineProperties`.
 
 * `array`: elements have been intercepted.
 
@@ -151,7 +151,7 @@ Unlike hooks, traps are designed to modify the semantic of the code being analyz
 
 * `stringify`: only used to perform direct call to `eval` as defined in http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1.
 
-* `unary`: valid `Operator` are:
+* `unary`: valid `Operator` parameters are:
     * `'-'`
     * `'+'`
     * `'!'`
@@ -159,7 +159,7 @@ Unlike hooks, traps are designed to modify the semantic of the code being analyz
     * `'typeof'`
     * `'void'`
 
-* `binary`: valid `Operator` are:
+* `binary`: valid `Operator` parameters are:
     * `'=='`
     * `'!='`
     * `'===`
@@ -183,14 +183,14 @@ Unlike hooks, traps are designed to modify the semantic of the code being analyz
     * `'instanceof'`
     * `'..'`
 
-* `get`, `set`, `delete`: The `property` parameter can either be:
+* `get`, `set`, `delete`: the `property` parameter can either be:
     * A raw string if it came from a static property access (e.g. `o.a`).
     * A wrapped value if it came from a computed member expression (e.g. `o["a"]`).
 
-* `exist`: triggered when scope lookup hits a `with` statement or the global object. The value returned by this trap should indcate whether the identifier exists in the environment-object. In the case of a `with` statement, a false value will make the lookup propagate to the enclosing scope. In the case of the global object, a false value will trigger a reference error.
+* `exist`: triggered when scope lookup hits a `with` statement or the global object. The value returned by this trap should indicate whether the identifier exists in the environment-object. In the case of a `with` statement, a false value will make the lookup propagate to the enclosing scope. In the case of the global object, a false value will trigger a reference error.
 
 
-### Precision concerning JavaScript
+### Precision concerning JavaScript semantic
 
 You are free to return the value you want from trap calls, however be aware that doing so carelessly will most likely result into a modification of JavaScript semantic. For instance you are free to say that `1+1 = 11` (JCVD was right after all) but the target program will not behave the same after instrumentation. For those of you who want to stick close to JavaScript semantic here is a list of things to keep in mind when implementing traps:
 
@@ -254,4 +254,3 @@ You are free to return the value you want from trap calls, however be aware that
 
 * Support strict mode (currently being ignored).
 * Support last valued expression e.g.: `eval('if (true) 1; else 2;')`.
-* Statically optimize traps insertion (for now traps existence are checked during compilation while they could be checked only once).

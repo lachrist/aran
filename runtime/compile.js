@@ -34,11 +34,7 @@ module.exports = function (aran) {
   var sandboxstage  = aran.sandbox ? Sandbox(esv.visit, esv.mark, aran.sandbox) : Util.nil
   var trapsstage    = aran.traps   ? Traps(esv.visit, esv.mark, aran.traps)     : Util.nil
 
-  totaltime = 0
-  timecounter = 0
-
   function compile (local, code) {
-    var time = performance.now()
     var ast = Esprima.parse(code, options)
     var topvars = []
     hooksstage(ast)
@@ -50,13 +46,7 @@ module.exports = function (aran) {
     if (declarators.length) { ast.body.unshift(Esvisit.BS.Declaration(declarators)) }
     var errors = Esvalid.errors(ast)
     if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
-    var code = Escodegen.generate(ast)
-    
-    timecounter++
-    totaltime = totaltime + (performance.now() - time)
-    if (timecounter > 5500) { console.log("comp: "+totaltime) }
-
-    return code
+    return Escodegen.generate(ast)
   }
 
   aran.compile = function (local, code) {

@@ -1,4 +1,6 @@
 
+// Track the origin of nulls and undefined.
+
 ///////////
 // Setup //
 ///////////

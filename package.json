@@ -1,12 +1,13 @@
 { "name" : "aran"
-, "description" : "Aran embeds a JS compiler for performing instrumentation or shadow execution"
-, "version" : "0.0.10"
+, "description" : "Aran is JavaScript source-to-source code transformer to build dynamic analysis tools"
+, "version" : "0.1.0"
 , "author" : {"name":"Laurent Christophe", "email":"lachrist@vub.ac.be"}
 , "repository": "lachrist/aran"
+, "homepage": "http://github.com/lachrist/aran"
 , "license" : "MIT"
-, "scripts": { "test": "mocha --harmony" }
-, "dependencies": {"esprima":"*", "esvisit":"*", "esvalid":"*", "escodegen":"*"}
-, "files" : ["main.js", "util.js", "runtime", "stage", "syntax"]
+, "bin": "run.js"
+, "dependencies": {"esprima":"0.0.6", "esvisit":"*", "esvalid":"*", "escodegen":"*"}
+, "files" : ["main.js", "run.js", "util.js", "runtime", "stage", "syntax"]
 , "main": "main.js"
 , "keywords" : ["JavaScript", "Instrumentation", "Sandboxing", "Monitoring", "Tracing", "Shadow Execution", "ECMAScript5"]
 }

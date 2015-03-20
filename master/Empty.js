@@ -1,3 +1,2 @@
 
-// This analysis does absolutely nothing!
-// *yay*
+// This analysis does absolutely nothing! *yay*

@@ -1,4 +1,6 @@
 
+// Log everything that Aran can intercept/record!
+
 /////////////
 // Sandbox //
 /////////////

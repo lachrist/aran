@@ -1,4 +1,23 @@
 
+// Extension of the Harmony Proxy API. AranProxies can track unary and binary
+// operations as well as other operations already tracked by Harmony Proxies.
+// Try the snippet in target:
+/*
+var x = new AranProxy(1, {
+  binary: function (op, x, y) {
+    console.log("Binary: "+x+" "+op+" "+y)
+    return 666
+  },
+  apply: function (fct, th, args) {
+    console.log("Apply: "+fct)
+    return args.join("-") 
+  }
+})
+if (x+2 !== 666) { throw "fail1" }
+if (3+x !== 666) { throw "fail2" }
+*/
+
+
 function unwrap (x) { return (x && x.__aranproxy__) ? x.target : x }
 function gettrap (x, name) { if (x && x.__aranproxy__) { return x.traps[name] } }
 window.AranProxy = function (target, traps) {
