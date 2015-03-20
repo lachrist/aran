@@ -15,7 +15,7 @@ module.exports = function (sandbox, hooks, traps) {
 
   return function (x) {
     aran.flush()
-    var code = (typeof x.code === "string") ? x.code : x
+    var code = (typeof x.code === "string") ? x : x.code
     aran.global.aran = aran
     x.compiled = globalcompile(code)
     return aran.eval(x.compiled)
