@@ -1,12 +1,12 @@
 { "name" : "aran"
 , "description" : "Aran is JavaScript source-to-source code transformer to build dynamic analysis tools"
-, "version" : "0.1.0"
+, "version" : "0.1.1"
 , "author" : {"name":"Laurent Christophe", "email":"lachrist@vub.ac.be"}
 , "repository": "lachrist/aran"
 , "homepage": "http://github.com/lachrist/aran"
 , "license" : "MIT"
 , "bin": "run.js"
-, "dependencies": {"esprima":"0.0.6", "esvisit":"*", "esvalid":"*", "escodegen":"*"}
+, "dependencies": {"esprima":"*", "esvisit":"0.0.6", "esvalid":"*", "escodegen":"*"}
 , "files" : ["main.js", "run.js", "util.js", "runtime", "stage", "syntax"]
 , "main": "main.js"
 , "keywords" : ["JavaScript", "Instrumentation", "Sandboxing", "Monitoring", "Tracing", "Shadow Execution", "ECMAScript5"]
