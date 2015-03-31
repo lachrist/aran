@@ -1,6 +1,5 @@
 
-// Setup runtime stack to provide temporary memory
-// Define:
+// Setup runtime stack to provide temporary memory, defines:
 //   - aran.push{1,2,3}
 //   - aran.get{1,2,3}
 //   - aran.pop{1,2,3}

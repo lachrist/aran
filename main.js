@@ -1,27 +1,30 @@
 
-var Escape = require("./runtime/escape.js")
 var Stack = require("./runtime/stack.js")
-var Sandbox = require("./runtime/sandbox.js")
+var Scope = require("./runtime/scope.js")
 var Compile = require("./runtime/compile.js")
+var Store = require("./runtime/store.js")
 
-module.exports = function (sandbox, hooks, traps) {
+module.exports = function (sandbox, traps) {
 
-  var aran = {sandbox:sandbox, hooks:hooks, traps:traps}
+  var aran = {
+    sandbox: sandbox,
+    traps: traps,
+    global: (function () { return this } ())
+  }
 
-  Escape(aran)
   Stack(aran)
-  Sandbox(aran)
-  var globalcompile = Compile(aran)
+  Scope(aran)
+  var save = Store(aran)
+  var globalcompile = Compile(aran, save)
 
   return function (x) {
     aran.flush()
-    var code = (typeof x === "string") ? x : x.code
+    var code = x.code || x
+    var parent = x.parent || null
     aran.global.aran = aran
-    var compiled = globalcompile(code)
-    x.compiled = globalcompile(code)
-    return aran.eval(compiled)
+    var compiled = globalcompile(parent, code)
+    x.compiled = compiled
+    return aran.global.eval(compiled)
   }
 
 }
-
-

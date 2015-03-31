@@ -1,5 +1,5 @@
 
-// Assemble compilations stages and define aran.compile
+// Assemble compilations stages, defines: aran.compile.
 
 var Esprima = require("esprima")
 var Esvisit = require("esvisit")
@@ -8,11 +8,13 @@ var Escodegen = require("escodegen")
 
 var Util = require("../util.js")
 
-var Hooks = require("../stage/hooks.js")
-var Sanitize = require("../stage/sanitize.js")
+var Shadow = require("../syntax/shadow.js")
+var Ptah = require("../syntax/ptah.js")
+
 var Hoist = require("../stage/hoist.js")
+var Sanitize = require("../stage/sanitize.js")
 var Sandbox = require("../stage/sandbox.js")
-var Traps = require("../stage/traps.js")
+var Intercept = require("../stage/intercept.js")
 
 function summarize (error) {
   var sum = error.message+" for node:";
@@ -20,40 +22,59 @@ function summarize (error) {
   return sum
 }
 
-module.exports = function (aran) {
-
-  var options = {
-    range: Boolean(aran.hooks&&(aran.hooks.StartRange||aran.hooks.EndRange)),
-    loc: Boolean(aran.hooks&&(aran.hooks.StartLoc||aran.hooks.EndLoc))
+function locate (program, parent) {
+  var workers = []
+  program.$locus = {parent:parent}
+  workers.push(program)
+  function setparent (k) { if (k[0] !== "$") { parent.$locus[k] = copy(parent[k]) } }
+  function copy (x) {
+    if (Array.isArray(x)) { return x.map(copy) }
+    if (x === null) { return null }
+    if (typeof x === "object") {
+      if (x.type) {
+        workers.push(x)
+        x.$locus = {parent:parent}
+        return x.$locus
+      }
+      var o = {}
+      var ks = Object.keys(x)
+      for (var i=0; i<ks.length; i++) { o[ks[i]] = copy(x[ks[i]]) }
+      return o
+    }
+    return x
   }
+  while (parent = workers.pop()) { Object.keys(parent).forEach(setparent) }
+}
+
+module.exports = function (aran, save) {
 
   var esv = Esvisit.Prepare()
-  var hooksstage    = aran.hooks   ? Hooks(esv.visit, esv.mark, aran.hooks)     : Util.nil
-  var sanitizestage =                Sanitize(esv.visit, esv.mark)
-  var hoiststage    =                Hoist(esv.visit, esv.mark)
-  var sandboxstage  = aran.sandbox ? Sandbox(esv.visit, esv.mark, aran.sandbox) : Util.nil
-  var trapsstage    = aran.traps   ? Traps(esv.visit, esv.mark, aran.traps)     : Util.nil
+  var hoist     =                Hoist(esv.visit, esv.mark)
+  var sanitize  =                Sanitize(esv.visit, esv.mark)
+  var sandbox   = aran.sandbox ? Sandbox(esv.visit, esv.mark, aran.sandbox)       : Util.nil
+  var intercept = aran.traps   ? Intercept(esv.visit, esv.mark, aran.traps, save) : Util.nil
 
-  function compile (local, code) {
-    var ast = Esprima.parse(code, options)
-    var topvars = []
-    hooksstage(ast)
-    sanitizestage(ast)
-    hoiststage(local, ast, topvars)
-    sandboxstage(local, ast, topvars)
-    trapsstage(ast, topvars)
-    var declarators = topvars.map(function (name) { return Esvisit.BuildDeclarator(name, null) })
-    if (declarators.length) { ast.body.unshift(Esvisit.BS.Declaration(declarators)) }
-    var errors = Esvalid.errors(ast)
+  aran.compile = function (isglobal, parent, code) {
+    var program = Esprima.parse(code, {loc:true})
+    locate(program, parent)
+    sanitize(program)
+    var topvars = hoist(program)
+    sandbox(program)
+    intercept(isglobal, program, topvars)
+    if (aran.sandbox && isglobal) {
+      program.body = [
+        Ptah.Expression(Shadow("sandboxdeclare", [Ptah.Array(topvars.map(Ptah.Literal))])),
+        Ptah.With(Shadow("membrane"), Ptah.Block(program.body))
+      ]
+    } else if (topvars.length) {
+      program.body.unshift(Ptah.Declaration(topvars.map(function (v) { return Ptah.Declarator(v, null) })))
+    }
+    console.log(Esvisit.View(program))
+    var errors = Esvalid.errors(program)
     if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
-    return Escodegen.generate(ast)
+    return Escodegen.generate(program)
   }
 
-  aran.compile = function (local, code) {
-    if (aran.traps&&aran.traps.stringify) { code = aran.traps.stringify(code) }
-    return compile(local, code)
-  }
-
-  return function (code) { return compile(false, code) }
+  return function (parent, code) { return aran.compile(true, parent, code) }
 
 }

@@ -5,97 +5,23 @@
 // Sandbox //
 /////////////
 
-function log (op, p) { console.log(op+" "+p) }
-
-exports.sandbox = new Proxy({}, {
-  has: function (s, p) { return (log("Has", p), p in s) },
-  get: function (s, p) { return (log("Get", p), s[p]) },
-  set: function (s, p, v) { return (log("Set", p), s[p]=v) },
-  deleteProperty: function (s, p) { return (log("Delete", p), delete s[p]) }
+exports.sandbox = new Proxy(window, {
+  has: function (s, p) { return (console.log("GlobalHas "+p), p in s) },
+  get: function (s, p) { return (console.log("GlobalGet "+p), s[p]) },
+  set: function (s, p, v) { return (console.log("GlobalSet "+p), s[p]=v) },
+  deleteProperty: function (s, p) { return (console.log("GlobalDel "+p), delete s[p]) }
 })
-
-///////////
-// Hooks //
-///////////
-
-exports.hooks = {}
-exports.hooks.StartRange = true
-exports.hooks.EndRange = true
-exports.hooks.StartLoc = true
-exports.hooks.EndLoc = true
-types().forEach(function (type) {
-  exports.hooks[type] = function (startrange, endrange, startloc, endloc) {
-    var infos = []
-    for (var i=4; i<arguments.length; i++) { infos.push(arguments[i]) }
-    var msg = type+":"
-    msg += " range "+startrange+"->"+endrange+";"
-    msg += " loc "+startloc+"->"+endloc+";"
-    msg += " infos "+JSON.stringify(infos)
-    console.log(msg)
-  }
-})
-
-function types () {
-  return [
-    // Statement Types //
-    "Empty",
-    "Strict",
-    "Block",
-    "Expression",
-    "If",
-    "Label",
-    "Break",
-    "Continue",
-    "With",
-    "Switch",
-    "Return",
-    "Throw",
-    "Try",
-    "While",
-    "DoWhile",
-    "DeclarationFor",
-    "For",
-    "IdentifierForIn",
-    "MemberForIn",
-    "DeclarationForIn",
-    "Definition",
-    "Declaration",
-    // Expression Types //
-    "This",
-    "Array",
-    "Object",
-    "Function",
-    "Sequence",
-    "IdentifierTypeof",
-    "IdentifierDelete",
-    "MemberDelete",
-    "Unary",
-    "Binary",
-    "IdentifierAssignment",
-    "MemberAssignment",
-    "IdentiferUpdate",
-    "MemberUpdate",
-    "Logical",
-    "Conditional",
-    "New",
-    "MemberCall",
-    "EvalCall",
-    "Call",
-    "Member",
-    "Identifier",
-    "Literal"
-  ]
-}
 
 ///////////
 // Traps //
 ///////////
 
-function log (trap, x) {
-  var msg = trap+": "
-  for (var i=1; i<arguments.length; i++) {
+function log (trap, n, x) {
+  var msg = trap
+  if (n) { msg += "@"+n.loc.start.line+"-"+n.loc.start.column+":"+n.type }
+  for (var i=2; i<arguments.length; i++) {
     if (typeof arguments[i] === "function") {
-      msg += " "+"[function "+arguments[i].name+"]"
+      msg += " [function "+arguments[i].name+"]"
     } else {
       msg += " "+String(arguments[i])
     }
@@ -105,35 +31,33 @@ function log (trap, x) {
 }
 
 exports.traps = {
-  primitive: function (x) { return log("primitive", x) },
-  undefined: function (c) { return (log("undefined", c), undefined) },
-  object: function (x) { return log("object", x) },
-  array: function (x) { return log("array", x) },
-  arguments: function (x) { return log("arguments", x) },
-  function: function (x) { return log("function", x) },
-  regexp: function (x) { return log("regexp", x) },
-  booleanize: function (x, c) { return log("booleanize", x, c) },
-  stringify: function (x) { return log("stringify", x) },
-  throw: function (x) { return log("throw", x) },
-  catch: function (x) { return log("catch", x) },
-  unary: function (op, x) { return (log("unary", op, x), eval(op+" x")) },
-  binary: function (op, x1, x2) { return (log("binary", op, x1, x2), eval("x1 "+op+" x2")) },
-  apply: function (f, o, xs) { return (log("apply", f, o, xs), f.apply(o, xs)) },
-  new: function (f, xs) {
-    log("new", f, xs)
-    function F() { return f.apply(this, xs) }
-    F.prototype = f.prototype
-    return new F()
-  },
-  get: function (o, p) { return (log("get", o, p), o[p]) },
-  set: function (o, p, v) { return (log("set", o, p, v), o[p]=v) },
-  delete: function (o, p) { return (log("delete", o, p), delete o[p]) },
-  enumerate: function (o) {
-    log("enumerate", o)
-    var ps = []
-    for (p in o) { ps.push(p) }
-    return ps
-  },
-  erase: function (p, r) { return (log("erase", p, r), r)  },
-  exist: function (o, p) { return (log("has", o, p), p in o) },
+  primitive: function (x, n) { return log("primitive", n, x) },
+  undefined: function (s, n) { return (log("undefined", n, s), undefined) },
+  object: function (x, n) { return log("object", n, x) },
+  array: function (x, n) { return log("array", n, x) },
+  arguments: function (x, n) { return log("arguments", n, x) },
+  function: function (x, n) { return log("function", n, x) },
+  regexp: function (p, f, n) { return (log("regexp", n, p , f), RegExp(p, f)) },
+  booleanize: function (x, n) { return log("booleanize", n, x) },
+  stringify: function (x, n) { return log("stringify", n, x) },
+  catch: function (x, n) { return log("catch", n, x) },
+  unary: function (op, x, n) { return (log("unary", n, op, x), eval(op+" x")) },
+  binary: function (op, x1, x2, n) { return (log("binary", n, op, x1, x2), eval("x1 "+op+" x2")) },
+  apply: function (f, o, xs, n) { return (log("apply", n, f, o, xs), f.apply(o, xs)) },
+  new: function (f, xs, n) { return (log("new", n, f, xs), new f(...xs)) },
+  has: function (o, k) { return (log("has", undefined, o, k), k in o) },
+  get: function (o, k, n) { return (log("get", n, o, k), o[k]) },
+  set: function (o, k, v, n) { return (log("set", n, o, k, v), o[k]=v) },
+  delete: function (o, k, n) { return (log("delete", n, o, k), delete o[k]) },
+  enumerate: function (o, n) {
+    log("enumerate", n, o)
+    var ks = []
+    for (k in o) { ks.push(k) }
+    return ks
+  }
 };
+
+  // function F() { return f.apply(this, xs) }
+  //   F.prototype = f.prototype
+  //   return new F()
+  // },

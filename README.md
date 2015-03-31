@@ -4,13 +4,7 @@ Aran is a npm module for facilitating the instrumentation of JavaScript programs
 
 **Aran uses ECMAScript6 Harmony Proxies which are currently only fully supported by Firefox; sanboxing and `with` statements will make Aran crash on Node, Safari, Chrome and Internet Explorer!**
 
-This module exposes a function that expects three arguments:
-
-* `sandbox`: a value used to mock the global object for the code being instrumented.
-* `hooks`: a set of functions used for tracing purposes.
-* `traps`: a set of functions for intercepting runtime values.
-
-Aran returns a function that will perform the dynamic analysis on any given code string. In the snippet below, we setup a simple yet powerful analysis that can be deployed to browsers using building tools such as `browserify`.
+This module exposes a function that expects three arguments. First, a value used to mock the global object for the code being instrumented. Second, set of functions for intercepting language-level operations. The return value of this module is a function that instrument and run passed code string. In the snippet below, we setup a simple yet powerful analysis that can be deployed to browsers using building tools such as `browserify`.
 
 ```javascript
 var Aran = require('aran');
@@ -19,33 +13,43 @@ var sandbox = {
   undefined: undefined,
   Math: Math
 };
-/* Trace binary operations */
-var hooks = {
-  StartLoc: true,
-  Binary: function (loc, op) { console.log('Binary operation '+op+' at '+loc) }
-};
-/* Disable unary operations; count function calls */
+/* Log binary operations and count function calls */
 var fcts = [];
 var traps = {
-  unary: function (op, arg) { throw new Error('Unary operation disabled') }
-  function: function (fct) {
+  binary: function (op, left, right, node) {
+    console.log();
+    return eval('left '+op+' right');
+  },
+  function: function (fct, node) {
     fcts.push(fct);
-    fct.__counter__ = 0;
+    fct.__birth__ = node
+    fct.__calls__ = [];
     return fct;
   },
-  apply: function (fct, th, args) {
-    fct.__counter__++;
+  apply: function (fct, th, args, node) {
+    fct.__calls__.push(node);
     return fct.apply(th, args);
   }
 };
 /* Run Aran and show results */
-var run = Aran(sandbox, hooks, traps);
-var target = ...; // Code to be instrumented
-var input = {code:target};
-var result = run(input);
-console.log(input.compiled);
-console.log(result);
-console.log(fcts.map(function (fct) { return fct.name+": "+fct.__counter__ }));
+var aran = Aran(sandbox, traps);
+var target = [
+  'function sqrt (x) { return Math.sqrt(x) }',
+  'function delta (a, b, c) { return  b * b - 4 * a * c}',
+  'function solve (a, b, c) {',
+  '  var sol1 = ((-b) + sqrt(delta(a, b, c))) / (2 * a);',
+  '  var sol2 = ((-b) - sqrt(delta(a, b, c))) / (2 * a);',
+  '  return [sol1, sol2];',
+  '}',
+  'solve(1, -5, 6);',
+].join('\n');
+console.log(aran(target));
+fct.forEach(function (fct) {
+  console.log('Function @ line:'+fct.__birth__.loc.start.line+', column:'+fct.__birth__.loc.start.column);
+  fct.__calls__.forEach(function (call) {
+    console.log('    Call @ line: '+call.loc.start.line+', column: '+call.loc.start.column);
+  });
+});
 ```
 
 Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has been designed to be run along the code being instrumented so it can instrument on the fly code evaluated at runtime. Statements that escape the instrumentation can easily mess things up, for instance `aran = null` will discard all information related to the current analysis.
@@ -95,31 +99,29 @@ For instance:
 
 ## Traps
 
-Unlike hooks, traps are designed to modify the semantic of the code being analyzed. They are useful for implementing shadow execution and, in general, any dynamic techniques that require runtime values. Traps have been designed to provide a minimal interface for piloting JavaScript semantic. That is that many non-fundamental JavaScript statements / expressions such as `x++` have been desugared to be expressed with simpler concepts. All traps are optional and independent. Traps are listed in the table below. Traps arguments that start with a capital letters are raw (unintercepted) value, while traps arguments that start with a lower case letter are intercepted values.
+Traps are useful for implementing shadow execution and, in general, any dynamic techniques that require runtime values. Traps have been designed to provide a minimal interface for piloting JavaScript semantic. That is that many non-fundamental JavaScript statements / expressions such as `x++` have been desugared to be expressed with simpler concepts. All traps are optional and independent. Traps are listed in the table below. Traps arguments that start with a capital letters are raw (unintercepted) value, while traps arguments that start with a lower case letter are intercepted values. The last argument of each trap is a Mozilla syntactic node ; in the transformed code, `:Literal:` means that the passed syntactic node is of type `Literal`.
 
  Trap | Target | Transformed
 :-----|:-------|:-----------
-`primitive(Value)` | `'foo'` | `aran.traps.primitive('foo')`
-`undefined(Cause)` | `return` | `return aran.traps.undefined('empty-return')`
-`object(Object)` | `{a:x}` | `aran.traps.object({a:x})`
-`array(Array)` | `[x,y,z]` | `aran.traps.array([x,y,z])`
-`arguments(Arguments)` | `function () {}` | `aran.traps.function(function () { arguments = aran.traps.arguments(arguments) })`
-`function(Function)` | `function () {}` | `aran.traps.function(function () { arguments = aran.traps.arguments(arguments) })`
-`regexp(Pattern, Flags)` | `/abc/g` | `aran.traps.regexp("abc", "g")`
-`booleanize(value, Cause)` | `x?:y:z` | `aran.traps.booleanize(x, '?:')?y:z`
-`stringify(value)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x)))`
-`throw(exception)` | `throw x` | `throw aran.traps.throw(x)`
-`catch([E/e]xception)` | `try {} catch (e) {}` | `try {} catch (e) { e = aran.traps.catch(e) }`
-`unary(Operator, argument)` | `!x` | `aran.traps.unary('!', x)`
-`binary(Operator, left, right)` | `x+y` | `aran.traps.binary('+', x, y)`
-`apply(function, this, Arguments)` | `f(x, y)` | `aran.traps.apply(f, undefined, [x,y])`
-`new(function, Arguments)` | `new F(x, y)` | `aran.traps.new(F, [x,y])`
-`get(object, [P/p]roperty)` | `o[k]` | `aran.traps.get(o, k)`
-`set(object, [P/p]roperty, value)` | `o[k] = v` | `aran.traps.set(o, k, v)`
-`delete(object, [P/p]roperty)` | `delete o[k]` | `aran.traps.delete(o, k)`
-`enumerate(object)` | `for ... in` | Its complicated...
-`exist(object, Property)` | Its complicated... | Its complicated...
-`erase(Identifier, Result)` | `delete x` | `aran.traps.erase('x', delete x)`
+`primitive(Value, Node)` | `'foo'` | `aran.traps.primitive('foo', :Literal:)`
+`object(Object, Node)` | `{a:x}` | `aran.traps.object({a:x}, :ObjectExpression:)`
+`array(Array, Node)` | `[x,y,z]` | `aran.traps.array([x,y,z], :ArrayExpression:)`
+`regexp(Pattern, Flags, Node)` | `/abc/gi` | `aran.traps.regexp("abc", "gi", :Literal:)`
+`function(Function, Node)` | `function (...) {...}` | `... function (...) { arguments = aran.traps.arguments(arguments, :FunctionExpression:); ... } ...`
+`arguments(Arguments, Node)` | `function (...) {...}` | `aran.traps.function(function (...) { ... }, :FunctionExpression:)`
+`undefined(MaybeName, Node)` | `return;` | `return aran.traps.undefined(null, :ReturnStatement:);`
+`Booleanize(value, Node)` | `x ? y : z` | `aran.traps.booleanize(x, :ConditionalExpression:) ? y : z`
+`Stringify(value, Node)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x, :CallExpression:)))`
+`catch([E/e]xception, Node)` | `... catch (e) { ... }` | `... catch (e) { e = aran.traps.catch(e, :TryStatement:); ... }`
+`unary(Operator, argument, Node)` | `!x` | `aran.traps.unary('!', x, :UnaryExpression:)`
+`binary(Operator, left, right, Node)` | `x+y` | `aran.traps.binary('+', x, y, :BinaryExpression:)`
+`apply(function, this, Arguments, Node)` | `f(x, y)` | `aran.traps.apply(f, aran.traps.global, [x,y], :CallExpression:)`
+`new(function, Arguments, Node)` | `new F(x, y)` | `aran.traps.new(F, [x,y], :NewExpression:)`
+`Has(object, Key)` | `x` | `x`
+`get(object, [K]key, MaybeNode)` | `o[k]` | `aran.traps.get(o, k, :MemberExpression:)`
+`set(object, [K]key, value, MaybeNode)` | `o[k] = v` | `aran.traps.set(o, k, v, :AssignmentExpression:)`
+`delete(object, [K]key, MaybeNode)` | `delete o[k]` | `aran.traps.delete(o, k, :UnaryExpression:)`
+`enumerate(object, Node)` | `for (x in o) { ... }` | `... aran.traps.enumerate(o, :ForInStatement:) ...`
 
 ### Remarks on traps
 
@@ -156,7 +158,7 @@ Unlike hooks, traps are designed to modify the semantic of the code being analyz
     * `'+'`
     * `'!'`
     * `'~'`
-    * `'typeof'`
+    * `'typeof'`: given value is a raw `undefined` if the argument is an undefined identifier
     * `'void'`
 
 * `binary`: valid `Operator` parameters are:
@@ -187,8 +189,7 @@ Unlike hooks, traps are designed to modify the semantic of the code being analyz
     * A raw string if it came from a static property access (e.g. `o.a`).
     * A wrapped value if it came from a computed member expression (e.g. `o["a"]`).
 
-* `exist`: triggered when scope lookup hits a `with` statement or the global object. The value returned by this trap should indicate whether the identifier exists in the environment-object. In the case of a `with` statement, a false value will make the lookup propagate to the enclosing scope. In the case of the global object, a false value will trigger a reference error.
-
+* `exist`: only trap not inserted inside the target code ; triggered instead when scope lookup hits a `with` statement or the global object. The value returned by this trap should indicate whether the identifier exists in the environment-object. In the case of a `with` statement, a false value will make the lookup propagate to the enclosing scope. In the case of the global object, a false value will trigger a reference error.
 
 ### Precision concerning JavaScript semantic
 

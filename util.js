@@ -89,3 +89,10 @@ exports.esprima = function (message) { error("esprima", message, arguments) }
 exports.internal = function (message) { error("internal", message, arguments) }
 
 exports.external = function (message) { error("external", message, arguments) }
+
+////////////////////////
+// Simply linked list //
+////////////////////////
+
+exports.link = function (data, next) { return {data:data, next:next} }
+

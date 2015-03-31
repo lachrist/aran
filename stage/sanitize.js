@@ -16,8 +16,7 @@
 // calls statements.Try (and throws a: stmt not defined).
 // I have really no idea why it does that...
 
-var Esvisit = require("esvisit")
-var Shadow = require("../syntax/shadow.js")
+var Ptah = require("../syntax/ptah.js")
 var Nasus = require("../syntax/nasus.js")
 var Util = require("../util.js")
 
@@ -25,7 +24,6 @@ module.exports = function (visit, mark) {
 
   var onexpressions = {}
   var onstatements = {}
-
   function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }
   function onexpression (type, expr) { if (onexpressions[type]) { return onexpressions[type](expr) } }
 
@@ -33,45 +31,56 @@ module.exports = function (visit, mark) {
   // Stack Preservation //
   ////////////////////////
 
+  // Try ::= Try
   onstatements.Try = function (stmt) {
-    stmt.block.body.unshift(Esvisit.BS.Expression(Nasus.mark()))
-    if (!stmt.finalizer) { stmt.finalizer = {type:"Block", body:[]} }
-    stmt.finalizer.body.unshift(Esvisit.BS.Expression(Nasus.unmark()))
+    var unmark = Ptah.Expression(Nasus.unmark())
+    return Ptah.Try(
+      (stmt.block.body.unshift(Ptah.Expression(Nasus.mark())), stmt.block.body),
+      stmt.handlers.length ? stmt.handlers[0].param.name : null,
+      stmt.handlers.length ? stmt.handlers[0].body.body : null,
+      stmt.finalizer ? (stmt.finalizer.body.unshift(unmark), stmt.finalizer.body) : [unmark],
+      stmt
+    )
   }
 
   /////////////
   // Logical //
   ///////////// 
 
+  // Logical ::= Conditional
   onexpressions.Logical = function (expr) {
-    return Esvisit.BE.Conditional(
+    var cond = Ptah.Conditional(
       Nasus.push(expr.left),
-      (expr.operator === "||") ? Nasus.pop() : Esvisit.BE.Sequence([Nasus.pop(), expr.right]),
-      (expr.operator === "||") ? Esvisit.BE.Sequence([Nasus.pop(), expr.right]) : Nasus.pop()
-    )
+      Nasus.pop(),
+      Ptah.Sequence([Nasus.pop(), expr.right]),
+      expr)
+    if (expr.operator === "&&") {
+      cond.consequent = cond.alternate
+      cond.alternate = Nasus.pop()
+    }
+    return cond
   }
 
   ////////////
   // Typeof //
   ////////////
 
-  // typeof ID >>> (typeof function () {
-  //   aran.mark ()
-  //   try {return ID} catch (_) {}
-  // } ())
+  // typeof ID >>> (typeof function () { try {return ID} catch (_) {} } ())
+  // IdentifierTypeof ::= Unary + Identifier
   onexpressions.IdentifierTypeof = function (expr) {
-    return Esvisit.BE.Unary(
+    return Ptah.Unary(
       "typeof",
-      Esvisit.BE.Call(
-        Esvisit.BE.Function(
+      Ptah.Call(
+        Ptah.Function(
           null,
           [],
-          [Esvisit.BS.Expression(Nasus.mark()), Esvisit.BS.Try(
-            [Esvisit.BS.Return(Esvisit.BE.Identifier(expr.argument.name))],
+          [Ptah.Try(
+            [Ptah.Return(Ptah.Identifier(expr.argument.name, expr))],
             "_",
-            [Esvisit.BS.Expression(Nasus.unmark())],
+            [],
             null)]),
-        []))
+        []),
+      expr)
   }
 
   //////////////////
@@ -82,62 +91,59 @@ module.exports = function (visit, mark) {
 
     function pushobject (member) { return Nasus.push1(member.object) }
     function pushproperty (member) { return member.computed ? Nasus.push2(member.property) : member.property.name }
-    function popmember (member) { return Esvisit.BE.Member(Nasus.pop1(), member.computed ? Nasus.pop2() : member.property.name) }
+    function popmember (member, ancestor) { return Ptah.Member(Nasus.pop1(), member.computed ? Nasus.pop2() : member.property.name, ancestor) }
 
-    onexpressions.IdentifierAssignment = function (expr) {
-      if (expr.operator === "=") { return }
-      return Esvisit.BE.IdentifierAssignment(
-        "=",
+    // IdentifierBinaryAssignment ::= IdentifierAssignment + Binary + Identifier
+    onexpressions.IdentifierBinaryAssignment = function (expr) {
+      return Ptah.IdentifierAssignment(
         expr.left.name,
-        Esvisit.BE.Binary(
+        Ptah.Binary(
           expr.operator.replace("=", ""),
-          Esvisit.BE.Identifier(expr.left.name),
-          expr.right
-        )
-      )
+          Ptah.Identifier(expr.left.name, expr),
+          expr.right,
+          expr),
+        expr)
     }
 
-    onexpressions.MemberAssignment = function (expr) {
-      if (expr.operator === "=") { return }
-      return Esvisit.BE.MemberAssignment(
-        "=",
+    // MemberBinaryAssignment ::= MemberAssignment + Binary + Member
+    onexpressions.MemberBinaryAssignment = function (expr) {
+      return Ptah.MemberAssignment(
         pushobject(expr.left),
         pushproperty(expr.left),
-        Esvisit.BE.Binary(
+        Ptah.Binary(
           expr.operator.replace("=", ""),
-          popmember(expr.left),
-          expr.right
-        )
-      )
+          popmember(expr.left, expr),
+          expr.right,
+          expr),
+        expr)
     }
 
+    // IdentifierUpdate ::= IdentifierAssignment + Binary + Identifier + Literal
     onexpressions.IdentifierUpdate = function (expr) {
-      var ass = Esvisit.BE.IdentifierAssignment(
-        "=",
+      var ass = Ptah.IdentifierAssignment(
         expr.argument.name,
-        Esvisit.BE.Binary(
+        Ptah.Binary(
           expr.operator[0],
-          (expr.prefix?Util.identity:Nasus.push)(Esvisit.BE.Identifier(expr.argument.name)),
-          Esvisit.BE.Literal(1)
-        )
-      )
+          (expr.prefix?Util.identity:Nasus.push)(Ptah.Identifier(expr.argument.name, expr)),
+          Ptah.Literal(1, expr),
+        expr))
       if (expr.prefix) { return ass }
-      return Esvisit.BE.Sequence([ass, Nasus.pop()])
+      return Ptah.Sequence([ass, Nasus.pop()])
     }
 
+    // MemberUpdate ::= MemberAssignment + Binary + Member + Literal
     onexpressions.MemberUpdate = function (expr) {
-      var ass = Esvisit.BE.MemberAssignment(
-        "=",
+      var ass = Ptah.MemberAssignment(
         pushobject(expr.argument),
         pushproperty(expr.argument),
-        Esvisit.BE.Binary(
+        Ptah.Binary(
           expr.operator[0],
-          (expr.prefix?Util.identity:Nasus.push3)(popmember(expr.argument)),
-          Esvisit.BE.Literal(1)
-        )
-      )
+          (expr.prefix?Util.identity:Nasus.push3)(popmember(expr.argument, expr)),
+          Ptah.Literal(1, expr),
+          expr),
+        expr)
       if (expr.prefix) { return ass }
-      return Esvisit.BE.Sequence([ass, Nasus.pop3()])
+      return Ptah.Sequence([ass, Nasus.pop3()])
     }
 
   }
@@ -148,37 +154,46 @@ module.exports = function (visit, mark) {
   // Strict //
   ////////////
 
-  onstatements.Strict = function (stmt) { return Esvisit.BS.Empty() }
+  // Strict ::=
+  onstatements.Strict = function (stmt) { return Ptah.Empty() }
 
   //////////////////////
   // Inline Accessors //
   //////////////////////
 
-  onexpressions.Object = function (expr) {
-    var hasaccessor = false
+  // AccessorObject ::= MemberCall + DataObject + DataObject + N*DataObject + 2*N*Literal + Max(2*N*Function)
+  // Semantic not preserved:
+  // var Object = null
+  // var o = { a:1, get b () {} } // OK
+  // // NOT OK //
+  // var o = Object.defineProperties({a:1}, {
+  //   b: {
+  //     configurable: true,
+  //     enumerable: true,
+  //     get: function () {}
+  //   }
+  // })
+  onexpressions.AccessorObject = function (expr) {
     var accessors = {}
-    var datadescriptors = []
-    var accessordescriptors = []
-    expr.properties.forEach(function (p) {
-      var key = p.key.name || p.key.value
-      if (p.kind === "init") { datadescriptors.push(Esvisit.BuildInitProperty(key, p.value)) }
-      else {
-        hasaccessor = true
-        if (!accessors[key]) { accessors[key] = {} }
-        accessors[key][p.kind] = Esvisit.BE.Function(null, (p.kind==="get")?[]:[p.value.params[0].name], p.value.body.body)
+    var properties = expr.properties.filter(function (p) {
+      if (p.kind === "init") { return true }
+      var k = p.key.name || p.key.value
+      if (!accessors[k]) {
+        accessors[k] = {
+          configurable: Ptah.Literal(true, p),
+          enumerable: Ptah.Literal(true, p)
+        }
       }
+      accessors[k][p.kind] = Ptah.Function(
+        null,
+        p.value.params.map(function (id) { return id.name }),
+        p.value.body.body,
+        p
+      )
+      return false
     })
-    if (!hasaccessor) { return }
-    for (var key in accessors) {
-      var descriptors = [
-        Esvisit.BuildInitProperty("configurable", Esvisit.BE.Literal(true)),
-        Esvisit.BuildInitProperty("enumerable", Esvisit.BE.Literal(true)),
-      ]
-      if (accessors[key].get) { descriptors.push(Esvisit.BuildInitProperty("get", accessors[key].get)) }
-      if (accessors[key].set) { descriptors.push(Esvisit.BuildInitProperty("set", accessors[key].set)) }
-      accessordescriptors.push(Esvisit.BuildInitProperty(key, Esvisit.BE.Object(descriptors)))
-    }
-    return Esvisit.BE.Call(Shadow("defineproperties"), [Esvisit.BE.Object(datadescriptors), Esvisit.BE.Object(accessordescriptors)])
+    Object.keys(accessors).map(function (k) { accessors[k] = Ptah.Set(accessors[k], expr) })
+    return Ptah.MemberCall(Ptah.Identifier("Object"), "defineProperties", [Ptah.DataObject(properties, expr), Ptah.Set(accessors, expr)])
   }
 
   ////////////
@@ -195,28 +210,57 @@ module.exports = function (visit, mark) {
     function pop () { stack.pop() }
     function get () { return Util.last(stack) ? ("switch"+Util.last(stack)) : null }
 
+    // Switch ::= Max(N*(If + Binary))
     onstatements.Switch = function (stmt) {
       stack.push(++counter)
       mark(pop)
-      var stmts = [Esvisit.BS.Expression(Nasus.push(stmt.discriminant))]
+      var stmts = [Ptah.Expression(Nasus.push(stmt.discriminant))]
       stmt.cases.forEach(function (c) {
         if (!c.test) { for (var i=0; i<c.consequent.length; i++) { stmts.push(c.consequent[i]) } }
-        else { stmts.push(Esvisit.BS.If(Esvisit.BE.Binary("===", Nasus.get(), c.test), Esvisit.BS.Block(c.consequent))) }
+        else {
+          stmts.push(Ptah.If(
+            Ptah.Binary("===", Nasus.get(), c.test, c),
+            Ptah.Block(c.consequent),
+            null,
+            c))
+        }
       })
-      return Esvisit.BS.Label(get(), Esvisit.BS.Try(stmts, null, null, [Esvisit.Halt(Esvisit.BS.Expression(Nasus.pop()))]))
+      return Ptah.Label(
+        get(),
+        Ptah.Try(stmts, null, null, [Ptah.Expression(Nasus.pop())]))
     }
 
+    // Label ::= Label
     onstatements.Label = function (stmt) { escape(stmt.label) }
+
+    // Continue ::= Continue
     onstatements.Continue = function (stmt) { if (stmt.label) { escape(stmt.label) } }
+
+    // Break ::= Break
     onstatements.Break = function (stmt) {
       if (stmt.label) { escape(stmt.label) }
-      else if (get()) { return Esvisit.BS.Break(get()) }
+      else if (get()) { return Ptah.Break(get(), stmt) }
     }
 
+    // While ::= While
     onstatements.While = mask
+
+    // DoWhile ::= DoWhile
     onstatements.DoWhile = mask
+
+    // DeclarationFor ::= DeclarationFor
+    onstatements.DeclarationFor = mask
+
+    // For ::= For
     onstatements.For = mask
+
+    // DeclarationForIn ::= DeclarationForIn
+    onstatements.DeclarationForIn = mask
+
+    // IdentifierForIn ::= IdentifierForIn
     onstatements.IdentifierForIn = mask
+
+    // MemberForIn ::= MemberForIn
     onstatements.MemberForIn = mask
 
   }

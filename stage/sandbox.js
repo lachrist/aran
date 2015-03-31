@@ -3,13 +3,13 @@
  * Make sure no identifier from the target code shadows aran.
  */
 
-var Esvisit = require("esvisit")
+var Ptah = require("../syntax/ptah.js")
 var Util = require("../util.js")
 var Nasus = require("../syntax/nasus.js")
 var Shadow = require("../syntax/shadow.js")
-var Nodify = require("../syntax/nodify.js")
 
 function escape (id) { if (/^\$*aran$/.test(id.name)) { id.name = "$"+id.name } }
+function descape (decl) { escape(decl.id) }
 
 module.exports = function (visit, mark, sandbox) {
 
@@ -22,59 +22,44 @@ module.exports = function (visit, mark, sandbox) {
   // Statements //
   ////////////////
 
+  // IdentifierForIn := IdentifierForIn
   onstatements.IdentifierForIn = function (stmt) { escape(stmt.left) }
+
+  // With ::= With
   onstatements.With = function (stmt) { stmt.object = Shadow("with", [stmt.object]) }
+
+  // Try ::= Try
   onstatements.Try = function (stmt) { if (stmt.handlers[0]) { escape(stmt.handlers[0].param) } }
 
   /////////////////
   // Expressions //
   /////////////////
 
+  // Function ::= HoistedFunction
   onexpressions.HoistedFunction = function (expr) {
     expr.params.forEach(escape)
-    if (expr.body.body[0].declarations) { expr.body.body[0].declarations.forEach(function (dec) { escape(dec.id) }) }
+    if (expr.body.body[0].declarations) { expr.body.body[0].declarations.forEach(descape) }
   }
 
-  // this >>> (this === aran.global) ? aran.sandbox : this
+  // This ::= This
+  // this >>> (aran.push(this) === aran.global) ? (nasus.pop(), aran.sandbox) : nasus.pop()
   onexpressions.This = function (expr) {
-    return Esvisit.BE.Conditional(
-      Esvisit.BE.Binary(
-        "===",
-        Esvisit.BE.This(),
-        Shadow("global")),
-      Esvisit.BE.Sequence([
-        Nasus.pop(),
-        Shadow("sandbox")]),
-      Esvisit.BE.This())
+    return Ptah.Conditional(
+      Ptah.Binary("===", Nasus.push(Ptah.This(expr)), Shadow("global")),
+      Ptah.Sequence([Nasus.pop(), Shadow("sandbox")]),
+      Nasus.pop())
   }
 
-  // delete ID >>> (aran.predelete(), aran.push(delete ID), aran.postdelete(), aran.pop())
-  onexpression.IdentifierDelete = function (expr) {
-    escape(expr.argument)
-    return Esvisit.BE.Sequence([
-      Shadow("predelete", []),
-      Nasus.push(Util.copy(expr)),
-      Shadow("postdelete", []),
-      Nasus.pop()])
-  }
-
+  // IdentifierAssignment ::= IdentifierAssignment
   onexpressions.IdentifierAssignment = function (expr) { escape(expr.left) }
 
-  onexpressions.identifier = escape
+  // Identifier ::= Identifier
+  onexpressions.Identifier = escape
 
   ////////////
   // Return //
   ////////////
 
-  return function (local, ast, topvars) {
-    visit(ast, onstatement, onexpression)
-    if (!local) {
-      ast.body = [
-        Esvisit.BS.Expression(Shadow("declare", [Nodify(topvars)])),
-        Esvisit.Ignore(Esvisit.BS.With(Shadow("proxy"), Esvisit.BS.Block(ast.body)))
-      ]
-      topvars.length = 0
-    }
-  }
+  return function (ast) { visit(ast, onstatement, onexpression) }
 
 }

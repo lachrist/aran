@@ -24,7 +24,7 @@ function run () {
   document.getElementById("compiled").value = ""
   var exports = {}
   try { eval(document.getElementById("master").value) } catch (e) { throw (alert("Error when running master: "+e), e) }
-  try { var aran = Aran(exports.sandbox, exports.hooks, exports.traps) } catch (e) { throw (alert("Error when setting up Aran: "+e),e) }
+  try { var aran = Aran(exports.sandbox, exports.traps) } catch (e) { throw (alert("Error when setting up Aran: "+e),e) }
   document.getElementById("run").disabled = false
   document.getElementById("run").onclick = function () {
     // Hide old results
