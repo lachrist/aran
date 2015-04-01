@@ -80,7 +80,7 @@ As stated above, the sandbox parameter will act in all point as if it was the gl
 
 ## Traps
 
-Traps can be used to implementing shadow execution and, in general, any dynamic techniques that require runtime values. Traps have been designed to provide a minimal interface for piloting JavaScript semantic. That is that many non-fundamental JavaScript features such as `x++` have been desugared to be expressed with simpler concepts. All traps are optional and independent. Traps are listed in the table below:
+Traps can be used to implement shadow execution and, in general, dynamic techniques that require runtime values. Traps have been designed to provide a minimal interface for piloting JavaScript semantic. That is that many non-fundamental JavaScript features such as `x++` have been desugared to be expressed with simpler concepts. All traps are independently optional. Traps are listed in the below table:
 
  Trap | Target | Transformed
 :-----|:-------|:-----------
@@ -106,10 +106,10 @@ Traps can be used to implementing shadow execution and, in general, any dynamic 
 
 Clarifications:
 
-1. Node arguments are mozilla ast node (see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API). The only difference is that each node has a `parent` properties that points to the node's parent allowing to traverse the ast from leafs to root.
+1. Node arguments are mozilla ast node (see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API). The only difference is that each node has a `parent` property that points to the node's parent allowing to traverse the ast from leafs to root.
 2. In the transformed column, `:ReturnStatement:` means that the given ast node is of type `ReturnStatement`.
 3. Arguments that start with a capital letter are raw (unintercepted) values while arguments that start with a lower case letter have been previously intercepted.
-4. There is no constraint to the shape of the values returned by traps starting with a lower case letter. `Booleanize` and `Has` should return a value of type `boolean` while `Stringify` should return a value of type `string`.
+4. There is no constraint on the shape of the values returned by traps starting with a lower case letter. `Booleanize` and `Has` should return a value of type `boolean` while `Stringify` should return a value of type `string`.
 
 ## Options
 
@@ -119,10 +119,10 @@ Option  | When set to true
 `loc`   | ast node have line and column-based location info (see http://esprima.org/doc/index.html)
 `range` | ast node have an index-based location range (array) (see http://esprima.org/doc/index.html)
 
-## ToDo
+## To-Do
 
 * Support strict mode (currently being ignored).
-* Support last valued expression e.g.: `eval('if (true) 1; else 2;')`.
+* Fully support last valued expression e.g.: `eval('switch (1) { case 1: 2; }')`.
 
 <!-- 
 ## Remarks on traps
