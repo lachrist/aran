@@ -6725,7 +6725,7 @@ function amdefine(module, requireFn) {
 
 module.exports = amdefine;
 
-}).call(this,require('_process'),"/../node_modules/escodegen/node_modules/source-map/node_modules/amdefine/amdefine.js")
+}).call(this,require('_process'),"/node_modules/escodegen/node_modules/source-map/node_modules/amdefine/amdefine.js")
 },{"_process":4,"path":3}],22:[function(require,module,exports){
 module.exports={
   "name": "escodegen",
