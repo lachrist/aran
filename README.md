@@ -106,10 +106,10 @@ Traps can be used to implement shadow execution and, in general, dynamic techniq
 
 Clarifications:
 
-1. Node arguments are mozilla ast node (see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API). The only difference is that each node has a `parent` property that points to the node's parent allowing to traverse the ast from leafs to root.
-2. In the transformed column, `:ReturnStatement:` means that the given ast node is of type `ReturnStatement`.
-3. Arguments that start with a capital letter are raw (unintercepted) values while arguments that start with a lower case letter have been previously intercepted.
-4. There is no constraint on the shape of the values returned by traps starting with a lower case letter. `Booleanize` and `Has` should return a value of type `boolean` while `Stringify` should return a value of type `string`.
+  1. Node arguments are mozilla ast node (see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API). The only difference is that each node has a `parent` property that points to the node's parent allowing to traverse the ast from leafs to root.
+  2. In the transformed column, `:ReturnStatement:` means that the given ast node is of type `ReturnStatement`.
+  3. Arguments that start with a capital letter are raw (unintercepted) values while arguments that start with a lower case letter have been previously intercepted.
+  4. There is no constraint on the shape of the values returned by traps starting with a lower case letter. `Booleanize` and `Has` should return a value of type `boolean` while `Stringify` should return a value of type `string`.
 
 ## Options
 
