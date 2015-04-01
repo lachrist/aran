@@ -12832,7 +12832,7 @@ module.exports = function () {
 
   function visit (ast, onstmt, onexpr) {
     var type, node, child
-    for (var i=0; i<ast.body.length; i++) { workerlist.push(ast.body[i]) }
+    for (var i=ast.body.length-1; i>=0; i--) { workerlist.push(ast.body[i]) }
     while (node = workerlist.pop()) {
       if (typeof node === "function") { node() }
       else if (!node.$halt) {
