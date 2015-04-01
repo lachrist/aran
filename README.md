@@ -1,14 +1,18 @@
 # Aran <img src="aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
 
-Aran is a npm module for facilitating the instrumentation of JavaScript programs. Aran is based on a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: profiling, tracing, sandboxing, and symbolic execution. To install: `npm install aran`.
+Aran is a npm module for facilitating the instrumentation of JavaScript programs at runtime. Aran is based on a source-to-source code transformation largely compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: profiling, tracing, sandboxing, and symbolic execution. To install: `npm install aran`.
 
-**Aran uses ECMAScript6 Harmony Proxies which are currently only fully supported by Firefox; sanboxing and `with` statements will make Aran crash on Node, Safari, Chrome and Internet Explorer!**
+**Aran uses ECMAScript6 Harmony Proxies which are currently only well supported by Firefox. Sanboxing and `with` statements will make Aran crash on Node, Safari, Chrome and Internet Explorer!**
 
-This module exposes a function that expects three arguments. First, a value used to mock the global object for the code being instrumented. Second, set of functions for intercepting language-level operations. The return value of this module is a function that instrument and run passed code string. In the snippet below, we setup a simple yet powerful analysis that can be deployed to browsers using building tools such as `browserify`.
+This module exposes a function that expects three arguments.
+1. A value used to mock the global object for the code being instrumented.
+2. A set of functions for intercepting language-level operations.
+3. A set of options
+The return value of Aran is a function that instrument and run given code string. In the snippet below, we setup a simple yet powerful analysis that can be deployed to browsers using building tools such as `browserify`.
 
 ```javascript
 var Aran = require('aran');
-/* Very strict sandbox that only allow Math access */
+/* Very strict sandbox that only allows Math access */
 var sandbox = {undefined:undefined, Math:Math};
 /* Traps get an AST with source code location */
 var options = {ast:true, loc:true};
