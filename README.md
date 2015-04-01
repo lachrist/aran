@@ -1,14 +1,10 @@
 # Aran <img src="aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
 
-Aran is a npm module for facilitating the instrumentation of JavaScript programs at runtime. Aran is based on a source-to-source code transformation largely compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: profiling, tracing, sandboxing, and symbolic execution. To install: `npm install aran`.
+Aran is a npm module for dynamically instrumenting JavaScript code. Aran is based on a source-to-source code transformation largely compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: profiling, tracing, sandboxing, and symbolic execution. To install: `npm install aran`.
 
 **Aran uses ECMAScript6 Harmony Proxies which are currently only well supported by Firefox. Sanboxing and `with` statements will make Aran crash on Node, Safari, Chrome and Internet Explorer!**
 
-This module exposes a function that expects three arguments.
-1. A value used to mock the global object for the code being instrumented.
-2. A set of functions for intercepting language-level operations.
-3. A set of options
-The return value of Aran is a function that instrument and run given code string. In the snippet below, we setup a simple yet powerful analysis that can be deployed to browsers using building tools such as `browserify`.
+This module exposes a function that expects three arguments: (i) a value used to mock the global object for the code being instrumented, (ii) a set of functions for intercepting language-level operations, (iii) a set of options. The return value of Aran is a function that instrument and run given code string. In the snippet below, we setup a simple yet powerful analysis that can be deployed to browsers using building tools such as `browserify`.
 
 ```javascript
 var Aran = require('aran');
@@ -62,54 +58,29 @@ Function@2-0
   Call@7-0
 ```
 
-Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has been designed to be run along the code being instrumented so it can instrument on the fly code evaluated at runtime. Statements that escape the instrumentation can easily mess things up, for instance `aran = null` will discard all information related to the current analysis.
+We choosed to instrument JavaScript code at runtime to support dynamic code evaluation enabled by the infamous `eval` function and the `Function` constructor. If code was instrumented statically, dynamic code evaluation would be uninstrumented wich could easily break the analysis ; consider: `eval('delete aran.sandbox')`. Consequently, as shown in the above snippet, Aran has been designed to be on the same virtual machine as the code being instrumented.
 
 ## Demonstration
 
-Download the files `demo/demo.html` and `demo/bundle.js` and put them into the same directory. Then simply open `demo.html` with a recent version of Firefox. In the master text field, you can specify aran's parameters using exports: `exports.sandbox`, `exports.hooks` and `exports.traps`. Note that there is a set of built-in analyses available through the drop-down list. The target text field expects the code to be instrumented.
+Download the files `demo/demo.html` and `demo/bundle.js` and put them into the same directory. Then simply open `demo.html` with a recent version of Firefox. In the master text field, you can specify aran's parameters using exports: `exports.sandbox`, `exports.traps` and `exports.options`. Note that there is a set of built-in analyses available through the drop-down list. The target text field expects the code to be instrumented.
 
 <img src="demo.png" align="center" alt="demo" title="Demonstration"/>
 
 ## Sandbox
 
-As stated above, the sandbox parameter will act in all point as if it was the global object of the code being instrumented. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `has`, `get`, `set` and `delete` are implemented, the sandbox can be of any type, otherwise it should be a JavaScript object. Two sandbox properties have a particular status:
+As stated above, the sandbox parameter will act in all point as if it was the global object of the code being instrumented. The difficulty of coming up with a suitable sandbox for complex analysis such as dynamic symbolic execution is not to be underestimated. If the traps `has`, `get`, `set` and `delete` are implemented, the sandbox can be a value of any type, otherwise it should be a JavaScript object. Two sandbox properties have a particular status:
+
   * `eval`: Letting the target code accessing the built-in `window.eval` function enables direct eval calls (see: http://www.ecma-international.org/ecma-262/5.1/#sec-15.1.2.1.1) ; any other value will prevent the target to perform direct eval call. Roughly, `eval(x)` is compiled into a conditional expression where the consequent is a direct eval call and the alternative a normal function call:
     
     ```javascript
-    (eval === aran.eval) ? eval(aran.compile(x)) : eval(x)
+    (eval === aran.global.eval) ? eval(aran.compile(x)) : eval(x)
     ```
   
-  * `undefined`: Because `undefined` is omnipresent in JavaScript, it does not really make sense to rule it out of the sandbox. If the sandbox does not contain an undefined entry (i.e.: `sandobx['undefined'] = undefined`), it will merely prevent the target code to explicitely access `undefined` using an identifier. If you want to intercept any apparation of `undefined` (e.g.: undefined arguments, empty returns, etc), you should implement `traps.undefined` instead. Assuming that the sandbox verifies `sandbox['undefined'] = undefined`, the trap will be triggered on explicit `undefined` reference as well. More technically, `undefined` identifiers are compiled into the below conditional:
-    
-    ```javascript
-    (undefined === aran.undefined) ? aran.traps.undefined('identifier') : undefined
-    ```
-
-## Hooks
-
-Hooks are functions called before executing statements and expressions. Although Aran uses Esprima which follows Mozilla node types (see: https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API), hooks follow the AST types described in https://github.com/lachrist/esvisit which better represent JavaScript semantic. All hooks are optional and independent. Each hook will be called with syntactic information described in https://github.com/lachrist/esvisit. For instance `o.f(x)` triggers `hooks.MemberCall('f', 1)` where the first argument is the name of the property (if not computed) and the second argument is the number of passed argument. Those syntactic information can completed with code location:
-  1. `StartRange`: The index where the statement / expression start.
-  2. `EnRange`: The index where the statement / expression end.
-  3. `StartLoc`: The `line-column` where the statement / expression start.
-  4. `EndLoc`: The `line-column` where the statement / expression end.
-
-For instance:
-
-  ```javascript
-  hooks.StartRange = true
-  hooks.EndRange = true
-  hooks.StartLoc = true
-  hooks.EndLoc = true
-  hooks.MemberCall = function (StartRange, EndRange, StartLoc, EndLoc, MaybeProperty, ArgumentsLength) {
-    console.log('MemberCall '+MaybeProperty+' ArgumentsLength');
-    console.log('  Range: '+StartRange+' -> '+EndRange);
-    console.log('  Loc: '+StartLoc+' -> '+EndLoc);
-  }
-  ```
+  * `undefined`: Because `undefined` is omnipresent in JavaScript, it does not really make sense to rule it out of the sandbox. Blacklisting `undefined` from the sandbox will merely prevent the target code to explicitely access `undefined` using an identifier. If you want to intercept any apparation of `undefined` (e.g.: undefined arguments, empty returns, etc), you should implement `traps.undefined` instead. Assuming that the sandbox verifies `sandbox['undefined'] = undefined`, the trap will be triggered on explicit `undefined` reference as if it was a literal.
 
 ## Traps
 
-Traps are useful for implementing shadow execution and, in general, any dynamic techniques that require runtime values. Traps have been designed to provide a minimal interface for piloting JavaScript semantic. That is that many non-fundamental JavaScript statements / expressions such as `x++` have been desugared to be expressed with simpler concepts. All traps are optional and independent. Traps are listed in the table below. Traps arguments that start with a capital letters are raw (unintercepted) value, while traps arguments that start with a lower case letter are intercepted values. The last argument of each trap is a Mozilla syntactic node ; in the transformed code, `:Literal:` means that the passed syntactic node is of type `Literal`.
+Traps can be used to implementing shadow execution and, in general, any dynamic techniques that require runtime values. Traps have been designed to provide a minimal interface for piloting JavaScript semantic. That is that many non-fundamental JavaScript features such as `x++` have been desugared to be expressed with simpler concepts. All traps are optional and independent. Traps are listed in the table below:
 
  Trap | Target | Transformed
 :-----|:-------|:-----------
@@ -133,7 +104,28 @@ Traps are useful for implementing shadow execution and, in general, any dynamic 
 `delete(object, [K]key, MaybeNode)` | `delete o[k]` | `aran.traps.delete(o, k, :UnaryExpression:)`
 `enumerate(object, Node)` | `for (x in o) { ... }` | `... aran.traps.enumerate(o, :ForInStatement:) ...`
 
-### Remarks on traps
+Clarifications:
+
+1. Node arguments are mozilla ast node (see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API). The only difference is that each node has a `parent` properties that points to the node's parent allowing to traverse the ast from leafs to root.
+2. In the transformed column, `:ReturnStatement:` means that the given ast node is of type `ReturnStatement`.
+3. Arguments that start with a capital letter are raw (unintercepted) values while arguments that start with a lower case letter have been previously intercepted.
+4. There is no constraint to the shape of the values returned by traps starting with a lower case letter. `Booleanize` and `Has` should return a value of type `boolean` while `Stringify` should return a value of type `string`.
+
+## Options
+
+Option  | When set to true
+:-------|:----------------
+`ast`   | traps expect an ast mozilla node as last argument
+`loc`   | ast node have line and column-based location info (see http://esprima.org/doc/index.html)
+`range` | ast node have an index-based location range (array) (see http://esprima.org/doc/index.html)
+
+## ToDo
+
+* Support strict mode (currently being ignored).
+* Support last valued expression e.g.: `eval('if (true) 1; else 2;')`.
+
+<!-- 
+## Remarks on traps
 
 * `primitive`: primitive creation arise on the following literals:
     * `null`
@@ -260,8 +252,4 @@ You are free to return the value you want from trap calls, however be aware that
     assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'multiline')) === '{"value":false,"writable":false,"enumerable":false,"configurable":false}');
     assert(JSON.stringify(Object.getOwnPropertyDescriptor(r, 'lastIndex')) === '{"value":0,"writable":true,"enumerable":false,"configurable":false}');
     ```
-
-## ToDo
-
-* Support strict mode (currently being ignored).
-* Support last valued expression e.g.: `eval('if (true) 1; else 2;')`.
+ -->
