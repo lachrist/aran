@@ -11,7 +11,7 @@ window.onload = function () {
 function prepare () {
   var exports = {}
   eval(arguments[0])
-  return Aran(exports.sandbox, exports.traps)
+  return Aran(exports.sandbox, exports.traps, exports.options)
 }
 
 function round (x) { return Math.round(1000*x)/1000 }
@@ -145,11 +145,12 @@ var Scope = require("./runtime/scope.js")
 var Compile = require("./runtime/compile.js")
 var Store = require("./runtime/store.js")
 
-module.exports = function (sandbox, traps) {
+module.exports = function (sandbox, traps, options) {
 
   var aran = {
     sandbox: sandbox,
     traps: traps,
+    options: options,
     global: (function () { return this } ())
   }
 
@@ -13063,15 +13064,16 @@ function locate (program, parent) {
 
 module.exports = function (aran, save) {
 
+  var options = aran.options || {}
   var esv = Esvisit.Prepare()
   var hoist     =                Hoist(esv.visit, esv.mark)
   var sanitize  =                Sanitize(esv.visit, esv.mark)
   var sandbox   = aran.sandbox ? Sandbox(esv.visit, esv.mark, aran.sandbox)       : Util.nil
-  var intercept = aran.traps   ? Intercept(esv.visit, esv.mark, aran.traps, save) : Util.nil
+  var intercept = aran.traps   ? Intercept(esv.visit, esv.mark, aran.traps, options.ast?save:null) : Util.nil
 
   aran.compile = function (isglobal, parent, code) {
-    var program = Esprima.parse(code, {loc:true})
-    locate(program, parent)
+    var program = Esprima.parse(code, {loc:options.loc, range:options.range})
+    if (options.ast) { locate(program, parent) }
     sanitize(program)
     var topvars = hoist(program)
     sandbox(program)
@@ -13084,7 +13086,7 @@ module.exports = function (aran, save) {
     } else if (topvars.length) {
       program.body.unshift(Ptah.Declaration(topvars.map(function (v) { return Ptah.Declarator(v, null) })))
     }
-    console.log(Esvisit.View(program))
+    // console.log(Esvisit.View(program))
     var errors = Esvalid.errors(program)
     if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
     return Escodegen.generate(program)
@@ -13382,7 +13384,7 @@ module.exports = function (visit, mark, traps, save) {
   /////////////
 
   function trap (name, args, ancestor) {
-    args.push(Shadow("fetch", [Ptah.Literal(save(ancestor.$locus))]))
+    if (save) { args.push(Shadow("fetch", [Ptah.Literal(save(ancestor.$locus))])) }
     return Shadow("traps", name, args)
   }
 
@@ -13557,7 +13559,9 @@ module.exports = function (visit, mark, traps, save) {
     if (traps.stringify) { args[0] = trap("stringify", [args[0]], node) }
     args[0] = Shadow("compile", [
       Ptah.Literal(depth===0),
-      Shadow("fetch", [Ptah.Literal(save(node.$locus))]),
+      save
+        ? Shadow("fetch", [Ptah.Literal(save(node.$locus))])
+        : Ptah.Literal(null),
       args[0]])
     return Ptah.Conditional(
       Ptah.Binary("===", Nasus.push(Ptah.Identifier("eval")), Shadow("global", "eval")),
@@ -14003,7 +14007,7 @@ var BS = Esvisit.BuildStatement
 
 function finalize (node, ancestor) {
   if (!ancestor) { return Esvisit.Ignore(node) }
-  node.$locus = ancestor.$locus
+  if (ancestor.$locus) { node.$locus = ancestor.$locus }
   return node
 }
 

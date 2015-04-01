@@ -2,6 +2,15 @@
 // Log everything that Aran can intercept/record!
 
 /////////////
+// Options //
+/////////////
+
+exports.options = {
+  ast: true,
+  loc: true
+}
+
+/////////////
 // Sandbox //
 /////////////
 

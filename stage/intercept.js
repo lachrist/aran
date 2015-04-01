@@ -26,7 +26,7 @@ module.exports = function (visit, mark, traps, save) {
   /////////////
 
   function trap (name, args, ancestor) {
-    args.push(Shadow("fetch", [Ptah.Literal(save(ancestor.$locus))]))
+    if (save) { args.push(Shadow("fetch", [Ptah.Literal(save(ancestor.$locus))])) }
     return Shadow("traps", name, args)
   }
 
@@ -201,7 +201,9 @@ module.exports = function (visit, mark, traps, save) {
     if (traps.stringify) { args[0] = trap("stringify", [args[0]], node) }
     args[0] = Shadow("compile", [
       Ptah.Literal(depth===0),
-      Shadow("fetch", [Ptah.Literal(save(node.$locus))]),
+      save
+        ? Shadow("fetch", [Ptah.Literal(save(node.$locus))])
+        : Ptah.Literal(null),
       args[0]])
     return Ptah.Conditional(
       Ptah.Binary("===", Nasus.push(Ptah.Identifier("eval")), Shadow("global", "eval")),

@@ -5,7 +5,7 @@ var BS = Esvisit.BuildStatement
 
 function finalize (node, ancestor) {
   if (!ancestor) { return Esvisit.Ignore(node) }
-  node.$locus = ancestor.$locus
+  if (ancestor.$locus) { node.$locus = ancestor.$locus }
   return node
 }
 

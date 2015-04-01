@@ -10,7 +10,7 @@ window.onload = function () {
 function prepare () {
   var exports = {}
   eval(arguments[0])
-  return Aran(exports.sandbox, exports.traps)
+  return Aran(exports.sandbox, exports.traps, exports.options)
 }
 
 function round (x) { return Math.round(1000*x)/1000 }

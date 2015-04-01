@@ -1,8 +1,8 @@
 window.masters = {};
 window.masters.AranProxy = "\n// Extension of the Harmony Proxy API. AranProxies can track unary and binary\n// operations as well as other operations already tracked by Harmony Proxies.\n// Try the snippet in target:\n/*\nvar x = new AranProxy(1, {\n  binary: function (op, x, y) {\n    console.log(\"Binary: \"+x+\" \"+op+\" \"+y)\n    return 666\n  },\n  apply: function (fct, th, args) {\n    console.log(\"Apply: \"+fct)\n    return args.join(\"-\") \n  }\n})\nif (x+2 !== 666) { throw \"fail1\" }\nif (3+x !== 666) { throw \"fail2\" }\n*/\n\n\nfunction unwrap (x) { return (x && x.__aranproxy__) ? x.target : x }\nfunction gettrap (x, name) { if (x && x.__aranproxy__) { return x.traps[name] } }\nwindow.AranProxy = function (target, traps) {\n  return {\n    __aranproxy__: true,\n    target: target,\n    traps: traps\n  }\n}\n\nexports.traps = {\n  booleanize: unwrap,\n  stringify: unwrap,\n  unary: function (op, x) {\n    var trap = gettrap(x, \"unary\")\n    x = unwrap(x)\n    return trap ? trap(op, x) : eval(op+\" x\")\n  },\n  binary: function (op, x, y) {\n    var trap = gettrap(x, \"binary\") || gettrap(y, \"binary\")\n    x = unwrap(x)\n    y = unwrap(y)\n    return trap ? trap(op, x, y) : eval(\"x \"+op+\" y\")\n  },\n  function: function (fct) {\n    fct.__instrumented__ = true\n    return fct\n  },\n  apply: function (fct, th, args) {\n    var trap = gettrap(fct, \"apply\")\n    fct = unwrap(fct)\n    if (!fct.__instrumented__) {\n      th = unwrap(th)\n      args = args.map(unwrap)\n    }\n    return trap ? trap(fct, th, args) : fct.apply(th, args)\n  },\n  new: function (fct, args) {\n    var trap = gettrap(fct)\n    fct = unwrap(fct)\n    if (!fct.__instrumented__) {\n      args = args.map(unwrap)\n    }\n    return trap ? trap(fct, args) : new fct(...args)\n  },\n  get: function (obj, prop) {\n    var trap = gettrap(obj, \"get\")\n    obj = unwrap(obj)\n    prop = unwrap(prop)\n    return trap ? trap(obj, prop) : obj[prop]\n  },\n  set: function (obj, prop, val) {\n    var trap = gettrap(obj, \"set\")\n    obj = unwrap(obj)\n    prop = unwrap(prop)\n    return trap ? trap(obj, prop, val) : (obj[prop] = val)\n  },\n  delete: function (obj, prop) {\n    var trap = gettrap(obj, \"delete\")\n    obj = unwrap(obj)\n    prop = unwrap(prop)\n    return trap ? trap(obj, prop) : delete obj[prop]\n  },\n  enumerate: function (obj) {\n    var trap = gettrap(obj, \"enumerate\")\n    obj = unwrap(obj)\n    if (trap) { return trap(obj) }\n    var keys = [] \n    for (var key in obj) { keys.push(key) }\n    return keys\n  }\n}\n";
 window.masters.Empty = "\n// This analysis does absolutely nothing! *yay*\n";
-window.masters.Identity = "\n// exports.sandbox = window;\n\nexports.traps = {\n  primitive: function (x, n) { return x },\n  undefined: function (s, n) { return undefined },\n  object: function (x, n) { return x },\n  array: function (x, n) { return x },\n  arguments: function (x, n) { return x },\n  function: function (x, n) { return x },\n  regexp: function (p, f, n) { return RegExp(p, f) },\n  booleanize: function (x, n) { return x },\n  stringify: function (x, n) { return x },\n  catch: function (x, n) { return x },\n  unary: function (op, x, n) { return eval(op+\" x\") },\n  binary: function (op,  x1, x2, n) { return eval(\"x1 \"+op+\" x2\") },\n  apply: function (f, o, xs, n) { return f.apply(o, xs) },\n  new: function (f, xs, n) { return new f(...xs) },\n  has: function (o, k) { return k in o },\n  get: function (o, k, n) { return o[k] },\n  set: function (o, k, v, n) { return o[k]=v },\n  delete: function (o, k, n) { return delete o[k] },\n  enumerate: function (o, n) {\n    var ks = []\n    for (k in o) { ks.push(k) }\n    return ks\n  }\n};\n";
-window.masters.LogAll = "\n// Log everything that Aran can intercept/record!\n\n/////////////\n// Sandbox //\n/////////////\n\nexports.sandbox = new Proxy(window, {\n  has: function (s, p) { return (console.log(\"GlobalHas \"+p), p in s) },\n  get: function (s, p) { return (console.log(\"GlobalGet \"+p), s[p]) },\n  set: function (s, p, v) { return (console.log(\"GlobalSet \"+p), s[p]=v) },\n  deleteProperty: function (s, p) { return (console.log(\"GlobalDel \"+p), delete s[p]) }\n})\n\n///////////\n// Traps //\n///////////\n\nfunction log (trap, n, x) {\n  var msg = trap\n  if (n) { msg += \"@\"+n.loc.start.line+\"-\"+n.loc.start.column+\":\"+n.type }\n  for (var i=2; i<arguments.length; i++) {\n    if (typeof arguments[i] === \"function\") {\n      msg += \" [function \"+arguments[i].name+\"]\"\n    } else {\n      msg += \" \"+String(arguments[i])\n    }\n  }\n  console.log(msg)\n  return x\n}\n\nexports.traps = {\n  primitive: function (x, n) { return log(\"primitive\", n, x) },\n  undefined: function (s, n) { return (log(\"undefined\", n, s), undefined) },\n  object: function (x, n) { return log(\"object\", n, x) },\n  array: function (x, n) { return log(\"array\", n, x) },\n  arguments: function (x, n) { return log(\"arguments\", n, x) },\n  function: function (x, n) { return log(\"function\", n, x) },\n  regexp: function (p, f, n) { return (log(\"regexp\", n, p , f), RegExp(p, f)) },\n  booleanize: function (x, n) { return log(\"booleanize\", n, x) },\n  stringify: function (x, n) { return log(\"stringify\", n, x) },\n  catch: function (x, n) { return log(\"catch\", n, x) },\n  unary: function (op, x, n) { return (log(\"unary\", n, op, x), eval(op+\" x\")) },\n  binary: function (op, x1, x2, n) { return (log(\"binary\", n, op, x1, x2), eval(\"x1 \"+op+\" x2\")) },\n  apply: function (f, o, xs, n) { return (log(\"apply\", n, f, o, xs), f.apply(o, xs)) },\n  new: function (f, xs, n) { return (log(\"new\", n, f, xs), new f(...xs)) },\n  has: function (o, k) { return (log(\"has\", undefined, o, k), k in o) },\n  get: function (o, k, n) { return (log(\"get\", n, o, k), o[k]) },\n  set: function (o, k, v, n) { return (log(\"set\", n, o, k, v), o[k]=v) },\n  delete: function (o, k, n) { return (log(\"delete\", n, o, k), delete o[k]) },\n  enumerate: function (o, n) {\n    log(\"enumerate\", n, o)\n    var ks = []\n    for (k in o) { ks.push(k) }\n    return ks\n  }\n};\n\n  // function F() { return f.apply(this, xs) }\n  //   F.prototype = f.prototype\n  //   return new F()\n  // },";
+window.masters.Identity = "\n// exports.sandbox = window;\nexports.options = {ast:true}\nexports.traps = {\n  primitive: function (x, n) { return x },\n  undefined: function (s, n) { return undefined },\n  object: function (x, n) { return x },\n  array: function (x, n) { return x },\n  arguments: function (x, n) { return x },\n  function: function (x, n) { return x },\n  regexp: function (p, f, n) { return RegExp(p, f) },\n  booleanize: function (x, n) { return x },\n  stringify: function (x, n) { return x },\n  catch: function (x, n) { return x },\n  unary: function (op, x, n) { return eval(op+\" x\") },\n  binary: function (op,  x1, x2, n) { return eval(\"x1 \"+op+\" x2\") },\n  apply: function (f, o, xs, n) { return f.apply(o, xs) },\n  new: function (f, xs, n) { return new f(...xs) },\n  has: function (o, k) { return k in o },\n  get: function (o, k, n) { return o[k] },\n  set: function (o, k, v, n) { return o[k]=v },\n  delete: function (o, k, n) { return delete o[k] },\n  enumerate: function (o, n) {\n    var ks = []\n    for (k in o) { ks.push(k) }\n    return ks\n  }\n};\n";
+window.masters.LogAll = "\n// Log everything that Aran can intercept/record!\n\n/////////////\n// Options //\n/////////////\n\nexports.options = {\n  ast: true,\n  loc: true\n}\n\n/////////////\n// Sandbox //\n/////////////\n\nexports.sandbox = new Proxy(window, {\n  has: function (s, p) { return (console.log(\"GlobalHas \"+p), p in s) },\n  get: function (s, p) { return (console.log(\"GlobalGet \"+p), s[p]) },\n  set: function (s, p, v) { return (console.log(\"GlobalSet \"+p), s[p]=v) },\n  deleteProperty: function (s, p) { return (console.log(\"GlobalDel \"+p), delete s[p]) }\n})\n\n///////////\n// Traps //\n///////////\n\nfunction log (trap, n, x) {\n  var msg = trap\n  if (n) { msg += \"@\"+n.loc.start.line+\"-\"+n.loc.start.column+\":\"+n.type }\n  for (var i=2; i<arguments.length; i++) {\n    if (typeof arguments[i] === \"function\") {\n      msg += \" [function \"+arguments[i].name+\"]\"\n    } else {\n      msg += \" \"+String(arguments[i])\n    }\n  }\n  console.log(msg)\n  return x\n}\n\nexports.traps = {\n  primitive: function (x, n) { return log(\"primitive\", n, x) },\n  undefined: function (s, n) { return (log(\"undefined\", n, s), undefined) },\n  object: function (x, n) { return log(\"object\", n, x) },\n  array: function (x, n) { return log(\"array\", n, x) },\n  arguments: function (x, n) { return log(\"arguments\", n, x) },\n  function: function (x, n) { return log(\"function\", n, x) },\n  regexp: function (p, f, n) { return (log(\"regexp\", n, p , f), RegExp(p, f)) },\n  booleanize: function (x, n) { return log(\"booleanize\", n, x) },\n  stringify: function (x, n) { return log(\"stringify\", n, x) },\n  catch: function (x, n) { return log(\"catch\", n, x) },\n  unary: function (op, x, n) { return (log(\"unary\", n, op, x), eval(op+\" x\")) },\n  binary: function (op, x1, x2, n) { return (log(\"binary\", n, op, x1, x2), eval(\"x1 \"+op+\" x2\")) },\n  apply: function (f, o, xs, n) { return (log(\"apply\", n, f, o, xs), f.apply(o, xs)) },\n  new: function (f, xs, n) { return (log(\"new\", n, f, xs), new f(...xs)) },\n  has: function (o, k) { return (log(\"has\", undefined, o, k), k in o) },\n  get: function (o, k, n) { return (log(\"get\", n, o, k), o[k]) },\n  set: function (o, k, v, n) { return (log(\"set\", n, o, k, v), o[k]=v) },\n  delete: function (o, k, n) { return (log(\"delete\", n, o, k), delete o[k]) },\n  enumerate: function (o, n) {\n    log(\"enumerate\", n, o)\n    var ks = []\n    for (k in o) { ks.push(k) }\n    return ks\n  }\n};\n\n  // function F() { return f.apply(this, xs) }\n  //   F.prototype = f.prototype\n  //   return new F()\n  // },";
 window.masters.LogHooks = "\n// Log all the executed statements/expressions. For more information about\n// the node types listed below, see: https://github.com/lachrist/esvisit.\n\nexports.hooks = {}\nexports.hooks.StartRange = true\nexports.hooks.EndRange = true\nexports.hooks.StartLoc = true\nexports.hooks.EndLoc = true\ntypes().forEach(function (type) {\n  exports.hooks[type] = function (startrange, endrange, startloc, endloc) {\n    var infos = []\n    for (var i=4; i<arguments.length; i++) { infos.push(arguments[i]) }\n    var msg = type+\":\"\n    msg += \" range \"+startrange+\"->\"+endrange+\";\"\n    msg += \" loc \"+startloc+\"->\"+endloc+\";\"\n    msg += \" infos \"+JSON.stringify(infos)\n    console.log(msg)\n  }\n})\n\nfunction types () {\n  return [\n    // Statement Types //\n    \"Empty\",\n    \"Strict\",\n    \"Block\",\n    \"Expression\",\n    \"If\",\n    \"Label\",\n    \"Break\",\n    \"Continue\",\n    \"With\",\n    \"Switch\",\n    \"Return\",\n    \"Throw\",\n    \"Try\",\n    \"While\",\n    \"DoWhile\",\n    \"DeclarationFor\",\n    \"For\",\n    \"IdentifierForIn\",\n    \"MemberForIn\",\n    \"DeclarationForIn\",\n    \"Definition\",\n    \"Declaration\",\n    // Expression Types //\n    \"This\",\n    \"Array\",\n    \"Object\",\n    \"Function\",\n    \"Sequence\",\n    \"IdentifierTypeof\",\n    \"IdentifierDelete\",\n    \"MemberDelete\",\n    \"Unary\",\n    \"Binary\",\n    \"IdentifierAssignment\",\n    \"MemberAssignment\",\n    \"IdentiferUpdate\",\n    \"MemberUpdate\",\n    \"Logical\",\n    \"Conditional\",\n    \"New\",\n    \"MemberCall\",\n    \"EvalCall\",\n    \"Call\",\n    \"Member\",\n    \"Identifier\",\n    \"Literal\"\n  ]\n}\n";
 window.masters.LogSandbox = "\n// Prevent the instrumented code to access ANY property of the global object.\n// This includes: 'Object', 'Function' and even 'undefined'.\n// This master uses Harmony proxy to record operation made to the empty sandbox.\n\nfunction log (op, p) { console.log(op+\" \"+p) }\n\nexports.sandbox = new Proxy({}, {\n  has: function (s, p) { return (log(\"Has\", p), p in s) },\n  get: function (s, p) { return (log(\"Get\", p), s[p]) },\n  set: function (s, p, v) { return (log(\"Set\", p), s[p]=v) },\n  deleteProperty: function (s, p) { return (log(\"Delete\", p), delete s[p]) }\n})\n";
 window.masters.LogTraps = "\n// Log all the language-level operations intercepted by aran.\n// For more information about the trap listed below, see https://github.com/lachrist/aran.\n// The below implementation is transparent in the sense that it simply forward runtime value.\n// However you are can provide aribtrary code and heavily modify JS semantic.\n\nfunction log (trap, x) {\n  var msg = trap+\": \"\n  for (var i=1; i<arguments.length; i++) {\n    if (typeof arguments[i] === \"function\") {\n      msg += \" \"+\"[function \"+arguments[i].name+\"]\"\n    } else {\n      msg += \" \"+String(arguments[i])\n    }\n  }\n  console.log(msg)\n  return x\n}\n\nexports.traps = {\n  primitive: function (x) { return log(\"primitive\", x) },\n  undefined: function (c) { return (log(\"undefined\", c), undefined) },\n  object: function (x) { return log(\"object\", x) },\n  array: function (x) { return log(\"array\", x) },\n  arguments: function (x) { return log(\"arguments\", x) },\n  function: function (x) { return log(\"function\", x) },\n  regexp: function (x) { return log(\"regexp\", x) },\n  booleanize: function (x, c) { return log(\"booleanize\", x, c) },\n  stringify: function (x) { return log(\"stringify\", x) },\n  throw: function (x) { return log(\"throw\", x) },\n  catch: function (x) { return log(\"catch\", x) },\n  unary: function (op, x) { return (log(\"unary\", op, x), eval(op+\" x\")) },\n  binary: function (op, x1, x2) { return (log(\"binary\", op, x1, x2), eval(\"x1 \"+op+\" x2\")) },\n  apply: function (f, o, xs) { return (log(\"apply\", f, o, xs), f.apply(o, xs)) },\n  new: function (f, xs) {\n    log(\"new\", f, xs)\n    function F() { return f.apply(this, xs) }\n    F.prototype = f.prototype\n    return new F()\n  },\n  get: function (o, p) { return (log(\"get\", o, p), o[p]) },\n  set: function (o, p, v) { return (log(\"set\", o, p, v), o[p]=v) },\n  delete: function (o, p) { return (log(\"delete\", o, p), delete o[p]) },\n  enumerate: function (o) {\n    log(\"enumerate\", o)\n    var ps = []\n    for (p in o) { ps.push(p) }\n    return ps\n  },\n  erase: function (p, r) { return (log(\"erase\", p, r), r)  },\n  exist: function (o, p) { return (log(\"has\", o, p), p in o) },\n};\n";
@@ -34,7 +34,7 @@ function run () {
   document.getElementById("compiled").value = ""
   var exports = {}
   try { eval(document.getElementById("master").value) } catch (e) { throw (alert("Error when running master: "+e), e) }
-  try { var aran = Aran(exports.sandbox, exports.traps) } catch (e) { throw (alert("Error when setting up Aran: "+e),e) }
+  try { var aran = Aran(exports.sandbox, exports.traps, exports.options) } catch (e) { throw (alert("Error when setting up Aran: "+e),e) }
   document.getElementById("run").disabled = false
   document.getElementById("run").onclick = function () {
     // Hide old results
@@ -72,11 +72,12 @@ var Scope = require("./runtime/scope.js")
 var Compile = require("./runtime/compile.js")
 var Store = require("./runtime/store.js")
 
-module.exports = function (sandbox, traps) {
+module.exports = function (sandbox, traps, options) {
 
   var aran = {
     sandbox: sandbox,
     traps: traps,
+    options: options,
     global: (function () { return this } ())
   }
 
@@ -12758,7 +12759,7 @@ module.exports = function () {
 
   function visit (ast, onstmt, onexpr) {
     var type, node, child
-    for (var i=0; i<ast.body.length; i++) { workerlist.push(ast.body[i]) }
+    for (var i=ast.body.length-1; i>=0; i--) { workerlist.push(ast.body[i]) }
     while (node = workerlist.pop()) {
       if (typeof node === "function") { node() }
       else if (!node.$halt) {
@@ -12990,15 +12991,16 @@ function locate (program, parent) {
 
 module.exports = function (aran, save) {
 
+  var options = aran.options || {}
   var esv = Esvisit.Prepare()
   var hoist     =                Hoist(esv.visit, esv.mark)
   var sanitize  =                Sanitize(esv.visit, esv.mark)
   var sandbox   = aran.sandbox ? Sandbox(esv.visit, esv.mark, aran.sandbox)       : Util.nil
-  var intercept = aran.traps   ? Intercept(esv.visit, esv.mark, aran.traps, save) : Util.nil
+  var intercept = aran.traps   ? Intercept(esv.visit, esv.mark, aran.traps, options.ast?save:null) : Util.nil
 
   aran.compile = function (isglobal, parent, code) {
-    var program = Esprima.parse(code, {loc:true})
-    locate(program, parent)
+    var program = Esprima.parse(code, {loc:options.loc, range:options.range})
+    if (options.ast) { locate(program, parent) }
     sanitize(program)
     var topvars = hoist(program)
     sandbox(program)
@@ -13009,9 +13011,9 @@ module.exports = function (aran, save) {
         Ptah.With(Shadow("membrane"), Ptah.Block(program.body))
       ]
     } else if (topvars.length) {
-      program.body.unshift(Ptah.Declaration(topvars.map(Ptah.Declarator)))
+      program.body.unshift(Ptah.Declaration(topvars.map(function (v) { return Ptah.Declarator(v, null) })))
     }
-    console.log(Esvisit.View(program))
+    // console.log(Esvisit.View(program))
     var errors = Esvalid.errors(program)
     if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
     return Escodegen.generate(program)
@@ -13309,7 +13311,7 @@ module.exports = function (visit, mark, traps, save) {
   /////////////
 
   function trap (name, args, ancestor) {
-    args.push(Shadow("fetch", [Ptah.Literal(save(ancestor.$locus))]))
+    if (save) { args.push(Shadow("fetch", [Ptah.Literal(save(ancestor.$locus))])) }
     return Shadow("traps", name, args)
   }
 
@@ -13484,7 +13486,9 @@ module.exports = function (visit, mark, traps, save) {
     if (traps.stringify) { args[0] = trap("stringify", [args[0]], node) }
     args[0] = Shadow("compile", [
       Ptah.Literal(depth===0),
-      Shadow("fetch", [Ptah.Literal(save(node.$locus))]),
+      save
+        ? Shadow("fetch", [Ptah.Literal(save(node.$locus))])
+        : Ptah.Literal(null),
       args[0]])
     return Ptah.Conditional(
       Ptah.Binary("===", Nasus.push(Ptah.Identifier("eval")), Shadow("global", "eval")),
@@ -13930,7 +13934,7 @@ var BS = Esvisit.BuildStatement
 
 function finalize (node, ancestor) {
   if (!ancestor) { return Esvisit.Ignore(node) }
-  node.$locus = ancestor.$locus
+  if (ancestor.$locus) { node.$locus = ancestor.$locus }
   return node
 }
 

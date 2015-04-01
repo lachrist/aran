@@ -9,47 +9,53 @@ This module exposes a function that expects three arguments. First, a value used
 ```javascript
 var Aran = require('aran');
 /* Very strict sandbox that only allow Math access */
-var sandbox = {
-  undefined: undefined,
-  Math: Math
-};
-/* Log binary operations and count function calls */
+var sandbox = {undefined:undefined, Math:Math};
+/* Traps get an AST with source code location */
+var options = {ast:true, loc:true};
+/* Track calls on user-defined functions */
 var fcts = [];
 var traps = {
-  binary: function (op, left, right, node) {
-    console.log();
-    return eval('left '+op+' right');
-  },
   function: function (fct, node) {
     fcts.push(fct);
-    fct.__birth__ = node
+    fct.__birth__ = node;
     fct.__calls__ = [];
     return fct;
   },
-  apply: function (fct, th, args, node) {
-    fct.__calls__.push(node);
-    return fct.apply(th, args);
+  apply: function (fct, obj, args, node) {
+    if (fct.__calls__) fct.__calls__.push(node);
+    return fct.apply(obj, args);
   }
 };
-/* Run Aran and show results */
-var aran = Aran(sandbox, traps);
+/* Target code */
 var target = [
-  'function sqrt (x) { return Math.sqrt(x) }',
-  'function delta (a, b, c) { return  b * b - 4 * a * c}',
-  'function solve (a, b, c) {',
-  '  var sol1 = ((-b) + sqrt(delta(a, b, c))) / (2 * a);',
-  '  var sol2 = ((-b) - sqrt(delta(a, b, c))) / (2 * a);',
-  '  return [sol1, sol2];',
-  '}',
-  'solve(1, -5, 6);',
+/* 1 */'function delta (a, b, c) { return  b * b - 4 * a * c}',
+/* 2 */'function solve (a, b, c) {',
+/* 3 */'  var sol1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);',
+/* 4 */'  var sol2 = ((-b) - Math.sqrt(delta(a, b, c))) / (2 * a);',
+/* 5 */'  return [sol1, sol2];',
+/* 6 */'}',
+/* 7 */'solve(1, -5, 6);',
 ].join('\n');
+/* Run and log results */
+var aran = Aran(sandbox, traps, options);
 console.log(aran(target));
-fct.forEach(function (fct) {
-  console.log('Function @ line:'+fct.__birth__.loc.start.line+', column:'+fct.__birth__.loc.start.column);
+fcts.forEach(function (fct) {
+  var start = fct.__birth__.loc.start;
+  console.log('Function@'+start.line+'-'+start.column);
   fct.__calls__.forEach(function (call) {
-    console.log('    Call @ line: '+call.loc.start.line+', column: '+call.loc.start.column);
+    var start = call.loc.start;
+    console.log('  Call@'+start.line+'-'+start.column);
   });
 });
+```
+
+```bash
+Array [ 3, 2 ]
+Function@1-0
+  Call@3-31
+  Call@4-31
+Function@2-0
+  Call@7-0
 ```
 
 Note that JavaScript features dynamic code evaluation through the infamous `eval` function and the `Function` constructor. Consequently, as shown in the above snippet, Aran has been designed to be run along the code being instrumented so it can instrument on the fly code evaluated at runtime. Statements that escape the instrumentation can easily mess things up, for instance `aran = null` will discard all information related to the current analysis.

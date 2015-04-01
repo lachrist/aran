@@ -1,6 +1,6 @@
 
 // exports.sandbox = window;
-
+exports.options = {ast:true}
 exports.traps = {
   primitive: function (x, n) { return x },
   undefined: function (s, n) { return undefined },

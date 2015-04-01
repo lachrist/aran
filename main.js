@@ -4,11 +4,12 @@ var Scope = require("./runtime/scope.js")
 var Compile = require("./runtime/compile.js")
 var Store = require("./runtime/store.js")
 
-module.exports = function (sandbox, traps) {
+module.exports = function (sandbox, traps, options) {
 
   var aran = {
     sandbox: sandbox,
     traps: traps,
+    options: options,
     global: (function () { return this } ())
   }
 
