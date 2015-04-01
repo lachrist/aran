@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8">
     <title>Aran in Action</title>
+      <script src="right.js"></script>
+      <script src="ace/ace.js"></script>
       <style>
       #main {
         font-family: Helvetica, 'Open Sans', Arial, sans-serif;
@@ -22,6 +24,7 @@
       }
       label {
         display: block;
+        height: 20px;
       }
       #output-div label {
         margin: 10px;
@@ -38,14 +41,25 @@
       button::-moz-focus-inner {
         padding: 8px;
       }
+      .editor {
+        resize: both;
+        overflow: auto;
+        width: 480px;
+        height: 200px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        margin-right: 10px;
+        border: 1px #C0C0C0 solid;
+      }
       #enjoy {
         margin-bottom: 30px;
       }
-      #master-div {
-        margin-right: 20px;
-      }
       #master-div, #target-div, #compiled-div, #output-div {
         display: inline-block;
+        vertical-align: top;
+      }
+      #output-div {
+        vertical-align: bottom;
       }
     </style>
     <script src="bundle.js"></script>
@@ -57,22 +71,20 @@
         Welcome the to <a href="https://github.com/lachrist/aran">Aran</a> demonstration page; Aran is a source-to-source code transformer for building JavaScript dynamic analaysis tools. Here, you may experiment Aran's possibilities and construct your own JavaScript dynamic analysis. In Aran, you construct a dynamic analysis by defining three parameters: <span class="code">sandbox</span>, <span class="code">hooks</span> and <span class="code">traps</span>, see <a href="https://github.com/lachrist/aran">https://github/lachrist/aran</a> for more documentation. These parameters can be specified in the master text field and are entered into the system by clicking on the (Re)Initialize button. The analysis can be triggered multiple times on arbitrary JavaScript target code by clicking on the Run/Analyze button.
       </p>
       <p id="enjoy">Enjoy!</p>
-      <div>
-        <div id="master-div">
-          <label>Master: <select id="select"></select></label>
-          <textarea id="master" class="code" cols="65" rows="15" wrap="off"></textarea><br/>
-          <button id="init">(Re) Initialize</button><br/>
-        </div>
-        <div id="target-div">
-          <label>Target:</label>
-          <textarea id="target" class="code" cols="65" rows="15" wrap="off"></textarea><br/>
-          <button id="run" style="display:inline-block" disabled>Instrument &amp; Run</button>
-          <label style="display:inline-block"><input id="comparison" type="checkbox" checked>Compare with uninstrumented code</label><br/>
-        </div>
+      <div id="master-div">
+        <label>Master: <select id="select"></select></label>
+        <div class="editor" id="master"></div>
+        <button id="init">(Re) Initialize</button><br/>
+      </div>
+      <div id="target-div">
+        <label>Target:</label>
+        <div class="editor" id="target"></div>
+        <button id="run" style="display:inline-block" disabled>Instrument &amp; Run</button>
+        <label style="display:inline-block"><input id="comparison" type="checkbox" checked>Compare with uninstrumented code</label><br/>
       </div>
       <div id="compiled-div">
         <label>Compiled:</label>
-        <textarea id="compiled" class="code" cols="100" rows="15" wrap="off" readonly></textarea><br/>
+        <div class="editor" id="compiled"></div>
       </div>
       <div style="visibility:hidden" id="output-div">
         <label id="result-label">Result: <span id="result" class="code"></span></label>

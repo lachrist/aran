@@ -1,29 +1,52 @@
 
 window.Aran = require("..")
 
+// <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.1.8/ace.js"></script>
 function print (x) {
   if (x === undefined) { return "undefined" }
   try { return JSON.stringify(x) } catch (e) { return String(e) }
 }
 
+var master
+var target
+var compiled
+
+function editor (id) {
+  var editor = ace.edit(id)
+  editor.setTheme("ace/theme/chrome")
+  editor.getSession().setMode("ace/mode/javascript")
+  editor.$blockScrolling = Infinity
+  editor.setOption("showPrintMargin", false)
+  return editor
+}
+
 window.onload = function () {
+  master = editor("master")
+  target = editor("target")
+  compiled = editor("compiled")
+  compiled.setReadOnly(true)
+  setInterval(function () {
+    master.resize()
+    target.resize()
+    compiled.resize()
+  }, 2000)
   for (var name in masters) {
     var option = document.createElement("option")
     option.textContent = name
     option.value = name
     document.getElementById("select").appendChild(option)
   }
-  document.getElementById("select").onchange = function () { master.value = masters[select.value] }
+  document.getElementById("select").onchange = function () { master.setValue(masters[select.value], -1) }
   document.getElementById("select").value = "Empty"
-  document.getElementById("master").value = masters.Empty
+  master.setValue(masters.Empty, -1)
   document.getElementById("init").onclick = run
 }
 
 function run () {
   document.getElementById("output-div").style.visibility = "hidden"
-  document.getElementById("compiled").value = ""
+  compiled.setValue("", -1)
   var exports = {}
-  try { eval(document.getElementById("master").value) } catch (e) { throw (alert("Error when running master: "+e), e) }
+  try { eval(master.getValue()) } catch (e) { throw (alert("Error when running master: "+e), e) }
   try { var aran = Aran(exports.sandbox, exports.traps, exports.options) } catch (e) { throw (alert("Error when setting up Aran: "+e),e) }
   document.getElementById("run").disabled = false
   document.getElementById("run").onclick = function () {
@@ -32,16 +55,17 @@ function run () {
     // Run original
     if (document.getElementById("comparison").checked) {
       var start = performance.now()
-      try { var result = window.eval(target.value) } catch (e) { var error = e }
+      try { var result = window.eval(target.getValue()) } catch (e) { var error = e }
       var end = performance.now()
     }
     // Run Aran
-    var input = {code:target.value}
+    var input = {code:target.getValue()}
     var aranstart = performance.now()
     try { var aranresult = aran(input) } catch (e) { var aranerror = e }
     var aranend = performance.now()
     // Output results
-    document.getElementById("compiled").value = input.compiled
+    console.log(input.compiled)
+    compiled.setValue(input.compiled, -1)
     document.getElementById("result").textContent = String(result)
     document.getElementById("error").textContent = String(error)
     document.getElementById("time").textContent = (Math.round(1000*(end-start))/1000)+"ms"

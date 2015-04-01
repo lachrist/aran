@@ -1,5 +1,5 @@
 
-// This master traps everything,  
+// This master traps everything, log it and forward it // 
 
 exports.sandbox = new Proxy(window, {
   has: function (s, p) { return (console.log("GlobalHas "+p), p in s) },
