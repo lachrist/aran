@@ -1,18 +1,5 @@
 
-// Log everything that Aran can intercept/record!
-
-/////////////
-// Options //
-/////////////
-
-exports.options = {
-  ast: true,
-  loc: true
-}
-
-/////////////
-// Sandbox //
-/////////////
+// This master traps everything,  
 
 exports.sandbox = new Proxy(window, {
   has: function (s, p) { return (console.log("GlobalHas "+p), p in s) },
@@ -21,23 +8,7 @@ exports.sandbox = new Proxy(window, {
   deleteProperty: function (s, p) { return (console.log("GlobalDel "+p), delete s[p]) }
 })
 
-///////////
-// Traps //
-///////////
-
-function log (trap, n, x) {
-  var msg = trap
-  if (n) { msg += "@"+n.loc.start.line+"-"+n.loc.start.column+":"+n.type }
-  for (var i=2; i<arguments.length; i++) {
-    if (typeof arguments[i] === "function") {
-      msg += " [function "+arguments[i].name+"]"
-    } else {
-      msg += " "+String(arguments[i])
-    }
-  }
-  console.log(msg)
-  return x
-}
+exports.options = {ast:true, loc:true}
 
 exports.traps = {
   primitive: function (x, n) { return log("primitive", n, x) },
@@ -64,9 +35,18 @@ exports.traps = {
     for (k in o) { ks.push(k) }
     return ks
   }
-};
+}
 
-  // function F() { return f.apply(this, xs) }
-  //   F.prototype = f.prototype
-  //   return new F()
-  // },
+function log (trap, n, x) {
+  var msg = trap
+  if (n) { msg += "@"+n.loc.start.line+"-"+n.loc.start.column+":"+n.type }
+  for (var i=2; i<arguments.length; i++) {
+    if (typeof arguments[i] === "function") {
+      msg += " [function "+arguments[i].name+"]"
+    } else {
+      msg += " "+String(arguments[i])
+    }
+  }
+  console.log(msg)
+  return x
+}

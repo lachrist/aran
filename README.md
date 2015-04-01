@@ -91,14 +91,14 @@ Traps can be used to implement shadow execution and, in general, dynamic techniq
 `function(Function, Node)` | `function (...) {...}` | `... function (...) { arguments = aran.traps.arguments(arguments, :FunctionExpression:); ... } ...`
 `arguments(Arguments, Node)` | `function (...) {...}` | `aran.traps.function(function (...) { ... }, :FunctionExpression:)`
 `undefined(MaybeName, Node)` | `return;` | `return aran.traps.undefined(null, :ReturnStatement:);`
-`Booleanize(value, Node)` | `x ? y : z` | `aran.traps.booleanize(x, :ConditionalExpression:) ? y : z`
-`Stringify(value, Node)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x, :CallExpression:)))`
+`booleanize(value, Node)` | `x ? y : z` | `aran.traps.booleanize(x, :ConditionalExpression:) ? y : z`
+`stringify(value, Node)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x, :CallExpression:)))`
 `catch([E/e]xception, Node)` | `... catch (e) { ... }` | `... catch (e) { e = aran.traps.catch(e, :TryStatement:); ... }`
 `unary(Operator, argument, Node)` | `!x` | `aran.traps.unary('!', x, :UnaryExpression:)`
 `binary(Operator, left, right, Node)` | `x+y` | `aran.traps.binary('+', x, y, :BinaryExpression:)`
 `apply(function, this, Arguments, Node)` | `f(x, y)` | `aran.traps.apply(f, aran.traps.global, [x,y], :CallExpression:)`
 `new(function, Arguments, Node)` | `new F(x, y)` | `aran.traps.new(F, [x,y], :NewExpression:)`
-`Has(object, Key)` | `x` | `x`
+`has(object, Key)` | `x` | `x`
 `get(object, [K]key, MaybeNode)` | `o[k]` | `aran.traps.get(o, k, :MemberExpression:)`
 `set(object, [K]key, value, MaybeNode)` | `o[k] = v` | `aran.traps.set(o, k, v, :AssignmentExpression:)`
 `delete(object, [K]key, MaybeNode)` | `delete o[k]` | `aran.traps.delete(o, k, :UnaryExpression:)`
@@ -109,7 +109,7 @@ Clarifications:
   1. Node arguments are mozilla ast node (see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API). The only difference is that each node has a `parent` property that points to the node's parent allowing to traverse the ast from leafs to root.
   2. In the transformed column, `:ReturnStatement:` means that the given ast node is of type `ReturnStatement`.
   3. Arguments that start with a capital letter are raw (unintercepted) values while arguments that start with a lower case letter have been previously intercepted.
-  4. There is no constraint on the shape of the values returned by traps starting with a lower case letter. `Booleanize` and `Has` should return a value of type `boolean` while `Stringify` should return a value of type `string`.
+  4. The value returned by traps can be of anytype. Exceptions being: `Booleanize` and `Has` should return a value of type `boolean`, `Stringify` should return a value of type `string`.
 
 ## Options
 

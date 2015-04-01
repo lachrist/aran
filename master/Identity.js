@@ -1,6 +1,10 @@
 
-exports.sandbox = window;
-exports.options = {ast:true};
+// This master traps everything but it is transparent //
+
+exports.sandbox = window
+
+exports.options = {ast:true}
+
 exports.traps = {
   primitive: function (x, n) { return x },
   undefined: function (s, n) { return undefined },
@@ -16,7 +20,7 @@ exports.traps = {
   binary: function (op,  x1, x2, n) { return eval("x1 "+op+" x2") },
   apply: function (f, o, xs, n) { return f.apply(o, xs) },
   new: function (f, xs, n) { return new f(...xs) },
-  has: function (o, k) { return k in o },
+  has: function (o, k, n) { return k in o },
   get: function (o, k, n) { return o[k] },
   set: function (o, k, v, n) { return o[k]=v },
   delete: function (o, k, n) { return delete o[k] },
@@ -25,4 +29,4 @@ exports.traps = {
     for (k in o) { ks.push(k) }
     return ks
   }
-};
+}
