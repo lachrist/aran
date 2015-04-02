@@ -6,9 +6,11 @@
 //  - aran.isobjectdelete
 //  - aran.deleteresult
 
-function unescape (str) { if (/^\$*aran$/.test(str)) { return str.substring(1) } return str }
 
 module.exports = function (aran) {
+
+  var unescape = function (str) { return str }
+  if (aran.sandbox) { unescape = function (str) { if (/^\$*aran$/.test(str)) { return str.substring(1) } return str } }
 
   var has = function (o, k) { return (k==="aran") || (unescape(k) in o) }
   if (aran.traps&&aran.traps.has) { has = function (o, k) { return (k==="aran") || aran.traps.has(o, unescape(k)) } }

@@ -66,9 +66,9 @@
   </head>
   <body>
     <div id="main">
-      <h1>Aran in Action</h1>
+      <h1>Aran in Action (better use it with Firefox!)</h1>
       <p>
-        Welcome the to <a href="https://github.com/lachrist/aran">Aran</a> demonstration page; Aran is a source-to-source code transformer for building JavaScript dynamic analaysis tools. Here, you may experiment Aran's possibilities and construct your own JavaScript dynamic analysis. In Aran, you construct a dynamic analysis by defining three parameters: <span class="code">sandbox</span>, <span class="code">hooks</span> and <span class="code">traps</span>, see <a href="https://github.com/lachrist/aran">https://github/lachrist/aran</a> for more documentation. These parameters can be specified in the master text field and are entered into the system by clicking on the (Re)Initialize button. The analysis can be triggered multiple times on arbitrary JavaScript target code by clicking on the Run/Analyze button.
+        Welcome the to <a href="https://github.com/lachrist/aran">Aran</a> demonstration page! Aran is a source-to-source code transformer to dynamically instrument JavaScript code. Aran is largely compatible with the ECMAScript5 specification and enables amongst other things: profiling, tracing, sandboxing, and symbolic execution. Here, you may experiment Aran's capabilities by writing JavaScript code both in the master field and in the target field. In the master field, you may assign <span class="code">exports.sandbox</span>, <span class="code">exports.traps</span> and <span class="code">exports.options</span> (see <a href="https://github.com/lachrist/aran">https://github/lachrist/aran</a> for more information). These values will be used to create a new Aran instance after the (Re)Initialize button is cliked upon. This Aran instance can be triggered multiple times on arbitrary target code by clicking on the Run/Analyze button.
       </p>
       <p id="enjoy">Enjoy!</p>
       <div id="master-div">

@@ -17,6 +17,8 @@ function editor (id) {
   editor.getSession().setMode("ace/mode/javascript")
   editor.$blockScrolling = Infinity
   editor.setOption("showPrintMargin", false)
+  editor.getSession().setTabSize(2)
+  editor.getSession().setUseSoftTabs(true)
   return editor
 }
 
@@ -29,7 +31,7 @@ window.onload = function () {
     master.resize()
     target.resize()
     compiled.resize()
-  }, 2000)
+  }, 1000)
   for (var name in masters) {
     var option = document.createElement("option")
     option.textContent = name
@@ -46,14 +48,16 @@ function run () {
   document.getElementById("output-div").style.visibility = "hidden"
   compiled.setValue("", -1)
   var exports = {}
-  try { eval(master.getValue()) } catch (e) { throw (alert("Error when running master: "+e), e) }
+  window.exports = exports
+  try { window.eval(master.getValue()) } catch (e) { throw (alert("Error when running master: "+e), e) }
   try { var aran = Aran(exports.sandbox, exports.traps, exports.options) } catch (e) { throw (alert("Error when setting up Aran: "+e),e) }
   document.getElementById("run").disabled = false
   document.getElementById("run").onclick = function () {
+    var comparison = document.getElementById("comparison").checked
     // Hide old results
     document.getElementById("output-div").style.visibility = "hidden"
     // Run original
-    if (document.getElementById("comparison").checked) {
+    if (comparison) {
       var start = performance.now()
       try { var result = window.eval(target.getValue()) } catch (e) { var error = e }
       var end = performance.now()
@@ -64,11 +68,10 @@ function run () {
     try { var aranresult = aran(input) } catch (e) { var aranerror = e }
     var aranend = performance.now()
     // Output results
-    console.log(input.compiled)
     compiled.setValue(input.compiled, -1)
-    document.getElementById("result").textContent = String(result)
-    document.getElementById("error").textContent = String(error)
-    document.getElementById("time").textContent = (Math.round(1000*(end-start))/1000)+"ms"
+    document.getElementById("result").textContent = comparison ? String(result) : ""
+    document.getElementById("error").textContent = comparison ? String(error) : ""
+    document.getElementById("time").textContent = comparison ? ((Math.round(1000*(end-start))/1000)+"ms") : ""
     document.getElementById("aran-result").textContent = String(aranresult)
     document.getElementById("aran-error").textContent = String(aranerror)
     document.getElementById("aran-time").textContent = (Math.round(1000*(aranend-aranstart))/1000)+"ms"

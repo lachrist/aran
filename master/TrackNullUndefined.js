@@ -48,7 +48,7 @@ exports.traps = {
   },
   enumerate: function (obj, node) {
     var keys = []
-    for (var key in unwerap(obj)) { keys.push(key) }
+    for (var key in unwrap(obj)) { keys.push(key) }
     return keys
   },
   catch: function (err, node) { return wrap(err, node) },
@@ -59,7 +59,7 @@ exports.traps = {
   apply: function (fct, th, args, node) {
     if (fct.__void__) { throw new TypeError(print(fct)+" is not a function") }
     if (fct.__instrumented__) { return fct.apply(th, args) }
-    return wrap(fct.apply(th, args.map(unwrap)), node)
+    return wrap(fct.apply(unwrap(th), args.map(unwrap)), node)
   },
   new: function (fct, args, node) {
     if (fct.__void__) { throw new TypeError(print(fct)+" is not a constructor") }
@@ -73,3 +73,11 @@ exports.traps = {
     return wrap(new fct(...args.map(unwrap)), node)
   }
 }
+
+// (function () {
+//   x = {a:y}
+//   y = "foo"
+//   function f (z) { z.a() }
+//   f(x)
+//   var x, y
+// } ());
