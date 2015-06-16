@@ -21,7 +21,7 @@ window.onload = function () {
   dom.masters = document.getElementById("masters");
   dom.targets = document.getElementById("targets");
   dom.feedback = document.getElementById("feedback");
-  dom.output = document.getElementById("output");
+  dom.list = document.getElementById("list");
   dom.table = document.getElementById("table");
   // bind //
   dom.masters.onchange = enable;
@@ -33,7 +33,7 @@ window.onload = function () {
 // Files //
 ///////////
 
-function enable () { dom.run.disabled = masters.files.length && targets.files.length }
+function enable () { dom.run.disabled = !(masters.files.length && targets.files.length) }
 
 ///////////
 // Start //
@@ -45,23 +45,27 @@ function start () {
   var rdv = 0;
   dom.feedback.style.visibility = "visible";
   dom.feedback.textContent = "Load files...";
-  dom.output.style.visibility = "hidden";
+  while (dom.table.firstChild)
+    dom.table.removeChild(dom.table.firstChild);
+  while (dom.list.firstChild)
+    dom.list.removeChild(dom.list.firstChild);
   dom.masters.disabled = true;
   dom.targets.disabled = true;
   dom.run.disabled = true;
-  function read (file, idx, arr) {
+  function read (file, dico) {
     rdv++;
     var reader = new FileReader();
     reader.readAsText(file, "UTF-8");
     reader.onload = function () {
-      var collection = (arr === dom.masters.files) ? masters : targets;
-      collection[file.name] = reader.result;
+      dico[file.name] = reader.result;
       if (!--rdv)
         benchmarkall(masters, targets);
     }
   }
-  dom.master.files.forEach(read);
-  dom.targets.files.forEach(read);
+  for (var i=0; i<dom.masters.files.length; i++)
+    read(dom.masters.files[i], masters);
+  for (var i=0; i<dom.targets.files.length; i++)
+    read(dom.targets.files[i], targets);
 }
 
 ///////////
@@ -71,10 +75,10 @@ function start () {
 function loadmaster (master) {
   master = master.replace(/require\(('|")aran('|")\)/g, "window.Aran");
   var module = {exports:{}};
-  (Function("module", "exports", mast))(module, module.exports);
-  if (module.exports.sandbox || module.exports.traps || module.exports.options)
-    return Aran(exports.sandbox, exports.traps, exports.options);
-  return module.exports;
+  (Function("module", "exports", master))(module, module.exports);
+  if (typeof module.exports === "function")
+    return module.exports;
+  return Aran(module.exports.sandbox, module.exports.traps, module.exports.options);
 }
 
 function benchmarkall (masters, targets) {
@@ -93,17 +97,14 @@ function benchmarkall (masters, targets) {
       tidx = 0;
       midx++;
     }
-    if (mdix === mkeys.length) {
+    if (midx === mkeys.length) {
       clearInterval(interval);
       return display(results);
     }
     notify();
     try { var aran = loadmaster(masters[mkeys[midx]]) }
     catch (e) {
-      results.push({
-        master: mkeys[midx];
-        mastererror: e
-      })
+      results.push({master:mkeys[midx], mastererror:e});
       return midx++;
     }
     var result = benchmark(aran, targets[tkeys[tidx]]);
@@ -115,7 +116,7 @@ function benchmarkall (masters, targets) {
 }
 
 function benchmark (aran, target) {
-  target = "(function () {\n"+target+"\n ());"
+  target = "(function () {\n"+target+"\n} ());"
   var result = {};
   var input = {code:target};
   // Original
@@ -138,16 +139,16 @@ function benchmark (aran, target) {
 
 function display (results) {
   var headers = ["master", "target", "loc", "aranloc", "error", "aranerror", "time", "arantime"];
-  var feedback = "";
   var row;
   var cell;
   var time = 0;
   var arantime = 0;
-  while (dom.table.firstChild)
-    dom.table.removeChild(dom.table.firstChild);
   results.forEach(function (res) {
-    if (res.mastererror)
-      return feedback += "Error at master: "+res.master+": "+res.mastererror;
+    if (res.mastererror) {
+      var li = document.createElement("li");
+      li.textContent = "Error at master: "+res.master+": "+res.mastererror;
+      return list.appendChild(li);
+    }
     time = time + res.time;
     arantime = arantime + res.arantime;
     row = document.createElement("tr");
@@ -157,13 +158,12 @@ function display (results) {
       row.appendChild(cell);
     }
     cell = document.createElement("td");
-    cell.textContent = round(ress[i].arantime/res[i].time);
+    cell.textContent = round(res.arantime/res.time);
     row.appendChild(cell);
     table.appendChild(row);
   });
-  dom.feedback.textContent = "Average slowdown factor: "+round(arantime/time)
-  dom.output.style.visibility = "visible"
-  dom.masters.disabled = false
-  dom.targets.disabled = false
-  dom.run.disabled = false
+  dom.feedback.textContent = "Average slowdown factor: "+round(arantime/time);
+  dom.masters.disabled = false;
+  dom.targets.disabled = false;
+  dom.run.disabled = false;
 }

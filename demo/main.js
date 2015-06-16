@@ -51,10 +51,9 @@ function run () {
   try { (Function("module", "exports", master.getValue().replace(/require\(('|")aran('|")\)/, "window.Aran")))(module, module.exports) }
   catch (e) { throw (alert("Error when running master: "+e), e) }
   var aran = module.exports
-  if (module.exports.sandbox || module.exports.traps || modules.exports.options) {
-    try { aran = Aran(exports.sandbox, exports.traps, exports.options) }
+  if (typeof module.exports !== "function")
+    try { aran = Aran(module.exports.sandbox, module.exports.traps, module.exports.options) }
     catch (e) { throw (alert("Error when setting up Aran: "+e),e) }
-  }
   document.getElementById("run").disabled = false
   document.getElementById("run").onclick = function () {
     var comparison = document.getElementById("comparison").checked

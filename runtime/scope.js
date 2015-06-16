@@ -32,7 +32,7 @@ module.exports = function (aran) {
   aran.with = function (o) {
     if (!aran.sandbox && !aran.traps.exist && !aran.traps.get && !aran.traps.set && !aran.traps.delete) { return o }
     if (!aran.global.Proxy) { throw new Error("Harmony Proxies are needed to support trapped with statements and") }
-    return aran.global.Proxy(o, {
+    return new aran.global.Proxy(o, {
       has: has,
       get: get,
       set: set,
@@ -69,7 +69,7 @@ module.exports = function (aran) {
     }
   }
 
-  aran.membrane = aran.global.Proxy(aran.sandbox, {
+  aran.membrane = new aran.global.Proxy(aran.sandbox, {
     has: function () { return true },
     get: function (o, k) {
       if (has(o, k)) { return get(o, k) }
