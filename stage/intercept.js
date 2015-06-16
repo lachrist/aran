@@ -210,7 +210,7 @@ module.exports = function (visit, mark, traps, save) {
       Ptah.Sequence([Nasus.pop(), Ptah.EvalCall(args)]),
       traps.apply
         ? trap("apply", [Nasus.pop(), Shadow("global"), Ptah.Array(node.arguments)], node)
-        : Ptah.call(Nasus.pop(), expr.arguments))
+        : Ptah.Call(Nasus.pop(), node.arguments))
   }
 
   // EXPR1.EXPR2(ARGS)

@@ -77,10 +77,10 @@ function sink (fct) {
 exports.sandbox = {
   prompt: source(window.prompt.bind(window)),
   alert: sink(window.alert.bind(window)),
-  eval: sink(window.eval.bind(window)),
+  eval: sink(window.eval),
   JSON: {
-    parse: river(window.JSON.parse.bind(JSON)),
-    stringify: river(window.JSON.stringify.bind(JSON))
+    parse: river(window.JSON.parse),
+    stringify: river(window.JSON.stringify)
   }
 }
 
@@ -117,7 +117,7 @@ exports.traps = {
 
 // var x = prompt("Enter something evil!");
 // var o = {a:"Safe"}
-// o.b = x
+// o.b = "foo "+x+" bar"
 // function f (arg) {
 //   alert(arg.a)
 //   alert(arg.b)

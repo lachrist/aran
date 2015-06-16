@@ -12972,11 +12972,11 @@ module.exports = function () {
     IdentifierAssignment: function (n) { childs.push(n.right) },
     IdentifierBinaryAssignment: function (n) { childs.push(n.right) },
     MemberAssignment: function (n) {
-      member(n)
+      member(n.left)
       childs.push(n.right)
     },
     MemberBinaryAssignment: function (n) {
-      member(n)
+      member(n.left)
       childs.push(n.right)
     },
     IdentifierUpdate: nil,
@@ -13105,9 +13105,11 @@ module.exports = function (aran, save) {
 //  - aran.isobjectdelete
 //  - aran.deleteresult
 
-function unescape (str) { if (/^\$*aran$/.test(str)) { return str.substring(1) } return str }
 
 module.exports = function (aran) {
+
+  var unescape = function (str) { return str }
+  if (aran.sandbox) { unescape = function (str) { if (/^\$*aran$/.test(str)) { return str.substring(1) } return str } }
 
   var has = function (o, k) { return (k==="aran") || (unescape(k) in o) }
   if (aran.traps&&aran.traps.has) { has = function (o, k) { return (k==="aran") || aran.traps.has(o, unescape(k)) } }
@@ -13568,7 +13570,7 @@ module.exports = function (visit, mark, traps, save) {
       Ptah.Sequence([Nasus.pop(), Ptah.EvalCall(args)]),
       traps.apply
         ? trap("apply", [Nasus.pop(), Shadow("global"), Ptah.Array(node.arguments)], node)
-        : Ptah.call(Nasus.pop(), expr.arguments))
+        : Ptah.Call(Nasus.pop(), node.arguments))
   }
 
   // EXPR1.EXPR2(ARGS)
@@ -13642,7 +13644,7 @@ function escape (id) { if (/^\$*aran$/.test(id.name)) { id.name = "$"+id.name } 
 function descape (decl) { escape(decl.id) }
 
 module.exports = function (visit, mark, sandbox) {
-
+  
   var onstatements = {}
   var onexpressions = {}
   function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }
