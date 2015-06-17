@@ -1,135 +1,4 @@
-window.masters = {};
-window.masters.Empty = "\n// This master does absolutely nothing! *yay* //\n";
-window.masters.Identity = "\n// This master traps everything and forward it //\n\nexports.sandbox = window\n\nexports.options = {\n  ast:true,\n  loc:true,\n  range:true\n}\n\nexports.traps = {\n  primitive: function (x, n) { return x },\n  undefined: function (s, n) { return undefined },\n  object: function (x, n) { return x },\n  array: function (x, n) { return x },\n  arguments: function (x, n) { return x },\n  function: function (x, n) { return x },\n  regexp: function (p, f, n) { return RegExp(p, f) },\n  booleanize: function (x, n) { return x },\n  stringify: function (x, n) { return x },\n  catch: function (x, n) { return x },\n  unary: function (op, x, n) { return eval(op+\" x\") },\n  binary: function (op,  x1, x2, n) { return eval(\"x1 \"+op+\" x2\") },\n  apply: function (f, o, xs, n) { return f.apply(o, xs) },\n  new: function (f, xs, n) { return new f(...xs) },\n  has: function (o, k) { return k in o },\n  get: function (o, k, n) { return o[k] },\n  set: function (o, k, v, n) { return o[k]=v },\n  delete: function (o, k, n) { return delete o[k] },\n  enumerate: function (o, n) {\n    var ks = []\n    for (k in o) { ks.push(k) }\n    return ks\n  }\n}\n";
-window.masters.Lazy = "\nfunction delay (fct) {\n  fct.__thunk__ = true\n  return fct\n}\n\nfunction force (val) {\n  if (val && val.__thunk__) { return val.__cached__ || (val.__cached__=val()) }\n  return val\n}\n\nwindow.delay = delay\nwindow.force = force\nwindow.ispromise = function (val) { return Boolean(val && val.__thunk__) }\n\nexports.traps = {\n  function: function (x) {\n    x.__instrumented__ = true\n    return x\n  },\n  booleanize: function (x) { return force(x) },\n  stringify: function (x) { return force(x) },\n  unary: function (op, x) { return eval(op+\" force(x)\") },\n  binary: function (op, x1, x2) { return eval(\"force(x1) \"+op+\" force(x2)\") },\n  apply: function (f, o, xs) {\n    f = force(f)\n    if (f.__instrumented__) { return f.apply(o, xs) }\n    return f.apply(force(o), xs.map(force))\n  },\n  new: function (f, xs) {\n    f = force(f)\n    if (f.__instrumented__) { return new f(...xs) }\n    return new f(...xs.map(force))\n  },\n  has: function (o, k) { return k in force(o) },\n  get: function (o, k, n) { return force(o)[force(k)] },\n  set: function (o, k, v, n) { return force(o)[force(k)]=v },\n  delete: function (o, k, n) { return delete force(o)[force(k)] },\n  enumerate: function (o, n) {\n    var ks = []\n    for (k in force(o)) { ks.push(k) }\n    return ks\n  }\n}\n\n// (function () {\n//   var counter = 0\n//   // Work with binary && resolved once\n//   var p1 = delay(function () {\n//     counter++\n//     return 3\n//   })\n//   if (p1+p1 !== 6) { throw \"addition\" }\n//   if (counter !== 1) { throw \"counter\" }\n//   // Works with built-in functions \n//   var p2 = delay(function () { return {a:1} })\n//   if (JSON.stringify(p2) !== '{\"a\":1}')\n//     throw \"stringify\"\n// } ())\n";
-window.masters.Logger = "\n// This master traps everything, log it and forward it // \n\nexports.sandbox = new Proxy(window, {\n  has: function (s, p) { return (console.log(\"GlobalHas \"+p), p in s) },\n  get: function (s, p) { return (console.log(\"GlobalGet \"+p), s[p]) },\n  set: function (s, p, v) { return (console.log(\"GlobalSet \"+p), s[p]=v) },\n  deleteProperty: function (s, p) { return (console.log(\"GlobalDel \"+p), delete s[p]) }\n})\n\nexports.options = {ast:true, loc:true}\n\nexports.traps = {\n  primitive: function (x, n) { return log(\"primitive\", n, x) },\n  undefined: function (s, n) { return (log(\"undefined\", n, s), undefined) },\n  object: function (x, n) { return log(\"object\", n, x) },\n  array: function (x, n) { return log(\"array\", n, x) },\n  arguments: function (x, n) { return log(\"arguments\", n, x) },\n  function: function (x, n) { return log(\"function\", n, x) },\n  regexp: function (p, f, n) { return (log(\"regexp\", n, p , f), RegExp(p, f)) },\n  booleanize: function (x, n) { return log(\"booleanize\", n, x) },\n  stringify: function (x, n) { return log(\"stringify\", n, x) },\n  catch: function (x, n) { return log(\"catch\", n, x) },\n  unary: function (op, x, n) { return (log(\"unary\", n, op, x), eval(op+\" x\")) },\n  binary: function (op, x1, x2, n) { return (log(\"binary\", n, op, x1, x2), eval(\"x1 \"+op+\" x2\")) },\n  apply: function (f, o, xs, n) { return (log(\"apply\", n, f, o, xs), f.apply(o, xs)) },\n  new: function (f, xs, n) { return (log(\"new\", n, f, xs), new f(...xs)) },\n  has: function (o, k) { return (log(\"has\", undefined, o, k), k in o) },\n  get: function (o, k, n) { return (log(\"get\", n, o, k), o[k]) },\n  set: function (o, k, v, n) { return (log(\"set\", n, o, k, v), o[k]=v) },\n  delete: function (o, k, n) { return (log(\"delete\", n, o, k), delete o[k]) },\n  enumerate: function (o, n) {\n    log(\"enumerate\", n, o)\n    var ks = []\n    for (k in o) { ks.push(k) }\n    return ks\n  }\n}\n\nfunction log (trap, n, x) {\n  var msg = trap\n  if (n) { msg += \"@\"+n.loc.start.line+\"-\"+n.loc.start.column+\":\"+n.type }\n  for (var i=2; i<arguments.length; i++) {\n    if (typeof arguments[i] === \"function\") {\n      msg += \" [function \"+arguments[i].name+\"]\"\n    } else {\n      msg += \" \"+String(arguments[i])\n    }\n  }\n  console.log(msg)\n  return x\n}\n";
-window.masters.Sandbox = "\n// A very strict sandbox that only whitelist Math and JSON //\n\nexports.sandbox = {\n  Math:Math,\n  JSON:JSON\n}\n\n// aran.sandbox = window\n// window.aran.sandbox = window\n// function f () { this.alert(\"BOUM\") }\n// f()\n";
-window.masters.Taint = "\nfunction id (x) { return x }\n\nfunction isprimitive (x) {\n  return (x===null)\n    || (x===undefined)\n    || (typeof x===\"boolean\")\n    || (typeof x===\"number\")\n    || (typeof x===\"string\")\n}\n\nfunction box (x) {\n  if (typeof x === \"boolean\") { return new Boolean(x) }\n  if (typeof x === \"number\") { return new Number(x) }\n  if (typeof x === \"string\") { return new String(x) }\n  return x\n}\n\n//////////////////\n// Taint values //\n//////////////////\n\nvar tainted = new WeakSet()\n\nfunction taint (x) {\n  if (x===null||x===undefined) { return x } // cannot taint null && undefined\n  if (isprimitive(x)) { x = box(x) }\n  else {\n    var copy = {}\n    for (var k in x) { copy[k] = taint(x[k]) }\n    x = copy\n  }\n  tainted.add(x)\n  return x\n}\n\nfunction istainted (x) {\n  if (tainted.has(x)) { return true }\n  if (!isprimitive(x)) { for (var k in x) { if (istainted(x[k])) { return true } } }\n  return false\n}\n\n//////////////////////////////////////////////////\n// Sandbox:                                     //\n//  1. Prevent tainted values to access IOs     //\n//  2. Propage taint on built-in function calls //\n//////////////////////////////////////////////////\n\n// Create taint values\nfunction source (fct) {\n  return function () {\n    return taint(fct.apply(this, arguments))\n  }\n}\n\n// Forward tainted values\nfunction river (fct) {\n  return function () {\n    var post = id\n    for (var i=0; i<arguments.length; i++) {\n      if (istainted(arguments[i])) { post = taint }\n    }\n    return post(fct.apply(this, arguments))\n  }\n}\n\n// Check no taint values sink in\nfunction sink (fct) {\n  return function () {\n    for (var i=0; i<arguments.length; i++) {\n      if (istainted(arguments[i])) { throw new Error(\"Tainted value into sink (argument \"+i+\")\") }\n    }\n    return fct.apply(this, arguments)\n  }\n}\n\nexports.sandbox = {\n  prompt: source(window.prompt.bind(window)),\n  alert: sink(window.alert.bind(window)),\n  eval: sink(window.eval),\n  JSON: {\n    parse: river(window.JSON.parse),\n    stringify: river(window.JSON.stringify)\n  }\n}\n\n///////////////////////////////////////////////////////////\n// Traps:                                                //\n//   1. Prevent tainted value to affect the control flow //\n//   2. Propagate taint on unary-binary operations       //\n///////////////////////////////////////////////////////////\n\nexports.traps = {\n  booleanize: function (x) {\n    if (istainted(x)) { throw new Error(\"Taint value flows in program conditional\") }\n    return x\n  },\n  stringify: function (x) {\n    if (istainted(x)) { throw new Error(\"Taint value flows in direct eval call\") }\n    return x\n  },\n  unary: function (op, x) {\n    if (istainted(x)) { return taint(eval(op+\" x\")) }\n    return eval(op+\" x\")\n  },\n  binary: function (op,  x1, x2) {\n    var post = id\n    if (istainted(x1)) { post=taint }\n    if (istainted(x2)) { post=taint }\n    return post(eval(\"x1 \"+op+\" x2\"))\n  }\n}\n\n/////////////\n// Example //\n/////////////\n\n// var x = prompt(\"Enter something evil!\");\n// var o = {a:\"Safe\"}\n// o.b = \"foo \"+x+\" bar\"\n// function f (arg) {\n//   alert(arg.a)\n//   alert(arg.b)\n// }\n// f(o)\n\n";
-window.masters.TrackNullUndefined = "\n// This master tracks the origin of null and undefined values //\n\nfunction wrap (x, origin, varname) {\n  if (x === null || x === undefined) {\n    return {\n      __void__: true,\n      value: x,\n      origin: origin,\n      varname: varname\n    }\n  }\n  return x\n}\n\nfunction unwrap (x) { return x.__void__?x.value:x }\n\nfunction print (x) {\n  var start = x.origin.loc.start\n  var msg = x.value+\"@\"+start.line+\"-\"+start.column\n  if (x.varname) { msg = msg+\" (\"+x.varname+\")\" }\n  return msg\n}\n\nexports.options = {ast:true, loc:true}\n\nexports.traps = {\n  primitive: function (val, node) { return wrap(val, node) },\n  undefined: function (varname, node) { return wrap(undefined, node, varname) },\n  booleanize: function (val, node) { return unwrap(val) },\n  stringify: function (val, node) { return unwrap(val) },\n  unary: function (op, x, node) { return wrap(eval(op+\" unwrap(x)\"), node) },\n  binary: function (op, x, y, node) { return wrap(eval(\"unwrap(x) \"+op+\" unwrap(y)\"), node) },\n  get: function (obj, prop, node) {\n    prop = unwrap(prop)\n    if (obj.__void__) { throw new TypeError(\"Cannot read property \"+prop+\" of \"+print(obj)) }\n    return wrap(obj[prop], node)\n  },\n  set: function (obj, prop, val, node) {\n    prop = unwrap(prop)\n    if (obj.__void__) { throw new TypeError(\"Cannot set property \"+prop+\" of \"+print(obj)) }\n    return obj[prop] = val\n  },\n  delete: function (obj, prop, node) {\n    prop = unwrap(prop)\n    if (obj.__void__) { throw new TypeError(\"Connot delete property \"+prop+\" of \"+print(obj)) }\n    return delete obj[prop]\n  },\n  enumerate: function (obj, node) {\n    var keys = []\n    for (var key in unwrap(obj)) { keys.push(key) }\n    return keys\n  },\n  catch: function (err, node) { return wrap(err, node) },\n  function: function (fct, node) {\n    fct.__instrumented__ = true\n    return fct\n  },\n  apply: function (fct, th, args, node) {\n    if (fct.__void__) { throw new TypeError(print(fct)+\" is not a function\") }\n    if (fct.__instrumented__) { return fct.apply(th, args) }\n    return wrap(fct.apply(unwrap(th), args.map(unwrap)), node)\n  },\n  new: function (fct, args, node) {\n    if (fct.__void__) { throw new TypeError(print(fct)+\" is not a constructor\") }\n    if (fct.__instrumented__) {\n      var o = Object.create(fct.prototype)\n      var res = fct.apply(o, args)\n      if (res.__void__) { return o }\n      if (typeof res !== \"object\") { return o }\n      return res\n    }\n    return wrap(new fct(...args.map(unwrap)), node)\n  }\n}\n\n// (function () {\n//   x = {a:y}\n//   y = \"foo\"\n//   function f (z) { z.a() }\n//   f(x)\n//   var x, y\n// } ());\n";
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-
-window.Aran = require("..")
-
-// <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.1.8/ace.js"></script>
-function print (x) {
-  if (x === undefined) { return "undefined" }
-  try { return JSON.stringify(x) } catch (e) { return String(e) }
-}
-
-var master
-var target
-var compiled
-
-function editor (id) {
-  var editor = ace.edit(id)
-  editor.setTheme("ace/theme/chrome")
-  editor.getSession().setMode("ace/mode/javascript")
-  editor.$blockScrolling = Infinity
-  editor.setOption("showPrintMargin", false)
-  editor.getSession().setTabSize(2)
-  editor.getSession().setUseSoftTabs(true)
-  return editor
-}
-
-window.onload = function () {
-  master = editor("master")
-  target = editor("target")
-  compiled = editor("compiled")
-  compiled.setReadOnly(true)
-  setInterval(function () {
-    master.resize()
-    target.resize()
-    compiled.resize()
-  }, 1000)
-  for (var name in masters) {
-    var option = document.createElement("option")
-    option.textContent = name
-    option.value = name
-    document.getElementById("select").appendChild(option)
-  }
-  document.getElementById("select").onchange = function () { master.setValue(masters[select.value], -1) }
-  document.getElementById("select").value = "Empty"
-  master.setValue(masters.Empty, -1)
-  document.getElementById("init").onclick = run
-}
-
-function run () {
-  document.getElementById("output-div").style.visibility = "hidden"
-  compiled.setValue("", -1)
-  var module = {exports:{}}
-  try { (Function("module", "exports", master.getValue().replace(/require\(('|")aran('|")\)/, "window.Aran")))(module, module.exports) }
-  catch (e) { throw (alert("Error when running master: "+e), e) }
-  var aran = module.exports
-  if (typeof module.exports !== "function")
-    try { aran = Aran(module.exports.sandbox, module.exports.traps, module.exports.options) }
-    catch (e) { throw (alert("Error when setting up Aran: "+e),e) }
-  document.getElementById("run").disabled = false
-  document.getElementById("run").onclick = function () {
-    var comparison = document.getElementById("comparison").checked
-    // Hide old results
-    document.getElementById("output-div").style.visibility = "hidden"
-    // Run original
-    if (comparison) {
-      var start = performance.now()
-      try { var result = window.eval(target.getValue()) } catch (e) { var error = e }
-      var end = performance.now()
-    }
-    // Run Aran
-    var input = {code:target.getValue()}
-    var aranstart = performance.now()
-    try { var aranresult = aran(input) } catch (e) { var aranerror = e }
-    var aranend = performance.now()
-    // Output results
-    compiled.setValue(input.compiled, -1)
-    document.getElementById("result").textContent = comparison ? String(result) : ""
-    document.getElementById("error").textContent = comparison ? String(error) : ""
-    document.getElementById("time").textContent = comparison ? ((Math.round(1000*(end-start))/1000)+"ms") : ""
-    document.getElementById("aran-result").textContent = String(aranresult)
-    document.getElementById("aran-error").textContent = String(aranerror)
-    document.getElementById("aran-time").textContent = (Math.round(1000*(aranend-aranstart))/1000)+"ms"
-    document.getElementById("output-div").style.visibility = "visible"
-    // Throws error for debugging purpose
-    if (error) { throw (console.dir(error), error) }
-    if (aranerror) { throw (console.dir(aranerror), aranerror) }
-  }
-}
-
-},{"..":2}],2:[function(require,module,exports){
-
-var Stack = require("./runtime/stack.js")
-var Scope = require("./runtime/scope.js")
-var Compile = require("./runtime/compile.js")
-var Store = require("./runtime/store.js")
-
-module.exports = function (sandbox, traps, options) {
-
-  debugger;
-
-  var aran = {
-    sandbox: sandbox,
-    traps: traps,
-    options: options,
-    global: (function () { return this } ())
-  }
-
-  Stack(aran)
-  Scope(aran)
-  var save = Store(aran)
-  var globalcompile = Compile(aran, save)
-
-  return function (x) {
-    aran.flush()
-    var code = x.code || x
-    var parent = x.parent || null
-    aran.global.aran = aran
-    var compiled = globalcompile(parent, code)
-    x.compiled = compiled
-    return aran.global.eval(compiled)
-  }
-
-}
-
-},{"./runtime/compile.js":35,"./runtime/scope.js":36,"./runtime/stack.js":37,"./runtime/store.js":38}],3:[function(require,module,exports){
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -357,7 +226,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":4}],4:[function(require,module,exports){
+},{"_process":2}],2:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -417,7 +286,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],5:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 (function (global){
 /*
   Copyright (C) 2012-2014 Yusuke Suzuki <utatane.tea@gmail.com>
@@ -2979,7 +2848,7 @@ process.umask = function() { return 0; };
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./package.json":22,"estraverse":6,"esutils":10,"source-map":11}],6:[function(require,module,exports){
+},{"./package.json":20,"estraverse":4,"esutils":8,"source-map":9}],4:[function(require,module,exports){
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
@@ -3826,7 +3695,7 @@ process.umask = function() { return 0; };
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],7:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -3972,7 +3841,7 @@ process.umask = function() { return 0; };
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],8:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /*
   Copyright (C) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2014 Ivan Nikulin <ifaaan@gmail.com>
@@ -4075,7 +3944,7 @@ process.umask = function() { return 0; };
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],9:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -4214,7 +4083,7 @@ process.umask = function() { return 0; };
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./code":8}],10:[function(require,module,exports){
+},{"./code":6}],8:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -4249,7 +4118,7 @@ process.umask = function() { return 0; };
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./ast":7,"./code":8,"./keyword":9}],11:[function(require,module,exports){
+},{"./ast":5,"./code":6,"./keyword":7}],9:[function(require,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -4259,7 +4128,7 @@ exports.SourceMapGenerator = require('./source-map/source-map-generator').Source
 exports.SourceMapConsumer = require('./source-map/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = require('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":17,"./source-map/source-map-generator":18,"./source-map/source-node":19}],12:[function(require,module,exports){
+},{"./source-map/source-map-consumer":15,"./source-map/source-map-generator":16,"./source-map/source-node":17}],10:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4358,7 +4227,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":20,"amdefine":21}],13:[function(require,module,exports){
+},{"./util":18,"amdefine":19}],11:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4502,7 +4371,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./base64":14,"amdefine":21}],14:[function(require,module,exports){
+},{"./base64":12,"amdefine":19}],12:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4546,7 +4415,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":21}],15:[function(require,module,exports){
+},{"amdefine":19}],13:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4628,7 +4497,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":21}],16:[function(require,module,exports){
+},{"amdefine":19}],14:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2014 Mozilla Foundation and contributors
@@ -4716,7 +4585,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":20,"amdefine":21}],17:[function(require,module,exports){
+},{"./util":18,"amdefine":19}],15:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -5293,7 +5162,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":12,"./base64-vlq":13,"./binary-search":15,"./util":20,"amdefine":21}],18:[function(require,module,exports){
+},{"./array-set":10,"./base64-vlq":11,"./binary-search":13,"./util":18,"amdefine":19}],16:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -5695,7 +5564,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":12,"./base64-vlq":13,"./mapping-list":16,"./util":20,"amdefine":21}],19:[function(require,module,exports){
+},{"./array-set":10,"./base64-vlq":11,"./mapping-list":14,"./util":18,"amdefine":19}],17:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -6111,7 +5980,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./source-map-generator":18,"./util":20,"amdefine":21}],20:[function(require,module,exports){
+},{"./source-map-generator":16,"./util":18,"amdefine":19}],18:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -6432,7 +6301,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":21}],21:[function(require,module,exports){
+},{"amdefine":19}],19:[function(require,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
@@ -6735,7 +6604,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,require('_process'),"/../node_modules/escodegen/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"_process":4,"path":3}],22:[function(require,module,exports){
+},{"_process":2,"path":1}],20:[function(require,module,exports){
 module.exports={
   "name": "escodegen",
   "description": "ECMAScript code generator",
@@ -6823,7 +6692,7 @@ module.exports={
   "_resolved": "https://registry.npmjs.org/escodegen/-/escodegen-1.6.1.tgz"
 }
 
-},{}],23:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /*
   Copyright (C) 2013 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2013 Thaddee Tyl <thaddee.tyl@gmail.com>
@@ -12146,7 +12015,7 @@ module.exports={
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],24:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 var esutils = require("esutils");
 var merge = Object.assign || require("object-assign");
@@ -12954,15 +12823,15 @@ module.exports = {
 
 };
 
-},{"esutils":28,"object-assign":29}],25:[function(require,module,exports){
+},{"esutils":26,"object-assign":27}],23:[function(require,module,exports){
+arguments[4][5][0].apply(exports,arguments)
+},{"dup":5}],24:[function(require,module,exports){
+arguments[4][6][0].apply(exports,arguments)
+},{"dup":6}],25:[function(require,module,exports){
 arguments[4][7][0].apply(exports,arguments)
-},{"dup":7}],26:[function(require,module,exports){
+},{"./code":24,"dup":7}],26:[function(require,module,exports){
 arguments[4][8][0].apply(exports,arguments)
-},{"dup":8}],27:[function(require,module,exports){
-arguments[4][9][0].apply(exports,arguments)
-},{"./code":26,"dup":9}],28:[function(require,module,exports){
-arguments[4][10][0].apply(exports,arguments)
-},{"./ast":25,"./code":26,"./keyword":27,"dup":10}],29:[function(require,module,exports){
+},{"./ast":23,"./code":24,"./keyword":25,"dup":8}],27:[function(require,module,exports){
 /*!
 	object-assign
 	ES6 Object.assign() ponyfill
@@ -13016,7 +12885,7 @@ arguments[4][10][0].apply(exports,arguments)
 	}
 })();
 
-},{}],30:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 
 /////////////
 // Helpers //
@@ -13600,7 +13469,7 @@ exports.SwitchCase = function (test, consequent) {
   }
 }
 
-},{}],31:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 
 var Visit = require("./visit.js")
 var Build = require("./build.js")
@@ -13626,7 +13495,7 @@ exports.Ignore = function (node) { return (node.$ignore=true, node) }
 // View //
 exports.View = View
 
-},{"./build.js":30,"./view.js":33,"./visit.js":34}],32:[function(require,module,exports){
+},{"./build.js":28,"./view.js":31,"./visit.js":32}],30:[function(require,module,exports){
 
 module.exports = function (node) { return (types[node.type] || clean)(node) }
 
@@ -13666,7 +13535,7 @@ var types = {
   }
 }
 
-},{}],33:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 
 module.exports = function (node) { return view(0, null, node) }
 
@@ -13687,7 +13556,7 @@ function view (depth, property, x) {
   return indent+String(x)+"\n"
 }
 
-},{}],34:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 
 var Type = require("./type.js")
 
@@ -13889,7 +13758,7 @@ module.exports = function () {
 
 }
 
-},{"./type.js":32}],35:[function(require,module,exports){
+},{"./type.js":30}],33:[function(require,module,exports){
 
 // Assemble compilations stages, defines: aran.compile.
 
@@ -13972,7 +13841,7 @@ module.exports = function (aran, save) {
 
 }
 
-},{"../stage/hoist.js":39,"../stage/intercept.js":40,"../stage/sandbox.js":41,"../stage/sanitize.js":42,"../syntax/ptah.js":44,"../syntax/shadow.js":45,"../util.js":46,"escodegen":5,"esprima":23,"esvalid":24,"esvisit":31}],36:[function(require,module,exports){
+},{"../stage/hoist.js":37,"../stage/intercept.js":38,"../stage/sandbox.js":39,"../stage/sanitize.js":40,"../syntax/ptah.js":42,"../syntax/shadow.js":43,"../util.js":44,"escodegen":3,"esprima":21,"esvalid":22,"esvisit":29}],34:[function(require,module,exports){
 
 // Intercept scoping lookup on objects (with && global), defines:
 //  - aran.membrane
@@ -14007,7 +13876,7 @@ module.exports = function (aran) {
   aran.with = function (o) {
     if (!aran.sandbox && !aran.traps.exist && !aran.traps.get && !aran.traps.set && !aran.traps.delete) { return o }
     if (!aran.global.Proxy) { throw new Error("Harmony Proxies are needed to support trapped with statements and") }
-    return aran.global.Proxy(o, {
+    return new aran.global.Proxy(o, {
       has: has,
       get: get,
       set: set,
@@ -14044,7 +13913,7 @@ module.exports = function (aran) {
     }
   }
 
-  aran.membrane = aran.global.Proxy(aran.sandbox, {
+  aran.membrane = new aran.global.Proxy(aran.sandbox, {
     has: function () { return true },
     get: function (o, k) {
       if (has(o, k)) { return get(o, k) }
@@ -14056,7 +13925,7 @@ module.exports = function (aran) {
 
 }
 
-},{}],37:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 
 // Setup runtime stack to provide temporary memory, defines:
 //   - aran.push{1,2,3}
@@ -14116,7 +13985,7 @@ module.exports = function (aran) {
 
 }
 
-},{}],38:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 
 // Save compile time information for runtime, defines: aran.fetch.
 
@@ -14129,7 +13998,7 @@ module.exports = function (aran) {
   }
 }
 
-},{}],39:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 
 /*
  * Hoist variable declaration and function definition.
@@ -14233,7 +14102,7 @@ module.exports = function (visit, mark) {
 
 }
 
-},{"../syntax/ptah.js":44,"../util.js":46}],40:[function(require,module,exports){
+},{"../syntax/ptah.js":42,"../util.js":44}],38:[function(require,module,exports){
 
 /*
  * Intercept the evaluation of some expressions/statements.
@@ -14505,7 +14374,7 @@ module.exports = function (visit, mark, traps, save) {
 
 }
 
-},{"../syntax/nasus.js":43,"../syntax/ptah.js":44,"../syntax/shadow.js":45,"../util.js":46,"esvisit":31}],41:[function(require,module,exports){
+},{"../syntax/nasus.js":41,"../syntax/ptah.js":42,"../syntax/shadow.js":43,"../util.js":44,"esvisit":29}],39:[function(require,module,exports){
 
 /*
  * Make sure no identifier from the target code shadows aran.
@@ -14572,7 +14441,7 @@ module.exports = function (visit, mark, sandbox) {
 
 }
 
-},{"../syntax/nasus.js":43,"../syntax/ptah.js":44,"../syntax/shadow.js":45,"../util.js":46}],42:[function(require,module,exports){
+},{"../syntax/nasus.js":41,"../syntax/ptah.js":42,"../syntax/shadow.js":43,"../util.js":44}],40:[function(require,module,exports){
 
 /*
  * Sanitize JavaScript to simplify trap insertion:
@@ -14850,7 +14719,7 @@ module.exports = function (visit, mark) {
 
 }
 
-},{"../syntax/nasus.js":43,"../syntax/ptah.js":44,"../util.js":46}],43:[function(require,module,exports){
+},{"../syntax/nasus.js":41,"../syntax/ptah.js":42,"../util.js":44}],41:[function(require,module,exports){
 
 /*
  * Nasus and his siphoning strike will construct syntactic calls to aran stacks.
@@ -14877,7 +14746,7 @@ exports.get1 = function () { return Esvisit.Halt(Shadow("get1", [])) }
 exports.get2 = function () { return Esvisit.Halt(Shadow("get2", [])) }
 exports.get3 = function () { return Esvisit.Halt(Shadow("get3", [])) }
 
-},{"./shadow.js":45,"esvisit":31}],44:[function(require,module,exports){
+},{"./shadow.js":43,"esvisit":29}],42:[function(require,module,exports){
 
 var Esvisit = require("esvisit")
 var BE = Esvisit.BuildExpression
@@ -15029,7 +14898,7 @@ exports.Declarator = function (name, init, ancestor) {
   return finalize(Esvisit.BuildDeclarator(name, init), ancestor)
 }
 
-},{"esvisit":31}],45:[function(require,module,exports){
+},{"esvisit":29}],43:[function(require,module,exports){
 
 /*
  * Call Aran Linvail, the shadow master.
@@ -15053,7 +14922,7 @@ module.exports = function () {
   return base
 }
 
-},{"esvisit":31}],46:[function(require,module,exports){
+},{"esvisit":29}],44:[function(require,module,exports){
 
 //////////////
 // Function //
@@ -15153,4 +15022,37 @@ exports.external = function (message) { error("external", message, arguments) }
 exports.link = function (data, next) { return {data:data, next:next} }
 
 
-},{}]},{},[1]);
+},{}],"aran":[function(require,module,exports){
+
+var Stack = require("./runtime/stack.js")
+var Scope = require("./runtime/scope.js")
+var Compile = require("./runtime/compile.js")
+var Store = require("./runtime/store.js")
+
+module.exports = function (sandbox, traps, options) {
+
+  var aran = {
+    sandbox: sandbox,
+    traps: traps,
+    options: options,
+    global: (function () { return this } ())
+  }
+
+  Stack(aran)
+  Scope(aran)
+  var save = Store(aran)
+  var globalcompile = Compile(aran, save)
+
+  return function (x) {
+    aran.flush()
+    var code = x.code || x
+    var parent = x.parent || null
+    aran.global.aran = aran
+    var compiled = globalcompile(parent, code)
+    x.compiled = compiled
+    return aran.global.eval(compiled)
+  }
+
+}
+
+},{"./runtime/compile.js":33,"./runtime/scope.js":34,"./runtime/stack.js":35,"./runtime/store.js":36}]},{},[]);

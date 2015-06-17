@@ -1,15 +1,17 @@
 
 // This master traps everything and forward it //
 
-exports.sandbox = window
+var Aran = require("aran");
 
-exports.options = {
+var sandbox = window
+
+var options = {
   ast:true,
   loc:true,
   range:true
 }
 
-exports.traps = {
+var traps = {
   primitive: function (x, n) { return x },
   undefined: function (s, n) { return undefined },
   object: function (x, n) { return x },
@@ -34,3 +36,5 @@ exports.traps = {
     return ks
   }
 }
+
+module.exports = Aran(sandbox, traps, options);

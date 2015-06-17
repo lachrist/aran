@@ -1,5 +1,5 @@
 
-window.Aran = require("..")
+var Aran = require("aran");
 
 // <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.1.8/ace.js"></script>
 function print (x) {
@@ -47,13 +47,10 @@ window.onload = function () {
 function run () {
   document.getElementById("output-div").style.visibility = "hidden"
   compiled.setValue("", -1)
-  var module = {exports:{}}
-  try { (Function("module", "exports", master.getValue().replace(/require\(('|")aran('|")\)/, "window.Aran")))(module, module.exports) }
+  var module = {}
+  try { (Function("module", "exports", master.getValue()))(module, undefined) }
   catch (e) { throw (alert("Error when running master: "+e), e) }
-  var aran = module.exports
-  if (typeof module.exports !== "function")
-    try { aran = Aran(module.exports.sandbox, module.exports.traps, module.exports.options) }
-    catch (e) { throw (alert("Error when setting up Aran: "+e),e) }
+  var aran = module.exports || require("master");
   document.getElementById("run").disabled = false
   document.getElementById("run").onclick = function () {
     var comparison = document.getElementById("comparison").checked

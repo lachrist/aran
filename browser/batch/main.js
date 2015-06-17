@@ -1,6 +1,4 @@
 
-window.Aran = require("..")
-
 //////////
 // Util //
 //////////
@@ -73,12 +71,9 @@ function start () {
 ///////////
 
 function loadmaster (master) {
-  master = master.replace(/require\(('|")aran('|")\)/g, "window.Aran");
-  var module = {exports:{}};
-  (Function("module", "exports", master))(module, module.exports);
-  if (typeof module.exports === "function")
-    return module.exports;
-  return Aran(module.exports.sandbox, module.exports.traps, module.exports.options);
+  var module = {};
+  (Function("module", "exports", master))(module, undefined);
+  return module.exports || require("master");
 }
 
 function benchmarkall (masters, targets) {

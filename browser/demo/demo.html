@@ -3,66 +3,67 @@
   <head>
     <meta charset="UTF-8">
     <title>Aran in Action</title>
-      <script src="right.js"></script>
-      <script src="ace/ace.js"></script>
-      <style>
-      #main {
-        font-family: Helvetica, 'Open Sans', Arial, sans-serif;
-        font-weight: lighter;
-        width: 1000px;
-        margin: auto;
-      }
-      .code {
-        font-family: "Lucida Console", Monaco, monospace;
-        font-size: 12px;
-      }
-      h1 {
-        text-align: center;
-      }
-      p {
-        text-align: justify;
-      }
-      label {
-        display: block;
-        height: 20px;
-      }
-      #output-div label {
-        margin: 10px;
-      }
-      textarea {
-        margin-top: 5px;
-        margin-bottom: 5px;
-      }
-      button {
-        padding: 8px;
-        margin-bottom: 30px;
-        font-size: 14px
-      }
-      button::-moz-focus-inner {
-        padding: 8px;
-      }
-      .editor {
-        resize: both;
-        overflow: auto;
-        width: 480px;
-        height: 200px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-        margin-right: 10px;
-        border: 1px #C0C0C0 solid;
-      }
-      #enjoy {
-        margin-bottom: 30px;
-      }
-      #master-div, #target-div, #compiled-div, #output-div {
-        display: inline-block;
-        vertical-align: top;
-      }
-      #output-div {
-        vertical-align: bottom;
-      }
+    <script src="ace/ace.js"></script>
+    <script src="../aran.js"></script>
+    <script src="./masters.js"></script>
+    <script src="./main.js"></script>
+    <style>
+    #main {
+      font-family: Helvetica, 'Open Sans', Arial, sans-serif;
+      font-weight: lighter;
+      width: 1000px;
+      margin: auto;
+    }
+    .code {
+      font-family: "Lucida Console", Monaco, monospace;
+      font-size: 12px;
+    }
+    h1 {
+      text-align: center;
+    }
+    p {
+      text-align: justify;
+    }
+    label {
+      display: block;
+      height: 20px;
+    }
+    #output-div label {
+      margin: 10px;
+    }
+    textarea {
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
+    button {
+      padding: 8px;
+      margin-bottom: 30px;
+      font-size: 14px
+    }
+    button::-moz-focus-inner {
+      padding: 8px;
+    }
+    .editor {
+      resize: both;
+      overflow: auto;
+      width: 480px;
+      height: 200px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      margin-right: 10px;
+      border: 1px #C0C0C0 solid;
+    }
+    #enjoy {
+      margin-bottom: 30px;
+    }
+    #master-div, #target-div, #compiled-div, #output-div {
+      display: inline-block;
+      vertical-align: top;
+    }
+    #output-div {
+      vertical-align: bottom;
+    }
     </style>
-    <script src="bundle.js"></script>
   </head>
   <body>
     <div id="main">
