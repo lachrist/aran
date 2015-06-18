@@ -30,9 +30,9 @@ module.exports = function (visit, mark, traps, save) {
     return Shadow("traps", name, args)
   }
 
-  function booleanize (test, ancestor) {
-    if (!traps.booleanize) { return test }
-    return trap("booleanize", [test], ancestor)
+  function test (test, ancestor) {
+    if (!traps.test) { return test }
+    return trap("test", [test], ancestor)
   }
 
   function undef(name, ancestor) {
@@ -78,11 +78,15 @@ module.exports = function (visit, mark, traps, save) {
 
   var onstatements = {}
 
-  onstatements.If = function (node) { node.test = booleanize(node.test, node) }
+  onstatements.If = function (node) { node.test = test(node.test, node) }
 
   onstatements.Return = function (node) { if (!node.argument) { node.argument = undef(null, node) } }
+ 
+  onstatements.Throw = function (node) { if (traps.throw) { node.argument = trap("throw", [node.argument], node) } }
 
   onstatements.Try = function (node) {
+    if (traps.try)
+      node.block.body.unshift(Ptah.Expression(trap("try", [], node)));
     if (node.handlers[0] && traps.catch) {
       node.handlers[0].body.body.unshift(Ptah.Expression(Ptah.IdentifierAssignment(
         node.handlers[0].param.name,
@@ -91,11 +95,11 @@ module.exports = function (visit, mark, traps, save) {
     }
   }
 
-  onstatements.While = function (node) { node.test = booleanize(node.test, node) }
+  onstatements.While = function (node) { node.test = test(node.test, node) }
 
-  onstatements.DoWhile = function (node) { node.test = booleanize(node.test, node) }
+  onstatements.DoWhile = function (node) { node.test = test(node.test, node) }
 
-  onstatements.For = function (node) { if (node.test) { node.test = booleanize(node.test, node) } }
+  onstatements.For = function (node) { if (node.test) { node.test = test(node.test, node) } }
 
   // for (ID in EXPR2) STMT >>> { 
   //   try {
@@ -137,7 +141,26 @@ module.exports = function (visit, mark, traps, save) {
 
   onexpressions.Array = function (node) { if (traps.array) { return trap("array", [Ptah.Array(node.elements)], node) } }
 
-  onexpressions.DataObject = function (node) { if (traps.object) { return trap("object", [Ptah.DataObject(node.properties)], node) } }
+  onexpressions.Object = function (node) {
+    if (traps.object) {
+      var os = [];
+      var dico = {};
+      node.properties.forEach(function (p) {
+        var k = (p.key.type === "Identifier") ? p.key.name : p.key.value
+        var o = dico[k]
+        if (!o) {
+          o = Ptah.Object([Ptah.InitProperty("key", Ptah.Literal(k))])
+          dico[k] = o
+          os.push(o)
+        }
+        var kind = (p.kind === "init") ? "value" : p.kind
+        o.properties.push(Ptah.InitProperty(kind, p.value))
+      })
+      return trap("object", [Ptah.Array(os)], node)
+    }
+  }
+
+  // onexpressions.DataObject = function (node) { if (traps.object) { return trap("object", [Ptah.DataObject(node.properties)], node) } }
 
   onexpressions.HoistedFunction = function (node) {
     (depth++, mark(out))
@@ -191,14 +214,14 @@ module.exports = function (visit, mark, traps, save) {
 
   onexpressions.Binary = function (node) { if (traps.binary) { return trap("binary", [Ptah.Literal(node.operator), node.left, node.right], node) } }
 
-  onexpressions.Conditional = function (node) { node.test = booleanize(node.test, node) }
+  onexpressions.Conditional = function (node) { node.test = test(node.test, node) }
 
   // eval(ARGS) >>> (aran.push(eval)===aran.eval) ? (aran.pop(), eval(aran.compiled(LOCAL, ARGS)) : aran.pop()(ARGS)
   // sandbox contains the original eval function <=> possibly local eval
   // the alternative eval call is known to be standard eval call
   onexpressions.EvalCall = function (node) {
     var args = node.arguments.slice()
-    if (traps.stringify) { args[0] = trap("stringify", [args[0]], node) }
+    if (traps.eval) { args[0] = trap("eval", [args[0]], node) }
     args[0] = Shadow("compile", [
       Ptah.Literal(depth===0),
       save

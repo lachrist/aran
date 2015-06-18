@@ -85,12 +85,12 @@ exports.Array = function (elements, ancestor) {
   return finalize(BE.Array(elements), ancestor)
 }
 
-exports.Set = function (hash, ancestor) {
-  return finalize(BE.DataObject(Object.keys(hash).map(function (k) { return Esvisit.BuildInitProperty(k, hash[k]) })), ancestor)
-}
+// exports.Set = function (hash, ancestor) {
+//   return finalize(BE.DataObject(Object.keys(hash).map(function (k) { return Esvisit.BuildInitProperty(k, hash[k]) })), ancestor)
+// }
 
-exports.DataObject = function (initproperties, ancestor) {
-  return finalize(BE.DataObject(initproperties), ancestor)
+exports.Object = function (properties, ancestor) {
+  return finalize(BE.Object(properties), ancestor)
 }
 
 exports.MemberAssignment = function (leftobject, leftproperty, right, ancestor) {
@@ -147,4 +147,8 @@ exports.Literal = function (value, ancestor) {
 
 exports.Declarator = function (name, init, ancestor) {
   return finalize(Esvisit.BuildDeclarator(name, init), ancestor)
+}
+
+exports.InitProperty = function (name, value, ancestor) {
+  return finalize(Esvisit.BuildInitProperty(name, value), ancestor)
 }

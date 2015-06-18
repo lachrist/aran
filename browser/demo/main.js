@@ -1,58 +1,62 @@
 
-var Aran = require("aran");
+(function () {
 
-// <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.1.8/ace.js"></script>
-function print (x) {
-  if (x === undefined) { return "undefined" }
-  try { return JSON.stringify(x) } catch (e) { return String(e) }
-}
-
-var master
-var target
-var compiled
-
-function editor (id) {
-  var editor = ace.edit(id)
-  editor.setTheme("ace/theme/chrome")
-  editor.getSession().setMode("ace/mode/javascript")
-  editor.$blockScrolling = Infinity
-  editor.setOption("showPrintMargin", false)
-  editor.getSession().setTabSize(2)
-  editor.getSession().setUseSoftTabs(true)
-  return editor
-}
-
-window.onload = function () {
-  master = editor("master")
-  target = editor("target")
-  compiled = editor("compiled")
-  compiled.setReadOnly(true)
-  setInterval(function () {
-    master.resize()
-    target.resize()
-    compiled.resize()
-  }, 1000)
-  for (var name in masters) {
-    var option = document.createElement("option")
-    option.textContent = name
-    option.value = name
-    document.getElementById("select").appendChild(option)
+  // <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.1.8/ace.js"></script>
+  function print (x) {
+    if (x === undefined) { return "undefined" }
+    try { return JSON.stringify(x) } catch (e) { return String(e) }
   }
-  document.getElementById("select").onchange = function () { master.setValue(masters[select.value], -1) }
-  document.getElementById("select").value = "Empty"
-  master.setValue(masters.Empty, -1)
-  document.getElementById("init").onclick = run
-}
 
-function run () {
-  document.getElementById("output-div").style.visibility = "hidden"
-  compiled.setValue("", -1)
-  var module = {}
-  try { (Function("module", "exports", master.getValue()))(module, undefined) }
-  catch (e) { throw (alert("Error when running master: "+e), e) }
-  var aran = module.exports || require("master");
-  document.getElementById("run").disabled = false
-  document.getElementById("run").onclick = function () {
+  var master
+  var target
+  var compiled
+  var aran
+
+  function editor (id) {
+    var editor = ace.edit(id)
+    editor.setTheme("ace/theme/chrome")
+    editor.getSession().setMode("ace/mode/javascript")
+    editor.$blockScrolling = Infinity
+    editor.setOption("showPrintMargin", false)
+    editor.getSession().setTabSize(2)
+    editor.getSession().setUseSoftTabs(true)
+    return editor
+  }
+
+  window.onload = function () {
+    master = editor("master")
+    target = editor("target")
+    compiled = editor("compiled")
+    compiled.setReadOnly(true)
+    setInterval(function () {
+      master.resize()
+      target.resize()
+      compiled.resize()
+    }, 1000)
+    for (var name in masters) {
+      var option = document.createElement("option")
+      option.textContent = name
+      option.value = name
+      document.getElementById("select").appendChild(option)
+    }
+    document.getElementById("select").onchange = function () { master.setValue(masters[select.value], -1) }
+    document.getElementById("select").value = "Empty"
+    master.setValue(masters.Empty, -1)
+    document.getElementById("init").onclick = init
+    document.getElementById("run").onclick = run
+  }
+
+  function init () {
+    document.getElementById("output-div").style.visibility = "hidden"
+    compiled.setValue("", -1)
+    var module = {}
+    try { (Function("module", "exports", master.getValue()))(module, undefined) }
+    catch (e) { throw (alert("Error when running master: "+e), e) }
+    aran = module.exports || require("master");
+    document.getElementById("run").disabled = false
+  }
+
+  function run () {
     var comparison = document.getElementById("comparison").checked
     // Hide old results
     document.getElementById("output-div").style.visibility = "hidden"
@@ -80,4 +84,5 @@ function run () {
     if (error) { throw (console.dir(error), error) }
     if (aranerror) { throw (console.dir(aranerror), aranerror) }
   }
-}
+
+} ());

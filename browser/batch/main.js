@@ -100,7 +100,9 @@ function benchmarkall (masters, targets) {
     try { var aran = loadmaster(masters[mkeys[midx]]) }
     catch (e) {
       results.push({master:mkeys[midx], mastererror:e});
-      return midx++;
+      midx++;
+      console.dir(e);
+      throw e;
     }
     var result = benchmark(aran, targets[tkeys[tidx]]);
     result.master = mkeys[midx];

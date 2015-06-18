@@ -13164,19 +13164,11 @@ expressions.Array = function (elements) {
   }
 }
 
-expressions.AccessorObject = function (properties) {
+expressions.Object = function (properties) {
   return {
-    $type: "AccessorObject",
+    $type: "Object",
     type: "ObjectExpression",
     properties: properties
-  }
-}
-
-expressions.DataObject = function (initproperties) {
-  return {
-    $type: "DataObject",
-    type: "ObjectExpression",
-    properties: initproperties
   }
 }
 
@@ -13519,14 +13511,6 @@ var types = {
   ForStatement:         function (n) { return (n.init&&n.init.type==="VariableDeclaration") ? "DeclarationFor" : "For" },
   ForInStatement:       function (n) { return (n.left.type === "VariableDeclaration" ? "Declaration" : left(n.left)) + "ForIn" },
   CallExpression:       function (n) { return (n.callee.name === "eval" ? "Eval" : (n.callee.type === "MemberExpression" ? "Member" : "")) + "Call" },
-  ObjectExpression:     function (n) {
-    for (var i=0; i<n.properties.length; i++) {
-      if (n.properties[i].kind !== "init") {
-        return "AccessorObject"
-      }
-    }
-    return "DataObject"
-  },
   UnaryExpression:      function (n) {
     if (n.operator === "typeof" && n.argument.type === "Identifier") { return "IdentifierTypeof" }
     if (n.operator === "delete" && n.argument.type === "Identifier") { return "IdentifierDelete" }
@@ -13696,13 +13680,7 @@ module.exports = function () {
   var exprs = {
     This: nil,
     Array: function (n) { nodes(n.elements) },
-    DataObject: function (n) { for (var i=0; i<n.properties.length; i++) { childs.push(n.properties[i].value) } },
-    AccessorObject: function (n) {
-      for (var i=0; i<n.properties.length; i++) {
-        if (n.properties[i].kind === "init") { childs.push(n.properties[i].value) }
-        else { nodes(n.properties[i].value.body.body) }
-      }
-    },
+    Object: function (n) { for (var i=0; i<n.properties.length; i++) { childs.push(n.properties[i].value) } },
     Function: function (n) { nodes(n.body.body) },
     HoistedFunction: function (n) { for (var i=1; i<n.body.body.length; i++) { childs.push(n.body.body[i]) } },
     Sequence: function (n) { nodes(n.expressions) },
@@ -13717,11 +13695,11 @@ module.exports = function () {
     IdentifierAssignment: function (n) { childs.push(n.right) },
     IdentifierBinaryAssignment: function (n) { childs.push(n.right) },
     MemberAssignment: function (n) {
-      member(n)
+      member(n.left)
       childs.push(n.right)
     },
     MemberBinaryAssignment: function (n) {
-      member(n)
+      member(n.left)
       childs.push(n.right)
     },
     IdentifierUpdate: nil,
@@ -14135,9 +14113,9 @@ module.exports = function (visit, mark, traps, save) {
     return Shadow("traps", name, args)
   }
 
-  function booleanize (test, ancestor) {
-    if (!traps.booleanize) { return test }
-    return trap("booleanize", [test], ancestor)
+  function test (test, ancestor) {
+    if (!traps.test) { return test }
+    return trap("test", [test], ancestor)
   }
 
   function undef(name, ancestor) {
@@ -14183,11 +14161,15 @@ module.exports = function (visit, mark, traps, save) {
 
   var onstatements = {}
 
-  onstatements.If = function (node) { node.test = booleanize(node.test, node) }
+  onstatements.If = function (node) { node.test = test(node.test, node) }
 
   onstatements.Return = function (node) { if (!node.argument) { node.argument = undef(null, node) } }
+ 
+  onstatements.Throw = function (node) { if (traps.throw) { node.argument = trap("throw", [node.argument], node) } }
 
   onstatements.Try = function (node) {
+    if (traps.try)
+      node.block.body.unshift(Ptah.Expression(trap("try", [], node)));
     if (node.handlers[0] && traps.catch) {
       node.handlers[0].body.body.unshift(Ptah.Expression(Ptah.IdentifierAssignment(
         node.handlers[0].param.name,
@@ -14196,11 +14178,11 @@ module.exports = function (visit, mark, traps, save) {
     }
   }
 
-  onstatements.While = function (node) { node.test = booleanize(node.test, node) }
+  onstatements.While = function (node) { node.test = test(node.test, node) }
 
-  onstatements.DoWhile = function (node) { node.test = booleanize(node.test, node) }
+  onstatements.DoWhile = function (node) { node.test = test(node.test, node) }
 
-  onstatements.For = function (node) { if (node.test) { node.test = booleanize(node.test, node) } }
+  onstatements.For = function (node) { if (node.test) { node.test = test(node.test, node) } }
 
   // for (ID in EXPR2) STMT >>> { 
   //   try {
@@ -14242,7 +14224,26 @@ module.exports = function (visit, mark, traps, save) {
 
   onexpressions.Array = function (node) { if (traps.array) { return trap("array", [Ptah.Array(node.elements)], node) } }
 
-  onexpressions.DataObject = function (node) { if (traps.object) { return trap("object", [Ptah.DataObject(node.properties)], node) } }
+  onexpressions.Object = function (node) {
+    if (traps.object) {
+      var os = [];
+      var dico = {};
+      node.properties.forEach(function (p) {
+        var k = (p.key.type === "Identifier") ? p.key.name : p.key.value
+        var o = dico[k]
+        if (!o) {
+          o = Ptah.Object([Ptah.InitProperty("key", Ptah.Literal(k))])
+          dico[k] = o
+          os.push(o)
+        }
+        var kind = (p.kind === "init") ? "value" : p.kind
+        o.properties.push(Ptah.InitProperty(kind, p.value))
+      })
+      return trap("object", [Ptah.Array(os)], node)
+    }
+  }
+
+  // onexpressions.DataObject = function (node) { if (traps.object) { return trap("object", [Ptah.DataObject(node.properties)], node) } }
 
   onexpressions.HoistedFunction = function (node) {
     (depth++, mark(out))
@@ -14296,14 +14297,14 @@ module.exports = function (visit, mark, traps, save) {
 
   onexpressions.Binary = function (node) { if (traps.binary) { return trap("binary", [Ptah.Literal(node.operator), node.left, node.right], node) } }
 
-  onexpressions.Conditional = function (node) { node.test = booleanize(node.test, node) }
+  onexpressions.Conditional = function (node) { node.test = test(node.test, node) }
 
   // eval(ARGS) >>> (aran.push(eval)===aran.eval) ? (aran.pop(), eval(aran.compiled(LOCAL, ARGS)) : aran.pop()(ARGS)
   // sandbox contains the original eval function <=> possibly local eval
   // the alternative eval call is known to be standard eval call
   onexpressions.EvalCall = function (node) {
     var args = node.arguments.slice()
-    if (traps.stringify) { args[0] = trap("stringify", [args[0]], node) }
+    if (traps.eval) { args[0] = trap("eval", [args[0]], node) }
     args[0] = Shadow("compile", [
       Ptah.Literal(depth===0),
       save
@@ -14617,28 +14618,28 @@ module.exports = function (visit, mark) {
   //     get: function () {}
   //   }
   // })
-  onexpressions.AccessorObject = function (expr) {
-    var accessors = {}
-    var properties = expr.properties.filter(function (p) {
-      if (p.kind === "init") { return true }
-      var k = p.key.name || p.key.value
-      if (!accessors[k]) {
-        accessors[k] = {
-          configurable: Ptah.Literal(true, p),
-          enumerable: Ptah.Literal(true, p)
-        }
-      }
-      accessors[k][p.kind] = Ptah.Function(
-        null,
-        p.value.params.map(function (id) { return id.name }),
-        p.value.body.body,
-        p
-      )
-      return false
-    })
-    Object.keys(accessors).map(function (k) { accessors[k] = Ptah.Set(accessors[k], expr) })
-    return Ptah.MemberCall(Ptah.Identifier("Object"), "defineProperties", [Ptah.DataObject(properties, expr), Ptah.Set(accessors, expr)])
-  }
+  // onexpressions.AccessorObject = function (expr) {
+  //   var accessors = {}
+  //   var properties = expr.properties.filter(function (p) {
+  //     if (p.kind === "init") { return true }
+  //     var k = p.key.name || p.key.value
+  //     if (!accessors[k]) {
+  //       accessors[k] = {
+  //         configurable: Ptah.Literal(true, p),
+  //         enumerable: Ptah.Literal(true, p)
+  //       }
+  //     }
+  //     accessors[k][p.kind] = Ptah.Function(
+  //       null,
+  //       p.value.params.map(function (id) { return id.name }),
+  //       p.value.body.body,
+  //       p
+  //     )
+  //     return false
+  //   })
+  //   Object.keys(accessors).map(function (k) { accessors[k] = Ptah.Set(accessors[k], expr) })
+  //   return Ptah.MemberCall(Ptah.Identifier("Object"), "defineProperties", [Ptah.DataObject(properties, expr), Ptah.Set(accessors, expr)])
+  // }
 
   ////////////
   // Switch //
@@ -14834,12 +14835,12 @@ exports.Array = function (elements, ancestor) {
   return finalize(BE.Array(elements), ancestor)
 }
 
-exports.Set = function (hash, ancestor) {
-  return finalize(BE.DataObject(Object.keys(hash).map(function (k) { return Esvisit.BuildInitProperty(k, hash[k]) })), ancestor)
-}
+// exports.Set = function (hash, ancestor) {
+//   return finalize(BE.DataObject(Object.keys(hash).map(function (k) { return Esvisit.BuildInitProperty(k, hash[k]) })), ancestor)
+// }
 
-exports.DataObject = function (initproperties, ancestor) {
-  return finalize(BE.DataObject(initproperties), ancestor)
+exports.Object = function (properties, ancestor) {
+  return finalize(BE.Object(properties), ancestor)
 }
 
 exports.MemberAssignment = function (leftobject, leftproperty, right, ancestor) {
@@ -14896,6 +14897,10 @@ exports.Literal = function (value, ancestor) {
 
 exports.Declarator = function (name, init, ancestor) {
   return finalize(Esvisit.BuildDeclarator(name, init), ancestor)
+}
+
+exports.InitProperty = function (name, value, ancestor) {
+  return finalize(Esvisit.BuildInitProperty(name, value), ancestor)
 }
 
 },{"esvisit":29}],43:[function(require,module,exports){

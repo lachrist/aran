@@ -173,28 +173,28 @@ module.exports = function (visit, mark) {
   //     get: function () {}
   //   }
   // })
-  onexpressions.AccessorObject = function (expr) {
-    var accessors = {}
-    var properties = expr.properties.filter(function (p) {
-      if (p.kind === "init") { return true }
-      var k = p.key.name || p.key.value
-      if (!accessors[k]) {
-        accessors[k] = {
-          configurable: Ptah.Literal(true, p),
-          enumerable: Ptah.Literal(true, p)
-        }
-      }
-      accessors[k][p.kind] = Ptah.Function(
-        null,
-        p.value.params.map(function (id) { return id.name }),
-        p.value.body.body,
-        p
-      )
-      return false
-    })
-    Object.keys(accessors).map(function (k) { accessors[k] = Ptah.Set(accessors[k], expr) })
-    return Ptah.MemberCall(Ptah.Identifier("Object"), "defineProperties", [Ptah.DataObject(properties, expr), Ptah.Set(accessors, expr)])
-  }
+  // onexpressions.AccessorObject = function (expr) {
+  //   var accessors = {}
+  //   var properties = expr.properties.filter(function (p) {
+  //     if (p.kind === "init") { return true }
+  //     var k = p.key.name || p.key.value
+  //     if (!accessors[k]) {
+  //       accessors[k] = {
+  //         configurable: Ptah.Literal(true, p),
+  //         enumerable: Ptah.Literal(true, p)
+  //       }
+  //     }
+  //     accessors[k][p.kind] = Ptah.Function(
+  //       null,
+  //       p.value.params.map(function (id) { return id.name }),
+  //       p.value.body.body,
+  //       p
+  //     )
+  //     return false
+  //   })
+  //   Object.keys(accessors).map(function (k) { accessors[k] = Ptah.Set(accessors[k], expr) })
+  //   return Ptah.MemberCall(Ptah.Identifier("Object"), "defineProperties", [Ptah.DataObject(properties, expr), Ptah.Set(accessors, expr)])
+  // }
 
   ////////////
   // Switch //
