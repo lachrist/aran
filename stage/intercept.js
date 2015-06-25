@@ -144,7 +144,7 @@ module.exports = function (visit, mark, traps, save) {
   onexpressions.Object = function (node) {
     if (traps.object) {
       var os = [];
-      var dico = {};
+      var dico = Object.create(null); // to avoid access Object.prototype
       node.properties.forEach(function (p) {
         var k = (p.key.type === "Identifier") ? p.key.name : p.key.value
         var o = dico[k]
