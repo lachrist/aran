@@ -271,6 +271,12 @@ module.exports = function (visit, mark, traps, save) {
         Ptah.Sequence([Nasus.pop(), undef(null, node)]),
         Nasus.pop())
     }
+    if (traps.primitive && (node.name === "NaN")) {
+      return Ptah.Conditional(
+        Ptah.Binary("!==", Ptah.Identifier("NaN"), Ptah.Identifier("NaN")),
+        trap("primitive", [Ptah.Identifier("NaN")], node),
+        Ptah.Identifier("NaN"))
+    }
   }
 
   ////////////

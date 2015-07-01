@@ -71,8 +71,8 @@ module.exports = function (aran, save) {
       program.body.unshift(Ptah.Declaration(topvars.map(function (v) { return Ptah.Declarator(v, null) })))
     }
     // console.log(Esvisit.View(program))
-    var errors = Esvalid.errors(program)
-    if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
+    // var errors = Esvalid.errors(program)
+    // if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
     return Escodegen.generate(program)
   }
 

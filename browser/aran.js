@@ -13810,8 +13810,8 @@ module.exports = function (aran, save) {
       program.body.unshift(Ptah.Declaration(topvars.map(function (v) { return Ptah.Declarator(v, null) })))
     }
     // console.log(Esvisit.View(program))
-    var errors = Esvalid.errors(program)
-    if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
+    // var errors = Esvalid.errors(program)
+    // if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
     return Escodegen.generate(program)
   }
 
@@ -14227,7 +14227,7 @@ module.exports = function (visit, mark, traps, save) {
   onexpressions.Object = function (node) {
     if (traps.object) {
       var os = [];
-      var dico = {};
+      var dico = Object.create(null); // to avoid access Object.prototype
       node.properties.forEach(function (p) {
         var k = (p.key.type === "Identifier") ? p.key.name : p.key.value
         var o = dico[k]
@@ -14353,6 +14353,12 @@ module.exports = function (visit, mark, traps, save) {
         Ptah.Binary("===", Nasus.push(Ptah.Identifier("undefined")), Shadow("global", "undefined")),
         Ptah.Sequence([Nasus.pop(), undef(null, node)]),
         Nasus.pop())
+    }
+    if (traps.primitive && (node.name === "NaN")) {
+      return Ptah.Conditional(
+        Ptah.Binary("!==", Ptah.Identifier("NaN"), Ptah.Identifier("NaN")),
+        trap("primitive", [Ptah.Identifier("NaN")], node),
+        Ptah.Identifier("NaN"))
     }
   }
 

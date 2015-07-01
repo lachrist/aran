@@ -85,20 +85,20 @@ Traps can be used to implement shadow execution and, in general, dynamic techniq
  Trap | Target | Transformed
 :-----|:-------|:-----------
 `primitive(Value, Node)` | `'foo'` | `aran.traps.primitive('foo', :Literal:)`
-`object(Object, Node)` | `{a:x}` | `aran.traps.object({a:x}, :ObjectExpression:)`
+`object(Properties, Node)` | `{a:x}` | `aran.traps.object([{key:'a', value:x}], :ObjectExpression:)`
 `array(Array, Node)` | `[x,y,z]` | `aran.traps.array([x,y,z], :ArrayExpression:)`
 `regexp(Pattern, Flags, Node)` | `/abc/gi` | `aran.traps.regexp("abc", "gi", :Literal:)`
 `function(Function, Node)` | `function (...) {...}` | `... function (...) { arguments = aran.traps.arguments(arguments, :FunctionExpression:); ... } ...`
 `arguments(Arguments, Node)` | `function (...) {...}` | `aran.traps.function(function (...) { ... }, :FunctionExpression:)`
 `undefined(MaybeName, Node)` | `return;` | `return aran.traps.undefined(null, :ReturnStatement:);`
-`booleanize(value, Node)` | `x ? y : z` | `aran.traps.booleanize(x, :ConditionalExpression:) ? y : z`
-`stringify(value, Node)` | `eval(x)` | `eval(aran.compile(aran.traps.stringify(x, :CallExpression:)))`
+`test(value, Node)` | `x ? y : z` | `aran.traps.test(x, :ConditionalExpression:) ? y : z`
+`eval(value, Node)` | `eval(x)` | `eval(aran.compile(aran.traps.eval(x, :CallExpression:)))`
+`try(Node)` | `try { ...` | `try { aran.traps.try(:TryStatement:) ...`
 `catch([E/e]xception, Node)` | `... catch (e) { ... }` | `... catch (e) { e = aran.traps.catch(e, :TryStatement:); ... }`
 `unary(Operator, argument, Node)` | `!x` | `aran.traps.unary('!', x, :UnaryExpression:)`
 `binary(Operator, left, right, Node)` | `x+y` | `aran.traps.binary('+', x, y, :BinaryExpression:)`
 `apply(function, this, Arguments, Node)` | `f(x, y)` | `aran.traps.apply(f, aran.traps.global, [x,y], :CallExpression:)`
-`new(function, Arguments, Node)` | `new F(x, y)` | `aran.traps.new(F, [x,y], :NewExpression:)`
-`has(object, Key)` | `x` | `x`
+`construct(function, Arguments, Node)` | `new F(x, y)` | `aran.traps.construct(F, [x,y], :NewExpression:)`
 `get(object, [K]key, MaybeNode)` | `o[k]` | `aran.traps.get(o, k, :MemberExpression:)`
 `set(object, [K]key, value, MaybeNode)` | `o[k] = v` | `aran.traps.set(o, k, v, :AssignmentExpression:)`
 `delete(object, [K]key, MaybeNode)` | `delete o[k]` | `aran.traps.delete(o, k, :UnaryExpression:)`

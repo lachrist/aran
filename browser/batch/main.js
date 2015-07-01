@@ -94,7 +94,7 @@ function benchmarkall (masters, targets) {
     }
     if (midx === mkeys.length) {
       clearInterval(interval);
-      return display(results);
+      return report(results);
     }
     notify();
     try { var aran = loadmaster(masters[mkeys[midx]]) }
@@ -107,6 +107,7 @@ function benchmarkall (masters, targets) {
     var result = benchmark(aran, targets[tkeys[tidx]]);
     result.master = mkeys[midx];
     result.target = tkeys[tidx];
+    display(result);
     results.push(result);
     tidx++;
   }, 5);
@@ -134,32 +135,41 @@ function benchmark (aran, target) {
 // Display //
 /////////////
 
-function display (results) {
-  var headers = ["master", "target", "loc", "aranloc", "error", "aranerror", "time", "arantime"];
+var headers = ["master", "target", "loc", "aranloc", "error", "aranerror", "time", "arantime"];
+function display (res) {
   var row;
   var cell;
+  if (res.mastererror) {
+    var li = document.createElement("li");
+    li.textContent = "Error at master: "+res.master+": "+res.mastererror;
+    return list.appendChild(li);
+  }
+  row = document.createElement("tr");
+  for (var j=0; j<headers.length; j++) {
+    cell = document.createElement("td");
+    cell.textContent = res[headers[j]];
+    row.appendChild(cell);
+  }
+  cell = document.createElement("td");
+  cell.textContent = round(res.arantime/res.time);
+  row.appendChild(cell);
+  table.appendChild(row);
+}
+
+function report (results) {
   var time = 0;
   var arantime = 0;
   results.forEach(function (res) {
-    if (res.mastererror) {
-      var li = document.createElement("li");
-      li.textContent = "Error at master: "+res.master+": "+res.mastererror;
-      return list.appendChild(li);
-    }
-    time = time + res.time;
-    arantime = arantime + res.arantime;
-    row = document.createElement("tr");
-    for (var j=0; j<headers.length; j++) {
-      cell = document.createElement("td");
-      cell.textContent = res[headers[j]];
-      row.appendChild(cell);
-    }
-    cell = document.createElement("td");
-    cell.textContent = round(res.arantime/res.time);
-    row.appendChild(cell);
-    table.appendChild(row);
+    time += res.time;
+    arantime += res.arantime;
   });
-  dom.feedback.textContent = "Average slowdown factor: "+round(arantime/time);
+  var report = "Slowdownfactor >> average: "+round(arantime/time);
+  results = results.sort(function (r1, r2) { return (r1.arantime/r1.time) > (r2.arantime/r2.time) });
+  var res;
+  report += ", first quartil: "+(res=results[Math.round(results.length/4)],res.arantime/res.time);
+  report += ", median:"+(res=results[Math.round(results.length/2)],res.arantime/res.time);
+  report += ", third quartil: "+(res=results[Math.round(3*results.length/4)],res.arantime/res.time);
+  dom.feedback.textContent = report;
   dom.masters.disabled = false;
   dom.targets.disabled = false;
   dom.run.disabled = false;
