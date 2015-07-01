@@ -88,8 +88,8 @@ Traps can be used to implement shadow execution and, in general, dynamic techniq
 `object(Properties, Node)` | `{a:x}` | `aran.traps.object([{key:'a', value:x}], :ObjectExpression:)`
 `array(Array, Node)` | `[x,y,z]` | `aran.traps.array([x,y,z], :ArrayExpression:)`
 `regexp(Pattern, Flags, Node)` | `/abc/gi` | `aran.traps.regexp("abc", "gi", :Literal:)`
-`function(Function, Node)` | `function (...) {...}` | `... function (...) { arguments = aran.traps.arguments(arguments, :FunctionExpression:); ... } ...`
-`arguments(Arguments, Node)` | `function (...) {...}` | `aran.traps.function(function (...) { ... }, :FunctionExpression:)`
+`function(Function, Node)` | `function (...) {...}` | `aran.traps.function(function (...) { ... }, :FunctionExpression:)`
+`arguments(Arguments, Node)` | `function (...) {...}` | `... function (...) { arguments = aran.traps.arguments(arguments, :FunctionExpression:); ... } ...`
 `undefined(MaybeName, Node)` | `return;` | `return aran.traps.undefined(null, :ReturnStatement:);`
 `test(value, Node)` | `x ? y : z` | `aran.traps.test(x, :ConditionalExpression:) ? y : z`
 `eval(value, Node)` | `eval(x)` | `eval(aran.compile(aran.traps.eval(x, :CallExpression:)))`
