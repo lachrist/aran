@@ -254,7 +254,7 @@ module.exports = function (visit, mark, traps, save) {
 
   onexpressions.Call = function (node) { if (traps.apply) { return trap("apply", [node.callee, Shadow("global"), Ptah.Array(node.arguments)], node) } }
 
-  onexpressions.New = function (node) { if (traps.new) { return trap("new", [node.callee, Ptah.Array(node.arguments)], node) } }
+  onexpressions.New = function (node) { if (traps.construct) { return trap("construct", [node.callee, Ptah.Array(node.arguments)], node) } }
 
   onexpressions.Member = function (node) { if (traps.get) { return trap("get", [node.object, property(node)], node) } }
 
