@@ -6,7 +6,7 @@
 , "homepage": "http://github.com/lachrist/aran"
 , "license" : "MIT"
 , "bin": "run.js"
-, "dependencies": {"esprima":"*", "esvisit":"*", "esvalid":"*", "escodegen":"*", "otiluke":"*", "minimist":"*"}
+, "dependencies": {"esprima":"*", "esvisit":"*", "esvalid":"*", "escodegen":"*", "otiluke":"*", "minimist":"*", "browserify":"*"}
 , "files" : ["main.js", "run.js", "util.js", "runtime", "stage", "syntax"]
 , "main": "main.js"
 , "keywords" : ["JavaScript", "Instrumentation", "Sandboxing", "Monitoring", "Tracing", "Shadow Execution", "ECMAScript5"]
