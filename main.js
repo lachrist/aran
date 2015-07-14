@@ -11,21 +11,20 @@ module.exports = function (sandbox, traps, options) {
     traps: traps,
     options: options,
     global: (function () { return this } ())
-  }
+  };
 
   Stack(aran)
   Scope(aran)
   var save = Store(aran)
   var globalcompile = Compile(aran, save)
 
-  return function (x) {
-    aran.flush()
-    var code = x.code || x
-    var parent = x.parent || null
-    aran.global.aran = aran
-    var compiled = globalcompile(parent, code)
-    x.compiled = compiled
-    return aran.global.eval(compiled)
-  }
+  return aran;
 
 }
+
+// eval: function (code) {
+//   aran.flush();
+//   var compiled = globalcompile(code);
+//   aran.compiled = compiled;
+//   return aran.global.eval(compiled);
+// }

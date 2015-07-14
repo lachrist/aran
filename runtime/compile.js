@@ -55,14 +55,15 @@ module.exports = function (aran, save) {
   var sandbox   = aran.sandbox ? Sandbox(esv.visit, esv.mark, aran.sandbox)       : Util.nil
   var intercept = aran.traps   ? Intercept(esv.visit, esv.mark, aran.traps, options.ast?save:null) : Util.nil
 
-  aran.compile = function (isglobal, parent, code) {
+  aran.compile = function (code, parent) {
+    aran.flush()
     var program = Esprima.parse(code, {loc:options.loc, range:options.range})
     if (options.ast) { locate(program, parent) }
     sanitize(program)
     var topvars = hoist(program)
     sandbox(program)
-    intercept(isglobal, program, topvars)
-    if (aran.sandbox && isglobal) {
+    intercept(!Boolean(parent), program, topvars)
+    if (aran.sandbox && !parent) {
       program.body = [
         Ptah.Expression(Shadow("sandboxdeclare", [Ptah.Array(topvars.map(Ptah.Literal))])),
         Ptah.With(Shadow("membrane"), Ptah.Block(program.body))
@@ -76,6 +77,6 @@ module.exports = function (aran, save) {
     return Escodegen.generate(program)
   }
 
-  return function (parent, code) { return aran.compile(true, parent, code) }
+  return function (code) { return aran.compile(code, null) }
 
 }

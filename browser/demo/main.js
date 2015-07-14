@@ -10,7 +10,6 @@
   var master
   var target
   var compiled
-  var aran
 
   function editor (id) {
     var editor = ace.edit(id)
@@ -50,29 +49,33 @@
     document.getElementById("output-div").style.visibility = "hidden"
     compiled.setValue("", -1)
     var module = {}
-    try { (Function("module", "exports", master.getValue()))(module, undefined) }
-    catch (e) { throw (alert("Error when running master: "+e), e) }
-    aran = module.exports || require("master");
+    try { window.eval(master.getValue()) }
+    catch (e) {
+      alert("Error when running master: "+e);
+      throw e;
+    }
     document.getElementById("run").disabled = false
   }
 
   function run () {
+    var comp;
     var comparison = document.getElementById("comparison").checked
     // Hide old results
     document.getElementById("output-div").style.visibility = "hidden"
     // Run original
     if (comparison) {
       var start = performance.now()
-      try { var result = window.eval(target.getValue()) } catch (e) { var error = e }
+      try { var result = window.eval(target.getValue()) }
+      catch (e) { var error = e }
       var end = performance.now()
     }
     // Run Aran
-    var input = {code:target.getValue()}
     var aranstart = performance.now()
-    try { var aranresult = aran(input) } catch (e) { var aranerror = e }
+    try { var aranresult = window.eval(comp = aran.compile(target.getValue())) }
+    catch (e) { var aranerror = e }
     var aranend = performance.now()
     // Output results
-    compiled.setValue(input.compiled, -1)
+    compiled.setValue(comp, -1)
     document.getElementById("result").textContent = comparison ? String(result) : ""
     document.getElementById("error").textContent = comparison ? String(error) : ""
     document.getElementById("time").textContent = comparison ? ((Math.round(1000*(end-start))/1000)+"ms") : ""

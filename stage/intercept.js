@@ -223,11 +223,10 @@ module.exports = function (visit, mark, traps, save) {
     var args = node.arguments.slice()
     if (traps.eval) { args[0] = trap("eval", [args[0]], node) }
     args[0] = Shadow("compile", [
-      Ptah.Literal(depth===0),
+      args[0]],
       save
         ? Shadow("fetch", [Ptah.Literal(save(node.$locus))])
-        : Ptah.Literal(null),
-      args[0]])
+        : Ptah.Literal(null))
     return Ptah.Conditional(
       Ptah.Binary("===", Nasus.push(Ptah.Identifier("eval")), Shadow("global", "eval")),
       Ptah.Sequence([Nasus.pop(), Ptah.EvalCall(args)]),

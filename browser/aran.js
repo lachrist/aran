@@ -13501,6 +13501,7 @@ function left (n) {
 
 var types = {
   Identifier:           function (n) { return "Identifier" },
+  Debugger:             function (n) { return "Debugger" },
   LabeledStatement:     function (n) { return "Label" },
   Literal:              function (n) { return "Literal" },
   FunctionDeclaration:  function (n) { return "Definition" },
@@ -13607,6 +13608,7 @@ module.exports = function () {
   var stmts = {
     Empty: nil,
     Strict: nil,
+    Debugger: nil,
     Block: function (n) { nodes(n.body) },
     Expression: function (n) { childs.push(n.expression) },
     If: function (n) {
@@ -13794,14 +13796,15 @@ module.exports = function (aran, save) {
   var sandbox   = aran.sandbox ? Sandbox(esv.visit, esv.mark, aran.sandbox)       : Util.nil
   var intercept = aran.traps   ? Intercept(esv.visit, esv.mark, aran.traps, options.ast?save:null) : Util.nil
 
-  aran.compile = function (isglobal, parent, code) {
+  aran.compile = function (code, parent) {
+    aran.flush()
     var program = Esprima.parse(code, {loc:options.loc, range:options.range})
     if (options.ast) { locate(program, parent) }
     sanitize(program)
     var topvars = hoist(program)
     sandbox(program)
-    intercept(isglobal, program, topvars)
-    if (aran.sandbox && isglobal) {
+    intercept(!Boolean(parent), program, topvars)
+    if (aran.sandbox && !parent) {
       program.body = [
         Ptah.Expression(Shadow("sandboxdeclare", [Ptah.Array(topvars.map(Ptah.Literal))])),
         Ptah.With(Shadow("membrane"), Ptah.Block(program.body))
@@ -13815,7 +13818,7 @@ module.exports = function (aran, save) {
     return Escodegen.generate(program)
   }
 
-  return function (parent, code) { return aran.compile(true, parent, code) }
+  return function (code) { return aran.compile(code, null) }
 
 }
 
@@ -14306,11 +14309,10 @@ module.exports = function (visit, mark, traps, save) {
     var args = node.arguments.slice()
     if (traps.eval) { args[0] = trap("eval", [args[0]], node) }
     args[0] = Shadow("compile", [
-      Ptah.Literal(depth===0),
+      args[0]],
       save
         ? Shadow("fetch", [Ptah.Literal(save(node.$locus))])
-        : Ptah.Literal(null),
-      args[0]])
+        : Ptah.Literal(null))
     return Ptah.Conditional(
       Ptah.Binary("===", Nasus.push(Ptah.Identifier("eval")), Shadow("global", "eval")),
       Ptah.Sequence([Nasus.pop(), Ptah.EvalCall(args)]),
@@ -14337,7 +14339,7 @@ module.exports = function (visit, mark, traps, save) {
 
   onexpressions.Call = function (node) { if (traps.apply) { return trap("apply", [node.callee, Shadow("global"), Ptah.Array(node.arguments)], node) } }
 
-  onexpressions.New = function (node) { if (traps.new) { return trap("new", [node.callee, Ptah.Array(node.arguments)], node) } }
+  onexpressions.New = function (node) { if (traps.construct) { return trap("construct", [node.callee, Ptah.Array(node.arguments)], node) } }
 
   onexpressions.Member = function (node) { if (traps.get) { return trap("get", [node.object, property(node)], node) } }
 
@@ -15047,23 +15049,22 @@ module.exports = function (sandbox, traps, options) {
     traps: traps,
     options: options,
     global: (function () { return this } ())
-  }
+  };
 
   Stack(aran)
   Scope(aran)
   var save = Store(aran)
   var globalcompile = Compile(aran, save)
 
-  return function (x) {
-    aran.flush()
-    var code = x.code || x
-    var parent = x.parent || null
-    aran.global.aran = aran
-    var compiled = globalcompile(parent, code)
-    x.compiled = compiled
-    return aran.global.eval(compiled)
-  }
+  return aran;
 
 }
+
+// eval: function (code) {
+//   aran.flush();
+//   var compiled = globalcompile(code);
+//   aran.compiled = compiled;
+//   return aran.global.eval(compiled);
+// }
 
 },{"./runtime/compile.js":33,"./runtime/scope.js":34,"./runtime/stack.js":35,"./runtime/store.js":36}]},{},[]);
