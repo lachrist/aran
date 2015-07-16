@@ -6,9 +6,8 @@ var Browserify = require("browserify");
 var Minimist = require("minimist");
 
 var args = Minimist(process.argv.slice(2));
-var ports = {http:args["http-port"], ssl:args["ssl-port"]};
 if ("help" in args)
-  console.log("Usage: aran --entry /path/to/entry.js --http-port 8080 --ssl-port 8443")
+  console.log("Usage: aran --entry /path/to/entry.js --port 8080")
 if (!args.entry)
   throw "Argument --entry is mandatory"
 
@@ -20,7 +19,7 @@ writable._write = function (chunk, encoding, done) {
 };
 writable.on("finish", function () {
   buffer.push("\nrequire('trololo');");
-  Otiluke("aran", buffer.join(""), ports);
+  Otiluke("aran", buffer.join(""), args.port);
 });
 var b = Browserify();
 b.require(args.entry, {expose:"trololo"});
