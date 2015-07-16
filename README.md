@@ -1,6 +1,6 @@
 # Aran <img src="aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
 
-Aran is a npm module for dynamically instrumenting JavaScript code. Aran is based on a source-to-source code transformation largely compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: profiling, tracing, sandboxing, and symbolic execution. To install: `npm install aran`.
+Aran is a npm module for dynamically instrumenting JavaScript code. Aran is based on a source-to-source code transformation largely compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: profiling, tracing, sandboxing, and symbolic execution. To install: `npm install aran`. Aran has an executable to 
 
 **Aran uses ECMAScript6 Harmony Proxies which are currently only well supported by Firefox. Sanboxing and `with` statements will make Aran crash on Node, Safari, Chrome and Internet Explorer!**
 
