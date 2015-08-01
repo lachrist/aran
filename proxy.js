@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 var Stream = require("stream");
 var Otiluke = require("otiluke");
 var Browserify = require("browserify");
@@ -7,7 +5,7 @@ var Minimist = require("minimist");
 
 var args = Minimist(process.argv.slice(2));
 if ("help" in args)
-  console.log("Usage: aran --entry /path/to/entry.js --port 8080")
+  console.log("Usage: aran --entry /absolute/path/to/main.js --port 8080")
 if (!args.entry)
   throw "Argument --entry is mandatory"
 
@@ -18,20 +16,9 @@ writable._write = function (chunk, encoding, done) {
   done();
 };
 writable.on("finish", function () {
-  buffer.push("\nrequire('trololo');");
-  Otiluke("aran", buffer.join(""), args.port);
+  buffer.push("\nrequire('main');");
+  Otiluke(args.warning, "aran", buffer.join(""), args.port);
 });
 var b = Browserify();
-b.require(args.entry, {expose:"trololo"});
+b.require(args.entry, {expose:"main"});
 b.bundle().pipe(writable);
-
-// FS.readFile(process.argv[2], {encoding:"utf8"}, function (err, master) {
-//   if (err) { throw new Error(err) }
-//   FS.readFile(process.argv[3], {encoding:"utf8"}, function (err, target) {
-//     if (err) { throw new Error(err) }
-//     var exports = {}
-//     eval(master)
-//     var aran = Aran(exports.sandbox, exports.hooks, exports.traps)
-//     aran(target)
-//   })
-// })
