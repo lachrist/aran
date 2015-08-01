@@ -17,7 +17,7 @@ writable._write = function (chunk, encoding, done) {
 };
 writable.on("finish", function () {
   buffer.push("\nrequire('main');");
-  Otiluke(args.warning, "aran", buffer.join(""), args.port);
+  Otiluke(args.log, "aran", buffer.join(""), args.port);
 });
 var b = Browserify();
 b.require(args.entry, {expose:"main"});
