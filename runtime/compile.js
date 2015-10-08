@@ -48,17 +48,16 @@ function locate (program, parent) {
 
 module.exports = function (aran, save) {
 
-  var options = aran.options || {}
   var esv = Esvisit.Prepare()
   var hoist     =                Hoist(esv.visit, esv.mark)
   var sanitize  =                Sanitize(esv.visit, esv.mark)
   var sandbox   = aran.sandbox ? Sandbox(esv.visit, esv.mark, aran.sandbox)       : Util.nil
-  var intercept = aran.traps   ? Intercept(esv.visit, esv.mark, aran.traps, options.ast?save:null) : Util.nil
+  var intercept = aran.traps   ? Intercept(esv.visit, esv.mark, aran.traps, aran.ast?save:null) : Util.nil
 
   aran.compile = function (code, parent) {
     aran.flush()
-    var program = Esprima.parse(code, {loc:options.loc, range:options.range})
-    if (options.ast) { locate(program, parent) }
+    var program = Esprima.parse(code, {loc:aran.loc, range:aran.range})
+    if (aran.ast) { locate(program, parent) }
     sanitize(program)
     var topvars = hoist(program)
     sandbox(program)
@@ -76,7 +75,5 @@ module.exports = function (aran, save) {
     // if (errors.length > 0) { Util.log("Compilation warning", errors.map(summarize), errors) }
     return Escodegen.generate(program)
   }
-
-  return function (code) { return aran.compile(code, null) }
 
 }

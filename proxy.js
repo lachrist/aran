@@ -5,7 +5,7 @@ var Minimist = require("minimist");
 
 var args = Minimist(process.argv.slice(2));
 if ("help" in args)
-  console.log("Usage: node proxy.js --entry /absolute/path/to/main.js --port 8080")
+  console.log("Usage: node proxy.js --entry /absolute/path/to/main.js --port 8080 --record-port 8000 record-file /absolut/path/to/log.txt")
 if (!args.entry)
   throw "Argument --entry is mandatory"
 var buffer = [];

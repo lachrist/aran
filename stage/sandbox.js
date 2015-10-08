@@ -12,7 +12,7 @@ function escape (id) { if (/^\$*aran$/.test(id.name)) { id.name = "$"+id.name } 
 function descape (decl) { escape(decl.id) }
 
 module.exports = function (visit, mark, sandbox) {
-  
+
   var onstatements = {}
   var onexpressions = {}
   function onstatement (type, stmt) { if (onstatements[type]) { return onstatements[type](stmt) } }

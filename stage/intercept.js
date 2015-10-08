@@ -248,7 +248,7 @@ module.exports = function (visit, mark, traps, save) {
     var obj = Nasus.pop()
     var args = Ptah.Array(node.arguments)
     if (traps.apply) { return trap("apply", [fct, obj, args], node) }
-    return Ptah.call(Shadow("global", "Function", "prototype", "apply", "bind", [fct]), [obj, args])
+    return Ptah.Call(Shadow("global", "Function", "prototype", "apply", "bind", [fct]), [obj, args])
   }
 
   onexpressions.Call = function (node) { if (traps.apply) { return trap("apply", [node.callee, Shadow("global"), Ptah.Array(node.arguments)], node) } }

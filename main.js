@@ -4,22 +4,15 @@ var Scope = require("./runtime/scope.js")
 var Compile = require("./runtime/compile.js")
 var Store = require("./runtime/store.js")
 
-module.exports = function (sandbox, traps, options) {
-
-  var aran = {
-    sandbox: sandbox,
-    traps: traps,
-    options: options,
-    global: (function () { return this } ())
-  };
-
+module.exports = function (options) {
+  var aran = {}
+  for (var key in options)
+    aran[key] = options[key];
+  aran.global = (function () { return this } ());
   Stack(aran)
   Scope(aran)
-  var save = Store(aran)
-  var globalcompile = Compile(aran, save)
-
+  Compile(aran, Store(aran))
   return aran;
-
 }
 
 // eval: function (code) {
