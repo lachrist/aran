@@ -8,24 +8,24 @@ This module exposes a function that expects three arguments: (i) a value used to
 
 ```javascript
 var Aran = require('aran');
-/* Very strict sandbox that only allows Math access */
-var sandbox = {undefined:undefined, Math:Math};
-/* Traps get an AST with source code location */
-var options = {ast:true, loc:true};
-/* Track calls on user-defined functions */
+
 var fcts = [];
-var traps = {
-  function: function (fct, node) {
-    fcts.push(fct);
-    fct.__birth__ = node;
-    fct.__calls__ = [];
-    return fct;
-  },
-  apply: function (fct, obj, args, node) {
-    if (fct.__calls__) fct.__calls__.push(node);
-    return fct.apply(obj, args);
-  }
-};
+
+/* Setting aran and traps */
+var aran = Aran({
+  ast: true,
+  loc: true,
+  traps: {
+  function: function (x, n) {
+      fcts.push(x);
+      x.__birth__ = n;
+      x.__calls__ = [];
+      return x; },
+    apply: function (f, o, xs, n) {
+      if (f.__calls__) f.__calls__.push(n);
+      return f.apply(o, xs);}
+}
+});
 /* Target code */
 var target = [
 /* 1 */'function delta (a, b, c) { return  b * b - 4 * a * c}',
@@ -37,24 +37,25 @@ var target = [
 /* 7 */'solve(1, -5, 6);',
 ].join('\n');
 /* Run and log results */
-var aran = Aran(sandbox, traps, options);
-console.log(aran(target));
-fcts.forEach(function (fct) {
-  var start = fct.__birth__.loc.start;
-  console.log('Function@'+start.line+'-'+start.column);
-  fct.__calls__.forEach(function (call) {
+var compiled = aran.compile(target);
+
+eval(compiled);
+
+fcts.forEach(function (x) {
+  var start = x.__birth__.loc.start;
+  console.log('Function '+x.name+'@'+start.line+'-'+start.column);
+  x.__calls__.forEach(function (call) {
     var start = call.loc.start;
     console.log('  Call@'+start.line+'-'+start.column);
   });
-});
+  });
 ```
 
 ```bash
-Array [ 3, 2 ]
-Function@1-0
+Function delta@1-0
   Call@3-31
   Call@4-31
-Function@2-0
+Function solve@2-0
   Call@7-0
 ```
 
