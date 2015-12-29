@@ -1,44 +1,48 @@
 # Aran <img src="aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
 
-Aran is a npm module for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing, and symbolic execution. Aran performs a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and we working toward supporting ECMAScript6 (see http://www.ecma-international.org/ecma-262/6.0/). To install: `npm install aran`.
+Aran is a npm module for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing, and symbolic execution. Aran performs a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting ECMAScript6 (see http://www.ecma-international.org/ecma-262/6.0/). To install, run `npm install aran`.
 
-This module exposes a function that expects two arguments: (i) a string which is the JavaScript to instrument (ii) a set of poptionsa value used to mock the global object for the code being instrumented, (ii) a set of functions for intercepting language-level operations, (iii) a set of options. The return value of Aran is a function that instrument and run given code string. In the snippet below, we setup a simple yet powerful analysis that can be deployed to browsers using building tools such as `browserify`.
+The snippet below demonstrate the usage of Aran.
+First a target JavaScript code is being instrumented using `Aran.compile`.
+The analysis code is then generated as the concatenation of:
+  1. `Aran.setup` which defines the global variable `aran`.
+  2. `master` which should provide the implementation of the traps indicated to `Aran.compile`.
+  3. The instrumented target.
 
 ```javascript
-// Server //
 var Aran = require('aran');
-var code = [
-/* 1 */'function delta (a, b, c) { return  b * b - 4 * a * c}',
-/* 2 */'function solve (a, b, c) {',
-/* 3 */'  var sol1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);',
-/* 4 */'  var sol2 = ((-b) - Math.sqrt(delta(a, b, c))) / (2 * a);',
-/* 5 */'  return [sol1, sol2];',
-/* 6 */'}',
-/* 7 */'solve(1, -5, 6);',
+var target = [
+  'function delta (a, b, c) { return  b * b - 4 * a * c}',
+  'function solve (a, b, c) {',
+  '  var sol1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);',
+  '  var sol2 = ((-b) - Math.sqrt(delta(a, b, c))) / (2 * a);',
+  '  return [sol1, sol2];',
+  '}',
+  'solve(1, -5, 6);',
 ].join('\n');
-var instrumented = Aran.compile({loc:true, traps:['apply', 'ast']}, code);
-
-// Client //
-var ast;
-eval(Aran.client);
-aran.traps = {
-  ast: function (x, i) { ast = x },
-  apply: function (f, t, xs, i) {
-    debugger;
-    var node = aran.fetch(ast, i);
-    console.log("about to call "+f.name+" @ "+node.loc.start.line+":"+node.loc.start.column);
-    return f.apply(t, xs);
-  }
-};
-eval(instrumented);
+var instrumented = Aran.compile({loc:true, traps:['ast', 'apply']}, target);
+var master = [
+  'var ast;',
+  'aran.traps = {',
+  '  ast: function (x, i) { ast = x },',
+  '  apply: function (f, t, xs, i) {',
+  '    console.log("apply "+f.name+" at line "+aran.fetch(ast, i).loc.start.line);',
+  '    return f.apply(t, xs);',
+  '  }',
+  '};'
+].join('\n');
+console.log(user);
+var analysis = [Aran.setup, master, instrumented].join('\n');
+eval(analysis);
 ```
 
-```bash
-about to call solve @ 7:0
-about to call delta @ 3:31
-about to call sqrt @ 3:21
-about to call delta @ 4:31
-about to call sqrt @ 4:21
+```
+apply solve at line 7
+apply delta at line 3
+apply sqrt at line 3
+apply delta at line 4
+apply sqrt at line 4
+[ 3, 2 ]
 ```
 
 We choosed to instrument JavaScript code at runtime to support dynamic code evaluation enabled by the infamous `eval` function and the `Function` constructor. If code was instrumented statically, dynamic code evaluation would be uninstrumented wich could easily break the analysis ; consider: `eval('delete aran.sandbox')`. Consequently, as shown in the above snippet, Aran has been designed to be on the same virtual machine as the code being instrumented.
