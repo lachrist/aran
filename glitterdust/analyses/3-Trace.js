@@ -3,7 +3,7 @@
 
 var Aran = require("aran");
 
-eval(Aran.client);
+eval(Aran.setup);
 
 var depth = 0;
 
