@@ -6,7 +6,7 @@
 , "homepage": "http://github.com/lachrist/aran"
 , "license" : "MIT"
 , "bin": "proxy.js"
-, "dependencies": {"esprima":"*", "esvisit":"*", "esvalid":"*", "escodegen":"*", "otiluke":"*", "minimist":"*", "browserify":"*"}
+, "dependencies": {"esprima":"*", "minimist":"*"}
 , "files" : ["main.js", "proxy.js", "util.js", "runtime", "stage", "syntax"]
 , "main": "main.js"
 , "keywords" : ["JavaScript", "Instrumentation", "Sandboxing", "Monitoring", "Tracing", "Shadow Execution", "ECMAScript5"]

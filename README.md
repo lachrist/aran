@@ -1,33 +1,13 @@
 # Aran <img src="aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
 
-Aran is a npm module for dynamically instrumenting JavaScript code. Aran is based on a source-to-source code transformation largely compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and enable amongst other things: profiling, tracing, sandboxing, and symbolic execution. To install: `npm install aran`. Aran has an executable to 
+Aran is a npm module for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing, and symbolic execution. Aran performs a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and we working toward supporting ECMAScript6 (see http://www.ecma-international.org/ecma-262/6.0/). To install: `npm install aran`.
 
-**Aran uses ECMAScript6 Harmony Proxies which are currently only well supported by Firefox. Sanboxing and `with` statements will make Aran crash on Node, Safari, Chrome and Internet Explorer!**
-
-This module exposes a function that expects three arguments: (i) a value used to mock the global object for the code being instrumented, (ii) a set of functions for intercepting language-level operations, (iii) a set of options. The return value of Aran is a function that instrument and run given code string. In the snippet below, we setup a simple yet powerful analysis that can be deployed to browsers using building tools such as `browserify`.
+This module exposes a function that expects two arguments: (i) a string which is the JavaScript to instrument (ii) a set of poptionsa value used to mock the global object for the code being instrumented, (ii) a set of functions for intercepting language-level operations, (iii) a set of options. The return value of Aran is a function that instrument and run given code string. In the snippet below, we setup a simple yet powerful analysis that can be deployed to browsers using building tools such as `browserify`.
 
 ```javascript
+// Server //
 var Aran = require('aran');
-/* Very strict sandbox that only allows Math access */
-var sandbox = {undefined:undefined, Math:Math};
-/* Traps get an AST with source code location */
-var options = {ast:true, loc:true};
-/* Track calls on user-defined functions */
-var fcts = [];
-var traps = {
-  function: function (fct, node) {
-    fcts.push(fct);
-    fct.__birth__ = node;
-    fct.__calls__ = [];
-    return fct;
-  },
-  apply: function (fct, obj, args, node) {
-    if (fct.__calls__) fct.__calls__.push(node);
-    return fct.apply(obj, args);
-  }
-};
-/* Target code */
-var target = [
+var code = [
 /* 1 */'function delta (a, b, c) { return  b * b - 4 * a * c}',
 /* 2 */'function solve (a, b, c) {',
 /* 3 */'  var sol1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);',
@@ -36,26 +16,29 @@ var target = [
 /* 6 */'}',
 /* 7 */'solve(1, -5, 6);',
 ].join('\n');
-/* Run and log results */
-var aran = Aran(sandbox, traps, options);
-console.log(aran(target));
-fcts.forEach(function (fct) {
-  var start = fct.__birth__.loc.start;
-  console.log('Function@'+start.line+'-'+start.column);
-  fct.__calls__.forEach(function (call) {
-    var start = call.loc.start;
-    console.log('  Call@'+start.line+'-'+start.column);
-  });
-});
+var instrumented = Aran.compile({loc:true, traps:['apply', 'ast']}, code);
+
+// Client //
+var ast;
+eval(Aran.client);
+aran.traps = {
+  ast: function (x, i) { ast = x },
+  apply: function (f, t, xs, i) {
+    debugger;
+    var node = aran.fetch(ast, i);
+    console.log("about to call "+f.name+" @ "+node.loc.start.line+":"+node.loc.start.column);
+    return f.apply(t, xs);
+  }
+};
+eval(instrumented);
 ```
 
 ```bash
-Array [ 3, 2 ]
-Function@1-0
-  Call@3-31
-  Call@4-31
-Function@2-0
-  Call@7-0
+about to call solve @ 7:0
+about to call delta @ 3:31
+about to call sqrt @ 3:21
+about to call delta @ 4:31
+about to call sqrt @ 4:21
 ```
 
 We choosed to instrument JavaScript code at runtime to support dynamic code evaluation enabled by the infamous `eval` function and the `Function` constructor. If code was instrumented statically, dynamic code evaluation would be uninstrumented wich could easily break the analysis ; consider: `eval('delete aran.sandbox')`. Consequently, as shown in the above snippet, Aran has been designed to be on the same virtual machine as the code being instrumented.
