@@ -9,44 +9,44 @@ A GUI version of this demonstration is available [here](glitterdust/demo.html).
 
 1. The file `target.js` is a monolithic JavaScript program that we want to analyze:
 
-```javascript
-// target.js //
-function delta (a, b, c) { return  b * b - 4 * a * c}
-function solve (a, b, c) {
-  var sol1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);
-  var sol2 = ((-b) - Math.sqrt(delta(a, b, c))) / (2 * a);
-  return [sol1, sol2];
-}
-solve(1, -5, 6);
-```
+  ```javascript
+  // target.js //
+  function delta (a, b, c) { return  b * b - 4 * a * c}
+  function solve (a, b, c) {
+    var sol1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);
+    var sol2 = ((-b) - Math.sqrt(delta(a, b, c))) / (2 * a);
+    return [sol1, sol2];
+  }
+  solve(1, -5, 6);
+  ```
 
 2. The file `master.js` provides an implementation for the syntactic traps.
 
-```javascript
-// master.js //
-(function () {
-  var ast;
-  aran.traps = {};
-  aran.traps.ast = function (x, i) { ast = x };
-  aran.traps.apply = function (f, t, xs, i) {
-    var node = aran.fetch(ast, i);
-    console.log("apply "+f.name+" at line "+node.loc.start.line);
-    return f.apply(t, xs);
-  };
-} ());
-```
+  ```javascript
+  // master.js //
+  (function () {
+    var ast;
+    aran.traps = {};
+    aran.traps.ast = function (x, i) { ast = x };
+    aran.traps.apply = function (f, t, xs, i) {
+      var node = aran.fetch(ast, i);
+      console.log("apply "+f.name+" at line "+node.loc.start.line);
+      return f.apply(t, xs);
+    };
+  } ());
+  ```
 
 3. The file `main.js` creates `__target__.js` as the concatenation of (i) `Aran.setup` which defines the global variable `aran` (ii) `master` which is the content of `master.js` (iii) `instrumented` which is the result of instrumenting `target.js`. Note that `Aran.instrument` expects the list of traps implemented by `master.js` in its options.
 
-```javascript
-// main.js //
-var fs = require('fs');
-var Aran = require('aran');
-var target = fs.readFileSync(__dirname+'/target.js', {encoding:'utf8'});
-var instrumented = Aran.instrument({loc:true, traps:['ast', 'apply']}, target);
-var master = fs.readFileSync(__dirname+'/master.js', {encoding:'utf8'});
-fs.writeFileSync(__dirname+'/__target__.js', [Aran.setup, master, instrumented].join('\n'));
-```
+  ```javascript
+  // main.js //
+  var fs = require('fs');
+  var Aran = require('aran');
+  var target = fs.readFileSync(__dirname+'/target.js', {encoding:'utf8'});
+  var instrumented = Aran.instrument({loc:true, traps:['ast', 'apply']}, target);
+  var master = fs.readFileSync(__dirname+'/master.js', {encoding:'utf8'});
+  fs.writeFileSync(__dirname+'/__target__.js', [Aran.setup, master, instrumented].join('\n'));
+  ```
 
 In ECMAScript5-compatible JavaScript environments, evaluating the code of `__target__.js` will produce the following log: 
 
