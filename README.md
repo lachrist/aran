@@ -11,6 +11,7 @@ The analysis code is then generated as the concatenation of:
   3. `instrumented` which is the instrumented target.
 
 ```javascript
+// target.js //
 function delta (a, b, c) { return  b * b - 4 * a * c}
 function solve (a, b, c) {
   var sol1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);
@@ -21,7 +22,8 @@ solve(1, -5, 6);
 ```
 
 ```javascript
-var ast;',
+// master.js //
+var ast;
 aran.traps = {};
 aran.traps.ast = function (x, i) { ast = x };
 aran.traps.apply = function (f, t, xs, i) {
