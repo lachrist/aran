@@ -3,7 +3,7 @@
 Aran is a npm module for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing, and symbolic execution. Aran performs a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting ECMAScript6 (see http://www.ecma-international.org/ecma-262/6.0/). To install, run `npm install aran`.
 
 Aran enables powerfull dynamic analysis by letting the user define syntactic traps that will be triggered while the program under scrutiny is being executed.
-For instance, the expression `x + y` may be instrumented as `aran.traps.binary('+', x, y)` which triggers the `binary` trap.
+For instance, the expression `x + y` may be transformed into `aran.traps.binary('+', x, y)` which triggers the `binary` trap.
 Below we demonstrate how to analyze a monolithic JavaScript program using Aran.
 A GUI version of this demonstration is available [here](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
 
@@ -36,7 +36,7 @@ A GUI version of this demonstration is available [here](http://rawgit.com/lachri
   } ());
   ```
 
-3. The file `main.js` creates `__target__.js` as the concatenation of (i) `Aran.setup` which defines the global variable `aran` (ii) `master` which is the content of `master.js` (iii) `instrumented` which is the result of instrumenting `target.js`. Note that `Aran.instrument` expects the list of traps implemented by `master.js` in its options.
+3. The file `main.js` creates `__target__.js` as the concatenation of (/i/) `Aran.setup` which defines the global variable `aran` (/ii/) `master` which is the content of `master.js` (/iii/) `instrumented` which is the result of instrumenting `target.js`. *Note* that `Aran.instrument` expects the list of traps implemented by `master.js` in its options.
 
   ```javascript
   // main.js //
