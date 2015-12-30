@@ -5,7 +5,7 @@ Aran is a npm module for instrumenting JavaScript code which enables amongst oth
 Aran enables powerfull dynamic analysis by letting the user define syntactic traps that will be triggered while the program under scrutiny is being executed.
 For instance, the expression `x + y` may be instrumented as `aran.traps.binary('+', x, y)` which triggers the `binary` trap.
 Below we demonstrate how to analyze a monolithic JavaScript program using Aran.
-A GUI version of this demonstration is available [here](https://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
+A GUI version of this demonstration is available [here](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
 
 1. The file `target.js` is a monolithic JavaScript program that we want to analyze:
 
