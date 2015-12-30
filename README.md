@@ -36,7 +36,7 @@ A GUI version of this demonstration is available [here](http://rawgit.com/lachri
   } ());
   ```
 
-3. The file `main.js` creates `__target__.js` as the concatenation of (/i/) `Aran.setup` which defines the global variable `aran` (/ii/) `master` which is the content of `master.js` (/iii/) `instrumented` which is the result of instrumenting `target.js`. *Note* that `Aran.instrument` expects the list of traps implemented by `master.js` in its options.
+3. The file `main.js` creates `__target__.js` as the concatenation of (*i*) `Aran.setup` which defines the global variable `aran` (*ii*) `master` which is the content of `master.js` (*iii*) `instrumented` which is the result of instrumenting `target.js`. **Note** that `Aran.instrument` expects the list of traps implemented by `master.js` in its options.
 
   ```javascript
   // main.js //
