@@ -60,8 +60,9 @@ button::-moz-focus-inner {
 
 var Aran = require("../main.js");
 window.eval(Aran.setup);
-module.exports = function (master, target) {
-  window.eval(master);
+module.exports = function (analysis, target) {
+  debugger;
+  window.eval(analysis);
   return Aran.instrument({loc:true, range:true, traps:Object.keys(aran.traps)}, target);
 };
 
@@ -9503,18 +9504,15 @@ function editor (name) {
 }
 
 function select (select, object, editor) {
-  var first = null;
+  object[""] = "";
   for (var name in object) {
-    first = first || name;
     var option = document.createElement("option");
     option.textContent = name;
     option.value = name;
     select.appendChild(option);
   }
-  if (!first)
-    return select.visibility = "hidden";
   select.onchange = function () { editor.setValue(object[select.value], -1) };
-  select.value = ("Default" in object) ? "Default" : first;
+  select.value = "";
   select.onchange();
 }
 

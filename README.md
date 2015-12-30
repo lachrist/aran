@@ -28,8 +28,8 @@ Below we demonstrate how to analyze a monolithic JavaScript program using Aran.
     aran.traps = {};
     aran.traps.ast = function (x, i) { ast = x };
     aran.traps.apply = function (f, t, xs, i) {
-      var node = aran.fetch(ast, i);
-      console.log("apply "+f.name+" at line "+node.loc.start.line);
+      var line = aran.fetch(ast, i).loc.start.line;
+      console.log("apply "+f.name+" at line "+line);
       return f.apply(t, xs);
     };
   } ());

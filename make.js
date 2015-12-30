@@ -1,5 +1,4 @@
 
-
 var Fs = require("fs");
 var Glitterdust = require("glitterdust");
 
