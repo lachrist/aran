@@ -10,9 +10,10 @@ var Glitterdust = require("glitterdust");
 var s1 = Fs.readFileSync(__dirname+"/client/main.js", {encoding:"utf8"});
 var s2 = Fs.readFileSync(__dirname+"/client/childs.js", {encoding:"utf8"});
 var s3 = Fs.readFileSync(__dirname+"/client/fetch.js", {encoding:"utf8"});
+var s4 = Fs.readFileSync(__dirname+"/client/forwards.js", {encoding:"utf8"});
 var ss = [
   "exports.instrument = require('./instrument');",
-  "exports.setup = "+JSON.stringify(s1+s2+s3)+";"
+  "exports.setup = "+JSON.stringify(s1+s2+s3+s4)+";"
 ];
 Fs.writeFileSync(__dirname+"/main.js", ss.join("\n"), {encoding:"utf8"});
 

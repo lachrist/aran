@@ -2,10 +2,9 @@
 
 Aran is a npm module for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing, and symbolic execution. Aran performs a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting ECMAScript6 (see http://www.ecma-international.org/ecma-262/6.0/). To install, run `npm install aran`.
 
-Aran enables powerfull dynamic analysis by letting the user define syntactic traps that will be triggered while the program under scrutiny is being executed.
+In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.
 For instance, the expression `x + y` may be transformed into `aran.traps.binary('+', x, y)` which triggers the `binary` trap.
 Below we demonstrate how to analyze a monolithic JavaScript program using Aran.
-A GUI version of this demonstration is available [here](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
 
 1. The file `target.js` is a monolithic JavaScript program that we want to analyze:
 
@@ -20,10 +19,10 @@ A GUI version of this demonstration is available [here](http://rawgit.com/lachri
   solve(1, -5, 6);
   ```
 
-2. The file `master.js` provides an implementation for the syntactic traps.
+2. The file `analysis.js` provides an implementation of the syntactic traps to the predefined global variable `aran`:
 
   ```javascript
-  // master.js //
+  // analysis.js //
   (function () {
     var ast;
     aran.traps = {};
@@ -36,7 +35,7 @@ A GUI version of this demonstration is available [here](http://rawgit.com/lachri
   } ());
   ```
 
-3. The file `main.js` creates `__target__.js` as the concatenation of (*i*) `Aran.setup` which defines the global variable `aran` (*ii*) `master` which is the content of `master.js` (*iii*) `instrumented` which is the result of instrumenting `target.js`. **Note** that `Aran.instrument` expects the list of traps implemented by `master.js` in its options.
+3. The file `main.js` creates `__target__.js` as the concatenation of (*i*) `Aran.setup` which defines the global variable `aran` (*ii*) `analysis` which is the content of `analysis.js` (*iii*) `instrumented` which is the result of instrumenting `target.js`. Note that `Aran.instrument` expects an array of traps that should be inserted in the target code.
 
   ```javascript
   // main.js //
@@ -44,11 +43,11 @@ A GUI version of this demonstration is available [here](http://rawgit.com/lachri
   var Aran = require('aran');
   var target = fs.readFileSync(__dirname+'/target.js', {encoding:'utf8'});
   var instrumented = Aran.instrument({loc:true, traps:['ast', 'apply']}, target);
-  var master = fs.readFileSync(__dirname+'/master.js', {encoding:'utf8'});
-  fs.writeFileSync(__dirname+'/__target__.js', [Aran.setup, master, instrumented].join('\n'));
+  var analysis = fs.readFileSync(__dirname+'/master.js', {encoding:'utf8'});
+  fs.writeFileSync(__dirname+'/__target__.js', [Aran.setup, analysis, instrumented].join('\n'));
   ```
 
-In ECMAScript5-compatible JavaScript environments, evaluating the code of `__target__.js` will produce the following log: 
+In ECMAScript5-compatible JavaScript environments, evaluating the code in `__target__.js` will produce the following log: 
 
 ```
 apply solve at line 7
@@ -57,3 +56,7 @@ apply sqrt at line 3
 apply delta at line 4
 apply sqrt at line 4
 ```
+
+A GUI version of this demonstration is available [here](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
+
+<img src="demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>

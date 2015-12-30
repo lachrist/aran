@@ -113,9 +113,11 @@ visitors.DoWhileStatement = function (ctx, ast) { return "do"+body(ctx, ast.body
 
 visitors.ForStatement = function (ctx, ast) {
   var block = {before:"", after:""};
-  var x = (ast.init.type === "VariableDeclaration")
-    ? declare(ctx, ast.init, block, ast.index)
-    : ast.init ? visit(ctx, ast.init) : "";
+  var x = ast.init
+    ? ((ast.init.type === "VariableDeclaration")
+      ? declare(ctx, ast.init, block, ast.index)
+      : visit(ctx, ast.init))
+    : "";
   var y = ast.test ? ctx.traps.test(visit(ctx, ast.test), ast.index) : "";
   var z = ast.update ? visit(ctx, ast.update) : "";
   return "{"+block.before+"for("+x+";"+y+";"+z+")"+body(ctx, ast.body)+block.after+"}";
@@ -210,7 +212,7 @@ visitors.AssignmentExpression = function (ctx, ast) {
   }
   if (ast.operator === "=")
     return ast.left.type === "Identifier"
-      ? ast.left.name+"="+ctx.traps.write(ast.left.name, visit(ctx, ast.right), ast.index)
+      ? "("+ast.left.name+"="+ctx.traps.write(ast.left.name, visit(ctx, ast.right), ast.index)+")"
       : ctx.traps.set(ast.computed, visit(ctx, ast.left.object), ast.computed ? visit(ctx, ast.left.property) : ast.left.property.name, visit(ctx, ast.right), ast.index);
   var o = ast.operator.substring(0, ast.operator.length-1);
   var l = ast.left.type === "Identifier"
@@ -218,7 +220,7 @@ visitors.AssignmentExpression = function (ctx, ast) {
     : ctx.traps.get(ast.computed, tmp1, ast.computed ? tmp2 : ast.left.property.name, ast.index);
   var b = ctx.traps.binary(o, l, visit(ctx, ast.right), ast.index);
   return ast.left.type === "Identifier"
-    ? ast.left.name+"="+ctx.traps.write(ast.left.name, b, ast.index)
+    ? "("+ast.left.name+"="+ctx.traps.write(ast.left.name, b, ast.index)+")"
     : ctx.traps.set(ast.computed, "("+tmp1+"="+visit(ctx, ast.left.object)+")", ast.computed ? "("+tmp2+"="+visit(ctx, ast.left.property)+")" : ast.left.property.name, b, ast.index);
 };
 

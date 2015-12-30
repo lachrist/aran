@@ -80,7 +80,7 @@ traps.enumerate.off = function (object) { return "aran.enumerate("+object+")" };
 
 traps.construct = {};
 traps.construct.on  = function (constructor, arguments, index) { return "aran.traps.construct("+constructor+",["+arguments.join(",")+"],"+index+")" };
-traps.construct.off = function (constructor, arguments) { return  "(new "+constructor+"("+arguments.join(",")+"))" };
+traps.construct.off = function (constructor, arguments) { return  "new "+constructor+"("+arguments.join(",")+")" };
 
 traps.eval = {};
 traps.eval.on = function (arguments, index) {
@@ -93,7 +93,7 @@ traps.eval.off = function (arguments) { return "eval("+arguments.join(",")+")" }
 
 traps.unary = {};
 traps.unary.on  = function (operator, value, index) { return "aran.traps.unary("+JSON.stringify(operator)+","+value+","+index+")" };
-traps.unary.off = function (operator, value) { return operator+" "+value };
+traps.unary.off = function (operator, value) { return operator+"("+value+")" };
 
 traps.binary = {};
 traps.binary.on  = function (operator, left, right, index) { return "aran.traps.binary("+JSON.stringify(operator)+","+left+","+right+","+index+")" };
