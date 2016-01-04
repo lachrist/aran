@@ -73,28 +73,37 @@ Option  | Value
 `loc`   | Boolean, if true: ast node have line and column-based location info (see http://esprima.org/doc/index.html)
 `range` | Boolean, if true: ast node have an index-based location range (array) (see http://esprima.org/doc/index.html)
 
- Trap | Target | Instrumented
+ **Traps** | **Target** | **Instrumented**
 :-----|:-------|:------------
-Other |||
-`primitive(Value, Node)` | `'foo'` | `aran.traps.primitive('foo', :Literal:)`
-`object(Properties, Node)` | `{a:x}` | `aran.traps.object([{key:'a', value:x}], :ObjectExpression:)`
-`array(Array, Node)` | `[x,y,z]` | `aran.traps.array([x,y,z], :ArrayExpression:)`
-`regexp(Pattern, Flags, Node)` | `/abc/gi` | `aran.traps.regexp("abc", "gi", :Literal:)`
-`function(Function, Node)` | `function (...) {...}` | `... function (...) { arguments = aran.traps.arguments(arguments, :FunctionExpression:); ... } ...`
-`arguments(Arguments, Node)` | `function (...) {...}` | `aran.traps.function(function (...) { ... }, :FunctionExpression:)`
-`undefined(MaybeName, Node)` | `return;` | `return aran.traps.undefined(null, :ReturnStatement:);`
-`test(value, Node)` | `x ? y : z` | `aran.traps.test(x, :ConditionalExpression:) ? y : z`
-`eval(value, Node)` | `eval(x)` | `eval(aran.compile(aran.traps.eval(x, :CallExpression:)))`
-`try(Node)` | `try { ...` | `try { aran.traps.try(:TryStatement:) ...`
-`catch([E/e]xception, Node)` | `... catch (e) { ... }` | `... catch (e) { e = aran.traps.catch(e, :TryStatement:); ... }`
-`unary(Operator, argument, Node)` | `!x` | `aran.traps.unary('!', x, :UnaryExpression:)`
-`binary(Operator, left, right, Node)` | `x+y` | `aran.traps.binary('+', x, y, :BinaryExpression:)`
-`apply(function, this, Arguments, Node)` | `f(x, y)` | `aran.traps.apply(f, aran.traps.global, [x,y], :CallExpression:)`
-`construct(function, Arguments, Node)` | `new F(x, y)` | `aran.traps.construct(F, [x,y], :NewExpression:)`
-`get(object, [K]key, MaybeNode)` | `o[k]` | `aran.traps.get(o, k, :MemberExpression:)`
-`set(object, [K]key, value, MaybeNode)` | `o[k] = v` | `aran.traps.set(o, k, v, :AssignmentExpression:)`
-`delete(object, [K]key, MaybeNode)` | `delete o[k]` | `aran.traps.delete(o, k, :UnaryExpression:)`
-`enumerate(object, Node)` | `for (x in o) { ... }` | `... aran.traps.enumerate(o, :ForInStatement:) ...`
+`Ast(tree, index)` ||
+`Strict(index)` ||
+`literal(value, index)` | `'foo'` | `aran.traps.literal('foo', 123)`
+**Environment**
+`Declare(kind, variables, index)` | `var x = 1, y;` | `aran.traps.Declare('var', [x,y], 123)`
+`Undeclare(kind, variables, index)` ||
+`read(variable, value, index)` | `x` | `aran.traps.read('x', x, 123)` |
+`write(variable, value1, value2, index)` | `x = EXPR` | `aran.traps.write('x', x, ..., 123)`
+**Object**
+`get(object, key, index)` | `o.k` | `aran.traps.get(o, 'k', 123)` 
+`set(object, key, value, index)` | `o.k = x` | `aran.traps.set(o, 'k', x, 123)`
+`delete(object, key, index)` | `delete o.k` | `aran.traps.delete(o, 'k', 123)`
+`enumerate(object, index)` | for (k in o) ... | `... aran.traps.enumerate(o, 123) ...`
+**Apply**
+`arguments(values, index)` ||
+`return(value, index)` | `return x` | `return aran.traps.return(x, 123)`
+`apply(function, context, arguments, index)` | `f(x,y)` | `aran.traps.apply(f, aran.global, [x,y], 123)`
+`construct(constructor, arguments, index)` | `new F(x,y)` | `aran.traps.construct(F, [x,y], 123)`
+`eval(arguments, index)` | `eval(x, y)` | `eval(aran.traps.eval([x,y], 123))`
+`unary(operator, value, index)` | `!x` | `aran.traps.unary('!', x, 123)`
+`binary(operator, left, right, index)` | `x + y` | `aran.traps.binary('+', x, y)`
+** Control **
+`test(fork, index)` | `if (x) ...` | `if (aran.traps.test(x, 123)) ...`
+`throw(error, index)` | `throw x` | `throw aran.traps.throw(x, 123)`
+`Try(index)` | `try { ... }` | `try { aran.traps.Try(123); ... }`
+`catch(error, index)` | `catch (e) { ... }` | `catch (e) { e = aran.traps.catch(e, 123) ... }`
+`finally(index)` | `finally { ... }` | `finally { aran.traps.Finally(123); ... }`
+`Label(label, index)` | l : { ... }; | `aran.traps.Label('l', 123); a : { ... };`
+`Break(label, index)` | `break l;` | `aran.traps.Break('l', 123); break l;`
 
 ## JavaScript Modules
 

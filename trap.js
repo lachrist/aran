@@ -134,10 +134,11 @@ traps.Finally = {};
 traps.Finally.on  = function (index) { return "aran.traps.finally("+index+");" };
 traps.Finally.off = empty;
 
+traps.Label = {};
+traps.Label.on  = function (label, index) { return "aran.traps.label("+JSON.stringify(label)+","+index+");" };
+traps.Label.off = empty;
+
 traps.Break = {};
 traps.Break.on  = function (label, index) { return "aran.traps.break("+JSON.stringify(label)+","+index+");" };
 traps.Break.off = empty;
 
-traps.Label = {};
-traps.Label.on  = function (label, index) { return "aran.traps.label("+JSON.stringify(label)+","+index+");" };
-traps.Label.off = empty;
