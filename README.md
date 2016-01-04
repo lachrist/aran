@@ -87,7 +87,7 @@ Traps | Target | Instrumented
 `get(object, key, index)` | `o.k` | `aran.traps.get(o, 'k', 123)` 
 `set(object, key, value, index)` | `o.k = x` | `aran.traps.set(o, 'k', x, 123)`
 `delete(object, key, index)` | `delete o.k` | `aran.traps.delete(o, 'k', 123)`
-`enumerate(object, index)` | `for (k in o) ...` | `... aran.traps.enumerate(o, 123) ...`
+`enumerate(object, index)` | `for(k in o)...` | `... aran.traps.enumerate(o, 123) ...`
 **Apply** ||
 `arguments(values, index)` ||
 `return(value, index)` | `return x;` | `return aran.traps.return(x, 123);`
@@ -100,7 +100,7 @@ Traps | Target | Instrumented
 `test(value, index)` | `if (x) ...` | `if (aran.traps.test(x, 123)) ...`
 `throw(error, index)` | `throw x;` | `throw aran.traps.throw(x, 123);`
 `Try(index)` | `try {...}` | `try { aran.traps.Try(123); ...}`
-`catch(error, index)` | `catch(e) {...}` | `catch(e) { e = aran.traps.catch(e, 123) ...}`
+`catch(error, index)` | `catch(e){...}` | `catch(e){ e = aran.traps.catch(e, 123) ...}`
 `finally(index)` | `finally {...}` | `finally { aran.traps.Finally(123); ...}`
 `Label(label, index)` | `l: {...};` | `aran.traps.Label('l', 123); l: {...};`
 `Break(label, index)` | `break l;` | `aran.traps.Break('l', 123); break l;`
