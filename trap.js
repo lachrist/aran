@@ -1,7 +1,6 @@
 
-// Traps expect only primitives and return strings.
-//   - Lowercase traps returns an string which is a valid expression.
-//   - Uppercase traps returns a string which is a sequence of statements.
+// Lowercase: expression string
+// Uppercase: statement string
 
 var traps = {};
 
@@ -19,20 +18,16 @@ module.exports = function (xs) {
 ////////////
 
 traps.Ast = {};
-traps.Ast.on = function (ast, index) { return "aran.traps.ast("+ast+","+index+");" }
-traps.Ast.off = empty
+traps.Ast.on = function (ast, index) { return "aran.traps.ast("+ast+","+index+");" };
+traps.Ast.off = empty;
 
 traps.Strict = {};
-traps.Strict.on = function (index) { return "aran.traps.strict("+index+");" }
-traps.Strict.off = empty
+traps.Strict.on = function (index) { return "aran.traps.strict("+index+");" };
+traps.Strict.off = empty;
 
 traps.literal = {};
 traps.literal.on  = function (value, index) { return "aran.traps.literal("+value+","+index+")" };
 traps.literal.off = function (value) { return value };
-
-traps.test = {};
-traps.test.on  = function (value, index) { return "aran.traps.test("+value+","+index+")" };
-traps.test.off = function (value) { return value };
 
 /////////////////
 // Environment //
@@ -78,6 +73,22 @@ traps.enumerate.off = function (object) { return "aran.enumerate("+object+")" };
 // Apply //
 ///////////
 
+traps.arguments = {};
+traps.arguments.on  = function (index) { return "aran.traps.arguments(arguments,"+index+")" };
+traps.arguments.off = function () { return "arguments" };
+
+traps.return = {};
+traps.return.on  = function (value, index) { return "aran.traps.return("+value+","+index+")" };
+traps.return.off = function (value) { return value };
+
+traps.apply = {};
+traps.apply.on  = function (function_, this_, arguments, index) { return "aran.traps.apply("+function_+","+(this_||"void null")+",["+arguments.join(",")+"],"+index+")" };
+traps.apply.off = function (function_, this_, arguments) {
+  return this_
+    ? "aran.apply("+function_+","+this_+",["+arguments.join(",")+"])"
+    : "("+function_+"("+arguments.join(",")+"))";
+}
+
 traps.construct = {};
 traps.construct.on  = function (constructor, arguments, index) { return "aran.traps.construct("+constructor+",["+arguments.join(",")+"],"+index+")" };
 traps.construct.off = function (constructor, arguments) { return  "new "+constructor+"("+arguments.join(",")+")" };
@@ -88,7 +99,7 @@ traps.eval.on = function (arguments, index) {
   for (var i=1; i<arguments.length; i++)
     r+=","+arguments[i];
   return r+")";
-}
+};
 traps.eval.off = function (arguments) { return "eval("+arguments.join(",")+")" };
 
 traps.unary = {};
@@ -99,25 +110,25 @@ traps.binary = {};
 traps.binary.on  = function (operator, left, right, index) { return "aran.traps.binary("+JSON.stringify(operator)+","+left+","+right+","+index+")" };
 traps.binary.off = function (operator, left, right) { return "("+left+" "+operator+" "+right+")" };
 
-traps.apply = {};
-traps.apply.on  = function (function_, this_, arguments, index) { return "aran.traps.apply("+function_+","+(this_||"void null")+",["+arguments.join(",")+"],"+index+")" };
-traps.apply.off = function (function_, this_, arguments) {
-  return this_
-    ? "aran.apply("+function_+","+this_+",["+arguments.join(",")+"])"
-    : "("+function_+"("+arguments.join(",")+"))";
-}
-
 /////////////
 // Control //
 /////////////
+
+traps.test = {};
+traps.test.on  = function (value, index) { return "aran.traps.test("+value+","+index+")" };
+traps.test.off = function (value) { return value };
+
+traps.throw = {};
+traps.throw.on  = function (value, index) { return "aran.traps.throw("+value+","+index+")" };
+traps.throw.off = function (value) { return value };
 
 traps.Try = {};
 traps.Try.on  = function (index) { return "aran.traps.try("+index+");" };
 traps.Try.off = empty;
 
-traps.Catch = {};
-traps.Catch.on  = function (variable, index) { return variable+" = aran.traps.catch("+variable+","+index+");" };
-traps.Catch.off = empty;
+traps.catch = {};
+traps.catch.on  = function (variable, index) { return "aran.traps.catch("+variable+","+index+");" };
+traps.catch.off = function (variable) { return variable };
 
 traps.Finally = {};
 traps.Finally.on  = function (index) { return "aran.traps.finally("+index+");" };
@@ -130,11 +141,3 @@ traps.Break.off = empty;
 traps.Label = {};
 traps.Label.on  = function (label, index) { return "aran.traps.label("+JSON.stringify(label)+","+index+");" };
 traps.Label.off = empty;
-
-traps.throw = {};
-traps.throw.on  = function (value, index) { return "aran.traps.throw("+value+","+index+")" };
-traps.throw.off = function (value) { return value };
-
-traps.return = {};
-traps.return.on  = function (value, index) { return "aran.traps.return("+value+","+index+")" };
-traps.return.off = function (value) { return value };

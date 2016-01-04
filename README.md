@@ -2,9 +2,11 @@
 
 Aran is a npm module for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing, and symbolic execution. Aran performs a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting ECMAScript6 (see http://www.ecma-international.org/ecma-262/6.0/). To install, run `npm install aran`.
 
+## Demonstration
+
 In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.
 For instance, the expression `x + y` may be transformed into `aran.traps.binary('+', x, y)` which triggers the `binary` trap.
-Below we demonstrate how to analyze a monolithic JavaScript program using Aran.
+Below we demonstrate how to analyze a monolithic (as opposed to modularized) JavaScript program using Aran.
 
 1. The file `target.js` is a monolithic JavaScript program that we want to analyze:
 
@@ -57,6 +59,45 @@ apply delta at line 4
 apply sqrt at line 4
 ```
 
-A GUI version of this demonstration is available [here](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
+Monolithic JavaScript programs can also be analyzed through Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
 
 <img src="demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
+
+## API
+
+The top-level function of aran expects an option object wich may contain the following fields:
+
+Option  | Value
+:-------|:----------------
+`traps` | Object, may contain the syntactic traps detailled below
+`loc`   | Boolean, if true: ast node have line and column-based location info (see http://esprima.org/doc/index.html)
+`range` | Boolean, if true: ast node have an index-based location range (array) (see http://esprima.org/doc/index.html)
+
+ Trap | Target | Instrumented
+:-----|:-------|:------------
+Other |||
+`primitive(Value, Node)` | `'foo'` | `aran.traps.primitive('foo', :Literal:)`
+`object(Properties, Node)` | `{a:x}` | `aran.traps.object([{key:'a', value:x}], :ObjectExpression:)`
+`array(Array, Node)` | `[x,y,z]` | `aran.traps.array([x,y,z], :ArrayExpression:)`
+`regexp(Pattern, Flags, Node)` | `/abc/gi` | `aran.traps.regexp("abc", "gi", :Literal:)`
+`function(Function, Node)` | `function (...) {...}` | `... function (...) { arguments = aran.traps.arguments(arguments, :FunctionExpression:); ... } ...`
+`arguments(Arguments, Node)` | `function (...) {...}` | `aran.traps.function(function (...) { ... }, :FunctionExpression:)`
+`undefined(MaybeName, Node)` | `return;` | `return aran.traps.undefined(null, :ReturnStatement:);`
+`test(value, Node)` | `x ? y : z` | `aran.traps.test(x, :ConditionalExpression:) ? y : z`
+`eval(value, Node)` | `eval(x)` | `eval(aran.compile(aran.traps.eval(x, :CallExpression:)))`
+`try(Node)` | `try { ...` | `try { aran.traps.try(:TryStatement:) ...`
+`catch([E/e]xception, Node)` | `... catch (e) { ... }` | `... catch (e) { e = aran.traps.catch(e, :TryStatement:); ... }`
+`unary(Operator, argument, Node)` | `!x` | `aran.traps.unary('!', x, :UnaryExpression:)`
+`binary(Operator, left, right, Node)` | `x+y` | `aran.traps.binary('+', x, y, :BinaryExpression:)`
+`apply(function, this, Arguments, Node)` | `f(x, y)` | `aran.traps.apply(f, aran.traps.global, [x,y], :CallExpression:)`
+`construct(function, Arguments, Node)` | `new F(x, y)` | `aran.traps.construct(F, [x,y], :NewExpression:)`
+`get(object, [K]key, MaybeNode)` | `o[k]` | `aran.traps.get(o, k, :MemberExpression:)`
+`set(object, [K]key, value, MaybeNode)` | `o[k] = v` | `aran.traps.set(o, k, v, :AssignmentExpression:)`
+`delete(object, [K]key, MaybeNode)` | `delete o[k]` | `aran.traps.delete(o, k, :UnaryExpression:)`
+`enumerate(object, Node)` | `for (x in o) { ... }` | `... aran.traps.enumerate(o, :ForInStatement:) ...`
+
+## JavaScript Modules
+
+
+
+## TODO List
