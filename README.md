@@ -100,8 +100,8 @@ Traps                                        | Target              | Instrumente
 `test(value, index)`                         | `if (x) ...`        | `if (aran.traps.test(x, 123)) ...`
 `throw(error, index)`                        | `throw x;`          | `throw aran.traps.throw(x, 123);`
 `Try(index)`                                 | `try { ... }`       | `try { `<br>&nbsp;&nbsp;`aran.traps.Try(123);`<br>&nbsp;&nbsp;`...`<br>`}`
-`catch(error, index)`                        | `catch (e) { ... }` | `catch (e) { `<br>`e = aran.traps.catch(e, 123); ...}`
-`Finally(index)`                             | `finally { ... }`   | `finally { aran.traps.Finally(123); ...}`
+`catch(error, index)`                        | `catch (e) { ... }` | `catch (e) { `<br>&nbsp;&nbsp;`e = aran.traps.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`}`
+`Finally(index)`                             | `finally { ... }`   | `finally { `<br>&nbsp;&nbsp;`aran.traps.Finally(123);`<br>&nbsp;&nbsp;`...`<br>`}`
 `Label(label, index)`                        | `l: { ... };`       | `aran.traps.Label('l', 123);`<br>`l: {...};`
 `Break(label, index)`                        | `break l;`          | `aran.traps.Break('l', 123);`<br>`break l;`
 
