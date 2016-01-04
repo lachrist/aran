@@ -76,7 +76,7 @@ Option  | Value
 Traps | Target | Instrumented
 :-----|:-------|:------------
 `Ast(tree, index)` ||
-`Strict(index)` | `'use strick';` | `use strict`; aran.trap.Strict(123)`
+`Strict(index)` | `'use strick';` | `'use strict'; aran.trap.Strict(123)`
 `literal(value, index)` | `'foo'` | `aran.traps.literal('foo', 123)`
 **Environment** ||
 `Declare(kind, variables, index)` | `var x = 1, y;` | `aran.traps.Declare('var', [x,y], 123); var x = 1, y;`
@@ -99,10 +99,10 @@ Traps | Target | Instrumented
 **Control** ||
 `test(value, index)` | `if (x) ...` | `if (aran.traps.test(x, 123)) ...`
 `throw(error, index)` | `throw x;` | `throw aran.traps.throw(x, 123);`
-`Try(index)` | `try { ... }` | `try { aran.traps.Try(123); ... }`
-`catch(error, index)` | `catch (e) { ... }` | `catch (e) { e = aran.traps.catch(e, 123) ... }`
-`finally(index)` | `finally { ... }` | `finally { aran.traps.Finally(123); ... }`
-`Label(label, index)` | `l : { ... };` | `aran.traps.Label('l', 123); l : { ... };`
+`Try(index)` | `try {...}` | `try { aran.traps.Try(123); ... }`
+`catch(error, index)` | `catch (e) {...}` | `catch (e) { e = aran.traps.catch(e, 123) ... }`
+`finally(index)` | `finally {...}` | `finally { aran.traps.Finally(123); ... }`
+`Label(label, index)` | `l:{...};` | `aran.traps.Label('l', 123); l:{...};`
 `Break(label, index)` | `break l;` | `aran.traps.Break('l', 123); break l;`
 
 ## JavaScript Modules
