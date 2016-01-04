@@ -83,7 +83,7 @@ Option  | Value
 `Undeclare(kind, variables, index)` ||
 `read(variable, value, index)` | `x` | `aran.traps.read('x', x, 123)` |
 `write(variable, value1, value2, index)` | `x = EXPR` | `aran.traps.write('x', x, ..., 123)`
-**Object**
+**Object** ||
 `get(object, key, index)` | `o.k` | `aran.traps.get(o, 'k', 123)` 
 `set(object, key, value, index)` | `o.k = x` | `aran.traps.set(o, 'k', x, 123)`
 `delete(object, key, index)` | `delete o.k` | `aran.traps.delete(o, 'k', 123)`
