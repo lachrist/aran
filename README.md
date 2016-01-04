@@ -79,7 +79,7 @@ Traps                                        | Target              | Instrumente
 `Strict(index)`                              | `'use strict';`     | `'use strict'; aran.trap.Strict(123)`
 `literal(value, index)`                      | `'foo'`             | `aran.traps.literal('foo', 123)`
 **Environment**                              |                     |
-`Declare(kind, variables, index)`            | `var x = 1, y;`     | `aran.traps.Declare('var', [x,y], 123);` `var x = 1, y;`
+`Declare(kind, variables, index)`            | `var x = 1, y;`     | `aran.traps.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
 `Undeclare(kind, variables, index)`          |                     |
 `read(variable, value, index)`               | `x`                 | `aran.traps.read('x', x, 123)` |
 `write(variable, old, new, index)`           | `x = y`             | `aran.traps.write('x', x, y, 123)`
