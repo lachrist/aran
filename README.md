@@ -73,7 +73,7 @@ Option  | Value
 `loc`   | Boolean, if true: ast node have line and column-based location info (see http://esprima.org/doc/index.html)
 `range` | Boolean, if true: ast node have an index-based location range (array) (see http://esprima.org/doc/index.html)
 
-Traps | Target | Instrumented
+Traps | Targetttttttt | Instrumented
 :-----|:-------|:------------
 `Ast(tree, index)` ||
 `Strict(index)` | `'use strick';` | `'use strict'; aran.trap.Strict(123)`
