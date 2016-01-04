@@ -99,7 +99,7 @@ Traps                                        | Target              | Instrumente
 **Control**                                  |                     |
 `test(value, index)`                         | `if (x) ...`        | `if (aran.traps.test(x, 123)) ...`
 `throw(error, index)`                        | `throw x;`          | `throw aran.traps.throw(x, 123);`
-`Try(index)`                                 | `try { ... }`       | `try { `<br>&nbsp;`aran.traps.Try(123);`<br>&nbsp;`...`<br>`}`
+`Try(index)`                                 | `try { ... }`       | `try { `<br>&nbsp;&nbsp;`aran.traps.Try(123);`<br>&nbsp;&nbsp;`...`<br>`}`
 `catch(error, index)`                        | `catch (e) { ... }` | `catch (e) { `<br>`e = aran.traps.catch(e, 123); ...}`
 `Finally(index)`                             | `finally { ... }`   | `finally { aran.traps.Finally(123); ...}`
 `Label(label, index)`                        | `l: { ... };`       | `aran.traps.Label('l', 123);`<br>`l: {...};`
