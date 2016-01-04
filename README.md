@@ -78,7 +78,7 @@ Option  | Value
 `Ast(tree, index)` ||
 `Strict(index)` ||
 `literal(value, index)` | `'foo'` | `aran.traps.literal('foo', 123)`
-**Environment**
+**Environment** ||
 `Declare(kind, variables, index)` | `var x = 1, y;` | `aran.traps.Declare('var', [x,y], 123)`
 `Undeclare(kind, variables, index)` ||
 `read(variable, value, index)` | `x` | `aran.traps.read('x', x, 123)` |
@@ -88,7 +88,7 @@ Option  | Value
 `set(object, key, value, index)` | `o.k = x` | `aran.traps.set(o, 'k', x, 123)`
 `delete(object, key, index)` | `delete o.k` | `aran.traps.delete(o, 'k', 123)`
 `enumerate(object, index)` | for (k in o) ... | `... aran.traps.enumerate(o, 123) ...`
-**Apply**
+**Apply** ||
 `arguments(values, index)` ||
 `return(value, index)` | `return x` | `return aran.traps.return(x, 123)`
 `apply(function, context, arguments, index)` | `f(x,y)` | `aran.traps.apply(f, aran.global, [x,y], 123)`
@@ -96,7 +96,7 @@ Option  | Value
 `eval(arguments, index)` | `eval(x, y)` | `eval(aran.traps.eval([x,y], 123))`
 `unary(operator, value, index)` | `!x` | `aran.traps.unary('!', x, 123)`
 `binary(operator, left, right, index)` | `x + y` | `aran.traps.binary('+', x, y)`
-** Control **
+** Control ** ||
 `test(fork, index)` | `if (x) ...` | `if (aran.traps.test(x, 123)) ...`
 `throw(error, index)` | `throw x` | `throw aran.traps.throw(x, 123)`
 `Try(index)` | `try { ... }` | `try { aran.traps.Try(123); ... }`
