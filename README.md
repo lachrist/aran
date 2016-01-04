@@ -76,7 +76,7 @@ Option  | Value
 Traps                                        | Target              | Instrumented
 :--------------------------------------------|:--------------------|:------------------------------------------------------
 `Ast(tree, index)`                           |                     |
-`Strict(index)`                              | `'use strict';`     | `'use strict'; aran.trap.Strict(123)`
+`Strict(index)`                              | `'use strict';`     | `'use strict';`<br>`aran.trap.Strict(123);`
 `literal(value, index)`                      | `'foo'`             | `aran.traps.literal('foo', 123)`
 **Environment**                              |                     |
 `Declare(kind, variables, index)`            | `var x = 1, y;`     | `aran.traps.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
@@ -91,8 +91,8 @@ Traps                                        | Target              | Instrumente
 **Apply**                                    |                     |
 `arguments(values, index)`                   |                     |
 `return(value, index)`                       | `return x;`         | `return aran.traps.return(x, 123);`
-`apply(function, context, arguments, index)` | `f(x,y)`            | `aran.traps.apply(f, aran.global, [x,y], 123)`
-`construct(constructor, arguments, index)`   | `new F(x,y)`        | `aran.traps.construct(F, [x,y], 123)`
+`apply(function,context,arguments,index)`    | `f(x,y)`            | `aran.traps.apply(f,aran.global,[x,y],123)`
+`construct(constructor,arguments,index)`     | `new F(x,y)`        | `aran.traps.construct(F,[x,y],123)`
 `eval(arguments, index)`                     | `eval(x, y)`        | `eval(aran.traps.eval([x,y], 123))`
 `unary(operator, value, index)`              | `!x`                | `aran.traps.unary('!', x, 123)`
 `binary(operator, left, right, index)`       | `x + y`             | `aran.traps.binary('+', x, y)`
