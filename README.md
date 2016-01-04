@@ -76,7 +76,7 @@ Option  | Value
 Traps                                        | Target              | Instrumented
 :--------------------------------------------|:--------------------|:------------------------------------------------------
 `Ast(tree, index)`                           |                     |
-`Strict(index)`                              | `'use strict';`     | `'use strict';`<br>`aran.trap.Strict(123);`
+`Strict(index)`                              | `'use strict';`     | `§'use strict';`<br>`aran.trap.Strict(123);`
 `literal(value, index)`                      | `'foo'`             | `aran.traps.literal('foo', 123)`
 **Environment**                              |                     |
 `Declare(kind, variables, index)`            | `var x = 1, y;`     | `aran.traps.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
@@ -95,15 +95,15 @@ Traps                                        | Target              | Instrumente
 `construct(constructor, args, index)`        | `new F(x,y)`        | `aran.traps.construct(F, [x,y], 123)`
 `eval(args, index)`                          | `eval(x, y)`        | `eval(aran.traps.eval([x,y], 123))`
 `unary(operator, value, index)`              | `!x`                | `aran.traps.unary('!', x, 123)`
-`binary(operator, left, right, index)`       | `x + y`             | `aran.traps.binary('+', x, y)`
+`binary(operator, left, right, index)`       | `x + y`             | `aran.traps.binary('+', x, y, 123)`
 **Control**                                  |                     |
 `test(value, index)`                         | `if (x) ...`        | `if (aran.traps.test(x, 123)) ...`
 `throw(error, index)`                        | `throw x;`          | `throw aran.traps.throw(x, 123);`
-`Try(index)`                                 | `try { ... }`       | `try { aran.traps.Try(123); ...}`
+`Try(index)`                                 | `try { ... }`       | `try { `<br>`  aran.traps.Try(123);`<br>`  ...`<br>`}`
 `catch(error, index)`                        | `catch (e) { ... }` | `catch (e) { `<br>`e = aran.traps.catch(e, 123); ...}`
-`finally(index)`                             | `finally { ... }`   | `finally { aran.traps.Finally(123); ...}`
-`Label(label, index)`                        | `l: { ... };`       | `aran.traps.Label('l', 123); l: {...};`
-`Break(label, index)`                        | `break l;`          | `aran.traps.Break('l', 123); break l;`
+`Finally(index)`                             | `finally { ... }`   | `finally { aran.traps.Finally(123); ...}`
+`Label(label, index)`                        | `l: { ... };`       | `aran.traps.Label('l', 123);`<br>`l: {...};`
+`Break(label, index)`                        | `break l;`          | `aran.traps.Break('l', 123);`<br>`break l;`
 
 ## JavaScript Modules
 
