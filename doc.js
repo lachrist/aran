@@ -55,10 +55,11 @@ var traps = [
   "Label",
   "Break"
 ];
-
-process.stdout.write(" |"+traps.map(backquote).join("|"));
+process.stdout.write(repeat(" ", 25)+"|");
+process.stdout.write(traps.map(backquote).join("|"));
 process.stdout.write("\n");
-process.stdout.write("-|"+traps.map(function(t) { return repeat("-", t.length+2) }).join("|"));
+process.stdout.write(repeat("-", 25)+"|");
+process.stdout.write(traps.map(function(t) { return repeat("-", t.length+2) }).join("|"));
 process.stdout.write("\n");
 tree.body.forEach(function (node) {
   if (node.type === "ExpressionStatement"
@@ -70,7 +71,9 @@ tree.body.forEach(function (node) {
       && !node.expression.left.computed) {
     var ts = visit(node.expression.right);
     process.stdout.write(pad(backquote(node.expression.left.property.name), 25)+"|");
-    process.stdout.write(traps.map(function (t) { return ts.indexOf(t) === -1 ? "   " : " X " }).join("|"));
+    process.stdout.write(traps.map(function (t) {
+      return pad(ts.indexOf(t) === -1 ? "" : " X", t.length+2);
+    }).join("|"));
     process.stdout.write("\n");
   }
 });
