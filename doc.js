@@ -71,15 +71,13 @@ tree.body.forEach(function (node) {
       && !node.expression.left.computed) {
     var ts = visit(node.expression.right);
     process.stdout.write(pad(backquote(node.expression.left.property.name), 25)+"|");
-    process.stdout.write(traps.map(function (t) {
-      return pad(ts.indexOf(t) === -1 ? "" : " X", t.length+2);
-    }).join("|"));
+    process.stdout.write(traps.map(function (t) { return ts.indexOf(t) === -1 ? " " : "X" }).join("|"));
     process.stdout.write("\n");
   }
 });
 
 function backquote (s) { return "`"+s+"`" }
 
-function repeat (s, n) { return s/*Array(n+1).join(s)*/ }
+function repeat (s, n) { return Array(n+1).join(s) }
 
 function pad (s, n) { return s+repeat(" ", n-s.length) }
