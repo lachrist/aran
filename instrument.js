@@ -19,7 +19,16 @@ module.exports = function (options, code) {
   var ctx = {counter:options.offset||0, traps:Trap(options.traps||[])};
   ctx.closure = {temporals:[], label:null, before:"", block:null};
   var ast = Esprima.parse(code, {loc:options.loc, range:options.range});
-  ast.index = ++ctx.counter;
+  return visit(ctx, ast);
+}
+
+var visitors = {};
+
+////////////////
+// Statements //
+////////////////
+
+visitors.Program = function (ctx, ast) {
   var strict = ast.body.length && isstrict(ast.body[0]);
   var xs = (strict ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
   ast.maxIndex = ctx.counter;
@@ -28,14 +37,8 @@ module.exports = function (options, code) {
     + (strict ? ctx.traps.Strict(ast.index) : "")
     + (ctx.closure.temporals.length ? "var "+ctx.closure.temporals.join(", ")+";" : "")
     + ctx.closure.before
-    + xs.join("");
+    + xs.join("");  
 }
-
-var visitors = {};
-
-////////////////
-// Statements //
-////////////////
 
 visitors.EmptyStatement = function (ctx, ast) { return "" };
 
@@ -299,6 +302,10 @@ function isstrict (ast) {
     && ast.expression.value === "use strict";
 }
 
+// We can transparently ensure there is bracket around (if|while|do-while|for|for-in|while) bodies because:
+// 1) The body is already a block statement and we do nothing
+// 2) The body is a non-declarative statement (http://www.ecma-international.org/ecma-262/6.0/#sec-statements)
+//    and adding bracket around it is transparent.
 function body (ctx, ast) { return (ast.type === "BlockStatement") ? visit(ctx, ast) : "{"+visit(ctx,ast)+"}" }
 
 function declare (ctx, ast, blk, idx) {
@@ -309,7 +316,7 @@ function declare (ctx, ast, blk, idx) {
     return d.id.name;
   });
   if (ast.kind === "var") {
-    ctx.closure.before += ctx.traps.Declare(ast.kind, vs, idx);
+    ctx.closure.before += ctx.traps.Declare("var", vs, idx);
     ctx.closure.before += ast.kind+" "+vs.join(",")+";";
   } else {
     blk.before += ctx.traps.Declare(ast.kind, vs, idx);
