@@ -105,11 +105,11 @@ Traps                                        | Target              | Instrumente
 `Label(label, index)`                        | `l: { ... };`       | `aran.traps.Label('l', 123);`<br>`l: {...};`
 `Break(label, index)`                        | `break l;`          | `aran.traps.Break('l', 123);`<br>`break l;`
 
-The below table is the cross product of esprima's node type and Aran's traps.
-An `X`
-
-                         |`Ast`|`Strict`|`literal`|`Declare`|`Undeclare`|`read`|`write`|`get`|`set`|`delete`|`enumerate`|`arguments`|`return`|`apply`|`construct`|`eval`|`unary`|`binary`|`test`|`throw`|`Try`|`catch`|`Finally`|`Label`|`Break`
--------------------------|-----|--------|---------|---------|-----------|------|-------|-----|-----|--------|-----------|-----------|--------|-------|-----------|------|-------|--------|------|-------|-----|-------|---------|-------|-------
+The below table is the cross product of esprima's AST node and Aran's traps.
+An X indicates that a trap may be invoked during the execution of an AST node.
+To further under s
+ |`Ast`|`Strict`|`literal`|`Declare`|`Undeclare`|`read`|`write`|`get`|`set`|`delete`|`enumerate`|`arguments`|`return`|`apply`|`construct`|`eval`|`unary`|`binary`|`test`|`throw`|`Try`|`catch`|`Finally`|`Label`|`Break`
+-|-----|--------|---------|---------|-----------|------|-------|-----|-----|--------|-----------|-----------|--------|-------|-----------|------|-------|--------|------|-------|-----|-------|---------|-------|-------
 `Program`                |X|X| | | | | | | | | | | | | | | | | | | | | | | 
 `EmptyStatement`         | | | | | | | | | | | | | | | | | | | | | | | | | 
 `BlockStatement`         | | | | | | | | | | | | | | | | | | | | | | | | | 
@@ -146,6 +146,7 @@ An `X`
 `MemberExpression`       | | | | | | | |X| | | | | | | | | | | | | | | | | 
 `Identifier`             | | | | | |X| | | | | | | | | | | | | | | | | | | 
 `Literal`                | | |X| | | | | | | | | | | | | | | | | | | | | | 
+
 
 ## JavaScript Modules
 

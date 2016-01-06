@@ -55,11 +55,10 @@ var traps = [
   "Label",
   "Break"
 ];
-process.stdout.write(repeat(" ", 25)+"|");
-process.stdout.write(traps.map(backquote).join("|"));
+
+process.stdout.write(" |"+traps.map(backquote).join("|"));
 process.stdout.write("\n");
-process.stdout.write(repeat("-", 25)+"|");
-process.stdout.write(traps.map(function(t) { return repeat("-", t.length+2) }).join("|"));
+process.stdout.write("-|"+traps.map(function(t) { return repeat("-", t.length+2) }).join("|"));
 process.stdout.write("\n");
 tree.body.forEach(function (node) {
   if (node.type === "ExpressionStatement"
