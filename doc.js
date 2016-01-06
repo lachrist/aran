@@ -80,6 +80,6 @@ tree.body.forEach(function (node) {
 
 function backquote (s) { return "`"+s+"`" }
 
-function repeat (s, n) { return Array(n+1).join(s) }
+function repeat (s, n) { return s/*Array(n+1).join(s)*/ }
 
 function pad (s, n) { return s+repeat(" ", n-s.length) }
