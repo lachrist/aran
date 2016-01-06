@@ -37,7 +37,11 @@ Below we demonstrate how to analyze a monolithic (as opposed to modularized) Jav
   } ());
   ```
 
-3. The file `main.js` creates `__target__.js` as the concatenation of (*i*) `Aran.setup` which defines the global variable `aran` (*ii*) `analysis` which is the content of `analysis.js` (*iii*) `instrumented` which is the result of instrumenting `target.js`. Note that `Aran.instrument` expects an array of traps that should be inserted in the target code.
+3. The file `main.js` creates `__target__.js` as the concatenation of
+     (*i*) `Aran.setup` which defines the global variable `aran`
+     (*ii*) `analysis` which is the content of `analysis.js`
+     (*iii*) `instrumented` which is the result of instrumenting `target.js`.
+   Note that `Aran.instrument` expects an array of traps that should be inserted in the target code.
 
   ```javascript
   // main.js //
@@ -49,7 +53,7 @@ Below we demonstrate how to analyze a monolithic (as opposed to modularized) Jav
   fs.writeFileSync(__dirname+'/__target__.js', [Aran.setup, analysis, instrumented].join('\n'));
   ```
 
-In ECMAScript5-compatible JavaScript environments, evaluating the code in `__target__.js` will produce the following log: 
+In ECMAScript5-compatible environments, evaluating the code in `__target__.js` will produce the following log: 
 
 ```
 apply solve at line 7
@@ -63,19 +67,29 @@ Monolithic JavaScript programs can also be analyzed through Aran's [demo page](h
 
 <img src="demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
 
-## API
+## Instrumentation Phase
 
-The top-level function of aran expects an option object wich may contain the following fields:
+This section details Aran's instrumentation API.
+The object exported by this node module contains two fields:
 
-Option  | Value
-:-------|:----------------
-`traps` | Object, may contain the syntactic traps detailled below
-`loc`   | Boolean, if true: ast node have line and column-based location info (see http://esprima.org/doc/index.html)
-`range` | Boolean, if true: ast node have an index-based location range (see http://esprima.org/doc/index.html)
+1. `instrument(options, target)`: Function expecting the below set of options and some JavaScript code to instrument; it returns the instrumented JavaScript code.
+
+  Option   | Default | Value
+  :--------|:--------|:----------------
+  `offset` | `0`     | Integer, the value to start indexing [Esprima](http://esprima.org) AST nodes 
+  `traps`  | `[]`    | Array, contains the names of the traps to be called during the execution phase
+  `loc`    | `false` | Boolean, if true: ast node have line and column-based location info [see](http://esprima.org/doc/index.html)
+  `range`  | `false` | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
+
+2. `setup`: JavaScript code for initializing the execution phase -- i.e.: globally defining the aran object of the execution/analysis phase.
+
+The below table introduces by example the set of traps Aran may insert.
+All traps are independently optional and they all receive as last argument an integer which is the index of the AST node.
+In the table below, the number `123` is used as dummy index.
 
 Traps                                        | Target              | Instrumented
 :--------------------------------------------|:--------------------|:------------------------------------------------------
-`Ast(tree, index)`                           |                     |
+`Ast(tree, index)`                           |                     | `Ast(..., 123)`
 `Strict(index)`                              | `'use strict';`     | `'use strict';`<br>`aran.trap.Strict(123);`
 `literal(value, index)`                      | `'foo'`             | `aran.traps.literal('foo', 123)`
 **Environment**                              |                     |
@@ -89,11 +103,11 @@ Traps                                        | Target              | Instrumente
 `delete(object, key, index)`                 | `delete o.k`        | `aran.traps.delete(o, 'k', 123)`
 `enumerate(object, index)`                   | `for (k in o) ...`  | `... aran.traps.enumerate(o, 123) ...`
 **Apply**                                    |                     |
-`arguments(values, index)`                   |                     |
+`arguments(values, index)`                   |                     | `arguments = aran.trap.arguments(arguments, 123)`
 `return(value, index)`                       | `return x;`         | `return aran.traps.return(x, 123);`
 `apply(function, context, args, index)`      | `f(x,y)`            | `aran.traps.apply(f, aran.g, [x,y], 123)`
 `construct(constructor, args, index)`        | `new F(x,y)`        | `aran.traps.construct(F, [x,y], 123)`
-`eval(args, index)`                          | `eval(x, y)`        | `eval(aran.traps.eval([x,y], 123))`
+`eval(args, index)`                          | `eval(x, y)`        | `... eval(aran.traps.eval([x,y], 123))... `
 `unary(operator, value, index)`              | `!x`                | `aran.traps.unary('!', x, 123)`
 `binary(operator, left, right, index)`       | `x + y`             | `aran.traps.binary('+', x, y, 123)`
 **Control**                                  |                     |
@@ -105,11 +119,8 @@ Traps                                        | Target              | Instrumente
 `Label(label, index)`                        | `l: { ... };`       | `aran.traps.Label('l', 123);`<br>`l: {...};`
 `Break(label, index)`                        | `break l;`          | `aran.traps.Break('l', 123);`<br>`break l;`
 
-The below table is the cross product of esprima's AST node and Aran's traps.
-An X indicates that a trap may be invoked during the execution of an AST node.
-To further under s
-
-
+The below table depicts which traps are susceptible to be inserted for a given [Esprima](http://esprima.org/)'s AST node.
+To further investigate how traps are inserted for a given AST node, please try it out in Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
 
                          |`Ast`|`Strict`|`literal`|`Declare`|`Undeclare`|`read`|`write`|`get`|`set`|`delete`|`enumerate`|`arguments`|`return`|`apply`|`construct`|`eval`|`unary`|`binary`|`test`|`throw`|`Try`|`catch`|`Finally`|`Label`|`Break`
 -------------------------|:---:|:------:|:-------:|:-------:|:---------:|:----:|:-----:|:---:|:---:|:------:|:---------:|:---------:|:------:|:-----:|:---------:|:----:|:-----:|:------:|:----:|:-----:|:---:|:-----:|:-------:|:-----:|:-----:
@@ -150,9 +161,10 @@ To further under s
 `Identifier`             |     |        |         |         |           | X    |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
 `Literal`                |     |        | X       |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
 
+## Execution/Analysis Phase
 
 ## JavaScript Modules
 
-
-
 ## TODO List
+
+1. Finish this readme!
