@@ -108,6 +108,7 @@ Traps                                        | Target              | Instrumente
 The below table is the cross product of esprima's AST node and Aran's traps.
 An X indicates that a trap may be invoked during the execution of an AST node.
 To further under s
+
  |`Ast`|`Strict`|`literal`|`Declare`|`Undeclare`|`read`|`write`|`get`|`set`|`delete`|`enumerate`|`arguments`|`return`|`apply`|`construct`|`eval`|`unary`|`binary`|`test`|`throw`|`Try`|`catch`|`Finally`|`Label`|`Break`
 -|-----|--------|---------|---------|-----------|------|-------|-----|-----|--------|-----------|-----------|--------|-------|-----------|------|-------|--------|------|-------|-----|-------|---------|-------|-------
 `Program`                |X|X| | | | | | | | | | | | | | | | | | | | | | | 
