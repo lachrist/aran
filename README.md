@@ -109,44 +109,46 @@ The below table is the cross product of esprima's AST node and Aran's traps.
 An X indicates that a trap may be invoked during the execution of an AST node.
 To further under s
 
- |`Ast`|`Strict`|`literal`|`Declare`|`Undeclare`|`read`|`write`|`get`|`set`|`delete`|`enumerate`|`arguments`|`return`|`apply`|`construct`|`eval`|`unary`|`binary`|`test`|`throw`|`Try`|`catch`|`Finally`|`Label`|`Break`
--|-----|--------|---------|---------|-----------|------|-------|-----|-----|--------|-----------|-----------|--------|-------|-----------|------|-------|--------|------|-------|-----|-------|---------|-------|-------
-`Program`                |X|X| | | | | | | | | | | | | | | | | | | | | | | 
-`EmptyStatement`         | | | | | | | | | | | | | | | | | | | | | | | | | 
-`BlockStatement`         | | | | | | | | | | | | | | | | | | | | | | | | | 
-`ExpressionStatement`    | | | | | | | | | | | | | | | | | | | | | | | | | 
-`IfStatement`            | | | | | | | | | | | | | | | | | | |X| | | | | | 
-`LabeledStatement`       | | | | | | | | | | | | | | | | | | | | | | | |X| 
-`BreakStatement`         | | | | | | | | | | | | | | | | | | | | | | | | |X
-`ContinueStatement`      | | | | | | | | | | | | | | | | | | | | | | | | | 
-`WithStatement`          | | | | | | | | | | | | | | | | | | | | | | | | | 
-`SwitchStatement`        | | | | | | | | | | | | | | | | | |X|X| | | | | | 
-`ReturnStatement`        | | | | | | | | | | | | |X| | | | | | | | | | | | 
-`ThrowStatement`         | | | | | | | | | | | | | | | | | | | |X| | | | | 
-`TryStatement`           | | | | | | | | | | | | | | | | | | | | |X| |X| | 
-`WhileStatement`         | | | | | | | | | | | | | | | | | | |X| | | | | | 
-`DoWhileStatement`       | | | | | | | | | | | | | | | | | | |X| | | | | | 
-`ForStatement`           | | | | | | | | | | | | | | | | | | |X| | | | | | 
-`ForInStatement`         | | | | | | |X| |X| |X| | | | | | | | | | | | | | 
-`DebuggerStatement`      | | | | | | | | | | | | | | | | | | | | | | | | | 
-`FunctionDeclaration`    | | | |X| | |X| | | | | | | | | | | | | | | | | | 
-`VariableDeclaration`    | | | | | | | | | | | | | | | | | | | | | | | | | 
-`ThisExpression`         | | | | | |X| | | | | | | | | | | | | | | | | | | 
-`ArrayExpression`        | | |X| | | | | | | | | | | | | | | | | | | | | | 
-`ObjectExpression`       | | |X| | | | | | | | | | | | | | | | | | | | | | 
-`FunctionExpression`     | | | | | | | | | | | | | | | | | | | | | | | | | 
-`SequenceExpression`     | | | | | | | | | | | | | | | | | | | | | | | | | 
-`UnaryExpression`        | | | | | | | | | |X| | | | | | |X| | | | | | | | 
-`BinaryExpression`       | | | | | | | | | | | | | | | | | |X| | | | | | | 
-`AssignmentExpression`   | | | | | |X|X|X|X| | | | | | | | |X| | | | | | | 
-`UpdateExpression`       | | |X| | |X|X|X|X| | | | | | | | |X| | | | | | | 
-`LogicalExpression`      | | | | | | | | | | | | | | | | | | |X| | | | | | 
-`ConditionalExpression`  | | | | | | | | | | | | | | | | | | |X| | | | | | 
-`NewExpression`          | | | | | | | | | | | | | | |X| | | | | | | | | | 
-`CallExpression`         | | | | | |X| |X| | | | | |X| |X| | | | | | | | | 
-`MemberExpression`       | | | | | | | |X| | | | | | | | | | | | | | | | | 
-`Identifier`             | | | | | |X| | | | | | | | | | | | | | | | | | | 
-`Literal`                | | |X| | | | | | | | | | | | | | | | | | | | | | 
+
+
+                         |Ast|Strict|literal|Declare|Undeclare|read|write|get|set|delete|enumerate|arguments|return|apply|construct|eval|unary|binary|test|throw|Try|catch|Finally|Label|Break
+-------------------------|---|------|-------|-------|---------|----|-----|---|---|------|---------|---------|------|-----|---------|----|-----|------|----|-----|---|-----|-------|-----|-----
+Program                  | X | X    |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+EmptyStatement           |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+BlockStatement           |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+ExpressionStatement      |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+IfStatement              |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      | X  |     |   |     |       |     |     
+LabeledStatement         |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       | X   |     
+BreakStatement           |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     | X   
+ContinueStatement        |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+WithStatement            |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+SwitchStatement          |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     | X    | X  |     |   |     |       |     |     
+ReturnStatement          |   |      |       |       |         |    |     |   |   |      |         |         | X    |     |         |    |     |      |    |     |   |     |       |     |     
+ThrowStatement           |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    | X   |   |     |       |     |     
+TryStatement             |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     | X |     | X     |     |     
+WhileStatement           |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      | X  |     |   |     |       |     |     
+DoWhileStatement         |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      | X  |     |   |     |       |     |     
+ForStatement             |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      | X  |     |   |     |       |     |     
+ForInStatement           |   |      |       |       |         |    | X   |   | X |      | X       |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+DebuggerStatement        |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+FunctionDeclaration      |   |      |       | X     |         |    | X   |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+VariableDeclaration      |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+ThisExpression           |   |      |       |       |         | X  |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+ArrayExpression          |   |      | X     |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+ObjectExpression         |   |      | X     |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+FunctionExpression       |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+SequenceExpression       |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+UnaryExpression          |   |      |       |       |         |    |     |   |   | X    |         |         |      |     |         |    | X   |      |    |     |   |     |       |     |     
+BinaryExpression         |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     | X    |    |     |   |     |       |     |     
+AssignmentExpression     |   |      |       |       |         | X  | X   | X | X |      |         |         |      |     |         |    |     | X    |    |     |   |     |       |     |     
+UpdateExpression         |   |      | X     |       |         | X  | X   | X | X |      |         |         |      |     |         |    |     | X    |    |     |   |     |       |     |     
+LogicalExpression        |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      | X  |     |   |     |       |     |     
+ConditionalExpression    |   |      |       |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      | X  |     |   |     |       |     |     
+NewExpression            |   |      |       |       |         |    |     |   |   |      |         |         |      |     | X       |    |     |      |    |     |   |     |       |     |     
+CallExpression           |   |      |       |       |         | X  |     | X |   |      |         |         |      | X   |         | X  |     |      |    |     |   |     |       |     |     
+MemberExpression         |   |      |       |       |         |    |     | X |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+Identifier               |   |      |       |       |         | X  |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
+Literal                  |   |      | X     |       |         |    |     |   |   |      |         |         |      |     |         |    |     |      |    |     |   |     |       |     |     
 
 
 ## JavaScript Modules

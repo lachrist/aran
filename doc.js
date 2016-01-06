@@ -70,7 +70,7 @@ tree.body.forEach(function (node) {
       && !node.expression.left.computed) {
     var ts = visit(node.expression.right);
     process.stdout.write(pad(backquote(node.expression.left.property.name), 25)+"|");
-    process.stdout.write(traps.map(function (t) { return ts.indexOf(t) === -1 ? " " : "X" }).join("|"));
+    process.stdout.write(traps.map(function (t) { return ts.indexOf(t) === -1 ? "   " : " X " }).join("|"));
     process.stdout.write("\n");
   }
 });
