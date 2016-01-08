@@ -96,25 +96,25 @@ In the table below, `123` is used as a dummy index.
 `Ast(tree, index)`                        |                     |
 `Strict(index)`                           | `'use strict';`     | `'use strict';`<br>`aran.Strict(123);`
 `literal(value, index)`                   | `'foo'`             | `aran.literal('foo', 123)`
+`unary(op, value, index)`                 | `!x`                | `aran.unary('!', x, 123)`
+`binary(op, left, right, index)`          | `x + y`             | `aran.binary('+', x, y, 123)`
 **Environment**                           |                     |
 `Declare(kind, variables, index)`         | `var x = 1, y;`     | `aran.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
 `read(variable, value, index)`            | `x`                 | `aran.read('x', x, 123)` |
 `write(variable, old, new, index)`        | `x = y`             | `aran.write('x', x, y, 123)`
-`Enter(index)`                            | `{ ... }`           | `{ aran.Enter(123); ... }`
-`Leave(index)`                            | `{ ... }`           | `{ ... aran.Leave(123); }`
+`Enter(index)`                            | `{ ... }`           | `{`<br>&nbsp;&nbsp;`aran.Enter(123);`<br>&nbsp;&nbsp;`...`<br>`}`
+`Leave(index)`                            | `{ ... }`           | `{`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`aran.Leave(123);`<br>`}`
+**Apply**                                 |                     |
+`apply(fct, context, args, index)`        | `f(x,y)`            | `aran.apply(f, aran.g, [x,y], 123)`
+`construct(fct, args, index)`             | `new F(x,y)`        | `aran.construct(F, [x,y], 123)`
+`arguments(values, index)`                |                     | `arguments = aran.arguments(arguments, 123)`
+`return(value, index)`                    | `return x;`         | `return aran.return(x, 123);`
+`eval(args, index)`                       | `eval(x, y)`        | `... eval(aran.eval([x,y], 123))... `
 **Object**                                |                     |
 `get(object, key, index)`                 | `o.k`               | `aran.get(o, 'k', 123)` 
 `set(object, key, value, index)`          | `o.k = x`           | `aran.set(o, 'k', x, 123)`
 `delete(object, key, index)`              | `delete o.k`        | `aran.delete(o, 'k', 123)`
 `enumerate(object, index)`                | `for (k in o) ...`  | `... aran.enumerate(o, 123) ...`
-**Apply**                                 |                     |
-`arguments(values, index)`                |                     | `arguments = aran.arguments(arguments, 123)`
-`return(value, index)`                    | `return x;`         | `return aran.return(x, 123);`
-`apply(fct, context, args, index)`        | `f(x,y)`            | `aran.apply(f, aran.g, [x,y], 123)`
-`construct(fct, args, index)`             | `new F(x,y)`        | `aran.construct(F, [x,y], 123)`
-`eval(args, index)`                       | `eval(x, y)`        | `... eval(aran.eval([x,y], 123))... `
-`unary(op, value, index)`                 | `!x`                | `aran.unary('!', x, 123)`
-`binary(op, left, right, index)`          | `x + y`             | `aran.binary('+', x, y, 123)`
 **Control**                               |                     |
 `test(value, index)`                      | `if (x) ...`        | `if (aran.test(x, 123)) ...`
 `throw(error, index)`                     | `throw x;`          | `throw aran.throw(x, 123);`
