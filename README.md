@@ -5,7 +5,7 @@ Aran is a npm module for instrumenting JavaScript code which enables amongst oth
 ## Demonstration
 
 In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.
-For instance, the expression `x + y` may be transformed into `aran.traps.binary('+', x, y)` which triggers the `binary` trap.
+For instance, the expression `x + y` may be transformed into `aran.binary('+', x, y)` which triggers the `binary` trap.
 Below we demonstrate how to analyze a monolithic (as opposed to modularized) JavaScript program using Aran.
 
 1. The file `target.js` is a monolithic JavaScript program that is the target for our analysis:
@@ -14,14 +14,14 @@ Below we demonstrate how to analyze a monolithic (as opposed to modularized) Jav
   // target.js //
   function delta (a, b, c) { return  b * b - 4 * a * c}
   function solve (a, b, c) {
-    var sol1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);
-    var sol2 = ((-b) - Math.sqrt(delta(a, b, c))) / (2 * a);
-    return [sol1, sol2];
+    var s1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);
+    var s2 = ((-b) - Math.sqrt(delta(a, b, c))) / (2 * a);
+    return [s1, s2];
   }
   solve(1, -5, 6);
   ```
 
-2. The file `analysis.js` provides an implementation of the syntactic traps and write them into the predefined global variable `__hidden__`:
+2. The file `analysis.js` provides an implementation of the traps and write them into the global variable arbitrarily named `__hidden__`:
 
   ```javascript
   // analysis.js //
@@ -30,27 +30,23 @@ Below we demonstrate how to analyze a monolithic (as opposed to modularized) Jav
     var ast;
     __hidden__.Ast = function (x, i) { ast = x };
     __hidden__.apply = function (f, t, xs, i) {
-      var line = aran.search(ast, i).loc.start.line;
-      console.log("apply "+f.name+" at line "+line);
+      var l = aran.search(ast, i).loc.start.line;
+      console.log("apply "+f.name+" at line "+l);
       return f.apply(t, xs);
     };
   } ());
   ```
 
-3. The file `main.js` creates `__target__.js` as the concatenation of
-     (*i*) `Aran.setup` which defines the global variable `aran`
-     (*ii*) `analysis` which is the content of `analysis.js`
-     (*iii*) `instrumented` which is the result of instrumenting `target.js`.
-   Note that `Aran.instrument` expects an array of traps that should be inserted in the target code.
+3. The file `main.js` creates `__target__.js` as the concatenation of the analysis and the target instrumented by the top-level function of Aran:
 
   ```javascript
   // main.js //
   var fs = require('fs');
   var Aran = require('aran');
+  var analysis = fs.readFileSync(__dirname+'/analysis.js', {encoding:'utf8'});
   var target = fs.readFileSync(__dirname+'/target.js', {encoding:'utf8'});
   var instrumented = Aran({global: "__hidden__", loc:true, traps:['ast', 'apply']}, target);
-  var analysis = fs.readFileSync(__dirname+'/analysis.js', {encoding:'utf8'});
-  fs.writeFileSync(__dirname+'/__target__.js', [Aran.setup, analysis, instrumented].join('\n'));
+  fs.writeFileSync(__dirname+'/__target__.js', analysis+'\n'+instrumented);
   ```
 
 In ECMAScript5-compatible environments, evaluating the content of `__target__.js` will produce the following log: 
@@ -70,20 +66,16 @@ Monolithic JavaScript programs can also be analyzed through Aran's [demo page](h
 ## Instrumentation Phase
 
 This section details Aran's instrumentation API.
-The object exported by this node module contains two fields:
-
-1. `instrument(options, target)`: Function expecting the below set of options and some JavaScript code to instrument; it returns the instrumented JavaScript code.
+The top-level function exported by this node module expects the below set of options and some JavaScript code to instrument:
 
    Option   | Default  | Value
   :---------|:---------|:----------------
   `global`  | `'aran'` | String, the name of the global variable to store Aran's data
-  `nosetup` | `false`  | Boolean, indicate whether to initialize the global 
-  `offset`  | `0`      | Integer, the value to start indexing [Esprima](http://esprima.org) AST nodes 
   `traps`   | `[]`     | Array, contains the names of the traps to be called during the execution phase
+  `offset`  | `0`      | Integer, the value to start indexing [Esprima](http://esprima.org) AST nodes
   `loc`     | `false`  | Boolean, if true: ast node have line and column-based location info [see](http://esprima.org/doc/index.html)
   `range`   | `false`  | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
-
-2. `setup`: JavaScript code for initializing the execution phase -- i.e.: globally defining the aran object of the execution/analysis phase.
+  `nosetup` | `false`  | Boolean, set `true` only if sure the analysis is already setup (small performance gain)
 
 The below table introduces by example the set of traps Aran may insert.
 Traps starting with a upper-case letter are simple observers and their return values are discarded while the value returned by lower-case traps may be used inside expressions.
@@ -104,9 +96,9 @@ In the table below, `123` is used as a dummy index.
 `write(variable, old, new, index)`  | `x = y`             | `aran.write('x', x, y, 123)`
 `Enter(index)`<br>`Leave(index)`    | `{ ... }`           | `{`<br>&nbsp;&nbsp;`aran.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`aran.Leave(123);`<br>`}`
 **Apply**                           |                     |
-`apply(fct, context, args, index)`  | `f(x,y)`            | `aran.apply(f, aran.g, [x,y], 123)`
+`apply(fct, this, args, index)`     | `f(x,y)`            | `aran.apply(f, aran.g, [x,y], 123)`
 `construct(fct, args, index)`       | `new F(x,y)`        | `aran.construct(F, [x,y], 123)`
-`arguments(values, index)`          |                     | `arguments = aran.arguments(arguments, 123)`
+`arguments(values, index)`          | `function () {}`    | `... arguments = aran.arguments(arguments, 123); ...`
 `return(value, index)`              | `return x;`         | `return aran.return(x, 123);`
 `eval(args, index)`                 | `eval(x, y)`        | `... eval(aran.eval([x,y], 123))... `
 **Object**                          |                     |
@@ -119,7 +111,7 @@ In the table below, `123` is used as a dummy index.
 `Label(label, index)`               | `l: { ... };`       | `aran.Label('l', 123);`<br>`l: { ... };`
 `Break(label, index)`               | `break l;`          | `aran.Break('l', 123);`<br>`break l;`
 `throw(error, index)`               | `throw x;`          | `throw aran.throw(x, 123);`
-`Try(index)`<br>`catch(error, index)`<br>`Finally(index)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`aran.Try(123);`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`e = aran.catch(e, 124);`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`aran.finally(123);`<br>&nbsp;&nbsp;`..`<br>`}`
+`Try(index)`<br>`catch(error, index)`<br>`Finally(index)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`aran.Try(123);`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`e = aran.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`aran.Finally(123);`<br>&nbsp;&nbsp;`..`<br>`}`
 
 The below table depicts which traps are susceptible to be inserted for a given [Esprima](http://esprima.org/) AST node.
 To further investigate how traps are inserted, please try it out in Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).

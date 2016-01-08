@@ -1,5 +1,9 @@
 (function (aran) {
 
+  if (aran.__setup__)
+    return;
+  aran.__setup__ = true;
+
   var defineProperties = Object.defineProperties;
 
   aran.__apply__ = function (f, t, xs) { return f.apply(t, xs) };
@@ -35,7 +39,7 @@
   };
 
   aran.search = function (ast, idx) {
-    if (ast && typeof === "object") {
+    if (ast && typeof ast === "object") {
       if (ast.index === idx)
         return ast;
       if (ast.index < idx && ast.maxIndex > idx) {
