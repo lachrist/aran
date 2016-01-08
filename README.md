@@ -110,18 +110,18 @@ In the table below, `123` is used as a dummy index.
 **Apply**                                 |                     |
 `arguments(values, index)`                |                     | `arguments = aran.arguments(arguments, 123)`
 `return(value, index)`                    | `return x;`         | `return aran.return(x, 123);`
-`apply(function, context, args, index)`   | `f(x,y)`            | `aran.apply(f, aran.g, [x,y], 123)`
-`construct(constructor, args, index)`     | `new F(x,y)`        | `aran.construct(F, [x,y], 123)`
+`apply(fct, context, args, index)`        | `f(x,y)`            | `aran.apply(f, aran.g, [x,y], 123)`
+`construct(fct, args, index)`             | `new F(x,y)`        | `aran.construct(F, [x,y], 123)`
 `eval(args, index)`                       | `eval(x, y)`        | `... eval(aran.eval([x,y], 123))... `
-`unary(operator, value, index)`           | `!x`                | `aran.unary('!', x, 123)`
-`binary(operator, left, right, index)`    | `x + y`             | `aran.binary('+', x, y, 123)`
+`unary(op, value, index)`                 | `!x`                | `aran.unary('!', x, 123)`
+`binary(op, left, right, index)`          | `x + y`             | `aran.binary('+', x, y, 123)`
 **Control**                               |                     |
 `test(value, index)`                      | `if (x) ...`        | `if (aran.test(x, 123)) ...`
 `throw(error, index)`                     | `throw x;`          | `throw aran.throw(x, 123);`
 `Try(index)`                              | `try { ... }`       | `try { `<br>&nbsp;&nbsp;`aran.Try(123);`<br>&nbsp;&nbsp;`...`<br>`}`
 `catch(error, index)`                     | `catch (e) { ... }` | `catch (e) { `<br>&nbsp;&nbsp;`e = aran.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`}`
 `Finally(index)`                          | `finally { ... }`   | `finally { `<br>&nbsp;&nbsp;`aran.Finally(123);`<br>&nbsp;&nbsp;`...`<br>`}`
-`Label(label, index)`                     | `l: { ... };`       | `aran.Label('l', 123);`<br>`l: {...};`
+`Label(label, index)`                     | `l: { ... };`       | `aran.Label('l', 123);`<br>`l: { ... };`
 `Break(label, index)`                     | `break l;`          | `aran.Break('l', 123);`<br>`break l;`
 
 The below table depicts which traps are susceptible to be inserted for a given [Esprima](http://esprima.org/) AST node.
