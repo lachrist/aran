@@ -91,37 +91,35 @@ All traps are independently optional and they all receive as last argument an in
 The very first trap to be triggered is always `Ast` which receives the indexed [Esprima](http://esprima.org) AST tree of the instrumented code. 
 In the table below, `123` is used as a dummy index.
 
- Traps                                    | Target              | Instrumented
-:-----------------------------------------|:--------------------|:------------------------------------------------------
-`Ast(tree, index)`                        |                     |
-`Strict(index)`                           | `'use strict';`     | `'use strict';`<br>`aran.Strict(123);`
-`literal(value, index)`                   | `'foo'`             | `aran.literal('foo', 123)`
-`unary(op, value, index)`                 | `!x`                | `aran.unary('!', x, 123)`
-`binary(op, left, right, index)`          | `x + y`             | `aran.binary('+', x, y, 123)`
-**Environment**                           |                     |
-`Declare(kind, variables, index)`         | `var x = 1, y;`     | `aran.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
-`read(variable, value, index)`            | `x`                 | `aran.read('x', x, 123)` |
-`write(variable, old, new, index)`        | `x = y`             | `aran.write('x', x, y, 123)`
-`Enter(index) && Leave(index)`            | `{ ... }`           | `{`<br>&nbsp;&nbsp;`aran.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`aran.Leave(123);`<br>`}`
-**Apply**                                 |                     |
-`apply(fct, context, args, index)`        | `f(x,y)`            | `aran.apply(f, aran.g, [x,y], 123)`
-`construct(fct, args, index)`             | `new F(x,y)`        | `aran.construct(F, [x,y], 123)`
-`arguments(values, index)`                |                     | `arguments = aran.arguments(arguments, 123)`
-`return(value, index)`                    | `return x;`         | `return aran.return(x, 123);`
-`eval(args, index)`                       | `eval(x, y)`        | `... eval(aran.eval([x,y], 123))... `
-**Object**                                |                     |
-`get(object, key, index)`                 | `o.k`               | `aran.get(o, 'k', 123)` 
-`set(object, key, value, index)`          | `o.k = x`           | `aran.set(o, 'k', x, 123)`
-`delete(object, key, index)`              | `delete o.k`        | `aran.delete(o, 'k', 123)`
-`enumerate(object, index)`                | `for (k in o) ...`  | `... aran.enumerate(o, 123) ...`
-**Control**                               |                     |
-`test(value, index)`                      | `if (x) ...`        | `if (aran.test(x, 123)) ...`
-`throw(error, index)`                     | `throw x;`          | `throw aran.throw(x, 123);`
-`Try(index)`                              | `try { ... }`       | `try { `<br>&nbsp;&nbsp;`aran.Try(123);`<br>&nbsp;&nbsp;`...`<br>`}`
-`catch(error, index)`                     | `catch (e) { ... }` | `catch (e) { `<br>&nbsp;&nbsp;`e = aran.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`}`
-`Finally(index)`                          | `finally { ... }`   | `finally { `<br>&nbsp;&nbsp;`aran.Finally(123);`<br>&nbsp;&nbsp;`...`<br>`}`
-`Label(label, index)`                     | `l: { ... };`       | `aran.Label('l', 123);`<br>`l: { ... };`
-`Break(label, index)`                     | `break l;`          | `aran.Break('l', 123);`<br>`break l;`
+ Traps                              | Target              | Instrumented
+:-----------------------------------|:--------------------|:------------------------------------------------------
+`Ast(tree, index)`                  |                     |
+`Strict(index)`                     | `'use strict';`     | `'use strict';`<br>`aran.Strict(123);`
+`literal(value, index)`             | `'foo'`             | `aran.literal('foo', 123)`
+`unary(op, value, index)`           | `!x`                | `aran.unary('!', x, 123)`
+`binary(op, left, right, index)`    | `x + y`             | `aran.binary('+', x, y, 123)`
+**Environment**                     |                     |
+`Declare(kind, variables, index)`   | `var x = 1, y;`     | `aran.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
+`read(variable, value, index)`      | `x`                 | `aran.read('x', x, 123)` |
+`write(variable, old, new, index)`  | `x = y`             | `aran.write('x', x, y, 123)`
+`Enter(index)`<br>`Leave(index)`    | `{ ... }`           | `{`<br>&nbsp;&nbsp;`aran.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`aran.Leave(123);`<br>`}`
+**Apply**                           |                     |
+`apply(fct, context, args, index)`  | `f(x,y)`            | `aran.apply(f, aran.g, [x,y], 123)`
+`construct(fct, args, index)`       | `new F(x,y)`        | `aran.construct(F, [x,y], 123)`
+`arguments(values, index)`          |                     | `arguments = aran.arguments(arguments, 123)`
+`return(value, index)`              | `return x;`         | `return aran.return(x, 123);`
+`eval(args, index)`                 | `eval(x, y)`        | `... eval(aran.eval([x,y], 123))... `
+**Object**                          |                     |
+`get(object, key, index)`           | `o.k`               | `aran.get(o, 'k', 123)` 
+`set(object, key, value, index)`    | `o.k = x`           | `aran.set(o, 'k', x, 123)`
+`delete(object, key, index)`        | `delete o.k`        | `aran.delete(o, 'k', 123)`
+`enumerate(object, index)`          | `for (k in o) ...`  | `... aran.enumerate(o, 123) ...`
+**Control**                         |                     |
+`test(value, index)`                | `if (x) ...`        | `if (aran.test(x, 123)) ...`
+`Label(label, index)`               | `l: { ... };`       | `aran.Label('l', 123);`<br>`l: { ... };`
+`Break(label, index)`               | `break l;`          | `aran.Break('l', 123);`<br>`break l;`
+`throw(error, index)`               | `throw x;`          | `throw aran.throw(x, 123);`
+`Try(index)`<br>`catch(error, index)`<br>`Finally(index)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`aran.Try(123);`<br>&nbsp;&nbsp;`...`<br>`}`
 
 The below table depicts which traps are susceptible to be inserted for a given [Esprima](http://esprima.org/) AST node.
 To further investigate how traps are inserted, please try it out in Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
