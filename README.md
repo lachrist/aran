@@ -102,8 +102,7 @@ In the table below, `123` is used as a dummy index.
 `Declare(kind, variables, index)`         | `var x = 1, y;`     | `aran.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
 `read(variable, value, index)`            | `x`                 | `aran.read('x', x, 123)` |
 `write(variable, old, new, index)`        | `x = y`             | `aran.write('x', x, y, 123)`
-`Enter(index)`                            | `{ ... }`           | `{`<br>&nbsp;&nbsp;`aran.Enter(123);`<br>&nbsp;&nbsp;`...`<br>`}`
-`Leave(index)`                            | `{ ... }`           | `{`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`aran.Leave(123);`<br>`}`
+`Enter(index) && Leave(index)`            | `{ ... }`           | `{`<br>&nbsp;&nbsp;`aran.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`aran.Leave(123);`<br>`}`
 **Apply**                                 |                     |
 `apply(fct, context, args, index)`        | `f(x,y)`            | `aran.apply(f, aran.g, [x,y], 123)`
 `construct(fct, args, index)`             | `new F(x,y)`        | `aran.construct(F, [x,y], 123)`
