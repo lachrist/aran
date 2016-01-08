@@ -6,15 +6,15 @@ var Glitterdust = require("glitterdust");
 // Generate main.js //
 //////////////////////
 
-var s1 = Fs.readFileSync(__dirname+"/client/main.js", {encoding:"utf8"});
-var s2 = Fs.readFileSync(__dirname+"/client/childs.js", {encoding:"utf8"});
-var s3 = Fs.readFileSync(__dirname+"/client/fetch.js", {encoding:"utf8"});
-var s4 = Fs.readFileSync(__dirname+"/client/forwards.js", {encoding:"utf8"});
-var ss = [
-  "exports.instrument = require('./instrument');",
-  "exports.setup = "+JSON.stringify(s1+s2+s3+s4)+";"
-];
-Fs.writeFileSync(__dirname+"/main.js", ss.join("\n"), {encoding:"utf8"});
+Fs.writeFileSync(__dirname+"/main.js", [
+  "var Instrument = require('./instrument.js');"
+  "var setup = "+JSON.stringify(Fs.readFileSync(__dirname+"/setup.js"))+";",
+  "module.exports = function (options, code) {",
+  "  if (options.nosetup)",
+  "    return Instrument(options, code);",
+  "  return setup.replace('ARAN', function () { return options.global || 'aran' }) + Instrument(options, code);",
+  "};"
+].join("\n"), {encoding:"utf8"});
 
 //////////////////////////
 // Generate glitterdust //
