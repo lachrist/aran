@@ -6,7 +6,7 @@ Aran is a npm module for instrumenting JavaScript code which enables amongst oth
 
 In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.
 For instance, the expression `x + y` may be transformed into `aran.binary('+', x, y)` which triggers the `binary` trap.
-Below we demonstrate how to analyze a monolithic (as opposed to modularized) JavaScript program using Aran.
+Below we demonstrate how to analyze a monolithic - as opposed to modularized - JavaScript program using Aran.
 
 1. The file `target.js` is a monolithic JavaScript program that is the target for our analysis:
 
@@ -21,16 +21,18 @@ Below we demonstrate how to analyze a monolithic (as opposed to modularized) Jav
   solve(1, -5, 6);
   ```
 
-2. The file `analysis.js` provides an implementation of the traps and write them into the global variable arbitrarily named `__hidden__`:
+2. The file `analysis.js` provides an implementation of the traps `Ast` and `apply`.
+   These traps are written into the global variable arbitrarily named `__hidden__`.
+   The fetch, the code location 
 
   ```javascript
   // analysis.js //
   var __hidden__ = {};
   (function () {
-    var ast;
-    __hidden__.Ast = function (x, i) { ast = x };
+    var tree;
+    __hidden__.Ast = function (x, i) { tree = x };
     __hidden__.apply = function (f, t, xs, i) {
-      var l = aran.search(ast, i).loc.start.line;
+      var l = __hidden__.__search__(ast, i).loc.start.line;
       console.log("apply "+f.name+" at line "+l);
       return f.apply(t, xs);
     };
@@ -45,7 +47,7 @@ Below we demonstrate how to analyze a monolithic (as opposed to modularized) Jav
   var Aran = require('aran');
   var analysis = fs.readFileSync(__dirname+'/analysis.js', {encoding:'utf8'});
   var target = fs.readFileSync(__dirname+'/target.js', {encoding:'utf8'});
-  var instrumented = Aran({global: "__hidden__", loc:true, traps:['ast', 'apply']}, target);
+  var instrumented = Aran({global: '__hidden__', loc:true, traps:['Ast', 'apply']}, target);
   fs.writeFileSync(__dirname+'/__target__.js', analysis+'\n'+instrumented);
   ```
 
@@ -63,28 +65,30 @@ Monolithic JavaScript programs can also be analyzed through Aran's [demo page](h
 
 <img src="demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
 
-## Instrumentation Phase
+## API
 
 This section details Aran's instrumentation API.
-The top-level function exported by this node module expects the below set of options and some JavaScript code to instrument:
+The top-level function exported by this node module expects the set of options below and some JavaScript code to instrument:
 
-   Option   | Default  | Value
-  :---------|:---------|:----------------
-  `global`  | `'aran'` | String, the name of the global variable to store Aran's data
-  `traps`   | `[]`     | Array, contains the names of the traps to be called during the execution phase
-  `offset`  | `0`      | Integer, the value to start indexing [Esprima](http://esprima.org) AST nodes
-  `loc`     | `false`  | Boolean, if true: ast node have line and column-based location info [see](http://esprima.org/doc/index.html)
-  `range`   | `false`  | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
-  `nosetup` | `false`  | Boolean, set `true` only if sure the analysis is already setup (small performance gain)
+ Option   | Default  | Value
+----------|----------|-----------------
+`global`  | `'aran'` | String, the name of the global variable to store Aran's data
+`traps`   | `[]`     | Array, contains the names of the traps to be called during the execution phase
+`offset`  | `0`      | Integer, the value to start indexing [Esprima](http://esprima.org) AST nodes
+`loc`     | `false`  | Boolean, if true: ast node have line and column-based location info [see](http://esprima.org/doc/index.html)
+`range`   | `false`  | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
+`nosetup` | `false`  | Boolean, set `true` only if sure the analysis is already setup (small performance gain)
 
 The below table introduces by example the set of traps Aran may insert.
-Traps starting with a upper-case letter are simple observers and their return values are discarded while the value returned by lower-case traps may be used inside expressions.
+Traps starting with a upper-case letter are simple observers and their return values are never used while the value returned by lower-case traps may be used inside expressions.
 All traps are independently optional and they all receive as last argument an integer which is the index of the [Esprima](http://esprima.org) AST node that triggered the trap.
-The very first trap to be triggered is always `Ast` which receives the indexed [Esprima](http://esprima.org) AST tree of the instrumented code. 
+The very first trap to be triggered is always `Ast` which receives the indexed [Esprima](http://esprima.org) AST tree of the instrumented code.
+As shown in the demonstration, the helper function `search(tree, index)` can be used to obtain an [Esprima](http://esprima.org) AST node from an index.
 In the table below, `123` is used as a dummy index.
 
  Traps                              | Target              | Instrumented
-:-----------------------------------|:--------------------|:------------------------------------------------------
+------------------------------------|---------------------|-------------------------------------------------------
+** General **                       |                     |
 `Ast(tree, index)`                  |                     |
 `Strict(index)`                     | `'use strict';`     | `'use strict';`<br>`aran.Strict(123);`
 `literal(value, index)`             | `'foo'`             | `aran.literal('foo', 123)`
@@ -98,7 +102,7 @@ In the table below, `123` is used as a dummy index.
 **Apply**                           |                     |
 `apply(fct, this, args, index)`     | `f(x,y)`            | `aran.apply(f, aran.g, [x,y], 123)`
 `construct(fct, args, index)`       | `new F(x,y)`        | `aran.construct(F, [x,y], 123)`
-`arguments(values, index)`          | `function () {}`    | `... arguments = aran.arguments(arguments, 123); ...`
+`Arguments(value, index)`           | `function ...`      | `... aran.Arguments(arguments, 123)... `
 `return(value, index)`              | `return x;`         | `return aran.return(x, 123);`
 `eval(args, index)`                 | `eval(x, y)`        | `... eval(aran.eval([x,y], 123))... `
 **Object**                          |                     |
@@ -155,21 +159,16 @@ To further investigate how traps are inserted, please try it out in Aran's [demo
 `Identifier`             |     |        |         |         |           | X    |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
 `Literal`                |     |        | X       |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
 
-## Execution/Analysis Phase
-
-We now discuss the second phase which consists in executing the target program along with the analysis instantiated by the traps. 
-Before evaluating any output of `Aran.instrument`, two step are required:
-  (*i*) evaluate `Aran.setup` which create the global `aran`
-  (*ii*) provide a user-defined implementation of the traps in `aran.traps`.
-Currently, the global `aran` only features one helper function: `aran.search(node, index)` which attempts to find a sub node at the given index; `undefined` is returned if the search failed.
-The complexity of `aran.search` is of `O(log(n))` where `n` is the size of the given node.
-
-Lets have a short word on Aran's transparency -- i.e.: its ability to not affect the behavior of the program under scrutiny.
-The transparency of the analyses performed by Aran are primary reliant on the transparency of the traps defined by the user.
-Less importantly, the global variables `aran` may be accessed from within target code.
-For instance, the target code `aran = null` may preclude Aran from further performing the analysis.
-In most cases, these transparency breakage can be prevented with proper guards in traps' implementation.
+We finish this section by discussing the `aran` object present in the execution/analysis phase.
+It is the responsibility of the user to make sure that the target code does not interact with it by choosing an appropriate global name.
+Such interaction would alter the original behavior of the target and the conclusion drawn during the analysis might be falsified.
+Note that global variables can also be accessed through the global object -- i.e. `window` in browsers and `global` in node.
+For instance it could be wise to add a guard to the enumerate trap so that the key pointing to the `aran` object is omitted.
 
 ## JavaScript Modules
 
-TODO
+TO-DO
+
+## Supported ECMAScript6 Features
+
+* Block scoping [let && const](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/let)

@@ -1,44 +1,42 @@
 (function (aran) {
 
   if (aran.__setup__)
-    return;
+     return;
   aran.__setup__ = true;
 
   var defineProperties = Object.defineProperties;
 
-  aran.__apply__ = function (f, t, xs) { return f.apply(t, xs) };
-  aran.__apply__ = (typeof Reflect !== "undefined" && Reflect.apply) || aran.apply;
+  aran.__apply__ = function (fct, ths, args) { return fct.apply(ths, args) };
+  aran.__apply__ = typeof Reflect === "undefined" ? aran.__apply__ : Reflect.apply;
 
-  aran.__enumerate__ = function (o) {
-    var ks = [];
-    for (var k in o)
-      ks[ks.length] = k;
-    return ks;
+  aran.__enumerate__ = function (obj) {
+    var arr = [];
+    for (var str in obj)
+      arr[arr.length] = str;
+    return arr;
   };
-  aran.__enumerate__ = (typeof Reflect !== "undefined" && Reflect.enumerate) || aran.enumerate;
+  aran.__enumerate__ = typeof Reflect === "undefined" ? aran.__enumerate__ : Reflect.enumerate;
 
   aran.__eval__ = eval;
 
-  aran.__object__ = function (xs) {
-    var ps = {};
-    for (var i=0; i<xs.length; i+=3) {
-      if (!ps[xs[i]])
-        ps[xs[i]] = {enumerable:true, configurable:true};
-      if (xs[i+1] === "init") {
-        delete ps[xs[i]].get;
-        delete ps[xs[i]].set;
-        ps[xs[i]].writable = true;
-        ps[xs[i]].value = xs[i+2]
+  aran.__object__ = function (arr) {
+    var obj1 = {};
+    for (var i=0; i<arr.length; i++) {
+      if (!obj1[arr[i][0]])
+        obj1[arr[i][0]] = {enumerate:true, configurable: true}
+      var obj2 = obj1[arr[i][0]];
+      if (arr[i][1] === "init") {
+        (delete obj2.get, delete obj2.set);
+        (obj2.writable = true, obj2.value = arr[i][2]);
       } else {
-        delete ps[xs[i]].writable
-        delete ps[xs[i]].value
-        ps[xs[i]][xs[i+1]] = xs[i+2]
+        (delete obj2.writable, delete obj2.value);
+        obj2[arr[i][1]] = arr[i][2];
       }
     }
-    return defineProperties({}, ps);
-  };
+    return defineProperties({}, obj1);
+  }
 
-  aran.search = function (ast, idx) {
+  aran.__search__ = function (ast, idx) {
     if (ast && typeof ast === "object") {
       if (ast.index === idx)
         return ast;

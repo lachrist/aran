@@ -1,12 +1,32 @@
 
-// TODO protect aran variables and labels
+// The visitors of this file either:
+//   1) visit an expression node and return an expression string
+//   2) visit a statement node and return a concatenated list of statement strings. 
+// Replacing a statement by a list of statement is safe if control structures
+// (if|while|do-while|for|for-in|label) have a statement block as body.
+// If it is not aldeready the case, we put a block around the body of these structures.
+// Since ECMAScript6, statement blocks are no longer transparent due to block scoping.
+// However, this transformation is safe because the body of the above structure cannot be a
+// variable declaration (see http://www.ecma-international.org/ecma-262/6.0/#sec-statements).
+
+// Code generation guide line:
+// 1) The beginning of a statement may directly be a letter
 
 var Esprima = require("esprima");
 var Trap = require("./trap.js");
 
-////////////
-// Export //
-////////////
+module.exports = function (options, code) {
+  var ctx = {
+    counter: options.offset || 0,
+    global: options.global || "aran",
+    traps: Trap(options.traps || []),
+    loop: "",
+    temporals: [],
+    hoisted: {closure:"", block:""}
+  };
+  var ast = Esprima.parse(code, {loc:options.loc, range:options.range});
+  return visit(ctx, ast);
+};
 
 function visit (ctx, ast) {
   ast.index = ++ctx.counter;
@@ -15,13 +35,6 @@ function visit (ctx, ast) {
   return res;
 };
 
-module.exports = function (options, code) {
-  var ctx = {counter:options.offset||0, traps:Trap(options.traps||[])};
-  ctx.closure = {temporals:[], label:null, before:"", block:null};
-  var ast = Esprima.parse(code, {loc:options.loc, range:options.range});
-  return visit(ctx, ast);
-}
-
 var visitors = {};
 
 ////////////////
@@ -29,142 +42,195 @@ var visitors = {};
 ////////////////
 
 visitors.Program = function (ctx, ast) {
-  var strict = ast.body.length && isstrict(ast.body[0]);
-  var xs = (strict ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
-  ast.maxIndex = ctx.counter;
-  return (strict ? "'use strict';" : "")
-    + (ctx.traps.Ast({toString:function () {return JSON.stringify(ast)}}) || "")
-    + (strict ? ctx.traps.Strict(ast.index) : "")
-    + (ctx.closure.temporals.length ? "var "+ctx.closure.temporals.join(", ")+";" : "")
-    + ctx.closure.before
-    + xs.join("");  
-}
+  var bin = ast.body.length && strict(ast.body[0]);
+  var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
+  return (bin ? "'use strict';" : "")
+    + ctx.traps.Ast(JSON.stringify(ast), ctx.index)
+    + (bin ? ctx.traps.Strict(ast.index) : "")
+    + (ctx.temporals.length ? "var "+ctx.temporals.join(", ")+";" : "")
+    + ctx.hoisted.closure
+    + ctx.hoisted.block
+    + arr.join("");
+};
 
 visitors.EmptyStatement = function (ctx, ast) { return "" };
 
 visitors.BlockStatement = function (ctx, ast) {
-  var save = ctx.closure.block;
-  ctx.closure.block = {before:"", after:"", label:""};
-  var x = ast.body.map(visit.bind(null, ctx)).join("");
-  x = "{"+ctx.closure.block.before+x+ctx.closure.block.after+"}";
-  ctx.closure.block = save;
-  return x;
-};
+  var tmp = ctx.hoisted.block;
+  ctx.hoisted.block = "";
+  var str = ast.body.map(visit.bind(null, ctx)).join("");
+  var res = "{"
+    + ctx.traps.Enter(ast.index)
+    + ctx.hoisted.block
+    + str
+    + ctx.traps.Leave(ast.index) + "}";
+  ctx.hoisted.block = tmp;
+  return res;
+}
 
 visitors.ExpressionStatement = function (ctx, ast) { return visit(ctx, ast.expression)+";" };
 
 visitors.IfStatement = function (ctx, ast) {
-  return "if("+ctx.traps.test(visit(ctx, ast.test), ast.index)+")"
-    + body(ctx, ast.consequent)
-    + (ast.alternate ? "else"+body(ctx, ast.alternate) : "")
+  return "if(" + ctx.traps.test(visit(ctx, ast.test), ast.index) + ")" + body(ctx, ast.consequent)
+    + (ast.alternate ? "else" + body(ctx, ast.alternate) : "")
 };
 
 visitors.LabeledStatement = function (ctx, ast) {
-  var str = ctx.traps.Label(ast.label.name, ast.index)+ast.label.name+":";
-  if (ctx.closure.block&&ctx.closure.block.label) {
-    var save = ctx.closure.block.label;
-    ctx.closure.block.label = null;
-    str += visit(ctx, ast.body);
-    ctx.closure.block.label = save;
-    return str;
-  }
-  return str+visit(ctx, ast.body);
+  return ctx.traps.Label(ast.label.name, ast.index)
+    + ast.label.name + ":" + visit(ctx, ast.body)
 };
 
 visitors.BreakStatement = function (ctx, ast) {
-  var label = ast.label ? ast.label.name : (ctx.closure.block ? ctx.closure.block.label : "");
-  return ctx.traps.Break(ast.label?ast.label.name:null, ast.index)+"break "+label+";"
+  return ctx.traps.Break(ast.label ? ast.label.name : null, ast.index)
+    + "break " + (ast.label ? ast.label.name : ctx.loop) + ";"
 };
 
-visitors.ContinueStatement = function (ctx, ast) { return ast.label ? "continue "+ast.label.name+";" : "continue;" };
+visitors.ContinueStatement = function (ctx, ast) {
+  return "continue "+(ast.label?ast.label.name:"")+";";
+};
 
 // TODO: figure out what to do with WithStatement...
-visitors.WithStatement = function (ctx, ast) { return "with("+visit(ctx, ast.object)+")"+body(ctx,ast.body) };
+visitors.WithStatement = function (ctx, ast) {
+  return "with("+visit(ctx, ast.object)+")"+body(ctx,ast.body);
+};
 
 visitors.SwitchStatement = function (ctx, ast) {
-  var f = visit.bind(null, ctx);
-  var tmp0 = temporal(ctx, ast.index, 0);
-  var tmp1 = temporal(ctx, ast.index, 1);
-  var label = "aran_switch_"+ast.index;
-  var save = ctx.closure.block;
-  ctx.closure.block = {before:"", after:"", label:label};
-  var s = tmp0+"=false;"+tmp1+"="+visit(ctx, ast.discriminant)+";"+label+":{"+ast.cases.map(function (c) {
-    return c.test
-      ? "if("+tmp0+"||("+tmp0+"="+ctx.traps.test(ctx.traps.binary("===", tmp1, visit(ctx, c.test), ast.index), ast.index)+")){"+c.consequent.map(f).join("")+"}"
-      : tmp0+"=true;"+c.consequent.map(f).join("");
-  }).join("")+"}";
-  s = ctx.closure.block.before+s+ctx.closure.block.after;
-  ctx.closure.block = save;
-  return s;
+  function fct1 (ast) { return "if("+str1+")"+visit(ctx, ast) }
+  function fct2 (ast) {
+    return str1 + "=" + (ast.test ? ctx.traps.test(
+      ctx.traps.binary("===", str2, visit(ctx, ast.test), ast.index),
+      ast.index) : "true") + ";" + ast.consequent.map(fct1).join("");
+  }
+  var str1 = temporal(ctx, ast.index, 1);
+  var str2 = temporal(ctx, ast.index, 2);
+  var tmp1 = ctx.hoisted.block, tmp2 = ctx.loop;
+  (ctx.hoisted.block = "", ctx.loop = ctx.global+"_switch_"+ast.index);
+  var str3 = str1 + "=false;"
+    + str2 + "=" + visit(ctx, ast.discriminant)+";"
+    + ctx.loop + ":{" + ast.cases.map(fct2).join("")+"}";
+  var res = ctx.traps.Enter(ast.index) + ctx.hoisted.block + str3 + ctx.traps.Leave(ast.index);
+  (ctx.hoisted.block = tmp1, ctx.loop = tmp2);
+  return res;
 };
 
-visitors.ReturnStatement = function (ctx, ast) { return "return "+ctx.traps.return(ast.argument ? visit(ctx, ast.argument) : "void null", ast.index)+";" };
+visitors.ReturnStatement = function (ctx, ast) {
+  return "return " + ctx.traps.return(
+    ast.argument ? visit(ctx, ast.argument) : "void 0",
+    ast.index) + ";";
+};
 
-visitors.ThrowStatement = function (ctx, ast) { return "throw "+ctx.traps.throw(visit(ctx, ast.argument), ast.index)+";" };
+visitors.ThrowStatement = function (ctx, ast) {
+  return "throw " + ctx.traps.throw(visit(ctx, ast.argument), ast.index) + ";";
+};
 
 visitors.TryStatement = function (ctx, ast) {
-  var v = visit.bind(null, ctx);
-  var p = ast.handler && ast.handler.param.name;
-  return "try{"+ctx.traps.Try(ast.index)+ast.block.body.map(v).join("")+"}"
-    + (p ? "catch("+p+"){"+ctx.traps.Catch(p, ast.index)+ast.handler.body.body.map(v).join("")+"}" : "")
-    + (ast.finalizer ? "finally{"+ctx.traps.Finally(ast.index)+ast.finalizer.body.map(v).join("")+"}" : "");
+  var fct = visit.bind(null, ctx);
+  return "try{" + ctx.traps.Try(ast.index) + ast.block.body.map(fct).join("") + "}"
+    + (ast.handler ? "catch(" + ast.handler.param.name + "){"
+      + ast.handler.param.name + "=" + ctx.traps.catch(ast.handler.param.name, ast.index) + ";"
+      + ast.handler.body.body.map(fct).join("") + "}" : "")
+    + (ast.finalizer ? "finally{" + ctx.traps.Finally(ast.index)
+      + ast.finalizer.body.map(fct).join("") + "}" : "");
 };
 
-visitors.WhileStatement = function (ctx, ast) { return "while("+ctx.traps.test(visit(ctx, ast.test), ast.index)+")"+body(ctx, ast.body) };
+visitors.WhileStatement = function (ctx, ast) {
+  var tmp = ctx.loop;
+  ctx.loop = "";
+  var res = "while(" + ctx.traps.test(visit(ctx, ast.test), ast.index) + ")"
+    + body(ctx, ast.body);
+  ctx.loop = tmp;
+  return res;
+};
 
-visitors.DoWhileStatement = function (ctx, ast) { return "do"+body(ctx, ast.body)+"while("+ctx.traps.test(visit(ctx, ast.test), ast.index)+");" };
+visitors.DoWhileStatement = function (ctx, ast) {
+  var tmp = ctx.loop;
+  ctx.loop = "";
+  var res = "do" + body(ctx, ast.body)
+    + "while(" + ctx.traps.test(visit(ctx, ast.test), ast.index) + ");";
+  ctx.loop = tmp;
+  return res;
+};
 
 visitors.ForStatement = function (ctx, ast) {
-  var block = {before:"", after:""};
-  var x = ast.init
-    ? ((ast.init.type === "VariableDeclaration")
-      ? declare(ctx, ast.init, block, ast.index)
-      : visit(ctx, ast.init))
-    : "";
-  var y = ast.test ? ctx.traps.test(visit(ctx, ast.test), ast.index) : "";
-  var z = ast.update ? visit(ctx, ast.update) : "";
-  return "{"+block.before+"for("+x+";"+y+";"+z+")"+body(ctx, ast.body)+block.after+"}";
+  if (ast.init && ast.init.type === "VariableDeclaration") {
+    var tmp = ctx.hoisted.block;
+    ctx.hoisted.block = "";
+    var str1 = declare(ctx, ast.init, ast.index);
+    var str2 = ctx.hoisted.block;
+    ctx.hoisted.block = tmp;
+  } else {
+    var str1 = ast.init ? visit(ctx, ast.init) : "";
+  }
+  var str3 = ast.test ? ctx.traps.test(visit(ctx, ast.test), ast.index) : "";
+  var str4 = ast.update ? visit(ctx, ast.update) : "";
+  var tmp = ctx.loop;
+  ctx.loop = "";
+  var res = ctx.traps.Enter(ast.idx)
+    + (str2 || "")
+    + "for(" + str1 + ";" + str3 + ";" + str4 + ")"
+    + body(ctx, ast.body)
+    + ctx.traps.Leave(ast.idx);
+  ctx.loop = tmp;
+  return res;
 };
 
 visitors.ForInStatement = function (ctx, ast) {
-  var tmp0 = temporal(ctx, ast.index, 0);
-  var tmp1 = temporal(ctx, ast.index, 3);
-  var b = tmp0+"="+ctx.traps.enumerate(visit(ctx, ast.right), ast.index)+";"+tmp1+"=0"+";";
-  if (ast.left.type === "MemberExpression") {
-    var tmp2 = temporal(ctx, ast.index, 1);
-    b += tmp2+"="+visit(ctx, ast.left.object)+";";
-    if (ast.left.computed) {
-      var tmp3 = temporal(ctx, ast.index, 1)+";";
-      b += tmp3+"="+visit(ctx, ast.left.property)+";";
+  var obj = {
+    enumerate: temporal(ctx, ast.index, 1),
+    counter: temporal(ctx, ast.index, 2)
+  };
+  var arr = [
+    obj.enumerate + "=" + ctx.traps.enumerate(visit(ctx, ast.right), ast.index) + ";",
+    obj.counter + "=0;"
+  ];
+  if (ast.left.type !== "MemberExpression") {
+    if (ast.left.type === "VariableDeclaration") {
+      var tmp = ctx.hoisted.block;
+      ctx.hoisted.block = "";
+      var str1 = declare(ctx, ast.left, ast.index);
+      arr.unshift(ctx.hoisted.block);
+      ctx.hoisted.block = tmp;
     }
-    var u = ctx.traps.set(ast.left.computed, tmp2, ast.left.computed?tmp3:ast.left.property.name, tmp0+"["+tmp1+"]", ast.index);
-  } else if (ast.left.type === "VariableDeclaration") {
-    var block = {before:"", after:""};
-    var x = declare(ctx, ast.left, block, ast.index);
-    b += block.before;
-    var a = block.after;
-    var u = ast.left.declarations[0].id.name+"="+ctx.traps.write(ast.left.declarations[0].id.name, tmp0+"["+tmp1+"]", ast.index);
-  } else if (ast.left.type === "Identifier") {
-    var u = ast.left.name+"="+ctx.traps.write(ast.left.name, tmp0+"["+tmp1+"]", ast.index);
+    var str2 = ctx.traps.write(
+      ast.left.type === "Identifier" ? ast.left.name : ast.left.declarations[0].id.name,
+      obj.enumerate + "[" + obj.counter + "]",
+      ast.index);
   } else {
-    throw new Error("Unexpected left hand side type of for-in statement: "+ast.left.type);
-  }
-  return "{"+b+"for("+(x||"")+";("+tmp1+"<"+tmp0+".length && ("+u+",true));"+tmp1+"++)"+body(ctx, ast.body)+(a||"")+"}";
+    obj.object = temporal(ctx, ast.index, 3);
+    arr.push(obj.object + "=" + visit(ctx, ast.left.object) + ";");
+    if (ast.left.computed) {
+      obj.property = temporal(ctx, ast.index, 4);
+      arr.push(obj.property + "=" + visit(ctx, ast.left.property) + ";")
+    }
+    var str2 = ctx.traps.set(
+      ast.left.computed,
+      obj.object,
+      ast.left.computed ? obj.property : ast.left.property.name,
+      obj.enumerate + "[" + obj.counter + "]",
+      ast.index);
+  } 
+  var tmp = ctx.loop;
+  ctx.loop = "";
+  var res = ctx.traps.Enter(ast.index)
+    + arr.join("")
+    + "for(" + (str1 || "") + ";"
+    + obj.counter + "<" + obj.enumerate + ".length&&(" + str2 + ",true);"
+    + obj.counter + "++)"
+    + body(ctx, ast.body)
+    + ctx.traps.Leave(ast.index);
+  ctx.loop = tmp;
+  return res;
 };
 
 visitors.DebuggerStatement = function (ctx, ast) { return "debugger;" };
 
 visitors.FunctionDeclaration = function (ctx, ast) {
-  ctx.closure.before += "var "+ast.id.name+";";
-  ctx.closure.before += ctx.traps.Declare(ast.kind, [ast.id.name], ast.index);
-  ctx.closure.before += ast.id.name+"="+ctx.traps.write(ast.id.name, closure(ctx, ast, ast.index), ast.index)+";"
-  return "";
+  ctx.hoisted.closure += ctx.traps.Declare("var", [ast.id.name], ast.index)
+    + ctx.traps.write(ast.id.name, closure(ctx, ast), ast.index) + ";";
+  return "var " + ast.id.name + ";";
 };
 
-visitors.VariableDeclaration = function (ctx, ast) {
-  var str = declare(ctx, ast, ctx.closure.block, ast.index);
-  return str ? str+";" : ""
-};
+visitors.VariableDeclaration = function (ctx, ast) { return declare(ctx, ast, ast.index) + ";" };
 
 /////////////////
 // Expressions //
@@ -172,115 +238,165 @@ visitors.VariableDeclaration = function (ctx, ast) {
 
 visitors.ThisExpression = function (ctx, ast) { return ctx.traps.read("this", ast.index) };
 
-visitors.ArrayExpression = function (ctx, ast) { return ctx.traps.literal("["+ast.elements.map(function (e) { return e ? visit(ctx, e) : "" }).join(",")+"]", ast.index) };
-
-visitors.ObjectExpression = function (ctx, ast) {
-  var data = true;
-  ast.properties.forEach(function (p) { data = data && p.kind === "init" });
-  if (data) {
-    var ps = ast.properties.map(function (p) { return (p.key.name||p.key.raw)+":"+visit(ctx, p.value)  });
-    return ctx.traps.literal("{"+ps.join(",")+"}", ast.index);
-  }
-  var xs = [];
-  ast.properties.forEach(function (p) {
-    xs.push(p.key.raw||JSON.stringify(p.key.name));
-    xs.push(JSON.stringify(p.kind));
-    xs.push(visit(ctx, p.value));
-  });
-  return ctx.traps.literal("aran.object(["+xs.join(",")+"])", ast.index);
+visitors.ArrayExpression = function (ctx, ast) {
+  return ctx.traps.literal(
+    "[" + ast.elements.map(function (elm) { return elm ? visit(ctx, elm) : "" }).join(",") + "]",
+    ast.index);
 };
 
-visitors.FunctionExpression = function (ctx, ast) { return closure(ctx, ast, ast.index) };
+function kindinit (ast) { return ast.kind === "init" }
+visitors.ObjectExpression = function (ctx, ast) {
+  if (ast.properties.every(kindinit))
+    return ctx.traps.literal("{" + ast.properties.map(function (ast) {
+      return (ast.key.raw || ast.key.name) + ":" + visit(ctx, ast.value)
+    }).join(",") + "}", ast.index);
+  return ctx.traps.literal("aran.__object__([" + ast.properties.map(function (prp) {
+    return "[" + (prp.key.raw || JSON.stringify(prp.key.name)) + ","
+      + JSON.stringify(prp.kind) + ","
+      + visit(ctx, prp.value) + "]";
+  }).join(",") + "])", ast.index);
+};
 
-visitors.SequenceExpression = function (ctx, ast) { return "("+ast.expressions.map(visit.bind(null, ctx)).join(",")+")" };
+visitors.FunctionExpression = function (ctx, ast) { return closure(ctx, ast) };
 
-// TODO: figure out what to do with delete identifier.
+visitors.SequenceExpression = function (ctx, ast) {
+  return "(" + ast.expressions.map(visit.bind(null, ctx)).join(",") + ")";
+};
+
+// TODO: figure out what to do with: ``delete identifier''.
 visitors.UnaryExpression = function (ctx, ast) {
   if (ast.operator === "typeof" && ast.argument.type === "Identifier")
-    return ctx.traps.unary("typeof", "(function () { try { return "+ast.argument.name+" } catch (_) {} } ())", ast.index);
+    return ctx.traps.unary(
+      "typeof",
+      "(function(){try{return " + ast.argument.name + "}catch(_){}}())",
+      ast.index);
   if (ast.operator === "delete" && ast.argument.type === "Identifier")
-    return "delete "+ast.argument.name;
+    return "(delete " + ast.argument.name + ")";
   if (ast.operator === "delete" && ast.argument.type === "MemberExpression")
-    return ctx.traps.delete(ast.argument.computed, visit(ctx, ast.argument.object), ast.computed ? visit(ctx, ast.argument.property) : ast.argument.property.name, ast.index);
+    return ctx.traps.delete(
+      ast.argument.computed,
+      visit(ctx, ast.argument.object),
+      ast.computed ? visit(ctx, ast.argument.property) : ast.argument.property.name,
+      ast.index);
   return ctx.traps.unary(ast.operator, visit(ctx, ast.argument), ast.index);
 };
 
-visitors.BinaryExpression = function (ctx, ast) { return ctx.traps.binary(ast.operator, visit(ctx, ast.left), visit(ctx, ast.right), ast.index) };
+visitors.BinaryExpression = function (ctx, ast) {
+  return ctx.traps.binary(
+    ast.operator,
+    visit(ctx, ast.left),
+    visit(ctx, ast.right),
+    ast.index);
+};
 
 visitors.AssignmentExpression = function (ctx, ast) {
-  if (ast.left.type === "MemberExpression") {
-    var tmp1 = temporal(ctx, ast.index, 1);
-    if (ast.left.computed)
-      var tmp2 = temporal(ctx, ast.index, 2);
-  }
+  var str1, str2, str3;
   if (ast.operator === "=")
     return ast.left.type === "Identifier"
-      ? "("+ast.left.name+"="+ctx.traps.write(ast.left.name, visit(ctx, ast.right), ast.index)+")"
-      : ctx.traps.set(ast.computed, visit(ctx, ast.left.object), ast.computed ? visit(ctx, ast.left.property) : ast.left.property.name, visit(ctx, ast.right), ast.index);
-  var o = ast.operator.substring(0, ast.operator.length-1);
-  var l = ast.left.type === "Identifier"
-    ? ctx.traps.read(ast.left.name, ast.index)
-    : ctx.traps.get(ast.computed, tmp1, ast.computed ? tmp2 : ast.left.property.name, ast.index);
-  var b = ctx.traps.binary(o, l, visit(ctx, ast.right), ast.index);
+      ? ctx.traps.write(ast.left.name, visit(ctx, ast.right), ast.index)
+      : ctx.traps.set(
+        ast.computed,
+        visit(ctx, ast.left.object),
+        ast.computed ? visit(ctx, ast.left.property) : ast.left.property.name,
+        visit(ctx, ast.right), ast.index);
+  str1 = ctx.traps.binary(
+    ast.operator.substring(0, ast.operator.length-1),
+    ast.left.type === "Identifier"
+      ? ctx.traps.read(ast.left.name, ast.index)
+      : ctx.traps.get(
+        ast.computed,
+        str2 = temporal(ctx, ast.index, 1),
+        ast.computed ? str3 = temporal(ctx, ast.index, 2) : ast.left.property.name,
+        ast.index),
+      visit(ctx, ast.right),
+      ast.index);
   return ast.left.type === "Identifier"
-    ? "("+ast.left.name+"="+ctx.traps.write(ast.left.name, b, ast.index)+")"
-    : ctx.traps.set(ast.computed, "("+tmp1+"="+visit(ctx, ast.left.object)+")", ast.computed ? "("+tmp2+"="+visit(ctx, ast.left.property)+")" : ast.left.property.name, b, ast.index);
+    ? ctx.traps.write(ast.left.name, str1, ast.index)
+    : ctx.traps.set(
+      ast.computed,
+      "(" + str2 + "=" + visit(ctx, ast.left.object) + ")",
+      ast.computed
+        ? "(" + str3 + "=" + visit(ctx, ast.left.property) + ")"
+        : ast.left.property.name,
+      str1,
+      ast.index);
 };
 
 visitors.UpdateExpression = function (ctx, ast) {
-  if (ast.argument.type === "MemberExpression") {
-    var tmp1 = temporal(ctx, ast.index, 1);
-    if (ast.argument.computed)
-      var tmp2 = temporal(ctx, ast.index, 2);
-  }
-  var o = ast.operator[0];
-  var l = ast.argument.type === "Identifier"
+  var str1, str2, str3, str4, str5, str6;
+  str1 = ast.argument.type === "Identifier"
     ? ctx.traps.read(ast.argument.name, ast.index)
-    : ctx.traps.get(ast.argument.computed, tmp1, ast.argument.computed ? tmp2 : ast.argument.property.name, ast.index);
-  if (!ast.prefix) {
-    var tmp0 = temporal(ctx, ast.index, 0);
-    l = "("+tmp0+" = "+l+")";
-  }
-  var r = ctx.traps.literal("1", ast.index);
-  var b = ctx.traps.binary(o, l, r, ast.index);
-  var a = ast.argument.type === "Identifier"
-    ? ast.argument.name+"="+ctx.traps.write(ast.argument.name, b, ast.index)
-    : ctx.traps.set(ast.argument.computed, "("+tmp1+"="+visit(ctx, ast.argument.object)+")", ast.argument.computed ? "("+tmp2+"="+visit(ctx, ast.argument.property)+")" : ast.argument.property.name, b, ast.index)
-  return ast.prefix ? a : "("+a+", "+tmp0+")";
+    : ctx.traps.get(
+      ast.argument.computed,
+      str2 = temporal(ctx, ast.index, 1),
+      ast.argument.computed ? str3 = temporal(ctx, ast.index, 2) : ast.argument.property.name,
+      ast.index);
+  if (!ast.prefix)
+    str1 = "(" + (str4 = temporal(ctx, ast.index, 0)) + " = " + str1 + ")";
+  str5 = ctx.traps.binary(ast.operator[0], str1, ctx.traps.literal("1", ast.index), ast.index);
+  str6 = ast.argument.type === "Identifier"
+    ? ctx.traps.write(ast.argument.name, str5, ast.index)
+    : ctx.traps.set(
+      ast.argument.computed,
+      "(" + str2 + "=" + visit(ctx, ast.argument.object) + ")",
+      ast.argument.computed
+        ? "(" + str3 + "=" + visit(ctx, ast.argument.property) + ")"
+        : ast.argument.property.name,
+      str5,
+      ast.index);
+  return ast.prefix ? str6 : "(" + str6 + "," + str4 + ")";
 };
 
 visitors.LogicalExpression = function (ctx, ast) {
-  var tmp0 = temporal(ctx, ast.index, 0);
-  var t = "("+tmp0+" = "+ctx.traps.test(visit(ctx, ast.left), ast.index)+")";
+  var str1 = temporal(ctx, ast.index, 0);
+  var str2 = "(" + str1 + "=" + ctx.traps.test(visit(ctx, ast.left), ast.index) + ")";
   if (ast.operator === "||")
-    return "("+t+" ? "+tmp0+" : "+visit(ctx, ast.right)+")";
+    return "(" + str2 + "?" + str1 + ":" + visit(ctx, ast.right) + ")";
   if (ast.operator === "&&")
-    return "("+t+" ? "+visit(ctx, ast.right)+" : "+tmp0+")";
-  throw new Error("Unknown logical operator "+ast.operator);
+    return "(" + str2 + "?" + visit(ctx, ast.right) + ":" + str1 + ")";
+  throw new Error("Unknown logical operator " + ast.operator);
 };
 
-visitors.ConditionalExpression = function (ctx, ast) { return "("+ctx.traps.test(visit(ctx, ast.test), ast.index)+" ? "+visit(ctx, ast.consequent)+" : "+visit(ctx, ast.alternate)+")" };
+visitors.ConditionalExpression = function (ctx, ast) {
+  return "(" + ctx.traps.test(visit(ctx, ast.test), ast.index)
+    + "?" + visit(ctx, ast.consequent)
+    + ":" + visit(ctx, ast.alternate) + ")";
+};
 
-visitors.NewExpression = function (ctx, ast) { return ctx.traps.construct(visit(ctx, ast.callee), ast.arguments.map(visit.bind(null, ctx)), ast.index) };
+visitors.NewExpression = function (ctx, ast) {
+  return ctx.traps.construct(
+    visit(ctx, ast.callee),
+    ast.arguments.map(visit.bind(null, ctx)),
+    ast.index);
+};
 
-// o.f(x,y,z)
-// get(push(o), "f").apply(pop(), [x,y,z]);
-// apply(push(o).f, pop(), [x,y,z], 123)
-// apply(get(push(o), "f"), pop(), [x,y,z], 123)
+function args (ctx, ast) { return ast.arguments.map(visit.bind(null, ctx)) }
 visitors.CallExpression = function (ctx, ast) {
-  var xs = ast.arguments.map(visit.bind(null, ctx));
-  if (ast.callee.type === "MemberExpression") {
-    var tmp0 = temporal(ctx, ast.index, 0);
-    return ctx.traps.apply(ctx.traps.get(ast.callee.computed, "("+tmp0+"="+visit(ctx, ast.callee.object)+")", ast.callee.computed ? visit(ctx, ast.callee.property) : ast.callee.property.name, ast.index), tmp0, xs, ast.index);
-  }
-  if (ast.callee.type === "Identifier" && ast.callee.name === "eval") {
-    var tmp0 = temporal(ctx, ast.index, 0);
-    return "((("+tmp0+" = "+ctx.traps.read("eval", ast.index)+") === aran.eval) ? "+ctx.traps.eval(xs, ast.index)+" : "+ctx.traps.apply(tmp0, null, xs, ast.index)+")";
-  }
-  return ctx.traps.apply(visit(ctx, ast.callee), null, ast.arguments.map(visit.bind(null, ctx)), ast.index);
+  if (ast.callee.type === "Identifier" && ast.callee.name === "eval")
+    return "(" + ctx.traps.read("eval", ast.index) + "===aran.__eval__"
+      + "?" + ctx.traps.eval(args(ctx, ast), ast.index)
+      + ":" + ctx.traps.apply("eval", null, args(ctx, ast), ast.index) + ")";
+  if (ast.callee.type !== "MemberExpression")
+    return ctx.traps.apply(visit(ctx, ast.callee), null, args(ctx, ast), ast.index);
+  var str = temporal(ctx, ast.index, 0);
+  return ctx.traps.apply(
+    ctx.traps.get(
+      ast.callee.computed,
+      "(" + str + "=" + visit(ctx, ast.callee.object) +")",
+      ast.callee.computed ? visit(ctx, ast.callee.property) : ast.callee.property.name,
+      ast.index),
+    str,
+    args(ctx, ast),
+    ast.index); 
 }
 
-visitors.MemberExpression = function (ctx, ast) { return ctx.traps.get(ast.computed, visit(ctx, ast.object), ast.computed ? visit(ctx, ast.property) : ast.property.name, ast.index) };
+visitors.MemberExpression = function (ctx, ast) {
+  return ctx.traps.get(
+    ast.computed,
+    visit(ctx, ast.object),
+    ast.computed ? visit(ctx, ast.property) : ast.property.name,
+    ast.index);
+};
 
 visitors.Identifier = function (ctx, ast) { return ctx.traps.read(ast.name, ast.index) };
 
@@ -291,51 +407,46 @@ visitors.Literal = function (ctx, ast) { return ctx.traps.literal(ast.raw, ast.i
 /////////////
 
 function temporal (ctx, idx1, idx2) {
-  var tmp = "aran_"+idx1+"_"+idx2;
-  ctx.closure.temporals.push(tmp);
-  return tmp;
+  var res = ctx.global + "_" + idx1 + "_" + idx2;
+  ctx.temporals.push(res);
+  return res;
 }
 
-function isstrict (ast) {
+function strict (ast) {
   return ast.type === "ExpressionStatement"
     && ast.expression.type === "Literal"
     && ast.expression.value === "use strict";
 }
 
-// We can transparently ensure there is bracket around (if|while|do-while|for|for-in|while) bodies because:
-// 1) The body is already a block statement and we do nothing
-// 2) The body is a non-declarative statement (http://www.ecma-international.org/ecma-262/6.0/#sec-statements)
-//    and adding bracket around it is transparent.
-function body (ctx, ast) { return (ast.type === "BlockStatement") ? visit(ctx, ast) : "{"+visit(ctx,ast)+"}" }
-
-function declare (ctx, ast, blk, idx) {
-  var xs = [];
-  var vs = ast.declarations.map(function (d) {
-    if (d.init)
-      xs.push(d.id.name+"="+visit(ctx, d.init));
-    return d.id.name;
-  });
-  if (ast.kind === "var") {
-    ctx.closure.before += ctx.traps.Declare("var", vs, idx);
-    ctx.closure.before += ast.kind+" "+vs.join(",")+";";
-  } else {
-    blk.before += ctx.traps.Declare(ast.kind, vs, idx);
-    blk.before += ast.kind+" "+vs.join(",")+";";
-    blk.after += ctx.traps.Undeclare(ast.kind, vs, idx);
-  }
-  return xs.length && (xs.length===1 ? xs[0] : "("+xs.join(",")+")");
+function body (ctx, ast) {
+  return ast.type === "BlockStatement" ? visit(ctx, ast) : "{" + visit(ctx,ast) + "}";
 }
 
-function name (i) { return i.name }
-function closure (ctx, ast, idx) {
-  var strict = ast.body.body.length && isstrict(ast.body.body[0]);
-  var save = ctx.closure;
-  ctx.closure = {before:"", temporals:[], block:null};
-  var xs = (strict ? ast.body.body.slice(1) : ast.body.body).map(visit.bind(null, ctx));
-  var s = (strict ? "'use strict';"+ctx.traps.Strict(idx) : "")
-    + (ctx.closure.temporals.length ? "var "+ctx.closure.temporals.join(",")+";" : "")
-    + ctx.closure.before
-    + xs.join("");
-  ctx.closure = save;
-  return ctx.traps.literal("function "+(ast.id?ast.id.name:"")+"("+ast.params.map(name).join(",")+"){"+s+"}", idx);
+function idname (ast) { return ast.id.name }
+function declare (ctx, ast, idx) {
+  var res = ast.kind + " " + ast.declarations.map(function (dec) {
+    return dec.id.name + (dec.init ? "=" + visit(ctx, dec.init) : "");
+  }).join(",");
+  ctx.hoisted[ast.kind === "var" ? "closure" : "block"] += ctx.traps.Declare(
+    ast.kind,
+    ast.declarations.map(idname),
+    idx);
+  return res;
+}
+
+function name (ast) { return ast.name }
+function closure (ctx, ast) {
+  var bin = ast.body.body.length && strict(ast.body.body[0]);
+  var tmp1 = ctx.hoisted, tmp2 = ctx.loop, tmp3 = ctx.temporals;
+  (ctx.hoisted = {closure:"", block: ""}, ctx.loop = "", ctx.temporals = []);
+  var arr = (bin ? ast.body.body.slice(1) : ast.body.body).map(visit.bind(null, ctx));
+  var str = "function " + (ast.id ? ast.id.name : "")
+    + "(" + ast.params.map(name).join(",") + "){"
+    + (bin ? "'use strict';" + ctx.traps.Strict(ast.index) : "")
+    + ctx.traps.Arguments(ast.index)
+    + (ctx.temporals.length ? "var " + ctx.temporals.join(",") + ";" : "")
+    + ctx.hoisted.closure
+    + arr.join("") + "}";
+  (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.temporals = tmp3);
+  return str;
 }

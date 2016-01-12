@@ -29,31 +29,37 @@ tree.body.map(function (node) { return
 });
 
 var traps = [
+  // General //
   "Ast",
   "Strict",
   "literal",
+  "unary",
+  "binary",
+  // Environment //
   "Declare",
-  "Undeclare",
   "read",
   "write",
+  "Enter",
+  "Leave",
+  // Apply //
+  "apply",
+  "construct",
+  "Arguments",
+  "return",
+  "eval",
+  // Object //
   "get",
   "set",
   "delete",
   "enumerate",
-  "arguments",
-  "return",
-  "apply",
-  "construct",
-  "eval",
-  "unary",
-  "binary",
+  // Control //
   "test",
+  "Label",
+  "Break",
   "throw",
   "Try",
   "catch",
-  "Finally",
-  "Label",
-  "Break"
+  "Finally"
 ];
 process.stdout.write(repeat(" ", 25)+"|");
 process.stdout.write(traps.map(backquote).join("|"));

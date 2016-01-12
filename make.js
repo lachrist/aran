@@ -1,19 +1,20 @@
 
 var Fs = require("fs");
 var Glitterdust = require("glitterdust");
+var Uglify = require("uglify-js");
 
 //////////////////////
 // Generate main.js //
 //////////////////////
 
+var setup = Uglify.minify(__dirname+"/setup.js").code;
+//var setup = Fs.readFileSync(__dirname+"/setup.js", {encoding:"utf8"});
+
 Fs.writeFileSync(__dirname+"/main.js", [
-  "var Instrument = require('./instrument.js');"
-  "var setup = "+JSON.stringify(Fs.readFileSync(__dirname+"/setup.js"))+";",
-  "module.exports = function (options, code) {",
-  "  if (options.nosetup)",
-  "    return Instrument(options, code);",
-  "  return setup.replace('ARAN', function () { return options.global || 'aran' }) + Instrument(options, code);",
-  "};"
+  "var Instrument = require('./instrument.js');",
+  "var Uglify = require('uglify-js');",
+  "var setup = "+JSON.stringify(setup)+";",
+  "module.exports = function (options, code) { return (options.nosetup ? '' : setup.replace('ARAN', function () { return options.global || 'aran'})) + Instrument(options, code) };"
 ].join("\n"), {encoding:"utf8"});
 
 //////////////////////////

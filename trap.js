@@ -1,7 +1,4 @@
 
-// Lowercase: expression string
-// Uppercase: statement string
-
 var traps = {};
 
 function empty () { return "" }
@@ -9,7 +6,7 @@ function empty () { return "" }
 module.exports = function (xs) {
   var o = {};
   for (var k in traps)
-    o[k] = traps[k][(xs.indexOf(k.toLowerCase()) === -1) ? "off" : "on"];
+    o[k] = traps[k][xs.indexOf(k) === -1 ? "off" : "on"];
   return o;
 }
 
@@ -51,8 +48,8 @@ traps.read.on  = function (variable, index) { return "aran.read("+JSON.stringify
 traps.read.off = function (variable) { return variable };
 
 traps.write = {};
-traps.write.on  = function (variable, value, index) { return "aran.write("+JSON.stringify(variable)+","+variable+","+value+","+index+")" };
-traps.write.off = function (variable, value) { return value };
+traps.write.on  = function (variable, value, index) { return "("+variable +"=aran.write("+JSON.stringify(variable)+","+variable+","+value+","+index+"))" };
+traps.write.off = function (variable, value) { return "("+variable+"="+value+")" };
 
 traps.Enter = {};
 traps.Enter.on  = function (index) { return "aran.Enter("+index+");" };
@@ -66,33 +63,28 @@ traps.Leave.off = empty;
 // Apply //
 ///////////
 
-traps.arguments = {};
-traps.arguments.on  = function (index) { return "aran.arguments(arguments,"+index+")" };
-traps.arguments.off = function () { return "arguments" };
-
-traps.return = {};
-traps.return.on  = function (value, index) { return "aran.return("+value+","+index+")" };
-traps.return.off = function (value) { return value };
-
 traps.apply = {};
-traps.apply.on  = function (function_, this_, arguments, index) { return "aran.apply("+function_+","+(this_||"void null")+",["+arguments.join(",")+"],"+index+")" };
-traps.apply.off = function (function_, this_, arguments) {
-  return this_
-    ? "aran.__apply__("+function_+","+this_+",["+arguments.join(",")+"])"
-    : "("+function_+"("+arguments.join(",")+"))";
+traps.apply.on  = function (fct, ths, args, idx) { return "aran.apply("+fct+","+(ths||"void 0")+",["+args.join(",")+"],"+idx+")" };
+traps.apply.off = function (fct, ths, args) {
+  return ths
+    ? "aran.__apply__("+fct+","+ths+",["+args.join(",")+"])"
+    : "("+fct+"("+args.join(",")+"))";
 };
 
 traps.construct = {};
 traps.construct.on  = function (constructor, arguments, index) { return "aran.construct("+constructor+",["+arguments.join(",")+"],"+index+")" };
 traps.construct.off = function (constructor, arguments) { return  "new "+constructor+"("+arguments.join(",")+")" };
 
+traps.Arguments = {};
+traps.Arguments.on  = function (index) { return "aran.Arguments(arguments,"+index+");" };
+traps.Arguments.off = empty;
+
+traps.return = {};
+traps.return.on  = function (value, index) { return "aran.return("+value+","+index+")" };
+traps.return.off = function (value) { return value };
+
 traps.eval = {};
-traps.eval.on = function (arguments, index) {
-  var r = "eval(aran.eval("+arguments[0]+","+index+")";
-  for (var i=1; i<arguments.length; i++)
-    r+=","+arguments[i];
-  return r+")";
-};
+traps.eval.on = function (arguments, index) { return "eval(aran.eval(["+arguments.join(",")+"][0],"+index+"))" };
 traps.eval.off = function (arguments) { return "eval("+arguments.join(",")+")" };
 
 ////////////
@@ -140,7 +132,7 @@ traps.Try.on  = function (index) { return "aran.Try("+index+");" };
 traps.Try.off = empty;
 
 traps.catch = {};
-traps.catch.on  = function (variable, index) { return "aran.catch("+variable+","+index+");" };
+traps.catch.on  = function (variable, index) { return "aran.catch("+JSON.stringify(variable)+","+variable+","+index+");" };
 traps.catch.off = function (variable) { return variable };
 
 traps.Finally = {};
