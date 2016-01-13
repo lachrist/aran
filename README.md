@@ -76,16 +76,16 @@ The top-level function exported by this node module expects the set of options b
 ----------|----------|-----------------
 `global`  | `'aran'` | String, the name of the global variable to store Aran's data
 `traps`   | `[]`     | Array, contains the names of the traps to be called during the execution phase
-`offset`  | `0`      | Integer, the value to start indexing [Esprima](http://esprima.org) AST nodes
+`offset`  | `0`      | Integer, the value to start indexing [AST nodes](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API)
 `loc`     | `false`  | Boolean, if true: ast node have line and column-based location info [see](http://esprima.org/doc/index.html)
 `range`   | `false`  | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
 `nosetup` | `false`  | Boolean, set `true` only if sure the analysis is already setup (small performance gain)
 
 The below table introduces by example the set of traps Aran can insert.
 Traps starting with a upper-case letter are simple observers and their return values are never used while the value returned by lower-case traps may be used inside expressions.
-All traps are independently optional and they all receive as last argument an integer which is the index of the [Esprima](http://esprima.org) AST node that triggered the trap.
-The very first trap to be triggered is always `Ast` which receives the indexed [Esprima](http://esprima.org) AST tree of the target code before its instrumentation.
-As shown in the demonstration, the helper function `__search__(tree, index)` can be used to obtain an [Esprima](http://esprima.org) AST node from an index.
+All traps are independently optional and they all receive as last argument an integer which is the index of the AST node that triggered the trap.
+The very first trap to be triggered is always `Ast` which receives the indexed AST tree of the target code before its instrumentation.
+As shown in the demonstration, the helper function `__search__(tree, index)` can be used to obtain an AST node from an index.
 In the table below, `123` is used as a dummy index.
 
  Traps                              | Target              | Instrumented
@@ -119,7 +119,7 @@ In the table below, `123` is used as a dummy index.
 `throw(error, index)`               | `throw x;`          | `throw aran.throw(x, 123);`
 `Try(index)`<br>`catch(error, index)`<br>`Finally(index)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`aran.Try(123);`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`e = aran.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`aran.Finally(123);`<br>&nbsp;&nbsp;`..`<br>`}`
 
-The below table depicts which traps are susceptible to be inserted for every [Esprima](http://esprima.org/) AST node type.
+The below table depicts which traps are susceptible to be inserted for every [AST node type](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API).
 To further investigate how traps are inserted, please try it out in Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
 
                          |`Ast`|`Strict`|`literal`|`unary`|`binary`|`Declare`|`read`|`write`|`Enter`|`Leave`|`apply`|`construct`|`Arguments`|`return`|`eval`|`get`|`set`|`delete`|`enumerate`|`test`|`Label`|`Break`|`throw`|`Try`|`catch`|`Finally`
