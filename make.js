@@ -7,8 +7,8 @@ var Uglify = require("uglify-js");
 // Generate main.js //
 //////////////////////
 
-var setup = Uglify.minify(__dirname+"/setup.js").code;
-//var setup = Fs.readFileSync(__dirname+"/setup.js", {encoding:"utf8"});
+//var setup = Uglify.minify(__dirname+"/setup.js").code;
+var setup = Fs.readFileSync(__dirname+"/setup.js", {encoding:"utf8"});
 
 Fs.writeFileSync(__dirname+"/main.js", [
   "var Instrument = require('./instrument.js');",

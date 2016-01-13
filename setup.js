@@ -37,14 +37,19 @@
   }
 
   aran.__search__ = function (ast, idx) {
+    // console.log((ast && ast.index) + " " + idx);
+    // if (idx === 7 && ast && ast.type === "IfStatement")
+    //   debugger;
     if (ast && typeof ast === "object") {
       if (ast.index === idx)
         return ast;
-      if (ast.index < idx && ast.maxIndex > idx) {
+      if (!ast.index || (ast.index < idx && ast.maxIndex >= idx)) {
         for (var k in ast) {
-          var tmp = aran.search(ast[k], idx);
-          if (tmp)
-            return tmp;
+          if (k !== "loc" && k !== "range") {
+            var tmp = aran.__search__(ast[k], idx);
+            if (tmp)
+              return tmp;
+          }
         }
       }
     }

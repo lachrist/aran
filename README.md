@@ -23,7 +23,7 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
 
 2. The file `analysis.js` provides an implementation of the traps `Ast` and `apply`.
    These traps are written into the global variable arbitrarily named `__hidden__`.
-   The fetch, the code location 
+   The function `__search__` is used to fetch the location of the code responsible of triggering `apply` traps.
 
   ```javascript
   // analysis.js //
@@ -32,7 +32,7 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
     var tree;
     __hidden__.Ast = function (x, i) { tree = x };
     __hidden__.apply = function (f, t, xs, i) {
-      var l = __hidden__.__search__(ast, i).loc.start.line;
+      var l = __hidden__.__search__(tree, i).loc.start.line;
       console.log("apply "+f.name+" at line "+l);
       return f.apply(t, xs);
     };
@@ -88,7 +88,7 @@ In the table below, `123` is used as a dummy index.
 
  Traps                              | Target              | Instrumented
 ------------------------------------|---------------------|-------------------------------------------------------
-** General **                       |                     |
+**General**                         |                     |
 `Ast(tree, index)`                  |                     |
 `Strict(index)`                     | `'use strict';`     | `'use strict';`<br>`aran.Strict(123);`
 `literal(value, index)`             | `'foo'`             | `aran.literal('foo', 123)`
@@ -120,44 +120,44 @@ In the table below, `123` is used as a dummy index.
 The below table depicts which traps are susceptible to be inserted for a given [Esprima](http://esprima.org/) AST node.
 To further investigate how traps are inserted, please try it out in Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
 
-                         |`Ast`|`Strict`|`literal`|`Declare`|`Undeclare`|`read`|`write`|`get`|`set`|`delete`|`enumerate`|`arguments`|`return`|`apply`|`construct`|`eval`|`unary`|`binary`|`test`|`throw`|`Try`|`catch`|`Finally`|`Label`|`Break`
--------------------------|:---:|:------:|:-------:|:-------:|:---------:|:----:|:-----:|:---:|:---:|:------:|:---------:|:---------:|:------:|:-----:|:---------:|:----:|:-----:|:------:|:----:|:-----:|:---:|:-----:|:-------:|:-----:|:-----:
-`Program`                | X   | X      |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`EmptyStatement`         |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`BlockStatement`         |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`ExpressionStatement`    |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`IfStatement`            |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        | X    |       |     |       |         |       |       
-`LabeledStatement`       |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         | X     |       
-`BreakStatement`         |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       | X     
-`ContinueStatement`      |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`WithStatement`          |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`SwitchStatement`        |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       | X      | X    |       |     |       |         |       |       
-`ReturnStatement`        |     |        |         |         |           |      |       |     |     |        |           |           | X      |       |           |      |       |        |      |       |     |       |         |       |       
-`ThrowStatement`         |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      | X     |     |       |         |       |       
-`TryStatement`           |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       | X   |       | X       |       |       
-`WhileStatement`         |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        | X    |       |     |       |         |       |       
-`DoWhileStatement`       |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        | X    |       |     |       |         |       |       
-`ForStatement`           |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        | X    |       |     |       |         |       |       
-`ForInStatement`         |     |        |         |         |           |      | X     |     | X   |        | X         |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`DebuggerStatement`      |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`FunctionDeclaration`    |     |        |         | X       |           |      | X     |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`VariableDeclaration`    |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`ThisExpression`         |     |        |         |         |           | X    |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`ArrayExpression`        |     |        | X       |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`ObjectExpression`       |     |        | X       |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`FunctionExpression`     |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`SequenceExpression`     |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`UnaryExpression`        |     |        |         |         |           |      |       |     |     | X      |           |           |        |       |           |      | X     |        |      |       |     |       |         |       |       
-`BinaryExpression`       |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       | X      |      |       |     |       |         |       |       
-`AssignmentExpression`   |     |        |         |         |           | X    | X     | X   | X   |        |           |           |        |       |           |      |       | X      |      |       |     |       |         |       |       
-`UpdateExpression`       |     |        | X       |         |           | X    | X     | X   | X   |        |           |           |        |       |           |      |       | X      |      |       |     |       |         |       |       
-`LogicalExpression`      |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        | X    |       |     |       |         |       |       
-`ConditionalExpression`  |     |        |         |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        | X    |       |     |       |         |       |       
-`NewExpression`          |     |        |         |         |           |      |       |     |     |        |           |           |        |       | X         |      |       |        |      |       |     |       |         |       |       
-`CallExpression`         |     |        |         |         |           | X    |       | X   |     |        |           |           |        | X     |           | X    |       |        |      |       |     |       |         |       |       
-`MemberExpression`       |     |        |         |         |           |      |       | X   |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`Identifier`             |     |        |         |         |           | X    |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
-`Literal`                |     |        | X       |         |           |      |       |     |     |        |           |           |        |       |           |      |       |        |      |       |     |       |         |       |       
+                         |`Ast`|`Strict`|`literal`|`unary`|`binary`|`Declare`|`read`|`write`|`Enter`|`Leave`|`apply`|`construct`|`Arguments`|`return`|`eval`|`get`|`set`|`delete`|`enumerate`|`test`|`Label`|`Break`|`throw`|`Try`|`catch`|`Finally`
+-------------------------|:---:|:------:|:-------:|:-----:|:------:|:-------:|:----:|:-----:|:-----:|:-----:|:-----:|:---------:|:---------:|:------:|:----:|:---:|:---:|:------:|:---------:|:----:|:-----:|:-----:|:-----:|:---:|:-----:|:-------:
+`Program`                | X   | X      |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`EmptyStatement`         |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`BlockStatement`         |     |        |         |       |        |         |      |       | X     | X     |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`ExpressionStatement`    |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`IfStatement`            |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           | X    |       |       |       |     |       |         
+`LabeledStatement`       |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      | X     |       |       |     |       |         
+`BreakStatement`         |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       | X     |       |     |       |         
+`ContinueStatement`      |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`WithStatement`          |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`SwitchStatement`        |     |        |         |       | X      |         |      |       | X     | X     |       |           |           |        |      |     |     |        |           | X    |       |       |       |     |       |         
+`ReturnStatement`        |     |        |         |       |        |         |      |       |       |       |       |           |           | X      |      |     |     |        |           |      |       |       |       |     |       |         
+`ThrowStatement`         |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       | X     |     |       |         
+`TryStatement`           |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       | X   | X     | X       
+`WhileStatement`         |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           | X    |       |       |       |     |       |         
+`DoWhileStatement`       |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           | X    |       |       |       |     |       |         
+`ForStatement`           |     |        |         |       |        |         |      |       | X     | X     |       |           |           |        |      |     |     |        |           | X    |       |       |       |     |       |         
+`ForInStatement`         |     |        |         |       |        |         |      | X     | X     | X     |       |           |           |        |      |     | X   |        | X         |      |       |       |       |     |       |         
+`DebuggerStatement`      |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`FunctionDeclaration`    |     |        |         |       |        | X       |      | X     |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`VariableDeclaration`    |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`ThisExpression`         |     |        |         |       |        |         | X    |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`ArrayExpression`        |     |        | X       |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`ObjectExpression`       |     |        | X       |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`FunctionExpression`     |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`SequenceExpression`     |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`UnaryExpression`        |     |        |         | X     |        |         |      |       |       |       |       |           |           |        |      |     |     | X      |           |      |       |       |       |     |       |         
+`BinaryExpression`       |     |        |         |       | X      |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`AssignmentExpression`   |     |        |         |       | X      |         | X    | X     |       |       |       |           |           |        |      | X   | X   |        |           |      |       |       |       |     |       |         
+`UpdateExpression`       |     |        | X       |       | X      |         | X    | X     |       |       |       |           |           |        |      | X   | X   |        |           |      |       |       |       |     |       |         
+`LogicalExpression`      |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           | X    |       |       |       |     |       |         
+`ConditionalExpression`  |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           | X    |       |       |       |     |       |         
+`NewExpression`          |     |        |         |       |        |         |      |       |       |       |       | X         |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`CallExpression`         |     |        |         |       |        |         | X    |       |       |       | X     |           |           |        | X    | X   |     |        |           |      |       |       |       |     |       |         
+`MemberExpression`       |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      | X   |     |        |           |      |       |       |       |     |       |         
+`Identifier`             |     |        |         |       |        |         | X    |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`Literal`                |     |        | X       |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
 
 We finish this section by discussing the `aran` object present in the execution/analysis phase.
 It is the responsibility of the user to make sure that the target code does not interact with it by choosing an appropriate global name.

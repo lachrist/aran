@@ -44,6 +44,7 @@ var visitors = {};
 visitors.Program = function (ctx, ast) {
   var bin = ast.body.length && strict(ast.body[0]);
   var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
+  ast.maxIndex = ctx.counter; // edgy to put here
   return (bin ? "'use strict';" : "")
     + ctx.traps.Ast(JSON.stringify(ast), ctx.index)
     + (bin ? ctx.traps.Strict(ast.index) : "")
@@ -96,10 +97,10 @@ visitors.WithStatement = function (ctx, ast) {
 
 visitors.SwitchStatement = function (ctx, ast) {
   function fct1 (ast) { return "if("+str1+")"+visit(ctx, ast) }
-  function fct2 (ast) {
-    return str1 + "=" + (ast.test ? ctx.traps.test(
-      ctx.traps.binary("===", str2, visit(ctx, ast.test), ast.index),
-      ast.index) : "true") + ";" + ast.consequent.map(fct1).join("");
+  function fct2 (cse) {
+    return str1 + "=" + (cse.test ? ctx.traps.test(
+      ctx.traps.binary("===", str2, visit(ctx, cse.test), ast.index),
+      ast.index) : "true") + ";" + cse.consequent.map(fct1).join("");
   }
   var str1 = temporal(ctx, ast.index, 1);
   var str2 = temporal(ctx, ast.index, 2);
@@ -165,11 +166,11 @@ visitors.ForStatement = function (ctx, ast) {
   var str4 = ast.update ? visit(ctx, ast.update) : "";
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = ctx.traps.Enter(ast.idx)
+  var res = ctx.traps.Enter(ast.index)
     + (str2 || "")
     + "for(" + str1 + ";" + str3 + ";" + str4 + ")"
     + body(ctx, ast.body)
-    + ctx.traps.Leave(ast.idx);
+    + ctx.traps.Leave(ast.index);
   ctx.loop = tmp;
   return res;
 };
@@ -372,10 +373,12 @@ visitors.NewExpression = function (ctx, ast) {
 
 function args (ctx, ast) { return ast.arguments.map(visit.bind(null, ctx)) }
 visitors.CallExpression = function (ctx, ast) {
-  if (ast.callee.type === "Identifier" && ast.callee.name === "eval")
+  if (ast.callee.type === "Identifier" && ast.callee.name === "eval") {
+    var arr = args(ctx, ast);
     return "(" + ctx.traps.read("eval", ast.index) + "===aran.__eval__"
-      + "?" + ctx.traps.eval(args(ctx, ast), ast.index)
-      + ":" + ctx.traps.apply("eval", null, args(ctx, ast), ast.index) + ")";
+      + "?" + ctx.traps.eval(arr, ast.index)
+      + ":" + ctx.traps.apply("eval", null, arr, ast.index) + ")";
+  }
   if (ast.callee.type !== "MemberExpression")
     return ctx.traps.apply(visit(ctx, ast.callee), null, args(ctx, ast), ast.index);
   var str = temporal(ctx, ast.index, 0);
