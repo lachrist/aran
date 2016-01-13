@@ -22,8 +22,8 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
   ```
 
 2. The file `analysis.js` provides an implementation of the traps `Ast` and `apply`.
-   These traps are written into the global variable arbitrarily named `__hidden__`.
-   The function `__search__` is used to fetch the location of the code responsible of triggering `apply` traps.
+   These traps are written into the global value arbitrarily named `__hidden__`.
+   The method `__search__`, defined later, is used to fetch the location of the code responsible of triggering `apply` traps.
 
   ```javascript
   // analysis.js //
@@ -54,14 +54,16 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
 In ECMAScript5-compatible environments, evaluating the content of `__target__.js` will produce the following log: 
 
 ```
-apply solve at line 7
-apply delta at line 3
-apply sqrt at line 3
+apply solve at line 8
 apply delta at line 4
 apply sqrt at line 4
+apply delta at line 5
+apply sqrt at line 5
 ```
 
 Monolithic JavaScript programs can also be analyzed through Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
+In the demo page, the global value holding the traps has to be named `aran` and trap names are deduced from looking this global value.
+Note that this is possible only because the instrumentation phase and execution/analysis phase happen on the same process.
 
 <img src="demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
 
@@ -79,11 +81,11 @@ The top-level function exported by this node module expects the set of options b
 `range`   | `false`  | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
 `nosetup` | `false`  | Boolean, set `true` only if sure the analysis is already setup (small performance gain)
 
-The below table introduces by example the set of traps Aran may insert.
+The below table introduces by example the set of traps Aran can insert.
 Traps starting with a upper-case letter are simple observers and their return values are never used while the value returned by lower-case traps may be used inside expressions.
 All traps are independently optional and they all receive as last argument an integer which is the index of the [Esprima](http://esprima.org) AST node that triggered the trap.
-The very first trap to be triggered is always `Ast` which receives the indexed [Esprima](http://esprima.org) AST tree of the instrumented code.
-As shown in the demonstration, the helper function `search(tree, index)` can be used to obtain an [Esprima](http://esprima.org) AST node from an index.
+The very first trap to be triggered is always `Ast` which receives the indexed [Esprima](http://esprima.org) AST tree of the target code before its instrumentation.
+As shown in the demonstration, the helper function `__search__(tree, index)` can be used to obtain an [Esprima](http://esprima.org) AST node from an index.
 In the table below, `123` is used as a dummy index.
 
  Traps                              | Target              | Instrumented
@@ -117,7 +119,7 @@ In the table below, `123` is used as a dummy index.
 `throw(error, index)`               | `throw x;`          | `throw aran.throw(x, 123);`
 `Try(index)`<br>`catch(error, index)`<br>`Finally(index)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`aran.Try(123);`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`e = aran.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`aran.Finally(123);`<br>&nbsp;&nbsp;`..`<br>`}`
 
-The below table depicts which traps are susceptible to be inserted for a given [Esprima](http://esprima.org/) AST node.
+The below table depicts which traps are susceptible to be inserted for every [Esprima](http://esprima.org/) AST node type.
 To further investigate how traps are inserted, please try it out in Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
 
                          |`Ast`|`Strict`|`literal`|`unary`|`binary`|`Declare`|`read`|`write`|`Enter`|`Leave`|`apply`|`construct`|`Arguments`|`return`|`eval`|`get`|`set`|`delete`|`enumerate`|`test`|`Label`|`Break`|`throw`|`Try`|`catch`|`Finally`
@@ -137,15 +139,15 @@ To further investigate how traps are inserted, please try it out in Aran's [demo
 `TryStatement`           |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       | X   | X     | X       
 `WhileStatement`         |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           | X    |       |       |       |     |       |         
 `DoWhileStatement`       |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           | X    |       |       |       |     |       |         
-`ForStatement`           |     |        |         |       |        |         |      |       | X     | X     |       |           |           |        |      |     |     |        |           | X    |       |       |       |     |       |         
-`ForInStatement`         |     |        |         |       |        |         |      | X     | X     | X     |       |           |           |        |      |     | X   |        | X         |      |       |       |       |     |       |         
+`ForStatement`           |     |        |         |       |        | X       |      |       | X     | X     |       |           |           |        |      |     |     |        |           | X    |       |       |       |     |       |         
+`ForInStatement`         |     |        |         |       |        | X       |      | X     | X     | X     |       |           |           |        |      |     | X   |        | X         |      |       |       |       |     |       |         
 `DebuggerStatement`      |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
-`FunctionDeclaration`    |     |        |         |       |        | X       |      | X     |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
-`VariableDeclaration`    |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`FunctionDeclaration`    |     | X      |         |       |        | X       |      | X     |       |       |       |           | X         |        |      |     |     |        |           |      |       |       |       |     |       |         
+`VariableDeclaration`    |     |        |         |       |        | X       |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
 `ThisExpression`         |     |        |         |       |        |         | X    |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
 `ArrayExpression`        |     |        | X       |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
 `ObjectExpression`       |     |        | X       |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
-`FunctionExpression`     |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
+`FunctionExpression`     |     | X      |         |       |        |         |      |       |       |       |       |           | X         |        |      |     |     |        |           |      |       |       |       |     |       |         
 `SequenceExpression`     |     |        |         |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
 `UnaryExpression`        |     |        |         | X     |        |         |      |       |       |       |       |           |           |        |      |     |     | X      |           |      |       |       |       |     |       |         
 `BinaryExpression`       |     |        |         |       | X      |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
@@ -159,11 +161,9 @@ To further investigate how traps are inserted, please try it out in Aran's [demo
 `Identifier`             |     |        |         |       |        |         | X    |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
 `Literal`                |     |        | X       |       |        |         |      |       |       |       |       |           |           |        |      |     |     |        |           |      |       |       |       |     |       |         
 
-We finish this section by discussing the `aran` object present in the execution/analysis phase.
-It is the responsibility of the user to make sure that the target code does not interact with it by choosing an appropriate global name.
-Such interaction would alter the original behavior of the target and the conclusion drawn during the analysis might be falsified.
-Note that global variables can also be accessed through the global object -- i.e. `window` in browsers and `global` in node.
-For instance it could be wise to add a guard to the enumerate trap so that the key pointing to the `aran` object is omitted.
+We finish this section by discussing the global value holding traps during the execution/analysis phase.
+It is the responsibility of the user to make sure that the target code does not interact with it by choosing an appropriate global name or by adding proper guards to traps such as `read`, `write` and `enumerate`.
+Such interaction should be avoided because it would alter the original behavior of the target code and the conclusion drawn during the analysis might be falsified.
 
 ## JavaScript Modules
 

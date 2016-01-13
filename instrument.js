@@ -251,7 +251,7 @@ visitors.ObjectExpression = function (ctx, ast) {
     return ctx.traps.literal("{" + ast.properties.map(function (ast) {
       return (ast.key.raw || ast.key.name) + ":" + visit(ctx, ast.value)
     }).join(",") + "}", ast.index);
-  return ctx.traps.literal("aran.__object__([" + ast.properties.map(function (prp) {
+  return ctx.traps.literal(ctx.global+".__object__([" + ast.properties.map(function (prp) {
     return "[" + (prp.key.raw || JSON.stringify(prp.key.name)) + ","
       + JSON.stringify(prp.kind) + ","
       + visit(ctx, prp.value) + "]";

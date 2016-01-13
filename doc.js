@@ -23,7 +23,7 @@ function visit (node) {
 }
 
 var helpers = {};
-tree.body.map(function (node) { return 
+tree.body.map(function (node) {
   if (node.type === "FunctionDeclaration")
     helpers[node.id.name] = visit(node);
 });
