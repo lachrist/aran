@@ -12,7 +12,6 @@ var setup = Fs.readFileSync(__dirname+"/setup.js", {encoding:"utf8"});
 
 Fs.writeFileSync(__dirname+"/main.js", [
   "var Instrument = require('./instrument.js');",
-  "var Uglify = require('uglify-js');",
   "var setup = "+JSON.stringify(setup)+";",
   "module.exports = function (options, code) { return (options.nosetup ? '' : setup.replace('ARAN', function () { return options.global || 'aran'})) + Instrument(options, code) };"
 ].join("\n"), {encoding:"utf8"});
@@ -35,4 +34,12 @@ Glitterdust({
   instrument: __dirname+"/glitterdust/main.js",
   masters: __dirname+"/glitterdust/analyses",
   targets: __dirname+"/../benchmark/atom"
+});
+
+Glitterdust({
+  mode: "batch",
+  out: __dirname+"/glitterdust/batch-sunspider.html",
+  instrument: __dirname+"/glitterdust/main.js",
+  masters: __dirname+"/glitterdust/analyses",
+  targets: __dirname+"/../benchmark/sunspider-1.0.2"
 });

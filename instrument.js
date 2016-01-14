@@ -296,27 +296,27 @@ visitors.AssignmentExpression = function (ctx, ast) {
     return ast.left.type === "Identifier"
       ? ctx.traps.write(ast.left.name, visit(ctx, ast.right), ast.index)
       : ctx.traps.set(
-        ast.computed,
+        ast.left.computed,
         visit(ctx, ast.left.object),
-        ast.computed ? visit(ctx, ast.left.property) : ast.left.property.name,
+        ast.left.computed ? visit(ctx, ast.left.property) : ast.left.property.name,
         visit(ctx, ast.right), ast.index);
   str1 = ctx.traps.binary(
     ast.operator.substring(0, ast.operator.length-1),
     ast.left.type === "Identifier"
       ? ctx.traps.read(ast.left.name, ast.index)
       : ctx.traps.get(
-        ast.computed,
+        ast.left.computed,
         str2 = temporal(ctx, ast.index, 1),
-        ast.computed ? str3 = temporal(ctx, ast.index, 2) : ast.left.property.name,
+        ast.left.computed ? str3 = temporal(ctx, ast.index, 2) : ast.left.property.name,
         ast.index),
       visit(ctx, ast.right),
       ast.index);
   return ast.left.type === "Identifier"
     ? ctx.traps.write(ast.left.name, str1, ast.index)
     : ctx.traps.set(
-      ast.computed,
+      ast.left.computed,
       "(" + str2 + "=" + visit(ctx, ast.left.object) + ")",
-      ast.computed
+      ast.left.computed
         ? "(" + str3 + "=" + visit(ctx, ast.left.property) + ")"
         : ast.left.property.name,
       str1,

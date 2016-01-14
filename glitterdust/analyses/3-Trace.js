@@ -17,12 +17,8 @@ aran.Enter = function (i) { };
 aran.Leave = function (i) { };
 
 // Apply //
-aran.apply = function (f, t, xs, i) { return f.apply(t, xs) }
-aran.construct = function (c, xs, i) {
-  var o = Object.create(c.prototype);
-  var r = c.apply(o, xs);
-  return (typeof r === "object" && r !== null) ? r : o;
-};
+aran.apply = function (f, t, xs, i) { return f.apply(t, xs) };
+aran.construct = function (c, xs, i) { return new c(...xs) };
 aran.Arguments = function (xs, i) { };
 aran.return = function (x, i) { return x };
 aran.eval = function (x, i) { return x };
@@ -61,7 +57,7 @@ aran.Finally = function (i) { };
     aran[k] = function () {
       log(k, arguments);
       return trap.apply(null, arguments);
-    } 
+    };
   });
   aran.Ast = function (x, i) { tree = x };
 } ());
