@@ -1,6 +1,8 @@
 # Aran <img src="aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
 
-Aran is a npm module for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing, and symbolic execution. Aran performs a source-to-source code transformation fully compatible with ECMAScript5 specification (see http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting ECMAScript6 (see http://www.ecma-international.org/ecma-262/6.0/). To install, run `npm install aran`.
+Aran is a npm module for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing, and symbolic execution.
+Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting [ECMAScript6](http://www.ecma-international.org/ecma-262/6.0/).
+To install, run `npm install aran`.
 
 ## Demonstration
 
@@ -47,7 +49,7 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
   var Aran = require('aran');
   var analysis = fs.readFileSync(__dirname+'/analysis.js', {encoding:'utf8'});
   var target = fs.readFileSync(__dirname+'/target.js', {encoding:'utf8'});
-  var instrumented = Aran({global: '__hidden__', loc:true, traps:['Ast', 'apply']}, target);
+  var instrumented = Aran({namespace: '__hidden__', loc:true, traps:['Ast', 'apply']}, target);
   fs.writeFileSync(__dirname+'/__target__.js', analysis+'\n'+instrumented);
   ```
 
@@ -72,14 +74,13 @@ Note that this is possible only because the instrumentation phase and execution/
 This section details Aran's instrumentation API.
 The top-level function exported by this node module expects the set of options below and some JavaScript code to instrument:
 
- Option   | Default  | Value
-----------|----------|-----------------
-`global`  | `'aran'` | String, the name of the global variable to store Aran's data
-`traps`   | `[]`     | Array, contains the names of the traps to be called during the execution phase
-`offset`  | `0`      | Integer, the value to start indexing [AST nodes](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API)
-`loc`     | `false`  | Boolean, if true: ast node have line and column-based location info [see](http://esprima.org/doc/index.html)
-`range`   | `false`  | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
-`nosetup` | `false`  | Boolean, set `true` only if sure the analysis is already setup (small performance gain)
+ Option     | Default  | Value
+------------|----------|-----------------
+`namespace` | `'aran'` | String, the name of the global variable to store Aran's data
+`traps`     | `[]`     | Array, contains the names of the traps to be called during the execution phase
+`loc`       | `false`  | Boolean, if true: ast node have line and column-based location info [see](http://esprima.org/doc/index.html)
+`range`     | `false`  | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
+`nosetup`   | `false`  | Boolean, set `true` only if sure the analysis is already setup (small performance gain)
 
 The below table introduces by example the set of traps Aran can insert.
 Traps starting with a upper-case letter are simple observers and their return values are never used while the value returned by lower-case traps may be used inside expressions.
@@ -91,7 +92,7 @@ In the table below, `123` is used as a dummy index.
  Traps                              | Target              | Instrumented
 ------------------------------------|---------------------|-------------------------------------------------------
 **General**                         |                     |
-`Ast(tree, index)`                  |                     |
+`Ast(tree, url)`                    |                     |
 `Strict(index)`                     | `'use strict';`     | `'use strict';`<br>`aran.Strict(123);`
 `literal(value, index)`             | `'foo'`             | `aran.literal('foo', 123)`
 `unary(op, value, index)`           | `!x`                | `aran.unary('!', x, 123)`

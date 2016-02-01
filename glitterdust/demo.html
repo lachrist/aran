@@ -58,13 +58,14 @@ button::-moz-focus-inner {
 }</style>
     <script>require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
-var Aran = require("../main.js");
+var Instrument = require("../instrument.js");
+
 module.exports = function (analysis, target) {
   window.eval(analysis);
-  return Aran({loc:true, range:true, traps:Object.keys(aran)}, target);
+  return Instrument({loc:true, traps:Object.keys(aran)})(null, target);
 };
 
-},{"../main.js":3}],2:[function(require,module,exports){
+},{"../instrument.js":2}],2:[function(require,module,exports){
 
 // The visitors of this file either:
 //   1) visit an expression node and return an expression string
@@ -76,29 +77,63 @@ module.exports = function (analysis, target) {
 // However, this transformation is safe because the body of the above structure cannot be a
 // variable declaration (see http://www.ecma-international.org/ecma-262/6.0/#sec-statements).
 
-// Code generation guide line:
-// 1) The beginning of a statement may directly be a letter
-
 var Esprima = require("esprima");
-var Trap = require("./trap.js");
+var Traps = require("./traps.js");
 
-module.exports = function (options, code) {
+var nid = 0;
+var vid = 0;
+
+// options: {namespace:String, analysis:String, traps:[String], loc:Boolean, range:Boolean}
+// TODO switch __apply__ to Reflect.apply when supported enough 
+module.exports = function (options) {
+  var str = options.namespace || "aran";
   var ctx = {
-    counter: options.offset || 0,
-    global: options.global || "aran",
-    traps: Trap(options.traps || []),
-    loop: "",
-    temporals: [],
-    hoisted: {closure:"", block:""}
+    traps: Traps(str, options.traps),
+    hide: function () {
+      var res = str + ++vid;
+      this.hidden.push(res);
+      return res;
+    },
+    accessor: ["function (arr) {",
+      "var obj = {};",
+      "for (var i=0; i<arr.length; i++) {",
+        "if (!obj[arr[i].key])",
+          "obj[arr[i].key] = {enumerate:true, configurable: true};",
+        "if (arr[i].kind === 'init') {",
+          "(delete obj[arr[i].key].get, delete obj[arr[i].key].set);",
+          "(obj[arr[i].key].writable = true, obj[arr[i].key].value = arr[i].value);",
+        "} else {",
+          "(delete obj[arr[i].key].writable, delete obj[arr[i].key].value);",
+          "obj[arr[i].key][arr[i].kind] = arr[i].value;",
+        "}",
+      "}",
+      "return " + str + ".__defineProperties__({}, obj);",
+    "}"].join("")
   };
-  var ast = Esprima.parse(code, {loc:options.loc, range:options.range});
-  return visit(ctx, ast);
-};
+  return function (url, code) {
+    (ctx.loop = "", ctx.hidden = [], ctx.hoisted = {closure:"", block:""});
+    var ast = Esprima.parse(code, {loc:options.loc, range:options.range});
+    var bin = ast.body.length && strict(ast.body[0]);
+    ast.index = ++nid;
+    var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
+    ast.maxIndex = nid;
+    return (bin ? "'use strict';" : "")
+      + str + ".__eval__=" + str + ".__eval__||eval;"
+      + str + ".__apply__=" + str + ".__apply__||function(f,t,xs){return f.apply(t,xs)};"
+      + str + ".__defineProperties__=" + str + ".__defineProperties__||Object.defineProperties;"
+      + ctx.traps.Ast(JSON.stringify(ast), JSON.stringify(url))
+      + (bin ? ctx.traps.Strict(ast.index) : "")
+      + (ctx.hidden.length ? "var "+ctx.hidden.join(",")+";" : "")
+      + ctx.hoisted.closure
+      + ctx.hoisted.block
+      + arr.join("");
+  }
+}
 
 function visit (ctx, ast) {
-  ast.index = ++ctx.counter;
+  ast.index = ++nid;
   var res = visitors[ast.type](ctx, ast);
-  ast.maxIndex = ctx.counter;
+  ast.maxIndex = nid;
   return res;
 };
 
@@ -107,19 +142,6 @@ var visitors = {};
 ////////////////
 // Statements //
 ////////////////
-
-visitors.Program = function (ctx, ast) {
-  var bin = ast.body.length && strict(ast.body[0]);
-  var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
-  ast.maxIndex = ctx.counter; // edgy to put here
-  return (bin ? "'use strict';" : "")
-    + ctx.traps.Ast(JSON.stringify(ast), ctx.index)
-    + (bin ? ctx.traps.Strict(ast.index) : "")
-    + (ctx.temporals.length ? "var "+ctx.temporals.join(", ")+";" : "")
-    + ctx.hoisted.closure
-    + ctx.hoisted.block
-    + arr.join("");
-};
 
 visitors.EmptyStatement = function (ctx, ast) { return "" };
 
@@ -154,28 +176,28 @@ visitors.BreakStatement = function (ctx, ast) {
 };
 
 visitors.ContinueStatement = function (ctx, ast) {
-  return "continue "+(ast.label?ast.label.name:"")+";";
+  return "continue " + (ast.label?ast.label.name:"") + ";";
 };
 
 // TODO: figure out what to do with WithStatement...
 visitors.WithStatement = function (ctx, ast) {
-  return "with("+visit(ctx, ast.object)+")"+body(ctx,ast.body);
+  return "with(" + visit(ctx, ast.object) + ")" + body(ctx,ast.body);
 };
 
 visitors.SwitchStatement = function (ctx, ast) {
-  function fct1 (ast) { return "if("+str1+")"+visit(ctx, ast) }
+  function fct1 (ast) { return "if(" + str1 + ")" + visit(ctx, ast) }
   function fct2 (cse) {
     return str1 + "=" + (cse.test ? ctx.traps.test(
       ctx.traps.binary("===", str2, visit(ctx, cse.test), ast.index),
       ast.index) : "true") + ";" + cse.consequent.map(fct1).join("");
   }
-  var str1 = temporal(ctx, ast.index, 1);
-  var str2 = temporal(ctx, ast.index, 2);
+  var str1 = ctx.hide();
+  var str2 = ctx.hide();
   var tmp1 = ctx.hoisted.block, tmp2 = ctx.loop;
-  (ctx.hoisted.block = "", ctx.loop = ctx.global+"_switch_"+ast.index);
+  (ctx.hoisted.block = "", ctx.loop = ctx.hide());
   var str3 = str1 + "=false;"
     + str2 + "=" + visit(ctx, ast.discriminant)+";"
-    + ctx.loop + ":{" + ast.cases.map(fct2).join("")+"}";
+    + ctx.loop + ":{" + ast.cases.map(fct2).join("") + "}";
   var res = ctx.traps.Enter(ast.index) + ctx.hoisted.block + str3 + ctx.traps.Leave(ast.index);
   (ctx.hoisted.block = tmp1, ctx.loop = tmp2);
   return res;
@@ -243,10 +265,7 @@ visitors.ForStatement = function (ctx, ast) {
 };
 
 visitors.ForInStatement = function (ctx, ast) {
-  var obj = {
-    enumerate: temporal(ctx, ast.index, 1),
-    counter: temporal(ctx, ast.index, 2)
-  };
+  var obj = {enumerate: ctx.hide(), counter: ctx.hide()};
   var arr = [
     obj.enumerate + "=" + ctx.traps.enumerate(visit(ctx, ast.right), ast.index) + ";",
     obj.counter + "=0;"
@@ -264,10 +283,10 @@ visitors.ForInStatement = function (ctx, ast) {
       obj.enumerate + "[" + obj.counter + "]",
       ast.index);
   } else {
-    obj.object = temporal(ctx, ast.index, 3);
+    obj.object = ctx.hide();
     arr.push(obj.object + "=" + visit(ctx, ast.left.object) + ";");
     if (ast.left.computed) {
-      obj.property = temporal(ctx, ast.index, 4);
+      obj.property = ctx.hide();
       arr.push(obj.property + "=" + visit(ctx, ast.left.property) + ";")
     }
     var str2 = ctx.traps.set(
@@ -312,17 +331,16 @@ visitors.ArrayExpression = function (ctx, ast) {
     ast.index);
 };
 
-function kindinit (ast) { return ast.kind === "init" }
 visitors.ObjectExpression = function (ctx, ast) {
   if (ast.properties.every(kindinit))
     return ctx.traps.literal("{" + ast.properties.map(function (ast) {
       return (ast.key.raw || ast.key.name) + ":" + visit(ctx, ast.value)
     }).join(",") + "}", ast.index);
-  return ctx.traps.literal(ctx.global+".__object__([" + ast.properties.map(function (prp) {
-    return "[" + (prp.key.raw || JSON.stringify(prp.key.name)) + ","
-      + JSON.stringify(prp.kind) + ","
-      + visit(ctx, prp.value) + "]";
-  }).join(",") + "])", ast.index);
+  return ctx.traps.literal("(" + ctx.accessor + "([" + ast.properties.map(function (prp) {
+      return "{key:" + (prp.key.raw || JSON.stringify(prp.key.name)) + ","
+        + "kind:" + JSON.stringify(prp.kind) + ","
+        + "value:" + visit(ctx, prp.value) + "}";
+    }).join(",") + "]))", ast.index);
 };
 
 visitors.FunctionExpression = function (ctx, ast) { return closure(ctx, ast) };
@@ -373,8 +391,8 @@ visitors.AssignmentExpression = function (ctx, ast) {
       ? ctx.traps.read(ast.left.name, ast.index)
       : ctx.traps.get(
         ast.left.computed,
-        str2 = temporal(ctx, ast.index, 1),
-        ast.left.computed ? str3 = temporal(ctx, ast.index, 2) : ast.left.property.name,
+        str2 = ctx.hide(),
+        ast.left.computed ? str3 = ctx.hide() : ast.left.property.name,
         ast.index),
       visit(ctx, ast.right),
       ast.index);
@@ -396,11 +414,11 @@ visitors.UpdateExpression = function (ctx, ast) {
     ? ctx.traps.read(ast.argument.name, ast.index)
     : ctx.traps.get(
       ast.argument.computed,
-      str2 = temporal(ctx, ast.index, 1),
-      ast.argument.computed ? str3 = temporal(ctx, ast.index, 2) : ast.argument.property.name,
+      str2 = ctx.hide(),
+      ast.argument.computed ? str3 = ctx.hide() : ast.argument.property.name,
       ast.index);
   if (!ast.prefix)
-    str1 = "(" + (str4 = temporal(ctx, ast.index, 0)) + " = " + str1 + ")";
+    str1 = "(" + (str4 = ctx.hide()) + " = " + str1 + ")";
   str5 = ctx.traps.binary(ast.operator[0], str1, ctx.traps.literal("1", ast.index), ast.index);
   str6 = ast.argument.type === "Identifier"
     ? ctx.traps.write(ast.argument.name, str5, ast.index)
@@ -416,7 +434,7 @@ visitors.UpdateExpression = function (ctx, ast) {
 };
 
 visitors.LogicalExpression = function (ctx, ast) {
-  var str1 = temporal(ctx, ast.index, 0);
+  var str1 = ctx.hide();
   var str2 = "(" + str1 + "=" + ctx.traps.test(visit(ctx, ast.left), ast.index) + ")";
   if (ast.operator === "||")
     return "(" + str2 + "?" + str1 + ":" + visit(ctx, ast.right) + ")";
@@ -448,7 +466,7 @@ visitors.CallExpression = function (ctx, ast) {
   }
   if (ast.callee.type !== "MemberExpression")
     return ctx.traps.apply(visit(ctx, ast.callee), null, args(ctx, ast), ast.index);
-  var str = temporal(ctx, ast.index, 0);
+  var str = ctx.hide();
   return ctx.traps.apply(
     ctx.traps.get(
       ast.callee.computed,
@@ -476,11 +494,11 @@ visitors.Literal = function (ctx, ast) { return ctx.traps.literal(ast.raw, ast.i
 // Helpers //
 /////////////
 
-function temporal (ctx, idx1, idx2) {
-  var res = ctx.global + "_" + idx1 + "_" + idx2;
-  ctx.temporals.push(res);
-  return res;
-}
+function kindinit (ast) { return ast.kind === "init" }
+
+function name (ast) { return ast.name }
+
+function idname (ast) { return ast.id.name }
 
 function strict (ast) {
   return ast.type === "ExpressionStatement"
@@ -492,7 +510,6 @@ function body (ctx, ast) {
   return ast.type === "BlockStatement" ? visit(ctx, ast) : "{" + visit(ctx,ast) + "}";
 }
 
-function idname (ast) { return ast.id.name }
 function declare (ctx, ast, idx) {
   var res = ast.kind + " " + ast.declarations.map(function (dec) {
     return dec.id.name + (dec.init ? "=" + visit(ctx, dec.init) : "");
@@ -504,28 +521,23 @@ function declare (ctx, ast, idx) {
   return res;
 }
 
-function name (ast) { return ast.name }
 function closure (ctx, ast) {
   var bin = ast.body.body.length && strict(ast.body.body[0]);
-  var tmp1 = ctx.hoisted, tmp2 = ctx.loop, tmp3 = ctx.temporals;
-  (ctx.hoisted = {closure:"", block: ""}, ctx.loop = "", ctx.temporals = []);
+  var tmp1 = ctx.hoisted, tmp2 = ctx.loop, tmp3 = ctx.hidden;
+  (ctx.hoisted = {closure:"", block: ""}, ctx.loop = "", ctx.hidden = []);
   var arr = (bin ? ast.body.body.slice(1) : ast.body.body).map(visit.bind(null, ctx));
-  var str = "function " + (ast.id ? ast.id.name : "")
+  var res = "function " + (ast.id ? ast.id.name : "")
     + "(" + ast.params.map(name).join(",") + "){"
     + (bin ? "'use strict';" + ctx.traps.Strict(ast.index) : "")
     + ctx.traps.Arguments(ast.index)
-    + (ctx.temporals.length ? "var " + ctx.temporals.join(",") + ";" : "")
+    + (ctx.hidden.length ? "var " + ctx.hidden.join(",") + ";" : "")
     + ctx.hoisted.closure
     + arr.join("") + "}";
-  (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.temporals = tmp3);
-  return str;
+  (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.hidden = tmp3);
+  return res;
 }
 
-},{"./trap.js":5,"esprima":4}],3:[function(require,module,exports){
-var Instrument = require('./instrument.js');
-var setup = "(function (aran) {\n\n  if (aran.__setup__)\n     return;\n  aran.__setup__ = true;\n\n  var defineProperties = Object.defineProperties;\n\n  aran.__apply__ = function (fct, ths, args) { return fct.apply(ths, args) };\n  aran.__apply__ = typeof Reflect === \"undefined\" ? aran.__apply__ : Reflect.apply;\n\n  aran.__enumerate__ = function (obj) {\n    var arr = [];\n    for (var str in obj)\n      arr[arr.length] = str;\n    return arr;\n  };\n  aran.__enumerate__ = typeof Reflect === \"undefined\" ? aran.__enumerate__ : Reflect.enumerate;\n\n  aran.__eval__ = eval;\n\n  aran.__object__ = function (arr) {\n    var obj1 = {};\n    for (var i=0; i<arr.length; i++) {\n      if (!obj1[arr[i][0]])\n        obj1[arr[i][0]] = {enumerate:true, configurable: true}\n      var obj2 = obj1[arr[i][0]];\n      if (arr[i][1] === \"init\") {\n        (delete obj2.get, delete obj2.set);\n        (obj2.writable = true, obj2.value = arr[i][2]);\n      } else {\n        (delete obj2.writable, delete obj2.value);\n        obj2[arr[i][1]] = arr[i][2];\n      }\n    }\n    return defineProperties({}, obj1);\n  }\n\n  aran.__search__ = function (ast, idx) {\n    // console.log((ast && ast.index) + \" \" + idx);\n    // if (idx === 7 && ast && ast.type === \"IfStatement\")\n    //   debugger;\n    if (ast && typeof ast === \"object\") {\n      if (ast.index === idx)\n        return ast;\n      if (!ast.index || (ast.index < idx && ast.maxIndex >= idx)) {\n        for (var k in ast) {\n          if (k !== \"loc\" && k !== \"range\") {\n            var tmp = aran.__search__(ast[k], idx);\n            if (tmp)\n              return tmp;\n          }\n        }\n      }\n    }\n  };\n\n} (ARAN));";
-module.exports = function (options, code) { return (options.nosetup ? '' : setup.replace('ARAN', function () { return options.global || 'aran'})) + Instrument(options, code) };
-},{"./instrument.js":2}],4:[function(require,module,exports){
+},{"./traps.js":4,"esprima":3}],3:[function(require,module,exports){
 /*
   Copyright (c) jQuery Foundation, Inc. and Contributors, All Rights Reserved.
 
@@ -6268,149 +6280,117 @@ module.exports = function (options, code) { return (options.nosetup ? '' : setup
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],5:[function(require,module,exports){
-
-var traps = {};
+},{}],4:[function(require,module,exports){
 
 function empty () { return "" }
 
-module.exports = function (xs) {
-  var o = {};
+module.exports = function (namespace, names) {
+  var obj = {};
   for (var k in traps)
-    o[k] = traps[k][xs.indexOf(k) === -1 ? "off" : "on"];
-  return o;
+    obj[k] = (names.indexOf(k) !== -1
+      ? traps[k]
+      : (k[0] === k[0].toUpperCase() ? empty : forwards[k]))
+    .bind(null, namespace);
+  return obj;
 }
+
+var traps = {};
+
+var forwards = {};
 
 ////////////
 // Others //
 ////////////
 
-traps.Ast = {};
-traps.Ast.on = function (ast, index) { return "aran.Ast("+ast+","+index+");" };
-traps.Ast.off = empty;
+traps.Ast = function (namespace, ast, url) { return namespace+".Ast("+ast+","+JSON.stringify(url)+");" }
 
-traps.Strict = {};
-traps.Strict.on = function (index) { return "aran.Strict("+index+");" };
-traps.Strict.off = empty;
+traps.Strict = function (namespace, index) { return namespace+".Strict("+index+");" }
 
-traps.literal = {};
-traps.literal.on  = function (value, index) { return "aran.literal("+value+","+index+")" };
-traps.literal.off = function (value) { return value };
+traps.literal = function (namespace, value, index) { return namespace+".literal("+value+","+index+")" };
+forwards.literal = function (_, value, _) { return value };
 
-traps.unary = {};
-traps.unary.on  = function (operator, value, index) { return "aran.unary("+JSON.stringify(operator)+","+value+","+index+")" };
-traps.unary.off = function (operator, value) { return operator+"("+value+")" };
+traps.unary = function (namespace, operator, value, index) { return namespace+".unary("+JSON.stringify(operator)+","+value+","+index+")" };
+forwards.unary = function (_, operator, value, _) { return operator+"("+value+")" };
 
-traps.binary = {};
-traps.binary.on  = function (operator, left, right, index) { return "aran.binary("+JSON.stringify(operator)+","+left+","+right+","+index+")" };
-traps.binary.off = function (operator, left, right) { return "("+left+" "+operator+" "+right+")" };
-
+traps.binary = function (namespace, operator, left, right, index) { return namespace+".binary("+JSON.stringify(operator)+","+left+","+right+","+index+")" };
+forwards.binary = function (_, operator, left, right, _) { return "("+left+" "+operator+" "+right+")" };
 
 /////////////////
 // Environment //
 /////////////////
 
-traps.Declare = {};
-traps.Declare.on  = function (kind, variables, index) { return "aran.Declare("+JSON.stringify(kind)+","+JSON.stringify(variables)+","+index+");" }
-traps.Declare.off = empty;
+traps.Declare = function (namespace, kind, variables, index) { return namespace+".Declare("+JSON.stringify(kind)+","+JSON.stringify(variables)+","+index+");" }
 
-traps.read = {};
-traps.read.on  = function (variable, index) { return "aran.read("+JSON.stringify(variable)+","+variable+","+index+")" };
-traps.read.off = function (variable) { return variable };
+traps.read = function (namespace, variable, index) { return namespace+".read("+JSON.stringify(variable)+","+variable+","+index+")" };
+forwards.read = function (_, variable, _) { return variable };
 
-traps.write = {};
-traps.write.on  = function (variable, value, index) { return "("+variable +"=aran.write("+JSON.stringify(variable)+","+variable+","+value+","+index+"))" };
-traps.write.off = function (variable, value) { return "("+variable+"="+value+")" };
+traps.write = function (namespace, variable, value, index) { return "("+variable +"="+namespace+".write("+JSON.stringify(variable)+","+variable+","+value+","+index+"))" };
+forwards.write = function (_, variable, value, _) { return "("+variable+"="+value+")" };
 
-traps.Enter = {};
-traps.Enter.on  = function (index) { return "aran.Enter("+index+");" };
-traps.Enter.off = empty;
+traps.Enter = function (namespace, index) { return namespace+".Enter("+index+");" };
 
-traps.Leave = {};
-traps.Leave.on  = function (index) { return "aran.Leave("+index+");" };
-traps.Leave.off = empty;
+traps.Leave = function (namespace, index) { return namespace+".Leave("+index+");" };
 
 ///////////
 // Apply //
 ///////////
 
-traps.apply = {};
-traps.apply.on  = function (fct, ths, args, idx) { return "aran.apply("+fct+","+(ths||"void 0")+",["+args.join(",")+"],"+idx+")" };
-traps.apply.off = function (fct, ths, args) {
+traps.apply = function (namespace, fct, ths, args, idx) { return namespace+".apply("+fct+","+(ths||"void 0")+",["+args.join(",")+"],"+idx+")" };
+forwards.apply = function (namespace, fct, ths, args, _) {
   return ths
-    ? "aran.__apply__("+fct+","+ths+",["+args.join(",")+"])"
+    ? namespace+".__apply__("+fct+","+ths+",["+args.join(",")+"])"
     : "("+fct+"("+args.join(",")+"))";
 };
 
-traps.construct = {};
-traps.construct.on  = function (constructor, arguments, index) { return "aran.construct("+constructor+",["+arguments.join(",")+"],"+index+")" };
-traps.construct.off = function (constructor, arguments) { return  "new "+constructor+"("+arguments.join(",")+")" };
+traps.construct = function (namespace, constructor, arguments, index) { return namespace+".construct("+constructor+",["+arguments.join(",")+"],"+index+")" };
+forwards.construct = function (_, constructor, arguments, _) { return  "new "+constructor+"("+arguments.join(",")+")" };
 
-traps.Arguments = {};
-traps.Arguments.on  = function (index) { return "aran.Arguments(arguments,"+index+");" };
-traps.Arguments.off = empty;
+traps.Arguments = function (namespace, index) { return namespace+".Arguments(arguments,"+index+");" };
 
-traps.return = {};
-traps.return.on  = function (value, index) { return "aran.return("+value+","+index+")" };
-traps.return.off = function (value) { return value };
+traps.return = function (namespace, value, index) { return namespace+".return("+value+","+index+")" };
+forwards.return = function (_, value, _) { return value };
 
-traps.eval = {};
-traps.eval.on = function (arguments, index) { return "eval(aran.eval(["+arguments.join(",")+"][0],"+index+"))" };
-traps.eval.off = function (arguments) { return "eval("+arguments.join(",")+")" };
+traps.eval = function (namespace, arguments, index) { return "eval("+namespace+".eval(["+arguments.join(",")+"][0],"+index+"))" };
+forwards.eval = function (_, arguments, _) { return "eval("+arguments.join(",")+")" };
 
 ////////////
 // Object //
 ////////////
 
-traps.get = {};
-traps.get.on  = function (computed, object, property, index) { return "aran.get("+object+","+(computed ? property : JSON.stringify(property))+","+index+")" };
-traps.get.off = function (computed, object, property) { return object+(computed ? "["+property+"]" : "."+property) };
+traps.get = function (namespace, computed, object, property, index) { return namespace+".get("+object+","+(computed ? property : JSON.stringify(property))+","+index+")" };
+forwards.get = function (_, computed, object, property, _) { return object+(computed ? "["+property+"]" : "."+property) };
 
-traps.set = {};
-traps.set.on  = function (computed, object, property, value, index) { return "aran.set("+object+","+(computed ? property : JSON.stringify(property))+","+value+","+index+")" };
-traps.set.off = function (computed, object, property, value) { return "("+object+(computed ? "["+property+"]" : "."+property)+"="+value+")" };
+traps.set = function (namespace, computed, object, property, value, index) { return namespace+".set("+object+","+(computed ? property : JSON.stringify(property))+","+value+","+index+")" };
+forwards.set = function (_, computed, object, property, value, _) { return "("+object+(computed ? "["+property+"]" : "."+property)+"="+value+")" };
 
-traps.delete = {};
-traps.delete.on  = function (computed, object, property, index) { return "aran.delete("+object+","+(computed ? property : JSON.stringify(property))+","+index+")" };
-traps.delete.off = function (computed, object, property) { return "delete "+object+(computed ? "["+property+"]" : "."+property) };
+traps.delete = function (namespace, computed, object, property, index) { return namespace+".delete("+object+","+(computed ? property : JSON.stringify(property))+","+index+")" };
+forwards.delete = function (_, computed, object, property, _) { return "delete "+object+(computed ? "["+property+"]" : "."+property) };
 
-traps.enumerate = {};
-traps.enumerate.on  = function (object, index) { return "aran.enumerate("+object+","+index+")" };
-traps.enumerate.off = function (object) { return "aran.__enumerate__("+object+")" };
+traps.enumerate = function (namespace, object, index) { return namespace+".enumerate("+object+","+index+")" };
+forwards.enumerate = function (_, object, _) { return "(function(o){var ks=[];for(var k in o) ks[ks.length]=k;return ks;}("+object+"))" };
 
 /////////////
 // Control //
 /////////////
 
-traps.test = {};
-traps.test.on  = function (value, index) { return "aran.test("+value+","+index+")" };
-traps.test.off = function (value) { return value };
+traps.test = function (namespace, value, index) { return namespace+".test("+value+","+index+")" };
+forwards.test = function (_, value, _) { return value };
 
-traps.Label = {};
-traps.Label.on  = function (label, index) { return "aran.Label("+JSON.stringify(label)+","+index+");" };
-traps.Label.off = empty;
+traps.Label = function (namespace, label, index) { return namespace+".Label("+JSON.stringify(label)+","+index+");" };
 
-traps.Break = {};
-traps.Break.on  = function (label, index) { return "aran.Break("+JSON.stringify(label)+","+index+");" };
-traps.Break.off = empty;
+traps.Break = function (namespace, label, index) { return namespace+".Break("+JSON.stringify(label)+","+index+");" };
 
-traps.throw = {};
-traps.throw.on  = function (value, index) { return "aran.throw("+value+","+index+")" };
-traps.throw.off = function (value) { return value };
+traps.throw = function (namespace, value, index) { return namespace+".throw("+value+","+index+")" };
+forwards.throw = function (_, value, _) { return value };
 
-traps.Try = {};
-traps.Try.on  = function (index) { return "aran.Try("+index+");" };
-traps.Try.off = empty;
+traps.Try = function (namespace, index) { return namespace+".Try("+index+");" };
 
-traps.catch = {};
-traps.catch.on  = function (variable, index) { return "aran.catch("+JSON.stringify(variable)+","+variable+","+index+");" };
-traps.catch.off = function (variable) { return variable };
+traps.catch = function (namespace, variable, index) { return namespace+".catch("+JSON.stringify(variable)+","+variable+","+index+");" };
+forwards.catch = function (_, variable, _) { return variable };
 
-traps.Finally = {};
-traps.Finally.on  = function (index) { return "aran.Finally("+index+");" };
-traps.Finally.off = empty;
+traps.Finally = function (namespace, index) { return namespace+".Finally("+index+");" };
 
-},{}],6:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 /**
 The following batches are equivalent:
 
@@ -6467,7 +6447,7 @@ if (typeof define === "function" && define.amd) {
 }
 
 
-},{"./lib/beautify":9,"./lib/beautify-css":7,"./lib/beautify-html":8}],7:[function(require,module,exports){
+},{"./lib/beautify":8,"./lib/beautify-css":6,"./lib/beautify-html":7}],6:[function(require,module,exports){
 (function (global){
 /*jshint curly:true, eqeqeq:true, laxbreak:true, noempty:false */
 /*
@@ -6962,7 +6942,7 @@ if (typeof define === "function" && define.amd) {
 }());
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 (function (global){
 /*jshint curly:true, eqeqeq:true, laxbreak:true, noempty:false */
 /*
@@ -7918,7 +7898,7 @@ if (typeof define === "function" && define.amd) {
 }());
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./beautify-css.js":7,"./beautify.js":9}],9:[function(require,module,exports){
+},{"./beautify-css.js":6,"./beautify.js":8}],8:[function(require,module,exports){
 (function (global){
 /*jshint curly:true, eqeqeq:true, laxbreak:true, noempty:false */
 /*
@@ -10009,7 +9989,7 @@ if (typeof define === "function" && define.amd) {
 }());
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],10:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 
 exports.round = function (x) { return Math.round(1000*x)/1000 }
 
@@ -10059,7 +10039,7 @@ function select (select, object, editor) {
 module.exports = function () {
   ["master", "target", "instrumented"].forEach(editor);
   editors.instrumented.setReadOnly(true);
-  select(document.getElementById("master-select"), {"1-Empty.js":"\n// This analysis does absolutely nothing! *yay* //\nvar aran = {};\n","2-Transparent.js":"\n// This analysis traps everything and transparently forwards all operations //\n\nvar aran = {};\n\n// General //\naran.Ast = function (x, i) { };\naran.Strict = function (i) { };\naran.literal = function (x, i) { return x };\naran.unary = function (o, x, i) { return eval(o+\" x\") };\naran.binary = function (o, x1, x2, i) { return eval(\"x1 \"+o+\" x2\") };\n\n// Environment //\naran.Declare = function (vs, i) { };\naran.read = function (v, x, i) { return x };\naran.write = function (v, x1, x2, i) { return x2 };\naran.Enter = function (i) { };\naran.Leave = function (i) { };\n\n// Apply //\naran.apply = function (f, t, xs, i) { return f.apply(t, xs) };\naran.construct = function (c, xs, i) { return new c(...xs) };\naran.Arguments = function (xs, i) { };\naran.return = function (x, i) { return x };\naran.eval = function (x, i) { return x };\n\n// Object //\naran.get = function (o, k, i) { return o[k] };\naran.set = function (o, k, x, i) { return o[k] = x };\naran.delete = function (o, k, i) { return delete o[k] };\naran.enumerate = function (o, i) {\n  var ks = [];\n  for (var k in o)\n    ks.push(k);\n  return ks;\n};\n\n// Control //\naran.test = function (x, i) { return x };\naran.Label = function (l, i) { };\naran.Break = function (l, i) { };\naran.throw = function (x, i) { return x };\naran.Try = function (i) { };\naran.catch = function (v, x, i) { return x };\naran.Finally = function (i) { };\n","3-Trace.js":"\n// This analysis traps everything, logs everything and transparently forwards all operations //\n\nvar aran = {};\n\n// General //\naran.Strict = function (i) { };\naran.literal = function (x, i) { return x };\naran.unary = function (o, x, i) { return eval(o+\" x\") };\naran.binary = function (o, x1, x2, i) { return eval(\"x1 \"+o+\" x2\") };\n\n// Environment //\naran.Declare = function (vs, i) { };\naran.read = function (v, x, i) { return x };\naran.write = function (v, x1, x2, i) { return x2 };\naran.Enter = function (i) { };\naran.Leave = function (i) { };\n\n// Apply //\naran.apply = function (f, t, xs, i) { return f.apply(t, xs) };\naran.construct = function (c, xs, i) { return new c(...xs) };\naran.Arguments = function (xs, i) { };\naran.return = function (x, i) { return x };\naran.eval = function (x, i) { return x };\n\n// Object //\naran.get = function (o, k, i) { return o[k] };\naran.set = function (o, k, x, i) { return o[k] = x };\naran.delete = function (o, k, i) { return delete o[k] };\naran.enumerate = function (o, i) {\n  var ks = [];\n  for (var k in o)\n    ks.push(k);\n  return ks;\n};\n\n// Control //\naran.test = function (x, i) { return x };\naran.Label = function (l, i) { };\naran.Break = function (l, i) { };\naran.throw = function (x, i) { return x };\naran.Try = function (i) { };\naran.catch = function (v, x, i) { return x };\naran.Finally = function (i) { };\n\n(function () {\n  var tree;\n  function log (trap, xs) {\n    var n = aran.__search__(tree, xs[xs.length-1]);\n    var s = trap+\" \"+n.type+\"@\"+n.loc.start.line+\"-\"+n.loc.start.column;\n    for (var i=0; i<xs.length-1; i++)\n      s += (typeof xs[i] === \"function\") ? \" [function \"+xs[i].name+\"]\" : \" \"+String(xs[i]);\n    console.log(s);\n  }\n  Object.keys(aran).forEach(function (k) {\n    var trap = aran[k];\n    aran[k] = function () {\n      log(k, arguments);\n      return trap.apply(null, arguments);\n    };\n  });\n  aran.Ast = function (x, i) { tree = x };\n} ());\n\n"}, editors.master);
+  select(document.getElementById("master-select"), {"1-Empty.js":"\n// This analysis does absolutely nothing! *yay* //\nvar aran = {};\n(function () { return this } ()).aran = aran;\n\n","2-Transparent.js":"\n// This analysis traps everything and transparently forwards all operations //\n\nvar aran = {};\n(function () { return this } ()).aran = aran;\n\n// General //\naran.Ast = function (x, i) { };\naran.Strict = function (i) { };\naran.literal = function (x, i) { return x };\naran.unary = function (o, x, i) { return eval(o+\" x\") };\naran.binary = function (o, x1, x2, i) { return eval(\"x1 \"+o+\" x2\") };\n\n// Environment //\naran.Declare = function (vs, i) { };\naran.read = function (v, x, i) { return x };\naran.write = function (v, x1, x2, i) { return x2 };\naran.Enter = function (i) { };\naran.Leave = function (i) { };\n\n// Apply //\naran.apply = function (f, t, xs, i) { return f.apply(t, xs) };\n// aran.construct = function (c, xs, i) { return new c(...xs) };\naran.Arguments = function (xs, i) { };\naran.return = function (x, i) { return x };\naran.eval = function (x, i) { return x };\n\n// Object //\naran.get = function (o, k, i) { return o[k] };\naran.set = function (o, k, x, i) { return o[k] = x };\naran.delete = function (o, k, i) { return delete o[k] };\naran.enumerate = function (o, i) {\n  var ks = [];\n  for (var k in o)\n    ks.push(k);\n  return ks;\n};\n\n// Control //\naran.test = function (x, i) { return x };\naran.Label = function (l, i) { };\naran.Break = function (l, i) { };\naran.throw = function (x, i) { return x };\naran.Try = function (i) { };\naran.catch = function (v, x, i) { return x };\naran.Finally = function (i) { };\n","3-Trace.js":"\n// This analysis traps everything, logs everything and transparently forwards all operations //\n\nvar aran = {};\n(function () { return this } ()).aran = aran;\n\n// General //\naran.Strict = function (i) { };\naran.literal = function (x, i) { return x };\naran.unary = function (o, x, i) { return eval(o+\" x\") };\naran.binary = function (o, x1, x2, i) { return eval(\"x1 \"+o+\" x2\") };\n\n// Environment //\naran.Declare = function (vs, i) { };\naran.read = function (v, x, i) { return x };\naran.write = function (v, x1, x2, i) { return x2 };\naran.Enter = function (i) { };\naran.Leave = function (i) { };\n\n// Apply //\naran.apply = function (f, t, xs, i) { return f.apply(t, xs) };\n//aran.construct = function (c, xs, i) { return new c(...xs) };\naran.Arguments = function (xs, i) { };\naran.return = function (x, i) { return x };\naran.eval = function (x, i) { return x };\n\n// Object //\naran.get = function (o, k, i) { return o[k] };\naran.set = function (o, k, x, i) { return o[k] = x };\naran.delete = function (o, k, i) { return delete o[k] };\naran.enumerate = function (o, i) {\n  var ks = [];\n  for (var k in o)\n    ks.push(k);\n  return ks;\n};\n\n// Control //\naran.test = function (x, i) { return x };\naran.Label = function (l, i) { };\naran.Break = function (l, i) { };\naran.throw = function (x, i) { return x };\naran.Try = function (i) { };\naran.catch = function (v, x, i) { return x };\naran.Finally = function (i) { };\n\n(function () {\n  function search (ast, idx) {\n    if (ast && typeof ast === \"object\") {\n      if (ast.index === idx)\n        return ast;\n      if (!ast.index || (ast.index < idx && ast.maxIndex >= idx)) {\n        for (var k in ast) {\n          if (k !== \"loc\" && k !== \"range\") {\n            var tmp = search(ast[k], idx);\n            if (tmp)\n              return tmp;\n          }\n        }\n      }\n    }\n  }\n  Object.keys(aran).forEach(function (name) {\n    var trap = aran[name];\n    aran[name] = function () {\n      log(name, arguments);\n      return trap.apply(null, arguments);\n    };\n  });\n  var sources = [];\n  aran.Ast = function (ast, url) { sources.push({url:url, ast:ast}) };\n  function locate (index) {\n    var node;\n    for (var i=0; i<sources.length; i++)\n      if (node = search(sources[i].ast, index))\n        return node.type\n          + \"@\" + sources[i].url\n          + \"#\" + node.loc.start.line + \"-\" + node.loc.start.column;\n    return index; \n  }\n  function log (name, args) {\n    var mess = name+\" \"+locate(args[args.length-1]);\n    for (var i=0; i<args.length-1; i++)\n      mess += (typeof args[i] === \"function\") ? \" [function \" + args[i].name + \"]\" : \" \" + args[i];\n    console.log(mess);\n  }\n} ());\n\n"}, editors.master);
   select(document.getElementById("target-select"), {"Array.js":"\n(function () {\n  if ([1,2,3][0] !== 1) { throw 'Array' }\n} ())\n","Binary.js":"\n(function () {\n  if (1+2 !== 3) { throw 'Binary' }\n} ())\n","Block.js":"\n(function () {\n  {}\n  {var x=1; x=2; x=3}\n  if (x !== 3) { throw 'Block' }\n} ())\n","Break.js":"\n(function () {\n  a:{\n    break a\n    throw 'Break'\n  }\n} ())\n\n","Call.js":"\n(function () {\n  function f () { return 1 }\n  if (f() !== 1) { throw 'Call' }\n} ())\n","Conditional.js":"\n(function () {\n  if ((true?1:2) !== 1) { throw 'Conditional1' }\n  if ((false?1:2) !== 2) { throw 'Conditional2' }\n} ())\n","Continue.js":"\n(function () {\n  var b=true\n  while (b) {\n    b=false\n    continue\n    throw 'Continue'\n  }\n} ())\n","Declaration.js":"\n(function () {\n  var x,y=1\n  x\n  if (y !== 1) { throw 'Declaration' }\n} ())\n","DeclarationFor.js":"\n(function () {\n  for (var i=0; i<3; i++) {}\n  if (i !== 3) {throw 'DeclarationFor' }\n} ())\n","DeclarationForIn.js":"\n(function () {\n  for (var k in {a:1}) {}\n  if (k !== 'a') { throw 'DeclarationForIn' }  \n} ())\n","Definition.js":"\n(function () {\n  f()\n  function f () {}\n} ())\n","DoWhile.js":"\n(function () {\n  var i=0\n  do { i++ } while (i < 3)\n  if (i !== 3) { throw 'DoWhile' }\n} ())\n","Empty.js":"\n(function () {\n  ;\n} ())\n","EvalCall.js":"\n(function () {\n  var x = 1\n  if(eval('x') !== 1) { throw 'EvalCall' }\n} ())\n","Expression.js":"\n(function () {\n  1;\n} ())\n","For.js":"\n(function () {\n  var i\n  for (i=0; i<3; i++) {}\n  if (i !== 3) { throw 'For' }\n} ())\n","Function.js":"\n(function () {\n  var f = function () { return 1 }\n  if (f()!==1) { throw 'Function' }\n} ())\n","Identifier.js":"\n(function () {\n  var x = 1\n  if (x !== 1) { throw 'Identifier' }\n} ())\n","IdentifierAssignment.js":"\n(function () {\n  var x\n  x = 1\n  if (x !== 1) { throw 'IdentifierAssignment1' }\n  x += 2\n  if (x !== 3) { throw 'IdentifierAssignment2' }\n} ())\n","IdentifierDelete.js":"\n(function () {\n  var o = {a:1}\n  var x\n  with (o) {\n    if (delete x) { throw 'IdentifierDelete1' }\n    if (! delete a) { throw 'IdentifierDelete2' }\n    if (! delete a$strange$id) { throw 'IdentifierDelete3' }\n  }\n  if ('a' in o) { throw 'IdentifierDelete4' }\n} ())\n","IdentifierForIn.js":"\n(function () {\n  var k\n  for (k in {a:1}) {}\n  if (k !== 'a') { throw 'IdentifierForIn' }\n} ())\n","IdentifierTypeof.js":"\n(function () {\n  if (typeof 1 !== 'number') { throw 'Typeof2' }\n  if (typeof a$very$strange$id !== 'undefined') { throw 'Typeof1' }\n} ())\n","IdentifierUpdate.js":"\n(function () {\n  var x = 1\n  if (x++ !== 1) { throw 'IdentifierUpdate1' }\n  if (++x !== 3) { throw 'IdentifierUpdate2' }\n} ())\n","If.js":"\n(function () {\n  if (true) {} else { throw 'If1' }\n  if (false) { throw 'If2' } else {}\n} ())\n","Label.js":"\n(function () {\n  a:{\n    break a\n    throw 'Label'\n  }\n} ())\n","Literal.js":"\n(function () {\n  null;\n  true;\n  false;\n  1;\n  -1;\n  'a';\n  /abc/g;\n} ())\n","Logical.js":"\n(function () {\n  if ((false||1) !== 1) { throw 'Logical1' }\n  if ((true&&1) !== 1) { throw 'Logical2' }\n} ())\n","Member.js":"\n(function () {\n  if ({a:1}.a !== 1) { throw 'Member' }\n} ())\n","MemberAssignment.js":"\n(function () {\n  var o = {}\n  o.a = 1\n  if (o.a !== 1) { throw 'MemberAssignment1' }\n  o.a += 2\n  if (o.a !== 3) { throw 'MemberAssignment2' }\n} ())\n","MemberCall.js":"\n(function () {\n  var o = {\n    f: function () { if (this !== o) { throw 'MemberCall' } }\n  }\n  o.f()\n} ())\n","MemberDelete.js":"\n(function () {\n  var o = {a:1}\n  delete o.a\n  if ('a' in o) { throw 'MemberDelete' }\n} ())\n","MemberForIn.js":"\n(function () {\n  var o = {}\n  for (o.a in {a:1}) {}\n  if (o.a !== 'a') { throw 'MemberForin' }\n} ())\n","MemberUpdate.js":"\n(function () {\n  var o = {a:1}\n  if (o.a++ !== 1) { throw 'MemberUpdate1' }\n  if (++o.a !== 3) { throw 'MemberUpdate2' }\n} ())\n","New.js":"\n(function () {\n  var o = {}\n  function F () { return o }\n  if (new F() !== o) { throw 'New' }\n} ())\n","Object.js":"\n(function () {\n  var o = {\n    a: 1,\n    b: 2,\n    get c () { return 1 },\n    set c (v) {}\n  }\n  o.c=666\n  if (o.c!==1) { throw 'Object' }\n} ())\n","Return.js":"\n(function () {\n  function f () {\n    return\n    throw 'Return1'\n  }\n  if (f() !== undefined) { throw 'Return2'}\n} ())\n","Sequence.js":"\n(function () {\n  if ((1,2) !== 2) { throw 'Sequence' }\n} ())\n","Strict.js":"\n(function () {\n  'use strict';\n} ())\n","Switch.js":"\n(function () {\n  var i=0\n  switch (2) {\n    case 1: throw 'Switch1';\n    case 2: i++;\n    default:\n      i++;\n      break;\n    case 2: throw 'Switch2';\n  }\n  if(i !== 2) {throw 'Switch3' }\n} ())\n","This.js":"\n(function () {\n  var o = {\n    f:function () { if (this!==o) { throw 'This' } }\n  }\n  o.f()\n} ())\n","Throw.js":"\n(function () {\n  var c = false\n  var f = false\n  try {\n    throw 'ok'\n    throw 'BOUM'\n  }\n  catch (e) { c = e }\n  finally { f = true }\n  if (c !== 'ok') { throw 'Throw1' }\n  if (!f) { throw 'Throw2' }\n} ())\n","Unary.js":"\n(function () {\n  if (!true) { throw 'Unary' }\n} ())\n","While.js":"\n(function () {\n  var i=0\n  while (i < 3) { i++ }\n  if (i !== 3) { throw 'While' }\n} ())\n","With.js":"\n(function () {\n  with ({a:1}) {\n    if (a!==1) { throw 'With' }\n  }\n} ())\n"}, editors.target);
   document.getElementById("run-button").onclick = function () {
     try {
@@ -10084,7 +10064,7 @@ module.exports = function () {
   };
 };
 
-},{"../util.js":10,"/Users/soft/Desktop/workspace/aran/glitterdust/main.js":1,"js-beautify":6}]},{},[]);
+},{"../util.js":9,"/Users/soft/Desktop/workspace/aran/glitterdust/main.js":1,"js-beautify":5}]},{},[]);
 
 window.onload = require('glitterdust');</script>
   </head>

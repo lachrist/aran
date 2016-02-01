@@ -1,3 +1,29 @@
-var Instrument = require('./instrument.js');
-var setup = "(function (aran) {\n\n  if (aran.__setup__)\n     return;\n  aran.__setup__ = true;\n\n  var defineProperties = Object.defineProperties;\n\n  aran.__apply__ = function (fct, ths, args) { return fct.apply(ths, args) };\n  aran.__apply__ = typeof Reflect === \"undefined\" ? aran.__apply__ : Reflect.apply;\n\n  aran.__enumerate__ = function (obj) {\n    var arr = [];\n    for (var str in obj)\n      arr[arr.length] = str;\n    return arr;\n  };\n  aran.__enumerate__ = typeof Reflect === \"undefined\" ? aran.__enumerate__ : Reflect.enumerate;\n\n  aran.__eval__ = eval;\n\n  aran.__object__ = function (arr) {\n    var obj1 = {};\n    for (var i=0; i<arr.length; i++) {\n      if (!obj1[arr[i][0]])\n        obj1[arr[i][0]] = {enumerate:true, configurable: true}\n      var obj2 = obj1[arr[i][0]];\n      if (arr[i][1] === \"init\") {\n        (delete obj2.get, delete obj2.set);\n        (obj2.writable = true, obj2.value = arr[i][2]);\n      } else {\n        (delete obj2.writable, delete obj2.value);\n        obj2[arr[i][1]] = arr[i][2];\n      }\n    }\n    return defineProperties({}, obj1);\n  }\n\n  aran.__search__ = function (ast, idx) {\n    // console.log((ast && ast.index) + \" \" + idx);\n    // if (idx === 7 && ast && ast.type === \"IfStatement\")\n    //   debugger;\n    if (ast && typeof ast === \"object\") {\n      if (ast.index === idx)\n        return ast;\n      if (!ast.index || (ast.index < idx && ast.maxIndex >= idx)) {\n        for (var k in ast) {\n          if (k !== \"loc\" && k !== \"range\") {\n            var tmp = aran.__search__(ast[k], idx);\n            if (tmp)\n              return tmp;\n          }\n        }\n      }\n    }\n  };\n\n} (ARAN));";
-module.exports = function (options, code) { return (options.nosetup ? '' : setup.replace('ARAN', function () { return options.global || 'aran'})) + Instrument(options, code) };
+
+var Fs = require("fs");
+var Browserify = require("browserify");
+var Instrument = require("./instrument.js");
+var Otiluke = require("otiluke");
+
+// options: {
+//   analysis: String,
+//   namespace: String,
+//   traps: [String],
+//   loc: Boolean,
+//   range: Boolean,
+//   filter: Function,
+//   port: Number,
+//   main: Path,
+// }
+module.exports = function (options) {
+  options.namespace = options.namespace || "aran";
+  var instrument = Instrument(options);
+  if (!options.port && !options.main)
+    return instrument;
+  Otiluke({
+    intercept: function (url) {
+      return (options.filter && !options.filter(url)) ? null : instrument.bind(null, url);
+    },
+    port: options.port,
+    main: options.main
+  });
+}

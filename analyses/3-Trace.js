@@ -2,6 +2,7 @@
 // This analysis traps everything, logs everything and transparently forwards all operations //
 
 var aran = {};
+(function () { return this } ()).aran = aran;
 
 // General //
 aran.Strict = function (i) { };
@@ -18,7 +19,7 @@ aran.Leave = function (i) { };
 
 // Apply //
 aran.apply = function (f, t, xs, i) { return f.apply(t, xs) };
-aran.construct = function (c, xs, i) { return new c(...xs) };
+//aran.construct = function (c, xs, i) { return new c(...xs) };
 aran.Arguments = function (xs, i) { };
 aran.return = function (x, i) { return x };
 aran.eval = function (x, i) { return x };
@@ -44,21 +45,44 @@ aran.catch = function (v, x, i) { return x };
 aran.Finally = function (i) { };
 
 (function () {
-  var tree;
-  function log (trap, xs) {
-    var n = aran.__search__(tree, xs[xs.length-1]);
-    var s = trap+" "+n.type+"@"+n.loc.start.line+"-"+n.loc.start.column;
-    for (var i=0; i<xs.length-1; i++)
-      s += (typeof xs[i] === "function") ? " [function "+xs[i].name+"]" : " "+String(xs[i]);
-    console.log(s);
+  function search (ast, idx) {
+    if (ast && typeof ast === "object") {
+      if (ast.index === idx)
+        return ast;
+      if (!ast.index || (ast.index < idx && ast.maxIndex >= idx)) {
+        for (var k in ast) {
+          if (k !== "loc" && k !== "range") {
+            var tmp = search(ast[k], idx);
+            if (tmp)
+              return tmp;
+          }
+        }
+      }
+    }
   }
-  Object.keys(aran).forEach(function (k) {
-    var trap = aran[k];
-    aran[k] = function () {
-      log(k, arguments);
+  Object.keys(aran).forEach(function (name) {
+    var trap = aran[name];
+    aran[name] = function () {
+      log(name, arguments);
       return trap.apply(null, arguments);
     };
   });
-  aran.Ast = function (x, i) { tree = x };
+  var sources = [];
+  aran.Ast = function (ast, url) { sources.push({url:url, ast:ast}) };
+  function locate (index) {
+    var node;
+    for (var i=0; i<sources.length; i++)
+      if (node = search(sources[i].ast, index))
+        return node.type
+          + "@" + sources[i].url
+          + "#" + node.loc.start.line + "-" + node.loc.start.column;
+    return index; 
+  }
+  function log (name, args) {
+    var mess = name+" "+locate(args[args.length-1]);
+    for (var i=0; i<args.length-1; i++)
+      mess += (typeof args[i] === "function") ? " [function " + args[i].name + "]" : " " + args[i];
+    console.log(mess);
+  }
 } ());
 

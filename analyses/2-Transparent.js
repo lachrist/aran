@@ -2,6 +2,7 @@
 // This analysis traps everything and transparently forwards all operations //
 
 var aran = {};
+(function () { return this } ()).aran = aran;
 
 // General //
 aran.Ast = function (x, i) { };
@@ -19,7 +20,7 @@ aran.Leave = function (i) { };
 
 // Apply //
 aran.apply = function (f, t, xs, i) { return f.apply(t, xs) };
-aran.construct = function (c, xs, i) { return new c(...xs) };
+// aran.construct = function (c, xs, i) { return new c(...xs) };
 aran.Arguments = function (xs, i) { };
 aran.return = function (x, i) { return x };
 aran.eval = function (x, i) { return x };

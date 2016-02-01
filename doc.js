@@ -68,21 +68,31 @@ process.stdout.write(repeat("-", 25)+"|");
 process.stdout.write(traps.map(function(t) { return ":"+repeat("-", t.length)+":" }).join("|"));
 process.stdout.write("\n");
 tree.body.forEach(function (node) {
-  if (node.type === "ExpressionStatement"
-      && node.expression.type === "AssignmentExpression"
-      && node.expression.operator === "="
-      && node.expression.left.type === "MemberExpression"
-      && node.expression.left.object.type === "Identifier"
-      && node.expression.left.object.name === "visitors"
-      && !node.expression.left.computed) {
+  var trap = extract(node);
+  if (trap) {
     var ts = visit(node.expression.right);
-    process.stdout.write(pad(backquote(node.expression.left.property.name), 25)+"|");
+    process.stdout.write(pad(backquote(trap), 25)+"|");
     process.stdout.write(traps.map(function (t) {
       return pad(ts.indexOf(t) === -1 ? "" : " X", t.length+2);
     }).join("|"));
     process.stdout.write("\n");
   }
 });
+
+function extract (node) {
+  if (node.type === "ExpressionStatement") {
+    node = node.expression;
+    if (node.type === "AssignmentExpression" && node.operator === "=") {
+      node = node.left;
+      if (node.type === "MemberExpression" && !node.computed && node.object.type === "Identifier") {
+        if (node.object.name === "visitors")
+          return node.property.name;
+        if (node.object.name === "module" && node.property.name === "exports")
+          return "Program";
+      }
+    }
+  }
+}
 
 function backquote (s) { return "`"+s+"`" }
 

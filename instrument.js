@@ -9,29 +9,63 @@
 // However, this transformation is safe because the body of the above structure cannot be a
 // variable declaration (see http://www.ecma-international.org/ecma-262/6.0/#sec-statements).
 
-// Code generation guide line:
-// 1) The beginning of a statement may directly be a letter
-
 var Esprima = require("esprima");
-var Trap = require("./trap.js");
+var Traps = require("./traps.js");
 
-module.exports = function (options, code) {
+var nid = 0;
+var vid = 0;
+
+// options: {namespace:String, analysis:String, traps:[String], loc:Boolean, range:Boolean}
+// TODO switch __apply__ to Reflect.apply when supported enough 
+module.exports = function (options) {
+  var str = options.namespace || "aran";
   var ctx = {
-    counter: options.offset || 0,
-    global: options.global || "aran",
-    traps: Trap(options.traps || []),
-    loop: "",
-    temporals: [],
-    hoisted: {closure:"", block:""}
+    traps: Traps(str, options.traps),
+    hide: function () {
+      var res = str + ++vid;
+      this.hidden.push(res);
+      return res;
+    },
+    accessor: ["function (arr) {",
+      "var obj = {};",
+      "for (var i=0; i<arr.length; i++) {",
+        "if (!obj[arr[i].key])",
+          "obj[arr[i].key] = {enumerate:true, configurable: true};",
+        "if (arr[i].kind === 'init') {",
+          "(delete obj[arr[i].key].get, delete obj[arr[i].key].set);",
+          "(obj[arr[i].key].writable = true, obj[arr[i].key].value = arr[i].value);",
+        "} else {",
+          "(delete obj[arr[i].key].writable, delete obj[arr[i].key].value);",
+          "obj[arr[i].key][arr[i].kind] = arr[i].value;",
+        "}",
+      "}",
+      "return " + str + ".__defineProperties__({}, obj);",
+    "}"].join("")
   };
-  var ast = Esprima.parse(code, {loc:options.loc, range:options.range});
-  return visit(ctx, ast);
-};
+  return function (url, code) {
+    (ctx.loop = "", ctx.hidden = [], ctx.hoisted = {closure:"", block:""});
+    var ast = Esprima.parse(code, {loc:options.loc, range:options.range});
+    var bin = ast.body.length && strict(ast.body[0]);
+    ast.index = ++nid;
+    var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
+    ast.maxIndex = nid;
+    return (bin ? "'use strict';" : "")
+      + str + ".__eval__=" + str + ".__eval__||eval;"
+      + str + ".__apply__=" + str + ".__apply__||function(f,t,xs){return f.apply(t,xs)};"
+      + str + ".__defineProperties__=" + str + ".__defineProperties__||Object.defineProperties;"
+      + ctx.traps.Ast(JSON.stringify(ast), JSON.stringify(url))
+      + (bin ? ctx.traps.Strict(ast.index) : "")
+      + (ctx.hidden.length ? "var "+ctx.hidden.join(",")+";" : "")
+      + ctx.hoisted.closure
+      + ctx.hoisted.block
+      + arr.join("");
+  }
+}
 
 function visit (ctx, ast) {
-  ast.index = ++ctx.counter;
+  ast.index = ++nid;
   var res = visitors[ast.type](ctx, ast);
-  ast.maxIndex = ctx.counter;
+  ast.maxIndex = nid;
   return res;
 };
 
@@ -40,19 +74,6 @@ var visitors = {};
 ////////////////
 // Statements //
 ////////////////
-
-visitors.Program = function (ctx, ast) {
-  var bin = ast.body.length && strict(ast.body[0]);
-  var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
-  ast.maxIndex = ctx.counter; // edgy to put here
-  return (bin ? "'use strict';" : "")
-    + ctx.traps.Ast(JSON.stringify(ast), ctx.index)
-    + (bin ? ctx.traps.Strict(ast.index) : "")
-    + (ctx.temporals.length ? "var "+ctx.temporals.join(", ")+";" : "")
-    + ctx.hoisted.closure
-    + ctx.hoisted.block
-    + arr.join("");
-};
 
 visitors.EmptyStatement = function (ctx, ast) { return "" };
 
@@ -87,28 +108,28 @@ visitors.BreakStatement = function (ctx, ast) {
 };
 
 visitors.ContinueStatement = function (ctx, ast) {
-  return "continue "+(ast.label?ast.label.name:"")+";";
+  return "continue " + (ast.label?ast.label.name:"") + ";";
 };
 
 // TODO: figure out what to do with WithStatement...
 visitors.WithStatement = function (ctx, ast) {
-  return "with("+visit(ctx, ast.object)+")"+body(ctx,ast.body);
+  return "with(" + visit(ctx, ast.object) + ")" + body(ctx,ast.body);
 };
 
 visitors.SwitchStatement = function (ctx, ast) {
-  function fct1 (ast) { return "if("+str1+")"+visit(ctx, ast) }
+  function fct1 (ast) { return "if(" + str1 + ")" + visit(ctx, ast) }
   function fct2 (cse) {
     return str1 + "=" + (cse.test ? ctx.traps.test(
       ctx.traps.binary("===", str2, visit(ctx, cse.test), ast.index),
       ast.index) : "true") + ";" + cse.consequent.map(fct1).join("");
   }
-  var str1 = temporal(ctx, ast.index, 1);
-  var str2 = temporal(ctx, ast.index, 2);
+  var str1 = ctx.hide();
+  var str2 = ctx.hide();
   var tmp1 = ctx.hoisted.block, tmp2 = ctx.loop;
-  (ctx.hoisted.block = "", ctx.loop = ctx.global+"_switch_"+ast.index);
+  (ctx.hoisted.block = "", ctx.loop = ctx.hide());
   var str3 = str1 + "=false;"
     + str2 + "=" + visit(ctx, ast.discriminant)+";"
-    + ctx.loop + ":{" + ast.cases.map(fct2).join("")+"}";
+    + ctx.loop + ":{" + ast.cases.map(fct2).join("") + "}";
   var res = ctx.traps.Enter(ast.index) + ctx.hoisted.block + str3 + ctx.traps.Leave(ast.index);
   (ctx.hoisted.block = tmp1, ctx.loop = tmp2);
   return res;
@@ -176,10 +197,7 @@ visitors.ForStatement = function (ctx, ast) {
 };
 
 visitors.ForInStatement = function (ctx, ast) {
-  var obj = {
-    enumerate: temporal(ctx, ast.index, 1),
-    counter: temporal(ctx, ast.index, 2)
-  };
+  var obj = {enumerate: ctx.hide(), counter: ctx.hide()};
   var arr = [
     obj.enumerate + "=" + ctx.traps.enumerate(visit(ctx, ast.right), ast.index) + ";",
     obj.counter + "=0;"
@@ -197,10 +215,10 @@ visitors.ForInStatement = function (ctx, ast) {
       obj.enumerate + "[" + obj.counter + "]",
       ast.index);
   } else {
-    obj.object = temporal(ctx, ast.index, 3);
+    obj.object = ctx.hide();
     arr.push(obj.object + "=" + visit(ctx, ast.left.object) + ";");
     if (ast.left.computed) {
-      obj.property = temporal(ctx, ast.index, 4);
+      obj.property = ctx.hide();
       arr.push(obj.property + "=" + visit(ctx, ast.left.property) + ";")
     }
     var str2 = ctx.traps.set(
@@ -245,17 +263,16 @@ visitors.ArrayExpression = function (ctx, ast) {
     ast.index);
 };
 
-function kindinit (ast) { return ast.kind === "init" }
 visitors.ObjectExpression = function (ctx, ast) {
   if (ast.properties.every(kindinit))
     return ctx.traps.literal("{" + ast.properties.map(function (ast) {
       return (ast.key.raw || ast.key.name) + ":" + visit(ctx, ast.value)
     }).join(",") + "}", ast.index);
-  return ctx.traps.literal(ctx.global+".__object__([" + ast.properties.map(function (prp) {
-    return "[" + (prp.key.raw || JSON.stringify(prp.key.name)) + ","
-      + JSON.stringify(prp.kind) + ","
-      + visit(ctx, prp.value) + "]";
-  }).join(",") + "])", ast.index);
+  return ctx.traps.literal("(" + ctx.accessor + "([" + ast.properties.map(function (prp) {
+      return "{key:" + (prp.key.raw || JSON.stringify(prp.key.name)) + ","
+        + "kind:" + JSON.stringify(prp.kind) + ","
+        + "value:" + visit(ctx, prp.value) + "}";
+    }).join(",") + "]))", ast.index);
 };
 
 visitors.FunctionExpression = function (ctx, ast) { return closure(ctx, ast) };
@@ -306,8 +323,8 @@ visitors.AssignmentExpression = function (ctx, ast) {
       ? ctx.traps.read(ast.left.name, ast.index)
       : ctx.traps.get(
         ast.left.computed,
-        str2 = temporal(ctx, ast.index, 1),
-        ast.left.computed ? str3 = temporal(ctx, ast.index, 2) : ast.left.property.name,
+        str2 = ctx.hide(),
+        ast.left.computed ? str3 = ctx.hide() : ast.left.property.name,
         ast.index),
       visit(ctx, ast.right),
       ast.index);
@@ -329,11 +346,11 @@ visitors.UpdateExpression = function (ctx, ast) {
     ? ctx.traps.read(ast.argument.name, ast.index)
     : ctx.traps.get(
       ast.argument.computed,
-      str2 = temporal(ctx, ast.index, 1),
-      ast.argument.computed ? str3 = temporal(ctx, ast.index, 2) : ast.argument.property.name,
+      str2 = ctx.hide(),
+      ast.argument.computed ? str3 = ctx.hide() : ast.argument.property.name,
       ast.index);
   if (!ast.prefix)
-    str1 = "(" + (str4 = temporal(ctx, ast.index, 0)) + " = " + str1 + ")";
+    str1 = "(" + (str4 = ctx.hide()) + " = " + str1 + ")";
   str5 = ctx.traps.binary(ast.operator[0], str1, ctx.traps.literal("1", ast.index), ast.index);
   str6 = ast.argument.type === "Identifier"
     ? ctx.traps.write(ast.argument.name, str5, ast.index)
@@ -349,7 +366,7 @@ visitors.UpdateExpression = function (ctx, ast) {
 };
 
 visitors.LogicalExpression = function (ctx, ast) {
-  var str1 = temporal(ctx, ast.index, 0);
+  var str1 = ctx.hide();
   var str2 = "(" + str1 + "=" + ctx.traps.test(visit(ctx, ast.left), ast.index) + ")";
   if (ast.operator === "||")
     return "(" + str2 + "?" + str1 + ":" + visit(ctx, ast.right) + ")";
@@ -381,7 +398,7 @@ visitors.CallExpression = function (ctx, ast) {
   }
   if (ast.callee.type !== "MemberExpression")
     return ctx.traps.apply(visit(ctx, ast.callee), null, args(ctx, ast), ast.index);
-  var str = temporal(ctx, ast.index, 0);
+  var str = ctx.hide();
   return ctx.traps.apply(
     ctx.traps.get(
       ast.callee.computed,
@@ -409,11 +426,11 @@ visitors.Literal = function (ctx, ast) { return ctx.traps.literal(ast.raw, ast.i
 // Helpers //
 /////////////
 
-function temporal (ctx, idx1, idx2) {
-  var res = ctx.global + "_" + idx1 + "_" + idx2;
-  ctx.temporals.push(res);
-  return res;
-}
+function kindinit (ast) { return ast.kind === "init" }
+
+function name (ast) { return ast.name }
+
+function idname (ast) { return ast.id.name }
 
 function strict (ast) {
   return ast.type === "ExpressionStatement"
@@ -425,7 +442,6 @@ function body (ctx, ast) {
   return ast.type === "BlockStatement" ? visit(ctx, ast) : "{" + visit(ctx,ast) + "}";
 }
 
-function idname (ast) { return ast.id.name }
 function declare (ctx, ast, idx) {
   var res = ast.kind + " " + ast.declarations.map(function (dec) {
     return dec.id.name + (dec.init ? "=" + visit(ctx, dec.init) : "");
@@ -437,19 +453,18 @@ function declare (ctx, ast, idx) {
   return res;
 }
 
-function name (ast) { return ast.name }
 function closure (ctx, ast) {
   var bin = ast.body.body.length && strict(ast.body.body[0]);
-  var tmp1 = ctx.hoisted, tmp2 = ctx.loop, tmp3 = ctx.temporals;
-  (ctx.hoisted = {closure:"", block: ""}, ctx.loop = "", ctx.temporals = []);
+  var tmp1 = ctx.hoisted, tmp2 = ctx.loop, tmp3 = ctx.hidden;
+  (ctx.hoisted = {closure:"", block: ""}, ctx.loop = "", ctx.hidden = []);
   var arr = (bin ? ast.body.body.slice(1) : ast.body.body).map(visit.bind(null, ctx));
-  var str = "function " + (ast.id ? ast.id.name : "")
+  var res = "function " + (ast.id ? ast.id.name : "")
     + "(" + ast.params.map(name).join(",") + "){"
     + (bin ? "'use strict';" + ctx.traps.Strict(ast.index) : "")
     + ctx.traps.Arguments(ast.index)
-    + (ctx.temporals.length ? "var " + ctx.temporals.join(",") + ";" : "")
+    + (ctx.hidden.length ? "var " + ctx.hidden.join(",") + ";" : "")
     + ctx.hoisted.closure
     + arr.join("") + "}";
-  (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.temporals = tmp3);
-  return str;
+  (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.hidden = tmp3);
+  return res;
 }
