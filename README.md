@@ -25,16 +25,31 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
 
 2. The file `analysis.js` provides an implementation of the traps `Ast` and `apply`.
    These traps are written into the global value arbitrarily named `__hidden__`.
-   The method `__search__`, defined later, is used to fetch the location of the code responsible of triggering `apply` traps.
+   The function `search`, is used to fetch the location of the code responsible of triggering `apply` traps.
 
   ```javascript
   // analysis.js //
   var __hidden__ = {};
   (function () {
+    function search (ast, idx) {
+      if (ast && typeof ast === "object") {
+        if (ast.index === idx)
+          return ast;
+        if (!ast.index || (ast.index < idx && ast.maxIndex >= idx)) {
+          for (var k in ast) {
+            if (k !== "loc" && k !== "range") {
+              var tmp = search(ast[k], idx);
+              if (tmp)
+                return tmp;
+            }
+          }
+        }
+      }
+    }
     var tree;
     __hidden__.Ast = function (x, i) { tree = x };
     __hidden__.apply = function (f, t, xs, i) {
-      var l = __hidden__.__search__(tree, i).loc.start.line;
+      var l = search(tree, i).loc.start.line;
       console.log("apply "+f.name+" at line "+l);
       return f.apply(t, xs);
     };
@@ -49,7 +64,7 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
   var Aran = require('aran');
   var analysis = fs.readFileSync(__dirname+'/analysis.js', {encoding:'utf8'});
   var target = fs.readFileSync(__dirname+'/target.js', {encoding:'utf8'});
-  var instrumented = Aran({namespace: '__hidden__', loc:true, traps:['Ast', 'apply']}, target);
+  var instrumented = Aran({namespace: '__hidden__', loc:true, traps:['Ast', 'apply']})('target.js', target);
   fs.writeFileSync(__dirname+'/__target__.js', analysis+'\n'+instrumented);
   ```
 
@@ -80,7 +95,6 @@ The top-level function exported by this node module expects the set of options b
 `traps`     | `[]`     | Array, contains the names of the traps to be called during the execution phase
 `loc`       | `false`  | Boolean, if true: ast node have line and column-based location info [see](http://esprima.org/doc/index.html)
 `range`     | `false`  | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
-`nosetup`   | `false`  | Boolean, set `true` only if sure the analysis is already setup (small performance gain)
 
 The below table introduces by example the set of traps Aran can insert.
 Traps starting with a upper-case letter are simple observers and their return values are never used while the value returned by lower-case traps may be used inside expressions.
@@ -168,7 +182,7 @@ Such interaction should be avoided because it would alter the original behavior 
 
 ## JavaScript Modules
 
-TO-DO
+Soon to be supported: HTML pages and node programs!
 
 ## Supported ECMAScript6 Features
 

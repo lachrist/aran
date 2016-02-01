@@ -5,7 +5,6 @@ var Instrument = require("./instrument.js");
 var Otiluke = require("otiluke");
 
 // options: {
-//   analysis: String,
 //   namespace: String,
 //   traps: [String],
 //   loc: Boolean,

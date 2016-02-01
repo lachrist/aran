@@ -15,7 +15,7 @@ var Traps = require("./traps.js");
 var nid = 0;
 var vid = 0;
 
-// options: {namespace:String, analysis:String, traps:[String], loc:Boolean, range:Boolean}
+// options: {namespace:String, traps:[String], loc:Boolean, range:Boolean}
 // TODO switch __apply__ to Reflect.apply when supported enough 
 module.exports = function (options) {
   var str = options.namespace || "aran";
