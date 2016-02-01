@@ -1,6 +1,5 @@
 
 var Fs = require("fs");
-var Browserify = require("browserify");
 var Instrument = require("./instrument.js");
 var Otiluke = require("otiluke");
 
