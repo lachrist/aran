@@ -64,7 +64,8 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
   var Aran = require('aran');
   var analysis = fs.readFileSync(__dirname+'/analysis.js', {encoding:'utf8'});
   var target = fs.readFileSync(__dirname+'/target.js', {encoding:'utf8'});
-  var instrumented = Aran({namespace: '__hidden__', loc:true, traps:['Ast', 'apply']})('target.js', target);
+  var aran = Aran({namespace: '__hidden__', loc:true, traps:['Ast', 'apply']});
+  var instrumented = aran('an-optional-url', target);
   fs.writeFileSync(__dirname+'/__target__.js', analysis+'\n'+instrumented);
   ```
 
