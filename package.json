@@ -1,12 +1,12 @@
 { "name" : "aran"
 , "description" : "Aran is JavaScript instrumenter for building dynamic analysis tools"
-, "version" : "1.0.5"
+, "version" : "1.0.6"
 , "author" : {"name":"Laurent Christophe", "email":"lachrist@vub.ac.be"}
 , "repository": "lachrist/aran"
 , "homepage": "http://github.com/lachrist/aran"
 , "license" : "MIT"
 , "dependencies": {"esprima":"*", "otiluke":"*"}
-, "files" : ["instrument.js", "main.js", "trap.js"]
+, "files" : ["instrument.js", "main.js", "traps.js"]
 , "main": "main.js"
 , "keywords" : ["JavaScript", "Instrumentation", "Sandboxing", "Monitoring", "Tracing", "Shadow Execution", "ECMAScript5"]
 }
