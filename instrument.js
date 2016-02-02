@@ -54,7 +54,7 @@ module.exports = function (options) {
       + str + ".__apply__=" + str + ".__apply__||function(f,t,xs){return f.apply(t,xs)};"
       + str + ".__defineProperties__=" + str + ".__defineProperties__||Object.defineProperties;"
       + ctx.traps.Ast(JSON.stringify(ast), JSON.stringify(url))
-      + (bin ? ctx.traps.Strict(ast.index) : "")
+      + (bin ? ctx.traps.Strict(ast.bounds[0]) : "")
       + (ctx.hidden.length ? "var "+ctx.hidden.join(",")+";" : "")
       + ctx.hoisted.closure
       + ctx.hoisted.block
@@ -82,10 +82,10 @@ visitors.BlockStatement = function (ctx, ast) {
   ctx.hoisted.block = "";
   var str = ast.body.map(visit.bind(null, ctx)).join("");
   var res = "{"
-    + ctx.traps.Enter(ast.index)
+    + ctx.traps.Enter(ast.bounds[0])
     + ctx.hoisted.block
     + str
-    + ctx.traps.Leave(ast.index) + "}";
+    + ctx.traps.Leave(ast.bounds[0]) + "}";
   ctx.hoisted.block = tmp;
   return res;
 }
@@ -93,17 +93,17 @@ visitors.BlockStatement = function (ctx, ast) {
 visitors.ExpressionStatement = function (ctx, ast) { return visit(ctx, ast.expression)+";" };
 
 visitors.IfStatement = function (ctx, ast) {
-  return "if(" + ctx.traps.test(visit(ctx, ast.test), ast.index) + ")" + body(ctx, ast.consequent)
+  return "if(" + ctx.traps.test(visit(ctx, ast.test), ast.bounds[0]) + ")" + body(ctx, ast.consequent)
     + (ast.alternate ? "else" + body(ctx, ast.alternate) : "")
 };
 
 visitors.LabeledStatement = function (ctx, ast) {
-  return ctx.traps.Label(ast.label.name, ast.index)
+  return ctx.traps.Label(ast.label.name, ast.bounds[0])
     + ast.label.name + ":" + visit(ctx, ast.body)
 };
 
 visitors.BreakStatement = function (ctx, ast) {
-  return ctx.traps.Break(ast.label ? ast.label.name : null, ast.index)
+  return ctx.traps.Break(ast.label ? ast.label.name : null, ast.bounds[0])
     + "break " + (ast.label ? ast.label.name : ctx.loop) + ";"
 };
 
@@ -120,8 +120,8 @@ visitors.SwitchStatement = function (ctx, ast) {
   function fct1 (ast) { return "if(" + str1 + ")" + visit(ctx, ast) }
   function fct2 (cse) {
     return str1 + "=" + (cse.test ? ctx.traps.test(
-      ctx.traps.binary("===", str2, visit(ctx, cse.test), ast.index),
-      ast.index) : "true") + ";" + cse.consequent.map(fct1).join("");
+      ctx.traps.binary("===", str2, visit(ctx, cse.test), ast.bounds[0]),
+      ast.bounds[0]) : "true") + ";" + cse.consequent.map(fct1).join("");
   }
   var str1 = ctx.hide();
   var str2 = ctx.hide();
@@ -130,7 +130,7 @@ visitors.SwitchStatement = function (ctx, ast) {
   var str3 = str1 + "=false;"
     + str2 + "=" + visit(ctx, ast.discriminant)+";"
     + ctx.loop + ":{" + ast.cases.map(fct2).join("") + "}";
-  var res = ctx.traps.Enter(ast.index) + ctx.hoisted.block + str3 + ctx.traps.Leave(ast.index);
+  var res = ctx.traps.Enter(ast.bounds[0]) + ctx.hoisted.block + str3 + ctx.traps.Leave(ast.bounds[0]);
   (ctx.hoisted.block = tmp1, ctx.loop = tmp2);
   return res;
 };
@@ -138,27 +138,27 @@ visitors.SwitchStatement = function (ctx, ast) {
 visitors.ReturnStatement = function (ctx, ast) {
   return "return " + ctx.traps.return(
     ast.argument ? visit(ctx, ast.argument) : "void 0",
-    ast.index) + ";";
+    ast.bounds[0]) + ";";
 };
 
 visitors.ThrowStatement = function (ctx, ast) {
-  return "throw " + ctx.traps.throw(visit(ctx, ast.argument), ast.index) + ";";
+  return "throw " + ctx.traps.throw(visit(ctx, ast.argument), ast.bounds[0]) + ";";
 };
 
 visitors.TryStatement = function (ctx, ast) {
   var fct = visit.bind(null, ctx);
-  return "try{" + ctx.traps.Try(ast.index) + ast.block.body.map(fct).join("") + "}"
+  return "try{" + ctx.traps.Try(ast.bounds[0]) + ast.block.body.map(fct).join("") + "}"
     + (ast.handler ? "catch(" + ast.handler.param.name + "){"
-      + ast.handler.param.name + "=" + ctx.traps.catch(ast.handler.param.name, ast.index) + ";"
+      + ast.handler.param.name + "=" + ctx.traps.catch(ast.handler.param.name, ast.bounds[0]) + ";"
       + ast.handler.body.body.map(fct).join("") + "}" : "")
-    + (ast.finalizer ? "finally{" + ctx.traps.Finally(ast.index)
+    + (ast.finalizer ? "finally{" + ctx.traps.Finally(ast.bounds[0])
       + ast.finalizer.body.map(fct).join("") + "}" : "");
 };
 
 visitors.WhileStatement = function (ctx, ast) {
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = "while(" + ctx.traps.test(visit(ctx, ast.test), ast.index) + ")"
+  var res = "while(" + ctx.traps.test(visit(ctx, ast.test), ast.bounds[0]) + ")"
     + body(ctx, ast.body);
   ctx.loop = tmp;
   return res;
@@ -168,7 +168,7 @@ visitors.DoWhileStatement = function (ctx, ast) {
   var tmp = ctx.loop;
   ctx.loop = "";
   var res = "do" + body(ctx, ast.body)
-    + "while(" + ctx.traps.test(visit(ctx, ast.test), ast.index) + ");";
+    + "while(" + ctx.traps.test(visit(ctx, ast.test), ast.bounds[0]) + ");";
   ctx.loop = tmp;
   return res;
 };
@@ -177,21 +177,21 @@ visitors.ForStatement = function (ctx, ast) {
   if (ast.init && ast.init.type === "VariableDeclaration") {
     var tmp = ctx.hoisted.block;
     ctx.hoisted.block = "";
-    var str1 = declare(ctx, ast.init, ast.index);
+    var str1 = declare(ctx, ast.init, ast.bounds[0]);
     var str2 = ctx.hoisted.block;
     ctx.hoisted.block = tmp;
   } else {
     var str1 = ast.init ? visit(ctx, ast.init) : "";
   }
-  var str3 = ast.test ? ctx.traps.test(visit(ctx, ast.test), ast.index) : "";
+  var str3 = ast.test ? ctx.traps.test(visit(ctx, ast.test), ast.bounds[0]) : "";
   var str4 = ast.update ? visit(ctx, ast.update) : "";
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = ctx.traps.Enter(ast.index)
+  var res = ctx.traps.Enter(ast.bounds[0])
     + (str2 || "")
     + "for(" + str1 + ";" + str3 + ";" + str4 + ")"
     + body(ctx, ast.body)
-    + ctx.traps.Leave(ast.index);
+    + ctx.traps.Leave(ast.bounds[0]);
   ctx.loop = tmp;
   return res;
 };
@@ -199,21 +199,21 @@ visitors.ForStatement = function (ctx, ast) {
 visitors.ForInStatement = function (ctx, ast) {
   var obj = {enumerate: ctx.hide(), counter: ctx.hide()};
   var arr = [
-    obj.enumerate + "=" + ctx.traps.enumerate(visit(ctx, ast.right), ast.index) + ";",
+    obj.enumerate + "=" + ctx.traps.enumerate(visit(ctx, ast.right), ast.bounds[0]) + ";",
     obj.counter + "=0;"
   ];
   if (ast.left.type !== "MemberExpression") {
     if (ast.left.type === "VariableDeclaration") {
       var tmp = ctx.hoisted.block;
       ctx.hoisted.block = "";
-      var str1 = declare(ctx, ast.left, ast.index);
+      var str1 = declare(ctx, ast.left, ast.bounds[0]);
       arr.unshift(ctx.hoisted.block);
       ctx.hoisted.block = tmp;
     }
     var str2 = ctx.traps.write(
       ast.left.type === "Identifier" ? ast.left.name : ast.left.declarations[0].id.name,
       obj.enumerate + "[" + obj.counter + "]",
-      ast.index);
+      ast.bounds[0]);
   } else {
     obj.object = ctx.hide();
     arr.push(obj.object + "=" + visit(ctx, ast.left.object) + ";");
@@ -226,17 +226,17 @@ visitors.ForInStatement = function (ctx, ast) {
       obj.object,
       ast.left.computed ? obj.property : ast.left.property.name,
       obj.enumerate + "[" + obj.counter + "]",
-      ast.index);
+      ast.bounds[0]);
   } 
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = ctx.traps.Enter(ast.index)
+  var res = ctx.traps.Enter(ast.bounds[0])
     + arr.join("")
     + "for(" + (str1 || "") + ";"
     + obj.counter + "<" + obj.enumerate + ".length&&(" + str2 + ",true);"
     + obj.counter + "++)"
     + body(ctx, ast.body)
-    + ctx.traps.Leave(ast.index);
+    + ctx.traps.Leave(ast.bounds[0]);
   ctx.loop = tmp;
   return res;
 };
@@ -244,35 +244,35 @@ visitors.ForInStatement = function (ctx, ast) {
 visitors.DebuggerStatement = function (ctx, ast) { return "debugger;" };
 
 visitors.FunctionDeclaration = function (ctx, ast) {
-  ctx.hoisted.closure += ctx.traps.Declare("var", [ast.id.name], ast.index)
-    + ctx.traps.write(ast.id.name, closure(ctx, ast), ast.index) + ";";
+  ctx.hoisted.closure += ctx.traps.Declare("var", [ast.id.name], ast.bounds[0])
+    + ctx.traps.write(ast.id.name, closure(ctx, ast), ast.bounds[0]) + ";";
   return "var " + ast.id.name + ";";
 };
 
-visitors.VariableDeclaration = function (ctx, ast) { return declare(ctx, ast, ast.index) + ";" };
+visitors.VariableDeclaration = function (ctx, ast) { return declare(ctx, ast, ast.bounds[0]) + ";" };
 
 /////////////////
 // Expressions //
 /////////////////
 
-visitors.ThisExpression = function (ctx, ast) { return ctx.traps.read("this", ast.index) };
+visitors.ThisExpression = function (ctx, ast) { return ctx.traps.read("this", ast.bounds[0]) };
 
 visitors.ArrayExpression = function (ctx, ast) {
   return ctx.traps.literal(
     "[" + ast.elements.map(function (elm) { return elm ? visit(ctx, elm) : "" }).join(",") + "]",
-    ast.index);
+    ast.bounds[0]);
 };
 
 visitors.ObjectExpression = function (ctx, ast) {
   if (ast.properties.every(kindinit))
     return ctx.traps.literal("{" + ast.properties.map(function (ast) {
       return (ast.key.raw || ast.key.name) + ":" + visit(ctx, ast.value)
-    }).join(",") + "}", ast.index);
+    }).join(",") + "}", ast.bounds[0]);
   return ctx.traps.literal("(" + ctx.accessor + "([" + ast.properties.map(function (prp) {
       return "{key:" + (prp.key.raw || JSON.stringify(prp.key.name)) + ","
         + "kind:" + JSON.stringify(prp.kind) + ","
         + "value:" + visit(ctx, prp.value) + "}";
-    }).join(",") + "]))", ast.index);
+    }).join(",") + "]))", ast.bounds[0]);
 };
 
 visitors.FunctionExpression = function (ctx, ast) { return closure(ctx, ast) };
@@ -287,7 +287,7 @@ visitors.UnaryExpression = function (ctx, ast) {
     return ctx.traps.unary(
       "typeof",
       "(function(){try{return " + ast.argument.name + "}catch(_){}}())",
-      ast.index);
+      ast.bounds[0]);
   if (ast.operator === "delete" && ast.argument.type === "Identifier")
     return "(delete " + ast.argument.name + ")";
   if (ast.operator === "delete" && ast.argument.type === "MemberExpression")
@@ -295,8 +295,8 @@ visitors.UnaryExpression = function (ctx, ast) {
       ast.argument.computed,
       visit(ctx, ast.argument.object),
       ast.computed ? visit(ctx, ast.argument.property) : ast.argument.property.name,
-      ast.index);
-  return ctx.traps.unary(ast.operator, visit(ctx, ast.argument), ast.index);
+      ast.bounds[0]);
+  return ctx.traps.unary(ast.operator, visit(ctx, ast.argument), ast.bounds[0]);
 };
 
 visitors.BinaryExpression = function (ctx, ast) {
@@ -304,32 +304,32 @@ visitors.BinaryExpression = function (ctx, ast) {
     ast.operator,
     visit(ctx, ast.left),
     visit(ctx, ast.right),
-    ast.index);
+    ast.bounds[0]);
 };
 
 visitors.AssignmentExpression = function (ctx, ast) {
   var str1, str2, str3;
   if (ast.operator === "=")
     return ast.left.type === "Identifier"
-      ? ctx.traps.write(ast.left.name, visit(ctx, ast.right), ast.index)
+      ? ctx.traps.write(ast.left.name, visit(ctx, ast.right), ast.bounds[0])
       : ctx.traps.set(
         ast.left.computed,
         visit(ctx, ast.left.object),
         ast.left.computed ? visit(ctx, ast.left.property) : ast.left.property.name,
-        visit(ctx, ast.right), ast.index);
+        visit(ctx, ast.right), ast.bounds[0]);
   str1 = ctx.traps.binary(
     ast.operator.substring(0, ast.operator.length-1),
     ast.left.type === "Identifier"
-      ? ctx.traps.read(ast.left.name, ast.index)
+      ? ctx.traps.read(ast.left.name, ast.bounds[0])
       : ctx.traps.get(
         ast.left.computed,
         str2 = ctx.hide(),
         ast.left.computed ? str3 = ctx.hide() : ast.left.property.name,
-        ast.index),
+        ast.bounds[0]),
       visit(ctx, ast.right),
-      ast.index);
+      ast.bounds[0]);
   return ast.left.type === "Identifier"
-    ? ctx.traps.write(ast.left.name, str1, ast.index)
+    ? ctx.traps.write(ast.left.name, str1, ast.bounds[0])
     : ctx.traps.set(
       ast.left.computed,
       "(" + str2 + "=" + visit(ctx, ast.left.object) + ")",
@@ -337,23 +337,23 @@ visitors.AssignmentExpression = function (ctx, ast) {
         ? "(" + str3 + "=" + visit(ctx, ast.left.property) + ")"
         : ast.left.property.name,
       str1,
-      ast.index);
+      ast.bounds[0]);
 };
 
 visitors.UpdateExpression = function (ctx, ast) {
   var str1, str2, str3, str4, str5, str6;
   str1 = ast.argument.type === "Identifier"
-    ? ctx.traps.read(ast.argument.name, ast.index)
+    ? ctx.traps.read(ast.argument.name, ast.bounds[0])
     : ctx.traps.get(
       ast.argument.computed,
       str2 = ctx.hide(),
       ast.argument.computed ? str3 = ctx.hide() : ast.argument.property.name,
-      ast.index);
+      ast.bounds[0]);
   if (!ast.prefix)
     str1 = "(" + (str4 = ctx.hide()) + " = " + str1 + ")";
-  str5 = ctx.traps.binary(ast.operator[0], str1, ctx.traps.literal("1", ast.index), ast.index);
+  str5 = ctx.traps.binary(ast.operator[0], str1, ctx.traps.literal("1", ast.bounds[0]), ast.bounds[0]);
   str6 = ast.argument.type === "Identifier"
-    ? ctx.traps.write(ast.argument.name, str5, ast.index)
+    ? ctx.traps.write(ast.argument.name, str5, ast.bounds[0])
     : ctx.traps.set(
       ast.argument.computed,
       "(" + str2 + "=" + visit(ctx, ast.argument.object) + ")",
@@ -361,13 +361,13 @@ visitors.UpdateExpression = function (ctx, ast) {
         ? "(" + str3 + "=" + visit(ctx, ast.argument.property) + ")"
         : ast.argument.property.name,
       str5,
-      ast.index);
+      ast.bounds[0]);
   return ast.prefix ? str6 : "(" + str6 + "," + str4 + ")";
 };
 
 visitors.LogicalExpression = function (ctx, ast) {
   var str1 = ctx.hide();
-  var str2 = "(" + str1 + "=" + ctx.traps.test(visit(ctx, ast.left), ast.index) + ")";
+  var str2 = "(" + str1 + "=" + ctx.traps.test(visit(ctx, ast.left), ast.bounds[0]) + ")";
   if (ast.operator === "||")
     return "(" + str2 + "?" + str1 + ":" + visit(ctx, ast.right) + ")";
   if (ast.operator === "&&")
@@ -376,7 +376,7 @@ visitors.LogicalExpression = function (ctx, ast) {
 };
 
 visitors.ConditionalExpression = function (ctx, ast) {
-  return "(" + ctx.traps.test(visit(ctx, ast.test), ast.index)
+  return "(" + ctx.traps.test(visit(ctx, ast.test), ast.bounds[0])
     + "?" + visit(ctx, ast.consequent)
     + ":" + visit(ctx, ast.alternate) + ")";
 };
@@ -385,29 +385,29 @@ visitors.NewExpression = function (ctx, ast) {
   return ctx.traps.construct(
     visit(ctx, ast.callee),
     ast.arguments.map(visit.bind(null, ctx)),
-    ast.index);
+    ast.bounds[0]);
 };
 
 function args (ctx, ast) { return ast.arguments.map(visit.bind(null, ctx)) }
 visitors.CallExpression = function (ctx, ast) {
   if (ast.callee.type === "Identifier" && ast.callee.name === "eval") {
     var arr = args(ctx, ast);
-    return "(" + ctx.traps.read("eval", ast.index) + "===aran.__eval__"
-      + "?" + ctx.traps.eval(arr, ast.index)
-      + ":" + ctx.traps.apply("eval", null, arr, ast.index) + ")";
+    return "(" + ctx.traps.read("eval", ast.bounds[0]) + "===aran.__eval__"
+      + "?" + ctx.traps.eval(arr, ast.bounds[0])
+      + ":" + ctx.traps.apply("eval", null, arr, ast.bounds[0]) + ")";
   }
   if (ast.callee.type !== "MemberExpression")
-    return ctx.traps.apply(visit(ctx, ast.callee), null, args(ctx, ast), ast.index);
+    return ctx.traps.apply(visit(ctx, ast.callee), null, args(ctx, ast), ast.bounds[0]);
   var str = ctx.hide();
   return ctx.traps.apply(
     ctx.traps.get(
       ast.callee.computed,
       "(" + str + "=" + visit(ctx, ast.callee.object) +")",
       ast.callee.computed ? visit(ctx, ast.callee.property) : ast.callee.property.name,
-      ast.index),
+      ast.bounds[0]),
     str,
     args(ctx, ast),
-    ast.index); 
+    ast.bounds[0]); 
 }
 
 visitors.MemberExpression = function (ctx, ast) {
@@ -415,12 +415,12 @@ visitors.MemberExpression = function (ctx, ast) {
     ast.computed,
     visit(ctx, ast.object),
     ast.computed ? visit(ctx, ast.property) : ast.property.name,
-    ast.index);
+    ast.bounds[0]);
 };
 
-visitors.Identifier = function (ctx, ast) { return ctx.traps.read(ast.name, ast.index) };
+visitors.Identifier = function (ctx, ast) { return ctx.traps.read(ast.name, ast.bounds[0]) };
 
-visitors.Literal = function (ctx, ast) { return ctx.traps.literal(ast.raw, ast.index) };
+visitors.Literal = function (ctx, ast) { return ctx.traps.literal(ast.raw, ast.bounds[0]) };
 
 /////////////
 // Helpers //
@@ -460,8 +460,8 @@ function closure (ctx, ast) {
   var arr = (bin ? ast.body.body.slice(1) : ast.body.body).map(visit.bind(null, ctx));
   var res = "function " + (ast.id ? ast.id.name : "")
     + "(" + ast.params.map(name).join(",") + "){"
-    + (bin ? "'use strict';" + ctx.traps.Strict(ast.index) : "")
-    + ctx.traps.Arguments(ast.index)
+    + (bin ? "'use strict';" + ctx.traps.Strict(ast.bounds[0]) : "")
+    + ctx.traps.Arguments(ast.bounds[0])
     + (ctx.hidden.length ? "var " + ctx.hidden.join(",") + ";" : "")
     + ctx.hoisted.closure
     + arr.join("") + "}";
