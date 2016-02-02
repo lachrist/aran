@@ -46,9 +46,9 @@ module.exports = function (options) {
     (ctx.loop = "", ctx.hidden = [], ctx.hoisted = {closure:"", block:""});
     var ast = Esprima.parse(code, {loc:options.loc, range:options.range});
     var bin = ast.body.length && strict(ast.body[0]);
-    ast.index = ++nid;
+    ast.bounds = [++nid];
     var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
-    ast.maxIndex = nid;
+    ast.bounds.push(nid);
     return (bin ? "'use strict';" : "")
       + str + ".__eval__=" + str + ".__eval__||eval;"
       + str + ".__apply__=" + str + ".__apply__||function(f,t,xs){return f.apply(t,xs)};"
@@ -63,9 +63,9 @@ module.exports = function (options) {
 }
 
 function visit (ctx, ast) {
-  ast.index = ++nid;
+  ast.bounds = [++nid];
   var res = visitors[ast.type](ctx, ast);
-  ast.maxIndex = nid;
+  ast.bounds.push(nid);
   return res;
 };
 

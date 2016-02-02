@@ -14,11 +14,8 @@ var Otiluke = require("otiluke");
 //   main: Path,
 // }
 module.exports = function (options) {
-  options.namespace = options.namespace || "aran";
   var instrument = Instrument(options);
-  if (!options.port && !options.main)
-    return instrument;
-  Otiluke({
+  return !options.analysis ? instrument : Otiluke({
     setup: options.analysis,
     port: options.port,
     main: options.main,

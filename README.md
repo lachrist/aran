@@ -10,7 +10,7 @@ In Aran, an analysis consists in a set of syntactic traps that will be triggered
 For instance, the expression `x + y` may be transformed into `aran.binary('+', x, y)` which triggers the `binary` trap.
 Below we demonstrate how to analyze a monolithic - as opposed to modularized - JavaScript program using Aran.
 
-1. The file `target.js` is a monolithic JavaScript program that is the target for our analysis:
+1. The file `target.js` is a monolithic JavaScript program that we are interested to analyze:
 
   ```javascript
   // target.js //
@@ -31,32 +31,32 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
   // apply-analysis.js //
   var __hidden__ = {};
   (function () {
-    function search (ast, idx) {
-      var tmp;
-      if (typeof ast !== "object" || ast === null)
-        return;
-      if (ast.index === idx)
-        return ast;
-      if (ast.index > idx || ast.maxIndex < idx)
-        return;
-      for (var k in ast)
-        if (tmp = search(ast[k], idx))
-          return tmp;
-    }
     var program;
     __hidden__.Ast = function (ast, url) {
       console.log("Executing " + url);
       program = ast;
     };
-    __hidden__.apply = function (f, t, xs, i) {
-      var l = search(program, i).loc.start.line;
-      console.log("Apply "+f.name+" at line "+l);
-      return f.apply(t, xs);
+    __hidden__.apply = function (fct, ths, args, idx) {
+      var num = search(program, idx).loc.start.line;
+      console.log("Apply " + fct.name + " at line " + num);
+      return fct.apply(ths, args);
     };
+    function search (ast, idx) {
+      var tmp;
+      if (typeof ast !== "object" || ast === null)
+        return;
+      if (ast.bounds && idx === ast.bounds[0])
+        return ast;
+      if (ast.bounds && (idx < ast.bounds[0] || idx > ast.bounds[1]))
+        return;
+      for (var k in ast)
+        if (tmp = search(ast[k], idx))
+          return tmp;
+    }
   } ());
   ```
 
-3. The file `main.js` creates `__target__.js` as the concatenation of the analysis and the target instrumented by the top-level function of Aran:
+3. The file `main.js` creates `__target__.js` as the concatenation of the analysis and the instrumented target code:
 
   ```javascript
   // main.js //
@@ -64,12 +64,12 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
   var Aran = require('aran');
   var analysis = fs.readFileSync(__dirname+'/apply-analysis.js', {encoding:'utf8'});
   var target = fs.readFileSync(__dirname+'/target.js', {encoding:'utf8'});
-  var aran = Aran({namespace: '__hidden__', loc:true, traps:['Ast', 'apply']});
+  var aran = Aran({namespace:'__hidden__', traps:['Ast','apply'], loc:true});
   var instrumented = aran(target, 'an-optional-script-locator');
   fs.writeFileSync(__dirname+'/__target__.js', analysis+'\n'+instrumented);
   ```
 
-In ECMAScript5-compatible environments, evaluating the content of `__target__.js` will produce the following log: 
+In ECMAScript5-compatible environments, executing `__target__.js` will produce the following log: 
 
 ```
 Executing an-optional-script-locator
@@ -91,22 +91,22 @@ Note that this is possible only because the instrumentation phase and execution/
 This section details Aran's instrumentation API.
 The top-level function exported by this node module expects the set of options below:
 
- Option     | Default                          | Value
-------------|----------------------------------|-----------------------------------------------------------------------------------------------
-`namespace` | `'aran'`                         | String, the name of the global variable to store Aran's data
-`traps`     | `[]`                             | Array, contains the names of the traps to be called later, during the execution phase
-`analysis`  | `undefined`                      | String, JavaScript code implementating the traps named in the `traps` option
-`filter`    | `function (url) { return true }` | Function, called with the url of the source to decide whether to instrument it
-`port`      | `undefined`                      | Number, a port to setup an MITM HTTP proxy for intercepting and instrumenting trafic of JavaScript code
-`main`      | `undefined`                      | String, a path to the main file of a node program, the bundled instrumented code is sent to the `stdout` 
-`loc`       | `false`                          | Boolean, if true: ast node have line and column-based location info [see](http://esprima.org/doc/index.html)
-`range`     | `false`                          | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
+ Option     | Default                               | Value
+------------|---------------------------------------|---------------------------------------------------------------------------------------------------------------------
+`namespace` | `'aran'`                              | String, the name of the global value containing Aran's traps
+`traps`     | `[]`                                  | Array, contains the names of the traps to be called later, during the execution phase
+`analysis`  | `undefined`                           | String, JavaScript code implementing the traps named in the `traps` option
+`filter`    | `function (url)`<br>`{ return true }` | Function, called with the url of a JavaScript resource to decide whether to instrument it
+`port`      | `undefined`                           | Number, a port to setup an MITM HTTP proxy for intercepting and instrumenting traffic of JavaScript code
+`main`      | `undefined`                           | String, a path to the main file of a node program, the bundled instrumented code is sent to the `stdout` 
+`loc`       | `false`                               | Boolean, if true: ast node have line and column-based location info [cf esprima](http://esprima.org/doc/index.html)
+`range`     | `false`                               | Boolean, if true: ast node have an index-based location range [cf esprima](http://esprima.org/doc/index.html)
 
 If `analysis` is not defined, the top-level function returns an instrumentation function expecting two arguments: the code to instrument and an optional script locator that will be passed to the trap `Ast` -- as demonstrated above.
 If `analysis` is defined, Aran will try to cope with one of the two module systems below.
 For more information, please refer to [Otiluke's readme](https://github.com/lachrist/otiluke)
 
-1. HTML pages if `port` is defined; an MITM proxy will be deployed intercepting and instrumenting trafic of JavaScript code.
+1. If `port` is defined, HTML pages: an MITM proxy will be deployed intercepting and instrumenting traffic of JavaScript code.
    Note that this requires to tell your browser to direct his requests to the corresponding local port and to trust the root certificate of [Otiluke](https://github.com/lachrist/otiluke).
 
 ```javascript
@@ -124,7 +124,7 @@ Aran({
 });
 ```
 
-2. Node requires if `main` is defined; the bundled instrumented program is streamed into `stdout`.
+2. If `main` is defined, node requires: the bundled instrumented program is streamed into `stdout`.
 
 ```javascript
 var fs = require('fs');
@@ -146,14 +146,16 @@ Aran({
 The below table introduces by example the set of traps Aran can insert.
 Traps starting with a upper-case letter are simple observers and their return values are never used while the value returned by lower-case traps may be used inside expressions.
 All traps are independently optional and they all receive as last argument an integer which is the index of the AST node that triggered the trap.
-The very first trap to be triggered is always `Ast` which receives the indexed AST tree of the target code before its instrumentation.
-As shown in the demonstration, the helper function `__search__(tree, index)` can be used to obtain an AST node from an index.
+The only exception to this rule is the `Ast` trap which is always triggered first and receives instead an url locating the instrumented JavaScript resource.
+The first argument given to the `Ast` trap is an [esprima](http://esprima.org) tree whose statement and expression nodes contain a `bounds` field.
+`bounds[0]` is the node index; all of the node children have their index greater than `bounds[0]` and lesser or equal than `bounds[1]`.
+This enables to search a node at a given index in `log(ast-size)` as shown in the demonstration section. 
 In the table below, `123` is used as a dummy index.
 
  Traps                              | Target              | Instrumented
 ------------------------------------|---------------------|-------------------------------------------------------
 **General**                         |                     |
-`Ast(tree, url)`                    |                     |
+`Ast(ast, url)`                     |                     |
 `Strict(index)`                     | `'use strict';`     | `'use strict';`<br>`aran.Strict(123);`
 `literal(value, index)`             | `'foo'`             | `aran.literal('foo', 123)`
 `unary(op, value, index)`           | `!x`                | `aran.unary('!', x, 123)`
