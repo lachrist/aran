@@ -6303,7 +6303,7 @@ var forwards = {};
 // Others //
 ////////////
 
-traps.Ast = function (namespace, ast, url) { return namespace+".Ast("+ast+","+JSON.stringify(url)+");" }
+traps.Ast = function (namespace, ast, url) { return namespace+".Ast("+ast+","+url+");" }
 
 traps.Strict = function (namespace, index) { return namespace+".Strict("+index+");" }
 
