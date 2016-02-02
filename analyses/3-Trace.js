@@ -46,19 +46,16 @@ aran.Finally = function (i) { };
 
 (function () {
   function search (ast, idx) {
-    if (ast && typeof ast === "object") {
-      if (ast.index === idx)
-        return ast;
-      if (!ast.index || (ast.index < idx && ast.maxIndex >= idx)) {
-        for (var k in ast) {
-          if (k !== "loc" && k !== "range") {
-            var tmp = search(ast[k], idx);
-            if (tmp)
-              return tmp;
-          }
-        }
-      }
-    }
+    var tmp;
+    if (typeof ast !== "object" || ast === null)
+      return;
+    if (ast.index === idx)
+      return ast;
+    if (ast.index > idx || ast.maxIndex < idx)
+      return;
+    for (var k in ast)
+      if (tmp = search(ast[k], idx))
+        return tmp;
   }
   Object.keys(aran).forEach(function (name) {
     var trap = aran[name];

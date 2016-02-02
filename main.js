@@ -9,6 +9,7 @@ var Otiluke = require("otiluke");
 //   loc: Boolean,
 //   range: Boolean,
 //   filter: Function,
+//   analysis: String
 //   port: Number,
 //   main: Path,
 // }
@@ -18,10 +19,13 @@ module.exports = function (options) {
   if (!options.port && !options.main)
     return instrument;
   Otiluke({
-    intercept: function (url) {
-      return (options.filter && !options.filter(url)) ? null : instrument.bind(null, url);
-    },
+    setup: options.analysis,
     port: options.port,
-    main: options.main
+    main: options.main,
+    intercept: function (url) {
+      return options.filter && !options.filter(url)
+        ? null
+        : function (code) { return instrument(code, url) };
+    }
   });
 }

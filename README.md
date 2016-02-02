@@ -25,32 +25,32 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
 
 2. The file `analysis.js` provides an implementation of the traps `Ast` and `apply`.
    These traps are written into the global value arbitrarily named `__hidden__`.
-   The function `search`, is used to fetch the location of the code responsible of triggering `apply` traps.
+   The function `search`, is used to fetch the AST node responsible of triggering the `apply` traps.
 
   ```javascript
-  // analysis.js //
+  // apply-analysis.js //
   var __hidden__ = {};
   (function () {
     function search (ast, idx) {
-      if (ast && typeof ast === "object") {
-        if (ast.index === idx)
-          return ast;
-        if (!ast.index || (ast.index < idx && ast.maxIndex >= idx)) {
-          for (var k in ast) {
-            if (k !== "loc" && k !== "range") {
-              var tmp = search(ast[k], idx);
-              if (tmp)
-                return tmp;
-            }
-          }
-        }
-      }
+      var tmp;
+      if (typeof ast !== "object" || ast === null)
+        return;
+      if (ast.index === idx)
+        return ast;
+      if (ast.index > idx || ast.maxIndex < idx)
+        return;
+      for (var k in ast)
+        if (tmp = search(ast[k], idx))
+          return tmp;
     }
-    var tree;
-    __hidden__.Ast = function (x, i) { tree = x };
+    var program;
+    __hidden__.Ast = function (ast, url) {
+      console.log("Executing " + url);
+      program = ast;
+    };
     __hidden__.apply = function (f, t, xs, i) {
-      var l = search(tree, i).loc.start.line;
-      console.log("apply "+f.name+" at line "+l);
+      var l = search(program, i).loc.start.line;
+      console.log("Apply "+f.name+" at line "+l);
       return f.apply(t, xs);
     };
   } ());
@@ -62,25 +62,26 @@ Below we demonstrate how to analyze a monolithic - as opposed to modularized - J
   // main.js //
   var fs = require('fs');
   var Aran = require('aran');
-  var analysis = fs.readFileSync(__dirname+'/analysis.js', {encoding:'utf8'});
+  var analysis = fs.readFileSync(__dirname+'/apply-analysis.js', {encoding:'utf8'});
   var target = fs.readFileSync(__dirname+'/target.js', {encoding:'utf8'});
   var aran = Aran({namespace: '__hidden__', loc:true, traps:['Ast', 'apply']});
-  var instrumented = aran('an-optional-url', target);
+  var instrumented = aran(target, 'an-optional-script-locator');
   fs.writeFileSync(__dirname+'/__target__.js', analysis+'\n'+instrumented);
   ```
 
 In ECMAScript5-compatible environments, evaluating the content of `__target__.js` will produce the following log: 
 
 ```
-apply solve at line 8
-apply delta at line 4
-apply sqrt at line 4
-apply delta at line 5
-apply sqrt at line 5
+Executing an-optional-script-locator
+Apply solve at line 8
+Apply delta at line 4
+Apply sqrt at line 4
+Apply delta at line 5
+Apply sqrt at line 5
 ```
 
 Monolithic JavaScript programs can also be analyzed through Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
-In the demo page, the global value holding the traps has to be named `aran` and trap names are deduced from looking this global value.
+In the demo page, the global value holding the traps has to be named `aran` and trap names are deduced from inspecting this global value.
 Note that this is possible only because the instrumentation phase and execution/analysis phase happen on the same process.
 
 <img src="demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
@@ -88,14 +89,59 @@ Note that this is possible only because the instrumentation phase and execution/
 ## API
 
 This section details Aran's instrumentation API.
-The top-level function exported by this node module expects the set of options below and some JavaScript code to instrument:
+The top-level function exported by this node module expects the set of options below:
 
- Option     | Default  | Value
-------------|----------|-----------------
-`namespace` | `'aran'` | String, the name of the global variable to store Aran's data
-`traps`     | `[]`     | Array, contains the names of the traps to be called during the execution phase
-`loc`       | `false`  | Boolean, if true: ast node have line and column-based location info [see](http://esprima.org/doc/index.html)
-`range`     | `false`  | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
+ Option     | Default                          | Value
+------------|----------------------------------|-----------------------------------------------------------------------------------------------
+`namespace` | `'aran'`                         | String, the name of the global variable to store Aran's data
+`traps`     | `[]`                             | Array, contains the names of the traps to be called later, during the execution phase
+`analysis`  | `undefined`                      | String, JavaScript code implementating the traps named in the `traps` option
+`filter`    | `function (url) { return true }` | Function, called with the url of the source to decide whether to instrument it
+`port`      | `undefined`                      | Number, a port to setup an MITM HTTP proxy for intercepting and instrumenting trafic of JavaScript code
+`main`      | `undefined`                      | String, a path to the main file of a node program, the bundled instrumented code is sent to the `stdout` 
+`loc`       | `false`                          | Boolean, if true: ast node have line and column-based location info [see](http://esprima.org/doc/index.html)
+`range`     | `false`                          | Boolean, if true: ast node have an index-based location range [see](http://esprima.org/doc/index.html)
+
+If `analysis` is not defined, the top-level function returns an instrumentation function expecting two arguments: the code to instrument and an optional script locator that will be passed to the trap `Ast` -- as demonstrated above.
+If `analysis` is defined, Aran will try to cope with one of the two module systems below.
+For more information, please refer to [Otiluke's readme](https://github.com/lachrist/otiluke)
+
+1. HTML pages if `port` is defined; an MITM proxy will be deployed intercepting and instrumenting trafic of JavaScript code.
+   Note that this requires to tell your browser to direct his requests to the corresponding local port and to trust the root certificate of [Otiluke](https://github.com/lachrist/otiluke).
+
+```javascript
+var fs = require('fs');
+var Aran = require('aran');
+Aran({
+  namespace: '__hidden__',
+  traps: ['Ast', 'apply'],
+  analysis: fs.readFileSync('./apply-analysis.js', {encoding:'utf8'}),
+  filter: function (url) { return url.indexOf("my-host.com") !== -1 }, 
+  port: null,
+  main: 'absolute/path/to/main.js',
+  loc: true,
+  range: false
+});
+```
+
+2. Node requires if `main` is defined; the bundled instrumented program is streamed into `stdout`.
+
+```javascript
+var fs = require('fs');
+var Aran = require('aran');
+Aran({
+  namespace: '__hidden__',
+  traps: ['Ast', 'apply'],
+  analysis: fs.readFileSync('./apply-analysis.js', {encoding:'utf8'}),
+  filter: function (url) { return url.indexOf("my-module") !== -1 },
+  port: 8080,
+  main: null,
+  loc: true,
+  range: false
+});
+```
+
+## Traps
 
 The below table introduces by example the set of traps Aran can insert.
 Traps starting with a upper-case letter are simple observers and their return values are never used while the value returned by lower-case traps may be used inside expressions.
@@ -180,10 +226,6 @@ To further investigate how traps are inserted, please try it out in Aran's [demo
 We finish this section by discussing the global value holding traps during the execution/analysis phase.
 It is the responsibility of the user to make sure that the target code does not interact with it by choosing an appropriate global name or by adding proper guards to traps such as `read`, `write` and `enumerate`.
 Such interaction should be avoided because it would alter the original behavior of the target code and the conclusion drawn during the analysis might be falsified.
-
-## JavaScript Modules
-
-Soon to be supported: HTML pages and node programs!
 
 ## Supported ECMAScript6 Features
 

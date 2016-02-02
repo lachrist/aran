@@ -42,7 +42,7 @@ module.exports = function (options) {
       "return " + str + ".__defineProperties__({}, obj);",
     "}"].join("")
   };
-  return function (url, code) {
+  return function (code, url) {
     (ctx.loop = "", ctx.hidden = [], ctx.hoisted = {closure:"", block:""});
     var ast = Esprima.parse(code, {loc:options.loc, range:options.range});
     var bin = ast.body.length && strict(ast.body[0]);

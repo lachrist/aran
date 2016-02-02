@@ -8,5 +8,10 @@ Main({
     console.log(url);
     return true;
   },
-  analysis: Fs.readFileSync(__dirname + "/analyses/2-Transparent.js", {encoding:"utf8"})
+  namespace: "gruntyyy",
+  traps: ["Ast"],
+  analysis: [
+    "var gruntyyy = {};",
+    "gruntyyy.Ast = function (ast, url) { console.log(url) };"
+  ].join("")
 });
