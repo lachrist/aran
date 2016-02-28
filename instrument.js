@@ -108,7 +108,7 @@ visitors.BreakStatement = function (ctx, ast) {
 };
 
 visitors.ContinueStatement = function (ctx, ast) {
-  return "continue " + (ast.label?ast.label.name:"") + ";";
+  return "continue " + (ast.label ? ast.label.name : "") + ";";
 };
 
 // TODO: figure out what to do with WithStatement...
@@ -466,5 +466,5 @@ function closure (ctx, ast) {
     + ctx.hoisted.closure
     + arr.join("") + "}";
   (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.hidden = tmp3);
-  return res;
+  return ctx.traps.literal(res, ast.bounds[0]);
 }

@@ -63,7 +63,7 @@ var Instrument = require("../instrument.js");
 module.exports = function (analysis, target) {
   window.eval(analysis);
   var instrument = Instrument({loc:true, traps:Object.keys(aran)});
-  return instrument(target);
+  return instrument(target, "master");
 };
 
 },{"../instrument.js":2}],2:[function(require,module,exports){
@@ -177,7 +177,7 @@ visitors.BreakStatement = function (ctx, ast) {
 };
 
 visitors.ContinueStatement = function (ctx, ast) {
-  return "continue " + (ast.label?ast.label.name:"") + ";";
+  return "continue " + (ast.label ? ast.label.name : "") + ";";
 };
 
 // TODO: figure out what to do with WithStatement...
@@ -535,7 +535,7 @@ function closure (ctx, ast) {
     + ctx.hoisted.closure
     + arr.join("") + "}";
   (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.hidden = tmp3);
-  return res;
+  return ctx.traps.literal(res, ast.bounds[0]);
 }
 
 },{"./traps.js":4,"esprima":3}],3:[function(require,module,exports){

@@ -9,16 +9,22 @@ var Otiluke = require("otiluke");
 //   loc: Boolean,
 //   range: Boolean,
 //   filter: Function,
-//   analysis: String
+//   analysis: Path,
 //   port: Number,
 //   main: Path,
 // }
 module.exports = function (options) {
-  var instrument = Instrument(options);
+  var instrument = Instrument({
+    namespace: options.namespace,
+    traps: options.traps,
+    range: options.range,
+    loc: options.loc
+  });
   return !options.analysis ? instrument : Otiluke({
     setup: options.analysis,
     port: options.port,
     main: options.main,
+    out: options.out,
     intercept: function (url) {
       return options.filter && !options.filter(url)
         ? null

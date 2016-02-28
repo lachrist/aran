@@ -107,7 +107,7 @@ If `analysis` is defined, Aran will try to cope with one of the two module syste
 For more information, please refer to [Otiluke's readme](https://github.com/lachrist/otiluke)
 
 1. If `port` is defined, HTML pages: an MITM proxy will be deployed intercepting and instrumenting traffic of JavaScript code.
-   Note that this requires to tell your browser to direct his requests to the corresponding local port and to trust the root certificate of [Otiluke](https://github.com/lachrist/otiluke).
+   Note that this requires to tell your browser to direct his requests to the corresponding local port and to trust the Otiluke's root certificate -- [cf Otiluke](https://github.com/lachrist/otiluke).
 
 ```javascript
 var fs = require('fs');
