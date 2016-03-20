@@ -220,8 +220,8 @@ visitors.TryStatement = function (ctx, ast) {
     + (ast.handler ? "catch(" + ast.handler.param.name + "){"
       + ast.handler.param.name + "=" + ctx.traps.catch(ast.handler.param.name, ast.bounds[0]) + ";"
       + ast.handler.body.body.map(fct).join("") + "}" : "")
-    + (ast.finalizer ? "finally{" + ctx.traps.Finally(ast.bounds[0])
-      + ast.finalizer.body.map(fct).join("") + "}" : "");
+    + "finally{" + ctx.traps.Finally(ast.bounds[0])
+      + (ast.finalizer ? ast.finalizer.body.map(fct).join("") : "") + "}";
 };
 
 visitors.WhileStatement = function (ctx, ast) {
