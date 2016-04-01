@@ -45,14 +45,21 @@ th, td {
     <script>require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
 var Instrument = require("../instrument.js");
+var Esprima = require("esprima");
+
+var options = {range:true, loc:true};
 
 module.exports = function (analysis, target) {
+  debugger;
   window.eval(analysis);
-  var instrument = Instrument({loc:true, traps:Object.keys(aran)});
-  return instrument(target, "master");
+  var aran = (function () { return this.aran } ());
+  var ast = Esprima.parse(target, options);
+  var instrumented = Instrument("aran", Object.keys(aran))(ast);
+  aran.Ast && aran.Ast(ast, "master");
+  return instrumented;
 };
 
-},{"../instrument.js":2}],2:[function(require,module,exports){
+},{"../instrument.js":2,"esprima":3}],2:[function(require,module,exports){
 
 // The visitors of this file either:
 //   1) visit an expression node and return an expression string
@@ -72,12 +79,11 @@ var vid = 0;
 
 // options: {namespace:String, traps:[String], loc:Boolean, range:Boolean}
 // TODO switch __apply__ to Reflect.apply when supported enough 
-module.exports = function (options) {
-  var str = options.namespace || "aran";
+module.exports = function (namespace, traps) {
   var ctx = {
-    traps: Traps(str, options.traps),
+    traps: Traps(namespace, traps),
     hide: function () {
-      var res = str + ++vid;
+      var res = namespace + ++vid;
       this.hidden.push(res);
       return res;
     },
@@ -94,21 +100,19 @@ module.exports = function (options) {
           "obj[arr[i].key][arr[i].kind] = arr[i].value;",
         "}",
       "}",
-      "return " + str + ".__defineProperties__({}, obj);",
+      "return " + namespace + ".__defineProperties__({}, obj);",
     "}"].join("")
   };
-  return function (code, url) {
+  return function (ast) {
     (ctx.loop = "", ctx.hidden = [], ctx.hoisted = {closure:"", block:""});
-    var ast = Esprima.parse(code, {loc:options.loc, range:options.range});
     var bin = ast.body.length && strict(ast.body[0]);
     ast.bounds = [++nid];
     var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
     ast.bounds.push(nid);
     return (bin ? "'use strict';" : "")
-      + str + ".__eval__=" + str + ".__eval__||eval;"
-      + str + ".__apply__=" + str + ".__apply__||function(f,t,xs){return f.apply(t,xs)};"
-      + str + ".__defineProperties__=" + str + ".__defineProperties__||Object.defineProperties;"
-      + ctx.traps.Ast(JSON.stringify(ast), JSON.stringify(url))
+      + namespace + ".__eval__=" + namespace + ".__eval__||eval;"
+      + namespace + ".__apply__=" + namespace + ".__apply__||function(f,t,xs){return f.apply(t,xs)};"
+      + namespace + ".__defineProperties__=" + namespace + ".__defineProperties__||Object.defineProperties;"
       + (bin ? ctx.traps.Strict(ast.bounds[0]) : "")
       + (ctx.hidden.length ? "var "+ctx.hidden.join(",")+";" : "")
       + ctx.hoisted.closure

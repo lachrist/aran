@@ -18,11 +18,10 @@ var vid = 0;
 // options: {namespace:String, traps:[String], loc:Boolean, range:Boolean}
 // TODO switch __apply__ to Reflect.apply when supported enough 
 module.exports = function (options) {
-  var str = options.namespace || "aran";
   var ctx = {
-    traps: Traps(str, options.traps),
+    traps: Traps(options.namespace, options.traps),
     hide: function () {
-      var res = str + ++vid;
+      var res = namespace + ++vid;
       this.hidden.push(res);
       return res;
     },
@@ -39,26 +38,29 @@ module.exports = function (options) {
           "obj[arr[i].key][arr[i].kind] = arr[i].value;",
         "}",
       "}",
-      "return " + str + ".__defineProperties__({}, obj);",
+      "return " + options.namespace + ".__defineProperties__({}, obj);",
     "}"].join("")
   };
-  return function (code, url) {
+  var obj = {range:Boolean(options.range), loc:Boolean(options.loc)};
+  return function (code) {
+    var ast = Esprima.parse(code, obj);
     (ctx.loop = "", ctx.hidden = [], ctx.hoisted = {closure:"", block:""});
-    var ast = Esprima.parse(code, {loc:options.loc, range:options.range});
     var bin = ast.body.length && strict(ast.body[0]);
     ast.bounds = [++nid];
     var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
     ast.bounds.push(nid);
-    return (bin ? "'use strict';" : "")
-      + str + ".__eval__=" + str + ".__eval__||eval;"
-      + str + ".__apply__=" + str + ".__apply__||function(f,t,xs){return f.apply(t,xs)};"
-      + str + ".__defineProperties__=" + str + ".__defineProperties__||Object.defineProperties;"
-      + ctx.traps.Ast(JSON.stringify(ast), JSON.stringify(url))
-      + (bin ? ctx.traps.Strict(ast.bounds[0]) : "")
-      + (ctx.hidden.length ? "var "+ctx.hidden.join(",")+";" : "")
-      + ctx.hoisted.closure
-      + ctx.hoisted.block
-      + arr.join("");
+    return {
+      ast: ast,
+      instrumented: (bin ? "'use strict';" : "")
+        + options.namespace + ".__eval__=" + options.namespace + ".__eval__||eval;"
+        + options.namespace + ".__apply__=" + options.namespace + ".__apply__||function(f,t,xs){return f.apply(t,xs)};"
+        + options.namespace + ".__defineProperties__=" + options.namespace + ".__defineProperties__||Object.defineProperties;"
+        + (bin ? ctx.traps.Strict(ast.bounds[0]) : "")
+        + (ctx.hidden.length ? "var "+ctx.hidden.join(",")+";" : "")
+        + ctx.hoisted.closure
+        + ctx.hoisted.block
+        + arr.join("")
+    };
   }
 }
 

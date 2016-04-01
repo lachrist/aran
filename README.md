@@ -8,83 +8,113 @@ To install, run `npm install aran`.
 
 In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.
 For instance, the expression `x + y` may be transformed into `aran.binary('+', x, y)` which triggers the `binary` trap.
-Below we demonstrate how to analyze a monolithic - as opposed to modularized - JavaScript program using Aran.
+The best way to get familiar with Aran is by toying with its [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
+The target textarea expects a JavaScript program to analyze while tha master textarea expects the analysis implementing the trap functions.
+In the demo page, the global object containing the trap functions has to be called `aran` but this constraint is released in the rest of the API.
 
-1. The file `target.js` is a monolithic JavaScript program that we are interested to analyze:
+<img src="demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
 
-  ```javascript
-  // target.js //
-  function delta (a, b, c) { return  b * b - 4 * a * c}
-  function solve (a, b, c) {
-    var s1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);
-    var s2 = ((-b) - Math.sqrt(delta(a, b, c))) / (2 * a);
-    return [s1, s2];
-  }
-  solve(1, -5, 6);
-  ```
+## Aran's basic usage
 
-2. The file `analysis.js` provides an implementation of the traps `Ast` and `apply`.
-   These traps are written into the global value arbitrarily named `__hidden__`.
-   The function `search`, is used to fetch the AST node responsible of triggering the `apply` traps.
+We now demonstrate the basic API of Aran by logging function calls within a program solving the equation: `x^2 - 5*x + 6 = 0`.
+Because Aran is fully written in JavaScript, the instrumentation can happen on the same process as analysis.
+In that case we say that the instrumentation is online.
+By opposition, we refer to offline instrumentation when the instrumentation happens on separate process as the analysis.
 
-  ```javascript
-  // apply-analysis.js //
-  var __hidden__ = {};
-  (function () {
-    var program;
-    __hidden__.Ast = function (ast, url) {
-      console.log("Executing " + url);
-      program = ast;
-    };
-    __hidden__.apply = function (fct, ths, args, idx) {
-      var num = search(program, idx).loc.start.line;
-      console.log("Apply " + fct.name + " at line " + num);
-      return fct.apply(ths, args);
-    };
-    function search (ast, idx) {
-      var tmp;
-      if (typeof ast !== "object" || ast === null)
-        return;
-      if (ast.bounds && idx === ast.bounds[0])
-        return ast;
-      if (ast.bounds && (idx < ast.bounds[0] || idx > ast.bounds[1]))
-        return;
-      for (var k in ast)
-        if (tmp = search(ast[k], idx))
-          return tmp;
-    }
-  } ());
-  ```
+```javascript
+// target.js //
+function delta (a, b, c) { return  b * b - 4 * a * c}
+function solve (a, b, c) {
+  var s1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);
+  var s2 = ((-b) - Math.sqrt(delta(a, b, c))) / (2 * a);
+  return [s1, s2];
+}
+solve(1, -5, 6);
+```
 
-3. The file `main.js` creates `__target__.js` as the concatenation of the analysis and the instrumented target code:
+### Offline Instrumentation
 
-  ```javascript
-  // main.js //
-  var fs = require('fs');
-  var Aran = require('aran');
-  var analysis = fs.readFileSync(__dirname+'/apply-analysis.js', {encoding:'utf8'});
-  var target = fs.readFileSync(__dirname+'/target.js', {encoding:'utf8'});
-  var aran = Aran({namespace:'__hidden__', traps:['Ast','apply'], loc:true});
-  var instrumented = aran(target, 'an-optional-script-locator');
-  fs.writeFileSync(__dirname+'/__target__.js', analysis+'\n'+instrumented);
-  ```
+First we explore offline instrumentation.
+The analysis consists in declaring a global variable named `__hidden__` which is unlikely to be accessed by the program under analysis.
+This global variable holds an object that contains the trap functions that will be called later during the analysis.
+Here, the only implemented trap is `apply` which is triggered on function calls.
 
-In ECMAScript5-compatible environments, executing `__target__.js` will produce the following log: 
+```javascript
+// analysis-offline.js //
+(function () {
+  this.__hidden__ = {};
+  __hidden__.apply = function (f, t, xs) {
+    console.log("Apply " + f.name);
+    return f.apply(t, xs);
+  };
+} ());
+```
+
+To perform the instrumentation, `Aran` needs to know the name of the global variable holding the trap functions as well as the traps to be inserted.
+The returned instrumentation function simply replaces language constructs with call to traps functions; it expects JavaScript code and returns its instrumented version as well as its [AST](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API).
+To create a standalone analysis, it suffices to concatenate the analysis with the instrumented code.
+
+```javascript
+var Aran = require('aran');
+var fs = require('fs');
+var target = fs.readFileSync('./target.js', 'utf8');
+var analysis = fs.readFileSync('./analysis-offline.js');
+var aran = Aran({namespace:'__hidden__', traps:['apply']});
+var result = aran(target);
+fs.writeFileSync('./__instrumented__.js', analysis + '\n' + result.instrumented);
+```
+
+Executing the sandalone analysis `__instrumented__.js` in any compatible [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) environment produces the following log:
 
 ```
-Executing an-optional-script-locator
+Apply solve
+Apply delta
+Apply sqrt
+Apply delta
+Apply sqrt
+```
+
+### Online Instrumentation
+
+The problem with the previous offline instrumentation is that the analysis has no means to communicate with the instrumentation process.
+We identified two cases where the analysis would need to communicate with the instrumentation process:
+1. The analysis needs to access code locations that triggered traps.
+2. If the program under analysis peforms dynamic code evaluation, the analysis might requires to instrument this code as well.
+A convenient way to solve these issues is to make the instrumentation happens on the same process as the analysis:
+
+```javascript
+(function () {
+  var Aran = require('aran');
+  var aran = Aran({namespace:'__hidden__', traps:['apply']});
+  var target = require('fs').readFileSync('./target.js', 'utf8');
+  var asts = [];
+  function instrument (code) {
+    var result = aran(code);
+    asts.push(result.ast);
+    return result.instrumented;
+  }
+  this.__hidden__ = {};
+  __hidden__.eval = function (x) { return instrument(x) };
+  __hidden__.apply = function (f, t, xs, i) {
+    for (var j = 0; j < asts.length; j++)
+      var node = node || asts[j].search(i);
+    console.log('Apply ' + fct.name + ' at line ' + node.loc.start.line);
+    return f.apply(t, xs);
+  };
+  this.eval(instrumented(target));
+} ());
+```
+
+Executing this last script in Node produces the below log.
+Note that the Aran module can easily be ported to browsers using bundling libraries such as [Browserify](http://browserify.org/).
+
+```
 Apply solve at line 8
 Apply delta at line 4
 Apply sqrt at line 4
 Apply delta at line 5
 Apply sqrt at line 5
 ```
-
-Monolithic JavaScript programs can also be analyzed through Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
-In the demo page, the global value holding the traps has to be named `aran` and trap names are deduced from inspecting this global value.
-Note that this is possible only because the instrumentation phase and execution/analysis phase happen on the same process.
-
-<img src="demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
 
 ## API
 

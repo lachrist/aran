@@ -5,7 +5,7 @@
 , "repository": "lachrist/aran"
 , "homepage": "http://github.com/lachrist/aran"
 , "license" : "MIT"
-, "dependencies": {"esprima":"*", "otiluke":"*"}
+, "dependencies": {"esprima":"*", "otiluke":"*", "browserify":"*"}
 , "files" : ["instrument.js", "main.js", "traps.js"]
 , "main": "main.js"
 , "keywords" : ["JavaScript", "Instrumentation", "Sandboxing", "Monitoring", "Tracing", "Shadow Execution", "ECMAScript5"]
