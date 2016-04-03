@@ -9,8 +9,8 @@ To install, run `npm install aran`.
 In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.
 For instance, the expression `x + y` may be transformed into `aran.binary('+', x, y)` which triggers the `binary` trap.
 The best way to get familiar with Aran is by toying with its [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
-The target textarea expects a JavaScript program to analyze while tha master textarea expects the analysis implementing the trap functions.
-In the demo page, the global object containing the trap functions has to be called `aran` but this constraint is released in the rest of the API.
+The target editor expects a JavaScript program to analyze while the master editor expects the analysis implementing the trap functions.
+In the demo page, the global variable referencing traps has to be called `aran` but this constraint is released in the API.
 
 <img src="demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
 
@@ -19,7 +19,7 @@ In the demo page, the global object containing the trap functions has to be call
 We now demonstrate the basic API of Aran by logging function calls within a program solving the equation: `x^2 - 5*x + 6 = 0`.
 Because Aran is fully written in JavaScript, the instrumentation can happen on the same process as analysis.
 In that case we say that the instrumentation is online.
-By opposition, we refer to offline instrumentation when the instrumentation happens on separate process as the analysis.
+By opposition, we refer to offline instrumentation when the instrumentation happens on a separate process.
 
 ```javascript
 // target.js //
@@ -32,11 +32,11 @@ function solve (a, b, c) {
 solve(1, -5, 6);
 ```
 
-### Offline Instrumentation
+#### Offline Instrumentation
 
 First we explore offline instrumentation.
 The analysis consists in declaring a global variable named `__hidden__` which is unlikely to be accessed by the program under analysis.
-This global variable holds an object that contains the trap functions that will be called later during the analysis.
+This global variable holds an object that contains traps that will be called later during the analysis.
 Here, the only implemented trap is `apply` which is triggered on function calls.
 
 ```javascript
@@ -50,8 +50,8 @@ Here, the only implemented trap is `apply` which is triggered on function calls.
 } ());
 ```
 
-To perform the instrumentation, `Aran` needs to know the name of the global variable holding the trap functions as well as the traps to be inserted.
-The returned instrumentation function simply replaces language constructs with call to traps functions; it expects JavaScript code and returns its instrumented version as well as its [AST](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API).
+To perform instrumentation, Aran needs to know the name of the global variable referencing the traps as well as the names of the traps implemented by the user.
+The returned instrumentation function simply replaces language constructs with call to traps functions; it expects JavaScript code and returns its instrumented version.
 To create a standalone analysis, it suffices to concatenate the analysis with the instrumented code.
 
 ```javascript
@@ -74,7 +74,7 @@ Apply delta
 Apply sqrt
 ```
 
-### Online Instrumentation
+#### Online Instrumentation
 
 The problem with the previous offline instrumentation is that the analysis has no means to communicate with the instrumentation process.
 We identified two cases where the analysis would need to communicate with the instrumentation process:
