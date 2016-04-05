@@ -1,5 +1,4 @@
-var Aran = require("../../main.js");
-var fs = require("fs");
+var Aran = require("aran");
 global.__hidden__ = {};
 __hidden__.apply = function (f, t, xs, i) {
   var node = aran.search(i);
@@ -7,5 +6,4 @@ __hidden__.apply = function (f, t, xs, i) {
   return f.apply(t, xs);
 };
 var aran = Aran({namespace:"__hidden__", traps:Object.keys(__hidden__), loc:true});
-var target = fs.readFileSync("../target/monolithic.js", "utf8");
-global.eval(aran.instrument(target));
+module.exports = aran.instrument;
