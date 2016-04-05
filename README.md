@@ -16,19 +16,7 @@ In the demo page, the global variable referencing traps has to be called `aran` 
 
 ## Usage
 
-In the [./usage] We now demonstrate the basic API of Aran by logging function calls within a program solving the polynomial equation: `x^2 - 5*x + 6 = 0`.
-Because Aran is fully written in JavaScript, the instrumentation can happen on the same process as the JavaScript program being analyzed.
-In that case we say that the instrumentation is online.
-By opposition, we refer to offline instrumentation when the instrumentation happens on a separate process.
-Three different usage examples are provided in this repository:
-
-1. [Offline monolithic instrumentation](usage/offline-monolithic)
-2. [Online monolithic instrumentation](usage/online-monolithic)
-3. [Online modular instrumentation](usage/online-modular)
-
-
 ```javascript
-// target.js //
 function delta (a, b, c) { return  b * b - 4 * a * c }
 function solve (a, b, c) {
   var s1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);
@@ -38,167 +26,18 @@ function solve (a, b, c) {
 solve(1, -5, 6);
 ```
 
-### Offline Instrumentation
+To demonstrate how to use Aran we propose to log the function calls inside a program solving the polynomial equation: `x^2 - 5*x + 6 = 0`.
+Because Aran is fully written in JavaScript, the instrumentation can happen on the same process as the JavaScript program being analyzed.
+In that case we say that the instrumentation is online.
+By opposition, we refer to offline instrumentation when the instrumentation happens on a separate process.
+Three different use examples are provided in this repository:
 
-First we explore offline instrumentation.
-The analysis consists in declaring a global variable named `__hidden__` which is unlikely to be accessed by the program under analysis.
-This global variable refers to an object containing the traps that will be called during the analysis.
-Here, the only implemented trap is `apply` which is triggered on function calls.
+1. [Offline monolithic instrumentation](usage/offline-monolithic)
+2. [Online monolithic instrumentation](usage/online-monolithic)
+3. [Online modular instrumentation](usage/online-modular)
 
-```javascript
-// analysis.js //
-(function () {
-  this.__hidden__ = {};
-  __hidden__.apply = function (f, t, xs) {
-    console.log("Apply " + f.name);
-    return f.apply(t, xs);
-  };
-} ());
-```
-
-To perform instrumentation, Aran needs to know the name of the global variable referencing the traps as well as the names of the traps implemented by the user.
-The returned instrumentation function simply replaces language constructs with call to traps functions; it expects an [AST](https://github.com/estree/estree) and returns the corresponding instrumented JavaScript code.
-To create a standalone analysis, it suffices to concatenate the analysis with the instrumented code.
-
-```javascript
-// instrument.js //
-var Aran = require('aran');
-var fs = require('fs');
-var target = fs.readFileSync('./target.js', 'utf8');
-var analysis = fs.readFileSync('./analysis-offline.js');
-var aran = Aran({namespace:'__hidden__', traps:['apply']});
-var result = aran.instrument(target);
-fs.writeFileSync('./__instrumented__.js', analysis + '\n' + result.instrumented);
-```
-
-```javascript
-// __instrumented__.js //
-
-```
-
-Executing the sandalone analysis `__instrumented__.js` in any compatible [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) environment produces the following log:
-
-```
-Apply solve
-Apply delta
-Apply sqrt
-Apply delta
-Apply sqrt
-```
-
-### Online Instrumentation
-
-The problem with the previous offline instrumentation is that the analysis has no means to communicate with the instrumentation process.
-We identified two cases where such communication is needed:
-
-1. The analysis needs to access code locations that triggered traps.
-2. If the program under analysis peforms dynamic code evaluation, the analysis might requires to instrument this code as well.
-
-A convenient way to solve these issues is to make the instrumentation happens on the same process as the analysis.
-This enables the `eval` trap to instrument dynamic code during the analysis and the `apply` trap to access the code location where the call occured.
-Note that when `aran` is called, every node from the given AST is indexed and every time a trap is triggered an index is passed as last argument.
-The node responsible of triggering the trap can then be retrieved using the `search` method.
-
-```javascript
-(function () {
-  var Aran = require('aran');
-  var fs = require('fs');
-  this.__hidden__ = {};
-  __hidden__.eval = function (x) { return aran.instrument(x) };
-  __hidden__.apply = function (f, t, xs, i) {
-    var node = aran.search(i);
-    console.log('Apply ' + fct.name + ' at line ' + node.loc.start.line);
-    return f.apply(t, xs);
-  };
-  var aran = Aran({namespace:'__hidden__', traps:Object.keys(__hidden__)});
-  var target = fs.readFileSync('./target.js', 'utf8');
-  this.eval(instrument(target));
-} ());
-```
-
-Executing this last script in Node produces the below log.
-Note that the both Aran and Esprima can be ported to browsers using bundling libraries such as [Browserify](http://browserify.org/).
-
-```
-Apply solve at line 8
-Apply delta at line 4
-Apply sqrt at line 4
-Apply delta at line 5
-Apply sqrt at line 5
-```
-
-### Online CommonJS
-
-```javascript
-// delta.js //
-modules.exports = function delta (a, b, c) { return  b * b - 4 * a * c }
-```
-
-```javascript
-// solve.js //
-var Delta = require('./delta.js');
-module.exports = function solve (a, b, c) {
-  var s1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);
-  var s2 = ((-b) - Math.sqrt(delta(a, b, c))) / (2 * a);
-  return [s1, s2];
-}
-```
-
-```javascript
-// main.js //
-var Solve = require('./solve.js');
-Solve(1, -5, 6);
-```
-
-```javascript
-// analysis.js //
-var Aran = require('aran');
-var Esprima = require('esprima');
-var aran = Aran({namespace:'__hidden__', traps:['eval', 'apply']);
-module.exports = function (code, url) {
-  
-}
-this.__hidden__ = {};
-__hidden__.eval = function (x) { return __hidden__.instrument(x) };
-__hidden__.apply = function (f, t, xs, i) {
-  var node = __hidden__.search(i);
-  console.log('Apply ' + fct.name + ' at line ' + node.loc.start.line);
-  return f.apply(t, xs);
-};
-```
-
-```
-aran < main.js --analysis ./analysis.js --namespace __hidden__ --loc
-```
-
-### Online HTML
-
-```
-aran --port 8080 --analysis ./analysis.js --namespace __hidden__ --loc
-```
-
-
-```javascript
-(function () {
-  var Aran = require('aran');
-  var aran = Aran.commonjs({namespace:'__hidden__', main:'./main.js', analysis:''});
-  var target = fs.readFileSync('./target.js', 'utf8');
-  var asts = [];
-  function instrument (code) {
-    var ast = Esprima.parse(code, {loc:true});
-    asts.push(ast);
-    return aran(ast);
-  }
-
-  this.eval(instrumented(target));
-} ());
-```
-
-### TL;DR
-
-
-
-
+<!-- 
+## THE REST IS OUTDATED
 
 This section details Aran's instrumentation API.
 The top-level function exported by this node module expects the set of options below:
@@ -344,3 +183,4 @@ Such interaction should be avoided because it would alter the original behavior 
 ## Supported ECMAScript6 Features
 
 * Block scoping [let && const](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/let)
+ -->

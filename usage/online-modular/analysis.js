@@ -7,8 +7,10 @@ function location (index) {
   return root.source + "#" + node.loc.start.line + ":" + node.loc.start.column;
 }
 
+var evalID = 0;
+
 global.__hidden__ = {};
-__hidden__.eval = function (x, i) { return aran.instrument(x, "eval") };
+__hidden__.eval = function (x, i) { return aran.instrument(x, "eval#"+(++evalID)) };
 __hidden__.apply = function (f, t, xs, i) {
   console.log("Apply " + f.name + " @ " + location(i));
   return f.apply(t, xs);
