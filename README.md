@@ -20,6 +20,12 @@ In the [./usage] We now demonstrate the basic API of Aran by logging function ca
 Because Aran is fully written in JavaScript, the instrumentation can happen on the same process as the JavaScript program being analyzed.
 In that case we say that the instrumentation is online.
 By opposition, we refer to offline instrumentation when the instrumentation happens on a separate process.
+Three different usage examples are provided in this repository:
+
+1. [Offline monolithic instrumentation](usage/offline-monolithic)
+2. [Online monolithic instrumentation](usage/online-monolithic)
+3. [Online modular instrumentation](usage/online-modular)
+
 
 ```javascript
 // target.js //
