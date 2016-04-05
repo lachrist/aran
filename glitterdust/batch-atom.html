@@ -44,22 +44,21 @@ th, td {
 </style>
     <script>require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
-var Instrument = require("../instrument.js");
-var Esprima = require("esprima");
+var Aran = require("../main.js");
 
-var options = {range:true, loc:true};
+function load (module) {
+  if (module !== "aran")
+    throw new Error("Only 'aran' can be required here.")
+  return Aran;
+}
 
 module.exports = function (analysis, target) {
-  debugger;
-  window.eval(analysis);
-  var aran = (function () { return this.aran } ());
-  var ast = Esprima.parse(target, options);
-  var instrumented = Instrument("aran", Object.keys(aran))(ast);
-  aran.Ast && aran.Ast(ast, "master");
-  return instrumented;
+  var module = {};
+  new Function("require", "module", "exports", "global", analysis)(load, module, {}, window);
+  return module.exports(target, "target");
 };
 
-},{"../instrument.js":2,"esprima":3}],2:[function(require,module,exports){
+},{"../main.js":3}],2:[function(require,module,exports){
 
 // The visitors of this file either:
 //   1) visit an expression node and return an expression string
@@ -77,7 +76,6 @@ var Traps = require("./traps.js");
 var nid = 0;
 var vid = 0;
 
-// options: {namespace:String, traps:[String], loc:Boolean, range:Boolean}
 // TODO switch __apply__ to Reflect.apply when supported enough 
 module.exports = function (namespace, traps) {
   var ctx = {
@@ -87,6 +85,7 @@ module.exports = function (namespace, traps) {
       this.hidden.push(res);
       return res;
     },
+    eval: namespace + ".__eval__",
     accessor: ["function (arr) {",
       "var obj = {};",
       "for (var i=0; i<arr.length; i++) {",
@@ -106,25 +105,26 @@ module.exports = function (namespace, traps) {
   return function (ast) {
     (ctx.loop = "", ctx.hidden = [], ctx.hoisted = {closure:"", block:""});
     var bin = ast.body.length && strict(ast.body[0]);
-    ast.bounds = [++nid];
-    var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx));
-    ast.bounds.push(nid);
+    Object.defineProperty(ast, "__min__", {value:++nid});
+    var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx, null));
+    Object.defineProperty(ast, "__max__", {value:nid});
     return (bin ? "'use strict';" : "")
       + namespace + ".__eval__=" + namespace + ".__eval__||eval;"
       + namespace + ".__apply__=" + namespace + ".__apply__||function(f,t,xs){return f.apply(t,xs)};"
       + namespace + ".__defineProperties__=" + namespace + ".__defineProperties__||Object.defineProperties;"
-      + (bin ? ctx.traps.Strict(ast.bounds[0]) : "")
+      + (bin ? ctx.traps.Strict(ast.__min__) : "")
       + (ctx.hidden.length ? "var "+ctx.hidden.join(",")+";" : "")
       + ctx.hoisted.closure
       + ctx.hoisted.block
-      + arr.join("");
-  }
-}
+      + arr.join("")
+  };
+};
 
-function visit (ctx, ast) {
-  ast.bounds = [++nid];
+function visit (ctx, src, ast) {
+  Object.defineProperty(ast, "parent", {value:src});
+  Object.defineProperty(ast, "__min__", {value:++nid});
   var res = visitors[ast.type](ctx, ast);
-  ast.bounds.push(nid);
+  Object.defineProperty(ast, "__max__", {value:nid});
   return res;
 };
 
@@ -139,30 +139,30 @@ visitors.EmptyStatement = function (ctx, ast) { return "" };
 visitors.BlockStatement = function (ctx, ast) {
   var tmp = ctx.hoisted.block;
   ctx.hoisted.block = "";
-  var str = ast.body.map(visit.bind(null, ctx)).join("");
+  var str = ast.body.map(visit.bind(null, ctx, ast)).join("");
   var res = "{"
-    + ctx.traps.Enter(ast.bounds[0])
+    + ctx.traps.Enter(ast.__min__)
     + ctx.hoisted.block
     + str
-    + ctx.traps.Leave(ast.bounds[0]) + "}";
+    + ctx.traps.Leave(ast.__min__) + "}";
   ctx.hoisted.block = tmp;
   return res;
 }
 
-visitors.ExpressionStatement = function (ctx, ast) { return visit(ctx, ast.expression)+";" };
+visitors.ExpressionStatement = function (ctx, ast) { return visit(ctx, ast, ast.expression)+";" };
 
 visitors.IfStatement = function (ctx, ast) {
-  return "if(" + ctx.traps.test(visit(ctx, ast.test), ast.bounds[0]) + ")" + body(ctx, ast.consequent)
-    + (ast.alternate ? "else" + body(ctx, ast.alternate) : "")
+  return "if(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + ")" + body(ctx, ast, ast.consequent)
+    + (ast.alternate ? "else" + body(ctx, ast, ast.alternate) : "")
 };
 
 visitors.LabeledStatement = function (ctx, ast) {
-  return ctx.traps.Label(ast.label.name, ast.bounds[0])
-    + ast.label.name + ":" + visit(ctx, ast.body)
+  return ctx.traps.Label(ast.label.name, ast.__min__)
+    + ast.label.name + ":" + visit(ctx, ast, ast.body)
 };
 
 visitors.BreakStatement = function (ctx, ast) {
-  return ctx.traps.Break(ast.label ? ast.label.name : null, ast.bounds[0])
+  return ctx.traps.Break(ast.label ? ast.label.name : null, ast.__min__)
     + "break " + (ast.label ? ast.label.name : ctx.loop) + ";"
 };
 
@@ -172,53 +172,53 @@ visitors.ContinueStatement = function (ctx, ast) {
 
 // TODO: figure out what to do with WithStatement...
 visitors.WithStatement = function (ctx, ast) {
-  return "with(" + visit(ctx, ast.object) + ")" + body(ctx,ast.body);
+  return "with(" + visit(ctx, ast, ast.object) + ")" + body(ctx, ast, ast.body);
 };
 
 visitors.SwitchStatement = function (ctx, ast) {
-  function fct1 (ast) { return "if(" + str1 + ")" + visit(ctx, ast) }
+  function fct1 (ast2) { return "if(" + str1 + ")" + visit(ctx, ast, ast2) }
   function fct2 (cse) {
     return str1 + "=" + (cse.test ? ctx.traps.test(
-      ctx.traps.binary("===", str2, visit(ctx, cse.test), ast.bounds[0]),
-      ast.bounds[0]) : "true") + ";" + cse.consequent.map(fct1).join("");
+      ctx.traps.binary("===", str2, visit(ctx, ast, cse.test), ast.__min__),
+      ast.__min__) : "true") + ";" + cse.consequent.map(fct1).join("");
   }
   var str1 = ctx.hide();
   var str2 = ctx.hide();
   var tmp1 = ctx.hoisted.block, tmp2 = ctx.loop;
   (ctx.hoisted.block = "", ctx.loop = ctx.hide());
   var str3 = str1 + "=false;"
-    + str2 + "=" + visit(ctx, ast.discriminant)+";"
+    + str2 + "=" + visit(ctx, ast, ast.discriminant)+";"
     + ctx.loop + ":{" + ast.cases.map(fct2).join("") + "}";
-  var res = ctx.traps.Enter(ast.bounds[0]) + ctx.hoisted.block + str3 + ctx.traps.Leave(ast.bounds[0]);
+  var res = ctx.traps.Enter(ast.__min__) + ctx.hoisted.block + str3 + ctx.traps.Leave(ast.__min__);
   (ctx.hoisted.block = tmp1, ctx.loop = tmp2);
   return res;
 };
 
 visitors.ReturnStatement = function (ctx, ast) {
   return "return " + ctx.traps.return(
-    ast.argument ? visit(ctx, ast.argument) : "void 0",
-    ast.bounds[0]) + ";";
+    ast.argument ? visit(ctx, ast, ast.argument) : "void 0",
+    ast.__min__) + ";";
 };
 
 visitors.ThrowStatement = function (ctx, ast) {
-  return "throw " + ctx.traps.throw(visit(ctx, ast.argument), ast.bounds[0]) + ";";
+  return "throw " + ctx.traps.throw(visit(ctx, ast, ast.argument), ast.__min__) + ";";
 };
 
 visitors.TryStatement = function (ctx, ast) {
-  var fct = visit.bind(null, ctx);
-  return "try{" + ctx.traps.Try(ast.bounds[0]) + ast.block.body.map(fct).join("") + "}"
+  var fct = visit.bind(null, ctx, ast);
+  return "try{" + ctx.traps.Try(ast.__min__) + ast.block.body.map(fct).join("") + "}"
     + (ast.handler ? "catch(" + ast.handler.param.name + "){"
-      + ast.handler.param.name + "=" + ctx.traps.catch(ast.handler.param.name, ast.bounds[0]) + ";"
+      + ast.handler.param.name + "=" + ctx.traps.catch(ast.handler.param.name, ast.__min__) + ";"
       + ast.handler.body.body.map(fct).join("") + "}" : "")
-    + "finally{" + ctx.traps.Finally(ast.bounds[0])
+    + "finally{" + ctx.traps.Finally(ast.__min__)
       + (ast.finalizer ? ast.finalizer.body.map(fct).join("") : "") + "}";
 };
 
 visitors.WhileStatement = function (ctx, ast) {
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = "while(" + ctx.traps.test(visit(ctx, ast.test), ast.bounds[0]) + ")"
-    + body(ctx, ast.body);
+  var res = "while(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + ")"
+    + body(ctx, ast, ast.body);
   ctx.loop = tmp;
   return res;
 };
@@ -226,8 +226,8 @@ visitors.WhileStatement = function (ctx, ast) {
 visitors.DoWhileStatement = function (ctx, ast) {
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = "do" + body(ctx, ast.body)
-    + "while(" + ctx.traps.test(visit(ctx, ast.test), ast.bounds[0]) + ");";
+  var res = "do" + body(ctx, ast, ast.body)
+    + "while(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + ");";
   ctx.loop = tmp;
   return res;
 };
@@ -236,21 +236,21 @@ visitors.ForStatement = function (ctx, ast) {
   if (ast.init && ast.init.type === "VariableDeclaration") {
     var tmp = ctx.hoisted.block;
     ctx.hoisted.block = "";
-    var str1 = declare(ctx, ast.init, ast.bounds[0]);
+    var str1 = declare(ctx, ast, ast.init, ast.__min__);
     var str2 = ctx.hoisted.block;
     ctx.hoisted.block = tmp;
   } else {
-    var str1 = ast.init ? visit(ctx, ast.init) : "";
+    var str1 = ast.init ? visit(ctx, ast, ast.init) : "";
   }
-  var str3 = ast.test ? ctx.traps.test(visit(ctx, ast.test), ast.bounds[0]) : "";
-  var str4 = ast.update ? visit(ctx, ast.update) : "";
+  var str3 = ast.test ? ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) : "";
+  var str4 = ast.update ? visit(ctx, ast, ast.update) : "";
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = ctx.traps.Enter(ast.bounds[0])
+  var res = ctx.traps.Enter(ast.__min__)
     + (str2 || "")
     + "for(" + str1 + ";" + str3 + ";" + str4 + ")"
-    + body(ctx, ast.body)
-    + ctx.traps.Leave(ast.bounds[0]);
+    + body(ctx, ast, ast.body)
+    + ctx.traps.Leave(ast.__min__);
   ctx.loop = tmp;
   return res;
 };
@@ -258,44 +258,44 @@ visitors.ForStatement = function (ctx, ast) {
 visitors.ForInStatement = function (ctx, ast) {
   var obj = {enumerate: ctx.hide(), counter: ctx.hide()};
   var arr = [
-    obj.enumerate + "=" + ctx.traps.enumerate(visit(ctx, ast.right), ast.bounds[0]) + ";",
+    obj.enumerate + "=" + ctx.traps.enumerate(visit(ctx, ast, ast.right), ast.__min__) + ";",
     obj.counter + "=0;"
   ];
   if (ast.left.type !== "MemberExpression") {
     if (ast.left.type === "VariableDeclaration") {
       var tmp = ctx.hoisted.block;
       ctx.hoisted.block = "";
-      var str1 = declare(ctx, ast.left, ast.bounds[0]);
+      var str1 = declare(ctx, ast, ast.left, ast.__min__);
       arr.unshift(ctx.hoisted.block);
       ctx.hoisted.block = tmp;
     }
     var str2 = ctx.traps.write(
       ast.left.type === "Identifier" ? ast.left.name : ast.left.declarations[0].id.name,
       obj.enumerate + "[" + obj.counter + "]",
-      ast.bounds[0]);
+      ast.__min__);
   } else {
     obj.object = ctx.hide();
-    arr.push(obj.object + "=" + visit(ctx, ast.left.object) + ";");
+    arr.push(obj.object + "=" + visit(ctx, ast, ast.left.object) + ";");
     if (ast.left.computed) {
       obj.property = ctx.hide();
-      arr.push(obj.property + "=" + visit(ctx, ast.left.property) + ";")
+      arr.push(obj.property + "=" + visit(ctx, ast, ast.left.property) + ";")
     }
     var str2 = ctx.traps.set(
       ast.left.computed,
       obj.object,
       ast.left.computed ? obj.property : ast.left.property.name,
       obj.enumerate + "[" + obj.counter + "]",
-      ast.bounds[0]);
+      ast.__min__);
   } 
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = ctx.traps.Enter(ast.bounds[0])
+  var res = ctx.traps.Enter(ast.__min__)
     + arr.join("")
     + "for(" + (str1 || "") + ";"
     + obj.counter + "<" + obj.enumerate + ".length&&(" + str2 + ",true);"
     + obj.counter + "++)"
-    + body(ctx, ast.body)
-    + ctx.traps.Leave(ast.bounds[0]);
+    + body(ctx, ast, ast.body)
+    + ctx.traps.Leave(ast.__min__);
   ctx.loop = tmp;
   return res;
 };
@@ -303,41 +303,41 @@ visitors.ForInStatement = function (ctx, ast) {
 visitors.DebuggerStatement = function (ctx, ast) { return "debugger;" };
 
 visitors.FunctionDeclaration = function (ctx, ast) {
-  ctx.hoisted.closure += ctx.traps.Declare("var", [ast.id.name], ast.bounds[0])
-    + ctx.traps.write(ast.id.name, closure(ctx, ast), ast.bounds[0]) + ";";
+  ctx.hoisted.closure += ctx.traps.Declare("var", [ast.id.name], ast.__min__)
+    + ctx.traps.write(ast.id.name, closure(ctx, ast), ast.__min__) + ";";
   return "var " + ast.id.name + ";";
 };
 
-visitors.VariableDeclaration = function (ctx, ast) { return declare(ctx, ast, ast.bounds[0]) + ";" };
+visitors.VariableDeclaration = function (ctx, ast) { return declare(ctx, ast, ast, ast.__min__) + ";" };
 
 /////////////////
 // Expressions //
 /////////////////
 
-visitors.ThisExpression = function (ctx, ast) { return ctx.traps.read("this", ast.bounds[0]) };
+visitors.ThisExpression = function (ctx, ast) { return ctx.traps.read("this", ast.__min__) };
 
 visitors.ArrayExpression = function (ctx, ast) {
   return ctx.traps.literal(
-    "[" + ast.elements.map(function (elm) { return elm ? visit(ctx, elm) : "" }).join(",") + "]",
-    ast.bounds[0]);
+    "[" + ast.elements.map(function (elm) { return elm ? visit(ctx, ast, elm) : "" }).join(",") + "]",
+    ast.__min__);
 };
 
 visitors.ObjectExpression = function (ctx, ast) {
   if (ast.properties.every(kindinit))
     return ctx.traps.literal("{" + ast.properties.map(function (ast) {
-      return (ast.key.raw || ast.key.name) + ":" + visit(ctx, ast.value)
-    }).join(",") + "}", ast.bounds[0]);
+      return (ast.key.raw || ast.key.name) + ":" + visit(ctx, ast, ast.value)
+    }).join(",") + "}", ast.__min__);
   return ctx.traps.literal("(" + ctx.accessor + "([" + ast.properties.map(function (prp) {
       return "{key:" + (prp.key.raw || JSON.stringify(prp.key.name)) + ","
         + "kind:" + JSON.stringify(prp.kind) + ","
-        + "value:" + visit(ctx, prp.value) + "}";
-    }).join(",") + "]))", ast.bounds[0]);
+        + "value:" + visit(ctx, ast, prp.value) + "}";
+    }).join(",") + "]))", ast.__min__);
 };
 
 visitors.FunctionExpression = function (ctx, ast) { return closure(ctx, ast) };
 
 visitors.SequenceExpression = function (ctx, ast) {
-  return "(" + ast.expressions.map(visit.bind(null, ctx)).join(",") + ")";
+  return "(" + ast.expressions.map(visit.bind(null, ctx, ast)).join(",") + ")";
 };
 
 // TODO: figure out what to do with: ``delete identifier''.
@@ -346,140 +346,140 @@ visitors.UnaryExpression = function (ctx, ast) {
     return ctx.traps.unary(
       "typeof",
       "(function(){try{return " + ast.argument.name + "}catch(_){}}())",
-      ast.bounds[0]);
+      ast.__min__);
   if (ast.operator === "delete" && ast.argument.type === "Identifier")
     return "(delete " + ast.argument.name + ")";
   if (ast.operator === "delete" && ast.argument.type === "MemberExpression")
     return ctx.traps.delete(
       ast.argument.computed,
-      visit(ctx, ast.argument.object),
-      ast.computed ? visit(ctx, ast.argument.property) : ast.argument.property.name,
-      ast.bounds[0]);
-  return ctx.traps.unary(ast.operator, visit(ctx, ast.argument), ast.bounds[0]);
+      visit(ctx, ast, ast.argument.object),
+      ast.computed ? visit(ctx, ast, ast.argument.property) : ast.argument.property.name,
+      ast.__min__);
+  return ctx.traps.unary(ast.operator, visit(ctx, ast, ast.argument), ast.__min__);
 };
 
 visitors.BinaryExpression = function (ctx, ast) {
   return ctx.traps.binary(
     ast.operator,
-    visit(ctx, ast.left),
-    visit(ctx, ast.right),
-    ast.bounds[0]);
+    visit(ctx, ast, ast.left),
+    visit(ctx, ast, ast.right),
+    ast.__min__);
 };
 
 visitors.AssignmentExpression = function (ctx, ast) {
   var str1, str2, str3;
   if (ast.operator === "=")
     return ast.left.type === "Identifier"
-      ? ctx.traps.write(ast.left.name, visit(ctx, ast.right), ast.bounds[0])
+      ? ctx.traps.write(ast.left.name, visit(ctx, ast, ast.right), ast.__min__)
       : ctx.traps.set(
         ast.left.computed,
-        visit(ctx, ast.left.object),
-        ast.left.computed ? visit(ctx, ast.left.property) : ast.left.property.name,
-        visit(ctx, ast.right), ast.bounds[0]);
+        visit(ctx, ast, ast.left.object),
+        ast.left.computed ? visit(ctx, ast, ast.left.property) : ast.left.property.name,
+        visit(ctx, ast, ast.right), ast.__min__);
   str1 = ctx.traps.binary(
     ast.operator.substring(0, ast.operator.length-1),
     ast.left.type === "Identifier"
-      ? ctx.traps.read(ast.left.name, ast.bounds[0])
+      ? ctx.traps.read(ast.left.name, ast.__min__)
       : ctx.traps.get(
         ast.left.computed,
         str2 = ctx.hide(),
         ast.left.computed ? str3 = ctx.hide() : ast.left.property.name,
-        ast.bounds[0]),
-      visit(ctx, ast.right),
-      ast.bounds[0]);
+        ast.__min__),
+      visit(ctx, ast, ast.right),
+      ast.__min__);
   return ast.left.type === "Identifier"
-    ? ctx.traps.write(ast.left.name, str1, ast.bounds[0])
+    ? ctx.traps.write(ast.left.name, str1, ast.__min__)
     : ctx.traps.set(
       ast.left.computed,
-      "(" + str2 + "=" + visit(ctx, ast.left.object) + ")",
+      "(" + str2 + "=" + visit(ctx, ast, ast.left.object) + ")",
       ast.left.computed
-        ? "(" + str3 + "=" + visit(ctx, ast.left.property) + ")"
+        ? "(" + str3 + "=" + visit(ctx, ast, ast.left.property) + ")"
         : ast.left.property.name,
       str1,
-      ast.bounds[0]);
+      ast.__min__);
 };
 
 visitors.UpdateExpression = function (ctx, ast) {
   var str1, str2, str3, str4, str5, str6;
   str1 = ast.argument.type === "Identifier"
-    ? ctx.traps.read(ast.argument.name, ast.bounds[0])
+    ? ctx.traps.read(ast.argument.name, ast.__min__)
     : ctx.traps.get(
       ast.argument.computed,
       str2 = ctx.hide(),
       ast.argument.computed ? str3 = ctx.hide() : ast.argument.property.name,
-      ast.bounds[0]);
+      ast.__min__);
   if (!ast.prefix)
     str1 = "(" + (str4 = ctx.hide()) + " = " + str1 + ")";
-  str5 = ctx.traps.binary(ast.operator[0], str1, ctx.traps.literal("1", ast.bounds[0]), ast.bounds[0]);
+  str5 = ctx.traps.binary(ast.operator[0], str1, ctx.traps.literal("1", ast.__min__), ast.__min__);
   str6 = ast.argument.type === "Identifier"
-    ? ctx.traps.write(ast.argument.name, str5, ast.bounds[0])
+    ? ctx.traps.write(ast.argument.name, str5, ast.__min__)
     : ctx.traps.set(
       ast.argument.computed,
-      "(" + str2 + "=" + visit(ctx, ast.argument.object) + ")",
+      "(" + str2 + "=" + visit(ctx, ast, ast.argument.object) + ")",
       ast.argument.computed
-        ? "(" + str3 + "=" + visit(ctx, ast.argument.property) + ")"
+        ? "(" + str3 + "=" + visit(ctx, ast, ast.argument.property) + ")"
         : ast.argument.property.name,
       str5,
-      ast.bounds[0]);
+      ast.__min__);
   return ast.prefix ? str6 : "(" + str6 + "," + str4 + ")";
 };
 
 visitors.LogicalExpression = function (ctx, ast) {
   var str1 = ctx.hide();
-  var str2 = "(" + str1 + "=" + ctx.traps.test(visit(ctx, ast.left), ast.bounds[0]) + ")";
+  var str2 = "(" + str1 + "=" + ctx.traps.test(visit(ctx, ast, ast.left), ast.__min__) + ")";
   if (ast.operator === "||")
-    return "(" + str2 + "?" + str1 + ":" + visit(ctx, ast.right) + ")";
+    return "(" + str2 + "?" + str1 + ":" + visit(ctx, ast, ast.right) + ")";
   if (ast.operator === "&&")
-    return "(" + str2 + "?" + visit(ctx, ast.right) + ":" + str1 + ")";
+    return "(" + str2 + "?" + visit(ctx, ast, ast.right) + ":" + str1 + ")";
   throw new Error("Unknown logical operator " + ast.operator);
 };
 
 visitors.ConditionalExpression = function (ctx, ast) {
-  return "(" + ctx.traps.test(visit(ctx, ast.test), ast.bounds[0])
-    + "?" + visit(ctx, ast.consequent)
-    + ":" + visit(ctx, ast.alternate) + ")";
+  return "(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__)
+    + "?" + visit(ctx, ast, ast.consequent)
+    + ":" + visit(ctx, ast, ast.alternate) + ")";
 };
 
 visitors.NewExpression = function (ctx, ast) {
   return ctx.traps.construct(
-    visit(ctx, ast.callee),
-    ast.arguments.map(visit.bind(null, ctx)),
-    ast.bounds[0]);
+    visit(ctx, ast, ast.callee),
+    ast.arguments.map(visit.bind(null, ctx, ast)),
+    ast.__min__);
 };
 
-function args (ctx, ast) { return ast.arguments.map(visit.bind(null, ctx)) }
+function args (ctx, ast) { return ast.arguments.map(visit.bind(null, ctx, ast)) }
 visitors.CallExpression = function (ctx, ast) {
   if (ast.callee.type === "Identifier" && ast.callee.name === "eval") {
     var arr = args(ctx, ast);
-    return "(" + ctx.traps.read("eval", ast.bounds[0]) + "===aran.__eval__"
-      + "?" + ctx.traps.eval(arr, ast.bounds[0])
-      + ":" + ctx.traps.apply("eval", null, arr, ast.bounds[0]) + ")";
+    return "(" + ctx.traps.read("eval", ast.__min__) + "==="+ctx.eval
+      + "?" + ctx.traps.eval(arr, ast.__min__)
+      + ":" + ctx.traps.apply("eval", null, arr, ast.__min__) + ")";
   }
   if (ast.callee.type !== "MemberExpression")
-    return ctx.traps.apply(visit(ctx, ast.callee), null, args(ctx, ast), ast.bounds[0]);
+    return ctx.traps.apply(visit(ctx, ast, ast.callee), null, args(ctx, ast), ast.__min__);
   var str = ctx.hide();
   return ctx.traps.apply(
     ctx.traps.get(
       ast.callee.computed,
-      "(" + str + "=" + visit(ctx, ast.callee.object) +")",
-      ast.callee.computed ? visit(ctx, ast.callee.property) : ast.callee.property.name,
-      ast.bounds[0]),
+      "(" + str + "=" + visit(ctx, ast, ast.callee.object) +")",
+      ast.callee.computed ? visit(ctx, ast, ast.callee.property) : ast.callee.property.name,
+      ast.__min__),
     str,
     args(ctx, ast),
-    ast.bounds[0]); 
+    ast.__min__); 
 }
 
 visitors.MemberExpression = function (ctx, ast) {
   return ctx.traps.get(
     ast.computed,
-    visit(ctx, ast.object),
-    ast.computed ? visit(ctx, ast.property) : ast.property.name,
-    ast.bounds[0]);
+    visit(ctx, ast, ast.object),
+    ast.computed ? visit(ctx, ast, ast.property) : ast.property.name,
+    ast.__min__);
 };
 
-visitors.Identifier = function (ctx, ast) { return ctx.traps.read(ast.name, ast.bounds[0]) };
+visitors.Identifier = function (ctx, ast) { return ctx.traps.read(ast.name, ast.__min__) };
 
-visitors.Literal = function (ctx, ast) { return ctx.traps.literal(ast.raw, ast.bounds[0]) };
+visitors.Literal = function (ctx, ast) { return ctx.traps.literal(ast.raw, ast.__min__) };
 
 /////////////
 // Helpers //
@@ -497,13 +497,13 @@ function strict (ast) {
     && ast.expression.value === "use strict";
 }
 
-function body (ctx, ast) {
-  return ast.type === "BlockStatement" ? visit(ctx, ast) : "{" + visit(ctx,ast) + "}";
+function body (ctx, src, ast) {
+  return ast.type === "BlockStatement" ? visit(ctx, src, ast) : "{" + visit(ctx, src, ast) + "}";
 }
 
-function declare (ctx, ast, idx) {
+function declare (ctx, src, ast, idx) {
   var res = ast.kind + " " + ast.declarations.map(function (dec) {
-    return dec.id.name + (dec.init ? "=" + visit(ctx, dec.init) : "");
+    return dec.id.name + (dec.init ? "=" + visit(ctx, src, dec.init) : "");
   }).join(",");
   ctx.hoisted[ast.kind === "var" ? "closure" : "block"] += ctx.traps.Declare(
     ast.kind,
@@ -516,19 +516,61 @@ function closure (ctx, ast) {
   var bin = ast.body.body.length && strict(ast.body.body[0]);
   var tmp1 = ctx.hoisted, tmp2 = ctx.loop, tmp3 = ctx.hidden;
   (ctx.hoisted = {closure:"", block: ""}, ctx.loop = "", ctx.hidden = []);
-  var arr = (bin ? ast.body.body.slice(1) : ast.body.body).map(visit.bind(null, ctx));
+  var arr = (bin ? ast.body.body.slice(1) : ast.body.body).map(visit.bind(null, ctx, ast));
   var res = "function " + (ast.id ? ast.id.name : "")
     + "(" + ast.params.map(name).join(",") + "){"
-    + (bin ? "'use strict';" + ctx.traps.Strict(ast.bounds[0]) : "")
-    + ctx.traps.Arguments(ast.bounds[0])
+    + (bin ? "'use strict';" + ctx.traps.Strict(ast.__min__) : "")
+    + ctx.traps.Arguments(ast.__min__)
     + (ctx.hidden.length ? "var " + ctx.hidden.join(",") + ";" : "")
     + ctx.hoisted.closure
     + arr.join("") + "}";
   (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.hidden = tmp3);
-  return ctx.traps.literal(res, ast.bounds[0]);
+  return ctx.traps.literal(res, ast.__min__);
 }
 
-},{"./traps.js":4,"esprima":3}],3:[function(require,module,exports){
+},{"./traps.js":5,"esprima":4}],3:[function(require,module,exports){
+
+var Instrument = require("./instrument.js");
+var Esprima = require("esprima");
+
+var global = (function () { return this } ());
+
+function search (ast, idx) {
+  var tmp;
+  if (typeof ast !== "object" || ast === null)
+    return;
+  if (ast.bounds && idx === ast.bounds[0])
+    return ast;
+  if (ast.bounds && (idx < ast.bounds[0] || idx > ast.bounds[1]))
+    return;
+  for (var k in ast)
+    if (tmp = search(ast[k], idx))
+      return tmp;
+}
+
+module.exports = function (options) {
+  if (typeof options !== "object" || options === null)
+    options = {};
+  var suboptions = {loc:options.loc, range:options.range};
+  var namespace = options.namespace || "aran";
+  var instrument = Instrument(namespace, options.traps || Object.keys(global[namespace]));
+  var asts = [];
+  return {
+    instrument: function (code, source) {
+      var ast = Esprima.parse(code, suboptions);
+      ast.source = source;
+      asts.push(ast);
+      return instrument(ast);
+    },
+    search: function (index) {
+      for (var i=0; i<asts.length && !node; i++)
+        var node = search(asts[i], index);
+      return node;
+    }
+  };
+};
+
+},{"./instrument.js":2,"esprima":4}],4:[function(require,module,exports){
 /*
   Copyright (c) jQuery Foundation, Inc. and Contributors, All Rights Reserved.
 
@@ -6271,7 +6313,7 @@ function closure (ctx, ast) {
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 
 function empty () { return "" }
 
@@ -6381,7 +6423,7 @@ forwards.catch = function (_, variable, _) { return variable };
 
 traps.Finally = function (namespace, index) { return namespace+".Finally("+index+");" };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 
 exports.round = function (x) { return Math.round(1000*x)/1000 }
 
@@ -6431,7 +6473,7 @@ module.exports = function () {
   dom.stop.onclick = stop;
   dom.run.onclick = run;
   toggle(true);
-  benchmarkall({"1-Empty.js":"\n// This analysis does absolutely nothing! *yay* //\nvar aran = {};\n(function () { return this } ()).aran = aran;\n\n","2-Transparent.js":"\n// This analysis traps everything and transparently forwards all operations //\n\nvar aran = {};\n(function () { return this } ()).aran = aran;\n\n// General //\naran.Ast = function (x, i) { };\naran.Strict = function (i) { };\naran.literal = function (x, i) { return x };\naran.unary = function (o, x, i) { return eval(o+\" x\") };\naran.binary = function (o, x1, x2, i) { return eval(\"x1 \"+o+\" x2\") };\n\n// Environment //\naran.Declare = function (vs, i) { };\naran.read = function (v, x, i) { return x };\naran.write = function (v, x1, x2, i) { return x2 };\naran.Enter = function (i) { };\naran.Leave = function (i) { };\n\n// Apply //\naran.apply = function (f, t, xs, i) { return f.apply(t, xs) };\n// aran.construct = function (c, xs, i) { return new c(...xs) };\naran.Arguments = function (xs, i) { };\naran.return = function (x, i) { return x };\naran.eval = function (x, i) { return x };\n\n// Object //\naran.get = function (o, k, i) { return o[k] };\naran.set = function (o, k, x, i) { return o[k] = x };\naran.delete = function (o, k, i) { return delete o[k] };\naran.enumerate = function (o, i) {\n  var ks = [];\n  for (var k in o)\n    ks.push(k);\n  return ks;\n};\n\n// Control //\naran.test = function (x, i) { return x };\naran.Label = function (l, i) { };\naran.Break = function (l, i) { };\naran.throw = function (x, i) { return x };\naran.Try = function (i) { };\naran.catch = function (v, x, i) { return x };\naran.Finally = function (i) { };\n","3-Trace.js":"\n// This analysis traps everything, logs everything and transparently forwards all operations //\n\nvar aran = {};\n(function () { return this } ()).aran = aran;\n\n// General //\naran.Strict = function (i) { };\naran.literal = function (x, i) { return x };\naran.unary = function (o, x, i) { return eval(o+\" x\") };\naran.binary = function (o, x1, x2, i) { return eval(\"x1 \"+o+\" x2\") };\n\n// Environment //\naran.Declare = function (vs, i) { };\naran.read = function (v, x, i) { return x };\naran.write = function (v, x1, x2, i) { return x2 };\naran.Enter = function (i) { };\naran.Leave = function (i) { };\n\n// Apply //\naran.apply = function (f, t, xs, i) { return f.apply(t, xs) };\n//aran.construct = function (c, xs, i) { return new c(...xs) };\naran.Arguments = function (xs, i) { };\naran.return = function (x, i) { return x };\naran.eval = function (x, i) { return x };\n\n// Object //\naran.get = function (o, k, i) { return o[k] };\naran.set = function (o, k, x, i) { return o[k] = x };\naran.delete = function (o, k, i) { return delete o[k] };\naran.enumerate = function (o, i) {\n  var ks = [];\n  for (var k in o)\n    ks.push(k);\n  return ks;\n};\n\n// Control //\naran.test = function (x, i) { return x };\naran.Label = function (l, i) { };\naran.Break = function (l, i) { };\naran.throw = function (x, i) { return x };\naran.Try = function (i) { };\naran.catch = function (v, x, i) { return x };\naran.Finally = function (i) { };\n\n(function () {\n  function search (ast, idx) {\n    var tmp;\n    if (typeof ast !== \"object\" || ast === null)\n      return;\n    if (ast.bounds && idx === ast.bounds[0])\n      return ast;\n    if (ast.bounds && (idx < ast.bounds[0] || idx > ast.bounds[1]))\n      return;\n    for (var k in ast)\n      if (tmp = search(ast[k], idx))\n        return tmp;\n  }\n  Object.keys(aran).forEach(function (name) {\n    var trap = aran[name];\n    aran[name] = function () {\n      log(name, arguments);\n      return trap.apply(null, arguments);\n    };\n  });\n  var sources = [];\n  aran.Ast = function (ast, url) { sources.push({url:url, ast:ast}) };\n  function locate (index) {\n    var node;\n    for (var i=0; i<sources.length; i++)\n      if (node = search(sources[i].ast, index))\n        return node.type\n          + \"@\" + sources[i].url\n          + \"#\" + node.loc.start.line + \"-\" + node.loc.start.column;\n    return index; \n  }\n  function log (name, args) {\n    var mess = name+\" \"+locate(args[args.length-1]);\n    for (var i=0; i<args.length-1; i++)\n      mess += (typeof args[i] === \"function\") ? \" [function \" + args[i].name + \"]\" : \" \" + args[i];\n    console.log(mess);\n  }\n} ());\n\n"}, {"Array.js":"\n(function () {\n  if ([1,2,3][0] !== 1) { throw 'Array' }\n} ())\n","Binary.js":"\n(function () {\n  if (1+2 !== 3) { throw 'Binary' }\n} ())\n","Block.js":"\n(function () {\n  {}\n  {var x=1; x=2; x=3}\n  if (x !== 3) { throw 'Block' }\n} ())\n","Break.js":"\n(function () {\n  a:{\n    break a\n    throw 'Break'\n  }\n} ())\n\n","Call.js":"\n(function () {\n  function f () { return 1 }\n  if (f() !== 1) { throw 'Call' }\n} ())\n","Conditional.js":"\n(function () {\n  if ((true?1:2) !== 1) { throw 'Conditional1' }\n  if ((false?1:2) !== 2) { throw 'Conditional2' }\n} ())\n","Continue.js":"\n(function () {\n  var b=true\n  while (b) {\n    b=false\n    continue\n    throw 'Continue'\n  }\n} ())\n","Declaration.js":"\n(function () {\n  var x,y=1\n  x\n  if (y !== 1) { throw 'Declaration' }\n} ())\n","DeclarationFor.js":"\n(function () {\n  for (var i=0; i<3; i++) {}\n  if (i !== 3) {throw 'DeclarationFor' }\n} ())\n","DeclarationForIn.js":"\n(function () {\n  for (var k in {a:1}) {}\n  if (k !== 'a') { throw 'DeclarationForIn' }  \n} ())\n","Definition.js":"\n(function () {\n  f()\n  function f () {}\n} ())\n","DoWhile.js":"\n(function () {\n  var i=0\n  do { i++ } while (i < 3)\n  if (i !== 3) { throw 'DoWhile' }\n} ())\n","Empty.js":"\n(function () {\n  ;\n} ())\n","EvalCall.js":"\n(function () {\n  var x = 1\n  if(eval('x') !== 1) { throw 'EvalCall' }\n} ())\n","Expression.js":"\n(function () {\n  1;\n} ())\n","For.js":"\n(function () {\n  var i\n  for (i=0; i<3; i++) {}\n  if (i !== 3) { throw 'For' }\n} ())\n","Function.js":"\n(function () {\n  var f = function () { return 1 }\n  if (f()!==1) { throw 'Function' }\n} ())\n","Identifier.js":"\n(function () {\n  var x = 1\n  if (x !== 1) { throw 'Identifier' }\n} ())\n","IdentifierAssignment.js":"\n(function () {\n  var x\n  x = 1\n  if (x !== 1) { throw 'IdentifierAssignment1' }\n  x += 2\n  if (x !== 3) { throw 'IdentifierAssignment2' }\n} ())\n","IdentifierDelete.js":"\n(function () {\n  var o = {a:1}\n  var x\n  with (o) {\n    if (delete x) { throw 'IdentifierDelete1' }\n    if (! delete a) { throw 'IdentifierDelete2' }\n    if (! delete a$strange$id) { throw 'IdentifierDelete3' }\n  }\n  if ('a' in o) { throw 'IdentifierDelete4' }\n} ())\n","IdentifierForIn.js":"\n(function () {\n  var k\n  for (k in {a:1}) {}\n  if (k !== 'a') { throw 'IdentifierForIn' }\n} ())\n","IdentifierTypeof.js":"\n(function () {\n  if (typeof 1 !== 'number') { throw 'Typeof2' }\n  if (typeof a$very$strange$id !== 'undefined') { throw 'Typeof1' }\n} ())\n","IdentifierUpdate.js":"\n(function () {\n  var x = 1\n  if (x++ !== 1) { throw 'IdentifierUpdate1' }\n  if (++x !== 3) { throw 'IdentifierUpdate2' }\n} ())\n","If.js":"\n(function () {\n  if (true) {} else { throw 'If1' }\n  if (false) { throw 'If2' } else {}\n} ())\n","Label.js":"\n(function () {\n  a:{\n    break a\n    throw 'Label'\n  }\n} ())\n","Literal.js":"\n(function () {\n  null;\n  true;\n  false;\n  1;\n  -1;\n  'a';\n  /abc/g;\n} ())\n","Logical.js":"\n(function () {\n  if ((false||1) !== 1) { throw 'Logical1' }\n  if ((true&&1) !== 1) { throw 'Logical2' }\n} ())\n","Member.js":"\n(function () {\n  if ({a:1}.a !== 1) { throw 'Member' }\n} ())\n","MemberAssignment.js":"\n(function () {\n  var o = {}\n  o.a = 1\n  if (o.a !== 1) { throw 'MemberAssignment1' }\n  o.a += 2\n  if (o.a !== 3) { throw 'MemberAssignment2' }\n} ())\n","MemberCall.js":"\n(function () {\n  var o = {\n    f: function () { if (this !== o) { throw 'MemberCall' } }\n  }\n  o.f()\n} ())\n","MemberDelete.js":"\n(function () {\n  var o = {a:1}\n  delete o.a\n  if ('a' in o) { throw 'MemberDelete' }\n} ())\n","MemberForIn.js":"\n(function () {\n  var o = {}\n  for (o.a in {a:1}) {}\n  if (o.a !== 'a') { throw 'MemberForin' }\n} ())\n","MemberUpdate.js":"\n(function () {\n  var o = {a:1}\n  if (o.a++ !== 1) { throw 'MemberUpdate1' }\n  if (++o.a !== 3) { throw 'MemberUpdate2' }\n} ())\n","New.js":"\n(function () {\n  var o = {}\n  function F () { return o }\n  if (new F() !== o) { throw 'New' }\n} ())\n","Object.js":"\n(function () {\n  var o = {\n    a: 1,\n    b: 2,\n    get c () { return 1 },\n    set c (v) {}\n  }\n  o.c=666\n  if (o.c!==1) { throw 'Object' }\n} ())\n","Return.js":"\n(function () {\n  function f () {\n    return\n    throw 'Return1'\n  }\n  if (f() !== undefined) { throw 'Return2'}\n} ())\n","Sequence.js":"\n(function () {\n  if ((1,2) !== 2) { throw 'Sequence' }\n} ())\n","Strict.js":"\n(function () {\n  'use strict';\n} ())\n","Switch.js":"\n(function () {\n  var i=0\n  switch (2) {\n    case 1: throw 'Switch1';\n    case 2: i++;\n    default:\n      i++;\n      break;\n    case 2: throw 'Switch2';\n  }\n  if(i !== 2) {throw 'Switch3' }\n} ())\n","This.js":"\n(function () {\n  var o = {\n    f:function () { if (this!==o) { throw 'This' } }\n  }\n  o.f()\n} ())\n","Throw.js":"\n(function () {\n  var c = false\n  var f = false\n  try {\n    throw 'ok'\n    throw 'BOUM'\n  }\n  catch (e) { c = e }\n  finally { f = true }\n  if (c !== 'ok') { throw 'Throw1' }\n  if (!f) { throw 'Throw2' }\n} ())\n","Unary.js":"\n(function () {\n  if (!true) { throw 'Unary' }\n} ())\n","While.js":"\n(function () {\n  var i=0\n  while (i < 3) { i++ }\n  if (i !== 3) { throw 'While' }\n} ())\n","With.js":"\n(function () {\n  with ({a:1}) {\n    if (a!==1) { throw 'With' }\n  }\n} ())\n"});
+  benchmarkall({"1-Empty.js":"// This analysis does absolutely nothing! *yay* //\nvar Aran = require(\"aran\");\nglobal.__hidden__ = {};\nvar aran = Aran({namespace:\"__hidden__\", traps:[]});\nmodule.exports = aran.instrument;","2-Transparent.js":"\n// This analysis traps everything and transparently forwards all operations //\n\nvar Aran = require(\"aran\");\n\nvar traps = {};\n\n// General //\ntraps.Ast = function (x, i) { };\ntraps.Strict = function (i) { };\ntraps.literal = function (x, i) { return x };\ntraps.unary = function (o, x, i) { return eval(o+\" x\") };\ntraps.binary = function (o, x1, x2, i) { return eval(\"x1 \"+o+\" x2\") };\n\n// Environment //\ntraps.Declare = function (vs, i) { };\ntraps.read = function (v, x, i) { return x };\ntraps.write = function (v, x1, x2, i) { return x2 };\ntraps.Enter = function (i) { };\ntraps.Leave = function (i) { };\n\n// Apply //\ntraps.apply = function (f, t, xs, i) { return f.apply(t, xs) };\n// traps.construct = function (c, xs, i) { return new c(...xs) };\ntraps.Arguments = function (xs, i) { };\ntraps.return = function (x, i) { return x };\ntraps.eval = function (x, i) { return x };\n\n// Object //\ntraps.get = function (o, k, i) { return o[k] };\ntraps.set = function (o, k, x, i) { return o[k] = x };\ntraps.delete = function (o, k, i) { return delete o[k] };\ntraps.enumerate = function (o, i) {\n  var ks = [];\n  for (var k in o)\n    ks.push(k);\n  return ks;\n};\n\n// Control //\ntraps.test = function (x, i) { return x };\ntraps.Label = function (l, i) { };\ntraps.Break = function (l, i) { };\ntraps.throw = function (x, i) { return x };\ntraps.Try = function (i) { };\ntraps.catch = function (v, x, i) { return x };\ntraps.Finally = function (i) { };\n\nvar aran = Aran({namespace:\"__hidden__\", traps: Object.keys(traps)});\nglobal.__hidden__ = traps;\nmodule.exports = aran.instrument;\n","3-Trace.js":"\n// This analysis traps everything, logs everything and transparently forwards all operations //\n\nvar Aran = require(\"aran\");\n\nvar traps = {};\n\n// General //\ntraps.Strict = function (i) { };\ntraps.literal = function (x, i) { return x };\ntraps.unary = function (o, x, i) { return eval(o+\" x\") };\ntraps.binary = function (o, x1, x2, i) { return eval(\"x1 \"+o+\" x2\") };\n\n// Environment //\ntraps.Declare = function (vs, i) { };\ntraps.read = function (v, x, i) { return x };\ntraps.write = function (v, x1, x2, i) { return x2 };\ntraps.Enter = function (i) { };\ntraps.Leave = function (i) { };\n\n// Apply //\ntraps.apply = function (f, t, xs, i) { return f.apply(t, xs) };\n//traps.construct = function (c, xs, i) { return new c(...xs) };\ntraps.Arguments = function (xs, i) { };\ntraps.return = function (x, i) { return x };\ntraps.eval = function (x, i) { return x };\n\n// Object //\ntraps.get = function (o, k, i) { return o[k] };\ntraps.set = function (o, k, x, i) { return o[k] = x };\ntraps.delete = function (o, k, i) { return delete o[k] };\ntraps.enumerate = function (o, i) {\n  var ks = [];\n  for (var k in o)\n    ks.push(k);\n  return ks;\n};\n\n// Control //\ntraps.test = function (x, i) { return x };\ntraps.Label = function (l, i) { };\ntraps.Break = function (l, i) { };\ntraps.throw = function (x, i) { return x };\ntraps.Try = function (i) { };\ntraps.catch = function (v, x, i) { return x };\ntraps.Finally = function (i) { };\n\nObject.keys(traps).forEach(function (name) {\n  var trap = traps[name];\n  traps[name] = function () {\n    log(name, arguments);\n    return trap.apply(null, arguments);\n  };\n});\n\nfunction log (name, args) {\n  var mess = name+\" \"+locate(args[args.length-1]);\n  for (var i=0; i<args.length-1; i++)\n    mess += (typeof args[i] === \"function\") ? \" [function \" + args[i].name + \"]\" : \" \" + args[i];\n  console.log(mess);\n}\n\nfunction locate (index) {\n  var node = aran.search(index);\n  if (!node)\n    return index;\n  var loc = node.loc.start;\n  for (var root = node; root.parent; root = root.parent);\n  return node.type + \"@\" + root.url + \"#\" + loc.line + \":\" + loc.column;\n}\n\nvar aran = Aran({namespace:\"__hidden__\", traps: Object.keys(traps), loc:true});\nglobal.__hidden__ = traps;\nmodule.exports = aran.instrument;\n"}, {"Array.js":"\n(function () {\n  if ([1,2,3][0] !== 1) { throw 'Array' }\n} ())\n","Binary.js":"\n(function () {\n  if (1+2 !== 3) { throw 'Binary' }\n} ())\n","Block.js":"\n(function () {\n  {}\n  {var x=1; x=2; x=3}\n  if (x !== 3) { throw 'Block' }\n} ())\n","Break.js":"\n(function () {\n  a:{\n    break a\n    throw 'Break'\n  }\n} ())\n\n","Call.js":"\n(function () {\n  function f () { return 1 }\n  if (f() !== 1) { throw 'Call' }\n} ())\n","Conditional.js":"\n(function () {\n  if ((true?1:2) !== 1) { throw 'Conditional1' }\n  if ((false?1:2) !== 2) { throw 'Conditional2' }\n} ())\n","Continue.js":"\n(function () {\n  var b=true\n  while (b) {\n    b=false\n    continue\n    throw 'Continue'\n  }\n} ())\n","Declaration.js":"\n(function () {\n  var x,y=1\n  x\n  if (y !== 1) { throw 'Declaration' }\n} ())\n","DeclarationFor.js":"\n(function () {\n  for (var i=0; i<3; i++) {}\n  if (i !== 3) {throw 'DeclarationFor' }\n} ())\n","DeclarationForIn.js":"\n(function () {\n  for (var k in {a:1}) {}\n  if (k !== 'a') { throw 'DeclarationForIn' }  \n} ())\n","Definition.js":"\n(function () {\n  f()\n  function f () {}\n} ())\n","DoWhile.js":"\n(function () {\n  var i=0\n  do { i++ } while (i < 3)\n  if (i !== 3) { throw 'DoWhile' }\n} ())\n","Empty.js":"\n(function () {\n  ;\n} ())\n","EvalCall.js":"\n(function () {\n  var x = 1\n  if(eval('x') !== 1) { throw 'EvalCall' }\n} ())\n","Expression.js":"\n(function () {\n  1;\n} ())\n","For.js":"\n(function () {\n  var i\n  for (i=0; i<3; i++) {}\n  if (i !== 3) { throw 'For' }\n} ())\n","Function.js":"\n(function () {\n  var f = function () { return 1 }\n  if (f()!==1) { throw 'Function' }\n} ())\n","Identifier.js":"\n(function () {\n  var x = 1\n  if (x !== 1) { throw 'Identifier' }\n} ())\n","IdentifierAssignment.js":"\n(function () {\n  var x\n  x = 1\n  if (x !== 1) { throw 'IdentifierAssignment1' }\n  x += 2\n  if (x !== 3) { throw 'IdentifierAssignment2' }\n} ())\n","IdentifierDelete.js":"\n(function () {\n  var o = {a:1}\n  var x\n  with (o) {\n    if (delete x) { throw 'IdentifierDelete1' }\n    if (! delete a) { throw 'IdentifierDelete2' }\n    if (! delete a$strange$id) { throw 'IdentifierDelete3' }\n  }\n  if ('a' in o) { throw 'IdentifierDelete4' }\n} ())\n","IdentifierForIn.js":"\n(function () {\n  var k\n  for (k in {a:1}) {}\n  if (k !== 'a') { throw 'IdentifierForIn' }\n} ())\n","IdentifierTypeof.js":"\n(function () {\n  if (typeof 1 !== 'number') { throw 'Typeof2' }\n  if (typeof a$very$strange$id !== 'undefined') { throw 'Typeof1' }\n} ())\n","IdentifierUpdate.js":"\n(function () {\n  var x = 1\n  if (x++ !== 1) { throw 'IdentifierUpdate1' }\n  if (++x !== 3) { throw 'IdentifierUpdate2' }\n} ())\n","If.js":"\n(function () {\n  if (true) {} else { throw 'If1' }\n  if (false) { throw 'If2' } else {}\n} ())\n","Label.js":"\n(function () {\n  a:{\n    break a\n    throw 'Label'\n  }\n} ())\n","Literal.js":"\n(function () {\n  null;\n  true;\n  false;\n  1;\n  -1;\n  'a';\n  /abc/g;\n} ())\n","Logical.js":"\n(function () {\n  if ((false||1) !== 1) { throw 'Logical1' }\n  if ((true&&1) !== 1) { throw 'Logical2' }\n} ())\n","Member.js":"\n(function () {\n  if ({a:1}.a !== 1) { throw 'Member' }\n} ())\n","MemberAssignment.js":"\n(function () {\n  var o = {}\n  o.a = 1\n  if (o.a !== 1) { throw 'MemberAssignment1' }\n  o.a += 2\n  if (o.a !== 3) { throw 'MemberAssignment2' }\n} ())\n","MemberCall.js":"\n(function () {\n  var o = {\n    f: function () { if (this !== o) { throw 'MemberCall' } }\n  }\n  o.f()\n} ())\n","MemberDelete.js":"\n(function () {\n  var o = {a:1}\n  delete o.a\n  if ('a' in o) { throw 'MemberDelete' }\n} ())\n","MemberForIn.js":"\n(function () {\n  var o = {}\n  for (o.a in {a:1}) {}\n  if (o.a !== 'a') { throw 'MemberForin' }\n} ())\n","MemberUpdate.js":"\n(function () {\n  var o = {a:1}\n  if (o.a++ !== 1) { throw 'MemberUpdate1' }\n  if (++o.a !== 3) { throw 'MemberUpdate2' }\n} ())\n","New.js":"\n(function () {\n  var o = {}\n  function F () { return o }\n  if (new F() !== o) { throw 'New' }\n} ())\n","Object.js":"\n(function () {\n  var o = {\n    a: 1,\n    b: 2,\n    get c () { return 1 },\n    set c (v) {}\n  }\n  o.c=666\n  if (o.c!==1) { throw 'Object' }\n} ())\n","Return.js":"\n(function () {\n  function f () {\n    return\n    throw 'Return1'\n  }\n  if (f() !== undefined) { throw 'Return2'}\n} ())\n","Sequence.js":"\n(function () {\n  if ((1,2) !== 2) { throw 'Sequence' }\n} ())\n","Strict.js":"\n(function () {\n  'use strict';\n} ())\n","Switch.js":"\n(function () {\n  var i=0\n  switch (2) {\n    case 1: throw 'Switch1';\n    case 2: i++;\n    default:\n      i++;\n      break;\n    case 2: throw 'Switch2';\n  }\n  if(i !== 2) {throw 'Switch3' }\n} ())\n","This.js":"\n(function () {\n  var o = {\n    f:function () { if (this!==o) { throw 'This' } }\n  }\n  o.f()\n} ())\n","Throw.js":"\n(function () {\n  var c = false\n  var f = false\n  try {\n    throw 'ok'\n    throw 'BOUM'\n  }\n  catch (e) { c = e }\n  finally { f = true }\n  if (c !== 'ok') { throw 'Throw1' }\n  if (!f) { throw 'Throw2' }\n} ())\n","Unary.js":"\n(function () {\n  if (!true) { throw 'Unary' }\n} ())\n","While.js":"\n(function () {\n  var i=0\n  while (i < 3) { i++ }\n  if (i !== 3) { throw 'While' }\n} ())\n","With.js":"\n(function () {\n  with ({a:1}) {\n    if (a!==1) { throw 'With' }\n  }\n} ())\n"});
 }
 
 function toggle (d) {
@@ -6544,7 +6586,7 @@ function master (name, master, target, table) {
   table.appendChild(tr);
 }
 
-},{"../util.js":5,"/Users/soft/Desktop/workspace/aran/glitterdust/main.js":1}]},{},[]);
+},{"../util.js":6,"/Users/soft/Desktop/workspace/aran/glitterdust/main.js":1}]},{},[]);
 
 window.onload = require('glitterdust');</script>
   </head>

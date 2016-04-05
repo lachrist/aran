@@ -1,108 +1,40 @@
 
-var Fs = require("fs");
-var Browserify = require("Browserify");
-var Otiluke = require("otiluke");
 var Instrument = require("./instrument.js");
-var Stream = require("stream");
 var Esprima = require("esprima");
 
-var cf = " -- cf: https://github.com/lachrist/aran#api";
-var dynamic = [
-  "require(ANALYSIS);",
-  "var Esprima = require(\"esprima\");",
-  "var Instrument = require(\"" + __dirname.replace(/\"/g, "\\\"") + "/instrument.js\");",
-  "var aran = (function () { return this.NAMESPACE } ());",
-  "var instrument = Instrument(\"NAMESPACE\", Object.keys(aran));",
-  "var options = {range:RANGE, loc:LOC};",
-  "aran.instrument = function (code, url) {",
-  "  var ast = Esprima.parse(code, options);",
-  "  var instrumented = instrument(ast);",
-  "  aran.Ast && aran.Ast(ast, url);",
-  "  return instrumented;",
-  "};"
-].join("\n");
+var global = (function () { return this } ());
 
-function test (f, x, msg) { try { f(x) } catch (e) { throw new Error(msg) } } 
+function search (ast, idx) {
+  var tmp;
+  if (typeof ast !== "object" || ast === null)
+    return;
+  if (ast.bounds && idx === ast.bounds[0])
+    return ast;
+  if (ast.bounds && (idx < ast.bounds[0] || idx > ast.bounds[1]))
+    return;
+  for (var k in ast)
+    if (tmp = search(ast[k], idx))
+      return tmp;
+}
 
-
-exports.static = function (options) {
-  if (!Array.isArray(options.traps))
-    throw new Error("The option traps should be an array" + cf);
-  if 
-};
-
-exports.dynamic = {
-  monolithic:
-  mitm:
-  commonjs:
-};
-
-exports.instrument = instrument;
-
-exports.static = function (options, callback) {
-  var instrument = Instrument(options);
-  if (options.monolithic) {
-    Fs.readFile(options.monolithic, "utf8", function (error, content) {
-      return callback(error, instrument(content));
-    });
-  } else if (options.)
-
-};
-
-exports.dynamic = function (options) {
-
-};
-
-exports.static = function () {=
-  monolithic:
-  commonjs:
-  html:
-};
-
-
-exports.static = function (options) {
-  if (!Array.isArray(options.traps))
-    throw new Error("The option traps should be an array" + cf);
-  var suboptions = {range:options.range, loc:options.loc};
-  var instrument = Instrument(options.namespace, options.traps);
-  return function (code) {
-    var ast = Esprima.parse(code, suboptions);
-    return {instrumented:instrument(ast), ast:ast};
+module.exports = function (options) {
+  if (typeof options !== "object" || options === null)
+    options = {};
+  var suboptions = {loc:options.loc, range:options.range};
+  var namespace = options.namespace || "aran";
+  var instrument = Instrument(namespace, options.traps || Object.keys(global[namespace]));
+  var asts = [];
+  return {
+    instrument: function (code, source) {
+      var ast = Esprima.parse(code, suboptions);
+      ast.source = source;
+      asts.push(ast);
+      return instrument(ast);
+    },
+    search: function (index) {
+      for (var i=0; i<asts.length && !node; i++)
+        var node = search(asts[i], index);
+      return node;
+    }
   };
-};
-
-exports.mitm = function (options) {
-  if (typeof options.port !== "number")
-    throw new Error("The option port should be a number");
-  initialize(options);
-};
-
-exports.commonjs = function (options) {
-  test(Fs.createReadStream, options.main, "The option main does not point to a readable file" + cf);
-  test(Fs.createWriteStream, options.out, "The option out does not point to a writable file" + cf);
-  initialize(options);
-};
-
-function initialize (options) {
-  options.namespace = options.namespace || "aran";
-  options.intercept = function (url) {
-    if (!options.filter || options.filter(url))
-      return function (code) {
-        return "eval(" + options.namespace + ".instrument(" + JSON.stringify(code) + "," + JSON.stringify(url) + "))";
-      }
-  };
-  test(Fs.createReadStream, options.analysis, "The option analysis does not point to a readable file" + cf);
-  var stream = new Stream.Readable({read: function () {}});
-  stream.push(dynamic
-    .replace(/ANALYSIS/g, function () { return JSON.stringify(options.analysis) })
-    .replace(/NAMESPACE/g, function () { return options.namespace })
-    .replace(/RANGE/g, function () { return Boolean(options.range) })
-    .replace(/LOC/g, function () { return Boolean(options.loc) }));
-  stream.push(null);
-  Browserify(stream).bundle(function (error, buffer) {
-    if (error)
-      throw error;
-    options.setup = buffer.toString();
-    Otiluke(options);
-  });
 };

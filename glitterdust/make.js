@@ -1,34 +1,16 @@
 
 var Glitterdust = require("glitterdust");
 
-Glitterdust({
-  mode: "demo",
-  out: __dirname+"/demo.html",
-  instrument: __dirname+"/main.js",
-  masters: __dirname+"/../analyses",
-  targets: __dirname+"/../../benchmark/atom"
-});
+function options (mode, targets, out) {
+  return {
+    mode: mode,
+    targets: targets,
+    out: out,
+    instrument: __dirname+"/main.js",
+    masters: __dirname+"/analyses"
+  }
+}
 
-Glitterdust({
-  mode: "batch",
-  out: __dirname+"/batch-atom.html",
-  instrument: __dirname+"/main.js",
-  masters: __dirname+"/../analyses",
-  targets: __dirname+"/../../benchmark/atom"
-});
-
-Glitterdust({
-  mode: "batch",
-  out: __dirname+"/linvail-atom.html",
-  instrument: __dirname+"/main.js",
-  masters: __dirname+"/../../linvail/analyses/bundles",
-  targets: __dirname+"/../../benchmark/atom"
-});
-
-Glitterdust({
-  mode: "batch",
-  out: __dirname+"/batch-sunspider.html",
-  instrument: __dirname+"/main.js",
-  masters: __dirname+"/../analyses",
-  targets: __dirname+"/../../benchmark/sunspider-1.0.2"
-});
+Glitterdust(options("demo", __dirname+"/../../benchmark/atom", __dirname+"/demo.html"));
+Glitterdust(options("batch", __dirname+"/../../benchmark/atom", __dirname+"/batch-atom.html"));
+Glitterdust(options("batch", __dirname+"/../../benchmark/sunspider-1.0.2", __dirname+"/batch-sunspider.html"));

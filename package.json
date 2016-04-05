@@ -8,5 +8,6 @@
 , "dependencies": {"esprima":"*", "otiluke":"*", "browserify":"*"}
 , "files" : ["instrument.js", "main.js", "traps.js"]
 , "main": "main.js"
+, "bin": "run.js"
 , "keywords" : ["JavaScript", "Instrumentation", "Sandboxing", "Monitoring", "Tracing", "Shadow Execution", "ECMAScript5"]
 }
