@@ -1,4 +1,4 @@
-var Aran = require("aran");
+var Aran = require("../../main.js");
 var fs = require("fs");
 var target = fs.readFileSync("../target/monolithic.js", "utf8");
 var analysis = fs.readFileSync("./analysis.js", "utf8");

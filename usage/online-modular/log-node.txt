@@ -1,0 +1,7 @@
+Apply require @ /Users/soft/Desktop/workspace/aran/usage/target/node/main.js#1:12
+Apply require @ /Users/soft/Desktop/workspace/aran/usage/target/node/solve.js#1:12
+Apply solve @ /Users/soft/Desktop/workspace/aran/usage/target/node/main.js#2:0
+Apply delta @ /Users/soft/Desktop/workspace/aran/usage/target/node/solve.js#3:29
+Apply sqrt @ /Users/soft/Desktop/workspace/aran/usage/target/node/solve.js#3:19
+Apply delta @ /Users/soft/Desktop/workspace/aran/usage/target/node/solve.js#4:29
+Apply sqrt @ /Users/soft/Desktop/workspace/aran/usage/target/node/solve.js#4:19

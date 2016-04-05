@@ -4,6 +4,8 @@ Aran is a npm module for instrumenting JavaScript code which enables amongst oth
 Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting [ECMAScript6](http://www.ecma-international.org/ecma-262/6.0/).
 To install, run `npm install aran`.
 
+REST IS OUTDATED
+
 ## Demonstration
 
 In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.

@@ -553,9 +553,9 @@ function search (ast, idx) {
   var tmp;
   if (typeof ast !== "object" || ast === null)
     return;
-  if (ast.bounds && idx === ast.bounds[0])
+  if ("__min__" in ast && idx === ast.__min__)
     return ast;
-  if (ast.bounds && (idx < ast.bounds[0] || idx > ast.bounds[1]))
+  if (idx < ast.__min__ || idx > ast.__max__)
     return;
   for (var k in ast)
     if (tmp = search(ast[k], idx))

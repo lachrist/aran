@@ -1,16 +1,16 @@
 
-var Aran = require("aran");
+var Aran = require("../../main.js");
 
-function location (node) {
+function location (index) {
+  var node = aran.search(index);
   for (var root = node; root.parent; root = root.parent);
-  return root.url + "#" + node.loc.start.line + ":" + node.loc.start.column;
+  return root.source + "#" + node.loc.start.line + ":" + node.loc.start.column;
 }
 
 global.__hidden__ = {};
 __hidden__.eval = function (x, i) { return aran.instrument(x, "eval") };
 __hidden__.apply = function (f, t, xs, i) {
-  var node = aran.search(i);
-  console.log("Apply " + fct.name + " @ " + location(node));
+  console.log("Apply " + f.name + " @ " + location(i));
   return f.apply(t, xs);
 };
 
