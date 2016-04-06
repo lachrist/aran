@@ -1,4 +1,4 @@
-# Aran <img src="aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
+# Aran <img src="readme/aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
 
 Aran is a npm module for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing, and symbolic execution.
 Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting [ECMAScript6](http://www.ecma-international.org/ecma-262/6.0/).
@@ -12,7 +12,7 @@ The best way to get familiar with Aran is by toying with its [demo page](http://
 The target editor expects a JavaScript program to analyze while the master editor expects the analysis implementing the trap functions.
 In the demo page, the global variable referencing traps has to be called `aran` but this constraint is released in the API.
 
-<img src="demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
+<img src="readme/demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
 
 ## Usage
 
