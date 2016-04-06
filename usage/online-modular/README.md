@@ -14,8 +14,10 @@ function location (index) {
   return root.source + "#" + node.loc.start.line + ":" + node.loc.start.column;
 }
 
+var evalID = 0;
+
 global.__hidden__ = {};
-__hidden__.eval = function (x, i) { return aran.instrument(x, "eval") };
+__hidden__.eval = function (x, i) { return aran.instrument(x, "eval"+(++evalID)) };
 __hidden__.apply = function (f, t, xs, i) {
   console.log("Apply " + f.name + " @ " + location(i));
   return f.apply(t, xs);
@@ -54,7 +56,7 @@ Apply sqrt @ /Users/soft/Desktop/workspace/aran/usage/target/node/solve.js#4:19
 
 ## Online Instrumentation of Web Pages
 
-Otiluke can also deploy a proxy that acts as a [man-in-the-middle](https://en.wikipedia.org/wiki/Man-in-the-middle_attack).
+Otiluke can also deploy a proxy that acts as a [man-in-the-middle attack](https://en.wikipedia.org/wiki/Man-in-the-middle_attack).
 Once your browser is configured according to [Otiluke's readme](https://github.com/lachrist/otiluke), you can deploy the proxy with:
 
 ```javascript
@@ -68,13 +70,13 @@ otiluke --mitm --transform ./analysis.js --port 8080
 ```
 
 Now, all browser's requests will be intercepted so that the analysis is run along the web page under analysis.
-For testing purpose, you can serve the files of `target/html`; for instance:
+For testing purpose, you can serve the files of [../target/html](../target/html); for instance:
 
 ```
 http-server ../target/html -p 8000
 ```
 
-Visiting `http://127.0.0.1:8000` produces should then produce the following log:
+If everything is correctly setup, visiting `http://127.0.0.1:8000` produces the following log:
 
 ```
 Apply solve @ http://127.0.0.1:8000/#156#2:6

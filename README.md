@@ -9,8 +9,7 @@ To install, run `npm install aran`.
 In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.
 For instance, the expression `x + y` may be transformed into `aran.binary('+', x, y)` which triggers the `binary` trap.
 The best way to get familiar with Aran is by toying with its [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
-The target editor expects a JavaScript program to analyze while the master editor expects the analysis implementing the trap functions.
-In the demo page, the global variable referencing traps has to be called `aran` but this constraint is released in the API.
+The target editor expects a JavaScript program to analyze while the master editor expects a script exporting an instrumentation function.
 
 <img src="readme/demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
 
@@ -26,7 +25,7 @@ function solve (a, b, c) {
 solve(1, -5, 6);
 ```
 
-To demonstrate how to use Aran we propose to log the function calls inside a program solving the polynomial equation: `x^2 - 5*x + 6 = 0`.
+To demonstrate how to use Aran we propose to log the function calls inside a program solving: `x^2 - 5*x + 6 = 0`.
 Because Aran is fully written in JavaScript, the instrumentation can happen on the same process as the JavaScript program being analyzed.
 In that case we say that the instrumentation is online.
 By opposition, we refer to offline instrumentation when the instrumentation happens on a separate process.
@@ -38,9 +37,9 @@ Three different use examples are provided in this repository:
 
 ## API
 
-The top level function of this module understand the below set of options and returns an object with two functions: `instrument` and `search`.
-`instrument` parses the given string as JavaScript code, indexes every AST node, store the entire AST, and return the instrumented code.
-`search` looks up for an AST node at the given index within the previsouly parsed scripts.
+The top level function of this module understands the below set of options and returns an object with two functions.
+The `instrument` function parses the given string as JavaScript code, indexes every AST node, store the entire AST, and return the instrumented code.
+The `search` function looks up for an AST node at the given index within the previously parsed scripts.
 
  Option     | Default  | Value
 ------------|----------|---------------------------------------------------------------------------------------------------------------------
@@ -54,14 +53,14 @@ First it could break the analysis by modifying the traps.
 Second, more subtly, it changes the behavior of the program under analysis and the conclusion drawn during the analysis may not hold for the program alone.
 The most straight forward way to prevent this to happen is to pick an extravagant name for this global variable.
 However it is not a complete solution because the program under analysis may still access it by listing the property of the global object.
-An complete solution can be obtained by controlling the access to the global object with the traps `read`, `write`, `enumerate` and `apply`.
+A complete solution can be obtained by controlling the access to the global object with the traps `read`, `write`, `enumerate` and `apply`.
 
 ## Traps
 
 The below table introduces by example the set of traps Aran can insert.
 Traps starting with a upper-case letter are simple observers and their return values are never used while the value returned by lower-case traps may be used inside expressions.
 All traps are independently optional and they all receive as last argument an integer which is the index of the AST node that triggered the trap.
-The AST node at a given index can be retreive using `aran.search(index)`.
+The AST node at a given index can be retrieved using `aran.search(index)`.
 In the table below, `123` is used as a dummy index.
 
  Traps                              | Target              | Instrumented

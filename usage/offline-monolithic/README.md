@@ -29,7 +29,7 @@ var aran = Aran({namespace:"__hidden__", traps:["apply"]});
 fs.writeFileSync("./run.js", analysis + "\n" + aran.instrument(target));
 ```
 
-Executing the sandalone analysis of the target `run.js` in any compatible [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) environment produces the following log:
+Executing `run.js` in any compatible [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) environment produces the following log:
 
 ```
 Apply solve
@@ -39,6 +39,6 @@ Apply delta
 Apply sqrt
 ```
 
-The problem with such instrumentation process is that the analysis has no mean communicate with the instrumentation process.
+The problem with such instrumentation process is that the analysis has no mean to communicate with the instrumentation process.
 In particular the analysis does not have any information about the AST nodes that triggered its traps and it cannot dynamically instrument code when for instance the `eval` function is called.
-The online instrumentation process exposed in [online-monolithic](../online-monolithic) is designed to solve this issues.
+The online instrumentation process exposed in [online-monolithic](../online-monolithic) is designed to solve these issues.

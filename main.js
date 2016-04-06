@@ -21,8 +21,7 @@ module.exports = function (options) {
   if (typeof options !== "object" || options === null)
     options = {};
   var suboptions = {loc:options.loc, range:options.range};
-  var namespace = options.namespace || "aran";
-  var instrument = Instrument(namespace, options.traps || Object.keys(global[namespace]));
+  var instrument = Instrument(options.namespace || "aran", options.traps || []);
   var asts = [];
   return {
     instrument: function (code, source) {
