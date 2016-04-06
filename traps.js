@@ -19,8 +19,6 @@ var forwards = {};
 // Others //
 ////////////
 
-traps.Ast = function (namespace, ast, url) { return namespace+".Ast("+ast+","+url+");" }
-
 traps.Strict = function (namespace, index) { return namespace+".Strict("+index+");" }
 
 traps.literal = function (namespace, value, index) { return namespace+".literal("+value+","+index+")" };
