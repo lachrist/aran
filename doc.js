@@ -30,7 +30,6 @@ tree.body.map(function (node) {
 
 var traps = [
   // General //
-  "Ast",
   "Strict",
   "literal",
   "unary",
@@ -84,12 +83,8 @@ function extract (node) {
     node = node.expression;
     if (node.type === "AssignmentExpression" && node.operator === "=") {
       node = node.left;
-      if (node.type === "MemberExpression" && !node.computed && node.object.type === "Identifier") {
-        if (node.object.name === "visitors")
-          return node.property.name;
-        if (node.object.name === "module" && node.property.name === "exports")
-          return "Program";
-      }
+      if (node.type === "MemberExpression" && !node.computed && node.object.type === "Identifier" && node.object.name === "visitors")
+        return node.property.name;
     }
   }
 }
