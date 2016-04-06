@@ -42,12 +42,12 @@ The top level function of this module understand the below set of options and re
 `instrument` parses the given string as JavaScript code, indexes every AST node, store the entire AST, and return the instrumented code.
 `search` looks up for an AST node at the given index within the previsouly parsed scripts.
 
- Option     | Default                  | Value
-------------|--------------------------|---------------------------------------------------------------------------------------------------------------------
-`namespace` | `'aran'`                 | String, the name of the global value containing Aran's traps
-`traps`     | `Object.keys(namespace)` | Array, contains the names of the traps to be called later, during the execution phase
-`loc`       | `false`                  | Boolean, if true: ast node have line and column-based location info [cf esprima](http://esprima.org/doc/index.html)
-`range`     | `false`                  | Boolean, if true: ast node have an index-based location range [cf esprima](http://esprima.org/doc/index.html)
+ Option     | Default  | Value
+------------|----------|---------------------------------------------------------------------------------------------------------------------
+`namespace` | `'aran'` | String, the name of the global value containing Aran's traps
+`traps`     | `[]`     | Array, contains the names of the traps to be called later, during the execution phase
+`loc`       | `false`  | Boolean, if true: ast node have line and column-based location info [cf esprima](http://esprima.org/doc/index.html)
+`range`     | `false`  | Boolean, if true: ast node have an index-based location range [cf esprima](http://esprima.org/doc/index.html)
 
 Note that if the program under analysis accesses the global variable holding the Aran's traps terrible things will happen.
 First it could break the analysis by modifying the traps. 
