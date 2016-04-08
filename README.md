@@ -16,14 +16,27 @@ The target editor expects a JavaScript program to analyze while the master edito
 ## Usage
 
 ```javascript
-function delta (a, b, c) { return  b * b - 4 * a * c }
-function solve (a, b, c) {
-  var s1 = ((-b) + Math.sqrt(delta(a, b, c))) / (2 * a);
-  var s2 = ((-b) - Math.sqrt(delta(a, b, c))) / (2 * a);
-  return [s1, s2];
-}
-solve(1, -5, 6);
+var Aran = require("aran");
+var aran = Aran({
+  namespace: unusedGlobalName,
+  traps: trapNames,
+  loc: isLoCNeeded,
+  range: isRangeNeeded
+});
+var instrumentedCode = aran.instrument(jsCode, rootParent);
+var maybeNode = aran.search(nodeIndex);
 ```
+
+The top level function of this module understands the below set of options and returns an object with two functions.
+The `instrument` function parses the given string as JavaScript code, indexes every AST node, store the entire AST, assign the root's parent and return the instrumented code.
+The `search` function looks up for an AST node at the given index within the previously parsed scripts.
+
+ Option     | Default  | Value
+------------|----------|---------------------------------------------------------------------------------------------------------------------
+`namespace` | `"aran"` | String, the name of the global value containing Aran's traps
+`traps`     | `[]`     | Array, contains the names of the traps to be called later, during the execution phase
+`loc`       | `false`  | Boolean, if true: ast node have line and column-based location info [cf esprima](http://esprima.org/doc/index.html)
+`range`     | `false`  | Boolean, if true: ast node have an index-based location range [cf esprima](http://esprima.org/doc/index.html)
 
 To demonstrate how to use Aran we propose to log the function calls inside a program solving: `x^2 - 5*x + 6 = 0`.
 Because Aran is fully written in JavaScript, the instrumentation can happen on the same process as the JavaScript program being analyzed.
@@ -34,19 +47,6 @@ Three different use examples are provided in this repository:
 1. [Offline monolithic instrumentation](usage/offline-monolithic)
 2. [Online monolithic instrumentation](usage/online-monolithic)
 3. [Online modular instrumentation](usage/online-modular)
-
-## API
-
-The top level function of this module understands the below set of options and returns an object with two functions.
-The `instrument` function parses the given string as JavaScript code, indexes every AST node, store the entire AST, and return the instrumented code.
-The `search` function looks up for an AST node at the given index within the previously parsed scripts.
-
- Option     | Default  | Value
-------------|----------|---------------------------------------------------------------------------------------------------------------------
-`namespace` | `'aran'` | String, the name of the global value containing Aran's traps
-`traps`     | `[]`     | Array, contains the names of the traps to be called later, during the execution phase
-`loc`       | `false`  | Boolean, if true: ast node have line and column-based location info [cf esprima](http://esprima.org/doc/index.html)
-`range`     | `false`  | Boolean, if true: ast node have an index-based location range [cf esprima](http://esprima.org/doc/index.html)
 
 Note that if the program under analysis accesses the global variable holding the Aran's traps terrible things will happen.
 First it could break the analysis by modifying the traps. 

@@ -44,7 +44,6 @@ module.exports = function (namespace, traps) {
   return function (ast) {
     (ctx.loop = "", ctx.hidden = [], ctx.hoisted = {closure:"", block:""});
     var bin = ast.body.length && strict(ast.body[0]);
-    Object.defineProperty(ast, "parent", {value:null});
     Object.defineProperty(ast, "__min__", {value:++nid});
     var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(null, ctx, ast));
     Object.defineProperty(ast, "__max__", {value:nid});
@@ -56,7 +55,7 @@ module.exports = function (namespace, traps) {
       + (ctx.hidden.length ? "var "+ctx.hidden.join(",")+";" : "")
       + ctx.hoisted.closure
       + ctx.hoisted.block
-      + arr.join("")
+      + arr.join("");
   };
 };
 

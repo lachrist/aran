@@ -6,7 +6,6 @@ var Aran = require("aran");
 var traps = {};
 
 // General //
-traps.Ast = function (x, i) { };
 traps.Strict = function (i) { };
 traps.literal = function (x, i) { return x };
 traps.unary = function (o, x, i) { return eval(o+" x") };

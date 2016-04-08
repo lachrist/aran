@@ -24,9 +24,9 @@ module.exports = function (options) {
   var instrument = Instrument(options.namespace || "aran", options.traps || []);
   var asts = [];
   return {
-    instrument: function (code, source) {
+    instrument: function (code, parent) {
       var ast = Esprima.parse(code, suboptions);
-      ast.source = source;
+      parent && (ast.parent = parent);
       asts.push(ast);
       return instrument(ast);
     },
