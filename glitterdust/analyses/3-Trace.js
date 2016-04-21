@@ -61,12 +61,11 @@ function log (name, args) {
 }
 
 function locate (index) {
-  var node = aran.search(index);
+  var node = aran.node(index);
   if (!node)
     return index;
   var loc = node.loc.start;
-  for (var root = node; root.parent; root = root.parent);
-  return node.type + "@" + root.url + "#" + loc.line + ":" + loc.column;
+  return node.type + "@" + aran.source(index) + "#" + loc.line + ":" + loc.column;
 }
 
 var aran = Aran({namespace:"__hidden__", traps: Object.keys(traps), loc:true});

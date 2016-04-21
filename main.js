@@ -23,17 +23,26 @@ module.exports = function (options) {
   var suboptions = {loc:options.loc, range:options.range};
   var instrument = Instrument(options.namespace || "aran", options.traps || []);
   var asts = [];
+  var sources = [];
   return {
-    instrument: function (code, parent) {
+    instrument: function (code, source) {
       var ast = Esprima.parse(code, suboptions);
-      parent && (ast.parent = parent);
+      // parent && (ast.parent = parent);
       asts.push(ast);
+      sources.push(source);
       return instrument(ast);
     },
-    search: function (index) {
-      for (var i=0; i<asts.length && !node; i++)
+    node: function (index) {
+      for (var i=0; i<asts.length; i++) {
         var node = search(asts[i], index);
-      return node;
+        if (node)
+          return node;
+      }
+    },
+    source: function (index) {
+      for (var i=0; i<asts.length; i++)
+        if (index >= asts[i].__min__ && index <= asts[i].__max__)
+          return sources[i];
     }
   };
 };

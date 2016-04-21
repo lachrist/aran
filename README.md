@@ -23,8 +23,9 @@ var aran = Aran({
   loc: isLoCNeeded,
   range: isRangeNeeded
 });
-var instrumentedCode = aran.instrument(jsCode, rootParent);
-var maybeNode = aran.search(nodeIndex);
+var instrumentedCode = aran.instrument(jsCode, source);
+var maybeNode = aran.node(nodeIndex);
+var maybeSource = aran.source(nodeIndex);
 ```
 
 The top level function of this module understands the below set of options and returns an object with two functions.
@@ -66,6 +67,7 @@ In the table below, `123` is used as a dummy index.
  Traps                              | Target              | Instrumented
 ------------------------------------|---------------------|-------------------------------------------------------
 **General**                         |                     |
+`Program(index)`                    | ...                 | `aran.Program(123); ...`
 `Strict(index)`                     | `'use strict';`     | `'use strict';`<br>`aran.Strict(123);`
 `literal(value, index)`             | `'foo'`             | `aran.literal('foo', 123)`
 `unary(op, value, index)`           | `!x`                | `aran.unary('!', x, 123)`

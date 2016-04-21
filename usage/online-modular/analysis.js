@@ -2,9 +2,8 @@
 var Aran = require("../../main.js");
 
 function location (index) {
-  var node = aran.search(index);
-  for (var root = node; root.parent; root = root.parent);
-  return root + "#" + node.loc.start.line + ":" + node.loc.start.column;
+  var node = aran.node(index);
+  return aran.source(index) + "#" + node.loc.start.line + ":" + node.loc.start.column;
 }
 
 var evalID = 0;

@@ -19,7 +19,9 @@ var forwards = {};
 // Others //
 ////////////
 
-traps.Strict = function (namespace, index) { return namespace+".Strict("+index+");" }
+traps.Program = function (namespace, index) { return namespace+".Program("+index+");" };
+
+traps.Strict = function (namespace, index) { return namespace+".Strict("+index+");" };
 
 traps.literal = function (namespace, value, index) { return namespace+".literal("+value+","+index+")" };
 forwards.literal = function (_, value, _) { return value };
