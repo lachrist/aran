@@ -1,4 +1,4 @@
-var Aran = require("../../main.js");
+var Aran = require("aran");
 var evalID = 0;
 var fs = require("fs");
 global.__hidden__ = {};

@@ -1,5 +1,5 @@
 
-var Aran = require("../../main.js");
+var Aran = require("aran");
 
 function location (index) {
   var node = aran.node(index);
