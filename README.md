@@ -8,7 +8,7 @@ To install, run `npm install aran`.
 
 In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.
 For instance, the expression `x + y` may be transformed into `aran.binary('+', x, y)` which triggers the `binary` trap.
-The best way to get familiar with Aran is by toying with its [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
+The best way to get familiar with Aran is by toying with its [demo page](http://rawgit.com/lachrist/aran/master/analyses/demo.html).
 The target editor expects a JavaScript program to analyze while the master editor expects a script exporting an instrumentation function.
 
 <img src="readme/demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
