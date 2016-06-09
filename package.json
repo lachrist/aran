@@ -6,7 +6,7 @@
 , "homepage": "http://github.com/lachrist/aran"
 , "license" : "MIT"
 , "dependencies": {"esprima":"2.7.x"}
-, "files" : ["instrument.js", "index.js", "traps.js"]
-, "main": "index.js"
+, "files" : ["instrument.js", "main.js", "traps.js"]
+, "main": "main.js"
 , "keywords" : ["JavaScript", "Instrumentation", "Dynamic Analysis", "Sandboxing", "Monitoring", "Tracing", "Shadow Execution", "ECMAScript5"]
 }
