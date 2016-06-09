@@ -58,7 +58,9 @@ var traps = [
   "throw",
   "Try",
   "catch",
-  "Finally"
+  "Finally",
+  "sequence",
+  "Expression"
 ];
 process.stdout.write(repeat(" ", 25)+"|");
 process.stdout.write(traps.map(backquote).join("|"));

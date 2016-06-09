@@ -23,8 +23,29 @@ traps.Program = function (namespace, index) { return namespace+".Program("+index
 
 traps.Strict = function (namespace, index) { return namespace+".Strict("+index+");" };
 
-traps.literal = function (namespace, value, index) { return namespace+".literal("+value+","+index+")" };
-forwards.literal = function (_, value, _) { return value };
+traps.primitive = function (namespace, value, index) { return namespace+".primitive("+value+","+index+")" };
+forwards.primitive = function (_, value, _) { return value };
+
+traps.closure = function (namespace, closure, index) { return namespace+".closure("+closure+","+index+")" };
+forwards.closure = function (_, closure, index) { return closure };
+
+function property (prp) { return "{key:"+prp.key+",configurable:true,enumerable:true,"+(prp.kind === "init" ? "writable:true,value" : prp.kind)+":"+prp.value+"}" }
+traps.object = function (namespace, properties, index) { return namespace+".object(["+properties.map(property).join(",")+"],"+index+")"};
+forwards.object = function (_, properties, index) {
+  var arr = [];
+  properties.forEach(function (p) { (p.kind === "init") && arr.push(p.key + ":" + p.value) });
+  var str = "{"+arr.join(",")+"}";
+  properties.forEach(function (p) {
+    (p.kind !== "init") && (str = "Object.defineProperty("+str+","+p.key+",{configurable:true,enumerable:true,"+p.kind+":"+p.value+"})");
+  });
+  return str;
+};
+
+traps.array = function (namespace, elements, index) { return namespace+".array(["+elements.join(",")+"],"+index+")" };
+forwards.array = function (_, elements, _) { return "["+elements.join(",")+"]" };
+
+traps.regexp = function (namespace, pattern, flags, index) { return namespace+".regexp("+JSON.stringify(pattern)+","+JSON.stringify(flags)+","+index+")" };
+forwards.regexp = function (_, pattern, flags, index) { return "/"+pattern+"/"+flags+" " };
 
 traps.unary = function (namespace, operator, value, index) { return namespace+".unary("+JSON.stringify(operator)+","+value+","+index+")" };
 forwards.unary = function (_, operator, value, _) { return operator+"("+value+")" };
@@ -41,12 +62,15 @@ traps.Declare = function (namespace, kind, variables, index) { return namespace+
 traps.read = function (namespace, variable, index) { return namespace+".read("+JSON.stringify(variable)+","+variable+","+index+")" };
 forwards.read = function (_, variable, _) { return variable };
 
-traps.write = function (namespace, variable, value, index) { return "("+variable +"="+namespace+".write("+JSON.stringify(variable)+","+variable+","+value+","+index+"))" };
+traps.write = function (namespace, variable, value, index) { return namespace+".write("+JSON.stringify(variable)+","+value+",function("+namespace+"){"+variable+"="+namespace+"},"+index+")" };
 forwards.write = function (_, variable, value, _) { return "("+variable+"="+value+")" };
 
 traps.Enter = function (namespace, index) { return namespace+".Enter("+index+");" };
 
 traps.Leave = function (namespace, index) { return namespace+".Leave("+index+");" };
+
+traps.with = function (namespace, environment, index) { return namespace+".with("+environment+","+index+")" };
+forwards.with = function (_, environment, _) { return environment };
 
 ///////////
 // Apply //
@@ -74,14 +98,14 @@ forwards.eval = function (_, arguments, _) { return "eval("+arguments.join(",")+
 // Object //
 ////////////
 
-traps.get = function (namespace, computed, object, property, index) { return namespace+".get("+object+","+(computed ? property : JSON.stringify(property))+","+index+")" };
-forwards.get = function (_, computed, object, property, _) { return object+(computed ? "["+property+"]" : "."+property) };
+traps.get = function (namespace, object, key, index) { return namespace+".get("+object+","+key+","+index+")" };
+forwards.get = function (_, object, key, _) { return object+"["+key+"]" };
 
-traps.set = function (namespace, computed, object, property, value, index) { return namespace+".set("+object+","+(computed ? property : JSON.stringify(property))+","+value+","+index+")" };
-forwards.set = function (_, computed, object, property, value, _) { return "("+object+(computed ? "["+property+"]" : "."+property)+"="+value+")" };
+traps.set = function (namespace, object, key, value, index) { return namespace+".set("+object+","+key+","+value+","+index+")" };
+forwards.set = function (_, object, key, value, _) { return "("+object+"["+key+"]"+"="+value+")" };
 
-traps.delete = function (namespace, computed, object, property, index) { return namespace+".delete("+object+","+(computed ? property : JSON.stringify(property))+","+index+")" };
-forwards.delete = function (_, computed, object, property, _) { return "delete "+object+(computed ? "["+property+"]" : "."+property) };
+traps.delete = function (namespace, object, key, index) { return namespace+".delete("+object+","+key+","+index+")" };
+forwards.delete = function (_, object, key, _) { return "delete "+object+"["+key+"]" };
 
 traps.enumerate = function (namespace, object, index) { return namespace+".enumerate("+object+","+index+")" };
 forwards.enumerate = function (_, object, _) { return "(function(o){var ks=[];for(var k in o) ks[ks.length]=k;return ks;}("+object+"))" };
@@ -106,3 +130,8 @@ traps.catch = function (namespace, variable, index) { return namespace+".catch("
 forwards.catch = function (_, variable, _) { return variable };
 
 traps.Finally = function (namespace, index) { return namespace+".Finally("+index+");" };
+
+traps.sequence = function (namespace, expressions, index) { return namespace+".sequence(["+expressions.join(",")+"],"+index+")" };
+forwards.sequence = function (_, expressions, _) { return "("+expressions.join(",")+")" }
+
+traps.Expression = function (namespace, index) { return namespace+".Expression("+index+");" }

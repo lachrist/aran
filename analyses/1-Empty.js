@@ -1,5 +1,6 @@
 // This analysis does absolutely nothing! *yay* //
 var Aran = require("aran");
-global.__hidden__ = {};
-var aran = Aran({namespace:"__hidden__", traps:[]});
+var traps = {};
+global.__hidden__ = traps;
+var aran = Aran({namespace:"__hidden__", traps:Object.keys(traps)});
 module.exports = aran.instrument;

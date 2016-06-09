@@ -94,6 +94,8 @@ In the table below, `123` is used as a dummy index.
 `Break(label, index)`               | `break l;`          | `aran.Break('l', 123);`<br>`break l;`
 `throw(error, index)`               | `throw x;`          | `throw aran.throw(x, 123);`
 `Try(index)`<br>`catch(error, index)`<br>`Finally(index)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`aran.Try(123);`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`e = aran.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`aran.Finally(123);`<br>&nbsp;&nbsp;`..`<br>`}`
+`sequence`                          | `(x, y, z)`         | `aran.sequence([x, y, z], 123)`
+`Expression`                        | x;                  | `aran.Expression(x);`
 
 The below table depicts which traps are susceptible to be inserted for every [AST node type](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API).
 To further investigate how traps are inserted, please try it out in Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).

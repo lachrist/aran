@@ -30,7 +30,6 @@ module.exports = function (options) {
   return {
     instrument: function (code, source) {
       var ast = Esprima.parse(code, suboptions);
-      // parent && (ast.parent = parent);
       asts.push(ast);
       sources.push(source);
       return instrument(ast);
