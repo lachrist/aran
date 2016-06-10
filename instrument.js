@@ -136,8 +136,8 @@ visitors.SwitchStatement = function (ctx, ast) {
 };
 
 visitors.ReturnStatement = function (ctx, ast) {
-  return "return " + ctx.traps.return(
-    ast.argument ? visit(ctx, ast, ast.argument) : "void 0",
+  return " return " + ctx.traps.return(
+    ast.argument ? visit(ctx, ast, ast.argument) : " void 0",
     ast.__min__) + ";";
 };
 
@@ -466,7 +466,7 @@ function closure (ctx, ast) {
     + (ctx.hidden.length ? "var " + ctx.hidden.join(",") + ";" : "")
     + ctx.hoisted.closure
     + arr.join("")
-    + ctx.traps.return(ctx.traps.primitive(" void 0", ast.__min__), ast.__min__)
+    + " return " + ctx.traps.return(ctx.traps.primitive(" void 0", ast.__min__), ast.__min__)
     + "}";
   (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.hidden = tmp3);
   return ctx.traps.closure(res, ast.__min__);
