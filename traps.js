@@ -36,10 +36,12 @@ forwards.object = function (_, properties, index) {
   properties.forEach(function (p) { (p.kind === "init") && arr.push(p.key + ":" + p.value) });
   var str = "{"+arr.join(",")+"}";
   properties.forEach(function (p) {
-    (p.kind !== "init") && (str = "Object.defineProperty("+str+","+p.key+",{configurable:true,enumerable:true,"+p.kind+":"+p.value+"})");
+    (p.kind !== "init") && (str = namespace+".__defineProperty__("+str+","+p.key+",{configurable:true,enumerable:true,"+p.kind+":"+p.value+"})");
   });
   return str;
 };
+
+traps.Last = function (namespace, index) { return namespace+".Last("+index+");" };
 
 traps.array = function (namespace, elements, index) { return namespace+".array(["+elements.join(",")+"],"+index+")" };
 forwards.array = function (_, elements, _) { return "["+elements.join(",")+"]" };
@@ -76,11 +78,11 @@ forwards.with = function (_, environment, _) { return environment };
 // Apply //
 ///////////
 
-traps.apply = function (namespace, fct, ths, args, idx) { return namespace+".apply("+fct+","+(ths||"void 0")+",["+args.join(",")+"],"+idx+")" };
+traps.apply = function (namespace, fct, ths, args, idx) { return namespace+".apply("+fct+","+ths+",["+args.join(",")+"],"+idx+")" };
 forwards.apply = function (namespace, fct, ths, args, _) {
-  return ths
-    ? namespace+".__apply__("+fct+","+ths+",["+args.join(",")+"])"
-    : "("+fct+"("+args.join(",")+"))";
+  return (ths === "null" || ths === "void 0")
+    ? "("+fct+"("+args.join(",")+"))"
+    : namespace+".__apply__("+fct+","+ths+",["+args.join(",")+"])"
 };
 
 traps.construct = function (namespace, constructor, arguments, index) { return namespace+".construct("+constructor+",["+arguments.join(",")+"],"+index+")" };
@@ -133,5 +135,8 @@ traps.Finally = function (namespace, index) { return namespace+".Finally("+index
 
 traps.sequence = function (namespace, expressions, index) { return namespace+".sequence(["+expressions.join(",")+"],"+index+")" };
 forwards.sequence = function (_, expressions, _) { return "("+expressions.join(",")+")" }
+
+traps.expression = function (namespace, value, index) { return namespace+".Expression("+value+","+index+")"}
+forwards.expression = function (_, value, index) { return value }
 
 traps.Expression = function (namespace, index) { return namespace+".Expression("+index+");" }

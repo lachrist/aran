@@ -61,7 +61,7 @@ A complete solution can be obtained by controlling the access to the global obje
 The below table introduces by example the set of traps Aran can insert.
 Traps starting with a upper-case letter are simple observers and their return values are never used while the value returned by lower-case traps may be used inside expressions.
 All traps are independently optional and they all receive as last argument an integer which is the index of the AST node that triggered the trap.
-The AST node at a given index can be retrieved using `aran.search(index)`.
+The AST node at a given index can be retrieved using `aran.node(index)`.
 In the table below, `123` is used as a dummy index.
 
  Traps                              | Target              | Instrumented
@@ -78,7 +78,7 @@ In the table below, `123` is used as a dummy index.
 `write(variable, old, new, index)`  | `x = y`             | `aran.write('x', x, y, 123)`
 `Enter(index)`<br>`Leave(index)`    | `{ ... }`           | `{`<br>&nbsp;&nbsp;`aran.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`aran.Leave(123);`<br>`}`
 **Apply**                           |                     |
-`apply(fct, this, args, index)`     | `f(x,y)`            | `aran.apply(f, aran.g, [x,y], 123)`
+`apply(fct, this, args, index)`     | `f(x,y)`            | `aran.apply(f, null, [x,y], 123)`
 `construct(fct, args, index)`       | `new F(x,y)`        | `aran.construct(F, [x,y], 123)`
 `Arguments(value, index)`           | `function ...`      | `... aran.Arguments(arguments, 123)... `
 `return(value, index)`              | `return x;`         | `return aran.return(x, 123);`
@@ -97,6 +97,9 @@ In the table below, `123` is used as a dummy index.
 `sequence`                          | `(x, y, z)`         | `aran.sequence([x, y, z], 123)`
 `Expression`                        | x;                  | `aran.Expression(x);`
 
+In the case of a direct apply, the `this` argument provided to the `apply` trap is `undefined` in strict mode or else is `null`.
+If one of the parameter is named `arguments`, the `arguments` trap is not triggered.
+The finally trap is always triggered even if it its clause did not originally exist.
 The below table depicts which traps are susceptible to be inserted for every [AST node type](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API).
 To further investigate how traps are inserted, please try it out in Aran's [demo page](http://rawgit.com/lachrist/aran/master/glitterdust/demo.html).
 

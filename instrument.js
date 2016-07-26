@@ -9,53 +9,40 @@
 // However, this transformation is safe because the body of the above structure cannot be a
 // variable declaration (see http://www.ecma-international.org/ecma-262/6.0/#sec-statements).
 
-var Esprima = require("esprima");
 var Traps = require("./traps.js");
+var Last = require("./last.js");
 
 var nid = 0;
 var vid = 0;
 
-// TODO switch __apply__ to Reflect.apply when supported enough 
 module.exports = function (namespace, traps) {
   var ctx = {
+    eval: namespace + ".__eval__",
     traps: Traps(namespace, traps),
-    hide: function () {
+    hide: function fct () {
       var res = namespace + ++vid;
       this.hidden.push(res);
       return res;
-    },
-    eval: namespace + ".__eval__",
-    accessor: ["function (arr) {",
-      "var obj = {};",
-      "for (var i=0; i<arr.length; i++) {",
-        "if (!obj[arr[i].key])",
-          "obj[arr[i].key] = {enumerate:true, configurable: true};",
-        "if (arr[i].kind === 'init') {",
-          "(delete obj[arr[i].key].get, delete obj[arr[i].key].set);",
-          "(obj[arr[i].key].writable = true, obj[arr[i].key].value = arr[i].value);",
-        "} else {",
-          "(delete obj[arr[i].key].writable, delete obj[arr[i].key].value);",
-          "obj[arr[i].key][arr[i].kind] = arr[i].value;",
-        "}",
-      "}",
-      "return " + namespace + ".__defineProperties__({}, obj);",
-    "}"].join("")
+    }
   };
   return function (ast) {
-    (ctx.loop = "", ctx.hidden = [], ctx.hoisted = {closure:"", block:""});
-    var bin = ast.body.length && strict(ast.body[0]);
+    ctx.strict = strict(ast.body[0]);
+    ctx.loop = "";
+    ctx.hidden = [];
+    ctx.hoisted = {closure:"", block:""};
     Object.defineProperty(ast, "__min__", {value:++nid});
-    var arr = (bin ? ast.body.slice(1) : ast.body).map(visit.bind(undefined, ctx, ast));
+    var str1 = Last(ast) ? "" : ctx.traps.Last("void 0", ast.__min__);
+    var str2 = ast.body.map(visit.bind(null, ctx, ast)).join("");
     Object.defineProperty(ast, "__max__", {value:nid});
-    return (bin ? "'use strict';" : "")
-      + namespace + ".__eval__=" + namespace + ".__eval__||eval;"
-      + namespace + ".__apply__=" + namespace + ".__apply__||function(f,t,xs){return f.apply(t,xs)};"
-      + namespace + ".__defineProperties__=" + namespace + ".__defineProperties__||Object.defineProperties;"
-      + (bin ? ctx.traps.Strict(ast.__min__) : "")
-      + (ctx.hidden.length ? "var "+ctx.hidden.join(",")+";" : "")
-      + ctx.hoisted.closure
-      + ctx.hoisted.block
-      + arr.join("");
+    return (ctx.strict ? "'use-strict';" : "")
+         + namespace + ".__global__=" + namespace + ".__global__||(function () { return this } ());"
+         + namespace + ".__eval__=" + namespace + ".__eval__||eval;"
+         + namespace + ".__apply__=" + namespace + ".__apply__||(typeof Reflect === 'object' ? Reflect.apply : function(f,t,xs){return f.apply(t,xs)});"
+         + namespace + ".__defineProperty__=" + namespace + ".__defineProperty__||Object.defineProperty;";
+         + ctx.hoisted.closure
+         + ctx.hoisted.block
+         + str2
+         + str1;
   };
 };
 
@@ -78,7 +65,7 @@ visitors.EmptyStatement = function (ctx, ast) { return "" };
 visitors.BlockStatement = function (ctx, ast) {
   var tmp = ctx.hoisted.block;
   ctx.hoisted.block = "";
-  var str = ast.body.map(visit.bind(undefined, ctx, ast)).join("");
+  var str = ast.body.map(visit.bind(null, ctx, ast)).join("");
   var res = "{"
     + ctx.traps.Enter(ast.__min__)
     + ctx.hoisted.block
@@ -86,26 +73,30 @@ visitors.BlockStatement = function (ctx, ast) {
     + ctx.traps.Leave(ast.__min__) + "}";
   ctx.hoisted.block = tmp;
   return res;
-}
+};
 
 visitors.ExpressionStatement = function (ctx, ast) {
-  return visit(ctx, ast, ast.expression) + ";" + ctx.traps.Expression(ast.__min__);
+  return ctx.traps[ast.__last__ ? "Last" : "Expression"](visit(ctx, ast, ast.expression), ast.__min__);
 };
 
 visitors.IfStatement = function (ctx, ast) {
-  return "if(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + ")"
-    + body(ctx, ast, ast.consequent)
-    + (ast.alternate ? "else " + body(ctx, ast, ast.alternate) : "")
+  return "if(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + "){"
+      + visit(ctx, ast, ast.consequent)
+      + (ast.__last__ && !ast.__last__.consequent ? ctx.traps.Last("void 0", ast.__min__) : "")
+    + "}else{"
+      + (ast.alternate ? visit(ctx, ast, ast.alternate) : "")
+      + (ast.__last__ && !ast.__last__.alternate ? ctx.traps.Last("void 0", ast.__min__) : "") 
+    + "}";
 };
 
 visitors.LabeledStatement = function (ctx, ast) {
-  return ctx.traps.Label(ast.label.name, ast.__min__)
-    + ast.label.name + ":" + visit(ctx, ast, ast.body)
+  return ctx.traps.Label(ast.label.name, ast.__min__) + ast.label.name
+    + ":" + visit(ctx, ast, ast.body);
 };
 
 visitors.BreakStatement = function (ctx, ast) {
   return ctx.traps.Break(ast.label ? ast.label.name : null, ast.__min__)
-    + "break " + (ast.label ? ast.label.name : ctx.loop) + ";"
+    + "break " + (ast.label ? ast.label.name : ctx.loop) + ";";
 };
 
 visitors.ContinueStatement = function (ctx, ast) {
@@ -113,7 +104,7 @@ visitors.ContinueStatement = function (ctx, ast) {
 };
 
 visitors.WithStatement = function (ctx, ast) {
-  return "with(" + ctx.traps.with(visit(ctx, ast, ast.object), ast.__min__) + ")" + body(ctx, ast, ast.body);
+  return "with(" + ctx.traps.with(visit(ctx, ast, ast.object), ast.__min__) + "){" + visit(ctx, ast, ast.body) + "}";
 };
 
 visitors.SwitchStatement = function (ctx, ast) {
@@ -146,20 +137,30 @@ visitors.ThrowStatement = function (ctx, ast) {
 };
 
 visitors.TryStatement = function (ctx, ast) {
-  var fct = visit.bind(undefined, ctx, ast);
-  return "try{" + ctx.traps.Try(ast.__min__) + ast.block.body.map(fct).join("") + "}"
+  var fct = visit.bind(null, ctx, ast);
+  return "try{" + ctx.traps.Enter(ast.__min__)
+      + ctx.traps.Try(ast.__min__)
+      + ast.block.body.map(fct).join("")
+      + (ast.__last__ && !ast.__last__.body ? ctx.traps.Last("void 0", ast.__min__) : "")
+      + ctx.traps.Leave(ast.__min__) + "}"
     + (ast.handler ? "catch(" + ast.handler.param.name + "){"
+      + ctx.traps.Enter(ast.__min__)
       + ast.handler.param.name + "=" + ctx.traps.catch(ast.handler.param.name, ast.__min__) + ";"
-      + ast.handler.body.body.map(fct).join("") + "}" : "")
-    + "finally{" + ctx.traps.Finally(ast.__min__)
-      + (ast.finalizer ? ast.finalizer.body.map(fct).join("") : "") + "}";
+      + ast.handler.body.body.map(fct).join("") +
+      + (ast.__last__ && !ast.__last__.handler ? ctx.traps.Last("void 0", ast.__min__) : "")
+      + ctx.traps.Leave(ast.__min__) + "}" : "")
+    + "finally{" + ctx.traps.Enter(ast.__min__)
+      + ctx.traps.Finally(ast.__min__)
+      + (ast.finalizer ? ast.finalizer.body.map(fct).join("") : "")
+      + ctx.traps.Leave(ast.__min__) + "}";
 };
 
 visitors.WhileStatement = function (ctx, ast) {
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = "while(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + ")"
-    + body(ctx, ast, ast.body);
+  var res = (ast.__last__ ? ctx.traps.Last("void 0", ast.__min__) : "")
+    + "while(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + "){"
+    + visit(ctx, ast, ast.body) + "}";
   ctx.loop = tmp;
   return res;
 };
@@ -167,8 +168,9 @@ visitors.WhileStatement = function (ctx, ast) {
 visitors.DoWhileStatement = function (ctx, ast) {
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = "do" + body(ctx, ast, ast.body)
-    + "while(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + ");";
+  var res = (ast.__last__ ? ctx.traps.Last("void 0", ast.__min__) : "")
+    + "do{" + visit(ctx, ast, ast.body)
+    + "}while(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + ");";
   ctx.loop = tmp;
   return res;
 };
@@ -186,10 +188,11 @@ visitors.ForStatement = function (ctx, ast) {
   ast.update && (str4 = visit(ctx, ast, ast.update) + ";" + ctx.traps.Expression(ast.__min__));
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = "{" + ctx.traps.Enter(ast.__min__) + str1 + str2
+  var res = (ast.__last__ ? ctx.traps.Last("void 0", ast.__min__) : "")
+    + "{" + ctx.traps.Enter(ast.__min__) + str1 + str2
     + "while(" + str3 + "){"
     + (ast.body.type === "BlockStatement"
-      ? ast.body.body.map(visit.bind(undefined, ctx, ast)).join("")
+      ? ast.body.body.map(visit.bind(null, ctx, ast)).join("")
       : visit(ctx, ast, ast.body))
     + str4 + "}" + ctx.traps.Leave(ast.__min__) + "}";
   ctx.loop = tmp;
@@ -230,10 +233,11 @@ visitors.ForInStatement = function (ctx, ast) {
   } 
   var tmp = ctx.loop;
   ctx.loop = "";
-  var res = "{" + ctx.traps.Enter(ast.__min__) + arr.join("")
+  var res = (ast.__last__ ? ctx.traps.Last("void 0", ast.__min__) : "")
+    + "{" + ctx.traps.Enter(ast.__min__) + arr.join("")
     + "while(" + obj.counter + "<" + obj.enumerate + ".length){"
     + (ast.body.type === "BlockStatement"
-      ? ast.body.body.map(visit.bind(undefined, ctx, ast)).join("")
+      ? ast.body.body.map(visit.bind(null, ctx, ast)).join("")
       : visit(ctx, ast, ast.body))
     + str + ";" + ctx.traps.Expression(ast.__min__) + obj.counter +"++;}"
     + ctx.traps.Leave(ast.__min__) + "}";
@@ -276,7 +280,7 @@ visitors.ObjectExpression = function (ctx, ast) {
 visitors.FunctionExpression = function (ctx, ast) { return closure(ctx, ast) };
 
 visitors.SequenceExpression = function (ctx, ast) {
-  return ctx.traps.sequence(ast.expressions.map(visit.bind(undefined, ctx, ast)), ast.__min__);
+  return ctx.traps.sequence(ast.expressions.map(visit.bind(null, ctx, ast)), ast.__min__);
 };
 
 // TODO: figure out what to do with: ``delete identifier''.
@@ -384,20 +388,20 @@ visitors.ConditionalExpression = function (ctx, ast) {
 visitors.NewExpression = function (ctx, ast) {
   return ctx.traps.construct(
     visit(ctx, ast, ast.callee),
-    ast.arguments.map(visit.bind(undefined, ctx, ast)),
+    ast.arguments.map(visit.bind(null, ctx, ast)),
     ast.__min__);
 };
 
-function args (ctx, ast) { return ast.arguments.map(visit.bind(undefined, ctx, ast)) }
+function args (ctx, ast) { return ast.arguments.map(visit.bind(null, ctx, ast)) }
 visitors.CallExpression = function (ctx, ast) {
   if (ast.callee.type === "Identifier" && ast.callee.name === "eval") {
     var arr = args(ctx, ast);
     return "(" + ctx.traps.read("eval", ast.__min__) + "==="+ctx.eval
       + "?" + ctx.traps.eval(arr, ast.__min__)
-      + ":" + ctx.traps.apply("eval", null, arr, ast.__min__) + ")";
+      + ":" + ctx.traps.apply("eval", ctx.strict ? "void 0" : "null", arr, ast.__min__) + ")";
   }
   if (ast.callee.type !== "MemberExpression")
-    return ctx.traps.apply(visit(ctx, ast, ast.callee), null, args(ctx, ast), ast.__min__);
+    return ctx.traps.apply(visit(ctx, ast, ast.callee), ctx.strict ? "void 0" : "null", args(ctx, ast), ast.__min__);
   var str = ctx.hide();
   return ctx.traps.apply(
     ctx.traps.get(
@@ -432,21 +436,23 @@ visitors.Literal = function (ctx, ast) {
 // Helpers //
 /////////////
 
-function kindinit (ast) { return ast.kind === "init" }
-
-function name (ast) { return ast.name }
-
-function idname (ast) { return ast.id.name }
-
 function strict (ast) {
   return ast.type === "ExpressionStatement"
     && ast.expression.type === "Literal"
     && ast.expression.value === "use strict";
 }
 
-function body (ctx, src, ast) {
-  return ast.type === "BlockStatement" ? visit(ctx, src, ast) : "{" + visit(ctx, src, ast) + "}";
-}
+// function body (ctx, src, ast) {
+//   var str = ("__last__" in src && !src.body)
+//     ? ctx.traps.Last("void 0", src.__min__);
+//     :
+//   return "{" + visit(ctx, src, ast) + "}"
+//   return ast.type === "BlockStatement"
+//     ? visit(ctx, src, ast)
+//     : "{" + visit(ctx, src, ast) +  + "}";
+// }
+
+function idname (ast) { return ast.id.name }
 
 function declare (ctx, src, ast) {
   return ast.kind + " " + ast.declarations.map(idname).join(",") + ";" + ast.declarations.map(function (dec) {
@@ -454,20 +460,24 @@ function declare (ctx, src, ast) {
   }).join("");
 }
 
-function closure (ctx, ast) {
-  var bin = ast.body.body.length && strict(ast.body.body[0]);
-  var tmp1 = ctx.hoisted, tmp2 = ctx.loop, tmp3 = ctx.hidden;
-  (ctx.hoisted = {closure:"", block: ""}, ctx.loop = "", ctx.hidden = []);
-  var arr = (bin ? ast.body.body.slice(1) : ast.body.body).map(visit.bind(undefined, ctx, ast));
-  var res = "function " + (ast.id ? ast.id.name : "")
-    + "(" + ast.params.map(name).join(",") + "){"
-    + (bin ? "'use strict';" + ctx.traps.Strict(ast.__min__) : "")
-    + ctx.traps.Arguments(ast.__min__)
-    + (ctx.hidden.length ? "var " + ctx.hidden.join(",") + ";" : "")
-    + ctx.hoisted.closure
-    + arr.join("")
-    + " return " + ctx.traps.return(ctx.traps.primitive(" void 0", ast.__min__), ast.__min__)
-    + "}";
-  (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.hidden = tmp3);
-  return ctx.traps.closure(res, ast.__min__);
-}
+var closure = (function () {
+  function name (ast) { return ast.name }
+  function nonarguments (p) { p.name !== "arguments" }
+  return function (ctx, ast) {
+    var tmp1 = ctx.hoisted, tmp2 = ctx.loop, tmp3 = ctx.hidden, tmp4 = ctx.strict;
+    (ctx.hoisted = {closure:"", block: ""}, ctx.loop = "", ctx.hidden = []);
+    ctx.strict = ast.body.body.length && strict(ast.body.body[0]);
+    var arr = (ctx.strict ? ast.body.body.slice(1) : ast.body.body).map(visit.bind(null, ctx, ast));
+    var res = "function " + (ast.id ? ast.id.name : "")
+      + "(" + ast.params.map(name).join(",") + "){"
+      + (ctx.strict ? "'use strict';" + ctx.traps.Strict(ast.__min__) : "")
+      + (ast.params.every(nonarguments) ? ctx.traps.Arguments(ast.__min__) : "")
+      + (ctx.hidden.length ? "var " + ctx.hidden.join(",") + ";" : "")
+      + ctx.hoisted.closure
+      + arr.join("")
+      + " return " + ctx.traps.return(ctx.traps.primitive(" void 0", ast.__min__), ast.__min__)
+      + "}";
+    (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.hidden = tmp3, ctx.strict = tmp4);
+    return ctx.traps.closure(res, ast.__min__);
+  };
+} ());
