@@ -1,5 +1,6 @@
 // This analysis traps everything and forward all operations //
 var Aran = require("aran");
+var JsBeautify = require("js-beautify");
 var traps = {};
 // General //
 traps.Program = function (idx) { };
@@ -16,7 +17,7 @@ traps.object = function (prps, idx) {
 traps.array = function (vals, idx) { return vals };
 traps.regexp = function (ptn, flg, idx) { return new RegExp(ptn, flg) }
 // Environment //
-traps.Declare = function (tags, idx) { };
+traps.Declare = function (kind, tags, idx) { };
 traps.read = function (tag, val, idx) { return val };
 traps.write = function (tag, val, wrt, idx) { return wrt(val) };
 traps.Enter = function (idx) { };
@@ -53,4 +54,6 @@ traps.expression = function (val, idx) { return val };
 // Exports //
 global.__hidden__ = traps;
 var aran = Aran({namespace:"__hidden__", traps:Object.keys(traps)});
-module.exports = aran.instrument;
+module.exports = function (script, source) {
+  return JsBeautify.js_beautify(aran.instrument(script, source));
+};
