@@ -3,13 +3,17 @@
 Aran is a npm module for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing, and symbolic execution.
 Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting [ECMAScript6](http://www.ecma-international.org/ecma-262/6.0/).
 To install, run `npm install aran`.
+Note than Aran does not deal with module systems; alone, it can only handle monolithic JavaScript programs.
+Various module systems are supported in a separate module called [Otiluke](https://github.com/lachrist/otiluke).
 
 ## Demonstration
 
 In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.
 For instance, the expression `x + y` may be transformed into `aran.binary('+', x, y)` which triggers the `binary` trap.
-The best way to get familiar with Aran is by toying with its [demo page](http://rawgit.com/lachrist/aran/master/demo/index.html).
-The target editor expects a JavaScript program to analyze while the master editor expects a script exporting an instrumentation function.
+The best way to get familiar with Aran is by toying with its [demo page](http://rawgit.com/lachrist/aran/master/demo/index.html) built with [Otiluke](https://github.com/lachrist/otiluke).
+The 'transpile' editor expects a script exporting an instrumentation function.
+The monolithic program to instrument can be typed into the 'main' editor.
+Note than 
 
 <img src="readme/demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
 
