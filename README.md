@@ -8,7 +8,7 @@ To install, run `npm install aran`.
 
 In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.
 For instance, the expression `x + y` may be transformed into `aran.binary('+', x, y)` which triggers the `binary` trap.
-The best way to get familiar with Aran is by toying with its [demo page](http://rawgit.com/lachrist/aran/master/demo.html).
+The best way to get familiar with Aran is by toying with its [demo page](http://rawgit.com/lachrist/aran/master/demo/index.html).
 The target editor expects a JavaScript program to analyze while the master editor expects a script exporting an instrumentation function.
 
 <img src="readme/demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
@@ -18,19 +18,20 @@ The target editor expects a JavaScript program to analyze while the master edito
 ```javascript
 var Aran = require("aran");
 var aran = Aran({
-  namespace: unusedGlobalName,
+  namespace: hiddenGlobalName,
   traps: trapNames,
   loc: isLoCNeeded,
   range: isRangeNeeded
 });
-var instrumentedCode = aran.instrument(jsCode, source);
+var instrumentedCode = aran.instrument(script, source);
 var maybeNode = aran.node(nodeIndex);
 var maybeSource = aran.source(nodeIndex);
 ```
 
-The top level function of this module understands the below set of options and returns an object with two functions.
-The `instrument` function parses the given string as JavaScript code, indexes every AST node, store the entire AST, assign the root's parent and return the instrumented code.
-The `search` function looks up for an AST node at the given index within the previously parsed scripts.
+Aside from instrumenting, `aran.instrument` indexes every AST nodes and store them with the associated source.
+Later, when traps are called, the index of the node responsible of triggering the trap is systematically given as last argument.
+From this index, it is possible to retrieve the AST node with `aran.node` or the associated source with `aran.source`.
+Here are the options recognized by the top-level function of this module:
 
  Option     | Default  | Value
 ------------|----------|---------------------------------------------------------------------------------------------------------------------
@@ -50,7 +51,7 @@ Three different use examples are provided in this repository:
 3. [Online modular instrumentation](usage/online-modular)
 
 Note that if the program under analysis accesses the global variable holding the Aran's traps terrible things will happen.
-First it could break the analysis by modifying the traps. 
+First it could break the analysis by modifying the traps.
 Second, more subtly, it changes the behavior of the program under analysis and the conclusion drawn during the analysis may not hold for the program alone.
 The most straight forward way to prevent this to happen is to pick an extravagant name for this global variable.
 However it is not a complete solution because the program under analysis may still access it by listing the property of the global object.
