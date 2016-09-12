@@ -2,74 +2,81 @@
 // This analysis traps AND logs everything and forward all operations //
 
 // BEGIN VERBATIM 2-Identity.js //
-
+// This analysis traps everything and forward all operations //
 var Aran = require("aran");
 var traps = {};
-
 // General //
-traps.Program = function (i) { };
-traps.Strict = function (i) { };
-traps.unary = function (o, x, i) { return eval(o+" x") };
-traps.binary = function (o, x1, x2, i) { return eval("x1 "+o+" x2") };
+traps.Program = function (idx) { };
+traps.Strict = function (idx) { };
 // Creation //
-traps.primitive = function (x, i) { return x };
-traps.closure = function (x, i) { return x };
-traps.object = function (ps, i) {
-  var o = {};
-  ps.forEach(function (p) { Object.defineProperty(o, p.key, p) });
-  return o;
+traps.primitive = function (prm, idx) { return prm };
+traps.closure = function (fct, idx) { return fct };
+traps.object = function (prps, idx) {
+  var obj = {};
+  for (var i=0; i<prps.length; i++)
+    Object.defineProperty(obj, prps[i].key, prps[i]);
+  return obj;
 };
-traps.array = function (xs, i) { return xs }
-traps.regexp = function (p, f, i) { return new RegExp(p, f) }
+traps.array = function (vals, idx) { return vals };
+traps.regexp = function (ptn, flg, idx) { return new RegExp(ptn, flg) }
 // Environment //
-traps.Declare = function (vs, i) { };
-traps.read = function (v, x, i) { return x };
-traps.write = function (v, x, f, i) { return (f(x), x) };
-traps.Enter = function (i) { };
-traps.Leave = function (i) { };
-traps.with = function (x, i) { return x };
+traps.Declare = function (tags, idx) { };
+traps.read = function (tag, val, idx) { return val };
+traps.write = function (tag, val, wrt, idx) { return wrt(val) };
+traps.Enter = function (idx) { };
+traps.Leave = function (idx) { };
+traps.with = function (env, idx) { return env };
 // Apply //
-traps.apply = function (f, t, xs, i) { return f.apply(t, xs) };
-traps.construct = function (c, xs, i) { return new c(...xs) };
-traps.Arguments = function (xs, i) { };
-traps.return = function (x, i) { return x };
-traps.eval = function (x, i) { return x };
+traps.apply = function (fct, ths, args, idx) { return fct.apply(ths, args) };
+traps.construct = function (cst, args, idx) { return new cst(...args) };
+traps.Arguments = function (args, i) { };
+traps.return = function (val, idx) { return val };
+traps.eval = function (args, idx) { return args[0] };
+traps.unary = function (opr, arg, idx) { return eval(opr+" arg") };
+traps.binary = function (opr, lft, rgt, idx) { return eval("lft "+opr+" rgt") };
 // Object //
-traps.get = function (o, k, i) { return o[k] };
-traps.set = function (o, k, x, i) { return o[k] = x };
-traps.delete = function (o, k, i) { return delete o[k] };
-traps.enumerate = function (o, i) {
-  var ks = [];
-  for (var k in o)
-    ks.push(k);
-  return ks;
+traps.get = function (obj, key, idx) { return obj[key] };
+traps.set = function (obj, key, val, idx) { return obj[key] = val };
+traps.delete = function (obj, key, idx) { return delete obj[key] };
+traps.enumerate = function (obj, idx) {
+  var keys = [];
+  for (var key in obj)
+    keys.push(key);
+  return keys;
 };
 // Control //
-traps.test = function (x, i) { return x };
-traps.Label = function (l, i) { };
-traps.Break = function (l, i) { };
-traps.throw = function (x, i) { return x };
-traps.Try = function (i) { };
-traps.catch = function (v, x, i) { return x };
-traps.Finally = function (i) { };
-
+traps.test = function (val, idx) { return val };
+traps.Label = function (lbl, idx) { };
+traps.Break = function (lbl, idx) { };
+traps.throw = function (err, idx) { return err };
+traps.Try = function (idx) { };
+traps.catch = function (err, idx) { return err };
+traps.Finally = function (idx) { };
+traps.sequence = function (vals, idx) { return vals[vals.length-1] };
+traps.expression = function (val, idx) { return val };
+// Exports //
+global.__hidden__ = traps;
+var aran = Aran({namespace:"__hidden__", traps:Object.keys(traps)});
+module.exports = aran.instrument;
 // END VERBATIM 2-Identity.js //
 
-function log (name, array) {
-  var string = name+" "+locate(array[array.length-1]) + " >>";
-  for (var i=0; i<array.length-1; i++)
-    string += (" " + array[i]).substring(0, 10);
-  console.log(string);
-}
-
-function locate (index) {
-  var node = aran.node(index);
-  if (!node)
-    debugger;
-  var source = aran.source(index);
-  var loc = node.loc.start;
-  return node.type + "@" + source + "#" + loc.line + ":" + loc.column;
-}
+var log = (function () {
+  function locate (index) {
+    var node = aran.node(index);
+    var source = aran.source(index);
+    var loc = node.loc.start;
+    return node.type + "@" + source + "#" + loc.line + ":" + loc.column;
+  }
+  function message (name, array) {
+    var string = name+" "+locate(array[array.length-1]) + " >>";
+    for (var i=0; i<array.length-1; i++)
+      string += (" " + array[i]).substring(0, 10);
+    return string;
+  }
+  return global.meta
+    ? function (name, array) { meta.log(message(name, array)+"\n") }
+    : function (name, array) { console.log(message(name, array)) };
+} ());
 
 var traps2 = {};
 Object.keys(traps).forEach(function (name) {

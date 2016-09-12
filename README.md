@@ -69,9 +69,10 @@ In the table below, `123` is used as a dummy index.
 **General**                         |                     |
 `Program(index)`                    | ...                 | `aran.Program(123); ...`
 `Strict(index)`                     | `'use strict';`     | `'use strict';`<br>`aran.Strict(123);`
+`expression(value, index)`          | `x`                 | `aran.expression(x, 123)`
+**Creation**                        |                     |
+
 `literal(value, index)`             | `'foo'`             | `aran.literal('foo', 123)`
-`unary(op, value, index)`           | `!x`                | `aran.unary('!', x, 123)`
-`binary(op, left, right, index)`    | `x + y`             | `aran.binary('+', x, y, 123)`
 **Environment**                     |                     |
 `Declare(kind, variables, index)`   | `var x = 1, y;`     | `aran.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
 `read(variable, value, index)`      | `x`                 | `aran.read('x', x, 123)` |
@@ -83,6 +84,8 @@ In the table below, `123` is used as a dummy index.
 `Arguments(value, index)`           | `function ...`      | `... aran.Arguments(arguments, 123)... `
 `return(value, index)`              | `return x;`         | `return aran.return(x, 123);`
 `eval(args, index)`                 | `eval(x, y)`        | `... eval(aran.eval([x,y], 123))... `
+`unary(op, value, index)`           | `!x`                | `aran.unary('!', x, 123)`
+`binary(op, left, right, index)`    | `x + y`             | `aran.binary('+', x, y, 123)`
 **Object**                          |                     |
 `get(object, key, index)`           | `o.k`               | `aran.get(o, 'k', 123)` 
 `set(object, key, value, index)`    | `o.k = x`           | `aran.set(o, 'k', x, 123)`
@@ -94,8 +97,6 @@ In the table below, `123` is used as a dummy index.
 `Break(label, index)`               | `break l;`          | `aran.Break('l', 123);`<br>`break l;`
 `throw(error, index)`               | `throw x;`          | `throw aran.throw(x, 123);`
 `Try(index)`<br>`catch(error, index)`<br>`Finally(index)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`aran.Try(123);`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`e = aran.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`aran.Finally(123);`<br>&nbsp;&nbsp;`..`<br>`}`
-`sequence`                          | `(x, y, z)`         | `aran.sequence([x, y, z], 123)`
-`Expression`                        | x;                  | `aran.Expression(x);`
 
 In the case of a direct apply, the `this` argument provided to the `apply` trap is `undefined` in strict mode or else is `null`.
 If one of the parameter is named `arguments`, the `arguments` trap is not triggered.

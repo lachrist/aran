@@ -15,13 +15,17 @@ var traps = {};
 
 var forwards = {};
 
-////////////
-// Others //
-////////////
+/////////////
+// General //
+/////////////
 
 traps.Program = function (namespace, index) { return namespace+".Program("+index+");" };
 
 traps.Strict = function (namespace, index) { return namespace+".Strict("+index+");" };
+
+//////////////
+// Creation //
+//////////////
 
 traps.primitive = function (namespace, value, index) { return namespace+".primitive("+value+","+index+")" };
 forwards.primitive = function (_, value, _) { return value };
@@ -31,7 +35,7 @@ forwards.closure = function (_, closure, index) { return closure };
 
 function property (prp) { return "{key:"+prp.key+",configurable:true,enumerable:true,"+(prp.kind === "init" ? "writable:true,value" : prp.kind)+":"+prp.value+"}" }
 traps.object = function (namespace, properties, index) { return namespace+".object(["+properties.map(property).join(",")+"],"+index+")"};
-forwards.object = function (_, properties, index) {
+forwards.object = function (namespace, properties, index) {
   var arr = [];
   properties.forEach(function (p) { (p.kind === "init") && arr.push(p.key + ":" + p.value) });
   var str = "{"+arr.join(",")+"}";
@@ -41,19 +45,11 @@ forwards.object = function (_, properties, index) {
   return str;
 };
 
-traps.Last = function (namespace, index) { return namespace+".Last("+index+");" };
-
 traps.array = function (namespace, elements, index) { return namespace+".array(["+elements.join(",")+"],"+index+")" };
 forwards.array = function (_, elements, _) { return "["+elements.join(",")+"]" };
 
 traps.regexp = function (namespace, pattern, flags, index) { return namespace+".regexp("+JSON.stringify(pattern)+","+JSON.stringify(flags)+","+index+")" };
 forwards.regexp = function (_, pattern, flags, index) { return "/"+pattern+"/"+flags+" " };
-
-traps.unary = function (namespace, operator, value, index) { return namespace+".unary("+JSON.stringify(operator)+","+value+","+index+")" };
-forwards.unary = function (_, operator, value, _) { return operator+"("+value+")" };
-
-traps.binary = function (namespace, operator, left, right, index) { return namespace+".binary("+JSON.stringify(operator)+","+left+","+right+","+index+")" };
-forwards.binary = function (_, operator, left, right, _) { return "("+left+" "+operator+" "+right+")" };
 
 /////////////////
 // Environment //
@@ -64,7 +60,7 @@ traps.Declare = function (namespace, kind, variables, index) { return namespace+
 traps.read = function (namespace, variable, index) { return namespace+".read("+JSON.stringify(variable)+","+variable+","+index+")" };
 forwards.read = function (_, variable, _) { return variable };
 
-traps.write = function (namespace, variable, value, index) { return namespace+".write("+JSON.stringify(variable)+","+value+",function("+namespace+"){"+variable+"="+namespace+"},"+index+")" };
+traps.write = function (namespace, variable, value, index) { return namespace+".write("+JSON.stringify(variable)+","+value+",function("+namespace+"){return "+variable+"="+namespace+"},"+index+")" };
 forwards.write = function (_, variable, value, _) { return "("+variable+"="+value+")" };
 
 traps.Enter = function (namespace, index) { return namespace+".Enter("+index+");" };
@@ -93,8 +89,14 @@ traps.Arguments = function (namespace, index) { return namespace+".Arguments(arg
 traps.return = function (namespace, value, index) { return namespace+".return("+value+","+index+")" };
 forwards.return = function (_, value, _) { return value };
 
-traps.eval = function (namespace, arguments, index) { return "eval("+namespace+".eval(["+arguments.join(",")+"][0],"+index+"))" };
+traps.eval = function (namespace, arguments, index) { return "eval("+namespace+".eval(["+arguments.join(",")+"],"+index+"))" };
 forwards.eval = function (_, arguments, _) { return "eval("+arguments.join(",")+")" };
+
+traps.unary = function (namespace, operator, value, index) { return namespace+".unary("+JSON.stringify(operator)+","+value+","+index+")" };
+forwards.unary = function (_, operator, value, _) { return operator+"("+value+")" };
+
+traps.binary = function (namespace, operator, left, right, index) { return namespace+".binary("+JSON.stringify(operator)+","+left+","+right+","+index+")" };
+forwards.binary = function (_, operator, left, right, _) { return "("+left+" "+operator+" "+right+")" };
 
 ////////////
 // Object //
@@ -128,7 +130,7 @@ forwards.throw = function (_, value, _) { return value };
 
 traps.Try = function (namespace, index) { return namespace+".Try("+index+");" };
 
-traps.catch = function (namespace, variable, index) { return namespace+".catch("+JSON.stringify(variable)+","+variable+","+index+");" };
+traps.catch = function (namespace, variable, index) { return namespace+".catch("+variable+","+index+");" };
 forwards.catch = function (_, variable, _) { return variable };
 
 traps.Finally = function (namespace, index) { return namespace+".Finally("+index+");" };
@@ -136,7 +138,5 @@ traps.Finally = function (namespace, index) { return namespace+".Finally("+index
 traps.sequence = function (namespace, expressions, index) { return namespace+".sequence(["+expressions.join(",")+"],"+index+")" };
 forwards.sequence = function (_, expressions, _) { return "("+expressions.join(",")+")" }
 
-traps.expression = function (namespace, value, index) { return namespace+".Expression("+value+","+index+")"}
+traps.expression = function (namespace, value, index) { return namespace+".expression("+value+","+index+")"}
 forwards.expression = function (_, value, index) { return value }
-
-traps.Expression = function (namespace, index) { return namespace+".Expression("+index+");" }
