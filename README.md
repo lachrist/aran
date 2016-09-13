@@ -9,11 +9,11 @@ Various module systems are supported in a separate module called [Otiluke](https
 ## Demonstration
 
 In Aran, an analysis consists in a set of syntactic traps that will be triggered while the program under scrutiny is being executed.
-For instance, the expression `x + y` may be transformed into `aran.binary('+', x, y)` which triggers the `binary` trap.
+For instance, the expression `x + y` may be transformed into `__hidden__.binary('+', x, y)` which triggers the `binary` trap.
 The best way to get familiar with Aran is by toying with its [demo page](http://rawgit.com/lachrist/aran/master/demo/index.html) built with [Otiluke](https://github.com/lachrist/otiluke).
 The 'transpile' editor expects a script exporting an instrumentation function.
 The monolithic program to instrument can be typed into the 'main' editor.
-Note than 
+Note that [Otiluke](https://github.com/lachrist/otiluke) provide a separate log chanel
 
 <img src="readme/demo.png" align="center" alt="demo-screenshot" title="Aran's demonstration page"/>
 
