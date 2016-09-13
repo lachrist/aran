@@ -75,8 +75,8 @@ In the table below, `123` is used as a dummy index.
 `Program(index)`                    | ...                 | `aran.Program(123); ...`
 `Strict(index)`                     | `'use strict';`     | `'use strict';`<br>`aran.Strict(123);`
 **Creation**                        |                     |
-`primitive(value, index)`           | null                | `aran.primitive(null, 123)`
-`closure(value, index)`             | function ...        | `aran.closure(function ..., 123)`
+`primitive(value, index)`           | `null`              | `aran.primitive(null, 123)`
+`closure(value, index)`             | `function ...`      | `aran.closure(function ..., 123)`
 `object(properties, index)`         | `{a:x}`             | `aran.object([{`<br>`key:"a",`<br>`configurable:true,`<br>`enumerable:true`<br>`value:x}]`
 `array(elements, index)`            | `[x, y, z]`         | `aran.array([x, y, z], 123)`
 `regexp(pattern, flags, index)`     | `/abc/g`            | `aran.regexp("abc", "g")`
@@ -105,13 +105,13 @@ In the table below, `123` is used as a dummy index.
 `Break(label, index)`               | `break l;`          | `aran.Break('l', 123);`<br>`break l;`
 `throw(error, index)`               | `throw x;`          | `throw aran.throw(x, 123);`
 `Try(index)`<br>`catch(error, index)`<br>`Finally(index)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`aran.Try(123);`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`e = aran.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`aran.Finally(123);`<br>&nbsp;&nbsp;`..`<br>`}`
-`sequence(values, index)`           | (x, y, z)           | `aran.sequence([x, y, z], 123)`
+`sequence(values, index)`           | `(x, y, z)`         | `aran.sequence([x, y, z], 123)`
 `expression(value, index)`          | `x`                 | `aran.expression(x, 123)`
 
 
 In the case of a direct apply, the `this` argument provided to the `apply` trap is `undefined` in strict mode or else is `null`.
 If one of the parameter is named `arguments`, the `arguments` trap is not triggered.
-The finally trap is always triggered even if it its clause did not originally exist.
+The `finally` trap is always triggered even if it its clause did not originally exist.
 The below table depicts which traps are susceptible to be inserted for every [AST node type](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API).
 To further investigate how traps are inserted, please try it out in Aran's [demo page](http://rawgit.com/lachrist/aran/master/demo.html).
 
