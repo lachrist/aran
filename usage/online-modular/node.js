@@ -1,2 +1,2 @@
-// otiluke --node --transform ./analysis.js --main ../target/commonjs/main.js
-require("otiluke").node({transform:"./analysis.js", main:"../target/commonjs/main.js"});
+// otiluke --node --transpile ./analysis.js --main ../target/commonjs/main.js
+require("otiluke").node({transpile:"./analysis.js", main:"../target/commonjs/main.js"});

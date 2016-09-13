@@ -2,7 +2,7 @@
 var Esprima = require("esprima");
 var Fs = require("fs");
 
-var code = Fs.readFileSync(__dirname+"/instrument.js", {encoding:"utf8"});
+var code = Fs.readFileSync(__dirname+"/../instrument.js", {encoding:"utf8"});
 var tree = Esprima.parse(code);
 
 function visit (node) {
@@ -28,40 +28,9 @@ tree.body.map(function (node) {
     helpers[node.id.name] = visit(node);
 });
 
-var traps = [
-  // General //
-  "Strict",
-  "literal",
-  "unary",
-  "binary",
-  // Environment //
-  "Declare",
-  "read",
-  "write",
-  "Enter",
-  "Leave",
-  // Apply //
-  "apply",
-  "construct",
-  "Arguments",
-  "return",
-  "eval",
-  // Object //
-  "get",
-  "set",
-  "delete",
-  "enumerate",
-  // Control //
-  "test",
-  "Label",
-  "Break",
-  "throw",
-  "Try",
-  "catch",
-  "Finally",
-  "sequence",
-  "Expression"
-];
+var traps = [];
+Fs.readFileSync(__dirname+"/../traps.js", "utf8")
+  .replace(/\ntraps.(\w+)/g, function (_, name) { traps.push(name) });
 process.stdout.write(repeat(" ", 25)+"|");
 process.stdout.write(traps.map(backquote).join("|"));
 process.stdout.write("\n");
