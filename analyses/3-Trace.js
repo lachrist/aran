@@ -74,8 +74,8 @@ module.exports = function (options) {
     };
   });
   // Exports //
-  global.__ = traps2;
-  var aran = Aran({namespace:"__", traps:Object.keys(traps2), loc:true});
+  global._meta_ = traps2;
+  var aran = Aran({namespace:"_meta_", traps:Object.keys(traps2), loc:true});
   return function (script, source) {
     return JsBeautify.js_beautify(aran.instrument(script, source));
   };

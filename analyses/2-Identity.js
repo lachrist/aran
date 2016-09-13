@@ -53,8 +53,8 @@ module.exports = function (options) {
   traps.sequence = function (vals, idx) { return vals[vals.length-1] };
   traps.expression = function (val, idx) { return val };
   // Exports //
-  global.__hidden__ = traps;
-  var aran = Aran({namespace:"__hidden__", traps:Object.keys(traps)});
+  global._meta_ = traps;
+  var aran = Aran({namespace:"_meta_", traps:Object.keys(traps)});
   return function (script, source) {
     return JsBeautify.js_beautify(aran.instrument(script, source));
   };
