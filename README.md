@@ -72,41 +72,41 @@ In the table below, `123` is used as a dummy index.
  Traps                              | Target              | Instrumented
 ------------------------------------|---------------------|-------------------------------------------------------
 **General**                         |                     |
-`Program(index)`                    | ...                 | `aran.Program(123); ...`
-`Strict(index)`                     | `'use strict';`     | `'use strict';`<br>`aran.Strict(123);`
+`Program(index)`                    | ...                 | `_meta_.Program(123); ...`
+`Strict(index)`                     | `'use strict';`     | `'use strict';`<br>`_meta_.Strict(123);`
 **Creation**                        |                     |
-`primitive(value, index)`           | `null`              | `aran.primitive(null, 123)`
-`closure(value, index)`             | `function ...`      | `aran.closure(function ..., 123)`
-`object(properties, index)`         | `{a:x}`             | `aran.object([{`<br>`key:"a",`<br>`configurable:true,`<br>`enumerable:true`<br>`value:x}]`
-`array(elements, index)`            | `[x, y, z]`         | `aran.array([x, y, z], 123)`
-`regexp(pattern, flags, index)`     | `/abc/g`            | `aran.regexp("abc", "g")`
+`primitive(value, index)`           | `null`              | `_meta_.primitive(null, 123)`
+`closure(value, index)`             | `function ...`      | `_meta_.closure(function ..., 123)`
+`object(properties, index)`         | `{a:x}`             | `_meta_.object([{`<br>`key:"a",`<br>`configurable:true,`<br>`enumerable:true`<br>`value:x}]`
+`array(elements, index)`            | `[x, y, z]`         | `_meta_.array([x, y, z], 123)`
+`regexp(pattern, flags, index)`     | `/abc/g`            | `_meta_.regexp("abc", "g")`
 **Environment**                     |                     |
-`Declare(kind, variables, index)`   | `var x = 1, y;`     | `aran.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
-`read(variable, value, index)`      | `x`                 | `aran.read('x', x, 123)` |
-`write(variable, old, new, index)`  | `x = y`             | `aran.write('x', x, y, 123)`
-`Enter(index)`<br>`Leave(index)`    | `{ ... }`           | `{`<br>&nbsp;&nbsp;`aran.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`aran.Leave(123);`<br>`}`
-`with(environment, index)`          | `with(o) { ... }`   | `with(aran.with(o)) { ... }`
+`Declare(kind, variables, index)`   | `var x = 1, y;`     | `_meta_.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
+`read(variable, value, index)`      | `x`                 | `_meta_.read('x', x, 123)` |
+`write(variable, old, new, index)`  | `x = y`             | `_meta_.write('x', x, y, 123)`
+`Enter(index)`<br>`Leave(index)`    | `{ ... }`           | `{`<br>&nbsp;&nbsp;`_meta_.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`_meta_.Leave(123);`<br>`}`
+`with(environment, index)`          | `with(o) { ... }`   | `with(_meta_.with(o)) { ... }`
 **Apply**                           |                     |
-`apply(fct, this, args, index)`     | `f(x,y)`            | `aran.apply(f, null, [x,y], 123)`
-`construct(fct, args, index)`       | `new F(x,y)`        | `aran.construct(F, [x,y], 123)`
-`Arguments(value, index)`           | `function ...`      | `... aran.Arguments(arguments, 123)... `
-`return(value, index)`              | `return x;`         | `return aran.return(x, 123);`
-`eval(args, index)`                 | `eval(x, y)`        | `... eval(aran.eval([x,y], 123))... `
-`unary(op, value, index)`           | `!x`                | `aran.unary('!', x, 123)`
-`binary(op, left, right, index)`    | `x + y`             | `aran.binary('+', x, y, 123)`
+`apply(fct, this, args, index)`     | `f(x,y)`            | `_meta_.apply(f, null, [x,y], 123)`
+`construct(fct, args, index)`       | `new F(x,y)`        | `_meta_.construct(F, [x,y], 123)`
+`Arguments(value, index)`           | `function ...`      | `... _meta_.Arguments(arguments, 123)... `
+`return(value, index)`              | `return x;`         | `return _meta_.return(x, 123);`
+`eval(args, index)`                 | `eval(x, y)`        | `... eval(_meta_.eval([x,y], 123))... `
+`unary(op, value, index)`           | `!x`                | `_meta_.unary('!', x, 123)`
+`binary(op, left, right, index)`    | `x + y`             | `_meta_.binary('+', x, y, 123)`
 **Object**                          |                     |
-`get(object, key, index)`           | `o.k`               | `aran.get(o, 'k', 123)` 
-`set(object, key, value, index)`    | `o.k = x`           | `aran.set(o, 'k', x, 123)`
-`delete(object, key, index)`        | `delete o.k`        | `aran.delete(o, 'k', 123)`
-`enumerate(object, index)`          | `for (k in o) ...`  | `... aran.enumerate(o, 123) ...`
+`get(object, key, index)`           | `o.k`               | `_meta_.get(o, 'k', 123)` 
+`set(object, key, value, index)`    | `o.k = x`           | `_meta_.set(o, 'k', x, 123)`
+`delete(object, key, index)`        | `delete o.k`        | `_meta_.delete(o, 'k', 123)`
+`enumerate(object, index)`          | `for (k in o) ...`  | `... _meta_.enumerate(o, 123) ...`
 **Control**                         |                     |
-`test(value, index)`                | `if (x) ...`        | `if (aran.test(x, 123)) ...`
-`Label(label, index)`               | `l: { ... };`       | `aran.Label('l', 123);`<br>`l: { ... };`
-`Break(label, index)`               | `break l;`          | `aran.Break('l', 123);`<br>`break l;`
-`throw(error, index)`               | `throw x;`          | `throw aran.throw(x, 123);`
-`Try(index)`<br>`catch(error, index)`<br>`Finally(index)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`aran.Try(123);`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`e = aran.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`aran.Finally(123);`<br>&nbsp;&nbsp;`..`<br>`}`
-`sequence(values, index)`           | `(x, y, z)`         | `aran.sequence([x, y, z], 123)`
-`expression(value, index)`          | `x`                 | `aran.expression(x, 123)`
+`test(value, index)`                | `if (x) ...`        | `if (_meta_.test(x, 123)) ...`
+`Label(label, index)`               | `l: { ... };`       | `_meta_.Label('l', 123);`<br>`l: { ... };`
+`Break(label, index)`               | `break l;`          | `_meta_.Break('l', 123);`<br>`break l;`
+`throw(error, index)`               | `throw x;`          | `throw _meta_.throw(x, 123);`
+`Try(index)`<br>`catch(error, index)`<br>`Finally(index)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`_meta_.Try(123);`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`e = _meta_.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`_meta_.Finally(123);`<br>&nbsp;&nbsp;`..`<br>`}`
+`sequence(values, index)`           | `(x, y, z)`         | `_meta_.sequence([x, y, z], 123)`
+`expression(value, index)`          | `x`                 | `_meta_.expression(x, 123)`
 
 
 In the case of a direct apply, the `this` argument provided to the `apply` trap is `undefined` in strict mode or else is `null`.
