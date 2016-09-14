@@ -83,13 +83,13 @@ In the table below, `123` is used as a dummy index.
 **Environment**                     |                     |
 `Declare(kind, variables, index)`   | `var x = 1, y;`     | `_meta_.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
 `read(variable, value, index)`      | `x`                 | `_meta_.read('x', x, 123)` |
-`write(var, val, write, index)`     | `x = y`             | `_meta_.write(`<br>&nbsp;&nbsp;`'x',`<br>&nbsp;&nbsp;`x,`<br>&nbsp;&nbsp;`function (_meta_) {return x=_meta_},`<br>&nbsp;&nbsp;`123`<br>`)`
+`write(var, val, write, index)`     | `x = y`             | `_meta_.write(`<br>&nbsp;&nbsp;`'x',`<br>&nbsp;&nbsp;`y,`<br>&nbsp;&nbsp;`function (_meta_) {return x=_meta_},`<br>&nbsp;&nbsp;`123`<br>`)`
 `Enter(index)`<br>`Leave(index)`    | `{ ... }`           | `{`<br>&nbsp;&nbsp;`_meta_.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`_meta_.Leave(123);`<br>`}`
 `with(environment, index)`          | `with(o) { ... }`   | `with(_meta_.with(o)) { ... }`
 **Apply**                           |                     |
 `apply(fct, this, args, index)`     | `f(x,y)`            | `_meta_.apply(f, null, [x,y], 123)`
 `construct(fct, args, index)`       | `new F(x,y)`        | `_meta_.construct(F, [x,y], 123)`
-`Arguments(args, index)`           | `function ...`      | `... _meta_.Arguments(arguments, 123)... `
+`Arguments(args, index)`            | `function ...`      | `... _meta_.Arguments(arguments, 123)... `
 `return(value, index)`              | `return x;`         | `return _meta_.return(x, 123);`
 `eval(args, index)`                 | `eval(x, y)`        | `... eval(_meta_.eval([x,y], 123))... `
 `unary(op, value, index)`           | `!x`                | `_meta_.unary('!', x, 123)`
