@@ -1,6 +1,6 @@
 // node otiluke/run.js --demo --transform aran/analyses --out aran/analyses/demo.html
 // node otiluke/run.js --test --transform aran/analyses/2-Trace.js --port 8080
-// wesh
+
 
 var Instrument = require("./instrument.js");
 var Esprima = require("esprima");
@@ -29,7 +29,7 @@ module.exports = function (options) {
   var sources = [];
   return {
     instrument: function (code, source) {
-      var ast = Esprima.parse(code, suboptions);
+      var ast = typeof code === "string" ? Esprima.parse(code, suboptions) : code;
       asts.push(ast);
       sources.push(source);
       return instrument(ast);
