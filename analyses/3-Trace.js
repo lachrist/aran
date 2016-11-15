@@ -60,7 +60,7 @@ module.exports = function (options) {
     var loc = node.loc.start;
     return node.type + "@" + source + "#" + loc.line + ":" + loc.column;
   }
-  function logtrap (key, args) {
+  function logtrap (name, args) {
     var data = name + " " + locate(args[args.length - 1]) + " >>";
     for (var i=0; i<args.length - 1; i++)
       data += (" " + args[i]).substring(0, 10);

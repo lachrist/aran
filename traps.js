@@ -1,14 +1,26 @@
 
 function empty () { return "" }
 
-module.exports = function (namespace, names) {
-  var obj = {};
-  for (var k in traps)
-    obj[k] = (names.indexOf(k) !== -1
-      ? traps[k]
-      : (k[0] === k[0].toUpperCase() ? empty : forwards[k]))
-    .bind(null, namespace);
-  return obj;
+function make (test, name, namespace) {
+  return test
+    ? traps[name].bind(null, namespace)
+    : (name[0] === name[0].toUpperCase()
+      ? empty
+      : forwards[name]).bind(null, namespace);
+}
+
+module.exports = function (namespace, predicates) {
+  return Object.keys(traps).reduce(function (o, k) {
+    var x = typeof predicates === "function"
+      ? predicates
+      : (Array.isArray(predicates)
+        ? predicates.indexOf(k) !== -1
+        : predicates[k]); 
+    o[k] = (typeof x === "function")
+      ? function () { return make(x(arguments[arguments.length - 1]), k, namespace)(arguments) }
+      : make(x, k, namespace)
+    return o;
+  }, {});
 }
 
 var traps = {};
