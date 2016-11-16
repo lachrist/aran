@@ -17,7 +17,7 @@ module.exports = function (namespace, predicates) {
         ? predicates.indexOf(k) !== -1
         : predicates[k]); 
     o[k] = (typeof x === "function")
-      ? function () { return make(x(arguments[arguments.length - 1]), k, namespace)(arguments) }
+      ? function () { return make(x(arguments[arguments.length - 1]), k, namespace).apply(null, arguments) }
       : make(x, k, namespace)
     return o;
   }, {});
