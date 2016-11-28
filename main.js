@@ -1,6 +1,19 @@
 // node otiluke/run.js --demo --transform aran/analyses --out aran/analyses/demo.html
 // node otiluke/run.js --test --transform aran/analyses/2-Trace.js --port 8080
+// > cat analysis.js instrumented.js | node
 
+// var Aran = require("aran");
+// var aran = ({
+//   namespace: "meta",
+//   traps: ["eval"],
+//   loc: true,
+// });
+// global.meta = {};
+// meta.eval = function (xs, i) {
+//   console.log("eval at "+aran.node(i).loc);
+//   return aran.instrument(xs[0]);
+// };
+// eval(aran.instrument(Fs.readFileSync("target.js", "utf8)));
 
 var Instrument = require("./instrument.js");
 var Esprima = require("esprima");

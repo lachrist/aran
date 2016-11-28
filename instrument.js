@@ -26,7 +26,8 @@ module.exports = function (namespace, traps) {
   };
   return function (ast) {
     ctx.strict = ast.body[0] && strict(ast.body[0]);
-    ctx.loop = "";
+    ctx.switchlabel = "";
+    ctx.looplabel = "";
     ctx.hidden = [];
     ctx.hoisted = {closure:"", block:""};
     ast.__min__ = ++nid;
@@ -93,13 +94,16 @@ visitors.IfStatement = function (ctx, ast) {
 };
 
 visitors.LabeledStatement = function (ctx, ast) {
-  return ctx.traps.Label(ast.label.name, ast.__min__) + ast.label.name
-    + ":" + visit(ctx, ast, ast.body);
+  if (["WhileStatement", "DoWhileStatement", "ForStatement", "ForInStatement"].indexOf(ast.body.type) === -1)
+    return ctx.traps.Label(ast.label.name, ast.__min__) + ast.label.name
+      + ":{" + visit(ctx, ast, ast.body)+"}";
+  ctx.looplabel = ast.label.name;
+  return visit(ctx, ast, ast.body);
 };
 
 visitors.BreakStatement = function (ctx, ast) {
   return ctx.traps.Break(ast.label ? ast.label.name : null, ast.__min__)
-    + "break " + (ast.label ? ast.label.name : ctx.loop) + ";";
+    + "break " + (ast.label ? ast.label.name : ctx.switchlabel) + ";";
 };
 
 visitors.ContinueStatement = function (ctx, ast) {
@@ -119,13 +123,13 @@ visitors.SwitchStatement = function (ctx, ast) {
   }
   var str1 = ctx.hide();
   var str2 = ctx.hide();
-  var tmp1 = ctx.hoisted.block, tmp2 = ctx.loop;
-  (ctx.hoisted.block = "", ctx.loop = ctx.hide());
+  var tmp1 = ctx.hoisted.block, tmp2 = ctx.switchlabel;
+  (ctx.hoisted.block = "", ctx.switchlabel = ctx.hide());
   var str3 = str1 + "=false;"
     + str2 + "=" + visit(ctx, ast, ast.discriminant)+";"
-    + ctx.loop + ":{" + ast.cases.map(fct2).join("") + "}";
+    + ctx.switchlabel + ":{" + ast.cases.map(fct2).join("") + "}";
   var res = ctx.traps.Enter(ast.__min__) + ctx.hoisted.block + str3 + ctx.traps.Leave(ast.__min__);
-  (ctx.hoisted.block = tmp1, ctx.loop = tmp2);
+  (ctx.hoisted.block = tmp1, ctx.switchlabel = tmp2);
   return res;
 };
 
@@ -159,26 +163,34 @@ visitors.TryStatement = function (ctx, ast) {
 };
 
 visitors.WhileStatement = function (ctx, ast) {
-  var tmp = ctx.loop;
-  ctx.loop = "";
+  var lbl = ctx.looplabel;
+  ctx.looplabel = "";
+  var tmp = ctx.switchlabel;
+  ctx.switchlabel = "";
   var res = ctx.traps.expression(ctx.traps.primitive("void 0", ast.__min__), ast.__min__) + ";"
-    + "while(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + "){"
+    + (lbl?lbl+":":"") + "while(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + "){"
     + visit(ctx, ast, ast.body) + "}";
-  ctx.loop = tmp;
+  ctx.switchlabel = tmp;
   return res;
 };
 
 visitors.DoWhileStatement = function (ctx, ast) {
-  var tmp = ctx.loop;
-  ctx.loop = "";
+  var lbl = ctx.looplabel;
+  ctx.looplabel = "";
+  var tmp = ctx.switchlabel;
+  ctx.switchlabel = "";
   var res = ctx.traps.expression(ctx.traps.primitive("void 0", ast.__min__), ast.__min__) + ";"
-    + "do{" + visit(ctx, ast, ast.body)
+    + (lbl?lbl+":":"") + "do{" + visit(ctx, ast, ast.body)
     + "}while(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + ");";
-  ctx.loop = tmp;
+  ctx.switchlabel = tmp;
   return res;
 };
 
 visitors.ForStatement = function (ctx, ast) {
+  var lbl = ctx.looplabel;
+  ctx.looplabel = "";
+  var tmp = ctx.switchlabel;
+  ctx.switchlabel = "";
   var str1 = "", str2 = "", str3 = "", str4 = "";
   if (ast.init && ast.init.type === "VariableDeclaration") {
     str1 = ctx.traps.Declare(ast.init.kind, ast.init.declarations.map(idname), ast.__min__);
@@ -189,20 +201,22 @@ visitors.ForStatement = function (ctx, ast) {
   }
   str3 = ctx.traps.test(ast.test ? visit(ctx, ast, ast.test) : "true", ast.__min__);
   ast.update && (str4 = ctx.traps.expression(visit(ctx, ast, ast.update), ast.__min__) + ";");
-  var tmp = ctx.loop;
-  ctx.loop = "";
   var res = ctx.traps.expression(ctx.traps.primitive("void 0", ast.__min__), ast.__min__) + ";"
     + "{" + ctx.traps.Enter(ast.__min__) + str1 + str2
-    + "while(" + str3 + "){"
+    + (lbl?lbl+":":"") + "while(" + str3 + "){"
     + (ast.body.type === "BlockStatement"
       ? ast.body.body.map(visit.bind(null, ctx, ast)).join("")
       : visit(ctx, ast, ast.body))
     + str4 + "}" + ctx.traps.Leave(ast.__min__) + "}";
-  ctx.loop = tmp;
+  ctx.switchlabel = tmp;
   return res;
 };
 
 visitors.ForInStatement = function (ctx, ast) {
+  var lbl = ctx.looplabel;
+  ctx.looplabel = "";
+  var tmp = ctx.switchlabel;
+  ctx.switchlabel = "";
   var obj = {enumerate: ctx.hide(), counter: ctx.hide()};
   var arr = [
     obj.enumerate + "=" + ctx.traps.enumerate(visit(ctx, ast, ast.right), ast.__min__) + ";",
@@ -233,18 +247,16 @@ visitors.ForInStatement = function (ctx, ast) {
         : ctx.traps.primitive(JSON.stringify(ast.left.property.name), ast.__min__),
       obj.enumerate + "[" + obj.counter + "]",
       ast.__min__);
-  } 
-  var tmp = ctx.loop;
-  ctx.loop = "";
+  }
   var res = ctx.traps.expression(ctx.traps.primitive("void 0", ast.__min__), ast.__min__) + ";"
     + "{" + ctx.traps.Enter(ast.__min__) + arr.join("")
-    + "while(" + obj.counter + "<" + obj.enumerate + ".length){"
+    + (lbl?lbl+":":"") + "while(" + obj.counter + "<" + obj.enumerate + ".length){"
     + (ast.body.type === "BlockStatement"
       ? ast.body.body.map(visit.bind(null, ctx, ast)).join("")
       : visit(ctx, ast, ast.body))
     + ctx.traps.expression(str, ast.__min__) + ";" + obj.counter +"++;}"
     + ctx.traps.Leave(ast.__min__) + "}";
-  ctx.loop = tmp;
+  ctx.switchlabel = tmp;
   return res;
 };
 
@@ -469,7 +481,7 @@ var closure = (function () {
   function name (ast) { return ast.name }
   function nonarguments (p) { p.name !== "arguments" }
   return function (ctx, ast) {
-    var tmp1 = ctx.hoisted, tmp2 = ctx.loop, tmp3 = ctx.hidden, tmp4 = ctx.strict;
+    var tmp1 = ctx.hoisted, tmp2 = ctx.switchlabel, tmp3 = ctx.hidden, tmp4 = ctx.strict;
     (ctx.hoisted = {closure:"", block: ""}, ctx.loop = "", ctx.hidden = []);
     ctx.strict = ast.body.body.length && strict(ast.body.body[0]);
     var arr = (ctx.strict ? ast.body.body.slice(1) : ast.body.body).map(visit.bind(null, ctx, ast));
@@ -482,7 +494,7 @@ var closure = (function () {
       + arr.join("")
       + " return " + ctx.traps.return(ctx.traps.primitive("void 0", ast.__min__), ast.__min__)
       + "}";
-    (ctx.hoisted = tmp1, ctx.loop = tmp2, ctx.hidden = tmp3, ctx.strict = tmp4);
+    (ctx.hoisted = tmp1, ctx.switchlabel = tmp2, ctx.hidden = tmp3, ctx.strict = tmp4);
     return ctx.traps.closure(res, ast.__min__);
   };
 } ());

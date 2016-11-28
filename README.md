@@ -157,20 +157,3 @@ To further investigate how traps are inserted, try it out in Aran's [demo page](
 ## Supported ECMAScript6 Features
 
 * Block scoping [let && const](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/let)
-
-## To-Do
-
-* Bug: duplicating statement is not always safe (thanks Michael):
-```javascript
-l = a.split('/');
-c = l.length;
-a: for (;0.0 < c;c -= 1.0){
-    e = (l.slice(0.0,c)).join('/');
-    if (k)for (d = k.length;0.0 < d;d -= 1.0)if (b = m(h,(k.slice(0.0,d)).join('/')))if (b = m(b,e)){
-        f = b;
-        g = c;
-        break a;
-    }
-    (!i && (n && m(n,e))) && (i = m(n,e),p = c);
-}
-``` 
