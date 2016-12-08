@@ -1,7 +1,7 @@
 # Aran <img src="readme/aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
 
 Aran is a [npm module](https://www.npmjs.com/aran) for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing.
-To implement so called ``heavy-weight'' dynamic analysis such as taint analysis and symbolic execution, it is recommended to use Aran in conjunction with [Linvail](https://github.com/lachrist/linvail).
+To implement so called *heavy-weight* dynamic analysis such as taint analysis and symbolic execution, it is recommended to use Aran in conjunction with [Linvail](https://github.com/lachrist/linvail).
 Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting [ECMAScript6](http://www.ecma-international.org/ecma-262/6.0/).
 To install, run `npm install aran`.
 Note than Aran does not deal with module systems; alone, it can only handle monolithic JavaScript programs.
