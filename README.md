@@ -83,8 +83,8 @@ In the table below, `123` is used as a dummy index.
 `regexp(pattern, flags, index)`     | `/abc/g`            | `_meta_.regexp("abc", "g")`
 **Environment**                     |                     |
 `Declare(kind, variables, index)`   | `var x = 1, y;`     | `_meta_.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
-`read(var, read, index)`            | `x`                 | `_meta_.read(`<br>&nbsp;&nbsp;`'x'`,<br>&nbsp;&nbsp;`function () {return x}`<br>&nbsp;&nbsp;`, 123)`
-`write(var, val, write, index)`     | `x = y`             | `_meta_.write(`<br>&nbsp;&nbsp;`'x', y,`<br>&nbsp;&nbsp;`function (_meta_) {return x=_meta_},`<br>&nbsp;&nbsp;`123)`
+`read(var, read, index)`            | `x`                 | `_meta_.read('x', () => x, 123)`
+`write(var, val, write, index)`     | `x = y`             | `_meta_.write('x', y, (_meta_) => x=_meta_, 123)`
 `Enter(index)`<br>`Leave(index)`    | `{ ... }`           | `{`<br>&nbsp;&nbsp;`_meta_.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`_meta_.Leave(123);`<br>`}`
 `with(environment, index)`          | `with(o) { ... }`   | `with(_meta_.with(o)) { ... }`
 **Apply**                           |                     |
