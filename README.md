@@ -1,7 +1,7 @@
 # Aran <img src="readme/aran.png" align="right" alt="aran-logo" title="Aran Linvail"/>
 
-Aran is a [npm module](https://www.npmjs.com/aran) for instrumenting JavaScript code which enables amongst other things: profiling, tracing, sandboxing.
-To implement so called *heavy-weight* dynamic analysis such as taint analysis and symbolic execution, it is recommended to use Aran in conjunction with [Linvail](https://github.com/lachrist/linvail).
+Aran is a [npm module](https://www.npmjs.com/aran) for instrumenting JavaScript code which enables amongst other things: objects and functions profiling, control-flow tracing and sandboxing.
+To implement data-flow centric dynamic analysis such as taint analysis and symbolic execution, it is recommended to use Aran in conjunction with [Linvail](https://github.com/lachrist/linvail).
 Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting [ECMAScript6](http://www.ecma-international.org/ecma-262/6.0/).
 To install, run `npm install aran`.
 Note than Aran does not deal with module systems; alone, it can only handle monolithic JavaScript programs.
@@ -83,8 +83,8 @@ In the table below, `123` is used as a dummy index.
 `regexp(pattern, flags, index)`     | `/abc/g`            | `_meta_.regexp("abc", "g")`
 **Environment**                     |                     |
 `Declare(kind, variables, index)`   | `var x = 1, y;`     | `_meta_.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
-`read(variable, value, index)`      | `x`                 | `_meta_.read('x', x, 123)` |
-`write(var, val, write, index)`     | `x = y`             | `_meta_.write(`<br>&nbsp;&nbsp;`'x',`<br>&nbsp;&nbsp;`y,`<br>&nbsp;&nbsp;`function (_meta_) {return x=_meta_},`<br>&nbsp;&nbsp;`123`<br>`)`
+`read(var, read, index)`            | `x`                 | `_meta_.read(`<br>&nbsp;&nbsp;`'x'`,<br>&nbsp;&nbsp;`function () {return x}`<br>&nbsp;&nbsp;`, 123)`
+`write(var, val, write, index)`     | `x = y`             | `_meta_.write(`<br>&nbsp;&nbsp;`'x', y,`<br>&nbsp;&nbsp;`function (_meta_) {return x=_meta_},`<br>&nbsp;&nbsp;`123)`
 `Enter(index)`<br>`Leave(index)`    | `{ ... }`           | `{`<br>&nbsp;&nbsp;`_meta_.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`_meta_.Leave(123);`<br>`}`
 `with(environment, index)`          | `with(o) { ... }`   | `with(_meta_.with(o)) { ... }`
 **Apply**                           |                     |

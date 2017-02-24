@@ -1,4 +1,4 @@
-// node otiluke/run.js --demo --transform aran/analyses --out aran/analyses/demo.html
+  // node otiluke/run.js --demo --transform aran/analyses --out aran/analyses/demo.html
 // node otiluke/run.js --test --transform aran/analyses/2-Trace.js --port 8080
 // > cat analysis.js instrumented.js | node
 

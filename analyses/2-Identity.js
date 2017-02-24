@@ -19,8 +19,8 @@ module.exports = function (options) {
   traps.regexp = function (ptn, flg, idx) { return new RegExp(ptn, flg) }
   // Environment //
   traps.Declare = function (kind, tags, idx) { };
-  traps.read = function (tag, val, idx) { return val };
-  traps.write = function (tag, val, wrt, idx) { return wrt(val) };
+  traps.read = function (tag, fct, idx) { return fct() };
+  traps.write = function (tag, val, fct, idx) { return fct(val) };
   traps.Enter = function (idx) { };
   traps.Leave = function (idx) { };
   traps.with = function (env, idx) { return env };

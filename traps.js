@@ -69,7 +69,7 @@ forwards.regexp = function (_, pattern, flags, index) { return "/"+pattern+"/"+f
 
 traps.Declare = function (namespace, kind, variables, index) { return namespace+".Declare("+JSON.stringify(kind)+","+JSON.stringify(variables)+","+index+");" }
 
-traps.read = function (namespace, variable, index) { return namespace+".read("+JSON.stringify(variable)+","+variable+","+index+")" };
+traps.read = function (namespace, variable, index) { return namespace+".read("+JSON.stringify(variable)+",function(){return "+variable+"},"+index+")" };
 forwards.read = function (_, variable, _) { return variable };
 
 traps.write = function (namespace, variable, value, index) { return namespace+".write("+JSON.stringify(variable)+","+value+",function("+namespace+"){return "+variable+"="+namespace+"},"+index+")" };
