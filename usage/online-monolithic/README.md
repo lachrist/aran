@@ -4,7 +4,7 @@
 A convenient way to solve the issues exposed in [offline-monolithic](../offline-monolithic) is to make the instrumentation happens on the same process as the analysis of the target program.
 In this case, online instrumentation enables the `eval` trap to instrument dynamic code during the analysis and the `apply` trap to access the code location where the call occurred:
 
-```javascript
+```js
 var Aran = require("../../main.js");
 var evalID = 0;
 var fs = require("fs");
@@ -15,9 +15,10 @@ _meta_.apply = function (f, t, xs, i) {
   console.log("Apply "+f.name+" at "+aran.source(i)+"#"+node.loc.start.line);
   return f.apply(t, xs);
 };
-var aran = Aran({namespace:"_meta_", traps:Object.keys(_meta_), loc:true});
+var aran = Aran("_meta_");
 var target = fs.readFileSync(__dirname+"/../target/monolithic.js", "utf8");
-global.eval(aran.instrument(target, "target.js"));
+var program = Esprima.parse(target, {loc:true});
+global.eval(aran.instrument(program, Object.keys(_meta_));
 ```
 
 The method `aran.node` look for an [AST](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API) node at the given index.

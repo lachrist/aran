@@ -11,53 +11,54 @@
 
 var Traps = require("./traps.js");
 
-var nid = 0;
-var vid = 0;
+function hide () {
+  var res = this.namespace + ++this.vid;
+  this.hidden.push(res);
+  return res;
+}
 
-module.exports = function (namespace, traps) {
-  var ctx = {
-    eval: namespace + ".__eval__",
-    traps: Traps(namespace, traps),
-    hide: function fct () {
-      var res = namespace + ++vid;
-      this.hidden.push(res);
-      return res;
-    }
-  };
-  return function (ast) {
-    ctx.strict = ast.body[0] && strict(ast.body[0]);
-    ctx.switchlabel = "";
-    ctx.looplabel = "";
-    ctx.hidden = [];
-    ctx.hoisted = {closure:"", block:""};
-    ast.__min__ = ++nid;
-    var str = ast.body.map(visit.bind(null, ctx, ast)).join("");
-    ast.__max__ = nid;
-    return (ctx.strict ? "'use-strict';" : "")
-         + namespace + ".__global__=" + namespace + ".__global__||(function () { return this } ());"
-         + namespace + ".__eval__=" + namespace + ".__eval__||eval;"
-         + namespace + ".__apply__=" + namespace + ".__apply__||(typeof Reflect === 'object' ? Reflect.apply : function(f,t,xs){return f.apply(t,xs)});"
-         + namespace + ".__defineProperty__=" + namespace + ".__defineProperty__||Object.defineProperty;"
-         + ctx.traps.Program(ast.__min__)
-         + ctx.hoisted.closure
-         + ctx.hoisted.block
-         + ctx.traps.expression(ctx.traps.primitive("void 0", ast.__min__), ast.__min__) + ";"
-         + str;
-  };
-};
-
-function visit (ctx, src, ast) {
+function visit (src, ast) {
   Object.defineProperty(ast, "parent", {
     configurable: true,
     enumerable: false,
     writable: true,
     value: src
   });
-  ast.__min__ = ++nid;
-  var res = visitors[ast.type](ctx, ast);
-  ast.__max__ = nid;
-  Object.defineProperty(ast, "__max__", {value:nid});
+  ast.__min__ = ++this.nid;
+  var res = visitors[ast.type](this, ast);
+  ast.__max__ = this.nid;
   return res;
+}
+
+module.exports = function (namespace) {
+  var ctx = {
+    namespace: namespace,
+    vid: 0,
+    nid: 0,
+    hide: hide,
+    visit: visit
+  };
+  return function (program, pointcut) {
+    ctx.traps = Traps(namespace, pointcut);
+    ctx.strict = program.body[0] && strict(program.body[0]);
+    ctx.switchlabel = "";
+    ctx.looplabel = "",
+    ctx.hidden = [],
+    ctx.hoisted = {closure:"", block:""}
+    program.__min__ = ++ctx.nid;
+    var str = program.body.map(ctx.visit.bind(ctx, program)).join("");
+    program.__max__ = ctx.nid;
+    return (ctx.strict ? "'use-strict';" : "")
+         + namespace + ".__global__=" + namespace + ".__global__||(function () { return this } ());"
+         + namespace + ".__eval__=" + namespace + ".__eval__||eval;"
+         + namespace + ".__apply__=" + namespace + ".__apply__||(typeof Reflect === 'object' ? Reflect.apply : function(f,t,xs){return f.apply(t,xs)});"
+         + namespace + ".__defineProperty__=" + namespace + ".__defineProperty__||Object.defineProperty;"
+         + ctx.traps.Program(program.__min__)
+         + ctx.hoisted.closure
+         + ctx.hoisted.block
+         + ctx.traps.expression(ctx.traps.primitive("void 0", program.__min__), program.__min__) + ";"
+         + str;
+  };
 };
 
 var visitors = {};
@@ -71,7 +72,7 @@ visitors.EmptyStatement = function (ctx, ast) { return "" };
 visitors.BlockStatement = function (ctx, ast) {
   var tmp = ctx.hoisted.block;
   ctx.hoisted.block = "";
-  var str = ast.body.map(visit.bind(null, ctx, ast)).join("");
+  var str = ast.body.map(ctx.visit.bind(ctx, ast)).join("");
   var res = "{"
     + ctx.traps.Enter(ast.__min__)
     + ctx.hoisted.block
@@ -83,22 +84,22 @@ visitors.BlockStatement = function (ctx, ast) {
 };
 
 visitors.ExpressionStatement = function (ctx, ast) {
-  return ctx.traps.expression(visit(ctx, ast, ast.expression), ast.__min__) + ";";
+  return ctx.traps.expression(ctx.visit(ast, ast.expression), ast.__min__) + ";";
 };
 
 visitors.IfStatement = function (ctx, ast) {
   return ctx.traps.expression(ctx.traps.primitive("void 0", ast.__min__), ast.__min__) + ";"
-    + "if(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + "){"
-    + visit(ctx, ast, ast.consequent)
-    + "}" + (ast.alternate ? "else{" + visit(ctx, ast, ast.alternate) + "}" : "");
+    + "if(" + ctx.traps.test(ctx.visit(ast, ast.test), ast.__min__) + "){"
+    + ctx.visit(ast, ast.consequent)
+    + "}" + (ast.alternate ? "else{" + ctx.visit(ast, ast.alternate) + "}" : "");
 };
 
 visitors.LabeledStatement = function (ctx, ast) {
   if (["WhileStatement", "DoWhileStatement", "ForStatement", "ForInStatement"].indexOf(ast.body.type) === -1)
     return ctx.traps.Label(ast.label.name, ast.__min__) + ast.label.name
-      + ":{" + visit(ctx, ast, ast.body)+"}";
+      + ":{" + ctx.visit(ast, ast.body)+"}";
   ctx.looplabel = ast.label.name;
-  return visit(ctx, ast, ast.body);
+  return ctx.visit(ast, ast.body);
 };
 
 visitors.BreakStatement = function (ctx, ast) {
@@ -111,14 +112,14 @@ visitors.ContinueStatement = function (ctx, ast) {
 };
 
 visitors.WithStatement = function (ctx, ast) {
-  return "with(" + ctx.traps.with(visit(ctx, ast, ast.object), ast.__min__) + "){" + visit(ctx, ast, ast.body) + "}";
+  return "with(" + ctx.traps.with(ctx.visit(ast, ast.object), ast.__min__) + "){" + ctx.visit(ast, ast.body) + "}";
 };
 
 visitors.SwitchStatement = function (ctx, ast) {
-  function fct1 (ast2) { return "if(" + str1 + ")" + visit(ctx, ast, ast2) }
+  function fct1 (ast2) { return "if(" + str1 + ")" + ctx.visit(ast, ast2) }
   function fct2 (cse) {
     return str1 + "=" + (cse.test ? ctx.traps.test(
-      ctx.traps.binary("===", str2, visit(ctx, ast, cse.test), ast.__min__),
+      ctx.traps.binary("===", str2, ctx.visit(ast, cse.test), ast.__min__),
       ast.__min__) : "true") + ";" + cse.consequent.map(fct1).join("");
   }
   var str1 = ctx.hide();
@@ -126,7 +127,7 @@ visitors.SwitchStatement = function (ctx, ast) {
   var tmp1 = ctx.hoisted.block, tmp2 = ctx.switchlabel;
   (ctx.hoisted.block = "", ctx.switchlabel = ctx.hide());
   var str3 = str1 + "=false;"
-    + str2 + "=" + visit(ctx, ast, ast.discriminant)+";"
+    + str2 + "=" + ctx.visit(ast, ast.discriminant)+";"
     + ctx.switchlabel + ":{" + ast.cases.map(fct2).join("") + "}";
   var res = ctx.traps.Enter(ast.__min__) + ctx.hoisted.block + str3 + ctx.traps.Leave(ast.__min__);
   (ctx.hoisted.block = tmp1, ctx.switchlabel = tmp2);
@@ -135,16 +136,16 @@ visitors.SwitchStatement = function (ctx, ast) {
 
 visitors.ReturnStatement = function (ctx, ast) {
   return " return " + ctx.traps.return(
-    ast.argument ? visit(ctx, ast, ast.argument) : ctx.traps.primitive("void 0", ast.__min__),
+    ast.argument ? ctx.visit(ast, ast.argument) : ctx.traps.primitive("void 0", ast.__min__),
     ast.__min__) + ";";
 };
 
 visitors.ThrowStatement = function (ctx, ast) {
-  return "throw " + ctx.traps.throw(visit(ctx, ast, ast.argument), ast.__min__) + ";";
+  return "throw " + ctx.traps.throw(ctx.visit(ast, ast.argument), ast.__min__) + ";";
 };
 
 visitors.TryStatement = function (ctx, ast) {
-  var fct = visit.bind(null, ctx, ast);
+  var fct = ctx.visit.bind(ctx, ast);
   return "try{" + ctx.traps.Enter(ast.__min__)
       + ctx.traps.expression(ctx.traps.primitive("void 0", ast.__min__), ast.__min__) + ";"
       + ctx.traps.Try(ast.__min__)
@@ -168,8 +169,8 @@ visitors.WhileStatement = function (ctx, ast) {
   var tmp = ctx.switchlabel;
   ctx.switchlabel = "";
   var res = ctx.traps.expression(ctx.traps.primitive("void 0", ast.__min__), ast.__min__) + ";"
-    + (lbl?lbl+":":"") + "while(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + "){"
-    + visit(ctx, ast, ast.body) + "}";
+    + (lbl?lbl+":":"") + "while(" + ctx.traps.test(ctx.visit(ast, ast.test), ast.__min__) + "){"
+    + ctx.visit(ast, ast.body) + "}";
   ctx.switchlabel = tmp;
   return res;
 };
@@ -180,8 +181,8 @@ visitors.DoWhileStatement = function (ctx, ast) {
   var tmp = ctx.switchlabel;
   ctx.switchlabel = "";
   var res = ctx.traps.expression(ctx.traps.primitive("void 0", ast.__min__), ast.__min__) + ";"
-    + (lbl?lbl+":":"") + "do{" + visit(ctx, ast, ast.body)
-    + "}while(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__) + ");";
+    + (lbl?lbl+":":"") + "do{" + ctx.visit(ast, ast.body)
+    + "}while(" + ctx.traps.test(ctx.visit(ast, ast.test), ast.__min__) + ");";
   ctx.switchlabel = tmp;
   return res;
 };
@@ -197,16 +198,16 @@ visitors.ForStatement = function (ctx, ast) {
     (ast.init.kind === "var") && (ctx.hoisted.closure += str1, str1 = "");
     str2 = declare(ctx, ast, ast.init);
   } else if (ast.init) {
-    str2 = ctx.traps.expression(visit(ctx, ast, ast.init), ast.__min__) + ";"; 
+    str2 = ctx.traps.expression(ctx.visit(ast, ast.init), ast.__min__) + ";"; 
   }
-  str3 = ctx.traps.test(ast.test ? visit(ctx, ast, ast.test) : "true", ast.__min__);
-  ast.update && (str4 = ctx.traps.expression(visit(ctx, ast, ast.update), ast.__min__) + ";");
+  str3 = ctx.traps.test(ast.test ? ctx.visit(ast, ast.test) : "true", ast.__min__);
+  ast.update && (str4 = ctx.traps.expression(ctx.visit(ast, ast.update), ast.__min__) + ";");
   var res = ctx.traps.expression(ctx.traps.primitive("void 0", ast.__min__), ast.__min__) + ";"
     + "{" + ctx.traps.Enter(ast.__min__) + str1 + str2
     + (lbl?lbl+":":"") + "while(" + str3 + "){"
     + (ast.body.type === "BlockStatement"
-      ? ast.body.body.map(visit.bind(null, ctx, ast)).join("")
-      : visit(ctx, ast, ast.body))
+      ? ast.body.body.map(ctx.visit.bind(ctx, ast)).join("")
+      : ctx.visit(ast, ast.body))
     + str4 + "}" + ctx.traps.Leave(ast.__min__) + "}";
   ctx.switchlabel = tmp;
   return res;
@@ -219,7 +220,7 @@ visitors.ForInStatement = function (ctx, ast) {
   ctx.switchlabel = "";
   var obj = {enumerate: ctx.hide(), counter: ctx.hide()};
   var arr = [
-    obj.enumerate + "=" + ctx.traps.enumerate(visit(ctx, ast, ast.right), ast.__min__) + ";",
+    obj.enumerate + "=" + ctx.traps.enumerate(ctx.visit(ast, ast.right), ast.__min__) + ";",
     obj.counter + "=0;"
   ];
   if (ast.left.type !== "MemberExpression") {
@@ -235,10 +236,10 @@ visitors.ForInStatement = function (ctx, ast) {
       ast.__min__);
   } else {
     obj.object = ctx.hide();
-    arr.push(obj.object + "=" + visit(ctx, ast, ast.left.object) + ";");
+    arr.push(obj.object + "=" + ctx.visit(ast, ast.left.object) + ";");
     if (ast.left.computed) {
       obj.property = ctx.hide();
-      arr.push(obj.property + "=" + visit(ctx, ast, ast.left.property) + ";")
+      arr.push(obj.property + "=" + ctx.visit(ast, ast.left.property) + ";")
     }
     var str = ctx.traps.set(
       obj.object,
@@ -252,8 +253,8 @@ visitors.ForInStatement = function (ctx, ast) {
     + "{" + ctx.traps.Enter(ast.__min__) + arr.join("")
     + (lbl?lbl+":":"") + "while(" + obj.counter + "<" + obj.enumerate + ".length){"
     + (ast.body.type === "BlockStatement"
-      ? ast.body.body.map(visit.bind(null, ctx, ast)).join("")
-      : visit(ctx, ast, ast.body))
+      ? ast.body.body.map(ctx.visit.bind(ctx, ast)).join("")
+      : ctx.visit(ast, ast.body))
     + ctx.traps.expression(str, ast.__min__) + ";" + obj.counter +"++;}"
     + ctx.traps.Leave(ast.__min__) + "}";
   ctx.switchlabel = tmp;
@@ -279,25 +280,28 @@ visitors.ThisExpression = function (ctx, ast) { return ctx.traps.read("this", as
 visitors.ArrayExpression = function (ctx, ast) {
   return ctx.traps.array(ast.elements.map(function (elm) {
     return elm
-      ? visit(ctx, ast, elm)
+      ? ctx.visit(ast, elm)
       : ctx.traps.primitive(ctx.traps.primitive("void 0", ast.__min__), ast.__min__);
   }), ast.__min__);
 };
 
 visitors.ObjectExpression = function (ctx, ast) {
-  return ctx.traps.object(ast.properties.map(function (prp) {
-    return {
-      kind: prp.kind,
-      key: prp.key.type === "Identifier" ? JSON.stringify(prp.key.name) : prp.key.raw,
-      value: visit(ctx, ast, prp.value)
-    };
-  }), ast.__min__);
+  var str1 = ctx.hide();
+  return "("+str1+"={},"+ast.properties.map(function (prp) {
+    var str2 = prp.computed
+      ? ctx.visit(ast, prp.key)
+      : ctx.traps.primitive(prp.key.type === "Identifier" ?  JSON.stringify(prp.key.name) : prp.key.raw, ast.__min__);
+    var str3 = prp.kind === "init"
+      ? "value:"+ctx.visit(ast, prp.value)+",writable:true"
+      : prp.kind+":"+ctx.visit(ast, prp.value);
+    return ctx.namespace+".__defineProperty__("+str1+","+str2+",{"+str3+",enumerable:true,configurable:true}),";
+  }).join("")+str1+")";
 };
 
 visitors.FunctionExpression = function (ctx, ast) { return closure(ctx, ast) };
 
 visitors.SequenceExpression = function (ctx, ast) {
-  return ctx.traps.sequence(ast.expressions.map(visit.bind(null, ctx, ast)), ast.__min__);
+  return ctx.traps.sequence(ast.expressions.map(ctx.visit.bind(ctx, ast)), ast.__min__);
 };
 
 // TODO: figure out what to do with: ``delete identifier''.
@@ -311,19 +315,19 @@ visitors.UnaryExpression = function (ctx, ast) {
     return "(delete " + ast.argument.name + ")";
   if (ast.operator === "delete" && ast.argument.type === "MemberExpression")
     return ctx.traps.delete(
-      visit(ctx, ast, ast.argument.object),
-      ast.computed
-        ? visit(ctx, ast, ast.argument.property)
+      ctx.visit(ast, ast.argument.object),
+      ast.argument.computed
+        ? ctx.visit(ast, ast.argument.property)
         : ctx.traps.primitive(JSON.stringify(ast.argument.property.name), ast.__min__),
       ast.__min__);
-  return ctx.traps.unary(ast.operator, visit(ctx, ast, ast.argument), ast.__min__);
+  return ctx.traps.unary(ast.operator, ctx.visit(ast, ast.argument), ast.__min__);
 };
 
 visitors.BinaryExpression = function (ctx, ast) {
   return ctx.traps.binary(
     ast.operator,
-    visit(ctx, ast, ast.left),
-    visit(ctx, ast, ast.right),
+    ctx.visit(ast, ast.left),
+    ctx.visit(ast, ast.right),
     ast.__min__);
 };
 
@@ -331,13 +335,13 @@ visitors.AssignmentExpression = function (ctx, ast) {
   var str1, str2, str3;
   if (ast.operator === "=")
     return ast.left.type === "Identifier"
-      ? ctx.traps.write(ast.left.name, visit(ctx, ast, ast.right), ast.__min__)
+      ? ctx.traps.write(ast.left.name, ctx.visit(ast, ast.right), ast.__min__)
       : ctx.traps.set(
-        visit(ctx, ast, ast.left.object),
+        ctx.visit(ast, ast.left.object),
         ast.left.computed
-          ? visit(ctx, ast, ast.left.property)
+          ? ctx.visit(ast, ast.left.property)
           : ctx.traps.primitive(JSON.stringify(ast.left.property.name), ast.__min__),
-        visit(ctx, ast, ast.right), ast.__min__);
+        ctx.visit(ast, ast.right), ast.__min__);
   str1 = ctx.traps.binary(
     ast.operator.substring(0, ast.operator.length-1),
     ast.left.type === "Identifier"
@@ -348,14 +352,14 @@ visitors.AssignmentExpression = function (ctx, ast) {
           ? str3 = ctx.hide()
           : ctx.traps.primitive(JSON.stringify(ast.left.property.name), ast.__min__),
         ast.__min__),
-      visit(ctx, ast, ast.right),
+      ctx.visit(ast, ast.right),
       ast.__min__);
   return ast.left.type === "Identifier"
     ? ctx.traps.write(ast.left.name, str1, ast.__min__)
     : ctx.traps.set(
-      "(" + str2 + "=" + visit(ctx, ast, ast.left.object) + ")",
+      "(" + str2 + "=" + ctx.visit(ast, ast.left.object) + ")",
       ast.left.computed
-        ? "(" + str3 + "=" + visit(ctx, ast, ast.left.property) + ")"
+        ? "(" + str3 + "=" + ctx.visit(ast, ast.left.property) + ")"
         : ctx.traps.primitive(JSON.stringify(ast.left.property.name), ast.__min__),
       str1,
       ast.__min__);
@@ -377,9 +381,9 @@ visitors.UpdateExpression = function (ctx, ast) {
   str6 = ast.argument.type === "Identifier"
     ? ctx.traps.write(ast.argument.name, str5, ast.__min__)
     : ctx.traps.set(
-      "(" + str2 + "=" + visit(ctx, ast, ast.argument.object) + ")",
+      "(" + str2 + "=" + ctx.visit(ast, ast.argument.object) + ")",
       ast.argument.computed
-        ? "(" + str3 + "=" + visit(ctx, ast, ast.argument.property) + ")"
+        ? "(" + str3 + "=" + ctx.visit(ast, ast.argument.property) + ")"
         : ctx.traps.primitive(JSON.stringify(ast.argument.property.name), ast.__min__),
       str5,
       ast.__min__);
@@ -388,32 +392,32 @@ visitors.UpdateExpression = function (ctx, ast) {
 
 visitors.LogicalExpression = function (ctx, ast) {
   var str1 = ctx.hide();
-  var str2 = "(" + str1 + "=" + ctx.traps.test(visit(ctx, ast, ast.left), ast.__min__) + ")";
+  var str2 = "(" + str1 + "=" + ctx.traps.test(ctx.visit(ast, ast.left), ast.__min__) + ")";
   if (ast.operator === "||")
-    return "(" + str2 + "?" + str1 + ":" + visit(ctx, ast, ast.right) + ")";
+    return "(" + str2 + "?" + str1 + ":" + ctx.visit(ast, ast.right) + ")";
   if (ast.operator === "&&")
-    return "(" + str2 + "?" + visit(ctx, ast, ast.right) + ":" + str1 + ")";
+    return "(" + str2 + "?" + ctx.visit(ast, ast.right) + ":" + str1 + ")";
   throw new Error("Unknown logical operator " + ast.operator);
 };
 
 visitors.ConditionalExpression = function (ctx, ast) {
-  return "(" + ctx.traps.test(visit(ctx, ast, ast.test), ast.__min__)
-    + "?" + visit(ctx, ast, ast.consequent)
-    + ":" + visit(ctx, ast, ast.alternate) + ")";
+  return "(" + ctx.traps.test(ctx.visit(ast, ast.test), ast.__min__)
+    + "?" + ctx.visit(ast, ast.consequent)
+    + ":" + ctx.visit(ast, ast.alternate) + ")";
 };
 
 visitors.NewExpression = function (ctx, ast) {
   return ctx.traps.construct(
-    visit(ctx, ast, ast.callee),
-    ast.arguments.map(visit.bind(null, ctx, ast)),
+    ctx.visit(ast, ast.callee),
+    ast.arguments.map(ctx.visit.bind(ctx, ast)),
     ast.__min__);
 };
 
-function args (ctx, ast) { return ast.arguments.map(visit.bind(null, ctx, ast)) }
+function args (ctx, ast) { return ast.arguments.map(ctx.visit.bind(ctx, ast)) }
 visitors.CallExpression = function (ctx, ast) {
   if (ast.callee.type === "Identifier" && ast.callee.name === "eval") {
     var arr = args(ctx, ast);
-    return "(" + ctx.traps.read("eval", ast.__min__) + "==="+ctx.eval
+    return "(" + ctx.traps.read("eval", ast.__min__) + "==="+ctx.namespace+".__eval__"
       + "?" + ctx.traps.eval(arr, ast.__min__)
       + ":" + ctx.traps.apply(
         "eval",
@@ -421,14 +425,14 @@ visitors.CallExpression = function (ctx, ast) {
   }
   if (ast.callee.type !== "MemberExpression")
     return ctx.traps.apply(
-      visit(ctx, ast, ast.callee),
+      ctx.visit(ast, ast.callee),
       ctx.strict ? ctx.traps.primitive("void 0", ast.__min__) : "null", args(ctx, ast), ast.__min__);
   var str = ctx.hide();
   return ctx.traps.apply(
     ctx.traps.get(
-      "(" + str + "=" + visit(ctx, ast, ast.callee.object) +")",
+      "(" + str + "=" + ctx.visit(ast, ast.callee.object) +")",
       ast.callee.computed
-        ? visit(ctx, ast, ast.callee.property)
+        ? ctx.visit(ast, ast.callee.property)
         : ctx.traps.primitive(JSON.stringify(ast.callee.property.name), ast.__min__),
       ast.__min__),
     str,
@@ -438,9 +442,9 @@ visitors.CallExpression = function (ctx, ast) {
 
 visitors.MemberExpression = function (ctx, ast) {
   return ctx.traps.get(
-    visit(ctx, ast, ast.object),
+    ctx.visit(ast, ast.object),
     ast.computed
-      ? visit(ctx, ast, ast.property)
+      ? ctx.visit(ast, ast.property)
       : ctx.traps.primitive(JSON.stringify(ast.property.name), ast.__min__),
     ast.__min__);
 };
@@ -454,9 +458,7 @@ visitors.Identifier = function (ctx, ast) {
 };
 
 visitors.Literal = function (ctx, ast) {
-  return "regex" in ast
-    ? ctx.traps.regexp(ast.regex.pattern, ast.regex.flags, ast.__min__)
-    : ctx.traps.primitive(ast.raw, ast.__min__);
+  return ctx.traps["regex" in ast ? "regexp" : "primitive"](ast.raw, ast.__min__);
 };
 
 /////////////
@@ -473,7 +475,7 @@ function idname (ast) { return ast.id.name }
 
 function declare (ctx, src, ast) {
   return ast.kind + " " + ast.declarations.map(idname).join(",") + ";" + ast.declarations.map(function (dec) {
-    return dec.init ? ctx.traps.expression(ctx.traps.write(dec.id.name, visit(ctx, src, dec.init), src.__min__), src.__min__) + ";" : "";
+    return dec.init ? ctx.traps.expression(ctx.traps.write(dec.id.name, ctx.visit(src, dec.init), src.__min__), src.__min__) + ";" : "";
   }).join("");
 }
 
@@ -484,7 +486,7 @@ var closure = (function () {
     var tmp1 = ctx.hoisted, tmp2 = ctx.switchlabel, tmp3 = ctx.hidden, tmp4 = ctx.strict;
     (ctx.hoisted = {closure:"", block: ""}, ctx.loop = "", ctx.hidden = []);
     ctx.strict = ast.body.body.length && strict(ast.body.body[0]);
-    var arr = (ctx.strict ? ast.body.body.slice(1) : ast.body.body).map(visit.bind(null, ctx, ast));
+    var arr = (ctx.strict ? ast.body.body.slice(1) : ast.body.body).map(ctx.visit.bind(ctx, ast));
     var res = "function " + (ast.id ? ast.id.name : "")
       + "(" + ast.params.map(name).join(",") + "){"
       + (ctx.strict ? "'use strict';" + ctx.traps.Strict(ast.__min__) : "")
@@ -492,9 +494,9 @@ var closure = (function () {
       + (ctx.hidden.length ? "var " + ctx.hidden.join(",") + ";" : "")
       + ctx.hoisted.closure
       + arr.join("")
-      + " return " + ctx.traps.return(ctx.traps.primitive("void 0", ast.__min__), ast.__min__)
+      + " return " + ctx.traps.return(ctx.traps.primitive("void 0", ast.__min__), ast.__min__)+";"
       + "}";
     (ctx.hoisted = tmp1, ctx.switchlabel = tmp2, ctx.hidden = tmp3, ctx.strict = tmp4);
-    return ctx.traps.closure(res, ast.__min__);
+    return ctx.traps.function(res, ast.__min__);
   };
 } ());

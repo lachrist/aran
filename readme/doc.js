@@ -31,11 +31,11 @@ tree.body.map(function (node) {
 var traps = [];
 Fs.readFileSync(__dirname+"/../traps.js", "utf8")
   .replace(/\ntraps.(\w+)/g, function (_, name) { traps.push(name) });
-process.stdout.write(repeat(" ", 25)+"|");
-process.stdout.write(traps.map(backquote).join("|"));
+process.stdout.write("X"+repeat(" ", 24)+"| ");
+process.stdout.write(traps.map(backquote).join(" | "));
 process.stdout.write("\n");
 process.stdout.write(repeat("-", 25)+"|");
-process.stdout.write(traps.map(function(t) { return ":"+repeat("-", t.length)+":" }).join("|"));
+process.stdout.write(traps.map(function(t) { return ":-"+repeat("-", t.length)+"-:" }).join("|"));
 process.stdout.write("\n");
 tree.body.forEach(function (node) {
   var trap = extract(node);
@@ -43,7 +43,7 @@ tree.body.forEach(function (node) {
     var ts = visit(node.expression.right);
     process.stdout.write(pad(backquote(trap), 25)+"|");
     process.stdout.write(traps.map(function (t) {
-      return pad(ts.indexOf(t) === -1 ? "" : " X", t.length+2);
+      return pad(ts.indexOf(t) === -1 ? "" : " X", t.length+4);
     }).join("|"));
     process.stdout.write("\n");
   }

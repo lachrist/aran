@@ -20,44 +20,45 @@ var Esprima = require("esprima");
 
 var global = (function () { return this } ());
 
-function search (ast, idx) {
-  var tmp;
-  if (typeof ast !== "object" || ast === null)
+function search (node, index) {
+  if (typeof node !== "object" || node === null)
     return;
-  if ("__min__" in ast && idx === ast.__min__)
-    return ast;
-  if (idx < ast.__min__ || idx > ast.__max__)
+  if ("__min__" in node && index === node.__min__)
+    return node;
+  if (index < node.__min__ || index > node.__max__)
     return;
-  for (var k in ast)
-    if (tmp = search(ast[k], idx))
-      return tmp;
+  for (var key in node) {
+    var child = search(node[key], index);
+    if (child) {
+      return child;
+    }
+  }
 }
 
-module.exports = function (options) {
-  if (typeof options !== "object" || options === null)
-    options = {};
-  var suboptions = {loc:options.loc, range:options.range};
-  var instrument = Instrument(options.namespace || "_meta_", options.traps || []);
-  var asts = [];
-  var sources = [];
+module.exports = function (namespace) {
+  namespace = namespace || "_traps_";
+  var instrument = Instrument(namespace);
+  var programs = [];
   return {
-    instrument: function (code, source) {
-      var ast = typeof code === "string" ? Esprima.parse(code, suboptions) : code;
-      asts.push(ast);
-      sources.push(source);
-      return instrument(ast);
+    namespace: namespace,
+    instrument: function (program, pointcut) {
+      programs.push(program);
+      return instrument(program, pointcut);
     },
     node: function (index) {
-      for (var i=0; i<asts.length; i++) {
-        var node = search(asts[i], index);
-        if (node)
+      for (var i=0; i<programs.length; i++) {
+        var node = search(programs[i], index);
+        if (node) {
           return node;
+        }
       }
     },
-    source: function (index) {
-      for (var i=0; i<asts.length; i++)
-        if (index >= asts[i].__min__ && index <= asts[i].__max__)
-          return sources[i];
+    program: function (index) {
+      for (var i=0; i<programs.length; i++) {
+        if (index >= programs[i].__min__ && index <= programs[i].__max__) {
+          return programs[i];
+        }
+      }
     }
   };
 };

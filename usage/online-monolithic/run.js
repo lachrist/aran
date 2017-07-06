@@ -8,6 +8,7 @@ _meta_.apply = function (f, t, xs, i) {
   console.log("Apply "+f.name+" at "+aran.source(i)+"#"+node.loc.start.line);
   return f.apply(t, xs);
 };
-var aran = Aran({namespace:"_meta_", traps:Object.keys(_meta_), loc:true});
+var aran = Aran("_meta_");
 var target = fs.readFileSync(__dirname+"/../target/monolithic.js", "utf8");
-global.eval(aran.instrument(target, "target.js"));
+var program = Esprima.parse(target, {loc:true});
+global.eval(aran.instrument(program, Object.keys(_meta_));

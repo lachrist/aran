@@ -1,26 +1,39 @@
 
 function empty () { return "" }
 
-function make (test, name, namespace) {
-  return test
-    ? traps[name].bind(null, namespace)
-    : (name[0] === name[0].toUpperCase()
-      ? empty
-      : forwards[name]).bind(null, namespace);
-}
-
-module.exports = function (namespace, predicates) {
-  return Object.keys(traps).reduce(function (o, k) {
-    var x = typeof predicates === "function"
-      ? predicates
-      : (Array.isArray(predicates)
-        ? predicates.indexOf(k) !== -1
-        : predicates[k]); 
-    o[k] = (typeof x === "function")
-      ? function () { return make(x(arguments[arguments.length - 1]), k, namespace).apply(null, arguments) }
-      : make(x, k, namespace)
-    return o;
-  }, {});
+module.exports = function (namespace, pointcut) {
+  if (Array.isArray(pointcut)) {
+    var make = function (name, trap, forward) {
+      return (pointcut.indexOf(name) !== -1) ? trap : forward;
+    };
+  } else if (typeof pointcut === "function") {
+    var make = function (name, trap, forward) {
+      return function () {
+        var index = arguments[arguments.length - 1];
+        return (pointcut(name,index)?trap:forward).apply(this, arguments);
+      }
+    };
+  } else if (typeof pointcut === "object" && pointcut !== null) {
+    var make = function (name, trap, forward) {
+      if (typeof pointcut[name] !== "function")
+        return pointcut[name] ? trap : forward;
+      return function () {
+        var index = arguments[arguments.length - 1];
+        return (pointcut[name](index)?trap:forward).apply(this, arguments);
+      }
+    };
+  } else {
+    var make = function (name, trap, forward) {
+      return forward;
+    };
+  }
+  var object = {};
+  Object.keys(traps).forEach(function (name) {
+    var trap = traps[name].bind(null, namespace);
+    var forward = (name in forwards) ? forwards[name].bind(null, namespace) : empty;
+    object[name] = make(name, trap, forward);
+  });
+  return object;
 }
 
 var traps = {};
@@ -42,8 +55,8 @@ traps.Strict = function (namespace, index) { return namespace+".Strict("+index+"
 traps.primitive = function (namespace, value, index) { return namespace+".primitive("+value+","+index+")" };
 forwards.primitive = function (_, value, _) { return value };
 
-traps.closure = function (namespace, closure, index) { return namespace+".closure("+closure+","+index+")" };
-forwards.closure = function (_, closure, index) { return closure };
+traps.function = function (namespace, value, index) { return namespace+".function("+value+","+index+")" };
+forwards.function = function (_, value, index) { return value };
 
 function property (prp) { return "{key:"+prp.key+",configurable:true,enumerable:true,"+(prp.kind === "init" ? "writable:true,value" : prp.kind)+":"+prp.value+"}" }
 traps.object = function (namespace, properties, index) { return namespace+".object(["+properties.map(property).join(",")+"],"+index+")"};
@@ -57,11 +70,11 @@ forwards.object = function (namespace, properties, index) {
   return str;
 };
 
-traps.array = function (namespace, elements, index) { return namespace+".array(["+elements.join(",")+"],"+index+")" };
-forwards.array = function (_, elements, _) { return "["+elements.join(",")+"]" };
+traps.array = function (namespace, value, index) { return namespace+".array(["+value.join(",")+"],"+index+")" };
+forwards.array = function (_, value, _) { return "["+value.join(",")+"]" };
 
-traps.regexp = function (namespace, pattern, flags, index) { return namespace+".regexp("+JSON.stringify(pattern)+","+JSON.stringify(flags)+","+index+")" };
-forwards.regexp = function (_, pattern, flags, index) { return "/"+pattern+"/"+flags+" " };
+traps.regexp = function (namespace, value, index) { return namespace+".regexp("+value+","+index+")" };
+forwards.regexp = function (_, value, _) { return value };
 
 /////////////////
 // Environment //

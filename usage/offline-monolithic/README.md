@@ -6,7 +6,7 @@ It is best to choose a variable name that is unlikely to be accessed by the prog
 This global variable refers to an object containing the traps that will be called during the analysis.
 Here, the only implemented trap is `apply` which is triggered on function calls.
 
-```javascript
+```js
 (function () {
   this._meta_ = {};
   _meta_.apply = function (f, t, xs) {
@@ -20,7 +20,7 @@ To perform instrumentation, Aran needs to know the name of the global variable r
 The returned instrumentation function simply replaces language constructs with calls to trap functions.
 To create a standalone analysis of the target, it suffices to concatenate the analysis with the instrumented code.
 
-```javascript
+```js
 var Aran = require("../../main.js");
 var fs = require("fs");
 var target = fs.readFileSync(__dirname+"/../target/monolithic.js", "utf8");

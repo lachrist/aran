@@ -1,11 +1,13 @@
 
 # Online Modular Instrumentation
 
+*Outdated!*
+
 We use [Otiluke](https://github.com/lachrist/otiluke) to demonstrate how Aran can be used to analyze modular programs.
 When using Otiluke, an analysis consists in a node module which exports an instrumentation function.
 This module will be executed along the program under analysis and the exported instrumentation function will be called on all its sources.
 
-```javascript
+```js
 var Aran = require("../../main.js");
 module.exports = function (options) {
   function location (index) {
@@ -24,13 +26,13 @@ module.exports = function (options) {
 };
 ```
 
-For the rest, it is supposed that [Otiluke](https://github.com/lachrist/otiluke) is accessible from this directory. 
+For the rest, it is assumed that [Otiluke](https://github.com/lachrist/otiluke) is accessible from this directory. 
 
 ## Online Instrumentation of Node module
 
 Otiluke requires two information to transform node modules: the analysis module described above and the entry point of the node module under analysis:
 
-```javascript
+```js
 require("otiluke").node({transpile:"./analysis.js", main:"../target/commonjs/main.js"});
 ```
 
@@ -57,7 +59,7 @@ Apply sqrt @ /Users/soft/Desktop/workspace/aran/usage/target/commonjs/solve.js#4
 Otiluke can also deploy a proxy that acts as a [man-in-the-middle attack](https://en.wikipedia.org/wiki/Man-in-the-middle_attack).
 Once your browser is configured according to [Otiluke's readme](https://github.com/lachrist/otiluke), you can deploy the proxy with:
 
-```javascript
+```js
 require("otiluke").mitm({transpile:"./analysis.js", port:8080});
 ```
 
