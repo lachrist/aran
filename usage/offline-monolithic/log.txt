@@ -1,5 +1,0 @@
-Apply solve
-Apply delta
-Apply sqrt
-Apply delta
-Apply sqrt

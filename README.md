@@ -1,13 +1,14 @@
 # Aran <img src="readme/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
 
 Aran is a [npm module](https://www.npmjs.com/aran) for instrumenting JavaScript code which enables amongst other things: objects and functions profiling, debugging, control-flow tracing and sandboxing.
-Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting [ECMAScript6](http://www.ecma-international.org/ecma-262/6.0/).
+Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting the latter ECMAScript specifications.
 To install, run `npm install aran`.
+
 Note than Aran does not deal with module systems.
 Alone, it can only handle monolithic JavaScript programs.
 Various module systems are supported in a separate module called [Otiluke](https://github.com/lachrist/otiluke).
 Additionally, Aran does not offer an out-of-the-box interface for tracking primitive values which is crucial for data-flow centric dynamic analyses such as taint analysis and symbolic execution.
-In our research, we track primitive values with an additional npm module: [Linvail](https://github.com/lachrist/linvail).
+In our research, we track primitive values with a completmentary npm module: [Linvail](https://github.com/lachrist/linvail).
 
 ## Getting Started
 
@@ -97,44 +98,45 @@ Traps starting with a upper-case letter are simple observers and their return va
 All traps are independently optional and they all receive as last argument an integer which is the index of the [ESTree](https://github.com/estree/estree) [node](https://github.com/estree/estree/blob/master/es5.md#node-objects) that triggered the trap.
 In the table below, `123` is used as a dummy index.
 
- Traps                              | Target              | Instrumented
-------------------------------------|---------------------|-------------------------------------------------------
-**General**                         |                     |
-`Program(index)`                    | `...`               | `_traps_.Program(123); ...`
-`Strict(index)`                     | `'use strict';`     | `'use strict';`<br>`_traps_.Strict(123);`
-**Creation**                        |                     |
-`primitive(value, index)`           | `"foo"`             | `_traps_.primitive("foo", 123)`
-`function(value, index)`            | `function ...`      | `_traps_.function(function ..., 123)`
-`object(value, index)`              | `{a:x}`             | `_traps_.object({a:x}, 123)`
-`array(value, index)`               | `[x, y, z]`         | `_traps_.array([x, y, z], 123)`
-`regexp(value, index)`              | `/abc/g`            | `_traps_.regexp(/abc/g, 123)`
-**Environment**                     |                     |
-`Declare(kind, variables, index)`   | `var x = 1, y;`     | `_traps_.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
-`read(var, read, index)`            | `x`                 | `_traps_.read('x', () => x, 123)`
-`write(var, val, write, index)`     | `x = y`             | `_traps_.write('x', y, (_traps_) => x=_traps_, 123)`
-`Enter(index)`<br>`Leave(index)`    | `{ ... }`           | `{`<br>&nbsp;&nbsp;`_traps_.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`_traps_.Leave(123);`<br>`}`
-`with(environment, index)`          | `with(o) { ... }`   | `with(_traps_.with(o)) { ... }`
-**Apply**                           |                     |
-`apply(fct, this, args, index)`     | `f(x,y)`            | `_traps_.apply(f, null, [x,y], 123)`
-`construct(fct, args, index)`       | `new F(x,y)`        | `_traps_.construct(F, [x,y], 123)`
-`Arguments(args, index)`            | `function ...`      | `... _traps_.Arguments(arguments, 123)... `
-`return(value, index)`              | `return x;`         | `return _traps_.return(x, 123);`
-`eval(args, index)`                 | `eval(x, y)`        | `... eval(_traps_.eval([x,y], 123))... `
-`unary(op, value, index)`           | `!x`                | `_traps_.unary('!', x, 123)`
-`binary(op, left, right, index)`    | `x + y`             | `_traps_.binary('+', x, y, 123)`
-**Object**                          |                     |
-`get(object, key, index)`           | `o.k`               | `_traps_.get(o, 'k', 123)` 
-`set(object, key, value, index)`    | `o.k = x`           | `_traps_.set(o, 'k', x, 123)`
-`delete(object, key, index)`        | `delete o.k`        | `_traps_.delete(o, 'k', 123)`
-`enumerate(object, index)`          | `for (k in o) ...`  | `... _traps_.enumerate(o, 123) ...`
-**Control**                         |                     |
-`test(value, index)`                | `if (x) ...`        | `if (_traps_.test(x, 123)) ...`
-`Label(label, index)`               | `l: { ... };`       | `_traps_.Label('l', 123);`<br>`l: { ... };`
-`Break(label, index)`               | `break l;`          | `_traps_.Break('l', 123);`<br>`break l;`
-`throw(error, index)`               | `throw x;`          | `throw _traps_.throw(x, 123);`
-`Try(index)`<br>`catch(error, index)`<br>`Finally(index)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`_traps_.Try(123);`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`e = _traps_.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`_traps_.Finally(123);`<br>&nbsp;&nbsp;`..`<br>`}`
-`sequence(values, index)`           | `(x, y, z)`         | `_traps_.sequence([x, y, z], 123)`
-`expression(value, index)`          | `x`                 | `_traps_.expression(x, 123)`
+ Traps                             | Target              | Instrumented
+-----------------------------------|---------------------|-------------------------------------------------------
+**General**                        |                     |
+`Program(idx)`                     | `...`               | `_traps_.Program(123); ...`
+`Strict(idx)`                      | `'use strict';`     | `'use strict';`<br>`_traps_.Strict(123);`
+**Creation**                       |                     |
+`primitive(val, idx)`              | `"foo"`             | `_traps_.primitive("foo", 123)`
+`function(val, idx)`               | `function ...`      | `_traps_.function(function ..., 123)`
+`object(val, idx)`                 | `{a:x}`             | `_traps_.object({a:x}, 123)`
+`array(val, idx)`                  | `[x, y, z]`         | `_traps_.array([x, y, z], 123)`
+`regexp(val, idx)`                 | `/abc/g`            | `_traps_.regexp(/abc/g, 123)`
+**Environment**                    |                     |
+`Declare(knd, tags, idx)`          | `var x = 1, y;`     | `_traps_.Declare('var', [x,y], 123);`<br>`var x = 1, y;`
+`read(tag, val, idx)`              | `x`                 | `_traps_.read('x', x, 123)`
+`write(tag, old, new, wrt, idx)`   | `x = y`             | `_traps_.write('x', x, y, (_traps_) => x=_traps_, 123)`
+`Enter(idx)`<br>`Leave(idx)`       | `{ ... }`           | `{`<br>&nbsp;&nbsp;`_traps_.Enter(123);`<br>&nbsp;&nbsp;`...`<br>&nbsp;&nbsp;`_traps_.Leave(123);`<br>`}`
+`with(env, idx)`                   | `with(o) { ... }`   | `with(_traps_.with(o)) { ... }`
+**Apply**                          |                     |
+`apply(fct, ths, args, idx)`       | `f(x,y)`            | `_traps_.apply(f, null, [x,y], 123)`
+`construct(cst, args, idx)`        | `new F(x,y)`        | `_traps_.construct(F, [x,y], 123)`
+`Arguments(args, idx)`             | `function ...`      | `... _traps_.Arguments(arguments, 123)... `
+`return(val, idx)`                 | `return x;`         | `return _traps_.return(x, 123);`
+`eval(args, idx)`                  | `eval(x, y)`        | `... eval(_traps_.eval([x,y], 123))... `
+`unary(uop, arg, idx)`             | `!x`                | `_traps_.unary('!', x, 123)`
+`binary(bop, arg1, arg2, idx)`     | `x + y`             | `_traps_.binary('+', x, y, 123)`
+**Object**                         |                     |
+`get(obj, key, idx)`               | `o.k`               | `_traps_.get(o, 'k', 123)` 
+`set(obj, key, val, idx)`          | `o.k = x`           | `_traps_.set(o, 'k', x, 123)`
+`delete(obj, key, idx)`            | `delete o.k`        | `_traps_.delete(o, 'k', 123)`
+`enumerate(obj, idx)`              | `for (k in o) ...`  | `... _traps_.enumerate(o, 123) ...`
+**Control**                        |                     |
+`test(val, idx)`                   | `if (x) ...`        | `if (_traps_.test(x, 123)) ...`
+`Label(lab, idx)`                  | `l: { ... };`       | `_traps_.Label('l', 123);`<br>`l: { ... };`
+`Break(lab, idx)`                  | `break l;`          | `_traps_.Break('l', 123);`<br>`break l;`
+`Continue(lab, idx)`               | `continue l;`       | `_traps_.Continue('l', 123);`<br>`continue l;`
+`throw(err, idx)`                  | `throw x;`          | `throw _traps_.throw(x, 123);`
+`Try(idx)`<br>`catch(err, idx)`<br>`Finally(idx)` | `try {`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`...`<br>`}` | `try { `<br>&nbsp;&nbsp;`_traps_.Try(123);`<br>&nbsp;&nbsp;`...`<br>`} catch (e) {`<br>&nbsp;&nbsp;`e = _traps_.catch(e, 123);`<br>&nbsp;&nbsp;`...`<br>`} finally {`<br>&nbsp;&nbsp;`_traps_.Finally(123);`<br>&nbsp;&nbsp;`..`<br>`}`
+`sequence(vals, idx)`              | `(x, y, z)`         | `_traps_.sequence([x, y, z], 123)`
+`expression(val, idx)`             | `x`                 | `_traps_.expression(x, 123)`
 
 In the case of a direct apply, the `this` argument provided to the `apply` trap is `undefined` in strict mode and `null` in normal mode.
 If one of the parameter is named `arguments`, the `arguments` trap is not triggered.
@@ -201,6 +203,43 @@ There are several known transparency issues that Aran does not handle for you:
   assert(identity.toString() === code);
   ```
 
-## Supported ECMAScript6 Features
+## Known unsuported language features:
 
-* Block scoping [let && const](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/let)
+* ES2015 modules: native JS modules arrived, we did not even to begin to think about their implication for Aran.
+
+* ES2015 classes: they should be desugared and trigger pre-existing traps.
+
+* iterators: no support for generator functions (i.e. `function*`, `yield` and `yield*`) and the `for ... of` loop.
+Would be nice to desugar generator functions into regular function returning an explicit iterator.
+We could also desugar the `for ... of` into a regular loop and trigger the usual `test` trap.
+
+* promises: no support for asynchronous functions and the await keyword, promises themselves requires no specific threatment.
+Would be nice to desugar await into explicit promises nesting.
+
+* `arguments`: as there is no dedicated language structure involved with the use of `arguments`, code using the arguments object can be instrumented.
+However there is no support to account for the crazinest of this feature.
+In the code below, the `write` trap should be triggered over `x` but we do not do it at the moment.
+
+```js
+function g (xs) {
+  xs[0] = "foo";
+}
+function f (x,y,z) {
+  g(arguments);
+  return [x,y,z];
+}
+console.log(f(1,2,3))
+```
+```
+{ '0': 'foo', '1': 2, '2': 3 }
+```
+
+* destructuring assignment: should be desugared into standard assignment which should trigger the `write` trap. 
+
+* arrow: should be easy to support.
+
+* default argument values: should be easy to support.
+
+* trailing arguments: should be easy to support.
+
+* trailing parameters: should be easy to support.

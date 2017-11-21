@@ -1,64 +1,50 @@
-  // node otiluke/run.js --demo --transform aran/analyses --out aran/analyses/demo.html
-// node otiluke/run.js --test --transform aran/analyses/2-Trace.js --port 8080
-// > cat analysis.js instrumented.js | node
 
-// var Aran = require("aran");
-// var aran = ({
-//   namespace: "meta",
-//   traps: ["eval"],
-//   loc: true,
-// });
-// global.meta = {};
-// meta.eval = function (xs, i) {
-//   console.log("eval at "+aran.node(i).loc);
-//   return aran.instrument(xs[0]);
-// };
-// eval(aran.instrument(Fs.readFileSync("target.js", "utf8)));
+const Join = require("./join.js");
+const JoinPoint = require("./join-point.js");
+const Cut = require("./cut.js");
 
-var Instrument = require("./instrument.js");
-var Esprima = require("esprima");
+function join (root, pointcut) {
+  this._roots.push(root);
+  const tmp1 = global.ARAN_NAMESPACE;
+  const tmp2 = global.ARAN_COUNTER;
+  const tmp3 = global.ARAN_CUT;
+  global.ARAN_NAMESPACE = this.namespace;
+  global.ARAN_COUNTER = this._counter;
+  global.ARAN_CUT = Cut(pointcut);
+  const res = Visit(root);
+  this._counter = global.ARAN_COUNTER;
+  global.ARAN_NAMESPACE = tmp1;
+  global.ARAN_COUNTER = tmp2;
+  global.ARAN_CUT = tmp3;
+  return res;
+}
 
-var global = (function () { return this } ());
-
-function search (node, index) {
-  if (typeof node !== "object" || node === null)
-    return;
-  if ("__min__" in node && index === node.__min__)
-    return node;
-  if (index < node.__min__ || index > node.__max__)
-    return;
-  for (var key in node) {
-    var child = search(node[key], index);
-    if (child) {
-      return child;
+function root (index) {
+  for (let i=0, l=this._roots.length; i<l; i++) {
+    if (index >= this._roots[i].__min__ && index <= this._roots[i].__max__) {
+      return this._roots[i];
     }
   }
 }
 
-module.exports = function (namespace) {
-  namespace = namespace || "_traps_";
-  var instrument = Instrument(namespace);
-  var programs = [];
-  return {
-    namespace: namespace,
-    instrument: function (program, pointcut) {
-      programs.push(program);
-      return instrument(program, pointcut);
-    },
-    node: function (index) {
-      for (var i=0; i<programs.length; i++) {
-        var node = search(programs[i], index);
-        if (node) {
-          return node;
-        }
-      }
-    },
-    program: function (index) {
-      for (var i=0; i<programs.length; i++) {
-        if (index >= programs[i].__min__ && index <= programs[i].__max__) {
-          return programs[i];
-        }
+function node (index) {
+  const nodes = this._roots.slice()
+  for (let nodes; nodes.length; node = nodes.pop()) {
+    if (typeof node === "object" && node !== null) {
+      if (node.__min__ === index)
+        return node;
+      if (!node.__min__ || (index > node.__min__ && index <= node.__max__)) {
+        nodes.push(... Array.isArray(node) ? node : Object.values(node));
       }
     }
-  };
-};
+  }
+}
+
+module.exports = (namespace) => ({
+  _roots: [],
+  _counter: 1,
+  namespace: namespace || "__aran__",
+  join: join,
+  root: root,
+  node: node
+});

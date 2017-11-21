@@ -1,5 +1,0 @@
-Apply solve at line 7
-Apply delta at line 3
-Apply sqrt at line 3
-Apply delta at line 4
-Apply sqrt at line 4

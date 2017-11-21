@@ -1,7 +1,4 @@
 .DS_Store
-.npmignore
 .gitignore
-node_modules/
-analyses/
-readme/
-usage/
+/demo/
+/readme/

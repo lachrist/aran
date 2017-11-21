@@ -1,5 +1,0 @@
-Apply solve @ http://127.0.0.1:8000/#156#2:6
-Apply delta @ http://127.0.0.1:8000/solve.js#2:29
-Apply sqrt @ http://127.0.0.1:8000/solve.js#2:19
-Apply delta @ http://127.0.0.1:8000/solve.js#3:29
-Apply sqrt @ http://127.0.0.1:8000/solve.js#3:19
