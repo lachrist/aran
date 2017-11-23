@@ -24,14 +24,14 @@ const trap = (key, args) => {
 };
 
 const produce = (key) => ({
-  forward: Build[key],
+  trap: key
   cut: (arg0, arg1, arg2) => trap(
     key,
     [Build[key](arg0, arg1, arg2)]) });
 
-const consume = (key) => ({
-  forward: identity,
-  cut: (arg) => trap(key, [arg]) });
+// const consume = (key) => ({
+//   forward: identity,
+//   cut: (arg) => trap(key, [arg]) });
 
 const operate = (key) => ({
   forward: Build[key],

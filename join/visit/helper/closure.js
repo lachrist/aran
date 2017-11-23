@@ -1,6 +1,35 @@
 
+// function (x) { ... }
+
+// function () {
+//   var aran_this = this;
+//   var aran_arguments = arguments;
+//   Closure(this, arguments);
+//   x = write("x", aran_arguments[0]);
+//   ...
+// }
+
+function (x, ...xs) { ... }
+
+// (x) => { ... }
+
+// function (aran_arg0) {
+//   Closure(null, arguments);
+//   x = write("x", aran_arg0);
+//   ...
+// }
+
+(x, ...xs) => { ... }
+
+function () {
+  [x, ...xs] = arguments;
+};
+
+
+
 module.exports = (ast, idx) => {
   const tmp1 = ARAN_HOISTED;
+  const tmp2 = ARAN_HIDDEN;
   const tmp2 = ARAN_STRICT;
   const str = ast.type === "ArrowExpression" ?
     Hide(idx, "arguments") :
