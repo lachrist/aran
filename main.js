@@ -3,14 +3,14 @@ const Join = require("./join.js");
 
 function join (root, pointcut) {
   this._roots.push(root);
-  const temporary1 = global.ARAN_NAMESPACE;
-  const temporary2 = global.ARAN_COUNTER;
-  global.ARAN_NAMESPACE = this.namespace;
-  global.ARAN_COUNTER = this._counter;
+  const temporary = global.ARAN;
+  global.ARAN = {
+    namespace: this.namespace,
+    counter: this._counter,
+  };
   const result = Join(root, pointcut);
-  this._counter = global.ARAN_COUNTER;
-  global.ARAN_NAMESPACE = temporary1;
-  global.ARAN_COUNTER = temporary2;
+  this._counter = global.ARAN.counter;
+  global.ARAN = temporary;
   return result;
 }
 
@@ -27,8 +27,9 @@ function node (nid) {
   while (node.length) {
     var node = nodes.pop();
     if (typeof node === "object" && node !== null) {
-      if (node.__min__ === nid)
+      if (node.__min__ === nid) {
         return node;
+      }
       if (!node.__min__ || (nid > node.__min__ && nid <= node.__max__)) {
         for (var key in node) {
           nodes.push(node[key]);

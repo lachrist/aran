@@ -1,2 +1,0 @@
-
-exports.Program = (ast) => {};

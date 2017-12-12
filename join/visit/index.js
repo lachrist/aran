@@ -1,18 +1,16 @@
 
-const Expression = require("./visitors-expression.js");
-const Statement = require("./visitors-statement.js");
-const Program = require("./visitors-program.js");
+const Expression = require("./expression.js");
+const Statement = require("./statement.js");
 
-const visit = (visitors) => (ast) => {
-  ast.__min__ = ++ARAN_COUNTER;
-  const tmp = ARAN_CURRENT;
-  ARAN_CURRENT = ARAN_COUNTER;
-  const res = visitors[ast.type](ast);
-  ARAN_CURRENT = tmp;
-  ast.__max__ = ARAN_COUNTER;
-  return res;
+const visit = (visitors) => (node) => {
+  ast.__min__ = ++ARAN.counter;
+  const temporary = ARAN.index;
+  ARAN.index = ARAN.counter;
+  const result = visitors[node.type](node);
+  ARAN.index = temporary;
+  ast.__max__ = ARAN.counter;
+  return result;
 };
 
-exports.expression = visit(Expression);
 exports.Statement = visit(Statement);
-exports.PROGRAM = visit(Program);
+exports.expression = Visit(Expression);

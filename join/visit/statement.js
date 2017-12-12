@@ -5,43 +5,51 @@
 // However, since ECMAScript6, statement blocks are no longer transparent due to block scoping.
 // Yet, this transformation is safe because the body of the above structure cannot be a declaration (see http://www.ecma-international.org/ecma-262/6.0/#sec-statements).
 
-exports.EmptyStatement = (ast) => [];
+const concat = Array.prototype.concat;
 
-exports.BlockStatement = (ast) => [Build.Block(flaten([
-  ARAN_CUT.Enter("block", ast.__min__),
-  flaten(ast.body.map(Visit)),
-  ARAN_CUT.Leave("block", ast.__min__)]))];
+exports.EmptyStatement = (node) => [];
 
-exports.ExpressionStatement = (ast) => flaten([
-  Build.Statement(Visit(ast.expression)),
-  ARAN_CUT.Drop(ast.__min__)]);
+exports.BlockStatement = (node) => ARAN.cut.Block(
+  concat.apply(
+    [],
+    node.body.map(Visit.Statement)));
 
-exports.IfStatement = (ast) => [Build.If(
-  ARAN_CUT.test(Visit(ast.test), ast.__min__),
-  Body(ast.consequent),
-  ast.alternate ? Body(ast.alternate) : null)];
+exports.ExpressionStatement = (node) => concat.call(
+  [
+    Build.Statement(
+      Visit.expression(node.expression))],
+  ARAN.cut.Drop());
 
-exports.LabeledStatement = (ast) => flaten([
-  ARAN_CUT.Label(ast.label.name, ast.__min__),
-  Build.Label(
-    ast.label.name,
-    Body(ast.body, ast.__min__))]);
+exports.IfStatement = (node) => ARAN.cut.If(
+  ARAN.cut.test(
+    Visit.expression(node.test)),
+  Helpers.Body(node.consequent),
+  node.alternate ?
+    Helpers.Body(node.alternate) :
+    []);
 
-exports.BreakStatement = (ast) => flaten([
-  ARAN_CUT.Break(ast.label ? ast.label.name : null, ast.__min__),
-  Build.Break(ast.label ? ast.label.name : null)]);
+exports.LabeledStatement = (node) => ARAN.cut.Label(
+  node.label.name,
+  Helpers.Body(node.body));
 
-exports.ContinueStatement = (ast) => flaten([
-  ARAN_CUT.Continue(ast.label ? ast.label.name : null, ast.__min__),
-  Build.Continue(ast.label ? ast.label.name : null)]);
+exports.BreakStatement = (node) => ARAN.cut.Break(
+  node.label ? node.label.name : null);
 
-exports.WithStatement = (ast) => [Build.With(
-  ARAN_CUT.with(
-    Visit(ast.object),
-    ast.__min__),
-  Body(ast.body))];
+exports.ContinueStatement = (node) => ARAN.cut.Continue(
+  node.label ? node.label.name : null);
+
+exports.WithStatement = (node) => ARAN.cut.With(
+  Visit.expression(node.object),
+  Helpers.Body(node.body));
 
 // TODO
+exports.SwitchStatement = (node) => ARAN.cut.Switch(
+  Visit.expression(ast.discriminant),
+  node.cases.map((clause) => [
+    clause.test ?
+      Visit.expression(test) :
+      null,
+    ]);
 exports.SwitchStatement = (ast) => {
   ARAN_CUT.Enter("switch", ast.__min__) +
   "var" + Hide(ast.__min__, "switch") + "=" + Visit(ast.discriminant) + ";"
@@ -62,18 +70,20 @@ exports.SwitchStatement = (ast) => {
   ARAN_CUT.drop(ast.__min__) +
   ARAN_CUT.Leave("switch", ast.__min__);
 
-exports.ReturnStatement = (ast) => [Build.Return(ARAN_CUT.return(
-  ast.argument ?
-    Visit(ast.argument) :
-    ARAN_CUT.primitive(void 0, ast.__min__),
-  ast.__min__))];
+exports.ReturnStatement = (node) => ARAN.cut.Return(
+  node.argument ?
+    Visit(node.argument),
+    ARAN.cut.primitive(void 0));
 
-exports.ThrowStatement = (ast) => [Build.throw(
-  ARAN_CUT.throw(
-    Visit(ast.argument),
-    ast.__min__))];
+exports.ThrowStatement = (ast) => ARAN.cut.Throw(
+  Visit(node.argument));
 
-exports.TryStatement = (ast) => Build.Try(
+exports.TryStatement = (ast) => ARAN.cut.Try(
+
+  );
+
+
+  Build.Try(
   flaten([
     ARAN_CUT.Enter("try", ast.__min__),
     flaten(ast.block.body.map(Visit)),
@@ -98,17 +108,27 @@ exports.TryStatement = (ast) => Build.Try(
       ARAN_CUT.Leave("finally", ast.__min__)]) :
     null);
 
-exports.WhileStatement = (ast) => [Build.While(
-  ARAN_CUT.test(
-    Visit(ast.test),
-    ast.__min__),
-  Body(ast.body))];
+exports.WhileStatement = (node) => ARAN.cut.While(
+  Visit(node.test),
+  Helpers.Body(node.body));
 
-exports.DoWhileStatement = (ast) => [Build.DoWhile(
-  Body(ast.body),
-  ARAN_CUT.test(
-    Visit(ast.test),
-    ast.__min__))];
+exports.DoWhileStatement = (node) => concat.call(
+  [
+    Build.Statement(
+      Build.write(
+        Hide("dowhile"),
+        Build.primitive(true)))],
+  ARAN.cut.While(
+    Build.conditional(
+      Build.read(
+        Hide("dowhile")),
+      Build.sequence(
+        Build.write(
+          Hide("dowhile"),
+          Build.primitive(false)),
+        ARAN.cut.primitive(true)),    
+      Visit.expression(node.test)),
+    Helpers.Body(node.body)));
 
 // TODO
 exports.ForStatement = function (ctx, ast) {
@@ -146,6 +166,39 @@ exports.ForStatement = function (ctx, ast) {
   ctx.switchlabel = tmp;
   return res;
 };
+
+  enumerate: Build.function(
+    "enumerate",
+    ["o"],
+    [ 
+      Build.Declare(
+        "var",
+        "ks",
+        Build.array([]));
+      Build.while(
+        Build.identifier("o"),
+        [
+          Build.write(
+            "ks",
+            Build.apply(
+              Build.get(
+                Build.identifier("ks"),
+                "concat"),
+              [Build.apply(
+                Build.identifier(load("ownKeys")),
+                [Build.identifier("o")])])),
+          Build.write(
+            "o",
+            Build.apply(
+              load("getPrototypeOf"),
+              [Build.identifier("o")]))])]);
+  global: Build.conditional(
+    Build.binary(
+      "===",
+      Build.identifier("window"),
+      Build.primitive("undefined")),
+    Build.identifier("global"),
+    Build.identifier("window"))
 
 // TODO
 exports.ForInStatement = (ctx, ast) => {
