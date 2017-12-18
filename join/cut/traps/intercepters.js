@@ -7,7 +7,7 @@
 // write :: String -> expression -> expression
 // declare :: String -> expression -> expression
 
-const Invoke = require("./invoke.js");
+const Invoke = require("./_invoke.js");
 const Build = require("../../build");
 const TrapKeys = require("../../../trap-keys.js");
 

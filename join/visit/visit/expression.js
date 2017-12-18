@@ -1,78 +1,68 @@
 
-exports.ThisExpression = (ast) => ARAN_CUT.readT(ARAN_THIS, ast.__min__);
+const Visit = require("./index.js");
 
-exports.ArrayExpression = (ast) => ARAN_CUT.array(
-  ast.elements.map(
-    (elm) => elm ?
-      Visit.expression(elm) :
-      ARAN_CUT.primitive(void 0, ast.__min__)),
-  ast.__min__);
+exports.ThisExpression = (node) => ARAN.cut.read("this");
 
-exports.ObjectExpression = (ast) => ARAN_CUT.object(
-  ast.properties.map(
-    (prp) => ({
-      kind: prp.kind,
-      key: prp.computed ?
-        Visit.expression(prp.key) :
-        ARAN_CUT.primitive(prp.key[prp.key.type === "Identifier" ? "name" : "raw"], ast.__min__),
-      value: Visit.expression(prp.value)
-    })),
-  ast.__min__);
+exports.ArrayExpression = (node) => ARAN.cut.array(
+  node.elements.map(
+    (expression) => expressions ?
+      Visit.expression(expression) :
+      ARAN.cut.primitive(void 0)));
 
-exports.ArrowExpression = (ast) => Closure(ast, ast.__min__);
+exports.ObjectExpression = (node) => ARAN.cut.object(
+  node.properties.map((property) => [
+    property.kind,
+    property.computed ?
+      Visit.expression(property.key) :
+      ARAN.cut.primitive(property.key.name),
+    Visit.expression(property.value)]));
 
-exports.FunctionExpression = (ast) => Closure(ast, ast.__min__);
+exports.ArrowExpression = (node) => Helpers.closure(node);
 
-exports.SequenceExpression = (ast) => {
-  var arr = [];
-  for (var i=0, l=ast.expressions.length-1; i<l; i++)
-    arr.push(ARAN_CUT.dropA(
-      Visit.expression(ast.expressions[i]),
-      ast.__min__));
-  arr.push(ast.expressions[l]);
-  return Build.sequence(arr);
-};
+exports.FunctionExpression = (node) => Helper.closure(node);
 
-exports.UnaryExpression = (ast) => {
-  if (ast.operator === "typeof" && ast.argument.type === "Identifier")
-    return ARAN_CUT.unary(
+exports.SequenceExpression = (node) => Build.sequence(
+  node.expressions.map((expression, index) => index === node.expressions.length -1 ?
+    ARAN.cut.drop.after(
+      Visit.expression(expression)),
+    Visit.expression(expression)));
+
+exports.UnaryExpression = (node) => {
+  if (node.operator === "typeof" && node.argument.type === "Identifier")
+    return ARAN.cut.unary(
       "typeof",
-      Build.apply(
+      Build.call(
         Build.function(
-          null,
-          [],
-          [Build.Try(
-            [Build.Return(ARAN_CUT.read(ast.argument.name, ast.__min__))],
-            "_"
-            [Build.Return(ARAN_CUT.primitive(void 0, ast.__min__))]
-            null)]),
-        []),
-      ast.__min__);
-  if (ast.operator === "delete" && ast.argument.type === "Identifier")
-    return ARAN_CUT.discard(ast.argument.name, ast.__min__);
-  if (ast.operator === "delete" && ast.argument.type === "MemberExpression")
-    return ARAN_CUT.delete(
-      Visit.expression(argument.object),
-      Property(ast.argument.property, ast.__min__),
-      ast.__min__);
-  return ARAN_CUT.unary(
-    ast.operator,
-    Visit.expression(ast.argument),
-    ast.__min__);
+          [
+            Build.Try(
+              [
+                Build.Return(
+                  ARAN.cut.read(node.argument.name))],
+              [
+                Build.Return(
+                  ARAN.cut.primitive(void 0))]
+              [])]),
+        []));
+  if (node.operator === "delete" && node.argument.type === "Identifier")
+    return ARAN.cut.discard(node.argument.name);
+  if (node.operator === "delete" && node.argument.type === "MemberExpression")
+    return ARAN.cut.delete(
+      Visit.expression(node.argument.object),
+      Helpers.property(node.argument.property));
+  return ARAN.cut.unary(
+    node.operator,
+    Visit.expression(node.argument));
 };
 
-exports.BinaryExpression = (ast) => ARAN_CUT.binary(
-  ast.operator,
-  Visit.expression(ast.left),
-  Visit.expression(ast.right),
-  ast.__min__);
+exports.BinaryExpression = (node) => ARAN.cut.binary(
+  node.operator,
+  Visit.expression(node.left),
+  Visit.expression(node.right));
 
-exports.AssignmentExpression = (ast) => ast.operator === "=" ?
-  Assign(
-    null,
-    ast.left,
-    Visit.expression(ast.right),
-    ast.__min__) :
+exports.AssignmentExpression = (node) => node.operator === "=" ?
+  Helpers.write(
+    node.left,
+    Visit.expression(node.right)) :
   Left(
     (str) => ARAN_CUT.binary(
       ast.operator.substring(0, ast.operator.length-1),

@@ -3,21 +3,24 @@ const Visit = require("./index.js");
 const Rest = require("./rest.js");
 const Build = require("../../build");
 
-module.exports = (kind, left, right) => {
-  const pairs = [[left, right]];
+const identity = (argument) => argument;
+
+module.exports = (kind, pairs) => {
   let counter = 0;
-  const push = kind ?
-    (exp) => Build.Statement(exp) :
-    (exp) => exp;
-  const asts = [];
+  const transform = kind ?
+    Build.Statement :
+    identity;
+  const result = [];
   while (pairs.length) {
     counter++;
     const pair = pairs.pop();
     if (pair[0] === null) {
-      push(
-        ARAN.cut.drop.after(right));
+      result.push(
+        transform(
+          ARAN.cut.drop.after(right)));
     } else if (pair[0] === "push") {
-      push(pair[1]);
+      result.push(
+        transform(pair[1]));
     } else if (pair[0].type === "Identifier") {
       if (kind === "var") {
         ARAN.closure.hoisted.push(
@@ -25,19 +28,21 @@ module.exports = (kind, left, right) => {
             "var",
             pair[0].name,
             ARAN.cut.primitive(void 0)));
-        push(ARAN.cut.write(pair[0].name, pair[1]));
+        result.push(
+          transform(ARAN.cut.write(pair[0].name, pair[1])));
       } else {
-        asts.push(
+        result.push(
           kind ?
-            ARAN.cut.Declare(kind, pair[0].name, pair[1]) :
-            ARAN.cut.write(pair[0].name, pair[1]));
+            ARAN.cut.Declare(kind, pair[0].name, pair[1]),
+            ARAN.cut.write(pair[0].name, pair[1]))
       }
     } else if (pair[0].type === "MemberExpression") {
-      push(
-        ARAN.cut.set(
-          Visit.expression(pair[0].object),
-          Property([pair[0].property]),
-          pair[1]));
+      result.push(
+        transform(
+          ARAN.cut.set(
+            Visit.expression(pair[0].object),
+            Property([pair[0].property]),
+            pair[1])));
     } else if (pair[0] === "AssignmentPattern") {
       pairs.push([
         pair[0].left,
@@ -108,5 +113,5 @@ module.exports = (kind, left, right) => {
             Property(pair[0].properties[i]))]);
     }
   }
-  return asts;
+  return result;
 };

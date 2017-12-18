@@ -4,33 +4,10 @@ const TrapKeys = require("../../trap-keys.js");
 const Build = require("../build");
 const Flaten = require("../flaten.js");
 
-
 module.exports = (pointcut) => {
 
   const traps = Traps(pointcut);
   const cut = {};
-
-  // cut.$This = () => Build.Declare(
-  //   "var",
-  //   Protect("this"),
-  //   traps.this(
-  //     Build.this()));
-  // cut.$Arguments = () => Build.Declare(
-  //   "var",
-  //   Protect("arguments"),
-  //   traps.arguments(
-  //     Build.arguments()));
-
-  // cut.closure = (identifier, identifiers, statements) => traps.closure(
-  //   Build.closure(identifier, identifiers, statements));
-
-  // TrapKeys.informers.forEach((key) => {
-  //   cut[key] = (...rest) => {
-  //     const expression = traps[key](...rest);
-  //     return expression ?
-  //       Build.Statement(expression) :
-  //       Build.Empty();
-  // }});
 
   ///////////////
   // Combiners //
@@ -40,25 +17,18 @@ module.exports = (pointcut) => {
     cut[key] = traps[key];
   });
 
-  //////////////////////////////////////////
-  // Informers + catch + arguments + this //
-  //////////////////////////////////////////
+  ////////////////////////////////////////////////////
+  // Informers + catch + arguments + this + closure //
+  ////////////////////////////////////////////////////
 
-  ["Label", "Break", "Continue"].forEach((key) => {
-    cut[key] = (label, statement) => Flaten(
-      Inform(traps[key](label)),
-      Build[key](label, statements));
-  });
+  cut.arrow = (strict, statements) => Closure(true, strict, statements);
 
-  cut.Block = (statements) => Flaten(
-    Inform(traps.Enter("block")),
-    statements,
-    Inform(traps.Leave("block")));
+  cut.["function"] = (strict, statements) => Closure(false, strict, statements);
 
-  cut.Try = (statements1, statements2, statement3) => Build.Try(
+  cut.Try = (statements1, statements2, statements3) => Build.Try(
     Flaten(
       Inform(traps.Enter("try")),
-      statements,
+      statements1,
       Inform(traps.Leave("try"))),
     Flaten(
       Inform(traps.Enter("catch")),
@@ -67,64 +37,38 @@ module.exports = (pointcut) => {
           "error",
           traps.catch(
             Build.read("error")))),
-      statements,
+      statements2,
       Inform(traps.Leave("catch"))),
     Flaten(
       Inform(traps.Enter("finally")),
-      statements,
+      statements3,
       Inform(traps.Leave("finally"))));
 
-  cut.closure = (strict, TODO arrow, statements) => traps.closure(
-    Build.closure(
-      strict,
-      identifier,
-      Flaten(
-        // META.closure(STRICT);
-        Inform(traps.Closure(strict));
-        // arguments = META.arguments(arguments);
-        [
-          Build.Statement(
-            Build.write(
-              "arguments",
-              traps.arguments(
-                Build.read("arguments"))))],
-        // META.copy(2);
-        Inform(arrow ?
-          null :
-          traps.Copy(2)),
-        // let METAarguments = META.declare(arguments, "let", "arguments");
-        arrow ?
-          [] :
-          [
-            Build.Declare(
-              "var",
-              Sanitize("arguments"),
-              traps.declare(
-                "let",
-                "arguments",
-                Build.read("arguments")))],
-        // META.drop();
-        Inform(arrow ?
-          traps.Drop(0) :
-          null),
-        // const METAthis = META.declare(META.this(this), "const", "this");
-        arrow ?
-          [] :
-          [
-            Build.Declare(
-              "const",
-              Sanitize("this"),
-              traps.declare(
-                "const",
-                "this",
-                Build.read("this")))],
-        // BODY
-        statements,
-        // return traps.return(traps.primitive(void 0));
-        [
-          Build.Return(
-            traps.return(
-              traps.primitive(void 0)))])));
+  cut.PROGRAM = (strict, statements) => Build.PROGRAM(
+    strict,
+    Flaten(
+      Inform(traps.Program(strict)),
+      statements));
+
+  cut.Label = (label, statements) => Flaten(
+    Inform(traps.Label(label)),
+    Build.Label(label, Flaten(
+      Inform(traps.Enter("label")),
+      statements,
+      Inform(traps.Leave("label")))));
+
+  cut.Break = (label) => Flaten(
+    Inform(traps.Break(label)),
+    Build.Break(label));
+
+  cut.Continue = (label) => Flaten(
+    Inform(traps.Continue(label)),
+    Build.Continue(label));
+
+  cut.Block = (statements) => Flaten(
+    Inform(traps.Enter("block")),
+    statements,
+    Inform(traps.Leave("block")));
 
   ((() => {
     const make = (key) => {
@@ -157,14 +101,14 @@ module.exports = (pointcut) => {
   ///////////////
 
   cut.read = (identifier) => traps.read(
+    identifier,
     Build.read(
-      sanitize(identifier)),
-    identifier);
+      sanitize(identifier)));
   
   cut.discard = (identifier) => traps.discard(
+    identifier,
     Build.discard(
-      sanitize(identifier)),
-    identifier);
+      sanitize(identifier)));
 
   cut.primitive = (primitive) => traps.primitive(
     Build.primitive(primitive));
@@ -172,18 +116,22 @@ module.exports = (pointcut) => {
   cut.regexp = (pattern, flags) => traps.regexp(
     Build.regexp(pattern, flags));
 
+  cut.protect = (name) => traps.protect(
+    name,
+    Build.read(Protect(name)));
+
   ///////////////
   // Consumers //
   ///////////////
 
   cut.write = (identifier, expression) => Build.write(
     sanitize(identifier),
-    traps.write(expression, identifier));
+    traps.write(identifier, expression));
 
   cut.Declare = (kind, identifier, expression) => Build.Declare(
     kind,
     sanitize(identifier),
-    traps.declare(expression, identifier, kind));
+    traps.declare(kind, identifier, expression));
 
   cut.Return = (expression) => Build.Return(
     traps.return(expression));
@@ -193,39 +141,47 @@ module.exports = (pointcut) => {
 
   cut.With = (expression, statements) => Build.With(
     traps.with(expression),
-    statements);
+    Flaten(
+      Inform(traps.Enter("with")),
+      statements,
+      Inform(traps.Leave("with"))));
 
   cut.Throw = (expression) => Build.Throw(
     traps.throw(expression));
 
   cut.While = (expression, statements) => Build.While(
     traps.test(expression),
-    statements);
+    Flaten(
+      Inform(traps.Enter("while")),
+      statements,
+      Inform(traps.Leave("while"))));
 
   cut.If = (expression, statements1, statements2) => Build.If(
     traps.test(expression),
-    statements1,
-    statements2);
+    Flaten(
+      Inform(traps.Enter("then")),
+      statements1,
+      Inform(traps.Leave("then"))),
+    Flaten(
+      Inform(traps.Enter("else")),
+      statements1,
+      Inform(traps.Leave("else"))));
 
   cut.conditional = (expression1, expression2, expression3) => Build.conditional(
     traps.test(expression1),
     expression2,
     expression3);
 
-  cut.Switch = (expression, cases) => concat.call(
-    Inform(traps.Enter("switch")),
-    [
-      Build.Switch(
-        expression,
-        cases.map((array) => [
-          traps.$test(array[0]),
-          array[1]]))],
-    Inform(traps.Leave("switch")));
-
-  // TODO
-  cut.Program = (strict, statements) => concat.call(
-
-    strict);
+  // // TODO
+  // cut.Switch = (expression, cases) => concat.call(
+  //   Inform(traps.Enter("switch")),
+  //   [
+  //     Build.Switch(
+  //       expression,
+  //       cases.map((array) => [
+  //         traps.$test(array[0]),
+  //         array[1]]))],
+  //   Inform(traps.Leave("switch")));
 
   ////////////
   // Return //

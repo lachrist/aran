@@ -10,7 +10,7 @@
 // unary :: String -> expression -> expression
 // binary :: String -> expression -> expression -> expression
 
-const Invoke = require("./invoke.js");
+const Invoke = require("./_invoke.js");
 const Build = require("../../build");
 const TrapKeys = require("../../../trap-keys.js");
 

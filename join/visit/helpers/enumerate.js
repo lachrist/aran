@@ -1,12 +1,13 @@
 
-
-// function (keyss, object) {
-//   while (object) {
-//     keyss[keyss.length] = Object.keys(object);
-//     object = Object.getPrototypeOf(object);
+// function () {
+//   while (arguments[1]) {
+//     arguments[0][arguments[0].length] = Object.keys(arguments[1]);
+//     arguments[1] = Object.getPrototypeOf(arguments[1]);
 //   }
-//   return Reflect.apply(Array.prototype.concat, [], keyss);
+//   return Reflect.apply(Array.prototype.concat, [], arguments[0]);
 // }
+
+// TODO
 
 module.exports = () => Build.closure(
   null,

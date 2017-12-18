@@ -1,10 +1,27 @@
 
 const Cut = require("./cut");
 const Visit = require("./visit");
+const Build = require("./build.js");
 
-module.exports = (program, pointcut) => {
+module.exports = (program, pointcut) => { 
+  program.__min__ = ++ARAN.counter;
+  ARAN.index = ARAN.counter;
   ARAN.cut = Cut(pointcut);
-  return Visit.PROGRAM(program);
+  ARAN.context = Context(program.body[0]);
+  const statements = Flaten.apply(
+    null,
+    program.body.map(Visit.Statement));
+  return ARAN.cut.PROGRAM(
+    ARAN.context.strict,
+    Flaten.call(
+      Flaten.apply(
+        null,
+        ARAN.hidden.map((identifier) => Build.Declare(
+          "var",
+          identifier,
+          Build.primitive(null)))),
+      Flaten.apply(null, ARAN.context.hoisted);
+      statements));
 };
 
 
