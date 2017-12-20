@@ -1,8 +1,7 @@
 
+const ArrayLite = require("array-lite");
+const Build = require("../build.js");
 const Traps = require("./traps");
-const TrapKeys = require("../../trap-keys.js");
-const Build = require("../build");
-const Flaten = require("../flaten.js");
 
 module.exports = (pointcut) => {
 
@@ -13,24 +12,37 @@ module.exports = (pointcut) => {
   // Combiners //
   ///////////////
 
-  TrapKeys.combiners.forEach((key) => {
-    cut[key] = traps[key];
-  });
+  ArrayLite.each(
+    [
+      "object",
+      "array",
+      "get",
+      "set",
+      "delete",
+      "enumerate",
+      "invoke",
+      "apply",
+      "construct",
+      "unary",
+      "binary"],
+    (key) => {
+      cut[key] = traps[key];
+    });
 
   ////////////////////////////////////////////////////
   // Informers + catch + arguments + this + closure //
   ////////////////////////////////////////////////////
 
-  cut.arrow = (strict, statements) => Closure(true, strict, statements);
+  cut.arrow = (strict, statements) => Closure(true, traps, strict, statements);
 
-  cut.["function"] = (strict, statements) => Closure(false, strict, statements);
+  cut.["function"] = (strict, statements) => Closure(false, traps, strict, statements);
 
   cut.Try = (statements1, statements2, statements3) => Build.Try(
-    Flaten(
+    ArrayLite.concat(
       Inform(traps.Enter("try")),
       statements1,
       Inform(traps.Leave("try"))),
-    Flaten(
+    ArrayLite.concat(
       Inform(traps.Enter("catch")),
       Build.Statement(
         Build.write(
@@ -39,33 +51,33 @@ module.exports = (pointcut) => {
             Build.read("error")))),
       statements2,
       Inform(traps.Leave("catch"))),
-    Flaten(
+    ArrayLite.concat(
       Inform(traps.Enter("finally")),
       statements3,
       Inform(traps.Leave("finally"))));
 
   cut.PROGRAM = (strict, statements) => Build.PROGRAM(
     strict,
-    Flaten(
+    ArrayLite.concat(
       Inform(traps.Program(strict)),
       statements));
 
-  cut.Label = (label, statements) => Flaten(
+  cut.Label = (label, statements) => ArrayLite.concat(
     Inform(traps.Label(label)),
-    Build.Label(label, Flaten(
+    Build.Label(label, ArrayLite.concat(
       Inform(traps.Enter("label")),
       statements,
       Inform(traps.Leave("label")))));
 
-  cut.Break = (label) => Flaten(
+  cut.Break = (label) => ArrayLite.concat(
     Inform(traps.Break(label)),
     Build.Break(label));
 
-  cut.Continue = (label) => Flaten(
+  cut.Continue = (label) => ArrayLite.concat(
     Inform(traps.Continue(label)),
     Build.Continue(label));
 
-  cut.Block = (statements) => Flaten(
+  cut.Block = (statements) => ArrayLite.concat(
     Inform(traps.Enter("block")),
     statements,
     Inform(traps.Leave("block")));
@@ -141,7 +153,7 @@ module.exports = (pointcut) => {
 
   cut.With = (expression, statements) => Build.With(
     traps.with(expression),
-    Flaten(
+    ArrayLite.concat(
       Inform(traps.Enter("with")),
       statements,
       Inform(traps.Leave("with"))));
@@ -151,18 +163,18 @@ module.exports = (pointcut) => {
 
   cut.While = (expression, statements) => Build.While(
     traps.test(expression),
-    Flaten(
+    ArrayLite.concat(
       Inform(traps.Enter("while")),
       statements,
       Inform(traps.Leave("while"))));
 
   cut.If = (expression, statements1, statements2) => Build.If(
     traps.test(expression),
-    Flaten(
+    ArrayLite.concat(
       Inform(traps.Enter("then")),
       statements1,
       Inform(traps.Leave("then"))),
-    Flaten(
+    ArrayLite.concat(
       Inform(traps.Enter("else")),
       statements1,
       Inform(traps.Leave("else"))));
@@ -172,16 +184,13 @@ module.exports = (pointcut) => {
     expression2,
     expression3);
 
-  // // TODO
-  // cut.Switch = (expression, cases) => concat.call(
-  //   Inform(traps.Enter("switch")),
-  //   [
-  //     Build.Switch(
-  //       expression,
-  //       cases.map((array) => [
-  //         traps.$test(array[0]),
-  //         array[1]]))],
-  //   Inform(traps.Leave("switch")));
+  cut.Switch = (clauses) => ArrayLite.concat(
+    Inform(traps.Enter("switch")),
+    Build.Switch(
+      clauses.map((clause) => [
+        traps.test(clause[0]),
+        clause[1]])),
+    Inform(traps.Leave("switch")));
 
   ////////////
   // Return //

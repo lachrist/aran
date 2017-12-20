@@ -1,2 +1,2 @@
 
-module.exports = (information) => ARAN.namespace + "_" + information;
+module.exports = (name) => ARAN.namespace + "_" + name;

@@ -10,29 +10,45 @@
 // unary :: String -> expression -> expression
 // binary :: String -> expression -> expression -> expression
 
-const Invoke = require("./_invoke.js");
+const ArrayLite = require("array-lite");
 const Build = require("../../build");
-const TrapKeys = require("../../../trap-keys.js");
+const CallTrap = require("./call-trap.js");
 
-const mapping = (property) => [
-  Build.primitive(property[0]),
-  property[1],
-  property[2]];
+const transformerss = {
+  object: [
+    (properties) => Build.array(ArrayLite.map(properties, Build.array))],
+  array: [
+    Build.array],
+  invoke: [
+    null,
+    null,
+    Build.array],
+  apply: [
+    null,
+    Build.array],
+  construct1: [
+    null,
+    Build.array],
+  unary: [
+    Build.primitive],
+  binary: [
+    Build.primitive]};
 
-const transformers = {
-  object0: (properties) => Build.array(properties.map(mapping)),
-  array0: Build.array,
-  apply2: Build.array,
-  construct1: Build.array,
-  unary0: Build.primitive,
-  binary0: Build.primitive};
-
-TrapKeys.combiners.forEach((key) => {
-  const mapping = (element, index) => {
-    const transformer = transformers[key+index];
-    return transformer ? transformer(element) : element;
-  };
-  points[key] = {
+Rayar.each(
+  [
+    "object",
+    "array",
+    "get",
+    "set",
+    "delete",
+    "enumerate",
+    "invoke",
+    "apply",
+    "construct",
+    "unary",
+    "binary"],
+  (key) => exports[key] = {
     forward: Build[key],
-    cut: (...rest) => Invoke(key, rest.map(mapping))};
-});
+    cut: function () {
+      return CallTrap(key, ArrayLite.zipmap(arguments, transformerss[key]||[]));
+    }});

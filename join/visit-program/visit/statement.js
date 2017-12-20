@@ -40,33 +40,32 @@ exports.WithStatement = (node) => ARAN.cut.With(
   Visit.expression(node.object),
   Helpers.Body(node.body));
 
-// // TODO
-// exports.SwitchStatement = (node) => ARAN.cut.Switch(
-//   Visit.expression(ast.discriminant),
-//   node.cases.map((clause) => [
-//     clause.test ?
-//       Visit.expression(test) :
-//       null,
-//     ]);
-// exports.SwitchStatement = (ast) => {
-//   ARAN_CUT.Enter("switch", ast.__min__) +
-//   "var" + Hide(ast.__min__, "switch") + "=" + Visit(ast.discriminant) + ";"
-//   "switch (true) {" +
-//   ast.cases.map((cse) =>
-//     (cst.test
-//       ? "case " +
-//         ARAN_CUT.test(
-//           ARAN_CUT.binary("===",
-//             ARAN_CUT.peek(Hide(ast.__min__, "switch"), ast.__min__),
-//             Visit(cse.test),
-//             ast.__min__),
-//           ast.__min__) +
-//         ":"
-//       : "default:") +
-//     cse.consequent.map(Visit).join("")).join("") +
-//   "}" +
-//   ARAN_CUT.drop(ast.__min__) +
-//   ARAN_CUT.Leave("switch", ast.__min__);
+exports.SwitchStatement = (node) => ARAN.cut.Switch(
+  Visit.expression(ast.discriminant),
+  node.cases.map((clause) => [
+    clause.test ?
+      Visit.expression(test) :
+      null]);
+
+exports.SwitchStatement = (ast) => {
+  ARAN_CUT.Enter("switch", ast.__min__) +
+  "var" + Hide(ast.__min__, "switch") + "=" + Visit(ast.discriminant) + ";"
+  "switch (true) {" +
+  ast.cases.map((cse) =>
+    (cst.test
+      ? "case " +
+        ARAN_CUT.test(
+          ARAN_CUT.binary("===",
+            ARAN_CUT.peek(Hide(ast.__min__, "switch"), ast.__min__),
+            Visit(cse.test),
+            ast.__min__),
+          ast.__min__) +
+        ":"
+      : "default:") +
+    cse.consequent.map(Visit).join("")).join("") +
+  "}" +
+  ARAN_CUT.drop(ast.__min__) +
+  ARAN_CUT.Leave("switch", ast.__min__);
 
 exports.ReturnStatement = (node) => ARAN.cut.Return(
   node.argument ?

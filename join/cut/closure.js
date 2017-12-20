@@ -1,11 +1,13 @@
+
+const ArrayLite = require("array-lite");
 const Build = require("../build.js");
 const Inform = require("./inform.js");
 const Sanitize = require("./sanitize.js");
 
-module.exports = (traps, arrow, strict, statements) => traps.closure(
+module.exports = (arrow, traps, strict, statements) => traps.closure(
   Build.closure(
     strict,
-    Flaten(
+    ArrayLite.concat(
       // META.closure(STRICT);
       Inform(traps.Closure(strict));
       // arguments = META.arguments(arguments);

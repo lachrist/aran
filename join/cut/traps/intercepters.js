@@ -7,12 +7,31 @@
 // write :: String -> expression -> expression
 // declare :: String -> expression -> expression
 
-const Invoke = require("./_invoke.js");
+const ArrayLite = require("array-lite");
 const Build = require("../../build");
-const TrapKeys = require("../../../trap-keys.js");
+const CallTrap = require("./call-trap.js");
 
-var identity = (value) => value;
+var producers = [
+  "read",
+  "discard",
+  "builtin",
+  "this",
+  "arguments",
+  "primitive",
+  "regexp",
+  "closure"];
 
-TrapKeys.producers.concat(TrapKeys.consumers).forEach((key) => module.exports[key] = {
-  forward: identity,
-  cut: (value, ...rest) => Invoke(key, [value].concat(rest.map(Build.primitive))});
+var consumers = [
+  "test",
+  "with",
+  "throw",
+  "return",
+  "eval",
+  "write",
+  "declare"];
+
+ArrayLite.each(
+  ArrayLite.concat(producers, consumers)),
+  (key) => module.exports[key] = {
+    forward: ArrayLite.last,
+    cut: (value, ...rest) => CallTrap(key, [value].concat(rest.map(Build.primitive)));

@@ -1,7 +1,7 @@
 
 const Visit = require("./index.js");
 const Rest = require("./rest.js");
-const Build = require("../../build");
+const Build = require("../../build.js");
 
 const identity = (argument) => argument;
 

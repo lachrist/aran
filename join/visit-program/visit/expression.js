@@ -1,21 +1,17 @@
 
 const Visit = require("./index.js");
+const ObjectExpression = require("./object-expression.js");
 
 exports.ThisExpression = (node) => ARAN.cut.read("this");
 
 exports.ArrayExpression = (node) => ARAN.cut.array(
-  node.elements.map(
-    (expression) => expressions ?
+  ArrayLite.map(
+    node.elements,
+    (expression) => expression ?
       Visit.expression(expression) :
       ARAN.cut.primitive(void 0)));
 
-exports.ObjectExpression = (node) => ARAN.cut.object(
-  node.properties.map((property) => [
-    property.kind,
-    property.computed ?
-      Visit.expression(property.key) :
-      ARAN.cut.primitive(property.key.name),
-    Visit.expression(property.value)]));
+exports.ObjectExpression = ObjectExpression;
 
 exports.ArrowExpression = (node) => Helpers.closure(node);
 

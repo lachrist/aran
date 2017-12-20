@@ -1,8 +1,9 @@
 
+const ArrayLite = require("array-lite");
+const Build = require("../build.js");
+const Protect = require("../protect.js");
 const Cut = require("./cut");
-const VisitStatement = require("./visit-statement");
-const Build = require("./build.js");
-const Protect = require("./protect.js");
+const Visit = require("./visit");
 
 const keys = Object.keys;
 
@@ -11,25 +12,23 @@ module.exports = (program, pointcut) => {
   ARAN.index = ARAN.counter;
   ARAN.cut = Cut(pointcut);
   ARAN.context = Context(program.body[0]);
-  const statements = Flaten.apply(
-    null,
-    program.body.map(VisitStatement));
-  return Build.PROGRAM(
+  const statements = ArrayLite.flaten(
+    program.body.map(Visit.Statement));
+  return ARAN.cut.PROGRAM(
     ARAN.context.strict,
-    Flaten(
-      Flaten.apply(
-        keys(bindings).forEach(save)),
-      Flaten.apply(
-        null,
+    ArrayLite.concat(
+      ArrayLite.flaten(
+        keys(builtins).forEach(save)),
+      ArrayLite.flaten(
         ARAN.hidden.map((identifier) => Build.Declare(
           "var",
           identifier,
           Build.primitive(null)))),
-      Flaten.apply(null, ARAN.context.hoisted);
+      ArrayLite.flaten(ARAN.context.hoisted);
       statements));
 };
 
-const bindings = {
+const builtins = {
   global: () => Build.conditional(
     Build.binary(
       Build.unary(
@@ -67,5 +66,5 @@ const save = (key) => Build.If(
   Build.Declaration(
     "var",
     Protect(key)
-    bindings[key]()),
+    builtins[key]()),
   []);

@@ -9,12 +9,23 @@
 // copy :: (expression | null)
 // swap :: Number -> Number -> (expression | null)
 
-const Invoke = require("./_invoke.js");
+const ArrayLite = require("array-lite");
 const Build = require("../../build");
-const TrapKeys = require("../../../trap-keys.js");
+const CallTrap = require("./call-trap.js");
 
 const noop = () => null;
 
-TrapKeys.informers.forEach((key) => module.exports[key] = {
-  forward: noop,
-  cut: (...array) => Invoke(key, array.map(Build.primitive))});
+ArrayLite.each(
+  [
+    "Enter",
+    "Leave",
+    "Program",
+    "Closure",
+    "Label",
+    "Continue",
+    "Break",
+    "Copy",
+    "Drop"],
+  (key) => exports[key] = {
+    forward: noop,
+    cut: (...array) => CallTrap(key, array.map(Build.primitive))});

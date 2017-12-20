@@ -1,17 +1,20 @@
 
+const ArrayLite = require("array-lite");
+
 /////////////
 // Program //
 /////////////
 
 exports.PROGRAM = (strict, statements) => ({
   type: "Program",
-  body: Flaten(
+  body: ArrayLite.concat(
     strict ?
-      [{
-        type: "ExpressionsStatement",
-        expressions: {
-          type: "Literal",
-          value: "use strict"}}],
+      [
+        {
+          type: "ExpressionsStatement",
+          expression: {
+            type: "Literal",
+            value: "use strict"}}],
       [],
     statements)});
 
@@ -60,7 +63,7 @@ exports.closure = (strict, statements) => ({
   rest: null,
   body: {
     type: "BlockStatement",
-    body: Flaten(
+    body: ArrayLite.concat(
       strict ?
         [
           {
@@ -83,11 +86,11 @@ exports.primitive = (primitive) => primitive === void 0 ?
     type: "Literal",
     value: primitive};
 
-exports.regexp = (pattern, flags) => ({
+exports.regexp = (string1, string2) => ({
   type: "Literal",
   regex: {
-    pattern: pattern,
-    flags: flags}});
+    pattern: string1,
+    flags: string2}});
 
 exports.get = (expression1, expression2) => ({
   type: "MemberExpression",
@@ -141,26 +144,23 @@ exports.discard = (identifier) => ({
     type: "Identifier",
     name: identifier}});
 
-exports.call = (expression, expressions) => ({
+exports.construct = (expression, expressions) => ({
+  type: "NewExpression",
+  callee: expression,
+  arguments: expressions});
+
+exports.apply = (expression, expressions) => ({
   type: "CallExpression",
   callee: expression,
   arguments: expressions});
 
-exports.apply = (expression1, expression2, expressions) => ({
+exports.invoke = (expression1, expression2, expressions) => ({
   type: "CallExpression",
   callee: {
-    type: "Identifier",
-    name: Protect("apply")},
-  arguments: [
-    expression1,
-    expression2,
-    {
-      type: "ArrayExpression",
-      elements: expressions}]});
-
-exports.construct = (expression, expressions) => ({
-  type: "NewExpression",
-  callee: expression,
+    type: "MemberExpression",
+    computed: true,
+    object: expression1,
+    property: expression2},
   arguments: expressions});
 
 exports.sequence = (expressions) => ({
@@ -246,10 +246,13 @@ exports.Debugger = () => [
   {
     type: "DebuggerStatement"}];
 
-// exports.Switch = (expression, cases) => ({
-//   type: "SwitchStatement",
-//   discriminant: expresssion,
-//   cases: cases.map((array) => {
-//     type: "SwitchCase",
-//     test: array[0],
-//     consequent: array[1]})});
+exports.Switch = (clauses) => ({
+  type: "SwitchStatement",
+  discriminant: {
+    type: Literal,
+    value: true
+  },
+  cases: clauses.map((clause) => {
+    type: "SwitchCase",
+    test: clause[0],
+    consequent: clause[1]})});
