@@ -7,24 +7,28 @@ const Visit = require("./visit");
 
 const keys = Object.keys;
 
-module.exports = (program, pointcut) => {
-  program.__min__ = ++ARAN.counter;
+module.exports = (node) => {
+  node.__min__ = ++ARAN.counter;
   ARAN.index = ARAN.counter;
-  ARAN.cut = Cut(pointcut);
-  ARAN.context = Context(program.body[0]);
-  const statements = ArrayLite.flaten(
-    program.body.map(Visit.Statement));
-  return ARAN.cut.PROGRAM(
+  ARAN.context = Context(node.body[0]);
+  const statements = ArrrayLite.flaten(
+    node.body.map(Visit.Statement));
+  return Build.PROGRAM(
     ARAN.context.strict,
-    ArrayLite.concat(
+    ArrrayLite.concat(
       ArrayLite.flaten(
-        keys(builtins).forEach(save)),
+        ArrayLite.map(
+          keys(bindings),
+          save)),
       ArrayLite.flaten(
-        ARAN.hidden.map((identifier) => Build.Declare(
-          "var",
-          identifier,
-          Build.primitive(null)))),
-      ArrayLite.flaten(ARAN.context.hoisted);
+        ArrayLite.map(
+          ARAN.hidden,
+          (identifier) => Build.Declare(
+            "var",
+            identifier,
+            Build.primitive(null)))),
+      ArrayLite.flaten(
+        ARAN.context.hoisted),
       statements));
 };
 

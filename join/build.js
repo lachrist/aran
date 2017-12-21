@@ -1,6 +1,12 @@
 
 const ArrayLite = require("array-lite");
 
+function check (identifier) {
+  if (identifier === "arguments" || identifier === "error")
+    throw new Error("Cannot modify "+identifier);
+  return identifier;
+}
+
 /////////////
 // Program //
 /////////////
@@ -8,21 +14,23 @@ const ArrayLite = require("array-lite");
 exports.PROGRAM = (strict, statements) => ({
   type: "Program",
   body: ArrayLite.concat(
-    strict ?
+    (
+      strict ?
       [
         {
           type: "ExpressionsStatement",
           expression: {
             type: "Literal",
             value: "use strict"}}],
-      [],
+      []),
     statements)});
 
 ////////////////
 // Expression //
 ////////////////
 
-exports.read = (identifier) => identifier === "this" ?
+exports.read = (identifier) => (
+  identifier === "this" ?
   {
     type: "ThisExpression"} :
   {
@@ -34,7 +42,7 @@ exports.write = (identifier, expression) => ({
   operator: "=",
   left: {
     type: "Identifier",
-    name: identifier},
+    name: check(identifier)},
   right: expression});
 
 exports.array = (expressions) => ({
@@ -190,7 +198,7 @@ exports.Declare = (kind, identifier, expression) => [
         type: "VariableDeclarator",
         id: {
           type: "Identifier",
-          name: identifier},
+          name: check(identifier)},
         init: expression}]}];
 
 exports.If = (expression, statements1, statements2) => [

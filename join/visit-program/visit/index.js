@@ -13,4 +13,4 @@ const visit = (visitors) => (node) => {
 };
 
 exports.Statement = visit(Statement);
-exports.expression = Visit(Expression);
+exports.expression = visit(Expression);

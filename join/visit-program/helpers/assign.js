@@ -2,10 +2,11 @@
 const Visit = require("./index.js");
 const Rest = require("./rest.js");
 const Build = require("../../build.js");
+const Inline = require("../inline.js")
 
 const identity = (argument) => argument;
 
-module.exports = (kind, pairs) => {
+var assign = (kind, pairs) => {
   let counter = 0;
   const transform = kind ?
     Build.Statement :
@@ -61,8 +62,8 @@ module.exports = (kind, pairs) => {
       if (length && elements[length-1].type === "RestElement") {
         pairs.push([
           elements[length-1].argument,
-          Build.call(
-            rest(),
+          Build.apply(
+            Inline.rest(),
             [ ARAN.cut.array([]),
               ARAN.cut.copy1.before(
                 Build.read(
@@ -115,3 +116,38 @@ module.exports = (kind, pairs) => {
   }
   return result;
 };
+
+exports.write = (pattern, expression) => Build.sequence(
+  Flaten(
+    assign(
+      null,
+      [
+        [
+          pattern,
+          ARAN.cut.copy0.after(
+            Build.write(
+              Hide("write"),
+              Visit(expression)))]]),
+    [
+      Build.read(
+        Hide("write"))]));
+
+exports.Declare = (kind, declarators) => Flaten.apply(
+[],
+declarators.map((declarator) => {
+  if (declarator.init)
+    return assign(
+      kind,
+      [
+        [declarator.id, declarator.init]]);
+  if (declarator.id.type !== "Identifier")
+    throw new Error("Missing initializer in destructuring pattern");
+  const statements = ARAN.cut.Declare(
+    kind,
+    declarator.id.name,
+    ARAN.cut.primitive(void 0));
+  if (kind !== "var")
+    return statements;
+  ARAN.closure.hoisted.push(statements);
+  return [];
+}));

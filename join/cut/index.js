@@ -29,32 +29,9 @@ module.exports = (pointcut) => {
       cut[key] = traps[key];
     });
 
-  ////////////////////////////////////////////////////
-  // Informers + catch + arguments + this + closure //
-  ////////////////////////////////////////////////////
-
-  cut.arrow = (strict, statements) => Closure(true, traps, strict, statements);
-
-  cut.["function"] = (strict, statements) => Closure(false, traps, strict, statements);
-
-  cut.Try = (statements1, statements2, statements3) => Build.Try(
-    ArrayLite.concat(
-      Inform(traps.Enter("try")),
-      statements1,
-      Inform(traps.Leave("try"))),
-    ArrayLite.concat(
-      Inform(traps.Enter("catch")),
-      Build.Statement(
-        Build.write(
-          "error",
-          traps.catch(
-            Build.read("error")))),
-      statements2,
-      Inform(traps.Leave("catch"))),
-    ArrayLite.concat(
-      Inform(traps.Enter("finally")),
-      statements3,
-      Inform(traps.Leave("finally"))));
+  ///////////////
+  // Informers //
+  ///////////////
 
   cut.PROGRAM = (strict, statements) => Build.PROGRAM(
     strict,
@@ -82,67 +59,89 @@ module.exports = (pointcut) => {
     statements,
     Inform(traps.Leave("block")));
 
-  ((() => {
-    const make = (key) => {
-      cut[key.toLowerCase()] = {
-        after: (expression1) => {
-          const expression2 = traps[key]();
-          return expression2 ?
-            Build.get(
-              Build.array([expression1, expression2]),
-              0) :
-            expression1;
-        },
-        before: (expression1) => {
-          const expression2 = traps[key]();
-          return expression2 ?
-            Build.sequence(expression1, expression2) :
-            expression1;
-        }
-      };
-    };
-    make("Drop");
-    [0, 1, 2, 3].forEach((position) => {
+  cut.$Closure = (strict, arrow) => Inform(
+    traps.Closure(strict, arrow, null));
+
+  ArrayLite.each(
+    [0,1,2,3],
+    (position) => {
       traps["Copy"+position] = () => traps.copy(position);
-      make("Copy"+position);
     });
-  }) ());
+
+  ArrayLite.each(
+    ["Drop", "Copy0", "Copy1", "Copy2", "Copy3"],
+    (key) =>
+      {
+        cut["$"+key.toLowerCase()] = {
+          after: (expression1) => {
+            const expression2 = traps[key]();
+            return expression2 ?
+              Build.get(
+                Build.array([expression1, expression2]),
+                0) :
+              expression1;
+          },
+          before: (expression1) => {
+            const expression2 = traps[key]();
+            return expression2 ?
+              Build.sequence(expression1, expression2) :
+              expression1
+          }}
+      });
 
   ///////////////
   // Producers //
   ///////////////
 
+  cut.$this = () => traps.this(null);
+
+  cut.$arguments = () => traps.arguments(null);
+
+  cut.$error = () => traps.error(null);
+
+  cut.$builtin = (name) => traps.builtin(
+    name,
+    Escape(name));
+
+  cut.Try = (statements1, statements2, statements3) => Build.Try(
+    ArrayLite.concat(
+      Inform(traps.Enter("try")),
+      statements1,
+      Inform(traps.Leave("try"))),
+    ArrayLite.concat(
+      Inform(traps.Enter("catch")),
+      statements2,
+      Inform(traps.Leave("catch"))),
+    ArrayLite.concat(
+      Inform(traps.Enter("finally")),
+      statements3,
+      Inform(traps.Leave("finally"))));
+
+  cut.closure = (strict, statements) => traps.closure([strict, statements]);
+
   cut.read = (identifier) => traps.read(
     identifier,
-    Build.read(
-      sanitize(identifier)));
-  
+    Sanitize(identifier));
+
   cut.discard = (identifier) => traps.discard(
     identifier,
-    Build.discard(
-      sanitize(identifier)));
+    Sanitize(identifier));
 
-  cut.primitive = (primitive) => traps.primitive(
-    Build.primitive(primitive));
+  cut.primitive = (primitive) => traps.primitive(primitive);
 
-  cut.regexp = (pattern, flags) => traps.regexp(
-    Build.regexp(pattern, flags));
-
-  cut.protect = (name) => traps.protect(
-    name,
-    Build.read(Protect(name)));
+  cut.regexp = (pattern, flags) => traps.regexp([pattern, flags]);
 
   ///////////////
   // Consumers //
   ///////////////
 
   cut.write = (identifier, expression) => Build.write(
-    sanitize(identifier),
+    Sanitize(identifier),
     traps.write(identifier, expression));
 
   cut.Declare = (kind, identifier, expression) => Build.Declare(
     kind,
-    sanitize(identifier),
+    Sanitize(identifier),
     traps.declare(kind, identifier, expression));
 
   cut.Return = (expression) => Build.Return(
