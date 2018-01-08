@@ -1,16 +1,16 @@
 
 const ArrayLite = require("array-lite");
-const Build = require("../../build.js");
+const Build = require("../../build");
 const Context = require("../context.js");
 const Visit = require("../visit");
-const Pattern = require("../pattern");
+const Util = require("./index.js");
 
 exports.Declaration = (node) => ArrayLite.flaten(
   ArrayLite.map(
     node.declarations,
     (declarator, temporary) => (
       declarator.init ?
-      Pattern.Declare(node.kind, declarator.id, declarator.init) :
+      Util.Declare(node.kind, declarator.id, declarator.init) :
       (
         temporary = ARAN.cut.Declare(
           node.kind,

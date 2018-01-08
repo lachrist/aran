@@ -1,6 +1,16 @@
 
+// array = rest(array, iterator)
+//
+// function rest () {
+//   let step = null;
+//   while (!(step = arguments[1].next()).done) {
+//     arguments[0][arguments[0].length] = step.value;
+//   }
+//   return arguments[0];
+// }
+
 const ArrayLite = require("array-lite");
-const Build = require("../build.js");
+const Build = require("../build");
 const Escape = require("../escape.js");
 const Visit = require("./visit");
 const Context = require("./context.js");
@@ -20,13 +30,6 @@ module.exports = (node) => {
         ArrayLite.map(
           keys(builtins),
           save)),
-      ArrayLite.flaten(
-        ArrayLite.map(
-          ARAN.context.interims,
-          (identifier) => Build.Declare(
-            "var",
-            identifier,
-            Build.primitive(null)))),
       ArrayLite.flaten(
         ARAN.context.hoisted),
       statements));
@@ -57,7 +60,45 @@ const builtins = {
   iterator: () => Build.get(
     Build.read("Symbol"),
     Build.primitive("iterator")),
-  eval: () => Build.read("eval")};
+  eval: () => Build.read("eval"),
+  rest: () => Build.closure(
+    false,
+    ArrayLite.concat(
+      Build.Declare(
+        "let",
+        "step",
+        Build.primitive(void 0)),
+      Build.While(
+        Build.unary(
+          "!",
+          Build.get(
+            Build.write(
+              "step",
+              Build.invoke(
+                Build.get(
+                  Build.read(
+                    "arguments"),
+                  Build.primitive(1)),
+                Build.primitive("next"),
+                [])),
+            Build.primitive("done"))),
+        Build.Statement(
+          Build.set(
+            Build.get(
+              Build.read("arguments"),
+              Build.primitive(0)),
+            Build.get(
+              Build.get(
+                Build.read("arguments"),
+                Build.primitive(0)),
+              Build.primitive("length")),
+            Build.get(
+              Build.read("step"),
+              Build.primitive("value"))))),
+      Build.Return(
+        Build.get(
+          Build.read("arguments"),
+          Build.primitive(0)))))};
 
 const save = (key) => Build.If(
   Build.binary(

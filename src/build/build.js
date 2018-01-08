@@ -12,7 +12,7 @@ exports.PROGRAM = (strict, statements) => ({
       strict ?
       [
         {
-          type: "ExpressionsStatement",
+          type: "ExpressionStatement",
           expression: {
             type: "Literal",
             value: "use strict"}}] :
@@ -106,7 +106,7 @@ exports.set = (expression1, expression2, expression3) => ({
   left: {
     type: "MemberExpression",
     computed: true,
-    object: expressions1,
+    object: expression1,
     property: expression2},
   right: expression3});
 
@@ -165,9 +165,12 @@ exports.invoke = (expression1, expression2, expressions) => ({
     property: expression2},
   arguments: expressions});
 
-exports.sequence = (expressions) => ({
-  type: "SequenceExpression",
-  expressions: expressions});
+exports.sequence = (expressions) => (
+  expressions.length === 1 ?
+  expressions[0] :
+  ({
+    type: "SequenceExpression",
+    expressions: expressions}));
 
 ///////////////
 // Statement //
@@ -188,6 +191,10 @@ exports.Return = (expression) => [
     type: "ReturnStatement",
     argument: expression}];
 
+exports.Throw = (expression) => [
+  {
+    type: "ThrowStatement",
+    argument: expression}];
 
 exports.Try = (statements1, statements2, statements3) => [
   {
@@ -234,7 +241,7 @@ exports.If = (expression, statements1, statements2) => [
 
 exports.Label = (label, statements) => [
   {
-    type:"LabelStatement",
+    type:"LabeledStatement",
     label: {
       type: "Identifier",
       name: label},

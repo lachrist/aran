@@ -1,6 +1,6 @@
 
 const ArrayLite = require("array-lite");
-const Build = require("../../../build.js");
+const Build = require("../../../build");
 const Escape = require("../../../escape.js");
 
 exports.combiners = {

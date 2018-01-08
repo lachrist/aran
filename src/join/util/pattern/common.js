@@ -1,8 +1,7 @@
 
-const Visit = require("../visit");
-const Build = require("../../build.js");
-const Inline = require("../inline");
-const Util = require("../util");
+const Build = require("../../../build");
+const Visit = require("../../visit");
+const Util = require("../index.js");
 
 module.exports = (transformers, pairs) => {
   const result = [];
@@ -19,7 +18,7 @@ module.exports = (transformers, pairs) => {
         ARAN.cut.$drop.after(
           ARAN.cut.set(
             Visit.expression(left.object),
-            Util.property(left.computed),
+            Util.property(left),
             right)));
     } else if (left.type === "AssignmentPattern") {
       pairs[pairs.length] = [
@@ -60,11 +59,11 @@ module.exports = (transformers, pairs) => {
           left.elements[last].type === "RestElement" ?
           [
             left.elements[last].argument,
-            Build.apply(
-              Inline.rest(),
+            ARAN.cut.apply(
+              ARAN.cut.builtin("rest"),
               [
-                Hide("iterator"+index),
-                ARAN.cut.array([])])] :
+                ARAN.cut.array([]),
+                Hide("iterator"+index)])] :
           [
             left.elements[last],
             ARAN.cut.invoke(

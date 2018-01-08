@@ -1,8 +1,7 @@
 
-
-const ArrayLite = require("array-lite");
-const Build = require("../../build.js"); 
+const Build = require("../../build"); 
 const Visit = require("../visit");
+const Util = require("./index.js");
 
 exports.update = (left, update) => (
   left.type === "Identifier" ?

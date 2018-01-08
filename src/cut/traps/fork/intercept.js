@@ -1,6 +1,6 @@
 
 const ArrayLite = require("array-lite");
-const Build = require("../../../build.js");
+const Build = require("../../../build");
 const TrapArguments = require("./trap-arguments");
 
 const keys = Object.keys;

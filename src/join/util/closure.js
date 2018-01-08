@@ -1,27 +1,10 @@
 
 const ArrayLite = require("array-lite");
-const Build = require("../../build.js");
+const Build = require("../../build");
+const Interim = require("../interim.js");
 const Context = require("../context.js");
 const Visit = require("../visit");
-const Pattern = require("../pattern");
-
-exports.Declaration = (node) => ArrayLite.flaten(
-  ArrayLite.map(
-    node.declarations,
-    (declarator, temporary) => (
-      declarator.init ?
-      Pattern.Declare(node.kind, declarator.id, declarator.init) :
-      (
-        temporary = ARAN.cut.Declare(
-          node.kind,
-          declarator.id.name,
-          ARAN.cut.primitive(void 0)),
-        (
-          node.kind === "var" ?
-          (
-            ARAN.context.hoisted[ARAN.context.hoisted.length] = temporary,
-            []) :
-          temporary)))));
+const Util = require("./index.js");
 
 exports.closure = (node) => {
   const temporary = ARAN.context;
@@ -37,10 +20,9 @@ exports.closure = (node) => {
       ARAN.cut.Declare(
         "let",
         "this",
-        ARAN.cut.$this()),
-    Build.Declare(
-      "let",
-      Interim("arguments"),
+        ARAN.cut.$this())),
+    Interim.Declare(
+      "arguments",
       ARAN.cut.$arguments()),
     (
       node.type === "ArrowExpression" ?
@@ -48,67 +30,56 @@ exports.closure = (node) => {
       ARAN.cut.Declare(
         "let",
         "arguments",
-        ARAN.cut.copy0before(
-          Build.read(
-            ARAN.context.interim("arguments"))))),
+        ARAN.cut.$copy0before(
+          Interim.read("arguments")))),
     ArrayLite.map(
       node.params,
       (param, index) => (
         param.type === "RestElement" ?
         ArrayLite.concat(
-          Build.Declare(
-            "let",
-            Interim("argument_index"),
+          Interim.Declare(
+            "argument_index",
             ARAN.cut.primitive(index)),
-          Build.Statement(
-            "let",
-            Interim("argument_rest"),
+          Interim.Declare(
+            "argument_rest",
             ARAN.cut.array([])),
-          ARAN.cut.while(
+          ARAN.cut.While(
             ARAN.cut.binary(
-              "<"
-              Build.read(
-                Interim("argument_index"))),
+              "<",
+              Interim.read("argument_index")),
               ARAN.cut.get(
-                Build.read(
-                  Interim("arguments")),
+                Interim.read("arguments"),
                 ARAN.cut.primitive("length")),
             ArrayLite.concat(
               Build.Statement(
                 ARAN.cut.set(
-                  Build.read(
-                    Interim("argument_rest")),
+                  Interim.read("argument_rest"),
                   ARAN.cut.binary(
                     "-",
-                    Build.read(
-                      Interim("argument_index")),
+                    Interim.read("argument_index"),
                     ARAN.cut.primitive(index)),
                   ARAN.cut.get(
-                    Build.read(
-                      Interim("arguments")),
-                    Build.read(
-                      Interim("argument_index"))))),
+                    Interim.read("arguments"),
+                    Interim.read("argument_index")))),
               Build.Statement(
-                Build.write(
-                  Interim("argument_index"),
+                Interim.write.write(
+                  "argument_index",
                   ARAN.cut.binary(
-                    "+"
-                    Build.read(
-                      Interim("argument_index")),
+                    "+",
+                    Interim.read("argument_index"),
                     ARAN.cut.primitive(1)))))),
-          Pattern.Declare(
+          Util.Declare(
             "let",
             param.argument,
-            Build.read(
-              Interim("argument_rest")))) :
-        Pattern.Declare(
+            Interim.read("argument_rest"))) :
+        Util.Declare(
           "let",
           param,
           ARAN.cut.get(
-            ARAN.cut.$copy0.before(
+            ARAN.cut.$copy0before(
               Build.read("arguments")),
-            ARAN.cut.primitive(index)))))
-    ARAN.cut.$Drop());
+            ARAN.cut.primitive(index))))),
+    ARAN.cut.$Drop0());
   const statements2 = (
     node.body.type === "BlockStatement" ?
     ArrayLite.concat(
@@ -123,13 +94,6 @@ exports.closure = (node) => {
   const expression = ARAN.cut.closure(
     ARAN.context.strict,
     ArrayLite.concat(
-      ArrayLite.flaten(
-        ArrayLite.map(
-          ARAN.context.interims,
-          (identifier) => Build.Declare(
-            "let",
-            identifier,
-            Build.primitive(null)))),
       statements1,
       ArrayLite.flaten(ARAN.context.hoisted),
       statements2));

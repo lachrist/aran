@@ -6,9 +6,10 @@
 // Yet, this transformation is safe because the body of the above structure cannot be a declaration (see http://www.ecma-international.org/ecma-262/6.0/#sec-statements).
 
 const ArrayLite = require("array-lite");
-const Build = require("../../build.js");
+const Build = require("../../build");
+const Interim = require("../interim.js");
 const Util = require("../util");
-const Common = require("./common.js");
+const Visit = require("./index.js");
 
 exports.EmptyStatement = (node) => [];
 
@@ -21,19 +22,19 @@ exports.BlockStatement = (node) => ARAN.cut.Block(
 exports.ExpressionStatement = (node) => ArrayLite.concat(
   Build.Statement(
       Visit.expression(node.expression)),
-  ARAN.cut.$Drop());
+  ARAN.cut.$Drop0());
 
 exports.IfStatement = (node) => ARAN.cut.If(
   Visit.expression(node.test),
-  Helpers.Body(node.consequent),
+  Util.Body(node.consequent),
   (
     node.alternate ?
-    Helpers.Body(node.alternate) :
+    Util.Body(node.alternate) :
     []));
 
 exports.LabeledStatement = (node) => ARAN.cut.Label(
   node.label.name,
-  Helpers.Body(node.body));
+  Util.Body(node.body));
 
 exports.BreakStatement = (node) => ARAN.cut.Break(
   node.label ? node.label.name : null);
@@ -43,13 +44,12 @@ exports.ContinueStatement = (node) => ARAN.cut.Continue(
 
 exports.WithStatement = (node) => ARAN.cut.With(
   Visit.expression(node.object),
-  Helpers.Body(node.body));
+  Util.Body(node.body));
 
 exports.SwitchStatement = (node) => ArrayLite.concat(
-  Build.Statement(
-    Build.write(
-      Interim("switch"),
-      Visit(ast.discriminant))),
+  Interim.Declare(
+    "switch",
+    Visit(ast.discriminant)),
   ARAN.cut.Switch(
     ArrayLite.map(
       node.cases,
@@ -59,15 +59,14 @@ exports.SwitchStatement = (node) => ArrayLite.concat(
           ARAN.cut.binary(
             "===",
             ARAN.cut.$copy0.before(
-              Buil.read(
-                Interim("switch"))),
+              Interim.read("switch")),
             Visit.expression(clause.test)) :
           ARAN.cut.primitive(true)),
         ArrayLite.concat(
           ArrayLite.map(
             clause.consequent,
             Visit.Statement))])),
-  ARAN.cut.$Drop());
+  ARAN.cut.$Drop0());
 
 exports.ReturnStatement = (node) => ARAN.cut.Return(
   (
@@ -84,7 +83,7 @@ exports.TryStatement = (node) => ARAN.cut.Try(
   (
     node.handler ?
     ArrayLite.flaten(
-      Helpers.assignment(
+      Util.assignment(
         node.handler.param,
         Build.read("error")),
       ArrayLite.concat(
@@ -102,24 +101,22 @@ exports.TryStatement = (node) => ARAN.cut.Try(
 
 exports.WhileStatement = (node) => ARAN.cut.While(
   Visit.expression(node.test),
-  Helpers.Body(node.body));
+  Util.Body(node.body));
 
 exports.DoWhileStatement = (node) => ArrayLite.concat(
-  Build.Statement(
-    Build.write(
-      Interim("dowhile"),
-      Build.primitive(true))),
+  Interim.Declare(
+    "dowhile",
+    Build.primitive(true)),
   ARAN.cut.While(
     Build.conditional(
-      Build.read(
-        Interim("dowhile")),
+      Interim.read("dowhile"),
       Build.sequence(
-        Build.write(
-          Interim("dowhile"),
+        Interim.write(
+          "dowhile",
           Build.primitive(false)),
         ARAN.cut.primitive(true)),
       Visit.expression(node.test)),
-    Helpers.Body(node.body)));
+    Util.Body(node.body)));
 
 // // TODO
 // exports.ForStatement = function (ctx, ast) {
@@ -270,11 +267,8 @@ exports.FunctionDeclaration = (node) => {
     ARAN.cut.Declare(
       "var",
       node.id.name,
-      Helpers.closure(node)));
+      Util.closure(node)));
   return [];
 };
 
-exports.VariableDeclaration = (node) => Helpers.Declaration(node);
-
-// Circular dependency //
-const Visit = require("./index.js");
+exports.VariableDeclaration = (node) => Util.Declaration(node);

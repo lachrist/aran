@@ -1,7 +1,6 @@
 
 const ArrayLite = require("array-lite");
-const Build = require("../../../build.js");
-const Visit = require("../../visit");
+const Build = require("../../../build");
 const Common = require("./common.js");
 
 const transformerss = {

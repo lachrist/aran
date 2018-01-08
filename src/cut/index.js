@@ -1,6 +1,6 @@
 
 const ArrayLite = require("array-lite");
-const Build = require("../build.js");
+const Build = require("../build");
 const Traps = require("./traps");
 const Escape = require("../escape.js");
 
@@ -82,8 +82,10 @@ module.exports = (pointcut) => {
       traps["Copy"+position] = () => traps.Copy(position);
     });
 
+  traps.Drop0 = traps.Drop;
+
   ArrayLite.each(
-    ["Drop", "Copy0", "Copy1", "Copy2", "Copy3"],
+    ["Drop0", "Copy0", "Copy1", "Copy2", "Copy3"],
     (key) => {
       cut["$"+key] = () => inform(traps[key]());
       cut["$"+key.toLowerCase()+"before"] = (expression1) => {
@@ -203,8 +205,6 @@ module.exports = (pointcut) => {
         traps.test(clause[0]),
         clause[1]])),
     inform(traps.Leave("switch")));
-
-  cut.$enumerate = (expression) => 
 
   ////////////
   // Return //
