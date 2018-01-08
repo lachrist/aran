@@ -1,6 +1,6 @@
 {
   "name": "aran",
-  "description": "Aran is JavaScript instrumenter for building dynamic analysis tools",
+  "description": "Aran is a JavaScript instrumenter for building dynamic analysis tools",
   "version": "1.4.0",
   "author": {
     "name": "Laurent Christophe",
@@ -10,14 +10,14 @@
   "homepage": "http://github.com/lachrist/aran",
   "license": "MIT",
   "dependencies": {
-    "esprima": "2.7.x"
+    "array-lite": "0.0.2"
   },
   "files": [
     "instrument.js",
     "main.js",
     "traps.js"
   ],
-  "main": "main.js",
+  "main": "src/index.js",
   "keywords": [
     "JavaScript",
     "Instrumentation",
