@@ -1,4 +1,6 @@
 
+const Util = require("util");
+
 const etypes = [
   "ThisExpression",
   "Identifier",
@@ -69,53 +71,58 @@ const binaries = [
   ".."
 ];
 
-exports.identifier = (identifier) => {
-  if (typeof identifier !== "string")
-    throw new Error("[identifier] is not a string: "+identifier);
-  if (!/^[$_a-zA-Z][$_a-zA-Z]*$/.test(identifier))
-    throw new Error("[identifier] not a valid: "+identifier)
+exports.identifier = (value) => {
+  if (typeof value !== "string")
+    throw new Error("[identifier] is not a string: "+Util.inspect(value));
+  if (!/^[$_a-zA-Z][$_a-zA-Z0-9]*$/.test(value))
+    throw new Error("[identifier] invalid: "+Util.inspect(value))
 };
 
-exports.expression = (expression) => {
-  if (typeof expression !== "object" || expression === null)
-    throw new Error("[expression] not an object: "+expression);
-  if (!etypes.includes(expression.type))
-    throw new Error("[expression] unknwon type: "+expression);
+exports.expression = (value) => {
+  if (typeof value !== "object" || value === null)
+    throw new Error("[expression] not an object: "+Util.inspect(value));
+  if (!etypes.includes(value.type))
+    throw new Error("[expression] unknwon type: "+Util.inspect(value));
 };
 
-exports.statement = (statement) => {
-  if (typeof statement !== "object" || statement === null)
-    throw new Error("[statement] not an object: "+statement);
-  if (!stypes.includes(statement.type))
-    throw new Error("[statement] unknown type: "+statement);
+exports.statement = (value) => {
+  if (typeof value !== "object" || value === null)
+    throw new Error("[statement] not an object: "+Util.inspect(value));
+  if (!stypes.includes(value.type))
+    throw new Error("[statement] unknown type: "+Util.inspect(value));
 };
 
-exports.primitive = (primitive) => {
-  if (primitive && primitive !== true && typeof primitive !== "number" && typeof primitive !== "string")
-    throw new Error("[primitive] type error: "+primitive);
+exports.primitive = (value) => {
+  if (value && value !== true && typeof value !== "number" && typeof value !== "string")
+    throw new Error("[primitive] type error: "+Util.inspect(value));
 };
 
-exports.string = (boolean) => {
-  if (typeof boolean !== "boolean")
-    throw new Error("[boolean] type error: "+boolean);
-};
-
-exports.string = (string) => {
-  if (typeof string !== string)
-    throw new Error("[string] type error: "+string);
+exports.null = (value) => {
+  if (value !== null)
+    throw new Error("[null] not null: "+Utio.inspect(value))
 }
 
-exports.unary = (unary) => {
-  if (!unaries.includes(unary))
-    throw new Error("[unary] unknown: "+unary);
+exports.boolean = (value) => {
+  if (typeof value !== "boolean")
+    throw new Error("[boolean] type error: "+Util.inspect(value));
 };
 
-exports.binary = (binary) => {
-  if (!binaries.includes(binary))
-    throw new Error("[binary] unknown: "+binary);
+exports.string = (value) => {
+  if (typeof value !== "string")
+    throw new Error("[string] type error: "+Util.inspect(value));
+}
+
+exports.unary = (value) => {
+  if (!unaries.includes(value))
+    throw new Error("[unary] unknown: "+Util.inspect(value));
+};
+
+exports.binary = (value) => {
+  if (!binaries.includes(value))
+    throw new Error("[binary] unknown: "+Util.inspect(value));
 };
 
 exports.kind = (kind) => {
   if (!kinds.includes(kind))
-    throw new Error("[kind] unknown: "+kind);
+    throw new Error("[kind] unknown: "+Util.inspect(kind));
 };

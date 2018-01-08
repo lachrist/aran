@@ -76,7 +76,8 @@ exports.closure = (strict, statements) => ({
         [],
       statements)}});
 
-exports.primitive = (primitive) => primitive === void 0 ?
+exports.primitive = (primitive) => (
+  primitive === void 0 ?
   {
     type: "UnaryExpression",
     operator: "void",
@@ -86,7 +87,7 @@ exports.primitive = (primitive) => primitive === void 0 ?
       value: 0}} :
   {
     type: "Literal",
-    value: primitive};
+    value: primitive});
 
 exports.regexp = (string1, string2) => ({
   type: "Literal",
@@ -166,11 +167,19 @@ exports.invoke = (expression1, expression2, expressions) => ({
   arguments: expressions});
 
 exports.sequence = (expressions) => (
-  expressions.length === 1 ?
-  expressions[0] :
-  ({
-    type: "SequenceExpression",
-    expressions: expressions}));
+  expressions.length === 0 ?
+  {
+    type: "UnaryExpression",
+    operator: "void",
+    argument: {
+      type: "Literal",
+      value: 0}} :
+  (  
+    expressions.length === 1 ?
+    expressions[0] :
+    ({
+      type: "SequenceExpression",
+      expressions: expressions})));
 
 ///////////////
 // Statement //
@@ -233,11 +242,9 @@ exports.If = (expression, statements1, statements2) => [
     consequent: {
       type: "BlockStatement",
       body: statements1},
-    alternate: statements2 ?
-      {
-        type: "BlockStatement",
-        body: statements2} :
-      null}];
+    alternate: {
+      type: "BlockStatement",
+      body: statements2}}];
 
 exports.Label = (label, statements) => [
   {

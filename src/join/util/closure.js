@@ -107,10 +107,11 @@ exports.closure = (node) => {
         ARAN.cut.primitive("name"),
         ARAN.cut.object(
           [
-            "value",
-            ARAN.cut.primitive(node.id.name)],
-          [
-            "configurable",
-            ARAN.cut.primitive(true)])]) :
+            [
+              ARAN.cut.primitive("value"),
+              ARAN.cut.primitive(node.id.name)],
+            [
+              ARAN.cut.primitive("configurable"),
+              ARAN.cut.primitive(true)]])]) :
     expression);
 };
