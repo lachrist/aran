@@ -111,147 +111,115 @@ exports.DoWhileStatement = (node) => ArrayLite.concat(
     Build.conditional(
       Interim.read("dowhile"),
       Build.sequence(
-        Interim.write(
-          "dowhile",
-          Build.primitive(false)),
-        ARAN.cut.primitive(true)),
+        [
+          Interim.write(
+            "dowhile",
+            Build.primitive(false)),
+          ARAN.cut.primitive(true)]),
       Visit.expression(node.test)),
     Util.Body(node.body)));
 
-// // TODO
-// exports.ForStatement = function (ctx, ast) {
-//   const lab = ctx.looplabel ? ctx.looplabel + ":" : "";
-//   const tmp = ctx.switchlabel;
-//   ctx.looplabel = "";
-//   ctx.switchlabel = "";
-//   let str1 = "";
-//   let str2 = "";
-//   if (ast.init && ast.init.type === "VariableDeclaration") {
-//     str1 = ctx.cut.Declare(ast.init.kind, ast.init.declarations.map((d) => d.id.name), ast.__min__);
-//     if (ast.init.kind === "var") {
-//       ctx.hoisted.closure += str1
-//       str1 = "";
-//     }
-//     str2 = JoinHelpers.declare(ctx, ast, ast.init);
-//   } else if (ast.init) {
-//     str2 = ctx.cut.expression(ctx.visit(ast, ast.init), ast.__min__) + ";"; 
-//   }
-//   const str3 = ctx.cut.test(ast.test ? ctx.visit(ast, ast.test) : "true", ast.__min__);
-//   const str4 = ast.body.type === "BlockStatement"
-//     ? ast.body.body.map(ctx.visit.bind(ctx, ast)).join("")
-//     : ctx.visit(ast, ast.body);
-//   const str5 = ast.update
-//     ? ctx.cut.expression(ctx.visit(ast, ast.update), ast.__min__) + ";";
-//     : "";
-//   const res =
-//     ctx.cut.expression(ctx.cut.primitive("void 0", ast.__min__), ast.__min__) + ";" +
-//     "{" + ctx.cut.Enter(ast.__min__) +
-//     str1 +
-//     str2 +
-//     lab + "while(" + str3 + ")" +
-//     "{" + str4 + str5 + "}" +
-//     ctx.cut.Leave(ast.__min__) + "}";
-//   ctx.switchlabel = tmp;
-//   return res;
-// };
-
-//   enumerate: Build.function(
-//     "enumerate",
-//     ["o"],
-//     [ 
-//       Build.Declare(
-//         "var",
-//         "ks",
-//         Build.array([]));
-//       Build.while(
-//         Build.identifier("o"),
-//         [
-//           Build.write(
-//             "ks",
-//             Build.apply(
-//               Build.get(
-//                 Build.identifier("ks"),
-//                 "concat"),
-//               [Build.apply(
-//                 Build.identifier(load("ownKeys")),
-//                 [Build.identifier("o")])])),
-//           Build.write(
-//             "o",
-//             Build.apply(
-//               load("getPrototypeOf"),
-//               [Build.identifier("o")]))])]);
-//   global: Build.conditional(
-//     Build.binary(
-//       "===",
-//       Build.identifier("window"),
-//       Build.primitive("undefined")),
-//     Build.identifier("global"),
-//     Build.identifier("window"))
-
-// // TODO
-// exports.ForInStatement = (ctx, ast) => {
-//   const lab = ctx.looplabel ? ctx.looplabel+":" : "";
-//   ctx.looplabel = "";
-//   var tmp = ctx.switchlabel;
-//   ctx.switchlabel = "";
-//   var obj = {enumerate: ctx.hide(), counter: ctx.hide()};
-//   var arr = [
-//     obj.enumerate + "=" + ctx.cut.enumerate(ctx.visit(ast, ast.right), ast.__min__) + ";",
-//     obj.counter + "=0;"
-//   ];
-//   if (ast.left.type !== "MemberExpression") {
-//     if (ast.left.type === "VariableDeclaration") {
-//       (function (str) {
-//         (ast.left.kind === "var") ? (ctx.hoisted.closure += str) : arr.push(str);
-//       } (ctx.cut.Declare(ast.left.kind, ast.left.declarations.map((d) => d.id.name), ast.__min__)));
-//       arr.push(JoinHelpers.declare(ctx, ast, ast.left));
-//     }
-//     var str = ctx.cut.write(
-//       ast.left.type === "Identifier" ? ast.left.name : ast.left.declarations[0].id.name,
-//       obj.enumerate + "[" + obj.counter + "]",
-//       ast.__min__);
-//   } else {
-//     obj.object = ctx.hide();
-//     arr.push(obj.object + "=" + ctx.visit(ast, ast.left.object) + ";");
-//     if (ast.left.computed) {
-//       obj.property = ctx.hide();
-//       arr.push(obj.property + "=" + ctx.visit(ast, ast.left.property) + ";")
-//     }
-//     var str = ctx.cut.set(
-//       obj.object,
-//       ast.left.computed
-//         ? obj.property
-//         : ctx.cut.primitive(JSON.stringify(ast.left.property.name), ast.__min__),
-//       obj.enumerate + "[" + obj.counter + "]",
-//       ast.__min__);
-//   }
-//   var res = ctx.cut.expression(ctx.cut.primitive("void 0", ast.__min__), ast.__min__) + ";"
-//     + "{" + ctx.cut.Enter(ast.__min__) + arr.join("")
-//     + lab + "while(" + obj.counter + "<" + obj.enumerate + ".length){"
-//     + (ast.body.type === "BlockStatement"
-//       ? ast.body.body.map(ctx.visit.bind(ctx, ast)).join("")
-//       : ctx.visit(ast, ast.body))
-//     + ctx.cut.expression(str, ast.__min__) + ";" + obj.counter +"++;}"
-//     + ctx.cut.Leave(ast.__min__) + "}";
-//   ctx.switchlabel = tmp;
-//   return res;
-// };
-
-
-// for (k in o) { ... }
+// for (let x; y; z) { ... }
 //
-// var _o = o;
-// while (o) {
-//   var _ks = Object.keys(_o);
-//   _o = Object.getPrototypeOf(o);
-//   var _i = 0;
-//   while (_i < _ks.length) {
-//     k = _ks[i];
-//     i = i + 1;
-//     ...
+// { 
+//   let x;
+//   while (y) { ... z; }
+// }
+
+exports.ForStatement = (node) => ARAN.cut.Block(
+  ArrayLite.concat(
+    (
+      node.init.type === "VariableDeclaration" ?
+      Util.Declaration(node.init) :
+      ArrayLite.concat(
+        Build.Statement(
+          Visit.expression(node.init)),
+        ARAN.cut.$Drop0())),
+    ARAN.cut.While(
+      Visit.expression(node.test),
+      ArrayLite.concat(
+        Util.Body(node.body),
+        Build.Statement(
+          Visit.expression(node.update)),
+        ARAN.cut.$Drop0()))));
+
+// for (let k in o) { ... }
+//
+// {
+//   let k; 
+//   var _o = o;
+//   while (o) {
+//     var _ks = keys(_o);
+//     _o = getPrototypeOf(o);
+//     var _i = 0;
+//     while (_i < _ks.length) {
+//       k = _ks[i];
+//       i = i + 1;
+//       ...
+//     }
 //   }
 // }
 
+exports.ForInStatement = (node) => ARAN.cut.Block(
+  ArrayLite.concat(
+    (
+      node.left.type === "VariableDeclaration" ?
+      Util.Declaration(node.left) :
+      []),
+    Interim.Declare(
+      "object",
+      node.right),
+    ARAN.cut.While(
+      Interim.read("object"),
+      ArrayLite.concat(
+        Interim.Declare(
+          "keys",
+          ARAN.cut.apply(
+            ARAN.cut.$builtin("keys"),
+            [
+              Interim.read("object")])),
+        Build.Statement(
+          Interim.write(
+            "object",
+            ARAN.cut.apply(
+              ARAN.cut.$builtin("getPrototypeOf"),
+              [
+                Interim.read("object")]))),
+        Interim.Declare(
+          "index",
+          ARAN.cut.primitive(0)),
+        ARAN.cut.While(
+          ARAN.cut.binary(
+            "<",
+            Interim.read("index"),
+            ARAN.cut.get(
+              Interim.read("keys"),
+              ARAN.cut.primitive("length"))),
+          ArrayLite.concat(
+            Build.Statement(
+              Util.write(
+                (
+                  node.left.type === "VariableDeclaration" ?
+                  node.left.declarations[0].id :
+                  node.left),
+                ARAN.cut.get(
+                  Interim.read("keys"),
+                  Interim.read("index")))),
+            Interim.write(
+              "index",
+              ARAN.cut.binary(
+                "+",
+                Interim.read("index"),
+                ARAN.cut.primitive(1))),
+            Util.Body(node.body)))))));
+
+// The left member is executed at every loop:
+// > for (o[(console.log("kaka"),"grunt")] in {foo:"bar", buz:"qux"}) console.log(o);
+// kaka
+// { foo: 5, grunt: 'foo' }
+// kaka
+// { foo: 5, grunt: 'buz' }
+//
 // for (x of xs) { ... }
 //
 // var _iterator = xs[Symbol.iterator]();
@@ -259,6 +227,40 @@ exports.DoWhileStatement = (node) => ArrayLite.concat(
 //   x = _step.value;
 //   ...
 // }
+
+exports.ForOfStatement = (node) => ARAN.cut.Block(
+  ArrayLite.concat(
+    (
+      node.left.type === "VariableDeclaration" ?
+      Util.Declaration(node.left) :
+      []),
+    Interim.Declare(
+      "iterator",
+      ARAN.cut.invoke(
+        node.right,
+        ARAN.cut.$builtin("iterator"),
+        [])),
+    ARAN.cut.While(
+      ARAN.unary(
+        "!",
+        ARAN.cut.get(        
+          Interim.hoist(
+            "step",
+            ARAN.cut.apply(
+              Interim.read("iterator"),
+              [])),
+          ARAN.cut.primitive("done"))),
+      ArrayLite.concat(
+        Build.Statement(
+          Util.write(
+            (
+              node.left.type === "VariableDeclaration" ?
+              node.left.declarations[0].id :
+              node.left),
+            ARAN.get(
+              Interim.read("step"),
+              ARAN.cut.primitive("value")))),
+        Util.body(node.body)))));
 
 exports.DebuggerStatement = (node) => Build.Debugger();
 

@@ -3,7 +3,9 @@ const Build = require("../../../build");
 const TrapArguments = require("./trap-arguments.js");
 
 const empty = () => null;
-const identity = (argument) => argument;
+function pass () {
+  return arguments[arguments.length-1];
+}
 
 ArrayLite.each(
   Object.keys(TrapArguments.combiners),
@@ -15,8 +17,14 @@ ArrayLite.each(
 
 ArrayLite.each(
   Object.keys(TrapArguments.consumers),
-  (key) => exports[key] = identity);
+  (key) => exports[key] = pass);
 
 ArrayLite.each(
   Object.keys(TrapArguments.producers),
-  (key) => exports[key] = TrapArguments.producers[key][0]);
+  (key) => {
+    const last = TrapArguments.producers[key].length-1;
+    const transformer = TrapArguments.producers[key][last];
+    exports[key] = function () {
+      return transformer(arguments[last]);
+    };
+  });

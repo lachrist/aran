@@ -11,7 +11,7 @@ exports.closure = (node) => {
   ARAN.context = Context(
     node.body.type === "BlockStatement" && node.body.body[0]);
   const statements1 = ArrayLite.concat(
-    ARAN.cut.$Closure(
+    ARAN.cut.$Arrival(
       ARAN.context.strict,
       node.type === "ArrowExpression"),
     (

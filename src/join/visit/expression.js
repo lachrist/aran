@@ -4,6 +4,8 @@ const Build = require("../../build");
 const Interim = require("../interim.js");
 const Util = require("../util");
 const Visit = require("./index.js");
+const apply = Reflect.apply;
+const substring = String.prototype.substring;
 
 exports.ThisExpression = (node) => ARAN.cut.read("this");
 
@@ -74,9 +76,9 @@ exports.SequenceExpression = (node) => Build.sequence(
       ARAN.cut.drop.after(
         Visit.expression(expression)))));
 
-exports.UnaryExpression = (node) => {
-  if (node.operator === "typeof" && node.argument.type === "Identifier")
-    return ARAN.cut.unary(
+exports.UnaryExpression = (node) => (
+  node.operator === "typeof" && node.argument.type === "Identifier" ?
+  ARAN.cut.unary(
       "typeof",
       Build.apply(
         Build.function(
@@ -86,76 +88,176 @@ exports.UnaryExpression = (node) => {
             Build.Return(
               ARAN.cut.primitive(void 0)),
             [])),
-        []));
-  if (node.operator === "delete" && node.argument.type === "Identifier")
-    return ARAN.cut.discard(node.argument.name);
-  if (node.operator === "delete" && node.argument.type === "MemberExpression")
-    return ARAN.cut.delete(
-      Visit.expression(node.argument.object),
-      Util.property(node.argument));
-  return ARAN.cut.unary(
-    node.operator,
-    Visit.expression(node.argument));
-};
+        [])) :
+  (node.operator === "delete" && node.argument.type === "Identifier" ?
+    ARAN.cut.discard(node.argument.name) :
+    (
+      node.operator === "delete" && node.argument.type === "MemberExpression" ?
+      ARAN.cut.delete(
+        Visit.expression(node.argument.object),
+        Util.property(node.argument)) :
+      ARAN.cut.unary(
+        node.operator,
+        Visit.expression(node.argument)))));
 
 exports.BinaryExpression = (node) => ARAN.cut.binary(
   node.operator,
   Visit.expression(node.left),
   Visit.expression(node.right));
 
-exports.AssignmentExpression = (node) => (
-  node.operator === "=" ?
-  Build.sequence(
-    [
+// set invariant enforced (3 pop, 0 push)
+exports.AssignmentExpression = (node) => Build.sequence(
+  [
+    (
+      node.operator === "=" ?
       Util.write(
         node.left,
         Interim.hoist(
-          "assignment",
+          "value",
           ARAN.cut.$copy0after(
-            Visit.expression(node.right)))),
-      Interim.read("assignment")]) :
-  Util.update(
-    (expression) => ARAN.cut.binary(
-      ArrayLite.slice(node.operator, 0, node.operator.length-1),
-      expression,
-      Visit.expression(node.right)),
-    node.left));
-
-exports.UpdateExpression = (node) => {
-  const expression = Util.update(
-    node.argument,
-    (expression) => ARAN.cut.binary(
-      node.operator[0],
+            Visit.expression(node.right)))) :
       (
-        node.prefix ?
-        expression :
-        Interim.hoist(
-          "update",
-          ARAN.cut.$copy0after(expression))),
-      ARAN.cut.primitive(1)));
-  return (
-    node.prefix ?
-    expression :
-    Build.sequence(
-      [
-        ARAN.cut.$drop0after(expression),
-        Interim.read("update")]));
-};
+        node.left.type === "MemberExpression" ?
+        ARAN.cut.set(
+          Interim.hoist(
+            "object",
+            ARAN.cut.$copy1after(
+              Visit.expression(node.left.object))),
+          Interim.hoist(
+            "property",
+            ARAN.cut.$copy2after(
+              Util.property(node.left))),
+          Interim.hoist(
+            "value",
+            ARAN.cut.$copy3after(
+              ARAN.cut.binary(
+                apply(substring, node.operator, [0, node.operator.length-1]),
+                ARAN.cut.get(
+                  Interim.read("object"),
+                  Interim.read("property")),
+                Visit.expression(node.right))))) :
+        ARAN.cut.write(
+          node.left.name,
+          Interim.hoist(
+            "value",
+            ARAN.cut.$copy0after(
+              ARAN.cut.binary(
+                apply(substring, node.operator, [0, node.operator.length-1]),
+                ARAN.cut.read(node.left.name),
+                Visit.expression(node.right))))))),
+    Interim.read("value")]);
 
-exports.LogicalExpression = (node) => {
-  const expression1 = Interim.hoist(
+// set invariant non-enforced (3 pop, 1 push)
+// exports.AssignmentExpression = (node) => (
+//   node.left.type === "MemberExpression" ?
+//   ARAN.cut.set(
+//     (
+//       node.operator === "=" ?
+//       Visit.expression(node.left.object) :
+//       Interim.hoist(
+//         "object",
+//         Visit.expression(node.left.object))),
+//     (
+//       node.operator === "=" ?
+//       Util.property(node.left) :
+//       Interim.hoist(
+//         "property",
+//         Visit.expression(node.left))),
+//     (
+//       node.operator === "=" ?
+//       Visit.expression(node.right) :
+//       ARAN.cut.binary(
+//         apply(substring, node.operator, node.operator.length-1),
+//         ARAN.cut.get(
+//           Interim.read("object"),
+//           Interim.read("property")),
+//         Visit.expression(node.right)))) :
+//   Build.sequence(
+//     [
+//       (
+//         node.operator === "=" ?
+//         Util.write(
+//           node.left,
+//           Interim.hoist(
+//             "result",
+//             Visit.expression(node.right))) :
+//         ARAN.cut.write(
+//           node.left.name,
+//           ARAN.cut.binary(
+//             apply(substring, node.operator, node.operator.length-1),
+//             ARAN.cut.read(node.left.name),
+//             Interim.hoist(
+//               "result",
+//               Visit.expression(node.right))))),
+//       Interim.read("result")]));
+
+exports.UpdateExpression = (node) => Build.sequence(
+  [
+    (
+      node.left.type === "MemberExpression" ?
+      ARAN.cut.set(
+        Interim.hoist(
+          "object",
+          ARAN.cut.$copy1after(
+            Visit.expression(node.left.object))),
+        Interim.hoist(
+          "property",
+          ARAN.cut.$copy2after(
+            Util.property(node.left))),
+        (
+          node.prefix ?
+          Interim.hoist(
+            "value",
+            ARAN.cut.$copy3after(
+              ARAN.cut.binary(
+                node.operator[0],
+                ARAN.cut.get(
+                  Interim.read("object"),
+                  Interim.read("property")),
+                ARAN.cut.primitive(1)))) :
+          ARAN.cut.binary(
+            node.operator[0],
+            Interim.hoist(
+              "value",
+              ARAN.cut.get(
+                Interim.read("object"),
+                Interim.read("property"))),
+            ARAN.cut.primitive(1)))) :
+      ARAN.cut.write(
+        node.left.name,
+        (
+          node.prefix ?
+          Interim.hoist(
+            "value",
+            ARAN.cut.$copy0after(
+              ARAN.cut.binary(
+                node.operator[0],
+                ARAN.cut.read(node.left.name),
+                ARAN.cut.primitive(1)))) :
+          ARAN.cut.binary(
+            node.operator[0],
+            Interim.hoist(
+              "value",
+              ARAN.cut.$copy0after(
+                ARAN.cut.read(node.left.name))),
+            ARAN.cut.primitive(1))))),
+    Interim.read("value")]);
+
+exports.LogicalExpression = (node) => ARAN.cut.conditional(
+  Interim.hoist(
       "logical",
       ARAN.cut.$copy0after(
-        Visit.expression(node.left)));
-  const expression2 = Interim.read("logic");
-  const expression3 = ARAN.cut.drop0before(
-    Visit.expression(node.right));
-  if (node.operator === "||")
-    return ARAN.cut.conditional(expression1, expression2, expression3);
-  if (node.operator === "&&")
-    return ARAN.cut.conditional(expression1, expression3, expression2);
-  throw new Error("Unknown logical operator " + node.operator);
-};
+        Visit.expression(node.left))),
+  (
+    node.operator === "||" ?
+    Interim.read("logic") :
+    ARAN.cut.drop0before(
+      Visit.expression(node.right))),
+  (
+    node.operator === "&&" ?
+    Interim.read("logic") :
+    ARAN.cut.drop0before(
+      Visit.expression(node.right))));
 
 exports.ConditionalExpression = (node) => ARAN.cut.conditional(
   Visit.expression(node.test),

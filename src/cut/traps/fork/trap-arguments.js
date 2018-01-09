@@ -41,15 +41,15 @@ exports.combiners = {
 
 exports.producers = {
   read: [
-    Build.read,
-    Build.primitive],
+    Build.primitive,
+    Build.read],
   discard: [
-    Build.discard,
-    Build.primitive],
+    Build.primitive,
+    Build.discard],
   builtin: [
+    Build.primitive,
     (identifier) => Build.read(
-      Escape(identifier)),
-    Build.primitive],
+      Escape(identifier))],
   this: [
     () => Build.read("this")],
   arguments: [
@@ -65,12 +65,12 @@ exports.producers = {
 
 exports.consumers = {
   declare: [
-    null,
     Build.primitive,
-    Build.primitive],
+    Build.primitive,
+    null],
   write: [
-    null,
-    Build.primitive],
+    Build.primitive,
+    null],
   test: [
     null],
   with: [
@@ -83,25 +83,25 @@ exports.consumers = {
     null]};
 
 exports.informers = {
-  Enter: [
+  enter: [
     Build.primitive],
-  Leave: [
+  leave: [
     Build.primitive],
-  Program: [
+  program: [
     Build.primitive],
-  Closure: [
+  arrival: [
     Build.primitive,
     Build.primitive,
     () => Build.get(
       Build.read("arguments"),
       Build.primitive("length"))],
-  Label: [
+  label: [
     Build.primitive],
-  Continue: [
+  continue: [
     Build.prmitive],
-  Break: [
+  break: [
     Build.primitive],
-  Copy: [
+  copy: [
     Build.primitive],
-  Drop: [
+  drop: [
     Build.primitive]};

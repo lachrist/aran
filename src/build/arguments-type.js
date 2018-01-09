@@ -27,6 +27,7 @@ exports.construct = ["expression", ["expression"]];
 exports.apply = ["expression", ["expression"]];
 exports.invoke = ["expression", "expression", ["expression"]];
 exports.sequence = [["expression"]];
+exports.eval = ["expression"];
 
 ///////////////
 // Statement //

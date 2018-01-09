@@ -4,6 +4,7 @@ const Visit = require("../../visit");
 const Util = require("../index.js");
 
 module.exports = (transformers, pairs) => {
+  debugger;
   const result = [];
   for (let index1=0; index1<pairs.length; index1++) {
     const left = pairs[index1][0];
@@ -15,11 +16,10 @@ module.exports = (transformers, pairs) => {
       result[result.length] = transformers.binding(left.name, right);
     } else if (left.type === "MemberExpression") {
       result[result.length] = transformers.expression(
-        ARAN.cut.$drop.after(
-          ARAN.cut.set(
-            Visit.expression(left.object),
-            Util.property(left),
-            right)));
+        ARAN.cut.set(
+          Visit.expression(left.object),
+          Util.property(left),
+          right));
     } else if (left.type === "AssignmentPattern") {
       pairs[pairs.length] = [
         left.left,
@@ -99,5 +99,6 @@ module.exports = (transformers, pairs) => {
       }
     }
   }
+  debugger;
   return result;
 };

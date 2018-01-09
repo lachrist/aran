@@ -3,6 +3,9 @@ const ArrayLite = require("array-lite");
 const Build = require("../build");
 const Traps = require("./traps");
 const Escape = require("../escape.js");
+const apply = Reflect.apply;
+const substring = String.prototype.substring;
+const toUpperCase = String.prototype.toUpperCase;
 
 const inform = (expression) => expression ?
   Build.Statement(expression) :
@@ -50,56 +53,56 @@ module.exports = (pointcut) => {
   cut.PROGRAM = (strict, statements) => Build.PROGRAM(
     strict,
     ArrayLite.concat(
-      inform(traps.Program(strict)),
+      inform(traps.program(strict)),
       statements));
 
   cut.Label = (label, statements) => ArrayLite.concat(
-    inform(traps.Label(label)),
+    inform(traps.label(label)),
     Build.Label(label, ArrayLite.concat(
-      inform(traps.Enter("label")),
+      inform(traps.enter("label")),
       statements,
-      inform(traps.Leave("label")))));
+      inform(traps.leave("label")))));
 
   cut.Break = (label) => ArrayLite.concat(
-    inform(traps.Break(label)),
+    inform(traps.break(label)),
     Build.Break(label));
 
   cut.Continue = (label) => ArrayLite.concat(
-    inform(traps.Continue(label)),
+    inform(traps.continue(label)),
     Build.Continue(label));
 
   cut.Block = (statements) => ArrayLite.concat(
-    inform(traps.Enter("block")),
+    inform(traps.enter("block")),
     statements,
-    inform(traps.Leave("block")));
+    inform(traps.leave("block")));
 
-  cut.$Closure = (strict, arrow) => inform(
-    traps.Closure(strict, arrow, null));
+  cut.$Arrival = (strict, arrow) => inform(
+    traps.arrival(strict, arrow, null));
 
   ArrayLite.each(
     [0,1,2,3],
     (position) => {
-      traps["Copy"+position] = () => traps.Copy(position);
+      traps["copy"+position] = () => traps.copy(position);
     });
 
-  traps.Drop0 = traps.Drop;
+  traps.drop0 = traps.drop;
 
   ArrayLite.each(
-    ["Drop0", "Copy0", "Copy1", "Copy2", "Copy3"],
+    ["drop0", "copy0", "copy1", "copy2", "copy3"],
     (key) => {
-      cut["$"+key] = () => inform(traps[key]());
-      cut["$"+key.toLowerCase()+"before"] = (expression1) => {
+      cut["$"+apply(toUpperCase, key[0], [])+apply(substring, key, [1])] = () => inform(traps[key]());
+      cut["$"+key+"before"] = (expression1) => {
         const expression2 = traps[key]();
         return expression2 ?
           Build.sequence(expression1, expression2) :
           expression1
       };
-      cut["$"+key.toLowerCase()+"after"] = (expression1) => {
+      cut["$"+key+"after"] = (expression1) => {
         const expression2 = traps[key]();
         return expression2 ?
           Build.get(
             Build.array([expression1, expression2]),
-            0) :
+            Build.primitive(0)) :
           expression1;
       };
     });
@@ -120,17 +123,17 @@ module.exports = (pointcut) => {
 
   cut.Try = (statements1, statements2, statements3) => Build.Try(
     ArrayLite.concat(
-      inform(traps.Enter("try")),
+      inform(traps.enter("try")),
       statements1,
-      inform(traps.Leave("try"))),
+      inform(traps.leave("try"))),
     ArrayLite.concat(
-      inform(traps.Enter("catch")),
+      inform(traps.enter("catch")),
       statements2,
-      inform(traps.Leave("catch"))),
+      inform(traps.leave("catch"))),
     ArrayLite.concat(
-      inform(traps.Enter("finally")),
+      inform(traps.enter("finally")),
       statements3,
-      inform(traps.Leave("finally"))));
+      inform(traps.leave("finally"))));
 
   cut.closure = (strict, statements) => traps.closure([strict, statements]);
 
@@ -152,12 +155,12 @@ module.exports = (pointcut) => {
 
   cut.write = (identifier, expression) => Build.write(
     sanitize(identifier),
-    traps.write(expression, identifier));
+    traps.write(identifier, expression));
 
   cut.Declare = (kind, identifier, expression) => Build.Declare(
     kind,
     sanitize(identifier),
-    traps.declare(expression, kind, identifier));
+    traps.declare(kind, identifier, expression));
 
   cut.Return = (expression) => Build.Return(
     traps.return(expression));
@@ -168,9 +171,9 @@ module.exports = (pointcut) => {
   cut.With = (expression, statements) => Build.With(
     traps.with(expression),
     ArrayLite.concat(
-      inform(traps.Enter("with")),
+      inform(traps.enter("with")),
       statements,
-      inform(traps.Leave("with"))));
+      inform(traps.leave("with"))));
 
   cut.Throw = (expression) => Build.Throw(
     traps.throw(expression));
@@ -178,20 +181,20 @@ module.exports = (pointcut) => {
   cut.While = (expression, statements) => Build.While(
     traps.test(expression),
     ArrayLite.concat(
-      inform(traps.Enter("while")),
+      inform(traps.enter("while")),
       statements,
-      inform(traps.Leave("while"))));
+      inform(traps.leave("while"))));
 
   cut.If = (expression, statements1, statements2) => Build.If(
     traps.test(expression),
     ArrayLite.concat(
-      inform(traps.Enter("then")),
+      inform(traps.enter("then")),
       statements1,
-      inform(traps.Leave("then"))),
+      inform(traps.leave("then"))),
     ArrayLite.concat(
-      inform(traps.Enter("else")),
-      statements1,
-      inform(traps.Leave("else"))));
+      inform(traps.enter("else")),
+      statements2,
+      inform(traps.leave("else"))));
 
   cut.conditional = (expression1, expression2, expression3) => Build.conditional(
     traps.test(expression1),
@@ -199,12 +202,12 @@ module.exports = (pointcut) => {
     expression3);
 
   cut.Switch = (clauses) => ArrayLite.concat(
-    inform(traps.Enter("switch")),
+    inform(traps.enter("switch")),
     Build.Switch(
       clauses.map((clause) => [
         traps.test(clause[0]),
         clause[1]])),
-    inform(traps.Leave("switch")));
+    inform(traps.leave("switch")));
 
   ////////////
   // Return //

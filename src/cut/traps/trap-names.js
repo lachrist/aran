@@ -30,12 +30,12 @@ module.exports = [
   "return",
   "eval",
   // Informers //
-  "Enter",
-  "Leave",
-  "Program",
-  "Closure",
-  "Label",
-  "Continue",
-  "Break",
-  "Copy",
-  "Drop"];
+  "enter",
+  "leave",
+  "program",
+  "arrival",
+  "label",
+  "continue",
+  "break",
+  "copy",
+  "drop"];

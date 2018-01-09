@@ -181,6 +181,14 @@ exports.sequence = (expressions) => (
       type: "SequenceExpression",
       expressions: expressions})));
 
+exports.eval = (expression) => ({
+  type: "CallExpression",
+  callee: {
+    type: "Identifier",
+    name: "eval" },
+  arguments: [
+    expression]})
+
 ///////////////
 // Statement //
 ///////////////

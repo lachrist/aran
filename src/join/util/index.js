@@ -5,5 +5,4 @@ Object.assign(
   require("./body.js"),
   require("./closure.js"),
   require("./declaration.js"),
-  require("./property.js"),
-  require("./update.js"));
+  require("./property.js"));

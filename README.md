@@ -29,6 +29,13 @@ We provide three usage example in this repository:
 
 ## API
 
+Trap Category | # pops | # pushes
+---------------------------------
+Combiner      | x      | 1 (0 set)
+Producer      | 0      | 1
+Consumer      | 1      | 0
+Informer      | 0      | 0
+
 ### `aran = Aran(namespace)`
 
 * `namespace(string)`: the name of the global variable holding the traps. The default value is `"_traps_"`.
