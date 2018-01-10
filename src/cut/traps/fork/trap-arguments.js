@@ -3,41 +3,43 @@ const ArrayLite = require("array-lite");
 const Build = require("../../../build");
 const Escape = require("../../../escape.js");
 
+const identity = (argument) => argument;
+
 exports.combiners = {
   object: [
     (array) => Build.array(
       ArrayLite.map(
         array,
-        Build.array))],
+        (expressions) => Build.array(expressions)))],
   array: [
     Build.array],
   get: [
-    null,
-    null],
+    identity,
+    identity],
   set: [
-    null,
-    null,
-    null],
+    identity,
+    identity,
+    identity],
   delete: [
-    null,
-    null],
+    identity,
+    identity],
   invoke: [
-    null,
-    null,
+    identity,
+    identity,
     Build.array],
   apply: [
-    null,
+    identity,
     Build.array],
   construct: [
-    null,
+    identity,
     Build.array],
   unary: [
     Build.primitive,
-    null],
+    identity],
   binary: [
     Build.primitive,
-    null,
-    null]};
+    identity,
+    identity]};
 
 exports.producers = {
   read: [
@@ -66,20 +68,20 @@ exports.consumers = {
   declare: [
     Build.primitive,
     Build.primitive,
-    null],
+    identity],
   write: [
     Build.primitive,
-    null],
+    identity],
   test: [
-    null],
+    identity],
   with: [
-    null],
+    identity],
   throw: [
-    null],
+    identity],
   return: [
-    null],
+    identity],
   eval: [
-    null]};
+    identity]};
 
 exports.informers = {
   enter: [
@@ -97,7 +99,7 @@ exports.informers = {
   label: [
     Build.primitive],
   continue: [
-    Build.prmitive],
+    Build.primitive],
   break: [
     Build.primitive],
   copy: [

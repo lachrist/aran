@@ -92,11 +92,12 @@ module.exports = (pointcut) => {
     ["drop0", "copy0", "copy1", "copy2", "copy3"],
     (key) => {
       cut["$"+apply(toUpperCase, key[0], [])+apply(substring, key, [1])] = () => inform(traps[key]());
-      cut["$"+key+"before"] = (expression1) => {
-        const expression2 = traps[key]();
-        return expression2 ?
-          Build.sequence(expression1, expression2) :
-          expression1
+      cut["$"+key+"before"] = (expression2) => {
+        const expression1 = traps[key]();
+        return expression1 ?
+          Build.sequence(
+            [expression1, expression2]) :
+          expression2
       };
       cut["$"+key+"after"] = (expression1) => {
         const expression2 = traps[key]();

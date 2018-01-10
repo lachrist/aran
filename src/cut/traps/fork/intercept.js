@@ -10,8 +10,10 @@ ArrayLite.each(
   (category) => ArrayLite.each(
       keys(TrapArguments[category]),
       (key) => exports[key] = function () {
-        const array = ArrayLite.zipmap(arguments, TrapArguments[category][key]);
-        array[array.length] = Build.primitive(ARAN.index);
+        const array = [];
+        for (var index=0; index<arguments.length; index++)
+          array[index] = TrapArguments[category][key][index](arguments[index]);
+        array[index] = Build.primitive(ARAN.index);
         return Build.invoke(
           Build.read(ARAN.namespace),
           Build.primitive(key),

@@ -12,7 +12,7 @@ const substring = String.prototype.substring;
 ArrayLite.each(keys(Build), (key) => {
   exports[key] = function () {
     if (arguments.length !== ArgumentsType[key].length)
-      throw new Error("Arguments number mismatch, expected "+ArgumentsType[key].length+", got: "+Util.inspect(arguments));
+      throw new Error("Arguments number mismatch, ["+key+"] expected "+ArgumentsType[key].length+", got: "+Util.inspect(arguments));
     for (var index = 0; index<ArgumentsType[key].length; index++)
       duck(ArgumentsType[key][index], arguments[index]);
     return apply(Build[key], null, arguments);
