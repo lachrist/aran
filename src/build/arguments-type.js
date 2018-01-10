@@ -46,3 +46,4 @@ exports.Continue = ["?identifier"];
 exports.While = ["expression", ["statement"]];
 exports.Debugger = [];
 exports.Switch = [[{0:"expression", 1:["statement"]}]];
+exports.With = ["expression", ["statement"]];

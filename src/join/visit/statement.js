@@ -49,7 +49,7 @@ exports.WithStatement = (node) => ARAN.cut.With(
 exports.SwitchStatement = (node) => ArrayLite.concat(
   Interim.Declare(
     "switch",
-    Visit(ast.discriminant)),
+    Visit.expression(node.discriminant)),
   ARAN.cut.Switch(
     ArrayLite.map(
       node.cases,
@@ -58,11 +58,11 @@ exports.SwitchStatement = (node) => ArrayLite.concat(
           clause.test ?
           ARAN.cut.binary(
             "===",
-            ARAN.cut.$copy0.before(
+            ARAN.cut.$copy0before(
               Interim.read("switch")),
             Visit.expression(clause.test)) :
           ARAN.cut.primitive(true)),
-        ArrayLite.concat(
+        ArrayLite.flaten(
           ArrayLite.map(
             clause.consequent,
             Visit.Statement))])),
@@ -78,22 +78,25 @@ exports.ThrowStatement = (node) => ARAN.cut.Throw(
   Visit.expression(node.argument));
 
 exports.TryStatement = (node) => ARAN.cut.Try(
-  ArrayLite.concat(
-    node.block.body.map(Visit.Statement)),
+  ArrayLite.flaten(
+    ArrayLite.map(
+      node.block.body,
+      Visit.Statement)),
   (
     node.handler ?
-    ArrayLite.flaten(
-      Util.assignment(
+    ArrayLite.concat(
+      Util.Declare(
+        "let",
         node.handler.param,
         Build.read("error")),
-      ArrayLite.concat(
+      ArrayLite.flaten(
         ArrayLite.map(
-          node.handler.body,
+          node.handler.body.body,
           Visit.Statement))) :
     []),
   (
     node.finalizer ?
-    ArrayLite.concat(
+    ArrayLite.flaten(
       ArrayLite.map(
         node.finalizer.body,
         Visit.Statement)) :
@@ -205,12 +208,13 @@ exports.ForInStatement = (node) => ARAN.cut.Block(
                 ARAN.cut.get(
                   Interim.read("keys"),
                   Interim.read("index")))),
-            Interim.write(
-              "index",
-              ARAN.cut.binary(
-                "+",
-                Interim.read("index"),
-                ARAN.cut.primitive(1))),
+            Build.Statement(
+              Interim.write(
+                "index",
+                ARAN.cut.binary(
+                  "+",
+                  Interim.read("index"),
+                  ARAN.cut.primitive(1)))),
             Util.Body(node.body)))))));
 
 // The left member is executed at every loop:
@@ -241,13 +245,14 @@ exports.ForOfStatement = (node) => ARAN.cut.Block(
         ARAN.cut.$builtin("iterator"),
         [])),
     ARAN.cut.While(
-      ARAN.unary(
+      ARAN.cut.unary(
         "!",
         ARAN.cut.get(        
           Interim.hoist(
             "step",
-            ARAN.cut.apply(
+            ARAN.cut.invoke(
               Interim.read("iterator"),
+              ARAN.cut.primitive("next"),
               [])),
           ARAN.cut.primitive("done"))),
       ArrayLite.concat(
@@ -257,10 +262,10 @@ exports.ForOfStatement = (node) => ARAN.cut.Block(
               node.left.type === "VariableDeclaration" ?
               node.left.declarations[0].id :
               node.left),
-            ARAN.get(
+            ARAN.cut.get(
               Interim.read("step"),
               ARAN.cut.primitive("value")))),
-        Util.body(node.body)))));
+        Util.Body(node.body)))));
 
 exports.DebuggerStatement = (node) => Build.Debugger();
 

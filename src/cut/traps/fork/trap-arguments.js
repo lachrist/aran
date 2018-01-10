@@ -48,8 +48,7 @@ exports.producers = {
     Build.discard],
   builtin: [
     Build.primitive,
-    (identifier) => Build.read(
-      Escape(identifier))],
+    Build.read],
   this: [
     () => Build.read("this")],
   arguments: [

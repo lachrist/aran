@@ -212,6 +212,28 @@ There are several known transparency issues that Aran does not handle for you:
 
 ## Known unsuported language features:
 
+* `typeof` in the temporal deadzone.
+Aran does not hoist `let` and `const` declaration so it cannot make the difference between an undeclared variable and undefined variable.
+This approximiation simplifies both aran and analyses modeling the environment however it leads to transparency breakage when `typeof` is involved.
+Normally the code below should fail at the `typeof` line but it does not after aran compilation.
+
+```
+{
+  typeof x;
+  const x;
+}
+```
+
+```
+{
+  meta.unary("typeof", (function () {
+    try { return meta.read(x) } catch (error) {}
+    return meta.primitive(void 0);
+  } ()));
+  const x;
+}
+```
+
 * ES2015 modules: native JS modules arrived, we did not even to begin to think about their implication for Aran.
 
 * ES2015 classes: they should be desugared and trigger pre-existing traps.

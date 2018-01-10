@@ -42,7 +42,7 @@ const builtins = {
       Build.unary(
         "typeof",
         Build.read("window")),
-      Build.primitive(void 0)),
+      Build.primitive("undefined")),
     Build.read("global"),
     Build.read("window")),
   apply: () => Build.get(
@@ -107,7 +107,7 @@ const save = (key) => Build.If(
       "typeof",
       Build.read(
         Escape(key))),
-    Build.primitive(void 0)),
+    Build.primitive("undefined")),
   Build.Declare(
     "var",
     Escape(key),

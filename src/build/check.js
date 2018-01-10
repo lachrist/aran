@@ -32,7 +32,8 @@ const stypes = [
   "ContinueStatement",
   "WhileStatement",
   "DebuggerStatement",
-  "SwitchStatement"
+  "SwitchStatement",
+  "WithStatement"
 ];
 
 const kinds = ["var", "let", "const"];

@@ -71,10 +71,11 @@ module.exports = (pointcut) => {
     inform(traps.continue(label)),
     Build.Continue(label));
 
-  cut.Block = (statements) => ArrayLite.concat(
-    inform(traps.enter("block")),
-    statements,
-    inform(traps.leave("block")));
+  cut.Block = (statements) => Build.Block(
+    ArrayLite.concat(
+      inform(traps.enter("block")),
+      statements,
+      inform(traps.leave("block"))));
 
   cut.$Arrival = (strict, arrow) => inform(
     traps.arrival(strict, arrow, null));

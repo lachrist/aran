@@ -10,7 +10,10 @@ exports.Declaration = (node) => ArrayLite.flaten(
     node.declarations,
     (declarator, temporary) => (
       declarator.init ?
-      Util.Declare(node.kind, declarator.id, declarator.init) :
+      Util.Declare(
+        node.kind,
+        declarator.id,
+        Visit.expression(declarator.init)) :
       (
         temporary = ARAN.cut.Declare(
           node.kind,

@@ -59,6 +59,7 @@ exports.closure = (strict, statements) => ({
   type: "FunctionExpression",
   generator: false,
   async: false,
+  expression: false,
   id: null,
   params: [],
   defaults: [],
@@ -66,14 +67,15 @@ exports.closure = (strict, statements) => ({
   body: {
     type: "BlockStatement",
     body: ArrayLite.concat(
-      strict ?
+      (
+        strict ?
         [
           {
-            type: "ExpressionsStatement",
-            expressions: {
+            type: "ExpressionStatement",
+            expression: {
               type: "Literal",
               value: "use strict"}}] :
-        [],
+        []),
       statements)}});
 
 exports.primitive = (primitive) => (
@@ -135,7 +137,7 @@ exports.delete = (expression1, expression2) => ({
   operator: "delete",
   argument: {
     type: "MemberExpression",
-    computed: false,
+    computed: true,
     object: expression1,
     property: expression2}});
 
@@ -226,7 +228,7 @@ exports.Try = (statements1, statements2, statements3) => [
         name: "error"},
       body: {
         type: "BlockStatement",
-        statements2}},
+        body: statements2}},
     finalizer: {
       type: "BlockStatement",
       body: statements3}}];
@@ -294,13 +296,22 @@ exports.Debugger = () => [
   {
     type: "DebuggerStatement"}];
 
-exports.Switch = (clauses) => ({
-  type: "SwitchStatement",
-  discriminant: {
-    type: Literal,
-    value: true
-  },
-  cases: clauses.map((clause) => ({
-    type: "SwitchCase",
-    test: clause[0],
-    consequent: clause[1]}))});
+exports.Switch = (clauses) => [
+  {
+    type: "SwitchStatement",
+    discriminant: {
+      type: "Literal",
+      value: true
+    },
+    cases: clauses.map((clause) => ({
+      type: "SwitchCase",
+      test: clause[0],
+      consequent: clause[1]}))}];
+
+exports.With = (expression, statements) => [
+  {
+    type: "WithStatement",
+    object: expression,
+    body: {
+      type: "BlockStatement",
+      body: statements}}];
