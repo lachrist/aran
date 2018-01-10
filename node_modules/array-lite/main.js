@@ -1,6 +1,18 @@
 
 var parseInt = global.parseInt;
 
+exports.join = function (array, separator) {
+  if (array.length === 0)
+    return "";
+  var last = array.length-1;
+  var index = 0;
+  var result = "";
+  while (index < last) {
+    result += array[index++] + separator; 
+  }
+  return result + array[last];
+};
+
 exports.flaten = function (array1) {
   var result=[];
   var index1 = 0;
@@ -28,7 +40,7 @@ exports.prefix = function (array1, array2) {
 }
 
 exports.concat = function () {
-  var result=[];
+  var result = [];
   var index1 = 0;
   var length1 = arguments.length;
   while (index1 < length1) {

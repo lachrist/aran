@@ -4,15 +4,17 @@ const Build = require("../../../build");
 const Escape = require("../../../escape.js");
 
 const identity = (argument) => argument;
+const primitive = primitive;
+const array = array;
 
 exports.combiners = {
   object: [
     (array) => Build.array(
       ArrayLite.map(
         array,
-        (expressions) => Build.array(expressions)))],
+        array))],
   array: [
-    Build.array],
+    array],
   get: [
     identity,
     identity],
@@ -26,31 +28,31 @@ exports.combiners = {
   invoke: [
     identity,
     identity,
-    Build.array],
+    array],
   apply: [
     identity,
-    Build.array],
+    array],
   construct: [
     identity,
-    Build.array],
+    array],
   unary: [
-    Build.primitive,
+    primitive,
     identity],
   binary: [
-    Build.primitive,
+    primitive,
     identity,
     identity]};
 
 exports.producers = {
   read: [
-    Build.primitive,
-    Build.read],
+    primitive,
+    (identifier) => Build.read(identifier)],
   discard: [
-    Build.primitive,
-    Build.discard],
+    primitive,
+    (identifier) => Build.discard(identifier)],
   builtin: [
-    Build.primitive,
-    Build.read],
+    primitive,
+    (identifier) => Build.read(identifier)],
   this: [
     () => Build.read("this")],
   arguments: [
@@ -58,7 +60,7 @@ exports.producers = {
   error: [
     () => Build.read("error")],
   primitive: [
-    Build.primitive],
+    primitive],
   regexp: [
     (array) => Build.regexp(array[0], array[1])],
   closure: [
@@ -66,11 +68,11 @@ exports.producers = {
 
 exports.consumers = {
   declare: [
-    Build.primitive,
-    Build.primitive,
+    primitive,
+    primitive,
     identity],
   write: [
-    Build.primitive,
+    primitive,
     identity],
   test: [
     identity],
@@ -85,24 +87,24 @@ exports.consumers = {
 
 exports.informers = {
   enter: [
-    Build.primitive],
+    primitive],
   leave: [
-    Build.primitive],
+    primitive],
   program: [
-    Build.primitive],
+    primitive],
   arrival: [
-    Build.primitive,
-    Build.primitive,
+    primitive,
+    primitive,
     () => Build.get(
       Build.read("arguments"),
       Build.primitive("length"))],
   label: [
-    Build.primitive],
+    primitive],
   continue: [
-    Build.primitive],
+    primitive],
   break: [
-    Build.primitive],
+    primitive],
   copy: [
-    Build.primitive],
+    primitive],
   drop: [
-    Build.primitive]};
+    primitive]};

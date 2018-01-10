@@ -1,6 +1,7 @@
 
 const Join = require("./join");
 const Cut = require("./cut");
+const Build = require("./build");
 const ArrayLite = require("array-lite");
 
 function join (root, pointcut) {
@@ -42,10 +43,11 @@ function node (idx) {
   }
 }
 
-module.exports = (namespace) => ({
+module.exports = (options) => ({
   _roots: [],
   _counter: 1,
-  namespace: namespace || "__aran__",
+  namespace: options.namespace || "__aran__",
+  build: Build[options.output] || output,
   join: join,
   root: root,
   node: node

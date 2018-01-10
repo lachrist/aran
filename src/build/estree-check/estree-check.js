@@ -1,7 +1,7 @@
 
 const Util = require("util");
 const ArrayLite = require("array-lite");
-const Build = require("./build.js");
+const Estree = require("../estree.js");
 const Check = require("./check.js");
 const ArgumentsType = require("./arguments-type.js");
 const isArray = Array.isArray;
@@ -9,13 +9,13 @@ const keys = Object.keys;
 const apply = Reflect.apply;
 const substring = String.prototype.substring;
 
-ArrayLite.each(keys(Build), (key) => {
+ArrayLite.each(keys(Estree), (key) => {
   exports[key] = function () {
     if (arguments.length !== ArgumentsType[key].length)
       throw new Error("Arguments number mismatch, ["+key+"] expected "+ArgumentsType[key].length+", got: "+Util.inspect(arguments));
     for (var index = 0; index<ArgumentsType[key].length; index++)
       duck(ArgumentsType[key][index], arguments[index]);
-    return apply(Build[key], null, arguments);
+    return apply(Estree[key], null, arguments);
   };
 });
 
