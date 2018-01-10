@@ -1,129 +1,43 @@
 
 const Util = require("util");
+const ArrayLite = require("array-lite");
+const Estree = require("../estree.js");
+const Check = require("./check.js");
+const ArgumentsType = require("./arguments-type.js");
+const isArray = Array.isArray;
+const keys = Object.keys;
+const apply = Reflect.apply;
+const substring = String.prototype.substring;
 
-const etypes = [
-  "ThisExpression",
-  "Identifier",
-  "AssignmentExpression",
-  "ArrayExpression",
-  "ObjectExpression",
-  "FunctionExpression",
-  "UnaryExpression",
-  "Literal",
-  "MemberExpression",
-  "ConditionalExpression",
-  "BinaryExpression",
-  "UnaryExpression",
-  "NewExpression",
-  "CallExpression",
-  "SequenceExpression"
-];
+ArrayLite.each(keys(Estree), (key) => {
+  exports[key] = function () {
+    if (arguments.length !== ArgumentsType[key].length)
+      throw new Error("Arguments number mismatch, ["+key+"] expected "+ArgumentsType[key].length+", got: "+Util.inspect(arguments));
+    for (var index = 0; index<ArgumentsType[key].length; index++)
+      duck(ArgumentsType[key][index], arguments[index]);
+    return apply(Estree[key], null, arguments);
+  };
+});
 
-const stypes = [
-  "BlockStatement",
-  "ExpressionStatement",
-  "ReturnStatement",
-  "ThrowStatement",
-  "TryStatement",
-  "VariableDeclaration",
-  "IfStatement",
-  "LabeledStatement",
-  "BreakStatement",
-  "ContinueStatement",
-  "WhileStatement",
-  "DebuggerStatement",
-  "SwitchStatement",
-  "WithStatement"
-];
-
-const kinds = ["var", "let", "const"];
-
-const unaries = [
-  "-",
-  "+",
-  "!",
-  "~",
-  "typeof",
-  "void"
-];
-
-const binaries = [
-  "==",
-  "!=",
-  "===",
-  "!==",
-  "<",
-  "<=",
-  ">",
-  ">=",
-  "<<",
-  ">>",
-  ">>>",
-  "+",
-  "-",
-  "*",
-  "/",
-  "%",
-  "|",
-  "^",
-  "&",
-  "in",
-  "instanceof",
-  ".."
-];
-
-exports.identifier = (value) => {
-  if (typeof value !== "string")
-    throw new Error("[identifier] is not a string: "+Util.inspect(value));
-  if (!/^[$_a-zA-Z][$_a-zA-Z0-9]*$/.test(value))
-    throw new Error("[identifier] invalid: "+Util.inspect(value))
-};
-
-exports.expression = (value) => {
-  if (typeof value !== "object" || value === null)
-    throw new Error("[expression] not an object: "+Util.inspect(value));
-  if (!etypes.includes(value.type))
-    throw new Error("[expression] unknwon type: "+Util.inspect(value));
-};
-
-exports.statement = (value) => {
-  if (typeof value !== "object" || value === null)
-    throw new Error("[statement] not an object: "+Util.inspect(value));
-  if (!stypes.includes(value.type))
-    throw new Error("[statement] unknown type: "+Util.inspect(value));
-};
-
-exports.primitive = (value) => {
-  if (value && value !== true && typeof value !== "number" && typeof value !== "string")
-    throw new Error("[primitive] type error: "+Util.inspect(value));
-};
-
-exports.null = (value) => {
-  if (value !== null)
-    throw new Error("[null] not null: "+Utio.inspect(value))
-}
-
-exports.boolean = (value) => {
-  if (typeof value !== "boolean")
-    throw new Error("[boolean] type error: "+Util.inspect(value));
-};
-
-exports.string = (value) => {
-  if (typeof value !== "string")
-    throw new Error("[string] type error: "+Util.inspect(value));
-}
-
-exports.unary = (value) => {
-  if (!unaries.includes(value))
-    throw new Error("[unary] unknown: "+Util.inspect(value));
-};
-
-exports.binary = (value) => {
-  if (!binaries.includes(value))
-    throw new Error("[binary] unknown: "+Util.inspect(value));
-};
-
-exports.kind = (kind) => {
-  if (!kinds.includes(kind))
-    throw new Error("[kind] unknown: "+Util.inspect(kind));
+const duck = (type, value) => {
+  if (isArray(type) && type.length === 1) {
+    if (typeof value !== "object" || value === null || typeof value.length !== "number")
+      throw new Error("Not an array: "+Util.inspect(value));
+    ArrayLite.each(
+      value,
+      (value) => duck(type[0], value));
+  } else if (typeof type === "object" && type !== null) {
+    if (typeof value !== "object" || value === null)
+      throw new Error("Not an object: "+Util.inspect(value));
+    for (var key in type)
+      duck(type[key], value[key]);
+  } else if (typeof type === "string" && type[0] === "?"){
+    if (value !== null) {
+      Check[apply(substring, type, [1])](value);
+    }
+  } else if (typeof type === "string") {
+    Check[type](value);
+  } else {
+    throw new Error("Unknown type: "+Util.inspect(type));
+  }
 };

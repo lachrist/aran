@@ -8,6 +8,7 @@ function join (root, pointcut) {
   this._roots.push(root);
   const temporary = global.ARAN;
   global.ARAN = {
+    build: this._build,
     namespace: this.namespace,
     counter: this._counter,
     cut: Cut(pointcut)
@@ -46,8 +47,8 @@ function node (idx) {
 module.exports = (options) => ({
   _roots: [],
   _counter: 1,
+  _build: options.output ? (Build[options.output] || output) : Build.Estree,
   namespace: options.namespace || "__aran__",
-  build: Build[options.output] || output,
   join: join,
   root: root,
   node: node

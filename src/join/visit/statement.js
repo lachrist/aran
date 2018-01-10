@@ -20,7 +20,7 @@ exports.BlockStatement = (node) => ARAN.cut.Block(
       Visit.Statement)));
 
 exports.ExpressionStatement = (node) => ArrayLite.concat(
-  Build.Statement(
+  ARAN.build.Statement(
       Visit.expression(node.expression)),
   ARAN.cut.$Drop0());
 
@@ -88,7 +88,7 @@ exports.TryStatement = (node) => ARAN.cut.Try(
       Util.Declare(
         "let",
         node.handler.param,
-        Build.read("error")),
+        ARAN.build.read("error")),
       ArrayLite.flaten(
         ArrayLite.map(
           node.handler.body.body,
@@ -109,15 +109,15 @@ exports.WhileStatement = (node) => ARAN.cut.While(
 exports.DoWhileStatement = (node) => ArrayLite.concat(
   Interim.Declare(
     "dowhile",
-    Build.primitive(true)),
+    ARAN.build.primitive(true)),
   ARAN.cut.While(
-    Build.conditional(
+    ARAN.build.conditional(
       Interim.read("dowhile"),
-      Build.sequence(
+      ARAN.build.sequence(
         [
           Interim.write(
             "dowhile",
-            Build.primitive(false)),
+            ARAN.build.primitive(false)),
           ARAN.cut.primitive(true)]),
       Visit.expression(node.test)),
     Util.Body(node.body)));
@@ -135,14 +135,14 @@ exports.ForStatement = (node) => ARAN.cut.Block(
       node.init.type === "VariableDeclaration" ?
       Util.Declaration(node.init) :
       ArrayLite.concat(
-        Build.Statement(
+        ARAN.build.Statement(
           Visit.expression(node.init)),
         ARAN.cut.$Drop0())),
     ARAN.cut.While(
       Visit.expression(node.test),
       ArrayLite.concat(
         Util.Body(node.body),
-        Build.Statement(
+        ARAN.build.Statement(
           Visit.expression(node.update)),
         ARAN.cut.$Drop0()))));
 
@@ -171,7 +171,7 @@ exports.ForInStatement = (node) => ARAN.cut.Block(
       []),
     Interim.Declare(
       "object",
-      node.right),
+      Visit.expression(node.right)),
     ARAN.cut.While(
       Interim.read("object"),
       ArrayLite.concat(
@@ -181,7 +181,7 @@ exports.ForInStatement = (node) => ARAN.cut.Block(
             ARAN.cut.$builtin("keys"),
             [
               Interim.read("object")])),
-        Build.Statement(
+        ARAN.build.Statement(
           Interim.write(
             "object",
             ARAN.cut.apply(
@@ -199,7 +199,7 @@ exports.ForInStatement = (node) => ARAN.cut.Block(
               Interim.read("keys"),
               ARAN.cut.primitive("length"))),
           ArrayLite.concat(
-            Build.Statement(
+            ARAN.build.Statement(
               Util.write(
                 (
                   node.left.type === "VariableDeclaration" ?
@@ -208,7 +208,7 @@ exports.ForInStatement = (node) => ARAN.cut.Block(
                 ARAN.cut.get(
                   Interim.read("keys"),
                   Interim.read("index")))),
-            Build.Statement(
+            ARAN.build.Statement(
               Interim.write(
                 "index",
                 ARAN.cut.binary(
@@ -241,7 +241,7 @@ exports.ForOfStatement = (node) => ARAN.cut.Block(
     Interim.Declare(
       "iterator",
       ARAN.cut.invoke(
-        node.right,
+        Visit.expression(node.right),
         ARAN.cut.$builtin("iterator"),
         [])),
     ARAN.cut.While(
@@ -256,7 +256,7 @@ exports.ForOfStatement = (node) => ARAN.cut.Block(
               [])),
           ARAN.cut.primitive("done"))),
       ArrayLite.concat(
-        Build.Statement(
+        ARAN.build.Statement(
           Util.write(
             (
               node.left.type === "VariableDeclaration" ?
@@ -267,7 +267,7 @@ exports.ForOfStatement = (node) => ARAN.cut.Block(
               ARAN.cut.primitive("value")))),
         Util.Body(node.body)))));
 
-exports.DebuggerStatement = (node) => Build.Debugger();
+exports.DebuggerStatement = (node) => ARAN.build.Debugger();
 
 exports.FunctionDeclaration = (node) => {
   ARAN.context.hoisted.push(

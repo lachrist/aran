@@ -1,6 +1,5 @@
 
 const ArrayLite = require("array-lite");
-const Build = require("../../../build");
 const TrapArguments = require("./trap-arguments");
 
 const keys = Object.keys;
@@ -13,8 +12,8 @@ ArrayLite.each(
         const array = [];
         for (var index=0; index<arguments.length; index++)
           array[index] = TrapArguments[category][key][index](arguments[index]);
-        array[index] = Build.primitive(ARAN.index);
-        return Build.invoke(
-          Build.read(ARAN.namespace),
-          Build.primitive(key),
+        array[index] = ARAN.build.primitive(ARAN.index);
+        return ARAN.build.invoke(
+          ARAN.build.read(ARAN.namespace),
+          ARAN.build.primitive(key),
           array) }));

@@ -1,13 +1,13 @@
 const ArrayLite = require("array-lite");
-const Build = require("../../../build");
 const TrapArguments = require("./trap-arguments.js");
 
+const apply = Reflect.apply;
 const empty = () => null;
 function pass () { return arguments[arguments.length-1] }
 
 ArrayLite.each(
   Object.keys(TrapArguments.combiners),
-  (key) => exports[key] = Build[key]);
+  (key) => exports[key] = function () { return apply(ARAN.build[key], null, arguments) });
 
 ArrayLite.each(
   Object.keys(TrapArguments.informers),

@@ -68,7 +68,7 @@ exports.ArrowFunctionExpression = (node) => Util.closure(node);
 
 exports.FunctionExpression = (node) => Util.closure(node);
 
-exports.SequenceExpression = (node) => Build.sequence(
+exports.SequenceExpression = (node) => ARAN.build.sequence(
   ArrayLite.map(
     node.expressions,
     (expression, index) => (
@@ -81,13 +81,13 @@ exports.UnaryExpression = (node) => (
   node.operator === "typeof" && node.argument.type === "Identifier" ?
   ARAN.cut.unary(
       "typeof",
-      Build.apply(
-        Build.closure(
+      ARAN.build.apply(
+        ARAN.build.closure(
           false,
-          Build.Try(
-            Build.Return(
+          ARAN.build.Try(
+            ARAN.build.Return(
               ARAN.cut.read(node.argument.name)),
-            Build.Return(
+            ARAN.build.Return(
               ARAN.cut.primitive(void 0)),
             [])),
         [])) :
@@ -108,7 +108,7 @@ exports.BinaryExpression = (node) => ARAN.cut.binary(
   Visit.expression(node.right));
 
 // set invariant enforced (3 pop, 0 push)
-exports.AssignmentExpression = (node) => Build.sequence(
+exports.AssignmentExpression = (node) => ARAN.build.sequence(
   [
     (
       node.operator === "=" ?
@@ -174,7 +174,7 @@ exports.AssignmentExpression = (node) => Build.sequence(
 //           Interim.read("object"),
 //           Interim.read("property")),
 //         Visit.expression(node.right)))) :
-//   Build.sequence(
+//   ARAN.build.sequence(
 //     [
 //       (
 //         node.operator === "=" ?
@@ -193,7 +193,7 @@ exports.AssignmentExpression = (node) => Build.sequence(
 //               Visit.expression(node.right))))),
 //       Interim.read("result")]));
 
-exports.UpdateExpression = (node) => Build.sequence(
+exports.UpdateExpression = (node) => ARAN.build.sequence(
   [
     (
       node.argument.type === "MemberExpression" ?
@@ -299,8 +299,8 @@ exports.CallExpression = (node) => (
         (
           node.arguments.length === 1 ?
           Visit.expression(node.arguments[0]) :
-          Build.get(
-            Build.array(
+          ARAN.build.get(
+            ARAN.build.array(
               ArrayLite.map(
                 node.arguments,
                 (argument, index) => (
@@ -308,7 +308,7 @@ exports.CallExpression = (node) => (
                   ARAN.cut.drop0after(
                     Visit.expression(argument)) :
                   Visit.expression(argument)))),
-            Build.primitive(0))))))) :
+            ARAN.build.primitive(0))))))) :
   ARAN.cut.apply(
     ARAN.cut.builtin("apply"),
     [
@@ -328,7 +328,7 @@ exports.CallExpression = (node) => (
           ARAN.context.strict ?
           ARAN.cut.primitive(void 0) :
           ARAN.cut.$builtin("global"))),
-      Build.sequence(
+      ARAN.build.sequence(
         ArrayLite.concat(
           [
             Interim.hoist(
@@ -338,7 +338,7 @@ exports.CallExpression = (node) => (
             node.arguments,
             (argument) => (
               argument.type === "SpreadElement" ?
-              Build.apply(
+              ARAN.build.apply(
                 ARAN.cut.$builtin(),
                 [
                   ARAN.cut.$copy0before(
@@ -363,11 +363,11 @@ exports.MemberExpression = (node) => ARAN.cut.get(
 
 exports.Identifier = (node) => (
   node.name === "undefined" ?
-  Build.conditional(
-    Build.binary(
+  ARAN.build.conditional(
+    ARAN.build.binary(
       "===",
-      Build.read("undefined"),
-      Build.primitive(void 0)),
+      ARAN.build.read("undefined"),
+      ARAN.build.primitive(void 0)),
     ARAN.cut.primitive(void 0),
     ARAN.cut.read("undefined")) :
   ARAN.cut.read(node.name));

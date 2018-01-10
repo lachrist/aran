@@ -1,10 +1,9 @@
 
-const Build = require("../../../build");
 const Common = require("./common.js");
 
 const identity = (argument) => argument;
 
-exports.write = (pattern, expression) => Build.sequence(
+exports.write = (pattern, expression) => ARAN.build.sequence(
   Common(
     {
       expression: identity,

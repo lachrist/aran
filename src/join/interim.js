@@ -1,25 +1,24 @@
 
-const Build = require("../build");
 const Escape = require("../escape.js");
 
 exports.hoist = (information, expression) => {
-  ARAN.context.hoisted[ARAN.context.hoisted.length] = Build.Declare(
+  ARAN.context.hoisted[ARAN.context.hoisted.length] = ARAN.build.Declare(
     "var",
     Escape(ARAN.index + "_" + information),
-    Build.primitive(void 0));
-  return Build.write(
+    ARAN.build.primitive(void 0));
+  return ARAN.build.write(
     Escape(ARAN.index + "_" + information),
     expression);
 };
 
-exports.read = (information) => Build.read(
+exports.read = (information) => ARAN.build.read(
   Escape(ARAN.index + "_" + information));
 
-exports.write = (information, expression) => Build.write(
+exports.write = (information, expression) => ARAN.build.write(
   Escape(ARAN.index + "_" + information),
   expression);
 
-exports.Declare = (information, expression) => Build.Declare(
+exports.Declare = (information, expression) => ARAN.build.Declare(
   "var",
   Escape(ARAN.index + "_" + information),
   expression);

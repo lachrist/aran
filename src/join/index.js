@@ -10,7 +10,6 @@
 // }
 
 const ArrayLite = require("array-lite");
-const Build = require("../build");
 const Escape = require("../escape.js");
 const Visit = require("./visit");
 const Context = require("./context.js");
@@ -23,7 +22,7 @@ module.exports = (node) => {
   ARAN.context = Context(node.body[0]);
   const statements = ArrayLite.flaten(
     node.body.map(Visit.Statement));
-  return Build.PROGRAM(
+  return ARAN.build.PROGRAM(
     ARAN.context.strict,
     ArrayLite.concat(
       ArrayLite.flaten(
@@ -36,79 +35,79 @@ module.exports = (node) => {
 };
 
 const builtins = {
-  global: () => Build.conditional(
-    Build.binary(
+  global: () => ARAN.build.conditional(
+    ARAN.build.binary(
       "===",
-      Build.unary(
+      ARAN.build.unary(
         "typeof",
-        Build.read("window")),
-      Build.primitive("undefined")),
-    Build.read("global"),
-    Build.read("window")),
-  apply: () => Build.get(
-    Build.read("Reflect"),
-    Build.primitive("apply")),
-  defineProperty: () => Build.get(
-    Build.read("Object"),
-    Build.primitive("defineProperty")),
-  getPrototypeOf: () => Build.get(
-    Build.read("Object"),
-    Build.primitive("getPrototypeOf")),
-  keys: () => Build.get(
-    Build.read("Object"),
-    Build.primitive("keys")),
-  iterator: () => Build.get(
-    Build.read("Symbol"),
-    Build.primitive("iterator")),
-  eval: () => Build.read("eval"),
-  rest: () => Build.closure(
+        ARAN.build.read("window")),
+      ARAN.build.primitive("undefined")),
+    ARAN.build.read("global"),
+    ARAN.build.read("window")),
+  apply: () => ARAN.build.get(
+    ARAN.build.read("Reflect"),
+    ARAN.build.primitive("apply")),
+  defineProperty: () => ARAN.build.get(
+    ARAN.build.read("Object"),
+    ARAN.build.primitive("defineProperty")),
+  getPrototypeOf: () => ARAN.build.get(
+    ARAN.build.read("Object"),
+    ARAN.build.primitive("getPrototypeOf")),
+  keys: () => ARAN.build.get(
+    ARAN.build.read("Object"),
+    ARAN.build.primitive("keys")),
+  iterator: () => ARAN.build.get(
+    ARAN.build.read("Symbol"),
+    ARAN.build.primitive("iterator")),
+  eval: () => ARAN.build.read("eval"),
+  rest: () => ARAN.build.closure(
     false,
     ArrayLite.concat(
-      Build.Declare(
+      ARAN.build.Declare(
         "let",
         "step",
-        Build.primitive(void 0)),
-      Build.While(
-        Build.unary(
+        ARAN.build.primitive(void 0)),
+      ARAN.build.While(
+        ARAN.build.unary(
           "!",
-          Build.get(
-            Build.write(
+          ARAN.build.get(
+            ARAN.build.write(
               "step",
-              Build.invoke(
-                Build.get(
-                  Build.read(
+              ARAN.build.invoke(
+                ARAN.build.get(
+                  ARAN.build.read(
                     "arguments"),
-                  Build.primitive(1)),
-                Build.primitive("next"),
+                  ARAN.build.primitive(1)),
+                ARAN.build.primitive("next"),
                 [])),
-            Build.primitive("done"))),
-        Build.Statement(
-          Build.set(
-            Build.get(
-              Build.read("arguments"),
-              Build.primitive(0)),
-            Build.get(
-              Build.get(
-                Build.read("arguments"),
-                Build.primitive(0)),
-              Build.primitive("length")),
-            Build.get(
-              Build.read("step"),
-              Build.primitive("value"))))),
-      Build.Return(
-        Build.get(
-          Build.read("arguments"),
-          Build.primitive(0)))))};
+            ARAN.build.primitive("done"))),
+        ARAN.build.Statement(
+          ARAN.build.set(
+            ARAN.build.get(
+              ARAN.build.read("arguments"),
+              ARAN.build.primitive(0)),
+            ARAN.build.get(
+              ARAN.build.get(
+                ARAN.build.read("arguments"),
+                ARAN.build.primitive(0)),
+              ARAN.build.primitive("length")),
+            ARAN.build.get(
+              ARAN.build.read("step"),
+              ARAN.build.primitive("value"))))),
+      ARAN.build.Return(
+        ARAN.build.get(
+          ARAN.build.read("arguments"),
+          ARAN.build.primitive(0)))))};
 
-const save = (key) => Build.If(
-  Build.binary(
+const save = (key) => ARAN.build.If(
+  ARAN.build.binary(
     "===",
-    Build.unary(
+    ARAN.build.unary(
       "typeof",
-      Build.read(
+      ARAN.build.read(
         Escape(key))),
-    Build.primitive("undefined")),
-  Build.Declare(
+    ARAN.build.primitive("undefined")),
+  ARAN.build.Declare(
     "var",
     Escape(key),
     builtins[key]()),

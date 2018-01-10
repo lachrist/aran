@@ -1,17 +1,16 @@
 
 const ArrayLite = require("array-lite");
-const Build = require("../../../build");
 const Escape = require("../../../escape.js");
 
 const identity = (argument) => argument;
-const primitive = primitive;
-const array = array;
+const primitive = (primitive) => ARAN.build.primitive(primitive);
+const array = (expressions) => ARAN.build.array(expressions);
 
 exports.combiners = {
   object: [
-    (array) => Build.array(
+    (expressions) => ARAN.build.array(
       ArrayLite.map(
-        array,
+        expressions,
         array))],
   array: [
     array],
@@ -46,25 +45,25 @@ exports.combiners = {
 exports.producers = {
   read: [
     primitive,
-    (identifier) => Build.read(identifier)],
+    (identifier) => ARAN.build.read(identifier)],
   discard: [
     primitive,
-    (identifier) => Build.discard(identifier)],
+    (identifier) => ARAN.build.discard(identifier)],
   builtin: [
     primitive,
-    (identifier) => Build.read(identifier)],
+    (identifier) => ARAN.build.read(identifier)],
   this: [
-    () => Build.read("this")],
+    () => ARAN.build.read("this")],
   arguments: [
-    () => Build.read("arguments")],
+    () => ARAN.build.read("arguments")],
   error: [
-    () => Build.read("error")],
+    () => ARAN.build.read("error")],
   primitive: [
     primitive],
   regexp: [
-    (array) => Build.regexp(array[0], array[1])],
+    (array) => ARAN.build.regexp(array[0], array[1])],
   closure: [
-    (array) => Build.closure(array[0], array[1])]};
+    (array) => ARAN.build.closure(array[0], array[1])]};
 
 exports.consumers = {
   declare: [
@@ -95,9 +94,9 @@ exports.informers = {
   arrival: [
     primitive,
     primitive,
-    () => Build.get(
-      Build.read("arguments"),
-      Build.primitive("length"))],
+    () => ARAN.build.get(
+      ARAN.build.read("arguments"),
+      ARAN.build.primitive("length"))],
   label: [
     primitive],
   continue: [

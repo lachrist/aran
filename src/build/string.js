@@ -7,7 +7,7 @@ const stringify = JSON.stringify;
 /////////////
 
 exports.PROGRAM = (strict, statements) => (
-  (strict ? "use strict;" : "") + 
+  (strict ? "\"use strict\";" : "") + 
   ArrayLite.join(statements, ""));
 
 ////////////////
@@ -39,7 +39,7 @@ exports.object = (properties) => (
 
 exports.closure = (strict, statements) => (
   "function(){" +
-  (strict ? "use-strict;" : "") +
+  (strict ? "\"use-strict\";" : "") +
   ArrayLite.join(statements, "") +
   "}");
 
@@ -75,6 +75,7 @@ exports.conditional = (expression1, expression2, expression3) => (
   "?" +
   expression2 +
   ":" +
+  expression3 +
   ")");
 
 exports.binary = (operator, expression1, expression2) => (
@@ -83,7 +84,7 @@ exports.binary = (operator, expression1, expression2) => (
   " " +
   operator +
   " " +
-  expression2
+  expression2 +
   ")");
 
 exports.unary = (operator, expression) => (
@@ -125,7 +126,7 @@ exports.invoke = (expression1, expression2, expressions) => (
   "[" +
   expression2 +
   "](" +
-  ArrayLite.join(expressions) +
+  ArrayLite.join(expressions, ",") +
   "))");
 
 exports.sequence = (expressions) => (
@@ -152,7 +153,7 @@ exports.Block = (statements) => [
   (
     "{" +
     ArrayLite.join(statements, "") +
-    "}"];
+    "}")];
 
 exports.Statement = (expression) => [
   (
@@ -178,14 +179,17 @@ exports.Try = (statements1, statements2, statements3) => [
     "}catch(error){" +
     ArrayLite.join(statements2, "") +
     "}finally{" +
-    ArrayLite.join(statements3, ""))];
+    ArrayLite.join(statements3, "") +
+    "}")];
 
 exports.Declare = (kind, identifier, expression) => [
   (
     kind +
+    " " +
     identifier +
     "=" +
-    expression)];
+    expression +
+    ";")];
 
 exports.If = (expression, statements1, statements2) => [
   (
@@ -194,12 +198,13 @@ exports.If = (expression, statements1, statements2) => [
     "){" +
     ArrayLite.join(statements1, "") +
     "}else{" +
-    ArrayLite.join(statements2, ""))];
+    ArrayLite.join(statements2, "") +
+    "}")];
 
 exports.Label = (label, statements) => [
   (
     label +
-    ":{"
+    ":{" +
     ArrayLite.join(statements, "") +
     "}")];
 
@@ -236,9 +241,10 @@ exports.Switch = (clauses) => [
         (clause) => (
           "case " +
           clause[0] +
-          ":"
+          ":" +
           ArrayLite.join(clause[1], ""))),
-      ""))];
+      "") +
+    "}")];
 
 exports.With = (expression, statements) => [
   (

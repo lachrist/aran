@@ -1,6 +1,5 @@
 
 const ArrayLite = require("array-lite");
-const Build = require("../../build");
 const Interim = require("../interim.js");
 const Context = require("../context.js");
 const Visit = require("../visit");
@@ -51,7 +50,7 @@ exports.closure = (node) => {
                   Interim.read("arguments"),
                   ARAN.cut.primitive("length"))),
               ArrayLite.concat(
-                Build.Statement(
+                ARAN.build.Statement(
                   ARAN.cut.set(
                     Interim.read("argument_rest"),
                     ARAN.cut.binary(
@@ -61,7 +60,7 @@ exports.closure = (node) => {
                     ARAN.cut.get(
                       Interim.read("arguments"),
                       Interim.read("argument_index")))),
-                Build.Statement(
+                ARAN.build.Statement(
                   Interim.write(
                     "argument_index",
                     ARAN.cut.binary(
@@ -77,7 +76,7 @@ exports.closure = (node) => {
             param,
             ARAN.cut.get(
               ARAN.cut.$copy0before(
-                Build.read("arguments")),
+                ARAN.build.read("arguments")),
               ARAN.cut.primitive(index)))))),
     ARAN.cut.$Drop0());
   const statements2 = (

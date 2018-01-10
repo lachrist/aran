@@ -1,6 +1,5 @@
 
 const ArrayLite = require("array-lite");
-const Build = require("../build");
 const Traps = require("./traps");
 const Escape = require("../escape.js");
 const apply = Reflect.apply;
@@ -8,7 +7,7 @@ const substring = String.prototype.substring;
 const toUpperCase = String.prototype.toUpperCase;
 
 const inform = (expression) => expression ?
-  Build.Statement(expression) :
+  ARAN.build.Statement(expression) :
   [];
 
 const sanitize = (identifier) => (
@@ -50,7 +49,7 @@ module.exports = (pointcut) => {
   // Informers //
   ///////////////
 
-  cut.PROGRAM = (strict, statements) => Build.PROGRAM(
+  cut.PROGRAM = (strict, statements) => ARAN.build.PROGRAM(
     strict,
     ArrayLite.concat(
       inform(traps.program(strict)),
@@ -58,20 +57,20 @@ module.exports = (pointcut) => {
 
   cut.Label = (label, statements) => ArrayLite.concat(
     inform(traps.label(label)),
-    Build.Label(label, ArrayLite.concat(
+    ARAN.build.Label(label, ArrayLite.concat(
       inform(traps.enter("label")),
       statements,
       inform(traps.leave("label")))));
 
   cut.Break = (label) => ArrayLite.concat(
     inform(traps.break(label)),
-    Build.Break(label));
+    ARAN.build.Break(label));
 
   cut.Continue = (label) => ArrayLite.concat(
     inform(traps.continue(label)),
-    Build.Continue(label));
+    ARAN.build.Continue(label));
 
-  cut.Block = (statements) => Build.Block(
+  cut.Block = (statements) => ARAN.build.Block(
     ArrayLite.concat(
       inform(traps.enter("block")),
       statements,
@@ -95,16 +94,16 @@ module.exports = (pointcut) => {
       cut["$"+key+"before"] = (expression2) => {
         const expression1 = traps[key]();
         return expression1 ?
-          Build.sequence(
+          ARAN.build.sequence(
             [expression1, expression2]) :
           expression2
       };
       cut["$"+key+"after"] = (expression1) => {
         const expression2 = traps[key]();
         return expression2 ?
-          Build.get(
-            Build.array([expression1, expression2]),
-            Build.primitive(0)) :
+          ARAN.build.get(
+            ARAN.build.array([expression1, expression2]),
+            ARAN.build.primitive(0)) :
           expression1;
       };
     });
@@ -123,7 +122,7 @@ module.exports = (pointcut) => {
     name,
     Escape(name));
 
-  cut.Try = (statements1, statements2, statements3) => Build.Try(
+  cut.Try = (statements1, statements2, statements3) => ARAN.build.Try(
     ArrayLite.concat(
       inform(traps.enter("try")),
       statements1,
@@ -155,39 +154,39 @@ module.exports = (pointcut) => {
   // Consumers //
   ///////////////
 
-  cut.write = (identifier, expression) => Build.write(
+  cut.write = (identifier, expression) => ARAN.build.write(
     sanitize(identifier),
     traps.write(identifier, expression));
 
-  cut.Declare = (kind, identifier, expression) => Build.Declare(
+  cut.Declare = (kind, identifier, expression) => ARAN.build.Declare(
     kind,
     sanitize(identifier),
     traps.declare(kind, identifier, expression));
 
-  cut.Return = (expression) => Build.Return(
+  cut.Return = (expression) => ARAN.build.Return(
     traps.return(expression));
 
-  cut.eval = (expression) => Build.eval(
+  cut.eval = (expression) => ARAN.build.eval(
     traps.eval(expression));
 
-  cut.With = (expression, statements) => Build.With(
+  cut.With = (expression, statements) => ARAN.build.With(
     traps.with(expression),
     ArrayLite.concat(
       inform(traps.enter("with")),
       statements,
       inform(traps.leave("with"))));
 
-  cut.Throw = (expression) => Build.Throw(
+  cut.Throw = (expression) => ARAN.build.Throw(
     traps.throw(expression));
 
-  cut.While = (expression, statements) => Build.While(
+  cut.While = (expression, statements) => ARAN.build.While(
     traps.test(expression),
     ArrayLite.concat(
       inform(traps.enter("while")),
       statements,
       inform(traps.leave("while"))));
 
-  cut.If = (expression, statements1, statements2) => Build.If(
+  cut.If = (expression, statements1, statements2) => ARAN.build.If(
     traps.test(expression),
     ArrayLite.concat(
       inform(traps.enter("then")),
@@ -198,14 +197,14 @@ module.exports = (pointcut) => {
       statements2,
       inform(traps.leave("else"))));
 
-  cut.conditional = (expression1, expression2, expression3) => Build.conditional(
+  cut.conditional = (expression1, expression2, expression3) => ARAN.build.conditional(
     traps.test(expression1),
     expression2,
     expression3);
 
   cut.Switch = (clauses) => ArrayLite.concat(
     inform(traps.enter("switch")),
-    Build.Switch(
+    ARAN.build.Switch(
       clauses.map((clause) => [
         traps.test(clause[0]),
         clause[1]])),
