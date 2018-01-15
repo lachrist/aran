@@ -91,12 +91,6 @@ exports.informers = {
     primitive],
   program: [
     primitive],
-  arrival: [
-    primitive,
-    primitive,
-    () => ARAN.build.get(
-      ARAN.build.read("arguments"),
-      ARAN.build.primitive("length"))],
   label: [
     primitive],
   continue: [

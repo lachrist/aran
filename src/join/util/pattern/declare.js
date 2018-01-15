@@ -6,7 +6,7 @@ const transformerss = {
   var: {
     expression: (expression) => ARAN.build.Statement(expression),
     binding: (identifier, expression) => {
-      ARAN.context.hoisted[ARAN.context.hoisted.length] = ARAN.cut.Declare(
+      ARAN.hoisted[ARAN.hoisted.length] = ARAN.cut.Declare(
         "var",
         identifier,
         ARAN.cut.primitive(void 0));

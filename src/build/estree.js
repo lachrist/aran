@@ -5,7 +5,7 @@ const ArrayLite = require("array-lite");
 // Program //
 /////////////
 
-exports.PROGRAM = (strict, statements) => ({
+exports.PROGRAM = (strict, statements, expression) => ({
   type: "Program",
   body: ArrayLite.concat(
     (
@@ -17,7 +17,11 @@ exports.PROGRAM = (strict, statements) => ({
             type: "Literal",
             value: "use strict"}}] :
       []),
-    statements)});
+    statements,
+    [
+      {
+        type: "ExpressionStatement",
+        expression: expression}])});
 
 ////////////////
 // Expression //

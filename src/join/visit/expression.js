@@ -325,7 +325,7 @@ exports.CallExpression = (node) => (
         node.callee.type === "MemberExpression" ?
         Interim.read("this") :
         (
-          ARAN.context.strict ?
+          node.AranStrict ?
           ARAN.cut.primitive(void 0) :
           ARAN.cut.$builtin("global"))),
       ARAN.build.sequence(

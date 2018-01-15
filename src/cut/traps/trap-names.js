@@ -1,4 +1,19 @@
 
+// Matched with leave():
+//   - program(boolean)
+//   - block()
+//   - try()
+//   - catch(value)
+//   - with(value)
+//   - label(identifier)
+//   - finally()
+//   - switch()
+//   - loop()
+//
+// Matched with return(value):
+//   - 
+
+
 module.exports = [
   // Combiners //
   "object",
@@ -17,7 +32,7 @@ module.exports = [
   "builtin",
   "this",
   "arguments",
-  "error",
+  "catch",
   "primitive",
   "regexp",
   "closure",
@@ -30,11 +45,14 @@ module.exports = [
   "return",
   "eval",
   // Informers //
-  "enter",
-  "leave",
   "program",
-  "arrival",
   "label",
+  "block",
+  "switch",
+  "loop",
+  "try",
+  "finally",
+  "leave",
   "continue",
   "break",
   "copy",

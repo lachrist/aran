@@ -6,9 +6,11 @@ const stringify = JSON.stringify;
 // Program //
 /////////////
 
-exports.PROGRAM = (strict, statements) => (
+exports.PROGRAM = (strict, statements, expression) => (
   (strict ? "\"use strict\";" : "") + 
-  ArrayLite.join(statements, ""));
+  ArrayLite.join(statements, "")) +
+  expression +
+  ";";
 
 ////////////////
 // Expression //
@@ -21,7 +23,7 @@ exports.write = (identifier, expression) => (
   identifier +
   "=" +
   expression +
-  ")");  
+  ")");
 
 exports.array = (expressions) => (
   "[" +

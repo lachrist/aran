@@ -12,7 +12,7 @@ ArrayLite.each(
         const array = [];
         for (var index=0; index<arguments.length; index++)
           array[index] = TrapArguments[category][key][index](arguments[index]);
-        array[index] = ARAN.build.primitive(ARAN.index);
+        array[index] = ARAN.build.primitive(ARAN.parent.AranIndex);
         return ARAN.build.invoke(
           ARAN.build.read(ARAN.namespace),
           ARAN.build.primitive(key),

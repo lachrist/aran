@@ -19,10 +19,18 @@ exports.BlockStatement = (node) => ARAN.cut.Block(
       node.body,
       Visit.Statement)));
 
-exports.ExpressionStatement = (node) => ArrayLite.concat(
-  ARAN.build.Statement(
-      Visit.expression(node.expression)),
-  ARAN.cut.$Drop0());
+exports.ExpressionStatement = (node) => (
+  node.expression.AranLast ?
+  ArrayLite.concat(
+    Aran.cut.$Drop0(),
+    ARAN.build.Statement(
+      Interim.write(
+        "last",
+        Visit.expression(node.expression)))) :
+  ArrayLite.concat(
+    ARAN.build.Statement(
+        Visit.expression(node.expression)),
+    ARAN.cut.$Drop0());
 
 exports.IfStatement = (node) => ARAN.cut.If(
   Visit.expression(node.test),
@@ -247,7 +255,7 @@ exports.ForOfStatement = (node) => ARAN.cut.Block(
     ARAN.cut.While(
       ARAN.cut.unary(
         "!",
-        ARAN.cut.get(        
+        ARAN.cut.get(
           Interim.hoist(
             "step",
             ARAN.cut.invoke(
@@ -270,11 +278,10 @@ exports.ForOfStatement = (node) => ARAN.cut.Block(
 exports.DebuggerStatement = (node) => ARAN.build.Debugger();
 
 exports.FunctionDeclaration = (node) => {
-  ARAN.context.hoisted.push(
-    ARAN.cut.Declare(
-      "var",
-      node.id.name,
-      Util.closure(node)));
+  ARAN.hoisted[ARAN.hoisted.length] = ARAN.cut.Declare(
+    "var",
+    node.id.name,
+    Util.closure(node));
   return [];
 };
 

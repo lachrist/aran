@@ -1,16 +1,15 @@
 
 const ArrayLite = require("array-lite");
 const Interim = require("../interim.js");
-const Context = require("../context.js");
 const Visit = require("../visit");
 const Util = require("./index.js");
 
 exports.closure = (node) => {
-  const temporary = ARAN.context;
-  ARAN.context = Context(!node.expression && node.body.body[0]);
+  const temporary = ARAN.hoisted;
+  ARAN.hoisted = [];
   const statements1 = ArrayLite.concat(
     ARAN.cut.$Arrival(
-      ARAN.context.strict,
+      node.AranStrict,
       node.type === "ArrowFunctionExpression"),
     (
       node.type === "ArrowFunctionExpression" ?
@@ -90,14 +89,13 @@ exports.closure = (node) => {
           Visit.Statement)),
         ARAN.cut.Return(
           ARAN.cut.primitive(void 0))));
-  debugger;
   const expression = ARAN.cut.closure(
-    ARAN.context.strict,
+    node.AranStrict,
     ArrayLite.concat(
       statements1,
-      ArrayLite.flaten(ARAN.context.hoisted),
+      ArrayLite.flaten(ARAN.hoisted),
       statements2));
-  ARAN.context = temporary;
+  ARAN.hoisted = temporary;
   return (
     node.id ?
     ARAN.cut.apply(

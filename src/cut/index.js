@@ -24,60 +24,13 @@ module.exports = (pointcut) => {
 
   const cut = {};
 
-  ///////////////
-  // Combiners //
-  ///////////////
+  /////////////////
+  // Compilation //
+  /////////////////
 
-  ArrayLite.each(
-    [
-      "object",
-      "array",
-      "get",
-      "set",
-      "delete",
-      "enumerate",
-      "invoke",
-      "apply",
-      "construct",
-      "unary",
-      "binary"],
-    (key) => {
-      cut[key] = traps[key];
-    });
-
-  ///////////////
-  // Informers //
-  ///////////////
-
-  cut.PROGRAM = (strict, statements) => ARAN.build.PROGRAM(
-    strict,
-    ArrayLite.concat(
-      inform(traps.program(strict)),
-      statements));
-
-  cut.Label = (label, statements) => ArrayLite.concat(
-    inform(traps.label(label)),
-    ARAN.build.Label(label, ArrayLite.concat(
-      inform(traps.enter("label")),
-      statements,
-      inform(traps.leave("label")))));
-
-  cut.Break = (label) => ArrayLite.concat(
-    inform(traps.break(label)),
-    ARAN.build.Break(label));
-
-  cut.Continue = (label) => ArrayLite.concat(
-    inform(traps.continue(label)),
-    ARAN.build.Continue(label));
-
-  cut.Block = (statements) => ARAN.build.Block(
-    ArrayLite.concat(
-      inform(traps.enter("block")),
-      statements,
-      inform(traps.leave("block"))));
-
-  cut.$Arrival = (strict, arrow) => inform(
-    traps.arrival(strict, arrow, null));
+  cut.$builtin = (name) => traps.builtin(
+    name,
+    Escape(name));
 
   ArrayLite.each(
     [0,1,2,3],
@@ -109,34 +62,117 @@ module.exports = (pointcut) => {
     });
 
   ///////////////
+  // Combiners //
+  ///////////////
+
+  ArrayLite.each(
+    [
+      "object",
+      "array",
+      "get",
+      "set",
+      "delete",
+      "enumerate",
+      "invoke",
+      "apply",
+      "construct",
+      "unary",
+      "binary"],
+    (key) => {
+      cut[key] = traps[key];
+    });
+
+  ///////////////
+  // Informers //
+  ///////////////
+
+  cut.PROGRAM = (strict, statements, expression) => ARAN.build.PROGRAM(
+    strict,
+    ArrayLite.concat(
+      inform(traps.program(strict)),
+      statements),
+    traps.last(expression));
+
+  cut.Label = (label, statements) => ArrayLite.concat(
+    inform(traps.label(label)),
+    ARAN.build.Label(label, ArrayLite.concat(
+      statements,
+      inform(traps.leave("label")))));
+
+  cut.Break = (label) => ArrayLite.concat(
+    inform(traps.break(label)),
+    ARAN.build.Break(label));
+
+  cut.Continue = (label) => ArrayLite.concat(
+    inform(traps.continue(label)),
+    ARAN.build.Continue(label));
+
+  cut.Block = (statements) => ARAN.build.Block(
+    ArrayLite.concat(
+      inform(traps.block()),
+      statements,
+      inform(traps.leave("block"))));
+
+  ///////////////
   // Producers //
   ///////////////
 
-  cut.$this = () => traps.this(null);
-
-  cut.$arguments = () => traps.arguments(null);
-
-  cut.$error = () => traps.error(null);
-
-  cut.$builtin = (name) => traps.builtin(
-    name,
-    Escape(name));
-
   cut.Try = (statements1, statements2, statements3) => ARAN.build.Try(
     ArrayLite.concat(
-      inform(traps.enter("try")),
+      inform(traps.try()),
       statements1,
       inform(traps.leave("try"))),
     ArrayLite.concat(
+      ARAN.build.Statement(
+        ARAN.build.write(
+          "error",
+          traps.catch(null))),
       inform(traps.enter("catch")),
       statements2,
       inform(traps.leave("catch"))),
     ArrayLite.concat(
-      inform(traps.enter("finally")),
+      inform(traps.finally()),
       statements3,
       inform(traps.leave("finally"))));
 
-  cut.closure = (strict, statements) => traps.closure([strict, statements]);
+  cut.closure = (strict, statements) => traps.closure(
+    [
+      strict,
+      (
+        ARAN.parent.type === "ArrowFunctionExpression" ?
+        ArrayLite.concat(
+          ARAN.build.Statement(
+            traps.this(null)),
+          inform(traps.drop0())) :
+        ARAN.build.Declare(
+          "const",
+          "self",
+          traps.declare(
+            "const",
+            "this",
+            traps.this(null)))),
+      ARAN.build.Statement(
+        ARAN.build.write(
+          "arguments",
+          (
+            ARAN.parent.type === "ArrowFunctionExpression" ?
+            traps.arguments(null) :
+            traps.declare(
+              "let",
+              "arguments",
+              traps.arguments(null)))))
+        ARAN.build.Statement(
+          ARAN.build.write(
+            "arguments",
+            traps.declare(
+              "let",
+              "arguments",
+              ))))
+      ARAN.build.Statement(
+        ARAN.build.write(
+          "arguments",
+          traps.arguments(null)))
+      statements]);
 
   cut.read = (identifier) => traps.read(
     identifier,
@@ -172,7 +208,6 @@ module.exports = (pointcut) => {
   cut.With = (expression, statements) => ARAN.build.With(
     traps.with(expression),
     ArrayLite.concat(
-      inform(traps.enter("with")),
       statements,
       inform(traps.leave("with"))));
 
@@ -182,9 +217,9 @@ module.exports = (pointcut) => {
   cut.While = (expression, statements) => ARAN.build.While(
     traps.test(expression),
     ArrayLite.concat(
-      inform(traps.enter("while")),
+      inform(traps.enter("loop")),
       statements,
-      inform(traps.leave("while"))));
+      inform(traps.leave("loop"))));
 
   cut.If = (expression, statements1, statements2) => ARAN.build.If(
     traps.test(expression),

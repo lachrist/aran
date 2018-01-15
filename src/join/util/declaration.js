@@ -1,6 +1,5 @@
 
 const ArrayLite = require("array-lite");
-const Context = require("../context.js");
 const Visit = require("../visit");
 const Util = require("./index.js");
 
@@ -12,7 +11,14 @@ exports.Declaration = (node) => ArrayLite.flaten(
       Util.Declare(
         node.kind,
         declarator.id,
-        Visit.expression(declarator.init)) :
+        (
+          declarator.init.AranLast ?
+          Interim.write(
+            "last",
+            ARAN.cut.$drop0before(
+              Aran.cut.$copy0after(
+                Visit.expression(declarator.init)))) :
+          Visit.expression(declarator.init))) :
       (
         temporary = ARAN.cut.Declare(
           node.kind,
@@ -21,6 +27,6 @@ exports.Declaration = (node) => ArrayLite.flaten(
         (
           node.kind === "var" ?
           (
-            ARAN.context.hoisted[ARAN.context.hoisted.length] = temporary,
+            ARAN.hoisted[ARAN.hoisted.length] = temporary,
             []) :
           temporary)))));

@@ -12,26 +12,45 @@
 const ArrayLite = require("array-lite");
 const Escape = require("../escape.js");
 const Visit = require("./visit");
-const Context = require("./context.js");
+const Last = require("./last.js");
 
 const keys = Object.keys;
 
-module.exports = (node) => {
-  node.__min__ = ++ARAN.counter;
-  ARAN.index = ARAN.counter;
-  ARAN.context = Context(node.body[0]);
+module.exports = (node, strict) => {
+  Last(node);
+  node.AranParent = null;
+  node.AranStrict = (
+    strict ||
+    (
+      node.body.length &&
+      node.body[0].type === "ExpressionStatement" &&
+      node.body[0].expression.type === "Literal" &&
+      node.body[0].expression.value === "use strict"));
+  node.AranIndex = ++ARAN.counter;
+  if (ARAN.nodes)
+    ARAN.nodes[ARAN.counter] = node;
+  ARAN.hoisted = [];
+  ARAN.parent = node;
   const statements = ArrayLite.flaten(
     node.body.map(Visit.Statement));
-  return ARAN.build.PROGRAM(
-    ARAN.context.strict,
+  const result = ARAN.cut.PROGRAM(
+    node.AranStrict,
     ArrayLite.concat(
       ArrayLite.flaten(
         ArrayLite.map(
           keys(builtins),
           save)),
+      Interim.Declare(
+        "last",
+        ARAN.cut.primitive(void 0)),
       ArrayLite.flaten(
-        ARAN.context.hoisted),
-      statements));
+        ARAN.hoisted),
+      statements),
+    Interim.read("last"));
+  delete ARAN.hoisted;
+  delete ARAN.parent;
+  node.AranMaxIndex = ARAN.counter;
+  return result;
 };
 
 const builtins = {
