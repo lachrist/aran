@@ -213,21 +213,27 @@ exports.Label = (label, statements) => [
 exports.Break = (label) => [
   (
     "break " +
-    (label||"") +
-    ";")];
-
-exports.Continue = (label) => [
-  (
-    "continue " +
-    (label||"") +
+    label +
     ";")];
 
 exports.While = (expression, statements) => [
   (
-    "while(" +
+    "BreakLoop:while(" +
     expression +
-    "){" +
+    ")ContinueLoop:{" +
     ArrayLite.join(statements, "") +
+    "}")];
+
+exports.For = (statements1, expression1, expression2, statements2) => [
+  (
+    "BreakLoop:{" +
+    ArrayLite.join(statements1, "") +
+    "for(;" +
+    expression1 +
+    ";" +
+    expression2 +
+    ")ContinueLoop:{" +
+    ArrayLite.join(statements2, "") +
     "}")];
 
 exports.Debugger = () => [
@@ -236,7 +242,7 @@ exports.Debugger = () => [
 
 exports.Switch = (clauses) => [
   (
-    "switch(true){" +
+    "BreakLoop:switch(true){" +
     ArrayLite.join(
       ArrayLite.map(
         clauses,

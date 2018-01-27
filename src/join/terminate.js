@@ -1,6 +1,5 @@
 
-const match = (node) => node.AranLast = true;
-const clash = (node) => false;
+const stop = (node) => false;
 const body = (node) => {
   visit(node.body);
   return true;
@@ -11,14 +10,14 @@ const visit = (node) => visitors[node.type](node);
 module.exports = visit;
 
 const visitors = {};
-visitors.EmptyStatement = clash;
+visitors.EmptyStatement = stop;
 visitors.BlockStatement = (node) => {
   for (let index = node.body.length-1; index >= 0; index--)
     if (visit(node.body[index]))
       return true;
   return false;
 };
-visitors.ExpressionStatement = node.expression.AranLast = true;
+visitors.ExpressionStatement = node.expression.AranTerminate = true;
 visitors.IfStatement = (node) => {
   visit(node.consequent);
   if (node.alternate)
@@ -26,8 +25,8 @@ visitors.IfStatement = (node) => {
   return true;
 };
 visitors.LabeledStatement = (node) => visit(node.body);
-visitors.BreakStatement = clash;
-visitors.ContinueStatement = clash;
+visitors.BreakStatement = stop;
+visitors.ContinueStatement = stop;
 visitors.WithStatement = body;
 visitors.SwitchStatement = (node) {
   for (let index1 = 0; index1 < node.cases.length; index1++) {
@@ -50,11 +49,11 @@ visitors.DoWhileStatement = body;
 visitors.ForStatement = body;
 visitors.ForInStatement = body;
 visitors.ForOfStatement = body;
-visitors.DebuggerStatement = clash;
-visitors.FunctionDeclaration = clash;
+visitors.DebuggerStatement = stop;
+visitors.FunctionDeclaration = stop;
 visitors.VariableDeclaration = (node) => {
   for (let index = node.declarations.length-1; index >= 0; index--)
     if (node.declarations[index].init)
-      return node.declarations[index].init = true;
+      return node.declarations[index].init.AranTerminate = true;
   return false;
 };

@@ -1,5 +1,6 @@
 
 const ArrayLite = require("array-lite");
+const Escape = require("../../escape.js");
 const Visit = require("../visit");
 const Util = require("./index.js");
 
@@ -12,12 +13,12 @@ exports.Declaration = (node) => ArrayLite.flaten(
         node.kind,
         declarator.id,
         (
-          declarator.init.AranLast ?
-          Interim.write(
-            "last",
-            ARAN.cut.$drop0before(
-              Aran.cut.$copy0after(
-                Visit.expression(declarator.init)))) :
+          declarator.init.AranTerminate ?
+          ARAN.build.write(
+            Escape("terminate"),
+            Aran.cut.$copy(
+              0,
+              Visit.expression(declarator.init))) :
           Visit.expression(declarator.init))) :
       (
         temporary = ARAN.cut.Declare(

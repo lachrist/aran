@@ -5,13 +5,14 @@ const Escape = require("../../../escape.js");
 const identity = (argument) => argument;
 const primitive = (primitive) => ARAN.build.primitive(primitive);
 const array = (expressions) => ARAN.build.array(expressions);
+const object = (expressions) => ARAN.build.array(
+  ArrayLite.map(
+    expressions,
+    array));
 
 exports.combiners = {
   object: [
-    (expressions) => ARAN.build.array(
-      ArrayLite.map(
-        expressions,
-        array))],
+    object],
   array: [
     array],
   get: [
@@ -45,25 +46,25 @@ exports.combiners = {
 exports.producers = {
   read: [
     primitive,
-    (identifier) => ARAN.build.read(identifier)],
+    identity],
   discard: [
     primitive,
-    (identifier) => ARAN.build.discard(identifier)],
+    identity],
   builtin: [
     primitive,
-    (identifier) => ARAN.build.read(identifier)],
+    identity],
   this: [
-    () => ARAN.build.read("this")],
+    identity],
   arguments: [
-    () => ARAN.build.read("arguments")],
+    identity],
   error: [
-    () => ARAN.build.read("error")],
+    identity],
   primitive: [
     primitive],
   regexp: [
-    (array) => ARAN.build.regexp(array[0], array[1])],
+    identity],
   closure: [
-    (array) => ARAN.build.closure(array[0], array[1])]};
+    identity]};
 
 exports.consumers = {
   declare: [
@@ -82,16 +83,18 @@ exports.consumers = {
   return: [
     identity],
   eval: [
+    identity],
+  terminate: [
     identity]};
 
 exports.informers = {
-  enter: [
+  try: [],
+  finally: [],
+  block: [],
+  program: [],
+  label: [
     primitive],
   leave: [
-    primitive],
-  program: [
-    primitive],
-  label: [
     primitive],
   continue: [
     primitive],
@@ -99,5 +102,4 @@ exports.informers = {
     primitive],
   copy: [
     primitive],
-  drop: [
-    primitive]};
+  drop: []};

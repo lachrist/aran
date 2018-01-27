@@ -10,7 +10,7 @@ module.exports = (transformers, pairs) => {
     const right = pairs[index1][1];
     if (left === null) {
       result[result.length] = transformers.expression(
-        ARAN.cut.$drop0after(right));
+        ARAN.cut.$drop(right));
     } else if (left.type === "Identifier") {
       result[result.length] = transformers.binding(left.name, right);
     } else if (left.type === "MemberExpression") {
@@ -27,15 +27,15 @@ module.exports = (transformers, pairs) => {
             "===",
             Interim.hoist(
               "default"+index1,
-              ARAN.cut.$copy0after(right)),
+              ARAN.cut.$copy(0, right)),
             ARAN.cut.primitive(void 0)),
-          ARAN.cut.$drop0before(
+          ARAN.cut.$drop(
             Visit.expression(left.right)),
           Interim.read("default"+index1))];
     } else if (left.type === "ArrayPattern") {
       if (left.elements.length === 0) {
         result[result.length] = transformers.expression(
-          ARAN.cut.$drop0after(right));
+          ARAN.cut.$drop(right));
       } else {
         result[result.length] = transformers.expression(
           Interim.hoist(
@@ -50,7 +50,8 @@ module.exports = (transformers, pairs) => {
             left.elements[index2],
             ARAN.cut.get(
               ARAN.cut.invoke(
-                ARAN.cut.$copy0before(
+                ARAN.cut.$copy(
+                  0,
                   Interim.read("iterator"+index1)),
                 ARAN.cut.primitive("next"),
                 []),
@@ -62,7 +63,6 @@ module.exports = (transformers, pairs) => {
             ARAN.cut.apply(
               ARAN.cut.$builtin("rest"),
               [
-                ARAN.cut.array([]),
                 Interim.read("iterator"+index1)])] :
           [
             left.elements[last],
@@ -76,7 +76,7 @@ module.exports = (transformers, pairs) => {
     } else if (left.type === "ObjectPattern") {
       if (!left.properties.length) {
         result[result.length] = transformers.expression(
-          ARAN.cut.$drop0after(right));
+          ARAN.cut.$drop(right));
       } else {
         result[result.length] = transformers.expression(
           Interim.hoist(
@@ -89,7 +89,8 @@ module.exports = (transformers, pairs) => {
               (
                 index2 === left.properties.length - 1 ?
                 Interim.read("object"+index1) :
-                ARAN.cut.$copy0before(
+                ARAN.cut.$copy(
+                  0,
                   Interim.read("object"+index1))),
               Util.property(
                 {

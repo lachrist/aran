@@ -12,12 +12,12 @@
 const ArrayLite = require("array-lite");
 const Escape = require("../escape.js");
 const Visit = require("./visit");
-const Last = require("./last.js");
+const Terminate = require("./terminate.js");
 
 const keys = Object.keys;
 
 module.exports = (node, strict) => {
-  Last(node);
+  Terminate(node);
   node.AranParent = null;
   node.AranStrict = (
     strict ||
@@ -86,6 +86,10 @@ const builtins = {
         "let",
         "step",
         ARAN.build.primitive(void 0)),
+      ARAN.build.Declare(
+        "let",
+        "array",
+        ARAN.build.array([])),
       ARAN.build.While(
         ARAN.build.unary(
           "!",
@@ -94,29 +98,22 @@ const builtins = {
               "step",
               ARAN.build.invoke(
                 ARAN.build.get(
-                  ARAN.build.read(
-                    "arguments"),
+                  ARAN.build.read("arguments"),
                   ARAN.build.primitive(1)),
                 ARAN.build.primitive("next"),
                 [])),
             ARAN.build.primitive("done"))),
         ARAN.build.Statement(
           ARAN.build.set(
+            ARAN.build.read("array"),
             ARAN.build.get(
-              ARAN.build.read("arguments"),
-              ARAN.build.primitive(0)),
-            ARAN.build.get(
-              ARAN.build.get(
-                ARAN.build.read("arguments"),
-                ARAN.build.primitive(0)),
+              ARAN.build.read("array"),
               ARAN.build.primitive("length")),
             ARAN.build.get(
               ARAN.build.read("step"),
               ARAN.build.primitive("value"))))),
       ARAN.build.Return(
-        ARAN.build.get(
-          ARAN.build.read("arguments"),
-          ARAN.build.primitive(0)))))};
+        ARAN.build.read("array"))))};
 
 const save = (key) => ARAN.build.If(
   ARAN.build.binary(

@@ -29,8 +29,8 @@ const stypes = [
   "IfStatement",
   "LabeledStatement",
   "BreakStatement",
-  "ContinueStatement",
   "WhileStatement",
+  "ForStatement",
   "DebuggerStatement",
   "SwitchStatement",
   "WithStatement"
@@ -101,7 +101,7 @@ exports.primitive = (value) => {
 exports.null = (value) => {
   if (value !== null)
     throw new Error("[null] not null: "+Utio.inspect(value))
-}
+};
 
 exports.boolean = (value) => {
   if (typeof value !== "boolean")

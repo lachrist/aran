@@ -59,28 +59,57 @@ exports.object = (properties) => ({
     value: property[1]
   }))});
 
-exports.closure = (strict, statements) => ({
-  type: "FunctionExpression",
-  generator: false,
-  async: false,
-  expression: false,
-  id: null,
-  params: [],
-  defaults: [],
-  rest: null,
-  body: {
-    type: "BlockStatement",
-    body: ArrayLite.concat(
-      (
-        strict ?
-        [
-          {
-            type: "ExpressionStatement",
-            expression: {
-              type: "Literal",
-              value: "use strict"}}] :
-        []),
-      statements)}});
+exports.closure = (identifier, strict, statements) => ({
+  type: "AssignmentExpression",
+  operator: "=",
+  left: {
+    type: "Identifier",
+    name: identifier },
+  right: {
+    type: "FunctionExpression",
+    generator: false,
+    async: false,
+    expression: false,
+    id: null,
+    params: [],
+    defaults: [],
+    rest: null,
+    body: {
+      type: "BlockStatement",
+      body: ArrayLite.concat(
+        (
+          strict ?
+          [
+            {
+              type: "ExpressionStatement",
+              expression: {
+                type: "Literal",
+                value: "use strict"}}] :
+          []),
+        statements)}}});
+
+// exports.closure = (strict, statements) => ({
+//   type: "FunctionExpression",
+//   generator: false,
+//   async: false,
+//   expression: false,
+//   id: null,
+//   params: [],
+//   defaults: [],
+//   rest: null,
+//   body: {
+//     type: "BlockStatement",
+//     body: ArrayLite.concat(
+//       (
+//         strict ?
+//         [
+//           {
+//             type: "ExpressionStatement",
+//             expression: {
+//               type: "Literal",
+//               value: "use strict"}}] :
+//         []),
+//       statements)}});
 
 exports.primitive = (primitive) => (
   primitive === void 0 ?
@@ -273,28 +302,52 @@ exports.Label = (label, statements) => [
 exports.Break = (label) => [
   {
     type:"BreakStatement",
-    label: label ?
-      {
-        type: "Identifier",
-        name: label} :
-      null}];
-
-exports.Continue = (label) => [
-  {
-    type:"ContinueStatement",
-    label: label ?
-      {
-        type: "Identifier",
-        name: label} :
-      null}];
+    label: {
+      type: "Identifier",
+      name: label}}];
 
 exports.While = (expression, statements) => [
   {
-    type: "WhileStatement",
-    test: expression,
+    type: "LabeledStatement",
+    label: {
+      type: "Identifier",
+      name: "BreakLoop" },
+    body: {
+      type: "WhileStatement",
+      test: expression,
+      body: {
+        type: "LabeledStatement",
+        label: {
+          type: "Identifier",
+          name: "ContinueLoop"},
+        body: {
+          type: "BlockStatement",
+          body: statements}}}}];
+
+exports.For = (statements1, expression1, expression2, statements2) => [
+  {
+    type: "LabeledStatement",
+    label: {
+      type: "Identifier",
+      name: "BreakLoop"},
     body: {
       type: "BlockStatement",
-      body: statements}}];
+      body: ArrayLite.concat(
+        statements1,
+        [
+          {
+            type: "ForStatement",
+            init: null,
+            test: expression1,
+            update: expression2,
+            body: {
+              type: "LabeledStatement",
+              label: {
+                type: "Identifier",
+                name: "ContinueLoop"},
+              body: {
+                type: "BlockStatement",
+                body: statements2 }}}])}}}];
 
 exports.Debugger = () => [
   {
@@ -302,15 +355,20 @@ exports.Debugger = () => [
 
 exports.Switch = (clauses) => [
   {
-    type: "SwitchStatement",
-    discriminant: {
-      type: "Literal",
-      value: true
-    },
-    cases: clauses.map((clause) => ({
-      type: "SwitchCase",
-      test: clause[0],
-      consequent: clause[1]}))}];
+    type: "LabeledStatement",
+    label: {
+      type: "Identifier",
+      name: "BreakLoop"},
+    body: {
+      type: "SwitchStatement",
+      discriminant: {
+        type: "Literal",
+        value: true
+      },
+      cases: clauses.map((clause) => ({
+        type: "SwitchCase",
+        test: clause[0],
+        consequent: clause[1]}))}}];
 
 exports.With = (expression, statements) => [
   {

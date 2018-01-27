@@ -10,7 +10,7 @@
   "homepage": "http://github.com/lachrist/aran",
   "license": "MIT",
   "dependencies": {
-    "array-lite": "0.0.3"
+    "array-lite": "0.1.0"
   },
   "files": [
     "instrument.js",

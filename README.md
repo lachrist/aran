@@ -191,14 +191,18 @@ X                        | `Program` | `Strict` | `primitive` | `function` | `ob
 
 ## Transparency Concerns
 
-In the context of dynamic analysis, it is crucial to prevent the program under analysis from interacting with the analysis.
-If it is not the case, the conclusions drawn during the analysis may no longer hold for the original program.
-In other words, the analysis (meta) layer should remain *transparent* from the program (base) layer.
-There are several known transparency issues that Aran does not handle for you:
 
 * *Namespace access*:
   
   In the original version of the program `global[namespace]` should not be defined.
+
+
+## Known Transparency Breakage
+
+In the context of dynamic analysis, it is crucial to prevent the program under analysis from interacting with the analysis.
+If such interaction happens, the conclusions drawn during the analysis may no longer hold for the original program.
+In other words, the analysis (meta) layer should remain *transparent* from the program (base) layer.
+There are several known transparency issues that Aran does not handle for you:
 
 * *Code reificaton*:
   JavaScript offers means to have a view of the code.
@@ -210,40 +214,59 @@ There are several known transparency issues that Aran does not handle for you:
   assert(identity.toString() === code);
   ```
 
-## Known unsuported language features:
+* *`typeof` in the temporal deadzone*.
+  Aran does not hoist `let` and `const` declaration so it cannot make the difference between an undeclared variable and undefined variable.
+  This approximiation simplifies both aran and analyses modeling the environment.
+  However it leads to transparency breakage when `typeof` is involved.
+  Normally the code below should fail at the `typeof` line but it does not after aran compilation.
+  ```js
+  {
+    typeof x;
+    const x;
+  }
+  ```
+  ```js
+  {
+    META.unary("typeof", (function () {
+      try { return META.read(x) } catch (error) {}
+      return META.primitive(void 0);
+    } ()));
+    const x;
+  }
+  ```
 
-* `typeof` in the temporal deadzone.
-Aran does not hoist `let` and `const` declaration so it cannot make the difference between an undeclared variable and undefined variable.
-This approximiation simplifies both aran and analyses modeling the environment however it leads to transparency breakage when `typeof` is involved.
-Normally the code below should fail at the `typeof` line but it does not after aran compilation.
+* The (evil) `with` construct.
+Aran protect the following identifiers: `this`, `$this`, `arguments`, `$arguments`, `error`, `$error`.
+Also, Aran consider that reading a variable from the environment is transparent.
+This fair assumption can be broken when the object passed to the `with` construct is a proxy or contains getters.
+
+* Global object:
 
 ```
-{
-  typeof x;
-  const x;
-}
+var error = "foo";
+if (error !== "foo")
+  throw "This will not thrown!";
+if (global.error !== "foo")
+  throw "But this will...";
 ```
 
 ```
-{
-  meta.unary("typeof", (function () {
-    try { return meta.read(x) } catch (error) {}
-    return meta.primitive(void 0);
-  } ()));
-  const x;
-}
+global.arguments = "foo";
+var arrow = () => arguments;
+
 ```
+
+## Known unsported ECMAScript features
 
 * ES2015 modules: native JS modules arrived, we did not even to begin to think about their implication for Aran.
 
 * ES2015 classes: they should be desugared and trigger pre-existing traps.
 
-* iterators: no support for generator functions (i.e. `function*`, `yield` and `yield*`) and the `for ... of` loop.
+* Generator functions (i.e. the keywords: `function*`, `yield` and `yield*`).
 Would be nice to desugar generator functions into regular function returning an explicit iterator.
-We could also desugar the `for ... of` into a regular loop and trigger the usual `test` trap.
 
-* promises: no support for asynchronous functions and the await keyword, promises themselves requires no specific threatment.
-Would be nice to desugar await into explicit promises nesting.
+* Asynchronous functions (i.e. the kewords: `async` and `await`).
+Would be nice to desugar `await` into explicit promises nesting.
 
 * `arguments`: as there is no dedicated language structure involved with the use of `arguments`, code using the arguments object can be instrumented.
 However there is no support to account for the crazinest of this feature.
@@ -263,12 +286,5 @@ console.log(f(1,2,3))
 { '0': 'foo', '1': 2, '2': 3 }
 ```
 
-* destructuring assignment: should be desugared into standard assignment which should trigger the `write` trap. 
+* Template literals
 
-* arrow: should be easy to support.
-
-* default argument values: should be easy to support.
-
-* trailing arguments: should be easy to support.
-
-* trailing parameters: should be easy to support.
