@@ -7,7 +7,11 @@ const body = (node) => {
 
 const visit = (node) => visitors[node.type](node);
 
-module.exports = visit;
+module.exports = (node) => {
+  for (var index = node.body.length-1; index>=0; index--)
+    if (visit(node.body[index]))
+      return;
+};
 
 const visitors = {};
 visitors.EmptyStatement = stop;
@@ -17,7 +21,7 @@ visitors.BlockStatement = (node) => {
       return true;
   return false;
 };
-visitors.ExpressionStatement = node.expression.AranTerminate = true;
+visitors.ExpressionStatement = (node) => node.expression.AranTerminate = true;
 visitors.IfStatement = (node) => {
   visit(node.consequent);
   if (node.alternate)
@@ -28,8 +32,8 @@ visitors.LabeledStatement = (node) => visit(node.body);
 visitors.BreakStatement = stop;
 visitors.ContinueStatement = stop;
 visitors.WithStatement = body;
-visitors.SwitchStatement = (node) {
-  for (let index1 = 0; index1 < node.cases.length; index1++) {
+visitors.SwitchStatement = (node) => {
+  for (let index1 = 0; index1 < node.cases.length; index1++)
     for (let index2 = node.cases[index1].consequent.length-1; index2 >= 0; index2--)
       if (visit(node.cases[index1].consequent[index2]))
         break;

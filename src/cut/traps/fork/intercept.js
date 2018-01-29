@@ -4,9 +4,9 @@ const TrapArguments = require("./trap-arguments");
 
 const keys = Object.keys;
 
-ArrayLite.each(
+ArrayLite.forEach(
   ["consumers", "producers", "informers", "combiners"],
-  (category) => ArrayLite.each(
+  (category) => ArrayLite.forEach(
       keys(TrapArguments[category]),
       (key) => exports[key] = function () {
         const array = [];

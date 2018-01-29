@@ -1,6 +1,4 @@
 
-var parseInt = global.parseInt;
-
 exports.join = function (array, separator) {
   if (array.length === 0)
     return "";
@@ -14,7 +12,8 @@ exports.join = function (array, separator) {
 };
 
 exports.flaten = function (array1) {
-  var result=[];
+  var result = [];
+  var length = 0
   var index1 = 0;
   var length1 = array1.length;
   while (index1 < length1) {
@@ -22,22 +21,11 @@ exports.flaten = function (array1) {
     var index2 = 0;
     var length2 = array2.length;
     while (index2 < length2) {
-      result[result.length] = array2[index2++];
+      result[length++] = array2[index2++];
     }
   }
   return result;
 };
-
-exports.prefix = function (array1, array2) {
-  var index1 = 0;
-  var length1 = array1.length;
-  while (index1 < length1) {
-    if (array1[index1] !== array2[index1++]) {
-      return false;
-    }
-  }
-  return true;
-}
 
 exports.concat = function () {
   var result = [];
@@ -54,7 +42,7 @@ exports.concat = function () {
   return result;
 };
 
-exports.any = function (array, predicate) {
+exports.some = function (array, predicate) {
   var index = 0;
   var length = array.length;
   while (index < length) {
@@ -65,7 +53,7 @@ exports.any = function (array, predicate) {
   return false;
 };
 
-exports.all = function (array, predicate) {
+exports.every = function (array, predicate) {
   var index = 0;
   var length = array.length;
   while (index < length) {
@@ -76,7 +64,7 @@ exports.all = function (array, predicate) {
   return true;
 };
 
-exports.contain = function (array, element) {
+exports.includes = function (array, element) {
   var index = 0;
   var length = array.length;
   while (index<length) {
@@ -85,6 +73,16 @@ exports.contain = function (array, element) {
     }
   }
   return false;
+};
+
+exports.reverse = function (array) {
+  var index = array.length-1;
+  var result = [];
+  var length = 0;
+  while (index >= 0) {
+    result[length++] = array[index--];
+  }
+  return result;
 };
 
 exports.map = function (array, transform) {
@@ -97,7 +95,23 @@ exports.map = function (array, transform) {
   return result;
 };
 
-exports.zipmap = function (array, transformers) {
+exports.flatenMap = function (array1, transform) {
+  var result = [];
+  var length = 0;
+  var index1 = 0;
+  var length1 = array1.length;
+  while (index1 < length1) {
+    var array2 = transform(array1[index1], index1++, array1);
+    var index2 = 0;
+    var length2 = array2.length;
+    while (index2 < length2) {
+      result[length++] = array2[index2++];
+    }
+  }
+  return result;
+}
+
+exports.zipMap = function (array, transformers) {
   var result = [];
   var index = 0;
   var length = array.length;
@@ -122,7 +136,7 @@ exports.filter = function (array, predicate) {
   return result;
 };
 
-exports.each = function (array, procedure) {
+exports.forEach = function (array, procedure) {
   var index = 0;
   var length = array.length;
   while (index < length) {
@@ -137,20 +151,60 @@ exports.reduce = function (array, accumulator, result) {
     result = accumulator(result, array[index], index++, array);
   }
   return result;
+};
+
+exports.indexOf = function (array, value) {
+  var index = 0;
+  var length = array.length;
+  while (index < length) {
+    if (array[index] === value) {
+      return index;
+    }
+    index++;
+  }
+  return -1;
+};
+
+exports.find = function (array, predicate) {
+  var index = 0;
+  var length = array.length;
+  while (index < length) {
+    if (predicate(array[index], index, array)) {
+      return array[index];
+    }
+    index++;
+  }
+};
+
+exports.findIndex = function (array, predicate) {
+  var index = 0;
+  var length = array.length;
+  while (index < length) {
+    if (predicate(array[index], index, array)) {
+      return index;
+    }
+    index++
+  }
+  return -1;
 }
 
-exports.last = function (array) {
-  return array[array.length-1];
+exports.lastIndexOf = function (array, value) {
+  var index = array.length-1;
+  while (index >= 0) {
+    if (array[index] === value) {
+      return index;
+    }
+    index--;
+  }
+  return -1;
 };
 
 exports.slice = function (array, index, length) {
   var result = [];
-  index = parseInt(index);
-  if (index !== index || index < 0) {
+  if (!index) {
     index = 0;
   }
-  length = parseInt(length);
-  if (length !== length || length > array.length) {
+  if (!length || length > array.length) {
     length = array.length
   }
   while (index < length) {

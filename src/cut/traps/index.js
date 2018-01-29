@@ -9,7 +9,7 @@ const apply = Reflect.apply;
 module.exports = (pointcut) => {
   const make = (
     isArray(pointcut) ?
-    (key) => Fork[Boolean(ArrayLite.contain(pointcut, key))][key] :
+    (key) => Fork[Boolean(ArrayLite.includes(pointcut, key))][key] :
     (
       typeof pointcut === "function" ?
       (key) => function () { return apply(
@@ -25,9 +25,9 @@ module.exports = (pointcut) => {
             null,
             arguments) } :
           Fork[Boolean(pointcut[key])][key]) :
-        Fork[false])));
+        (key) => Fork[false][key])));
   const cut = {};
-  ArrayLite.each(
+  ArrayLite.forEach(
     TrapNames,
     (name) => cut[name] = make(name));
   return cut;

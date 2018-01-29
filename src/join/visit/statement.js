@@ -6,7 +6,8 @@
 // Yet, this transformation is safe because the body of the above structure cannot be a declaration (see http://www.ecma-international.org/ecma-262/6.0/#sec-statements).
 
 const ArrayLite = require("array-lite");
-const Interim = require("../../interim.js");
+const Escape = require("../../escape.js");
+const Interim = require("../interim.js");
 const Util = require("../util");
 const Visit = require("./index.js");
 const SanitizeLabel = require("./sanitize-label.js");
@@ -14,23 +15,20 @@ const SanitizeLabel = require("./sanitize-label.js");
 exports.EmptyStatement = (node) => [];
 
 exports.BlockStatement = (node) => ARAN.cut.Block(
-  ArrayLite.flaten(
-    ArrayLite.map(
-      node.body,
-      Visit.Statement)));
+  ArrayLite.flatenMap(
+    node.body,
+    Visit.Statement));
 
 exports.ExpressionStatement = (node) => (
   node.expression.AranTerminate ?
   ArrayLite.concat(
-    Aran.cut.$Drop0(),
+    ARAN.cut.$Drop(ARAN.terminate),
     ARAN.build.Statement(
       ARAN.build.write(
-        Escape("terminate"),
+        ARAN.terminate,
         Visit.expression(node.expression)))) :
-  ArrayLite.concat(
-    ARAN.build.Statement(
-        Visit.expression(node.expression)),
-    ARAN.cut.$Drop0());
+  ARAN.cut.$drop(
+    Visit.expression(node.expression)));
 
 exports.IfStatement = (node) => ARAN.cut.If(
   Visit.expression(node.test),
@@ -70,10 +68,9 @@ exports.SwitchStatement = (node) => ArrayLite.concat(
               Interim.read("switch")),
             Visit.expression(clause.test)) :
           ARAN.cut.primitive(true)),
-        ArrayLite.flaten(
-          ArrayLite.map(
-            clause.consequent,
-            Visit.Statement))])),
+        ArrayLite.flatenMap(
+          clause.consequent,
+          Visit.Statement)])),
   ARAN.cut.$Drop0());
 
 exports.ReturnStatement = (node) => ARAN.cut.Return(
@@ -86,10 +83,9 @@ exports.ThrowStatement = (node) => ARAN.cut.Throw(
   Visit.expression(node.argument));
 
 exports.TryStatement = (node) => ARAN.cut.Try(
-  ArrayLite.flaten(
-    ArrayLite.map(
-      node.block.body,
-      Visit.Statement)),
+  ArrayLite.flatenMap(
+    node.block.body,
+    Visit.Statement),
   (
     node.handler ?
     ArrayLite.concat(
@@ -98,22 +94,20 @@ exports.TryStatement = (node) => ARAN.cut.Try(
         node.handler.param,
         ARAN.build.read(
           Escape("error"))),
-      ArrayLite.flaten(
-        ArrayLite.map(
-          node.handler.body.body,
-          Visit.Statement))) :
+      ArrayLite.flatenMap(
+        node.handler.body.body,
+        Visit.Statement)) :
     []),
   (
     node.finalizer ?
-    ArrayLite.flaten(
-      ArrayLite.map(
-        node.finalizer.body,
-        Visit.Statement)) :
+    ArrayLite.flatenMap(
+      node.finalizer.body,
+      Visit.Statement) :
     []));
 
 exports.WhileStatement = (node) => ARAN.cut.While(
   Visit.expression(node.test),
-  Util.LoopBody(node.parent, node.body));
+  Util.LoopBody(node.AranParent, node.body));
 
 exports.DoWhileStatement = (node) => ArrayLite.concat(
   Interim.Declare(
@@ -142,10 +136,9 @@ exports.ForStatement = (node) => ARAN.cut.For(
   (
     node.init.type === "VariableDeclaration" ?
     Util.Declaration(node.init) :
-    ArrayLite.concat(
-      ARAN.build.Statement(
-        Visit.expression(node.init)),
-      ARAN.cut.$Drop0())),
+    ARAN.build.Statement(
+      ARAN.cut.$drop(
+        Visit.expression(node.init)))),
   Visit.expression(node.test),
   (
     node.update ?

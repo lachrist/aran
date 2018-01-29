@@ -1,19 +1,4 @@
 
-// Matched with leave():
-//   - program(boolean)
-//   - block()
-//   - try()
-//   - catch(value)
-//   - with(value)
-//   - label(identifier)
-//   - finally()
-//   - switch()
-//   - loop()
-//
-// Matched with return(value):
-//   - 
-
-
 module.exports = [
   // Combiners //
   "object",
@@ -27,6 +12,7 @@ module.exports = [
   "unary",
   "binary",
   // Producers //
+  "copy",
   "read",
   "discard",
   "builtin",
@@ -37,6 +23,7 @@ module.exports = [
   "regexp",
   "closure",
   // Consumers //
+  "drop",
   "declare",
   "write",
   "test",
@@ -44,16 +31,13 @@ module.exports = [
   "throw",
   "return",
   "eval",
+  "terminate",
   // Informers //
   "program",
   "label",
+  "callee",
   "block",
-  "switch",
-  "loop",
   "try",
   "finally",
   "leave",
-  "continue",
-  "break",
-  "copy",
-  "drop"];
+  "break"];

@@ -52,7 +52,7 @@ function node2 (iid) {
 module.exports = (options) => ({
   _roots: [],
   _counter: 1,
-  _build: options.output ? (Build[options.output] || output) : Build.Estree,
+  _build: options.output ? (Build[options.output] || options.output) : Build.Estree,
   _nodes: options.nocache ? null : [],
   namespace: options.namespace || "__aran__",
   join: join,

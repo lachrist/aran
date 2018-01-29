@@ -1,6 +1,6 @@
 
 const ArrayLite = require("array-lite");
-const Interim = require("../../interim.js");
+const Interim = require("../interim.js");
 const Util = require("../util");
 const Visit = require("./index.js");
 const apply = Reflect.apply;
@@ -17,7 +17,7 @@ exports.ArrayExpression = (node) => ARAN.cut.array(
       ARAN.cut.primitive(void 0))));
 
 exports.ObjectExpression = (node) => (
-  ArrayLite.all(
+  ArrayLite.every(
     node.properties,
     (property) => property.kind === "init") ?
   ARAN.cut.object(
@@ -106,7 +106,6 @@ exports.BinaryExpression = (node) => ARAN.cut.binary(
   Visit.expression(node.left),
   Visit.expression(node.right));
 
-// set invariant enforced (3 pop, 0 push)
 exports.AssignmentExpression = (node) => ARAN.build.sequence(
   [
     (
@@ -152,50 +151,6 @@ exports.AssignmentExpression = (node) => ARAN.build.sequence(
                 ARAN.cut.read(node.left.name),
                 Visit.expression(node.right))))))),
     Interim.read("value")]);
-
-// set invariant non-enforced (3 pop, 1 push)
-// exports.AssignmentExpression = (node) => (
-//   node.left.type === "MemberExpression" ?
-//   ARAN.cut.set(
-//     (
-//       node.operator === "=" ?
-//       Visit.expression(node.left.object) :
-//       Interim.hoist(
-//         "object",
-//         Visit.expression(node.left.object))),
-//     (
-//       node.operator === "=" ?
-//       Util.property(node.left) :
-//       Interim.hoist(
-//         "property",
-//         Visit.expression(node.left))),
-//     (
-//       node.operator === "=" ?
-//       Visit.expression(node.right) :
-//       ARAN.cut.binary(
-//         apply(substring, node.operator, node.operator.length-1),
-//         ARAN.cut.get(
-//           Interim.read("object"),
-//           Interim.read("property")),
-//         Visit.expression(node.right)))) :
-//   ARAN.build.sequence(
-//     [
-//       (
-//         node.operator === "=" ?
-//         Util.write(
-//           node.left,
-//           Interim.hoist(
-//             "result",
-//             Visit.expression(node.right))) :
-//         ARAN.cut.write(
-//           node.left.name,
-//           ARAN.cut.binary(
-//             apply(substring, node.operator, node.operator.length-1),
-//             ARAN.cut.read(node.left.name),
-//             Interim.hoist(
-//               "result",
-//               Visit.expression(node.right))))),
-//       Interim.read("result")]));
 
 exports.UpdateExpression = (node) => ARAN.build.sequence(
   [
@@ -254,6 +209,7 @@ exports.UpdateExpression = (node) => ARAN.build.sequence(
             ARAN.cut.primitive(1))))),
     Interim.read("value")]);
 
+// ACCESS GENERATED CODE
 exports.LogicalExpression = (node, local1, local2, local3) => (
   local1 = Interim.read("logic"),
   local2 = ARAN.cut.$drop(local1),
@@ -265,14 +221,14 @@ exports.LogicalExpression = (node, local1, local2, local3) => (
       Visit.expression(node.right))),
   ARAN.cut.conditional(
     Interim.hoist(
-        "logical",
-        ARAN.cut.$copy(
-          0,
-          Visit.expression(node.left))),
+      "logical",
+      ARAN.cut.$copy(
+        0,
+        Visit.expression(node.left))),
     (
       node.operator === "||" ?
       Interim.read("logic") :
-      local3)
+      local3),
     (
       node.operator === "&&" ?
       Interim.read("logic") :
@@ -290,7 +246,7 @@ exports.NewExpression = (node) => ARAN.cut.construct(
     Visit.expression));
 
 exports.CallExpression = (node) => (
-  ArrayLite.all(
+  ArrayLite.every(
     node.arguments,
     (argument) => argument.type !== "SpreadElement") ?
   (
@@ -322,7 +278,7 @@ exports.CallExpression = (node) => (
                 node.arguments,
                 (argument, index) => (
                   index ?
-                  ARAN.cut.drop0after(
+                  ARAN.cut.$drop(
                     Visit.expression(argument)) :
                   Visit.expression(argument)))),
             ARAN.build.primitive(0))))))) :

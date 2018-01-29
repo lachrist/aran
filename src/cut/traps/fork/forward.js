@@ -4,7 +4,7 @@ const TrapArguments = require("./trap-arguments.js");
 const empty = () => null;
 function last () { return arguments[arguments.length-1] }
 
-ArrayLite.each(
+ArrayLite.forEach(
   Object.keys(TrapArguments.combiners),
   (key) => exports[key] = (
     TrapArguments.combiners[key].length === 1 ?
@@ -14,12 +14,12 @@ ArrayLite.each(
       (argument0, argument1) => ARAN.build[key](argument0, argument1) :
       (argument0, argument1, argument2) => ARAN.build[key](argument0, argument1, argument2))));
 
-ArrayLite.each(
+ArrayLite.forEach(
   Object.keys(TrapArguments.informers),
   (key) => exports[key] = empty);
 
-ArrayLite.each(
+ArrayLite.forEach(
   ArrayLite.concat(
     Object.keys(TrapArguments.producers),
-    Object.keys(TrapArguments.consumers))
+    Object.keys(TrapArguments.consumers)),
   (key) => exports[key] = last);

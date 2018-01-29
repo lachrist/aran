@@ -59,57 +59,28 @@ exports.object = (properties) => ({
     value: property[1]
   }))});
 
-exports.closure = (identifier, strict, statements) => ({
-  type: "AssignmentExpression",
-  operator: "=",
-  left: {
-    type: "Identifier",
-    name: identifier },
-  right: {
-    type: "FunctionExpression",
-    generator: false,
-    async: false,
-    expression: false,
-    id: null,
-    params: [],
-    defaults: [],
-    rest: null,
-    body: {
-      type: "BlockStatement",
-      body: ArrayLite.concat(
-        (
-          strict ?
-          [
-            {
-              type: "ExpressionStatement",
-              expression: {
-                type: "Literal",
-                value: "use strict"}}] :
-          []),
-        statements)}}});
-
-// exports.closure = (strict, statements) => ({
-//   type: "FunctionExpression",
-//   generator: false,
-//   async: false,
-//   expression: false,
-//   id: null,
-//   params: [],
-//   defaults: [],
-//   rest: null,
-//   body: {
-//     type: "BlockStatement",
-//     body: ArrayLite.concat(
-//       (
-//         strict ?
-//         [
-//           {
-//             type: "ExpressionStatement",
-//             expression: {
-//               type: "Literal",
-//               value: "use strict"}}] :
-//         []),
-//       statements)}});
+exports.closure = (strict, statements) => ({
+  type: "FunctionExpression",
+  generator: false,
+  async: false,
+  expression: false,
+  id: null,
+  params: [],
+  defaults: [],
+  rest: null,
+  body: {
+    type: "BlockStatement",
+    body: ArrayLite.concat(
+      (
+        strict ?
+        [
+          {
+            type: "ExpressionStatement",
+            expression: {
+              type: "Literal",
+              value: "use strict"}}] :
+        []),
+      statements)}});
 
 exports.primitive = (primitive) => (
   primitive === void 0 ?
@@ -347,7 +318,7 @@ exports.For = (statements1, expression1, expression2, statements2) => [
                 name: "ContinueLoop"},
               body: {
                 type: "BlockStatement",
-                body: statements2 }}}])}}}];
+                body: statements2 }}}])}}];
 
 exports.Debugger = () => [
   {

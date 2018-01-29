@@ -1,6 +1,7 @@
 
 const ArrayLite = require("array-lite");
-const Interim = require("../../interim.js");
+const Escape = require("../../escape.js");
+const Interim = require("../interim.js");
 const Visit = require("../visit");
 const Util = require("./index.js");
 const Error = global.Error;
@@ -111,12 +112,11 @@ exports.closure = (node, local1, local2) => {
     ARAN.cut.Return(
       Visit.expression(node.body)) :
     ArrayLite.concat(
-      ArrayLite.flaten(
-        ArrayLite.map(
-          node.body.body,
-          Visit.Statement)),
-        ARAN.cut.Return(
-          ARAN.cut.primitive(void 0))));
+      ArrayLite.flatenMap(
+        node.body.body,
+        Visit.Statement),
+      ARAN.cut.Return(
+        ARAN.cut.primitive(void 0))));
   const expression = ARAN.cut.closure(
     node.AranStrict,
     ArrayLite.concat(

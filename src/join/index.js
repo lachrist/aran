@@ -12,6 +12,7 @@
 const ArrayLite = require("array-lite");
 const Escape = require("../escape.js");
 const Visit = require("./visit");
+const Interim = require("./interim.js");
 const Terminate = require("./terminate.js");
 
 const keys = Object.keys;
@@ -31,24 +32,26 @@ module.exports = (node, strict) => {
     ARAN.nodes[ARAN.counter] = node;
   ARAN.hoisted = [];
   ARAN.parent = node;
-  const statements = ArrayLite.flaten(
-    node.body.map(Visit.Statement));
+  ARAN.terminate = Escape("terminate"+node.AranIndex);
+  const statements = ArrayLite.flatenMap(
+    node.body,
+    Visit.Statement);
   const result = ARAN.cut.PROGRAM(
     node.AranStrict,
     ArrayLite.concat(
-      ArrayLite.flaten(
-        ArrayLite.map(
-          keys(builtins),
-          save)),
-      Interim.Declare(
-        "last",
+      ArrayLite.flatenMap(
+        keys(builtins),
+        save),
+      ARAN.build.Declare(
+        "var",
+        ARAN.terminate,
         ARAN.cut.primitive(void 0)),
-      ArrayLite.flaten(
-        ARAN.hoisted),
+      ArrayLite.flaten(ARAN.hoisted),
       statements),
-    Interim.read("last"));
+    ARAN.build.read(ARAN.terminate));
   delete ARAN.hoisted;
   delete ARAN.parent;
+  delete ARAN.terminate;
   node.AranMaxIndex = ARAN.counter;
   return result;
 };

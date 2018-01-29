@@ -288,3 +288,5 @@ console.log(f(1,2,3))
 
 * Template literals
 
+* `new.target`
+
