@@ -17,6 +17,7 @@ module.exports = [
   "discard",
   "builtin",
   "this",
+  "newtarget",
   "arguments",
   "catch",
   "primitive",

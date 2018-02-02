@@ -1,7 +1,9 @@
 
 const Util = require("util");
+const ArrayLite = require("array-lite");
 
 const etypes = [
+  "MetaProperty",
   "ThisExpression",
   "Identifier",
   "AssignmentExpression",
@@ -29,6 +31,7 @@ const stypes = [
   "IfStatement",
   "LabeledStatement",
   "BreakStatement",
+  "ContinueStatement",
   "WhileStatement",
   "ForStatement",
   "DebuggerStatement",
@@ -75,21 +78,28 @@ const binaries = [
 exports.identifier = (value) => {
   if (typeof value !== "string")
     throw new Error("[identifier] is not a string: "+Util.inspect(value));
-  if (!/^[$_a-zA-Z][$_a-zA-Z0-9]*$/.test(value))
+  if (!/^[$_a-zA-Z][$_a-zA-Z0-9]*$/.test(value) && value !== "new.target")
     throw new Error("[identifier] invalid: "+Util.inspect(value))
+};
+
+exports.label = (value) => {
+  if (typeof value !== "string")
+    throw new Error("[label] is not a string: "+Util.inspect(value));
+  if (!/^[$_a-zA-Z][$_a-zA-Z0-9]*$/.test(value))
+    throw new Error("[label] invalid: "+Util.inspect(value))
 };
 
 exports.expression = (value) => {
   if (typeof value !== "object" || value === null)
     throw new Error("[expression] not an object: "+Util.inspect(value));
-  if (!etypes.includes(value.type))
+  if (!ArrayLite.includes(etypes, value.type))
     throw new Error("[expression] unknwon type: "+Util.inspect(value));
 };
 
 exports.statement = (value) => {
   if (typeof value !== "object" || value === null)
     throw new Error("[statement] not an object: "+Util.inspect(value));
-  if (!stypes.includes(value.type))
+  if (!ArrayLite.includes(stypes, value.type))
     throw new Error("[statement] unknown type: "+Util.inspect(value));
 };
 
@@ -114,16 +124,16 @@ exports.string = (value) => {
 }
 
 exports.unary = (value) => {
-  if (!unaries.includes(value))
+  if (!ArrayLite.includes(unaries, value))
     throw new Error("[unary] unknown: "+Util.inspect(value));
 };
 
 exports.binary = (value) => {
-  if (!binaries.includes(value))
+  if (!ArrayLite.includes(binaries, value))
     throw new Error("[binary] unknown: "+Util.inspect(value));
 };
 
 exports.kind = (kind) => {
-  if (!kinds.includes(kind))
+  if (!ArrayLite.includes(kinds, kind))
     throw new Error("[kind] unknown: "+Util.inspect(kind));
 };

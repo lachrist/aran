@@ -32,7 +32,6 @@ module.exports = (node, strict) => {
     ARAN.nodes[ARAN.counter] = node;
   ARAN.hoisted = [];
   ARAN.parent = node;
-  ARAN.terminate = Escape("terminate"+node.AranIndex);
   const statements = ArrayLite.flatenMap(
     node.body,
     Visit.Statement);
@@ -42,16 +41,10 @@ module.exports = (node, strict) => {
       ArrayLite.flatenMap(
         keys(builtins),
         save),
-      ARAN.build.Declare(
-        "var",
-        ARAN.terminate,
-        ARAN.cut.primitive(void 0)),
       ArrayLite.flaten(ARAN.hoisted),
-      statements),
-    ARAN.build.read(ARAN.terminate));
+      statements));
   delete ARAN.hoisted;
   delete ARAN.parent;
-  delete ARAN.terminate;
   node.AranMaxIndex = ARAN.counter;
   return result;
 };
@@ -82,6 +75,7 @@ const builtins = {
     ARAN.build.read("Symbol"),
     ARAN.build.primitive("iterator")),
   eval: () => ARAN.build.read("eval"),
+  TypeError: () => ARAN.build.read("TypeError"),
   rest: () => ARAN.build.closure(
     false,
     ArrayLite.concat(
@@ -102,10 +96,11 @@ const builtins = {
               ARAN.build.invoke(
                 ARAN.build.get(
                   ARAN.build.read("arguments"),
-                  ARAN.build.primitive(1)),
+                  ARAN.build.primitive(0)),
                 ARAN.build.primitive("next"),
                 [])),
             ARAN.build.primitive("done"))),
+        null,
         ARAN.build.Statement(
           ARAN.build.set(
             ARAN.build.read("array"),

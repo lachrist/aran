@@ -27,6 +27,7 @@ exports.producers = {
   read: [primitive, identity],
   discard: [primitive, identity],
   builtin: [primitive, identity],
+  newtarget: [identity],
   this: [identity],
   arguments: [identity],
   catch: [identity],
@@ -43,7 +44,7 @@ exports.consumers = {
   throw: [identity],
   return: [identity],
   eval: [identity],
-  terminate: [identity]};
+  terminate: [primitive, identity]};
 
 exports.informers = {
   try: [],
@@ -51,7 +52,6 @@ exports.informers = {
   block: [],
   program: [],
   callee: [identity],
-  label: [primitive],
+  label: [primitive, primitive],
   leave: [primitive],
-  continue: [primitive],
-  break: [primitive]};
+  break: [primitive, primitive]};

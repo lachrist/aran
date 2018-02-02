@@ -10,7 +10,6 @@ const Escape = require("../../escape.js");
 const Interim = require("../interim.js");
 const Util = require("../util");
 const Visit = require("./index.js");
-const SanitizeLabel = require("./sanitize-label.js");
 
 exports.EmptyStatement = (node) => [];
 
@@ -22,13 +21,24 @@ exports.BlockStatement = (node) => ARAN.cut.Block(
 exports.ExpressionStatement = (node) => (
   node.expression.AranTerminate ?
   ArrayLite.concat(
-    ARAN.cut.$Drop(ARAN.terminate),
+    ARAN.build.Statement(
+      Interim.write(
+        "terminate",
+        ARAN.cut.$drop(
+          ARAN.cut.$copy(
+            2,
+            Visit.expression(node.expression))))),
+    ARAN.build.Statement(
+      ARAN.cut.$drop(
+        ARAN.build.read(
+          Escape("terminate")))),
     ARAN.build.Statement(
       ARAN.build.write(
-        ARAN.terminate,
-        Visit.expression(node.expression)))) :
-  ARAN.cut.$drop(
-    Visit.expression(node.expression)));
+        Escape("terminate"),
+        Interim.read("terminate")))) :
+  ARAN.build.Statement(
+    ARAN.cut.$drop(
+      Visit.expression(node.expression))));
 
 exports.IfStatement = (node) => ARAN.cut.If(
   Visit.expression(node.test),
@@ -39,14 +49,12 @@ exports.IfStatement = (node) => ARAN.cut.If(
     []));
 
 exports.LabeledStatement = (node) => ARAN.cut.Label(
-  SanitizeLabel(node.label.name),
+  node.label.name,
   Util.Body(node.body));
 
-exports.BreakStatement = (node) => ARAN.cut.Break(
-  node.label ? SanitizeLabel(node.label.name) : "BreakLoop");
+exports.BreakStatement = (node) => ARAN.cut.Break(node.label ? node.label.name : null);
 
-exports.ContinueStatement = (node) => ARAN.cut.Break(
-  node.label ? "Continue"+node.label.name : "ContinueLoop");
+exports.ContinueStatement = (node) => ARAN.cut.Continue(node.label ? node.label.name : null);
 
 exports.WithStatement = (node) => ARAN.cut.With(
   Visit.expression(node.object),
@@ -65,13 +73,16 @@ exports.SwitchStatement = (node) => ArrayLite.concat(
           ARAN.cut.binary(
             "===",
             ARAN.cut.$copy(
+              0,
               Interim.read("switch")),
             Visit.expression(clause.test)) :
           ARAN.cut.primitive(true)),
         ArrayLite.flatenMap(
           clause.consequent,
           Visit.Statement)])),
-  ARAN.cut.$Drop0());
+  ARAN.build.Statement(
+    ARAN.cut.$drop(
+      Interim.read("switch"))));
 
 exports.ReturnStatement = (node) => ARAN.cut.Return(
   (
@@ -107,7 +118,11 @@ exports.TryStatement = (node) => ARAN.cut.Try(
 
 exports.WhileStatement = (node) => ARAN.cut.While(
   Visit.expression(node.test),
-  Util.LoopBody(node.AranParent, node.body));
+  (
+    node.AranParent.type === "LabeledStatement" ?
+    node.AranParent.label.name :
+    null),
+  Util.Body(node.body));
 
 exports.DoWhileStatement = (node) => ArrayLite.concat(
   Interim.Declare(
@@ -123,7 +138,11 @@ exports.DoWhileStatement = (node) => ArrayLite.concat(
             ARAN.build.primitive(false)),
           ARAN.cut.primitive(true)]),
       Visit.expression(node.test)),
-    Util.LoopBody(node.AranParent, node.body)));
+    (
+      node.AranParent.type === "LabeledStatement" ?
+      node.AranParent.label.name :
+      null),
+    Util.Body(node.body)));
 
 // for (let x; y; z) { ... }
 //
@@ -145,7 +164,11 @@ exports.ForStatement = (node) => ARAN.cut.For(
     ARAN.cut.$drop(
       Visit.expression(node.update)) :
     ARAN.build.primitive(null)),
-  Util.LoopBody(node.AranParent, node.body));
+  (
+    node.AranParent.type === "LabeledStatement" ?
+    node.AranParent.label.name :
+    null),
+  Util.Body(node.body));
 
 // for (let k in o) { ... }
 //
@@ -180,6 +203,7 @@ exports.ForInStatement = (node) => ARAN.cut.For(
       ARAN.cut.$builtin("getPrototypeOf"),
       [
         Interim.read("object")])),
+  null,
   ARAN.cut.For(
     ArrayLite.concat( 
       Interim.Declare(
@@ -203,6 +227,10 @@ exports.ForInStatement = (node) => ARAN.cut.For(
         "+",
         Interim.read("index"),
         ARAN.cut.primitive(1))),
+    (
+      node.AranParent.type === "LabeledStatement" ?
+      node.AranParent.label.name :
+      null),
     ArrayLite.concat(
       ARAN.build.Statement(
         Util.write(
@@ -213,7 +241,7 @@ exports.ForInStatement = (node) => ARAN.cut.For(
           ARAN.cut.get(
             Interim.read("keys"),
             Interim.read("index")))),
-      Util.LoopBody(node.AranParent, node.body))));
+      Util.Body(node.body))));
 
 // The left member is executed at every loop:
 // > for (o[(console.log("kaka"),"grunt")] in {foo:"bar", buz:"qux"}) console.log(o);
@@ -260,7 +288,11 @@ exports.ForOfStatement = (node) => ARAN.cut.For(
     ARAN.cut.get(
       Interim.read("step"),
       ARAN.cut.primitive("value"))),
-  Util.LoopBody(node.AranParent, node.body));
+  (
+    node.AranParent.type === "LabeledStatement" ?
+    node.AranParent.label.name :
+    null),
+  Util.Body(node.body));
 
 exports.DebuggerStatement = (node) => ARAN.build.Debugger();
 

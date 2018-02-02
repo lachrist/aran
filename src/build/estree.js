@@ -5,7 +5,7 @@ const ArrayLite = require("array-lite");
 // Program //
 /////////////
 
-exports.PROGRAM = (strict, statements, expression) => ({
+exports.PROGRAM = (strict, statements) => ({
   type: "Program",
   body: ArrayLite.concat(
     (
@@ -17,11 +17,7 @@ exports.PROGRAM = (strict, statements, expression) => ({
             type: "Literal",
             value: "use strict"}}] :
       []),
-    statements,
-    [
-      {
-        type: "ExpressionStatement",
-        expression: expression}])});
+    statements)});
 
 ////////////////
 // Expression //
@@ -31,9 +27,19 @@ exports.read = (identifier) => (
   identifier === "this" ?
   {
     type: "ThisExpression"} :
-  {
-    type: "Identifier",
-    name: identifier});
+  (
+    identifier === "new.target" ?
+    {
+      type: "MetaProperty",
+      meta: {
+        type: "Identifier",
+        name: "new"},
+      property: {
+        type: "Identifier",
+        name: "target"}} :
+    {
+      type: "Identifier",
+      name: identifier}));
 
 exports.write = (identifier, expression) => ({
   type: "AssignmentExpression",
@@ -262,7 +268,7 @@ exports.If = (expression, statements1, statements2) => [
 
 exports.Label = (label, statements) => [
   {
-    type:"LabeledStatement",
+    type: "LabeledStatement",
     label: {
       type: "Identifier",
       name: label},
@@ -273,52 +279,60 @@ exports.Label = (label, statements) => [
 exports.Break = (label) => [
   {
     type:"BreakStatement",
-    label: {
-      type: "Identifier",
-      name: label}}];
+    label: (
+      label ?
+      {
+        type: "Identifier",
+        name: label} :
+      null)}];
 
-exports.While = (expression, statements) => [
+exports.Continue = () => [
   {
-    type: "LabeledStatement",
-    label: {
-      type: "Identifier",
-      name: "BreakLoop" },
-    body: {
-      type: "WhileStatement",
-      test: expression,
-      body: {
+    type: "ContinueStatement",
+    label: null}];
+
+exports.While = (expression, label, statements) => [
+  {
+    type: "WhileStatement",
+    test: expression,
+    body: (
+      label ?
+      {
         type: "LabeledStatement",
         label: {
           type: "Identifier",
-          name: "ContinueLoop"},
+          name: label},
         body: {
           type: "BlockStatement",
-          body: statements}}}}];
+          body: statements}} :
+      {
+        type: "BlockStatement",
+        body: statements})}];
 
-exports.For = (statements1, expression1, expression2, statements2) => [
+exports.For = (statements1, expression1, expression2, label, statements2) => [
   {
-    type: "LabeledStatement",
-    label: {
-      type: "Identifier",
-      name: "BreakLoop"},
-    body: {
-      type: "BlockStatement",
-      body: ArrayLite.concat(
-        statements1,
-        [
-          {
-            type: "ForStatement",
-            init: null,
-            test: expression1,
-            update: expression2,
-            body: {
+    type: "BlockStatement",
+    body: ArrayLite.concat(
+      statements1,
+      [
+        {
+          type: "ForStatement",
+          init: null,
+          test: expression1,
+          update: expression2,
+          body: (
+            label ?
+            {
               type: "LabeledStatement",
               label: {
                 type: "Identifier",
-                name: "ContinueLoop"},
+                name: label},
               body: {
                 type: "BlockStatement",
-                body: statements2 }}}])}}];
+                body: statements2}} :
+            {
+              type: "BlockStatement",
+              body: statements2})}])}];
 
 exports.Debugger = () => [
   {
@@ -326,20 +340,15 @@ exports.Debugger = () => [
 
 exports.Switch = (clauses) => [
   {
-    type: "LabeledStatement",
-    label: {
-      type: "Identifier",
-      name: "BreakLoop"},
-    body: {
-      type: "SwitchStatement",
-      discriminant: {
-        type: "Literal",
-        value: true
-      },
-      cases: clauses.map((clause) => ({
-        type: "SwitchCase",
-        test: clause[0],
-        consequent: clause[1]}))}}];
+    type: "SwitchStatement",
+    discriminant: {
+      type: "Literal",
+      value: true
+    },
+    cases: clauses.map((clause) => ({
+      type: "SwitchCase",
+      test: clause[0],
+      consequent: clause[1]}))}];
 
 exports.With = (expression, statements) => [
   {

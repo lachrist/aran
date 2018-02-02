@@ -11,13 +11,26 @@ exports.Declaration = (node) => ArrayLite.flatenMap(
     (
       declarator.init.AranTerminate ?
       ArrayLite.concat(
-        ARAN.cut.$Drop(ARAN.terminate),
+        Interim.Declare(
+          "terminate",
+          ARAN.cut.$copy(
+              2,
+              Visit.expression(declarator.init))),
+        Util.Declare(
+          node.kind,
+          declarator.id,
+          Interim.read("terminate")),
+        ARAN.build.Statement(
+          ARAN.cut.$drop(
+            ARAN.build.read(
+              Escape("terminate")))),
         ARAN.build.write(
-          ARAN.terminate,
-          ARAN.cut.copy(
-            0,
-            Visit.expression(declarator.init)))) :
-      Visit.expression(declarator.init)) :
+          Escape("terminate"),
+          Interim.read("terminate"))) :
+      Util.Declare(
+        node.kind,
+        declarator.id,
+        Visit.expression(declarator.init))) :
     (
       local = ARAN.cut.Declare(
         node.kind,

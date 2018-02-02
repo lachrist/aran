@@ -3,7 +3,7 @@
 // Program //
 /////////////
 
-exports.PROGRAM = ["boolean", ["statement"], "expression"];
+exports.PROGRAM = ["boolean", ["statement"]];
 
 ////////////////
 // Expression //
@@ -40,10 +40,11 @@ exports.Throw = ["expression"];
 exports.Try = [["statement"], ["statement"], ["statement"]];
 exports.Declare = ["kind", "identifier", "expression"];
 exports.If = ["expression", ["statement"], ["statement"]];
-exports.Label = ["identifier", ["statement"]];
-exports.Break = ["identifier"];
-exports.While = ["expression", ["statement"]];
-exports.For = [["statement"], "expression", "expression", ["statement"]];
+exports.Label = ["label", ["statement"]];
+exports.Break = ["?label"];
+exports.Continue = [];
+exports.While = ["expression", "?label", ["statement"]];
+exports.For = [["statement"], "expression", "expression", "?label", ["statement"]];
 exports.Debugger = [];
 exports.Switch = [[{0:"expression", 1:["statement"]}]];
 exports.With = ["expression", ["statement"]];

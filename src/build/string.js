@@ -6,10 +6,9 @@ const stringify = JSON.stringify;
 // Program //
 /////////////
 
-exports.PROGRAM = (strict, statements, expression) => (
+exports.PROGRAM = (strict, statements) => (
   (strict ? "\"use strict\";" : "") + 
   ArrayLite.join(statements, "")) +
-  expression +
   ";";
 
 ////////////////
@@ -213,26 +212,36 @@ exports.Label = (label, statements) => [
 exports.Break = (label) => [
   (
     "break " +
-    label +
+    (label||"") +
     ";")];
 
-exports.While = (expression, statements) => [
+exports.Continue = (label) => [
   (
-    "BreakLoop:while(" +
+    "continue "+
+    (label||"") +
+    ";")];
+
+exports.While = (expression, label, statements) => [
+  (
+    "while(" +
     expression +
-    ")ContinueLoop:{" +
+    ")" +
+    (label ? label + ":" : ""),
+    "{" +
     ArrayLite.join(statements, "") +
     "}")];
 
-exports.For = (statements1, expression1, expression2, statements2) => [
+exports.For = (statements1, expression1, expression2, label, statements2) => [
   (
-    "BreakLoop:{" +
+    "{" +
     ArrayLite.join(statements1, "") +
     "for(;" +
     expression1 +
     ";" +
     expression2 +
-    ")ContinueLoop:{" +
+    ")" +
+    (label ? label + ":" : ""),
+    "{" +
     ArrayLite.join(statements2, "") +
     "}")];
 
@@ -242,7 +251,7 @@ exports.Debugger = () => [
 
 exports.Switch = (clauses) => [
   (
-    "BreakLoop:switch(true){" +
+    "switch(true){" +
     ArrayLite.join(
       ArrayLite.map(
         clauses,

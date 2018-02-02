@@ -209,30 +209,28 @@ exports.UpdateExpression = (node) => ARAN.build.sequence(
             ARAN.cut.primitive(1))))),
     Interim.read("value")]);
 
-// ACCESS GENERATED CODE
-exports.LogicalExpression = (node, local1, local2, local3) => (
-  local1 = Interim.read("logic"),
-  local2 = ARAN.cut.$drop(local1),
-  local3 = (
-    local1 === local2 ?
-    Visit.expression(node.right) :
+exports.LogicalExpression = (node) => ARAN.cut.conditional(
+  Interim.hoist(
+    "logic",
+    ARAN.cut.$copy(
+      0,
+      Visit.expression(node.left))),
+  (
+    node.operator === "||" ?
+    Interim.read("logic") :
     ARAN.build.sequence(
-      local2,
-      Visit.expression(node.right))),
-  ARAN.cut.conditional(
-    Interim.hoist(
-      "logical",
-      ARAN.cut.$copy(
-        0,
-        Visit.expression(node.left))),
-    (
-      node.operator === "||" ?
-      Interim.read("logic") :
-      local3),
-    (
-      node.operator === "&&" ?
-      Interim.read("logic") :
-      local3)));
+      [
+        ARAN.cut.$drop(
+          Interim.read("logic")),
+        Visit.expression(node.right)])),
+  (
+    node.operator === "&&" ?
+    Interim.read("logic") :
+    ARAN.build.sequence(
+      [
+        ARAN.cut.$drop(
+          Interim.read("logic")),
+        Visit.expression(node.right)])));
 
 exports.ConditionalExpression = (node) => ARAN.cut.conditional(
   Visit.expression(node.test),
@@ -337,6 +335,8 @@ exports.CallExpression = (node) => (
 exports.MemberExpression = (node) => ARAN.cut.get(
   Visit.expression(node.object),
   Util.property(node));
+
+exports.MetaProperty = (node) => ARAN.cut.read("new.target");
 
 exports.Identifier = (node) => (
   node.name === "undefined" ?

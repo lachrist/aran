@@ -5,6 +5,7 @@ const Util = require("../index.js");
 
 module.exports = (transformers, pairs) => {
   const result = [];
+  debugger;
   for (let index1=0; index1<pairs.length; index1++) {
     const left = pairs[index1][0];
     const right = pairs[index1][1];

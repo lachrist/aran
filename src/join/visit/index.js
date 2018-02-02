@@ -24,7 +24,7 @@ const visit = (visitors) => (node) => {
     node.body.body[0].expression.value === "use strict");
   node.AranIndex = ++ARAN.counter;
   if (ARAN.nodes)
-    ARAN.nodes[ARAN.counter] = node;
+    ARAN.nodes[node.AranIndex] = node;
   const temporary = ARAN.parent;
   ARAN.parent = node;
   const result = visitors[node.type](node);
