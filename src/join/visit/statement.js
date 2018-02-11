@@ -18,25 +18,11 @@ exports.BlockStatement = (node) => ARAN.cut.Block(
     node.body,
     Visit.Statement));
 
-exports.ExpressionStatement = (node) => (
-  node.expression.AranTerminate ?
-  ArrayLite.concat(
-    ARAN.build.Statement(
-      Interim.write(
-        "terminate",
-        ARAN.cut.$drop(
-          ARAN.cut.$copy(
-            2,
-            Visit.expression(node.expression))))),
-    ARAN.build.Statement(
-      ARAN.cut.$drop(
-        ARAN.build.read(
-          Escape("terminate")))),
-    ARAN.build.Statement(
-      ARAN.build.write(
-        Escape("terminate"),
-        Interim.read("terminate")))) :
-  ARAN.build.Statement(
+exports.ExpressionStatement = (node) => ARAN.build.Statement(
+  (
+    node.expression.AranTerminate ?
+    ARAN.cut.$terminal(
+      Visit.expression(node.expression)) :
     ARAN.cut.$drop(
       Visit.expression(node.expression))));
 
@@ -49,40 +35,56 @@ exports.IfStatement = (node) => ARAN.cut.If(
     []));
 
 exports.LabeledStatement = (node) => ARAN.cut.Label(
-  node.label.name,
+  "b" + node.label.name,
   Util.Body(node.body));
 
-exports.BreakStatement = (node) => ARAN.cut.Break(node.label ? node.label.name : null);
+exports.BreakStatement = (node) => ARAN.cut.Break(
+  (
+    node.label ?
+    "b" + node.label.name :
+    ARAN.break));
 
-exports.ContinueStatement = (node) => ARAN.cut.Continue(node.label ? node.label.name : null);
+exports.ContinueStatement = (node) => ARAN.cut.Break(
+  (
+    node.label ?
+    "c" + node.label.name :
+    ARAN.continue));
 
 exports.WithStatement = (node) => ARAN.cut.With(
   Visit.expression(node.object),
   Util.Body(node.body));
 
-exports.SwitchStatement = (node) => ArrayLite.concat(
-  Interim.Declare(
-    "switch",
-    Visit.expression(node.discriminant)),
-  ARAN.cut.Switch(
-    ArrayLite.map(
-      node.cases,
-      (clause) => [
-        (
-          clause.test ?
-          ARAN.cut.binary(
-            "===",
-            ARAN.cut.$copy(
-              0,
-              Interim.read("switch")),
-            Visit.expression(clause.test)) :
-          ARAN.cut.primitive(true)),
-        ArrayLite.flatenMap(
-          clause.consequent,
-          Visit.Statement)])),
-  ARAN.build.Statement(
-    ARAN.cut.$drop(
-      Interim.read("switch"))));
+exports.SwitchStatement = (node, temporary, result) => (
+  temporary = ARAN.label,
+  ARAN.break = "B" + node.AranSerial,
+  result =
+    ARAN.cut.Label(
+      ARAN.break,
+      ArrayLite.concat(
+        Interim.Declare(
+          "switch",
+          Visit.expression(node.discriminant)),
+        ARAN.cut.Switch(
+          ArrayLite.map(
+            node.cases,
+            (clause) => [
+              (
+                clause.test ?
+                ARAN.cut.binary(
+                  "===",
+                  ARAN.cut.$copy(
+                    1,
+                    Interim.read("switch")),
+                  Visit.expression(clause.test)) :
+                ARAN.cut.primitive(true)),
+              ArrayLite.flatenMap(
+                clause.consequent,
+                Visit.Statement)])),
+        ARAN.build.Statement(
+          ARAN.cut.$drop(
+            Interim.read("switch"))))),
+    ARAN.break = temporary,
+    result);
 
 exports.ReturnStatement = (node) => ARAN.cut.Return(
   (
@@ -108,7 +110,9 @@ exports.TryStatement = (node) => ARAN.cut.Try(
       ArrayLite.flatenMap(
         node.handler.body.body,
         Visit.Statement)) :
-    []),
+    ARAN.cut.Throw(
+      ARAN.build.read(
+        Escape("error")))),
   (
     node.finalizer ?
     ArrayLite.flatenMap(
@@ -116,33 +120,26 @@ exports.TryStatement = (node) => ARAN.cut.Try(
       Visit.Statement) :
     []));
 
-exports.WhileStatement = (node) => ARAN.cut.While(
+exports.WhileStatement = (node) => Util.Loop(
   Visit.expression(node.test),
-  (
-    node.AranParent.type === "LabeledStatement" ?
-    node.AranParent.label.name :
-    null),
-  Util.Body(node.body));
+  [],
+  node.body,
+  []);
 
 exports.DoWhileStatement = (node) => ArrayLite.concat(
   Interim.Declare(
     "dowhile",
-    ARAN.build.primitive(true)),
-  ARAN.cut.While(
+    ARAN.build.primitive(false)),
+  Util.Loop(
     ARAN.build.conditional(
       Interim.read("dowhile"),
-      ARAN.build.sequence(
-        [
-          Interim.write(
-            "dowhile",
-            ARAN.build.primitive(false)),
-          ARAN.cut.primitive(true)]),
-      Visit.expression(node.test)),
-    (
-      node.AranParent.type === "LabeledStatement" ?
-      node.AranParent.label.name :
-      null),
-    Util.Body(node.body)));
+      Visit.expression(node.test),
+      Interim.write(
+        "dowhile",
+        ARAN.cut.primitive(true))),
+    [],
+    node.body,
+    []));
 
 // for (let x; y; z) { ... }
 //
@@ -151,24 +148,30 @@ exports.DoWhileStatement = (node) => ArrayLite.concat(
 //   while (y) { ... z; }
 // }
 
-exports.ForStatement = (node) => ARAN.cut.For(
-  (
-    node.init.type === "VariableDeclaration" ?
-    Util.Declaration(node.init) :
-    ARAN.build.Statement(
-      ARAN.cut.$drop(
-        Visit.expression(node.init)))),
-  Visit.expression(node.test),
-  (
-    node.update ?
-    ARAN.cut.$drop(
-      Visit.expression(node.update)) :
-    ARAN.build.primitive(null)),
-  (
-    node.AranParent.type === "LabeledStatement" ?
-    node.AranParent.label.name :
-    null),
-  Util.Body(node.body));
+exports.ForStatement = (node) => ARAN.cut.Block(
+  ArrayLite.concat(
+    (
+      node.init ?
+      (
+        node.init.type === "VariableDeclaration" ?
+        Util.Declaration(node.init) :
+        ARAN.build.Statement(
+          ARAN.cut.$drop(
+            Visit.expression(node.init)))) :
+      []),
+    Util.Loop(
+      (
+        node.test ?
+        Visit.expression(node.test) :
+        ARAN.cut.primitive(true)),
+      [],
+      node.body,
+      (
+        node.update ?
+        ARAN.build.Statement(
+          ARAN.cut.$drop(
+            Visit.expression(node.update))) :
+        []))));
 
 // for (let k in o) { ... }
 //
@@ -187,7 +190,7 @@ exports.ForStatement = (node) => ARAN.cut.For(
 //   }
 // }
 
-exports.ForInStatement = (node) => ARAN.cut.For(
+exports.ForInStatement = (node) => ARAN.cut.Block(
   ArrayLite.concat(
     (
       node.left.type === "VariableDeclaration" ?
@@ -195,53 +198,59 @@ exports.ForInStatement = (node) => ARAN.cut.For(
       []),
     Interim.Declare(
       "object",
-      Visit.expression(node.right))),
-  Interim.read("object"),
-  Interim.write(
-    "object",
-    ARAN.cut.apply(
-      ARAN.cut.$builtin("getPrototypeOf"),
-      [
-        Interim.read("object")])),
-  null,
-  ARAN.cut.For(
-    ArrayLite.concat( 
-      Interim.Declare(
-        "keys",
-        ARAN.cut.apply(
-          ARAN.cut.$builtin("keys"),
-          [
-            Interim.read("object")])),
-      Interim.Declare(
-        "index",
-        ARAN.cut.primitive(0))),
-    ARAN.cut.binary(
-      "<",
-      Interim.read("index"),
-      ARAN.cut.get(
-        Interim.read("keys"),
-        ARAN.cut.primitive("length"))),
-    Interim.write(
-      "index",
-      ARAN.cut.binary(
-        "+",
-        Interim.read("index"),
-        ARAN.cut.primitive(1))),
-    (
-      node.AranParent.type === "LabeledStatement" ?
-      node.AranParent.label.name :
-      null),
-    ArrayLite.concat(
-      ARAN.build.Statement(
-        Util.write(
-          (
-            node.left.type === "VariableDeclaration" ?
-            node.left.declarations[0].id :
-            node.left),
-          ARAN.cut.get(
-            Interim.read("keys"),
-            Interim.read("index")))),
-      Util.Body(node.body))));
+      Visit.expression(node.right)),
+    ARAN.cut.While(
+      ARAN.cut.$copy(
+        0,
+        Interim.read("object")),
+      ArrayLite.concat(
+        Interim.Declare(
+          "index",
+          ARAN.cut.primitive(0)),
+        Interim.Declare(
+          "keys",
+          ARAN.cut.apply(
+            ARAN.cut.$drop(
+              ARAN.cut.$copy(
+                2,
+                ARAN.cut.$builtin("keys"))),
+            [
+              ARAN.cut.$copy(
+                2,
+                Interim.read("object"))])),
+        // ARAN.build.Statement(
+        //   Interim.write(
+        //     "object",
+        //     ARAN.cut.apply(
+        //       ARAN.cut.$builtin("getPrototypeOf"),
+        //       [
+        //         Interim.read("object")]))),
+        Util.Loop(
+          ARAN.cut.binary(
+            "<",
+            ARAN.cut.$copy(
+              2,
+              Interim.read("index")),
+            ARAN.cut.get(
+              Interim.read("keys"),
+              ARAN.cut.primitive("length"))),
+          ARAN.build.Statement(
+            Util.assign(
+              (
+                node.left.type === "VariableDeclaration" ?
+                node.left.declarations[0].id :
+                node.left),
+              ARAN.cut.get(
+                Interim.read("keys"),
+                Interim.read("index")))),
+          node.body,
+          ARAN.build.Statement(
+            Interim.write(
+              "index",
+              ARAN.cut.binary(
+                "+",
+                Interim.read("index"),
+                ARAN.cut.primitive(1)))))))));
 
 // The left member is executed at every loop:
 // > for (o[(console.log("kaka"),"grunt")] in {foo:"bar", buz:"qux"}) console.log(o);
@@ -258,7 +267,7 @@ exports.ForInStatement = (node) => ARAN.cut.For(
 //   ...
 // }
 
-exports.ForOfStatement = (node) => ARAN.cut.For(
+exports.ForOfStatement = (node) => ARAN.cut.Block(
   ArrayLite.concat(
     (
       node.left.type === "VariableDeclaration" ?
@@ -269,30 +278,29 @@ exports.ForOfStatement = (node) => ARAN.cut.For(
       ARAN.cut.invoke(
         Visit.expression(node.right),
         ARAN.cut.$builtin("iterator"),
-        []))),
-  ARAN.cut.unary(
-    "!",
-    ARAN.cut.get(
-      Interim.hoist(
-        "step",
-        ARAN.cut.invoke(
-          Interim.read("iterator"),
-          ARAN.cut.primitive("next"),
-          [])),
-      ARAN.cut.primitive("done"))),
-  Util.write(
-    (
-      node.left.type === "VariableDeclaration" ?
-      node.left.declarations[0].id :
-      node.left),
-    ARAN.cut.get(
-      Interim.read("step"),
-      ARAN.cut.primitive("value"))),
-  (
-    node.AranParent.type === "LabeledStatement" ?
-    node.AranParent.label.name :
-    null),
-  Util.Body(node.body));
+        [])),
+    Util.Loop(
+      ARAN.cut.unary(
+        "!",
+        ARAN.cut.get(
+          Interim.hoist(
+            "step",
+            ARAN.cut.invoke(
+              Interim.read("iterator"),
+              ARAN.cut.primitive("next"),
+              [])),
+          ARAN.cut.primitive("done"))),
+      ARAN.build.Statement(
+        Util.assign(
+          (
+            node.left.type === "VariableDeclaration" ?
+            node.left.declarations[0].id :
+            node.left),
+          ARAN.cut.get(
+            Interim.read("step"),
+            ARAN.cut.primitive("value")))),
+      node.body,
+      [])));
 
 exports.DebuggerStatement = (node) => ARAN.build.Debugger();
 

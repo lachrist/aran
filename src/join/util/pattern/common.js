@@ -1,11 +1,18 @@
 
-const Interim = require('../../interim.js');
+const Interim = require("../../interim.js");
 const Visit = require("../../visit");
 const Util = require("../index.js");
 
-module.exports = (transformers, pairs) => {
-  const result = [];
-  debugger;
+// right can only modify the last element of the stack's.
+// pair, conserve stack
+module.exports = (transformers, left, right) => {
+  const result = [
+    transformers.expression(
+      Interim.hoist("right", right))];
+  const pairs = [
+    [
+      left,
+      Interim.read("right")]];
   for (let index1=0; index1<pairs.length; index1++) {
     const left = pairs[index1][0];
     const right = pairs[index1][1];
@@ -16,10 +23,11 @@ module.exports = (transformers, pairs) => {
       result[result.length] = transformers.binding(left.name, right);
     } else if (left.type === "MemberExpression") {
       result[result.length] = transformers.expression(
-        ARAN.cut.set(
-          Visit.expression(left.object),
-          Util.property(left),
-          right));
+        ARAN.cut.$drop(
+          ARAN.cut.set(
+            Visit.expression(left.object),
+            Util.property(left),
+            right)));
     } else if (left.type === "AssignmentPattern") {
       pairs[pairs.length] = [
         left.left,
@@ -100,5 +108,8 @@ module.exports = (transformers, pairs) => {
       }
     }
   }
+  result[result.length] = transformers.expression(
+    ARAN.cut.$drop(
+      Interim.read("right")));
   return result;
 };

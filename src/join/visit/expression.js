@@ -35,10 +35,13 @@ exports.ObjectExpression = (node) => (
       ARAN.cut.$builtin("defineProperty"),
       [
         node,
-        Util.property(
-          {
-            computed: property.computed,
-            property: property.key}),
+        (
+          property.computed ?
+          Visit.expression(property.key) :
+          (
+            property.key.type === "Identifier" ?
+            ARAN.cut.primitive(property.key.name) :
+            ARAN.cut.primitive(property.key.value))),
         ARAN.cut.object(
           ArrayLite.concat(
             [
@@ -106,114 +109,140 @@ exports.BinaryExpression = (node) => ARAN.cut.binary(
   Visit.expression(node.left),
   Visit.expression(node.right));
 
-exports.AssignmentExpression = (node) => ARAN.build.sequence(
-  [
-    (
-      node.operator === "=" ?
-      Util.write(
-        node.left,
-        Interim.hoist(
-          "value",
-          ARAN.cut.$copy(
-            0,
-            Visit.expression(node.right)))) :
+// Redondant checks on pattern (could improve {maybe}).
+exports.AssignmentExpression = (node) => (
+  node.left.type === "Identifier" ?
+  ARAN.cut.write(
+    node.left.name,
+    ARAN.cut.$copy(
+      1,
       (
-        node.left.type === "MemberExpression" ?
-        ARAN.cut.set(
-          Interim.hoist(
-            "object",
-            ARAN.cut.$copy(
-              1,
-              Visit.expression(node.left.object))),
-          Interim.hoist(
-            "property",
-            ARAN.cut.$copy(
-              2,
-              Util.property(node.left))),
-          Interim.hoist(
-            "value",
-            ARAN.cut.$copy(
-              3,
-              ARAN.cut.binary(
-                apply(substring, node.operator, [0, node.operator.length-1]),
-                ARAN.cut.get(
-                  Interim.read("object"),
-                  Interim.read("property")),
-                Visit.expression(node.right))))) :
-        ARAN.cut.write(
-          node.left.name,
-          Interim.hoist(
-            "value",
-            ARAN.cut.$copy(
-              0,
-              ARAN.cut.binary(
-                apply(substring, node.operator, [0, node.operator.length-1]),
-                ARAN.cut.read(node.left.name),
-                Visit.expression(node.right))))))),
-    Interim.read("value")]);
-
-exports.UpdateExpression = (node) => ARAN.build.sequence(
-  [
-    (
-      node.argument.type === "MemberExpression" ?
-      ARAN.cut.set(
+        node.operator === "=" ?
+        Visit.expression(node.right) :
+        ARAN.cut.binary(
+          apply(substring, node.operator, [0, node.operator.length-1]),
+          ARAN.cut.read(node.left.name),
+          Visit.expression(node.right))))) :
+  (
+    node.left.type === "MemberExpression" ?
+    ARAN.cut.set(
+      (
+        node.operator === "=" ?
+        Visit.expression(node.left.object) :
         Interim.hoist(
           "object",
-          ARAN.cut.$copy(
-            1,
-            Visit.expression(node.argument.object))),
+          Visit.expression(node.left.object))),
+      (
+        node.operator === "=" ?
+        Util.property(node.left),
         Interim.hoist(
           "property",
+          Util.property(node.left))),
+      (
+        node.operator === "=" ?
+        Visit.expression(node.right) :
+        ARAN.cut.binary(
+          apply(substring, node.operator, [0, node.operator.length-1]),
+          ARAN.cut.get(
+            ARAN.cut.$copy(
+              2,
+              Interim.read("object")),
+            ARAN.cut.$copy(
+              2,
+              Interim.read("property"))),
+          Visit.expression(node.right))))
+    ARAN.build.sequence([
+      Interim.hoist(
+        "value",
+        ARAN.cut.$copy(
+          1,
+          Visit.expression(node.right))),
+      Util.assign(
+        node.left,
+        Interim.read("value")),
+      Interim.read("value")])));
+
+exports.UpdateExpression = (node) => (
+  node.argument.type === "MemberExpression" ?
+  (
+    node.prefix ?
+    ARAN.cut.set(
+      Interim.hoist(
+        "object",
+        Visit.expression(node.argument.object)),
+      Interim.hoist(
+        "property",
+        Util.property(node.argument)),
+      ARAN.cut.binary(
+        node.operator[0],
+        ARAN.cut.get(
           ARAN.cut.$copy(
             2,
-            Util.property(node.argument))),
-        (
-          node.prefix ?
-          Interim.hoist(
-            "value",
-            ARAN.cut.$copy(
-              3,
-              ARAN.cut.binary(
-                node.operator[0],
-                ARAN.cut.get(
-                  Interim.read("object"),
-                  Interim.read("property")),
-                ARAN.cut.primitive(1)))) :
-          ARAN.cut.binary(
-            node.operator[0],
+            Interim.read("object")),
+          ARAN.cut.$copy(
+            2,
+            Interim.read("property"))),
+        ARAN.cut.primitive(1))) :
+    ARAN.build.sequence(
+      [
+        ARAN.cut.$drop(
+          ARAN.cut.set(
             Interim.hoist(
-              "value",
-              ARAN.cut.get(
-                Interim.read("object"),
-                Interim.read("property"))),
-            ARAN.cut.primitive(1)))) :
-      ARAN.cut.write(
-        node.argument.name,
-        (
-          node.prefix ?
-          Interim.hoist(
-            "value",
-            ARAN.cut.$copy(
-              0,
-              ARAN.cut.binary(
-                node.operator[0],
-                ARAN.cut.read(node.argument.name),
-                ARAN.cut.primitive(1)))) :
+              "object",
+              Visit.expression(node.argument.object)),
+            Interim.hoist(
+              "property",
+              Util.property(node.argument)),
+            ARAN.cut.binary(
+              node.operator[0],
+              ARAN.cut.$copy(
+                3,
+                ARAN.cut.$swap(
+                  1,
+                  2,
+                  ARAN.cut.$swap(
+                    1,
+                    3,
+                    Interim.hoist(
+                      "value",
+                        ARAN.cut.get(
+                          ARAN.cut.$copy(
+                            2,
+                            Interim.read("object")),
+                          ARAN.cut.$copy(
+                            2,
+                            Interim.read("property"))))))),
+              ARAN.cut.primitive(1)))),
+        Interim.read("value")])) :
+  (
+    node.prefix ?
+    ARAN.cut.write(
+      node.argument.name,
+      ARAN.cut.$copy(
+        1,
+        ARAN.cut.binary(
+          node.operator[0],
+          ARAN.cut.read(node.argument.name),
+          ARAN.cut.primitive(1)))) :
+    ARAN.build.sequence(
+      [
+        ARAN.cut.write(
+          node.argument.name,
           ARAN.cut.binary(
             node.operator[0],
             Interim.hoist(
               "value",
               ARAN.cut.$copy(
-                0,
+                1,
                 ARAN.cut.read(node.argument.name))),
-            ARAN.cut.primitive(1))))),
-    Interim.read("value")]);
+            ARAN.cut.primitive(1))),
+        Interim.read("value")])));
 
 exports.LogicalExpression = (node) => ARAN.cut.conditional(
   Interim.hoist(
     "logic",
     ARAN.cut.$copy(
-      0,
+      1,
       Visit.expression(node.left))),
   (
     node.operator === "||" ?
@@ -289,13 +318,16 @@ exports.CallExpression = (node) => (
           Interim.hoist(
             "this",
             ARAN.cut.$copy(
-              2,
+              1,
               Visit.expression(node.callee.object))),
           Util.property(node.callee)) :
         Visit.expression(node.callee)),
       (
         node.callee.type === "MemberExpression" ?
-        Interim.read("this") :
+        ARAN.cut.$swap(
+          1,
+          2,
+          Interim.read("this")) :
         (
           node.AranStrict ?
           ARAN.cut.primitive(void 0) :
@@ -314,7 +346,7 @@ exports.CallExpression = (node) => (
                 ARAN.cut.$builtin(),
                 [
                   ARAN.cut.$copy(
-                    0,
+                    1,
                     Interim.read("arguments")),
                   ARAN.cut.invoke(
                     Visit.expression(argument.argument),
@@ -322,11 +354,11 @@ exports.CallExpression = (node) => (
                     [])]) :
               ARAN.cut.set(
                 ARAN.cut.$copy(
-                  0,
+                  1,
                   Interim.read("arguments")),
                 ARAN.cut.get(
                   ARAN.cut.$copy(
-                    0,
+                    1,
                     Interim.read("arguments")),
                   ARAN.cut.primitive("length")),
                 Visit.expression(argument)))),

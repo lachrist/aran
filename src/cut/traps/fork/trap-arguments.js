@@ -44,14 +44,17 @@ exports.consumers = {
   throw: [identity],
   return: [identity],
   eval: [identity],
-  terminate: [primitive, identity]};
+  terminal: [identity],
+  success: [identity],
+  failure: [identity]};
 
 exports.informers = {
+  begin: [],
+  end: [],
   try: [],
   finally: [],
   block: [],
-  program: [],
-  callee: [identity],
   label: [primitive, primitive],
   leave: [primitive],
-  break: [primitive, primitive]};
+  break: [primitive, primitive],
+  callee: [identity]};

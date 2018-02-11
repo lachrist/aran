@@ -31,9 +31,7 @@ const stypes = [
   "IfStatement",
   "LabeledStatement",
   "BreakStatement",
-  "ContinueStatement",
   "WhileStatement",
-  "ForStatement",
   "DebuggerStatement",
   "SwitchStatement",
   "WithStatement"

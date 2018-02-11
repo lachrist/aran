@@ -17,19 +17,20 @@ const Terminate = require("./terminate.js");
 
 const keys = Object.keys;
 
-module.exports = (node, strict) => {
+module.exports = (node, parent) => {
   Terminate(node);
-  node.AranParent = null;
+  node.AranParent = parent || null;
   node.AranStrict = (
-    strict ||
+    (
+      parent && parent.AranStrict) ||
     (
       node.body.length &&
       node.body[0].type === "ExpressionStatement" &&
       node.body[0].expression.type === "Literal" &&
       node.body[0].expression.value === "use strict"));
-  node.AranIndex = ++ARAN.counter;
+  node.AranSerial = ++ARAN.counter;
   if (ARAN.nodes)
-    ARAN.nodes[ARAN.counter] = node;
+    ARAN.nodes[node.AranSerial] = node;
   ARAN.hoisted = [];
   ARAN.parent = node;
   const statements = ArrayLite.flatenMap(
@@ -45,7 +46,7 @@ module.exports = (node, strict) => {
       statements));
   delete ARAN.hoisted;
   delete ARAN.parent;
-  node.AranMaxIndex = ARAN.counter;
+  node.AranMaxSerial = ARAN.counter;
   return result;
 };
 
@@ -100,7 +101,6 @@ const builtins = {
                 ARAN.build.primitive("next"),
                 [])),
             ARAN.build.primitive("done"))),
-        null,
         ARAN.build.Statement(
           ARAN.build.set(
             ARAN.build.read("array"),

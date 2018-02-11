@@ -6,8 +6,8 @@ const apply = Reflect.apply;
 const substring = String.prototype.substring;
 const toUpperCase = String.prototype.toUpperCase;
 const Inform = require("./inform.js");
+const ParseLabel = require("./parse-label.js");
 const SanitizeIdentifier = require("./sanitize-identifier.js");
-const SanitizeLabel = require("./sanitize-label.js");
 const ContainArguments = require("./contain-arguments.js");
 
 module.exports = (pointcut) => {
@@ -24,6 +24,10 @@ module.exports = (pointcut) => {
     name,
     ARAN.build.read(
       Escape(name)));
+
+  cut.$terminal = (expression) => ARAN.build.write(
+    Escape("terminal"),
+    traps.terminal(expression));
 
   cut.$copy = traps.copy;
 
@@ -53,25 +57,16 @@ module.exports = (pointcut) => {
   ///////////////
 
   cut.Label = (label, statements) => ArrayLite.concat(
-    Inform(traps.label(label, false)),
+    Inform(traps.label(ParseLabel.split(label) , ParseLabel.core(label))),
     ARAN.build.Label(
-      label && SanitizeLabel.break(label),
+      label,
       ArrayLite.concat(
         statements,
         Inform(traps.leave("label")))));
 
   cut.Break = (label) => ArrayLite.concat(
-    Inform(traps.break(label, false)),
-    ARAN.build.Break(
-      label && SanitizeLabel.break(label)));
-
-  cut.Continue = (label) => ArrayLite.concat(
-    Inform(traps.break(label, true)),
-    (
-      label ?
-      ARAN.build.Break(
-        SanitizeLabel.break(label)) :
-      ARAN.build.Continue()));
+    Inform(traps.break(ParseLabel.split(label) , ParseLabel.core(label))),
+    ARAN.build.Break(label));
 
   cut.Block = (statements) => ARAN.build.Block(
     ArrayLite.concat(
@@ -209,23 +204,24 @@ module.exports = (pointcut) => {
     strict,
     ARAN.build.Try(
       ArrayLite.concat(
-        Inform(traps.program()),
+        Inform(
+          traps.begin()),
         ARAN.build.Declare(
           "let",
-          Escape("terminate"),
-          traps.primitive(
-            ARAN.build.primitive(void 0))),
+          Escape("terminal"),
+          traps.terminal(
+            traps.primitive(
+              ARAN.build.primitive(void 0)))),
         statements,
         ARAN.build.Statement(
-          traps.terminate(
-            true,
+          traps.success(
             ARAN.build.read(
-              Escape("terminate"))))),
+              Escape("terminal"))))),
       ARAN.build.Throw(
-        traps.terminate(
-          false,
+        traps.failure(
           ARAN.build.read("error"))),
-      []));
+      Inform(
+        traps.end())));
 
   cut.write = (identifier, expression) => ARAN.build.write(
     SanitizeIdentifier(identifier),
@@ -251,57 +247,61 @@ module.exports = (pointcut) => {
   cut.Throw = (expression) => ARAN.build.Throw(
     traps.throw(expression));
 
-  cut.While = (expression, label, statements) => ArrayLite.concat(
-    Inform(
-      traps.label(null, false)),
+  cut.While = (expression, statements) => ArrayLite.concat(
     ARAN.build.While(
       traps.test(expression),
-      (
-        label &&
-        SanitizeLabel.continue(label)),
-      ArrayLite.concat(
-        Inform(
-          traps.label(null, true)),
-        (
-          label ?
-          Inform(
-            traps.label(label, true)) :
-          []),
-        statements,
-        (
-          label ?
-          Inform(
-            traps.leave("label")) :
-          []),
-        Inform(
-          traps.leave("label")))),
-    Inform(traps.leave("label")));
+      statements));
 
-  cut.For = (statements1, expression1, expression2, label, statements2) => ArrayLite.concat(
-    Inform(traps.label(null, false)),
-    ARAN.build.For(
-      statements1,
-      traps.test(expression1),
-      expression2,
-      (
-        label &&
-        SanitizeLabel.continue(label)),
-      ArrayLite.concat(
-        Inform(
-          traps.label(null, true)),
-        (
-          label ?
-          Inform(
-            traps.label(label, true)) :
-          []),
-        statements2,
-        (
-          label ?
-          Inform(
-            traps.leave("label")) :
-          []),
-        Inform(traps.leave("label")))),
-    Inform(traps.leave("label")));
+    // Inform(
+    //   traps.label(null, false)),
+    // ARAN.build.While(
+    //   traps.test(expression),
+    //   (
+    //     label &&
+    //     SanitizeLabel.continue(label)),
+    //   ArrayLite.concat(
+    //     Inform(
+    //       traps.label(null, true)),
+    //     (
+    //       label ?
+    //       Inform(
+    //         traps.label(label, true)) :
+    //       []),
+    //     statements,
+    //     (
+    //       label ?
+    //       Inform(
+    //         traps.leave("label")) :
+    //       []),
+    //     Inform(
+    //       traps.leave("label")))),
+    // Inform(traps.leave("label")));
+
+  // cut.For = (statements1, expression1, expression2, label, statements2) => ArrayLite.concat(
+  //   Inform(traps.label(null, false)),
+  //   ARAN.build.For(
+  //     statements1,
+  //     traps.test(expression1),
+  //     expression2,
+  //     (
+  //       label &&
+  //       SanitizeLabel.continue(label)),
+  //     ArrayLite.concat(
+  //       Inform(
+  //         traps.label(null, true)),
+  //       (
+  //         label ?
+  //         Inform(
+  //           traps.label(label, true)) :
+  //         []),
+  //       statements2,
+  //       (
+  //         label ?
+  //         Inform(
+  //           traps.leave("label")) :
+  //         []),
+  //       Inform(traps.leave("label")))),
+  //   Inform(traps.leave("label")));
 
   cut.If = (expression, statements1, statements2) => ARAN.build.If(
     traps.test(expression),
@@ -319,13 +319,12 @@ module.exports = (pointcut) => {
     expression2,
     expression3);
 
-  cut.Switch = (clauses) => ArrayLite.concat(
-    Inform(traps.label(null)),
-    ARAN.build.Switch(
-      clauses.map((clause) => [
+  cut.Switch = (clauses) => ARAN.build.Switch(
+    ArrayLite.map(
+      clauses,
+      (clause) => [
         traps.test(clause[0]),
-        clause[1]])),
-    Inform(traps.leave("label")));
+        clause[1]]));
 
   ////////////
   // Return //

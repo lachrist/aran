@@ -182,6 +182,7 @@ exports.sequence = (expressions) => (
   expressions.length === 0 ?
   {
     type: "UnaryExpression",
+    prefix: true,
     operator: "void",
     argument: {
       type: "Literal",
@@ -279,60 +280,17 @@ exports.Label = (label, statements) => [
 exports.Break = (label) => [
   {
     type:"BreakStatement",
-    label: (
-      label ?
-      {
-        type: "Identifier",
-        name: label} :
-      null)}];
+    label: {
+      type: "Identifier",
+      name: label}}];
 
-exports.Continue = () => [
-  {
-    type: "ContinueStatement",
-    label: null}];
-
-exports.While = (expression, label, statements) => [
+exports.While = (expression, statements) => [
   {
     type: "WhileStatement",
     test: expression,
-    body: (
-      label ?
-      {
-        type: "LabeledStatement",
-        label: {
-          type: "Identifier",
-          name: label},
-        body: {
-          type: "BlockStatement",
-          body: statements}} :
-      {
-        type: "BlockStatement",
-        body: statements})}];
-
-exports.For = (statements1, expression1, expression2, label, statements2) => [
-  {
-    type: "BlockStatement",
-    body: ArrayLite.concat(
-      statements1,
-      [
-        {
-          type: "ForStatement",
-          init: null,
-          test: expression1,
-          update: expression2,
-          body: (
-            label ?
-            {
-              type: "LabeledStatement",
-              label: {
-                type: "Identifier",
-                name: label},
-              body: {
-                type: "BlockStatement",
-                body: statements2}} :
-            {
-              type: "BlockStatement",
-              body: statements2})}])}];
+    body: {
+      type: "BlockStatement",
+      body: statements}}];
 
 exports.Debugger = () => [
   {

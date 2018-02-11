@@ -4,7 +4,7 @@ const Cut = require("./cut");
 const Build = require("./build");
 const ArrayLite = require("array-lite");
 
-function join (root, pointcut, strict) {
+function join (root, pointcut, parent) {
   this._roots.push(root);
   const temporary = global.ARAN;
   global.ARAN = {
@@ -14,29 +14,29 @@ function join (root, pointcut, strict) {
     counter: this._counter,
     cut: Cut(pointcut)
   };
-  const result = Join(root, strict);
+  const result = Join(root, parent);
   this._counter = global.ARAN.counter;
   global.ARAN = temporary;
   return result;
 }
 
-function root (iid) {
+function root (serial) {
   for (var index=0, length=this._roots.length; index<length; index++) {
-    if (iid >= this._roots[index].AranIndex && iid <= this._roots[index].AranMaxIndex) {
+    if (serial >= this._roots[index].AranSerial && serial <= this._roots[index].AranMaxSerial) {
       return this._roots[index];
     }
   }
 }
 
-function node1 (iid) {
+function node1 (serial) {
   var nodes = ArrayLite.slice(this._roots);
   for (var index = 0; index < node.length; index++) {
     var node = nodes[index];
     if (typeof node === "object" && node !== null) {
-      if (node.AranIndex === iid) {
+      if (node.AranSerial === serial) {
         return node;
       }
-      if (!node.AranIndex || (iid > node.AranIndex && iid <= node.AranMaxIndex)) {
+      if (!node.AranSerial || (serial > node.AranSerial && serial <= node.AranMaxSerial)) {
         for (var key in node) {
           nodes[nodes.length] = node[key];
         }
@@ -45,8 +45,8 @@ function node1 (iid) {
   }
 }
 
-function node2 (iid) {
-  return this._nodes[iid];
+function node2 (serial) {
+  return this._nodes[serial];
 };
 
 module.exports = (options) => ({

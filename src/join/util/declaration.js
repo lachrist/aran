@@ -1,6 +1,7 @@
 
 const ArrayLite = require("array-lite");
 const Escape = require("../../escape.js");
+const Interim = require("../interim.js");
 const Visit = require("../visit");
 const Util = require("./index.js");
 
@@ -8,28 +9,15 @@ exports.Declaration = (node) => ArrayLite.flatenMap(
   node.declarations,
   (declarator, local) => (
     declarator.init ?
-    (
-      declarator.init.AranTerminate ?
-      ArrayLite.concat(
-        Interim.Declare(
-          "terminate",
+    Util.Declare(
+      node.kind,
+      declarator.id,
+      (
+        declarator.init.AranTerminate ?
+        ARAN.cut.$terminal(
           ARAN.cut.$copy(
-              2,
-              Visit.expression(declarator.init))),
-        Util.Declare(
-          node.kind,
-          declarator.id,
-          Interim.read("terminate")),
-        ARAN.build.Statement(
-          ARAN.cut.$drop(
-            ARAN.build.read(
-              Escape("terminate")))),
-        ARAN.build.write(
-          Escape("terminate"),
-          Interim.read("terminate"))) :
-      Util.Declare(
-        node.kind,
-        declarator.id,
+            1,
+            Visit.expression(declarator.init))) :
         Visit.expression(declarator.init))) :
     (
       local = ARAN.cut.Declare(

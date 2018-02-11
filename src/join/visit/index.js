@@ -22,14 +22,14 @@ const visit = (visitors) => (node) => {
     node.body.body[0].type === "ExpressionStatement" &&
     node.body.body[0].expression.type === "Literal" &&
     node.body.body[0].expression.value === "use strict");
-  node.AranIndex = ++ARAN.counter;
+  node.AranSerial = ++ARAN.counter;
   if (ARAN.nodes)
-    ARAN.nodes[node.AranIndex] = node;
+    ARAN.nodes[node.AranSerial] = node;
   const temporary = ARAN.parent;
   ARAN.parent = node;
   const result = visitors[node.type](node);
   ARAN.parent = temporary;
-  node.AranMaxIndex = ARAN.counter;
+  node.AranMaxSerial = ARAN.counter;
   return result;
 };
 

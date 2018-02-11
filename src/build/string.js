@@ -202,23 +202,19 @@ exports.If = (expression, statements1, statements2) => [
     ArrayLite.join(statements2, "") +
     "}")];
 
-exports.Label = (label, statements) => [
+exports.Label = (boolean, label, statements) => [
   (
+    (boolean ? "Continue" : "Break") +
     label +
     ":{" +
     ArrayLite.join(statements, "") +
     "}")];
 
-exports.Break = (label) => [
+exports.Break = (boolean, label) => [
   (
     "break " +
-    (label||"") +
-    ";")];
-
-exports.Continue = (label) => [
-  (
-    "continue "+
-    (label||"") +
+    (boolean ? "Continue" : "Break") +
+    label +
     ";")];
 
 exports.While = (expression, label, statements) => [
@@ -231,19 +227,19 @@ exports.While = (expression, label, statements) => [
     ArrayLite.join(statements, "") +
     "}")];
 
-exports.For = (statements1, expression1, expression2, label, statements2) => [
-  (
-    "{" +
-    ArrayLite.join(statements1, "") +
-    "for(;" +
-    expression1 +
-    ";" +
-    expression2 +
-    ")" +
-    (label ? label + ":" : ""),
-    "{" +
-    ArrayLite.join(statements2, "") +
-    "}")];
+// exports.For = (statements1, expression1, expression2, label, statements2) => [
+//   (
+//     "{" +
+//     ArrayLite.join(statements1, "") +
+//     "for(;" +
+//     expression1 +
+//     ";" +
+//     expression2 +
+//     ")" +
+//     (label ? label + ":" : ""),
+//     "{" +
+//     ArrayLite.join(statements2, "") +
+//     "}")];
 
 exports.Debugger = () => [
   (

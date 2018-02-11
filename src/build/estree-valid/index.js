@@ -7,7 +7,6 @@ const ArgumentsType = require("./arguments-type.js");
 const isArray = Array.isArray;
 const keys = Object.keys;
 const apply = Reflect.apply;
-const substring = String.prototype.substring;
 
 ArrayLite.forEach(keys(Estree), (key) => {
   exports[key] = function () {
@@ -31,9 +30,6 @@ const duck = (type, value) => {
       throw new Error("Not an object: "+Util.inspect(value));
     for (var key in type)
       duck(type[key], value[key]);
-  } else if (typeof type === "string" && type[0] === "?") {
-    if (value !== null)
-      Check[apply(substring, type, [1])](value);
   } else if (typeof type === "string") {
     Check[type](value);
   } else {

@@ -49,7 +49,7 @@ exports.closure = (node) => {
           pattern,
           ARAN.cut.get(
             ARAN.cut.$copy(
-              0,
+              1,
               ARAN.build.read(
                 Escape("arguments"))),
             ARAN.cut.primitive(index)))),

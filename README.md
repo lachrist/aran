@@ -31,7 +31,7 @@ We provide three usage example in this repository:
 
 Trap Category | # pops | # pushes
 ---------------------------------
-Combiner      | x      | 1 (0 set)
+Combiner      | 1..n   | 1
 Producer      | 0      | 1
 Consumer      | 1      | 0
 Informer      | 0      | 0
