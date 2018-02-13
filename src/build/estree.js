@@ -226,20 +226,20 @@ exports.Throw = (expression) => [
     type: "ThrowStatement",
     argument: expression}];
 
-exports.Try = (statements1, statements2, statements3) => [
+exports.Try = (statements1, $statements2, statements3) => [
   {
     type: "TryStatement",
     block: {
       type: "BlockStatement",
       body: statements1},
-    handler: {
+    handler: $statements2 && {
       type: "CatchClause",
       param: {
         type: "Identifier",
         name: "error"},
       body: {
         type: "BlockStatement",
-        body: statements2}},
+        body: $statements2}},
     finalizer: {
       type: "BlockStatement",
       body: statements3}}];

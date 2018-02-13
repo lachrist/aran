@@ -2,13 +2,13 @@
 const ArrayLite = require("array-lite");
 const Traps = require("./traps");
 const Escape = require("../escape.js");
-const apply = Reflect.apply;
-const substring = String.prototype.substring;
-const toUpperCase = String.prototype.toUpperCase;
+const Reflect_apply = Reflect.apply;
+const String_prototype_replace = String.prototype.replace;
 const Inform = require("./inform.js");
 const ParseLabel = require("./parse-label.js");
 const SanitizeIdentifier = require("./sanitize-identifier.js");
 const ContainArguments = require("./contain-arguments.js");
+
 
 module.exports = (pointcut) => {
 
@@ -20,18 +20,21 @@ module.exports = (pointcut) => {
   // Compilation //
   /////////////////
 
-  cut.$builtin = (name) => traps.builtin(
-    name,
+  cut.$builtin = (strings) => traps.builtin(
+    ArrayLite.join(strings, "."),
     ARAN.build.read(
-      Escape(name)));
+      Escape(
+        ArrayLite.join(strings, "_"))));
 
-  cut.$terminal = (expression) => ARAN.build.write(
-    Escape("terminal"),
-    traps.terminal(expression));
+  cut.$completion = (expression) => ARAN.build.write(
+    Escape("completion"),
+    traps.completion(expression));
 
   cut.$copy = traps.copy;
 
   cut.$drop = traps.drop;
+
+  cut.$swap = traps.swap;
 
   ///////////////
   // Combiners //
@@ -56,13 +59,12 @@ module.exports = (pointcut) => {
   // Informers //
   ///////////////
 
-  cut.Label = (label, statements) => ArrayLite.concat(
-    Inform(traps.label(ParseLabel.split(label) , ParseLabel.core(label))),
-    ARAN.build.Label(
-      label,
-      ArrayLite.concat(
-        statements,
-        Inform(traps.leave("label")))));
+  cut.Label = (label, statements) => ARAN.build.Label(
+    label,
+    ArrayLite.concat(
+      Inform(traps.label(ParseLabel.split(label) , ParseLabel.core(label))),
+      statements,
+      Inform(traps.leave("label"))));
 
   cut.Break = (label) => ArrayLite.concat(
     Inform(traps.break(ParseLabel.split(label) , ParseLabel.core(label))),
@@ -169,7 +171,7 @@ module.exports = (pointcut) => {
                       "let",
                       "arguments",
                       traps.copy(
-                        0,
+                        1,
                         ARAN.build.read(
                           Escape("arguments")))))),
                 statements)))),
@@ -208,15 +210,15 @@ module.exports = (pointcut) => {
           traps.begin()),
         ARAN.build.Declare(
           "let",
-          Escape("terminal"),
-          traps.terminal(
+          Escape("completion"),
+          traps.completion(
             traps.primitive(
               ARAN.build.primitive(void 0)))),
         statements,
         ARAN.build.Statement(
           traps.success(
             ARAN.build.read(
-              Escape("terminal"))))),
+              Escape("completion"))))),
       ARAN.build.Throw(
         traps.failure(
           ARAN.build.read("error"))),
@@ -251,57 +253,6 @@ module.exports = (pointcut) => {
     ARAN.build.While(
       traps.test(expression),
       statements));
-
-    // Inform(
-    //   traps.label(null, false)),
-    // ARAN.build.While(
-    //   traps.test(expression),
-    //   (
-    //     label &&
-    //     SanitizeLabel.continue(label)),
-    //   ArrayLite.concat(
-    //     Inform(
-    //       traps.label(null, true)),
-    //     (
-    //       label ?
-    //       Inform(
-    //         traps.label(label, true)) :
-    //       []),
-    //     statements,
-    //     (
-    //       label ?
-    //       Inform(
-    //         traps.leave("label")) :
-    //       []),
-    //     Inform(
-    //       traps.leave("label")))),
-    // Inform(traps.leave("label")));
-
-  // cut.For = (statements1, expression1, expression2, label, statements2) => ArrayLite.concat(
-  //   Inform(traps.label(null, false)),
-  //   ARAN.build.For(
-  //     statements1,
-  //     traps.test(expression1),
-  //     expression2,
-  //     (
-  //       label &&
-  //       SanitizeLabel.continue(label)),
-  //     ArrayLite.concat(
-  //       Inform(
-  //         traps.label(null, true)),
-  //       (
-  //         label ?
-  //         Inform(
-  //           traps.label(label, true)) :
-  //         []),
-  //       statements2,
-  //       (
-  //         label ?
-  //         Inform(
-  //           traps.leave("label")) :
-  //         []),
-  //       Inform(traps.leave("label")))),
-  //   Inform(traps.leave("label")));
 
   cut.If = (expression, statements1, statements2) => ARAN.build.If(
     traps.test(expression),

@@ -22,8 +22,12 @@ exports.combiners = {
   unary: [primitive, identity],
   binary: [primitive, identity, identity]};
 
-exports.producers = {
+exports.modifiers = {
+  // stack //
+  swap: [primitive, primitive, identity],
   copy: [primitive, identity],
+  drop: [identity],
+  // producers //
   read: [primitive, identity],
   discard: [primitive, identity],
   builtin: [primitive, identity],
@@ -33,9 +37,8 @@ exports.producers = {
   catch: [identity],
   primitive: [identity],
   regexp: [identity],
-  closure: [identity]};
-
-exports.consumers = {
+  closure: [identity],
+  // consumers //
   drop: [identity],
   declare: [primitive, primitive, identity],
   write: [primitive, identity],
@@ -44,7 +47,7 @@ exports.consumers = {
   throw: [identity],
   return: [identity],
   eval: [identity],
-  terminal: [identity],
+  completion: [identity],
   success: [identity],
   failure: [identity]};
 

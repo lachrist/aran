@@ -19,12 +19,15 @@ ArrayLite.forEach(keys(Estree), (key) => {
 });
 
 const duck = (type, value) => {
-  if (isArray(type) && type.length === 1) {
+  if (isArray(type) && type.length === 2 && type[0] === "nullable") {
+    if (value !== null)
+      duck(type[1], value);
+  } else if (isArray(type) && type.length === 2 && type[0] === "list") {
     if (typeof value !== "object" || value === null || typeof value.length !== "number")
       throw new Error("Not an array: "+Util.inspect(value));
     ArrayLite.forEach(
       value,
-      (value) => duck(type[0], value));
+      (value) => duck(type[1], value));
   } else if (typeof type === "object" && type !== null) {
     if (typeof value !== "object" || value === null)
       throw new Error("Not an object: "+Util.inspect(value));

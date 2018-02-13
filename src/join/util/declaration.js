@@ -12,13 +12,7 @@ exports.Declaration = (node) => ArrayLite.flatenMap(
     Util.Declare(
       node.kind,
       declarator.id,
-      (
-        declarator.init.AranTerminate ?
-        ARAN.cut.$terminal(
-          ARAN.cut.$copy(
-            1,
-            Visit.expression(declarator.init))) :
-        Visit.expression(declarator.init))) :
+      Visit.expression(declarator.init)) :
     (
       local = ARAN.cut.Declare(
         node.kind,

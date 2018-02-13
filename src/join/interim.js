@@ -22,5 +22,3 @@ exports.Declare = (information, expression) => ARAN.build.Declare(
   "var",
   Escape(ARAN.parent.AranSerial + "_" + information),
   expression);
-
-exports.LABEL = (information) => Escape(ARAN.parent.AranSerial + "_" + information);

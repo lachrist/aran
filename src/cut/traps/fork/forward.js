@@ -19,7 +19,5 @@ ArrayLite.forEach(
   (key) => exports[key] = empty);
 
 ArrayLite.forEach(
-  ArrayLite.concat(
-    Object.keys(TrapArguments.producers),
-    Object.keys(TrapArguments.consumers)),
+  TrapArguments.modifiers,
   (key) => exports[key] = last);

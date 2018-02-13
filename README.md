@@ -189,6 +189,11 @@ X                        | `Program` | `Strict` | `primitive` | `function` | `ob
 `Identifier`             |           |          | X           |            |          |         |          |           | X      |         |         |         |        |         |             |             |          |        |         |          |       |       |          |             |        |         |         |         |       |         |           |            |              
 `Literal`                |           |          |             |            |          |         |          |           |        |         |         |         |        |         |             |             |          |        |         |          |       |       |          |             |        |         |         |         |       |         |           |            |              
 
+## TODOs
+
+* Optimized AST output
+* Inline ugly Aran-defined rest function
+
 ## Transparency Concerns
 
 

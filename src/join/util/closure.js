@@ -19,28 +19,34 @@ exports.closure = (node) => {
         ARAN.cut.invoke(
           ARAN.build.read(
             Escape("arguments")),
-          ARAN.cut.$builtin("iterator"),
+          ARAN.cut.$builtin(["Symbol", "iterator"]),
           [])),
       ArrayLite.flatenMap(
         node.params,
-        (pattern) => Util.Declare(
-          "let",
-          (
-            pattern.type === "RestElement" ?
-            pattern.argument :
-            pattern),
-          (
-            pattern.type === "RestElement" ?
-            ARAN.cut.apply(
-              ARAN.cut.$builtin("rest"),
+        (pattern) => (
+          pattern.type === "RestElement" ?
+          Util.Declare(
+            "let",
+            pattern.argument,
+            ARAN.build.apply(
+              Util.rest(),
               [
-                Interim.read("iterator")]) :
+                Interim.read("iterator"),
+                ARAN.cut.array([])])) :
+          Util.Declare(
+            "let",
+            pattern,
             ARAN.cut.get(
               ARAN.cut.invoke(
-                Interim.read("iterator"),
+                ARAN.cut.$copy(
+                  1,
+                  Interim.read("iterator")),
                 ARAN.cut.primitive("next"),
                 []),
-              ARAN.cut.primitive("value")))))) :
+              ARAN.cut.primitive("value"))))),
+      ARAN.build.Statement(
+        ARAN.cut.$drop(
+          Interim.read("iterator")))) :
     ArrayLite.concat(
       ArrayLite.flatenMap(
         node.params,
@@ -77,7 +83,7 @@ exports.closure = (node) => {
   return (
     node.id ?
     ARAN.cut.apply(
-      ARAN.cut.$builtin("defineProperty"),
+      ARAN.cut.$builtin(["Object", "defineProperty"]),
       [
         expression,
         ARAN.cut.primitive("name"),

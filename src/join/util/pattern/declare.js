@@ -2,7 +2,6 @@
 const ArrayLite = require("array-lite");
 const Interim = require("../../interim.js");
 const Common = require("./common.js");
-const Pure = require("./pure.js");
 
 const transformerss = {
   var: {
@@ -25,8 +24,11 @@ const transformerss = {
 exports.Declare = (kind, pattern, expression) => (
   pattern.type === "Identifier" ?
   transformerss[kind].binding(pattern.name, expression) :
-  ArrayLite.flaten(
+  ArrayLite.concat(
+    Interim.Declare(
+      "right",
+      expression),
     Common(
       transformerss[kind],
       pattern,
-      expression)));
+      "right")));

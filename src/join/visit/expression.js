@@ -32,7 +32,7 @@ exports.ObjectExpression = (node) => (
   ArrayLite.reduce(
     node.properties,
     (node, property) => ARAN.cut.apply(
-      ARAN.cut.$builtin("defineProperty"),
+      ARAN.cut.$builtin(["Object", "defineProperty"]),
       [
         node,
         (
@@ -134,7 +134,7 @@ exports.AssignmentExpression = (node) => (
           Visit.expression(node.left.object))),
       (
         node.operator === "=" ?
-        Util.property(node.left),
+        Util.property(node.left) :
         Interim.hoist(
           "property",
           Util.property(node.left))),
@@ -150,7 +150,7 @@ exports.AssignmentExpression = (node) => (
             ARAN.cut.$copy(
               2,
               Interim.read("property"))),
-          Visit.expression(node.right))))
+          Visit.expression(node.right)))) :
     ARAN.build.sequence([
       Interim.hoist(
         "value",
@@ -310,7 +310,7 @@ exports.CallExpression = (node) => (
                   Visit.expression(argument)))),
             ARAN.build.primitive(0))))))) :
   ARAN.cut.apply(
-    ARAN.cut.builtin("apply"),
+    ARAN.cut.$builtin(["Reflect", "apply"]),
     [
       (
         node.callee.type === "MemberExpression" ?
@@ -331,7 +331,7 @@ exports.CallExpression = (node) => (
         (
           node.AranStrict ?
           ARAN.cut.primitive(void 0) :
-          ARAN.cut.$builtin("global"))),
+          ARAN.cut.$builtin(["global"]))),
       ARAN.build.sequence(
         ArrayLite.concat(
           [
@@ -340,29 +340,35 @@ exports.CallExpression = (node) => (
               ARAN.cut.array([]))],
           ArrayLite.map(
             node.arguments,
-            (argument) => (
-              argument.type === "SpreadElement" ?
-              ARAN.build.apply(
-                ARAN.cut.$builtin(),
-                [
-                  ARAN.cut.$copy(
-                    1,
-                    Interim.read("arguments")),
-                  ARAN.cut.invoke(
-                    Visit.expression(argument.argument),
-                    ARAN.cut.builtin("iterator"),
-                    [])]) :
-              ARAN.cut.set(
-                ARAN.cut.$copy(
+            (argument) => ARAN.cut.$drop(
+              (
+                argument.type === "SpreadElement" ?
+                ARAN.cut.$swap(
+                  2,
                   1,
-                  Interim.read("arguments")),
-                ARAN.cut.get(
+                  ARAN.build.apply(
+                    Util.rest(),
+                    [
+                      ARAN.cut.invoke(
+                        Visit.expression(argument.argument),
+                        ARAN.cut.$builtin(["Symbol", "iterator"]),
+                        []),
+                      ARAN.cut.$swap(
+                        2,
+                        1,
+                        Interim.read("arguments"))])) :
+                ARAN.cut.set(
                   ARAN.cut.$copy(
                     1,
                     Interim.read("arguments")),
-                  ARAN.cut.primitive("length")),
-                Visit.expression(argument)))),
-          Interim.read("arguments")))]));
+                  ARAN.cut.get(
+                    ARAN.cut.$copy(
+                      1,
+                      Interim.read("arguments")),
+                    ARAN.cut.primitive("length")),
+                  Visit.expression(argument))))),
+          [
+            Interim.read("arguments")]))]));
 
 exports.MemberExpression = (node) => ARAN.cut.get(
   Visit.expression(node.object),

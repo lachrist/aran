@@ -13,18 +13,18 @@ const ArrayLite = require("array-lite");
 const Escape = require("../escape.js");
 const Visit = require("./visit");
 const Interim = require("./interim.js");
-const Terminate = require("./terminate.js");
+const Completion = require("./completion.js");
 
 const keys = Object.keys;
 
 module.exports = (node, parent) => {
-  Terminate(node);
+  Completion(node);
   node.AranParent = parent || null;
   node.AranStrict = (
     (
       parent && parent.AranStrict) ||
     (
-      node.body.length &&
+      node.body.length > 0 &&
       node.body[0].type === "ExpressionStatement" &&
       node.body[0].expression.type === "Literal" &&
       node.body[0].expression.value === "use strict"));
@@ -39,9 +39,37 @@ module.exports = (node, parent) => {
   const result = ARAN.cut.PROGRAM(
     node.AranStrict,
     ArrayLite.concat(
+      save(
+        "global",
+        ARAN.build.conditional(
+          ARAN.build.binary(
+            "===",
+            ARAN.build.unary(
+              "typeof",
+              ARAN.build.read("window")),
+            ARAN.build.primitive("undefined")),
+          ARAN.build.read("global"),
+          ARAN.build.read("window"))),
       ArrayLite.flatenMap(
-        keys(builtins),
-        save),
+        [
+          ["eval"],
+          ["TypeError"],
+          ["Reflect", "apply"],
+          ["Object", "defineProperty"],
+          ["Object", "getPrototypeOf"],
+          ["Object", "keys"],
+          ["Symbol", "iterator"]],
+        (strings) => save(
+          ArrayLite.join(strings, "_"),
+          ArrayLite.reduce(
+            strings,
+            (accumulator, string) => (
+              accumulator ?
+              ARAN.build.get(
+                accumulator,
+                ARAN.build.primitive(string)) :
+              ARAN.build.read(string)),
+            null))),
       ArrayLite.flaten(ARAN.hoisted),
       statements));
   delete ARAN.hoisted;
@@ -50,70 +78,7 @@ module.exports = (node, parent) => {
   return result;
 };
 
-const builtins = {
-  global: () => ARAN.build.conditional(
-    ARAN.build.binary(
-      "===",
-      ARAN.build.unary(
-        "typeof",
-        ARAN.build.read("window")),
-      ARAN.build.primitive("undefined")),
-    ARAN.build.read("global"),
-    ARAN.build.read("window")),
-  apply: () => ARAN.build.get(
-    ARAN.build.read("Reflect"),
-    ARAN.build.primitive("apply")),
-  defineProperty: () => ARAN.build.get(
-    ARAN.build.read("Object"),
-    ARAN.build.primitive("defineProperty")),
-  getPrototypeOf: () => ARAN.build.get(
-    ARAN.build.read("Object"),
-    ARAN.build.primitive("getPrototypeOf")),
-  keys: () => ARAN.build.get(
-    ARAN.build.read("Object"),
-    ARAN.build.primitive("keys")),
-  iterator: () => ARAN.build.get(
-    ARAN.build.read("Symbol"),
-    ARAN.build.primitive("iterator")),
-  eval: () => ARAN.build.read("eval"),
-  TypeError: () => ARAN.build.read("TypeError"),
-  rest: () => ARAN.build.closure(
-    false,
-    ArrayLite.concat(
-      ARAN.build.Declare(
-        "let",
-        "step",
-        ARAN.build.primitive(void 0)),
-      ARAN.build.Declare(
-        "let",
-        "array",
-        ARAN.build.array([])),
-      ARAN.build.While(
-        ARAN.build.unary(
-          "!",
-          ARAN.build.get(
-            ARAN.build.write(
-              "step",
-              ARAN.build.invoke(
-                ARAN.build.get(
-                  ARAN.build.read("arguments"),
-                  ARAN.build.primitive(0)),
-                ARAN.build.primitive("next"),
-                [])),
-            ARAN.build.primitive("done"))),
-        ARAN.build.Statement(
-          ARAN.build.set(
-            ARAN.build.read("array"),
-            ARAN.build.get(
-              ARAN.build.read("array"),
-              ARAN.build.primitive("length")),
-            ARAN.build.get(
-              ARAN.build.read("step"),
-              ARAN.build.primitive("value"))))),
-      ARAN.build.Return(
-        ARAN.build.read("array"))))};
-
-const save = (key) => ARAN.build.If(
+const save = (key, value) => ARAN.build.If(
   ARAN.build.binary(
     "===",
     ARAN.build.unary(
@@ -124,5 +89,5 @@ const save = (key) => ARAN.build.If(
   ARAN.build.Declare(
     "var",
     Escape(key),
-    builtins[key]()),
+    value),
   []);
