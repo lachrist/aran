@@ -128,9 +128,10 @@ module.exports = (pointcut) => {
                 (
                   ARAN.parent.type === "ArrowFunctionExpression" ?
                   (
-                    traps.drop(
-                      traps.this(
-                        ARAN.build.read("this")))) :
+                    ARAN.build.Statement(
+                      traps.drop(
+                        traps.this(
+                          ARAN.build.read("this"))))) :
                   ARAN.build.Declare(
                     "const",
                     SanitizeIdentifier("this"),
@@ -142,9 +143,10 @@ module.exports = (pointcut) => {
                 (
                   ARAN.parent.type === "ArrowFunctionExpression" ?
                   (
-                    traps.drop(
-                      traps.newtarget(
-                        ARAN.build.read("new.target")))) :
+                    ARAN.build.Statement(
+                      traps.drop(
+                        traps.newtarget(
+                          ARAN.build.read("new.target"))))) :
                   ARAN.build.Declare(
                     "const",
                     SanitizeIdentifier("new.target"),
@@ -217,8 +219,10 @@ module.exports = (pointcut) => {
         statements,
         ARAN.build.Statement(
           traps.success(
-            ARAN.build.read(
-              Escape("completion"))))),
+            ARAN.build.write(
+              Escape("completion"), // to prevent optimization to drop last statement
+              ARAN.build.read(
+                Escape("completion")))))),
       ARAN.build.Throw(
         traps.failure(
           ARAN.build.read("error"))),

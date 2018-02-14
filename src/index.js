@@ -3,6 +3,8 @@ const Join = require("./join");
 const Cut = require("./cut");
 const Build = require("./build");
 const ArrayLite = require("array-lite");
+const Object_assign = Object.assign;
+const Object_keys = Object.keys;
 
 function join (root, pointcut, parent) {
   this._roots.push(root);
@@ -49,13 +51,22 @@ function node2 (serial) {
   return this._nodes[serial];
 };
 
-module.exports = (options) => ({
-  _roots: [],
-  _counter: 1,
-  _build: options.output ? (Build[options.output] || options.output) : Build.Estree,
-  _nodes: options.nocache ? null : [],
-  namespace: options.namespace || "__aran__",
-  join: join,
-  root: root,
-  node: options.nocache ? node1 : node2
-});
+module.exports = (options) => {
+  options = Object_assign({
+    namespace: "__META__",
+    output: "EstreeOptimized",
+    nocache: false
+  }, options);
+  if (!Build[options.output])
+    throw new Error("Unknown output: "+options.output+", should be one of "+Object_keys(Build)+".");
+  return {
+    _roots: [],
+    _counter: 1,
+    _build: Build[options.output],
+    _nodes: options.nocache ? null : [],
+    namespace: options.namespace,
+    join: join,
+    root: root,
+    node: options.nocache ? node1 : node2
+  }
+};

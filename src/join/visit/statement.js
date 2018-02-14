@@ -85,7 +85,8 @@ exports.SwitchStatement = (node, temporary, statement) => Util.Completion(
       ARAN.break = temporary,
       ARAN.build.Try(
         statement,
-        null,
+        ARAN.build.Throw(
+          ARAN.build.read("error")),
         ARAN.build.Statement(
           ARAN.cut.$drop(
             Interim.read("switch"))))));
@@ -116,8 +117,7 @@ exports.TryStatement = (node) => Util.Completion(
           node.handler.body.body,
           Visit.Statement)) :
       ARAN.cut.Throw(
-        ARAN.build.read(
-          Escape("error")))),
+        ARAN.build.read("error"))),
     (
       node.finalizer ?
       ArrayLite.flatenMap(
@@ -332,7 +332,8 @@ exports.ForInStatement = (node) => Util.Completion(
               "+",
               Interim.read("index1"),
               ARAN.cut.primitive(1))))),
-      null,
+      ARAN.build.Throw(
+        ARAN.build.read("error")),
       ArrayLite.concat(
         ARAN.build.Statement(
           ARAN.cut.$drop(
@@ -395,7 +396,8 @@ exports.ForOfStatement = (node) => Util.Completion(
       ARAN.build.Statement(
         ARAN.cut.$drop(
           Interim.read("step")))),
-    null,
+    ARAN.build.Throw(
+      ARAN.build.read("error")),
     ArrayLite.concat(
       ARAN.build.Statement(
         ARAN.cut.$drop(

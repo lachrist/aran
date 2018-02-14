@@ -12,11 +12,13 @@
   "dependencies": {
     "array-lite": "0.1.0"
   },
-  "files": [
-    "instrument.js",
-    "main.js",
-    "traps.js"
-  ],
+  "devDependencies": {
+    "astring": "1.2.0",
+    "readline-sync": "1.4.8",
+    "acorn": "5.4.1",
+    "browserify": "16.1.0",
+    "minimist": "1.2.0"
+  },
   "main": "src/index.js",
   "keywords": [
     "JavaScript",
@@ -25,7 +27,6 @@
     "Sandboxing",
     "Monitoring",
     "Tracing",
-    "Shadow Execution",
-    "ECMAScript5"
+    "Shadow Execution"
   ]
 }

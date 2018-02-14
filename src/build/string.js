@@ -56,10 +56,11 @@ exports.regexp = (string1, string2) => (
   string2);
 
 exports.get = (expression1, expression2) => (
+  "(" +
   expression1 +
   "[" +
   expression2 +
-  "]");
+  "])");
 
 exports.set = (expression1, expression2, expression3) => (
   "(" +
@@ -202,44 +203,26 @@ exports.If = (expression, statements1, statements2) => [
     ArrayLite.join(statements2, "") +
     "}")];
 
-exports.Label = (boolean, label, statements) => [
+exports.Label = (label, statements) => [
   (
-    (boolean ? "Continue" : "Break") +
     label +
     ":{" +
     ArrayLite.join(statements, "") +
     "}")];
 
-exports.Break = (boolean, label) => [
+exports.Break = (label) => [
   (
     "break " +
-    (boolean ? "Continue" : "Break") +
     label +
     ";")];
 
-exports.While = (expression, label, statements) => [
+exports.While = (expression, statements) => [
   (
     "while(" +
     expression +
-    ")" +
-    (label ? label + ":" : ""),
-    "{" +
+    "){" +
     ArrayLite.join(statements, "") +
     "}")];
-
-// exports.For = (statements1, expression1, expression2, label, statements2) => [
-//   (
-//     "{" +
-//     ArrayLite.join(statements1, "") +
-//     "for(;" +
-//     expression1 +
-//     ";" +
-//     expression2 +
-//     ")" +
-//     (label ? label + ":" : ""),
-//     "{" +
-//     ArrayLite.join(statements2, "") +
-//     "}")];
 
 exports.Debugger = () => [
   (

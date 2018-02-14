@@ -1,12 +1,24 @@
 # Aran <img src="readme/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
 
-Aran is a [npm module](https://www.npmjs.com/aran) for instrumenting JavaScript code which enables amongst other things: objects and functions profiling, debugging, control-flow tracing and sandboxing.
-Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and we are working toward supporting the latter ECMAScript specifications.
-To install, run `npm install aran`.
+Aran is a [npm module](https://www.npmjs.com/aran) for instrumenting JavaScript code, to install run `npm install aran`.
+Aran was designed as an infra-structure to build development-time dynamic program analyses such as: objects and functions profiling, debugging, control-flow tracing, taint analysis, concolic testing, etc...
+Aran also could also be used at deployment-time to implement control access systems like sandboxing.  
+Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and most of ECMAScript2017.
+Notable missing features are:
+* Native modules: [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import), [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export).
+* [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
+* Generator functions: [`function*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), [`yield`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield) and [`yield*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield*).
+* Asynchronous functions: [`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function).
 
 Note than Aran does not deal with module systems.
 Alone, it can only handle monolithic JavaScript programs.
-Various module systems are supported in a separate module called [Otiluke](https://github.com/lachrist/otiluke).
+Various module systems (i.e. `node` and `html`) are supported in a separate module called [Otiluke](https://github.com/lachrist/otiluke).
+
+Some dynamic analyses like taint analysis and concolic testing requires the tracking of primitive values.
+
+  
+Aran offers an interface to 
+
 Additionally, Aran does not offer an out-of-the-box interface for tracking primitive values which is crucial for data-flow centric dynamic analyses such as taint analysis and symbolic execution.
 In our research, we track primitive values with a completmentary npm module: [Linvail](https://github.com/lachrist/linvail).
 
