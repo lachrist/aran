@@ -15,7 +15,7 @@ module.exports = (options, Advice, script1) => {
     Acorn.parse(script, {locations:true}),
     Object.keys(global[options.namespace]),
     parent));
-  global[options.namespace] = Advice(aran, join);
+  global[options.namespace] = Advice(aran, join).traps;
   const script2 = join(script1, null);
   try {
     return {

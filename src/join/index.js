@@ -46,10 +46,10 @@ module.exports = (node, parent) => {
             "===",
             ARAN.build.unary(
               "typeof",
-              ARAN.build.read("window")),
+              ARAN.build.read("self")),
             ARAN.build.primitive("undefined")),
           ARAN.build.read("global"),
-          ARAN.build.read("window"))),
+          ARAN.build.read("self"))),
       ArrayLite.flatenMap(
         [
           ["eval"],

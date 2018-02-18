@@ -1,2 +1,2 @@
 
-module.exports = (aran, join) => ({});
+module.exports = (aran, join) => ({traps:{}});

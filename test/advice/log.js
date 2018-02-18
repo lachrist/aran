@@ -2,7 +2,7 @@
 const Forward = require("./shadow.js");
 const Print = require("./util/print.js");
 
-const Reflect_ownKeys = global.Reflect.ownKeys;
+const Object_keys = global.Object.keys;
 const String_prototype_substring = global.String.prototype.substring;
 const Reflect_apply = global.Reflect.apply;
 const console = global.console;
@@ -17,16 +17,16 @@ const format = (string, length) => {
 }
 
 module.exports = (aran, join) => {
-  const ftraps = Forward(aran, join);
+  const forward = Forward(aran, join);
   const traps = {};
-  Reflect_ownKeys(ftraps).forEach((key) => {
+  Reflect_ownKeys(forward.traps).forEach((key) => {
     traps[key] = function () {
       let message = format(key, 10) + " | " + format(""+arguments[arguments.length-1], 3);
       for (let index = 0; index < 4; index++)
         message += " | "+ format(index < arguments.length-1 ? Print(arguments[index]) : "", 20);
       Reflect_apply(console_log, console, [message]);
-      return Reflect_apply(ftraps[key], null, arguments);
+      return Reflect_apply(forward.traps[key], null, arguments);
     };
   });
-  return traps;
+  return {traps:traps};
 };

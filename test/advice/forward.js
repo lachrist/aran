@@ -5,10 +5,10 @@ const Reflect_construct = global.Reflect.construct;
 const Array_prototype_forEach = global.Array.prototype.forEach;
 
 const modifiers = [
-  // stack //
+  // special //
   "copy",
-  "drop",
   "swap",
+  "drop",
   // producers //
   "read",
   "builtin",
@@ -22,7 +22,6 @@ const modifiers = [
   "discard",
   // consumers //
   "completion",
-  "drop",
   "success",
   "failure",
   "test",
@@ -83,7 +82,7 @@ module.exports = (aran, join) => {
       object[properties[index][0]] = properties[index][1];
     return object;
   };
-  return traps;
+  return {traps:traps};
 };
 
 

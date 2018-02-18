@@ -1,28 +1,39 @@
 # Aran <img src="readme/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
 
-Aran is a [npm module](https://www.npmjs.com/aran) for instrumenting JavaScript code, to install run `npm install aran`.
-Aran was designed as an infra-structure to build development-time dynamic program analyses such as: objects and functions profiling, debugging, control-flow tracing, taint analysis, concolic testing, etc...
-Aran also could also be used at deployment-time to implement control access systems like sandboxing.  
-Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and most of ECMAScript2017.
-Notable missing features are:
-* Native modules: [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import), [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export).
-* [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
-* Generator functions: [`function*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), [`yield`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield) and [`yield*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield*).
-* Asynchronous functions: [`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function).
+Aran is a [npm module](https://www.npmjs.com/aran) for instrumenting JavaScript code.
+To install, run `npm install aran`.
+Aran was designed as an infra-structure to build development-time dynamic program analyses such as: objects and functions profiling, debugging, control-flow tracing etc...
+Note that, aside from performance overhead, nothing prevent Aran to be used at deployment-time.
+For instance, Aran could be used to implement control access systems such as sandboxing.
 
-Note than Aran does not deal with module systems.
-Alone, it can only handle monolithic JavaScript programs.
-Various module systems (i.e. `node` and `html`) are supported in a separate module called [Otiluke](https://github.com/lachrist/otiluke).
+## Limitations
 
-Some dynamic analyses like taint analysis and concolic testing requires the tracking of primitive values.
-
-  
-Aran offers an interface to 
-
-Additionally, Aran does not offer an out-of-the-box interface for tracking primitive values which is crucial for data-flow centric dynamic analyses such as taint analysis and symbolic execution.
-In our research, we track primitive values with a completmentary npm module: [Linvail](https://github.com/lachrist/linvail).
+1) Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and most of ECMAScript2017.
+   Notable missing features are:
+   * Native modules ([`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import), [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export)).
+   * [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
+   * Generator functions ([`function*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), [`yield`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield),[`yield*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield*)).
+   * Asynchronous functions ([`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)).
+2) Aran does not provide any facilities for instrumenting modularized JavaScript application.
+   To instrument server-side node application and client-side browser application we rely on a separate module called [Otiluke](https://github.com/lachrist/otiluke).
+3) Aran does not offer an out-of-the-box interface for tracking primitive values through the object graph.
+   This feature is crucial for data-flow centric dynamic analyses such as taint analysis and symbolic execution.
+   In our research, we track primitive values with a complementary npm module called [Linvail](https://github.com/lachrist/linvail).
 
 ## Getting Started
+
+The code transformation performed by Aran essentially consists in inserting calls to global functions at ast nodes specified by the user.
+For instance, the expression `x+y` may be transformed into `_META_.binary('+',x,y)`
+These global functions are called advice (or traps) and the specification that characterizes what part of the advice should be executed at which node is called pointcut.
+This terminology is borrowed from [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming).
+
+
+<img src="readme/offline.png" align="center" alt="offline-instrumentation" title="Aran's offline instrumentation"/>
+
+
+
+
+That means that code instrumented by Aran cannot by directly executed without defining those 
 
 In Aran, an analysis consists in a set of trap functions that will be triggered while the program under scrutiny is being executed.
 For instance, the expression `x+y` may be transformed into `_traps_.binary('+',x,y)` which triggers the `binary` trap.
@@ -69,7 +80,7 @@ This is an instance of transparency breakage which is further discussed in the s
 
 * `namespace(string)`: the name of the global variable holding the traps.
 
-### `instrumented = aran.instrument(program, pointcut)`
+### `joined = aran.join(estree, pointcut)`
 
 * `program(object)`: an [ESTree](https://github.com/estree/estree) [program node](https://github.com/estree/estree/blob/master/es5.md#programs).
 * `pointcut(array|function|object)`: specification of where to insert calls to trap.
@@ -105,7 +116,7 @@ This is an instance of transparency breakage which is further discussed in the s
 * `index(number)`: the index of an [ESTree](https://github.com/estree/estree) [node](https://github.com/estree/estree/blob/master/es5.md#node-objects).
 * `node(object|undefined)`: the [ESTree](https://github.com/estree/estree) [node](https://github.com/estree/estree/blob/master/es5.md#node-objects) at the given index, if any.
 
-### `program = aran.program(index)`
+### `root = aran.root(index)`
 
 * `index(number)`: the index of an [ESTree](https://github.com/estree/estree) [node](https://github.com/estree/estree/blob/master/es5.md#node-objects).
 * `program(object|undefined)`: the [ESTree](https://github.com/estree/estree) [program node](https://github.com/estree/estree/blob/master/es5.md#programs) incorporating the [ESTree](https://github.com/estree/estree) [node](https://github.com/estree/estree/blob/master/es5.md#node-objects) at the given index, if any.
@@ -274,6 +285,8 @@ var arrow = () => arguments;
 ```
 
 ## Known unsported ECMAScript features
+
+* Function names, length and prototype
 
 * ES2015 modules: native JS modules arrived, we did not even to begin to think about their implication for Aran.
 
