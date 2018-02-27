@@ -121,24 +121,27 @@ module.exports = (aran, join) => {
   const estack = Stack();
   const cstack = Stack();
 
-  const produce = (value, serial) => {
-    vstack.push(value);
-    return value;
-  }
-
-  const consume = (value, serial) => {
-    check("Consume-Value", vstack.peek(), value, serial);
-    return vstack.pop();
+  // Membrane //
+  let counter = 0;
+  const print = (value) => {
+    if (typeof value === "function")
+      return "[Function " + (value.name || "anonymous") + "]";
+    if (Array.isArray(value))
+      return "[Array]";
+    if (typeof value === "object" && value !== null)
+      return "[Object]";
+    if (typeof value === "string")
+      return JSON.stringify(value);
+    return "" + value;
   };
-
-  global.Function = Dynamic.Function(join);
-  global.eval = Dynamic.eval(join);
-  global.Proxy = function Proxy (target, handlers) {
-    if (new.target === void 0) // https://github.com/jsdom/webidl2js/issues/78
-      throw new TypeError("Constructor Proxy requires 'new'");
-    const proxy = new Proxy(target, traps);
-    proxies.set(proxy, {target:target, handlers:handlers});
-    return proxy;
+  const produce = (message, value, serial) => {
+    vstack.push(++counter);
+    postMessage("enter "+message+" #"+counter+" "+print(value)+"\n");
+    return value;
+  };
+  const consume = (message, value, serial) => {
+    postMessage("leave "+message+" #"+vstack.pop()+"\n");
+    return value;
   };
 
   /////////////
@@ -160,17 +163,40 @@ module.exports = (aran, join) => {
     return value;
   };
 
-  ///////////////
-  // Producers //
-  ///////////////
+  /////////////////
+  // Environment //
+  ///////////////// 
 
-  traps.this = (value, serial) => produce(value, serial);
-  traps.newtarget = (value, serial) => produce(value, serial);
-  traps.arguments = (value, serial) => produce(value, serial);
-  traps.regexp = (value, serial) => produce(value, serial);
-  traps.primitive = (value, serial) => produce(value, serial);
-  traps.builtin = (identifier, value, serial) => produce(value, serial);
-  traps.discard = (identifier, value, serial) => produce(value, serial);
+  traps.write = (identifier, value, serial) => {
+    cstack.peek().loop((type, binding, custom) => {
+      if (identifier in binding) {
+        if (type === "with")
+          leave("with write "+identifier, value, serial);
+        else
+          binding[identifier] = vstack.pop();
+        return true;
+      }
+    }) || leave("global write "+identifier, value, serial);
+    return value;
+  };
+
+  traps.declare = (kind, identifier, value, serial) => {
+    cstack.peek().loop((type, binding, custom) => {
+      if (kind !== "var" || type === "closure") {
+        if (type === "with")
+          throw new Error("This should never happen");
+        Object_defineProperty(binding, identifier, {
+          enumerable: true,
+          configurable: kind === "var",
+          writable: kind !== "const",
+          value: vstack.pop();
+        });
+        return true;
+      }
+    }) || leave("global declare "+kind+" "+identifier, value, serial);
+    return value;
+  };
+
   traps.read = (identifier, value, serial) => {
     let result;
     const each = (type, binding, custom) => {
@@ -184,6 +210,18 @@ module.exports = (aran, join) => {
     check("Read", result, value, serial);
     return produce(result, serial);
   };
+
+  ///////////////
+  // Producers //
+  ///////////////
+
+  traps.this = (value, serial) => produce(value, serial);
+  traps.newtarget = (value, serial) => produce(value, serial);
+  traps.arguments = (value, serial) => produce(value, serial);
+  traps.regexp = (value, serial) => produce(value, serial);
+  traps.primitive = (value, serial) => produce(value, serial);
+  traps.builtin = (identifier, value, serial) => produce(value, serial);
+  traps.discard = (identifier, value, serial) => produce(value, serial);
   traps.closure = (value, serial) => {
     let wrapper = function () {
       if (cstack.length)
@@ -243,34 +281,6 @@ module.exports = (aran, join) => {
   traps.completion = (value, serial) => {
     estack.pop();
     estack.push(value);
-    return consume(value, serial);
-  };
-  traps.write = (identifier, value, serial) => {
-    const each = (type, binding, custom) => {
-      if (identifier in binding) {
-        if (type !== "with")
-          binding[identifier] = value;
-        return true;
-      }
-    }
-    if (!cstack.peek().loop(each) && aran.node(serial).AranStrict)
-      throw new Error("["+serial+"] Write failure: "+identifier);
-    return consume(value, serial);
-  };
-  traps.declare = (kind, identifier, value, serial) => {
-    cstack.peek().loop((type, binding, custom) => {
-      if (kind !== "var" || type === "closure") {
-        if (type === "with")
-          throw new Error("["+serial+"] Illegal with frame");
-        Object_defineProperty(binding, identifier, {
-          enumerable: true,
-          configurable: kind === "var",
-          writable: kind !== "const",
-          value: value
-        });
-        return true;
-      }
-    });
     return consume(value, serial);
   };
 

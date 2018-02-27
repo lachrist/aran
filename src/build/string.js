@@ -7,9 +7,10 @@ const stringify = JSON.stringify;
 /////////////
 
 exports.PROGRAM = (strict, statements) => (
-  (strict ? "\"use strict\";" : "") + 
+  (strict ? "\"use strict\";" : "") +
+  "let completion;" + 
   ArrayLite.join(statements, "")) +
-  ";";
+  "completion;";
 
 ////////////////
 // Expression //
@@ -115,7 +116,7 @@ exports.construct = (expression, expressions) => (
   ArrayLite.join(expressions, ",") +
   "))");
 
-exports.apply = (expression, expressions) => (
+exports.apply = (boolean, expression, expressions) => (
   "(" +
   expression +
   "(" +

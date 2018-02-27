@@ -1,5 +1,4 @@
 
-const Escape = require("../../escape.js");
 const Expression = require("./expression.js");
 const Statement = require("./statement.js");
 const defineProperty = Reflect.defineProperty;
@@ -11,6 +10,7 @@ const visit = (visitors) => (node) => {
     writable: true,
     value: ARAN.parent
   });
+  node.AranParentSerial = node.AranParent.AranSerial;
   node.AranStrict = (
     ARAN.parent.AranStrict &&
     (

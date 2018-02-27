@@ -17,7 +17,24 @@ exports.PROGRAM = (strict, statements) => ({
             type: "Literal",
             value: "use strict"}}] :
       []),
-    statements)});
+    [
+      {
+        type: "VariableDeclaration",
+        kind: "let",
+        declarations: [
+          {
+            type: "VariableDeclarator",
+            id: {
+              type: "Identifier",
+              name: "completion"},
+            init: null}]}],
+    statements,
+    [
+      {
+        type: "ExpressionStatement",
+        expression: {
+          type: "Identifier",
+          name: "completion"}}])});
 
 ////////////////
 // Expression //
@@ -164,7 +181,7 @@ exports.construct = (expression, expressions) => ({
   callee: expression,
   arguments: expressions});
 
-exports.apply = (expression, expressions) => ({
+exports.apply = (boolean, expression, expressions) => ({
   type: "CallExpression",
   callee: expression,
   arguments: expressions});

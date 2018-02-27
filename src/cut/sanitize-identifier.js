@@ -4,13 +4,15 @@ const startsWith = String.prototype.startsWith;
 
 module.exports = (identifier) => (
   identifier === "new.target" ?
-  "$newtarget" :
+  (ARAN.namespace[0] === "$" ? "_" : "$") + "newtarget" :
   (
     (
+      identifier === "callee" ||
       identifier === "this" ||
       identifier === "arguments" ||
       identifier === "error" ||
-      identifier[0] === (ARAN.namespace === "$" ? "_" : "$") ||
+      identifier === "completion" ||
+      identifier[0] === (ARAN.namespace[0] === "$" ? "_" : "$") ||
       apply(startsWith, identifier, [ARAN.namespace])) ?
-    (ARAN.namespace === "$" ? "_" : "$") + identifier :
+    (ARAN.namespace[0] === "$" ? "_" : "$") + identifier :
     identifier));

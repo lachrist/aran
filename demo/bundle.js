@@ -21,15 +21,15 @@ const callback = (name) => (error, script) => {
 }
 
 const online = (analysis, target) => SandboxScenario(
-  {type:"raw", path:"online/spawn.js"},
+  {type:"raw", path:"online/spawn.js", basedir:"./"},
   [
-    {type:"browserify", path:"online/"+analysis+".js"}],
+    {type:"browserify", path:"online/analysis/"+analysis+".js"}],
   [
     {type:"raw", path:"target/"+target+".js"}],
   callback("online-"+analysis+"-"+target));
 
 const offline = (analysis, target) => SandboxScenario(
-  {type:"browserify", path:"offline/spawn.js"},
+  {type:"browserify", path:"offline/spawn.js", basedir:"./"},
   [
     {type:"raw", path:"offline/"+analysis+"/pointcut.js"},
     {type:"raw", path:"offline/"+analysis+"/advice.js"}],
@@ -39,3 +39,6 @@ const offline = (analysis, target) => SandboxScenario(
 
 offline("apply", "factorial");
 online("apply", "factorial");
+online("eval", "dynamic-double");
+online("forward", "empty");
+online("shadow-value", "delta");

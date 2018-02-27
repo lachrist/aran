@@ -3,7 +3,7 @@
 // Program //
 /////////////
 
-exports.PROGRAM = ["boolean", ["statement"]];
+exports.PROGRAM = ["boolean", ["list", "statement"]];
 
 ////////////////
 // Expression //
@@ -24,7 +24,7 @@ exports.unary = ["unary", "expression"];
 exports.delete = ["expression", "expression"];
 exports.discard = ["identifier"];
 exports.construct = ["expression", ["list", "expression"]];
-exports.apply = ["expression", ["list", "expression"]];
+exports.apply = [["nullable", "boolean"], "expression", ["list", "expression"]];
 exports.invoke = ["expression", "expression", ["list", "expression"]];
 exports.sequence = [["list", "expression"]];
 exports.eval = ["expression"];

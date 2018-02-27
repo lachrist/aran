@@ -6,11 +6,13 @@ Function.prototype.toString = function () {
 };
 let depth = "";
 self.META = {
-  apply: (closure, values, serial) => {
-    const line = aran.node(serial).loc.start.line;
-    postMessage(depth+closure+"@"+line+"("+values.join(", ")+")\n");
+  apply: (strict, closure, values, serial) => {
+    const node = aran.node(serial);
+    const prefix = depth+closure+"@"+node.loc.start.line;
+    postMessage(prefix+"("+values.join(", ")+")\n");
     depth += ".";
-    const result = closure(...values);
+    const context = strict ? undefined : global; 
+    const result = Reflect.apply(closure, context, values);
     depth = depth.substring(1);
     postMessage(depth+result+"\n");
     return result;

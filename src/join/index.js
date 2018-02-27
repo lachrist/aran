@@ -10,84 +10,40 @@
 // }
 
 const ArrayLite = require("array-lite");
-const Escape = require("../escape.js");
+const Builtin = require("../builtin.js");
 const Visit = require("./visit");
 const Interim = require("./interim.js");
 const Completion = require("./completion.js");
 
 const keys = Object.keys;
 
-module.exports = (node, parent) => {
-  Completion(node);
-  node.AranParent = parent || null;
-  node.AranStrict = (
+module.exports = (root, parent) => {
+  Completion(root);
+  root.AranParent = parent;
+  root.AranParentSerial = parent ? parent.AranSerial || null : null;
+  root.AranStrict = (
     (
       parent && parent.AranStrict) ||
     (
-      node.body.length > 0 &&
-      node.body[0].type === "ExpressionStatement" &&
-      node.body[0].expression.type === "Literal" &&
-      node.body[0].expression.value === "use strict"));
-  node.AranSerial = ++ARAN.counter;
+      root.body.length > 0 &&
+      root.body[0].type === "ExpressionStatement" &&
+      root.body[0].expression.type === "Literal" &&
+      root.body[0].expression.value === "use strict"));
+  root.AranSerial = ++ARAN.counter;
   if (ARAN.nodes)
-    ARAN.nodes[node.AranSerial] = node;
+    ARAN.nodes[root.AranSerial] = root;
   ARAN.hoisted = [];
-  ARAN.parent = node;
+  ARAN.parent = root;
   const statements = ArrayLite.flatenMap(
-    node.body,
+    root.body,
     Visit.Statement);
   const result = ARAN.cut.PROGRAM(
-    node.AranStrict,
+    root.AranStrict,
     ArrayLite.concat(
-      save(
-        "global",
-        ARAN.build.conditional(
-          ARAN.build.binary(
-            "===",
-            ARAN.build.unary(
-              "typeof",
-              ARAN.build.read("self")),
-            ARAN.build.primitive("undefined")),
-          ARAN.build.read("global"),
-          ARAN.build.read("self"))),
-      ArrayLite.flatenMap(
-        [
-          ["eval"],
-          ["TypeError"],
-          ["Reflect", "apply"],
-          ["Object", "defineProperty"],
-          ["Object", "getPrototypeOf"],
-          ["Object", "keys"],
-          ["Symbol", "iterator"]],
-        (strings) => save(
-          ArrayLite.join(strings, "_"),
-          ArrayLite.reduce(
-            strings,
-            (accumulator, string) => (
-              accumulator ?
-              ARAN.build.get(
-                accumulator,
-                ARAN.build.primitive(string)) :
-              ARAN.build.read(string)),
-            null))),
       ArrayLite.flaten(ARAN.hoisted),
       statements));
   delete ARAN.hoisted;
   delete ARAN.parent;
-  node.AranMaxSerial = ARAN.counter;
+  root.AranMaxSerial = ARAN.counter;
   return result;
 };
-
-const save = (key, value) => ARAN.build.If(
-  ARAN.build.binary(
-    "===",
-    ARAN.build.unary(
-      "typeof",
-      ARAN.build.read(
-        Escape(key))),
-    ARAN.build.primitive("undefined")),
-  ARAN.build.Declare(
-    "var",
-    Escape(key),
-    value),
-  []);

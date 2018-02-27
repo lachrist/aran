@@ -1,12 +1,13 @@
 
 const ArrayLite = require("array-lite");
-const Escape = require("../../escape.js");
 const Interim = require("../interim.js");
 const Visit = require("../visit");
 const Util = require("./index.js");
 const Error = global.Error;
 
 exports.closure = (node) => {
+  const name = node.id ? node.id.name : ARAN.name;
+  ARAN.name = "";
   const temporary = ARAN.hoisted;
   ARAN.hoisted = [];
   const statements1 = (
@@ -14,13 +15,13 @@ exports.closure = (node) => {
       node.params.length &&
       node.params[node.params.length-1].type === "RestElement") ?
     ArrayLite.concat(
-      Interim.Declare(
-        "iterator",
-        ARAN.cut.invoke(
-          ARAN.build.read(
-            Escape("arguments")),
-          ARAN.cut.$builtin(["Symbol", "iterator"]),
-          [])),
+      ARAN.build.Statement(
+        Interim.hoist(
+          "iterator",
+          ARAN.cut.invoke(
+            ARAN.build.read("arguments"),
+            ARAN.cut.$builtin(["Symbol", "iterator"]),
+            []))),
       ArrayLite.flatenMap(
         node.params,
         (pattern) => (
@@ -29,6 +30,7 @@ exports.closure = (node) => {
             "let",
             pattern.argument,
             ARAN.build.apply(
+              null,
               Util.rest(),
               [
                 Interim.read("iterator"),
@@ -56,13 +58,13 @@ exports.closure = (node) => {
           ARAN.cut.get(
             ARAN.cut.$copy(
               1,
-              ARAN.build.read(
-                Escape("arguments"))),
+              ARAN.build.read("arguments")),
             ARAN.cut.primitive(index)))),
       ARAN.build.Statement(
         ARAN.cut.$drop(
-          ARAN.build.read(
-            Escape("arguments"))))));
+          ARAN.build.read("arguments")))));
+  const statements0 = ArrayLite.flaten(ARAN.hoisted);
+  ARAN.hoisted = [];
   const statements2 = (
     node.expression ?
     ARAN.cut.Return(
@@ -73,27 +75,56 @@ exports.closure = (node) => {
         Visit.Statement),
       ARAN.cut.Return(
         ARAN.cut.primitive(void 0))));
-  const expression = ARAN.cut.closure(
-    node.AranStrict,
-    ArrayLite.concat(
-      statements1,
-      ArrayLite.flaten(ARAN.hoisted),
-      statements2));
+  const expression = ARAN.cut.apply(
+    null,
+    ARAN.cut.$builtin(["Object", "defineProperty"]),
+    [
+      ARAN.cut.apply(
+        null,
+        ARAN.cut.$builtin(["Object", "defineProperty"]),
+        [
+          ARAN.cut.closure(
+            node.AranStrict,
+            ArrayLite.concat(
+              statements0,
+              statements1,
+              ArrayLite.flaten(ARAN.hoisted),
+              statements2)),
+          ARAN.cut.primitive("name"),
+          ARAN.cut.object(
+            [
+              [
+                ARAN.cut.primitive("value"),
+                ARAN.cut.primitive(name)],
+              [
+                ARAN.cut.primitive("configurable"),
+                ARAN.cut.primitive(true)]])]),
+      ARAN.cut.primitive("length"),
+      ARAN.cut.object([
+        [
+          ARAN.cut.primitive("value"),
+          ARAN.cut.primitive(
+            (
+              (
+                node.params.length &&
+                node.params[node.params.length-1].type === "RestElement") ?
+              node.params.length - 1 :
+              node.params.length))],
+        [
+          ARAN.cut.primitive("configurable"),
+          ARAN.cut.primitive(true)]])]);
   ARAN.hoisted = temporary;
   return (
-    node.id ?
-    ARAN.cut.apply(
-      ARAN.cut.$builtin(["Object", "defineProperty"]),
+    node.type === "ArrowFunctionExpression" ?
+    ARAN.build.sequence(
       [
-        expression,
-        ARAN.cut.primitive("name"),
-        ARAN.cut.object(
-          [
-            [
-              ARAN.cut.primitive("value"),
-              ARAN.cut.primitive(node.id.name)],
-            [
-              ARAN.cut.primitive("configurable"),
-              ARAN.cut.primitive(true)]])]) :
+        ARAN.cut.$drop(
+          ARAN.cut.set(
+            ARAN.cut.$copy(
+              1,
+              Interim.hoist("arrow", expression)),
+            ARAN.cut.primitive("prototype"),
+            ARAN.cut.primitive(void 0))),
+        Interim.read("arrow")]) :
     expression);
 };

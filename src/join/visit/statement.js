@@ -6,7 +6,6 @@
 // Yet, this transformation is safe because the body of the above structure cannot be a declaration (see http://www.ecma-international.org/ecma-262/6.0/#sec-statements).
 
 const ArrayLite = require("array-lite");
-const Escape = require("../../escape.js");
 const Interim = require("../interim.js");
 const Util = require("../util");
 const Visit = require("./index.js");
@@ -63,9 +62,10 @@ exports.SwitchStatement = (node, temporary, statement) => Util.Completion(
     statement = ARAN.cut.Label(
       ARAN.break,
       ArrayLite.concat(
-        Interim.Declare(
-          "switch",
-          Visit.expression(node.discriminant)),
+        ARAN.build.Statement(
+          Interim.hoist(
+            "switch",
+            Visit.expression(node.discriminant))),
         ARAN.cut.Switch(
           ArrayLite.map(
             node.cases,
@@ -111,8 +111,7 @@ exports.TryStatement = (node) => Util.Completion(
         Util.Declare(
           "let",
           node.handler.param,
-          ARAN.build.read(
-            Escape("error"))),
+          ARAN.build.read("error")),
         ArrayLite.flatenMap(
           node.handler.body.body,
           Visit.Statement)) :
@@ -135,9 +134,10 @@ exports.WhileStatement = (node) => Util.Completion(
 
 exports.DoWhileStatement = (node) => Util.Completion(
   Util.Loop(
-    Interim.Declare(
-      "dowhile",
-      ARAN.build.primitive(false)),
+    ARAN.build.Statement(
+      Interim.hoist(
+        "dowhile",
+        ARAN.build.primitive(false))),
     ARAN.build.conditional(
       Interim.read("dowhile"),
       Visit.expression(node.test),
@@ -201,28 +201,33 @@ exports.ForStatement = (node) => Util.Completion(
 
 exports.ForInStatement = (node) => Util.Completion(
   ArrayLite.concat(
-    Interim.Declare(
-      "keys1",
-      ARAN.cut.array([])),
-    Interim.Declare(
-      "object",
-      Visit.expression(node.right)),
+    ARAN.build.Statement(
+      Interim.hoist(
+        "keys1",
+        ARAN.cut.array([]))),
+    ARAN.build.Statement(
+      Interim.hoist(
+        "object",
+        Visit.expression(node.right))),
     ARAN.cut.While(
       ARAN.cut.$copy(
         1,
         Interim.read("object")),
       ArrayLite.concat(
-        Interim.Declare(
-          "keys2",
-          ARAN.cut.apply(
-            ARAN.cut.$builtin(["Object", "keys"]),
-            [
-              ARAN.cut.$copy(
-                2,
-                Interim.read("object"))])),
-        Interim.Declare(
-          "index2",
-          ARAN.cut.primitive(0)),
+        ARAN.build.Statement(
+          Interim.hoist(
+            "keys2",
+            ARAN.cut.apply(
+              null,
+              ARAN.cut.$builtin(["Object", "keys"]),
+              [
+                ARAN.cut.$copy(
+                  2,
+                  Interim.read("object"))]))),
+        ARAN.build.Statement(
+          Interim.hoist(
+            "index2",
+            ARAN.cut.primitive(0))),
         ARAN.cut.While(
           ARAN.cut.binary(
             "<",
@@ -270,6 +275,7 @@ exports.ForInStatement = (node) => Util.Completion(
           Interim.write(
             "object",
             ARAN.cut.apply(
+              null,
               ARAN.cut.$swap(
                 1,
                 2,
@@ -279,9 +285,10 @@ exports.ForInStatement = (node) => Util.Completion(
     ARAN.build.Statement(
       ARAN.cut.$drop(
         Interim.read("object"))),
-    Interim.Declare(
-      "index1",
-      ARAN.cut.primitive(0)),
+    ARAN.build.Statement(
+      Interim.hoist(
+        "index1",
+        ARAN.cut.primitive(0))),
     ARAN.build.Try(
       Util.Loop(
         (
@@ -350,12 +357,13 @@ exports.ForOfStatement = (node) => Util.Completion(
           node.left.type === "VariableDeclaration" ?
           Util.Declaration(node.left) :
           []),
-        Interim.Declare(
-          "iterator",
-          ARAN.cut.invoke(
-            Visit.expression(node.right),
-            ARAN.cut.$builtin(["Symbol", "iterator"]),
-            []))),
+        ARAN.build.Statement(
+          Interim.hoist(
+            "iterator",
+            ARAN.cut.invoke(
+              Visit.expression(node.right),
+              ARAN.cut.$builtin(["Symbol", "iterator"]),
+              [])))),
       ARAN.cut.unary(
         "!",
         ARAN.cut.get(
@@ -410,7 +418,7 @@ exports.DebuggerStatement = (node) => ARAN.build.Debugger();
 
 exports.FunctionDeclaration = (node) => {
   ARAN.hoisted[ARAN.hoisted.length] = ARAN.cut.Declare(
-    "var",
+    node.AranStrict ? "let" : "var",
     node.id.name,
     Util.closure(node));
   return [];

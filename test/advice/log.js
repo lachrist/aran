@@ -19,7 +19,7 @@ const format = (string, length) => {
 module.exports = (aran, join) => {
   const forward = Forward(aran, join);
   const traps = {};
-  Reflect_ownKeys(forward.traps).forEach((key) => {
+  Object_keys(forward.traps).forEach((key) => {
     traps[key] = function () {
       let message = format(key, 10) + " | " + format(""+arguments[arguments.length-1], 3);
       for (let index = 0; index < 4; index++)

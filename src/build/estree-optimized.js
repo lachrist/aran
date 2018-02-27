@@ -3,6 +3,10 @@ const ArrayLite = require("array-lite");
 const Reflect_apply = Reflect.apply;
 const RegExp_prototype_test = RegExp.prototype.test;
 
+// NOTE: read expression (identifier) are considered
+// pure even if they may throw an error or trigger a
+// proxy trap inside WithStatement.
+
 /////////////
 // Helpers //
 /////////////
@@ -64,7 +68,24 @@ exports.PROGRAM = (strict, statements) => ({
             type: "Literal",
             value: "use strict"}}] :
       []),
-    statements)});
+    [
+      {
+        type: "VariableDeclaration",
+        kind: "let",
+        declarations: [
+          {
+            type: "VariableDeclarator",
+            id: {
+              type: "Identifier",
+              name: "completion"},
+            init: null}]}],
+    statements,
+    [
+      {
+        type: "ExpressionStatement",
+        expression: {
+          type: "Identifier",
+          name: "completion"}}])});
 
 ////////////////
 // Expression //
@@ -93,6 +114,7 @@ exports.read = (identifier) => (
 
 exports.write = (identifier, expression) => ({
   type: "AssignmentExpression",
+  AranPure: expression.type === "Identifier" && expression.name === identifier,
   operator: "=",
   left: {
     type: "Identifier",
@@ -218,7 +240,7 @@ exports.construct = (expression, expressions) => ({
   callee: expression,
   arguments: expressions});
 
-exports.apply = (expression, expressions) => ({
+exports.apply = (boolean, expression, expressions) => ({
   type: "CallExpression",
   callee: expression,
   arguments: expressions});

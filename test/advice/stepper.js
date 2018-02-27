@@ -20,12 +20,10 @@ const naming = [
   "Boolean.prototype",
   "Error.prototype"
 ].map((name) => [eval(name), name]);
-naming.map = Array_prototype_map;
 
 module.exports = (aran, join) => {
 
   const shadow = Shadow(aran, join);
-  const snaming = naming.map((pair) => [shadow.sanitize(pair[0]), pair[1]]);
   const traps = {};
 
   const describe = (jsonify, object, key) => {
@@ -42,9 +40,9 @@ module.exports = (aran, join) => {
   const reify = (key, arguments) => {
     const store = [];
     const jsonify = (value) => {
-      for (let index = 0, length = snaming.length; index < length; index++)
-        if (snaming[index][0] === value)
-          return "@"+snaming[index][1];
+      for (let index = 0, length = naming.length; index < length; index++)
+        if (naming[index][0] === value)
+          return "@"+naming[index][1];
       if (value === void 0 || value === 1/0 || value === -1/0 || value !== value)
         return "#"+String(value)
       if (value === null || typeof value === "boolean" || typeof value === "number")
@@ -72,7 +70,7 @@ module.exports = (aran, join) => {
       state.arguments.push(arguments[0].map((p) => [jsonify(p[0]), jsonify(p[1])]));
     } else {
       for (var index=0, last=arguments.length-1; index<last; index++) {
-        if ((key === "apply" && index === 1) || (key === "construct" && index === 1) || (key === "invoke" && index === 2)) {
+        if ((key === "apply" && index === 2) || (key === "construct" && index === 1) || (key === "invoke" && index === 2)) {
           arguments[index].map = Array_prototype_map;
           state.arguments.push(arguments[index].map(jsonify));
         } else {

@@ -1,6 +1,5 @@
 
 const ArrayLite = require("array-lite");
-const Escape = require("../../escape.js");
 const Interim = require("../interim.js");
 const Visit = require("../visit");
 const Util = require("./index.js");
@@ -12,7 +11,16 @@ exports.Declaration = (node) => ArrayLite.flatenMap(
     Util.Declare(
       node.kind,
       declarator.id,
-      Visit.expression(declarator.init)) :
+      (
+        (
+          declarator.id.type === "Identifier" &&
+          (
+            declarator.init.type === "FunctionExpression"||
+            declarator.init.type === "ArrowFunctionExpression")) ?
+        (
+          ARAN.name = declarator.id.name,
+          Visit.expression(declarator.init)) :
+        Visit.expression(declarator.init))) :
     (
       local = ARAN.cut.Declare(
         node.kind,

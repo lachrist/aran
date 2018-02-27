@@ -49,6 +49,7 @@ const unaries = [
 ];
 
 const binaries = [
+  "**",
   "==",
   "!=",
   "===",

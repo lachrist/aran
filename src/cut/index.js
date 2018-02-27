@@ -1,14 +1,14 @@
 
 const ArrayLite = require("array-lite");
 const Traps = require("./traps");
-const Escape = require("../escape.js");
+const Builtin = require("../builtin.js");
 const Reflect_apply = Reflect.apply;
 const String_prototype_replace = String.prototype.replace;
 const Inform = require("./inform.js");
 const ParseLabel = require("./parse-label.js");
 const SanitizeIdentifier = require("./sanitize-identifier.js");
 const ContainArguments = require("./contain-arguments.js");
-
+const Setup = require("../setup.js");
 
 module.exports = (pointcut) => {
 
@@ -16,18 +16,44 @@ module.exports = (pointcut) => {
 
   const cut = {};
 
+  // eval in strict mode is block-scoped 
+  // eval in normal mode is closure-scoped
+  cut.PROGRAM = (strict, statements) => ARAN.build.PROGRAM(
+    strict,
+    ArrayLite.concat(
+      ARAN.nosetup ? [] : Setup(),
+      ARAN.build.Try(
+        ArrayLite.concat(
+          Inform(
+            traps.begin()),
+          ARAN.build.Statement(
+            ARAN.build.write(
+              "completion",
+              traps.completion(
+                traps.primitive(
+                  ARAN.build.primitive(void 0))))),
+          statements,
+          ARAN.build.Statement(
+            ARAN.build.write(
+              "completion",
+              traps.success(
+                ARAN.build.read("completion"))))),
+        ARAN.build.Throw(
+          traps.failure(
+            ARAN.build.read("error"))),
+        Inform(
+          traps.end()))));
+
   /////////////////
   // Compilation //
   /////////////////
 
   cut.$builtin = (strings) => traps.builtin(
     ArrayLite.join(strings, "."),
-    ARAN.build.read(
-      Escape(
-        ArrayLite.join(strings, "_"))));
+    Builtin.load(strings));
 
   cut.$completion = (expression) => ARAN.build.write(
-    Escape("completion"),
+    "completion",
     traps.completion(expression));
 
   cut.$copy = traps.copy;
@@ -86,11 +112,11 @@ module.exports = (pointcut) => {
       statements1,
       Inform(traps.leave("try"))),
     ArrayLite.concat(
-      ARAN.build.Declare(
-        "const",
-        Escape("error"),
-        traps.catch(
-          ARAN.build.read("error"))),
+      ARAN.build.Statement(
+        ARAN.build.write(
+          "error",
+          traps.catch(
+            ARAN.build.read("error")))),
       statements2,
       Inform(traps.leave("catch"))),
     ArrayLite.concat(
@@ -99,91 +125,84 @@ module.exports = (pointcut) => {
       Inform(traps.leave("finally"))));
 
   cut.closure = (strict, statements) => ARAN.build.apply(
+    null,
     ARAN.build.closure(
       strict,
       ArrayLite.concat(
         ARAN.build.Declare(
           "const",
-          Escape("callee"),
-          ARAN.build.get(
-            ARAN.build.array(
-              [
-                traps.closure(
-                  ARAN.build.closure(
-                    strict,
-                    ArrayLite.concat(
-                      (
-                        ARAN.parent.type === "ArrowFunctionExpression" ?
-                        ARAN.build.If(
-                          ARAN.build.read("new.target"),
-                          ARAN.build.Throw(
-                            ARAN.build.construct(
-                              ARAN.build.read(
-                                Escape("TypeError")),
-                              [
-                                ARAN.build.primitive("arrow is not a constructor")])),
-                          []) :
-                        []),
-                      Inform(
-                        traps.callee(
-                          ARAN.build.read(
-                            Escape("callee")))),
-                      (
-                        ARAN.parent.type === "ArrowFunctionExpression" ?
-                        (
-                          ARAN.build.Statement(
-                            traps.drop(
-                              traps.this(
-                                ARAN.build.read("this"))))) :
-                        ARAN.build.Declare(
-                          "const",
-                          SanitizeIdentifier("this"),
-                          traps.declare(
-                            "const",
-                            "this",
-                            traps.this(
-                              ARAN.build.read("this"))))),
-                      (
-                        ARAN.parent.type === "ArrowFunctionExpression" ?
-                        (
-                          ARAN.build.Statement(
-                            traps.drop(
-                              traps.newtarget(
-                                ARAN.build.read("new.target"))))) :
-                        ARAN.build.Declare(
-                          "const",
-                          SanitizeIdentifier("new.target"),
-                          traps.declare(
-                            "const",
-                            "new.target",
-                            traps.newtarget(
-                              ARAN.build.read("new.target"))))),
-                      ARAN.build.Declare(
-                        "const",
-                        Escape("arguments"),
-                        traps.arguments(
-                          ARAN.build.read("arguments"))),
-                      (
-                        (
-                          ARAN.parent.type === "ArrowFunctionExpression" ||
-                          ContainArguments(
-                            ArrayLite.slice(ARAN.parent.params))) ?
-                        [] :
-                        ARAN.build.Declare(
-                          "let",
-                          SanitizeIdentifier("arguments"),
-                          traps.declare(
-                            "let",
-                            "arguments",
-                            traps.copy(
-                              1,
-                              ARAN.build.read(
-                                Escape("arguments")))))),
-                      statements)))]),
-            ARAN.build.primitive(0))),
+          "callee",
+          traps.closure(
+            ARAN.build.closure(
+              strict,
+              ArrayLite.concat(
+                (
+                  ARAN.parent.type === "ArrowFunctionExpression" ?
+                  ARAN.build.If(
+                    ARAN.build.read("new.target"),
+                    ARAN.build.Throw(
+                      ARAN.build.construct(
+                        Builtin.load(["TypeError"]),
+                        [
+                          ARAN.build.primitive("arrow is not a constructor")])),
+                    []) :
+                  []),
+                Inform(
+                  traps.callee(
+                    ARAN.build.read("callee"))),
+                (
+                  ARAN.parent.type === "ArrowFunctionExpression" ?
+                  (
+                    ARAN.build.Statement(
+                      traps.drop(
+                        traps.this(
+                          ARAN.build.read("this"))))) :
+                  ARAN.build.Declare(
+                    "const",
+                    SanitizeIdentifier("this"),
+                    traps.declare(
+                      "const",
+                      "this",
+                      traps.this(
+                        ARAN.build.read("this"))))),
+                (
+                  ARAN.parent.type === "ArrowFunctionExpression" ?
+                  (
+                    ARAN.build.Statement(
+                      traps.drop(
+                        traps.newtarget(
+                          ARAN.build.read("new.target"))))) :
+                  ARAN.build.Declare(
+                    "const",
+                    SanitizeIdentifier("new.target"),
+                    traps.declare(
+                      "const",
+                      "new.target",
+                      traps.newtarget(
+                        ARAN.build.read("new.target"))))),
+                ARAN.build.Statement(
+                  ARAN.build.write(
+                    "arguments",
+                    traps.arguments(
+                      ARAN.build.read("arguments")))),
+                (
+                  (
+                    ARAN.parent.type === "ArrowFunctionExpression" ||
+                    ContainArguments(
+                      ArrayLite.slice(ARAN.parent.params))) ?
+                  [] :
+                  ARAN.build.Declare(
+                    "let",
+                    SanitizeIdentifier("arguments"),
+                    traps.declare(
+                      "let",
+                      "arguments",
+                      traps.copy(
+                        1,
+                        ARAN.build.read("arguments"))))),
+                statements)))),
         ARAN.build.Return(
-          ARAN.build.read(
-            Escape("callee"))))),
+          ARAN.build.read("callee")))),
     []);
 
   cut.read = (identifier) => traps.read(
@@ -205,33 +224,6 @@ module.exports = (pointcut) => {
   ///////////////
   // Consumers //
   ///////////////
-
-  // eval in strict mode is block-scoped 
-  // eval in normal mode is closure-scoped
-  cut.PROGRAM = (strict, statements) => ARAN.build.PROGRAM(
-    strict,
-    ARAN.build.Try(
-      ArrayLite.concat(
-        Inform(
-          traps.begin()),
-        ARAN.build.Declare(
-          "let",
-          Escape("completion"),
-          traps.completion(
-            traps.primitive(
-              ARAN.build.primitive(void 0)))),
-        statements,
-        ARAN.build.Statement(
-          traps.success(
-            ARAN.build.write(
-              Escape("completion"), // to prevent optimization to drop last statement
-              ARAN.build.read(
-                Escape("completion")))))),
-      ARAN.build.Throw(
-        traps.failure(
-          ARAN.build.read("error"))),
-      Inform(
-        traps.end())));
 
   cut.write = (identifier, expression) => ARAN.build.write(
     SanitizeIdentifier(identifier),

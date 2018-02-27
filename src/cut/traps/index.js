@@ -3,6 +3,7 @@ const ArrayLite = require("array-lite");
 const Fork = require("./fork");
 const TrapNames = require("./trap-names.js");
 
+const Boolean = global.Boolean
 const isArray = Array.isArray;
 const apply = Reflect.apply;
 

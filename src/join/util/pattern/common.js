@@ -82,6 +82,7 @@ module.exports = (transformers, pattern, string) => {
               Interim.hoist(
                 "rest"+(++counter),
                 ARAN.build.apply(
+                  null,
                   Util.rest(),
                   [
                     Interim.read(string2),

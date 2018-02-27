@@ -25,10 +25,6 @@ exports.Declare = (kind, pattern, expression) => (
   pattern.type === "Identifier" ?
   transformerss[kind].binding(pattern.name, expression) :
   ArrayLite.concat(
-    Interim.Declare(
-      "right",
-      expression),
-    Common(
-      transformerss[kind],
-      pattern,
-      "right")));
+    ARAN.build.Statement(
+      Interim.hoist("right", expression)),
+    Common(transformerss[kind], pattern, "right")));
