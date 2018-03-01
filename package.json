@@ -17,6 +17,7 @@
     "astring": "1.2.0",
     "browserify": "16.1.0",
     "minimist": "1.2.0",
+    "print-lite": "0.0.1",
     "readline-sync": "1.4.8",
     "sandbox-scenario": "0.0.12"
   },

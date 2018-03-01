@@ -32,11 +32,10 @@ exports.SaveEvalAuthentic = () => ARAN.build.Declare(
       "===",
       ARAN.build.unary(
         "typeof",
-        ARAN.build.read(ARAN.namespace+"eval")),
+        ARAN.build.read(ARAN.namespace+"_eval")),
       ARAN.build.primitive("undefined")),
     ARAN.build.read("eval"),
-    ARAN.build.read(
-      Escape("eval"))));
+    ARAN.build.read(ARAN.namespace+"_eval")));
 
 exports.Save = (strings) => ARAN.build.Declare(
   "var",

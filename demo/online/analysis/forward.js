@@ -1,25 +1,16 @@
 const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
-const pointcut = () => true;
-module.exports = (script1) => {
-  const ast1 = Acorn.parse(script1);
-  const ast2 = aran.join(ast1, pointcut)
-  const script2 = Astring.generate(ast2);
-  postMessage(script2+"\n");
-  try {
-    postMessage("Success: "+eval(script2)+"\n");
-  } catch (error) {
-    postMessage("Failure: "+error+"\n");
-  }
+const PrintLite = require("print-lite");
+const pointcut = true;
+module.exports = (script) => {
+  script = Astring.generate(aran.join(Acorn.parse(script), pointcut, null));
+  postMessage(script+"\n");
+  postMessage("Success: "+PrintLite(global.eval(script))+"\n");
 };
-const aran = Aran({
-  namespace: "META",
-  nosetup: true
-});
-eval(Astring.generate(aran.setup()));
-self.META = {};
-// Modifiers // 
+const aran = Aran({namespace:"META"});
+global.META = {};
+// Modifiers //
 const pass = function () {
   return arguments[arguments.length-2];
 };
@@ -85,3 +76,14 @@ META.object = (properties, serial) =>
     object[property[0]] = property[1];
     return object;
   }, {});
+// Logger (uncomment below) //
+// Object.keys(META).forEach((name) => {
+//   const trap = META[name];
+//   META[name] = function () {
+//     let message = name + "@" + arguments.length;
+//     for (let index = 0; index < arguments.length - 1; index++)
+//       message += " " + PrintLite(arguments[index]);
+//     postMessage(message+"\n");
+//     return Reflect.apply(trap, null, arguments);
+//   };
+// });

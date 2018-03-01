@@ -1,6 +1,6 @@
 
-const Forward = require("./shadow.js");
-const Print = require("./util/print.js");
+const Forward = require("./forward.js");
+const PrintLite = require("print-lite");
 
 const Object_keys = global.Object.keys;
 const String_prototype_substring = global.String.prototype.substring;
@@ -23,7 +23,7 @@ module.exports = (aran, join) => {
     traps[key] = function () {
       let message = format(key, 10) + " | " + format(""+arguments[arguments.length-1], 3);
       for (let index = 0; index < 4; index++)
-        message += " | "+ format(index < arguments.length-1 ? Print(arguments[index]) : "", 20);
+        message += " | "+ format(index < arguments.length-1 ? PrintLite(arguments[index]) : "", 20);
       Reflect_apply(console_log, console, [message]);
       return Reflect_apply(forward.traps[key], null, arguments);
     };

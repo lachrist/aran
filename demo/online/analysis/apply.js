@@ -5,7 +5,7 @@ Function.prototype.toString = function () {
   return this.name || "anonymous";
 };
 let depth = "";
-self.META = {
+global.META = {
   apply: (strict, closure, values, serial) => {
     const node = aran.node(serial);
     const prefix = depth+closure+"@"+node.loc.start.line;
@@ -20,7 +20,7 @@ self.META = {
 };
 const aran = Aran({namespace:"META"});
 module.exports = (script) => {
-  const ast1 = Acorn.parse(script, {locations:true});
-  const ast2 = aran.join(ast1, ["apply"]);
-  eval(Astring.generate(ast2));
+  const estree1 = Acorn.parse(script, {locations:true});
+  const estree2 = aran.join(estree1, ["apply"], null);
+  eval(Astring.generate(estree2));
 };

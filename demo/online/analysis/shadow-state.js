@@ -1,440 +1,259 @@
-
-const Print = require("./util/print.js");
-const Dynamic = require("./util/dynamic.js");
-const Error = global.Error;
-const TypeError = global.TypeError;
-const ReferenceError = global.ReferenceError;
-const WeakMap = global.WeakMap;
-const String = global.String;
-const Proxy = global.Proxy;
-const eval = global.eval;
-const Reflect_apply = global.Reflect.apply;
-const Reflect_construct = global.Reflect.construct;
-const Object_create = global.Object.create;
-const Object_defineProperty = global.Object.defineProperty;
-const Array_prototype_pop = global.Array.prototype.pop;
-const Array_prototype_push = global.Array.prototype.push;
-const Array_prototype_map = global.Array.prototype.map;
-const Array_prototype_concat = global.Array.prototype.concat;
-const Array_prototype_unshift = global.Array.prototype.unshift;
-const WeakMap_prototype_get = global.WeakMap.prototype.get;
-const WeakMap_prototype_set = global.WeakMap.prototype.set;
-const WeakMap_prototype_has = global.WeakMap.prototype.has;
-
-const check = (title, value1, value2, serial) => {
-  if (value1 !== value2 && (value1 === value1 || value2 === value2)) {
-    throw new Error("["+serial+"] "+title+" mismatch. Expected: "+Print(value1)+", got: "+Print(value2)+".");
-  }
-};
-
-// Methods: has, get, set //
-const SafeWeakMap = () => {
-  const weakmap = new WeakMap();
-  weakmap.has = WeakMap_prototype_has;
-  weakmap.get = WeakMap_prototype_get;
-  weakmap.set = WeakMap_prototype_set;
-  return weakmap;
-};
-
-// Methods: map, push, pop, peek //
-// Attributes: length, 0..length //
-const Stack = ((() => {
-  function peek () { return this[this.length-1] };
-  return () => {
-    const stack = [];
-    stack.push = Array_prototype_push;
-    stack.pop = Array_prototype_pop;
-    stack.map = Array_prototype_map;
-    stack.peek = peek;
-    return stack;
-  };
-}) ());
-
-// Methods: reify, extend, lookup //
-const Scope = ((() => {
-  function lookup (identifier, serial) {
-    let index = this.length;
-    while (index--)
-      if (identifier in this[index])
-        return this[index][identifier];
-    throw new ReferenceError("["+serial+"] Read failure: "+identifier);
-  }
-  function extend (bindings) {
-    return make(this._concat(bindings));
-  };
-  const make = (array) => {
-    array._concat = Array_prototype_concat;
-    array.reify = Array_prototype_map;
-    array.extend = extend;
-    array.lookup = lookup;
-    return array;
-  }
-  return () => make([global]);
-}) ());
-
-// Methods: reify, scope, enter, leave, loop, empty //
-const Call = ((() => {
-  function reify (jsonify) {
-    return {
-      scope: this._scope.reify(jsonify),
-      frames: this._frames.map((frame) => [frame[0], jsonify(frame[1]), frame[2]])
-    };
-  };
-  function getscope () {
-    return this._scope;
-  };
-  function enter (type, binding, custom) {
-    const frame = [type, binding, custom];
-    this._frames.push(frame);
-    return frame;
-  }
-  function leave (type, serial) {
-    check("Leave", (this._frames[this._frames.length-1]||{})[0], type, serial);
-    this._frames.pop();
-  }
-  function loop (closure) {
-    let index = this._frames.length;
-    while (index--) {
-      const frame = this._frames[index];
-      if (closure(frame[0], frame[1], frame[2]))
-        return true;
-    }
+const Aran = require("aran");
+const Acorn = require("acorn");
+const Astring = require("astring");
+const PrintLite = require("print-lite");
+///////////
+// Setup //
+///////////
+const aran = Aran({namespace:"META"});
+global.META = {};
+const join = (script, parent) =>
+  Astring.generate(aran.join(Acorn.parse(script), true, parent));
+const scopes = new WeakMap();
+const vstack = [];
+const cstack = [];
+const bound = (frame, identifier) => {
+  if (identifier.startsWith("META") || !())
     return false;
+  if (!(identifier in frame.binding))
+    return false;
+  if (frame.type !== "with")
+    return true;
+  return !frame.binding[Symbol.unscopables].includes(identifier);
+};
+//////////////
+// Membrane //
+//////////////
+let counter = 0;
+const oprint = (o) => (Array.isArray(o)) ? "["+o.join(", ")+"]" : o;
+const produce = (value, origin) => {
+  origin = origin.reverse();
+  const left = "&"+(++counter)+"("+PrintLite(value)+")";
+  const right = origin[0]+"("+origin.slice(1).map(oprint)+")";
+  postMessage(left+" = "+right+"\n");
+  vstack.push("&"+counter);
+  return value;
+};
+const consume = (value, origin, serial) => {
+  origin = origin.reverse();
+  postMessage(origin[0]+"("+vstack.pop+", "+origin.slice(1).map(oprint)+")\n");
+  postMessage(name+"("+vstack.pop()+", "+serial+")\n");
+  return value;
+};
+/////////////
+// Special //
+/////////////
+META.copy = (position, value, serial) => {
+  vstack.push(vstack[vstack.length-position]);
+  return value;
+};
+META.swap = (position1, position2, value, serial) => {
+  const temporary = vstack[vstack.length-position1];
+  vstack[vstack.length-position1] = vstack[vstack.length-position2];
+  vstack[vstack.length-position2] = temporary;
+  return value;
+};
+META.drop = (value, serial) => {
+  vstack.pop();
+  return value;
+};
+META.begin = (serial) => {
+  if (aran.node(serial).AranParent) {
+    cstack[cstack.length-1].push({
+      type: aran.node(serial).AranStrict ? "closure" : "block",
+      binding: Object.create(null)
+    });
+  } else {
+    cstack.push([{
+      type: "block",
+      binding: Object.create(null)
+    }]);
   }
-  return (scope) => ({
-    _scope: scope,
-    _frames: Stack(),
-    reify: reify,
-    scope: getscope,
-    enter: enter,
-    leave: leave,
-    loop: loop
-  });
-}) ());
-
-module.exports = (aran, join) => {
-
-  const traps = {};
-  const proxies = SafeWeakMap();
-  const scopes = SafeWeakMap();
-  const vstack = Stack();
-  const estack = Stack();
-  const cstack = Stack();
-
-  // Membrane //
-  let counter = 0;
-  const print = (value) => {
-    if (typeof value === "function")
-      return "[Function " + (value.name || "anonymous") + "]";
-    if (Array.isArray(value))
-      return "[Array]";
-    if (typeof value === "object" && value !== null)
-      return "[Object]";
-    if (typeof value === "string")
-      return JSON.stringify(value);
-    return "" + value;
-  };
-  const produce = (message, value, serial) => {
-    vstack.push(++counter);
-    postMessage("enter "+message+" #"+counter+" "+print(value)+"\n");
-    return value;
-  };
-  const consume = (message, value, serial) => {
-    postMessage("leave "+message+" #"+vstack.pop()+"\n");
-    return value;
-  };
-
-  /////////////
-  // Special //
-  /////////////
-
-  traps.copy = (position, value, serial) => {
-    vstack.push(vstack[vstack.length-position]);
-    return value;
-  };
-  traps.swap = (position1, position2, value, serial) => {
-    const temporary = vstack[vstack.length-position1];
-    vstack[vstack.length-position1] = vstack[vstack.length-position2];
-    vstack[vstack.length-position2] = temporary;
-    return value;
-  };
-  traps.drop = (value, serial) => {
-    vstack.pop();
-    return value;
-  };
-
-  /////////////////
-  // Environment //
-  ///////////////// 
-
-  traps.write = (identifier, value, serial) => {
-    cstack.peek().loop((type, binding, custom) => {
-      if (identifier in binding) {
-        if (type === "with")
-          leave("with write "+identifier, value, serial);
-        else
-          binding[identifier] = vstack.pop();
-        return true;
-      }
-    }) || leave("global write "+identifier, value, serial);
-    return value;
-  };
-
-  traps.declare = (kind, identifier, value, serial) => {
-    cstack.peek().loop((type, binding, custom) => {
-      if (kind !== "var" || type === "closure") {
-        if (type === "with")
-          throw new Error("This should never happen");
-        Object_defineProperty(binding, identifier, {
-          enumerable: true,
-          configurable: kind === "var",
-          writable: kind !== "const",
-          value: vstack.pop();
-        });
-        return true;
-      }
-    }) || leave("global declare "+kind+" "+identifier, value, serial);
-    return value;
-  };
-
-  traps.read = (identifier, value, serial) => {
-    let result;
-    const each = (type, binding, custom) => {
-      if (identifier in binding) {
-        result = binding[identifier];
-        return true;
-      }
-    }
-    if (!cstack.peek().loop(each))
-      result = cstack.peek().scope().lookup(identifier);
-    check("Read", result, value, serial);
-    return produce(result, serial);
-  };
-
-  ///////////////
-  // Producers //
-  ///////////////
-
-  traps.this = (value, serial) => produce(value, serial);
-  traps.newtarget = (value, serial) => produce(value, serial);
-  traps.arguments = (value, serial) => produce(value, serial);
-  traps.regexp = (value, serial) => produce(value, serial);
-  traps.primitive = (value, serial) => produce(value, serial);
-  traps.builtin = (identifier, value, serial) => produce(value, serial);
-  traps.discard = (identifier, value, serial) => produce(value, serial);
-  traps.closure = (value, serial) => {
-    let wrapper = function () {
-      if (cstack.length)
-        return new.target ? Reflect_construct(value, arguments) : Reflect_apply(value, this, arguments);
-      try {
-        var result = new.target ? Reflect_construct(value, arguments) : Reflect_apply(value, this, arguments);
-      } catch (error) {
-        while (cstack.length)
-          cstack.pop();
-        while (vstack.length)
-          vstack.pop();
-        throw error;
-      }
-      if (cstack.length || vstack.length || estack.length)
-        throw new Error("["+serial+"] State poluted");
-      return result;
-    };
-    const bindings = [];
-    bindings.unshift = Array_prototype_unshift;
-    cstack.peek().loop((type, binding, custom) => { bindings.unshift(binding) });
-    scopes.set(wrapper, cstack.peek().scope().extend(bindings));
-    return produce(wrapper, serial);
-  };
-  traps.catch = (value, serial) => {
-    const each = (type, binding, custom) => {
-      cstack.peek().leave(type, serial);
-      if (type === "try") {
-        cstack.peek().enter("catch", Object_create(null), null);
-        while (vstack.length > custom)
-          vstack.pop();
-        return true;
-      }
-    }
-    while (cstack.length) {
-      if (cstack.peek().loop(each))
-        return produce(value, serial);
+};
+META.success = (value, serial) => value
+META.failure = (error, serial) => {
+  if (!aran.node(serial).AranParent) {
+    while (cstack.length)
       cstack.pop();
-    }
-    throw new Error("["+serial+"] Catch failure");
-  };
-
-  ///////////////
-  // Consumers //
-  ///////////////
-
-  traps.test = (value, serial) => consume(value, serial);
-  traps.throw = (value, serial) => consume(value, serial);
-  traps.eval = (value, serial) => join(consume(value, serial), aran.node(serial));
-  traps.return = (value, serial) => {
-    cstack.pop();
-    return consume(value, serial);
-  };
-  traps.with = (value, serial) => {
-    cstack.peek().enter("with", value, null);
-    return consume(value, serial);
-  };
-  traps.completion = (value, serial) => {
-    estack.pop();
-    estack.push(value);
-    return consume(value, serial);
-  };
-
-  ///////////////
-  // Informers //
-  ///////////////
-
-  traps.callee = (value, serial) => {
-    cstack.push(Call(scopes.get(value)));
-    cstack.peek().enter("closure", Object.create(null), null);
-  };
-  traps.block = (serial) => {
-    cstack.peek().enter("block", Object.create(null), null);
-  };
-  traps.try = (serial) => {
-    cstack.peek().enter("try", Object_create(null), vstack.length);
-  };
-  traps.finally = (serial) => {
-    cstack.peek().enter("finally", Object_create(null), null);
-  };
-  traps.label = (boolean, label, serial) => {
-    label = (boolean ? "Break" : "Continue") + (label||"");
-    cstack.peek().enter("label", Object_create(null), label);
-  };
-  traps.leave = (type, serial) => {
-    cstack.peek().leave(type, serial);
-  };
-  traps.break = (boolean, label, serial) => {
-    label = (boolean ? "Break" : "Continue") + (label||"");
-    const each = (type, binding, custom) => {
-      cstack.peek().leave(type, serial);
-      return label === custom;
-    }
-    if (!cstack.peek().loop(each))
-      throw new Error("["+serial+"] Break failure: "+label);    
-  };
-
-  ///////////////
-  // Combiners //
-  ///////////////
-
-  traps.invoke = (value1, value2, values, serial) => {
-    let index = values.length;
-    while (index--)
-      consume(values[index], serial);
-    consume(value2, serial);
-    consume(value1, serial);
-    return produce(Reflect_apply(value1[value2], value1, values), serial);
-  };
-  traps.construct = (value, values, serial) => {
-    let index = values.length;
-    while (index--)
-      consume(values[index], serial);
-    consume(value, serial);
-    return produce(Reflect_construct(value, values), serial);
-  };
-  traps.apply = (boolean, value, values, serial) => {
-    let index = values.length;
-    while (index--)
-      consume(values[index], serial);
-    consume(value, serial);
-    return produce(Reflect_apply(value, boolean ? void 0 : global, values), serial);
-  };
-  traps.unary = (operator, value, serial) => {
-    consume(value, serial);
-    return produce(eval(operator+" value"), serial)
-  };
-  traps.binary = (operator, value1, value2, serial) => {
-    consume(value2, serial);
-    consume(value1, serial);
-    return produce(eval("value1 "+operator+" value2"), serial);
-  };
-  traps.get = (value1, value2, serial) => {
-    consume(value2, serial);
-    consume(value1, serial);
-    return produce(value1[value2], serial);
-  };
-  traps.set = (value1, value2, value3, serial) => {
-    consume(value3, serial);
-    consume(value2, serial);
-    consume(value1, serial);
-    return produce(value1[value2] = value3, serial);
-  };
-  traps.delete = (value1, value2, serial) => {
-    consume(value2, serial);
-    consume(value1, serial);
-    return produce(delete value1[value2], serial);
-  };
-  traps.array = (values, serial) => {
-    let index = values.length;
-    while (index--)
-      consume(values[index], serial);
-    return produce(values, serial);
-  };
-  traps.object = (properties, serial) => {
-    const result = {};
-    let index = properties.length
-    while (index--) {
-      consume(properties[index][1], serial);
-      consume(properties[index][0], serial);
-      result[properties[index][0]] = properties[index][1];
-    }
-    return produce(result, serial);
-  };
-
-  //////////////////////
-  // Setup / Teardown //
-  //////////////////////
-
-  traps.begin = (serial) => {
-    estack.push(null);
-    if (aran.node(serial).AranParent)
-      return cstack.peek().enter(aran.node(serial).AranStrict ? "closure" : "block", Object_create(null), null);
-    cstack.push(Call(Scope()));
-    cstack.peek().enter("block", Object_create(null), null);
-  };
-  traps.success = (value, serial) => {
-    check("Success", estack.peek(), value, serial);
-    if (aran.node(serial).AranParent) {
-      cstack.peek().leave(aran.node(serial).AranStrict ? "closure" : "block", serial);
-      return produce(value, serial);
-    }
-    cstack.peek().leave("block", serial);
-    if (cstack.peek().loop(() => true))
-      throw new Error("["+serial+"] CallStack frames poluted");
-    cstack.pop();
-    if (estack.length === 1 && (cstack.length || vstack.length))
-      throw new Error("["+serial+"] State poluted");
-    return value;
-  };
-  traps.failure = (error, serial) => {
-    if (estack.length === 1) {
+    while (vstack.length)
+      vstack.pop();
+  }
+  return error;
+};
+META.end = (serial) => {};
+//////////////////////////
+// (Possible) Producers //
+//////////////////////////
+META.this = (value, serial) => produce(value, ["this", serial]);
+META.newtarget = (value, serial) => produce(value, ["newtarget", serial]);
+META.arguments = (value, serial) => produce(value, ["arguments", serial]);
+META.regexp = (value, serial) => produce(value, ["regexp", serial]);
+META.primitive = (value, serial) => produce(value, ["primitive", serial]);
+META.builtin = (identifier, value, serial) => produce(value, ["builtin", serial]);
+META.discard = (identifier, value, serial) => produce(value, ["discard", serial]);
+META.closure = (value, serial) => {
+  let wrapper = function () {
+    if (cstack.length)
+      return new.target ? Reflect_construct(value, arguments) : Reflect_apply(value, this, arguments);
+    try {
+      return new.target ? Reflect_construct(value, arguments) : Reflect_apply(value, this, arguments);
+    } catch (error) {
       while (cstack.length)
         cstack.pop();
       while (vstack.length)
         vstack.pop();
+      throw error;
     }
-    return error;
   };
-  traps.end = (serial) => {
-    estack.pop();
+  scopes.set(wrapper, cstack.map((frame) => {type:"scope", binding:frame.binding}));
+  return produce(wrapper, ["closure", serial]);
+};
+META.read = (identifier, value, serial) => {
+  let call = cstack[cstack.length-1];
+  let index = call.length;
+  while (index--) {
+    const frame = call[index];
+    if (bound(frame, identifier)) {
+      if (frame.type === "with") {
+        return produce(value, ["read-with", identifier, serial]);
+      }
+      vstack.push(frame.binding[identifier]);
+      return value;
+    }
   };
-
-  ////////////
-  // Return //
-  ////////////
-
-  return {
-    traps: traps,
-    vstack: vstack,
-    cstack: cstack,
-    estack: estack,
-    proxies: proxies,
-    scopes: scopes
-  };
-
+  return produce(value, ["read-global", identifier, serial]);
+};
+META.catch = (value, serial) => {
+  while (cstack.length) {
+    let call = cstack[cstack.length-1];
+    let index = call.length;
+    while (index--) {
+      const frame = call[index];
+      if (frame.type === "try") {
+        call.push({type:"catch", binding:{}});
+        while (vstack.length > frame.recovery)
+          vstack.pop();
+        return produce(value, ["catch", serial]);
+      }
+    }
+    cstack.pop();
+  }
+};
+//////////////////////////
+// (Possible) Consumers //
+//////////////////////////
+META.completion = (value, serial) => consume(value, "completion", serial);
+META.test = (value, serial) => consume(value, "test", serial);
+META.throw = (value, serial) => consume(value, "throw", serial);
+META.eval = (value, serial) => join(consume(value, "eval", serial), aran.node(serial));
+traps.return = (value, serial) => {
+  cstack.pop();
+  return consume(value, ["return", serial]);
+};
+traps.with = (value, serial) => {
+  cstack[cstack.length-1].push({type:"with", binding:value});
+  return consume(value, ["with", serial]);
+};
+traps.write = (identifier, value, serial) => {
+  const call = cstack[cstack.length-1];
+  let index = call.length;
+  while (index--) {
+    const frame = call[index];
+    if (bound(frame, identifier)) {
+      if (frame.type === "with")
+        return frame.binding[identifier] = consume(value, "with-write", serial);
+      frame.binding[identifier] = vstack.pop();
+      return value; 
+    }
+  }
+  if (identifier in global || aran.node(serial).AranStrict)
+    return global[identifier] = consume(value, "global-write", serial);
+  throw new ReferenceError(identifier+" is not defined");
+};
+traps.declare = (kind, identifier, value, serial) => {
+  let frame;
+  if (kind === "var") {
+    const call = cstack[cstack.length-1];
+    let index = call.length;
+    while (call[index].type !== "closure") 
+      index--;
+    if (index === -1)
+      consume(value, ["declare-global", serial]);
+      if ()
+      const frame = call[index];
+    }
+  }
+};
+///////////////
+// Informers //
+///////////////
+META.callee = (value, serial) => cstack.push(scopes.get(value).concat([{
+  type: "closure",
+  binding:Object.create(null)
+}]));
+META.leave = (type, serial) => cstack[cstack.length-1].pop();
+META.block = (serial) => cstack[cstack.length-1].push({
+  type: "block",
+  binding: Object.create(null)
+});
+META.try = (serial) => cstack[cstack.length-1].push({
+  type: "try",
+  binding: Object.create(null),
+  recovery: vstack.length
+});
+META.finally = (serial) => cstack[cstack.length-1].push({
+  type: "finally",
+  binding: Object.create(null)
+});
+META.label = (boolean, label, serial) => cstack[cstack.length-1].push({
+  type: "label",
+  binding: Object.create(null),
+  label: (boolean ? "Break" : "Continue") + (label||"")
+});
+META.break = (boolean, label, serial) => {
+  label = (boolean ? "Break" : "Continue") + (label||"");
+  const call = cstack[cstack.length-1];
+  while (call.length) {
+    const frame = call.pop();
+    if (frame.type === "label" && frame.label === label)
+      return;
+  }
+};
+///////////////
+// Combiners //
+///////////////
+META.apply = (strict, value, values, serial) => produce(
+  Reflect.apply(value, strict ? global : undefined, values),
+  [serial, vstack.splice(-values.length), vstack.pop(), "apply"]);
+META.invoke = (value1, value2, values, serial) => produce(
+  Reflect.apply(value1[value2], value1, values),
+  [serial, vstack.splice(-values.length), vstack.pop(), vstack.pop(), "invoke"]);
+META.construct = (value, values, serial) => produce(
+  Reflect.construct(value, values),
+  [serial, vstack.splice(-values.length), vstack.pop(), "construct"]);
+META.unary = (operator, value, serial) => produce(
+  eval(operator+" value"),
+  [serial, vstack.pop(), operator, "unary"]);
+META.binary = (operator, value1, value2, serial) => produce(
+  eval("value1 "+operator+" value2"),
+  [serial, vstack.pop(), vstack.pop(), operator, "binary"]);
+META.get = (value1, value2, serial) => produce(
+  value1[value2],
+  [serial, vstack.pop(), vstack.pop(), "get"]);
+META.set = (value1, value2, value3, serial) => produce(
+  value1[value2] = value,
+  [serial, vstack.pop(), vstack.pop(), vstack.pop(), "set"]);
+META.delete = (value1, value2, serial) => produce(
+  delete value1[value2],
+  [serial, vstack.pop(), vstack.pop(), "delete"]);
+META.array = (values, serial) => produce(
+  values,
+  [serial, vstack.splice(-values.length), "array"]);
+META.object = (properties, serial) => {
+  const object = {};
+  const mproperties = properties.map((property) => {
+    object[property[0]] = property[1];
+    return "["+vstack.splice(-2, 1)+","+vstack.pop()+"]";
+  });
+  return produce(object, [serial, mproperties.reverse(), "object"]);
 };

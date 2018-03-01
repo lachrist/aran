@@ -1,6 +1,5 @@
 
-const Print = require("./util/print.js");
-const Dynamic = require("./util/dynamic.js");
+const PrintLite = require("print-lite");
 const Error = global.Error;
 const TypeError = global.TypeError;
 const ReferenceError = global.ReferenceError;
@@ -23,7 +22,7 @@ const WeakMap_prototype_has = global.WeakMap.prototype.has;
 
 const check = (title, value1, value2, serial) => {
   if (value1 !== value2 && (value1 === value1 || value2 === value2)) {
-    throw new Error("["+serial+"] "+title+" mismatch. Expected: "+Print(value1)+", got: "+Print(value2)+".");
+    throw new Error("["+serial+"] "+title+" mismatch. Expected: "+PrintLite(value1)+", got: "+PrintLite(value2)+".");
   }
 };
 
@@ -131,8 +130,6 @@ module.exports = (aran, join) => {
     return vstack.pop();
   };
 
-  global.Function = Dynamic.Function(join);
-  global.eval = Dynamic.eval(join);
   global.Proxy = function Proxy (target, handlers) {
     if (new.target === void 0) // https://github.com/jsdom/webidl2js/issues/78
       throw new TypeError("Constructor Proxy requires 'new'");

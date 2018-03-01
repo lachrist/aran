@@ -1,140 +1,173 @@
 const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
-module.exports = (script) => {
-  const ast1 = Acorn.parse(script);
-  const ast2 = aran.join(ast1, Object.keys(META), null);
-  global.eval("with(METAproxy) { "+Astring.generate(ast2)+"}");
-};
-global.META = {};
-const aran = Aran({namespace:"META",nosetup:true});
+const PrintLite = require("print-lite");
+///////////
+// Setup //
+///////////
+const aran = Aran({namespace:"META", nosetup:true});
 global.eval(Astring.generate(aran.setup()));
+global.META = {};
+const join = (script, parent) =>
+  Astring.generate(aran.join(Acorn.parse(script), Object.keys(META), parent));
+module.exports = (script) => eval("with (gproxy) { "+join(script, null)+"}");
+//////////////
 // Membrane //
+//////////////
 let counter = 0;
-const print = (value) => {
-  if (typeof value === "function")
-    return "[Function " + (value.name || "anonymous") + "]";
-  if (Array.isArray(value))
-    return "[Array]";
-  if (typeof value === "object" && value !== null)
-    return "[Object]";
-  if (typeof value === "string")
-    return JSON.stringify(value);
-  return "" + value;
+const reference = (name, parts) => {
+  postMessage("#"+(++counter)+" = "+name+"("+parts.map(String).join(", ")+");");
+  return counter;
 };
-const enter = (message, value, serial) => {
-  postMessage("enter "+message+" #"+(++counter)+" "+print(value)+"\n");
-  return {base:value,meta:counter};
+
+
+const metaof = ($value) => $value.meta;
+const baseof = ($value) => $value.base;
+const oprint = (o) => (Array.isArray(o)) ? "["+o.map(String).join(", ")+"]" : String(o);
+const produce = (value, origin) => {
+  const left = "&"+(++counter)+"("+PrintLite(value)+")";
+  const right = origin[0]+"("+origin.slice(1).map(oprint).join(", ")+")";
+  postMessage(left+" = "+right+"\n");
+  return {base:value,meta:"&"+counter};
 };
-const leave = (message, $value, serial) => {
-  postMessage("leave "+message+" #"+$value.meta+"\n");
-  return $value.base; 
+const consume = ($value, name, serial) => {
+  postMessage(name+"("+$value.meta+", "+serial+")\n");
+  return $value.base;
 };
+const combine = ($value, name, origin) => {};
+const produce = (value, name, origin) => {};
+const consume = ()
+/////////////////
 // Environment //
-let definable = null;
-global.METAproxy = new Proxy(global, {
-  has: (target, key) => !key.startsWith("META"),
+/////////////////
+let set = null;
+let get = null;
+const handlers = {
+  has: (target, key) => !key.startsWith("META") && (key in target.base),
+  deleteProperty: (target, key) => delete target.base[key],
   get: (target, key, receiver) => {
     if (key === Symbol.unscopables)
-      return target[key];
-    if (key in target)
-      return enter("with get "+key, target[key], null);
-    throw new ReferenceError(key+" is not defined");
+      return target.base[Symbol.unscopables];
+    get = "with";
+    return target.base[key];
   },
   set: (target, key, $value, receiver) => {
-    const value = leave("with set "+key, $value, null);
-    if (key in target)
-      return target[key] = value;
-    if (definable)
-      return Object.defineProperty(target, key, {
+    target.base[key] = consume($value, "with-write-"+key, set.serial);
+    set = null;
+  }
+};
+const gproxy = new Proxy(produce(global, ["global", 0]), {
+  has: (target, key) => !key.startsWith("META"),
+  deleteProperty: (target, key) => delete target.base[key],
+  get: (target, key, receiver) => {
+    if (key === Symbol.unscopables)
+      return undefined;
+    if (!(key in target.base))
+      throw new ReferenceError(key+" is not defined");
+    get = "global";
+    return target.base[key];
+  },
+  set: (target, key, $value, receiver) => {
+    if (!(key in target) && set.write && aran.node(set.serial).AranStrict)
+      throw new ReferenceError(key+" is not defined");
+    if (key in target || set.write) {
+      target.object[key] = consume($value, "with-write-"+key, set.serial);
+    } else {
+      Object.defineProperty(target, key, {
         configurable: false,
         enumerable: true,
         writable: true,
-        value: value
+        value: consume($value, "with-declare-"+key, set.serial)
       });
-    throw new ReferenceError(key+" is not defined");
+    }
   }
 });
+META.with = ($value, serial) => new Proxy($value, handlers);
+META.read = (identifier, $value, serial) => {
+  if (get) {
+    $value = produce($value, ["with-read-"+identifier, serial]);
+    get = false;
+  }
+  return $value
+};
 META.write = (identifier, $value, serial) => {
-  definable = !aran.node(serial).AranStrict;
+  set = {write:true, serial:serial};
   return $value;
 };
 META.declare = (kind, identifier, $value, serial) => {
-  definable = true;
+  set = {write:false, serial:serial};
   return $value;
 };
+META.eval = ($value, serial) => join(consume("eval")($value, serial));
+///////////////
 // Producers //
-META.builtin = (name, value, serial) => enter("builtin-"+name, value, serial);
-[ "primitive",
-  "regexp",
-  "closure",
-  "discard",
-  "catch",
-  "this",
-  "newtarget",
-  "arguments"].forEach((key) => META[key] = (value, serial) => enter(key, value, serial));
+///////////////
+["builtin", "primitive", "regexp", "closure", "discard", "this", "newtarget", "arguments", "catch"].forEach((name) => {
+  META[key] = function () {
+    return {
+      base: arguments[arguments.length-2],
+      meta: equation(name, arguments)
+    };
+  }
+});
+META.builtin = (name, value, serial) => produce(value, ["builtin", name, serial]);
+META.primitive = (value, serial) => produce(value, ["primitive", serial]);
+META.regexp = (value, serial) => produce(value, ["regexp", serial]);
+META.closure = (value, serial) => produce(value, ["closure", serial]);
+META.discard = (identifier, value, serial) => produce(value, ["discard", identifier, serial]);
+META.this = (value, serial) => produce(value, ["this", serial]);
+META.newtarget = (value, serial) => produce(value, ["newtarget", serial]);
+META.arguments = (value, serial) => produce(value, ["arguments", serial]);
+META.catch = (value, serial) => produce(value, ["catch", serial]);
+///////////////
 // Consumers //
-META.eval = ($value, serial) => {
-  value = leave("eval", $value, serial);
-  return aran.join(value, Object.keys(META), aran.node(serial));
+///////////////
+const consume = (name) => function () {
+  const $value = arguments[arguments.length-2];
+  arguments[arguments.length-2] = $value.meta;
+  equation(name, arguments);
+  return $value.base;
 };
-[ "success",
-  "test",
-  "throw",
-  "return",
-  "with"].forEach((key) => META[key] = ($value, serial) => leave(key, $value, serial));
+META.success = consume("success");
+META.test = consume("test");
+META.throw = consume("throw");
+META.return = consume("return");
+///////////////
 // Combiners //
-META.apply = (strict, $value, $values, serial) => {
-  const value = leave("apply closure", $value, serial);
-  const values = $values.map(($value, index) => leave("apply arguments "+index, $value, serial));
-  return enter("apply", Reflect.apply(value, strict ? global : undefined, values), serial);
-};
-META.invoke = ($value1, $value2, $values, serial) => {
-  const value1 = leave("invoke object", $value1, serial);
-  const value2 = leave("invoke key", $value2, serial);
-  const values = $values.map(($value, index) => leave("invoke arguments "+index, $value, serial));  
-  return enter("invoke", Reflect.apply(value1[value2], value1, values), serial);
-};
-META.construct = ($value, $values, serial) => {
-  const value = leave("construct closure", $value, serial);
-  const values = $values.map((value, index) => leave("invoke arguments "+index, $value, serial));
-  return enter("construct", Reflect.construct(value, values), serial);
-};
-META.unary = (operator, $value, serial) => {
-  const value = leave("unary "+operator, $value, serial);
-  return enter("unary", eval(operator+" value"), serial);
-};
-META.binary = (operator, $value1, $value2, serial) => {
-  const value1 = leave("binary "+operator+" left", $value1, serial);
-  const value2 = leave("binary "+operator+" right", $value2, serial);
-  return enter("binary", eval("value1 "+operator+" value2"));
-};
-META.get = ($value1, $value2, serial) => {
-  const value1 = leave("get object", $value1, serial);
-  const value2 = leave("get key", $value2, serial);
-  return enter("get", value1[value2], serial);
-};
-META.set = ($value1, $value2, $value3, serial) => {
-  const value1 = leave("set object", $value1, serial);
-  const value2 = leave("set key", $value2, serial);
-  const value3 = leave("set value", $value3, serial);
-  value1[value2] = value3
-  return $value3;
-};
-META.delete = ($value1, $value2, serial) => {
-  const value1 = leave("delete object", $value1, serial);
-  const value2 = leave("delete key", $value2, serial);
-  return enter("delete", delete value1[value2], serial);
-};
-META.array = ($values, serial) => {
-  const values = $values.map(($value, index) => leave("elements "+index, value, serial));
-  return enter("array", values, serial);
-};
+///////////////
+const combine = (name, value, array) => 
+META.apply = (strict, $value, $values, serial) => produce(
+  Reflect.apply($value.base, strict ? global : undefined, $values.map(baseof)),
+  ["apply", strict, $value.meta, $values.map(metaof), serial])
+META.invoke = ($value1, $value2, $values, serial) => produce(
+  Reflect.apply($value1.base[$value2.base], $value1.base, $values.map(baseof)),
+  ["invoke", $value1.meta, $value2.meta, $values.map(metaof), serial]);
+META.construct = ($value, $values, serial) => produce(
+  Reflect.construct($value.base, $values.map(baseof)),
+  ["construct", $value.meta, $values.map(metaof), serial]);
+META.unary = (operator, $value, serial) => produce(
+  eval(operator+" $value.base"),
+  ["unary", operator, $value.meta, serial]);
+META.binary = (operator, $value1, $value2, serial) => produce(
+  eval("$value1.base "+operator+" $value2.base"),
+  ["binary", operator, $value1.meta, $value2.meta, serial]);
+META.get = ($value1, $value2, serial) => produce(
+  $value1.base[$value2.base],
+  ["get", $value1.meta, $value2.meta, serial]);
+META.set = ($value1, $value2, $value3, serial) => produce(
+  $value1.base[$value2.base] = $value3.base,
+  ["set", $value1.meta, $value2.meta, $value3.meta, serial]);
+META.delete = ($value1, $value2, serial) => produce(
+  delete $value1.base[$value2.base],
+  ["delete", $value1.meta, $value2.meta, serial]);
+META.array = ($values, serial) => produce(
+  $values.map(baseof),
+  ["array", $values.map(metaof), serial]);
 META.object = ($properties, serial) => {
-  return enter("object", $properties.reduce((object, $property, index) => {
-    const key = leave("object key "+index, $property[0], serial);
-    const value = leave("object value "+index, $property[1], serial);
-    object[key] = value;
-    return object;
-  }, {}), serial);
+  const object = {};
+  const mproperties = $properties.map(($property) => {
+    object[$property[0].base] = $property[1].base;
+    return "["+$property[0].meta+","+$property[1].meta+"]";
+  });
+  return produce(object, ["object", mproperties, serial]);
 };

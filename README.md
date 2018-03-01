@@ -138,8 +138,8 @@ Instrument the given program.
   The [ESTree Program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
 * `pointcut :: closure | object | array` default:  `[]`.
   The specification that tells aran where to insert calls to the advice.
-  Aran support three specification formats:
-  * `array`: an array of trap name to insert everywhere.
+  Aran support four specification formats:
+  * `array`: an array containing the names of the traps to insert everywhere.
     For instance, the poincut below results in aran inserting the `binary` trap everywhere:
     ```js
     const pointcut = ["binary"]
@@ -150,11 +150,13 @@ Instrument the given program.
     ```js
     const pointcut = (name, node) => node.type === "UpdateExpression" && name === "binary";
     ```
-  * `object`: an object whose property keys are trap name and property values are functions recieving nodes.
+  * `object`: an object whose property keys are trap names and property values are functions recieving a node.
     As for the `closure`format, these functions should return a boolean indicating wether to insert the trap call.
     For instance, the pointcut below has the same semantic as the one above:
     ```js
-    const pointcut = { binary: (node) => node.type === "UpdateExpression" };```
+    const pointcut = { binary: (node) => node.type === "UpdateExpression" };
+    ```
+  * `*`: if truthy, insert all the traps everywhere; if falsy, insert none of the trap nowhere.
 * `parent :: ESTree | null` default : `null`.
   In the event of instrumenting code before passing it to a *direct* eval call, `parent` should refer the node calling the eval function.
   Otherwise it should be `null`.

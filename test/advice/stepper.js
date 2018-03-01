@@ -1,4 +1,5 @@
 const ReadlineSync = require("readline-sync");
+const Util = require("util");
 const Shadow = require("./shadow.js");
 const Reflect_apply = global.Reflect.apply;
 const Object_keys = global.Object.keys;
@@ -117,7 +118,7 @@ module.exports = (aran, join) => {
 
   Reflect_apply(Array_prototype_forEach, Object_keys(shadow.traps), [(key) => {
     traps[key] = function () {
-      console.log(JSON_stringify(reify(key, arguments), null, 2));
+      console.log(Util.inspect(reify(key, arguments), {colors:true,depth:null}));
       ReadlineSync.question("Press <enter> to step in...");
       return Reflect_apply(shadow.traps[key], this, arguments);
     };

@@ -26,7 +26,7 @@ module.exports = (pointcut) => {
             null,
             arguments) } :
           Fork[Boolean(pointcut[key])][key]) :
-        (key) => Fork[false][key])));
+        (key) => Fork[Boolean(pointcut)][key])));
   const cut = {};
   ArrayLite.forEach(
     TrapNames,
