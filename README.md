@@ -25,7 +25,7 @@ Aran could also be used as a desugarizer much like [babel](https://babeljs.io).
 ## Getting Started
 
 The code transformation performed by Aran essentially consists in inserting calls to global functions at ast nodes specified by the user.
-For instance, the expression `x+y` may be transformed into `_META_.binary('+',x,y,123)`.
+For instance, the expression `x+y` could be transformed into `_META_.binary('+',x,y,123)`.
 The last argument passed to these global functions is always a *serial* number which uniquely identifies the node responsible for triggering the call. 
 These global functions are collectively called advice (or traps) and the specification that characterizes what part of the advice should be executed at which node is called pointcut.
 The process calling parts of the advice at the program points defined by the pointcut is called joining. 
@@ -75,6 +75,7 @@ When Aran instruments a program, *all* its statement nodes and *all* its express
   The node's serial number.
 * `AranMaxSerial :: number`.
   The maximum serial number which can be found within the node's decedents.
+  This is usefull to speed up the serial number lookup.
 * `AranParent :: ESTree | *`.
   The node's parent, in general this should be an ESTree.
   But, if the node's type is `"Program"`, then this field will be the third argument passed to `aran.join(program, pointcut, parent)`. 
@@ -199,9 +200,8 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
 `finally`     | `serial:number`      |                     |                     |
 `block`       | `serial:number`      |                     |                     |
 `leave`       | `type:string`        | `serial:number`     |                     |
-`label`       | `continue:boolean`   | `label:string`      | `serial:number`     |
-`break`       | `continue:boolean`   | `label:string`      | `serial:number`     |
-`callee`      | `closure:function`   | `serial:number`     |                     |
+`label`       | `iscontinue:boolean` | `label:string`      | `serial:number`     |
+`break`       | `iscontinue:boolean` | `label:string`      | `serial:number`     |
 **Combiners** |                      |                     |                     |
 `object`      | `properties:`<br>`[{0:value,1:value}]` | `serial:number` |       |
 `array`       | `elements:[value]`   | `serial:number`     |                     |
@@ -222,7 +222,7 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
 `read`        | `identifier:string`  | `produced:value`    | `serial:number`     |
 `discard`     | `identifier:string`  | `produced:value`    | `serial:number`     |
 `builtin`     | `name:string`        | `produced:value`    | `serial:number`     |
-`newtarget`   | `produced:value`     | `serial:number`     |                     |
+`callee`      | `produced:value`     | `serial:number`     |                     |
 `this`        | `produced:value`     | `serial:number`     |                     |
 `arguments`   | `produced:value`     | `serial:number`     |                     |
 `catch`       | `produced:value`     | `serial:number`     |                     |
@@ -231,7 +231,7 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
 `closure`     | `produced:value`     | `serial:number`     |                     |
 *Consumers*   |                      |                     |                     |
 `declare`     | `kind:string`        | `identifier:string` | `consumed:value`    | `serial:number`
-`write`       | `identifier:string`  | `consumed:value`    | `serial:number`
+`write`       | `identifier:string`  | `consumed:value`    | `serial:number`     |
 `test`        | `consumed:value`     | `serial:number`     |                     |
 `with`        | `consumed:value`     | `serial:number`     |                     |
 `throw`       | `consumed:value`     | `serial:number`     |                     |
@@ -262,7 +262,7 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
   completion;
   ```
 
-* `["block", "leave", "break"]`
+* `["block", "leave"]`
 
   ```js
   {"Hello!"}
@@ -301,23 +301,20 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
   } catch (error) {
     error = META.catch(error, 3);
     let e = error;
-    completion = postMessage("catch");
+    completion = console.log("catch");
     META.leave("catch", 3);
   } finally {
     META.finally(3);
-    postMessage("finally");
+    console.log("finally");
     META.leave("finally", 3);
   }
   completion;
   ```
 
-* `["callee", "newtarget", "this", "arguments", "closure", "return"]`
+* `["closure", "callee", "newtarget", "this", "arguments", "return"]`
 
   ```js
-  function IdentityFunction (x) {
-    return x;
-  }
-  let IdentityArrow = (x) => x;
+  function identity (x) { return x }
   ```
 
   ```js
@@ -336,7 +333,7 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
     }, 3);
     return callee;
   })(), "name", {
-    value: "id",
+    value: "identity",
     configurable: true
   }), "length", {
     value: 1,
@@ -345,7 +342,7 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
   completion;
   ```
 
-* `["label", "leave"]`
+* `["label", "break", "leave"]`
   ```js
   l : while (true) {
     break l;
@@ -424,22 +421,33 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
 * `["test"]`
 
   ```js
-  if (true) "foo";
+  if (true) ;
   false ? "foo" : "bar";
-  while (0) {}
-  for (; null;) {}
+  "qux" || "buz";
+  "zig" && "wiz";
+  while (0) ;
+  for (; null;) ;
   ```
 
   ```js
   let completion;
   completion = void 0;
+  let META_ARAN_12_logic;
+  let META_ARAN_16_logic;
   if (META.test(true, 3)) ;
-  META.test(false, 8) ? "foo" : "bar";
-  B12: while (META.test(0, 12)) C12: ;
+  META.test(false, 7) ? "foo" : "bar";
+  META.test(META_ARAN_12_logic = "qux", 12) ? META_ARAN_12_logic : "buz";
+  META.test(META_ARAN_16_logic = "zig", 16) ? "wiz" : META_ARAN_16_logic;
+  B19: while (META.test(0, 19)) C19: ;
   completion = void 0;
-  B14: while (META.test(null, 14)) C14: ;
+  B22: while (META.test(null, 22)) C22: ;
   completion;
   ```
+
+
+```sh
+node run-all.js analysis/shadow-state.js ../../test/atom
+```
 
  Pointcut                             | Target              | Instrumented
 -----------------------------------|---------------------|-------------------------------------------------------

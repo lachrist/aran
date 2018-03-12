@@ -135,9 +135,9 @@ module.exports = (pointcut) => {
           traps.closure(
             ARAN.build.closure(
               strict,
-              ArrayLite.concat(
-                (
-                  ARAN.parent.type === "ArrowFunctionExpression" ?
+              (
+                ARAN.parent.type === "ArrowFunctionExpression" ?
+                ArrayLite.concat(
                   ARAN.build.If(
                     ARAN.build.read("new.target"),
                     ARAN.build.Throw(
@@ -145,18 +145,39 @@ module.exports = (pointcut) => {
                         Builtin.load(["TypeError"]),
                         [
                           ARAN.build.primitive("arrow is not a constructor")])),
-                    []) :
-                  []),
-                Inform(
-                  traps.callee(
-                    ARAN.build.read("callee"))),
-                (
-                  ARAN.parent.type === "ArrowFunctionExpression" ?
-                  (
-                    ARAN.build.Statement(
-                      traps.drop(
-                        traps.this(
-                          ARAN.build.read("this"))))) :
+                    []),
+                  ARAN.build.Statement(
+                    traps.drop(
+                      traps.callee(
+                        ARAN.build.read("callee")))),
+                  ARAN.build.Statement(
+                    traps.drop(
+                      traps.this(
+                        ARAN.build.read("this")))),
+                  ARAN.build.Statement(
+                    ARAN.build.write(
+                      "arguments",
+                      traps.arguments(
+                        ARAN.build.read("arguments")))),
+                  statements) :
+                ArrayLite.concat(
+                  ARAN.build.Declare(
+                    "const",
+                    SanitizeIdentifier("new.target"),
+                    traps.declare(
+                      "const",
+                      "new.target",
+                      ARAN.build.conditional(
+                        ARAN.build.read("new.target"),
+                        traps.callee(
+                          ARAN.build.read("callee")),
+                        ARAN.build.sequence(
+                          [
+                            traps.drop(
+                              traps.callee(
+                                ARAN.build.read("callee"))),
+                            traps.primitive(
+                              ARAN.build.primitive(void 0))])))),
                   ARAN.build.Declare(
                     "const",
                     SanitizeIdentifier("this"),
@@ -164,43 +185,26 @@ module.exports = (pointcut) => {
                       "const",
                       "this",
                       traps.this(
-                        ARAN.build.read("this"))))),
-                (
-                  ARAN.parent.type === "ArrowFunctionExpression" ?
-                  (
-                    ARAN.build.Statement(
-                      traps.drop(
-                        traps.newtarget(
-                          ARAN.build.read("new.target"))))) :
-                  ARAN.build.Declare(
-                    "const",
-                    SanitizeIdentifier("new.target"),
-                    traps.declare(
-                      "const",
-                      "new.target",
-                      traps.newtarget(
-                        ARAN.build.read("new.target"))))),
-                ARAN.build.Statement(
-                  ARAN.build.write(
-                    "arguments",
-                    traps.arguments(
-                      ARAN.build.read("arguments")))),
-                (
-                  (
-                    ARAN.parent.type === "ArrowFunctionExpression" ||
-                    ContainArguments(
-                      ArrayLite.slice(ARAN.parent.params))) ?
-                  [] :
-                  ARAN.build.Declare(
-                    "let",
-                    SanitizeIdentifier("arguments"),
-                    traps.declare(
-                      "let",
+                        ARAN.build.read("this")))),
+                  ARAN.build.Statement(
+                    ARAN.build.write(
                       "arguments",
-                      traps.copy(
-                        1,
-                        ARAN.build.read("arguments"))))),
-                statements)))),
+                      traps.arguments(
+                        ARAN.build.read("arguments")))),
+                  (
+                    ContainArguments(
+                        ArrayLite.slice(ARAN.parent.params)) ?
+                    [] :
+                    ARAN.build.Declare(
+                      "let",
+                      SanitizeIdentifier("arguments"),
+                      traps.declare(
+                        "let",
+                        "arguments",
+                        traps.copy(
+                          1,
+                          ARAN.build.read("arguments"))))),
+                  statements))))),
         ARAN.build.Return(
           ARAN.build.read("callee")))),
     []);
@@ -225,9 +229,24 @@ module.exports = (pointcut) => {
   // Consumers //
   ///////////////
 
-  cut.write = (identifier, expression) => ARAN.build.write(
-    SanitizeIdentifier(identifier),
-    traps.write(identifier, expression));
+  cut.write = (
+    aran.sandbox ?
+    (identifier, expression) => ARAN.build.write(
+      SanitizeIdentifier(identifier),
+      traps.write(identifier, expression)) :
+    (identifier, expression) => (
+      node.AranStrict ?
+      ARAN.build.sequence(
+        [
+          Builtin.save(["declare"], false),
+          ARAN.build.write(
+            SanitizeIdentifier(identifier),
+            traps.write(identifier, expression)),
+          Builtin.save(["declare"], true),
+          ARAN.build.read(SanitizeIdentifier(identifier))])) :
+      ARAN.build.write(
+        SanitizeIdentifier(identifier),
+        traps.write(identifier, expression));
 
   cut.Declare = (kind, identifier, expression) => ARAN.build.Declare(
     kind,

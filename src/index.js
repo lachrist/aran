@@ -1,9 +1,10 @@
 
+const ArrayLite = require("array-lite");
 const Join = require("./join");
 const Cut = require("./cut");
 const Setup = require("./setup.js");
 const Build = require("./build");
-const ArrayLite = require("array-lite");
+const Sanitize = require("./sanitize.js");
 const Object_assign = Object.assign;
 const Object_keys = Object.keys;
 
@@ -12,6 +13,7 @@ function join (root, pointcut, parent) {
   const temporary = global.ARAN;
   global.ARAN = {
     build: this._build,
+    sanitize: this._sanitize,
     nodes: this._nodes,
     nosetup: this._nosetup,
     namespace: this.namespace,
@@ -66,10 +68,11 @@ function node2 (serial) {
 
 module.exports = (options) => {
   options = Object_assign({
-    namespace: "__META__",
+    namespace: "META",
     output: "EstreeOptimized",
     nocache: false,
-    nosetup: false
+    nosetup: false,
+    sandbox: false
   }, options);
   if (!Build[options.output])
     throw new Error("Unknown output: "+options.output+", should be one of "+Object_keys(Build)+".");
@@ -79,6 +82,7 @@ module.exports = (options) => {
     _nosetup: options.nosetup,
     _build: Build[options.output],
     _nodes: options.nocache ? null : [],
+    _sanitize: Sanitize(options.namespace),
     namespace: options.namespace,
     setup: setup,
     join: join,

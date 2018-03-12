@@ -9,40 +9,39 @@ const aran = Aran({namespace:"META"});
 global.META = {};
 const join = (script, parent) =>
   Astring.generate(aran.join(Acorn.parse(script), true, parent));
+module.exports = (script) => eval(join(script, null));
 const scopes = new WeakMap();
 const vstack = [];
+const estack = [];
 const cstack = [];
-const bound = (frame, identifier) => {
-  if (identifier.startsWith("META") || !())
+const bind = (frame, identifier) => {
+  if (identifier.startsWith("META"))
     return false;
   if (!(identifier in frame.binding))
     return false;
   if (frame.type !== "with")
     return true;
-  return !frame.binding[Symbol.unscopables].includes(identifier);
+  const unscopables = frame.binding[Symbol.unscopables];
+  return unscopables && unscopables.includes(identifier);
 };
-//////////////
-// Membrane //
-//////////////
 let counter = 0;
-const oprint = (o) => (Array.isArray(o)) ? "["+o.join(", ")+"]" : o;
-const produce = (value, origin) => {
-  origin = origin.reverse();
-  const left = "&"+(++counter)+"("+PrintLite(value)+")";
-  const right = origin[0]+"("+origin.slice(1).map(oprint)+")";
-  postMessage(left+" = "+right+"\n");
+const consume = (name, infos, value, serial) => {
+  postMessage(name+"("+infos.concat([vstack.pop(), serial]).join(", ")+")\n");
+  return value;
+};
+const produce = (name, infos, value, serial) => {
+  postMessage("#"+(++counter)+" = "+name+"("+infos.concat([PrintLite(value), serial]).join(", ")+")\n");
   vstack.push("&"+counter);
   return value;
 };
-const consume = (value, origin, serial) => {
-  origin = origin.reverse();
-  postMessage(origin[0]+"("+vstack.pop+", "+origin.slice(1).map(oprint)+")\n");
-  postMessage(name+"("+vstack.pop()+", "+serial+")\n");
+const combine = (value, name, infos, serial) => {
+  postMessage("#"+(++counter)+"["+PrintLite(value)+"] = "+name+"("+infos.reverse().concat([serial]).join(", ")+")\n");
+  vstack.push("&"+counter);
   return value;
 };
-/////////////
-// Special //
-/////////////
+//////////////
+// Chaining //
+//////////////
 META.copy = (position, value, serial) => {
   vstack.push(vstack[vstack.length-position]);
   return value;
@@ -57,7 +56,140 @@ META.drop = (value, serial) => {
   vstack.pop();
   return value;
 };
+///////////////
+// Producers //
+///////////////
+["primitive", "regexp", "closure", "this", "arguments", "catch"].forEach((name) => {
+  META[name] = (value, serial) => produce(name, [], value, serial);
+});
+META.callee = (value, serial) => {
+  cstack.push(scopes.get(value).concat([{
+    type: "closure",
+    binding: Object.create(null)
+  }]));
+  return produce("callee", [], value, serial);
+};
+META.builtin = (name, value, serial) => produce("builtin", [name], value, serial);
+META.discard = (identifier, value, serial) => produce("discard", [identifier], value, serial);
+META.closure = (value, serial) => {
+  let wrapper = function () {
+    if (cstack.length)
+      return new.target ? Reflect.construct(value, arguments) : Reflect.apply(value, this, arguments);
+    try {
+      return new.target ? Reflect.construct(value, arguments) : Reflect.apply(value, this, arguments);
+    } catch (error) {
+      while (cstack.length)
+        cstack.pop();
+      while (vstack.length)
+        vstack.pop();
+      throw error;
+    }
+  };
+  delete wrapper.name;
+  scopes.set(wrapper, cstack[cstack.length-1].slice());
+  return produce("closure", [], wrapper, serial);
+};
+META.read = (identifier, value, serial) => {
+  let call = cstack[cstack.length-1];
+  let index = call.length;
+  while (index--) {
+    const frame = call[index];
+    if (bind(frame, identifier)) {
+      if (frame.type === "with")
+        return produce("read", [identifier], value, 0);
+      vstack.push(frame.binding[identifier]);
+      return value;
+    }
+  };
+  return produce("read", [identifier], value, 0);
+};
+META.catch = (value, serial) => {
+  while (cstack.length) {
+    let call = cstack[cstack.length-1];
+    let index = call.length;
+    while (index--) {
+      const frame = call[index];
+      if (frame.type === "try") {
+        call.push({type:"catch", binding:{}});
+        while (vstack.length > frame.recovery)
+          vstack.pop();
+        return produce("catch", [], value, serial);
+      }
+    }
+    cstack.pop();
+  }
+};
+///////////////
+// Consumers //
+///////////////
+META.with = (value, serial) => {
+  cstack[cstack.length-1].push({type:"with", binding:value});
+  return consume("with", [], value, serial);
+};
+META.success = (value, serial) => {
+  vstack.push(estack.pop());
+  return aran.node(serial).AranParent ? value : consume("success", [], value, serial);
+};
+META.failure = (error, serial) => {
+  estack.pop();
+  if (!aran.node(serial).AranParent) {
+    while (cstack.length)
+      cstack.pop();
+    while (vstack.length)
+      vstack.pop();
+  }
+  return error;
+};
+META.completion = (value, serial) => {
+  estack[estack.length-1] = vstack.pop();
+  return value;
+};
+META.throw = (value, serial) => consume("throw", [], value, serial);
+META.test = (value, serial) => consume("test", [], value, serial);
+META.eval = (value, serial) => join(consume("eval", [], value, serial), aran.node(serial));
+META.return = (value, serial) => {
+  cstack.pop();
+  return consume("return", [], value, serial);
+};
+META.write = (identifier, value, serial) => {
+  const call = cstack[cstack.length-1];
+  let index = call.length;
+  while (index--) {
+    const frame = call[index];
+    if (bind(frame, identifier)) {
+      if (frame.type === "with")
+        return consume("write", [identifier], value, 0);
+      frame.binding[identifier] = vstack.pop();
+      return value;
+    }
+  }
+  return consume("write", [identifier], value, 0);
+};
+META.declare = (kind, identifier, value, serial) => {
+  const call = cstack[cstack.length-1];
+  let frame = call[call.length-1];
+  if (kind === "var") {
+    let index = call.length-1;
+    while (call[index].type !== "closure") {
+      if (!index)
+        return consume("declare", ["var", identifier], value, 0);
+      index--;
+    }
+    frame = call[index];
+  }
+  Object.defineProperty(frame.binding, identifier, {
+    configurable: kind === "var",
+    writable: kind !== "const",
+    enumerable: true,
+    value: vstack.pop()
+  });
+  return value;
+};
+///////////////
+// Informers //
+///////////////
 META.begin = (serial) => {
+  estack.push(null);
   if (aran.node(serial).AranParent) {
     cstack[cstack.length-1].push({
       type: aran.node(serial).AranStrict ? "closure" : "block",
@@ -70,127 +202,7 @@ META.begin = (serial) => {
     }]);
   }
 };
-META.success = (value, serial) => value
-META.failure = (error, serial) => {
-  if (!aran.node(serial).AranParent) {
-    while (cstack.length)
-      cstack.pop();
-    while (vstack.length)
-      vstack.pop();
-  }
-  return error;
-};
 META.end = (serial) => {};
-//////////////////////////
-// (Possible) Producers //
-//////////////////////////
-META.this = (value, serial) => produce(value, ["this", serial]);
-META.newtarget = (value, serial) => produce(value, ["newtarget", serial]);
-META.arguments = (value, serial) => produce(value, ["arguments", serial]);
-META.regexp = (value, serial) => produce(value, ["regexp", serial]);
-META.primitive = (value, serial) => produce(value, ["primitive", serial]);
-META.builtin = (identifier, value, serial) => produce(value, ["builtin", serial]);
-META.discard = (identifier, value, serial) => produce(value, ["discard", serial]);
-META.closure = (value, serial) => {
-  let wrapper = function () {
-    if (cstack.length)
-      return new.target ? Reflect_construct(value, arguments) : Reflect_apply(value, this, arguments);
-    try {
-      return new.target ? Reflect_construct(value, arguments) : Reflect_apply(value, this, arguments);
-    } catch (error) {
-      while (cstack.length)
-        cstack.pop();
-      while (vstack.length)
-        vstack.pop();
-      throw error;
-    }
-  };
-  scopes.set(wrapper, cstack.map((frame) => {type:"scope", binding:frame.binding}));
-  return produce(wrapper, ["closure", serial]);
-};
-META.read = (identifier, value, serial) => {
-  let call = cstack[cstack.length-1];
-  let index = call.length;
-  while (index--) {
-    const frame = call[index];
-    if (bound(frame, identifier)) {
-      if (frame.type === "with") {
-        return produce(value, ["read-with", identifier, serial]);
-      }
-      vstack.push(frame.binding[identifier]);
-      return value;
-    }
-  };
-  return produce(value, ["read-global", identifier, serial]);
-};
-META.catch = (value, serial) => {
-  while (cstack.length) {
-    let call = cstack[cstack.length-1];
-    let index = call.length;
-    while (index--) {
-      const frame = call[index];
-      if (frame.type === "try") {
-        call.push({type:"catch", binding:{}});
-        while (vstack.length > frame.recovery)
-          vstack.pop();
-        return produce(value, ["catch", serial]);
-      }
-    }
-    cstack.pop();
-  }
-};
-//////////////////////////
-// (Possible) Consumers //
-//////////////////////////
-META.completion = (value, serial) => consume(value, "completion", serial);
-META.test = (value, serial) => consume(value, "test", serial);
-META.throw = (value, serial) => consume(value, "throw", serial);
-META.eval = (value, serial) => join(consume(value, "eval", serial), aran.node(serial));
-traps.return = (value, serial) => {
-  cstack.pop();
-  return consume(value, ["return", serial]);
-};
-traps.with = (value, serial) => {
-  cstack[cstack.length-1].push({type:"with", binding:value});
-  return consume(value, ["with", serial]);
-};
-traps.write = (identifier, value, serial) => {
-  const call = cstack[cstack.length-1];
-  let index = call.length;
-  while (index--) {
-    const frame = call[index];
-    if (bound(frame, identifier)) {
-      if (frame.type === "with")
-        return frame.binding[identifier] = consume(value, "with-write", serial);
-      frame.binding[identifier] = vstack.pop();
-      return value; 
-    }
-  }
-  if (identifier in global || aran.node(serial).AranStrict)
-    return global[identifier] = consume(value, "global-write", serial);
-  throw new ReferenceError(identifier+" is not defined");
-};
-traps.declare = (kind, identifier, value, serial) => {
-  let frame;
-  if (kind === "var") {
-    const call = cstack[cstack.length-1];
-    let index = call.length;
-    while (call[index].type !== "closure") 
-      index--;
-    if (index === -1)
-      consume(value, ["declare-global", serial]);
-      if ()
-      const frame = call[index];
-    }
-  }
-};
-///////////////
-// Informers //
-///////////////
-META.callee = (value, serial) => cstack.push(scopes.get(value).concat([{
-  type: "closure",
-  binding:Object.create(null)
-}]));
 META.leave = (type, serial) => cstack[cstack.length-1].pop();
 META.block = (serial) => cstack[cstack.length-1].push({
   type: "block",
@@ -222,38 +234,39 @@ META.break = (boolean, label, serial) => {
 ///////////////
 // Combiners //
 ///////////////
-META.apply = (strict, value, values, serial) => produce(
+const cut = (length) => length ? "["+vstack.splice(-length) +"]" : "[]";
+META.apply = (strict, value, values, serial) => combine(
   Reflect.apply(value, strict ? global : undefined, values),
-  [serial, vstack.splice(-values.length), vstack.pop(), "apply"]);
-META.invoke = (value1, value2, values, serial) => produce(
+  "apply", [cut(values.length), vstack.pop(), String(strict)], serial);
+META.invoke = (value1, value2, values, serial) => combine(
   Reflect.apply(value1[value2], value1, values),
-  [serial, vstack.splice(-values.length), vstack.pop(), vstack.pop(), "invoke"]);
-META.construct = (value, values, serial) => produce(
+  "invoke", [cut(values.length), vstack.pop(), vstack.pop()], serial);
+META.construct = (value, values, serial) => combine(
   Reflect.construct(value, values),
-  [serial, vstack.splice(-values.length), vstack.pop(), "construct"]);
-META.unary = (operator, value, serial) => produce(
+  "construct", [cut(values.length), vstack.pop()], serial);
+META.unary = (operator, value, serial) => combine(
   eval(operator+" value"),
-  [serial, vstack.pop(), operator, "unary"]);
-META.binary = (operator, value1, value2, serial) => produce(
+  "unary", [vstack.pop(), operator], serial);
+META.binary = (operator, value1, value2, serial) => combine(
   eval("value1 "+operator+" value2"),
-  [serial, vstack.pop(), vstack.pop(), operator, "binary"]);
-META.get = (value1, value2, serial) => produce(
+  "binary", [vstack.pop(), vstack.pop(), operator], serial);
+META.get = (value1, value2, serial) => combine(
   value1[value2],
-  [serial, vstack.pop(), vstack.pop(), "get"]);
-META.set = (value1, value2, value3, serial) => produce(
-  value1[value2] = value,
-  [serial, vstack.pop(), vstack.pop(), vstack.pop(), "set"]);
-META.delete = (value1, value2, serial) => produce(
+  "get", [vstack.pop(), vstack.pop()], serial);
+META.set = (value1, value2, value3, serial) => combine(
+  value1[value2] = value3,
+  "set", [vstack.pop(), vstack.pop(), vstack.pop()], serial);
+META.delete = (value1, value2, serial) => combine(
   delete value1[value2],
-  [serial, vstack.pop(), vstack.pop(), "delete"]);
-META.array = (values, serial) => produce(
+  "delete", [vstack.pop(), vstack.pop()], serial);
+META.array = (values, serial) => combine(
   values,
-  [serial, vstack.splice(-values.length), "array"]);
+  "array", [cut(values.length)], serial);
 META.object = (properties, serial) => {
   const object = {};
   const mproperties = properties.map((property) => {
     object[property[0]] = property[1];
     return "["+vstack.splice(-2, 1)+","+vstack.pop()+"]";
   });
-  return produce(object, [serial, mproperties.reverse(), "object"]);
+  return combine(object, "object", ["["+mproperties.reverse()+"]"], serial);
 };

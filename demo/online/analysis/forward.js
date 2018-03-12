@@ -21,7 +21,7 @@ const pass = function () {
   "read",
   "builtin",
   "this",
-  "newtarget",
+  "callee",
   "arguments",
   "catch",
   "primitive",
@@ -44,7 +44,6 @@ const noop = () => {};
 [
   "try",
   "finally",
-  "callee",
   "leave",
   "begin",
   "end",

@@ -37,9 +37,8 @@ const offline = (analysis, target) => SandboxScenario(
     {type:"raw", path:"target/"+target+".js"}],
   callback("offline-"+analysis+"-"+target));
 
-// offline("apply", "factorial");
-// online("apply", "factorial");
-// online("eval", "dynamic-double");
-// online("forward", "empty");
-// online("shadow-value", "delta");
-online("eval", "sample");
+offline("apply", "factorial");
+online("apply", "factorial");
+online("eval", "dynamic-double");
+online("forward", "empty");
+online("shadow-value", "delta");

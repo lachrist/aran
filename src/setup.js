@@ -16,6 +16,7 @@ module.exports = () => ARAN.build.If(
     ArrayLite.flatenMap(
       [
         ["TypeError"],
+        ["ReferenceError"],
         ["Reflect", "apply"],
         ["Object", "defineProperty"],
         ["Object", "getPrototypeOf"],

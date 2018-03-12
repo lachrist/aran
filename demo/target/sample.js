@@ -1,4 +1,5 @@
 
-with ({a:1}) {
-  console.log("LALA", delete a);
-}
+(function () {
+  var x = 1;
+  return eval("x");
+} ());

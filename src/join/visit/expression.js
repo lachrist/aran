@@ -310,66 +310,49 @@ exports.CallExpression = (node) => (
       ARAN.build.sequence(
         [
           Interim.hoist(
+            "eval_function",
+            ARAN.cut.read("eval")),
+          Interim.hoist(
             "eval_arguments",
             ARAN.build.array(
               ArrayLite.map(
                 node.arguments,
                 Visit.expression))),
           ARAN.build.conditional(
-            ARAN.build.binary(
-              "===",
-              ARAN.build.read("eval"),
-              Builtin.load(["eval", "authentic"])),
+            ARAN.build.apply(
+              null,
+              Builtin.load(["iseval"]),
+              [
+                Interim.read("eval_function")]),
             ARAN.build.sequence(
-              ArrayLite.concat(
-                ArrayLite.map(
-                  ArrayLite.slice(1, node.arguments),
-                  (expression, index) => ARAN.cut.$drop(
-                    ARAN.build.primitive(null))),
-                [
+              [
+                ARAN.build.write(
+                  "eval",
+                  Builtin.load(["eval"])),
+                Interim.hoist(
+                  "eval_result",
                   ARAN.cut.eval(
-                    (
-                      node.arguments.length === 0 ?
-                      ARAN.cut.primitive(void 0) :
-                      ARAN.build.get(
-                        Interim.read("eval_arguments"),
-                        ARAN.build.primitive(0))))])),
-            ARAN.build.conditional(
-              ARAN.build.binary(
-                "===",
-                ARAN.build.read("eval"),
-                Builtin.load(["eval", "substitute"])),
-              ARAN.build.sequence(
-                ArrayLite.concat(
-                  ArrayLite.map(
-                    ArrayLite.slice(1, node.arguments),
-                    (expression, index) => ARAN.cut.$drop(
-                      ARAN.build.primitive(null))),
-                  [
-                    ARAN.build.write(
-                      "eval",
-                      Builtin.load(["eval", "authentic"])),
-                    Interim.hoist(
-                      "eval_result",
-                      ARAN.cut.eval(
-                        (
-                          node.arguments.length === 0 ?
-                          ARAN.cut.primitive(void 0) :
-                          ARAN.build.get(
-                            Interim.read("eval_arguments"),
-                            ARAN.build.primitive(0))))),
-                    ARAN.build.write(
-                      "eval",
-                      Builtin.load(["eval", "substitute"])),
-                    Interim.read("eval_result")])),
-              ARAN.cut.apply(
-                node.AranStrict,
-                ARAN.cut.read("eval"),
-                ArrayLite.map(
-                  node.arguments,
-                  (expression, index) => ARAN.build.get(
-                    Interim.read("eval_arguments"),
-                    ARAN.build.primitive(index))))))]))) :
+                    ArrayLite.reduce(
+                      ArrayLite.slice(node.arguments, 0, 1),
+                      (expression, _, index) => ARAN.cut.$drop(expression),
+                      (
+                        node.arguments.length === 0 ?
+                        ARAN.cut.primitive(void 0) :
+                        ARAN.build.get(
+                          Interim.read("eval_arguments"),
+                          ARAN.build.primitive(0)))))),
+                ARAN.build.write(
+                  "eval",
+                  Interim.read("eval_function")),
+                Interim.read("eval_result")]),
+            ARAN.cut.apply(
+              node.AranStrict,
+              Interim.read("eval_function"),
+              ArrayLite.map(
+                node.arguments,
+                (expression, index) => ARAN.build.get(
+                  Interim.read("eval_arguments"),
+                  ARAN.build.primitive(index)))))]))) :
   ARAN.cut.apply(
     null,
     ARAN.cut.$builtin(["Reflect", "apply"]),
@@ -439,16 +422,7 @@ exports.MemberExpression = (node) => ARAN.cut.get(
 
 exports.MetaProperty = (node) => ARAN.cut.read("new.target");
 
-exports.Identifier = (node) => (
-  node.name === "undefined" ?
-  ARAN.build.conditional(
-    ARAN.build.binary(
-      "===",
-      ARAN.build.read("undefined"),
-      ARAN.build.primitive(void 0)),
-    ARAN.cut.primitive(void 0),
-    ARAN.cut.read("undefined")) :
-  ARAN.cut.read(node.name));
+exports.Identifier = (node) => ARAN.cut.read(node.name);
 
 exports.Literal = (node) => (
   node.regex ?
