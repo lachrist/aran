@@ -1,11 +1,13 @@
 
 const ArrayLite = require("array-lite");
-const Builtin = require("../../builtin.js");
+const Meta = require("../../meta.js");
 const Interim = require("../interim.js");
 const Util = require("../util");
 const Visit = require("./index.js");
-const Reflect_apply = Reflect.apply;
-const String_prototype_substring = String.prototype.substring;
+
+const Array = global.Array;
+const Reflect_apply = global.Reflect.apply;
+const String_prototype_substring = global.String.prototype.substring;
 
 exports.ThisExpression = (node) => ARAN.cut.read("this");
 
@@ -307,52 +309,34 @@ exports.CallExpression = (node) => (
         ArrayLite.map(
           node.arguments,
           Visit.expression)) :
-      ARAN.build.sequence(
-        [
-          Interim.hoist(
-            "eval_function",
-            ARAN.cut.read("eval")),
-          Interim.hoist(
-            "eval_arguments",
-            ARAN.build.array(
-              ArrayLite.map(
-                node.arguments,
-                Visit.expression))),
-          ARAN.build.conditional(
-            ARAN.build.apply(
-              null,
-              Builtin.load(["iseval"]),
-              [
-                Interim.read("eval_function")]),
-            ARAN.build.sequence(
-              [
-                ARAN.build.write(
-                  "eval",
-                  Builtin.load(["eval"])),
-                Interim.hoist(
-                  "eval_result",
-                  ARAN.cut.eval(
-                    ArrayLite.reduce(
-                      ArrayLite.slice(node.arguments, 0, 1),
-                      (expression, _, index) => ARAN.cut.$drop(expression),
-                      (
-                        node.arguments.length === 0 ?
-                        ARAN.cut.primitive(void 0) :
-                        ARAN.build.get(
-                          Interim.read("eval_arguments"),
-                          ARAN.build.primitive(0)))))),
-                ARAN.build.write(
-                  "eval",
-                  Interim.read("eval_function")),
-                Interim.read("eval_result")]),
-            ARAN.cut.apply(
-              node.AranStrict,
-              Interim.read("eval_function"),
-              ArrayLite.map(
-                node.arguments,
-                (expression, index) => ARAN.build.get(
-                  Interim.read("eval_arguments"),
-                  ARAN.build.primitive(index)))))]))) :
+      ARAN.cut.conditional(
+        ARAN.cut.binary(
+          "===",
+          ARAN.cut.read("eval"),
+          ARAN.cut.$builtin(["eval"])),
+        ARAN.cut.eval(
+          (
+            node.arguments.length === 0 ?
+            ARAN.cut.primitive(void 0) :
+            (
+              node.arguments.length === 1 ?
+              Visit.expression(node.arguments[0]) :
+              ARAN.build.get(
+                ARAN.build.array(
+                  ArrayLite.map(
+                    node.arguments,
+                    (expression, index) => (
+                      index ?
+                      ARAN.cut.$drop(
+                        Visit.expression(expression)) :
+                      Visit.expression(expression)))),
+                ARAN.build.primitive(0))))),
+        ARAN.cut.apply(
+          node.AranStrict,
+          ARAN.cut.read("eval"),
+          ArrayLite.map(
+            node.arguments,
+            Visit.expression))))) :
   ARAN.cut.apply(
     null,
     ARAN.cut.$builtin(["Reflect", "apply"]),

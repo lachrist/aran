@@ -98,6 +98,10 @@ Create a new Aran instance.
   A boolean indicating whether to prefix the short setup code before every instrumented programs.
   The setup code consists only in a few read and write operations so it is extremely lightweight.
   If this option is truthy, the setup code will have to be manually evaluated before executing any instrumented program.
+* `options.nosandbox :: boolean`
+  * Restore identifiers before modifying the global object.
+  * Deliver unaltered `eval` function for direct eval call.
+  * Throw an error when target code attempts to access the advice.
 * `options.output :: string | object` default: `"EstreeOptimized"`.
   The output format of the `aran.join` method.
   If it is an object, it should be a builder ressembling the ones at [src/build](src/build).

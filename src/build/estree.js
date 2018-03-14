@@ -5,36 +5,89 @@ const ArrayLite = require("array-lite");
 // Program //
 /////////////
 
-exports.PROGRAM = (strict, statements) => ({
+exports.PROGRAM = (strict, expression, statements) => ({
   type: "Program",
-  body: ArrayLite.concat(
-    (
-      strict ?
+  body: (
+    expression ?
+    [
+      {
+        type: "WithStatement",
+        object: expression,
+        body: {
+          type: "BlockStatement",
+          body: ArrayLite.concat(
+            [
+              {
+                type: "VariableDeclaration",
+                kind: "let",
+                declarations: [
+                  {
+                    type: "VariableDeclarator",
+                    id: {
+                      type: "Identifier",
+                      name: "completion"},
+                    init: null}]}],
+            (
+              strict ?
+              [
+                {
+                  type: "ExpressionStatement",
+                  expression: {
+                    type: "CallExpression",
+                    callee: {
+                      type: "FunctionExpression",
+                      generator: false,
+                      async: false,
+                      expression: false,
+                      id: null,
+                      params: [],
+                      defaults: [],
+                      rest: null,
+                      body: [
+                        ArrayLite.concat(
+                          [
+                            {
+                              type: "ExpressionStatement",
+                              expression: 
+                                {
+                                  type: "Literal",
+                                  value: "use strict" }}],
+                          statements)]},
+                    arguments: []}}] :
+              statements),
+            [{
+              type: "ExpressionStatement",
+              expression: {
+                type: "Identifier",
+                name: "completion"}}])}}] :
+    ArrayLite.concat(
+      (
+        strict ?
+        [
+          {
+            type: "ExpressionStatement",
+            expression: {
+              type: "Literal",
+              value: "use strict"}}] :
+        []),
+      [
+        {
+          type: "VariableDeclaration",
+          kind: "let",
+          declarations: [
+            {
+              type: "VariableDeclarator",
+              id: {
+                type: "Identifier",
+                name: "completion"},
+              init: null}]}],
+      statements,
       [
         {
           type: "ExpressionStatement",
           expression: {
-            type: "Literal",
-            value: "use strict"}}] :
-      []),
-    [
-      {
-        type: "VariableDeclaration",
-        kind: "let",
-        declarations: [
-          {
-            type: "VariableDeclarator",
-            id: {
-              type: "Identifier",
-              name: "completion"},
-            init: null}]}],
-    statements,
-    [
-      {
-        type: "ExpressionStatement",
-        expression: {
-          type: "Identifier",
-          name: "completion"}}])});
+            type: "Identifier",
+            name: "completion"}}]))});
 
 ////////////////
 // Expression //

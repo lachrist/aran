@@ -3,7 +3,7 @@
 // Program //
 /////////////
 
-exports.PROGRAM = ["boolean", ["list", "statement"]];
+exports.PROGRAM = ["boolean", ["nullable", "expression"], ["list", "statement"]];
 
 ////////////////
 // Expression //

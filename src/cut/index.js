@@ -1,14 +1,14 @@
 
 const ArrayLite = require("array-lite");
+const Meta = require("../meta.js");
 const Traps = require("./traps");
-const Builtin = require("../builtin.js");
-const Reflect_apply = Reflect.apply;
-const String_prototype_replace = String.prototype.replace;
 const Inform = require("./inform.js");
 const ParseLabel = require("./parse-label.js");
 const SanitizeIdentifier = require("./sanitize-identifier.js");
 const ContainArguments = require("./contain-arguments.js");
-const Setup = require("../setup.js");
+
+const Reflect_apply = Reflect.apply;
+const String_prototype_replace = String.prototype.replace;
 
 module.exports = (pointcut) => {
 
@@ -18,31 +18,30 @@ module.exports = (pointcut) => {
 
   // eval in strict mode is block-scoped 
   // eval in normal mode is closure-scoped
-  cut.PROGRAM = (strict, statements) => ARAN.build.PROGRAM(
+  cut.PROGRAM = (strict, expression, statements) => ARAN.build.PROGRAM(
     strict,
-    ArrayLite.concat(
-      ARAN.nosetup ? [] : Setup(),
-      ARAN.build.Try(
-        ArrayLite.concat(
-          Inform(
-            traps.begin()),
-          ARAN.build.Statement(
-            ARAN.build.write(
-              "completion",
-              traps.completion(
-                traps.primitive(
-                  ARAN.build.primitive(void 0))))),
-          statements,
-          ARAN.build.Statement(
-            ARAN.build.write(
-              "completion",
-              traps.success(
-                ARAN.build.read("completion"))))),
-        ARAN.build.Throw(
-          traps.failure(
-            ARAN.build.read("error"))),
+    expression,
+    ARAN.build.Try(
+      ArrayLite.concat(
         Inform(
-          traps.end()))));
+          traps.begin()),
+        ARAN.build.Statement(
+          ARAN.build.write(
+            "completion",
+            traps.completion(
+              traps.primitive(
+                ARAN.build.primitive(void 0))))),
+        statements,
+        ARAN.build.Statement(
+          ARAN.build.write(
+            "completion",
+            traps.success(
+              ARAN.build.read("completion"))))),
+      ARAN.build.Throw(
+        traps.failure(
+          ARAN.build.read("error"))),
+      Inform(
+        traps.end())));
 
   /////////////////
   // Compilation //
@@ -50,7 +49,7 @@ module.exports = (pointcut) => {
 
   cut.$builtin = (strings) => traps.builtin(
     ArrayLite.join(strings, "."),
-    Builtin.load(strings));
+    Meta.builtin(strings));
 
   cut.$completion = (expression) => ARAN.build.write(
     "completion",
@@ -136,13 +135,13 @@ module.exports = (pointcut) => {
             ARAN.build.closure(
               strict,
               (
-                ARAN.parent.type === "ArrowFunctionExpression" ?
+                ARAN.node.type === "ArrowFunctionExpression" ?
                 ArrayLite.concat(
                   ARAN.build.If(
                     ARAN.build.read("new.target"),
                     ARAN.build.Throw(
                       ARAN.build.construct(
-                        Builtin.load(["TypeError"]),
+                        Meta.builtin(["TypeError"]),
                         [
                           ARAN.build.primitive("arrow is not a constructor")])),
                     []),
@@ -193,7 +192,7 @@ module.exports = (pointcut) => {
                         ARAN.build.read("arguments")))),
                   (
                     ContainArguments(
-                        ArrayLite.slice(ARAN.parent.params)) ?
+                        ArrayLite.slice(ARAN.node.params)) ?
                     [] :
                     ARAN.build.Declare(
                       "let",
@@ -230,23 +229,23 @@ module.exports = (pointcut) => {
   ///////////////
 
   cut.write = (
-    aran.sandbox ?
+    ARAN.nosandbox ?
     (identifier, expression) => ARAN.build.write(
       SanitizeIdentifier(identifier),
       traps.write(identifier, expression)) :
     (identifier, expression) => (
-      node.AranStrict ?
+      ARAN.node.AranStrict ?
       ARAN.build.sequence(
         [
-          Builtin.save(["declare"], false),
+          META.declare(false),
           ARAN.build.write(
             SanitizeIdentifier(identifier),
             traps.write(identifier, expression)),
-          Builtin.save(["declare"], true),
-          ARAN.build.read(SanitizeIdentifier(identifier))])) :
+          META.declare(true),
+          ARAN.build.read(SanitizeIdentifier(identifier))]) :
       ARAN.build.write(
         SanitizeIdentifier(identifier),
-        traps.write(identifier, expression));
+        traps.write(identifier, expression))));
 
   cut.Declare = (kind, identifier, expression) => ARAN.build.Declare(
     kind,
@@ -260,7 +259,8 @@ module.exports = (pointcut) => {
     traps.eval(expression));
 
   cut.With = (expression, statements) => ARAN.build.With(
-    traps.with(expression),
+    Meta.wproxy(
+      traps.with(expression)),
     ArrayLite.concat(
       statements,
       Inform(traps.leave("with"))));

@@ -10,6 +10,7 @@ const modifiers = [
   "drop",
   // producers //
   "read",
+  "callee",
   "builtin",
   "this",
   "newtarget",
@@ -35,7 +36,6 @@ const modifiers = [
 const informers = [
   "try",
   "finally",
-  "callee",
   "leave",
   "begin",
   "end",

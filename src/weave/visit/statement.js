@@ -6,6 +6,7 @@
 // Yet, this transformation is safe because the body of the above structure cannot be a declaration (see http://www.ecma-international.org/ecma-262/6.0/#sec-statements).
 
 const ArrayLite = require("array-lite");
+const Meta = require("../../meta.js");
 const Interim = require("../interim.js");
 const Util = require("../util");
 const Visit = require("./index.js");

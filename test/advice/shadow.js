@@ -168,6 +168,11 @@ module.exports = (aran, join) => {
   traps.primitive = (value, serial) => produce(value, serial);
   traps.builtin = (identifier, value, serial) => produce(value, serial);
   traps.discard = (identifier, value, serial) => produce(value, serial);
+  traps.callee = (value, serial) => {
+    cstack.push(Call(scopes.get(value)));
+    cstack.peek().enter("closure", Object.create(null), null);
+    return produce(value, serial);
+  };
   traps.read = (identifier, value, serial) => {
     let result;
     const each = (type, binding, custom) => {
@@ -275,10 +280,6 @@ module.exports = (aran, join) => {
   // Informers //
   ///////////////
 
-  traps.callee = (value, serial) => {
-    cstack.push(Call(scopes.get(value)));
-    cstack.peek().enter("closure", Object.create(null), null);
-  };
   traps.block = (serial) => {
     cstack.peek().enter("block", Object.create(null), null);
   };

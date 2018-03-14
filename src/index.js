@@ -1,27 +1,22 @@
 
 const ArrayLite = require("array-lite");
-const Join = require("./join");
+const Meta = require("./meta.js");
+const Weave = require("./weave");
 const Cut = require("./cut");
-const Setup = require("./setup.js");
 const Build = require("./build");
-const Sanitize = require("./sanitize.js");
-const Object_assign = Object.assign;
-const Object_keys = Object.keys;
+const RegExp = global.RegExp;
+const Object_assign = global.Object.assign;
+const Object_keys = global.Object.keys;
+const Reflect_apply = global.Reflect.apply;
+const String_prototype_replace = global.String.prototype.replace;
 
-function join (root, pointcut, parent) {
+function weave (root, pointcut, parent) {
   this._roots.push(root);
   const temporary = global.ARAN;
-  global.ARAN = {
-    build: this._build,
-    sanitize: this._sanitize,
-    nodes: this._nodes,
-    nosetup: this._nosetup,
-    namespace: this.namespace,
-    counter: this._counter,
-    cut: Cut(pointcut)
-  };
-  const result = Join(root, parent);
-  this._counter = global.ARAN.counter;
+  global.ARAN = this._global;
+  global.ARAN.cut = Cut(pointcut);
+  const result = Weave(root, parent);
+  global.ARAN.cut = null;
   global.ARAN = temporary;
   return result;
 }
@@ -53,17 +48,14 @@ function node1 (serial) {
 
 function setup () {
   const temporary = global.ARAN;
-  global.ARAN = {
-    build: this._build,
-    namespace: this.namespace
-  };
-  const setup = Setup();
+  global.ARAN = this._global;
+  const setup = Meta.Setup();
   global.ARAN = temporary;
-  return this._build.PROGRAM(false, setup);
+  return this._global.build.PROGRAM(false, null, setup);
 }
 
 function node2 (serial) {
-  return this._nodes[serial];
+  return this._global.nodes[serial];
 };
 
 module.exports = (options) => {
@@ -71,22 +63,29 @@ module.exports = (options) => {
     namespace: "META",
     output: "EstreeOptimized",
     nocache: false,
-    nosetup: false,
-    sandbox: false
+    nosandbox: false
   }, options);
   if (!Build[options.output])
-    throw new Error("Unknown output: "+options.output+", should be one of "+Object_keys(Build)+".");
+    throw new Error("Unknown output: "+options.output+", should be one of "+Object_keys(Build));
   return {
     _roots: [],
-    _counter: 1,
-    _nosetup: options.nosetup,
-    _build: Build[options.output],
-    _nodes: options.nocache ? null : [],
-    _sanitize: Sanitize(options.namespace),
-    namespace: options.namespace,
+    _global: {
+      counter: 1,
+      node: null,
+      cut: null,
+      hoisted: null,
+      namespace: options.namespace,
+      nosandbox: options.nosandbox,
+      build: Build[options.output],
+      nodes: options.nocache ? null : [],
+      regexp: new RegExp(
+        "^\\$*(newtarget|callee|this|arguments|error|completion|eval|" +
+        Reflect_apply(String_prototype_replace, options.namespace, ["$", "\\$$"]) +
+        ")$"),
+    },
     setup: setup,
-    join: join,
+    weave: weave,
     root: root,
     node: options.nocache ? node1 : node2
-  }
+  };
 };

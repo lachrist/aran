@@ -6,11 +6,22 @@ const stringify = JSON.stringify;
 // Program //
 /////////////
 
-exports.PROGRAM = (strict, statements) => (
-  (strict ? "\"use strict\";" : "") +
-  "let completion;" + 
-  ArrayLite.join(statements, "")) +
-  "completion;";
+exports.PROGRAM = (strict, expression, statements) => (
+  expression ?
+  (
+    "with(let completion;"
+    +expression
+    +"){"+
+    (
+      strict ?
+      "(function(){\"use strict\";"+statements+"}());" :
+      statements)+
+    "completion;}") :
+  (
+    (strict ? "\"use strict\";" : "") +
+    "let completion;" + 
+    ArrayLite.join(statements, "") +
+    "completion;"));
 
 ////////////////
 // Expression //

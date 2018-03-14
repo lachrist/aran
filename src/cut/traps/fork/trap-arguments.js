@@ -37,6 +37,7 @@ exports.modifiers = {
   primitive: [identity],
   regexp: [identity],
   closure: [identity],
+  callee: [identity],
   // consumers //
   drop: [identity],
   declare: [primitive, primitive, identity],
@@ -58,5 +59,4 @@ exports.informers = {
   block: [],
   label: [primitive, primitive],
   leave: [primitive],
-  break: [primitive, primitive],
-  callee: [identity]};
+  break: [primitive, primitive]};

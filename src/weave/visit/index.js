@@ -5,14 +5,14 @@ const defineProperty = Reflect.defineProperty;
 
 const visit = (visitors) => (node) => {
   defineProperty(node, "AranParent", {
+    value: ARAN.node,
     configurable: true,
     enumerable: false,
     writable: true,
-    value: ARAN.parent
   });
   node.AranParentSerial = node.AranParent.AranSerial;
   node.AranStrict = (
-    ARAN.parent.AranStrict &&
+    ARAN.node.AranStrict &&
     (
       node.type === "FunctionExpression" ||
       node.type === "FunctionDeclaration" ||
@@ -25,10 +25,10 @@ const visit = (visitors) => (node) => {
   node.AranSerial = ++ARAN.counter;
   if (ARAN.nodes)
     ARAN.nodes[node.AranSerial] = node;
-  const temporary = ARAN.parent;
-  ARAN.parent = node;
+  const temporary = ARAN.node;
+  ARAN.node = node;
   const result = visitors[node.type](node);
-  ARAN.parent = temporary;
+  ARAN.node = temporary;
   node.AranMaxSerial = ARAN.counter;
   return result;
 };

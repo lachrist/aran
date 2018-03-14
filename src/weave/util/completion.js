@@ -2,7 +2,7 @@
 const ArrayLite = require("array-lite");
 
 exports.Completion = (statements) => (
-  ARAN.parent.AranCompletion ?
+  ARAN.node.AranCompletion ?
   ArrayLite.concat(
     ARAN.build.Statement(
       ARAN.cut.$completion(
