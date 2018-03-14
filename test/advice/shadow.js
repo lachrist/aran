@@ -130,13 +130,13 @@ module.exports = (aran, join) => {
     return vstack.pop();
   };
 
-  global.Proxy = function Proxy (target, handlers) {
-    if (new.target === void 0) // https://github.com/jsdom/webidl2js/issues/78
-      throw new TypeError("Constructor Proxy requires 'new'");
-    const proxy = new Proxy(target, traps);
-    proxies.set(proxy, {target:target, handlers:handlers});
-    return proxy;
-  };
+  // global.Proxy = function Proxy (target, handlers) {
+  //   if (new.target === void 0) // https://github.com/jsdom/webidl2js/issues/78
+  //     throw new TypeError("Constructor Proxy requires 'new'");
+  //   const proxy = new Proxy(target, traps);
+  //   proxies.set(proxy, {target:target, handlers:handlers});
+  //   return proxy;
+  // };
 
   /////////////
   // Special //
@@ -162,7 +162,6 @@ module.exports = (aran, join) => {
   ///////////////
 
   traps.this = (value, serial) => produce(value, serial);
-  traps.newtarget = (value, serial) => produce(value, serial);
   traps.arguments = (value, serial) => produce(value, serial);
   traps.regexp = (value, serial) => produce(value, serial);
   traps.primitive = (value, serial) => produce(value, serial);

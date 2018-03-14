@@ -2,41 +2,65 @@ const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
 const PrintLite = require("print-lite");
-///////////
-// Setup //
-///////////
-const aran = Aran({namespace:"META", nosetup:true});
-global.eval(Astring.generate(aran.setup()));
-const join = (script1, parent) =>
-  Astring.generate(aran.join(Acorn.parse(script1), Object.keys(META), parent));
-global.META = {};
-global.META_iseval = ($value) => $value.base === eval;
-module.exports = (script) => eval(join(script, null));
+//////////////
+// Membrane //
+//////////////
 let counter = 0;
-///////////////
-// Consumers //
-///////////////
+const wrappers = new WeakSet();
 const consume = (name, infos, $value, serial) => {
   postMessage(name+"("+infos.concat([$value.meta, serial]).join(", ")+")\n");
   return $value.base;
 };
+const produce = (name, infos, value, serial) => {
+  postMessage("#"+(++counter)+" = "+name+"("+infos.concat([PrintLite(value), serial]).join(", ")+")\n");
+  const wrapper = {meta:"&"+counter, base:value};
+  wrappers.add(wrapper);
+  return wrapper;
+};
+const combine = (value, name, infos, serial) => {
+  postMessage("#"+(++counter)+"["+PrintLite(value)+"] = "+name+"("+infos.join(", ")+", "+serial+")\n");
+  const wrapper = {meta:"&"+counter, base:value};
+  wrappers.add(wrapper);
+  return wrapper;
+};
+///////////
+// Setup //
+///////////
+const aran = Aran({namespace:"META"});
+let META = {};
+const handlers = {
+  set: (target, key, $value, receiver) => {
+    target[key] = consume("write", [key], $value, 0);
+  },
+  defineProperty: (target, key, descriptor) => {
+    descriptor.value = consume("declare", ["var", key], descriptor.value, 0);
+    return Reflect.defineProperty(target, key, descriptor);
+  }
+};
+(function () {
+  let global = new Proxy(this, handlers);
+  eval(Astring.generate(aran.setup()));
+} ());
+const weave = (script, parent) =>
+  Astring.generate(aran.weave(Acorn.parse(script), Object.keys(META), parent));
+module.exports = (script) => eval(weave(script, null));
+const metaof = ($value) => $value.meta;
+const baseof = ($value) => $value.base;
+///////////////
+// Consumers //
+///////////////
 ["test", "throw", "return"].forEach((name) => {
   META[name] = ($value, serial) => consume(name, [], $value, serial);
 });
-META.success = ($value, serial) => aran.node(serial).AranParent
-  ? $value
-  : consume("success", [], $value, serial);
+META.success = ($value, serial) =>
+  aran.node(serial).AranParent ? $value : consume("success", [], $value, serial);
 META.with = ($value, serial) =>
   new Proxy(consume("with", [], $value, serial), handlers);
 META.eval = ($value, serial) =>
-  join(consume("eval", [], $value, serial), aran.node(serial));
+  weave(consume("eval", [], $value, serial), aran.node(serial));
 ///////////////
 // Producers //
 ///////////////
-const produce = (name, infos, value, serial) => {
-  postMessage("#"+(++counter)+" = "+name+"("+infos.concat([PrintLite(value), serial]).join(", ")+")\n");
-  return {meta:"&"+counter, base:value};
-};
 ["primitive", "regexp", "closure", "this", "arguments", "catch"].forEach((name) => {
   META[name] = (value, serial) => produce(name, [], value, serial);
 });
@@ -46,15 +70,11 @@ META.builtin = (name, value, serial) =>
   produce("builtin", [name], value, serial);
 META.callee = ($value, serial) =>
   produce("callee", [], $value.base, serial);
+META.read = (identifier, value, serial) =>
+  wrappers.has(value) ? value : produce("read", [identifier], value, serial);
 ///////////////
 // Combiners //
 ///////////////
-const metaof = ($value) => $value.meta;
-const baseof = ($value) => $value.base;
-const combine = (value, name, infos, serial) => {
-  postMessage("#"+(++counter)+"["+PrintLite(value)+"] = "+name+"("+infos.join(", ")+", "+serial+")\n");
-  return {meta:"&"+counter, base:value};
-};
 META.apply = (strict, $value, $values, serial) => combine(
   Reflect.apply($value.base, strict ? global : undefined, $values.map(baseof)),
   "apply", [String(strict), $value.meta, "["+$values.map(metaof)+"]"], serial);
@@ -90,17 +110,3 @@ META.object = ($properties, serial) => {
   });
   return combine(object, "object", ["["+mproperties+"]"], serial);
 };
-/////////////////
-// Environment //
-/////////////////
-const handlers = {
-  get: (target, key, receiver) => produce("read", [key], target[key], 0),
-  set: (target, key, $value, receiver) => {
-    target[key] = consume("write", [key], $value, 0);
-  },
-  defineProperty: (target, key, descriptor) => {
-    descriptor.value = consume("declare", ["var", key], descriptor.value, 0);
-    Reflect.defineProperty(target, key, descriptor);
-  }
-};
-global.META_sandbox = new Proxy(global, handlers);

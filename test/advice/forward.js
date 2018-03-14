@@ -13,7 +13,6 @@ const modifiers = [
   "callee",
   "builtin",
   "this",
-  "newtarget",
   "arguments",
   "catch",
   "primitive",
@@ -30,7 +29,7 @@ const modifiers = [
   "eval",
   "with",
   "write",
-  "declare",
+  "declare"
 ];
 
 const informers = [

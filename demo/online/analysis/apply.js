@@ -19,8 +19,9 @@ global.META = {
   }
 };
 const aran = Aran({namespace:"META"});
+global.eval(Astring.generate(aran.setup()));
 module.exports = (script) => {
   const estree1 = Acorn.parse(script, {locations:true});
-  const estree2 = aran.join(estree1, ["apply"], null);
-  eval(Astring.generate(estree2));
+  const estree2 = aran.weave(estree1, ["apply"], null);
+  global.eval(Astring.generate(estree2));
 };

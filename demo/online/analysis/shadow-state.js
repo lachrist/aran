@@ -7,9 +7,10 @@ const PrintLite = require("print-lite");
 ///////////
 const aran = Aran({namespace:"META"});
 global.META = {};
-const join = (script, parent) =>
-  Astring.generate(aran.join(Acorn.parse(script), true, parent));
-module.exports = (script) => eval(join(script, null));
+global.eval(Astring.generate(aran.setup()));
+const weave = (script, parent) =>
+  Astring.generate(aran.weave(Acorn.parse(script), true, parent));
+module.exports = (script) => eval(weave(script, null));
 const scopes = new WeakMap();
 const vstack = [];
 const estack = [];
@@ -96,12 +97,12 @@ META.read = (identifier, value, serial) => {
     const frame = call[index];
     if (bind(frame, identifier)) {
       if (frame.type === "with")
-        return produce("read", [identifier], value, 0);
+        return produce("read", [identifier], value, serial);
       vstack.push(frame.binding[identifier]);
       return value;
     }
   };
-  return produce("read", [identifier], value, 0);
+  return produce("read", [identifier], value, serial);
 };
 META.catch = (value, serial) => {
   while (cstack.length) {
@@ -146,7 +147,7 @@ META.completion = (value, serial) => {
 };
 META.throw = (value, serial) => consume("throw", [], value, serial);
 META.test = (value, serial) => consume("test", [], value, serial);
-META.eval = (value, serial) => join(consume("eval", [], value, serial), aran.node(serial));
+META.eval = (value, serial) => weave(consume("eval", [], value, serial), aran.node(serial));
 META.return = (value, serial) => {
   cstack.pop();
   return consume("return", [], value, serial);

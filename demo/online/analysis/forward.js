@@ -4,12 +4,13 @@ const Astring = require("astring");
 const PrintLite = require("print-lite");
 const pointcut = true;
 module.exports = (script) => {
-  script = Astring.generate(aran.join(Acorn.parse(script), pointcut, null));
+  script = Astring.generate(aran.weave(Acorn.parse(script), pointcut, null));
   postMessage(script+"\n");
   postMessage("Success: "+PrintLite(global.eval(script))+"\n");
 };
 const aran = Aran({namespace:"META"});
 global.META = {};
+global.eval(Astring.generate(aran.setup()));
 // Modifiers //
 const pass = function () {
   return arguments[arguments.length-2];
@@ -76,7 +77,7 @@ META.object = (properties, serial) =>
     return object;
   }, {});
 // Logger (uncomment below) //
-// Object.keys(META).forEach((name) => {
+// Object.keys(META).filter((name) => name.toLowerCase === name).forEach((name) => {
 //   const trap = META[name];
 //   META[name] = function () {
 //     let message = name + "@" + arguments.length;
