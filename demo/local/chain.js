@@ -9,6 +9,9 @@ Fs.readdirSync(dirname).forEach((filename) => {
     const chunks = [];
     const child = ChildProcess.fork(path, process.argv, {stdio:"pipe"});
     child.stderr.on("data", (chunk) => { chunks.push(chunk) });
-    child.on("exit", (code, signal) => { console.log(filename+" "+chunks.join(""))});
+    child.on("exit", (code, signal) => {
+      process.stdout.write(filename+"\n");
+      chunks.length && process.stderr.write(chunks.join(""))
+    });
   }
 });

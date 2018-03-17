@@ -114,7 +114,6 @@ exports.BinaryExpression = (node) => ARAN.cut.binary(
   Visit.expression(node.left),
   Visit.expression(node.right));
 
-// Redondant checks on pattern (could improve {maybe}).
 exports.AssignmentExpression = (node) => (
   node.left.type === "Identifier" ?
   ARAN.cut.write(
@@ -287,7 +286,7 @@ exports.NewExpression = (node) => ARAN.cut.construct(
     node.arguments,
     Visit.expression));
 
-exports.CallExpression = (node) => (
+exports.CallExpression = (node, local) => (
   ArrayLite.every(
     node.arguments,
     (argument) => argument.type !== "SpreadElement") ? // eval(x, ...xs) is not direct!
@@ -314,23 +313,42 @@ exports.CallExpression = (node) => (
           "===",
           ARAN.cut.read("eval"),
           ARAN.cut.$builtin(["eval"])),
-        ARAN.cut.eval(
-          (
-            node.arguments.length === 0 ?
-            ARAN.cut.primitive(void 0) :
+        (
+          local = ARAN.cut.eval(
             (
-              node.arguments.length === 1 ?
-              Visit.expression(node.arguments[0]) :
-              ARAN.build.get(
-                ARAN.build.array(
-                  ArrayLite.map(
-                    node.arguments,
-                    (expression, index) => (
-                      index ?
-                      ARAN.cut.$drop(
-                        Visit.expression(expression)) :
-                      Visit.expression(expression)))),
-                ARAN.build.primitive(0))))),
+              node.arguments.length === 0 ?
+              ARAN.cut.primitive(void 0) :
+              (
+                node.arguments.length === 1 ?
+                Visit.expression(node.arguments[0]) :
+                ARAN.build.get(
+                  ARAN.build.array(
+                    ArrayLite.map(
+                      node.arguments,
+                      (expression, index) => (
+                        index ?
+                        ARAN.cut.$drop(
+                          Visit.expression(expression)) :
+                        Visit.expression(expression)))),
+                  ARAN.build.primitive(0))))),
+          (
+            ARAN.sandbox ?
+            local :
+            ARAN.build.sequence(
+              [
+                Interim.hoist(
+                  "function",
+                  ARAN.build.read("eval")),
+                ARAN.build.write(
+                  "eval",
+                  Meta.eval()),
+                Interim.hoist(
+                  "result",
+                  local),
+                ARAN.build.write(
+                  "eval",
+                  Interim.read("function")),
+                Interim.read("result")]))),
         ARAN.cut.apply(
           node.AranStrict,
           ARAN.cut.read("eval"),

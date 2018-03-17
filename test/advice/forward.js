@@ -10,10 +10,7 @@ const modifiers = [
   "drop",
   // producers //
   "read",
-  "callee",
   "builtin",
-  "this",
-  "arguments",
   "catch",
   "primitive",
   "regexp",
@@ -51,6 +48,7 @@ module.exports = (aran, join) => {
   const traps = {};
   Reflect_apply(Array_prototype_forEach, modifiers, [(key) => traps[key] = pass]);
   Reflect_apply(Array_prototype_forEach, informers, [(key) => traps[key] = empty]);
+  traps.arrival = (isnew, callee, context, arguments, serial) => [callee, context, arguments];
   traps.apply = (strict, closure, arguments, serial) => Reflect_apply(closure, strict ? void 0 : global, arguments);
   traps.invoke = (object, key, arguments, serial) => Reflect_apply(object[key], object, arguments);
   traps.construct = (closure, arguments, serial) => Reflect_construct(closure, arguments);

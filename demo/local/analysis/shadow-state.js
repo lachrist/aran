@@ -2,6 +2,26 @@ const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
 const PrintLite = require("print-lite");
+//////////////
+// Membrane //
+//////////////
+let counter = 0;
+const consume = (name, infos, value, serial) => {
+  postMessage(name+"("+infos.concat([vstack.pop(), serial]).join(", ")+")\n");
+  return value;
+};
+const produce = (name, infos, value, serial) => {
+  const right = name+"("+infos.concat([PrintLite(value), serial]).join(", ")+")";
+  postMessage("#"+(++counter)+" = "+right+"\n");
+  vstack.push("&"+counter);
+  return value;
+};
+const combine = (value, name, infos, serial) => {
+  const right = name+"("+infos.reverse().concat([serial]).join(", ")+")";
+  postMessage("#"+(++counter)+"["+PrintLite(value)+"] = "+right+"\n");
+  vstack.push("&"+counter);
+  return value;
+};
 ///////////
 // Setup //
 ///////////
@@ -24,21 +44,6 @@ const bind = (frame, identifier) => {
     return true;
   const unscopables = frame.binding[Symbol.unscopables];
   return unscopables && unscopables.includes(identifier);
-};
-let counter = 0;
-const consume = (name, infos, value, serial) => {
-  postMessage(name+"("+infos.concat([vstack.pop(), serial]).join(", ")+")\n");
-  return value;
-};
-const produce = (name, infos, value, serial) => {
-  postMessage("#"+(++counter)+" = "+name+"("+infos.concat([PrintLite(value), serial]).join(", ")+")\n");
-  vstack.push("&"+counter);
-  return value;
-};
-const combine = (value, name, infos, serial) => {
-  postMessage("#"+(++counter)+"["+PrintLite(value)+"] = "+name+"("+infos.reverse().concat([serial]).join(", ")+")\n");
-  vstack.push("&"+counter);
-  return value;
 };
 //////////////
 // Chaining //
@@ -70,14 +75,20 @@ META.callee = (value, serial) => {
   }]));
   return produce("callee", [], value, serial);
 };
-META.builtin = (name, value, serial) => produce("builtin", [name], value, serial);
-META.discard = (identifier, value, serial) => produce("discard", [identifier], value, serial);
+META.builtin = (name, value, serial) =>
+  produce("builtin", [name], value, serial);
+META.discard = (identifier, value, serial) =>
+  produce("discard", [identifier], value, serial);
 META.closure = (value, serial) => {
   let wrapper = function () {
     if (cstack.length)
-      return new.target ? Reflect.construct(value, arguments) : Reflect.apply(value, this, arguments);
+      return new.target ?
+        Reflect.construct(value, arguments) :
+        Reflect.apply(value, this, arguments);
     try {
-      return new.target ? Reflect.construct(value, arguments) : Reflect.apply(value, this, arguments);
+      return new.target ?
+        Reflect.construct(value, arguments) :
+        Reflect.apply(value, this, arguments);
     } catch (error) {
       while (cstack.length)
         cstack.pop();
@@ -145,9 +156,12 @@ META.completion = (value, serial) => {
   estack[estack.length-1] = vstack.pop();
   return value;
 };
-META.throw = (value, serial) => consume("throw", [], value, serial);
-META.test = (value, serial) => consume("test", [], value, serial);
-META.eval = (value, serial) => weave(consume("eval", [], value, serial), aran.node(serial));
+META.throw = (value, serial) =>
+  consume("throw", [], value, serial);
+META.test = (value, serial) =>
+  consume("test", [], value, serial);
+META.eval = (value, serial) =>
+  weave(consume("eval", [], value, serial), aran.node(serial));
 META.return = (value, serial) => {
   cstack.pop();
   return consume("return", [], value, serial);

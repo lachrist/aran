@@ -1,3 +1,4 @@
+// Usage node bundle.js path/to/advice.js path/to/target.js [--namespace META] [--output EstreeValid] [--nocache] [--nosandbox]
 const Path = require("path");
 const Fs = require("fs");
 const Stream = require("stream");

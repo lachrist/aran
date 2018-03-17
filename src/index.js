@@ -63,7 +63,7 @@ module.exports = (options) => {
     namespace: "META",
     output: "EstreeOptimized",
     nocache: false,
-    nosandbox: false
+    sandbox: false
   }, options);
   if (!Build[options.output])
     throw new Error("Unknown output: "+options.output+", should be one of "+Object_keys(Build));
@@ -75,11 +75,12 @@ module.exports = (options) => {
       cut: null,
       hoisted: null,
       namespace: options.namespace,
-      nosandbox: options.nosandbox,
+      sandbox: options.sandbox,
       build: Build[options.output],
       nodes: options.nocache ? null : [],
       regexp: new RegExp(
-        "^\\$*(newtarget|callee|this|arguments|error|completion|eval|" +
+        "^\\$*(newtarget|callee|this|arguments|error|completion|arrival|" +
+        (options.sandbox ? "eval|" : "") +
         Reflect_apply(String_prototype_replace, options.namespace, ["$", "\\$$"]) +
         ")$"),
     },

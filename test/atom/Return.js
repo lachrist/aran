@@ -4,6 +4,6 @@
     return;
     throw new Error("Return1");
   }
-  if (f() !== undefined)
+  if (f() !== void 0)
     throw new Error("Return2");
 } ());

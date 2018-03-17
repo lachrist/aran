@@ -30,9 +30,9 @@ module.exports = (root, parent) => {
   const result = ARAN.cut.PROGRAM(
     root.AranStrict,
     (
-      ARAN.nosandbox || parent ?
-      null :
-      Meta.gproxy()),
+      ARAN.sandbox && !parent ?
+      Meta.gproxy() :
+      null),
     ArrayLite.concat(
       ArrayLite.flaten(ARAN.hoisted),
       statements));

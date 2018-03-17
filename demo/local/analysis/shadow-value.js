@@ -12,13 +12,15 @@ const consume = (name, infos, $value, serial) => {
   return $value.base;
 };
 const produce = (name, infos, value, serial) => {
-  postMessage("#"+(++counter)+" = "+name+"("+infos.concat([PrintLite(value), serial]).join(", ")+")\n");
+  const right = name+"("+infos.concat([PrintLite(value), serial]).join(", ")+")";
+  postMessage("#"+(++counter)+" = "+right+"\n");
   const wrapper = {meta:"&"+counter, base:value};
   wrappers.add(wrapper);
   return wrapper;
 };
 const combine = (value, name, infos, serial) => {
-  postMessage("#"+(++counter)+"["+PrintLite(value)+"] = "+name+"("+infos.join(", ")+", "+serial+")\n");
+  const right = name+"("+infos.join(", ")+", "+serial+")";
+  postMessage("#"+(++counter)+"["+PrintLite(value)+"] = "+right+"\n");
   const wrapper = {meta:"&"+counter, base:value};
   wrappers.add(wrapper);
   return wrapper;

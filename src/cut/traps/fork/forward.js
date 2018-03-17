@@ -15,6 +15,11 @@ ArrayLite.forEach(
       (argument0, argument1) => ARAN.build[key](argument0, argument1) :
       (argument0, argument1, argument2) => ARAN.build[key](argument0, argument1, argument2))));
 
+exports.arrival = (boolean, expression1, expression2, expression3) => ARAN.build.array([
+  expression1,
+  expression2,
+  expression3]);
+
 ArrayLite.forEach(
   Object_keys(TrapArguments.informers),
   (key) => exports[key] = empty);

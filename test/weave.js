@@ -14,7 +14,11 @@ module.exports = (options, Advice) => {
   const generate = options.output === "String" ? (script) => script : Astring.generate;
   const weave = (script, parent) => generate(aran.weave(Acorn.parse(script), pointcut, parent));
   global[options.namespace] = Advice(aran, weave).traps;
-  eval(generate(aran.setup()));
+  {
+    let sandbox = global;
+    console.log(generate(aran.setup()));
+    eval(generate(aran.setup()));
+  }
   const pointcut = Object.keys(global[options.namespace]);
   return (script) => weave(script, null);
 };

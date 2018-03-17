@@ -19,10 +19,11 @@ exports.combiners = {
   apply: [primitive, identity, array],
   construct: [identity, array],
   unary: [primitive, identity],
-  binary: [primitive, identity, identity]};
+  binary: [primitive, identity, identity],
+  arrival: [primitive, identity, identity, identity]};
 
 exports.modifiers = {
-  // stack //
+  // chainers //
   swap: [primitive, primitive, identity],
   copy: [primitive, identity],
   drop: [identity],
@@ -30,14 +31,10 @@ exports.modifiers = {
   read: [primitive, identity],
   discard: [primitive, identity],
   builtin: [primitive, identity],
-  newtarget: [identity],
-  this: [identity],
-  arguments: [identity],
   catch: [identity],
   primitive: [identity],
   regexp: [identity],
   closure: [identity],
-  callee: [identity],
   // consumers //
   drop: [identity],
   declare: [primitive, primitive, identity],

@@ -5,7 +5,7 @@ const SandboxScenario = require("sandbox-scenario");
 const callback = (name) => (error, script) => {
   if (error)
     throw error;
-  Fs.writeFileSync("output/"+name+".html", [
+  Fs.writeFileSync(__dirname+"/output/"+name+".html", [
     "<!DOCTYPE html>",
     "<html>",
     "  <head>",
@@ -20,25 +20,30 @@ const callback = (name) => (error, script) => {
   ].join("\n"), "utf8");
 }
 
-const online = (analysis, target) => SandboxScenario(
-  {type:"raw", path:"online/spawn.js", basedir:"./"},
+const local = (analysis, target) => SandboxScenario(
+  {type:"raw", path:__dirname+"/local/spawn.js", basedir:"./"},
   [
-    {type:"browserify", path:"online/analysis/"+analysis+".js"}],
+    {type:"browserify", path:__dirname+"/local/analysis/"+analysis+".js"}],
   [
-    {type:"raw", path:"target/"+target+".js"}],
-  callback("online-"+analysis+"-"+target));
+    {type:"raw", path:__dirname+"/target/"+target+".js"}],
+  callback("local-"+analysis+"-"+target));
 
-const offline = (analysis, target) => SandboxScenario(
-  {type:"browserify", path:"offline/spawn.js", basedir:"./"},
+const remote = (analysis, target) => SandboxScenario(
+  {type:"browserify", path:__dirname+"/remote/spawn.js", basedir:"./"},
   [
-    {type:"raw", path:"offline/"+analysis+"/pointcut.js"},
-    {type:"raw", path:"offline/"+analysis+"/advice.js"}],
+    {type:"raw", path:__dirname+"/remote/"+analysis+"/pointcut.js"},
+    {type:"raw", path:__dirname+"/remote/"+analysis+"/advice.js"}],
   [
-    {type:"raw", path:"target/"+target+".js"}],
-  callback("offline-"+analysis+"-"+target));
+    {type:"raw", path:__dirname+"/target/"+target+".js"}],
+  callback("remote-"+analysis+"-"+target));
 
-offline("apply", "factorial");
-online("apply", "factorial");
-online("eval", "dynamic-double");
-online("forward", "empty");
-online("shadow-value", "delta");
+// remote("apply", "factorial");
+// local("apply", "factorial");
+// local("empty", "empty");
+// local("eval", "dynamic");
+// local("forward", "empty");
+
+// local("shadow-value", "delta");
+// local("shadow-state", "delta");
+
+local("sandbox", "global");

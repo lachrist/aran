@@ -2,19 +2,18 @@ const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
 const PrintLite = require("print-lite");
-const pointcut = true;
-module.exports = (script) => {
-  script = Astring.generate(aran.weave(Acorn.parse(script), pointcut, null));
-  postMessage(script+"\n");
-  postMessage("Success: "+PrintLite(global.eval(script))+"\n");
-};
-const aran = Aran({namespace:"META"});
 global.META = {};
+const aran = Aran({namespace:"META"});
 global.eval(Astring.generate(aran.setup()));
-// Modifiers //
-const pass = function () {
-  return arguments[arguments.length-2];
+module.exports = (script) => {
+  script = Astring.generate(aran.weave(Acorn.parse(script), true, null));
+  console.log(script);
+  global.eval(script);
 };
+///////////////
+// Modifiers //
+///////////////
+const pass = function () { return arguments[arguments.length-2] };
 [
   "copy",
   "swap",
@@ -40,7 +39,9 @@ const pass = function () {
   "write",
   "declare",
 ].forEach((name) => { META[name] = pass });
+///////////////
 // Informers //
+///////////////
 const noop = () => {};
 [
   "try",
@@ -52,7 +53,9 @@ const noop = () => {};
   "label",
   "break"
 ].forEach((name) => { META[name] = noop });
+///////////////
 // Combiners //
+///////////////
 META.apply = (strict, closure, values, serial) =>
   Reflect.apply(closure, strict ? undefined : global, values);
 META.invoke = (object, key, values, serial) =>
@@ -76,14 +79,15 @@ META.object = (properties, serial) =>
     object[property[0]] = property[1];
     return object;
   }, {});
+//////////////////////////////
 // Logger (uncomment below) //
-// Object.keys(META).filter((name) => name.toLowerCase === name).forEach((name) => {
-//   const trap = META[name];
-//   META[name] = function () {
-//     let message = name + "@" + arguments.length;
-//     for (let index = 0; index < arguments.length - 1; index++)
-//       message += " " + PrintLite(arguments[index]);
-//     postMessage(message+"\n");
-//     return Reflect.apply(trap, null, arguments);
-//   };
+//////////////////////////////
+// Object.keys(META).forEach((name) => {
+//   if (name.toLowerCase === name) {
+//     const trap = META[name];
+//     META[name] = function () {
+//       console.log(name+" "+Array.from(arguments).map(PrintLite).join(" "));
+//       return Reflect.apply(trap, this, arguments);
+//     };
+//   }
 // });

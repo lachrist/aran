@@ -6,12 +6,12 @@
     };
   },
   apply: function (strict, closure, values, serial) {
-    postMessage(depth+closure+"@"+serial+"("+values.join(", ")+")\n");
+    console.log(depth+closure+"@"+serial+"("+values.join(", ")+")\n");
     depth += ".";
-    const context = strict ? undefined : global;
+    const context = strict ? undefined : self;
     const result = Reflect.apply(closure, context, values);
     depth = depth.substring(1);
-    postMessage(depth+result+"\n");
+    console.log(depth+result+"\n");
     return result;
   }
 })

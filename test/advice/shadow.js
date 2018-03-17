@@ -161,6 +161,16 @@ module.exports = (aran, join) => {
   // Producers //
   ///////////////
 
+  traps.arrival = (boolean, value1, value2, value3, serial) => {
+    cstack.push(Call(scopes.get(value1)));
+    cstack.peek().enter("closure", Object.create(null), null);
+    return [
+      produce(value1, serial),
+      produce(value2, serial),
+      produce(value3, serial);
+    ];
+  };
+
   traps.this = (value, serial) => produce(value, serial);
   traps.arguments = (value, serial) => produce(value, serial);
   traps.regexp = (value, serial) => produce(value, serial);

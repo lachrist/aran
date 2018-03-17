@@ -126,87 +126,116 @@ module.exports = (pointcut) => {
   cut.closure = (strict, statements) => ARAN.build.apply(
     null,
     ARAN.build.closure(
-      strict,
+      false,
       ArrayLite.concat(
         ARAN.build.Declare(
           "const",
           "callee",
           traps.closure(
+            strict,
             ARAN.build.closure(
               strict,
-              (
-                ARAN.node.type === "ArrowFunctionExpression" ?
-                ArrayLite.concat(
-                  ARAN.build.If(
-                    ARAN.build.read("new.target"),
-                    ARAN.build.Throw(
-                      ARAN.build.construct(
-                        Meta.builtin(["TypeError"]),
-                        [
-                          ARAN.build.primitive("arrow is not a constructor")])),
-                    []),
-                  ARAN.build.Statement(
-                    traps.drop(
-                      traps.callee(
-                        ARAN.build.read("callee")))),
-                  ARAN.build.Statement(
-                    traps.drop(
-                      traps.this(
-                        ARAN.build.read("this")))),
-                  ARAN.build.Statement(
-                    ARAN.build.write(
-                      "arguments",
-                      traps.arguments(
-                        ARAN.build.read("arguments")))),
-                  statements) :
-                ArrayLite.concat(
-                  ARAN.build.Declare(
-                    "const",
-                    SanitizeIdentifier("new.target"),
-                    traps.declare(
-                      "const",
-                      "new.target",
-                      ARAN.build.conditional(
-                        ARAN.build.read("new.target"),
-                        traps.callee(
-                          ARAN.build.read("callee")),
-                        ARAN.build.sequence(
-                          [
-                            traps.drop(
-                              traps.callee(
-                                ARAN.build.read("callee"))),
-                            traps.primitive(
-                              ARAN.build.primitive(void 0))])))),
-                  ARAN.build.Declare(
-                    "const",
-                    SanitizeIdentifier("this"),
-                    traps.declare(
-                      "const",
-                      "this",
-                      traps.this(
-                        ARAN.build.read("this")))),
-                  ARAN.build.Statement(
-                    ARAN.build.write(
-                      "arguments",
-                      traps.arguments(
-                        ARAN.build.read("arguments")))),
-                  (
-                    ContainArguments(
-                        ArrayLite.slice(ARAN.node.params)) ?
-                    [] :
-                    ARAN.build.Declare(
-                      "let",
-                      SanitizeIdentifier("arguments"),
-                      traps.declare(
-                        "let",
-                        "arguments",
-                        traps.copy(
-                          1,
-                          ARAN.build.read("arguments"))))),
-                  statements))))),
+              ArrayLite.concat(
+                ARAN.build.Declare(
+                  "const",
+                  "arrival",
+                  traps.arrival(
+                    ARAN.build.binary(
+                      "===",
+                      ARAN.build.read("new.target"),
+                      ARAN.build.primitive(void 0)),
+                    ARAN.build.read("callee"),
+                    ARAN.build.read("this"),
+                    ARAN.build.read("arguments"))),
+              statements)))),
         ARAN.build.Return(
           ARAN.build.read("callee")))),
     []);
+
+  // cut.closure = (strict, statements) => ARAN.build.apply(
+  //   null,
+  //   ARAN.build.closure(
+  //     strict,
+  //     ArrayLite.concat(
+  //       ARAN.build.Declare(
+  //         "const",
+  //         "callee",
+  //         traps.closure(
+  //           ARAN.build.closure(
+  //             strict,
+  //             (
+  //               ARAN.node.type === "ArrowFunctionExpression" ?
+  //               ArrayLite.concat(
+  //                 ARAN.build.If(
+  //                   ARAN.build.read("new.target"),
+  //                   ARAN.build.Throw(
+  //                     ARAN.build.construct(
+  //                       Meta.builtin(["TypeError"]),
+  //                       [
+  //                         ARAN.build.primitive("arrow is not a constructor")])),
+  //                   []),
+  //                 ARAN.build.Statement(
+  //                   traps.drop(
+  //                     traps.callee(
+  //                       ARAN.build.read("callee")))),
+  //                 ARAN.build.Statement(
+  //                   traps.drop(
+  //                     traps.this(
+  //                       ARAN.build.read("this")))),
+  //                 ARAN.build.Statement(
+  //                   ARAN.build.write(
+  //                     "arguments",
+  //                     traps.arguments(
+  //                       ARAN.build.read("arguments")))),
+  //                 statements) :
+  //               ArrayLite.concat(
+  //                 ARAN.build.Declare(
+  //                   "const",
+  //                   SanitizeIdentifier("new.target"),
+  //                   traps.declare(
+  //                     "const",
+  //                     "new.target",
+  //                     ARAN.build.conditional(
+  //                       ARAN.build.read("new.target"),
+  //                       traps.callee(
+  //                         ARAN.build.read("callee")),
+  //                       ARAN.build.sequence(
+  //                         [
+  //                           traps.drop(
+  //                             traps.callee(
+  //                               ARAN.build.read("callee"))),
+  //                           traps.primitive(
+  //                             ARAN.build.primitive(void 0))])))),
+  //                 ARAN.build.Declare(
+  //                   "const",
+  //                   SanitizeIdentifier("this"),
+  //                   traps.declare(
+  //                     "const",
+  //                     "this",
+  //                     traps.this(
+  //                       ARAN.build.read("this")))),
+  //                 ARAN.build.Statement(
+  //                   ARAN.build.write(
+  //                     "arguments",
+  //                     traps.arguments(
+  //                       ARAN.build.read("arguments")))),
+  //                 (
+  //                   ContainArguments(
+  //                       ArrayLite.slice(ARAN.node.params)) ?
+  //                   [] :
+  //                   ARAN.build.Declare(
+  //                     "let",
+  //                     SanitizeIdentifier("arguments"),
+  //                     traps.declare(
+  //                       "let",
+  //                       "arguments",
+  //                       traps.copy(
+  //                         1,
+  //                         ARAN.build.read("arguments"))))),
+  //                 statements))))),
+  //       ARAN.build.Return(
+  //         ARAN.build.read("callee")))),
+  //   []);
 
   cut.read = (identifier) => traps.read(
     identifier,
@@ -229,23 +258,23 @@ module.exports = (pointcut) => {
   ///////////////
 
   cut.write = (
-    ARAN.nosandbox ?
-    (identifier, expression) => ARAN.build.write(
-      SanitizeIdentifier(identifier),
-      traps.write(identifier, expression)) :
+    ARAN.sandbox ?
     (identifier, expression) => (
       ARAN.node.AranStrict ?
       ARAN.build.sequence(
         [
-          META.declare(false),
+          Meta.declaration(false),
           ARAN.build.write(
             SanitizeIdentifier(identifier),
             traps.write(identifier, expression)),
-          META.declare(true),
+          Meta.declaration(true),
           ARAN.build.read(SanitizeIdentifier(identifier))]) :
       ARAN.build.write(
         SanitizeIdentifier(identifier),
-        traps.write(identifier, expression))));
+        traps.write(identifier, expression))) :
+    (identifier, expression) => ARAN.build.write(
+      SanitizeIdentifier(identifier),
+      traps.write(identifier, expression)));
 
   cut.Declare = (kind, identifier, expression) => ARAN.build.Declare(
     kind,

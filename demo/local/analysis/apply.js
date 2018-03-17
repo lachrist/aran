@@ -9,19 +9,21 @@ global.META = {
   apply: (strict, closure, values, serial) => {
     const node = aran.node(serial);
     const prefix = depth+closure+"@"+node.loc.start.line;
-    postMessage(prefix+"("+values.join(", ")+")\n");
+    console.log(prefix+"("+values.join(", ")+")\n");
     depth += ".";
     const context = strict ? undefined : global; 
     const result = Reflect.apply(closure, context, values);
     depth = depth.substring(1);
-    postMessage(depth+result+"\n");
+    console.log(depth+result+"\n");
     return result;
   }
 };
 const aran = Aran({namespace:"META"});
+const parent = null;
+const pointcut = ["apply"];
 global.eval(Astring.generate(aran.setup()));
 module.exports = (script) => {
   const estree1 = Acorn.parse(script, {locations:true});
-  const estree2 = aran.weave(estree1, ["apply"], null);
+  const estree2 = aran.weave(estree1, pointcut, parent);
   global.eval(Astring.generate(estree2));
 };

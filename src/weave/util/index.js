@@ -6,6 +6,7 @@ Object.assign(
   require("./closure.js"),
   require("./completion.js"),
   require("./declaration.js"),
+  require("./define.js"),
   require("./loop.js"),
   require("./property.js"),
   require("./rest.js"));

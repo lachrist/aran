@@ -1,10 +1,9 @@
 
 module.exports = [
-  // stack //
-  "swap",
-  "copy",
-  "drop",
+  ///////////////
   // Combiners //
+  ///////////////
+  "arrival",
   "object",
   "array",
   "get",
@@ -15,13 +14,17 @@ module.exports = [
   "construct",
   "unary",
   "binary",
+  ///////////////
+  // modifiers //
+  ///////////////
+  // Chainers //
+  "swap",
+  "copy",
+  "drop",
   // Producers //
   "read",
   "discard",
   "builtin",
-  "this",
-  "newtarget",
-  "arguments",
   "catch",
   "primitive",
   "regexp",
@@ -37,11 +40,12 @@ module.exports = [
   "completion",
   "success",
   "failure",
+  ///////////////
   // Informers //
+  ///////////////
   "begin",
   "end",
   "label",
-  "callee",
   "block",
   "try",
   "finally",

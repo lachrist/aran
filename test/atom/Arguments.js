@@ -1,4 +1,3 @@
-
 (function () {
   function f () {
     if (arguments[0] !== "foo")

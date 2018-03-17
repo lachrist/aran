@@ -6,9 +6,14 @@ module.exports = (pointcut, advice) => {
   pointcut = eval(pointcut);
   return (path, script, argv) => {
     const ast1 = Acorn.parse(script);
-    const ast2 = aran.join(ast1, pointcut);
+    const ast2 = aran.weave(ast1, pointcut);
     return new Worker(URL.createObjectURL(new Blob([
-      "var META = "+advice+";\n"+Astring.generate(ast2)
+      "console.log = function () { \n",
+      "  postMessage(Array.from(arguments).map(String).join(' ')+'\\n');\n",
+      "};\n",
+      "self.META = "+advice+";",
+      Astring.generate(aran.setup()),
+      Astring.generate(ast2)
     ])));
   };
 };
