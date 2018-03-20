@@ -76,7 +76,7 @@ An other good reason for the advice to communicate with Aran arises when the tar
    * Generator functions ([`function*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), [`yield`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield),[`yield*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield*)).
    * Asynchronous functions ([`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)).
    * [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals).
-2) There exists loopholes that will cause the target program to behave differentially when analyzed, this is discussed in [Heisenbugs](heisenbugs).
+2) There exists loopholes that will cause the target program to behave differentially when analyzed, this is discussed in [Heisenbugs](#heisenbugs).
 3) Aran does not provide any facilities for instrumenting modularized JavaScript applications.
    To instrument server-side node applications and client-side browser applications we rely on a separate module called [Otiluke](https://github.com/lachrist/otiluke).
 4) Aran does not offer an out-of-the-box interface for tracking primitive values through the object graph.
