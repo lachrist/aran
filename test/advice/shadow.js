@@ -1,5 +1,4 @@
 
-const PrintLite = require("print-lite");
 const Error = global.Error;
 const TypeError = global.TypeError;
 const ReferenceError = global.ReferenceError;
@@ -20,9 +19,19 @@ const WeakMap_prototype_get = global.WeakMap.prototype.get;
 const WeakMap_prototype_set = global.WeakMap.prototype.set;
 const WeakMap_prototype_has = global.WeakMap.prototype.has;
 
+const print = (value) => {
+  if (typeof value === "function")
+    return "function";
+  if (typeof value === "object")
+    return value ? "object" : "null";
+  if (typeof value === "string")
+    return JSON.stringify(value);
+  return String(value);
+};
+
 const check = (title, value1, value2, serial) => {
   if (value1 !== value2 && (value1 === value1 || value2 === value2)) {
-    throw new Error("["+serial+"] "+title+" mismatch. Expected: "+PrintLite(value1)+", got: "+PrintLite(value2)+".");
+    throw new Error("["+serial+"] "+title+" mismatch. Expected: "+print(value1)+", got: "+print(value2)+".");
   }
 };
 

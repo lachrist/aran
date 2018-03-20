@@ -1,6 +1,8 @@
+
 const ReadlineSync = require("readline-sync");
 const Util = require("util");
 const Shadow = require("./shadow.js");
+
 const Reflect_apply = global.Reflect.apply;
 const Object_keys = global.Object.keys;
 const Object_getOwnPropertyDescriptor = global.Object.getOwnPropertyDescriptor;
