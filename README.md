@@ -385,22 +385,22 @@ Here are the known heisenbugs that Aran may introduce by itself:
     const x;
   }
   ```
-* [`arguments`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments):
-  Some analyses like [`demo/local/analyses/shadow-value.js`](demo/local/analyses/shadow-value.js) threat values differently when they are get/set to object than when they are read/written to the environment.
+* *Arguments' Numerical Properties*:
+  Some analyses like [`demo/local/analysis/shadow-value.js`](demo/local/analysis/shadow-value.js) threat values differently when they are get/set to object than when they are read/written to the environment.
   In non strict mode, the [arguments object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments) blurs this distinction which can lead to heisenbugs.
   In the code below, the `write` trap should be triggered with `"x"` and `"bar"` to account to for the sneaky variable assignment but it is not at the moment. 
   ```js
   function f (x) {
     arguments[0] = "bar";
-    console.log(x);
+    console.log(x); // prints "bar"
   }
   f("foo");
   ```
 
 ## Acknowledgement
 
-I am [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd student at the Vrij Universiteit of Brussel (VUB).
-I am working at the SOFT language lab in close relation with my promoters [Coen De Roover](http://soft.vub.ac.be/soft/members/cderoove) and [Wolfgang De Meuter](http://soft.vub.ac.be/soft/members/wdmeuter).
+I'm [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd student at the Vrij Universiteit of Brussel (VUB).
+I'm working at the SOFT language lab in close relation with my promoters [Coen De Roover](http://soft.vub.ac.be/soft/members/cderoove) and [Wolfgang De Meuter](http://soft.vub.ac.be/soft/members/wdmeuter).
 I'm currently being employed on the [Tearless](http://soft.vub.ac.be/tearless/pages/index.html) project.
 
 ![tearless](readme/tearless.png)
