@@ -1,44 +1,28 @@
 # Aran <img src="readme/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
 
-Aran is a [npm module](https://www.npmjs.com/aran) for instrumenting JavaScript code.
+Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting JavaScript code.
 To install, run `npm install aran`.
 Aran was designed as an infra-structure to build development-time dynamic program analyses such as: objects and functions profiling, debugging, control-flow tracing, taint analysis and concolic testing.
-Aran can be used at deployment-time but be mindfull of performance overhead.
+Aran can be used at deployment-time but be mindful of performance overhead.
 For instance, Aran can be used to carry out control access systems such as sandboxing.
 Aran can also be used as a desugarizer much like [babel](https://babeljs.io).
-
-## Limitations
-
-1) Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and most of [ECMAScript2017](https://www.ecma-international.org/ecma-262/8.0/).
-   Known missing features are:
-   * Native modules ([`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import), [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export)).
-   * [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
-   * Generator functions ([`function*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), [`yield`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield),[`yield*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield*)).
-   * Asynchronous functions ([`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)).
-   * [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals).
-2) There exists loopholes that will cause the target program to behave differentially when analyzed, this is discussed in [Heisenbugs](heisenbugs).
-3) Aran does not provide any facilities for instrumenting modularized JavaScript applications.
-   To instrument server-side node applications and client-side browser applications we rely on a separate module called [Otiluke](https://github.com/lachrist/otiluke).
-4) Aran does not offer an out-of-the-box interface for tracking primitive values through the object graph.
-   This feature is crucial for data-flow centric dynamic analyses such as taint analysis and symbolic execution.
-   In our research, we track primitive values through the object graph with a complementary npm module called [Linvail](https://github.com/lachrist/linvail).
 
 ## Getting Started
 
 The code transformation performed by Aran essentially consists in inserting calls to functions called *traps* at [ESTree](https://github.com/estree/estree) nodes specified by the user.
 For instance, the expression `x + y` could be transformed into `META.binary("+", x, y, 123)`.
 The last argument passed to traps is always a *serial* number which uniquely identifies the node which triggered the trap.
-These traps functions are collectively called *advice* and the specification that characterizes what part of the advice should be executed at which node is called pointcut.
-The process of inserting calls to parts of the advice at the program points defined by the pointcut is called weaving.
+These traps functions are collectively called *advice* and the specification that characterizes which node should trigger a given trap is called *pointcut*.
+The process of inserting trap calls based on a pointcut is called *weaving*.
 This terminology is borrowed from [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming).
 [demo/remote/apply](TODO) demonstrates these concepts.
 The instrumentation performed in this demonstrator is qualified as *remote* because it takes place on a process distinct from the one evaluating the instrumented code.
 
-<img src="readme/remote.pdf" align="center" alt="remote-instrumentation" title="Aran's remote instrumentation"/>
+<img src="readme/remote.svg" align="center" alt="remote-instrumentation" title="Aran's remote instrumentation"/>
 
-As shown in [demo/local/apply](TODO), Aran can also be used to perform *local* instrumentation -- i.e.: the instrumentation is performed on the process that evaluates the instrumented code.
-The advantage of local instrumentation over remote instrumentation is to enables direct communication between Aran's instances and advices.
-For instance, the advice can use `aran.node(serial)` to retrieve the line index of the node that triggered a trap.
+As shown in [demo/local/apply](TODO), Aran can also be used to perform *local* instrumentation -- i.e.: the instrumentation is performed on the process that also evaluates the instrumented code.
+Compared to remote instrumentation, local instrumentation enable direct communication between an advice and its associated Aran's instance.
+For instance, `aran.node(serial)` can invoked by the advice to retrieve the line index of the node that triggered a trap.
 An other good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
 Below is a minimal working example of local instrumentation in node:
 
@@ -60,9 +44,7 @@ const aran = Aran({namespace:"META"});
 global.eval(Astring.generate(aran.setup()));
 const script1 = "'Hello World!'";
 const estree1 = Acorn.parse(script1);
-const parent = null;
-const pointcut = ["primitive"];
-const estree2 = aran.weave(estree1, pointcut, parent);
+const estree2 = aran.weave(estree1, ["primitive"], null);
 const script2 = Astring.generate(estree2);
 global.eval(script2);
 ```
@@ -77,13 +59,30 @@ global.eval(script2);
   The last lines can be uncommented to turn this analysis into a tracer.
 * [demo/local/sandbox](TODO):
   Very restrictive sandboxing.
-  See the section on `aran.setup` to know which identifiers should be available.
+  See the API section on `aran.setup` to know which identifiers should be available from the scope.
 * [demo/local/eval](TODO):
-  How to to handle dynamic code evaluation, [script element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script) are not handled.
-* [demo/local/shadow-Value](TODO):
-  Track programs values across the value stack and the environment but not the store, the shadow value way.
-* [demo/local/shadow-State](TODO):
-  Track programs values across the value stack and the environment but not the store, the shadow state way.
+  How to to handle dynamic code evaluation, inserting [script element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script) is not handled.
+* [demo/local/shadow-value](TODO):
+  Track program values across the value stack and the environment but not the store (the shadow value way).
+* [demo/local/shadow-state](TODO):
+  Track program values across the value stack and the environment but not the store (the shadow state way).
+  This analysis provides the same output as the previous one but is more complex.
+
+## Limitations
+
+1) Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and most of [ECMAScript2017](https://www.ecma-international.org/ecma-262/8.0/).
+   Known missing features are:
+   * Native modules ([`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import), [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export)).
+   * [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
+   * Generator functions ([`function*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), [`yield`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield),[`yield*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield*)).
+   * Asynchronous functions ([`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)).
+   * [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals).
+2) There exists loopholes that will cause the target program to behave differentially when analyzed, this is discussed in [Heisenbugs](heisenbugs).
+3) Aran does not provide any facilities for instrumenting modularized JavaScript applications.
+   To instrument server-side node applications and client-side browser applications we rely on a separate module called [Otiluke](https://github.com/lachrist/otiluke).
+4) Aran does not offer an out-of-the-box interface for tracking primitive values through the object graph.
+   This feature is crucial for data-flow centric dynamic analyses such as taint analysis and symbolic execution.
+   In our research, we track primitive values through the object graph with a complementary npm module called [Linvail](https://github.com/lachrist/linvail).
 
 ## API
 
