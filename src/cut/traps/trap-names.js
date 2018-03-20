@@ -3,7 +3,6 @@ module.exports = [
   ///////////////
   // Combiners //
   ///////////////
-  "arrival",
   "object",
   "array",
   "get",
@@ -22,13 +21,14 @@ module.exports = [
   "copy",
   "drop",
   // Producers //
+  "arrival",
   "read",
   "discard",
   "builtin",
   "catch",
   "primitive",
   "regexp",
-  "closure",
+  "function",
   // Consumers //
   "declare",
   "write",

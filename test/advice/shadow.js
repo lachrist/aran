@@ -91,11 +91,11 @@ const Call = ((() => {
     check("Leave", (this._frames[this._frames.length-1]||{})[0], type, serial);
     this._frames.pop();
   }
-  function loop (closure) {
+  function loop (callback) {
     let index = this._frames.length;
     while (index--) {
       const frame = this._frames[index];
-      if (closure(frame[0], frame[1], frame[2]))
+      if (callback(frame[0], frame[1], frame[2]))
         return true;
     }
     return false;
@@ -161,25 +161,13 @@ module.exports = (aran, join) => {
   // Producers //
   ///////////////
 
-  traps.arrival = (boolean, value1, value2, value3, serial) => {
-    cstack.push(Call(scopes.get(value1)));
-    cstack.peek().enter("closure", Object.create(null), null);
-    return [
-      produce(value1, serial),
-      produce(value2, serial),
-      produce(value3, serial);
-    ];
-  };
-
-  traps.this = (value, serial) => produce(value, serial);
-  traps.arguments = (value, serial) => produce(value, serial);
   traps.regexp = (value, serial) => produce(value, serial);
   traps.primitive = (value, serial) => produce(value, serial);
   traps.builtin = (identifier, value, serial) => produce(value, serial);
   traps.discard = (identifier, value, serial) => produce(value, serial);
-  traps.callee = (value, serial) => {
-    cstack.push(Call(scopes.get(value)));
-    cstack.peek().enter("closure", Object.create(null), null);
+  traps.arrival = (value, serial) => {
+    cstack.push(Call(scopes.get(value.callee)));
+    cstack.peek().enter("function", Object.create(null), null);
     return produce(value, serial);
   };
   traps.read = (identifier, value, serial) => {
@@ -195,7 +183,7 @@ module.exports = (aran, join) => {
     check("Read", result, value, serial);
     return produce(result, serial);
   };
-  traps.closure = (value, serial) => {
+  traps.function = (value, serial) => {
     let wrapper = function () {
       if (cstack.length)
         return new.target ? Reflect_construct(value, arguments) : Reflect_apply(value, this, arguments);
@@ -212,6 +200,9 @@ module.exports = (aran, join) => {
         throw new Error("["+serial+"] State poluted");
       return result;
     };
+    Object_defineProperty(wrapper, "name", {value:value.name, configurable:true});
+    Object_defineProperty(wrapper, "length", {value:value.length, configurable:true});
+    wrapper.prototype = value.prototype || {constructor:wrapper};
     const bindings = [];
     bindings.unshift = Array_prototype_unshift;
     cstack.peek().loop((type, binding, custom) => { bindings.unshift(binding) });
@@ -270,7 +261,7 @@ module.exports = (aran, join) => {
   };
   traps.declare = (kind, identifier, value, serial) => {
     cstack.peek().loop((type, binding, custom) => {
-      if (kind !== "var" || type === "closure") {
+      if (kind !== "var" || type === "function") {
         if (type === "with")
           throw new Error("["+serial+"] Illegal with frame");
         Object_defineProperty(binding, identifier, {
@@ -390,14 +381,14 @@ module.exports = (aran, join) => {
   traps.begin = (serial) => {
     estack.push(null);
     if (aran.node(serial).AranParent)
-      return cstack.peek().enter(aran.node(serial).AranStrict ? "closure" : "block", Object_create(null), null);
+      return cstack.peek().enter(aran.node(serial).AranStrict ? "function" : "block", Object_create(null), null);
     cstack.push(Call(Scope()));
     cstack.peek().enter("block", Object_create(null), null);
   };
   traps.success = (value, serial) => {
     check("Success", estack.peek(), value, serial);
     if (aran.node(serial).AranParent) {
-      cstack.peek().leave(aran.node(serial).AranStrict ? "closure" : "block", serial);
+      cstack.peek().leave(aran.node(serial).AranStrict ? "function" : "block", serial);
       return produce(value, serial);
     }
     cstack.peek().leave("block", serial);

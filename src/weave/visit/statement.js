@@ -421,7 +421,7 @@ exports.FunctionDeclaration = (node) => {
   ARAN.hoisted[ARAN.hoisted.length] = ARAN.cut.Declare(
     node.AranStrict ? "let" : "var",
     node.id.name,
-    Util.closure(node));
+    Util.function(node));
   return [];
 };
 

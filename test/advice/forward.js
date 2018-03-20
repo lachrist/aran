@@ -9,12 +9,13 @@ const modifiers = [
   "swap",
   "drop",
   // producers //
+  "arrival",
   "read",
   "builtin",
   "catch",
   "primitive",
   "regexp",
-  "closure",
+  "function",
   "discard",
   // consumers //
   "completion",
@@ -48,10 +49,9 @@ module.exports = (aran, join) => {
   const traps = {};
   Reflect_apply(Array_prototype_forEach, modifiers, [(key) => traps[key] = pass]);
   Reflect_apply(Array_prototype_forEach, informers, [(key) => traps[key] = empty]);
-  traps.arrival = (isnew, callee, context, arguments, serial) => [callee, context, arguments];
-  traps.apply = (strict, closure, arguments, serial) => Reflect_apply(closure, strict ? void 0 : global, arguments);
+  traps.apply = (strict, callee, arguments, serial) => Reflect_apply(callee, strict ? void 0 : global, arguments);
   traps.invoke = (object, key, arguments, serial) => Reflect_apply(object[key], object, arguments);
-  traps.construct = (closure, arguments, serial) => Reflect_construct(closure, arguments);
+  traps.construct = (callee, arguments, serial) => Reflect_construct(callee, arguments);
   traps.unary = (operator, argument, serial) => eval(operator+" argument");
   traps.binary = (operator, left, right, serial) => eval("left "+operator+" right");
   traps.get = (object, key, serial) => object[key];

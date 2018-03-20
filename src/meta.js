@@ -41,6 +41,42 @@ exports.declaration = (boolean) => ARAN.build.set(
   ARAN.build.primitive("DECLARE"),
   ARAN.build.primitive(boolean));
 
+exports.define = (expression1, string, expression2, boolean1, boolean2, boolean3) => ARAN.build.apply(
+  null,
+  ARAN.build.get(
+    ARAN.build.read(ARAN.namespace),
+    ARAN.build.primitive("DEFINE")),
+  [
+    expression1,
+    ARAN.build.primitive(string),
+    ARAN.build.object(
+      ArrayLite.concat(
+        [
+          [
+            ARAN.build.primitive("value"),
+            expression2]],
+        (
+          boolean1 ?
+          [
+            [
+              ARAN.build.primitive("writable"),
+              ARAN.build.primitive(true)]] :
+          []),
+        (
+          boolean2 ?
+          [
+            [
+              ARAN.build.primitive("enumerable"),
+              ARAN.build.primitive(true)]] :
+          []),
+        (
+          boolean3 ?
+          [
+            [
+              ARAN.build.primitive("configurable"),
+              ARAN.build.primitive(true)]] :
+          [])))]);
+
 exports.Setup = () => ArrayLite.flatenMap(
   ArrayLite.concat(
     [
@@ -52,18 +88,18 @@ exports.Setup = () => ArrayLite.flatenMap(
         ARAN.build.read("Proxy")],
       [
         "WHANDLERS",
-        whandlers()]],
+        whandlers()],
+      [
+        "DEFINE",
+        ARAN.build.get(
+          ARAN.build.read("Object"),
+          ARAN.build.primitive("defineProperty"))]],
     (
       ARAN.sandbox ?
       [
         [
           "RERROR",
           ARAN.build.read("ReferenceError")],
-        [
-          "DEFINE",
-          ARAN.build.get(
-            ARAN.build.read("Object"),
-            ARAN.build.primitive("defineProperty"))],
         [
           "DECLARATION",
           ARAN.build.primitive(true)],
@@ -76,33 +112,15 @@ exports.Setup = () => ArrayLite.flatenMap(
       [
         [
           "GLOBAL",
-          ARAN.build.conditional(
-            ARAN.build.binary(
-              "===",
-              ARAN.build.unary(
-                "typeof",
-                ARAN.build.read("global")),
-              ARAN.build.primitive("undefined")),
-            ARAN.build.read("self"),
-            ARAN.build.read("global"))]]),
-    [
-      [
-        "GLOBAL_global",
-        ARAN.build.get(
-          ARAN.build.get(
-            ARAN.build.read(ARAN.namespace),
-            ARAN.build.primitive("GLOBAL")),
-          ARAN.build.conditional(
-            ARAN.build.binary(
-              "in",
-              ARAN.build.primitive("global"),
-              ARAN.build.get(
-                ARAN.build.read(ARAN.namespace),
-                ARAN.build.primitive("GLOBAL"))),
-            ARAN.build.primitive("global"),
-            ARAN.build.primitive("self")))]],
+          ARAN.build.apply(
+            null,
+            ARAN.build.get(
+              ARAN.build.read(ARAN.namespace),
+              ARAN.build.primitive("EVAL")),
+            [
+              ARAN.build.primitive("this")])]]),
     ArrayLite.map(
-      ["TypeError", "eval"],
+      ["TypeError", "eval", "global"],
       (string) => [
         "GLOBAL_" + string,
         ARAN.build.get(
@@ -373,7 +391,7 @@ const restore = () => ARAN.build.If(
 const ghandlers = () => ARAN.build.object([
   [
     ARAN.build.primitive("has"),
-    ARAN.build.closure(
+    ARAN.build.function(
       false,
       ArrayLite.concat(
         ARAN.build.Declare(
@@ -407,7 +425,7 @@ const ghandlers = () => ARAN.build.object([
           ARAN.build.primitive(true))))],
   [
     ARAN.build.primitive("deleteProperty"),
-    ARAN.build.closure(
+    ARAN.build.function(
       false,
       ArrayLite.concat(
         ARAN.build.Declare(
@@ -425,7 +443,7 @@ const ghandlers = () => ARAN.build.object([
             ARAN.build.read("key")))))],
   [
     ARAN.build.primitive("get"),
-    ARAN.build.closure(
+    ARAN.build.function(
       false,
       ArrayLite.concat(
         ARAN.build.Declare(
@@ -481,7 +499,7 @@ const ghandlers = () => ARAN.build.object([
                 ARAN.build.primitive(" is not defined"))]))))],
     [
       ARAN.build.primitive("set"),
-      ARAN.build.closure(
+      ARAN.build.function(
         false,
         ArrayLite.concat(
           ARAN.build.Declare(
@@ -619,7 +637,7 @@ const ghandlers = () => ARAN.build.object([
 const whandlers = () => ARAN.build.object([
   [
     ARAN.build.primitive("has"),
-    ARAN.build.closure(
+    ARAN.build.function(
       false,
       ArrayLite.concat(
         ARAN.build.Declare(
@@ -660,7 +678,7 @@ const whandlers = () => ARAN.build.object([
               ARAN.build.primitive(0))))))],
   [
     ARAN.build.primitive("deleteProperty"),
-    ARAN.build.closure(
+    ARAN.build.function(
       false,
       ArrayLite.concat(
         ARAN.build.Declare(
@@ -678,7 +696,7 @@ const whandlers = () => ARAN.build.object([
             ARAN.build.read("key")))))],
   [
     ARAN.build.primitive("get"),
-    ARAN.build.closure(
+    ARAN.build.function(
       false,
       ArrayLite.concat(
         ARAN.build.Declare(
@@ -710,7 +728,7 @@ const whandlers = () => ARAN.build.object([
             ARAN.build.read("key")))))],
   [
     ARAN.build.primitive("set"),
-    ARAN.build.closure(
+    ARAN.build.function(
       false,
       ArrayLite.concat(
         ARAN.build.Declare(

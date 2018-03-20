@@ -1,7 +1,6 @@
 const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
-const PrintLite = require("print-lite");
 global.META = {};
 const aran = Aran({namespace:"META"});
 global.eval(Astring.generate(aran.setup()));
@@ -9,6 +8,15 @@ module.exports = (script) => {
   script = Astring.generate(aran.weave(Acorn.parse(script), true, null));
   console.log(script);
   global.eval(script);
+};
+const print = (value) => {
+  if (typeof value === "function")
+    return "function";
+  if (typeof value === "object")
+    return value ? "object" : "null";
+  if (typeof value === "string")
+    return JSON.stringify(value);
+  return String(value);
 };
 ///////////////
 // Modifiers //
@@ -19,14 +27,12 @@ const pass = function () { return arguments[arguments.length-2] };
   "swap",
   "drop",
   "read",
+  "arrival",
   "builtin",
-  "this",
-  "callee",
-  "arguments",
   "catch",
   "primitive",
   "regexp",
-  "closure",
+  "function",
   "discard",
   "completion",
   "success",
@@ -56,12 +62,12 @@ const noop = () => {};
 ///////////////
 // Combiners //
 ///////////////
-META.apply = (strict, closure, values, serial) =>
-  Reflect.apply(closure, strict ? undefined : global, values);
+META.apply = (strict, callee, values, serial) =>
+  Reflect.apply(callee, strict ? undefined : global, values);
+META.construct = (callee, values, serial) =>
+  Reflect.construct(callee, values);
 META.invoke = (object, key, values, serial) =>
   Reflect.apply(object[key], object, values);
-META.construct = (closure, values, serial) =>
-  Reflect.construct(closure, values);
 META.unary = (operator, argument, serial) =>
   eval(operator+" argument");
 META.binary = (operator, left, right, serial) =>
@@ -86,7 +92,7 @@ META.object = (properties, serial) =>
 //   if (name.toLowerCase === name) {
 //     const trap = META[name];
 //     META[name] = function () {
-//       console.log(name+" "+Array.from(arguments).map(PrintLite).join(" "));
+//       console.log(name+" "+Array.from(arguments).map(print).join(" "));
 //       return Reflect.apply(trap, this, arguments);
 //     };
 //   }

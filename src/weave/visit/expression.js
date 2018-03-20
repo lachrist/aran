@@ -70,9 +70,9 @@ exports.ObjectExpression = (node) => (
                 Visit.expression(property.value)]]))]),
     ARAN.cut.object([])));
 
-exports.ArrowFunctionExpression = (node) => Util.closure(node);
+exports.ArrowFunctionExpression = (node) => Util.function(node);
 
-exports.FunctionExpression = (node) => Util.closure(node);
+exports.FunctionExpression = (node) => Util.function(node);
 
 exports.SequenceExpression = (node) => ARAN.build.sequence(
   ArrayLite.map(
@@ -89,7 +89,7 @@ exports.UnaryExpression = (node) => (
       "typeof",
       ARAN.build.apply(
         null,
-        ARAN.build.closure(
+        ARAN.build.function(
           false,
           ARAN.build.Try(
             ARAN.build.Return(

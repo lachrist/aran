@@ -199,7 +199,7 @@ exports.object = (properties) => ({
     value: property[1]
   }))});
 
-exports.closure = (strict, statements) => ({
+exports["function"] = (strict, statements) => ({
   type: "FunctionExpression",
   AranPure: true,
   generator: false,

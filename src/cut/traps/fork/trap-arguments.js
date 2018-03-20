@@ -19,8 +19,7 @@ exports.combiners = {
   apply: [primitive, identity, array],
   construct: [identity, array],
   unary: [primitive, identity],
-  binary: [primitive, identity, identity],
-  arrival: [primitive, identity, identity, identity]};
+  binary: [primitive, identity, identity]};
 
 exports.modifiers = {
   // chainers //
@@ -31,10 +30,11 @@ exports.modifiers = {
   read: [primitive, identity],
   discard: [primitive, identity],
   builtin: [primitive, identity],
+  arrival: [identity],
   catch: [identity],
   primitive: [identity],
   regexp: [identity],
-  closure: [identity],
+  function: [identity],
   // consumers //
   drop: [identity],
   declare: [primitive, primitive, identity],

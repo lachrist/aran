@@ -3,4 +3,4 @@ function fac (x) {
     return 1;
   return x * fac(x - 1);
 }
-console.log(fac(6));
+console.log("6! is "+fac(6));

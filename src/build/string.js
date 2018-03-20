@@ -50,7 +50,7 @@ exports.object = (properties) => (
     ",") +
   "}");
 
-exports.closure = (strict, statements) => (
+exports["function"] = (strict, statements) => (
   "function(){" +
   (strict ? "\"use-strict\";" : "") +
   ArrayLite.join(statements, "") +

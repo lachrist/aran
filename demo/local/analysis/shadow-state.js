@@ -1,24 +1,32 @@
 const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
-const PrintLite = require("print-lite");
 //////////////
 // Membrane //
 //////////////
+const print = (value) => {
+  if (typeof value === "function")
+    return "function";
+  if (typeof value === "object")
+    return value ? "object" : "null";
+  if (typeof value === "string")
+    return JSON.stringify(value);
+  return String(value);
+};
 let counter = 0;
 const consume = (name, infos, value, serial) => {
-  postMessage(name+"("+infos.concat([vstack.pop(), serial]).join(", ")+")\n");
+  console.log(name+"("+infos.concat([vstack.pop()]).join(", ")+", @"+serial+")");
   return value;
 };
 const produce = (name, infos, value, serial) => {
-  const right = name+"("+infos.concat([PrintLite(value), serial]).join(", ")+")";
-  postMessage("#"+(++counter)+" = "+right+"\n");
+  const right = name+"("+infos.concat([print(value)]).join(", ")+", @"+serial+")";
+  console.log("#"+(++counter)+" = "+right);
   vstack.push("&"+counter);
   return value;
 };
 const combine = (value, name, infos, serial) => {
-  const right = name+"("+infos.reverse().concat([serial]).join(", ")+")";
-  postMessage("#"+(++counter)+"["+PrintLite(value)+"] = "+right+"\n");
+  const right = name+"("+infos.reverse().join(", ")+", @"+serial+")";
+  console.log("#"+(++counter)+"["+print(value)+"] = "+right);
   vstack.push("&"+counter);
   return value;
 };
@@ -65,21 +73,15 @@ META.drop = (value, serial) => {
 ///////////////
 // Producers //
 ///////////////
-["primitive", "regexp", "closure", "this", "arguments", "catch"].forEach((name) => {
-  META[name] = (value, serial) => produce(name, [], value, serial);
-});
-META.callee = (value, serial) => {
-  cstack.push(scopes.get(value).concat([{
-    type: "closure",
-    binding: Object.create(null)
-  }]));
-  return produce("callee", [], value, serial);
-};
+META.primitive = (value, serial) =>
+  produce("primitive", [], value, serial);
+META.regexp = (value, serial) =>
+  produce("regexp", [], value, serial);
 META.builtin = (name, value, serial) =>
-  produce("builtin", [name], value, serial);
+  produce("builtin", ["'"+name+"'"], value, serial);
 META.discard = (identifier, value, serial) =>
-  produce("discard", [identifier], value, serial);
-META.closure = (value, serial) => {
+  produce("discard", ["'"+identifier+"'"], value, serial);
+META.function = (value, serial) => {
   let wrapper = function () {
     if (cstack.length)
       return new.target ?
@@ -97,9 +99,18 @@ META.closure = (value, serial) => {
       throw error;
     }
   };
-  delete wrapper.name;
+  Object.defineProperty(wrapper, "name", {value:value.name, configurable:true});
+  Object.defineProperty(wrapper, "length", {value:value.length, configurable:true});
+  wrapper.prototype = value.prototype || {constructor:wrapper};
   scopes.set(wrapper, cstack[cstack.length-1].slice());
-  return produce("closure", [], wrapper, serial);
+  return produce("function", [], wrapper, serial);
+};
+META.arrival = (value, serial) => {
+  cstack.push(scopes.get(value.callee).concat([{
+    type: "function",
+    binding: Object.create(null)
+  }]));
+  return produce("arrival", [], value, serial);
 };
 META.read = (identifier, value, serial) => {
   let call = cstack[cstack.length-1];
@@ -108,12 +119,12 @@ META.read = (identifier, value, serial) => {
     const frame = call[index];
     if (bind(frame, identifier)) {
       if (frame.type === "with")
-        return produce("read", [identifier], value, serial);
+        return produce("read", ["'"+identifier+"'"], value, 0);
       vstack.push(frame.binding[identifier]);
       return value;
     }
   };
-  return produce("read", [identifier], value, serial);
+  return produce("read", ["'"+identifier+"'"], value, 0);
 };
 META.catch = (value, serial) => {
   while (cstack.length) {
@@ -173,21 +184,21 @@ META.write = (identifier, value, serial) => {
     const frame = call[index];
     if (bind(frame, identifier)) {
       if (frame.type === "with")
-        return consume("write", [identifier], value, 0);
+        return consume("write", ["'"+identifier+"'"], value, 0);
       frame.binding[identifier] = vstack.pop();
       return value;
     }
   }
-  return consume("write", [identifier], value, 0);
+  return consume("write", ["'"+identifier+"'"], value, 0);
 };
 META.declare = (kind, identifier, value, serial) => {
   const call = cstack[cstack.length-1];
   let frame = call[call.length-1];
   if (kind === "var") {
     let index = call.length-1;
-    while (call[index].type !== "closure") {
+    while (call[index].type !== "function") {
       if (!index)
-        return consume("declare", ["var", identifier], value, 0);
+        return consume("declare", ["'var'", "'"+identifier+"'"], value, 0);
       index--;
     }
     frame = call[index];
@@ -207,7 +218,7 @@ META.begin = (serial) => {
   estack.push(null);
   if (aran.node(serial).AranParent) {
     cstack[cstack.length-1].push({
-      type: aran.node(serial).AranStrict ? "closure" : "block",
+      type: aran.node(serial).AranStrict ? "function" : "block",
       binding: Object.create(null)
     });
   } else {
@@ -261,10 +272,10 @@ META.construct = (value, values, serial) => combine(
   "construct", [cut(values.length), vstack.pop()], serial);
 META.unary = (operator, value, serial) => combine(
   eval(operator+" value"),
-  "unary", [vstack.pop(), operator], serial);
+  "unary", [vstack.pop(), "'"+operator+"'"], serial);
 META.binary = (operator, value1, value2, serial) => combine(
   eval("value1 "+operator+" value2"),
-  "binary", [vstack.pop(), vstack.pop(), operator], serial);
+  "binary", [vstack.pop(), vstack.pop(), "'"+operator+"'"], serial);
 META.get = (value1, value2, serial) => combine(
   value1[value2],
   "get", [vstack.pop(), vstack.pop()], serial);
