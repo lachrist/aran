@@ -9,33 +9,14 @@ Aran can also be used as a desugarizer much like [babel](https://babeljs.io).
 
 ## Getting Started
 
-The code transformation performed by Aran essentially consists in inserting calls to functions called *traps* at [ESTree](https://github.com/estree/estree) nodes specified by the user.
-For instance, the expression `x + y` could be transformed into `META.binary("+", x, y, 123)`.
-The last argument passed to traps is always a *serial* number which uniquely identifies the node which triggered the trap.
-These traps functions are collectively called *advice* and the specification that characterizes which node should trigger a given trap is called *pointcut*.
-The process of inserting trap calls based on a pointcut is called *weaving*.
-This terminology is borrowed from [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming).
-[demo/remote/apply](TODO) demonstrates these concepts.
-The instrumentation performed in this demonstrator is qualified as *remote* because it takes place on a process distinct from the one evaluating the instrumented code.
-
-![remote instrumentation](readme/remote.svg)
-
-<!-- <img src="readme/remote.svg" align="center" alt="remote-instrumentation" title="Aran's remote instrumentation"/>
- -->
-As shown in [demo/local/apply](TODO), Aran can also be used to perform *local* instrumentation -- i.e.: the instrumentation is performed on the process that also evaluates the instrumented code.
-Compared to remote instrumentation, local instrumentation enable direct communication between an advice and its associated Aran's instance.
-For instance, `aran.node(serial)` can invoked by the advice to retrieve the line index of the node that triggered a trap.
-An other good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
-Below is a minimal working example of local instrumentation in node:
-
 ```sh
 mkdir node_modules
-npm install aran acorn astring
+npm install acorn aran astring
 ```
 
 ```js
-const Aran = require("aran");
 const Acorn = require("acorn");
+const Aran = require("aran");
 const Astring = require("astring");
 global.META = {};
 META.primitive = (primitive, serial) => {
@@ -50,6 +31,22 @@ const estree2 = aran.weave(estree1, ["primitive"], null);
 const script2 = Astring.generate(estree2);
 global.eval(script2);
 ```
+
+The code transformation performed by Aran essentially consists in inserting calls to functions called *traps* at [ESTree](https://github.com/estree/estree) nodes specified by the user.
+For instance, the expression `x + y` could be transformed into `META.binary("+", x, y, 123)`.
+The last argument passed to traps is always a *serial* number which uniquely identifies the node which triggered the trap.
+These traps functions are collectively called *advice* and the specification that characterizes which node should trigger a given trap is called *pointcut*.
+The process of inserting trap calls based on a pointcut is called *weaving*.
+This terminology is borrowed from [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming).
+[demo/remote/apply](TODO) demonstrates these concepts.
+The instrumentation performed in this demonstrator is qualified as *remote* because it takes place on a process distinct from the one evaluating the instrumented code.
+
+![remote instrumentation](readme/remote.svg)
+
+As shown in [demo/local/apply](TODO), Aran can also be used to perform *local* instrumentation -- i.e.: the instrumentation is performed on the process that also evaluates the instrumented code.
+Compared to remote instrumentation, local instrumentation enable direct communication between an advice and its associated Aran's instance.
+For instance, `aran.node(serial)` can invoked by the advice to retrieve the line index of the node that triggered a trap.
+An other good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
 
 ## Demonstrators
 
@@ -90,7 +87,7 @@ global.eval(script2);
 
 ### Syntactic Nodes
 
-Aran visits the *statement nodes* and *expression nodes* of an [ESTree](https://github.com/estree/estree).
+Aran visits the *statement nodes* and *expression nodes* of a given ESTree.
 Within an ESTree, a node is called statement node if it can be replaced by any other statement while conserving the syntactic validity of the program.
 Same goes for expression node at the exception of syntactic [getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) and [setters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set) which are considered node expression even though they cannot be replaced by non-function expressions.
 For instance, in the program `for (var k = x in o) ...`, the variable declaration `var k = x` does not correspond to a statement node but `x` does correspond to an expression node.
@@ -113,10 +110,10 @@ When Aran instruments a program, all its statement nodes and all its expression 
 ### `aran = require("aran")(options)`
 
 Create a new Aran instance.
-* `options.namespace :: string` default: `"META"`.
+* `options.namespace :: string`, default `"META"`:
   The name of the global variable holding the advice.
   Code instrumented by this aran instance will not be able to read, write or shadow this variable.
-* `options.output :: string | object` default: `"EstreeOptimized"`.
+* `options.output :: string | object`, default `"EstreeOptimized"`:
   The output format of the `aran.weave` method.
   If it is an object, it should be a builder ressembling the ones at [src/build](src/build).
   If it is a string, it should be one of:
@@ -127,18 +124,21 @@ Create a new Aran instance.
     This is useful to debug Aran itself.
   * `"String"`: directly produces an unoptimized and compact code string.
     This should result in a slightly faster instrumentation than the other output options.
-* `options.nocache :: boolean` default: `false`.
-  A boolean indicating whether aran should keep an array of node indexed by serial number.
-  If this options is truthy, `aran.node(serial)` will explores the ast which is `O(log(n))` rather than accessing the cache which is `O(1)`.
-* `options.sandbox :: boolean` default: `false`.
+* `options.nocache :: boolean`, default `false`:
+  A boolean indicating whether aran should keep an array of nodes indexed by serial number.
+* `options.sandbox :: boolean`, default `false`:
   A boolean indicating whether instrumented code should a use a custom object as [global object](https://developer.mozilla.org/en-US/docs/Glossary/Global_object).
   If this options is truthy, code weaved without parent will contain a [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) whose environment object is a [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
   This proxy will also solve a transparency breakage by restoring identifiers sanitized by Aran.
+* `aran :: aran.Aran`.
+  The newly created aran instance.
 
 ### `output = aran.setup()`
 
 Build the setup code that should be evaluated before any instrumented code.
-* `output :: *`.
+* `aran :: aran.Aran`:
+  An Aran instance.
+* `output :: *`:
   The setup code whose format depends on `options.output`.
 
 The code simply populate the advice with the couple of properties summarized below.
@@ -147,12 +147,13 @@ Key                            |  Value                                         
 -------------------------------|-------------------------------------------------------------------|------------------
 `EVAL`                         | `eval`                                                            | direct [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) calls
 `PROXY`                        | `Proxy`                                                           | sandboxing and [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with)
-`WHANDLERS`                    | `{ has, get, set, deleteProperty }`                               | [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with)
+`WHANDLERS`                    | `{ ... }`                                                         | [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with)
 `DEFINE`                       | `Object.defineProperty`                                           | [arguments.callee](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments/callee), [function.name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name), [function.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/length) and sandbox declaration
 `GLOBAL` (sandbox falsy)       | `("indirect", eval)("this")`                                      | sandboxing and getting globals 
 `GLOBAL` (sandbox truthy)      | `sandbox`                                                         | getting globals
 `DECLARATION` (sandbox truthy) | `true`                                                            | sandbox declaration/assignment
 `RERROR` (sandbox truthy)      | `ReferenceError`                                                  | sandbox assignment/read
+`GHANDLERS` (sandbox truthy)   | `{ ... }`                                                         | sandboxing
 `GLOBAL_global`                | `META.GLOBAL.global`                                              | [spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
 `GLOBAL_TypeError`             | `META.GLOBAL.TypeError`                                           | [arrow function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
 `GLOBAL_eval`                  | `META.GLOBAL.eval`                                                | direct [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) calls
@@ -165,42 +166,50 @@ Key                            |  Value                                         
 ### `output = aran.weave(estree, pointcut, parent)`
 
 Insert calls to trap functions at nodes specified by the pointcut.
-* `estree :: ESTree.Program`.
+* `aran :: aran.Aran`
+* `estree :: estree.Program`:
   The [ESTree Program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
-* `pointcut :: function | object | array` default:  `[]`.
-  The specification that tells aran where to insert calls to the advice.
-  Aran support four specification formats:
-  * `array`: an array containing the names of the traps to insert everywhere.
-    For instance, the poincut below results in aran inserting the `binary` trap everywhere:
-  * `function`: a function that receives the name of the trap to insert and the node where to insert it.
-    It should returns a boolean value that indicate whether or not to insert the trap.
+* `pointcut :: array | function | object | *`, default `false`:
+  The specification that tells Aran where to insert trap calls.
+  Four specification formats are supported:
+  * `array`:
+    An array containing the names of the traps to insert everywhere.
+    For instance, the poincut `["binary"]` indicates aran to insert `binary` traps whenever applicable.
+  * `function`:
+    A function that tells whether to insert a given trap at a given node.
     For instance, the pointcut below results in aran inserting a call to the `binary` trap at every update expression:
     ```js
     const pointcut = (name, node) => node.type === "UpdateExpression" && name === "binary";
     ```
-  * `object`: an object whose property keys are trap names and property values are functions recieving a node.
-    As for the `function` format, these functions should return a boolean indicating wether to insert the trap call.
+  * `object`:
+    An object whose property keys are trap names and property values are functions receiving a node.
+    As for the `function` format, these functions should return a boolean indicating whether to insert the trap call.
     For instance, the pointcut below has the same semantic as the one above:
     ```js
     const pointcut = { binary: (node) => node.type === "UpdateExpression" };
     ```
-  * `*`: if truthy, insert all the traps everywhere; if falsy, insert none of the trap nowhere.
-* `parent :: ESTree | null` default : `null`.
-  In the event of instrumenting code before passing it to a *direct* eval call, `parent` should refer the node performing the call to the eval function.
-  Otherwise it should be `null`; in which case, their will be no with statements inserted for sandboxing.
-* `output :: *`.
+  * `*`:
+    If truthy, all traps are to be inserted when applicable,
+    If falsy, insert never insert any trap.
+* `parent :: ESTree | null`, default `null`:
+  In the event of instrumenting code before passing it to a direct eval call, this argument should refer to the node performing the call to the eval function.
+  Otherwise it should be `null`.
+* `output :: *`:
   The instrumented output whose format depends on `options.output`.
 
 ### `node = aran.node(serial)`
 
 Retrieve a node from its serial number.
-If `options.nocache` is truthy, this method will explore the ESTree (`O(log(n))`), else it will access the cache (`O(1)`).
-* `serial :: number`.
+If `options.nocache` is truthy, this method will explore the ESTrees which is has a complexity growing linearly with the depth of the trees.
+If `options.nocache` is falsy, this methods simply resolves into an array access.
+* `aran :: aran.Aran`
+* `serial :: number`
 * `node :: ESTree | undefined`
 
 ### `root = aran.root(serial)`
 
-Retrieve the program node that contains the node at the given serial number.
+Retrieve the ESTree Program node that contains the node at the given serial number.
+* `aran :: aran.Aran`
 * `serial :: number`
 * `root :: ESTree.Program | undefined`
 
@@ -208,7 +217,6 @@ Retrieve the program node that contains the node at the given serial number.
 
 Traps are functions of the advice provided by the user.
 All traps are independently optional and they all receive as last argument an integer which is the index of the ESTree node that triggered the trap.
-In this readme, `123` is used as a dummy serial number.
 We categorized traps depending on their insertion mechanism.
 
 * *Combiners*: replacements for some expression nodes.
@@ -216,17 +224,17 @@ We categorized traps depending on their insertion mechanism.
   Their transparent implementation is trap-dependent.
   For instance:
   ```js
-  // x + y >> META.binary("+", x, y, 123)
-  META.binary = (operator, left, right, serial) => eval("left "+operator+" right");
+  o.k(x) >> META.invoke(o, "k", [x], 123);
+  META.invoke = (object, key, values, serial) => Reflect.apply(object[key], object, values);
   ```
-  Combiners pop some values from the value stack and push exactly one value on top of it.
+  Combiners pop some values from the value-stack and push exactly one value on top of it.
 * *Modifiers*: surround some expression nodes.
   These traps are given a single value from the target program which they can freely modify.
   Their transparent implementation consists in returning the second last argument.
   For instance:
   ```js
-  // x ? y : z >> META.test(x, 123) : y : z
-  META.test = (value, serial) => value;
+  // x >> META.read("x", x, 123)
+  META.read = (identifier, value, serial) => value;
   ```
   Additionally most modifiers fall into the two subcategories based on their impact on the value stack:
   * *Producers*: produce a value on top of the value stack -- e.g.: `primitive`.
@@ -266,9 +274,6 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
 `discard`     | `identifier:string`  | `produced:value`    | `serial:number`     |                   
 `builtin`     | `name:string`        | `produced:value`    | `serial:number`     |                   
 `arrival`     | `produced:value`     | `serial:number`     |                     |                   
-`callee`      | `produced:value`     | `serial:number`     |                     |                   
-`this`        | `produced:value`     | `serial:number`     |                     |                   
-`arguments`   | `produced:value`     | `serial:number`     |                     |                   
 `catch`       | `produced:value`     | `serial:number`     |                     |                   
 `primitive`   | `produced:value`     | `serial:number`     |                     |                   
 `regexp`      | `produced:value`     | `serial:number`     |                     |                   
@@ -388,3 +393,14 @@ Here are the known heisenbugs that Aran may introduce by itself:
   }
   f("foo");
   ```
+
+## Acknowledgement
+
+I am [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd student at the Vrij Universiteit of Brussel (VUB).
+I am working at the SOFT language lab in close relation with my promoters [Coen De Roover](http://soft.vub.ac.be/soft/members/cderoove) and [Wolfgang De Meuter](http://soft.vub.ac.be/soft/members/wdmeuter).
+I'm currently being employed on the [Tearless](http://soft.vub.ac.be/tearless/pages/index.html) project.
+
+![tearless](readme/tearless.png)
+![soft](readme/soft.png)
+![vub](readme/vub.png)
+
