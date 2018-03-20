@@ -18,8 +18,10 @@ This terminology is borrowed from [aspect-oriented programming](https://en.wikip
 [demo/remote/apply](TODO) demonstrates these concepts.
 The instrumentation performed in this demonstrator is qualified as *remote* because it takes place on a process distinct from the one evaluating the instrumented code.
 
-<img src="readme/remote.svg" align="center" alt="remote-instrumentation" title="Aran's remote instrumentation"/>
+![remote instrumentation](readme/remote.svg)
 
+<!-- <img src="readme/remote.svg" align="center" alt="remote-instrumentation" title="Aran's remote instrumentation"/>
+ -->
 As shown in [demo/local/apply](TODO), Aran can also be used to perform *local* instrumentation -- i.e.: the instrumentation is performed on the process that also evaluates the instrumented code.
 Compared to remote instrumentation, local instrumentation enable direct communication between an advice and its associated Aran's instance.
 For instance, `aran.node(serial)` can invoked by the advice to retrieve the line index of the node that triggered a trap.
