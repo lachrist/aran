@@ -343,7 +343,7 @@ Here are the known heisenbugs that Aran may introduce by itself:
   console.log($$error, global.error, global.$$error);
   ```
   This heisenbug can be alleviated by turning the sandbox option on.
-* *Advice Access*:
+* *Access to the Advice*:
   Consider the snippet below which makes the advice available as a global variable.
   If the `script` code accesses the `global.META`, havoc will ensue. 
   ```js
@@ -363,7 +363,7 @@ Here are the known heisenbugs that Aran may introduce by itself:
   However this is not a complete solution because although the `META` identifier is sanitized, `aran` is still accessible from the target program.
   A complete solution can be obtained by turning the sandbox option on.
   In that case, only the lookup of `META` will be able to reach to outside scope.
-* *Temporal Deadzone (`typeof`)*:
+* *Typeof in the Temporal Deadzone*:
   Aran does not hoist `let` and `const` declarations so it cannot make the difference between an undeclared variable and an undefined variable.
   To the best of our knowledge, this distinction is only necessary when `typeof` is involved.
   This approximation simplifies both Aran's internal structure and analyses modeling the environment.
@@ -397,7 +397,7 @@ Here are the known heisenbugs that Aran may introduce by itself:
   f("foo");
   ```
 
-## Acknowledgement
+## Acknowledgments
 
 I'm [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd student at the Vrij Universiteit of Brussel (VUB).
 I'm working at the SOFT language lab in close relation with my promoters [Coen De Roover](http://soft.vub.ac.be/soft/members/cderoove) and [Wolfgang De Meuter](http://soft.vub.ac.be/soft/members/wdmeuter).
