@@ -76,7 +76,7 @@ An other good reason for the advice to communicate with Aran arises when the tar
    * Generator functions ([`function*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), [`yield`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield),[`yield*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield*)).
    * Asynchronous functions ([`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)).
    * [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals).
-2) There exists loopholes that will cause the target program to behave differentially when analyzed, this is discussed in [Heisenbugs](#heisenbugs).
+2) There exists loopholes that will cause the target program to behave differentially when analyzed, this is discussed in [Known Heisenbugs](#known-heisenbugs).
 3) Aran does not provide any facilities for instrumenting modularized JavaScript applications.
    To instrument server-side node applications and client-side browser applications we rely on a separate module called [Otiluke](https://github.com/lachrist/otiluke).
 4) Aran does not offer an out-of-the-box interface for tracking primitive values through the object graph.
@@ -89,22 +89,22 @@ An other good reason for the advice to communicate with Aran arises when the tar
 
 Aran visits the *statement nodes* and *expression nodes* of a given ESTree.
 Within an ESTree, a node is called statement node if it can be replaced by any other statement while conserving the syntactic validity of the program.
-Same goes for expression node at the exception of syntactic [getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) and [setters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set) which are considered node expression even though they cannot be replaced by non-function expressions.
-For instance, in the program `for (var k = x in o) ...`, the variable declaration `var k = x` does not correspond to a statement node but `x` does correspond to an expression node.
+Same goes for expression nodes.
+The only exception being [getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) and [setters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set) which are considered node expressions even though they cannot be replaced by non-function expressions.
 When Aran instruments a program, all its statement nodes and all its expression nodes will be annotated with the following fields:
 
-* `AranSerial :: number`.
+* `AranSerial :: number`:
   The node's serial number.
-* `AranMaxSerial :: number`.
+* `AranMaxSerial :: number`:
   The maximum serial number which can be found within the node's decedents.
-  This is useful to speed up serial number lookups.
-* `AranParent :: ESTree | *`.
+  This is useful to speed up node search.
+* `AranParent :: ESTree | *`:
   The node's parent.
-  If the node is of type `"Program"`, then this field will be the third argument passed to `aran.join(program, pointcut, parent)`. 
+  If the node is of type `"Program"`, then this field will be the third argument passed to `aran.weave`. 
   This field is not enumerable to prevent `JSON.stringify` from complaining about circularity.
-* `AranParentSerial :: number | null`.
+* `AranParentSerial :: number | null`:
   The parent's serial number of the node (if any).
-* `AranStrict :: boolean`
+* `AranStrict :: boolean`:
   Indicates whether the node is in [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) or not.
 
 ### `aran = require("aran")(options)`
@@ -114,23 +114,29 @@ Create a new Aran instance.
   The name of the global variable holding the advice.
   Code instrumented by this aran instance will not be able to read, write or shadow this variable.
 * `options.output :: string | object`, default `"EstreeOptimized"`:
-  The output format of the `aran.weave` method.
+  The output format of `aran.weave` and `aran.setup`.
   If it is an object, it should be a builder ressembling the ones at [src/build](src/build).
   If it is a string, it should be one of:
-  * `"ESTree"`: regular [ESTree](https://github.com/estree/estree).
-  * `"ESTreeOptimized"`: an optimized and more compact ESTree.
+  * `"ESTree"`:
+    Regular ESTree.
+  * `"ESTreeOptimized"`:
+    An optimized and more compact ESTree.
     The performance cost of the optimization pass should barely be noticeable. 
-  * `"ESTreeValid"`: same as `"ESTree"` but performs various checks before constructing each node.
+  * `"ESTreeValid"`:
+    Same as `"ESTree"` but performs various checks before constructing each node.
     This is useful to debug Aran itself.
-  * `"String"`: directly produces an unoptimized and compact code string.
+  * `"String"`:
+    Directly produces an unoptimized and compact code string.
     This should result in a slightly faster instrumentation than the other output options.
 * `options.nocache :: boolean`, default `false`:
   A boolean indicating whether aran should keep an array of nodes indexed by serial number.
+  A truthy options will result in a faster execution of `aran.node`.
 * `options.sandbox :: boolean`, default `false`:
-  A boolean indicating whether instrumented code should a use a custom object as [global object](https://developer.mozilla.org/en-US/docs/Glossary/Global_object).
+  A boolean indicating whether instrumented code should use a custom object as [global object](https://developer.mozilla.org/en-US/docs/Glossary/Global_object).
   If this options is truthy, code weaved without parent will contain a [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) whose environment object is a [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
   This proxy will also solve a transparency breakage by restoring identifiers sanitized by Aran.
-* `aran :: aran.Aran`.
+  This is expected to produce noticeable performance overhead.
+* `aran :: aran.Aran`:
   The newly created aran instance.
 
 ### `output = aran.setup()`
@@ -141,7 +147,7 @@ Build the setup code that should be evaluated before any instrumented code.
 * `output :: *`:
   The setup code whose format depends on `options.output`.
 
-The code simply populate the advice with the couple of properties summarized below.
+The setup code simply set to the advice the couple of properties summarized below.
 
 Key                            |  Value                                                            | Usage 
 -------------------------------|-------------------------------------------------------------------|------------------
@@ -173,17 +179,17 @@ Insert calls to trap functions at nodes specified by the pointcut.
   The specification that tells Aran where to insert trap calls.
   Four specification formats are supported:
   * `array`:
-    An array containing the names of the traps to insert everywhere.
-    For instance, the poincut `["binary"]` indicates aran to insert `binary` traps whenever applicable.
+    An array containing the names of the traps to insert at every applicable cut point.
+    For instance, the poincut `["binary"]` indicates aran to insert the `binary` traps whenever applicable.
   * `function`:
     A function that tells whether to insert a given trap at a given node.
     For instance, the pointcut below results in aran inserting a call to the `binary` trap at every update expression:
     ```js
-    const pointcut = (name, node) => node.type === "UpdateExpression" && name === "binary";
+    const pointcut = (name, node) => name === "binary" && node.type === "UpdateExpression" ;
     ```
   * `object`:
-    An object whose property keys are trap names and property values are functions receiving a node.
-    As for the `function` format, these functions should return a boolean indicating whether to insert the trap call.
+    An object whose keys are trap names and values are functions receiving nodes.
+    As for the `function` format, these functions should return a boolean indicating whether to insert the call.
     For instance, the pointcut below has the same semantic as the one above:
     ```js
     const pointcut = { binary: (node) => node.type === "UpdateExpression" };
@@ -200,8 +206,8 @@ Insert calls to trap functions at nodes specified by the pointcut.
 ### `node = aran.node(serial)`
 
 Retrieve a node from its serial number.
-If `options.nocache` is truthy, this method will explore the ESTrees which is has a complexity growing linearly with the depth of the trees.
-If `options.nocache` is falsy, this methods simply resolves into an array access.
+If `options.nocache` is truthy, this method will explore the ESTrees which has a complexity growing linearly with the depth of the trees.
+If `options.nocache` is falsy, this methods resolves to a much quicker array access.
 * `aran :: aran.Aran`
 * `serial :: number`
 * `node :: ESTree | undefined`
@@ -219,16 +225,16 @@ Traps are functions of the advice provided by the user.
 All traps are independently optional and they all receive as last argument an integer which is the index of the ESTree node that triggered the trap.
 We categorized traps depending on their insertion mechanism.
 
-* *Combiners*: replacements for some expression nodes.
+* *Combiners*: replacements for expression nodes.
   These traps are given several values from the target program which they can freely combine.
   Their transparent implementation is trap-dependent.
   For instance:
   ```js
-  o.k(x) >> META.invoke(o, "k", [x], 123);
+  // o.k(x) >> META.invoke(o, "k", [x], 123);
   META.invoke = (object, key, values, serial) => Reflect.apply(object[key], object, values);
   ```
   Combiners pop some values from the value-stack and push exactly one value on top of it.
-* *Modifiers*: surround some expression nodes.
+* *Modifiers*: surround expression nodes.
   These traps are given a single value from the target program which they can freely modify.
   Their transparent implementation consists in returning the second last argument.
   For instance:
@@ -239,7 +245,7 @@ We categorized traps depending on their insertion mechanism.
   Additionally most modifiers fall into the two subcategories based on their impact on the value stack:
   * *Producers*: produce a value on top of the value stack -- e.g.: `primitive`.
   * *Consumers*: consume the value on top of the value stack -- e.g.: `test`.
-* *Informers*: wrapped into an expression statement.
+* *Informers*: result is discarded.
   These traps are only given static syntactic information.
   Their transparent implementation consists in doing nothing.
   For instance:
@@ -249,22 +255,19 @@ We categorized traps depending on their insertion mechanism.
   ```
   Informers don't have any effect on the value stack.
 
-The below table list all the traps Aran can insert.
-[This demonstrator](TODO) can be use to experiment how traps are inserted.
-
 Name          | arguments[0]         | arguments[1]        | arguments[2]        | arguments[3]      
 --------------|----------------------|---------------------|---------------------|-------------------
 **Combiners** |                      |                     |                     |                   
-`object`      | `properties:`<br>`[{0:value,1:value}]` | `serial:number` |       |                   
-`array`       | `elements:[value]`   | `serial:number`     |                     |                   
-`get`         | `object:value`       | `key:value`         | `serial:number`     |                   
-`set`         | `object:value`       | `key:value`         | `value:value`       | `serial:number`   
-`delete`      | `object:value`       | `key:value`         | `serial:number`     |                   
-`invoke`      | `object:value`       | `key:value`         | `arguments:[value]` | `serial:number`   
 `apply`       | `strict:boolean`     | `function:value`    | `arguments:[value]` | `serial:number`   
+`invoke`      | `object:value`       | `key:value`         | `arguments:[value]` | `serial:number`   
 `construct`   | `constructor:value`  | `arguments:[value]` | `serial:number`     |                   
 `unary`       | `operator:string`    | `argument:value`    | `serial:number`     |                   
 `binary`      | `operator:string`    | `left:value`        | `right:value`       | `serial:number`   
+`get`         | `object:value`       | `key:value`         | `serial:number`     |                   
+`set`         | `object:value`       | `key:value`         | `value:value`       | `serial:number`   
+`delete`      | `object:value`       | `key:value`         | `serial:number`     |                   
+`object`      | `properties:`<br>`[{0:value,1:value}]` | `serial:number` |       |                   
+`array`       | `elements:[value]`   | `serial:number`     |                     |                   
 **Modifiers** |                      |                     |                     |                   
 `copy`        | `position:number`    | `forward:*`         | `serial:number`     |                   
 `drop`        | `forward:*`          | `serial:number`     |                     |                   
