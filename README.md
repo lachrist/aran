@@ -305,20 +305,20 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
 ## Known Heisenbugs
 
 When dynamically analyzing a program it is implicitly assumed that the analysis will conserve its behavior.
-Behavioral divergences are called [heisenbugs](https://en.wikipedia.org/wiki/Heisenbug).
-Heisenbugs are undesirables because they compromise the conclusion drawn by the analysis.
+If this is not the case, the analysis might draw erroneous conclusions.
+Behavioral divergences caused by analyses over the programs they target are called [heisenbugs](https://en.wikipedia.org/wiki/Heisenbug).
 Here are the known heisenbugs that Aran may introduce by itself:
 
-* *Performance Overhead*
+* *Performance Overhead*:
   A program being dynamically analyzed will necessarily perform slower.
-  Events might interleave in a differently or malicious code might detect the overhead.
+  Events might interleave in a different order or malicious code might detect the overhead.
   Unfortunately there is no general solution to this problem. 
-* *Code Reification*
+* *Code Reification*:
   Whenever the target program can obtain a representation of itself, the original code should be returned and not its instrumented version.
-  [`Function.prototype.toString`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/toString) and `[ScriptElement.textContent]`(https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) are both instance
+  [`Function.prototype.toString`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/toString) and [`ScriptElement.textContent`](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) are both instance of code reification.
   Aran does not deal with code reification at the moment.
-* *Modified Global Variables*
-  Aran sanitize identifiers to prevent clashes with a function similar to: 
+* *Modified Global Variables*:
+  To prevent clashes, Aran sanitizes identifiers with a function similar to: 
   ```js
   function sanitize (identifier) {
     if (identifier === "new.target")
@@ -330,7 +330,7 @@ Here are the known heisenbugs that Aran may introduce by itself:
     return identifier;
   }
   ```
-  If a modified identifier is actually global variables, the global object will differ.
+  If a modified identifier is actually a global variable, the global object will differ.
   Consider the code below, it will output `foo foo undefined` but will output `foo undefined foo` under an empty Aran analysis.
   ```js
   // Original //
@@ -343,7 +343,7 @@ Here are the known heisenbugs that Aran may introduce by itself:
   console.log($$error, global.error, global.$$error);
   ```
   This heisenbug can be alleviated by turning the sandbox option on.
-* *Advice Access*
+* *Advice Access*:
   Consider the snippet below which makes the advice available as a global variable.
   If the `script` code accesses the `global.META`, havoc will ensue. 
   ```js
@@ -360,14 +360,14 @@ Here are the known heisenbugs that Aran may introduce by itself:
   eval(Astring.generate(aran.setup()));
   eval(Astring.generate(aran.weave(script)));
   ```
-  However this is not a complete solution because although the `META` is sanitized, `aran` is not.
+  However this is not a complete solution because although the `META` identifier is sanitized, `aran` is still accessible from the target program.
   A complete solution can be obtained by turning the sandbox option on.
-  Only the lookup of `META` will be able to reach to outside scope.
-* *Temporal Deadzone (`typeof`)*
-  Aran does not hoist `let` and `const` declaration so it cannot make the difference between an undeclared variable and an undefined variable.
+  In that case, only the lookup of `META` will be able to reach to outside scope.
+* *Temporal Deadzone (`typeof`)*:
+  Aran does not hoist `let` and `const` declarations so it cannot make the difference between an undeclared variable and an undefined variable.
   To the best of our knowledge, this distinction is only necessary when `typeof` is involved.
   This approximation simplifies both Aran's internal structure and analyses modeling the environment.
-  Normally the code below should fail at the `typeof` line but it might not under Aran analysis.
+  Normally the code below should fail at the `typeof` line but it won't after inserting the `unary` trap:
   ```js
   // Original //
   {
@@ -385,8 +385,8 @@ Here are the known heisenbugs that Aran may introduce by itself:
     const x;
   }
   ```
-* [`arguments`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments)
-  Some analyses like [`demo/local/shadow-value.js`](demo/local/shadow-value.js) threat values differently when they are get/set to object than when they are read/written to the environment.
+* [`arguments`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments):
+  Some analyses like [`demo/local/analyses/shadow-value.js`](demo/local/analyses/shadow-value.js) threat values differently when they are get/set to object than when they are read/written to the environment.
   In non strict mode, the [arguments object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments) blurs this distinction which can lead to heisenbugs.
   In the code below, the `write` trap should be triggered with `"x"` and `"bar"` to account to for the sneaky variable assignment but it is not at the moment. 
   ```js
