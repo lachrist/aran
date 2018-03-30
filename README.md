@@ -1,4 +1,4 @@
-# Aran <img src="readme/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
+# Aran <img src="img/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
 
 Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting JavaScript code.
 To install, run `npm install aran`.
@@ -41,7 +41,7 @@ This terminology is borrowed from [aspect-oriented programming](https://en.wikip
 [demo/remote/apply](https://cdn.rawgit.com/lachrist/aran/db1885cb/demo/output/remote-apply-factorial.html) demonstrates these concepts.
 The instrumentation performed in this demonstrator is qualified as *remote* because it takes place on a process distinct from the one evaluating the instrumented code.
 
-![remote instrumentation](readme/remote.png)
+![remote instrumentation](img/remote.png)
 
 As shown in [demo/local/apply](https://cdn.rawgit.com/lachrist/aran/db1885cb/demo/output/local-apply-factorial.html), Aran can also be used to perform *local* instrumentation -- i.e.: the instrumentation is performed on the process that also evaluates the instrumented code.
 Compared to remote instrumentation, local instrumentation enable direct communication between an advice and its associated Aran's instance.
@@ -396,7 +396,7 @@ I'm [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd stud
 I'm working at the SOFT language lab in close relation with my promoters [Coen De Roover](http://soft.vub.ac.be/soft/members/cderoove) and [Wolfgang De Meuter](http://soft.vub.ac.be/soft/members/wdmeuter).
 I'm currently being employed on the [Tearless](http://soft.vub.ac.be/tearless/pages/index.html) project.
 
-![tearless](readme/tearless.png)
-![soft](readme/soft.png)
-![vub](readme/vub.png)
+![tearless](img/tearless.png)
+![soft](img/soft.png)
+![vub](img/vub.png)
 
