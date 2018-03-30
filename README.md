@@ -41,7 +41,7 @@ This terminology is borrowed from [aspect-oriented programming](https://en.wikip
 [demo/remote/apply](https://cdn.rawgit.com/lachrist/aran/db1885cb/demo/output/remote-apply-factorial.html) demonstrates these concepts.
 The instrumentation performed in this demonstrator is qualified as *remote* because it takes place on a process distinct from the one evaluating the instrumented code.
 
-![remote instrumentation](readme/remote.svg)
+![remote instrumentation](readme/remote.png)
 
 As shown in [demo/local/apply](https://cdn.rawgit.com/lachrist/aran/db1885cb/demo/output/local-apply-factorial.html), Aran can also be used to perform *local* instrumentation -- i.e.: the instrumentation is performed on the process that also evaluates the instrumented code.
 Compared to remote instrumentation, local instrumentation enable direct communication between an advice and its associated Aran's instance.
