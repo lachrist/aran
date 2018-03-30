@@ -11,33 +11,54 @@ module.exports = (root, parent) => {
   Completion(root);
   root.AranParent = parent;
   root.AranParentSerial = parent ? parent.AranSerial : null;
-  root.AranStrict = (
-    (
-      parent && parent.AranStrict) ||
-    (
-      root.body.length > 0 &&
-      root.body[0].type === "ExpressionStatement" &&
-      root.body[0].expression.type === "Literal" &&
-      root.body[0].expression.value === "use strict"));
+  const strict = (
+    root.body.length &&
+    root.body[0].type === "ExpressionStatement" &&
+    root.body[0].expression.type === "Literal" &&
+    root.body[0].expression.value === "use strict")
+  root.AranStrict = (parent && parent.AranStrict) || strict;
   root.AranSerial = ++ARAN.counter;
   if (ARAN.nodes)
     ARAN.nodes[root.AranSerial] = root;
   ARAN.hoisted = [];
   ARAN.node = root;
-  const statements = ArrayLite.flatenMap(
-    root.body,
-    Visit.Statement);
-  const result = ARAN.cut.PROGRAM(
-    root.AranStrict,
-    (
-      ARAN.sandbox && !parent ?
-      Meta.gproxy() :
-      null),
-    ArrayLite.concat(
-      ArrayLite.flaten(ARAN.hoisted),
-      statements));
+  const statements = ARAN.cut.$Program(
+    ArrayLite.flaten(
+      ArrayLite.reverse(
+        [
+          ArrayLite.flatenMap(root.body, Visit.Statement),
+          (
+            root.AranParent ?
+            [] :
+            ARAN.cut.Declare(
+              "const",
+              "this",
+              ARAN.cut.$load("global"))),
+          ArrayLite.flaten(ARAN.hoisted)])));
   ARAN.hoisted = null;
   ARAN.node = null;
   root.AranMaxSerial = ARAN.counter;
-  return result;
+  return ARAN.build.PROGRAM(
+    strict,
+    (
+      parent || !ARAN.sandbox ?
+      statements :
+      (
+        root.AranStrict ?
+        ARAN.build.With(
+          Meta.gproxy(true),
+          ARAN.build.Statement(
+            ARAN.build.apply(
+              ARAN.build.arrow(
+                [],
+                statements),
+              []))) :
+        ARAN.build.Statement(
+          ARAN.build.apply(
+            ARAN.build.arrow(
+              [],
+              ARAN.build.With(
+                Meta.gproxy(false),
+                statements)),
+            [])))));
 };

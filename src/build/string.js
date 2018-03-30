@@ -6,22 +6,11 @@ const stringify = JSON.stringify;
 // Program //
 /////////////
 
-exports.PROGRAM = (strict, expression, statements) => (
-  expression ?
-  (
-    "with(let completion;"
-    +expression
-    +"){"+
-    (
-      strict ?
-      "(function(){\"use strict\";"+statements+"}());" :
-      statements)+
-    "completion;}") :
-  (
-    (strict ? "\"use strict\";" : "") +
-    "let completion;" + 
-    ArrayLite.join(statements, "") +
-    "completion;"));
+exports.PROGRAM = (strict, statements) => (
+  (strict ? "\"use strict\";" : "") +
+  "let completion;" + 
+  ArrayLite.join(statements, "") +
+  "completion;");
 
 ////////////////
 // Expression //
@@ -51,10 +40,18 @@ exports.object = (properties) => (
   "}");
 
 exports["function"] = (strict, statements) => (
-  "function(){" +
+  "(function(){const callee=function(){" +
   (strict ? "\"use-strict\";" : "") +
+  "let arrival={callee:callee,new:new.target!==void 0,this:this,arguments:arguments};" +
   ArrayLite.join(statements, "") +
-  "}");
+  "};return callee;}())");
+
+exports.arrow = (identifiers, statements) => (
+  "((" +
+  ArrayLite.join(identifiers, ",") +
+  ")=>{" +
+  ArrayLite.join(statements, "") +
+  "})");
 
 exports.primitive = (primitive) => (
   primitive === void 0 ?
@@ -127,7 +124,7 @@ exports.construct = (expression, expressions) => (
   ArrayLite.join(expressions, ",") +
   "))");
 
-exports.apply = (boolean, expression, expressions) => (
+exports.apply = (expression, expressions) => (
   "(" +
   expression +
   "(" +

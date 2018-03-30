@@ -1,6 +1,9 @@
 const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
+
+let META = {};
+
 //////////////
 // Membrane //
 //////////////
@@ -28,45 +31,25 @@ const combine = (value, name, infos, serial) => {
   console.log("#"+(++counter)+"["+print(value)+"] = "+right);
   return {meta:"&"+counter, base:value};
 };
-///////////
-// Setup //
-///////////
-const aran = Aran({namespace:"META", sandbox:true});
-let META = {};
-const handlers = {};
-global.global = global;
-let sandbox = new Proxy(global, handlers);
-eval(Astring.generate(aran.setup()));
-handlers.get = (target, key, receiver) => typeof key === "symbol" ?
-  target[key] :
-  produce("read", ["'"+key+"'"], target[key], 0);
-handlers.set = (target, key, $value, receiver) => {
-  target[key] = consume("write", ["'"+key+"'"], $value, 0);
-};
-handlers.defineProperty = (target, key, descriptor) => {
-  descriptor.value = consume("declare", ["'var'", "'"+key+"'"], descriptor.value, 0);
-  return Reflect.defineProperty(target, key, descriptor);
-};
-const weave = (script, parent) =>
-  Astring.generate(aran.weave(Acorn.parse(script), Object.keys(META), parent));
-module.exports = (script) => eval(weave(script, null));
-const metaof = ($value) => $value.meta;
-const baseof = ($value) => $value.base;
+
 ///////////////
 // Consumers //
 ///////////////
+META.save = (name, $value, serial) =>
+  consume("save", ["'"+name+"'"], $value, serial);
 META.test = ($value, serial) =>
   consume("test", [], $value, serial);
 META.throw = ($value, serial) =>
   consume("throw", [], $value, serial);
 META.return = ($value, serial) =>
   consume("return", [], $value, serial);
-META.success = ($value, serial) =>
-  aran.node(serial).AranParent ? $value : consume("success", [], $value, serial);
+META.success = (strict, direct, $value, serial) =>
+  direct ? $value : consume("success", [], $value, serial);
 META.with = ($value, serial) =>
   new Proxy(consume("with", [], $value, serial), handlers);
 META.eval = ($value, serial) =>
   weave(consume("eval", [], $value, serial), aran.node(serial));
+
 ///////////////
 // Producers //
 ///////////////
@@ -80,20 +63,22 @@ META.catch = (value, serial) =>
   produce("catch", [], value, serial);
 META.discard = (identifier, value, serial) =>
   produce("discard", ["'"+identifier+"'"], value, serial);
-META.builtin = (name, value, serial) =>
-  produce("builtin", ["'"+name+"'"], value, serial);
-META.arrival = (value, serial) => {
-  value.callee = value.callee.base;
-  if (!aran.node(serial).AranStrict)
+META.load = (name, value, serial) =>
+  produce("load", ["'"+name+"'"], value, serial);
+META.arrival = (strict, value, serial) => {
+  if (!strict)
     value.arguments.callee = value.callee;
   return produce("arrival", [], value, serial);
 };
+
 ///////////////
 // Combiners //
 ///////////////
-META.apply = (strict, $value, $values, serial) => combine(
-  Reflect.apply($value.base, strict ? global : undefined, $values.map(baseof)),
-  "apply", [String(strict), $value.meta, "["+$values.map(metaof)+"]"], serial);
+const metaof = ($value) => $value.meta;
+const baseof = ($value) => $value.base;
+META.apply = ($value1, $value2, $values, serial) => combine(
+  Reflect.apply($value1.base, $value2.base, $values.map(baseof)),
+  "apply", [$value1.meta, $value2.meta, "["+$values.map(metaof)+"]"], serial);
 META.invoke = ($value1, $value2, $values, serial) => combine(
   Reflect.apply($value1.base[$value2.base], $value1.base, $values.map(baseof)),
   "invoke", [$value1.meta, $value2.meta, "["+$values.map(metaof)+"]"], serial);
@@ -126,3 +111,26 @@ META.object = ($properties, serial) => {
   });
   return combine(object, "object", ["["+mproperties+"]"], serial);
 };
+
+///////////
+// Setup //
+///////////
+const pointcut = Object.keys(META);
+const aran = Aran({namespace:"META", sandbox:true});
+const handlers = {};
+handlers.get = (target, key, receiver) => typeof key === "symbol" ?
+  target[key] :
+  produce("read", ["'"+key+"'"], target[key], null);
+handlers.set = (target, key, $value, receiver) => {
+  target[key] = consume("write", ["'"+key+"'"], $value, null);
+};
+handlers.defineProperty = (target, key, descriptor) => {
+  descriptor.value = consume("declare", ["'var'", "'"+key+"'"], descriptor.value, null);
+  return Reflect.defineProperty(target, key, descriptor);
+};
+global.global = global;
+let sandbox = new Proxy(global, handlers);
+eval(Astring.generate(aran.setup(pointcut)));
+const weave = (script, parent) =>
+  Astring.generate(aran.weave(Acorn.parse(script), pointcut, parent));
+module.exports = (script) => eval(weave(script, null));

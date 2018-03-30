@@ -4,8 +4,8 @@ const ArrayLite = require("array-lite");
 // stack : [..., iterator, array]
 // function (iterator, array) { return array }
 
-exports.rest = () => ARAN.build.function(
-  false,
+exports.rest = () => ARAN.build.arrow(
+  ["iterator", "array"],
   ArrayLite.concat(
     ARAN.build.Declare(
       "let",
@@ -20,11 +20,9 @@ exports.rest = () => ARAN.build.function(
             ARAN.cut.$copy(
               1,
               ARAN.cut.invoke(
-                ARAN.build.get(
-                  ARAN.cut.$copy(
-                    2,
-                    ARAN.build.read("arguments")),
-                  ARAN.build.primitive(0)),
+                ARAN.cut.$copy(
+                  2,
+                  ARAN.build.read("iterator")),
                 ARAN.cut.primitive("next"),
                 []))),
           ARAN.cut.primitive("done"))),
@@ -33,15 +31,11 @@ exports.rest = () => ARAN.build.function(
           ARAN.cut.set(
             ARAN.cut.$copy(
               2,
-              ARAN.build.get(
-                ARAN.build.read("arguments"),
-                ARAN.build.primitive(1))),
+              ARAN.build.read("array")),
             ARAN.cut.get(
               ARAN.cut.$copy(
                 1,
-                ARAN.build.get(
-                  ARAN.build.read("arguments"),
-                  ARAN.build.primitive(1))),
+                ARAN.build.read("array")),
               ARAN.cut.primitive("length")),
             ARAN.cut.get(
               ARAN.cut.$swap(
@@ -56,6 +50,4 @@ exports.rest = () => ARAN.build.function(
       ARAN.cut.$drop(
         ARAN.build.read("step"))),
     ARAN.build.Return(
-      ARAN.build.get(
-        ARAN.build.read("arguments"),
-        ARAN.build.primitive(1)))));
+      ARAN.build.read("array"))));

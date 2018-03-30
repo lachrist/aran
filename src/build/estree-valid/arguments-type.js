@@ -3,7 +3,7 @@
 // Program //
 /////////////
 
-exports.PROGRAM = ["boolean", ["nullable", "expression"], ["list", "statement"]];
+exports.PROGRAM = ["boolean", ["list", "statement"]];
 
 ////////////////
 // Expression //
@@ -14,6 +14,7 @@ exports.write = ["identifier", "expression"];
 exports.array = [["list", "expression"]];
 exports.object = [["list", {0:"expression",1:"expression"}]];
 exports.function = ["boolean", ["list", "statement"]];
+exports.arrow = [["list", "identifier"], ["list", "statement"]];
 exports.primitive = ["primitive"];
 exports.regexp = ["string", "string"];
 exports.get = ["expression", "expression"];
@@ -24,7 +25,7 @@ exports.unary = ["unary", "expression"];
 exports.delete = ["expression", "expression"];
 exports.discard = ["identifier"];
 exports.construct = ["expression", ["list", "expression"]];
-exports.apply = [["nullable", "boolean"], "expression", ["list", "expression"]];
+exports.apply = ["expression", ["list", "expression"]];
 exports.invoke = ["expression", "expression", ["list", "expression"]];
 exports.sequence = [["list", "expression"]];
 exports.eval = ["expression"];

@@ -35,8 +35,7 @@ exports.ObjectExpression = (node) => (
   ArrayLite.reduce(
     node.properties,
     (node, property) => ARAN.cut.apply(
-      null,
-      ARAN.cut.$builtin(["Object", "defineProperty"]),
+      ARAN.cut.$load("Object_defineProperty"),
       [
         node,
         (
@@ -88,9 +87,8 @@ exports.UnaryExpression = (node) => (
   ARAN.cut.unary(
       "typeof",
       ARAN.build.apply(
-        null,
-        ARAN.build.function(
-          false,
+        ARAN.build.arrow(
+          [],
           ARAN.build.Try(
             ARAN.build.Return(
               ARAN.cut.read(node.argument.name)),
@@ -303,7 +301,6 @@ exports.CallExpression = (node, local) => (
         node.callee.type !== "Identifier" ||
         node.callee.name !== "eval") ?
       ARAN.cut.apply(
-        node.AranStrict,
         Visit.expression(node.callee),
         ArrayLite.map(
           node.arguments,
@@ -312,7 +309,7 @@ exports.CallExpression = (node, local) => (
         ARAN.cut.binary(
           "===",
           ARAN.cut.read("eval"),
-          ARAN.cut.$builtin(["eval"])),
+          ARAN.cut.$load("eval")),
         (
           local = ARAN.cut.eval(
             (
@@ -350,14 +347,12 @@ exports.CallExpression = (node, local) => (
                   Interim.read("function")),
                 Interim.read("result")]))),
         ARAN.cut.apply(
-          node.AranStrict,
           ARAN.cut.read("eval"),
           ArrayLite.map(
             node.arguments,
             Visit.expression))))) :
   ARAN.cut.apply(
-    null,
-    ARAN.cut.$builtin(["Reflect", "apply"]),
+    ARAN.cut.$load("Reflect_apply"),
     [
       (
         node.callee.type === "MemberExpression" ?
@@ -378,7 +373,7 @@ exports.CallExpression = (node, local) => (
         (
           node.AranStrict ?
           ARAN.cut.primitive(void 0) :
-          ARAN.cut.$builtin(["global"]))),
+          ARAN.cut.$load("global"))),
       ARAN.build.sequence(
         ArrayLite.concat(
           [
@@ -394,12 +389,11 @@ exports.CallExpression = (node, local) => (
                   2,
                   1,
                   ARAN.build.apply(
-                    null,
                     Util.rest(),
                     [
                       ARAN.cut.invoke(
                         Visit.expression(argument.argument),
-                        ARAN.cut.$builtin(["Symbol", "iterator"]),
+                        ARAN.cut.$load("Symbol_iterator"),
                         []),
                       ARAN.cut.$swap(
                         2,

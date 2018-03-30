@@ -1,14 +1,7 @@
 const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
-global.META = {};
-const aran = Aran({namespace:"META"});
-global.eval(Astring.generate(aran.setup()));
-module.exports = (script) => {
-  script = Astring.generate(aran.weave(Acorn.parse(script), true, null));
-  console.log(script);
-  global.eval(script);
-};
+
 const print = (value) => {
   if (typeof value === "function")
     return "function";
@@ -18,6 +11,9 @@ const print = (value) => {
     return JSON.stringify(value);
   return String(value);
 };
+
+global.META = {};
+
 ///////////////
 // Modifiers //
 ///////////////
@@ -28,7 +24,8 @@ const pass = function () { return arguments[arguments.length-2] };
   "drop",
   "read",
   "arrival",
-  "builtin",
+  "load",
+  "save",
   "catch",
   "primitive",
   "regexp",
@@ -45,6 +42,7 @@ const pass = function () { return arguments[arguments.length-2] };
   "write",
   "declare",
 ].forEach((name) => { META[name] = pass });
+
 ///////////////
 // Informers //
 ///////////////
@@ -59,11 +57,12 @@ const noop = () => {};
   "label",
   "break"
 ].forEach((name) => { META[name] = noop });
+
 ///////////////
 // Combiners //
 ///////////////
-META.apply = (strict, callee, values, serial) =>
-  Reflect.apply(callee, strict ? undefined : global, values);
+META.apply = (callee, value, values, serial) =>
+  Reflect.apply(callee, value, values);
 META.construct = (callee, values, serial) =>
   Reflect.construct(callee, values);
 META.invoke = (object, key, values, serial) =>
@@ -85,6 +84,7 @@ META.object = (properties, serial) =>
     object[property[0]] = property[1];
     return object;
   }, {});
+
 //////////////////////////////
 // Logger (uncomment below) //
 //////////////////////////////
@@ -97,3 +97,14 @@ META.object = (properties, serial) =>
 //     };
 //   }
 // });
+
+///////////
+// Setup //
+///////////
+const aran = Aran({namespace:"META"});
+global.eval(Astring.generate(aran.setup(true)));
+module.exports = (script) => {
+  script = Astring.generate(aran.weave(Acorn.parse(script), true, null));
+  console.log(script);
+  global.eval(script);
+};

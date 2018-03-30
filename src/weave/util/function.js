@@ -44,7 +44,7 @@ exports.function = (node) => {
           ARAN.cut.primitive("new")),
         ARAN.cut.Throw(
           ARAN.cut.construct(
-            ARAN.cut.$builtin(["TypeError"]),
+            ARAN.cut.$load("TypeError"),
             [
               ARAN.cut.primitive((node.id ? node.id.name : ARAN.name)+" is not a constructor")])),
         []) :
@@ -103,7 +103,7 @@ exports.function = (node) => {
               ARAN.cut.get(
                 ARAN.build.read("arrival"),
                 ARAN.cut.primitive("arguments")),
-              ARAN.cut.$builtin(["Symbol", "iterator"]),
+              ARAN.cut.$load("Symbol_iterator"),
               []))),
         ArrayLite.flatenMap(
           node.params,
@@ -113,7 +113,6 @@ exports.function = (node) => {
               "let",
               pattern.argument,
               ARAN.build.apply(
-                null,
                 Util.rest(),
                 [
                   Interim.read("iterator"),

@@ -5,10 +5,9 @@
       return this.name || "anonymous";
     };
   },
-  apply: function (strict, callee, values, serial) {
+  apply: function (callee, value, values, serial) {
     console.log(depth+callee+"@"+serial+"("+values.join(", ")+")");
     depth += ".";
-    const value = strict ? undefined : self;
     const result = Reflect.apply(callee, value, values);
     depth = depth.substring(1);
     console.log(depth+result);

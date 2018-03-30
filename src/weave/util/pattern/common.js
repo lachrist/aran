@@ -69,7 +69,7 @@ module.exports = (transformers, pattern, string) => {
         string2 = "iterator"+(++counter),
         ARAN.cut.invoke(
           Interim.read(string1),
-          ARAN.cut.$builtin(["Symbol", "iterator"]),
+          ARAN.cut.$load("Symbol_iterator"),
           []))),
     ArrayLite.flatenMap(
       pattern.elements,
@@ -82,7 +82,6 @@ module.exports = (transformers, pattern, string) => {
               Interim.hoist(
                 "rest"+(++counter),
                 ARAN.build.apply(
-                  null,
                   Util.rest(),
                   [
                     Interim.read(string2),

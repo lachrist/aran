@@ -24,9 +24,9 @@ const naming = [
   "Error.prototype"
 ].map((name) => [eval(name), name]);
 
-module.exports = (aran, join) => {
+module.exports = (instrument) => {
 
-  const shadow = Shadow(aran, join);
+  const shadow = Shadow(instrument);
   const traps = {};
 
   const describe = (jsonify, object, key) => {

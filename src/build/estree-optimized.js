@@ -56,89 +56,123 @@ const nullable = (expression) => (
 // Program //
 /////////////
 
-exports.PROGRAM = (strict, expression, statements) => ({
+exports.PROGRAM = (strict, statements) => ({
   type: "Program",
-  body: (
-    expression ?
+  body: ArrayLite.concat(
+    (
+      strict ?
+      [
+        {
+          type: "StatementExpression",
+          expression: {
+            type: "Literal",
+            value: "use strict"}}] :
+      []),
     [
       {
-        type: "WithStatement",
-        object: expression,
-        body: {
-          type: "BlockStatement",
-          body: ArrayLite.concat(
-            [
-              {
-                type: "VariableDeclaration",
-                kind: "let",
-                declarations: [
-                  {
-                    type: "VariableDeclarator",
-                    id: {
-                      type: "Identifier",
-                      name: "completion"},
-                    init: null}]}],
-            (
-              strict ?
-              [
-                {
-                  type: "ExpressionStatement",
-                  expression: {
-                    type: "CallExpression",
-                    callee: {
-                      type: "FunctionExpression",
-                      generator: false,
-                      async: false,
-                      expression: false,
-                      id: null,
-                      params: [],
-                      defaults: [],
-                      rest: null,
-                      body: [
-                        ArrayLite.concat(
-                          [
-                            {
-                              type: "ExpressionStatement",
-                              expression: 
-                                {
-                                  type: "Literal",
-                                  value: "use strict" }}],
-                          statements)]},
-                    arguments: []}}] :
-              statements),
-            [{
-              type: "ExpressionStatement",
-              expression: {
-                type: "Identifier",
-                name: "completion"}}])}}] :
-    ArrayLite.concat(
-      (
-        strict ?
-        [
+        type: "VariableDeclaration",
+        kind: "let",
+        declarations: [
           {
-            type: "ExpressionStatement",
-            expression: {
-              type: "Literal",
-              value: "use strict"}}] :
-        []),
-      [
-        {
-          type: "VariableDeclaration",
-          kind: "let",
-          declarations: [
-            {
-              type: "VariableDeclarator",
-              id: {
-                type: "Identifier",
-                name: "completion"},
-              init: null}]}],
-      statements,
-      [
-        {
-          type: "ExpressionStatement",
-          expression: {
-            type: "Identifier",
-            name: "completion"}}]))});
+            type: "VariableDeclarator",
+            id: {
+              type: "Identifier",
+              name: "completion"},
+            init: null}]}],
+    statements,
+    [
+      {
+        type: "ExpressionStatement",
+        expression: {
+          type: "Identifier",
+          name: "completion"}}])});
+
+// exports.PROGRAM = (strict, statements1, expression, statements2) => ({
+//   type: "Program",
+//   body: (
+//     expression ?
+//     ArrayLite.concat(
+//       statements1,
+//       [
+//         {
+//           type: "WithStatement",
+//           object: expression,
+//           body: {
+//             type: "BlockStatement",
+//             body: ArrayLite.concat(
+//               [
+//                 {
+//                   type: "VariableDeclaration",
+//                   kind: "let",
+//                   declarations: [
+//                     {
+//                       type: "VariableDeclarator",
+//                       id: {
+//                         type: "Identifier",
+//                         name: "completion"},
+//                       init: null}]}],
+//               (
+//                 strict ?
+//                 [
+//                   {
+//                     type: "ExpressionStatement",
+//                     expression: {
+//                       type: "CallExpression",
+//                       callee: {
+//                         type: "FunctionExpression",
+//                         generator: false,
+//                         async: false,
+//                         expression: false,
+//                         id: null,
+//                         params: [],
+//                         defaults: [],
+//                         rest: null,
+//                         body: [
+//                           ArrayLite.concat(
+//                             [
+//                               {
+//                                 type: "ExpressionStatement",
+//                                 expression: 
+//                                   {
+//                                     type: "Literal",
+//                                     value: "use strict" }}],
+//                             statements)]},
+//                       arguments: []}}] :
+//                 statements2),
+//               [{
+//                 type: "ExpressionStatement",
+//                 expression: {
+//                   type: "Identifier",
+//                   name: "completion"}}])}}]) :
+//     ArrayLite.concat(
+//       (
+//         strict ?
+//         [
+//           {
+//             type: "ExpressionStatement",
+//             expression: {
+//               type: "Literal",
+//               value: "use strict"}}] :
+//         []),
+//       statements1,
+//       [
+//         {
+//           type: "VariableDeclaration",
+//           kind: "let",
+//           declarations: [
+//             {
+//               type: "VariableDeclarator",
+//               id: {
+//                 type: "Identifier",
+//                 name: "completion"},
+//               init: null}]}],
+//       statements2,
+//       [
+//         {
+//           type: "ExpressionStatement",
+//           expression: {
+//             type: "Identifier",
+//             name: "completion"}}]))});
 
 ////////////////
 // Expression //
@@ -200,28 +234,146 @@ exports.object = (properties) => ({
   }))});
 
 exports["function"] = (strict, statements) => ({
-  type: "FunctionExpression",
-  AranPure: true,
-  generator: false,
-  async: false,
-  expression: false,
-  id: null,
-  params: [],
+  type: "CallExpression",
+  callee: {
+    type: "FunctionExpression",
+    generator: false,
+    async: false,
+    expression: false,
+    id: null,
+    params: [],
+    defaults: [],
+    rest: null,
+    body: {
+      type: "BlockStatement",
+      body: [
+        {
+          type: "VariableDeclaration",
+          kind: "const",
+          declarations: [
+            {
+              type: "VariableDeclarator",
+              id: {
+                type: "Identifier",
+                name: "callee"},
+              init: {
+                type: "FunctionExpression",
+                generator: false,
+                async: false,
+                expression: false,
+                id: null,
+                params: [],
+                defaults: [],
+                rest: null,
+                body: {
+                  type: "BlockStatement",
+                  body: ArrayLite.concat(
+                    (
+                      strict ?
+                      [
+                        {
+                          type: "ExpressionStatement",
+                          expression: {
+                            type: "Literal",
+                            value: "use strict"}}] :
+                      []),
+                    [
+                      {
+                        type: "VariableDeclaration",
+                        kind: "let",
+                        declarations: [
+                          {
+                            type: "VariableDeclarator",
+                            id: {
+                              type: "Identifier",
+                              name: "arrival"},
+                            init: {
+                              type: "ObjectExpression",
+                              properties: [
+                                {
+                                  type: "Property",
+                                  shorthand: false,
+                                  method: false,
+                                  kind: "init",
+                                  computed: false,
+                                  key: {
+                                    type: "Identifier",
+                                    name: "callee"},
+                                  value: {
+                                    type: "Identifier",
+                                    name: "callee"}},
+                                {
+                                  type: "Property",
+                                  shorthand: false,
+                                  method: false,
+                                  kind: "init",
+                                  computed: false,
+                                  key: {
+                                    type: "Identifier",
+                                    name: "new"},
+                                  value: {
+                                    type: "BinaryExpression",
+                                    operator: "!==",
+                                    left: {
+                                      type: "MetaProperty",
+                                      meta: {
+                                        type: "Identifier",
+                                        name: "new"},
+                                      property: {
+                                        type: "Identifier",
+                                        name: "target"}},
+                                    right: {
+                                      type: "UnaryExpression",
+                                      operator: "void",
+                                      prefix: true,
+                                      argument: {
+                                        type: "Literal",
+                                        value: 0}}}},
+                                {
+                                  type: "Property",
+                                  shorthand: false,
+                                  method: false,
+                                  kind: "init",
+                                  computed: false,
+                                  key: {
+                                    type: "Identifier",
+                                    name: "this"},
+                                  value: {
+                                    type: "ThisExpression"}},
+                                {
+                                  type: "Property",
+                                  shorthand: false,
+                                  method: false,
+                                  kind: "init",
+                                  computed: false,
+                                  key: {
+                                    type: "Identifier",
+                                    name: "arguments"},
+                                  value: {
+                                    type: "Identifier",
+                                    name: "arguments"}}]}}]}],
+                    statements)}}}]},
+        {
+          type: "ReturnStatement",
+          argument: {
+            type: "Identifier",
+            name: "callee"}}]}},
+  arguments: []});
+
+exports.arrow = (identifiers, statements) => ({
+  type: "ArrowFunctionExpression",
   defaults: [],
   rest: null,
+  generator: false,
+  expression: false,
+  params: ArrayLite.map(
+    identifiers,
+    (identifier) => ({
+      type: "Identifier",
+      name: identifier})),
   body: {
     type: "BlockStatement",
-    body: ArrayLite.concat(
-      (
-        strict ?
-        [
-          {
-            type: "ExpressionStatement",
-            expression: {
-              type: "Literal",
-              value: "use strict"}}] :
-        []),
-      statements)}});
+    body: statements}});
 
 exports.primitive = (primitive) => (
   primitive === void 0 ?
@@ -293,7 +445,7 @@ exports.construct = (expression, expressions) => ({
   callee: expression,
   arguments: expressions});
 
-exports.apply = (boolean, expression, expressions) => ({
+exports.apply = (expression, expressions) => ({
   type: "CallExpression",
   callee: expression,
   arguments: expressions});

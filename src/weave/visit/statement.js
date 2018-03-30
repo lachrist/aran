@@ -219,11 +219,10 @@ exports.ForInStatement = (node) => Util.Completion(
           Interim.hoist(
             "keys2",
             ARAN.cut.apply(
-              null,
-              ARAN.cut.$builtin(["Object", "keys"]),
+              ARAN.cut.$load("Object_keys"),
               [
                 ARAN.cut.$copy(
-                  2,
+                  3,
                   Interim.read("object"))]))),
         ARAN.build.Statement(
           Interim.hoist(
@@ -276,13 +275,15 @@ exports.ForInStatement = (node) => Util.Completion(
           Interim.write(
             "object",
             ARAN.cut.apply(
-              null,
               ARAN.cut.$swap(
                 1,
                 2,
-                ARAN.cut.$builtin(["Object", "getPrototypeOf"])),
+                ARAN.cut.$load("Object_getPrototypeOf")),
               [
-                Interim.read("object")]))))),
+                ARAN.cut.$swap(
+                  1,
+                  2,
+                  Interim.read("object"))]))))),
     ARAN.build.Statement(
       ARAN.cut.$drop(
         Interim.read("object"))),
@@ -363,7 +364,7 @@ exports.ForOfStatement = (node) => Util.Completion(
             "iterator",
             ARAN.cut.invoke(
               Visit.expression(node.right),
-              ARAN.cut.$builtin(["Symbol", "iterator"]),
+              ARAN.cut.$load("Symbol_iterator"),
               [])))),
       ARAN.cut.unary(
         "!",

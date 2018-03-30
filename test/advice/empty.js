@@ -1,1 +1,1 @@
-module.exports = (aran, join) => ({traps:{}});
+module.exports = (instrument) => ({traps:{}});

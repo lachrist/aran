@@ -1,10 +1,12 @@
 const Acorn = require("acorn");
 const Aran = require("aran");
 const Astring = require("astring");
-const aran = Aran({namespace:"META", sandbox:true});
 let META = {};
+const aran = Aran({namespace:"META", sandbox:true});
 {
   let sandbox = {
+    TypeError: TypeError,
+    ReferenceError: ReferenceError,
     Object: Object,
     Reflect: Reflect,
     Symbol: Symbol,

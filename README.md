@@ -147,27 +147,20 @@ Build the setup code that should be evaluated before any instrumented code.
 * `output :: *`:
   The setup code whose format depends on `options.output`.
 
-The setup code simply set to the advice the couple of properties summarized below.
-
-Key                            |  Value                                                            | Usage 
--------------------------------|-------------------------------------------------------------------|------------------
-`EVAL`                         | `eval`                                                            | direct [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) calls
-`PROXY`                        | `Proxy`                                                           | sandboxing and [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with)
-`WHANDLERS`                    | `{ ... }`                                                         | [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with)
-`DEFINE`                       | `Object.defineProperty`                                           | [arguments.callee](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments/callee), [function.name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name), [function.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/length) and sandbox declaration
-`GLOBAL` (sandbox falsy)       | `("indirect", eval)("this")`                                      | sandboxing and getting globals 
-`GLOBAL` (sandbox truthy)      | `sandbox`                                                         | getting globals
-`DECLARATION` (sandbox truthy) | `true`                                                            | sandbox declaration/assignment
-`RERROR` (sandbox truthy)      | `ReferenceError`                                                  | sandbox assignment/read
-`GHANDLERS` (sandbox truthy)   | `{ ... }`                                                         | sandboxing
-`GLOBAL_global`                | `META.GLOBAL.global`                                              | [spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
-`GLOBAL_TypeError`             | `META.GLOBAL.TypeError`                                           | [arrow function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
-`GLOBAL_eval`                  | `META.GLOBAL.eval`                                                | direct [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) calls
-`GLOBAL_Reflect_apply`         | `META.GLOBAL.Reflect ? META.GLOBAL.Reflect.apply : void 0`        | [spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
-`GLOBAL_Object_defineProperty` | `META.GLOBAL.Object ? META.GLOBAL.Object.defineProperty : void 0` | [object getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) and [object setter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set)
-`GLOBAL_Object_getPrototypeOf` | `META.GLOBAL.Object ? META.GLOBAL.Object.getPrototypeOf : void 0` | [for-in loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in)
-`GLOBAL_Object_keys`           | `META.GLOBAL.Object ? META.GLOBAL.Object.keys : void 0`           | [for-in loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in)   
-`GLOBAL_Symbol_iterator`       | `META.GLOBAL.Symbol ? META.GLOBAL.Symbol.iterator : void 0`       | [iteration protocols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols)
+When evaluating the setup code, the following variables should present in the scope:
+* `sandbox`: if sandboxing is enabled, this value will replace the global object.
+* `eval`: direct [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) calls.
+* `Proxy`: sandboxing and [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with).
+* `Object.defineProperty`: [function.name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name) and [function.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/length).
+* `ReferenceError`: [assignment to undeclared variable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Undeclared_var) (sandboxing only).
+* `global.global`: [spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax).
+* `global.Reflect.apply`: [spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax).
+* `global.TypeError`: [arrow function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions).
+* `global.eval`: direct [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) calls.
+* `global.Object.defineProperty`: [getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) and [setter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set).
+* `global.Symbol.iterator`: [iteration protocols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols).
+* `global.Object.getPrototypeOf`: [for-in loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in).
+* `global.Object.keys`: [for-in loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in).
 
 ### `output = aran.weave(estree, pointcut, parent)`
 
@@ -255,58 +248,58 @@ We categorized traps depending on their insertion mechanism.
   ```
   Informers don't have any effect on the value stack.
 
-Name          | arguments[0]         | arguments[1]        | arguments[2]        | arguments[3]      
---------------|----------------------|---------------------|---------------------|-------------------
-**Combiners** |                      |                     |                     |                   
-`apply`       | `strict:boolean`     | `function:value`    | `arguments:[value]` | `serial:number`   
-`invoke`      | `object:value`       | `key:value`         | `arguments:[value]` | `serial:number`   
-`construct`   | `constructor:value`  | `arguments:[value]` | `serial:number`     |                   
-`unary`       | `operator:string`    | `argument:value`    | `serial:number`     |                   
-`binary`      | `operator:string`    | `left:value`        | `right:value`       | `serial:number`   
-`get`         | `object:value`       | `key:value`         | `serial:number`     |                   
-`set`         | `object:value`       | `key:value`         | `value:value`       | `serial:number`   
-`delete`      | `object:value`       | `key:value`         | `serial:number`     |                   
-`object`      | `properties:`<br>`[{0:value,1:value}]` | `serial:number` |       |                   
-`array`       | `elements:[value]`   | `serial:number`     |                     |                   
-**Modifiers** |                      |                     |                     |                   
-`copy`        | `position:number`    | `forward:*`         | `serial:number`     |                   
-`drop`        | `forward:*`          | `serial:number`     |                     |                   
-`swap`        | `position1:number`   | `position2:number`  | `forward:*`         | `serial:number`   
-*Producers*   |                      |                     |                     |                   
-`read`        | `identifier:string`  | `produced:value`    | `serial:number`     |                   
-`discard`     | `identifier:string`  | `produced:value`    | `serial:number`     |                   
-`builtin`     | `name:string`        | `produced:value`    | `serial:number`     |                   
-`arrival`     | `produced:value`     | `serial:number`     |                     |                   
-`catch`       | `produced:value`     | `serial:number`     |                     |                   
-`primitive`   | `produced:value`     | `serial:number`     |                     |                   
-`regexp`      | `produced:value`     | `serial:number`     |                     |                   
-`function`    | `produced:value`     | `serial:number`     |                     |                   
-*Consumers*   |                      |                     |                     |                   
-`declare`     | `kind:string`        | `identifier:string` | `consumed:value`    | `serial:number`   
-`write`       | `identifier:string`  | `consumed:value`    | `serial:number`     |                   
-`test`        | `consumed:value`     | `serial:number`     |                     |                   
-`with`        | `consumed:value`     | `serial:number`     |                     |                   
-`throw`       | `consumed:value`     | `serial:number`     |                     |                   
-`return`      | `consumed:value`     | `serial:number`     |                     |                   
-`eval`        | `consumed:value`     | `serial:number`     |                     |                   
-`completion`  | `consumed:value`     | `serial:number`     |                     |                   
-`success`     | `consumed:value`     | `serial:number`     |                     |                   
-`failure`     | `consumed:value`     | `serial:number`     |                     |                   
-**Informers** |                      |                     |                     |                   
-`begin`       | `serial:number`      |                     |                     |                   
-`end`         | `serial:number`      |                     |                     |                   
-`try`         | `serial:number`      |                     |                     |                   
-`finally`     | `serial:number`      |                     |                     |                   
-`block`       | `serial:number`      |                     |                     |                   
-`leave`       | `type:string`        | `serial:number`     |                     |                   
-`label`       | `iscontinue:boolean` | `label:string`      | `serial:number`     |                   
-`break`       | `iscontinue:boolean` | `label:string`      | `serial:number`     |                   
+Name          | arguments[0]         | arguments[1]        | arguments[2]        | arguments[3]   
+--------------|----------------------|---------------------|---------------------|----------------
+**Combiners** |                      |                     |                     |                
+`apply`       | `function:value`     | `this:value`        | `arguments:[value]` | `serial:number`
+`invoke`      | `object:value`       | `key:value`         | `arguments:[value]` | `serial:number`
+`construct`   | `constructor:value`  | `arguments:[value]` | `serial:number`     |                
+`unary`       | `operator:string`    | `argument:value`    | `serial:number`     |                
+`binary`      | `operator:string`    | `left:value`        | `right:value`       | `serial:number`
+`get`         | `object:value`       | `key:value`         | `serial:number`     |                
+`set`         | `object:value`       | `key:value`         | `value:value`       | `serial:number`
+`delete`      | `object:value`       | `key:value`         | `serial:number`     |                
+`object`      | `properties:`<br>`[{0:value,1:value}]` | `serial:number` |       |                
+`array`       | `elements:[value]`   | `serial:number`     |                     |                
+**Modifiers** |                      |                     |                     |                
+`copy`        | `position:number`    | `forward:*`         | `serial:number`     |                
+`drop`        | `forward:*`          | `serial:number`     |                     |                
+`swap`        | `position1:number`   | `position2:number`  | `forward:*`         | `serial:number`
+*Producers*   |                      |                     |                     |                
+`read`        | `identifier:string`  | `produced:value`    | `serial:number`     |                
+`discard`     | `identifier:string`  | `produced:value`    | `serial:number`     |                
+`builtin`     | `name:string`        | `produced:value`    | `serial:number`     |                
+`arrival`     | `strict:boolean`     | `produced:value`    | `serial:number`     |                
+`catch`       | `produced:value`     | `serial:number`     |                     |                
+`primitive`   | `produced:value`     | `serial:number`     |                     |                
+`regexp`      | `produced:value`     | `serial:number`     |                     |                
+`function`    | `produced:value`     | `serial:number`     |                     |                
+*Consumers*   |                      |                     |                     |                
+`declare`     | `kind:string`        | `identifier:string` | `consumed:value`    | `serial:number`
+`write`       | `identifier:string`  | `consumed:value`    | `serial:number`     |                
+`test`        | `consumed:value`     | `serial:number`     |                     |                
+`with`        | `consumed:value`     | `serial:number`     |                     |                
+`throw`       | `consumed:value`     | `serial:number`     |                     |                
+`return`      | `consumed:value`     | `serial:number`     |                     |                
+`eval`        | `consumed:value`     | `serial:number`     |                     |                
+`completion`  | `consumed:value`     | `serial:number`     |                     |                
+`success`     | `strict:boolean`     | `direct:boolean`    | `consumed:value`    | `serial:number`
+`failure`     | `strict:boolean`     | `direct:boolean`    | `consumed:value`    | `serial:number`
+**Informers** |                      |                     |                     |                
+`begin`       | `strict:boolean`     | `direct:boolean`    | `serial:number`     |                
+`end`         | `strict:boolean`     | `direct:boolean`    | `serial:number`     |                
+`try`         | `serial:number`      |                     |                     |                
+`finally`     | `serial:number`      |                     |                     |                
+`block`       | `serial:number`      |                     |                     |                
+`leave`       | `type:string`        | `serial:number`     |                     |                
+`label`       | `continue:boolean`   | `label:string`      | `serial:number`     |                
+`break`       | `continue:boolean`   | `label:string`      | `serial:number`     |                
 
 ## Known Heisenbugs
 
 When dynamically analyzing a program it is implicitly assumed that the analysis will conserve its behavior.
 If this is not the case, the analysis might draw erroneous conclusions.
-Behavioral divergences caused by analyses over the programs they target are called [heisenbugs](https://en.wikipedia.org/wiki/Heisenbug).
+Behavioral divergences caused by analyses over the target programs are called [heisenbugs](https://en.wikipedia.org/wiki/Heisenbug).
 Here are the known heisenbugs that Aran may introduce by itself:
 
 * *Performance Overhead*:

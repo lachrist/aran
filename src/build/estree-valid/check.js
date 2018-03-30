@@ -10,6 +10,7 @@ const etypes = [
   "ArrayExpression",
   "ObjectExpression",
   "FunctionExpression",
+  "ArrowFunctionExpression",
   "UnaryExpression",
   "Literal",
   "MemberExpression",

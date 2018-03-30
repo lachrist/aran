@@ -120,7 +120,7 @@ const Call = ((() => {
   });
 }) ());
 
-module.exports = (aran, join) => {
+module.exports = (instrument) => {
 
   const traps = {};
   const proxies = SafeWeakMap();
@@ -172,9 +172,9 @@ module.exports = (aran, join) => {
 
   traps.regexp = (value, serial) => produce(value, serial);
   traps.primitive = (value, serial) => produce(value, serial);
-  traps.builtin = (identifier, value, serial) => produce(value, serial);
+  traps.load = (name, value, serial) => produce(value, serial);
   traps.discard = (identifier, value, serial) => produce(value, serial);
-  traps.arrival = (value, serial) => {
+  traps.arrival = (boolean, value, serial) => {
     cstack.push(Call(scopes.get(value.callee)));
     cstack.peek().enter("function", Object.create(null), null);
     return produce(value, serial);
@@ -215,7 +215,7 @@ module.exports = (aran, join) => {
     const bindings = [];
     bindings.unshift = Array_prototype_unshift;
     cstack.peek().loop((type, binding, custom) => { bindings.unshift(binding) });
-    scopes.set(wrapper, cstack.peek().scope().extend(bindings));
+    scopes.set(value, cstack.peek().scope().extend(bindings));
     return produce(wrapper, serial);
   };
   traps.catch = (value, serial) => {
@@ -240,9 +240,10 @@ module.exports = (aran, join) => {
   // Consumers //
   ///////////////
 
+  traps.save = (name, value, serial) => consume(value, serial);
   traps.test = (value, serial) => consume(value, serial);
   traps.throw = (value, serial) => consume(value, serial);
-  traps.eval = (value, serial) => join(consume(value, serial), aran.node(serial));
+  traps.eval = (value, serial) => instrument(consume(value, serial), serial);
   traps.return = (value, serial) => {
     cstack.pop();
     return consume(value, serial);
@@ -257,15 +258,13 @@ module.exports = (aran, join) => {
     return consume(value, serial);
   };
   traps.write = (identifier, value, serial) => {
-    const each = (type, binding, custom) => {
+    cstack.peek().loop((type, binding, custom) => {
       if (identifier in binding) {
         if (type !== "with")
           binding[identifier] = value;
         return true;
       }
-    }
-    if (!cstack.peek().loop(each) && aran.node(serial).AranStrict)
-      throw new Error("["+serial+"] Write failure: "+identifier);
+    });
     return consume(value, serial);
   };
   traps.declare = (kind, identifier, value, serial) => {
@@ -334,12 +333,13 @@ module.exports = (aran, join) => {
     consume(value, serial);
     return produce(Reflect_construct(value, values), serial);
   };
-  traps.apply = (boolean, value, values, serial) => {
+  traps.apply = (value1, value2, values, serial) => {
     let index = values.length;
     while (index--)
       consume(values[index], serial);
-    consume(value, serial);
-    return produce(Reflect_apply(value, boolean ? void 0 : global, values), serial);
+    consume(value2, serial);
+    consume(value1, serial);
+    return produce(Reflect_apply(value1, value2, values), serial);
   };
   traps.unary = (operator, value, serial) => {
     consume(value, serial);
@@ -387,17 +387,17 @@ module.exports = (aran, join) => {
   // Setup / Teardown //
   //////////////////////
 
-  traps.begin = (serial) => {
+  traps.begin = (boolean1, boolean2, serial) => {
     estack.push(null);
-    if (aran.node(serial).AranParent)
-      return cstack.peek().enter(aran.node(serial).AranStrict ? "function" : "block", Object_create(null), null);
+    if (boolean2)
+      return cstack.peek().enter(boolean1 ? "function" : "block", Object_create(null), null);
     cstack.push(Call(Scope()));
     cstack.peek().enter("block", Object_create(null), null);
   };
-  traps.success = (value, serial) => {
+  traps.success = (boolean1, boolean2, value, serial) => {
     check("Success", estack.peek(), value, serial);
-    if (aran.node(serial).AranParent) {
-      cstack.peek().leave(aran.node(serial).AranStrict ? "function" : "block", serial);
+    if (boolean2) {
+      cstack.peek().leave(boolean1 ? "function" : "block", serial);
       return produce(value, serial);
     }
     cstack.peek().leave("block", serial);
@@ -408,7 +408,7 @@ module.exports = (aran, join) => {
       throw new Error("["+serial+"] State poluted");
     return value;
   };
-  traps.failure = (error, serial) => {
+  traps.failure = (boolean1, boolean2, error, serial) => {
     if (estack.length === 1) {
       while (cstack.length)
         cstack.pop();

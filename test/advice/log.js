@@ -25,8 +25,8 @@ const print = (value) => {
   return String(value);
 };
 
-module.exports = (aran, join) => {
-  const forward = Forward(aran, join);
+module.exports = (instrument) => {
+  const forward = Forward(instrument);
   const traps = {};
   Object_keys(forward.traps).forEach((key) => {
     traps[key] = function () {

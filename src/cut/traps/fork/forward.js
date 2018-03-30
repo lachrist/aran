@@ -16,7 +16,10 @@ const combine = (key, length) => {
 
 ArrayLite.forEach(
   Object_keys(TrapArguments.combiners),
-  (key) => exports[key] = combine(key, TrapArguments.combiners[key].length));
+  (key) => exports[key] = (
+    key === "apply" ?
+    (expression1, expression2, expressions) => ARAN.build.apply(expression1, expressions) :
+    combine(key, TrapArguments.combiners[key].length)));
 
 ArrayLite.forEach(
   Object_keys(TrapArguments.informers),

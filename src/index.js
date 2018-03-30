@@ -15,10 +15,10 @@ function weave (root, pointcut, parent) {
   const temporary = global.ARAN;
   global.ARAN = this._global;
   global.ARAN.cut = Cut(pointcut);
-  const result = Weave(root, parent);
+  const program = Weave(root, typeof parent === "number" ? this.node(parent) : parent);
   global.ARAN.cut = null;
   global.ARAN = temporary;
-  return result;
+  return program;
 }
 
 function root (serial) {
@@ -46,17 +46,21 @@ function node1 (serial) {
   }
 }
 
-function setup () {
+function setup (pointcut) {
   const temporary = global.ARAN;
   global.ARAN = this._global;
-  const setup = Meta.Setup();
+  global.ARAN.cut = Cut(pointcut);
+  global.ARAN.node = this._roots[0];
+  const program = Meta.SETUP();
+  global.ARAN.node = null;
+  global.ARAN.cut = null;
   global.ARAN = temporary;
-  return this._global.build.PROGRAM(false, null, setup);
+  return program;
 }
 
 function node2 (serial) {
   return this._global.nodes[serial];
-};
+}
 
 module.exports = (options) => {
   options = Object_assign({
@@ -67,8 +71,16 @@ module.exports = (options) => {
   }, options);
   if (!Build[options.output])
     throw new Error("Unknown output: "+options.output+", should be one of "+Object_keys(Build));
+  const roots = [
+    {
+      type: "Program",
+      body: [],
+      AranStrict: false,
+      AranParent: null,
+      AranSerial: 0,
+      AranSerialMax: 0}];
   return {
-    _roots: [],
+    _roots: roots,
     _global: {
       counter: 1,
       node: null,
@@ -77,7 +89,7 @@ module.exports = (options) => {
       namespace: options.namespace,
       sandbox: options.sandbox,
       build: Build[options.output],
-      nodes: options.nocache ? null : [],
+      nodes: options.nocache ? null : [roots[0]],
       regexp: new RegExp(
         "^\\$*(newtarget|callee|this|arguments|error|completion|arrival|" +
         (options.sandbox ? "eval|" : "") +

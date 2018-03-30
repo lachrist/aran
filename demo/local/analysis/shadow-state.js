@@ -1,6 +1,23 @@
 const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
+
+global.META = {};
+const scopes = new WeakMap();
+const vstack = [];
+const estack = [];
+const cstack = [];
+const bind = (frame, identifier) => {
+  if (identifier.startsWith("META"))
+    return false;
+  if (!(identifier in frame.binding))
+    return false;
+  if (frame.type !== "with")
+    return true;
+  const unscopables = frame.binding[Symbol.unscopables];
+  return unscopables && unscopables.includes(identifier);
+};
+
 //////////////
 // Membrane //
 //////////////
@@ -30,29 +47,7 @@ const combine = (value, name, infos, serial) => {
   vstack.push("&"+counter);
   return value;
 };
-///////////
-// Setup //
-///////////
-const aran = Aran({namespace:"META"});
-global.META = {};
-global.eval(Astring.generate(aran.setup()));
-const weave = (script, parent) =>
-  Astring.generate(aran.weave(Acorn.parse(script), true, parent));
-module.exports = (script) => eval(weave(script, null));
-const scopes = new WeakMap();
-const vstack = [];
-const estack = [];
-const cstack = [];
-const bind = (frame, identifier) => {
-  if (identifier.startsWith("META"))
-    return false;
-  if (!(identifier in frame.binding))
-    return false;
-  if (frame.type !== "with")
-    return true;
-  const unscopables = frame.binding[Symbol.unscopables];
-  return unscopables && unscopables.includes(identifier);
-};
+
 //////////////
 // Chaining //
 //////////////
@@ -70,6 +65,7 @@ META.drop = (value, serial) => {
   vstack.pop();
   return value;
 };
+
 ///////////////
 // Producers //
 ///////////////
@@ -77,8 +73,8 @@ META.primitive = (value, serial) =>
   produce("primitive", [], value, serial);
 META.regexp = (value, serial) =>
   produce("regexp", [], value, serial);
-META.builtin = (name, value, serial) =>
-  produce("builtin", ["'"+name+"'"], value, serial);
+META.load = (name, value, serial) =>
+  produce("load", ["'"+name+"'"], value, serial);
 META.discard = (identifier, value, serial) =>
   produce("discard", ["'"+identifier+"'"], value, serial);
 META.function = (value, serial) => {
@@ -102,10 +98,10 @@ META.function = (value, serial) => {
   Object.defineProperty(wrapper, "name", {value:value.name, configurable:true});
   Object.defineProperty(wrapper, "length", {value:value.length, configurable:true});
   wrapper.prototype = value.prototype || {constructor:wrapper};
-  scopes.set(wrapper, cstack[cstack.length-1].slice());
+  scopes.set(value, cstack[cstack.length-1].slice());
   return produce("function", [], wrapper, serial);
 };
-META.arrival = (value, serial) => {
+META.arrival = (strict, value, serial) => {
   cstack.push(scopes.get(value.callee).concat([{
     type: "function",
     binding: Object.create(null)
@@ -119,12 +115,12 @@ META.read = (identifier, value, serial) => {
     const frame = call[index];
     if (bind(frame, identifier)) {
       if (frame.type === "with")
-        return produce("read", ["'"+identifier+"'"], value, 0);
+        return produce("read", ["'"+identifier+"'"], value, null);
       vstack.push(frame.binding[identifier]);
       return value;
     }
   };
-  return produce("read", ["'"+identifier+"'"], value, 0);
+  return produce("read", ["'"+identifier+"'"], value, null);
 };
 META.catch = (value, serial) => {
   while (cstack.length) {
@@ -142,6 +138,7 @@ META.catch = (value, serial) => {
     cstack.pop();
   }
 };
+
 ///////////////
 // Consumers //
 ///////////////
@@ -149,13 +146,13 @@ META.with = (value, serial) => {
   cstack[cstack.length-1].push({type:"with", binding:value});
   return consume("with", [], value, serial);
 };
-META.success = (value, serial) => {
+META.success = (strict, direct, value, serial) => {
   vstack.push(estack.pop());
-  return aran.node(serial).AranParent ? value : consume("success", [], value, serial);
+  return direct ? value : consume("success", [], value, serial);
 };
-META.failure = (error, serial) => {
+META.failure = (strict, direct, error, serial) => {
   estack.pop();
-  if (!aran.node(serial).AranParent) {
+  if (!direct) {
     while (cstack.length)
       cstack.pop();
     while (vstack.length)
@@ -167,12 +164,14 @@ META.completion = (value, serial) => {
   estack[estack.length-1] = vstack.pop();
   return value;
 };
+META.save = (name, value, serial) =>
+  consume("save", ["'"+name+"'"], value, serial);
 META.throw = (value, serial) =>
   consume("throw", [], value, serial);
 META.test = (value, serial) =>
   consume("test", [], value, serial);
 META.eval = (value, serial) =>
-  weave(consume("eval", [], value, serial), aran.node(serial));
+  instrument(consume("eval", [], value, serial), serial);
 META.return = (value, serial) => {
   cstack.pop();
   return consume("return", [], value, serial);
@@ -184,12 +183,12 @@ META.write = (identifier, value, serial) => {
     const frame = call[index];
     if (bind(frame, identifier)) {
       if (frame.type === "with")
-        return consume("write", ["'"+identifier+"'"], value, 0);
+        return consume("write", ["'"+identifier+"'"], value, null);
       frame.binding[identifier] = vstack.pop();
       return value;
     }
   }
-  return consume("write", ["'"+identifier+"'"], value, 0);
+  return consume("write", ["'"+identifier+"'"], value, null);
 };
 META.declare = (kind, identifier, value, serial) => {
   const call = cstack[cstack.length-1];
@@ -198,7 +197,7 @@ META.declare = (kind, identifier, value, serial) => {
     let index = call.length-1;
     while (call[index].type !== "function") {
       if (!index)
-        return consume("declare", ["'var'", "'"+identifier+"'"], value, 0);
+        return consume("declare", ["'var'", "'"+identifier+"'"], value, null);
       index--;
     }
     frame = call[index];
@@ -211,14 +210,15 @@ META.declare = (kind, identifier, value, serial) => {
   });
   return value;
 };
+
 ///////////////
 // Informers //
 ///////////////
-META.begin = (serial) => {
+META.begin = (strict, direct, serial) => {
   estack.push(null);
-  if (aran.node(serial).AranParent) {
+  if (direct) {
     cstack[cstack.length-1].push({
-      type: aran.node(serial).AranStrict ? "function" : "block",
+      type: strict ? "function" : "block",
       binding: Object.create(null)
     });
   } else {
@@ -228,7 +228,7 @@ META.begin = (serial) => {
     }]);
   }
 };
-META.end = (serial) => {};
+META.end = (strict, direct, serial) => {};
 META.leave = (type, serial) => cstack[cstack.length-1].pop();
 META.block = (serial) => cstack[cstack.length-1].push({
   type: "block",
@@ -257,13 +257,14 @@ META.break = (boolean, label, serial) => {
       return;
   }
 };
+
 ///////////////
 // Combiners //
 ///////////////
 const cut = (length) => length ? "["+vstack.splice(-length) +"]" : "[]";
-META.apply = (strict, value, values, serial) => combine(
-  Reflect.apply(value, strict ? global : undefined, values),
-  "apply", [cut(values.length), vstack.pop(), String(strict)], serial);
+META.apply = (value1, value2, values, serial) => combine(
+  Reflect.apply(value1, value2, values),
+  "apply", [cut(values.length), vstack.pop(), vstack.pop()], serial);
 META.invoke = (value1, value2, values, serial) => combine(
   Reflect.apply(value1[value2], value1, values),
   "invoke", [cut(values.length), vstack.pop(), vstack.pop()], serial);
@@ -296,3 +297,12 @@ META.object = (properties, serial) => {
   });
   return combine(object, "object", ["["+mproperties.reverse()+"]"], serial);
 };
+
+///////////
+// Setup //
+///////////
+const aran = Aran({namespace:"META"});
+global.eval(Astring.generate(aran.setup(true)));
+const instrument = (script, parent) =>
+  Astring.generate(aran.weave(Acorn.parse(script), true, parent));
+module.exports = (script) => eval(instrument(script, null));
