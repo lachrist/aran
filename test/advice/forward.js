@@ -9,7 +9,6 @@ const modifiers = [
   "swap",
   "drop",
   // producers //
-  "arrival",
   "read",
   "load",
   "catch",
@@ -50,6 +49,7 @@ module.exports = (instrument) => {
   const traps = {};
   Reflect_apply(Array_prototype_forEach, modifiers, [(key) => traps[key] = pass]);
   Reflect_apply(Array_prototype_forEach, informers, [(key) => traps[key] = empty]);
+  traps.arrival = (strict, callee, isnew, value, values) => [callee, isnew, value, values];
   traps.apply = (callee, value, values, serial) => Reflect_apply(callee, value, values);
   traps.invoke = (object, key, values, serial) => Reflect_apply(object[key], object, values);
   traps.construct = (callee, values, serial) => Reflect_construct(callee, values);

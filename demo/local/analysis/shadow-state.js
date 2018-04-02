@@ -101,13 +101,6 @@ META.function = (value, serial) => {
   scopes.set(value, cstack[cstack.length-1].slice());
   return produce("function", [], wrapper, serial);
 };
-META.arrival = (strict, value, serial) => {
-  cstack.push(scopes.get(value.callee).concat([{
-    type: "function",
-    binding: Object.create(null)
-  }]));
-  return produce("arrival", [], value, serial);
-};
 META.read = (identifier, value, serial) => {
   let call = cstack[cstack.length-1];
   let index = call.length;
@@ -262,6 +255,18 @@ META.break = (boolean, label, serial) => {
 // Combiners //
 ///////////////
 const cut = (length) => length ? "["+vstack.splice(-length) +"]" : "[]";
+META.arrival = (strict, value1, value2, value3, value4, serial) => {
+  cstack.push(scopes.get(value1).concat([{
+    type: "function",
+    binding: Object.create(null)
+  }]));
+  return [
+    produce("arrival-callee", [], value1, serial),
+    produce("arrival-isnew", [], value2, serial),
+    produce("arrival-this", [], value3, serial),
+    produce("arrival-arguments", [], value4, serial)
+  ];
+};
 META.apply = (value1, value2, values, serial) => combine(
   Reflect.apply(value1, value2, values),
   "apply", [cut(values.length), vstack.pop(), vstack.pop()], serial);
@@ -305,4 +310,4 @@ const aran = Aran({namespace:"META"});
 global.eval(Astring.generate(aran.setup(true)));
 const instrument = (script, parent) =>
   Astring.generate(aran.weave(Acorn.parse(script), true, parent));
-module.exports = (script) => eval(instrument(script, null));
+module.exports = (script) => global.eval(instrument(script));

@@ -1,21 +1,11 @@
 const Acorn = require("acorn");
 const Aran = require("aran");
 const Astring = require("astring");
-let META = {};
+global.META = {};
+META.GLOBAL = Object.create(global);
+META.GLOBAL.Date = () => "APRIL FOOL";
 const aran = Aran({namespace:"META", sandbox:true});
-{
-  let sandbox = {
-    TypeError: TypeError,
-    ReferenceError: ReferenceError,
-    Object: Object,
-    Reflect: Reflect,
-    Symbol: Symbol,
-    console: console,
-    eval: eval,
-    Math: Math
-  };
-  sandbox.global = sandbox;
-  eval(Astring.generate(aran.setup()));
-}
+META.GLOBAL.global = META.GLOBAL;
+global.eval(Astring.generate(aran.setup(false)));
 module.exports = (script) =>
-  eval(Astring.generate(aran.weave(Acorn.parse(script), false, null)));
+  global.eval(Astring.generate(aran.weave(Acorn.parse(script), false)));

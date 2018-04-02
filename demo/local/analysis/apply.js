@@ -17,11 +17,10 @@ Function.prototype.toString = function () {
 };
 let depth = "";
 const aran = Aran({namespace:"META"});
-const parent = null;
 const pointcut = ["apply"];
 global.eval(Astring.generate(aran.setup(pointcut)));
 module.exports = (script) => {
   const estree1 = Acorn.parse(script, {locations:true});
-  const estree2 = aran.weave(estree1, pointcut, parent);
+  const estree2 = aran.weave(estree1, pointcut);
   global.eval(Astring.generate(estree2));
 };

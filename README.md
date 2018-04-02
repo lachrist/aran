@@ -23,11 +23,12 @@ META.primitive = (primitive, serial) => {
   console.log("["+serial+"]", primitive);
   return primitive;
 };
+const pointcut = ["primitive"];
 const aran = Aran({namespace:"META"});
-global.eval(Astring.generate(aran.setup()));
+global.eval(Astring.generate(aran.setup(pointcut)));
 const script1 = "'Hello World!'";
 const estree1 = Acorn.parse(script1);
-const estree2 = aran.weave(estree1, ["primitive"], null);
+const estree2 = aran.weave(estree1, pointcut);
 const script2 = Astring.generate(estree2);
 global.eval(script2);
 ```
@@ -95,7 +96,7 @@ When Aran instruments a program, all its statement nodes and all its expression 
 
 * `AranSerial :: number`:
   The node's serial number.
-* `AranMaxSerial :: number`:
+* `AranSerialMax :: number`:
   The maximum serial number which can be found within the node's decedents.
   This is useful to speed up node search.
 * `AranParent :: ESTree | *`:
@@ -115,7 +116,7 @@ Create a new Aran instance.
   Code instrumented by this aran instance will not be able to read, write or shadow this variable.
 * `options.output :: string | object`, default `"EstreeOptimized"`:
   The output format of `aran.weave` and `aran.setup`.
-  If it is an object, it should be a builder ressembling the ones at [src/build](src/build).
+  If it is an object, it should provide the same interface as the builders in [src/build](src/build).
   If it is a string, it should be one of:
   * `"ESTree"`:
     Regular ESTree.
@@ -132,21 +133,23 @@ Create a new Aran instance.
   A boolean indicating whether aran should keep an array of nodes indexed by serial number.
   A truthy options will result in a faster execution of `aran.node`.
 * `options.sandbox :: boolean`, default `false`:
-  A boolean indicating whether instrumented code should use a custom object as [global object](https://developer.mozilla.org/en-US/docs/Glossary/Global_object).
+  A boolean indicating whether the user will provide a custom `GLOBAl` property to the advice to serve as [global object](https://developer.mozilla.org/en-US/docs/Glossary/Global_object) for the instrumented code.
   If this options is truthy, code weaved without parent will contain a [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) whose environment object is a [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
   This proxy will also solve a transparency breakage by restoring identifiers sanitized by Aran.
   This is expected to produce noticeable performance overhead.
 * `aran :: aran.Aran`:
   The newly created aran instance.
 
-### `output = aran.setup()`
+### `output = aran.setup(pointcut)`
 
 Build the setup code that should be evaluated before any instrumented code.
 * `aran :: aran.Aran`:
   An Aran instance.
+* `pointcut`: see the `pointcut` parameter of `aran.weave`.
 * `output :: *`:
   The setup code whose format depends on `options.output`.
 
+<!-- 
 When evaluating the setup code, the following variables should present in the scope:
 * `sandbox`: if sandboxing is enabled, this value will replace the global object.
 * `eval`: direct [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) calls.
@@ -161,6 +164,7 @@ When evaluating the setup code, the following variables should present in the sc
 * `global.Symbol.iterator`: [iteration protocols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols).
 * `global.Object.getPrototypeOf`: [for-in loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in).
 * `global.Object.keys`: [for-in loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in).
+ -->
 
 ### `output = aran.weave(estree, pointcut, parent)`
 
@@ -227,6 +231,7 @@ We categorized traps depending on their insertion mechanism.
   META.invoke = (object, key, values, serial) => Reflect.apply(object[key], object, values);
   ```
   Combiners pop some values from the value-stack and push exactly one value on top of it.
+  The only exception is the `arrival` trap which pops no values from stack and push four values on top of it.
 * *Modifiers*: surround expression nodes.
   These traps are given a single value from the target program which they can freely modify.
   Their transparent implementation consists in returning the second last argument.
@@ -248,9 +253,14 @@ We categorized traps depending on their insertion mechanism.
   ```
   Informers don't have any effect on the value stack.
 
-Name          | arguments[0]         | arguments[1]        | arguments[2]        | arguments[3]   
---------------|----------------------|---------------------|---------------------|----------------
-**Combiners** |                      |                     |                     |                
+```
+arrival(strict:boolean, callee:value, new:boolean, this:value, arguments:value, serial:number)
+```
+
+Name          | arguments[0]         | arguments[1]        | arguments[2]        | arguments[3]    
+--------------|----------------------|---------------------|---------------------|-----------------
+**Combiners** |                      |                     |                     |                 
+`arrival`     |                      |                     |                     |
 `apply`       | `function:value`     | `this:value`        | `arguments:[value]` | `serial:number`
 `invoke`      | `object:value`       | `key:value`         | `arguments:[value]` | `serial:number`
 `construct`   | `constructor:value`  | `arguments:[value]` | `serial:number`     |                
@@ -356,10 +366,11 @@ Here are the known heisenbugs that Aran may introduce by itself:
   However this is not a complete solution because although the `META` identifier is sanitized, `aran` is still accessible from the target program.
   A complete solution can be obtained by turning the sandbox option on.
   In that case, only the lookup of `META` will be able to reach to outside scope.
-* *Typeof in the Temporal Deadzone*:
-  Aran does not hoist `let` and `const` declarations so it cannot make the difference between an undeclared variable and an undefined variable.
-  To the best of our knowledge, this distinction is only necessary when `typeof` is involved.
-  This approximation simplifies both Aran's internal structure and analyses modeling the environment.
+* *Temporal Deadzone*:
+  Aran's `declare` trap cannot express the temporal deadzone introduced by [let](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let) and [const](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const).
+  To properly model temporal deadzones, a new trap expressing that a variable is defined within a block but not yet declared should be added.
+  This can cause heisenbugs on analyses modeling the environment.
+  Moreover, the `typeof` operator does not behave the same in Aran itself when applied on identifier in the temporal deadzone.
   Normally the code below should fail at the `typeof` line but it won't after inserting the `unary` trap:
   ```js
   // Original //

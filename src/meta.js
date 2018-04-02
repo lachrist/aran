@@ -6,6 +6,15 @@ exports.trigger = (string, expressions) => ARAN.build.invoke(
   ARAN.build.primitive(string),
   expressions);
 
+exports.apply = (expression1, expression2, expressions) => ARAN.build.apply(
+  ARAN.build.get(
+    ARAN.build.read("META"),
+    ARAN.build.primitive("APPLY")),
+  [
+    expression1,
+    expression2,
+    ARAN.build.array(expressions)]);
+
 exports.eval = () => ARAN.build.get(
   ARAN.build.read(ARAN.namespace),
   ARAN.build.primitive("EVAL"));
@@ -41,6 +50,54 @@ exports.wproxy = (expression) => ARAN.build.construct(
     ARAN.build.get(
       ARAN.build.read(ARAN.namespace),
       ARAN.build.primitive("WHANDLERS"))]);
+
+exports.Sandbox = (strict, statements) => ARAN.build.Statement(
+  ARAN.build.write(
+    "completion",
+    ARAN.build.apply(
+      ARAN.build.get(
+        ARAN.build.read(ARAN.namespace),
+        ARAN.build.primitive("APPLY")),
+      [
+        ARAN.build.function(
+          false,
+          ARAN.build.With(
+            ARAN.build.construct(
+              ARAN.build.get(
+                ARAN.build.read(ARAN.namespace),
+                ARAN.build.primitive("PROXY")),
+              [
+                ARAN.build.get(
+                  ARAN.build.read(ARAN.namespace),
+                  ARAN.build.primitive("GLOBAL")),
+                ARAN.build.get(
+                  ARAN.build.read(ARAN.namespace),
+                  ARAN.build.primitive(strict ? "GSHANDLERS" : "GHANDLERS"))]),
+            ArrayLite.concat(
+              ARAN.build.Declare(
+                "const",
+                ARAN.namespace,
+                ARAN.build.read("this")),
+              ARAN.build.Declare(
+                "const",
+                "eval",
+                ARAN.build.get(
+                  ARAN.build.read(ARAN.namespace),
+                  ARAN.build.primitive("EVAL"))),
+              ARAN.build.Declare(
+                "let",
+                "completion",
+                ARAN.build.primitive(void 0)),
+              (
+                strict ?
+                ARAN.build.apply(
+                  ARAN.build.function(true, statements),
+                  []) :
+                statements),
+              ARAN.build.Return(
+                ARAN.build.read("completion"))))),
+        ARAN.build.read(ARAN.namespace),
+        ARAN.build.array([])])));
 
 exports.define = (expression1, string, expression2, boolean1, boolean2, boolean3) => ARAN.build.apply(
   ARAN.build.get(
@@ -87,22 +144,34 @@ exports.SETUP = () => ARAN.build.PROGRAM(
             "EVAL",
             ARAN.build.read("eval")],
           [
+            "GLOBAL",
+            ARAN.build.invoke(
+              ARAN.build.read(ARAN.namespace),
+              ARAN.build.primitive("EVAL"),
+              [
+                ARAN.build.primitive("this")])],
+          [
             "PROXY",
             ARAN.build.read("Proxy")],
-          [
-            "WHANDLERS",
-            whandlers()],
           [
             "DEFINE",
             ARAN.build.get(
               ARAN.build.read("Object"),
-              ARAN.build.primitive("defineProperty"))]],
+              ARAN.build.primitive("defineProperty"))],
+          [
+            "APPLY",
+            ARAN.build.get(
+              ARAN.build.read("Reflect"),
+              ARAN.build.primitive("apply"))],
+          [
+            "RERROR",
+            ARAN.build.read("ReferenceError")],
+          [
+            "WHANDLERS",
+            whandlers()]],
         (
           ARAN.sandbox ?
           [
-            [
-              "RERROR",
-              ARAN.build.read("ReferenceError")],
             [
               "GHANDLERS",
               ARAN.build.object([
@@ -132,71 +201,45 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                   ghandlers.get()],
                 [
                   ARAN.build.primitive("set"),
-                  ghandlers.setstrict()]])],
-            [
-              "GLOBAL",
-              ARAN.build.read("sandbox")]] :
-          [
-            [
-              "GLOBAL",
-              ARAN.build.invoke(
-                ARAN.build.read(ARAN.namespace),
-                ARAN.build.primitive("EVAL"),
-                [
-                  ARAN.build.primitive("this")])]])),
-      (pair) => ARAN.build.Statement(
-        ARAN.build.set(
-          ARAN.build.read(ARAN.namespace),
-          ARAN.build.primitive(pair[0]),
-          pair[1]))),
+                  ghandlers.setstrict()]])]] :
+          [])),
+      (pair) => ARAN.build.If(
+        ARAN.build.unary(
+          "!",
+          ARAN.build.binary(
+            "in",
+            ARAN.build.primitive(pair[0]),
+            ARAN.build.read(ARAN.namespace))),
+        ARAN.build.Statement(
+          ARAN.build.set(
+            ARAN.build.read(ARAN.namespace),
+            ARAN.build.primitive(pair[0]),
+            pair[1])),
+        [])),
     (
-      ARAN.sandbox ?
-      [] :
-      ARAN.build.Statement(
-        ARAN.build.set(
-          ARAN.build.get(
-            ARAN.build.read(ARAN.namespace),
-            ARAN.build.primitive("GLOBAL")),
-          ARAN.build.primitive("global"),
-          ARAN.build.get(
-            ARAN.build.read(ARAN.namespace),
-            ARAN.build.primitive("GLOBAL"))))),
-    ARAN.build.With(
+      ((statements) => ARAN.sandbox ? exports.Sandbox(false, statements) : statements)
       (
-        ARAN.sandbox ?
-        ARAN.build.construct(
-          ARAN.build.read("Proxy"),
-          [
-            ARAN.build.get(
-              ARAN.build.read(ARAN.namespace),
-              ARAN.build.primitive("GLOBAL")),
-            ARAN.build.get(
-              ARAN.build.read(ARAN.namespace),
-              ARAN.build.primitive("GHANDLERS"))]) :
-        ARAN.build.get(
-          ARAN.build.read(ARAN.namespace),
-          ARAN.build.primitive("GLOBAL"))),
-      ARAN.cut.$Program(
-        ArrayLite.concat(
-          ArrayLite.flatenMap(
-            ["global", "TypeError", "eval"],
-            (string) => ARAN.build.Statement(
-              ARAN.cut.$save(
-                string,
-                ARAN.cut.read(string)))),
-          ArrayLite.flatenMap(
-            [
-              ["Reflect", "apply"],
-              ["Object", "defineProperty"],
-              ["Object", "getPrototypeOf"],
-              ["Object", "keys"],
-              ["Symbol", "iterator"]],
-            (strings) => ARAN.build.Statement(
-              ARAN.cut.$save(
-                strings[0] + "_" + strings[1],
-                ARAN.cut.get(
-                  ARAN.cut.read(strings[0]),
-                  ARAN.cut.primitive(strings[1]))))))))));
+        ARAN.cut.$Program(
+          ArrayLite.concat(
+            ArrayLite.flatenMap(
+              ["global", "TypeError", "eval"],
+              (string) => ARAN.build.Statement(
+                ARAN.cut.$save(
+                  string,
+                  ARAN.cut.read(string)))),
+            ArrayLite.flatenMap(
+              [
+                ["Reflect", "apply"],
+                ["Object", "defineProperty"],
+                ["Object", "getPrototypeOf"],
+                ["Object", "keys"],
+                ["Symbol", "iterator"]],
+              (strings) => ARAN.build.Statement(
+                ARAN.cut.$save(
+                  strings[0] + "_" + strings[1],
+                  ARAN.cut.get(
+                    ARAN.cut.read(strings[0]),
+                    ARAN.cut.primitive(strings[1])))))))))));
 
 // if (key[0] === "$") {
 //   if (key[1] === "$") {
@@ -380,15 +423,7 @@ const restore = () => ARAN.build.If(
 /////////////////////
 
 // ({
-//   has: (target, key) => {
-//     if (key === "META")
-//       return false;
-//     if (key === "completion")
-//       return false;
-//     if (key === "$$META")
-//       throw new META.RERROR("Base layer cannot access META");
-//     return true;
-//   },
+//   has: (target, key) => true,
 //   deleteProperty (target, key) {
 //     RESTORE
 //     return delete target[key];
@@ -419,38 +454,8 @@ const restore = () => ARAN.build.If(
 const ghandlers = {
   "has": () => ARAN.build.arrow(
     ["target", "key"],
-    ArrayLite.concat(
-      ARAN.build.If(
-        ARAN.build.binary(
-          "===",
-          ARAN.build.read("key"),
-          ARAN.build.primitive(ARAN.namespace)),
-        ARAN.build.Return(
-          ARAN.build.primitive(false)),
-        []),
-      ARAN.build.If(
-        ARAN.build.binary(
-          "===",
-          ARAN.build.read("key"),
-          ARAN.build.primitive("completion")),
-        ARAN.build.Return(
-          ARAN.build.primitive(false)),
-        []),
-      ARAN.build.If(
-        ARAN.build.binary(
-          "===",
-          ARAN.build.read("key"),
-          ARAN.build.primitive("$$"+ARAN.namespace)),
-        ARAN.build.Throw(
-          ARAN.build.construct(
-            ARAN.build.get(
-              ARAN.build.read(ARAN.namespace),
-              ARAN.build.primitive("RERROR")),
-            [
-              ARAN.build.primitive("Target program is forbidden to access "+ARAN.namespace)])),
-        []),
-      ARAN.build.Return(
-        ARAN.build.primitive(true)))),
+    ARAN.build.Return(
+      ARAN.build.primitive(true))),
   "deleteProperty": () => ARAN.build.arrow(
     ["target", "key"],
     ArrayLite.concat(

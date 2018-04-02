@@ -16,45 +16,6 @@ module.exports = (pointcut) => {
 
   const cut = {};
 
-  // // eval in strict mode is block-scoped 
-  // // eval in normal mode is function-scoped
-  // cut.PROGRAM = (strict, expression, statements) => ARAN.build.PROGRAM(
-  //   strict,
-  //   expression,
-  //   ARAN.build.Try(
-  //     ArrayLite.concat(
-  //       Inform(
-  //         traps.begin()),
-  //       (
-  //         ARAN.node.AranParent ?
-  //         [] :
-  //         ARAN.build.Declare(
-  //           "const",
-  //           SanitizeIdentifier("this"),
-  //           traps.declare(
-  //             "const",
-  //             "this",
-  //             traps.load(
-  //               "global",
-  //               Meta.load("global"))))),
-  //       ARAN.build.Statement(
-  //         ARAN.build.write(
-  //           "completion",
-  //           traps.completion(
-  //             traps.primitive(
-  //               ARAN.build.primitive(void 0))))),
-  //       statements,
-  //       ARAN.build.Statement(
-  //         ARAN.build.write(
-  //           "completion",
-  //           traps.success(
-  //             ARAN.build.read("completion"))))),
-  //     ARAN.build.Throw(
-  //       traps.failure(
-  //         ARAN.build.read("error"))),
-  //     Inform(
-  //       traps.end())));
-
   /////////////////
   // Compilation //
   /////////////////
@@ -181,16 +142,40 @@ module.exports = (pointcut) => {
       Inform(traps.leave("finally"))));
 
   cut["function"] = (strict, statements) => traps.function(
-    ARAN.build.function(
-      strict,
-      ArrayLite.concat(
-        ARAN.build.Statement(
-          ARAN.build.write(
-            "arrival",
-            traps.arrival(
-              Boolean(ARAN.node.AranStrict),
-              ARAN.build.read("arrival")))),
-        statements)));
+    Meta.define(
+      Meta.define(
+        ARAN.build.function(
+          strict,
+          ArrayLite.concat(
+            ARAN.build.Statement(
+              ARAN.build.write(
+                "arrival",
+                traps.arrival(
+                  Boolean(ARAN.node.AranStrict),
+                  ARAN.build.read("callee"),
+                  ARAN.build.binary(
+                    "!==",
+                    ARAN.build.read("new.target"),
+                    ARAN.build.primitive(void 0)),
+                  ARAN.build.read("this"),
+                  ARAN.build.read("arguments")))),
+            statements)),
+        "length",
+        ARAN.build.primitive(
+          (
+            (
+              ARAN.node.params.length &&
+              ARAN.node.params[ARAN.node.params.length-1].type === "RestElement") ?
+            ARAN.node.params.length - 1 :
+            ARAN.node.params.length)),
+        false, 
+        false,
+        true),
+      "name",
+      ARAN.build.primitive(ARAN.node.id ? ARAN.node.id.name : ARAN.name || ""),
+      false,
+      false,
+      true));
 
   cut.read = (identifier) => traps.read(
     identifier,

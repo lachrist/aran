@@ -23,7 +23,7 @@ function weave (root, pointcut, parent) {
 
 function root (serial) {
   for (var index=0, length=this._roots.length; index<length; index++) {
-    if (serial >= this._roots[index].AranSerial && serial <= this._roots[index].AranMaxSerial) {
+    if (serial >= this._roots[index].AranSerial && serial <= this._roots[index].AranSerialMax) {
       return this._roots[index];
     }
   }
@@ -37,7 +37,7 @@ function node1 (serial) {
       if (node.AranSerial === serial) {
         return node;
       }
-      if (!node.AranSerial || (serial > node.AranSerial && serial <= node.AranMaxSerial)) {
+      if (!node.AranSerial || (serial > node.AranSerial && serial <= node.AranSerialMax)) {
         for (var key in node) {
           nodes[nodes.length] = node[key];
         }

@@ -37,28 +37,11 @@ module.exports = (root, parent) => {
           ArrayLite.flaten(ARAN.hoisted)])));
   ARAN.hoisted = null;
   ARAN.node = null;
-  root.AranMaxSerial = ARAN.counter;
-  return ARAN.build.PROGRAM(
-    strict,
-    (
-      parent || !ARAN.sandbox ?
-      statements :
-      (
-        root.AranStrict ?
-        ARAN.build.With(
-          Meta.gproxy(true),
-          ARAN.build.Statement(
-            ARAN.build.apply(
-              ARAN.build.arrow(
-                [],
-                statements),
-              []))) :
-        ARAN.build.Statement(
-          ARAN.build.apply(
-            ARAN.build.arrow(
-              [],
-              ARAN.build.With(
-                Meta.gproxy(false),
-                statements)),
-            [])))));
+  root.AranSerialMax = ARAN.counter;
+  return (
+    parent || !ARAN.sandbox ?
+    ARAN.build.PROGRAM(strict, statements) :
+    ARAN.build.PROGRAM(
+      false,
+      Meta.Sandbox(strict, statements)));
 };

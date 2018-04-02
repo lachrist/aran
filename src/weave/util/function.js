@@ -37,11 +37,11 @@ exports.function = (node) => {
     (
       node.type === "ArrowFunctionExpression" ?
       ARAN.cut.If(
-        ARAN.cut.get(
-          ARAN.cut.$copy(
-            1,
-            ARAN.build.read("arrival")),
-          ARAN.cut.primitive("new")),
+        ARAN.cut.$copy(
+          3,
+          ARAN.build.get(
+            ARAN.build.read("arrival"),
+            ARAN.build.primitive(1))),
         ARAN.cut.Throw(
           ARAN.cut.construct(
             ARAN.cut.$load("TypeError"),
@@ -56,16 +56,16 @@ exports.function = (node) => {
         "const",
         "new.target",
         ARAN.cut.conditional(
-          ARAN.cut.get(
-            ARAN.cut.$copy(
-              1,
-              ARAN.build.read("arrival")),
-            ARAN.cut.primitive("new")),
-          ARAN.cut.get(
-            ARAN.cut.$copy(
-              1,
-              ARAN.build.read("arrival")),
-            ARAN.cut.primitive("callee")),
+          ARAN.cut.$copy(
+            3,
+            ARAN.build.get(
+              ARAN.build.read("arrival"),
+              ARAN.build.primitive(1))),
+          ARAN.cut.$copy(
+            4,
+            ARAN.build.get(
+              ARAN.build.read("arrival"),
+              ARAN.build.primitive(0))),
           ARAN.cut.primitive(void 0)))),
     (
       node.type === "ArrowFunctionExpression" ?
@@ -73,11 +73,11 @@ exports.function = (node) => {
       ARAN.cut.Declare(
         "const",
         "this",
-        ARAN.cut.get(
-          ARAN.cut.$copy(
-            1,
-            ARAN.build.read("arrival")),
-          ARAN.cut.primitive("this")))),
+        ARAN.cut.$copy(
+          2,
+          ARAN.build.get(
+            ARAN.build.read("arrival"),
+            ARAN.build.primitive(2))))),
     (
       (
         node.type === "ArrowFunctionExpression" ||
@@ -86,11 +86,11 @@ exports.function = (node) => {
       ARAN.cut.Declare(
         "const",
         "arguments",
-        ARAN.cut.get(
-          ARAN.cut.$copy(
-            1,
-            ARAN.build.read("arrival")),
-          ARAN.cut.primitive("arguments")))),
+        ARAN.cut.$copy(
+          1,
+          ARAN.build.get(
+            ARAN.build.read("arrival"),
+            ARAN.build.primitive(3))))),
     (
       (
         node.params.length &&
@@ -100,9 +100,9 @@ exports.function = (node) => {
           Interim.hoist(
             "iterator",
             ARAN.cut.invoke(
-              ARAN.cut.get(
+              ARAN.build.get(
                 ARAN.build.read("arrival"),
-                ARAN.cut.primitive("arguments")),
+                ARAN.build.primitive(3)),
               ARAN.cut.$load("Symbol_iterator"),
               []))),
         ArrayLite.flatenMap(
@@ -138,15 +138,20 @@ exports.function = (node) => {
             "let",
             pattern,
             ARAN.cut.get(
-              ARAN.cut.get(
-                ARAN.cut.$copy(
-                  1,
-                  ARAN.build.read("arrival")),
-                ARAN.cut.primitive("arguments")),
+              ARAN.cut.$copy(
+                1,
+                ARAN.build.get(
+                  ARAN.build.read("arrival"),
+                  ARAN.build.primitive(3))),
               ARAN.cut.primitive(index)))),
         ARAN.build.Statement(
           ARAN.cut.$drop(
-            ARAN.build.read("arrival"))))));
+            ARAN.build.primitive(null))))),
+    ARAN.build.Statement(
+      ARAN.cut.$drop(
+        ARAN.cut.$drop(
+          ARAN.cut.$drop(
+            ARAN.build.primitive(null))))));
   const statements0 = ArrayLite.flaten(ARAN.hoisted);
   ARAN.hoisted = [];
   const statements2 = (

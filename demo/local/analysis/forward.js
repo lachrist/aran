@@ -23,7 +23,6 @@ const pass = function () { return arguments[arguments.length-2] };
   "swap",
   "drop",
   "read",
-  "arrival",
   "load",
   "save",
   "catch",
@@ -61,6 +60,8 @@ const noop = () => {};
 ///////////////
 // Combiners //
 ///////////////
+META.arrival = (strict, callee, isnew, value, values) =>
+  [callee, isnew, value, values];
 META.apply = (callee, value, values, serial) =>
   Reflect.apply(callee, value, values);
 META.construct = (callee, values, serial) =>
@@ -88,15 +89,13 @@ META.object = (properties, serial) =>
 //////////////////////////////
 // Logger (uncomment below) //
 //////////////////////////////
-// Object.keys(META).forEach((name) => {
-//   if (name.toLowerCase === name) {
-//     const trap = META[name];
-//     META[name] = function () {
-//       console.log(name+" "+Array.from(arguments).map(print).join(" "));
-//       return Reflect.apply(trap, this, arguments);
-//     };
-//   }
-// });
+Object.keys(META).forEach((name) => {
+  const trap = META[name];
+  META[name] = function () {
+    console.log(name+" "+Array.from(arguments).map(print).join(" "));
+    return Reflect.apply(trap, this, arguments);
+  };
+});
 
 ///////////
 // Setup //

@@ -1,4 +1,7 @@
 console.log(Math.sqrt(4));
-var error = "foo";
-console.log(error, global.error, global.$$error);
-console.log(new Date());
+console.log(Date());
+console.log(global.Date());
+console.log(this.Date());
+(function () {
+  console.log(this.Date());
+} ());

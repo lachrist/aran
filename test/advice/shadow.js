@@ -174,11 +174,6 @@ module.exports = (instrument) => {
   traps.primitive = (value, serial) => produce(value, serial);
   traps.load = (name, value, serial) => produce(value, serial);
   traps.discard = (identifier, value, serial) => produce(value, serial);
-  traps.arrival = (boolean, value, serial) => {
-    cstack.push(Call(scopes.get(value.callee)));
-    cstack.peek().enter("function", Object.create(null), null);
-    return produce(value, serial);
-  };
   traps.read = (identifier, value, serial) => {
     let result;
     const each = (type, binding, custom) => {
@@ -318,6 +313,16 @@ module.exports = (instrument) => {
   // Combiners //
   ///////////////
 
+  traps.arrival = (boolean, value1, value2, value3, value4, serial) => {
+    cstack.push(Call(scopes.get(value1)));
+    cstack.peek().enter("function", Object.create(null), null);
+    return [
+      produce(value1),
+      produce(value2),
+      produce(value3),
+      produce(value4)
+    ];
+  };
   traps.invoke = (value1, value2, values, serial) => {
     let index = values.length;
     while (index--)

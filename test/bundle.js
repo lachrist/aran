@@ -10,7 +10,7 @@ readable.push([
   "const Instrument = require(\"./instrument.js\");",
   "const Advice = require("+JSON.stringify(Path.resolve(process.argv[2]))+");",
   "const instrument = Instrument("+JSON.stringify(Minimist(process.argv.slice(4)))+", Advice);",
-  "const script = weave("+JSON.stringify(Fs.readFileSync(process.argv[3], "utf8"))+");",
+  "const script = instrument("+JSON.stringify(Fs.readFileSync(process.argv[3], "utf8"))+");",
   "console.log(script);",
   "debugger;",
   "console.dir(geval(script));"

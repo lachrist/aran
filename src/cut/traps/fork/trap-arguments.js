@@ -8,6 +8,7 @@ const object = (expressions) => ARAN.build.array(
   ArrayLite.map(expressions, array));
 
 exports.combiners = {
+  arrival: [primitive, identity, identity, identity, identity],
   object: [object],
   array: [array],
   get: [identity, identity],
@@ -28,7 +29,6 @@ exports.modifiers = {
   read: [primitive, identity],
   discard: [primitive, identity],
   load: [primitive, identity],
-  arrival: [primitive, identity],
   catch: [identity],
   primitive: [identity],
   regexp: [identity],
