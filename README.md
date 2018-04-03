@@ -51,6 +51,7 @@ An other good reason for the advice to communicate with Aran arises when the tar
 
 ## Demonstrators
 
+* [demo/local/apply-operate]()
 * [demo/local/empty](https://cdn.rawgit.com/lachrist/aran/02322862/demo/output/local-empty-empty.html): Do nothing.
   Can be used to inspect how Aran desugars JavaScript.
 * [demo/local/forward](https://cdn.rawgit.com/lachrist/aran/02322862/demo/output/local-forward-empty.html):

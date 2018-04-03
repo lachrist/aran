@@ -37,11 +37,12 @@ const remote = (analysis, target) => SandboxScenario(
     {type:"raw", path:__dirname+"/target/"+target+".js"}],
   callback("remote-"+analysis+"-"+target));
 
-remote("apply", "factorial");
-local("apply", "factorial");
-local("empty", "empty");
-local("eval", "dynamic");
-local("forward", "empty");
-local("sandbox", "global");
-local("shadow-value", "delta");
-local("shadow-state", "delta");
+// remote("apply", "factorial");
+// local("apply", "factorial");
+// local("empty", "empty");
+// local("eval", "dynamic");
+// local("forward", "empty");
+// local("sandbox", "global");
+// local("shadow-value", "delta");
+// local("shadow-state", "delta");
+local("apply-operate", "delta2");
