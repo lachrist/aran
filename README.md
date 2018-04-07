@@ -263,7 +263,7 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
 --------------|----------------------|---------------------|---------------------|-----------------
 **Combiners** |                      |                     |                     |                 
 `arrival`     |                      |                     |                     |
-`apply`       | `function:value`     | `this:value`        | `arguments:[value]` | `serial:number`
+`apply`       | `strict:boolean`     | `function:value`    | `arguments:[value]` | `serial:number`
 `invoke`      | `object:value`       | `key:value`         | `arguments:[value]` | `serial:number`
 `construct`   | `constructor:value`  | `arguments:[value]` | `serial:number`     |                
 `unary`       | `operator:string`    | `argument:value`    | `serial:number`     |                

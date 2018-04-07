@@ -89,13 +89,13 @@ META.object = (properties, serial) =>
 //////////////////////////////
 // Logger (uncomment below) //
 //////////////////////////////
-Object.keys(META).forEach((name) => {
-  const trap = META[name];
-  META[name] = function () {
-    console.log(name+" "+Array.from(arguments).map(print).join(" "));
-    return Reflect.apply(trap, this, arguments);
-  };
-});
+// Object.keys(META).forEach((name) => {
+//   const trap = META[name];
+//   META[name] = function () {
+//     console.log(name+" "+Array.from(arguments).map(print).join(" "));
+//     return Reflect.apply(trap, this, arguments);
+//   };
+// });
 
 ///////////
 // Setup //
