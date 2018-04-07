@@ -262,14 +262,14 @@ META.arrival = (strict, value1, value2, value3, value4, serial) => {
   }]));
   return [
     produce("arrival-callee", [], value1, serial),
-    produce("arrival-isnew", [], value2, serial),
+    produce("arrival-new", [], value2, serial),
     produce("arrival-this", [], value3, serial),
     produce("arrival-arguments", [], value4, serial)
   ];
 };
-META.apply = (value1, value2, values, serial) => combine(
-  Reflect.apply(value1, value2, values),
-  "apply", [cut(values.length), vstack.pop(), vstack.pop()], serial);
+META.apply = (strict, value1, values, serial) => combine(
+  Reflect.apply(value1, strict ? undefined : global, values),
+  "apply", [cut(values.length), vstack.pop(), String(strict)], serial);
 META.invoke = (value1, value2, values, serial) => combine(
   Reflect.apply(value1[value2], value1, values),
   "invoke", [cut(values.length), vstack.pop(), vstack.pop()], serial);
@@ -306,7 +306,8 @@ META.object = (properties, serial) => {
 ///////////
 // Setup //
 ///////////
-const aran = Aran({namespace:"META"});
+// To output the same result as shadow-value, the sandbox must be activated 
+const aran = Aran({namespace:"META", sandbox:true});
 global.eval(Astring.generate(aran.setup(true)));
 const instrument = (script, parent) =>
   Astring.generate(aran.weave(Acorn.parse(script), true, parent));

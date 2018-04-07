@@ -17,9 +17,9 @@ const location = (serial) => {
   const loc = aran.node(serial).loc;
   return "@"+loc.start.line + ":"+loc.start.column;
 };
-META.apply = (callee, value, values, serial) => {
+META.apply = (strict, callee, values, serial) => {
   console.log(callee.name+"("+values.map(print).join(", ")+") "+location(serial));
-  const result = Reflect.apply(callee, value, values);
+  const result = Reflect.apply(callee, strict ? undefined : global, values);
   console.log(print(result)+" = "+callee.name+"("+values.map(print).join(", ")+") "+location(serial));
   return result;
 };

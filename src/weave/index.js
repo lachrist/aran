@@ -21,27 +21,28 @@ module.exports = (root, parent) => {
   if (ARAN.nodes)
     ARAN.nodes[root.AranSerial] = root;
   ARAN.hoisted = [];
-  ARAN.node = root;
-  const statements = ARAN.cut.$Program(
-    ArrayLite.flaten(
-      ArrayLite.reverse(
-        [
-          ArrayLite.flatenMap(root.body, Visit.Statement),
-          (
-            root.AranParent ?
-            [] :
-            ARAN.cut.Declare(
-              "const",
-              "this",
-              ARAN.cut.$load("global"))),
-          ArrayLite.flaten(ARAN.hoisted)])));
+  const statements1 = ArrayLite.flatenMap(root.body, Visit.Statement);
+  const statements2 = ArrayLite.flaten(ARAN.hoisted);
   ARAN.hoisted = null;
-  ARAN.node = null;
   root.AranSerialMax = ARAN.counter;
-  return (
-    parent || !ARAN.sandbox ?
-    ARAN.build.PROGRAM(strict, statements) :
-    ARAN.build.PROGRAM(
-      false,
-      Meta.Sandbox(strict, statements)));
+  return ARAN.cut.$PROGRAM(
+    ARAN.sandbox && !parent,
+    strict,
+    ArrayLite.concat(
+      ARAN.build.Declare(
+        "const",
+        "eval",
+        Meta.eval()),
+      (
+        root.AranParent ?
+        [] :
+        ARAN.cut.Declare(
+          "const",
+          "this",
+          ARAN.cut.$load("global"))),
+      ARAN.build.Statement(
+        ARAN.cut.$completion(
+          ARAN.cut.primitive(void 0))),
+      statements1,
+      statements2));
 };

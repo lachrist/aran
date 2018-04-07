@@ -34,10 +34,11 @@ exports.ObjectExpression = (node) => (
         Visit.expression(property.value)])) :
   ArrayLite.reduce(
     node.properties,
-    (node, property) => ARAN.cut.apply(
-      ARAN.cut.$load("Object_defineProperty"),
+    (expression, property) => ARAN.cut.apply(
+      node.AranStrict,
+      ARAN.cut.$load("Object.defineProperty"),
       [
-        node,
+        expression,
         (
           property.computed ?
           Visit.expression(property.key) :
@@ -87,7 +88,9 @@ exports.UnaryExpression = (node) => (
   ARAN.cut.unary(
       "typeof",
       ARAN.build.apply(
+        null,
         ARAN.build.arrow(
+          false,
           [],
           ARAN.build.Try(
             ARAN.build.Return(
@@ -301,6 +304,7 @@ exports.CallExpression = (node, local) => (
         node.callee.type !== "Identifier" ||
         node.callee.name !== "eval") ?
       ARAN.cut.apply(
+        node.AranStrict,
         Visit.expression(node.callee),
         ArrayLite.map(
           node.arguments,
@@ -310,49 +314,32 @@ exports.CallExpression = (node, local) => (
           "===",
           ARAN.cut.read("eval"),
           ARAN.cut.$load("eval")),
-        (
-          local = ARAN.cut.eval(
-            (
-              node.arguments.length === 0 ?
-              ARAN.cut.primitive(void 0) :
-              (
-                node.arguments.length === 1 ?
-                Visit.expression(node.arguments[0]) :
-                ARAN.build.get(
-                  ARAN.build.array(
-                    ArrayLite.map(
-                      node.arguments,
-                      (expression, index) => (
-                        index ?
-                        ARAN.cut.$drop(
-                          Visit.expression(expression)) :
-                        Visit.expression(expression)))),
-                  ARAN.build.primitive(0))))),
+        ARAN.cut.eval(
           (
-            ARAN.sandbox ?
-            local :
-            ARAN.build.sequence(
-              [
-                Interim.hoist(
-                  "function",
-                  ARAN.build.read("eval")),
-                ARAN.build.write(
-                  "eval",
-                  Meta.eval()),
-                Interim.hoist(
-                  "result",
-                  local),
-                ARAN.build.write(
-                  "eval",
-                  Interim.read("function")),
-                Interim.read("result")]))),
+            node.arguments.length === 0 ?
+            ARAN.cut.primitive(void 0) :
+            (
+              node.arguments.length === 1 ?
+              Visit.expression(node.arguments[0]) :
+              ARAN.build.get(
+                ARAN.build.array(
+                  ArrayLite.map(
+                    node.arguments,
+                    (expression, index) => (
+                      index ?
+                      ARAN.cut.$drop(
+                        Visit.expression(expression)) :
+                      Visit.expression(expression)))),
+                ARAN.build.primitive(0))))),
         ARAN.cut.apply(
+          node.AranStrict,
           ARAN.cut.read("eval"),
           ArrayLite.map(
             node.arguments,
             Visit.expression))))) :
   ARAN.cut.apply(
-    ARAN.cut.$load("Reflect_apply"),
+    node.AranStrict,
+    ARAN.cut.$load("Reflect.apply"),
     [
       (
         node.callee.type === "MemberExpression" ?
@@ -389,11 +376,12 @@ exports.CallExpression = (node, local) => (
                   2,
                   1,
                   ARAN.build.apply(
+                    null,
                     Util.rest(),
                     [
                       ARAN.cut.invoke(
                         Visit.expression(argument.argument),
-                        ARAN.cut.$load("Symbol_iterator"),
+                        ARAN.cut.$load("Symbol.iterator"),
                         []),
                       ARAN.cut.$swap(
                         2,

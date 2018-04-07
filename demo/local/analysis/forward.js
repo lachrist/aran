@@ -62,8 +62,8 @@ const noop = () => {};
 ///////////////
 META.arrival = (strict, callee, isnew, value, values) =>
   [callee, isnew, value, values];
-META.apply = (callee, value, values, serial) =>
-  Reflect.apply(callee, value, values);
+META.apply = (strict, callee, values, serial) =>
+  Reflect.apply(callee, strict ? undefined : global, values);
 META.construct = (callee, values, serial) =>
   Reflect.construct(callee, values);
 META.invoke = (object, key, values, serial) =>

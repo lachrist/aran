@@ -265,14 +265,14 @@ module.exports = (instrument) => {
   traps.declare = (kind, identifier, value, serial) => {
     cstack.peek().loop((type, binding, custom) => {
       if (kind !== "var" || type === "function") {
-        if (type === "with")
-          throw new Error("["+serial+"] Illegal with frame");
-        Object_defineProperty(binding, identifier, {
-          enumerable: true,
-          configurable: kind === "var",
-          writable: kind !== "const",
-          value: value
-        });
+        if (type !== "with") {
+          Object_defineProperty(binding, identifier, {
+            enumerable: true,
+            configurable: kind === "var",
+            writable: kind !== "const",
+            value: value
+          });
+        }
         return true;
       }
     });
@@ -338,13 +338,12 @@ module.exports = (instrument) => {
     consume(value, serial);
     return produce(Reflect_construct(value, values), serial);
   };
-  traps.apply = (value1, value2, values, serial) => {
+  traps.apply = (boolean, value, values, serial) => {
     let index = values.length;
     while (index--)
       consume(values[index], serial);
-    consume(value2, serial);
-    consume(value1, serial);
-    return produce(Reflect_apply(value1, value2, values), serial);
+    consume(value, serial);
+    return produce(Reflect_apply(value, boolean ? void 0 : global, values), serial);
   };
   traps.unary = (operator, value, serial) => {
     consume(value, serial);

@@ -5,11 +5,11 @@ const ArrayLite = require("array-lite");
 // Program //
 /////////////
 
-exports.PROGRAM = (strict, statements) => ({
+exports.PROGRAM = (boolean, statements) => ({
   type: "Program",
   body: ArrayLite.concat(
     (
-      strict ?
+      boolean ?
       [
         {
           type: "StatementExpression",
@@ -82,7 +82,7 @@ exports.object = (properties) => ({
     value: property[1]
   }))});
 
-exports["function"] = (strict, statements) => ({
+exports["function"] = (boolean, statements) => ({
   type: "CallExpression",
   callee: {
     type: "FunctionExpression",
@@ -118,7 +118,7 @@ exports["function"] = (strict, statements) => ({
                   type: "BlockStatement",
                   body: ArrayLite.concat(
                     (
-                      strict ?
+                      boolean ?
                       [
                         {
                           type: "ExpressionStatement",
@@ -145,7 +145,7 @@ exports["function"] = (strict, statements) => ({
             name: "callee"}}]}},
   arguments: []});
 
-exports.arrow = (identifiers, statements) => ({
+exports.arrow = (boolean, identifiers, statements) => ({
   type: "ArrowFunctionExpression",
   defaults: [],
   rest: null,
@@ -158,7 +158,17 @@ exports.arrow = (identifiers, statements) => ({
       name: identifier})),
   body: {
     type: "BlockStatement",
-    body: statements}});
+    body: ArrayLite.concat(
+      (
+        boolean ?
+        [
+          {
+            type: "ExpressionStatement",
+            expression: {
+              type: "Literal",
+              value: "use strict"}}] :
+        []),
+      statements)}});
 
 exports.primitive = (primitive) => (
   primitive === void 0 ?
@@ -236,10 +246,15 @@ exports.construct = (expression, expressions) => ({
   callee: expression,
   arguments: expressions});
 
-exports.apply = (expression, expressions) => ({
+exports.apply = (boolean, expression, expressions) => ({
   type: "CallExpression",
   callee: expression,
   arguments: expressions});
+
+exports.arrival = (boolean, expression1, expression2, expression3, expression4) => ({
+  type: "ArrayExpression",
+  elements: [expression1, expression2, expression3, expression4]
+});
 
 exports.invoke = (expression1, expression2, expressions) => ({
   type: "CallExpression",

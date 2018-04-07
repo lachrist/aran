@@ -10,15 +10,21 @@ const Object_keys = global.Object.keys;
 const Reflect_apply = global.Reflect.apply;
 const String_prototype_replace = global.String.prototype.replace;
 
-function weave (root, pointcut, parent) {
-  this._roots.push(root);
+const run = (root, pointcut, parent, aran, closure) => {
+  aran._roots[aran._roots.length] = root;
   const temporary = global.ARAN;
-  global.ARAN = this._global;
+  global.ARAN = aran._global;
   global.ARAN.cut = Cut(pointcut);
-  const program = Weave(root, typeof parent === "number" ? this.node(parent) : parent);
+  global.ARAN.node = root;
+  const program = closure(root, typeof parent === "number" ? aran.node(parent) : parent);
+  global.ARAN.node = null;
   global.ARAN.cut = null;
   global.ARAN = temporary;
   return program;
+}
+
+function weave (root, pointcut, parent) {
+  return run(root, pointcut, parent, this, Weave);
 }
 
 function root (serial) {
@@ -47,15 +53,13 @@ function node1 (serial) {
 }
 
 function setup (pointcut) {
-  const temporary = global.ARAN;
-  global.ARAN = this._global;
-  global.ARAN.cut = Cut(pointcut);
-  global.ARAN.node = this._roots[0];
-  const program = Meta.SETUP();
-  global.ARAN.node = null;
-  global.ARAN.cut = null;
-  global.ARAN = temporary;
-  return program;
+  return run({
+    type: "Program",
+    body: [],
+    AranStrict: false,
+    AranParent: null,
+    AranSerial: 0,
+    AranSerialMax: 0}, pointcut, null, this, Meta.SETUP);
 }
 
 function node2 (serial) {
@@ -71,16 +75,8 @@ module.exports = (options) => {
   }, options);
   if (!Build[options.output])
     throw new Error("Unknown output: "+options.output+", should be one of "+Object_keys(Build));
-  const roots = [
-    {
-      type: "Program",
-      body: [],
-      AranStrict: false,
-      AranParent: null,
-      AranSerial: 0,
-      AranSerialMax: 0}];
   return {
-    _roots: roots,
+    _roots: [],
     _global: {
       counter: 1,
       node: null,
@@ -89,10 +85,9 @@ module.exports = (options) => {
       namespace: options.namespace,
       sandbox: options.sandbox,
       build: Build[options.output],
-      nodes: options.nocache ? null : [roots[0]],
+      nodes: options.nocache ? null : [],
       regexp: new RegExp(
-        "^\\$*(newtarget|callee|this|arguments|error|completion|arrival|" +
-        (options.sandbox ? "eval|" : "") +
+        "^\\$*(newtarget|callee|this|arguments|error|completion|arrival|eval|" +
         Reflect_apply(String_prototype_replace, options.namespace, ["$", "\\$$"]) +
         ")$"),
     },

@@ -5,26 +5,20 @@ const Meta = require("../../../meta.js");
 
 const empty = () => null;
 function last () { return arguments[arguments.length-1] }
-const combine = (key, length) => {
-  if (length === 1)
-    return (argument0) => ARAN.build[key](argument0);
-  if (length === 2)
-    return (argument0, argument1) => ARAN.build[key](argument0, argument1);
-  if (length === 3)
-    return (argument0, argument1, argument2) => ARAN.build[key](argument0, argument1, argument2);
-  throw new Error("Invalid trap arguments length: "+length);
+const combine = (key) => {
+  switch (TrapArguments.combiners[key].length) {
+    case 1: return (x1) => ARAN.build[key](x1);
+    case 2: return (x1, x2) => ARAN.build[key](x1, x2);
+    case 3: return (x1, x2, x3) => ARAN.build[key](x1, x2, x3);
+    case 4: return (x1, x2, x3, x4) => ARAN.build[key](x1, x2, x3, x4);
+    case 5: return (x1, x2, x3, x4, x5) => ARAN.build[key](x1, x2, x3, x4, x5);
+  }
 };
 
 ArrayLite.forEach(
   Object_keys(TrapArguments.combiners),
-  (key) => {
-    if (key !== "apply" && key !== "arrival")
-      exports[key] = combine(key, TrapArguments.combiners[key].length)
-  });
+  (key) => exports[key] = combine(key));
 
-exports.apply = Meta.apply;
-
-exports.arrival = (boolean, expression1, expression2, expression3, expression4) => ARAN.build.array([expression1, expression2, expression3, expression4]);
 
 ArrayLite.forEach(
   Object_keys(TrapArguments.informers),

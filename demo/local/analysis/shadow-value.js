@@ -74,13 +74,13 @@ const metaof = ($value) => $value.meta;
 const baseof = ($value) => $value.base;
 META.arrival = (strict, value1, value2, value3, value4, serial) => [
   produce("arrival-callee", [], value1, serial),
-  produce("arrival-isnew", [], value2, serial),
+  produce("arrival-new", [], value2, serial),
   produce("arrival-this", [], value3, serial),
   produce("arrival-arguments", [], value4, serial)
 ];
-META.apply = ($value1, $value2, $values, serial) => combine(
-  Reflect.apply($value1.base, $value2.base, $values.map(baseof)),
-  "apply", [$value1.meta, $value2.meta, "["+$values.map(metaof)+"]"], serial);
+META.apply = (strict, $value, $values, serial) => combine(
+  Reflect.apply($value.base, strict ? undefined : global, $values.map(baseof)),
+  "apply", [String(strict), $value.meta, "["+$values.map(metaof)+"]"], serial);
 META.invoke = ($value1, $value2, $values, serial) => combine(
   Reflect.apply($value1.base[$value2.base], $value1.base, $values.map(baseof)),
   "invoke", [$value1.meta, $value2.meta, "["+$values.map(metaof)+"]"], serial);
@@ -119,18 +119,15 @@ META.object = ($properties, serial) => {
 ///////////
 const pointcut = Object.keys(META);
 const aran = Aran({namespace:"META", sandbox:true});
-const handlers = {};
-META.GLOBAL = new Proxy(Object.create(global), handlers);
-META.GLOBAL.global = META.GLOBAL;
-handlers.get = (target, key, receiver) => typeof key === "symbol" ?
-  target[key] :
-  produce("read", ["'"+key+"'"], target[key], null);
-handlers.set = (target, key, $value, receiver) => {
-  target[key] = consume("write", ["'"+key+"'"], $value, null);
-};
-handlers.defineProperty = (target, key, descriptor) => {
-  descriptor.value = consume("declare", ["'var'", "'"+key+"'"], descriptor.value, null);
-  return Reflect.defineProperty(target, key, descriptor);
+const handlers = {
+  get: (target, key, receiver) => typeof key === "symbol" ?
+    target[key] :
+    produce("read", ["'"+key+"'"], target[key], null),
+  set: (target, key, $value, receiver) => {
+    target[key] = key in target ?
+      consume("write", ["'"+key+"'"], $value, null) :
+      consume("declare", ["'var'", "'"+key+"'"], $value, null)
+  }
 };
 global.eval(Astring.generate(aran.setup(pointcut)));
 const instrument = (script, parent) =>

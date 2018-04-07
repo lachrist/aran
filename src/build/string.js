@@ -6,8 +6,8 @@ const stringify = JSON.stringify;
 // Program //
 /////////////
 
-exports.PROGRAM = (strict, statements) => (
-  (strict ? "\"use strict\";" : "") +
+exports.PROGRAM = (boolean, statements) => (
+  (boolean ? "\"use strict\";" : "") +
   "let completion;" + 
   ArrayLite.join(statements, "") +
   "completion;");
@@ -39,17 +39,18 @@ exports.object = (properties) => (
     ",") +
   "}");
 
-exports["function"] = (strict, statements) => (
+exports["function"] = (boolean, statements) => (
   "(function(){const callee=function(){" +
-  (strict ? "\"use-strict\";" : "") +
+  (boolean ? "\"use-strict\";" : "") +
   "let arrival={callee:callee,new:new.target!==void 0,this:this,arguments:arguments};" +
   ArrayLite.join(statements, "") +
   "};return callee;}())");
 
-exports.arrow = (identifiers, statements) => (
+exports.arrow = (boolean, identifiers, statements) => (
   "((" +
   ArrayLite.join(identifiers, ",") +
   ")=>{" +
+  (boolean ? "\"use-strict\";" : "") +
   ArrayLite.join(statements, "") +
   "})");
 
@@ -124,12 +125,23 @@ exports.construct = (expression, expressions) => (
   ArrayLite.join(expressions, ",") +
   "))");
 
-exports.apply = (expression, expressions) => (
+exports.apply = (boolean, expression, expressions) => (
   "(" +
   expression +
   "(" +
   ArrayLite.join(expressions, ",") +
   "))");
+
+exports.arrival = (boolean, expression1, expression2, expression3, expression4) => (
+  "[" +
+  expression1 +
+  "," +
+  expression2 +
+  "," +
+  expression3 +
+  "," +
+  expression4 +
+  "]");
 
 exports.invoke = (expression1, expression2, expressions) => (
   "(" +

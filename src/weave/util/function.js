@@ -103,7 +103,7 @@ exports.function = (node) => {
               ARAN.build.get(
                 ARAN.build.read("arrival"),
                 ARAN.build.primitive(3)),
-              ARAN.cut.$load("Symbol_iterator"),
+              ARAN.cut.$load("Symbol.iterator"),
               []))),
         ArrayLite.flatenMap(
           node.params,
@@ -113,6 +113,7 @@ exports.function = (node) => {
               "let",
               pattern.argument,
               ARAN.build.apply(
+                null,
                 Util.rest(),
                 [
                   Interim.read("iterator"),

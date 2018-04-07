@@ -20,35 +20,67 @@ module.exports = (pointcut) => {
   // Compilation //
   /////////////////
 
-  cut.$Program = (statements) => ARAN.build.Try(
-    ArrayLite.concat(
-      Inform(
-        traps.begin(
-          Boolean(ARAN.node.AranStrict),
-          Boolean(ARAN.node.AranParent))),
-      ARAN.build.Statement(
-        ARAN.build.write(
-          "completion",
-          traps.completion(
-            traps.primitive(
-              ARAN.build.primitive(void 0))))),
-      statements,
-      ARAN.build.Statement(
-        ARAN.build.write(
-          "completion",
-          traps.success(
+  cut.$PROGRAM = (boolean1, boolean2, statements) => ARAN.build.PROGRAM(
+    !boolean1 && boolean2,
+    ARAN.build.Try(
+      ArrayLite.concat(
+        Inform(
+          traps.begin(
             Boolean(ARAN.node.AranStrict),
-            Boolean(ARAN.node.AranParent),
-            ARAN.build.read("completion"))))),
-    ARAN.build.Throw(
-      traps.failure(
-        Boolean(ARAN.node.AranStrict),
-        Boolean(ARAN.node.AranParent),
-        ARAN.build.read("error"))),
-    Inform(
-      traps.end(
-        Boolean(ARAN.node.AranStrict),
-        Boolean(ARAN.node.AranParent))));
+            Boolean(ARAN.node.AranParent))),
+        (
+          boolean1 ?
+          ARAN.build.Statement(
+            ARAN.build.write(
+              "completion",
+              Meta.apply(
+                ARAN.build.function(
+                  false,
+                  ARAN.build.With(
+                    Meta.proxy(
+                      boolean2 ? "GLOBAL_STRICT_HANDLERS" : "GLOBAL_HANDLERS",
+                      traps.with(
+                        traps.load(
+                          "global",
+                          Meta.load("global")))),
+                    ArrayLite.concat(
+                      ARAN.build.Declare(
+                        "let",
+                        ARAN.namespace,
+                        ARAN.build.read("this")),
+                      ARAN.build.Declare(
+                        "let",
+                        "completion",
+                        ARAN.build.primitive(void 0)),
+                      (
+                        boolean2 ?
+                        ARAN.build.apply(
+                          null,
+                          ARAN.build.arrow(true, [], statements),
+                          []) :
+                        statements),
+                      Inform(traps.leave("with")),
+                      ARAN.build.Return(
+                        ARAN.build.read("completion"))))),
+                ARAN.build.read(ARAN.namespace),
+                []))) :
+          statements),
+        ARAN.build.Statement(
+          ARAN.build.write(
+            "completion",
+            traps.success(
+              Boolean(ARAN.node.AranStrict),
+              Boolean(ARAN.node.AranParent),
+              ARAN.build.read("completion"))))),
+      ARAN.build.Throw(
+        traps.failure(
+          Boolean(ARAN.node.AranStrict),
+          Boolean(ARAN.node.AranParent),
+          ARAN.build.read("error"))),
+      Inform(
+        traps.end(
+          Boolean(ARAN.node.AranStrict),
+          Boolean(ARAN.node.AranParent)))));
 
   cut.$completion = (expression) => ARAN.build.write(
     "completion",
@@ -86,17 +118,6 @@ module.exports = (pointcut) => {
       "unary",
       "binary"],
     (key) => cut[key] = traps[key]);
-
-  cut.apply = (expression, expressions) => traps.apply(
-    expression,
-    (
-      ARAN.node.AranStrict ?
-      traps.primitive(
-        ARAN.build.primitve(void 0)) :
-      traps.load(
-        "global",
-        Meta.load("global"))),
-    expressions);
 
   ///////////////
   // Informers //
@@ -228,7 +249,8 @@ module.exports = (pointcut) => {
     traps.eval(expression));
 
   cut.With = (expression, statements) => ARAN.build.With(
-    Meta.wproxy(
+    Meta.proxy(
+      "LOCAL_HANDLERS",
       traps.with(expression)),
     ArrayLite.concat(
       statements,

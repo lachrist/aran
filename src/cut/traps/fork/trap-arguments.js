@@ -15,7 +15,7 @@ exports.combiners = {
   set: [identity, identity, identity],
   delete: [identity, identity],
   invoke: [identity, identity, array],
-  apply: [identity, identity, array],
+  apply: [primitive, identity, array],
   construct: [identity, array],
   unary: [primitive, identity],
   binary: [primitive, identity, identity]};

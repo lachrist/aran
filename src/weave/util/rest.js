@@ -5,6 +5,7 @@ const ArrayLite = require("array-lite");
 // function (iterator, array) { return array }
 
 exports.rest = () => ARAN.build.arrow(
+  false,
   ["iterator", "array"],
   ArrayLite.concat(
     ARAN.build.Declare(

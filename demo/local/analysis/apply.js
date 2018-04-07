@@ -2,12 +2,12 @@ const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
 global.META = {};
-META.apply = (callee, value, values, serial) => {
+META.apply = (strict, callee, values, serial) => {
   const node = aran.node(serial);
   const prefix = depth+callee+"@"+node.loc.start.line;
   console.log(prefix+"("+values.join(", ")+")");
   depth += ".";
-  const result = Reflect.apply(callee, value, values);
+  const result = Reflect.apply(callee, strict ? undefined : global, values);
   depth = depth.substring(1);
   console.log(depth+result);
   return result;
