@@ -8,7 +8,6 @@ module.exports = (pointcut, advice) => {
     const estree1 = Acorn.parse(script);
     const estree2 = aran.weave(estree1, pointcut);
     return new Worker(URL.createObjectURL(new Blob([
-      "this.global = this;",
       "console.log = function () { \n",
       "  postMessage(Array.from(arguments).map(String).join(' ')+'\\n');\n",
       "};\n",

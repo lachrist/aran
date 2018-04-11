@@ -7,7 +7,8 @@ META.apply = (strict, callee, values, serial) => {
   const prefix = depth+callee+"@"+node.loc.start.line;
   console.log(prefix+"("+values.join(", ")+")");
   depth += ".";
-  const result = Reflect.apply(callee, strict ? undefined : global, values);
+  const value = strict ? undefined : global;
+  const result = Reflect.apply(callee, value, values);
   depth = depth.substring(1);
   console.log(depth+result);
   return result;

@@ -1,7 +1,7 @@
 const ArrayLite = require("array-lite");
+const Meta = require("../../../meta.js");
 const TrapArguments = require("./trap-arguments.js");
 const Object_keys = Object.keys;
-const Meta = require("../../../meta.js");
 
 const empty = () => null;
 function last () { return arguments[arguments.length-1] }
@@ -19,6 +19,10 @@ ArrayLite.forEach(
   Object_keys(TrapArguments.combiners),
   (key) => exports[key] = combine(key));
 
+exports.apply = (boolean, expression, expressions) => (
+  ARAN.sandbox ?
+  Meta.apply(expression, Meta.load("global"), expressions) :
+  ARAN.build.apply(boolean, expression, expressions));
 
 ArrayLite.forEach(
   Object_keys(TrapArguments.informers),

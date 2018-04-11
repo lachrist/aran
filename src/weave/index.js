@@ -43,6 +43,6 @@ module.exports = (root, parent) => {
       ARAN.build.Statement(
         ARAN.cut.$completion(
           ARAN.cut.primitive(void 0))),
-      statements1,
-      statements2));
+      statements2,
+      statements1));
 };
