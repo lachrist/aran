@@ -162,8 +162,8 @@ META.REFERENCE_ERROR        = META.REFERENCE_ERROR        || ReferenceError;
 META.OBJECT_DEFINE_PROPERTY = META.OBJECT_DEFINE_PROPERTY || Object.defineProperty;
 META.REFLECT_APPLY          = META.REFLECT_APPLY          || Reflect.apply;
 META.LOCAL_HANDLERS         = {...};
-META.GLOBAL_HANDLERS        = {...}; // if options.sandboxing is truthy
-META.GLOBAL_STRICT_HANDLERS = {...}; // if options.sandboxing is truthy
+META.GLOBAL_HANDLERS        = {...}; // if options.sandbox is truthy
+META.GLOBAL_STRICT_HANDLERS = {...}; // if options.sandbox is truthy
 // Instrumented //
 META.GLOBAL_eval                  = META.GLOBAL.eval;
 META.GLOBAL_TypeError             = META.GLOBAL.TypeError;
@@ -172,7 +172,7 @@ META.GLOBAL_Symbol_iterator       = META.GLOBAL.Symbol  ? META.GLOBAL.Symbol.ite
 META.GLOBAL_Object_defineProperty = META.GLOBAL.Object  ? META.GLOBAL.Object.defineProperty : undefined;
 META.GLOBAL_Object_getPrototypeOf = META.GLOBAL.Object  ? META.GLOBAL.Object.getPrototypeOf : undefined;
 META.GLOBAL_Object_keys           = META.GLOBAL.Object  ? META.GLOBAL.Object.keys           : undefined;
-META.GLOBAl.$$eval = META.GLOBAL.eval; // if options.sandboxing is falsy
+META.GLOBAl.$$eval = META.GLOBAL.eval; // if options.sandbox is falsy
 ```
 
 ### `output = aran.weave(estree, pointcut, parent)`
@@ -340,7 +340,7 @@ Name          | Original             | Instrumented
 `regexp`      | `/abc/g`             | `META.regexp(/abc/g, @serial)`
 `function`    | `() => {}`           | `META.function(..., @serial)`
 *Consumers*   |                      | 
-`save`        |                      | `... META["GLOBAL_Symbol.iterator"] = META.save("Symbol.iterator", META.GLOBAL.Symbol.iterator); ...`
+`save`        |                      | `... META.GLOBAL_Symbol_iterator = META.save("Symbol.iterator", META.GLOBAL.Symbol.iterator); ...`
 `declare`     | `let x = y`          | `let x = META.declare("let", "x", y, @serial)`
 `write`       | `x = y`              | `x = META.write("x", y, @serial)`
 `test`        | `x ? y : z`          | `META.test(x, @serial) : y : z`
