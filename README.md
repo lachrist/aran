@@ -39,12 +39,12 @@ The last argument passed to traps is always a *serial* number which uniquely ide
 These traps functions are collectively called *advice* and the specification that characterizes which node should trigger a given trap is called *pointcut*.
 The process of inserting trap calls based on a pointcut is called *weaving*.
 This terminology is borrowed from [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming).
-[demo/remote/apply](https://cdn.rawgit.com/lachrist/aran/e7ddc8b9/demo/output/remote-apply-factorial.html) demonstrates these concepts.
+[demo/remote/apply](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/remote-apply-factorial.html) demonstrates these concepts.
 The instrumentation performed in this demonstrator is qualified as *remote* because it takes place on a process distinct from the one evaluating the instrumented code.
 
 ![remote instrumentation](img/remote.png)
 
-As shown in [demo/local/apply](https://cdn.rawgit.com/lachrist/aran/e7ddc8b9/demo/output/local-apply-factorial.html), Aran can also be used to perform *local* instrumentation -- i.e.: the instrumentation is performed on the process that also evaluates the instrumented code.
+As shown in [demo/local/apply](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-apply-factorial.html), Aran can also be used to perform *local* instrumentation -- i.e.: the instrumentation is performed on the process that also evaluates the instrumented code.
 Compared to remote instrumentation, local instrumentation enable direct communication between an advice and its associated Aran's instance.
 For instance, `aran.node(serial)` can invoked by the advice to retrieve the line index of the node that triggered a trap.
 An other good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
@@ -53,20 +53,20 @@ An other good reason for the advice to communicate with Aran arises when the tar
 
 * [demo/local/apply-operate](https://cdn.rawgit.com/lachrist/aran/c4c83ad6/demo/output/local-apply-operate-delta2.html).
   Log function applications and binary/unary operations.
-* [demo/local/empty](https://cdn.rawgit.com/lachrist/aran/e7ddc8b9/demo/output/local-empty-empty.html): Do nothing.
+* [demo/local/empty](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-empty-empty.html): Do nothing.
   Can be used to inspect how Aran desugars JavaScript.
-* [demo/local/forward](https://cdn.rawgit.com/lachrist/aran/e7ddc8b9/demo/output/local-forward-empty.html):
+* [demo/local/forward](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-forward-empty.html):
   Transparent implementation of all the traps.
   Can be used to inspect how Aran inserts traps.
   The last lines can be uncommented to turn this analysis into a tracer.
-* [demo/local/sandbox](https://cdn.rawgit.com/lachrist/aran/e7ddc8b9/demo/output/local-sandbox-global.html):
+* [demo/local/sandbox](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-sandbox-global.html):
   Very restrictive sandboxing.
   See the API section on `aran.setup` to know which identifiers should be available from the scope.
-* [demo/local/eval](https://cdn.rawgit.com/lachrist/aran/e7ddc8b9/demo/output/local-eval-dynamic.html):
+* [demo/local/eval](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-eval-dynamic.html):
   How to to handle dynamic code evaluation, inserting [script element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script) is not handled.
-* [demo/local/shadow-value](https://cdn.rawgit.com/lachrist/aran/e7ddc8b9/demo/output/local-shadow-value-delta.html):
+* [demo/local/shadow-value](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-shadow-value-delta.html):
   Track program values across the value stack and the environment but not the store (the shadow value way).
-* [demo/local/shadow-state](https://cdn.rawgit.com/lachrist/aran/e7ddc8b9/demo/output/local-shadow-state-delta.html):
+* [demo/local/shadow-state](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-shadow-state-delta.html):
   Track program values across the value stack and the environment but not the store (the shadow state way).
   This analysis provides the same output as the previous one but is more complex.
 
