@@ -151,22 +151,29 @@ Build the setup code that should be evaluated before any instrumented code.
 * `output :: *`:
   The setup code whose format depends on `options.output`.
 
-<!-- 
-When evaluating the setup code, the following variables should present in the scope:
-* `sandbox`: if sandboxing is enabled, this value will replace the global object.
-* `eval`: direct [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) calls.
-* `Proxy`: sandboxing and [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with).
-* `Object.defineProperty`: [function.name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name) and [function.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/length).
-* `ReferenceError`: [assignment to undeclared variable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Undeclared_var) (sandboxing only).
-* `global.global`: [spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax).
-* `global.Reflect.apply`: [spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax).
-* `global.TypeError`: [arrow function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions).
-* `global.eval`: direct [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) calls.
-* `global.Object.defineProperty`: [getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) and [setter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set).
-* `global.Symbol.iterator`: [iteration protocols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols).
-* `global.Object.getPrototypeOf`: [for-in loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in).
-* `global.Object.keys`: [for-in loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in).
- -->
+The setup code with `options.namespace` being `META` looks like:
+
+```js
+// NOT Instrumented
+META.EVAL                   = META.EVAL                   || eval;
+META.GLOBAL                 = META.GLOBAL                 || META.EVAL("this");
+META.PROXY                  = META.PROXY                  || Proxy;
+META.REFERENCE_ERROR        = META.REFERENCE_ERROR        || ReferenceError;
+META.OBJECT_DEFINE_PROPERTY = META.OBJECT_DEFINE_PROPERTY || Object.defineProperty;
+META.REFLECT_APPLY          = META.REFLECT_APPLY          || Reflect.apply;
+META.LOCAL_HANDLERS         = {...};
+META.GLOBAL_HANDLERS        = {...}; // if options.sandboxing is truthy
+META.GLOBAL_STRICT_HANDLERS = {...}; // if options.sandboxing is truthy
+// Instrumented //
+META.GLOBAL_eval                  = META.GLOBAL.eval;
+META.GLOBAL_TypeError             = META.GLOBAL.TypeError;
+META.GLOBAL_Reflect_apply         = META.GLOBAL.Reflect ? META.GLOBAL.Reflect.apply         : undefined;
+META.GLOBAL_Symbol_iterator       = META.GLOBAL.Symbol  ? META.GLOBAL.Symbol.iterator       : undefined;
+META.GLOBAL_Object_defineProperty = META.GLOBAL.Object  ? META.GLOBAL.Object.defineProperty : undefined;
+META.GLOBAL_Object_getPrototypeOf = META.GLOBAL.Object  ? META.GLOBAL.Object.getPrototypeOf : undefined;
+META.GLOBAL_Object_keys           = META.GLOBAL.Object  ? META.GLOBAL.Object.keys           : undefined;
+META.GLOBAl.$$eval = META.GLOBAL.eval; // if options.sandboxing is falsy
+```
 
 ### `output = aran.weave(estree, pointcut, parent)`
 
@@ -281,7 +288,6 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
 `read`        | `identifier:string`  | `produced:value`    | `serial:number`     |                
 `discard`     | `identifier:string`  | `produced:value`    | `serial:number`     |                
 `builtin`     | `name:string`        | `produced:value`    | `serial:number`     |                
-`arrival`     | `strict:boolean`     | `produced:value`    | `serial:number`     |                
 `catch`       | `produced:value`     | `serial:number`     |                     |                
 `primitive`   | `produced:value`     | `serial:number`     |                     |                
 `regexp`      | `produced:value`     | `serial:number`     |                     |                
@@ -306,6 +312,233 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
 `leave`       | `type:string`        | `serial:number`     |                     |                
 `label`       | `continue:boolean`   | `label:string`      | `serial:number`     |                
 `break`       | `continue:boolean`   | `label:string`      | `serial:number`     |                
+
+Name          | Original             | Instrumented
+--------------|----------------------|-------------
+**Combiners** |                      |
+`arrival`     | `...`                | `... const arrival = META.arrival(@strict, callee, new.target === undefined, this, arguments, @serial); ...`
+`apply`       | `f(x,y)`             | `META.apply(@strict, f, [x,y], @serial)`
+`invoke`      | `o.k(x,y)`           | `META.invoke(o, "k", [x,y], @serial)`
+`construct`   | `new F(x,y)`         | `META.construct(F, [x,y], @serial)`
+`unary`       | `!x`                 | `META.unary("!", x, @serial)` 
+`binary`      | `x + y`              | `META.binary("+", x, y, @serial)` 
+`get`         | `o.k`                | `META.get(o, "k", @serial)`
+`set`         | `o.k = x`            | `META.set(o, "k", x, @serial)`
+`delete`      | `delete o.k`         | `META.delete(o, "k", @serial)`
+`object`      | `{k:x,l:y}`          | `META.object([["k", x], ["l", y]], @serial)`
+`array`       | `[x,y]`              | `META.array([x,y], @serial)`
+**Modifiers** |                      | 
+`copy`        | `for (x in o) ...`   | `... META.copy(1, ..., @serial) ...`
+`drop`        | `f();`               | `META.drop(f(), @serial);`
+`swap`        | `for (x in o) ...`   | `... META.swap(1, 2, ..., @serial)`
+*Producers*   |                      | 
+`read`        | `x`                  | `... META.read("x", x, @serial) ... `
+`discard`     | `delete x`           | `META.discard("x", delete x, @serial)`
+`load`        | `[x1,x2] = xs`       | `... META.load("Symbol.iterator", META["GLOBAL_Symbol.iterator"]) ...` 
+`catch`       | `... catch (e) ...`  | `... catch (error) { let e = META.catch(error, @serial); ...`
+`primitive`   | `"foo"`              | `META.primitive("foo", @serial)`
+`regexp`      | `/abc/g`             | `META.regexp(/abc/g, @serial)`
+`function`    | `() => {}`           | `META.function(..., @serial)`
+*Consumers*   |                      | 
+`save`        |                      | `... META["GLOBAL_Symbol.iterator"] = META.save("Symbol.iterator", META.GLOBAL.Symbol.iterator); ...`
+`declare`     | `let x = y`          | `let x = META.declare("let", "x", y, @serial)`
+`write`       | `x = y`              | `x = META.write("x", y, @serial)`
+`test`        | `x ? y : z`          | `META.test(x, @serial) : y : z`
+`with`        | `with (x) { ... }`   | `with(new META.PROXY(META.with(x, @serial), META.LOCAL_HANDLERS)) { ... }`
+`throw`       | `throw x`            | `throw META.throw(x, @serial)`
+`return`      | `return x`           | `return META.return(x, @serial)`
+`eval`        | `eval(x)`            | `$$eval === META.GLOBAL_eval ? eval(META.eval(x, @serial)) : $$eval(x)`
+`completion`  | `"foo";`             | `completion = META.completion("foo", @serial);`
+`success`     | `...`                | `... completion = META.success(@strict, @direct, completion, @serial); ...`
+`failure`     | `...`                | `... catch (error) { throw META.failure(@strict, @direct, error, @serial); } ...`
+**Informers** |                      |
+`begin`       | `...`                | `... META.begin(@strict, @direct); ...`
+`end`         | `...`                | `... finally { META.end(@strict, @direct); } ...`
+`try`         | `try { ...`          | `try { META.try(@serial) ...`
+`finally`     | `... finally { ...`  | `... finally { META.finally(@serial) ...`
+`block`       | `{ ... }`            | `{ META.block(@serial) ... }`
+`leave`       | `{ ... }`            | `{ ... META.leave("block", @serial); }`
+`label`       | `l: { ... }`         | `bl: { META.label(false, "l", @serial); ... }`
+`break`       | `break l;`           | `META.break(false, "l", @serial); break bl;`
+
+* `["begin", "completion", "success", "failure", "end"]`.
+  The first parameter of `begin`, `success`, `failure` and `end` is a boolean indicating whether the program is in strict mode or not.
+  Their second parameter is an other boolean indicating whether will be evaluated into a direct call to `eval`.
+  The first / last trap invoked by a program is always `begin` / `end`.
+  Before invoking `end` either `success` or `failure` is invoked.  
+  Extra machinery is needed to conserve the completion value of programs.
+  In Aran, programs always starts with the `let completion;` declaration statement and ends with the `completion;` expression statement.
+  In between, when the completion variable needs to be reassigned, the `completion` trap is invoked.
+  The completion variable can be reassigned one last time with the `success` trap.
+  ```js
+  "foo";
+  ```
+  ```js
+  let completion;
+  try {
+    META.begin(@strict, @direct, @serial);
+    completion = META.completion("foo", @serial);
+    completion = META.success(@strict, @direct, completion, @serial);
+  } catch (error) {
+    throw META.failure(@strict, @direct, error, @serial);
+  } finally {
+    META.end(@strict, @direct, @serial);
+  }
+  completion;
+  ```
+* `["function", "arrival"]`:
+  The `function` intercepts the creation of closures whether they are actual functions or arrows.
+  Note that the given function has a `name` and a `length` property consistent with the original version.
+  To desugar destructuring parameters we used the `arguments` identifiers.  
+  This requires arrows to be desugared into functions.
+  The `arrival` trap receive all the information 
+  Note that `callee` is assigned to the function given as parameter to the `function` trap and not its return value.
+  If the `function` trap returns a different value, the `arrival` traps should reflect this change in `arrival[0]` and `arrival[3].callee` (non strict mode only). 
+  ```js
+  const add = function (x, y) {
+    return x + y; 
+  };
+  ```
+  ```js
+  const add = META.function((() => {
+    let callee = function () {
+      const arrival = META.arrival(@strict, callee, new.target === undefined, this, arguments, @serial);
+      const $$newtarget = arrival[1] ? arrival[0] : undefined; 
+      const $$this = arrival[2];
+      let $$arguments = arrival[3];
+      let x = arrival[3][0];
+      let y = arrival[3][1];
+      return x + y;
+    };
+    META.OBJECT_DEFINE_PROPERTY(callee, "name", {
+      value: "add",
+      writable: false,
+      enumerable: false,
+      configurable: true
+    });
+    META.OBJECT_DEFINE_PROPERTY(callee, "length", {
+      value: 2,
+      writable: false,
+      enumerable: false,
+      configurable: true
+    });
+    return callee;
+  }) (), @serial);
+  ```
+* `["save", "load"]`:
+  Some structures require builtin values to be desugarized.
+  For instance a `for ... in` loop can be desugarized into multiple `for` loops by calling `Object.getPrototypeOf` and `Object.keys`.
+  As the target programs can easily modify the global object, we created a save/load system to make sure we access the correct builtin values.
+* `["block", "leave"]`:
+  There exists multiple block semantic in JavaScript, the simplest one corresponds to regular blocks.
+  The value passed as first parameter to `leave` are: `"block"`, `"try"`, `"catch"`, `"finally"` and `"label"`.
+  Each of these value corresponds to the name of the trap that might have been triggered upon entering the block.
+  ```js
+  {
+    let x = "foo";
+  }
+  ```
+  ```js
+  {
+    META.block(@serial);
+    let x = "foo";
+    META.leave("block", @serial);
+  }
+  ```
+* `["try", "catch", "finally", "leave"]`
+  Not much to say about these traps.
+  The Aran-specific identifier `error` is used so that destructuring parameters can be desugarized.
+  ```js
+  try {
+    f();
+  } catch (e) {
+    g();
+  } finally {
+    h();
+  }
+  ```
+  ```js
+  try {
+    META.try(@serial);
+    f();
+    META.leave("try", @serial)
+  } catch (error) {
+    let e = META.catch(error, @serial);
+    g();
+    META.leave("catch", @serial);
+  } finally {
+    META.finally(@serial);
+    h();
+    META.leave("finally", @serial);
+  }
+  ```
+* `["label", "leave", "break"]`:
+  We made some extra work to avoid adding a `continue` trap.
+  This can be realized by splitting labels into two categories: break labels and continue labels.
+  Explicit break / continue labels are prepended with `"b"` / `"c"`:
+  ```js
+  foo : {
+    break foo;
+  }
+  ```
+  ```js
+  bfoo: {
+    META.label(false, "foo", @serial1);
+    META.break(false, "foo", @serial2);
+    break bfoo;
+    META.leave("label", @serial1);
+  }
+  ```
+  Implicit break / continue labels are explicitly named `"B"` / `"C"`:
+```js
+  while (x) {
+    break;
+    continue;
+  }
+  ```
+  ```js
+  META.label(false, null);
+  B: while (x) C: {
+    META.label(true, null);
+    META.break(false, null);
+    break B;
+    META.break(true, null);
+    break: C;
+    META.leave("label");
+  }
+  META.leave("label");
+  ```
+  To make these two transformations invisible to the user we added a parameter to the `label` and `break`.
+  This parameter is a boolean telling whether the label is a break label (false) or a continue label (true).
+* `["copy", "drop", "swap"]`:
+  These traps are only important for analyses that mirror the value stack.
+  The rest of the time, these traps can be ignored.
+  Analysis mirroring the value stack should look like:
+  ```js
+  let traps = {};
+  let vstack = [];
+  // consumers: should pop a value from the stack.
+  // producers: should push a value from the stack.
+  // combiners-{arrival}: should
+  //   1) pops {0-N} values from the stack
+  //   2) push one value on the stack.
+  // arrival: push four values on top of the stack.
+  traps.copy = (position, result, serial) {
+    vstack.push(vstack[vstack.length-position]);
+    return result;
+  };
+  traps.swap = (position1, position2, result, serial) {
+    const tmp = vstack[vstack.length-position1];
+    vstack[vstack.length-position1] = vstack[vstack.length-position2];
+    vstack[vstack.length-position2] = tmp;
+    return result;
+  };
+  traps.drop = (result, serial) {
+    vstack.pop();
+    return result;
+  };
+  ```
+
 
 ## Known Heisenbugs
 
