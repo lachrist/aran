@@ -14,7 +14,7 @@ npm install aran
 ```
 
 ```js
-const Aranlive = require("aran/live");
+const AranLive = require("aran/live");
 const aranlive = AranLive({
   binary: (operator, left, right, serial) => {
     console.log(operator + " @"+serial);
