@@ -15,7 +15,7 @@ module.exports = (root, parent) => {
     root.body.length &&
     root.body[0].type === "ExpressionStatement" &&
     root.body[0].expression.type === "Literal" &&
-    root.body[0].expression.value === "use strict")
+    root.body[0].expression.value === "use strict");
   root.AranStrict = (parent && parent.AranStrict) || strict;
   root.AranSerial = ++ARAN.counter;
   if (ARAN.nodes)
@@ -25,21 +25,9 @@ module.exports = (root, parent) => {
   const statements2 = ArrayLite.flaten(ARAN.hoisted);
   ARAN.hoisted = null;
   root.AranSerialMax = ARAN.counter;
-  return ARAN.cut.$PROGRAM(
-    ARAN.sandbox && !parent,
+  return ARAN.cut.PROGRAM(
     strict,
     ArrayLite.concat(
-      ARAN.build.Declare(
-        "const",
-        "eval",
-        Meta.eval()),
-      (
-        root.AranParent ?
-        [] :
-        ARAN.cut.Declare(
-          "const",
-          "this",
-          ARAN.cut.$load("global"))),
       ARAN.build.Statement(
         ARAN.cut.$completion(
           ARAN.cut.primitive(void 0))),

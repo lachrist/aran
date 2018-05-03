@@ -39,18 +39,18 @@ exports.object = (properties) => (
     ",") +
   "}");
 
-exports["function"] = (boolean, statements) => (
+exports.closure = (boolean, statements) => (
   "(function(){const callee=function(){" +
-  (boolean ? "\"use-strict\";" : "") +
+  (boolean ? "\"use strict\";" : "") +
   "let arrival={callee:callee,new:new.target!==void 0,this:this,arguments:arguments};" +
   ArrayLite.join(statements, "") +
   "};return callee;}())");
 
-exports.arrow = (boolean, identifiers, statements) => (
-  "((" +
+exports["function"] = (boolean, identifiers, statements) => (
+  "(function(" +
   ArrayLite.join(identifiers, ",") +
-  ")=>{" +
-  (boolean ? "\"use-strict\";" : "") +
+  "){" +
+  (boolean ? "\"use strict\";" : "") +
   ArrayLite.join(statements, "") +
   "})");
 
@@ -125,7 +125,7 @@ exports.construct = (expression, expressions) => (
   ArrayLite.join(expressions, ",") +
   "))");
 
-exports.apply = (boolean, expression, expressions) => (
+exports.apply = (expression, expressions) => (
   "(" +
   expression +
   "(" +

@@ -12,16 +12,17 @@ const visit = (visitors) => (node) => {
   });
   node.AranParentSerial = node.AranParent.AranSerial;
   node.AranStrict = (
-    ARAN.node.AranStrict &&
+    ARAN.node.AranStrict ||
     (
-      node.type === "FunctionExpression" ||
-      node.type === "FunctionDeclaration" ||
-      node.type === "ArrowFunctionExpression") &&
-    !node.expression &&
-    node.body.body.length &&
-    node.body.body[0].type === "ExpressionStatement" &&
-    node.body.body[0].expression.type === "Literal" &&
-    node.body.body[0].expression.value === "use strict");
+      (
+        node.type === "FunctionExpression" ||
+        node.type === "FunctionDeclaration" ||
+        node.type === "ArrowFunctionExpression") &&
+      !node.expression &&
+      Boolean(node.body.body.length) &&
+      node.body.body[0].type === "ExpressionStatement" &&
+      node.body.body[0].expression.type === "Literal" &&
+      node.body.body[0].expression.value === "use strict"));
   node.AranSerial = ++ARAN.counter;
   if (ARAN.nodes)
     ARAN.nodes[node.AranSerial] = node;

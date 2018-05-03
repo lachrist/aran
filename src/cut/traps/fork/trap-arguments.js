@@ -15,7 +15,7 @@ exports.combiners = {
   set: [identity, identity, identity],
   delete: [identity, identity],
   invoke: [identity, identity, array],
-  apply: [primitive, identity, array],
+  apply: [identity, array],
   construct: [identity, array],
   unary: [primitive, identity],
   binary: [primitive, identity, identity]};
@@ -26,13 +26,14 @@ exports.modifiers = {
   copy: [primitive, identity],
   drop: [identity],
   // producers //
+  begin: [primitive, primitive, identity],
   read: [primitive, identity],
   discard: [primitive, identity],
   load: [primitive, identity],
   catch: [identity],
   primitive: [identity],
   regexp: [identity],
-  function: [identity],
+  closure: [identity],
   // consumers //
   save: [primitive, identity],
   drop: [identity],
@@ -48,7 +49,6 @@ exports.modifiers = {
   failure: [primitive, primitive, identity]};
 
 exports.informers = {
-  begin: [primitive, primitive],
   end: [primitive, primitive],
   try: [],
   finally: [],

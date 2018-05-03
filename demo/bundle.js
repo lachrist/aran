@@ -9,7 +9,7 @@ const callback = (name) => (error, script) => {
     "<!DOCTYPE html>",
     "<html>",
     "  <head>",
-    "    <title>sandbox-scenario demo</title>",
+    "    <title>"+name+"</title>",
     "  </head>",
     "  <body>",
     "    <script type=\"text/javascript\">",
@@ -20,29 +20,29 @@ const callback = (name) => (error, script) => {
   ].join("\n"), "utf8");
 }
 
-const local = (analysis, target) => SandboxScenario(
-  {type:"raw", path:__dirname+"/local/spawn.js", basedir:"./"},
+const live = (advice, target) => SandboxScenario(
+  {type:"raw", path:__dirname+"/live/spawn.js", basedir:"./"},
   [
-    {type:"browserify", path:__dirname+"/local/analysis/"+analysis+".js"}],
-  [
-    {type:"raw", path:__dirname+"/target/"+target+".js"}],
-  callback("local-"+analysis+"-"+target));
-
-const remote = (analysis, target) => SandboxScenario(
-  {type:"browserify", path:__dirname+"/remote/spawn.js", basedir:"./"},
-  [
-    {type:"raw", path:__dirname+"/remote/"+analysis+"/pointcut.js"},
-    {type:"raw", path:__dirname+"/remote/"+analysis+"/advice.js"}],
+    {type:"browserify", path:__dirname+"/live/instrument/"+advice+".js"}],
   [
     {type:"raw", path:__dirname+"/target/"+target+".js"}],
-  callback("remote-"+analysis+"-"+target));
+  callback("live-"+advice+"-"+target));
 
-remote("apply", "factorial");
-local("apply", "factorial");
-local("empty", "empty");
-local("eval", "dynamic");
-local("forward", "empty");
-local("sandbox", "global");
-local("shadow-value", "delta");
-local("shadow-state", "delta");
-local("apply-operate", "delta2");
+const dead = (advice, target) => SandboxScenario(
+  {type:"browserify", path:__dirname+"/dead/spawn.js", basedir:"./"},
+  [
+    {type:"raw", path:__dirname+"/dead/"+advice+"/pointcut.js"},
+    {type:"browserify", path:__dirname+"/dead/"+advice+"/advice.js"}],
+  [
+    {type:"raw", path:__dirname+"/target/"+target+".js"}],
+  callback("dead-"+advice+"-"+target));
+
+dead("apply", "factorial");
+live("apply-explicit", "factorial");
+live("apply", "factorial");
+live("empty", "empty");
+live("eval", "dynamic");
+live("forward", "empty");
+live("sandbox", "global");
+live("shadow-value", "delta");
+live("shadow-state", "delta");

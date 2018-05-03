@@ -11,16 +11,7 @@ exports.Declaration = (node) => ArrayLite.flatenMap(
     Util.Declare(
       node.kind,
       declarator.id,
-      (
-        (
-          declarator.id.type === "Identifier" &&
-          (
-            declarator.init.type === "FunctionExpression"||
-            declarator.init.type === "ArrowFunctionExpression")) ?
-        (
-          ARAN.name = declarator.id.name,
-          Visit.expression(declarator.init)) :
-        Visit.expression(declarator.init))) :
+      Visit.expression(declarator.init)) :
     (
       local = ARAN.cut.Declare(
         node.kind,

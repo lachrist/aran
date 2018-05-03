@@ -22,13 +22,14 @@ module.exports = [
   "copy",
   "drop",
   // Producers //
+  "begin",
   "read",
   "discard",
   "load",
   "catch",
   "primitive",
   "regexp",
-  "function",
+  "closure",
   // Consumers //
   "save",
   "declare",
@@ -44,7 +45,6 @@ module.exports = [
   ///////////////
   // Informers //
   ///////////////
-  "begin",
   "end",
   "label",
   "block",

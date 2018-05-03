@@ -219,7 +219,6 @@ exports.ForInStatement = (node) => Util.Completion(
           Interim.hoist(
             "keys2",
             ARAN.cut.apply(
-              node.AranStrict,
               ARAN.cut.$load("Object.keys"),
               [
                 ARAN.cut.$copy(
@@ -276,7 +275,6 @@ exports.ForInStatement = (node) => Util.Completion(
           Interim.write(
             "object",
             ARAN.cut.apply(
-              node.AranStrict,
               ARAN.cut.$swap(
                 1,
                 2,
@@ -421,7 +419,7 @@ exports.FunctionDeclaration = (node) => {
   ARAN.hoisted[ARAN.hoisted.length] = ARAN.cut.Declare(
     node.AranStrict ? "let" : "var",
     node.id.name,
-    Util.function(node));
+    Util.closure(node));
   return [];
 };
 

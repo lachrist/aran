@@ -1,35 +1,55 @@
 
 const ArrayLite = require("array-lite");
 
-exports.trigger = (string, expressions) => ARAN.build.invoke(
+exports.global = () => ARAN.build.get(
   ARAN.build.read(ARAN.namespace),
-  ARAN.build.primitive(string),
-  expressions);
+  ARAN.build.primitive("GLOBAL"));
 
-exports.apply = (expression1, expression2, expressions) => ARAN.build.apply(
-  null,
-  ARAN.build.get(
-    ARAN.build.read("META"),
-    ARAN.build.primitive("REFLECT_APPLY")),
-  [
-    expression1,
-    expression2,
-    ARAN.build.array(expressions)]);
+exports.Sandbox = (statements) => ARAN.build.Statement(
+  ARAN.build.write(
+    "completion",
+    ARAN.build.apply(
+      ARAN.build.get(
+        ARAN.build.read(ARAN.namespace),
+        ARAN.build.primitive("REFLECT_APPLY")),
+      [
+        ARAN.build.function(
+          false,
+          [],
+          ARAN.build.With(
+            ARAN.build.construct(
+              ARAN.build.get(
+                ARAN.build.read(ARAN.namespace),
+                ARAN.build.primitive("PROXY")),
+              [
+                ARAN.build.get(
+                  ARAN.build.read(ARAN.namespace),
+                  ARAN.build.primitive("SANDBOX")),
+                ARAN.build.get(
+                  ARAN.build.read(ARAN.namespace),
+                  ARAN.build.primitive(ARAN.node.AranStrict ? "STRICT_SANDBOX_HANDLERS" : "SANDBOX_HANDLERS"))]),
+            ArrayLite.concat(
+              ARAN.build.Declare(
+                "const",
+                ARAN.namespace,
+                ARAN.build.read("this")),
+              ARAN.build.Declare(
+                "const",
+                "eval",
+                ARAN.build.get(
+                  ARAN.build.read(ARAN.namespace),
+                  ARAN.build.primitive("EVAL"))),
+              ARAN.build.Declare(
+                "let",
+                "completion",
+                ARAN.build.primitive(void 0)),
+              statements,
+              ARAN.build.Return(
+                ARAN.build.read("completion"))))),
+        ARAN.build.read(ARAN.namespace),
+        ARAN.build.array([])])));
 
-exports.eval = () => ARAN.build.get(
-  ARAN.build.read(ARAN.namespace),
-  ARAN.build.primitive("EVAL"));
-
-exports.load = (string) => ARAN.build.get(
-  ARAN.build.read(ARAN.namespace),
-  ARAN.build.primitive(string === "global" ? "GLOBAL" : "GLOBAL_" + string));
-
-exports.save = (string, expression) => ARAN.build.set(
-  ARAN.build.read(ARAN.namespace),
-  ARAN.build.primitive("GLOBAL_"+string),
-  expression);
-
-exports.proxy = (string, expression) => ARAN.build.construct(
+exports.wproxy = (expression) => ARAN.build.construct(
   ARAN.build.get(
     ARAN.build.read(ARAN.namespace),
     ARAN.build.primitive("PROXY")),
@@ -37,10 +57,27 @@ exports.proxy = (string, expression) => ARAN.build.construct(
     expression,
     ARAN.build.get(
       ARAN.build.read(ARAN.namespace),
-      ARAN.build.primitive(string))]);
+      ARAN.build.primitive("WITH_HANDLERS"))]);
+
+exports.trigger = (string, expressions) => ARAN.build.invoke(
+  ARAN.build.read(ARAN.namespace),
+  ARAN.build.primitive(string),
+  expressions);
+
+exports.eval = () => ARAN.build.get(
+  ARAN.build.read(ARAN.namespace),
+  ARAN.build.primitive("EVAL"));
+
+exports.load = (string) => ARAN.build.get(
+  ARAN.build.read(ARAN.namespace),
+  ARAN.build.primitive("SAVE_" + string));
+
+exports.save = (string, expression) => ARAN.build.set(
+  ARAN.build.read(ARAN.namespace),
+  ARAN.build.primitive("SAVE_" + string),
+  expression);
 
 exports.define = (expression1, string, expression2, boolean1, boolean2, boolean3) => ARAN.build.apply(
-  null,
   ARAN.build.get(
     ARAN.build.read(ARAN.namespace),
     ARAN.build.primitive("OBJECT_DEFINE_PROPERTY")),
@@ -78,6 +115,12 @@ exports.define = (expression1, string, expression2, boolean1, boolean2, boolean3
 exports.SETUP = () => ARAN.build.PROGRAM(
   false,
   ArrayLite.concat(
+    // META.EVAL = if (!("EVAL" in META)) META.EVAL = eval;
+    // META.GLOBAl = if (!("GLOBAL" in META)) META.GLOBAL = META.EVAL("this");
+    // META.PROXY = if (!("PROXY" in META)) META.PROXY = Proxy;
+    // META.OBJECT_DEFINE_PROPERTY = if (!("OBJECT_DEFINE_PROPERTY" in META)) META.OBJECT_DEFINE_PROPERTY = Object.defineProperty;
+    // META.REFLECT_APPLY = if (!("REFLECT_APPLY" in META)) META.REFLECT_APPLY = Reflect.apply;
+    // META.REFERENCE_ERROR = if (!("REFERENCE_ERROR" in META)) META.REFERENCE_ERROR = ReferenceError;
     ArrayLite.flatenMap(
       [
         [
@@ -119,15 +162,68 @@ exports.SETUP = () => ARAN.build.PROGRAM(
             ARAN.build.primitive(pair[0]),
             pair[1])),
         [])),
+    // META.GLOBAL.$$eval = META.GLOBAL.eval;
+    (
+      ARAN.sandbox ?
+      [] :
+      ARAN.build.Statement(
+        ARAN.build.set(
+          ARAN.build.get(
+            ARAN.build.read(ARAN.namespace),
+            ARAN.build.primitive("GLOBAL")),
+          ARAN.build.primitive("$$eval"),
+          ARAN.build.get(
+            ARAN.build.get(
+              ARAN.build.read(ARAN.namespace),
+              ARAN.build.primitive("GLOBAL")),
+            ARAN.build.primitive("eval"))))),
+    // META.WITH_HANDLERS = {
+    //   has: (target, key) => {
+    //     if (key === "$$this")
+    //       return false;
+    //     if (key === "$newtarget")
+    //       return false;
+    //     if (key === "error")
+    //       return false;
+    //     if (key === "arguments")
+    //       return false;
+    //     if (key === "completion")
+    //       return false;
+    //     if (key[0] !== "M")
+    //       return false;
+    //     if (key[1] !== "E")
+    //       return false;
+    //     if (key[2] !== "T")
+    //       return false;
+    //     if (key[3] !== "A")
+    //       return false;
+    //     RESTORE
+    //     return key in target;
+    //   },
+    //   get: (target, key, receiver) => {
+    //     if (typeof target === "symbol")
+    //       return target[key];
+    //     RESTORE
+    //     return target[key];
+    //   },
+    //   set: (target, key, value, receiver) => {
+    //     RESTORE
+    //     target[key] = value;
+    //   },
+    //   deleteProperty (target, key) => {
+    //     RESTORE
+    //     return delete target[key];
+    //   }
+    // };
     ARAN.build.Statement(
       ARAN.build.set(
         ARAN.build.read(ARAN.namespace),
-        ARAN.build.primitive("LOCAL_HANDLERS"),
+        ARAN.build.primitive("WITH_HANDLERS"),
         ARAN.build.object(
           [
             [
               ARAN.build.primitive("has"),
-              ARAN.build.arrow(
+              ARAN.build.function(
                 false,
                 ["target", "key"],
                 ArrayLite.concat(
@@ -161,7 +257,7 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                       ARAN.build.read("target")))))],
             [
               ARAN.build.primitive("get"),
-              ARAN.build.arrow(
+              ARAN.build.function(
                 false,
                 ["target", "key", "receiver"],
                 ArrayLite.concat(
@@ -184,7 +280,7 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                       ARAN.build.read("key")))))],
             [
               ARAN.build.primitive("set"),
-              ARAN.build.arrow(
+              ARAN.build.function(
                 false,
                 ["target", "key", "value", "receiver"],
                 ArrayLite.concat(
@@ -196,7 +292,7 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                       ARAN.build.read("value")))))],
             [
               ARAN.build.primitive("deleteProperty"),
-              ARAN.build.arrow(
+              ARAN.build.function(
                 false,
                 ["target", "key"],
                 ArrayLite.concat(
@@ -205,23 +301,38 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                     ARAN.build.delete(
                       ARAN.build.read("target"),
                       ARAN.build.read("key")))))]]))),
+    // META.SANDBOX_HANDLERS = {
+    //   has: (target, key) => {
+    //     return true;
+    //   },
+    //   get: (target, key, receiver) => {
+    //     if (typeof key === "symbol")
+    //       return void 0;
+    //     RESTORE
+    //     if (key in target)
+    //       return target[key];
+    //     throw new META.REFERENCE_ERROR(key+" is not defined");
+    //   },
+    //   set: META.HANDLERS.set,
+    //   deleteProperty: META.HANDLERS.deleteProeperty
+    // };
     (
       ARAN.sandbox ?
       ARAN.build.Statement(
         ARAN.build.set(
           ARAN.build.read(ARAN.namespace),
-          ARAN.build.primitive("GLOBAL_HANDLERS"),
+          ARAN.build.primitive("SANDBOX_HANDLERS"),
           ARAN.build.object([
             [
               ARAN.build.primitive("has"),
-              ARAN.build.arrow(
+              ARAN.build.function(
                 false,
                 ["target", "key"],
                 ARAN.build.Return(
                   ARAN.build.primitive(true)))],
             [
               ARAN.build.primitive("get"),
-              ARAN.build.arrow(
+              ARAN.build.function(
                 false,
                 ["target", "key", "receiver"],
                 ArrayLite.concat(
@@ -250,7 +361,7 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                     ARAN.build.construct(
                       ARAN.build.get(
                         ARAN.build.read(ARAN.namespace),
-                        ARAN.build.primitive("RERROR")),
+                        ARAN.build.primitive("REFERENCE_ERROR")),
                       [
                         ARAN.build.binary(
                           "+",
@@ -261,22 +372,34 @@ exports.SETUP = () => ARAN.build.PROGRAM(
               ARAN.build.get(
                 ARAN.build.get(
                   ARAN.build.read(ARAN.namespace),
-                  ARAN.build.primitive("LOCAL_HANDLERS")),
+                  ARAN.build.primitive("WITH_HANDLERS")),
                 ARAN.build.primitive("set"))],
             [
               ARAN.build.primitive("deleteProperty"),
               ARAN.build.get(
                 ARAN.build.get(
                   ARAN.build.read(ARAN.namespace),
-                  ARAN.build.primitive("LOCAL_HANDLERS")),
+                  ARAN.build.primitive("WITH_HANDLERS")),
                 ARAN.build.primitive("deleteProperty"))]]))) :
       []),
+    // META.STRICT_SANDBOX_HANDLERS = {
+    //   has: META.GLOBAL_HANDLERS.has,
+    //   get: META.GLOBAL_HANDLERS.get,
+    //   set: (target, key, value, receiver) => {
+    //     RESTORE
+    //     if (key in target)
+    //       target[key] = value;
+    //     else
+    //       throw new META.REFERENCE_ERROR(key+" is not defined");
+    //   },
+    //   deleteProperty: META.GLOBAL_HANDLERS.deleteProperty
+    // };
     (
       ARAN.sandbox ?
       ARAN.build.Statement(
         ARAN.build.set(
           ARAN.build.read(ARAN.namespace),
-          ARAN.build.primitive("GLOBAL_STRICT_HANDLERS"),
+          ARAN.build.primitive("STRICT_SANDBOX_HANDLERS"),
           ARAN.build.object(
             [
               [
@@ -284,18 +407,18 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                 ARAN.build.get(
                   ARAN.build.get(
                     ARAN.build.read(ARAN.namespace),
-                    ARAN.build.primitive("GLOBAL_HANDLERS")),
+                    ARAN.build.primitive("SANDBOX_HANDLERS")),
                   ARAN.build.primitive("has"))],
               [
                 ARAN.build.primitive("get"),
                 ARAN.build.get(
                   ARAN.build.get(
                     ARAN.build.read(ARAN.namespace),
-                    ARAN.build.primitive("GLOBAL_HANDLERS")),
+                    ARAN.build.primitive("SANDBOX_HANDLERS")),
                   ARAN.build.primitive("get"))],
               [
                 ARAN.build.primitive("set"),
-                ARAN.build.arrow(
+                ARAN.build.function(
                   false,
                   ["target", "key", "value", "receiver"],
                   ArrayLite.concat(
@@ -314,7 +437,7 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                         ARAN.build.construct(
                           ARAN.build.get(
                             ARAN.build.read(ARAN.namespace),
-                            ARAN.build.primitive("RERROR")),
+                            ARAN.build.primitive("REFERENCE_ERROR")),
                           [
                             ARAN.build.binary(
                               "+",
@@ -325,114 +448,9 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                 ARAN.build.get(
                   ARAN.build.get(
                     ARAN.build.read(ARAN.namespace),
-                    ARAN.build.primitive("GLOBAL_HANDLERS")),
+                    ARAN.build.primitive("SANDBOX_HANDLERS")),
                   ARAN.build.primitive("deleteProperty"))]]))) :
-      []),
-    ArrayLite.flatenMap(
-      ["TypeError", "eval"],
-      (string) => ARAN.build.Statement(
-        ARAN.cut.$save(
-          string,
-          ARAN.cut.get(
-            ARAN.cut.$load("global"),
-            ARAN.cut.primitive(string))))),
-    ArrayLite.flatenMap(
-      [
-        ["Reflect", "apply"],
-        ["Object", "defineProperty"],
-        ["Object", "getPrototypeOf"],
-        ["Object", "keys"],
-        ["Symbol", "iterator"]],
-      (strings) => ARAN.build.Statement(
-        ARAN.cut.$save(
-          strings[0] + "." + strings[1],
-          ARAN.cut.conditional(
-            ARAN.cut.get(
-              ARAN.cut.$load("global"),
-              ARAN.cut.primitive(strings[0])),
-            ARAN.cut.get(
-              ARAN.cut.get(
-                ARAN.cut.$load("global"),
-                ARAN.cut.primitive(strings[0])),
-              ARAN.cut.primitive(strings[1])),
-            ARAN.cut.primitive(void 0))))),
-    (
-      ARAN.sandbox ?
-      [] :
-      ARAN.build.Statement(
-        ARAN.cut.$drop(
-          ARAN.cut.set(
-            ARAN.cut.$load("global"),
-            ARAN.cut.primitive("$$eval"),
-            ARAN.cut.$load("eval")))))));
-
-// META.LOCAL_HANDLERS = {
-//   has: (target, key) => {
-//     if (key === "$$this")
-//       return false;
-//     if (key === "$newtarget")
-//       return false;
-//     if (key === "error")
-//       return false;
-//     if (key === "arguments")
-//       return false;
-//     if (key === "completion")
-//       return false;
-//     if (key[0] !== "M")
-//       return false;
-//     if (key[1] !== "E")
-//       return false;
-//     if (key[2] !== "T")
-//       return false;
-//     if (key[3] !== "A")
-//       return false;
-//     RESTORE
-//     return key in target;
-//   },
-//   get: (target, key, receiver) => {
-//     if (typeof target === "symbol")
-//       return target[key];
-//     RESTORE
-//     return target[key];
-//   },
-//   set: (target, key, value, receiver) => {
-//     RESTORE
-//     target[key] = value;
-//   },
-//   deleteProperty (target, key) => {
-//     RESTORE
-//     return delete target[key];
-//   }
-// };
-
-// META.GLOBAL_HANDLERS = {
-//   has: (target, key) => {
-//     return true;
-//   },
-//   get: (target, key, receiver) => {
-//     if (typeof key === "symbol")
-//       return void 0;
-//     RESTORE
-//     if (key in target)
-//       return target[key];
-//     throw new META.RERROR(key+" is not defined");
-//   },
-//   set: META.LOCAL_HANDLERS.set,
-//   deleteProperty: META.LOCAL_HANDLERS.deleteProeperty
-// };
-
-// META.GLOBAL_STRICT_HANDLERS = {
-//   has: META.GLOBAL_HANDLERS.has,
-//   get: META.GLOBAL_HANDLERS.get,
-//   set: (target, key, value, receiver) => {
-//     RESTORE
-//     if (key in target)
-//       target[key] = value;
-//     else
-//       throw new META.RERROR(key+" is not defined");
-//   },
-//   deleteProperty: META.GLOBAL_HANDLERS.deleteProperty
-// };
+      [])));
 
 // RESTORE :=
 // if (key[0] === "$") {

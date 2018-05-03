@@ -10,61 +10,18 @@ const Object_keys = global.Object.keys;
 const Reflect_apply = global.Reflect.apply;
 const String_prototype_replace = global.String.prototype.replace;
 
-const run = (root, pointcut, parent, aran, closure) => {
-  aran._roots[aran._roots.length] = root;
+const run = (state, roots, root, pointcut, parent, closure) => {
+  roots[roots.length] = root;
   const temporary = global.ARAN;
-  global.ARAN = aran._global;
+  global.ARAN = state;
   global.ARAN.cut = Cut(pointcut);
   global.ARAN.node = root;
-  const program = closure(root, typeof parent === "number" ? aran.node(parent) : parent);
+  const program = closure(root, parent);
   global.ARAN.node = null;
   global.ARAN.cut = null;
   global.ARAN = temporary;
   return program;
-}
-
-function weave (root, pointcut, parent) {
-  return run(root, pointcut, parent, this, Weave);
-}
-
-function root (serial) {
-  for (var index=0, length=this._roots.length; index<length; index++) {
-    if (serial >= this._roots[index].AranSerial && serial <= this._roots[index].AranSerialMax) {
-      return this._roots[index];
-    }
-  }
-}
-
-function node1 (serial) {
-  var nodes = ArrayLite.slice(this._roots);
-  for (var index = 0; index < node.length; index++) {
-    var node = nodes[index];
-    if (typeof node === "object" && node !== null) {
-      if (node.AranSerial === serial) {
-        return node;
-      }
-      if (!node.AranSerial || (serial > node.AranSerial && serial <= node.AranSerialMax)) {
-        for (var key in node) {
-          nodes[nodes.length] = node[key];
-        }
-      }
-    }
-  }
-}
-
-function setup (pointcut) {
-  return run({
-    type: "Program",
-    body: [],
-    AranStrict: false,
-    AranParent: null,
-    AranSerial: 0,
-    AranSerialMax: 0}, pointcut, null, this, Meta.SETUP);
-}
-
-function node2 (serial) {
-  return this._global.nodes[serial];
-}
+};
 
 module.exports = (options) => {
   options = Object_assign({
@@ -75,25 +32,57 @@ module.exports = (options) => {
   }, options);
   if (!Build[options.output])
     throw new Error("Unknown output: "+options.output+", should be one of "+Object_keys(Build));
+  const roots = [];
+  const state = {
+    counter: 1,
+    node: null,
+    cut: null,
+    hoisted: null,
+    namespace: options.namespace,
+    sandbox: options.sandbox,
+    build: Build[options.output],
+    nodes: options.nocache ? null : [],
+    regexp: new RegExp(
+      "^\\$*(newtarget|callee|this|arguments|error|completion|arrival|eval|" +
+      Reflect_apply(String_prototype_replace, options.namespace, ["$", "\\$$"]) +
+      ")$"),
+  };
+  const node = (
+    options.nocache ?
+    (serial) => {
+      var nodes = ArrayLite.slice(roots);
+      for (var index = 0; index < node.length; index++) {
+        var node = nodes[index];
+        if (typeof node === "object" && node !== null) {
+          if (node.AranSerial === serial) {
+            return node;
+          }
+          if (!node.AranSerial || (serial > node.AranSerial && serial <= node.AranSerialMax)) {
+            for (var key in node) {
+              nodes[nodes.length] = node[key];
+            }
+          }
+        }
+      }
+    } :
+    (serial) => state.nodes[serial]);
   return {
-    _roots: [],
-    _global: {
-      counter: 1,
-      node: null,
-      cut: null,
-      hoisted: null,
-      namespace: options.namespace,
-      sandbox: options.sandbox,
-      build: Build[options.output],
-      nodes: options.nocache ? null : [],
-      regexp: new RegExp(
-        "^\\$*(newtarget|callee|this|arguments|error|completion|arrival|eval|" +
-        Reflect_apply(String_prototype_replace, options.namespace, ["$", "\\$$"]) +
-        ")$"),
+    namespace: options.namespace,
+    setup: (pointcut) => run(state, roots, {
+      type: "Program",
+      body: [],
+      AranStrict: false,
+      AranParent: null,
+      AranSerial: 0,
+      AranSerialMax: 0}, pointcut, null, Meta.SETUP),
+    weave: (root, pointcut, parent) => run(state, roots, root, pointcut, typeof parent === "number" ? node(parent) : parent, Weave),
+    root: (serial) => {
+      for (var index=0, length=roots.length; index<length; index++) {
+        if (serial >= roots[index].AranSerial && serial <= roots[index].AranSerialMax) {
+          return roots[index];
+        }
+      }
     },
-    setup: setup,
-    weave: weave,
-    root: root,
-    node: options.nocache ? node1 : node2
+    node: node
   };
 };

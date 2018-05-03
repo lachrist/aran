@@ -2,73 +2,67 @@
 
 Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting JavaScript code.
 To install, run `npm install aran`.
-Aran was designed as an infra-structure to build development-time dynamic program analyses such as: objects and functions profiling, debugging, control-flow tracing, taint analysis and concolic testing.
-Aran can be used at deployment-time but be mindful of performance overhead.
+Aran was designed as a generic infra-structure to build various development-time dynamic program analyses such as: objects and functions profiling, debugging, control-flow tracing, taint analysis and concolic testing.
+Aran can also be used at deployment-time but be mindful of performance overhead.
 For instance, Aran can be used to carry out control access systems such as sandboxing.
 Aran can also be used as a desugarizer much like [babel](https://babeljs.io).
 
 ## Getting Started
 
 ```sh
-mkdir node_modules
-npm install acorn aran astring
+npm install aran
 ```
 
 ```js
-const Acorn = require("acorn");
-const Aran = require("aran");
-const Astring = require("astring");
-global.META = {};
-META.primitive = (primitive, serial) => {
-  console.log("["+serial+"]", primitive);
-  return primitive;
-};
-const pointcut = ["primitive"];
-const aran = Aran({namespace:"META"});
-global.eval(Astring.generate(aran.setup(pointcut)));
-const script1 = "'Hello World!'";
-const estree1 = Acorn.parse(script1);
-const estree2 = aran.weave(estree1, pointcut);
-const script2 = Astring.generate(estree2);
-global.eval(script2);
+const Aranlive = require("aran/live");
+const aranlive = AranLive({
+  binary: (operator, left, right, serial) => {
+    console.log(operator + " @"+serial);
+    return eval("left "+operator+" right");
+  }
+});
+global.eval(aranlive.instrument("'Hello' + 'World!'"));
 ```
 
 The code transformation performed by Aran essentially consists in inserting calls to functions called *traps* at [ESTree](https://github.com/estree/estree) nodes specified by the user.
-For instance, the expression `x + y` could be transformed into `META.binary("+", x, y, 123)`.
+For instance, the expression `x + y` may be transformed into `META.binary("+", x, y, 123)`.
 The last argument passed to traps is always a *serial* number which uniquely identifies the node which triggered the trap.
-These traps functions are collectively called *advice* and the specification that characterizes which node should trigger a given trap is called *pointcut*.
+The object that contains traps is called *advice* and the specification that characterizes what trap should be triggered on each node is called *pointcut*.
 The process of inserting trap calls based on a pointcut is called *weaving*.
 This terminology is borrowed from [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming).
-[demo/remote/apply](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/remote-apply-factorial.html) demonstrates these concepts.
-The instrumentation performed in this demonstrator is qualified as *remote* because it takes place on a process distinct from the one evaluating the instrumented code.
+[demo/dead/apply](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/dead-apply-factorial.html) demonstrates these concepts.
 
-![remote instrumentation](img/remote.png)
+![weaving](img/weaving.png)
 
-As shown in [demo/local/apply](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-apply-factorial.html), Aran can also be used to perform *local* instrumentation -- i.e.: the instrumentation is performed on the process that also evaluates the instrumented code.
-Compared to remote instrumentation, local instrumentation enable direct communication between an advice and its associated Aran's instance.
-For instance, `aran.node(serial)` can invoked by the advice to retrieve the line index of the node that triggered a trap.
+When code weaving happens on the same process that evaluates weaved code, it is called *live weaving*.
+This is the case for [instrument/apply-explicit.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-apply-explicit-factorial.html) which performs the same analysis as [demo/dead/apply](demo/dead/apply).
+Live weaving enables direct communication between an advice and its associated Aran's instance.
+For instance, `aran.node(serial)` can be invoked by the advice to retrieve the line index of the node that triggered a trap.
 An other good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
+
+When performing live weaving, Aran offers a simpler interface which hides the complexity linked to pointcut and setup.
+This alternative API also performs parsing with [acorn](https://github.com/acornjs/acorn) and code generation with [astring](https://github.com/davidbonnet/astring). 
+This simpler API is demonstrated at [demo/live/instrument/apply.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-apply-factorial.html).
 
 ## Demonstrators
 
-* [demo/local/apply-operate](https://cdn.rawgit.com/lachrist/aran/c4c83ad6/demo/output/local-apply-operate-delta2.html).
-  Log function applications and binary/unary operations.
-* [demo/local/empty](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-empty-empty.html): Do nothing.
+* [demo/live/instrument/empty.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-empty-empty.html): Do nothing.
+  Empty advice.
   Can be used to inspect how Aran desugars JavaScript.
-* [demo/local/forward](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-forward-empty.html):
+* [demo/live/instrument/forward.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-forward-empty.html):
   Transparent implementation of all the traps.
   Can be used to inspect how Aran inserts traps.
   The last lines can be uncommented to turn this analysis into a tracer.
-* [demo/local/sandbox](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-sandbox-global.html):
-  Very restrictive sandboxing.
-  See the API section on `aran.setup` to know which identifiers should be available from the scope.
-* [demo/local/eval](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-eval-dynamic.html):
-  How to to handle dynamic code evaluation, inserting [script element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script) is not handled.
-* [demo/local/shadow-value](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-shadow-value-delta.html):
+* [demo/live/instrument/sandbox.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-sandbox-global.html):
+  Demonstrate sandboxing by restricting access to `Date`.
+* [demo/live/instrument/eval.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-eval-dynamic.html):
+  Transitively intercepting dynamic code evaluation.
+  [Script element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script) insertion is not handled.
+* [demo/live/instrument/shadow-value.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-shadow-value-delta.html):
   Track program values across the value stack and the environment but not the store (the shadow value way).
-* [demo/local/shadow-state](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/local-shadow-state-delta.html):
+* [demo/local/instrument/shadow-state.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-shadow-state-delta.html):
   Track program values across the value stack and the environment but not the store (the shadow state way).
-  This analysis provides the same output as the previous one but is more complex.
+  This analysis provides the same output as the previous one.
 
 ## Limitations
 
@@ -86,7 +80,43 @@ An other good reason for the advice to communicate with Aran arises when the tar
    This feature is crucial for data-flow centric dynamic analyses such as taint analysis and symbolic execution.
    In our research, we track primitive values through the object graph with a complementary npm module called [Linvail](https://github.com/lachrist/linvail).
 
-## API
+## Simplified Live API
+
+This simpler interface is provided by [live.js](live.js) which is a tiny wrapper around the regular Aran interface.
+
+### `aranlive = require("aran/live")(advice, options)`
+
+Create a new AranLive instance.
+* `advice ::  object`: the object containing the traps.
+  If `options.sandbox` is truthy, `advice.SANDBOX` will be used as the top frame of every environment.
+* `options :: object | undefined`: regular aran's options; see `require("aran")(options)`
+
+### `output = aranlive.instrument(script, parent, options)`
+
+Desugar and insert calls to traps present in the advice.
+* `script :: string`: the target code to weave.
+* `parent :: object | number | undefined`: the parent's node of the target; only for direct eval call.
+* `options :: object | undefined`: acorn's parsing options.
+* `output :: string`: the weaved code containing trap calls.
+
+### `node = aranlive.node(serial)`
+
+Retrieve a node from its serial number; same as `aran.node(serial)`.
+* `serial :: number`
+* `node :: object | undefined`
+
+### `root = aranlive.root(serial)`
+
+Retrieve the ESTree Program node that contains the node at the given serial number; same as `aran.root(serial)`.
+* `serial :: number`
+* `root :: object | undefined`
+
+### `namespace = aranlive.namespace`
+
+The name of the global variable holding the advice; same as `aran.namespace`
+* `namespace :: string`
+
+## Regular API
 
 ### Syntactic Nodes
 
@@ -116,10 +146,9 @@ Create a new Aran instance.
 * `options.namespace :: string`, default `"META"`:
   The name of the global variable holding the advice.
   Code instrumented by this aran instance will not be able to read, write or shadow this variable.
-* `options.output :: string | object`, default `"EstreeOptimized"`:
+* `options.output :: string`, default `"EstreeOptimized"`:
   The output format of `aran.weave` and `aran.setup`.
-  If it is an object, it should provide the same interface as the builders in [src/build](src/build).
-  If it is a string, it should be one of:
+  Valid values are:
   * `"ESTree"`:
     Regular ESTree.
   * `"ESTreeOptimized"`:
@@ -139,46 +168,32 @@ Create a new Aran instance.
   If this options is truthy, code weaved without parent will contain a [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) whose environment object is a [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
   This proxy will also solve a transparency breakage by restoring identifiers sanitized by Aran.
   This is expected to produce noticeable performance overhead.
-* `aran :: aran.Aran`:
-  The newly created aran instance.
 
 ### `output = aran.setup(pointcut)`
 
 Build the setup code that should be evaluated before any instrumented code.
-* `aran :: aran.Aran`:
-  An Aran instance.
-* `pointcut`: see the `pointcut` parameter of `aran.weave`.
+* `pointcut`:
+  See the `pointcut` parameter of `aran.weave`.
 * `output :: *`:
   The setup code whose format depends on `options.output`.
 
 The setup code with `options.namespace` being `META` looks like:
 
 ```js
-// NOT Instrumented
-META.EVAL                   = META.EVAL                   || eval;
-META.GLOBAL                 = META.GLOBAL                 || META.EVAL("this");
-META.PROXY                  = META.PROXY                  || Proxy;
-META.REFERENCE_ERROR        = META.REFERENCE_ERROR        || ReferenceError;
-META.OBJECT_DEFINE_PROPERTY = META.OBJECT_DEFINE_PROPERTY || Object.defineProperty;
-META.REFLECT_APPLY          = META.REFLECT_APPLY          || Reflect.apply;
-META.LOCAL_HANDLERS         = {...};
-META.GLOBAL_HANDLERS        = {...}; // if options.sandbox is truthy
-META.GLOBAL_STRICT_HANDLERS = {...}; // if options.sandbox is truthy
-// Instrumented //
-META.GLOBAL_eval                  = META.GLOBAL.eval;
-META.GLOBAL_TypeError             = META.GLOBAL.TypeError;
-META.GLOBAL_Reflect_apply         = META.GLOBAL.Reflect ? META.GLOBAL.Reflect.apply         : undefined;
-META.GLOBAL_Symbol_iterator       = META.GLOBAL.Symbol  ? META.GLOBAL.Symbol.iterator       : undefined;
-META.GLOBAL_Object_defineProperty = META.GLOBAL.Object  ? META.GLOBAL.Object.defineProperty : undefined;
-META.GLOBAL_Object_getPrototypeOf = META.GLOBAL.Object  ? META.GLOBAL.Object.getPrototypeOf : undefined;
-META.GLOBAL_Object_keys           = META.GLOBAL.Object  ? META.GLOBAL.Object.keys           : undefined;
-META.GLOBAl.$$eval = META.GLOBAL.eval; // if options.sandbox is falsy
+META.EVAL                    = META.EVAL                   || eval;
+META.GLOBAL                  = META.GLOBAL                 || META.EVAL("this");
+META.PROXY                   = META.PROXY                  || Proxy;
+META.REFERENCE_ERROR         = META.REFERENCE_ERROR        || ReferenceError;
+META.OBJECT_DEFINE_PROPERTY  = META.OBJECT_DEFINE_PROPERTY || Object.defineProperty;
+META.REFLECT_APPLY           = META.REFLECT_APPLY          || Reflect.apply;
+META.WITH_HANDLERS           = {...};
+META.SANDBOX_HANDLERS        = {...}; // if options.sandbox is truthy
+META.STRICT_SANDBOX_HANDLERS = {...}; // if options.sandbox is truthy
 ```
 
 ### `output = aran.weave(estree, pointcut, parent)`
 
-Insert calls to trap functions at nodes specified by the pointcut.
-* `aran :: aran.Aran`
+Desugar and insert calls to trap functions at nodes specified by the pointcut.
 * `estree :: estree.Program`:
   The [ESTree Program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
 * `pointcut :: array | function | object | *`, default `false`:
@@ -214,18 +229,21 @@ Insert calls to trap functions at nodes specified by the pointcut.
 Retrieve a node from its serial number.
 If `options.nocache` is truthy, this method will explore the ESTrees which has a complexity growing linearly with the depth of the trees.
 If `options.nocache` is falsy, this methods resolves to a much quicker array access.
-* `aran :: aran.Aran`
 * `serial :: number`
 * `node :: ESTree | undefined`
 
 ### `root = aran.root(serial)`
 
 Retrieve the ESTree Program node that contains the node at the given serial number.
-* `aran :: aran.Aran`
 * `serial :: number`
 * `root :: ESTree.Program | undefined`
 
-## Traps
+### `namespace = aran.namesapce`
+
+The name of the glboal variable holding the advice;
+* `namespace :: string`
+
+## Advice
 
 Traps are functions of the advice provided by the user.
 All traps are independently optional and they all receive as last argument an integer which is the index of the ESTree node that triggered the trap.
@@ -262,15 +280,11 @@ We categorized traps depending on their insertion mechanism.
   ```
   Informers don't have any effect on the value stack.
 
-```
-arrival(strict:boolean, callee:value, new:boolean, this:value, arguments:value, serial:number)
-```
-
 Name          | arguments[0]         | arguments[1]        | arguments[2]        | arguments[3]    
 --------------|----------------------|---------------------|---------------------|-----------------
 **Combiners** |                      |                     |                     |                 
-`arrival`     |                      |                     |                     |
-`apply`       | `strict:boolean`     | `function:value`    | `arguments:[value]` | `serial:number`
+`arrival`     | `strict:boolean`     | `callee:value`      | `new:boolean`       | `this:value` `arguments:value` `serial:number`
+`apply`       | `function:value`     | `arguments:[value]` | `serial:number`     |
 `invoke`      | `object:value`       | `key:value`         | `arguments:[value]` | `serial:number`
 `construct`   | `constructor:value`  | `arguments:[value]` | `serial:number`     |                
 `unary`       | `operator:string`    | `argument:value`    | `serial:number`     |                
@@ -291,7 +305,7 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
 `catch`       | `produced:value`     | `serial:number`     |                     |                
 `primitive`   | `produced:value`     | `serial:number`     |                     |                
 `regexp`      | `produced:value`     | `serial:number`     |                     |                
-`function`    | `produced:value`     | `serial:number`     |                     |                
+`closure`     | `produced:value`     | `serial:number`     |                     |                
 *Consumers*   |                      |                     |                     |                
 `declare`     | `kind:string`        | `identifier:string` | `consumed:value`    | `serial:number`
 `write`       | `identifier:string`  | `consumed:value`    | `serial:number`     |                
@@ -317,7 +331,7 @@ Name          | Original             | Instrumented
 --------------|----------------------|-------------
 **Combiners** |                      |
 `arrival`     | `...`                | `... const arrival = META.arrival(@strict, callee, new.target === undefined, this, arguments, @serial); ...`
-`apply`       | `f(x,y)`             | `META.apply(@strict, f, [x,y], @serial)`
+`apply`       | `f(x,y)`             | `META.apply(f, [x,y], @serial)`
 `invoke`      | `o.k(x,y)`           | `META.invoke(o, "k", [x,y], @serial)`
 `construct`   | `new F(x,y)`         | `META.construct(F, [x,y], @serial)`
 `unary`       | `!x`                 | `META.unary("!", x, @serial)` 
@@ -338,7 +352,7 @@ Name          | Original             | Instrumented
 `catch`       | `... catch (e) ...`  | `... catch (error) { let e = META.catch(error, @serial); ...`
 `primitive`   | `"foo"`              | `META.primitive("foo", @serial)`
 `regexp`      | `/abc/g`             | `META.regexp(/abc/g, @serial)`
-`function`    | `() => {}`           | `META.function(..., @serial)`
+`closure`     | `() => {}`           | `META.closure(..., @serial)`
 *Consumers*   |                      | 
 `save`        |                      | `... META.GLOBAL_Symbol_iterator = META.save("Symbol.iterator", META.GLOBAL.Symbol.iterator); ...`
 `declare`     | `let x = y`          | `let x = META.declare("let", "x", y, @serial)`
@@ -634,6 +648,23 @@ Here are the known heisenbugs that Aran may introduce by itself:
     console.log(x); // prints "bar"
   }
   f("foo");
+  ```
+* *Computed Methods' Name*
+  Aran use a simple static analysis to compute functions' name.
+  It works in most case but cannot cope with computed poperty keys.
+  Normally, the expression below should evaluates to `"f"`.
+  But in Aran, it evalaluates to `""`.
+  ```js
+  ({["f"]:()=>{}}).f.name
+  ```
+* *Constructor's TypeError Message*:
+  Aran transforms arrow into functions which throws an type error when used as constructor.
+  Normally the below code should throw `TypeError: bar is not a constructor`.
+  But in Aran, it throws `TypeError: foo is not a constructor`. 
+  ```js
+  const foo = () => {};
+  const bar = foo;
+  new bar(); 
   ```
 
 ## Acknowledgments

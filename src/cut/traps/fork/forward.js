@@ -19,11 +19,6 @@ ArrayLite.forEach(
   Object_keys(TrapArguments.combiners),
   (key) => exports[key] = combine(key));
 
-exports.apply = (boolean, expression, expressions) => (
-  ARAN.sandbox ?
-  Meta.apply(expression, Meta.load("global"), expressions) :
-  ARAN.build.apply(boolean, expression, expressions));
-
 ArrayLite.forEach(
   Object_keys(TrapArguments.informers),
   (key) => exports[key] = empty);

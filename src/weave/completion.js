@@ -43,8 +43,8 @@ visitors.SwitchStatement = (node, last) => {
     node.AranCompletion = true;
   return false;
 };
-visitors.ReturnStatement = (node, last) => false;
-visitors.ThrowStatement = (node, last) => false;
+visitors.ReturnStatement = (node, last) => { throw new Error("Invalid return statement") };
+visitors.ThrowStatement = (node, last) => true;
 visitors.TryStatement = (node, last) => {
   const last1 = chain(node.block.body, last);
   const last2 = chain(node.handler.body.body, last);

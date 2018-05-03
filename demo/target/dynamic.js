@@ -1,6 +1,6 @@
 let double = Function("x", "return 2 * x");
 let x = null;
 console.log(eval([
-  "global.x = 123;",
-  "double(global.eval('x'));",
+  "this.x = 123;",
+  "double(this.eval('x'));",
 ].join("\n")));

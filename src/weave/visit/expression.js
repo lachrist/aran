@@ -35,7 +35,6 @@ exports.ObjectExpression = (node) => (
   ArrayLite.reduce(
     node.properties,
     (expression, property) => ARAN.cut.apply(
-      node.AranStrict,
       ARAN.cut.$load("Object.defineProperty"),
       [
         expression,
@@ -70,9 +69,9 @@ exports.ObjectExpression = (node) => (
                 Visit.expression(property.value)]]))]),
     ARAN.cut.object([])));
 
-exports.ArrowFunctionExpression = (node) => Util.function(node);
+exports.ArrowFunctionExpression = (node) => Util.closure(node);
 
-exports.FunctionExpression = (node) => Util.function(node);
+exports.FunctionExpression = (node) => Util.closure(node);
 
 exports.SequenceExpression = (node) => ARAN.build.sequence(
   ArrayLite.map(
@@ -88,8 +87,7 @@ exports.UnaryExpression = (node) => (
   ARAN.cut.unary(
       "typeof",
       ARAN.build.apply(
-        null,
-        ARAN.build.arrow(
+        ARAN.build.function(
           false,
           [],
           ARAN.build.Try(
@@ -162,16 +160,7 @@ exports.AssignmentExpression = (node) => (
           "value",
           ARAN.cut.$copy(
             1,
-            (
-              (
-                node.left.type === "Identifier" &&
-                (
-                  node.right.type === "FunctionExpression" ||
-                  node.right.type === "ArrowFunctionExpression")) ?
-              (
-                ARAN.name = node.left.name,
-                Visit.expression(node.right)) :
-              Visit.expression(node.right)))),
+            Visit.expression(node.right))),
         Util.assign(
           node.left,
           Interim.read("value")),
@@ -304,7 +293,6 @@ exports.CallExpression = (node, local) => (
         node.callee.type !== "Identifier" ||
         node.callee.name !== "eval") ?
       ARAN.cut.apply(
-        node.AranStrict,
         Visit.expression(node.callee),
         ArrayLite.map(
           node.arguments,
@@ -332,13 +320,11 @@ exports.CallExpression = (node, local) => (
                       Visit.expression(expression)))),
                 ARAN.build.primitive(0))))),
         ARAN.cut.apply(
-          node.AranStrict,
           ARAN.cut.read("eval"),
           ArrayLite.map(
             node.arguments,
             Visit.expression))))) :
   ARAN.cut.apply(
-    node.AranStrict,
     ARAN.cut.$load("Reflect.apply"),
     [
       (
@@ -357,10 +343,7 @@ exports.CallExpression = (node, local) => (
           1,
           2,
           Interim.read("this")) :
-        (
-          node.AranStrict ?
-          ARAN.cut.primitive(void 0) :
-          ARAN.cut.$load("global"))),
+        ARAN.cut.primitive(void 0)),
       ARAN.build.sequence(
         ArrayLite.concat(
           [
@@ -376,7 +359,6 @@ exports.CallExpression = (node, local) => (
                   2,
                   1,
                   ARAN.build.apply(
-                    null,
                     Util.rest(),
                     [
                       ARAN.cut.invoke(

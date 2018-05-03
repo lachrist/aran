@@ -63,7 +63,7 @@ exports.PROGRAM = (boolean, statements) => ({
       boolean ?
       [
         {
-          type: "StatementExpression",
+          type: "ExpressionStatement",
           expression: {
             type: "Literal",
             value: "use strict"}}] :
@@ -146,7 +146,7 @@ exports.object = (properties) => ({
     value: property[1]
   }))});
 
-exports["function"] = (boolean, statements) => ({
+exports.closure = (boolean, statements) => ({
   type: "CallExpression",
   callee: {
     type: "FunctionExpression",
@@ -209,12 +209,15 @@ exports["function"] = (boolean, statements) => ({
             name: "callee"}}]}},
   arguments: []});
 
-exports.arrow = (boolean, identifiers, statements) => ({
-  type: "ArrowFunctionExpression",
+exports["function"] = (boolean, identifiers, statements) => ({
+  type: "FunctionExpression",
+  generator: false,
+  async: false,
+  expression: false,
+  id: null,
+  params: [],
   defaults: [],
   rest: null,
-  generator: false,
-  expression: false,
   params: ArrayLite.map(
     identifiers,
     (identifier) => ({
@@ -304,7 +307,7 @@ exports.construct = (expression, expressions) => ({
   callee: expression,
   arguments: expressions});
 
-exports.apply = (boolean, expression, expressions) => ({
+exports.apply = (expression, expressions) => ({
   type: "CallExpression",
   callee: expression,
   arguments: expressions});
@@ -352,13 +355,10 @@ exports.eval = (expression) => ({
 // Statement //
 ///////////////
 
-exports.Block = (statements) => (
-  statements.length <= 1 ?
-  statements :
-  [
-    {
-      type: "BlockStatement",
-      body: statements}]);
+exports.Block = (statements) => [
+  {
+    type: "BlockStatement",
+    body: statements}];
 
 exports.Statement = (expression) => (
   expression.AranPure ?

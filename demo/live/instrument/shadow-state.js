@@ -1,0 +1,320 @@
+const AranLive = require("aran/live");
+
+const advice = {};
+const scopes = new WeakMap();
+const vstack = [];
+const estack = [];
+const cstack = [];
+const saving = {};
+
+const bind = (frame, identifier) => {
+  if (identifier.startsWith(aranlive.namespace))
+    return false;
+  if (!(identifier in frame.binding))
+    return false;
+  if (frame.type !== "with")
+    return true;
+  const unscopables = frame.binding[Symbol.unscopables];
+  return unscopables && unscopables.includes(identifier);
+};
+
+const cleanup = () => {
+  while (cstack.length)
+    cstack.pop();
+  while (vstack.length)
+    vstack.pop();
+};
+
+//////////////
+// Membrane //
+//////////////
+const print = (value) => {
+  if (typeof value === "function")
+    return "function";
+  if (typeof value === "object")
+    return value ? "object" : "null";
+  if (typeof value === "string")
+    return JSON.stringify(value);
+  return String(value);
+};
+let counter = 0;
+const consume = (name, infos, value, serial) => {
+  console.log(name+"("+infos.concat([vstack.pop()]).join(", ")+", @"+serial+")");
+  return value;
+};
+const produce = (name, infos, value, serial) => {
+  const right = name+"("+infos.concat([print(value)]).join(", ")+", @"+serial+")";
+  console.log("#"+(++counter)+" = "+right);
+  vstack.push("&"+counter);
+  return value;
+};
+const combine = (value, name, infos, serial) => {
+  const right = name+"("+infos.reverse().join(", ")+", @"+serial+")";
+  console.log("#"+(++counter)+"["+print(value)+"] = "+right);
+  vstack.push("&"+counter);
+  return value;
+};
+
+//////////////
+// Chaining //
+//////////////
+advice.copy = (position, value, serial) => {
+  vstack.push(vstack[vstack.length-position]);
+  return value;
+};
+advice.swap = (position1, position2, value, serial) => {
+  const temporary = vstack[vstack.length-position1];
+  vstack[vstack.length-position1] = vstack[vstack.length-position2];
+  vstack[vstack.length-position2] = temporary;
+  return value;
+};
+advice.drop = (value, serial) => {
+  vstack.pop();
+  return value;
+};
+
+///////////////
+// Producers //
+///////////////
+
+const fhandlers = {
+  apply: (target, value, values) => {
+    if (cstack.length)
+      return Reflect.apply(target, value, values);
+    try {
+      return Reflect.apply(target, value, values);
+    } catch (error) {
+      cleanup();
+      throw error;
+    }
+  },
+  construct: (target, values) => {
+    if (cstack.length)
+      return Reflect.construct(target, values);
+    try {
+      return Reflect.construct(target, values);
+    } catch (error) {
+      cleanup();
+      throw error;
+    }
+  }
+};
+advice.begin = (strict, direct, value, serial) => {
+  estack.push(null);
+  if (direct) {
+    cstack[cstack.length-1].push({
+      type: strict ? "closure" : "block",
+      binding: Object.create(null)
+    });
+  } else {
+    cstack.push([{
+      type: "block",
+      binding: Object.create(null)
+    }]);
+  }
+  return produce("begin", [strict, direct], value, serial);
+};
+advice.primitive = (value, serial) =>
+  produce("primitive", [], value, serial);
+advice.regexp = (value, serial) =>
+  produce("regexp", [], value, serial);
+advice.load = (name, value, serial) => {
+  vstack.push(saving[name]);
+  return value;
+}
+advice.discard = (identifier, value, serial) =>
+  produce("discard", ["'"+identifier+"'"], value, serial);
+advice.closure = (value, serial) => {
+  scopes.set(value, cstack[cstack.length-1].slice());
+  return produce("closure", [], new Proxy(value, fhandlers), serial);
+};
+advice.read = (identifier, value, serial) => {
+  let call = cstack[cstack.length-1];
+  let index = call.length;
+  while (index--) {
+    const frame = call[index];
+    if (bind(frame, identifier)) {
+      if (frame.type === "with")
+        return produce("with-read", ["'"+identifier+"'"], value, null);
+      vstack.push(frame.binding[identifier]);
+      return value;
+    }
+  };
+  return produce("global-read", ["'"+identifier+"'"], value, null);
+};
+advice.catch = (value, serial) => {
+  while (cstack.length) {
+    let call = cstack[cstack.length-1];
+    let index = call.length;
+    while (index--) {
+      const frame = call[index];
+      if (frame.type === "try") {
+        call.push({type:"catch", binding:{}});
+        while (vstack.length > frame.recovery)
+          vstack.pop();
+        return produce("catch", [], value, serial);
+      }
+    }
+    cstack.pop();
+  }
+};
+
+///////////////
+// Consumers //
+///////////////
+advice.with = (value, serial) => {
+  cstack[cstack.length-1].push({type:"with", binding:value});
+  return consume("with", [], value, serial);
+};
+advice.success = (strict, direct, value, serial) => {
+  vstack.push(estack.pop());
+  return direct ? value : consume("success", [], value, serial);
+};
+advice.failure = (strict, direct, error, serial) => {
+  estack.pop();
+  if (!direct)
+    cleanup();
+  return error;
+};
+advice.completion = (value, serial) => {
+  estack[estack.length-1] = vstack.pop();
+  return value;
+};
+advice.save = (name, value, serial) => {
+  saving[name] = vstack.pop();
+  return value;
+};
+advice.throw = (value, serial) =>
+  consume("throw", [], value, serial);
+advice.test = (value, serial) =>
+  consume("test", [], value, serial);
+advice.eval = (value, serial) =>
+  aranlive.instrument(consume("eval", [], value, serial), serial);
+advice.return = (value, serial) => {
+  cstack.pop();
+  return consume("return", [], value, serial);
+};
+advice.write = (identifier, value, serial) => {
+  const call = cstack[cstack.length-1];
+  let index = call.length;
+  while (index--) {
+    const frame = call[index];
+    if (bind(frame, identifier)) {
+      if (frame.type === "with")
+        return consume("with-write", ["'"+identifier+"'"], value, null);
+      frame.binding[identifier] = vstack.pop();
+      return value;
+    }
+  }
+  return consume("global-write", ["'"+identifier+"'"], value, null);
+};
+advice.declare = (kind, identifier, value, serial) => {
+  const call = cstack[cstack.length-1];
+  let frame = call[call.length-1];
+  if (kind === "var") {
+    let index = call.length-1;
+    while (call[index].type !== "closure") {
+      if (!index)
+        return consume("global-declare", ["'var'", "'"+identifier+"'"], value, null);
+      index--;
+    }
+    frame = call[index];
+  }
+  Object.defineProperty(frame.binding, identifier, {
+    configurable: kind === "var",
+    writable: kind !== "const",
+    enumerable: true,
+    value: vstack.pop()
+  });
+  return value;
+};
+
+///////////////
+// Informers //
+///////////////
+advice.end = (strict, direct, serial) => {};
+advice.leave = (type, serial) => cstack[cstack.length-1].pop();
+advice.block = (serial) => cstack[cstack.length-1].push({
+  type: "block",
+  binding: Object.create(null)
+});
+advice.try = (serial) => cstack[cstack.length-1].push({
+  type: "try",
+  binding: Object.create(null),
+  recovery: vstack.length
+});
+advice.finally = (serial) => cstack[cstack.length-1].push({
+  type: "finally",
+  binding: Object.create(null)
+});
+advice.label = (boolean, label, serial) => cstack[cstack.length-1].push({
+  type: "label",
+  binding: Object.create(null),
+  label: (boolean ? "Break" : "Continue") + (label||"")
+});
+advice.break = (boolean, label, serial) => {
+  label = (boolean ? "Break" : "Continue") + (label||"");
+  const call = cstack[cstack.length-1];
+  while (call.length) {
+    const frame = call.pop();
+    if (frame.type === "label" && frame.label === label)
+      return;
+  }
+};
+
+///////////////
+// Combiners //
+///////////////
+const cut = (length) => length ? "["+vstack.splice(-length) +"]" : "[]";
+advice.arrival = (strict, value1, value2, value3, value4, serial) => {
+  cstack.push(scopes.get(value1).concat([{
+    type: "closure",
+    binding: Object.create(null)
+  }]));
+  return [
+    produce("arrival-callee", [], value1, serial),
+    produce("arrival-new", [], value2, serial),
+    produce("arrival-this", [], value3, serial),
+    produce("arrival-arguments", [], value4, serial)
+  ];
+};
+advice.apply = (value, values, serial) => combine(
+  value(...values),
+  "apply", [cut(values.length), vstack.pop()], serial);
+advice.invoke = (value1, value2, values, serial) => combine(
+  Reflect.apply(value1[value2], value1, values),
+  "invoke", [cut(values.length), vstack.pop(), vstack.pop()], serial);
+advice.construct = (value, values, serial) => combine(
+  new value(...values),
+  "construct", [cut(values.length), vstack.pop()], serial);
+advice.unary = (operator, value, serial) => combine(
+  eval(operator+" value"),
+  "unary", [vstack.pop(), "'"+operator+"'"], serial);
+advice.binary = (operator, value1, value2, serial) => combine(
+  eval("value1 "+operator+" value2"),
+  "binary", [vstack.pop(), vstack.pop(), "'"+operator+"'"], serial);
+advice.get = (value1, value2, serial) => combine(
+  value1[value2],
+  "get", [vstack.pop(), vstack.pop()], serial);
+advice.set = (value1, value2, value3, serial) => combine(
+  value1[value2] = value3,
+  "set", [vstack.pop(), vstack.pop(), vstack.pop()], serial);
+advice.delete = (value1, value2, serial) => combine(
+  delete value1[value2],
+  "delete", [vstack.pop(), vstack.pop()], serial);
+advice.array = (values, serial) => combine(
+  values,
+  "array", [cut(values.length)], serial);
+advice.object = (properties, serial) => {
+  const object = {};
+  const mproperties = properties.map((property) => {
+    object[property[0]] = property[1];
+    return "["+vstack.splice(-2, 1)+","+vstack.pop()+"]";
+  });
+  return combine(object, "object", ["["+mproperties.reverse()+"]"], serial);
+};
+
+// The sandbox must be activated to output the same result as shadow-value.
+advice.SANDBOX = global;
+const aranlive = AranLive(advice, {sandbox:true});
+module.exports = aranlive.instrument;
