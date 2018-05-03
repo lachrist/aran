@@ -30,37 +30,37 @@ The last argument passed to traps is always a *serial* number which uniquely ide
 The object that contains traps is called *advice* and the specification that characterizes what trap should be triggered on each node is called *pointcut*.
 The process of inserting trap calls based on a pointcut is called *weaving*.
 This terminology is borrowed from [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming).
-[demo/dead/apply](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/dead-apply-factorial.html) demonstrates these concepts.
+[demo/dead/apply](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/dead-apply-factorial.html) demonstrates these concepts.
 
 ![weaving](img/weaving.png)
 
 When code weaving happens on the same process that evaluates weaved code, it is called *live weaving*.
-This is the case for [instrument/apply-explicit.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-apply-explicit-factorial.html) which performs the same analysis as [demo/dead/apply](demo/dead/apply).
+This is the case for [instrument/apply-explicit.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-apply-explicit-factorial.html) which performs the same analysis as [demo/dead/apply](demo/dead/apply).
 Live weaving enables direct communication between an advice and its associated Aran's instance.
 For instance, `aran.node(serial)` can be invoked by the advice to retrieve the line index of the node that triggered a trap.
 An other good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
 
 When performing live weaving, Aran offers a simpler interface which hides the complexity linked to pointcut and setup.
 This alternative API also performs parsing with [acorn](https://github.com/acornjs/acorn) and code generation with [astring](https://github.com/davidbonnet/astring). 
-This simpler API is demonstrated at [demo/live/instrument/apply.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-apply-factorial.html).
+This simpler API is demonstrated at [demo/live/instrument/apply.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-apply-factorial.html).
 
 ## Demonstrators
 
-* [demo/live/instrument/empty.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-empty-empty.html): Do nothing.
+* [demo/live/instrument/empty.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-empty-empty.html): Do nothing.
   Empty advice.
   Can be used to inspect how Aran desugars JavaScript.
-* [demo/live/instrument/forward.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-forward-empty.html):
+* [demo/live/instrument/forward.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-forward-empty.html):
   Transparent implementation of all the traps.
   Can be used to inspect how Aran inserts traps.
   The last lines can be uncommented to turn this analysis into a tracer.
-* [demo/live/instrument/sandbox.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-sandbox-global.html):
+* [demo/live/instrument/sandbox.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-sandbox-global.html):
   Demonstrate sandboxing by restricting access to `Date`.
-* [demo/live/instrument/eval.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-eval-dynamic.html):
+* [demo/live/instrument/eval.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-eval-dynamic.html):
   Transitively intercepting dynamic code evaluation.
   [Script element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script) insertion is not handled.
-* [demo/live/instrument/shadow-value.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-shadow-value-delta.html):
+* [demo/live/instrument/shadow-value.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-shadow-value-delta.html):
   Track program values across the value stack and the environment but not the store (the shadow value way).
-* [demo/local/instrument/shadow-state.js](https://cdn.rawgit.com/lachrist/aran/ab5f67ec/demo/output/live-shadow-state-delta.html):
+* [demo/local/instrument/shadow-state.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-shadow-state-delta.html):
   Track program values across the value stack and the environment but not the store (the shadow state way).
   This analysis provides the same output as the previous one.
 
