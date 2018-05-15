@@ -41,7 +41,7 @@ exports.closure = (node) => {
           3,
           ARAN.build.get(
             ARAN.build.read("arrival"),
-            ARAN.build.primitive(1))),
+            ARAN.build.primitive("new"))),
         ARAN.cut.Throw(
           ARAN.cut.construct(
             ARAN.cut.$load("TypeError"),
@@ -60,12 +60,12 @@ exports.closure = (node) => {
             3,
             ARAN.build.get(
               ARAN.build.read("arrival"),
-              ARAN.build.primitive(1))),
+              ARAN.build.primitive("new"))),
           ARAN.cut.$copy(
             4,
             ARAN.build.get(
               ARAN.build.read("arrival"),
-              ARAN.build.primitive(0))),
+              ARAN.build.primitive("callee"))),
           ARAN.cut.primitive(void 0)))),
     (
       node.type === "ArrowFunctionExpression" ?
@@ -77,7 +77,7 @@ exports.closure = (node) => {
           2,
           ARAN.build.get(
             ARAN.build.read("arrival"),
-            ARAN.build.primitive(2))))),
+            ARAN.build.primitive("this"))))),
     (
       (
         node.type === "ArrowFunctionExpression" ||
@@ -90,7 +90,7 @@ exports.closure = (node) => {
           1,
           ARAN.build.get(
             ARAN.build.read("arrival"),
-            ARAN.build.primitive(3))))),
+            ARAN.build.primitive("arguments"))))),
     (
       (
         node.params.length &&
@@ -102,7 +102,7 @@ exports.closure = (node) => {
             ARAN.cut.invoke(
               ARAN.build.get(
                 ARAN.build.read("arrival"),
-                ARAN.build.primitive(3)),
+                ARAN.build.primitive("arguments")),
               ARAN.cut.$load("Symbol.iterator"),
               []))),
         ArrayLite.flatenMap(
@@ -142,7 +142,7 @@ exports.closure = (node) => {
                 1,
                 ARAN.build.get(
                   ARAN.build.read("arrival"),
-                  ARAN.build.primitive(3))),
+                  ARAN.build.primitive("arguments"))),
               ARAN.cut.primitive(index)))),
         ARAN.build.Statement(
           ARAN.cut.$drop(

@@ -382,9 +382,9 @@ exports.CallExpression = (node, local) => (
           [
             Interim.read("arguments")]))]));
 
-exports.MemberExpression = (node) => ARAN.cut.get(
+exports.MemberExpression = (node) => {debugger; return ARAN.cut.get(
   Visit.expression(node.object),
-  Util.property(node));
+  Util.property(node));}
 
 exports.MetaProperty = (node) => ARAN.cut.read("new.target");
 

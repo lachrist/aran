@@ -190,17 +190,6 @@ exports.closure = (boolean, statements) => ({
                             type: "Literal",
                             value: "use strict"}}] :
                       []),
-                    [
-                      {
-                        type: "VariableDeclaration",
-                        kind: "let",
-                        declarations: [
-                          {
-                            type: "VariableDeclarator",
-                            id: {
-                              type: "Identifier",
-                              name: "arrival"},
-                            init: null}]}],
                     statements)}}}]},
         {
           type: "ReturnStatement",
@@ -260,7 +249,16 @@ exports.regexp = (string1, string2) => ({
     pattern: string1,
     flags: string2}});
 
-exports.get = (expression1, expression2) => member(expression1, expression2);
+exports.get = (expression1, expression2) => (
+  (
+    expression1.type === "ArrayExpression" &&
+    expression2.type === "Literal" &&
+    typeof expression2.value === "number" &&
+    ArrayLite.every(
+      expression1.elements,
+      (expression, index) => index === expression2.value || expression.AranPure)) ?
+  expression1.elements[expression2.value] :
+  member(expression1, expression2));
 
 exports.set = (expression1, expression2, expression3) => ({
   type: "AssignmentExpression",
@@ -311,11 +309,6 @@ exports.apply = (expression, expressions) => ({
   type: "CallExpression",
   callee: expression,
   arguments: expressions});
-
-exports.arrival = (boolean, expression1, expression2, expression3, expression4) => ({
-  type: "ArrayExpression",
-  elements: [expression1, expression2, expression3, expression4]
-});
 
 exports.invoke = (expression1, expression2, expressions) => ({
   type: "CallExpression",

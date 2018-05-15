@@ -3,52 +3,52 @@ module.exports = [
   ///////////////
   // Combiners //
   ///////////////
-  "arrival",
-  "object",
-  "array",
-  "get",
-  "set",
-  "delete",
-  "invoke",
   "apply",
-  "construct",
-  "unary",
+  "array",
   "binary",
+  "construct",
+  "delete",
+  "get",
+  "invoke",
+  "object",
+  "set",
+  "unary",
   ///////////////
-  // modifiers //
-  ///////////////
-  // Chainers //
-  "swap",
-  "copy",
-  "drop",
   // Producers //
+  ///////////////
+  "arrival",
   "begin",
-  "read",
+  "catch",
+  "closure",
   "discard",
   "load",
-  "catch",
   "primitive",
+  "read",
   "regexp",
-  "closure",
+  ///////////////
   // Consumers //
-  "save",
-  "declare",
-  "write",
-  "test",
-  "with",
-  "throw",
-  "return",
-  "eval",
+  ///////////////
   "completion",
-  "success",
+  "declare",
+  "eval",
   "failure",
+  "return",  
+  "save",
+  "success",
+  "test",
+  "throw",
+  "with",
+  "write",
   ///////////////
   // Informers //
   ///////////////
-  "end",
-  "label",
   "block",
-  "try",
+  "break",
+  "copy",
+  "drop",
+  "end",
   "finally",
+  "label",
   "leave",
-  "break"];
+  "swap",
+  "try"];

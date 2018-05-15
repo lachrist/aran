@@ -26,7 +26,6 @@ exports.delete = ["expression", "expression"];
 exports.discard = ["identifier"];
 exports.construct = ["expression", ["list", "expression"]];
 exports.apply = ["expression", ["list", "expression"]];
-exports.arrival = ["boolean", "expression", "expression", "expression", "expression"];
 exports.invoke = ["expression", "expression", ["list", "expression"]];
 exports.sequence = [["list", "expression"]];
 exports.eval = ["expression"];

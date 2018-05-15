@@ -19,11 +19,10 @@ module.exports = AranLive({
     console.log("DIRECT EVAL CALL:\n"+script+"\n");
     return module.exports(script, serial);
   },
-  arrival: (strict, callee, isnew, value, values, serial) => [
-    callee,
-    isnew,
-    value === global ? sandbox : value,
-    values 
-  ],
+  arrival: (strict, arrival, serial) => {
+    if (arrival.this === global)
+      arrival.this = sandbox;
+    return arrival;
+  },
   begin: (strict, direct, value) => sandbox,
 }, {sandbox:true}).instrument;

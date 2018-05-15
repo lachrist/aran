@@ -3,56 +3,58 @@ const ArrayLite = require("array-lite");
 
 const identity = (argument) => argument;
 const primitive = (primitive) => ARAN.build.primitive(primitive);
+const read = (string) => ARAN.build.read(string);
 const array = (expressions) => ARAN.build.array(expressions);
 const object = (expressions) => ARAN.build.array(
   ArrayLite.map(expressions, array));
 
-exports.combiners = {
-  arrival: [primitive, identity, identity, identity, identity],
-  object: [object],
-  array: [array],
-  get: [identity, identity],
-  set: [identity, identity, identity],
-  delete: [identity, identity],
-  invoke: [identity, identity, array],
+exports.computers = {
+  // Combiners //
   apply: [identity, array],
+  binary: [primitive, identity, identity],
   construct: [identity, array],
-  unary: [primitive, identity],
-  binary: [primitive, identity, identity]};
+  delete: [identity, identity],
+  get: [identity, identity],
+  invoke: [identity, identity, array],
+  object: [object],
+  set: [identity, identity, identity],
+  unary: [primitive, identity]};
 
 exports.modifiers = {
-  // chainers //
-  swap: [primitive, primitive, identity],
-  copy: [primitive, identity],
-  drop: [identity],
-  // producers //
+  // Combiners //
+  array: [identity],
+  // Producers //
+  arrival: [primitive, identity],
   begin: [primitive, primitive, identity],
-  read: [primitive, identity],
+  catch: [identity],
+  closure: [identity],
   discard: [primitive, identity],
   load: [primitive, identity],
-  catch: [identity],
   primitive: [identity],
+  read: [primitive, identity],
   regexp: [identity],
-  closure: [identity],
-  // consumers //
-  save: [primitive, identity],
-  drop: [identity],
-  declare: [primitive, primitive, identity],
-  write: [primitive, identity],
-  test: [identity],
-  with: [identity],
-  throw: [identity],
-  return: [identity],
-  eval: [identity],
+  // Consumers //
   completion: [identity],
+  declare: [primitive, primitive, identity],
+  eval: [identity],
+  failure: [primitive, primitive, identity],
+  return: [read, identity],
+  save: [primitive, identity],
   success: [primitive, primitive, identity],
-  failure: [primitive, primitive, identity]};
+  test: [identity],
+  throw: [identity],
+  with: [identity],
+  write: [primitive, identity]};
 
 exports.informers = {
-  end: [primitive, primitive],
-  try: [],
-  finally: [],
+  // Informers //
   block: [],
+  break: [primitive, primitive],
+  copy: [primitive],
+  drop: [],
+  end: [primitive, primitive],
+  finally: [],
   label: [primitive, primitive],
   leave: [primitive],
-  break: [primitive, primitive]};
+  swap: [primitive, primitive],
+  try: []};

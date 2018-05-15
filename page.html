@@ -1,44 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>eval(sample) @16:22:58</title>
+    <title>empty-estree-valid(sample) @16:17:55</title>
   </head>
   <body>
   <script>
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-console.dir(eval(require("/Users/soft/Desktop/workspace/aran/demo/live/instrument/eval.js")("let x = 1;\ndebugger;\neval(\"x\");")));
-},{"/Users/soft/Desktop/workspace/aran/demo/live/instrument/eval.js":2}],2:[function(require,module,exports){
-(function (global){
+console.dir(eval(require("/Users/soft/Desktop/workspace/aran/demo/live/instrument/empty-estree-valid.js")("[\"foo\"][0];")));
+},{"/Users/soft/Desktop/workspace/aran/demo/live/instrument/empty-estree-valid.js":2}],2:[function(require,module,exports){
 const AranLive = require("aran/live");
-const sandbox = Object.create(global);
-sandbox.eval = function eval (script) {
-  console.log("INDIRECT EVAL CALL:\n"+script+"\n");
-  return global.eval(module.exports(script));
-};
-sandbox.Function = function Function () {
-  const script = arguments.length ? [
-    "(function anonymous("+Array.from(arguments).slice(0, -1).join(",")+"){",
-    arguments[arguments.length-1],
-    "})"
-  ].join("\n") : "(function anonymous() {\n\n})";
-  console.log("FUNCTION CALL:\n"+script+"\n");
-  return global.eval(module.exports(script));
-};
-module.exports = AranLive({
-  SANDBOX: sandbox,
-  eval: (script, serial) => {
-    console.log("DIRECT EVAL CALL:\n"+script+"\n");
-    return module.exports(script, serial);
-  },
-  arrival: (strict, callee, isnew, value, values, serial) => [
-    callee,
-    isnew,
-    value === global ? sandbox : value,
-    values 
-  ],
-  begin: (strict, direct, value) => sandbox,
-}, {sandbox:true}).instrument;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+module.exports = AranLive({}, {output:"EstreeValid"}).instrument;
 },{"aran/live":3}],3:[function(require,module,exports){
 module.exports = require("../../../live.js");
 },{"../../../live.js":4}],4:[function(require,module,exports){
@@ -67,7 +38,7 @@ module.exports = (advice, options) => {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./src/index.js":27,"acorn":5,"astring":7}],5:[function(require,module,exports){
+},{"./src/index.js":26,"acorn":5,"astring":7}],5:[function(require,module,exports){
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -5399,17 +5370,6 @@ exports.closure = (boolean, statements) => ({
                             type: "Literal",
                             value: "use strict"}}] :
                       []),
-                    [
-                      {
-                        type: "VariableDeclaration",
-                        kind: "let",
-                        declarations: [
-                          {
-                            type: "VariableDeclarator",
-                            id: {
-                              type: "Identifier",
-                              name: "arrival"},
-                            init: null}]}],
                     statements)}}}]},
         {
           type: "ReturnStatement",
@@ -5469,7 +5429,16 @@ exports.regexp = (string1, string2) => ({
     pattern: string1,
     flags: string2}});
 
-exports.get = (expression1, expression2) => member(expression1, expression2);
+exports.get = (expression1, expression2) => (
+  (
+    expression1.type === "ArrayExpression" &&
+    expression2.type === "Literal" &&
+    typeof expression2.value === "number" &&
+    ArrayLite.every(
+      expression1.elements,
+      (expression, index) => index === expression2.value || expression.AranPure)) ?
+  expression1.elements[expression2.value] :
+  member(expression1, expression2));
 
 exports.set = (expression1, expression2, expression3) => ({
   type: "AssignmentExpression",
@@ -5520,11 +5489,6 @@ exports.apply = (expression, expressions) => ({
   type: "CallExpression",
   callee: expression,
   arguments: expressions});
-
-exports.arrival = (boolean, expression1, expression2, expression3, expression4) => ({
-  type: "ArrayExpression",
-  elements: [expression1, expression2, expression3, expression4]
-});
 
 exports.invoke = (expression1, expression2, expressions) => ({
   type: "CallExpression",
@@ -5714,7 +5678,6 @@ exports.delete = ["expression", "expression"];
 exports.discard = ["identifier"];
 exports.construct = ["expression", ["list", "expression"]];
 exports.apply = ["expression", ["list", "expression"]];
-exports.arrival = ["boolean", "expression", "expression", "expression", "expression"];
 exports.invoke = ["expression", "expression", ["list", "expression"]];
 exports.sequence = [["list", "expression"]];
 exports.eval = ["expression"];
@@ -5878,7 +5841,7 @@ exports.kind = (kind) => {
     throw new Error("[kind] unknown: "+Util.inspect(kind));
 };
 
-},{"array-lite":6,"util":50}],11:[function(require,module,exports){
+},{"array-lite":6,"util":49}],11:[function(require,module,exports){
 
 const Util = require("util");
 const ArrayLite = require("array-lite");
@@ -5921,7 +5884,7 @@ const duck = (type, value) => {
   }
 };
 
-},{"../estree.js":12,"./arguments-type.js":9,"./check.js":10,"array-lite":6,"util":50}],12:[function(require,module,exports){
+},{"../estree.js":12,"./arguments-type.js":9,"./check.js":10,"array-lite":6,"util":49}],12:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 
@@ -6050,17 +6013,6 @@ exports.closure = (boolean, statements) => ({
                             type: "Literal",
                             value: "use strict"}}] :
                       []),
-                    [
-                      {
-                        type: "VariableDeclaration",
-                        kind: "let",
-                        declarations: [
-                          {
-                            type: "VariableDeclarator",
-                            id: {
-                              type: "Identifier",
-                              name: "arrival"},
-                            init: null}]}],
                     statements)}}}]},
         {
           type: "ReturnStatement",
@@ -6177,11 +6129,6 @@ exports.apply = (expression, expressions) => ({
   type: "CallExpression",
   callee: expression,
   arguments: expressions});
-
-exports.arrival = (boolean, expression1, expression2, expression3, expression4) => ({
-  type: "ArrayExpression",
-  elements: [expression1, expression2, expression3, expression4]
-});
 
 exports.invoke = (expression1, expression2, expressions) => ({
   type: "CallExpression",
@@ -6382,7 +6329,6 @@ exports.object = (properties) => (
 exports.closure = (boolean, statements) => (
   "(function(){const callee=function(){" +
   (boolean ? "\"use strict\";" : "") +
-  "let arrival={callee:callee,new:new.target!==void 0,this:this,arguments:arguments};" +
   ArrayLite.join(statements, "") +
   "};return callee;}())");
 
@@ -6471,17 +6417,6 @@ exports.apply = (expression, expressions) => (
   "(" +
   ArrayLite.join(expressions, ",") +
   "))");
-
-exports.arrival = (boolean, expression1, expression2, expression3, expression4) => (
-  "[" +
-  expression1 +
-  "," +
-  expression2 +
-  "," +
-  expression3 +
-  "," +
-  expression4 +
-  "]");
 
 exports.invoke = (expression1, expression2, expressions) => (
   "(" +
@@ -6647,24 +6582,16 @@ module.exports = (patterns) => {
 const ArrayLite = require("array-lite");
 const Meta = require("../meta.js");
 const Traps = require("./traps");
-const Inform = require("./inform.js");
 const Name = require("./name.js")
 const ParseLabel = require("./parse-label.js");
 const SanitizeIdentifier = require("./sanitize-identifier.js");
 const ContainArguments = require("./contain-arguments.js");
-
-const Reflect_apply = Reflect.apply;
-const String_prototype_replace = String.prototype.replace;
 
 module.exports = (pointcut) => {
 
   const traps = Traps(pointcut);
 
   const cut = {};
-
-  /////////////////
-  // Compilation //
-  /////////////////
 
   cut.PROGRAM = (boolean, statements) => (
     statements = ArrayLite.concat(
@@ -6707,7 +6634,8 @@ module.exports = (pointcut) => {
                   string,
                   traps.read(
                     string,
-                    ARAN.build.read(string)))))),
+                    ARAN.build.read(
+                      SanitizeIdentifier(string))))))),
           ArrayLite.flatenMap(
             [
               ["Reflect", "apply"],
@@ -6723,7 +6651,8 @@ module.exports = (pointcut) => {
                   traps.get(
                     traps.read(
                       strings[0],
-                      ARAN.build.read(strings[0])),
+                      ARAN.build.read(
+                        SanitizeIdentifier(strings[0]))),
                     traps.primitive(
                       ARAN.build.primitive(strings[1])))))))),
         []),
@@ -6757,83 +6686,10 @@ module.exports = (pointcut) => {
             Boolean(ARAN.node.AranStrict),
             Boolean(ARAN.node.AranParent),
             ARAN.build.read("error"))),
-        Inform(
+        ARAN.build.Statement(
           traps.end(
             Boolean(ARAN.node.AranStrict),
             Boolean(ARAN.node.AranParent))))));
-
-  // // boolean1 := sandbox, boolean2 := strict
-  // cut.$PROGRAM = (boolean1, boolean2, statements) => ARAN.build.PROGRAM(
-  //   !boolean1 && boolean2,
-  //   ARAN.build.Try(
-  //     ArrayLite.concat(
-  //       Inform(
-  //         traps.begin(
-  //           Boolean(ARAN.node.AranStrict),
-  //           Boolean(ARAN.node.AranParent))),
-  //       (
-  //         boolean1 ?
-  //         ARAN.build.Statement(
-  //           ARAN.build.write(
-  //             "completion",
-  //             Meta.apply(
-  //               ARAN.build.function(
-  //                 false,
-  //                 [],
-  //                 ARAN.build.With(
-  //                   Meta.proxy(
-  //                     boolean2 ? "GLOBAL_STRICT_HANDLERS" : "GLOBAL_HANDLERS",
-  //                     traps.with(
-  //                       traps.load(
-  //                         "global",
-  //                         Meta.load("global")))),
-  //                   ArrayLite.concat(
-  //                     ARAN.build.Declare(
-  //                       "let",
-  //                       ARAN.namespace,
-  //                       ARAN.build.read("this")),
-  //                     ARAN.build.Declare(
-  //                       "const",
-  //                       "eval",
-  //                       Meta.eval()),
-  //                     ARAN.build.Declare(
-  //                       "let",
-  //                       "completion",
-  //                       ARAN.build.primitive(void 0)),
-  //                     Inform(
-  //                       traps.block()),
-  //                     (
-  //                       boolean2 ?
-  //                       ARAN.build.Statement(
-  //                         ARAN.build.apply(
-  //                           ARAN.build.function(true, [], statements),
-  //                           [])) :
-  //                       statements),
-  //                     Inform(
-  //                       traps.leave("block")),
-  //                     Inform(
-  //                       traps.leave("with")),
-  //                     ARAN.build.Return(
-  //                       ARAN.build.read("completion"))))),
-  //               ARAN.build.read(ARAN.namespace),
-  //               []))) :
-  //         statements),
-  //       ARAN.build.Statement(
-  //         ARAN.build.write(
-  //           "completion",
-  //           traps.success(
-  //             Boolean(ARAN.node.AranStrict),
-  //             Boolean(ARAN.node.AranParent),
-  //             ARAN.build.read("completion"))))),
-  //     ARAN.build.Throw(
-  //       traps.failure(
-  //         Boolean(ARAN.node.AranStrict),
-  //         Boolean(ARAN.node.AranParent),
-  //         ARAN.build.read("error"))),
-  //     Inform(
-  //       traps.end(
-  //         Boolean(ARAN.node.AranStrict),
-  //         Boolean(ARAN.node.AranParent)))));
 
   cut.$completion = (expression) => ARAN.build.write(
     "completion",
@@ -6843,15 +6699,26 @@ module.exports = (pointcut) => {
     string,
     Meta.load(string));
 
-  cut.$copy = traps.copy;
+  cut.$copy = (number, expression) => ARAN.build.get(
+    ARAN.build.array(
+      [
+        expression,
+        traps.copy(number) ]),
+    ARAN.build.primitive(0));
 
-  cut.$drop = traps.drop;
+  cut.$drop = (expression) => ARAN.build.get(
+    ARAN.build.array(
+      [
+        expression,
+        traps.drop()]),
+    ARAN.build.primitive(0));
 
-  cut.$swap = traps.swap;
-
-  ///////////////
-  // Combiners //
-  ///////////////
+  cut.$swap = (number1, number2, expression) => ARAN.build.get(
+    ARAN.build.array(
+      [
+        expression,
+        traps.swap(number1, number2)]),
+    ARAN.build.primitive(0));
 
   ArrayLite.forEach(
     [
@@ -6868,36 +6735,28 @@ module.exports = (pointcut) => {
       "binary"],
     (key) => cut[key] = traps[key]);
 
-  ///////////////
-  // Informers //
-  ///////////////
-
   cut.Label = (label, statements) => ARAN.build.Label(
     label,
     ArrayLite.concat(
-      Inform(traps.label(ParseLabel.split(label) , ParseLabel.core(label))),
+      ARAN.build.Statement(traps.label(ParseLabel.split(label) , ParseLabel.core(label))),
       statements,
-      Inform(traps.leave("label"))));
+      ARAN.build.Statement(traps.leave("label"))));
 
   cut.Break = (label) => ArrayLite.concat(
-    Inform(traps.break(ParseLabel.split(label) , ParseLabel.core(label))),
+    ARAN.build.Statement(traps.break(ParseLabel.split(label) , ParseLabel.core(label))),
     ARAN.build.Break(label));
 
   cut.Block = (statements) => ARAN.build.Block(
     ArrayLite.concat(
-      Inform(traps.block()),
+      ARAN.build.Statement(traps.block()),
       statements,
-      Inform(traps.leave("block"))));
-
-  ///////////////
-  // Producers //
-  ///////////////
+      ARAN.build.Statement(traps.leave("block"))));
 
   cut.Try = (statements1, statements2, statements3) => ARAN.build.Try(
     ArrayLite.concat(
-      Inform(traps.try()),
+      ARAN.build.Statement(traps.try()),
       statements1,
-      Inform(traps.leave("try"))),
+      ARAN.build.Statement(traps.leave("try"))),
     ArrayLite.concat(
       ARAN.build.Statement(
         ARAN.build.write(
@@ -6905,11 +6764,11 @@ module.exports = (pointcut) => {
           traps.catch(
             ARAN.build.read("error")))),
       statements2,
-      Inform(traps.leave("catch"))),
+      ARAN.build.Statement(traps.leave("catch"))),
     ArrayLite.concat(
-      Inform(traps.finally()),
+      ARAN.build.Statement(traps.finally()),
       statements3,
-      Inform(traps.leave("finally"))));
+      ARAN.build.Statement(traps.leave("finally"))));
 
   cut.closure = (boolean, statements) => traps.closure(
     Meta.define(
@@ -6917,18 +6776,28 @@ module.exports = (pointcut) => {
         ARAN.build.closure(
           boolean,
           ArrayLite.concat(
-            ARAN.build.Statement(
-              ARAN.build.write(
-                "arrival",
-                traps.arrival(
-                  Boolean(ARAN.node.AranStrict),
-                  ARAN.build.read("callee"),
-                  ARAN.build.binary(
-                    "!==",
-                    ARAN.build.read("new.target"),
-                    ARAN.build.primitive(void 0)),
-                  ARAN.build.read("this"),
-                  ARAN.build.read("arguments")))),
+            ARAN.build.Declare(
+              "const",
+              "arrival",
+              traps.arrival(
+                Boolean(ARAN.node.AranStrict),
+                ARAN.build.object(
+                  [
+                    [
+                      ARAN.build.primitive("callee"),
+                      ARAN.build.read("callee")],
+                    [
+                      ARAN.build.primitive("new"),
+                      ARAN.build.binary(
+                        "!==",
+                        ARAN.build.read("new.target"),
+                        ARAN.build.primitive(void 0))],
+                    [
+                      ARAN.build.primitive("this"),
+                      ARAN.build.read("this")],
+                    [
+                      ARAN.build.primitive("arguments"),
+                      ARAN.build.read("arguments")]]))),
             statements)),
         "length",
         ARAN.build.primitive(
@@ -6963,10 +6832,6 @@ module.exports = (pointcut) => {
   cut.regexp = (pattern, flags) => traps.regexp(
     ARAN.build.regexp(pattern, flags));
 
-  ///////////////
-  // Consumers //
-  ///////////////
-
   cut.write = (
     ARAN.sandbox ?
     (identifier, expression) => (
@@ -6992,7 +6857,7 @@ module.exports = (pointcut) => {
     traps.declare(kind, identifier, expression));
 
   cut.Return = (expression) => ARAN.build.Return(
-    traps.return(expression));
+    traps.return("arrival", expression));
 
   cut.eval = (expression) => ARAN.build.eval(
     traps.eval(expression));
@@ -7002,7 +6867,7 @@ module.exports = (pointcut) => {
       traps.with(expression)),
     ArrayLite.concat(
       statements,
-      Inform(traps.leave("with"))));
+      ARAN.build.Statement(traps.leave("with"))));
 
   cut.Throw = (expression) => ARAN.build.Throw(
     traps.throw(expression));
@@ -7015,13 +6880,13 @@ module.exports = (pointcut) => {
   cut.If = (expression, statements1, statements2) => ARAN.build.If(
     traps.test(expression),
     ArrayLite.concat(
-      Inform(traps.block()),
+      ARAN.build.Statement(traps.block()),
       statements1,
-      Inform(traps.leave("block"))),
+      ARAN.build.Statement(traps.leave("block"))),
     ArrayLite.concat(
-      Inform(traps.block()),
+      ARAN.build.Statement(traps.block()),
       statements2,
-      Inform(traps.leave("block"))));
+      ARAN.build.Statement(traps.leave("block"))));
 
   cut.conditional = (expression1, expression2, expression3) => ARAN.build.conditional(
     traps.test(expression1),
@@ -7035,22 +6900,11 @@ module.exports = (pointcut) => {
         traps.test(clause[0]),
         clause[1]]));
 
-  ////////////
-  // Return //
-  ////////////
-
   return cut;
 
 };
 
-},{"../meta.js":28,"./contain-arguments.js":15,"./inform.js":17,"./name.js":18,"./parse-label.js":19,"./sanitize-identifier.js":20,"./traps":25,"array-lite":6}],17:[function(require,module,exports){
-
-module.exports = ($expression) => (
-  $expression ?
-  ARAN.build.Statement($expression) :
-  []);
-
-},{}],18:[function(require,module,exports){
+},{"../meta.js":27,"./contain-arguments.js":15,"./name.js":17,"./parse-label.js":18,"./sanitize-identifier.js":19,"./traps":24,"array-lite":6}],17:[function(require,module,exports){
 
 module.exports = (node) => {
   if (node.id)
@@ -7077,7 +6931,7 @@ module.exports = (node) => {
   return "";
 };
 
-},{}],19:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 
 const Reflect_apply = Reflect.apply;
 const String_prototype_substring = String.prototype.substring;
@@ -7089,7 +6943,7 @@ exports.core = (label) => (
   null :
   Reflect_apply(String_prototype_substring, label, [1]));
 
-},{}],20:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 (function (global){
 const Reflect_apply = global.Reflect.apply;
 const RegExp_prototype_test = global.RegExp.prototype.test;
@@ -7102,42 +6956,42 @@ module.exports = (identifier) => (
     "$$" + identifier :
     identifier));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],21:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
+(function (global){
 const ArrayLite = require("array-lite");
 const Meta = require("../../../meta.js");
 const TrapArguments = require("./trap-arguments.js");
 const Object_keys = Object.keys;
-
-const empty = () => null;
-function last () { return arguments[arguments.length-1] }
-const combine = (key) => {
-  switch (TrapArguments.combiners[key].length) {
-    case 1: return (x1) => ARAN.build[key](x1);
-    case 2: return (x1, x2) => ARAN.build[key](x1, x2);
-    case 3: return (x1, x2, x3) => ARAN.build[key](x1, x2, x3);
-    case 4: return (x1, x2, x3, x4) => ARAN.build[key](x1, x2, x3, x4);
-    case 5: return (x1, x2, x3, x4, x5) => ARAN.build[key](x1, x2, x3, x4, x5);
-  }
-};
+const Error = global.Error;
 
 ArrayLite.forEach(
-  Object_keys(TrapArguments.combiners),
-  (key) => exports[key] = combine(key));
+  Object_keys(TrapArguments.computers),
+  (key) => {
+    switch (TrapArguments.computers[key].length) {
+      case 1: return exports[key] = (x1) => ARAN.build[key](x1);
+      case 2: return exports[key] = (x1, x2) => ARAN.build[key](x1, x2);
+      case 3: return exports[key] = (x1, x2, x3) => ARAN.build[key](x1, x2, x3);
+    }
+    throw new Error("Invalid trap arity for "+key);
+  });
 
+const empty = () => ARAN.build.primitive(null);
 ArrayLite.forEach(
   Object_keys(TrapArguments.informers),
   (key) => exports[key] = empty);
 
+function last () { return arguments[arguments.length-1] }
 ArrayLite.forEach(
   Object_keys(TrapArguments.modifiers),
   (key) => exports[key] = last);
 
-},{"../../../meta.js":28,"./trap-arguments.js":24,"array-lite":6}],22:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"../../../meta.js":27,"./trap-arguments.js":23,"array-lite":6}],21:[function(require,module,exports){
 
 exports.true = require("./intercept.js");
 exports.false = require("./forward.js");
 
-},{"./forward.js":21,"./intercept.js":23}],23:[function(require,module,exports){
+},{"./forward.js":20,"./intercept.js":22}],22:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 const Meta = require("../../../meta.js");
@@ -7146,7 +7000,7 @@ const TrapArguments = require("./trap-arguments");
 const Object_keys = Object.keys;
 
 ArrayLite.forEach(
-  ["informers", "modifiers", "combiners"],
+  ["informers", "modifiers", "computers"],
   (category) => ArrayLite.forEach(
     Object_keys(TrapArguments[category]),
     (key) => exports[key] = function () {
@@ -7158,67 +7012,69 @@ ArrayLite.forEach(
             ARAN.build.primitive(ARAN.node.AranSerial)]));
     }));
 
-},{"../../../meta.js":28,"./trap-arguments":24,"array-lite":6}],24:[function(require,module,exports){
+},{"../../../meta.js":27,"./trap-arguments":23,"array-lite":6}],23:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 
 const identity = (argument) => argument;
 const primitive = (primitive) => ARAN.build.primitive(primitive);
+const read = (string) => ARAN.build.read(string);
 const array = (expressions) => ARAN.build.array(expressions);
 const object = (expressions) => ARAN.build.array(
   ArrayLite.map(expressions, array));
 
-exports.combiners = {
-  arrival: [primitive, identity, identity, identity, identity],
-  object: [object],
-  array: [array],
-  get: [identity, identity],
-  set: [identity, identity, identity],
-  delete: [identity, identity],
-  invoke: [identity, identity, array],
+exports.computers = {
+  // Combiners //
   apply: [identity, array],
+  binary: [primitive, identity, identity],
   construct: [identity, array],
-  unary: [primitive, identity],
-  binary: [primitive, identity, identity]};
+  delete: [identity, identity],
+  get: [identity, identity],
+  invoke: [identity, identity, array],
+  object: [object],
+  set: [identity, identity, identity],
+  unary: [primitive, identity]};
 
 exports.modifiers = {
-  // chainers //
-  swap: [primitive, primitive, identity],
-  copy: [primitive, identity],
-  drop: [identity],
-  // producers //
+  // Combiners //
+  array: [identity],
+  // Producers //
+  arrival: [primitive, identity],
   begin: [primitive, primitive, identity],
-  read: [primitive, identity],
+  catch: [identity],
+  closure: [identity],
   discard: [primitive, identity],
   load: [primitive, identity],
-  catch: [identity],
   primitive: [identity],
+  read: [primitive, identity],
   regexp: [identity],
-  closure: [identity],
-  // consumers //
-  save: [primitive, identity],
-  drop: [identity],
-  declare: [primitive, primitive, identity],
-  write: [primitive, identity],
-  test: [identity],
-  with: [identity],
-  throw: [identity],
-  return: [identity],
-  eval: [identity],
+  // Consumers //
   completion: [identity],
+  declare: [primitive, primitive, identity],
+  eval: [identity],
+  failure: [primitive, primitive, identity],
+  return: [read, identity],
+  save: [primitive, identity],
   success: [primitive, primitive, identity],
-  failure: [primitive, primitive, identity]};
+  test: [identity],
+  throw: [identity],
+  with: [identity],
+  write: [primitive, identity]};
 
 exports.informers = {
-  end: [primitive, primitive],
-  try: [],
-  finally: [],
+  // Informers //
   block: [],
+  break: [primitive, primitive],
+  copy: [primitive],
+  drop: [],
+  end: [primitive, primitive],
+  finally: [],
   label: [primitive, primitive],
   leave: [primitive],
-  break: [primitive, primitive]};
+  swap: [primitive, primitive],
+  try: []};
 
-},{"array-lite":6}],25:[function(require,module,exports){
+},{"array-lite":6}],24:[function(require,module,exports){
 (function (global){
 
 const ArrayLite = require("array-lite");
@@ -7257,63 +7113,63 @@ module.exports = (pointcut) => {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./fork":22,"./trap-names.js":26,"array-lite":6}],26:[function(require,module,exports){
+},{"./fork":21,"./trap-names.js":25,"array-lite":6}],25:[function(require,module,exports){
 
 module.exports = [
   ///////////////
   // Combiners //
   ///////////////
-  "arrival",
-  "object",
-  "array",
-  "get",
-  "set",
-  "delete",
-  "invoke",
   "apply",
-  "construct",
-  "unary",
+  "array",
   "binary",
+  "construct",
+  "delete",
+  "get",
+  "invoke",
+  "object",
+  "set",
+  "unary",
   ///////////////
-  // modifiers //
-  ///////////////
-  // Chainers //
-  "swap",
-  "copy",
-  "drop",
   // Producers //
+  ///////////////
+  "arrival",
   "begin",
-  "read",
+  "catch",
+  "closure",
   "discard",
   "load",
-  "catch",
   "primitive",
+  "read",
   "regexp",
-  "closure",
+  ///////////////
   // Consumers //
-  "save",
-  "declare",
-  "write",
-  "test",
-  "with",
-  "throw",
-  "return",
-  "eval",
+  ///////////////
   "completion",
-  "success",
+  "declare",
+  "eval",
   "failure",
+  "return",  
+  "save",
+  "success",
+  "test",
+  "throw",
+  "with",
+  "write",
   ///////////////
   // Informers //
   ///////////////
-  "end",
-  "label",
   "block",
-  "try",
+  "break",
+  "copy",
+  "drop",
+  "end",
   "finally",
+  "label",
   "leave",
-  "break"];
+  "swap",
+  "try"];
 
-},{}],27:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 (function (global){
 
 const ArrayLite = require("array-lite");
@@ -7405,7 +7261,7 @@ module.exports = (options) => {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./build":13,"./cut":16,"./meta.js":28,"./weave":30,"array-lite":6}],28:[function(require,module,exports){
+},{"./build":13,"./cut":16,"./meta.js":27,"./weave":29,"array-lite":6}],27:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 
@@ -8038,7 +7894,7 @@ const restore = () => ARAN.build.If(
     []),
   []);
 
-},{"array-lite":6}],29:[function(require,module,exports){
+},{"array-lite":6}],28:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 
@@ -8106,7 +7962,7 @@ visitors.DebuggerStatement = (node, last) => last;
 visitors.FunctionDeclaration = (ndoe, last) => last;
 visitors.VariableDeclaration = (node, last) => last;
 
-},{"array-lite":6}],30:[function(require,module,exports){
+},{"array-lite":6}],29:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 const Meta = require("../meta.js");
@@ -8144,7 +8000,7 @@ module.exports = (root, parent) => {
       statements1));
 };
 
-},{"../meta.js":28,"./completion.js":29,"./interim.js":31,"./visit":45,"array-lite":6}],31:[function(require,module,exports){
+},{"../meta.js":27,"./completion.js":28,"./interim.js":30,"./visit":44,"array-lite":6}],30:[function(require,module,exports){
 
 exports.hoist = (information, expression) => {
   ARAN.hoisted[ARAN.hoisted.length] = ARAN.build.Declare(
@@ -8163,7 +8019,7 @@ exports.write = (information, expression) => ARAN.build.write(
   ARAN.namespace +"_" + ARAN.node.AranSerial + "_" + information,
   expression);
 
-},{}],32:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 const Visit = require("../visit");
@@ -8175,7 +8031,7 @@ exports.Body = (node) => (
     Visit.Statement) :
   Visit.Statement(node));
 
-},{"../visit":45,"array-lite":6}],33:[function(require,module,exports){
+},{"../visit":44,"array-lite":6}],32:[function(require,module,exports){
 (function (global){
 
 const ArrayLite = require("array-lite");
@@ -8220,7 +8076,7 @@ exports.closure = (node) => {
           3,
           ARAN.build.get(
             ARAN.build.read("arrival"),
-            ARAN.build.primitive(1))),
+            ARAN.build.primitive("new"))),
         ARAN.cut.Throw(
           ARAN.cut.construct(
             ARAN.cut.$load("TypeError"),
@@ -8239,12 +8095,12 @@ exports.closure = (node) => {
             3,
             ARAN.build.get(
               ARAN.build.read("arrival"),
-              ARAN.build.primitive(1))),
+              ARAN.build.primitive("new"))),
           ARAN.cut.$copy(
             4,
             ARAN.build.get(
               ARAN.build.read("arrival"),
-              ARAN.build.primitive(0))),
+              ARAN.build.primitive("callee"))),
           ARAN.cut.primitive(void 0)))),
     (
       node.type === "ArrowFunctionExpression" ?
@@ -8256,7 +8112,7 @@ exports.closure = (node) => {
           2,
           ARAN.build.get(
             ARAN.build.read("arrival"),
-            ARAN.build.primitive(2))))),
+            ARAN.build.primitive("this"))))),
     (
       (
         node.type === "ArrowFunctionExpression" ||
@@ -8269,7 +8125,7 @@ exports.closure = (node) => {
           1,
           ARAN.build.get(
             ARAN.build.read("arrival"),
-            ARAN.build.primitive(3))))),
+            ARAN.build.primitive("arguments"))))),
     (
       (
         node.params.length &&
@@ -8281,7 +8137,7 @@ exports.closure = (node) => {
             ARAN.cut.invoke(
               ARAN.build.get(
                 ARAN.build.read("arrival"),
-                ARAN.build.primitive(3)),
+                ARAN.build.primitive("arguments")),
               ARAN.cut.$load("Symbol.iterator"),
               []))),
         ArrayLite.flatenMap(
@@ -8321,7 +8177,7 @@ exports.closure = (node) => {
                 1,
                 ARAN.build.get(
                   ARAN.build.read("arrival"),
-                  ARAN.build.primitive(3))),
+                  ARAN.build.primitive("arguments"))),
               ARAN.cut.primitive(index)))),
         ARAN.build.Statement(
           ARAN.cut.$drop(
@@ -8362,7 +8218,7 @@ exports.closure = (node) => {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../interim.js":31,"../visit":45,"./index.js":36,"array-lite":6}],34:[function(require,module,exports){
+},{"../interim.js":30,"../visit":44,"./index.js":35,"array-lite":6}],33:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 
@@ -8375,7 +8231,7 @@ exports.Completion = (statements) => (
     statements) :
   statements);
 
-},{"array-lite":6}],35:[function(require,module,exports){
+},{"array-lite":6}],34:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 const Interim = require("../interim.js");
@@ -8402,7 +8258,7 @@ exports.Declaration = (node) => ArrayLite.flatenMap(
           []) :
         local))));
 
-},{"../interim.js":31,"../visit":45,"./index.js":36,"array-lite":6}],36:[function(require,module,exports){
+},{"../interim.js":30,"../visit":44,"./index.js":35,"array-lite":6}],35:[function(require,module,exports){
 
 Object.assign(
   exports,
@@ -8415,7 +8271,7 @@ Object.assign(
   require("./property.js"),
   require("./rest.js"));
 
-},{"./body.js":32,"./closure.js":33,"./completion.js":34,"./declaration.js":35,"./loop.js":37,"./pattern":41,"./property.js":42,"./rest.js":43}],37:[function(require,module,exports){
+},{"./body.js":31,"./closure.js":32,"./completion.js":33,"./declaration.js":34,"./loop.js":36,"./pattern":40,"./property.js":41,"./rest.js":42}],36:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 const Visit = require("../visit");
@@ -8450,7 +8306,7 @@ exports.Loop = (begin, test, before, body, after) => {
   return result;
 };
 
-},{"../visit":45,"./index.js":36,"array-lite":6}],38:[function(require,module,exports){
+},{"../visit":44,"./index.js":35,"array-lite":6}],37:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 const Interim = require("../../interim.js");
@@ -8477,7 +8333,7 @@ exports.assign = (pattern, expression) => (
       pattern,
       expression)));
 
-},{"../../interim.js":31,"../../visit":45,"../index.js":36,"./common.js":39,"array-lite":6}],39:[function(require,module,exports){
+},{"../../interim.js":30,"../../visit":44,"../index.js":35,"./common.js":38,"array-lite":6}],38:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 const Interim = require("../../interim.js");
@@ -8594,7 +8450,7 @@ module.exports = (transformers, pattern, string) => {
   return visit(pattern, string);
 };
 
-},{"../../interim.js":31,"../../visit":45,"../index.js":36,"array-lite":6}],40:[function(require,module,exports){
+},{"../../interim.js":30,"../../visit":44,"../index.js":35,"array-lite":6}],39:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 const Interim = require("../../interim.js");
@@ -8626,12 +8482,12 @@ exports.Declare = (kind, pattern, expression) => (
       Interim.hoist("right", expression)),
     Common(transformerss[kind], pattern, "right")));
 
-},{"../../interim.js":31,"./common.js":39,"array-lite":6}],41:[function(require,module,exports){
+},{"../../interim.js":30,"./common.js":38,"array-lite":6}],40:[function(require,module,exports){
 
 exports.assign = require("./assign.js").assign;
 exports.Declare = require("./declare.js").Declare;
 
-},{"./assign.js":38,"./declare.js":40}],42:[function(require,module,exports){
+},{"./assign.js":37,"./declare.js":39}],41:[function(require,module,exports){
 
 const Visit = require("../visit");
 
@@ -8643,7 +8499,7 @@ exports.property = (node) => (
     ARAN.cut.primitive(node.property.name) :
     ARAN.cut.primitive(node.property.value)));
 
-},{"../visit":45}],43:[function(require,module,exports){
+},{"../visit":44}],42:[function(require,module,exports){
 
 const ArrayLite = require("array-lite");
 
@@ -8699,7 +8555,7 @@ exports.rest = () => ARAN.build.function(
     ARAN.build.Return(
       ARAN.build.read("array"))));
 
-},{"array-lite":6}],44:[function(require,module,exports){
+},{"array-lite":6}],43:[function(require,module,exports){
 (function (global){
 
 const ArrayLite = require("array-lite");
@@ -9085,9 +8941,9 @@ exports.CallExpression = (node, local) => (
           [
             Interim.read("arguments")]))]));
 
-exports.MemberExpression = (node) => ARAN.cut.get(
+exports.MemberExpression = (node) => {debugger; return ARAN.cut.get(
   Visit.expression(node.object),
-  Util.property(node));
+  Util.property(node));}
 
 exports.MetaProperty = (node) => ARAN.cut.read("new.target");
 
@@ -9099,7 +8955,7 @@ exports.Literal = (node) => (
   ARAN.cut.primitive(node.value));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../../meta.js":28,"../interim.js":31,"../util":36,"./index.js":45,"array-lite":6}],45:[function(require,module,exports){
+},{"../../meta.js":27,"../interim.js":30,"../util":35,"./index.js":44,"array-lite":6}],44:[function(require,module,exports){
 
 const Expression = require("./expression.js");
 const Statement = require("./statement.js");
@@ -9139,7 +8995,7 @@ const visit = (visitors) => (node) => {
 exports.Statement = visit(Statement);
 exports.expression = visit(Expression);
 
-},{"./expression.js":44,"./statement.js":46}],46:[function(require,module,exports){
+},{"./expression.js":43,"./statement.js":45}],45:[function(require,module,exports){
 
 // The visitors of this file returns a list of statement.
 // This is safe provided that control structures (if|while|do-while|for|for-in|label) have a statement block as body.
@@ -9567,7 +9423,7 @@ exports.FunctionDeclaration = (node) => {
 
 exports.VariableDeclaration = (node) => Util.Declaration(node);
 
-},{"../../meta.js":28,"../interim.js":31,"../util":36,"./index.js":45,"array-lite":6}],47:[function(require,module,exports){
+},{"../../meta.js":27,"../interim.js":30,"../util":35,"./index.js":44,"array-lite":6}],46:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -9753,7 +9609,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],48:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -9778,14 +9634,14 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],49:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],50:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10375,7 +10231,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":49,"_process":47,"inherits":48}]},{},[1]);
+},{"./support/isBuffer":48,"_process":46,"inherits":47}]},{},[1]);
 
   </script>
   </body>

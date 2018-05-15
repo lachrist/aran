@@ -42,7 +42,6 @@ exports.object = (properties) => (
 exports.closure = (boolean, statements) => (
   "(function(){const callee=function(){" +
   (boolean ? "\"use strict\";" : "") +
-  "let arrival={callee:callee,new:new.target!==void 0,this:this,arguments:arguments};" +
   ArrayLite.join(statements, "") +
   "};return callee;}())");
 
@@ -131,17 +130,6 @@ exports.apply = (expression, expressions) => (
   "(" +
   ArrayLite.join(expressions, ",") +
   "))");
-
-exports.arrival = (boolean, expression1, expression2, expression3, expression4) => (
-  "[" +
-  expression1 +
-  "," +
-  expression2 +
-  "," +
-  expression3 +
-  "," +
-  expression4 +
-  "]");
 
 exports.invoke = (expression1, expression2, expressions) => (
   "(" +

@@ -17,9 +17,8 @@ const advice = {};
 ///////////////
 const pass = function () { return arguments[arguments.length-2] };
 [
-  "copy",
-  "swap",
-  "drop",
+  "array",
+  "arrival",
   "read",
   "load",
   "save",
@@ -45,6 +44,9 @@ const pass = function () { return arguments[arguments.length-2] };
 ///////////////
 const noop = () => {};
 [
+  "copy",
+  "swap",
+  "drop",
   "try",
   "finally",
   "leave",
@@ -56,9 +58,8 @@ const noop = () => {};
 ].forEach((name) => { advice[name] = noop });
 
 ///////////////
-// Combiners //
+// Computers //
 ///////////////
-advice.arrival = (strict, callee, isnew, value, values) => [callee, isnew, value, values];
 advice.apply = (callee, values, serial) => callee(...values);
 advice.construct = (callee, values, serial) => new callee(...values);
 advice.invoke = (object, key, values, serial) => Reflect.apply(object[key], object, values);
@@ -67,7 +68,6 @@ advice.binary = (operator, left, right, serial) => eval("left "+operator+" right
 advice.get = (object, key, serial) => object[key];
 advice.set = (object, key, value, serial) => object[key] = value;
 advice.delete = (object, key, serial) => delete object[key];
-advice.array = (elements, serial) => elements;
 advice.object = (properties, serial) => properties.reduce((object, property) => {
   object[property[0]] = property[1];
   return object;

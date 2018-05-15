@@ -129,8 +129,6 @@ const Call = ((() => {
   });
 }) ());
 
-
-
 const advice = {PROXY:Proxy};
 const proxies = SafeWeakMap();
 const scopes = SafeWeakMap();
@@ -154,24 +152,6 @@ global.Proxy = function Proxy (target, handlers) {
   const proxy = new Proxy(target, advice);
   proxies.set(proxy, {target:target, handlers:handlers});
   return proxy;
-};
-
-/////////////
-// Special //
-/////////////
-advice.copy = (position, value, serial) => {
-  vstack.push(vstack[vstack.length-position]);
-  return value;
-};
-advice.swap = (position1, position2, value, serial) => {
-  const temporary = vstack[vstack.length-position1];
-  vstack[vstack.length-position1] = vstack[vstack.length-position2];
-  vstack[vstack.length-position2] = temporary;
-  return value;
-};
-advice.drop = (value, serial) => {
-  vstack.pop();
-  return value;
 };
 
 ///////////////
@@ -198,6 +178,24 @@ const ftraps = {
       throw error;
     }
   }
+};
+advice.arrival = (boolean, arrival, serial) => {
+  cstack.push(Call(scopes.get(arrival.callee)));
+  cstack.peek().enter("closure", Object.create(null), null);
+  return {
+    callee: produce(arrival.callee),
+    new: produce(arrival.new),
+    this: produce(arrival.this),
+    arguments: produce(arrival.arguments)
+  };
+};
+advice.begin = (boolean1, boolean2, value, serial) => {
+  estack.push(null);
+  if (boolean2)
+    return cstack.peek().enter(boolean1 ? "closure" : "block", Object_create(null), null);
+  cstack.push(Call(Scope()));
+  cstack.peek().enter("block", Object_create(null), null);
+  return produce(value, serial);
 };
 advice.regexp = (value, serial) => produce(value, serial);
 advice.primitive = (value, serial) => produce(value, serial);
@@ -244,11 +242,30 @@ advice.catch = (value, serial) => {
 ///////////////
 // Consumers //
 ///////////////
+advice.success = (boolean1, boolean2, value, serial) => {
+  check("Success", estack.peek(), value, serial);
+  if (boolean2) {
+    cstack.peek().leave(boolean1 ? "closure" : "block", serial);
+    return produce(value, serial);
+  }
+  cstack.peek().leave("block", serial);
+  if (cstack.peek().loop(() => true))
+    throw new Error("["+serial+"] CallStack frames poluted");
+  cstack.pop();
+  if (estack.length === 1 && (cstack.length || vstack.length))
+    throw new Error("["+serial+"] State poluted");
+  return value;
+};
+advice.failure = (boolean1, boolean2, error, serial) => {
+  if (estack.length === 1)
+    cleanup();
+  return error;
+};
 advice.save = (name, value, serial) => consume(value, serial);
 advice.test = (value, serial) => consume(value, serial);
 advice.throw = (value, serial) => consume(value, serial);
 advice.eval = (value, serial) => module.exports(consume(value, serial), serial);
-advice.return = (value, serial) => {
+advice.return = (arrival, value, serial) => {
   cstack.pop();
   return consume(value, serial);
 };
@@ -291,6 +308,20 @@ advice.declare = (kind, identifier, value, serial) => {
 ///////////////
 // Informers //
 ///////////////
+advice.end = (serial) => {
+  estack.pop();
+};
+advice.copy = (position, serial) => {
+  vstack.push(vstack[vstack.length-position]);
+};
+advice.swap = (position1, position2, serial) => {
+  const temporary = vstack[vstack.length-position1];
+  vstack[vstack.length-position1] = vstack[vstack.length-position2];
+  vstack[vstack.length-position2] = temporary;
+};
+advice.drop = (serial) => {
+  vstack.pop();
+};
 advice.block = (serial) => {
   cstack.peek().enter("block", Object.create(null), null);
 };
@@ -320,16 +351,6 @@ advice.break = (boolean, label, serial) => {
 ///////////////
 // Combiners //
 ///////////////
-advice.arrival = (boolean, value1, value2, value3, value4, serial) => {
-  cstack.push(Call(scopes.get(value1)));
-  cstack.peek().enter("closure", Object.create(null), null);
-  return [
-    produce(value1),
-    produce(value2),
-    produce(value3),
-    produce(value4)
-  ];
-};
 advice.invoke = (value1, value2, values, serial) => {
   let index = values.length;
   while (index--)
@@ -392,40 +413,6 @@ advice.object = (properties, serial) => {
     result[properties[index][0]] = properties[index][1];
   }
   return produce(result, serial);
-};
-
-//////////////////////
-// Setup / Teardown //
-//////////////////////
-advice.begin = (boolean1, boolean2, value, serial) => {
-  estack.push(null);
-  if (boolean2)
-    return cstack.peek().enter(boolean1 ? "closure" : "block", Object_create(null), null);
-  cstack.push(Call(Scope()));
-  cstack.peek().enter("block", Object_create(null), null);
-  return produce(value, serial);
-};
-advice.success = (boolean1, boolean2, value, serial) => {
-  check("Success", estack.peek(), value, serial);
-  if (boolean2) {
-    cstack.peek().leave(boolean1 ? "closure" : "block", serial);
-    return produce(value, serial);
-  }
-  cstack.peek().leave("block", serial);
-  if (cstack.peek().loop(() => true))
-    throw new Error("["+serial+"] CallStack frames poluted");
-  cstack.pop();
-  if (estack.length === 1 && (cstack.length || vstack.length))
-    throw new Error("["+serial+"] State poluted");
-  return value;
-};
-advice.failure = (boolean1, boolean2, error, serial) => {
-  if (estack.length === 1)
-    cleanup();
-  return error;
-};
-advice.end = (serial) => {
-  estack.pop();
 };
 
 module.exports = AranLive(advice).instrument;

@@ -2,24 +2,16 @@
 const ArrayLite = require("array-lite");
 const Meta = require("../meta.js");
 const Traps = require("./traps");
-const Inform = require("./inform.js");
 const Name = require("./name.js")
 const ParseLabel = require("./parse-label.js");
 const SanitizeIdentifier = require("./sanitize-identifier.js");
 const ContainArguments = require("./contain-arguments.js");
-
-const Reflect_apply = Reflect.apply;
-const String_prototype_replace = String.prototype.replace;
 
 module.exports = (pointcut) => {
 
   const traps = Traps(pointcut);
 
   const cut = {};
-
-  /////////////////
-  // Compilation //
-  /////////////////
 
   cut.PROGRAM = (boolean, statements) => (
     statements = ArrayLite.concat(
@@ -114,83 +106,10 @@ module.exports = (pointcut) => {
             Boolean(ARAN.node.AranStrict),
             Boolean(ARAN.node.AranParent),
             ARAN.build.read("error"))),
-        Inform(
+        ARAN.build.Statement(
           traps.end(
             Boolean(ARAN.node.AranStrict),
             Boolean(ARAN.node.AranParent))))));
-
-  // // boolean1 := sandbox, boolean2 := strict
-  // cut.$PROGRAM = (boolean1, boolean2, statements) => ARAN.build.PROGRAM(
-  //   !boolean1 && boolean2,
-  //   ARAN.build.Try(
-  //     ArrayLite.concat(
-  //       Inform(
-  //         traps.begin(
-  //           Boolean(ARAN.node.AranStrict),
-  //           Boolean(ARAN.node.AranParent))),
-  //       (
-  //         boolean1 ?
-  //         ARAN.build.Statement(
-  //           ARAN.build.write(
-  //             "completion",
-  //             Meta.apply(
-  //               ARAN.build.function(
-  //                 false,
-  //                 [],
-  //                 ARAN.build.With(
-  //                   Meta.proxy(
-  //                     boolean2 ? "GLOBAL_STRICT_HANDLERS" : "GLOBAL_HANDLERS",
-  //                     traps.with(
-  //                       traps.load(
-  //                         "global",
-  //                         Meta.load("global")))),
-  //                   ArrayLite.concat(
-  //                     ARAN.build.Declare(
-  //                       "let",
-  //                       ARAN.namespace,
-  //                       ARAN.build.read("this")),
-  //                     ARAN.build.Declare(
-  //                       "const",
-  //                       "eval",
-  //                       Meta.eval()),
-  //                     ARAN.build.Declare(
-  //                       "let",
-  //                       "completion",
-  //                       ARAN.build.primitive(void 0)),
-  //                     Inform(
-  //                       traps.block()),
-  //                     (
-  //                       boolean2 ?
-  //                       ARAN.build.Statement(
-  //                         ARAN.build.apply(
-  //                           ARAN.build.function(true, [], statements),
-  //                           [])) :
-  //                       statements),
-  //                     Inform(
-  //                       traps.leave("block")),
-  //                     Inform(
-  //                       traps.leave("with")),
-  //                     ARAN.build.Return(
-  //                       ARAN.build.read("completion"))))),
-  //               ARAN.build.read(ARAN.namespace),
-  //               []))) :
-  //         statements),
-  //       ARAN.build.Statement(
-  //         ARAN.build.write(
-  //           "completion",
-  //           traps.success(
-  //             Boolean(ARAN.node.AranStrict),
-  //             Boolean(ARAN.node.AranParent),
-  //             ARAN.build.read("completion"))))),
-  //     ARAN.build.Throw(
-  //       traps.failure(
-  //         Boolean(ARAN.node.AranStrict),
-  //         Boolean(ARAN.node.AranParent),
-  //         ARAN.build.read("error"))),
-  //     Inform(
-  //       traps.end(
-  //         Boolean(ARAN.node.AranStrict),
-  //         Boolean(ARAN.node.AranParent)))));
 
   cut.$completion = (expression) => ARAN.build.write(
     "completion",
@@ -200,20 +119,30 @@ module.exports = (pointcut) => {
     string,
     Meta.load(string));
 
-  cut.$copy = traps.copy;
+  cut.$copy = (number, expression) => ARAN.build.get(
+    ARAN.build.array(
+      [
+        expression,
+        traps.copy(number) ]),
+    ARAN.build.primitive(0));
 
-  cut.$drop = traps.drop;
+  cut.$drop = (expression) => ARAN.build.get(
+    ARAN.build.array(
+      [
+        expression,
+        traps.drop()]),
+    ARAN.build.primitive(0));
 
-  cut.$swap = traps.swap;
-
-  ///////////////
-  // Combiners //
-  ///////////////
+  cut.$swap = (number1, number2, expression) => ARAN.build.get(
+    ARAN.build.array(
+      [
+        expression,
+        traps.swap(number1, number2)]),
+    ARAN.build.primitive(0));
 
   ArrayLite.forEach(
     [
       "object",
-      "array",
       "get",
       "set",
       "delete",
@@ -225,36 +154,31 @@ module.exports = (pointcut) => {
       "binary"],
     (key) => cut[key] = traps[key]);
 
-  ///////////////
-  // Informers //
-  ///////////////
+  cut.array = (elements) => traps.array(
+    ARAN.build.array(elements));
 
   cut.Label = (label, statements) => ARAN.build.Label(
     label,
     ArrayLite.concat(
-      Inform(traps.label(ParseLabel.split(label) , ParseLabel.core(label))),
+      ARAN.build.Statement(traps.label(ParseLabel.split(label) , ParseLabel.core(label))),
       statements,
-      Inform(traps.leave("label"))));
+      ARAN.build.Statement(traps.leave("label"))));
 
   cut.Break = (label) => ArrayLite.concat(
-    Inform(traps.break(ParseLabel.split(label) , ParseLabel.core(label))),
+    ARAN.build.Statement(traps.break(ParseLabel.split(label) , ParseLabel.core(label))),
     ARAN.build.Break(label));
 
   cut.Block = (statements) => ARAN.build.Block(
     ArrayLite.concat(
-      Inform(traps.block()),
+      ARAN.build.Statement(traps.block()),
       statements,
-      Inform(traps.leave("block"))));
-
-  ///////////////
-  // Producers //
-  ///////////////
+      ARAN.build.Statement(traps.leave("block"))));
 
   cut.Try = (statements1, statements2, statements3) => ARAN.build.Try(
     ArrayLite.concat(
-      Inform(traps.try()),
+      ARAN.build.Statement(traps.try()),
       statements1,
-      Inform(traps.leave("try"))),
+      ARAN.build.Statement(traps.leave("try"))),
     ArrayLite.concat(
       ARAN.build.Statement(
         ARAN.build.write(
@@ -262,11 +186,11 @@ module.exports = (pointcut) => {
           traps.catch(
             ARAN.build.read("error")))),
       statements2,
-      Inform(traps.leave("catch"))),
+      ARAN.build.Statement(traps.leave("catch"))),
     ArrayLite.concat(
-      Inform(traps.finally()),
+      ARAN.build.Statement(traps.finally()),
       statements3,
-      Inform(traps.leave("finally"))));
+      ARAN.build.Statement(traps.leave("finally"))));
 
   cut.closure = (boolean, statements) => traps.closure(
     Meta.define(
@@ -274,18 +198,28 @@ module.exports = (pointcut) => {
         ARAN.build.closure(
           boolean,
           ArrayLite.concat(
-            ARAN.build.Statement(
-              ARAN.build.write(
-                "arrival",
-                traps.arrival(
-                  Boolean(ARAN.node.AranStrict),
-                  ARAN.build.read("callee"),
-                  ARAN.build.binary(
-                    "!==",
-                    ARAN.build.read("new.target"),
-                    ARAN.build.primitive(void 0)),
-                  ARAN.build.read("this"),
-                  ARAN.build.read("arguments")))),
+            ARAN.build.Declare(
+              "const",
+              "arrival",
+              traps.arrival(
+                Boolean(ARAN.node.AranStrict),
+                ARAN.build.object(
+                  [
+                    [
+                      ARAN.build.primitive("callee"),
+                      ARAN.build.read("callee")],
+                    [
+                      ARAN.build.primitive("new"),
+                      ARAN.build.binary(
+                        "!==",
+                        ARAN.build.read("new.target"),
+                        ARAN.build.primitive(void 0))],
+                    [
+                      ARAN.build.primitive("this"),
+                      ARAN.build.read("this")],
+                    [
+                      ARAN.build.primitive("arguments"),
+                      ARAN.build.read("arguments")]]))),
             statements)),
         "length",
         ARAN.build.primitive(
@@ -320,10 +254,6 @@ module.exports = (pointcut) => {
   cut.regexp = (pattern, flags) => traps.regexp(
     ARAN.build.regexp(pattern, flags));
 
-  ///////////////
-  // Consumers //
-  ///////////////
-
   cut.write = (
     ARAN.sandbox ?
     (identifier, expression) => (
@@ -349,7 +279,7 @@ module.exports = (pointcut) => {
     traps.declare(kind, identifier, expression));
 
   cut.Return = (expression) => ARAN.build.Return(
-    traps.return(expression));
+    traps.return("arrival", expression));
 
   cut.eval = (expression) => ARAN.build.eval(
     traps.eval(expression));
@@ -359,7 +289,7 @@ module.exports = (pointcut) => {
       traps.with(expression)),
     ArrayLite.concat(
       statements,
-      Inform(traps.leave("with"))));
+      ARAN.build.Statement(traps.leave("with"))));
 
   cut.Throw = (expression) => ARAN.build.Throw(
     traps.throw(expression));
@@ -372,13 +302,13 @@ module.exports = (pointcut) => {
   cut.If = (expression, statements1, statements2) => ARAN.build.If(
     traps.test(expression),
     ArrayLite.concat(
-      Inform(traps.block()),
+      ARAN.build.Statement(traps.block()),
       statements1,
-      Inform(traps.leave("block"))),
+      ARAN.build.Statement(traps.leave("block"))),
     ArrayLite.concat(
-      Inform(traps.block()),
+      ARAN.build.Statement(traps.block()),
       statements2,
-      Inform(traps.leave("block"))));
+      ARAN.build.Statement(traps.leave("block"))));
 
   cut.conditional = (expression1, expression2, expression3) => ARAN.build.conditional(
     traps.test(expression1),
@@ -391,10 +321,6 @@ module.exports = (pointcut) => {
       (clause) => [
         traps.test(clause[0]),
         clause[1]]));
-
-  ////////////
-  // Return //
-  ////////////
 
   return cut;
 

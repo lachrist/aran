@@ -55,28 +55,9 @@ const combine = (value, name, infos, serial) => {
   return value;
 };
 
-//////////////
-// Chaining //
-//////////////
-advice.copy = (position, value, serial) => {
-  vstack.push(vstack[vstack.length-position]);
-  return value;
-};
-advice.swap = (position1, position2, value, serial) => {
-  const temporary = vstack[vstack.length-position1];
-  vstack[vstack.length-position1] = vstack[vstack.length-position2];
-  vstack[vstack.length-position2] = temporary;
-  return value;
-};
-advice.drop = (value, serial) => {
-  vstack.pop();
-  return value;
-};
-
 ///////////////
 // Producers //
 ///////////////
-
 const fhandlers = {
   apply: (target, value, values) => {
     if (cstack.length)
@@ -98,6 +79,18 @@ const fhandlers = {
       throw error;
     }
   }
+};
+advice.arrival = (strict, arrival, serial) => {
+  cstack.push(scopes.get(arrival.callee).concat([{
+    type: "closure",
+    binding: Object.create(null)
+  }]));
+  return {
+    callee: produce("arrival-callee", [], arrival.callee, serial),
+    new: produce("arrival-new", [], arrival.new, serial),
+    this: produce("arrival-this", [], arrival.this, serial),
+    arguments: produce("arrival-arguments", [], arrival.arguments, serial)
+  };
 };
 advice.begin = (strict, direct, value, serial) => {
   estack.push(null);
@@ -190,7 +183,7 @@ advice.test = (value, serial) =>
   consume("test", [], value, serial);
 advice.eval = (value, serial) =>
   aranlive.instrument(consume("eval", [], value, serial), serial);
-advice.return = (value, serial) => {
+advice.return = (arrival, value, serial) => {
   cstack.pop();
   return consume("return", [], value, serial);
 };
@@ -232,6 +225,17 @@ advice.declare = (kind, identifier, value, serial) => {
 ///////////////
 // Informers //
 ///////////////
+advice.copy = (position, serial) => {
+  vstack.push(vstack[vstack.length-position]);
+};
+advice.swap = (position1, position2, serial) => {
+  const temporary = vstack[vstack.length-position1];
+  vstack[vstack.length-position1] = vstack[vstack.length-position2];
+  vstack[vstack.length-position2] = temporary;
+};
+advice.drop = (serial) => {
+  vstack.pop();
+};
 advice.end = (strict, direct, serial) => {};
 advice.leave = (type, serial) => cstack[cstack.length-1].pop();
 advice.block = (serial) => cstack[cstack.length-1].push({
@@ -266,18 +270,6 @@ advice.break = (boolean, label, serial) => {
 // Combiners //
 ///////////////
 const cut = (length) => length ? "["+vstack.splice(-length) +"]" : "[]";
-advice.arrival = (strict, value1, value2, value3, value4, serial) => {
-  cstack.push(scopes.get(value1).concat([{
-    type: "closure",
-    binding: Object.create(null)
-  }]));
-  return [
-    produce("arrival-callee", [], value1, serial),
-    produce("arrival-new", [], value2, serial),
-    produce("arrival-this", [], value3, serial),
-    produce("arrival-arguments", [], value4, serial)
-  ];
-};
 advice.apply = (value, values, serial) => combine(
   value(...values),
   "apply", [cut(values.length), vstack.pop()], serial);

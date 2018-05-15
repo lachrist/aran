@@ -239,144 +239,131 @@ Retrieve the ESTree Program node that contains the node at the given serial numb
 
 ### `namespace = aran.namesapce`
 
-The name of the glboal variable holding the advice;
+The name of the global variable holding the advice;
 * `namespace :: string`
 
 ## Advice
 
 The most important part of the advice are the trap functions.
 All traps are independently optional and they all receive as last argument an integer which is the index of the ESTree node that triggered the trap.
-We categorized traps depending on their insertion mechanism.
 
-* *Combiners*: replacements for expression nodes.
+### Trap Categorization
+
+We tried to provide as few simple and trap as possible to express the entire JavaScript semantic.
+This process still left us with around 40 traps which we categorize as follow:
+
+* *Combiners*: traps whose result is used and which pop several values from the stack and then push exactly one value on top of the stack.
   These traps are given several values from the target program which they can freely combine.
   Their transparent implementation consists in reproducing the effect of the expression they replace.
-  For instance:
-  ```js
-  // o.k(x) >> META.invoke(o, "k", [x], 123);
-  META.invoke = (object, key, values, serial) => object[key](...values);
-  ```
-  Combiners pop some values from the value-stack and push exactly one value on top of it.
-  The only exception is the `arrival` trap which pops no values from stack and push four values on top of it.
-* *Modifiers*: surround expression nodes.
+* *Producers*: traps whose result is used and which push several values on top of the stack.
   These traps are given a single value from the target program which they can freely modify.
-  Their transparent implementation consists in returning the second last argument.
-  For instance:
-  ```js
-  // x >> META.read("x", x, 123)
-  META.read = (identifier, value, serial) => value;
-  ```
-  Additionally most modifiers fall into the two subcategories based on their impact on the value stack:
-  * *Producers*: produce a value on top of the value stack -- e.g.: `primitive`.
-  * *Consumers*: consume the value on top of the value stack -- e.g.: `test`.
-* *Informers*: result is not used.
-  These traps are only given static syntactic information.
-  Their transparent implementation consists in doing nothing.
-  For instance:
-  ```js
-  // break a; >> META.break(false, "a", 123); break a;
-  META.break = (iscontinue, label, serial) => {};
-  ```
-  Informers don't have any effect on the value stack.
+  Their transparent implementation consists in returning their second last argument.
+* *Consumers*: traps whose result is used and which pop exactly one values from the stack.
+  These traps are given a single value from the target program which they can freely modify.
+  Their transparent implementation consists in returning their second last argument.
+* *Informers*: traps whose result is not used.
+  These traps are only given primitive constant.
+  Their transparent implementation consist in doing nothing.
+
+![trap-categorization](img/trap-category.png)
 
 ### Trap Insertion
 
 Name          | Original             | Instrumented
 --------------|----------------------|-------------
 **Combiners** |                      |
-`arrival`     | `...`                | `... const arrival = META.arrival(@strict, callee, new.target === undefined, this, arguments, @serial); ...`
 `apply`       | `f(x,y)`             | `META.apply(f, [x,y], @serial)`
-`invoke`      | `o.k(x,y)`           | `META.invoke(o, "k", [x,y], @serial)`
-`construct`   | `new F(x,y)`         | `META.construct(F, [x,y], @serial)`
-`unary`       | `!x`                 | `META.unary("!", x, @serial)` 
-`binary`      | `x + y`              | `META.binary("+", x, y, @serial)` 
-`get`         | `o.k`                | `META.get(o, "k", @serial)`
-`set`         | `o.k = x`            | `META.set(o, "k", x, @serial)`
-`delete`      | `delete o.k`         | `META.delete(o, "k", @serial)`
-`object`      | `{k:x,l:y}`          | `META.object([["k", x], ["l", y]], @serial)`
 `array`       | `[x,y]`              | `META.array([x,y], @serial)`
-**Modifiers** |                      | 
-`copy`        | `for (x in o) ...`   | `... META.copy(1, ..., @serial) ...`
-`drop`        | `f();`               | `META.drop(f(), @serial);`
-`swap`        | `for (x in o) ...`   | `... META.swap(1, 2, ..., @serial)`
-*Producers*   |                      | 
-`begin`       | `...`                | `... META.begin(@strict, @direct, META.GLOBAL, @serial); ...`
-`read`        | `x`                  | `META.read("x", x, @serial)`
+`binary`      | `x + y`              | `META.binary("+", x, y, @serial)` 
+`construct`   | `new F(x,y)`         | `META.construct(F, [x,y], @serial)`
+`delete`      | `delete o.k`         | `META.delete(o, "k", @serial)`
+`get`         | `o.k`                | `META.get(o, "k", @serial)`
+`invoke`      | `o.k(x,y)`           | `META.invoke(o, "k", [x,y], @serial)`
+`object`      | `{k:x,l:y}`          | `META.object([["k", x], ["l", y]], @serial)`
+`set`         | `o.k = x`            | `META.set(o, "k", x, @serial)`
+`unary`       | `!x`                 | `META.unary("!", x, @serial)` 
+**Producers** |                      | 
+`arrival`     | `() => { ... }`      | `function () { const arrival = META.arrival(@strict, {callee:callee, new:new.target===undefined, this:this, arguments:arguments}, @serial); ... }`
+`begin`       | `...` (program)      | `... const $$this = META.begin(@strict, @direct, META.GLOBAL, @serial); ...`
+`catch`       | `... catch (e) ...`  | `... catch (error) { let e = META.catch(error, @serial); ...`
+`closure`     | `() => {}`           | `META.closure(..., @serial)`
 `discard`     | `delete x`           | `META.discard("x", delete x, @serial)`
 `load`        | `[x1,x2] = xs`       | `... META.load("Symbol.iterator", META["SAVE_Symbol.iterator"], @serial) ...` 
-`catch`       | `... catch (e) ...`  | `... catch (error) { let e = META.catch(error, @serial); ...`
 `primitive`   | `"foo"`              | `META.primitive("foo", @serial)`
+`read`        | `x`                  | `META.read("x", x, @serial)`
 `regexp`      | `/abc/g`             | `META.regexp(/abc/g, @serial)`
-`closure`     | `() => {}`           | `META.closure(..., @serial)`
-*Consumers*   |                      | 
-`save`        |                      | `... META.SAVE_Symbol_iterator = META.save("Symbol.iterator", Symbol.iterator, @serial); ...`
-`declare`     | `let x = y`          | `let x = META.declare("let", "x", y, @serial)`
-`write`       | `x = y`              | `x = META.write("x", y, @serial)`
-`test`        | `x ? y : z`          | `META.test(x, @serial) : y : z`
-`with`        | `with (x) { ... }`   | `with(new META.PROXY(META.with(x, @serial), META.WITH_HANDLERS)) { ... }`
-`throw`       | `throw x`            | `throw META.throw(x, @serial)`
-`return`      | `return x`           | `return META.return(x, @serial)`
-`eval`        | `eval(x)`            | `$$eval === META.SAVE_eval ? eval(META.eval(x, @serial)) : $$eval(x)`
+**Consumers** |                      | 
 `completion`  | `"foo";`             | `completion = META.completion("foo", @serial);`
-`success`     | `...`                | `... completion = META.success(@strict, @direct, completion, @serial); ...`
-`failure`     | `...`                | `... catch (error) { throw META.failure(@strict, @direct, error, @serial); } ...`
+`declare`     | `let x = y`          | `let x = META.declare("let", "x", y, @serial)`
+`eval`        | `eval(x)`            | `$$eval === META.SAVE_eval ? eval(META.eval(x, @serial)) : $$eval(x)`
+`failure`     | `...` (program)      | `... catch (error) { throw META.failure(@strict, @direct, error, @serial); } ...`
+`return`      | `return x`           | `return META.return(arrival, x, @serial)`
+`save`        |                      | `... META.SAVE_Symbol_iterator = META.save("Symbol.iterator", Symbol.iterator, @serial); ...`
+`success`     | `...` (program)      | `... completion = META.success(@strict, @direct, completion, @serial); ...`
+`test`        | `x ? y : z`          | `META.test(x, @serial) : y : z`
+`throw`       | `throw x`            | `throw META.throw(x, @serial)`
+`with`        | `with (x) { ... }`   | `with(new META.PROXY(META.with(x, @serial), META.WITH_HANDLERS)) { ... }`
+`write`       | `x = y`              | `x = META.write("x", y, @serial)`
 **Informers** |                      |
-`end`         | `...`                | `... finally { META.end(@strict, @direct, @serial); } ...`
-`try`         | `try { ...`          | `try { META.try(@serial) ...`
-`finally`     | `... finally { ...`  | `... finally { META.finally(@serial) ...`
 `block`       | `{ ... }`            | `{ META.block(@serial) ... }`
-`leave`       | `{ ... }`            | `{ ... META.leave("block", @serial); }`
-`label`       | `l: { ... }`         | `bl: { META.label(false, "l", @serial); ... }`
 `break`       | `break l;`           | `META.break(false, "l", @serial); break bl;`
+`copy`        | `for (x in o) ...`   | `... META.copy(1, @serial) ...`
+`drop`        | `f();`               | `(f(), META.drop(@serial));`
+`end`         | `...` (program)      | `... finally { META.end(@strict, @direct, @serial); } ...`
+`finally`     | `... finally { ...`  | `... finally { META.finally(@serial) ...`
+`label`       | `l: { ... }`         | `bl: { META.label(false, "l", @serial); ... }`
+`leave`       | `{ ... }`            | `{ ... META.leave("block", @serial); }`
+`swap`        | `for (x in o) ...`   | `... META.swap(1, 2, @serial) ...`
+`try`         | `try { ...`          | `try { META.try(@serial) ...`
 
 ### Trap Signature
 
-Name          | arguments[0]         | arguments[1]        | arguments[2]        | arguments[3]    
+Name          | arguments[0]         | arguments[1]        | arguments[2]        | arguments[3]
 --------------|----------------------|---------------------|---------------------|-----------------
-**Combiners** |                      |                     |                     |                 
-`arrival`     | `strict:boolean`     | `callee:value`      | `new:boolean`       | `this:value` `arguments:value` `serial:number`
+**Combiners** |                      |                     |                     |
 `apply`       | `function:value`     | `arguments:[value]` | `serial:number`     |
-`invoke`      | `object:value`       | `key:value`         | `arguments:[value]` | `serial:number`
-`construct`   | `constructor:value`  | `arguments:[value]` | `serial:number`     |                
-`unary`       | `operator:string`    | `argument:value`    | `serial:number`     |                
+`array`       | `elements:[value]`   | `serial:number`     |                     |
 `binary`      | `operator:string`    | `left:value`        | `right:value`       | `serial:number`
-`get`         | `object:value`       | `key:value`         | `serial:number`     |                
+`construct`   | `constructor:value`  | `arguments:[value]` | `serial:number`     |
+`delete`      | `object:value`       | `key:value`         | `serial:number`     |
+`get`         | `object:value`       | `key:value`         | `serial:number`     |
+`invoke`      | `object:value`       | `key:value`         | `arguments:[value]` | `serial:number`
+`object`      | `properties:`<br>`[{0:value,1:value}]` | `serial:number` |       |
 `set`         | `object:value`       | `key:value`         | `value:value`       | `serial:number`
-`delete`      | `object:value`       | `key:value`         | `serial:number`     |                
-`object`      | `properties:`<br>`[{0:value,1:value}]` | `serial:number` |       |                
-`array`       | `elements:[value]`   | `serial:number`     |                     |                
-**Modifiers** |                      |                     |                     |                
-`copy`        | `position:number`    | `forward:*`         | `serial:number`     |                
-`drop`        | `forward:*`          | `serial:number`     |                     |                
-`swap`        | `position1:number`   | `position2:number`  | `forward:*`         | `serial:number`
-*Producers*   |                      |                     |                     |                
-`begin`       | `strict:boolean`     | `direct:boolean`    | `produced:value`    | `serial:number`                
-`read`        | `identifier:string`  | `produced:value`    | `serial:number`     |                
-`discard`     | `identifier:string`  | `produced:value`    | `serial:number`     |                
-`builtin`     | `name:string`        | `produced:value`    | `serial:number`     |                
-`catch`       | `produced:value`     | `serial:number`     |                     |                
-`primitive`   | `produced:value`     | `serial:number`     |                     |                
-`regexp`      | `produced:value`     | `serial:number`     |                     |                
-`closure`     | `produced:value`     | `serial:number`     |                     |                
-*Consumers*   |                      |                     |                     |                
+`unary`       | `operator:string`    | `argument:value`    | `serial:number`     |
+**Producers** |                      |                     |                     |
+`arrival`     | `strict:boolean`     | `arrival:{callee:value, new:boolean, this:value, arguments:[value]}` | `serial:number` |
+`begin`       | `strict:boolean`     | `direct:boolean`    | `produced:value`    | `serial:number`
+`catch`       | `produced:value`     | `serial:number`     |                     |
+`closure`     | `produced:value`     | `serial:number`     |                     |
+`discard`     | `identifier:string`  | `produced:value`    | `serial:number`     |
+`load`        | `name:string`        | `produced:value`    | `serial:number`     |
+`primitive`   | `produced:value`     | `serial:number`     |                     |
+`read`        | `identifier:string`  | `produced:value`    | `serial:number`     |
+`regexp`      | `produced:value`     | `serial:number`     |                     |
+**Consumers** |                      |                     |                     |
+`completion`  | `consumed:value`     | `serial:number`     |                     |
 `declare`     | `kind:string`        | `identifier:string` | `consumed:value`    | `serial:number`
-`write`       | `identifier:string`  | `consumed:value`    | `serial:number`     |                
-`test`        | `consumed:value`     | `serial:number`     |                     |                
-`with`        | `consumed:value`     | `serial:number`     |                     |                
-`throw`       | `consumed:value`     | `serial:number`     |                     |                
-`return`      | `consumed:value`     | `serial:number`     |                     |                
-`eval`        | `consumed:value`     | `serial:number`     |                     |                
-`completion`  | `consumed:value`     | `serial:number`     |                     |                
-`success`     | `strict:boolean`     | `direct:boolean`    | `consumed:value`    | `serial:number`
+`eval`        | `consumed:value`     | `serial:number`     |                     |
 `failure`     | `strict:boolean`     | `direct:boolean`    | `consumed:value`    | `serial:number`
-**Informers** |                      |                     |                     |                
-`end`         | `strict:boolean`     | `direct:boolean`    | `serial:number`     |                
-`try`         | `serial:number`      |                     |                     |                
-`finally`     | `serial:number`      |                     |                     |                
-`block`       | `serial:number`      |                     |                     |                
-`leave`       | `type:string`        | `serial:number`     |                     |                
-`label`       | `continue:boolean`   | `label:string`      | `serial:number`     |                
-`break`       | `continue:boolean`   | `label:string`      | `serial:number`     |                
+`return`      | `arrival:{callee:value, new:boolean, this:value, arguments:[value]}` | `consumed:value` | `serial:number`              
+`save`        | `name:string`        | `consumed:value`    | `serial:number`     |
+`success`     | `strict:boolean`     | `direct:boolean`    | `consumed:value`    | `serial:number`
+`test`        | `consumed:value`     | `serial:number`     |                     |
+`throw`       | `consumed:value`     | `serial:number`     |                     |
+`with`        | `consumed:value`     | `serial:number`     |                     |
+`write`       | `identifier:string`  | `consumed:value`    | `serial:number`     |
+**Informers** |                      |                     |                     |
+`block`       | `serial:number`      |                     |                     |
+`break`       | `continue:boolean`   | `label:string`      | `serial:number`     |
+`copy`        | `position:number`    | `serial:number`     |                     |
+`drop`        | `serial:number`      |                     |                     |
+`end`         | `strict:boolean`     | `direct:boolean`    | `serial:number`     |
+`finally`     | `serial:number`      |                     |                     |
+`label`       | `continue:boolean`   | `label:string`      | `serial:number`     |
+`leave`       | `type:string`        | `serial:number`     |                     |
+`swap`        | `position1:number`   | `position2:number`  | `serial:number`     |
+`try`         | `serial:number`      |                     |                     |
 
 ### Logically Linked Traps
 
@@ -414,7 +401,7 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
   This requires arrows to be desugared into functions.
   The `arrival` trap receives all the information relative to entering a closure.
   Note that `callee` is assigned to the function given as parameter to the `closure` trap and not its return value.
-  If the `closure` trap returns a custom value, the `arrival` traps should reflect this change in `arrival[0]` and `arrival[3].callee` (non strict mode only). 
+  If the `closure` trap returns a custom value, the `arrival` traps should reflect this change in `arrival.callee` and `arrival.arguments.callee` (non strict mode only). 
   ```js
   // Original //
   const add = function (x, y) {
@@ -425,12 +412,17 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
   // Instrumented //
   const add = META.function((() => {
     let callee = function () {
-      const arrival = META.arrival(@strict, callee, new.target === undefined, this, arguments, @serial);
-      const $$newtarget = arrival[1] ? arrival[0] : undefined; 
-      const $$this = arrival[2];
-      let $$arguments = arrival[3];
-      let x = arrival[3][0];
-      let y = arrival[3][1];
+      const arrival = META.arrival(@strict, {
+        callee: callee,
+        new: new.target === void 0,
+        this: this,
+        arguments: arugment
+      }, @serial);
+      const $$newtarget = arrival.new ? arrival.callee : undefined; 
+      const $$this = arrival.this;
+      let $$arguments = arrival.arguments;
+      let x = arrival.arguments[0];
+      let y = arrival.arguments[1];
       return x + y;
     };
     META.OBJECT_DEFINE_PROPERTY(callee, "name", {
@@ -560,19 +552,16 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
   They each express a simple manipulation of the value stack as examplified below:
   ```js
   // Advice //
-  advice.copy = (position, result, serial) {
+  advice.copy = (position, serial) => {
     vstack.push(vstack[vstack.length-position]);
-    return result;
   };
-  advice.swap = (position1, position2, result, serial) {
+  advice.swap = (position1, position2, serial) => {
     const tmp = vstack[vstack.length-position1];
     vstack[vstack.length-position1] = vstack[vstack.length-position2];
     vstack[vstack.length-position2] = tmp;
-    return result;
   };
-  advice.drop = (result, serial) {
+  advice.drop = (serial) => {
     vstack.pop();
-    return result;
   };
   ```
 

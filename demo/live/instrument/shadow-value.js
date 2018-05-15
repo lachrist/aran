@@ -50,7 +50,7 @@ advice.test = ($value, serial) =>
   consume("test", [], $value, serial);
 advice.throw = ($value, serial) =>
   consume("throw", [], $value, serial);
-advice.return = ($value, serial) =>
+advice.return = (arrival, $value, serial) =>
   consume("return", [], $value, serial);
 advice.success = (strict, direct, $value, serial) =>
    direct ? $value : consume("success", [], $value, serial);
@@ -62,6 +62,12 @@ advice.eval = ($value, serial) =>
 ///////////////
 // Producers //
 ///////////////
+advice.arrival = (strict, arrival, serial) => ({
+  callee: produce("arrival-callee", [], arrival.callee, serial),
+  new: produce("arrival-new", [], arrival.new, serial),
+  this: produce("arrival-this", [], arrival.this, serial),
+  arguments: produce("arrival-arguments", [], arrival.arguments, serial)
+});
 advice.begin = (strict, direct, value, serial) =>
   produce("begin", [strict, direct], value, serial);
 advice.primitive = (value, serial) =>
@@ -80,12 +86,6 @@ advice.discard = (identifier, value, serial) =>
 ///////////////
 const metaof = ($value) => $value.meta;
 const baseof = ($value) => $value.base;
-advice.arrival = (strict, value1, value2, value3, value4, serial) => [
-  produce("arrival-callee", [], value1, serial),
-  produce("arrival-new", [], value2, serial),
-  produce("arrival-this", [], value3, serial),
-  produce("arrival-arguments", [], value4, serial)
-];
 advice.apply = ($value, $values, serial) => combine(
   ("dummy", $value.base)(...$values.map(baseof)),
   "apply", [$value.meta, "["+$values.map(metaof)+"]"], serial);

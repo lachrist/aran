@@ -4,10 +4,9 @@ sandbox.Date = () => "APRIL FOOL";
 module.exports = AranLive({
   SANDBOX: sandbox,
   begin: (strict, direct, value) => sandbox,
-  arrival: (strict, callee, isnew, value, values) => [
-    callee,
-    isnew,
-    value === global ? sandbox : value,
-    values
-  ]
+  arrival: (strict, arrival, values) => {
+    if (arrival.this === global)
+      arrival.this = sandbox;
+    return arrival;
+  }
 }, {sandbox:true}).instrument;
