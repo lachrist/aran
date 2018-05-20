@@ -36,37 +36,37 @@ The last argument passed to traps is always a *serial* number which uniquely ide
 The object that contains traps is called *advice* and the specification that characterizes what trap should be triggered on each node is called *pointcut*.
 The process of inserting trap calls based on a pointcut is called *weaving*.
 This terminology is borrowed from [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming).
-[demo/dead/apply](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/dead-apply-factorial.html) demonstrates these concepts.
+[demo/dead/apply](https://cdn.rawgit.com/lachrist/aran/9ad0fe6d/demo/output/dead-apply-factorial.html) demonstrates these concepts.
 
 ![weaving](img/weaving.png)
 
 When code weaving happens on the same process that evaluates weaved code, it is called *live weaving*.
-This is the case for [instrument/apply-explicit.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-apply-explicit-factorial.html) which performs the same analysis as [demo/dead/apply](demo/dead/apply).
+This is the case for [instrument/apply-explicit.js](https://cdn.rawgit.com/lachrist/aran/9ad0fe6d/demo/output/live-apply-explicit-factorial.html) which performs the same analysis as [demo/dead/apply](demo/dead/apply).
 Live weaving enables direct communication between an advice and its associated Aran's instance.
 For instance, `aran.node(serial)` can be invoked by the advice to retrieve the line index of the node that triggered a trap.
 An other good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
 
 When performing live weaving, Aran offers a simpler interface which hides the complexity linked to pointcut and setup.
 This alternative API also performs parsing with [acorn](https://github.com/acornjs/acorn) and code generation with [astring](https://github.com/davidbonnet/astring). 
-This simpler API is demonstrated at [demo/live/instrument/apply.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-apply-factorial.html).
+This simpler API is demonstrated at [demo/live/instrument/apply.js](https://cdn.rawgit.com/lachrist/aran/9ad0fe6d/demo/output/live-apply-factorial.html).
 
 ## Demonstrators
 
-* [demo/live/instrument/empty.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-empty-empty.html): Do nothing.
+* [demo/live/instrument/empty.js](https://cdn.rawgit.com/lachrist/aran/9ad0fe6d/demo/output/live-empty-empty.html): Do nothing.
   Empty advice.
   Can be used to inspect how Aran desugars JavaScript.
-* [demo/live/instrument/forward.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-forward-empty.html):
+* [demo/live/instrument/forward.js](https://cdn.rawgit.com/lachrist/aran/9ad0fe6d/demo/output/live-forward-empty.html):
   Transparent implementation of all the traps.
   Can be used to inspect how Aran inserts traps.
   The last lines can be uncommented to turn this analysis into a tracer.
-* [demo/live/instrument/sandbox.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-sandbox-global.html):
+* [demo/live/instrument/sandbox.js](https://cdn.rawgit.com/lachrist/aran/9ad0fe6d/demo/output/live-sandbox-global.html):
   Demonstrate sandboxing by restricting access to `Date`.
-* [demo/live/instrument/eval.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-eval-dynamic.html):
+* [demo/live/instrument/eval.js](https://cdn.rawgit.com/lachrist/aran/9ad0fe6d/demo/output/live-eval-dynamic.html):
   Transitively intercepting dynamic code evaluation.
   [Script element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script) insertion is not handled.
-* [demo/live/instrument/shadow-value.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-shadow-value-delta.html):
+* [demo/live/instrument/shadow-value.js](https://cdn.rawgit.com/lachrist/aran/9ad0fe6d/demo/output/live-shadow-value-delta.html):
   Track program values across the value stack and the environment but not the store (the shadow value way).
-* [demo/local/instrument/shadow-state.js](https://cdn.rawgit.com/lachrist/aran/f7381fdc/demo/output/live-shadow-state-delta.html):
+* [demo/local/instrument/shadow-state.js](https://cdn.rawgit.com/lachrist/aran/9ad0fe6d/demo/output/live-shadow-state-delta.html):
   Track program values across the value stack and the environment but not the store (the shadow state way).
   This analysis provides the same output as the previous one.
 
@@ -88,7 +88,7 @@ This simpler API is demonstrated at [demo/live/instrument/apply.js](https://cdn.
 
 ## Simplified Live API
 
-This simpler interface is provided by [live.js](live.js) which is a tiny wrapper around the regular Aran interface.
+This simpler interface is provided by [live.js](live.js) which is a simple wrapper around the regular Aran interface.
 
 ### `aranlive = require("aran/live")(advice, options)`
 
@@ -100,10 +100,10 @@ Create a new AranLive instance.
 ### `output = aranlive.instrument(script, parent, options)`
 
 Desugar and insert calls to traps present in the advice.
-* `script :: string`: the target code to weave.
-* `parent :: object | number | undefined`: the parent's node of the target; only for direct eval call.
+* `script :: string`: the target code to instrument.
+* `parent :: object | number | undefined`: the parent's node of the target (only for direct eval call).
 * `options :: object | undefined`: acorn's parsing options.
-* `output :: string`: the weaved code containing trap calls.
+* `output :: string`: the instrumented code (contains trap calls).
 
 ### `node = aranlive.node(serial)`
 
@@ -261,15 +261,19 @@ This process still left us with around 40 traps which we categorize as follow:
 * *Combiners*: traps whose result is used and which pop several values from the stack and then push exactly one value on top of the stack.
   These traps are given several values from the target program which they can freely combine.
   Their transparent implementation consists in reproducing the effect of the expression they replace.
+  e.g.: `apply`: `(fct, args, ser) => fct(...args)`
 * *Producers*: traps whose result is used and which push several values on top of the stack.
   These traps are given a single value from the target program which they can freely modify.
   Their transparent implementation consists in returning their second last argument.
+  e.g: `read`: `(str, val, ser) => val`.
 * *Consumers*: traps whose result is used and which pop exactly one values from the stack.
   These traps are given a single value from the target program which they can freely modify.
   Their transparent implementation consists in returning their second last argument.
+  e.g.: `write`: `(str, val, ser) => val`.
 * *Informers*: traps whose result is not used.
   These traps are only given primitive constant.
-  Their transparent implementation consist in doing nothing.
+  Their transparent implementation consists in doing nothing.
+  e.g.: `end`: `(dir, sct, ser) => {}`.
 
 ![trap-categorization](img/trap-category.png)
 
@@ -373,15 +377,13 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
 
 ### Logically Linked Traps
 
-* `["begin", "completion", "success", "failure", "end"]`.
+* `["begin", "completion", "success", "failure", "end"]`:
+  These traps are linked to a program from the original code.
   The first parameter of `begin`, `success`, `failure` and `end` is a boolean indicating whether the program is in strict mode or not.
-  Their second parameter is an other boolean indicating whether will be evaluated into a direct call to `eval`.
+  Their second parameter is an other boolean indicating whether it is being evaluated into a direct call to `eval` or not.
   The first / last trap invoked by a program is always `begin` / `end`.
-  Before invoking `end` either `success` or `failure` is invoked.  
-  Extra machinery is needed to conserve the completion value of programs.
-  In Aran, programs always starts with the `let completion;` declaration statement and ends with the `completion;` expression statement.
-  In between, when the completion variable needs to be reassigned, the `completion` trap is invoked.
-  The completion variable can be reassigned one last time with the `success` trap.
+  Before invoking `end`, either `success` or `failure` is invoked.  
+  The `completion` trap is invoked every time the completion value of a program changes.
   ```js
   // Original //
   this.Math.sqrt(4);
@@ -400,12 +402,12 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
   }
   completion;
   ```
-* `["closure", "arrival"]`:
-  The `closure` trap intercepts the creation of closures whether they are functions or arrows.
-  Note that the given closure has a `name` and a `length` property consistent with the original version.
-  To desugar destructuring parameters we used the `arguments` identifiers.  
+* `["closure", "arrival", "return"]`:
+  These traps are linked to a closure from the original code.
+  The `closure` trap intercepts the creation of the closures whether it is a function or an arrow.
+  To desugar destructuring parameters, Aran always uses the `arguments` identifiers.  
   This requires arrows to be desugared into functions.
-  The `arrival` trap receives all the information relative to entering a closure.
+  The `arrival` trap receives all the information relative to entering the closure.
   Note that `callee` is assigned to the function given as parameter to the `closure` trap and not its return value.
   If the `closure` trap returns a custom value, the `arrival` traps should reflect this change in `arrival.callee` and `arrival.arguments.callee` (non strict mode only). 
   ```js
@@ -464,7 +466,7 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
     META.leave("block", @serial);
   }
   ```
-* `["try", "catch", "finally", "leave"]`
+* `["try", "catch", "finally", "leave"]`:
   `try`, `catch` and `finally` are each closed with a `leave` trap.
   The Aran-specific identifier `error` is used so that destructuring parameters can be desugarized.
   ```js
@@ -495,7 +497,7 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
   ```
 * `["label", "leave", "break"]`:
   We made some extra work to avoid adding a `continue` trap.
-  This can be realized by splitting labels into two categories: break labels and continue labels.
+  This has beeen realized by splitting labels into two categories: break labels and continue labels.
   Explicit break / continue labels are prepended with `"b"` / `"c"`:
   ```js
   // Original //
@@ -533,13 +535,13 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
   }
   META.leave("label");
   ```
-  To make these two transformations invisible to the user we added a parameter to the `label` and `break`.
-  This parameter is a boolean telling whether the label is a break label (false) or a continue label (true).
+  To make these two transformations invisible to the user we added a boolean parameter to the `label` and `break`.
+  This parameter tells whether the label is a break label (false) or a continue label (true).
 * `["save", "load"]`:
+  These traps are only important for analyses that mirror the cares about the value stack.
   Some structures require builtin values to be desugarized.
-  For instance a `for ... in` loop can be desugarized into `for` loops by calling `Object.getPrototypeOf` and `Object.keys`.
+  For instance a `for ... in` loop can be desugarized into `for` loops with the help of `Object.getPrototypeOf` and `Object.keys`.
   As the target programs can modify the global object, we created a save/load system to make sure we access the correct builtin values.
-  These traps are only important for analyses that mirror the value stack.
   Analyses that mirror the value stack should also mirror this mapping as shown below:
   ```js
   // Advice //
@@ -554,7 +556,7 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
   };
   ```
 * `["copy", "drop", "swap"]`:
-  These traps are only important for analyses that mirror the value stack.
+  These traps are only important for analyses that mirror the cares about the value stack.
   They each express a simple manipulation of the value stack as examplified below:
   ```js
   // Advice //
