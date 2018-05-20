@@ -1,1 +1,1 @@
-["foo"];
+eval("debugger; 123");

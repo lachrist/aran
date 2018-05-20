@@ -65,11 +65,11 @@ advice.eval = ($value, serial) =>
 advice.arrival = (strict, arrival, serial) => ({
   callee: produce("arrival-callee", [], arrival.callee, serial),
   new: produce("arrival-new", [], arrival.new, serial),
-  this: produce("arrival-this", [], arrival.this, serial),
+  this: produce("arrival-this", [], arrival.this === global ? advice.SANDBOX : arrival.this, serial),
   arguments: produce("arrival-arguments", [], arrival.arguments, serial)
 });
 advice.begin = (strict, direct, value, serial) =>
-  produce("begin", [strict, direct], value, serial);
+  produce("begin", [strict, direct], advice.SANDBOX, serial);
 advice.primitive = (value, serial) =>
   produce("primitive", [], value, serial);
 advice.regexp = (value, serial) =>

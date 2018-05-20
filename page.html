@@ -1,15 +1,145 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>empty-estree-valid(sample) @16:17:55</title>
+    <title>shadow-value(sample) @13:56:30</title>
   </head>
   <body>
   <script>
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-console.dir(eval(require("/Users/soft/Desktop/workspace/aran/demo/live/instrument/empty-estree-valid.js")("[\"foo\"][0];")));
-},{"/Users/soft/Desktop/workspace/aran/demo/live/instrument/empty-estree-valid.js":2}],2:[function(require,module,exports){
+console.dir(eval(require("/Users/soft/Desktop/workspace/aran/demo/live/instrument/shadow-value.js")("eval(\"debugger; 123\");")));
+},{"/Users/soft/Desktop/workspace/aran/demo/live/instrument/shadow-value.js":2}],2:[function(require,module,exports){
+(function (global){
 const AranLive = require("aran/live");
-module.exports = AranLive({}, {output:"EstreeValid"}).instrument;
+
+const advice = {};
+// Wrapper target to get rid of constraints imposed on traps.
+const handlers = {
+  has: (target, key) => key in target.inner,
+  deleteProperty: (target, key) => delete target.inner[key],
+  get: (target, key, receiver) => typeof key === "symbol" ?
+    target.inner[key] :
+    produce(target.type+"-read", ["'"+key+"'"], target.inner[key], null),
+  set: (target, key, $value, receiver) => {
+    target.inner[key] = key in target.inner ?
+      consume(target.type+"-write", ["'"+key+"'"], $value, null) :
+      consume(target.type+"-declare", ["'var'", "'"+key+"'"], $value, null)
+  }
+};
+
+//////////////
+// Membrane //
+//////////////
+const print = (value) => {
+  if (typeof value === "function")
+    return "function";
+  if (typeof value === "object")
+    return value ? "object" : "null";
+  if (typeof value === "string")
+    return JSON.stringify(value);
+  return String(value);
+};
+let counter = 0;
+const consume = (name, infos, $value, serial) => {
+  console.log(name+"("+infos.concat([$value.meta]).join(", ")+", @"+serial+")");
+  return $value.base;
+};
+const produce = (name, infos, value, serial) => {
+  const right = name+"("+infos.concat([print(value)]).join(", ")+", @"+serial+")";
+  console.log("#"+(++counter)+" = "+right);
+  return {meta:"&"+counter, base:value};
+};
+const combine = (value, name, infos, serial) => {
+  const right = name+"("+infos.join(", ")+", @"+serial+")";
+  console.log("#"+(++counter)+"["+print(value)+"] = "+right);
+  return {meta:"&"+counter, base:value};
+};
+
+///////////////
+// Consumers //
+///////////////
+advice.test = ($value, serial) =>
+  consume("test", [], $value, serial);
+advice.throw = ($value, serial) =>
+  consume("throw", [], $value, serial);
+advice.return = (arrival, $value, serial) =>
+  consume("return", [], $value, serial);
+advice.success = (strict, direct, $value, serial) =>
+   direct ? $value : consume("success", [], $value, serial);
+advice.with = ($value, serial) =>
+  new Proxy({type:"with",inner:consume("with", [], $value, serial)}, handlers);
+advice.eval = ($value, serial) =>
+  module.exports(consume("eval", [], $value, serial), serial);
+
+///////////////
+// Producers //
+///////////////
+advice.arrival = (strict, arrival, serial) => ({
+  callee: produce("arrival-callee", [], arrival.callee, serial),
+  new: produce("arrival-new", [], arrival.new, serial),
+  this: produce("arrival-this", [], arrival.this === global ? advice.SANDBOX : arrival.this, serial),
+  arguments: produce("arrival-arguments", [], arrival.arguments, serial)
+});
+advice.begin = (strict, direct, value, serial) =>
+  produce("begin", [strict, direct], advice.SANDBOX, serial);
+advice.primitive = (value, serial) =>
+  produce("primitive", [], value, serial);
+advice.regexp = (value, serial) =>
+  produce("regexp", [], value, serial);
+advice.closure = (value, serial) =>
+  produce("closure", [], value, serial);
+advice.catch = (value, serial) =>
+  produce("catch", [], value, serial);
+advice.discard = (identifier, value, serial) =>
+  produce("discard", ["'"+identifier+"'"], value, serial);
+
+///////////////
+// Combiners //
+///////////////
+const metaof = ($value) => $value.meta;
+const baseof = ($value) => $value.base;
+advice.apply = ($value, $values, serial) => combine(
+  ("dummy", $value.base)(...$values.map(baseof)),
+  "apply", [$value.meta, "["+$values.map(metaof)+"]"], serial);
+advice.invoke = ($value1, $value2, $values, serial) => combine(
+  $value1.base[$value2.base](...$values.map(baseof)),
+  "invoke", [$value1.meta, $value2.meta, "["+$values.map(metaof)+"]"], serial);
+advice.construct = ($value, $values, serial) => combine(
+  new $value.base(...$values.map(baseof)),
+  "construct", [$value.meta, "["+$values.map(metaof)+"]"], serial);
+advice.unary = (operator, $value, serial) => combine(
+  eval(operator+" $value.base"),
+  "unary", ["'"+operator+"'", $value.meta], serial);
+advice.binary = (operator, $value1, $value2, serial) => combine(
+  eval("$value1.base "+operator+" $value2.base"),
+  "binary", ["'"+operator+"'", $value1.meta, $value2.meta], serial);
+advice.get = ($value1, $value2, serial) => combine(
+  $value1.base[$value2.base],
+  "get", [$value1.meta, $value2.meta], serial);
+advice.set = ($value1, $value2, $value3, serial) => combine(
+  $value1.base[$value2.base] = $value3.base,
+  "set", [$value1.meta, $value2.meta, $value3.meta], serial);
+advice.delete = ($value1, $value2, serial) => combine(
+  delete $value1.base[$value2.base],
+  "delete", [$value1.meta, $value2.meta], serial);
+advice.array = ($values, serial) => combine(
+  $values.map(baseof),
+  "array", ["["+$values.map(metaof)+"]"], serial);
+advice.object = ($properties, serial) => {
+  const object = {};
+  const mproperties = $properties.map(($property) => {
+    object[$property[0].base] = $property[1].base;
+    return "["+$property[0].meta+","+$property[1].meta+"]";
+  });
+  return combine(object, "object", ["["+mproperties+"]"], serial);
+};
+
+///////////
+// Setup //
+///////////
+advice.SANDBOX = new Proxy({type:"global",inner:global}, handlers);
+module.exports = AranLive(advice, {sandbox:true}).instrument;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"aran/live":3}],3:[function(require,module,exports){
 module.exports = require("../../../live.js");
 },{"../../../live.js":4}],4:[function(require,module,exports){
@@ -6578,6 +6708,7 @@ module.exports = (patterns) => {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],16:[function(require,module,exports){
+(function (global){
 
 const ArrayLite = require("array-lite");
 const Meta = require("../meta.js");
@@ -6586,6 +6717,7 @@ const Name = require("./name.js")
 const ParseLabel = require("./parse-label.js");
 const SanitizeIdentifier = require("./sanitize-identifier.js");
 const ContainArguments = require("./contain-arguments.js");
+const Boolean = global.Boolean;
 
 module.exports = (pointcut) => {
 
@@ -6594,6 +6726,7 @@ module.exports = (pointcut) => {
   const cut = {};
 
   cut.PROGRAM = (boolean, statements) => (
+    ((() => { debugger}) ()),
     statements = ArrayLite.concat(
       (
         ARAN.node.AranParent ?
@@ -6601,7 +6734,7 @@ module.exports = (pointcut) => {
           traps.drop(
             traps.begin(
               ARAN.node.AranStrict,
-              ARAN.node.AranParent,
+              Boolean(ARAN.node.AranParent),
               Meta.global()))) :
         ARAN.build.Declare(
           "const",
@@ -6611,7 +6744,7 @@ module.exports = (pointcut) => {
             "this",
             traps.begin(
               ARAN.node.AranStrict,
-              ARAN.node.AranParent,
+              Boolean(ARAN.node.AranParent),
               Meta.global())))),
       ARAN.build.If(
         ARAN.build.unary(
@@ -6723,7 +6856,6 @@ module.exports = (pointcut) => {
   ArrayLite.forEach(
     [
       "object",
-      "array",
       "get",
       "set",
       "delete",
@@ -6734,6 +6866,9 @@ module.exports = (pointcut) => {
       "unary",
       "binary"],
     (key) => cut[key] = traps[key]);
+
+  cut.array = (elements) => traps.array(
+    ARAN.build.array(elements));
 
   cut.Label = (label, statements) => ARAN.build.Label(
     label,
@@ -6904,6 +7039,7 @@ module.exports = (pointcut) => {
 
 };
 
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../meta.js":27,"./contain-arguments.js":15,"./name.js":17,"./parse-label.js":18,"./sanitize-identifier.js":19,"./traps":24,"array-lite":6}],17:[function(require,module,exports){
 
 module.exports = (node) => {

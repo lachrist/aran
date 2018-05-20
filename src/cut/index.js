@@ -6,6 +6,7 @@ const Name = require("./name.js")
 const ParseLabel = require("./parse-label.js");
 const SanitizeIdentifier = require("./sanitize-identifier.js");
 const ContainArguments = require("./contain-arguments.js");
+const Boolean = global.Boolean;
 
 module.exports = (pointcut) => {
 
@@ -14,15 +15,18 @@ module.exports = (pointcut) => {
   const cut = {};
 
   cut.PROGRAM = (boolean, statements) => (
+    ((() => { debugger}) ()),
     statements = ArrayLite.concat(
       (
         ARAN.node.AranParent ?
-        ARAN.build.Statement(
-          traps.drop(
+        ArrayLite.concat(
+          ARAN.build.Statement(
             traps.begin(
               ARAN.node.AranStrict,
-              ARAN.node.AranParent,
-              Meta.global()))) :
+              Boolean(ARAN.node.AranParent),
+              Meta.global())),
+          ARAN.build.Statement(
+            traps.drop())) :
         ARAN.build.Declare(
           "const",
           "$$this",
@@ -31,7 +35,7 @@ module.exports = (pointcut) => {
             "this",
             traps.begin(
               ARAN.node.AranStrict,
-              ARAN.node.AranParent,
+              Boolean(ARAN.node.AranParent),
               Meta.global())))),
       ARAN.build.If(
         ARAN.build.unary(
