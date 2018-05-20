@@ -2,7 +2,7 @@
 
 Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting JavaScript code.
 To install, run `npm install aran`.
-Aran was designed as a generic infra-structure to build various development-time dynamic program analyses such as: objects and functions profiling, debugging, control-flow tracing, taint analysis and concolic testing.
+Aran was designed as a generic infra-structure for building various development-time dynamic program analyses such as: objects and functions profiling, debugging, control-flow tracing, taint analysis and concolic testing.
 Aran can also be used at deployment-time but be mindful of performance overhead.
 For instance, Aran can be used to carry out control access systems such as sandboxing.
 Aran can also be used as a desugarizer much like [babel](https://babeljs.io).
@@ -14,14 +14,20 @@ npm install aran
 ```
 
 ```js
-const AranLive = require("aran/live");
+const AranLive = require("./live");
 const aranlive = AranLive({
   binary: (operator, left, right, serial) => {
-    console.log(operator + " @"+serial);
-    return eval("left "+operator+" right");
+    const result = eval("left "+operator+" right");
+    console.log(left+" "+operator+" "+right+" = "+result);
+    return result;
   }
 });
-global.eval(aranlive.instrument("'Hello' + 'World!'"));
+global.eval(aranlive.instrument("'Hello'+'World'+'!'"));
+```
+
+```txt
+Hello + World = HelloWorld
+HelloWorld + ! = HelloWorld!
 ```
 
 The code transformation performed by Aran essentially consists in inserting calls to functions called *traps* at [ESTree](https://github.com/estree/estree) nodes specified by the user.
