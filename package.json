@@ -6,7 +6,10 @@
     "name": "Laurent Christophe",
     "email": "lachrist@vub.ac.be"
   },
-  "files": "src/",
+  "files": [
+    "src/",
+    "live.js"
+  ],
   "main": "src/index.js",
   "repository": "lachrist/aran",
   "homepage": "http://github.com/lachrist/aran",

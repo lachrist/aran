@@ -15,7 +15,6 @@ module.exports = (pointcut) => {
   const cut = {};
 
   cut.PROGRAM = (boolean, statements) => (
-    ((() => { debugger}) ()),
     statements = ArrayLite.concat(
       (
         ARAN.node.AranParent ?
