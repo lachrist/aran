@@ -408,7 +408,7 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
   The first / last trap invoked by a program is always `begin` / `end`.
   Before invoking `end`, either `success` or `failure` is invoked.
   The `completion` trap is invoked every time the completion value of a program changes.
-  For a given program, the second parameter of `begin` and the first parameter of `success`, `failure` and `end` will always refer to the exact same value.
+  For a given program, the first parameter of `success`, `failure` and `end` will always refer to the value returned by `begin`.
   ```js
   // Original //
   this.Math.sqrt(4);
@@ -416,14 +416,16 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
   ```js
   // Instrumented //
   let completion;
+  let scope;
   try {
-    $$this = META.begin(false, "global", META.GLOBAL, @serial);
+    scope = META.begin(false, {this:this}, @serial);
+    let $$this = scope.this;
     completion = META.completion($$this.Math.sqrt(4), @serial);
-    completion = META.success("global", completion, @serial);
+    completion = META.success(scope, completion, @serial);
   } catch (error) {
-    throw META.failure("global", error, @serial);
+    throw META.failure(scope, error, @serial);
   } finally {
-    META.end("global", @serial);
+    META.end(scope, @serial);
   }
   completion;
   ```
