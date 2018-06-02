@@ -320,7 +320,7 @@ Name          | Original             | Instrumented
 `unary`       | `!x`                 | `META.unary("!", x, @serial)` 
 **Producers** |                      | 
 `arrival`     | `() => { ... }`      | `function () { const arrival = META.arrival(@strict, {callee:callee, new:new.target===undefined, this:this, arguments:arguments}, @serial); ... }`
-`begin`       | `...` (program)      | `... const $$this = META.begin(@strict, @direct, META.GLOBAL, @serial); ...`
+`begin`       | `...` (program)      | `... const scope = META.begin(@strict, @scope, @serial); ...`
 `catch`       | `... catch (e) ...`  | `... catch (error) { let e = META.catch(error, @serial); ...`
 `closure`     | `() => {}`           | `META.closure(..., @serial)`
 `discard`     | `delete x`           | `META.discard("x", delete x, @serial)`
@@ -332,10 +332,10 @@ Name          | Original             | Instrumented
 `completion`  | `"foo";`             | `completion = META.completion("foo", @serial);`
 `declare`     | `let x = y`          | `let x = META.declare("let", "x", y, @serial)`
 `eval`        | `eval(x)`            | `$$eval === META.SAVE_eval ? eval(META.eval(x, @serial)) : $$eval(x)`
-`failure`     | `...` (program)      | `... catch (error) { throw META.failure(@strict, @direct, error, @serial); } ...`
+`failure`     | `...` (program)      | `... catch (error) { throw META.failure(scope, error, @serial); } ...`
 `return`      | `return x`           | `return META.return(arrival, x, @serial)`
 `save`        |                      | `... META.SAVE_Symbol_iterator = META.save("Symbol.iterator", Symbol.iterator, @serial); ...`
-`success`     | `...` (program)      | `... completion = META.success(@strict, @direct, completion, @serial); ...`
+`success`     | `...` (program)      | `... completion = META.success(scope, completion, @serial); ...`
 `test`        | `x ? y : z`          | `META.test(x, @serial) : y : z`
 `throw`       | `throw x`            | `throw META.throw(x, @serial)`
 `with`        | `with (x) { ... }`   | `with(new META.PROXY(META.with(x, @serial), META.WITH_HANDLERS)) { ... }`
@@ -345,7 +345,7 @@ Name          | Original             | Instrumented
 `break`       | `break l;`           | `META.break(false, "l", @serial); break bl;`
 `copy`        | `for (x in o) ...`   | `... META.copy(1, @serial) ...`
 `drop`        | `f();`               | `(f(), META.drop(@serial));`
-`end`         | `...` (program)      | `... finally { META.end(@strict, @direct, @serial); } ...`
+`end`         | `...` (program)      | `... finally { META.end(scope, @serial); } ...`
 `finally`     | `... finally { ...`  | `... finally { META.finally(@serial) ...`
 `label`       | `l: { ... }`         | `bl: { META.label(false, "l", @serial); ... }`
 `leave`       | `{ ... }`            | `{ ... META.leave("block", @serial); }`
@@ -369,7 +369,7 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
 `unary`       | `operator:string`     | `argument:value`      | `serial:number`     |
 **Producers** |                       |                       |                     |
 `arrival`     | `strict:boolean`      | `arrival:{callee:value, new:boolean, this:value, arguments:[value]}` | `serial:number` |
-`begin`       | `strict:boolean`      | `scope:string|object` | `produced:value`    | `serial:number`
+`begin`       | `strict:boolean`      | `scope:object`        | `produced:value`    | `serial:number`
 `catch`       | `produced:value`      | `serial:number`       |                     |
 `closure`     | `produced:value`      | `serial:number`       |                     |
 `discard`     | `identifier:string`   | `produced:value`      | `serial:number`     |
@@ -381,10 +381,10 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
 `completion`  | `consumed:value`      | `serial:number`       |                     |
 `declare`     | `kind:string`         | `identifier:string`   | `consumed:value`    | `serial:number`
 `eval`        | `consumed:value`      | `serial:number`       |                     |
-`failure`     | `scope:string|object` | `consumed:value`      | `serial:number`     |
+`failure`     | `scope:object`        | `consumed:value`      | `serial:number`     |
 `return`      | `arrival:{callee:value, new:boolean, this:value, arguments:[value]}` | `consumed:value` | `serial:number`              
 `save`        | `name:string`         | `consumed:value`      | `serial:number`     |
-`success`     | `scope:string|object` | `consumed:value`      | `serial:number`     |
+`success`     | `scope:object`        | `consumed:value`      | `serial:number`     |
 `test`        | `consumed:value`      | `serial:number`       |                     |
 `throw`       | `consumed:value`      | `serial:number`       |                     |
 `with`        | `consumed:value`      | `serial:number`       |                     |
@@ -394,7 +394,7 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
 `break`       | `continue:boolean`    | `label:string`        | `serial:number`     |
 `copy`        | `position:number`     | `serial:number`       |                     |
 `drop`        | `serial:number`       |                       |                     |
-`end`         | `scope:string|object` | `serial:number`       |                     |
+`end`         | `scope:string`        | `serial:number`       |                     |
 `finally`     | `serial:number`       |                       |                     |
 `label`       | `continue:boolean`    | `label:string`        | `serial:number`     |
 `leave`       | `type:string`         | `serial:number`       |                     |
