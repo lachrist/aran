@@ -89,6 +89,7 @@ This simpler API is demonstrated at [demo/live/instrument/apply.js](https://cdn.
 ## Simplified Live API
 
 This simpler interface is provided by [live.js](live.js) which is a simple wrapper around the regular Aran interface.
+It forces live instrumentation and use the keys of the advice as pointcut.
 
 ### `aranlive = require("aran/live")(advice, options)`
 
@@ -149,7 +150,7 @@ When Aran instruments a program, all its statement nodes and all its expression 
 Programs node don't have a `AranParent` property nor a `AranParentSerial` property.
 Instead they have an `AranScope` property which is either an array or an object.
 An array indicates that the program will be evaluated as global code.
-The array refers to the name of the variables predefined in the program's block scope -- e.g. `["exports", "module", "require", "this"]`.
+The array's elements are variable names predefined in the program's block scope -- e.g. `["exports", "module", "require", "this"]`.
 An object indicates that the program will be evaluated by a direct eval call.
 The object refers to the estree node where the call occured.
 
@@ -231,11 +232,11 @@ Desugar and insert calls to trap functions at nodes specified by the pointcut.
   * `*`:
     All traps are to be inserted whenever applicable.
 * `scope :: array | string | falsy | object | string`:
-  This value indicates in which scope will the program be evaluated.
+  This value indicates in which scope the program will be evaluated.
   This value will be used to set `estree.AranScope`.
   * `array`:
     The code will be evaluated as global code.
-    The array should contain variable names predefined in the scope.
+    The array should contain variable names predefined in the program's block scope.
     The instrumented code will reasigned these variables in alphabetical order.
   * `"commonjs"`:
     Alias for `["exports", "module", "require", "this"]`
