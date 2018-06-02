@@ -1,53 +1,24 @@
 
 const ArrayLite = require("array-lite");
 
-exports.global = () => ARAN.build.get(
-  ARAN.build.read(ARAN.namespace),
-  ARAN.build.primitive("GLOBAL"));
+exports.apply = (expression1, expression2, expressions) => ARAN.build.apply(
+  ARAN.build.get(
+    ARAN.build.read(ARAN.namespace),
+    ARAN.build.primitive("REFLECT_APPLY")),
+  [
+    expression1,
+    expression2,
+    ARAN.build.array(expressions)]);
 
-exports.Sandbox = (statements) => ARAN.build.Statement(
-  ARAN.build.write(
-    "completion",
-    ARAN.build.apply(
-      ARAN.build.get(
-        ARAN.build.read(ARAN.namespace),
-        ARAN.build.primitive("REFLECT_APPLY")),
-      [
-        ARAN.build.function(
-          false,
-          [],
-          ARAN.build.With(
-            ARAN.build.construct(
-              ARAN.build.get(
-                ARAN.build.read(ARAN.namespace),
-                ARAN.build.primitive("PROXY")),
-              [
-                ARAN.build.get(
-                  ARAN.build.read(ARAN.namespace),
-                  ARAN.build.primitive("SANDBOX")),
-                ARAN.build.get(
-                  ARAN.build.read(ARAN.namespace),
-                  ARAN.build.primitive(ARAN.node.AranStrict ? "STRICT_SANDBOX_HANDLERS" : "SANDBOX_HANDLERS"))]),
-            ArrayLite.concat(
-              ARAN.build.Declare(
-                "const",
-                ARAN.namespace,
-                ARAN.build.read("this")),
-              ARAN.build.Declare(
-                "const",
-                "eval",
-                ARAN.build.get(
-                  ARAN.build.read(ARAN.namespace),
-                  ARAN.build.primitive("EVAL"))),
-              ARAN.build.Declare(
-                "let",
-                "completion",
-                ARAN.build.primitive(void 0)),
-              statements,
-              ARAN.build.Return(
-                ARAN.build.read("completion"))))),
-        ARAN.build.read(ARAN.namespace),
-        ARAN.build.array([])])));
+exports.sproxy = (expression) => ARAN.build.construct(
+  ARAN.build.get(
+    ARAN.build.read(ARAN.namespace),
+    ARAN.build.primitive("PROXY")),
+  [
+    expression,
+    ARAN.build.get(
+      ARAN.build.read(ARAN.namespace),
+      ARAN.build.primitive(ARAN.node.AranStrict ? "STRICT_SANDBOX_HANDLERS" : "SANDBOX_HANDLERS"))]);
 
 exports.wproxy = (expression) => ARAN.build.construct(
   ARAN.build.get(
@@ -127,13 +98,6 @@ exports.SETUP = () => ARAN.build.PROGRAM(
           "EVAL",
           ARAN.build.read("eval")],
         [
-          "GLOBAL",
-          ARAN.build.invoke(
-            ARAN.build.read(ARAN.namespace),
-            ARAN.build.primitive("EVAL"),
-            [
-              ARAN.build.primitive("this")])],
-        [
           "PROXY",
           ARAN.build.read("Proxy")],
         [
@@ -162,20 +126,24 @@ exports.SETUP = () => ARAN.build.PROGRAM(
             ARAN.build.primitive(pair[0]),
             pair[1])),
         [])),
-    // META.GLOBAL.$$eval = META.GLOBAL.eval;
+    // META.EVAL("this").$$eval = META.EVAL("this").eval;
     (
       ARAN.sandbox ?
       [] :
       ARAN.build.Statement(
         ARAN.build.set(
-          ARAN.build.get(
+          ARAN.build.invoke(
             ARAN.build.read(ARAN.namespace),
-            ARAN.build.primitive("GLOBAL")),
+            ARAN.build.primitive("EVAL"),
+            [
+              ARAN.build.primitive("this")]),
           ARAN.build.primitive("$$eval"),
           ARAN.build.get(
-            ARAN.build.get(
+            ARAN.build.invoke(
               ARAN.build.read(ARAN.namespace),
-              ARAN.build.primitive("GLOBAL")),
+              ARAN.build.primitive("EVAL"),
+              [
+                ARAN.build.primitive("this")]),
             ARAN.build.primitive("eval"))))),
     // META.WITH_HANDLERS = {
     //   has: (target, key) => {

@@ -14,8 +14,7 @@ const bind = (frame, identifier) => {
     return false;
   if (frame.type !== "with")
     return true;
-  const unscopables = frame.binding[Symbol.unscopables];
-  return unscopables && unscopables.includes(identifier);
+  return !(frame.binding[Symbol.unscopables] || []).includes(identifier);
 };
 
 const cleanup = () => {
@@ -80,32 +79,35 @@ const fhandlers = {
     }
   }
 };
-advice.arrival = (strict, arrival, serial) => {
-  cstack.push(scopes.get(arrival.callee).concat([{
+advice.arrival = (strict, scope, serial) => {
+  cstack.push(scopes.get(scope.callee).concat([{
     type: "closure",
     binding: Object.create(null)
   }]));
   return {
-    callee: produce("arrival-callee", [], arrival.callee, serial),
-    new: produce("arrival-new", [], arrival.new, serial),
-    this: produce("arrival-this", [], arrival.this, serial),
-    arguments: produce("arrival-arguments", [], arrival.arguments, serial)
+    callee: produce("arrival-callee", [strict], scope.callee, serial),
+    new: produce("arrival-new", [strict], scope.new, serial),
+    this: produce("arrival-this", [strict], scope.this, serial),
+    arguments: produce("arrival-arguments", [strict], scope.arguments, serial)
   };
 };
-advice.begin = (strict, direct, value, serial) => {
+advice.begin = (strict, scope, value, serial) => {
   estack.push(null);
-  if (direct) {
-    cstack[cstack.length-1].push({
-      type: strict ? "closure" : "block",
-      binding: Object.create(null)
-    });
-  } else {
+  if (scope) {
     cstack.push([{
       type: "block",
       binding: Object.create(null)
     }]);
+    Object.keys(scope).sort().reverse().forEach((key) => {
+      scope[key] = produce("begin-"+key, [strict], scope[key], serial);
+    });
+  } else {
+    cstack[cstack.length-1].push({
+      type: strict ? "closure" : "block",
+      binding: Object.create(null)
+    });
   }
-  return produce("begin", [strict, direct], value, serial);
+  return scope;
 };
 advice.primitive = (value, serial) =>
   produce("primitive", [], value, serial);
@@ -159,13 +161,13 @@ advice.with = (value, serial) => {
   cstack[cstack.length-1].push({type:"with", binding:value});
   return consume("with", [], value, serial);
 };
-advice.success = (strict, direct, value, serial) => {
+advice.success = (scope, value, serial) => {
   vstack.push(estack.pop());
-  return direct ? value : consume("success", [], value, serial);
+  return scope ? consume("success", [], value, serial) : value;
 };
-advice.failure = (strict, direct, error, serial) => {
+advice.failure = (scope, error, serial) => {
   estack.pop();
-  if (!direct)
+  if (scope)
     cleanup();
   return error;
 };
@@ -183,7 +185,7 @@ advice.test = (value, serial) =>
   consume("test", [], value, serial);
 advice.eval = (value, serial) =>
   aranlive.instrument(consume("eval", [], value, serial), serial);
-advice.return = (arrival, value, serial) => {
+advice.return = (scope, value, serial) => {
   cstack.pop();
   return consume("return", [], value, serial);
 };
@@ -236,7 +238,7 @@ advice.swap = (position1, position2, serial) => {
 advice.drop = (serial) => {
   vstack.pop();
 };
-advice.end = (strict, direct, serial) => {};
+advice.end = (scope, serial) => {};
 advice.leave = (type, serial) => cstack[cstack.length-1].pop();
 advice.block = (serial) => cstack[cstack.length-1].push({
   type: "block",

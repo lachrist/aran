@@ -10,19 +10,6 @@ const Object_keys = global.Object.keys;
 const Reflect_apply = global.Reflect.apply;
 const String_prototype_replace = global.String.prototype.replace;
 
-const run = (state, roots, root, pointcut, parent, closure) => {
-  roots[roots.length] = root;
-  const temporary = global.ARAN;
-  global.ARAN = state;
-  global.ARAN.cut = Cut(pointcut);
-  global.ARAN.node = root;
-  const program = closure(root, parent);
-  global.ARAN.node = null;
-  global.ARAN.cut = null;
-  global.ARAN = temporary;
-  return program;
-};
-
 module.exports = (options) => {
   options = Object_assign({
     namespace: "META",
@@ -43,7 +30,7 @@ module.exports = (options) => {
     build: Build[options.output],
     nodes: options.nocache ? null : [],
     regexp: new RegExp(
-      "^\\$*(newtarget|callee|this|arguments|error|completion|arrival|eval|" +
+      "^\\$*(newtarget|callee|this|arguments|error|completion|eval|scope|" +
       Reflect_apply(String_prototype_replace, options.namespace, ["$", "\\$$"]) +
       ")$"),
   };
@@ -68,14 +55,37 @@ module.exports = (options) => {
     (serial) => state.nodes[serial]);
   return {
     namespace: options.namespace,
-    setup: (pointcut) => run(state, roots, {
-      type: "Program",
-      body: [],
-      AranStrict: false,
-      AranParent: null,
-      AranSerial: 0,
-      AranSerialMax: 0}, pointcut, null, Meta.SETUP),
-    weave: (root, pointcut, parent) => run(state, roots, root, pointcut, typeof parent === "number" ? node(parent) : parent, Weave),
+    setup: () => {
+      const temporary = global.ARAN;
+      global.ARAN = state;
+      const program = Meta.SETUP();
+      global.ARAN = temporary;
+      return program;
+    },
+    weave: (root, pointcut, scope) => {
+      roots[roots.length] = root;
+      const temporary = global.ARAN;
+      global.ARAN = state;
+      global.ARAN.cut = Cut(pointcut);
+      global.ARAN.node = root;
+      const program = Weave(root, (
+        typeof scope === "number" ?
+        node(scope) :
+        (
+          !scope || scope === "global" ?
+          ["this"] :
+          (
+            scope === "commonjs" ?
+            ["exports", "module", "require", "this"] :
+            (
+              scope === "node" ?
+              ["__filename", "__dirname", "exports", "module", "require", "this"] :
+              scope)))));
+      global.ARAN.node = null;
+      global.ARAN.cut = null;
+      global.ARAN = temporary;
+      return program;
+    },
     root: (serial) => {
       for (var index=0, length=roots.length; index<length; index++) {
         if (serial >= roots[index].AranSerial && serial <= roots[index].AranSerialMax) {

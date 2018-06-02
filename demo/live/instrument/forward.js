@@ -34,6 +34,7 @@ const pass = function () { return arguments[arguments.length-2] };
   "throw",
   "return",
   "eval",
+  "begin",
   "with",
   "write",
   "declare",
@@ -50,7 +51,6 @@ const noop = () => {};
   "try",
   "finally",
   "leave",
-  "begin",
   "end",
   "block",
   "label",
@@ -84,4 +84,5 @@ advice.object = (properties, serial) => properties.reduce((object, property) => 
 //   };
 // });
 
-module.exports = AranLive(advice).instrument;
+const aranlive = AranLive(advice);
+module.exports = (script, source) => aranlive.instrument(script);

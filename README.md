@@ -95,14 +95,14 @@ This simpler interface is provided by [live.js](live.js) which is a simple wrapp
 Create a new AranLive instance.
 * `advice ::  object`: the object containing the traps.
   If `options.sandbox` is truthy, `advice.SANDBOX` will be used as the top frame of every environment.
-* `options :: object | undefined`: regular aran's options; see `require("aran")(options)`
+* `options :: object | falsy`: regular aran's options; see `require("aran")(options)`
 
-### `output = aranlive.instrument(script, parent, options)`
+### `output = aranlive.instrument(script, scope, options)`
 
 Desugar and insert calls to traps present in the advice.
 * `script :: string`: the target code to instrument.
-* `parent :: object | number | undefined`: the parent's node of the target (only for direct eval call).
-* `options :: object | undefined`: acorn's parsing options.
+* `scope :: array | string | falsy | object | string`: cf the `scope` parameter of `aran.weave(script, pointcut, scope)`.
+* `options :: object | falsy`: acorn's parsing options.
 * `output :: string`: the instrumented code (contains trap calls).
 
 ### `node = aranlive.node(serial)`
@@ -137,7 +137,7 @@ When Aran instruments a program, all its statement nodes and all its expression 
 * `AranSerialMax :: number`:
   The maximum serial number which can be found within the node's decedents.
   This is useful to speed up node search.
-* `AranParent :: ESTree | *`:
+* `AranParent :: object | *`:
   The node's parent.
   If the node is of type `"Program"`, then this field will be the third argument passed to `aran.weave`. 
   This field is not enumerable to prevent `JSON.stringify` from complaining about circularity.
@@ -145,6 +145,13 @@ When Aran instruments a program, all its statement nodes and all its expression 
   The parent's serial number of the node (if any).
 * `AranStrict :: boolean`:
   Indicates whether the node is in [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) or not.
+
+Programs node don't have a `AranParent` property nor a `AranParentSerial` property.
+Instead they have an `AranScope` property which is either an array or an object.
+An array indicates that the program will be evaluated as global code.
+The array refers to the name of the variables predefined in the program's block scope -- e.g. `["exports", "module", "require", "this"]`.
+An object indicates that the program will be evaluated by a direct eval call.
+The object refers to the estree node where the call occured.
 
 ### `aran = require("aran")(options)`
 
@@ -170,7 +177,7 @@ Create a new Aran instance.
   A boolean indicating whether aran should keep an array of nodes indexed by serial number.
   A truthy options will result in a faster execution of `aran.node`.
 * `options.sandbox :: boolean`, default `false`:
-  A boolean indicating whether the user will provide a custom `GLOBAl` property to the advice to serve as [global object](https://developer.mozilla.org/en-US/docs/Glossary/Global_object) for the instrumented code.
+  A boolean indicating whether the user will provide a custom `GLOBAL` property to the advice to serve as [global object](https://developer.mozilla.org/en-US/docs/Glossary/Global_object) for the instrumented code.
   If this options is truthy, code weaved without parent will contain a [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) whose environment object is a [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
   This proxy will also solve a transparency breakage by restoring identifiers sanitized by Aran.
   This is expected to produce noticeable performance overhead.
@@ -178,29 +185,29 @@ Create a new Aran instance.
 ### `output = aran.setup()`
 
 Build the setup code that should be evaluated before any instrumented code.
-* `output :: *`:
+* `output :: string | object`:
   The setup code whose format depends on `options.output`.
 
 The setup code with `options.namespace` being `META` looks like:
 
 ```js
 META.EVAL                    = META.EVAL                   || eval;
-META.GLOBAL                  = META.GLOBAL                 || META.EVAL("this");
 META.PROXY                   = META.PROXY                  || Proxy;
 META.REFERENCE_ERROR         = META.REFERENCE_ERROR        || ReferenceError;
 META.OBJECT_DEFINE_PROPERTY  = META.OBJECT_DEFINE_PROPERTY || Object.defineProperty;
 META.REFLECT_APPLY           = META.REFLECT_APPLY          || Reflect.apply;
 META.WITH_HANDLERS           = {...};
-META.SANDBOX_HANDLERS        = {...}; // if options.sandbox is truthy
-META.STRICT_SANDBOX_HANDLERS = {...}; // if options.sandbox is truthy
+META.SANDBOX_HANDLERS        = {...};             // if options.sandbox is truthy
+META.STRICT_SANDBOX_HANDLERS = {...};             // if options.sandbox is truthy
+META.EVAL("this").$$eval = META.EVAL("this").eval // if options.sandbox is falsy
 ```
 
-### `output = aran.weave(estree, pointcut, parent)`
+### `output = aran.weave(estree, pointcut, sort)`
 
 Desugar and insert calls to trap functions at nodes specified by the pointcut.
-* `estree :: estree.Program`:
+* `estree :: object`:
   The [ESTree Program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
-* `pointcut :: array | function | object | *`, default `false`:
+* `pointcut :: array | function | object | falsy | *`:
   The specification that tells Aran where to insert trap calls.
   Four specification formats are supported:
   * `array`:
@@ -219,14 +226,32 @@ Desugar and insert calls to trap functions at nodes specified by the pointcut.
     ```js
     const pointcut = { binary: (node) => node.type === "UpdateExpression" };
     ```
+  * `falsy`:
+    Never insert any trap.
   * `*`:
-    If truthy, all traps are to be inserted when applicable,
-    If falsy, insert never insert any trap.
-* `parent :: ESTree | number | null`, default `null`:
-  In the event of instrumenting code before passing it to a direct eval call, this argument should be thuthy; else falsy.
-  As this value is assigned to the `AranParent` property of the given `estree` argument, it makes sens to pass the estree node which triggered the direct eval call.
-  If it is a number, aran will assume it is a serial number and pass it to `aran.node(serial)` first.
-* `output :: *`:
+    All traps are to be inserted whenever applicable.
+* `scope :: array | string | falsy | object | string`:
+  This value indicates in which scope will the program be evaluated.
+  This value will be used to set `estree.AranScope`.
+  * `array`:
+    The code will be evaluated as global code.
+    The array should contain variable names predefined in the scope.
+    The instrumented code will reasigned these variables in alphabetical order.
+  * `"commonjs"`:
+    Alias for `["exports", "module", "require", "this"]`
+  * `"node"`
+    Alias for `["__filename", "__dirname", "exports", "module", "require", "this"]`
+  * `"global"`:
+    Alias for `["this"]`.
+  * `falsy`:
+    Alias for `["this"]`.
+  * `object`:
+    The code will be evaluated by a direct eval call.
+    The object should be an estree referring to the direct eval call.
+  * `number`:
+    Same as `object` but pass a serial number instead; `aran.weave(script, pointcut, node)` is equivalent to `aran.weave(script, pointcut, aran.node(serial))`.
+
+* `output :: object | string`:
   The instrumented output whose format depends on `options.output`.
 
 ### `node = aran.node(serial)`
@@ -328,62 +353,61 @@ Name          | Original             | Instrumented
 
 ### Trap Signature
 
-Name          | arguments[0]         | arguments[1]        | arguments[2]        | arguments[3]
---------------|----------------------|---------------------|---------------------|-----------------
-**Combiners** |                      |                     |                     |
-`apply`       | `function:value`     | `arguments:[value]` | `serial:number`     |
-`array`       | `elements:[value]`   | `serial:number`     |                     |
-`binary`      | `operator:string`    | `left:value`        | `right:value`       | `serial:number`
-`construct`   | `constructor:value`  | `arguments:[value]` | `serial:number`     |
-`delete`      | `object:value`       | `key:value`         | `serial:number`     |
-`get`         | `object:value`       | `key:value`         | `serial:number`     |
-`invoke`      | `object:value`       | `key:value`         | `arguments:[value]` | `serial:number`
+Name          | arguments[0]          | arguments[1]          | arguments[2]        | arguments[3]
+--------------|-----------------------|-----------------------|---------------------|-----------------
+**Combiners** |                       |                       |                     |
+`apply`       | `function:value`      | `arguments:[value]`   | `serial:number`     |
+`array`       | `elements:[value]`    | `serial:number`       |                     |
+`binary`      | `operator:string`     | `left:value`          | `right:value`       | `serial:number`
+`construct`   | `constructor:value`   | `arguments:[value]`   | `serial:number`     |
+`delete`      | `object:value`        | `key:value`           | `serial:number`     |
+`get`         | `object:value`        | `key:value`           | `serial:number`     |
+`invoke`      | `object:value`        | `key:value`           | `arguments:[value]` | `serial:number`
 `object`      | `properties:`<br>`[{0:value,1:value}]` | `serial:number` |       |
-`set`         | `object:value`       | `key:value`         | `value:value`       | `serial:number`
-`unary`       | `operator:string`    | `argument:value`    | `serial:number`     |
-**Producers** |                      |                     |                     |
-`arrival`     | `strict:boolean`     | `arrival:{callee:value, new:boolean, this:value, arguments:[value]}` | `serial:number` |
-`begin`       | `strict:boolean`     | `direct:boolean`    | `produced:value`    | `serial:number`
-`catch`       | `produced:value`     | `serial:number`     |                     |
-`closure`     | `produced:value`     | `serial:number`     |                     |
-`discard`     | `identifier:string`  | `produced:value`    | `serial:number`     |
-`load`        | `name:string`        | `produced:value`    | `serial:number`     |
-`primitive`   | `produced:value`     | `serial:number`     |                     |
-`read`        | `identifier:string`  | `produced:value`    | `serial:number`     |
-`regexp`      | `produced:value`     | `serial:number`     |                     |
-**Consumers** |                      |                     |                     |
-`completion`  | `consumed:value`     | `serial:number`     |                     |
-`declare`     | `kind:string`        | `identifier:string` | `consumed:value`    | `serial:number`
-`eval`        | `consumed:value`     | `serial:number`     |                     |
-`failure`     | `strict:boolean`     | `direct:boolean`    | `consumed:value`    | `serial:number`
+`set`         | `object:value`        | `key:value`           | `value:value`       | `serial:number`
+`unary`       | `operator:string`     | `argument:value`      | `serial:number`     |
+**Producers** |                       |                       |                     |
+`arrival`     | `strict:boolean`      | `arrival:{callee:value, new:boolean, this:value, arguments:[value]}` | `serial:number` |
+`begin`       | `strict:boolean`      | `scope:string|object` | `produced:value`    | `serial:number`
+`catch`       | `produced:value`      | `serial:number`       |                     |
+`closure`     | `produced:value`      | `serial:number`       |                     |
+`discard`     | `identifier:string`   | `produced:value`      | `serial:number`     |
+`load`        | `name:string`         | `produced:value`      | `serial:number`     |
+`primitive`   | `produced:value`      | `serial:number`       |                     |
+`read`        | `identifier:string`   | `produced:value`      | `serial:number`     |
+`regexp`      | `produced:value`      | `serial:number`       |                     |
+**Consumers** |                       |                       |                     |
+`completion`  | `consumed:value`      | `serial:number`       |                     |
+`declare`     | `kind:string`         | `identifier:string`   | `consumed:value`    | `serial:number`
+`eval`        | `consumed:value`      | `serial:number`       |                     |
+`failure`     | `scope:string|object` | `consumed:value`      | `serial:number`     |
 `return`      | `arrival:{callee:value, new:boolean, this:value, arguments:[value]}` | `consumed:value` | `serial:number`              
-`save`        | `name:string`        | `consumed:value`    | `serial:number`     |
-`success`     | `strict:boolean`     | `direct:boolean`    | `consumed:value`    | `serial:number`
-`test`        | `consumed:value`     | `serial:number`     |                     |
-`throw`       | `consumed:value`     | `serial:number`     |                     |
-`with`        | `consumed:value`     | `serial:number`     |                     |
-`write`       | `identifier:string`  | `consumed:value`    | `serial:number`     |
-**Informers** |                      |                     |                     |
-`block`       | `serial:number`      |                     |                     |
-`break`       | `continue:boolean`   | `label:string`      | `serial:number`     |
-`copy`        | `position:number`    | `serial:number`     |                     |
-`drop`        | `serial:number`      |                     |                     |
-`end`         | `strict:boolean`     | `direct:boolean`    | `serial:number`     |
-`finally`     | `serial:number`      |                     |                     |
-`label`       | `continue:boolean`   | `label:string`      | `serial:number`     |
-`leave`       | `type:string`        | `serial:number`     |                     |
-`swap`        | `position1:number`   | `position2:number`  | `serial:number`     |
-`try`         | `serial:number`      |                     |                     |
+`save`        | `name:string`         | `consumed:value`      | `serial:number`     |
+`success`     | `scope:string|object` | `consumed:value`      | `serial:number`     |
+`test`        | `consumed:value`      | `serial:number`       |                     |
+`throw`       | `consumed:value`      | `serial:number`       |                     |
+`with`        | `consumed:value`      | `serial:number`       |                     |
+`write`       | `identifier:string`   | `consumed:value`      | `serial:number`     |
+**Informers** |                       |                       |                     |
+`block`       | `serial:number`       |                       |                     |
+`break`       | `continue:boolean`    | `label:string`        | `serial:number`     |
+`copy`        | `position:number`     | `serial:number`       |                     |
+`drop`        | `serial:number`       |                       |                     |
+`end`         | `scope:string|object` | `serial:number`       |                     |
+`finally`     | `serial:number`       |                       |                     |
+`label`       | `continue:boolean`    | `label:string`        | `serial:number`     |
+`leave`       | `type:string`         | `serial:number`       |                     |
+`swap`        | `position1:number`    | `position2:number`    | `serial:number`     |
+`try`         | `serial:number`       |                       |                     |
 
 ### Logically Linked Traps
 
 * `["begin", "completion", "success", "failure", "end"]`:
   These traps are linked to a program from the original code.
-  The first parameter of `begin`, `success`, `failure` and `end` is a boolean indicating whether the program is in strict mode or not.
-  Their second parameter is an other boolean indicating whether it is being evaluated into a direct call to `eval` or not.
   The first / last trap invoked by a program is always `begin` / `end`.
-  Before invoking `end`, either `success` or `failure` is invoked.  
+  Before invoking `end`, either `success` or `failure` is invoked.
   The `completion` trap is invoked every time the completion value of a program changes.
+  For a given program, the second parameter of `begin` and the first parameter of `success`, `failure` and `end` will always refer to the exact same value.
   ```js
   // Original //
   this.Math.sqrt(4);
@@ -392,13 +416,13 @@ Name          | arguments[0]         | arguments[1]        | arguments[2]       
   // Instrumented //
   let completion;
   try {
-    $$this = META.begin(@strict, @direct, META.GLOBAL, @serial);
+    $$this = META.begin(false, "global", META.GLOBAL, @serial);
     completion = META.completion($$this.Math.sqrt(4), @serial);
-    completion = META.success(@strict, @direct, completion, @serial);
+    completion = META.success("global", completion, @serial);
   } catch (error) {
-    throw META.failure(@strict, @direct, error, @serial);
+    throw META.failure("global", error, @serial);
   } finally {
-    META.end(@strict, @direct, @serial);
+    META.end("global", @serial);
   }
   completion;
   ```
@@ -683,7 +707,7 @@ Here are the known heisenbugs that Aran may introduce by itself:
   ```js
   const foo = () => {};
   const bar = foo;
-  new bar(); 
+  new bar();
   ```
 
 ## Acknowledgments

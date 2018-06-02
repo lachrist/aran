@@ -18,5 +18,5 @@ global.META = {
 const pointcut = ["apply"];
 const aran = Aran({namespace:"META"});
 global.eval(Astring.generate(aran.setup(pointcut)));
-module.exports = (script) =>
+module.exports = (script, source) =>
   Astring.generate(aran.weave(Acorn.parse(script, {locations:true}), pointcut));

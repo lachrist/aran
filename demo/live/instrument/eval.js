@@ -2,7 +2,7 @@ const AranLive = require("aran/live");
 const sandbox = Object.create(global);
 sandbox.eval = function eval (script) {
   console.log("INDIRECT EVAL CALL:\n"+script+"\n");
-  return global.eval(module.exports(script));
+  return global.eval(aranlive.instrument(script));
 };
 sandbox.Function = function Function () {
   const script = arguments.length ? [
@@ -11,18 +11,20 @@ sandbox.Function = function Function () {
     "})"
   ].join("\n") : "(function anonymous() {\n\n})";
   console.log("FUNCTION CALL:\n"+script+"\n");
-  return global.eval(module.exports(script));
+  return global.eval(aranlive.instrument(script));
 };
-module.exports = AranLive({
+const check_this = (strict, scope, serial) => {
+  if (scope && scope.this === global)
+    scope.this = sandbox;
+  return scope;
+};
+const aranlive = AranLive({
   SANDBOX: sandbox,
+  arrival: check_this,
+  begin: check_this,
   eval: (script, serial) => {
     console.log("DIRECT EVAL CALL:\n"+script+"\n");
-    return module.exports(script, serial);
-  },
-  arrival: (strict, arrival, serial) => {
-    if (arrival.this === global)
-      arrival.this = sandbox;
-    return arrival;
-  },
-  begin: (strict, direct, value) => sandbox,
-}, {sandbox:true}).instrument;
+    return aranlive.instrument(script, serial);
+  }
+}, {sandbox:true});
+module.exports = (script, source) => {debugger; return aranlive.instrument(script)};

@@ -11,7 +11,7 @@ module.exports = (advice, options) => {
   const pointcut = Object.keys(advice).filter(istrapname);
   const generate = options && options.output === "String" ? identity : Astring.generate;
   global[aran.namespace] = advice;
-  global.eval(generate(aran.setup(pointcut)));
+  global.eval(generate(aran.setup()));
   return {
     node: aran.node,
     root: aran.root,

@@ -7,6 +7,7 @@ const ParseLabel = require("./parse-label.js");
 const SanitizeIdentifier = require("./sanitize-identifier.js");
 const ContainArguments = require("./contain-arguments.js");
 const Boolean = global.Boolean;
+const Array_isArray = Array.isArray;
 
 module.exports = (pointcut) => {
 
@@ -17,25 +18,27 @@ module.exports = (pointcut) => {
   cut.PROGRAM = (boolean, statements) => (
     statements = ArrayLite.concat(
       (
-        ARAN.node.AranParent ?
-        ArrayLite.concat(
-          ARAN.build.Statement(
-            traps.begin(
-              ARAN.node.AranStrict,
-              Boolean(ARAN.node.AranParent),
-              Meta.global())),
-          ARAN.build.Statement(
-            traps.drop())) :
-        ARAN.build.Declare(
-          "const",
-          "$$this",
-          traps.declare(
-            "const",
-            "this",
-            traps.begin(
-              ARAN.node.AranStrict,
-              Boolean(ARAN.node.AranParent),
-              Meta.global())))),
+        Array_isArray(ARAN.node.AranScope) ?
+        ArrayLite.flatenMap(
+          ARAN.node.AranScope,
+          (string, expression) => (
+            expression = traps.declare(
+              "let",
+              string,
+              ARAN.build.get(
+                ARAN.build.read("scope"),
+                ARAN.build.primitive(string))),
+            (
+              (
+                SanitizeIdentifier(string) !== string &&
+                !ArrayLite.includes(SanitizeIdentifier(string))) ?
+              ARAN.build.Declare(
+                "let",
+                SanitizeIdentifier(string),
+                expression) :
+              ARAN.build.Statement(
+                ARAN.build.write(string, expression))))) :
+        []),
       ARAN.build.If(
         ARAN.build.unary(
           "!",
@@ -80,39 +83,107 @@ module.exports = (pointcut) => {
                       ARAN.build.primitive(strings[1])))))))),
         []),
       statements),
-    ARAN.build.PROGRAM(
-      boolean && (!ARAN.sandbox || ARAN.node.AranParent),
-      ARAN.build.Try(
-        ArrayLite.concat(
-          (
-            !ARAN.sandbox || ARAN.node.AranParent ?
-            statements :
-            Meta.Sandbox(
-              boolean ?
-              ARAN.build.Statement(
-                ARAN.build.apply(
-                  ARAN.build.function(
-                    true,
-                    [],
-                    statements),
-                  [])) :
-              statements)),
-          ARAN.build.Statement(
-            ARAN.build.write(
-              "completion",
-              traps.success(
-                Boolean(ARAN.node.AranStrict),
-                Boolean(ARAN.node.AranParent),
-                ARAN.build.read("completion"))))),
-        ARAN.build.Throw(
-          traps.failure(
-            Boolean(ARAN.node.AranStrict),
-            Boolean(ARAN.node.AranParent),
-            ARAN.build.read("error"))),
+    statements = (
+      ARAN.sandbox && Array_isArray(ARAN.node.AranScope) && boolean ?
+      ARAN.build.Statement(
+        ARAN.build.apply(
+          ARAN.build.function(
+            true,
+            [],
+            statements),
+          [])) :
+      statements),
+    statements = (
+      ARAN.sandbox && Array_isArray(ARAN.node.AranScope) ?
+      ArrayLite.concat(
         ARAN.build.Statement(
-          traps.end(
-            Boolean(ARAN.node.AranStrict),
-            Boolean(ARAN.node.AranParent))))));
+          ARAN.build.set(
+            ARAN.build.read(ARAN.namespace),
+            ARAN.build.primitive("SCOPE"),
+            ARAN.build.read("scope"))),
+        ARAN.build.Statement(
+          ARAN.build.write(
+            "completion",
+              Meta.apply(
+                ARAN.build.function(
+                  false,
+                  [],
+                  ARAN.build.With(
+                    ARAN.build.construct(
+                      ARAN.build.get(
+                        ARAN.build.read(ARAN.namespace),
+                        ARAN.build.primitive("PROXY")),
+                      [
+                        ARAN.build.get(
+                          ARAN.build.read(ARAN.namespace),
+                          ARAN.build.primitive("SANDBOX")),
+                        ARAN.build.get(
+                          ARAN.build.read(ARAN.namespace),
+                          ARAN.build.primitive(ARAN.node.AranStrict ? "STRICT_SANDBOX_HANDLERS" : "SANDBOX_HANDLERS"))]),
+                    ArrayLite.concat(
+                      ARAN.build.Declare(
+                        "const",
+                        ARAN.namespace,
+                        ARAN.build.read("this")),
+                      ARAN.build.Declare(
+                        "const",
+                        "scope",
+                        ARAN.build.get(
+                          ARAN.build.read(ARAN.namespace),
+                          ARAN.build.primitive("SCOPE"))),
+                      ARAN.build.Declare(
+                        "const",
+                        "eval",
+                        ARAN.build.get(
+                          ARAN.build.read(ARAN.namespace),
+                          ARAN.build.primitive("EVAL"))),
+                      ARAN.build.Declare(
+                        "let",
+                        "completion",
+                        ARAN.build.primitive(void 0)),
+                      statements,
+                      ARAN.build.Return(
+                        ARAN.build.read("completion"))))),
+                ARAN.build.read(ARAN.namespace),
+                [])))) :
+      statements),
+    ARAN.build.PROGRAM(
+      boolean && (!ARAN.sandbox || !Array_isArray(ARAN.node.AranScope)),
+      ArrayLite.concat(
+        ARAN.build.Declare(
+          "let",
+          "scope",
+          ARAN.build.primitive(void 0)),
+        ARAN.build.Try(
+          ArrayLite.concat(
+            ARAN.build.Statement(
+              ARAN.build.write(
+                "scope",
+                traps.begin(
+                  Boolean(ARAN.node.AranStrict),
+                  (
+                    Array_isArray(ARAN.node.AranScope) ?
+                    ARAN.build.object(
+                      ArrayLite.map(
+                        ARAN.node.AranScope,
+                        (string) => [
+                          ARAN.build.primitive(string),
+                          ARAN.build.read(string)])) :
+                    ARAN.build.primitive(null))))),
+            statements,
+            ARAN.build.Statement(
+              ARAN.build.write(
+                "completion",
+                traps.success(
+                  ARAN.build.read("scope"),
+                  ARAN.build.read("completion"))))),
+          ARAN.build.Throw(
+            traps.failure(
+              ARAN.build.read("scope"),
+              ARAN.build.read("error"))),
+          ARAN.build.Statement(
+            traps.end(
+              ARAN.build.read("scope")))))));
 
   cut.$completion = (expression) => ARAN.build.write(
     "completion",
@@ -203,7 +274,7 @@ module.exports = (pointcut) => {
           ArrayLite.concat(
             ARAN.build.Declare(
               "const",
-              "arrival",
+              "scope",
               traps.arrival(
                 Boolean(ARAN.node.AranStrict),
                 ARAN.build.object(
@@ -282,7 +353,7 @@ module.exports = (pointcut) => {
     traps.declare(kind, identifier, expression));
 
   cut.Return = (expression) => ARAN.build.Return(
-    traps.return("arrival", expression));
+    traps.return("scope", expression));
 
   cut.eval = (expression) => ARAN.build.eval(
     traps.eval(expression));

@@ -7,16 +7,15 @@ const Completion = require("./completion.js");
 
 const keys = Object.keys;
 
-module.exports = (root, parent) => {
+module.exports = (root, scope) => {
   Completion(root);
-  root.AranParent = parent;
-  root.AranParentSerial = parent ? parent.AranSerial : null;
+  root.AranScope = scope;
   const strict = (
     root.body.length &&
     root.body[0].type === "ExpressionStatement" &&
     root.body[0].expression.type === "Literal" &&
     root.body[0].expression.value === "use strict");
-  root.AranStrict = (parent && parent.AranStrict) || strict;
+  root.AranStrict = strict || scope.AranStrict;
   root.AranSerial = ++ARAN.counter;
   if (ARAN.nodes)
     ARAN.nodes[root.AranSerial] = root;

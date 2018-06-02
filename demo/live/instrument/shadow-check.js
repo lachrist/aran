@@ -11,12 +11,14 @@ const eval = global.eval;
 const Reflect_apply = global.Reflect.apply;
 const Reflect_construct = global.Reflect.construct;
 const Object_create = global.Object.create;
+const Object_keys = global.Object.keys;
 const Object_defineProperty = global.Object.defineProperty;
 const Array_prototype_pop = global.Array.prototype.pop;
 const Array_prototype_push = global.Array.prototype.push;
 const Array_prototype_map = global.Array.prototype.map;
 const Array_prototype_concat = global.Array.prototype.concat;
 const Array_prototype_unshift = global.Array.prototype.unshift;
+const Array_prototype_sort = global.Array.prototype.sort;
 const WeakMap_prototype_get = global.WeakMap.prototype.get;
 const WeakMap_prototype_set = global.WeakMap.prototype.set;
 const WeakMap_prototype_has = global.WeakMap.prototype.has;
@@ -179,23 +181,29 @@ const ftraps = {
     }
   }
 };
-advice.arrival = (boolean, arrival, serial) => {
-  cstack.push(Call(scopes.get(arrival.callee)));
-  cstack.peek().enter("closure", Object.create(null), null);
+advice.arrival = (boolean, scope, serial) => {
+  cstack.push(Call(scopes.get(scope.callee)));
+  cstack.peek().enter("closure", Object_create(null), null);
   return {
-    callee: produce(arrival.callee),
-    new: produce(arrival.new),
-    this: produce(arrival.this),
-    arguments: produce(arrival.arguments)
+    callee: produce(scope.callee),
+    new: produce(scope.new),
+    this: produce(scope.this),
+    arguments: produce(scope.arguments)
   };
 };
-advice.begin = (boolean1, boolean2, value, serial) => {
+advice.begin = (boolean, scope, serial) => {
   estack.push(null);
-  if (boolean2)
-    return cstack.peek().enter(boolean1 ? "closure" : "block", Object_create(null), null);
+  if (!scope) {
+    cstack.peek().enter(boolean ? "closure" : "block", Object_create(null), null);
+    return boolean ? "closure" : "block";
+  }
   cstack.push(Call(Scope()));
   cstack.peek().enter("block", Object_create(null), null);
-  return produce(value, serial);
+  const keys = Reflect_apply(Array_prototype_sort, Object_keys(scope), []);
+  let index = keys.length;
+  while (index --)
+    scope[keys[index]] = produce(scope[keys[index]], serial);
+  return scope;
 };
 advice.regexp = (value, serial) => produce(value, serial);
 advice.primitive = (value, serial) => produce(value, serial);
@@ -242,10 +250,10 @@ advice.catch = (value, serial) => {
 ///////////////
 // Consumers //
 ///////////////
-advice.success = (boolean1, boolean2, value, serial) => {
+advice.success = (scope, value, serial) => {
   check("Success", estack.peek(), value, serial);
-  if (boolean2) {
-    cstack.peek().leave(boolean1 ? "closure" : "block", serial);
+  if (typeof scope === "string") {
+    cstack.peek().leave(scope, serial);
     return produce(value, serial);
   }
   cstack.peek().leave("block", serial);
@@ -256,7 +264,7 @@ advice.success = (boolean1, boolean2, value, serial) => {
     throw new Error("["+serial+"] State poluted");
   return value;
 };
-advice.failure = (boolean1, boolean2, error, serial) => {
+advice.failure = (scope, error, serial) => {
   if (estack.length === 1)
     cleanup();
   return error;
@@ -265,7 +273,7 @@ advice.save = (name, value, serial) => consume(value, serial);
 advice.test = (value, serial) => consume(value, serial);
 advice.throw = (value, serial) => consume(value, serial);
 advice.eval = (value, serial) => module.exports(consume(value, serial), serial);
-advice.return = (arrival, value, serial) => {
+advice.return = (scope, value, serial) => {
   cstack.pop();
   return consume(value, serial);
 };

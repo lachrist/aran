@@ -50,10 +50,10 @@ advice.test = ($value, serial) =>
   consume("test", [], $value, serial);
 advice.throw = ($value, serial) =>
   consume("throw", [], $value, serial);
-advice.return = (arrival, $value, serial) =>
+advice.return = (scope, $value, serial) =>
   consume("return", [], $value, serial);
-advice.success = (strict, direct, $value, serial) =>
-   direct ? $value : consume("success", [], $value, serial);
+advice.success = (scope, $value, serial) =>
+   scope ? consume("success", [], $value, serial) : $value;
 advice.with = ($value, serial) =>
   new Proxy({type:"with",inner:consume("with", [], $value, serial)}, handlers);
 advice.eval = ($value, serial) =>
@@ -62,14 +62,20 @@ advice.eval = ($value, serial) =>
 ///////////////
 // Producers //
 ///////////////
-advice.arrival = (strict, arrival, serial) => ({
-  callee: produce("arrival-callee", [], arrival.callee, serial),
-  new: produce("arrival-new", [], arrival.new, serial),
-  this: produce("arrival-this", [], arrival.this === global ? advice.SANDBOX : arrival.this, serial),
-  arguments: produce("arrival-arguments", [], arrival.arguments, serial)
+advice.arrival = (strict, scope, serial) => ({
+  callee: produce("arrival-callee", [strict], scope.callee, serial),
+  new: produce("arrival-new", [strict], scope.new, serial),
+  this: produce("arrival-this", [strict], scope.this, serial),
+  arguments: produce("arrival-arguments", [strict], scope.arguments, serial)
 });
-advice.begin = (strict, direct, value, serial) =>
-  produce("begin", [strict, direct], advice.SANDBOX, serial);
+advice.begin = (strict, scope, serial) => {
+  if (scope) {
+    Object.keys(scope).sort().reverse().forEach((key) => {
+      scope[key] = produce("begin-"+key, [strict], scope[key]);
+    });
+  }
+  return scope;
+};
 advice.primitive = (value, serial) =>
   produce("primitive", [], value, serial);
 advice.regexp = (value, serial) =>

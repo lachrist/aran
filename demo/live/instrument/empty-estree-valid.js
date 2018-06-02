@@ -1,2 +1,3 @@
 const AranLive = require("aran/live");
-module.exports = AranLive({}, {output:"EstreeValid"}).instrument;
+const aranlive = AranLive({}, {output:"EstreeValid"});
+module.exports = (script, source) => aranlive.instrument(script);

@@ -40,7 +40,7 @@ exports.closure = (node) => {
         ARAN.cut.$copy(
           3,
           ARAN.build.get(
-            ARAN.build.read("arrival"),
+            ARAN.build.read("scope"),
             ARAN.build.primitive("new"))),
         ARAN.cut.Throw(
           ARAN.cut.construct(
@@ -53,30 +53,30 @@ exports.closure = (node) => {
       node.type === "ArrowFunctionExpression" ?
       [] :
       ARAN.cut.Declare(
-        "const",
+        "let",
         "new.target",
         ARAN.cut.conditional(
           ARAN.cut.$copy(
             3,
             ARAN.build.get(
-              ARAN.build.read("arrival"),
+              ARAN.build.read("scope"),
               ARAN.build.primitive("new"))),
           ARAN.cut.$copy(
             4,
             ARAN.build.get(
-              ARAN.build.read("arrival"),
+              ARAN.build.read("scope"),
               ARAN.build.primitive("callee"))),
           ARAN.cut.primitive(void 0)))),
     (
       node.type === "ArrowFunctionExpression" ?
       [] :
       ARAN.cut.Declare(
-        "const",
+        "let",
         "this",
         ARAN.cut.$copy(
           2,
           ARAN.build.get(
-            ARAN.build.read("arrival"),
+            ARAN.build.read("scope"),
             ARAN.build.primitive("this"))))),
     (
       (
@@ -84,12 +84,12 @@ exports.closure = (node) => {
         defargs(ArrayLite.slice(node.params))) ?
       [] :
       ARAN.cut.Declare(
-        "const",
+        "let",
         "arguments",
         ARAN.cut.$copy(
           1,
           ARAN.build.get(
-            ARAN.build.read("arrival"),
+            ARAN.build.read("scope"),
             ARAN.build.primitive("arguments"))))),
     (
       (
@@ -101,7 +101,7 @@ exports.closure = (node) => {
             "iterator",
             ARAN.cut.invoke(
               ARAN.build.get(
-                ARAN.build.read("arrival"),
+                ARAN.build.read("scope"),
                 ARAN.build.primitive("arguments")),
               ARAN.cut.$load("Symbol.iterator"),
               []))),
@@ -141,7 +141,7 @@ exports.closure = (node) => {
               ARAN.cut.$copy(
                 1,
                 ARAN.build.get(
-                  ARAN.build.read("arrival"),
+                  ARAN.build.read("scope"),
                   ARAN.build.primitive("arguments"))),
               ARAN.cut.primitive(index)))),
         ARAN.build.Statement(

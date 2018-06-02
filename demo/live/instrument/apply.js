@@ -13,4 +13,4 @@ const aranlive = AranLive({
     return result;
   }
 });
-module.exports = (script) => aranlive.instrument(script, null, {locations:true});
+module.exports = (script, source) => aranlive.instrument(script, null, {locations:true});
