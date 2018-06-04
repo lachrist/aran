@@ -84,7 +84,7 @@ module.exports = (pointcut) => {
         []),
       statements),
     statements = (
-      ARAN.sandbox && Array_isArray(ARAN.node.AranScope) && boolean ?
+      boolean && ARAN.sandbox ?
       ARAN.build.Statement(
         ARAN.build.apply(
           ARAN.build.function(
@@ -148,7 +148,7 @@ module.exports = (pointcut) => {
                 [])))) :
       statements),
     ARAN.build.PROGRAM(
-      boolean && (!ARAN.sandbox || !Array_isArray(ARAN.node.AranScope)),
+      boolean && !ARAN.sandbox,
       ArrayLite.concat(
         ARAN.build.Declare(
           "let",
