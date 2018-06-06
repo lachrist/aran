@@ -1,5 +1,6 @@
-
-const AranLive = require("aran/live");
+const Acorn = require("acorn");
+const Aran = require("aran");
+const Astring = require("astring");
 
 const Error = global.Error;
 const TypeError = global.TypeError;
@@ -272,7 +273,7 @@ advice.failure = (scope, error, serial) => {
 advice.save = (name, value, serial) => consume(value, serial);
 advice.test = (value, serial) => consume(value, serial);
 advice.throw = (value, serial) => consume(value, serial);
-advice.eval = (value, serial) => module.exports(consume(value, serial), serial);
+advice.eval = (value, serial) => instrument(consume(value, serial), serial);
 advice.return = (scope, value, serial) => {
   cstack.pop();
   return consume(value, serial);
@@ -412,15 +413,15 @@ advice.array = (values, serial) => {
     consume(values[index], serial);
   return produce(values, serial);
 };
-advice.object = (properties, serial) => {
-  const result = {};
-  let index = properties.length
-  while (index--) {
-    consume(properties[index][1], serial);
-    consume(properties[index][0], serial);
-    result[properties[index][0]] = properties[index][1];
-  }
-  return produce(result, serial);
+advice.object = (keys, value, serial) => {
+  let index = keys.length;
+  while (index--)
+    consume(value[keys[index]], serial);
+  return produce(value, serial);
 };
 
-module.exports = AranLive(advice).instrument;
+const aran = Aran({namespace:"ADVICE"});
+global.ADVICE = advice;
+const instrument = (script, scope) => Astring.generate(aran.weave(Acorn.parse(script), true, scope));
+global.eval(Astring.generate(aran.setup()));
+module.exports = (script, source) => instrument(script);

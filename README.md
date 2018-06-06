@@ -10,19 +10,20 @@ Aran can also be used as a desugarizer much like [babel](https://babeljs.io).
 ## Getting Started
 
 ```sh
-npm install aran
+npm install aran aran-live
 ```
 
 ```js
-const AranLive = require("aran/live");
-const aranlive = AranLive({
+const Aran = require("aran");
+const AranLive = require("aran-live");
+const instrument = AranLive(Aran(), {
   binary: (operator, left, right, serial) => {
     const result = eval("left "+operator+" right");
     console.log(left+" "+operator+" "+right+" = "+result);
     return result;
   }
 });
-global.eval(aranlive.instrument("'Hello'+'World'+'!'"));
+global.eval(instrument("'Hello'+'World'+'!'"));
 ```
 
 ```txt
@@ -41,14 +42,14 @@ This terminology is borrowed from [aspect-oriented programming](https://en.wikip
 ![weaving](img/weaving.png)
 
 When code weaving happens on the same process that evaluates weaved code, it is called *live weaving*.
-This is the case for [instrument/apply-explicit.js](https://cdn.rawgit.com/lachrist/aran/bb8186d5/demo/output/live-apply-explicit-factorial.html) which performs the same analysis as [demo/dead/apply](demo/dead/apply).
+This is the case for [instrument/apply-regular-api.js](https://cdn.rawgit.com/lachrist/aran/bb8186d5/demo/output/live-apply-regular-api-factorial.html) which performs the same analysis as [demo/dead/apply](demo/dead/apply).
 Live weaving enables direct communication between an advice and its associated Aran's instance.
 For instance, `aran.node(serial)` can be invoked by the advice to retrieve the line index of the node that triggered a trap.
 An other good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
 
-When performing live weaving, Aran offers a simpler interface which hides the complexity linked to pointcut and setup.
+When performing live weaving, [AranLive](https://github.com/lachrist/aran-live) offers a simpler interface which hides the complexity linked to pointcut and setup.
 This alternative API also performs parsing with [acorn](https://github.com/acornjs/acorn) and code generation with [astring](https://github.com/davidbonnet/astring). 
-This simpler API is demonstrated at [demo/live/instrument/apply.js](https://cdn.rawgit.com/lachrist/aran/bb8186d5/demo/output/live-apply-factorial.html).
+This simpler API is demonstrated at [demo/live/instrument/apply-live-api.js](https://cdn.rawgit.com/lachrist/aran/bb8186d5/demo/output/live-apply-live-api-factorial.html).
 
 ## Demonstrators
 
@@ -86,44 +87,7 @@ This simpler API is demonstrated at [demo/live/instrument/apply.js](https://cdn.
    This feature is crucial for data-flow centric dynamic analyses such as taint analysis and symbolic execution.
    In our research, we track primitive values through the object graph with a complementary npm module called [Linvail](https://github.com/lachrist/linvail).
 
-## Simplified Live API
-
-This simpler interface is provided by [live.js](live.js) which is a simple wrapper around the regular Aran interface.
-It forces live instrumentation and use the keys of the advice as pointcut.
-
-### `aranlive = require("aran/live")(advice, options)`
-
-Create a new AranLive instance.
-* `advice ::  object`: the object containing the traps.
-  If `options.sandbox` is truthy, `advice.SANDBOX` will be used as the top frame of every environment.
-* `options :: object | falsy`: regular aran's options; see `require("aran")(options)`
-
-### `output = aranlive.instrument(script, scope, options)`
-
-Desugar and insert calls to traps present in the advice.
-* `script :: string`: the target code to instrument.
-* `scope :: array | string | falsy | object | string`: cf the `scope` parameter of `aran.weave(script, pointcut, scope)`.
-* `options :: object | falsy`: acorn's parsing options.
-* `output :: string`: the instrumented code (contains trap calls).
-
-### `node = aranlive.node(serial)`
-
-Retrieve a node from its serial number; same as `aran.node(serial)`.
-* `serial :: number`
-* `node :: object | undefined`
-
-### `root = aranlive.root(serial)`
-
-Retrieve the ESTree Program node that contains the node at the given serial number; same as `aran.root(serial)`.
-* `serial :: number`
-* `root :: object | undefined`
-
-### `namespace = aranlive.namespace`
-
-The name of the global variable holding the advice; same as `aran.namespace`
-* `namespace :: string`
-
-## Regular API
+## API
 
 ### Syntactic Nodes
 
@@ -315,7 +279,7 @@ Name          | Original             | Instrumented
 `delete`      | `delete o.k`         | `META.delete(o, "k", @serial)`
 `get`         | `o.k`                | `META.get(o, "k", @serial)`
 `invoke`      | `o.k(x,y)`           | `META.invoke(o, "k", [x,y], @serial)`
-`object`      | `{k:x,l:y}`          | `META.object([["k", x], ["l", y]], @serial)`
+`object`      | `{k:x,l:y}`          | `META.object(["k", "l"], {k:x,l:y}, @serial)`
 `set`         | `o.k = x`            | `META.set(o, "k", x, @serial)`
 `unary`       | `!x`                 | `META.unary("!", x, @serial)` 
 **Producers** |                      | 
@@ -358,17 +322,17 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
 --------------|-----------------------|-----------------------|---------------------|-----------------
 **Combiners** |                       |                       |                     |
 `apply`       | `function:value`      | `arguments:[value]`   | `serial:number`     |
-`array`       | `elements:[value]`    | `serial:number`       |                     |
+`array`       | `array:value`         | `serial:number`       |                     |
 `binary`      | `operator:string`     | `left:value`          | `right:value`       | `serial:number`
 `construct`   | `constructor:value`   | `arguments:[value]`   | `serial:number`     |
 `delete`      | `object:value`        | `key:value`           | `serial:number`     |
 `get`         | `object:value`        | `key:value`           | `serial:number`     |
 `invoke`      | `object:value`        | `key:value`           | `arguments:[value]` | `serial:number`
-`object`      | `properties:`<br>`[{0:value,1:value}]` | `serial:number` |       |
+`object`      | `keys:[string]`       | `object:value`        | `serial:number`     |
 `set`         | `object:value`        | `key:value`           | `value:value`       | `serial:number`
 `unary`       | `operator:string`     | `argument:value`      | `serial:number`     |
 **Producers** |                       |                       |                     |
-`arrival`     | `strict:boolean`      | `arrival:{callee:value, new:boolean, this:value, arguments:[value]}` | `serial:number` |
+`arrival`     | `strict:boolean`      | `scope:object`        | `serial:number`     |
 `begin`       | `strict:boolean`      | `scope:object`        | `produced:value`    | `serial:number`
 `catch`       | `produced:value`      | `serial:number`       |                     |
 `closure`     | `produced:value`      | `serial:number`       |                     |
@@ -382,7 +346,7 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
 `declare`     | `kind:string`         | `identifier:string`   | `consumed:value`    | `serial:number`
 `eval`        | `consumed:value`      | `serial:number`       |                     |
 `failure`     | `scope:object`        | `consumed:value`      | `serial:number`     |
-`return`      | `arrival:{callee:value, new:boolean, this:value, arguments:[value]}` | `consumed:value` | `serial:number`              
+`return`      | `scope:object`        | `consumed:value`      | `serial:number`     |          
 `save`        | `name:string`         | `consumed:value`      | `serial:number`     |
 `success`     | `scope:object`        | `consumed:value`      | `serial:number`     |
 `test`        | `consumed:value`      | `serial:number`       |                     |
@@ -401,7 +365,7 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
 `swap`        | `position1:number`    | `position2:number`    | `serial:number`     |
 `try`         | `serial:number`       |                       |                     |
 
-### Logically Linked Traps
+### Trap Comments
 
 * `["begin", "completion", "success", "failure", "end"]`:
   These traps are linked to a program from the original code.
@@ -564,6 +528,10 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
   ```
   To make these two transformations invisible to the user we added a boolean parameter to the `label` and `break`.
   This parameter tells whether the label is a break label (false) or a continue label (true).
+* `["array", "object"]`:
+  These traps are the only combiner traps whose transparent implementation simply consists in returning one of their argument.
+  The object trap receives as first arguments an array of unique keys which indicates the order in which the data properties were assign to the object.
+  Literal objects containing computed keys or accessor properties or non-unique keys will result in an empty object being passed to the `object` trap.
 * `["save", "load"]`:
   These traps are only important for analyses that mirror the cares about the value stack.
   Some structures require builtin values to be desugarized.

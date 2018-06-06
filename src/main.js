@@ -54,6 +54,7 @@ module.exports = (options) => {
     } :
     (serial) => state.nodes[serial]);
   return {
+    output: options.output,
     namespace: options.namespace,
     setup: () => {
       const temporary = global.ARAN;

@@ -20,17 +20,20 @@ exports.ArrayExpression = (node) => ARAN.cut.array(
       ARAN.cut.primitive(void 0))));
 
 exports.ObjectExpression = (node) => (
-  ArrayLite.every(
-    node.properties,
-    (property) => property.kind === "init") ?
+  (
+    ArrayLite.every(
+      node.properties,
+      (property) => property.kind === "init" && (!property.computed || property.key.type === "Literal")) &&
+    ArrayLite.every(
+      ArrayLite.map(
+        node.properties,
+        (property) => property.key.type === "Identifier" ? property.key.name : String(property.key.value)),
+      (string, index, array) => ArrayLite.lastIndexOf(array, string) === index)) ? 
   ARAN.cut.object(
     ArrayLite.map(
       node.properties,
       (property) => [
-        Util.property(
-          {
-            computed: property.computed,
-            property: property.key}),
+        property.key.type === "Identifier" ? property.key.name : String(property.key.value),
         Visit.expression(property.value)])) :
   ArrayLite.reduce(
     node.properties,
@@ -49,23 +52,22 @@ exports.ObjectExpression = (node) => (
           ArrayLite.concat(
             [
               [
-                ARAN.cut.primitive("configurable"),
+                "configurable",
                 ARAN.cut.primitive(true)]],
             [
               [
-                ARAN.cut.primitive("enumerable"),
+                "enumerable",
                 ARAN.cut.primitive(true)]],
             (
               property.kind === "init" ?
               [
                 [
-                  ARAN.cut.primitive("writable"),
+                  "writable",
                   ARAN.cut.primitive(true)]] :
               []),
             [
               [
-                ARAN.cut.primitive(
-                  property.kind === "init" ? "value" : property.kind),
+                property.kind === "init" ? "value" : property.kind,
                 Visit.expression(property.value)]]))]),
     ARAN.cut.object([])));
 

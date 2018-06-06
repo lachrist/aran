@@ -59,27 +59,27 @@ exports.define = (expression1, string, expression2, boolean1, boolean2, boolean3
       ArrayLite.concat(
         [
           [
-            ARAN.build.primitive("value"),
+            "value",
             expression2]],
         (
           boolean1 ?
           [
             [
-              ARAN.build.primitive("writable"),
+              "writable",
               ARAN.build.primitive(true)]] :
           []),
         (
           boolean2 ?
           [
             [
-              ARAN.build.primitive("enumerable"),
+              "enumerable",
               ARAN.build.primitive(true)]] :
           []),
         (
           boolean3 ?
           [
             [
-              ARAN.build.primitive("configurable"),
+              "configurable",
               ARAN.build.primitive(true)]] :
           [])))]);
 
@@ -190,7 +190,7 @@ exports.SETUP = () => ARAN.build.PROGRAM(
         ARAN.build.object(
           [
             [
-              ARAN.build.primitive("has"),
+              "has",
               ARAN.build.function(
                 false,
                 ["target", "key"],
@@ -224,7 +224,7 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                       ARAN.build.read("key"),
                       ARAN.build.read("target")))))],
             [
-              ARAN.build.primitive("get"),
+              "get",
               ARAN.build.function(
                 false,
                 ["target", "key", "receiver"],
@@ -247,7 +247,7 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                       ARAN.build.read("target"),
                       ARAN.build.read("key")))))],
             [
-              ARAN.build.primitive("set"),
+              "set",
               ARAN.build.function(
                 false,
                 ["target", "key", "value", "receiver"],
@@ -259,7 +259,7 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                       ARAN.build.read("key"),
                       ARAN.build.read("value")))))],
             [
-              ARAN.build.primitive("deleteProperty"),
+              "deleteProperty",
               ARAN.build.function(
                 false,
                 ["target", "key"],
@@ -292,14 +292,14 @@ exports.SETUP = () => ARAN.build.PROGRAM(
           ARAN.build.primitive("SANDBOX_HANDLERS"),
           ARAN.build.object([
             [
-              ARAN.build.primitive("has"),
+              "has",
               ARAN.build.function(
                 false,
                 ["target", "key"],
                 ARAN.build.Return(
                   ARAN.build.primitive(true)))],
             [
-              ARAN.build.primitive("get"),
+              "get",
               ARAN.build.function(
                 false,
                 ["target", "key", "receiver"],
@@ -336,14 +336,14 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                           ARAN.build.read("key"),
                           ARAN.build.primitive(" is not defined"))]))))],
             [
-              ARAN.build.primitive("set"),
+              "set",
               ARAN.build.get(
                 ARAN.build.get(
                   ARAN.build.read(ARAN.namespace),
                   ARAN.build.primitive("WITH_HANDLERS")),
                 ARAN.build.primitive("set"))],
             [
-              ARAN.build.primitive("deleteProperty"),
+              "deleteProperty",
               ARAN.build.get(
                 ARAN.build.get(
                   ARAN.build.read(ARAN.namespace),
@@ -371,21 +371,21 @@ exports.SETUP = () => ARAN.build.PROGRAM(
           ARAN.build.object(
             [
               [
-                ARAN.build.primitive("has"),
+                "has",
                 ARAN.build.get(
                   ARAN.build.get(
                     ARAN.build.read(ARAN.namespace),
                     ARAN.build.primitive("SANDBOX_HANDLERS")),
                   ARAN.build.primitive("has"))],
               [
-                ARAN.build.primitive("get"),
+                "get",
                 ARAN.build.get(
                   ARAN.build.get(
                     ARAN.build.read(ARAN.namespace),
                     ARAN.build.primitive("SANDBOX_HANDLERS")),
                   ARAN.build.primitive("get"))],
               [
-                ARAN.build.primitive("set"),
+                "set",
                 ARAN.build.function(
                   false,
                   ["target", "key", "value", "receiver"],
@@ -412,7 +412,7 @@ exports.SETUP = () => ARAN.build.PROGRAM(
                               ARAN.build.read("key"),
                               ARAN.build.primitive(" is not defined"))])))))],
               [
-                ARAN.build.primitive("deleteProperty"),
+                "deleteProperty",
                 ARAN.build.get(
                   ARAN.build.get(
                     ARAN.build.read(ARAN.namespace),

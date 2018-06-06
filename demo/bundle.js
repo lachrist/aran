@@ -38,8 +38,8 @@ const dead = (advice, target) => SandboxScenario(
   callback("dead-"+advice+"-"+target));
 
 dead("apply", "factorial");
-live("apply-explicit", "factorial");
-live("apply", "factorial");
+live("apply-regular-api", "factorial");
+live("apply-live-api", "factorial");
 live("empty", "empty");
 live("eval", "dynamic");
 live("forward", "empty");

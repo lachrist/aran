@@ -7,22 +7,22 @@
     "email": "lachrist@vub.ac.be"
   },
   "files": [
-    "src/",
-    "live.js"
+    "src/"
   ],
-  "main": "src/index.js",
+  "main": "src/main.js",
   "repository": "lachrist/aran",
   "homepage": "http://github.com/lachrist/aran",
   "license": "MIT",
   "dependencies": {
-    "acorn": "5.4.1",
-    "astring": "1.2.0",
     "array-lite": "0.1.0"
   },
   "devDependencies": {
-    "testrumenter": "0.0.0",
+    "acorn": "5.4.1",
+    "aran-live": "0.0.0",
+    "astring": "1.2.0",
     "browserify": "16.1.0",
-    "sandbox-scenario": "0.0.12"
+    "sandbox-scenario": "0.0.12",
+    "testrumenter": "0.0.0"
   },
   "keywords": [
     "JavaScript",

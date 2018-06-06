@@ -1,4 +1,5 @@
-const AranLive = require("aran/live");
+const Aran = require("aran");
+const AranLive = require("aran-live");
 
 const advice = {};
 const scopes = new WeakMap();
@@ -8,8 +9,8 @@ const cstack = [];
 const saving = {};
 
 const bind = (frame, identifier) => {
-  if (identifier.startsWith(aranlive.namespace))
-    return false;
+  // if (identifier.startsWith(aranlive.namespace))
+  //   return false;
   if (!(identifier in frame.binding))
     return false;
   if (frame.type !== "with")
@@ -184,7 +185,7 @@ advice.throw = (value, serial) =>
 advice.test = (value, serial) =>
   consume("test", [], value, serial);
 advice.eval = (value, serial) =>
-  aranlive.instrument(consume("eval", [], value, serial), serial);
+  instrument(consume("eval", [], value, serial), serial);
 advice.return = (scope, value, serial) => {
   cstack.pop();
   return consume("return", [], value, serial);
@@ -299,16 +300,12 @@ advice.delete = (value1, value2, serial) => combine(
 advice.array = (values, serial) => combine(
   values,
   "array", [cut(values.length)], serial);
-advice.object = (properties, serial) => {
-  const object = {};
-  const mproperties = properties.map((property) => {
-    object[property[0]] = property[1];
-    return "["+vstack.splice(-2, 1)+","+vstack.pop()+"]";
-  });
-  return combine(object, "object", ["["+mproperties.reverse()+"]"], serial);
+advice.object = (keys, object, serial) => {
+  const strings = keys.reverse().map((key) => JSON.stringify(key)+":"+vstack.pop());
+  return combine(object, "object", ["{"+strings.reverse().join(",")+"}"], serial);
 };
 
 // The sandbox must be activated to output the same result as shadow-value.
 advice.SANDBOX = global;
-const aranlive = AranLive(advice, {sandbox:true});
-module.exports = aranlive.instrument;
+const instrument = AranLive(Aran({sandbox:true}), advice);
+module.exports = (script, source) => instrument(script);

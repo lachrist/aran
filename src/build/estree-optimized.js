@@ -130,19 +130,17 @@ exports.object = (properties) => ({
   type: "ObjectExpression",
   AranPure: ArrayLite.every(
     properties,
-    (property) => property[0].AranPure && property[1].AranPure),
+    (property) => property[1].AranPure),
   properties: properties.map((property) => ({
     type: "Property",
-    computed: !identifiable(property[0]),
+    computed: false,
     shorthand: false,
     method: false,
     kind: "init",
-    key: (
-      identifiable(property[0]) ?
-      {
-        type: "Identifier",
-        name: property[0].value} :
-      property[0]),
+    key: {
+      type: "Literal",
+      value: property[0]
+    },
     value: property[1]
   }))});
 

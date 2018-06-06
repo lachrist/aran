@@ -5,8 +5,8 @@ const identity = (argument) => argument;
 const primitive = (primitive) => ARAN.build.primitive(primitive);
 const read = (string) => ARAN.build.read(string);
 const array = (expressions) => ARAN.build.array(expressions);
-const object = (expressions) => ARAN.build.array(
-  ArrayLite.map(expressions, array));
+const order = (strings) => ARAN.build.array(
+  ArrayLite.map(strings, ARAN.build.primitive));
 
 exports.computers = {
   // Combiners //
@@ -16,13 +16,13 @@ exports.computers = {
   delete: [identity, identity],
   get: [identity, identity],
   invoke: [identity, identity, array],
-  object: [object],
   set: [identity, identity, identity],
   unary: [primitive, identity]};
 
 exports.modifiers = {
   // Combiners //
   array: [identity],
+  object: [order, identity],
   // Producers //
   arrival: [primitive, identity],
   begin: [primitive, identity],

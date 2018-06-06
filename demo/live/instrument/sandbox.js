@@ -1,4 +1,5 @@
-const AranLive = require("aran/live");
+const Aran = require("aran");
+const AranLive = require("aran-live");
 const sandbox = Object.create(global);
 sandbox.Date = () => "APRIL FOOL";
 const check_this = (strict, scope, serial) => {
@@ -6,9 +7,9 @@ const check_this = (strict, scope, serial) => {
     scope.this = sandbox;
   return scope;
 };
-const aranlive = AranLive({
+const instrument = AranLive(Aran({sandbox:true}), {
   SANDBOX: sandbox,
   begin: check_this,
   arrival: check_this
-}, {sandbox:true});
-module.exports = (script, source) => aranlive.instrument(script);
+});
+module.exports = (script, source) => instrument(script);

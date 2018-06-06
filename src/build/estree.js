@@ -74,11 +74,14 @@ exports.object = (properties) => ({
   type: "ObjectExpression",
   properties: properties.map((property) => ({
     type: "Property",
-    computed: true,
+    computed: false,
     shorthand: false,
     method: false,
     kind: "init",
-    key: property[0],
+    key: {
+      type: "Literal",
+      value: property[0]
+    },
     value: property[1]
   }))});
 

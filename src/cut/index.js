@@ -9,6 +9,8 @@ const ContainArguments = require("./contain-arguments.js");
 const Boolean = global.Boolean;
 const Array_isArray = Array.isArray;
 
+const first = (array) => array[0];
+
 module.exports = (pointcut) => {
 
   const traps = Traps(pointcut);
@@ -167,7 +169,7 @@ module.exports = (pointcut) => {
                       ArrayLite.map(
                         ARAN.node.AranScope,
                         (string) => [
-                          ARAN.build.primitive(string),
+                          string,
                           ARAN.build.read(string)])) :
                     ARAN.build.primitive(null))))),
             statements,
@@ -228,6 +230,10 @@ module.exports = (pointcut) => {
       "binary"],
     (key) => cut[key] = traps[key]);
 
+  cut.object = (properties) => traps.object(
+    ArrayLite.map(properties, first),
+    ARAN.build.object(properties));
+
   cut.array = (elements) => traps.array(
     ARAN.build.array(elements));
 
@@ -280,19 +286,19 @@ module.exports = (pointcut) => {
                 ARAN.build.object(
                   [
                     [
-                      ARAN.build.primitive("callee"),
+                      "callee",
                       ARAN.build.read("callee")],
                     [
-                      ARAN.build.primitive("new"),
+                      "new",
                       ARAN.build.binary(
                         "!==",
                         ARAN.build.read("new.target"),
                         ARAN.build.primitive(void 0))],
                     [
-                      ARAN.build.primitive("this"),
+                      "this",
                       ARAN.build.read("this")],
                     [
-                      ARAN.build.primitive("arguments"),
+                      "arguments",
                       ARAN.build.read("arguments")]]))),
             statements)),
         "length",

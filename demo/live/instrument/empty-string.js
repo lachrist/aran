@@ -1,3 +1,6 @@
-const AranLive = require("aran/live");
-const aranlive = AranLive({}, {output:"String"});
-module.exports = (script, source) => aranlive.instrument(script);
+const Acorn = require("acorn");
+const Aran = require("aran");
+global.ADVICE = {};
+const aran = Aran({namespace:"ADVICE", output:"String"});
+global.eval(aran.setup());
+module.exports = (script, source) => aran.weave(Acorn.parse(script));

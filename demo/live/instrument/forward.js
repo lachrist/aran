@@ -1,14 +1,5 @@
-const AranLive = require("aran/live");
-
-const print = (value) => {
-  if (typeof value === "function")
-    return "function";
-  if (typeof value === "object")
-    return value ? "object" : "null";
-  if (typeof value === "string")
-    return JSON.stringify(value);
-  return String(value);
-};
+const Aran = require("aran");
+const AranLive = require("aran-live");
 
 const advice = {};
 
@@ -23,6 +14,7 @@ const pass = function () { return arguments[arguments.length-2] };
   "load",
   "save",
   "catch",
+  "object",
   "primitive",
   "regexp",
   "closure",
@@ -68,14 +60,19 @@ advice.binary = (operator, left, right, serial) => eval("left "+operator+" right
 advice.get = (object, key, serial) => object[key];
 advice.set = (object, key, value, serial) => object[key] = value;
 advice.delete = (object, key, serial) => delete object[key];
-advice.object = (properties, serial) => properties.reduce((object, property) => {
-  object[property[0]] = property[1];
-  return object;
-}, {});
 
 //////////////////////////////
 // Tracer (uncomment below) //
 //////////////////////////////
+// const print = (value) => {
+//   if (typeof value === "function")
+//     return "function";
+//   if (typeof value === "object")
+//     return value ? "object" : "null";
+//   if (typeof value === "string")
+//     return JSON.stringify(value);
+//   return String(value);
+// };
 // Object.keys(advice).forEach((name) => {
 //   const trap = advice[name];
 //   advice[name] = function () {
@@ -84,5 +81,5 @@ advice.object = (properties, serial) => properties.reduce((object, property) => 
 //   };
 // });
 
-const aranlive = AranLive(advice);
-module.exports = (script, source) => aranlive.instrument(script);
+const instrument = AranLive(Aran(), advice);
+module.exports = (script, source) => instrument(script);
