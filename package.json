@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "acorn": "5.4.1",
-    "aran-live": "0.0.0",
+    "aran-live": "0.0.1",
     "astring": "1.2.0",
     "browserify": "16.1.0",
     "sandbox-scenario": "0.0.12",
