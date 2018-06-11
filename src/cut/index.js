@@ -334,24 +334,29 @@ module.exports = (pointcut) => {
   cut.regexp = (pattern, flags) => traps.regexp(
     ARAN.build.regexp(pattern, flags));
 
-  cut.write = (
-    ARAN.sandbox ?
-    (identifier, expression) => (
-      ARAN.node.AranStrict ?
-      ARAN.build.sequence(
-        [
-          Meta.declaration(false),
-          ARAN.build.write(
-            SanitizeIdentifier(identifier),
-            traps.write(identifier, expression)),
-          Meta.declaration(true),
-          ARAN.build.read(SanitizeIdentifier(identifier))]) :
-      ARAN.build.write(
-        SanitizeIdentifier(identifier),
-        traps.write(identifier, expression))) :
-    (identifier, expression) => ARAN.build.write(
-      SanitizeIdentifier(identifier),
-      traps.write(identifier, expression)));
+  cut.write = (identifier, expression) => ARAN.build.write(
+    SanitizeIdentifier(identifier),
+    traps.write(identifier, expression));
+
+  // TODO think about sandboxing (set traps on declaration) and strict mode
+  // (
+  //   ARAN.sandbox ?
+  //   (identifier, expression) => (
+  //     ARAN.node.AranStrict ?
+  //     ARAN.build.sequence(
+  //       [
+  //         Meta.declaration(false),
+  //         ARAN.build.write(
+  //           SanitizeIdentifier(identifier),
+  //           traps.write(identifier, expression)),
+  //         Meta.declaration(true),
+  //         ARAN.build.read(SanitizeIdentifier(identifier))]) :
+  //     ARAN.build.write(
+  //       SanitizeIdentifier(identifier),
+  //       traps.write(identifier, expression))) :
+  //   (identifier, expression) => ARAN.build.write(
+  //     SanitizeIdentifier(identifier),
+  //     traps.write(identifier, expression)));
 
   cut.Declare = (kind, identifier, expression) => ARAN.build.Declare(
     kind,
