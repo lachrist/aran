@@ -1,15 +1,22 @@
+const Acorn = require("acorn");
 const Aran = require("aran");
-const AranLive = require("aran-live");
-const sandbox = Object.create(global);
-sandbox.Date = () => "APRIL FOOL";
+const Astring = require("astring");
+// Advice //
 const check_this = (strict, scope, serial) => {
   if (scope && scope.this === global)
-    scope.this = sandbox;
+    scope.this = ADVICE.SANDBOX;
   return scope;
 };
-const instrument = AranLive(Aran({sandbox:true}), {
-  SANDBOX: sandbox,
+global.ADVICE = {
+  SANDBOX: Object.create(global),
   begin: check_this,
   arrival: check_this
-});
-module.exports = (script, source) => instrument(script);
+};
+ADVICE.SANDBOX.Date = () => "APRIL FOOL";
+// Setup //
+const aran = Aran({namespace:"ADVICE"});
+global.eval(Astring.generate(aran.setup()));
+module.exports = (script) => Astring.generate(aran.weave(
+  Acorn.parse(script),
+  ["begin", "arrival"],
+  {sandbox:true}));

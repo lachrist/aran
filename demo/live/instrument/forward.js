@@ -1,7 +1,11 @@
+const Acorn = require("acorn");
 const Aran = require("aran");
-const AranLive = require("aran-live");
+const Astring = require("astring");
 
-const advice = {};
+////////////
+// Advice //
+////////////
+global.ADVICE = {};
 
 ///////////////
 // Modifiers //
@@ -30,7 +34,7 @@ const pass = function () { return arguments[arguments.length-2] };
   "with",
   "write",
   "declare",
-].forEach((name) => { advice[name] = pass });
+].forEach((name) => { ADVICE[name] = pass });
 
 ///////////////
 // Informers //
@@ -47,19 +51,19 @@ const noop = () => {};
   "block",
   "label",
   "break"
-].forEach((name) => { advice[name] = noop });
+].forEach((name) => { ADVICE[name] = noop });
 
 ///////////////
 // Computers //
 ///////////////
-advice.apply = (callee, values, serial) => callee(...values);
-advice.construct = (callee, values, serial) => new callee(...values);
-advice.invoke = (object, key, values, serial) => Reflect.apply(object[key], object, values);
-advice.unary = (operator, argument, serial) => eval(operator+" argument");
-advice.binary = (operator, left, right, serial) => eval("left "+operator+" right");
-advice.get = (object, key, serial) => object[key];
-advice.set = (object, key, value, serial) => object[key] = value;
-advice.delete = (object, key, serial) => delete object[key];
+ADVICE.apply = (callee, values, serial) => callee(...values);
+ADVICE.construct = (callee, values, serial) => new callee(...values);
+ADVICE.invoke = (object, key, values, serial) => Reflect.apply(object[key], object, values);
+ADVICE.unary = (operator, argument, serial) => eval(operator+" argument");
+ADVICE.binary = (operator, left, right, serial) => eval("left "+operator+" right");
+ADVICE.get = (object, key, serial) => object[key];
+ADVICE.set = (object, key, value, serial) => object[key] = value;
+ADVICE.delete = (object, key, serial) => delete object[key];
 
 //////////////////////////////
 // Tracer (uncomment below) //
@@ -73,13 +77,19 @@ advice.delete = (object, key, serial) => delete object[key];
 //     return JSON.stringify(value);
 //   return String(value);
 // };
-// Object.keys(advice).forEach((name) => {
-//   const trap = advice[name];
-//   advice[name] = function () {
+// Object.keys(ADVICE).forEach((name) => {
+//   const trap = ADVICE[name];
+//   ADVICE[name] = function () {
 //     console.log(name+" "+Array.from(arguments).map(print).join(" "));
 //     return Reflect.apply(trap, this, arguments);
 //   };
 // });
 
-const instrument = AranLive(Aran(), advice);
-module.exports = (script, source) => instrument(script);
+///////////
+// Setup //
+///////////
+const aran = Aran({namespace:"ADVICE"});
+global.eval(Astring.generate(aran.setup()));
+module.exports = (script) => Astring.generate(aran.weave(
+  Acorn.parse(script),
+  true));

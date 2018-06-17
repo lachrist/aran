@@ -10,25 +10,30 @@ Aran can also be used as a desugarizer much like [babel](https://babeljs.io).
 ## Getting Started
 
 ```sh
-npm install aran aran-live
+npm install acorn aran astring
 ```
 
 ```js
+const Acorn = require("acorn");
 const Aran = require("aran");
-const AranLive = require("aran-live");
-const instrument = AranLive(Aran(), {
+const Astring = require("astring");
+global.ADVICE = {
   binary: (operator, left, right, serial) => {
     const result = eval("left "+operator+" right");
-    console.log(left+" "+operator+" "+right+" = "+result);
+    console.log(left+" "+operator+" "+right+" >>> "+result);
     return result;
   }
-});
-global.eval(instrument("'Hello'+'World'+'!'"));
+};
+const aran = Aran({namespace:"ADVICE"});
+global.eval(Astring.generate(aran.setup()));
+const estree1 = Acorn.parse("'Hello'+'World'+'!'");
+const estree2 = aran.weave(estree2, ["binary"]);
+global.eval(Astring.generate(estree2));
 ```
 
 ```txt
-Hello + World = HelloWorld
-HelloWorld + ! = HelloWorld!
+Hello + World >>> HelloWorld
+HelloWorld + ! >>> HelloWorld!
 ```
 
 The code transformation performed by Aran essentially consists in inserting calls to functions called *traps* at [ESTree](https://github.com/estree/estree) nodes specified by the user.
@@ -42,14 +47,10 @@ This terminology is borrowed from [aspect-oriented programming](https://en.wikip
 ![weaving](img/weaving.png)
 
 When code weaving happens on the same process that evaluates weaved code, it is called *live weaving*.
-This is the case for [instrument/apply-regular-api.js](https://cdn.rawgit.com/lachrist/aran/40e658af/demo/output/live-apply-regular-api-factorial.html) which performs the same analysis as [demo/dead/apply](demo/dead/apply).
+This is the case for [demo/live/instrument/apply.js](https://cdn.rawgit.com/lachrist/aran/40e658af/demo/output/live-apply-factorial.html) which performs the same analysis as [demo/dead/apply](demo/dead/apply).
 Live weaving enables direct communication between an advice and its associated Aran's instance.
 For instance, `aran.node(serial)` can be invoked by the advice to retrieve the line index of the node that triggered a trap.
 An other good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
-
-When performing live weaving, [AranLive](https://github.com/lachrist/aran-live) offers a simpler interface which hides the complexity linked to pointcut and setup.
-This alternative API also performs parsing with [acorn](https://github.com/acornjs/acorn) and code generation with [astring](https://github.com/davidbonnet/astring). 
-This simpler API is demonstrated at [demo/live/instrument/apply-live-api.js](https://cdn.rawgit.com/lachrist/aran/40e658af/demo/output/live-apply-live-api-factorial.html).
 
 ## Demonstrators
 
@@ -83,9 +84,10 @@ This simpler API is demonstrated at [demo/live/instrument/apply-live-api.js](htt
 2) There exists loopholes that will cause the target program to behave differentially when analyzed, this is discussed in [Known Heisenbugs](#known-heisenbugs).
 3) Aran does not provide any facilities for instrumenting modularized JavaScript applications.
    To instrument server-side node applications and client-side browser applications we rely on a separate module called [Otiluke](https://github.com/lachrist/otiluke).
+   You can either combine these module manually or used [aran-lite](https://github.com/lachrist/linvail) which is simpler but also less generic.
 4) Aran does not offer an out-of-the-box interface for tracking primitive values through the object graph.
    This feature is crucial for data-flow centric dynamic analyses such as taint analysis and symbolic execution.
-   In our research, we track primitive values through the object graph with a complementary npm module called [Linvail](https://github.com/lachrist/linvail).
+   In our research, we track primitive values through the object graph with [aran-access](https://github.com/lachrist/linvail) which implements an acces control system around Aran's instrumented code.
 
 ## API
 
@@ -120,13 +122,13 @@ The object refers to the estree node where the call occured.
 
 ### `aran = require("aran")(options)`
 
-Create a new Aran instance.
-* `options.namespace :: string`, default `"META"`:
+Create a new Aran instance; normally, you would only be interested by the `namespace` option.
+* `options.namespace :: string`, default `"ADVICE"`:
   The name of the global variable holding the advice.
   Code instrumented by this aran instance will not be able to read, write or shadow this variable.
-* `options.output :: string`, default `"EstreeOptimized"`:
-  The output format of `aran.weave` and `aran.setup`.
-  Valid values are:
+* `options.output :: string | object`, default `"EstreeOptimized"`:
+  Defines the output format of `aran.weave` and `aran.setup`.
+  It can be an object resembling the modules of [/lib/build](/lib/build) or one of the string:
   * `"ESTree"`:
     Regular ESTree.
   * `"ESTreeOptimized"`:
@@ -140,12 +142,7 @@ Create a new Aran instance.
     This should result in a slightly faster instrumentation than the other output options.
 * `options.nocache :: boolean`, default `false`:
   A boolean indicating whether aran should keep an array of nodes indexed by serial number.
-  A truthy options will result in a faster execution of `aran.node`.
-* `options.sandbox :: boolean`, default `false`:
-  A boolean indicating whether the user will provide a custom `GLOBAL` property to the advice to serve as [global object](https://developer.mozilla.org/en-US/docs/Glossary/Global_object) for the instrumented code.
-  If this options is truthy, code weaved without parent will contain a [with statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) whose environment object is a [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
-  This proxy will also solve a transparency breakage by restoring identifiers sanitized by Aran.
-  This is expected to produce noticeable performance overhead.
+  A truthy options will result in a slower execution of `aran.node` for a slight memory gain.
 
 ### `output = aran.setup()`
 
@@ -162,12 +159,12 @@ META.REFERENCE_ERROR         = META.REFERENCE_ERROR        || ReferenceError;
 META.OBJECT_DEFINE_PROPERTY  = META.OBJECT_DEFINE_PROPERTY || Object.defineProperty;
 META.REFLECT_APPLY           = META.REFLECT_APPLY          || Reflect.apply;
 META.WITH_HANDLERS           = {...};
-META.SANDBOX_HANDLERS        = {...};             // if options.sandbox is truthy
-META.STRICT_SANDBOX_HANDLERS = {...};             // if options.sandbox is truthy
-META.EVAL("this").$$eval = META.EVAL("this").eval // if options.sandbox is falsy
+META.SANDBOX_HANDLERS        = {...};
+META.STRICT_SANDBOX_HANDLERS = {...};
+META.EVAL("this").$$eval = META.EVAL("this").eval
 ```
 
-### `output = aran.weave(estree, pointcut, sort)`
+### `output = aran.weave(estree, pointcut, {scope, sandbox})`
 
 Desugar and insert calls to trap functions at nodes specified by the pointcut.
 * `estree :: object`:
@@ -195,13 +192,16 @@ Desugar and insert calls to trap functions at nodes specified by the pointcut.
     Never insert any trap.
   * `*`:
     All traps are to be inserted whenever applicable.
+* `sandbox :: boolean`, default `false`:
+  A boolean indicating whether global code should use the `SANDBOX` property of the advice as the top-level frame.
+  This is achieve by combining [ECMAScript Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) and the [With Statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with).
 * `scope :: array | string | falsy | object | string`:
   This value indicates in which scope the program will be evaluated.
-  This value will be used to set `estree.AranScope`.
+  This value will be used to compute `estree.AranScope`.
   * `array`:
     The code will be evaluated as global code.
     The array should contain variable names predefined in the program's block scope.
-    The instrumented code will reasigned these variables in alphabetical order.
+    The instrumented code will reassign these variables in alphabetical order.
   * `"commonjs"`:
     Alias for `["exports", "module", "require", "this"]`
   * `"node"`
@@ -215,7 +215,6 @@ Desugar and insert calls to trap functions at nodes specified by the pointcut.
     The object should be an estree referring to the direct eval call.
   * `number`:
     Same as `object` but pass a serial number instead; `aran.weave(script, pointcut, node)` is equivalent to `aran.weave(script, pointcut, aran.node(serial))`.
-
 * `output :: object | string`:
   The instrumented output whose format depends on `options.output`.
 
@@ -681,8 +680,8 @@ Here are the known heisenbugs that Aran may introduce by itself:
   new bar();
   ```
 
-<!-- ## Improvements Idea
-
+<!--
+## Improvements Idea
 * Pass actual scope instead of puzzling `{callee,this,new,arguments}`; e.g. `{this,new.target,arguments,x0,x1}`.
   Clearer semantic but analyses keeping the arguments and the variables in sync is challenging in the presence of destructuring assignment and spread syntax.
  -->

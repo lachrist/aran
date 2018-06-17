@@ -422,6 +422,10 @@ advice.object = (keys, value, serial) => {
 
 const aran = Aran({namespace:"ADVICE"});
 global.ADVICE = advice;
-const instrument = (script, scope) => Astring.generate(aran.weave(Acorn.parse(script), true, scope));
 global.eval(Astring.generate(aran.setup()));
-module.exports = (script, source) => instrument(script);
+const instrument = (script, serial) => Astring.generate(aran.weave(
+  Acorn.parse(script),
+  true,
+  {scope:serial}));
+
+module.exports = instrument;

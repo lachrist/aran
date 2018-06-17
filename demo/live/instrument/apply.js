@@ -1,6 +1,7 @@
 const Acorn = require("acorn");
 const Aran = require("aran");
 const Astring = require("astring");
+// Advice //
 Function.prototype.toString = function () { return this.name || "anonymous" };
 let depth = "";
 global.ADVICE = {
@@ -15,8 +16,9 @@ global.ADVICE = {
     return result;
   }
 };
-const pointcut = ["apply"];
+// Setup //
 const aran = Aran({namespace:"ADVICE"});
 global.eval(Astring.generate(aran.setup()));
-module.exports = (script, source) =>
-  Astring.generate(aran.weave(Acorn.parse(script, {locations:true}), pointcut));
+module.exports = (script) => Astring.generate(aran.weave(
+  Acorn.parse(script, {locations:true}),
+  ["apply"]));

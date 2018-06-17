@@ -1,15 +1,15 @@
 {
   "name": "aran",
   "description": "Aran is a JavaScript instrumenter for building dynamic analysis tools",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "author": {
     "name": "Laurent Christophe",
     "email": "lachrist@vub.ac.be"
   },
   "files": [
-    "src/"
+    "lib/"
   ],
-  "main": "src/main.js",
+  "main": "lib/main.js",
   "repository": "lachrist/aran",
   "homepage": "http://github.com/lachrist/aran",
   "license": "MIT",

@@ -1,16 +1,20 @@
+const Acorn = require("acorn");
 const Aran = require("aran");
-const AranLive = require("aran-live");
+const Astring = require("astring");
 
-const advice = {};
+///////////
+// State //
+///////////
 const scopes = new WeakMap();
 const vstack = [];
 const estack = [];
 const cstack = [];
 const saving = {};
 
+/////////////
+// Helpers //
+/////////////
 const bind = (frame, identifier) => {
-  // if (identifier.startsWith(aranlive.namespace))
-  //   return false;
   if (!(identifier in frame.binding))
     return false;
   if (frame.type !== "with")
@@ -55,6 +59,11 @@ const combine = (value, name, infos, serial) => {
   return value;
 };
 
+////////////
+// Advice //
+////////////
+global.ADVICE = {SANDBOX:global};
+
 ///////////////
 // Producers //
 ///////////////
@@ -80,7 +89,7 @@ const fhandlers = {
     }
   }
 };
-advice.arrival = (strict, scope, serial) => {
+ADVICE.arrival = (strict, scope, serial) => {
   cstack.push(scopes.get(scope.callee).concat([{
     type: "closure",
     binding: Object.create(null)
@@ -92,7 +101,7 @@ advice.arrival = (strict, scope, serial) => {
     arguments: produce("arrival-arguments", [strict], scope.arguments, serial)
   };
 };
-advice.begin = (strict, scope, value, serial) => {
+ADVICE.begin = (strict, scope, value, serial) => {
   estack.push(null);
   if (scope) {
     cstack.push([{
@@ -110,21 +119,21 @@ advice.begin = (strict, scope, value, serial) => {
   }
   return scope;
 };
-advice.primitive = (value, serial) =>
+ADVICE.primitive = (value, serial) =>
   produce("primitive", [], value, serial);
-advice.regexp = (value, serial) =>
+ADVICE.regexp = (value, serial) =>
   produce("regexp", [], value, serial);
-advice.load = (name, value, serial) => {
+ADVICE.load = (name, value, serial) => {
   vstack.push(saving[name]);
   return value;
 }
-advice.discard = (identifier, value, serial) =>
+ADVICE.discard = (identifier, value, serial) =>
   produce("discard", ["'"+identifier+"'"], value, serial);
-advice.closure = (value, serial) => {
+ADVICE.closure = (value, serial) => {
   scopes.set(value, cstack[cstack.length-1].slice());
   return produce("closure", [], new Proxy(value, fhandlers), serial);
 };
-advice.read = (identifier, value, serial) => {
+ADVICE.read = (identifier, value, serial) => {
   let call = cstack[cstack.length-1];
   let index = call.length;
   while (index--) {
@@ -138,7 +147,7 @@ advice.read = (identifier, value, serial) => {
   };
   return produce("global-read", ["'"+identifier+"'"], value, null);
 };
-advice.catch = (value, serial) => {
+ADVICE.catch = (value, serial) => {
   while (cstack.length) {
     let call = cstack[cstack.length-1];
     let index = call.length;
@@ -158,39 +167,39 @@ advice.catch = (value, serial) => {
 ///////////////
 // Consumers //
 ///////////////
-advice.with = (value, serial) => {
+ADVICE.with = (value, serial) => {
   cstack[cstack.length-1].push({type:"with", binding:value});
   return consume("with", [], value, serial);
 };
-advice.success = (scope, value, serial) => {
+ADVICE.success = (scope, value, serial) => {
   vstack.push(estack.pop());
   return scope ? consume("success", [], value, serial) : value;
 };
-advice.failure = (scope, error, serial) => {
+ADVICE.failure = (scope, error, serial) => {
   estack.pop();
   if (scope)
     cleanup();
   return error;
 };
-advice.completion = (value, serial) => {
+ADVICE.completion = (value, serial) => {
   estack[estack.length-1] = vstack.pop();
   return value;
 };
-advice.save = (name, value, serial) => {
+ADVICE.save = (name, value, serial) => {
   saving[name] = vstack.pop();
   return value;
 };
-advice.throw = (value, serial) =>
+ADVICE.throw = (value, serial) =>
   consume("throw", [], value, serial);
-advice.test = (value, serial) =>
+ADVICE.test = (value, serial) =>
   consume("test", [], value, serial);
-advice.eval = (value, serial) =>
+ADVICE.eval = (value, serial) =>
   instrument(consume("eval", [], value, serial), serial);
-advice.return = (scope, value, serial) => {
+ADVICE.return = (scope, value, serial) => {
   cstack.pop();
   return consume("return", [], value, serial);
 };
-advice.write = (identifier, value, serial) => {
+ADVICE.write = (identifier, value, serial) => {
   const call = cstack[cstack.length-1];
   let index = call.length;
   while (index--) {
@@ -204,7 +213,7 @@ advice.write = (identifier, value, serial) => {
   }
   return consume("global-write", ["'"+identifier+"'"], value, null);
 };
-advice.declare = (kind, identifier, value, serial) => {
+ADVICE.declare = (kind, identifier, value, serial) => {
   const call = cstack[cstack.length-1];
   let frame = call[call.length-1];
   if (kind === "var") {
@@ -228,38 +237,38 @@ advice.declare = (kind, identifier, value, serial) => {
 ///////////////
 // Informers //
 ///////////////
-advice.copy = (position, serial) => {
+ADVICE.copy = (position, serial) => {
   vstack.push(vstack[vstack.length-position]);
 };
-advice.swap = (position1, position2, serial) => {
+ADVICE.swap = (position1, position2, serial) => {
   const temporary = vstack[vstack.length-position1];
   vstack[vstack.length-position1] = vstack[vstack.length-position2];
   vstack[vstack.length-position2] = temporary;
 };
-advice.drop = (serial) => {
+ADVICE.drop = (serial) => {
   vstack.pop();
 };
-advice.end = (scope, serial) => {};
-advice.leave = (type, serial) => cstack[cstack.length-1].pop();
-advice.block = (serial) => cstack[cstack.length-1].push({
+ADVICE.end = (scope, serial) => {};
+ADVICE.leave = (type, serial) => cstack[cstack.length-1].pop();
+ADVICE.block = (serial) => cstack[cstack.length-1].push({
   type: "block",
   binding: Object.create(null)
 });
-advice.try = (serial) => cstack[cstack.length-1].push({
+ADVICE.try = (serial) => cstack[cstack.length-1].push({
   type: "try",
   binding: Object.create(null),
   recovery: vstack.length
 });
-advice.finally = (serial) => cstack[cstack.length-1].push({
+ADVICE.finally = (serial) => cstack[cstack.length-1].push({
   type: "finally",
   binding: Object.create(null)
 });
-advice.label = (boolean, label, serial) => cstack[cstack.length-1].push({
+ADVICE.label = (boolean, label, serial) => cstack[cstack.length-1].push({
   type: "label",
   binding: Object.create(null),
   label: (boolean ? "Break" : "Continue") + (label||"")
 });
-advice.break = (boolean, label, serial) => {
+ADVICE.break = (boolean, label, serial) => {
   label = (boolean ? "Break" : "Continue") + (label||"");
   const call = cstack[cstack.length-1];
   while (call.length) {
@@ -273,39 +282,47 @@ advice.break = (boolean, label, serial) => {
 // Combiners //
 ///////////////
 const cut = (length) => length ? "["+vstack.splice(-length) +"]" : "[]";
-advice.apply = (value, values, serial) => combine(
+ADVICE.apply = (value, values, serial) => combine(
   value(...values),
   "apply", [cut(values.length), vstack.pop()], serial);
-advice.invoke = (value1, value2, values, serial) => combine(
+ADVICE.invoke = (value1, value2, values, serial) => combine(
   Reflect.apply(value1[value2], value1, values),
   "invoke", [cut(values.length), vstack.pop(), vstack.pop()], serial);
-advice.construct = (value, values, serial) => combine(
+ADVICE.construct = (value, values, serial) => combine(
   new value(...values),
   "construct", [cut(values.length), vstack.pop()], serial);
-advice.unary = (operator, value, serial) => combine(
+ADVICE.unary = (operator, value, serial) => combine(
   eval(operator+" value"),
   "unary", [vstack.pop(), "'"+operator+"'"], serial);
-advice.binary = (operator, value1, value2, serial) => combine(
+ADVICE.binary = (operator, value1, value2, serial) => combine(
   eval("value1 "+operator+" value2"),
   "binary", [vstack.pop(), vstack.pop(), "'"+operator+"'"], serial);
-advice.get = (value1, value2, serial) => combine(
+ADVICE.get = (value1, value2, serial) => combine(
   value1[value2],
   "get", [vstack.pop(), vstack.pop()], serial);
-advice.set = (value1, value2, value3, serial) => combine(
+ADVICE.set = (value1, value2, value3, serial) => combine(
   value1[value2] = value3,
   "set", [vstack.pop(), vstack.pop(), vstack.pop()], serial);
-advice.delete = (value1, value2, serial) => combine(
+ADVICE.delete = (value1, value2, serial) => combine(
   delete value1[value2],
   "delete", [vstack.pop(), vstack.pop()], serial);
-advice.array = (values, serial) => combine(
+ADVICE.array = (values, serial) => combine(
   values,
   "array", [cut(values.length)], serial);
-advice.object = (keys, object, serial) => {
+ADVICE.object = (keys, object, serial) => {
   const strings = keys.reverse().map((key) => JSON.stringify(key)+":"+vstack.pop());
   return combine(object, "object", ["{"+strings.reverse().join(",")+"}"], serial);
 };
 
+///////////
+// Setup //
+///////////
 // The sandbox must be activated to output the same result as shadow-value.
-advice.SANDBOX = global;
-const instrument = AranLive(Aran({sandbox:true}), advice);
-module.exports = (script, source) => instrument(script);
+const aran = Aran({namespace:"ADVICE"});
+global.eval(Astring.generate(aran.setup()));
+const instrument = (script, serial) => Astring.generate(aran.weave(
+  Acorn.parse(script),
+  true,
+  {sandbox:true, scope:serial}));
+module.exports = instrument;
+
