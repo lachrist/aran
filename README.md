@@ -214,7 +214,7 @@ Desugar and insert calls to trap functions at nodes specified by the pointcut.
     The code will be evaluated by a direct eval call.
     The object should be an estree referring to the direct eval call.
   * `number`:
-    Same as `object` but pass a serial number instead; `aran.weave(script, pointcut, node)` is equivalent to `aran.weave(script, pointcut, aran.node(serial))`.
+    Same as `object` but pass a serial number instead; `aran.weave(script, pointcut, {scope:node})` is equivalent to `aran.weave(script, pointcut, {scope:aran.node(serial)})`.
 * `output :: object | string`:
   The instrumented output whose format depends on `options.output`.
 
