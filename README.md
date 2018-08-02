@@ -120,13 +120,27 @@ The array's elements are variable names predefined in the program's block scope 
 An object indicates that the program will be evaluated by a direct eval call.
 The object refers to the estree node where the call occured.
 
-### `aran = require("aran")(options)`
+### `aran = require("aran")({namespace, roots, format})`
 
 Create a new Aran instance; normally, you would only be interested by the `namespace` option.
-* `options.namespace :: string`, default `"ADVICE"`:
+* `namespace :: string`, default `"ADVICE"`:
   The name of the global variable holding the advice.
   Code instrumented by this aran instance will not be able to read, write or shadow this variable.
-* `options.output :: string | object`, default `"EstreeOptimized"`:
+* `roots :: array`, default `[]`.
+  Each `estree.Program` node passed to `aran.weave` will be stored in this array.
+  The only reason why you would want to pass an non empty array is to duplicate an other aran instance.
+  ```js
+  const Aran = require("aran");
+  const aran1 = Aran({...});
+  ...
+  const state = JSON.stringify({
+    namespace: aran1.namespace,
+    roots: aran1.roots,
+    format: aran1.format
+  });
+  const aran2 = Aran(JSON.parse(state));
+  ```
+* `format :: string | object`, default `"EstreeOptimized"`:
   Defines the output format of `aran.weave` and `aran.setup`.
   It can be an object resembling the modules of [/lib/build](/lib/build) or one of the string:
   * `"ESTree"`:
@@ -139,16 +153,13 @@ Create a new Aran instance; normally, you would only be interested by the `names
     This is useful to debug Aran itself.
   * `"String"`:
     Directly produces an unoptimized and compact code string.
-    This should result in a slightly faster instrumentation than the other output options.
-* `options.nocache :: boolean`, default `false`:
-  A boolean indicating whether aran should keep an array of nodes indexed by serial number.
-  A truthy options will result in a slower execution of `aran.node` for a slight memory gain.
+    This should result in a slightly faster instrumentation than the other `format` options.
 
 ### `output = aran.setup()`
 
 Build the setup code that should be evaluated before any instrumented code.
 * `output :: string | object`:
-  The setup code whose format depends on `options.output`.
+  The setup code whose format depends on `options.format`.
 
 The setup code with `options.namespace` being `META` looks like:
 
@@ -216,26 +227,41 @@ Desugar and insert calls to trap functions at nodes specified by the pointcut.
   * `number`:
     Same as `object` but pass a serial number instead; `aran.weave(script, pointcut, {scope:node})` is equivalent to `aran.weave(script, pointcut, {scope:aran.node(serial)})`.
 * `output :: object | string`:
-  The instrumented output whose format depends on `options.output`.
-
-### `node = aran.node(serial)`
-
-Retrieve a node from its serial number.
-If `options.nocache` is truthy, this method will explore the ESTrees which has a complexity growing linearly with the depth of the trees.
-If `options.nocache` is falsy, this methods resolves to a much quicker array access.
-* `serial :: number`
-* `node :: ESTree | undefined`
-
-### `root = aran.root(serial)`
-
-Retrieve the ESTree Program node that contains the node at the given serial number.
-* `serial :: number`
-* `root :: ESTree.Program | undefined`
+  The instrumented output whose format depends on `options.format`.
 
 ### `namespace = aran.namesapce`
 
 The name of the global variable holding the advice;
 * `namespace :: string`
+
+### `roots = aran.roots`
+
+An array of all the estree program nodes visited by the Aran instance which can be used to serialize its state.
+* `roots :: array`
+
+### `nodes = aran.nodes`
+
+An array of all the estree nodes visited by the Aran instance which can be used to retrieve an AST node from a serial number.
+* `nodes :: array`
+
+### `root = aran.rootof(serial)`
+
+Retrieve the ESTree Program node that contains the node at the given serial number.
+* `serial :: number`
+* `root :: ESTree.Program | undefined`
+
+### `node = aran.node(serial)`
+
+*Deprecated*: use `aran.nodes[serial]` instead.
+
+Retrieve a node from its serial number.
+* `serial :: number`
+* `node :: ESTree | undefined`
+
+
+### `root = aran.root(serial)`
+
+*Deprecated*: use `aran.rootof(serial)` instead.
 
 ## Advice
 
