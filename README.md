@@ -20,20 +20,23 @@ const Astring = require("astring");
 global.ADVICE = {
   binary: (operator, left, right, serial) => {
     const result = eval("left "+operator+" right");
-    console.log(left+" "+operator+" "+right+" >>> "+result);
+    console.log(result+" ("+left+" "+operator+" "+right+")");
     return result;
   }
 };
-const aran = Aran({namespace:"ADVICE"});
+const aran = Aran({
+  namespace: "ADVICE",
+  pointcut: ["binary"]
+});
 global.eval(Astring.generate(aran.setup()));
 const estree1 = Acorn.parse("'Hello'+'World'+'!'");
-const estree2 = aran.weave(estree2, ["binary"]);
+const estree2 = aran.weave(estree2);
 global.eval(Astring.generate(estree2));
 ```
 
 ```txt
-Hello + World >>> HelloWorld
-HelloWorld + ! >>> HelloWorld!
+HelloWorld (Hello + World)
+HelloWorld! (HelloWorld + !)
 ```
 
 The code transformation performed by Aran essentially consists in inserting calls to functions called *traps* at [ESTree](https://github.com/estree/estree) nodes specified by the user.
@@ -49,7 +52,7 @@ This terminology is borrowed from [aspect-oriented programming](https://en.wikip
 When code weaving happens on the same process that evaluates weaved code, it is called *live weaving*.
 This is the case for [demo/live/instrument/apply.js](https://cdn.rawgit.com/lachrist/aran/ed21412d/demo/output/live-apply-factorial.html) which performs the same analysis as [demo/dead/apply](demo/dead/apply).
 Live weaving enables direct communication between an advice and its associated Aran's instance.
-For instance, `aran.node(serial)` can be invoked by the advice to retrieve the line index of the node that triggered a trap.
+For instance, `aran.nodes[serial]` can be invoked by the advice to retrieve the line index of the node that triggered a trap.
 An other good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
 
 ## Demonstrators
@@ -93,34 +96,35 @@ An other good reason for the advice to communicate with Aran arises when the tar
 
 ### Syntactic Nodes
 
-Aran visits the *statement nodes* and *expression nodes* of a given ESTree.
-Within an ESTree, a node is called statement node if it can be replaced by any other statement while conserving the syntactic validity of the program.
-Same goes for expression nodes.
-The only exception being [getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) and [setters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set) which are considered node expressions even though they cannot be replaced by non-function expressions.
-When Aran instruments a program, all its statement nodes and all its expression nodes will be annotated with the following fields:
+Aran visits all the nodes of a given ESTree and completes them with the following information:
 
+* `AranStrict :: boolean`:
+  Indicates whether the node is in [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) or not.
 * `AranSerial :: number`:
   The node's serial number.
 * `AranSerialMax :: number`:
   The maximum serial number which can be found within the node's decedents.
   This is useful to speed up node search.
-* `AranParent :: object | *`:
+* `AranParent :: object | null`:
   The node's parent.
-  If the node is of type `"Program"`, then this field will be the third argument passed to `aran.weave`. 
+  If the node is of type `"Program"`, then this field will be the third argument passed to `aran.weave`.
   This field is not enumerable to prevent `JSON.stringify` from complaining about circularity.
 * `AranParentSerial :: number | null`:
   The parent's serial number of the node (if any).
-* `AranStrict :: boolean`:
-  Indicates whether the node is in [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) or not.
+* `AranRoot :: object`:
+  The root program node from which the node originated.
+  This field is not enumerable to prevent `JSON.stringify` from complaining about circularity.
+* `AranRootSerial :: number`:
+  The the serial number of the node's root.
 
 Programs node don't have a `AranParent` property nor a `AranParentSerial` property.
 Instead they have an `AranScope` property which is either an array or an object.
 An array indicates that the program will be evaluated as global code.
 The array's elements are variable names predefined in the program's block scope -- e.g. `["exports", "module", "require", "this"]`.
 An object indicates that the program will be evaluated by a direct eval call.
-The object refers to the estree node where the call occured.
+The object refers to the estree node where the call occurred.
 
-### `aran = require("aran")({namespace, roots, format})`
+### `aran = require("aran")({namespace, roots, format, sandbox, pointcut})`
 
 Create a new Aran instance; normally, you would only be interested by the `namespace` option.
 * `namespace :: string`, default `"ADVICE"`:
@@ -154,6 +158,32 @@ Create a new Aran instance; normally, you would only be interested by the `names
   * `"String"`:
     Directly produces an unoptimized and compact code string.
     This should result in a slightly faster instrumentation than the other `format` options.
+* `sandbox :: boolean`, default `false`:
+  A boolean indicating whether global code should use the `SANDBOX` property of the advice as the top-level frame.
+  This is achieved by combining [ECMAScript Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) and the [With Statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with).
+* `pointcut :: array | function | object | falsy | *`:
+  The specification that tells Aran where to insert trap calls.
+  Four specification formats are supported:
+  * `array`:
+    An array containing the names of the traps to insert at every applicable cut point.
+    For instance, the pointcut `["binary"]` indicates aran to insert the `binary` traps whenever applicable.
+  * `function`:
+    A function that tells whether to insert a given trap at a given node.
+    For instance, the pointcut below results in aran inserting a call to the `binary` trap at every update expression:
+    ```js
+    const pointcut = (name, node) => name === "binary" && node.type === "UpdateExpression" ;
+    ```
+  * `object`:
+    An object whose keys are trap names and values are functions receiving nodes.
+    As for the `function` format, these functions should return a boolean indicating whether to insert the call.
+    For instance, the pointcut below has the same semantic as the one above:
+    ```js
+    const pointcut = { binary: (node) => node.type === "UpdateExpression" };
+    ```
+  * `falsy`:
+    Never insert any trap.
+  * `*`:
+    All traps are to be inserted whenever applicable.
 
 ### `output = aran.setup()`
 
@@ -180,32 +210,6 @@ META.EVAL("this").$$eval = META.EVAL("this").eval
 Desugar and insert calls to trap functions at nodes specified by the pointcut.
 * `estree :: object`:
   The [ESTree Program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
-* `pointcut :: array | function | object | falsy | *`:
-  The specification that tells Aran where to insert trap calls.
-  Four specification formats are supported:
-  * `array`:
-    An array containing the names of the traps to insert at every applicable cut point.
-    For instance, the poincut `["binary"]` indicates aran to insert the `binary` traps whenever applicable.
-  * `function`:
-    A function that tells whether to insert a given trap at a given node.
-    For instance, the pointcut below results in aran inserting a call to the `binary` trap at every update expression:
-    ```js
-    const pointcut = (name, node) => name === "binary" && node.type === "UpdateExpression" ;
-    ```
-  * `object`:
-    An object whose keys are trap names and values are functions receiving nodes.
-    As for the `function` format, these functions should return a boolean indicating whether to insert the call.
-    For instance, the pointcut below has the same semantic as the one above:
-    ```js
-    const pointcut = { binary: (node) => node.type === "UpdateExpression" };
-    ```
-  * `falsy`:
-    Never insert any trap.
-  * `*`:
-    All traps are to be inserted whenever applicable.
-* `sandbox :: boolean`, default `false`:
-  A boolean indicating whether global code should use the `SANDBOX` property of the advice as the top-level frame.
-  This is achieve by combining [ECMAScript Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) and the [With Statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with).
 * `scope :: array | string | falsy | object | string`:
   This value indicates in which scope the program will be evaluated.
   This value will be used to compute `estree.AranScope`.
