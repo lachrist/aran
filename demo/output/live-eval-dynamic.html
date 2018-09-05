@@ -10,7 +10,7 @@
   "type": "raw",
   "path": "/live/spawn.js",
   "editor": {},
-  "content": "(instrument) => (path, script, argv) => new Worker(URL.createObjectURL(new Blob([\n  \"this.eval(\"+instrument+\"(\"+JSON.stringify(script)+\"));\\n\",\n])));"
+  "content": "(instrument) => (path, script, argv) => new Worker(URL.createObjectURL(new Blob([\n  \"console.log = function () { \\n\",\n  \"  postMessage(Array.from(arguments).map(String).join(' ')+'\\\\n');\\n\",\n  \"};\\n\",\n  \"const instrumented = \"+instrument+\"(\"+JSON.stringify(script)+\");\\n\",\n  // Uncomment to log instrumented code\n  // \"console.log(instrumented);\\n\",\n  \"this.eval(instrumented);\"\n])));"
 };
   const PARENT_SANDBOXES = [
   {
