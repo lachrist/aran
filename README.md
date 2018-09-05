@@ -105,27 +105,27 @@ Aran visits all the nodes of a given ESTree and completes them with the followin
 * `AranSerialMax :: number`:
   The maximum serial number which can be found within the node's decedents.
   This is useful to speed up node search.
+* `AranRoot :: object`:
+  The program node from which the node originated.
+  This field is not enumerable to prevent `JSON.stringify` from complaining about circularity.
+* `AranRootSerial :: number`:
+  The serial number of the node's root.
 * `AranParent :: object | null`:
   The node's parent.
   If the node is of type `"Program"`, then this field will either refer to a direct eval call or it will be null.
   This field is not enumerable to prevent `JSON.stringify` from complaining about circularity.
-* `AranRoot :: object`:
-  The program node from which the node originated.
-  This field is not enumerable to prevent `JSON.stringify` from complaining about circularity.
 * `AranParentSerial :: number | null`:
-  The serial number of the node's parent.
-* `AranRootSerial :: number`:
-  The serial number of the node's root.
+  The serial number of the node's parent (if any).
 
 ### `aran = require("aran")({namespace, format, sandbox, pointcut, roots})`
 
 Create a new Aran instance.
-The options `namespace`, `sandbox` and `pointcut` can be modified during the lifetime of the instance.
+The options `namespace`, `format`, `sandbox` and `pointcut` can be modified during the lifetime of the instance.
 
 * `namespace :: string`, default `"__ARAN__"`:
   The name of the global variable holding the advice.
 * `format :: string | object`, default `"EstreeOptimized"`:
-  Defines the output format of `aran.weave` and `aran.setup`.
+  Defines the output format of `aran.weave(root, scope)` and `aran.setup()`.
   It can be an object resembling the modules of [/lib/build](/lib/build) or one of the string:
   * `"ESTree"`:
     Regular ESTree.
@@ -139,7 +139,7 @@ The options `namespace`, `sandbox` and `pointcut` can be modified during the lif
     Directly produces an unoptimized and compact code string.
     This should result in a slightly faster instrumentation than the other `format` options.
 * `sandbox :: boolean`, default `false`:
-  A boolean indicating whether the `SANDBOX` property of the advice should be assigned as the top-level frame of global code.
+  A boolean indicating whether the `SANDBOX` property of the advice should be used as the top-level frame of global code.
   This is achieved by combining [ECMAScript Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) and the [With Statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with).
 * `pointcut :: array | function | object | falsy | truthy`:
   The specification that tells Aran where to insert trap calls.
@@ -165,7 +165,7 @@ The options `namespace`, `sandbox` and `pointcut` can be modified during the lif
   * `truthy`:
     All traps are to be inserted whenever applicable.
 * `roots :: array`, default `[]`.
-  Each `estree.Program` node passed to `aran.weave` will be stored in this array.
+  Each `estree.Program` node passed to `aran.weave(root, scope)` will be stored in this array.
   The only reason why you would want to pass a non empty array is to duplicate an aran instance.
   ```js
   const Aran = require("aran");
@@ -177,7 +177,7 @@ The options `namespace`, `sandbox` and `pointcut` can be modified during the lif
 ### `output = aran.setup()`
 
 Build the setup code that should be evaluated before any instrumented code.
-* `output :: string | object`:
+* `output :: estree.Program | string | *`:
   The setup code whose format depends on `options.format`.
 
 The setup code with `options.namespace` being `META` looks like:
@@ -194,10 +194,10 @@ META.STRICT_SANDBOX_HANDLERS = {...};
 META.EVAL("this").$$eval = META.EVAL("this").eval
 ```
 
-### `output = aran.weave(estree, scope)`
+### `output = aran.weave(root, scope)`
 
 Desugar and insert calls to trap functions at nodes specified by the pointcut.
-* `estree :: object`:
+* `root :: estree.Program`:
   The [ESTree Program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
 * `scope :: array | string | null`, default `"global"`:
   This value indicates in which scope the program will be evaluated.
@@ -214,59 +214,25 @@ Desugar and insert calls to trap functions at nodes specified by the pointcut.
     Alias for `["this"]`.
   * `null`:
     The code will be evaluated inside a direct eval call.
-* `output :: object | string`:
+* `output :: estree.Program | string | *`:
   The instrumented output whose format depends on `options.format`.
 
 ### `aran.namespace`
 
-```
-{
-  value: string,
-  enumerable: true,
-  configurable: false,
-  writable: true
-}
-```
+Read/Write the name of the global variable holding the advice for subsequent `aran.setup()` and `aran.weave(estree, scope)` and calls.
 
 ### `aran.poincut`
 
-Read/Write the pointcut of subsequent `aran.weave(estree, scope)` calss.
-
-```
-{
-  value: array | function | object | falsy | truthy,
-  enumerable: true,
-  configurable: false,
-  writable: true
-}
-```
+Read/Write the pointcut for subsequent `aran.weave(root, scope)` calls.
 
 ### `aran.sandbox`
 
-Read/Write whether the `SANDBOX` field of the advice should substitute the global object for subsequent `aran.weave(estree, scope)` calls.
-
-```
-{
-  value: boolean,
-  enumerable: true,
-  configurable: false,
-  writable: true
-}
-```
+Read/Write whether the `SANDBOX` field of the advice should substitute the global object for subsequent `aran.weave(root, scope)` calls.
 
 ### `aran.format`
 
-Read/Write the output format of subsequent `aran.weave(estree, scope)` and `aran.setup()` calls.
+Read/Write the output format for subsequent `aran.setup()` and `aran.weave(estree, scope)` and calls.
 If a custom builder is provided (the object), the Aran instance can no longer simply be `JSON.stringify`.
-
-```
-{
-  value: string | object,
-  enumerable: true,
-  configurable: false,
-  writable: true
-}
-```
 
 ### `aran.roots`
 
