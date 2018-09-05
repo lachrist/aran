@@ -14,9 +14,10 @@ global.ADVICE = {
 };
 ADVICE.SANDBOX.Date = () => "APRIL FOOL";
 // Setup //
-const aran = Aran({namespace:"ADVICE"});
+const aran = Aran({
+  namespace: "ADVICE",
+  sandbox: true,
+  pointcut: ["begin", "arrival"]});
 global.eval(Astring.generate(aran.setup()));
-module.exports = (script) => Astring.generate(aran.weave(
-  Acorn.parse(script),
-  ["begin", "arrival"],
-  {sandbox:true}));
+module.exports = (script) =>
+  Astring.generate(aran.weave(Acorn.parse(script)));

@@ -64,7 +64,7 @@ ADVICE.success = (scope, value, serial) =>
 ADVICE.with = (value, serial) =>
   new Proxy({type:"with",inner:consume("with", [], value, serial)}, handlers);
 ADVICE.eval = (value, serial) =>
-  module.exports(consume("eval", [], value, serial), serial);
+  instrument(consume("eval", [], value, serial), null);
 
 ///////////////
 // Producers //
@@ -139,10 +139,12 @@ ADVICE.object = (keys, value, serial) => {
 ///////////
 // Setup //
 ///////////
-const aran = Aran({namespace:"ADVICE"});
+const aran = Aran({
+  namespace: "ADVICE",
+  sandbox: true,
+  pointcut: Object.keys(ADVICE).filter((name) => name !== "SANDBOX")
+});
 global.eval(Astring.generate(aran.setup()));
-const instrument = (script, serial) => Astring.generate(aran.weave(
-  Acorn.parse(script),
-  Object.keys(ADVICE).filter((name) => name !== "SANDBOX"),
-  {sandbox:true, scope:serial}));
+const instrument = (script, scope) =>
+  Astring.generate(aran.weave(Acorn.parse(script), scope));
 module.exports = instrument;

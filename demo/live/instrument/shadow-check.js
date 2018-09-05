@@ -273,7 +273,7 @@ advice.failure = (scope, error, serial) => {
 advice.save = (name, value, serial) => consume(value, serial);
 advice.test = (value, serial) => consume(value, serial);
 advice.throw = (value, serial) => consume(value, serial);
-advice.eval = (value, serial) => instrument(consume(value, serial), serial);
+advice.eval = (value, serial) => instrument(consume(value, serial), null);
 advice.return = (scope, value, serial) => {
   cstack.pop();
   return consume(value, serial);
@@ -420,12 +420,12 @@ advice.object = (keys, value, serial) => {
   return produce(value, serial);
 };
 
-const aran = Aran({namespace:"ADVICE"});
+const aran = Aran({
+  namespace:"ADVICE",
+  pointcut: true
+});
 global.ADVICE = advice;
 global.eval(Astring.generate(aran.setup()));
-const instrument = (script, serial) => Astring.generate(aran.weave(
-  Acorn.parse(script),
-  true,
-  {scope:serial}));
-
+const instrument = (script, scope) =>
+  Astring.generate(aran.weave(Acorn.parse(script), scope));
 module.exports = instrument;

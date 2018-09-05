@@ -88,8 +88,7 @@ ADVICE.delete = (object, key, serial) => delete object[key];
 ///////////
 // Setup //
 ///////////
-const aran = Aran({namespace:"ADVICE"});
+const aran = Aran({namespace:"ADVICE", pointcut:true});
 global.eval(Astring.generate(aran.setup()));
-module.exports = (script) => Astring.generate(aran.weave(
-  Acorn.parse(script),
-  true));
+module.exports = (script) =>
+  Astring.generate(aran.weave(Acorn.parse(script)));

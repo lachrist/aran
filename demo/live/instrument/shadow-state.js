@@ -194,7 +194,7 @@ ADVICE.throw = (value, serial) =>
 ADVICE.test = (value, serial) =>
   consume("test", [], value, serial);
 ADVICE.eval = (value, serial) =>
-  instrument(consume("eval", [], value, serial), serial);
+  instrument(consume("eval", [], value, serial), null);
 ADVICE.return = (scope, value, serial) => {
   cstack.pop();
   return consume("return", [], value, serial);
@@ -318,11 +318,11 @@ ADVICE.object = (keys, object, serial) => {
 // Setup //
 ///////////
 // The sandbox must be activated to output the same result as shadow-value.
-const aran = Aran({namespace:"ADVICE"});
+const aran = Aran({
+  namespace:"ADVICE",
+  sandbox: true,
+  pointcut: true
+});
 global.eval(Astring.generate(aran.setup()));
-const instrument = (script, serial) => Astring.generate(aran.weave(
-  Acorn.parse(script),
-  true,
-  {sandbox:true, scope:serial}));
+const instrument = (script, scope) => Astring.generate(aran.weave(Acorn.parse(script), scope));
 module.exports = instrument;
-

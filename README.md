@@ -107,43 +107,23 @@ Aran visits all the nodes of a given ESTree and completes them with the followin
   This is useful to speed up node search.
 * `AranParent :: object | null`:
   The node's parent.
-  If the node is of type `"Program"`, then this field will be the third argument passed to `aran.weave`.
+  If the node is of type `"Program"`, then this field will either refer to a direct eval call or it will be null.
+  This field is not enumerable to prevent `JSON.stringify` from complaining about circularity.
+* `AranRoot :: object`:
+  The program node from which the node originated.
   This field is not enumerable to prevent `JSON.stringify` from complaining about circularity.
 * `AranParentSerial :: number | null`:
-  The parent's serial number of the node (if any).
-* `AranRoot :: object`:
-  The root program node from which the node originated.
-  This field is not enumerable to prevent `JSON.stringify` from complaining about circularity.
+  The serial number of the node's parent.
 * `AranRootSerial :: number`:
-  The the serial number of the node's root.
+  The serial number of the node's root.
 
-Programs node don't have a `AranParent` property nor a `AranParentSerial` property.
-Instead they have an `AranScope` property which is either an array or an object.
-An array indicates that the program will be evaluated as global code.
-The array's elements are variable names predefined in the program's block scope -- e.g. `["exports", "module", "require", "this"]`.
-An object indicates that the program will be evaluated by a direct eval call.
-The object refers to the estree node where the call occurred.
+### `aran = require("aran")({namespace, format, sandbox, pointcut, roots})`
 
-### `aran = require("aran")({namespace, roots, format, sandbox, pointcut})`
+Create a new Aran instance.
+The options `namespace`, `sandbox` and `pointcut` can be modified during the lifetime of the instance.
 
-Create a new Aran instance; normally, you would only be interested by the `namespace` option.
-* `namespace :: string`, default `"ADVICE"`:
+* `namespace :: string`, default `"__ARAN__"`:
   The name of the global variable holding the advice.
-  Code instrumented by this aran instance will not be able to read, write or shadow this variable.
-* `roots :: array`, default `[]`.
-  Each `estree.Program` node passed to `aran.weave` will be stored in this array.
-  The only reason why you would want to pass an non empty array is to duplicate an other aran instance.
-  ```js
-  const Aran = require("aran");
-  const aran1 = Aran({...});
-  ...
-  const state = JSON.stringify({
-    namespace: aran1.namespace,
-    roots: aran1.roots,
-    format: aran1.format
-  });
-  const aran2 = Aran(JSON.parse(state));
-  ```
 * `format :: string | object`, default `"EstreeOptimized"`:
   Defines the output format of `aran.weave` and `aran.setup`.
   It can be an object resembling the modules of [/lib/build](/lib/build) or one of the string:
@@ -159,9 +139,9 @@ Create a new Aran instance; normally, you would only be interested by the `names
     Directly produces an unoptimized and compact code string.
     This should result in a slightly faster instrumentation than the other `format` options.
 * `sandbox :: boolean`, default `false`:
-  A boolean indicating whether global code should use the `SANDBOX` property of the advice as the top-level frame.
+  A boolean indicating whether the `SANDBOX` property of the advice should be assigned as the top-level frame of global code.
   This is achieved by combining [ECMAScript Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) and the [With Statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with).
-* `pointcut :: array | function | object | falsy | *`:
+* `pointcut :: array | function | object | falsy | truthy`:
   The specification that tells Aran where to insert trap calls.
   Four specification formats are supported:
   * `array`:
@@ -182,8 +162,17 @@ Create a new Aran instance; normally, you would only be interested by the `names
     ```
   * `falsy`:
     Never insert any trap.
-  * `*`:
+  * `truthy`:
     All traps are to be inserted whenever applicable.
+* `roots :: array`, default `[]`.
+  Each `estree.Program` node passed to `aran.weave` will be stored in this array.
+  The only reason why you would want to pass a non empty array is to duplicate an aran instance.
+  ```js
+  const Aran = require("aran");
+  const aran1 = Aran({...});
+  const serialized = JSON.stringify(aran1);
+  const aran2 = Aran(JSON.parse(serialized));
+  ```
 
 ### `output = aran.setup()`
 
@@ -205,12 +194,12 @@ META.STRICT_SANDBOX_HANDLERS = {...};
 META.EVAL("this").$$eval = META.EVAL("this").eval
 ```
 
-### `output = aran.weave(estree, pointcut, {scope, sandbox})`
+### `output = aran.weave(estree, scope)`
 
 Desugar and insert calls to trap functions at nodes specified by the pointcut.
 * `estree :: object`:
   The [ESTree Program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
-* `scope :: array | string | falsy | object | string`:
+* `scope :: array | string | null`, default `"global"`:
   This value indicates in which scope the program will be evaluated.
   This value will be used to compute `estree.AranScope`.
   * `array`:
@@ -223,49 +212,86 @@ Desugar and insert calls to trap functions at nodes specified by the pointcut.
     Alias for `["__filename", "__dirname", "exports", "module", "require", "this"]`
   * `"global"`:
     Alias for `["this"]`.
-  * `falsy`:
-    Alias for `["this"]`.
-  * `object`:
-    The code will be evaluated by a direct eval call.
-    The object should be an estree referring to the direct eval call.
-  * `number`:
-    Same as `object` but pass a serial number instead; `aran.weave(script, pointcut, {scope:node})` is equivalent to `aran.weave(script, pointcut, {scope:aran.node(serial)})`.
+  * `null`:
+    The code will be evaluated inside a direct eval call.
 * `output :: object | string`:
   The instrumented output whose format depends on `options.format`.
 
-### `namespace = aran.namesapce`
+### `aran.namespace`
 
-The name of the global variable holding the advice;
-* `namespace :: string`
+```
+{
+  value: string,
+  enumerable: true,
+  configurable: false,
+  writable: true
+}
+```
 
-### `roots = aran.roots`
+### `aran.poincut`
 
-An array of all the estree program nodes visited by the Aran instance which can be used to serialize its state.
-* `roots :: array`
+Read/Write the pointcut of subsequent `aran.weave(estree, scope)` calss.
 
-### `nodes = aran.nodes`
+```
+{
+  value: array | function | object | falsy | truthy,
+  enumerable: true,
+  configurable: false,
+  writable: true
+}
+```
 
-An array of all the estree nodes visited by the Aran instance which can be used to retrieve an AST node from a serial number.
-* `nodes :: array`
+### `aran.sandbox`
 
-### `root = aran.rootof(serial)`
+Read/Write whether the `SANDBOX` field of the advice should substitute the global object for subsequent `aran.weave(estree, scope)` calls.
 
-Retrieve the ESTree Program node that contains the node at the given serial number.
-* `serial :: number`
-* `root :: ESTree.Program | undefined`
+```
+{
+  value: boolean,
+  enumerable: true,
+  configurable: false,
+  writable: true
+}
+```
 
-### `node = aran.node(serial)`
+### `aran.format`
 
-*Deprecated*: use `aran.nodes[serial]` instead.
+Read/Write the output format of subsequent `aran.weave(estree, scope)` and `aran.setup()` calls.
+If a custom builder is provided (the object), the Aran instance can no longer simply be `JSON.stringify`.
 
-Retrieve a node from its serial number.
-* `serial :: number`
-* `node :: ESTree | undefined`
+```
+{
+  value: string | object,
+  enumerable: true,
+  configurable: false,
+  writable: true
+}
+```
 
+### `aran.roots`
 
-### `root = aran.root(serial)`
+An array of all the program nodes visited by aran.
+The only reason why you would want to access this field is to serialize the Aran instance.
 
-*Deprecated*: use `aran.rootof(serial)` instead.
+`{
+  value: array,
+  enumerable: true,
+  configurable: false,
+  writable: false
+}`
+
+### `aran.nodes`
+
+An array indexing all the AST node visited by the Aran instance.
+This field is useful to quickly retrieve a node from its serial number: `aran.nodes[serial]`.
+It is not enumerable to reduces the size of `JSON.stringify(aran)`.
+
+`{
+  value: array,
+  enumerable: false,
+  configurable: false,
+  writable: false
+}`
 
 ## Advice
 

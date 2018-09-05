@@ -13,7 +13,7 @@ global.ADVICE = {
   begin: check_this,
   eval: (script, serial) => {
     console.log("DIRECT EVAL CALL:\n"+script+"\n");
-    return instrument(script, serial);
+    return instrument(script, null);
   }
 };
 ADVICE.SANDBOX.eval = function eval (script) {
@@ -30,10 +30,12 @@ ADVICE.SANDBOX.Function = function Function () {
   return global.eval(instrument(script));
 };
 // Setup //
-const aran = Aran({namespace:"ADVICE"});
+const aran = Aran({
+  namespace: "ADVICE",
+  pointcut: ["arrrival", "begin", "eval"],
+  sandbox: true
+});
 global.eval(Astring.generate(aran.setup()));
-const instrument = (script, serial) => Astring.generate(aran.weave(
-  Acorn.parse(script),
-  ["arrrival", "begin", "eval"],
-  {sandbox:true, scope:serial}));
+const instrument = (script, scope) =>
+  Astring.generate(aran.weave(Acorn.parse(script), scope));
 module.exports = instrument;

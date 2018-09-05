@@ -6,7 +6,7 @@ Function.prototype.toString = function () { return this.name || "anonymous" };
 let depth = "";
 global.ADVICE = {
   apply: (callee, values, serial) => {
-    const node = aran.node(serial);
+    const node = aran.nodes[serial];
     const prefix = depth+callee+"@"+node.loc.start.line;
     console.log(prefix+"("+values.join(", ")+")");
     depth += ".";
@@ -17,8 +17,7 @@ global.ADVICE = {
   }
 };
 // Setup //
-const aran = Aran({namespace:"ADVICE"});
+const aran = Aran({namespace:"ADVICE", pointcut:["apply"]});
 global.eval(Astring.generate(aran.setup()));
-module.exports = (script) => Astring.generate(aran.weave(
-  Acorn.parse(script, {locations:true}),
-  ["apply"]));
+module.exports = (script) =>
+  Astring.generate(aran.weave(Acorn.parse(script, {locations:true})));
