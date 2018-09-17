@@ -117,10 +117,9 @@ Aran visits all the nodes of a given ESTree and completes them with the followin
 * `AranParentSerial :: number | null`:
   The serial number of the node's parent (if any).
 
-### `aran = require("aran")({namespace, format, sandbox, pointcut, roots})`
+### `aran = require("aran")({namespace, format, roots})`
 
 Create a new Aran instance.
-The options `namespace`, `format`, `sandbox` and `pointcut` can be modified during the lifetime of the instance.
 
 * `namespace :: string`, default `"__ARAN__"`:
   The name of the global variable holding the advice.
@@ -138,32 +137,6 @@ The options `namespace`, `format`, `sandbox` and `pointcut` can be modified duri
   * `"String"`:
     Directly produces an unoptimized and compact code string.
     This should result in a slightly faster instrumentation than the other `format` options.
-* `sandbox :: boolean`, default `false`:
-  A boolean indicating whether the `SANDBOX` property of the advice should be used as the top-level frame of global code.
-  This is achieved by combining [ECMAScript Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) and the [With Statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with).
-* `pointcut :: array | function | object | falsy | truthy`:
-  The specification that tells Aran where to insert trap calls.
-  Four specification formats are supported:
-  * `array`:
-    An array containing the names of the traps to insert at every applicable cut point.
-    For instance, the pointcut `["binary"]` indicates aran to insert the `binary` traps whenever applicable.
-  * `function`:
-    A function that tells whether to insert a given trap at a given node.
-    For instance, the pointcut below results in aran inserting a call to the `binary` trap at every update expression:
-    ```js
-    const pointcut = (name, node) => name === "binary" && node.type === "UpdateExpression" ;
-    ```
-  * `object`:
-    An object whose keys are trap names and values are functions receiving nodes.
-    As for the `function` format, these functions should return a boolean indicating whether to insert the call.
-    For instance, the pointcut below has the same semantic as the one above:
-    ```js
-    const pointcut = { binary: (node) => node.type === "UpdateExpression" };
-    ```
-  * `falsy`:
-    Never insert any trap.
-  * `truthy`:
-    All traps are to be inserted whenever applicable.
 * `roots :: array`, default `[]`.
   Each `estree.Program` node passed to `aran.weave(root, scope)` will be stored in this array.
   The only reason why you would want to pass a non empty array is to duplicate an aran instance.
@@ -174,77 +147,83 @@ The options `namespace`, `format`, `sandbox` and `pointcut` can be modified duri
   const aran2 = Aran(JSON.parse(serialized));
   ```
 
-### `output = aran.setup()`
-
-Build the setup code that should be evaluated before any instrumented code.
-* `output :: estree.Program | string | *`:
-  The setup code whose format depends on `options.format`.
-
-The setup code with `options.namespace` being `META` looks like:
-
-```js
-META.EVAL                    = META.EVAL                   || eval;
-META.PROXY                   = META.PROXY                  || Proxy;
-META.REFERENCE_ERROR         = META.REFERENCE_ERROR        || ReferenceError;
-META.OBJECT_DEFINE_PROPERTY  = META.OBJECT_DEFINE_PROPERTY || Object.defineProperty;
-META.REFLECT_APPLY           = META.REFLECT_APPLY          || Reflect.apply;
-META.WITH_HANDLERS           = {...};
-META.SANDBOX_HANDLERS        = {...};
-META.STRICT_SANDBOX_HANDLERS = {...};
-META.EVAL("this").$$eval = META.EVAL("this").eval
-```
-
-### `output = aran.weave(root, scope)`
+### `output = aran.weave(program, pointcut, context)`
 
 Desugar and insert calls to trap functions at nodes specified by the pointcut.
-* `root :: estree.Program`:
+* `program :: estree.Program`:
   The [ESTree Program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
-* `scope :: array | string | null`, default `"global"`:
-  This value indicates in which scope the program will be evaluated.
-  This value will be used to compute `estree.AranScope`.
+* `pointcut :: array | function`:
+  The specification that tells Aran where to insert trap calls.
+  Two specification formats are supported:
   * `array`:
-    The code will be evaluated as global code.
-    The array should contain variable names predefined in the program's block scope.
-    The instrumented code will reassign these variables in alphabetical order.
-  * `"commonjs"`:
-    Alias for `["exports", "module", "require", "this"]`
-  * `"node"`
-    Alias for `["__filename", "__dirname", "exports", "module", "require", "this"]`
-  * `"global"`:
-    Alias for `["this"]`.
-  * `null`:
-    The code will be evaluated inside a direct eval call.
+    An array containing the names of the traps to insert at every applicable cut point.
+    For instance, the pointcut `["binary"]` indicates Aran to insert the `binary` traps whenever applicable.
+  * `function`:
+    A function that tells whether to insert a given trap at a given node.
+    For instance, the pointcut below results in Aran inserting a call to the `binary` trap at every update expression:
+    ```js
+    const pointcut = (name, node) => name === "binary" && node.type === "UpdateExpression" ;
+    ```
+* context :: `object | string`, defaut `"global"`:
+  * `object`:
+    * `context.local :: boolean`
+    * `context.closure :: boolean`
+    * `context.strict :: boolean`
+    * `context.identifiers :: array`
+  * `string`:
+    The string format is a shorthand for the more general object format.
+    ```js
+    {
+      "global":        {local:false, closure:false, strict:false, identifiers:["this"]},
+      "commonjs":      {local:false, closure:true,  strict:false, identifiers:["this", "require", "module", "exports"]},
+      "node":          {local:fale,  closure:true,  strict:false, identifiers:["this", "require", "module", "exports", "__filename", "__dirname"]},
+      "direct":        {local:true,  closure:false, strict:false, identifiers:[]},
+      "direct-strict": {local:true,  closure:true,  strict:true,  identifiers:[]},
+    }
+    ```
 * `output :: estree.Program | string | *`:
-  The instrumented output whose format depends on `options.format`.
+  The weaved code whose format depends on the `format` option.
 
 ### `aran.namespace`
 
-Read/Write the name of the global variable holding the advice for subsequent `aran.setup()` and `aran.weave(estree, scope)` and calls.
+The name of the global variable holding the advice.
 
-### `aran.poincut`
-
-Read/Write the pointcut for subsequent `aran.weave(root, scope)` calls.
-
-### `aran.sandbox`
-
-Read/Write whether the `SANDBOX` field of the advice should substitute the global object for subsequent `aran.weave(root, scope)` calls.
+```js
+{
+  value: string,
+  enumerable: true,
+  configurable: false,
+  writable: false
+}
+```
 
 ### `aran.format`
 
-Read/Write the output format for subsequent `aran.setup()` and `aran.weave(estree, scope)` and calls.
-If a custom builder is provided (the object), the Aran instance can no longer simply be `JSON.stringify`.
+The output format for `aran.weave(estree, scope)` and calls.
+If a custom builder was provided, the Aran instance can no longer simply be `JSON.stringify`.
+
+```js
+{
+  value: string | object,
+  enumerable: true,
+  configurable: false,
+  writable: false
+}
+```
 
 ### `aran.roots`
 
 An array of all the program nodes visited by aran.
 The only reason why you would want to access this field is to serialize the Aran instance.
 
-`{
+```js
+{
   value: array,
   enumerable: true,
   configurable: false,
   writable: false
-}`
+}
+```
 
 ### `aran.nodes`
 
@@ -261,30 +240,25 @@ It is not enumerable to reduces the size of `JSON.stringify(aran)`.
 
 ## Advice
 
-The most important part of the advice are the trap functions.
-All traps are independently optional and they all receive as last argument an integer which is the index of the ESTree node that triggered the trap.
+In Aran, an advice is a collection of functions that will be called during the evaluation of weaved code.
+These functions are called traps; they are independently optional and they all receive as last argument an integer which is the index of the ESTree node that triggered the them.
 
 ### Trap Categorization
 
-We tried to provide as few simple and trap as possible to express the entire JavaScript semantic.
-This process still left us with around 40 traps which we categorize as follow:
+We tried to provide as few trap as possible to express the entire JavaScript semantic.
+This process still left us with around 40 traps which we categorize depending on their effect on the value stack:
 
-* *Combiners*: traps whose result is used and which pop several values from the stack and then push exactly one value on top of the stack.
-  These traps are given several values from the target program which they can freely combine.
-  Their transparent implementation consists in reproducing the effect of the expression they replace.
-  e.g.: `apply`: `(fct, args, ser) => fct(...args)`
-* *Producers*: traps whose result is used and which push several values on top of the stack.
-  These traps are given a single value from the target program which they can freely modify.
-  Their transparent implementation consists in returning their second last argument.
-  e.g: `read`: `(str, val, ser) => val`.
-* *Consumers*: traps whose result is used and which pop exactly one values from the stack.
-  These traps are given a single value from the target program which they can freely modify.
-  Their transparent implementation consists in returning their second last argument.
-  e.g.: `write`: `(str, val, ser) => val`.
-* *Informers*: traps whose result is not used.
-  These traps are only given primitive constant.
-  Their transparent implementation consists in doing nothing.
-  e.g.: `end`: `(dir, sct, ser) => {}`.
+* *Bystanders*: no effect on the value stack.
+  Aside from `begin`, these traps receive only primitive constants and their result is discarded.
+* *Producers*: push several values on top of the stack.
+  Aside from `arrival`, these traps push exactly one value on top of the stack.
+  Aside from `copy` and `arrival`, the pushed value corresponds to the value returned by the trap.
+* *Consumers*: pop one value from the stack.
+  Aside from `drop`, the popped value corresponds to the value returned by the trap.
+* *Combiners*: pop several values from the value stack and push exactly one value on top of it.
+  Aside from `array` and `object`, these traps should compute a new value.
+* *Swappers*: swap two elements of the value stack based on their position.
+  The only trap in this category is `swap`.
 
 ![trap-categorization](img/trap-category.png)
 
@@ -292,50 +266,60 @@ This process still left us with around 40 traps which we categorize as follow:
 
 Name          | Original             | Instrumented
 --------------|----------------------|-------------
-**Combiners** |                      |
-`apply`       | `f(x,y)`             | `META.apply(f, [x,y], @serial)`
-`array`       | `[x,y]`              | `META.array([x,y], @serial)`
-`binary`      | `x + y`              | `META.binary("+", x, y, @serial)` 
-`construct`   | `new F(x,y)`         | `META.construct(F, [x,y], @serial)`
-`delete`      | `delete o.k`         | `META.delete(o, "k", @serial)`
-`get`         | `o.k`                | `META.get(o, "k", @serial)`
-`invoke`      | `o.k(x,y)`           | `META.invoke(o, "k", [x,y], @serial)`
-`object`      | `{k:x,l:y}`          | `META.object(["k", "l"], {k:x,l:y}, @serial)`
-`set`         | `o.k = x`            | `META.set(o, "k", x, @serial)`
-`unary`       | `!x`                 | `META.unary("!", x, @serial)` 
-**Producers** |                      | 
-`arrival`     | `() => { ... }`      | `function () { const arrival = META.arrival(@strict, {callee:callee, new:new.target===undefined, this:this, arguments:arguments}, @serial); ... }`
-`begin`       | `...` (program)      | `... const scope = META.begin(@strict, @scope, @serial); ...`
-`catch`       | `... catch (e) ...`  | `... catch (error) { let e = META.catch(error, @serial); ...`
-`closure`     | `() => {}`           | `META.closure(..., @serial)`
-`discard`     | `delete x`           | `META.discard("x", delete x, @serial)`
-`load`        | `[x1,x2] = xs`       | `... META.load("Symbol.iterator", META["SAVE_Symbol.iterator"], @serial) ...` 
-`primitive`   | `"foo"`              | `META.primitive("foo", @serial)`
-`read`        | `x`                  | `META.read("x", x, @serial)`
-`regexp`      | `/abc/g`             | `META.regexp(/abc/g, @serial)`
-**Consumers** |                      | 
-`completion`  | `"foo";`             | `completion = META.completion("foo", @serial);`
-`declare`     | `let x = y`          | `let x = META.declare("let", "x", y, @serial)`
-`eval`        | `eval(x)`            | `$$eval === META.SAVE_eval ? eval(META.eval(x, @serial)) : $$eval(x)`
-`failure`     | `...` (program)      | `... catch (error) { throw META.failure(scope, error, @serial); } ...`
-`return`      | `return x`           | `return META.return(arrival, x, @serial)`
-`save`        |                      | `... META.SAVE_Symbol_iterator = META.save("Symbol.iterator", Symbol.iterator, @serial); ...`
-`success`     | `...` (program)      | `... completion = META.success(scope, completion, @serial); ...`
-`test`        | `x ? y : z`          | `META.test(x, @serial) : y : z`
-`throw`       | `throw x`            | `throw META.throw(x, @serial)`
-`with`        | `with (x) { ... }`   | `with(new META.PROXY(META.with(x, @serial), META.WITH_HANDLERS)) { ... }`
-`write`       | `x = y`              | `x = META.write("x", y, @serial)`
-**Informers** |                      |
+**Bystanders**|                      |
+*Informers*   |                      |
+`sandbox`     | `...` (program)      | `... begin(scope, @serial), META_HANDLERS)) { ... }`
 `block`       | `{ ... }`            | `{ META.block(@serial) ... }`
 `break`       | `break l;`           | `META.break(false, "l", @serial); break bl;`
-`copy`        | `for (x in o) ...`   | `... META.copy(1, @serial) ...`
 `drop`        | `f();`               | `(f(), META.drop(@serial));`
 `end`         | `...` (program)      | `... finally { META.end(scope, @serial); } ...`
 `finally`     | `... finally { ...`  | `... finally { META.finally(@serial) ...`
 `label`       | `l: { ... }`         | `bl: { META.label(false, "l", @serial); ... }`
 `leave`       | `{ ... }`            | `{ ... META.leave("block", @serial); }`
-`swap`        | `for (x in o) ...`   | `... META.swap(1, 2, @serial) ...`
 `try`         | `try { ...`          | `try { META.try(@serial) ...`
+*Modifiers*   |                      |
+`begin`       | `...` (program)      | `... const sandbox = META.begin(strict, scope, global, @serial); ...`
+**Producers** |                      | 
+*Informers*   |                      |
+`arrival`     | `() => { ... }`      | `... META.arrival(@strict, scope, callee, arguments, @serial); ...`
+*Modifiers*   |                      |
+`builtin`     | `for (x in o) ...`   | `... META.builtin("Object.keys", META._Object_keys, @serial) ...`
+`catch`       | `... catch (e) ...`  | `... catch (error) { let e = META.catch(error, @serial); ...`
+`closure`     | `() => {}`           | `META.closure(..., @serial)`
+`discard`     | `delete x`           | `META.discard("x", delete x, @serial)`
+`primitive`   | `"foo"`              | `META.primitive("foo", @serial)`
+`read`        | `x`                  | `META.read("x", x, @serial)`
+`regexp`      | `/abc/g`             | `META.regexp(/abc/g, @serial)`
+**Consumers** |                      | 
+*Informers*   |                      |
+`drop`        | `f();`               | `f(); META.drop();`
+*Modifiers*   |                      |
+`completion`  | `"foo";`             | `completion = META.completion("foo", @serial);`
+`declare`     | `let x = y`          | `let x = META.declare("let", "x", y, @serial)`
+`eval`        | `eval(x)`            | `$eval === META._eval ? eval(META.eval(x, @serial)) : $eval(x)`
+`failure`     | `...` (program)      | `... catch (error) { throw META.failure(scope, error, @serial); } ...`
+`return`      | `return x`           | `return META.return(arrival, x, @serial)`
+`success`     | `...` (program)      | `... completion = META.success(scope, completion, @serial); ...`
+`test`        | `x ? y : z`          | `META.test(x, @serial) : y : z`
+`throw`       | `throw x`            | `throw META.throw(x, @serial)`
+`with`        | `with (x) { ... }`   | `with(new META._Proxy(META.with(x, @serial), META._WithHandlers)) { ... }`
+`write`       | `x = y`              | `x = META.write("x", y, @serial)`
+**Combiners** |                      |
+*Modifiers*   |                      |
+`array`       | `[x,y]`              | `META.array([x,y], @serial)`
+`object`      | `{k:x,l:y}`          | `META.object(["k", "l"], {k:x,l:y}, @serial)`
+*Computers*   |                      |
+`apply`       | `f(x,y)`             | `META.apply(f, [x,y], @serial)`
+`binary`      | `x + y`              | `META.binary("+", x, y, @serial)` 
+`construct`   | `new F(x,y)`         | `META.construct(F, [x,y], @serial)`
+`delete`      | `delete o.k`         | `META.delete(o, "k", @serial)`
+`get`         | `o.k`                | `META.get(o, "k", @serial)`
+`invoke`      | `o.k(x,y)`           | `META.invoke(o, "k", [x,y], @serial)`
+`set`         | `o.k = x`            | `META.set(o, "k", x, @serial)`
+`unary`       | `!x`                 | `META.unary("!", x, @serial)` 
+**Swappers**  |                      |
+*Informers*   |                      |
+`swap`        | `for (x in o) ...`   | `... META.swap(1, 2, @serial) ...`
 
 ### Trap Signature
 
@@ -393,72 +377,66 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
   The first / last trap invoked by a program is always `begin` / `end`.
   Before invoking `end`, either `success` or `failure` is invoked.
   The `completion` trap is invoked every time the completion value of a program changes.
-  For a given program, the first parameter of `success`, `failure` and `end` will always refer to the value returned by `begin`.
   ```js
   // Original //
   this.Math.sqrt(4);
   ```
   ```js
   // Instrumented //
-  let completion;
-  let scope;
   try {
-    scope = META.begin(false, {this:this}, @serial);
-    let $$this = scope.this;
-    completion = META.completion($$this.Math.sqrt(4), @serial);
-    completion = META.success(scope, completion, @serial);
+    META._Reflect_apply(function () {
+      META._scope = {this:this};
+      with (META._Proxy(META.begin(false, META._scope, META._global, 1), META._SandboxHandlers)) {
+        const META = this;
+        const eval = META._eval;
+        const $$this = META._scope.this;
+        let completion;
+        completion = META.completion($$this.Math.sqrt(4), 1);
+        completion = META.success(scope, completion, 1);
+        return completion;
+      }
+    }, META, []);
   } catch (error) {
-    throw META.failure(scope, error, @serial);
+    throw META.failure(error, 1);
   } finally {
-    META.end(scope, @serial);
+    META.end(1);
   }
-  completion;
   ```
 * `["closure", "arrival", "return"]`:
   These traps are linked to a closure from the original code.
   The `closure` trap intercepts the creation of the closures whether it is a function or an arrow.
   To desugar destructuring parameters, Aran always uses the `arguments` identifiers.  
-  This requires arrows to be desugared into functions.
+  This requires to replace arrows by functions.
   The `arrival` trap receives all the information relative to entering the closure.
   Note that `callee` is assigned to the function given as parameter to the `closure` trap and not its return value.
   If the `closure` trap returns a custom value, the `arrival` traps should reflect this change in `arrival.callee` and `arrival.arguments.callee` (non strict mode only). 
   ```js
   // Original //
-  const add = function (x, y) {
-    return x + y; 
+  const add = function (arguments0) {
+    return arguments0 + arguments[1]; 
   };
   ```
   ```js
   // Instrumented //
-  const add = META.function((() => {
-    let callee = function () {
-      const arrival = META.arrival(@strict, {
-        callee: callee,
-        new: new.target === void 0,
-        this: this,
-        arguments: arugment
-      }, @serial);
-      const $$newtarget = arrival.new ? arrival.callee : undefined; 
-      const $$this = arrival.this;
-      let $$arguments = arrival.arguments;
-      let x = arrival.arguments[0];
-      let y = arrival.arguments[1];
-      return x + y;
-    };
-    META.OBJECT_DEFINE_PROPERTY(callee, "name", {
-      value: "add",
-      writable: false,
-      enumerable: false,
-      configurable: true
-    });
-    META.OBJECT_DEFINE_PROPERTY(callee, "length", {
-      value: 2,
-      writable: false,
-      enumerable: false,
-      configurable: true
-    });
-    return callee;
-  }) (), @serial);
+  const add = META.closure(
+    META._Object_defineProperty(
+      META._Object_defineProperty(
+        function callee () {
+          {
+            let scope = {"new.target":new.target, this, arguments, callee};
+            META.arrival(false, scope, arguments, @serial1);
+            var $newtarget = scope["new.target"];
+            var $this = scope.this;
+            var $arguments = scope.arguments;
+          }
+          let arguments0 = arguments[0];
+          return META.return(arguments0 + $arguments[1], @serial2);
+        },
+        "name",
+        {value:"add", configurable:true}),
+      "length",
+      {value:2, configurable:true}),
+    @serial1);
   ```
 * `["block", "leave"]`:
   There exists multiple block semantic in JavaScript, the simplest one corresponds to regular blocks.
@@ -572,7 +550,7 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
   };
   ```
 * `["copy", "drop", "swap"]`:
-  These traps are only important for analyses that mirror the cares about the value stack.
+  These traps are only important for analyses that cares about the value stack.
   They each express a simple manipulation of the value stack as examplified below:
   ```js
   // Advice //
@@ -580,9 +558,9 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
     vstack.push(vstack[vstack.length-position]);
   };
   advice.swap = (position1, position2, serial) => {
-    const tmp = vstack[vstack.length-position1];
+    const temporary = vstack[vstack.length-position1];
     vstack[vstack.length-position1] = vstack[vstack.length-position2];
-    vstack[vstack.length-position2] = tmp;
+    vstack[vstack.length-position2] = temporary;
   };
   advice.drop = (serial) => {
     vstack.pop();

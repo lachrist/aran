@@ -62,7 +62,7 @@ const combine = (value, name, infos, serial) => {
 ////////////
 // Advice //
 ////////////
-global.ADVICE = {SANDBOX:global};
+global.ADVICE = {};
 
 ///////////////
 // Producers //
@@ -89,7 +89,7 @@ const fhandlers = {
     }
   }
 };
-ADVICE.arrival = (strict, scope, serial) => {
+ADVICE.arrival = (strict, scope, arguments, serial) => {
   cstack.push(scopes.get(scope.callee).concat([{
     type: "closure",
     binding: Object.create(null)
@@ -101,23 +101,20 @@ ADVICE.arrival = (strict, scope, serial) => {
     arguments: produce("arrival-arguments", [strict], scope.arguments, serial)
   };
 };
-ADVICE.begin = (strict, scope, value, serial) => {
+ADVICE.begin = (strict, scope, global, serial) => {
   estack.push(null);
   if (scope) {
     cstack.push([{
       type: "block",
-      binding: Object.create(null)
+      binding: scope
     }]);
-    Object.keys(scope).sort().reverse().forEach((key) => {
-      scope[key] = produce("begin-"+key, [strict], scope[key], serial);
-    });
   } else {
     cstack[cstack.length-1].push({
       type: strict ? "closure" : "block",
       binding: Object.create(null)
     });
   }
-  return scope;
+  return global;
 };
 ADVICE.primitive = (value, serial) =>
   produce("primitive", [], value, serial);
@@ -154,7 +151,7 @@ ADVICE.catch = (value, serial) => {
     while (index--) {
       const frame = call[index];
       if (frame.type === "try") {
-        call.push({type:"catch", binding:{}});
+        call.push({type:"catch", binding:Object.create(null)});
         while (vstack.length > frame.recovery)
           vstack.pop();
         return produce("catch", [], value, serial);
@@ -171,11 +168,11 @@ ADVICE.with = (value, serial) => {
   cstack[cstack.length-1].push({type:"with", binding:value});
   return consume("with", [], value, serial);
 };
-ADVICE.success = (scope, value, serial) => {
+ADVICE.success = (value, serial) => {
   vstack.push(estack.pop());
   return scope ? consume("success", [], value, serial) : value;
 };
-ADVICE.failure = (scope, error, serial) => {
+ADVICE.failure = (error, serial) => {
   estack.pop();
   if (scope)
     cleanup();
@@ -194,8 +191,8 @@ ADVICE.throw = (value, serial) =>
 ADVICE.test = (value, serial) =>
   consume("test", [], value, serial);
 ADVICE.eval = (value, serial) =>
-  instrument(consume("eval", [], value, serial), null);
-ADVICE.return = (scope, value, serial) => {
+  Astring.generate(aran.weave(acorn.parse(consume("eval", [], value, serial)), pointcut, null));
+ADVICE.return = (value, serial) => {
   cstack.pop();
   return consume("return", [], value, serial);
 };
@@ -248,7 +245,7 @@ ADVICE.swap = (position1, position2, serial) => {
 ADVICE.drop = (serial) => {
   vstack.pop();
 };
-ADVICE.end = (scope, serial) => {};
+ADVICE.end = (serial) => {};
 ADVICE.leave = (type, serial) => cstack[cstack.length-1].pop();
 ADVICE.block = (serial) => cstack[cstack.length-1].push({
   type: "block",
@@ -318,11 +315,7 @@ ADVICE.object = (keys, object, serial) => {
 // Setup //
 ///////////
 // The sandbox must be activated to output the same result as shadow-value.
-const aran = Aran({
-  namespace:"ADVICE",
-  sandbox: true,
-  pointcut: true
-});
-global.eval(Astring.generate(aran.setup()));
-const instrument = (script, scope) => Astring.generate(aran.weave(Acorn.parse(script), scope));
-module.exports = instrument;
+const aran = Aran({namespace:"ADVICE"});
+const pointcut = Object.keys(ADVICE);
+global.eval(Astring.generate(aran.setup));
+module.exports = (script) => Astring.generate(aran.weave(Acorn.parse(script), pointcut, ["this"]));
