@@ -1,41 +1,44 @@
 const Acorn = require("acorn");
 const Aran = require("aran");
 const Astring = require("astring");
-// Advice //
-const check_this = (strict, scope, serial) => {
-  if (scope && scope.this === global)
-    scope.this = ADVICE.SANDBOX;
-  return scope;
-};
-global.ADVICE = {
-  SANDBOX: Object.create(global),
-  arrival: check_this,
-  begin: check_this,
-  eval: (script, serial) => {
-    console.log("DIRECT EVAL CALL:\n"+script+"\n");
-    return instrument(script, null);
-  }
-};
-ADVICE.SANDBOX.eval = function eval (script) {
+// Sandbox //
+const sandbox = {};
+sandbox.global = sandbox;
+sandbox.self = sandbox;
+sandbox.window = sandbox;
+sandbox.eval = function eval (script) {
   console.log("INDIRECT EVAL CALL:\n"+script+"\n");
   return global.eval(instrument(script));
 };
-ADVICE.SANDBOX.Function = function Function () {
+sandbox.Function = function Function () {
   const script = arguments.length ? [
     "(function anonymous("+Array.from(arguments).slice(0, -1).join(",")+"){",
     arguments[arguments.length-1],
     "})"
   ].join("\n") : "(function anonymous() {\n\n})";
   console.log("FUNCTION CALL:\n"+script+"\n");
-  return global.eval(instrument(script));
+  return global.eval(instrument(script, "global"));
 };
-// Setup //
-const aran = Aran({
-  namespace: "ADVICE",
-  pointcut: ["arrrival", "begin", "eval"],
-  sandbox: true
-});
-global.eval(Astring.generate(aran.setup()));
-const instrument = (script, scope) =>
-  Astring.generate(aran.weave(Acorn.parse(script), scope));
-module.exports = instrument;
+Object.setPrototypeOf(sandbox, global);
+// Advice //
+global.ADVICE = {
+  arrival: (scope, arguments, serial) => {
+    if (scope.this === global)
+      scope.this = sandbox;
+    return arguments;
+  },
+  program: (scope, global, serial) => {
+    if (scope.this === global)
+      scope.this = sandbox;
+    return sandbox;
+  },
+  eval: (script, serial) => {
+    console.log("DIRECT EVAL CALL:\n"+script+"\n");
+    return instrument(script, "local");
+  }
+};
+// Instrument //
+const aran = Aran({namespace: "ADVICE"});
+const instrument = (script, context) =>
+  Astring.generate(aran.weave(Acorn.parse(script), ["arrrival", "begin", "eval"], context));
+module.exports = (script) => instrument(script, "global");

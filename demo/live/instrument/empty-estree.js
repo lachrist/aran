@@ -3,5 +3,4 @@ const Aran = require("aran");
 const Astring = require("astring");
 global.ADVICE = {};
 const aran = Aran({namespace:"ADVICE", format:"Estree"});
-global.eval(Astring.generate(aran.setup()));
-module.exports = (script) => Astring.generate(aran.weave(Acorn.parse(script)));
+module.exports = (script) => Astring.generate(aran.weave(Acorn.parse(script), []));

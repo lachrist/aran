@@ -17,7 +17,6 @@ global.ADVICE = {
   }
 };
 // Setup //
-const aran = Aran({namespace:"ADVICE", pointcut:["apply"]});
-global.eval(Astring.generate(aran.setup()));
+const aran = Aran({namespace:"ADVICE"});
 module.exports = (script) =>
-  Astring.generate(aran.weave(Acorn.parse(script, {locations:true})));
+  Astring.generate(aran.weave(Acorn.parse(script, {locations:true}), ["apply"]));

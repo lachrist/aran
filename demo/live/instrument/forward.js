@@ -15,8 +15,7 @@ const pass = function () { return arguments[arguments.length-2] };
   "array",
   "arrival",
   "read",
-  "load",
-  "save",
+  "builtin",
   "catch",
   "object",
   "primitive",
@@ -30,7 +29,7 @@ const pass = function () { return arguments[arguments.length-2] };
   "throw",
   "return",
   "eval",
-  "begin",
+  "program",
   "with",
   "write",
   "declare",
@@ -56,14 +55,11 @@ const noop = () => {};
 ///////////////
 // Computers //
 ///////////////
-ADVICE.apply = (callee, values, serial) => callee(...values);
-ADVICE.construct = (callee, values, serial) => new callee(...values);
+ADVICE.apply = (closure, values, serial) => Reflect.apply(closure, values);
+ADVICE.construct = (constructor, values, serial) => Reflect.construct(constructor, values);
 ADVICE.invoke = (object, key, values, serial) => Reflect.apply(object[key], object, values);
-ADVICE.unary = (operator, argument, serial) => eval(operator+" argument");
-ADVICE.binary = (operator, left, right, serial) => eval("left "+operator+" right");
-ADVICE.get = (object, key, serial) => object[key];
-ADVICE.set = (object, key, value, serial) => object[key] = value;
-ADVICE.delete = (object, key, serial) => delete object[key];
+ADVICE.unary = (operator, value, serial) => eval(operator+" value");
+ADVICE.binary = (operator, value1, value2, serial) => eval("value1 "+operator+" value2");
 
 //////////////////////////////
 // Tracer (uncomment below) //
@@ -88,7 +84,5 @@ ADVICE.delete = (object, key, serial) => delete object[key];
 ///////////
 // Setup //
 ///////////
-const aran = Aran({namespace:"ADVICE", pointcut:true});
-global.eval(Astring.generate(aran.setup()));
-module.exports = (script) =>
-  Astring.generate(aran.weave(Acorn.parse(script)));
+const aran = Aran({namespace:"ADVICE"});
+module.exports = (script) => Astring.generate(aran.weave(Acorn.parse(script), () => true));

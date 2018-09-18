@@ -386,12 +386,12 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
   try {
     META._Reflect_apply(function () {
       META._scope = {this:this};
-      with (META._Proxy(META.begin(false, META._scope, META._global, 1), META._SandboxHandlers)) {
+      with (META._Proxy({"*inner*":META.begin(false, META._scope, META._global, 1)}, META._SandboxHandlers)) {
         const META = this;
         const eval = META._eval;
-        const $$this = META._scope.this;
+        const _this = META._scope.this;
         let completion;
-        completion = META.completion($$this.Math.sqrt(4), 1);
+        completion = META.completion(_this.Math.sqrt(4), 1);
         completion = META.success(scope, completion, 1);
         return completion;
       }
