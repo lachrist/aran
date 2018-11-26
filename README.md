@@ -686,6 +686,15 @@ Here are the known heisenbugs that Aran may introduce by itself:
   Clearer semantic but analyses keeping the arguments and the variables in sync is challenging in the presence of destructuring assignment and spread syntax.
  -->
 
+## Implementation
+
+### Side Effects
+
+- scope.binding[name].declared
+- scope.binding[name].static 
+- ARAN.node
+- ARAN.counter
+
 ## Acknowledgments
 
 I'm [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd student at the Vrij Universiteit of Brussel (VUB).

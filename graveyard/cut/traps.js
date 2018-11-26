@@ -1,5 +1,6 @@
 
 const ArrayLite = require("array-lite");
+const Array_from = Array.from;
 
 // I tried to make lib/cut context independent.
 // ARAN.node.AranSerial is the only place where
@@ -22,48 +23,39 @@ module.exports = (pointcut) => {
   ArrayLite.forEach(
     [
       // Producers //
-      "catch",
+      "error",
       "closure",
-      "discard",
       "builtin",
       "primitive",
       "read",
+      // 4-Producers //
       "arrival",
       // Consumers //
-      "completion",
       "declare",
       "eval",
-      "failure",
-      "return",  
-      "success",
+      "return",
       "test",
       "throw",
-      "with",
-      "write",
-      // Others //
-      "sandbox"],
+      "write"],
     (name) => {
-      traps[name] = (...expressions) => (
-        pointcut(name, expressions) ?
-        trigger(name, expressions) :
-        expressions[expressions.length-1]);
+      traps[name] = function () => {
+        return (
+          pointcut(name, ARAN.node) ?
+          trigger(
+            name,
+            Array_from(arguments)) :
+          arguments[arguments.length-1]);
+      };
     });
 
   // Informers //
   ArrayLite.forEach(
     [
-      // Bystanders //
-      "block",
-      "break",
-      "end",
-      "finally",
-      "label",
-      "leave",
-      "try",
-      // Others //
-      "copy",
       "drop",
-      "swap"],
+      "break",
+      "continue",
+      "enter",
+      "leave"],
     (name) => {
       traps[name] = (...expressions) => (
         pointcut(name, ARAN.node) ?
@@ -89,38 +81,6 @@ module.exports = (pointcut) => {
         expression1,
         expression2]),
     ARAN.build.construct(expression1, expression2));
-
-  // traps.apply = (expression1, expressions, booleans) => (
-  //   pointcut("apply", ARAN.node) ?
-  //   trigger(
-  //     "apply",
-  //     [
-  //       expression1,
-  //       traps.primitive(
-  //         ARAN.build.primitive(void 0)),
-
-  //       ARAN.build.array(
-  //         [
-
-
-  // traps.apply = (expression1, expression2, expressions) => (
-  //   pointcut("apply", ARAN.node) ?
-  //   trigger(
-  //     "apply",
-  //     [
-  //       expression1,
-  //       expression2,
-  //       ARAN.build.array(expressions)]) :
-  //   ARAN.build.apply(expression1, expression2, expressions));
-
-  // traps.construct = (expression, expressions) => (
-  //   pointcut("construct", ARAN.node) ?
-  //   trigger(
-  //     "construct",
-  //     [
-  //       expression,
-  //       ARAN.build.array(expressions)]) :
-  //   ARAN.build.construct(expression, expressions));
 
   return traps;
 
