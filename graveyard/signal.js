@@ -9,3 +9,5 @@ exports.throw = (string1, string2) => ARAN.cut.apply(
           ARAN.cut.primitive(string2)]))),
   ARAN.cut.primitive(void 0),
   []);
+
+exports.THROW = (string1, string2) => 

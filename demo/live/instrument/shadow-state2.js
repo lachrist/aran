@@ -30,20 +30,6 @@ const consume = (origin, serial) => {
   console.log("<< "+stack.pop()+" "+origin+" @"+serial);
 };
 
-const extend = (tag, label, identifiers) => {
-  scope = Object.create(scope);
-  for (let identifier of identifiers)
-    Reflect.defineProperty(scope, identifier, {writable:true});
-  Reflect.defineProperty(scope, SymbolTag, {value:tag});
-  Reflect.defineProperty(scope, SymbolLabel, {value:label});
-};
-
-const goto = (predicate) => {
-  while (!predicate(scope))
-    scope = Reflect.getPrototypeOf(scope);
-  scope = Reflect.getPrototypeOf(scope);
-};
-
 ///////////////
 // Producers //
 ///////////////
@@ -53,12 +39,12 @@ exports.primitive = (value, serial) => {
   return value;
 };
 
-exports.builtin = (name, value, serial) => {
+exports.builtin = (value, name, serial) => {
   produce("builtin("+name+")", serial);
   return value;
 };
 
-exports.read = (identifier, value) => {
+exports.read = (value, identifier) => {
   stack.push(scope[identifier]);
   return value;
 };
@@ -67,11 +53,12 @@ exports.read = (identifier, value) => {
 // Consumers //
 ///////////////
 
-exports.drop = (serial) => {
+exports.drop = (value, serial) => {
   consume("drop", serial);
+  return value;
 };
 
-exports.write = (identifier, value) => {
+exports.write = (value, identifier, serial) => {
   scope[identifier] = stack.pop();
   return value;
 };
@@ -84,6 +71,11 @@ exports.test = (value, serial) => {
 exports.throw = (value, serial) => {
   consume("throw", serial);
   return value;
+};
+
+exports.eval = (value, serial) => {
+  consume("eval", serial);
+  return aran.weave(); // TODO
 };
 
 ///////////////
@@ -112,18 +104,14 @@ exports.closure = (value, serial) => {
   return value;
 };
 
-exports.arrival = (value1, value2, value3, callee, identifiers, serial) => {
+exports.arrival = (value1, value2, value3, value4, serial) => {
   callstack.push(scope);
-  scope = scopeof(callee);
-  extend("closure", null, identifiers);
-  for (let identifier of identifiers) {
-    produce("arrival("+identifier+")", serial);
-    scope[identifier] = vstack.pop();
-  }
-  produce("arrival-new-target", serial);
-  produce("arrival-this", serial);
-  produce("arrival-argument", serial)
-  return [value1, value2, value3];
+  scope = scopeof(value1);
+  produce("calllee", serial);
+  produce("new.target", serial);
+  produce("this", serial);
+  produce("arguments", serial);
+  return [value1, value2, value3, value4];
 };
 
 exports.return = (value, serial) => {
@@ -132,75 +120,92 @@ exports.return = (value, serial) => {
   return value;
 };
 
-/////////
-// Try //
-/////////
+///////////
+// Block //
+///////////
 
-exports.try = (identifiers, serial) => {
-  extend("try", null, identifiers);
-  scope[SymbolStackLength] = stack.length;
+exports.enter = (tag, label, identifiers, serial) => {
+  scope = Object.create(scope);
+  for (let identifier of identifiers)
+    Object.defineProperty(scope, identifier, {writable:true});
+  Object.defineProperty(scope, SymbolTag, tag);
+  Object.defineProperty(scope, SymbolLabel, label);
+  if (tag === "try") {
+    Object.defineProperty(scope, SymbolStackLength, stack.length)
+  }
 };
 
-exports.catch = (value, identifiers, serial) => {
+exports.leave = (serial) => {
+  scope = Object.getPrototypeOf(scope);
+};
+
+exports.error = (value, serial) => {
   while (scope[SymbolTag] !== "try") {
     scope = Reflect.getPrototypeOf(scope);
     if (scope[SymbolTag] === "closure") {
       scope = callstack.pop();
     }
   }
-  while (stack.length > scope[SymbolStackLength])
+  while (stack.length > scope[SymbolStackLength]) {
     stack.pop();
-  extend("catch", null, identifiers);
-  produce("catch", serial);
+  }
+  produce("error", serial);
   return value;
 };
 
-exports.finally = (value, identifiers, serial) => {
-  extend("finally", null, identifiers);
-};
-
-///////////
-// Block //
-///////////
-
-exports.block = (label, identifiers, serial) => {
-  extend("block", label, identifiers);
-};
-
-exports.loop = (label, identifiers, serial) => {
-  extend("loop", label, identifiers);
-};
-
-exports.switch = (identifiers, serial) => {
-  extend("switch", null, identifiers);
-};
-
-exports.leave = (serial) => {
-  scope = Reflect.getPrototypeOf(scope);
-};
-
 exports.continue = (label) => {
-  if (label)
-    goto((scope) => scope[SymbolTag] === "loop" && scope[SymbolLabel] === label);
-  else
-    goto((scope) => scope[SymbolTag] === "loop")
+  if (label) {
+    while (Object.getPrototypeOf(scope)[SymbolLabel] !== label) {
+      scope = Object.getPrototypeOf(scope);
+    }
+  } else {
+    while (Object.getPrototypeOf(scope)[SymbolTag] !== "loop") {
+      scope = Object.getPrototypeOf(scope);
+    }
+  }
 };
 
 exports.break = (label) => {
-  if (label)
-    goto((scope) => scope[SymbolTag] === "block" && scope[SymbolLabel] === label);
-  else
-    goto((scope) => scope[SymbolTag] === "loop" || scope[SymbolTag] === "switch");
-};
-
-exports.eval = (value, serial) => {
-  consume("eval", serial);
-  return aran.weave(); // TODO
+  if (label) {
+    while (scope[SymbolLabel] !== label) {
+      scope = Object.getPrototypeOf(scope);
+    }
+  } else {
+    while (scope[SymbolTag] !== "loop" || scope[SymbolTag] !== "switch") {
+      scope = Object.getPrototypeOf(scope);
+    }
+  }
 };
 
 /////////////
 // Program //
 /////////////
+
+exports.failure = (value, serial) => {
+  return value;
+};
+
+exports.success = (value, serial) => {
+  consume("success", serial);
+  return value;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

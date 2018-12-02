@@ -12,27 +12,20 @@ global.ADVICE = {};
 ///////////////
 const pass = function () { return arguments[arguments.length-2] };
 [
-  "array",
   "arrival",
   "read",
   "builtin",
-  "catch",
-  "object",
+  "error",
   "primitive",
-  "regexp",
   "closure",
-  "discard",
-  "completion",
   "success",
   "failure",
   "test",
   "throw",
   "return",
   "eval",
-  "program",
-  "with",
+  "prelude",
   "write",
-  "declare",
 ].forEach((name) => { ADVICE[name] = pass });
 
 ///////////////
@@ -40,9 +33,9 @@ const pass = function () { return arguments[arguments.length-2] };
 ///////////////
 const noop = () => {};
 [
-  "copy",
-  "swap",
-  "drop",
+  "enter",
+  
+
   "try",
   "finally",
   "leave",

@@ -14,11 +14,12 @@
   "homepage": "http://github.com/lachrist/aran",
   "license": "MIT",
   "dependencies": {
-    "array-lite": "0.1.0"
+    "array-lite": "^0.1.1",
+    "esvalid": "^1.1.0"
   },
   "devDependencies": {
-    "acorn": "^5.4.1",
-    "astring": "^1.2.0",
+    "acorn": "^6.0.4",
+    "astring": "^1.3.1",
     "browserify": "^16.1.0",
     "sandbox-scenario": "0.0.12"
   },

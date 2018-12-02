@@ -6,12 +6,12 @@ exports.join = function (array, separator) {
   var index = 0;
   var result = "";
   while (index < last) {
-    result += array[index++] + separator; 
+    result += array[index++] + separator;
   }
   return result + array[last];
 };
 
-exports.flaten = function (array1) {
+exports.flat = function (array1) {
   var result = [];
   var length = 0
   var index1 = 0;
@@ -95,7 +95,7 @@ exports.map = function (array, transform) {
   return result;
 };
 
-exports.flatenMap = function (array1, transform) {
+exports.flatMap = function (array1, transform) {
   var result = [];
   var length = 0;
   var index1 = 0;
@@ -110,17 +110,6 @@ exports.flatenMap = function (array1, transform) {
   }
   return result;
 }
-
-exports.zipMap = function (array, transformers) {
-  var result = [];
-  var index = 0;
-  var length = array.length;
-  while (index < length) {
-    var transform = transformers[index];
-    result[index] = transform ? transform(array[index], index++, array) : array[index++];
-  }
-  return result;
-};
 
 exports.filter = function (array, predicate) {
   var result = [];
@@ -149,6 +138,14 @@ exports.reduce = function (array, accumulator, result) {
   var length = array.length;
   while (index < length) {
     result = accumulator(result, array[index], index++, array);
+  }
+  return result;
+};
+
+exports.reduceRight = function (array, accumulator, result) {
+  var index = array.length;
+  while (index--) {
+    result = accumulator(result, array[index], index, array);
   }
   return result;
 };
@@ -189,24 +186,17 @@ exports.findIndex = function (array, predicate) {
 }
 
 exports.lastIndexOf = function (array, value) {
-  var index = array.length-1;
-  while (index >= 0) {
+  var index = array.length;
+  while (index--) {
     if (array[index] === value) {
       return index;
     }
-    index--;
   }
   return -1;
 };
 
 exports.slice = function (array, index, length) {
   var result = [];
-  if (!index) {
-    index = 0;
-  }
-  if (!length || length > array.length) {
-    length = array.length
-  }
   while (index < length) {
     result[result.length] = array[index++];
   }
