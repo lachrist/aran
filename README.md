@@ -1,5 +1,12 @@
 # Aran <img src="img/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
 
+<!-- // TRANSPARENCY ISSUE
+// No closure naming for computed property in object literal:
+//
+// > let foo = 1;
+// > ({[foo]: function(){}})[1]
+// [Function: 1] -->
+
 Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting JavaScript code.
 To install, run `npm install aran`.
 Aran was designed as a generic infra-structure for building various development-time dynamic program analyses such as: objects and functions profiling, debugging, control-flow tracing, taint analysis and concolic testing.
