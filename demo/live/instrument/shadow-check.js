@@ -52,8 +52,8 @@ const signal = (message) => {
   process.exit(1);
 };
 
-const check = (name, value1, value2, array, serial) => {
-  if (value1 !== value2) {
+const check = (name, value1, serial) => {
+  if (value1 !== value2 || (value1 !== value1 && value2 !== value2)) {
     const loc = aran.nodes[serial].loc;
     signal([
       "Value mismatch ["+name+"]@"+loc.start.line+":"+loc.start.column,
@@ -82,7 +82,7 @@ advice.builtin = function (value, name, serial) {
 };
 
 advice.read = (value, identifier, serial) => {
-  check("read", scope[identifier], value, [identifier], serial);
+  check(scope[identifier], value, serial);
   stack.push(value);
   return value;
 };
@@ -92,12 +92,12 @@ advice.read = (value, identifier, serial) => {
 ///////////////
 
 advice.drop = function (value, serial) {
-  check("drop", stack.pop(), value, [], serial);
+  check(stack.pop(), value, serial);
   return value;
 };
 
 advice.write = function (value, identifier, serial) {
-  check("write", stack.pop(), value, [identifier], serial);
+  check(stack.pop(), value, serial);
   let frame = scope;
   while (!Reflect.getOwnPropertyDescriptor(frame, identifier))
     frame = Reflect.getPrototypeOf(frame);
@@ -106,12 +106,12 @@ advice.write = function (value, identifier, serial) {
 };
 
 advice.test = function (value, serial) {
-  check("test", stack.pop(), value, [], serial);
+  check(stack.pop(), value, serial);
   return value;
 };
 
 advice.throw = function (value, serial) {
-  check("throw", stack.pop(), value, [], serial);
+  check(stack.pop(), value, serial);
   return value;
 };
 
@@ -120,20 +120,44 @@ advice.throw = function (value, serial) {
 ///////////////
 
 advice.construct = function (value1, values, serial) {
-  [value1].concat(values).reverse().forEach((value, index, array) => {
-    check("construct", stack.pop(), value, array, serial);
-  });
+  for (let index=values.length-1; index>=0; index--)
+    check(stack.pop(), values[index], serial);
+  check(stack.pop(), value1, serial);
+  if (scopes.has(value1)) {
+    stack.push(values);
+    stack.push(value1);
+  } else {
+    callstack.push(scope);
+    scope = null
+  }
   const value2 = Reflect.construct(value1, values);
-  stack.push(value2);
+  if (scopes.has(value1)) {
+    check(stack[stack.length-1], value2, serial);
+  } else {
+    scope = callstack.
+    stack.push(value2);
+  }
   return value2;
 };
 
 advice.apply = (value1, value2, values, serial) => {
-  [value1, value2].concat(values).reverse().forEach((value, index, array) => {
-    check("apply", stack.pop(), value, array, serial);
-  });
+  for (let index=values.length-1; index>=0; index--)
+    check(stack.pop(), values[index], serial);
+  check(stack.pop(), value2, serial);
+  check(stack.pop(), value1, serial);
+  if (scopes.has(value1)) {
+    stack.push(values)
+    stack.push(value2)
+    stack.push(undefined);
+  } else {
+    callstack.push(scope);
+    scope = null;
+  }
   const value3 = Reflect.apply(value1, value2, values);
-  stack.push(value3)
+  if (scopes.has(values1))
+    check(stack[stack.length-1], value3, serial);
+  else
+    stack.push(value3);
   return value3;
 };
 
@@ -162,6 +186,10 @@ advice.closure = (value1, serial) => {
   stack.push(value2);
   return value2;
 };
+
+advice.arrival = (value1, value2, value3) => [];
+
+advice.arrival = (boolean, $value1, $value2, )
 
 advice.arrival = (value1, value2, value3, value4, serial) => {
   callstack.push(scope);
@@ -246,8 +274,9 @@ advice.break = (label, serial) => {
 
 advice.eval = function (value, serial) {
   check("eval", stack.pop(), value, [], serial);
-  const pointcut = (name) => name !== "success" && name !== "failure" 
-  return Astring.generate(aran.weave(Acorn.parse(value, {locations:true}), pointcut, serial));
+  const estree1 = Acorn.parse(value, {locations:true});
+  const estree2 = aran.weave(estree1, pointcut, serial);
+  return Astring.generate(estree2);
 };
 
 advice.failure = (value, serial) => {
@@ -273,8 +302,9 @@ advice.success = (value, serial) => {
 const aran = Aran();
 global[aran.namespace] = advice;
 global.eval(Astring.generate(aran.setup()));
+const pointcut = (name, node) => true;
 module.exports = (script) => {
   const estree1 = Acorn.parse(script, {locations:true});
-  const estree2 = aran.weave(estree1, (name, node) => true, null);
+  const estree2 = aran.weave(estree1, pointcut, null);
   return Astring.generate(estree2);
 };
