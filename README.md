@@ -1,6 +1,15 @@
 # Aran <img src="img/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
 
-<!-- // TRANSPARENCY ISSUE
+This is reasarch project.
+It works on basic cases, but 
+Please submit bug reports.
+In the near future I will not add new feature but I will correct
+If you make publication based on it, I kindly request to share love by providing a link to this github repository.
+
+<!--
+// **Disclaimer**
+
+// TRANSPARENCY ISSUE
 // No closure naming for computed property in object literal:
 //
 // > let foo = 1;
