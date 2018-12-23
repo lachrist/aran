@@ -4,7 +4,7 @@ const Aran = require("aran.js");
 const Astring = require("astring");
 
 const SymbolTag = Symbol("tag");
-const SymbolLabel = Symbol("label");
+const SymbolLabels = Symbol("labels");
 const SymbolSerial = Symbol("serial");
 const SymbolStackLength = Symbol("stack-length");
 
@@ -37,8 +37,6 @@ const print = (value) => {
 
 const check = (name, args, value1, value2) => {
   if (!Object.is(value1, value2)) {
-    console.log(value1);
-    console.log(value2);
     const loc = aran.nodes[args[args.length-1]].loc;
     process.stderr.write((new Error([
       "Mismatch at "+name,
@@ -151,16 +149,17 @@ advice.abrupt = function (value, serial) {
 
 advice.debugger = function (serial) {};
 
-advice.arrival = function (context, serial) {
+// callee, new.target, this, arguments
+advice.arrival = function (value1, value2, value3, value4, serial) {
   callstack.push(scope);
   if (context.callee) {
     if (scope !== undefined) {
-      check("arrival-newtarget", arguments, context["new.target"], stack.pop());
+      check("arrival-newtarget", arguments, value2, stack.pop());
       for (let index = values.length-1; index >= 0; index--)
-        check("arrival-"+index, arguments, context.arguments[index], stack.pop());
+        check("arrival-"+index, arguments, value4.arguments[index], stack.pop());
       if (value2 !== undefined)
-        check("arrival-this", arguments, context.this, stack.pop());
-      check("arrival-callee", arguments, context.callee, stack.pop());
+        check("arrival-this", arguments, value3, stack.pop());
+      check("arrival-callee", arguments, value1, stack.pop());
     }
     for (let index = context.arguments.length-1; index >= 0; index--)
       stack.push(context.arguments[index]);
@@ -179,7 +178,7 @@ advice.program = (value, serial1, serial2) => {
     scope = null;
 };
 
-advice.enter = function (tag, label, identifiers, serial) {
+advice.enter = function (tag, labels, identifiers, serial) {
   if (tag === "catch") {
     while (scope[SymbolTag] !== "try")
       scope = Reflect.getPrototypeOf(scope);
@@ -195,7 +194,7 @@ advice.enter = function (tag, label, identifiers, serial) {
   if (tag === "program" || tag === "closure" || tag === "try")
     Reflect.defineProperty(scope, SymbolStackLength, {value:stack.length});
   Reflect.defineProperty(scope, SymbolTag, {value:tag});
-  Reflect.defineProperty(scope, SymbolLabel, {value:label});
+  Reflect.defineProperty(scope, SymbolLabels, {value:labels});
   Reflect.defineProperty(scope, SymbolSerial, {value:serial});
 };
 
@@ -205,20 +204,28 @@ advice.leave = function (serial) {
 };
 
 advice.continue = function (label, serial) {
-  const predicate = label ?
-    () => scope[SymbolLabel] !== label :
-    () => scope[SymbolTag] !== "loop"
-  while (predicate())
-    scope = Reflect.getPrototypeOf(scope);
+  if (label) {
+    while (scope[SymbolLabels].includes(label)) {
+      scope = Reflect.getPrototypeOf(scope);
+    }
+  } else {
+    while (scope[SymbolTag] !== "loop") {
+      scope = Reflect.getPrototypeOf(scope);
+    }
+  }
   scope = Reflect.getPrototypeOf(scope);
 };
 
 advice.break = function (label, serial) {
-  const predicate = label ?
-    () => scope[SymbolLabel] !== label :
-    () => scope[SymbolTag] !== "loop" && scope[SymbolTag] !== "switch";
-  while (predicate())
-    scope = Reflect.getPrototypeOf(scope);
+  if (label) {
+    while (scope[SymbolLabels].includes(label)) {
+      scope = Reflect.getPrototypeOf(scope);
+    }
+  } else {
+    while (scope[SymbolTag] !== "loop" && scope[SymbolTag] !== "switch") {
+      scope = Reflect.getPrototypeOf(scope);
+    }
+  }
   scope = Reflect.getPrototypeOf(scope);
 };
 
@@ -288,9 +295,16 @@ advice.construct = function (value1, values, serial) {
 // Setup //
 ///////////
 
+// Object.keys(advice).forEach((name) => {
+//   const trap = advice[name];
+//   advice[name] = function () {
+//     console.log(name+" "+Array.from(arguments).map(print).join(" "));
+//     return Reflect.apply(trap, this, arguments);
+//   };
+// });
+
 const aran = Aran();
 global[aran.namespace] = advice;
-console.log(Astring.generate(aran.setup()));
 global.eval(Astring.generate(aran.setup()));
 const pointcut = (name, node) => true;
 module.exports = (script) => {
