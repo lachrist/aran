@@ -24,10 +24,14 @@ const stack = [];
 ///////////
 
 const print = (value) => {
+  if (value === global)
+    return "[global]";
+  if (value instanceof Error)
+    return "[error " + value.message + "]";
   if (typeof value === "string")
     return JSON.stringify(value);
   if (typeof value === "function")
-    return "[function]";
+    return "[function "+value.name+"]";
   if (Array.isArray(value))
     return "[array]";
   if (value && typeof value === "object")
@@ -135,7 +139,7 @@ advice.abrupt = function (value, serial) {
   check("abrupt", arguments, value, stack.pop());
   while (scope[SymbolTag] !== "closure" && scope[SymbolTag] !== "program")
     scope = Reflect.getPrototypeOf(scope);
-  while (stack.length >= scope[SymbolStackLength])
+  while (stack.length > scope[SymbolStackLength])
     stack.pop();
   scope = callstack.pop();
   if (scope !== undefined)
@@ -152,7 +156,7 @@ advice.debugger = function (serial) {};
 // callee, new.target, this, arguments
 advice.arrival = function (value1, value2, value3, value4, serial) {
   callstack.push(scope);
-  if (context.callee) {
+  if (value1) {
     if (scope !== undefined) {
       check("arrival-newtarget", arguments, value2, stack.pop());
       for (let index = values.length-1; index >= 0; index--)
@@ -161,13 +165,13 @@ advice.arrival = function (value1, value2, value3, value4, serial) {
         check("arrival-this", arguments, value3, stack.pop());
       check("arrival-callee", arguments, value1, stack.pop());
     }
-    for (let index = context.arguments.length-1; index >= 0; index--)
-      stack.push(context.arguments[index]);
-    stack.push(context.arguments.length);
-    stack.push(context.this);
-    stack.push(context["new.target"]);
+    for (let index = value4.length-1; index >= 0; index--)
+      stack.push(value4[index]);
+    stack.push(value4.length);
+    stack.push(value3);
+    stack.push(value2);
     scope = scopeof.get(value1);
-  } else if (!aran.nodes[serial].AranParent) {
+  } else if (!aran.nodes[serial].AranParentSerial) {
     scope = null;
   }
 };
@@ -183,7 +187,7 @@ advice.enter = function (tag, labels, identifiers, serial) {
     while (scope[SymbolTag] !== "try")
       scope = Reflect.getPrototypeOf(scope);
     const error = stack.pop();
-    while (scope[SymbolStackLength] >= stack.length)
+    while (stack.length > scope[SymbolStackLength])
       stack.pop();
     stack.push(error);
     scope = Reflect.getPrototypeOf(scope);
@@ -303,12 +307,15 @@ advice.construct = function (value1, values, serial) {
 //   };
 // });
 
-const aran = Aran();
+const aran = Aran({format:"script"});
 global[aran.namespace] = advice;
-global.eval(Astring.generate(aran.setup()));
+global.eval(aran.setup());
 const pointcut = (name, node) => true;
-module.exports = (script) => {
-  const estree1 = Acorn.parse(script, {locations:true});
-  const estree2 = aran.weave(estree1, pointcut, null);
-  return Astring.generate(estree2);
+module.exports = (script1) => {
+  const estree = Acorn.parse(script1, {locations:true});
+  const block1 = aran.desugar(estree, null);
+  const block2 = aran.ambush(block1, pointcut);
+  const script2 = aran.generate(block2);
+  // console.log(script2);
+  return script2;
 };
