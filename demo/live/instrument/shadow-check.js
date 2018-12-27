@@ -25,17 +25,17 @@ const stack = [];
 
 const print = (value) => {
   if (value === global)
-    return "[global]";
+    return "(global)";
   if (value instanceof Error)
-    return "[error " + value.message + "]";
+    return "(error " + value.message + ")";
   if (typeof value === "string")
     return JSON.stringify(value);
   if (typeof value === "function")
-    return "[function "+value.name+"]";
+    return "(function "+value.name+")";
   if (Array.isArray(value))
-    return "[array]";
+    return "[" + value.map(print).join(", ") + "]";
   if (value && typeof value === "object")
-    return "[object]";
+    return "(object)";
   return String(value);
 };
 
@@ -159,9 +159,9 @@ advice.arrival = function (value1, value2, value3, value4, serial) {
   if (value1) {
     if (scope !== undefined) {
       check("arrival-newtarget", arguments, value2, stack.pop());
-      for (let index = values.length-1; index >= 0; index--)
-        check("arrival-"+index, arguments, value4.arguments[index], stack.pop());
-      if (value2 !== undefined)
+      for (let index = value4.length-1; index >= 0; index--)
+        check("arrival-"+index, arguments, value4[index], stack.pop());
+      if (value2 === undefined)
         check("arrival-this", arguments, value3, stack.pop());
       check("arrival-callee", arguments, value1, stack.pop());
     }
@@ -237,62 +237,64 @@ advice.break = function (label, serial) {
 // Combiners //
 ///////////////
 
+const external = function (closure, argument0, argument1, argument2) {
+  callstack.push(scope);
+  scope = undefined;
+  try {
+    const value = closure(argument0, argument1, argument2);
+    stack.push(value);
+    return value;
+  } catch (value) {
+    stack.push(value);
+    throw value;
+  } finally {
+    scope = callstack.pop();
+  }
+};
+
+advice.unary = function (operator, value1, serial) {
+  check("unary-argument", arguments, value1, stack.pop());
+  return external(aran.unary, operator, value1, undefined);
+};
+
+advice.binary = function (operator, value1, value2, serial) {
+  check("binary-right", arguments, value2, stack.pop());
+  check("binary-left", arguments, value1, stack.pop());
+  return external(aran.binary, operator, value1, value2);
+};
+
 advice.apply = function (value1, value2, values, serial) {
   for (let index = values.length-1; index >= 0; index--)
     check("apply-"+index, arguments, values[index], stack.pop());
   check("apply-this", arguments, value2, stack.pop());
   check("apply-callee", arguments, value1, stack.pop());
-  if (scopeof.has(value1)) {
-    stack.push(value1);
-    stack.push(value2);
-    for (let index = 0; index < values.length; index++)
-      stack.push(values[index]);
-    stack.push(undefined);
-    const value3 = Reflect.apply(value1, value2, values);
-    check("apply-result", arguments, value3, stack.pop());
-    stack.push(value3);
-    return value3;
-  }
-  try {
-    callstack.push(scope);
-    scope = undefined;
-    if (value1 === eval) {
-      const estree1 = Acorn.parse(values[0], {locations:true});
-      const estree2 = aran.weave(estree1, () => true, null);
-      values[0] = Astring.generate(estree2);
-    }
-    const value3 = Reflect.apply(value1, value2, values);
-    scope = callstack.pop();
-    stack.push(value3);
-    return value3;
-  } catch (value3) {
-    scope = callstack.pop();
-    stack.push(value3);
-    throw value3;
-  }
+  if (!scopeof.has(value1))
+    return external(Reflect.apply, value1, value2, values);
+  stack.push(value1);
+  stack.push(value2);
+  for (let index = 0; index < values.length; index++)
+    stack.push(values[index]);
+  stack.push(undefined);
+  const value3 = Reflect.apply(value1, value2, values);
+  check("apply-result", arguments, value3, stack.pop());
+  stack.push(value3);
+  return value3;
 };
 
 advice.construct = function (value1, values, serial) {
   for (let index = values.length-1; index >= 0; index--)
     check("construct-"+index, arguments, values[index], stack.pop());
   check("construct-callee", arguments, value1, stack.pop());
-  if (scopeof.has(value1)) {
-    stack.push(value1);
-    for (let index = 0; index < values.length; index++)
-      stack.push(values[index]);
-    const value2 = Reflect.construct(value1, values, value1);
-    check("construct-result", arguments, value2, stack.pop());
-    stack.push(value2);
-    return value;
-  }
-  try {
-    const value2 = Reflect.construct(value1, values, value1);
-    stack.push(value2);
-    return value2;
-  } catch (value2) {
-    stack.push(value2);
-    throw value2;
-  }
+  if (!scopeof.has(value1))
+    return external(Reflect.construct, value1, values, value1);
+  stack.push(value1);
+  for (let index = 0; index < values.length; index++)
+    stack.push(values[index]);
+  stack.push(value1);
+  const value2 = Reflect.construct(value1, values, value1);
+  check("construct-result", arguments, value2, stack.pop());
+  stack.push(value2);
+  return value;
 };
 
 ///////////
@@ -316,6 +318,5 @@ module.exports = (script1) => {
   const block1 = aran.desugar(estree, null);
   const block2 = aran.ambush(block1, pointcut);
   const script2 = aran.generate(block2);
-  // console.log(script2);
   return script2;
 };
