@@ -122,9 +122,8 @@ advice.throw = function (value, serial) {
 
 advice.eval = function (value, serial) {
   check("eval", arguments, value, stack.pop());
-  const estree1 = Acorn.parse(value, {locations:true});
-  const estree2 = aran.weave(estree1, pointcut, serial);
-  return Astring.generate(estree2);
+  const estree = Acorn.parse(value, {locations:true});
+  return aran.weave(estree, pointcut, serial);
 };
 
 advice.return = function (value, serial) {
@@ -137,7 +136,7 @@ advice.return = function (value, serial) {
 
 advice.abrupt = function (value, serial) {
   check("abrupt", arguments, value, stack.pop());
-  while (scope[SymbolTag] !== "closure" && scope[SymbolTag] !== "program")
+  while (scope[SymbolTag] !== "closure")
     scope = Reflect.getPrototypeOf(scope);
   while (stack.length > scope[SymbolStackLength])
     stack.pop();
@@ -147,39 +146,50 @@ advice.abrupt = function (value, serial) {
   return value;
 };
 
+advice.success = function (value, serial) {
+  check("success", arguments, value, stack.pop());
+  scope = callstack.pop();
+  return value;
+};
+
+advice.failure = function (value, serial) {
+  check("failure", arguments, value, stack.pop());
+  while (scope[SymbolTag] !== "program")
+    scope = Reflect.getPrototypeOf(scope);
+  while (stack.length > scope[SymbolStackLength])
+    stack.pop();
+  scope = callstack.pop();
+  return value;
+};
+
 ///////////////
 // Informers //
 ///////////////
 
 advice.debugger = function (serial) {};
 
-// callee, new.target, this, arguments
-advice.arrival = function (value1, value2, value3, value4, serial) {
+advice.program = function (value, serial) {
   callstack.push(scope);
-  if (value1) {
-    if (scope !== undefined) {
-      check("arrival-newtarget", arguments, value2, stack.pop());
-      for (let index = value4.length-1; index >= 0; index--)
-        check("arrival-"+index, arguments, value4[index], stack.pop());
-      if (value2 === undefined)
-        check("arrival-this", arguments, value3, stack.pop());
-      check("arrival-callee", arguments, value1, stack.pop());
-    }
-    for (let index = value4.length-1; index >= 0; index--)
-      stack.push(value4[index]);
-    stack.push(value4.length);
-    stack.push(value3);
-    stack.push(value2);
-    scope = scopeof.get(value1);
-  } else if (!aran.nodes[serial].AranParentSerial) {
-    scope = null;
-  }
+  scope = null;
 };
 
-advice.program = (value, serial1, serial2) => {
+// callee, new.target, this, arguments
+advice.arrival = function (value1, value2, value3, value4, serial) {
+  if (scope !== undefined) {
+    check("arrival-newtarget", arguments, value2, stack.pop());
+    for (let index = value4.length-1; index >= 0; index--)
+      check("arrival-"+index, arguments, value4[index], stack.pop());
+    if (value2 === undefined)
+      check("arrival-this", arguments, value3, stack.pop());
+    check("arrival-callee", arguments, value1, stack.pop());
+  }
+  for (let index = value4.length-1; index >= 0; index--)
+    stack.push(value4[index]);
+  stack.push(value4.length);
+  stack.push(value3);
+  stack.push(value2);
   callstack.push(scope);
-  if (serial1 === null)
-    scope = null;
+  scope = scopeof.get(value1);
 };
 
 advice.enter = function (tag, labels, identifiers, serial) {
@@ -209,7 +219,7 @@ advice.leave = function (serial) {
 
 advice.continue = function (label, serial) {
   if (label) {
-    while (scope[SymbolLabels].includes(label)) {
+    while (!scope[SymbolLabels].includes(label)) {
       scope = Reflect.getPrototypeOf(scope);
     }
   } else {
@@ -222,7 +232,7 @@ advice.continue = function (label, serial) {
 
 advice.break = function (label, serial) {
   if (label) {
-    while (scope[SymbolLabels].includes(label)) {
+    while (!scope[SymbolLabels].includes(label)) {
       scope = Reflect.getPrototypeOf(scope);
     }
   } else {
@@ -294,7 +304,7 @@ advice.construct = function (value1, values, serial) {
   const value2 = Reflect.construct(value1, values, value1);
   check("construct-result", arguments, value2, stack.pop());
   stack.push(value2);
-  return value;
+  return value2;
 };
 
 ///////////
@@ -317,6 +327,7 @@ module.exports = (script1) => {
   const estree = Acorn.parse(script1, {locations:true});
   const block1 = aran.desugar(estree, null);
   const block2 = aran.ambush(block1, pointcut);
+  // console.log(require("util").inspect(block2, {depth:null, colors:true}));
   const script2 = aran.generate(block2);
   return script2;
 };
