@@ -5,7 +5,6 @@ const Astring = require("astring");
 
 const SymbolTag = Symbol("tag");
 const SymbolLabels = Symbol("labels");
-const SymbolSerial = Symbol("serial");
 const SymbolStackLength = Symbol("stack-length");
 
 let counter = 0;
@@ -16,6 +15,24 @@ const stack = [];
 const advice = {};
 const aran = Aran({format:"script"});
 const pointcut = (name, node) => true;
+const print = (value) => {
+  if (typeof value === "string")
+    return JSON.stringify(value);
+  if (typeof value === "function")
+    return "[Function]"
+  if (typeof value === "object" && value !== null)
+    return Object.prototype.toString.call(value);
+  return String(value);
+};
+const input = (name, value, serial) => {
+  const shadow = ++counter;
+  stack.push(shadow);
+  console.log(shadow+" <= "+print(value)+" // "+name+"@"+serial);
+};
+const output = (name, value, serial) => {
+  const shadow = stack.pop();
+  console.log(shadow+" => "+print(value)+" // "+name+"@"+serial);
+};
 
 global[aran.namespace] = advice;
 global.eval(aran.setup());
@@ -26,18 +43,18 @@ module.exports = (script) => aran.weave(Acorn.parse(script), pointcut, null);
 ///////////////
 
 advice.primitive = (value, serial) => {
-  stack.push(++counter);
+  input("primitive", value, serial);
   return value;
 };
 
 advice.builtin = (value, name, serial) => {
-  stack.push(++counter);
+  input("builtin-("+name+")", value, serial);
   return value;
 };
 
 advice.closure = (value, serial) => {
   scopeof.set(value, scope);
-  stack.push(++counter);
+  input("closure", value, serial);
   return value;
 };
 
@@ -52,7 +69,7 @@ advice.error = (value, serial) => {
 
 advice.argument = function (value, name, serial) {
   if (name === "length" || name === "new.target")
-    stack.push(++counter)
+    input("argument-"+name, value, serial);
   return value;
 };
 
@@ -69,12 +86,12 @@ advice.write = (value, identifier, serial) => {
   let frame = scope;
   while (!Reflect.getOwnPropertyDescriptor(frame, identifier))
     frame = Reflect.getPrototypeOf(frame);
-  frame[identifier] = ++counter;
+  frame[identifier] = stack.pop();
   return value;
 };
 
 advice.test = (value, serial) => {
-  stack.pop();
+  output("test", value, serial);
   return value;
 };
 
@@ -83,42 +100,43 @@ advice.throw = (value, serial) => {
 };
 
 advice.eval = (value, serial) => {
-  stack.pop();
+  output("eval", value, serial);
   return aran.weave(Acorn.parse(value), pointcut, serial);
 };
 
 advice.return = (value, serial) => {
   scope = callstack.pop();
   if (scope === undefined)
-    stack.pop();
+    output("return", value, null);
   return value;
 };
 
 advice.abrupt = (value, serial) => {
-  const meta = stack.pop();
+  const shadow = stack.pop();
   while (scope[SymbolTag] !== "closure")
     scope = Reflect.getPrototypeOf(scope);
   while (stack.length > scope[SymbolStackLength])
     stack.pop();
   scope = callstack.pop();
   if (scope !== undefined)
-    stack.push(meta);
+    stack.push(shadow);
   return value;
 };
 
 advice.success = (value, serial) => {
-  stack.pop();
   scope = callstack.pop();
+  output("success", value, serial);
   return value;
 };
 
 advice.failure = (value, serial) => {
+  const shadow = stack.pop();
   while (scope[SymbolTag] !== "program")
     scope = Reflect.getPrototypeOf(scope);
   while (stack.length > scope[SymbolStackLength])
     stack.pop();
   scope = callstack.pop();
-  return value;
+  return output("failure", value, serial);
 };
 
 ///////////////
@@ -132,27 +150,27 @@ advice.program = (value, serial) => {
   scope = null;
 };
 
-advice.arrival = (value1, value2, value3, value4, serial) => {
+advice.arrival = (callee, newtarget, self, arguments, serial) => {
   if (scope === undefined) {
-    for (let index = 0; index < value4.length; index++)
-      stack.push(++counter);
-    if (value2 === undefined)
-      stack.push(++counter);
-    stack.push(++counter);
+    for (let index = arguments.length - 1; index >= 0; index--) {
+      input("arrival-argument-"+index, arguments[index], null);
+    }
+    if (newtarget === undefined) {
+      input("arrival-this", self, null);
+    }
   }
   callstack.push(scope);
-  scope = scopeof.get(value1);
+  scope = scopeof.get(callee);
 };
 
 advice.enter = (tag, labels, identifiers, serial) => {
   if (tag === "catch") {
-    const meta = stack.pop();
+    const shadow = stack.pop();
     while (scope[SymbolTag] !== "try")
       scope = Reflect.getPrototypeOf(scope);
-    const error = stack.pop();
     while (stack.length > scope[SymbolStackLength])
       stack.pop();
-    stack.push(meta);
+    stack.push(shadow);
     scope = Reflect.getPrototypeOf(scope);
   }
   scope = Object.create(scope);
@@ -162,7 +180,6 @@ advice.enter = (tag, labels, identifiers, serial) => {
     Reflect.defineProperty(scope, SymbolStackLength, {value:stack.length});
   Reflect.defineProperty(scope, SymbolTag, {value:tag});
   Reflect.defineProperty(scope, SymbolLabels, {value:labels});
-  Reflect.defineProperty(scope, SymbolSerial, {value:serial});
 };
 
 advice.leave = (serial) => {
@@ -200,50 +217,85 @@ advice.break = (label, serial) => {
 ///////////////
 
 advice.unary = function (operator, value, serial) {
-  stack.pop();
+  output("unary-argument-("+operator+")", value, serial);
+  callstack.push(scope);
+  scope = undefined;
   try {
-    return aran.unary(operator, value);
+    const result = aran.unary(operator, value, serial);
+    input("unary-result-("+operator+")", result, serial);
+    return result;
+  } catch (error) {
+    input("unary-error-("+operator+")", error, serial);
+    throw error;
   } finally {
-    stack.push(++counter);
+    scope = callstack.pop();
   }
 };
 
 advice.binary = function (operator, value1, value2, serial) {
-  stack.pop();
-  stack.pop();
+  output("binary-right-("+operator+")", value2, serial);
+  output("binary-left-("+operator+")", value1, serial);
+  callstack.push(scope);
+  scope = undefined;
   try {
-    return aran.binary(operator, value1, value2);
+    const result = aran.binary(operator, value1, value2);
+    input("binary-result-("+operator+")", result, serial);
+    return result;
+  } catch (error) {
+    input("binary-error-("+operator+")", error, stack);
+    throw error;
   } finally {
-    stack.push(++counter);
+    scope = callstack.pop();
   }
 };
 
 advice.apply = (value1, value2, values, serial) => {
-  const metas = stack.splice(-values.length);
-  const meta = stack.pop();
-  stack.pop();
   if (scopeof.has(value1)) {
-    stack.push(...metas);
-    stack.push(meta);
+    const shadows = values.length ? stack.splice(-values.length) : [];
+    const shadow = stack.pop();
+    output("apply-callee", value1, serial);
+    stack.push(...shadows.reverse());
+    stack.push(shadow);
     return Reflect.apply(value1, value2, values);
   }
+  callstack.push(scope);
+  scope = undefined;
   try {
-    return Reflect.apply(value1, value2, values);
+    for (let index = values.length - 1; index >= 0; index--)
+      output("apply-argument-"+index, values[index], serial);
+    output("apply-this", value2, serial);
+    output("apply-callee", value1, serial);
+    const result = Reflect.apply(value1, value2, values);
+    input("apply-result", result, serial);
+    return result;
+  } catch (error) {
+    input("apply-error", error, serial);
+    throw error;
   } finally {
-    stack.push(++counter);
+    scope = callstack.pop();
   }
 };
 
 advice.construct = (value, values, serial) => {
-  const metas = stack.splice(-values.length);
-  stack.pop();
   if (scopeof.has(value)) {
-    stack.push(...metas);
+    const shadows = values.length ? stack.splice(-values.length) : [];
+    output("construct-callee", value, serial);
+    stack.push(...shadows.reverse());
     return Reflect.construct(value, values);
   }
+  callstack.push(scope);
+  scope = undefined;
   try {
-    return Reflect.construct(value, values);
+    for (let index = values.length - 1; index >= 0; index--)
+      output("construct-argument-"+index, values[index], serial);
+    output("construct-callee", value, serial);
+    const result = Reflect.construct(value, values);
+    input("construct-result", result, serial);
+    return result;
+  } catch (error) {
+    input("construct-error", error, serial);
+    throw error;
   } finally {
-    stack.push(++counter);
+    scope = callstack.pop();
   }
 }; 
