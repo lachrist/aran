@@ -1,27 +1,19 @@
 # Aran <img src="img/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
 
-This is reasarch project.
-It works on basic cases, but 
-Please submit bug reports.
-In the near future I will not add new feature but I will correct
-If you make publication based on it, I kindly request to share love by providing a link to this github repository.
-
-<!--
-// **Disclaimer**
-
-// TRANSPARENCY ISSUE
-// No closure naming for computed property in object literal:
-//
-// > let foo = 1;
-// > ({[foo]: function(){}})[1]
-// [Function: 1] -->
-
 Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting JavaScript code.
 To install, run `npm install aran`.
 Aran was designed as a generic infra-structure for building various development-time dynamic program analyses such as: objects and functions profiling, debugging, control-flow tracing, taint analysis and concolic testing.
 Aran can also be used at deployment-time but be mindful of performance overhead.
 For instance, Aran can be used to carry out control access systems such as sandboxing.
-Aran can also be used as a desugarizer much like [babel](https://babeljs.io).
+<!-- 
+**Disclaimer**
+Aran is an academic research project, we are using it at [our lab](http://soft.vub.ac.be/soft/) to run experiments and develop new existing analyses.
+Yet we believe 
+
+Although I spent a lot of time improving the quality of this software I do not claim it reached industrial strength.
+You are more than welcome to try Aran on production code but be mindful that it originally fits.
+In any case 
+In the near future, I will not add new features but will correct bugs reported here.
 
 ## Getting Started
 
@@ -93,7 +85,18 @@ An other good reason for the advice to communicate with Aran arises when the tar
 
 ## Limitations
 
-1) Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and most of [ECMAScript2017](https://www.ecma-international.org/ecma-262/8.0/).
+<!--
+// **Disclaimer**
+
+// TRANSPARENCY ISSUE
+// No closure naming for computed property in object literal:
+//
+// > let foo = 1;
+// > ({[foo]: function(){}})[1]
+// [Function: 1] -->
+
+
+1) Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and most of [ECMAScript2018](https://www.ecma-international.org/ecma-262/8.0/).
    Known missing features are:
    * Native modules ([`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import), [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export)).
    * [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
@@ -721,3 +724,137 @@ I'm currently being employed on the [Tearless](http://soft.vub.ac.be/tearless/pa
 ![soft](img/soft.png)
 ![vub](img/vub.png)
 
+
+
+## Discussion
+
+[Aran](https://github.com/lachrist/aran) and program transformation in general is good for introspecting the control flow and pointers data flow.
+Things become more difficult when reasoning about primitive value data flow is involved.
+For instance, there is no way at the JavaScript language level to differentiate two `null` values even though they have different origins.
+This restriction strikes every JavaScript primitive values because they are inlined into different parts of the program's state -- e.g the environment and the value stack.
+All of these copying blur the concept of a primitive value's identity and lifetime.
+By opposition, objects can be properly differentiated based on their address in the store.
+Such situation happens in almost every mainstream programming languages.
+We now discuss several strategies to provide an identity to primitive values:
+* *Shadow States*:
+  For low-level languages such as binary code, primitive values are often tracked by maintaining a so called "shadow state" that mirrors the concrete program state.
+  This shadow state contains analysis-related information about the program values situated at the same location in the concrete state. 
+  [Valgrind](http://valgrind.org/) is a popular binary instrumentation framework which utilizes this technique to enables many data-flow analyses.
+  The difficulty of this technique lies in maintaining the shadow state as non-instrumented functions are being executed.
+  In JavaScript this problem typically arises when objects are passed to non instrumented functions such as builtins.
+  Keeping the shadow store in sync during such operation requires to know the exact semantic of the non-instrumented function. 
+  Since they are so many different builtin functions in JavaScript, this is a very hard thing to do.
+* *Record And Replay*:
+  Record and replay systems such as [Jalangi](https://github.com/SRA-SiliconValley/jalangi) are an intelligent response to the challenge of keeping in sync the shadow state with its concrete state.
+  Acknowledging that divergences between shadow and concrete states cannot be completely avoided, these systems allows divergences in the replay phase which can be recovered from by utilizing the trace gathered during the record phase.
+  We propose two arguments against such technique:
+  First, every time divergences are resolved in the replay phase, values with unknown origin are being introduced which necessarily diminish the precision of the resulting analysis.
+  Second, the replay phase only provide information about partial execution which can be puzzling to reason about.
+* *Wrappers*:
+  Instead of providing an entire separated shadow state, wrappers constitute a finer grained solution.
+  By wrapping primitive values inside objects we can simply let them propagate through the data flow of the base program.
+  The challenge introduced by wrappers is to make them behave like their wrapped primitive value to non-transformed code.
+  We explore three solutions to this challenge:
+  * *Boxed Values*:
+    JavaScript enables to box booleans, numbers and strings.
+    Despite that symbols, `undefined` and `null` cannot be tracked by this method, boxed values do not always behave like their primitive counterpart within builtins.    
+    ```js
+    // Strings cannot be differentiated based on their origin
+    let string1 = "abc";
+    let string2 = "abc";
+    assert(string1 === string2);
+    // Boxed strings can be differentiated based on their origin
+    let boxed_string1 = new String("abc");
+    let boxed_string2 = new String("abc");
+    assert(boxed_string1 !== boxed_string2);
+    // Boxed value behave as primitive in some builtins: 
+    assert(JSON.stringify({a:string1}) === JSON.stringify({a:boxed_string1}));
+    // In others, they don't...
+    let error
+    try {
+      Object.defineProperty(string1, "foo", {value:"bar"});
+    } catch (e) {
+      error = e;
+    }
+    assert(error);
+    Object.defineProperty(boxed_string1, "foo", {value:"bar"});
+    ```
+  * *`valueOf` Method*:
+    A similar mechanism to boxed value is to use the `valueOf` method.
+    Many JavaScript builtins expecting a primitive value but receiving an object will try to convert this object into a primitive using its `valueOf` method.
+    As for boxed values this solution is not bullet proof and there exists many cases where the `valueOf` method will not be invoked.
+  * *Explicit Wrappers*:
+    Finally a last option consists in using explicit wrappers which should be cleaned up before escaping to non-instrumented code.
+    This requires to setup an access control system between instrumented code and non-instrumented code.
+    This the solution this module directly enables.
+
+## Acknowledgments
+
+I'm [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd student at the Vrij Universiteit of Brussel (VUB).
+I'm working at the SOFT language lab, my promoters are [Coen De Roover](http://soft.vub.ac.be/soft/members/cderoove) and [Wolfgang De Meuter](http://soft.vub.ac.be/soft/members/wdmeuter).
+I'm currently being employed on the [Tearless](http://soft.vub.ac.be/tearless/pages/index.html) project.
+
+<!-- Improvements ideas:
+Provide a much more fine grained membrane definition.
+This membrane can easily express the actual membrane and is symetric.
+I suspect I will be able to use a single foreign file instead of generating the dual.
+```
+membrane = {
+  instrument: (script, serial) => ...,
+  enter_primitive: (primitive) => ...,
+  enter_native_wild: (native_wild) => ...,
+  enter_native_tame: (native_tame) => ...,
+  leave_wild: (inner) => ...,
+  leave_tame: (inner) => ...,
+};
+```
+ -->
+
+<!-- 
+1. **Debugging NaN appearances**
+  In this first example, we want to provide an analysis which tracks the origin of `NaN` (not-a-number) values.
+  The problem with `NaN` values is that they can easily propagate as the program is executed such that detecting the original cause of a `NaN` appearance is often tedious for large programs.
+  Consider the program below which alerts "Your age is: NaN".
+  ```js
+  var year = Number(document.getElementById("bdate").avlue);
+  // many lines with many unrelated NaNs appearances
+  alert("Your age is: " + (2016 - year));
+  ```
+  Simply printing every appearance of `NaN` values runs under the risk of overwhelming the programmer with unrelated `NaN` appearances.
+  We would like to know only of the `NaN` that caused the alert to display an buggy message.
+  It is therefore crucial to differentiate `NaN` values which cannot be done at the JavaScript language level.
+
+2. **Taint analysis**
+  Taint analysis consists in marking -- or *tainting* -- values coming from predefined source of information and preventing them from flowing through predefined sinks of information.
+  As tainted values are manipulated through the program, the taint should be properly propagated to dependent values. 
+  ```js
+  var password = document.getElementById("password"); // predefined source
+  var secret = password.value; // tainted string
+  var secrets = secret.split(""); // array of tainted characters
+  sendToShadyThirdPartyServer(secrets); // predefined sink
+  ```
+  Lets suppose that the password was `"trustno1"`.
+  N.B. strings are primitive values in JavaScript.
+  After splitting this string to characters we cannot simply taint all string being `"t"`, `"r"`, `"u"`, `"s"`, `"t"`, "`n`", "`o`", `"1"`.
+  This would lead to serious over-tainting and diminish the precision and usefulness of the analysis.
+  As for the `Nan` debugger we crucially need to differentiate primitive values based on their origin and not only their value.
+
+3. **Concolic Testing**
+  Concolic testing aims at automatically exploring all the control-flow paths a program can take for validation purpose.
+  It involves gathering mathematic formula on a program's inputs as it is being executed.
+  Later, these formula can be given to a constraint solver to steer the program into a unexplored execution path.
+  Consider the program below which has two different outcomes based on the birthdate of the user.
+  A successful concolic tester should be able to generate an birthdate input that leads the program to the consequent branch and an other birthdate input that leads the program to the alternate branch.
+  ```js
+  var input = document.getElemenById("bdate").value;
+  var bdate = input.value // new symbolic value [α]
+  var age = bdate - 2016; // new constraint [β = α - 2016]
+  var isminor = age > 17; // new constraint [γ = β > 17]
+  if (isminor) {          // path condition [γ && γ = β > 17 && β = α - 2016]
+    // do something
+  } else {                // path condition [!γ && γ = β > 17 && β = α - 2016]
+    // do something else
+  }
+  ```
+  It should be clear that confusing two primitive values having different origin would easily lead to erroneous path constraint.
+ --> -->

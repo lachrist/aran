@@ -1,6 +1,6 @@
 
 const Acorn = require("acorn");
-const Aran = require("aran.js");
+const Aran = require("aran");
 
 const aran = Aran({format:"script"});
 const advice = {};
@@ -25,9 +25,6 @@ const output = (name, {value, shadow}, serial) => {
   console.log(shadow+" => "+print(value)+" // "+name+"@"+serial);
   return value;
 };
-
-// const input = (name, value, serial) => value;
-// const output = (name, value, serial) => value;
 
 global[aran.namespace] = advice;
 global.eval(aran.setup());
@@ -84,6 +81,7 @@ advice.success = ($value, serial) => {
 advice.failure = ($value, serial) => {
   return output("failure", $value, serial);
 };
+
 // Combiners //
 advice.unary = function (operator, $value, serial) {
   const value = output("unary-argument-("+operator+")", $value, serial);

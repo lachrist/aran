@@ -1,6 +1,6 @@
 
 const Acorn = require("acorn");
-const Aran = require("aran.js");
+const Aran = require("aran");
 const Astring = require("astring");
 
 const SymbolTag = Symbol("tag");
