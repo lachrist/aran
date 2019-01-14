@@ -9,7 +9,9 @@ global[aran.namespace] = {
   }
 };
 global.eval(aran.setup());
-module.exports = (script) => {
-  const estree = Acorn.parse(script);
-  return aran.weave(estree, pointcut, null);
+module.exports = (script1) => {
+  const estree = Acorn.parse(script1);
+  const script2 = aran.weave(estree, pointcut, null);
+  // console.log(script2);
+  return script2;
 };

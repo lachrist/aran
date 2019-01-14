@@ -8,9 +8,10 @@ const pointcut = (name, node) => name in advice;
 const aran = Aran({format:"script"});
 global[aran.namespace] = advice;
 eval(aran.setup());
+let counter = 0;
 const membrane = {
-  taint: (value) => ({inner:value}),
-  clean: (value) => value.inner
+  taint: (value) => ({meta:"@"+(++counter), base:value}),
+  clean: ($$value) => $$value.base
 };
 const {capture, release} = Linvail(membrane, {
   check: true,
@@ -22,7 +23,10 @@ module.exports = (script) => {
 
 // Consumers //
 advice.throw = ($$value, serial) => release(membrane.clean($$value));
-advice.test = ($$value, serial) => membrane.clean($$value);
+advice.test = ($$value, serial) => {
+  console.log($$value.meta+" TEST");
+  return membrane.clean($$value);
+};
 advice.success = ($$value, serial) => release(membrane.clean($$value));
 advice.eval = ($$value, serial) => {
   const script = release(membrane.clean($$value));
@@ -31,7 +35,11 @@ advice.eval = ($$value, serial) => {
 
 // Producers //
 advice.error = (value, serial) => membrane.taint(capture(value));
-advice.primitive = (primitive, serial) => membrane.taint(primitive);
+advice.primitive = (primitive, serial) => {
+  const $$primitive = membrane.taint(primitive);
+  console.log($$primitive.meta+" := "+JSON.stringify(primitive));
+  return $$primitive;
+};
 advice.builtin = (value, name, serial) => membrane.taint(capture(value));
 advice.closure = ($closure, serial) => {
   Reflect.setPrototypeOf($closure, capture(Function.prototype));
@@ -53,11 +61,15 @@ advice.construct = ($$value, $$values, serial) => {
 advice.unary = (operator, $$value, serial) => {
   const value = release(membrane.clean($$value));
   const primitive = aran.unary(operator, value);
-  return membrane.taint(primitive);
+  const $$primitive = membrane.taint(primitive);
+  console.log($$primitive.meta+" := "+operator+" "+$$value.meta);
+  return $$primitive;
 };
 advice.binary = (operator, $$value1, $$value2, serial) => {
   const value1 = release(membrane.clean($$value1));
   const value2 = release(membrane.clean($$value2));
   const primitive = aran.binary(operator, value1, value2);
-  return membrane.taint(primitive);
+  const $$primitive = membrane.taint(primitive);
+  console.log($$primitive.meta+" := "+$$value1.meta+" "+operator+" "+$$value2.meta);
+  return $$primitive;
 };

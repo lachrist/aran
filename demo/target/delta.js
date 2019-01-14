@@ -1,11 +1,12 @@
-let a = 1, b = 6, c = 9;
-const delta = b * b - 4 * a * c;
-if (delta < 0) {
-  console.log("No Solution");
-} else if (delta === 0) {
-  console.log("Sol = " + (-b / 2 * a));
-} else {
-  const sol1 = (-b - Math.sqrt(delta) / 2 * a);
-  const sol2 = (-b + Math.sqrt(delta) / 2 * a);
-  console.log("Sol1 = "+sol1+", Sol2 = "+sol2);
-}
+const delta = (a, b, c) => b * b - 4 * a * c;
+const solve = (a, b, c) => {
+  const d = delta(a, b, c);
+  if (d < 0)
+    return "No Solution";
+  if (d === 0)
+    return "Sol = " + (-b / 2 * a);
+  const s1 = (-b - Math.sqrt(d) / 2 * a);
+  const s2 = (-b + Math.sqrt(d) / 2 * a);
+  return "Sol1 = " + s1 + ", Sol2 = " + s2;
+};
+console.log(solve(1, 6, 9));

@@ -5,7 +5,7 @@ const SandboxScenario = require("sandbox-scenario");
 const callback = (name) => (error, script) => {
   if (error)
     throw error;
-  Fs.writeFileSync(__dirname+"/output/"+name+".html", [
+  Fs.writeFileSync(__dirname+"/../../lachrist.github.io/aran/"+name+".html", [
     "<!DOCTYPE html>",
     "<html>",
     "  <head>",
@@ -39,9 +39,12 @@ const dead = (analysis, target) => SandboxScenario(
 
 dead("apply", "factorial");
 live("apply", "factorial");
-// live("empty", "empty");
-// live("eval", "dynamic");
-// live("forward", "empty");
-// live("sandbox", "global");
-// live("shadow-value", "delta");
-// live("shadow-state", "delta");
+live("empty-estree", "samples");
+live("empty-script", "samples");
+live("forward-estree", "samples");
+live("forward-script", "samples");
+live("logger", "delta");
+live("shadow-value", "delta");
+live("shadow-state", "delta");
+live("linvail-value", "delta-object");
+
