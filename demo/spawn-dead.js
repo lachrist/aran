@@ -2,6 +2,7 @@ const Aran = require("aran");
 const Acorn = require("acorn");
 const Astring = require("astring");
 module.exports = (pointcut, advice) => {
+  pointcut = global.eval(pointcut);
   const aran = Aran();
   const estree1 = aran.setup();
   return (path, script, argv) => {

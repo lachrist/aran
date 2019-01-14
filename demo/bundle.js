@@ -20,28 +20,28 @@ const callback = (name) => (error, script) => {
   ].join("\n"), "utf8");
 }
 
-const live = (advice, target) => SandboxScenario(
-  {type:"raw", path:__dirname+"/live/spawn.js", basedir:"./"},
+const live = (analysis, target) => SandboxScenario(
+  {type:"browserify", path:__dirname+"/spawn-live.js", basedir:"./"},
   [
-    {type:"browserify", path:__dirname+"/live/instrument/"+advice+".js"}],
+    {type:"browserify", path:__dirname+"/live/"+analysis+".js"}],
   [
     {type:"raw", path:__dirname+"/target/"+target+".js"}],
-  callback("live-"+advice+"-"+target));
+  callback("live-"+analysis+"-"+target));
 
-const dead = (advice, target) => SandboxScenario(
-  {type:"browserify", path:__dirname+"/dead/spawn.js", basedir:"./"},
+const dead = (analysis, target) => SandboxScenario(
+  {type:"browserify", path:__dirname+"/spawn-dead.js", basedir:"./"},
   [
-    {type:"raw", path:__dirname+"/dead/"+advice+"/pointcut.js"},
-    {type:"browserify", path:__dirname+"/dead/"+advice+"/advice.js"}],
+    {type:"browserify", path:__dirname+"/dead/"+analysis+"-pointcut.js"},
+    {type:"browserify", path:__dirname+"/dead/"+analysis+"-advice.js"}],
   [
     {type:"raw", path:__dirname+"/target/"+target+".js"}],
-  callback("dead-"+advice+"-"+target));
+  callback("dead-"+analysis+"-"+target));
 
 dead("apply", "factorial");
 live("apply", "factorial");
-live("empty", "empty");
-live("eval", "dynamic");
-live("forward", "empty");
-live("sandbox", "global");
-live("shadow-value", "delta");
-live("shadow-state", "delta");
+// live("empty", "empty");
+// live("eval", "dynamic");
+// live("forward", "empty");
+// live("sandbox", "global");
+// live("shadow-value", "delta");
+// live("shadow-state", "delta");

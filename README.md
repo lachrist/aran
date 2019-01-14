@@ -4,16 +4,13 @@ Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting Jav
 To install, run `npm install aran`.
 Aran was designed as a generic infra-structure for building various development-time dynamic program analyses such as: objects and functions profiling, debugging, control-flow tracing, taint analysis and concolic testing.
 Aran can also be used at deployment-time but be mindful of performance overhead.
-For instance, Aran can be used to carry out control access systems such as sandboxing.
-<!-- 
-**Disclaimer**
-Aran is an academic research project, we are using it at [our lab](http://soft.vub.ac.be/soft/) to run experiments and develop new existing analyses.
-Yet we believe 
+For instance, Aran can be used to implement control access systems such as sandboxing.
 
+**Disclaimer**
+Aran is an academic research project, we are using it at [our lab](http://soft.vub.ac.be/soft/) to support publication and run experiments.
 Although I spent a lot of time improving the quality of this software I do not claim it reached industrial strength.
-You are more than welcome to try Aran on production code but be mindful that it originally fits.
-In any case 
-In the near future, I will not add new features but will correct bugs reported here.
+Bugs may still remain and unforeseen behavior may occur on large instrumented programs.
+In the near future, I will not add new features but will correct bugs reported in this repository.
 
 ## Getting Started
 
@@ -23,55 +20,78 @@ npm install acorn aran astring
 
 ```js
 const Acorn = require("acorn");
-const Aran = require("aran");
+const Aran = require("./lib/main.js");
 const Astring = require("astring");
+let depth = "";
 global.ADVICE = {
-  binary: (operator, left, right, serial) => {
-    const result = eval("left "+operator+" right");
-    console.log(result+" ("+left+" "+operator+" "+right+")");
-    return result;
+  apply: (f, t, xs, serial) => {
+    console.log(depth + f.name + "(" + xs.join(", ") + ")");
+    depth += ".";
+    const x = Reflect.apply(f, t, xs);
+    depth = depth.substring(1);
+    console.log(depth + x);
+    return x;
   }
 };
-const aran = Aran({
-  namespace: "ADVICE",
-  pointcut: ["binary"]
-});
+const pointcut = (name, node) =>
+  name === "apply" && node.type === "CallExpression";
+const aran = Aran({namespace: "ADVICE"});
 global.eval(Astring.generate(aran.setup()));
-const estree1 = Acorn.parse("'Hello'+'World'+'!'");
-const estree2 = aran.weave(estree2);
+const estree1 = Acorn.parse(`
+  const fac = (n) => n ? n * fac(n - 1) : 1;
+  fac(6);
+`);
+const estree2 = aran.weave(estree1, pointcut);
 global.eval(Astring.generate(estree2));
 ```
 
 ```txt
-HelloWorld (Hello + World)
-HelloWorld! (HelloWorld + !)
+fac(6)
+.fac(5)
+..fac(4)
+...fac(3)
+....fac(2)
+.....fac(1)
+......fac(0)
+......1
+.....1
+....2
+...6
+..24
+.120
+720
 ```
 
 The code transformation performed by Aran essentially consists in inserting calls to functions called *traps* at [ESTree](https://github.com/estree/estree) nodes specified by the user.
 For instance, the expression `x + y` may be transformed into `META.binary("+", x, y, 123)`.
 The last argument passed to traps is always a *serial* number which uniquely identifies the node which triggered the trap.
-The object that contains traps is called *advice* and the specification that characterizes what trap should be triggered on each node is called *pointcut*.
+The object that contains traps is called the *advice* and the specification that characterizes what trap should be triggered on each node is called *pointcut*.
 The process of inserting trap calls based on a pointcut is called *weaving*.
 This terminology is borrowed from [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming).
-[demo/dead/apply](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/dead-apply-factorial.html) demonstrates these concepts.
+[demo/output/dead-apply-factorial.html](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/dead-apply-factorial.html) demonstrates these concepts.
 
 ![weaving](img/weaving.png)
 
-When code weaving happens on the same process that evaluates weaved code, it is called *live weaving*.
-This is the case for [demo/live/instrument/apply.js](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/live-apply-factorial.html) which performs the same analysis as [demo/dead/apply](demo/dead/apply).
+When code weaving happens on the same process which evaluates weaved code, it is called *live weaving*.
+[demo/output/live-apply-factorial.js](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/live-apply-factorial.html) is an example of live weaving.
 Live weaving enables direct communication between an advice and its associated Aran's instance.
 For instance, `aran.nodes[serial]` can be invoked by the advice to retrieve the line index of the node that triggered a trap.
-An other good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
+Another good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
 
 ## Demonstrators
 
-* [demo/live/instrument/empty.js](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/live-empty-empty.html): Do nothing.
-  Empty advice.
+* [demo/live/instrument/empty-estree.js](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/live-empty-empty.html):
+  Empty advice, do nothing aside from instrumenting the argument of direct eval calls.  
   Can be used to inspect how Aran desugars JavaScript.
-* [demo/live/instrument/forward.js](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/live-forward-empty.html):
+* [demo/live/instrument/empty-script.js](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/live-empty-empty.html):
+  Same as `empty-estree.js` but uses the `"script"` format option instead.
+* [demo/live/instrument/forward-estree.js](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/live-forward-empty.html):
   Transparent implementation of all the traps.
   Can be used to inspect how Aran inserts traps.
-  The last lines can be uncommented to turn this analysis into a tracer.
+* [demo/live/instrument/forward-script.js](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/live-forward-empty.html):
+  Same as `forward-estree.js` but uses the `"script"` format option instead.
+* [demo/live/instrument/logger.js](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/live-forward-empty.html):
+  Same as `forward-script.js` but log the arguments and result of every trap.
 * [demo/live/instrument/sandbox.js](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/live-sandbox-global.html):
   Demonstrate sandboxing by restricting access to `Date`.
 * [demo/live/instrument/eval.js](https://cdn.rawgit.com/lachrist/aran/9076ca66/demo/output/live-eval-dynamic.html):
@@ -95,8 +115,7 @@ An other good reason for the advice to communicate with Aran arises when the tar
 // > ({[foo]: function(){}})[1]
 // [Function: 1] -->
 
-
-1) Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and most of [ECMAScript2018](https://www.ecma-international.org/ecma-262/8.0/).
+1) Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and most of [ECMAScript2019](https://www.ecma-international.org/ecma-262/8.0/).
    Known missing features are:
    * Native modules ([`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import), [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export)).
    * [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
@@ -857,4 +876,4 @@ membrane = {
   }
   ```
   It should be clear that confusing two primitive values having different origin would easily lead to erroneous path constraint.
- --> -->
+ -->
