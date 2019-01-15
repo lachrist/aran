@@ -112,7 +112,7 @@ Another good reason for the advice to communicate with Aran arises when the targ
    * Asynchronous functions ([`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)).
    * [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals).
 2) There exists loopholes that will cause the target program to behave differentially when analyzed.
-   These bugs are commonly refer as *Heisenbugs*, and are discusses in [Known Heisenbugs](#known-heisenbugs).
+   These bugs are commonly referred as *Heisenbugs*, and are discusses in [Known Heisenbugs](#known-heisenbugs).
 3) Aran does not provide any facilities for instrumenting modularized JavaScript applications.
    To instrument server-side node applications and client-side browser applications we rely on a separate module called [Otiluke](https://github.com/lachrist/otiluke).
 4) Aran does not offer an out-of-the-box interface for tracking primitive values through the object graph.
@@ -156,6 +156,7 @@ For instance, in the code below, `aran1` and `aran2` are in the exact same state
 
 Generate the setup code which should be executed before any instrumented code; it is either an ESTree program or a string depending on `options.format`.
 The setup code should be evaluated in an environment where the advice variable is accessible.
+If the setup code is evaluated twice (for the same advice variable), it will throw an error.
 
 ### `output = aran.weave(program, pointcut, serial)`
 
@@ -244,144 +245,150 @@ An array indexing all the AST node visited by the Aran instance.
 This field is useful to retrieve a node from its serial number: `aran.nodes[serial]`.
 It is not enumerable to reduces the size of `JSON.stringify(aran)`.
 
-`{
+```js
+{
   value: array,
   enumerable: false,
   configurable: false,
   writable: false
-}`
+}
+```
 
 ## Advice
 
 In Aran, an advice is a collection of functions that will be called during the evaluation of weaved code.
-These functions are called traps; they are independently optional and they all receive as last argument an integer which is the index of the ESTree node that triggered the them.
+These functions are called traps; they are independently optional and they all receive as last argument a number which is the index of the ESTree node that triggered the them.
+Serial numbers can be seen as program counters.
 
 ### Trap Categorization
 
 We tried to provide as few trap as possible to express the entire JavaScript semantic.
 This process still left us with around 40 traps which we categorize depending on their effect on the value stack:
 
-* *Bystanders*: no effect on the value stack.
-  Aside from `begin`, these traps receive only primitive constants and their result is discarded.
-* *Producers*: push several values on top of the stack.
-  Aside from `arrival`, these traps push exactly one value on top of the stack.
-  Aside from `copy` and `arrival`, the pushed value corresponds to the value returned by the trap.
-* *Consumers*: pop one value from the stack.
-  Aside from `drop`, the popped value corresponds to the value returned by the trap.
-* *Combiners*: pop several values from the value stack and push exactly one value on top of it.
-  Aside from `array` and `object`, these traps should compute a new value.
-* *Swappers*: swap two elements of the value stack based on their position.
-  The only trap in this category is `swap`.
+* Informers (7): do nothing
+* Modifiers (15): returns the first argument
+  * Bystanders (2): no effect on the value stack
+  * Producers: push a value on top of the value stack.
+  * Consumers: pop a value from the value stack.
+* Combiners (4): computes a new value
+  * `unary = (operator, argument, serial) => eval(operator+" argument");`
+  * `binary = (operator, left, right, serial) => eval("left "+operator+" right");`
+  * `apply = (closure, context, arguments, serial) => Reflect.apply(closure, context, arguments);`
+  * `construct = (constructor, arguments, serial) => Reflect.construct(constructor, arguments);`
 
 ![trap-categorization](img/trap-category.png)
 
 ### Trap Insertion
 
-Name          | Original             | Instrumented
---------------|----------------------|-------------
-**Bystanders**|                      |
-*Informers*   |                      |
-`sandbox`     | `...` (program)      | `... begin(scope, @serial), META_HANDLERS)) { ... }`
-`block`       | `{ ... }`            | `{ META.block(@serial) ... }`
-`break`       | `break l;`           | `META.break(false, "l", @serial); break bl;`
-`drop`        | `f();`               | `(f(), META.drop(@serial));`
-`end`         | `...` (program)      | `... finally { META.end(scope, @serial); } ...`
-`finally`     | `... finally { ...`  | `... finally { META.finally(@serial) ...`
-`label`       | `l: { ... }`         | `bl: { META.label(false, "l", @serial); ... }`
-`leave`       | `{ ... }`            | `{ ... META.leave("block", @serial); }`
-`try`         | `try { ...`          | `try { META.try(@serial) ...`
-*Modifiers*   |                      |
-`begin`       | `...` (program)      | `... const sandbox = META.begin(strict, scope, global, @serial); ...`
-**Producers** |                      | 
-*Informers*   |                      |
-`arrival`     | `() => { ... }`      | `... META.arrival(@strict, scope, callee, arguments, @serial); ...`
-*Modifiers*   |                      |
-`builtin`     | `for (x in o) ...`   | `... META.builtin("Object.keys", META._Object_keys, @serial) ...`
-`catch`       | `... catch (e) ...`  | `... catch (error) { let e = META.catch(error, @serial); ...`
-`closure`     | `() => {}`           | `META.closure(..., @serial)`
-`discard`     | `delete x`           | `META.discard("x", delete x, @serial)`
-`primitive`   | `"foo"`              | `META.primitive("foo", @serial)`
-`read`        | `x`                  | `META.read("x", x, @serial)`
-`regexp`      | `/abc/g`             | `META.regexp(/abc/g, @serial)`
-**Consumers** |                      | 
-*Informers*   |                      |
-`drop`        | `f();`               | `f(); META.drop();`
-*Modifiers*   |                      |
-`completion`  | `"foo";`             | `completion = META.completion("foo", @serial);`
-`declare`     | `let x = y`          | `let x = META.declare("let", "x", y, @serial)`
-`eval`        | `eval(x)`            | `$eval === META._eval ? eval(META.eval(x, @serial)) : $eval(x)`
-`failure`     | `...` (program)      | `... catch (error) { throw META.failure(scope, error, @serial); } ...`
-`return`      | `return x`           | `return META.return(arrival, x, @serial)`
-`success`     | `...` (program)      | `... completion = META.success(scope, completion, @serial); ...`
-`test`        | `x ? y : z`          | `META.test(x, @serial) : y : z`
-`throw`       | `throw x`            | `throw META.throw(x, @serial)`
-`with`        | `with (x) { ... }`   | `with(new META._Proxy(META.with(x, @serial), META._WithHandlers)) { ... }`
-`write`       | `x = y`              | `x = META.write("x", y, @serial)`
-**Combiners** |                      |
-*Modifiers*   |                      |
-`array`       | `[x,y]`              | `META.array([x,y], @serial)`
-`object`      | `{k:x,l:y}`          | `META.object(["k", "l"], {k:x,l:y}, @serial)`
-*Computers*   |                      |
-`apply`       | `f(x,y)`             | `META.apply(f, [x,y], @serial)`
-`binary`      | `x + y`              | `META.binary("+", x, y, @serial)` 
-`construct`   | `new F(x,y)`         | `META.construct(F, [x,y], @serial)`
-`delete`      | `delete o.k`         | `META.delete(o, "k", @serial)`
-`get`         | `o.k`                | `META.get(o, "k", @serial)`
-`invoke`      | `o.k(x,y)`           | `META.invoke(o, "k", [x,y], @serial)`
-`set`         | `o.k = x`            | `META.set(o, "k", x, @serial)`
-`unary`       | `!x`                 | `META.unary("!", x, @serial)` 
-**Swappers**  |                      |
-*Informers*   |                      |
-`swap`        | `for (x in o) ...`   | `... META.swap(1, 2, @serial) ...`
+exports.CombinerTrap = [
+  "apply",
+  "construct",
+  "unary",
+  "binary"
+];
+
+exports.InformerTrap = [
+  "program",
+  "arrival",
+  "enter",
+  "leave",
+  "continue",
+  "break",
+  "debugger"
+];
+
+exports.ModifierTrap = [
+  // Bystanders //
+  "abrupt",
+  "failure",
+  // Producers //
+  "primitive",
+  "read",
+  "closure",
+  "builtin",
+  "error",
+  "argument",
+  // Consumer //
+  "drop",
+  "eval",
+  "test",
+  "write",
+  "return",
+  "throw",
+  "success"
+];
+
+
+Name          | Original              | Instrumented
+--------------|-----------------------|-------------
+**Informers** |                       |
+`program`     | `...` (program)       | `program(META.builtins.global, @serial); ...`
+`arrival`     | `function () { ... }` | `... function () { ... META.arrival(callee, new.target, this, arguments, @serial); ... } ...`
+`enter`       | `l: { let x; ... }`   | `{ META.enter("block", ["x"], ["l"], @serial); ... }`
+`leave`       | `{ ... }`             | `{ ... META.leave(@serial); }`
+`continue`    | `continue l;`         | `META.continue("l", @serial); continue a;`
+`break`       | `break l;`            | `META.break("l", @serial); break a;`
+`debugger`    | `debugger;`           | `META.debugger(@serial); debugger;`
+**Modifiers** |                       |
+*Bystanders*  |                       |
+`abrupt`      | `function () { ... }` | `... try { ... } catch (error) { throw META.abrupt(error, @serial); } ...`
+`failure`     | `...` (program)       | `try { ... } catch (error) { throw META.failure(error, @serial); }` 
+*Producers*   |                       | 
+`primitive`   | `"foo"`               | `META.primitive("foo", @serial)`
+`read`        | `x`                   | `META.read(x, "x", @serial)`
+`closure`     | `function () { ... }` | `META.closure(..., @serial)`
+`builtin`     | `[x, y]`              | `META.builtin(META.builtins["Array.of"], "Array.of", @serial)(x, y)`
+`error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... META.error(error, @serial) }`
+`argument`    | `function () { ... }` | `... function () { ... META.argument(arguments.length, "length", @serial) ... } ...`
+*Consumers*   |                       |
+`drop`        | `(x, y)`              | `(META.drop(x, @serial), y)`
+`test`        | `x ? y : z`           | `META.test(x, @serial) ? y : z`
+`write`       | `x = "foo";`          | `META.write("foo", "x", @serial);`
+`return`      | `return x;`           | `return META.return(x, @serial);`
+`throw`       | `throw e;`            | `throw META.throw(e, @serial);`
+`success`     | `x;` (program)        | `META.success(x, @serial);` 
+`eval`        | `eval(x)`             | `... eval(META.eval(x, @serial)) ...`
+**Combiners** |                       |
+`unary`       | `!x`                  | `META.unary("!", x, @serial)`
+`binary`      | `x + y`               | `META.binary("+", x, y, @serial)` 
+`apply`       | `f(x,y)`              | `META.apply(f, undefined, [x, y], @serial)`
+`construct`   | `new F(x,y)`          | `META.construct(F, [x, y], @serial)`
 
 ### Trap Signature
 
-Name          | arguments[0]          | arguments[1]          | arguments[2]        | arguments[3]
---------------|-----------------------|-----------------------|---------------------|-----------------
-**Combiners** |                       |                       |                     |
-`apply`       | `function:value`      | `arguments:[value]`   | `serial:number`     |
-`array`       | `array:value`         | `serial:number`       |                     |
-`binary`      | `operator:string`     | `left:value`          | `right:value`       | `serial:number`
-`construct`   | `constructor:value`   | `arguments:[value]`   | `serial:number`     |
-`delete`      | `object:value`        | `key:value`           | `serial:number`     |
-`get`         | `object:value`        | `key:value`           | `serial:number`     |
-`invoke`      | `object:value`        | `key:value`           | `arguments:[value]` | `serial:number`
-`object`      | `keys:[string]`       | `object:value`        | `serial:number`     |
-`set`         | `object:value`        | `key:value`           | `value:value`       | `serial:number`
-`unary`       | `operator:string`     | `argument:value`      | `serial:number`     |
-**Producers** |                       |                       |                     |
-`arrival`     | `strict:boolean`      | `scope:object`        | `serial:number`     |
-`begin`       | `strict:boolean`      | `scope:object`        | `produced:value`    | `serial:number`
-`catch`       | `produced:value`      | `serial:number`       |                     |
-`closure`     | `produced:value`      | `serial:number`       |                     |
-`discard`     | `identifier:string`   | `produced:value`      | `serial:number`     |
-`load`        | `name:string`         | `produced:value`      | `serial:number`     |
-`primitive`   | `produced:value`      | `serial:number`       |                     |
-`read`        | `identifier:string`   | `produced:value`      | `serial:number`     |
-`regexp`      | `produced:value`      | `serial:number`       |                     |
-**Consumers** |                       |                       |                     |
-`completion`  | `consumed:value`      | `serial:number`       |                     |
-`declare`     | `kind:string`         | `identifier:string`   | `consumed:value`    | `serial:number`
-`eval`        | `consumed:value`      | `serial:number`       |                     |
-`failure`     | `scope:object`        | `consumed:value`      | `serial:number`     |
-`return`      | `scope:object`        | `consumed:value`      | `serial:number`     |          
-`save`        | `name:string`         | `consumed:value`      | `serial:number`     |
-`success`     | `scope:object`        | `consumed:value`      | `serial:number`     |
-`test`        | `consumed:value`      | `serial:number`       |                     |
-`throw`       | `consumed:value`      | `serial:number`       |                     |
-`with`        | `consumed:value`      | `serial:number`       |                     |
-`write`       | `identifier:string`   | `consumed:value`      | `serial:number`     |
-**Informers** |                       |                       |                     |
-`block`       | `serial:number`       |                       |                     |
-`break`       | `continue:boolean`    | `label:string`        | `serial:number`     |
-`copy`        | `position:number`     | `serial:number`       |                     |
-`drop`        | `serial:number`       |                       |                     |
-`end`         | `scope:string`        | `serial:number`       |                     |
-`finally`     | `serial:number`       |                       |                     |
-`label`       | `continue:boolean`    | `label:string`        | `serial:number`     |
-`leave`       | `type:string`         | `serial:number`       |                     |
-`swap`        | `position1:number`    | `position2:number`    | `serial:number`     |
-`try`         | `serial:number`       |                       |                     |
+Name          | arguments[0]          | arguments[1]          | arguments[2]        | arguments[3]        | arguments[4]
+--------------|-----------------------|-----------------------|---------------------|---------------------|----------------
+**Informers** |                       |                       |                     |                     |
+`program`     | `global:object`       | `serial:number`       |                     |                     |
+`arrival`     | `callee:function`     | `new.target:function` | `this:value`        | `arguments:[value]` | `serial:number`
+`enter`       | `tag:"program"|"block"|"then"|"else"|"loop"|"try"|"catch"|"finally"|"switch"` | `variables:[string]` | `labels:[string]` | `serial:number` |
+`leave`       | `serial:number`       |                       |                     |                     |
+`continue`    | `label:string|null`   | `serial:number`       |                     |                     |
+`break`       | `label:string|null`   | `serial:number`       |                     |                     |
+`debugger`    | `serial:number`       |                       |                     |                     |
+**Modifiers** |                       |                       |                     |                     |
+*Bystanders*  |                       |                       |                     |                     |
+`abrupt`      | `error:value`         | `serial:number`       |                     |                     |
+`failure`     | `error:value`         | `serial:number`       |                     |                     |
+*Producers*   |                       |                       |                     |                     |
+`primitive`   | `produced:undefined|null|boolean|number|string` | `serial:number` | |                     |
+`read`        | `produced:value`      | `variable:string`     | `serial:number`     |                     |
+`closure`     | `produced:function`   | `serial:number`       |                     |                     |
+`builtin`     | `produced:value`      | `name:string`         | `serial:number`     |                     |
+`error`       | `produced:value`      | `serial:number`       |                     |                     |
+`argument`    | `produced:value`      | `index:number|"new.target"|"this"|"length"` | `serial:number`|    |
+*Consumers*   |                       |                       |                     |                     |
+`drop`        | `consumed:value`      | `serial:number`       |                     |                     |
+`test`        | `consumed:value`      | `serial:number`       |                     |                     |
+`write`       | `consumed:value`      | `variable:string`     | `serial:number`     |                     |
+`return`      | `consumed:value`      | `serial:number`       |                     |                     |
+`throw`       | `consumed:value`      | `serial:number`       |                     |                     |
+`success`     | `consumed:value`      | `serial:number`       |                     |                     |
+**Combiners** |                       |                       |                     |                     |
+`unary`       | `operator:string`     | `argument:value`      | `serial:number`     |                     |
+`binary`      | `operator:string`     | `left:value`          | `right:value`       | `serial:number`     |
+`apply`       | `function:value`      | `this:value`          | `arguments:[value]` | `serial:number`     |
+`construct`   | `constructor:value`   | `arguments:[value]`   | `serial:number`     |                     |
 
 ### Trap Comments
 
@@ -587,6 +594,7 @@ Saving builtins functions is necessary because some language-level operations ar
 The prevent modification of the global object from affecting the behavior of language-level operations we need to store them upfront.
 For instance `o.k` will be instrumented into something like `__ARAN__.builtins["Reflect.get"](o, "k")` rather than directly `Reflect.get(o, "k")` which is affected by the state of the global object.
 
+### Existing Builtins
 
 * `global`: Declaring/writing/reading global variables and the initial value of `this`.
 * `eval`: Detect whether a syntactic direct eval call actually resolves to a direct eval call at runtime.
@@ -607,6 +615,8 @@ For instance `o.k` will be instrumented into something like `__ARAN__.builtins["
 * `Object.getOwnPropertyDescriptor(Function.prototype,'arguments').get`: The `callee` fields of `arguments` objects in strict mode. 
 * `Object.getOwnPropertyDescriptor(Function.prototype,'arguments').set`: The `callee` fields of `arguments` objects in strict mode.
 
+### Aran-Specific Builtins
+
 Additionally, Aran will store several custom functions to help desugaring JavaScript.
 
 * `object = Object.fromEntries(associations)`: Create an object from an iteration of pairs of key-value Object (stage 3 status).
@@ -621,20 +631,22 @@ Additionally, Aran will store several custom functions to help desugaring JavaSc
   * assigning to a constant variable.
 * `AranThrowReferenceError(message)`: Throws a reference error.
   `ReferenceError` could have been saved instead but it would have increase the size of the instrumented code.
+  It is called when:
   * accessing a local variable in its [temporal dead zone](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let#Temporal_dead_zone).
   * assigning to non existing global variable in strict mode.
   * reading a non existing global variable.
 * `array = AranEnumerate(object)`: Enumerate the keys of an object as in a `for .. in` loop.
-  Used to desugar a `for .. in` loop in a `while` loop.
+  It is used to desugar a `for .. in` loop in a `while` loop.
 * `array = AranRest(iterator)`: Create an array with the rest of an iterator.
-  Used to desugar array pattern with rest element.
+  It is used to desugar array pattern with rest element.
 * `boolean = AranHold(object, key)`: Indicates whether a property is present in a an object or its prototype chain.
-  Used to detect the existence of a global variable.
+  It is used to detect the existence of a global variable.
 * `object = AranDefineDataProperty(object, key, value, writable, enumerable, configurable)`: Similar to `Object.defineProperty` but directly accepts the properties of the descriptor.
+  It is used to declared global variables, desugar object expressions and define various fields of functions and `arguments` objects.
 * `object = AranDefineAccessorProperty(object, key, getter, setter, enumerable, configurable)`: Similar to `Object.defineProperty` but directly accepts the properties of the descriptor.
-  Used to declared global variables, 
+  It is used to desugar object expressions and define the `callee` field of `arguments` objects in strict mode.
 
-We are considering adding `AranGet`, `AranSet` and `AranSetStrict` as a more straightforward option to desugar member of `Reflect.get` and `Reflect.set` to help reduce the size of instrumented code.
+We are considering adding `AranGet`, `AranSet` and `AranSetStrict` as an alternative to `Reflect.get` and `Reflect.set` to decrease the size of instrumented code.
 
 ## Known Heisenbugs
 
