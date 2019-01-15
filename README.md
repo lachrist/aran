@@ -320,9 +320,9 @@ Name          | Original              | Instrumented
 Name          | arguments[0]          | arguments[1]          | arguments[2]        | arguments[3]        | arguments[4]
 --------------|-----------------------|-----------------------|---------------------|---------------------|----------------
 **Informers** |                       |                       |                     |                     |
-`program`     | `global:object`       | `serial:number`       |                     |                     |
-`arrival`     | `callee:function`     | `new.target:function` | `this:value`        | `arguments:[value]` | `serial:number`
-`enter`       | `tag:"program"\|"block"\|"then"\|"else"\|"loop"\|"try"\|"catch"\|"finally"\|"switch"` | `variables:[string]` | `labels:[string]` | `serial:number` |
+`program`     | `global: object`       | `serial:number`       |                     |                     |
+`arrival`     | `callee: function`     | `new.target:function` | `this:value`        | `arguments:[value]` | `serial:number`
+`enter`       | `tag: "program" \| "block" \| "then" \| "else" \| "loop" \| "try" \| "catch" \| "finally" \| "switch"` | `variables:[string]` | `labels:[string]` | `serial:number` |
 `leave`       | `serial:number`       |                       |                     |                     |
 `continue`    | `label:string\|null`   | `serial:number`       |                     |                     |
 `break`       | `label:string\|null`   | `serial:number`       |                     |                     |
