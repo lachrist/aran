@@ -201,7 +201,7 @@ Performs a binary operation.
 
 ### `aran.namespace`
 
-The name of the global variable holding the advice.
+The name of the variable holding the advice.
 
 ```js
 {
@@ -214,7 +214,7 @@ The name of the global variable holding the advice.
 
 ### `aran.format`
 
-The output format for `aran.weave(estree, scope)` and `aran.setup()` calls.
+The output format for `aran.weave(estree, scope)` and `aran.setup()` calls; either `"estree"` or `"script"`.
 
 ```js
 {
@@ -250,47 +250,6 @@ It is not enumerable to reduces the size of `JSON.stringify(aran)`.
   configurable: false,
   writable: false
 }`
-
-## Setup
-
-The setup will add a `builtins` field to the advice which will refer to an object containing functions of the global object.
-Saving builtins functions is necessary because some language-level operations are desugared into calls to builtins function.
-The prevent modification of the global from affecting the behavior of language-level operations we need to store them upfront.
-For instance `o.k` will be instrumented into something like `__ARAN__.builtins["Reflect.get"](o, "k")` rather than directly `Reflect.get(o, "k")` which is affected by the state of the global object.
-
-* `global`
-* `eval`
-* `RegExp`
-* `Reflect.get`
-* `Reflect.set`
-* `Reflect.construct`
-* `Reflect.apply`
-* `Reflect.deleteProperty`
-* `Symbol.unscopables`
-* `Symbol.iterator`
-* `Object`
-* `Object.setPrototypeOf`
-* `Object.create`
-* `Object.prototype`
-* `Array.of`
-* `Array.prototype.concat`
-* `Array.prototype[Symbol.iterator]`
-* `Function.prototype`
-* `Object.getOwnPropertyDescriptor(Function.prototype,'arguments').get`
-* `Object.getOwnPropertyDescriptor(Function.prototype,'arguments').set`
-
-Additionally, Aran will store several custom functions to help desugaring JavaScript.
-
-* `Object.fromEntries`
-* `AranThrowTypeError(message)`
-* `AranThrowReferenceError(message)`
-* `AranEnumerate`
-* `AranRest`
-* `AranHold`
-* `AranDefineDataProperty`
-* `AranDefineAccessorProperty`
-
-We are considering adding `AranGet`, `AranSet` and `AranSetStrict` as a more direct variant of `Reflect.get` and `Reflect.set` to help reduce the size of instrumented code.
 
 ## Advice
 
@@ -620,6 +579,62 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
     vstack.pop();
   };
   ```
+  
+## Setup
+
+The setup code will add a `builtins` field to the advice whose value will be an object containing functions of the global object.
+Saving builtins functions is necessary because some language-level operations are desugared into calls to builtins function.
+The prevent modification of the global object from affecting the behavior of language-level operations we need to store them upfront.
+For instance `o.k` will be instrumented into something like `__ARAN__.builtins["Reflect.get"](o, "k")` rather than directly `Reflect.get(o, "k")` which is affected by the state of the global object.
+
+
+* `global`: Declaring/writing/reading global variables and the initial value of `this`.
+* `eval`: Detect whether a syntactic direct eval call actually resolves to a direct eval call at runtime.
+* `RegExp`: Literal regular expressions.
+* `Reflect.get`: Member expressions.
+* `Reflect.set`: Member assignments.
+* `Reflect.construct`: Constructions with spread elements. 
+* `Reflect.apply`: Applications with spread elements.
+* `Reflect.deleteProperty`: Delete unary operations on member expressions.
+* `Symbol.unscopables`: `with` statement.
+* `Symbol.iterator`: Iteration protocol.
+* `Object`: Member expressions (`Reflect.get` throws on non-object), and `with` statements.
+* `Object.create`: Object expressions, value of `arguments`, value of the `prototype` and `constructor` fields of a function.
+* `Object.prototype`: Object expressions, value of `arguments`, value of the `prototype` and `constructor` fields of a function.
+* `Array.of`: Array expressions, spread elements, object expressions desugared using `Object.fromEntries`.   
+* `Array.prototype.concat`: Spread elements (array expression, call expression and construct expression).
+* `Array.prototype[Symbol.iterator]`: The `@@iterator` fields of `arguments` objects.
+* `Object.getOwnPropertyDescriptor(Function.prototype,'arguments').get`: The `callee` fields of `arguments` objects in strict mode. 
+* `Object.getOwnPropertyDescriptor(Function.prototype,'arguments').set`: The `callee` fields of `arguments` objects in strict mode.
+
+Additionally, Aran will store several custom functions to help desugaring JavaScript.
+
+* `object = Object.fromEntries(associations)`: Create an object from an iteration of pairs of key-value Object (stage 3 status).
+  This function provide a more economical alternative than nested `AranDefineDataProperty` to desugar object expressions with only `init` properties.
+* `AranThrowTypeError(message)`: Throws a type error.
+  `TypeError` could have been saved instead but it would have increase the size of the instrumented code.
+  It is called when:
+  * `null` or `undefined` passed to a `with` statement.
+  * deleting a member expression failed.
+  * assigning a member expression failed.
+  * an arrow is called as a constructor.
+  * assigning to a constant variable.
+* `AranThrowReferenceError(message)`: Throws a reference error.
+  `ReferenceError` could have been saved instead but it would have increase the size of the instrumented code.
+  * accessing a local variable in its [temporal dead zone](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let#Temporal_dead_zone).
+  * assigning to non existing global variable in strict mode.
+  * reading a non existing global variable.
+* `array = AranEnumerate(object)`: Enumerate the keys of an object as in a `for .. in` loop.
+  Used to desugar a `for .. in` loop in a `while` loop.
+* `array = AranRest(iterator)`: Create an array with the rest of an iterator.
+  Used to desugar array pattern with rest element.
+* `boolean = AranHold(object, key)`: Indicates whether a property is present in a an object or its prototype chain.
+  Used to detect the existence of a global variable.
+* `object = AranDefineDataProperty(object, key, value, writable, enumerable, configurable)`: Similar to `Object.defineProperty` but directly accepts the properties of the descriptor.
+* `object = AranDefineAccessorProperty(object, key, getter, setter, enumerable, configurable)`: Similar to `Object.defineProperty` but directly accepts the properties of the descriptor.
+  Used to declared global variables, 
+
+We are considering adding `AranGet`, `AranSet` and `AranSetStrict` as a more straightforward option to desugar member of `Reflect.get` and `Reflect.set` to help reduce the size of instrumented code.
 
 ## Known Heisenbugs
 
