@@ -280,45 +280,6 @@ This process still left us with around 40 traps which we categorize depending on
 
 ### Trap Insertion
 
-exports.CombinerTrap = [
-  "apply",
-  "construct",
-  "unary",
-  "binary"
-];
-
-exports.InformerTrap = [
-  "program",
-  "arrival",
-  "enter",
-  "leave",
-  "continue",
-  "break",
-  "debugger"
-];
-
-exports.ModifierTrap = [
-  // Bystanders //
-  "abrupt",
-  "failure",
-  // Producers //
-  "primitive",
-  "read",
-  "closure",
-  "builtin",
-  "error",
-  "argument",
-  // Consumer //
-  "drop",
-  "eval",
-  "test",
-  "write",
-  "return",
-  "throw",
-  "success"
-];
-
-
 Name          | Original              | Instrumented
 --------------|-----------------------|-------------
 **Informers** |                       |
@@ -361,22 +322,22 @@ Name          | arguments[0]          | arguments[1]          | arguments[2]    
 **Informers** |                       |                       |                     |                     |
 `program`     | `global:object`       | `serial:number`       |                     |                     |
 `arrival`     | `callee:function`     | `new.target:function` | `this:value`        | `arguments:[value]` | `serial:number`
-`enter`       | `tag:"program"|"block"|"then"|"else"|"loop"|"try"|"catch"|"finally"|"switch"` | `variables:[string]` | `labels:[string]` | `serial:number` |
+`enter`       | `tag:"program"\|"block"\|"then"\|"else"\|"loop"\|"try"\|"catch"\|"finally"\|"switch"` | `variables:[string]` | `labels:[string]` | `serial:number` |
 `leave`       | `serial:number`       |                       |                     |                     |
-`continue`    | `label:string|null`   | `serial:number`       |                     |                     |
-`break`       | `label:string|null`   | `serial:number`       |                     |                     |
+`continue`    | `label:string\|null`   | `serial:number`       |                     |                     |
+`break`       | `label:string\|null`   | `serial:number`       |                     |                     |
 `debugger`    | `serial:number`       |                       |                     |                     |
 **Modifiers** |                       |                       |                     |                     |
 *Bystanders*  |                       |                       |                     |                     |
 `abrupt`      | `error:value`         | `serial:number`       |                     |                     |
 `failure`     | `error:value`         | `serial:number`       |                     |                     |
 *Producers*   |                       |                       |                     |                     |
-`primitive`   | `produced:undefined|null|boolean|number|string` | `serial:number` | |                     |
+`primitive`   | `produced:undefined\|null\|boolean\|number\|string` | `serial:number` | |                     |
 `read`        | `produced:value`      | `variable:string`     | `serial:number`     |                     |
 `closure`     | `produced:function`   | `serial:number`       |                     |                     |
 `builtin`     | `produced:value`      | `name:string`         | `serial:number`     |                     |
 `error`       | `produced:value`      | `serial:number`       |                     |                     |
-`argument`    | `produced:value`      | `index:number|"new.target"|"this"|"length"` | `serial:number`|    |
+`argument`    | `produced:value`      | `index:number\|"new.target"\|"this"\|"length"` | `serial:number`|    |
 *Consumers*   |                       |                       |                     |                     |
 `drop`        | `consumed:value`      | `serial:number`       |                     |                     |
 `test`        | `consumed:value`      | `serial:number`       |                     |                     |
