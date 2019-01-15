@@ -337,7 +337,7 @@ Name          | arguments[0]              | arguments[1]             | arguments
 `closure`     | `produced :: function`    | `serial :: number`       |                        |                        |
 `builtin`     | `produced :: value`       | `name :: string`         | `serial :: number`     |                        |
 `error`       | `produced :: value`       | `serial :: number`       |                        |                        |
-`argument`    | `produced :: value`       | `index :: number\|"new.target"\|"this"\|"length"` | `serial :: number`|    |
+`argument`    | `produced :: value`       | `index :: number \| "new.target" \| "this" \| "length"` | `serial :: number`| |
 *Consumers*   |                           |                          |                        |                        |
 `drop`        | `consumed :: value`       | `serial :: number`       |                        |                        |
 `test`        | `consumed :: value`       | `serial :: number`       |                        |                        |
