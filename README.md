@@ -317,39 +317,39 @@ Name          | Original              | Instrumented
 
 ### Trap Signature
 
-Name          | arguments[0]          | arguments[1]          | arguments[2]        | arguments[3]        | arguments[4]
---------------|-----------------------|-----------------------|---------------------|---------------------|----------------
-**Informers** |                       |                       |                     |                     |
-`program`     | `global: object`       | `serial:number`       |                     |                     |
-`arrival`     | `callee: function`     | `new.target:function` | `this:value`        | `arguments:[value]` | `serial:number`
+Name          | arguments[0]              | arguments[1]             | arguments[2]           | arguments[3]           | arguments[4]
+--------------|---------------------------|--------------------------|------------------------|------------------------|----------------
+**Informers** |                           |                          |                        |                        |
+`program`     | `global :: object`        | `serial :: number`       |                        |                        |
+`arrival`     | `callee :: function`      | `new.target :: function` | `this :: value`        | `arguments :: [value]` | `serial :: number`
 `enter`       | `tag: "program" \| "block" \| "then" \| "else" \| "loop" \| "try" \| "catch" \| "finally" \| "switch"` | `variables:[string]` | `labels:[string]` | `serial:number` |
-`leave`       | `serial:number`       |                       |                     |                     |
-`continue`    | `label:string\|null`   | `serial:number`       |                     |                     |
-`break`       | `label:string\|null`   | `serial:number`       |                     |                     |
-`debugger`    | `serial:number`       |                       |                     |                     |
-**Modifiers** |                       |                       |                     |                     |
-*Bystanders*  |                       |                       |                     |                     |
-`abrupt`      | `error:value`         | `serial:number`       |                     |                     |
-`failure`     | `error:value`         | `serial:number`       |                     |                     |
-*Producers*   |                       |                       |                     |                     |
-`primitive`   | `produced:undefined\|null\|boolean\|number\|string` | `serial:number` | |                     |
-`read`        | `produced:value`      | `variable:string`     | `serial:number`     |                     |
-`closure`     | `produced:function`   | `serial:number`       |                     |                     |
-`builtin`     | `produced:value`      | `name:string`         | `serial:number`     |                     |
-`error`       | `produced:value`      | `serial:number`       |                     |                     |
-`argument`    | `produced:value`      | `index:number\|"new.target"\|"this"\|"length"` | `serial:number`|    |
-*Consumers*   |                       |                       |                     |                     |
-`drop`        | `consumed:value`      | `serial:number`       |                     |                     |
-`test`        | `consumed:value`      | `serial:number`       |                     |                     |
-`write`       | `consumed:value`      | `variable:string`     | `serial:number`     |                     |
-`return`      | `consumed:value`      | `serial:number`       |                     |                     |
-`throw`       | `consumed:value`      | `serial:number`       |                     |                     |
-`success`     | `consumed:value`      | `serial:number`       |                     |                     |
-**Combiners** |                       |                       |                     |                     |
-`unary`       | `operator:string`     | `argument:value`      | `serial:number`     |                     |
-`binary`      | `operator:string`     | `left:value`          | `right:value`       | `serial:number`     |
-`apply`       | `function:value`      | `this:value`          | `arguments:[value]` | `serial:number`     |
-`construct`   | `constructor:value`   | `arguments:[value]`   | `serial:number`     |                     |
+`leave`       | `serial:number`           |                          |                        |                        |
+`continue`    | `label :: string \| null` | `serial :: number`       |                        |                        |
+`break`       | `label :: string \| null` | `serial :: number`       |                        |                        |
+`debugger`    | `serial :: number`        |                          |                        |                        |
+**Modifiers** |                           |                          |                        |                        |
+*Bystanders*  |                           |                          |                        |                        |
+`abrupt`      | `error :: value`          | `serial :: number`       |                        |                        |
+`failure`     | `error :: value`          | `serial :: number`       |                        |                        |
+*Producers*   |                           |                          |                        |                        |
+`primitive`   | `produced :: undefined \| null \| boolean \| number \| string` | `serial :: number` | |                |
+`read`        | `produced :: value`       | `variable :: string`     | `serial :: number`     |                        |
+`closure`     | `produced :: function`    | `serial :: number`       |                        |                        |
+`builtin`     | `produced :: value`       | `name :: string`         | `serial :: number`     |                        |
+`error`       | `produced :: value`       | `serial :: number`       |                        |                        |
+`argument`    | `produced :: value`       | `index :: number\|"new.target"\|"this"\|"length"` | `serial :: number`|    |
+*Consumers*   |                           |                          |                        |                        |
+`drop`        | `consumed :: value`       | `serial :: number`       |                        |                        |
+`test`        | `consumed :: value`       | `serial :: number`       |                        |                        |
+`write`       | `consumed :: value`       | `variable :: string`     | `serial :: number`     |                        |
+`return`      | `consumed :: value`       | `serial :: number`       |                        |                        |
+`throw`       | `consumed :: value`       | `serial :: number`       |                        |                        |
+`success`     | `consumed :: value`       | `serial :: number`       |                        |                        |
+**Combiners** |                           |                          |                        |                        |
+`unary`       | `operator :: "-" \| "+" \| "!" \| "~" \| "typeof" \| "void"` | `argument :: value` | `serial :: number` | |
+`binary`      | `operator :: "==" \| "!=" \| "===" \| "!==" \| "<" \| "<=" \| ">" \| ">=" \| "<<" \| ">>" \| ">>>" \| "+" \| "-" \| "*" \| "/" \| "%" \| "|" \| "^" \| "&" \| "in" \| "instanceof" \| ".."` | `left :: value` | `right :: value` | `serial :: number` |
+`apply`       | `function :: value`       | `this :: value`          | `arguments :: [value]` | `serial :: number`     |
+`construct`   | `constructor :: value`    | `arguments :: [value]`   | `serial :: number`     |                        |
 
 ### Trap Comments
 
