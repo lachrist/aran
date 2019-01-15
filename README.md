@@ -347,7 +347,7 @@ Name          | arguments[0]              | arguments[1]             | arguments
 `success`     | `consumed :: value`       | `serial :: number`       |                        |                        |
 **Combiners** |                           |                          |                        |                        |
 `unary`       | `operator :: "-" \| "+" \| "!" \| "~" \| "typeof" \| "void"` | `argument :: value` | `serial :: number` | |
-`binary`      | `operator :: "==" \| "!=" \| "===" \| "!==" \| "<" \| "<=" \| ">" \| ">=" \| "<<" \| ">>" \| ">>>" \| "+" \| "-" \| "*" \| "/" \| "%" \| "|" \| "^" \| "&" \| "in" \| "instanceof" \| ".."` | `left :: value` | `right :: value` | `serial :: number` |
+`binary`      | `operator :: "==" \| "!=" \| "===" \| "!==" \| "<" \| "<=" \| ">" \| ">=" \| "<<" \| ">>" \| ">>>" \| "+" \| "-" \| "*" \| "/" \| "%" \| "\|" \| "^" \| "&" \| "in" \| "instanceof" \| ".."` | `left :: value` | `right :: value` | `serial :: number` |
 `apply`       | `function :: value`       | `this :: value`          | `arguments :: [value]` | `serial :: number`     |
 `construct`   | `constructor :: value`    | `arguments :: [value]`   | `serial :: number`     |                        |
 
