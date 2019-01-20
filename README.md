@@ -268,8 +268,8 @@ This process still left us with around 40 traps which we categorize depending on
 * Informers (7): do nothing
 * Modifiers (15): returns the first argument
   * Bystanders (2): no effect on the value stack
-  * Producers: push a value on top of the value stack.
-  * Consumers: pop a value from the value stack.
+  * Producers (6): push a value on top of the value stack.
+  * Consumers (7): pop a value from the value stack.
 * Combiners (4): computes a new value
   * `unary = (operator, argument, serial) => eval(operator+" argument");`
   * `binary = (operator, left, right, serial) => eval("left "+operator+" right");`
@@ -285,35 +285,35 @@ Name          | Original              | Instrumented
 **Informers** |                       |
 `program`     | `...` (program)       | `program(META.builtins.global, @serial); ...`
 `arrival`     | `function () { ... }` | `... function () { ... META.arrival(callee, new.target, this, arguments, @serial); ... } ...`
-`enter`       | `l: { let x; ... }`   | `{ META.enter("block", ["x"], ["l"], @serial); ... }`
+`enter`       | `l: { let x; ... }`   | `l : { META.enter("block", ["x"], ["l"], @serial); ... }`
 `leave`       | `{ ... }`             | `{ ... META.leave(@serial); }`
-`continue`    | `continue l;`         | `META.continue("l", @serial); continue a;`
-`break`       | `break l;`            | `META.break("l", @serial); break a;`
+`continue`    | `continue l;`         | `META.continue("l", @serial); continue l;`
+`break`       | `break l;`            | `META.break("l", @serial); break l;`
 `debugger`    | `debugger;`           | `META.debugger(@serial); debugger;`
 **Modifiers** |                       |
 *Bystanders*  |                       |
-`abrupt`      | `function () { ... }` | `... try { ... } catch (error) { throw META.abrupt(error, @serial); } ...`
+`abrupt`      | `function () { ... }` | `... function () { ... try { ... } catch (error) { throw META.abrupt(error, @serial); } ... } ...`
 `failure`     | `...` (program)       | `try { ... } catch (error) { throw META.failure(error, @serial); }` 
+`throw`       | `throw e;`            | `throw META.throw($e, @serial);`
+`error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... META.error(error, @serial) ... }`
 *Producers*   |                       | 
 `primitive`   | `"foo"`               | `META.primitive("foo", @serial)`
-`read`        | `x`                   | `META.read(x, "x", @serial)`
-`closure`     | `function () { ... }` | `META.closure(..., @serial)`
-`builtin`     | `[x, y]`              | `META.builtin(META.builtins["Array.of"], "Array.of", @serial)(x, y)`
-`error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... META.error(error, @serial) }`
+`read`        | `x`                   | `META.read($x, "x", @serial)`
+`closure`     | `function () { ... }` | `META.closure(... function () { ... } ..., @serial)`
+`builtin`     | `[x, y]`              | `META.builtin(META.builtins["Array.of"], "Array.of", @serial)($x, $y)`
 `argument`    | `function () { ... }` | `... function () { ... META.argument(arguments.length, "length", @serial) ... } ...`
 *Consumers*   |                       |
-`drop`        | `(x, y)`              | `(META.drop(x, @serial), y)`
-`test`        | `x ? y : z`           | `META.test(x, @serial) ? y : z`
-`write`       | `x = "foo";`          | `META.write("foo", "x", @serial);`
-`return`      | `return x;`           | `return META.return(x, @serial);`
-`throw`       | `throw e;`            | `throw META.throw(e, @serial);`
-`success`     | `x;` (program)        | `META.success(x, @serial);` 
-`eval`        | `eval(x)`             | `... eval(META.eval(x, @serial)) ...`
+`drop`        | `(x, y)`              | `(META.drop($x, @serial), $y)`
+`test`        | `x ? y : z`           | `META.test($x, @serial) ? $y : $z`
+`write`       | `x = y;`              | `$x = META.write($y, "x", @serial);`
+`return`      | `return x;`           | `return META.return($x, @serial);`
+`success`     | `x;` (program)        | `META.success($x, @serial);` 
+`eval`        | `eval(x)`             | `... eval(META.eval($x, @serial)) ...`
 **Combiners** |                       |
-`unary`       | `!x`                  | `META.unary("!", x, @serial)`
-`binary`      | `x + y`               | `META.binary("+", x, y, @serial)` 
-`apply`       | `f(x,y)`              | `META.apply(f, undefined, [x, y], @serial)`
-`construct`   | `new F(x,y)`          | `META.construct(F, [x, y], @serial)`
+`unary`       | `!x`                  | `META.unary("!", $x, @serial)`
+`binary`      | `x + y`               | `META.binary("+", $x, $y, @serial)` 
+`apply`       | `f(x, y)`             | `META.apply($f, undefined, [$x, $y], @serial)`
+`construct`   | `new F(x, y)`         | `META.construct($F, [$x, $y], @serial)`
 
 ### Trap Signature
 
@@ -322,8 +322,8 @@ Name          | arguments[0]              | arguments[1]             | arguments
 **Informers** |                           |                          |                        |                        |
 `program`     | `global :: object`        | `serial :: number`       |                        |                        |
 `arrival`     | `callee :: function`      | `new.target :: function` | `this :: value`        | `arguments :: [value]` | `serial :: number`
-`enter`       | `tag: "program" \| "block" \| "then" \| "else" \| "loop" \| "try" \| "catch" \| "finally" \| "switch"` | `variables:[string]` | `labels:[string]` | `serial:number` |
-`leave`       | `serial:number`           |                          |                        |                        |
+`enter`       | `tag :: "program" \| "block" \| "then" \| "else" \| "loop" \| "try" \| "catch" \| "finally" \| "switch"` | `variables :: [string]` | `labels :: [string]` | `serial :: number` |
+`leave`       | `serial :: number`        |                          |                        |                        |
 `continue`    | `label :: string \| null` | `serial :: number`       |                        |                        |
 `break`       | `label :: string \| null` | `serial :: number`       |                        |                        |
 `debugger`    | `serial :: number`        |                          |                        |                        |
@@ -550,12 +550,11 @@ Name          | arguments[0]              | arguments[1]             | arguments
   
 ## Setup
 
-The setup code will add a `builtins` field to the advice whose value will be an object containing functions of the global object.
+The setup code will add a `primordials` field to the advice whose value will be an object containing functions of the global object.
 Saving builtins functions is necessary because some language-level operations are desugared into calls to builtins function.
-The prevent modification of the global object from affecting the behavior of language-level operations we need to store them upfront.
-For instance `o.k` will be instrumented into something like `__ARAN__.builtins["Reflect.get"](o, "k")` rather than directly `Reflect.get(o, "k")` which is affected by the state of the global object.
-
-### Existing Builtins
+To prevent modifications of the global object from affecting the behavior of language-level operations we need to store some builtins upfront.
+For instance `o.k` will be instrumented into something like `__ARAN__.primordials["Reflect.get"]($o, "k")` rather than directly `Reflect.get($o, "k")` which is affected by the state of the global object.
+Below is a list of the all the primordials stored by the setup code along with the language-level operations which they help desugar:
 
 * `global`: Declaring/writing/reading global variables and the initial value of `this`.
 * `eval`: Detect whether a syntactic direct eval call actually resolves to a direct eval call at runtime.
@@ -565,23 +564,40 @@ For instance `o.k` will be instrumented into something like `__ARAN__.builtins["
 * `Reflect.construct`: Constructions with spread elements. 
 * `Reflect.apply`: Applications with spread elements.
 * `Reflect.deleteProperty`: Delete unary operations on member expressions.
-* `Symbol.unscopables`: `with` statement.
-* `Symbol.iterator`: Iteration protocol.
-* `Object`: Member expressions (`Reflect.get` throws on non-object), and `with` statements.
+* `Object`: Member expressions (`Reflect.get` and `Reflect.set` throw on non-objects), and `with` statements.
 * `Object.create`: Object expressions, value of `arguments`, value of the `prototype` and `constructor` fields of a function.
 * `Object.prototype`: Object expressions, value of `arguments`, value of the `prototype` and `constructor` fields of a function.
+* `Symbol.unscopables`: `with` statement.
+* `Symbol.iterator`: Iteration protocol.
 * `Array.of`: Array expressions, spread elements, object expressions desugared using `Object.fromEntries`.   
-* `Array.prototype.concat`: Spread elements (array expression, call expression and construct expression).
-* `Array.prototype[Symbol.iterator]`: The `@@iterator` fields of `arguments` objects.
-* `Object.getOwnPropertyDescriptor(Function.prototype,'arguments').get`: The `callee` fields of `arguments` objects in strict mode. 
-* `Object.getOwnPropertyDescriptor(Function.prototype,'arguments').set`: The `callee` fields of `arguments` objects in strict mode.
+* `Array.prototype.concat`: Spread elements (array expressions, call expressions and construct expressions).
+* `Array.prototype.values`: The `@@iterator` field of `arguments` objects.
+* `Reflect.getOwnPropertyDescriptor(Function.prototype,'arguments').get`: The `callee` fields of `arguments` objects in strict mode. 
+* `Reflect.getOwnPropertyDescriptor(Function.prototype,'arguments').set`: The `callee` fields of `arguments` objects in strict mode.
 
-### Aran-Specific Builtins
+## Aran-Helpers
+
+Rather than defining a closure whenever a loop is needed in an expression context, Aran defines several helper functions at the beginning of each program:
+
+1. `AranCompletion`: The current completion value of the program.
+2. `AranThrowTypeError(message)`: Throws a type error.
+3. `AranThrowReferenceError(message)`: Throws a reference error.
+4. `boolean = AranIsGlobal(name)`: Indicates whether an identifier is globally defined.
+5. `array = AranIteratorRest(iterator)`: Pushes the remaining elements of an iterator into an array.
+6. `object = AranObjectRest(object, keys)`: 
+7. `AranObjectAssign(target, source)`: Similar to `Object.assign` but uses `Reflect.defineProperty` rather than `Reflect.set` on the target object.
 
 Additionally, Aran will store several custom functions to help desugaring JavaScript.
 
+<!-- * `array = AranEnumerate(object)`: Enumerate the keys of an object as in a `for .. in` loop.
+  It is used to desugar a `for .. in` loop in a `while` loop.
 * `object = Object.fromEntries(associations)`: Create an object from an iteration of pairs of key-value Object (stage 3 status).
   This function provide a more economical alternative than nested `AranDefineDataProperty` to desugar object expressions with only `init` properties.
+* `object = AranDefineDataProperty(object, key, value, writable, enumerable, configurable)`: Similar to `Object.defineProperty` but directly accepts the properties of the descriptor.
+  It is used to declared global variables, desugar object expressions and define various fields of functions and `arguments` objects.
+* `object = AranDefineAccessorProperty(object, key, getter, setter, enumerable, configurable)`: Similar to `Object.defineProperty` but directly accepts the properties of the descriptor.
+  It is used to desugar object expressions and define the `callee` field of `arguments` objects in strict mode. -->
+
 * `AranThrowTypeError(message)`: Throws a type error.
   `TypeError` could have been saved instead but it would have increase the size of the instrumented code.
   It is called when:
@@ -596,16 +612,12 @@ Additionally, Aran will store several custom functions to help desugaring JavaSc
   * accessing a local variable in its [temporal dead zone](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let#Temporal_dead_zone).
   * assigning to non existing global variable in strict mode.
   * reading a non existing global variable.
-* `array = AranEnumerate(object)`: Enumerate the keys of an object as in a `for .. in` loop.
-  It is used to desugar a `for .. in` loop in a `while` loop.
-* `array = AranRest(iterator)`: Create an array with the rest of an iterator.
+* `array = AranIteratorRest(iterator)`: Create an array with the rest of an iterator.
   It is used to desugar array pattern with rest element.
-* `boolean = AranHold(object, key)`: Indicates whether a property is present in a an object or its prototype chain.
+* `boolean = AranObjectHold(object, key)`: Indicates whether a property is present in a an object or its prototype chain.
   It is used to detect the existence of a global variable.
-* `object = AranDefineDataProperty(object, key, value, writable, enumerable, configurable)`: Similar to `Object.defineProperty` but directly accepts the properties of the descriptor.
-  It is used to declared global variables, desugar object expressions and define various fields of functions and `arguments` objects.
-* `object = AranDefineAccessorProperty(object, key, getter, setter, enumerable, configurable)`: Similar to `Object.defineProperty` but directly accepts the properties of the descriptor.
-  It is used to desugar object expressions and define the `callee` field of `arguments` objects in strict mode.
+* `object = AranObjectRest(object, keys)`
+* `AranObjectAssign(target, source)`: Same as `Object.assign` but does not trigger setters.
 
 We are considering adding `AranGet`, `AranSet` and `AranSetStrict` as an alternative to `Reflect.get` and `Reflect.set` to decrease the size of instrumented code.
 
