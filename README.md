@@ -277,41 +277,39 @@ This process still left us with 26 traps which we categorize based on their tran
   * `apply = (closure, context, arguments, serial) => Reflect.apply(closure, context, arguments);`
   * `construct = (constructor, arguments, serial) => Reflect.construct(constructor, arguments);`
 
-![trap-categorization](img/trap-category.png)
-
 ### Trap Insertion
 
 Name          | Original              | Instrumented
 --------------|-----------------------|-------------
 **Informers** |                       |
-`program`     | `...` (program)       | `program(META.builtins.global, @serial); ...`
-`arrival`     | `function () { ... }` | `... function () { ... META.arrival(callee, new.target, this, arguments, @serial); ... } ...`
-`enter`       | `l: { let x; ... }`   | `l : { META.enter("block", ["x"], ["l"], @serial); ... }`
-`leave`       | `{ ... }`             | `{ ... META.leave(@serial); }`
-`continue`    | `continue l;`         | `META.continue("l", @serial); continue l;`
-`break`       | `break l;`            | `META.break("l", @serial); break l;`
-`debugger`    | `debugger;`           | `META.debugger(@serial); debugger;`
+`program`     | `...` (program)       | `program(_.builtins.global, @serial); ...`
+`arrival`     | `function () { ... }` | `... function () { ... _.arrival(callee, new.target, this, arguments, @serial); ... } ...`
+`enter`       | `l: { let x; ... }`   | `l : { _.enter("block", ["x"], ["l"], @serial); ... }`
+`leave`       | `{ ... }`             | `{ ... _.leave(@serial); }`
+`continue`    | `continue l;`         | `_.continue("l", @serial); continue l;`
+`break`       | `break l;`            | `_.break("l", @serial); break l;`
+`debugger`    | `debugger;`           | `_.debugger(@serial); debugger;`
 **Modifiers** |                       |
-`primitive`   | `"foo"`               | `META.primitive("foo", @serial)`
-`read`        | `x`                   | `META.read($x, "x", @serial)`
-`closure`     | `function () { ... }` | `META.closure(... function () { ... } ..., @serial)`
-`builtin`     | `[x, y]`              | `META.builtin(META.builtins["Array.of"], "Array.of", @serial)($x, $y)`
-`argument`    | `function () { ... }` | `... function () { ... META.argument(arguments.length, "length", @serial) ... } ...`
-`drop`        | `(x, y)`              | `(META.drop($x, @serial), $y)`
-`test`        | `x ? y : z`           | `META.test($x, @serial) ? $y : $z`
-`write`       | `x = y;`              | `$x = META.write($y, "x", @serial);`
-`return`      | `return x;`           | `return META.return($x, @serial);`
-`success`     | `x;` (program)        | `META.success($x, @serial);` 
-`eval`        | `eval(x)`             | `... eval(META.eval($x, @serial)) ...`
-`abrupt`      | `function () { ... }` | `... function () { ... try { ... } catch (error) { throw META.abrupt(error, @serial); } ... } ...`
-`failure`     | `...` (program)       | `try { ... } catch (error) { throw META.failure(error, @serial); }` 
-`throw`       | `throw e;`            | `throw META.throw($e, @serial);`
-`error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... META.error(error, @serial) ... }`
+`primitive`   | `"foo"`               | `_.primitive("foo", @serial)`
+`read`        | `x`                   | `_.read($x, "x", @serial)`
+`closure`     | `function () { ... }` | `_.closure(... function () { ... } ..., @serial)`
+`builtin`     | `[x, y]`              | `_.builtin(_.builtins["Array.of"], "Array.of", @serial)($x, $y)`
+`argument`    | `function () { ... }` | `... function () { ... _.argument(arguments.length, "length", @serial) ... } ...`
+`drop`        | `(x, y)`              | `(_.drop($x, @serial), $y)`
+`test`        | `x ? y : z`           | `_.test($x, @serial) ? $y : $z`
+`write`       | `x = y;`              | `$x = _.write($y, "x", @serial);`
+`return`      | `return x;`           | `return _.return($x, @serial);`
+`success`     | `x;` (program)        | `_.success($x, @serial);` 
+`eval`        | `eval(x)`             | `... eval(_.eval($x, @serial)) ...`
+`abrupt`      | `function () { ... }` | `... function () { ... try { ... } catch (error) { throw _.abrupt(error, @serial); } ... } ...`
+`failure`     | `...` (program)       | `try { ... } catch (error) { throw _.failure(error, @serial); }` 
+`throw`       | `throw e;`            | `throw _.throw($e, @serial);`
+`error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... _.error(error, @serial) ... }`
 **Combiners** |                       |
-`unary`       | `!x`                  | `META.unary("!", $x, @serial)`
-`binary`      | `x + y`               | `META.binary("+", $x, $y, @serial)` 
-`apply`       | `f(x, y)`             | `META.apply($f, undefined, [$x, $y], @serial)`
-`construct`   | `new F(x, y)`         | `META.construct($F, [$x, $y], @serial)`
+`unary`       | `!x`                  | `_.unary("!", $x, @serial)`
+`binary`      | `x + y`               | `_.binary("+", $x, $y, @serial)` 
+`apply`       | `f(x, y)`             | `_.apply($f, undefined, [$x, $y], @serial)`
+`construct`   | `new F(x, y)`         | `_.construct($F, [$x, $y], @serial)`
 
 ### Trap Signature
 
