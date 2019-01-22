@@ -188,7 +188,7 @@ Desugar the input program and insert calls to trap functions at nodes specified 
 ### `result = aran.unary(operator, argument)`
 
 Performs a unary operation as expected by the `unary` trap.
-`aran.unary` can be implemented as easily as `eval(operator+" argument")` but we used a boring `switch` loop instead for performance reasons.
+This function can be implemented as easily as `eval(operator+" argument")` but we used a boring `switch` loop instead for performance reasons.
 
 * `operator :: string`
 * `arguments :: *`
@@ -197,7 +197,7 @@ Performs a unary operation as expected by the `unary` trap.
 ### `result = aran.binary(operator, left, right)`
 
 Performs a binary operation as expected by the `binary` trap.
-`aran.unary` can be implemented as easily as `eval("left "+operator+" right")` but we used a boring `switch` loop instead for performance reasons.
+This function can be implemented as easily as `eval("left "+operator+" right")` but we used a boring `switch` loop instead for performance reasons.
 
 * `operator :: string`
 * `left :: *`
@@ -267,13 +267,10 @@ Serial numbers can be seen as program counters.
 ### Trap Categorization
 
 We tried to provide as few trap as possible to express the entire JavaScript semantic.
-This process still left us with around 40 traps which we categorize depending on their effect on the value stack:
+This process still left us with 26 traps which we categorize based on their transparent implementation:
 
-* Informers (7): do nothing
+* Informers (7): does nothing
 * Modifiers (15): returns the first argument
-  * Bystanders (2): no effect on the value stack
-  * Producers (6): push a value on top of the value stack.
-  * Consumers (7): pop a value from the value stack.
 * Combiners (4): computes a new value
   * `unary = (operator, argument, serial) => eval(operator+" argument");`
   * `binary = (operator, left, right, serial) => eval("left "+operator+" right");`
@@ -295,24 +292,21 @@ Name          | Original              | Instrumented
 `break`       | `break l;`            | `META.break("l", @serial); break l;`
 `debugger`    | `debugger;`           | `META.debugger(@serial); debugger;`
 **Modifiers** |                       |
-*Bystanders*  |                       |
-`abrupt`      | `function () { ... }` | `... function () { ... try { ... } catch (error) { throw META.abrupt(error, @serial); } ... } ...`
-`failure`     | `...` (program)       | `try { ... } catch (error) { throw META.failure(error, @serial); }` 
-`throw`       | `throw e;`            | `throw META.throw($e, @serial);`
-`error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... META.error(error, @serial) ... }`
-*Producers*   |                       | 
 `primitive`   | `"foo"`               | `META.primitive("foo", @serial)`
 `read`        | `x`                   | `META.read($x, "x", @serial)`
 `closure`     | `function () { ... }` | `META.closure(... function () { ... } ..., @serial)`
 `builtin`     | `[x, y]`              | `META.builtin(META.builtins["Array.of"], "Array.of", @serial)($x, $y)`
 `argument`    | `function () { ... }` | `... function () { ... META.argument(arguments.length, "length", @serial) ... } ...`
-*Consumers*   |                       |
 `drop`        | `(x, y)`              | `(META.drop($x, @serial), $y)`
 `test`        | `x ? y : z`           | `META.test($x, @serial) ? $y : $z`
 `write`       | `x = y;`              | `$x = META.write($y, "x", @serial);`
 `return`      | `return x;`           | `return META.return($x, @serial);`
 `success`     | `x;` (program)        | `META.success($x, @serial);` 
 `eval`        | `eval(x)`             | `... eval(META.eval($x, @serial)) ...`
+`abrupt`      | `function () { ... }` | `... function () { ... try { ... } catch (error) { throw META.abrupt(error, @serial); } ... } ...`
+`failure`     | `...` (program)       | `try { ... } catch (error) { throw META.failure(error, @serial); }` 
+`throw`       | `throw e;`            | `throw META.throw($e, @serial);`
+`error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... META.error(error, @serial) ... }`
 **Combiners** |                       |
 `unary`       | `!x`                  | `META.unary("!", $x, @serial)`
 `binary`      | `x + y`               | `META.binary("+", $x, $y, @serial)` 
