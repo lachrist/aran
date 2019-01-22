@@ -20,7 +20,7 @@ npm install acorn aran astring
 
 ```js
 const Acorn = require("acorn");
-const Aran = require("./lib/main.js");
+const Aran = require("aran");
 const Astring = require("astring");
 let depth = "";
 global.ADVICE = {
@@ -110,7 +110,6 @@ Another good reason for the advice to communicate with Aran arises when the targ
    * [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
    * Generator functions ([`function*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), [`yield`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield),[`yield*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield*)).
    * Asynchronous functions ([`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)).
-   * [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals).
 2) There exists loopholes that will cause the target program to behave differentially when analyzed.
    These bugs are commonly referred as *Heisenbugs*, and are discusses in [Known Heisenbugs](#known-heisenbugs).
 3) Aran does not provide any facilities for instrumenting modularized JavaScript applications.
@@ -125,8 +124,9 @@ Another good reason for the advice to communicate with Aran arises when the targ
 
 Create a new Aran instance.
 
-* `namespace :: string`, default `"__ARAN__"`:
+* `namespace :: string`, default `"_"`:
   The name of the variable holding the advice.
+  It should not start by a dollar sign (`$`) and should be not be one of: `arguments`, `eval`, `callee`, `error`.
   This variable should be accessible from the instrumented code.
   For instance, this variable should be global if the instrumented code is evaluated globally.
   Aran performs identifier mangling in such a way that variables from the instrumented code never clash against this variable.
@@ -144,23 +144,27 @@ The state of an Aran instance essentially consists in the node it instrumented.
 Aran instances can be serialized using the standard `JSON.stringify` function.
 For instance, in the code below, `aran1` and `aran2` are in the exact same state:
 
-  ```js
-  const Aran = require("aran");
-  const aran1 = Aran({...});
-  const string = JSON.stringify(aran1);
-  const options = JSON.parse(string);
-  const aran2 = Aran(options);
-  ```
+```js
+const Aran = require("aran");
+const aran1 = Aran({...});
+const string = JSON.stringify(aran1);
+const options = JSON.parse(string);
+const aran2 = Aran(options);
+```
 
 ### `output = aran.setup()`
 
-Generate the setup code which should be executed before any instrumented code; it is either an ESTree program or a string depending on `options.format`.
-The setup code should be evaluated in an environment where the advice variable is accessible.
-If the setup code is evaluated twice (for the same advice variable), it will throw an error.
+Generate the setup code which should be executed before any instrumented code.
+
+* `output :: estree.Program | string`:
+  The setup code whose format depends on the `format` option.
+
+The setup code should be evaluated in an environment where `this` points to the global object and where the advice variable is accessible.
+If the setup code is evaluated twice for the same advice, it will throw an error.
 
 ### `output = aran.weave(program, pointcut, serial)`
 
-Desugar and insert calls to trap functions at nodes specified by the pointcut.
+Desugar the input program and insert calls to trap functions at nodes specified by the pointcut.
 * `program :: estree.Program`:
   The [ESTree program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
 * `pointcut :: array | function`:
@@ -178,12 +182,12 @@ Desugar and insert calls to trap functions at nodes specified by the pointcut.
 * `serial :: number | null | undefined`: default `null`
   If the given ESTree program is going to be evaluated inside a direct eval call within some previously instrumented code, the `serial` argument should be the serial number locating that direct eval call.
   If the instrumented code is going to be evaluated globally, this argument should be `null` or `undefined`.
-* `output :: estree.Program | string | *`:
+* `output :: estree.Program | string`:
   The weaved code whose format depends on the `format` option.
 
 ### `result = aran.unary(operator, argument)`
 
-Performs a unary operation.
+Performs a unary operation as expected by the `unary` trap.
 `aran.unary` can be implemented as easily as `eval(operator+" argument")` but we used a boring `switch` loop instead for performance reasons.
 
 * `operator :: string`
@@ -192,7 +196,7 @@ Performs a unary operation.
 
 ### `result = aran.binary(operator, left, right)`
 
-Performs a binary operation.
+Performs a binary operation as expected by the `binary` trap.
 `aran.unary` can be implemented as easily as `eval("left "+operator+" right")` but we used a boring `switch` loop instead for performance reasons.
 
 * `operator :: string`
@@ -215,7 +219,7 @@ The name of the variable holding the advice.
 
 ### `aran.format`
 
-The output format for `aran.weave(estree, scope)` and `aran.setup()` calls; either `"estree"` or `"script"`.
+The output format for `aran.weave(estree, scope)` and `aran.setup()`; either `"estree"` or `"script"`.
 
 ```js
 {
