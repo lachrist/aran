@@ -684,9 +684,9 @@ I'm [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd stud
 I'm working at the [SOFT language lab](http://soft.vub.ac.be/soft/), my promoters are [Coen De Roover](http://soft.vub.ac.be/soft/members/cderoove) and [Wolfgang De Meuter](http://soft.vub.ac.be/soft/members/wdmeuter).
 I'm currently being employed on the [Tearless project](http://soft.vub.ac.be/tearless/pages/index.html).
 
-![tearless](img/tearless.png)
-![soft](img/soft.png)
 ![vub](img/vub.png)
+![soft](img/soft.png)
+![tearless](img/tearless.png)
 
 <!-- 
 ## Discussion
