@@ -12,6 +12,17 @@ Although I spent a lot of time improving the quality of this software I do not c
 Bugs may still remain and unforeseen behaviour may occur on large instrumented programs.
 In the near future, I will not add new features but will correct reported bugs.
 
+**Table of contents**:
+1. [Getting Started](#getting-started)
+2. [Demonstrators]
+3. [Limitations]
+4. [API]
+5. [Advice]
+6. [Setup Phase]
+7. [Predefined Values]
+8. [Known Heisenbug]
+9. [Acknowledgements]
+
 ## Getting Started
 
 ```sh
@@ -347,22 +358,25 @@ Name          | arguments[0]              | arguments[1]             | arguments
 ### Traps Comments
 
 Traps are all independently optional but some traps are logically coupled.
+To illustrate the points below we often use 
 We enumerate this links below:
 
-* `["enter", "write", "read", "leave"]`
-  These four traps represent the runtime interaction  
-  1. In the normalisation process, Aran often inserts new variables called *token* which appear to be numbers from the traps perspective.
-    So if the second argument of a `write`/`read` invocation is a string, the   
-  2. Aran only declares `let` variables.
+* `enter`, `write`, `read`, `leave`:
+  These (only) four traps describe the runtime interaction with the environment.
+  We discuss how below:
+  1. In the normalisation process, Aran often inserts new variables called *token*.
+    Tokens appear to be numbers from traps perspective whereas variables present in the original code appear as strings.
+  2. Aran only declares `let` variables:
     * `var` declarations at the top-level scope are normalised into property definition on the global object.
     * `var` declarations inside functions are hoisted and normalised into `let` declarations.
     * `const` declarations are normalised into `let` declarations and a static type error is throws upon attempting to rewrite them.
-  3. Aran hoist its `let` declarations at the top of blocks, making the temporal deadzone disappear.
-    To restore the behaviour of the temporal deadzone, each variable is associated with a token.
-    At runtime, these tokens will refer to a boolean value indicating whether the variable has already been initialised or not.
+  3. Aran hoist its `let` declarations at the top of blocks.
+    This makes the temporal deadzone disappear.
+    To restore the behaviour of the temporal deadzone, a token is associated to each variable.
+    At runtime, these tokens will refer to a boolean value indicating whether their associated variable has already been initialised or not.
     Before accessing a variable in a dynamic portion of the deadzone, a runtime time check on its associated token is inserted. 
     In many cases, the temporal deadzone of a variable can be statically determined and its associated token is entirely removed from the instrumented code.
-  These remarks are illustrated in the pseudo instrumentation below:
+    Not that `eval` kills this optimisation because we have to assume that any reachable variable may be accessed.
   ```js
   // Original //
   const a = () => x;
@@ -371,7 +385,7 @@ We enumerate this links below:
   a = "bar";
   ```
   ```js
-  // Instrumented //
+  // (pseudo) Instrumented //
   let $a, $x, $1;
   META.enter("program", [], ["a", "x", 123]);
   $1 = META.write(false, 1);
@@ -385,9 +399,9 @@ We enumerate this links below:
   throw new TypeError("Assignment to a constant variable");
   META.leave();
   ```
-* `["program", "success", "failure"]`:
-  These traps are linked to a program from the original code.
-  The first trap invoked by a program is always `program` and the last trap is either `success` or `failure`.
+* `program`, `success`, `failure`:
+  These traps are inserted into programs that will *not* be evaluated inside a direct eval call.
+  The first trap invoked by a program is always `program(@serial)` and the last trap is either `success($1, @serial)` or `failure(error, @serial)`.
   ```js
   // Original //
   "foo";
@@ -403,173 +417,97 @@ We enumerate this links below:
     throw META.failure(error);
   }
   ```
-* `["arrival", "argument", "return"]`:
-  The most complex link 
-  
-  These traps are linked to a closure from the original code.
-  The `closure` trap intercepts the creation of the closures whether it is a function or an arrow.
-  To normalise destructuring parameters, Aran always uses the `arguments` identifiers.  
-  This requires to replace arrows by functions.
-  The `arrival` trap receives all the information relative to entering the closure.
-  Note that `callee` is assigned to the function given as parameter to the `closure` trap and not its return value.
+* `arrival`, `argument`, `return`, `abrupt`:
+  When applying an instrumented closure, these traps are invoked in the following order:
+  1. `arrival(callee, new.target, this, arguments, @serial)`:
+     Beware: `callee` refers to the function given as parameter to the `closure` trap and *not* its return value.
+  2. `argument(new.target, "new.target", @serial)`:
+     For arrows, this trap is used to check that it was not called as a constructor.
+     For functions, this trap is used to initialise a sanitised `new.target` variable.
+     For functions, if its result is not `undefined`, it will be used to initialise a sanitised `this` variable.
+  3. `argument(this, "this", @serial)`:
+     This trap is invoked only if the previous trap returned `undefined`. 
+     For arrows, the result of this trap is discarded.
+     For functions, this trap is used to initialise a sanitised `this` variable.
+  4. `argument(arguments.length, "length", @serial)`:
+     The value returned by this trap is used to define how many times the next trap should be called.
+  5. `argument(arguments[argindex], argindex, @serial)`:
+     The variable `argindex` is counter from `0` to the value returned by the previous trap. 
+     This trap is used to initialise parameters.
+     For functions reading the `arguments` variable it is also used to initialise the `arguments` object.
+  6. `return(<EXPR>, @serial)` or `abrupt(error, @serial)`:
+     If the closure normally finished, the `return` trap is invoked with its result.
+     Else, the abrupt `abrupt` traps is called with the error that caused it to abruptly terminate.
+     The serial number of the `return` trap may either points to a `return` statement in the original code or the closure if it finished without hitting a `return` statement.
   ```js
   // Original //
-  const a = (x) => x * x; 
+  const f = function (x) => {
+    console.log("Square = " x * x);
+  }
   ```
   ```js
-  // Instrumented //
-  let $a;
-  $a = function callee () {
-    let $x, $0newtarget, $this, $123, $124;
-    META.arrival(callee, new.target, this, arguments, @serial);
-    $0newtarget = META.argument(new.target, "new.target", @serial);
-    if ($0newtarget)
-      throw new TypeError("Arrow used as constructor");
-    $this = META.argument(this, "this", @serial);
-    $123 = META.argument(arguments.length, "length", @serial);
-    $x = 0 < $123 ? META.argument(arguments[0], 0, @serial) : undefined;
-    $124 = 1;
-    while ($124 < $123)
-      META.argument(arguments[$124], $124, @serial);
-    return META.return($x * $x);
+  // (pseudo) Instrumented //
+  let $f;
+  $f = function callee () {
+    try {
+      let $x, $0newtarget, $this, $1, $2;
+      META.arrival(callee, new.target, this, arguments, @serial);
+      $0newtarget = META.argument(new.target, "new.target", @serial);
+      if ($0newtarget)
+        $this = Object.create($0newtarget.prototype);
+      else
+        $this = META.argument(this, "this", @serial);
+      $1 = META.argument(arguments.length, "length", @serial);
+      $x = 0 < $1 ? META.argument(arguments[0], 0, @serial) : undefined;
+      $2 = 1;
+      while ($2 < $1) {
+        META.argument(arguments[$2], $2, @serial);
+        $2 = $2 + 1;
+      }
+      console.log("Square = " $x * $x);
+      return META.return(undefined, @serial);
+    } catch (error) {
+      throw META.abrupt(error, @serial);
+    }
   };
   ```
-* `["enter", "leave", "break", "continue"]`:
-  There exists multiple block semantic in JavaScript, the simplest one corresponds to regular blocks.
-  The legal values passed as first parameter to `leave` are: `"block"`, `"try"`, `"catch"`, `"finally"` and `"label"`.
-  Each of these value corresponds to the name of the trap that might have been triggered upon entering the block.
+* `enter`, `break`, `continue`, `leave`:
+  These traps describe runtime label jumps:
   ```js
   // Original //
-  {
-    let x = "foo";
+  l: while (true) {
+    continue l;
   }
   ```
   ```js
   // Instrumented //
-  {
-    META.block(@serial);
-    let x = "foo";
-    META.leave("block", @serial);
+  l: m: while (true) {
+    META.enter("loop", ["l", "m"], @serial1);
+    META.continue("l", @serial2);
+    continue l;
+    META.leave(@serial1);
   }
   ```
-* `["try", "catch", "finally", "leave"]`:
-  `try`, `catch` and `finally` are each closed with a `leave` trap.
-  The Aran-specific identifier `error` is used so that destructuring parameters can be desugarized.
-  ```js
-  // Orginal //
-  try {
-    f();
-  } catch (e) {
-    g();
-  } finally {
-    h();
-  }
-  ```
-  ```js
-  // Instrumented //
-  try {
-    META.try(@serial);
-    f();
-    META.leave("try", @serial)
-  } catch (error) {
-    let e = META.catch(error, @serial);
-    g();
-    META.leave("catch", @serial);
-  } finally {
-    META.finally(@serial);
-    h();
-    META.leave("finally", @serial);
-  }
-  ```
-* `["label", "leave", "break"]`:
-  We made some extra work to avoid adding a `continue` trap.
-  This has beeen realized by splitting labels into two categories: break labels and continue labels.
-  Explicit break / continue labels are prepended with `"b"` / `"c"`:
+* `builtin`:
+  In the normalisation process, Aran often uses pre-existing values from the global object (a.k.a primordials).
+  To render the instrumented code resilient to modification of the global object it is important to store these builtin values upfront.
+  This is performed during the setup phase.
   ```js
   // Original //
-  foo : {
-    break foo;
-  }
+  o.k
   ```
   ```js
-  // Instrumented //
-  bfoo: {
-    META.label(false, "foo", @serial1);
-    META.break(false, "foo", @serial2);
-    break bfoo;
-    META.leave("label", @serial1);
-  }
+  // (pseudo) Instrumented //
+  (
+    $o === null || $o === undefined ?
+    ((() => { throw new TypeError("Cannot read property of undefined or null") }) ()) :
+    META.builtin(META.builtins["Reflect.get"], "Reflect.get")(META.builtin(META.builtins["Object"], "Object")($o), "k"));
   ```
-  Implicit break / continue labels are explicitly named `"B"` / `"C"`:
-  ```js
-  // Original // 
-  while (x) {
-    break;
-    continue;
-  }
-  ```
-  ```js
-  // Instrumented //
-  META.label(false, null);
-  B: while (x) C: {
-    META.label(true, null);
-    META.break(false, null);
-    break B;
-    META.break(true, null);
-    break: C;
-    META.leave("label");
-  }
-  META.leave("label");
-  ```
-  To make these two transformations invisible to the user we added a boolean parameter to the `label` and `break`.
-  This parameter tells whether the label is a break label (false) or a continue label (true).
-* `["array", "object"]`:
-  These traps are the only combiner traps whose transparent implementation simply consists in returning one of their argument.
-  The object trap receives as first arguments an array of unique keys which indicates the order in which the data properties were assign to the object.
-  Literal objects containing computed keys or accessor properties or non-unique keys will result in an empty object being passed to the `object` trap.
-* `["save", "load"]`:
-  These traps are only important for analyses that mirror the cares about the value stack.
-  Some structures require builtin values to be desugarised.
-  For instance a `for ... in` loop can be desugarised into `for` loops with the help of `Object.getPrototypeOf` and `Object.keys`.
-  As the target programs can modify the global object, we created a save/load system to make sure we access the correct builtin values.
-  Analyses that mirror the value stack should also mirror this mapping as shown below:
-  ```js
-  // Advice //
-  let mapping = {};
-  advice.save = (name, value, serial) => {
-    mapping[name] = vstack.pop();
-    return value;
-  };
-  advice.load = (name, value, serial) => {
-    vstack.push(mapping[name]);
-    return value;
-  };
-  ```
-* `["copy", "drop", "swap"]`:
-  These traps are only important for analyses that cares about the value stack.
-  They each express a simple manipulation of the value stack as examplified below:
-  ```js
-  // Advice //
-  advice.copy = (position, serial) => {
-    vstack.push(vstack[vstack.length-position]);
-  };
-  advice.swap = (position1, position2, serial) => {
-    const temporary = vstack[vstack.length-position1];
-    vstack[vstack.length-position1] = vstack[vstack.length-position2];
-    vstack[vstack.length-position2] = temporary;
-  };
-  advice.drop = (serial) => {
-    vstack.pop();
-  };
-  ```
-  
+
 ## Setup
 
 The setup code will add a `builtins` field to the advice pointing to an object containing values of the global object (a.k.a *primordial*).
 If the advice already contains a `builtins` field, an error is thrown.
-The setup step is required because Aran uses several builtin values to normalise language-level operations.
-Therefore, it is important to save these builtins upfront so that instrumented code remain resilient to modifications of the global object.
-For instance `o.k` will be instrumented into something like `ADVICE.primordials["Reflect.get"]($o, "k")` rather than directly `Reflect.get($o, "k")` which is affected by the state of the global object.
 Below is a list of the all the builtins stored by the setup code along with their utility:
 
 * `global`: For declaring/writing/reading global variables and for assigning the initial value of `this`.
@@ -604,28 +542,37 @@ Below is a list of the all the builtins stored by the setup code along with thei
 
 ## Predefined Values
 
-Rather than defining a closure whenever a loop is needed in an expression context, Aran defines several functions at the beginning of each program.
-Along with these helper functions is the completion value of the program.
-Below is listed the values Aran redefined for every programs; their place in the list reflect the token to which they are assigned.
+Rather than defining a closure whenever statements are needed in an expression context, Aran defines several functions at the beginning of programs.
+This help reduce the size of the instrumented code.
+The other value that Aran predefines is the completion value of the program.
+These predefined values are always assigned to the same token in the order listed below:
 
-1. `Completion`: The completion value of the program, initially: `undefined`.
-2. `HelperThrowTypeError(message)`: Throws a type error.
-  * Assigning to a constant variable.
-  * Calling an arrow as a constructor.
-  * In strict mode, deleting a member expression and failing.
-  * In strict mode, assigning a member expression and failing.
-  * Passing `null` or `undefined` a `with` statement.
-3. `HelperThrowReferenceError(message)`: Throws a reference error.
-  * Accessing a local variable in its temporal dead zone.
-  * Reading a non existing global variable.
-  * In Strict mode, writing to non existing global variable.
-4. `boolean = HelperIsGlobal(name)`: Indicates whether an identifier is globally defined (non-enumerable properties also count).
-  This helper is inserted whenever a variable lookup reach the global scope in Aran's static scope analysis.
-5. `array = HelperIteratorRest(iterator)`: Pushes the remaining elements of an iterator into an array.
-  This helper is inserted to compute the value of an array pattern's rest element.
-6. `target = HelperObjectRest(source, keys)`: Create an object `target` that contains the own enumerable properties of `source` safe the ones listed in `keys`.
-  This helper is inserted to computed the value of an object pattern's rest element.
-7. `HelperObjectAssign(target, source)`: Similar to `Object.assign` but uses `Reflect.defineProperty` rather than `Reflect.set` on the target object.
+1. `Completion`:
+   The completion value of the program, initially: `undefined`.
+2. `HelperThrowTypeError(message)`:
+   Throws a type error; called when:
+   * Assigning to a constant variable.
+   * Reading/Assigning a property on `null` or `undefined`. 
+   * Calling an arrow as a constructor.
+   * In strict mode, deleting a member expression and failing.
+   * In strict mode, assigning a member expression and failing.
+   * Passing `null` or `undefined` a `with` statement.
+3. `HelperThrowReferenceError(message)`:
+   Throws a reference error; called when:
+   * Accessing a local variable in its temporal dead zone.
+   * Reading a non existing global variable.
+   * In Strict mode, writing to non existing global variable.
+4. `boolean = HelperIsGlobal(name)`:
+   Indicates whether an identifier is globally defined (non-enumerable properties also count).
+   This helper is inserted whenever a variable lookup reach the global scope in Aran's static scope analysis.
+5. `array = HelperIteratorRest(iterator)`:
+   Pushes the remaining elements of an iterator into an array.
+   This helper is inserted to compute the value of an array pattern's rest element.
+6. `target = HelperObjectRest(source, keys)`:
+   Create an object `target` that contains the own enumerable properties of `source` safe the ones listed in `keys`.
+   This helper is inserted to computed the value of an object pattern's rest element.
+7. `HelperObjectAssign(target, source)`:
+   Similar to `Object.assign` but uses `Reflect.defineProperty` rather than `Reflect.set` on the target object.
    This helper is inserted whenever an object expression contain a spread element.
 
 To help decrease the size of the instrumented code, we are considering adding `AranGet`, `AranSet` and `AranSetStrict` as an alternative to `Reflect.get` and `Reflect.set`.
@@ -727,8 +674,7 @@ I'm currently being employed on the [Tearless project](http://soft.vub.ac.be/tea
 ![soft](img/soft.png)
 ![vub](img/vub.png)
 
-
-
+<!-- 
 ## Discussion
 
 [Aran](https://github.com/lachrist/aran) and program transformation in general is good for introspecting the control flow and pointers data flow.
@@ -791,7 +737,7 @@ We now discuss several strategies to provide an identity to primitive values:
     This requires to setup an access control system between instrumented code and non-instrumented code.
     This the solution this module directly enables.
 
-<!-- 
+
 1. **Debugging NaN appearances**
   In this first example, we want to provide an analysis which tracks the origin of `NaN` (not-a-number) values.
   The problem with `NaN` values is that they can easily propagate as the program is executed such that detecting the original cause of a `NaN` appearance is often tedious for large programs.
