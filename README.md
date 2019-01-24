@@ -385,6 +385,7 @@ We enumerate this links below:
   a();
   a = "bar";
   ```
+
   ```js
   // (pseudo) Instrumented //
   let $a, $x, $1;
@@ -409,6 +410,7 @@ We enumerate this links below:
   // Original //
   "foo";
   ```
+
   ```js
   // Instrumented //
   META.program();
@@ -420,6 +422,7 @@ We enumerate this links below:
     throw META.failure(error);
   }
   ```
+
 * `arrival`, `argument`, `return`, `abrupt`:
   When applying an instrumented closure, these traps are invoked in the following order:
   1. `arrival(callee, new.target, this, arguments, @serial)`:
@@ -442,12 +445,14 @@ We enumerate this links below:
      If the closure normally finished, the `return` trap is invoked with its result.
      Else, the abrupt `abrupt` traps is called with the error that caused it to abruptly terminate.
      The serial number of the `return` trap may either points to a `return` statement in the original code or the closure if it finished without hitting a `return` statement.
+
   ```js
   // Original //
   const f = function (x) => {
     console.log("Square = " x * x);
   }
   ```
+
   ```js
   // (pseudo) Instrumented //
   let $f;
@@ -474,14 +479,17 @@ We enumerate this links below:
     }
   };
   ```
+
 * `enter`, `break`, `continue`, `leave`:
   These traps describe runtime label jumps:
+
   ```js
   // Original //
   l: while (true) {
     continue l;
   }
   ```
+
   ```js
   // Instrumented //
   l: m: while (true) {
@@ -491,14 +499,17 @@ We enumerate this links below:
     META.leave(@serial1);
   }
   ```
+
 * `builtin`:
   In the normalisation process, Aran often uses pre-existing values from the global object (a.k.a primordials).
   To render the instrumented code resilient to modification of the global object it is important to store these builtin values upfront.
   This is performed during the setup phase.
+
   ```js
   // Original //
   o.k
   ```
+
   ```js
   // (pseudo) Instrumented //
   (
@@ -583,7 +594,7 @@ To help decrease the size of the instrumented code, we are considering adding `A
 When dynamically analysing a program, it is implicitly assumed that the analysis will conserve the program's behaviour.
 If this is not the case, the analysis might draw erroneous conclusions.
 Behavioural divergences caused by an analysis over the target program are called [Heisenbugs](https://en.wikipedia.org/wiki/Heisenbug).
-It is very easy to write an analysis that is not transparent, for instance `advice.primitive = () => "foo";` will drastically alter the behavior of the program under analysis.
+It is very easy to write an analysis that is not transparent, for instance `advice.primitive = () => "foo";` will drastically alter the behaviour of the program under analysis.
 However, Aran introduce Heisenbugs by itself as well:
 
 * *Performance Overhead*:
