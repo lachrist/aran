@@ -108,7 +108,7 @@ Another good reason for the advice to communicate with Aran arises when the targ
   The identity of values is conserved by wrapping them inside regular objects.
 * [test/live/shadow-state.js](https://lachrist.github.io/aran/live-shadow-state-delta.html):
   Output the same log as `shadow-value` but by mirroring the value stack, the call stack and the environment rather than wrapping values.
-  This analysis is quite complex and demonstrates the full capability of Aran.
+  This analysis demonstrates the full capability of Aran and may serve documentation.
 * [test/live/linvail-value.js](https://lachrist.github.io/aran/live-linvail-value-delta-object.html)
   Like `shadow-value`, this analysis wrap values into objects to conserve their identity.
   However this analysis can also track values through the store (a.k.a the objet graph) thanks to a separate npm module called [linvail](https://www.npmjs.com/package/linvail).
@@ -298,7 +298,7 @@ Name          | Original              | Instrumented
 `break`       | `break l;`            | `META.break("l", @serial); break l;`
 `continue`    | `continue l;`         | `META.continue("l", @serial); continue l;`
 `debugger`    | `debugger;`           | `META.debugger(@serial); debugger;`
-`enter`       | `l: { let x; ... }`   | `l : { META.enter("block", ["x"], ["l"], @serial); ... }`
+`enter`       | `l: { let x; ... }`   | `l : { META.enter("block", ["l"], ["x"], @serial); ... }`
 `leave`       | `{ ... }`             | `{ ... META.leave(@serial); }`
 `program`     | `...` (program)       | `program(META.builtins.global, @serial); ...`
 *Modifiers*   |                       |
@@ -332,7 +332,7 @@ Name          | arguments[0]              | arguments[1]             | arguments
 `break`       | `label :: string \| null` | `serial :: number`       |                        |                        |
 `continue`    | `label :: string \| null` | `serial :: number`       |                        |                        |
 `debugger`    | `serial :: number`        |                          |                        |                        |
-`enter`       | `tag :: "program" \| "block" \| "then" \| "else" \| "loop" \| "try" \| "catch" \| "finally" \| "switch"` | `variables :: [string]` | `labels :: [string]` | `serial :: number` |
+`enter`       | `tag :: "program" \| "block" \| "then" \| "else" \| "loop" \| "try" \| "catch" \| "finally" \| "switch"` | `labels :: [string]` | `variables :: [string]` | `serial :: number` |
 `leave`       | `serial :: number`        |                          |                        |                        |
 `program`     | `global :: object`        | `serial :: number`       |                        |                        |
 *Modifiers*   |                           |                          |                        |                        |
@@ -358,9 +358,7 @@ Name          | arguments[0]              | arguments[1]             | arguments
 
 **Traps Comments:**
 
-Traps are all independently optional but some traps are logically coupled.
-To illustrate the points below we often use 
-We enumerate this links below:
+Some groups of traps requires additional explanations: 
 
 * `enter`, `write`, `read`, `leave`:
   These (only) four traps describe the runtime interaction with the environment.
@@ -370,8 +368,8 @@ We enumerate this links below:
   2. Aran only declares `let` variables:
      * `var` declarations at the top-level scope are normalised into property definition on the global object.
      * `var` declarations inside functions are hoisted and normalised into `let` declarations.
-     * `const` declarations are normalised into `let` declarations and a static type error is throws upon attempting to rewrite them.
-  3. Aran hoist its `let` declarations at the top of blocks.
+     * `const` declarations are normalised into `let` declarations and a static type error is throws upon rewrite attempt.
+  3. Aran hoist its `let` declarations at the top of lexical blocks.
      This makes the temporal deadzone disappear.
      To restore the behaviour of the temporal deadzone, a token is associated to each variable.
      At runtime, these tokens will refer to a boolean value indicating whether their associated variable has already been initialised or not.
@@ -430,22 +428,22 @@ We enumerate this links below:
      Beware: `callee` refers to the function given as parameter to the `closure` trap and *not* its return value.
   2. `argument(new.target, "new.target", @serial)`:
      For arrows, this trap is used to check that it was not called as a constructor.
-     For functions, this trap is used to initialise a sanitised `new.target` variable.
-     For functions, if its result is not `undefined`, it will be used to initialise a sanitised `this` variable.
+     For functions, this trap is used to initialise a sanitised version of the `new.target` variable.
+     For functions, if its result is not `undefined`, it will be used to initialise a sanitised version of the `this` variable.
   3. `argument(this, "this", @serial)`:
      This trap is invoked only if the previous trap returned `undefined`. 
      For arrows, the result of this trap is discarded.
-     For functions, this trap is used to initialise a sanitised `this` variable.
+     For functions, this trap is used to initialise a sanitised version of the `this` variable.
   4. `argument(arguments.length, "length", @serial)`:
      The value returned by this trap is used to define how many times the next trap should be called.
   5. `argument(arguments[argindex], argindex, @serial)`:
-     The variable `argindex` is counter from `0` to the value returned by the previous trap. 
      This trap is used to initialise parameters.
      For functions reading the `arguments` variable it is also used to initialise the `arguments` object.
+     The variable `argindex` is counter from `0` to the value returned by the previous trap.
   6. `return(<EXPR>, @serial)` or `abrupt(error, @serial)`:
-     If the closure normally finished, the `return` trap is invoked with its result.
-     Else, the abrupt `abrupt` traps is called with the error that caused it to abruptly terminate.
-     The serial number of the `return` trap may either points to a `return` statement in the original code or the closure if it finished without hitting a `return` statement.
+     If the closure normally terminated, the `return` trap is invoked with its result.
+     Else, the `abrupt` trap is called with the error that caused it to abruptly terminate.
+     The serial number of the `return` trap may either points to a `return` statement in the original code or the closure if it terminated without hitting a `return` statement.
 
   ```js
   // Original //
@@ -486,7 +484,7 @@ We enumerate this links below:
 
   ```js
   // Original //
-  l: while (true) {
+  l: m: while (true) {
     continue l;
   }
   ```
@@ -494,7 +492,7 @@ We enumerate this links below:
   ```js
   // Instrumented //
   l: m: while (true) {
-    META.enter("loop", ["l", "m"], @serial1);
+    META.enter("loop", ["l", "m"], [], @serial1);
     META.continue("l", @serial2);
     continue l;
     META.leave(@serial1);
@@ -502,21 +500,18 @@ We enumerate this links below:
   ```
 
 * `builtin`:
-  In the normalisation process, Aran often uses pre-existing values from the global object (a.k.a primordials).
+  In the normalisation process, Aran often uses pre-existing values from the global object (a.k.a: builtins, a.k.a: primordials).
   To render the instrumented code resilient to modification of the global object it is important to store these builtin values upfront.
   This is performed during the setup phase.
 
   ```js
   // Original //
-  o.k
+  /abc/g
   ```
 
   ```js
   // (pseudo) Instrumented //
-  (
-    $o === null || $o === undefined ?
-    ((() => { throw new TypeError("Cannot read property of undefined or null") }) ()) :
-    META.builtin(META.builtins["Reflect.get"], "Reflect.get")(META.builtin(META.builtins["Object"], "Object")($o), "k"));
+  new META.builtin(META.builtins.RegExp, "RegExp")("abc", "g");
   ```
 
 ## Builtins
@@ -577,16 +572,16 @@ These predefined values are always assigned to the same token in the order liste
    * In Strict mode, writing to non existing global variable.
 4. `boolean = HelperIsGlobal(name)`:
    Indicates whether an identifier is globally defined (non-enumerable properties also count).
-   This helper is inserted whenever a variable lookup reach the global scope in Aran's static scope analysis.
+   A call to this helper are inserted whenever a variable lookup reach the global scope in Aran's static scope analysis.
 5. `array = HelperIteratorRest(iterator)`:
    Pushes the remaining elements of an iterator into an array.
-   This helper is inserted to compute the value of an array pattern's rest element.
+   A call to this helper is inserted to compute the value of an array pattern's rest element.
 6. `target = HelperObjectRest(source, keys)`:
    Create an object `target` that contains the own enumerable properties of `source` safe the ones listed in `keys`.
-   This helper is inserted to computed the value of an object pattern's rest element.
+   A call to this helper is inserted to computed the value of an object pattern's rest element.
 7. `HelperObjectAssign(target, source)`:
    Similar to `Object.assign` but uses `Reflect.defineProperty` rather than `Reflect.set` on the target object.
-   This helper is inserted whenever an object expression contain a spread element.
+   A call to this helper is inserted whenever an object expression contain a spread element.
 
 ## Known Heisenbugs
 
@@ -607,12 +602,12 @@ However, Aran introduce Heisenbugs by itself as well:
   function f () {}
   assert(f.toString() === "function f () {}");
   ```
-  The most straightforward way to solve this issue would involve (i) receiving indentation information along with the program AST (ii) maintaining at runtime a mapping from closures to their non-instrumented source code (iii) inserting runtime checks at every function call to transform the result.
+  Solving this issue should probably involve (i) receiving indentation information along with the program AST (ii) maintaining at runtime a mapping from closures to their non-instrumented source code (iii) inserting runtime checks at every function call to transform the result.
   Not only this would make Aran's API uglier, it would also not completely solve the problem as `Function.prototype.toString` could be called on instrumented closures in non-instrumented code areas.
-* *Dynamic Scoping*
+* *Dynamic Scoping*:
   Normally, in non-strict mode, direct eval calls should be able to declare variables to their calling environment.
   This is not the case for instrumented code because Aran performs a static scope analysis.
-  The make JavaScript scope purely static, Aran simply transforms the top level `var` declarations into `let` declarations for programs being evaluated inside a direct eval call.
+  To make JavaScript scope purely static, Aran simply transforms the top level `var` declarations into `let` declarations for programs being evaluated inside a direct eval call.
   In the code below, the assertion should pass but it does not after instrumentation:
   ```js
   function f () {
@@ -623,8 +618,7 @@ However, Aran introduce Heisenbugs by itself as well:
   ```
   This could be solved but it would render the scope analysis much more complex.
 * *Aliasing Arguments' Properties*:
-  In non strict mode, the [arguments object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments) 
-  and the environment are linked.
+  In non strict mode, [`arguments` objects](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments) are linked to their closure's environment.
   Modifications of the arguments object will be reflected to the binding of their corresponding parameter.
   This link is broken by Aran's instrumentation because instrumented closures don't have parameters and use the `arguments` object instead.
   In the code below, both assertions should pass but they are both failing after instrumentation:
@@ -638,8 +632,8 @@ However, Aran introduce Heisenbugs by itself as well:
   f("foo");
   ```
   The link between the `arguments` object and the environment could be re-established by using proxies and modifying the scope analysis performed by Aran.
-* *Computed Methods' Name*
-  Normally, in an object literal, function's names should be assigned to the property key even if it is computed.
+* *Computed Methods' Name*:
+  Normally, in an object literal, methods names should be assigned to their property key even if it is computed.
   This is not the case for instrumented code because Aran uses a simple static analysis to assign function's names.
   In the code below, the assertion should pass but it fails after instrumentation:
   ```js
@@ -650,7 +644,7 @@ However, Aran introduce Heisenbugs by itself as well:
   assert(o.foo.name === "foo");
   ```
   This issue could be solved in Aran.
-* *Arrow's Prototype*
+* *Arrow's Prototype*:
   Normally, arrows should not define a `prototype` property.
   This is not the case for instrumented code because Aran transforms arrows into function which have a non-configurable `prototype` property.
   In the code below, both assertion should pass but the second one fails after instrumentation
@@ -659,11 +653,10 @@ However, Aran introduce Heisenbugs by itself as well:
   assert(a.prototype === undefined); // Success
   assert(Reflect.getOwnPropertyDescriptor(a, "prototype") === undefined);
   ```
-  This issue could be solved by not transforming arrows to functions but we feel that having one single application process is worth this Heisenbug.
+  This issue could be solved by not transforming arrows to functions.
 * *Constructing Arrow Proxies*:
   Normally, a proxy wrapping an arrow function should never call its `construct` handler.
   This is not the case for instrumented code because Aran transforms arrows into functions that throw a type error when the `new.target` is defined.
-  In the code below, the assertion should pass but it fails after instrumentation:
   ```js
   const a = () => {};
   const p = new Proxy(a, {
@@ -673,7 +666,7 @@ However, Aran introduce Heisenbugs by itself as well:
   });
   new p();
   ```
-  This issue could be solved by not transforming arrows to functions but we feel that having one single application process is worth this Heisenbug.
+  This issue could be solved by not transforming arrows to functions.
 
 ## Acknowledgments
 
