@@ -6,7 +6,7 @@ Aran was designed as a generic infra-structure for building various development-
 Aran can also be used at deployment-time but be mindful of performance overhead.
 For instance, Aran can be used to implement control access systems such as sandboxing.
 
-**Disclaimer**
+**Disclaimer**:
 Aran is an academic research project, we are using it at [our lab](http://soft.vub.ac.be/soft/) to support publications and run experiments.
 Although I spent a lot of time improving the quality of this software I do not claim it reaches industrial strength.
 Bugs may still remain and unforeseen behaviour may occur on large instrumented programs.
@@ -133,7 +133,7 @@ Another good reason for the advice to communicate with Aran arises when the targ
 
 ## API
 
-### `aran = require("aran")({namespace, format, roots})`
+**`aran = require("aran")({namespace, format, roots})`**
 
 Create a new Aran instance.
 
