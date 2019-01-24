@@ -62,7 +62,7 @@ advice.primitive = function (value, serial) {
   return value;
 };
 
-advice.primordial = function (value, name, serial) {
+advice.builtin = function (value, name, serial) {
   stack.push(value);
   return value;
 };
@@ -325,7 +325,7 @@ global.eval(aran.setup());
 const pointcut = (name, node) => true;
 module.exports = (script1) => {
   const estree = Acorn.parse(script1, {locations:true});
-  const block1 = aran.desugar(estree, null);
+  const block1 = aran.normalise(estree, null);
   const block2 = aran.ambush(block1, pointcut);
   // console.log(require("util").inspect(block2, {depth:null, colors:true}));
   const script2 = aran.generate(block2);

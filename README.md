@@ -9,7 +9,7 @@ For instance, Aran can be used to implement control access systems such as sandb
 **Disclaimer**
 Aran is an academic research project, we are using it at [our lab](http://soft.vub.ac.be/soft/) to support publications and run experiments.
 Although I spent a lot of time improving the quality of this software I do not claim it reaches industrial strength.
-Bugs may still remain and unforeseen behavior may occur on large instrumented programs.
+Bugs may still remain and unforeseen behaviour may occur on large instrumented programs.
 In the near future, I will not add new features but will correct reported bugs.
 
 ## Getting Started
@@ -65,7 +65,7 @@ fac(6)
 The code transformation performed by Aran essentially consists in inserting calls to functions called *traps* at [ESTree](https://github.com/estree/estree) nodes specified by the user.
 For instance, the expression `x + y` may be transformed into `META.binary("+", x, y, 123)`.
 The last argument passed to traps is always a *serial* number which uniquely identifies the node which triggered the trap.
-The object that contains traps is called the *advice* and the specification that characterizes what trap should be triggered on each node is called *pointcut*.
+The object that contains traps is called the *advice* and the specification that characterises what trap should be triggered on each node is called *pointcut*.
 The process of inserting trap calls based on a pointcut is called *weaving*.
 This terminology is borrowed from [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming).
 [This page](https://lachrist.github.io/aran/dead-apply-factorial.html) demonstrates those concepts.
@@ -110,9 +110,9 @@ Another good reason for the advice to communicate with Aran arises when the targ
    * [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
    * Generator functions ([`function*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), [`yield`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield),[`yield*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield*)).
    * Asynchronous functions ([`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)).
-2) There exists loopholes that will cause the target program to behave differentially when analyzed.
+2) There exists loopholes that will cause the target program to behave differentially when analysed.
    These bugs are commonly referred as *Heisenbugs*, and are discusses in [Known Heisenbugs](#known-heisenbugs).
-3) Aran does not provide any facilities for instrumenting modularized JavaScript applications.
+3) Aran does not provide any facilities for instrumenting modularised JavaScript applications.
    To instrument server-side node applications and client-side browser applications we rely on a separate module called [Otiluke](https://github.com/lachrist/otiluke).
 4) Aran does not offer an out-of-the-box interface for tracking primitive values through the object graph.
    This feature is crucial for data-centric analyses such as taint analysis and symbolic execution.
@@ -141,7 +141,7 @@ Create a new Aran instance.
   If this array is not empty it should probably come from another Aran instance.
 
 The state of an Aran instance essentially consists in the node it instrumented.
-Aran instances can be serialized using the standard `JSON.stringify` function.
+Aran instances can be serialised using the standard `JSON.stringify` function.
 For instance, in the code below, `aran1` and `aran2` are in the exact same state:
 
 ```js
@@ -264,158 +264,166 @@ In Aran, an advice is a collection of functions that will be called during the e
 These functions are called traps; they are independently optional and they all receive as last argument a number which is the index of the ESTree node that triggered the them.
 Serial numbers can be seen as program counters.
 
-### Trap Categorization
+### Traps Categorisation
 
 We tried to provide as few trap as possible to express the entire JavaScript semantic.
-This process still left us with 26 traps which we categorize based on their transparent implementation:
+This process still left us with 26 traps which we categorise based on their transparent implementation:
 
-* Informers (7): does nothing
-* Modifiers (15): returns the first argument
-* Combiners (4): computes a new value
+* Informers (7): do nothing
+* Modifiers (15): return their first argument
+* Combiners (4): compute a new value
   * `unary = (operator, argument, serial) => eval(operator+" argument");`
   * `binary = (operator, left, right, serial) => eval("left "+operator+" right");`
   * `apply = (closure, context, arguments, serial) => Reflect.apply(closure, context, arguments);`
   * `construct = (constructor, arguments, serial) => Reflect.construct(constructor, arguments);`
 
-### Trap Insertion
+### Traps Insertion
 
 Name          | Original              | Instrumented
 --------------|-----------------------|-------------
 **Informers** |                       |
-`program`     | `...` (program)       | `program(_.builtins.global, @serial); ...`
-`arrival`     | `function () { ... }` | `... function () { ... _.arrival(callee, new.target, this, arguments, @serial); ... } ...`
+`arrival`     | `function () { ... }` | `... function callee () { ... _.arrival(callee, new.target, this, arguments, @serial); ... } ...`
+`break`       | `break l;`            | `_.break("l", @serial); break l;`
+`continue`    | `continue l;`         | `_.continue("l", @serial); continue l;`
+`debugger`    | `debugger;`           | `_.debugger(@serial); debugger;`
 `enter`       | `l: { let x; ... }`   | `l : { _.enter("block", ["x"], ["l"], @serial); ... }`
 `leave`       | `{ ... }`             | `{ ... _.leave(@serial); }`
-`continue`    | `continue l;`         | `_.continue("l", @serial); continue l;`
-`break`       | `break l;`            | `_.break("l", @serial); break l;`
-`debugger`    | `debugger;`           | `_.debugger(@serial); debugger;`
+`program`     | `...` (program)       | `program(_.builtins.global, @serial); ...`
 **Modifiers** |                       |
+`abrupt`      | `function () { ... }` | `... function callee () { ... try { ... } catch (error) { throw _.abrupt(error, @serial); } ... } ...`
+`argument`    | `function () { ... }` | `... function callee () { ... _.argument(arguments.length, "length", @serial) ... } ...`
+`builtin`     | `[x, y]`              | `_.builtin(_.builtins["Array.of"], "Array.of", @serial)($x, $y)`
+`closure`     | `function () { ... }` | `_.closure(... function callee () { ... } ..., @serial)`
+`drop`        | `(x, y)`              | `(_.drop($x, @serial), $y)`
+`error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... _.error(error, @serial) ... }`
+`eval`        | `eval(x)`             | `... eval(_.eval($x, @serial)) ...`
+`failure`     | `...` (program)       | `try { ... } catch (error) { throw _.failure(error, @serial); }` 
 `primitive`   | `"foo"`               | `_.primitive("foo", @serial)`
 `read`        | `x`                   | `_.read($x, "x", @serial)`
-`closure`     | `function () { ... }` | `_.closure(... function () { ... } ..., @serial)`
-`builtin`     | `[x, y]`              | `_.builtin(_.builtins["Array.of"], "Array.of", @serial)($x, $y)`
-`argument`    | `function () { ... }` | `... function () { ... _.argument(arguments.length, "length", @serial) ... } ...`
-`drop`        | `(x, y)`              | `(_.drop($x, @serial), $y)`
-`test`        | `x ? y : z`           | `_.test($x, @serial) ? $y : $z`
-`write`       | `x = y;`              | `$x = _.write($y, "x", @serial);`
 `return`      | `return x;`           | `return _.return($x, @serial);`
 `success`     | `x;` (program)        | `_.success($x, @serial);` 
-`eval`        | `eval(x)`             | `... eval(_.eval($x, @serial)) ...`
-`abrupt`      | `function () { ... }` | `... function () { ... try { ... } catch (error) { throw _.abrupt(error, @serial); } ... } ...`
-`failure`     | `...` (program)       | `try { ... } catch (error) { throw _.failure(error, @serial); }` 
+`test`        | `x ? y : z`           | `_.test($x, @serial) ? $y : $z`
 `throw`       | `throw e;`            | `throw _.throw($e, @serial);`
-`error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... _.error(error, @serial) ... }`
+`write`       | `x = y;`              | `$x = _.write($y, "x", @serial);`
 **Combiners** |                       |
-`unary`       | `!x`                  | `_.unary("!", $x, @serial)`
-`binary`      | `x + y`               | `_.binary("+", $x, $y, @serial)` 
 `apply`       | `f(x, y)`             | `_.apply($f, undefined, [$x, $y], @serial)`
+`binary`      | `x + y`               | `_.binary("+", $x, $y, @serial)` 
 `construct`   | `new F(x, y)`         | `_.construct($F, [$x, $y], @serial)`
+`unary`       | `!x`                  | `_.unary("!", $x, @serial)`
 
-### Trap Signature
+### Traps Signature
 
 Name          | arguments[0]              | arguments[1]             | arguments[2]           | arguments[3]           | arguments[4]
 --------------|---------------------------|--------------------------|------------------------|------------------------|----------------
 **Informers** |                           |                          |                        |                        |
-`program`     | `global :: object`        | `serial :: number`       |                        |                        |
 `arrival`     | `callee :: function`      | `new.target :: function` | `this :: value`        | `arguments :: [value]` | `serial :: number`
+`break`       | `label :: string \| null` | `serial :: number`       |                        |                        |
+`continue`    | `label :: string \| null` | `serial :: number`       |                        |                        |
+`debugger`    | `serial :: number`        |                          |                        |                        |
 `enter`       | `tag :: "program" \| "block" \| "then" \| "else" \| "loop" \| "try" \| "catch" \| "finally" \| "switch"` | `variables :: [string]` | `labels :: [string]` | `serial :: number` |
 `leave`       | `serial :: number`        |                          |                        |                        |
-`continue`    | `label :: string \| null` | `serial :: number`       |                        |                        |
-`break`       | `label :: string \| null` | `serial :: number`       |                        |                        |
-`debugger`    | `serial :: number`        |                          |                        |                        |
+`program`     | `global :: object`        | `serial :: number`       |                        |                        |
 **Modifiers** |                           |                          |                        |                        |
-*Bystanders*  |                           |                          |                        |                        |
 `abrupt`      | `error :: value`          | `serial :: number`       |                        |                        |
+`argument`    | `produced :: value`       | `index :: number \| "new.target" \| "this" \| "length"` | `serial :: number`| |
+`builtin`     | `produced :: value`       | `name :: string`         | `serial :: number`     |                        |
+`closure`     | `produced :: function`    | `serial :: number`       |                        |                        |
+`drop`        | `consumed :: value`       | `serial :: number`       |                        |                        |
+`error`       | `produced :: value`       | `serial :: number`       |                        |                        |
 `failure`     | `error :: value`          | `serial :: number`       |                        |                        |
-*Producers*   |                           |                          |                        |                        |
 `primitive`   | `produced :: undefined \| null \| boolean \| number \| string` | `serial :: number` | |                |
 `read`        | `produced :: value`       | `variable :: string`     | `serial :: number`     |                        |
-`closure`     | `produced :: function`    | `serial :: number`       |                        |                        |
-`builtin`     | `produced :: value`       | `name :: string`         | `serial :: number`     |                        |
-`error`       | `produced :: value`       | `serial :: number`       |                        |                        |
-`argument`    | `produced :: value`       | `index :: number \| "new.target" \| "this" \| "length"` | `serial :: number`| |
-*Consumers*   |                           |                          |                        |                        |
-`drop`        | `consumed :: value`       | `serial :: number`       |                        |                        |
-`test`        | `consumed :: value`       | `serial :: number`       |                        |                        |
-`write`       | `consumed :: value`       | `variable :: string`     | `serial :: number`     |                        |
 `return`      | `consumed :: value`       | `serial :: number`       |                        |                        |
-`throw`       | `consumed :: value`       | `serial :: number`       |                        |                        |
 `success`     | `consumed :: value`       | `serial :: number`       |                        |                        |
+`test`        | `consumed :: value`       | `serial :: number`       |                        |                        |
+`throw`       | `consumed :: value`       | `serial :: number`       |                        |                        |
+`write`       | `consumed :: value`       | `variable :: string`     | `serial :: number`     |                        |
 **Combiners** |                           |                          |                        |                        |
-`unary`       | `operator :: "-" \| "+" \| "!" \| "~" \| "typeof" \| "void"` | `argument :: value` | `serial :: number` | |
-`binary`      | `operator :: "==" \| "!=" \| "===" \| "!==" \| "<" \| "<=" \| ">" \| ">=" \| "<<" \| ">>" \| ">>>" \| "+" \| "-" \| "*" \| "/" \| "%" \| "\|" \| "^" \| "&" \| "in" \| "instanceof" \| ".."` | `left :: value` | `right :: value` | `serial :: number` |
 `apply`       | `function :: value`       | `this :: value`          | `arguments :: [value]` | `serial :: number`     |
+`binary`      | `operator :: "==" \| "!=" \| "===" \| "!==" \| "<" \| "<=" \| ">" \| ">=" \| "<<" \| ">>" \| ">>>" \| "+" \| "-" \| "*" \| "/" \| "%" \| "\|" \| "^" \| "&" \| "in" \| "instanceof" \| ".."` | `left :: value` | `right :: value` | `serial :: number` |
 `construct`   | `constructor :: value`    | `arguments :: [value]`   | `serial :: number`     |                        |
+`unary`       | `operator :: "-" \| "+" \| "!" \| "~" \| "typeof" \| "void"` | `argument :: value` | `serial :: number` | |
 
-### Trap Comments
+### Traps Comments
 
-* `["begin", "completion", "success", "failure", "end"]`:
+Traps are all independently optional but some traps are logically coupled.
+We enumerate this links below:
+
+* `["enter", "write", "read", "leave"]`
+  Through `enter` and `leave`
+  Aran hides away the complexity of deadzone.
+  If a 
+  
+  ```js
+  const a = () => x;
+  let x = "foo";
+  a();
+  ```
+  ```js
+  let $a, $x, $123;
+  META.enter("program", [], ["a", "x", 123]);
+  $123 = false;
+  $a = () => (
+    $123 ?
+    META.read($x, "x", 123) :
+    ((() => { throw new TypeError("x is not defined") }) ()));
+  $x = META.write("foo", "x");
+  $123 = true;
+  META.leave();
+  ```
+  
+  `enter` and `leave` provide enough information the determine the current scope.
+  You can assume that `write` will only be called on defined variable in the scope.
+* `["program", "success", "failure"]`:
   These traps are linked to a program from the original code.
-  The first / last trap invoked by a program is always `begin` / `end`.
-  Before invoking `end`, either `success` or `failure` is invoked.
-  The `completion` trap is invoked every time the completion value of a program changes.
+  The first trap invoked by a program is always `program` and the last trap is either `success` or `failure`.
   ```js
   // Original //
   this.Math.sqrt(4);
   ```
   ```js
   // Instrumented //
+  META.program();
+  let $1 = undefined;
   try {
-    META._Reflect_apply(function () {
-      META._scope = {this:this};
-      with (META._Proxy({"*inner*":META.begin(false, META._scope, META._global, 1)}, META._SandboxHandlers)) {
-        const META = this;
-        const eval = META._eval;
-        const _this = META._scope.this;
-        let completion;
-        completion = META.completion(_this.Math.sqrt(4), 1);
-        completion = META.success(scope, completion, 1);
-        return completion;
-      }
-    }, META, []);
+    $1 = this.Math.sqrt(3);
+    META.success($1);
   } catch (error) {
-    throw META.failure(error, 1);
-  } finally {
-    META.end(1);
+    throw META.failure(error);
   }
   ```
-* `["closure", "arrival", "return"]`:
+* `["arrival", "argument", "return"]`:
+  The most complex link 
+  
   These traps are linked to a closure from the original code.
   The `closure` trap intercepts the creation of the closures whether it is a function or an arrow.
-  To desugar destructuring parameters, Aran always uses the `arguments` identifiers.  
+  To normalise destructuring parameters, Aran always uses the `arguments` identifiers.  
   This requires to replace arrows by functions.
   The `arrival` trap receives all the information relative to entering the closure.
   Note that `callee` is assigned to the function given as parameter to the `closure` trap and not its return value.
-  If the `closure` trap returns a custom value, the `arrival` traps should reflect this change in `arrival.callee` and `arrival.arguments.callee` (non strict mode only). 
   ```js
   // Original //
-  const add = function (arguments0) {
-    return arguments0 + arguments[1]; 
-  };
+  const a = (x) => x * x; 
   ```
   ```js
   // Instrumented //
-  const add = META.closure(
-    META._Object_defineProperty(
-      META._Object_defineProperty(
-        function callee () {
-          {
-            let scope = {"new.target":new.target, this, arguments, callee};
-            META.arrival(false, scope, arguments, @serial1);
-            var $newtarget = scope["new.target"];
-            var $this = scope.this;
-            var $arguments = scope.arguments;
-          }
-          let arguments0 = arguments[0];
-          return META.return(arguments0 + $arguments[1], @serial2);
-        },
-        "name",
-        {value:"add", configurable:true}),
-      "length",
-      {value:2, configurable:true}),
-    @serial1);
+  let $a;
+  $a = function callee () {
+    let $x, $0newtarget, $this, $123, $124;
+    META.arrival(callee, new.target, this, arguments, @serial);
+    $0newtarget = META.argument(new.target, "new.target", @serial);
+    if ($0newtarget)
+      throw new TypeError("Arrow used as constructor");
+    $this = META.argument(this, "this", @serial);
+    $123 = META.argument(arguments.length, "length", @serial);
+    $x = 0 < $123 ? META.argument(arguments[0], 0, @serial) : undefined;
+    $124 = 1;
+    while ($124 < $123)
+      META.argument(arguments[$124], $124, @serial);
+    return META.return($x * $x);
+  };
   ```
-* `["block", "leave"]`:
+* `["enter", "leave", "break", "continue"]`:
   There exists multiple block semantic in JavaScript, the simplest one corresponds to regular blocks.
   The legal values passed as first parameter to `leave` are: `"block"`, `"try"`, `"catch"`, `"finally"` and `"label"`.
   Each of these value corresponds to the name of the trap that might have been triggered upon entering the block.
@@ -510,8 +518,8 @@ Name          | arguments[0]              | arguments[1]             | arguments
   Literal objects containing computed keys or accessor properties or non-unique keys will result in an empty object being passed to the `object` trap.
 * `["save", "load"]`:
   These traps are only important for analyses that mirror the cares about the value stack.
-  Some structures require builtin values to be desugarized.
-  For instance a `for ... in` loop can be desugarized into `for` loops with the help of `Object.getPrototypeOf` and `Object.keys`.
+  Some structures require builtin values to be desugarised.
+  For instance a `for ... in` loop can be desugarised into `for` loops with the help of `Object.getPrototypeOf` and `Object.keys`.
   As the target programs can modify the global object, we created a save/load system to make sure we access the correct builtin values.
   Analyses that mirror the value stack should also mirror this mapping as shown below:
   ```js
@@ -546,220 +554,163 @@ Name          | arguments[0]              | arguments[1]             | arguments
   
 ## Setup
 
-The setup code will add a `primordials` field to the advice whose value will be an object containing functions of the global object.
-Saving builtins functions is necessary because some language-level operations are desugared into calls to builtins function.
-To prevent modifications of the global object from affecting the behavior of language-level operations we need to store some builtins upfront.
-For instance `o.k` will be instrumented into something like `__ARAN__.primordials["Reflect.get"]($o, "k")` rather than directly `Reflect.get($o, "k")` which is affected by the state of the global object.
-Below is a list of the all the primordials stored by the setup code along with the language-level operations which they help desugar:
+The setup code will add a `builtins` field to the advice pointing to an object containing values of the global object (a.k.a *primordial*).
+If the advice already contains a `builtins` field, an error is thrown.
+The setup step is required because Aran uses several builtin values to normalise language-level operations.
+Therefore, it is important to save these builtins upfront so that instrumented code remain resilient to modifications of the global object.
+For instance `o.k` will be instrumented into something like `ADVICE.primordials["Reflect.get"]($o, "k")` rather than directly `Reflect.get($o, "k")` which is affected by the state of the global object.
+Below is a list of the all the builtins stored by the setup code along with their utility:
 
-* `global`: Declaring/writing/reading global variables and the initial value of `this`.
-* `eval`: Detect whether a syntactic direct eval call actually resolves to a direct eval call at runtime.
-* `RegExp`: Literal regular expressions.
-* `Reflect.get`: Member expressions.
-* `Reflect.set`: Member assignments.
-* `Reflect.construct`: Constructions with spread elements. 
-* `Reflect.apply`: Applications with spread elements.
-* `Reflect.deleteProperty`: Delete unary operations on member expressions.
-* `Object`: Member expressions (`Reflect.get` and `Reflect.set` throw on non-objects), and `with` statements.
-* `Object.create`: Object expressions, value of `arguments`, value of the `prototype` and `constructor` fields of a function.
-* `Object.prototype`: Object expressions, value of `arguments`, value of the `prototype` and `constructor` fields of a function.
-* `Symbol.unscopables`: `with` statement.
-* `Symbol.iterator`: Iteration protocol.
-* `Array.of`: Array expressions, spread elements, object expressions desugared using `Object.fromEntries`.   
-* `Array.prototype.concat`: Spread elements (array expressions, call expressions and construct expressions).
+* `global`: For declaring/writing/reading global variables and for assigning the initial value of `this`.
+* `eval`: For detecting whether a syntactic direct eval call actually resolves to a direct eval call at runtime.
+* `RegExp`: For normalising literal regular expressions.
+* `ReferenceError`: Reference errors are thrown when a variable is not defined or is in the temporal deadzone. 
+* `TypeError`: Type errors are thrown at many places, e.g: when `Reflect.set` returns false in strict mode.
+* `Reflect.get`: For normalising member expressions.
+* `Reflect.set`: For normalising assignments on member expressions and building various objects.
+* `Reflect.has`: Called when variable lookups hit a `with` statement.
+* `Reflect.deleteProperty`: For normalising `delete` unary operations on member expressions.
+* `Reflect.apply`: For normalising call expressions containing spread elements.
+* `Reflect.construct`: For normalising new expressions containing spread elements.
+* `Reflect.getOwnPropertyDescriptor`: For knowing whether a variable is globally defined.
+* `Reflect.defineProperty`: For building various objects (e.g.: object literals, the `arguments` object, functions, functions prototype).
+* `Reflect.getPrototypeOf`: For knowing whether a variable is defined in the global object and for collecting the enumerable keys of an object as enumerated by the `for .. in` statement.
+* `Reflect.setPrototypeOf`: For building various objects (e.g.: object literals, the `arguments` object, functions prototype).
+* `Object`: Often called before calling functions of the `Reflect` object to prevent type errors.
+* `Object.prototype`: The `[[Prototype]]` field of various objects (e.g.: object literals, the `arguments` object, functions prototype).
+* `Object.create`: For building various objects.
+* `Object.freeze`: For building the first argument passed to the tag of template expressions and its `raw` property.
+* `Object.keys`: For normalising `for ... in` statements.
+* `Array.of`: For normalising array expressions and building the first argument passed to the tag of template expressions and its `raw` property.
+* `Array.prototype.push`: For building the rest elements of array patterns, object patterns and argument patterns.
+* `Array.prototype.concat`: For normalising expressions with spread elements (array expressions, call expressions, new expressions).
 * `Array.prototype.values`: The `@@iterator` field of `arguments` objects.
-* `Reflect.getOwnPropertyDescriptor(Function.prototype,'arguments').get`: The `callee` fields of `arguments` objects in strict mode. 
+* `Array.prototype.includes`: For building the `rest` value of object patterns.
+* `Symbol.unscopables`: Used when variable lookups hit a `with` statement.
+* `Symbol.iterator`: For normalising the iteration protocol.
+* `Reflect.getOwnPropertyDescriptor(Function.prototype,'arguments').get`: The `callee` fields of `arguments` objects in strict mode.
 * `Reflect.getOwnPropertyDescriptor(Function.prototype,'arguments').set`: The `callee` fields of `arguments` objects in strict mode.
 
-## Aran-Helpers
+## Predefined Values
 
-Rather than defining a closure whenever a loop is needed in an expression context, Aran defines several helper functions at the beginning of each program:
+Rather than defining a closure whenever a loop is needed in an expression context, Aran defines several functions at the beginning of each program.
+Along with these helper functions is the completion value of the program.
+Below is listed the values Aran redefined for every programs; their place in the list reflect the token to which they are assigned.
 
-1. `AranCompletion`: The current completion value of the program.
-2. `AranThrowTypeError(message)`: Throws a type error.
-3. `AranThrowReferenceError(message)`: Throws a reference error.
-4. `boolean = AranIsGlobal(name)`: Indicates whether an identifier is globally defined.
-5. `array = AranIteratorRest(iterator)`: Pushes the remaining elements of an iterator into an array.
-6. `object = AranObjectRest(object, keys)`: 
-7. `AranObjectAssign(target, source)`: Similar to `Object.assign` but uses `Reflect.defineProperty` rather than `Reflect.set` on the target object.
+1. `Completion`: The completion value of the program, initially: `undefined`.
+2. `HelperThrowTypeError(message)`: Throws a type error.
+  * Assigning to a constant variable.
+  * Calling an arrow as a constructor.
+  * In strict mode, deleting a member expression and failing.
+  * In strict mode, assigning a member expression and failing.
+  * Passing `null` or `undefined` a `with` statement.
+3. `HelperThrowReferenceError(message)`: Throws a reference error.
+  * Accessing a local variable in its temporal dead zone.
+  * Reading a non existing global variable.
+  * In Strict mode, writing to non existing global variable.
+4. `boolean = HelperIsGlobal(name)`: Indicates whether an identifier is globally defined (non-enumerable properties also count).
+  This helper is inserted whenever a variable lookup reach the global scope in Aran's static scope analysis.
+5. `array = HelperIteratorRest(iterator)`: Pushes the remaining elements of an iterator into an array.
+  This helper is inserted to compute the value of an array pattern's rest element.
+6. `target = HelperObjectRest(source, keys)`: Create an object `target` that contains the own enumerable properties of `source` safe the ones listed in `keys`.
+  This helper is inserted to computed the value of an object pattern's rest element.
+7. `HelperObjectAssign(target, source)`: Similar to `Object.assign` but uses `Reflect.defineProperty` rather than `Reflect.set` on the target object.
+   This helper is inserted whenever an object expression contain a spread element.
 
-Additionally, Aran will store several custom functions to help desugaring JavaScript.
-
-<!-- * `array = AranEnumerate(object)`: Enumerate the keys of an object as in a `for .. in` loop.
-  It is used to desugar a `for .. in` loop in a `while` loop.
-* `object = Object.fromEntries(associations)`: Create an object from an iteration of pairs of key-value Object (stage 3 status).
-  This function provide a more economical alternative than nested `AranDefineDataProperty` to desugar object expressions with only `init` properties.
-* `object = AranDefineDataProperty(object, key, value, writable, enumerable, configurable)`: Similar to `Object.defineProperty` but directly accepts the properties of the descriptor.
-  It is used to declared global variables, desugar object expressions and define various fields of functions and `arguments` objects.
-* `object = AranDefineAccessorProperty(object, key, getter, setter, enumerable, configurable)`: Similar to `Object.defineProperty` but directly accepts the properties of the descriptor.
-  It is used to desugar object expressions and define the `callee` field of `arguments` objects in strict mode. -->
-
-* `AranThrowTypeError(message)`: Throws a type error.
-  `TypeError` could have been saved instead but it would have increase the size of the instrumented code.
-  It is called when:
-  * `null` or `undefined` passed to a `with` statement.
-  * deleting a member expression failed.
-  * assigning a member expression failed.
-  * an arrow is called as a constructor.
-  * assigning to a constant variable.
-* `AranThrowReferenceError(message)`: Throws a reference error.
-  `ReferenceError` could have been saved instead but it would have increase the size of the instrumented code.
-  It is called when:
-  * accessing a local variable in its [temporal dead zone](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let#Temporal_dead_zone).
-  * assigning to non existing global variable in strict mode.
-  * reading a non existing global variable.
-* `array = AranIteratorRest(iterator)`: Create an array with the rest of an iterator.
-  It is used to desugar array pattern with rest element.
-* `boolean = AranObjectHold(object, key)`: Indicates whether a property is present in a an object or its prototype chain.
-  It is used to detect the existence of a global variable.
-* `object = AranObjectRest(object, keys)`
-* `AranObjectAssign(target, source)`: Same as `Object.assign` but does not trigger setters.
-
-We are considering adding `AranGet`, `AranSet` and `AranSetStrict` as an alternative to `Reflect.get` and `Reflect.set` to decrease the size of instrumented code.
+To help decrease the size of the instrumented code, we are considering adding `AranGet`, `AranSet` and `AranSetStrict` as an alternative to `Reflect.get` and `Reflect.set`.
 
 ## Known Heisenbugs
 
-<!--
-// **Disclaimer**
-
-// TRANSPARENCY ISSUE
-// No closure naming for computed property in object literal:
-//
-// > let foo = 1;
-// > ({[foo]: function(){}})[1]
-// [Function: 1] -->
-
-When dynamically analyzing a program, it is implicitly assumed that the analysis will conserve the program's behavior.
+When dynamically analysing a program, it is implicitly assumed that the analysis will conserve the program's behaviour.
 If this is not the case, the analysis might draw erroneous conclusions.
-Behavioral divergences caused by an analysis over the target program are called [heisenbugs](https://en.wikipedia.org/wiki/Heisenbug).
-Here are the known Heisenbugs that Aran may introduce by itself:
+Behavioural divergences caused by an analysis over the target program are called [Heisenbugs](https://en.wikipedia.org/wiki/Heisenbug).
+It is very easy to write an analysis that is not transparent, for instance `advice.primitive = () => "foo";` will drastically alter the behavior of the program under analysis.
+However, Aran introduce Heisenbugs by itself as well:
 
 * *Performance Overhead*:
-  A program being dynamically analyzed will necessarily perform slower.
+  A program being dynamically analysed will necessarily perform slower.
   Events might interleave in a different order or malicious code might detect the overhead.
-  Unfortunately there is no general solution to this problem. 
+  Unfortunately there seem to be no general solution to this problem.
 * *Code Reification*:
-  Whenever the target program can obtain a representation of itself, the original code should be returned and not its instrumented version.
-  [`Function.prototype.toString`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/toString) and [`ScriptElement.textContent`](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) are both instance of code reification.
-  Aran does not deal with code reification at the moment.
-* *Modified Global Variables*:
-  To prevent clashes, Aran sanitizes identifiers with a function similar to: 
+  Whenever the target program can obtain a representation of itself (a.k.a. code reification), the original code should be returned rather than its instrumented version.
+  In the code below, the assertion should pass but it does not after instrumentation:
   ```js
-  function sanitize (identifier) {
-    if (identifier === "new.target")
-      return "$newtarget";
-    if (/^\$*(completion|error|newtarget|this|arguments|eval)$/.test(identifier))
-      return "$$" + identifier;
-    if (/^\$*META/)
-      return "$$" + identifier;
-    return identifier;
+  function f () {}
+  assert(f.toString() === "function f () {}");
+  ```
+  The most straightforward way to solve this issue would involve (i) receiving indentation information along with the program AST (ii) maintaining at runtime a mapping from closures to their non-instrumented source code (iii) inserting runtime checks at every function call to transform the result.
+  Not only this would make Aran's API uglier, it would also not completely solve the problem as `Function.prototype.toString` could be called on instrumented closures in non-instrumented code areas.
+* *Dynamic Scoping*
+  Normally, in non-strict mode, direct eval calls should be able to declare variables to their calling environment.
+  This is not the case for instrumented code because Aran performs a static scope analysis.
+  The make JavaScript scope purely static, Aran simply transforms the top level `var` declarations into `let` declarations for programs being evaluated inside a direct eval call.
+  In the code below, the assertion should pass but it does not after instrumentation:
+  ```js
+  function f () {
+    eval("var x = 'foo';");
+    assert(typeof x === "number");
   }
+  f();
   ```
-  If a modified identifier is actually a global variable, the global object will differ.
-  Consider the code below, it will output `foo foo undefined` but will output `foo undefined foo` under an empty Aran analysis.
-  ```js
-  // Original //
-  var error = "foo";
-  console.log(error, global.error, global.$$error);
-  ```
-  ```js
-  // Instrumented (pointcut = []) //
-  var $$error = "foo";
-  console.log($$error, global.error, global.$$error);
-  ```
-  This heisenbug can be alleviated by turning the sandbox option on.
-* *Access to the Advice*:
-  Consider the snippet below which makes the advice available as a global variable.
-  If the `script` code accesses the `global.META`, havoc will ensue. 
-  ```js
-  global.META = {};
-  const aran = Aran({namespace:"META"});
-  global.eval(Astring.generate(aran.setup());
-  global.eval(Astring.generate(aran.weave(script)));
-  ```
-  This heisenbug can be alleviated by locally defining the advice and using direct eval calls.
-  ```js
-  const META = {};
-  cons aran = Aran({namespace:"META" /*sandbox:true*/});
-  // const sandbox = global;
-  eval(Astring.generate(aran.setup()));
-  eval(Astring.generate(aran.weave(script)));
-  ```
-  However this is not a complete solution because although the `META` identifier is sanitized, `aran` is still accessible from the target program.
-  A complete solution can be obtained by turning the sandbox option on.
-  In that case, only the lookup of `META` will be able to reach to outside scope.
-* *Temporal Deadzone*:
-  Aran's `declare` trap cannot express the temporal deadzone introduced by [let](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let) and [const](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const).
-  To properly model temporal deadzones, a new trap expressing that a variable is defined within a block but not yet declared should be added.
-  This can cause heisenbugs on analyses modeling the environment.
-  Moreover, the `typeof` operator does not behave the same in Aran itself when applied on identifier in the temporal deadzone.
-  Normally the code below should fail at the `typeof` line but it won't after inserting the `unary` trap:
-  ```js
-  // Original //
-  {
-    typeof x;
-    const x;
-  }
-  ```
-  ```js
-  // Instrumented (pointcut = ["unary"]) //
-  {
-    META.unary("typeof", (function () {
-      try { return x } catch (error) {}
-      return void 0;
-    } ()));
-    const x;
-  }
-  ```
-* *Arguments' Numerical Properties*:
-  Some analyses like [`demo/local/analysis/shadow-value.js`](demo/local/analysis/shadow-value.js) threat values differently when they are get/set to object than when they are read/written to the environment.
-  In non strict mode, the [arguments object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments) blurs this distinction which can lead to heisenbugs.
-  In the code below, the `write` trap should be triggered with `"x"` and `"bar"` to account to for the sneaky variable assignment but it is not at the moment. 
+  This could be solved but it would render the scope analysis much more complex.
+* *Aliasing Arguments' Properties*:
+  In non strict mode, the [arguments object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments) 
+  and the environment are linked.
+  Modifications of the arguments object will be reflected to the binding of their corresponding parameter.
+  This link is broken by Aran's instrumentation because instrumented closures don't have parameters and use the `arguments` object instead.
+  In the code below, both assertions should pass but they are both failing after instrumentation:
   ```js
   function f (x) {
     arguments[0] = "bar";
-    console.log(x); // prints "bar"
+    assert(x === "bar");
+    x = "qux";
+    assert(arguments[0] === "qux");
   }
   f("foo");
   ```
+  The link between the `arguments` object and the environment could be re-established by using proxies and modifying the scope analysis performed by Aran.
 * *Computed Methods' Name*
-  Aran use a simple static analysis to compute functions' name.
-  It works in most case but cannot cope with computed poperty keys.
-  Normally, the expression below should evaluates to `"f"`.
-  But in Aran, it evalaluates to `""`.
+  Normally, in an object literal, function's names should be assigned to the property key even if it is computed.
+  This is not the case for instrumented code because Aran uses a simple static analysis to assign function's names.
+  In the code below, the assertion should pass but it fails after instrumentation:
   ```js
-  ({["f"]:()=>{}}).f.name
+  var x = "foo"
+  var o = {
+    [x]: function () {}
+  };
+  assert(o.foo.name === "foo");
   ```
-* *Constructor's TypeError Message*:
-  Aran transforms arrow into functions which throws an type error when used as constructor.
-  Normally the below code should throw `TypeError: bar is not a constructor`.
-  But in Aran, it throws `TypeError: foo is not a constructor`. 
+  This issue could be solved in Aran.
+* *Arrow's Prototype*
+  Normally, arrows should not define a `prototype` property.
+  This is not the case for instrumented code because Aran transforms arrows into function which have a non-configurable `prototype` property.
+  In the code below, both assertion should pass but the second one fails after instrumentation
   ```js
-  const foo = () => {};
-  const bar = foo;
-  new bar();
+  var a = () => {};
+  assert(a.prototype === undefined); // Success
+  assert(Reflect.getOwnPropertyDescriptor(a, "prototype") === undefined);
   ```
-
-<!--
-## Improvements Idea
-* Pass actual scope instead of puzzling `{callee,this,new,arguments}`; e.g. `{this,new.target,arguments,x0,x1}`.
-  Clearer semantic but analyses keeping the arguments and the variables in sync is challenging in the presence of destructuring assignment and spread syntax.
- -->
-
-## Implementation
-
-### Side Effects
-
-- scope.binding[name].declared
-- scope.binding[name].static 
-- ARAN.node
-- ARAN.counter
+  This issue could be solved by not transforming arrows to functions but we feel that having one single application process is worth this Heisenbug.
+* *Constructing Arrow Proxies*:
+  Normally, a proxy wrapping an arrow function should never call its `construct` handler.
+  This is not the case for instrumented code because Aran transforms arrows into functions that throw a type error when the `new.target` is defined.
+  In the code below, the assertion should pass but it fails after instrumentation:
+  ```js
+  const a = () => {};
+  const p = new Proxy(a, {
+    construct: () => {
+      throw new Error("This should never happen");
+    }
+  });
+  new p();
+  ```
+  This issue could be solved by not transforming arrows to functions but we feel that having one single application process is worth this Heisenbug.
 
 ## Acknowledgments
 
-I'm [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd student at the Vrij Universiteit of Brussel (VUB).
-I'm working at the SOFT language lab in close relation with my promoters [Coen De Roover](http://soft.vub.ac.be/soft/members/cderoove) and [Wolfgang De Meuter](http://soft.vub.ac.be/soft/members/wdmeuter).
-I'm currently being employed on the [Tearless](http://soft.vub.ac.be/tearless/pages/index.html) project.
+I'm [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd student at the [Vrij Universiteit of Brussel](https://www.vub.ac.be).
+I'm working at the [SOFT language lab](http://soft.vub.ac.be/soft/), my promoters are [Coen De Roover](http://soft.vub.ac.be/soft/members/cderoove) and [Wolfgang De Meuter](http://soft.vub.ac.be/soft/members/wdmeuter).
+I'm currently being employed on the [Tearless project](http://soft.vub.ac.be/tearless/pages/index.html).
 
 ![tearless](img/tearless.png)
 ![soft](img/soft.png)
@@ -828,28 +779,6 @@ We now discuss several strategies to provide an identity to primitive values:
     Finally a last option consists in using explicit wrappers which should be cleaned up before escaping to non-instrumented code.
     This requires to setup an access control system between instrumented code and non-instrumented code.
     This the solution this module directly enables.
-
-## Acknowledgments
-
-I'm [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd student at the Vrij Universiteit of Brussel (VUB).
-I'm working at the SOFT language lab, my promoters are [Coen De Roover](http://soft.vub.ac.be/soft/members/cderoove) and [Wolfgang De Meuter](http://soft.vub.ac.be/soft/members/wdmeuter).
-I'm currently being employed on the [Tearless](http://soft.vub.ac.be/tearless/pages/index.html) project.
-
-<!-- Improvements ideas:
-Provide a much more fine grained membrane definition.
-This membrane can easily express the actual membrane and is symetric.
-I suspect I will be able to use a single foreign file instead of generating the dual.
-```
-membrane = {
-  instrument: (script, serial) => ...,
-  enter_primitive: (primitive) => ...,
-  enter_native_wild: (native_wild) => ...,
-  enter_native_tame: (native_tame) => ...,
-  leave_wild: (inner) => ...,
-  leave_tame: (inner) => ...,
-};
-```
- -->
 
 <!-- 
 1. **Debugging NaN appearances**

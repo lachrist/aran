@@ -29,7 +29,7 @@ advice.eval = ($$value, serial) => {
 // Producers //
 advice.error = (value, serial) => membrane.taint(capture(value));
 advice.primitive = (primitive, serial) => membrane.taint(primitive);
-advice.primordial = (value, name, serial) => membrane.taint(capture(value));
+advice.builtin = (value, name, serial) => membrane.taint(capture(value));
 advice.closure = ($closure, serial) => {
   Reflect.setPrototypeOf($closure, capture(Function.prototype));
   return membrane.taint($closure);

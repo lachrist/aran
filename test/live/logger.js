@@ -60,7 +60,7 @@ advice.arrival = (value1, value2, value3, value4, serial) => {
   "throw",
   "return",
   "closure",
-  "primordial",
+  "builtin",
   "primitive",
   "read",
   "argument",

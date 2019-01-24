@@ -47,8 +47,8 @@ advice.primitive = (value, serial) => {
   return value;
 };
 
-advice.primordial = (value, name, serial) => {
-  input("primordial-("+name+")", value, serial);
+advice.builtin = (value, name, serial) => {
+  input("builtin-("+name+")", value, serial);
   return value;
 };
 
