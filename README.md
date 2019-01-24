@@ -14,14 +14,14 @@ In the near future, I will not add new features but will correct reported bugs.
 
 **Table of contents**:
 1. [Getting Started](#getting-started)
-2. [Demonstrators]
-3. [Limitations]
-4. [API]
-5. [Advice]
-6. [Setup Phase]
-7. [Predefined Values]
-8. [Known Heisenbug]
-9. [Acknowledgements]
+2. [Demonstrators](#demonstrators)
+3. [Limitations](#limitations)
+4. [API](#api)
+5. [Advice](#advice)
+6. [Builtins](#builtins)
+7. [Predefined Values](#predefined-values)
+8. [Known Heisenbugs](#known-heisenbugs)
+9. [Acknowledgements](#acknowledgments)
 
 ## Getting Started
 
@@ -504,10 +504,8 @@ We enumerate this links below:
     META.builtin(META.builtins["Reflect.get"], "Reflect.get")(META.builtin(META.builtins["Object"], "Object")($o), "k"));
   ```
 
-## Setup
+## Builtins
 
-The setup code will add a `builtins` field to the advice pointing to an object containing values of the global object (a.k.a *primordial*).
-If the advice already contains a `builtins` field, an error is thrown.
 Below is a list of the all the builtins stored by the setup code along with their utility:
 
 * `global`: For declaring/writing/reading global variables and for assigning the initial value of `this`.
