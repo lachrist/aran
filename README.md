@@ -90,9 +90,11 @@ Another good reason for the advice to communicate with Aran arises when the targ
 
 ## Demonstrators
 
+* [demo/dead/apply/](https://lachrist.github.io/aran/dead-apply-factorial.html)
+  The getting started example where weaving happens on the main thread and the evaluation of the weaved code on a webworker.
 * [demo/live/empty-estree.js](https://lachrist.github.io/aran/live-empty-estree-samples.html):
   Empty advice, do nothing aside from instrumenting the argument of direct eval calls.
-  Can be used to inspect how Aran desugars JavaScript.
+  Can be used to inspect how Aran normalise JavaScript.
 * [demo/live/empty-script.js](https://lachrist.github.io/aran/live-empty-script-samples.html):
   Same as `empty-estree.js` but uses the `"script"` format option instead.
 * [demo/live/forward-estree.js](https://lachrist.github.io/aran/live-forward-estree-samples.html):
@@ -108,7 +110,7 @@ Another good reason for the advice to communicate with Aran arises when the targ
 * [demo/live/shadow-state.js](https://lachrist.github.io/aran/live-shadow-state-delta.html):
   Output the same log as `shadow-value` but by mirroring the value stack, the call stack and the environment rather than wrapping values.
   This analysis is quite complex and demonstrates the full capability of Aran.
-* [demo/live/linvail-value.js](https://lachrist.github.io/aran/live-linvail-state-delta-object.html)
+* [demo/live/linvail-value.js](https://lachrist.github.io/aran/live-linvail-value-delta-object.html)
   Like `shadow-value`, this analysis wrap values into objects to conserve their identity.
   However this analysis can also track values through the store (a.k.a the objet graph) thanks to separate npm module called [linvail](https://www.npmjs.com/package/linvail).
   Linvail uses [ECMAScript proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) to implement an transitive access control system known as membrane.

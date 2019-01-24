@@ -31,14 +31,13 @@ const live = (analysis, target) => SandboxScenario(
 const dead = (analysis, target) => SandboxScenario(
   {type:"browserify", path:__dirname+"/spawn-dead.js", basedir:"./"},
   [
-    {type:"browserify", path:__dirname+"/dead/"+analysis+"-pointcut.js"},
-    {type:"browserify", path:__dirname+"/dead/"+analysis+"-advice.js"}],
+    {type:"browserify", path:__dirname+"/dead/"+analysis+"/pointcut.js"},
+    {type:"browserify", path:__dirname+"/dead/"+analysis+"/advice.js"}],
   [
     {type:"raw", path:__dirname+"/target/"+target+".js"}],
   callback("dead-"+analysis+"-"+target));
 
 dead("apply", "factorial");
-live("apply", "factorial");
 live("empty-estree", "samples");
 live("empty-script", "samples");
 live("forward-estree", "samples");
@@ -47,4 +46,3 @@ live("logger", "delta");
 live("shadow-value", "delta");
 live("shadow-state", "delta");
 live("linvail-value", "delta-object");
-

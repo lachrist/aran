@@ -10,8 +10,6 @@ global[aran.namespace] = {
     return Astring.generate(estree2);
   }
 };
-// console.log(require("esvalid").errors(aran.setup()));
-console.log(Astring.generate(aran.setup()));
 global.eval(Astring.generate(aran.setup()));
 module.exports = (script1) => {
   const estree1 = Acorn.parse(script1);
