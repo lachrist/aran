@@ -165,7 +165,7 @@ const options = JSON.parse(string);
 const aran2 = Aran(options);
 ```
 
-### `output = aran.setup()`
+**`output = aran.setup()`**
 
 Generate the setup code which should be executed before any instrumented code.
 
@@ -175,7 +175,7 @@ Generate the setup code which should be executed before any instrumented code.
 The setup code should be evaluated in an environment where `this` points to the global object and where the advice variable is accessible.
 If the setup code is evaluated twice for the same advice, it will throw an error.
 
-### `output = aran.weave(program, pointcut, serial)`
+**`output = aran.weave(program, pointcut, serial)`**
 
 Desugar the input program and insert calls to trap functions at nodes specified by the pointcut.
 * `program :: estree.Program`:
@@ -198,7 +198,7 @@ Desugar the input program and insert calls to trap functions at nodes specified 
 * `output :: estree.Program | string`:
   The weaved code whose format depends on the `format` option.
 
-### `result = aran.unary(operator, argument)`
+**`result = aran.unary(operator, argument)`**
 
 Performs a unary operation as expected by the `unary` trap.
 This function can be implemented as easily as `eval(operator+" argument")` but we used a boring `switch` loop instead for performance reasons.
@@ -207,7 +207,7 @@ This function can be implemented as easily as `eval(operator+" argument")` but w
 * `arguments :: *`
 * `result :: primitive`
 
-### `result = aran.binary(operator, left, right)`
+**`result = aran.binary(operator, left, right)`**
 
 Performs a binary operation as expected by the `binary` trap.
 This function can be implemented as easily as `eval("left "+operator+" right")` but we used a boring `switch` loop instead for performance reasons.
@@ -217,7 +217,7 @@ This function can be implemented as easily as `eval("left "+operator+" right")` 
 * `right :: *`
 * `result :: primitive`
 
-### `aran.namespace`
+**`aran.namespace`**
 
 The name of the variable holding the advice.
 
@@ -230,7 +230,7 @@ The name of the variable holding the advice.
 }
 ```
 
-### `aran.format`
+**`aran.format`**
 
 The output format for `aran.weave(estree, scope)` and `aran.setup()`; either `"estree"` or `"script"`.
 
@@ -243,7 +243,7 @@ The output format for `aran.weave(estree, scope)` and `aran.setup()`; either `"e
 }
 ```
 
-### `aran.roots`
+**`aran.roots`**
 
 An array of all the program nodes weaved by the Aran instance.
 
@@ -256,7 +256,7 @@ An array of all the program nodes weaved by the Aran instance.
 }
 ```
 
-### `aran.nodes`
+**`aran.nodes`**
 
 An array indexing all the AST node visited by the Aran instance.
 This field is useful to retrieve a node from its serial number: `aran.nodes[serial]`.
@@ -277,7 +277,7 @@ In Aran, an advice is a collection of functions that will be called during the e
 These functions are called traps; they are independently optional and they all receive as last argument a number which is the index of the ESTree node that triggered the them.
 Serial numbers can be seen as program counters.
 
-### Traps Categorisation
+**Traps Categorisation**
 
 We tried to provide as few trap as possible to express the entire JavaScript semantic.
 This process still left us with 26 traps which we categorise based on their transparent implementation:
@@ -290,11 +290,11 @@ This process still left us with 26 traps which we categorise based on their tran
   * `apply = (closure, context, arguments, serial) => Reflect.apply(closure, context, arguments);`
   * `construct = (constructor, arguments, serial) => Reflect.construct(constructor, arguments);`
 
-### Traps Insertion
+**Traps Insertion**
 
 Name          | Original              | Instrumented
 --------------|-----------------------|-------------
-**Informers** |                       |
+*Informers*   |                       |
 `arrival`     | `function () { ... }` | `... function callee () { ... _.arrival(callee, new.target, this, arguments, @serial); ... } ...`
 `break`       | `break l;`            | `_.break("l", @serial); break l;`
 `continue`    | `continue l;`         | `_.continue("l", @serial); continue l;`
@@ -302,7 +302,7 @@ Name          | Original              | Instrumented
 `enter`       | `l: { let x; ... }`   | `l : { _.enter("block", ["x"], ["l"], @serial); ... }`
 `leave`       | `{ ... }`             | `{ ... _.leave(@serial); }`
 `program`     | `...` (program)       | `program(_.builtins.global, @serial); ...`
-**Modifiers** |                       |
+*Modifiers*   |                       |
 `abrupt`      | `function () { ... }` | `... function callee () { ... try { ... } catch (error) { throw _.abrupt(error, @serial); } ... } ...`
 `argument`    | `function () { ... }` | `... function callee () { ... _.argument(arguments.length, "length", @serial) ... } ...`
 `builtin`     | `[x, y]`              | `_.builtin(_.builtins["Array.of"], "Array.of", @serial)($x, $y)`
@@ -318,17 +318,17 @@ Name          | Original              | Instrumented
 `test`        | `x ? y : z`           | `_.test($x, @serial) ? $y : $z`
 `throw`       | `throw e;`            | `throw _.throw($e, @serial);`
 `write`       | `x = y;`              | `$x = _.write($y, "x", @serial);`
-**Combiners** |                       |
+*Combiners*   |                       |
 `apply`       | `f(x, y)`             | `_.apply($f, undefined, [$x, $y], @serial)`
 `binary`      | `x + y`               | `_.binary("+", $x, $y, @serial)` 
 `construct`   | `new F(x, y)`         | `_.construct($F, [$x, $y], @serial)`
 `unary`       | `!x`                  | `_.unary("!", $x, @serial)`
 
-### Traps Signature
+**Traps Signature**
 
 Name          | arguments[0]              | arguments[1]             | arguments[2]           | arguments[3]           | arguments[4]
 --------------|---------------------------|--------------------------|------------------------|------------------------|----------------
-**Informers** |                           |                          |                        |                        |
+*Informers*   |                           |                          |                        |                        |
 `arrival`     | `callee :: function`      | `new.target :: function` | `this :: value`        | `arguments :: [value]` | `serial :: number`
 `break`       | `label :: string \| null` | `serial :: number`       |                        |                        |
 `continue`    | `label :: string \| null` | `serial :: number`       |                        |                        |
@@ -336,7 +336,7 @@ Name          | arguments[0]              | arguments[1]             | arguments
 `enter`       | `tag :: "program" \| "block" \| "then" \| "else" \| "loop" \| "try" \| "catch" \| "finally" \| "switch"` | `variables :: [string]` | `labels :: [string]` | `serial :: number` |
 `leave`       | `serial :: number`        |                          |                        |                        |
 `program`     | `global :: object`        | `serial :: number`       |                        |                        |
-**Modifiers** |                           |                          |                        |                        |
+*Modifiers*   |                           |                          |                        |                        |
 `abrupt`      | `error :: value`          | `serial :: number`       |                        |                        |
 `argument`    | `produced :: value`       | `index :: number \| "new.target" \| "this" \| "length"` | `serial :: number`| |
 `builtin`     | `produced :: value`       | `name :: string`         | `serial :: number`     |                        |
@@ -351,13 +351,13 @@ Name          | arguments[0]              | arguments[1]             | arguments
 `test`        | `consumed :: value`       | `serial :: number`       |                        |                        |
 `throw`       | `consumed :: value`       | `serial :: number`       |                        |                        |
 `write`       | `consumed :: value`       | `variable :: string`     | `serial :: number`     |                        |
-**Combiners** |                           |                          |                        |                        |
+*Combiners*   |                           |                          |                        |                        |
 `apply`       | `function :: value`       | `this :: value`          | `arguments :: [value]` | `serial :: number`     |
 `binary`      | `operator :: "==" \| "!=" \| "===" \| "!==" \| "<" \| "<=" \| ">" \| ">=" \| "<<" \| ">>" \| ">>>" \| "+" \| "-" \| "*" \| "/" \| "%" \| "\|" \| "^" \| "&" \| "in" \| "instanceof" \| ".."` | `left :: value` | `right :: value` | `serial :: number` |
 `construct`   | `constructor :: value`    | `arguments :: [value]`   | `serial :: number`     |                        |
 `unary`       | `operator :: "-" \| "+" \| "!" \| "~" \| "typeof" \| "void"` | `argument :: value` | `serial :: number` | |
 
-### Traps Comments
+**Traps Comments**
 
 Traps are all independently optional but some traps are logically coupled.
 To illustrate the points below we often use 
