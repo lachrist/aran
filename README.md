@@ -365,18 +365,19 @@ We enumerate this links below:
   These (only) four traps describe the runtime interaction with the environment.
   We discuss how below:
   1. In the normalisation process, Aran often inserts new variables called *token*.
-    Tokens appear to be numbers from traps perspective whereas variables present in the original code appear as strings.
+     Tokens appear to be numbers from traps perspective whereas variables present in the original code appear as strings.
   2. Aran only declares `let` variables:
-    * `var` declarations at the top-level scope are normalised into property definition on the global object.
-    * `var` declarations inside functions are hoisted and normalised into `let` declarations.
-    * `const` declarations are normalised into `let` declarations and a static type error is throws upon attempting to rewrite them.
+     * `var` declarations at the top-level scope are normalised into property definition on the global object.
+     * `var` declarations inside functions are hoisted and normalised into `let` declarations.
+     * `const` declarations are normalised into `let` declarations and a static type error is throws upon attempting to rewrite them.
   3. Aran hoist its `let` declarations at the top of blocks.
-    This makes the temporal deadzone disappear.
-    To restore the behaviour of the temporal deadzone, a token is associated to each variable.
-    At runtime, these tokens will refer to a boolean value indicating whether their associated variable has already been initialised or not.
-    Before accessing a variable in a dynamic portion of the deadzone, a runtime time check on its associated token is inserted. 
-    In many cases, the temporal deadzone of a variable can be statically determined and its associated token is entirely removed from the instrumented code.
-    Not that `eval` kills this optimisation because we have to assume that any reachable variable may be accessed.
+     This makes the temporal deadzone disappear.
+     To restore the behaviour of the temporal deadzone, a token is associated to each variable.
+     At runtime, these tokens will refer to a boolean value indicating whether their associated variable has already been initialised or not.
+     Before accessing a variable in a dynamic portion of the deadzone, a runtime time check on its associated token is inserted. 
+     In many cases, the temporal deadzone of a variable can be statically determined and its associated token is entirely removed from the instrumented code.
+     Not that `eval` kills this optimisation because we have to assume that any reachable variable may be accessed.
+  
   ```js
   // Original //
   const a = () => x;
@@ -399,9 +400,11 @@ We enumerate this links below:
   throw new TypeError("Assignment to a constant variable");
   META.leave();
   ```
+
 * `program`, `success`, `failure`:
   These traps are inserted into programs that will *not* be evaluated inside a direct eval call.
   The first trap invoked by a program is always `program(@serial)` and the last trap is either `success($1, @serial)` or `failure(error, @serial)`.
+  
   ```js
   // Original //
   "foo";
