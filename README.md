@@ -589,8 +589,6 @@ These predefined values are always assigned to the same token in the order liste
    Similar to `Object.assign` but uses `Reflect.defineProperty` rather than `Reflect.set` on the target object.
    This helper is inserted whenever an object expression contain a spread element.
 
-To help decrease the size of the instrumented code, we are considering adding `AranGet`, `AranSet` and `AranSetStrict` as an alternative to `Reflect.get` and `Reflect.set`.
-
 ## Known Heisenbugs
 
 When dynamically analysing a program, it is implicitly assumed that the analysis will conserve the program's behaviour.
