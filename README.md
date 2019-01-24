@@ -138,7 +138,7 @@ Another good reason for the advice to communicate with Aran arises when the targ
 
   * `namespace :: string`, default `"_"`:
     The name of the variable holding the advice.
-    It should not start by a dollar sign (`$`) and should be not be one of: `arguments`, `eval`, `callee`, `error`.
+    It should not start by a dollar sign (`$`) and should not be be one of: `arguments`, `eval`, `callee`, `error`.
     This variable should be accessible from the instrumented code.
     For instance, this variable should be global if the instrumented code is evaluated globally.
     Aran performs identifier mangling in such a way that variables from the instrumented code never clash against this variable.
@@ -148,7 +148,7 @@ Another good reason for the advice to communicate with Aran arises when the targ
     This option requires a generator like [astring](https://www.npmjs.com/package/astring) to obtain executable JavaScript code.
     * `"script"`: Output a string which can directly be fed to `eval`.
     As Aran's instrumentation can be quite verbose, expressions are spanned in multiple lines.
-  * `roots :: array`, default `[]`.
+  * `roots :: array`, default `[]`:
     Each ESTree program node passed to `aran.weave(root, pointcut, scope)` will be stored in this array.
     If this array is not empty it should probably come from another Aran instance.
 
@@ -176,7 +176,7 @@ Another good reason for the advice to communicate with Aran arises when the targ
 
 * **`output = aran.weave(program, pointcut, serial)`**
 
-  Desugar the input program and insert calls to trap functions at nodes specified by the pointcut.
+  Normalise the input program and insert calls to trap functions at nodes specified by the pointcut.
   * `program :: estree.Program`:
     The [ESTree program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
   * `pointcut :: array | function`:
@@ -191,8 +191,8 @@ Another good reason for the advice to communicate with Aran arises when the targ
       ```js
       const pointcut = (name, node) => name === "binary" && node.type === "UpdateExpression" ;
       ```
-  * `serial :: number | null | undefined`: default `null`
-    If the given ESTree program is going to be evaluated inside a direct eval call within some previously instrumented code, the `serial` argument should be the serial number locating that direct eval call.
+  * `serial :: number | null`, default `null`:
+    If the given ESTree program is going to be evaluated inside a direct eval call within some previously instrumented code, the `serial` argument should be the serial number of that direct eval call.
     If the instrumented code is going to be evaluated globally, this argument should be `null` or `undefined`.
   * `output :: estree.Program | string`:
     The weaved code whose format depends on the `format` option.
@@ -259,7 +259,7 @@ Another good reason for the advice to communicate with Aran arises when the targ
 
   An array indexing all the AST node visited by the Aran instance.
   This field is useful to retrieve a node from its serial number: `aran.nodes[serial]`.
-  It is not enumerable to reduces the size of `JSON.stringify(aran)`.
+  It is not enumerable to reduces the size of stringifying Aran instances.
 
   ```js
   {
@@ -273,17 +273,17 @@ Another good reason for the advice to communicate with Aran arises when the targ
 ## Advice
 
 In Aran, an advice is a collection of functions that will be called during the evaluation of weaved code.
-These functions are called traps; they are independently optional and they all receive as last argument a number which is the index of the ESTree node that triggered the them.
+These functions are called traps.
+They are independently optional and they all receive as last argument a number which is the index of the ESTree node that triggered the them.
 Serial numbers can be seen as program counters.
 
 **Traps Categorisation:**
 
-We tried to provide as few trap as possible to express the entire JavaScript semantic.
-This process still left us with 26 traps which we categorise based on their transparent implementation:
+There exists 26 traps which we categorise based on their transparent implementation:
 
-* Informers (7): do nothing
-* Modifiers (15): return their first argument
-* Combiners (4): compute a new value
+* Informers (7): Do nothing.
+* Modifiers (15): Return their first argument.
+* Combiners (4): Compute a new value:
   * `unary = (operator, argument, serial) => eval(operator+" argument");`
   * `binary = (operator, left, right, serial) => eval("left "+operator+" right");`
   * `apply = (closure, context, arguments, serial) => Reflect.apply(closure, context, arguments);`
@@ -294,34 +294,34 @@ This process still left us with 26 traps which we categorise based on their tran
 Name          | Original              | Instrumented
 --------------|-----------------------|-------------
 *Informers*   |                       |
-`arrival`     | `function () { ... }` | `... function callee () { ... _.arrival(callee, new.target, this, arguments, @serial); ... } ...`
-`break`       | `break l;`            | `_.break("l", @serial); break l;`
-`continue`    | `continue l;`         | `_.continue("l", @serial); continue l;`
-`debugger`    | `debugger;`           | `_.debugger(@serial); debugger;`
-`enter`       | `l: { let x; ... }`   | `l : { _.enter("block", ["x"], ["l"], @serial); ... }`
-`leave`       | `{ ... }`             | `{ ... _.leave(@serial); }`
-`program`     | `...` (program)       | `program(_.builtins.global, @serial); ...`
+`arrival`     | `function () { ... }` | `... function callee () { ... META.arrival(callee, new.target, this, arguments, @serial); ... } ...`
+`break`       | `break l;`            | `META.break("l", @serial); break l;`
+`continue`    | `continue l;`         | `META.continue("l", @serial); continue l;`
+`debugger`    | `debugger;`           | `META.debugger(@serial); debugger;`
+`enter`       | `l: { let x; ... }`   | `l : { META.enter("block", ["x"], ["l"], @serial); ... }`
+`leave`       | `{ ... }`             | `{ ... META.leave(@serial); }`
+`program`     | `...` (program)       | `program(META.builtins.global, @serial); ...`
 *Modifiers*   |                       |
-`abrupt`      | `function () { ... }` | `... function callee () { ... try { ... } catch (error) { throw _.abrupt(error, @serial); } ... } ...`
-`argument`    | `function () { ... }` | `... function callee () { ... _.argument(arguments.length, "length", @serial) ... } ...`
-`builtin`     | `[x, y]`              | `_.builtin(_.builtins["Array.of"], "Array.of", @serial)($x, $y)`
-`closure`     | `function () { ... }` | `_.closure(... function callee () { ... } ..., @serial)`
-`drop`        | `(x, y)`              | `(_.drop($x, @serial), $y)`
-`error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... _.error(error, @serial) ... }`
-`eval`        | `eval(x)`             | `... eval(_.eval($x, @serial)) ...`
-`failure`     | `...` (program)       | `try { ... } catch (error) { throw _.failure(error, @serial); }` 
-`primitive`   | `"foo"`               | `_.primitive("foo", @serial)`
-`read`        | `x`                   | `_.read($x, "x", @serial)`
-`return`      | `return x;`           | `return _.return($x, @serial);`
-`success`     | `x;` (program)        | `_.success($x, @serial);` 
-`test`        | `x ? y : z`           | `_.test($x, @serial) ? $y : $z`
-`throw`       | `throw e;`            | `throw _.throw($e, @serial);`
-`write`       | `x = y;`              | `$x = _.write($y, "x", @serial);`
+`abrupt`      | `function () { ... }` | `... function callee () { ... try { ... } catch (error) { throw META.abrupt(error, @serial); } ... } ...`
+`argument`    | `function () { ... }` | `... function callee () { ... META.argument(arguments.length, "length", @serial) ... } ...`
+`builtin`     | `[x, y]`              | `META.builtin(META.builtins["Array.of"], "Array.of", @serial)($x, $y)`
+`closure`     | `function () { ... }` | `META.closure(... function callee () { ... } ..., @serial)`
+`drop`        | `(x, y)`              | `(META.drop($x, @serial), $y)`
+`error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... META.error(error, @serial) ... }`
+`eval`        | `eval(x)`             | `... eval(META.eval($x, @serial)) ...`
+`failure`     | `...` (program)       | `try { ... } catch (error) { throw META.failure(error, @serial); }` 
+`primitive`   | `"foo"`               | `META.primitive("foo", @serial)`
+`read`        | `x`                   | `META.read($x, "x", @serial)`
+`return`      | `return x;`           | `return META.return($x, @serial);`
+`success`     | `x;` (program)        | `META.success($x, @serial);` 
+`test`        | `x ? y : z`           | `META.test($x, @serial) ? $y : $z`
+`throw`       | `throw e;`            | `throw META.throw($e, @serial);`
+`write`       | `x = y;`              | `$x = META.write($y, "x", @serial);`
 *Combiners*   |                       |
-`apply`       | `f(x, y)`             | `_.apply($f, undefined, [$x, $y], @serial)`
-`binary`      | `x + y`               | `_.binary("+", $x, $y, @serial)` 
-`construct`   | `new F(x, y)`         | `_.construct($F, [$x, $y], @serial)`
-`unary`       | `!x`                  | `_.unary("!", $x, @serial)`
+`apply`       | `f(x, y)`             | `META.apply($f, undefined, [$x, $y], @serial)`
+`binary`      | `x + y`               | `META.binary("+", $x, $y, @serial)` 
+`construct`   | `new F(x, y)`         | `META.construct($F, [$x, $y], @serial)`
+`unary`       | `!x`                  | `META.unary("!", $x, @serial)`
 
 **Traps Signature:**
 
