@@ -350,43 +350,54 @@ Traps are all independently optional but some traps are logically coupled.
 We enumerate this links below:
 
 * `["enter", "write", "read", "leave"]`
-  Through `enter` and `leave`
-  Aran hides away the complexity of deadzone.
-  If a 
-  
+  These four traps represent the runtime interaction  
+  1. In the normalisation process, Aran often inserts new variables called *token* which appear to be numbers from the traps perspective.
+    So if the second argument of a `write`/`read` invocation is a string, the   
+  2. Aran only declares `let` variables.
+    * `var` declarations at the top-level scope are normalised into property definition on the global object.
+    * `var` declarations inside functions are hoisted and normalised into `let` declarations.
+    * `const` declarations are normalised into `let` declarations and a static type error is throws upon attempting to rewrite them.
+  3. Aran hoist its `let` declarations at the top of blocks, making the temporal deadzone disappear.
+    To restore the behaviour of the temporal deadzone, each variable is associated with a token.
+    At runtime, these tokens will refer to a boolean value indicating whether the variable has already been initialised or not.
+    Before accessing a variable in a dynamic portion of the deadzone, a runtime time check on its associated token is inserted. 
+    In many cases, the temporal deadzone of a variable can be statically determined and its associated token is entirely removed from the instrumented code.
+  These remarks are illustrated in the pseudo instrumentation below:
   ```js
+  // Original //
   const a = () => x;
   let x = "foo";
   a();
+  a = "bar";
   ```
   ```js
-  let $a, $x, $123;
+  // Instrumented //
+  let $a, $x, $1;
   META.enter("program", [], ["a", "x", 123]);
-  $123 = false;
+  $1 = META.write(false, 1);
   $a = () => (
-    $123 ?
+    META.read($1, 1) ?
     META.read($x, "x", 123) :
     ((() => { throw new TypeError("x is not defined") }) ()));
   $x = META.write("foo", "x");
-  $123 = true;
+  $1 = META.write(true, 1);
+  $a();
+  throw new TypeError("Assignment to a constant variable");
   META.leave();
   ```
-  
-  `enter` and `leave` provide enough information the determine the current scope.
-  You can assume that `write` will only be called on defined variable in the scope.
 * `["program", "success", "failure"]`:
   These traps are linked to a program from the original code.
   The first trap invoked by a program is always `program` and the last trap is either `success` or `failure`.
   ```js
   // Original //
-  this.Math.sqrt(4);
+  "foo";
   ```
   ```js
   // Instrumented //
   META.program();
   let $1 = undefined;
   try {
-    $1 = this.Math.sqrt(3);
+    $1 = "foo";
     META.success($1);
   } catch (error) {
     throw META.failure(error);
