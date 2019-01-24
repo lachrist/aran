@@ -8,7 +8,7 @@ For instance, Aran can be used to implement control access systems such as sandb
 
 **Disclaimer**:
 Aran is an academic research project, we are using it at [our lab](http://soft.vub.ac.be/soft/) to support publications and run experiments.
-Although I spent a lot of time improving the quality of this software I do not claim it reaches industrial strength.
+Although I spent a lot of time improving the quality of this software I do not claim it has reached industrial strength.
 Bugs may still remain and unforeseen behaviour may occur on large instrumented programs.
 In the near future, I will not add new features but will correct reported bugs.
 
@@ -73,24 +73,23 @@ fac(6)
 720
 ```
 
-The code transformation performed by Aran essentially consists in inserting calls to functions called *traps* at [ESTree](https://github.com/estree/estree) nodes specified by the user.
+The code transformation performed by Aran essentially consists in inserting calls to functions named *traps* at [ESTree](https://github.com/estree/estree) nodes specified by the user.
 For instance, the expression `x + y` may be transformed into `META.binary("+", x, y, 123)`.
 The last argument passed to traps is always a *serial* number which uniquely identifies the node which triggered the trap.
-The object that contains traps is called the *advice* and the specification that characterises what trap should be triggered on each node is called *pointcut*.
+The object that contains these trap functions is called the *advice* and the specification that characterises what trap should be triggered on each node is called the *pointcut*.
 The process of inserting trap calls based on a pointcut is called *weaving*.
 This terminology is borrowed from [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming).
-[This page](https://lachrist.github.io/aran/dead-apply-factorial.html) demonstrates those concepts.
 
 ![weaving](img/weaving.png)
 
-When code weaving happens on the same process which evaluates weaved code, it is called *live weaving*.
-Live weaving enables direct communication between an advice and its associated Aran's instance.
+When code weaving happens on the same process which evaluates the weaved code, it is called *live weaving*.
+Live weaving enables direct communication between an advice and its associated Aran instance.
 For instance, `aran.nodes[serial]` can be invoked by the advice to retrieve the line index of the node that triggered a trap.
 Another good reason for the advice to communicate with Aran arises when the target program performs dynamic code evaluation -- e.g. by calling the evil [eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) function.
 
 ## Demonstrators
 
-* [test/dead/apply/](https://lachrist.github.io/aran/dead-apply-factorial.html)
+* [test/dead/apply/](https://lachrist.github.io/aran/dead-apply-factorial.html):
   The getting started example where weaving happens on the main thread and the evaluation of the weaved code on a webworker.
 * [test/live/empty-estree.js](https://lachrist.github.io/aran/live-empty-estree-samples.html):
   Empty advice, do nothing aside from instrumenting the argument of direct eval calls.
@@ -112,164 +111,164 @@ Another good reason for the advice to communicate with Aran arises when the targ
   This analysis is quite complex and demonstrates the full capability of Aran.
 * [test/live/linvail-value.js](https://lachrist.github.io/aran/live-linvail-value-delta-object.html)
   Like `shadow-value`, this analysis wrap values into objects to conserve their identity.
-  However this analysis can also track values through the store (a.k.a the objet graph) thanks to separate npm module called [linvail](https://www.npmjs.com/package/linvail).
-  Linvail uses [ECMAScript proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) to implement an transitive access control system known as membrane.
+  However this analysis can also track values through the store (a.k.a the objet graph) thanks to a separate npm module called [linvail](https://www.npmjs.com/package/linvail).
+  Linvail uses [ECMAScript proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) to implement an transitive access control system known as *membrane*.
 
 ## Limitations
 
-1) Aran performs a source-to-source code transformation fully compatible with [ECMAScript5](http://www.ecma-international.org/ecma-262/5.1/) and most of [ECMAScript2019](https://www.ecma-international.org/ecma-262/8.0/).
+1) Aran performs a source-to-source code transformation fully compatible with most of [ECMAScript2018](https://www.ecma-international.org/ecma-262/9.0).
    Known missing features are:
    * Native modules ([`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import), [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export)).
    * [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
    * Generator functions ([`function*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), [`yield`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield),[`yield*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield*)).
    * Asynchronous functions ([`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)).
 2) There exists loopholes that will cause the target program to behave differentially when analysed.
-   These bugs are commonly referred as *Heisenbugs*, and are discusses in [Known Heisenbugs](#known-heisenbugs).
+   These bugs are often referred as [Heisenbugs](https://en.wikipedia.org/wiki/Heisenbug), and are discusses in [Known Heisenbugs](#known-heisenbugs).
 3) Aran does not provide any facilities for instrumenting modularised JavaScript applications.
    To instrument server-side node applications and client-side browser applications we rely on a separate module called [Otiluke](https://github.com/lachrist/otiluke).
 4) Aran does not offer an out-of-the-box interface for tracking primitive values through the object graph.
    This feature is crucial for data-centric analyses such as taint analysis and symbolic execution.
-   In our research, we track primitive values through the object graph with [linvail](https://github.com/lachrist/linvail) which implements an access control system known as membrane.
+   In our research, we track primitive values through the object graph with [linvail](https://github.com/lachrist/linvail) which implements a transitive access control system known as [membrane](https://tvcutsem.github.io/membranes).
 
 ## API
 
-**`aran = require("aran")({namespace, format, roots})`**
+* **`aran = require("aran")({namespace, format, roots})`**
 
-Create a new Aran instance.
+  Create a new Aran instance.
 
-* `namespace :: string`, default `"_"`:
+  * `namespace :: string`, default `"_"`:
+    The name of the variable holding the advice.
+    It should not start by a dollar sign (`$`) and should be not be one of: `arguments`, `eval`, `callee`, `error`.
+    This variable should be accessible from the instrumented code.
+    For instance, this variable should be global if the instrumented code is evaluated globally.
+    Aran performs identifier mangling in such a way that variables from the instrumented code never clash against this variable.
+  * `format :: "estree" | "script"`, default `"estree"`:
+    Defines the output format of `aran.weave(root, pointcut, scope)` and `aran.setup()`.
+    * `"estree"`: Output an [ESTree program](https://github.com/estree/estree/blob/master/es2015.md#programs).
+    This option requires a generator like [astring](https://www.npmjs.com/package/astring) to obtain executable JavaScript code.
+    * `"script"`: Output a string which can directly be fed to `eval`.
+    As Aran's instrumentation can be quite verbose, expressions are spanned in multiple lines.
+  * `roots :: array`, default `[]`.
+    Each ESTree program node passed to `aran.weave(root, pointcut, scope)` will be stored in this array.
+    If this array is not empty it should probably come from another Aran instance.
+
+  The state of an Aran instance essentially consists in the node it instrumented.
+  Aran instances can be serialised using the standard `JSON.stringify` function.
+  For instance, in the code below, `aran1` and `aran2` are in the exact same state:
+
+  ```js
+  const Aran = require("aran");
+  const aran1 = Aran({...});
+  const string = JSON.stringify(aran1);
+  const options = JSON.parse(string);
+  const aran2 = Aran(options);
+  ```
+
+* **`output = aran.setup()`**
+
+  Generate the setup code which should be executed before any instrumented code.
+
+  * `output :: estree.Program | string`:
+    The setup code whose format depends on the `format` option.
+
+  The setup code should be evaluated in an environment where `this` points to the global object and where the advice variable is accessible.
+  If the setup code is evaluated twice for the same advice, it will throw an error.
+
+* **`output = aran.weave(program, pointcut, serial)`**
+
+  Desugar the input program and insert calls to trap functions at nodes specified by the pointcut.
+  * `program :: estree.Program`:
+    The [ESTree program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
+  * `pointcut :: array | function`:
+    The specification that tells Aran where to insert trap calls.
+    Two specification formats are supported:
+    * `array`:
+      An array containing the names of the traps to insert at every applicable cut point.
+      For instance, the pointcut `["binary"]` indicates Aran to insert the `binary` traps whenever applicable.
+    * `function`:
+      A function that tells whether to insert a given trap at a given node.
+      For instance, the pointcut below results in Aran inserting a call to the `binary` trap at every update expression:
+      ```js
+      const pointcut = (name, node) => name === "binary" && node.type === "UpdateExpression" ;
+      ```
+  * `serial :: number | null | undefined`: default `null`
+    If the given ESTree program is going to be evaluated inside a direct eval call within some previously instrumented code, the `serial` argument should be the serial number locating that direct eval call.
+    If the instrumented code is going to be evaluated globally, this argument should be `null` or `undefined`.
+  * `output :: estree.Program | string`:
+    The weaved code whose format depends on the `format` option.
+
+* **`result = aran.unary(operator, argument)`**
+
+  Performs a unary operation as expected by the `unary` trap.
+  This function can be implemented as easily as `eval(operator+" argument")` but we used a boring `switch` loop instead for performance reasons.
+
+  * `operator :: string`
+  * `arguments :: *`
+  * `result :: primitive`
+
+* **`result = aran.binary(operator, left, right)`**
+
+  Performs a binary operation as expected by the `binary` trap.
+  This function can be implemented as easily as `eval("left "+operator+" right")` but we used a boring `switch` loop instead for performance reasons.
+
+  * `operator :: string`
+  * `left :: *`
+  * `right :: *`
+  * `result :: primitive`
+
+* **`aran.namespace`**
+
   The name of the variable holding the advice.
-  It should not start by a dollar sign (`$`) and should be not be one of: `arguments`, `eval`, `callee`, `error`.
-  This variable should be accessible from the instrumented code.
-  For instance, this variable should be global if the instrumented code is evaluated globally.
-  Aran performs identifier mangling in such a way that variables from the instrumented code never clash against this variable.
-* `format :: "estree" | "script"`, default `"estree"`:
-  Defines the output format of `aran.weave(root, pointcut, scope)` and `aran.setup()`.
-  * `"estree"`: Output an [ESTree program](https://github.com/estree/estree/blob/master/es2015.md#programs).
-  This option requires a generator like [astring](https://www.npmjs.com/package/astring) to obtain executable JavaScript code.
-  * `"script"`: Output a string which can directly be fed to `eval`.
-  As Aran's instrumentation can be quite verbose, expressions are spanned in multiple lines.
-* `roots :: array`, default `[]`.
-  Each ESTree program node passed to `aran.weave(root, pointcut, scope)` will be stored in this array.
-  If this array is not empty it should probably come from another Aran instance.
 
-The state of an Aran instance essentially consists in the node it instrumented.
-Aran instances can be serialised using the standard `JSON.stringify` function.
-For instance, in the code below, `aran1` and `aran2` are in the exact same state:
+  ```js
+  {
+    value: string,
+    enumerable: true,
+    configurable: false,
+    writable: false
+  }
+  ```
 
-```js
-const Aran = require("aran");
-const aran1 = Aran({...});
-const string = JSON.stringify(aran1);
-const options = JSON.parse(string);
-const aran2 = Aran(options);
-```
+* **`aran.format`**
 
-**`output = aran.setup()`**
+  The output format for `aran.weave(estree, scope)` and `aran.setup()`; either `"estree"` or `"script"`.
 
-Generate the setup code which should be executed before any instrumented code.
+  ```js
+  {
+    value: string,
+    enumerable: true,
+    configurable: false,
+    writable: false
+  }
+  ```
 
-* `output :: estree.Program | string`:
-  The setup code whose format depends on the `format` option.
+* **`aran.roots`**
 
-The setup code should be evaluated in an environment where `this` points to the global object and where the advice variable is accessible.
-If the setup code is evaluated twice for the same advice, it will throw an error.
+  An array of all the program nodes weaved by the Aran instance.
 
-**`output = aran.weave(program, pointcut, serial)`**
+  ```js
+  {
+    value: array,
+    enumerable: true,
+    configurable: false,
+    writable: false
+  }
+  ```
 
-Desugar the input program and insert calls to trap functions at nodes specified by the pointcut.
-* `program :: estree.Program`:
-  The [ESTree program](https://github.com/estree/estree/blob/master/es2015.md#programs) to instrument.
-* `pointcut :: array | function`:
-  The specification that tells Aran where to insert trap calls.
-  Two specification formats are supported:
-  * `array`:
-    An array containing the names of the traps to insert at every applicable cut point.
-    For instance, the pointcut `["binary"]` indicates Aran to insert the `binary` traps whenever applicable.
-  * `function`:
-    A function that tells whether to insert a given trap at a given node.
-    For instance, the pointcut below results in Aran inserting a call to the `binary` trap at every update expression:
-    ```js
-    const pointcut = (name, node) => name === "binary" && node.type === "UpdateExpression" ;
-    ```
-* `serial :: number | null | undefined`: default `null`
-  If the given ESTree program is going to be evaluated inside a direct eval call within some previously instrumented code, the `serial` argument should be the serial number locating that direct eval call.
-  If the instrumented code is going to be evaluated globally, this argument should be `null` or `undefined`.
-* `output :: estree.Program | string`:
-  The weaved code whose format depends on the `format` option.
+* **`aran.nodes`**
 
-**`result = aran.unary(operator, argument)`**
+  An array indexing all the AST node visited by the Aran instance.
+  This field is useful to retrieve a node from its serial number: `aran.nodes[serial]`.
+  It is not enumerable to reduces the size of `JSON.stringify(aran)`.
 
-Performs a unary operation as expected by the `unary` trap.
-This function can be implemented as easily as `eval(operator+" argument")` but we used a boring `switch` loop instead for performance reasons.
-
-* `operator :: string`
-* `arguments :: *`
-* `result :: primitive`
-
-**`result = aran.binary(operator, left, right)`**
-
-Performs a binary operation as expected by the `binary` trap.
-This function can be implemented as easily as `eval("left "+operator+" right")` but we used a boring `switch` loop instead for performance reasons.
-
-* `operator :: string`
-* `left :: *`
-* `right :: *`
-* `result :: primitive`
-
-**`aran.namespace`**
-
-The name of the variable holding the advice.
-
-```js
-{
-  value: string,
-  enumerable: true,
-  configurable: false,
-  writable: false
-}
-```
-
-**`aran.format`**
-
-The output format for `aran.weave(estree, scope)` and `aran.setup()`; either `"estree"` or `"script"`.
-
-```js
-{
-  value: string,
-  enumerable: true,
-  configurable: false,
-  writable: false
-}
-```
-
-**`aran.roots`**
-
-An array of all the program nodes weaved by the Aran instance.
-
-```js
-{
-  value: array,
-  enumerable: true,
-  configurable: false,
-  writable: false
-}
-```
-
-**`aran.nodes`**
-
-An array indexing all the AST node visited by the Aran instance.
-This field is useful to retrieve a node from its serial number: `aran.nodes[serial]`.
-It is not enumerable to reduces the size of `JSON.stringify(aran)`.
-
-```js
-{
-  value: array,
-  enumerable: false,
-  configurable: false,
-  writable: false
-}
-```
+  ```js
+  {
+    value: array,
+    enumerable: false,
+    configurable: false,
+    writable: false
+  }
+  ```
 
 ## Advice
 
@@ -277,7 +276,7 @@ In Aran, an advice is a collection of functions that will be called during the e
 These functions are called traps; they are independently optional and they all receive as last argument a number which is the index of the ESTree node that triggered the them.
 Serial numbers can be seen as program counters.
 
-**Traps Categorisation**
+**Traps Categorisation:**
 
 We tried to provide as few trap as possible to express the entire JavaScript semantic.
 This process still left us with 26 traps which we categorise based on their transparent implementation:
@@ -290,7 +289,7 @@ This process still left us with 26 traps which we categorise based on their tran
   * `apply = (closure, context, arguments, serial) => Reflect.apply(closure, context, arguments);`
   * `construct = (constructor, arguments, serial) => Reflect.construct(constructor, arguments);`
 
-**Traps Insertion**
+**Traps Insertion:**
 
 Name          | Original              | Instrumented
 --------------|-----------------------|-------------
@@ -324,7 +323,7 @@ Name          | Original              | Instrumented
 `construct`   | `new F(x, y)`         | `_.construct($F, [$x, $y], @serial)`
 `unary`       | `!x`                  | `_.unary("!", $x, @serial)`
 
-**Traps Signature**
+**Traps Signature:**
 
 Name          | arguments[0]              | arguments[1]             | arguments[2]           | arguments[3]           | arguments[4]
 --------------|---------------------------|--------------------------|------------------------|------------------------|----------------
@@ -357,7 +356,7 @@ Name          | arguments[0]              | arguments[1]             | arguments
 `construct`   | `constructor :: value`    | `arguments :: [value]`   | `serial :: number`     |                        |
 `unary`       | `operator :: "-" \| "+" \| "!" \| "~" \| "typeof" \| "void"` | `argument :: value` | `serial :: number` | |
 
-**Traps Comments**
+**Traps Comments:**
 
 Traps are all independently optional but some traps are logically coupled.
 To illustrate the points below we often use 
