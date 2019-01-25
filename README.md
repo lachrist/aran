@@ -369,7 +369,7 @@ Some groups of traps requires additional explanations:
      * `var` declarations at the top-level scope are normalised into property definition on the global object.
      * `var` declarations inside functions are hoisted and normalised into `let` declarations.
      * `const` declarations are normalised into `let` declarations and a static type error is throws upon rewrite attempt.
-  3. Aran hoist its `let` declarations at the top of lexical blocks.
+  3. Aran hoists its `let` declarations at the top of lexical blocks.
      This makes the temporal deadzone disappear.
      To restore the behaviour of the temporal deadzone, a token is associated to each variable.
      At runtime, these tokens will refer to a boolean value indicating whether their associated variable has already been initialised or not.
@@ -555,9 +555,7 @@ This help reduce the size of the instrumented code.
 The other value that Aran predefines is the completion value of the program.
 These predefined values are always assigned to the same token in the order listed below:
 
-1. `Completion`:
-   The completion value of the program, initially: `undefined`.
-2. `HelperThrowTypeError(message)`:
+1. `HelperThrowTypeError(message)`:
    Throws a type error; called when:
    * Assigning to a constant variable.
    * Reading/Assigning a property on `null` or `undefined`. 
@@ -565,23 +563,25 @@ These predefined values are always assigned to the same token in the order liste
    * In strict mode, deleting a member expression and failing.
    * In strict mode, assigning a member expression and failing.
    * Passing `null` or `undefined` a `with` statement.
-3. `HelperThrowReferenceError(message)`:
+2. `HelperThrowReferenceError(message)`:
    Throws a reference error; called when:
    * Accessing a local variable in its temporal dead zone.
    * Reading a non existing global variable.
    * In Strict mode, writing to non existing global variable.
-4. `boolean = HelperIsGlobal(name)`:
+3. `boolean = HelperIsGlobal(name)`:
    Indicates whether an identifier is globally defined (non-enumerable properties also count).
    A call to this helper are inserted whenever a variable lookup reach the global scope in Aran's static scope analysis.
-5. `array = HelperIteratorRest(iterator)`:
+4. `array = HelperIteratorRest(iterator)`:
    Pushes the remaining elements of an iterator into an array.
    A call to this helper is inserted to compute the value of an array pattern's rest element.
-6. `target = HelperObjectRest(source, keys)`:
+5. `target = HelperObjectRest(source, keys)`:
    Create an object `target` that contains the own enumerable properties of `source` safe the ones listed in `keys`.
    A call to this helper is inserted to computed the value of an object pattern's rest element.
-7. `HelperObjectAssign(target, source)`:
+6. `HelperObjectAssign(target, source)`:
    Similar to `Object.assign` but uses `Reflect.defineProperty` rather than `Reflect.set` on the target object.
    A call to this helper is inserted whenever an object expression contain a spread element.
+7. `Completion`:
+   The completion value of the program, initially: `undefined`.
 
 ## Known Heisenbugs
 

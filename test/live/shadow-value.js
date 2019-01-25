@@ -11,7 +11,7 @@ const print = (value) => {
   if (typeof value === "string")
     return JSON.stringify(value);
   if (typeof value === "function")
-    return "[Function]"
+    return "[function]";
   if (typeof value === "object" && value !== null)
     return Object.prototype.toString.call(value);
   return String(value);
