@@ -12,6 +12,8 @@ Although I spent a lot of time improving the quality of this software I do not c
 Bugs may still remain and unforeseen behaviour may occur on large instrumented programs.
 In the near future, I will not add new features but will correct reported bugs.
 
+**Aran produces a flaky error when used with node 11.9.0, the LTS 10.15.1 is advised**
+
 **Table of contents**:
 1. [Getting Started](#getting-started)
 2. [Demonstrators](#demonstrators)
@@ -260,6 +262,7 @@ Another good reason for the advice to communicate with Aran arises when the targ
   An array indexing all the AST node visited by the Aran instance.
   This field is useful to retrieve a node from its serial number: `aran.nodes[serial]`.
   It is not enumerable to reduces the size of stringifying Aran instances.
+  Each node in this array contains two additional properties: `AranSerial` and `AranParentSerial` which respectively refer to the serial number of the node and the serial number of its parent.
 
   ```js
   {
