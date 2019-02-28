@@ -615,7 +615,7 @@ However, Aran introduce Heisenbugs by itself as well:
   ```js
   function f () {
     eval("var x = 'foo';");
-    assert(typeof x === "number");
+    assert(typeof x === "string");
   }
   f();
   ```
