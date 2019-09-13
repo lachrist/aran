@@ -17,7 +17,7 @@
     "acorn": "^6.0.5",
     "astring": "^1.3.1",
     "esvalid": "^1.1.0",
-    "linvail": "^6.0.10",
+    "linvail": "^6.0.12",
     "sandbox-scenario": "0.0.13"
   },
   "keywords": [
