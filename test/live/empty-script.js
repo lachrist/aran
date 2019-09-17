@@ -12,6 +12,7 @@ global.eval(aran.setup());
 module.exports = (script1) => {
   const estree = Acorn.parse(script1);
   const script2 = aran.weave(estree, pointcut, null);
+  // console.log(script1);
   // console.log(script2);
   return script2;
 };

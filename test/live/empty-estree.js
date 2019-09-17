@@ -15,6 +15,7 @@ module.exports = (script1) => {
   const estree1 = Acorn.parse(script1);
   const estree2 = aran.weave(estree1, pointcut, null);
   const script2 = Astring.generate(estree2);
+  // console.log(script1);
   // console.log(script2);
   return script2;
 };
