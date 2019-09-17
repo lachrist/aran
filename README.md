@@ -115,6 +115,8 @@ Another good reason for the advice to communicate with Aran arises when the targ
   Like `shadow-value`, this analysis wrap values into objects to conserve their identity.
   However this analysis can also track values through the store (a.k.a the objet graph) thanks to a separate npm module called [linvail](https://www.npmjs.com/package/linvail).
   Linvail uses [ECMAScript proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) to implement an transitive access control system known as *membrane*.
+* [test/live/linvail-taint.js](https://lachrist.github.io/aran/live-linvail-taint-taint.html)
+  Simple taint analysis using [linvail](https://www.npmjs.com/package/linvail) which prevents information from meta variables `__ARAN_SOURCE__` to flow to meta variables `__ARAN_SINK__`.
 
 ## Limitations
 
