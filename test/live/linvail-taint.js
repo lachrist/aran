@@ -9,26 +9,29 @@ const aran = Aran({format:"script"});
 const internals = new WeakSet();
 const callstack = [];
 const push = (tag, name, serial) => {
-  console.log(tag, name, serial);
   callstack.push({tag, name, inputs:[], serial});
+  // console.log(Array(callstack.length + 1).join("."), tag, name, serial);
 };
 const peek = () => callstack[callstack.length - 1];
-const pop = () => { callstack.pop(); console.log("POP", callstack.length) };
+const pop = () => {
+  const {tag, name, inputs, serial} = callstack.pop();
+  // console.log(Array(callstack.length + 2).join("."), "pop", tag, name, serial);
+};
 global[aran.namespace] = advice;
 global.eval(aran.setup());
 const istainted = ($$value) => $$value.meta;
 const membrane = {
   taint: (value, reason) => {
-    let meta;
-    if (peek().inputs.filter(istainted).length) {
+    // console.log(Array(callstack.length + 1).join("."), "taint", print(value), reason);
+    let meta = null;
+    if (peek().tag !== "internal" && peek().inputs.filter(istainted).length) {
       meta = Object.assign({}, peek());
       meta.inputs = meta.inputs.slice();
-    } else {
-      meta = null;
     }
     return {base:value, meta};
   },
   clean: ({base, meta}, reason) => {
+    // console.log(Array(callstack.length + 1).join("."), "clean", print(base), meta, reason);
     peek().inputs.push({base, meta, reason});
     return base;
   }
@@ -46,16 +49,16 @@ const print = (value) => {
     return JSON.stringify(value);
   return String(value);
 };
-const log = ({base, meta, reason}, depth) => {
-  if (meta) {
-    const {tag, name, serial, inputs} = meta;
-    const {line, column} = aran.nodes[serial].loc.start;
-    console.log(Array(depth + 1).join("  ") + (reason || "") + " " + print(base) + " << " + tag + " " + name + " @" + line + ":" + column);
-    for (const $$value of inputs) {
+const log = ({base, meta:{tag, name, serial, inputs}, reason}, depth) => {
+  const {line, column} = aran.nodes[serial].loc.start;
+  console.log(Array(depth + 1).join("  ") + (reason || "") + " " + print(base) + " << " + tag + " " + name + " @" + line + ":" + column);
+  for (const $$value of inputs) {
+    if ($$value.meta) {
       log($$value, depth + 1);
+      break;
+    } else {
+      // console.log(Array(depth + 1).join("  ") + (reason || "") + " " + print(base));
     }
-  } else {
-    console.log(Array(depth + 1).join("  ") + (reason || "") + " " + print(base));
   }
 };
 
@@ -80,7 +83,6 @@ advice.success = ($$value, serial) => {
   return value;
 };
 advice.failure = ($$value, serial) => {
-  console.log($$value);
   const value = release(membrane.clean($$value, "failure"));
   pop();
   return value;
@@ -146,16 +148,14 @@ advice.construct = ($$value, $$values, serial) => {
 advice.unary = (operator, $$value, serial) => {
   push("unary", operator, serial);
   const value = release(membrane.clean($$value, "unary-argument"));
-  let primitive;
   try {
-    primitive = aran.unary(operator, value);
+    return membrane.taint(aran.unary(operator, value), "unary-result");
   } catch (error) {
-    const $$error = membrane.taint(capture(error), "unary-error");
+    throw membrane.taint(capture(error), "unary-error");
+  } finally {
     pop();
-    throw $$error;
   }
   pop();
-  return membrane.taint(primitive, "unary-result");
 };
 advice.binary = (operator, $$value1, $$value2, serial) => {
   push("binary", operator, serial);
@@ -163,12 +163,10 @@ advice.binary = (operator, $$value1, $$value2, serial) => {
   const value2 = release(membrane.clean($$value2), "binary-right");
   let primitive;
   try {
-    primitive = aran.binary(operator, value1, value2);
+    return membrane.taint(aran.binary(operator, value1, value2), "binary-result")
   } catch (error) {
-    const $$error = membrane.taint(capture(error), "binary-error");
+    throw membrane.taint(capture(error), "binary-error");
+  } finally {
     pop();
-    throw $$error;
   }
-  pop();
-  return membrane.taint(primitive, "binary-result");
 };

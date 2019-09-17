@@ -46,3 +46,4 @@ live("logger", "delta");
 live("shadow-value", "delta");
 live("shadow-state", "delta");
 live("linvail-value", "delta-object");
+live("linvail-taint", "taint");

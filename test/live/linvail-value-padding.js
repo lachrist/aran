@@ -57,7 +57,7 @@ advice.test = ($$value, serial) => {
 advice.success = ($$value, serial) => release(membrane.clean($$value));
 advice.eval = ($$value, serial) => {
   const script = release(membrane.clean($$value));
-  return aran.weave(Acorn.parse(script), pointcut, serial);
+  return aran.weave(Acorn.parse(script, {locations:true}), pointcut, serial);
 };
 
 // Producers //
