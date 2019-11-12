@@ -18,6 +18,10 @@ module.exports = (script) => {
   return aran.weave(Acorn.parse(script), pointcut, null);
 };
 
+advice.program = (closure, serial) => {
+  return release(membrane.clean($closure));
+};
+
 // Consumers //
 advice.throw = ($$value, serial) => release(membrane.clean($$value));
 advice.test = ($$value, serial) => {
@@ -31,7 +35,6 @@ advice.eval = ($$value, serial) => {
 };
 
 // Producers //
-advice.error = (value, serial) => membrane.taint(capture(value));
 advice.primitive = (primitive, serial) => {
   const $$primitive = membrane.taint(primitive);
   console.log($$primitive.meta+" := "+JSON.stringify(primitive));
@@ -42,10 +45,27 @@ advice.closure = ($closure, serial) => {
   Reflect.setPrototypeOf($closure, capture(Function.prototype));
   return membrane.taint($closure);
 };
-advice.argument = (_value, name) => {
+advice.error = (value, serial) => membrane.taint(capture(value));
+advice.parameter = (_value, name) => {
   if (name === "length" || name === "new.target")
     return membrane.taint(_value);
+  if (name === "error")
+    return membrane.taint(capture(_value));
+  if (name === "arguments") {
+    Reflect.setPrototypeOf(_value, capture(Array.prototype));
+    return membrane.taint(_value);
+  }
   return _value;
+};
+
+advice.enter = (tag, parameters, labels, identifiers, serial) => {
+  if (tag === "catch") {
+    parameters.error = membrane.taint(capture(parameters.error));
+  } else if (tag === "closure") {
+    parameters.length = membrane.taint(parameters.length);
+    parameters["new.target"] = membrane.taint(parameters["new.target"]);
+    parameters.arguments = membrane.enter(parameters.arguments);
+  }
 };
 
 // Combiners //
