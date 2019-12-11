@@ -213,11 +213,11 @@ advice.eval = (base, serial) => {
 //   return {register, fetch};
 // }) ());
 
-advice.enter = (tag, labels, frame, serial) => {
+advice.enter = (tag, parameters, labels, identifiers1, identifiers2, serial) => {
   if (tag === "closure" || tag === "program") {
     callstack.push(scope);
     if (tag === "closure") {
-      scope = scopes.get(identifiers.["@callee"]);
+      scope = scopes.get(identifiers["@callee"]);
     } else {
       scope = null;
     }
@@ -227,10 +227,10 @@ advice.enter = (tag, labels, frame, serial) => {
   scope[SymbolStackLength] = stack.length;
   if (tag === "closure") {
     if (callstack[callstack.length-1][SymbolTag] === "external") {
-      scope["@callee"] = mirror(frame["@callee"], "enter-closure-callee", serial);
-      scope["@new.target"] = mirror(frame["new.target"], "enter-closure-(new.target)", serial);
-      scope["@this"] = mirror(frame.this, "enter-closure-this", serial);
-      scope["@arguments"] = mirror(frame.arguments, "enter-closure-arguments", serial);   
+      scope["@callee"] = mirror(parameter["callee"], "enter-closure-callee", serial);
+      scope["@new.target"] = mirror(parameter["new.target"], "enter-closure-(new.target)", serial);
+      scope["@this"] = mirror(parameter["this"], "enter-closure-this", serial);
+      scope["@arguments"] = mirror(parameter["arguments"], "enter-closure-arguments", serial);   
     } else {
       const metas = {__proto__:null};
       for (let index = bases.length - 1; index >= 0; index--) {
