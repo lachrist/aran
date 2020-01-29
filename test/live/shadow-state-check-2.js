@@ -1,381 +1,740 @@
 
+const Aran = require("aran");
+const Acorn = require("acorn");
+const Astring = require("astring");
+
 const global_Reflect_apply = global.Reflect.apply;
-// const global_Reflect_defineProperty = global.Reflect.defineProperty;
-// const global_Symbol_iterator = global.Symbol.iterator;
-// const global_Array_prototype_values = global.Array.prototype.values;
+const global_Symbol = global.Symbol;
+const global_Array = global.Array;
+const global_Array_from = global.Array.from;
+const global_Symbol = global.Symbol;
 const global_WeakMap = global.WeakMap;
+const global_WeakMap_prototype_has = global.WeakMap.prototype.has;
 const global_WeakMap_prototype_get = global.WeakMap.prototype.get;
 const global_WeakMap_prototype_set = global.WeakMap.prototype.set;
+const global_Error = global.Error;
+const global_console = global.console;
+const global_console_error = global.console.error;
+const global_eval = global.eval;
+const global_Object_is = global.Object.is;
 
-const builtins = {
-  __proto__:null
+const UNITIALIZED = global_Symbol("uninitialized");
+
+const EMPTY = global_Symbol("empty");
+const CONTINUE = global_Symbol("continue");
+const BREAK = global_Symbol("break");
+const THROW = global_Symbol("throw");
+const COMPLETION = global_Symbol("completion");
+const RETURN = global_Symbol("return");
+
+const aran = Aran({
+  __proto__: null,
+  "advice-variable": "foo",
+  "builtin-variable": "bar"
+});
+
+// aran.weave
+// aran.nodes
+// aran.advice-variable
+// aran.builtin-variable
+// 
+// aran.builtin-names
+// aran.builtin-object
+// aran.builtin-estree
+// aran.builtin-script
+// 
+// aran.unary-operators
+// aran.unary-function
+// aran.unary-script
+// 
+// aran.binary-operators
+// aran.binary-function
+// aran.binary-script
+// 
+// aran.object-function
+// aran.object-script
+
+const pointcut = () => true;
+
+const advice = {__proto__:null};
+
+module.exports = (script1) => {
+  // State Pre-Constraints //
+  check(register.status === EMPTY);
+  check(scope === null);
+  check(stack.length === 0);
+  check(callstack.length === 0);
+  // Body //
+  const estree1 = Acorn.parse(script1);
+  const estree2 = aran.instrument(estree1, pointcut, null);
+  const script2 = Astring.generate(estree2);
+  // TODO return value
+  const closure = new global_Function(aran["advice-variable"], aran["builtin-variable"], script2);
+  closure(advice, aran["builtin-object"]);
+  // State Post-Constraints //
+  check(register.status === EMPTY);
+  check(scope === null);
+  check(stack.length === 0);
+  check(callstack.length === 0);
 };
+
+//////////////////////////
+// Methods as Functions //
+//////////////////////////
+
+const pop = (array) => global_Reflect_apply(global_Array_prototype_pop, array, []);
+
+const push = (array, element) => global_Reflect_apply(global_Array_prototype_push, array, [element]);
+
+const includes = (array, element) => global_Reflect_apply(global_Array_prototype_includes, array, [element]);
+
+const slice = (array, index1, index2) => global_Reflect_apply(global_Array_prototype_slice, array, [index1, index2]);
+
+const map = (array, closure) => global_Reflect_apply(global_Array_prototype_map, array, [closure]);
+
+const trim = (string) => global_Reflect_apply(global_String_prototype_trim, string, []);
+
+const substring = (string, index1, index2) => global_Reflect_apply(global_String_prototype_substring, string, [index1, index2]);
+
+const add = (weakset, value) => global_Reflect_apply(global_WeakSet_prototype_add, weakset, [value]);
+
+const elm = (weakset, value) => global_Reflect_apply(global_WeakSet_prototype_has, weakset, [value]);
+
+const has = (weakmap, key) => global_Reflect_apply(global_WeakMap_prototype_get, weakmap, [key]);
+
+const get = (weakmap, key) => global_Reflect_apply(global_WeakMap_prototype_get, weakmap, [key]);
+
+const set = (weakmap, key, value) => global_Reflect_apply(global_WeakMap_prototype_get, weakmap, [key, value]);
+
+///////////
+// State //
+///////////
+
 const stack = [];
-const empty = {__proto__: null};
-let scope = {
-  __proto__: null,
-  "%tag": "external",
-  "%stack-length": 0
-};
-let store = new global_WeakMap();
+
+const callstack = [];
+
+let scope = null;
+
 const scopes = new global_WeakMap();
-const registers = {
+
+const register = {
   __proto__: null,
-  return: empty,
-  throw: empty,
-  break: empty,
-  continue: empty
+  status: EMPTY,
+  value: null
 };
+
+///////////
+// Check //
+///////////
 
 let counter = 0;
-const wrap = (base) => {
-  __proto__: null,
-  counter: ++counter,
-  base: base
-};
 
-const set = (value, name) => {
-  if (!global_Object_is(register[name], empty)) {
-    throw new global_Error("Register should be empty");
+const check = (boolean) => {
+  if (boolean) {
+    counter++
+  } else {
+    debugger;
+    const error = new global_Error("Check Failure");
+    global_Reflect_apply(global_console_error, global_console, [error.stack]);
+    if (global_alert) {
+      global_alert("Check failure");
+    } else {
+      while (true) {}
+    }
   }
-  register[name] = value;
-  return value;
 };
 
-const get = (value, name) => {
-  if (!global_Object_is(register[name], value)) {
-    throw new global_Error("Register mismatch");
+/////////////////
+// Duck Typing //
+/////////////////
+
+const legal = (string) => {
+  // Credit: https://github.com/shinnn/is-var-name //
+  if (trim(string) !== string) {
+    return false;
   }
-  register[name] = empty;
-  return value;
-};
-
-const consume = (value) => {
-  if (!global_Object_is(stack[stack.length - 1], value)) {
-    throw new global_Error("Consume mismatch");
-  }
-  stack.length--;
-  return value;
-};
-
-const produce = (value) => {
-  stack[stack.length] = value;
-  return value;
-};
-
-const external = (closure) => {
-  callstack.push(scope);
-  scope = {
-    __proto__: null,
-    [SymbolTag]: "external",
-    [SymbolStackLength]: stack.length
-  };
   try {
-    return produce(closure());
-  } catch (value) {
-    throw set("error", value);
-  } finally {
-    scope = callstack[callstack.length - 1];
-    callstack.length--;
+    new global_Function(string, "var " + string);
+  } catch (error) {
+    return false;
   }
+  return true;
+};
+
+const duck = (type, value) => {
+  if (typeof type === "string") {
+    if (type === "value") {
+      return value !== UNITIALIZED;
+    }
+    if (type === "primitive") {
+      return (
+        value === null ||
+        value === void 0 ||
+        typeof value === "boolean" ||
+        typeof value === "number" ||
+        typeof value === "string");
+    }
+    if (type === "parameters") {
+      return (
+        value !== null &&
+        typeof value === "object" &&
+        global_Reflect_getPrototypeOf(value) === null);
+    }
+    if (type === "closure") {
+      return typeof value === "function";
+    }
+    if (type === "serial") {
+      return (
+        typeof value === "number" &&
+        global_Math_round(value) === value &&
+        value === value &&
+        value > 0 &&
+        value < aran.nodes.length);
+    }
+    if (type === "label") {
+      if (value === null) {
+        return true;
+      }
+      if (typeof value !== "string") {
+        return false;
+      }
+      return legal(value);
+    }
+    if (type === "identifier") {
+      if (typeof value !== "string") {
+        return false;
+      }
+      if (value[0] === "#" || value[0] === "@") {
+        return legal(substring(value, 1, void 0));
+      }
+      return legal(value);
+    }
+    if (type === "tag") {
+      return (
+        value === "program" ||
+        value === "closure" ||
+        value === "eval" ||
+        value === "block" ||
+        value === "then" ||
+        value === "else" ||
+        value === "while" ||
+        value === "try" ||
+        value === "catch" ||
+        value === "finally");
+    }
+    if (type === "binary-operator") {
+      return includes(aran["binary-operators"], value);
+    }
+    if (type === "unary-operator") {
+      return includes(aran["unary-operators"], value);
+    }
+    if (type === "builtin-name") {
+      return includes(aran["builtin-names"], value);
+    }
+    if (type === "builtin") {
+      for (let name in aran["builtin-object"]) {
+        if (aran["builtin-object"][name] === value) {
+          return true;
+        }
+      }
+      return false;
+    }
+    if (type === "parameter-name") {
+      return (
+        value === "callee" ||
+        value === "new.target" ||
+        value === "this" ||
+        value === "arguments" ||
+        value === "error");
+    }
+    return false;
+  }
+  if (global_Array_isArray(type)) {
+    if (!global_Array_isArray(value)) {
+      return false;
+    }
+    if (type.length === 1) {
+      for (let index = 0; index < value.length; index++) {
+        if (!duck(type[0], value[index])) {
+          return false;
+        }
+      }
+      return true;
+    }
+    if (type.length !== value.length) {
+      return false;
+    }
+    for (let index = 0; index < value.length; index++) {
+      if (!duck(type[index], value[index])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
 };
 
 ///////////////
 // Producers //
 ///////////////
 
-advice.read = (meta, hidden, identifier, serial) => {
-  if (scope[(hidden ? "_" : "$") + identifier] !== meta) {
-    throw new global_Error("Read mismatch");
-  }
-  stack[stack.length] = meta;
-  return meta;
+advice.read = function (value, identifier, serial) {
+  // Parameter Constraints //
+  check(duck(["value", "identifier", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(registers.status === EMPTY);
+  check(scope !== null);
+  check(global_Object_is(scope[identifier], value));
+  // Body //
+  push(stack, value);
+  return value;
 };
 
-advice.primitive = (base, serial) => {
-  const meta = wrap(base);
-  stack[stack.length] = meta;
-  return meta;
+advice.primitive = function (primitive, serial) {
+  // Parameter Constraints //
+  check(duck(["primitive", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  // Body //
+  push(stack, primitive);
+  return primitive;
 };
 
-advice.closure = (base, serial) => {
-  global_Reflect_apply(global_WeakMap_prototype_set, scopes, [base, scope]);
-  const meta = wrap(base);
-  stack[stack.length] = meta;
-  return meta;
+advice.closure = function (closure, serial) {
+  // Parameter Constraints //
+  check(duck(["closure", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  // Body //
+  set(scopes, closure, scope);
+  push(stack, closure);
+  return closure;
 };
 
-advice.builtin = (base, name) => {
-  if (name in builtins) {
-    if (!global_Object_is(builtins[name].base, base)) {
-      throw new global_Error("Builtin mismatch");
-    }
-  } else {
-    builtins[name] = wrap(base);
-  }
-  stack[stack.length] = builtins[name];
-  return builtins[name];
+advice.builtin = function (builtin, bname) {
+  // Parameter Constraints //
+  check(duck(["builtin", "builtin-name", "serial"], global_Array_from(arguments));
+  // Inter-Parameter Constraints //
+  check(global_Object_is(aran["builtin-object"][bname], builtin));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  // Body //
+  push(stack, builtin);
+  return builtin;
 };
 
-advice.parameter = (meta, name, serial) => {
-  if (scope["@" + name] !== meta)) {
-    throw new global_Error("Parameter mismatch");
-  }
-  stack[stack.length] = meta;
-  return meta;
+advice.parameter = function (value, pname, serial) {
+  // Parameter Constraints //
+  check(duck(["value", "parameter-name", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(scope["%parameters"][pname] === value);
+  // Body //
+  push(stack, value);
+  return value;
 };
 
 ///////////////
 // Consumers //
 ///////////////
 
-advice.drop = (meta, serial) => {
-  if (stack[stack.length - 1] !== meta) {
-    throw new global_Error("Drop mismatch");
-  }
-  stack.length--;
-  return meta.base;
+advice.drop = function (value, serial) {
+  // Parameter Constraints //
+  check(duck(["value", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(stack.length - scope["%stack-length"] >= 1);
+  check(global_Object_is(pop(stack), value));
+  // Body //
+  // stack.length -= 1;
 };
 
-advice.test = (meta, serial) => {
-  if (stack[stack.length - 1] !== meta) {
-    throw new global_Error("Test mismatch");
-  }
-  stack.length--;
-  return meta.base;
-};
-  
-advice.write = (meta, hidden, identifier, serial) => {
-  if (stack[stack.length - 1] !== meta) {
-    throw new global_Error("Write mismatch");
-  }
-  stack.length--;
-  scope[(hidden ? "_" : "$") + identifier] = meta;
-  return meta;
+advice.test = function (value, serial) {
+  // Parameter Constraints //
+  check(duck(["value", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(stack.length - scope["%stack-length"] >= 1);
+  check(global_Object_is(pop(stack), value));
+  // Body //
+  // stack.length -= 1;
+  return value;
 };
 
-advice.eval = (meta, serial) => {
-  if (stack[stack.length - 1] !== meta) {
-    throw new global_Error("Eval mismatch");
-  }
-  stack.length--;
-  return aran.instrument(meta.base, serial);
+advice.write = function (value, identifier, serial) => {
+  // Parameter Constraints //
+  check(duck(["value", "identifier", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(stack.length - scope["%stack-length"] >= 1);
+  check(global_Object_is(pop(stack), value));
+  // Body //
+  // stack.length -= 1;
+  scope[identifier] = value;
+  return value;
 };
 
-advice.throw = (value, serial) => {
-  if (stack[stack.length - 1] !== meta) {
-    throw new global_Error("Throw mismatch");
-  }
-  stack.length--;
-  if (register.throw === empty) {
-    throw new global_Error("Non-empty throw register");
-  }
-  regisiter.throw = meta;
+advice.eval = function (value, serial) {
+  // Parameter Constraints //
+  check(duck(["value", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(stack.length - scope["%stack-length"] >= 1);
+  check(global_Object_is(pop(stack), value));
+  // Body //
+  // stack.length -= 1;
+  const script1 = "" + value;
+  const estree1 = Acorn.parse(script1);
+  const estree2 = aran.instrument(estree1, serial);
+  const script2 =  Astring.generate(estree2);
+  return script2;
 };
 
-advice.return = (value, serial) => {
-  if (stack[stack.length - 1] !== meta) {
-    throw new global_Error("Throw mismatch");
-  }
-  stack.length--;
-  if (register.return === empty) {
-    throw new global_Error("Non-empty throw register");
-  }
-  regisiter.return = meta;
-}
+advice.throw = function (value, serial) {
+  // Parameter Constraints //
+  check(duck(["value", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(stack.length - scope["%stack-length"] >= 1);
+  check(global_Object_is(pop(stack), value));
+  // Body //
+  // stack.length -= 1;
+  register.status = THROW;
+  register.value = value;
+  return value;
+};
+
+advice.return = function (value, serial) {
+  // Parameter Constraints //
+  check(duck(["value", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(stack.length - scope["%stack-length"] >= 1);
+  check(global_Object_is(pop(stack), value));
+  // Body //
+  // stack.length -= 1;
+  register.status = RETURN;
+  register.value = value;
+  return value;
+};
 
 ///////////////
 // Combiners //
 ///////////////
 
-advice.object = (prototype, entries) => {
-  for (let index = entries.length - 1; index >= 0; index--) {
-    consume(entries[index][1]);
-    consume(entries[index][0]);
+const combine = () => {
+  const internal = has(scopes, register.value.callee);
+  push(callstack, scope);
+  scope = internal ? get(scopes, register.value.callee) : null;
+  try {
+    if (!internal) {
+      register.status = EMPTY;
+    }
+    const result = (
+      register.status === CONSTRUCT ?
+      global_Reflect_construct(register.value.callee, register.value.arguments) :
+      global_Reflect_apply(register.value.callee, register.value.this, register.value.arguments));
+    if (internal) {
+      check(register.status === RETURN);
+      check(global_Object_is(register.value, result));
+      register.status = EMPTY;
+    }
+    push(stack, result);
+    return result;
+  } catch (error) {
+    if (internal) {
+      check(register.status === THROW);
+      check(global_Object_is(register.value, error));
+    } else {
+      check(register.status === EMPTY);
+      register.status = THROW;
+      register.value = error;
+    }
+    throw error;
+  } finally {
+    scope = pop(callstack);
   }
-  consume(prototype);
-  const value = {__proto__:prototype};
-  for (let index = 0; index < entries.length; index++) {
-    value[entries[index][0]] = entries[index][1];
-  }
-  return produce(value);
 };
 
-advice.apply = (value1, value2, values, serial) => {
-  if (global_Reflect_apply(global_WeakMap_prototype_has, scopes, [value1])) {
-    return global_Reflect_apply(value1, value2, values);
-  }
+advice.apply = function (value1, value2, values, serial) {
+  // Parameter Constraints //
+  check(duck(["value", "value", ["value"], "serial"], global_Array_from(arguments)));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(stack.length - scope["%stack-length"] >= values.length + 2);
   for (let index = values.length - 1; index >= 0; index--) {
-    consume(values[index]);
+    check(global_Object_is(pop(stack), values[index]));
   }
-  consume(value2);
-  consume(value1);
-  return external(() => global_Reflect_apply(value1, value2, values));
+  check(global_Object_is(pop(stack), value2));
+  check(global_Object_is(pop(stack), value1));
+  // Body //
+  // stack.length -= values.length + 2;
+  register.status = APPLY;
+  register.value = {
+    __proto__: null,
+    callee: value1,
+    this: value2,
+    arguments: values
+  };
+  return combine();
 };
 
-advice.construct = (value, values, serial) => {
-  if (global_Reflect_apply(global_WeakMap_prototype_has, scopes, [value])) {
-    return global_Reflect_construct(value, values);
+advice.construct = function (value, values, serial) {
+  // Parameter Constraints //
+  check(duck(["value", ["value"], "serial"], global_Array_from(arguments)));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(stack.length - scope["%stack-length"] >= values.length + 1);
+  for (let index = metas.length - 1; index >= 0; index--) {
+    check(global_Object_is(pop(stack), values[index]));
   }
-  for (let index = values.length - 1; index >= 0; index--) {
-    consume(values[index]);
-  }
-  consume(value);
-  return external(() => global_Reflect_construct(value, values));
+  check(global_Object_is(pop(stack), value));
+  // Body //
+  // stack.length -= values.length + 1;
+  register.status = CONSTRUCT;
+  register.value = {
+    __proto__: null,
+    callee: value,
+    arguments: values
+  };
+  return combine();
 };
 
-advice.binary = (operator, value1, value2, serial) => {
-  consume(value2);
-  consume(value1);
-  return external(() => aran.binary(operator, value1, value2));
+advice.binary = function (operator, value1, value2, serial) {
+  // Parameter Constraints //
+  check(duck(["binary-operator", "value", "value", "serial"], global_Array_from(arguments)));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(stack.length - scope["%stack-length"] >= 2);
+  check(global_Object_is(pop(stack), value2));
+  check(global_Object_is(pop(stack), value1));
+  // Body //
+  // stack.length -= 2;
+  register.status = APPLY;
+  register.value = {
+    __proto__: null,
+    callee: aran["binary-function"],
+    arguments: [operator, value1, value2]
+  };
+  return combine();
 };
 
-advice.unary = (operator, value, serial) => {
-  consume(value);
-  return external(() => aran.unary(operator, value));
+advice.unary = function (operator, meta, serial) {
+  // Parameter Constraints //
+  check(duck(["unary-operator", "meta", "serial"], global_Array_from(arguments)));
+  // State Constraints //
+  check(fullregs() === 0);
+  check(scope !== null);
+  check(stack.length - scope["%stack-length"] >= 1);
+  check(global_Object_is(pop(stack), meta));
+  // Body //
+  // stack.length -= 1;
+  register.status = APPLY;
+  register.value = {
+    __proto__: null,
+    callee: aran["unary-function"],
+    this: null,
+    arguments: [operator, value1, value2]
+  };
+  return combine();
+};
+
+advice.object = function (value, valuess, serial) {
+  // Parameter Constraints //
+  check(duck(["value", [["value", "value"]], "serial"], global_Array_from(arguments)));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(stack.length - scope["%stack-length"] >= 2 * valuess.length + 1);
+  for (let index = valuess.length - 1; index >= 0; index--) {
+    check(global_Object_is(pop(stack), valuess[index][1]));
+    check(global_Object_is(pop(stack), valuess[index][0]));
+  }
+  check(global_Object_is(pop(stack), value));
+  // Body //
+  register.status = APPLY;
+  register.value = {
+    __proto__: null,
+    callee: aran["object-function"],
+    this: null,
+    arguments: [value, valuess]
+  };
+  return combine();
 };
 
 //////////////
 // Informer //
 //////////////
 
-advice.break = (label, serial) => {
-  if (register.break !== empty) {
-    throw new global_Error("Non-empty break register");
-  }
-  register.break = label;
+advice.break = function (label, serial) {
+  // Parameter Constraints //
+  check(duck(["label", "serial"], global_Array_from(arguments)));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  // Body //
+  register.status = BREAK;
+  register.value = label;
 };
 
-advice.continue = (label, serial) => {
-  if (register.continue !== empty) {
-    throw new global_Error("Non-empty continue register");
-  }
-  register.continue = label;
+advice.continue = function (label, serial) {
+  // Parameter Constraints //
+  check(duck(["label", "serial"], global_Array_from(arguments)));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  // Body //
+  register.status = CONTINUE;
+  register.value = label;
 };
 
-advice.enter = (tag, labels, parameters, identifiers1, identifiers2, serial) => {
-  if (tag === "program") {
-    if (scope["%tag"] !== "external") {
-      throw new Error("Invalid root scope");
-    }
-    callstack[callstack.length] = scope;
-    scope = null;
+advice.completion = function (serial) {
+  // Parameter Constraints //
+  check(duck(["serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(register.status === EMPTY);
+  check(scope !== null);
+  check(scope["%serial"] === serial);
+  // Body //
+  register.status = COMPLETION;
+};
+
+advice.failure = function (value, serial) {
+  // Parameter Constraints //
+  check(duck(["value", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  check(register.status === THROW);
+  check(register.value === value);
+  check(scope !== null);
+  check(scope["%serial"] === serial);
+  check(stack.length - scope["%stack-length"] >= 0);
+  // Body //
+  while (stack.length > scope["%stack-length"]) {
+    pop(stack);
+  }
+};
+
+advice.enter = function (tag, labels, parameters, identifiers, serial) {
+  // Parameter Constraints //
+  check(duck(["tag", ["label"], "parameters", ["identifier"], "serial"], global_Array_from(arguments)));
+  // Inter-Parameter Constraints //
+  if (tag === "catch") {
+    check(global_Reflect_ownKeys(parameters).length === 1);
+    check("error" in parameters);
+    check(duck("value", parameters.error));
+  } else if (tag === "program") {
+    check(global_Reflect_ownKeys(parameters).length === 1);
+    check("this" in parameters);
+    check(parameters.this === global);
   } else if (tag === "closure") {
-    callstack[callstack.length] = scope;
-    scope = global_Reflect_apply(global_WeakMap_prototype_get, scopes, [parameters.callee]);
+    check(global_Reflect_ownKeys(parameters).length === 4);
+    check("callee" in parameters);
+    check("new.target" in parameters);
+    check("this" in parameters);
+    check("arguments" in parameters);
+    check(typeof parameters["callee"] === "function");
+    if (parameters["new.target"] !== void 0) {
+      if (scope === null) {
+        check(typeof parameters["new.target"] === "function");
+      } else {
+        check(parameters["new.target"] === parameters["callee"]);
+      }
+    }
+    check(global_Array_isArray(parameters["arguments"]));
+  } else {
+    check(global_Reflect_ownKeys(parameters).length === 0);
+  }
+  // State Constraints //
+  if (tag === "program") {
+    check(scope === null);
+    check(register.status === EMPTY);
+  } else if (tag === "closure") {
+    if (scope === null) {
+      check(register.status === EMPTY);
+    } else {
+      if (parameters["new.target"] === void 0) {
+        check(register.status === APPLY);
+        check(global_Object_is(register.value.this, parameters.this));
+      } else {
+        check(register.status === CONSTRUCT);
+      }
+      check(global_Object_is(register.value.callee, parameters.callee));
+      check(register.value.arguments.length === parameters.arguments.length);
+      for (let index = 0; index < parameters.arguments.length; index++) {
+        check(global_Object_is(register.value.arguments[index], parameters.arguments[index]));
+      }
+      register.status = EMPTY;
+    }
+  } else if (tag === "catch") {
+    check(register.status === THROW);
+    check(global_Object_is(register.value, parameters.error));
+    register.status = EMPTY;
+  } else {
+    check(register.status === EMPTY);
+  }
+  // Body //
+  if (scope === null) {
+    push(callstack, scope);
+    scope = tag === "program" ? null : get(scopes, parameters.callee);
   }
   scope = {
     __proto__: scope,
-    ["%tag"] = tag,
-    ["%labels"] = labels,
-    ["%stack-length"] = stack.length,
-    ["%callstack-length"] = callstack.length
+    ["%tag"]: tag,
+    ["%labels"]: labels,
+    ["%parameters"]: parameters,
+    ["%serial"]: serial,
+    ["%stack-length"]: stack.length
   };
-  for (let index = 0; index < identifiers1.length; index++) {
-    scope["_" + identifier] = empty;
-  }
-  for (let index = 0; index < identifiers2.length; index++) {
-    scope["$" + identifier] = empty;
-  }
-  if (tag === "catch") {
-    if (regisiter.error !== parameter.error) {
-       throw new global_Error("Error register mismatch");
-    }
-    regisiter.error = empty;
-    scope["@error"] = parameter.error;
-  } else if (tag === "program") {
-    if (parameter.this !== global) {
-      throw new global_Error("This should be set to global");
-    }
-    if (!("global" in builtins)) {
-      builtins.global = {__proto__:null, base:global};
-    }
-    scope["@this"] = builtins.global;
-  } else if (tag === "closure") {
-    if (callstack[callstack.length - 1]["%tag"] !== "external") {
-      for (let index = parameter.arguments.length - 1; index >= 0; index--) {
-        consume(parameter.arguments[index]);
-      }
-      if (parameter["new.target"] !== void 0) {
-        consume(parameter.this);
-      }
-      consume(parameter.callee);
-    }
-    scope["@callee"] = parameter.callee;
-    scope["@new.target"] = parameter["new.target"];
-    scope["@this"] = parameter.this;
-    scope["@arguments"] = parameter.arguments;
+  for (let index = 0; index < identifiers.length; index++) {
+    scope[identifiers[index]] = UNINITIALIZED;
   }
 };
 
-advice.completion = (serial) => {
-  set("completion", null);
+advice.leave = function (tag, serial) {
+  // Parameter Constraints //
+  check(duck(["tag", "serial"], global_Array_from(arguments));
+  // State Constraints //
+  if (tag === "closure" || tag === "program" || tag === "eval") {
+    check(register.status === RETURN || register.status === THROW);
+  } else {
+    check(register.status !== EMPTY);
+  }
+  check(scope !== null);
+  check(scope["%tag"] === tag);
+  check(scope["%serial"] === serial);
+  check(scope["%stack-length"] === stack.length);
+  if (register.status === CONTINUE) {
+    if (includes(scope["%labels"], register.value) {
+      check(tag === "while");
+    }
+  }
+  // Body //
+  if (tag === "program" || tag === "closure") {
+    scope = global_Reflect_getPrototypeOf(scope);
+    if (scope === null) {
+      scope = pop(callstack);
+      register.status = EMPTY;
+    }
+  } else {
+    if (register.status === BREAK || register.status === CONTINUE) {
+      if (includes(scope["%labels"], register.value)) {
+        register.status = EMPTY;
+      }
+    }
+    scope = global_Reflect_getPrototypeOf(scope);
+  }
 };
-
-advice.leave = (serial) => {
-  {
-    const sum = 0;
-    for (let key in register) {
-      if (register[key] !== empty) {
-        sum += 1;
-      }
-    }
-    if (sum !== 1) {
-      throw new global_Error("There should exactly be one non-empty register.")
-    }
-  }
-  const tag = scope[SymbolTag];
-  const labels = scope[SymbolLabels];
-  scope = global_Reflect_getPrototypeOf(scope);
-  if (register.break !== empty || regisiter.continue !== empty) {
-    for (let index = 0; index < labels; index++) {
-      if (labels[index] === register.break) {
-        register.break = empty;
-        return;
-      }
-      if (scope[SymbolLabels][index] === register.continue) {
-        register.continue = empty;
-        if (scope[SymbolTag] !== "while") {
-          throw new global_Error("Matched continue label in non-while block");
-        }
-        return;
-      }
-    }
-  }
-  if (register.error !== empty) {
-    throw new global_Error("Register error should be empty when leaving blocks");
-  }
-  if (register.throw !== empty) {
-    if (scope[SymbolTag] === "try") {
-      regisiter.error = register.throw;
-      regisiter.throw = empty;
-    }
-  }
-  if (regisiter.return !== empty) {
-    if (scope[SymbolTag] === "closure") {
-      if (callstack[callstack.length - 1] )
-    }
-  }
-  
-  if (scope[SymbolTag] === "closure") {
-    if (register.throw === "")
-  }
-  
-    if (regisiter.)
-    
-    if (regisiter.throw !== empty) {
-      
-    }
-    
-    if (register.continue !== empty) {
-      for (let index = 0; index < scope[SymbolLabels]; index++) {
-        if (scope[SymbolLabels][index] === register.break) {
-          return;
-        }
-      }
-    }
-  } finally {
-    scope = global_Reflect_
-  }
-  
-}
