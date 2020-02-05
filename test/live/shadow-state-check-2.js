@@ -7,7 +7,6 @@ const global_Reflect_apply = global.Reflect.apply;
 const global_Symbol = global.Symbol;
 const global_Array = global.Array;
 const global_Array_from = global.Array.from;
-const global_Symbol = global.Symbol;
 const global_WeakMap = global.WeakMap;
 const global_WeakMap_prototype_has = global.WeakMap.prototype.has;
 const global_WeakMap_prototype_get = global.WeakMap.prototype.get;
@@ -66,7 +65,7 @@ module.exports = (script1) => {
   check(callstack.length === 0);
   // Body //
   const estree1 = Acorn.parse(script1);
-  const estree2 = aran.instrument(estree1, pointcut, null);
+  const estree2 = aran.weave(estree1, pointcut, null);
   const script2 = Astring.generate(estree2);
   // TODO return value
   const closure = new global_Function(aran["advice-variable"], aran["builtin-variable"], script2);
@@ -281,7 +280,7 @@ const duck = (type, value) => {
 
 advice.read = function (value, identifier, serial) {
   // Parameter Constraints //
-  check(duck(["value", "identifier", "serial"], global_Array_from(arguments));
+  check(duck(["value", "identifier", "serial"], global_Array_from(arguments)));
   // State Constraints //
   check(registers.status === EMPTY);
   check(scope !== null);
@@ -293,7 +292,7 @@ advice.read = function (value, identifier, serial) {
 
 advice.primitive = function (primitive, serial) {
   // Parameter Constraints //
-  check(duck(["primitive", "serial"], global_Array_from(arguments));
+  check(duck(["primitive", "serial"], global_Array_from(arguments)));
   // State Constraints //
   check(register.status === EMPTY);
   check(scope !== null);
@@ -304,7 +303,7 @@ advice.primitive = function (primitive, serial) {
 
 advice.closure = function (closure, serial) {
   // Parameter Constraints //
-  check(duck(["closure", "serial"], global_Array_from(arguments));
+  check(duck(["closure", "serial"], global_Array_from(arguments)));
   // State Constraints //
   check(register.status === EMPTY);
   check(scope !== null);
@@ -316,7 +315,7 @@ advice.closure = function (closure, serial) {
 
 advice.builtin = function (builtin, bname) {
   // Parameter Constraints //
-  check(duck(["builtin", "builtin-name", "serial"], global_Array_from(arguments));
+  check(duck(["builtin", "builtin-name", "serial"], global_Array_from(arguments)));
   // Inter-Parameter Constraints //
   check(global_Object_is(aran["builtin-object"][bname], builtin));
   // State Constraints //
@@ -329,7 +328,7 @@ advice.builtin = function (builtin, bname) {
 
 advice.parameter = function (value, pname, serial) {
   // Parameter Constraints //
-  check(duck(["value", "parameter-name", "serial"], global_Array_from(arguments));
+  check(duck(["value", "parameter-name", "serial"], global_Array_from(arguments)));
   // State Constraints //
   check(register.status === EMPTY);
   check(scope !== null);
@@ -345,7 +344,7 @@ advice.parameter = function (value, pname, serial) {
 
 advice.drop = function (value, serial) {
   // Parameter Constraints //
-  check(duck(["value", "serial"], global_Array_from(arguments));
+  check(duck(["value", "serial"], global_Array_from(arguments)));
   // State Constraints //
   check(register.status === EMPTY);
   check(scope !== null);
@@ -357,7 +356,7 @@ advice.drop = function (value, serial) {
 
 advice.test = function (value, serial) {
   // Parameter Constraints //
-  check(duck(["value", "serial"], global_Array_from(arguments));
+  check(duck(["value", "serial"], global_Array_from(arguments)));
   // State Constraints //
   check(register.status === EMPTY);
   check(scope !== null);
@@ -368,9 +367,9 @@ advice.test = function (value, serial) {
   return value;
 };
 
-advice.write = function (value, identifier, serial) => {
+advice.write = function (value, identifier, serial) {
   // Parameter Constraints //
-  check(duck(["value", "identifier", "serial"], global_Array_from(arguments));
+  check(duck(["value", "identifier", "serial"], global_Array_from(arguments)));
   // State Constraints //
   check(register.status === EMPTY);
   check(scope !== null);
@@ -384,7 +383,7 @@ advice.write = function (value, identifier, serial) => {
 
 advice.eval = function (value, serial) {
   // Parameter Constraints //
-  check(duck(["value", "serial"], global_Array_from(arguments));
+  check(duck(["value", "serial"], global_Array_from(arguments)));
   // State Constraints //
   check(register.status === EMPTY);
   check(scope !== null);
@@ -394,14 +393,14 @@ advice.eval = function (value, serial) {
   // stack.length -= 1;
   const script1 = "" + value;
   const estree1 = Acorn.parse(script1);
-  const estree2 = aran.instrument(estree1, serial);
+  const estree2 = aran.weave(estree1, serial);
   const script2 =  Astring.generate(estree2);
   return script2;
 };
 
 advice.throw = function (value, serial) {
   // Parameter Constraints //
-  check(duck(["value", "serial"], global_Array_from(arguments));
+  check(duck(["value", "serial"], global_Array_from(arguments)));
   // State Constraints //
   check(register.status === EMPTY);
   check(scope !== null);
@@ -416,7 +415,7 @@ advice.throw = function (value, serial) {
 
 advice.return = function (value, serial) {
   // Parameter Constraints //
-  check(duck(["value", "serial"], global_Array_from(arguments));
+  check(duck(["value", "serial"], global_Array_from(arguments)));
   // State Constraints //
   check(register.status === EMPTY);
   check(scope !== null);
@@ -604,7 +603,7 @@ advice.continue = function (label, serial) {
 
 advice.completion = function (serial) {
   // Parameter Constraints //
-  check(duck(["serial"], global_Array_from(arguments));
+  check(duck(["serial"], global_Array_from(arguments)));
   // State Constraints //
   check(register.status === EMPTY);
   check(scope !== null);
@@ -615,7 +614,7 @@ advice.completion = function (serial) {
 
 advice.failure = function (value, serial) {
   // Parameter Constraints //
-  check(duck(["value", "serial"], global_Array_from(arguments));
+  check(duck(["value", "serial"], global_Array_from(arguments)));
   // State Constraints //
   check(register.status === THROW);
   check(register.value === value);
@@ -706,7 +705,7 @@ advice.enter = function (tag, labels, parameters, identifiers, serial) {
 
 advice.leave = function (tag, serial) {
   // Parameter Constraints //
-  check(duck(["tag", "serial"], global_Array_from(arguments));
+  check(duck(["tag", "serial"], global_Array_from(arguments)));
   // State Constraints //
   if (tag === "closure" || tag === "program" || tag === "eval") {
     check(register.status === RETURN || register.status === THROW);
@@ -718,7 +717,7 @@ advice.leave = function (tag, serial) {
   check(scope["%serial"] === serial);
   check(scope["%stack-length"] === stack.length);
   if (register.status === CONTINUE) {
-    if (includes(scope["%labels"], register.value) {
+    if (includes(scope["%labels"], register.value)) {
       check(tag === "while");
     }
   }
