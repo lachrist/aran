@@ -19,7 +19,8 @@
     "esvalid": "^1.1.0",
     "linvail": "6.0.12",
     "otiluke": "5.4.3",
-    "sandbox-scenario": "0.0.13"
+    "sandbox-scenario": "0.0.13",
+    "tap": "^14.10.7"
   },
   "keywords": [
     "JavaScript",

@@ -213,6 +213,20 @@ advice.eval = (base, serial) => {
 //   return {register, fetch};
 // }) ());
 
+advice.next = () => {
+  
+};
+
+advice.value = (value, serial) => {
+  
+};
+
+advice.done = (boolean, serial) => {
+  
+};
+
+
+
 advice.enter = (tag, parameters, labels, identifiers1, identifiers2, serial) => {
   if (tag === "closure" || tag === "program") {
     callstack.push(scope);
@@ -226,7 +240,7 @@ advice.enter = (tag, parameters, labels, identifiers1, identifiers2, serial) => 
   scope[SymbolTag] = tag;
   scope[SymbolStackLength] = stack.length;
   if (tag === "closure") {
-    if (callstack[callstack.length-1][SymbolTag] === "external") {
+    if (callstack[calls§tack.length-1][SymbolTag] === "external") {
       scope["@callee"] = mirror(parameter["callee"], "enter-closure-callee", serial);
       scope["@new.target"] = mirror(parameter["new.target"], "enter-closure-(new.target)", serial);
       scope["@this"] = mirror(parameter["this"], "enter-closure-this", serial);
