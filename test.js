@@ -17,6 +17,7 @@ if (process.argv.length > 2) {
     "lib/lang/build",
     "lib/normalize/state",
     "lib/normalize/build",
+    "lib/normalize/query/access",
     "lib/normalize/object",
     "lib/normalize/scope/core",
     "lib/normalize/scope/layer",
