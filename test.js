@@ -23,8 +23,8 @@ if (process.argv.length > 2) {
     "lib/normalize/build",
     "lib/normalize/object",
     "lib/normalize/scope/core",
-    "lib/normalize/scope/layer",
-    "lib/normalize/scope/container",
+    "lib/normalize/scope/meta",
+    "lib/normalize/scope/base",
     "lib/normalize/scope/index"
   ].forEach((path) => {
     ChildProcess.execSync("nyc --check-coverage --branches 100 --functions 100 --lines 100 --statements 100 --include " + path + ".js node " + path + ".test.js", {
