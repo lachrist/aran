@@ -12,7 +12,7 @@
   "license": "MIT",
   "dependencies": {
     "acorn": "^7.2.0",
-    "array-lite": "0.1.1"
+    "array-lite": "^0.1.4"
   },
   "devDependencies": {
     "astring": "^1.3.1",
