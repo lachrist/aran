@@ -46,6 +46,14 @@ Assert.deepEqual(Parser.parse("123e+2", {startRule:"Number"}), 123e+2);
 Assert.throws(() => Parser.parse("123e", {startRule:"Number"}), Parser.SyntaxError);
 
 ////////////
+// BigInt //
+////////////
+
+Assert.deepEqual(Parser.parse("0n", {startRule:"BigInt"}), 0n);
+Assert.deepEqual(Parser.parse("0000n", {startRule:"BigInt"}), 0n);
+Assert.deepEqual(Parser.parse("123n", {startRule:"BigInt"}), 123n);
+
+////////////
 // String //
 ////////////
 
@@ -116,27 +124,27 @@ Assert.deepEqual(Parser.parse(" ( 123 ) ", {startRule:"StartExpression"}), ["pri
 ///////////////
 
 // Lift //
-Assert.deepEqual(Parser.parse(" 123 ; ", {startRule:"StartStatement"}), [["Lift", ["primitive", 123]]]);
+Assert.deepEqual(Parser.parse(" 123 ; ", {startRule:"StartStatement"}), ["Lift", ["primitive", 123]]);
 // Return //
-Assert.deepEqual(Parser.parse(" return 123 ; ", {startRule:"StartStatement"}), [["Return", ["primitive", 123]]]);
-Assert.deepEqual(Parser.parse(" return123 ; ", {startRule:"StartStatement"}), [["Lift", ["read", "return123"]]]);
+Assert.deepEqual(Parser.parse(" return 123 ; ", {startRule:"StartStatement"}), ["Return", ["primitive", 123]]);
+Assert.deepEqual(Parser.parse(" return123 ; ", {startRule:"StartStatement"}), ["Lift", ["read", "return123"]]);
 // Break //
-Assert.deepEqual(Parser.parse(" break foo ; ", {startRule:"StartStatement"}), [["Break", "foo"]]);
-Assert.deepEqual(Parser.parse(" breakfoo ; ", {startRule:"StartStatement"}), [["Lift", ["read", "breakfoo"]]]);
+Assert.deepEqual(Parser.parse(" break foo ; ", {startRule:"StartStatement"}), ["Break", "foo"]);
+Assert.deepEqual(Parser.parse(" breakfoo ; ", {startRule:"StartStatement"}), ["Lift", ["read", "breakfoo"]]);
 // Continue //
-Assert.deepEqual(Parser.parse(" continue foo ; ", {startRule:"StartStatement"}), [["Continue", "foo"]]);
-Assert.deepEqual(Parser.parse(" continuefoo ; ", {startRule:"StartStatement"}), [["Lift", ["read", "continuefoo"]]]);
+Assert.deepEqual(Parser.parse(" continue foo ; ", {startRule:"StartStatement"}), ["Continue", "foo"]);
+Assert.deepEqual(Parser.parse(" continuefoo ; ", {startRule:"StartStatement"}), ["Lift", ["read", "continuefoo"]]);
 // Debugger //
-Assert.deepEqual(Parser.parse("  debugger ; ", {startRule:"StartStatement"}), [["Debugger"]]);
+Assert.deepEqual(Parser.parse("  debugger ; ", {startRule:"StartStatement"}), ["Debugger"]);
 // Lone //
-Assert.deepEqual(Parser.parse(" foo : bar : { let x ; } ", {startRule:"StartStatement"}), [["Lone", ["foo", "bar"], ["BLOCK", ["x"], []]]]);
-Assert.deepEqual(Parser.parse(" { __proto__ : 123 } ; ", {startRule:"StartStatement"}), [["Lift", ["object", ["primitive", 123], []]]]);
+Assert.deepEqual(Parser.parse(" foo : bar : { let x ; } ", {startRule:"StartStatement"}), ["Lone", ["foo", "bar"], ["BLOCK", ["x"], []]]);
+Assert.deepEqual(Parser.parse(" { __proto__ : 123 } ; ", {startRule:"StartStatement"}), ["Lift", ["object", ["primitive", 123], []]]);
 // If //
-Assert.deepEqual(Parser.parse(" foo : bar : if ( 123 ) { let x ; } else { let y ; } ", {startRule:"StartStatement"}), [["If", ["foo", "bar"], ["primitive", 123], ["BLOCK", ["x"], []], ["BLOCK", ["y"], []]]]);
+Assert.deepEqual(Parser.parse(" foo : bar : if ( 123 ) { let x ; } else { let y ; } ", {startRule:"StartStatement"}), ["If", ["foo", "bar"], ["primitive", 123], ["BLOCK", ["x"], []], ["BLOCK", ["y"], []]]);
 // While //
-Assert.deepEqual(Parser.parse(" foo : bar : while ( 123 ) { let x ; } ", {startRule:"StartStatement"}), [["While", ["foo", "bar"], ["primitive", 123], ["BLOCK", ["x"], []]]]);
+Assert.deepEqual(Parser.parse(" foo : bar : while ( 123 ) { let x ; } ", {startRule:"StartStatement"}), ["While", ["foo", "bar"], ["primitive", 123], ["BLOCK", ["x"], []]]);
 // Try //
-Assert.deepEqual(Parser.parse(" foo : bar : try { let x ; } catch { let y ; } finally { let z ; } ", {startRule:"StartStatement"}), [["Try", ["foo", "bar"], ["BLOCK", ["x"], []], ["BLOCK", ["y"], []], ["BLOCK", ["z"], []]]]);
+Assert.deepEqual(Parser.parse(" foo : bar : try { let x ; } catch { let y ; } finally { let z ; } ", {startRule:"StartStatement"}), ["Try", ["foo", "bar"], ["BLOCK", ["x"], []], ["BLOCK", ["y"], []], ["BLOCK", ["z"], []]]);
 
 ///////////
 // Block //

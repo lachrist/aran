@@ -66,7 +66,7 @@ StartExpression = e:Expression _ { return e }
 
 StartBlock = b:Block _ { return b }
 
-StartStatement = ss:Statement* _ { return ss }
+StartStatement = s:Statement _ { return s }
 
 /////////////
 // Unicode //
@@ -155,6 +155,8 @@ Label = ESIdentifier
 String = JSONString
 
 Number = JSONNumber
+
+BigInt = s:$([0-9]+) "n" { return BigInt(s) }
 
 ///////////
 // Block //
@@ -253,6 +255,7 @@ NonApplyNonBinaryExpression
   / /* Primitive */   _ "null" __                                                       { return ["primitive", null] }
   / /* Primitive */   _ "false" __                                                      { return ["primitive", false] }
   / /* Primitive */   _ "true" __                                                       { return ["primitive", true] }
+  / /* Primitive */   _ i:BigInt                                                        { return ["primitive", i] }
   / /* Primitive */   _ n:Number                                                        { return ["primitive", n] }
   / /* Primitive */   _ s:String                                                        { return ["primitive", s] }
   / /* Builtin */     _ "#" _ s:String                                                  { return ["builtin", s] }
