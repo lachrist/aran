@@ -13,19 +13,18 @@ if (process.argv.length > 2) {
   });
 } else {
   [
-    "lib/lang/syntax",
-    "lib/lang/build",
+    "lib/lang",
     "lib/normalize/query/eval",
     "lib/normalize/query/hoisting",
     "lib/normalize/query/access",
     "lib/normalize/query/index",
     "lib/normalize/state",
-    "lib/normalize/build",
-    "lib/normalize/object",
-    "lib/normalize/scope/core",
-    "lib/normalize/scope/meta",
-    "lib/normalize/scope/base",
-    "lib/normalize/scope/index"
+    "lib/normalize/lang",
+    "lib/normalize/object"
+    // "lib/normalize/scope/core",
+    // "lib/normalize/scope/meta",
+    // "lib/normalize/scope/base",
+    // "lib/normalize/scope/index"
   ].forEach((path) => {
     ChildProcess.execSync("nyc --check-coverage --branches 100 --functions 100 --lines 100 --statements 100 --include " + path + ".js node " + path + ".test.js", {
       __proto__: null,
