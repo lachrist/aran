@@ -15,6 +15,8 @@ if (process.argv.length > 2) {
   [
     "lib/lang",
     "lib/normalize/query/eval",
+    "lib/normalize/query/other",
+    "lib/normalize/query/valuation",
     "lib/normalize/query/hoisting",
     "lib/normalize/query/access",
     "lib/normalize/query/index",
