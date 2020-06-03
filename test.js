@@ -14,6 +14,7 @@ if (process.argv.length > 2) {
 } else {
   [
     "lib/lang",
+    "lib/stratum",
     "lib/normalize/query/eval",
     "lib/normalize/query/other",
     "lib/normalize/query/valuation",
@@ -23,7 +24,6 @@ if (process.argv.length > 2) {
     "lib/normalize/state",
     "lib/normalize/lang",
     "lib/normalize/object",
-    "lib/normalize/scope/stratum",
     "lib/normalize/scope/inner",
     "lib/normalize/scope/outer",
     "lib/normalize/scope/meta",
