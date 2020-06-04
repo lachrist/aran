@@ -23,7 +23,7 @@ if (process.argv.length > 2) {
   [
     "lib/lang",
     "lib/test/parser/index",
-    // "lib/test/match",
+    "lib/test/match",
     "lib/test/index",
     "lib/stratum",
     "lib/normalize/query/eval",
