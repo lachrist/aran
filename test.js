@@ -8,22 +8,22 @@ if (process.argv.length > 2) {
       __proto__: null,
       stdio: "inherit"
     });
-    ChildProcess.execSync("nyc --reporter=html --report-dir=coverage --include " + process.argv[2] + ".js node " + process.argv[2] + ".test.js", {
-      __proto__: null,
-      stdio: "inherit"
-    });
-    ChildProcess.execSync("open coverage/index.html", {
-      __proto__: null,
-      stdio: "inherit"
-    });
   } catch (error) {
     process.exit(1);
   }
+  ChildProcess.execSync("nyc --reporter=html --report-dir=coverage --include " + process.argv[2] + ".js node " + process.argv[2] + ".test.js", {
+    __proto__: null,
+    stdio: "inherit"
+  });
+  ChildProcess.execSync("open coverage/index.html", {
+    __proto__: null,
+    stdio: "inherit"
+  });
 } else {
   [
     "lib/lang",
     "lib/test/parser/index",
-    "lib/test/match",
+    // "lib/test/match",
     "lib/test/index",
     "lib/stratum",
     "lib/normalize/query/eval",
@@ -42,10 +42,19 @@ if (process.argv.length > 2) {
     "lib/normalize/scope/index",
     "lib/normalize/completion"
   ].forEach((path) => {
-    ChildProcess.execSync("nyc --check-coverage --branches 100 --functions 100 --lines 100 --statements 100 --include " + path + ".js node " + path + ".test.js", {
-      __proto__: null,
-      stdio: "inherit"
-    });
+    console.log(`\n${path}...`);
+    try {
+      ChildProcess.execSync(`node ${path}.test.js`, {
+        __proto__: null,
+        stdio: "inherit"
+      });
+      ChildProcess.execSync(`nyc --check-coverage --branches 100 --functions 100 --lines 100 --statements 100 --include ${path}.js node ${path}.test.js`, {
+        __proto__: null,
+        stdio: "inherit"
+      });
+    } catch (error) {
+      process.exit(1);
+    }
   });
 }
 
