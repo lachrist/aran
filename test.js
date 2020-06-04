@@ -3,17 +3,28 @@
 const ChildProcess = require("child_process");
 
 if (process.argv.length > 2) {
-  ChildProcess.execSync("nyc --reporter=html --report-dir=coverage --include " + process.argv[2] + ".js node " + process.argv[2] + ".test.js", {
-    __proto__: null,
-    stdio: "inherit"
-  });
-  ChildProcess.execSync("open coverage/index.html", {
-    __proto__: null,
-    stdio: "inherit"
-  });
+  try {
+    ChildProcess.execSync("node " + process.argv[2] + ".test.js", {
+      __proto__: null,
+      stdio: "inherit"
+    });
+    ChildProcess.execSync("nyc --reporter=html --report-dir=coverage --include " + process.argv[2] + ".js node " + process.argv[2] + ".test.js", {
+      __proto__: null,
+      stdio: "inherit"
+    });
+    ChildProcess.execSync("open coverage/index.html", {
+      __proto__: null,
+      stdio: "inherit"
+    });
+  } catch (error) {
+    process.exit(1);
+  }
 } else {
   [
     "lib/lang",
+    "lib/test/parser/index",
+    "lib/test/match",
+    "lib/test/index",
     "lib/stratum",
     "lib/normalize/query/eval",
     "lib/normalize/query/other",
