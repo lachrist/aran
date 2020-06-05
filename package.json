@@ -25,6 +25,7 @@
     "pegjs": "^0.10.0"
   },
   "dependencies": {
-    "array-lite": "^0.1.5"
+    "array-lite": "^0.1.5",
+    "node": "^14.4.0"
   }
 }
