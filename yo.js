@@ -22,11 +22,10 @@ if (process.argv.length > 2) {
 } else {
   [
     "lib/tree",
-    "lib/lang/parse/index",
-    "lib/lang/generate",
+    // "lib/lang/parse/index",
+    // "lib/lang/generate",
     "lib/lang/index",
     "lib/match",
-    "lib/stratum",
     "lib/normalize/query/eval",
     "lib/normalize/query/other",
     "lib/normalize/query/valuation",
