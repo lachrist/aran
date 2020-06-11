@@ -24,8 +24,8 @@ if (process.argv.length > 2) {
     "lib/tree",
     "lib/lang/parse/index",
     "lib/lang/generate",
+    "lib/lang/match",
     "lib/lang/index",
-    "lib/match",
     "lib/stratum",
     "lib/normalize/query/eval",
     "lib/normalize/query/other",
@@ -41,7 +41,8 @@ if (process.argv.length > 2) {
     "lib/normalize/scope/meta",
     "lib/normalize/scope/base",
     "lib/normalize/scope/index",
-    "lib/normalize/completion"
+    "lib/normalize/completion",
+    "lib/normalize/visit/pattern"
   ].forEach((path) => {
     console.log(`\n${path}...`);
     try {
