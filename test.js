@@ -35,7 +35,7 @@ if (process.argv.length > 2) {
     "lib/normalize/query/index",
     "lib/normalize/state",
     "lib/normalize/tree",
-    "lib/normalize/object",
+    "lib/normalize/mop",
     "lib/normalize/scope/inner",
     "lib/normalize/scope/outer",
     "lib/normalize/scope/meta",
