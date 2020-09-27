@@ -45,8 +45,8 @@ if (process.argv.length > 2) {
     "lib/normalize/visit/common/assign",
     "lib/normalize/visit/common/closure",
     "lib/normalize/visit/common/class",
-    "lib/normalize/visit/common/index"
-    // "lib/normalize/visit/expression",
+    "lib/normalize/visit/common/index",
+    "lib/normalize/visit/expression"
     // "lib/normalize/visit/statement",
     // "lib/normalize/visit/index",
     // "lib/normalize/index"
