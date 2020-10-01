@@ -42,14 +42,14 @@ if (process.argv.length > 2) {
     "lib/normalize/scope/base",
     "lib/normalize/scope/index",
     "lib/normalize/completion",
-    "lib/normalize/visit/common/assign",
-    "lib/normalize/visit/common/closure",
-    "lib/normalize/visit/common/class",
-    "lib/normalize/visit/common/index",
-    "lib/normalize/visit/expression"
-    // "lib/normalize/visit/statement",
-    // "lib/normalize/visit/index",
-    // "lib/normalize/index"
+    "lib/normalize/program/common/assign",
+    "lib/normalize/program/common/closure",
+    "lib/normalize/program/common/class",
+    "lib/normalize/program/common/index",
+    "lib/normalize/program/expression",
+    "lib/normalize/program/statement",
+    "lib/normalize/program/index",
+    "lib/normalize/index"
   ].forEach((path) => {
     console.log(`\n${path}...`);
     try {
