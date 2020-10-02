@@ -22,6 +22,7 @@ if (process.argv.length > 2) {
 } else {
   [
     "lib/tree",
+    "lib/reserved-words",
     "lib/lang/parse/index",
     "lib/lang/generate",
     "lib/lang/match",
