@@ -22,7 +22,6 @@ if (process.argv.length > 2) {
 } else {
   [
     "lib/tree",
-    "lib/reserved-words",
     "lib/lang/parse/index",
     "lib/lang/generate",
     "lib/lang/match",
@@ -36,7 +35,7 @@ if (process.argv.length > 2) {
     "lib/normalize/query/index",
     "lib/normalize/state",
     "lib/normalize/tree",
-    "lib/normalize/mop",
+    "lib/normalize/builtin",
     "lib/normalize/scope/inner",
     "lib/normalize/scope/outer",
     "lib/normalize/scope/meta",
