@@ -64,7 +64,8 @@ if (process.argv.length > 2) {
     "lib/normalize/program/statement",
     "lib/normalize/program/index",
     "lib/normalize/index",
-    "lib/instrument"
+    "lib/instrument",
+    "lib/generate"
   ].forEach((path) => {
     console.log(`\n${path}...`);
     try {

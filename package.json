@@ -26,6 +26,10 @@
   "dependencies": {
     "acorn": "^8.0.1",
     "array-lite": "^0.1.5",
+    "colors": "^1.4.0",
+    "diff": "^4.0.2",
+    "escodegen": "^2.0.0",
+    "esvalid": "^1.1.0",
     "node": "^14.4.0"
   }
 }
