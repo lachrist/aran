@@ -70,10 +70,10 @@ if (process.argv.length > 2) {
   ].forEach((path) => {
     console.log(`\n${path}...`);
     try {
-      ChildProcess.execSync(`node ${path}.test.js`, {
-        __proto__: null,
-        stdio: "inherit"
-      });
+      // ChildProcess.execSync(`node ${path}.test.js`, {
+      //   __proto__: null,
+      //   stdio: "inherit"
+      // });
       ChildProcess.execSync(`nyc --reporter=text-summary --check-coverage --branches 100 --functions 100 --lines 100 --statements 100 --include ${path}.js node ${path}.test.js`, {
         __proto__: null,
         stdio: "inherit"
