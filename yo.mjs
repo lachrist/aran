@@ -1,26 +1,10 @@
-
-// f = 123;
-// let foo = 123;
-// export var foo = 123, foo = 456;
-// {foo};
-
-// import * as foo from "./swag.mjs"
-
-// import * as foo from "./yo.mjs";
-// console.log(foo);
-// export {foo as foo};
-// //
-// // import * as foo from "./yo.mjs"
-//
-// console.log(foo);
-
-// // import * as swag from "./swag.mjs";
-// // console.log("yo", Object.getOwnPropertyDescriptors(swag));
-// // console.log("yo", Reflect.isExtensible(swag));
-// console.log(foo);
-// import foo from "./swag.mjs";
-// console.log(foo);
-// // export * from "./swag.mjs";
-// //
-// //
-// // export {swag as swag};
+Lang._match_block(Meta.EXTEND_STATIC(Meta._make_root(), [], (scope) => {
+  return Meta.ImportBox(scope, "x", "foobar", (box) => {
+    Asser.throws(() => Meta.set(scope, box, Tree.primitive(123)), new global.Error("Cannot set a constant box"));
+    return Tree.Lift(Meta.get(scope, box)),
+  });
+}), Lang.PARSE_BLOCK(`{
+  let $_x_1_1;
+  import * as $_x_1_1 fro "foobar";
+  $_x_1_1;
+}`), Assert);
