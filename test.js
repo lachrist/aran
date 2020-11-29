@@ -62,6 +62,7 @@ if (process.argv.length > 2) {
     "lib/normalize/program/common/class",
     "lib/normalize/program/common/index",
     "lib/normalize/program/expression",
+    "lib/normalize/program/hoisted-statement",
     "lib/normalize/program/statement",
     "lib/normalize/program/index",
     "lib/normalize/index",
