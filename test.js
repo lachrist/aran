@@ -35,6 +35,7 @@ if (process.argv.length > 2) {
   };
   loop(Path.join(__dirname, "lib"));
   [
+    "lib/throw",
     "lib/parse-eval",
     "lib/parse",
     "lib/tree",
