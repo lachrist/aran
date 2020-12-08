@@ -1,6 +1,9 @@
 // import * as yo from  "./yo.mjs";
 // console.log(yo);
 
-export {x as foo} from "./yo.mjs";
+console.log("yolo1");
 
-console.log(x);
+const yo = import("./yo.mjs");
+
+
+console.log("yolo2", yo);

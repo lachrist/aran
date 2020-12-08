@@ -1,2 +1,8 @@
-// export let x = 1, y = (x = 2);
-eval("import.meta");
+
+console.log("yo1");
+
+// throw "boum";
+
+export let x = 123;
+
+console.log("yo2");
