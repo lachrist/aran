@@ -64,6 +64,7 @@ if (process.argv.length > 2) {
     "lib/transpile/visit/closure",
     "lib/transpile/visit/class",
     "lib/transpile/visit/expression",
+    "lib/transpile/visit/prelude-statement",
     "lib/transpile/visit/hoisted-statement",
     "lib/transpile/visit/statement",
     "lib/transpile/visit/block",
