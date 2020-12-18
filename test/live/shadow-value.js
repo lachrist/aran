@@ -36,8 +36,8 @@ module.exports = (script) => {
 advice.primitive = (value, serial) => {
   return input("primitive", value, serial);
 };
-advice.builtin = (value, name, serial) => {
-  return input("builtin-("+name+")", value, serial);
+advice.intrinsic = (value, name, serial) => {
+  return input("intrinsic-("+name+")", value, serial);
 }
 advice.argument = (value, name, serial) => {
   if (name === "new.target" || name === "length")

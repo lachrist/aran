@@ -49,7 +49,7 @@ exports.BLOCK = ({1:labels, 2:identifiers, 3:statements, 4:serial}, options) => 
                     (identifier2) => Build.Assign(
                       identifier2,
                       Build.apply(
-                        Build.builtin("Reflect.get"),
+                        Build.intrinsic("Reflect.get"),
                         Build.primitive(void 0),
                         [
                           Build.read(identifier1),

@@ -13,7 +13,7 @@ if (process.argv.length > 2) {
   } catch (error) {
     process.exit(1);
   }
-  ChildProcess.execSync("nyc --reporter=html --report-dir=coverage --include " + process.argv[2] + ".js node " + process.argv[2] + ".test.js", {
+  ChildProcess.execSync(`nyc --reporter=html --report-dir=coverage --include ${process.argv[2]}.js node ${process.argv[2]}.test.js`, {
     __proto__: null,
     stdio: "inherit"
   });
@@ -35,26 +35,26 @@ if (process.argv.length > 2) {
   };
   loop(Path.join(__dirname, "lib"));
   [
-    "lib/throw",
-    "lib/parse-local",
-    "lib/parse",
-    "lib/tree",
-    "lib/stratum",
-    "lib/lang/parse/index",
-    "lib/lang/generate",
-    "lib/lang/match",
-    "lib/lang/index",
-    "lib/transpile/query/hoisting",
-    "lib/transpile/query/eval",
-    "lib/transpile/query/other",
-    "lib/transpile/query/index",
-    "lib/transpile/state",
-    "lib/transpile/tree",
-    "lib/transpile/builtin",
-    "lib/transpile/scope/layer-1-core",
-    "lib/transpile/scope/layer-2-split",
-    "lib/transpile/scope/layer-3-meta",
-    "lib/transpile/scope/layer-4-base",
+    // "lib/throw",
+    // "lib/parse",
+    // "lib/parse-external",
+    // "lib/tree",
+    // "lib/stratum",
+    // "lib/lang/parse/index",
+    // "lib/lang/generate",
+    // "lib/lang/match",
+    // "lib/lang/index",
+    // "lib/transpile/query/hoisting",
+    // "lib/transpile/query/eval",
+    // "lib/transpile/query/other",
+    // "lib/transpile/query/index",
+    // "lib/transpile/state",
+    // "lib/transpile/tree",
+    // "lib/transpile/intrinsic",
+    // "lib/transpile/scope/layer-1-core",
+    // "lib/transpile/scope/layer-2-split",
+    // "lib/transpile/scope/layer-3-meta",
+    // "lib/transpile/scope/layer-4-base",
     "lib/transpile/scope/layer-5-index",
     "lib/transpile/scope/index",
     "lib/transpile/completion",

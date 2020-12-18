@@ -51,8 +51,8 @@ advice.primitive = (value, serial) => {
   return value;
 };
 
-advice.builtin = (value, name, serial) => {
-  input("builtin-("+name+")", value, serial);
+advice.intrinsic = (value, name, serial) => {
+  input("intrinsic-("+name+")", value, serial);
   return value;
 };
 

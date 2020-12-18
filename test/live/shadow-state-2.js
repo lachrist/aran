@@ -96,8 +96,8 @@ advice.primitive = (base, serial) => {
   return base;
 };
 
-advice.builtin = (base, name, serial) => {
-  stack.push(mirror(base, "builtin-("+name+")", serial));
+advice.intrinsic = (base, name, serial) => {
+  stack.push(mirror(base, "intrinsic-("+name+")", serial));
   return base;
 };
 

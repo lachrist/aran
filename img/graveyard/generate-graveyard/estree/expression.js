@@ -22,7 +22,7 @@ exports.closure = ({1:block}, namespace) => ({
   expression: false,
   async: false});
 
-exports.builtin = ({1:name}, namespace) => ({
+exports.intrinsic = ({1:name}, namespace) => ({
   type: "MemberExpression",
   computed: true,
   object: {
@@ -33,7 +33,7 @@ exports.builtin = ({1:name}, namespace) => ({
       name: namespace },
     property: {
       type: "Identifier",
-      name: "builtins"}},
+      name: "intrinsics"}},
   property: {
     type: "Literal",
     value: name}});
@@ -129,7 +129,7 @@ exports.eval = ({1:expression}, namespace) => ({
 
 exports.construct = ({1:expression, 2:expressions}, namespace) => (
   (
-    expression[0] === "builtin" &&
+    expression[0] === "intrinsic" &&
     expression[1] === "RegExp" &&
     expressions.length === 2 &&
     expressions[0][0] === "primitive" &&
@@ -155,7 +155,7 @@ exports.construct = ({1:expression, 2:expressions}, namespace) => (
 
 exports.apply = ({1:expression1, 2:expression2, 3:expressions}, namespace) => {
   if (expression2[0] === "primitive" && expression2[1] === void 0) {
-    if (expression1[0] === "builtin" && expression1[1] === "Array.of") {
+    if (expression1[0] === "intrinsic" && expression1[1] === "Array.of") {
       return {
         type: "ArrayExpression",
         elements: ArrayLite.map(expressions, (expression) => {
@@ -163,7 +163,7 @@ exports.apply = ({1:expression1, 2:expression2, 3:expressions}, namespace) => {
         })
       };
     }
-    if (expression1[0] === "builtin" && expression1[1] === "Object.fromEntries" && expressions.length === 1) {
+    if (expression1[0] === "intrinsic" && expression1[1] === "Object.fromEntries" && expressions.length === 1) {
       const node = Visit.expression(expressions[0], namespace);
       if (node.type === "ArrayExpression" && ArrayLite.every(node.elements, (node) => node.type === "ArrayExpression" && node.elements.length === 2)) {
         return {
@@ -178,7 +178,7 @@ exports.apply = ({1:expression1, 2:expression2, 3:expressions}, namespace) => {
         };
       }
     }
-    if (expression1[0] === "builtin" && expression1[1] === "Reflect.get" && expressions.length === 2) {
+    if (expression1[0] === "intrinsic" && expression1[1] === "Reflect.get" && expressions.length === 2) {
       return {
         type: "MemberExpression",
         computed: true,
@@ -229,7 +229,7 @@ exports.apply = ({1:expression1, 2:expression2, 3:expressions}, namespace) => {
           name: namespace },
         property: {
           type: "Identifier",
-          name: "builtins"}},
+          name: "intrinsics"}},
       property: {
         type: "Literal",
         value: "Reflect.apply"}},

@@ -29,18 +29,18 @@ const RETURN = global_Symbol("return");
 const aran = Aran({
   __proto__: null,
   "advice-variable": "foo",
-  "builtin-variable": "bar"
+  "intrinsic-variable": "bar"
 });
 
 // aran.weave
 // aran.nodes
 // aran.advice-variable
-// aran.builtin-variable
+// aran.intrinsic-variable
 // 
-// aran.builtin-names
-// aran.builtin-object
-// aran.builtin-estree
-// aran.builtin-script
+// aran.intrinsic-names
+// aran.intrinsic-object
+// aran.intrinsic-estree
+// aran.intrinsic-script
 // 
 // aran.unary-operators
 // aran.unary-function
@@ -68,8 +68,8 @@ module.exports = (script1) => {
   const estree2 = aran.weave(estree1, pointcut, null);
   const script2 = Astring.generate(estree2);
   // TODO return value
-  const closure = new global_Function(aran["advice-variable"], aran["builtin-variable"], script2);
-  closure(advice, aran["builtin-object"]);
+  const closure = new global_Function(aran["advice-variable"], aran["intrinsic-variable"], script2);
+  closure(advice, aran["intrinsic-object"]);
   // State Post-Constraints //
   check(register.status === EMPTY);
   check(scope === null);
@@ -228,12 +228,12 @@ const duck = (type, value) => {
     if (type === "unary-operator") {
       return includes(aran["unary-operators"], value);
     }
-    if (type === "builtin-name") {
-      return includes(aran["builtin-names"], value);
+    if (type === "intrinsic-name") {
+      return includes(aran["intrinsic-names"], value);
     }
-    if (type === "builtin") {
-      for (let name in aran["builtin-object"]) {
-        if (aran["builtin-object"][name] === value) {
+    if (type === "intrinsic") {
+      for (let name in aran["intrinsic-object"]) {
+        if (aran["intrinsic-object"][name] === value) {
           return true;
         }
       }
@@ -313,17 +313,17 @@ advice.closure = function (closure, serial) {
   return closure;
 };
 
-advice.builtin = function (builtin, bname) {
+advice.intrinsic = function (intrinsic, bname) {
   // Parameter Constraints //
-  check(duck(["builtin", "builtin-name", "serial"], global_Array_from(arguments)));
+  check(duck(["intrinsic", "intrinsic-name", "serial"], global_Array_from(arguments)));
   // Inter-Parameter Constraints //
-  check(global_Object_is(aran["builtin-object"][bname], builtin));
+  check(global_Object_is(aran["intrinsic-object"][bname], intrinsic));
   // State Constraints //
   check(register.status === EMPTY);
   check(scope !== null);
   // Body //
-  push(stack, builtin);
-  return builtin;
+  push(stack, intrinsic);
+  return intrinsic;
 };
 
 advice.parameter = function (value, pname, serial) {

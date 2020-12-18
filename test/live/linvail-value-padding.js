@@ -67,7 +67,7 @@ advice.primitive = (primitive, serial) => {
   log(printw($$primitive), "<<", "LITERAL", serial);
   return $$primitive;
 };
-advice.builtin = (value, name, serial) => membrane.taint(capture(value));
+advice.intrinsic = (value, name, serial) => membrane.taint(capture(value));
 advice.closure = ($closure, serial) => {
   Reflect.setPrototypeOf($closure, capture(Function.prototype));
   return membrane.taint($closure);

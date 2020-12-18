@@ -43,8 +43,8 @@ exports.construct = ({1:expression, 2:expressions, 3:serial}, options) => option
     (expression) => Visit.expression(expression, options)),
   serial);
 
-exports.builtin = ({1:string, 2:serial}, options) => options.trap.builtin(
-  Build.builtin(string),
+exports.intrinsic = ({1:string, 2:serial}, options) => options.trap.intrinsic(
+  Build.intrinsic(string),
   Build.primitive(string),
   serial);
 

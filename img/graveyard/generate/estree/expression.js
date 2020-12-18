@@ -19,7 +19,7 @@ exports.closure = ({1:block}, options) => ({
       namespace: options.namespace,
       tag: "closure")}});
 
-exports.builtin = ({1:name}, options) => ({
+exports.intrinsic = ({1:name}, options) => ({
   type: "MemberExpression",
   computed: true,
   object: {

@@ -26,7 +26,7 @@ exports.closure = ({1:block}, options) => {
   }, options);
 };
 
-exports.builtin = ({1:name}, options) => {};
+exports.intrinsic = ({1:name}, options) => {};
 
 ///////////////
 // Consumers //

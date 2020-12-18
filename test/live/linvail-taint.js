@@ -115,7 +115,7 @@ advice.argument = (_value, name) => {
   return _value;
 };
 advice.primitive = (primitive, serial) => membrane.taint(primitive, "primitive");
-advice.builtin = (value, name, serial) => membrane.taint(capture(value), "builtin");
+advice.intrinsic = (value, name, serial) => membrane.taint(capture(value), "intrinsic");
 advice.closure = ($closure, serial) => {
   Reflect.setPrototypeOf($closure, capture(Function.prototype));
   internals.add($closure);

@@ -21,21 +21,21 @@ module.exports = (block, {namespace, pointcut, nodes, serials, local:boolean}) =
 const maketraps = (namespace, pointcut, nodes) => {
   const intercept = (name, expressions, serial) => Build.apply(
     Build.apply(
-      Build.builtin("Reflect.get"),
+      Build.intrinsic("Reflect.get"),
       Build.primitive(void 0),
       [
         Build.apply(
-          Build.builtin("Reflect.get"),
+          Build.intrinsic("Reflect.get"),
           Build.primitive(void 0),
           [
-            Build.builtin("global"),
+            Build.intrinsic("global"),
             Build.primitive(namespace)]),
         Build.primitive(name)]),
     Build.apply(
-      Build.builtin("Reflect.get"),
+      Build.intrinsic("Reflect.get"),
       Build.primitive(void 0),
       [
-        Build.builtin("global"),
+        Build.intrinsic("global"),
         Build.primitive(namespace)]),
     ArrayLite.concat(expression, [Build.primitive(serail)]));
   const traps = {__proto__:null};
@@ -43,7 +43,7 @@ const maketraps = (namespace, pointcut, nodes) => {
     "enter",
     // Producers //
     "closure",
-    "builtin",
+    "intrinsic",
     "primitive",
     "read",
     // Consumer //
@@ -103,7 +103,7 @@ const maketraps = (namespace, pointcut, nodes) => {
         expression1,
         expression2,
         Build.apply(
-          Build.builtin("Array.of"),
+          Build.intrinsic("Array.of"),
           Build.primitive(void 0),
           expressions)],
       serial) :
@@ -115,7 +115,7 @@ const maketraps = (namespace, pointcut, nodes) => {
       [
         expression,
         Build.apply(
-          Build.builtin("Array.of"),
+          Build.intrinsic("Array.of"),
           Build.primitive(void 0),
           expressions)],
       serial) :
@@ -127,12 +127,12 @@ const maketraps = (namespace, pointcut, nodes) => {
       [
         expression,
         Build.apply(
-          Build.builtin("Array.of"),
+          Build.intrinsic("Array.of"),
           Build.primitive(void 0),
           ArrayLite.map(
             expressionss,
             (expressions) => Build.apply(
-              Build.builtin("Array.of"),
+              Build.intrinsic("Array.of"),
               Build.primitive(void 0),
               expressions)))],
       serial) :
@@ -179,7 +179,7 @@ const visitors = {
                     (identifier2) => Build.Assign(
                       identifier2,
                       Build.apply(
-                        Build.builtin("Reflect.get"),
+                        Build.intrinsic("Reflect.get"),
                         Build.primitive(void 0),
                         [
                           Build.read(identifier1),
@@ -227,8 +227,8 @@ const visitors = {
   // Expression Producer //
   closure: (block, serial, traps) => traps.closure(
     Build.closure(block, serial)),
-  builtin: (name, serial, traps) => traps.builtin(
-    Build.builtin(name),
+  intrinsic: (name, serial, traps) => traps.intrinsic(
+    Build.intrinsic(name),
     Build.primitive(name),
     serial),
   primitive: (primitive, serial, traps) => traps.primitive(

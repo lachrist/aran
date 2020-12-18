@@ -62,7 +62,7 @@ advice.primitive = function (value, serial) {
   return value;
 };
 
-advice.builtin = function (value, name, serial) {
+advice.intrinsic = function (value, name, serial) {
   stack.push(value);
   return value;
 };

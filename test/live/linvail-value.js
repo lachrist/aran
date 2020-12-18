@@ -40,7 +40,7 @@ advice.primitive = (primitive, serial) => {
   console.log($$primitive.meta+" := "+JSON.stringify(primitive));
   return $$primitive;
 };
-advice.builtin = (value, name, serial) => membrane.taint(capture(value));
+advice.intrinsic = (value, name, serial) => membrane.taint(capture(value));
 advice.closure = ($closure, serial) => {
   Reflect.setPrototypeOf($closure, capture(Function.prototype));
   return membrane.taint($closure);

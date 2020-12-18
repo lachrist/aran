@@ -37,7 +37,7 @@ module.exports = (script1) => {
   "throw",
   "return",
   "closure",
-  "builtin",
+  "intrinsic",
   "primitive",
   "read",
   "argument",

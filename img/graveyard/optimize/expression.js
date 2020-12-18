@@ -1,12 +1,12 @@
 
 const pure = (expression) => ()
 
-const builtin = (expression) => (
+const intrinsic = (expression) => (
   (
     expression.type === "MemberExpression" &&
     expression.computed &&
     expression.object.type === "Identifier" &&
-    expression.object.name === "builtins" &&
+    expression.object.name === "intrinsics" &&
     expression.property.type === "LiteralExpression" &&
     typeof expression.property.value === "string") ?
   expression.property.value :
@@ -19,14 +19,14 @@ const isundefined = (expression) => (
 
 const elements = (expression) => (
   expression.type === "CallExpression" &&
-  builtin(expression.callee) === "Reflect.apply" &&
+  intrinsic(expression.callee) === "Reflect.apply" &&
   expression.arguments.length === 3 &&
-  builtin(expression.arguments[0]) === "Array.of" &&
+  intrinsic(expression.arguments[0]) === "Array.of" &&
   pure(expression.arguments[1]) &&
 
 exports.apply = (expression, expressions) => (
   (
-    builtin(expression) === "Reflect.apply" &&
+    intrinsic(expression) === "Reflect.apply" &&
     expressions.length === 3 &&
     isundefined(expressions[1]) &&
     
@@ -35,7 +35,7 @@ exports.apply = (expression, expressions) => (
 
       
       if (expression2[0] === "primitive" && expression2[1] === void 0) {
-        if (expression1[0] === "builtin" && expression1[1] === "Array.of") {
+        if (expression1[0] === "intrinsic" && expression1[1] === "Array.of") {
           return {
             type: "ArrayExpression",
             elements: ArrayLite.map(expressions, (expression) => {
@@ -43,7 +43,7 @@ exports.apply = (expression, expressions) => (
             })
           };
         }
-        if (expression1[0] === "builtin" && expression1[1] === "Object.fromEntries" && expressions.length === 1) {
+        if (expression1[0] === "intrinsic" && expression1[1] === "Object.fromEntries" && expressions.length === 1) {
           const node = Visit.expression(expressions[0], namespace);
           if (node.type === "ArrayExpression" && ArrayLite.every(node.elements, (node) => node.type === "ArrayExpression" && node.elements.length === 2)) {
             return {
@@ -58,7 +58,7 @@ exports.apply = (expression, expressions) => (
             };
           }
         }
-        if (expression1[0] === "builtin" && expression1[1] === "Reflect.get" && expressions.length === 2) {
+        if (expression1[0] === "intrinsic" && expression1[1] === "Reflect.get" && expressions.length === 2) {
           return {
             type: "MemberExpression",
             computed: true,
@@ -109,7 +109,7 @@ exports.apply = (expression, expressions) => (
               name: namespace },
             property: {
               type: "Identifier",
-              name: "builtins"}},
+              name: "intrinsics"}},
           property: {
             type: "Literal",
             value: "Reflect.apply"}},

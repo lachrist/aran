@@ -9,12 +9,12 @@ const global_JSON_Stringify = global.JSON.stringify;
 const global_Reflect_getOwnPropertyDescriptor = global.Reflect.getOwnPropertyDescriptor;
 const global_Reflect_ownKeys = global.Reflect.ownKeys;
 
-const builtins = (
+const intrinsics = (
   "{\n" +
   "  __proto__: null,\n" +
   ArrayLite.join(
     ArrayLite.map(
-      Syntax["builtin-name"],
+      Syntax["intrinsic-name"],
       (name) => (
         name === "global" ?
         "  \"global\": (new Function(\"return this\"))()," :
@@ -78,7 +78,7 @@ const estree = (script) => {
 Fs.writeFileSync(
   Path.join(__dirname, "lib", "live2.js"),
   (
-    "exports.builtins = " + builtins + ";\n\n" +
+    "exports.intrinsics = " + intrinsics + ";\n\n" +
     "exports.unary = " + unary + ";\n\n" +
     "exports.binary = " + binary + ";\n\n" +
     "exports.object = " + object + ";\n\n"),
@@ -87,7 +87,7 @@ Fs.writeFileSync(
 Fs.writeFileSync(
   Path.join(__dirname, "lib", "dead.js"),
   (
-    "exports.builtins = " + estree(builtins) + "\n\n" +
+    "exports.intrinsics = " + estree(intrinsics) + "\n\n" +
     "exports.unary = " + estree(unary) + "\n\n" +
     "exports.binary = " + estree(binary) + "\n\n" +
     "exports.object = " + estree(object) + "\n\n"),

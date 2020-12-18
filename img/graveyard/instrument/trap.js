@@ -11,21 +11,21 @@ module.exports = (namespace, pointcut, nodes) => {
 
   const intercept = (name, expressions, serial) => Build.apply(
     Build.apply(
-      Build.builtin("Reflect.get"),
+      Build.intrinsic("Reflect.get"),
       Build.primitive(void 0),
       [
         Build.apply(
-          Build.builtin("Reflect.get"),
+          Build.intrinsic("Reflect.get"),
           Build.primitive(void 0),
           [
-            Build.builtin("global"),
+            Build.intrinsic("global"),
             Build.primitive(namespace)]),
         Build.primitive(name)]),
     Build.apply(
-      Build.builtin("Reflect.get"),
+      Build.intrinsic("Reflect.get"),
       Build.primitive(void 0),
       [
-        Build.builtin("global"),
+        Build.intrinsic("global"),
         Build.primitive(namespace)]),
     ArrayLite.concat(expression, [Build.primitive(serail)]));
 
@@ -35,7 +35,7 @@ module.exports = (namespace, pointcut, nodes) => {
     // Producers //
     "enter",
     "closure",
-    "builtin",
+    "intrinsic",
     "primitive",
     "read",
     // Consumer //
@@ -99,7 +99,7 @@ module.exports = (namespace, pointcut, nodes) => {
         expression1,
         expression2,
         Build.apply(
-          Build.builtin("Array.of"),
+          Build.intrinsic("Array.of"),
           Build.primitive(void 0),
           expressions)],
       serial) :
@@ -112,7 +112,7 @@ module.exports = (namespace, pointcut, nodes) => {
       [
         expression,
         Build.apply(
-          Build.builtin("Array.of"),
+          Build.intrinsic("Array.of"),
           Build.primitive(void 0),
           expressions)],
       serial) :
@@ -125,12 +125,12 @@ module.exports = (namespace, pointcut, nodes) => {
       [
         expression,
         Build.apply(
-          Build.builtin("Array.of"),
+          Build.intrinsic("Array.of"),
           Build.primitive(void 0),
           ArrayLite.map(
             expressionss,
             (expressions) => Build.apply(
-              Build.builtin("Array.of"),
+              Build.intrinsic("Array.of"),
               Build.primitive(void 0),
               expressions)))],
       serial) :

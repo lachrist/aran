@@ -20,7 +20,7 @@ In the near future, I will not add new features but will correct reported bugs.
 3. [Limitations](#limitations)
 4. [API](#api)
 5. [Advice](#advice)
-6. [Builtins](#builtins)
+6. [Intrinsics](#intrinsics)
 7. [Predefined Values](#predefined-values)
 8. [Known Heisenbugs](#known-heisenbugs)
 9. [Acknowledgements](#acknowledgments)
@@ -305,11 +305,11 @@ Name          | Original              | Instrumented
 `debugger`    | `debugger;`           | `META.debugger(@serial); debugger;`
 `enter`       | `l: { let x; ... }`   | `l : { META.enter("block", ["l"], ["x"], @serial); ... }`
 `leave`       | `{ ... }`             | `{ ... META.leave(@serial); }`
-`program`     | `...` (program)       | `program(META.builtins.global, @serial); ...`
+`program`     | `...` (program)       | `program(META.intrinsics.global, @serial); ...`
 *Modifiers*   |                       |
 `abrupt`      | `function () { ... }` | `... function callee () { ... try { ... } catch (error) { throw META.abrupt(error, @serial); } ... } ...`
 `argument`    | `function () { ... }` | `... function callee () { ... META.argument(arguments.length, "length", @serial) ... } ...`
-`builtin`     | `[x, y]`              | `META.builtin(META.builtins["Array.of"], "Array.of", @serial)($x, $y)`
+`intrinsic`     | `[x, y]`              | `META.intrinsic(META.intrinsics["Array.of"], "Array.of", @serial)($x, $y)`
 `closure`     | `function () { ... }` | `META.closure(... function callee () { ... } ..., @serial)`
 `drop`        | `(x, y)`              | `(META.drop($x, @serial), $y)`
 `error`       | `try { ... } catch (e) { ... }` | `try { ... } catch (error) { ... META.error(error, @serial) ... }`
@@ -343,7 +343,7 @@ Name          | arguments[0]              | arguments[1]             | arguments
 *Modifiers*   |                           |                          |                        |                        |
 `abrupt`      | `error :: value`          | `serial :: number`       |                        |                        |
 `argument`    | `produced :: value`       | `index :: number \| "new.target" \| "this" \| "length"` | `serial :: number`| |
-`builtin`     | `produced :: value`       | `name :: string`         | `serial :: number`     |                        |
+`intrinsic`     | `produced :: value`       | `name :: string`         | `serial :: number`     |                        |
 `closure`     | `produced :: function`    | `serial :: number`       |                        |                        |
 `drop`        | `consumed :: value`       | `serial :: number`       |                        |                        |
 `error`       | `produced :: value`       | `serial :: number`       |                        |                        |
@@ -504,9 +504,9 @@ Some groups of traps requires additional explanations:
   }
   ```
 
-* `builtin`:
-  In the normalisation process, Aran often uses pre-existing values from the global object (a.k.a: builtins, a.k.a: primordials).
-  To render the instrumented code resilient to modification of the global object it is important to store these builtin values upfront.
+* `intrinsic`:
+  In the normalisation process, Aran often uses pre-existing values from the global object (a.k.a: intrinsics, a.k.a: primordials).
+  To render the instrumented code resilient to modification of the global object it is important to store these intrinsic values upfront.
   This is performed during the setup phase.
 
   ```js
@@ -516,12 +516,12 @@ Some groups of traps requires additional explanations:
 
   ```js
   // (pseudo) Instrumented //
-  new META.builtin(META.builtins.RegExp, "RegExp")("abc", "g");
+  new META.intrinsic(META.intrinsics.RegExp, "RegExp")("abc", "g");
   ```
 
-## Builtins
+## Intrinsics
 
-Below is a list of the all the builtins stored by the setup code along with their utility:
+Below is a list of the all the intrinsics stored by the setup code along with their utility:
 
 * `global`: For declaring/writing/reading global variables and for assigning the initial value of `this`.
 * `eval`: For detecting whether a syntactic direct eval call actually resolves to a direct eval call at runtime.
@@ -699,9 +699,9 @@ We now discuss several strategies to provide an identity to primitive values:
   This shadow state contains analysis-related information about the program values situated at the same location in the concrete state. 
   [Valgrind](http://valgrind.org/) is a popular binary instrumentation framework which utilizes this technique to enables many data-flow analyses.
   The difficulty of this technique lies in maintaining the shadow state as non-instrumented functions are being executed.
-  In JavaScript this problem typically arises when objects are passed to non instrumented functions such as builtins.
+  In JavaScript this problem typically arises when objects are passed to non instrumented functions such as intrinsics.
   Keeping the shadow store in sync during such operation requires to know the exact semantic of the non-instrumented function. 
-  Since they are so many different builtin functions in JavaScript, this is a very hard thing to do.
+  Since they are so many different intrinsic functions in JavaScript, this is a very hard thing to do.
 * *Record And Replay*:
   Record and replay systems such as [Jalangi](https://github.com/SRA-SiliconValley/jalangi) are an intelligent response to the challenge of keeping in sync the shadow state with its concrete state.
   Acknowledging that divergences between shadow and concrete states cannot be completely avoided, these systems allows divergences in the replay phase which can be recovered from by utilizing the trace gathered during the record phase.
@@ -715,7 +715,7 @@ We now discuss several strategies to provide an identity to primitive values:
   We explore three solutions to this challenge:
   * *Boxed Values*:
     JavaScript enables to box booleans, numbers and strings.
-    Despite that symbols, `undefined` and `null` cannot be tracked by this method, boxed values do not always behave like their primitive counterpart within builtins.    
+    Despite that symbols, `undefined` and `null` cannot be tracked by this method, boxed values do not always behave like their primitive counterpart within intrinsics.    
     ```js
     // Strings cannot be differentiated based on their origin
     let string1 = "abc";
@@ -725,7 +725,7 @@ We now discuss several strategies to provide an identity to primitive values:
     let boxed_string1 = new String("abc");
     let boxed_string2 = new String("abc");
     assert(boxed_string1 !== boxed_string2);
-    // Boxed value behave as primitive in some builtins: 
+    // Boxed value behave as primitive in some intrinsics: 
     assert(JSON.stringify({a:string1}) === JSON.stringify({a:boxed_string1}));
     // In others, they don't...
     let error
@@ -739,7 +739,7 @@ We now discuss several strategies to provide an identity to primitive values:
     ```
   * *`valueOf` Method*:
     A similar mechanism to boxed value is to use the `valueOf` method.
-    Many JavaScript builtins expecting a primitive value but receiving an object will try to convert this object into a primitive using its `valueOf` method.
+    Many JavaScript intrinsics expecting a primitive value but receiving an object will try to convert this object into a primitive using its `valueOf` method.
     As for boxed values this solution is not bullet proof and there exists many cases where the `valueOf` method will not be invoked.
   * *Explicit Wrappers*:
     Finally a last option consists in using explicit wrappers which should be cleaned up before escaping to non-instrumented code.
