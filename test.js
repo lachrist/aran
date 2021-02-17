@@ -40,6 +40,7 @@ if (process.argv.length > 2) {
     "lib/source",
     "lib/parser",
     "lib/external-parser",
+    "lib/cache",
     "lib/prelim/hoisting",
     "lib/prelim/scoping",
     "lib/prelim/index",
