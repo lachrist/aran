@@ -26,6 +26,7 @@
     "diff": "^4.0.2"
   },
   "dependencies": {
-    "array-lite": "^0.1.9"
+    "array-lite": "^0.1.9",
+    "esprima": "^4.0.1"
   }
 }
