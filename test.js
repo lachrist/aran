@@ -13,7 +13,7 @@ if (process.argv.length > 2) {
   } catch (error) {
     process.exit(1);
   }
-  ChildProcess.execSync(`nyc --reporter=html --report-dir=coverage --include ${process.argv[2]}.js node ${process.argv[2]}.test.js`, {
+  ChildProcess.execSync(`npx c8 --reporter=html --report-dir=coverage --include ${process.argv[2]}.js node ${process.argv[2]}.test.js`, {
     __proto__: null,
     stdio: "inherit"
   });
@@ -59,9 +59,9 @@ if (process.argv.length > 2) {
     // "lib/transpile/tree",
     // "lib/transpile/completion",
     // "lib/transpile/intrinsic",
-    "lib/transpile/scope/layer-1-core",
-    "lib/transpile/scope/layer-2-split",
-    "lib/transpile/scope/layer-3-meta",
+    // "lib/transpile/scope/layer-1-core",
+    // "lib/transpile/scope/layer-2-split",
+    // "lib/transpile/scope/layer-3-meta",
     "lib/transpile/scope/layer-4-base",
     "lib/transpile/scope/layer-5-index",
     "lib/transpile/scope/index",
@@ -86,7 +86,7 @@ if (process.argv.length > 2) {
       //   __proto__: null,
       //   stdio: "inherit"
       // });
-      ChildProcess.execSync(`nyc --reporter=text-summary --check-coverage --branches 100 --functions 100 --lines 100 --statements 100 --include ${path}.js node ${path}.test.js`, {
+      ChildProcess.execSync(`npx c8 --reporter=text-summary --check-coverage --branches 100 --functions 100 --lines 100 --statements 100 --include ${path}.js node ${path}.test.js`, {
         __proto__: null,
         stdio: "inherit"
       });

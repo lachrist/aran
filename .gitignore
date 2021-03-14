@@ -2,7 +2,5 @@
 /node_modules/
 /.nyc_output/
 /coverage/
-/tmp.js
-/tmp-1.js
-/tmp-2.js
-/tmp.mjs
+/tmp*.js
+/tmp*.mjs
