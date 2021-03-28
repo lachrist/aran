@@ -1,54 +1,218 @@
-env:
-  es2020: true
+# env:
+globals:
+  globalThis: readonly
 parserOptions:
   ecmaVersion: 2020
   sourceType: module
 rules:
-  # Possible Errors
-  no-console: warn
+  ###################
+  # Possible Errors #
+  ###################
+  # for-direction >> Heuristic
+  # getter-return >> cf Accessor disabled by no-restricted-syntax
+  # no-async-promise-executor >> Asynchronous closures disabled by no-restricted-syntax
+  # no-await-in-loop >> Asynchronous closures disabled by no-restricted-syntax
+  # no-compare-neg-zero
+  # no-cond-assign
+  no-console: warn # Enabled even if heuristic
+  no-constant-condition: error
+  # no-control-regex
   no-debugger: warn
+  # no-dupe-args >> Strict-mode enforced by parserOptions
+  # no-dupe-else-if >> Heuristic
   no-dupe-keys: error
+  # no-duplicate-case >> SwitchStatement disabled by no-restricted-syntax
   no-empty: error
+  # no-empty-character-class
+  # no-ex-assign
+  # no-extra-boolean-cast >> Boolean global disabled by no-restricted-globals
+  # no-extra-parens
   no-extra-semi: error
-  no-func-assign: error
+  # no-func-assign >> FunctionDeclaration disabled by no-restricted-syntax
   no-import-assign: error
+  # no-inner-declarations >> FunctionDeclaration disabled by no-restricted-syntax
+  # no-invalid-regexp >> RegExp global disabled by no-restricted-globals
   no-irregular-whitespace: error
-  no-prototype-builtins: error
+  no-loss-of-precision: error
+  # no-misleading-character-class
+  # no-obj-calls >> No globals
+  # no-promise-executor-return >> TODO enforce return statement
+  # no-prototype-builtins >> Heuristic
+  # no-regex-spaces
+  # no-setter-return >> Accessors disabled by no-restricted-syntax
   no-sparse-arrays: error
+  # no-template-curly-in-string
+  # no-unexpected-multiline >> FIXME check if redundant with syle-related rules
   no-unreachable: error
   no-unreachable-loop: error
   no-unsafe-finally: error
-  no-unsafe-negation: error
+  # no-unsafe-negation: error TODO binary parenthesis
+  # no-unsafe-optional-chaining >> ChainExpression disabled by no-restricted-syntax
+  # no-useless-backreference
+  # require-atomic-updates >> Asynchronous and generator closures disabled by no-restricted-syntax
+  # use-isnan >> heuristic
   valid-typeof:
     - error
     - requireStringLiterals: true
-  # Best Practices
-  consistent-return: error
-  eqeqeq: error
-  no-case-declarations: error
-  no-constructor-return: error
-  no-else-return: error
-  no-eval: error
-  no-fallthrough: error
+  ##################
+  # Best Practices #
+  ##################
+  # accessor-pairs >> Accessors disabled by no-restricted-syntax
+  # array-callback-return >> TODO enforce return statement
+  # block-scoped-var >> Only es2015 variables enforced by no-restricted-syntax
+  # class-methods-use-this
+  # complexity	
+  # consistent-return >> TODO enforce return statement
+  # curly >> Body BlockStatement enforced by no-restricted-syntax
+  # default-case >> SwitchStatement disabled by no-restricted-syntax
+  # default-case-last >> SwitchStatement disabled by no-restricted-syntax
+  # default-param-last
+  dot-location: [error, object]
+  dot-notation:
+    - error
+    - allowKeywords: true
+  # eqeqeq >> Non-strict comparison operators disabled by no-restricted-syntax
+  # grouped-accessor-pairs >> Accessors disabled by no-restricted-syntax
+  # guard-for-in
+  # max-classes-per-file
+  # no-alert >> No browser environemnt
+  # no-caller >> Identifier[name="arguments"] disabled by no-restricted-syntax
+  # no-case-declarations >> SwitchStatement disabled by no-restricted-syntax
+  # no-constructor-return: error >> TODO return
+  # no-div-regex
+  no-else-return:
+    - error
+    - allowElseIf: false
+  # no-empty-function >> Empty closures disabled by no-restricted-syntax
+  no-empty-pattern: error
+  # no-eq-null >> Non-strict comparison operators disabled by no-restricted-syntax
+  # no-eval >> Identifier[name=eval] disabled by no-restricted-syntax
+  # no-extend-native >> No globals
+  # no-extra-bind >> Not sure what it is
+  # no-fallthrough >> SwitchStatement disabled by no-restricted-syntax
   no-floating-decimal: error
-  no-global-assign: error
-  no-labels: error
+  # no-global-assign >> No globals
+  # no-implicit-coercion >> Heuristic
+  # no-implicit-globals >> Strict mode enforced by parseOptions
+  # no-implied-eval >> Heuristic
+  # no-invalid-this >> Heuristic
+  # no-iterator >> Heuristic
+  # no-labels >> LabeledStatement disabled by no-restricted-syntax
+  # no-lone-blocks
+  # no-loop-func >> FunctionDeclaration disabled by no-restricted-syntax
+  # no-magic-numbers
   no-multi-spaces: error
   no-multi-str: error
+  # no-new
+  # no-new-func >> No globals
+  # no-new-wrappers >> No globals
+  no-nonoctal-decimal-escape: error
+  # no-param-reassign
   no-proto: error
-  # Variable
-  init-declarations: [error, always]
-  no-undef: error
-  no-unused-vars: error
-  no-use-before-define: error
-  # Stylistic Issues
+  # no-redeclare >> Only es2015 variables enforced by no-restricted-syntax
+  # no-restricted-properties
+  # no-return-assign
+  # no-return-await >> Asynchronous closures disabled by no-restricted-syntax
+  # no-script-url >> heuristic
+  no-self-assign: error
+  no-self-compare: error
+  # no-sequences
+  # no-throw-literal
+  # no-unmodified-loop-condition
+  no-unused-expressions: error
+  # no-unused-labels >> LabeledStatement disabled by no-restrict-syntax
+  # no-useless-call >> Heuristic
+  no-useless-catch: error
+  no-useless-concat: error
+  # no-useless-return >> ReturnStatement[argument=null] disabled by no-restrict-syntax
+  # no-void
+  no-warning-comments:
+    - warning
+    - terms:
+      - todo
+      - fixme
+  # no-with >> Strict-mode enforced by parsing options
+  prefer-named-capture-group: error
+  # prefer-promise-reject-errors >> No globals
+  # prefer-regex-literals >> No gobals
+  # radix >> No globals
+  # require-await >> Asynchronous closures disabled by no-restricted-syntax
+  require-unicode-regexp: error
+  # vars-on-top
+  wrap-iife: [error, outside]
+  yoda: [error, never]
+  ##########
+  # Strict #
+  ##########
+  strict: [error, never]
+  ############
+  # Variable #
+  ############
+  # init-declarations >> VariableDeclarator[init=null] disabled by no-restricted-syntax
+  # no-delete-var >> Strict mode enforced by parserOptions
+  # no-label-var >> LabeledStatement disabled by no-restricted-syntax
+  no-restricted-globals:
+    - error
+    - NaN
+    - Infinity
+    - undefined
+    - eval
+    - parseInt
+    - parseFloat
+    - isNaN
+    - isFinite
+    - decodeURI
+    - decodeURIComponent
+    - encodeURI
+    - encodeURIComponent
+    - Object
+    - Function
+    - Array
+    - String
+    - Boolean
+    - Number
+    - Math
+    - Date
+    - RegExp
+    - Error
+    - EvalError
+    - RangeError
+    - ReferenceError
+    - SyntaxError
+    - TypeError
+    - URIError
+    - JSON
+  # no-shadow
+  # no-shadow-restricted-names
+  no-undef:
+    - error
+    - typeof: true
+  # no-undef-init >> Identifier[name="undefined"] disabled by no-resticted-syntax
+  # no-undefined >> Identifier[name="undefined"] disabled by no-resticted-syntax
+  no-unused-vars:
+    - error
+    - vars: all
+      args: none
+  no-use-before-define:
+    - error
+    - functions: false # >> FunctionDeclaration disabled by no-resticted-syntax
+      classed: false # >> ClassDeclaration disabled by no-resticted-syntax
+      variables: true
+  ####################
+  # Stylistic Issues #
+  ####################
+  array-bracket-newline: [error, consistent]
   array-bracket-spacing: [error, never]
   array-element-newline: [error, consistent]
   block-spacing: [error, always]
   brace-style: [error, 1tbs]
   camelcase:
     - error
-    - allow: [^global_]
+    - properties: always
+      ignoreDestructuring: false
+      ignoreImports: false
+      ignoreGlobals: false
+      allow: [^global_]
   capitalized-comments: [error, always]
   comma-dangle: [error, always-multiline]
   comma-spacing:
@@ -57,15 +221,20 @@ rules:
       after: true
   comma-style: [error, last]
   computed-property-spacing: [error, never]
+  consistent-this: [error, self]
   eol-last: [error, always]
   func-call-spacing: [error, never]
   func-name-matching: [error, always]
-  func-names: [error, always]
+  # func-names >> FunctionExpression[id!=null] disabled by no-restricted-syntax
   func-style: [error, expression]
   function-call-argument-newline: [error, consistent]
   function-paren-newline: [error, never]
+  # id-denylist
+  # id-length
+  # id-match >> hoopfully camelcase is enough
   implicit-arrow-linebreak: [error, beside]
   indent: [error, 2]
+  # jsx-quotes
   key-spacing:
     - error
     - beforeColon: false
@@ -76,50 +245,129 @@ rules:
     - before: true
       after: true
   linebreak-style: [error, unix]
+  # lines-around-comment
+  # lines-between-class-members
+  # max-depth
   max-len:
     - warning
     - code: 80
       comments: 80
+  # max-lines
+  # max-lines-per-function
+  # max-nested-callbacks
+  # max-params
+  # max-statements
   max-statements-per-line:
     - error
     - max: 1
-  new-cap: error
+  multiline-comment-style: [error, separate-lines]
+  # multiline-ternary
+  new-cap:
+    - error
+    - newIsCap: true
+      capIsNew: true
+      properties: true
   new-parens: [error, always]
-  no-array-constructor: error
-  no-bitwise: error
-  no-continue: error
+  # newline-per-chained-call
+  # no-array-constructor >> No Array global
+  # no-bitwise >> Bitwise binary operator disabled by no-restricted-syntax
+  # no-continue >> ContinueStatement disabled by no-restricted-syntax
+  # no-inline-comments
   no-lonely-if: error
-  no-mixed-operators: error
-  # no-mixed-spaces-and-tabs >> indent
+  no-mixed-operators:
+    - error
+    - allowSamePrecedence: false
+      groups:
+      - ["+", "-", "*", "/", "%", "**"]
+      - ["&", "|", "^", "~", "<<", ">>", ">>>"]
+      - ["==", "!=", "===", "!==", ">", ">=", "<", "<="]
+      - ["&&", "||"]
+      - ["in", "instanceof"]
+  # no-mixed-spaces-and-tabs >> tabs disabled by no-tabs
   no-multi-assign: error
+  # no-multiple-empty-lines
   no-negated-condition: error
   # no-nested-ternary
-  no-new-object: error
-  no-plusplus: error
+  # no-new-object >> No Object global
+  # no-plusplus >> UpdateExpressionDisabled by no-restricted-syntax
   no-restricted-syntax:
     - error
-    - SwitchStatement
-  # no-tabs >> indent
+    - # Node type disable
+      SwitchStatement
+      UpdateExpression
+      ChainExpression
+      LabeledStatement
+      BreakStatement
+      ContinueStatement
+      FunctionDeclaration
+      ClassDeclaration
+      # Disable bitwise binary operators and non-strict comparison operatos
+      BinaryExpression[operator="=="]
+      BinaryExpression[operator="!="]
+      BinaryExpression[operator="&"]
+      BinaryExpression[operator="|"]
+      BinaryExpression[operator="^"]
+      BinaryExpression[operator="~"]
+      BinaryExpression[operator="<<"]
+      BinaryExpression[operator=">>"]
+      BinaryExpression[operator=">>>"]
+      # Disable Accessor
+      MethodDefinition[kind="get"]
+      MethodDefinition[kind="set"]
+      Property[kind="get"]
+      Property[kind="set"]
+      # Variable declaration
+      VariableDeclaration[kind=var]
+      VariableDeclaration[declarations.length>1]
+      VariableDeclarator[init===null]
+      # Identifier
+      Identifier[name="undefined"]
+      Identifier[name="eval"]
+      Identifier[name="arguments"]
+      # Asynchronous closures
+      FunctionExpression[async=true]
+      ArrowFunctionExpression[async=true]
+      # Generator closures
+      FunctionExpression[generator=true]
+      # Empty Closures
+      FunctionExpression[body.length=0]
+      ArrowFunctionExpression[expression=false][body.length=0]
+      # Named Closures
+      FunctionExpression[id!=null]
+      # Body BlockStatement
+      IfStatement[consequent.type!="BlockStatement"]
+      IfStatement[alternate.type!="BlockStatement"]
+      WhileStatement[body.type!="BlockStatement"]
+      DoWhileStatement[body.type!="BlockStatement"]
+      ForStatement[body.type!="BlockStatement"]
+      ForOfStatement[body.type!="BlockStatement"]
+      ForInStatement[body.type!="BlockStatement"]
+      # Empty ReturnStatement
+      ReturnStatement[argument=null]
+      # Literal Computation
+      BinaryExpression[left.type="Literal"][right.type="Literal"]
+      UnaryExpression[argument.type="Literal"]
+  no-tabs: error # not redundant with indent because also signal tabs in strings and comments
   # no-ternary
   no-trailing-spaces: error
-  # no-underscore-dangle
+  # no-underscore-dangle >> redundant with camel-case
   # no-unneeded-ternary
   no-whitespace-before-property: error
-  # nonblock-statement-body-position >> TODO single-line statement should be desabled
+  # nonblock-statement-body-position >> Body BlockStatement enforced by no-restricted-syntax
   object-curly-newline:
     - error
     - multiline: true
       consistent: true
   object-curly-spacing: [error, always]
   # object-property-newline >> not sure what it is
-  one-var: [error, never]
-  # one-var-declaration-per-line >> multiple declarations disabled by one-var
+  # one-var >> VariableDeclaration[declarations.length>1] disabled by no-restricted-syntax
+  # one-var-declaration-per-line >> VariableDeclaration[declarations.length>1] disabled by no-restricted-syntax
   operator-assignment: [error, always]
   operator-linebreak: [error, after]
   # padded-blocks
   # padding-line-between-statements
-  prefer-exponentiation-operator: [error, always]
-  prefer-object-spread: [error, always]
+  # prefer-exponentiation-operator >> heuristic
+  # prefer-object-spread >> heuristic
   quote-props: [error, as-needed]
   quotes: [error, double]
   semi: [error, always]
@@ -139,7 +387,7 @@ rules:
     - words: true
       nonwords: false
   spaced-comment: [error, always]
-  # switch-colon-spacing >> SwitchStatement disabled by no-restricted-syntax
+  # switch-colon-spacing >> cf no-restricted-syntax >> SwitchStatement
   template-tag-spacing: [error, never]
   unicode-bom: [error, never]
   # wrap-regex
@@ -153,8 +401,36 @@ rules:
     - before: true
       after: true
   constructor-super: [error, always]
-  generator-star-spacing: [error, ]
-  
-    
-    
-  
+  # generator-star-spacing >> Generator closures disabled by no-restricted-syntax
+  # no-class-assign >> ClassDeclaration disabled by no-restricted-syntax
+  # no-confusing-arrow >> TODO
+  no-const-assign: error
+  no-dupe-class-members: error
+  no-duplicate-imports: error
+  # no-new-symbol >> No Symbol global
+  # no-restricted-exports
+  # no-restricted-imports
+  no-this-before-super: error
+  no-useless-computed-key:
+    - error
+    - enforceForClassMembers: true
+  no-useless-constructor: error
+  no-useless-rename: error
+  # no-var >> VariableDeclaration[kind="var"] disabled by no-restricted-syntax
+  object-shorthand: [error, always]
+  # prefer-arrow-callback >> TODO enforce it myself
+  prefer-const:
+    - error
+    - destructuring: all
+      ignoreReadBeforeAssign: true
+  # prefer-destructuring
+  # prefer-numeric-literals >> no Number or parseInt global
+  # prefer-rest-params >> Identifier[name="arguments"] disabled by no-restrict-syntax
+  # prefer-spread >> Heuristic
+  prefer-template: error
+  # require-yield >> Generator closures disabled by no-restrict-syntax
+  rest-spread-spacing: [error, never]
+  # sort-imports
+  # symbol-description >> No Symbol global
+  template-curly-spacing: [error, never]
+  # yield-star-spacing >> Generator closures disabled by no-restrict-syntax
