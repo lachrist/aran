@@ -127,10 +127,11 @@ rules:
   # no-useless-return >> ReturnStatement[argument=null] disabled by no-restrict-syntax
   # no-void
   no-warning-comments:
-    - warning
-    - terms:
-      - todo
-      - fixme
+    - warn
+    - location: start
+      terms:
+        - todo
+        - fixme
   # no-with >> Strict-mode enforced by parsing options
   prefer-named-capture-group: error
   # prefer-promise-reject-errors >> No globals
@@ -196,7 +197,7 @@ rules:
   no-use-before-define:
     - error
     - functions: false # >> FunctionDeclaration disabled by no-resticted-syntax
-      classed: false # >> ClassDeclaration disabled by no-resticted-syntax
+      classes: false # >> ClassDeclaration disabled by no-resticted-syntax
       variables: true
   ####################
   # Stylistic Issues #
@@ -249,7 +250,7 @@ rules:
   # lines-between-class-members
   # max-depth
   max-len:
-    - warning
+    - warn
     - code: 80
       comments: 80
   # max-lines
@@ -292,61 +293,61 @@ rules:
   # no-plusplus >> UpdateExpressionDisabled by no-restricted-syntax
   no-restricted-syntax:
     - error
-    - # Node type disable
-      SwitchStatement
-      UpdateExpression
-      ChainExpression
-      LabeledStatement
-      BreakStatement
-      ContinueStatement
-      FunctionDeclaration
-      ClassDeclaration
+      # Node type disable
+    - SwitchStatement
+    - UpdateExpression
+    - ChainExpression
+    - LabeledStatement
+    - BreakStatement
+    - ContinueStatement
+    - FunctionDeclaration
+    - ClassDeclaration
       # Disable bitwise binary operators and non-strict comparison operatos
-      BinaryExpression[operator="=="]
-      BinaryExpression[operator="!="]
-      BinaryExpression[operator="&"]
-      BinaryExpression[operator="|"]
-      BinaryExpression[operator="^"]
-      BinaryExpression[operator="~"]
-      BinaryExpression[operator="<<"]
-      BinaryExpression[operator=">>"]
-      BinaryExpression[operator=">>>"]
+    - BinaryExpression[operator="=="]
+    - BinaryExpression[operator="!="]
+    - BinaryExpression[operator="&"]
+    - BinaryExpression[operator="|"]
+    - BinaryExpression[operator="^"]
+    - BinaryExpression[operator="~"]
+    - BinaryExpression[operator="<<"]
+    - BinaryExpression[operator=">>"]
+    - BinaryExpression[operator=">>>"]
       # Disable Accessor
-      MethodDefinition[kind="get"]
-      MethodDefinition[kind="set"]
-      Property[kind="get"]
-      Property[kind="set"]
+    - MethodDefinition[kind="get"]
+    - MethodDefinition[kind="set"]
+    - Property[kind="get"]
+    - Property[kind="set"]
       # Variable declaration
-      VariableDeclaration[kind=var]
-      VariableDeclaration[declarations.length>1]
-      VariableDeclarator[init===null]
+    - VariableDeclaration[kind=var]
+    - VariableDeclaration[declarations.length>1]
+    - VariableDeclarator[init=null]
       # Identifier
-      Identifier[name="undefined"]
-      Identifier[name="eval"]
-      Identifier[name="arguments"]
+    - Identifier[name="undefined"]
+    - Identifier[name="eval"]
+    - Identifier[name="arguments"]
       # Asynchronous closures
-      FunctionExpression[async=true]
-      ArrowFunctionExpression[async=true]
+    - FunctionExpression[async=true]
+    - ArrowFunctionExpression[async=true]
       # Generator closures
-      FunctionExpression[generator=true]
+    - FunctionExpression[generator=true]
       # Empty Closures
-      FunctionExpression[body.length=0]
-      ArrowFunctionExpression[expression=false][body.length=0]
+    - FunctionExpression[body.length=0]
+    - ArrowFunctionExpression[expression=false][body.length=0]
       # Named Closures
-      FunctionExpression[id!=null]
+    - FunctionExpression[id!=null]
       # Body BlockStatement
-      IfStatement[consequent.type!="BlockStatement"]
-      IfStatement[alternate.type!="BlockStatement"]
-      WhileStatement[body.type!="BlockStatement"]
-      DoWhileStatement[body.type!="BlockStatement"]
-      ForStatement[body.type!="BlockStatement"]
-      ForOfStatement[body.type!="BlockStatement"]
-      ForInStatement[body.type!="BlockStatement"]
+    - IfStatement[consequent.type!="BlockStatement"]
+    - IfStatement[alternate.type!="BlockStatement"]
+    - WhileStatement[body.type!="BlockStatement"]
+    - DoWhileStatement[body.type!="BlockStatement"]
+    - ForStatement[body.type!="BlockStatement"]
+    - ForOfStatement[body.type!="BlockStatement"]
+    - ForInStatement[body.type!="BlockStatement"]
       # Empty ReturnStatement
-      ReturnStatement[argument=null]
+    - ReturnStatement[argument=null]
       # Literal Computation
-      BinaryExpression[left.type="Literal"][right.type="Literal"]
-      UnaryExpression[argument.type="Literal"]
+    - BinaryExpression[left.type="Literal"][right.type="Literal"]
+    - UnaryExpression[argument.type="Literal"]
   no-tabs: error # not redundant with indent because also signal tabs in strings and comments
   # no-ternary
   no-trailing-spaces: error
@@ -400,7 +401,7 @@ rules:
     - error
     - before: true
       after: true
-  constructor-super: [error, always]
+  constructor-super: error
   # generator-star-spacing >> Generator closures disabled by no-restricted-syntax
   # no-class-assign >> ClassDeclaration disabled by no-restricted-syntax
   # no-confusing-arrow >> TODO
