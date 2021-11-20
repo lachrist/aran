@@ -61,7 +61,7 @@ rules:
   # array-callback-return >> TODO enforce return statement
   # block-scoped-var >> Only es2015 variables enforced by no-restricted-syntax
   # class-methods-use-this
-  # complexity	
+  # complexity
   # consistent-return >> TODO enforce return statement
   # curly >> Body BlockStatement enforced by no-restricted-syntax
   # default-case >> SwitchStatement disabled by no-restricted-syntax
@@ -249,10 +249,7 @@ rules:
   # lines-around-comment
   # lines-between-class-members
   # max-depth
-  max-len:
-    - warn
-    - code: 80
-      comments: 80
+  # max-len
   # max-lines
   # max-lines-per-function
   # max-nested-callbacks
