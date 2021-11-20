@@ -20,12 +20,13 @@
     "Shadow Execution"
   ],
   "devDependencies": {
-    "acorn": "^8.0.1",
-    "c8": "^7.6.0",
-    "chalk": "^4.1.0",
-    "diff": "^4.0.2",
-    "eslint": "^7.23.0",
-    "pegjs": "^0.10.0"
+    "acorn": "^8.6.0",
+    "c8": "^7.10.0",
+    "chalk": "^4.1.2",
+    "diff": "^5.0.0",
+    "eslint": "^8.2.0",
+    "pegjs": "^0.10.0",
+    "test-turtle": "^4.0.2"
   },
   "dependencies": {
     "array-lite": "^0.1.9"
