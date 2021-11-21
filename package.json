@@ -10,6 +10,10 @@
   "repository": "lachrist/aran",
   "homepage": "http://github.com/lachrist/aran",
   "license": "MIT",
+  "scripts": {
+    "build": "sh lib/lang/parse/deploy.sh",
+    "lint": "npx eslint '**/*.mjs'"
+  },
   "keywords": [
     "JavaScript",
     "Instrumentation",
@@ -25,6 +29,7 @@
     "chalk": "^4.1.2",
     "diff": "^5.0.0",
     "eslint": "^8.2.0",
+    "eslint-plugin-import": "^2.25.3",
     "pegjs": "^0.10.0",
     "test-turtle": "^4.0.2"
   },
