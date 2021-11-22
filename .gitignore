@@ -1,7 +1,5 @@
 .DS_Store
 /node_modules/
-/.nyc_output/
-/.turtle.json
 /coverage/
-/tmp*.js
-/tmp*.mjs
+/.turtle.json
+/yo*
