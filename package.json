@@ -12,7 +12,8 @@
   "license": "MIT",
   "scripts": {
     "build": "sh lib/lang/parse/deploy.sh",
-    "lint": "npx eslint '**/*.mjs'"
+    "lint": "npx eslint '**/*.mjs'",
+    "unit": "node ./node_modules/.bin/test-turtle --layout alongside 'npx prettier -w $1 $2 && npx eslint --rulesdir eslint-rules $1 $2 && node $2 && npx c8 --include $1 --check-coverage --branches 100 --functions 100 -- node $2'"
   },
   "keywords": [
     "JavaScript",
@@ -31,6 +32,7 @@
     "eslint": "^8.2.0",
     "eslint-plugin-import": "^2.25.3",
     "pegjs": "^0.10.0",
+    "prettier": "^2.4.1",
     "test-turtle": "^4.0.2"
   },
   "dependencies": {
