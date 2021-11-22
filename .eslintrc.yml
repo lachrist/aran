@@ -27,61 +27,31 @@ parserOptions:
 plugins:
   - import
 rules:
+  ##########
+  # Custom #
+  ##########
+  custom-no-globals: [error, globalThis]
   ################
   # Core Complex #
   ################
-  no-mixed-operators:
-    - error
-    - allowSamePrecedence: false
-      groups:
-        - ["+", "-", "*", "/", "%", "**"]
-        - ["&", "|", "^", "~", "<<", ">>", ">>>"]
-        - ["==", "!=", "===", "!==", ">", ">=", "<", "<="]
-        - ["&&", "||", "??"]
-        - ["in", "instanceof"]
-  no-restricted-globals:
-    - error
-    - NaN
-    - Infinity
-    - undefined
-    - eval
-    - parseInt
-    - parseFloat
-    - isNaN
-    - isFinite
-    - decodeURI
-    - decodeURIComponent
-    - encodeURI
-    - encodeURIComponent
-    - Object
-    - Function
-    - Array
-    - String
-    - Boolean
-    - Number
-    - Math
-    - Date
-    - RegExp
-    - Error
-    - EvalError
-    - RangeError
-    - ReferenceError
-    - SyntaxError
-    - TypeError
-    - URIError
-    - JSON
   no-restricted-syntax:
+    # https://estools.github.io/esquery/
     - error
-    # Node type disable
+    # Type Wide
+    - ForOfStatement
+    - AwaitExpression
+    - YieldExpression
     - SwitchStatement
     - UpdateExpression
     - ChainExpression
     - LabeledStatement
     - BreakStatement
     - ContinueStatement
+    - FunctionExpression
     - FunctionDeclaration
     - ClassDeclaration
-      # Disable bitwise binary operators and non-strict comparison operatos
+    - ClassExpression
+    # Disable bitwise binary operators and non-strict comparison operatos
     - BinaryExpression[operator="=="]
     - BinaryExpression[operator="!="]
     - BinaryExpression[operator="&"]
@@ -91,63 +61,49 @@ rules:
     - BinaryExpression[operator="<<"]
     - BinaryExpression[operator=">>"]
     - BinaryExpression[operator=">>>"]
-      # Disable Accessor
+    # AssignmentExpression
+    - :not(ExpressionStatement, ForStatement) > AssignmentExpression
+    - ForStatement > AssignmentExpression.test, AssignmentExpression.update
+    # Disable Accessor
     - MethodDefinition[kind="get"]
     - MethodDefinition[kind="set"]
     - Property[kind="get"]
     - Property[kind="set"]
-      # Variable declaration
+    # Variable declaration
     - VariableDeclaration[kind=var]
     - VariableDeclaration[declarations.length>1]
     - VariableDeclarator[init=null]
-      # Identifier
-    - Identifier[name="undefined"]
+    # Identifier
     - Identifier[name="eval"]
     - Identifier[name="arguments"]
-      # Asynchronous closures
-    - FunctionExpression[async=true]
+    # Asynchronous closures
     - ArrowFunctionExpression[async=true]
-      # Generator closures
-    - FunctionExpression[generator=true]
-      # Empty Closures
-    # - FunctionExpression[body.length=0]
-    # - ArrowFunctionExpression[expression=false][body.length=0]
-      # Named Closures
-    - FunctionExpression[id!=null]
-      # Body BlockStatement
-    - IfStatement[consequent.type!="BlockStatement"]
-    - IfStatement[alternate.type!="BlockStatement"]
-    - WhileStatement[body.type!="BlockStatement"]
-    - DoWhileStatement[body.type!="BlockStatement"]
-    - ForStatement[body.type!="BlockStatement"]
-    - ForOfStatement[body.type!="BlockStatement"]
-    - ForInStatement[body.type!="BlockStatement"]
-      # Empty ReturnStatement
+    # Empty ReturnStatement
     - ReturnStatement[argument=null]
-      # Literal Computation
-    - BinaryExpression[left.type="Literal"][right.type="Literal"]
-    - UnaryExpression[argument.type="Literal"]
+    # Literal Computation
+    # - BinaryExpression[left.type="Literal"][right.type="Literal"]
+    # - UnaryExpression[argument.type="Literal"]
   ###############
   # Core Simple #
   ###############
   # accessor-pairs >> Accessors disabled by no-restricted-syntax
-  # array-bracket-newline: [error, consistent] >> style
-  # array-bracket-spacing: [error, never] >> style
+  # array-bracket-newline: [error, consistent] >> Prettier
+  # array-bracket-spacing: [error, never] >> Prettier
   # array-callback-return >> heuristic + array-lite
-  # array-element-newline: [error, consistent] >> style
+  # array-element-newline: [error, consistent] >> Prettier
   arrow-body-style: [error, as-needed]
   arrow-parens: [error, always]
-  # arrow-spacing: [error, before:true, after:true] >> style
+  # arrow-spacing: [error, before:true, after:true] >> Prettier
   # block-scoped-var >> Only es2015 variables enforced by no-restricted-syntax
-  # block-spacing: [error, always] >> style
-  # brace-style: [error, 1tbs] >> style
-  capitalized-comments: [error, always]
+  # block-spacing: [error, always] >> Prettier
+  # brace-style: [error, 1tbs] >> Prettier
+  # capitalized-comments: [error, always] >> comment
   # class-methods-use-this >> Class disabled by no-restrictied syntax
   comma-dangle: [error, always-multiline]
-  # comma-spacing: [error, {before:false, after:true}] >> style
-  # comma-style: [error, last] >> style
+  # comma-spacing: [error, {before:false, after:true}] >> Prettier
+  # comma-style: [error, last] >> Prettier
   # complexity
-  # computed-property-spacing: [error, never] >> style
+  # computed-property-spacing: [error, never] >> Prettier
   consistent-return: error
   consistent-this: [error, self]
   # constructor-super: error >> Class are disabled by no-restricted-syntax
@@ -155,18 +111,18 @@ rules:
   # default-case >> SwitchStatement disabled by no-restricted-syntax
   # default-case-last >> SwitchStatement disabled by no-restricted-syntax
   default-param-last: error # TODO: disable default parameters
-  # dot-location: [error, object] >> style
+  # dot-location: [error, object] >> Prettier
   dot-notation: [error, {allowKeywords: true}]
-  # eol-last: [error, always] >> style
+  # eol-last: [error, always] >> Prettier
   # eqeqeq >> BinaryExpression[!=|==] disabled by no-restricted-syntax
   # for-direction >> Heuristic
-  # func-call-spacing: [error, never] >> style
+  # func-call-spacing: [error, never] >> Prettier
   # func-name-matching: [error, always] >> Function disabled by no-restricted-syntax
   # func-names >> Function disabled by no-restricted-syntax
   # func-style: [error, expression] >> Function disabled by no-restricted-syntax
-  # function-call-argument-newline: [error, consistent] >> style
-  # function-paren-newline: [error, never] >> style
-  # generator-star-spacing >> style
+  # function-call-argument-newline: [error, consistent] >> Prettier
+  # function-paren-newline: [error, never] >> Prettier
+  # generator-star-spacing >> Prettier
   # getter-return >> Accessor disabled by no-restricted-syntax
   # grouped-accessor-pairs >> Accessors disabled by no-restricted-syntax
   # guard-for-in >> Heuristic
@@ -174,15 +130,15 @@ rules:
   # id-denylist >> Heuristic
   # id-length >> Heuristic
   # id-match >> Hoopfully camelcase is enough
-  # implicit-arrow-linebreak: [error, beside] >> style
-  # indent: [error, 2] >> style
+  # implicit-arrow-linebreak: [error, beside] >> Prettier
+  # indent: [error, 2] >> Prettier
   # init-declarations >> VariableDeclarator[init=null] disabled by no-restricted-syntax
   # jsx-quotes >> no JSX
-  # key-spacing: [error, beforeColon:false, afterColon:true, mode:strict] >> style
-  # keyword-spacing: [error, {before:true, after:true}] >> style
-  # linebreak-style: [error, unix] >> style
+  # key-spacing: [error, beforeColon:false, afterColon:true, mode:strict] >> Prettier
+  # keyword-spacing: [error, {before:true, after:true}] >> Prettier
+  # linebreak-style: [error, unix] >> Prettier
   # lines-around-comment >> Not intersted in enforcing comment style
-  # lines-between-class-members >> style
+  # lines-between-class-members >> Prettier
   # max-classes-per-file >> Heurisitic + Class disabled by no-restricted-syntax
   # max-depth >> Heuristic
   # max-len >> Heuristic
@@ -191,12 +147,12 @@ rules:
   # max-nested-callbacks >> Heuristic
   # max-params >> Heuristic
   # max-statements >> Heuristic
-  # max-statements-per-line: [error, {max:1}] >> style
+  # max-statements-per-line: [error, {max:1}] >> Prettier
   # multiline-comment-style: [error, separate-lines] >> Not intersted in enforcing comment style
-  # multiline-ternary >> style
-  # new-cap: [error, {newIsCap:true, capIsNew:true, properties:true}] >> TODO
+  # multiline-ternary >> Prettier
+  new-cap: [error, {newIsCap: true}]
   new-parens: [error, always]
-  # newline-per-chained-call >> style
+  # newline-per-chained-call >> Prettier
   # no-alert >> No browser environemnt
   # no-array-constructor >> No Array global
   # no-arrow-condition >> deprecated
@@ -227,7 +183,7 @@ rules:
   no-dupe-keys: error
   # no-duplicate-case >> SwitchStatement disabled by no-restricted-syntax
   no-duplicate-imports: error
-  # no-else-return: [error, {allowElseIf:false}] >> I would enforce the contrary
+  no-else-return: [error, {allowElseIf: false}]
   # no-empty-character-class >> RegExp
   # no-empty-function >> Why?
   # no-empty-pattern: error >> Why?
@@ -238,7 +194,7 @@ rules:
   # no-extend-native >> No globals
   # no-extra-bind >> Heuristic
   # no-extra-boolean-cast >> Heuristic
-  no-extra-parens: error
+  no-extra-parens: [error, all, {nestedBinaryExpressions: false, enforceForSequenceExpressions: false}]
   no-extra-semi: error
   # no-extra-strict >> deprecated
   # no-fallthrough >> SwitchStatement disabled by no-restricted-syntax
@@ -253,7 +209,7 @@ rules:
   # no-inner-declarations >> FunctionDeclaration disabled by no-restricted-syntax
   # no-invalid-regexp >> RegExp global disabled by no-restricted-globals
   # no-invalid-this >> Heuristic
-  # no-irregular-whitespace: error >> style
+  # no-irregular-whitespace: error >> Prettier
   # no-iterator >> Heuristic
   # no-label-var >> LabeledStatement disabled by no-restricted-syntax
   # no-labels >> LabeledStatement disabled by no-restricted-syntax
@@ -263,11 +219,13 @@ rules:
   no-loss-of-precision: error
   # no-magic-numbers
   # no-misleading-character-class >> RegExp
-  # no-mixed-spaces-and-tabs >> style
-  no-multi-assign: error # >> TODO disable assignment outside of ExpressionStatement
-  # no-multi-spaces: error >> style
+  # no-mixed-spaces-and-tabs >> Prettier
+  no-mixed-operators: [error, {allowSamePrecedence: false}]
+  # no-mixed-requires >> deprecated
+  # no-multi-assign: error >> AssignemntExpression disabled in this context by no-restricted-syntax
+  # no-multi-spaces: error >> Prettier
   no-multi-str: error
-  # no-multiple-empty-lines >> style
+  # no-multiple-empty-lines >> Prettier
   # no-negated-condition: error >> Heuristic
   # no-nested-ternary >> I have plenty of those
   # no-new-func >> No globals
@@ -293,7 +251,7 @@ rules:
   # no-restricted-exports
   # no-restricted-imports
   # no-restricted-properties
-  # no-return-assign >> TODO disable AssignmentExpression outside of ExpressionStatement
+  # no-return-assign >> AssignmentExpression disabled in this context by no-restricted-syntax
   # no-return-await >> Asynchronous closures disabled by no-restricted-syntax
   # no-script-url >> heuristic
   no-self-assign: error
@@ -308,12 +266,12 @@ rules:
   # no-ternary >> I have plenty of those
   # no-this-before-super: error >> Class disabled by no restricted-syntax
   # no-throw-literal
-  # no-trailing-spaces: error >> style
+  # no-trailing-spaces: error >> Prettier
   # no-undef-init >> Identifier[name="undefined"] disabled by no-resticted-syntax
   no-undef: [error, {typeof: true}]
   # no-undefined >> Identifier[name="undefined"] disabled by no-resticted-syntax
   # no-underscore-dangle >> redundant with camel-case
-  # no-unexpected-multiline >> style
+  # no-unexpected-multiline >> Prettier
   # no-unmodified-loop-condition > heuristic
   # no-unneeded-ternary
   no-unreachable-loop: error
@@ -337,19 +295,19 @@ rules:
   # no-var >> VariableDeclaration[kind="var"] disabled by no-restricted-syntax
   # no-void >> I have plenty of those to create undefined value
   # no-warning-comments: [warn, {location:start, terms:[todo,fixme]}]
-  # no-whitespace-before-property: error >> style
+  # no-whitespace-before-property: error >> Prettier
   # no-with >> Strict-mode enforced by parsing options
   # nonblock-statement-body-position >> Body BlockStatement enforced by no-restricted-syntax
-  # object-curly-newline: [error, {multiline:true, consistent:true}] >> style
-  # object-curly-spacing: [error, always] >> style
-  # object-property-newline >> style
+  # object-curly-newline: [error, {multiline:true, consistent:true}] >> Prettier
+  # object-curly-spacing: [error, always] >> Prettier
+  # object-property-newline >> Prettier
   object-shorthand: [error, always]
   # one-var >> VariableDeclaration[declarations.length>1] disabled by no-restricted-syntax
   # one-var-declaration-per-line >> VariableDeclaration[declarations.length>1] disabled by no-restricted-syntax
   operator-assignment: [error, always]
-  # operator-linebreak: [error, after] >> style
-  # padded-blocks >> style
-  # padding-line-between-statements >> style
+  # operator-linebreak: [error, after] >> Prettier
+  # padded-blocks >> Prettier
+  # padding-line-between-statements >> Prettier
   # prefer-arrow-callback >> Function disabled by no-restricted-syntax
   prefer-const: [error, {destructuring: any}]
   prefer-destructuring: error
@@ -363,30 +321,30 @@ rules:
   # prefer-spread >> Heuristic
   prefer-template: error
   quote-props: [error, as-needed]
-  quotes: [error, double]
+  # quotes: [error, double] >> Prettier
   # radix >> No globals
   # require-atomic-updates >> Asynchronous and generator closures disabled by no-restricted-syntax
   # require-await >> Asynchronous closures disabled by no-restricted-syntax
   require-unicode-regexp: error
   # require-yield >> Generator closures disabled by no-restrict-syntax
-  # rest-spread-spacing: [error, never] >> style
-  # semi-spacing: [error, {before:false, after:false}] >> style
-  # semi-style: [error, last] >> style
+  # rest-spread-spacing: [error, never] >> Prettier
+  # semi-spacing: [error, {before:false, after:false}] >> Prettier
+  # semi-style: [error, last] >> Prettier
   semi: [error, always]
   # sort-imports
   # sort-keys
   # sort-vars
-  # space-before-blocks: [error, always] >> style
-  # space-before-function-paren: [error, always] >> style
-  # space-in-parens: [error, never] >> style
-  # space-infix-ops: [error] >> style
+  # space-before-blocks: [error, always] >> Prettier
+  # space-before-function-paren: [error, always] >> Prettier
+  # space-in-parens: [error, never] >> Prettier
+  # space-infix-ops: [error] >> Prettier
   # space-unary-ops: [error, {words:true, nonwords:false}] >> syle
-  # spaced-comment: [error, always] >> style
+  # spaced-comment: [error, always] >> Prettier
   strict: [error, never]
   # switch-colon-spacing >> cf no-restricted-syntax >> SwitchStatement
   # symbol-description >> No Symbol global
   template-curly-spacing: [error, never]
-  # template-tag-spacing: [error, never] >> style
+  # template-tag-spacing: [error, never] >> Prettier
   unicode-bom: [error, never]
   # use-isnan >> Heuristic
   # valid-jsdoc >> Deprecated
@@ -405,7 +363,7 @@ rules:
   import/exports-last: error
   # import/extensions: error
   import/first: error
-  import/group-exports: error
+  # import/group-exports: error
   # import/max-dependencies: error
   import/named: error
   # import/namespace
