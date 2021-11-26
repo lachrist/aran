@@ -24,8 +24,8 @@ export const assert = (check, message) => {
   }
 };
 
-export const generateDeadClosure = (location) => () => {
-  throw new Error(`closure at ${location} was never supposed to be called`);
+export const generateThrowError = (message) => () => {
+  throw new Error(message);
 };
 
 export const inspect = (value) => {

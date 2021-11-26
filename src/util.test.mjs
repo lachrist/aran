@@ -2,7 +2,7 @@ import {assertThrow, assertEqual, assertDeepEqual} from "./__fixture__.mjs";
 
 import {
   assert,
-  generateDeadClosure,
+  generateThrowError,
   inspect,
   format,
   expect,
@@ -13,7 +13,7 @@ const {Error} = globalThis;
 
 assertThrow(() => assert(false, "foo"), /^Error: foo/u);
 
-assertThrow(generateDeadClosure("foo"));
+assertThrow(generateThrowError("foo"));
 
 assertEqual(inspect("foo"), '"foo"');
 assertEqual(inspect(123), "123");

@@ -61,16 +61,16 @@ const syntax = {
     // Producer //
     PrimitiveExpression: ["Primitive"],
     IntrinsicExpression: ["Intrinsic"],
-    ReadImportExpression: ["Specifier", "Source"],
-    ReadVariableExpression: ["VariableIdentifier"],
+    LoadImportExpression: ["Specifier", "Source"],
+    ReadExpression: ["VariableIdentifier"],
     ReadEnclaveExpression: ["ReadableEnclaveVariableIdentifier"],
     TypeofEnclaveExpression: ["ReadableEnclaveVariableIdentifier"],
     ClosureExpression: ["ClosureKind", "Asynchronous", "Generator", "Block"],
     // Consumer //
     AwaitExpression: ["Expression"],
     YieldExpression: ["Delegate", "Expression"],
-    WriteExportExpression: ["Specifier", "Expression", "Expression"],
-    WriteVariableExpression: ["VariableIdentifier", "Expression", "Expression"],
+    SaveExportExpression: ["Specifier", "Expression", "Expression"],
+    WriteExpression: ["VariableIdentifier", "Expression", "Expression"],
     WriteEnclaveExpression: [
       "WritableEnclaveVariableIdentifier",
       "Expression",

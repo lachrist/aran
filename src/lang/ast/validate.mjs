@@ -4,12 +4,18 @@ import {
   filterOut,
   concat,
   map,
-  flaten,
+  flat,
   repeat,
+  lastIndexOf,
 } from "array-lite";
-import {assert, generateDeadcode} from "../../util.mjs";
+import {assert, generateThrowError} from "../../util.mjs";
 import {getSyntax, isSyntaxType} from "./syntax.mjs";
-import {dispatchNode, getNodeType, getNodeFieldArray} from "./accessor.mjs";
+import {
+  generateMakeNodeSlow,
+  dispatchNode,
+  getNodeType,
+  getNodeFieldArray,
+} from "./accessor.mjs";
 
 const {
   String,
@@ -37,22 +43,20 @@ const generateGetNodeKind = () => {
 };
 const getNodeKind = generateGetNodeKind();
 
-const generateMake1 = (type) => (field1) => [type, field1];
-const generateMake2 = (type) => (field1, field2) => [type, field1, field2];
-const generateMake3 = (type) => (field1, field2, field3) =>
-  [type, field1, field2, field3];
-const makePrimitiveExpression = generateMake1("PrimitiveExpression");
-const makeReadExpression = generateMake1("ReadExpression");
-const makeReadEnclaveExpression = generateMake1("ReadEnclaveExpression");
-const makeGetSuperEnclaveExpression = generateMake1(
+const makePrimitiveExpression = generateMakeNodeSlow("PrimitiveExpression");
+const makeReadExpression = generateMakeNodeSlow("ReadExpression");
+const makeReadEnclaveExpression = generateMakeNodeSlow("ReadEnclaveExpression");
+const makeGetSuperEnclaveExpression = generateMakeNodeSlow(
   "GetSuperEnclaveExpression",
 );
-const makeCallSuperEnclaveExpression = generateMake1(
+const makeCallSuperEnclaveExpression = generateMakeNodeSlow(
   "CallSuperEnclaveExpression",
 );
-const makeDeclareEnclaveStatement = generateMake3("DeclareEnclaveStatement");
-const makeImportLink = generateMake2("ImportLink");
-const makeExportLink = generateMake1("ExportLink");
+const makeDeclareEnclaveStatement = generateMakeNodeSlow(
+  "DeclareEnclaveStatement",
+);
+const makeImportLink = generateMakeNodeSlow("ImportLink");
+const makeExportLink = generateMakeNodeSlow("ExportLink");
 
 const generateIsType = (type) => (node) => getNodeType(node) === type;
 const isReturnStatement = generateIsType("ReturnStatement");
@@ -102,21 +106,20 @@ const isConstDeclareEnclaveStatement =
   generateIsDeclareEnclaveStatement("const");
 const isVarDeclareEnclaveStatement = generateIsDeclareEnclaveStatement("var");
 
-const generateIsReadVariableEnclaveExpression = (identifier1) => {
+const generateIsReadEnclaveExpression = (identifier1) => {
   const callbacks = {
     __proto__: null,
-    ReadVariableEnclaveExpression: (context, node, identifier2) =>
+    ReadEnclaveExpression: (context, node, identifier2) =>
       identifier1 === identifier2,
   };
   const callback = (context, node) => false;
   return (node) => dispatchNode(null, node, callbacks, callback);
 };
-const isThisReadVariableEnclaveExpression =
-  generateIsReadVariableEnclaveExpression("this");
-const isNewTargetReadVariableEnclaveExpression =
-  generateIsReadVariableEnclaveExpression("new.target");
-const isArgumentsReadVariableEnclaveExpression =
-  generateIsReadVariableEnclaveExpression("arguments");
+const isThisReadEnclaveExpression = generateIsReadEnclaveExpression("this");
+const isNewTargetReadEnclaveExpression =
+  generateIsReadEnclaveExpression("new.target");
+const isArgumentsReadEnclaveExpression =
+  generateIsReadEnclaveExpression("arguments");
 
 const databases = {__proto__: null};
 for (const kind in syntax) {
@@ -176,7 +179,7 @@ const digestNode = (node, type, path) => {
     } else {
       assert(type.length === node.length, `array length mismatch at ${path}`);
     }
-    return flaten(
+    return flat(
       map(type, (_, index) =>
         digestNode(node[index], type[index], `${path}/${String(index)}`),
       ),
@@ -187,19 +190,44 @@ const digestNode = (node, type, path) => {
 
 const immutable_trap_object = {
   __proto__: null,
-  setPrototypeOf: generateDeadcode("caught setPrototypeOf on immutable node"),
-  preventExtensions: generateDeadcode(
+  setPrototypeOf: generateThrowError("caught setPrototypeOf on immutable node"),
+  preventExtensions: generateThrowError(
     "caught preventExtensions on immutable node",
   ),
-  defineProperty: generateDeadcode("caught defineProperty on immutable node"),
-  deleteProperty: generateDeadcode("caught deleteProperty on immutable node"),
-  set: generateDeadcode("caught set on immutable node"),
+  defineProperty: generateThrowError("caught defineProperty on immutable node"),
+  deleteProperty: generateThrowError("caught deleteProperty on immutable node"),
+  set: generateThrowError("caught set on immutable node"),
 };
+
+const digestable = [
+  // Label //
+  "BreakStatement",
+  // Identifier //
+  "ReadExpression",
+  "WriteExpression",
+  // Link //
+  "ImportExpression",
+  "ExportExpression",
+  // Enclave //
+  "DeclareEnclaveStatement",
+  "CallSuperEnclaveExpression",
+  "GetSuperEnclaveExpression",
+  "SetSuperEnclaveExpression",
+  // Closure //
+  "ReturnStatement",
+  "AwaitExpression",
+  "YieldExpression",
+];
+
+const isDuplicate = (element, index, array) =>
+  lastIndexOf(array, element) > index;
 
 const generateValidateNode = () => {
   const callbacks = {
     __proto__: null,
     ModuleProgram: (digest, node, links, block) => {
+      digest = filterOut(digest, isThisReadEnclaveExpression);
+      digest = filterOut(digest, isArgumentsReadEnclaveExpression);
       digest = filterOut(digest, isVarDeclareEnclaveStatement);
       digest = filterOut(digest, isAwaitExpression);
       digest = filterOut(digest, generateIsBoundLinkExpression(links));
@@ -207,6 +235,8 @@ const generateValidateNode = () => {
       return digest;
     },
     ScriptProgram: (digest, node, block) => {
+      digest = filterOut(digest, isThisReadEnclaveExpression);
+      digest = filterOut(digest, isArgumentsReadEnclaveExpression);
       digest = filterOut(digest, isDeclareEnclaveStatement);
       checkOut(digest);
       return digest;
@@ -224,13 +254,13 @@ const generateValidateNode = () => {
         digest = filterOut(digest, isSetSuperEnclaveExpression);
       }
       if (includes(enclaves, "new.target")) {
-        digest = filterOut(digest, isNewTargetReadVariableEnclaveExpression);
+        digest = filterOut(digest, isNewTargetReadEnclaveExpression);
       }
       if (includes(enclaves, "this")) {
-        digest = filterOut(digest, isThisReadVariableEnclaveExpression);
+        digest = filterOut(digest, isThisReadEnclaveExpression);
       }
       if (includes(enclaves, "arguments")) {
-        digest = filterOut(digest, isArgumentsReadVariableEnclaveExpression);
+        digest = filterOut(digest, isArgumentsReadEnclaveExpression);
       }
       if (includes(enclaves, "var")) {
         digest = filterOut(digest, isVarDeclareEnclaveStatement);
@@ -238,10 +268,14 @@ const generateValidateNode = () => {
       checkOut(digest);
       return digest;
     },
-    BlockStatement: (digest, node, identifiers, statements) => {
+    Block: (digest, node, identifiers, statements) => {
       digest = filterOut(
         digest,
         generateIsBoundVariableExpression(identifiers),
+      );
+      assert(
+        !some(identifiers, isDuplicate),
+        "duplicate identifier found Block",
       );
       assert(
         !some(digest, isLetDeclareEnclaveStatement),
@@ -270,16 +304,16 @@ const generateValidateNode = () => {
         "constructor ClosureExpression cannot be asynchronous",
       );
       assert(
-        kind === "arrow" || !some(isNewTargetReadVariableEnclaveExpression),
-        "found new.target EnclaveVariableExpression in non-arrow ClosureExpression",
+        kind === "arrow" || !some(isNewTargetReadEnclaveExpression),
+        "found new.target ReadEnclaveExpression in non-arrow ClosureExpression",
       );
       assert(
-        kind === "arrow" || !some(isThisReadVariableEnclaveExpression),
-        "found this EnclaveVariableExpression in non-arrow ClosureExpression",
+        kind === "arrow" || !some(isThisReadEnclaveExpression),
+        "found this ReadEnclaveExpression in non-arrow ClosureExpression",
       );
       assert(
-        kind === "arrow" || !some(isArgumentsReadVariableEnclaveExpression),
-        "found arguments EnclaveVariableExpression in non-arrow ClosureExpression",
+        kind === "arrow" || !some(isArgumentsReadEnclaveExpression),
+        "found arguments ReadEnclaveExpression in non-arrow ClosureExpression",
       );
       assert(
         !some(digest, isAwaitExpression),
@@ -311,6 +345,8 @@ const generateValidateNode = () => {
       );
       return digest;
     },
+    BlockStatement: (digest, node, labels, block) =>
+      filterOut(digest, generateIsBoundBreakStatement(labels)),
     IfStatement: (digest, node, labels, expression, block1, block2) =>
       filterOut(digest, generateIsBoundBreakStatement(labels)),
     WhileStatement: (digest, node, labels, expression, block) =>
@@ -340,15 +376,21 @@ const generateValidateNode = () => {
     node = new Proxy(immutable_trap_object, node);
     const type = getNodeType(node);
     const kind = getNodeKind(node);
-    apply(databases[kind], setWeakMap, [
+    let digest = dispatchNode(
+      digestNode(getNodeFieldArray(node), syntax[kind][type], type),
       node,
-      dispatchNode(
-        digestNode(getNodeFieldArray(node), syntax[kind][type], type),
-        node,
-        callbacks,
-        callback,
-      ),
-    ]);
+      callbacks,
+      callback,
+    );
+    if (
+      includes(digestable, type) ||
+      isThisReadEnclaveExpression(node) ||
+      isNewTargetReadEnclaveExpression(node) ||
+      isArgumentsReadEnclaveExpression(node)
+    ) {
+      digest = concat(digest, [node]);
+    }
+    apply(databases[kind], setWeakMap, [node, digest]);
     return node;
   };
 };
