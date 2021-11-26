@@ -22,7 +22,7 @@
 globals:
   globalThis: readonly
 parserOptions:
-  ecmaVersion: 2020
+  ecmaVersion: 2021
   sourceType: module
 plugins:
   - import
@@ -63,7 +63,7 @@ rules:
     - BinaryExpression[operator=">>>"]
     # AssignmentExpression
     - :not(ExpressionStatement, ForStatement) > AssignmentExpression
-    - ForStatement > AssignmentExpression.test, AssignmentExpression.update
+    - ForStatement > AssignmentExpression.init, AssignmentExpression.test
     # Disable Accessor
     - MethodDefinition[kind="get"]
     - MethodDefinition[kind="set"]
@@ -72,7 +72,7 @@ rules:
     # Variable declaration
     - VariableDeclaration[kind=var]
     - VariableDeclaration[declarations.length>1]
-    - VariableDeclarator[init=null]
+    - :not(ForInStatement) > VariableDeclaration > VariableDeclarator[init=null]
     # Identifier
     - Identifier[name="eval"]
     - Identifier[name="arguments"]
@@ -80,6 +80,8 @@ rules:
     - ArrowFunctionExpression[async=true]
     # Empty ReturnStatement
     - ReturnStatement[argument=null]
+    # CallExpression
+    - CallExpression[callee.type="MemberExpression"]
     # Literal Computation
     # - BinaryExpression[left.type="Literal"][right.type="Literal"]
     # - UnaryExpression[argument.type="Literal"]
@@ -238,7 +240,7 @@ rules:
   # no-obj-calls >> globals disabled
   # no-octal-escape >> Octal disabled in strict mode
   # no-octal >> Octal disabled in strict mode
-  no-param-reassign: error
+  # no-param-reassign: error
   # no-path-concat >> deprecated
   # no-plusplus >> UpdateExpression Disabled by no-restricted-syntax
   # no-process-env >> deprecated
@@ -310,7 +312,7 @@ rules:
   # padding-line-between-statements >> Prettier
   # prefer-arrow-callback >> Function disabled by no-restricted-syntax
   prefer-const: [error, {destructuring: any}]
-  prefer-destructuring: error
+  # prefer-destructuring: error >> not intersted
   # prefer-exponentiation-operator >> heuristic
   # prefer-named-capture-group: error >> RegExp
   # prefer-numeric-literals >> no Number or parseInt global
@@ -320,7 +322,7 @@ rules:
   # prefer-rest-params >> Identifier[name="arguments"] disabled by no-restrict-syntax
   # prefer-spread >> Heuristic
   prefer-template: error
-  quote-props: [error, as-needed]
+  quote-props: [error, consistent-as-needed]
   # quotes: [error, double] >> Prettier
   # radix >> No globals
   # require-atomic-updates >> Asynchronous and generator closures disabled by no-restricted-syntax
@@ -360,7 +362,7 @@ rules:
   import/default: error
   # import/dynamic-import-chunkname: error
   import/export: error
-  import/exports-last: error
+  # import/exports-last: error
   # import/extensions: error
   import/first: error
   # import/group-exports: error
@@ -379,7 +381,7 @@ rules:
   # import/no-dynamic-require: error
   import/no-extraneous-dependencies: error
   # import/no-import-module-exports: error
-  import/no-internal-modules: error
+  # import/no-internal-modules: error
   import/no-mutable-exports: error
   # import/no-named-as-default-member: error
   # import/no-named-as-default: error
