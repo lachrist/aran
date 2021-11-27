@@ -24,7 +24,8 @@ const pushLine = (line) => {
   length += 1;
 }
 if (should_validate_node) {
-  pushLine('import { validateNode } from "./validate.mjs"');
+  pushLine('import { validateNode } from "./validate.mjs";');
+  pushLine("");
 }
 for (const kind in syntax) {
   for (const type in syntax[kind]) {
