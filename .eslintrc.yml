@@ -21,6 +21,7 @@
 
 globals:
   globalThis: readonly
+  console: readonly
 parserOptions:
   ecmaVersion: 2021
   sourceType: module
@@ -30,7 +31,7 @@ rules:
   ##########
   # Custom #
   ##########
-  custom-no-globals: [error, globalThis]
+  custom-no-globals: [error, globalThis, console]
   ################
   # Core Complex #
   ################
@@ -81,7 +82,7 @@ rules:
     # Empty ReturnStatement
     - ReturnStatement[argument=null]
     # CallExpression
-    - CallExpression[callee.type="MemberExpression"]
+    - :not(CallExpression[callee.type="MemberExpression"][callee.object.type="Identifier"][callee.object.name="console"])CallExpression[callee.type="MemberExpression"]
     # Literal Computation
     # - BinaryExpression[left.type="Literal"][right.type="Literal"]
     # - UnaryExpression[argument.type="Literal"]

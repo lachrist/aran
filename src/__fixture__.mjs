@@ -3,6 +3,10 @@
 import {strict as Assert} from "assert";
 /* eslint-enable no-nodejs-modules */
 
+const {Error} = globalThis;
+
+Error.stackTraceLimit = 1/0;
+
 export const {
   fail: assertUnreachable,
   ok: assert,

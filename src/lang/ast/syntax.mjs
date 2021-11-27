@@ -16,25 +16,21 @@ const syntax = {
   __proto__: null,
   Program: {
     __proto__: null,
-    ScriptProgram: [["Enclave", "*"], "Block"],
-    ModuleProgram: [["Enclave", "*"], ["Link", "*"], "Block"],
-    EvalProgram: [
-      ["Enclave", "*"],
-      ["VariableIdentifier", "*"],
-      "VariableIdentifier",
-      "Block",
-    ],
+    ScriptProgram: ["Block"],
+    ModuleProgram: [["Link", "*"], "Block"],
+    EvalProgram: [["Enclave", "*"], ["Variable", "*"], "Block"],
   },
   Link: {
     __proto__: null,
-    ImportLink: ["Specifier", "Source"],
+    ImportLink: ["NullableSpecifier", "Source"],
     ExportLink: ["Specifier"],
-    AggregateLink: ["Specifier", "Source", "Specifier"],
+    AggregateLink: ["NullableSpecifier", "NullableSpecifier", "Source"],
   },
   Block: {
     __proto__: null,
     Block: [
-      ["VariableIdentifier", "*"],
+      ["Label", "*"],
+      ["Variable", "*"],
       ["Statement", "*"],
     ],
   },
@@ -43,36 +39,36 @@ const syntax = {
     // BlockLess //
     ExpressionStatement: ["Expression"],
     ReturnStatement: ["Expression"],
-    BreakStatement: ["LabelIdentifier"],
+    BreakStatement: ["Label"],
     DebuggerStatement: [],
     DeclareEnclaveStatement: [
       "VariableKind",
-      "WritableEnclaveVariableIdentifier",
+      "WritableEnclaveVariable",
       "Expression",
     ],
     // BlockFull //
-    BlockStatement: [["LabelIdentifier", "*"], "Block"],
-    IfStatement: [["LabelIdentifier", "*"], "Expression", "Block", "Block"],
-    WhileStatement: [["LabelIdentifier", "*"], "Expression", "Block"],
-    TryStatement: [["LabelIdentifier", "*"], "Block", "Block", "Block"],
+    BlockStatement: ["Block"],
+    IfStatement: ["Expression", "Block", "Block"],
+    WhileStatement: ["Expression", "Block"],
+    TryStatement: ["Block", "Block", "Block"],
   },
   Expression: {
     __proto__: null,
     // Producer //
     PrimitiveExpression: ["Primitive"],
     IntrinsicExpression: ["Intrinsic"],
-    LoadImportExpression: ["Specifier", "Source"],
-    ReadExpression: ["VariableIdentifier"],
-    ReadEnclaveExpression: ["ReadableEnclaveVariableIdentifier"],
-    TypeofEnclaveExpression: ["ReadableEnclaveVariableIdentifier"],
+    LoadImportExpression: ["NullableSpecifier", "Source"],
+    ReadExpression: ["Variable"],
+    ReadEnclaveExpression: ["ReadableEnclaveVariable"],
+    TypeofEnclaveExpression: ["ReadableEnclaveVariable"],
     ClosureExpression: ["ClosureKind", "Asynchronous", "Generator", "Block"],
     // Consumer //
     AwaitExpression: ["Expression"],
     YieldExpression: ["Delegate", "Expression"],
     SaveExportExpression: ["Specifier", "Expression", "Expression"],
-    WriteExpression: ["VariableIdentifier", "Expression", "Expression"],
+    WriteExpression: ["Variable", "Expression", "Expression"],
     WriteEnclaveExpression: [
-      "WritableEnclaveVariableIdentifier",
+      "WritableEnclaveVariable",
       "Expression",
       "Expression",
     ],
@@ -83,12 +79,7 @@ const syntax = {
     SetSuperEnclaveExpression: ["Expression", "Expression"],
     GetSuperEnclaveExpression: ["Expression"],
     CallSuperEnclaveExpression: ["Expression"],
-    EvalExpression: [
-      ["Enclave", "*"],
-      ["VariableIdentifier", "*"],
-      "VariableIdentifier",
-      "Expression",
-    ],
+    EvalExpression: [["Enclave", "*"], ["Variable", "*"], "Expression"],
     ImportExpression: ["Expression"],
     ApplyExpression: ["Expression", "Expression", ["Expression", "*"]],
     ConstructExpression: ["Expression", ["Expression", "*"]],
@@ -244,23 +235,24 @@ const predicates = {
     any === "true" ||
     any === "false" ||
     (typeof any === "string" && apply(testRegExp, /^['".0-9]/u, [any])),
-  Specifier: (any) =>
+  NullableSpecifier: (any) =>
     any === null || (typeof any === "string" && isIdentifier(any)),
-  ReadableEnclaveVariableIdentifier: (any) =>
+  Specifier: (any) => typeof any === "string" && isIdentifier(any),
+  ReadableEnclaveVariable: (any) =>
     typeof any === "string" &&
     (any === "new.target" ||
       any === "this" ||
       any === "eval" ||
       any === "arguments" ||
       (isIdentifier(any) && !includes(keywords, any))),
-  WritableEnclaveVariableIdentifier: (any) =>
+  WritableEnclaveVariable: (any) =>
     typeof any === "string" && isIdentifier(any) && !includes(keywords, any),
-  LabelIdentifier: (any) =>
+  Label: (any) =>
     typeof any === "string" &&
     isIdentifier(any) &&
     !includes(keywords, any) &&
     !includes(aran_keywords, any),
-  VariableIdentifier: (any) =>
+  Variable: (any) =>
     typeof any === "string" &&
     isIdentifier(any) &&
     !includes(keywords, any) &&

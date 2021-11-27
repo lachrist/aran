@@ -17,26 +17,28 @@ assertEqual(isSyntaxType("undefined", "Primitive"), true);
 assertEqual(isSyntaxType("foo", "Primitive"), false);
 
 // Specifier //
-assertEqual(isSyntaxType(null, "Specifier"), true);
+assertEqual(isSyntaxType(null, "Specifier"), false);
 assertEqual(isSyntaxType("this", "Specifier"), true);
 assertEqual(isSyntaxType("new.target", "Specifier"), false);
 
-// ReadableEnclaveVariableIdentifier //
-assertEqual(isSyntaxType("foo", "ReadableEnclaveVariableIdentifier"), true);
-assertEqual(isSyntaxType("this", "ReadableEnclaveVariableIdentifier"), true);
-assertEqual(
-  isSyntaxType("function", "ReadableEnclaveVariableIdentifier"),
-  false,
-);
+// NullableSpecifier //
+assertEqual(isSyntaxType(null, "NullableSpecifier"), true);
+assertEqual(isSyntaxType("this", "NullableSpecifier"), true);
+assertEqual(isSyntaxType("new.target", "NullableSpecifier"), false);
 
-// WritableEnclaveVariableIdentifier //
-assertEqual(isSyntaxType("foo", "WritableEnclaveVariableIdentifier"), true);
-assertEqual(isSyntaxType("this", "WritableEnclaveVariableIdentifier"), false);
+// ReadableEnclaveVariable //
+assertEqual(isSyntaxType("foo", "ReadableEnclaveVariable"), true);
+assertEqual(isSyntaxType("this", "ReadableEnclaveVariable"), true);
+assertEqual(isSyntaxType("function", "ReadableEnclaveVariable"), false);
 
-// LabelIdentifier //
-assertEqual(isSyntaxType("foo", "LabelIdentifier"), true);
-assertEqual(isSyntaxType("this", "LabelIdentifier"), false);
+// WritableEnclaveVariable //
+assertEqual(isSyntaxType("foo", "WritableEnclaveVariable"), true);
+assertEqual(isSyntaxType("this", "WritableEnclaveVariable"), false);
 
-// VariableIdentifier //
-assertEqual(isSyntaxType("foo", "VariableIdentifier"), true);
-assertEqual(isSyntaxType("this", "VariableIdentifier"), false);
+// Label //
+assertEqual(isSyntaxType("foo", "Label"), true);
+assertEqual(isSyntaxType("this", "Label"), false);
+
+// Variable //
+assertEqual(isSyntaxType("foo", "Variable"), true);
+assertEqual(isSyntaxType("this", "Variable"), false);
