@@ -1,5 +1,6 @@
 import {
   some,
+  every,
   includes,
   filter,
   filterOut,
@@ -73,7 +74,7 @@ const isReturnStatement = generateIsType("ReturnStatement");
 const isYieldExpression = generateIsType("YieldExpression");
 const isAwaitExpression = generateIsType("AwaitExpression");
 const isInputExpression = generateIsType("InputExpression");
-const isExpressionEffect = generateIsType("ExpressionEffect");
+const isCompletionStatement = generateIsType("CompletionStatement");
 const isDeclareEnclaveStatement = generateIsType("DeclareEnclaveStatement");
 const isCallSuperEnclaveExpression = generateIsType(
   "CallSuperEnclaveExpression",
@@ -259,15 +260,8 @@ const digestNestedBlock = (digest) => {
   return digest;
 };
 
-const generateIsCompletionStatement = () => {
-  const callbacks = {
-    __proto__: null,
-    EffectStatement: (context, node, effect) => isExpressionEffect(effect),
-  };
-  const default_callback = (context, node) => false;
-  return (node) => dispatchNode(null, node, callbacks, default_callback);
-};
-const isCompletionStatement = generateIsCompletionStatement();
+const isLastOrNotCompletionStatement = (node, index, nodes) =>
+  index === nodes.length - 1 || !isCompletionStatement(node);
 
 const generateIsCompletionBlock = () => {
   const callback = (context, node, labels, variables, statements) =>
@@ -289,8 +283,12 @@ const generateValidateNode = () => {
     __proto__: null,
     ModuleProgram: (digest, node, links, block) => {
       assert(
+        !isCompletionBlock(block),
+        "ModuleProgram.body should not be a completion Block",
+      );
+      assert(
         !isLabeledBlock(block),
-        "ModuleProgram.body should not be labeled",
+        "ModuleProgram.body should not be a labeled Block",
       );
       assert(
         !some(flatMap(links, extractExportSpecifierArray), isDuplicate),
@@ -305,8 +303,12 @@ const generateValidateNode = () => {
     },
     ScriptProgram: (digest, node, block) => {
       assert(
+        isCompletionBlock(block),
+        "ScriptProgram.body should be a completion Block",
+      );
+      assert(
         !isLabeledBlock(block),
-        "ScriptProgram.body should not be labeled",
+        "ScriptProgram.body should not be a labeled Block",
       );
       digest = filterOut(digest, isThisReadEnclaveExpression);
       digest = filterOut(digest, isArgumentsReadEnclaveExpression);
@@ -315,10 +317,13 @@ const generateValidateNode = () => {
       return digest;
     },
     EvalProgram: (digest, node, enclaves, variables, block) => {
-      assert(!isLabeledBlock(block), "EvalProgram.body should not be labeled");
+      assert(
+        !isLabeledBlock(block),
+        "EvalProgram.body should not be a labeled Block",
+      );
       assert(
         isCompletionBlock(block),
-        "EvalProgram.body should end with a EffectStatement whose effect is an ExpressionEffect",
+        "EvalProgram.body should be a completion Block",
       );
       digest = filterOut(digest, generateIsBoundVariableNode(variables));
       if (includes(enclaves, "super.call")) {
@@ -358,6 +363,10 @@ const generateValidateNode = () => {
     Block: (digest, node, labels, variables, statements) => {
       assert(!some(variables, isDuplicate), "duplicate variable found Block");
       assert(
+        every(statements, isLastOrNotCompletionStatement),
+        "If present CompletionStatement should appear last in Block",
+      );
+      assert(
         filter(digest, isInputExpression).length <= 1,
         "multiple InputExpression found in block",
       );
@@ -370,6 +379,10 @@ const generateValidateNode = () => {
       assert(
         !isLabeledBlock(block),
         "ClosureExpression.body should not be labeled",
+      );
+      assert(
+        isCompletionBlock(block),
+        "Closure.body should be a completion Block",
       );
       assert(
         !generator || (kind !== "arrow" && kind !== "constructor"),
@@ -428,13 +441,58 @@ const generateValidateNode = () => {
       );
       return digest;
     },
-    BlockStatement: (digest, node, block) => digestNestedBlock(digest),
-    IfStatement: (digest, node, expression, block1, block2) =>
-      digestNestedBlock(digest),
-    WhileStatement: (digest, node, expression, block) =>
-      digestNestedBlock(digest),
-    TryStatement: (digest, node, block1, block2, block3) =>
-      digestNestedBlock(digest),
+    BlockStatement: (digest, node, block) => {
+      assert(
+        !isCompletionBlock(block),
+        "BlockStatement.body should not be a completion Block",
+      );
+      return digestNestedBlock(digest);
+    },
+    IfStatement: (digest, node, expression, block1, block2) => {
+      assert(
+        !isCompletionBlock(block1),
+        "IfStatement.consequent should not be a completion Block",
+      );
+      assert(
+        !isCompletionBlock(block2),
+        "IfStatement.alternate should not be a completion Block",
+      );
+      return digestNestedBlock(digest);
+    },
+    WhileStatement: (digest, node, expression, block) => {
+      assert(
+        !isCompletionBlock(block),
+        "WhileStatement.body should not be a completion Block",
+      );
+      return digestNestedBlock(digest);
+    },
+    TryStatement: (digest, node, block1, block2, block3) => {
+      assert(
+        !isCompletionBlock(block1),
+        "TryStatement.body should not be a completion Block",
+      );
+      assert(
+        !isCompletionBlock(block2),
+        "TryStatement.handler should not be a completion Block",
+      );
+      assert(
+        !isCompletionBlock(block3),
+        "TryStatement.finalizer should not be a completion Block",
+      );
+      assert(
+        !isLabeledBlock(block1),
+        "TryStatement.body should not be labeled Block",
+      );
+      assert(
+        !isLabeledBlock(block2),
+        "TryStatement.handler should not be labeled Block",
+      );
+      assert(
+        !isLabeledBlock(block3),
+        "TryStatement.finalizer should not be labeled Block",
+      );
+      return digestNestedBlock(digest);
+    },
     EvalExpression: (digest, node, enclaves, variables, expression) =>
       concat(
         digest,

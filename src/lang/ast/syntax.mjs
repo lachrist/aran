@@ -37,6 +37,7 @@ const syntax = {
   Statement: {
     __proto__: null,
     // BlockLess //
+    CompletionStatement: ["Expression"],
     EffectStatement: ["Effect"],
     ReturnStatement: ["Expression"],
     BreakStatement: ["Label"],
