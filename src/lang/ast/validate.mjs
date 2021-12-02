@@ -1,6 +1,7 @@
 import {
   some,
   includes,
+  filter,
   filterOut,
   concat,
   map,
@@ -58,6 +59,7 @@ const makeGetSuperEnclaveExpression = bind(
   makeNode,
   "GetSuperEnclaveExpression",
 );
+const makeSetSuperEnclaveEffect = bind(makeNode, "SetSuperEnclaveEffect");
 const makeCallSuperEnclaveExpression = bind(
   makeNode,
   "CallSuperEnclaveExpression",
@@ -70,19 +72,21 @@ const generateIsType = (type) => (node) => getNodeType(node) === type;
 const isReturnStatement = generateIsType("ReturnStatement");
 const isYieldExpression = generateIsType("YieldExpression");
 const isAwaitExpression = generateIsType("AwaitExpression");
+const isInputExpression = generateIsType("InputExpression");
+const isExpressionEffect = generateIsType("ExpressionEffect");
 const isDeclareEnclaveStatement = generateIsType("DeclareEnclaveStatement");
 const isCallSuperEnclaveExpression = generateIsType(
   "CallSuperEnclaveExpression",
 );
 const isGetSuperEnclaveExpression = generateIsType("GetSuperEnclaveExpression");
-const isSetSuperEnclaveExpression = generateIsType("SetSuperEnclaveExpression");
+const isSetSuperEnclaveEffect = generateIsType("SetSuperEnclaveEffect");
 const isBreakStatement = generateIsType("BreakStatement");
 
-const generateIsBoundVariableExpression = (variables) => {
+const generateIsBoundVariableNode = (variables) => {
   const callbacks = {
     __proto__: null,
     ReadExpression: (context, node, variable) => includes(variables, variable),
-    WriteExpression: (context, node, variable, expression1, expression2) =>
+    WriteEffect: (context, node, variable, expression) =>
       includes(variables, variable),
   };
   const callback = (context, node) => false;
@@ -136,8 +140,9 @@ const generateMakeEnclaveDummy = () => {
   const dummy_expression = makePrimitiveExpression(stringifyJSON("dummy"));
   const dummies = {
     "__proto__": null,
-    "super": makeGetSuperEnclaveExpression(dummy_expression),
-    "super()": makeCallSuperEnclaveExpression(dummy_expression),
+    "super.get": makeGetSuperEnclaveExpression(dummy_expression),
+    "super.set": makeSetSuperEnclaveEffect(dummy_expression, dummy_expression),
+    "super.call": makeCallSuperEnclaveExpression(dummy_expression),
     "new.target": makeReadEnclaveExpression("new.target"),
     "this": makeReadEnclaveExpression("this"),
     "arguments": makeReadEnclaveExpression("arguments"),
@@ -157,15 +162,10 @@ const generateIsBoundLinkExpression = (links) => {
   const hash = map(links, stringifyJSON);
   const callbacks = {
     __proto__: null,
-    LoadImportExpression: (context, node, specifier, source) =>
-      includes(hash, stringifyJSON(makeImportLink(specifier, source))),
-    SaveExportExpression: (
-      context,
-      node,
-      specifier,
-      expression1,
-      expression2,
-    ) => includes(hash, stringifyJSON(makeExportLink(specifier))),
+    StaticImportExpression: (context, node, source) =>
+      includes(hash, stringifyJSON(makeImportLink(source))),
+    ExportEffect: (context, node, specifier, expression) =>
+      includes(hash, stringifyJSON(makeExportLink(specifier))),
   };
   const callback = (context, node) => false;
   return (node) => dispatchNode(null, node, callbacks, callback);
@@ -223,19 +223,21 @@ const immutable_trap_object = {
 };
 
 const digestable = [
+  // Input //
+  "InputExpression",
   // Label //
   "BreakStatement",
   // Identifier //
   "ReadExpression",
-  "WriteExpression",
+  "WriteEffect",
   // Link //
-  "LoadImportExpression",
-  "SaveExportExpression",
+  "StaticImportExpression",
+  "ExportEffect",
   // Enclave //
   "DeclareEnclaveStatement",
   "CallSuperEnclaveExpression",
   "GetSuperEnclaveExpression",
-  "SetSuperEnclaveExpression",
+  "SetSuperEnclaveEffect",
   // Closure //
   "ReturnStatement",
   "AwaitExpression",
@@ -257,10 +259,20 @@ const digestNestedBlock = (digest) => {
   return digest;
 };
 
+const generateIsCompletionStatement = () => {
+  const callbacks = {
+    __proto__: null,
+    EffectStatement: (context, node, effect) => isExpressionEffect(effect),
+  };
+  const default_callback = (context, node) => false;
+  return (node) => dispatchNode(null, node, callbacks, default_callback);
+};
+const isCompletionStatement = generateIsCompletionStatement();
+
 const generateIsCompletionBlock = () => {
   const callback = (context, node, labels, variables, statements) =>
     statements.length > 0 &&
-    getNodeType(statements[statements.length - 1]) === "ExpressionStatement";
+    isCompletionStatement(statements[statements.length - 1]);
   return (block) => extractNode(null, block, "Block", callback);
 };
 const isCompletionBlock = generateIsCompletionBlock();
@@ -306,15 +318,17 @@ const generateValidateNode = () => {
       assert(!isLabeledBlock(block), "EvalProgram.body should not be labeled");
       assert(
         isCompletionBlock(block),
-        "EvalProgram.body should end with an ExpressionStatement",
+        "EvalProgram.body should end with a EffectStatement whose effect is an ExpressionEffect",
       );
-      digest = filterOut(digest, generateIsBoundVariableExpression(variables));
-      if (includes(enclaves, "super()")) {
+      digest = filterOut(digest, generateIsBoundVariableNode(variables));
+      if (includes(enclaves, "super.call")) {
         digest = filterOut(digest, isCallSuperEnclaveExpression);
       }
-      if (includes(enclaves, "super")) {
+      if (includes(enclaves, "super.get")) {
         digest = filterOut(digest, isGetSuperEnclaveExpression);
-        digest = filterOut(digest, isSetSuperEnclaveExpression);
+      }
+      if (includes(enclaves, "super.set")) {
+        digest = filterOut(digest, isSetSuperEnclaveEffect);
       }
       if (includes(enclaves, "new.target")) {
         digest = filterOut(digest, isNewTargetReadEnclaveExpression);
@@ -331,7 +345,7 @@ const generateValidateNode = () => {
       checkoutDigest(digest, "EvalProgram");
       return digest;
     },
-    AggregateLink: (digest, node, specifier1, specifier2, source) => {
+    AggregateLink: (digest, node, source, specifier1, specifier2) => {
       // export Foo as *   from "source"; // invalid
       // export *          from "source"; // valid
       // export *   as Foo from "source"; // valid
@@ -343,8 +357,13 @@ const generateValidateNode = () => {
     },
     Block: (digest, node, labels, variables, statements) => {
       assert(!some(variables, isDuplicate), "duplicate variable found Block");
+      assert(
+        filter(digest, isInputExpression).length <= 1,
+        "multiple InputExpression found in block",
+      );
+      digest = filterOut(digest, isInputExpression);
       digest = filterOut(digest, generateIsBoundBreakStatement(labels));
-      digest = filterOut(digest, generateIsBoundVariableExpression(variables));
+      digest = filterOut(digest, generateIsBoundVariableNode(variables));
       return digest;
     },
     ClosureExpression: (digest, node, kind, asynchronous, generator, block) => {
@@ -400,7 +419,7 @@ const generateValidateNode = () => {
         "GetSuperEnclaveExpression in non-arrow ClosureExpression",
       );
       assert(
-        kind === "arrow" || !some(digest, isSetSuperEnclaveExpression),
+        kind === "arrow" || !some(digest, isSetSuperEnclaveEffect),
         "SetSuperEnclaveExpression in non-arrow ClosureExpression",
       );
       assert(

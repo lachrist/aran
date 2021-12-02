@@ -1,74 +1,136 @@
 
 {
-  const Tree = require("../../tree.js");
-  const concatenate = (array1, array2) => {
-    const array3 = [];
-    const length1 = array1.length;
-    const length2 = array2.length;
-    for (let index = 0; index < length1; index++) {
-      array3[index] = array1[index];
-    }
-    for (let index = 0; index < length2; index++) {
-      array3[length1 + index] = array2[index];
-    }
-    return array3;
-  };
+  const {String:{fromCodePoint}, parseInt, parseFloat, BigInt, JSON:{stringify:stringifyJSON}} = globalThis;
+  import {concat} from "array-lite";
+  const appendMaybe = (array, maybe_element) => maybe_element === null ? array : concat(array, [maybe_element]);
+  const identity = (arg) => arg;
+  isKeyword
+  isAranKeyword
+  isUnaryOperator
+  isBinaryOperator
+  isEnclave
+  import {
+    makeScriptProgram,
+    makeModuleProgram,
+    makeEvalProgram,
+    makeImportLink,
+    makeExportLink,
+    makeAggregateLink,
+    makeBlock,
+    makeExpressionStatement,
+    makeReturnStatement,
+    makeBreakStatement,
+    makeDebuggerStatement,
+    makeDeclareEnclaveStatement,
+    makeBlockStatement,
+    makeIfStatement,
+    makeWhileStatement,
+    makeTryStatement,
+    makePrimitiveExpression,
+    makeIntrinsicExpression,
+    makeLoadImportExpression,
+    makeReadExpression,
+    makeReadEnclaveExpression,
+    makeTypeofEnclaveExpression,
+    makeClosureExpression,
+    makeAwaitExpression,
+    makeYieldExpression,
+    makeSaveExportExpression,
+    makeWriteExpression,
+    makeWriteEnclaveExpression,
+    makeSequenceExpression,
+    makeConditionalExpression,
+    makeThrowExpression,
+    makeSetSuperEnclaveExpression,
+    makeGetSuperEnclaveExpression,
+    makeCallSuperEnclaveExpression,
+    makeEvalExpression,
+    makeImportExpression,
+    makeApplyExpression,
+    makeConstructExpression,
+    makeUnaryExpression,
+    makeBinaryExpression,
+    makeObjectExpression,
+  } from "../ast/index.mjs";
 }
 
-StartProgram = _ p:Program _ { return p; }
+StartProgram = _ program:Program _ { return program; }
 
-StartLink = _ p:Link _ { return p; }
+StartLink = _ link:Link _ { return link; }
 
-StartBlock = _ b:Block _ { return b; }
+StartBlock = block:_Block _ { return block; }
 
-StartBranch = _ b:Branch _ { return b; }
+StartStatement = _ statement:Statement _ { return statement; }
 
-StartStatement = _ ss:SingleStatement_* { return ss.length === 1 ? ss[0] : Tree.ListStatement(ss); }
+StartExpression = _ expression:Expression _ { return expression; }
 
-StartSingleStatement = _ s:SingleStatement _ { return s; }
-
-StartExpression = _ e:Expression _ { return e; }
-
-//////////
-// JSON //
-//////////
+///////////////
+// Primitive //
+///////////////
 
 // https://www.json.org/json-en.html
 
-JSONString
-  = "\"" ss:(JSONStringEscapeSequence / [^\"\\\u0000-\u001F])* "\"" { return ss.join(""); }
+JSONString = $("\"" (JSONStringEscapeSequence / [^\"\\\u0000-\u001F])* "\"")
 
 JSONStringEscapeSequence
-  = "\\\"" { return "\"" }
-  / "\\\\" { return "\\" }
-  / "\\\/" { return "\/" }
-  / "\\b"  { return "\b" }
-  / "\\f"  { return "\f" }
-  / "\\n"  { return "\n" }
-  / "\\r"  { return "\r" }
-  / "\\t"  { return "\t" }
-  / "\\u" s:$([0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F]) { return String.fromCodePoint(parseInt(s, 16)); }
+  = "\\\""
+  / "\\\\"
+  / "\\\/"
+  / "\\b"
+  / "\\f"
+  / "\\n"
+  / "\\r"
+  / "\\t"
+  / "\\u" [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F]
 
-JSONNumber
-  = s1:$("-"? ("0" / [1-9][0-9]*)) s2:$(("." [0-9]+)?) s3:$(([eE] [+-]? [0-9]+)?) { return (s2 === "" && s3 === "") ? parseInt(s1, 10) : parseFloat(s1 + s2 + s3, 10); }
+PositiveJSONNumber = $(("0" / [1-9][0-9]*) ("." [0-9]+)? ([eE] [+-]? [0-9]+)?)
+
+String = JSONString
+
+Source = String
+
+Number = PositiveJSONNumber
+
+BigInt = $(("0" / [1-9][0-9]*) "n")
 
 ////////////////
-// ECMAScript //
+// Identifier //
 ////////////////
 
 // https://www.ecma-international.org/ecma-262/10.0/index.html#prod-Identifier
 // https://javascript.info/regexp-unicode
 // https://mathiasbynens.be/notes/javascript-identifiers
 
-Identifier = s:IdentifierStart ss:IdentifierPart* { return s + ss.join(""); }
+Identifier = head:$(IdentifierStart) tail:$(IdentifierPart*) { return head + tail; }
 
-IdentifierStart = s:. & { return /\p{ID_Start}|\$|_/u.test(s); } { return s; }
+Intrinsic = intrinsic:[a-zA-Z.@]+ & { return isIntrinsic(intrinsic); } { return intrinsic; }
 
-IdentifierPart = s:. & { return /\p{ID_Continue}|\$|\u200C|\u200D/u.test(s); } { return s; }
+IdentifierStart = character:. & { return /\p{ID_Start}|\$|_/u.test(character); }
 
-/////////////
-// Helpers //
-/////////////
+IdentifierPart = character:. & { return /\p{ID_Continue}|\$|\u200C|\u200D/u.test(character); }
+
+Label = identifier:Identifier & { return !isLabel(identifier); } { return identifier; }
+
+Variable = identifier:Identifier & { return !isVariable(identifier) } { return identifier; }
+
+VariableKind = kind:$([a-z]+) & { return isVariableKind(kind); } { return kind; }
+
+ClosureKind = kind:$([a-z]+) & { return isClosureKind(kind); } { return kind; }
+
+Specifier = identifier:Identifier & { return isSpecifier(identifier) } { return identifier; }
+
+EnclaveVariable = "enclave." identifier:Identifier & { return isEnclaveVariable(identifier); } { return identifier; }
+
+WritableEnclaveVariableIdentifier = identifier:Identifier & { return isWritableEnclaveVariable(s); } { return identifier; }
+
+ReadableEnclaveVariableIdentifier
+  = "new.target" __ { return "new.target"; }
+  / "import.meta" __ { return "import.meta"; }
+  / identifier:Identifier & { return isReadableEnclaveVariable(identifier); } { return identifier; }
+
+///////////
+// Space //
+///////////
 
 __ = !IdentifierPart
 
@@ -77,29 +139,6 @@ Comment
   / "//" [^\n]*
 
 _ = ([ \n\t] / Comment)*
-
-String = JSONString
-
-Number = JSONNumber
-
-BigInt = s:$([0-9]+) "n" { return BigInt(s); }
-
-LabelIdentifier
-  = s:Identifier & { return !Tree.isKeyword(s) && !Tree.isAranKeyword(s); } { return s; }
-
-VariableIdentifier
-  = s:Identifier & { return !Tree.isKeyword(s) && !Tree.isAranKeyword(s); } { return s; }
-
-ReadableEnclaveVariableIdentifier
-  = "new.target" __ { return "new.target"; }
-  / "import.meta" __ { return "import.meta"; }
-  / s:Identifier & { return s === "this" || s === "eval" || s === "arguments" || !Tree.isKeyword(s); } { return s; }
-
-WritableEnclaveVariableIdentifier
-  = s:Identifier & { return !Tree.isKeyword(s); } { return s; }
-
-Specifier
-  = Identifier
 
 //////////////
 // Operator //
@@ -123,125 +162,115 @@ OperatorCharacter
 UnaryOperator
   = "typeof" __ { return "typeof"; }
   / "void" __ { return "void"; }
-  / s:OperatorCharacter & { return Tree.isUnaryOperator(s); } { return s; }
+  / operator:$(OperatorCharacter) & { return isUnaryOperator(operator); } { return operator; }
 
 BinaryOperator
   = "in"         __ { return "in"; }
   / "instanceof" __ { return "instanceof"; }
-  / ss:OperatorCharacter+ & { return Tree.isBinaryOperator(ss.join("")); } { return ss.join(""); }
+  / operator:$(OperatorCharacter+) & { return isBinaryOperator(operator); } { return operator; }
+
+/////////////
+// Enclave //
+/////////////
+
+Enclave = enclave:$([a-z.()]+) & { return isEnclave(enclave); } { return enclave; }
 
 /////////////
 // Program //
 /////////////
 
+_EnclaveSemicolon = _ enclave:Enclave _ ";" { return e }
+
 Program
-  = "enclave" __ _ p:EnclaveProgram { return p; }
-  / "module" _ ";" _ f:ModuleProgram { return f(null); }
-  / "script" _ ";" _ f:ScriptProgram { return f(null); }
-  / "eval" _ ";" _ f:EvalProgram { return f(null); }
-
-EnclaveProgram
-  = "script" _ ";" _ f:ScriptProgram { return f("script"); }
-  / "module" _ ";" _ f:ModuleProgram { return f("module"); }
-  / "eval" __ _ e:EvalEnclave _ ";" _ f:EvalProgram { return f(e); }
-
-ModuleProgram
-  = ls:_Link* _ b:Block { return (c) => Tree.ModuleProgram(c, ls, b); }
-
-EvalProgram
-  = is:Declaration _ b:Block { return (c) => Tree.EvalProgram(c, is, b) }
-
-ScriptProgram
-  = ss:SingleStatement_* { return (c) => Tree.ScriptProgram(c, ss.length === 1 ? ss[0] : Tree.ListStatement(ss)); }
-
-EvalEnclave
-  = "confined"
-  / "sloppy-program" / "strict-program"
-  / "sloppy-function" / "strict-function"
-  / "sloppy-method" / "strict-method"
-  / "strict-constructor"
-  / "strict-derived-constructor"
+  = "script;" block:_Block { return makeScriptProgram(block); }
+  / "module;" _ "{" links:_LinkSemicolon* _ "}" block:_Block { return makeModuleProgram(links, block); }
+  / "eval;" _ "{" enclaves:_EnclaveSemicolon* _ "}" _ "{" variables:_VariableSemicolon* _ "}" block:_Block { return makeEvalProgram(enclaves, variables, block); }
 
 //////////
 // Link //
 //////////
 
-_Link
-  = _ l:Link { return l; };
+_LinkSemicolon = _ link:Link { return link; };
 
 Link
-  = "import" _ l:ImportLink { return l; }
-  / "export" _ c:Specifier _ ";" { return Tree.ExportLink(c); }
-  / "aggregate" _ l:AggregateLink { return l; }
+  = "import" _ link:ImportLink { return link; }
+  / "export" _ link:ExportLink { return link; }
 
 ImportLink
-  = "*" _ "from" _ s:Source _ ";" { return Tree.ImportLink(null, s); }
-  / c:Specifier _ "from" _ s:Source _ ";" { return Tree.ImportLink(c, s); }
+  = "*" _ "from" _ source:Source { return makeImportLink(null, source); }
+  / specifier:Specifier _ "from" _ source:Source { return makeImportLink(specifier, source); }
 
-AggregateLink
-  = "*" _ "from" _ s:Source _ ";" { return Tree.AggregateLink(null, s, null); }
-  / c1:Specifier _ "from" _ s:Source _ "as" _ c2:Specifier _ ";" { return Tree.AggregateLink(c1, s, c2); }
+ExportLink
+  = "*" _ link:AllExportLink { return link; }
+  / specifier:Specifier _ makeLink:SpecifierExportLink { return makeLink(specifier); }
 
-Source = String
+AllExportLink
+  = "from" _ source:Source _ ";" { return makeAggregateLink(null, null, source); }
+  / "as" _ specifier:Specifier _ "from" _ source:Source _ ";" { return makeAggregateLink(null, specifier, source); }
 
-////////////
-// Branch //
-////////////
-
-Branch = is:ColonLabelIdentifier_* b:Block { return Tree.Branch(is, b) }
-
-ColonLabelIdentifier_ = i:LabelIdentifier _ ":" _ { return i; }
+SpecifierExportLink
+  = "as" _ specifier2:Specifier _ "from" _ source:Source _ ";" { return (specifier1) => makeAggregateLink(specifier1, specifier2, source); }
+  / ";" { return makeExportLink; }
 
 ///////////
 // Block //
 ///////////
 
-Block = "{" _ is:Declaration _ ss:(SingleStatement_*) "}" { return Tree.Block(is, ss.length === 1 ? ss[0] : Tree.ListStatement(ss)); }
+_Block = labels:_LabelColon* _ "{" _ variables:Declaration statements:_Statement* _ "}" { return makeBlock(labels, variables, statements); }
+
+_LabelColon = _ label:Label _ ":" { return label; }
 
 Declaration
-  = "let" __ _ is:VariableIdentifierComa_* i:Identifier _ ";" { return concatenate(is, [i]); }
+  = "let" __ variables:_VariableComa* _ maybe_variable:Variable? _ ";" { return appendMaybe(variables, maybe_variable); }
   / "" { return [] }
 
-VariableIdentifierComa_ = s:VariableIdentifier _ "," _  { return s; }
+_VariableComa = _ variable:Variable _ "," { return variable; }
 
 ///////////////
 // Statement //
 ///////////////
 
-SingleStatement_
-  = s:SingleStatement _ { return s; }
+_Statement = _ statement:Statement { return statement; }
 
-SingleStatement
-  = "if"    _ & "(" _ e:Expression _ b1:Branch _ "else"  _ b2:Branch                         { return Tree.IfStatement(e, b1, b2); }
-  / "while" _ & "(" _ e:Expression _ b: Branch                                               { return Tree.WhileStatement(e, b); }
-  / "try"                          _ b1:Branch _ "catch" _ b2:Branch _ "finally" _ b3:Branch { return Tree.TryStatement(b1, b2, b3); }
-  /                                _ b: Branch                                               { return Tree.BranchStatement(b); }
-  / "enclave"  __ _ k:Kind _ i:WritableEnclaveVariableIdentifier _ "=" _ e:Expression _ ";"  { return Tree.DeclareEnclaveStatement(k, i, e) }
-  / "completion" __ _ e:Expression      _ ";" { return Tree.CompletionStatement(e); }
-  / "return"     __ _ e:Expression      _ ";" { return Tree.ReturnStatement(e); }
-  / "break"      __ _ i:LabelIdentifier _ ";" { return Tree.BreakStatement(i); }
-  / "debugger"                          _ ";" { return Tree.DebuggerStatement(); }
-  /            e:Expression             _ ";" { return Tree.ExpressionStatement(e); }
+Statement
+  = "if" _ & "(" _ expression:Expression block1:_Block _ "else" block2:Block { return makeIfStatement(expression, block1, block2); }
+  / "while" _ & "(" _ expression:Expression block:_Block { return makeWhileStatement(expression, block); }
+  / "try" block1:_Block _ "catch" block2:_Block _ "finally" block3:_Block { return makeTryStatement(block1, block2, block3); }
+  / block:_Block { return makeBlockStatement(block); }
+  / "enclave" __ _ kind:VariableKind _ variable:WritableEnclaveVariable _ "=" _ expression:Expression _ ";" { return makeDeclareEnclaveStatement(kind, variable, expression); }
+  / "return" __ _ expression:Expression _ ";" { return makeReturnStatement(expression); }
+  / "break" __ _ label:Label _ ";" { return makeBreakStatement(label); }
+  / "debugger" _ ";" { return makeDebuggerStatement(); }
+  / effect:Effect _ ";" { return makeExpressionStatement(effect); }
 
-Kind
-  = "var"
-  / "let"
-  / "const"
+////////////
+// Effect //
+////////////
+
+Effect
+  = "export" __ _ specifier:Specifier _ "=" _ expression:Expression { return makeExportEffect(specifier, expression); }
+  / "drop" __ _ expression:Expression { return makeExpressionEffect(expression); }
+  / "write" __ _ effect:WriteEffect { return effect; }
+
+WriteEffect
+  = "enclave.super" _ "[" _ expression1:Expression _ "]" _ "=" _ expression2:Expression { return makeSetSuperEffect(expression1, expression2); }
+  / variable:EnclaveVariable _ "=" _ expression:Expression { return makeWriteEnclaveEffect(variable, expression); }
+  / variable:Variable _ "=" _ expression:Variable { return makeWriteEffect(variable, expression); }
 
 ////////////////
 // Expression //
 ////////////////
 
-ComaProperty_
-  = "," _ p:ComaPropertyBody _ { return p; }
+Property
+  = "[" _ expression1:Expression _ "]" _ ":" _ expression2:Expression { return [expression1, expression2]; }
+  / identifier:Identifier _ ":" _ expression:Expression { return [makePrimitiveExpression(stringifyJSON(identifier)), expression]; }
 
-ComaPropertyBody
-  = "[" _ e1:Expression _ "]" _ ":" _ e2:Expression { return [e1, e2]; }
-  / s:String                  _ ":" _ e2:Expression { return [Tree.PrimitiveExpression(s), e2]; }
-  / i:Identifier              _ ":" _ e2:Expression { return [Tree.PrimitiveExpression(i), e2]; }
+_PropertyComa = _ property:Property _ "," { return property; }
 
-_ComaExpression
-  = _ "," _ e:Expression { return e; }
+Property_ = property:Property _ { return property; }
+
+_ExpressionComa
+  = _ expression:Expression _ "," { return expression; }
 
 _ApplyArguments
   = _ "(" _ x:ApplyArgumentsBody { return x }
@@ -251,95 +280,85 @@ ApplyArgumentsBody
   / "@" _ e2:Expression es:_ComaExpression* _ ")" { return (e1) => Tree.ApplyExpression(e1, e2, es); }
   /       e2:Expression es:_ComaExpression* _ ")" { return (e1) => Tree.ApplyExpression(e1, Tree.PrimitiveExpression(undefined), concatenate([e2], es)); }
 
-NormalArguments
-  = "(" _ es:NormalArgumentsBody { return es; }
+ConstructArguments
+  = "(" _ es:ConstructArgumentsBody { return es; }
 
-NormalArgumentsBody
+ConstructArgumentsBody
   =                                    ")" { return []; }
   / e:Expression es:_ComaExpression* _ ")" { return concatenate([e], es); }
 
 EnclaveExpression
-  = "super" __ _ e:SuperEnclaveExpression { return e; }
-  / "typeof" __ _ i:ReadableEnclaveVariableIdentifier { return Tree.TypeofEnclaveExpression(i); }
-  / "eval" _ c:EvalEnclave _ "(" _ is:VariableIdentifierComa_*  e:Expression _ ")" { return Tree.EvalExpression(c, is, e); }
-  / i:WritableEnclaveVariableIdentifier _ b:WriteEnclaveOperator _ e:Expression { return Tree.WriteEnclaveExpression(b, i, e); }
-  / i:ReadableEnclaveVariableIdentifier { return Tree.ReadEnclaveExpression(i) }
+  = "super" __ _ expression:SuperEnclaveExpression { return expression; }
+  / "typeof" __ _ variable:EnclaveVariable { return makeTypeofEnclaveExpression(variable); }
+  / variable:EnclaveVariable { return makeReadEnclaveExpression(variable); }
 
-WriteEnclaveOperator
-  = "?=" { return false; }
-  / "!=" { return true; }
+EnclaveParenthesisExpression
+  / "super" expression:SuperEnclaveParenthesisExpression { return expression; }
+  / "typeof" __ _ variable:EnclaveVariable _ ")" { return makeTypeofEnclaveExpression(variable); }
+  / variable:EnclaveVariable _ makeExpression:WriteEnclaveParenthesisExpressionTail { return makeExpression(variable); }
+
+SuperEnclaveParenthesisExpression
+  = "[" _ expression:Expression _ "]" _ makeExpression:SuperEnclaveParenthesisExpressionTail { return makeExpression(expression); }
+  / "(" _ "..." _ expression:Expression _ ")" _ ")" { return makeCallSuperEnclaveExpression(expression); }
+
+SuperEnclaveParenthesisExpressionTail
+  = "=" _ expression2:Expression "," _ expression3:Expression _ ")" { return (expression1) => makeSetSuperEnclaveExpression(expression1, expression2, expression3); }
+  / ")" { return makeGetSuperEnclaveExpression; }
+
+WriteEnclaveParenthesisExpressionTail
+  = "=" _ expression1:Expression "," _ expression2:Expression _ ")" { return (variable) => makeWriteEnclaveExpression(variable, expression1, expression2); }
+  / ")" { return makeReadEnclaveExpression; }
 
 SuperEnclaveExpression
-  = "["         _ e:Expression _ "]" _ f:AccessSuperEnclaveExpression { return f(e); }
-  / "(" _ "..." _ e:Expression _ ")" { return Tree.CallSuperEnclaveExpression(e); }
-
-AccessSuperEnclaveExpression
-  = "=" _ e2:Expression { return (e1) => Tree.SetSuperEnclaveExpression(e1, e2); }
-  / "" { return (e) => Tree.GetSuperEnclaveExpression(e); }
+  = "["         _ expression:Expression _ "]" { return makeGetSuperEnclaveExpression(expression); }
+  / "(" _ "..." _ expression:Expression _ ")" { return makeCallSuperEnclaveExpression(expression); }
 
 Expression
   = e:NonApplyExpression fs:_ApplyArguments* { return fs.reduce((e, f) => f(e), e); }
 
 NonApplyExpression
-  = /* Import */             "import" __ _ e:ImportExpression                               { return e; }
-  / /* Export */             "export" __ _ i:Specifier _ e:Expression                       { return Tree.ExportExpression(i, e); }
-  / /* Intrinsic */          "#" _ i:Identifier _ ss:IntrinsicPart_*                        { return Tree.IntrinsicExpression(i + ss.join("")); }
-  / /* AsyncClosure */       "async" __ _ f:ClosureSort                                     { return f(true); }
-  / /* NormalClosure */      f:ClosureSort                                                  { return f(false); }
-  / /* Throw */              "throw" __ _ e:Expression                                      { return Tree.ThrowExpression(e); }
-  / /* enclave */            "enclave" __ _ e:EnclaveExpression                             { return e; }
-  / /* Eval */               "eval" _ "(" _ is:VariableIdentifierComa_* e:Expression _ ")"  { return Tree.EvalExpression(null, is, e); }
-  / /* yield */              "yield" __ _ e:YieldExpression                                 { return e; } 
-  / /* await */              "await" __ _ e:Expression                                      { return Tree.AwaitExpression(e); }
-  / /* Require */            "require" __ _ e:Expression                                    { return Tree.RequireExpression(e); }
-  / /* Construct */          "new" __ _ e:NonApplyExpression _ es:NormalArguments           { return Tree.ConstructExpression(e, es); }
-  / /* Object */             "{" _ "__proto__" _ ":" _ e:Expression _ ps:ComaProperty_* "}" { return Tree.ObjectExpression(e, ps); }
-  / /* Head */               "(" _ e:Expression _ f:TailExpression                          { return f(e); }
-  / /* Primitive */          "void" __ _ "0"                                                { return Tree.PrimitiveExpression(void 0); }
-  / /* Primitive */          "null" __                                                      { return Tree.PrimitiveExpression(null); }
-  / /* Primitive */          "false" __                                                     { return Tree.PrimitiveExpression(false); }
-  / /* Primitive */          "true" __                                                      { return Tree.PrimitiveExpression(true); }
-  / /* Primitive */          i:BigInt                                                       { return Tree.PrimitiveExpression(i); }
-  / /* Primitive */          n:Number                                                       { return Tree.PrimitiveExpression(n); }
-  / /* Primitive */          s:String                                                       { return Tree.PrimitiveExpression(s); }
-  / /* Access */             i:VariableIdentifier _ f:AccessExpression                      { return f(i); }
-  / /* Unary */              o:UnaryOperator _ e:Expression                                 { return Tree.UnaryExpression(o, e); }
+  = "import" __ _ expression:ImportExpression { return expression; }
+  / "#" _ intrinsic:Intrinsic { return makeIntrinsicExpression(intrinsic); }
+  / asynchronous:$("async" _)? kind:ClosureKind _ generator:$("*" _ )? "(" _ ")" block:Block { return makeClosureExpression(kind, asynchronous !== null, generator !== null, block); }
+  / "throw" __ _ expression:Expression { return makeThrowExpression(e); }
+  / "typeof" __ _ expression:TypeofExprssion { return expression; }
+  / "enclave" __ _ expression:EnclaveExpression { return expression; }
+  / "eval" _ "(" enclaves:_EnclaveComa* _ maybe_enclave:Enclave_? ")" "(" variables:_VariableComa* _ maybe_variable:Variable_? ")" _ "(" _ expression:Expression _ ")" { return makeEvalExpression(appendMaybe(enclaves, maybe_enclave), appendMaybe(variables, maybe_variable), expression); }
+  / "yield" __ _ delegate:("*" _)? expression:Expression { return makeYieldExpression(delegate !== null, expression); } 
+  / "await" __ _ expression:Expression { return makeAwaitExpression(expression); }
+  /"new" __ _ expression:NonApplyExpression _ expressions:ConstructArguments { return makeConstructExpression(expression, expressions); }
+  / "{" _ "__proto__" _ ":" _ expression:Expression properties:_PropertyComa* _ maybe_property:Property_? "}" { return makeObjectExpression(expression, appendMaybe(properties, maybe_property); }
+  / "(" _ expression:ParenthesisExpression { return expression; }
+  / raw:$(Primitive) { return makePrimitiveExpression(raw); }
+  / operator:UnaryOperator _ expression:Expression { return makeUnaryExpression(operator, expression); }
+  / variable:Variable { return makeReadExpression(variable); }
 
-ClosureSort
-  = "arrow"       _ f:ClosureGenerator { return f("arrow"); }
-  / "function"    _ f:ClosureGenerator { return f("function"); }
-  / "method"      _ f:ClosureGenerator { return f("method"); }
-  / "constructor" _ f:ClosureGenerator { return f("constructor") }
+ParenthesisExpression
+  = "export" _ specifier:Specifier _ "=" expression1:Expression _ "," _ expression2:Expression _ ")" { return makeExportExpression(specifier, expression1, expression2); }
+  / "enclave" _ expression:EnclaveParenthesisExpression { return expression; }
+  / variable:Variable _ makeExpression:WriteParenthesisExpressionTail { return makeExpression(variable); }
+  / expression:Expression _ makeExpression:ParenthesisExpressionTail { return makeExpression(expression); }
 
-ClosureGenerator
-  = "*" _ f:ClosureBlock { return f(true) }
-  /       f:ClosureBlock { return f(false) }
+WriteParenthesisExpressionTail
+  = "=" _ expression1:Expression _ "," _ expression2:Expression _ ")" { return (variable) => makeWriteExpression(variable, expression1, expression2); }
+  / makeExpression:ParenthesisExpressionTail { return (variable) => makeExpression(makeReadExpression(variable)); }
 
-ClosureBlock
-  = "(" _ ")" _ b:Block { return (generator) => (sort) => (asynchronous) => Tree.ClosureExpression(sort, asynchronous, generator, b); }
-
-YieldExpression
-  = "*" _ e:Expression { return Tree.YieldExpression(true, e) }
-  /       e:Expression { return Tree.YieldExpression(false, e) }
-
-IntrinsicPart_
-  = "." _ i:Identifier _ { return "." + i; }
-  / "@" _ s:IntrinsicAccessor _ { return "@" + s; }
-
-IntrinsicAccessor
-  = "get"
-  / "set"
+ParenthesisExpressionTail
+  = operator:BinaryOperator _ expression2:Expression _ ")" { return (expression1) => makeBinary(expression1, expression2); }
+  / "," _ expression2:Expression _ ")" { return (expression1) => makeSequenceExpression(expression1, expression2); }
+  / "?" _ expression2:Expression _ ":" _ expression3:Expression _ ")" { return (expression1) => makeConditionalExpression(expression1, expression1, expression2); }
+  / ")" { return identity; }
 
 ImportExpression
-  = "*"         _ "from" _ s:String { return Tree.ImportExpression(null, s); }
-  / i:Specifier _ "from" _ s:String { return Tree.ImportExpression(i, s); }
+  = & "(" _ expression:Expression { return makeDynamicImportExpression(expression); }
+  / "*" _ "from" _ source:Source { return makeImportExpression(null, source); }
+  / specifier:Specifier _ "from" _ source:Source { return makeImportExpression(specifier, source); }
 
-AccessExpression
-  = "=" _ e:Expression { return (i) => Tree.WriteExpression(i, e); }
-  / "" { return (i) => Tree.ReadExpression(i); }
-
-TailExpression
-  =                                                          ")" { return (e) => e; }
-  / ","              _ e2:Expression                       _ ")" { return (e1) => Tree.SequenceExpression(e1, e2); }
-  / "?"              _ e2:Expression _ ":" _ e3:Expression _ ")" { return (e1) => Tree.ConditionalExpression(e1, e2, e3); }
-  / o:BinaryOperator _ e2:Expression                       _ ")" { return (e1) => Tree.BinaryExpression(o, e1, e2); }
+Primitive
+  = "undefined"
+  / "null"
+  / "true"
+  / "false"
+  / Number
+  / String
+  / BigInt

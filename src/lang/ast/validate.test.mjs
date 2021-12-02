@@ -15,30 +15,20 @@ assertThrow(() => {
 });
 
 // Duplicate Export Link //
-makeValidNode(
-  "ModuleProgram",
-  [
-    makeValidNode("ImportLink", "specifier", "source"),
-    makeValidNode("ExportLink", "specifier"),
-  ],
-  makeValidNode("Block", [], [], []),
-);
-assertThrow(() => {
-  makeValidNode(
-    "ModuleProgram",
-    [
-      makeValidNode("ExportLink", "specifier"),
-      makeValidNode("ExportLink", "specifier"),
-    ],
-    makeValidNode("Block", [], [], []),
-  );
-});
+{
+  const link = makeValidNode("ExportLink", "specifier");
+  const block = makeValidNode("Block", [], [], []);
+  makeValidNode("ModuleProgram", [link], block);
+  assertThrow(() => {
+    makeValidNode("ModuleProgram", [link, link], block);
+  });
+}
 
 // AggregateLink //
-makeValidNode("AggregateLink", null, null, "source");
-makeValidNode("AggregateLink", null, "foo", "source");
+makeValidNode("AggregateLink", "source", null, null);
+makeValidNode("AggregateLink", "source", null, "foo");
 assertThrow(() => {
-  makeValidNode("AggregateLink", "foo", null, "source");
+  makeValidNode("AggregateLink", "source", "foo", null);
 });
 
 // Generator Arrow //
@@ -74,18 +64,35 @@ assertThrow(() => {
   );
 });
 
-// CompletionBlock //
-assertThrow(() => {
-  makeValidNode("EvalProgram", [], [], makeValidNode("Block", [], [], []));
-});
-assertThrow(() => {
-  makeValidNode(
-    "EvalProgram",
-    [],
-    [],
-    makeValidNode("Block", [], [], [makeValidNode("DebuggerStatement")]),
+// Block //
+{
+  const statement = makeValidNode(
+    "EffectStatement",
+    makeValidNode("ExpressionEffect", makeValidNode("InputExpression")),
   );
-});
+  assertThrow(() => {
+    makeValidNode("Block", [], [], [statement, statement]);
+  });
+}
+
+// CompletionBlock //
+{
+  const block = makeValidNode("Block", [], [], []);
+  assertThrow(() => {
+    makeValidNode("EvalProgram", [], [], block);
+  });
+}
+{
+  const block = makeValidNode(
+    "Block",
+    [],
+    [],
+    [makeValidNode("DebuggerStatement")],
+  );
+  assertThrow(() => {
+    makeValidNode("EvalProgram", [], [], block);
+  });
+}
 makeValidNode(
   "EvalProgram",
   [],
@@ -96,8 +103,11 @@ makeValidNode(
     [],
     [
       makeValidNode(
-        "ExpressionStatement",
-        makeValidNode("PrimitiveExpression", "123"),
+        "EffectStatement",
+        makeValidNode(
+          "ExpressionEffect",
+          makeValidNode("PrimitiveExpression", "123"),
+        ),
       ),
     ],
   ),
@@ -148,8 +158,11 @@ makeValidNode(
       [],
       [
         makeValidNode(
-          "ExpressionStatement",
-          makeValidNode("ClosureExpression", "arrow", false, false, block),
+          "EffectStatement",
+          makeValidNode(
+            "ExpressionEffect",
+            makeValidNode("ClosureExpression", "arrow", false, false, block),
+          ),
         ),
       ],
     ),
@@ -164,10 +177,13 @@ makeValidNode(
     [],
     [
       makeValidNode(
-        "ExpressionStatement",
+        "EffectStatement",
         makeValidNode(
-          "AwaitExpression",
-          makeValidNode("PrimitiveExpression", "123"),
+          "ExpressionEffect",
+          makeValidNode(
+            "AwaitExpression",
+            makeValidNode("PrimitiveExpression", "123"),
+          ),
         ),
       ),
     ],
@@ -187,8 +203,11 @@ makeValidNode(
       [],
       [
         makeValidNode(
-          "ExpressionStatement",
-          makeValidNode("ClosureExpression", "arrow", true, false, block),
+          "EffectStatement",
+          makeValidNode(
+            "ExpressionEffect",
+            makeValidNode("ClosureExpression", "arrow", true, false, block),
+          ),
         ),
       ],
     ),
@@ -203,11 +222,14 @@ makeValidNode(
     [],
     [
       makeValidNode(
-        "ExpressionStatement",
+        "EffectStatement",
         makeValidNode(
-          "YieldExpression",
-          false,
-          makeValidNode("PrimitiveExpression", "123"),
+          "ExpressionEffect",
+          makeValidNode(
+            "YieldExpression",
+            false,
+            makeValidNode("PrimitiveExpression", "123"),
+          ),
         ),
       ),
     ],
@@ -226,8 +248,11 @@ makeValidNode(
       [],
       [
         makeValidNode(
-          "ExpressionStatement",
-          makeValidNode("ClosureExpression", "function", false, true, block),
+          "EffectStatement",
+          makeValidNode(
+            "ExpressionEffect",
+            makeValidNode("ClosureExpression", "function", false, true, block),
+          ),
         ),
       ],
     ),
@@ -312,8 +337,11 @@ testRigidDeclareEnclaveStatement("const");
         makeValidNode("PrimitiveExpression", "123"),
       ),
       makeValidNode(
-        "ExpressionStatement",
-        makeValidNode("PrimitiveExpression", "123"),
+        "EffectStatement",
+        makeValidNode(
+          "ExpressionEffect",
+          makeValidNode("PrimitiveExpression", "123"),
+        ),
       ),
     ],
   );
@@ -330,14 +358,31 @@ testRigidDeclareEnclaveStatement("const");
   });
 }
 
-// ReadExpression && WriteExpression //
-const testVariable = (makeValidVariableExpression) => {
-  const statement = makeValidNode(
-    "ExpressionStatement",
-    makeValidVariableExpression("variable"),
+// ReadExpression && WriteEffect //
+const testVariable = (makeValidVariableEffect) => {
+  const statement1 = makeValidNode(
+    "EffectStatement",
+    makeValidVariableEffect("variable"),
   );
-  const bound_block = makeValidNode("Block", [], ["variable"], [statement]);
-  const unbound_block = makeValidNode("Block", [], [], [statement]);
+  const statement2 = makeValidNode(
+    "EffectStatement",
+    makeValidNode(
+      "ExpressionEffect",
+      makeValidNode("PrimitiveExpression", '"completion"'),
+    ),
+  );
+  const bound_block = makeValidNode(
+    "Block",
+    [],
+    ["variable"],
+    [statement1, statement2],
+  );
+  const unbound_block = makeValidNode(
+    "Block",
+    [],
+    [],
+    [statement1, statement2],
+  );
   makeValidNode("ScriptProgram", bound_block);
   assertThrow(() => {
     makeValidNode("ScriptProgram", unbound_block);
@@ -347,13 +392,14 @@ const testVariable = (makeValidVariableExpression) => {
     makeValidNode("EvalProgram", [], [], unbound_block);
   });
 };
-testVariable((variable) => makeValidNode("ReadExpression", variable));
+testVariable((variable) =>
+  makeValidNode("ExpressionEffect", makeValidNode("ReadExpression", variable)),
+);
 testVariable((variable) =>
   makeValidNode(
-    "WriteExpression",
+    "WriteEffect",
     variable,
     makeValidNode("PrimitiveExpression", "123"),
-    makeValidNode("PrimitiveExpression", "456"),
   ),
 );
 
@@ -365,7 +411,12 @@ testVariable((variable) =>
         "Block",
         [],
         [],
-        [makeValidNode("ExpressionStatement", expression2)],
+        [
+          makeValidNode(
+            "EffectStatement",
+            makeValidNode("ExpressionEffect", expression2),
+          ),
+        ],
       );
       makeValidNode("EvalProgram", [enclave], [], block);
       assertThrow(() => {
@@ -387,25 +438,29 @@ testVariable((variable) =>
     );
   };
   testClosureEnclave(
-    "super()",
+    "super.call",
     makeValidNode(
       "CallSuperEnclaveExpression",
       makeValidNode("PrimitiveExpression", "123"),
     ),
   );
   testClosureEnclave(
-    "super",
+    "super.get",
     makeValidNode(
       "GetSuperEnclaveExpression",
       makeValidNode("PrimitiveExpression", "123"),
     ),
   );
   testClosureEnclave(
-    "super",
+    "super.set",
     makeValidNode(
-      "SetSuperEnclaveExpression",
-      makeValidNode("PrimitiveExpression", "123"),
-      makeValidNode("PrimitiveExpression", "123"),
+      "SequenceExpression",
+      makeValidNode(
+        "SetSuperEnclaveEffect",
+        makeValidNode("PrimitiveExpression", "123"),
+        makeValidNode("PrimitiveExpression", "456"),
+      ),
+      makeValidNode("PrimitiveExpression", "789"),
     ),
   );
   testClosureEnclave("this", makeValidNode("ReadEnclaveExpression", "this"));
@@ -427,8 +482,11 @@ testVariable((variable) =>
     [],
     [
       makeValidNode(
-        "ExpressionStatement",
-        makeValidNode("LoadImportExpression", "specifier", "source"),
+        "EffectStatement",
+        makeValidNode(
+          "ExpressionEffect",
+          makeValidNode("StaticImportExpression", "source"),
+        ),
       ),
     ],
   );
@@ -437,7 +495,7 @@ testVariable((variable) =>
   });
   makeValidNode(
     "ModuleProgram",
-    [makeValidNode("ImportLink", "specifier", "source")],
+    [makeValidNode("ImportLink", "source")],
     block,
   );
 }
@@ -450,12 +508,11 @@ testVariable((variable) =>
     [],
     [
       makeValidNode(
-        "ExpressionStatement",
+        "EffectStatement",
         makeValidNode(
-          "SaveExportExpression",
+          "ExportEffect",
           "specifier",
           makeValidNode("PrimitiveExpression", "123"),
-          makeValidNode("PrimitiveExpression", "456"),
         ),
       ),
     ],

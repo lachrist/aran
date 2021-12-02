@@ -22,9 +22,9 @@ const syntax = {
   },
   Link: {
     __proto__: null,
-    ImportLink: ["NullableSpecifier", "Source"],
+    ImportLink: ["Source"],
     ExportLink: ["Specifier"],
-    AggregateLink: ["NullableSpecifier", "NullableSpecifier", "Source"],
+    AggregateLink: ["Source", "NullableSpecifier", "NullableSpecifier"],
   },
   Block: {
     __proto__: null,
@@ -37,7 +37,7 @@ const syntax = {
   Statement: {
     __proto__: null,
     // BlockLess //
-    ExpressionStatement: ["Expression"],
+    EffectStatement: ["Effect"],
     ReturnStatement: ["Expression"],
     BreakStatement: ["Label"],
     DebuggerStatement: [],
@@ -52,35 +52,39 @@ const syntax = {
     WhileStatement: ["Expression", "Block"],
     TryStatement: ["Block", "Block", "Block"],
   },
+  Effect: {
+    __proto__: null,
+    SetSuperEnclaveEffect: ["Expression", "Expression"],
+    WriteEffect: ["Variable", "Expression"],
+    WriteInputEffect: ["Expression"],
+    WriteEnclaveEffect: ["EnclaveVariable", "Expression"],
+    ExportEffect: ["Specifier", "Expression"],
+    SequenceEffect: ["Effect", "Effect"],
+    ConditionalEffect: ["Expression", "Effect", "Effect"],
+    ExpressionEffect: ["Expression"],
+  },
   Expression: {
     __proto__: null,
     // Producer //
+    InputExpression: [],
     PrimitiveExpression: ["Primitive"],
     IntrinsicExpression: ["Intrinsic"],
-    LoadImportExpression: ["NullableSpecifier", "Source"],
+    StaticImportExpression: ["Source"],
     ReadExpression: ["Variable"],
     ReadEnclaveExpression: ["ReadableEnclaveVariable"],
     TypeofEnclaveExpression: ["ReadableEnclaveVariable"],
     ClosureExpression: ["ClosureKind", "Asynchronous", "Generator", "Block"],
-    // Consumer //
+    // Special //
     AwaitExpression: ["Expression"],
     YieldExpression: ["Delegate", "Expression"],
-    SaveExportExpression: ["Specifier", "Expression", "Expression"],
-    WriteExpression: ["Variable", "Expression", "Expression"],
-    WriteEnclaveExpression: [
-      "WritableEnclaveVariable",
-      "Expression",
-      "Expression",
-    ],
-    SequenceExpression: ["Expression", "Expression"],
-    ConditionalExpression: ["Expression", "Expression", "Expression"],
     ThrowExpression: ["Expression"],
+    SequenceExpression: ["Effect", "Expression"],
+    ConditionalExpression: ["Expression", "Expression", "Expression"],
     // Combiners //
-    SetSuperEnclaveExpression: ["Expression", "Expression"],
     GetSuperEnclaveExpression: ["Expression"],
     CallSuperEnclaveExpression: ["Expression"],
     EvalExpression: [["Enclave", "*"], ["Variable", "*"], "Expression"],
-    ImportExpression: ["Expression"],
+    DynamicImportExpression: ["Expression"],
     ApplyExpression: ["Expression", "Expression", ["Expression", "*"]],
     ConstructExpression: ["Expression", ["Expression", "*"]],
     UnaryExpression: ["UnaryOperator", "Expression"],
@@ -177,8 +181,9 @@ const keywords = [
 const predicates = {
   __proto__: null,
   Enclave: generateIsEnumeration([
-    "super",
-    "super()",
+    "super.get",
+    "super.set",
+    "super.call",
     "new.target",
     "arguments",
     "this",
