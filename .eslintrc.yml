@@ -74,9 +74,6 @@ rules:
     - VariableDeclaration[kind=var]
     - VariableDeclaration[declarations.length>1]
     - :not(ForInStatement) > VariableDeclaration > VariableDeclarator[init=null]
-    # Identifier
-    - Identifier[name="eval"]
-    - Identifier[name="arguments"]
     # Asynchronous closures
     - ArrowFunctionExpression[async=true]
     # Empty ReturnStatement
@@ -163,7 +160,7 @@ rules:
   # no-await-in-loop >> Asynchronous closures disabled by no-restricted-syntax
   # no-buffer-constructor >> No node environment
   # no-bitwise >> Bitwise binary operator disabled by no-restricted-syntax
-  # no-caller >> Identifier[name="arguments"] disabled by no-restricted-syntax
+  # no-caller >> disabled prefer-rest-params
   # no-case-declarations >> SwitchStatement disabled by no-restricted-syntax
   # no-catch-shadow >> deprecated
   # no-class-assign >> ClassDeclaration disabled by no-restricted-syntax
@@ -192,7 +189,7 @@ rules:
   # no-empty-pattern: error >> Why?
   no-empty: error
   # no-eq-null >> Non-strict comparison operators disabled by no-restricted-syntax
-  # no-eval >> Identifier[name=eval] disabled by no-restricted-syntax
+  no-eval: error
   no-ex-assign: error
   # no-extend-native >> No globals
   # no-extra-bind >> Heuristic
@@ -270,9 +267,9 @@ rules:
   # no-this-before-super: error >> Class disabled by no restricted-syntax
   # no-throw-literal
   # no-trailing-spaces: error >> Prettier
-  # no-undef-init >> Identifier[name="undefined"] disabled by no-resticted-syntax
+  # no-undef-init >> I want explicit init
   no-undef: [error, {typeof: true}]
-  # no-undefined >> Identifier[name="undefined"] disabled by no-resticted-syntax
+  # no-undefined >> I used local undefined variable
   # no-underscore-dangle >> redundant with camel-case
   # no-unexpected-multiline >> Prettier
   # no-unmodified-loop-condition > heuristic
@@ -320,7 +317,7 @@ rules:
   # prefer-object-spread >> Heuristic
   # prefer-promise-reject-errors >> No globals
   # prefer-regex-literals >> No globals
-  # prefer-rest-params >> Identifier[name="arguments"] disabled by no-restrict-syntax
+  prefer-rest-params: error
   # prefer-spread >> Heuristic
   prefer-template: error
   quote-props: [error, consistent-as-needed]
