@@ -165,7 +165,7 @@ const generateIsBoundLinkExpression = (links) => {
     __proto__: null,
     StaticImportExpression: (context, node, source) =>
       includes(hash, stringifyJSON(makeImportLink(source))),
-    ExportEffect: (context, node, specifier, expression) =>
+    StaticExportEffect: (context, node, specifier, expression) =>
       includes(hash, stringifyJSON(makeExportLink(specifier))),
   };
   const callback = (context, node) => false;
@@ -233,7 +233,7 @@ const digestable = [
   "WriteEffect",
   // Link //
   "StaticImportExpression",
-  "ExportEffect",
+  "StaticExportEffect",
   // Enclave //
   "DeclareEnclaveStatement",
   "CallSuperEnclaveExpression",

@@ -1,4 +1,4 @@
-/* eslint-disable arrow-body-style */
+/* eslint-disable arrow-body-style, no-use-before-define */
 
 import {slice, map, concat} from "array-lite";
 
@@ -25,9 +25,8 @@ import {
   makeTryStatement,
   makeSetSuperEnclaveEffect,
   makeWriteEffect,
-  makeWriteInputEffect,
   makeWriteEnclaveEffect,
-  makeExportEffect,
+  makeStaticExportEffect,
   makeSequenceEffect,
   makeConditionalEffect,
   makeExpressionEffect,
@@ -58,7 +57,9 @@ import {
 const {
   SyntaxError,
   Reflect: {apply},
-  String: {prototype: substring},
+  String: {
+    prototype: {substring},
+  },
   JSON: {stringify: stringifyJSON},
 } = globalThis;
 
@@ -66,11 +67,12 @@ const {
 // Keyword //
 /////////////
 
-const COMPLETION_KEYWORD = "completion";
 const MODULE_PROGRAM_KEYWORD = "module";
 const SCRIPT_PROGRAM_KEYWORD = "script";
 const EVAL_PROGRAM_KEYWORD = "eval";
-const EFFECT_KEYWORD = "void";
+const COMPLETION_KEYWORD = "completion";
+const EFFECT_KEYWORD = "effect";
+const THROW_KEYWORD = "throwError";
 const EVAL_KEYWORD = "eval";
 const UNDEFINED_KEYWORD = "undefined";
 const INPUT_KEYWORD = "input";
@@ -109,7 +111,7 @@ const enclaves = {
 // Error //
 ///////////
 
-const TEMPLATE = "Syntax error on node %s at %j:%j";
+const TEMPLATE = "Node %s at %j:%j";
 const extractNodeInfo = (node) => [
   node.type,
   node.loc.start.line,
@@ -126,6 +128,7 @@ const expectSyntax = (node, check) => {
 ///////////
 
 const generateVisit = (visitors) => (node) => {
+  // console.log(node.type, visitors);
   expectSyntax(node, node.type in visitors);
   const visitor = visitors[node.type];
   return visitor(node);
@@ -188,7 +191,7 @@ export const visitProgram = generateVisit({
         const head = getIdentifierHead(node.body[1].declarations[0].id.name);
         if (head === BASE_HEAD) {
           return makeEvalProgram(
-            map(node.body[1].declarations, visitBaseEvalDeclarator),
+            map(node.body[1].declarations, visitEnclaveDeclarator),
             [],
             visitBlock(node.body[2]),
           );
@@ -196,7 +199,7 @@ export const visitProgram = generateVisit({
         if (head === META_HEAD) {
           return makeEvalProgram(
             [],
-            map(node.body[1].declarations, visitMetaEvalDeclarator),
+            map(node.body[1].declarations, visitMetaDeclarator),
             visitBlock(node.body[2]),
           );
         }
@@ -208,8 +211,8 @@ export const visitProgram = generateVisit({
         expectSyntax(node, node.body[2].type === "VariableDeclaration");
         expectSyntax(node, node.body[2].kind === "let");
         return makeEvalProgram(
-          map(node.body[1].declarations, visitBaseEvalDeclarator),
-          map(node.body[2].declarations, visitMetaEvalDeclarator),
+          map(node.body[1].declarations, visitEnclaveDeclarator),
+          map(node.body[2].declarations, visitMetaDeclarator),
           visitBlock(node.body[2]),
         );
       }
@@ -323,7 +326,7 @@ export const visitStatement = generateVisit({
       expectSyntax(node, node.arguments.length === 1);
       return makeCompletionStatement(visitExpression(node.arguments[0]));
     }
-    return visitEffect(node.expression);
+    return makeEffectStatement(visitEffect(node.expression));
   },
   ReturnStatement: (node) => {
     return makeReturnStatement(visitExpression(node.argument));
@@ -357,38 +360,45 @@ export const visitEffect = generateVisit({
       visitEffect(node.expressions[1]),
     );
   },
-  ConditionalEffect: (node) => {
+  ConditionalExpression: (node) => {
     return makeConditionalEffect(
       visitExpression(node.test),
       visitEffect(node.consequent),
       visitEffect(node.alternate),
     );
   },
-  UnaryExpression: (node) => {
-    expectSyntax(node, node.operator === EFFECT_KEYWORD);
-    return makeExpressionEffect(visitExpression(node.argument));
-  },
   CallExpression: (node) => {
-    expectSyntax(node, node.callee.type === "Identifier");
-    expectSyntax(node, node.callee.name === EXPORT_STATIC_KEYWORD);
-    expectSyntax(node, node.arguments.length === 2);
-    expectSyntax(node, node.arguments[0].type === "Literal");
-    expectSyntax(node, typeof node.arguments[0].value === "string");
-    return makeExportEffect(
-      node.arguments[0].value,
-      visitExpression(node.arguments[1]),
-    );
+    if (
+      node.callee.type === "Identifier" &&
+      node.callee.name === EXPORT_STATIC_KEYWORD
+    ) {
+      expectSyntax(node, node.arguments.length === 2);
+      expectSyntax(node, node.arguments[0].type === "Literal");
+      expectSyntax(node, typeof node.arguments[0].value === "string");
+      return makeStaticExportEffect(
+        node.arguments[0].value,
+        visitExpression(node.arguments[1]),
+      );
+    }
+    if (
+      node.callee.type === "Identifier" &&
+      node.callee.name === EFFECT_KEYWORD
+    ) {
+      expectSyntax(node, node.arguments.length === 1);
+      return makeExpressionEffect(visitExpression(node.arguments[0]));
+    }
+    throw makeSyntaxError(node);
   },
   AssignmentExpression: (node) => {
     expectSyntax(node, node.operator === "=");
     if (
       node.left.type === "MemberExpression" &&
       node.left.object.type === "Identifier" &&
-      node.left.object.type === SUPER_BASE_IDENTIFIER
+      node.left.object.name === SUPER_BASE_IDENTIFIER
     ) {
       expectSyntax(node, node.left.computed);
       expectSyntax(node, !node.left.optional);
-      return makeExportEffect(
+      return makeSetSuperEnclaveEffect(
         visitExpression(node.left.property),
         visitExpression(node.right),
       );
@@ -507,7 +517,9 @@ export const visitExpression = generateVisit({
   },
   // Combiners //
   ImportExpression: (node) => {
-    return makeDynamicImportExpression(visitExpression(node.source));
+    expectSyntax(node, node.source.type === "Literal");
+    expectSyntax(node, typeof node.source.value === "string");
+    return makeDynamicImportExpression(node.source.value);
   },
   MemberExpression: (node) => {
     expectSyntax(node, node.optional === false);
@@ -533,8 +545,15 @@ export const visitExpression = generateVisit({
     }
     throw makeSyntaxError(node);
   },
-  ApplyExpression: (node) => {
+  CallExpression: (node) => {
     expectSyntax(node, node.optional === false);
+    if (
+      node.callee.type === "Identifier" &&
+      node.callee.name === THROW_KEYWORD
+    ) {
+      expectSyntax(node, node.arguments.length === 1);
+      return makeThrowExpression(visitExpression(node.arguments[0]));
+    }
     if (
       node.callee.type === "Identifier" &&
       node.callee.name === SUPER_BASE_IDENTIFIER
@@ -594,7 +613,7 @@ export const visitExpression = generateVisit({
       node.argument.type === "Identifier" &&
       getIdentifierHead(node.argument.name) !== META_HEAD
     ) {
-      return makeTypeofEnclaveExpression(node.argument.name);
+      return makeTypeofEnclaveExpression(getIdentifierBody(node.argument.name));
     }
     return makeUnaryExpression(node.operator, visitExpression(node.argument));
   },

@@ -564,7 +564,7 @@ testVariable((variable) =>
       makeValidNode(
         "EffectStatement",
         makeValidNode(
-          "ExportEffect",
+          "StaticExportEffect",
           "specifier",
           makeValidNode("PrimitiveExpression", "123"),
         ),
