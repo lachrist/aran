@@ -1,11 +1,11 @@
 import {
-  visitProgram,
-  visitLink,
-  visitBlock,
-  visitStatement,
-  visitEffect,
-  visitExpression,
-} from "./visit.mjs";
+  parseProgram,
+  parseLink,
+  parseBlock,
+  parseStatement,
+  parseEffect,
+  parseExpression,
+} from "./parse.mjs";
 
 import {
   makeScriptProgram,
@@ -53,86 +53,9 @@ import {
   makeUnaryExpression,
   makeBinaryExpression,
   makeObjectExpression,
-} from "../ast/index.mjs";
+} from "./ast/index.mjs";
 
-import {assertDeepEqual, assertThrow} from "../../__fixture__.mjs";
-
-import {parse as parseESTree} from "acorn-loose";
-
-const options = {
-  __proto__: null,
-  ecmaVersion: 2022,
-  sourceType: "module",
-  locations: true,
-};
-
-const parseProgram = (code) => visitProgram(parseESTree(code, options));
-const parseLink = (code) => visitLink(parseESTree(code, options).body[0]);
-const parseBlock = (code) => visitBlock(parseESTree(code, options).body[0]);
-const parseStatement = (code) =>
-  visitStatement(parseESTree(code, options).body[0]);
-const parseEffect = (code) =>
-  visitEffect(parseESTree(`(${code});`, options).body[0].expression);
-const parseExpression = (code) =>
-  visitExpression(parseESTree(`(${code});`, options).body[0].expression);
-
-[
-  makeScriptProgram,
-  makeModuleProgram,
-  makeEvalProgram,
-  makeImportLink,
-  makeExportLink,
-  makeAggregateLink,
-  makeBlock,
-  makeReturnStatement,
-  makeEffectStatement,
-  makeReturnStatement,
-  makeBreakStatement,
-  makeDebuggerStatement,
-  makeDeclareEnclaveStatement,
-  makeBlockStatement,
-  makeIfStatement,
-  makeWhileStatement,
-  makeTryStatement,
-  makeSetSuperEnclaveEffect,
-  makeWriteEffect,
-  makeWriteEnclaveEffect,
-  makeStaticExportEffect,
-  makeSequenceEffect,
-  makeConditionalEffect,
-  makeExpressionEffect,
-  makeInputExpression,
-  makePrimitiveExpression,
-  makeIntrinsicExpression,
-  makeStaticImportExpression,
-  makeReadExpression,
-  makeReadEnclaveExpression,
-  makeTypeofEnclaveExpression,
-  makeClosureExpression,
-  makeAwaitExpression,
-  makeYieldExpression,
-  makeThrowExpression,
-  makeSequenceExpression,
-  makeConditionalExpression,
-  makeGetSuperEnclaveExpression,
-  makeCallSuperEnclaveExpression,
-  makeEvalExpression,
-  makeDynamicImportExpression,
-  makeApplyExpression,
-  makeConstructExpression,
-  makeUnaryExpression,
-  makeBinaryExpression,
-  makeObjectExpression,
-];
-
-[
-  parseProgram,
-  parseLink,
-  parseBlock,
-  parseStatement,
-  parseEffect,
-  parseExpression,
-];
+import {assertDeepEqual, assertThrow} from "../__fixture__.mjs";
 
 ////////////////
 // Expression //

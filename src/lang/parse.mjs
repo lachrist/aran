@@ -1,8 +1,10 @@
 /* eslint-disable arrow-body-style, no-use-before-define */
 
-import {slice, map, concat} from "array-lite";
+import {parse as parseAcornLooseOriginal} from "acorn-loose";
 
-import {format, expect, assert} from "../../util.mjs";
+import {slice, map, concat, filterOut} from "array-lite";
+
+import {format, expect, assert} from "../util.mjs";
 
 import {
   extractNode,
@@ -51,49 +53,45 @@ import {
   makeUnaryExpression,
   makeBinaryExpression,
   makeObjectExpression,
-} from "../ast/index.mjs";
+} from "./ast/index.mjs";
+
+import {
+  isBaseVariable,
+  isMetaVariable,
+  getVariableBody,
+  makeBaseVariable,
+} from "./variable.mjs";
+
+import {
+  MODULE_PROGRAM_KEYWORD,
+  SCRIPT_PROGRAM_KEYWORD,
+  EVAL_PROGRAM_KEYWORD,
+  EFFECT_KEYWORD,
+  THROW_KEYWORD,
+  EVAL_KEYWORD,
+  UNDEFINED_KEYWORD,
+  INPUT_KEYWORD,
+  INTRINSIC_KEYWORD,
+  YIELD_DELEGATE_KEYWORD,
+  YIELD_STRAIGHT_KEYWORD,
+  EXPORT_STATIC_KEYWORD,
+  IMPORT_STATIC_KEYWORD,
+} from "./keywords.mjs";
+
+// https://github.com/acornjs/acorn/issues/1082
+const isEmptyStatement = (node) => node.type === "EmptyStatement";
+const parseAcornLoose = (code, options) => {
+  const node = parseAcornLooseOriginal(code, options);
+  node.body = filterOut(node.body, isEmptyStatement);
+  return node;
+};
 
 const {
   SyntaxError,
-  Reflect: {apply},
-  String: {
-    prototype: {substring},
-  },
   JSON: {stringify: stringifyJSON},
 } = globalThis;
 
-/////////////
-// Keyword //
-/////////////
-
-const MODULE_PROGRAM_KEYWORD = "module";
-const SCRIPT_PROGRAM_KEYWORD = "script";
-const EVAL_PROGRAM_KEYWORD = "eval";
-const EFFECT_KEYWORD = "effect";
-const THROW_KEYWORD = "throwError";
-const EVAL_KEYWORD = "eval";
-const UNDEFINED_KEYWORD = "undefined";
-const INPUT_KEYWORD = "input";
-const INTRINSIC_KEYWORD = "intrinsic";
-const YIELD_DELEGATE_KEYWORD = "yieldDelegate";
-const YIELD_STRAIGHT_KEYWORD = "yieldStraight";
-const EXPORT_STATIC_KEYWORD = "exportStatic";
-const IMPORT_STATIC_KEYWORD = "importStatic";
-
-////////////////
-// Identifier //
-////////////////
-
-const BASE_HEAD = "$";
-const META_HEAD = "_";
-const SUPER_BASE_IDENTIFIER = `${BASE_HEAD}super`;
-const getIdentifierHead = (identifier) => identifier[0];
-const getIdentifierBody = (identifier) =>
-  apply(substring, identifier, [1, identifier.length]);
-
-/////////////
-// Enclave //
-/////////////
+const SUPER_BASE_IDENTIFIER = makeBaseVariable("super");
 
 const enclaves = {
   "__proto__": null,
@@ -152,15 +150,13 @@ const visitEnclave = generateVisit({
 
 const visitMetaDeclarator = (node) => {
   assert(node.type === "VariableDeclarator", "invalid variable declarator");
-  expectSyntax(node, node.id.type === "Identifier");
   expectSyntax(node, node.init === null);
-  const head = getIdentifierHead(node.id.name);
-  const body = getIdentifierBody(node.id.name);
-  expectSyntax(node, head === META_HEAD);
-  return body;
+  expectSyntax(node, node.id.type === "Identifier");
+  expectSyntax(node, isMetaVariable(node.id.name));
+  return getVariableBody(node.id.name);
 };
 
-export const visitProgram = generateVisit({
+const visitProgram = generateVisit({
   __proto__: null,
   Program: (node) => {
     expectSyntax(node, node.body.length > 0);
@@ -175,7 +171,13 @@ export const visitProgram = generateVisit({
     if (kind === MODULE_PROGRAM_KEYWORD) {
       expectSyntax(node, node.body.length > 1);
       return makeModuleProgram(
-        map(slice(node.body, 1, node.body.length - 1), visitLink),
+        map(
+          filterOut(
+            slice(node.body, 1, node.body.length - 1),
+            isEmptyStatement,
+          ),
+          visitLink,
+        ),
         visitBlock(node.body[node.body.length - 1]),
       );
     }
@@ -223,7 +225,7 @@ export const visitProgram = generateVisit({
   },
 });
 
-export const visitLink = generateVisit({
+const visitLink = generateVisit({
   __proto__: null,
   ImportDeclaration: (node) => {
     if (node.specifiers.length === 0) {
@@ -262,7 +264,7 @@ export const visitLink = generateVisit({
   },
 });
 
-export const visitBlock = generateVisit({
+const visitBlock = generateVisit({
   __proto__: null,
   LabeledStatement: (node) => {
     return extractNode(
@@ -281,7 +283,7 @@ export const visitBlock = generateVisit({
       node.body[0].type === "VariableDeclaration" &&
       node.body[0].kind === "let" &&
       node.body[0].declarations[0].id.type === "Identifier" &&
-      getIdentifierHead(node.body[0].declarations[0].id.name) === META_HEAD
+      isMetaVariable(node.body[0].declarations[0].id.name)
     ) {
       return makeBlock(
         [],
@@ -293,7 +295,7 @@ export const visitBlock = generateVisit({
   },
 });
 
-export const visitStatement = generateVisit({
+const visitStatement = generateVisit({
   __proto__: null,
   BlockStatement: (node) => {
     return makeBlockStatement(visitBlock(node));
@@ -342,19 +344,16 @@ export const visitStatement = generateVisit({
     expectSyntax(node, node.declarations.length === 1);
     expectSyntax(node, node.declarations[0].init !== null);
     expectSyntax(node, node.declarations[0].id.type === "Identifier");
-    expectSyntax(
-      node,
-      getIdentifierHead(node.declarations[0].id.name) === BASE_HEAD,
-    );
+    expectSyntax(node, isBaseVariable(node.declarations[0].id.name));
     return makeDeclareEnclaveStatement(
       node.kind,
-      getIdentifierBody(node.declarations[0].id.name),
+      getVariableBody(node.declarations[0].id.name),
       visitExpression(node.declarations[0].init),
     );
   },
 });
 
-export const visitEffect = generateVisit({
+const visitEffect = generateVisit({
   __proto__: null,
   SequenceExpression: (node) => {
     expectSyntax(node, node.expressions.length === 2);
@@ -407,13 +406,17 @@ export const visitEffect = generateVisit({
       );
     }
     if (node.left.type === "Identifier") {
-      const head = getIdentifierHead(node.left.name);
-      const body = getIdentifierBody(node.left.name);
-      if (head === META_HEAD) {
-        return makeWriteEffect(body, visitExpression(node.right));
+      if (isMetaVariable(node.left.name)) {
+        return makeWriteEffect(
+          getVariableBody(node.left.name),
+          visitExpression(node.right),
+        );
       }
-      if (head === BASE_HEAD) {
-        return makeWriteEnclaveEffect(body, visitExpression(node.right));
+      if (isBaseVariable(node.left.name)) {
+        return makeWriteEnclaveEffect(
+          getVariableBody(node.left.name),
+          visitExpression(node.right),
+        );
       }
       throw makeSyntaxError(node);
     }
@@ -446,12 +449,12 @@ const visitProperty = generateVisit({
 const visitMetaIdentifier = generateVisit({
   __proto__: null,
   Identifier: (node) => {
-    expectSyntax(node, getIdentifierHead(node.name) === META_HEAD);
-    return getIdentifierBody(node.name);
+    expectSyntax(node, isMetaVariable(node.name));
+    return getVariableBody(node.name);
   },
 });
 
-export const visitExpression = generateVisit({
+const visitExpression = generateVisit({
   __proto__: null,
   Literal: (node) => {
     return makePrimitiveExpression(node.raw);
@@ -481,13 +484,11 @@ export const visitExpression = generateVisit({
     if (node.name === INPUT_KEYWORD) {
       return makeInputExpression();
     }
-    const head = getIdentifierHead(node.name);
-    const body = getIdentifierBody(node.name);
-    if (head === META_HEAD) {
-      return makeReadExpression(body);
+    if (isMetaVariable(node.name)) {
+      return makeReadExpression(getVariableBody(node.name));
     }
-    if (head === BASE_HEAD) {
-      return makeReadEnclaveExpression(body);
+    if (isBaseVariable(node.name)) {
+      return makeReadEnclaveExpression(getVariableBody(node.name));
     }
     throw makeSyntaxError(node);
   },
@@ -521,17 +522,14 @@ export const visitExpression = generateVisit({
       expectSyntax(node, node.computed === true);
       return makeGetSuperEnclaveExpression(visitExpression(node.property));
     }
-    if (
-      node.object.type === "Identifier" &&
-      getIdentifierHead(node.object.name) === BASE_HEAD
-    ) {
+    if (node.object.type === "Identifier" && isBaseVariable(node.object.name)) {
       expectSyntax(node, node.computed === false);
       assert(
         node.property.type === "Identifier",
         "invalid non-computed property",
       );
       return makeReadEnclaveExpression(
-        `${getIdentifierBody(node.object.name)}.${node.property.name}`,
+        `${getVariableBody(node.object.name)}.${node.property.name}`,
       );
     }
     throw makeSyntaxError(node);
@@ -619,9 +617,9 @@ export const visitExpression = generateVisit({
     if (
       node.operator === "typeof" &&
       node.argument.type === "Identifier" &&
-      getIdentifierHead(node.argument.name) !== META_HEAD
+      isBaseVariable(node.argument.name)
     ) {
-      return makeTypeofEnclaveExpression(getIdentifierBody(node.argument.name));
+      return makeTypeofEnclaveExpression(getVariableBody(node.argument.name));
     }
     return makeUnaryExpression(node.operator, visitExpression(node.argument));
   },
@@ -645,3 +643,37 @@ export const visitExpression = generateVisit({
     );
   },
 });
+
+////////////
+// Export //
+////////////
+
+const options = {
+  __proto__: null,
+  ecmaVersion: 2022,
+  sourceType: "module",
+  locations: true,
+};
+
+export const parseProgram = (code) =>
+  visitProgram(parseAcornLoose(code, options));
+
+const generateParseStatement = (visit) => (code) => {
+  const node = parseAcornLoose(code, options);
+  assert(node.type === "Program");
+  assert(node.body.length === 1);
+  return visit(node.body[0]);
+};
+export const parseLink = generateParseStatement(visitLink);
+export const parseBlock = generateParseStatement(visitBlock);
+export const parseStatement = generateParseStatement(visitStatement);
+
+const generateParseExpression = (visit) => (code) => {
+  const node = parseAcornLoose(`(${code});`, options);
+  assert(node.type === "Program");
+  assert(node.body.length === 1);
+  assert(node.body[0].type === "ExpressionStatement");
+  return visit(node.body[0].expression);
+};
+export const parseExpression = generateParseExpression(visitExpression);
+export const parseEffect = generateParseExpression(visitEffect);
