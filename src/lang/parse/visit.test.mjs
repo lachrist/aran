@@ -15,9 +15,8 @@ import {
   makeExportLink,
   makeAggregateLink,
   makeBlock,
-  makeCompletionStatement,
-  makeEffectStatement,
   makeReturnStatement,
+  makeEffectStatement,
   makeBreakStatement,
   makeDebuggerStatement,
   makeDeclareEnclaveStatement,
@@ -58,7 +57,7 @@ import {
 
 import {assertDeepEqual, assertThrow} from "../../__fixture__.mjs";
 
-import {parse as parseESTree} from "acorn";
+import {parse as parseESTree} from "acorn-loose";
 
 const options = {
   __proto__: null,
@@ -69,26 +68,13 @@ const options = {
 
 const parseProgram = (code) => visitProgram(parseESTree(code, options));
 const parseLink = (code) => visitLink(parseESTree(code, options).body[0]);
-const parseBlock = (code) =>
-  visitBlock(
-    parseESTree(`(async function* () ${code});`, options).body[0].expression
-      .body,
-  );
+const parseBlock = (code) => visitBlock(parseESTree(code, options).body[0]);
 const parseStatement = (code) =>
-  visitStatement(
-    parseESTree(`(async function* () { ${code} });`, options).body[0].expression
-      .body.body[0],
-  );
+  visitStatement(parseESTree(code, options).body[0]);
 const parseEffect = (code) =>
-  visitEffect(
-    parseESTree(`(async function* () { (${code}); });`, options).body[0]
-      .expression.body.body[0].expression,
-  );
+  visitEffect(parseESTree(`(${code});`, options).body[0].expression);
 const parseExpression = (code) =>
-  visitExpression(
-    parseESTree(`(async function* () { (${code}); });`, options).body[0]
-      .expression.body.body[0].expression,
-  );
+  visitExpression(parseESTree(`(${code});`, options).body[0].expression);
 
 [
   makeScriptProgram,
@@ -98,7 +84,7 @@ const parseExpression = (code) =>
   makeExportLink,
   makeAggregateLink,
   makeBlock,
-  makeCompletionStatement,
+  makeReturnStatement,
   makeEffectStatement,
   makeReturnStatement,
   makeBreakStatement,
@@ -163,6 +149,15 @@ assertDeepEqual(parseExpression("_foo"), makeReadExpression("foo"));
 
 assertDeepEqual(parseExpression("$foo"), makeReadEnclaveExpression("foo"));
 
+assertThrow(() => parseExpression("foo"));
+
+assertDeepEqual(
+  parseExpression("$new.target"),
+  makeReadEnclaveExpression("new.target"),
+);
+
+assertThrow(() => parseExpression("foo.bar"));
+
 assertDeepEqual(
   parseExpression("typeof $foo"),
   makeTypeofEnclaveExpression("foo"),
@@ -207,7 +202,26 @@ assertDeepEqual(
 
 assertDeepEqual(
   parseExpression("import('source')"),
-  makeDynamicImportExpression("source"),
+  makeDynamicImportExpression(makePrimitiveExpression("'source'")),
+);
+
+assertDeepEqual(
+  parseExpression("importStatic('source', specifier)"),
+  makeStaticImportExpression("'source'", "specifier"),
+);
+
+assertDeepEqual(
+  parseExpression("throwError(123)"),
+  makeThrowExpression(makePrimitiveExpression("123")),
+);
+
+assertDeepEqual(
+  parseExpression("eval([$this, $new.target], [_foo, _bar], 123)"),
+  makeEvalExpression(
+    ["this", "new.target"],
+    ["foo", "bar"],
+    makePrimitiveExpression("123"),
+  ),
 );
 
 assertDeepEqual(
@@ -216,12 +230,12 @@ assertDeepEqual(
 );
 
 assertDeepEqual(
-  parseExpression("yield 123"),
+  parseExpression("yieldStraight(123)"),
   makeYieldExpression(false, makePrimitiveExpression("123")),
 );
 
 assertDeepEqual(
-  parseExpression("yield* 123"),
+  parseExpression("yieldDelegate(123)"),
   makeYieldExpression(true, makePrimitiveExpression("123")),
 );
 
@@ -261,6 +275,46 @@ assertDeepEqual(
   ]),
 );
 
+assertDeepEqual(
+  parseExpression("() => { return 123; }"),
+  makeClosureExpression(
+    "arrow",
+    false,
+    false,
+    makeBlock([], [], [makeReturnStatement(makePrimitiveExpression("123"))]),
+  ),
+);
+
+assertDeepEqual(
+  parseExpression("async () => { return 123; }"),
+  makeClosureExpression(
+    "arrow",
+    true,
+    false,
+    makeBlock([], [], [makeReturnStatement(makePrimitiveExpression("123"))]),
+  ),
+);
+
+assertDeepEqual(
+  parseExpression("function () { return 123; }"),
+  makeClosureExpression(
+    "function",
+    false,
+    false,
+    makeBlock([], [], [makeReturnStatement(makePrimitiveExpression("123"))]),
+  ),
+);
+
+assertDeepEqual(
+  parseExpression("async function * method () { return 123; }"),
+  makeClosureExpression(
+    "method",
+    true,
+    true,
+    makeBlock([], [], [makeReturnStatement(makePrimitiveExpression("123"))]),
+  ),
+);
+
 ////////////
 // Effect //
 ////////////
@@ -287,7 +341,188 @@ assertDeepEqual(
   ),
 );
 
+assertThrow(() => parseEffect("foo()"));
+
 assertDeepEqual(
   parseEffect("exportStatic('specifier', 123)"),
   makeStaticExportEffect("specifier", makePrimitiveExpression("123")),
+);
+
+assertDeepEqual(
+  parseEffect("(effect(123), effect(456))"),
+  makeSequenceEffect(
+    makeExpressionEffect(makePrimitiveExpression("123")),
+    makeExpressionEffect(makePrimitiveExpression("456")),
+  ),
+);
+
+assertDeepEqual(
+  parseEffect("123 ? effect(456) : effect(789)"),
+  makeConditionalEffect(
+    makePrimitiveExpression("123"),
+    makeExpressionEffect(makePrimitiveExpression("456")),
+    makeExpressionEffect(makePrimitiveExpression("789")),
+  ),
+);
+
+///////////////
+// Statement //
+///////////////
+
+assertDeepEqual(
+  parseStatement("effect(123);"),
+  makeEffectStatement(makeExpressionEffect(makePrimitiveExpression("123"))),
+);
+
+assertDeepEqual(parseStatement("debugger;"), makeDebuggerStatement());
+
+assertDeepEqual(
+  parseStatement("return 123;"),
+  makeReturnStatement(makePrimitiveExpression("123")),
+);
+
+assertDeepEqual(parseStatement("break foo;"), makeBreakStatement("foo"));
+
+assertDeepEqual(
+  parseStatement("foo: {}"),
+  makeBlockStatement(makeBlock(["foo"], [], [])),
+);
+
+assertDeepEqual(
+  parseStatement("{ debugger; }"),
+  makeBlockStatement(makeBlock([], [], [makeDebuggerStatement()])),
+);
+
+assertDeepEqual(
+  parseStatement("if (123) foo: {} else bar: {}"),
+  makeIfStatement(
+    makePrimitiveExpression("123"),
+    makeBlock(["foo"], [], []),
+    makeBlock(["bar"], [], []),
+  ),
+);
+
+assertDeepEqual(
+  parseStatement("while (123) foo: {}"),
+  makeWhileStatement(
+    makePrimitiveExpression("123"),
+    makeBlock(["foo"], [], []),
+  ),
+);
+
+assertDeepEqual(
+  parseStatement(
+    "try { return 123; } catch { return 456; } finally { return 789; }",
+  ),
+  makeTryStatement(
+    makeBlock([], [], [makeReturnStatement(makePrimitiveExpression("123"))]),
+    makeBlock([], [], [makeReturnStatement(makePrimitiveExpression("456"))]),
+    makeBlock([], [], [makeReturnStatement(makePrimitiveExpression("789"))]),
+  ),
+);
+
+assertDeepEqual(
+  parseStatement("let $x = 123;"),
+  makeDeclareEnclaveStatement("let", "x", makePrimitiveExpression("123")),
+);
+
+///////////
+// Block //
+///////////
+
+assertDeepEqual(parseBlock("{}"), makeBlock([], [], []));
+
+assertDeepEqual(
+  parseBlock("foo: bar: { let _qux, _buz; debugger; }"),
+  makeBlock(["foo", "bar"], ["qux", "buz"], [makeDebuggerStatement()]),
+);
+
+//////////
+// Link //
+//////////
+
+assertDeepEqual(
+  parseLink("export * from 'source';"),
+  makeAggregateLink("'source'", null, null),
+);
+
+assertDeepEqual(
+  parseLink("export * as specifier from 'source';"),
+  makeAggregateLink("'source'", null, "specifier"),
+);
+
+assertDeepEqual(
+  parseLink("export { specifier1 as specifier2 } from 'source';"),
+  makeAggregateLink("'source'", "specifier1", "specifier2"),
+);
+
+assertDeepEqual(parseLink("export { function };"), makeExportLink("function"));
+
+assertDeepEqual(
+  parseLink("import 'source';"),
+  makeImportLink("'source'", null),
+);
+
+assertDeepEqual(
+  parseLink("import {specifier} from 'source';"),
+  makeImportLink("'source'", "specifier"),
+);
+
+/////////////
+// Program //
+/////////////
+
+assertThrow(() => parseProgram("foo;"));
+
+assertDeepEqual(
+  parseProgram("module; import 'source'; export {specifier}; { debugger; }"),
+  makeModuleProgram(
+    [makeImportLink("'source'", null), makeExportLink("specifier")],
+    makeBlock([], [], [makeDebuggerStatement()]),
+  ),
+);
+
+assertDeepEqual(
+  parseProgram("script; return 123;"),
+  makeScriptProgram([makeReturnStatement(makePrimitiveExpression("123"))]),
+);
+
+assertThrow(() => parseProgram("eval;"));
+
+assertDeepEqual(
+  parseProgram("eval; { return 123; }"),
+  makeEvalProgram(
+    [],
+    [],
+    makeBlock([], [], [makeReturnStatement(makePrimitiveExpression("123"))]),
+  ),
+);
+
+assertThrow(() => parseProgram("eval; foo; bar;"));
+
+assertDeepEqual(
+  parseProgram("eval; let _foo, _bar; { return 123; }"),
+  makeEvalProgram(
+    [],
+    ["foo", "bar"],
+    makeBlock([], [], [makeReturnStatement(makePrimitiveExpression("123"))]),
+  ),
+);
+
+assertDeepEqual(
+  parseProgram("eval; [$this, $new.target]; { return 123; }"),
+  makeEvalProgram(
+    ["this", "new.target"],
+    [],
+    makeBlock([], [], [makeReturnStatement(makePrimitiveExpression("123"))]),
+  ),
+);
+
+assertDeepEqual(
+  parseProgram("eval; [$this, $new.target]; let _foo, _bar; { return 123; }"),
+  makeEvalProgram(
+    ["this", "new.target"],
+    ["foo", "bar"],
+    makeBlock([], [], [makeReturnStatement(makePrimitiveExpression("123"))]),
+  ),
 );

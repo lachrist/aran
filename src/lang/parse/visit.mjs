@@ -13,7 +13,6 @@ import {
   makeExportLink,
   makeAggregateLink,
   makeBlock,
-  makeCompletionStatement,
   makeEffectStatement,
   makeReturnStatement,
   makeBreakStatement,
@@ -70,14 +69,14 @@ const {
 const MODULE_PROGRAM_KEYWORD = "module";
 const SCRIPT_PROGRAM_KEYWORD = "script";
 const EVAL_PROGRAM_KEYWORD = "eval";
-const COMPLETION_KEYWORD = "completion";
 const EFFECT_KEYWORD = "effect";
 const THROW_KEYWORD = "throwError";
 const EVAL_KEYWORD = "eval";
 const UNDEFINED_KEYWORD = "undefined";
 const INPUT_KEYWORD = "input";
 const INTRINSIC_KEYWORD = "intrinsic";
-const SELF_SOURCE_KEYWORD = "self";
+const YIELD_DELEGATE_KEYWORD = "yieldDelegate";
+const YIELD_STRAIGHT_KEYWORD = "yieldStraight";
 const EXPORT_STATIC_KEYWORD = "exportStatic";
 const IMPORT_STATIC_KEYWORD = "importStatic";
 
@@ -97,14 +96,14 @@ const getIdentifierBody = (identifier) =>
 /////////////
 
 const enclaves = {
-  __proto__: null,
-  super_get: "super.get",
-  super_set: "super.set",
-  super_call: "super.call",
-  new_target: "new.target",
-  this: "this",
-  arguments: "arguments",
-  var: "var",
+  "__proto__": null,
+  "$super.get": "super.get",
+  "$super.set": "super.set",
+  "$super.call": "super.call",
+  "$new.target": "new.target",
+  "$this": "this",
+  "$arguments": "arguments",
+  "var": "var",
 };
 
 ///////////
@@ -134,16 +133,22 @@ const generateVisit = (visitors) => (node) => {
   return visitor(node);
 };
 
-const visitEnclaveDeclarator = (node) => {
-  assert(node.type === "VariableDeclarator", "invalid variable declarator");
-  expectSyntax(node, node.init === null);
-  expectSyntax(node, node.id.type === "Identifier");
-  const head = getIdentifierHead(node.id.name);
-  const body = getIdentifierBody(node.id.name);
-  expectSyntax(node, head === BASE_HEAD);
-  expectSyntax(node, body in enclaves);
-  return enclaves[body];
-};
+const visitEnclave = generateVisit({
+  __proto__: null,
+  Identifier: (node) => {
+    expectSyntax(node, node.name in enclaves);
+    return enclaves[node.name];
+  },
+  MemberExpression: (node) => {
+    expectSyntax(node, !node.computed);
+    expectSyntax(node, !node.optional);
+    expectSyntax(node, node.object.type === "Identifier");
+    expectSyntax(node, node.property.type === "Identifier");
+    const name = `${node.object.name}.${node.property.name}`;
+    expectSyntax(node, name in enclaves);
+    return enclaves[name];
+  },
+});
 
 const visitMetaDeclarator = (node) => {
   assert(node.type === "VariableDeclarator", "invalid variable declarator");
@@ -160,16 +165,17 @@ export const visitProgram = generateVisit({
   Program: (node) => {
     expectSyntax(node, node.body.length > 0);
     expectSyntax(node, node.body[0].type === "ExpressionStatement");
-    expectSyntax(node, node.body[0].expression.type === "Literal");
-    const kind = node.body[0].expression.value;
+    expectSyntax(node, node.body[0].expression.type === "Identifier");
+    const kind = node.body[0].expression.name;
     if (kind === SCRIPT_PROGRAM_KEYWORD) {
-      expectSyntax(node, node.body.length === 2);
-      return makeScriptProgram(visitBlock(node.body[1]));
+      return makeScriptProgram(
+        map(slice(node.body, 1, node.body.length), visitStatement),
+      );
     }
     if (kind === MODULE_PROGRAM_KEYWORD) {
       expectSyntax(node, node.body.length > 1);
       return makeModuleProgram(
-        map(visitLink, slice(node.body, 1, node.body.length - 1)),
+        map(slice(node.body, 1, node.body.length - 1), visitLink),
         visitBlock(node.body[node.body.length - 1]),
       );
     }
@@ -178,42 +184,37 @@ export const visitProgram = generateVisit({
         return makeEvalProgram([], [], visitBlock(node.body[1]));
       }
       if (node.body.length === 3) {
-        expectSyntax(node, node.body[1].type === "VariableDeclaration");
-        expectSyntax(node, node.body[1].kind === "let");
-        assert(
-          node.body[1].declarations.length > 0,
-          "empty variable declaration",
-        );
-        expectSyntax(
-          node,
-          node.body[1].declarations[0].id.type === "Identifier",
-        );
-        const head = getIdentifierHead(node.body[1].declarations[0].id.name);
-        if (head === BASE_HEAD) {
-          return makeEvalProgram(
-            map(node.body[1].declarations, visitEnclaveDeclarator),
-            [],
-            visitBlock(node.body[2]),
-          );
-        }
-        if (head === META_HEAD) {
+        if (
+          node.body[1].type === "VariableDeclaration" &&
+          node.body[1].kind === "let"
+        ) {
           return makeEvalProgram(
             [],
             map(node.body[1].declarations, visitMetaDeclarator),
             visitBlock(node.body[2]),
           );
         }
+        if (
+          node.body[1].type === "ExpressionStatement" &&
+          node.body[1].expression.type === "ArrayExpression"
+        ) {
+          return makeEvalProgram(
+            map(node.body[1].expression.elements, visitEnclave),
+            [],
+            visitBlock(node.body[2]),
+          );
+        }
         throw makeSyntaxError(node);
       }
       if (node.body.length === 4) {
-        expectSyntax(node, node.body[1].type === "VariableDeclaration");
-        expectSyntax(node, node.body[1].kind === "let");
+        expectSyntax(node, node.body[1].type === "ExpressionStatement");
+        expectSyntax(node, node.body[1].expression.type === "ArrayExpression");
         expectSyntax(node, node.body[2].type === "VariableDeclaration");
         expectSyntax(node, node.body[2].kind === "let");
         return makeEvalProgram(
-          map(node.body[1].declarations, visitEnclaveDeclarator),
+          map(node.body[1].expression.elements, visitEnclave),
           map(node.body[2].declarations, visitMetaDeclarator),
-          visitBlock(node.body[2]),
+          visitBlock(node.body[3]),
         );
       }
       throw makeSyntaxError(node);
@@ -225,21 +226,28 @@ export const visitProgram = generateVisit({
 export const visitLink = generateVisit({
   __proto__: null,
   ImportDeclaration: (node) => {
-    expectSyntax(node, node.specifiers.length === 0);
-    return makeImportLink(node.source.value);
+    if (node.specifiers.length === 0) {
+      return makeImportLink(node.source.raw, null);
+    }
+    expectSyntax(node, node.specifiers.length === 1);
+    expectSyntax(node, node.specifiers[0].type === "ImportSpecifier");
+    expectSyntax(
+      node,
+      node.specifiers[0].imported.name === node.specifiers[0].local.name,
+    );
+    return makeImportLink(node.source.raw, node.specifiers[0].imported.name);
   },
   ExportAllDeclaration: (node) => {
     return makeAggregateLink(
-      node.source.value,
+      node.source.raw,
       null,
       node.exported === null ? null : node.exported.name,
     );
   },
   ExportNamedDeclaration: (node) => {
-    expectSyntax(node, node.source !== null);
     expectSyntax(node, node.declaration === null);
     expectSyntax(node, node.specifiers.length === 1);
-    if (node.source.value === SELF_SOURCE_KEYWORD) {
+    if (node.source === null) {
       expectSyntax(
         node,
         node.specifiers[0].local.name === node.specifiers[0].exported.name,
@@ -247,7 +255,7 @@ export const visitLink = generateVisit({
       return makeExportLink(node.specifiers[0].local.name);
     }
     return makeAggregateLink(
-      node.source.value,
+      node.source.raw,
       node.specifiers[0].local.name,
       node.specifiers[0].exported.name,
     );
@@ -288,7 +296,10 @@ export const visitBlock = generateVisit({
 export const visitStatement = generateVisit({
   __proto__: null,
   BlockStatement: (node) => {
-    return makeBlockStatement(visitBlock(node.body));
+    return makeBlockStatement(visitBlock(node));
+  },
+  LabeledStatement: (node) => {
+    return makeBlockStatement(visitBlock(node));
   },
   TryStatement: (node) => {
     expectSyntax(node, node.handler !== null);
@@ -318,14 +329,6 @@ export const visitStatement = generateVisit({
     return makeDebuggerStatement();
   },
   ExpressionStatement: (node) => {
-    if (
-      node.type === "CallExpression" &&
-      node.callee.type === "Identifier" &&
-      node.callee.name === COMPLETION_KEYWORD
-    ) {
-      expectSyntax(node, node.arguments.length === 1);
-      return makeCompletionStatement(visitExpression(node.arguments[0]));
-    }
     return makeEffectStatement(visitEffect(node.expression));
   },
   ReturnStatement: (node) => {
@@ -440,14 +443,7 @@ const visitProperty = generateVisit({
   },
 });
 
-const visitEvalEnclave = generateVisit({
-  __proto__: null,
-  Literal: (node) => {
-    return node.value;
-  },
-});
-
-const visitEvalIdentifier = generateVisit({
+const visitMetaIdentifier = generateVisit({
   __proto__: null,
   Identifier: (node) => {
     expectSyntax(node, getIdentifierHead(node.name) === META_HEAD);
@@ -470,7 +466,7 @@ export const visitExpression = generateVisit({
     );
   },
   FunctionExpression: (node) => {
-    expectSyntax(node, node.params.length === 1);
+    expectSyntax(node, node.params.length === 0);
     return makeClosureExpression(
       node.id === null ? "function" : node.id.name,
       node.async,
@@ -512,14 +508,9 @@ export const visitExpression = generateVisit({
   AwaitExpression: (node) => {
     return makeAwaitExpression(visitExpression(node.argument));
   },
-  YieldExpression: (node) => {
-    return makeYieldExpression(node.delegate, visitExpression(node.argument));
-  },
   // Combiners //
   ImportExpression: (node) => {
-    expectSyntax(node, node.source.type === "Literal");
-    expectSyntax(node, typeof node.source.value === "string");
-    return makeDynamicImportExpression(node.source.value);
+    return makeDynamicImportExpression(visitExpression(node.source));
   },
   MemberExpression: (node) => {
     expectSyntax(node, node.optional === false);
@@ -549,6 +540,20 @@ export const visitExpression = generateVisit({
     expectSyntax(node, node.optional === false);
     if (
       node.callee.type === "Identifier" &&
+      node.callee.name === YIELD_STRAIGHT_KEYWORD
+    ) {
+      expectSyntax(node, node.arguments.length === 1);
+      return makeYieldExpression(false, visitExpression(node.arguments[0]));
+    }
+    if (
+      node.callee.type === "Identifier" &&
+      node.callee.name === YIELD_DELEGATE_KEYWORD
+    ) {
+      expectSyntax(node, node.arguments.length === 1);
+      return makeYieldExpression(true, visitExpression(node.arguments[0]));
+    }
+    if (
+      node.callee.type === "Identifier" &&
       node.callee.name === THROW_KEYWORD
     ) {
       expectSyntax(node, node.arguments.length === 1);
@@ -576,22 +581,25 @@ export const visitExpression = generateVisit({
       node.callee.type === "Identifier" &&
       node.callee.name === IMPORT_STATIC_KEYWORD
     ) {
-      expectSyntax(node, node.arguments.length === 1);
+      expectSyntax(node, node.arguments.length === 2);
       expectSyntax(node, node.arguments[0].type === "Literal");
-      expectSyntax(node, typeof node.arguments[0].value === "string");
-      return makeStaticImportExpression(node.arguments[0].value);
+      expectSyntax(node, node.arguments[1].type === "Identifier");
+      return makeStaticImportExpression(
+        node.arguments[0].raw,
+        node.arguments[1].name,
+      );
     }
     if (
       node.callee.type === "Identifier" &&
       node.callee.name === EVAL_KEYWORD
     ) {
       expectSyntax(node, node.arguments.length === 3);
+      expectSyntax(node, node.arguments[0].type === "ArrayExpression");
       expectSyntax(node, node.arguments[1].type === "ArrayExpression");
-      expectSyntax(node, node.arguments[2].type === "ArrayExpression");
       return makeEvalExpression(
-        map(node.arguments[1].elements, visitEvalEnclave),
-        map(node.arguments[2].elements, visitEvalIdentifier),
-        visitExpression(node.arguments[0]),
+        map(node.arguments[0].elements, visitEnclave),
+        map(node.arguments[1].elements, visitMetaIdentifier),
+        visitExpression(node.arguments[2]),
       );
     }
     expectSyntax(node, node.arguments.length > 0);
