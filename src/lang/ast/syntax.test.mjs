@@ -7,7 +7,7 @@ assertEqual(isSyntaxType("!", "UnaryOperator"), true);
 assertEqual(isSyntaxType("===", "UnaryOperator"), false);
 
 // Type //
-assertEqual(isSyntaxType("foo", "Source"), true);
+assertEqual(isSyntaxType("'foo'", "Source"), true);
 assertEqual(isSyntaxType(123, "Source"), false);
 
 // Primitive //

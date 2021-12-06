@@ -16,13 +16,13 @@ const syntax = {
   __proto__: null,
   Program: {
     __proto__: null,
-    ScriptProgram: ["Block"],
+    ScriptProgram: [["Statement", "*"]],
     ModuleProgram: [["Link", "*"], "Block"],
     EvalProgram: [["Enclave", "*"], ["Variable", "*"], "Block"],
   },
   Link: {
     __proto__: null,
-    ImportLink: ["Source"],
+    ImportLink: ["Source", "NullableSpecifier"],
     ExportLink: ["Specifier"],
     AggregateLink: ["Source", "NullableSpecifier", "NullableSpecifier"],
   },
@@ -37,7 +37,6 @@ const syntax = {
   Statement: {
     __proto__: null,
     // BlockLess //
-    CompletionStatement: ["Expression"],
     EffectStatement: ["Effect"],
     ReturnStatement: ["Expression"],
     BreakStatement: ["Label"],
@@ -57,7 +56,7 @@ const syntax = {
     __proto__: null,
     SetSuperEnclaveEffect: ["Expression", "Expression"],
     WriteEffect: ["Variable", "Expression"],
-    WriteEnclaveEffect: ["EnclaveVariable", "Expression"],
+    WriteEnclaveEffect: ["WritableEnclaveVariable", "Expression"],
     StaticExportEffect: ["Specifier", "Expression"],
     SequenceEffect: ["Effect", "Effect"],
     ConditionalEffect: ["Expression", "Effect", "Effect"],
@@ -69,7 +68,7 @@ const syntax = {
     InputExpression: [],
     PrimitiveExpression: ["Primitive"],
     IntrinsicExpression: ["Intrinsic"],
-    StaticImportExpression: ["Source"],
+    StaticImportExpression: ["Source", "NullableSpecifier"],
     ReadExpression: ["Variable"],
     ReadEnclaveExpression: ["ReadableEnclaveVariable"],
     TypeofEnclaveExpression: ["ReadableEnclaveVariable"],
@@ -233,7 +232,8 @@ const predicates = {
   Asynchronous: generateIsType("boolean"),
   Generator: generateIsType("boolean"),
   Delegate: generateIsType("boolean"),
-  Source: generateIsType("string"),
+  Source: (any) =>
+    typeof any === "string" && apply(testRegExp, /^['"]/u, [any]),
   Primitive: (any) =>
     any === "null" ||
     any === "undefined" ||

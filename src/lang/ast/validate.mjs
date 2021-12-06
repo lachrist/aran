@@ -1,6 +1,5 @@
 import {
   some,
-  every,
   includes,
   filter,
   filterOut,
@@ -74,7 +73,6 @@ const isReturnStatement = generateIsType("ReturnStatement");
 const isYieldExpression = generateIsType("YieldExpression");
 const isAwaitExpression = generateIsType("AwaitExpression");
 const isInputExpression = generateIsType("InputExpression");
-const isCompletionStatement = generateIsType("CompletionStatement");
 const isDeclareEnclaveStatement = generateIsType("DeclareEnclaveStatement");
 const isCallSuperEnclaveExpression = generateIsType(
   "CallSuperEnclaveExpression",
@@ -163,8 +161,8 @@ const generateIsBoundLinkExpression = (links) => {
   const hash = map(links, stringifyJSON);
   const callbacks = {
     __proto__: null,
-    StaticImportExpression: (context, node, source) =>
-      includes(hash, stringifyJSON(makeImportLink(source))),
+    StaticImportExpression: (context, node, source, specifier) =>
+      includes(hash, stringifyJSON(makeImportLink(source, specifier))),
     StaticExportEffect: (context, node, specifier, expression) =>
       includes(hash, stringifyJSON(makeExportLink(specifier))),
   };
@@ -260,13 +258,10 @@ const digestNestedBlock = (digest) => {
   return digest;
 };
 
-const isLastOrNotCompletionStatement = (node, index, nodes) =>
-  index === nodes.length - 1 || !isCompletionStatement(node);
-
 const generateIsCompletionBlock = () => {
   const callback = (context, node, labels, variables, statements) =>
     statements.length > 0 &&
-    isCompletionStatement(statements[statements.length - 1]);
+    isReturnStatement(statements[statements.length - 1]);
   return (block) => extractNode(null, block, "Block", callback);
 };
 const isCompletionBlock = generateIsCompletionBlock();
@@ -283,10 +278,6 @@ const generateValidateNode = () => {
     __proto__: null,
     ModuleProgram: (digest, node, links, block) => {
       assert(
-        !isCompletionBlock(block),
-        "ModuleProgram.body should not be a completion Block",
-      );
-      assert(
         !isLabeledBlock(block),
         "ModuleProgram.body should not be a labeled Block",
       );
@@ -301,15 +292,17 @@ const generateValidateNode = () => {
       checkoutDigest(digest, "ModuleProgram");
       return digest;
     },
-    ScriptProgram: (digest, node, block) => {
+    ScriptProgram: (digest, node, statements) => {
       assert(
-        isCompletionBlock(block),
-        "ScriptProgram.body should be a completion Block",
+        statements.length > 0 &&
+          isReturnStatement(statements[statements.length - 1]),
+        "ScriptProgram.body should end with a CompletionStatement",
       );
       assert(
-        !isLabeledBlock(block),
-        "ScriptProgram.body should not be a labeled Block",
+        filter(digest, isReturnStatement).length < 2,
+        "ScriptProgram.body should not contain more than one return statement",
       );
+      digest = filterOut(digest, isReturnStatement);
       digest = filterOut(digest, isThisReadEnclaveExpression);
       digest = filterOut(digest, isArgumentsReadEnclaveExpression);
       digest = filterOut(digest, isDeclareEnclaveStatement);
@@ -325,6 +318,11 @@ const generateValidateNode = () => {
         isCompletionBlock(block),
         "EvalProgram.body should be a completion Block",
       );
+      assert(
+        filter(digest, isReturnStatement).length < 2,
+        "EvalProgram.body should not contain more than one return statement",
+      );
+      digest = filterOut(digest, isReturnStatement);
       digest = filterOut(digest, generateIsBoundVariableNode(variables));
       if (includes(enclaves, "super.call")) {
         digest = filterOut(digest, isCallSuperEnclaveExpression);
@@ -362,10 +360,6 @@ const generateValidateNode = () => {
     },
     Block: (digest, node, labels, variables, statements) => {
       assert(!some(variables, isDuplicate), "duplicate variable found Block");
-      assert(
-        every(statements, isLastOrNotCompletionStatement),
-        "If present CompletionStatement should appear last in Block",
-      );
       assert(
         filter(digest, isInputExpression).length <= 1,
         "multiple InputExpression found in block",
@@ -441,44 +435,12 @@ const generateValidateNode = () => {
       );
       return digest;
     },
-    BlockStatement: (digest, node, block) => {
-      assert(
-        !isCompletionBlock(block),
-        "BlockStatement.body should not be a completion Block",
-      );
-      return digestNestedBlock(digest);
-    },
-    IfStatement: (digest, node, expression, block1, block2) => {
-      assert(
-        !isCompletionBlock(block1),
-        "IfStatement.consequent should not be a completion Block",
-      );
-      assert(
-        !isCompletionBlock(block2),
-        "IfStatement.alternate should not be a completion Block",
-      );
-      return digestNestedBlock(digest);
-    },
-    WhileStatement: (digest, node, expression, block) => {
-      assert(
-        !isCompletionBlock(block),
-        "WhileStatement.body should not be a completion Block",
-      );
-      return digestNestedBlock(digest);
-    },
+    BlockStatement: (digest, node, block) => digestNestedBlock(digest),
+    IfStatement: (digest, node, expression, block1, block2) =>
+      digestNestedBlock(digest),
+    WhileStatement: (digest, node, expression, block) =>
+      digestNestedBlock(digest),
     TryStatement: (digest, node, block1, block2, block3) => {
-      assert(
-        !isCompletionBlock(block1),
-        "TryStatement.body should not be a completion Block",
-      );
-      assert(
-        !isCompletionBlock(block2),
-        "TryStatement.handler should not be a completion Block",
-      );
-      assert(
-        !isCompletionBlock(block3),
-        "TryStatement.finalizer should not be a completion Block",
-      );
       assert(
         !isLabeledBlock(block1),
         "TryStatement.body should not be labeled Block",
