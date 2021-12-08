@@ -32,6 +32,8 @@ const testStatement = generateTest(parseStatement, stringifyStatement);
 const testProgram = generateTest(parseProgram, stringifyProgram);
 const testBlock = generateTest(parseBlock, stringifyBlock);
 
+testLink("export {specifier1 as specifier2} from 'source';");
+
 ////////////////
 // Expression //
 ////////////////
@@ -85,7 +87,7 @@ testExpression("!123;");
 
 testExpression("123 + 456;");
 
-// testExpression("({__proto__:12, [34]:56, key:78, 'k.e.y':90});");
+testExpression("({__proto__:123, [456]:789});");
 
 ////////////
 // Effect //
@@ -125,8 +127,9 @@ testBlock("label1: label2: { let _variable1, _variable2; effect(123); }");
 
 testLink("import 'source';");
 testLink("import {specifier} from 'source';");
-testLink("export {specifier};");
-// testLink("export {specifier1 as specifier2} from 'source';");
+// testLink("export {specifier};");
+testLink("export * as specifier from 'source';");
+testLink("export {specifier1 as specifier2} from 'source';");
 testLink("export * as specifier from 'source';");
 testLink("export * from 'source';");
 
@@ -134,6 +137,6 @@ testLink("export * from 'source';");
 // Program //
 /////////////
 
-testProgram("('script'); return 123;");
-testProgram("('module'); import 'source'; { effect(123); }");
-testProgram("('eval'); [$new.target, $this]; let _variable1, _variable2; { return 123; }");
+testProgram("'script'; return 123;");
+testProgram("'module'; import 'source'; { effect(123); }");
+testProgram("'eval'; [$new.target, $this]; let _variable1, _variable2; { return 123; }");

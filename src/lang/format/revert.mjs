@@ -38,6 +38,11 @@ const {
 // Make //
 //////////
 
+const makeDirective = (expression, directive) => ({
+  type: "ExpressionStatement",
+  expression,
+  directive,
+});
 const makeBlockStatement = (body) => ({type: "BlockStatement", body});
 const makeVariableDeclaration = (kind, declarations) => ({
   type: "VariableDeclaration",
@@ -95,7 +100,11 @@ const makeExportAllDeclaration = (exported, source) => ({
 const makeExportSpecifier = (local, exported) => ({
   type: "ExportSpecifier",
   local,
-  exported,
+  exported: {
+    start: 0,
+    end: 0,
+    ...exported,
+  },
 });
 const makeImportSpecifier = (local, imported) => ({
   type: "ImportSpecifier",
@@ -212,7 +221,9 @@ const transformEnclave = (enclave) => {
       makeIdentifier(segments[1]),
     );
   }
+  /* c8 ignore start */
   throw new Error("invalid enclave name");
+  /* c8 ignore stop */
 };
 
 const transformProperty = (property) =>
@@ -240,7 +251,12 @@ export const revertProgram = generateRevert({
     makeProgram(
       "script",
       concat(
-        [makeExpressionStatement(makeLiteral(SCRIPT_PROGRAM_KEYWORD, null))],
+        [
+          makeDirective(
+            makeLiteral(SCRIPT_PROGRAM_KEYWORD, null),
+            SCRIPT_PROGRAM_KEYWORD,
+          ),
+        ],
         map(statements, revertStatement),
       ),
     ),
@@ -248,7 +264,12 @@ export const revertProgram = generateRevert({
     makeProgram(
       "module",
       concat(
-        [makeExpressionStatement(makeLiteral(MODULE_PROGRAM_KEYWORD, null))],
+        [
+          makeDirective(
+            makeLiteral(MODULE_PROGRAM_KEYWORD, null),
+            MODULE_PROGRAM_KEYWORD,
+          ),
+        ],
         map(links, revertLink),
         [revertBlock(block)],
       ),
@@ -258,7 +279,10 @@ export const revertProgram = generateRevert({
       "script",
       concat(
         [
-          makeExpressionStatement(makeLiteral(EVAL_PROGRAM_KEYWORD, null)),
+          makeDirective(
+            makeLiteral(EVAL_PROGRAM_KEYWORD, null),
+            MODULE_PROGRAM_KEYWORD,
+          ),
           makeExpressionStatement(
             makeArrayExpression(map(enclaves, transformEnclave)),
           ),
@@ -426,8 +450,10 @@ export const revertExpression = generateRevert({
       if (getOwnPropertyDescriptor(primitive, "undefined") !== undefined) {
         return makeIdentifier(UNDEFINED_KEYWORD);
       }
+      /* c8 ignore start */
       throw new Error("invalid primitive");
     }
+    /* c8 ignore stop */
     return makeLiteral(primitive, null);
   },
   IntrinsicExpression: (context, node, intrinsic) =>

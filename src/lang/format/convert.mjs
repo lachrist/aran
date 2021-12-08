@@ -415,27 +415,13 @@ export const convertEffect = generateConvert({
   },
 });
 
-const convertNonComputedKey = generateConvert({
-  __proto__: null,
-  Identifier: (node) => {
-    return makePrimitiveExpression(node.name);
-  },
-  Literal: (node) => {
-    return makePrimitiveExpression(node.value);
-  },
-});
-
 const convertProperty = generateConvert({
   __proto__: null,
   Property: (node) => {
     expectSyntax(node, node.kind === "init");
     expectSyntax(node, node.method === false);
-    return [
-      node.computed
-        ? convertExpression(node.key)
-        : convertNonComputedKey(node.key),
-      convertExpression(node.value),
-    ];
+    expectSyntax(node, node.computed === true);
+    return [convertExpression(node.key), convertExpression(node.value)];
   },
 });
 
