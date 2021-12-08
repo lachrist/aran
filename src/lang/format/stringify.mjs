@@ -1,5 +1,11 @@
-
-import {revertExpression, revertEffect, revertLink, revertBlock, revertStatement, revertProgram} from "./revert.mjs";
+import {
+  revertExpression,
+  revertEffect,
+  revertLink,
+  revertBlock,
+  revertStatement,
+  revertProgram,
+} from "./revert.mjs";
 import {stringifyPrettier} from "./prettier.mjs";
 
 const makeProgram = (body) => ({
@@ -20,7 +26,8 @@ const generateStringifyProgram = (revert) => (node) =>
   stringifyPrettier(revert(node));
 
 export const stringifyEffect = generateStringifyExpression(revertEffect);
-export const stringifyExpression = generateStringifyExpression(revertExpression);
+export const stringifyExpression =
+  generateStringifyExpression(revertExpression);
 export const stringifyStatement = generateStringifyStatement(revertStatement);
 export const stringifyLink = generateStringifyStatement(revertLink);
 export const stringifyBlock = generateStringifyStatement(revertBlock);

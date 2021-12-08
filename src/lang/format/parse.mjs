@@ -1,9 +1,16 @@
-
-import {assert}from "../../util.mjs";
+import {assert} from "../../util.mjs";
 import {parseAcornLoose} from "./acorn.mjs";
-import {convertProgram, convertLink, convertBlock, convertStatement, convertEffect, convertExpression} from "./convert.mjs";
+import {
+  convertProgram,
+  convertLink,
+  convertBlock,
+  convertStatement,
+  convertEffect,
+  convertExpression,
+} from "./convert.mjs";
 
-const generateParseProgram = (convert) => (code) => convertProgram(parseAcornLoose(code));
+const generateParseProgram = (convert) => (code) =>
+  convertProgram(parseAcornLoose(code));
 const generateParseStatement = (convert) => (code) => {
   const node = parseAcornLoose(code);
   assert(node.type === "Program");

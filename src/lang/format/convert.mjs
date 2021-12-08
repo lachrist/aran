@@ -162,13 +162,6 @@ export const convertProgram = generateConvert({
     if (kind === MODULE_PROGRAM_KEYWORD) {
       expectSyntax(node, node.body.length > 1);
       return makeModuleProgram(
-        // map(
-        //   filterOut(
-        //     slice(node.body, 1, node.body.length - 1),
-        //     isEmptyStatement,
-        //   ),
-        //   convertLink,
-        // ),
         map(slice(node.body, 1, node.body.length - 1), convertLink),
         convertBlock(node.body[node.body.length - 1]),
       );

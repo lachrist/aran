@@ -99,10 +99,14 @@ const makeExportAllDeclaration = (exported, source) => ({
 });
 const makeExportSpecifier = (local, exported) => ({
   type: "ExportSpecifier",
-  local,
-  exported: {
+  local: {
     start: 0,
     end: 0,
+    ...local,
+  },
+  exported: {
+    start: local.name === exported.name ? 0 : 1,
+    end: local.name === exported.name ? 0 : 1,
     ...exported,
   },
 });
@@ -283,10 +287,14 @@ export const revertProgram = generateRevert({
             makeLiteral(EVAL_PROGRAM_KEYWORD, null),
             MODULE_PROGRAM_KEYWORD,
           ),
-          makeExpressionStatement(
-            makeArrayExpression(map(enclaves, transformEnclave)),
-          ),
         ],
+        enclaves.length === 0
+          ? []
+          : [
+              makeExpressionStatement(
+                makeArrayExpression(map(enclaves, transformEnclave)),
+              ),
+            ],
         variables.length === 0
           ? []
           : [
