@@ -2,7 +2,8 @@ import {includes} from "array-lite";
 import {getIntrinsicArray} from "./intrinsics.mjs";
 
 const {
-  Reflect: {apply},
+  undefined,
+  Reflect: {apply, getOwnPropertyDescriptor, ownKeys},
   RegExp: {
     prototype: {test: testRegExp},
   },
@@ -232,14 +233,19 @@ const predicates = {
   Asynchronous: generateIsType("boolean"),
   Generator: generateIsType("boolean"),
   Delegate: generateIsType("boolean"),
-  Source: (any) =>
-    typeof any === "string" && apply(testRegExp, /^['"]/u, [any]),
+  Source: (any) => typeof any === "string",
   Primitive: (any) =>
-    any === "null" ||
-    any === "undefined" ||
-    any === "true" ||
-    any === "false" ||
-    (typeof any === "string" && apply(testRegExp, /^['".0-9]/u, [any])),
+    any === null ||
+    typeof any === "boolean" ||
+    typeof any === "number" ||
+    typeof any === "string" ||
+    (typeof any === "object" &&
+      ownKeys(any).length === 1 &&
+      getOwnPropertyDescriptor(any, "undefined") !== undefined &&
+      any.undefined === null) ||
+    (getOwnPropertyDescriptor(any, "bigint") !== undefined &&
+      typeof any.bigint === "string" &&
+      apply(testRegExp, /^(0|([1-9][0-9]*))$/u, [any.bigint])),
   NullableSpecifier: (any) =>
     any === null || (typeof any === "string" && isIdentifier(any)),
   Specifier: (any) => typeof any === "string" && isIdentifier(any),

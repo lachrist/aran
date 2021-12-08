@@ -4,11 +4,12 @@ const global_Object_assign = global.Object.assign;
 
 const ArrayLite = require("array-lite");
 
-exports.Empty = () => ({__proto__:null});
+exports.Empty = () => ({__proto__: null});
 
 exports.Single = (key, value) => ({
   __proto__: null,
-  [key]: value});
+  [key]: value,
+});
 
 exports.combine = (path, mapping1, mapping2) => {
   if (typeof mapping1 === "string") {
@@ -24,7 +25,7 @@ exports.combine = (path, mapping1, mapping2) => {
       }
     }
   }
-  return global_Object_assign({__proto__:null}, mapping1, mapping2);
+  return global_Object_assign({__proto__: null}, mapping1, mapping2);
 };
 
 exports.bind = (path, key1, value1, mapping) => {
@@ -35,7 +36,7 @@ exports.bind = (path, key1, value1, mapping) => {
     if (mapping[key1] !== value1) {
       return `Binding mismatch at ${path} between [${key1}, ${value1}] and [${key1}, ${mapping[key1]}]`;
     }
-    mapping = global_Object_assign({__proto__:null}, mapping);
+    mapping = global_Object_assign({__proto__: null}, mapping);
     delete mapping[key1];
   } else {
     for (let key2 in mapping) {

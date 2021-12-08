@@ -12,7 +12,7 @@
   "license": "MIT",
   "scripts": {
     "build-debug": "ARAN_VALIDATE_NODE=true node build/generate-make.mjs",
-    "lint": "npx eslint '**/*.mjs'",
+    "lint": "npx eslint --rulesdir eslint-rules '**/*.mjs'",
     "unit": "node ./node_modules/.bin/test-turtle --layout alongside 'npx prettier -w $1 $2 && npx eslint --rulesdir eslint-rules $1 $2 && node $2 && npx c8 --reporter text --include $1 --check-coverage --branches 100 --functions 100 -- node $2'"
   },
   "keywords": [
@@ -26,7 +26,6 @@
   ],
   "devDependencies": {
     "acorn": "^8.6.0",
-    "acorn-loose": "^8.2.1",
     "c8": "^7.10.0",
     "chalk": "^4.1.2",
     "diff": "^5.0.0",

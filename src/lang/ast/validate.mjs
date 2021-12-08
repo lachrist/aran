@@ -136,7 +136,7 @@ for (const kind in syntax) {
 }
 
 const generateMakeEnclaveDummy = () => {
-  const dummy_expression = makePrimitiveExpression(stringifyJSON("dummy"));
+  const dummy_expression = makePrimitiveExpression("dummy");
   const dummies = {
     "__proto__": null,
     "super.get": makeGetSuperEnclaveExpression(dummy_expression),
