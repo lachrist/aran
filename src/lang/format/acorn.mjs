@@ -10,7 +10,7 @@ const options = {
 
 /* eslint-disable no-restricted-syntax */
 class LooseParser extends AcornParser {
-  raiseRecoverable(position, message) {}
+  raiseRecoverable(_position, _message) {}
   raise(position, message) {
     if (message !== "Unsyntactic break") {
       super.raise(position, message);

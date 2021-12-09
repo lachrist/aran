@@ -45,7 +45,7 @@ export const format = (template, values) => {
   let index = 0;
   const message = apply(replace, template, [
     /(%+)($|[^%])/gu,
-    (match, escape, marker) => {
+    (_match, escape, marker) => {
       if (escape.length >= 2) {
         return `${apply(substring, escape, ONE_ARRAY)}${marker}`;
       }

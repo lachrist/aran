@@ -144,11 +144,11 @@ const makeAssignmentExpression = (left, right) => ({
   left,
   right,
 });
-const makeCallExpression = (callee, _arguments) => ({
+const makeCallExpression = (callee, $arguments) => ({
   type: "CallExpression",
   optional: false,
   callee,
-  arguments: _arguments,
+  arguments: $arguments,
 });
 const makeSequenceExpression = (expressions) => ({
   type: "SequenceExpression",
@@ -166,27 +166,27 @@ const makeUnaryExpression = (operator, argument) => ({
   operator,
   argument,
 });
-const makeFunctionExpression = (id, _async, generator, body) => ({
+const makeFunctionExpression = (id, $async, generator, body) => ({
   type: "FunctionExpression",
   id,
-  async: _async,
+  async: $async,
   generator,
   body,
 });
-const makeArrowFunctionExpression = (_async, body) => ({
+const makeArrowFunctionExpression = ($async, body) => ({
   type: "ArrowFunctionExpression",
   id: null,
-  async: _async,
+  async: $async,
   params: [],
   body,
 });
 const makeAwaitExpression = (argument) => ({type: "AwaitExpression", argument});
 const makeSpreadElement = (argument) => ({type: "SpreadElement", argument});
 const makeImportExpression = (source) => ({type: "ImportExpression", source});
-const makeNewExpression = (callee, _arguments) => ({
+const makeNewExpression = (callee, $arguments) => ({
   type: "NewExpression",
   callee,
-  arguments: _arguments,
+  arguments: $arguments,
 });
 const makeBinaryExpression = (operator, left, right) => ({
   type: "BinaryExpression",
@@ -251,7 +251,7 @@ const generateRevert = (callbacks) => (node) =>
 
 export const revertProgram = generateRevert({
   __proto__: null,
-  ScriptProgram: (context, node, statements) =>
+  ScriptProgram: (_context, _node, statements) =>
     makeProgram(
       "script",
       concat(
@@ -264,7 +264,7 @@ export const revertProgram = generateRevert({
         map(statements, revertStatement),
       ),
     ),
-  ModuleProgram: (context, node, links, block) =>
+  ModuleProgram: (_context, _node, links, block) =>
     makeProgram(
       "module",
       concat(
@@ -278,7 +278,7 @@ export const revertProgram = generateRevert({
         [revertBlock(block)],
       ),
     ),
-  EvalProgram: (context, node, enclaves, variables, block) =>
+  EvalProgram: (_context, _node, enclaves, variables, block) =>
     makeProgram(
       "script",
       concat(
@@ -310,7 +310,7 @@ export const revertProgram = generateRevert({
 
 export const revertLink = generateRevert({
   __proto__: null,
-  ImportLink: (context, node, source, specifier) =>
+  ImportLink: (_context, _node, source, specifier) =>
     makeImportDeclaration(
       specifier === null
         ? []
@@ -322,7 +322,7 @@ export const revertLink = generateRevert({
           ],
       makeLiteral(source, null),
     ),
-  ExportLink: (context, node, specifier) =>
+  ExportLink: (_context, _node, specifier) =>
     makeExportNamedDeclaration(
       [
         makeExportSpecifier(
@@ -332,7 +332,7 @@ export const revertLink = generateRevert({
       ],
       null,
     ),
-  AggregateLink: (context, node, source, specifier1, specifier2) =>
+  AggregateLink: (_context, _node, source, specifier1, specifier2) =>
     specifier1 === null
       ? makeExportAllDeclaration(
           specifier2 === null ? null : makeIdentifier(specifier2),
@@ -354,7 +354,7 @@ export const accumulateLabel = (node, label) =>
 
 export const revertBlock = generateRevert({
   __proto__: null,
-  Block: (context, node, labels, variables, statements) =>
+  Block: (_context, _node, labels, variables, statements) =>
     reduceRight(
       labels,
       accumulateLabel,
@@ -376,29 +376,29 @@ export const revertBlock = generateRevert({
 
 export const revertStatement = generateRevert({
   __proto__: null,
-  DebuggerStatement: (context, node) => makeDebuggerStatement(),
-  ReturnStatement: (context, node, expression) =>
+  DebuggerStatement: (_context, _node) => makeDebuggerStatement(),
+  ReturnStatement: (_context, _node, expression) =>
     makeReturnStatement(revertExpression(expression)),
-  BreakStatement: (context, node, label) =>
+  BreakStatement: (_context, _node, label) =>
     makeBreakStatement(makeIdentifier(label)),
-  BlockStatement: (context, node, block) => revertBlock(block),
-  IfStatement: (context, node, expression, block1, block2) =>
+  BlockStatement: (_context, _node, block) => revertBlock(block),
+  IfStatement: (_context, _node, expression, block1, block2) =>
     makeIfStatement(
       revertExpression(expression),
       revertBlock(block1),
       revertBlock(block2),
     ),
-  WhileStatement: (context, node, expression, block) =>
+  WhileStatement: (_context, _node, expression, block) =>
     makeWhileStatement(revertExpression(expression), revertBlock(block)),
-  TryStatement: (context, node, block1, block2, block3) =>
+  TryStatement: (_context, _node, block1, block2, block3) =>
     makeTryStatement(
       revertBlock(block1),
       makeCatchClause(revertBlock(block2)),
       revertBlock(block3),
     ),
-  EffectStatement: (context, node, effect) =>
+  EffectStatement: (_context, _node, effect) =>
     makeExpressionStatement(revertEffect(effect)),
-  DeclareEnclaveStatement: (context, node, kind, variable, expression) =>
+  DeclareEnclaveStatement: (_context, _node, kind, variable, expression) =>
     makeVariableDeclaration(kind, [
       makeVariableDeclarator(
         makeIdentifier(makeBaseVariable(variable)),
@@ -409,7 +409,7 @@ export const revertStatement = generateRevert({
 
 export const revertEffect = generateRevert({
   __proto__: null,
-  SetSuperEnclaveEffect: (context, node, expression1, expression2) =>
+  SetSuperEnclaveEffect: (_context, _node, expression1, expression2) =>
     makeAssignmentExpression(
       makeMemberExpression(
         true,
@@ -418,30 +418,30 @@ export const revertEffect = generateRevert({
       ),
       revertExpression(expression2),
     ),
-  WriteEffect: (context, node, variable, expression) =>
+  WriteEffect: (_context, _node, variable, expression) =>
     makeAssignmentExpression(
       makeIdentifier(makeMetaVariable(variable)),
       revertExpression(expression),
     ),
-  WriteEnclaveEffect: (context, node, variable, expression) =>
+  WriteEnclaveEffect: (_context, _node, variable, expression) =>
     makeAssignmentExpression(
       makeIdentifier(makeBaseVariable(variable)),
       revertExpression(expression),
     ),
-  StaticExportEffect: (context, node, specifier, expression) =>
+  StaticExportEffect: (_context, _node, specifier, expression) =>
     makeCallExpression(makeIdentifier(EXPORT_STATIC_KEYWORD), [
       makeLiteral(specifier, null),
       revertExpression(expression),
     ]),
-  SequenceEffect: (context, node, effect1, effect2) =>
+  SequenceEffect: (_context, _node, effect1, effect2) =>
     makeSequenceExpression([revertEffect(effect1), revertEffect(effect2)]),
-  ConditionalEffect: (context, node, expression, effect1, effect2) =>
+  ConditionalEffect: (_context, _node, expression, effect1, effect2) =>
     makeConditionalExpression(
       revertExpression(expression),
       revertEffect(effect1),
       revertEffect(effect2),
     ),
-  ExpressionEffect: (context, node, expression) =>
+  ExpressionEffect: (_context, _node, expression) =>
     makeCallExpression(makeIdentifier(EFFECT_KEYWORD), [
       revertExpression(expression),
     ]),
@@ -449,8 +449,8 @@ export const revertEffect = generateRevert({
 
 export const revertExpression = generateRevert({
   __proto__: null,
-  InputExpression: (context, node) => makeIdentifier(INPUT_KEYWORD),
-  PrimitiveExpression: (context, node, primitive) => {
+  InputExpression: (_context, _node) => makeIdentifier(INPUT_KEYWORD),
+  PrimitiveExpression: (_context, _node, primitive) => {
     if (typeof primitive === "object" && primitive !== null) {
       if (getOwnPropertyDescriptor(primitive, "bigint") !== undefined) {
         return makeLiteral(null, primitive.bigint);
@@ -464,22 +464,22 @@ export const revertExpression = generateRevert({
     /* c8 ignore stop */
     return makeLiteral(primitive, null);
   },
-  IntrinsicExpression: (context, node, intrinsic) =>
+  IntrinsicExpression: (_context, _node, intrinsic) =>
     makeCallExpression(makeIdentifier(INTRINSIC_KEYWORD), [
       makeLiteral(intrinsic, null),
     ]),
-  StaticImportExpression: (context, node, source, specifier) =>
+  StaticImportExpression: (_context, _node, source, specifier) =>
     makeCallExpression(makeIdentifier(IMPORT_STATIC_KEYWORD), [
       makeLiteral(source, null),
       makeLiteral(specifier, null),
     ]),
-  ReadExpression: (context, node, variable) =>
+  ReadExpression: (_context, _node, variable) =>
     makeIdentifier(makeMetaVariable(variable)),
-  ReadEnclaveExpression: (context, node, variable) =>
+  ReadEnclaveExpression: (_context, _node, variable) =>
     makeIdentifier(makeBaseVariable(variable)),
-  TypeofEnclaveExpression: (context, node, variable) =>
+  TypeofEnclaveExpression: (_context, _node, variable) =>
     makeUnaryExpression("typeof", makeIdentifier(makeBaseVariable(variable))),
-  ClosureExpression: (context, node, kind, asynchronous, generator, block) =>
+  ClosureExpression: (_context, _node, kind, asynchronous, generator, block) =>
     kind === "arrow"
       ? makeArrowFunctionExpression(asynchronous, revertBlock(block))
       : makeFunctionExpression(
@@ -488,27 +488,27 @@ export const revertExpression = generateRevert({
           generator,
           revertBlock(block),
         ),
-  AwaitExpression: (context, node, expression) =>
+  AwaitExpression: (_context, _node, expression) =>
     makeAwaitExpression(revertExpression(expression)),
-  YieldExpression: (context, node, delegate, expression) =>
+  YieldExpression: (_context, _node, delegate, expression) =>
     makeCallExpression(
       makeIdentifier(
         delegate ? YIELD_DELEGATE_KEYWORD : YIELD_STRAIGHT_KEYWORD,
       ),
       [revertExpression(expression)],
     ),
-  ThrowExpression: (context, node, expression) =>
+  ThrowExpression: (_context, _node, expression) =>
     makeCallExpression(makeIdentifier(THROW_KEYWORD), [
       revertExpression(expression),
     ]),
-  SequenceExpression: (context, node, effect, expression) =>
+  SequenceExpression: (_context, _node, effect, expression) =>
     makeSequenceExpression([
       revertEffect(effect),
       revertExpression(expression),
     ]),
   ConditionalExpression: (
-    context,
-    node,
+    _context,
+    _node,
     expression1,
     expression2,
     expression3,
@@ -518,25 +518,25 @@ export const revertExpression = generateRevert({
       revertExpression(expression2),
       revertExpression(expression3),
     ),
-  GetSuperEnclaveExpression: (context, node, expression) =>
+  GetSuperEnclaveExpression: (_context, _node, expression) =>
     makeMemberExpression(
       true,
       makeIdentifier(makeBaseVariable("super")),
       revertExpression(expression),
     ),
-  CallSuperEnclaveExpression: (context, node, expression) =>
+  CallSuperEnclaveExpression: (_context, _node, expression) =>
     makeCallExpression(makeIdentifier(makeBaseVariable("super")), [
       makeSpreadElement(revertExpression(expression)),
     ]),
-  EvalExpression: (context, node, enclaves, variables, expression) =>
+  EvalExpression: (_context, _node, enclaves, variables, expression) =>
     makeCallExpression(makeIdentifier(EVAL_KEYWORD), [
       makeArrayExpression(map(enclaves, transformEnclave)),
       makeArrayExpression(map(variables, transformMetaVariable)),
       revertExpression(expression),
     ]),
-  DynamicImportExpression: (context, node, expression) =>
+  DynamicImportExpression: (_context, _node, expression) =>
     makeImportExpression(revertExpression(expression)),
-  ApplyExpression: (context, node, expression1, expression2, expressions) =>
+  ApplyExpression: (_context, _node, expression1, expression2, expressions) =>
     makeCallExpression(
       revertExpression(expression1),
       concat(
@@ -544,20 +544,20 @@ export const revertExpression = generateRevert({
         map(expressions, revertExpression),
       ),
     ),
-  ConstructExpression: (context, node, expression, expressions) =>
+  ConstructExpression: (_context, _node, expression, expressions) =>
     makeNewExpression(
       revertExpression(expression),
       map(expressions, revertExpression),
     ),
-  UnaryExpression: (context, node, operator, expression) =>
+  UnaryExpression: (_context, _node, operator, expression) =>
     makeUnaryExpression(operator, revertExpression(expression)),
-  BinaryExpression: (context, node, operator, expression1, expression2) =>
+  BinaryExpression: (_context, _node, operator, expression1, expression2) =>
     makeBinaryExpression(
       operator,
       revertExpression(expression1),
       revertExpression(expression2),
     ),
-  ObjectExpression: (context, node, expression, properties) =>
+  ObjectExpression: (_context, _node, expression, properties) =>
     makeObjectExpression(
       concat(
         [

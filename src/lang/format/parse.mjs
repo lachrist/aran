@@ -10,7 +10,7 @@ import {
 } from "./convert.mjs";
 
 const generateParseProgram = (convert) => (code) =>
-  convertProgram(parseAcornLoose(code));
+  convert(parseAcornLoose(code));
 const generateParseStatement = (convert) => (code) => {
   const node = parseAcornLoose(code);
   assert(node.type === "Program");

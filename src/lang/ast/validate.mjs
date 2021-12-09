@@ -84,30 +84,32 @@ const isBreakStatement = generateIsType("BreakStatement");
 const generateIsBoundVariableNode = (variables) => {
   const callbacks = {
     __proto__: null,
-    ReadExpression: (context, node, variable) => includes(variables, variable),
-    WriteEffect: (context, node, variable, expression) =>
+    ReadExpression: (_context, _node, variable) =>
+      includes(variables, variable),
+    WriteEffect: (_context, _node, variable, _expression) =>
       includes(variables, variable),
   };
-  const callback = (context, node) => false;
+  const callback = (_context, _node) => false;
   return (node) => dispatchNode(null, node, callbacks, callback);
 };
 
 const generateIsBoundBreakStatement = (variables) => {
   const callbacks = {
     __proto__: null,
-    BreakStatement: (context, node, variable) => includes(variables, variable),
+    BreakStatement: (_context, _node, variable) =>
+      includes(variables, variable),
   };
-  const callback = (context, node) => false;
+  const callback = (_context, _node) => false;
   return (node) => dispatchNode(null, node, callbacks, callback);
 };
 
 const generateIsDeclareEnclaveStatement = (kind1) => {
   const callbacks = {
     __proto__: null,
-    DeclareEnclaveStatement: (context, node, kind2, variable, expression) =>
+    DeclareEnclaveStatement: (_context, _node, kind2, _variable, _expression) =>
       kind1 === kind2,
   };
-  const callback = (context, node) => false;
+  const callback = (_context, _node) => false;
   return (node) => dispatchNode(null, node, callbacks, callback);
 };
 const isLetDeclareEnclaveStatement = generateIsDeclareEnclaveStatement("let");
@@ -118,10 +120,10 @@ const isVarDeclareEnclaveStatement = generateIsDeclareEnclaveStatement("var");
 const generateIsReadEnclaveExpression = (variable1) => {
   const callbacks = {
     __proto__: null,
-    ReadEnclaveExpression: (context, node, variable2) =>
+    ReadEnclaveExpression: (_context, _node, variable2) =>
       variable1 === variable2,
   };
-  const callback = (context, node) => false;
+  const callback = (_context, _node) => false;
   return (node) => dispatchNode(null, node, callbacks, callback);
 };
 const isThisReadEnclaveExpression = generateIsReadEnclaveExpression("this");
@@ -161,12 +163,12 @@ const generateIsBoundLinkExpression = (links) => {
   const hash = map(links, stringifyJSON);
   const callbacks = {
     __proto__: null,
-    StaticImportExpression: (context, node, source, specifier) =>
+    StaticImportExpression: (_context, _node, source, specifier) =>
       includes(hash, stringifyJSON(makeImportLink(source, specifier))),
-    StaticExportEffect: (context, node, specifier, expression) =>
+    StaticExportEffect: (_context, _node, specifier, _expression) =>
       includes(hash, stringifyJSON(makeExportLink(specifier))),
   };
-  const callback = (context, node) => false;
+  const callback = (_context, _node) => false;
   return (node) => dispatchNode(null, node, callbacks, callback);
 };
 
@@ -203,9 +205,9 @@ const digestNode = (node, type, path) => {
 const generateExtractExportSpecifierArray = () => {
   const callbacks = {
     __proto__: null,
-    ExportLink: (context, node, specifier) => [specifier],
+    ExportLink: (_context, _node, specifier) => [specifier],
   };
-  const callback = (context, node) => [];
+  const callback = (_context, _node) => [];
   return (node) => dispatchNode(null, node, callbacks, callback);
 };
 const extractExportSpecifierArray = generateExtractExportSpecifierArray();
@@ -259,7 +261,7 @@ const digestNestedBlock = (digest) => {
 };
 
 const generateIsCompletionBlock = () => {
-  const callback = (context, node, labels, variables, statements) =>
+  const callback = (_context, _node, _labels, _variables, statements) =>
     statements.length > 0 &&
     isReturnStatement(statements[statements.length - 1]);
   return (block) => extractNode(null, block, "Block", callback);
@@ -267,7 +269,7 @@ const generateIsCompletionBlock = () => {
 const isCompletionBlock = generateIsCompletionBlock();
 
 const generateIsLabeledBlock = () => {
-  const callback = (context, node, labels, variables, statements) =>
+  const callback = (_context, _node, labels, _variables, _statements) =>
     labels.length > 0;
   return (block) => extractNode(null, block, "Block", callback);
 };
@@ -276,7 +278,7 @@ const isLabeledBlock = generateIsLabeledBlock();
 const generateValidateNode = () => {
   const callbacks = {
     __proto__: null,
-    ModuleProgram: (digest, node, links, block) => {
+    ModuleProgram: (digest, _node, links, block) => {
       assert(
         !isLabeledBlock(block),
         "ModuleProgram.body should not be a labeled Block",
@@ -292,7 +294,7 @@ const generateValidateNode = () => {
       checkoutDigest(digest, "ModuleProgram");
       return digest;
     },
-    ScriptProgram: (digest, node, statements) => {
+    ScriptProgram: (digest, _node, statements) => {
       assert(
         statements.length > 0 &&
           isReturnStatement(statements[statements.length - 1]),
@@ -309,7 +311,7 @@ const generateValidateNode = () => {
       checkoutDigest(digest, "ScriptProgram");
       return digest;
     },
-    EvalProgram: (digest, node, enclaves, variables, block) => {
+    EvalProgram: (digest, _node, enclaves, variables, block) => {
       assert(
         !isLabeledBlock(block),
         "EvalProgram.body should not be a labeled Block",
@@ -348,7 +350,7 @@ const generateValidateNode = () => {
       checkoutDigest(digest, "EvalProgram");
       return digest;
     },
-    AggregateLink: (digest, node, source, specifier1, specifier2) => {
+    AggregateLink: (digest, _node, _source, specifier1, specifier2) => {
       // export Foo as *   from "source"; // invalid
       // export *          from "source"; // valid
       // export *   as Foo from "source"; // valid
@@ -358,7 +360,7 @@ const generateValidateNode = () => {
       );
       return digest;
     },
-    Block: (digest, node, labels, variables, statements) => {
+    Block: (digest, _node, labels, variables, _statements) => {
       assert(!some(variables, isDuplicate), "duplicate variable found Block");
       assert(
         filter(digest, isInputExpression).length <= 1,
@@ -369,7 +371,14 @@ const generateValidateNode = () => {
       digest = filterOut(digest, generateIsBoundVariableNode(variables));
       return digest;
     },
-    ClosureExpression: (digest, node, kind, asynchronous, generator, block) => {
+    ClosureExpression: (
+      digest,
+      _node,
+      kind,
+      asynchronous,
+      generator,
+      block,
+    ) => {
       assert(
         !isLabeledBlock(block),
         "ClosureExpression.body should not be labeled",
@@ -435,12 +444,12 @@ const generateValidateNode = () => {
       );
       return digest;
     },
-    BlockStatement: (digest, node, block) => digestNestedBlock(digest),
-    IfStatement: (digest, node, expression, block1, block2) =>
+    BlockStatement: (digest, _node, _block) => digestNestedBlock(digest),
+    IfStatement: (digest, _node, _expression, _block1, _block2) =>
       digestNestedBlock(digest),
-    WhileStatement: (digest, node, expression, block) =>
+    WhileStatement: (digest, _node, _expression, _block) =>
       digestNestedBlock(digest),
-    TryStatement: (digest, node, block1, block2, block3) => {
+    TryStatement: (digest, _node, block1, block2, block3) => {
       assert(
         !isLabeledBlock(block1),
         "TryStatement.body should not be labeled Block",
@@ -455,14 +464,14 @@ const generateValidateNode = () => {
       );
       return digestNestedBlock(digest);
     },
-    EvalExpression: (digest, node, enclaves, variables, expression) =>
+    EvalExpression: (digest, _node, enclaves, variables, _expression) =>
       concat(
         digest,
         map(enclaves, makeEnclaveDummy),
         map(variables, makeReadExpression),
       ),
   };
-  const callback = (digest, node) => digest;
+  const callback = (digest, _node) => digest;
   return (node) => {
     node = new Proxy(node, immutable_trap_object);
     const type = getNodeType(node);

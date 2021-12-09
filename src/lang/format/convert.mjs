@@ -256,7 +256,7 @@ export const convertBlock = generateConvert({
       null,
       convertBlock(node.body),
       "Block",
-      (context, block, labels, identifiers, statements) =>
+      (_context, _block, labels, identifiers, statements) =>
         makeBlock(concat([node.label.name], labels), identifiers, statements),
     );
   },
@@ -312,7 +312,7 @@ export const convertStatement = generateConvert({
       convertBlock(node.body),
     );
   },
-  DebuggerStatement: (node) => {
+  DebuggerStatement: (_node) => {
     return makeDebuggerStatement();
   },
   ExpressionStatement: (node) => {

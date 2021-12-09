@@ -35,6 +35,15 @@ rules:
   ################
   # Core Complex #
   ################
+  no-unused-vars:
+    - error
+    - vars: all
+      varsIgnorePattern: "^_"
+      args: all
+      argsIgnorePattern: "^_"
+      caughtErrors: all
+      caughtErrorsIgnorePattern: "^_"
+      ignoreRestSiblings: false
   no-restricted-syntax:
     # https://estools.github.io/esquery/
     - error
@@ -70,6 +79,8 @@ rules:
     - MethodDefinition[kind="set"]
     - Property[kind="get"]
     - Property[kind="set"]
+    # Ignored Variable
+    - :not(ObjectExpression > Property[computed=false] > Identifier.key):not(MemberExpression[computed=false] > Identifier.property):not(FunctionExpression > Identifier.params):not(ArrowFunctionExpression > Identifier.params)Identifier[name=/^_/u]
     # Variable declaration
     - VariableDeclaration[kind=var]
     - VariableDeclaration[declarations.length>1]
@@ -282,7 +293,6 @@ rules:
   # no-unused-expressions: error >> Heuristic
   # no-unused-labels >> LabeledStatement disabled by no-restrict-syntax
   # no-unused-private-class-members >> Class disabled by no-restricted-syntax
-  no-unused-vars: [error, {vars: all, args: none}]
   no-use-before-define: error
   # no-useless-backreference >> RegExp
   # no-useless-call >> Heuristic
