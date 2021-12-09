@@ -313,6 +313,10 @@ const generateValidateNode = () => {
     },
     EvalProgram: (digest, _node, enclaves, variables, block) => {
       assert(
+        !some(enclaves, isDuplicate),
+        "duplicate enclaves found in EvalProgram",
+      );
+      assert(
         !isLabeledBlock(block),
         "EvalProgram.body should not be a labeled Block",
       );
@@ -464,12 +468,21 @@ const generateValidateNode = () => {
       );
       return digestNestedBlock(digest);
     },
-    EvalExpression: (digest, _node, enclaves, variables, _expression) =>
-      concat(
+    EvalExpression: (digest, _node, enclaves, variables, _expression) => {
+      assert(
+        !some(enclaves, isDuplicate),
+        "duplicate enclave found in EvalExpression"
+      );
+      assert(
+        !some(variables, isDuplicate),
+        "duplicate variable found in EvalExpression"
+      );
+      return concat(
         digest,
         map(enclaves, makeEnclaveDummy),
         map(variables, makeReadExpression),
-      ),
+      );
+    }
   };
   const callback = (digest, _node) => digest;
   return (node) => {
