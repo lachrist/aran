@@ -194,7 +194,7 @@ rules:
   no-dupe-keys: error
   # no-duplicate-case >> SwitchStatement disabled by no-restricted-syntax
   no-duplicate-imports: error
-  no-else-return: [error, {allowElseIf: false}]
+  # no-else-return: [error, {allowElseIf: false}]
   # no-empty-character-class >> RegExp
   # no-empty-function >> Why?
   # no-empty-pattern: error >> Why?
