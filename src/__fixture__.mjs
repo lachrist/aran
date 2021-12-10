@@ -13,6 +13,7 @@ export const {
   throws: assertThrow,
   equal: assertEqual,
   deepEqual: assertDeepEqual,
+  match: assertMatch,
 } = Assert;
 
 export const generateAssertUnreachable = (message) => () => {
