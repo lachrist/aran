@@ -5,7 +5,9 @@ import {
   bindMapping,
 } from "./mapping.mjs";
 
-const {JSON:{stringify: stringifyJSON}} = globalThis;
+const {
+  JSON: {stringify: stringifyJSON},
+} = globalThis;
 
 export const getResultErrorMessage = (result) => {
   if (typeof result.variable === "string") {
@@ -29,7 +31,9 @@ export const makeEmptyResult = () => ({
 export const makeStructuralMismatchResult = (path, json1, json2) => ({
   variable: makeEmptyMapping(),
   label: makeEmptyMapping(),
-  structural: `Structural mismatch at ${path} between ${stringifyJSON(json1)} and ${stringifyJSON(json2)}`,
+  structural: `Structural mismatch at ${path} between ${stringifyJSON(
+    json1,
+  )} and ${stringifyJSON(json2)}`,
 });
 
 export const makeSingleVariableResult = (variable1, variable2) => ({
