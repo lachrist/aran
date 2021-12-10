@@ -1,8 +1,12 @@
-import {assertEqual, assertDeepEqual} from "../../__fixture__.mjs";
 import {
-  getResultErrorMessage,
+  assertEqual,
+  assertNotEqual,
+  assertDeepEqual,
+} from "../../__fixture__.mjs";
+import {makeRootError} from "./error.mjs";
+import {
+  getResultError,
   makeEmptyResult,
-  makeStructuralMismatchResult,
   makeSingleVariableResult,
   makeSingleLabelResult,
   combineResult,
@@ -10,17 +14,17 @@ import {
   bindResultLabel,
 } from "./result.mjs";
 
-assertEqual(getResultErrorMessage(makeEmptyResult()), null);
+assertEqual(getResultError(makeEmptyResult(null)), null);
 
-assertEqual(
-  typeof getResultErrorMessage(
+assertNotEqual(
+  getResultError(
     combineResult(
       "path",
-      makeStructuralMismatchResult("path", "message"),
-      makeEmptyResult(),
+      makeEmptyResult(makeRootError()),
+      makeEmptyResult(null),
     ),
   ),
-  "string",
+  null,
 );
 
 assertDeepEqual(
@@ -30,7 +34,7 @@ assertDeepEqual(
     "variable2",
     makeSingleVariableResult("variable1", "variable2"),
   ),
-  makeEmptyResult(),
+  makeEmptyResult(null),
 );
 
 assertDeepEqual(
@@ -40,27 +44,27 @@ assertDeepEqual(
     "label2",
     makeSingleLabelResult("label1", "label2"),
   ),
-  makeEmptyResult(),
+  makeEmptyResult(null),
 );
 
-assertEqual(
-  typeof getResultErrorMessage(
+assertNotEqual(
+  getResultError(
     combineResult(
       "path",
       makeSingleVariableResult("variable11", "variable12"),
       makeSingleVariableResult("variable11", "variable22"),
     ),
   ),
-  "string",
+  null,
 );
 
-assertEqual(
-  typeof getResultErrorMessage(
+assertNotEqual(
+  getResultError(
     combineResult(
       "path",
       makeSingleLabelResult("label11", "label12"),
       makeSingleLabelResult("label11", "label22"),
     ),
   ),
-  "string",
+  null,
 );

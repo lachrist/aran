@@ -14,6 +14,8 @@ export const {
   equal: assertEqual,
   deepEqual: assertDeepEqual,
   match: assertMatch,
+  notEqual: assertNotEqual,
+  notDeepEqual: assertNotDeepEqual
 } = Assert;
 
 export const generateAssertUnreachable = (message) => () => {

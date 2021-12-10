@@ -1,19 +1,17 @@
+import {setErrorMessage} from "./error.mjs";
 import {
+  isMapping,
   makeEmptyMapping,
   makeSingleMapping,
   combineMapping,
   bindMapping,
 } from "./mapping.mjs";
 
-const {
-  JSON: {stringify: stringifyJSON},
-} = globalThis;
-
-export const getResultErrorMessage = (result) => {
-  if (typeof result.variable === "string") {
+export const getResultError = (result) => {
+  if (!isMapping(result.variable)) {
     return result.variable;
   }
-  if (typeof result.label === "string") {
+  if (!isMapping(result.label)) {
     return result.label;
   }
   if (result.structural !== null) {
@@ -22,18 +20,10 @@ export const getResultErrorMessage = (result) => {
   return null;
 };
 
-export const makeEmptyResult = () => ({
+export const makeEmptyResult = (error) => ({
   variable: makeEmptyMapping(),
   label: makeEmptyMapping(),
-  structural: null,
-});
-
-export const makeStructuralMismatchResult = (path, json1, json2) => ({
-  variable: makeEmptyMapping(),
-  label: makeEmptyMapping(),
-  structural: `Structural mismatch at ${path} between ${stringifyJSON(
-    json1,
-  )} and ${stringifyJSON(json2)}`,
+  structural: error,
 });
 
 export const makeSingleVariableResult = (variable1, variable2) => ({
@@ -48,21 +38,39 @@ export const makeSingleLabelResult = (label1, label2) => ({
   structural: null,
 });
 
-export const combineResult = (path, result1, result2) => ({
-  variable: combineMapping(path, result1.variable, result2.variable),
-  label: combineMapping(path, result1.label, result2.label),
+export const combineResult = (error, result1, result2) => ({
+  variable: combineMapping(
+    setErrorMessage(error, "Variable combination mismatch"),
+    result1.variable,
+    result2.variable,
+  ),
+  label: combineMapping(
+    setErrorMessage(error, "Label combination mismatch"),
+    result1.label,
+    result2.label,
+  ),
   structural:
     result1.structural === null ? result2.structural : result1.structural,
 });
 
-export const bindResultVariable = (path, variable1, variable2, result) => ({
-  variable: bindMapping(path, variable1, variable2, result.variable),
+export const bindResultVariable = (error, variable1, variable2, result) => ({
+  variable: bindMapping(
+    setErrorMessage(error, "Variable binding mismatch"),
+    variable1,
+    variable2,
+    result.variable,
+  ),
   label: result.label,
   structural: result.structural,
 });
 
-export const bindResultLabel = (path, label1, label2, result) => ({
+export const bindResultLabel = (error, label1, label2, result) => ({
   variable: result.variable,
-  label: bindMapping(path, label1, label2, result.label),
+  label: bindMapping(
+    setErrorMessage(error, "Label binding mismatch"),
+    label1,
+    label2,
+    result.label,
+  ),
   structural: result.structural,
 });
