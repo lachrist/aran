@@ -10,320 +10,264 @@ import {
   getNodeFieldArray,
   dispatchNode,
   extractNode,
-  matchNode,
+  // matchNode,
+  getNodeAnnotation,
   allignNode,
 } from "./accessor.mjs";
-
-const {
-  Reflect: {defineProperty},
-} = globalThis;
 
 //////////////////////////////////////
 // getNodeType && getNodeFieldArray //
 //////////////////////////////////////
 
 assertEqual(
-  getNodeType(makeNode("PrimitiveExpression", "123")),
+  getNodeType(makeNode("PrimitiveExpression", "@", 123)),
   "PrimitiveExpression",
 );
 
-assertDeepEqual(getNodeFieldArray(makeNode("PrimitiveExpression", "123")), [
-  "123",
+assertDeepEqual(
+  getNodeAnnotation(makeNode("PrimitiveExpression", "@", 123)),
+  "@",
+);
+
+assertDeepEqual(getNodeFieldArray(makeNode("PrimitiveExpression", "@", 123)), [
+  123,
 ]);
 
 /////////////////////////////////
 // extractNode && dispatchNode //
 /////////////////////////////////
 
-const changeAdvertisedArity = (closure, value) => {
-  defineProperty(closure, "length", {__proto__: null, value});
-  return closure;
-};
-
 // default_callback //
 assertEqual(
   dispatchNode(
     "context",
-    makeNode("DebuggerStatement"),
+    makeNode("DebuggerStatement", "@"),
     {__proto__: null},
-    changeAdvertisedArity((...args) => {
-      assertDeepEqual(args, ["context", makeNode("DebuggerStatement")]);
+    (context, node, ...rest) => {
+      assertDeepEqual(
+        [context, node, rest],
+        ["context", makeNode("DebuggerStatement", "@"), []],
+      );
       return "result";
-    }, 2),
+    },
   ),
   "result",
 );
 
 // 0 //
-assertEqual(
-  extractNode(
-    "context",
-    makeNode("DebuggerStatement"),
-    "DebuggerStatement",
-    changeAdvertisedArity((...args) => {
-      assertDeepEqual(args, ["context", makeNode("DebuggerStatement")]);
-      return "result";
-    }, 2),
-  ),
-  "result",
-);
-assertEqual(
-  dispatchNode(
-    "context",
-    makeNode("DebuggerStatement"),
-    {
-      __proto__: null,
-      DebuggerStatement: changeAdvertisedArity((...args) => {
-        assertDeepEqual(args, ["context", makeNode("DebuggerStatement")]);
-        return "result";
-      }, 2),
-    },
-    generateAssertUnreachable("default callback should not be called"),
-  ),
-  "result",
-);
+{
+  const node = makeNode("DebuggerStatement", "@");
+  const callback = (context, annotation, ...rest) => {
+    assertDeepEqual([context, annotation, rest], ["context", "@", []]);
+    return "result";
+  };
+  assertEqual(
+    extractNode("context", node, "DebuggerStatement", callback),
+    "result",
+  );
+  assertEqual(
+    dispatchNode(
+      "context",
+      node,
+      {
+        __proto__: null,
+        DebuggerStatement: callback,
+      },
+      generateAssertUnreachable("default callback should not be called"),
+    ),
+    "result",
+  );
+}
 
 // 1 //
-assertEqual(
-  extractNode(
-    "context",
-    makeNode("PrimitiveExpression", "123"),
-    "PrimitiveExpression",
-    changeAdvertisedArity((...args) => {
-      assertDeepEqual(args, [
-        "context",
-        makeNode("PrimitiveExpression", "123"),
-        "123",
-      ]);
-      return "result";
-    }, 3),
-  ),
-  "result",
-);
-assertEqual(
-  dispatchNode(
-    "context",
-    makeNode("PrimitiveExpression", "123"),
-    {
-      __proto__: null,
-      PrimitiveExpression: changeAdvertisedArity((...args) => {
-        assertDeepEqual(args, [
-          "context",
-          makeNode("PrimitiveExpression", "123"),
-          "123",
-        ]);
-        return "result";
-      }, 3),
-    },
-    generateAssertUnreachable("default callback should not be called"),
-  ),
-  "result",
-);
+{
+  const node = makeNode("PrimitiveExpression", "@", 123);
+  const callback = (context, annotation, primitive, ...rest) => {
+    assertDeepEqual(
+      [context, annotation, primitive, rest],
+      ["context", "@", 123, []],
+    );
+    return "result";
+  };
+  assertEqual(
+    extractNode("context", node, "PrimitiveExpression", callback),
+    "result",
+  );
+  assertEqual(
+    dispatchNode(
+      "context",
+      node,
+      {
+        __proto__: null,
+        PrimitiveExpression: callback,
+      },
+      generateAssertUnreachable("default callback should not be called"),
+    ),
+    "result",
+  );
+}
 
 // 2 //
-assertEqual(
-  extractNode(
-    "context",
-    makeNode("Block", ["foo"], [makeNode("DebuggerStatement")]),
-    "Block",
-    changeAdvertisedArity((...args) => {
-      assertDeepEqual(args, [
-        "context",
-        makeNode("Block", ["foo"], [makeNode("DebuggerStatement")]),
-        ["foo"],
-        [makeNode("DebuggerStatement")],
-      ]);
-      return "result";
-    }, 4),
-  ),
-  "result",
-);
-assertEqual(
-  dispatchNode(
-    "context",
-    makeNode("Block", ["foo"], [makeNode("DebuggerStatement")]),
-    {
-      __proto__: null,
-      Block: changeAdvertisedArity((...args) => {
-        assertDeepEqual(args, [
-          "context",
-          makeNode("Block", ["foo"], [makeNode("DebuggerStatement")]),
-          ["foo"],
-          [makeNode("DebuggerStatement")],
-        ]);
-        return "result";
-      }, 4),
-    },
-    generateAssertUnreachable("default callback should not be called"),
-  ),
-  "result",
-);
+{
+  const node = makeNode("ImportLink", "@", "specifier", "source");
+  const callback = (context, annotation, specifier, source, ...rest) => {
+    assertDeepEqual(
+      [context, annotation, specifier, source, rest],
+      ["context", "@", "specifier", "source", []],
+    );
+    return "result";
+  };
+  assertEqual(extractNode("context", node, "ImportLink", callback), "result");
+  assertEqual(
+    dispatchNode(
+      "context",
+      node,
+      {
+        __proto__: null,
+        ImportLink: callback,
+      },
+      generateAssertUnreachable("default callback should not be called"),
+    ),
+    "result",
+  );
+}
 
 // 3 //
-assertEqual(
-  extractNode(
-    "context",
-    makeNode(
-      "ConditionalExpression",
-      makeNode("PrimitiveExpression", "123"),
-      makeNode("PrimitiveExpression", "456"),
-      makeNode("PrimitiveExpression", "789"),
-    ),
+{
+  const node = makeNode(
     "ConditionalExpression",
-    changeAdvertisedArity((...args) => {
-      assertDeepEqual(args, [
+    "@",
+    makeNode("PrimitiveExpression", "@", 123),
+    makeNode("PrimitiveExpression", "@", 456),
+    makeNode("PrimitiveExpression", "@", 789),
+  );
+  const callback = (
+    context,
+    annotation,
+    expression1,
+    expression2,
+    expression3,
+    ...rest
+  ) => {
+    assertDeepEqual(
+      [context, annotation, expression1, expression2, expression3, rest],
+      [
         "context",
-        makeNode(
-          "ConditionalExpression",
-          makeNode("PrimitiveExpression", "123"),
-          makeNode("PrimitiveExpression", "456"),
-          makeNode("PrimitiveExpression", "789"),
-        ),
-        makeNode("PrimitiveExpression", "123"),
-        makeNode("PrimitiveExpression", "456"),
-        makeNode("PrimitiveExpression", "789"),
-      ]);
-      return "result";
-    }, 5),
-  ),
-  "result",
-);
-assertEqual(
-  dispatchNode(
-    "context",
-    makeNode(
-      "ConditionalExpression",
-      makeNode("PrimitiveExpression", "123"),
-      makeNode("PrimitiveExpression", "456"),
-      makeNode("PrimitiveExpression", "789"),
+        "@",
+        makeNode("PrimitiveExpression", "@", 123),
+        makeNode("PrimitiveExpression", "@", 456),
+        makeNode("PrimitiveExpression", "@", 789),
+        [],
+      ],
+    );
+    return "result";
+  };
+  assertEqual(
+    extractNode("context", node, "ConditionalExpression", callback),
+    "result",
+  );
+  assertEqual(
+    dispatchNode(
+      "context",
+      node,
+      {
+        __proto__: null,
+        ConditionalExpression: callback,
+      },
+      generateAssertUnreachable("default callback should not be called"),
     ),
-    {
-      __proto__: null,
-      ConditionalExpression: changeAdvertisedArity((...args) => {
-        assertDeepEqual(args, [
-          "context",
-          makeNode(
-            "ConditionalExpression",
-            makeNode("PrimitiveExpression", "123"),
-            makeNode("PrimitiveExpression", "456"),
-            makeNode("PrimitiveExpression", "789"),
-          ),
-          makeNode("PrimitiveExpression", "123"),
-          makeNode("PrimitiveExpression", "456"),
-          makeNode("PrimitiveExpression", "789"),
-        ]);
-        return "result";
-      }, 5),
-    },
-    generateAssertUnreachable("default callback should not be called"),
-  ),
-  "result",
-);
+    "result",
+  );
+}
 
 // 4 //
-assertEqual(
-  extractNode(
-    "context",
-    makeNode(
-      "TryStatement",
-      ["label"],
-      makeNode("Block", ["foo"], []),
-      makeNode("Block", ["bar"], []),
-      makeNode("Block", ["qux"], []),
-    ),
-    "TryStatement",
-    changeAdvertisedArity((...args) => {
-      assertDeepEqual(args, [
+{
+  const node = makeNode(
+    "ClosureExpression",
+    "@",
+    "arrow",
+    true,
+    false,
+    makeNode("Block", "@", [], [], []),
+  );
+  const callback = (
+    context,
+    annotation,
+    kind,
+    asynchronous,
+    generator,
+    block,
+    ...rest
+  ) => {
+    assertDeepEqual(
+      [context, annotation, kind, asynchronous, generator, block, rest],
+      [
         "context",
-        makeNode(
-          "TryStatement",
-          ["label"],
-          makeNode("Block", ["foo"], []),
-          makeNode("Block", ["bar"], []),
-          makeNode("Block", ["qux"], []),
-        ),
-        ["label"],
-        makeNode("Block", ["foo"], []),
-        makeNode("Block", ["bar"], []),
-        makeNode("Block", ["qux"], []),
-      ]);
-      return "result";
-    }, 6),
-  ),
-  "result",
-);
-assertEqual(
-  dispatchNode(
-    "context",
-    makeNode(
-      "TryStatement",
-      ["label"],
-      makeNode("Block", ["foo"], []),
-      makeNode("Block", ["bar"], []),
-      makeNode("Block", ["qux"], []),
+        "@",
+        "arrow",
+        true,
+        false,
+        makeNode("Block", "@", [], [], []),
+        [],
+      ],
+    );
+    return "result";
+  };
+  assertEqual(
+    extractNode("context", node, "ClosureExpression", callback),
+    "result",
+  );
+  assertEqual(
+    dispatchNode(
+      "context",
+      node,
+      {
+        __proto__: null,
+        ClosureExpression: callback,
+      },
+      generateAssertUnreachable("default callback should not be called"),
     ),
-    {
-      __proto__: null,
-      TryStatement: changeAdvertisedArity((...args) => {
-        assertDeepEqual(args, [
-          "context",
-          makeNode(
-            "TryStatement",
-            ["label"],
-            makeNode("Block", ["foo"], []),
-            makeNode("Block", ["bar"], []),
-            makeNode("Block", ["qux"], []),
-          ),
-          ["label"],
-          makeNode("Block", ["foo"], []),
-          makeNode("Block", ["bar"], []),
-          makeNode("Block", ["qux"], []),
-        ]);
-        return "result";
-      }, 6),
-    },
-    generateAssertUnreachable("default callback should not be called"),
-  ),
-  "result",
-);
+    "result",
+  );
+}
 
 ///////////////
 // matchNode //
 ///////////////
 
-assertEqual(
-  matchNode(
-    "context",
-    makeNode("PrimitiveExpression", "123"),
-    makeNode("PrimitiveExpression", "456"),
-  ),
-  false,
-);
-
-assertEqual(
-  matchNode(
-    "context",
-    makeNode("PrimitiveExpression", "123"),
-    makeNode("PrimitiveExpression", "123"),
-  ),
-  true,
-);
-
-const testMatch = (matched) => {
-  assertEqual(
-    matchNode(
-      "context",
-      makeNode("PrimitiveExpression", "123"),
-      makeNode("PrimitiveExpression", (...args) => {
-        assertDeepEqual(args, ["context", "123"]);
-        return matched;
-      }),
-    ),
-    matched,
-  );
-};
-testMatch(true);
-testMatch(false);
+// assertEqual(
+//   matchNode(
+//     "context",
+//     makeNode("PrimitiveExpression", "@", 123),
+//     makeNode("PrimitiveExpression", "@", 456),
+//   ),
+//   false,
+// );
+//
+// assertEqual(
+//   matchNode(
+//     "context",
+//     makeNode("PrimitiveExpression", "@", 123),
+//     makeNode("PrimitiveExpression", "@", 123),
+//   ),
+//   true,
+// );
+//
+// const testMatch = (matched) => {
+//   assertEqual(
+//     matchNode(
+//       "context",
+//       makeNode("PrimitiveExpression", "@", 123),
+//       makeNode("PrimitiveExpression", "@", (...args) => {
+//         assertDeepEqual(args, ["context", "@", 123]);
+//         return matched;
+//       }),
+//     ),
+//     matched,
+//   );
+// };
+// testMatch(true);
+// testMatch(false);
 
 ////////////////
 // allignNode //
@@ -332,20 +276,14 @@ testMatch(false);
 assertEqual(
   allignNode(
     "context",
-    makeNode("PrimitiveExpression", "123"),
-    makeNode("PrimitiveExpression", "456"),
+    makeNode("PrimitiveExpression", "@1", 123),
+    makeNode("PrimitiveExpression", "@2", 456),
     {
       __proto__: null,
       PrimitiveExpression: (context, node1, node2, primitive1, primitive2) => {
         assertDeepEqual(
           [context, node1, node2, primitive1, primitive2],
-          [
-            "context",
-            makeNode("PrimitiveExpression", "123"),
-            makeNode("PrimitiveExpression", "456"),
-            "123",
-            "456",
-          ],
+          ["context", "@1", 123, "@2", 456],
         );
         return "result";
       },
@@ -358,16 +296,17 @@ assertEqual(
 assertEqual(
   allignNode(
     "context",
-    makeNode("PrimitiveExpression", "123"),
-    makeNode("PrimitiveExpression", "456"),
+    makeNode("PrimitiveExpression", "@", 123),
+    makeNode("PrimitiveExpression", "@", 456),
     {__proto__: null},
-    (context, node1, node2) => {
+    (context, node1, node2, ...rest) => {
       assertDeepEqual(
-        [context, node1, node2],
+        [context, node1, node2, rest],
         [
           "context",
-          makeNode("PrimitiveExpression", "123"),
-          makeNode("PrimitiveExpression", "456"),
+          makeNode("PrimitiveExpression", "@", 123),
+          makeNode("PrimitiveExpression", "@", 456),
+          [],
         ],
       );
       return "result";

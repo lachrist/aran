@@ -78,6 +78,15 @@ exports.match = (node1, node2, callback, _result, _message) => (
 //     Diff.diffWords(code1, code2),
 //     (part) => Chalk[colorize(part.added, part.removed)](part.value)),
 //   "");
+const global_Object_assign = global.Object.assign;
+const global_String = global.String;
+const global_JSON_stringify = global.JSON.stringify;
+const global_Math_floor = global.Math.floor;
+const global_Math_random = global.Math.random;
+const global_Date_now = global.Date.now;
+const global_Reflect_apply = global.Reflect.apply;
+const global_console_error = global.console.error;
+const global_console = global.console;
 
 // const get_tmp_path = () => Path.join(
 //   Os.tmpdir(),

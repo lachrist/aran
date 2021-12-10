@@ -29,9 +29,12 @@ if (should_validate_node) {
 }
 for (const kind in syntax) {
   for (const type in syntax[kind]) {
-    const identifiers = map(
-      new Array(syntax[kind][type].length),
-      (element, index) => `field${String(index)}`,
+    const identifiers = concat(
+      ["annotation"],
+      map(
+        new Array(syntax[kind][type].length),
+        (element, index) => `field${String(index)}`,
+      ),
     );
     const params = join(identifiers, ", ");
     let body = `[${join(concat([stringifyJSON(type)], identifiers), ", ")}]`;
