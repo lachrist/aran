@@ -471,18 +471,18 @@ const generateValidateNode = () => {
     EvalExpression: (digest, _node, enclaves, variables, _expression) => {
       assert(
         !some(enclaves, isDuplicate),
-        "duplicate enclave found in EvalExpression"
+        "duplicate enclave found in EvalExpression",
       );
       assert(
         !some(variables, isDuplicate),
-        "duplicate variable found in EvalExpression"
+        "duplicate variable found in EvalExpression",
       );
       return concat(
         digest,
         map(enclaves, makeEnclaveDummy),
         map(variables, makeReadExpression),
       );
-    }
+    },
   };
   const callback = (digest, _node) => digest;
   return (node) => {
