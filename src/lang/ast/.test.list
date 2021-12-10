@@ -1,6 +1,5 @@
 - intrinsics.mjs
 - syntax.mjs
 - accessor.mjs
-- test-accessor.mjs
 - validate.mjs
 - index.mjs
