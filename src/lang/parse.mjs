@@ -1,4 +1,4 @@
-import {assert} from "../../util.mjs";
+import {assert} from "../util.mjs";
 import {parseAcornLoose} from "./acorn.mjs";
 import {
   convertProgram,

@@ -1,4 +1,4 @@
-import {assertDeepEqual, assertEqual} from "../../__fixture__.mjs";
+import {assertDeepEqual, assertEqual} from "../__fixture__.mjs";
 import {makeRootError} from "./error.mjs";
 import {
   isMapping,

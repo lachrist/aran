@@ -10,7 +10,7 @@ import {
   lastIndexOf,
   flatMap,
 } from "array-lite";
-import {assert, generateThrowError} from "../../util.mjs";
+import {assert, generateThrowError} from "../util.mjs";
 import {getSyntax, isSyntaxType} from "./syntax.mjs";
 import {
   makeNode,

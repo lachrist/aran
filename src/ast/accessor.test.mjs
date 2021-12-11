@@ -2,7 +2,7 @@ import {
   assertEqual,
   assertDeepEqual,
   generateAssertUnreachable,
-} from "../../__fixture__.mjs";
+} from "../__fixture__.mjs";
 
 import {
   makeNode,

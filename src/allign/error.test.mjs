@@ -1,4 +1,4 @@
-import {assertEqual, assertDeepEqual} from "../../__fixture__.mjs";
+import {assertEqual, assertDeepEqual} from "../__fixture__.mjs";
 
 import {
   makeRootError,

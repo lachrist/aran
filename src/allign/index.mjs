@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define */
 import {zip, unzip, reduce, concat, map} from "array-lite";
-import {generateThrowError} from "../../util.mjs";
+import {generateThrowError} from "../util.mjs";
 import {allignNode, getNodeType, getNodeAnnotation} from "../ast/index.mjs";
 import {
   makeRootError,

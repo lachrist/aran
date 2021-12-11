@@ -2,7 +2,7 @@
 
 import {concat, map, reduceRight} from "array-lite";
 
-import {generateThrowError} from "../../util.mjs";
+import {generateThrowError} from "../util.mjs";
 
 import {dispatchNode} from "../ast/index.mjs";
 

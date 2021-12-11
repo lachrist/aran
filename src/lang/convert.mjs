@@ -2,7 +2,7 @@
 
 import {slice, map, concat} from "array-lite";
 
-import {format, expect, assert} from "../../util.mjs";
+import {format, expect, assert} from "../util.mjs";
 
 import {
   extractNode,

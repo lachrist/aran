@@ -1,4 +1,4 @@
-import {assertThrow} from "../../__fixture__.mjs";
+import {assertThrow} from "../__fixture__.mjs";
 import {makeNode} from "./accessor.mjs";
 import {validateNode} from "./validate.mjs";
 

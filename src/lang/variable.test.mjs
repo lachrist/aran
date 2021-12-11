@@ -1,4 +1,4 @@
-import {assertEqual} from "../../__fixture__.mjs";
+import {assertEqual} from "../__fixture__.mjs";
 import {
   makeBaseVariable,
   isBaseVariable,

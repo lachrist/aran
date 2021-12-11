@@ -1,4 +1,4 @@
-import {assertEqual, assertNotEqual} from "../../__fixture__.mjs";
+import {assertEqual, assertNotEqual} from "../__fixture__.mjs";
 import {
   parseExpression,
   parseEffect,
@@ -6,7 +6,7 @@ import {
   parseStatement,
   parseLink,
   parseProgram,
-} from "../format/index.mjs";
+} from "../lang/index.mjs";
 import {
   allignExpression,
   allignEffect,
