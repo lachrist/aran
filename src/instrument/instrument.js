@@ -1,21 +1,5 @@
-"use strict";
 
-const global_Set = global.Set;
-const global_Map = global.Map;
-const global_Array_isArray = global.Array.isArray;
-const global_String = global.String;
-const global_Object_assign = global.Object.assign;
-const global_Reflect_ownKeys = global.Reflect.ownKeys;
-const global_Reflect_apply = global.Reflect.apply;
-const global_Map_prototype_get = global.Map.prototype.get;
-const global_Boolean = global.Boolean;
-const global_Reflect_getPrototypeOf = global.Reflect.getPrototypeOf;
-
-const ArrayLite = require("array-lite");
-const Throw = require("./throw.js");
-const Tree = require("./tree");
-
-const make_object_expression = (object) => Tree.ObjectExpression(
+const makeObjectExpression = (object) => makeObjectExpression(
   Tree.PrimitiveExpression(null),
   ArrayLite.map(
     global_Reflect_ownKeys(object),
@@ -101,7 +85,7 @@ const make_cut = (pointcut) => (
           global_Boolean(pointcut.get(name))) :
         (
           (
-            typeof pointcut === "object" && 
+            typeof pointcut === "object" &&
             pointcut !== null) ?
           (name, ...values) => (
             typeof pointcut[name] === "function" ?
