@@ -7,6 +7,8 @@ import {
   format,
   expect,
   expectSuccess,
+  incrementCounter,
+  makeCounter,
 } from "./util.mjs";
 
 const {Error} = globalThis;
@@ -59,3 +61,5 @@ assertThrow(
     ),
   /Error: foo/u,
 );
+
+assertEqual(incrementCounter(makeCounter()), 1);

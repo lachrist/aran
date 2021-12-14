@@ -119,3 +119,13 @@ export const expectSuccess = (
     throw new Constructor(format(template, concat(values2, [error])));
   }
 };
+
+/////////////
+// Counter //
+/////////////
+
+export const makeCounter = () => ({value: 0});
+export const incrementCounter = (counter) => {
+  counter.value += 1;
+  return counter.value;
+};
