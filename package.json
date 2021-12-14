@@ -12,8 +12,8 @@
   "license": "MIT",
   "scripts": {
     "build": "node build/generate-make.mjs",
-    "lint": "npx eslint --rulesdir eslint-rules '**/*.mjs'",
-    "format": "npx prettier -w '**/*.mjs'",
+    "lint": "npx eslint",
+    "format": "npx prettier -w",
     "test": "/bin/sh shell/test.sh",
     "coverage": "/bin/sh shell/coverage.sh",
     "unit": "/bin/sh shell/unit.sh"
@@ -34,6 +34,7 @@
     "diff": "^5.0.0",
     "eslint": "^8.2.0",
     "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-local": "^1.0.0",
     "pegjs": "^0.10.0",
     "prettier": "^2.4.1",
     "test-turtle": "^4.0.2"
