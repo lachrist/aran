@@ -58,6 +58,9 @@ assertExpression(
 assertExpression("123;", "123;", true);
 assertExpression("123;", "321;", false);
 
+assertExpression("123n;", "123n;", true);
+assertExpression("123n;", "321n;", false);
+
 assertExpression("_x;", "_X;", true);
 
 assertExpression("$x;", "$x;", true);

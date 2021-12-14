@@ -18,7 +18,10 @@ import {
   bindResultLabel,
 } from "./result.mjs";
 
-const {String} = globalThis;
+const {
+  String,
+  JSON: {stringify: stringifyJSON},
+} = globalThis;
 
 const makeSinglePairVariableResult = (pair) =>
   makeSingleVariableResult(pair[0], pair[1]);
@@ -409,6 +412,11 @@ export const visitEffect = generateVisitNode({
   ],
 });
 
+const extractPrimitive = (primitive) =>
+  typeof primitive === "object" && primitive !== null
+    ? stringifyJSON(primitive)
+    : primitive;
+
 export const visitExpression = generateVisitNode({
   __proto__: null,
   InputExpression: (_error, _annotation1, _annotation2) => [],
@@ -419,7 +427,11 @@ export const visitExpression = generateVisitNode({
     primitive2,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "value"), primitive1, primitive2),
+    visitPrimitive(
+      appendErrorSegment(error, "value"),
+      extractPrimitive(primitive1),
+      extractPrimitive(primitive2),
+    ),
   ],
   IntrinsicExpression: (
     error,
