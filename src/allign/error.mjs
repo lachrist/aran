@@ -19,9 +19,14 @@ export const makeRootError = () => ({
   value2: null,
 });
 
-export const appendErrorPath = (error, segment) => ({
+export const appendErrorPrecision = (error, precision) => ({
   ...error,
-  path: `${error.path}${segment}`,
+  path: `${error.path}(${precision})`,
+});
+
+export const appendErrorSegment = (error, segment) => ({
+  ...error,
+  path: `${error.path}.${segment}`,
 });
 
 export const setErrorMessage = (error, message) => ({
