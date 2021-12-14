@@ -5,6 +5,12 @@ import {
   parseStatement,
   parseBlock,
   parseProgram,
+  stringifyExpression,
+  stringifyEffect,
+  stringifyLink,
+  stringifyStatement,
+  stringifyBlock,
+  stringifyProgram,
 } from "../lang/index.mjs";
 import {
   makeRootError,
@@ -27,7 +33,7 @@ const {
   JSON: {stringify: stringifyJSON},
 } = globalThis;
 
-const generateAllign = (parse, visit) => (node, code) => {
+const generateAllign = (parse, stringify, visit) => (node, code) => {
   const error = getResultError(visit(makeRootError(), node, parse(code)));
   if (error === null) {
     return null;
@@ -42,16 +48,35 @@ const generateAllign = (parse, visit) => (node, code) => {
     } = getErrorRight(error);
     return `${message} (${String(line)}-${String(
       column,
-    )}): mismatch between ${stringifyJSON(left)} and ${stringifyJSON(right)}`;
+    )}): mismatch between ${stringifyJSON(left)} and ${stringifyJSON(
+      right,
+    )}${"\n"}${stringify(node)}`;
   }
 };
 
 export const allignExpression = generateAllign(
   parseExpression,
+  stringifyExpression,
   visitExpression,
 );
-export const allignEffect = generateAllign(parseEffect, visitEffect);
-export const allignLink = generateAllign(parseLink, visitLink);
-export const allignStatement = generateAllign(parseStatement, visitStatement);
-export const allignBlock = generateAllign(parseBlock, visitBlock);
-export const allignProgram = generateAllign(parseProgram, visitProgram);
+export const allignEffect = generateAllign(
+  parseEffect,
+  stringifyEffect,
+  visitEffect,
+);
+export const allignLink = generateAllign(parseLink, stringifyLink, visitLink);
+export const allignStatement = generateAllign(
+  parseStatement,
+  stringifyStatement,
+  visitStatement,
+);
+export const allignBlock = generateAllign(
+  parseBlock,
+  stringifyBlock,
+  visitBlock,
+);
+export const allignProgram = generateAllign(
+  parseProgram,
+  stringifyProgram,
+  visitProgram,
+);

@@ -19,6 +19,18 @@ const makeErrorExpression = () => makeApplyExpression(
   ],
 );
 
+const isCompletionKind = (kind) => (
+  kind === "eval" ||
+  kind === "arrow" ||
+  kind === "function" ||
+  kind === "method" ||
+  kind === "constructor"
+);
+
+const default_callback = generateThrowError("Could not instrument node");
+
+const generateVisit = (callbacks) => (context, node) => dispatch(contex, node, callbacks, default_callback);
+
 const visitBlock = generateVisit({
   __proto__: null,
   Block: (context, serial, labels, variables, statements) => makeScopeBlock(
@@ -31,60 +43,51 @@ const visitBlock = generateVisit({
       const catch_cut = cut(context.pointcut, "catch", frame, null, serial);
       const leave_cut = cut(context.pointcut, "leave", frame, serial);
       const frame_variable = makeScopeNewVariable(extended_scope, "frame");
-      const input_variable = makeScopeNewVariable(extended_scope, "input");
-      const try_statements = concat(
-        (enter_cut || completion_cut || catch_cut || leave_cut) ?
-          [makeEffectStatement(makeScopeNewWriteEffect(
-            extended_scope,
-            frame_variable,
-            makeExpression(
-              makeObjectExpression(
-                makePrimitiveExpression(null),
+      const head_statements = (enter_cut || completion_cut || catch_cut || leave_cut) ?
+        [makeEffectStatement(makeScopeNewWriteEffect(
+          extended_scope,
+          frame_variable,
+          makeExpression(
+            makeObjectExpression(
+              makePrimitiveExpression(null),
+              [
                 [
-                  [
-                    makePrimitiveExpression("kind"),
-                    makePrimitiveExpression(context.kind),
-                  ],
-                  [
-                    makePrimitiveExpression("callee"),
-                    context.callee === null ? makePrimitiveExpression(null) : makeScopeNewReadExpression(extended_scope, context.callee),
-                  ],
-                  [
-                    makePrimitiveExpression("labels"),
-                    makeArrayExpression(
-                      labels.map((label) => makeScopeLabReadExpression(extended_scope, label)),
-                    ),
-                  ],
-                  [
-                    makePrimitiveExpression("variables"),
-                    makeArrayExpression(
-                      variables.map((variable) => makeScopeVarReadExpression(extended_scope, variable)),
-                    ),
-                  ],
+                  makePrimitiveExpression("kind"),
+                  makePrimitiveExpression(context.kind),
                 ],
-              ),
+                [
+                  makePrimitiveExpression("callee"),
+                  context.callee === null ? makePrimitiveExpression(null) : makeScopeNewReadExpression(extended_scope, context.callee),
+                ],
+                [
+                  makePrimitiveExpression("labels"),
+                  makeArrayExpression(
+                    labels.map((label) => makeScopeLabReadExpression(extended_scope, label)),
+                  ),
+                ],
+                [
+                  makePrimitiveExpression("variables"),
+                  makeArrayExpression(
+                    variables.map((variable) => makeScopeVarReadExpression(extended_scope, variable)),
+                  ),
+                ],
+              ],
             ),
-          ))] :
-          [],
-        enter_cut ? [makeEffectStatement(makeScopeNewWriteEffect(
-          input_variable,
-          makeTrapExpression(
-            context.namespace,
-            "enter",
-            [
-              makeScopeNewReadExpression(extended_scope, frame_variable),
-              makeInputExpression(),
-              makePrimitiveExpression(serial),
-            ]
           ),
-        ))] : [],
-        map(statements, (statement) => visitStatement({...context, callee:null, kind:null, input:enter_cut ? input_variable : null, scope:extended_scope}, statement)),
-        completion_cut
+        ))] :
+        [];
+      const try_statements = concat(
+        enter_cut
+          ? makeTrapStatementArray(context.namespace, "enter", [makeScopeFrameReadExpression(extended_scope), makePrimitiveExpression(serial)])
+          : [],
+        map(statements, (statement) => visitStatement({...context, callee:null, kind:null, scope:extended_scope}, statement)),
+        completion_cut && !isCompletionKind(context.kind)
           ? makeTrapStatementArray(context.namespace, "completion", [makeScopeFrameReadExpression(extended_scope), makePrimitiveExpression(serial)])
           : []
       );
       return (catch_cut || leave_cut) ?
         {
+          head: head_statements,
           try: try_statements,
           catch: [
             makeEffectStatement(
@@ -96,15 +99,16 @@ const visitBlock = generateVisit({
                 ),
               ),
             ),
-          ];
+          ],
           finally: leave_cut
             ? makeTrapStatementArray(context.namespace, "leave", [makeScopeFrameReadExpression(extended_scope), makePrimitiveExpression(serial)])
-            : []
+            : [],
+          tail: [],
         } :
         concat(
-          frame_statements,
+          head_statements,
           try_statements,
-        );
+        ),
     },
   ),
 });
