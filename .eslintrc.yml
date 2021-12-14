@@ -27,11 +27,12 @@ parserOptions:
   sourceType: module
 plugins:
   - import
+  - local
 rules:
   ##########
   # Custom #
   ##########
-  custom-no-globals: [error, globalThis, console]
+  local/no-globals: [error, globalThis, console]
   ################
   # Core Complex #
   ################
