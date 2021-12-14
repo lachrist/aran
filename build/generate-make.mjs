@@ -8,13 +8,12 @@ const {
   undefined,
   String,
   Array,
-  process: {env},
+  process: {env, argv},
   Reflect: {getOwnPropertyDescriptor, ownKeys},
   JSON: {stringify: stringifyJSON},
 } = globalThis;
 
-const should_validate_node =
-  getOwnPropertyDescriptor(env, "ARAN_VALIDATE_NODE") !== undefined;
+const should_validate_node = argv.length > 2 && argv[2] === "TEST";
 const syntax = getSyntax();
 
 const makeFieldArray = (kind, type) =>
