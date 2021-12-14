@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import {
   some,
   includes,
@@ -21,6 +22,8 @@ import {
 } from "./accessor.mjs";
 
 const {
+  NaN,
+  isNaN,
   String,
   Proxy,
   Error,
@@ -54,6 +57,7 @@ const isReturnStatement = generateIsType("ReturnStatement");
 const isYieldExpression = generateIsType("YieldExpression");
 const isAwaitExpression = generateIsType("AwaitExpression");
 const isInputExpression = generateIsType("InputExpression");
+const isThrowExpression = generateIsType("ThrowExpression");
 const isDeclareEnclaveStatement = generateIsType("DeclareEnclaveStatement");
 const isCallSuperEnclaveExpression = generateIsType(
   "CallSuperEnclaveExpression",
@@ -278,13 +282,42 @@ const digestNestedBlock = (digest) => {
   return digest;
 };
 
-const generateIsCompletionBlock = () => {
-  const callback = (_context, _annotation, _labels, _variables, statements) =>
-    statements.length > 0 &&
-    isReturnStatement(statements[statements.length - 1]);
+const generateGetEffectCompletion = () => {
+  const callbacks = {
+    __proto__: null,
+    ExpressionEffect: (_context, _annotation, expression) =>
+      isThrowExpression(expression) ? 0 : NaN,
+  };
+  const default_callback = (_context, _node) => NaN;
+  return (expression) =>
+    dispatchNode(null, expression, callbacks, default_callback);
+};
+const getEffectCompletion = generateGetEffectCompletion();
+const generateGetStatementCompletion = () => {
+  const callbacks = {
+    __proto__: null,
+    ReturnStatement: (_context, _annotation, _expression) => 1,
+    EffectStatement: (_context, _annotation, effect) =>
+      getEffectCompletion(effect),
+    BlockStatement: (_context, _annotation, block) => getBlockCompletion(block),
+    IfStatement: (_context, _annotation, _expression, block1, block2) =>
+      getBlockCompletion(block1) + getBlockCompletion(block2),
+    TryStatement: (_context, _annotation, block1, block2, _block3) =>
+      getBlockCompletion(block1) + getBlockCompletion(block2),
+  };
+  const default_callback = (_context, _node) => NaN;
+  return (statement) =>
+    dispatchNode(null, statement, callbacks, default_callback);
+};
+const getStatementCompletion = generateGetStatementCompletion();
+const generateGetBlockCompletion = () => {
+  const callback = (_context, _annotation, labels, _variables, statements) =>
+    labels.length === 0 && statements.length > 0
+      ? getStatementCompletion(statements[statements.length - 1])
+      : NaN;
   return (block) => extractNode(null, block, "Block", callback);
 };
-const isCompletionBlock = generateIsCompletionBlock();
+const getBlockCompletion = generateGetBlockCompletion();
 
 const generateIsLabeledBlock = () => {
   const callback = (_context, _annotation, labels, _variables, _statements) =>
@@ -313,14 +346,17 @@ const generateValidateNode = () => {
       return digest;
     },
     ScriptProgram: (digest, _annotation, statements) => {
+      const completion =
+        statements.length > 0
+          ? getStatementCompletion(statements[statements.length - 1])
+          : NaN;
       assert(
-        statements.length > 0 &&
-          isReturnStatement(statements[statements.length - 1]),
-        "ScriptProgram.body should end with a CompletionStatement",
+        !isNaN(completion),
+        "The last statement of ScriptProgram.body should be a completion statement",
       );
       assert(
-        filter(digest, isReturnStatement).length < 2,
-        "ScriptProgram.body should not contain more than one return statement",
+        filter(digest, isReturnStatement).length === completion,
+        "ScriptProgram.body should only contain ReturnStatement in completion position",
       );
       digest = filterOut(digest, isReturnStatement);
       digest = filterOut(digest, isThisReadEnclaveExpression);
@@ -330,21 +366,18 @@ const generateValidateNode = () => {
       return digest;
     },
     EvalProgram: (digest, _annotation, enclaves, variables, block) => {
+      const completion = getBlockCompletion(block);
       assert(
         !some(enclaves, isDuplicate),
         "duplicate enclaves found in EvalProgram",
       );
       assert(
-        !isLabeledBlock(block),
-        "EvalProgram.body should not be a labeled Block",
-      );
-      assert(
-        isCompletionBlock(block),
+        !isNaN(completion),
         "EvalProgram.body should be a completion Block",
       );
       assert(
-        filter(digest, isReturnStatement).length < 2,
-        "EvalProgram.body should not contain more than one return statement",
+        filter(digest, isReturnStatement).length === completion,
+        "EvalProgram.body should only contain ReturnStatement in completion position",
       );
       digest = filterOut(digest, isReturnStatement);
       digest = filterOut(digest, generateIsBoundVariableNode(variables));
@@ -402,11 +435,7 @@ const generateValidateNode = () => {
       block,
     ) => {
       assert(
-        !isLabeledBlock(block),
-        "ClosureExpression.body should not be labeled",
-      );
-      assert(
-        isCompletionBlock(block),
+        !isNaN(getBlockCompletion(block)),
         "Closure.body should be a completion Block",
       );
       assert(

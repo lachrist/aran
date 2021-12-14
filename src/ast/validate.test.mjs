@@ -83,11 +83,36 @@ assertThrow(() => {
   });
 }
 
-// CompletionBlock //
+// Completion //
+assertThrow(() => {
+  makeValidNode("ScriptProgram", "@", []);
+});
 {
-  const block = makeValidNode("Block", "@", [], [], []);
+  const statement = makeValidNode(
+    "EffectStatement",
+    "@",
+    makeValidNode(
+      "WriteEnclaveEffect",
+      "@",
+      "foo",
+      makeValidNode("PrimitiveExpression", "@", 123),
+    ),
+  );
   assertThrow(() => {
-    makeValidNode("EvalProgram", "@", [], [], block);
+    makeValidNode("ScriptProgram", "@", [statement]);
+  });
+}
+{
+  const statements = [
+    makeValidNode(
+      "ReturnStatement",
+      "@",
+      makeValidNode("PrimitiveExpression", "@", 123),
+    ),
+    makeValidNode("DebuggerStatement", "@"),
+  ];
+  assertThrow(() => {
+    makeValidNode("ScriptProgram", "@", statements);
   });
 }
 {
@@ -96,7 +121,17 @@ assertThrow(() => {
     "@",
     [],
     [],
-    [makeValidNode("DebuggerStatement", "@")],
+    [
+      makeValidNode(
+        "EffectStatement",
+        "@",
+        makeValidNode(
+          "ExpressionEffect",
+          "@",
+          makeValidNode("PrimitiveExpression", "@", 123),
+        ),
+      ),
+    ],
   );
   assertThrow(() => {
     makeValidNode("EvalProgram", "@", [], [], block);
@@ -114,9 +149,81 @@ makeValidNode(
     [],
     [
       makeValidNode(
-        "ReturnStatement",
+        "IfStatement",
         "@",
         makeValidNode("PrimitiveExpression", "@", 123),
+        makeValidNode(
+          "Block",
+          "@",
+          [],
+          [],
+          [
+            makeValidNode(
+              "BlockStatement",
+              "@",
+              makeValidNode(
+                "Block",
+                "@",
+                [],
+                [],
+                [
+                  makeValidNode(
+                    "ReturnStatement",
+                    "@",
+                    makeValidNode("PrimitiveExpression", "@", 123),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        makeValidNode(
+          "Block",
+          "@",
+          [],
+          [],
+          [
+            makeValidNode(
+              "TryStatement",
+              "@",
+              makeValidNode(
+                "Block",
+                "@",
+                [],
+                [],
+                [
+                  makeValidNode(
+                    "EffectStatement",
+                    "@",
+                    makeValidNode(
+                      "ExpressionEffect",
+                      "@",
+                      makeValidNode(
+                        "ThrowExpression",
+                        "@",
+                        makeValidNode("PrimitiveExpression", "@", 123),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              makeValidNode(
+                "Block",
+                "@",
+                [],
+                [],
+                [
+                  makeValidNode(
+                    "ReturnStatement",
+                    "@",
+                    makeValidNode("PrimitiveExpression", "@", 123),
+                  ),
+                ],
+              ),
+              makeValidNode("Block", "@", [], [], []),
+            ),
+          ],
+        ),
       ),
     ],
   ),
