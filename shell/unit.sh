@@ -1,0 +1,1 @@
+node ./node_modules/.bin/test-turtle --layout alongside 'npx prettier -w $1 $2 && npx eslint --rulesdir eslint-rules $1 $2 && node $2 && npx c8 --reporter text --include $1 --check-coverage --branches 100 --functions 100 -- node $2'

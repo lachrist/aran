@@ -11,9 +11,12 @@
   "homepage": "http://github.com/lachrist/aran",
   "license": "MIT",
   "scripts": {
-    "build-debug": "ARAN_VALIDATE_NODE=true node build/generate-make.mjs",
+    "build": "node build/generate-make.mjs",
     "lint": "npx eslint --rulesdir eslint-rules '**/*.mjs'",
-    "unit": "node ./node_modules/.bin/test-turtle --layout alongside 'npx prettier -w $1 $2 && npx eslint --rulesdir eslint-rules $1 $2 && node $2 && npx c8 --reporter text --include $1 --check-coverage --branches 100 --functions 100 -- node $2'"
+    "format": "npx prettier -w '**/*.mjs'",
+    "test": "/bin/sh shell/test.sh",
+    "coverage": "/bin/sh shell/coverage.sh",
+    "unit": "/bin/sh shell/unit.sh"
   },
   "keywords": [
     "JavaScript",
