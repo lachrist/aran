@@ -8,13 +8,15 @@ const {
   undefined,
 } = globalThis;
 
-export const makeNode = (...args) => args;
+export const makeAnnotatedNode = (...args) => args;
+
+export const makeNode = (...args) => concat(args, [null]);
 
 export const getNodeType = (node) => node[0];
 
-export const getNodeAnnotation = (node) => node[1];
+export const getNodeAnnotation = (node) => node[node.length - 1];
 
-export const getNodeFieldArray = (node) => slice(node, 2, node.length);
+export const getNodeFieldArray = (node) => slice(node, 1, node.length - 1);
 
 export const dispatchNode = (context, node, callbacks, default_callback) => {
   const {0: type, length} = node;

@@ -5,6 +5,7 @@ import {
 } from "../__fixture__.mjs";
 
 import {
+  makeAnnotatedNode,
   makeNode,
   getNodeType,
   getNodeFieldArray,
@@ -19,19 +20,27 @@ import {
 // getNodeType && getNodeFieldArray //
 //////////////////////////////////////
 
+// makeAnnotatedNode //
 assertEqual(
-  getNodeType(makeNode("PrimitiveExpression", "@", 123)),
+  getNodeType(makeAnnotatedNode("PrimitiveExpression", 123, "@")),
   "PrimitiveExpression",
 );
-
 assertDeepEqual(
-  getNodeAnnotation(makeNode("PrimitiveExpression", "@", 123)),
+  getNodeAnnotation(makeAnnotatedNode("PrimitiveExpression", 123, "@")),
   "@",
 );
+assertDeepEqual(
+  getNodeFieldArray(makeAnnotatedNode("PrimitiveExpression", 123, "@")),
+  [123],
+);
 
-assertDeepEqual(getNodeFieldArray(makeNode("PrimitiveExpression", "@", 123)), [
-  123,
-]);
+// makeNode //
+assertEqual(
+  getNodeType(makeNode("PrimitiveExpression", 123)),
+  "PrimitiveExpression",
+);
+assertDeepEqual(getNodeAnnotation(makeNode("PrimitiveExpression", 123)), null);
+assertDeepEqual(getNodeFieldArray(makeNode("PrimitiveExpression", 123)), [123]);
 
 /////////////////////////////////
 // extractNode && dispatchNode //
@@ -41,12 +50,12 @@ assertDeepEqual(getNodeFieldArray(makeNode("PrimitiveExpression", "@", 123)), [
 assertEqual(
   dispatchNode(
     "context",
-    makeNode("DebuggerStatement", "@"),
+    makeAnnotatedNode("DebuggerStatement", "@"),
     {__proto__: null},
     (context, node, ...rest) => {
       assertDeepEqual(
         [context, node, rest],
-        ["context", makeNode("DebuggerStatement", "@"), []],
+        ["context", makeAnnotatedNode("DebuggerStatement", "@"), []],
       );
       return "result";
     },
@@ -56,7 +65,7 @@ assertEqual(
 
 // 0 //
 {
-  const node = makeNode("DebuggerStatement", "@");
+  const node = makeAnnotatedNode("DebuggerStatement", "@");
   const callback = (context, annotation, ...rest) => {
     assertDeepEqual([context, annotation, rest], ["context", "@", []]);
     return "result";
@@ -81,11 +90,11 @@ assertEqual(
 
 // 1 //
 {
-  const node = makeNode("PrimitiveExpression", "@", 123);
-  const callback = (context, annotation, primitive, ...rest) => {
+  const node = makeAnnotatedNode("PrimitiveExpression", 123, "@");
+  const callback = (context, primitive, annotation, ...rest) => {
     assertDeepEqual(
-      [context, annotation, primitive, rest],
-      ["context", "@", 123, []],
+      [context, primitive, annotation, rest],
+      ["context", 123, "@", []],
     );
     return "result";
   };
@@ -109,11 +118,11 @@ assertEqual(
 
 // 2 //
 {
-  const node = makeNode("ImportLink", "@", "specifier", "source");
-  const callback = (context, annotation, specifier, source, ...rest) => {
+  const node = makeAnnotatedNode("ImportLink", "specifier", "source", "@");
+  const callback = (context, specifier, source, annotation, ...rest) => {
     assertDeepEqual(
-      [context, annotation, specifier, source, rest],
-      ["context", "@", "specifier", "source", []],
+      [context, specifier, source, annotation, rest],
+      ["context", "specifier", "source", "@", []],
     );
     return "result";
   };
@@ -134,12 +143,12 @@ assertEqual(
 
 // 3 //
 {
-  const node = makeNode(
+  const node = makeAnnotatedNode(
     "ConditionalExpression",
+    makeAnnotatedNode("PrimitiveExpression", 123, "@"),
+    makeAnnotatedNode("PrimitiveExpression", 456, "@"),
+    makeAnnotatedNode("PrimitiveExpression", 789, "@"),
     "@",
-    makeNode("PrimitiveExpression", "@", 123),
-    makeNode("PrimitiveExpression", "@", 456),
-    makeNode("PrimitiveExpression", "@", 789),
   );
   const callback = (
     context,
@@ -153,10 +162,10 @@ assertEqual(
       [context, annotation, expression1, expression2, expression3, rest],
       [
         "context",
+        makeAnnotatedNode("PrimitiveExpression", 123, "@"),
+        makeAnnotatedNode("PrimitiveExpression", 456, "@"),
+        makeAnnotatedNode("PrimitiveExpression", 789, "@"),
         "@",
-        makeNode("PrimitiveExpression", "@", 123),
-        makeNode("PrimitiveExpression", "@", 456),
-        makeNode("PrimitiveExpression", "@", 789),
         [],
       ],
     );
@@ -182,13 +191,13 @@ assertEqual(
 
 // 4 //
 {
-  const node = makeNode(
+  const node = makeAnnotatedNode(
     "ClosureExpression",
-    "@",
     "arrow",
     true,
     false,
-    makeNode("Block", "@", [], [], []),
+    makeAnnotatedNode("Block", [], [], [], "@"),
+    "@",
   );
   const callback = (
     context,
@@ -203,11 +212,11 @@ assertEqual(
       [context, annotation, kind, asynchronous, generator, block, rest],
       [
         "context",
-        "@",
         "arrow",
         true,
         false,
-        makeNode("Block", "@", [], [], []),
+        makeAnnotatedNode("Block", [], [], [], "@"),
+        "@",
         [],
       ],
     );
@@ -238,8 +247,8 @@ assertEqual(
 // assertEqual(
 //   matchNode(
 //     "context",
-//     makeNode("PrimitiveExpression", "@", 123),
-//     makeNode("PrimitiveExpression", "@", 456),
+//     makeAnnotatedNode("PrimitiveExpression", "@", 123),
+//     makeAnnotatedNode("PrimitiveExpression", "@", 456),
 //   ),
 //   false,
 // );
@@ -247,8 +256,8 @@ assertEqual(
 // assertEqual(
 //   matchNode(
 //     "context",
-//     makeNode("PrimitiveExpression", "@", 123),
-//     makeNode("PrimitiveExpression", "@", 123),
+//     makeAnnotatedNode("PrimitiveExpression", "@", 123),
+//     makeAnnotatedNode("PrimitiveExpression", "@", 123),
 //   ),
 //   true,
 // );
@@ -257,8 +266,8 @@ assertEqual(
 //   assertEqual(
 //     matchNode(
 //       "context",
-//       makeNode("PrimitiveExpression", "@", 123),
-//       makeNode("PrimitiveExpression", "@", (...args) => {
+//       makeAnnotatedNode("PrimitiveExpression", "@", 123),
+//       makeAnnotatedNode("PrimitiveExpression", "@", (...args) => {
 //         assertDeepEqual(args, ["context", "@", 123]);
 //         return matched;
 //       }),
@@ -276,14 +285,21 @@ assertEqual(
 assertEqual(
   allignNode(
     "context",
-    makeNode("PrimitiveExpression", "@1", 123),
-    makeNode("PrimitiveExpression", "@2", 456),
+    makeAnnotatedNode("PrimitiveExpression", 123, "@1"),
+    makeAnnotatedNode("PrimitiveExpression", 456, "@2"),
     {
       __proto__: null,
-      PrimitiveExpression: (context, node1, node2, primitive1, primitive2) => {
+      PrimitiveExpression: (
+        context,
+        node1,
+        node2,
+        primitive1,
+        primitive2,
+        ...rest
+      ) => {
         assertDeepEqual(
-          [context, node1, node2, primitive1, primitive2],
-          ["context", "@1", 123, "@2", 456],
+          [context, node1, node2, primitive1, primitive2, rest],
+          ["context", 123, "@1", 456, "@2", []],
         );
         return "result";
       },
@@ -296,16 +312,16 @@ assertEqual(
 assertEqual(
   allignNode(
     "context",
-    makeNode("PrimitiveExpression", "@", 123),
-    makeNode("PrimitiveExpression", "@", 456),
+    makeAnnotatedNode("PrimitiveExpression", 123, "@"),
+    makeAnnotatedNode("PrimitiveExpression", 456, "@"),
     {__proto__: null},
     (context, node1, node2, ...rest) => {
       assertDeepEqual(
         [context, node1, node2, rest],
         [
           "context",
-          makeNode("PrimitiveExpression", "@", 123),
-          makeNode("PrimitiveExpression", "@", 456),
+          makeAnnotatedNode("PrimitiveExpression", 123, "@"),
+          makeAnnotatedNode("PrimitiveExpression", 456, "@"),
           [],
         ],
       );

@@ -9,37 +9,36 @@ const makeValidNode = (...args) => validateNode(makeNode(...args));
 ///////////
 
 // Duplicate Variables //
-makeValidNode("Block", "@", [], ["foo", "bar", "qux"], []);
+makeValidNode("Block", [], ["foo", "bar", "qux"], []);
 assertThrow(() => {
-  makeValidNode("Block", "@", [], ["foo", "bar", "qux", "bar"], []);
+  makeValidNode("Block", [], ["foo", "bar", "qux", "bar"], []);
 });
 
 // Duplicate Export Link //
 {
-  const link = makeValidNode("ExportLink", "@", "specifier");
-  const block = makeValidNode("Block", "@", [], [], []);
-  makeValidNode("ModuleProgram", "@", [link], block);
+  const link = makeValidNode("ExportLink", "specifier");
+  const block = makeValidNode("Block", [], [], []);
+  makeValidNode("ModuleProgram", [link], block);
   assertThrow(() => {
-    makeValidNode("ModuleProgram", "@", [link, link], block);
+    makeValidNode("ModuleProgram", [link, link], block);
   });
 }
 
 // AggregateLink //
-makeValidNode("AggregateLink", "@", "'source'", null, null);
-makeValidNode("AggregateLink", "@", "'source'", null, "foo");
+makeValidNode("AggregateLink", "'source'", null, null);
+makeValidNode("AggregateLink", "'source'", null, "foo");
 assertThrow(() => {
-  makeValidNode("AggregateLink", "@", "'source'", "foo", null);
+  makeValidNode("AggregateLink", "'source'", "foo", null);
 });
 
 // Generator Arrow //
 assertThrow(() => {
   makeValidNode(
     "Closure",
-    "@",
     "arrow",
     false,
     true,
-    makeValidNode("Block", "@", [], [], []),
+    makeValidNode("Block", [], [], []),
   );
 });
 
@@ -47,11 +46,10 @@ assertThrow(() => {
 assertThrow(() => {
   makeValidNode(
     "Closure",
-    "@",
     "constructor",
     false,
     true,
-    makeValidNode("Block", "@", [], [], []),
+    makeValidNode("Block", [], [], []),
   );
 });
 
@@ -59,11 +57,10 @@ assertThrow(() => {
 assertThrow(() => {
   makeValidNode(
     "Closure",
-    "@",
     "constructor",
     true,
     false,
-    makeValidNode("Block", "@", [], [], []),
+    makeValidNode("Block", [], [], []),
   );
 });
 
@@ -71,106 +68,85 @@ assertThrow(() => {
 {
   const statement = makeValidNode(
     "EffectStatement",
-    "@",
-    makeValidNode(
-      "ExpressionEffect",
-      "@",
-      makeValidNode("InputExpression", "@"),
-    ),
+    makeValidNode("ExpressionEffect", makeValidNode("InputExpression")),
   );
   assertThrow(() => {
-    makeValidNode("Block", "@", [], [], [statement, statement]);
+    makeValidNode("Block", [], [], [statement, statement]);
   });
 }
 
 // Completion //
 assertThrow(() => {
-  makeValidNode("ScriptProgram", "@", []);
+  makeValidNode("ScriptProgram", []);
 });
 {
   const statement = makeValidNode(
     "EffectStatement",
-    "@",
     makeValidNode(
       "WriteEnclaveEffect",
-      "@",
       "foo",
-      makeValidNode("PrimitiveExpression", "@", 123),
+      makeValidNode("PrimitiveExpression", 123),
     ),
   );
   assertThrow(() => {
-    makeValidNode("ScriptProgram", "@", [statement]);
+    makeValidNode("ScriptProgram", [statement]);
   });
 }
 {
   const statements = [
-    makeValidNode(
-      "ReturnStatement",
-      "@",
-      makeValidNode("PrimitiveExpression", "@", 123),
-    ),
-    makeValidNode("DebuggerStatement", "@"),
+    makeValidNode("ReturnStatement", makeValidNode("PrimitiveExpression", 123)),
+    makeValidNode("DebuggerStatement"),
   ];
   assertThrow(() => {
-    makeValidNode("ScriptProgram", "@", statements);
+    makeValidNode("ScriptProgram", statements);
   });
 }
 {
   const block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [
       makeValidNode(
         "EffectStatement",
-        "@",
         makeValidNode(
           "ExpressionEffect",
-          "@",
-          makeValidNode("PrimitiveExpression", "@", 123),
+          makeValidNode("PrimitiveExpression", 123),
         ),
       ),
     ],
   );
   assertThrow(() => {
-    makeValidNode("EvalProgram", "@", [], [], block);
+    makeValidNode("EvalProgram", [], [], block);
   });
 }
 makeValidNode(
   "EvalProgram",
-  "@",
   [],
   [],
   makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [
       makeValidNode(
         "IfStatement",
-        "@",
-        makeValidNode("PrimitiveExpression", "@", 123),
+        makeValidNode("PrimitiveExpression", 123),
         makeValidNode(
           "Block",
-          "@",
           [],
           [],
           [
             makeValidNode(
               "BlockStatement",
-              "@",
               makeValidNode(
                 "Block",
-                "@",
                 [],
                 [],
                 [
                   makeValidNode(
                     "ReturnStatement",
-                    "@",
-                    makeValidNode("PrimitiveExpression", "@", 123),
+                    makeValidNode("PrimitiveExpression", 123),
                   ),
                 ],
               ),
@@ -179,29 +155,23 @@ makeValidNode(
         ),
         makeValidNode(
           "Block",
-          "@",
           [],
           [],
           [
             makeValidNode(
               "TryStatement",
-              "@",
               makeValidNode(
                 "Block",
-                "@",
                 [],
                 [],
                 [
                   makeValidNode(
                     "EffectStatement",
-                    "@",
                     makeValidNode(
                       "ExpressionEffect",
-                      "@",
                       makeValidNode(
                         "ThrowExpression",
-                        "@",
-                        makeValidNode("PrimitiveExpression", "@", 123),
+                        makeValidNode("PrimitiveExpression", 123),
                       ),
                     ),
                   ),
@@ -209,18 +179,16 @@ makeValidNode(
               ),
               makeValidNode(
                 "Block",
-                "@",
                 [],
                 [],
                 [
                   makeValidNode(
                     "ReturnStatement",
-                    "@",
-                    makeValidNode("PrimitiveExpression", "@", 123),
+                    makeValidNode("PrimitiveExpression", 123),
                   ),
                 ],
               ),
-              makeValidNode("Block", "@", [], [], []),
+              makeValidNode("Block", [], [], []),
             ),
           ],
         ),
@@ -231,15 +199,15 @@ makeValidNode(
 
 // Label //
 {
-  const block = makeValidNode("Block", "@", ["label"], [], []);
+  const block = makeValidNode("Block", ["label"], [], []);
   assertThrow(() => {
-    makeValidNode("Closure", "@", "arrow", false, false, block);
+    makeValidNode("Closure", "arrow", false, false, block);
   });
   assertThrow(() => {
-    makeValidNode("ModuleProgram", "@", [], block);
+    makeValidNode("ModuleProgram", [], block);
   });
   assertThrow(() => {
-    makeValidNode("EvalProgram", "@", [], [], block);
+    makeValidNode("EvalProgram", [], [], block);
   });
 }
 
@@ -251,33 +219,25 @@ makeValidNode(
 {
   const return_statement = makeValidNode(
     "ReturnStatement",
-    "@",
-    makeValidNode("PrimitiveExpression", "@", "return"),
+    makeValidNode("PrimitiveExpression", "return"),
   );
   const completion_statement = makeValidNode(
     "ReturnStatement",
-    "@",
-    makeValidNode("PrimitiveExpression", "@", "completion"),
+    makeValidNode("PrimitiveExpression", "completion"),
   );
   assertThrow(() => {
-    makeValidNode("ScriptProgram", "@", [
-      return_statement,
-      completion_statement,
-    ]);
+    makeValidNode("ScriptProgram", [return_statement, completion_statement]);
   });
-  makeValidNode("ScriptProgram", "@", [
+  makeValidNode("ScriptProgram", [
     makeValidNode(
       "ReturnStatement",
-      "@",
       makeValidNode(
         "ClosureExpression",
-        "@",
         "arrow",
         false,
         false,
         makeValidNode(
           "Block",
-          "@",
           [],
           [],
           [return_statement, completion_statement],
@@ -291,54 +251,40 @@ makeValidNode(
 {
   const await_expression = makeValidNode(
     "AwaitExpression",
-    "@",
-    makeValidNode("PrimitiveExpression", "@", "promise"),
+    makeValidNode("PrimitiveExpression", "promise"),
   );
   const completion_statement = makeValidNode(
     "ReturnStatement",
-    "@",
     await_expression,
   );
   const expression_statement = makeValidNode(
     "EffectStatement",
-    "@",
-    makeValidNode("ExpressionEffect", "@", await_expression),
+    makeValidNode("ExpressionEffect", await_expression),
   );
   const completion_block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [completion_statement],
   );
   const non_completion_block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [expression_statement],
   );
   assertThrow(() => {
-    makeValidNode(
-      "ClosureExpression",
-      "@",
-      "arrow",
-      false,
-      false,
-      completion_block,
-    );
+    makeValidNode("ClosureExpression", "arrow", false, false, completion_block);
   });
   assertThrow(() => {
-    makeValidNode("ScriptProgram", "@", [completion_statement]);
+    makeValidNode("ScriptProgram", [completion_statement]);
   });
-  makeValidNode("ModuleProgram", "@", [], non_completion_block);
-  makeValidNode("ScriptProgram", "@", [
+  makeValidNode("ModuleProgram", [], non_completion_block);
+  makeValidNode("ScriptProgram", [
     makeValidNode(
       "ReturnStatement",
-      "@",
       makeValidNode(
         "ClosureExpression",
-        "@",
         "arrow",
         true,
         false,
@@ -352,30 +298,25 @@ makeValidNode(
 {
   const yield_expression = makeValidNode(
     "YieldExpression",
-    "@",
     false,
-    makeValidNode("PrimitiveExpression", "@", 123),
+    makeValidNode("PrimitiveExpression", 123),
   );
   const completion_statement = makeValidNode(
     "ReturnStatement",
-    "@",
     yield_expression,
   );
   const expression_statement = makeValidNode(
     "EffectStatement",
-    "@",
-    makeValidNode("ExpressionEffect", "@", yield_expression),
+    makeValidNode("ExpressionEffect", yield_expression),
   );
   const completion_block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [completion_statement],
   );
   const non_completion_block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [expression_statement],
@@ -383,7 +324,6 @@ makeValidNode(
   assertThrow(() => {
     makeValidNode(
       "ClosureExpression",
-      "@",
       "function",
       false,
       false,
@@ -391,18 +331,16 @@ makeValidNode(
     );
   });
   assertThrow(() => {
-    makeValidNode("ScriptProgram", "@", [completion_statement]);
+    makeValidNode("ScriptProgram", [completion_statement]);
   });
   assertThrow(() => {
-    makeValidNode("ModuleProgram", "@", [], non_completion_block);
+    makeValidNode("ModuleProgram", [], non_completion_block);
   });
-  makeValidNode("ScriptProgram", "@", [
+  makeValidNode("ScriptProgram", [
     makeValidNode(
       "ReturnStatement",
-      "@",
       makeValidNode(
         "ClosureExpression",
-        "@",
         "function",
         false,
         true,
@@ -414,44 +352,39 @@ makeValidNode(
 
 // BreakStatement //
 {
-  const break_statement = makeValidNode("BreakStatement", "@", "label");
+  const break_statement = makeValidNode("BreakStatement", "label");
   const labeled_block = makeValidNode(
     "Block",
-    "@",
     ["label"],
     [],
     [break_statement],
   );
   const completion_block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [
       break_statement,
       makeValidNode(
         "ReturnStatement",
-        "@",
-        makeValidNode("PrimitiveExpression", "@", 123),
+        makeValidNode("PrimitiveExpression", 123),
       ),
     ],
   );
   assertThrow(() => {
-    makeValidNode("ScriptProgram", "@", completion_block);
+    makeValidNode("ScriptProgram", completion_block);
   });
   assertThrow(() => {
-    makeValidNode("Closure", "@", "arrow", false, false, completion_block);
+    makeValidNode("Closure", "arrow", false, false, completion_block);
   });
   makeValidNode(
     "ModuleProgram",
-    "@",
     [],
     makeValidNode(
       "Block",
-      "@",
       [],
       [],
-      [makeValidNode("BlockStatement", "@", labeled_block)],
+      [makeValidNode("BlockStatement", labeled_block)],
     ),
   );
 }
@@ -460,66 +393,59 @@ makeValidNode(
 const testRigidDeclareEnclaveStatement = (kind) => {
   const declare_statement = makeValidNode(
     "DeclareEnclaveStatement",
-    "@",
     kind,
     "variable",
-    makeValidNode("PrimitiveExpression", "@", 123),
+    makeValidNode("PrimitiveExpression", 123),
   );
   const return_statement = makeValidNode(
     "ReturnStatement",
-    "@",
-    makeValidNode("PrimitiveExpression", "@", "completion"),
+    makeValidNode("PrimitiveExpression", "completion"),
   );
   const completion_block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [declare_statement, return_statement],
   );
   const non_completion_block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [declare_statement],
   );
   const expression = makeValidNode(
     "AwaitExpression",
-    "@",
-    makeValidNode("PrimitiveExpression", "@", 123),
+    makeValidNode("PrimitiveExpression", 123),
   );
   assertThrow(() => {
-    makeValidNode("BlockStatement", "@", non_completion_block);
+    makeValidNode("BlockStatement", non_completion_block);
   });
   assertThrow(() => {
     makeValidNode(
       "IfStatement",
-      "@",
       expression,
       non_completion_block,
       non_completion_block,
     );
   });
   assertThrow(() => {
-    makeValidNode("WhileStatement", "@", expression, non_completion_block);
+    makeValidNode("WhileStatement", expression, non_completion_block);
   });
   assertThrow(() => {
     makeValidNode(
       "TryStatement",
-      "@",
       non_completion_block,
       non_completion_block,
       non_completion_block,
     );
   });
   assertThrow(() => {
-    makeValidNode("ModuleProgram", "@", [], non_completion_block);
+    makeValidNode("ModuleProgram", [], non_completion_block);
   });
   assertThrow(() => {
-    makeValidNode("EvalProgram", "@", [], [], "completion", completion_block);
+    makeValidNode("EvalProgram", [], [], "completion", completion_block);
   });
-  makeValidNode("ScriptProgram", "@", [declare_statement, return_statement]);
+  makeValidNode("ScriptProgram", [declare_statement, return_statement]);
 };
 testRigidDeclareEnclaveStatement("let");
 testRigidDeclareEnclaveStatement("const");
@@ -528,40 +454,36 @@ testRigidDeclareEnclaveStatement("const");
 {
   const declare_statement = makeValidNode(
     "DeclareEnclaveStatement",
-    "@",
     "var",
     "variable",
-    makeValidNode("PrimitiveExpression", "@", 123),
+    makeValidNode("PrimitiveExpression", 123),
   );
   const return_statement = makeValidNode(
     "ReturnStatement",
-    "@",
-    makeValidNode("PrimitiveExpression", "@", "primitive"),
+    makeValidNode("PrimitiveExpression", "primitive"),
   );
   const non_completion_block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [declare_statement],
   );
   const completion_block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [declare_statement, return_statement],
   );
   assertThrow(() => {
-    makeValidNode("Closure", "@", "arrow", false, false, completion_block);
+    makeValidNode("Closure", "arrow", false, false, completion_block);
   });
   assertThrow(() => {
-    makeValidNode("ModuleProgram", "@", [], non_completion_block);
+    makeValidNode("ModuleProgram", [], non_completion_block);
   });
-  makeValidNode("ScriptProgram", "@", [declare_statement, return_statement]);
-  makeValidNode("EvalProgram", "@", ["var"], [], completion_block);
+  makeValidNode("ScriptProgram", [declare_statement, return_statement]);
+  makeValidNode("EvalProgram", ["var"], [], completion_block);
   assertThrow(() => {
-    makeValidNode("EvalProgram", "@", [], [], completion_block);
+    makeValidNode("EvalProgram", [], [], completion_block);
   });
 }
 
@@ -569,60 +491,49 @@ testRigidDeclareEnclaveStatement("const");
 const testVariable = (makeValidVariableEffect) => {
   const variable_statement = makeValidNode(
     "EffectStatement",
-    "@",
     makeValidVariableEffect("variable"),
   );
   const return_statement = makeValidNode(
     "ReturnStatement",
-    "@",
-    makeValidNode("PrimitiveExpression", "@", "completion"),
+    makeValidNode("PrimitiveExpression", "completion"),
   );
   const bound_block = makeValidNode(
     "Block",
-    "@",
     [],
     ["variable"],
     [variable_statement, return_statement],
   );
   const unbound_block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [variable_statement, return_statement],
   );
-  makeValidNode("EvalProgram", "@", [], [], bound_block);
-  makeValidNode("EvalProgram", "@", [], ["variable"], unbound_block);
+  makeValidNode("EvalProgram", [], [], bound_block);
+  makeValidNode("EvalProgram", [], ["variable"], unbound_block);
   assertThrow(() => {
-    makeValidNode("EvalProgram", "@", [], [], unbound_block);
+    makeValidNode("EvalProgram", [], [], unbound_block);
   });
 };
 testVariable((variable) =>
-  makeValidNode(
-    "ExpressionEffect",
-    "@",
-    makeValidNode("ReadExpression", "@", variable),
-  ),
+  makeValidNode("ExpressionEffect", makeValidNode("ReadExpression", variable)),
 );
 testVariable((variable) =>
   makeValidNode(
     "ExpressionEffect",
-    "@",
     makeValidNode(
       "EvalExpression",
-      "@",
       [],
       [variable],
-      makeValidNode("PrimitiveExpression", "@", 123),
+      makeValidNode("PrimitiveExpression", 123),
     ),
   ),
 );
 testVariable((variable) =>
   makeValidNode(
     "WriteEffect",
-    "@",
     variable,
-    makeValidNode("PrimitiveExpression", "@", 123),
+    makeValidNode("PrimitiveExpression", 123),
   ),
 );
 
@@ -632,35 +543,26 @@ testVariable((variable) =>
     const run = (expression2) => {
       const block = makeValidNode(
         "Block",
-        "@",
         [],
         [],
-        [makeValidNode("ReturnStatement", "@", expression2)],
+        [makeValidNode("ReturnStatement", expression2)],
       );
-      makeValidNode("EvalProgram", "@", [enclave], [], block);
+      makeValidNode("EvalProgram", [enclave], [], block);
       assertThrow(() => {
-        makeValidNode("EvalProgram", "@", [], [], block);
+        makeValidNode("EvalProgram", [], [], block);
       });
-      makeValidNode("ClosureExpression", "@", "arrow", false, false, block);
+      makeValidNode("ClosureExpression", "arrow", false, false, block);
       assertThrow(() => {
-        makeValidNode(
-          "ClosureExpression",
-          "@",
-          "function",
-          false,
-          false,
-          block,
-        );
+        makeValidNode("ClosureExpression", "function", false, false, block);
       });
     };
     run(expression1);
     run(
       makeValidNode(
         "EvalExpression",
-        "@",
         [enclave],
         [],
-        makeValidNode("PrimitiveExpression", "@", 123),
+        makeValidNode("PrimitiveExpression", 123),
       ),
     );
   };
@@ -668,43 +570,36 @@ testVariable((variable) =>
     "super.call",
     makeValidNode(
       "CallSuperEnclaveExpression",
-      "@",
-      makeValidNode("PrimitiveExpression", "@", 123),
+      makeValidNode("PrimitiveExpression", 123),
     ),
   );
   testClosureEnclave(
     "super.get",
     makeValidNode(
       "GetSuperEnclaveExpression",
-      "@",
-      makeValidNode("PrimitiveExpression", "@", 123),
+      makeValidNode("PrimitiveExpression", 123),
     ),
   );
   testClosureEnclave(
     "super.set",
     makeValidNode(
       "SequenceExpression",
-      "@",
       makeValidNode(
         "SetSuperEnclaveEffect",
-        "@",
-        makeValidNode("PrimitiveExpression", "@", 123),
-        makeValidNode("PrimitiveExpression", "@", 456),
+        makeValidNode("PrimitiveExpression", 123),
+        makeValidNode("PrimitiveExpression", 456),
       ),
-      makeValidNode("PrimitiveExpression", "@", 789),
+      makeValidNode("PrimitiveExpression", 789),
     ),
   );
-  testClosureEnclave(
-    "this",
-    makeValidNode("ReadEnclaveExpression", "@", "this"),
-  );
+  testClosureEnclave("this", makeValidNode("ReadEnclaveExpression", "this"));
   testClosureEnclave(
     "arguments",
-    makeValidNode("ReadEnclaveExpression", "@", "arguments"),
+    makeValidNode("ReadEnclaveExpression", "arguments"),
   );
   testClosureEnclave(
     "new.target",
-    makeValidNode("ReadEnclaveExpression", "@", "new.target"),
+    makeValidNode("ReadEnclaveExpression", "new.target"),
   );
 }
 
@@ -712,28 +607,24 @@ testVariable((variable) =>
 {
   const block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [
       makeValidNode(
         "EffectStatement",
-        "@",
         makeValidNode(
           "ExpressionEffect",
-          "@",
-          makeValidNode("StaticImportExpression", "@", "'source'", "specifier"),
+          makeValidNode("StaticImportExpression", "'source'", "specifier"),
         ),
       ),
     ],
   );
   assertThrow(() => {
-    makeValidNode("ModuleProgram", "@", [], block);
+    makeValidNode("ModuleProgram", [], block);
   });
   makeValidNode(
     "ModuleProgram",
-    "@",
-    [makeValidNode("ImportLink", "@", "'source'", "specifier")],
+    [makeValidNode("ImportLink", "'source'", "specifier")],
     block,
   );
 }
@@ -742,29 +633,25 @@ testVariable((variable) =>
 {
   const block = makeValidNode(
     "Block",
-    "@",
     [],
     [],
     [
       makeValidNode(
         "EffectStatement",
-        "@",
         makeValidNode(
           "StaticExportEffect",
-          "@",
           "specifier",
-          makeValidNode("PrimitiveExpression", "@", 123),
+          makeValidNode("PrimitiveExpression", 123),
         ),
       ),
     ],
   );
   assertThrow(() => {
-    makeValidNode("ModuleProgram", "@", [], block);
+    makeValidNode("ModuleProgram", [], block);
   });
   makeValidNode(
     "ModuleProgram",
-    "@",
-    [makeValidNode("ExportLink", "@", "specifier")],
+    [makeValidNode("ExportLink", "specifier")],
     block,
   );
 }
