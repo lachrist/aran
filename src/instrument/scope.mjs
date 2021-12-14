@@ -189,15 +189,17 @@ export const makeScopeBlock = (scope, labels, variables, callback) => {
       map(filter(entries, isEntryInitializable), makeInitializeStatement),
       isArray(body)
         ? body
-        : [
+        : concat(
             body.head,
-            makeTryStatement(
-              makeBlock([], [], body.try),
-              makeBlock([], [], body.catch),
-              makeBlock([], [], body.finally),
-            ),
+            [
+              makeTryStatement(
+                makeBlock([], [], body.try),
+                makeBlock([], [], body.catch),
+                makeBlock([], [], body.finally),
+              ),
+            ],
             body.tail,
-          ],
+          ),
     ),
   );
 };
