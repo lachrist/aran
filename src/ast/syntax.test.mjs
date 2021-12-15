@@ -10,19 +10,6 @@ assertEqual(isSyntaxType("===", "UnaryOperator"), false);
 assertEqual(isSyntaxType("'foo'", "Source"), true);
 assertEqual(isSyntaxType(123, "Source"), false);
 
-// Primitive //
-assertEqual(isSyntaxType(null, "Primitive"), true);
-assertEqual(isSyntaxType(true, "Primitive"), true);
-assertEqual(isSyntaxType(false, "Primitive"), true);
-assertEqual(isSyntaxType(123, "Primitive"), true);
-assertEqual(isSyntaxType("foo", "Primitive"), true);
-assertEqual(isSyntaxType([], "Primitive"), false);
-assertEqual(isSyntaxType({undefined: null}, "Primitive"), true);
-assertEqual(isSyntaxType({undefined: 123}, "Primitive"), false);
-assertEqual(isSyntaxType({bigint: "0"}, "Primitive"), true);
-assertEqual(isSyntaxType({bigint: "123"}, "Primitive"), true);
-assertEqual(isSyntaxType({bigint: "123n"}, "Primitive"), false);
-
 // Specifier //
 assertEqual(isSyntaxType(null, "Specifier"), false);
 assertEqual(isSyntaxType("this", "Specifier"), true);

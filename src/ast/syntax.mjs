@@ -1,9 +1,9 @@
 import {includes} from "array-lite";
 import {getIntrinsicArray} from "./intrinsics.mjs";
+import {isLiteral} from "./literal.mjs";
 
 const {
-  undefined,
-  Reflect: {apply, getOwnPropertyDescriptor, ownKeys},
+  Reflect: {apply},
   RegExp: {
     prototype: {test: testRegExp},
   },
@@ -67,7 +67,7 @@ const syntax = {
     __proto__: null,
     // Producer //
     InputExpression: [],
-    PrimitiveExpression: ["Primitive"],
+    LiteralExpression: ["Literal"],
     IntrinsicExpression: ["Intrinsic"],
     StaticImportExpression: ["Source", "NullableSpecifier"],
     ReadExpression: ["Variable"],
@@ -234,18 +234,7 @@ const predicates = {
   Generator: generateIsType("boolean"),
   Delegate: generateIsType("boolean"),
   Source: (any) => typeof any === "string",
-  Primitive: (any) =>
-    any === null ||
-    typeof any === "boolean" ||
-    typeof any === "number" ||
-    typeof any === "string" ||
-    (typeof any === "object" &&
-      ownKeys(any).length === 1 &&
-      getOwnPropertyDescriptor(any, "undefined") !== undefined &&
-      any.undefined === null) ||
-    (getOwnPropertyDescriptor(any, "bigint") !== undefined &&
-      typeof any.bigint === "string" &&
-      apply(testRegExp, /^(0|([1-9][0-9]*))$/u, [any.bigint])),
+  Literal: isLiteral,
   NullableSpecifier: (any) =>
     any === null || (typeof any === "string" && isIdentifier(any)),
   Specifier: (any) => typeof any === "string" && isIdentifier(any),
