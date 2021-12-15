@@ -1,7 +1,12 @@
 /* eslint-disable no-use-before-define */
 import {zip, unzip, reduce, concat, map} from "array-lite";
 import {generateThrowError} from "../util.mjs";
-import {allignNode, getNodeType, getNodeAnnotation} from "../ast/index.mjs";
+import {
+  fromLiteral,
+  allignNode,
+  getNodeType,
+  getNodeAnnotation,
+} from "../ast/index.mjs";
 import {
   appendErrorSegment,
   appendErrorPrecision,
@@ -18,10 +23,7 @@ import {
   bindResultLabel,
 } from "./result.mjs";
 
-const {
-  String,
-  JSON: {stringify: stringifyJSON},
-} = globalThis;
+const {String} = globalThis;
 
 const makeSinglePairVariableResult = (pair) =>
   makeSingleVariableResult(pair[0], pair[1]);
@@ -412,25 +414,20 @@ export const visitEffect = generateVisitNode({
   ],
 });
 
-const extractPrimitive = (primitive) =>
-  typeof primitive === "object" && primitive !== null
-    ? stringifyJSON(primitive)
-    : primitive;
-
 export const visitExpression = generateVisitNode({
   __proto__: null,
   InputExpression: (_error, _annotation1, _annotation2) => [],
-  PrimitiveExpression: (
+  LiteralExpression: (
     error,
-    primitive1,
+    literal1,
     _annotation1,
-    primitive2,
+    literal2,
     _annotation2,
   ) => [
     visitPrimitive(
       appendErrorSegment(error, "value"),
-      extractPrimitive(primitive1),
-      extractPrimitive(primitive2),
+      fromLiteral(literal1),
+      fromLiteral(literal2),
     ),
   ],
   IntrinsicExpression: (

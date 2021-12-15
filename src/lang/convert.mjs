@@ -30,7 +30,7 @@ import {
   makeConditionalEffect,
   makeExpressionEffect,
   makeInputExpression,
-  makePrimitiveExpression,
+  makeLiteralExpression,
   makeIntrinsicExpression,
   makeStaticImportExpression,
   makeReadExpression,
@@ -460,9 +460,9 @@ export const convertExpression = generateConvert({
   __proto__: null,
   Literal: (node) => {
     if (getOwnPropertyDescriptor(node, "bigint") !== undefined) {
-      return makePrimitiveExpression({bigint: node.bigint}, node.loc);
+      return makeLiteralExpression({bigint: node.bigint}, node.loc);
     }
-    return makePrimitiveExpression(node.value, node.loc);
+    return makeLiteralExpression(node.value, node.loc);
   },
   ArrowFunctionExpression: (node) => {
     expectSyntax(node, node.params.length === 0);
@@ -486,7 +486,7 @@ export const convertExpression = generateConvert({
   },
   Identifier: (node) => {
     if (node.name === UNDEFINED_KEYWORD) {
-      return makePrimitiveExpression({undefined: null}, node.loc);
+      return makeLiteralExpression({undefined: null}, node.loc);
     }
     if (node.name === INPUT_KEYWORD) {
       return makeInputExpression(node.loc);

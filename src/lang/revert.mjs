@@ -4,7 +4,7 @@ import {concat, map, reduceRight} from "array-lite";
 
 import {generateThrowError} from "../util.mjs";
 
-import {dispatchNode} from "../ast/index.mjs";
+import {dispatchNode, fromLiteral} from "../ast/index.mjs";
 
 import {makeMetaVariable, makeBaseVariable} from "./variable.mjs";
 
@@ -25,9 +25,10 @@ import {
 } from "./keywords.mjs";
 
 const {
+  String,
   Error,
   undefined,
-  Reflect: {apply, getOwnPropertyDescriptor},
+  Reflect: {apply},
   String: {
     prototype: {split},
   },
@@ -70,11 +71,11 @@ const makeTryStatement = (block, handler, finalizer) => ({
   finalizer,
 });
 const makeCatchClause = (body) => ({type: "CatchClause", param: null, body});
-const makeLiteral = (value, bigint) => ({
+const makeLiteral = (value) => ({
   type: "Literal",
   value,
-  bigint,
-  raw: bigint === null ? stringifyJSON(value) : `${bigint}n`,
+  bigint: typeof value === "bigint" ? String(value) : null,
+  raw: typeof value === "bigint" ? `${String(value)}n` : stringifyJSON(value),
 });
 const makeProgram = (kind, body) => ({
   type: "Program",
@@ -257,7 +258,7 @@ export const revertProgram = generateRevert({
       concat(
         [
           makeDirective(
-            makeLiteral(SCRIPT_PROGRAM_KEYWORD, null),
+            makeLiteral(SCRIPT_PROGRAM_KEYWORD),
             SCRIPT_PROGRAM_KEYWORD,
           ),
         ],
@@ -270,7 +271,7 @@ export const revertProgram = generateRevert({
       concat(
         [
           makeDirective(
-            makeLiteral(MODULE_PROGRAM_KEYWORD, null),
+            makeLiteral(MODULE_PROGRAM_KEYWORD),
             MODULE_PROGRAM_KEYWORD,
           ),
         ],
@@ -284,7 +285,7 @@ export const revertProgram = generateRevert({
       concat(
         [
           makeDirective(
-            makeLiteral(EVAL_PROGRAM_KEYWORD, null),
+            makeLiteral(EVAL_PROGRAM_KEYWORD),
             MODULE_PROGRAM_KEYWORD,
           ),
         ],
@@ -320,7 +321,7 @@ export const revertLink = generateRevert({
               makeIdentifier(specifier),
             ),
           ],
-      makeLiteral(source, null),
+      makeLiteral(source),
     ),
   ExportLink: (_context, specifier, _annotation) =>
     makeExportNamedDeclaration(
@@ -336,7 +337,7 @@ export const revertLink = generateRevert({
     specifier1 === null
       ? makeExportAllDeclaration(
           specifier2 === null ? null : makeIdentifier(specifier2),
-          makeLiteral(source, null),
+          makeLiteral(source),
         )
       : makeExportNamedDeclaration(
           [
@@ -345,7 +346,7 @@ export const revertLink = generateRevert({
               makeIdentifier(specifier2),
             ),
           ],
-          makeLiteral(source, null),
+          makeLiteral(source),
         ),
 });
 
@@ -436,7 +437,7 @@ export const revertEffect = generateRevert({
     ),
   StaticExportEffect: (_context, specifier, expression, _annotation) =>
     makeCallExpression(makeIdentifier(EXPORT_STATIC_KEYWORD), [
-      makeLiteral(specifier, null),
+      makeLiteral(specifier),
       revertExpression(expression),
     ]),
   SequenceEffect: (_context, effect1, effect2, _annotation) =>
@@ -456,28 +457,20 @@ export const revertEffect = generateRevert({
 export const revertExpression = generateRevert({
   __proto__: null,
   InputExpression: (_context, _annotation) => makeIdentifier(INPUT_KEYWORD),
-  PrimitiveExpression: (_context, primitive, _annotation) => {
-    if (typeof primitive === "object" && primitive !== null) {
-      if (getOwnPropertyDescriptor(primitive, "bigint") !== undefined) {
-        return makeLiteral(null, primitive.bigint);
-      }
-      if (getOwnPropertyDescriptor(primitive, "undefined") !== undefined) {
-        return makeIdentifier(UNDEFINED_KEYWORD);
-      }
-      /* c8 ignore start */
-      throw new Error("invalid primitive");
-    }
-    /* c8 ignore stop */
-    return makeLiteral(primitive, null);
+  LiteralExpression: (_context, literal, _annotation) => {
+    const primitive = fromLiteral(literal);
+    return primitive === undefined
+      ? makeIdentifier(UNDEFINED_KEYWORD)
+      : makeLiteral(primitive);
   },
   IntrinsicExpression: (_context, intrinsic, _annotation) =>
     makeCallExpression(makeIdentifier(INTRINSIC_KEYWORD), [
-      makeLiteral(intrinsic, null),
+      makeLiteral(intrinsic),
     ]),
   StaticImportExpression: (_context, source, specifier, _annotation) =>
     makeCallExpression(makeIdentifier(IMPORT_STATIC_KEYWORD), [
-      makeLiteral(source, null),
-      makeLiteral(specifier, null),
+      makeLiteral(source),
+      makeLiteral(specifier),
     ]),
   ReadExpression: (_context, variable, _annotation) =>
     makeIdentifier(makeMetaVariable(variable)),

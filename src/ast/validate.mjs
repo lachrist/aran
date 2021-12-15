@@ -126,7 +126,7 @@ for (const kind in syntax) {
 }
 
 const generateMakeEnclaveDummy = () => {
-  const dummy_expression = makeNode("PrimitiveExpression", "dummy");
+  const dummy_expression = makeNode("LiteralExpression", "dummy");
   const dummies = {
     "__proto__": null,
     "super.get": makeNode("GetSuperEnclaveExpression", dummy_expression),

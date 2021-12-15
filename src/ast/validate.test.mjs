@@ -85,7 +85,7 @@ assertThrow(() => {
     makeValidNode(
       "WriteEnclaveEffect",
       "foo",
-      makeValidNode("PrimitiveExpression", 123),
+      makeValidNode("LiteralExpression", 123),
     ),
   );
   assertThrow(() => {
@@ -94,7 +94,7 @@ assertThrow(() => {
 }
 {
   const statements = [
-    makeValidNode("ReturnStatement", makeValidNode("PrimitiveExpression", 123)),
+    makeValidNode("ReturnStatement", makeValidNode("LiteralExpression", 123)),
     makeValidNode("DebuggerStatement"),
   ];
   assertThrow(() => {
@@ -111,7 +111,7 @@ assertThrow(() => {
         "EffectStatement",
         makeValidNode(
           "ExpressionEffect",
-          makeValidNode("PrimitiveExpression", 123),
+          makeValidNode("LiteralExpression", 123),
         ),
       ),
     ],
@@ -131,7 +131,7 @@ makeValidNode(
     [
       makeValidNode(
         "IfStatement",
-        makeValidNode("PrimitiveExpression", 123),
+        makeValidNode("LiteralExpression", 123),
         makeValidNode(
           "Block",
           [],
@@ -146,7 +146,7 @@ makeValidNode(
                 [
                   makeValidNode(
                     "ReturnStatement",
-                    makeValidNode("PrimitiveExpression", 123),
+                    makeValidNode("LiteralExpression", 123),
                   ),
                 ],
               ),
@@ -171,7 +171,7 @@ makeValidNode(
                       "ExpressionEffect",
                       makeValidNode(
                         "ThrowExpression",
-                        makeValidNode("PrimitiveExpression", 123),
+                        makeValidNode("LiteralExpression", 123),
                       ),
                     ),
                   ),
@@ -184,7 +184,7 @@ makeValidNode(
                 [
                   makeValidNode(
                     "ReturnStatement",
-                    makeValidNode("PrimitiveExpression", 123),
+                    makeValidNode("LiteralExpression", 123),
                   ),
                 ],
               ),
@@ -219,11 +219,11 @@ makeValidNode(
 {
   const return_statement = makeValidNode(
     "ReturnStatement",
-    makeValidNode("PrimitiveExpression", "return"),
+    makeValidNode("LiteralExpression", "return"),
   );
   const completion_statement = makeValidNode(
     "ReturnStatement",
-    makeValidNode("PrimitiveExpression", "completion"),
+    makeValidNode("LiteralExpression", "completion"),
   );
   assertThrow(() => {
     makeValidNode("ScriptProgram", [return_statement, completion_statement]);
@@ -251,7 +251,7 @@ makeValidNode(
 {
   const await_expression = makeValidNode(
     "AwaitExpression",
-    makeValidNode("PrimitiveExpression", "promise"),
+    makeValidNode("LiteralExpression", "promise"),
   );
   const completion_statement = makeValidNode(
     "ReturnStatement",
@@ -299,7 +299,7 @@ makeValidNode(
   const yield_expression = makeValidNode(
     "YieldExpression",
     false,
-    makeValidNode("PrimitiveExpression", 123),
+    makeValidNode("LiteralExpression", 123),
   );
   const completion_statement = makeValidNode(
     "ReturnStatement",
@@ -365,10 +365,7 @@ makeValidNode(
     [],
     [
       break_statement,
-      makeValidNode(
-        "ReturnStatement",
-        makeValidNode("PrimitiveExpression", 123),
-      ),
+      makeValidNode("ReturnStatement", makeValidNode("LiteralExpression", 123)),
     ],
   );
   assertThrow(() => {
@@ -395,11 +392,11 @@ const testRigidDeclareEnclaveStatement = (kind) => {
     "DeclareEnclaveStatement",
     kind,
     "variable",
-    makeValidNode("PrimitiveExpression", 123),
+    makeValidNode("LiteralExpression", 123),
   );
   const return_statement = makeValidNode(
     "ReturnStatement",
-    makeValidNode("PrimitiveExpression", "completion"),
+    makeValidNode("LiteralExpression", "completion"),
   );
   const completion_block = makeValidNode(
     "Block",
@@ -415,7 +412,7 @@ const testRigidDeclareEnclaveStatement = (kind) => {
   );
   const expression = makeValidNode(
     "AwaitExpression",
-    makeValidNode("PrimitiveExpression", 123),
+    makeValidNode("LiteralExpression", 123),
   );
   assertThrow(() => {
     makeValidNode("BlockStatement", non_completion_block);
@@ -456,11 +453,11 @@ testRigidDeclareEnclaveStatement("const");
     "DeclareEnclaveStatement",
     "var",
     "variable",
-    makeValidNode("PrimitiveExpression", 123),
+    makeValidNode("LiteralExpression", 123),
   );
   const return_statement = makeValidNode(
     "ReturnStatement",
-    makeValidNode("PrimitiveExpression", "primitive"),
+    makeValidNode("LiteralExpression", "literal"),
   );
   const non_completion_block = makeValidNode(
     "Block",
@@ -495,7 +492,7 @@ const testVariable = (makeValidVariableEffect) => {
   );
   const return_statement = makeValidNode(
     "ReturnStatement",
-    makeValidNode("PrimitiveExpression", "completion"),
+    makeValidNode("LiteralExpression", "completion"),
   );
   const bound_block = makeValidNode(
     "Block",
@@ -525,7 +522,7 @@ testVariable((variable) =>
       "EvalExpression",
       [],
       [variable],
-      makeValidNode("PrimitiveExpression", 123),
+      makeValidNode("LiteralExpression", 123),
     ),
   ),
 );
@@ -533,7 +530,7 @@ testVariable((variable) =>
   makeValidNode(
     "WriteEffect",
     variable,
-    makeValidNode("PrimitiveExpression", 123),
+    makeValidNode("LiteralExpression", 123),
   ),
 );
 
@@ -562,7 +559,7 @@ testVariable((variable) =>
         "EvalExpression",
         [enclave],
         [],
-        makeValidNode("PrimitiveExpression", 123),
+        makeValidNode("LiteralExpression", 123),
       ),
     );
   };
@@ -570,14 +567,14 @@ testVariable((variable) =>
     "super.call",
     makeValidNode(
       "CallSuperEnclaveExpression",
-      makeValidNode("PrimitiveExpression", 123),
+      makeValidNode("LiteralExpression", 123),
     ),
   );
   testClosureEnclave(
     "super.get",
     makeValidNode(
       "GetSuperEnclaveExpression",
-      makeValidNode("PrimitiveExpression", 123),
+      makeValidNode("LiteralExpression", 123),
     ),
   );
   testClosureEnclave(
@@ -586,10 +583,10 @@ testVariable((variable) =>
       "SequenceExpression",
       makeValidNode(
         "SetSuperEnclaveEffect",
-        makeValidNode("PrimitiveExpression", 123),
-        makeValidNode("PrimitiveExpression", 456),
+        makeValidNode("LiteralExpression", 123),
+        makeValidNode("LiteralExpression", 456),
       ),
-      makeValidNode("PrimitiveExpression", 789),
+      makeValidNode("LiteralExpression", 789),
     ),
   );
   testClosureEnclave("this", makeValidNode("ReadEnclaveExpression", "this"));
@@ -641,7 +638,7 @@ testVariable((variable) =>
         makeValidNode(
           "StaticExportEffect",
           "specifier",
-          makeValidNode("PrimitiveExpression", 123),
+          makeValidNode("LiteralExpression", 123),
         ),
       ),
     ],
