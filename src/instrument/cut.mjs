@@ -1,23 +1,26 @@
-import {includes} from "array-lite";
+import {includes, concat} from "array-lite";
 import {InvalidOptionsAranError} from "../util.mjs";
 
 const {
+  undefined,
   Array: {isArray},
   Reflect: {apply},
+  Map,
   Map: {
     prototype: {get: getMap, has: hasMap},
   },
+  Set,
   Set: {
-    prototype: {get: getSet, has: hasSet},
+    prototype: {has: hasSet},
   },
 } = globalThis;
 
-export const applyPoint = (point, name, values) => {
+export const applyPoint = (point, context, name, values) => {
   if (typeof point === "boolean") {
     return point;
   }
   if (typeof point === "function") {
-    return apply(point, undefined, values);
+    return apply(point, context, values);
   }
   throw new InvalidOptionsAranError(
     `Pointcut value for ${name} is invalid. It should either be: missing, a boolean, or a function.`,
@@ -32,15 +35,17 @@ export const cut = (pointcut, name, values) => {
     return includes(pointcut, name);
   }
   if (pointcut instanceof Set) {
-    return apply(pointcut, hasSet, [name]);
+    return apply(hasSet, pointcut, [name]);
   }
   if (pointcut instanceof Map) {
-    return apply(pointcut, hasMap, [name])
-      ? applyPoint(apply(pointcut, getMap, [name]), name, values)
+    return apply(hasMap, pointcut, [name])
+      ? applyPoint(apply(getMap, pointcut, [name]), pointcut, name, values)
       : false;
   }
   if (typeof pointcut === "object") {
-    return name in pointcut ? applyPoint(pointcut[name], name, values) : false;
+    return name in pointcut
+      ? applyPoint(pointcut[name], pointcut, name, values)
+      : false;
   }
   if (typeof pointcut === "function") {
     return apply(pointcut, undefined, concat([name], values));
