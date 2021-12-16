@@ -1,7 +1,16 @@
 
+import {zip} from "array-lite";
 import {makeApplyExpression, makeIntrinsicExpression, makePrimitiveExpression, makeReadEnclaveExpression} from "./ast/index.mjs";
+import {cut} from "./cut.mjs";
+import {getTrap} from "./traps.mjs";
 
-export const makeTrapExpression = (namespace, name, expressions) => makeApplyExpression(
+const {
+  Reflect: {apply},
+} = globalThis
+
+const applyPair = ({0:first, 1:second}) => first(second);
+
+const makeInnerTrapExpression = (namespace, name, expressions) => makeApplyExpression(
   makeApplyExpression(
     makeIntrinsicExpression("Reflect.get"),
     makePrimitiveExpression({undefined:null}),
@@ -14,10 +23,26 @@ export const makeTrapExpression = (namespace, name, expressions) => makeApplyExp
   expressions,
 );
 
-export const makeTrapStatementArray = (namespace, name, expressions) => [
-  makeEffectStatement(
-    makeExpressionEffect(
-      makeTrapExpression(namespace, name, expressions),
+export const makeTrapStatementArray = ({namespace, pointcut}, name, values) =>
+  cut(pointcut, name, map(zip(getTrapStatic(name), values), applyPair))
+  ? [
+    makeEffectStatement(
+      makeExpressionEffect(
+        makeInnerTrapExpression(
+          namespace,
+          name,
+          map(zip(getTrapDynamic(name), values), applyPair),
+        ),
+      ),
     ),
-  ),
-];
+  ]
+  : [];
+
+export const makeTrapExpression = ({pointcut, namespace}, name, values) =>
+  cut(pointcut, name, map(zip(getTrapStatic(name), values), applyPair))
+  ? makeInnerTrapExpression(
+    namespace,
+    name,
+    map(zip(getTrapDynamic(name), values), applyPair),
+  )
+  : apply(getTrapCombine(name), undefined, values)
