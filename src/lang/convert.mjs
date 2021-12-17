@@ -77,6 +77,7 @@ import {
 } from "./keywords.mjs";
 
 const {
+  String,
   undefined,
   SyntaxError,
   Reflect: {getOwnPropertyDescriptor},
@@ -99,12 +100,9 @@ const enclaves = {
 // Error //
 ///////////
 
-const TEMPLATE = "Node %s at %j:%j";
-const extractNodeInfo = (node) => [
-  node.type,
-  node.loc.start.line,
-  node.loc.start.column,
-];
+const locate = (loc) => `${String(loc.start.line)}:${String(loc.start.column)}`;
+const TEMPLATE = "Node %s at %s";
+const extractNodeInfo = (node) => [node.type, locate(node.loc)];
 const makeSyntaxError = (node) =>
   new SyntaxError(format(TEMPLATE, extractNodeInfo(node)));
 const expectSyntax = (node, check) => {
@@ -157,7 +155,7 @@ export const convertProgram = generateConvert({
     if (kind === SCRIPT_PROGRAM_KEYWORD) {
       return makeScriptProgram(
         map(slice(node.body, 1, node.body.length), convertStatement),
-        node.loc,
+        locate(node.loc),
       );
     }
     if (kind === MODULE_PROGRAM_KEYWORD) {
@@ -165,12 +163,17 @@ export const convertProgram = generateConvert({
       return makeModuleProgram(
         map(slice(node.body, 1, node.body.length - 1), convertLink),
         convertBlock(node.body[node.body.length - 1]),
-        node.loc,
+        locate(node.loc),
       );
     }
     if (kind === EVAL_PROGRAM_KEYWORD) {
       if (node.body.length === 2) {
-        return makeEvalProgram([], [], convertBlock(node.body[1]), node.loc);
+        return makeEvalProgram(
+          [],
+          [],
+          convertBlock(node.body[1]),
+          locate(node.loc),
+        );
       }
       if (node.body.length === 3) {
         if (
@@ -181,7 +184,7 @@ export const convertProgram = generateConvert({
             [],
             map(node.body[1].declarations, convertMetaDeclarator),
             convertBlock(node.body[2]),
-            node.loc,
+            locate(node.loc),
           );
         }
         if (
@@ -192,10 +195,10 @@ export const convertProgram = generateConvert({
             map(node.body[1].expression.elements, convertEnclave),
             [],
             convertBlock(node.body[2]),
-            node.loc,
+            locate(node.loc),
           );
         }
-        throw makeSyntaxError(node.loc, node);
+        throw makeSyntaxError(node);
       }
       if (node.body.length === 4) {
         expectSyntax(node, node.body[1].type === "ExpressionStatement");
@@ -206,12 +209,12 @@ export const convertProgram = generateConvert({
           map(node.body[1].expression.elements, convertEnclave),
           map(node.body[2].declarations, convertMetaDeclarator),
           convertBlock(node.body[3]),
-          node.loc,
+          locate(node.loc),
         );
       }
-      throw makeSyntaxError(node.loc, node);
+      throw makeSyntaxError(node);
     }
-    throw makeSyntaxError(node.loc, node);
+    throw makeSyntaxError(node);
   },
 });
 
@@ -219,7 +222,7 @@ export const convertLink = generateConvert({
   __proto__: null,
   ImportDeclaration: (node) => {
     if (node.specifiers.length === 0) {
-      return makeImportLink(node.source.value, null, node.loc);
+      return makeImportLink(node.source.value, null, locate(node.loc));
     }
     expectSyntax(node, node.specifiers.length === 1);
     expectSyntax(node, node.specifiers[0].type === "ImportSpecifier");
@@ -230,7 +233,7 @@ export const convertLink = generateConvert({
     return makeImportLink(
       node.source.value,
       node.specifiers[0].imported.name,
-      node.loc,
+      locate(node.loc),
     );
   },
   ExportAllDeclaration: (node) => {
@@ -238,7 +241,7 @@ export const convertLink = generateConvert({
       node.source.value,
       null,
       node.exported === null ? null : node.exported.name,
-      node.loc,
+      locate(node.loc),
     );
   },
   ExportNamedDeclaration: (node) => {
@@ -249,13 +252,13 @@ export const convertLink = generateConvert({
         node,
         node.specifiers[0].exported.name === node.specifiers[0].local.name,
       );
-      return makeExportLink(node.specifiers[0].exported.name, node.loc);
+      return makeExportLink(node.specifiers[0].exported.name, locate(node.loc));
     }
     return makeAggregateLink(
       node.source.value,
       node.specifiers[0].local.name,
       node.specifiers[0].exported.name,
-      node.loc,
+      locate(node.loc),
     );
   },
 });
@@ -272,13 +275,13 @@ export const convertBlock = generateConvert({
           concat([node.label.name], labels),
           identifiers,
           statements,
-          node.loc,
+          locate(node.loc),
         ),
     );
   },
   BlockStatement: (node) => {
     if (node.body.length === 0) {
-      return makeBlock([], [], [], node.loc);
+      return makeBlock([], [], [], locate(node.loc));
     }
     if (
       node.body[0].type === "VariableDeclaration" &&
@@ -290,20 +293,25 @@ export const convertBlock = generateConvert({
         [],
         map(node.body[0].declarations, convertMetaDeclarator),
         map(slice(node.body, 1, node.body.length), convertStatement),
-        node.loc,
+        locate(node.loc),
       );
     }
-    return makeBlock([], [], map(node.body, convertStatement), node.loc);
+    return makeBlock(
+      [],
+      [],
+      map(node.body, convertStatement),
+      locate(node.loc),
+    );
   },
 });
 
 export const convertStatement = generateConvert({
   __proto__: null,
   BlockStatement: (node) => {
-    return makeBlockStatement(convertBlock(node), node.loc);
+    return makeBlockStatement(convertBlock(node), locate(node.loc));
   },
   LabeledStatement: (node) => {
-    return makeBlockStatement(convertBlock(node), node.loc);
+    return makeBlockStatement(convertBlock(node), locate(node.loc));
   },
   TryStatement: (node) => {
     expectSyntax(node, node.handler !== null);
@@ -313,7 +321,7 @@ export const convertStatement = generateConvert({
       convertBlock(node.block),
       convertBlock(node.handler.body),
       convertBlock(node.finalizer),
-      node.loc,
+      locate(node.loc),
     );
   },
   IfStatement: (node) => {
@@ -322,28 +330,34 @@ export const convertStatement = generateConvert({
       convertExpression(node.test),
       convertBlock(node.consequent),
       convertBlock(node.alternate),
-      node.loc,
+      locate(node.loc),
     );
   },
   WhileStatement: (node) => {
     return makeWhileStatement(
       convertExpression(node.test),
       convertBlock(node.body),
-      node.loc,
+      locate(node.loc),
     );
   },
   DebuggerStatement: (node) => {
-    return makeDebuggerStatement(node.loc);
+    return makeDebuggerStatement(locate(node.loc));
   },
   ExpressionStatement: (node) => {
-    return makeEffectStatement(convertEffect(node.expression), node.loc);
+    return makeEffectStatement(
+      convertEffect(node.expression),
+      locate(node.loc),
+    );
   },
   ReturnStatement: (node) => {
-    return makeReturnStatement(convertExpression(node.argument), node.loc);
+    return makeReturnStatement(
+      convertExpression(node.argument),
+      locate(node.loc),
+    );
   },
   BreakStatement: (node) => {
     expectSyntax(node, node.label !== null);
-    return makeBreakStatement(node.label.name, node.loc);
+    return makeBreakStatement(node.label.name, locate(node.loc));
   },
   VariableDeclaration: (node) => {
     expectSyntax(node, node.declarations.length === 1);
@@ -354,7 +368,7 @@ export const convertStatement = generateConvert({
       node.kind,
       getVariableBody(node.declarations[0].id.name),
       convertExpression(node.declarations[0].init),
-      node.loc,
+      locate(node.loc),
     );
   },
 });
@@ -366,7 +380,7 @@ export const convertEffect = generateConvert({
     return makeSequenceEffect(
       convertEffect(node.expressions[0]),
       convertEffect(node.expressions[1]),
-      node.loc,
+      locate(node.loc),
     );
   },
   ConditionalExpression: (node) => {
@@ -374,7 +388,7 @@ export const convertEffect = generateConvert({
       convertExpression(node.test),
       convertEffect(node.consequent),
       convertEffect(node.alternate),
-      node.loc,
+      locate(node.loc),
     );
   },
   CallExpression: (node) => {
@@ -387,7 +401,7 @@ export const convertEffect = generateConvert({
       return makeStaticExportEffect(
         node.arguments[0].value,
         convertExpression(node.arguments[1]),
-        node.loc,
+        locate(node.loc),
       );
     }
     if (
@@ -397,10 +411,10 @@ export const convertEffect = generateConvert({
       expectSyntax(node, node.arguments.length === 1);
       return makeExpressionEffect(
         convertExpression(node.arguments[0]),
-        node.loc,
+        locate(node.loc),
       );
     }
-    throw makeSyntaxError(node.loc, node);
+    throw makeSyntaxError(node);
   },
   AssignmentExpression: (node) => {
     expectSyntax(node, node.operator === "=");
@@ -414,7 +428,7 @@ export const convertEffect = generateConvert({
       return makeSetSuperEnclaveEffect(
         convertExpression(node.left.property),
         convertExpression(node.right),
-        node.loc,
+        locate(node.loc),
       );
     }
     if (node.left.type === "Identifier") {
@@ -422,19 +436,19 @@ export const convertEffect = generateConvert({
         return makeWriteEffect(
           getVariableBody(node.left.name),
           convertExpression(node.right),
-          node.loc,
+          locate(node.loc),
         );
       }
       if (isBaseVariable(node.left.name)) {
         return makeWriteEnclaveEffect(
           getVariableBody(node.left.name),
           convertExpression(node.right),
-          node.loc,
+          locate(node.loc),
         );
       }
-      throw makeSyntaxError(node.loc, node);
+      throw makeSyntaxError(node);
     }
-    throw makeSyntaxError(node.loc, node);
+    throw makeSyntaxError(node);
   },
 });
 
@@ -460,9 +474,9 @@ export const convertExpression = generateConvert({
   __proto__: null,
   Literal: (node) => {
     if (getOwnPropertyDescriptor(node, "bigint") !== undefined) {
-      return makeLiteralExpression({bigint: node.bigint}, node.loc);
+      return makeLiteralExpression({bigint: node.bigint}, locate(node.loc));
     }
-    return makeLiteralExpression(node.value, node.loc);
+    return makeLiteralExpression(node.value, locate(node.loc));
   },
   ArrowFunctionExpression: (node) => {
     expectSyntax(node, node.params.length === 0);
@@ -471,7 +485,7 @@ export const convertExpression = generateConvert({
       node.async,
       node.generator,
       convertBlock(node.body),
-      node.loc,
+      locate(node.loc),
     );
   },
   FunctionExpression: (node) => {
@@ -481,30 +495,33 @@ export const convertExpression = generateConvert({
       node.async,
       node.generator,
       convertBlock(node.body),
-      node.loc,
+      locate(node.loc),
     );
   },
   Identifier: (node) => {
     if (node.name === UNDEFINED_KEYWORD) {
-      return makeLiteralExpression({undefined: null}, node.loc);
+      return makeLiteralExpression({undefined: null}, locate(node.loc));
     }
     if (node.name === INPUT_KEYWORD) {
-      return makeInputExpression(node.loc);
+      return makeInputExpression(locate(node.loc));
     }
     if (isMetaVariable(node.name)) {
-      return makeReadExpression(getVariableBody(node.name), node.loc);
+      return makeReadExpression(getVariableBody(node.name), locate(node.loc));
     }
     if (isBaseVariable(node.name)) {
-      return makeReadEnclaveExpression(getVariableBody(node.name), node.loc);
+      return makeReadEnclaveExpression(
+        getVariableBody(node.name),
+        locate(node.loc),
+      );
     }
-    throw makeSyntaxError(node, node.loc);
+    throw makeSyntaxError(node);
   },
   SequenceExpression: (node) => {
     expectSyntax(node, node.expressions.length === 2);
     return makeSequenceExpression(
       convertEffect(node.expressions[0]),
       convertExpression(node.expressions[1]),
-      node.loc,
+      locate(node.loc),
     );
   },
   ConditionalExpression: (node) => {
@@ -512,17 +529,20 @@ export const convertExpression = generateConvert({
       convertExpression(node.test),
       convertExpression(node.consequent),
       convertExpression(node.alternate),
-      node.loc,
+      locate(node.loc),
     );
   },
   AwaitExpression: (node) => {
-    return makeAwaitExpression(convertExpression(node.argument), node.loc);
+    return makeAwaitExpression(
+      convertExpression(node.argument),
+      locate(node.loc),
+    );
   },
   // Combiners //
   ImportExpression: (node) => {
     return makeDynamicImportExpression(
       convertExpression(node.source),
-      node.loc,
+      locate(node.loc),
     );
   },
   MemberExpression: (node) => {
@@ -534,7 +554,7 @@ export const convertExpression = generateConvert({
       expectSyntax(node, node.computed === true);
       return makeGetSuperEnclaveExpression(
         convertExpression(node.property),
-        node.loc,
+        locate(node.loc),
       );
     }
     if (node.object.type === "Identifier" && isBaseVariable(node.object.name)) {
@@ -545,10 +565,10 @@ export const convertExpression = generateConvert({
       );
       return makeReadEnclaveExpression(
         `${getVariableBody(node.object.name)}.${node.property.name}`,
-        node.loc,
+        locate(node.loc),
       );
     }
-    throw makeSyntaxError(node, node.loc);
+    throw makeSyntaxError(node);
   },
   CallExpression: (node) => {
     expectSyntax(node, node.optional === false);
@@ -560,7 +580,7 @@ export const convertExpression = generateConvert({
       return makeYieldExpression(
         false,
         convertExpression(node.arguments[0]),
-        node.loc,
+        locate(node.loc),
       );
     }
     if (
@@ -571,7 +591,7 @@ export const convertExpression = generateConvert({
       return makeYieldExpression(
         true,
         convertExpression(node.arguments[0]),
-        node.loc,
+        locate(node.loc),
       );
     }
     if (
@@ -581,7 +601,7 @@ export const convertExpression = generateConvert({
       expectSyntax(node, node.arguments.length === 1);
       return makeThrowExpression(
         convertExpression(node.arguments[0]),
-        node.loc,
+        locate(node.loc),
       );
     }
     if (
@@ -592,7 +612,7 @@ export const convertExpression = generateConvert({
       expectSyntax(node, node.arguments[0].type === "SpreadElement");
       return makeCallSuperEnclaveExpression(
         convertExpression(node.arguments[0].argument),
-        node.loc,
+        locate(node.loc),
       );
     }
     if (
@@ -601,7 +621,7 @@ export const convertExpression = generateConvert({
     ) {
       expectSyntax(node, node.arguments.length === 1);
       expectSyntax(node, node.arguments[0].type === "Literal");
-      return makeIntrinsicExpression(node.arguments[0].value, node.loc);
+      return makeIntrinsicExpression(node.arguments[0].value, locate(node.loc));
     }
     if (
       node.callee.type === "Identifier" &&
@@ -613,7 +633,7 @@ export const convertExpression = generateConvert({
       return makeStaticImportExpression(
         node.arguments[0].value,
         node.arguments[1].value,
-        node.loc,
+        locate(node.loc),
       );
     }
     if (
@@ -627,7 +647,7 @@ export const convertExpression = generateConvert({
         map(node.arguments[0].elements, convertEnclave),
         map(node.arguments[1].elements, convertMetaIdentifier),
         convertExpression(node.arguments[2]),
-        node.loc,
+        locate(node.loc),
       );
     }
     expectSyntax(node, node.arguments.length > 0);
@@ -635,14 +655,14 @@ export const convertExpression = generateConvert({
       convertExpression(node.callee),
       convertExpression(node.arguments[0]),
       map(slice(node.arguments, 1, node.arguments.length), convertExpression),
-      node.loc,
+      locate(node.loc),
     );
   },
   NewExpression: (node) => {
     return makeConstructExpression(
       convertExpression(node.callee),
       map(node.arguments, convertExpression),
-      node.loc,
+      locate(node.loc),
     );
   },
   UnaryExpression: (node) => {
@@ -653,13 +673,13 @@ export const convertExpression = generateConvert({
     ) {
       return makeTypeofEnclaveExpression(
         getVariableBody(node.argument.name),
-        node.loc,
+        locate(node.loc),
       );
     }
     return makeUnaryExpression(
       node.operator,
       convertExpression(node.argument),
-      node.loc,
+      locate(node.loc),
     );
   },
   BinaryExpression: (node) => {
@@ -667,7 +687,7 @@ export const convertExpression = generateConvert({
       node.operator,
       convertExpression(node.left),
       convertExpression(node.right),
-      node.loc,
+      locate(node.loc),
     );
   },
   ObjectExpression: (node) => {
@@ -680,7 +700,7 @@ export const convertExpression = generateConvert({
     return makeObjectExpression(
       convertExpression(node.properties[0].value),
       map(slice(node.properties, 1, node.properties.length), convertProperty),
-      node.loc,
+      locate(node.loc),
     );
   },
 });
