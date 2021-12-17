@@ -7,7 +7,7 @@ import {
   expect,
   expectSuccess,
   incrementCounter,
-  makeCounter,
+  createCounter,
   bind,
   returnFirst,
   returnSecond,
@@ -76,7 +76,7 @@ assertThrow(
 // Counter //
 /////////////
 
-assertEqual(incrementCounter(makeCounter()), 1);
+assertEqual(incrementCounter(createCounter()), 1);
 
 //////////////
 // Function //
