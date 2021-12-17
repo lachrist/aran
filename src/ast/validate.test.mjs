@@ -17,7 +17,12 @@ assertThrow(() => {
 // Duplicate Export Link //
 {
   const link = makeValidNode("ExportLink", "specifier");
-  const block = makeValidNode("Block", [], [], []);
+  const block = makeValidNode(
+    "Block",
+    [],
+    [],
+    [makeValidNode("ReturnStatement", makeValidNode("LiteralExpression", 123))],
+  );
   makeValidNode("ModuleProgram", [link], block);
   assertThrow(() => {
     makeValidNode("ModuleProgram", [link, link], block);
@@ -199,7 +204,12 @@ makeValidNode(
 
 // Label //
 {
-  const block = makeValidNode("Block", ["label"], [], []);
+  const block = makeValidNode(
+    "Block",
+    ["label"],
+    [],
+    [makeValidNode("ReturnStatement", makeValidNode("LiteralExpression", 123))],
+  );
   assertThrow(() => {
     makeValidNode("Closure", "arrow", false, false, block);
   });
@@ -257,21 +267,11 @@ makeValidNode(
     "ReturnStatement",
     await_expression,
   );
-  const expression_statement = makeValidNode(
-    "EffectStatement",
-    makeValidNode("ExpressionEffect", await_expression),
-  );
   const completion_block = makeValidNode(
     "Block",
     [],
     [],
     [completion_statement],
-  );
-  const non_completion_block = makeValidNode(
-    "Block",
-    [],
-    [],
-    [expression_statement],
   );
   assertThrow(() => {
     makeValidNode("ClosureExpression", "arrow", false, false, completion_block);
@@ -279,7 +279,7 @@ makeValidNode(
   assertThrow(() => {
     makeValidNode("ScriptProgram", [completion_statement]);
   });
-  makeValidNode("ModuleProgram", [], non_completion_block);
+  makeValidNode("ModuleProgram", [], completion_block);
   makeValidNode("ScriptProgram", [
     makeValidNode(
       "ReturnStatement",
@@ -353,36 +353,42 @@ makeValidNode(
 // BreakStatement //
 {
   const break_statement = makeValidNode("BreakStatement", "label");
-  const labeled_block = makeValidNode(
-    "Block",
-    ["label"],
-    [],
-    [break_statement],
+  const return_statement = makeValidNode(
+    "ReturnStatement",
+    makeValidNode("LiteralExpression", 123),
   );
-  const completion_block = makeValidNode(
+  const free_block = makeValidNode("Block", [], [], [break_statement]);
+  const bound_block = makeValidNode("Block", ["label"], [], [break_statement]);
+  const bound_completion_block = makeValidNode(
     "Block",
     [],
     [],
-    [
-      break_statement,
-      makeValidNode("ReturnStatement", makeValidNode("LiteralExpression", 123)),
-    ],
+    [makeValidNode("BlockStatement", bound_block), return_statement],
+  );
+  const free_completion_block = makeValidNode(
+    "Block",
+    [],
+    [],
+    [makeValidNode("BlockStatement", free_block), return_statement],
   );
   assertThrow(() => {
-    makeValidNode("ScriptProgram", completion_block);
+    makeValidNode("ScriptProgram", [break_statement]);
   });
   assertThrow(() => {
-    makeValidNode("Closure", "arrow", false, false, completion_block);
+    makeValidNode(
+      "ClosureExpression",
+      "arrow",
+      false,
+      false,
+      free_completion_block,
+    );
   });
   makeValidNode(
-    "ModuleProgram",
-    [],
-    makeValidNode(
-      "Block",
-      [],
-      [],
-      [makeValidNode("BlockStatement", labeled_block)],
-    ),
+    "ClosureExpression",
+    "arrow",
+    false,
+    false,
+    bound_completion_block,
   );
 }
 
@@ -602,33 +608,30 @@ testVariable((variable) =>
 
 // Import //
 {
-  const block = makeValidNode(
+  const completion_block = makeValidNode(
     "Block",
     [],
     [],
     [
       makeValidNode(
-        "EffectStatement",
-        makeValidNode(
-          "ExpressionEffect",
-          makeValidNode("StaticImportExpression", "'source'", "specifier"),
-        ),
+        "ReturnStatement",
+        makeValidNode("StaticImportExpression", "'source'", "specifier"),
       ),
     ],
   );
   assertThrow(() => {
-    makeValidNode("ModuleProgram", [], block);
+    makeValidNode("ModuleProgram", [], completion_block);
   });
   makeValidNode(
     "ModuleProgram",
     [makeValidNode("ImportLink", "'source'", "specifier")],
-    block,
+    completion_block,
   );
 }
 
 // Export //
 {
-  const block = makeValidNode(
+  const completion_block = makeValidNode(
     "Block",
     [],
     [],
@@ -641,14 +644,15 @@ testVariable((variable) =>
           makeValidNode("LiteralExpression", 123),
         ),
       ),
+      makeValidNode("ReturnStatement", makeValidNode("LiteralExpression", 123)),
     ],
   );
   assertThrow(() => {
-    makeValidNode("ModuleProgram", [], block);
+    makeValidNode("ModuleProgram", [], completion_block);
   });
   makeValidNode(
     "ModuleProgram",
     [makeValidNode("ExportLink", "specifier")],
-    block,
+    completion_block,
   );
 }

@@ -11,7 +11,7 @@ import {
   lastIndexOf,
   flatMap,
 } from "array-lite";
-import {assert, expect, generateThrowError} from "../util.mjs";
+import {assert, expect, generateThrowError, generateReturn} from "../util.mjs";
 import {getSyntax, isSyntaxType} from "./syntax.mjs";
 import {
   makeNode,
@@ -37,6 +37,8 @@ const {
 } = globalThis;
 
 const syntax = getSyntax();
+
+const returnFalse = generateReturn(false);
 
 const generateGetNodeKind = () => {
   const kinds = {__proto__: null};
@@ -72,7 +74,7 @@ const generateIsBoundVariableNode = (variables) => {
     WriteEffect: (_context, variable, _expression, _annotation) =>
       includes(variables, variable),
   };
-  const callback = (_context, _node) => false;
+  const callback = returnFalse;
   return (node) => dispatchNode(null, node, callbacks, callback);
 };
 
@@ -82,7 +84,7 @@ const generateIsBoundBreakStatement = (variables) => {
     BreakStatement: (_context, variable, _annotation) =>
       includes(variables, variable),
   };
-  const callback = (_context, _node) => false;
+  const callback = returnFalse;
   return (node) => dispatchNode(null, node, callbacks, callback);
 };
 
@@ -97,7 +99,7 @@ const generateIsDeclareEnclaveStatement = (kind1) => {
       _annotation,
     ) => kind1 === kind2,
   };
-  const callback = (_context, _node) => false;
+  const callback = returnFalse;
   return (node) => dispatchNode(null, node, callbacks, callback);
 };
 const isLetDeclareEnclaveStatement = generateIsDeclareEnclaveStatement("let");
@@ -111,7 +113,7 @@ const generateIsReadEnclaveExpression = (variable1) => {
     ReadEnclaveExpression: (_context, variable2, _annotation) =>
       variable1 === variable2,
   };
-  const callback = (_context, _node) => false;
+  const callback = returnFalse;
   return (node) => dispatchNode(null, node, callbacks, callback);
 };
 const isThisReadEnclaveExpression = generateIsReadEnclaveExpression("this");
@@ -157,7 +159,7 @@ const checkoutDigest = (digest, type) => {
 };
 
 const generateGenerateIsBoundLinkExpression = () => {
-  const callback = (_context, _node) => false;
+  const callback = returnFalse;
   const import_callbacks = {
     __proto__: null,
     ImportLink: (
@@ -337,6 +339,16 @@ const generateValidateNode = () => {
         !some(flatMap(links, extractExportSpecifierArray), isDuplicate),
         "duplicate export link found in ModuleProgram",
       );
+      const completion = getBlockCompletion(block);
+      assert(
+        !isNaN(completion),
+        "ModuleProgram.body should be a completion Block",
+      );
+      assert(
+        filter(digest, isReturnStatement).length === completion,
+        "ModuleProgram.body should only contain ReturnStatement in completion position",
+      );
+      digest = filterOut(digest, isReturnStatement);
       digest = filterOut(digest, isThisReadEnclaveExpression);
       digest = filterOut(digest, isArgumentsReadEnclaveExpression);
       digest = filterOut(digest, isAwaitExpression);
@@ -365,11 +377,11 @@ const generateValidateNode = () => {
       return digest;
     },
     EvalProgram: (digest, enclaves, variables, block, _annotation) => {
-      const completion = getBlockCompletion(block);
       assert(
         !some(enclaves, isDuplicate),
         "duplicate enclaves found in EvalProgram",
       );
+      const completion = getBlockCompletion(block);
       assert(
         !isNaN(completion),
         "EvalProgram.body should be a completion Block",
@@ -435,7 +447,7 @@ const generateValidateNode = () => {
     ) => {
       assert(
         !isNaN(getBlockCompletion(block)),
-        "Closure.body should be a completion Block",
+        "ClosureExpression.body should be a completion Block",
       );
       assert(
         !generator || (kind !== "arrow" && kind !== "constructor"),
