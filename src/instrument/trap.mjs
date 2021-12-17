@@ -26,6 +26,7 @@ import {
   makeEffectStatement,
   makeCallSuperEnclaveExpression,
   makeSetSuperEnclaveEffect,
+  makeWriteEnclaveEffect,
 } from "../ast/index.mjs";
 
 import {lookupScopeVariable, makeScopeReadExpression} from "./scope.mjs";
@@ -53,6 +54,8 @@ const mapMapReturnNull = (arrays) => map(arrays, mapReturnNull);
 
 const getScopeData = (pair) => lookupScopeVariable(pair[0], pair[1]);
 const getScopeDataArray = (pairs) => map(pairs, getScopeData);
+const getScopeNullableData = (pair) =>
+  pair === null ? null : getScopeData(pair);
 
 const makeArrayExpression = (expressions) =>
   makeApplyExpression(
@@ -64,6 +67,8 @@ const makeArrayExpression = (expressions) =>
 const makeScopeExpression = (pair) => makeScopeReadExpression(pair[0], pair[1]);
 const makeScopeArrayExpression = (pairs) =>
   makeArrayExpression(map(pairs, makeScopeExpression));
+const makeScopeNullableExpression = (pair) =>
+  pair === null ? makeLiteralExpression(null) : makeScopeExpression(pair);
 
 const makeMatrixExpression = (expressionss) =>
   makeApplyExpression(
@@ -86,6 +91,11 @@ const makeLiteralObjectExpression = (object) =>
 const makeLiteralObjectArrayExpression = (objects) =>
   makeArrayExpression(map(objects, makeLiteralObjectExpression));
 
+const makeNullableLiteralObjectArrayExpression = (objects) =>
+  objects === null
+    ? makeLiteralExpression(null)
+    : makeLiteralObjectArrayExpression(objects);
+
 ///////////////////
 // Type Argument //
 ///////////////////
@@ -97,7 +107,8 @@ const primitive_arg = [returnFirst, makeLiteralExpression];
 const literal_arg = [fromLiteral, makeLiteralExpression];
 const scope_arg = [getScopeData, makeScopeExpression];
 const scope_array_arg = [getScopeDataArray, makeScopeArrayExpression];
-const link_array_arg = [returnFirst, makeLiteralObjectArrayExpression];
+const link_array_arg = [returnFirst, makeNullableLiteralObjectArrayExpression];
+const nullable_scope_arg = [getScopeNullableData, makeScopeNullableExpression];
 
 //////////////////////
 // Synonym Argument //
@@ -107,15 +118,18 @@ const kind_arg = primitive_arg;
 const asynchronous_arg = primitive_arg;
 const generator_arg = primitive_arg;
 const serial_arg = primitive_arg;
+const name_arg = primitive_arg;
 const enclave_variable_arg = primitive_arg;
 const specifier_arg = primitive_arg;
 const source_arg = primitive_arg;
 const operator_arg = primitive_arg;
+const delegate_arg = primitive_arg;
 
 const label_arg = scope_arg;
 const variable_arg = scope_arg;
-const callee_arg = scope_arg;
 const perform_arg = scope_arg;
+
+const callee_arg = nullable_scope_arg;
 
 const label_array_arg = scope_array_arg;
 const variable_array_arg = scope_array_arg;
@@ -175,6 +189,13 @@ const traps = {
   ////////////
   // Effect //
   ////////////
+  "enclave-write": makeEffectTrap(
+    dropFirst(makeWriteEnclaveEffect),
+    perform_arg,
+    enclave_variable_arg,
+    expression_arg,
+    serial_arg,
+  ),
   "enclave-set-super": makeEffectTrap(
     dropFirst(makeSetSuperEnclaveEffect),
     perform_arg,
@@ -186,6 +207,13 @@ const traps = {
   // Expression //
   ////////////////
   // Producer //
+  "parameters": makeExpressionTrap(returnFirst, expression_arg, serial_arg),
+  "intrinsic": makeExpressionTrap(
+    returnSecond,
+    name_arg,
+    expression_arg,
+    serial_arg,
+  ),
   "literal": makeExpressionTrap(makeLiteralExpression, literal_arg, serial_arg),
   "import": makeExpressionTrap(
     returnThird,
@@ -220,6 +248,16 @@ const traps = {
     serial_arg,
   ),
   // Consumer //
+  "eval": makeExpressionTrap(returnFirst, expression_arg, serial_arg),
+  "throw": makeExpressionTrap(returnFirst, expression_arg, serial_arg),
+  "await": makeExpressionTrap(returnFirst, expression_arg, serial_arg),
+  "yield": makeExpressionTrap(
+    returnSecond,
+    delegate_arg,
+    expression_arg,
+    serial_arg,
+  ),
+  "drop": makeExpressionTrap(returnFirst, expression_arg, serial_arg),
   "export": makeExpressionTrap(
     returnSecond,
     specifier_arg,
@@ -236,13 +274,6 @@ const traps = {
   "enclave-declare": makeExpressionTrap(
     returnThird,
     kind_arg,
-    enclave_variable_arg,
-    expression_arg,
-    serial_arg,
-  ),
-  "enclave-write": makeExpressionTrap(
-    returnThird,
-    perform_arg,
     enclave_variable_arg,
     expression_arg,
     serial_arg,

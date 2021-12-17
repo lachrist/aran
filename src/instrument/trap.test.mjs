@@ -2,10 +2,13 @@ import {assertEqual, assertDeepEqual} from "../__fixture__.mjs";
 import {makeBlock, makeLiteralExpression} from "../ast/index.mjs";
 import {allignBlock, allignExpression} from "../allign/index.mjs";
 
-import {extendScope, makeRootScope, declareScopeVariable} from "./scope.mjs";
+import {extendScope, createRootScope, declareScopeVariable} from "./scope.mjs";
 
 import {makeTrapExpression, makeTrapStatementArray} from "./trap.mjs";
 
+////////////
+// bypass //
+////////////
 assertEqual(
   allignExpression(
     makeTrapExpression(
@@ -25,6 +28,9 @@ assertEqual(
   null,
 );
 
+////////////
+// object //
+////////////
 assertEqual(
   allignExpression(
     makeTrapExpression(
@@ -57,9 +63,17 @@ assertEqual(
   null,
 );
 
+////////////////////
+// arrival (full) //
+////////////////////
 {
-  const scope = extendScope(makeRootScope());
-  declareScopeVariable(scope, "callee", "callee-data", false, false);
+  const scope = extendScope(createRootScope());
+  declareScopeVariable(scope, {
+    variable: "callee",
+    value: "callee-data",
+    duplicable: false,
+    initialized: false,
+  });
   assertEqual(
     allignBlock(
       makeBlock(
@@ -106,10 +120,61 @@ assertEqual(
   );
 }
 
+/////////////////////
+// arrival (empty) //
+/////////////////////
+assertEqual(
+  allignBlock(
+    makeBlock(
+      [],
+      [],
+      makeTrapStatementArray(
+        {
+          namespace: "namespace",
+          pointcut: (...args) => {
+            assertDeepEqual(args, ["arrival", "kind", null, null, 123]);
+            return true;
+          },
+        },
+        "arrival",
+        "kind",
+        null,
+        null,
+        123,
+      ),
+    ),
+    `{
+      effect(
+        intrinsic("Reflect.get")(undefined, $namespace, "arrival")(
+          $namespace,
+          "kind",
+          null,
+          null,
+          123,
+        ),
+      );
+    }`,
+  ),
+  null,
+);
+
+///////////
+// enter //
+///////////
 {
-  const scope = extendScope(makeRootScope());
-  declareScopeVariable(scope, "variable", "variable-data", false, false);
-  declareScopeVariable(scope, "label", "label-data", false, false);
+  const scope = extendScope(createRootScope());
+  declareScopeVariable(scope, {
+    variable: "variable",
+    value: "variable-data",
+    duplicable: false,
+    initialized: false,
+  });
+  declareScopeVariable(scope, {
+    variable: "label",
+    value: "label-data",
+    duplicable: false,
+    initialized: false,
+  });
   assertEqual(
     allignBlock(
       makeBlock(
