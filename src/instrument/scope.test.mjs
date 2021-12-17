@@ -4,7 +4,7 @@ import {makeLiteralExpression} from "../ast/index.mjs";
 import {allignEffect, allignExpression} from "../allign/index.mjs";
 
 import {
-  makeRootScope,
+  createRootScope,
   extendScriptScope,
   extendScope,
   declareScopeVariable,
@@ -18,14 +18,30 @@ import {
 } from "./scope.mjs";
 
 {
-  const scope = extendScope(makeRootScope());
+  const scope = extendScope(createRootScope());
   // Declare //
-  declareScopeVariable(scope, "variable", "data1", false, false);
+  declareScopeVariable(scope, {
+    variable: "variable",
+    value: "data1",
+    duplicable: false,
+    initialized: false,
+  });
   assertThrow(
-    () => declareScopeVariable(scope, "variable", "data2", false, false),
+    () =>
+      declareScopeVariable(scope, {
+        variable: "variable",
+        value: "data2",
+        duplicable: false,
+        initialized: false,
+      }),
     /^Error: duplicate variable declaration/u,
   );
-  declareScopeVariable(scope, "variable", "data3", true, false);
+  declareScopeVariable(scope, {
+    variable: "variable",
+    value: "data3",
+    duplicable: true,
+    initialized: false,
+  });
   assertEqual(lookupScopeVariable(scope, "variable"), "data1");
   // Used //
   assertDeepEqual(getUsedScopeVariableArray(scope), []);
@@ -59,8 +75,13 @@ import {
 }
 
 {
-  const scope = extendScriptScope(makeRootScope(), "namespace");
-  declareScopeVariable(scope, "variable", "data", false, true);
+  const scope = extendScriptScope(createRootScope(), "namespace");
+  declareScopeVariable(scope, {
+    variable: "variable",
+    value: "data",
+    duplicable: false,
+    initialized: true,
+  });
   assertEqual(
     allignExpression(
       makeScopeReadExpression(scope, "variable"),

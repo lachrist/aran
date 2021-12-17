@@ -19,7 +19,7 @@ const {
 
 const SCRIPT = "@script";
 
-export const makeRootScope = () => null;
+export const createRootScope = () => null;
 
 export const extendScriptScope = (parent, namespace) => ({
   __proto__: parent,
@@ -33,10 +33,7 @@ export const extendScope = (parent) => ({
 
 export const declareScopeVariable = (
   scope,
-  variable,
-  data,
-  duplicable,
-  initialized,
+  {variable, value, duplicable, initialized},
 ) => {
   const descriptor = getOwnPropertyDescriptor(scope, variable);
   if (descriptor === undefined) {
@@ -46,7 +43,7 @@ export const declareScopeVariable = (
       enumerable: true,
       writable: true,
       value: {
-        data,
+        value,
         script: scope[SCRIPT],
         used: false,
         initialized,
@@ -57,7 +54,7 @@ export const declareScopeVariable = (
   }
 };
 
-export const lookupScopeVariable = (scope, variable) => scope[variable].data;
+export const lookupScopeVariable = (scope, variable) => scope[variable].value;
 
 export const makeScopeWriteEffect = (scope, variable, expression) => {
   const binding = scope[variable];
