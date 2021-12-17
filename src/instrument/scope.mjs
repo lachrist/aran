@@ -45,7 +45,7 @@ export const declareScopeVariable = (
       value: {
         value,
         script: scope[SCRIPT],
-        used: false,
+        used: initialized,
         initialized,
       },
     });

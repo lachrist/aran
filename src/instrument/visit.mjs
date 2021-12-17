@@ -2,7 +2,11 @@
 
 import {map, concat, filter, flatMap, reduce, zip, repeat} from "array-lite";
 
-import {generateThrowError, incrementCounter} from "../util.mjs";
+import {
+  generateThrowError,
+  incrementCounter,
+  generateReturn,
+} from "../util.mjs";
 
 import {
   matchNode,
@@ -89,10 +93,11 @@ import {
   makeScopeInitializeEffect,
   makeScopeReadExpression,
   makeScopeWriteEffect,
-  getScopeVariableArray,
+  getUsedScopeVariableArray,
 } from "./scope.mjs";
 
 const {
+  undefined,
   String,
   Error,
   Object: {entries: toEntries},
@@ -208,20 +213,48 @@ const makeInitializeStatement = (scope, variable) =>
     ),
   );
 
-const throw_error_statement = makeEffectStatement(
-  makeExpressionEffect(makeThrowExpression(makeArgumentExpression("error"))),
-);
+const returnTrue = generateReturn(true);
+
+const throw_error_statement_array_pattern = [
+  [
+    "EffectStatement",
+    [
+      "ExpressionEffect",
+      [
+        "ThrowExpression",
+        [
+          "ApplyExpression",
+          ["IntrinsicExpression", "Reflect.get", returnTrue],
+          ["LiteralExpression", undefined, returnTrue],
+          [
+            ["InputExpression", returnTrue],
+            ["LiteralExpression", "error", returnTrue],
+          ],
+          returnTrue,
+        ],
+        returnTrue,
+      ],
+      returnTrue,
+    ],
+    returnTrue,
+  ],
+];
 
 const makeOptimizedTryStatementArray = (
   statements1,
   statements2,
   statements3,
 ) =>
-  statements2.length === 1 &&
-  matchNode(statements2[0], throw_error_statement) &&
+  matchNode(null, statements2, throw_error_statement_array_pattern) &&
   statements3.length === 0
     ? statements1
-    : [makeTryStatement(statements1, statements2, statements3)];
+    : [
+        makeTryStatement(
+          makeBlock([], [], statements1),
+          makeBlock([], [], statements2),
+          makeBlock([], [], statements3),
+        ),
+      ];
 
 ///////////
 // Visit //
@@ -245,14 +278,14 @@ export const visitProgram = generateVisit({
     const visited_statements = flatMap(statements, (statement) =>
       visitStatement(child_context, statement),
     );
-    const variables = getScopeVariableArray(scope);
+    const variables = getUsedScopeVariableArray(scope);
     return makeScriptProgram(
       concat(
         variables.length > 0
           ? [
               makeDeclareEnclaveStatement(
                 "let",
-                context.namespace,
+                context.script,
                 makeObjectExpression(makeLiteralExpression(null), []),
               ),
             ]
@@ -321,7 +354,7 @@ export const visitProgram = generateVisit({
 // Links //
 ///////////
 
-const visitLink = generateContextlessVisit({
+export const visitLink = generateContextlessVisit({
   __proto__: null,
   ImportLink: (_context, source, specifier, _serial) => ({
     type: "import",
@@ -378,7 +411,7 @@ const makeLabDeclaration = (label) => ({
   initialized: false,
 });
 
-const visitBlock = generateVisit({
+export const visitBlock = generateVisit({
   __proto__: null,
   Block: (context, labels, variables, statements, serial) => {
     const child_scope = reduce(
@@ -413,39 +446,45 @@ const visitBlock = generateVisit({
     const completion_statements = isCompletionKind(context.kind)
       ? []
       : makeTrapStatementArray(context.trap, "completion", serial);
-    const failure_statements = makeEffectStatement(
-      makeExpressionEffect(
-        makeThrowExpression(
-          makeTrapExpression(
-            context.trap,
-            "failure",
-            makeArgumentExpression("error"),
-            serial,
+    const failure_statements = [
+      makeEffectStatement(
+        makeExpressionEffect(
+          makeThrowExpression(
+            makeTrapExpression(
+              context.trap,
+              "failure",
+              makeArgumentExpression("error"),
+              serial,
+            ),
           ),
         ),
       ),
-    );
+    ];
     const leave_statements = makeTrapStatementArray(
       context.trap,
       "leave",
       serial,
     );
-    const scope_variables = getScopeVariableArray(child_scope);
-    return makeBlock(labels, scope_variables, [
-      context.header,
-      map(
-        filter(
-          variables,
-          (variable) => !isScopeVariableInitialized(child_scope, variable),
+    const scope_variables = getUsedScopeVariableArray(child_scope);
+    return makeBlock(
+      labels,
+      scope_variables,
+      concat(
+        context.header,
+        map(
+          filter(
+            scope_variables,
+            (variable) => !isScopeVariableInitialized(child_scope, variable),
+          ),
+          (variable) => makeInitializeStatement(child_scope, variable),
         ),
-        (variable) => makeInitializeStatement(child_scope, variable),
+        makeOptimizedTryStatementArray(
+          concat(enter_statements, visited_statements, completion_statements),
+          failure_statements,
+          leave_statements,
+        ),
       ),
-      makeOptimizedTryStatementArray(
-        concat(enter_statements, visited_statements, completion_statements),
-        failure_statements,
-        leave_statements,
-      ),
-    ]);
+    );
   },
 });
 
@@ -453,7 +492,7 @@ const visitBlock = generateVisit({
 // Statement //
 ///////////////
 
-const visitStatement = generateVisit({
+export const visitStatement = generateVisit({
   __proto__: null,
   ReturnStatement: (context, expression, serial) => [
     makeReturnStatement(
@@ -535,7 +574,7 @@ const visitStatement = generateVisit({
 // Effect //
 ////////////
 
-const visitEffect = generateVisit({
+export const visitEffect = generateVisit({
   __proto__: null,
   WriteEffect: (context, variable, expression, serial) =>
     makeScopeWriteEffect(
@@ -625,7 +664,7 @@ const visitEffect = generateVisit({
 // Expression //
 ////////////////
 
-const visitExpression = generateVisit({
+export const visitExpression = generateVisit({
   __proto__: null,
   InputExpression: (context, serial) =>
     makeTrapExpression(
