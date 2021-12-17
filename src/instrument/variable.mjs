@@ -1,3 +1,10 @@
+const {
+  Reflect: {apply},
+  String: {
+    prototype: {substring},
+  },
+} = globalThis;
+
 const VAR_HEAD = "V";
 const LAB_HEAD = "L";
 const OLD_HEAD = "O";
@@ -5,6 +12,9 @@ const NEW_HEAD = "N";
 const REC_HEAD = "R";
 const WEC_HEAD = "W";
 const TEC_HEAD = "T";
+
+export const getVariableBody = (variable) =>
+  apply(substring, variable, [1, variable.length]);
 
 const generateMakeVariable = (head) => (body) => `${head}${body}`;
 export const makeVarVariable = generateMakeVariable(VAR_HEAD);

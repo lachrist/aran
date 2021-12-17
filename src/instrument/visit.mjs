@@ -1,18 +1,104 @@
+/* eslint-disable no-use-before-define */
+
+import {map, concat, filter, flatMap, reduce, zip, repeat} from "array-lite";
+
+import {generateThrowError, incrementCounter} from "../util.mjs";
 
 import {
   matchNode,
+  dispatchNode,
+  makeScriptProgram,
+  makeModuleProgram,
+  makeEvalProgram,
+  // makeImportLink,
+  // makeExportLink,
+  // makeAggregateLink,
+  makeBlock,
+  makeEffectStatement,
+  makeReturnStatement,
+  makeBreakStatement,
+  makeDebuggerStatement,
+  makeDeclareEnclaveStatement,
+  makeBlockStatement,
+  makeIfStatement,
+  makeWhileStatement,
+  makeTryStatement,
+  makeSetSuperEnclaveEffect,
+  // makeWriteEffect,
+  makeWriteEnclaveEffect,
+  makeStaticExportEffect,
+  makeSequenceEffect,
+  makeConditionalEffect,
+  makeExpressionEffect,
+  makeInputExpression,
+  makeLiteralExpression,
+  makeIntrinsicExpression,
+  makeStaticImportExpression,
+  // makeReadExpression,
+  makeReadEnclaveExpression,
+  makeTypeofEnclaveExpression,
+  makeClosureExpression,
+  makeAwaitExpression,
+  makeYieldExpression,
+  makeThrowExpression,
+  makeSequenceExpression,
+  makeConditionalExpression,
+  makeGetSuperEnclaveExpression,
+  makeCallSuperEnclaveExpression,
+  makeEvalExpression,
+  makeDynamicImportExpression,
+  makeApplyExpression,
+  // makeConstructExpression,
+  // makeUnaryExpression,
+  // makeBinaryExpression,
+  makeObjectExpression,
 } from "../ast/index.mjs";
 
-import {makeTrapExpression, makeTrapEffect, makeTrapStatementArray} from "./trap.mjs";
+import {unmangleLabel, unmangleVariable} from "./unmangle.mjs";
+
+import {
+  getVariableBody,
+  makeNewVariable,
+  makeOldVariable,
+  makeLabVariable,
+  makeVarVariable,
+  makeRECVariable,
+  makeWECVariable,
+  makeTECVariable,
+  // isOldVariable,
+  isNewVariable,
+  isLabVariable,
+  isVarVariable,
+  isRECVariable,
+  isTECVariable,
+  isWECVariable,
+} from "./variable.mjs";
+
+import {
+  makeTrapExpression,
+  makeTrapEffect,
+  makeTrapStatementArray,
+} from "./trap.mjs";
 
 import {
   extendScriptScope,
   extendScope,
+  declareScopeVariable,
   isScopeVariableUsed,
   isScopeVariableInitialized,
+  makeScopeInitializeEffect,
+  makeScopeReadExpression,
+  makeScopeWriteEffect,
+  getScopeVariableArray,
 } from "./scope.mjs";
 
-const PERFORM_IMPORT = "import";
+const {
+  String,
+  Error,
+  Object: {entries: toEntries},
+} = globalThis;
+
+const PERFORM_DYNAMIC_IMPORT = "import";
 const PERFORM_GET_SUPER_ENCLAVE = "get_super";
 const PERFORM_SET_SUPER_ENCLAVE = "set_super";
 const PERFORM_CALL_SUPER_ENCLAVE = "call_super";
@@ -21,86 +107,74 @@ const PERFORM_CALL_SUPER_ENCLAVE = "call_super";
 // Helpers //
 /////////////
 
-const makeArrayExpression = (expressions) => makeApplyExpression(
-  makeIntrinsicExpression("Array.of"),
-  makePrimitiveExpression({undefined:null}),
-  expressions,
-);
+const makeSimpleArrowExpression = (expression) =>
+  makeClosureExpression(
+    "arrow",
+    false,
+    false,
+    makeBlock([], [], [makeReturnStatement(expression)]),
+  );
 
-const makeSimpleArrowExpression = (expression) = makeClosureExpression(
-  "arrow",
-  false,
-  false,
-  makeBlock(
-    [],
-    [],
-    [
-      makeReturnStatement(expression),
-    ],
-  ),
-);
+const makeArgumentExpression = (literal) =>
+  makeApplyExpression(
+    makeIntrinsicExpression("Reflect.get"),
+    makeLiteralExpression({undefined: null}),
+    [makeInputExpression(), makeLiteralExpression(literal)],
+  );
 
-const makeArgumentExpression = (literal) => makeApplyExpression(
-  makeIntrinsicExpression("Reflect.get"),
-  makePrimitiveExpression({undefined:null}),
-  [
-    makeInputExpression(),
-    makePrimitiveExpression(literal),
-  ],
-);
+const makeLiteralProperty = (entry) => [
+  makeLiteralExpression(entry[0]),
+  makeLiteralExpression(entry[1]),
+];
 
 const makeInitializeExpression = (variable) => {
   if (isNewVariable(variable)) {
     if (variable === makeNewVariable(PERFORM_GET_SUPER_ENCLAVE)) {
       return makeSimpleArrowExpression(
-        makeGetSuperEnclaveExpression(
-          makeArgumentExpression(0),
-        ),
+        makeGetSuperEnclaveExpression(makeArgumentExpression(0)),
       );
     }
     if (variable === makeNewVariable(PERFORM_SET_SUPER_ENCLAVE)) {
       return makeSimpleArrowExpression(
-        makeSetSuperEnclaveEffect(
-          makeArgumentExpression(0),
-          makeArgumentExpression(1),
+        makeSequenceExpression(
+          makeSetSuperEnclaveEffect(
+            makeArgumentExpression(0),
+            makeArgumentExpression(1),
+          ),
+          makeLiteralExpression({undefined: null}),
         ),
       );
     }
     if (variable === makeNewVariable(PERFORM_CALL_SUPER_ENCLAVE)) {
       return makeSimpleArrowExpression(
-        makeCallSuperEnclaveExpression(
-          makeArgumentExpression(0),
-        ),
+        makeCallSuperEnclaveExpression(makeArgumentExpression(0)),
       );
     }
     if (variable === makeNewVariable(PERFORM_DYNAMIC_IMPORT)) {
       return makeSimpleArrowExpression(
-        makeDynamicImportExpression(
-          makeArgumentExpression(0),
-        ),
+        makeDynamicImportExpression(makeArgumentExpression(0)),
       );
     }
     throw new Error("could not initialized new variable");
   }
   if (isRECVariable(variable)) {
     return makeSimpleArrowExpression(
-      makeReadEnclaveExpression(
-        getVariableBody(variable),
-      ),
+      makeReadEnclaveExpression(getVariableBody(variable)),
     );
   }
   if (isTECVariable(variable)) {
     return makeTypeofEnclaveExpression(
-      makeTypeofEnclaveExpression(
-        getVariableBody(variable),
-      ),
+      makeTypeofEnclaveExpression(getVariableBody(variable)),
     );
   }
   if (isWECVariable(variable)) {
     return makeSimpleArrowExpression(
-      makeWriteEnclave(
-        getVariableBody(variable),
-        makeArgumentExpression(0),
+      makeSequenceExpression(
+        makeWriteEnclaveEffect(
+          getVariableBody(variable),
+          makeArgumentExpression(0),
+        ),
+        makeLiteralExpression({undefined: null}),
       ),
     );
   }
@@ -109,7 +183,7 @@ const makeInitializeExpression = (variable) => {
       makeLiteralExpression(null),
       map(
         toEntries(unmangleLabel(getVariableBody(variable))),
-        makePrimitiveProperty,
+        makeLiteralProperty,
       ),
     );
   }
@@ -125,37 +199,39 @@ const makeInitializeExpression = (variable) => {
   throw new Error("could not initialize variable");
 };
 
-const makeInitializeStatement = (scope, variable) => makeEffectStatement(
-  makeScopeInitializeEffect(
-    scope,
-    variable,
-    makeInitializeExpression(variable),
-  ),
-);
+const makeInitializeStatement = (scope, variable) =>
+  makeEffectStatement(
+    makeScopeInitializeEffect(
+      scope,
+      variable,
+      makeInitializeExpression(variable),
+    ),
+  );
 
 const throw_error_statement = makeEffectStatement(
-  makeExpressionEffect(
-    makeThrowExpresson(
-      makeArgumentExpression("error"),
-    ),
-  ),
+  makeExpressionEffect(makeThrowExpression(makeArgumentExpression("error"))),
 );
 
-const makeOptimizedTryStatementArray = (statements1, statements2, statements3) => (
+const makeOptimizedTryStatementArray = (
+  statements1,
+  statements2,
+  statements3,
+) =>
   statements2.length === 1 &&
   matchNode(statements2[0], throw_error_statement) &&
   statements3.length === 0
-  ? statements1
-  : [makeTryStatement(statements1, statements2, statements3)]
-);
+    ? statements1
+    : [makeTryStatement(statements1, statements2, statements3)];
 
 ///////////
 // Visit //
 ///////////
 
 const default_callback = generateThrowError("missing instrument callback");
-const generateVisit = (callbacks) => (context, node) => dispatchNode(contex, node, callbacks, default_callback);
-const generateContextlessVisit = (callbacks) => (node) => dispatchNode(null, node, callbacks, default_callback);
+const generateVisit = (callbacks) => (context, node) =>
+  dispatchNode(context, node, callbacks, default_callback);
+const generateContextlessVisit = (callbacks) => (node) =>
+  dispatchNode(null, node, callbacks, default_callback);
 
 /////////////
 // Program //
@@ -166,83 +242,79 @@ export const visitProgram = generateVisit({
   ScriptProgram: (context, statements, serial) => {
     const scope = extendScriptScope(context.scope, context.script);
     const child_context = {...context, scope};
-    const visited_statements = flatMap(
-      statements,
-      (statement) => visitStatement(child_context, statement),
+    const visited_statements = flatMap(statements, (statement) =>
+      visitStatement(child_context, statement),
     );
     const variables = getScopeVariableArray(scope);
-    return concat(
-      variables.length > 0
-        ? [
-          makeDeclareEnclaveStatement(
-            "let",
-            context.namespace,
-            makeObjectExpression(
-              makeLiteralExpression(null),
-              [],
-            ),
+    return makeScriptProgram(
+      concat(
+        variables.length > 0
+          ? [
+              makeDeclareEnclaveStatement(
+                "let",
+                context.namespace,
+                makeObjectExpression(makeLiteralExpression(null), []),
+              ),
+            ]
+          : [],
+        map(
+          filter(
+            variables,
+            (variable) => !isScopeVariableInitialized(scope, variable),
           ),
-        ] : [],
-      map(
-        filter(
-          variables,
-          (variable) => !isScopeVariableInitialized(scope, variable),
+          (variable) => makeInitializeStatement(scope, variable),
         ),
-        (variable) => makeInitializeStatement(
-          scope,
-          variable,
-        ),
-      ),
-      makeTrapStatementArray(
-        context.trap,
-        "arrival",
-        "script",
-        null,
-        null,
-        serial,
-      ),
-      visited_statements,
-    );
-  },
-  ModuleProgram: (context, links, block, serial) => makeModuleProgram(
-    links,
-    visitBlock(
-      {
-        ... context,
-        scope,
-        kind: "module",
-        header: makeTrapStatementArray(
+        makeTrapStatementArray(
           context.trap,
           "arrival",
-          "module",
-          map(links, visitLink),
-          null,
-          serial,
-        ),
-      },
-      block,
-    ),
-  ),
-  EvalProgram: (context, enclaves, identifiers, serial) => makeEvalProgram(
-    enclaves,
-    map(identifiers, makeOldVariable),
-    visitBlock(
-      {
-        ... context,
-        scope,
-        kind: "eval",
-        header: makeTrapStatementArray(
-          context,
-          "arrival",
-          "eval",
+          "script",
           null,
           null,
           serial,
         ),
-      },
-      block,
+        visited_statements,
+      ),
+    );
+  },
+  ModuleProgram: (context, links, block, serial) =>
+    makeModuleProgram(
+      links,
+      visitBlock(
+        {
+          ...context,
+          kind: "module",
+          header: makeTrapStatementArray(
+            context.trap,
+            "arrival",
+            "module",
+            map(links, visitLink),
+            null,
+            serial,
+          ),
+        },
+        block,
+      ),
     ),
-  ),
+  EvalProgram: (context, enclaves, identifiers, block, serial) =>
+    makeEvalProgram(
+      enclaves,
+      map(identifiers, makeOldVariable),
+      visitBlock(
+        {
+          ...context,
+          kind: "eval",
+          header: makeTrapStatementArray(
+            context,
+            "arrival",
+            "eval",
+            null,
+            null,
+            serial,
+          ),
+        },
+        block,
+      ),
+    ),
 });
 
 ///////////
@@ -251,30 +323,41 @@ export const visitProgram = generateVisit({
 
 const visitLink = generateContextlessVisit({
   __proto__: null,
-  ImportLink: (_context, source, specifier) => ({type: "import", source, import:specifier}),
-  ExportLink: (_context, source, specifier) => ({type: "export", export:specifier}),
-  AggregateLink: (_context, source, specifier1, specifier2) => ({type: "aggregate", source, import:specifier1, export:specifier2})
+  ImportLink: (_context, source, specifier, _serial) => ({
+    type: "import",
+    source,
+    import: specifier,
+  }),
+  ExportLink: (_context, specifier, _serial) => ({
+    type: "export",
+    export: specifier,
+  }),
+  AggregateLink: (_context, source, specifier1, specifier2, _serial) => ({
+    type: "aggregate",
+    source,
+    import: specifier1,
+    export: specifier2,
+  }),
 });
 
 ///////////
 // Block //
 ///////////
 
-const isCompletionKind = (kind) => (
+const isCompletionKind = (kind) =>
   kind === "eval" ||
   kind === "module" ||
   kind === "arrow" ||
   kind === "function" ||
   kind === "method" ||
-  kind === "constructor"
-);
+  kind === "constructor";
 
 const accumulateDeclaration = (scope, declaration) => {
   declareScopeVariable(scope, declaration);
   return scope;
 };
 
-const makeOldeclaration = (variable) => ({
+const makeOldDeclaration = (variable) => ({
   variable: makeOldVariable(variable),
   value: null,
   duplicable: false,
@@ -298,18 +381,18 @@ const makeLabDeclaration = (label) => ({
 const visitBlock = generateVisit({
   __proto__: null,
   Block: (context, labels, variables, statements, serial) => {
-    const scope = reduce(
+    const child_scope = reduce(
       concat(
-        map(labels, makeLabEntry),
-        map(variables, makeVarEntry),
-        map(variables, makeOldEntry),
+        map(labels, makeLabDeclaration),
+        map(variables, makeVarDeclaration),
+        map(variables, makeOldDeclaration),
       ),
       accumulateDeclaration,
       extendScope(context.scope),
     );
     const child_context = {
-      ... context,
-      scope,
+      ...context,
+      scope: child_scope,
       header: null,
       kind: null,
     };
@@ -317,30 +400,22 @@ const visitBlock = generateVisit({
       context.trap,
       "enter",
       context.kind,
-      zip(
-        repeat(child_scope, labels.length),
-        map(labels, makeLabVariable),
-      ),
+      zip(repeat(child_scope, labels.length), map(labels, makeLabVariable)),
       zip(
         repeat(child_scope, variables.length),
         map(variables, makeVarVariable),
       ),
       serial,
     );
-    const visited_statements = flatMap(
-      statements,
-      (statement) => visitStatement(child_context, statement),
+    const visited_statements = flatMap(statements, (statement) =>
+      visitStatement(child_context, statement),
     );
     const completion_statements = isCompletionKind(context.kind)
       ? []
-      : makeTrapStatementArray(
-        context.trap,
-        "completion",
-        serial,
-      );
+      : makeTrapStatementArray(context.trap, "completion", serial);
     const failure_statements = makeEffectStatement(
       makeExpressionEffect(
-        makeThrowExpresson(
+        makeThrowExpression(
           makeTrapExpression(
             context.trap,
             "failure",
@@ -355,30 +430,22 @@ const visitBlock = generateVisit({
       "leave",
       serial,
     );
-    const scope_variables = getScopeVariableArray(scope);
-    return makeBlock(
-      labels,
-      scope_variables,
-      [
-        header,
-        map(
-          filter(
-            variables,
-            (variable) => !isScopeVariableInitialized(scope, variable),
-          ),
-          (variable) => makeInitializeStatement(child_scope, variable)
+    const scope_variables = getScopeVariableArray(child_scope);
+    return makeBlock(labels, scope_variables, [
+      context.header,
+      map(
+        filter(
+          variables,
+          (variable) => !isScopeVariableInitialized(child_scope, variable),
         ),
-        makeOptimizedTryStatement(
-          concat(
-            enter_statements,
-            visited_statements,
-            completion_statements,
-          ),
-          failure_statements,
-          leave_statements,
-        ),
-      ],
-    );
+        (variable) => makeInitializeStatement(child_scope, variable),
+      ),
+      makeOptimizedTryStatementArray(
+        concat(enter_statements, visited_statements, completion_statements),
+        failure_statements,
+        leave_statements,
+      ),
+    ]);
   },
 });
 
@@ -386,7 +453,7 @@ const visitBlock = generateVisit({
 // Statement //
 ///////////////
 
-const visitStatement = generateInstrument({
+const visitStatement = generateVisit({
   __proto__: null,
   ReturnStatement: (context, expression, serial) => [
     makeReturnStatement(
@@ -398,61 +465,70 @@ const visitStatement = generateInstrument({
       ),
     ),
   ],
-  DebuggerStatement: (context, serial) => concat(
-    makeTrapStatementArray(context.trap, "debugger", serial),
-    [makeDebuggerStatement()],
-  ),
-  BreakStatement: (context, label, serial) => concat(
-    makeTrapStatementArray(
-      context.trap,
-      "break",
-      [scope, makeLabelVariable(label)],
-      serial],
+  DebuggerStatement: (context, serial) =>
+    concat(makeTrapStatementArray(context.trap, "debugger", serial), [
+      makeDebuggerStatement(),
+    ]),
+  BreakStatement: (context, label, serial) =>
+    concat(
+      makeTrapStatementArray(
+        context.trap,
+        "break",
+        [context.scope, makeLabVariable(label)],
+        serial,
+      ),
+      [makeBreakStatement(label)],
     ),
-    [makeBreakStatement(label)],
-  ),
-  EffectStatement: (context, effect, serial) => [makeEffectStatement(
-    visitEffect(context, effect),
-  )],
-  DeclareEnclaveStatement: (context, kind, variable, expression) => [makeDeclareEnclaveStatement(
-    kind,
-    variable,
-    makeTrapExpression(
-      context.trap,
-      "enclave-declare",
+  EffectStatement: (context, effect, _serial) => [
+    makeEffectStatement(visitEffect(context, effect)),
+  ],
+  DeclareEnclaveStatement: (context, kind, variable, expression, serial) => [
+    makeDeclareEnclaveStatement(
       kind,
       variable,
-      visitExpression(context, expression),
-      serial,
+      makeTrapExpression(
+        context.trap,
+        "enclave-declare",
+        kind,
+        variable,
+        visitExpression(context, expression),
+        serial,
+      ),
     ),
-  )],
-  BlockStatement: (context, block, serial) => [makeBlockStatement(
-    visitBlock(context, "block", [], block),
-  )],
-  IfStatement: (context, expression, block1, block2, serial) => [makeIfStatement(
-    makeTrapExpression(
-      context.trap,
-      "test",
-      visitExpression(context, expression),
-      serial,
+  ],
+  BlockStatement: (context, block, _serial) => [
+    makeBlockStatement(visitBlock(context, "block", [], block)),
+  ],
+  IfStatement: (context, expression, block1, block2, serial) => [
+    makeIfStatement(
+      makeTrapExpression(
+        context.trap,
+        "test",
+        visitExpression(context, expression),
+        serial,
+      ),
+      visitBlock(context, "consequent", [], block1),
+      visitBlock(context, "alternate", [], block2),
     ),
-    visitBlock(context, "consequent", [], block1),
-    visitBlock(context, "alternate", [], block2),
-  )],
-  WhileStatement: (context, expression, block, serial) => [makeWhileStatement(
-    makeTrapExpression(
-      context.trap,
-      "test",
-      visitExpression(context, expression),
-      serial,
+  ],
+  WhileStatement: (context, expression, block, serial) => [
+    makeWhileStatement(
+      makeTrapExpression(
+        context.trap,
+        "test",
+        visitExpression(context, expression),
+        serial,
+      ),
+      visitBlock(context, "while", [], block),
     ),
-    visitBlock(context, "while", [], block),
-  )],
-  TryStatement: (context, block1, block2, block3, _serial) => [makeTryStatement(
-    visitBlock(context, "try", [], block1),
-    visitBlock(context, "catch", [], block2),
-    visitBlock(context, "finally", [], block3),
-  )],
+  ],
+  TryStatement: (context, block1, block2, block3, _serial) => [
+    makeTryStatement(
+      visitBlock(context, "try", [], block1),
+      visitBlock(context, "catch", [], block2),
+      visitBlock(context, "finally", [], block3),
+    ),
+  ],
 });
 
 ////////////
@@ -461,30 +537,32 @@ const visitStatement = generateInstrument({
 
 const visitEffect = generateVisit({
   __proto__: null,
-  WriteEffect: (context, variable, expression, serial) => makeScopeWriteEffect(
-    context.scope,
-    makeOldVariable(variable),
-    makeTrapExpression(
-      context.trap,
-      "write",
-      [scope, makeVarVariable(variable)],
-      [scope, makeOldVariable(variable)],
-      serial,
+  WriteEffect: (context, variable, expression, serial) =>
+    makeScopeWriteEffect(
+      context.scope,
+      makeOldVariable(variable),
+      makeTrapExpression(
+        context.trap,
+        "write",
+        [context.scope, makeVarVariable(variable)],
+        visitExpression(context, expression),
+        serial,
+      ),
     ),
-  ),
-  StaticExportEffect: (context, specifier, expression, serial) => makeStaticExportEffect(
-    specifier,
-    makeTrapExpression(
-      context.trap,
-      "export",
+  StaticExportEffect: (context, specifier, expression, serial) =>
+    makeStaticExportEffect(
       specifier,
-      visitExpression(context, expression),
-      serial,
+      makeTrapExpression(
+        context.trap,
+        "export",
+        specifier,
+        visitExpression(context, expression),
+        serial,
+      ),
     ),
-  ),
   WriteEnclaveEffect: (context, variable, expression, serial) => {
     const perform_variable = makeWECVariable(variable);
-    declareScopeDuplicable(context.scope, {
+    declareScopeVariable(context.scope, {
       variable: perform_variable,
       value: null,
       duplicable: true,
@@ -493,15 +571,15 @@ const visitEffect = generateVisit({
     return makeTrapEffect(
       context.trap,
       "enclave-write",
-      [scope, perform_variable],
+      [context.scope, perform_variable],
       variable,
       visitExpression(context, expression),
       serial,
     );
   },
-  SetSuperEnclaveEffect: (context, expression1, expression2, _serial) => {
+  SetSuperEnclaveEffect: (context, expression1, expression2, serial) => {
     const perform_variable = makeNewVariable(PERFORM_SET_SUPER_ENCLAVE);
-    declareScopeDuplicable(context.scope, {
+    declareScopeVariable(context.scope, {
       variable: perform_variable,
       value: null,
       duplicable: true,
@@ -510,34 +588,37 @@ const visitEffect = generateVisit({
     return makeTrapEffect(
       context.trap,
       "enclave-set-super",
-      [scope, perform_variable],
+      [context.scope, perform_variable],
       visitExpression(context, expression1),
       visitExpression(context, expression2),
       serial,
     );
   },
-  SequenceEffect: (context, effect1, effect2, _serial) => makeSequenceEffect(
-    visitEffect(context, effect1),
-    visitEffect(context, effect2),
-  ),
-  ConditionalEffect: (context, expression, effec1, effect2, _serial) => makeConditionalEffect(
-    makeTrapExpression(
-      context.trap,
-      "test",
-      visitExpression(context, expression),
-      serial,
+  SequenceEffect: (context, effect1, effect2, _serial) =>
+    makeSequenceEffect(
+      visitEffect(context, effect1),
+      visitEffect(context, effect2),
     ),
-    visitEffect(context, effect1),
-    visitEffect(context, effect2),
-  ),
-  ExpressionEffect: (context, expression, serial) => makeExpressionEffect(
-    makeTrapExpression(
-      context.trap,
-      "drop",
-      visitExpression(context, expression),
-      serial,
+  ConditionalEffect: (context, expression, effect1, effect2, serial) =>
+    makeConditionalEffect(
+      makeTrapExpression(
+        context.trap,
+        "test",
+        visitExpression(context, expression),
+        serial,
+      ),
+      visitEffect(context, effect1),
+      visitEffect(context, effect2),
     ),
-  ),
+  ExpressionEffect: (context, expression, serial) =>
+    makeExpressionEffect(
+      makeTrapExpression(
+        context.trap,
+        "drop",
+        visitExpression(context, expression),
+        serial,
+      ),
+    ),
 });
 
 ////////////////
@@ -546,106 +627,115 @@ const visitEffect = generateVisit({
 
 const visitExpression = generateVisit({
   __proto__: null,
-  InputExpression: (context, serial) => makeTrapExpression(
-    context.trap,
-    "parameters",
-    makeInputExpression(),
-    serial,
-  ),
-  LiteralExpression: (context, literal, serial) => makeTrapExpression(
-    context.trap,
-    "literal",
-    literal,
-    serial,
-  ),
-  IntrinsicExpression: (context, name, serial) => makeTrapExpression(
-    context.trap,
-    "intrinsic",
-    name,
-    makeIntrinsicExpression(name),
-    serial,
-  ),
-  StaticImportExpression: (context, source, specifier) => makeTrapExpression(
-    context.trap,
-    "import",
-    source,
-    specifier,
-    makeImportExpression(source, specifier),
-    serial,
-  ),
-  ReadExpression: (context, variable) => makeTrapExpression(
-    context.trap,
-    "read",
-    [context.scope, makeVarVariable(variable)],
-    [context.scope, makeOldVariable(variable)],
-    serial,
-  ),
+  InputExpression: (context, serial) =>
+    makeTrapExpression(
+      context.trap,
+      "parameters",
+      makeInputExpression(),
+      serial,
+    ),
+  LiteralExpression: (context, literal, serial) =>
+    makeTrapExpression(context.trap, "literal", literal, serial),
+  IntrinsicExpression: (context, name, serial) =>
+    makeTrapExpression(
+      context.trap,
+      "intrinsic",
+      name,
+      makeIntrinsicExpression(name),
+      serial,
+    ),
+  StaticImportExpression: (context, source, specifier, serial) =>
+    makeTrapExpression(
+      context.trap,
+      "import",
+      source,
+      specifier,
+      makeStaticImportExpression(source, specifier),
+      serial,
+    ),
+  ReadExpression: (context, variable, serial) =>
+    makeTrapExpression(
+      context.trap,
+      "read",
+      [context.scope, makeVarVariable(variable)],
+      [context.scope, makeOldVariable(variable)],
+      serial,
+    ),
   ReadEnclaveExpression: (context, variable, serial) => {
     const perform_variable = makeRECVariable(variable);
-    declareScopeVariable(scope, {
+    declareScopeVariable(context.scope, {
       variable: perform_variable,
       value: null,
       duplicable: true,
-      initialized: false
+      initialized: false,
     });
     return makeTrapExpression(
       context.trap,
       "enclave-read",
-      [scope, perform_variable],
+      [context.scope, perform_variable],
       variable,
       serial,
     );
   },
   TypeofEnclaveExpression: (context, variable, serial) => {
     const perform_variable = makeTECVariable(variable);
-    declareScopeVariable(scope, {
+    declareScopeVariable(context.scope, {
       variable: perform_variable,
       value: null,
       duplicable: true,
-      initialized: false
+      initialized: false,
     });
     return makeTrapExpression(
       context.trap,
       "enclave-typeof",
-      [scope, perform_variable],
+      [context.scope, perform_variable],
       variable,
       serial,
     );
   },
   GetSuperEnclaveExpression: (context, expression, serial) => {
     const perform_variable = makeNewVariable(PERFORM_GET_SUPER_ENCLAVE);
-    declareScopeVariable(scope, {
+    declareScopeVariable(context.scope, {
       variable: perform_variable,
       value: null,
       duplicable: true,
-      initialized: false
+      initialized: false,
     });
     return makeTrapExpression(
       context.trap,
       "enclave-get-super",
-      [scope, perform_variable],
+      [context.scope, perform_variable],
       visitExpression(context, expression),
       serial,
     );
   },
   CallSuperEnclaveExpression: (context, expression, serial) => {
     const perform_variable = makeNewVariable(PERFORM_CALL_SUPER_ENCLAVE);
-    declareScopeVariable(scope, {
+    declareScopeVariable(context.scope, {
       variable: perform_variable,
       value: null,
       duplicable: true,
-      initialized: false
+      initialized: false,
     });
     return makeTrapExpression(
       context.trap,
       "enclave-call-super",
-      [scope, perform_variable],
+      [context.scope, perform_variable],
       visitExpression(context, expression),
       serial,
     );
   },
-  ClosureExpression: (context, kind, asynchronous, generator, block) => {
-    const callee_variable = makeNewVariable(`callee${String(incrementCounter(context.counter))}`);
+  ClosureExpression: (
+    context,
+    kind,
+    asynchronous,
+    generator,
+    block,
+    serial,
+  ) => {
+    const callee_variable = makeNewVariable(
+      `callee${String(incrementCounter(context.counter))}`,
+    );
     const expression = makeTrapExpression(
       context.trap,
       kind,
@@ -672,71 +762,76 @@ const visitExpression = generateVisit({
     );
     return isScopeVariableUsed(context.scope, callee_variable)
       ? makeSequenceExpression(
-        makeScopeInitializeEffect(
-          context.scope,
-          callee_variable,
-          expression,
-        ),
-        makeScopeReadExpression(
-          context.scope,
-          callee_variable,
-        ),
-      )
+          makeScopeInitializeEffect(context.scope, callee_variable, expression),
+          makeScopeReadExpression(context.scope, callee_variable),
+        )
       : expression;
   },
-  AwaitExpression: (context, expression, serial) => makeAwaitExpresson(
-    makeTrapExpression(
-      context.trap,
-      "await",
-      visitExpression(context, expression),
-      serial,
+  AwaitExpression: (context, expression, serial) =>
+    makeAwaitExpression(
+      makeTrapExpression(
+        context.trap,
+        "await",
+        visitExpression(context, expression),
+        serial,
+      ),
     ),
-  ),
-  YieldExpression: (context, delegate, expression, serial) => makeYieldExpresson(
-    delegate,
-    makeTrapExpression(
-      context.trap,
-      "yield",
+  YieldExpression: (context, delegate, expression, serial) =>
+    makeYieldExpression(
       delegate,
+      makeTrapExpression(
+        context.trap,
+        "yield",
+        delegate,
+        visitExpression(context, expression),
+        serial,
+      ),
+    ),
+  ThrowExpression: (context, expression, serial) =>
+    makeThrowExpression(
+      makeTrapExpression(
+        context.trap,
+        "throw",
+        visitExpression(context, expression),
+        serial,
+      ),
+    ),
+  SequenceExpression: (context, effect, expression, _serial) =>
+    makeSequenceExpression(
+      visitEffect(context, effect),
       visitExpression(context, expression),
-      serial,
     ),
-  ),
-  ThrowExpression: (context, expression, serial) => makeThrowExpresson(
-    makeTrapExpression(
-      context.trap,
-      "throw",
-      visitExpression(context, expression),
-      serial,
+  ConditionalExpression: (
+    context,
+    expression1,
+    expression2,
+    expression3,
+    serial,
+  ) =>
+    makeConditionalExpression(
+      makeTrapExpression(
+        context.trap,
+        "test",
+        visitExpression(context, expression1),
+        serial,
+      ),
+      visitExpression(context, expression2),
+      visitExpression(context, expression3),
     ),
-  ),
-  SequenceExpression: (context, effect, expression, serial) => makeSequenceExpression(
-    visitEffect(context, effect),
-    visitExpression(context, expression),
-  ),
-  ConditionalExpression: (context, expression1, expression2, expression3, serial) => makeConditionalExpression(
-    makeTrapExpression(
-      context.trap,
-      "test",
-      visitExpression(context, expression1),
-      serial,
+  EvalExpression: (context, enclaves, identifiers, expression, serial) =>
+    makeEvalExpression(
+      enclaves,
+      map(identifiers, makeOldVariable),
+      makeTrapExpression(
+        context.trap,
+        "eval",
+        visitExpression(context, expression),
+        serial,
+      ),
     ),
-    visitExpression(context, expression2),
-    visitExpression(context, expression3),
-  ),
-  EvalExpression: (context, enclaves, identifiers, expression, serial) => makeTrapExpression(
-    enclaves,
-    map(identifiers, makeOldVariable),
-    makeTrapExpression(
-      context.trap,
-      "eval",
-      visitExpression(context, expression),
-      serial,
-    ),
-  ),
   DynamicImportExpression: (context, expression, serial) => {
-    const perform_variable = makeNewVariable(PERFORM_IMPORT);
-    declareScopeDuplicable(scope, {
+    const perform_variable = makeNewVariable(PERFORM_DYNAMIC_IMPORT);
+    declareScopeVariable(context.scope, {
       variable: perform_variable,
       value: null,
       duplicable: true,
@@ -745,50 +840,59 @@ const visitExpression = generateVisit({
     return makeTrapExpression(
       context.trap,
       "dynamic-import",
-      [scope, perform_variable],
+      [context.scope, perform_variable],
       visitExpression(context, expression),
       serial,
     );
   },
   // Combiners //
-  ApplyExpression: (context, expression1, expression2, expressions, serial) => makeTrapExpression(
-    context.trap,
-    "apply",
-    visitExpression(context, expression1),
-    visitExpression(context, expression2),
-    map(expressions, (expression) => visitExpression(context, expression)),
-    serial,
-  ),
-  ConstructExpression: (context, expression, expressions, serial) => makeTrapExpression(
-    context.trap,
-    "construct",
-    visitExpression(context, expression1),
-    map(expressions, (expression) => visitExpression(context, expression)),
-    serial,
-  ),
-  UnaryExpression: (context, operator, expression, serial) => makeTrapExpression(
-    context.trap,
-    "unary",
-    operator,
-    visitExpression(context, expression),
-    serial,
-  ),
-  BinaryExpression: (context, operator, expression1, expression2, serial) => makeTrapExpression(
-    context.trap,
-    "binary",
-    operator,
-    visitExpression(context, expression1),
-    visitExpression(context, expression2),
-    serial,
-  ),
-  ObjectExpression: (context, expression, properties, serial) => makeTrapExpression(
-    context.trap,
-    "object",
-    visitExpression(context, expression),
-    map(properties, (property) => [
-      visitExpression(context, property[0]),
-      visitExpression(context, property[1]),
-    ]),
-    serial,
-  ),
+  ApplyExpression: (context, expression1, expression2, expressions, serial) =>
+    makeTrapExpression(
+      context.trap,
+      "apply",
+      visitExpression(context, expression1),
+      visitExpression(context, expression2),
+      map(expressions, (arg_expression) =>
+        visitExpression(context, arg_expression),
+      ),
+      serial,
+    ),
+  ConstructExpression: (context, expression, expressions, serial) =>
+    makeTrapExpression(
+      context.trap,
+      "construct",
+      visitExpression(context, expression),
+      map(expressions, (arg_expression) =>
+        visitExpression(context, arg_expression),
+      ),
+      serial,
+    ),
+  UnaryExpression: (context, operator, expression, serial) =>
+    makeTrapExpression(
+      context.trap,
+      "unary",
+      operator,
+      visitExpression(context, expression),
+      serial,
+    ),
+  BinaryExpression: (context, operator, expression1, expression2, serial) =>
+    makeTrapExpression(
+      context.trap,
+      "binary",
+      operator,
+      visitExpression(context, expression1),
+      visitExpression(context, expression2),
+      serial,
+    ),
+  ObjectExpression: (context, expression, properties, serial) =>
+    makeTrapExpression(
+      context.trap,
+      "object",
+      visitExpression(context, expression),
+      map(properties, (property) => [
+        visitExpression(context, property[0]),
+        visitExpression(context, property[1]),
+      ]),
+      serial,
+    ),
 });
