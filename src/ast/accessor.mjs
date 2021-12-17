@@ -1,9 +1,10 @@
-import {concat, slice} from "array-lite";
+import {concat, slice, every, zip} from "array-lite";
 import {assert} from "../util.mjs";
+import {isLiteral, fromLiteral} from "./literal.mjs";
 
 const {
   Error,
-  // Array: {isArray},
+  Array: {isArray},
   Reflect: {apply},
   undefined,
 } = globalThis;
@@ -69,15 +70,20 @@ export const extractNode = (context, node, type, callback) => {
   /* c8 ignore stop */
 };
 
-// export const matchNode = (context, value, pattern) => {
-//   if (typeof pattern === "function") {
-//     return pattern(context, value);
-//   }
-//   if (isArray(value) && isArray(pattern) && value.length === pattern.length) {
-//     return every(zip(value, pattern), (pair) => matchNode(context, pair[0], pair[1]);
-//   }
-//   return value === match;
-// };
+export const matchNode = (context, value, pattern) => {
+  if (typeof pattern === "function") {
+    return pattern(context, value);
+  }
+  if (isArray(value) && isArray(pattern) && value.length === pattern.length) {
+    return every(zip(value, pattern), (pair) =>
+      matchNode(context, pair[0], pair[1]),
+    );
+  }
+  if (pattern === undefined || typeof pattern === "bigint") {
+    return isLiteral(value) && fromLiteral(value) === pattern;
+  }
+  return value === pattern;
+};
 
 // allignNode is only used for testing so we don't care about performance and use reflection.
 export const allignNode = (

@@ -11,7 +11,7 @@ import {
   getNodeFieldArray,
   dispatchNode,
   extractNode,
-  // matchNode,
+  matchNode,
   getNodeAnnotation,
   allignNode,
 } from "./accessor.mjs";
@@ -22,25 +22,25 @@ import {
 
 // makeAnnotatedNode //
 assertEqual(
-  getNodeType(makeAnnotatedNode("PrimitiveExpression", 123, "@")),
-  "PrimitiveExpression",
+  getNodeType(makeAnnotatedNode("LiteralExpression", 123, "@")),
+  "LiteralExpression",
 );
 assertDeepEqual(
-  getNodeAnnotation(makeAnnotatedNode("PrimitiveExpression", 123, "@")),
+  getNodeAnnotation(makeAnnotatedNode("LiteralExpression", 123, "@")),
   "@",
 );
 assertDeepEqual(
-  getNodeFieldArray(makeAnnotatedNode("PrimitiveExpression", 123, "@")),
+  getNodeFieldArray(makeAnnotatedNode("LiteralExpression", 123, "@")),
   [123],
 );
 
 // makeNode //
 assertEqual(
-  getNodeType(makeNode("PrimitiveExpression", 123)),
-  "PrimitiveExpression",
+  getNodeType(makeNode("LiteralExpression", 123)),
+  "LiteralExpression",
 );
-assertDeepEqual(getNodeAnnotation(makeNode("PrimitiveExpression", 123)), null);
-assertDeepEqual(getNodeFieldArray(makeNode("PrimitiveExpression", 123)), [123]);
+assertDeepEqual(getNodeAnnotation(makeNode("LiteralExpression", 123)), null);
+assertDeepEqual(getNodeFieldArray(makeNode("LiteralExpression", 123)), [123]);
 
 /////////////////////////////////
 // extractNode && dispatchNode //
@@ -90,7 +90,7 @@ assertEqual(
 
 // 1 //
 {
-  const node = makeAnnotatedNode("PrimitiveExpression", 123, "@");
+  const node = makeAnnotatedNode("LiteralExpression", 123, "@");
   const callback = (context, primitive, annotation, ...rest) => {
     assertDeepEqual(
       [context, primitive, annotation, rest],
@@ -99,7 +99,7 @@ assertEqual(
     return "result";
   };
   assertEqual(
-    extractNode("context", node, "PrimitiveExpression", callback),
+    extractNode("context", node, "LiteralExpression", callback),
     "result",
   );
   assertEqual(
@@ -108,7 +108,7 @@ assertEqual(
       node,
       {
         __proto__: null,
-        PrimitiveExpression: callback,
+        LiteralExpression: callback,
       },
       generateAssertUnreachable("default callback should not be called"),
     ),
@@ -145,9 +145,9 @@ assertEqual(
 {
   const node = makeAnnotatedNode(
     "ConditionalExpression",
-    makeAnnotatedNode("PrimitiveExpression", 123, "@"),
-    makeAnnotatedNode("PrimitiveExpression", 456, "@"),
-    makeAnnotatedNode("PrimitiveExpression", 789, "@"),
+    makeAnnotatedNode("LiteralExpression", 123, "@"),
+    makeAnnotatedNode("LiteralExpression", 456, "@"),
+    makeAnnotatedNode("LiteralExpression", 789, "@"),
     "@",
   );
   const callback = (
@@ -162,9 +162,9 @@ assertEqual(
       [context, annotation, expression1, expression2, expression3, rest],
       [
         "context",
-        makeAnnotatedNode("PrimitiveExpression", 123, "@"),
-        makeAnnotatedNode("PrimitiveExpression", 456, "@"),
-        makeAnnotatedNode("PrimitiveExpression", 789, "@"),
+        makeAnnotatedNode("LiteralExpression", 123, "@"),
+        makeAnnotatedNode("LiteralExpression", 456, "@"),
+        makeAnnotatedNode("LiteralExpression", 789, "@"),
         "@",
         [],
       ],
@@ -244,39 +244,56 @@ assertEqual(
 // matchNode //
 ///////////////
 
-// assertEqual(
-//   matchNode(
-//     "context",
-//     makeAnnotatedNode("PrimitiveExpression", "@", 123),
-//     makeAnnotatedNode("PrimitiveExpression", "@", 456),
-//   ),
-//   false,
-// );
-//
-// assertEqual(
-//   matchNode(
-//     "context",
-//     makeAnnotatedNode("PrimitiveExpression", "@", 123),
-//     makeAnnotatedNode("PrimitiveExpression", "@", 123),
-//   ),
-//   true,
-// );
-//
-// const testMatch = (matched) => {
-//   assertEqual(
-//     matchNode(
-//       "context",
-//       makeAnnotatedNode("PrimitiveExpression", "@", 123),
-//       makeAnnotatedNode("PrimitiveExpression", "@", (...args) => {
-//         assertDeepEqual(args, ["context", "@", 123]);
-//         return matched;
-//       }),
-//     ),
-//     matched,
-//   );
-// };
-// testMatch(true);
-// testMatch(false);
+assertEqual(
+  matchNode("context", makeAnnotatedNode("LiteralExpression", 123, "@"), [
+    "LiteralExpression",
+    456,
+    "@",
+  ]),
+  false,
+);
+
+assertEqual(
+  matchNode("context", makeAnnotatedNode("LiteralExpression", 123, "@"), [
+    "LiteralExpression",
+    123,
+    "@",
+  ]),
+  true,
+);
+
+assertEqual(
+  matchNode(
+    "context",
+    makeAnnotatedNode("LiteralExpression", {bigint: "123"}, "@"),
+    ["LiteralExpression", 456n, "@"],
+  ),
+  false,
+);
+assertEqual(
+  matchNode(
+    "context",
+    makeAnnotatedNode("LiteralExpression", {bigint: "123"}, "@"),
+    ["LiteralExpression", 123n, "@"],
+  ),
+  true,
+);
+
+const testMatch = (matched) => {
+  assertEqual(
+    matchNode("context", makeAnnotatedNode("LiteralExpression", 123, "@"), [
+      "LiteralExpression",
+      (...args) => {
+        assertDeepEqual(args, ["context", 123]);
+        return matched;
+      },
+      "@",
+    ]),
+    matched,
+  );
+};
+testMatch(true);
+testMatch(false);
 
 ////////////////
 // allignNode //
@@ -285,11 +302,11 @@ assertEqual(
 assertEqual(
   allignNode(
     "context",
-    makeAnnotatedNode("PrimitiveExpression", 123, "@1"),
-    makeAnnotatedNode("PrimitiveExpression", 456, "@2"),
+    makeAnnotatedNode("LiteralExpression", 123, "@1"),
+    makeAnnotatedNode("LiteralExpression", 456, "@2"),
     {
       __proto__: null,
-      PrimitiveExpression: (
+      LiteralExpression: (
         context,
         node1,
         node2,
@@ -312,16 +329,16 @@ assertEqual(
 assertEqual(
   allignNode(
     "context",
-    makeAnnotatedNode("PrimitiveExpression", 123, "@"),
-    makeAnnotatedNode("PrimitiveExpression", 456, "@"),
+    makeAnnotatedNode("LiteralExpression", 123, "@"),
+    makeAnnotatedNode("LiteralExpression", 456, "@"),
     {__proto__: null},
     (context, node1, node2, ...rest) => {
       assertDeepEqual(
         [context, node1, node2, rest],
         [
           "context",
-          makeAnnotatedNode("PrimitiveExpression", 123, "@"),
-          makeAnnotatedNode("PrimitiveExpression", 456, "@"),
+          makeAnnotatedNode("LiteralExpression", 123, "@"),
+          makeAnnotatedNode("LiteralExpression", 456, "@"),
           [],
         ],
       );
