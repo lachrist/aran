@@ -29,7 +29,6 @@ import {
 } from "./visit.mjs";
 
 const {
-  String,
   JSON: {stringify: stringifyJSON},
 } = globalThis;
 
@@ -40,17 +39,10 @@ const generateAllign = (parse, stringify, visit) => (node, code) => {
   } else {
     const message = getErrorMessage(error);
     const {value: left} = getErrorLeft(error);
-    const {
-      value: right,
-      annotation: {
-        start: {line, column},
-      },
-    } = getErrorRight(error);
-    return `${message} (${String(line)}-${String(
-      column,
-    )}): mismatch between ${stringifyJSON(left)} and ${stringifyJSON(
-      right,
-    )}${"\n"}${stringify(node)}`;
+    const {value: right, annotation: location} = getErrorRight(error);
+    return `${message} (${location}): mismatch between ${stringifyJSON(
+      left,
+    )} and ${stringifyJSON(right)}${"\n"}${stringify(node)}`;
   }
 };
 
