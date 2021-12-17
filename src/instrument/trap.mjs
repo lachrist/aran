@@ -27,6 +27,7 @@ import {
   makeCallSuperEnclaveExpression,
   makeSetSuperEnclaveEffect,
   makeWriteEnclaveEffect,
+  makeDynamicImportExpression,
 } from "../ast/index.mjs";
 
 import {lookupScopeVariable, makeScopeReadExpression} from "./scope.mjs";
@@ -282,6 +283,12 @@ const traps = {
   "return": makeExpressionTrap(returnFirst, expression_arg, serial_arg),
   "failure": makeExpressionTrap(returnFirst, expression_arg, serial_arg),
   // Combiner //
+  "dynamic-import": makeExpressionTrap(
+    dropFirst(makeDynamicImportExpression),
+    perform_arg,
+    expression_arg,
+    serial_arg,
+  ),
   "unary": makeExpressionTrap(
     makeUnaryExpression,
     operator_arg,
