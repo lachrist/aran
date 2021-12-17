@@ -2,20 +2,30 @@ import {assertThrow, assertEqual, assertDeepEqual} from "./__fixture__.mjs";
 
 import {
   assert,
-  generateThrowError,
   inspect,
   format,
   expect,
   expectSuccess,
   incrementCounter,
   makeCounter,
+  bind,
+  returnFirst,
+  returnSecond,
+  returnThird,
+  returnFourth,
+  returnFifth,
+  generateReturn,
+  dropFirst,
+  generateThrowError,
 } from "./util.mjs";
 
 const {Error} = globalThis;
 
-assertThrow(() => assert(false, "foo"), /^Error: foo/u);
+///////////////
+// Assertion //
+///////////////
 
-assertThrow(generateThrowError("foo"));
+assertThrow(() => assert(false, "foo"), /^Error: foo/u);
 
 assertEqual(inspect("foo"), '"foo"');
 assertEqual(inspect(123), "123");
@@ -62,4 +72,32 @@ assertThrow(
   /Error: foo/u,
 );
 
+/////////////
+// Counter //
+/////////////
+
 assertEqual(incrementCounter(makeCounter()), 1);
+
+//////////////
+// Function //
+//////////////
+
+assertEqual(
+  bind(
+    (x) => 2 * x,
+    (x) => x + 1,
+  )(2),
+  6,
+);
+
+assertEqual(returnFirst(1), 1);
+assertEqual(returnSecond(1, 2), 2);
+assertEqual(returnThird(1, 2, 3), 3);
+assertEqual(returnFourth(1, 2, 3, 4), 4);
+assertEqual(returnFifth(1, 2, 3, 4, 5), 5);
+
+assertEqual(generateReturn(123)(), 123);
+
+assertDeepEqual(dropFirst((...xs) => xs)(1, 2, 3), [2, 3]);
+
+assertThrow(generateThrowError("foo"));

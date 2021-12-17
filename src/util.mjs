@@ -129,3 +129,22 @@ export const incrementCounter = (counter) => {
   counter.value += 1;
   return counter.value;
 };
+
+//////////////////////
+// Function Utility //
+//////////////////////
+
+export const bind = (f, g) => (x) => f(g(x));
+
+export const returnFirst = (x1) => x1;
+export const returnSecond = (_x1, x2) => x2;
+export const returnThird = (_x1, _x2, x3) => x3;
+export const returnFourth = (_x1, _x2, _x3, x4) => x4;
+export const returnFifth = (_x1, _x2, _x3, _x4, x5) => x5;
+
+export const generateReturn = (value) => () => value;
+
+export const dropFirst =
+  (f) =>
+  (_x, ...xs) =>
+    apply(f, undefined, xs);
