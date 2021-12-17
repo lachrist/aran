@@ -166,7 +166,7 @@ assertThrow(() => {
 });
 
 testProgram("'script'; return 123;");
-testProgram("'module'; import 'source'; { effect(123); }");
+testProgram("'module'; import 'source'; { return 123; }");
 testProgram(
   "'eval'; [$new.target, $this]; let _variable1, _variable2; { return 123; }",
 );

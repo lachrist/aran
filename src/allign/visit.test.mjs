@@ -418,18 +418,18 @@ assertProgram("'script'; return 123;", "'script'; return 123;", true);
 assertProgram("'script'; return 123;", "'script'; return 321;", false);
 
 assertProgram(
-  "'module'; export {specifier}; { effect(123); }",
-  "'module'; export {specifier}; { effect(123); }",
+  "'module'; export {specifier}; { return 123; }",
+  "'module'; export {specifier}; { return 123; }",
   true,
 );
 assertProgram(
-  "'module'; export {specifier}; { effect(123); }",
-  "'module'; export {SPECIFIER}; { effect(123); }",
+  "'module'; export {specifier}; { return 123; }",
+  "'module'; export {SPECIFIER}; { return 123; }",
   false,
 );
 assertProgram(
-  "'module'; export {specifier}; { effect(123); }",
-  "'module'; export {specifier}; { effect(321); }",
+  "'module'; export {specifier}; { return 123; }",
+  "'module'; export {specifier}; { return 321; }",
   false,
 );
 
