@@ -1,48 +1,344 @@
+import {map, zip, unzip} from "array-lite";
 
-import {zip} from "array-lite";
-import {makeApplyExpression, makeIntrinsicExpression, makePrimitiveExpression, makeReadEnclaveExpression} from "./ast/index.mjs";
+import {
+  generateThrowError,
+  generateReturn,
+  returnFirst,
+  returnSecond,
+  returnThird,
+  returnFourth,
+  dropFirst,
+} from "../util.mjs";
+
+import {
+  fromLiteral,
+  makeLiteralExpression,
+  makeObjectExpression,
+  makeApplyExpression,
+  makeIntrinsicExpression,
+  makeReadEnclaveExpression,
+  makeTypeofEnclaveExpression,
+  makeGetSuperEnclaveExpression,
+  makeUnaryExpression,
+  makeBinaryExpression,
+  makeConstructExpression,
+  makeExpressionEffect,
+  makeEffectStatement,
+  makeCallSuperEnclaveExpression,
+  makeSetSuperEnclaveEffect,
+} from "../ast/index.mjs";
+
+import {lookupScopeVariable, makeScopeReadExpression} from "./scope.mjs";
+
 import {cut} from "./cut.mjs";
-import {getTrap} from "./traps.mjs";
 
 const {
+  undefined,
   Reflect: {apply},
-} = globalThis
+  Object: {entries: toEntries},
+} = globalThis;
 
-const applyPair = ({0:first, 1:second}) => first(second);
+const STATEMENT_BYPASS = "statement";
+const EFFECT_BYPASS = "effect";
+const EXPRESSION_BYPASS = "expression";
 
-const makeInnerTrapExpression = (namespace, name, expressions) => makeApplyExpression(
+////////////
+// Helper //
+////////////
+
+const returnNull = generateReturn(null);
+const returnEmptyArray = generateReturn([]);
+const mapReturnNull = (array) => map(array, returnNull);
+const mapMapReturnNull = (arrays) => map(arrays, mapReturnNull);
+
+const getScopeData = (pair) => lookupScopeVariable(pair[0], pair[1]);
+const getScopeDataArray = (pairs) => map(pairs, getScopeData);
+
+const makeArrayExpression = (expressions) =>
   makeApplyExpression(
-    makeIntrinsicExpression("Reflect.get"),
-    makePrimitiveExpression({undefined:null}),
-    [
-      makeReadEnclaveExpression(namespace),
-      makePrimitiveExpression(name),
-    ],
+    makeIntrinsicExpression("Array.of"),
+    makeLiteralExpression({undefined: null}),
+    expressions,
+  );
+
+const makeScopeExpression = (pair) => makeScopeReadExpression(pair[0], pair[1]);
+const makeScopeArrayExpression = (pairs) =>
+  makeArrayExpression(map(pairs, makeScopeExpression));
+
+const makeMatrixExpression = (expressionss) =>
+  makeApplyExpression(
+    makeIntrinsicExpression("Array.of"),
+    makeLiteralExpression({undefined: null}),
+    map(expressionss, makeArrayExpression),
+  );
+
+const makeLiteralProperty = (entry) => [
+  makeLiteralExpression(entry[0]),
+  makeLiteralExpression(entry[1]),
+];
+
+const makeLiteralObjectExpression = (object) =>
+  makeObjectExpression(
+    makeLiteralExpression(null),
+    map(toEntries(object), makeLiteralProperty),
+  );
+
+const makeLiteralObjectArrayExpression = (objects) =>
+  makeArrayExpression(map(objects, makeLiteralObjectExpression));
+
+///////////////////
+// Type Argument //
+///////////////////
+
+const expression_arg = [returnNull, returnFirst];
+const expression_array_arg = [mapReturnNull, makeArrayExpression];
+const property_array_arg = [mapMapReturnNull, makeMatrixExpression];
+const primitive_arg = [returnFirst, makeLiteralExpression];
+const literal_arg = [fromLiteral, makeLiteralExpression];
+const scope_arg = [getScopeData, makeScopeExpression];
+const scope_array_arg = [getScopeDataArray, makeScopeArrayExpression];
+const link_array_arg = [returnFirst, makeLiteralObjectArrayExpression];
+
+//////////////////////
+// Synonym Argument //
+//////////////////////
+
+const kind_arg = primitive_arg;
+const asynchronous_arg = primitive_arg;
+const generator_arg = primitive_arg;
+const serial_arg = primitive_arg;
+const enclave_variable_arg = primitive_arg;
+const specifier_arg = primitive_arg;
+const source_arg = primitive_arg;
+const operator_arg = primitive_arg;
+
+const label_arg = scope_arg;
+const variable_arg = scope_arg;
+const callee_arg = scope_arg;
+const perform_arg = scope_arg;
+
+const label_array_arg = scope_array_arg;
+const variable_array_arg = scope_array_arg;
+
+//////////////
+// makeTrap //
+//////////////
+
+const missing_bypasses = {
+  [STATEMENT_BYPASS]: generateThrowError("missing statement bypass"),
+  [EFFECT_BYPASS]: generateThrowError("missing effect bypass"),
+  [EXPRESSION_BYPASS]: generateThrowError("missing expression bypass"),
+};
+
+const generateMakeTrap =
+  (bypass_type) =>
+  (bypass, ...args) => {
+    const [closures1, closures2] = unzip(args);
+    return {
+      ...missing_bypasses,
+      [bypass_type]: bypass,
+      static: closures1,
+      dynamic: closures2,
+    };
+  };
+const makeStatementTrap = generateMakeTrap(STATEMENT_BYPASS);
+const makeExpressionTrap = generateMakeTrap(EXPRESSION_BYPASS);
+const makeEffectTrap = generateMakeTrap(EFFECT_BYPASS);
+
+/////////////
+// Library //
+/////////////
+
+const traps = {
+  "__proto__": null,
+  //////////////
+  // Informer //
+  //////////////
+  "arrival": makeStatementTrap(
+    returnEmptyArray,
+    kind_arg,
+    link_array_arg,
+    callee_arg,
+    serial_arg,
   ),
-  makeReadEnclaveExpression(namespace),
-  expressions,
+  "enter": makeStatementTrap(
+    returnEmptyArray,
+    kind_arg,
+    label_array_arg,
+    variable_array_arg,
+    serial_arg,
+  ),
+  "completion": makeStatementTrap(returnEmptyArray, serial_arg),
+  "leave": makeStatementTrap(returnEmptyArray, serial_arg),
+  "debugger": makeStatementTrap(returnEmptyArray, serial_arg),
+  "break": makeStatementTrap(returnEmptyArray, label_arg, serial_arg),
+  ////////////
+  // Effect //
+  ////////////
+  "enclave-set-super": makeEffectTrap(
+    dropFirst(makeSetSuperEnclaveEffect),
+    perform_arg,
+    expression_arg,
+    expression_arg,
+    serial_arg,
+  ),
+  ////////////////
+  // Expression //
+  ////////////////
+  // Producer //
+  "literal": makeExpressionTrap(makeLiteralExpression, literal_arg, serial_arg),
+  "import": makeExpressionTrap(
+    returnThird,
+    source_arg,
+    specifier_arg,
+    expression_arg,
+  ),
+  "closure": makeExpressionTrap(
+    returnFourth,
+    kind_arg,
+    asynchronous_arg,
+    generator_arg,
+    expression_arg,
+    serial_arg,
+  ),
+  "read": makeExpressionTrap(
+    returnSecond,
+    variable_arg,
+    expression_arg,
+    serial_arg,
+  ),
+  "enclave-read": makeExpressionTrap(
+    dropFirst(makeReadEnclaveExpression),
+    perform_arg,
+    enclave_variable_arg,
+    serial_arg,
+  ),
+  "enclave-typeof": makeExpressionTrap(
+    dropFirst(makeTypeofEnclaveExpression),
+    perform_arg,
+    enclave_variable_arg,
+    serial_arg,
+  ),
+  // Consumer //
+  "export": makeExpressionTrap(
+    returnSecond,
+    specifier_arg,
+    expression_arg,
+    serial_arg,
+  ),
+  "write": makeExpressionTrap(
+    returnSecond,
+    variable_arg,
+    expression_arg,
+    serial_arg,
+  ),
+  "test": makeExpressionTrap(returnFirst, expression_arg, serial_arg),
+  "enclave-declare": makeExpressionTrap(
+    returnThird,
+    kind_arg,
+    enclave_variable_arg,
+    expression_arg,
+    serial_arg,
+  ),
+  "enclave-write": makeExpressionTrap(
+    returnThird,
+    perform_arg,
+    enclave_variable_arg,
+    expression_arg,
+    serial_arg,
+  ),
+  // Special //
+  "return": makeExpressionTrap(returnFirst, expression_arg, serial_arg),
+  "failure": makeExpressionTrap(returnFirst, expression_arg, serial_arg),
+  // Combiner //
+  "unary": makeExpressionTrap(
+    makeUnaryExpression,
+    operator_arg,
+    expression_arg,
+    serial_arg,
+  ),
+  "binary": makeExpressionTrap(
+    makeBinaryExpression,
+    operator_arg,
+    expression_arg,
+    expression_arg,
+    serial_arg,
+  ),
+  "apply": makeExpressionTrap(
+    makeApplyExpression,
+    expression_arg,
+    expression_arg,
+    expression_array_arg,
+    serial_arg,
+  ),
+  "construct": makeExpressionTrap(
+    makeConstructExpression,
+    expression_arg,
+    expression_array_arg,
+    serial_arg,
+  ),
+  "object": makeExpressionTrap(
+    makeObjectExpression,
+    expression_arg,
+    property_array_arg,
+    serial_arg,
+  ),
+  "enclave-get-super": makeExpressionTrap(
+    dropFirst(makeGetSuperEnclaveExpression),
+    perform_arg,
+    expression_arg,
+    serial_arg,
+  ),
+  "enclave-call-super": makeExpressionTrap(
+    dropFirst(makeCallSuperEnclaveExpression),
+    perform_arg,
+    expression_arg,
+    serial_arg,
+  ),
+};
+
+////////////
+// Export //
+////////////
+
+// const print = (x) => {
+//   console.log("GRUNT", x);
+//   return x;
+// };
+
+const applyPair = ({0: first, 1: second}) => first(second);
+
+const generateMakeTrapNode =
+  (bypass_type, makeNode) =>
+  ({namespace, pointcut}, name, ...values) =>
+    cut(pointcut, name, map(zip(traps[name].static, values), applyPair))
+      ? makeNode(
+          makeApplyExpression(
+            makeApplyExpression(
+              makeIntrinsicExpression("Reflect.get"),
+              makeLiteralExpression({undefined: null}),
+              [
+                makeReadEnclaveExpression(namespace),
+                makeLiteralExpression(name),
+              ],
+            ),
+            makeReadEnclaveExpression(namespace),
+            map(zip(traps[name].dynamic, values), applyPair),
+          ),
+        )
+      : apply(traps[name][bypass_type], undefined, values);
+
+export const makeTrapStatementArray = generateMakeTrapNode(
+  STATEMENT_BYPASS,
+  (expression) => [makeEffectStatement(makeExpressionEffect(expression))],
 );
 
-export const makeTrapStatementArray = ({namespace, pointcut}, name, values) =>
-  cut(pointcut, name, map(zip(getTrapStatic(name), values), applyPair))
-  ? [
-    makeEffectStatement(
-      makeExpressionEffect(
-        makeInnerTrapExpression(
-          namespace,
-          name,
-          map(zip(getTrapDynamic(name), values), applyPair),
-        ),
-      ),
-    ),
-  ]
-  : [];
+export const makeTrapExpression = generateMakeTrapNode(
+  EXPRESSION_BYPASS,
+  returnFirst,
+);
 
-export const makeTrapExpression = ({pointcut, namespace}, name, values) =>
-  cut(pointcut, name, map(zip(getTrapStatic(name), values), applyPair))
-  ? makeInnerTrapExpression(
-    namespace,
-    name,
-    map(zip(getTrapDynamic(name), values), applyPair),
-  )
-  : apply(getTrapCombine(name), undefined, values)
+export const makeTrapEffect = generateMakeTrapNode(
+  EFFECT_BYPASS,
+  makeExpressionEffect,
+);

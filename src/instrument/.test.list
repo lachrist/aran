@@ -1,7 +1,6 @@
 - scope.mjs
 - * unmangle.mjs
   * variable.mjs
-  * - * cut.mjs
-      * trap-library.mjs
+  * - cut.mjs
     - trap.mjs
 - index.mjs
