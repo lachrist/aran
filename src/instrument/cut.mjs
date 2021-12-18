@@ -42,7 +42,7 @@ export const cut = (pointcut, name, values) => {
       ? applyPoint(apply(getMap, pointcut, [name]), pointcut, name, values)
       : false;
   }
-  if (typeof pointcut === "object") {
+  if (typeof pointcut === "object" && pointcut !== null) {
     return name in pointcut
       ? applyPoint(pointcut[name], pointcut, name, values)
       : false;
