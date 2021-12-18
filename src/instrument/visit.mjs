@@ -27,9 +27,9 @@ import {
   makeIfStatement,
   makeWhileStatement,
   makeTryStatement,
-  makeSetSuperEnclaveEffect,
+  // makeSetSuperEnclaveEffect,
   // makeWriteEffect,
-  makeWriteEnclaveEffect,
+  // makeWriteEnclaveEffect,
   makeStaticExportEffect,
   makeSequenceEffect,
   makeConditionalEffect,
@@ -39,18 +39,18 @@ import {
   makeIntrinsicExpression,
   makeStaticImportExpression,
   // makeReadExpression,
-  makeReadEnclaveExpression,
-  makeTypeofEnclaveExpression,
+  // makeReadEnclaveExpression,
+  // makeTypeofEnclaveExpression,
   makeClosureExpression,
   makeAwaitExpression,
   makeYieldExpression,
   makeThrowExpression,
   makeSequenceExpression,
   makeConditionalExpression,
-  makeGetSuperEnclaveExpression,
-  makeCallSuperEnclaveExpression,
+  // makeGetSuperEnclaveExpression,
+  // makeCallSuperEnclaveExpression,
   makeEvalExpression,
-  makeDynamicImportExpression,
+  // makeDynamicImportExpression,
   makeApplyExpression,
   // makeConstructExpression,
   // makeUnaryExpression,
@@ -61,7 +61,6 @@ import {
 import {unmangleLabel, unmangleVariable} from "./unmangle.mjs";
 
 import {
-  getVariableBody,
   makeNewVariable,
   makeOldVariable,
   makeLabVariable,
@@ -69,13 +68,6 @@ import {
   makeRECVariable,
   makeWECVariable,
   makeTECVariable,
-  // isOldVariable,
-  isNewVariable,
-  isLabVariable,
-  isVarVariable,
-  isRECVariable,
-  isTECVariable,
-  isWECVariable,
 } from "./variable.mjs";
 
 import {
@@ -96,113 +88,15 @@ import {
   getUsedScopeVariableArray,
 } from "./scope.mjs";
 
-const {
-  undefined,
-  String,
-  Error,
-  Object: {entries: toEntries},
-} = globalThis;
+import {
+  makeInitializeExpression,
+  PERFORM_SET_SUPER_ENCLAVE,
+  PERFORM_GET_SUPER_ENCLAVE,
+  PERFORM_CALL_SUPER_ENCLAVE,
+  PERFORM_DYNAMIC_IMPORT,
+} from "./initialize.mjs";
 
-const PERFORM_DYNAMIC_IMPORT = "import";
-const PERFORM_GET_SUPER_ENCLAVE = "get_super";
-const PERFORM_SET_SUPER_ENCLAVE = "set_super";
-const PERFORM_CALL_SUPER_ENCLAVE = "call_super";
-
-/////////////
-// Helpers //
-/////////////
-
-const makeSimpleArrowExpression = (expression) =>
-  makeClosureExpression(
-    "arrow",
-    false,
-    false,
-    makeBlock([], [], [makeReturnStatement(expression)]),
-  );
-
-const makeArgumentExpression = (literal) =>
-  makeApplyExpression(
-    makeIntrinsicExpression("Reflect.get"),
-    makeLiteralExpression({undefined: null}),
-    [makeInputExpression(), makeLiteralExpression(literal)],
-  );
-
-const makeLiteralProperty = (entry) => [
-  makeLiteralExpression(entry[0]),
-  makeLiteralExpression(entry[1]),
-];
-
-const makeInitializeExpression = (variable) => {
-  if (isNewVariable(variable)) {
-    if (variable === makeNewVariable(PERFORM_GET_SUPER_ENCLAVE)) {
-      return makeSimpleArrowExpression(
-        makeGetSuperEnclaveExpression(makeArgumentExpression(0)),
-      );
-    }
-    if (variable === makeNewVariable(PERFORM_SET_SUPER_ENCLAVE)) {
-      return makeSimpleArrowExpression(
-        makeSequenceExpression(
-          makeSetSuperEnclaveEffect(
-            makeArgumentExpression(0),
-            makeArgumentExpression(1),
-          ),
-          makeLiteralExpression({undefined: null}),
-        ),
-      );
-    }
-    if (variable === makeNewVariable(PERFORM_CALL_SUPER_ENCLAVE)) {
-      return makeSimpleArrowExpression(
-        makeCallSuperEnclaveExpression(makeArgumentExpression(0)),
-      );
-    }
-    if (variable === makeNewVariable(PERFORM_DYNAMIC_IMPORT)) {
-      return makeSimpleArrowExpression(
-        makeDynamicImportExpression(makeArgumentExpression(0)),
-      );
-    }
-    throw new Error("could not initialized new variable");
-  }
-  if (isRECVariable(variable)) {
-    return makeSimpleArrowExpression(
-      makeReadEnclaveExpression(getVariableBody(variable)),
-    );
-  }
-  if (isTECVariable(variable)) {
-    return makeTypeofEnclaveExpression(
-      makeTypeofEnclaveExpression(getVariableBody(variable)),
-    );
-  }
-  if (isWECVariable(variable)) {
-    return makeSimpleArrowExpression(
-      makeSequenceExpression(
-        makeWriteEnclaveEffect(
-          getVariableBody(variable),
-          makeArgumentExpression(0),
-        ),
-        makeLiteralExpression({undefined: null}),
-      ),
-    );
-  }
-  if (isLabVariable(variable)) {
-    return makeObjectExpression(
-      makeLiteralExpression(null),
-      map(
-        toEntries(unmangleLabel(getVariableBody(variable))),
-        makeLiteralProperty,
-      ),
-    );
-  }
-  if (isVarVariable(variable)) {
-    return makeObjectExpression(
-      makeLiteralExpression(null),
-      map(
-        toEntries(unmangleVariable(getVariableBody(variable))),
-        makeLiteralProperty,
-      ),
-    );
-  }
-  throw new Error("could not initialize variable");
-};
+const {undefined, String} = globalThis;
 
 const makeInitializeStatement = (scope, variable) =>
   makeEffectStatement(
@@ -212,6 +106,10 @@ const makeInitializeStatement = (scope, variable) =>
       makeInitializeExpression(variable),
     ),
   );
+
+////////////////////////////////////
+// makeOptimizedTryStatementArray //
+////////////////////////////////////
 
 const returnTrue = generateReturn(true);
 
@@ -328,16 +226,24 @@ export const visitProgram = generateVisit({
         block,
       ),
     ),
-  EvalProgram: (context, enclaves, identifiers, block, serial) =>
+  EvalProgram: (context, enclaves, variables, block, serial) =>
     makeEvalProgram(
       enclaves,
-      map(identifiers, makeOldVariable),
+      map(variables, makeOldVariable),
       visitBlock(
         {
           ...context,
+          scope: reduce(
+            concat(
+              map(variables, makeVarDeclaration),
+              map(variables, makeOldDeclaration),
+            ),
+            accumulateDeclaration,
+            extendScope(context.scope),
+          ),
           kind: "eval",
           header: makeTrapStatementArray(
-            context,
+            context.trap,
             "arrival",
             "eval",
             null,
@@ -453,7 +359,11 @@ export const visitBlock = generateVisit({
             makeTrapExpression(
               context.trap,
               "failure",
-              makeArgumentExpression("error"),
+              makeApplyExpression(
+                makeIntrinsicExpression("Reflect.get"),
+                makeLiteralExpression({undefined: null}),
+                [makeInputExpression(), makeLiteralExpression("error")],
+              ),
               serial,
             ),
           ),
@@ -536,7 +446,9 @@ export const visitStatement = generateVisit({
     ),
   ],
   BlockStatement: (context, block, _serial) => [
-    makeBlockStatement(visitBlock(context, "block", [], block)),
+    makeBlockStatement(
+      visitBlock({...context, kind: "block", header: []}, block),
+    ),
   ],
   IfStatement: (context, expression, block1, block2, serial) => [
     makeIfStatement(
@@ -546,8 +458,8 @@ export const visitStatement = generateVisit({
         visitExpression(context, expression),
         serial,
       ),
-      visitBlock(context, "consequent", [], block1),
-      visitBlock(context, "alternate", [], block2),
+      visitBlock({...context, kind: "consequent", header: []}, block1),
+      visitBlock({...context, kind: "alternate", header: []}, block2),
     ),
   ],
   WhileStatement: (context, expression, block, serial) => [
@@ -558,14 +470,14 @@ export const visitStatement = generateVisit({
         visitExpression(context, expression),
         serial,
       ),
-      visitBlock(context, "while", [], block),
+      visitBlock({...context, kind: "while", header: []}, block),
     ),
   ],
   TryStatement: (context, block1, block2, block3, _serial) => [
     makeTryStatement(
-      visitBlock(context, "try", [], block1),
-      visitBlock(context, "catch", [], block2),
-      visitBlock(context, "finally", [], block3),
+      visitBlock({...context, kind: "try", header: []}, block1),
+      visitBlock({...context, kind: "catch", header: []}, block2),
+      visitBlock({...context, kind: "finally", header: []}, block3),
     ),
   ],
 });
@@ -697,7 +609,7 @@ export const visitExpression = generateVisit({
       context.trap,
       "read",
       [context.scope, makeVarVariable(variable)],
-      [context.scope, makeOldVariable(variable)],
+      makeScopeReadExpression(context.scope, makeOldVariable(variable)),
       serial,
     ),
   ReadEnclaveExpression: (context, variable, serial) => {
@@ -775,8 +687,15 @@ export const visitExpression = generateVisit({
     const callee_variable = makeNewVariable(
       `callee${String(incrementCounter(context.counter))}`,
     );
+    declareScopeVariable(context.scope, {
+      variable: callee_variable,
+      value: null,
+      duplicable: false,
+      initialized: false,
+    });
     const expression = makeTrapExpression(
       context.trap,
+      "closure",
       kind,
       asynchronous,
       generator,
@@ -785,16 +704,18 @@ export const visitExpression = generateVisit({
         asynchronous,
         generator,
         visitBlock(
-          context,
-          kind,
-          makeTrapStatementArray(
-            context.trap,
-            "arrival",
+          {
+            ...context,
             kind,
-            null,
-            [context.scope, callee_variable],
-            serial,
-          ),
+            header: makeTrapStatementArray(
+              context.trap,
+              "arrival",
+              kind,
+              null,
+              [context.scope, callee_variable],
+              serial,
+            ),
+          },
           block,
         ),
       ),
