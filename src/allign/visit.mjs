@@ -28,6 +28,17 @@ const {String} = globalThis;
 const makeSinglePairVariableResult = (pair) =>
   makeSingleVariableResult(pair[0], pair[1]);
 
+const visitLiteral = (error, literal1, literal2) =>
+  makeEmptyResult(
+    fromLiteral(literal1) === fromLiteral(literal2)
+      ? null
+      : setErrorValuePair(
+          setErrorMessage(error, "Literal mismatch"),
+          literal1,
+          literal2,
+        ),
+  );
+
 const visitPrimitive = (error, primitive1, primitive2) =>
   makeEmptyResult(
     primitive1 === primitive2
@@ -423,13 +434,7 @@ export const visitExpression = generateVisitNode({
     _annotation1,
     literal2,
     _annotation2,
-  ) => [
-    visitPrimitive(
-      appendErrorSegment(error, "value"),
-      fromLiteral(literal1),
-      fromLiteral(literal2),
-    ),
-  ],
+  ) => [visitLiteral(appendErrorSegment(error, "value"), literal1, literal2)],
   IntrinsicExpression: (
     error,
     intrinsic1,
