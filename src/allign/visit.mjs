@@ -9,7 +9,6 @@ import {
 } from "../ast/index.mjs";
 import {
   appendErrorSegment,
-  appendErrorPrecision,
   setErrorMessage,
   setErrorAnnotationPair,
   setErrorValuePair,
@@ -64,7 +63,7 @@ const generateVisitNode = (callbacks) => (error, node1, node2) => {
     );
   }
   const child_error = setErrorAnnotationPair(
-    appendErrorPrecision(error, type1),
+    appendErrorSegment(error, `(${type1})`),
     getNodeAnnotation(node1),
     getNodeAnnotation(node2),
   );
@@ -86,7 +85,7 @@ export const visitProgram = generateVisitNode({
     _annotation2,
   ) => [
     visitAllStatement(
-      appendErrorSegment(error, "body"),
+      appendErrorSegment(error, ".body"),
       statements1,
       statements2,
     ),
@@ -100,8 +99,8 @@ export const visitProgram = generateVisitNode({
     block2,
     _annotation2,
   ) => [
-    visitAllLink(appendErrorSegment(error, "links"), links1, links2),
-    visitBlock(appendErrorSegment(error, "body"), block1, block2),
+    visitAllLink(appendErrorSegment(error, ".links"), links1, links2),
+    visitBlock(appendErrorSegment(error, ".body"), block1, block2),
   ],
   EvalProgram: (
     error,
@@ -115,15 +114,15 @@ export const visitProgram = generateVisitNode({
     _annotation2,
   ) => [
     visitAllPrimitive(
-      appendErrorSegment(error, "enclaves"),
+      appendErrorSegment(error, ".enclaves"),
       enclaves1,
       enclaves2,
     ),
     bindAllVariable(
-      appendErrorSegment(error, "variables"),
+      appendErrorSegment(error, ".variables"),
       variables1,
       variables2,
-      visitBlock(appendErrorSegment(error, "body"), block1, block2),
+      visitBlock(appendErrorSegment(error, ".body"), block1, block2),
     ),
   ],
 });
@@ -140,15 +139,15 @@ export const visitLink = generateVisitNode({
     _annotation2,
   ) => [
     visitPrimitive(
-      appendErrorSegment(error, "specifier"),
+      appendErrorSegment(error, ".specifier"),
       specifier1,
       specifier2,
     ),
-    visitPrimitive(appendErrorSegment(error, "source"), source1, source2),
+    visitPrimitive(appendErrorSegment(error, ".source"), source1, source2),
   ],
   ExportLink: (error, specifier1, _annotation1, specifier2, _annotation2) => [
     visitPrimitive(
-      appendErrorSegment(error, "specifier"),
+      appendErrorSegment(error, ".specifier"),
       specifier1,
       specifier2,
     ),
@@ -164,14 +163,14 @@ export const visitLink = generateVisitNode({
     specifier22,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "source"), source1, source2),
+    visitPrimitive(appendErrorSegment(error, ".source"), source1, source2),
     visitPrimitive(
-      appendErrorSegment(error, "imported"),
+      appendErrorSegment(error, ".imported"),
       specifier11,
       specifier21,
     ),
     visitPrimitive(
-      appendErrorSegment(error, "exported"),
+      appendErrorSegment(error, ".exported"),
       specifier12,
       specifier22,
     ),
@@ -192,15 +191,15 @@ export const visitBlock = generateVisitNode({
     _annotation2,
   ) => [
     bindAllLabel(
-      appendErrorSegment(error, "labels"),
+      appendErrorSegment(error, ".labels"),
       labels1,
       labels2,
       bindAllVariable(
-        appendErrorSegment(error, "variables"),
+        appendErrorSegment(error, ".variables"),
         variables1,
         variables2,
         visitAllStatement(
-          appendErrorSegment(error, "body"),
+          appendErrorSegment(error, ".body"),
           statements1,
           statements2,
         ),
@@ -212,7 +211,7 @@ export const visitBlock = generateVisitNode({
 export const visitStatement = generateVisitNode({
   __proto__: null,
   EffectStatement: (error, effect1, _annotation1, effect2, _annotation2) => [
-    visitEffect(appendErrorSegment(error, "body"), effect1, effect2),
+    visitEffect(appendErrorSegment(error, ".body"), effect1, effect2),
   ],
   DeclareEnclaveStatement: (
     error,
@@ -225,10 +224,10 @@ export const visitStatement = generateVisitNode({
     expression2,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "kind"), kind1, kind2),
-    visitPrimitive(appendErrorSegment(error, "id"), identifier1, identifier2),
+    visitPrimitive(appendErrorSegment(error, ".kind"), kind1, kind2),
+    visitPrimitive(appendErrorSegment(error, ".id"), identifier1, identifier2),
     visitExpression(
-      appendErrorSegment(error, "init"),
+      appendErrorSegment(error, ".init"),
       expression1,
       expression2,
     ),
@@ -241,7 +240,7 @@ export const visitStatement = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "argument"),
+      appendErrorSegment(error, ".argument"),
       expression1,
       expression2,
     ),
@@ -251,7 +250,7 @@ export const visitStatement = generateVisitNode({
   ],
   DebuggerStatement: (_error, _annotation1, _annotation2) => [],
   BlockStatement: (error, block1, _annotation1, block2, _annotation2) => [
-    visitBlock(appendErrorSegment(error, "body"), block1, block2),
+    visitBlock(appendErrorSegment(error, ".body"), block1, block2),
   ],
   IfStatement: (
     error,
@@ -265,12 +264,12 @@ export const visitStatement = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "test"),
+      appendErrorSegment(error, ".test"),
       expression1,
       expression2,
     ),
-    visitBlock(appendErrorSegment(error, "consequent"), block11, block21),
-    visitBlock(appendErrorSegment(error, "alternate"), block12, block22),
+    visitBlock(appendErrorSegment(error, ".consequent"), block11, block21),
+    visitBlock(appendErrorSegment(error, ".alternate"), block12, block22),
   ],
   WhileStatement: (
     error,
@@ -282,11 +281,11 @@ export const visitStatement = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "test"),
+      appendErrorSegment(error, ".test"),
       expression1,
       expression2,
     ),
-    visitBlock(appendErrorSegment(error, "consequent"), block1, block2),
+    visitBlock(appendErrorSegment(error, ".consequent"), block1, block2),
   ],
   TryStatement: (
     error,
@@ -299,9 +298,9 @@ export const visitStatement = generateVisitNode({
     block23,
     _annotation2,
   ) => [
-    visitBlock(appendErrorSegment(error, "body"), block11, block21),
-    visitBlock(appendErrorSegment(error, "handler"), block12, block22),
-    visitBlock(appendErrorSegment(error, "finalizer"), block13, block23),
+    visitBlock(appendErrorSegment(error, ".body"), block11, block21),
+    visitBlock(appendErrorSegment(error, ".handler"), block12, block22),
+    visitBlock(appendErrorSegment(error, ".finalizer"), block13, block23),
   ],
 });
 
@@ -318,7 +317,7 @@ export const visitEffect = generateVisitNode({
   ) => [
     makeSingleVariableResult(identifier1, identifier2),
     visitExpression(
-      appendErrorSegment(error, "right"),
+      appendErrorSegment(error, ".right"),
       expression1,
       expression2,
     ),
@@ -332,9 +331,13 @@ export const visitEffect = generateVisitNode({
     expression2,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "left"), identifier1, identifier2),
+    visitPrimitive(
+      appendErrorSegment(error, ".left"),
+      identifier1,
+      identifier2,
+    ),
     visitExpression(
-      appendErrorSegment(error, "right"),
+      appendErrorSegment(error, ".right"),
       expression1,
       expression2,
     ),
@@ -349,12 +352,12 @@ export const visitEffect = generateVisitNode({
     _annotation2,
   ) => [
     visitPrimitive(
-      appendErrorSegment(error, "specifier"),
+      appendErrorSegment(error, ".specifier"),
       specifier1,
       specifier2,
     ),
     visitExpression(
-      appendErrorSegment(error, "right"),
+      appendErrorSegment(error, ".right"),
       expression1,
       expression2,
     ),
@@ -369,12 +372,12 @@ export const visitEffect = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "property"),
+      appendErrorSegment(error, ".property"),
       expression11,
       expression21,
     ),
     visitExpression(
-      appendErrorSegment(error, "right"),
+      appendErrorSegment(error, ".right"),
       expression12,
       expression22,
     ),
@@ -388,8 +391,8 @@ export const visitEffect = generateVisitNode({
     effect22,
     _annotation2,
   ) => [
-    visitEffect(appendErrorSegment(error, "first"), effect11, effect21),
-    visitEffect(appendErrorSegment(error, "second"), effect12, effect22),
+    visitEffect(appendErrorSegment(error, ".first"), effect11, effect21),
+    visitEffect(appendErrorSegment(error, ".second"), effect12, effect22),
   ],
   ConditionalEffect: (
     error,
@@ -403,12 +406,12 @@ export const visitEffect = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "test"),
+      appendErrorSegment(error, ".test"),
       expression1,
       expression2,
     ),
-    visitEffect(appendErrorSegment(error, "first"), effect11, effect21),
-    visitEffect(appendErrorSegment(error, "second"), effect12, effect22),
+    visitEffect(appendErrorSegment(error, ".first"), effect11, effect21),
+    visitEffect(appendErrorSegment(error, ".second"), effect12, effect22),
   ],
   ExpressionEffect: (
     error,
@@ -418,7 +421,7 @@ export const visitEffect = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "expression"),
+      appendErrorSegment(error, ".expression"),
       expression1,
       expression2,
     ),
@@ -434,7 +437,7 @@ export const visitExpression = generateVisitNode({
     _annotation1,
     literal2,
     _annotation2,
-  ) => [visitLiteral(appendErrorSegment(error, "value"), literal1, literal2)],
+  ) => [visitLiteral(appendErrorSegment(error, ".value"), literal1, literal2)],
   IntrinsicExpression: (
     error,
     intrinsic1,
@@ -442,7 +445,7 @@ export const visitExpression = generateVisitNode({
     intrinsic2,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "name"), intrinsic1, intrinsic2),
+    visitPrimitive(appendErrorSegment(error, ".name"), intrinsic1, intrinsic2),
   ],
   ClosureExpression: (
     error,
@@ -457,20 +460,20 @@ export const visitExpression = generateVisitNode({
     block2,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "kind"), kind1, kind2),
+    visitPrimitive(appendErrorSegment(error, ".kind"), kind1, kind2),
     visitPrimitive(
-      appendErrorSegment(error, "asynchronous"),
+      appendErrorSegment(error, ".asynchronous"),
       asynchronous1,
       asynchronous2,
     ),
     visitPrimitive(
-      appendErrorSegment(error, "generator"),
+      appendErrorSegment(error, ".generator"),
       generator1,
       generator2,
     ),
     // We do not have to unbind labels because there
     // should be no unbound labels in closure' body.
-    visitBlock(appendErrorSegment(error, "body"), block1, block2),
+    visitBlock(appendErrorSegment(error, ".body"), block1, block2),
   ],
   ReadExpression: (
     _error,
@@ -486,7 +489,7 @@ export const visitExpression = generateVisitNode({
     variable2,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "name"), variable1, variable2),
+    visitPrimitive(appendErrorSegment(error, ".name"), variable1, variable2),
   ],
   TypeofEnclaveExpression: (
     error,
@@ -495,7 +498,7 @@ export const visitExpression = generateVisitNode({
     variable2,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "name"), variable1, variable2),
+    visitPrimitive(appendErrorSegment(error, ".name"), variable1, variable2),
   ],
   CallSuperEnclaveExpression: (
     error,
@@ -505,7 +508,7 @@ export const visitExpression = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "argument"),
+      appendErrorSegment(error, ".argument"),
       expression1,
       expression2,
     ),
@@ -518,7 +521,7 @@ export const visitExpression = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "property"),
+      appendErrorSegment(error, ".property"),
       expression1,
       expression2,
     ),
@@ -532,9 +535,9 @@ export const visitExpression = generateVisitNode({
     expression2,
     _annotation2,
   ) => [
-    visitEffect(appendErrorSegment(error, "first"), effect1, effect2),
+    visitEffect(appendErrorSegment(error, ".first"), effect1, effect2),
     visitExpression(
-      appendErrorSegment(error, "second"),
+      appendErrorSegment(error, ".second"),
       expression1,
       expression2,
     ),
@@ -551,17 +554,17 @@ export const visitExpression = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "test"),
+      appendErrorSegment(error, ".test"),
       expression11,
       expression21,
     ),
     visitExpression(
-      appendErrorSegment(error, "consequent"),
+      appendErrorSegment(error, ".consequent"),
       expression12,
       expression22,
     ),
     visitExpression(
-      appendErrorSegment(error, "alternate"),
+      appendErrorSegment(error, ".alternate"),
       expression13,
       expression23,
     ),
@@ -574,7 +577,7 @@ export const visitExpression = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "argument"),
+      appendErrorSegment(error, ".argument"),
       expression1,
       expression2,
     ),
@@ -588,9 +591,13 @@ export const visitExpression = generateVisitNode({
     expression2,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "delegate"), delegate1, delegate2),
+    visitPrimitive(
+      appendErrorSegment(error, ".delegate"),
+      delegate1,
+      delegate2,
+    ),
     visitExpression(
-      appendErrorSegment(error, "argument"),
+      appendErrorSegment(error, ".argument"),
       expression1,
       expression2,
     ),
@@ -603,7 +610,7 @@ export const visitExpression = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "argument"),
+      appendErrorSegment(error, ".argument"),
       expression1,
       expression2,
     ),
@@ -622,12 +629,12 @@ export const visitExpression = generateVisitNode({
     concat(
       [
         visitAllPrimitive(
-          appendErrorSegment(error, "enclaves"),
+          appendErrorSegment(error, ".enclaves"),
           enclaves1,
           enclaves2,
         ),
         visitPrimitive(
-          appendErrorSegment(error, "variables.length"),
+          appendErrorSegment(error, ".variables.length"),
           variables1.length,
           variables2.length,
         ),
@@ -635,7 +642,7 @@ export const visitExpression = generateVisitNode({
       map(zip(variables1, variables2), makeSinglePairVariableResult),
       [
         visitExpression(
-          appendErrorSegment(error, "argument"),
+          appendErrorSegment(error, ".argument"),
           expression1,
           expression2,
         ),
@@ -653,17 +660,17 @@ export const visitExpression = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "callee"),
+      appendErrorSegment(error, ".callee"),
       expression11,
       expression21,
     ),
     visitExpression(
-      appendErrorSegment(error, "this"),
+      appendErrorSegment(error, ".this"),
       expression12,
       expression22,
     ),
     visitAllExpression(
-      appendErrorSegment(error, "arguments"),
+      appendErrorSegment(error, ".arguments"),
       expressions1,
       expressions2,
     ),
@@ -678,12 +685,12 @@ export const visitExpression = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "callee"),
+      appendErrorSegment(error, ".callee"),
       expression1,
       expression2,
     ),
     visitAllExpression(
-      appendErrorSegment(error, "arguments"),
+      appendErrorSegment(error, ".arguments"),
       expressions1,
       expressions2,
     ),
@@ -697,9 +704,9 @@ export const visitExpression = generateVisitNode({
     specifier2,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "source"), source1, source2),
+    visitPrimitive(appendErrorSegment(error, ".source"), source1, source2),
     visitPrimitive(
-      appendErrorSegment(error, "specifier"),
+      appendErrorSegment(error, ".specifier"),
       specifier1,
       specifier2,
     ),
@@ -712,7 +719,7 @@ export const visitExpression = generateVisitNode({
     _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, "source"),
+      appendErrorSegment(error, ".source"),
       expression1,
       expression2,
     ),
@@ -726,9 +733,13 @@ export const visitExpression = generateVisitNode({
     expression2,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "operator"), operator1, operator2),
+    visitPrimitive(
+      appendErrorSegment(error, ".operator"),
+      operator1,
+      operator2,
+    ),
     visitExpression(
-      appendErrorSegment(error, "argument"),
+      appendErrorSegment(error, ".argument"),
       expression1,
       expression2,
     ),
@@ -744,14 +755,18 @@ export const visitExpression = generateVisitNode({
     expression22,
     _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, "operator"), operator1, operator2),
+    visitPrimitive(
+      appendErrorSegment(error, ".operator"),
+      operator1,
+      operator2,
+    ),
     visitExpression(
-      appendErrorSegment(error, "left"),
+      appendErrorSegment(error, ".left"),
       expression11,
       expression21,
     ),
     visitExpression(
-      appendErrorSegment(error, "right"),
+      appendErrorSegment(error, ".right"),
       expression12,
       expression22,
     ),
@@ -769,12 +784,16 @@ export const visitExpression = generateVisitNode({
     const {0: keys2, 1: values2} = unzip(properties2);
     return [
       visitExpression(
-        appendErrorSegment(error, "prototype"),
+        appendErrorSegment(error, ".prototype"),
         expression1,
         expression2,
       ),
-      visitAllExpression(appendErrorSegment(error, "keys"), keys1, keys2),
-      visitAllExpression(appendErrorSegment(error, "values"), values1, values2),
+      visitAllExpression(appendErrorSegment(error, ".keys"), keys1, keys2),
+      visitAllExpression(
+        appendErrorSegment(error, ".values"),
+        values1,
+        values2,
+      ),
     ];
   },
 });
@@ -784,7 +803,7 @@ const generateCombineAll =
     combineResult(
       error,
       visitPrimitive(
-        appendErrorSegment(error, "length"),
+        appendErrorSegment(error, ".length"),
         array1.length,
         array2.length,
       ),
@@ -807,7 +826,7 @@ const generateVisitAll = (visit) => (error, array1, array2) =>
   combineResult(
     error,
     visitPrimitive(
-      appendErrorSegment(error, "length"),
+      appendErrorSegment(error, ".length"),
       array1.length,
       array2.length,
     ),

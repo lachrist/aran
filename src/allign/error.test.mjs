@@ -2,7 +2,6 @@ import {assertEqual, assertDeepEqual} from "../__fixture__.mjs";
 
 import {
   makeRootError,
-  appendErrorPrecision,
   appendErrorSegment,
   setErrorAnnotationPair,
   setErrorMessage,
@@ -14,15 +13,9 @@ import {
 
 assertEqual(
   getErrorMessage(
-    setErrorMessage(
-      appendErrorPrecision(
-        appendErrorSegment(makeRootError(), "segment"),
-        "precision",
-      ),
-      "message",
-    ),
+    setErrorMessage(appendErrorSegment(makeRootError(), "segment"), "message"),
   ),
-  "message at .segment(precision)",
+  "message at segment",
 );
 
 {
