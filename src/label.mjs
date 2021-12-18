@@ -20,7 +20,7 @@ export const makeEmptyBreakLabel = generatePrepend(EMPTY_BREAK_HEAD);
 export const makeEmptyContinueLabel = generatePrepend(EMPTY_CONTINUE_HEAD);
 
 const generateTestHead = (head1, head2) => (label) =>
-  label[0] === head1 || label[1] === head2;
+  label[0] === head1 || label[0] === head2;
 export const isBreakLabel = generateTestHead(FULL_BREAK_HEAD, EMPTY_BREAK_HEAD);
 export const isContinueLabel = generateTestHead(
   FULL_CONTINUE_HEAD,
