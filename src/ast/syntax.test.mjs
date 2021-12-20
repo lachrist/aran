@@ -3,8 +3,8 @@ import {getSyntax, isSyntaxType} from "./syntax.mjs";
 getSyntax();
 
 // Enumeration //
-assertEqual(isSyntaxType("!", "UnaryOperator"), true);
-assertEqual(isSyntaxType("===", "UnaryOperator"), false);
+assertEqual(isSyntaxType("arrow", "ClosureType"), true);
+assertEqual(isSyntaxType("foo", "ClosureType"), false);
 
 // Type //
 assertEqual(isSyntaxType("'foo'", "Source"), true);
@@ -19,15 +19,6 @@ assertEqual(isSyntaxType("new.target", "Specifier"), false);
 assertEqual(isSyntaxType(null, "NullableSpecifier"), true);
 assertEqual(isSyntaxType("this", "NullableSpecifier"), true);
 assertEqual(isSyntaxType("new.target", "NullableSpecifier"), false);
-
-// ReadableEnclaveVariable //
-assertEqual(isSyntaxType("foo", "ReadableEnclaveVariable"), true);
-assertEqual(isSyntaxType("this", "ReadableEnclaveVariable"), true);
-assertEqual(isSyntaxType("function", "ReadableEnclaveVariable"), false);
-
-// WritableEnclaveVariable //
-assertEqual(isSyntaxType("foo", "WritableEnclaveVariable"), true);
-assertEqual(isSyntaxType("this", "WritableEnclaveVariable"), false);
 
 // Label //
 assertEqual(isSyntaxType("foo", "Label"), true);

@@ -32,14 +32,7 @@ const testBlock = generateTest(parseBlock, stringifyBlock);
 // Expression //
 ////////////////
 
-assertThrow(() => {
-  testExpression("foo.bar;");
-});
-assertThrow(() => {
-  testExpression("foo;");
-});
-
-testExpression("input");
+testExpression("input;");
 
 testExpression("123;");
 testExpression("123n;");
@@ -50,13 +43,7 @@ testExpression("intrinsic('ReferenceError');");
 
 testExpression("importStatic('specifier', 'source');");
 
-testExpression("$variable;");
-testExpression("$this;");
-testExpression("$new.target;");
-
-testExpression("_variable;");
-
-testExpression("typeof $variable;");
+testExpression("variable;");
 
 testExpression("(() => { return 123; });");
 testExpression("(async () => { return 123; });");
@@ -68,29 +55,17 @@ testExpression("await 123;");
 testExpression("yieldStraight(123);");
 testExpression("yieldDelegate(123);");
 
-testExpression("throwError(123);");
-
 testExpression("(effect(123), 456);");
 
 testExpression("123 ? 456 : 789;");
 
-testExpression("$super[123];");
-
-testExpression("$super(...123);");
-
-testExpression("eval([$new.target, $this], [_variable1, _variable2], 123);");
-
-testExpression("import(123);");
+testExpression("eval([variable1, variable2], 123);");
 
 testExpression("123(456, 789)");
 
+testExpression("123[456](789)");
+
 testExpression("new 123(456)");
-
-testExpression("!123;");
-
-testExpression("123 + 456;");
-
-testExpression("({__proto__:123, [456]:789});");
 
 ////////////
 // Effect //
@@ -99,16 +74,8 @@ testExpression("({__proto__:123, [456]:789});");
 assertThrow(() => {
   testEffect("foo();");
 });
-assertThrow(() => {
-  testEffect("foo = 123;");
-});
-assertThrow(() => {
-  testEffect("foo.bar = 123;");
-});
 
-testEffect("$super[123] = 456;");
-testEffect("_variable = 123;");
-testEffect("$variable = 123;");
+testEffect("variable = 123;");
 testEffect("exportStatic('specifier', 123);");
 testEffect("(effect(123), effect(456));");
 testEffect("123 ? effect(456) : effect(789);");
@@ -122,7 +89,7 @@ testStatement("effect(123);");
 testStatement("return 123;");
 testStatement("break label;");
 testStatement("debugger;");
-testStatement("let $variable = 123;");
+testStatement("let variable = 123;");
 testStatement("{ effect(123); }");
 testStatement("label: { effect(123); }");
 testStatement("if (123) { effect(456); } else { effect(789); }");
@@ -135,7 +102,7 @@ testStatement(
 // Block //
 ///////////
 
-testBlock("label1: label2: { let _variable1, _variable2; effect(123); }");
+testBlock("label1: label2: { let variable1, variable2; effect(123); }");
 testBlock("{}");
 
 //////////
@@ -156,20 +123,12 @@ testLink("export * from 'source';");
 /////////////
 
 assertThrow(() => {
-  testProgram("'eval';");
-});
-assertThrow(() => {
-  testProgram("'eval'; foo; bar;");
-});
-assertThrow(() => {
   testProgram("'foo';");
 });
 
 testProgram("'script'; return 123;");
 testProgram("'module'; import 'source'; { return 123; }");
-testProgram(
-  "'eval'; [$new.target, $this]; let _variable1, _variable2; { return 123; }",
-);
-testProgram("'eval'; let _variable1, _variable2; { return 123; }");
-testProgram("'eval'; [$new.target, $this]; { return 123; }");
-testProgram("'eval'; { return 123; }");
+testProgram("'enclave eval'; ['new.target', 'this']; { return 123; }");
+testProgram("'local eval'; let variable1, variable2; { return 123; }");
+testProgram("'local eval'; { return 123; }");
+testProgram("'global eval'; { return 123; }");

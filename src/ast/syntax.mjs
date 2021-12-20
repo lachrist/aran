@@ -19,7 +19,9 @@ const syntax = {
     __proto__: null,
     ScriptProgram: [["Statement", "*"]],
     ModuleProgram: [["Link", "*"], "Block"],
-    EvalProgram: [["Enclave", "*"], ["Variable", "*"], "Block"],
+    LocalEvalProgram: [["Variable", "*"], "Block"],
+    GlobalEvalProgram: ["Block"],
+    EnclaveEvalProgram: [["Enclave", "*"], "Block"],
   },
   Link: {
     __proto__: null,
@@ -42,11 +44,7 @@ const syntax = {
     ReturnStatement: ["Expression"],
     BreakStatement: ["Label"],
     DebuggerStatement: [],
-    DeclareEnclaveStatement: [
-      "VariableKind",
-      "WritableEnclaveVariable",
-      "Expression",
-    ],
+    ScriptDeclareStatement: ["VariableType", "Variable", "Expression"],
     // BlockFull //
     BlockStatement: ["Block"],
     IfStatement: ["Expression", "Block", "Block"],
@@ -55,10 +53,8 @@ const syntax = {
   },
   Effect: {
     __proto__: null,
-    SetSuperEnclaveEffect: ["Expression", "Expression"],
     WriteEffect: ["Variable", "Expression"],
-    WriteEnclaveEffect: ["WritableEnclaveVariable", "Expression"],
-    StaticExportEffect: ["Specifier", "Expression"],
+    ExportEffect: ["Specifier", "Expression"],
     SequenceEffect: ["Effect", "Effect"],
     ConditionalEffect: ["Expression", "Effect", "Effect"],
     ExpressionEffect: ["Expression"],
@@ -69,27 +65,19 @@ const syntax = {
     InputExpression: [],
     LiteralExpression: ["Literal"],
     IntrinsicExpression: ["Intrinsic"],
-    StaticImportExpression: ["Source", "NullableSpecifier"],
+    ImportExpression: ["Source", "NullableSpecifier"],
     ReadExpression: ["Variable"],
-    ReadEnclaveExpression: ["ReadableEnclaveVariable"],
-    TypeofEnclaveExpression: ["ReadableEnclaveVariable"],
-    ClosureExpression: ["ClosureKind", "Asynchronous", "Generator", "Block"],
-    // Special //
+    ClosureExpression: ["ClosureType", "Asynchronous", "Generator", "Block"],
+    // Control //
     AwaitExpression: ["Expression"],
     YieldExpression: ["Delegate", "Expression"],
-    ThrowExpression: ["Expression"],
     SequenceExpression: ["Effect", "Expression"],
     ConditionalExpression: ["Expression", "Expression", "Expression"],
     // Combiners //
-    GetSuperEnclaveExpression: ["Expression"],
-    CallSuperEnclaveExpression: ["Expression"],
-    EvalExpression: [["Enclave", "*"], ["Variable", "*"], "Expression"],
-    DynamicImportExpression: ["Expression"],
+    EvalExpression: [["Variable", "*"], "Expression"],
     ApplyExpression: ["Expression", "Expression", ["Expression", "*"]],
+    InvokeExpression: ["Expression", "Expression", ["Expression", "*"]],
     ConstructExpression: ["Expression", ["Expression", "*"]],
-    UnaryExpression: ["UnaryOperator", "Expression"],
-    BinaryExpression: ["BinaryOperator", "Expression", "Expression"],
-    ObjectExpression: ["Expression", [["Expression", "Expression"], "*"]],
   },
 };
 
@@ -105,22 +93,6 @@ const generateIsEnumeration = (enumeration) => (any) =>
 /* eslint-disable valid-typeof */
 const generateIsType = (type) => (any) => typeof any === type;
 /* eslint-enable valid-typeof */
-
-const isIdentifier = (string) =>
-  apply(
-    testRegExp,
-    /^(\p{ID_Start}|\$|_)(\p{ID_Continue}|\$|\u200C|\u200D)*$/u,
-    [string],
-  );
-
-const aran_keywords = [
-  "enclave",
-  "error",
-  "arrow",
-  "method",
-  "constructor",
-  "aggregate",
-];
 
 const keywords = [
   // Keywords //
@@ -178,55 +150,29 @@ const keywords = [
   "eval",
 ];
 
+const isIdentifier = (any) =>
+  typeof any === "string" &&
+  apply(
+    testRegExp,
+    /^(\p{ID_Start}|\$|_)(\p{ID_Continue}|\$|\u200C|\u200D)*$/u,
+    [any],
+  );
+
 const predicates = {
   __proto__: null,
   Enclave: generateIsEnumeration([
+    "this",
+    "new.target",
     "super.get",
     "super.set",
     "super.call",
-    "new.target",
-    "arguments",
-    "this",
-    "var",
   ]),
-  VariableKind: generateIsEnumeration(["var", "let", "const"]),
-  ClosureKind: generateIsEnumeration([
+  VariableType: generateIsEnumeration(["let", "const"]),
+  ClosureType: generateIsEnumeration([
     "arrow",
     "function",
     "constructor",
     "method",
-  ]),
-  BinaryOperator: generateIsEnumeration([
-    "==",
-    "!=",
-    "===",
-    "!==",
-    "<",
-    "<=",
-    ">",
-    ">=",
-    "<<",
-    ">>",
-    ">>>",
-    "+",
-    "-",
-    "*",
-    "/",
-    "%",
-    "|",
-    "^",
-    "&",
-    "in",
-    "instanceof",
-  ]),
-  UnaryOperator: generateIsEnumeration([
-    "-",
-    "+",
-    "!",
-    "~",
-    "typeof",
-    // delete,
-    "void",
   ]),
   Intrinsic: generateIsEnumeration(getIntrinsicArray()),
   Strict: generateIsType("boolean"),
@@ -235,28 +181,10 @@ const predicates = {
   Delegate: generateIsType("boolean"),
   Source: (any) => typeof any === "string",
   Literal: isLiteral,
-  NullableSpecifier: (any) =>
-    any === null || (typeof any === "string" && isIdentifier(any)),
-  Specifier: (any) => typeof any === "string" && isIdentifier(any),
-  ReadableEnclaveVariable: (any) =>
-    typeof any === "string" &&
-    (any === "new.target" ||
-      any === "this" ||
-      any === "eval" ||
-      any === "arguments" ||
-      (isIdentifier(any) && !includes(keywords, any))),
-  WritableEnclaveVariable: (any) =>
-    typeof any === "string" && isIdentifier(any) && !includes(keywords, any),
-  Label: (any) =>
-    typeof any === "string" &&
-    isIdentifier(any) &&
-    !includes(keywords, any) &&
-    !includes(aran_keywords, any),
-  Variable: (any) =>
-    typeof any === "string" &&
-    isIdentifier(any) &&
-    !includes(keywords, any) &&
-    !includes(aran_keywords, any),
+  Specifier: isIdentifier,
+  NullableSpecifier: (any) => any === null || isIdentifier(any),
+  Variable: (any) => isIdentifier(any) && !includes(keywords, any),
+  Label: (any) => isIdentifier(any) && !includes(keywords, any),
 };
 
 export const isSyntaxType = (any, type) => {

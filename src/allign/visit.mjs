@@ -1,5 +1,5 @@
 /* eslint-disable no-use-before-define */
-import {zip, unzip, reduce, concat, map} from "array-lite";
+import {zip, reduce, concat, map} from "array-lite";
 import {generateThrowError} from "../util.mjs";
 import {
   fromLiteral,
@@ -102,14 +102,31 @@ export const visitProgram = generateVisitNode({
     visitAllLink(appendErrorSegment(error, ".links"), links1, links2),
     visitBlock(appendErrorSegment(error, ".body"), block1, block2),
   ],
-  EvalProgram: (
+  GlobalEvalProgram: (error, block1, _annotation1, block2, _annotation2) => [
+    visitBlock(appendErrorSegment(error, ".body"), block1, block2),
+  ],
+  LocalEvalProgram: (
     error,
-    enclaves1,
     variables1,
     block1,
     _annotation1,
-    enclaves2,
     variables2,
+    block2,
+    _annotation2,
+  ) => [
+    bindAllVariable(
+      appendErrorSegment(error, ".variables"),
+      variables1,
+      variables2,
+      visitBlock(appendErrorSegment(error, ".body"), block1, block2),
+    ),
+  ],
+  EnclaveEvalProgram: (
+    error,
+    enclaves1,
+    block1,
+    _annotation1,
+    enclaves2,
     block2,
     _annotation2,
   ) => [
@@ -118,12 +135,7 @@ export const visitProgram = generateVisitNode({
       enclaves1,
       enclaves2,
     ),
-    bindAllVariable(
-      appendErrorSegment(error, ".variables"),
-      variables1,
-      variables2,
-      visitBlock(appendErrorSegment(error, ".body"), block1, block2),
-    ),
+    visitBlock(appendErrorSegment(error, ".body"), block1, block2),
   ],
 });
 
@@ -213,7 +225,7 @@ export const visitStatement = generateVisitNode({
   EffectStatement: (error, effect1, _annotation1, effect2, _annotation2) => [
     visitEffect(appendErrorSegment(error, ".body"), effect1, effect2),
   ],
-  DeclareEnclaveStatement: (
+  ScriptDeclareStatement: (
     error,
     kind1,
     identifier1,
@@ -322,27 +334,7 @@ export const visitEffect = generateVisitNode({
       expression2,
     ),
   ],
-  WriteEnclaveEffect: (
-    error,
-    identifier1,
-    expression1,
-    _annotation1,
-    identifier2,
-    expression2,
-    _annotation2,
-  ) => [
-    visitPrimitive(
-      appendErrorSegment(error, ".left"),
-      identifier1,
-      identifier2,
-    ),
-    visitExpression(
-      appendErrorSegment(error, ".right"),
-      expression1,
-      expression2,
-    ),
-  ],
-  StaticExportEffect: (
+  ExportEffect: (
     error,
     specifier1,
     expression1,
@@ -360,26 +352,6 @@ export const visitEffect = generateVisitNode({
       appendErrorSegment(error, ".right"),
       expression1,
       expression2,
-    ),
-  ],
-  SetSuperEnclaveEffect: (
-    error,
-    expression11,
-    expression12,
-    _annotation1,
-    expression21,
-    expression22,
-    _annotation2,
-  ) => [
-    visitExpression(
-      appendErrorSegment(error, ".property"),
-      expression11,
-      expression21,
-    ),
-    visitExpression(
-      appendErrorSegment(error, ".right"),
-      expression12,
-      expression22,
     ),
   ],
   SequenceEffect: (
@@ -482,50 +454,6 @@ export const visitExpression = generateVisitNode({
     identifier2,
     _annotation2,
   ) => [makeSingleVariableResult(identifier1, identifier2)],
-  ReadEnclaveExpression: (
-    error,
-    variable1,
-    _annotation1,
-    variable2,
-    _annotation2,
-  ) => [
-    visitPrimitive(appendErrorSegment(error, ".name"), variable1, variable2),
-  ],
-  TypeofEnclaveExpression: (
-    error,
-    variable1,
-    _annotation1,
-    variable2,
-    _annotation2,
-  ) => [
-    visitPrimitive(appendErrorSegment(error, ".name"), variable1, variable2),
-  ],
-  CallSuperEnclaveExpression: (
-    error,
-    expression1,
-    _annotation1,
-    expression2,
-    _annotation2,
-  ) => [
-    visitExpression(
-      appendErrorSegment(error, ".argument"),
-      expression1,
-      expression2,
-    ),
-  ],
-  GetSuperEnclaveExpression: (
-    error,
-    expression1,
-    _annotation1,
-    expression2,
-    _annotation2,
-  ) => [
-    visitExpression(
-      appendErrorSegment(error, ".property"),
-      expression1,
-      expression2,
-    ),
-  ],
   SequenceExpression: (
     error,
     effect1,
@@ -569,19 +497,6 @@ export const visitExpression = generateVisitNode({
       expression23,
     ),
   ],
-  ThrowExpression: (
-    error,
-    expression1,
-    _annotation1,
-    expression2,
-    _annotation2,
-  ) => [
-    visitExpression(
-      appendErrorSegment(error, ".argument"),
-      expression1,
-      expression2,
-    ),
-  ],
   YieldExpression: (
     error,
     delegate1,
@@ -617,22 +532,15 @@ export const visitExpression = generateVisitNode({
   ],
   EvalExpression: (
     error,
-    enclaves1,
     variables1,
     expression1,
     _annotation1,
-    enclaves2,
     variables2,
     expression2,
     _annotation2,
   ) =>
     concat(
       [
-        visitAllPrimitive(
-          appendErrorSegment(error, ".enclaves"),
-          enclaves1,
-          enclaves2,
-        ),
         visitPrimitive(
           appendErrorSegment(error, ".variables.length"),
           variables1.length,
@@ -675,6 +583,33 @@ export const visitExpression = generateVisitNode({
       expressions2,
     ),
   ],
+  InvokeExpression: (
+    error,
+    expression11,
+    expression12,
+    expressions1,
+    _annotation1,
+    expression21,
+    expression22,
+    expressions2,
+    _annotation2,
+  ) => [
+    visitExpression(
+      appendErrorSegment(error, ".object"),
+      expression11,
+      expression21,
+    ),
+    visitExpression(
+      appendErrorSegment(error, ".property"),
+      expression12,
+      expression22,
+    ),
+    visitAllExpression(
+      appendErrorSegment(error, ".arguments"),
+      expressions1,
+      expressions2,
+    ),
+  ],
   ConstructExpression: (
     error,
     expression1,
@@ -695,7 +630,7 @@ export const visitExpression = generateVisitNode({
       expressions2,
     ),
   ],
-  StaticImportExpression: (
+  ImportExpression: (
     error,
     source1,
     specifier1,
@@ -711,91 +646,6 @@ export const visitExpression = generateVisitNode({
       specifier2,
     ),
   ],
-  DynamicImportExpression: (
-    error,
-    expression1,
-    _annotation1,
-    expression2,
-    _annotation2,
-  ) => [
-    visitExpression(
-      appendErrorSegment(error, ".source"),
-      expression1,
-      expression2,
-    ),
-  ],
-  UnaryExpression: (
-    error,
-    operator1,
-    expression1,
-    _annotation1,
-    operator2,
-    expression2,
-    _annotation2,
-  ) => [
-    visitPrimitive(
-      appendErrorSegment(error, ".operator"),
-      operator1,
-      operator2,
-    ),
-    visitExpression(
-      appendErrorSegment(error, ".argument"),
-      expression1,
-      expression2,
-    ),
-  ],
-  BinaryExpression: (
-    error,
-    operator1,
-    expression11,
-    expression12,
-    _annotation1,
-    operator2,
-    expression21,
-    expression22,
-    _annotation2,
-  ) => [
-    visitPrimitive(
-      appendErrorSegment(error, ".operator"),
-      operator1,
-      operator2,
-    ),
-    visitExpression(
-      appendErrorSegment(error, ".left"),
-      expression11,
-      expression21,
-    ),
-    visitExpression(
-      appendErrorSegment(error, ".right"),
-      expression12,
-      expression22,
-    ),
-  ],
-  ObjectExpression: (
-    error,
-    expression1,
-    properties1,
-    _annotation1,
-    expression2,
-    properties2,
-    _annotation2,
-  ) => {
-    const {0: keys1, 1: values1} = unzip(properties1);
-    const {0: keys2, 1: values2} = unzip(properties2);
-    return [
-      visitExpression(
-        appendErrorSegment(error, ".prototype"),
-        expression1,
-        expression2,
-      ),
-      visitAllExpression(appendErrorSegment(error, ".keys"), keys1, keys2),
-      visitAllExpression(
-        appendErrorSegment(error, ".values"),
-        values1,
-        values2,
-      ),
-    ];
-  },
 });
 
 const generateCombineAll =

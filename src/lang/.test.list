@@ -1,5 +1,4 @@
-- * variable.mjs
-  * keywords.mjs
+- keywords.mjs
 - * acorn.mjs
   * prettier.mjs
 - * convert.mjs

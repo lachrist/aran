@@ -12,7 +12,8 @@ const {
   JSON: {stringify: stringifyJSON},
 } = globalThis;
 
-const should_validate_node = argv.length > 2 && argv[2] === "TEST";
+const is_debug_mode = argv.length > 2 && argv[2] === "DEBUG";
+
 const syntax = getSyntax();
 
 const makeFieldArray = (kind, type) =>
@@ -31,7 +32,7 @@ writeFile(
   "src/ast/generated-make.mjs",
   join(
     concat(
-      should_validate_node
+      is_debug_mode
         ? ["import {validateNode} from './validate.mjs';"]
         : [],
       flatMap(ownKeys(syntax), (kind) =>
@@ -42,7 +43,7 @@ writeFile(
               concat(makeFieldArray(kind, type), ["annotation = null"]),
               ", ",
             )}) => ${
-              should_validate_node
+              is_debug_mode
                 ? `validateNode(${makeBody(kind, type)})`
                 : makeBody(kind, type)
             };`,

@@ -61,13 +61,7 @@ assertExpression("123;", "321;", false);
 assertExpression("123n;", "123n;", true);
 assertExpression("123n;", "321n;", false);
 
-assertExpression("_x;", "_X;", true);
-
-assertExpression("$x;", "$x;", true);
-assertExpression("$x;", "$X;", false);
-
-assertExpression("typeof $x;", "typeof $x;", true);
-assertExpression("typeof $x;", "typeof $X;", false);
+assertExpression("x;", "X;", true);
 
 assertExpression(
   "importStatic('source', 'specifier');",
@@ -94,9 +88,6 @@ assertExpression("yieldStraight(123);", "yieldDelegate(123);", false);
 assertExpression("yieldStraight(123);", "yieldStraight(321);", false);
 assertExpression("yieldDelegate(123);", "yieldDelegate(321);", false);
 
-assertExpression("throwError(123);", "throwError(123);", true);
-assertExpression("throwError(123);", "throwError(321);", false);
-
 assertExpression("(effect(123), 456);", "(effect(123), 456);", true);
 assertExpression("(effect(123), 456);", "(effect(321), 456);", false);
 assertExpression("(effect(123), 456);", "(effect(123), 654);", false);
@@ -106,51 +97,19 @@ assertExpression("123 ? 456 : 789;", "321 ? 456 : 789;", false);
 assertExpression("123 ? 456 : 789;", "123 ? 654 : 789;", false);
 assertExpression("123 ? 456 : 789;", "123 ? 456 : 987;", false);
 
-assertExpression("$super[123];", "$super[123];", true);
-assertExpression("$super[123];", "$super[321];", false);
-
-assertExpression("$super(...123);", "$super(...123);", true);
-assertExpression("$super(...123);", "$super(...321);", false);
-
-assertExpression("import(123);", "import(123);", true);
-assertExpression("import(123);", "import(321);", false);
-
 assertExpression("123(456, 789);", "123(456, 789);", true);
 assertExpression("123(456, 789);", "321(456, 789);", false);
 assertExpression("123(456, 789);", "123(654, 789);", false);
 assertExpression("123(456, 789);", "123(456, 987);", false);
 
+assertExpression("123[456](789);", "123[456](789);", true);
+assertExpression("123[456](789);", "321[456](789);", false);
+assertExpression("123[456](789);", "123[654](789);", false);
+assertExpression("123[456](789);", "123[456](987);", false);
+
 assertExpression("new 123(456);", "new 123(456);", true);
 assertExpression("new 123(456);", "new 321(456);", false);
 assertExpression("new 123(456);", "new 123(654);", false);
-
-assertExpression("!123;", "!123;", true);
-assertExpression("!123;", "!456;", false);
-
-assertExpression("123 + 456;", "123 + 456;", true);
-assertExpression("123 + 456;", "321 + 456;", false);
-assertExpression("123 + 456;", "123 + 654;", false);
-
-assertExpression(
-  "({__proto__:123, [456]:789});",
-  "({__proto__:123, [456]:789});",
-  true,
-);
-assertExpression(
-  "({__proto__:123, [456]:789});",
-  "({__proto__:321, [456]:789});",
-  false,
-);
-assertExpression(
-  "({__proto__:123, [456]:789});",
-  "({__proto__:123, [654]:789});",
-  false,
-);
-assertExpression(
-  "({__proto__:123, [456]:789});",
-  "({__proto__:123, [456]:987});",
-  false,
-);
 
 assertExpression(
   "(function () { return 123; });",
@@ -178,22 +137,9 @@ assertExpression(
   false,
 );
 
-assertExpression(
-  "eval([$this], [_x], 123);",
-  "eval([$this], [_x], 123);",
-  true,
-);
-assertExpression(
-  "eval([$this], [_x], 123);",
-  "eval([$this], [_x], 321);",
-  false,
-);
-assertExpression(
-  "eval([$this], [_x], 123);",
-  "eval([$new.target], [_x], 123);",
-  false,
-);
-assertExpression("eval([$this], [_x], _x);", "eval([$this], [_X], _x);", false);
+assertExpression("eval([x], 123);", "eval([x], 123);", true);
+assertExpression("eval([x], 123);", "eval([x], 321);", false);
+assertExpression("eval([x], x);", "eval([x], X);", false);
 
 ////////////
 // Effect //
@@ -201,10 +147,6 @@ assertExpression("eval([$this], [_x], _x);", "eval([$this], [_X], _x);", false);
 
 assertEffect("effect(123);", "effect(123);", true);
 assertEffect("effect(123);", "effect(321);", false);
-
-assertEffect("$super[123] = 456;", "$super[123] = 456;", true);
-assertEffect("$super[123] = 456;", "$super[321] = 456;", false);
-assertEffect("$super[123] = 456;", "$super[123] = 654;", false);
 
 assertEffect(
   "exportStatic('specifier', 123);",
@@ -222,12 +164,8 @@ assertEffect(
   false,
 );
 
-assertEffect("_x = 123;", "_X = 123;", true);
-assertEffect("_x = 123;", "_x = 321;", false);
-
-assertEffect("$x = 123;", "$x = 123;", true);
-assertEffect("$x = 123;", "$y = 123;", false);
-assertEffect("$x = 123;", "$x = 321;", false);
+assertEffect("x = 123;", "X = 123;", true);
+assertEffect("x = 123;", "x = 321;", false);
 
 assertEffect(
   "(effect(123), effect(456));",
@@ -280,10 +218,10 @@ assertStatement("break l;", "break L;", true);
 assertStatement("return 123;", "return 123;", true);
 assertStatement("return 123;", "return 321;", false);
 
-assertStatement("let $x = 123;", "let $x = 123;", true);
-assertStatement("let $x = 123;", "const $x = 123;", false);
-assertStatement("let $x = 123;", "let $y = 123;", false);
-assertStatement("let $x = 123;", "let $x = 321;", false);
+assertStatement("let x = 123;", "let x = 123;", true);
+assertStatement("let x = 123;", "const x = 123;", false);
+assertStatement("let x = 123;", "let y = 123;", false);
+assertStatement("let x = 123;", "let x = 321;", false);
 
 assertStatement("{ effect(123); }", "{ effect(123); }", true);
 assertStatement("{ effect(123); }", "{ effect(321); }", false);
@@ -434,22 +372,44 @@ assertProgram(
 );
 
 assertProgram(
-  "'eval'; [$this]; let _x; { return 123; }",
-  "'eval'; [$this]; let _x; { return 123; }",
+  "'global eval'; { return 123; }",
+  "'global eval'; { return 123; }",
   true,
 );
 assertProgram(
-  "'eval'; [$this]; let _x; { return 123; }",
-  "'eval'; [$this]; let _x; { return 321; }",
+  "'global eval'; { return 123; }",
+  "'global eval'; { return 321; }",
+  false,
+);
+
+assertProgram(
+  "'local eval'; let x; { return x; }",
+  "'local eval'; let X; { return X; }",
+  true,
+);
+assertProgram(
+  "'local eval'; let x; { return 123; }",
+  "'local eval'; { return 123; }",
   false,
 );
 assertProgram(
-  "'eval'; [$this]; let _x; { return 123; }",
-  "'eval'; [$new.target]; let _x; { return 123; }",
+  "'local eval'; { return 123; }",
+  "'local eval'; { return 312; }",
+  false,
+);
+
+assertProgram(
+  "'enclave eval'; []; { return 123; }",
+  "'enclave eval'; []; { return 123; }",
+  true,
+);
+assertProgram(
+  "'enclave eval'; []; { return 123; }",
+  "'enclave eval'; []; { return 321; }",
   false,
 );
 assertProgram(
-  "'eval'; [$this]; let _x, _y; { return _x + _y; }",
-  "'eval'; [$new.target]; let _x, _y; { return _y + _x; }",
+  "'enclave eval'; ['this']; { return 123; }",
+  "'enclave eval'; ['new.target']; { return 123; }",
   false,
 );

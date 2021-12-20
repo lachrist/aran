@@ -1,5 +1,38 @@
 "use strict";
 
+// BinaryOperator: generateIsEnumeration([
+//   "==",
+//   "!=",
+//   "===",
+//   "!==",
+//   "<",
+//   "<=",
+//   ">",
+//   ">=",
+//   "<<",
+//   ">>",
+//   ">>>",
+//   "+",
+//   "-",
+//   "*",
+//   "/",
+//   "%",
+//   "|",
+//   "^",
+//   "&",
+//   "in",
+//   "instanceof",
+// ]),
+// UnaryOperator: generateIsEnumeration([
+//   "-",
+//   "+",
+//   "!",
+//   "~",
+//   "typeof",
+//   // delete,
+//   "void",
+// ]),
+
 const global_Reflect_ownKeys = global.Reflect.ownKeys;
 const global_String_prototype_startsWith = global.String.prototype.startsWith;
 const global_Number_prototype_toString = global.Number.prototype.toString;
@@ -121,7 +154,7 @@ module.exports = (program, options) => visit_program(
   //     counter: 0,
   //     build: build[options.output]}
   //   options),
-  // 
+  //
   //   options,
   //   {
   //     build: build[options.output],

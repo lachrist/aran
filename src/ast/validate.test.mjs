@@ -14,6 +14,36 @@ assertThrow(() => {
   makeValidNode("Block", [], ["foo", "bar", "qux", "bar"], []);
 });
 
+// Duplicate LocalEvalProgram Variables && Duplicate EnclaveEvalProgram Enclaves //
+{
+  const completion_block = makeValidNode(
+    "Block",
+    [],
+    [],
+    [makeValidNode("ReturnStatement", makeValidNode("LiteralExpression", 123))],
+  );
+  makeValidNode("LocalEvalProgram", ["foo", "bar", "qux"], completion_block);
+  assertThrow(() => {
+    makeValidNode(
+      "LocalEvalProgram",
+      ["foo", "bar", "qux", "bar"],
+      completion_block,
+    );
+  });
+  makeValidNode(
+    "EnclaveEvalProgram",
+    ["super.get", "super.set"],
+    completion_block,
+  );
+  assertThrow(() => {
+    makeValidNode(
+      "EnclaveEvalProgram",
+      ["super.get", "super.set", "super.get"],
+      completion_block,
+    );
+  });
+}
+
 // Duplicate Export Link //
 {
   const link = makeValidNode("ExportLink", "specifier");
@@ -85,22 +115,16 @@ assertThrow(() => {
   makeValidNode("ScriptProgram", []);
 });
 {
-  const statement = makeValidNode(
-    "EffectStatement",
-    makeValidNode(
-      "WriteEnclaveEffect",
-      "foo",
-      makeValidNode("LiteralExpression", 123),
-    ),
-  );
+  const block = makeValidNode("Block", [], [], []);
   assertThrow(() => {
-    makeValidNode("ScriptProgram", [statement]);
+    makeValidNode("GlobalEvalProgram", block);
   });
 }
 {
   const statements = [
     makeValidNode("ReturnStatement", makeValidNode("LiteralExpression", 123)),
     makeValidNode("DebuggerStatement"),
+    makeValidNode("ReturnStatement", makeValidNode("LiteralExpression", 456)),
   ];
   assertThrow(() => {
     makeValidNode("ScriptProgram", statements);
@@ -111,24 +135,14 @@ assertThrow(() => {
     "Block",
     [],
     [],
-    [
-      makeValidNode(
-        "EffectStatement",
-        makeValidNode(
-          "ExpressionEffect",
-          makeValidNode("LiteralExpression", 123),
-        ),
-      ),
-    ],
+    [makeValidNode("DebuggerStatement")],
   );
   assertThrow(() => {
-    makeValidNode("EvalProgram", [], [], block);
+    makeValidNode("EvalProgram", block);
   });
 }
 makeValidNode(
-  "EvalProgram",
-  [],
-  [],
+  "GlobalEvalProgram",
   makeValidNode(
     "Block",
     [],
@@ -171,14 +185,8 @@ makeValidNode(
                 [],
                 [
                   makeValidNode(
-                    "EffectStatement",
-                    makeValidNode(
-                      "ExpressionEffect",
-                      makeValidNode(
-                        "ThrowExpression",
-                        makeValidNode("LiteralExpression", 123),
-                      ),
-                    ),
+                    "ReturnStatement",
+                    makeValidNode("LiteralExpression", 456),
                   ),
                 ],
               ),
@@ -189,7 +197,7 @@ makeValidNode(
                 [
                   makeValidNode(
                     "ReturnStatement",
-                    makeValidNode("LiteralExpression", 123),
+                    makeValidNode("LiteralExpression", 789),
                   ),
                 ],
               ),
@@ -217,7 +225,7 @@ makeValidNode(
     makeValidNode("ModuleProgram", [], block);
   });
   assertThrow(() => {
-    makeValidNode("EvalProgram", [], [], block);
+    makeValidNode("EvalProgram", block);
   });
 }
 
@@ -392,104 +400,6 @@ makeValidNode(
   );
 }
 
-// RigidDeclareEnclaveStatement //
-const testRigidDeclareEnclaveStatement = (kind) => {
-  const declare_statement = makeValidNode(
-    "DeclareEnclaveStatement",
-    kind,
-    "variable",
-    makeValidNode("LiteralExpression", 123),
-  );
-  const return_statement = makeValidNode(
-    "ReturnStatement",
-    makeValidNode("LiteralExpression", "completion"),
-  );
-  const completion_block = makeValidNode(
-    "Block",
-    [],
-    [],
-    [declare_statement, return_statement],
-  );
-  const non_completion_block = makeValidNode(
-    "Block",
-    [],
-    [],
-    [declare_statement],
-  );
-  const expression = makeValidNode(
-    "AwaitExpression",
-    makeValidNode("LiteralExpression", 123),
-  );
-  assertThrow(() => {
-    makeValidNode("BlockStatement", non_completion_block);
-  });
-  assertThrow(() => {
-    makeValidNode(
-      "IfStatement",
-      expression,
-      non_completion_block,
-      non_completion_block,
-    );
-  });
-  assertThrow(() => {
-    makeValidNode("WhileStatement", expression, non_completion_block);
-  });
-  assertThrow(() => {
-    makeValidNode(
-      "TryStatement",
-      non_completion_block,
-      non_completion_block,
-      non_completion_block,
-    );
-  });
-  assertThrow(() => {
-    makeValidNode("ModuleProgram", [], non_completion_block);
-  });
-  assertThrow(() => {
-    makeValidNode("EvalProgram", [], [], "completion", completion_block);
-  });
-  makeValidNode("ScriptProgram", [declare_statement, return_statement]);
-};
-testRigidDeclareEnclaveStatement("let");
-testRigidDeclareEnclaveStatement("const");
-
-// LooseDeclareEnclaveStatement //
-{
-  const declare_statement = makeValidNode(
-    "DeclareEnclaveStatement",
-    "var",
-    "variable",
-    makeValidNode("LiteralExpression", 123),
-  );
-  const return_statement = makeValidNode(
-    "ReturnStatement",
-    makeValidNode("LiteralExpression", "literal"),
-  );
-  const non_completion_block = makeValidNode(
-    "Block",
-    [],
-    [],
-    [declare_statement],
-  );
-  const completion_block = makeValidNode(
-    "Block",
-    [],
-    [],
-    [declare_statement, return_statement],
-  );
-  assertThrow(() => {
-    makeValidNode("Closure", "arrow", false, false, completion_block);
-  });
-  assertThrow(() => {
-    makeValidNode("ModuleProgram", [], non_completion_block);
-  });
-  makeValidNode("ScriptProgram", [declare_statement, return_statement]);
-  makeValidNode("EvalProgram", ["var"], [], completion_block);
-  assertThrow(() => {
-    makeValidNode("EvalProgram", [], [], completion_block);
-  });
-}
-
 // ReadExpression && WriteEffect //
 const testVariable = (makeValidVariableEffect) => {
   const variable_statement = makeValidNode(
@@ -512,10 +422,10 @@ const testVariable = (makeValidVariableEffect) => {
     [],
     [variable_statement, return_statement],
   );
-  makeValidNode("EvalProgram", [], [], bound_block);
-  makeValidNode("EvalProgram", [], ["variable"], unbound_block);
+  makeValidNode("GlobalEvalProgram", bound_block);
+  makeValidNode("LocalEvalProgram", ["variable"], unbound_block);
   assertThrow(() => {
-    makeValidNode("EvalProgram", [], [], unbound_block);
+    makeValidNode("GlobalEvalProgram", unbound_block);
   });
 };
 testVariable((variable) =>
@@ -526,7 +436,6 @@ testVariable((variable) =>
     "ExpressionEffect",
     makeValidNode(
       "EvalExpression",
-      [],
       [variable],
       makeValidNode("LiteralExpression", 123),
     ),
@@ -540,72 +449,6 @@ testVariable((variable) =>
   ),
 );
 
-// ClosureEnclave //
-{
-  const testClosureEnclave = (enclave, expression1) => {
-    const run = (expression2) => {
-      const block = makeValidNode(
-        "Block",
-        [],
-        [],
-        [makeValidNode("ReturnStatement", expression2)],
-      );
-      makeValidNode("EvalProgram", [enclave], [], block);
-      assertThrow(() => {
-        makeValidNode("EvalProgram", [], [], block);
-      });
-      makeValidNode("ClosureExpression", "arrow", false, false, block);
-      assertThrow(() => {
-        makeValidNode("ClosureExpression", "function", false, false, block);
-      });
-    };
-    run(expression1);
-    run(
-      makeValidNode(
-        "EvalExpression",
-        [enclave],
-        [],
-        makeValidNode("LiteralExpression", 123),
-      ),
-    );
-  };
-  testClosureEnclave(
-    "super.call",
-    makeValidNode(
-      "CallSuperEnclaveExpression",
-      makeValidNode("LiteralExpression", 123),
-    ),
-  );
-  testClosureEnclave(
-    "super.get",
-    makeValidNode(
-      "GetSuperEnclaveExpression",
-      makeValidNode("LiteralExpression", 123),
-    ),
-  );
-  testClosureEnclave(
-    "super.set",
-    makeValidNode(
-      "SequenceExpression",
-      makeValidNode(
-        "SetSuperEnclaveEffect",
-        makeValidNode("LiteralExpression", 123),
-        makeValidNode("LiteralExpression", 456),
-      ),
-      makeValidNode("LiteralExpression", 789),
-    ),
-  );
-  testClosureEnclave("this", makeValidNode("ReadEnclaveExpression", "this"));
-  testClosureEnclave(
-    "arguments",
-    makeValidNode("ReadEnclaveExpression", "arguments"),
-  );
-  testClosureEnclave(
-    "new.target",
-    makeValidNode("ReadEnclaveExpression", "new.target"),
-  );
-}
-
 // Import //
 {
   const completion_block = makeValidNode(
@@ -615,7 +458,7 @@ testVariable((variable) =>
     [
       makeValidNode(
         "ReturnStatement",
-        makeValidNode("StaticImportExpression", "'source'", "specifier"),
+        makeValidNode("ImportExpression", "'source'", "specifier"),
       ),
     ],
   );
@@ -639,7 +482,7 @@ testVariable((variable) =>
       makeValidNode(
         "EffectStatement",
         makeValidNode(
-          "StaticExportEffect",
+          "ExportEffect",
           "specifier",
           makeValidNode("LiteralExpression", 123),
         ),

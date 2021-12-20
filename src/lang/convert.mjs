@@ -8,7 +8,9 @@ import {
   extractNode,
   makeScriptProgram,
   makeModuleProgram,
-  makeEvalProgram,
+  makeLocalEvalProgram,
+  makeGlobalEvalProgram,
+  makeEnclaveEvalProgram,
   makeImportLink,
   makeExportLink,
   makeAggregateLink,
@@ -17,63 +19,47 @@ import {
   makeReturnStatement,
   makeBreakStatement,
   makeDebuggerStatement,
-  makeDeclareEnclaveStatement,
+  makeScriptDeclareStatement,
   makeBlockStatement,
   makeIfStatement,
   makeWhileStatement,
   makeTryStatement,
-  makeSetSuperEnclaveEffect,
   makeWriteEffect,
-  makeWriteEnclaveEffect,
-  makeStaticExportEffect,
+  makeExportEffect,
   makeSequenceEffect,
   makeConditionalEffect,
   makeExpressionEffect,
   makeInputExpression,
   makeLiteralExpression,
   makeIntrinsicExpression,
-  makeStaticImportExpression,
+  makeImportExpression,
   makeReadExpression,
-  makeReadEnclaveExpression,
-  makeTypeofEnclaveExpression,
   makeClosureExpression,
   makeAwaitExpression,
   makeYieldExpression,
-  makeThrowExpression,
   makeSequenceExpression,
   makeConditionalExpression,
-  makeGetSuperEnclaveExpression,
-  makeCallSuperEnclaveExpression,
   makeEvalExpression,
-  makeDynamicImportExpression,
   makeApplyExpression,
   makeConstructExpression,
-  makeUnaryExpression,
-  makeBinaryExpression,
-  makeObjectExpression,
+  makeInvokeExpression,
 } from "../ast/index.mjs";
 
 import {
-  isBaseVariable,
-  isMetaVariable,
-  getVariableBody,
-  makeBaseVariable,
-} from "./variable.mjs";
-
-import {
-  MODULE_PROGRAM_KEYWORD,
-  SCRIPT_PROGRAM_KEYWORD,
-  EVAL_PROGRAM_KEYWORD,
+  MODULE_PROGRAM_DIRECTIVE,
+  SCRIPT_PROGRAM_DIRECTIVE,
+  GLOBAL_EVAL_PROGRAM_DIRECTIVE,
+  LOCAL_EVAL_PROGRAM_DIRECTIVE,
+  ENCLAVE_EVAL_PROGRAM_DIRECTIVE,
   EFFECT_KEYWORD,
-  THROW_KEYWORD,
   EVAL_KEYWORD,
   UNDEFINED_KEYWORD,
   INPUT_KEYWORD,
   INTRINSIC_KEYWORD,
   YIELD_DELEGATE_KEYWORD,
   YIELD_STRAIGHT_KEYWORD,
-  EXPORT_STATIC_KEYWORD,
-  IMPORT_STATIC_KEYWORD,
+  EXPORT_KEYWORD,
+  IMPORT_KEYWORD,
 } from "./keywords.mjs";
 
 const {
@@ -82,19 +68,6 @@ const {
   SyntaxError,
   Reflect: {getOwnPropertyDescriptor},
 } = globalThis;
-
-const SUPER_BASE_IDENTIFIER = makeBaseVariable("super");
-
-const enclaves = {
-  "__proto__": null,
-  "$super.get": "super.get",
-  "$super.set": "super.set",
-  "$super.call": "super.call",
-  "$new.target": "new.target",
-  "$this": "this",
-  "$arguments": "arguments",
-  "var": "var",
-};
 
 ///////////
 // Error //
@@ -120,29 +93,31 @@ const generateConvert = (convertors) => (node) => {
   return convertor(node);
 };
 
-const convertEnclave = generateConvert({
-  __proto__: null,
-  Identifier: (node) => {
-    expectSyntax(node, node.name in enclaves);
-    return enclaves[node.name];
-  },
-  MemberExpression: (node) => {
-    expectSyntax(node, !node.computed);
-    expectSyntax(node, !node.optional);
-    expectSyntax(node, node.object.type === "Identifier");
-    expectSyntax(node, node.property.type === "Identifier");
-    const name = `${node.object.name}.${node.property.name}`;
-    expectSyntax(node, name in enclaves);
-    return enclaves[name];
-  },
-});
+const convertIdentifier = (node) => {
+  expectSyntax(node, node.type === "Identifier");
+  return node.name;
+};
 
-const convertMetaDeclarator = (node) => {
+const convertEnclave = (node) => {
+  expectSyntax(node, node.type === "Literal");
+  return node.value;
+};
+
+const convertDeclarator = (node) => {
   assert(node.type === "VariableDeclarator", "invalid variable declarator");
   expectSyntax(node, node.init === null);
-  expectSyntax(node, node.id.type === "Identifier");
-  expectSyntax(node, isMetaVariable(node.id.name));
-  return getVariableBody(node.id.name);
+  return convertIdentifier(node.id);
+};
+
+const convertDeclaration = (node) => {
+  expectSyntax(node, node.type === "VariableDeclaration");
+  expectSyntax(node, node.kind === "let");
+  return map(node.declarations, convertDeclarator);
+};
+
+const convertEnclaveArray = (node) => {
+  expectSyntax(node, node.type === "ArrayExpression");
+  return map(node.elements, convertEnclave);
 };
 
 export const convertProgram = generateConvert({
@@ -151,14 +126,14 @@ export const convertProgram = generateConvert({
     expectSyntax(node, node.body.length > 0);
     expectSyntax(node, node.body[0].type === "ExpressionStatement");
     expectSyntax(node, node.body[0].expression.type === "Literal");
-    const kind = node.body[0].expression.value;
-    if (kind === SCRIPT_PROGRAM_KEYWORD) {
+    const directive = node.body[0].expression.value;
+    if (directive === SCRIPT_PROGRAM_DIRECTIVE) {
       return makeScriptProgram(
         map(slice(node.body, 1, node.body.length), convertStatement),
         locate(node.loc),
       );
     }
-    if (kind === MODULE_PROGRAM_KEYWORD) {
+    if (directive === MODULE_PROGRAM_DIRECTIVE) {
       expectSyntax(node, node.body.length > 1);
       return makeModuleProgram(
         map(slice(node.body, 1, node.body.length - 1), convertLink),
@@ -166,53 +141,29 @@ export const convertProgram = generateConvert({
         locate(node.loc),
       );
     }
-    if (kind === EVAL_PROGRAM_KEYWORD) {
-      if (node.body.length === 2) {
-        return makeEvalProgram(
-          [],
-          [],
-          convertBlock(node.body[1]),
-          locate(node.loc),
-        );
-      }
-      if (node.body.length === 3) {
-        if (
-          node.body[1].type === "VariableDeclaration" &&
-          node.body[1].kind === "let"
-        ) {
-          return makeEvalProgram(
-            [],
-            map(node.body[1].declarations, convertMetaDeclarator),
-            convertBlock(node.body[2]),
-            locate(node.loc),
-          );
-        }
-        if (
-          node.body[1].type === "ExpressionStatement" &&
-          node.body[1].expression.type === "ArrayExpression"
-        ) {
-          return makeEvalProgram(
-            map(node.body[1].expression.elements, convertEnclave),
-            [],
-            convertBlock(node.body[2]),
-            locate(node.loc),
-          );
-        }
-        throw makeSyntaxError(node);
-      }
-      if (node.body.length === 4) {
-        expectSyntax(node, node.body[1].type === "ExpressionStatement");
-        expectSyntax(node, node.body[1].expression.type === "ArrayExpression");
-        expectSyntax(node, node.body[2].type === "VariableDeclaration");
-        expectSyntax(node, node.body[2].kind === "let");
-        return makeEvalProgram(
-          map(node.body[1].expression.elements, convertEnclave),
-          map(node.body[2].declarations, convertMetaDeclarator),
-          convertBlock(node.body[3]),
-          locate(node.loc),
-        );
-      }
-      throw makeSyntaxError(node);
+    if (directive === GLOBAL_EVAL_PROGRAM_DIRECTIVE) {
+      expectSyntax(node, node.body.length === 2);
+      return makeGlobalEvalProgram(
+        convertBlock(node.body[1]),
+        locate(node.loc),
+      );
+    }
+    if (directive === LOCAL_EVAL_PROGRAM_DIRECTIVE) {
+      expectSyntax(node, node.body.length === 2 || node.body.length === 3);
+      return makeLocalEvalProgram(
+        node.body.length === 2 ? [] : convertDeclaration(node.body[1]),
+        convertBlock(node.body[node.body.length - 1]),
+        locate(node.loc),
+      );
+    }
+    if (directive === ENCLAVE_EVAL_PROGRAM_DIRECTIVE) {
+      expectSyntax(node, node.body.length === 3);
+      expectSyntax(node, node.body[1].type === "ExpressionStatement");
+      return makeEnclaveEvalProgram(
+        convertEnclaveArray(node.body[1].expression),
+        convertBlock(node.body[2]),
+        locate(node.loc),
+      );
     }
     throw makeSyntaxError(node);
   },
@@ -280,28 +231,21 @@ export const convertBlock = generateConvert({
     );
   },
   BlockStatement: (node) => {
-    if (node.body.length === 0) {
-      return makeBlock([], [], [], locate(node.loc));
-    }
-    if (
-      node.body[0].type === "VariableDeclaration" &&
-      node.body[0].kind === "let" &&
-      node.body[0].declarations[0].id.type === "Identifier" &&
-      isMetaVariable(node.body[0].declarations[0].id.name)
-    ) {
+    if (node.body.length > 0 && node.body[0].type === "VariableDeclaration") {
       return makeBlock(
         [],
-        map(node.body[0].declarations, convertMetaDeclarator),
+        convertDeclaration(node.body[0]),
         map(slice(node.body, 1, node.body.length), convertStatement),
         locate(node.loc),
       );
+    } else {
+      return makeBlock(
+        [],
+        [],
+        map(node.body, convertStatement),
+        locate(node.loc),
+      );
     }
-    return makeBlock(
-      [],
-      [],
-      map(node.body, convertStatement),
-      locate(node.loc),
-    );
   },
 });
 
@@ -363,10 +307,9 @@ export const convertStatement = generateConvert({
     expectSyntax(node, node.declarations.length === 1);
     expectSyntax(node, node.declarations[0].init !== null);
     expectSyntax(node, node.declarations[0].id.type === "Identifier");
-    expectSyntax(node, isBaseVariable(node.declarations[0].id.name));
-    return makeDeclareEnclaveStatement(
+    return makeScriptDeclareStatement(
       node.kind,
-      getVariableBody(node.declarations[0].id.name),
+      node.declarations[0].id.name,
       convertExpression(node.declarations[0].init),
       locate(node.loc),
     );
@@ -394,11 +337,11 @@ export const convertEffect = generateConvert({
   CallExpression: (node) => {
     if (
       node.callee.type === "Identifier" &&
-      node.callee.name === EXPORT_STATIC_KEYWORD
+      node.callee.name === EXPORT_KEYWORD
     ) {
       expectSyntax(node, node.arguments.length === 2);
       expectSyntax(node, node.arguments[0].type === "Literal");
-      return makeStaticExportEffect(
+      return makeExportEffect(
         node.arguments[0].value,
         convertExpression(node.arguments[1]),
         locate(node.loc),
@@ -418,55 +361,12 @@ export const convertEffect = generateConvert({
   },
   AssignmentExpression: (node) => {
     expectSyntax(node, node.operator === "=");
-    if (
-      node.left.type === "MemberExpression" &&
-      node.left.object.type === "Identifier" &&
-      node.left.object.name === SUPER_BASE_IDENTIFIER
-    ) {
-      expectSyntax(node, node.left.computed);
-      expectSyntax(node, !node.left.optional);
-      return makeSetSuperEnclaveEffect(
-        convertExpression(node.left.property),
-        convertExpression(node.right),
-        locate(node.loc),
-      );
-    }
-    if (node.left.type === "Identifier") {
-      if (isMetaVariable(node.left.name)) {
-        return makeWriteEffect(
-          getVariableBody(node.left.name),
-          convertExpression(node.right),
-          locate(node.loc),
-        );
-      }
-      if (isBaseVariable(node.left.name)) {
-        return makeWriteEnclaveEffect(
-          getVariableBody(node.left.name),
-          convertExpression(node.right),
-          locate(node.loc),
-        );
-      }
-      throw makeSyntaxError(node);
-    }
-    throw makeSyntaxError(node);
-  },
-});
-
-const convertProperty = generateConvert({
-  __proto__: null,
-  Property: (node) => {
-    expectSyntax(node, node.kind === "init");
-    expectSyntax(node, node.method === false);
-    expectSyntax(node, node.computed === true);
-    return [convertExpression(node.key), convertExpression(node.value)];
-  },
-});
-
-const convertMetaIdentifier = generateConvert({
-  __proto__: null,
-  Identifier: (node) => {
-    expectSyntax(node, isMetaVariable(node.name));
-    return getVariableBody(node.name);
+    expectSyntax(node, node.left.type === "Identifier");
+    return makeWriteEffect(
+      node.left.name,
+      convertExpression(node.right),
+      locate(node.loc),
+    );
   },
 });
 
@@ -505,16 +405,7 @@ export const convertExpression = generateConvert({
     if (node.name === INPUT_KEYWORD) {
       return makeInputExpression(locate(node.loc));
     }
-    if (isMetaVariable(node.name)) {
-      return makeReadExpression(getVariableBody(node.name), locate(node.loc));
-    }
-    if (isBaseVariable(node.name)) {
-      return makeReadEnclaveExpression(
-        getVariableBody(node.name),
-        locate(node.loc),
-      );
-    }
-    throw makeSyntaxError(node);
+    return makeReadExpression(node.name, locate(node.loc));
   },
   SequenceExpression: (node) => {
     expectSyntax(node, node.expressions.length === 2);
@@ -539,37 +430,6 @@ export const convertExpression = generateConvert({
     );
   },
   // Combiners //
-  ImportExpression: (node) => {
-    return makeDynamicImportExpression(
-      convertExpression(node.source),
-      locate(node.loc),
-    );
-  },
-  MemberExpression: (node) => {
-    expectSyntax(node, node.optional === false);
-    if (
-      node.object.type === "Identifier" &&
-      node.object.name === SUPER_BASE_IDENTIFIER
-    ) {
-      expectSyntax(node, node.computed === true);
-      return makeGetSuperEnclaveExpression(
-        convertExpression(node.property),
-        locate(node.loc),
-      );
-    }
-    if (node.object.type === "Identifier" && isBaseVariable(node.object.name)) {
-      expectSyntax(node, node.computed === false);
-      assert(
-        node.property.type === "Identifier",
-        "invalid non-computed property",
-      );
-      return makeReadEnclaveExpression(
-        `${getVariableBody(node.object.name)}.${node.property.name}`,
-        locate(node.loc),
-      );
-    }
-    throw makeSyntaxError(node);
-  },
   CallExpression: (node) => {
     expectSyntax(node, node.optional === false);
     if (
@@ -596,27 +456,6 @@ export const convertExpression = generateConvert({
     }
     if (
       node.callee.type === "Identifier" &&
-      node.callee.name === THROW_KEYWORD
-    ) {
-      expectSyntax(node, node.arguments.length === 1);
-      return makeThrowExpression(
-        convertExpression(node.arguments[0]),
-        locate(node.loc),
-      );
-    }
-    if (
-      node.callee.type === "Identifier" &&
-      node.callee.name === SUPER_BASE_IDENTIFIER
-    ) {
-      expectSyntax(node, node.arguments.length === 1);
-      expectSyntax(node, node.arguments[0].type === "SpreadElement");
-      return makeCallSuperEnclaveExpression(
-        convertExpression(node.arguments[0].argument),
-        locate(node.loc),
-      );
-    }
-    if (
-      node.callee.type === "Identifier" &&
       node.callee.name === INTRINSIC_KEYWORD
     ) {
       expectSyntax(node, node.arguments.length === 1);
@@ -625,12 +464,12 @@ export const convertExpression = generateConvert({
     }
     if (
       node.callee.type === "Identifier" &&
-      node.callee.name === IMPORT_STATIC_KEYWORD
+      node.callee.name === IMPORT_KEYWORD
     ) {
       expectSyntax(node, node.arguments.length === 2);
       expectSyntax(node, node.arguments[0].type === "Literal");
       expectSyntax(node, node.arguments[1].type === "Literal");
-      return makeStaticImportExpression(
+      return makeImportExpression(
         node.arguments[0].value,
         node.arguments[1].value,
         locate(node.loc),
@@ -640,13 +479,21 @@ export const convertExpression = generateConvert({
       node.callee.type === "Identifier" &&
       node.callee.name === EVAL_KEYWORD
     ) {
-      expectSyntax(node, node.arguments.length === 3);
+      expectSyntax(node, node.arguments.length === 2);
       expectSyntax(node, node.arguments[0].type === "ArrayExpression");
-      expectSyntax(node, node.arguments[1].type === "ArrayExpression");
       return makeEvalExpression(
-        map(node.arguments[0].elements, convertEnclave),
-        map(node.arguments[1].elements, convertMetaIdentifier),
-        convertExpression(node.arguments[2]),
+        map(node.arguments[0].elements, convertIdentifier),
+        convertExpression(node.arguments[1]),
+        locate(node.loc),
+      );
+    }
+    if (node.callee.type === "MemberExpression") {
+      expectSyntax(node, !node.callee.optional);
+      expectSyntax(node, node.callee.computed);
+      return makeInvokeExpression(
+        convertExpression(node.callee.object),
+        convertExpression(node.callee.property),
+        map(node.arguments, convertExpression),
         locate(node.loc),
       );
     }
@@ -662,44 +509,6 @@ export const convertExpression = generateConvert({
     return makeConstructExpression(
       convertExpression(node.callee),
       map(node.arguments, convertExpression),
-      locate(node.loc),
-    );
-  },
-  UnaryExpression: (node) => {
-    if (
-      node.operator === "typeof" &&
-      node.argument.type === "Identifier" &&
-      isBaseVariable(node.argument.name)
-    ) {
-      return makeTypeofEnclaveExpression(
-        getVariableBody(node.argument.name),
-        locate(node.loc),
-      );
-    }
-    return makeUnaryExpression(
-      node.operator,
-      convertExpression(node.argument),
-      locate(node.loc),
-    );
-  },
-  BinaryExpression: (node) => {
-    return makeBinaryExpression(
-      node.operator,
-      convertExpression(node.left),
-      convertExpression(node.right),
-      locate(node.loc),
-    );
-  },
-  ObjectExpression: (node) => {
-    expectSyntax(node, node.properties.length > 0);
-    expectSyntax(node, node.properties[0].kind === "init");
-    expectSyntax(node, node.properties[0].method === false);
-    expectSyntax(node, node.properties[0].computed === false);
-    expectSyntax(node, node.properties[0].key.type === "Identifier");
-    expectSyntax(node, node.properties[0].key.name === "__proto__");
-    return makeObjectExpression(
-      convertExpression(node.properties[0].value),
-      map(slice(node.properties, 1, node.properties.length), convertProperty),
       locate(node.loc),
     );
   },

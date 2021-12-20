@@ -6,7 +6,6 @@ import {
   filterOut,
   concat,
   map,
-  flat,
   repeat,
   lastIndexOf,
   flatMap,
@@ -16,7 +15,6 @@ import {getSyntax, isSyntaxType} from "./syntax.mjs";
 import {
   makeNode,
   dispatchNode,
-  extractNode,
   getNodeType,
   getNodeFieldArray,
 } from "./accessor.mjs";
@@ -40,6 +38,12 @@ const syntax = getSyntax();
 
 const returnFalse = generateReturn(false);
 
+const returnEmptyArray = generateReturn([]);
+
+const returnNaN = generateReturn(NaN);
+
+const throwMissingCallback = generateThrowError("missing callback");
+
 const generateGetNodeKind = () => {
   const kinds = {__proto__: null};
   for (const kind in syntax) {
@@ -56,111 +60,39 @@ const isReturnStatement = generateIsType("ReturnStatement");
 const isYieldExpression = generateIsType("YieldExpression");
 const isAwaitExpression = generateIsType("AwaitExpression");
 const isInputExpression = generateIsType("InputExpression");
-const isThrowExpression = generateIsType("ThrowExpression");
-const isDeclareEnclaveStatement = generateIsType("DeclareEnclaveStatement");
-const isCallSuperEnclaveExpression = generateIsType(
-  "CallSuperEnclaveExpression",
-);
-const isGetSuperEnclaveExpression = generateIsType("GetSuperEnclaveExpression");
-const isSetSuperEnclaveEffect = generateIsType("SetSuperEnclaveEffect");
+const isScriptDeclareStatement = generateIsType("ScriptDeclareStatement");
 const isBreakStatement = generateIsType("BreakStatement");
 const makeReadExpression = (variable) => makeNode("ReadExpression", variable);
 
-const generateIsBoundVariableNode = (variables) => {
-  const callbacks = {
-    __proto__: null,
-    ReadExpression: (_context, variable, _annotation) =>
-      includes(variables, variable),
-    WriteEffect: (_context, variable, _expression, _annotation) =>
-      includes(variables, variable),
-  };
-  const callback = returnFalse;
-  return (node) => dispatchNode(null, node, callbacks, callback);
-};
+const generateQuery = (callbacks, default_callback) => (node, context) =>
+  dispatchNode(context, node, callbacks, default_callback);
 
-const generateIsBoundBreakStatement = (variables) => {
-  const callbacks = {
+const isBoundVariableNode = generateQuery(
+  {
     __proto__: null,
-    BreakStatement: (_context, variable, _annotation) =>
+    ReadExpression: (variables, variable, _annotation) =>
       includes(variables, variable),
-  };
-  const callback = returnFalse;
-  return (node) => dispatchNode(null, node, callbacks, callback);
-};
+    WriteEffect: (variables, variable, _expression, _annotation) =>
+      includes(variables, variable),
+  },
+  returnFalse,
+);
 
-const generateIsDeclareEnclaveStatement = (kind1) => {
-  const callbacks = {
+const isBoundBreakStatement = generateQuery(
+  {
     __proto__: null,
-    DeclareEnclaveStatement: (
-      _context,
-      kind2,
-      _variable,
-      _expression,
-      _annotation,
-    ) => kind1 === kind2,
-  };
-  const callback = returnFalse;
-  return (node) => dispatchNode(null, node, callbacks, callback);
-};
-const isLetDeclareEnclaveStatement = generateIsDeclareEnclaveStatement("let");
-const isConstDeclareEnclaveStatement =
-  generateIsDeclareEnclaveStatement("const");
-const isVarDeclareEnclaveStatement = generateIsDeclareEnclaveStatement("var");
-
-const generateIsReadEnclaveExpression = (variable1) => {
-  const callbacks = {
-    __proto__: null,
-    ReadEnclaveExpression: (_context, variable2, _annotation) =>
-      variable1 === variable2,
-  };
-  const callback = returnFalse;
-  return (node) => dispatchNode(null, node, callbacks, callback);
-};
-const isThisReadEnclaveExpression = generateIsReadEnclaveExpression("this");
-const isNewTargetReadEnclaveExpression =
-  generateIsReadEnclaveExpression("new.target");
-const isArgumentsReadEnclaveExpression =
-  generateIsReadEnclaveExpression("arguments");
+    BreakStatement: (labels, label, _annotation) => includes(labels, label),
+  },
+  returnFalse,
+);
 
 const databases = {__proto__: null};
 for (const kind in syntax) {
   databases[kind] = new WeakMap();
 }
 
-const generateMakeEnclaveDummy = () => {
-  const dummy_expression = makeNode("LiteralExpression", "dummy");
-  const dummies = {
-    "__proto__": null,
-    "super.get": makeNode("GetSuperEnclaveExpression", dummy_expression),
-    "super.set": makeNode(
-      "SetSuperEnclaveEffect",
-      dummy_expression,
-      dummy_expression,
-    ),
-    "super.call": makeNode("CallSuperEnclaveExpression", dummy_expression),
-    "new.target": makeNode("ReadEnclaveExpression", "new.target"),
-    "this": makeNode("ReadEnclaveExpression", "this"),
-    "arguments": makeNode("ReadEnclaveExpression", "arguments"),
-    "var": makeNode(
-      "DeclareEnclaveStatement",
-      "var",
-      "dummy",
-      dummy_expression,
-    ),
-  };
-  return (enclave) => dummies[enclave];
-};
-const makeEnclaveDummy = generateMakeEnclaveDummy();
-
-const checkoutDigest = (digest, type) => {
-  if (digest.length > 0) {
-    throw new Error(`found ${getNodeType(digest[0])} in ${type}`);
-  }
-};
-
-const generateGenerateIsBoundLinkExpression = () => {
-  const callback = returnFalse;
-  const import_callbacks = {
+const isBindingImportLink = generateQuery(
+  {
     __proto__: null,
     ImportLink: (
       {source: source1, specifier: specifier1},
@@ -168,26 +100,29 @@ const generateGenerateIsBoundLinkExpression = () => {
       specifier2,
       _annotation,
     ) => source1 === source2 && specifier1 === specifier2,
-  };
-  const export_callbacks = {
+  },
+  returnFalse,
+);
+
+const isBindingExportLink = generateQuery(
+  {
     __proto__: null,
     ExportLink: (specifier1, specifier2, _annotation) =>
       specifier1 === specifier2,
-  };
-  const callbacks = {
+  },
+  returnFalse,
+);
+
+const isBoundLinkExpression = generateQuery(
+  {
     __proto__: null,
-    StaticImportExpression: (links, source, specifier, _annotation1) =>
-      some(links, (link) =>
-        dispatchNode({source, specifier}, link, import_callbacks, callback),
-      ),
-    StaticExportEffect: (links, specifier, _expression, _annotation) =>
-      some(links, (link) =>
-        dispatchNode(specifier, link, export_callbacks, callback),
-      ),
-  };
-  return (links) => (node) => dispatchNode(links, node, callbacks, callback);
-};
-const generateIsBoundLinkExpression = generateGenerateIsBoundLinkExpression();
+    ImportExpression: (links, source, specifier, _annotation1) =>
+      some(links, (link) => isBindingImportLink(link, {source, specifier})),
+    ExportEffect: (links, specifier, _expression, _annotation) =>
+      some(links, (link) => isBindingExportLink(link, specifier)),
+  },
+  returnFalse,
+);
 
 const digestNode = (node, type, path) => {
   if (typeof type === "string") {
@@ -214,10 +149,8 @@ const digestNode = (node, type, path) => {
     } else {
       assert(type.length === node.length, `array length mismatch at ${path}`);
     }
-    return flat(
-      map(type, (_, index) =>
-        digestNode(node[index], type[index], `${path}/${String(index)}`),
-      ),
+    return flatMap(type, (_, index) =>
+      digestNode(node[index], type[index], `${path}/${String(index)}`),
     );
   }
   /* c8 ignore start */
@@ -225,15 +158,13 @@ const digestNode = (node, type, path) => {
   /* c8 ignore stop */
 };
 
-const generateExtractExportSpecifierArray = () => {
-  const callbacks = {
+const extractExportSpecifierArray = generateQuery(
+  {
     __proto__: null,
     ExportLink: (_context, specifier, _annotation) => [specifier],
-  };
-  const callback = (_context, _node) => [];
-  return (node) => dispatchNode(null, node, callbacks, callback);
-};
-const extractExportSpecifierArray = generateExtractExportSpecifierArray();
+  },
+  returnEmptyArray,
+);
 
 const immutable_trap_object = {
   __proto__: null,
@@ -255,13 +186,10 @@ const digestable = [
   "ReadExpression",
   "WriteEffect",
   // Link //
-  "StaticImportExpression",
-  "StaticExportEffect",
-  // Enclave //
-  "DeclareEnclaveStatement",
-  "CallSuperEnclaveExpression",
-  "GetSuperEnclaveExpression",
-  "SetSuperEnclaveEffect",
+  "ImportExpression",
+  "ExportEffect",
+  // Script //
+  "ScriptDeclareStatement",
   // Closure //
   "ReturnStatement",
   "AwaitExpression",
@@ -271,150 +199,94 @@ const digestable = [
 const isDuplicate = (element, index, array) =>
   lastIndexOf(array, element) > index;
 
-const digestNestedBlock = (digest) => {
-  assert(
-    !some(digest, isLetDeclareEnclaveStatement),
-    "found let DeclareEnclaveStatement in nested Block",
-  );
-  assert(
-    !some(digest, isConstDeclareEnclaveStatement),
-    "found const DeclareEnclaveStatement in nested Block",
-  );
-  return digest;
-};
-
-const generateGetEffectCompletion = () => {
-  const callbacks = {
-    __proto__: null,
-    ExpressionEffect: (_context, expression, _annotation) =>
-      isThrowExpression(expression) ? 0 : NaN,
-  };
-  const default_callback = (_context, _node) => NaN;
-  return (expression) =>
-    dispatchNode(null, expression, callbacks, default_callback);
-};
-const getEffectCompletion = generateGetEffectCompletion();
-const generateGetStatementCompletion = () => {
-  const callbacks = {
+const getStatementCompletion = generateQuery(
+  {
     __proto__: null,
     ReturnStatement: (_context, _expression, _annotation) => 1,
-    EffectStatement: (_context, effect, _annotation) =>
-      getEffectCompletion(effect),
     BlockStatement: (_context, block, _annotation) => getBlockCompletion(block),
     IfStatement: (_context, _expression, block1, block2, _annotation) =>
       getBlockCompletion(block1) + getBlockCompletion(block2),
     TryStatement: (_context, block1, block2, _block3, _annotation) =>
       getBlockCompletion(block1) + getBlockCompletion(block2),
-  };
-  const default_callback = (_context, _node) => NaN;
-  return (statement) =>
-    dispatchNode(null, statement, callbacks, default_callback);
-};
-const getStatementCompletion = generateGetStatementCompletion();
-const generateGetBlockCompletion = () => {
-  const callback = (_context, labels, _variables, statements, _annotation) =>
-    labels.length === 0 && statements.length > 0
-      ? getStatementCompletion(statements[statements.length - 1])
-      : NaN;
-  return (block) => extractNode(null, block, "Block", callback);
-};
-const getBlockCompletion = generateGetBlockCompletion();
+  },
+  returnNaN,
+);
 
-const generateIsLabeledBlock = () => {
-  const callback = (_context, labels, _variables, _statements, _annotation) =>
-    labels.length > 0;
-  return (block) => extractNode(null, block, "Block", callback);
+const getBlockCompletion = generateQuery(
+  {
+    __proto__: null,
+    Block: (_context, labels, _variables, statements, _annotation) =>
+      labels.length === 0 && statements.length > 0
+        ? getStatementCompletion(statements[statements.length - 1])
+        : NaN,
+  },
+  throwMissingCallback,
+);
+
+const isLabeledBlock = generateQuery(
+  {
+    __proto__: null,
+    Block: (_context, labels, _variables, _statements, _annotation) =>
+      labels.length > 0,
+  },
+  throwMissingCallback,
+);
+
+const checkoutProgram = (type, digest, completion) => {
+  assert(!isNaN(completion), `${type}.body should be a completion Block`);
+  assert(
+    filter(digest, isReturnStatement).length === completion,
+    `${type}.body should only contain ReturnStatement in completion position`,
+  );
+  digest = filterOut(digest, isReturnStatement);
+  if (digest.length > 0) {
+    throw new Error(`found ${getNodeType(digest[0])} in ${type}`);
+  }
+  return digest;
 };
-const isLabeledBlock = generateIsLabeledBlock();
+
+const checkoutBlockProgram = (type, digest, block) => {
+  assert(!isLabeledBlock(block), `${type}.body should not be a labeled Block`);
+  return checkoutProgram(type, digest, getBlockCompletion(block));
+};
 
 const generateValidateNode = () => {
   const callbacks = {
     __proto__: null,
     ModuleProgram: (digest, links, block, _annotation) => {
       assert(
-        !isLabeledBlock(block),
-        "ModuleProgram.body should not be a labeled Block",
-      );
-      assert(
         !some(flatMap(links, extractExportSpecifierArray), isDuplicate),
         "duplicate export link found in ModuleProgram",
       );
-      const completion = getBlockCompletion(block);
-      assert(
-        !isNaN(completion),
-        "ModuleProgram.body should be a completion Block",
-      );
-      assert(
-        filter(digest, isReturnStatement).length === completion,
-        "ModuleProgram.body should only contain ReturnStatement in completion position",
-      );
-      digest = filterOut(digest, isReturnStatement);
-      digest = filterOut(digest, isThisReadEnclaveExpression);
-      digest = filterOut(digest, isArgumentsReadEnclaveExpression);
       digest = filterOut(digest, isAwaitExpression);
-      digest = filterOut(digest, generateIsBoundLinkExpression(links));
-      checkoutDigest(digest, "ModuleProgram");
-      return digest;
+      digest = filterOut(digest, (node) => isBoundLinkExpression(node, links));
+      return checkoutBlockProgram("ModuleProgram", digest, block);
     },
     ScriptProgram: (digest, statements, _annotation) => {
-      const completion =
+      digest = filterOut(digest, isScriptDeclareStatement);
+      return checkoutProgram(
+        "ScriptProgram",
+        digest,
         statements.length > 0
           ? getStatementCompletion(statements[statements.length - 1])
-          : NaN;
-      assert(
-        !isNaN(completion),
-        "The last statement of ScriptProgram.body should be a completion statement",
+          : NaN,
       );
-      assert(
-        filter(digest, isReturnStatement).length === completion,
-        "ScriptProgram.body should only contain ReturnStatement in completion position",
-      );
-      digest = filterOut(digest, isReturnStatement);
-      digest = filterOut(digest, isThisReadEnclaveExpression);
-      digest = filterOut(digest, isArgumentsReadEnclaveExpression);
-      digest = filterOut(digest, isDeclareEnclaveStatement);
-      checkoutDigest(digest, "ScriptProgram");
-      return digest;
     },
-    EvalProgram: (digest, enclaves, variables, block, _annotation) => {
+    LocalEvalProgram: (digest, variables, block, _annotation) => {
+      assert(!some(variables, isDuplicate), "duplicate variable found Block");
+      digest = filterOut(digest, (node) =>
+        isBoundVariableNode(node, variables),
+      );
+      return checkoutBlockProgram("LocalEvalProgram", digest, block);
+    },
+    GlobalEvalProgram: (digest, block, _annotation) =>
+      checkoutBlockProgram("LocalEvalProgram", digest, block),
+    EnclaveEvalProgram: (digest, enclaves, block, _annotation) => {
       assert(
         !some(enclaves, isDuplicate),
         "duplicate enclaves found in EvalProgram",
       );
-      const completion = getBlockCompletion(block);
-      assert(
-        !isNaN(completion),
-        "EvalProgram.body should be a completion Block",
-      );
-      assert(
-        filter(digest, isReturnStatement).length === completion,
-        "EvalProgram.body should only contain ReturnStatement in completion position",
-      );
-      digest = filterOut(digest, isReturnStatement);
-      digest = filterOut(digest, generateIsBoundVariableNode(variables));
-      if (includes(enclaves, "super.call")) {
-        digest = filterOut(digest, isCallSuperEnclaveExpression);
-      }
-      if (includes(enclaves, "super.get")) {
-        digest = filterOut(digest, isGetSuperEnclaveExpression);
-      }
-      if (includes(enclaves, "super.set")) {
-        digest = filterOut(digest, isSetSuperEnclaveEffect);
-      }
-      if (includes(enclaves, "new.target")) {
-        digest = filterOut(digest, isNewTargetReadEnclaveExpression);
-      }
-      if (includes(enclaves, "this")) {
-        digest = filterOut(digest, isThisReadEnclaveExpression);
-      }
-      if (includes(enclaves, "arguments")) {
-        digest = filterOut(digest, isArgumentsReadEnclaveExpression);
-      }
-      if (includes(enclaves, "var")) {
-        digest = filterOut(digest, isVarDeclareEnclaveStatement);
-      }
-      checkoutDigest(digest, "EvalProgram");
-      return digest;
+      return checkoutBlockProgram("LocalEvalProgram", digest, block);
     },
     AggregateLink: (digest, _source, specifier1, specifier2, _annotation) => {
       // export Foo as *   from "source"; // invalid
@@ -429,12 +301,18 @@ const generateValidateNode = () => {
     Block: (digest, labels, variables, _statements, _annotation) => {
       assert(!some(variables, isDuplicate), "duplicate variable found Block");
       assert(
+        !some(digest, isScriptDeclareStatement),
+        "ScriptDeclareStatement can only appear at the top level of ScriptProgram",
+      );
+      assert(
         filter(digest, isInputExpression).length <= 1,
         "multiple InputExpression found in block",
       );
       digest = filterOut(digest, isInputExpression);
-      digest = filterOut(digest, generateIsBoundBreakStatement(labels));
-      digest = filterOut(digest, generateIsBoundVariableNode(variables));
+      digest = filterOut(digest, (node) => isBoundBreakStatement(node, labels));
+      digest = filterOut(digest, (node) =>
+        isBoundVariableNode(node, variables),
+      );
       return digest;
     },
     ClosureExpression: (
@@ -465,18 +343,6 @@ const generateValidateNode = () => {
         digest = filterOut(digest, isAwaitExpression);
       }
       assert(
-        kind === "arrow" || !some(digest, isNewTargetReadEnclaveExpression),
-        "found new.target ReadEnclaveExpression in non-arrow ClosureExpression",
-      );
-      assert(
-        kind === "arrow" || !some(digest, isThisReadEnclaveExpression),
-        "found this ReadEnclaveExpression in non-arrow ClosureExpression",
-      );
-      assert(
-        kind === "arrow" || !some(digest, isArgumentsReadEnclaveExpression),
-        "found arguments ReadEnclaveExpression in non-arrow ClosureExpression",
-      );
-      assert(
         !some(digest, isAwaitExpression),
         "found AwaitExpression in non-asynchronous ClosureExpression",
       );
@@ -485,32 +351,11 @@ const generateValidateNode = () => {
         "found YieldExpression in non-generator ClosureExpression",
       );
       assert(
-        !some(digest, isDeclareEnclaveStatement),
-        "found DeclareEnclaveStatement in ClosureExpression",
-      );
-      assert(
-        kind === "arrow" || !some(digest, isCallSuperEnclaveExpression),
-        "CallSuperEnclaveExpression in ClosureExpression",
-      );
-      assert(
-        kind === "arrow" || !some(digest, isGetSuperEnclaveExpression),
-        "GetSuperEnclaveExpression in non-arrow ClosureExpression",
-      );
-      assert(
-        kind === "arrow" || !some(digest, isSetSuperEnclaveEffect),
-        "SetSuperEnclaveExpression in non-arrow ClosureExpression",
-      );
-      assert(
         !some(digest, isBreakStatement),
         "unbound BreakStatement in ClosureExpression",
       );
       return digest;
     },
-    BlockStatement: (digest, _block, _annotation) => digestNestedBlock(digest),
-    IfStatement: (digest, _expression, _block1, _block2, _annotation) =>
-      digestNestedBlock(digest),
-    WhileStatement: (digest, _expression, _block, _annotation) =>
-      digestNestedBlock(digest),
     TryStatement: (digest, block1, block2, block3, _annotation) => {
       assert(
         !isLabeledBlock(block1),
@@ -524,22 +369,14 @@ const generateValidateNode = () => {
         !isLabeledBlock(block3),
         "TryStatement.finalizer should not be labeled Block",
       );
-      return digestNestedBlock(digest);
+      return digest;
     },
-    EvalExpression: (digest, enclaves, variables, _expression, _annotation) => {
-      assert(
-        !some(enclaves, isDuplicate),
-        "duplicate enclave found in EvalExpression",
-      );
+    EvalExpression: (digest, variables, _expression, _annotation) => {
       assert(
         !some(variables, isDuplicate),
         "duplicate variable found in EvalExpression",
       );
-      return concat(
-        digest,
-        map(enclaves, makeEnclaveDummy),
-        map(variables, makeReadExpression),
-      );
+      return concat(digest, map(variables, makeReadExpression));
     },
   };
   const callback = (digest, _annotation) => digest;
@@ -554,12 +391,7 @@ const generateValidateNode = () => {
       callbacks,
       callback,
     );
-    if (
-      includes(digestable, type) ||
-      isThisReadEnclaveExpression(node) ||
-      isNewTargetReadEnclaveExpression(node) ||
-      isArgumentsReadEnclaveExpression(node)
-    ) {
+    if (includes(digestable, type)) {
       digest = concat(digest, [node]);
     }
     apply(setWeakMap, databases[kind], [node, digest]);

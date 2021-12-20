@@ -12,6 +12,7 @@
   "license": "MIT",
   "scripts": {
     "build": "node build/generate-make.mjs",
+    "build-debug": "node build/generate-make.mjs DEBUG",
     "lint": "npx eslint",
     "format": "npx prettier -w",
     "test": "/bin/sh shell/test.sh",

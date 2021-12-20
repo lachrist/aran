@@ -6,7 +6,6 @@ import {
   makeApplyExpression,
   makeIntrinsicExpression,
   makeLiteralExpression,
-  makeReadEnclaveExpression,
   makeReadExpression,
 } from "../ast/index.mjs";
 
@@ -67,7 +66,11 @@ export const makeScopeWriteEffect = (scope, variable, expression) => {
           makeIntrinsicExpression("Reflect.set"),
           makeLiteralExpression({undefined: null}),
           [
-            makeReadEnclaveExpression(binding.script),
+            makeApplyExpression(
+              makeIntrinsicExpression("aran.readGlobal"),
+              makeLiteralExpression({undefined: null}),
+              [makeLiteralExpression(binding.script)],
+            ),
             makeLiteralExpression(variable),
             expression,
           ],
@@ -94,7 +97,11 @@ export const makeScopeReadExpression = (scope, variable) => {
         makeIntrinsicExpression("Reflect.get"),
         makeLiteralExpression({undefined: null}),
         [
-          makeReadEnclaveExpression(binding.script),
+          makeApplyExpression(
+            makeIntrinsicExpression("aran.readGlobal"),
+            makeLiteralExpression({undefined: null}),
+            [makeLiteralExpression(binding.script)],
+          ),
           makeLiteralExpression(variable),
         ],
       );

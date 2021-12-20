@@ -113,37 +113,56 @@ const makeInitializeStatement = (scope, variable) =>
 
 const returnTrue = generateReturn(true);
 
-const throw_error_statement_array_pattern = [
+const throw_error_expression_pattern = [
+  "ApplyExpression",
+  [
+    ["IntrinsicExpression", "aran.throw", returnTrue],
+    ["LiteralExpression", undefined, returnTrue],
+    [
+      [
+        "ApplyExpression",
+        ["IntrinsicExpression", "Reflect.get", returnTrue],
+        ["LiteralExpression", undefined, returnTrue],
+        [
+          ["InputExpression", returnTrue],
+          ["LiteralExpression", "error", returnTrue],
+        ],
+        returnTrue,
+      ],
+    ],
+  ],
+];
+
+const throw_return_error_statement_array_pattern = [
+  [
+    "ReturnStatement",
+    throw_error_expression_pattern,
+  ],
+];
+
+const throw_error_statement_array_pattern_2 = [
   [
     "EffectStatement",
     [
       "ExpressionEffect",
-      [
-        "ThrowExpression",
-        [
-          "ApplyExpression",
-          ["IntrinsicExpression", "Reflect.get", returnTrue],
-          ["LiteralExpression", undefined, returnTrue],
-          [
-            ["InputExpression", returnTrue],
-            ["LiteralExpression", "error", returnTrue],
-          ],
-          returnTrue,
-        ],
-        returnTrue,
-      ],
-      returnTrue,
+      throw_error_expression_pattern,
     ],
-    returnTrue,
   ],
 ];
 
 const makeOptimizedTryStatementArray = (
+  is_completion,
   statements1,
   statements2,
   statements3,
 ) =>
-  matchNode(null, statements2, throw_error_statement_array_pattern) &&
+  matchNode(
+    null,
+    statements2,
+    is_completion
+      ? throw_return_error_statement_array_pattern
+      : throw_error_statement_array_pattern
+  ) &&
   statements3.length === 0
     ? statements1
     : [
@@ -335,6 +354,7 @@ export const visitBlock = generateVisit({
       header: null,
       kind: null,
     };
+    const is_completion = isCompletionKind(context.kind);
     const enter_statements = makeTrapStatementArray(
       context.trap,
       "enter",
@@ -349,26 +369,33 @@ export const visitBlock = generateVisit({
     const visited_statements = flatMap(statements, (statement) =>
       visitStatement(child_context, statement),
     );
-    const completion_statements = isCompletionKind(context.kind)
+    const completion_statements = is_completion
       ? []
       : makeTrapStatementArray(context.trap, "completion", serial);
+    const failure_expression = makeApplyExpression(
+      makeIntrinsicExpression("aran.throw"),
+      makeLiteralExpression({undefined:null}),
+      [
+        makeTrapExpression(
+          context.trap,
+          "failure",
+          makeApplyExpression(
+            makeIntrinsicExpression("Reflect.get"),
+            makeLiteralExpression({undefined: null}),
+            [makeInputExpression(), makeLiteralExpression("error")],
+          ),
+          serial,
+        ),
+      ],
+    );
     const failure_statements = [
-      makeEffectStatement(
-        makeExpressionEffect(
-          makeThrowExpression(
-            makeTrapExpression(
-              context.trap,
-              "failure",
-              makeApplyExpression(
-                makeIntrinsicExpression("Reflect.get"),
-                makeLiteralExpression({undefined: null}),
-                [makeInputExpression(), makeLiteralExpression("error")],
-              ),
-              serial,
-            ),
+      is_completion
+        ? makeReturnStatement(failure_expression)
+        : makeEffectStatement(
+          makeExpressionEffect(
+            failure_expression,
           ),
         ),
-      ),
     ];
     const leave_statements = makeTrapStatementArray(
       context.trap,
@@ -389,6 +416,7 @@ export const visitBlock = generateVisit({
           (variable) => makeInitializeStatement(child_scope, variable),
         ),
         makeOptimizedTryStatementArray(
+          is_completion,
           concat(enter_statements, visited_statements, completion_statements),
           failure_statements,
           leave_statements,
@@ -855,4 +883,48 @@ export const visitExpression = generateVisit({
       ]),
       serial,
     ),
+  InvokeExpression: (context, expression1, expression2, expressions, serial) => {
+    const this_variable = makeOldVariable(`this_${String(incrementCounter(context.counter))}`);
+    declareScopeVariable(
+      context.scope,
+      {
+        variable: makeOldVariable(this_variable),
+        value: null,
+        duplicable: false,
+        initialized: true,
+      },
+    );
+    return makeTrapExpression(
+      context.trap,
+      "invoke",
+      (cut) =>
+        cut
+        ? visitExpression(
+          context,
+          makeSequenceExpression(
+            makeWriteEffect(
+              this_variable,
+              expression1,
+              serial,
+            ),
+            makeApplyExpression(
+              makeIntrinsicExpression("aran.get", serial),
+              makeLiteralExpression({undefined:null}, serial),
+              [
+                makeReadExpression(this_variable, serial),
+                expression2,
+              ],
+              serial,
+            ),
+            serial,
+          ),
+        )
+        : visitExpression(context, expression1),
+      (cut) =>
+        cut
+        ? visitExpression(context, makeReadExpression(this_variable, serial))
+        : visitExpression(context, expression2),
+      map(expressions, (expression) => visitExpression(context, expression)),
+    };
+  },
 });

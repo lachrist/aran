@@ -48,6 +48,9 @@ const EXPRESSION_BYPASS = "expression";
 // Helper //
 ////////////
 
+const call = (x) => (f) => f(x);
+
+const callTrue = call(null);
 const returnNull = generateReturn(null);
 const returnEmptyArray = generateReturn([]);
 const mapReturnNull = (array) => map(array, returnNull);
@@ -110,6 +113,8 @@ const scope_arg = [getScopeData, makeScopeExpression];
 const scope_array_arg = [getScopeDataArray, makeScopeArrayExpression];
 const link_array_arg = [returnFirst, makeNullableLiteralObjectArrayExpression];
 const nullable_scope_arg = [getScopeNullableData, makeScopeNullableExpression];
+
+const visit_arg = [returnNull, callTrue];
 
 //////////////////////
 // Synonym Argument //
@@ -333,6 +338,14 @@ const traps = {
     expression_arg,
     serial_arg,
   ),
+  "invoke": makeExpressionTrap(
+    (visitObject, visitKey, expressions) =>
+      makeInvokeExpression(visitObject(false), visitKey(false), expressions),
+    visit_arg,
+    visit_arg,
+    expression_array_arg,
+    serial_arg,
+  ),
 };
 
 ////////////
@@ -351,16 +364,13 @@ const generateMakeTrapNode =
   ({namespace, pointcut}, name, ...values) =>
     cut(pointcut, name, map(zip(traps[name].static, values), applyPair))
       ? makeNode(
-          makeApplyExpression(
+          makeInvokeExpression(
             makeApplyExpression(
-              makeIntrinsicExpression("Reflect.get"),
+              makeIntrinsicExpression("aran.readGlobal"),
               makeLiteralExpression({undefined: null}),
-              [
-                makeReadEnclaveExpression(namespace),
-                makeLiteralExpression(name),
-              ],
+              [makeLiteralExpression(namespace)],
             ),
-            makeReadEnclaveExpression(namespace),
+            makeLiteralExpression(name === "invoke" ? "apply" : name),
             map(zip(traps[name].dynamic, values), applyPair),
           ),
         )
