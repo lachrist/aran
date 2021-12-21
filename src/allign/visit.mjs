@@ -225,7 +225,7 @@ export const visitStatement = generateVisitNode({
   EffectStatement: (error, effect1, _annotation1, effect2, _annotation2) => [
     visitEffect(appendErrorSegment(error, ".body"), effect1, effect2),
   ],
-  ScriptDeclareStatement: (
+  DeclareStatement: (
     error,
     kind1,
     identifier1,

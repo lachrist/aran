@@ -60,12 +60,29 @@ const isReturnStatement = generateIsType("ReturnStatement");
 const isYieldExpression = generateIsType("YieldExpression");
 const isAwaitExpression = generateIsType("AwaitExpression");
 const isInputExpression = generateIsType("InputExpression");
-const isScriptDeclareStatement = generateIsType("ScriptDeclareStatement");
 const isBreakStatement = generateIsType("BreakStatement");
 const makeReadExpression = (variable) => makeNode("ReadExpression", variable);
 
 const generateQuery = (callbacks, default_callback) => (node, context) =>
   dispatchNode(context, node, callbacks, default_callback);
+
+const isLooseDeclareStatement = generateQuery(
+  {
+    __proto__: null,
+    DeclareStatement: (_context, kind, _variable, _expression, _annotation) =>
+      kind === "var",
+  },
+  returnFalse,
+);
+
+const isRigidDeclareStatement = generateQuery(
+  {
+    __proto__: null,
+    DeclareStatement: (_context, kind, _variable, _expression, _annotation) =>
+      kind === "let" || kind === "const",
+  },
+  returnFalse,
+);
 
 const isBoundVariableNode = generateQuery(
   {
@@ -178,19 +195,13 @@ const immutable_trap_object = {
 };
 
 const digestable = [
-  // Input //
   "InputExpression",
-  // Label //
   "BreakStatement",
-  // Identifier //
   "ReadExpression",
   "WriteEffect",
-  // Link //
   "ImportExpression",
   "ExportEffect",
-  // Script //
-  "ScriptDeclareStatement",
-  // Closure //
+  "DeclareStatement",
   "ReturnStatement",
   "AwaitExpression",
   "YieldExpression",
@@ -263,7 +274,7 @@ const generateValidateNode = () => {
       return checkoutBlockProgram("ModuleProgram", digest, block);
     },
     ScriptProgram: (digest, statements, _annotation) => {
-      digest = filterOut(digest, isScriptDeclareStatement);
+      digest = filterOut(digest, isRigidDeclareStatement);
       return checkoutProgram(
         "ScriptProgram",
         digest,
@@ -286,7 +297,8 @@ const generateValidateNode = () => {
         !some(enclaves, isDuplicate),
         "duplicate enclaves found in EvalProgram",
       );
-      return checkoutBlockProgram("LocalEvalProgram", digest, block);
+      digest = filterOut(digest, isLooseDeclareStatement);
+      return checkoutBlockProgram("EnclaveEvalProgram", digest, block);
     },
     AggregateLink: (digest, _source, specifier1, specifier2, _annotation) => {
       // export Foo as *   from "source"; // invalid
@@ -301,8 +313,8 @@ const generateValidateNode = () => {
     Block: (digest, labels, variables, _statements, _annotation) => {
       assert(!some(variables, isDuplicate), "duplicate variable found Block");
       assert(
-        !some(digest, isScriptDeclareStatement),
-        "ScriptDeclareStatement can only appear at the top level of ScriptProgram",
+        !some(digest, isRigidDeclareStatement),
+        "found rigid DeclareStatement in Block",
       );
       assert(
         filter(digest, isInputExpression).length <= 1,
@@ -342,6 +354,10 @@ const generateValidateNode = () => {
       if (asynchronous) {
         digest = filterOut(digest, isAwaitExpression);
       }
+      assert(
+        !some(digest, isLooseDeclareStatement),
+        "found DeclareStatement in ClosureExpression",
+      );
       assert(
         !some(digest, isAwaitExpression),
         "found AwaitExpression in non-asynchronous ClosureExpression",

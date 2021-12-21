@@ -351,7 +351,7 @@ export const revertStatement = generateRevert({
     ),
   EffectStatement: (_context, effect, _annotation) =>
     makeExpressionStatement(revertEffect(effect)),
-  ScriptDeclareStatement: (_context, kind, variable, expression, _annotation) =>
+  DeclareStatement: (_context, kind, variable, expression, _annotation) =>
     makeVariableDeclaration(kind, [
       makeVariableDeclarator(
         makeIdentifier(variable),

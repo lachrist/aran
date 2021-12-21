@@ -449,6 +449,50 @@ testVariable((variable) =>
   ),
 );
 
+// DeclareStatement //
+{
+  const makeDeclareStatement = (kind) =>
+    makeValidNode(
+      "DeclareStatement",
+      kind,
+      "variable",
+      makeValidNode("LiteralExpression", 123),
+    );
+  const rigid_declare_statement = makeDeclareStatement("let");
+  const loose_declare_statement = makeDeclareStatement("var");
+  const return_statement = makeValidNode(
+    "ReturnStatement",
+    makeValidNode("LiteralExpression", 123),
+  );
+  const debugger_statement = makeValidNode("DebuggerStatement");
+  // ScriptProgram //
+  const makeScriptProgram = (statement) =>
+    makeValidNode("ScriptProgram", [statement, return_statement]);
+  makeScriptProgram(rigid_declare_statement);
+  assertThrow(() => makeScriptProgram(loose_declare_statement));
+  // Block //
+  const makeBlock = (statement) =>
+    makeValidNode("Block", [], [], [statement, return_statement]);
+  makeBlock(loose_declare_statement);
+  assertThrow(() => makeBlock(rigid_declare_statement));
+  // EnclaveEvalProgram //
+  const makeEnclaveEvalProgram = (statement) =>
+    makeValidNode("EnclaveEvalProgram", [], makeBlock(statement));
+  makeEnclaveEvalProgram(loose_declare_statement);
+  assertThrow(() => makeEnclaveEvalProgram(rigid_declare_statement));
+  // ClosureExpression //
+  const makeClosureExpression = (statement) =>
+    makeValidNode(
+      "ClosureExpression",
+      "arrow",
+      false,
+      false,
+      makeBlock(statement),
+    );
+  makeClosureExpression(debugger_statement);
+  assertThrow(() => makeClosureExpression(loose_declare_statement));
+}
+
 // Import //
 {
   const completion_block = makeValidNode(

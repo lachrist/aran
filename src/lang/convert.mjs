@@ -19,7 +19,7 @@ import {
   makeReturnStatement,
   makeBreakStatement,
   makeDebuggerStatement,
-  makeScriptDeclareStatement,
+  makeDeclareStatement,
   makeBlockStatement,
   makeIfStatement,
   makeWhileStatement,
@@ -231,7 +231,11 @@ export const convertBlock = generateConvert({
     );
   },
   BlockStatement: (node) => {
-    if (node.body.length > 0 && node.body[0].type === "VariableDeclaration") {
+    if (
+      node.body.length > 0 &&
+      node.body[0].type === "VariableDeclaration" &&
+      node.body[0].kind === "let"
+    ) {
       return makeBlock(
         [],
         convertDeclaration(node.body[0]),
@@ -307,7 +311,7 @@ export const convertStatement = generateConvert({
     expectSyntax(node, node.declarations.length === 1);
     expectSyntax(node, node.declarations[0].init !== null);
     expectSyntax(node, node.declarations[0].id.type === "Identifier");
-    return makeScriptDeclareStatement(
+    return makeDeclareStatement(
       node.kind,
       node.declarations[0].id.name,
       convertExpression(node.declarations[0].init),
