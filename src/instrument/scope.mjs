@@ -63,7 +63,7 @@ export const makeScopeWriteEffect = (scope, variable, expression) => {
     ? makeWriteEffect(variable, expression)
     : makeExpressionEffect(
         makeApplyExpression(
-          makeIntrinsicExpression("Reflect.set"),
+          makeIntrinsicExpression("aran.setStrict"),
           makeLiteralExpression({undefined: null}),
           [
             makeApplyExpression(
@@ -94,7 +94,7 @@ export const makeScopeReadExpression = (scope, variable) => {
   return binding.script === null
     ? makeReadExpression(variable)
     : makeApplyExpression(
-        makeIntrinsicExpression("Reflect.get"),
+        makeIntrinsicExpression("aran.get"),
         makeLiteralExpression({undefined: null}),
         [
           makeApplyExpression(

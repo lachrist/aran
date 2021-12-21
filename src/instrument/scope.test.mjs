@@ -85,7 +85,7 @@ import {
   assertEqual(
     allignExpression(
       makeScopeReadExpression(scope, "variable"),
-      `intrinsic('Reflect.get')(
+      `intrinsic('aran.get')(
         undefined,
         intrinsic('aran.readGlobal')(undefined, "namespace"),
         'variable'
@@ -102,7 +102,7 @@ import {
     allignEffect(
       makeScopeWriteEffect(scope, "variable", makeLiteralExpression(123)),
       `effect(
-        intrinsic('Reflect.set')(
+        intrinsic('aran.setStrict')(
           undefined,
           intrinsic('aran.readGlobal')(undefined, "namespace"),
           'variable',

@@ -6,6 +6,8 @@ import {extendScope, createRootScope, declareScopeVariable} from "./scope.mjs";
 
 import {makeTrapExpression, makeTrapStatementArray} from "./trap.mjs";
 
+const {String} = globalThis;
+
 ////////////
 // bypass //
 ////////////
@@ -24,41 +26,6 @@ assertEqual(
       456,
     ),
     `123n;`,
-  ),
-  null,
-);
-
-////////////
-// object //
-////////////
-assertEqual(
-  allignExpression(
-    makeTrapExpression(
-      {
-        namespace: "namespace",
-        pointcut: (...args) => {
-          assertDeepEqual(args, ["object", null, [[null, null]], 123]);
-          return true;
-        },
-      },
-      "object",
-      makeLiteralExpression("prototype"),
-      [[makeLiteralExpression("key"), makeLiteralExpression("value")]],
-      123,
-    ),
-    `intrinsic("Reflect.get")(undefined, $namespace, "object")(
-      $namespace,
-      "prototype",
-      intrinsic("Array.of")(
-        undefined,
-        intrinsic("Array.of")(
-          undefined,
-          "key",
-          "value",
-        ),
-      ),
-      123,
-    );`,
   ),
   null,
 );
@@ -103,12 +70,16 @@ assertEqual(
       `{
         let _callee;
         effect(
-          intrinsic("Reflect.get")(undefined, $namespace, "arrival")(
-            $namespace,
+          intrinsic("aran.readGlobal")(undefined, "namespace")["arrival"](
             "kind",
             intrinsic("Array.of")(
               undefined,
-              {__proto__:null, ["link_key"]:"link_value"},
+              intrinsic("aran.createObject")(
+                undefined,
+                null,
+                "link_key",
+                "link_value",
+              ),
             ),
             _callee,
             123,
@@ -145,8 +116,7 @@ assertEqual(
     ),
     `{
       effect(
-        intrinsic("Reflect.get")(undefined, $namespace, "arrival")(
-          $namespace,
+        intrinsic("aran.readGlobal")(undefined, "namespace")["arrival"](
           "kind",
           null,
           null,
@@ -204,8 +174,7 @@ assertEqual(
       `{
         let _label, _variable;
         effect(
-          intrinsic("Reflect.get")(undefined, $namespace, "enter")(
-            $namespace,
+          intrinsic("aran.readGlobal")(undefined, "namespace")["enter"](
             "kind",
             intrinsic("Array.of")(undefined, _label),
             intrinsic("Array.of")(undefined, _variable),
@@ -217,3 +186,27 @@ assertEqual(
     null,
   );
 }
+
+////////////
+// Invoke //
+////////////
+assertEqual(
+  allignExpression(
+    makeTrapExpression(
+      {
+        namespace: "namespace",
+        pointcut: ["apply"],
+      },
+      "invoke",
+      (cut) => makeLiteralExpression(`object_${String(cut)}`),
+      (cut) => makeLiteralExpression(`key_${String(cut)}`),
+      [makeLiteralExpression("argument")],
+    ),
+    `intrinsic("aran.readGlobal")(undefined, "namespace")["apply"](
+      "object_true",
+      "key_true",
+      intrinsic("Array.of")(undefined, "argument"),
+    )`,
+  ),
+  null,
+);
