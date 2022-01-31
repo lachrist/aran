@@ -4,6 +4,7 @@ const {
   JSON: {stringify},
   Reflect: {apply, getOwnPropertyDescriptor},
   Object: {
+    freeze,
     prototype: {toString},
   },
   Error,
@@ -159,6 +160,8 @@ export const hasOwnProperty = (object, key) =>
 ///////////
 // Array //
 ///////////
+
+export const empty = freeze([]);
 
 export const mapContext = (array1, closure, context) => {
   const {length} = array1;
