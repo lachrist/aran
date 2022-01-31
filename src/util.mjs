@@ -149,6 +149,13 @@ export const dropFirst =
   (_x, ...xs) =>
     apply(f, undefined, xs);
 
+////////////
+// Object //
+////////////
+
+export const hasOwnProperty = (object, key) =>
+  getOwnPropertyDescriptor(object, key) !== undefined;
+
 ///////////
 // Array //
 ///////////

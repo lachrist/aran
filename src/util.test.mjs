@@ -17,6 +17,7 @@ import {
   generateReturn,
   dropFirst,
   generateThrowError,
+  hasOwnProperty,
   mapContext,
 } from "./util.mjs";
 
@@ -102,6 +103,13 @@ assertEqual(generateReturn(123)(), 123);
 assertDeepEqual(dropFirst((...xs) => xs)(1, 2, 3), [2, 3]);
 
 assertThrow(generateThrowError("foo"));
+
+////////////
+// Object //
+////////////
+
+assertEqual(hasOwnProperty({key: "value"}, "key"), true);
+assertEqual(hasOwnProperty({__proto__: {key: "value"}}, "key"), false);
 
 ///////////
 // Array //
