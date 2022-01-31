@@ -148,3 +148,16 @@ export const dropFirst =
   (f) =>
   (_x, ...xs) =>
     apply(f, undefined, xs);
+
+///////////
+// Array //
+///////////
+
+export const mapContext = (array1, closure, context) => {
+  const {length} = array1;
+  const array2 = [];
+  for (let index = 0; index < length; index += 1) {
+    array2[index] = closure(context, array1[index], index, array1);
+  }
+  return array2;
+};

@@ -17,6 +17,7 @@ import {
   generateReturn,
   dropFirst,
   generateThrowError,
+  mapContext,
 } from "./util.mjs";
 
 const {Error} = globalThis;
@@ -101,3 +102,12 @@ assertEqual(generateReturn(123)(), 123);
 assertDeepEqual(dropFirst((...xs) => xs)(1, 2, 3), [2, 3]);
 
 assertThrow(generateThrowError("foo"));
+
+///////////
+// Array //
+///////////
+
+assertDeepEqual(
+  mapContext(["element"], (...args) => args, "context"),
+  [["context", "element", 0, ["element"]]],
+);
