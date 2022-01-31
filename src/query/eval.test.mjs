@@ -10,3 +10,7 @@ const options = {
 assertEqual(hasDirectEvalCall(parseAcorn("[eval(x)];", options)), true);
 
 assertEqual(hasDirectEvalCall(parseAcorn("[eval(...xs)];", options)), false);
+
+assertEqual(hasDirectEvalCall(parseAcorn("(() => eval(x));", options)), false);
+
+assertEqual(hasDirectEvalCall(parseAcorn("/regexp/gu;", options)), false);

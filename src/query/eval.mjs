@@ -24,17 +24,26 @@ const isNodeKey = (key) =>
 const get = (object, key) => object[key];
 
 export const hasDirectEvalCall = (any) => {
-  // console.log(any);
   if (isArray(any)) {
     return some(any, hasDirectEvalCall);
   } else if (typeof any === "object" && any !== null) {
-    if (hasOwnProperty(any, "type") && isDirectEvalCall(any)) {
-      return true;
+    if (hasOwnProperty(any, "type")) {
+      if (isDirectEvalCall(any)) {
+        return true;
+      } else if (
+        any.type === "ArrowFunctionExpression" ||
+        any.type === "FunctionExpression" ||
+        any.type === "FunctionDeclaration"
+      ) {
+        return false;
+      } else {
+        return some(
+          mapContext(filter(ownKeys(any), isNodeKey), get, any),
+          hasDirectEvalCall,
+        );
+      }
     } else {
-      return some(
-        mapContext(filter(ownKeys(any), isNodeKey), get, any),
-        hasDirectEvalCall,
-      );
+      return some(mapContext(ownKeys(any), get, any), hasDirectEvalCall);
     }
   } else {
     return false;
