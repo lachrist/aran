@@ -52,9 +52,10 @@ assign(visitors, {
   ThrowStatemnt: visitEmpty,
   EmptyStatement: visitEmpty,
   DebuggerStatement: visitEmpty,
+  FunctionDeclaration: visitEmpty,
+  ClassDeclaration: visitEmpty,
   VariableDeclaration: visitEmpty,
   ContinueStatement: visitEmpty,
-  FunctionDeclaration: visitEmpty,
   ExpressionStatement: (node) => makeResult(VALUED, [makeFreeCompletion(node)]),
   BreakStatement: (node) =>
     makeResult(node.label === null ? null : node.label.name, []),

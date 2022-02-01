@@ -7,6 +7,7 @@ const {SyntaxError} = globalThis;
 // Contructor //
 ////////////////
 
+const VOID_TYPE = "void";
 const IMPORT_TYPE = "import";
 const VAR_TYPE = "var";
 const FUNCTION_TYPE = "function";
@@ -23,6 +24,7 @@ const generateMakeDeclaration = (type) => (variable) => ({
   exports: [],
 });
 
+export const makeVoidDeclaration = generateMakeDeclaration(VOID_TYPE);
 export const makeVarDeclaration = generateMakeDeclaration(VAR_TYPE);
 export const makeConstDeclaration = generateMakeDeclaration(CONST_TYPE);
 export const makeLetDeclaration = generateMakeDeclaration(LET_TYPE);
@@ -44,7 +46,7 @@ export const makeImportDeclaration = (variable, source, specifier) => ({
 // Mutator //
 /////////////
 
-export const addDeclarationExportSpecifier = (declaration, specifier) => ({
+export const exportDeclaration = (declaration, specifier) => ({
   ...declaration,
   exports: concat(declaration.exports, [specifier]),
 });
@@ -127,6 +129,10 @@ export const isDeclarationClosureBound = generateIncludesKind([
 ///////////////
 // Duplicate //
 ///////////////
+
+export const checkoutDeclarationArray = (declarations) => {
+
+};
 
 const isDeclarationDuplicable = generateIncludesKind([
   VAR_TYPE,
