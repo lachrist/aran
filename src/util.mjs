@@ -171,3 +171,16 @@ export const mapContext = (array1, closure, context) => {
   }
   return array2;
 };
+
+export const filterOutContext = (array1, closure, context) => {
+  const {length: length1} = array1;
+  let length2 = 0;
+  const array2 = [];
+  for (let index = 0; index < length1; index += 1) {
+    if (!closure(context, array1[index], index, array1)) {
+      array2[length2] = array1[index];
+      length2 += 1;
+    }
+  }
+  return array2;
+};

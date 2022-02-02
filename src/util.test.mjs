@@ -19,6 +19,7 @@ import {
   generateThrowError,
   hasOwnProperty,
   mapContext,
+  filterOutContext,
 } from "./util.mjs";
 
 const {Error} = globalThis;
@@ -118,4 +119,19 @@ assertEqual(hasOwnProperty({__proto__: {key: "value"}}, "key"), false);
 assertDeepEqual(
   mapContext(["element"], (...args) => args, "context"),
   [["context", "element", 0, ["element"]]],
+);
+
+assertDeepEqual(
+  filterOutContext(
+    [1, 2, 3, 4],
+    (context, element, index, elements, ...rest) => {
+      assertEqual(context, "context");
+      assertEqual(element, index + 1);
+      assertDeepEqual(elements, [1, 2, 3, 4]);
+      assertDeepEqual(rest, []);
+      return element > 2;
+    },
+    "context",
+  ),
+  [1, 2],
 );

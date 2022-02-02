@@ -1,6 +1,5 @@
-import {concat, flatMap, map, flat} from "array-lite";
-import {assert, mapContext} from "../../util.mjs";
-import {makeFunctionDeclaration, makeVarDeclaration} from "./data.mjs";
+import {concat, flatMap, map} from "array-lite";
+import {makeFunctionDeclaration, makeVarDeclaration} from "./declaration.mjs";
 import {collectDeclarator} from "./collect.mjs";
 
 const {
@@ -68,4 +67,4 @@ assign(visitors, {
   FunctionDeclaration: (node) => [makeFunctionDeclaration(node.id.name)],
 });
 
-export const hoistDeep = visit
+export const hoistDeep = visit;

@@ -4,9 +4,7 @@ import {
   makeLetDeclaration,
   makeConstDeclaration,
   makeClassDeclaration,
-} from "./data.mjs";
-
-const getConsequent = ({consequent}) => consequent;
+} from "./declaration.mjs";
 
 const makers = {
   __proto__: null,
@@ -14,7 +12,7 @@ const makers = {
   let: makeLetDeclaration,
 };
 
-const visit = (node) => {
+export const hoistShallow = (node) => {
   if (node.type === "VariableDeclaration") {
     if (node.kind !== "var") {
       return map(
@@ -29,14 +27,4 @@ const visit = (node) => {
   } else {
     return [];
   }
-};
-
-export const hoistSwitchStatement = (node) => {
-  assert(node.type === "SwitchStatement", "expecteed switch statement");
-  return flatMap(flatMap(node.cases, getConsequent), visit);
-};
-
-export const hoistBlockStatement = (node) => {
-  assert(node.type === "BlockStatement", "expected block statement");
-  return flatMap(node.body, visit);
 };
