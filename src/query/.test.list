@@ -1,3 +1,5 @@
-* completion
-* hoisting
-* eval.mjs
+- * completion
+  * hoisting
+  * eval.mjs
+  * strict.mjs
+- index.mjs
