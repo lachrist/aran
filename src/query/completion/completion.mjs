@@ -21,7 +21,7 @@ export const generateReleaseCompletion = (label) => (completion) =>
 export const generateCaptureCompletion = (label) => (completion) =>
   completion.label === undefined ? {node: completion.node, label} : completion;
 
-export const extractCompletionNode = ({node, label}) => {
+export const getCompletionNode = ({node, label}) => {
   assert(
     label === undefined,
     "only node from free completion can be extracted",

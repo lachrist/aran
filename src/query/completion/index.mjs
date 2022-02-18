@@ -1,7 +1,7 @@
 import {map, concat, flatMap} from "array-lite";
 import {assert} from "../../util.mjs";
 import {VALUED, UNVALUED} from "./valuation.mjs";
-import {makeFreeCompletion, extractCompletionNode} from "./completion.mjs";
+import {makeFreeCompletion, getCompletionNode} from "./completion.mjs";
 import {
   makeResult,
   generateReleaseResult,
@@ -106,5 +106,5 @@ assign(visitors, {
 export const inferCompletionNodeArray = (node) => {
   assert(node.type === "Program", "Expected a program node");
   assert(node.sourceType === "script", "Only script program have completion");
-  return map(chainResult(visitAll(node.body), UNVALUED), extractCompletionNode);
+  return map(chainResult(visitAll(node.body), UNVALUED), getCompletionNode);
 };

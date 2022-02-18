@@ -6,7 +6,7 @@ import {
   makeBoundedCompletion,
   generateReleaseCompletion,
   generateCaptureCompletion,
-  extractCompletionNode,
+  getCompletionNode,
 } from "./completion.mjs";
 
 const node = {type: "DebuggerStatement"};
@@ -35,4 +35,4 @@ assertDeepEqual(
   makeBoundedCompletion(node, "label2"),
 );
 
-assertDeepEqual(extractCompletionNode(makeFreeCompletion(node)), node);
+assertDeepEqual(getCompletionNode(makeFreeCompletion(node)), node);
