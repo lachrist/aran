@@ -28,6 +28,9 @@ import {
   hasOwnProperty,
   pop,
   push,
+  makeCurry,
+  callCurry,
+  extendCurry,
   getLast,
   mapCurry,
   findCurry,
@@ -159,6 +162,25 @@ assertEqual(hasOwnProperty({key: "value"}, "key"), true);
 assertEqual(hasOwnProperty({__proto__: {key: "value"}}, "key"), false);
 
 ///////////
+// Curry //
+///////////
+
+assertDeepEqual(
+  callCurry(
+    extendCurry(
+      makeCurry((...args) => args, 1, 2, 3),
+      4,
+      5,
+      6,
+    ),
+    7,
+    8,
+    9,
+  ),
+  [1, 2, 3, 4, 5, 6, 7, 8, 9],
+);
+
+///////////
 // Array //
 ///////////
 
@@ -179,36 +201,40 @@ assertEqual(getLast(["element1", "element2"]), "element2");
 assertEqual(
   findCurry(
     ["element"],
-    (...args) => {
+    makeCurry((...args) => {
       assertDeepEqual(args, ["curry", "element", 0, ["element"]]);
       return true;
-    },
-    "curry",
+    }, "curry"),
   ),
   "element",
 );
 
 assertEqual(
-  findCurry([], generateAssertUnreachable("should not be called"), "curry"),
+  findCurry(
+    [],
+    makeCurry(generateAssertUnreachable("should not be called"), "curry"),
+  ),
   null,
 );
 
 assertDeepEqual(
-  mapCurry(["element"], (...args) => args, "Curry"),
-  [["Curry", "element", 0, ["element"]]],
+  mapCurry(
+    ["element"],
+    makeCurry((...args) => args, "curry"),
+  ),
+  [["curry", "element", 0, ["element"]]],
 );
 
 assertDeepEqual(
   filterOutCurry(
     [1, 2, 3, 4],
-    (Curry, element, index, elements, ...rest) => {
-      assertEqual(Curry, "Curry");
+    makeCurry((curry, element, index, elements, ...rest) => {
+      assertEqual(curry, "curry");
       assertEqual(element, index + 1);
       assertDeepEqual(elements, [1, 2, 3, 4]);
       assertDeepEqual(rest, []);
       return element > 2;
-    },
-    "Curry",
+    }, "curry"),
   ),
   [1, 2],
 );
