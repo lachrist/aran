@@ -1,4 +1,9 @@
-import {assertThrow, assertEqual, assertDeepEqual} from "./__fixture__.mjs";
+import {
+  assertThrow,
+  assertEqual,
+  assertDeepEqual,
+  generateAssertUnreachable,
+} from "./__fixture__.mjs";
 
 import {
   assert,
@@ -17,12 +22,19 @@ import {
   generateReturn,
   dropFirst,
   generateThrowError,
+  generateSwitch0,
+  generateSwitch1,
+  generateSwitch2,
   hasOwnProperty,
-  mapContext,
-  filterOutContext,
+  pop,
+  push,
+  getLast,
+  mapCurry,
+  findCurry,
+  filterOutCurry,
 } from "./util.mjs";
 
-const {Error} = globalThis;
+const {Error, undefined} = globalThis;
 
 ///////////////
 // Assertion //
@@ -75,6 +87,40 @@ assertThrow(
   /Error: foo/u,
 );
 
+////////////////////
+// generateSwitch //
+////////////////////
+
+assertEqual(
+  generateSwitch0({
+    type: (...args) => {
+      assertDeepEqual(args, [{type: "type"}]);
+      return "result";
+    },
+  })({type: "type"}, "arg1", "arg2"),
+  "result",
+);
+
+assertEqual(
+  generateSwitch1({
+    type: (...args) => {
+      assertDeepEqual(args, [{type: "type"}, "arg1"]);
+      return "result";
+    },
+  })({type: "type"}, "arg1", "arg2"),
+  "result",
+);
+
+assertEqual(
+  generateSwitch2({
+    type: (...args) => {
+      assertDeepEqual(args, [{type: "type"}, "arg1", "arg2"]);
+      return "result";
+    },
+  })({type: "type"}, "arg1", "arg2"),
+  "result",
+);
+
 /////////////
 // Counter //
 /////////////
@@ -116,22 +162,53 @@ assertEqual(hasOwnProperty({__proto__: {key: "value"}}, "key"), false);
 // Array //
 ///////////
 
-assertDeepEqual(
-  mapContext(["element"], (...args) => args, "context"),
-  [["context", "element", 0, ["element"]]],
+assertEqual(getLast(["element1", "element2"]), "element2");
+
+{
+  const array = ["element1", "element2"];
+  assertEqual(pop(array), "element2");
+  assertDeepEqual(array, ["element1"]);
+}
+
+{
+  const array = ["element1"];
+  assertEqual(push(array, "element2"), undefined);
+  assertDeepEqual(array, ["element1", "element2"]);
+}
+
+assertEqual(
+  findCurry(
+    ["element"],
+    (...args) => {
+      assertDeepEqual(args, ["curry", "element", 0, ["element"]]);
+      return true;
+    },
+    "curry",
+  ),
+  "element",
+);
+
+assertEqual(
+  findCurry([], generateAssertUnreachable("should not be called"), "curry"),
+  null,
 );
 
 assertDeepEqual(
-  filterOutContext(
+  mapCurry(["element"], (...args) => args, "Curry"),
+  [["Curry", "element", 0, ["element"]]],
+);
+
+assertDeepEqual(
+  filterOutCurry(
     [1, 2, 3, 4],
-    (context, element, index, elements, ...rest) => {
-      assertEqual(context, "context");
+    (Curry, element, index, elements, ...rest) => {
+      assertEqual(Curry, "Curry");
       assertEqual(element, index + 1);
       assertDeepEqual(elements, [1, 2, 3, 4]);
       assertDeepEqual(rest, []);
       return element > 2;
     },
-    "context",
+    "Curry",
   ),
   [1, 2],
 );

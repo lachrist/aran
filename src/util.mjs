@@ -25,6 +25,22 @@ export const assert = (check, message) => {
   }
 };
 
+export const generateSwitch0 = (clauses) => (discriminant) => {
+  const clause = clauses[discriminant.type];
+  return clause(discriminant);
+};
+
+export const generateSwitch1 = (clauses) => (discriminant, argument1) => {
+  const clause = clauses[discriminant.type];
+  return clause(discriminant, argument1);
+};
+
+export const generateSwitch2 =
+  (clauses) => (discriminant, argument1, argument2) => {
+    const clause = clauses[discriminant.type];
+    return clause(discriminant, argument1, argument2);
+  };
+
 export const generateThrowError = (message) => () => {
   throw new Error(message);
 };
@@ -163,21 +179,43 @@ export const hasOwnProperty = (object, key) =>
 
 export const empty = freeze([]);
 
-export const mapContext = (array1, closure, context) => {
+export const getLast = (array) => array[array.length - 1];
+
+export const push = (array, element) => {
+  array[array.length] = element;
+};
+
+export const pop = (array) => {
+  const last = array[array.length - 1];
+  array.length -= 1;
+  return last;
+};
+
+export const findCurry = (array, closure, curry) => {
+  const {length} = array;
+  for (let index = 0; index < length; index += 1) {
+    if (closure(curry, array[index], index, array)) {
+      return array[index];
+    }
+  }
+  return null;
+};
+
+export const mapCurry = (array1, closure, curry) => {
   const {length} = array1;
   const array2 = [];
   for (let index = 0; index < length; index += 1) {
-    array2[index] = closure(context, array1[index], index, array1);
+    array2[index] = closure(curry, array1[index], index, array1);
   }
   return array2;
 };
 
-export const filterOutContext = (array1, closure, context) => {
+export const filterOutCurry = (array1, closure, curry) => {
   const {length: length1} = array1;
   let length2 = 0;
   const array2 = [];
   for (let index = 0; index < length1; index += 1) {
-    if (!closure(context, array1[index], index, array1)) {
+    if (!closure(curry, array1[index], index, array1)) {
       array2[length2] = array1[index];
       length2 += 1;
     }

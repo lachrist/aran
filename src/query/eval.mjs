@@ -1,4 +1,4 @@
-import {mapContext, hasOwnProperty} from "../util.mjs";
+import {mapCurry, hasOwnProperty} from "../util.mjs";
 import {some, filter} from "array-lite";
 
 const {
@@ -38,12 +38,12 @@ export const hasDirectEvalCall = (any) => {
         return false;
       } else {
         return some(
-          mapContext(filter(ownKeys(any), isNodeKey), get, any),
+          mapCurry(filter(ownKeys(any), isNodeKey), get, any),
           hasDirectEvalCall,
         );
       }
     } else {
-      return some(mapContext(ownKeys(any), get, any), hasDirectEvalCall);
+      return some(mapCurry(ownKeys(any), get, any), hasDirectEvalCall);
     }
   } else {
     return false;
