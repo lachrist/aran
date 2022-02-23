@@ -72,3 +72,21 @@ export const allignProgram = generateAllign(
   stringifyProgram,
   visitProgram,
 );
+
+// Bad idea: does not share variable mappings
+//
+// const isNotNull = (any) => any !== null;
+//
+// const generateAllignArray = (allign) => {
+//   const allignElement = (nodes, code, index) => allign(nodes[index], code);
+//   return (nodes, codes) => {
+//     if (nodes.length !== codes.length) {
+//       return "top-level array length mismatch";
+//     } else {
+//       return find(
+//         mapCurry(codes, makeCurry(allignElement, nodes)),
+//         isNotNull,
+//       );
+//     }
+//   }
+// };

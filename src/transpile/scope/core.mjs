@@ -235,15 +235,15 @@ const initialize = generateSwitch2({
   },
   [PROPERTY_SCOPE_TYPE]: ({parent}, distant, context) =>
     initialize(parent, distant, context),
-  [DYNAMIC_SCOPE_TYPE]: ({frame}, _distant, {onDynamicFrame, right}) =>
-    callCurry(onDynamicFrame, frame, right),
+  [DYNAMIC_SCOPE_TYPE]: ({frame}, _distant, {onDynamicFrame}) =>
+    callCurry(onDynamicFrame, frame),
 });
 
 export const makeScopeInitializeEffect = (
   scope,
   variable,
   right,
-  onDynamicFrame,
+  {onDynamicFrame},
 ) => initialize(scope, false, {variable, right, onDynamicFrame});
 
 ////////////
@@ -288,11 +288,11 @@ const lookup = generateSwitch2({
           if (initialization === YES) {
             return callCurry(onStaticLiveHit, note, either);
           } else {
-            binding.deadzone = true;
+            state.deadzone = true;
             const makeConditional =
               right === null
-                ? makeConditionalEffect
-                : makeConditionalExpression;
+                ? makeConditionalExpression
+                : makeConditionalEffect;
             return makeConditional(
               makeReadExpression(makeMetaVariable(variable)),
               callCurry(onStaticLiveHit, note, either),
@@ -340,7 +340,7 @@ export const makeScopeWriteEffect = (
 // makeScopeEvalExpression //
 /////////////////////////////
 
-const collect = generateSwitch1({
+const collect = generateSwitch2({
   [ROOT_SCOPE_TYPE]: (_scope, _escaped, variables) => variables,
   [DYNAMIC_SCOPE_TYPE]: ({parent}, escaped, variables) =>
     collect(parent, escaped, variables),
@@ -353,14 +353,17 @@ const collect = generateSwitch1({
     variables = concat(variables);
     for (let index = 0; index < length; index += 1) {
       const {variable, state} = bindings[index];
-      if (!includes(variables, variable)) {
+      if (!includes(variables, makeBaseVariable(variable))) {
         if (state !== null && escaped) {
           const {initialization, deadzone} = state;
           if (initialization !== YES && !deadzone) {
             state.deadzone = true;
           }
         }
-        push(variables, variable);
+        push(variables, makeBaseVariable(variable));
+        if (state.deadzone) {
+          push(variables, makeMetaVariable(variable));
+        }
       }
     }
     return collect(parent, escaped, variables);
