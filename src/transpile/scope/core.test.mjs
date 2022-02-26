@@ -1,15 +1,23 @@
-import {concat} from "array-lite";
-import {assertEqual, generateAssertUnreachable} from "../../__fixture__.mjs";
+import {
+  assertThrow,
+  assertEqual,
+  generateAssertUnreachable,
+} from "../../__fixture__.mjs";
 import {makeCurry} from "../../util.mjs";
 import {
   makeEffectStatement,
-  makeExpressionEffect,
+  makeWriteEffect,
+  makeReadExpression,
   makeLiteralExpression,
   makeBlockStatement,
-  makeBlock,
   makeSequenceExpression,
+  makeExpressionEffect,
 } from "../../ast/index.mjs";
-import {allignBlock} from "../../allign/index.mjs";
+import {
+  allignBlock,
+  allignExpression,
+  allignEffect,
+} from "../../allign/index.mjs";
 
 import {
   makePropertyScope,
@@ -17,52 +25,43 @@ import {
   makeClosureScope,
   makeDynamicScope,
   makeScopeBlock,
+  annotateVariable,
   lookupScopeProperty,
-  makeDeclareStatementArray,
-  makeScopeInitializeEffect,
-  makeScopeReadExpression,
-  makeScopeWriteEffect,
-  makeGhostDeclareStatementArray,
+  declareVariable,
+  makeInitializeEffect,
+  makeLookupExpression,
   makeScopeEvalExpression,
 } from "./core.mjs";
 
-const callbacks = {
+const curries = {
   onMiss: makeCurry(generateAssertUnreachable("onMiss")),
   onGhostHit: makeCurry(generateAssertUnreachable("onGhostHit")),
-  onStaticLiveHit: makeCurry(generateAssertUnreachable("onStaticLiveHit")),
-  onStaticDeadHit: makeCurry(generateAssertUnreachable("onStaticDeadHit")),
+  onLiveHit: makeCurry(generateAssertUnreachable("onStaticLiveHit")),
+  onDeadHit: makeCurry(generateAssertUnreachable("onStaticDeadHit")),
   onDynamicFrame: makeCurry(generateAssertUnreachable("onDynamicFrame")),
 };
+
+assertThrow(() =>
+  declareVariable(makeClosureScope(makeRootScope()), "variable"),
+);
 
 //////////////
 // Property //
 //////////////
 
-{
-  let scope1 = makeRootScope();
-  scope1 = makePropertyScope(scope1, "key1", "value1");
-  scope1 = makePropertyScope(scope1, "key2", "value2");
-  scope1 = makeClosureScope(scope1);
-  scope1 = makeDynamicScope(scope1);
-  assertEqual(
-    allignBlock(
-      makeScopeBlock(
-        scope1,
-        [],
-        makeCurry((scope2) => {
-          assertEqual(lookupScopeProperty(scope2, "key1"), "value1");
-          return [];
-        }),
-      ),
-      "{}",
-    ),
-    null,
-  );
-}
+assertThrow(() => lookupScopeProperty(makeRootScope(), "key"));
 
-/////////////////////
-// Static Deadzone //
-/////////////////////
+assertEqual(
+  lookupScopeProperty(
+    makeClosureScope(makePropertyScope(makeRootScope(), "key", "value")),
+    "key",
+  ),
+  "value",
+);
+
+/////////////
+// Regular //
+/////////////
 
 assertEqual(
   allignBlock(
@@ -71,124 +70,36 @@ assertEqual(
       [],
       makeCurry((scope) => {
         scope = makePropertyScope(scope, "key", "value");
-        return concat(
-          makeDeclareStatementArray(scope, "variable", "note", callbacks),
-          [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeReadExpression(scope, "variable", {
-                  ...callbacks,
-                  onStaticDeadHit: makeCurry((note) => {
-                    assertEqual(note, "note");
-                    return makeLiteralExpression(123);
-                  }),
+        assertEqual(declareVariable(scope, "variable"), true);
+        annotateVariable(scope, "variable", "note");
+        return [
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeLookupExpression(makeClosureScope(scope), "variable", {
+                ...curries,
+                onLiveHit: makeCurry((variable, note) => {
+                  assertEqual(note, "note");
+                  return makeReadExpression(variable);
                 }),
-              ),
+                onDeadHit: makeCurry(() => makeLiteralExpression("dead")),
+              }),
             ),
-            makeEffectStatement(
-              makeScopeInitializeEffect(
-                scope,
-                "variable",
-                makeLiteralExpression(456),
-                callbacks,
+          ),
+          makeEffectStatement(
+            makeInitializeEffect(scope, "variable", {
+              onDeadHit: makeCurry((variable) =>
+                makeWriteEffect(variable, makeLiteralExpression("init")),
               ),
-            ),
-            makeEffectStatement(
-              makeScopeWriteEffect(
-                scope,
-                "variable",
-                makeLiteralExpression(789),
-                {
-                  ...callbacks,
-                  onStaticLiveHit: makeCurry((note, effect) => {
-                    assertEqual(note, "note");
-                    return effect;
-                  }),
-                },
-              ),
-            ),
-          ],
-        );
+            }),
+          ),
+        ];
       }),
-    ),
-    `
-      {
-        let x;
-        effect(123);
-        x = 456;
-        x = 789;
-      }
-    `,
-  ),
-  null,
-);
-
-//////////////////////
-// Dynamic Deadzone //
-//////////////////////
-
-assertEqual(
-  allignBlock(
-    makeScopeBlock(
-      makeRootScope(),
-      [],
-      makeCurry((scope) =>
-        concat(
-          makeDeclareStatementArray(scope, "variable", "note", callbacks),
-          [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeReadExpression(makeClosureScope(scope), "variable", {
-                  ...callbacks,
-                  onStaticLiveHit: makeCurry((note, expression) => {
-                    assertEqual(note, "note");
-                    return expression;
-                  }),
-                  onStaticDeadHit: makeCurry((note) => {
-                    assertEqual(note, "note");
-                    return makeLiteralExpression("dead-read");
-                  }),
-                }),
-              ),
-            ),
-            makeEffectStatement(
-              makeScopeWriteEffect(
-                makeClosureScope(scope),
-                "variable",
-                makeLiteralExpression("write"),
-                {
-                  ...callbacks,
-                  onStaticLiveHit: makeCurry((note, effect) => {
-                    assertEqual(note, "note");
-                    return effect;
-                  }),
-                  onStaticDeadHit: makeCurry((note) => {
-                    assertEqual(note, "note");
-                    return makeExpressionEffect(
-                      makeLiteralExpression("dead-write"),
-                    );
-                  }),
-                },
-              ),
-            ),
-            makeEffectStatement(
-              makeScopeInitializeEffect(
-                scope,
-                "variable",
-                makeLiteralExpression("init"),
-                callbacks,
-              ),
-            ),
-          ],
-        ),
-      ),
     ),
     `
       {
         let x, _x;
         _x = false;
-        effect(_x ? x : 'dead-read');
-        (_x ? x = 'write' : effect('dead-write'));
+        effect(_x ? x : 'dead');
         (x = 'init', _x = true);
       }
     `,
@@ -205,29 +116,39 @@ assertEqual(
     makeScopeBlock(
       makeRootScope(),
       [],
-      makeCurry((scope1) =>
-        concat(
-          makeDeclareStatementArray(scope1, "variable", "note", callbacks),
-          [
-            makeBlockStatement(
-              makeScopeBlock(
-                scope1,
-                [],
-                makeCurry((scope2) => [
-                  makeEffectStatement(
-                    makeScopeInitializeEffect(
-                      scope2,
-                      "variable",
-                      makeLiteralExpression("init"),
-                      callbacks,
+      makeCurry((scope1) => {
+        assertEqual(declareVariable(scope1, "variable"), true);
+        return [
+          makeBlockStatement(
+            makeScopeBlock(
+              scope1,
+              [],
+              makeCurry((scope2) => [
+                makeEffectStatement(
+                  makeInitializeEffect(scope2, "variable", {
+                    ...curries,
+                    onDeadHit: makeCurry((variable) =>
+                      makeWriteEffect(variable, makeLiteralExpression("init")),
                     ),
-                  ),
-                ]),
-              ),
+                  }),
+                ),
+              ]),
             ),
-          ],
-        ),
-      ),
+          ),
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeLookupExpression(makeClosureScope(scope1), "variable", {
+                ...curries,
+                onLiveHit: makeCurry((variable, note) => {
+                  assertEqual(note, null);
+                  return makeReadExpression(variable);
+                }),
+                onDeadHit: makeCurry(() => makeLiteralExpression("dead")),
+              }),
+            ),
+          ),
+        ];
+      }),
     ),
     `
       {
@@ -236,6 +157,7 @@ assertEqual(
         {
           (x = 'init', _x = true);
         }
+        effect(_x ? x : 'dead');
       }
     `,
   ),
@@ -246,61 +168,28 @@ assertEqual(
 // Miss //
 //////////
 
+assertEqual(declareVariable(makeRootScope(), "variable"), false);
+
 assertEqual(
-  allignBlock(
-    makeScopeBlock(
-      makeRootScope(),
-      [],
-      makeCurry((scope) => [
-        makeEffectStatement(
-          makeExpressionEffect(
-            makeScopeReadExpression(scope, "variable", {
-              ...callbacks,
-              onMiss: makeCurry(() => makeLiteralExpression("miss")),
-            }),
-          ),
-        ),
-      ]),
-    ),
-    `{ effect('miss'); }`,
+  allignEffect(
+    makeInitializeEffect(makeRootScope(), "variable", {
+      ...curries,
+      onMiss: makeCurry(() =>
+        makeExpressionEffect(makeLiteralExpression("miss")),
+      ),
+    }),
+    "effect('miss')",
   ),
   null,
 );
 
-////////////////////
-// Ghost Variable //
-////////////////////
-
 assertEqual(
-  allignBlock(
-    makeScopeBlock(
-      makeRootScope(),
-      [],
-      makeCurry((scope) =>
-        concat(
-          makeGhostDeclareStatementArray(scope, "variable", "note", callbacks),
-          [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeReadExpression(scope, "variable", {
-                  ...callbacks,
-                  onStaticGhostHit: makeCurry((note, right) => {
-                    assertEqual(note, "note");
-                    assertEqual(right, null);
-                    return makeLiteralExpression("read");
-                  }),
-                }),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-    `
-      {
-        effect('read');
-      }
-    `,
+  allignExpression(
+    makeLookupExpression(makeRootScope(), "variable", {
+      ...curries,
+      onMiss: makeCurry(() => makeLiteralExpression("miss")),
+    }),
+    "'miss'",
   ),
   null,
 );
@@ -310,85 +199,44 @@ assertEqual(
 ///////////////////
 
 assertEqual(
-  allignBlock(
-    makeBlock(
-      [],
-      [],
-      makeDeclareStatementArray(
-        makeDynamicScope(makeRootScope(), "frame"),
-        "variable",
-        "note",
-        {
-          onDynamicFrame: makeCurry((frame) => {
-            assertEqual(frame, "frame");
-            return [
-              makeEffectStatement(
-                makeExpressionEffect(makeLiteralExpression("dynamic")),
-              ),
-            ];
-          }),
-        },
-      ),
+  declareVariable(makeDynamicScope(makeRootScope(), "frame"), "variable"),
+  "frame",
+);
+
+assertEqual(
+  allignEffect(
+    makeInitializeEffect(
+      makeDynamicScope(makeRootScope(), "frame"),
+      "variable",
+      {
+        ...curries,
+        onDynamicFrame: makeCurry((frame) =>
+          makeExpressionEffect(makeLiteralExpression(frame)),
+        ),
+      },
     ),
-    "{ effect('dynamic'); }",
+    `effect('frame')`,
   ),
   null,
 );
 
 assertEqual(
-  allignBlock(
-    makeBlock(
-      [],
-      [],
-      [
-        makeEffectStatement(
-          makeScopeInitializeEffect(
-            makeDynamicScope(makeRootScope(), "frame"),
-            "variable",
-            makeLiteralExpression("init"),
-            {
-              onDynamicFrame: makeCurry((frame) => {
-                assertEqual(frame, "frame");
-                return makeExpressionEffect(makeLiteralExpression("dynamic"));
-              }),
-            },
+  allignExpression(
+    makeLookupExpression(
+      makeDynamicScope(makeRootScope(), "frame"),
+      "variable",
+      {
+        ...curries,
+        onMiss: makeCurry(() => makeLiteralExpression("miss")),
+        onDynamicFrame: makeCurry((frame, expression) =>
+          makeSequenceExpression(
+            makeExpressionEffect(makeLiteralExpression(frame)),
+            expression,
           ),
         ),
-      ],
+      },
     ),
-    "{ effect('dynamic'); }",
-  ),
-  null,
-);
-
-assertEqual(
-  allignBlock(
-    makeBlock(
-      [],
-      [],
-      [
-        makeEffectStatement(
-          makeExpressionEffect(
-            makeScopeReadExpression(
-              makeDynamicScope(makeRootScope(), "frame"),
-              "variable",
-              {
-                ...callbacks,
-                onMiss: makeCurry(() => makeLiteralExpression("miss")),
-                onDynamicFrame: makeCurry((frame, expression) => {
-                  assertEqual(frame, "frame");
-                  return makeSequenceExpression(
-                    makeExpressionEffect(makeLiteralExpression("dynamic")),
-                    expression,
-                  );
-                }),
-              },
-            ),
-          ),
-        ),
-      ],
-    ),
-    "{ effect((effect('dynamic'), 'miss')); }",
+    "(effect('frame'), 'miss')",
   ),
   null,
 );
@@ -400,34 +248,29 @@ assertEqual(
 assertEqual(
   allignBlock(
     makeScopeBlock(
-      makeDynamicScope(
-        makePropertyScope(makeRootScope(), "key", "value"),
-        "frame",
-      ),
+      makeRootScope(),
       [],
-      makeCurry((scope) =>
-        concat(
-          makeDeclareStatementArray(scope, "variable", "note", callbacks),
-          [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeEvalExpression(
-                  makeClosureScope(scope),
-                  makeLiteralExpression("eval"),
-                ),
+      makeCurry((scope) => {
+        assertEqual(declareVariable(scope, "variable"), true);
+        return [
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeScopeEvalExpression(
+                makeClosureScope(scope),
+                makeLiteralExpression("eval"),
               ),
             ),
-            makeEffectStatement(
-              makeScopeInitializeEffect(
-                scope,
-                "variable",
-                makeLiteralExpression("init"),
-                callbacks,
+          ),
+          makeEffectStatement(
+            makeInitializeEffect(scope, "variable", {
+              ...curries,
+              onDeadHit: makeCurry((variable) =>
+                makeWriteEffect(variable, makeLiteralExpression("init")),
               ),
-            ),
-          ],
-        ),
-      ),
+            }),
+          ),
+        ];
+      }),
     ),
     `
       {
