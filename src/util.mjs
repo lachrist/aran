@@ -205,6 +205,13 @@ export const pop = (array) => {
   return last;
 };
 
+export const forEachCurry = (array, curry) => {
+  const {length} = array;
+  for (let index = 0; index < length; index += 1) {
+    callCurry(curry, array[index], index, array);
+  }
+};
+
 export const findCurry = (array, curry) => {
   const {length} = array;
   for (let index = 0; index < length; index += 1) {

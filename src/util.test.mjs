@@ -34,6 +34,7 @@ import {
   getLast,
   mapCurry,
   findCurry,
+  forEachCurry,
   filterOutCurry,
 } from "./util.mjs";
 
@@ -238,3 +239,21 @@ assertDeepEqual(
   ),
   [1, 2],
 );
+
+{
+  let sum = 0;
+  assertEqual(
+    forEachCurry(
+      [1, 2, 3],
+      makeCurry((curry, element, index, elements, ...rest) => {
+        assertEqual(curry, "curry");
+        assertEqual(element, index + 1);
+        assertDeepEqual(elements, [1, 2, 3]);
+        assertDeepEqual(rest, []);
+        sum += element;
+      }, "curry"),
+    ),
+    undefined,
+  );
+  assertEqual(sum, 6);
+}
