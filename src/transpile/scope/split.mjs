@@ -34,8 +34,8 @@ export const declareMetaGhostVariable = generateMeta(declareGhostVariable);
 export const annotateBaseVariable = generateBase(annotateVariable);
 export const annotateMetaVariable = generateMeta(annotateVariable);
 
-export const makeBaseInitialieEffect = generateBase(makeInitializeEffect);
-export const makeMetaInitialieEffect = generateMeta(makeInitializeEffect);
+export const makeBaseInitializeEffect = generateBase(makeInitializeEffect);
+export const makeMetaInitializeEffect = generateMeta(makeInitializeEffect);
 
 export const makeBaseLookupEffect = generateBase(makeLookupEffect);
 export const makeMetaLookupEffect = generateMeta(makeLookupEffect);
