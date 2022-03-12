@@ -1,6 +1,6 @@
 import {assertEqual, assertThrow} from "../../__fixture__.mjs";
 
-import {makeCurry} from "../../util.mjs";
+import {makeCurry, getLatestUUID} from "../../util.mjs";
 
 import {
   makeSequenceExpression,
@@ -12,8 +12,9 @@ import {
 import {allignExpression, allignBlock} from "../../allign/index.mjs";
 
 import {
-  makeScopeBlock,
   makeRootScope,
+  makeDynamicScope,
+  makeScopeBlock,
   makeTestBox,
   makePrimitiveBox,
   makeIntrinsicBox,
@@ -21,12 +22,11 @@ import {
   makeBoxStatementArray,
   makeCloseEffect,
   makeOpenExpression,
-  getLatestUUID,
 } from "./meta.mjs";
 
-///////////
-// Local //
-///////////
+////////////
+// Static //
+////////////
 
 assertEqual(
   allignBlock(
@@ -54,21 +54,25 @@ assertEqual(
   null,
 );
 
-////////////
-// Global //
-////////////
+/////////////
+// Dynamic //
+/////////////
 
 {
-  const scope = makeRootScope();
+  const scope = makeDynamicScope(
+    makeRootScope(),
+    makePrimitiveBox("frame"),
+    "data",
+  );
   assertEqual(
     allignExpression(
       makeBoxExpression(
         scope,
         "variable",
-        makeLiteralExpression(123),
+        makeLiteralExpression("init"),
         makeCurry((box) =>
           makeSequenceExpression(
-            makeCloseEffect(scope, box, makeLiteralExpression(456)),
+            makeCloseEffect(scope, box, makeLiteralExpression("right")),
             makeOpenExpression(scope, box),
           ),
         ),
@@ -77,21 +81,21 @@ assertEqual(
         (
           effect(intrinsic('aran.setStrict')(
             undefined,
-            intrinsic('aran.globalRecord'),
-            'variable_1_${getLatestUUID()}',
-            123,
+            'frame',
+            'variable_${getLatestUUID()}',
+            'init',
           )),
           (
             effect(intrinsic('aran.setStrict')(
               undefined,
-              intrinsic('aran.globalRecord'),
-              'variable_1_${getLatestUUID()}',
-              456,
+              'frame',
+              'variable_${getLatestUUID()}',
+              'right',
             )),
             intrinsic('aran.get')(
               undefined,
-              intrinsic('aran.globalRecord'),
-              'variable_1_${getLatestUUID()}',
+              'frame',
+              'variable_${getLatestUUID()}',
             )
           )
         )

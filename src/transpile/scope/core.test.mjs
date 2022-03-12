@@ -28,6 +28,7 @@ import {
   annotateVariable,
   lookupScopeProperty,
   declareVariable,
+  declareFreshVariable,
   makeInitializeEffect,
   makeLookupExpression,
   makeScopeEvalExpression,
@@ -70,12 +71,12 @@ assertEqual(
       [],
       makeCurry((scope) => {
         scope = makePropertyScope(scope, "key", "value");
-        assertEqual(declareVariable(scope, "variable"), true);
-        annotateVariable(scope, "variable", "note");
+        assertEqual(declareFreshVariable(scope, "variable"), "variable_1_1");
+        annotateVariable(scope, "variable_1_1", "note");
         return [
           makeEffectStatement(
             makeExpressionEffect(
-              makeLookupExpression(makeClosureScope(scope), "variable", {
+              makeLookupExpression(makeClosureScope(scope), "variable_1_1", {
                 ...curries,
                 onLiveHit: makeCurry((variable, note) => {
                   assertEqual(note, "note");
@@ -86,7 +87,7 @@ assertEqual(
             ),
           ),
           makeEffectStatement(
-            makeInitializeEffect(scope, "variable", {
+            makeInitializeEffect(scope, "variable_1_1", {
               onDeadHit: makeCurry((variable) =>
                 makeWriteEffect(variable, makeLiteralExpression("init")),
               ),
@@ -117,7 +118,7 @@ assertEqual(
       makeRootScope(),
       [],
       makeCurry((scope1) => {
-        assertEqual(declareVariable(scope1, "variable"), true);
+        assertEqual(declareVariable(scope1, "variable"), "variable");
         return [
           makeBlockStatement(
             makeScopeBlock(
@@ -167,8 +168,6 @@ assertEqual(
 //////////
 // Miss //
 //////////
-
-assertEqual(declareVariable(makeRootScope(), "variable"), false);
 
 assertEqual(
   allignEffect(
@@ -251,7 +250,7 @@ assertEqual(
       makeRootScope(),
       [],
       makeCurry((scope) => {
-        assertEqual(declareVariable(scope, "variable"), true);
+        assertEqual(declareVariable(scope, "variable"), "variable");
         return [
           makeEffectStatement(
             makeExpressionEffect(

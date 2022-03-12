@@ -1,11 +1,16 @@
 import {concat} from "array-lite";
 
 const {
+  Date: {now},
+  Number: {
+    prototype: {toString: toNumberString},
+  },
+  Math: {random, round},
   JSON: {stringify},
   Reflect: {apply, getOwnPropertyDescriptor},
   Object: {
     freeze,
-    prototype: {toString},
+    prototype: {toString: toObjectString},
   },
   Error,
   String,
@@ -53,7 +58,7 @@ export const inspect = (value) => {
     typeof value === "function" ||
     (typeof value === "object" && value !== null)
   ) {
-    return apply(toString, value, EMPTY_ARRAY);
+    return apply(toObjectString, value, EMPTY_ARRAY);
   }
   return String(value);
 };
@@ -243,3 +248,19 @@ export const filterOutCurry = (array1, curry) => {
   }
   return array2;
 };
+
+//////////
+// uuid //
+//////////
+
+const ENCODING = [36];
+let uuid = null;
+export const getUUID = () => {
+  uuid = `${apply(toNumberString, now(), ENCODING)}_${apply(
+    toNumberString,
+    round(10e12 * random()),
+    ENCODING,
+  )}`;
+  return uuid;
+};
+export const getLatestUUID = () => uuid;

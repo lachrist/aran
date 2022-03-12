@@ -12,12 +12,10 @@ import {concat} from "array-lite";
 
 import {
   returnSecond,
-  assert,
   makeCurry,
   callCurry,
   generateThrowError,
-  createCounter,
-  incrementCounter,
+  getUUID,
 } from "../../util.mjs";
 
 import {
@@ -34,9 +32,7 @@ import {
 import {makeGetExpression, makeStrictSetExpression} from "../intrinsic.mjs";
 
 import {
-  makePropertyScope,
-  lookupScopeProperty,
-  makeRootScope as makeCoreRootScope,
+  makeDynamicScope as makeCoreDynamicScope,
   declareMetaVariable,
   makeMetaInitializeEffect,
   makeMetaLookupExpression,
@@ -44,10 +40,11 @@ import {
 } from "./split.mjs";
 
 export {
+  makeRootScope,
   makeClosureScope,
   makePropertyScope,
-  makeDynamicScope,
   makeScopeBlock,
+  lookupScopeProperty,
   declareBaseVariable as declareVariable,
   annotateBaseVariable as annotateVariable,
   makeBaseInitializeEffect as makeInitializeEffect,
@@ -55,23 +52,13 @@ export {
   makeBaseLookupEffect as makeLookupEffect,
 } from "./split.mjs";
 
-const {
-  Date: {now: getNow},
-  Reflect: {apply},
-  Number: {
-    prototype: {toString},
-  },
-  Math: {random, round},
-  Error,
-} = globalThis;
+const {Error} = globalThis;
 
 const TEST_TYPE = "test";
-const LOCAL_TYPE = "local";
-const GLOBAL_TYPE = "global";
+const STATIC_TYPE = "static";
+const DYNAMIC_TYPE = "dynamic";
 const PRIMITIVE_TYPE = "primitive";
 const INTRINSIC_TYPE = "intrinsic";
-
-const ENCODING = [36];
 
 const onOpenLiveHit = (variable, _note) => makeReadExpression(variable);
 
@@ -81,34 +68,106 @@ const onInitializeHit = (expression, variable) =>
 const onCloseLiveHit = (expression, variable, _note) =>
   makeWriteEffect(variable, expression);
 
-let uuid = null;
-const getUUID = () => {
-  uuid = `${apply(toString, getNow(), ENCODING)}_${apply(
-    toString,
-    round(10e12 * random()),
-    ENCODING,
-  )}`;
-  return uuid;
-};
-export const getLatestUUID = () => uuid;
+//////////
+// Make //
+//////////
+
+export const makeDynamicScope = (parent, box, data) =>
+  makeCoreDynamicScope(parent, {
+    box,
+    data,
+  });
 
 //////////
 // Make //
 //////////
 
-const generateMakeBox = (type) => (data) => ({type, data});
-export const makePrimitiveBox = generateMakeBox(PRIMITIVE_TYPE);
-export const makeIntrinsicBox = generateMakeBox(INTRINSIC_TYPE);
-export const makeTestBox = generateMakeBox(TEST_TYPE);
-const makeLocalBox = generateMakeBox(LOCAL_TYPE);
-const makeGlobalBox = generateMakeBox(GLOBAL_TYPE);
+export const makePrimitiveBox = (primitive) => ({
+  type: PRIMITIVE_TYPE,
+  primitive,
+});
+
+export const makeIntrinsicBox = (intrinsic) => ({
+  type: INTRINSIC_TYPE,
+  intrinsic,
+});
+
+export const makeTestBox = (variable) => ({
+  type: TEST_TYPE,
+  variable,
+});
+
+const makeStaticBox = (variable) => ({
+  type: STATIC_TYPE,
+  variable,
+});
+
+const makeDynamicBox = (object, key) => ({
+  type: DYNAMIC_TYPE,
+  object,
+  key,
+});
+
+///////////////////
+// Read && Write //
+///////////////////
+
+const lookup_curry_object = {
+  onMiss: makeCurry(generateThrowError("missing meta variable")),
+  onDynamicFrame: makeCurry(returnSecond),
+  onLiveHit: null,
+  onDeadHit: makeCurry(generateThrowError("meta variable in deadzone")),
+  onGhostHit: makeCurry(generateThrowError("ghost meta variable")),
+};
+
+const open_curry_object = {
+  ...lookup_curry_object,
+  onLiveHit: makeCurry(onOpenLiveHit),
+};
+
+export const makeOpenExpression = (scope, box) => {
+  if (box.type === TEST_TYPE) {
+    return makeReadExpression(box.variable);
+  } else if (box.type === PRIMITIVE_TYPE) {
+    return makeLiteralExpression(box.primitive);
+  } else if (box.type === INTRINSIC_TYPE) {
+    return makeIntrinsicExpression(box.intrinsic);
+  } else if (box.type === STATIC_TYPE) {
+    return makeMetaLookupExpression(scope, box.variable, open_curry_object);
+  } else if (box.type === DYNAMIC_TYPE) {
+    return makeGetExpression(
+      makeOpenExpression(scope, box.object),
+      makeLiteralExpression(box.key),
+    );
+  } else {
+    throw new Error("invalid box type for opening");
+  }
+};
+
+export const makeCloseEffect = (scope, box, expression) => {
+  if (box.type === TEST_TYPE) {
+    return makeWriteEffect(box.variable, expression);
+  } else if (box.type === STATIC_TYPE) {
+    return makeMetaLookupEffect(scope, box.variable, {
+      __proto__: lookup_curry_object,
+      onLiveHit: makeCurry(onCloseLiveHit, expression),
+    });
+  } else if (box.type === DYNAMIC_TYPE) {
+    return makeExpressionEffect(
+      makeStrictSetExpression(
+        makeOpenExpression(scope, box.object),
+        makeLiteralExpression(box.key),
+        expression,
+      ),
+    );
+  } else {
+    throw new Error("invalid box type for closing");
+  }
+};
 
 /////////////
 // Declare //
 /////////////
-
-export const makeRootScope = () =>
-  makePropertyScope(makeCoreRootScope(), "meta-counter", createCounter(0));
 
 const initialize_curry_object = {
   onMiss: makeCurry(
@@ -121,31 +180,23 @@ const initialize_curry_object = {
 };
 
 const setup = (scope, variable, expression) => {
-  variable = `${variable}_${apply(
-    toString,
-    incrementCounter(lookupScopeProperty(scope, "meta-counter")),
-    ENCODING,
-  )}`;
-  const success = declareMetaVariable(scope, variable);
-  assert(
-    typeof success === "boolean",
-    "cannot declare meta variable in dynamic scope",
-  );
-  if (success) {
+  const either = declareMetaVariable(scope, variable);
+  if (typeof either === "string") {
     return {
-      box: makeLocalBox(variable),
-      effect: makeMetaInitializeEffect(scope, variable, {
+      box: makeStaticBox(either),
+      effect: makeMetaInitializeEffect(scope, either, {
         __proto__: initialize_curry_object,
         onDeadHit: makeCurry(onInitializeHit, expression),
       }),
     };
   } else {
+    const {box} = either;
     const key = `${variable}_${getUUID()}`;
     return {
-      box: makeGlobalBox(key),
+      box: makeDynamicBox(box, key),
       effect: makeExpressionEffect(
         makeStrictSetExpression(
-          makeIntrinsicExpression("aran.globalRecord"),
+          makeOpenExpression(scope, box),
           makeLiteralExpression(key),
           expression,
         ),
@@ -167,60 +218,3 @@ export const makeBoxEffect = generateMakeBoxNode(makeSequenceEffect);
 export const makeBoxStatementArray = generateMakeBoxNode((effect, statements) =>
   concat([makeEffectStatement(effect)], statements),
 );
-
-///////////////////
-// Read && Write //
-///////////////////
-
-const lookup_curry_object = {
-  onMiss: makeCurry(generateThrowError("missing meta variable")),
-  onDynamicFrame: makeCurry(returnSecond),
-  onLiveHit: null,
-  onDeadHit: makeCurry(generateThrowError("meta variable in deadzone")),
-  onGhostHit: makeCurry(generateThrowError("ghost meta variable")),
-};
-
-const open_curry_object = {
-  ...lookup_curry_object,
-  onLiveHit: makeCurry(onOpenLiveHit),
-};
-
-export const makeOpenExpression = (scope, {type, data}) => {
-  if (type === TEST_TYPE) {
-    return makeReadExpression(data);
-  } else if (type === PRIMITIVE_TYPE) {
-    return makeLiteralExpression(data);
-  } else if (type === INTRINSIC_TYPE) {
-    return makeIntrinsicExpression(data);
-  } else if (type === LOCAL_TYPE) {
-    return makeMetaLookupExpression(scope, data, open_curry_object);
-  } else if (type === GLOBAL_TYPE) {
-    return makeGetExpression(
-      makeIntrinsicExpression("aran.globalRecord"),
-      makeLiteralExpression(data),
-    );
-  } else {
-    throw new Error("invalid box type for opening");
-  }
-};
-
-export const makeCloseEffect = (scope, {type, data}, expression) => {
-  if (type === TEST_TYPE) {
-    return makeWriteEffect(data, expression);
-  } else if (type === LOCAL_TYPE) {
-    return makeMetaLookupEffect(scope, data, {
-      __proto__: lookup_curry_object,
-      onLiveHit: makeCurry(onCloseLiveHit, expression),
-    });
-  } else if (type === GLOBAL_TYPE) {
-    return makeExpressionEffect(
-      makeStrictSetExpression(
-        makeIntrinsicExpression("aran.globalRecord"),
-        makeLiteralExpression(data),
-        expression,
-      ),
-    );
-  } else {
-    throw new Error("invalid box type for closing");
-  }
-};

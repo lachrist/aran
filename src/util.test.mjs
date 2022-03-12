@@ -36,6 +36,8 @@ import {
   findCurry,
   forEachCurry,
   filterOutCurry,
+  getUUID,
+  getLatestUUID,
 } from "./util.mjs";
 
 const {Error, undefined} = globalThis;
@@ -257,3 +259,9 @@ assertDeepEqual(
   );
   assertEqual(sum, 6);
 }
+
+//////////
+// uuid //
+//////////
+
+assertEqual(getUUID(), getLatestUUID());

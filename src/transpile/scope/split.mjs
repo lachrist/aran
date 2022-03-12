@@ -1,7 +1,12 @@
-import {makeMetaVariable, makeBaseVariable} from "../../variable.mjs";
+import {
+  makeMetaVariable,
+  makeBaseVariable,
+  getVariableBody,
+} from "../../variable.mjs";
 
 import {
   declareVariable,
+  declareFreshVariable,
   declareGhostVariable,
   annotateVariable,
   makeInitializeEffect,
@@ -19,20 +24,35 @@ export {
   makeScopeEvalExpression,
 } from "./core.mjs";
 
+/////////////
+// Declare //
+/////////////
+
+const generateGenerateDeclare =
+  (makeVariable) => (closure) => (scope, variable) => {
+    const either = closure(scope, makeVariable(variable));
+    return typeof either === "string" ? getVariableBody(either) : either;
+  };
+
+const generateDeclareMeta = generateGenerateDeclare(makeMetaVariable);
+const generateDeclareBase = generateGenerateDeclare(makeBaseVariable);
+
+export const declareMetaVariable = generateDeclareMeta(declareFreshVariable);
+export const declareBaseVariable = generateDeclareBase(declareVariable);
+export const declareGhostBaseVariable =
+  generateDeclareBase(declareGhostVariable);
+
+////////////
+// Others //
+////////////
+
 const generateGenerate =
   (makeVariable) => (closure) => (scope, variable, argument) =>
     closure(scope, makeVariable(variable), argument);
 const generateBase = generateGenerate(makeBaseVariable);
 const generateMeta = generateGenerate(makeMetaVariable);
 
-export const declareBaseVariable = generateBase(declareVariable);
-export const declareMetaVariable = generateMeta(declareVariable);
-
-export const declareBaseGhostVariable = generateBase(declareGhostVariable);
-export const declareMetaGhostVariable = generateMeta(declareGhostVariable);
-
 export const annotateBaseVariable = generateBase(annotateVariable);
-export const annotateMetaVariable = generateMeta(annotateVariable);
 
 export const makeBaseInitializeEffect = generateBase(makeInitializeEffect);
 export const makeMetaInitializeEffect = generateMeta(makeInitializeEffect);

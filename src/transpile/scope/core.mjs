@@ -27,7 +27,15 @@ import {
   harvestBindingStatements,
 } from "./binding.mjs";
 
-const {Error} = globalThis;
+const {
+  Error,
+  Reflect: {apply},
+  Number: {
+    prototype: {toString},
+  },
+} = globalThis;
+
+const ENCODING = [36];
 
 const ROOT_SCOPE_TYPE = "root";
 const DYNAMIC_SCOPE_TYPE = "dynamic";
@@ -41,11 +49,13 @@ const CLOSURE_SCOPE_TYPE = "closure";
 
 export const makeRootScope = () => ({
   type: ROOT_SCOPE_TYPE,
+  depth: 0,
 });
 
 export const makeClosureScope = (parent) => ({
   type: CLOSURE_SCOPE_TYPE,
   parent,
+  depth: parent.depth + 1,
 });
 
 export const makePropertyScope = (parent, key, value) => ({
@@ -53,12 +63,14 @@ export const makePropertyScope = (parent, key, value) => ({
   parent,
   key,
   value,
+  depth: parent.depth + 1,
 });
 
 export const makeDynamicScope = (parent, frame) => ({
   type: DYNAMIC_SCOPE_TYPE,
   parent,
   frame,
+  depth: parent.depth + 1,
 });
 
 // Usage for ghost variables:
@@ -81,6 +93,8 @@ export const makeScopeBlock = (parent, labels, curry) => {
     type: STATIC_SCOPE_TYPE,
     parent,
     bindings,
+    depth: parent.depth + 1,
+    counter: 0,
   });
   forEach(bindings, assertBindingInitialization);
   return makeBlock(
@@ -108,20 +122,24 @@ export const lookupScopeProperty = (scope, key) => {
 // Declare //
 /////////////
 
-const generateDeclare = (bind) => (scope, variable) => {
+const generateDeclare = (bind, fresh) => (scope, variable) => {
   while (scope.type === PROPERTY_SCOPE_TYPE) {
     scope = scope.parent;
   }
-  if (scope.type === ROOT_SCOPE_TYPE) {
-    return false;
-  } else if (scope.type === STATIC_SCOPE_TYPE) {
+  if (scope.type === STATIC_SCOPE_TYPE) {
+    if (fresh) {
+      scope.counter += 1;
+      variable = `${variable}_${apply(toString, scope.depth, [
+        ENCODING,
+      ])}_${apply(toString, scope.counter, [ENCODING])}`;
+    }
     assert(
       findCurry(scope.bindings, makeCurry(equalsBindingVariable, variable)) ===
         null,
       "duplicate static variable declaration",
     );
     push(scope.bindings, bind(variable));
-    return true;
+    return variable;
   } else if (scope.type === DYNAMIC_SCOPE_TYPE) {
     return scope.frame;
   } else {
@@ -129,8 +147,9 @@ const generateDeclare = (bind) => (scope, variable) => {
   }
 };
 
-export const declareVariable = generateDeclare(makeBinding);
-export const declareGhostVariable = generateDeclare(makeGhostBinding);
+export const declareVariable = generateDeclare(makeBinding, false);
+export const declareGhostVariable = generateDeclare(makeGhostBinding, false);
+export const declareFreshVariable = generateDeclare(makeBinding, true);
 
 //////////
 // Note //
