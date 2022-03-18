@@ -15,7 +15,6 @@ import {
   makeGhostBinding,
   equalsBindingVariable,
   includesBindingVariable,
-  annotateBinding,
   makeBindingInitializeEffect,
   accessBinding,
   makeBindingLookupExpression,
@@ -71,8 +70,7 @@ assertEqual(
 /////////////////
 
 {
-  const binding = makeBinding("variable");
-  annotateBinding(binding, "note");
+  const binding = makeBinding("variable", "note");
   test("{ let x; effect('dead'); x = 'init'; effect(x); }", binding, [
     makeEffectStatement(
       makeExpressionEffect(
@@ -108,8 +106,7 @@ assertEqual(
 //////////////
 
 {
-  const binding = makeBinding("variable");
-  annotateBinding(binding, "note");
+  const binding = makeBinding("variable", "note");
   test(
     `
       {
@@ -145,8 +142,7 @@ assertEqual(
 }
 
 {
-  const binding = makeBinding("variable");
-  annotateBinding(binding, "note");
+  const binding = makeBinding("variable", "note");
   accessBinding(true, binding);
   test(
     `
@@ -174,8 +170,7 @@ assertEqual(
 /////////////
 
 {
-  const binding = makeBinding("variable");
-  annotateBinding(binding, "note");
+  const binding = makeBinding("variable", "note");
   test(
     `
       {
@@ -215,8 +210,7 @@ assertEqual(
 ///////////
 
 {
-  const binding = makeGhostBinding("variable");
-  annotateBinding(binding, "note");
+  const binding = makeGhostBinding("variable", "note");
   test("{ effect('ghost'); }", binding, [
     makeEffectStatement(
       makeExpressionEffect(

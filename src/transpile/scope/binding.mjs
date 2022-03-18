@@ -18,15 +18,15 @@ const YES = true;
 const NO = false;
 const MAYBE = null;
 
-export const makeBinding = (variable) => ({
+export const makeBinding = (variable, note) => ({
   variable,
-  note: null,
+  note,
   state: {initialization: NO, deadzone: false},
 });
 
-export const makeGhostBinding = (variable) => ({
+export const makeGhostBinding = (variable, note) => ({
   variable,
-  note: null,
+  note,
   state: null,
 });
 
@@ -35,11 +35,6 @@ export const includesBindingVariable = (variables, {variable}) =>
 
 export const equalsBindingVariable = (variable1, {variable: variable2}) =>
   variable1 === variable2;
-
-export const annotateBinding = (binding, note) => {
-  assert(binding.note === null, "duplicate binding annotation");
-  binding.note = note;
-};
 
 export const makeBindingInitializeEffect = (
   {variable, state},
