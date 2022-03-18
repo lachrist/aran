@@ -25,7 +25,6 @@ import {
   makeClosureScope,
   makeDynamicScope,
   makeScopeBlock,
-  annotateVariable,
   lookupScopeProperty,
   declareVariable,
   declareFreshVariable,
@@ -43,7 +42,12 @@ const curries = {
 };
 
 assertThrow(() =>
-  declareVariable(makeClosureScope(makeRootScope()), "variable"),
+  declareVariable(
+    makeClosureScope(makeRootScope()),
+    "kind",
+    "variable",
+    "note",
+  ),
 );
 
 //////////////
@@ -68,11 +72,14 @@ assertEqual(
   allignBlock(
     makeScopeBlock(
       makeRootScope(),
+      ["kind"],
       [],
       makeCurry((scope) => {
         scope = makePropertyScope(scope, "key", "value");
-        assertEqual(declareFreshVariable(scope, "variable"), "variable_1_1");
-        annotateVariable(scope, "variable_1_1", "note");
+        assertEqual(
+          declareFreshVariable(scope, "kind", "variable", "note"),
+          "variable_1_1",
+        );
         return [
           makeEffectStatement(
             makeExpressionEffect(
@@ -87,7 +94,7 @@ assertEqual(
             ),
           ),
           makeEffectStatement(
-            makeInitializeEffect(scope, "variable_1_1", {
+            makeInitializeEffect(scope, "kind", "variable_1_1", {
               onDeadHit: makeCurry((variable) =>
                 makeWriteEffect(variable, makeLiteralExpression("init")),
               ),
@@ -116,17 +123,19 @@ assertEqual(
   allignBlock(
     makeScopeBlock(
       makeRootScope(),
+      ["kind"],
       [],
       makeCurry((scope1) => {
-        assertEqual(declareVariable(scope1, "variable"), "variable");
+        assertEqual(declareVariable(scope1, "kind", "variable", "note"), null);
         return [
           makeBlockStatement(
             makeScopeBlock(
               scope1,
               [],
+              [],
               makeCurry((scope2) => [
                 makeEffectStatement(
-                  makeInitializeEffect(scope2, "variable", {
+                  makeInitializeEffect(scope2, "kind", "variable", {
                     ...curries,
                     onDeadHit: makeCurry((variable) =>
                       makeWriteEffect(variable, makeLiteralExpression("init")),
@@ -141,7 +150,7 @@ assertEqual(
               makeLookupExpression(makeClosureScope(scope1), "variable", {
                 ...curries,
                 onLiveHit: makeCurry((variable, note) => {
-                  assertEqual(note, null);
+                  assertEqual(note, "note");
                   return makeReadExpression(variable);
                 }),
                 onDeadHit: makeCurry(() => makeLiteralExpression("dead")),
@@ -169,18 +178,11 @@ assertEqual(
 // Miss //
 //////////
 
-assertEqual(
-  allignEffect(
-    makeInitializeEffect(makeRootScope(), "variable", {
-      ...curries,
-      onMiss: makeCurry(() =>
-        makeExpressionEffect(makeLiteralExpression("miss")),
-      ),
-    }),
-    "effect('miss')",
-  ),
-  null,
+assertThrow(() =>
+  makeInitializeEffect(makeRootScope(), "kind", "variable", curries),
 );
+
+assertThrow(() => declareVariable(makeRootScope(), "kind", "variable", "note"));
 
 assertEqual(
   allignExpression(
@@ -198,14 +200,20 @@ assertEqual(
 ///////////////////
 
 assertEqual(
-  declareVariable(makeDynamicScope(makeRootScope(), "frame"), "variable"),
+  declareVariable(
+    makeDynamicScope(makeRootScope(), ["kind"], "frame"),
+    "kind",
+    "variable",
+    null,
+  ),
   "frame",
 );
 
 assertEqual(
   allignEffect(
     makeInitializeEffect(
-      makeDynamicScope(makeRootScope(), "frame"),
+      makeDynamicScope(makeRootScope(), ["kind"], "frame"),
+      "kind",
       "variable",
       {
         ...curries,
@@ -222,7 +230,7 @@ assertEqual(
 assertEqual(
   allignExpression(
     makeLookupExpression(
-      makeDynamicScope(makeRootScope(), "frame"),
+      makeDynamicScope(makeRootScope(), ["kind"], "frame"),
       "variable",
       {
         ...curries,
@@ -248,9 +256,10 @@ assertEqual(
   allignBlock(
     makeScopeBlock(
       makeRootScope(),
+      ["kind"],
       [],
       makeCurry((scope) => {
-        assertEqual(declareVariable(scope, "variable"), "variable");
+        assertEqual(declareVariable(scope, "kind", "variable", "note"), null);
         return [
           makeEffectStatement(
             makeExpressionEffect(
@@ -261,7 +270,7 @@ assertEqual(
             ),
           ),
           makeEffectStatement(
-            makeInitializeEffect(scope, "variable", {
+            makeInitializeEffect(scope, "kind", "variable", {
               ...curries,
               onDeadHit: makeCurry((variable) =>
                 makeWriteEffect(variable, makeLiteralExpression("init")),

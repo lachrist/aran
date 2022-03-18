@@ -1,4 +1,4 @@
-import {concat, forEach, flatMap, reduce, reverse} from "array-lite";
+import {concat, forEach, flatMap, reduce, reverse, includes} from "array-lite";
 
 import {
   assert,
@@ -17,7 +17,6 @@ import {
   makeGhostBinding,
   includesBindingVariable,
   equalsBindingVariable,
-  annotateBinding,
   makeBindingInitializeEffect,
   accessBinding,
   makeBindingLookupExpression,
@@ -61,16 +60,17 @@ export const makeClosureScope = (parent) => ({
 export const makePropertyScope = (parent, key, value) => ({
   type: PROPERTY_SCOPE_TYPE,
   parent,
+  depth: parent.depth + 1,
   key,
   value,
-  depth: parent.depth + 1,
 });
 
-export const makeDynamicScope = (parent, frame) => ({
+export const makeDynamicScope = (parent, kinds, frame) => ({
   type: DYNAMIC_SCOPE_TYPE,
   parent,
-  frame,
   depth: parent.depth + 1,
+  kinds,
+  frame,
 });
 
 // Usage for ghost variables:
@@ -87,11 +87,12 @@ export const makeDynamicScope = (parent, frame) => ({
 //     >>     { 123; } } }
 //   - Imports
 
-export const makeScopeBlock = (parent, labels, curry) => {
+export const makeScopeBlock = (parent, kinds, labels, curry) => {
   const bindings = [];
   const statements = callCurry(curry, {
     type: STATIC_SCOPE_TYPE,
     parent,
+    kinds,
     bindings,
     depth: parent.depth + 1,
     counter: 0,
@@ -122,55 +123,36 @@ export const lookupScopeProperty = (scope, key) => {
 // Declare //
 /////////////
 
-const generateDeclare = (bind, fresh) => (scope, variable) => {
-  while (scope.type === PROPERTY_SCOPE_TYPE) {
-    scope = scope.parent;
-  }
-  if (scope.type === STATIC_SCOPE_TYPE) {
-    if (fresh) {
-      scope.counter += 1;
-      variable = `${variable}_${apply(toString, scope.depth, [
-        ENCODING,
-      ])}_${apply(toString, scope.counter, [ENCODING])}`;
+const generateDeclare = (fresh, bind) => (scope, kind, variable, note) => {
+  while (scope.type !== ROOT_SCOPE_TYPE && scope.type !== CLOSURE_SCOPE_TYPE) {
+    if (scope.type === STATIC_SCOPE_TYPE && includes(scope.kinds, kind)) {
+      if (fresh) {
+        scope.counter += 1;
+        variable = `${variable}_${apply(toString, scope.depth, [
+          ENCODING,
+        ])}_${apply(toString, scope.counter, [ENCODING])}`;
+      }
+      assert(
+        findCurry(
+          scope.bindings,
+          makeCurry(equalsBindingVariable, variable),
+        ) === null,
+        "duplicate static variable declaration",
+      );
+      push(scope.bindings, bind(variable, note));
+      return fresh ? variable : null;
     }
-    assert(
-      findCurry(scope.bindings, makeCurry(equalsBindingVariable, variable)) ===
-        null,
-      "duplicate static variable declaration",
-    );
-    push(scope.bindings, bind(variable));
-    return variable;
-  } else if (scope.type === DYNAMIC_SCOPE_TYPE) {
-    return scope.frame;
-  } else {
-    throw new Error("unexpected scope during variable declaration");
-  }
-};
-
-export const declareVariable = generateDeclare(makeBinding, false);
-export const declareGhostVariable = generateDeclare(makeGhostBinding, false);
-export const declareFreshVariable = generateDeclare(makeBinding, true);
-
-//////////
-// Note //
-//////////
-
-export const annotateVariable = (scope, variable, note) => {
-  while (scope.type === PROPERTY_SCOPE_TYPE) {
+    if (scope.type === DYNAMIC_SCOPE_TYPE && includes(scope.kinds, kind)) {
+      return scope.frame;
+    }
     scope = scope.parent;
   }
-  assert(
-    scope.type === STATIC_SCOPE_TYPE,
-    "unexpected scope during variable annotation",
-  );
-  const {bindings} = scope;
-  const binding = findCurry(
-    bindings,
-    makeCurry(equalsBindingVariable, variable),
-  );
-  assert(binding !== null, "missing binding for variable annotation");
-  annotateBinding(binding, note);
+  throw new Error("missing binding scope for variable declaration");
 };
+
+export const declareVariable = generateDeclare(false, makeBinding);
+export const declareFreshVariable = generateDeclare(true, makeBinding);
+export const declareGhostVariable = generateDeclare(false, makeGhostBinding);
 
 ////////////////
 // Initialize //
@@ -199,32 +181,33 @@ export const annotateVariable = (scope, variable, note) => {
 
 export const makeInitializeEffect = (
   scope,
+  kind,
   variable,
-  {onMiss, onDynamicFrame, ...curries},
+  {onDynamicFrame, ...curries},
 ) => {
   let distant = false;
-  while (scope.type !== ROOT_SCOPE_TYPE) {
-    if (scope.type === DYNAMIC_SCOPE_TYPE) {
-      return callCurry(onDynamicFrame, scope.frame);
-    } else if (scope.type === STATIC_SCOPE_TYPE) {
+  while (scope.type !== ROOT_SCOPE_TYPE && scope.type !== CLOSURE_SCOPE_TYPE) {
+    if (scope.type === STATIC_SCOPE_TYPE && includes(scope.kinds, kind)) {
       const binding = findCurry(
         scope.bindings,
         makeCurry(equalsBindingVariable, variable),
       );
-      if (binding === null) {
-        distant = true;
-      } else {
-        return makeBindingInitializeEffect(binding, distant, curries);
-      }
-    } else {
-      assert(
-        scope.type === PROPERTY_SCOPE_TYPE,
-        "unexpected scope type during variable initialization",
-      );
+      assert(binding !== null, "missing static variable for initialization");
+      return makeBindingInitializeEffect(binding, distant, curries);
+    } else if (
+      scope.type === DYNAMIC_SCOPE_TYPE &&
+      includes(scope.kinds, kind)
+    ) {
+      return callCurry(onDynamicFrame, scope.frame);
+    } else if (
+      scope.type === DYNAMIC_SCOPE_TYPE ||
+      scope.type === STATIC_SCOPE_TYPE
+    ) {
+      distant = true;
     }
     scope = scope.parent;
   }
-  return callCurry(onMiss);
+  throw new Error("missing binding scope for variable initialization");
 };
 
 ////////////
