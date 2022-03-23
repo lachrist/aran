@@ -23,9 +23,10 @@ export {
   makeScopeEvalExpression,
 } from "./core.mjs";
 
-const META_KIND = "meta";
-const RIGID_BASE_KIND = "rigid-base";
-const LOOSE_BASE_KIND = "loose-base";
+const META_KIND = 2;
+const BASE_KIND = 3;
+const LOOSE_KIND = 5;
+const RIGID_KIND = 7;
 
 //////////////////////
 // makeDynamicScope //
@@ -34,16 +35,15 @@ const LOOSE_BASE_KIND = "loose-base";
 const generateMakeDynamicScope = (kinds) => (scope, frame) =>
   makeDynamicScope(scope, kinds, frame);
 
-export const makeMetaDynamicScope = generateMakeDynamicScope([META_KIND]);
+export const makeMetaDynamicScope = generateMakeDynamicScope(META_KIND);
 
-export const makeRigidBaseDynamicScope = generateMakeDynamicScope([
-  RIGID_BASE_KIND,
-]);
+export const makeRigidBaseDynamicScope = generateMakeDynamicScope(
+  BASE_KIND * RIGID_KIND,
+);
 
-export const makeLooseBaseDynamicScope = generateMakeDynamicScope([
-  RIGID_BASE_KIND,
-  LOOSE_BASE_KIND,
-]);
+export const makeLooseBaseDynamicScope = generateMakeDynamicScope(
+  BASE_KIND * RIGID_KIND * LOOSE_KIND,
+);
 
 ////////////////////
 // makeScopeBlock //
@@ -52,17 +52,14 @@ export const makeLooseBaseDynamicScope = generateMakeDynamicScope([
 const generateMakeScopeBlock = (kinds) => (scope, labels, curries) =>
   makeScopeBlock(scope, kinds, labels, curries);
 
-export const makeEmptyScopeBlock = generateMakeScopeBlock([META_KIND]);
+export const makeEmptyScopeBlock = generateMakeScopeBlock(META_KIND);
 
-export const makeRigidScopeBlock = generateMakeScopeBlock([
-  META_KIND,
-  RIGID_BASE_KIND,
-]);
+export const makeRigidScopeBlock = generateMakeScopeBlock(
+  META_KIND * BASE_KIND * LOOSE_KIND,
+);
 
 export const makeLooseScopeBlock = generateMakeScopeBlock([
-  META_KIND,
-  RIGID_BASE_KIND,
-  LOOSE_BASE_KIND,
+  META_KIND * BASE_KIND * LOOSE_KIND * RIGID_KIND,
 ]);
 
 /////////////////////
@@ -70,33 +67,33 @@ export const makeLooseScopeBlock = generateMakeScopeBlock([
 /////////////////////
 
 const generateDeclare =
-  (declare, makeVariable, kind) => (scope, variable, note) => {
+  (kind, makeVariable, declare) => (scope, variable, note) => {
     const either = declare(scope, kind, makeVariable(variable), note);
     return typeof either === "string" ? getVariableBody(either) : either;
   };
 
 export const declareMetaVariable = generateDeclare(
-  declareFreshVariable,
-  makeMetaVariable,
   META_KIND,
+  makeMetaVariable,
+  declareFreshVariable,
 );
 
 export const declareGhostRigidBaseVariable = generateDeclare(
-  declareGhostVariable,
+  BASE_KIND * RIGID_KIND,
   makeBaseVariable,
-  RIGID_BASE_KIND,
+  declareGhostVariable,
 );
 
 export const declareRigidBaseVariable = generateDeclare(
-  declareVariable,
+  BASE_KIND * RIGID_KIND,
   makeBaseVariable,
-  RIGID_BASE_KIND,
+  declareVariable,
 );
 
 export const declareLooseBaseVariable = generateDeclare(
-  declareVariable,
+  BASE_KIND * LOOSE_KIND,
   makeBaseVariable,
-  LOOSE_BASE_KIND,
+  declareVariable,
 );
 
 ////////////////////
@@ -104,22 +101,22 @@ export const declareLooseBaseVariable = generateDeclare(
 ////////////////////
 
 const generateMakeInitialize =
-  (makeVariable, kind) => (scope, variable, curries) =>
+  (kind, makeVariable) => (scope, variable, curries) =>
     makeInitializeEffect(scope, kind, makeVariable(variable), curries);
 
 export const makeMetaInitializeEffect = generateMakeInitialize(
-  makeMetaVariable,
   META_KIND,
+  makeMetaVariable,
 );
 
 export const makeRigidBaseInitializeEffect = generateMakeInitialize(
+  BASE_KIND * RIGID_KIND,
   makeBaseVariable,
-  RIGID_BASE_KIND,
 );
 
 export const makeLooseBaseInitializeEffect = generateMakeInitialize(
+  BASE_KIND * LOOSE_KIND,
   makeBaseVariable,
-  LOOSE_BASE_KIND,
 );
 
 ////////////////
@@ -127,25 +124,29 @@ export const makeLooseBaseInitializeEffect = generateMakeInitialize(
 ////////////////
 
 const generateMakeLookup =
-  (makeLookup, makeVariable) => (scope, variable, curries) =>
-    makeLookup(scope, makeVariable(variable), curries);
+  (kind, makeVariable, makeLookup) => (scope, variable, curries) =>
+    makeLookup(scope, kind, makeVariable(variable), curries);
 
 export const makeMetaLookupExpression = generateMakeLookup(
-  makeLookupExpression,
+  META_KIND,
   makeMetaVariable,
+  makeLookupExpression,
 );
 
 export const makeBaseLookupExpression = generateMakeLookup(
-  makeLookupExpression,
+  BASE_KIND,
   makeBaseVariable,
+  makeLookupExpression,
 );
 
 export const makeMetaLookupEffect = generateMakeLookup(
-  makeLookupEffect,
+  META_KIND,
   makeMetaVariable,
+  makeLookupEffect,
 );
 
 export const makeBaseLookupEffect = generateMakeLookup(
-  makeLookupEffect,
+  BASE_KIND,
   makeBaseVariable,
+  makeLookupEffect,
 );

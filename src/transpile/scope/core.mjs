@@ -1,4 +1,4 @@
-import {concat, forEach, flatMap, reduce, reverse, includes} from "array-lite";
+import {concat, forEach, flatMap, reduce, reverse} from "array-lite";
 
 import {
   assert,
@@ -65,11 +65,11 @@ export const makePropertyScope = (parent, key, value) => ({
   value,
 });
 
-export const makeDynamicScope = (parent, kinds, frame) => ({
+export const makeDynamicScope = (parent, kind, frame) => ({
   type: DYNAMIC_SCOPE_TYPE,
   parent,
   depth: parent.depth + 1,
-  kinds,
+  kind,
   frame,
 });
 
@@ -87,12 +87,12 @@ export const makeDynamicScope = (parent, kinds, frame) => ({
 //     >>     { 123; } } }
 //   - Imports
 
-export const makeScopeBlock = (parent, kinds, labels, curry) => {
+export const makeScopeBlock = (parent, kind, labels, curry) => {
   const bindings = [];
   const statements = callCurry(curry, {
     type: STATIC_SCOPE_TYPE,
     parent,
-    kinds,
+    kind,
     bindings,
     depth: parent.depth + 1,
     counter: 0,
@@ -125,7 +125,7 @@ export const lookupScopeProperty = (scope, key) => {
 
 const generateDeclare = (fresh, bind) => (scope, kind, variable, note) => {
   while (scope.type !== ROOT_SCOPE_TYPE && scope.type !== CLOSURE_SCOPE_TYPE) {
-    if (scope.type === STATIC_SCOPE_TYPE && includes(scope.kinds, kind)) {
+    if (scope.type === STATIC_SCOPE_TYPE && scope.kind % kind === 0) {
       if (fresh) {
         scope.counter += 1;
         variable = `${variable}_${apply(toString, scope.depth, [
@@ -142,7 +142,7 @@ const generateDeclare = (fresh, bind) => (scope, kind, variable, note) => {
       push(scope.bindings, bind(variable, note));
       return fresh ? variable : null;
     }
-    if (scope.type === DYNAMIC_SCOPE_TYPE && includes(scope.kinds, kind)) {
+    if (scope.type === DYNAMIC_SCOPE_TYPE && scope.kind % kind === 0) {
       return scope.frame;
     }
     scope = scope.parent;
@@ -187,17 +187,14 @@ export const makeInitializeEffect = (
 ) => {
   let distant = false;
   while (scope.type !== ROOT_SCOPE_TYPE && scope.type !== CLOSURE_SCOPE_TYPE) {
-    if (scope.type === STATIC_SCOPE_TYPE && includes(scope.kinds, kind)) {
+    if (scope.type === STATIC_SCOPE_TYPE && scope.kind % kind === 0) {
       const binding = findCurry(
         scope.bindings,
         makeCurry(equalsBindingVariable, variable),
       );
       assert(binding !== null, "missing static variable for initialization");
       return makeBindingInitializeEffect(binding, distant, curries);
-    } else if (
-      scope.type === DYNAMIC_SCOPE_TYPE &&
-      includes(scope.kinds, kind)
-    ) {
+    } else if (scope.type === DYNAMIC_SCOPE_TYPE && scope.kind % kind === 0) {
       return callCurry(onDynamicFrame, scope.frame);
     } else if (
       scope.type === DYNAMIC_SCOPE_TYPE ||
@@ -223,15 +220,15 @@ const finalizeLookup = (frames, node, onDynamicFrame) =>
 
 const generateLookup =
   (lookupBinding) =>
-  (scope, variable, {onMiss, onDynamicFrame, ...curries}) => {
+  (scope, kind, variable, {onMiss, onDynamicFrame, ...curries}) => {
     let escaped = false;
     const frames = [];
     while (scope.type !== ROOT_SCOPE_TYPE) {
-      if (scope.type === DYNAMIC_SCOPE_TYPE) {
+      if (scope.type === DYNAMIC_SCOPE_TYPE && scope.kind % kind === 0) {
         push(frames, scope.frame);
       } else if (scope.type === CLOSURE_SCOPE_TYPE) {
         escaped = true;
-      } else if (scope.type === STATIC_SCOPE_TYPE) {
+      } else if (scope.type === STATIC_SCOPE_TYPE && scope.kind % kind === 0) {
         const binding = findCurry(
           scope.bindings,
           makeCurry(equalsBindingVariable, variable),
