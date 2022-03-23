@@ -8,7 +8,7 @@ import {
 import {allignBlock} from "../../allign/index.mjs";
 import {
   makeEmptyScopeBlock,
-  makeEmptyDynamicScope,
+  makeMetaDynamicScope,
   makeRootScope,
   declareMetaVariable,
   makeMetaInitializeEffect,
@@ -53,7 +53,7 @@ assertEqual(
 
 assertEqual(
   declareMetaVariable(
-    makeEmptyDynamicScope(makeRootScope(), 123),
+    makeMetaDynamicScope(makeRootScope(), 123),
     "variable",
     "note",
   ),

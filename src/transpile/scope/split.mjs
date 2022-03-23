@@ -34,13 +34,13 @@ const LOOSE_BASE_KIND = "loose-base";
 const generateMakeDynamicScope = (kinds) => (scope, frame) =>
   makeDynamicScope(scope, kinds, frame);
 
-export const makeEmptyDynamicScope = generateMakeDynamicScope([META_KIND]);
-export const makeRigidDynamicScope = generateMakeDynamicScope([
-  META_KIND,
+export const makeMetaDynamicScope = generateMakeDynamicScope([META_KIND]);
+
+export const makeRigidBaseDynamicScope = generateMakeDynamicScope([
   RIGID_BASE_KIND,
 ]);
-export const makeLooseDynamicScope = generateMakeDynamicScope([
-  META_KIND,
+
+export const makeLooseBaseDynamicScope = generateMakeDynamicScope([
   RIGID_BASE_KIND,
   LOOSE_BASE_KIND,
 ]);
@@ -53,10 +53,12 @@ const generateMakeScopeBlock = (kinds) => (scope, labels, curries) =>
   makeScopeBlock(scope, kinds, labels, curries);
 
 export const makeEmptyScopeBlock = generateMakeScopeBlock([META_KIND]);
+
 export const makeRigidScopeBlock = generateMakeScopeBlock([
   META_KIND,
   RIGID_BASE_KIND,
 ]);
+
 export const makeLooseScopeBlock = generateMakeScopeBlock([
   META_KIND,
   RIGID_BASE_KIND,
