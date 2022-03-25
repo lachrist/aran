@@ -156,6 +156,8 @@ export const incrementCounter = (counter) => {
 // Function Utility //
 //////////////////////
 
+export const flip = (f) => (x, y) => f(y, x);
+
 export const bind = (f, g) => (x) => f(g(x));
 
 export const returnFirst = (x1) => x1;
@@ -179,20 +181,6 @@ export const hasOwnProperty = (object, key) =>
   getOwnPropertyDescriptor(object, key) !== undefined;
 
 ///////////
-// Curry //
-///////////
-
-export const makeCurry = (f, ...xs) => ({f, xs});
-
-export const extendCurry = ({f, xs: xs1}, ...xs2) => ({
-  f,
-  xs: concat(xs1, xs2),
-});
-
-export const callCurry = ({f, xs: xs1}, ...xs2) =>
-  apply(f, undefined, concat(xs1, xs2));
-
-///////////
 // Array //
 ///////////
 
@@ -210,45 +198,6 @@ export const pop = (array) => {
   return last;
 };
 
-export const forEachCurry = (array, curry) => {
-  const {length} = array;
-  for (let index = 0; index < length; index += 1) {
-    callCurry(curry, array[index], index, array);
-  }
-};
-
-export const findCurry = (array, curry) => {
-  const {length} = array;
-  for (let index = 0; index < length; index += 1) {
-    if (callCurry(curry, array[index], index, array)) {
-      return array[index];
-    }
-  }
-  return null;
-};
-
-export const mapCurry = (array1, curry) => {
-  const {length} = array1;
-  const array2 = [];
-  for (let index = 0; index < length; index += 1) {
-    array2[index] = callCurry(curry, array1[index], index, array1);
-  }
-  return array2;
-};
-
-export const filterOutCurry = (array1, curry) => {
-  const {length: length1} = array1;
-  let length2 = 0;
-  const array2 = [];
-  for (let index = 0; index < length1; index += 1) {
-    if (!callCurry(curry, array1[index], index, array1)) {
-      array2[length2] = array1[index];
-      length2 += 1;
-    }
-  }
-  return array2;
-};
-
 //////////
 // uuid //
 //////////
@@ -264,3 +213,130 @@ export const getUUID = () => {
   return uuid;
 };
 export const getLatestUUID = () => uuid;
+
+/////////////
+// partial //
+/////////////
+
+export const partial =
+  (f, ...xs) =>
+  (...ys) =>
+    apply(f, undefined, concat(xs, ys));
+
+export const partial1 = (f, x1) => {
+  switch (f.length) {
+    case 1:
+      return () => f(x1);
+    case 2:
+      return (x2) => f(x1, x2);
+    case 3:
+      return (x2, x3) => f(x1, x2, x3);
+    case 4:
+      return (x2, x3, x4) => f(x1, x2, x3, x4);
+    case 5:
+      return (x2, x3, x4, x5) => f(x1, x2, x3, x4, x5);
+    default:
+      throw new Error("arity out of bound");
+  }
+};
+
+export const partial2 = (f, x1, x2) => {
+  switch (f.length) {
+    case 2:
+      return () => f(x1, x2);
+    case 3:
+      return (x3) => f(x1, x2, x3);
+    case 4:
+      return (x3, x4) => f(x1, x2, x3, x4);
+    case 5:
+      return (x3, x4, x5) => f(x1, x2, x3, x4, x5);
+    default:
+      throw new Error("arity out of bound");
+  }
+};
+
+export const partial3 = (f, x1, x2, x3) => {
+  switch (f.length) {
+    case 3:
+      return () => f(x1, x2, x3);
+    case 4:
+      return (x4) => f(x1, x2, x3, x4);
+    case 5:
+      return (x4, x5) => f(x1, x2, x3, x4, x5);
+    default:
+      throw new Error("arity out of bound");
+  }
+};
+
+export const partial4 = (f, x1, x2, x3, x4) => {
+  switch (f.length) {
+    case 4:
+      return () => f(x1, x2, x3, x4);
+    case 5:
+      return (x5) => f(x1, x2, x3, x4, x5);
+    default:
+      throw new Error("arity out of bound");
+  }
+};
+
+export const partial5 = (f, x1, x2, x3, x4, x5) => {
+  switch (f.length) {
+    case 5:
+      return () => f(x1, x2, x3, x4, x5);
+    default:
+      throw new Error("arity out of bound");
+  }
+};
+
+// ///////////
+// // Curry //
+// ///////////
+//
+// export const makeCurry = (f, ...xs) => ({f, xs});
+//
+// export const extendCurry = ({f, xs: xs1}, ...xs2) => ({
+//   f,
+//   xs: concat(xs1, xs2),
+// });
+//
+// export const callCurry = ({f, xs: xs1}, ...xs2) =>
+//   apply(f, undefined, concat(xs1, xs2));
+//
+// export const forEachCurry = (array, curry) => {
+//   const {length} = array;
+//   for (let index = 0; index < length; index += 1) {
+//     callCurry(curry, array[index], index, array);
+//   }
+// };
+//
+// export const findCurry = (array, curry) => {
+//   const {length} = array;
+//   for (let index = 0; index < length; index += 1) {
+//     if (callCurry(curry, array[index], index, array)) {
+//       return array[index];
+//     }
+//   }
+//   return null;
+// };
+//
+// export const mapCurry = (array1, curry) => {
+//   const {length} = array1;
+//   const array2 = [];
+//   for (let index = 0; index < length; index += 1) {
+//     array2[index] = callCurry(curry, array1[index], index, array1);
+//   }
+//   return array2;
+// };
+//
+// export const filterOutCurry = (array1, curry) => {
+//   const {length: length1} = array1;
+//   let length2 = 0;
+//   const array2 = [];
+//   for (let index = 0; index < length1; index += 1) {
+//     if (!callCurry(curry, array1[index], index, array1)) {
+//       array2[length2] = array1[index];
+//       length2 += 1;
+//     }
+//   }
+//   return array2;
+// };

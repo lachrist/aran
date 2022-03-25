@@ -1,6 +1,6 @@
 import {includes} from "array-lite";
 
-import {callCurry, assert} from "../../util.mjs";
+import {assert} from "../../util.mjs";
 
 import {makeBaseVariable, makeMetaVariable} from "../../variable.mjs";
 
@@ -47,7 +47,7 @@ export const makeBindingInitializeEffect = (
   if (distant) {
     state.deadzone = true;
   }
-  const effect = callCurry(onDeadHit, makeBaseVariable(variable));
+  const effect = onDeadHit(makeBaseVariable(variable));
   return state.deadzone
     ? makeSequenceEffect(
         effect,
@@ -69,17 +69,17 @@ const generateLookup =
   (makeConditional) =>
   ({variable, state, note}, escaped, {onGhostHit, onDeadHit, onLiveHit}) => {
     if (state === null) {
-      return callCurry(onGhostHit, note);
+      return onGhostHit(note);
     } else if (state.initialization === YES) {
-      return callCurry(onLiveHit, makeBaseVariable(variable), note);
+      return onLiveHit(makeBaseVariable(variable), note);
     } else if (state.initialization === NO && !escaped) {
-      return callCurry(onDeadHit);
+      return onDeadHit();
     } else {
       state.deadzone = true;
       return makeConditional(
         makeReadExpression(makeMetaVariable(variable)),
-        callCurry(onLiveHit, makeBaseVariable(variable), note),
-        callCurry(onDeadHit),
+        onLiveHit(makeBaseVariable(variable), note),
+        onDeadHit(),
       );
     }
   };

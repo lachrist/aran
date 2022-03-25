@@ -1,6 +1,9 @@
 import {map, flatMap} from "array-lite";
-import {makeCurry, mapCurry} from "../../util.mjs";
+
+import {partial1} from "../../util.mjs";
+
 import {collectDeclarator} from "./collect.mjs";
+
 import {
   makeImportDeclaration,
   makeVoidDeclaration,
@@ -98,10 +101,7 @@ const visitors = {
   },
   ExportAllDeclaration: (_node) => [],
   ImportDeclaration: (node) =>
-    mapCurry(
-      node.specifiers,
-      makeCurry(visitImportSpecifier, node.source.value),
-    ),
+    map(node.specifiers, partial1(visitImportSpecifier, node.source.value)),
 };
 
 export const hoistModule = (node) => {

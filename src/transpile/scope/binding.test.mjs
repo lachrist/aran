@@ -1,6 +1,7 @@
 import {concat} from "array-lite";
+
 import {assertEqual, generateAssertUnreachable} from "../../__fixture__.mjs";
-import {makeCurry} from "../../util.mjs";
+
 import {
   makeExpressionEffect,
   makeReadExpression,
@@ -9,7 +10,9 @@ import {
   makeWriteEffect,
   makeBlock,
 } from "../../ast/index.mjs";
+
 import {allignBlock} from "../../allign/index.mjs";
+
 import {
   makeBinding,
   makeGhostBinding,
@@ -24,9 +27,9 @@ import {
 } from "./binding.mjs";
 
 const curries = {
-  onGhostHit: makeCurry(generateAssertUnreachable("onGhostHit")),
-  onDeadHit: makeCurry(generateAssertUnreachable("onDeadHit")),
-  onLiveHit: makeCurry(generateAssertUnreachable("onLiveHit")),
+  onGhostHit: generateAssertUnreachable("onGhostHit"),
+  onDeadHit: generateAssertUnreachable("onDeadHit"),
+  onLiveHit: generateAssertUnreachable("onLiveHit"),
 };
 
 const test = (code, binding, statements) => {
@@ -76,25 +79,24 @@ assertEqual(
       makeExpressionEffect(
         makeBindingLookupExpression(binding, false, {
           ...curries,
-          onDeadHit: makeCurry(() => makeLiteralExpression("dead")),
+          onDeadHit: () => makeLiteralExpression("dead"),
         }),
       ),
     ),
     makeEffectStatement(
       makeBindingInitializeEffect(binding, false, {
-        onDeadHit: makeCurry((variable) =>
+        onDeadHit: (variable) =>
           makeWriteEffect(variable, makeLiteralExpression("init")),
-        ),
       }),
     ),
     makeEffectStatement(
       makeExpressionEffect(
         makeBindingLookupExpression(binding, false, {
           ...curries,
-          onLiveHit: makeCurry((variable, note) => {
+          onLiveHit: (variable, note) => {
             assertEqual(note, "note");
             return makeReadExpression(variable);
-          }),
+          },
         }),
       ),
     ),
@@ -122,19 +124,18 @@ assertEqual(
         makeExpressionEffect(
           makeBindingLookupExpression(binding, true, {
             ...curries,
-            onLiveHit: makeCurry((variable, note) => {
+            onLiveHit: (variable, note) => {
               assertEqual(note, "note");
               return makeReadExpression(variable);
-            }),
-            onDeadHit: makeCurry(() => makeLiteralExpression("dead")),
+            },
+            onDeadHit: () => makeLiteralExpression("dead"),
           }),
         ),
       ),
       makeEffectStatement(
         makeBindingInitializeEffect(binding, false, {
-          onDeadHit: makeCurry((variable) =>
+          onDeadHit: (variable) =>
             makeWriteEffect(variable, makeLiteralExpression("init")),
-          ),
         }),
       ),
     ],
@@ -156,9 +157,8 @@ assertEqual(
     [
       makeEffectStatement(
         makeBindingInitializeEffect(binding, false, {
-          onDeadHit: makeCurry((variable) =>
+          onDeadHit: (variable) =>
             makeWriteEffect(variable, makeLiteralExpression("init")),
-          ),
         }),
       ),
     ],
@@ -184,20 +184,19 @@ assertEqual(
     [
       makeEffectStatement(
         makeBindingInitializeEffect(binding, true, {
-          onDeadHit: makeCurry((variable) =>
+          onDeadHit: (variable) =>
             makeWriteEffect(variable, makeLiteralExpression("init")),
-          ),
         }),
       ),
       makeEffectStatement(
         makeExpressionEffect(
           makeBindingLookupExpression(binding, false, {
             ...curries,
-            onLiveHit: makeCurry((variable, note) => {
+            onLiveHit: (variable, note) => {
               assertEqual(note, "note");
               return makeReadExpression(variable);
-            }),
-            onDeadHit: makeCurry(() => makeLiteralExpression("dead")),
+            },
+            onDeadHit: () => makeLiteralExpression("dead"),
           }),
         ),
       ),
@@ -216,10 +215,10 @@ assertEqual(
       makeExpressionEffect(
         makeBindingLookupExpression(binding, false, {
           ...curries,
-          onGhostHit: makeCurry((note) => {
+          onGhostHit: (note) => {
             assertEqual(note, "note");
             return makeLiteralExpression("ghost");
-          }),
+          },
         }),
       ),
     ),

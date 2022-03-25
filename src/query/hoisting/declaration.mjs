@@ -1,5 +1,5 @@
-import {includes, concat} from "array-lite";
-import {makeCurry, filterOutCurry, assert} from "../../util.mjs";
+import {includes, concat, filterOut} from "array-lite";
+import {partial1, assert} from "../../util.mjs";
 
 const {
   Reflect: {apply},
@@ -142,10 +142,7 @@ const mergeDeclaration = (declaration1, declaration2) => {
     import: null,
     exports: concat(
       declaration1.exports,
-      filterOutCurry(
-        declaration2.exports,
-        makeCurry(includes, declaration1.exports),
-      ),
+      filterOut(declaration2.exports, partial1(includes, declaration1.exports)),
     ),
     variable: declaration1.variable,
   };

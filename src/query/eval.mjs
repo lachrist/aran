@@ -1,5 +1,6 @@
-import {makeCurry, mapCurry, hasOwnProperty} from "../util.mjs";
-import {some, filter} from "array-lite";
+import {map, some, filter} from "array-lite";
+
+import {hasOwnProperty, partial1} from "../util.mjs";
 
 const {
   Array: {isArray},
@@ -38,15 +39,12 @@ export const hasDirectEvalCall = (any) => {
         return false;
       } else {
         return some(
-          mapCurry(filter(ownKeys(any), isNodeKey), makeCurry(get, any)),
+          map(filter(ownKeys(any), isNodeKey), partial1(get, any)),
           hasDirectEvalCall,
         );
       }
     } else {
-      return some(
-        mapCurry(ownKeys(any), makeCurry(get, any)),
-        hasDirectEvalCall,
-      );
+      return some(map(ownKeys(any), partial1(get, any)), hasDirectEvalCall);
     }
   } else {
     return false;

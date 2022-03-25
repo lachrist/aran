@@ -1,3 +1,5 @@
+import {slice} from "array-lite";
+
 import {
   assertThrow,
   assertEqual,
@@ -26,25 +28,31 @@ import {
   generateSwitch1,
   generateSwitch2,
   hasOwnProperty,
+  getLast,
   pop,
   push,
-  makeCurry,
-  callCurry,
-  extendCurry,
-  getLast,
-  mapCurry,
-  findCurry,
-  forEachCurry,
-  filterOutCurry,
   getUUID,
   getLatestUUID,
+  flip,
+  partial,
+  partial1,
+  partial2,
+  partial3,
+  partial4,
+  partial5,
 } from "./util.mjs";
 
-const {Error, undefined} = globalThis;
+const {
+  Error,
+  undefined,
+  Reflect: {defineProperty, apply},
+} = globalThis;
 
 ///////////////
 // Assertion //
 ///////////////
+
+assertThrow(generateAssertUnreachable("foo"));
 
 assertThrow(() => assert(false, "foo"), /^Error: foo/u);
 
@@ -137,6 +145,8 @@ assertEqual(incrementCounter(createCounter()), 1);
 // Function //
 //////////////
 
+assertDeepEqual(flip((...xs) => xs)(1, 2), [2, 1]);
+
 assertEqual(
   bind(
     (x) => 2 * x,
@@ -165,25 +175,6 @@ assertEqual(hasOwnProperty({key: "value"}, "key"), true);
 assertEqual(hasOwnProperty({__proto__: {key: "value"}}, "key"), false);
 
 ///////////
-// Curry //
-///////////
-
-assertDeepEqual(
-  callCurry(
-    extendCurry(
-      makeCurry((...args) => args, 1, 2, 3),
-      4,
-      5,
-      6,
-    ),
-    7,
-    8,
-    9,
-  ),
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-);
-
-///////////
 // Array //
 ///////////
 
@@ -201,63 +192,33 @@ assertEqual(getLast(["element1", "element2"]), "element2");
   assertDeepEqual(array, ["element1", "element2"]);
 }
 
-assertEqual(
-  findCurry(
-    ["element"],
-    makeCurry((...args) => {
-      assertDeepEqual(args, ["curry", "element", 0, ["element"]]);
-      return true;
-    }, "curry"),
-  ),
-  "element",
-);
+/////////////
+// Partial //
+/////////////
 
-assertEqual(
-  findCurry(
-    [],
-    makeCurry(generateAssertUnreachable("should not be called"), "curry"),
-  ),
-  null,
-);
-
-assertDeepEqual(
-  mapCurry(
-    ["element"],
-    makeCurry((...args) => args, "curry"),
-  ),
-  [["curry", "element", 0, ["element"]]],
-);
-
-assertDeepEqual(
-  filterOutCurry(
-    [1, 2, 3, 4],
-    makeCurry((curry, element, index, elements, ...rest) => {
-      assertEqual(curry, "curry");
-      assertEqual(element, index + 1);
-      assertDeepEqual(elements, [1, 2, 3, 4]);
-      assertDeepEqual(rest, []);
-      return element > 2;
-    }, "curry"),
-  ),
-  [1, 2],
-);
+assertDeepEqual(partial((...xs) => xs, 1, 2, 3)(4, 5, 6), [1, 2, 3, 4, 5, 6]);
 
 {
-  let sum = 0;
-  assertEqual(
-    forEachCurry(
-      [1, 2, 3],
-      makeCurry((curry, element, index, elements, ...rest) => {
-        assertEqual(curry, "curry");
-        assertEqual(element, index + 1);
-        assertDeepEqual(elements, [1, 2, 3]);
-        assertDeepEqual(rest, []);
-        sum += element;
-      }, "curry"),
-    ),
-    undefined,
-  );
-  assertEqual(sum, 6);
+  const generate = (length) => {
+    const f = (...xs) => xs;
+    defineProperty(f, "length", {value: length});
+    return f;
+  };
+  const partials = [partial1, partial2, partial3, partial4, partial5];
+  for (let index1 = 1; index1 <= 5; index1 += 1) {
+    const partialX = partials[index1 - 1];
+    assertThrow(() => partialX(generate(0), 1, 2, 3, 4, 5));
+    for (let index2 = index1; index2 <= 5; index2 += 1) {
+      assertDeepEqual(
+        apply(
+          partialX(generate(index2), 1, 2, 3, 4, 5),
+          undefined,
+          slice([1, 2, 3, 4, 5], index1, 5),
+        ),
+        slice([1, 2, 3, 4, 5], 0, index2),
+      );
+    }
+  }
 }
 
 //////////
@@ -265,3 +226,81 @@ assertDeepEqual(
 //////////
 
 assertEqual(getUUID(), getLatestUUID());
+
+// ///////////
+// // Curry //
+// ///////////
+//
+// assertDeepEqual(
+//   callCurry(
+//     extendCurry(
+//       makeCurry((...args) => args, 1, 2, 3),
+//       4,
+//       5,
+//       6,
+//     ),
+//     7,
+//     8,
+//     9,
+//   ),
+//   [1, 2, 3, 4, 5, 6, 7, 8, 9],
+// );
+//
+// assertEqual(
+//   findCurry(
+//     ["element"],
+//     makeCurry((...args) => {
+//       assertDeepEqual(args, ["curry", "element", 0, ["element"]]);
+//       return true;
+//     }, "curry"),
+//   ),
+//   "element",
+// );
+//
+// assertEqual(
+//   findCurry(
+//     [],
+//     makeCurry(generateAssertUnreachable("should not be called"), "curry"),
+//   ),
+//   null,
+// );
+//
+// assertDeepEqual(
+//   mapCurry(
+//     ["element"],
+//     makeCurry((...args) => args, "curry"),
+//   ),
+//   [["curry", "element", 0, ["element"]]],
+// );
+//
+// assertDeepEqual(
+//   filterOutCurry(
+//     [1, 2, 3, 4],
+//     makeCurry((curry, element, index, elements, ...rest) => {
+//       assertEqual(curry, "curry");
+//       assertEqual(element, index + 1);
+//       assertDeepEqual(elements, [1, 2, 3, 4]);
+//       assertDeepEqual(rest, []);
+//       return element > 2;
+//     }, "curry"),
+//   ),
+//   [1, 2],
+// );
+//
+// {
+//   let sum = 0;
+//   assertEqual(
+//     forEachCurry(
+//       [1, 2, 3],
+//       makeCurry((curry, element, index, elements, ...rest) => {
+//         assertEqual(curry, "curry");
+//         assertEqual(element, index + 1);
+//         assertDeepEqual(elements, [1, 2, 3]);
+//         assertDeepEqual(rest, []);
+//         sum += element;
+//       }, "curry"),
+//     ),
+//     undefined,
+//   );
+//   assertEqual(sum, 6);
+// }
