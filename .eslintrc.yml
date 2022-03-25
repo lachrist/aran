@@ -52,7 +52,6 @@ rules:
     - ForOfStatement
     - AwaitExpression
     - YieldExpression
-    - SwitchStatement
     - UpdateExpression
     - ChainExpression
     - LabeledStatement
