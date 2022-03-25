@@ -35,14 +35,12 @@ const RIGID_KIND = 7;
 const generateMakeDynamicScope = (kinds) => (scope, frame) =>
   makeDynamicScope(scope, kinds, frame);
 
-export const makeMetaDynamicScope = generateMakeDynamicScope(META_KIND);
-
 export const makeRigidBaseDynamicScope = generateMakeDynamicScope(
   BASE_KIND * RIGID_KIND,
 );
 
 export const makeLooseBaseDynamicScope = generateMakeDynamicScope(
-  BASE_KIND * RIGID_KIND * LOOSE_KIND,
+  BASE_KIND * LOOSE_KIND,
 );
 
 ////////////////////
@@ -58,9 +56,9 @@ export const makeRigidScopeBlock = generateMakeScopeBlock(
   META_KIND * BASE_KIND * LOOSE_KIND,
 );
 
-export const makeLooseScopeBlock = generateMakeScopeBlock([
+export const makeLooseScopeBlock = generateMakeScopeBlock(
   META_KIND * BASE_KIND * LOOSE_KIND * RIGID_KIND,
-]);
+);
 
 /////////////////////
 // declareVariable //
