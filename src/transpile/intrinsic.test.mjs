@@ -3,13 +3,14 @@ import {makeLiteralExpression} from "../ast/index.mjs";
 import {allignExpression} from "../allign/index.mjs";
 
 import {
-  makeThrowExpression,
+  makeTypeofGlobalExpression,
   makeGetExpression,
   makeStrictSetExpression,
   makeObjectExpression,
   makeUnaryExpression,
   makeBinaryExpression,
-  makeSyntaxErrorExpression,
+  makeThrowSyntaxErrorExpression,
+  makeDirectIntrinsicExpression,
 } from "./intrinsic.mjs";
 
 const test = (expression, code) => {
@@ -17,53 +18,58 @@ const test = (expression, code) => {
 };
 
 test(
-  makeThrowExpression(makeLiteralExpression(123)),
-  "intrinsic('aran.throw')(undefined, 123)",
+  makeTypeofGlobalExpression(makeLiteralExpression("variable")),
+  "intrinsic('aran.typeofGlobal')(undefined, 'variable')",
 );
 
 test(
-  makeGetExpression(makeLiteralExpression(123), makeLiteralExpression(456)),
-  "intrinsic('aran.get')(undefined, 123, 456)",
+  makeGetExpression(
+    makeLiteralExpression("object"),
+    makeLiteralExpression("key"),
+  ),
+  "intrinsic('aran.get')(undefined, 'object', 'key')",
 );
 
 test(
   makeStrictSetExpression(
-    makeLiteralExpression(123),
-    makeLiteralExpression(456),
-    makeLiteralExpression(789),
+    makeLiteralExpression("object"),
+    makeLiteralExpression("key"),
+    makeLiteralExpression("value"),
   ),
-  "intrinsic('aran.setStrict')(undefined, 123, 456, 789)",
-);
-
-test(
-  makeObjectExpression(makeLiteralExpression(123), makeLiteralExpression(456)),
-  "intrinsic('aran.createObject')(undefined, 123, 456)",
+  "intrinsic('aran.setStrict')(undefined, 'object', 'key', 'value')",
 );
 
 test(
   makeObjectExpression(
-    makeLiteralExpression(123),
-    makeLiteralExpression(456),
-    "annotation",
+    makeLiteralExpression("prototype"),
+    makeLiteralExpression("key"),
+    makeLiteralExpression("value"),
   ),
-  "intrinsic('aran.createObject')(undefined, 123, 456)",
+  "intrinsic('aran.createObject')(undefined, 'prototype', 'key', 'value')",
 );
 
 test(
-  makeUnaryExpression("!", makeLiteralExpression(123)),
-  "intrinsic('aran.unary')(undefined, '!', 123)",
+  makeObjectExpression(makeLiteralExpression("prototype"), "annotation"),
+  "intrinsic('aran.createObject')(undefined, 'prototype')",
+);
+
+test(
+  makeUnaryExpression("!", makeLiteralExpression("argument")),
+  "intrinsic('aran.unary')(undefined, '!', 'argument')",
 );
 
 test(
   makeBinaryExpression(
     "+",
-    makeLiteralExpression(123),
-    makeLiteralExpression(456),
+    makeLiteralExpression("left"),
+    makeLiteralExpression("right"),
   ),
-  "intrinsic('aran.binary')(undefined, '+', 123, 456)",
+  "intrinsic('aran.binary')(undefined, '+', 'left', 'right')",
 );
 
 test(
-  makeSyntaxErrorExpression(makeLiteralExpression(123)),
-  "new (intrinsic('SyntaxError'))(123)",
+  makeThrowSyntaxErrorExpression("message"),
+  "intrinsic('aran.throw')(undefined, new (intrinsic('SyntaxError'))('message'))",
 );
+
+test(makeDirectIntrinsicExpression("globalThis"), "intrinsic('globalThis')");

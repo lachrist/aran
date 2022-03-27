@@ -1,4 +1,6 @@
-import {getLast, pop} from "../util.mjs";
+import {includes} from "array-lite";
+
+import {assert, getLast, pop} from "../util.mjs";
 
 import {
   makeApplyExpression,
@@ -39,16 +41,19 @@ const generateMakeApply3 =
       annotation,
     );
 
-const generateMakeConstruct1 =
-  (name) =>
-  (expression1, annotation = undefined) =>
-    makeConstructExpression(
-      makeIntrinsicExpression(name),
-      [expression1],
-      annotation,
-    );
+// const generateMakeConstruct1 =
+//   (name) =>
+//   (expression1, annotation = undefined) =>
+//     makeConstructExpression(
+//       makeIntrinsicExpression(name),
+//       [expression1],
+//       annotation,
+//     );
 
-// aran object //
+////////////
+// object //
+////////////
+
 export const makeObjectExpression = (...expressions) =>
   makeApplyExpression(
     makeIntrinsicExpression("aran.createObject"),
@@ -62,9 +67,11 @@ export const makeObjectExpression = (...expressions) =>
 export const makeGetExpression = generateMakeApply2("aran.get");
 export const makeSloppySetExpression = generateMakeApply3("aran.setSloppy");
 export const makeStrictSetExpression = generateMakeApply3("aran.setStrict");
-export const makeThrowExpression = generateMakeApply1("aran.throw");
 
-// aran global //
+////////////
+// global //
+////////////
+
 export const makeTypeofGlobalExpression =
   generateMakeApply1("aran.typeofGlobal");
 export const makeDeleteGlobalExpression =
@@ -79,7 +86,10 @@ export const makeStrictWriteGlobalExpression = generateMakeApply2(
   "aran.writeGlobalStrict",
 );
 
-// aran operator //
+//////////////
+// operator //
+//////////////
+
 export const makeUnaryExpression = (
   operator,
   expression,
@@ -91,6 +101,7 @@ export const makeUnaryExpression = (
     [makeLiteralExpression(operator), expression],
     annotation,
   );
+
 export const makeBinaryExpression = (
   operator,
   expression1,
@@ -104,7 +115,39 @@ export const makeBinaryExpression = (
     annotation,
   );
 
-export const makeReferenceErrorExpression =
-  generateMakeConstruct1("ReferenceError");
-export const makeSyntaxErrorExpression = generateMakeConstruct1("SyntaxError");
-export const makeTypeErrorExpression = generateMakeConstruct1("TypeError");
+///////////
+// throw //
+///////////
+
+const generateMakeThrow = (name) => (message) =>
+  makeApplyExpression(
+    makeIntrinsicExpression("aran.throw"),
+    makeLiteralExpression({undefined: null}),
+    [
+      makeConstructExpression(makeIntrinsicExpression(name), [
+        makeLiteralExpression(message),
+      ]),
+    ],
+  );
+
+export const makeThrowReferenceErrorExpression =
+  generateMakeThrow("ReferenceError");
+export const makeThrowSyntaxErrorExpression = generateMakeThrow("SyntaxError");
+export const makeThrowTypeErrorExpression = generateMakeThrow("TypeError");
+
+//////////
+// data //
+//////////
+
+const whitelist = [
+  "aran.globalDeclarativeRecord",
+  "aran.globalObjectRecord",
+  "globalThis",
+  "Symbol.iterator",
+  "Symbol.unscopables",
+];
+
+export const makeDirectIntrinsicExpression = (name) => {
+  assert(includes(whitelist, name), "invalid intrinsic name");
+  return makeIntrinsicExpression(name);
+};

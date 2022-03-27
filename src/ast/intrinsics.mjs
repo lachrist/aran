@@ -1,6 +1,7 @@
 const intrinsics = [
   // Special //
-  // "aran.globalObjectRecord",
+  "aran.globalObjectRecord",
+  "aran.globalDeclarativeRecord",
   "aran.unary",
   "aran.binary",
   "aran.throw",
@@ -11,7 +12,6 @@ const intrinsics = [
   "aran.get",
   "aran.setSloppy",
   "aran.setStrict",
-  "aran.globalRecord",
   "aran.deadzoneMarker",
   "aran.asynchronousGeneratorPrototype",
   "aran.generatorPrototype",
