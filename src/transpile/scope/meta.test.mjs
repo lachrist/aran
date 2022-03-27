@@ -1,165 +1,69 @@
-import {assertEqual, assertThrow} from "../../__fixture__.mjs";
-
-import {makeCurry, getLatestUUID} from "../../util.mjs";
+import "../../__fixture__.mjs";
 
 import {
-  makeSequenceExpression,
   makeLiteralExpression,
   makeEffectStatement,
   makeExpressionEffect,
 } from "../../ast/index.mjs";
 
-import {allignExpression, allignBlock} from "../../allign/index.mjs";
+import {
+  allignExpression,
+  allignEffect,
+  allignBlock,
+} from "../../allign/index.mjs";
 
 import {
   makeRootScope,
-  makeDynamicScope,
-  makeScopeBlock,
-  makeTestBox,
-  makePrimitiveBox,
-  makeIntrinsicBox,
-  makeBoxExpression,
-  makeBoxStatementArray,
-  makeCloseEffect,
-  makeOpenExpression,
+  makeEmptyScopeBlock,
+  declareMetaVariable,
+  makeMetaInitializeEffect,
+  makeMetaReadExpression,
+  makeMetaWriteEffect,
 } from "./meta.mjs";
 
-////////////
-// Static //
-////////////
-
-assertEqual(
-  allignBlock(
-    makeScopeBlock(
-      makeRootScope(),
-      [],
-      makeCurry((scope) =>
-        makeBoxStatementArray(
-          scope,
-          "variable",
-          makeLiteralExpression(123),
-          makeCurry((box) => [
-            makeEffectStatement(
-              makeExpressionEffect(makeOpenExpression(scope, box)),
-            ),
-            makeEffectStatement(
-              makeCloseEffect(scope, box, makeLiteralExpression(456)),
-            ),
-          ]),
-        ),
-      ),
-    ),
-    "{ let x; x = 123; effect(x); x = 456; }",
-  ),
-  null,
-);
-
-/////////////
-// Dynamic //
-/////////////
-
-{
-  const scope = makeDynamicScope(
-    makeRootScope(),
-    makePrimitiveBox("frame"),
-    "data",
-  );
-  assertEqual(
-    allignExpression(
-      makeBoxExpression(
-        scope,
-        "variable",
-        makeLiteralExpression("init"),
-        makeCurry((box) =>
-          makeSequenceExpression(
-            makeCloseEffect(scope, box, makeLiteralExpression("right")),
-            makeOpenExpression(scope, box),
-          ),
-        ),
-      ),
-      `
-        (
-          effect(intrinsic('aran.setStrict')(
-            undefined,
-            'frame',
-            'variable_${getLatestUUID()}',
-            'init',
-          )),
-          (
-            effect(intrinsic('aran.setStrict')(
-              undefined,
-              'frame',
-              'variable_${getLatestUUID()}',
-              'right',
-            )),
-            intrinsic('aran.get')(
-              undefined,
-              'frame',
-              'variable_${getLatestUUID()}',
-            )
-          )
-        )
-      `,
-    ),
-    null,
-  );
-}
-
 //////////
-// Test //
+// Miss //
 //////////
 
 {
   const scope = makeRootScope();
-  const box = makeTestBox("variable");
-  assertEqual(
-    allignExpression(
-      makeSequenceExpression(
-        makeCloseEffect(scope, box, makeLiteralExpression(123)),
-        makeOpenExpression(scope, box),
-      ),
-      "(x = 123, x)",
-    ),
-    null,
+  const variable = declareMetaVariable(scope, "variable");
+  allignEffect(
+    makeMetaInitializeEffect(scope, variable, makeLiteralExpression("init")),
+    `effect(intrinsic('aran.setStrict')(undefined, 'aran.globalDeclarativeRecord', '${variable}', 'init'))`,
+  );
+  allignExpression(
+    makeMetaReadExpression(scope, variable),
+    `intrinsic('aran.get')(undefined, 'aran.globalDeclarativeRecord', '${variable}')`,
+  );
+  allignEffect(
+    makeMetaWriteEffect(scope, variable, makeLiteralExpression("right")),
+    `effect(intrinsic('aran.setStrict')(undefined, 'aran.globalDeclarativeRecord', '${variable}', 'right'))`,
   );
 }
 
-///////////////
-// Primitive //
-///////////////
+/////////
+// Hit //
+/////////
 
-assertEqual(
-  allignExpression(
-    makeOpenExpression(makeRootScope(), makePrimitiveBox(123)),
-    "123",
-  ),
-  null,
-);
-
-///////////////
-// Intrinsic //
-///////////////
-
-assertEqual(
-  allignExpression(
-    makeOpenExpression(makeRootScope(), makeIntrinsicBox("SyntaxError")),
-    "intrinsic('SyntaxError')",
-  ),
-  null,
-);
-
-/////////////
-// Invalid //
-/////////////
-
-assertThrow(() =>
-  makeOpenExpression(makeRootScope(), {type: "invalid", data: 123}),
-);
-
-assertThrow(() =>
-  makeCloseEffect(
-    makeRootScope(),
-    makePrimitiveBox(123),
-    makeLiteralExpression(456),
-  ),
+allignBlock(
+  makeEmptyScopeBlock(makeRootScope(), [], (scope) => {
+    const variable = declareMetaVariable(scope, "variable");
+    return [
+      makeEffectStatement(
+        makeMetaInitializeEffect(
+          scope,
+          variable,
+          makeLiteralExpression("init"),
+        ),
+      ),
+      makeEffectStatement(
+        makeExpressionEffect(makeMetaReadExpression(scope, variable)),
+      ),
+      makeEffectStatement(
+        makeMetaWriteEffect(scope, variable, makeLiteralExpression("right")),
+      ),
+    ];
+  }),
+  "{ let x; x = 'init'; effect(x); x = 'right'; }",
 );

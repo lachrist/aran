@@ -8,213 +8,135 @@
 // type Result = (Remainder, Box)
 // type Remainder = Maybe Expression
 
-import {concat} from "array-lite";
-
 import {
-  returnSecond,
-  makeCurry,
-  callCurry,
+  assert,
   generateThrowError,
   getUUID,
+  partial1,
+  partial2,
 } from "../../util.mjs";
 
 import {
-  makeEffectStatement,
-  makeSequenceEffect,
-  makeIntrinsicExpression,
   makeLiteralExpression,
   makeWriteEffect,
   makeReadExpression,
   makeExpressionEffect,
-  makeSequenceExpression,
 } from "../../ast/index.mjs";
 
-import {makeGetExpression, makeStrictSetExpression} from "../intrinsic.mjs";
+import {
+  makeDirectIntrinsicExpression,
+  makeGetExpression,
+  makeStrictSetExpression,
+} from "../intrinsic.mjs";
 
 import {
-  makeDynamicScope as makeCoreDynamicScope,
-  declareMetaVariable,
-  makeMetaInitializeEffect,
-  makeMetaLookupExpression,
-  makeMetaLookupEffect,
+  declareMetaVariable as declareVariable,
+  makeMetaInitializeEffect as makeInitializeEffect,
+  makeMetaLookupExpression as makeLookupExpression,
+  makeMetaLookupEffect as makeLookupEffect,
 } from "./split.mjs";
 
 export {
   makeRootScope,
+  makeRigidBaseDynamicScope,
+  makeLooseBaseDynamicScope,
+  makeEmptyScopeBlock,
+  makeRigidScopeBlock,
+  makeLooseScopeBlock,
   makeClosureScope,
   makePropertyScope,
-  makeScopeBlock,
   lookupScopeProperty,
-  declareBaseVariable as declareVariable,
-  annotateBaseVariable as annotateVariable,
-  makeBaseInitializeEffect as makeInitializeEffect,
-  makeBaseLookupExpression as makeLookupExpression,
-  makeBaseLookupEffect as makeLookupEffect,
+  declareLooseBaseVariable,
+  declareRigidBaseVariable,
+  makeRigidBaseInitializeEffect,
+  makeLooseBaseInitializeEffect,
+  makeBaseLookupExpression,
+  makeBaseLookupEffect,
 } from "./split.mjs";
 
-const {Error} = globalThis;
-
-const TEST_TYPE = "test";
-const STATIC_TYPE = "static";
-const DYNAMIC_TYPE = "dynamic";
-const PRIMITIVE_TYPE = "primitive";
-const INTRINSIC_TYPE = "intrinsic";
-
-const onOpenLiveHit = (variable, _note) => makeReadExpression(variable);
-
-const onInitializeHit = (expression, variable) =>
-  makeWriteEffect(variable, expression);
-
-const onCloseLiveHit = (expression, variable, _note) =>
-  makeWriteEffect(variable, expression);
-
-//////////
-// Make //
-//////////
-
-export const makeDynamicScope = (parent, box, data) =>
-  makeCoreDynamicScope(parent, {
-    box,
-    data,
-  });
-
-//////////
-// Make //
-//////////
-
-export const makePrimitiveBox = (primitive) => ({
-  type: PRIMITIVE_TYPE,
-  primitive,
-});
-
-export const makeIntrinsicBox = (intrinsic) => ({
-  type: INTRINSIC_TYPE,
-  intrinsic,
-});
-
-export const makeTestBox = (variable) => ({
-  type: TEST_TYPE,
-  variable,
-});
-
-const makeStaticBox = (variable) => ({
-  type: STATIC_TYPE,
-  variable,
-});
-
-const makeDynamicBox = (object, key) => ({
-  type: DYNAMIC_TYPE,
-  object,
-  key,
-});
-
-///////////////////
-// Read && Write //
-///////////////////
-
-const lookup_curry_object = {
-  onMiss: makeCurry(generateThrowError("missing meta variable")),
-  onDynamicFrame: makeCurry(returnSecond),
-  onLiveHit: null,
-  onDeadHit: makeCurry(generateThrowError("meta variable in deadzone")),
-  onGhostHit: makeCurry(generateThrowError("ghost meta variable")),
-};
-
-const open_curry_object = {
-  ...lookup_curry_object,
-  onLiveHit: makeCurry(onOpenLiveHit),
-};
-
-export const makeOpenExpression = (scope, box) => {
-  if (box.type === TEST_TYPE) {
-    return makeReadExpression(box.variable);
-  } else if (box.type === PRIMITIVE_TYPE) {
-    return makeLiteralExpression(box.primitive);
-  } else if (box.type === INTRINSIC_TYPE) {
-    return makeIntrinsicExpression(box.intrinsic);
-  } else if (box.type === STATIC_TYPE) {
-    return makeMetaLookupExpression(scope, box.variable, open_curry_object);
-  } else if (box.type === DYNAMIC_TYPE) {
-    return makeGetExpression(
-      makeOpenExpression(scope, box.object),
-      makeLiteralExpression(box.key),
-    );
-  } else {
-    throw new Error("invalid box type for opening");
-  }
-};
-
-export const makeCloseEffect = (scope, box, expression) => {
-  if (box.type === TEST_TYPE) {
-    return makeWriteEffect(box.variable, expression);
-  } else if (box.type === STATIC_TYPE) {
-    return makeMetaLookupEffect(scope, box.variable, {
-      __proto__: lookup_curry_object,
-      onLiveHit: makeCurry(onCloseLiveHit, expression),
-    });
-  } else if (box.type === DYNAMIC_TYPE) {
-    return makeExpressionEffect(
-      makeStrictSetExpression(
-        makeOpenExpression(scope, box.object),
-        makeLiteralExpression(box.key),
-        expression,
-      ),
-    );
-  } else {
-    throw new Error("invalid box type for closing");
-  }
-};
+const onGhostHit = generateThrowError("unexpected ghost meta variable");
+const onDeadHit = generateThrowError("unexpected meta variable in deadzone");
+const onDynamicFrame = generateThrowError("unexpected meta dynamic frame");
 
 /////////////
 // Declare //
 /////////////
 
-const initialize_curry_object = {
-  onMiss: makeCurry(
-    generateThrowError("missing meta variable for initialization"),
-  ),
-  onHit: null,
-  onDynamicFrame: makeCurry(
-    generateThrowError("hit dynamic scope while initializating meta variable"),
-  ),
-};
-
-const setup = (scope, variable, expression) => {
-  const either = declareMetaVariable(scope, variable);
+export const declareMetaVariable = (scope, variable) => {
+  const either = declareVariable(scope, variable, null);
   if (typeof either === "string") {
-    return {
-      box: makeStaticBox(either),
-      effect: makeMetaInitializeEffect(scope, either, {
-        __proto__: initialize_curry_object,
-        onDeadHit: makeCurry(onInitializeHit, expression),
-      }),
-    };
+    return either;
   } else {
-    const {box} = either;
-    const key = `${variable}_${getUUID()}`;
-    return {
-      box: makeDynamicBox(box, key),
-      effect: makeExpressionEffect(
-        makeStrictSetExpression(
-          makeOpenExpression(scope, box),
-          makeLiteralExpression(key),
-          expression,
-        ),
-      ),
-    };
+    assert(either === null, "unexpected dynamic meta frame");
+    return `${variable}_${getUUID()}`;
   }
 };
 
-const generateMakeBoxNode =
-  (aggregate) => (scope, variable, expression, curry) => {
-    const {box, effect} = setup(scope, variable, expression);
-    return aggregate(effect, callCurry(curry, box));
-  };
+////////////////
+// Initialize //
+////////////////
 
-export const makeBoxExpression = generateMakeBoxNode(makeSequenceExpression);
+const onInitializeMiss = (variable, expression) =>
+  makeExpressionEffect(
+    makeStrictSetExpression(
+      makeDirectIntrinsicExpression("aran.globalDeclarativeRecord"),
+      makeLiteralExpression(variable),
+      expression,
+    ),
+  );
 
-export const makeBoxEffect = generateMakeBoxNode(makeSequenceEffect);
+const onInitializeDeadHit = (expression, variable) =>
+  makeWriteEffect(variable, expression);
 
-export const makeBoxStatementArray = generateMakeBoxNode((effect, statements) =>
-  concat([makeEffectStatement(effect)], statements),
-);
+export const makeMetaInitializeEffect = (scope, variable, expression) =>
+  makeInitializeEffect(scope, variable, {
+    onDynamicFrame,
+    onMiss: partial2(onInitializeMiss, variable, expression),
+    onDeadHit: partial1(onInitializeDeadHit, expression),
+  });
+
+//////////
+// Read //
+//////////
+
+const onReadLiveHit = (variable, _note) => makeReadExpression(variable);
+
+const onReadMiss = (variable) =>
+  makeGetExpression(
+    makeDirectIntrinsicExpression("aran.globalDeclarativeRecord"),
+    makeLiteralExpression(variable),
+  );
+
+export const makeMetaReadExpression = (scope, variable) =>
+  makeLookupExpression(scope, variable, {
+    onDynamicFrame,
+    onDeadHit,
+    onGhostHit,
+    onLiveHit: onReadLiveHit,
+    onMiss: partial1(onReadMiss, variable),
+  });
+
+///////////
+// Write //
+///////////
+
+const onWriteMiss = (variable, expression) =>
+  makeExpressionEffect(
+    makeStrictSetExpression(
+      makeDirectIntrinsicExpression("aran.globalDeclarativeRecord"),
+      makeLiteralExpression(variable),
+      expression,
+    ),
+  );
+
+const onWriteLiveHit = (expression, variable, _note) =>
+  makeWriteEffect(variable, expression);
+
+export const makeMetaWriteEffect = (scope, variable, expression) =>
+  makeLookupEffect(scope, variable, {
+    onGhostHit,
+    onDeadHit,
+    onDynamicFrame,
+    onLiveHit: partial1(onWriteLiveHit, expression),
+    onMiss: partial2(onWriteMiss, variable, expression),
+  });
