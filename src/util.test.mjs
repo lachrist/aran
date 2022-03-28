@@ -1,11 +1,6 @@
 import {slice} from "array-lite";
 
-import {
-  assertThrow,
-  assertEqual,
-  assertDeepEqual,
-  generateAssertUnreachable,
-} from "./__fixture__.mjs";
+import {assertThrow, assertEqual, assertDeepEqual} from "./__fixture__.mjs";
 
 import {
   assert,
@@ -21,12 +16,11 @@ import {
   returnThird,
   returnFourth,
   returnFifth,
-  generateReturn,
   dropFirst,
-  generateThrowError,
-  generateSwitch0,
-  generateSwitch1,
-  generateSwitch2,
+  throwError,
+  switch0,
+  switch1,
+  switch2,
   hasOwnProperty,
   getLast,
   pop,
@@ -51,8 +45,6 @@ const {
 ///////////////
 // Assertion //
 ///////////////
-
-assertThrow(generateAssertUnreachable("foo"));
 
 assertThrow(() => assert(false, "foo"), /^Error: foo/u);
 
@@ -106,32 +98,47 @@ assertThrow(
 ////////////////////
 
 assertEqual(
-  generateSwitch0({
-    type: (...args) => {
-      assertDeepEqual(args, [{type: "type"}]);
-      return "result";
+  switch0(
+    {
+      type: (...args) => {
+        assertDeepEqual(args, [{type: "type"}]);
+        return "result";
+      },
     },
-  })({type: "type"}, "arg1", "arg2"),
+    {type: "type"},
+    "arg1",
+    "arg2",
+  ),
   "result",
 );
 
 assertEqual(
-  generateSwitch1({
-    type: (...args) => {
-      assertDeepEqual(args, [{type: "type"}, "arg1"]);
-      return "result";
+  switch1(
+    {
+      type: (...args) => {
+        assertDeepEqual(args, [{type: "type"}, "arg1"]);
+        return "result";
+      },
     },
-  })({type: "type"}, "arg1", "arg2"),
+    {type: "type"},
+    "arg1",
+    "arg2",
+  ),
   "result",
 );
 
 assertEqual(
-  generateSwitch2({
-    type: (...args) => {
-      assertDeepEqual(args, [{type: "type"}, "arg1", "arg2"]);
-      return "result";
+  switch2(
+    {
+      type: (...args) => {
+        assertDeepEqual(args, [{type: "type"}, "arg1", "arg2"]);
+        return "result";
+      },
     },
-  })({type: "type"}, "arg1", "arg2"),
+    {type: "type"},
+    "arg1",
+    "arg2",
+  ),
   "result",
 );
 
@@ -161,11 +168,9 @@ assertEqual(returnThird(1, 2, 3), 3);
 assertEqual(returnFourth(1, 2, 3, 4), 4);
 assertEqual(returnFifth(1, 2, 3, 4, 5), 5);
 
-assertEqual(generateReturn(123)(), 123);
-
 assertDeepEqual(dropFirst((...xs) => xs)(1, 2, 3), [2, 3]);
 
-assertThrow(generateThrowError("foo"));
+assertThrow(() => throwError("foo"));
 
 ////////////
 // Object //

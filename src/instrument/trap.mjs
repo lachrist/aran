@@ -1,8 +1,8 @@
 import {map, zip, unzip, concat, flat} from "array-lite";
 
 import {
-  generateThrowError,
-  generateReturn,
+  partial1,
+  throwError,
   returnFirst,
   returnSecond,
   returnThird,
@@ -41,8 +41,8 @@ const EXPRESSION_BYPASS = "expression";
 const call = (x) => (f) => f(x);
 
 const callTrue = call(true);
-const returnNull = generateReturn(null);
-const returnEmptyArray = generateReturn([]);
+const returnNull = partial1(returnFirst, null);
+const returnEmptyArray = partial1(returnFirst, []);
 const mapReturnNull = (array) => map(array, returnNull);
 
 const getScopeData = (pair) => lookupScopeVariable(pair[0], pair[1]);
@@ -122,9 +122,9 @@ const variable_array_arg = scope_array_arg;
 //////////////
 
 const missing_bypasses = {
-  [STATEMENT_BYPASS]: generateThrowError("missing statement bypass"),
-  [EFFECT_BYPASS]: generateThrowError("missing effect bypass"),
-  [EXPRESSION_BYPASS]: generateThrowError("missing expression bypass"),
+  [STATEMENT_BYPASS]: partial1(throwError, "missing statement bypass"),
+  [EFFECT_BYPASS]: partial1(throwError, "missing effect bypass"),
+  [EXPRESSION_BYPASS]: partial1(throwError, "missing expression bypass"),
 };
 
 const generateMakeTrap =

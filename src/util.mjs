@@ -30,23 +30,22 @@ export const assert = (check, message) => {
   }
 };
 
-export const generateSwitch0 = (clauses) => (discriminant) => {
+export const switch0 = (clauses, discriminant) => {
   const clause = clauses[discriminant.type];
   return clause(discriminant);
 };
 
-export const generateSwitch1 = (clauses) => (discriminant, argument1) => {
+export const switch1 = (clauses, discriminant, argument1) => {
   const clause = clauses[discriminant.type];
   return clause(discriminant, argument1);
 };
 
-export const generateSwitch2 =
-  (clauses) => (discriminant, argument1, argument2) => {
-    const clause = clauses[discriminant.type];
-    return clause(discriminant, argument1, argument2);
-  };
+export const switch2 = (clauses, discriminant, argument1, argument2) => {
+  const clause = clauses[discriminant.type];
+  return clause(discriminant, argument1, argument2);
+};
 
-export const generateThrowError = (message) => () => {
+export const throwError = (message) => {
   throw new Error(message);
 };
 
@@ -165,8 +164,6 @@ export const returnSecond = (_x1, x2) => x2;
 export const returnThird = (_x1, _x2, x3) => x3;
 export const returnFourth = (_x1, _x2, _x3, x4) => x4;
 export const returnFifth = (_x1, _x2, _x3, _x4, x5) => x5;
-
-export const generateReturn = (value) => () => value;
 
 export const dropFirst =
   (f) =>

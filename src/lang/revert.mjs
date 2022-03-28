@@ -2,7 +2,7 @@
 
 import {concat, map, reduceRight} from "array-lite";
 
-import {generateThrowError} from "../util.mjs";
+import {partial1, throwError} from "../util.mjs";
 
 import {dispatchNode, fromLiteral} from "../ast/index.mjs";
 
@@ -187,7 +187,7 @@ const transformVariableDeclator = (variable) =>
 // Revert //
 ////////////
 
-const default_callback = generateThrowError("could not revert node");
+const default_callback = partial1(throwError, "could not revert node");
 
 const generateRevert = (callbacks) => (node) =>
   dispatchNode(null, node, callbacks, default_callback);

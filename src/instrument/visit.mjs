@@ -12,10 +12,11 @@ import {
 } from "array-lite";
 
 import {
+  partial1,
   assert,
-  generateThrowError,
+  throwError,
   incrementCounter,
-  generateReturn,
+  returnFirst,
 } from "../util.mjs";
 
 import {
@@ -26,9 +27,6 @@ import {
   makeGlobalEvalProgram,
   makeLocalEvalProgram,
   makeEnclaveEvalProgram,
-  // makeImportLink,
-  // makeExportLink,
-  // makeAggregateLink,
   makeBlock,
   makeEffectStatement,
   makeReturnStatement,
@@ -56,8 +54,6 @@ import {
   makeConditionalExpression,
   makeEvalExpression,
   makeApplyExpression,
-  // makeInvokeExpression,
-  // makeConstructExpression,
 } from "../ast/index.mjs";
 
 import {unmangleLabel, unmangleVariable} from "./unmangle.mjs";
@@ -138,7 +134,7 @@ const makeInitializeStatement = (scope, variable) =>
 // makeOptimizedTryStatementArray //
 ////////////////////////////////////
 
-const returnTrue = generateReturn(true);
+const returnTrue = partial1(returnFirst, true);
 
 const throw_error_expression_pattern = [
   "ApplyExpression",
@@ -197,7 +193,7 @@ const makeOptimizedTryStatementArray = (
 // Visit //
 ///////////
 
-const default_callback = generateThrowError("missing instrument callback");
+const default_callback = partial1(throwError, "missing instrument callback");
 const generateVisit = (callbacks) => (context, node) =>
   dispatchNode(context, node, callbacks, default_callback);
 const generateContextlessVisit = (callbacks) => (node) =>

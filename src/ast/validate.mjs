@@ -1,4 +1,5 @@
 /* eslint-disable no-use-before-define */
+
 import {
   some,
   includes,
@@ -10,8 +11,11 @@ import {
   lastIndexOf,
   flatMap,
 } from "array-lite";
-import {assert, expect, generateThrowError, generateReturn} from "../util.mjs";
+
+import {partial1, assert, expect, throwError, returnFirst} from "../util.mjs";
+
 import {getSyntax, isSyntaxType} from "./syntax.mjs";
+
 import {
   makeNode,
   dispatchNode,
@@ -36,13 +40,13 @@ const {
 
 const syntax = getSyntax();
 
-const returnFalse = generateReturn(false);
+const returnFalse = partial1(returnFirst, false);
 
-const returnEmptyArray = generateReturn([]);
+const returnEmptyArray = partial1(returnFirst, []);
 
-const returnNaN = generateReturn(NaN);
+const returnNaN = partial1(returnFirst, NaN);
 
-const throwMissingCallback = generateThrowError("missing callback");
+const throwMissingCallback = partial1(throwError, "missing callback");
 
 const generateGetNodeKind = () => {
   const kinds = {__proto__: null};
@@ -185,13 +189,23 @@ const extractExportSpecifierArray = generateQuery(
 
 const immutable_trap_object = {
   __proto__: null,
-  setPrototypeOf: generateThrowError("caught setPrototypeOf on immutable node"),
-  preventExtensions: generateThrowError(
+  setPrototypeOf: partial1(
+    throwError,
+    "caught setPrototypeOf on immutable node",
+  ),
+  preventExtensions: partial1(
+    throwError,
     "caught preventExtensions on immutable node",
   ),
-  defineProperty: generateThrowError("caught defineProperty on immutable node"),
-  deleteProperty: generateThrowError("caught deleteProperty on immutable node"),
-  set: generateThrowError("caught set on immutable node"),
+  defineProperty: partial1(
+    throwError,
+    "caught defineProperty on immutable node",
+  ),
+  deleteProperty: partial1(
+    throwError,
+    "caught deleteProperty on immutable node",
+  ),
+  set: partial1(throwError, "caught set on immutable node"),
 };
 
 const digestable = [

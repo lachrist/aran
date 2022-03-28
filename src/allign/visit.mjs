@@ -1,18 +1,22 @@
 /* eslint-disable no-use-before-define */
 import {zip, reduce, concat, map} from "array-lite";
-import {generateThrowError} from "../util.mjs";
+
+import {partial1, throwError} from "../util.mjs";
+
 import {
   fromLiteral,
   allignNode,
   getNodeType,
   getNodeAnnotation,
 } from "../ast/index.mjs";
+
 import {
   appendErrorSegment,
   setErrorMessage,
   setErrorAnnotationPair,
   setErrorValuePair,
 } from "./error.mjs";
+
 import {
   makeEmptyResult,
   makeSingleLabelResult,
@@ -49,7 +53,7 @@ const visitPrimitive = (error, primitive1, primitive2) =>
         ),
   );
 
-const default_callback = generateThrowError("could not visit node");
+const default_callback = partial1(throwError, "could not visit node");
 const generateVisitNode = (callbacks) => (error, node1, node2) => {
   const type1 = getNodeType(node1);
   const type2 = getNodeType(node2);
