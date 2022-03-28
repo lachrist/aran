@@ -139,14 +139,14 @@ const generateDeclare = (fresh, bind) => (scope, kind, variable, note) => {
         "duplicate static variable declaration",
       );
       push(scope.bindings, bind(variable, note));
-      return fresh ? variable : null;
+      return variable;
     }
     if (scope.type === DYNAMIC_SCOPE_TYPE && scope.kind % kind === 0) {
       return scope.frame;
     }
     scope = scope.parent;
   }
-  return null;
+  throw new Error("missing binding frame");
 };
 
 export const declareVariable = generateDeclare(false, makeBinding);
@@ -182,7 +182,7 @@ export const makeInitializeEffect = (
   scope,
   kind,
   variable,
-  {onDynamicFrame, onMiss, ...callbacks},
+  {onDynamicFrame, ...callbacks},
 ) => {
   let distant = false;
   while (scope.type !== ROOT_SCOPE_TYPE && scope.type !== CLOSURE_SCOPE_TYPE) {
@@ -203,7 +203,7 @@ export const makeInitializeEffect = (
     }
     scope = scope.parent;
   }
-  return onMiss();
+  throw new Error("missing binding frame");
 };
 
 ////////////

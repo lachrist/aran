@@ -117,7 +117,10 @@ assertEqual(
 assertEqual(
   allignBlock(
     makeScopeBlock(makeRootScope(), KINDS, [], (scope1) => {
-      assertEqual(declareVariable(scope1, KIND1, "variable", "note"), null);
+      assertEqual(
+        declareVariable(scope1, KIND1, "variable", "note"),
+        "variable",
+      );
       return [
         makeBlockStatement(
           makeScopeBlock(scope1, KIND2, [], (scope2) => [
@@ -166,9 +169,8 @@ assertThrow(() =>
   makeInitializeEffect(makeRootScope(), KIND1, "variable", curries),
 );
 
-assertEqual(
+assertThrow(() =>
   declareVariable(makeClosureScope(makeRootScope()), KIND1, "variable", "note"),
-  null,
 );
 
 assertEqual(
@@ -241,7 +243,10 @@ assertEqual(
 assertEqual(
   allignBlock(
     makeScopeBlock(makeRootScope(), KINDS, [], (scope) => {
-      assertEqual(declareVariable(scope, KIND1, "variable", "note"), null);
+      assertEqual(
+        declareVariable(scope, KIND1, "variable", "note"),
+        "variable",
+      );
       return [
         makeEffectStatement(
           makeExpressionEffect(

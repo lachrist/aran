@@ -14,6 +14,7 @@ import {
 
 import {
   makeRootScope,
+  makeMetaDynamicScope,
   makeEmptyScopeBlock,
   declareMetaVariable,
   makeMetaInitializeEffect,
@@ -26,19 +27,22 @@ import {
 //////////
 
 {
-  const scope = makeRootScope();
+  const scope = makeMetaDynamicScope(
+    makeRootScope(),
+    makeLiteralExpression("frame"),
+  );
   const variable = declareMetaVariable(scope, "variable");
   allignEffect(
     makeMetaInitializeEffect(scope, variable, makeLiteralExpression("init")),
-    `effect(intrinsic('aran.setStrict')(undefined, 'aran.globalDeclarativeRecord', '${variable}', 'init'))`,
+    `effect(intrinsic('aran.setStrict')(undefined, 'frame', '${variable}', 'init'))`,
   );
   allignExpression(
     makeMetaReadExpression(scope, variable),
-    `intrinsic('aran.get')(undefined, 'aran.globalDeclarativeRecord', '${variable}')`,
+    `intrinsic('aran.get')(undefined, 'frame', '${variable}')`,
   );
   allignEffect(
     makeMetaWriteEffect(scope, variable, makeLiteralExpression("right")),
-    `effect(intrinsic('aran.setStrict')(undefined, 'aran.globalDeclarativeRecord', '${variable}', 'right'))`,
+    `effect(intrinsic('aran.setStrict')(undefined, 'frame', '${variable}', 'right'))`,
   );
 }
 
