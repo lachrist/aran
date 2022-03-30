@@ -6,6 +6,7 @@ import {
   flatMap,
   reduce,
   reverse,
+  some,
 } from "array-lite";
 
 import {assert, push, partial1, flip} from "../../util.mjs";
@@ -14,14 +15,11 @@ import {makeBlock, makeEvalExpression} from "../../ast/index.mjs";
 
 import {
   makeBinding,
-  makeGhostBinding,
-  includesBindingVariable,
   equalsBindingVariable,
   makeBindingInitializeEffect,
   accessBinding,
   makeBindingLookupExpression,
   makeBindingLookupEffect,
-  assertBindingInitialization,
   harvestBindingVariables,
   harvestBindingStatements,
 } from "./binding.mjs";
@@ -98,7 +96,6 @@ export const makeScopeBlock = (parent, kind, labels, callback) => {
     depth: parent.depth + 1,
     counter: 0,
   });
-  forEach(bindings, assertBindingInitialization);
   return makeBlock(
     labels,
     flatMap(bindings, harvestBindingVariables),
@@ -124,7 +121,7 @@ export const lookupScopeProperty = (scope, key) => {
 // Declare //
 /////////////
 
-const generateDeclare = (fresh, bind) => (scope, kind, variable, note) => {
+const generateDeclare = (fresh) => (scope, kind, variable, note) => {
   while (scope.type !== ROOT_SCOPE_TYPE && scope.type !== CLOSURE_SCOPE_TYPE) {
     if (scope.type === STATIC_SCOPE_TYPE && scope.kind % kind === 0) {
       if (fresh) {
@@ -134,11 +131,13 @@ const generateDeclare = (fresh, bind) => (scope, kind, variable, note) => {
         ])}_${apply(toString, scope.counter, [ENCODING])}`;
       }
       assert(
-        find(scope.bindings, partial1(equalsBindingVariable, variable)) ===
-          undefined,
+        find(
+          scope.bindings,
+          partial1(flip(equalsBindingVariable), variable),
+        ) === undefined,
         "duplicate static variable declaration",
       );
-      push(scope.bindings, bind(variable, note));
+      push(scope.bindings, makeBinding(variable, note));
       return variable;
     }
     if (scope.type === DYNAMIC_SCOPE_TYPE && scope.kind % kind === 0) {
@@ -149,9 +148,8 @@ const generateDeclare = (fresh, bind) => (scope, kind, variable, note) => {
   throw new Error("missing binding frame");
 };
 
-export const declareVariable = generateDeclare(false, makeBinding);
-export const declareFreshVariable = generateDeclare(true, makeBinding);
-export const declareGhostVariable = generateDeclare(false, makeGhostBinding);
+export const declareVariable = generateDeclare(false);
+export const declareFreshVariable = generateDeclare(true);
 
 ////////////////
 // Initialize //
@@ -189,9 +187,12 @@ export const makeInitializeEffect = (
     if (scope.type === STATIC_SCOPE_TYPE && scope.kind % kind === 0) {
       const binding = find(
         scope.bindings,
-        partial1(equalsBindingVariable, variable),
+        partial1(flip(equalsBindingVariable), variable),
       );
-      assert(binding !== null, "missing static variable for initialization");
+      assert(
+        binding !== undefined,
+        "missing static variable for initialization",
+      );
       return makeBindingInitializeEffect(binding, distant, callbacks);
     } else if (scope.type === DYNAMIC_SCOPE_TYPE && scope.kind % kind === 0) {
       return onDynamicFrame(scope.frame);
@@ -226,7 +227,7 @@ const generateLookup =
       } else if (scope.type === STATIC_SCOPE_TYPE && scope.kind % kind === 0) {
         const binding = find(
           scope.bindings,
-          partial1(equalsBindingVariable, variable),
+          partial1(flip(equalsBindingVariable), variable),
         );
         if (binding !== null) {
           return finalizeLookup(
@@ -247,6 +248,9 @@ export const makeLookupEffect = generateLookup(makeBindingLookupEffect);
 //////////
 // eval //
 //////////
+
+const includesBindingVariable = (variables, binding) =>
+  some(variables, partial1(equalsBindingVariable, binding));
 
 export const makeScopeEvalExpression = (scope, expression) => {
   let variables = [];

@@ -1,6 +1,4 @@
-import {includes} from "array-lite";
-
-import {assert} from "../../util.mjs";
+import {push, assert} from "../../util.mjs";
 
 import {makeBaseVariable, makeMetaVariable} from "../../variable.mjs";
 
@@ -18,36 +16,37 @@ const YES = true;
 const NO = false;
 const MAYBE = null;
 
+const generateRead =
+  ({variable, state}) =>
+  () => {
+    state.accessed = true;
+    return makeReadExpression(makeBaseVariable(variable));
+  };
+
+const generateWrite =
+  ({variable, state}) =>
+  (expression) => {
+    state.accessed = true;
+    return makeWriteEffect(makeBaseVariable(variable), expression);
+  };
+
 export const makeBinding = (variable, note) => ({
   variable,
   note,
-  state: {initialization: NO, deadzone: false},
+  state: {initialization: NO, deadzone: false, accessed: false},
 });
 
-export const makeGhostBinding = (variable, note) => ({
-  variable,
-  note,
-  state: null,
-});
-
-export const includesBindingVariable = (variables, {variable}) =>
-  includes(variables, variable);
-
-export const equalsBindingVariable = (variable1, {variable: variable2}) =>
+export const equalsBindingVariable = ({variable: variable1}, variable2) =>
   variable1 === variable2;
 
-export const makeBindingInitializeEffect = (
-  {variable, state},
-  distant,
-  {onDeadHit},
-) => {
-  assert(state !== null, "cannot initialize ghost variable");
+export const makeBindingInitializeEffect = (binding, distant, {onHit}) => {
+  const {state, variable, note} = binding;
   assert(state.initialization === NO, "duplicate binding initialization");
   state.initialization = distant ? MAYBE : YES;
   if (distant) {
     state.deadzone = true;
   }
-  const effect = onDeadHit(makeBaseVariable(variable));
+  const effect = onHit(generateWrite(binding), note);
   return state.deadzone
     ? makeSequenceEffect(
         effect,
@@ -60,25 +59,25 @@ export const makeBindingInitializeEffect = (
 };
 
 export const accessBinding = (escaped, {state}) => {
-  if (state !== null && state.initialization === NO && escaped) {
+  state.accessed = true;
+  if (state.initialization === NO && escaped) {
     state.deadzone = true;
   }
 };
 
 const generateLookup =
   (makeConditional) =>
-  ({variable, state, note}, escaped, {onGhostHit, onDeadHit, onLiveHit}) => {
-    if (state === null) {
-      return onGhostHit(note);
-    } else if (state.initialization === YES) {
-      return onLiveHit(makeBaseVariable(variable), note);
+  (binding, escaped, {onDeadHit, onLiveHit}) => {
+    const {state, variable, note} = binding;
+    if (state.initialization === YES) {
+      return onLiveHit(generateRead(binding), generateWrite(binding), note);
     } else if (state.initialization === NO && !escaped) {
       return onDeadHit();
     } else {
       state.deadzone = true;
       return makeConditional(
         makeReadExpression(makeMetaVariable(variable)),
-        onLiveHit(makeBaseVariable(variable), note),
+        onLiveHit(generateRead(binding), generateWrite(binding), note),
         onDeadHit(),
       );
     }
@@ -89,25 +88,19 @@ export const makeBindingLookupExpression = generateLookup(
 );
 export const makeBindingLookupEffect = generateLookup(makeConditionalEffect);
 
-export const assertBindingInitialization = ({state}) => {
-  assert(
-    state === null || state.initialization !== NO,
-    "missing binding initialization",
-  );
-};
-
 export const harvestBindingVariables = ({state, variable}) => {
-  if (state === null) {
-    return [];
-  } else if (state.deadzone) {
-    return [makeBaseVariable(variable), makeMetaVariable(variable)];
-  } else {
-    return [makeBaseVariable(variable)];
+  const variables = [];
+  if (state.accessed) {
+    push(variables, makeBaseVariable(variable));
   }
+  if (state.deadzone) {
+    push(variables, makeMetaVariable(variable));
+  }
+  return variables;
 };
 
 export const harvestBindingStatements = ({state, variable}) => {
-  if (state === null || !state.deadzone) {
+  if (!state.deadzone) {
     return [];
   } else {
     return [

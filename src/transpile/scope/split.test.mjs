@@ -1,10 +1,6 @@
 import {assertEqual} from "../../__fixture__.mjs";
 
-import {
-  makeLiteralExpression,
-  makeEffectStatement,
-  makeWriteEffect,
-} from "../../ast/index.mjs";
+import {makeLiteralExpression, makeEffectStatement} from "../../ast/index.mjs";
 
 import {allignBlock} from "../../allign/index.mjs";
 
@@ -26,16 +22,18 @@ assertEqual(
         makeEffectStatement(
           makeMetaInitializeEffect(scope, variable1, {
             __proto__: null,
-            onDeadHit: (variable2) =>
-              makeWriteEffect(variable2, makeLiteralExpression("init")),
+            onHit: (write, note) => {
+              assertEqual(note, "note");
+              return write(makeLiteralExpression("init"));
+            },
           }),
         ),
         makeEffectStatement(
           makeMetaLookupEffect(scope, variable1, {
             __proto__: null,
-            onLiveHit: (variable2, note) => {
+            onLiveHit: (_read, write, note) => {
               assertEqual(note, "note");
-              return makeWriteEffect(variable2, makeLiteralExpression("right"));
+              return write(makeLiteralExpression("right"));
             },
           }),
         ),

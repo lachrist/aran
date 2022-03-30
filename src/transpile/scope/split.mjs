@@ -7,7 +7,6 @@ import {
 import {
   declareVariable,
   declareFreshVariable,
-  declareGhostVariable,
   makeInitializeEffect,
   makeLookupEffect,
   makeDynamicScope,
@@ -32,8 +31,8 @@ const RIGID_KIND = 7;
 // makeDynamicScope //
 //////////////////////
 
-const generateMakeDynamicScope = (kinds) => (scope, frame) =>
-  makeDynamicScope(scope, kinds, frame);
+const generateMakeDynamicScope = (kind) => (scope, frame) =>
+  makeDynamicScope(scope, kind, frame);
 
 export const makeMetaDynamicScope = generateMakeDynamicScope(META_KIND);
 
@@ -49,8 +48,8 @@ export const makeLooseBaseDynamicScope = generateMakeDynamicScope(
 // makeScopeBlock //
 ////////////////////
 
-const generateMakeScopeBlock = (kinds) => (scope, labels, curries) =>
-  makeScopeBlock(scope, kinds, labels, curries);
+const generateMakeScopeBlock = (kind) => (scope, labels, curries) =>
+  makeScopeBlock(scope, kind, labels, curries);
 
 export const makeEmptyScopeBlock = generateMakeScopeBlock(META_KIND);
 
@@ -76,12 +75,6 @@ export const declareMetaVariable = generateDeclare(
   META_KIND,
   makeMetaVariable,
   declareFreshVariable,
-);
-
-export const declareGhostRigidBaseVariable = generateDeclare(
-  BASE_KIND * RIGID_KIND,
-  makeBaseVariable,
-  declareGhostVariable,
 );
 
 export const declareRigidBaseVariable = generateDeclare(

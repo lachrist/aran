@@ -6,8 +6,6 @@ import {
 
 import {
   makeEffectStatement,
-  makeWriteEffect,
-  makeReadExpression,
   makeLiteralExpression,
   makeBlockStatement,
   makeSequenceExpression,
@@ -40,7 +38,7 @@ const KINDS = KIND1 * KIND2;
 
 const curries = {
   onMiss: generateAssertUnreachable("onMiss"),
-  onGhostHit: generateAssertUnreachable("onGhostHit"),
+  onHit: generateAssertUnreachable("onHit"),
   onLiveHit: generateAssertUnreachable("onStaticLiveHit"),
   onDeadHit: generateAssertUnreachable("onStaticDeadHit"),
   onDynamicFrame: generateAssertUnreachable("onDynamicFrame"),
@@ -81,9 +79,9 @@ assertEqual(
               "variable_1_1",
               {
                 ...curries,
-                onLiveHit: (variable, note) => {
+                onLiveHit: (read, _write, note) => {
                   assertEqual(note, "note");
-                  return makeReadExpression(variable);
+                  return read();
                 },
                 onDeadHit: () => makeLiteralExpression("dead"),
               },
@@ -92,8 +90,10 @@ assertEqual(
         ),
         makeEffectStatement(
           makeInitializeEffect(scope, KIND1, "variable_1_1", {
-            onDeadHit: (variable) =>
-              makeWriteEffect(variable, makeLiteralExpression("init")),
+            onHit: (write, note) => {
+              assertEqual(note, "note");
+              return write(makeLiteralExpression("init"));
+            },
           }),
         ),
       ];
@@ -127,8 +127,10 @@ assertEqual(
             makeEffectStatement(
               makeInitializeEffect(scope2, KIND1, "variable", {
                 ...curries,
-                onDeadHit: (variable) =>
-                  makeWriteEffect(variable, makeLiteralExpression("init")),
+                onHit: (write, note) => {
+                  assertEqual(note, "note");
+                  return write(makeLiteralExpression("init"));
+                },
               }),
             ),
           ]),
@@ -137,9 +139,9 @@ assertEqual(
           makeExpressionEffect(
             makeLookupExpression(makeClosureScope(scope1), KIND1, "variable", {
               ...curries,
-              onLiveHit: (variable, note) => {
+              onLiveHit: (read, _write, note) => {
                 assertEqual(note, "note");
-                return makeReadExpression(variable);
+                return read();
               },
               onDeadHit: () => makeLiteralExpression("dead"),
             }),
@@ -259,8 +261,10 @@ assertEqual(
         makeEffectStatement(
           makeInitializeEffect(scope, KIND1, "variable", {
             ...curries,
-            onDeadHit: (variable) =>
-              makeWriteEffect(variable, makeLiteralExpression("init")),
+            onHit: (write, note) => {
+              assertEqual(note, "note");
+              return write(makeLiteralExpression("init"));
+            },
           }),
         ),
       ];
