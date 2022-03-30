@@ -5,6 +5,7 @@ import {allignExpression} from "../allign/index.mjs";
 import {
   makeTypeofGlobalExpression,
   makeGetExpression,
+  makeHasExpression,
   makeStrictSetExpression,
   makeObjectExpression,
   makeUnaryExpression,
@@ -16,6 +17,14 @@ import {
 const test = (expression, code) => {
   assertEqual(allignExpression(expression, code), null);
 };
+
+test(
+  makeHasExpression(
+    makeLiteralExpression("object"),
+    makeLiteralExpression("key"),
+  ),
+  "intrinsic('aran.binary')(undefined, 'in', 'key', 'object')",
+);
 
 test(
   makeTypeofGlobalExpression(makeLiteralExpression("variable")),

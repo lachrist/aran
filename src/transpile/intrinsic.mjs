@@ -50,42 +50,6 @@ const generateMakeApply3 =
 //       annotation,
 //     );
 
-////////////
-// object //
-////////////
-
-export const makeObjectExpression = (...expressions) =>
-  makeApplyExpression(
-    makeIntrinsicExpression("aran.createObject"),
-    makeLiteralExpression({undefined: null}),
-    expressions,
-    typeof getLast(expressions) === "object" && getLast(expressions) !== null
-      ? undefined
-      : pop(expressions),
-  );
-
-export const makeGetExpression = generateMakeApply2("aran.get");
-export const makeSloppySetExpression = generateMakeApply3("aran.setSloppy");
-export const makeStrictSetExpression = generateMakeApply3("aran.setStrict");
-
-////////////
-// global //
-////////////
-
-export const makeTypeofGlobalExpression =
-  generateMakeApply1("aran.typeofGlobal");
-export const makeDeleteGlobalExpression =
-  generateMakeApply1("aran.deleteGlobal");
-export const makeReadGlobalExpression = generateMakeApply1("aran.readGlobal");
-export const makeDeclareGlobalExpression =
-  generateMakeApply2("aran.declareGlobal");
-export const makeSloppyWriteGlobalExpression = generateMakeApply2(
-  "aran.writeGlobalSloppy",
-);
-export const makeStrictWriteGlobalExpression = generateMakeApply2(
-  "aran.writeGlobalStrict",
-);
-
 //////////////
 // operator //
 //////////////
@@ -114,6 +78,44 @@ export const makeBinaryExpression = (
     [makeLiteralExpression(operator), expression1, expression2],
     annotation,
   );
+
+////////////
+// object //
+////////////
+
+export const makeObjectExpression = (...expressions) =>
+  makeApplyExpression(
+    makeIntrinsicExpression("aran.createObject"),
+    makeLiteralExpression({undefined: null}),
+    expressions,
+    typeof getLast(expressions) === "object" && getLast(expressions) !== null
+      ? undefined
+      : pop(expressions),
+  );
+
+export const makeHasExpression = (object, key, annotation = undefined) =>
+  makeBinaryExpression("in", key, object, annotation);
+export const makeGetExpression = generateMakeApply2("aran.get");
+export const makeSloppySetExpression = generateMakeApply3("aran.setSloppy");
+export const makeStrictSetExpression = generateMakeApply3("aran.setStrict");
+
+////////////
+// global //
+////////////
+
+export const makeTypeofGlobalExpression =
+  generateMakeApply1("aran.typeofGlobal");
+export const makeDeleteGlobalExpression =
+  generateMakeApply1("aran.deleteGlobal");
+export const makeReadGlobalExpression = generateMakeApply1("aran.readGlobal");
+export const makeDeclareGlobalExpression =
+  generateMakeApply2("aran.declareGlobal");
+export const makeSloppyWriteGlobalExpression = generateMakeApply2(
+  "aran.writeGlobalSloppy",
+);
+export const makeStrictWriteGlobalExpression = generateMakeApply2(
+  "aran.writeGlobalStrict",
+);
 
 ///////////
 // throw //
