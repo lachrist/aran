@@ -22,33 +22,9 @@ import {
   makeMetaWriteEffect,
 } from "./meta.mjs";
 
-//////////
-// Miss //
-//////////
-
-{
-  const scope = makeMetaDynamicScope(
-    makeRootScope(),
-    makeLiteralExpression("frame"),
-  );
-  const variable = declareMetaVariable(scope, "variable");
-  allignEffect(
-    makeMetaInitializeEffect(scope, variable, makeLiteralExpression("init")),
-    `effect(intrinsic('aran.setStrict')(undefined, 'frame', '${variable}', 'init'))`,
-  );
-  allignExpression(
-    makeMetaReadExpression(scope, variable),
-    `intrinsic('aran.get')(undefined, 'frame', '${variable}')`,
-  );
-  allignEffect(
-    makeMetaWriteEffect(scope, variable, makeLiteralExpression("right")),
-    `effect(intrinsic('aran.setStrict')(undefined, 'frame', '${variable}', 'right'))`,
-  );
-}
-
-/////////
-// Hit //
-/////////
+////////////
+// Static //
+////////////
 
 allignBlock(
   makeEmptyScopeBlock(makeRootScope(), [], (scope) => {
@@ -71,3 +47,39 @@ allignBlock(
   }),
   "{ let x; x = 'init'; effect(x); x = 'right'; }",
 );
+
+//////////////////////
+// Dynanmic && Miss //
+//////////////////////
+
+{
+  const scope = makeMetaDynamicScope(
+    makeRootScope(),
+    makeLiteralExpression("frame"),
+  );
+  const variable = declareMetaVariable(scope, "variable");
+  allignEffect(
+    makeMetaInitializeEffect(scope, variable, makeLiteralExpression("init")),
+    `
+      intrinsic('aran.binary')(undefined, 'in', 'frame', ${variable})
+        ? effect(intrinsic('aran.throw')(new (intrinsic('aran.AranError'))('duplicate initialization of dynamic compilation variable')))
+        : effect(intrinsic('aran.setStrict')(undefined, 'frame', '${variable}', 'init'))
+    `,
+  );
+  allignExpression(
+    makeMetaReadExpression(scope, variable),
+    `
+      intrinsic('aran.binary')(undefined, 'in', 'frame', ${variable})
+        ? intrinsic('aran.get')(undefined, 'frame', '${variable}')
+        : intrinsic('aran.throw')(new (intrinsic('aran.AranError'))('missing dynamic compilation variable for reading'))
+    `,
+  );
+  allignEffect(
+    makeMetaWriteEffect(scope, variable, makeLiteralExpression("right")),
+    `
+      intrinsic('aran.binary')(undefined, 'in', 'frame', ${variable})
+        ? effect(intrinsic('aran.setStrict')(undefined, 'frame', '${variable}', 'right'))
+        : effect(intrinsic('aran.throw')(new (intrinsic('aran.AranError'))('missing dynamic compilation variable for writing')))
+    `,
+  );
+}

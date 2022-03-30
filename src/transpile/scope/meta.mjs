@@ -8,20 +8,18 @@
 // type Result = (Remainder, Box)
 // type Remainder = Maybe Expression
 
-import {throwError, getUUID, partial1, partial2} from "../../util.mjs";
+import {throwError, getUUID, partial1} from "../../util.mjs";
 
 import {
   makeConditionalEffect,
-  makeConstructExpression,
+  makeConditionalExpression,
   makeLiteralExpression,
-  makeWriteEffect,
-  makeReadExpression,
   makeExpressionEffect,
 } from "../../ast/index.mjs";
 
 import {
   makeHasExpression,
-  makeThrowReferenceErrorExpression,
+  makeThrowAranErrorExpression,
   makeGetExpression,
   makeStrictSetExpression,
 } from "../intrinsic.mjs";
@@ -52,12 +50,7 @@ export {
   makeBaseLookupEffect,
 } from "./split.mjs";
 
-const onGhostHit = partial1(throwError, "unexpected ghost meta variable");
 const onDeadHit = partial1(throwError, "unexpected meta variable in deadzone");
-const onMiss = () =>
-  makeThrowReferenceErrorExpression(
-    "missing aran variable, it should never happen",
-  );
 
 /////////////
 // Declare //
@@ -72,28 +65,45 @@ export const declareMetaVariable = (scope, variable) => {
 // Initialize //
 ////////////////
 
-const onInitializeDynamicFrame = (variable, expression, frame) =>
-  makeExpressionEffect(
-    makeStrictSetExpression(frame, makeLiteralExpression(variable), expression),
+const generateOnInitializeDynamicFrame = (variable, expression) => (frame) =>
+  makeConditionalEffect(
+    makeHasExpression(frame, makeLiteralExpression(variable)),
+    makeExpressionEffect(
+      makeThrowAranErrorExpression(
+        "duplicate initialization of dynamic compilation variable",
+      ),
+    ),
+    makeExpressionEffect(
+      makeStrictSetExpression(
+        frame,
+        makeLiteralExpression(variable),
+        expression,
+      ),
+    ),
   );
 
-const onInitializeDeadHit = (expression, variable) =>
-  makeWriteEffect(variable, expression);
+const generateOnInitializeHit = (expression) => (write, _note) =>
+  write(expression);
 
 export const makeMetaInitializeEffect = (scope, variable, expression) =>
   makeInitializeEffect(scope, variable, {
-    onDynamicFrame: partial2(onInitializeDynamicFrame, variable, expression),
-    onDeadHit: partial1(onInitializeDeadHit, expression),
+    onDynamicFrame: generateOnInitializeDynamicFrame(variable, expression),
+    onHit: generateOnInitializeHit(expression),
   });
 
 //////////
 // Read //
 //////////
 
-const onReadLiveHit = (variable, _note) => makeReadExpression(variable);
+const onReadMiss = partial1(
+  makeThrowAranErrorExpression,
+  "missing dynamic compilation variable for reading",
+);
 
-const onReadDynamicFrame = (variable, frame, expression) =>
-  makeConstructExpression(
+const onReadLiveHit = (read, _write, _note) => read();
+
+const generateOnReadDynamicFrame = (variable) => (frame, expression) =>
+  makeConditionalExpression(
     makeHasExpression(frame, makeLiteralExpression(variable)),
     makeGetExpression(frame, makeLiteralExpression(variable)),
     expression,
@@ -101,18 +111,24 @@ const onReadDynamicFrame = (variable, frame, expression) =>
 
 export const makeMetaReadExpression = (scope, variable) =>
   makeLookupExpression(scope, variable, {
-    onDynamicFrame: partial1(onReadDynamicFrame, variable),
+    onDynamicFrame: generateOnReadDynamicFrame(variable),
     onDeadHit,
-    onGhostHit,
     onLiveHit: onReadLiveHit,
-    onMiss,
+    onMiss: onReadMiss,
   });
 
 ///////////
 // Write //
 ///////////
 
-const onWriteDynamicFrame = (variable, expression, frame, effect) =>
+const onWriteMiss = partial1(
+  makeExpressionEffect,
+  makeThrowAranErrorExpression(
+    "missing dynamic compilation variable for writing",
+  ),
+);
+
+const generateOnWriteDynamicFrame = (variable, expression) => (frame, effect) =>
   makeConditionalEffect(
     makeHasExpression(frame, makeLiteralExpression(variable)),
     makeExpressionEffect(
@@ -125,14 +141,13 @@ const onWriteDynamicFrame = (variable, expression, frame, effect) =>
     effect,
   );
 
-const onWriteLiveHit = (expression, variable, _note) =>
-  makeWriteEffect(variable, expression);
+const generateOnWriteLiveHit = (expression) => (_read, write, _note) =>
+  write(expression);
 
 export const makeMetaWriteEffect = (scope, variable, expression) =>
   makeLookupEffect(scope, variable, {
-    onGhostHit,
     onDeadHit,
-    onDynamicFrame: partial2(onWriteDynamicFrame, variable, expression),
-    onLiveHit: partial1(onWriteLiveHit, expression),
-    onMiss,
+    onDynamicFrame: generateOnWriteDynamicFrame(variable, expression),
+    onLiveHit: generateOnWriteLiveHit(expression),
+    onMiss: onWriteMiss,
   });
