@@ -134,6 +134,7 @@ const generateMakeThrow = (name) => (message) =>
 
 export const makeThrowReferenceErrorExpression =
   generateMakeThrow("ReferenceError");
+export const makeThrowAranErrorExpression = generateMakeThrow("aran.AranError");
 export const makeThrowSyntaxErrorExpression = generateMakeThrow("SyntaxError");
 export const makeThrowTypeErrorExpression = generateMakeThrow("TypeError");
 
