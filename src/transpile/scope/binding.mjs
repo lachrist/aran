@@ -39,14 +39,14 @@ export const makeBinding = (variable, note) => ({
 export const equalsBindingVariable = ({variable: variable1}, variable2) =>
   variable1 === variable2;
 
-export const makeBindingInitializeEffect = (binding, distant, {onHit}) => {
-  const {state, variable, note} = binding;
+export const makeBindingInitializeEffect = (binding, distant, expression) => {
+  const {state, variable} = binding;
   assert(state.initialization === NO, "duplicate binding initialization");
   state.initialization = distant ? MAYBE : YES;
   if (distant) {
     state.deadzone = true;
   }
-  const effect = onHit(generateWrite(binding), note);
+  const effect = makeWriteEffect(makeBaseVariable(variable), expression);
   return state.deadzone
     ? makeSequenceEffect(
         effect,

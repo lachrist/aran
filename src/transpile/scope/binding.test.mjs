@@ -72,12 +72,11 @@ assertEqual(
         ),
       ),
       makeEffectStatement(
-        makeBindingInitializeEffect(binding, false, {
-          onHit: (write, note) => {
-            assertEqual(note, "note");
-            return write(makeLiteralExpression("init"));
-          },
-        }),
+        makeBindingInitializeEffect(
+          binding,
+          false,
+          makeLiteralExpression("init"),
+        ),
       ),
       makeEffectStatement(
         makeExpressionEffect(
@@ -127,12 +126,11 @@ assertEqual(
         ),
       ),
       makeEffectStatement(
-        makeBindingInitializeEffect(binding, false, {
-          onHit: (write, note) => {
-            assertEqual(note, "note");
-            return write(makeLiteralExpression("init"));
-          },
-        }),
+        makeBindingInitializeEffect(
+          binding,
+          false,
+          makeLiteralExpression("init"),
+        ),
       ),
     ],
   );
@@ -152,12 +150,11 @@ assertEqual(
     binding,
     [
       makeEffectStatement(
-        makeBindingInitializeEffect(binding, false, {
-          onHit: (write, note) => {
-            assertEqual(note, "note");
-            return write(makeLiteralExpression("init"));
-          },
-        }),
+        makeBindingInitializeEffect(
+          binding,
+          false,
+          makeLiteralExpression("init"),
+        ),
       ),
     ],
   );
@@ -181,12 +178,11 @@ assertEqual(
     binding,
     [
       makeEffectStatement(
-        makeBindingInitializeEffect(binding, true, {
-          onHit: (write, note) => {
-            assertEqual(note, "note");
-            return write(makeLiteralExpression("init"));
-          },
-        }),
+        makeBindingInitializeEffect(
+          binding,
+          true,
+          makeLiteralExpression("init"),
+        ),
       ),
       makeEffectStatement(
         makeExpressionEffect(
