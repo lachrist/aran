@@ -155,7 +155,24 @@ export const incrementCounter = (counter) => {
 // Function Utility //
 //////////////////////
 
-export const flip = (f) => (x, y) => f(y, x);
+export const flip = (f) => {
+  switch (f.length) {
+    case 0:
+      return () => f();
+    case 1:
+      return (_x1) => f(undefined);
+    case 2:
+      return (x1, x2) => f(x2, x1);
+    case 3:
+      return (x1, x2, x3) => f(x2, x1, x3);
+    case 4:
+      return (x1, x2, x3, x4) => f(x2, x1, x3, x4);
+    case 5:
+      return (x1, x2, x3, x4, x5) => f(x2, x1, x3, x4, x5);
+    default:
+      throw new Error("arity out of bounds");
+  }
+};
 
 export const bind = (f, g) => (x) => f(g(x));
 

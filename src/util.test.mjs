@@ -42,6 +42,12 @@ const {
   Reflect: {defineProperty, apply},
 } = globalThis;
 
+const generateReturnArguments = (length) => {
+  const f = (...xs) => xs;
+  defineProperty(f, "length", {value: length});
+  return f;
+};
+
 ///////////////
 // Assertion //
 ///////////////
@@ -152,7 +158,16 @@ assertEqual(incrementCounter(createCounter()), 1);
 // Function //
 //////////////
 
-assertDeepEqual(flip((...xs) => xs)(1, 2), [2, 1]);
+assertDeepEqual(flip(generateReturnArguments(0))(0), []);
+assertDeepEqual(flip(generateReturnArguments(1))(1), [undefined]);
+assertDeepEqual(flip(generateReturnArguments(2))(1, 2), [2, 1]);
+assertDeepEqual(flip(generateReturnArguments(3))(1, 2, 3), [2, 1, 3]);
+assertDeepEqual(flip(generateReturnArguments(4))(1, 2, 3, 4), [2, 1, 3, 4]);
+assertDeepEqual(
+  flip(generateReturnArguments(5))(1, 2, 3, 4, 5),
+  [2, 1, 3, 4, 5],
+);
+assertThrow(() => flip(generateReturnArguments(6)));
 
 assertEqual(
   bind(
@@ -204,19 +219,14 @@ assertEqual(getLast(["element1", "element2"]), "element2");
 assertDeepEqual(partial((...xs) => xs, 1, 2, 3)(4, 5, 6), [1, 2, 3, 4, 5, 6]);
 
 {
-  const generate = (length) => {
-    const f = (...xs) => xs;
-    defineProperty(f, "length", {value: length});
-    return f;
-  };
   const partials = [partial1, partial2, partial3, partial4, partial5];
   for (let index1 = 1; index1 <= 5; index1 += 1) {
     const partialX = partials[index1 - 1];
-    assertThrow(() => partialX(generate(0), 1, 2, 3, 4, 5));
+    assertThrow(() => partialX(generateReturnArguments(0), 1, 2, 3, 4, 5));
     for (let index2 = index1; index2 <= 5; index2 += 1) {
       assertDeepEqual(
         apply(
-          partialX(generate(index2), 1, 2, 3, 4, 5),
+          partialX(generateReturnArguments(index2), 1, 2, 3, 4, 5),
           undefined,
           slice([1, 2, 3, 4, 5], index1, 5),
         ),
