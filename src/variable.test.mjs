@@ -1,12 +1,17 @@
 import {assertEqual} from "./__fixture__.mjs";
 
+import {createCounter} from "./util.mjs";
+
 import {
   getVariableBody,
   makeBaseVariable,
   makeMetaVariable,
   isBaseVariable,
   isMetaVariable,
+  freshenVariable,
 } from "./variable.mjs";
+
+assertEqual(freshenVariable("variable", 0, createCounter()), "variable_0_1");
 
 assertEqual(isBaseVariable(makeBaseVariable("variable")), true);
 assertEqual(isMetaVariable(makeMetaVariable("variable")), true);

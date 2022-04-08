@@ -10,6 +10,8 @@
 
 import {forEach} from "array-lite";
 
+import {incrementCounter} from "./util.mjs";
+
 const {
   Reflect: {apply},
   String: {
@@ -39,6 +41,9 @@ export const makeBaseVariable = (variable) =>
   variable in convert_mapping
     ? convert_mapping[variable]
     : `${BASE_HEAD}${variable}`;
+
+export const freshenVariable = (variable, depth, counter) =>
+  `${variable}_${depth}_${incrementCounter(counter)}`;
 
 export const makeMetaVariable = (variable) => `${META_HEAD}${variable}`;
 
