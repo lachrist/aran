@@ -1,3 +1,5 @@
+import {flip, partial1} from "../../util.mjs";
+
 import {
   makeMetaVariable,
   makeBaseVariable,
@@ -5,17 +7,22 @@ import {
 } from "../../variable.mjs";
 
 import {
+  makeRootScope as $makeRootScope,
+  getRoot,
+  setRoot,
+  makeWildcardScope,
+  makeScopeBlock,
+  isWildcardBound,
+  isRootBound,
+  getBindingWildcard,
   declareVariable,
   declareFreshVariable,
   makeInitializeEffect,
-  makeLookupEffect,
-  makeDynamicScope,
-  makeScopeBlock,
   makeLookupExpression,
+  makeLookupEffect,
 } from "./core.mjs";
 
 export {
-  makeRootScope,
   makeClosureScope,
   makePropertyScope,
   lookupScopeProperty,
@@ -27,37 +34,97 @@ const BASE_KIND = 3;
 const LOOSE_KIND = 5;
 const RIGID_KIND = 7;
 
-//////////////////////
-// makeDynamicScope //
-//////////////////////
+///////////////////
+// makeRootScope //
+///////////////////
 
-const generateMakeDynamicScope = (kind) => (scope, frame) =>
-  makeDynamicScope(scope, kind, frame);
+export const makeRootScope = (meta, base) =>
+  $makeRootScope({
+    meta,
+    base,
+  });
 
-export const makeMetaDynamicScope = generateMakeDynamicScope(META_KIND);
+const generateGetRoot = (key) => (scope) => getRoot(scope)[key];
 
-export const makeRigidBaseDynamicScope = generateMakeDynamicScope(
+export const getMetaRoot = generateGetRoot("meta");
+export const getBaseRoot = generateGetRoot("base");
+
+const generateSetRoot = (key1, key2) => (scope, value) =>
+  setRoot(scope, {
+    [key1]: value,
+    [key2]: getRoot(scope)[key1],
+  });
+
+export const setMetaRoot = generateSetRoot("meta", "base");
+
+export const setBaseRoot = generateSetRoot("base", "meta");
+
+///////////////////////
+// makeWildcardScope //
+///////////////////////
+
+const makeWildcardScopeFlipped = flip(makeWildcardScope);
+
+export const makeBaseWildcardScope = partial1(
+  makeWildcardScopeFlipped,
+  BASE_KIND,
+);
+
+export const makeRigidBaseWildcardScope = partial1(
+  makeWildcardScopeFlipped,
   BASE_KIND * RIGID_KIND,
 );
 
-export const makeLooseBaseDynamicScope = generateMakeDynamicScope(
+export const makeLooseBaseWildcardScope = partial1(
+  makeWildcardScopeFlipped,
   BASE_KIND * LOOSE_KIND,
+);
+
+/////////////
+// isBound //
+/////////////
+
+const isRootBoundFlipped = flip(isRootBound);
+
+export const isBaseRootBound = partial1(isRootBoundFlipped, BASE_KIND);
+
+export const isMetaRootBound = partial1(isRootBoundFlipped, META_KIND);
+
+const isWildcardBoundFlipped = flip(isWildcardBound);
+
+export const isBaseWildcardBound = partial1(isWildcardBoundFlipped, BASE_KIND);
+
+////////////////
+// getBinding //
+////////////////
+
+const getBindingWildcardFlipped = flip(getBindingWildcard);
+
+export const getBaseBindingWildcard = partial1(
+  getBindingWildcardFlipped,
+  BASE_KIND,
 );
 
 ////////////////////
 // makeScopeBlock //
 ////////////////////
 
-const generateMakeScopeBlock = (kind) => (scope, labels, curries) =>
-  makeScopeBlock(scope, kind, labels, curries);
+const makeScopeBlockFlipped = flip(makeScopeBlock);
 
-export const makeEmptyScopeBlock = generateMakeScopeBlock(META_KIND);
+export const makeEmptyScopeBlock = partial1(makeScopeBlockFlipped, META_KIND);
 
-export const makeRigidScopeBlock = generateMakeScopeBlock(
+export const makeRigidScopeBlock = partial1(
+  makeScopeBlockFlipped,
+  META_KIND * BASE_KIND * RIGID_KIND,
+);
+
+export const makeLooseScopeBlock = partial1(
+  makeScopeBlockFlipped,
   META_KIND * BASE_KIND * LOOSE_KIND,
 );
 
-export const makeLooseScopeBlock = generateMakeScopeBlock(
+export const makeFullScopeBlock = partial1(
+  makeScopeBlockFlipped,
   META_KIND * BASE_KIND * LOOSE_KIND * RIGID_KIND,
 );
 
@@ -66,12 +133,10 @@ export const makeLooseScopeBlock = generateMakeScopeBlock(
 /////////////////////
 
 const generateDeclare =
-  (kind, makeVariable, declare) => (scope, variable, note) => {
-    const either = declare(scope, kind, makeVariable(variable), note);
-    return typeof either === "string" ? getVariableBody(either) : either;
-  };
+  (kind, makeVariable, declare) => (scope, variable, note) =>
+    getVariableBody(declare(scope, kind, makeVariable(variable), note));
 
-export const declareMetaVariable = generateDeclare(
+export const declareMetaFreshVariable = generateDeclare(
   META_KIND,
   makeMetaVariable,
   declareFreshVariable,
@@ -94,8 +159,8 @@ export const declareLooseBaseVariable = generateDeclare(
 ////////////////////
 
 const generateMakeInitialize =
-  (kind, makeVariable) => (scope, variable, curries) =>
-    makeInitializeEffect(scope, kind, makeVariable(variable), curries);
+  (kind, makeVariable) => (scope, variable, expression) =>
+    makeInitializeEffect(scope, kind, makeVariable(variable), expression);
 
 export const makeMetaInitializeEffect = generateMakeInitialize(
   META_KIND,
@@ -117,29 +182,25 @@ export const makeLooseBaseInitializeEffect = generateMakeInitialize(
 ////////////////
 
 const generateMakeLookup =
-  (kind, makeVariable, makeLookup) => (scope, variable, curries) =>
-    makeLookup(scope, kind, makeVariable(variable), curries);
+  (makeVariable, makeLookup) => (scope, variable, callbacks) =>
+    makeLookup(scope, makeVariable(variable), callbacks);
 
 export const makeMetaLookupExpression = generateMakeLookup(
-  META_KIND,
   makeMetaVariable,
   makeLookupExpression,
 );
 
 export const makeBaseLookupExpression = generateMakeLookup(
-  BASE_KIND,
   makeBaseVariable,
   makeLookupExpression,
 );
 
 export const makeMetaLookupEffect = generateMakeLookup(
-  META_KIND,
   makeMetaVariable,
   makeLookupEffect,
 );
 
 export const makeBaseLookupEffect = generateMakeLookup(
-  BASE_KIND,
   makeBaseVariable,
   makeLookupEffect,
 );

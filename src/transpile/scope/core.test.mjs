@@ -22,16 +22,18 @@ import {
   makeScopeBlock,
   lookupScopeProperty,
   isWildcardBound,
-  // isBound,
-  isNotBound,
-  getBindingRoot,
+  isRootBound,
   getBindingWildcard,
-  declareStaticVariable,
-  declareFreshStaticVariable,
-  makeStaticInitializeEffect,
+  declareVariable,
+  getRoot,
+  setRoot,
+  declareFreshVariable,
+  makeInitializeEffect,
   makeLookupExpression,
   makeScopeEvalExpression,
 } from "./core.mjs";
+
+const {undefined} = globalThis;
 
 const KIND1 = 2;
 const KIND2 = 3;
@@ -39,8 +41,8 @@ const KINDS = KIND1 * KIND2;
 
 const callbacks = {
   onRoot: generateAssertUnreachable("onRoot"),
-  onLiveHit: generateAssertUnreachable("onStaticLiveHit"),
-  onDeadHit: generateAssertUnreachable("onStaticDeadHit"),
+  onLiveHit: generateAssertUnreachable("onLiveHit"),
+  onDeadHit: generateAssertUnreachable("onDeadHit"),
   onWildcard: generateAssertUnreachable("onWildcard"),
 };
 
@@ -63,16 +65,18 @@ assertEqual(
 ///////////
 
 {
-  const scope = makeRootScope("root");
+  const scope = makePropertyScope(makeRootScope("root"), "key", "value");
   assertEqual(isWildcardBound(scope, KIND1), false);
-  assertEqual(isNotBound(scope, KIND1), true);
-  assertEqual(getBindingRoot(scope, KIND1), "root");
+  assertEqual(isRootBound(scope, KIND1), true);
+  assertEqual(getRoot(scope), "root");
+  assertEqual(setRoot(scope, "ROOT"), undefined);
+  assertEqual(getRoot(scope), "ROOT");
 }
 
 {
   const scope = makeWildcardScope(makeRootScope("root"), KIND1, "wildcard");
   assertEqual(isWildcardBound(scope, KIND1), true);
-  assertEqual(isNotBound(scope, KIND1), false);
+  assertEqual(isRootBound(scope, KIND1), false);
   assertEqual(getBindingWildcard(scope, KIND1), "wildcard");
 }
 
@@ -85,29 +89,24 @@ assertEqual(
     makeScopeBlock(makeRootScope("root"), KINDS, [], (scope) => {
       scope = makePropertyScope(scope, "key", "value");
       assertEqual(
-        declareFreshStaticVariable(scope, KIND1, "variable", "note"),
+        declareFreshVariable(scope, KIND1, "variable", "note"),
         "variable_1_1",
       );
       return [
         makeEffectStatement(
           makeExpressionEffect(
-            makeLookupExpression(
-              makeClosureScope(scope),
-              KIND1,
-              "variable_1_1",
-              {
-                ...callbacks,
-                onLiveHit: (read, _write, note) => {
-                  assertEqual(note, "note");
-                  return read();
-                },
-                onDeadHit: () => makeLiteralExpression("dead"),
+            makeLookupExpression(makeClosureScope(scope), "variable_1_1", {
+              ...callbacks,
+              onLiveHit: (read, _write, note) => {
+                assertEqual(note, "note");
+                return read();
               },
-            ),
+              onDeadHit: () => makeLiteralExpression("dead"),
+            }),
           ),
         ),
         makeEffectStatement(
-          makeStaticInitializeEffect(
+          makeInitializeEffect(
             scope,
             KIND1,
             "variable_1_1",
@@ -136,14 +135,14 @@ assertEqual(
   allignBlock(
     makeScopeBlock(makeRootScope("root"), KINDS, [], (scope1) => {
       assertEqual(
-        declareStaticVariable(scope1, KIND1, "variable", "note"),
+        declareVariable(scope1, KIND1, "variable", "note"),
         "variable",
       );
       return [
         makeBlockStatement(
           makeScopeBlock(scope1, KIND2, [], (scope2) => [
             makeEffectStatement(
-              makeStaticInitializeEffect(
+              makeInitializeEffect(
                 scope2,
                 KIND1,
                 "variable",
@@ -154,7 +153,7 @@ assertEqual(
         ),
         makeEffectStatement(
           makeExpressionEffect(
-            makeLookupExpression(makeClosureScope(scope1), KIND1, "variable", {
+            makeLookupExpression(makeClosureScope(scope1), "variable", {
               ...callbacks,
               onLiveHit: (read, _write, note) => {
                 assertEqual(note, "note");
@@ -186,14 +185,11 @@ assertEqual(
 
 assertEqual(
   allignExpression(
-    makeLookupExpression(makeRootScope("root"), KIND1, "variable", {
+    makeLookupExpression(makeRootScope("root"), "variable", {
       ...callbacks,
-      onRoot: (root) => {
-        assertEqual(root, "root");
-        return makeLiteralExpression("miss");
-      },
+      onRoot: () => makeLiteralExpression("root"),
     }),
-    "'miss'",
+    "'root'",
   ),
   null,
 );
@@ -206,11 +202,10 @@ assertEqual(
   allignExpression(
     makeLookupExpression(
       makeWildcardScope(makeRootScope("root"), KINDS, "wildcard"),
-      KIND1,
       "variable",
       {
         ...callbacks,
-        onRoot: (root) => makeLiteralExpression(root),
+        onRoot: () => makeLiteralExpression("root"),
         onWildcard: (wildcard, expression) =>
           makeSequenceExpression(
             makeExpressionEffect(makeLiteralExpression(wildcard)),
@@ -231,7 +226,7 @@ assertEqual(
   allignBlock(
     makeScopeBlock(makeRootScope("root"), KINDS, [], (scope) => {
       assertEqual(
-        declareStaticVariable(scope, KIND1, "variable", "note"),
+        declareVariable(scope, KIND1, "variable", "note"),
         "variable",
       );
       return [
@@ -244,7 +239,7 @@ assertEqual(
           ),
         ),
         makeEffectStatement(
-          makeStaticInitializeEffect(
+          makeInitializeEffect(
             scope,
             KIND1,
             "variable",
