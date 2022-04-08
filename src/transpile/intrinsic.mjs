@@ -143,6 +143,7 @@ export const makeThrowTypeErrorExpression = generateMakeThrow("TypeError");
 //////////
 
 const whitelist = [
+  "aran.globalCache",
   "aran.globalDeclarativeRecord",
   "aran.globalObjectRecord",
   "globalThis",
