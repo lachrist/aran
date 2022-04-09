@@ -1,5 +1,6 @@
 const intrinsics = [
   // Special //
+  "aran.globalCache",
   "aran.globalObjectRecord",
   "aran.globalDeclarativeRecord",
   "aran.unary",
