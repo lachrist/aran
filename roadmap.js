@@ -17,11 +17,11 @@ aran.object = (prototype, ... properties) => {
 aran.throw = (error) => { throw error; };
 aran.unary = (operator, argument) => {};
 aran.binary = (operator, left, right) => {};
-aran.declareGlobal = (variable, value) => {
+aran.declareGlobal = (kind, variable, value) => {
   global.__HIDDEN__ = value;
-  global.eval(`var ${variable} = __HIDDEN__;`);
+  global.eval(`${kind} ${variable} = __HIDDEN__;`);
 };
-aran.readGlobal => (variable) => {
+aran.readGlobal = (variable) => {
   if (variable in global_typeof_cache) {
     return global_typeof_cache[variable]();
   } else {
@@ -31,7 +31,7 @@ aran.readGlobal => (variable) => {
     return typeofVariable();
   }
 };
-aran.typeofGlobal => (variable) => {
+aran.typeofGlobal = (variable) => {
   if (variable in global_typeof_cache) {
     return global_typeof_cache[variable]();
   } else {
@@ -41,7 +41,7 @@ aran.typeofGlobal => (variable) => {
     return typeofVariable();
   }
 };
-aran.writeGlobal => (variable, value) => {
+aran.writeGlobal = (variable, value) => {
   if (variable in global_write_cache) {
     global_write_cache[variable](value);
   } else {
