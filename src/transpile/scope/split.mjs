@@ -1,4 +1,4 @@
-import {flip, partial1} from "../../util.mjs";
+import {flip, partial1, returnFirst, returnSecond} from "../../util.mjs";
 
 import {
   makeMetaVariable,
@@ -181,26 +181,36 @@ export const makeLooseBaseInitializeEffect = generateMakeInitialize(
 // makeLookup //
 ////////////////
 
+const ignoreWildcard = (callbacks) => ({
+  ...callbacks,
+  onWildcard: returnSecond,
+});
+
 const generateMakeLookup =
-  (makeVariable, makeLookup) => (scope, variable, callbacks) =>
-    makeLookup(scope, makeVariable(variable), callbacks);
+  (makeVariable, makeLookup, transformCallbacks) =>
+  (scope, variable, callbacks) =>
+    makeLookup(scope, makeVariable(variable), transformCallbacks(callbacks));
 
 export const makeMetaLookupExpression = generateMakeLookup(
   makeMetaVariable,
   makeLookupExpression,
+  ignoreWildcard,
 );
 
 export const makeBaseLookupExpression = generateMakeLookup(
   makeBaseVariable,
   makeLookupExpression,
+  returnFirst,
 );
 
 export const makeMetaLookupEffect = generateMakeLookup(
   makeMetaVariable,
   makeLookupEffect,
+  ignoreWildcard,
 );
 
 export const makeBaseLookupEffect = generateMakeLookup(
   makeBaseVariable,
   makeLookupEffect,
+  returnFirst,
 );
