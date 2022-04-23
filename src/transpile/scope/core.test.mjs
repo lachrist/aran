@@ -22,7 +22,8 @@ import {
   makeScopeBlock,
   lookupScopeProperty,
   isWildcardBound,
-  isRootBound,
+  isBound,
+  isNotBound,
   getBindingWildcard,
   declareVariable,
   getRoot,
@@ -67,7 +68,8 @@ assertEqual(
 {
   const scope = makePropertyScope(makeRootScope("root"), "key", "value");
   assertEqual(isWildcardBound(scope, KIND1), false);
-  assertEqual(isRootBound(scope, KIND1), true);
+  assertEqual(isBound(scope, KIND1), false);
+  assertEqual(isNotBound(scope, KIND1), true);
   assertEqual(getRoot(scope), "root");
   assertEqual(setRoot(scope, "ROOT"), undefined);
   assertEqual(getRoot(scope), "ROOT");
@@ -76,7 +78,8 @@ assertEqual(
 {
   const scope = makeWildcardScope(makeRootScope("root"), KIND1, "wildcard");
   assertEqual(isWildcardBound(scope, KIND1), true);
-  assertEqual(isRootBound(scope, KIND1), false);
+  assertEqual(isBound(scope, KIND1), true);
+  assertEqual(isNotBound(scope, KIND1), false);
   assertEqual(getBindingWildcard(scope, KIND1), "wildcard");
 }
 

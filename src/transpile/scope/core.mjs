@@ -152,8 +152,14 @@ export const lookupScopeProperty = (scope, key) => {
 const generateIsBound = (type) => (scope, kind) =>
   getBindingScope(scope, kind).type === type;
 
+const generateIsNotBound = (type) => (scope, kind) =>
+  getBindingScope(scope, kind).type !== type;
+
+export const isBound = generateIsNotBound(ROOT_SCOPE_TYPE);
+export const isNotBound = generateIsBound(ROOT_SCOPE_TYPE);
+
+export const isBlockBound = generateIsBound(STATIC_SCOPE_TYPE);
 export const isWildcardBound = generateIsBound(DYNAMIC_SCOPE_TYPE);
-export const isRootBound = generateIsBound(ROOT_SCOPE_TYPE);
 
 ////////////////
 // getBinding //

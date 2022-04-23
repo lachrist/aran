@@ -21,7 +21,7 @@ import {
 } from "../intrinsic.mjs";
 
 import {
-  isMetaRootBound,
+  isMetaBound,
   getMetaRoot,
   makeRootScope as $makeRootScope,
   declareMetaFreshVariable as $declareMetaFreshVariable,
@@ -31,6 +31,9 @@ import {
 } from "./split.mjs";
 
 export {
+  isBaseBound,
+  isBaseWildcardBound,
+  isBaseBlockBound,
   makeRigidBaseWildcardScope,
   makeLooseBaseWildcardScope,
   makeEmptyScopeBlock,
@@ -79,18 +82,18 @@ export const makeRootScope = (base) => $makeRootScope(createCounter(), base);
 /////////////
 
 export const declareMetaVariable = (scope, variable) =>
-  isMetaRootBound(scope)
-    ? freshenVariable(variable, 0, getMetaRoot(scope))
-    : $declareMetaFreshVariable(scope, variable, null);
+  isMetaBound(scope)
+    ? $declareMetaFreshVariable(scope, variable, null)
+    : freshenVariable(variable, 0, getMetaRoot(scope));
 
 ////////////////
 // Initialize //
 ////////////////
 
 export const makeMetaInitializeEffect = (scope, variable, expression) =>
-  isMetaRootBound(scope)
-    ? makeWriteRootEffect(variable, expression)
-    : $makeMetaInitializeEffect(scope, variable, expression);
+  isMetaBound(scope)
+    ? $makeMetaInitializeEffect(scope, variable, expression)
+    : makeWriteRootEffect(variable, expression);
 
 //////////
 // Read //

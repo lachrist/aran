@@ -13,7 +13,8 @@ import {
   makeWildcardScope,
   makeScopeBlock,
   isWildcardBound,
-  isRootBound,
+  isBlockBound,
+  isBound,
   getBindingWildcard,
   declareVariable,
   declareFreshVariable,
@@ -63,6 +64,14 @@ export const setBaseRoot = generateSetRoot("base", "meta");
 // makeWildcardScope //
 ///////////////////////
 
+// The global meta frame can be represented as:
+// * a proper wildcard frame.
+//   - must handle lookup of meta variable in intermediary wildcard frames
+//   + readability
+// * the absence of binding frame.
+//   + meta variable are decoupled from wildcard frames
+//   - readability
+
 const makeWildcardScopeFlipped = flip(makeWildcardScope);
 
 export const makeBaseWildcardScope = partial1(
@@ -84,15 +93,15 @@ export const makeLooseBaseWildcardScope = partial1(
 // isBound //
 /////////////
 
-const isRootBoundFlipped = flip(isRootBound);
+const isBoundFlipped = flip(isBound);
 
-export const isBaseRootBound = partial1(isRootBoundFlipped, BASE_KIND);
+export const isBaseBound = partial1(isBoundFlipped, BASE_KIND);
 
-export const isMetaRootBound = partial1(isRootBoundFlipped, META_KIND);
+export const isMetaBound = partial1(isBoundFlipped, META_KIND);
 
-const isWildcardBoundFlipped = flip(isWildcardBound);
+export const isBaseWildcardBound = partial1(flip(isWildcardBound), BASE_KIND);
 
-export const isBaseWildcardBound = partial1(isWildcardBoundFlipped, BASE_KIND);
+export const isBaseBlockBound = partial1(flip(isBlockBound), BASE_KIND);
 
 ////////////////
 // getBinding //
