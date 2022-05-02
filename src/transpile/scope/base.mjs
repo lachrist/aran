@@ -107,29 +107,76 @@ export const makeDynamicScope = (scope, data, deadzone, unscopables, box) => mak
 // Declare //
 /////////////
 
-export const makeDeclareStatement = (scope, declaration, ghost) => {
-  const either = declareVariable(scope, getDeclarationVariable(declaration));
-  if (typeof either === "boolean") {
-    const success = either;
-    if (success) {
-      annotateVariable(
-        scope,
-        getDeclarationVariable(declaration),
-        getDeclarationNote(declaration),
-      );
-    } else {
-
-    }
-      if (isDeclarationImported(declaration)) {
-
-      } else {
-
-      }
-    } else {
-
-    }
+export const makeDeclareStatementArray = (scope, declaration, ghost) => {
+  const variable = getDeclarationVariable(declaration);
+  const either = declareVariable(scope, variable, ghost || isDeclarationImported(declaration));
+  if (typeof either === "string") {
+    assert(either === variable);
+    annotateVariable(scope, variable, declaration);
+    return [];
   } else {
-    const frame = either;
+    assert(!ghost, "dynamic ghost variable");
+    assert(!isDeclarationImported(declaration), "imported dynamic variable");
+    assert(getDeclarationExportSpecifierArray(declaration).length === 0, "exported dynamic variable");
+    assert(isFrameLoose(either) === isDeclarationLoose(declaration), "loose mismatch");
+    const box = getFrameBox(either);
+    return [
+      makeEffectStatement(
+        makeExpressionEffect(
+          makeConditionalExpression(
+            makeHasOwnPropertyExpression(
+              makeOpenExpression(scope, box),
+              makeLiteralExpression(variable),
+            ),
+            isFrameLoose(either)
+              ? makePrimitiveExpression({undefined:null})
+              : makeThrowReferenceErrorExpression("Duplicate rigid variable declaration (this should never happen, please consider submitting a bug report)"),
+            makeDefinePropertyExpression(
+              makeOpenExpression(scope, box),
+              makeLiteralExpression(variable),
+              {
+                __proto__: null,
+                value: isFrameLoose(either)
+                  ? makeLiteralExpression({undefined:null})
+                  : makeIntrinsicExpression("aran.deadzoneSymbol"),
+                writable: isDeclarationWritable(declaration),
+                enumerable: true,
+                configurable:
+              },
+            )
+
+      makeExpressionStatement(
+        makeConditionalExpression(
+          makeGetOwnPropertyDescriptorExpression(
+            makeOpenExpression(scope, getFrameBox(either)),
+            makeLiteralExpression(
+              Variable.getName(variable))),
+          (
+            Variable.isLoose(variable) ?
+            Tree.PrimitiveExpression(void 0) :
+            Intrinsic.makeThrowReferenceErrorExpression(`Duplicate rigid variable declaration (this should never happen, please consider submitting a bug report)`)),
+          Intrinsic.makeDefinePropertyExpression(
+            Intrinsic.makeOpenExpression(scope, _frame.box),
+            Tree.PrimitiveExpression(
+              Variable.getName(variable)),
+            {
+              __proto__:null,
+              value: (
+                Variable.isLoose(variable) ?
+                Tree.PrimitiveExpression(void 0) :
+                Intrinsic.makeGrabExpression("aran.deadzoneSymbol")),
+              writable: Variable.isWritable(variable),
+              enumerable: true,
+              configurable: Variable.isRigid(variable)},
+            false,
+            Intrinsic.SUCCESS_RESULT))),
+    ];
+
+    if (isFrameLoose(either)) {
+
+    } else {
+
+    }
   }
 }
 

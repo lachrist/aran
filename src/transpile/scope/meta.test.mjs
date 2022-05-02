@@ -12,13 +12,16 @@ import {
   allignBlock,
 } from "../../allign/index.mjs";
 
+import {makeRootScope, makeScopeBlock} from "./split.mjs";
+
 import {
-  makeRootScope,
-  makeEmptyScopeBlock,
-  declareMetaVariable,
-  makeMetaInitializeEffect,
-  makeMetaReadExpression,
-  makeMetaWriteEffect,
+  initializeScope,
+  backupScope,
+  restoreScope,
+  declareVariable,
+  makeInitializeEffect,
+  makeReadExpression,
+  makeWriteEffect,
 } from "./meta.mjs";
 
 //////////
@@ -26,10 +29,11 @@ import {
 //////////
 
 {
-  const scope = makeRootScope("base");
-  const variable = declareMetaVariable(scope, "variable");
+  const scope = initializeScope(makeRootScope());
+  restoreScope(scope, backupScope(scope) + 1);
+  const variable = declareVariable(scope, "variable");
   allignEffect(
-    makeMetaInitializeEffect(scope, variable, makeLiteralExpression("init")),
+    makeInitializeEffect(scope, variable, makeLiteralExpression("init")),
     `effect(
       intrinsic('aran.setStrict')(
         intrinsic('aran.globalCache'),
@@ -39,14 +43,14 @@ import {
     )`,
   );
   allignExpression(
-    makeMetaReadExpression(scope, variable),
+    makeReadExpression(scope, variable),
     `intrinsic('aran.get')(
       intrinsic('aran.globalCache'),
       '${variable}',
     )`,
   );
   allignEffect(
-    makeMetaWriteEffect(scope, variable, makeLiteralExpression("right")),
+    makeWriteEffect(scope, variable, makeLiteralExpression("right")),
     `effect(
       intrinsic('aran.setStrict')(
         intrinsic('aran.globalCache'),
@@ -62,21 +66,17 @@ import {
 ///////////
 
 allignBlock(
-  makeEmptyScopeBlock(makeRootScope("base"), [], (scope) => {
-    const variable = declareMetaVariable(scope, "variable");
+  makeScopeBlock(initializeScope(makeRootScope()), [], (scope) => {
+    const variable = declareVariable(scope, "variable");
     return [
       makeEffectStatement(
-        makeMetaInitializeEffect(
-          scope,
-          variable,
-          makeLiteralExpression("init"),
-        ),
+        makeInitializeEffect(scope, variable, makeLiteralExpression("init")),
       ),
       makeEffectStatement(
-        makeExpressionEffect(makeMetaReadExpression(scope, variable)),
+        makeExpressionEffect(makeReadExpression(scope, variable)),
       ),
       makeEffectStatement(
-        makeMetaWriteEffect(scope, variable, makeLiteralExpression("right")),
+        makeWriteEffect(scope, variable, makeLiteralExpression("right")),
       ),
     ];
   }),

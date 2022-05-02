@@ -67,7 +67,10 @@ assertEqual(
         makeExpressionEffect(
           makeBindingLookupExpression(binding, false, {
             ...curries,
-            onDeadHit: () => makeLiteralExpression("dead"),
+            onDeadHit: (note) => {
+              assertEqual(note, "note");
+              return makeLiteralExpression("dead");
+            },
           }),
         ),
       ),
@@ -121,7 +124,10 @@ assertEqual(
               assertEqual(note, "note");
               return read();
             },
-            onDeadHit: () => makeLiteralExpression("dead"),
+            onDeadHit: (note) => {
+              assertEqual(note, "note");
+              return makeLiteralExpression("dead");
+            },
           }),
         ),
       ),
@@ -192,7 +198,10 @@ assertEqual(
               assertEqual(note, "note");
               return read();
             },
-            onDeadHit: () => makeLiteralExpression("dead"),
+            onDeadHit: (note) => {
+              assertEqual(note, "note");
+              return makeLiteralExpression("dead");
+            },
           }),
         ),
       ),

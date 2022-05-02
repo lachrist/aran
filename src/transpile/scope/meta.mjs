@@ -8,7 +8,13 @@
 // type Result = (Remainder, Box)
 // type Remainder = Maybe Expression
 
-import {throwError, partial1, partial2, createCounter} from "../../util.mjs";
+import {
+  throwError,
+  partial1,
+  partial2,
+  createCounter,
+  incrementCounter,
+} from "../../util.mjs";
 
 import {makeLiteralExpression, makeExpressionEffect} from "../../ast/index.mjs";
 
@@ -21,48 +27,29 @@ import {
 } from "../intrinsic.mjs";
 
 import {
-  isMetaBound,
-  getMetaRoot,
-  makeRootScope as $makeRootScope,
-  declareMetaFreshVariable as $declareMetaFreshVariable,
-  makeMetaInitializeEffect as $makeMetaInitializeEffect,
-  makeMetaLookupExpression as $makeMetaLookupExpression,
-  makeMetaLookupEffect as $makeMetaLookupEffect,
+  makeMetaPropertyScope as makePropertyScope,
+  lookupMetaScopeProperty as lookupScopeProperty,
+  isMetaBound as isBound,
+  declareMetaVariable as declareVariable_,
+  makeMetaInitializeEffect as makeInitializeEffect_,
+  makeMetaLookupExpression as makeLookupExpression,
+  makeMetaLookupEffect as makeLookupEffect,
 } from "./split.mjs";
 
-export {
-  isBaseBound,
-  isBaseWildcardBound,
-  isBaseBlockBound,
-  makeRigidBaseWildcardScope,
-  makeLooseBaseWildcardScope,
-  makeEmptyScopeBlock,
-  makeRigidScopeBlock,
-  makeLooseScopeBlock,
-  makeFullScopeBlock,
-  makeClosureScope,
-  makePropertyScope,
-  lookupScopeProperty,
-  declareLooseBaseVariable,
-  declareRigidBaseVariable,
-  makeRigidBaseInitializeEffect,
-  makeLooseBaseInitializeEffect,
-  makeBaseLookupExpression,
-  makeBaseLookupEffect,
-} from "./split.mjs";
+const COUNTER = "counter";
 
 const onDeadHit = partial1(
   throwError,
   "meta variable should never be in deadzone",
 );
 
-const makeReadRootExpression = (variable) =>
+const makeReadGlobalExpression = (variable) =>
   makeGetExpression(
     makeDirectIntrinsicExpression("aran.globalCache"),
     makeLiteralExpression(variable),
   );
 
-const makeWriteRootEffect = (variable, expression) =>
+const makeWriteGlobalEffect = (variable, expression) =>
   makeExpressionEffect(
     makeStrictSetExpression(
       makeDirectIntrinsicExpression("aran.globalCache"),
@@ -75,25 +62,37 @@ const makeWriteRootEffect = (variable, expression) =>
 // makeRootScope //
 ///////////////////
 
-export const makeRootScope = (base) => $makeRootScope(createCounter(), base);
+export const initializeScope = (scope) =>
+  makePropertyScope(scope, COUNTER, createCounter());
+
+export const backupScope = (scope) =>
+  incrementCounter(lookupScopeProperty(scope, COUNTER));
+
+export const restoreScope = (scope, value1) => {
+  const counter = lookupScopeProperty(scope, COUNTER);
+  let value2 = incrementCounter(counter);
+  while (value2 <= value1) {
+    value2 = incrementCounter(counter);
+  }
+};
 
 /////////////
 // Declare //
 /////////////
 
-export const declareMetaVariable = (scope, variable) =>
-  isMetaBound(scope)
-    ? $declareMetaFreshVariable(scope, variable, null)
-    : freshenVariable(variable, 0, getMetaRoot(scope));
+export const declareVariable = (scope, variable) =>
+  isBound(scope)
+    ? declareVariable_(scope, variable, null)
+    : freshenVariable(variable, 0, lookupScopeProperty(scope, COUNTER));
 
 ////////////////
 // Initialize //
 ////////////////
 
-export const makeMetaInitializeEffect = (scope, variable, expression) =>
-  isMetaBound(scope)
-    ? $makeMetaInitializeEffect(scope, variable, expression)
-    : makeWriteRootEffect(variable, expression);
+export const makeInitializeEffect = (scope, variable, expression) =>
+  isBound(scope)
+    ? makeInitializeEffect_(scope, variable, expression)
+    : makeWriteGlobalEffect(variable, expression);
 
 //////////
 // Read //
@@ -101,11 +100,11 @@ export const makeMetaInitializeEffect = (scope, variable, expression) =>
 
 const readLiveHit = (read, _write, _note) => read();
 
-export const makeMetaReadExpression = (scope, variable) =>
-  $makeMetaLookupExpression(scope, variable, {
+export const makeReadExpression = (scope, variable) =>
+  makeLookupExpression(scope, variable, {
     onDeadHit,
     onLiveHit: readLiveHit,
-    onRoot: partial1(makeReadRootExpression, variable),
+    onRoot: partial1(makeReadGlobalExpression, variable),
   });
 
 ///////////
@@ -115,9 +114,9 @@ export const makeMetaReadExpression = (scope, variable) =>
 const generateWriteLiveHit = (expression) => (_read, write, _note) =>
   write(expression);
 
-export const makeMetaWriteEffect = (scope, variable, expression) =>
-  $makeMetaLookupEffect(scope, variable, {
+export const makeWriteEffect = (scope, variable, expression) =>
+  makeLookupEffect(scope, variable, {
     onDeadHit,
     onLiveHit: generateWriteLiveHit(expression),
-    onRoot: partial2(makeWriteRootEffect, variable, expression),
+    onRoot: partial2(makeWriteGlobalEffect, variable, expression),
   });

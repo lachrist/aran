@@ -1,32 +1,42 @@
-import {assertEqual, generateAssertUnreachable} from "../../__fixture__.mjs";
+import {
+  assertEqual,
+  assertThrow,
+  generateAssertUnreachable,
+} from "../../__fixture__.mjs";
 
 import {makeLiteralExpression, makeEffectStatement} from "../../ast/index.mjs";
 
 import {allignBlock} from "../../allign/index.mjs";
 
 import {
+  makeBaseDynamicScope,
+  isMetaBound,
   makeRootScope,
-  getMetaRoot,
-  setMetaRoot,
-  makeEmptyScopeBlock,
-  declareMetaFreshVariable,
+  makeScopeBlock,
+  makeMetaPropertyScope,
+  lookupMetaScopeProperty,
+  declareMetaVariable,
   makeMetaInitializeEffect,
   makeMetaLookupEffect,
 } from "./split.mjs";
 
-const {undefined} = globalThis;
+assertEqual(isMetaBound(makeRootScope()), false);
 
-{
-  const scope = makeRootScope("meta", "base");
-  assertEqual(getMetaRoot(scope), "meta");
-  assertEqual(setMetaRoot(scope, "META"), undefined);
-  assertEqual(getMetaRoot(scope), "META");
-}
+assertThrow(() => isMetaBound(makeBaseDynamicScope(makeRootScope()), "frame"));
+
+assertEqual(
+  lookupMetaScopeProperty(
+    makeMetaPropertyScope(makeRootScope(), "key", "value"),
+    "key",
+  ),
+  "value",
+);
 
 assertEqual(
   allignBlock(
-    makeEmptyScopeBlock(makeRootScope("meta", "base"), [], (scope) => {
-      const variable = declareMetaFreshVariable(scope, "variable", "note");
+    makeScopeBlock(makeRootScope(), [], (scope) => {
+      assertEqual(isMetaBound(scope), true);
+      const variable = declareMetaVariable(scope, "variable", "note");
       return [
         makeEffectStatement(
           makeMetaInitializeEffect(
@@ -36,9 +46,8 @@ assertEqual(
           ),
         ),
         makeEffectStatement(
-          makeMetaLookupEffect(scope, variable, {
+          makeMetaLookupEffect(makeBaseDynamicScope(scope, "frame"), variable, {
             __proto__: null,
-            onWildcard: generateAssertUnreachable("onWildcard"),
             onDeadHit: generateAssertUnreachable("onDeadHit"),
             onLiveHit: (_read, write, note) =>
               write(makeLiteralExpression(note)),

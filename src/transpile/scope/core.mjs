@@ -41,12 +41,10 @@ const STATIC_SCOPE_TYPE = "static";
 const PROPERTY_SCOPE_TYPE = "property";
 const CLOSURE_SCOPE_TYPE = "closure";
 
-const getBindingScope = (scope, kind) => {
+const getBindingScope = (scope) => {
   while (scope.type !== ROOT_SCOPE_TYPE) {
     if (scope.type === STATIC_SCOPE_TYPE || scope.type === DYNAMIC_SCOPE_TYPE) {
-      if (scope.kind % kind === 0) {
-        return scope;
-      }
+      return scope;
     }
     assert(
       scope.type !== CLOSURE_SCOPE_TYPE,
@@ -57,25 +55,15 @@ const getBindingScope = (scope, kind) => {
   return scope;
 };
 
-const isBindingScopeDistant = (scope, kind) => {
-  while (scope.type === PROPERTY_SCOPE_TYPE) {
-    scope = scope.parent;
-  }
-  assert(
-    scope.type !== CLOSURE_SCOPE_TYPE,
-    "binding scope should not be outside of closure",
-  );
-  return !(scope.type === ROOT_SCOPE_TYPE || scope.kind % kind === 0);
-};
+const equalsBindingVariableFlipped = flip(equalsBindingVariable);
 
 ////////////
 // Extend //
 ////////////
 
-export const makeRootScope = (root) => ({
+export const makeRootScope = () => ({
   type: ROOT_SCOPE_TYPE,
   depth: 0,
-  root,
 });
 
 export const makeClosureScope = (parent) => ({
@@ -92,12 +80,11 @@ export const makePropertyScope = (parent, key, value) => ({
   value,
 });
 
-export const makeWildcardScope = (parent, kind, wildcard) => ({
+export const makeDynamicScope = (parent, frame) => ({
   type: DYNAMIC_SCOPE_TYPE,
   parent,
   depth: parent.depth + 1,
-  kind,
-  wildcard,
+  frame,
 });
 
 // Usage for ghost variables:
@@ -114,12 +101,11 @@ export const makeWildcardScope = (parent, kind, wildcard) => ({
 //     >>     { 123; } } }
 //   - Imports
 
-export const makeScopeBlock = (parent, kind, labels, callback) => {
+export const makeScopeBlock = (parent, labels, callback) => {
   const bindings = [];
   const statements = callback({
     type: STATIC_SCOPE_TYPE,
     parent,
-    kind,
     bindings,
     depth: parent.depth + 1,
     counter: createCounter(),
@@ -149,40 +135,24 @@ export const lookupScopeProperty = (scope, key) => {
 // isBound //
 /////////////
 
-const generateIsBound = (type) => (scope, kind) =>
-  getBindingScope(scope, kind).type === type;
+export const isBound = (scope) =>
+  getBindingScope(scope).type !== ROOT_SCOPE_TYPE;
 
-const generateIsNotBound = (type) => (scope, kind) =>
-  getBindingScope(scope, kind).type !== type;
+const generateIsBound = (type) => (scope) =>
+  getBindingScope(scope).type === type;
 
-export const isBound = generateIsNotBound(ROOT_SCOPE_TYPE);
-export const isNotBound = generateIsBound(ROOT_SCOPE_TYPE);
+export const isStaticallyBound = generateIsBound(STATIC_SCOPE_TYPE);
 
-export const isBlockBound = generateIsBound(STATIC_SCOPE_TYPE);
-export const isWildcardBound = generateIsBound(DYNAMIC_SCOPE_TYPE);
+export const isDynamicallyBound = generateIsBound(DYNAMIC_SCOPE_TYPE);
 
-////////////////
-// getBinding //
-////////////////
+////////////////////////////
+// getBindingDynamicFrame //
+////////////////////////////
 
-export const getBindingWildcard = (scope, kind) => {
-  scope = getBindingScope(scope, kind);
-  assert(scope.type === DYNAMIC_SCOPE_TYPE, "unexpected binding scope type");
-  return scope.wildcard;
-};
-
-export const getRoot = (scope) => {
-  while (scope.type !== ROOT_SCOPE_TYPE) {
-    scope = scope.parent;
-  }
-  return scope.root;
-};
-
-export const setRoot = (scope, root) => {
-  while (scope.type !== ROOT_SCOPE_TYPE) {
-    scope = scope.parent;
-  }
-  scope.root = root;
+export const getBindingDynamicFrame = (scope) => {
+  scope = getBindingScope(scope);
+  assert(scope.type === DYNAMIC_SCOPE_TYPE, "expected dynamic scope type");
+  return scope.frame;
 };
 
 /////////////
@@ -190,15 +160,15 @@ export const setRoot = (scope, root) => {
 /////////////
 
 export const generateDeclareStatic =
-  (transformVariable) => (scope, kind, variable, note) => {
-    scope = getBindingScope(scope, kind);
+  (transformVariable) => (scope, variable, note) => {
+    scope = getBindingScope(scope);
     assert(
       scope.type === STATIC_SCOPE_TYPE,
-      "expected a statically bound variable",
+      "expected a statically bound scope",
     );
     variable = transformVariable(variable, scope.depth, scope.counter);
     assert(
-      find(scope.bindings, partial1(flip(equalsBindingVariable), variable)) ===
+      find(scope.bindings, partial1(equalsBindingVariableFlipped, variable)) ===
         undefined,
       "duplicate static variable declaration",
     );
@@ -234,15 +204,19 @@ export const declareFreshVariable = generateDeclareStatic(freshenVariable);
 //   }
 // }
 
-export const makeInitializeEffect = (scope, kind, variable, expression) => {
-  const distant = isBindingScopeDistant(scope, kind);
-  scope = getBindingScope(scope, kind);
-  assert(scope.type === STATIC_SCOPE_TYPE);
-  const binding = find(
-    scope.bindings,
-    partial1(flip(equalsBindingVariable), variable),
-  );
-  assert(binding !== undefined, "missing static variable for initialization");
+export const makeInitializeEffect = (scope, variable, expression) => {
+  const predicate = partial1(equalsBindingVariableFlipped, variable);
+  let distant = false;
+  let binding = undefined;
+  while (binding === undefined) {
+    scope = getBindingScope(scope);
+    assert(scope.type === STATIC_SCOPE_TYPE, "expected static scope type");
+    binding = find(scope.bindings, predicate);
+    if (binding === undefined) {
+      distant = true;
+      scope = scope.parent;
+    }
+  }
   return makeBindingInitializeEffect(binding, distant, expression);
 };
 
@@ -250,35 +224,33 @@ export const makeInitializeEffect = (scope, kind, variable, expression) => {
 // lookup //
 ////////////
 
-const finalizeLookup = (wildcards, node, onWildcard) =>
-  reduce(reverse(wildcards), flip(onWildcard), node);
+const finalizeLookup = (frames, node, onDynamicFrame) =>
+  reduce(reverse(frames), flip(onDynamicFrame), node);
 
 const generateLookup =
   (lookupBinding) =>
-  (scope, variable, {onRoot, onWildcard, ...callbacks}) => {
+  (scope, variable, {onRoot, onDynamicFrame, ...callbacks}) => {
     let escaped = false;
-    const wildcards = [];
+    const predicate = partial1(equalsBindingVariableFlipped, variable);
+    const frames = [];
     while (scope.type !== ROOT_SCOPE_TYPE) {
       if (scope.type === DYNAMIC_SCOPE_TYPE) {
-        push(wildcards, scope.wildcard);
+        push(frames, scope.frame);
       } else if (scope.type === CLOSURE_SCOPE_TYPE) {
         escaped = true;
       } else if (scope.type === STATIC_SCOPE_TYPE) {
-        const binding = find(
-          scope.bindings,
-          partial1(flip(equalsBindingVariable), variable),
-        );
-        if (binding !== null) {
+        const binding = find(scope.bindings, predicate);
+        if (binding !== undefined) {
           return finalizeLookup(
-            wildcards,
+            frames,
             lookupBinding(binding, escaped, callbacks),
-            onWildcard,
+            onDynamicFrame,
           );
         }
       }
       scope = scope.parent;
     }
-    return finalizeLookup(wildcards, onRoot(), onWildcard);
+    return finalizeLookup(frames, onRoot(), onDynamicFrame);
   };
 
 export const makeLookupExpression = generateLookup(makeBindingLookupExpression);

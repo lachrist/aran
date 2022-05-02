@@ -18,69 +18,54 @@ import {
   makePropertyScope,
   makeRootScope,
   makeClosureScope,
-  makeWildcardScope,
+  makeDynamicScope,
   makeScopeBlock,
   lookupScopeProperty,
-  isWildcardBound,
   isBound,
-  isNotBound,
-  getBindingWildcard,
+  isStaticallyBound,
+  isDynamicallyBound,
+  getBindingDynamicFrame,
   declareVariable,
-  getRoot,
-  setRoot,
   declareFreshVariable,
   makeInitializeEffect,
   makeLookupExpression,
   makeScopeEvalExpression,
 } from "./core.mjs";
 
-const {undefined} = globalThis;
-
-const KIND1 = 2;
-const KIND2 = 3;
-const KINDS = KIND1 * KIND2;
-
 const callbacks = {
   onRoot: generateAssertUnreachable("onRoot"),
   onLiveHit: generateAssertUnreachable("onLiveHit"),
   onDeadHit: generateAssertUnreachable("onDeadHit"),
-  onWildcard: generateAssertUnreachable("onWildcard"),
+  onDynamicFrame: generateAssertUnreachable("onDynamicFrame"),
 };
 
 //////////////
 // Property //
 //////////////
 
-assertThrow(() => lookupScopeProperty(makeRootScope("root"), "key"));
-
-assertEqual(
-  lookupScopeProperty(
-    makeClosureScope(makePropertyScope(makeRootScope("root"), "key", "value")),
-    "key",
-  ),
-  "value",
-);
+{
+  let scope = makeRootScope();
+  assertThrow(() => lookupScopeProperty(scope, "key"));
+  scope = makePropertyScope(scope, "key", "value");
+  scope = makeClosureScope(scope);
+  assertEqual(lookupScopeProperty(scope, "key"), "value");
+}
 
 ///////////
 // Query //
 ///////////
 
 {
-  const scope = makePropertyScope(makeRootScope("root"), "key", "value");
-  assertEqual(isWildcardBound(scope, KIND1), false);
-  assertEqual(isBound(scope, KIND1), false);
-  assertEqual(isNotBound(scope, KIND1), true);
-  assertEqual(getRoot(scope), "root");
-  assertEqual(setRoot(scope, "ROOT"), undefined);
-  assertEqual(getRoot(scope), "ROOT");
-}
-
-{
-  const scope = makeWildcardScope(makeRootScope("root"), KIND1, "wildcard");
-  assertEqual(isWildcardBound(scope, KIND1), true);
-  assertEqual(isBound(scope, KIND1), true);
-  assertEqual(isNotBound(scope, KIND1), false);
-  assertEqual(getBindingWildcard(scope, KIND1), "wildcard");
+  const scope1 = makeRootScope();
+  assertEqual(isBound(scope1), false);
+  assertEqual(isStaticallyBound(scope1), false);
+  assertEqual(isDynamicallyBound(scope1), false);
+  const scope2 = makeDynamicScope(scope1, "frame");
+  const scope3 = makePropertyScope(scope2, "key", "value");
+  assertEqual(isBound(scope3), true);
+  assertEqual(isStaticallyBound(scope3), false);
+  assertEqual(isDynamicallyBound(scope3), true);
+  assertEqual(getBindingDynamicFrame(scope3), "frame");
 }
 
 /////////////
@@ -89,10 +74,10 @@ assertEqual(
 
 assertEqual(
   allignBlock(
-    makeScopeBlock(makeRootScope("root"), KINDS, [], (scope) => {
+    makeScopeBlock(makeRootScope(), [], (scope) => {
       scope = makePropertyScope(scope, "key", "value");
       assertEqual(
-        declareFreshVariable(scope, KIND1, "variable", "note"),
+        declareFreshVariable(scope, "variable", "note"),
         "variable_1_1",
       );
       return [
@@ -104,14 +89,16 @@ assertEqual(
                 assertEqual(note, "note");
                 return read();
               },
-              onDeadHit: () => makeLiteralExpression("dead"),
+              onDeadHit: (note) => {
+                assertEqual(note, "note");
+                return makeLiteralExpression("dead");
+              },
             }),
           ),
         ),
         makeEffectStatement(
           makeInitializeEffect(
             scope,
-            KIND1,
             "variable_1_1",
             makeLiteralExpression("init"),
           ),
@@ -136,18 +123,14 @@ assertEqual(
 
 assertEqual(
   allignBlock(
-    makeScopeBlock(makeRootScope("root"), KINDS, [], (scope1) => {
-      assertEqual(
-        declareVariable(scope1, KIND1, "variable", "note"),
-        "variable",
-      );
+    makeScopeBlock(makeRootScope(), [], (scope1) => {
+      assertEqual(declareVariable(scope1, "variable", "note"), "variable");
       return [
         makeBlockStatement(
-          makeScopeBlock(scope1, KIND2, [], (scope2) => [
+          makeScopeBlock(scope1, [], (scope2) => [
             makeEffectStatement(
               makeInitializeEffect(
                 scope2,
-                KIND1,
                 "variable",
                 makeLiteralExpression("init"),
               ),
@@ -162,7 +145,10 @@ assertEqual(
                 assertEqual(note, "note");
                 return read();
               },
-              onDeadHit: () => makeLiteralExpression("dead"),
+              onDeadHit: (note) => {
+                assertEqual(note, "note");
+                return makeLiteralExpression("dead");
+              },
             }),
           ),
         ),
@@ -188,7 +174,7 @@ assertEqual(
 
 assertEqual(
   allignExpression(
-    makeLookupExpression(makeRootScope("root"), "variable", {
+    makeLookupExpression(makeRootScope(), "variable", {
       ...callbacks,
       onRoot: () => makeLiteralExpression("root"),
     }),
@@ -204,19 +190,19 @@ assertEqual(
 assertEqual(
   allignExpression(
     makeLookupExpression(
-      makeWildcardScope(makeRootScope("root"), KINDS, "wildcard"),
+      makeDynamicScope(makeRootScope(), "frame"),
       "variable",
       {
         ...callbacks,
         onRoot: () => makeLiteralExpression("root"),
-        onWildcard: (wildcard, expression) =>
+        onDynamicFrame: (frame, expression) =>
           makeSequenceExpression(
-            makeExpressionEffect(makeLiteralExpression(wildcard)),
+            makeExpressionEffect(makeLiteralExpression(frame)),
             expression,
           ),
       },
     ),
-    "(effect('wildcard'), 'root')",
+    "(effect('frame'), 'root')",
   ),
   null,
 );
@@ -227,11 +213,8 @@ assertEqual(
 
 assertEqual(
   allignBlock(
-    makeScopeBlock(makeRootScope("root"), KINDS, [], (scope) => {
-      assertEqual(
-        declareVariable(scope, KIND1, "variable", "note"),
-        "variable",
-      );
+    makeScopeBlock(makeRootScope(), [], (scope) => {
+      assertEqual(declareVariable(scope, "variable", "note"), "variable");
       return [
         makeEffectStatement(
           makeExpressionEffect(
@@ -244,7 +227,6 @@ assertEqual(
         makeEffectStatement(
           makeInitializeEffect(
             scope,
-            KIND1,
             "variable",
             makeLiteralExpression("init"),
           ),

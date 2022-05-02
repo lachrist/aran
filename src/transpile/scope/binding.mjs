@@ -72,13 +72,13 @@ const generateLookup =
     if (state.initialization === YES) {
       return onLiveHit(generateRead(binding), generateWrite(binding), note);
     } else if (state.initialization === NO && !escaped) {
-      return onDeadHit();
+      return onDeadHit(note);
     } else {
       state.deadzone = true;
       return makeConditional(
         makeReadExpression(makeMetaVariable(variable)),
         onLiveHit(generateRead(binding), generateWrite(binding), note),
-        onDeadHit(),
+        onDeadHit(note),
       );
     }
   };
