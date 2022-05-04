@@ -1,37 +1,3 @@
-
-import {
-  isDeclarationImported,
-  isDeclarationLoose,
-  isDeclarationRigid,
-  isDeclarationWritable,
-  getDeclarationVariable,
-  getDeclarationImportSource,
-  getDeclarationImportSpecifier,
-  getDeclarationExportSpecifierArray,
-} from "../../query/index.mjs";
-
-const global_Object_assign = global.Object.assign;
-
-const ArrayLite = require("array-lite");
-const Throw = require("../../throw.js");
-const Tree = require("../tree.js");
-const Intrinsic = require("../intrinsic.js");
-const Meta = require("./layer-3-meta.js");
-const Variable = require("../../variable.js");
-
-// type DynamicFrame = (ObjectBox, UnscopablesBox)
-// type ObjectBox = Box
-// type UnscopablesBox = Maybe Box
-
-// type MetaCallbacks = .outer.Callbacks
-// type RegularContext = (Scope, Identifier, Callbacks)
-// type Callbacks = (OnMiss, OnLiveHit, OnDeadHit, OnDynamicHit)
-// type OnMiss = Scope -> Identifier -> Right -> AranExpression
-// type OnLiveHit = Scope -> Identifier -> Right -> Tag -> Access -> AranExpression
-// type OnDeadHit = Scope -> Identifier -> Right -> Tag -> AranExpression
-// type OnDynamicHit = Scope -> Identifier -> Right -> Box -> AranExpression
-// type Right = *
-
 // Order of operations:
 //
 // const p = new Proxy({}, {
@@ -53,375 +19,496 @@ const Variable = require("../../variable.js");
 // Thrown:
 // ReferenceError: flat is not defined
 
-/////////////
-// Forward //
-/////////////
+import {concat, map, reduce} from "array-lite";
 
-exports.RootScope = Meta.RootScope;
-exports.makeBlock = Meta.makeBlock;
-exports.ClosureScope = Meta.ClosureScope;
-exports.PropertyScope = Meta.PropertyScope;
-exports.getPropertyValue = Meta.getPropertyValue;
-exports.makeEvalExpression = Meta.makeEvalExpression;
-exports.makeInputExpression = Meta.makeInputExpression;
+import {assert, throwError, partial1, returnFirst} from "../../util.mjs";
 
-exports.makeBoxStatement = Meta.makeBoxStatement;
-exports.makeBoxExpression = Meta.makeBoxExpression;
-exports.makeOpenExpression = Meta.makeOpenExpression;
-exports.makeCloseExpression = Meta.makeCloseExpression;
-exports.TestBox = Meta.TestBox;
-exports.PrimitiveBox = Meta.PrimitiveBox;
-exports.IntrinsicBox = Meta.IntrinsicBox;
+import {
+  makeSequenceEffect,
+  makeDeclareStatement,
+  makeExportEffect,
+  makeImportExpression,
+  makeEffectStatement,
+  makeExpressionEffect,
+  makeConditionalEffect,
+  makeConditionalExpression,
+  makeLiteralExpression,
+} from "../../ast/index.mjs";
 
-////////////
-// Helper //
-////////////
+import {
+  makeBinaryExpression,
+  makeStrictSetExpression,
+  makeGetExpression,
+  makeHasExpression,
+  makeSimpleObjectExpression,
+  makeDefinePropertyExpression,
+  makeDirectIntrinsicExpression,
+  makeThrowSyntaxErrorExpression,
+  makeThrowTypeErrorExpression,
+} from "../intrinsic.mjs";
 
-const isEmpty = (array) => array.length === 0;
-
-const updateExport = (scope, specifiers, box, write) => ArrayLite.reduce(
-  specifiers,
-  (expression, specifier) => Tree.SequenceExpression(
-    expression,
-    Tree.ExportExpression(
-      specifier,
-      Meta.makeOpenExpression(scope, box))),
-  write(
-    Meta.makeOpenExpression(scope, box)));
+import {
+  makeBasePropertyScope as makePropertyScope,
+  lookupBaseScopeProperty as lookupScopeProperty,
+  isBaseBound as isBound,
+  isBaseStaticallyBound as isStaticallyBound,
+  isBaseDynamicallyBound as isDynamicallyBound,
+  getBaseBindingDynamicFrame as getBindingDynamicFrame,
+  makeBaseDynamicScope as makeDynamicScope,
+  declareBaseVariable as declareVariable,
+  declareBaseGhostVariable as declareGhostVariable,
+  makeBaseInitializeEffect as makeInitializeEffect,
+  makeBaseLookupEffect as makeLookupEffect_,
+  makeBaseLookupExpression as makeLookupExpression_,
+} from "./split.mjs";
 
 //////////////////
-// DynamicScope //
+// DynamicFrame //
 //////////////////
 
-export const makeDynamicScope = (scope, data, deadzone, unscopables, box) => makeCoreDynamicScope(
-  scope,
-  {
-    data,
-    deadzone,
-    unscopables,
-    box,
-  },
-);
+const generateMakeDynamicScope =
+  (lookupable, declarable) => (parent, unscopable, object) =>
+    makeDynamicScope(parent, {
+      lookupable,
+      declarable,
+      unscopable,
+      object,
+    });
+
+export const makeLookupableScope = generateMakeDynamicScope(true, false);
+
+export const makeDeclarableScope = generateMakeDynamicScope(false, true);
+
+//////////////
+// Property //
+//////////////
+
+const STRICT = "strict";
+const REIFIED = "reified";
+
+export const initializeScope = (scope, reified) =>
+  makePropertyScope(makePropertyScope(scope, REIFIED, reified), STRICT, false);
+
+export const useStrictScope = (scope) => makePropertyScope(scope, STRICT, true);
+
+const isGlobalReified = (scope) => lookupScopeProperty(scope, REIFIED);
 
 /////////////
-// Declare //
+// Prelude //
 /////////////
 
-export const makeDeclareStatementArray = (scope, declaration, ghost) => {
-  const variable = getDeclarationVariable(declaration);
-  const either = declareVariable(scope, variable, ghost || isDeclarationImported(declaration));
-  if (typeof either === "string") {
-    assert(either === variable);
-    annotateVariable(scope, variable, declaration);
-    return [];
-  } else {
-    assert(!ghost, "dynamic ghost variable");
-    assert(!isDeclarationImported(declaration), "imported dynamic variable");
-    assert(getDeclarationExportSpecifierArray(declaration).length === 0, "exported dynamic variable");
-    assert(isFrameLoose(either) === isDeclarationLoose(declaration), "loose mismatch");
-    const box = getFrameBox(either);
+export const makePreludeStatementArray = (scope, variable) => {
+  if (!isBound(scope) && lookupScopeProperty(scope, REIFIED)) {
     return [
       makeEffectStatement(
         makeExpressionEffect(
           makeConditionalExpression(
-            makeHasOwnPropertyExpression(
-              makeOpenExpression(scope, box),
+            makeHasExpression(
+              makeDirectIntrinsicExpression("aran.globalRecord"),
               makeLiteralExpression(variable),
             ),
-            isFrameLoose(either)
-              ? makePrimitiveExpression({undefined:null})
-              : makeThrowReferenceErrorExpression("Duplicate rigid variable declaration (this should never happen, please consider submitting a bug report)"),
-            makeDefinePropertyExpression(
-              makeOpenExpression(scope, box),
-              makeLiteralExpression(variable),
-              {
-                __proto__: null,
-                value: isFrameLoose(either)
-                  ? makeLiteralExpression({undefined:null})
-                  : makeIntrinsicExpression("aran.deadzoneSymbol"),
-                writable: isDeclarationWritable(declaration),
-                enumerable: true,
-                configurable:
-              },
-            )
-
-      makeExpressionStatement(
-        makeConditionalExpression(
-          makeGetOwnPropertyDescriptorExpression(
-            makeOpenExpression(scope, getFrameBox(either)),
-            makeLiteralExpression(
-              Variable.getName(variable))),
-          (
-            Variable.isLoose(variable) ?
-            Tree.PrimitiveExpression(void 0) :
-            Intrinsic.makeThrowReferenceErrorExpression(`Duplicate rigid variable declaration (this should never happen, please consider submitting a bug report)`)),
-          Intrinsic.makeDefinePropertyExpression(
-            Intrinsic.makeOpenExpression(scope, _frame.box),
-            Tree.PrimitiveExpression(
-              Variable.getName(variable)),
-            {
-              __proto__:null,
-              value: (
-                Variable.isLoose(variable) ?
-                Tree.PrimitiveExpression(void 0) :
-                Intrinsic.makeGrabExpression("aran.deadzoneSymbol")),
-              writable: Variable.isWritable(variable),
-              enumerable: true,
-              configurable: Variable.isRigid(variable)},
-            false,
-            Intrinsic.SUCCESS_RESULT))),
+            makeThrowSyntaxErrorExpression(
+              `Identifier '${variable}' has already been declared`,
+            ),
+            makeLiteralExpression({undefined: null}),
+          ),
+        ),
+      ),
     ];
+  } else {
+    return [];
+  }
+};
 
-    if (isFrameLoose(either)) {
+///////////
+// Loose //
+///////////
 
+const makeExportUndefinedStatement = (specifier) =>
+  makeEffectStatement(
+    makeExportEffect(specifier, makeLiteralExpression({undefined: null})),
+  );
+
+const makeLooseDynamicDeclareEffect = (object, variable) =>
+  makeExpressionEffect(
+    makeConditionalExpression(
+      makeHasExpression(object, makeLiteralExpression(variable)),
+      makeLiteralExpression({undefined: null}),
+      makeDefinePropertyExpression(
+        object,
+        makeLiteralExpression(variable),
+        makeSimpleObjectExpression(makeLiteralExpression(null), {
+          configurable: makeLiteralExpression(false),
+          enumerable: makeLiteralExpression(true),
+          writable: makeLiteralExpression(true),
+          value: makeLiteralExpression({undefined: null}),
+        }),
+      ),
+    ),
+  );
+
+export const makeLooseDeclareStatementArray = (scope, variable, specifiers) => {
+  if (isStaticallyBound(scope)) {
+    declareVariable(scope, variable, {
+      writable: true,
+      import: null,
+      exports: specifiers,
+    });
+    return concat(
+      [
+        makeEffectStatement(
+          makeInitializeEffect(
+            scope,
+            variable,
+            makeLiteralExpression({undefined: null}),
+          ),
+        ),
+      ],
+      map(specifiers, makeExportUndefinedStatement),
+    );
+  } else if (isDynamicallyBound(scope)) {
+    const {declarable, unscopable, object} = getBindingDynamicFrame(scope);
+    assert(declarable, "expected declarable dynamic frame");
+    assert(!unscopable, "unxpected unscopable dynamic frame");
+    assert(
+      specifiers.length === 0,
+      "dynamically bound loose declaration should not be exported",
+    );
+    return [
+      makeEffectStatement(makeLooseDynamicDeclareEffect(object, variable)),
+    ];
+  } else {
+    assert(
+      specifiers.length === 0,
+      "globally bound loose declaration should not be exported",
+    );
+    if (isGlobalReified(scope)) {
+      return [
+        makeEffectStatement(
+          makeLooseDynamicDeclareEffect(
+            makeDirectIntrinsicExpression("aran.globalObject"),
+            variable,
+          ),
+        ),
+      ];
     } else {
-
+      return [
+        makeDeclareStatement(
+          "var",
+          variable,
+          makeLiteralExpression({undefined: null}),
+        ),
+      ];
     }
   }
-}
+};
 
-exports.makeDeclareStatement = (scope, variable, ghost, _frame) => (
-  Meta.isStatic(scope) ?
-  (
-    Meta.declareStaticVariable(
-      scope,
-      Variable.getName(variable),
-      Variable.isImport(variable) || ghost,
-      {
-        writable: Variable.isWritable(variable),
-        import: (
-          Variable.isImport(variable) ?
-          {
-            specifier: Variable.getImportSpecifier(variable),
-            source: Variable.getImportSource(variable)} :
-          null),
-        exports: Variable.getExportSpecifierArray(variable)}),
-    (
-      Variable.isLoose(variable) ?
-      // console.assert(!Variable.isImport(variable))
-      Tree.ExpressionStatement(
-        updateExport(
-          scope,
-          Variable.getExportSpecifierArray(variable),
-          Meta.PrimitiveBox(void 0),
-          (expression) => Meta.makeStaticInitializeExpression(
+///////////
+// Rigid //
+///////////
+
+export const makeRigidDeclareStatementArray = (
+  scope,
+  variable,
+  writable,
+  specifiers,
+) => {
+  if (isStaticallyBound(scope)) {
+    declareVariable(scope, variable, {
+      writable,
+      import: null,
+      exports: specifiers,
+    });
+    return [];
+  } else {
+    assert(
+      !isDynamicallyBound(scope),
+      "rigid declaration should not be dynamically bound",
+    );
+    assert(
+      specifiers.length === 0,
+      "rigid global declaration should not be exported",
+    );
+    if (isGlobalReified(scope)) {
+      return [
+        makeEffectStatement(
+          makeExpressionEffect(
+            makeStrictSetExpression(
+              makeDirectIntrinsicExpression("aran.globalRecord"),
+              makeLiteralExpression(variable),
+              makeDirectIntrinsicExpression("aran.deadzone"),
+            ),
+          ),
+        ),
+      ];
+    } else {
+      return [];
+    }
+  }
+};
+
+const generateMakeSequenceExport =
+  (duplicable_expression) => (effect, specifier) =>
+    makeSequenceEffect(
+      effect,
+      makeExportEffect(specifier, duplicable_expression),
+    );
+
+const onInitializeLiveHit = partial1(throwError, "duplicate initialization");
+const onInitializeDynamicFrame = partial1(
+  throwError,
+  "unexpected dynamic frame",
+);
+const onInitializeRoot = partial1(throwError, "unexpected root scope");
+const generateOnInitializeDeadHit =
+  (scope, variable, duplicable_expression) =>
+  ({exports: specifiers}) =>
+    reduce(
+      specifiers,
+      generateMakeSequenceExport(duplicable_expression),
+      makeInitializeEffect(scope, variable, duplicable_expression),
+    );
+
+export const makeRigidInitializeStatementArray = (
+  scope,
+  variable,
+  writable,
+  duplicable_expression,
+) => {
+  if (isStaticallyBound(scope)) {
+    return [
+      makeEffectStatement(
+        makeLookupEffect_(scope, variable, {
+          onLiveHit: onInitializeLiveHit,
+          onDeadHit: generateOnInitializeDeadHit(
             scope,
-            Variable.getName(variable),
-            Tree.PrimitiveExpression(void 0)))) :
-      Tree.ListStatement([]))) :
-  (
-    Throw.assert(
-      !ghost,
-      null,
-      `Non-static ghost variable`),
-    Throw.assert(
-      isEmpty(
-        Variable.getExportSpecifierArray(variable)),
-      null,
-      `Non-static export variable`),
-    Throw.assert(
-      !Variable.isImport(variable),
-      null,
-      `Non-static import variable`),
-    (
-      Meta.isDynamic(scope) ?
-      (
-        _frame = Meta.getDynamicFrame(scope),
-        Throw.assert(
-          (
-            Variable.isLoose(variable) ||
-            _frame.deadzone),
-          null,
-          `Invalid dynamic frame for rigid variable (declaration)`),
-        Tree.ExpressionStatement(
-          Tree.ConditionalExpression(
-            Intrinsic.makeGetOwnPropertyDescriptorExpression(
-              Intrinsic.makeOpenExpression(scope, _frame.box),
-              Tree.PrimitiveExpression(
-                Variable.getName(variable))),
-            (
-              Variable.isLoose(variable) ?
-              Tree.PrimitiveExpression(void 0) :
-              Intrinsic.makeThrowReferenceErrorExpression(`Duplicate rigid variable declaration (this should never happen, please consider submitting a bug report)`)),
-            Intrinsic.makeDefinePropertyExpression(
-              Intrinsic.makeOpenExpression(scope, _frame.box),
-              Tree.PrimitiveExpression(
-                Variable.getName(variable)),
-              {
-                __proto__:null,
-                value: (
-                  Variable.isLoose(variable) ?
-                  Tree.PrimitiveExpression(void 0) :
-                  Intrinsic.makeGrabExpression("aran.deadzoneSymbol")),
-                writable: Variable.isWritable(variable),
-                enumerable: true,
-                configurable: Variable.isRigid(variable)},
-              false,
-              Intrinsic.SUCCESS_RESULT)))) :
-      // console.assert(Meta.isRoot(scope))
-      Tree.ListStatement([]))));
-
-////////////////
-// Initialize //
-////////////////
-
-// Loose variable initialization is a regular write:
-//
-// function f () {
-//   var o = {x:123};
-//   var p = new Proxy(o, {
-//     get: (tgt, key, rec) => (console.log("get", key), Reflect.get(tgt, key, rec)),
-//     set: (tgt, key, val, rec) => (console.log("set", key, val), Reflect.set(tgt, key, val, rec)),
-//     has: (tgt, key) => (console.log("has", key), Reflect.get(tgt, key)),
-//   });
-//   with (p) {
-//     var x = 456;
-//   }
-//   return o;
-// }
-// f();
-// has x
-// get Symbol(Symbol.unscopables)
-// set x 123
-// { x: 123 }
-
-const declare_enclave_mapping = {
-  __proto__: null,
-  "var": "var",
-  "function": "var",
-  "let": "let",
-  "const": "const",
-  "class": "const"};
-
-exports.makeInitializeStatement = (scope, kind, identifier, box, write, _frame) => (
-  Meta.isRoot(scope) ?
-  (
-    Throw.assert(kind in declare_enclave_mapping, null, `Invalid variable kind for enclave declaration`),
-    Tree.__DeclareEnclaveStatement__(
-      declare_enclave_mapping[kind],
-      identifier,
-      Meta.makeOpenExpression(scope, box))) :
-  (
-    Variable.isLoose(
-      Variable[Variable.getConstructorName(kind)](identifier)) ?
-    Tree.ExpressionStatement(
-      write(scope, identifier, box)) :
-    (
-      Meta.isStatic(scope) ?
-      Tree.ExpressionStatement(
-        updateExport(
-          scope,
-          Meta.getStaticData(scope, identifier).exports,
-          box,
-          (expression) => Meta.makeStaticInitializeExpression(scope, identifier, expression))) :
-      // console.assert(Meta.isDynamic(scope))
-      (
-        _frame = Meta.getDynamicFrame(scope),
-        Throw.assert(_frame.deadzone, null, `Cannot initialize rigid variable on deadzone-disabled dynamic frame`),
-        Throw.assert(!_frame.unscopables, null, `Cannot initialize rigid variable on unscopables-enabled dynamic frame`),
-        Tree.ExpressionStatement(
-          Tree.ConditionalExpression(
-            Tree.BinaryExpression(
-              "===",
-              Intrinsic.makeGetExpression(
-                Meta.makeOpenExpression(scope, _frame.box),
-                Tree.PrimitiveExpression(identifier)),
-              Intrinsic.makeGrabExpression(`aran.deadzoneSymbol`)),
-            Intrinsic.makeDefinePropertyExpression(
-              Intrinsic.makeOpenExpression(scope, _frame.box),
-              Tree.PrimitiveExpression(
-                Variable.getName(variable)),
-              {
-                __proto__: null,
-                value: expression,
-                configurable: false},
-              false,
-              Intrinsic.SUCCESS_RESULT),
-            Intrinsic.makeThrowReferenceErrorExpression(`Invalid rigid variable initialization (this should never happen, please consider submitting a bug report)`)))))));
+            variable,
+            duplicable_expression,
+          ),
+          onDynamicFrame: onInitializeDynamicFrame,
+          onRoot: onInitializeRoot,
+        }),
+      ),
+    ];
+  } else {
+    assert(
+      !isDynamicallyBound(scope),
+      "rigid declaration should not be dynamically bound",
+    );
+    if (isGlobalReified(scope)) {
+      if (writable) {
+        return [
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeStrictSetExpression(
+                makeDirectIntrinsicExpression("aran.globalRecord"),
+                makeLiteralExpression(variable),
+                duplicable_expression,
+              ),
+            ),
+          ),
+        ];
+      } else {
+        return [
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeDefinePropertyExpression(
+                makeDirectIntrinsicExpression("aran.globalRecord"),
+                makeLiteralExpression(variable),
+                makeSimpleObjectExpression(makeLiteralExpression(null), {
+                  writable: makeLiteralExpression(false),
+                  value: duplicable_expression,
+                }),
+              ),
+            ),
+          ),
+        ];
+      }
+    } else {
+      return [
+        makeDeclareStatement(
+          writable ? "let" : "const",
+          variable,
+          duplicable_expression,
+        ),
+      ];
+    }
+  }
+};
 
 ////////////
-// lookup //
+// Import //
 ////////////
 
-const isSpecialIdentifier = (identifier) => (
+export const declareImportVariable = (scope, variable, source, specifier) => {
+  assert(
+    isStaticallyBound(scope),
+    "imported variables should be statically bound",
+  );
+  declareGhostVariable(scope, variable, {
+    writable: false,
+    import: {source, specifier},
+    exports: [],
+  });
+};
+
+////////////
+// Lookup //
+////////////
+
+const isSpecialVariable = (identifier) =>
   identifier === "this" ||
   identifier === "new.target" ||
-  identifier === "import.meta");
+  identifier === "import.meta";
 
-const lookup_callback_prototype = {
-  onMiss () { return this.callbacks.onMiss(); },
-  onStaticLiveHit (data, read, write) { return this.callbacks.onStaticLiveHit(
-    read,
-    (box) => (
-      data.writable ?
-      // console.assert(data.import === null)
-      updateExport(this.scope, data.exports, box, write) :
-      Intrinsic.makeThrowTypeErrorExpression(`Assignment to constant variable`))); },
-  onStaticDeadHit (data) { return this.callbacks.onStaticDeadHit(); },
-  onDynamicFrame (frame, expression3, _expression1, _expression2) { return (
-    isSpecialIdentifier(this.identifier) ?
-    expression3 :
-    (
-      _expression1 = Intrinsic.makeHasExpression(
-        Meta.makeOpenExpression(this.scope, frame.box),
-        Tree.PrimitiveExpression(this.identifier)),
-      _expression1 = (
-        frame.unscopables ?
-        Tree.ConditionalExpression(
-          _expression1,
-          Meta.makeBoxExpression(
-            this.scope,
-            false,
-            "ScopeBaseUnscopables",
-            Intrinsic.makeGetExpression(
-              Meta.makeOpenExpression(this.scope, frame.box),
-              Intrinsic.makeGrabExpression("Symbol.unscopables"),
-              null),
-            (box) => Tree.ConditionalExpression(
-              Tree.ConditionalExpression(
-                Tree.BinaryExpression(
-                  "===",
-                  Tree.UnaryExpression(
-                    "typeof",
-                    Meta.makeOpenExpression(this.scope, box)),
-                  Tree.PrimitiveExpression("object")),
-                Meta.makeOpenExpression(this.scope, box),
-                Tree.BinaryExpression(
-                  "===",
-                  Tree.UnaryExpression(
-                    "typeof",
-                    Meta.makeOpenExpression(this.scope, box)),
-                  Tree.PrimitiveExpression("function"))),
-              Tree.UnaryExpression(
-                "!",
-                Intrinsic.makeGetExpression(
-                  Meta.makeOpenExpression(this.scope, box),
-                  Tree.PrimitiveExpression(this.identifier),
-                  null)),
-              Tree.PrimitiveExpression(true))),
-          Tree.PrimitiveExpression(false)) :
-        _expression1),
-      _expression2 = this.callbacks.onDynamicLiveHit(frame.data, frame.box),
-      _expression2 = (
-        frame.deadzone ?
-        Tree.ConditionalExpression(
-          Tree.BinaryExpression(
+const dummy_note = {writable: true, import: null, exports: []};
+
+const generateWrite = (write, specifiers) => (right) =>
+  reduce(specifiers, generateMakeSequenceExport(right), write(right));
+
+const makeConstantAssignmentEffect = (_right) =>
+  makeExpressionEffect(
+    makeThrowTypeErrorExpression("Assignment to constant variable"),
+  );
+
+const generateOnLiveHit =
+  ({onStaticLiveHit}) =>
+  (read, write, {writable, import: import_, exports: specifiers}) => {
+    assert(import_ === null, "initialized import declaration");
+    return onStaticLiveHit(
+      read,
+      writable
+        ? generateWrite(write, specifiers)
+        : makeConstantAssignmentEffect,
+    );
+  };
+
+const generateOnDeadHit =
+  ({onStaticHit, onDeadHit}) =>
+  ({writable, import: import_}) => {
+    if (import_ === null) {
+      return onDeadHit();
+    } else {
+      assert(!writable, "writable import declaration");
+      return onStaticHit(
+        () => makeImportExpression(import_.source, import_.specifier),
+        makeConstantAssignmentEffect,
+      );
+    }
+  };
+
+const generateOnRoot =
+  (
+    makeConditional,
+    strict,
+    key,
+    reified,
+    {onDynamicHit, onDeadHit, onMiss, onGlobal},
+  ) =>
+  () => {
+    if (reified) {
+      return makeConditional(
+        makeHasExpression(
+          makeDirectIntrinsicExpression("aran.globalRecord"),
+          key,
+        ),
+        makeConditional(
+          makeBinaryExpression(
             "===",
-            Intrinsic.makeGetExpression(
-              Meta.makeOpenExpression(this.scope, frame.box),
-              Tree.PrimitiveExpression(this.identifier),
-              null),
-            Intrinsic.makeGrabExpression("aran.deadzoneMarker")),
-          this.callbacks.onDynamicDeadHit(frame.data, frame.box),
-          _expression2) :
-        _expression2),
-      Tree.ConditionalExpression(_expression1, _expression2, expression3))); }};
+            makeGetExpression(
+              makeDirectIntrinsicExpression("aran.globalRecord"),
+              key,
+            ),
+            makeDirectIntrinsicExpression("aran.deadzone"),
+          ),
+          onDeadHit(dummy_note),
+          onDynamicHit(
+            true,
+            makeDirectIntrinsicExpression("aran.globalRecord"),
+          ),
+        ),
+        makeConditional(
+          makeHasExpression(
+            makeDirectIntrinsicExpression("aran.globalObject"),
+            key,
+          ),
+          onDynamicHit(
+            strict,
+            makeDirectIntrinsicExpression("aran.globalObject"),
+          ),
+          onMiss(strict),
+        ),
+      );
+    } else {
+      return onGlobal(strict);
+    }
+  };
 
-exports.makeLookupExpression = (scope, identifier, callbacks) => Meta.makeLookupExpression(
-  scope,
-  identifier,
-  {
-    __proto__: lookup_callback_prototype,
-    scope,
-    identifier,
-    callbacks});
+const generateOnDynamicFrame =
+  (makeConditional, strict, key, {onDynamicHit}) =>
+  (node, {lookupable, unscopable, object}) => {
+    if (lookupable) {
+      if (unscopable) {
+        return makeConditional(
+          makeConditionalExpression(
+            makeGetExpression(
+              object,
+              makeDirectIntrinsicExpression("Symbol.unscopables"),
+            ),
+            makeConditionalExpression(
+              makeHasExpression(
+                makeGetExpression(
+                  object,
+                  makeDirectIntrinsicExpression("Symbol.unscopables"),
+                ),
+                key,
+              ),
+              makeLiteralExpression(false),
+              makeHasExpression(object, key),
+            ),
+            makeHasExpression(object, key),
+          ),
+          onDynamicHit(strict, object),
+          node,
+        );
+      } else {
+        return makeConditional(
+          makeHasExpression(object, key),
+          onDynamicHit(strict, object),
+          node,
+        );
+      }
+    } else {
+      return node;
+    }
+  };
+
+const generateMakeLookup =
+  (makeLookup, makeConditional) => (scope, variable, callbacks) => {
+    const key = makeLiteralExpression(variable);
+    const strict = lookupScopeProperty(scope, STRICT);
+    return makeLookup(scope, variable, {
+      onLiveHit: generateOnLiveHit(callbacks),
+      onDeadHit: generateOnDeadHit(callbacks),
+      onRoot: generateOnRoot(
+        makeConditional,
+        strict,
+        key,
+        isGlobalReified(scope),
+        callbacks,
+      ),
+      onDynamicFrame: isSpecialVariable(variable)
+        ? returnFirst
+        : generateOnDynamicFrame(makeConditional, strict, key, callbacks),
+    });
+  };
+
+export const makeLookupEffect = generateMakeLookup(
+  makeLookupEffect_,
+  makeConditionalEffect,
+);
+
+export const makeLookupExpression = generateMakeLookup(
+  makeLookupExpression_,
+  makeConditionalExpression,
+);
