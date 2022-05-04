@@ -44,7 +44,7 @@ const syntax = {
     ReturnStatement: ["Expression"],
     BreakStatement: ["Label"],
     DebuggerStatement: [],
-    DeclareStatement: ["VariableType", "Variable", "Expression"],
+    DeclareStatement: ["DeclareType", "Variable", "Expression"],
     // BlockFull //
     BlockStatement: ["Block"],
     IfStatement: ["Expression", "Block", "Block"],
@@ -167,7 +167,7 @@ const predicates = {
     "super.set",
     "super.call",
   ]),
-  VariableType: generateIsEnumeration(["var", "let", "const"]),
+  DeclareType: generateIsEnumeration(["var", "let", "const"]),
   ClosureType: generateIsEnumeration([
     "arrow",
     "function",
