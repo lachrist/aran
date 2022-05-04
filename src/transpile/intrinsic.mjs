@@ -1,6 +1,6 @@
-import {includes} from "array-lite";
+import {includes, concat, flat, map} from "array-lite";
 
-import {assert, getLast, pop} from "../util.mjs";
+import {assert} from "../util.mjs";
 
 import {
   makeApplyExpression,
@@ -9,7 +9,10 @@ import {
   makeConstructExpression,
 } from "../ast/index.mjs";
 
-const {undefined} = globalThis;
+const {
+  undefined,
+  Object: {entries: getEntries},
+} = globalThis;
 
 const generateMakeApply1 =
   (name) =>
@@ -83,14 +86,32 @@ export const makeBinaryExpression = (
 // object //
 ////////////
 
-export const makeObjectExpression = (...expressions) =>
+export const makeObjectExpression = (
+  prototype,
+  properties,
+  annotation = undefined,
+) =>
   makeApplyExpression(
     makeIntrinsicExpression("aran.createObject"),
     makeLiteralExpression({undefined: null}),
-    expressions,
-    typeof getLast(expressions) === "object" && getLast(expressions) !== null
-      ? undefined
-      : pop(expressions),
+    concat([prototype], flat(properties)),
+    annotation,
+  );
+
+const makeProperty = ({0: key, 1: value}) => [
+  makeLiteralExpression(key),
+  value,
+];
+
+export const makeSimpleObjectExpression = (
+  prototype,
+  object,
+  annotation = undefined,
+) =>
+  makeObjectExpression(
+    prototype,
+    map(getEntries(object), makeProperty),
+    annotation,
   );
 
 export const makeHasExpression = (object, key, annotation = undefined) =>
@@ -98,6 +119,9 @@ export const makeHasExpression = (object, key, annotation = undefined) =>
 export const makeGetExpression = generateMakeApply2("aran.get");
 export const makeSloppySetExpression = generateMakeApply3("aran.setSloppy");
 export const makeStrictSetExpression = generateMakeApply3("aran.setStrict");
+export const makeDefinePropertyExpression = generateMakeApply3(
+  "Reflect.defineProperty",
+);
 
 ////////////
 // global //

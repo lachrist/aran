@@ -8,6 +8,7 @@ import {
   makeHasExpression,
   makeStrictSetExpression,
   makeObjectExpression,
+  makeSimpleObjectExpression,
   makeUnaryExpression,
   makeBinaryExpression,
   makeThrowSyntaxErrorExpression,
@@ -49,17 +50,24 @@ test(
 );
 
 test(
-  makeObjectExpression(
-    makeLiteralExpression("prototype"),
-    makeLiteralExpression("key"),
-    makeLiteralExpression("value"),
-  ),
+  makeObjectExpression(makeLiteralExpression("prototype"), [
+    [makeLiteralExpression("key"), makeLiteralExpression("value")],
+  ]),
   "intrinsic('aran.createObject')(undefined, 'prototype', 'key', 'value')",
 );
 
 test(
-  makeObjectExpression(makeLiteralExpression("prototype"), "annotation"),
+  makeObjectExpression(makeLiteralExpression("prototype"), [], "annotation"),
   "intrinsic('aran.createObject')(undefined, 'prototype')",
+);
+
+test(
+  makeSimpleObjectExpression(
+    makeLiteralExpression("prototype"),
+    {key: makeLiteralExpression("value")},
+    "annotation",
+  ),
+  "intrinsic('aran.createObject')(undefined, 'prototype', 'key', 'value')",
 );
 
 test(
