@@ -234,7 +234,8 @@ export const convertBlock = generateConvert({
     if (
       node.body.length > 0 &&
       node.body[0].type === "VariableDeclaration" &&
-      node.body[0].kind === "let"
+      node.body[0].kind === "let" &&
+      node.body[0].declarations[0].init === null
     ) {
       return makeBlock(
         [],
