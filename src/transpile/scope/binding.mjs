@@ -1,4 +1,4 @@
-import {push, assert} from "../../util.mjs";
+import {assert} from "../../util.mjs";
 
 import {makeBaseVariable, makeMetaVariable} from "../../variable.mjs";
 
@@ -20,18 +20,14 @@ const MAYBE = null;
 const NEVER = undefined;
 
 const generateRead =
-  ({variable, state}) =>
-  () => {
-    state.accessed = true;
-    return makeReadExpression(makeBaseVariable(variable));
-  };
+  ({variable}) =>
+  () =>
+    makeReadExpression(makeBaseVariable(variable));
 
 const generateWrite =
-  ({variable, state}) =>
-  (expression) => {
-    state.accessed = true;
-    return makeWriteEffect(makeBaseVariable(variable), expression);
-  };
+  ({variable}) =>
+  (expression) =>
+    makeWriteEffect(makeBaseVariable(variable), expression);
 
 const generateMakeBinding = (initialization) => (variable, note) => ({
   variable,
@@ -39,7 +35,6 @@ const generateMakeBinding = (initialization) => (variable, note) => ({
   state: {
     initialization,
     deadzone: false,
-    accessed: false,
   },
 });
 
@@ -70,7 +65,6 @@ export const makeBindingInitializeEffect = (binding, distant, expression) => {
 };
 
 export const accessBinding = (escaped, {state}) => {
-  state.accessed = true;
   if (state.initialization === NO && escaped) {
     state.deadzone = true;
   }
@@ -107,14 +101,13 @@ export const assertBindingInitialization = ({state}) => {
 };
 
 export const harvestBindingVariables = ({state, variable}) => {
-  const variables = [];
-  if (state.accessed) {
-    push(variables, makeBaseVariable(variable));
+  if (state.initialization === NEVER) {
+    return [];
+  } else if (state.deadzone) {
+    return [makeBaseVariable(variable), makeMetaVariable(variable)];
+  } else {
+    return [makeBaseVariable(variable)];
   }
-  if (state.deadzone) {
-    push(variables, makeMetaVariable(variable));
-  }
-  return variables;
 };
 
 export const harvestBindingStatements = ({state, variable}) => {

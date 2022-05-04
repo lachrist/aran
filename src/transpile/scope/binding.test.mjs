@@ -26,7 +26,7 @@ import {
 
 const {undefined} = globalThis;
 
-const curries = {
+const callbacks = {
   onGhostHit: generateAssertUnreachable("onGhostHit"),
   onDeadHit: generateAssertUnreachable("onDeadHit"),
   onLiveHit: generateAssertUnreachable("onLiveHit"),
@@ -82,7 +82,7 @@ assertEqual(
       makeEffectStatement(
         makeExpressionEffect(
           makeBindingLookupExpression(binding, false, {
-            ...curries,
+            ...callbacks,
             onDeadHit: (note) => {
               assertEqual(note, "note");
               return makeLiteralExpression("dead");
@@ -100,7 +100,7 @@ assertEqual(
       makeEffectStatement(
         makeExpressionEffect(
           makeBindingLookupExpression(binding, false, {
-            ...curries,
+            ...callbacks,
             onLiveHit: (read, write, note) => {
               assertEqual(note, "note");
               return makeSequenceExpression(
@@ -135,7 +135,7 @@ assertEqual(
       makeEffectStatement(
         makeExpressionEffect(
           makeBindingLookupExpression(binding, true, {
-            ...curries,
+            ...callbacks,
             onLiveHit: (read, _write, note) => {
               assertEqual(note, "note");
               return read();
@@ -209,7 +209,7 @@ assertEqual(
       makeEffectStatement(
         makeExpressionEffect(
           makeBindingLookupExpression(binding, false, {
-            ...curries,
+            ...callbacks,
             onLiveHit: (read, _write, note) => {
               assertEqual(note, "note");
               return read();
@@ -224,24 +224,24 @@ assertEqual(
     ],
   );
 }
-//
-// ///////////
-// // Ghost //
-// ///////////
-//
-// {
-//   const binding = makeGhostBinding("variable", "note");
-//   test("{ effect('ghost'); }", binding, [
-//     makeEffectStatement(
-//       makeExpressionEffect(
-//         makeBindingLookupExpression(binding, false, {
-//           ...curries,
-//           onGhostHit: (note) => {
-//             assertEqual(note, "note");
-//             return makeLiteralExpression("ghost");
-//           },
-//         }),
-//       ),
-//     ),
-//   ]);
-// }
+
+///////////
+// Ghost //
+///////////
+
+{
+  const binding = makeGhostBinding("variable", "note");
+  test("{ effect('ghost'); }", binding, [
+    makeEffectStatement(
+      makeExpressionEffect(
+        makeBindingLookupExpression(binding, false, {
+          ...callbacks,
+          onDeadHit: (note) => {
+            assertEqual(note, "note");
+            return makeLiteralExpression("ghost");
+          },
+        }),
+      ),
+    ),
+  ]);
+}
