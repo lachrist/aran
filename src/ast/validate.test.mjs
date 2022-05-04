@@ -469,7 +469,7 @@ testVariable((variable) =>
   const makeScriptProgram = (statement) =>
     makeValidNode("ScriptProgram", [statement, return_statement]);
   makeScriptProgram(rigid_declare_statement);
-  assertThrow(() => makeScriptProgram(loose_declare_statement));
+  makeScriptProgram(loose_declare_statement);
   // Block //
   const makeBlock = (statement) =>
     makeValidNode("Block", [], [], [statement, return_statement]);

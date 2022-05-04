@@ -289,6 +289,7 @@ const generateValidateNode = () => {
     },
     ScriptProgram: (digest, statements, _annotation) => {
       digest = filterOut(digest, isRigidDeclareStatement);
+      digest = filterOut(digest, isLooseDeclareStatement);
       return checkoutProgram(
         "ScriptProgram",
         digest,
