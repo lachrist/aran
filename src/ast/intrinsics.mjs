@@ -13,7 +13,7 @@ const intrinsics = [
   "aran.get",
   "aran.setSloppy",
   "aran.setStrict",
-  "aran.deadzoneMarker",
+  "aran.deadzone",
   "aran.AranError",
   "aran.asynchronousGeneratorPrototype",
   "aran.generatorPrototype",

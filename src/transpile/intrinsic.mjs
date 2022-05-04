@@ -170,6 +170,7 @@ const whitelist = [
   "aran.globalCache",
   "aran.globalRecord",
   "aran.globalObject",
+  "aran.deadzone",
   "globalThis",
   "Symbol.iterator",
   "Symbol.unscopables",
