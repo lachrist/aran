@@ -12,13 +12,16 @@ import {
   stringifyBlock,
   stringifyProgram,
 } from "../lang/index.mjs";
+
 import {
   makeRootError,
   getErrorMessage,
   getErrorLeft,
   getErrorRight,
 } from "./error.mjs";
+
 import {getResultError} from "./result.mjs";
+
 import {
   visitExpression,
   visitEffect,
@@ -51,22 +54,27 @@ export const allignExpression = generateAllign(
   stringifyExpression,
   visitExpression,
 );
+
 export const allignEffect = generateAllign(
   parseEffect,
   stringifyEffect,
   visitEffect,
 );
+
 export const allignLink = generateAllign(parseLink, stringifyLink, visitLink);
+
 export const allignStatement = generateAllign(
   parseStatement,
   stringifyStatement,
   visitStatement,
 );
+
 export const allignBlock = generateAllign(
   parseBlock,
   stringifyBlock,
   visitBlock,
 );
+
 export const allignProgram = generateAllign(
   parseProgram,
   stringifyProgram,
