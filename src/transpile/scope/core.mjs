@@ -24,6 +24,8 @@ import {freshenVariable} from "../../variable.mjs";
 
 import {
   makeBinding,
+  makeGhostBinding,
+  assertBindingInitialization,
   equalsBindingVariable,
   makeBindingInitializeEffect,
   accessBinding,
@@ -110,6 +112,7 @@ export const makeScopeBlock = (parent, labels, callback) => {
     depth: parent.depth + 1,
     counter: createCounter(),
   });
+  forEach(bindings, assertBindingInitialization);
   return makeBlock(
     labels,
     flatMap(bindings, harvestBindingVariables),
@@ -160,7 +163,7 @@ export const getBindingDynamicFrame = (scope) => {
 /////////////
 
 export const generateDeclareStatic =
-  (transformVariable) => (scope, variable, note) => {
+  (bind, transformVariable) => (scope, variable, note) => {
     scope = getBindingScope(scope);
     assert(
       scope.type === STATIC_SCOPE_TYPE,
@@ -172,12 +175,19 @@ export const generateDeclareStatic =
         undefined,
       "duplicate static variable declaration",
     );
-    push(scope.bindings, makeBinding(variable, note));
+    push(scope.bindings, bind(variable, note));
     return variable;
   };
 
-export const declareVariable = generateDeclareStatic(returnFirst);
-export const declareFreshVariable = generateDeclareStatic(freshenVariable);
+export const declareVariable = generateDeclareStatic(makeBinding, returnFirst);
+export const declareGhostVariable = generateDeclareStatic(
+  makeGhostBinding,
+  returnFirst,
+);
+export const declareFreshVariable = generateDeclareStatic(
+  makeBinding,
+  freshenVariable,
+);
 
 ////////////////
 // Initialize //

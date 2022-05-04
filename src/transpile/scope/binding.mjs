@@ -12,9 +12,12 @@ import {
   makeEffectStatement,
 } from "../../ast/index.mjs";
 
+const {undefined} = globalThis;
+
 const YES = true;
 const NO = false;
 const MAYBE = null;
+const NEVER = undefined;
 
 const generateRead =
   ({variable, state}) =>
@@ -30,18 +33,26 @@ const generateWrite =
     return makeWriteEffect(makeBaseVariable(variable), expression);
   };
 
-export const makeBinding = (variable, note) => ({
+const generateMakeBinding = (initialization) => (variable, note) => ({
   variable,
   note,
-  state: {initialization: NO, deadzone: false, accessed: false},
+  state: {
+    initialization,
+    deadzone: false,
+    accessed: false,
+  },
 });
+
+export const makeBinding = generateMakeBinding(NO);
+
+export const makeGhostBinding = generateMakeBinding(NEVER);
 
 export const equalsBindingVariable = ({variable: variable1}, variable2) =>
   variable1 === variable2;
 
 export const makeBindingInitializeEffect = (binding, distant, expression) => {
   const {state, variable} = binding;
-  assert(state.initialization === NO, "duplicate binding initialization");
+  assert(state.initialization === NO, "duplicate/ghost binding initialization");
   state.initialization = distant ? MAYBE : YES;
   if (distant) {
     state.deadzone = true;
@@ -71,7 +82,10 @@ const generateLookup =
     const {state, variable, note} = binding;
     if (state.initialization === YES) {
       return onLiveHit(generateRead(binding), generateWrite(binding), note);
-    } else if (state.initialization === NO && !escaped) {
+    } else if (
+      state.initialization === NEVER ||
+      (state.initialization === NO && !escaped)
+    ) {
       return onDeadHit(note);
     } else {
       state.deadzone = true;
@@ -87,6 +101,10 @@ export const makeBindingLookupExpression = generateLookup(
   makeConditionalExpression,
 );
 export const makeBindingLookupEffect = generateLookup(makeConditionalEffect);
+
+export const assertBindingInitialization = ({state}) => {
+  assert(state.initialization !== NO, "missing variable initialization");
+};
 
 export const harvestBindingVariables = ({state, variable}) => {
   const variables = [];

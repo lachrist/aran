@@ -14,6 +14,8 @@ import {allignBlock} from "../../allign/index.mjs";
 
 import {
   makeBinding,
+  makeGhostBinding,
+  assertBindingInitialization,
   equalsBindingVariable,
   makeBindingInitializeEffect,
   accessBinding,
@@ -21,6 +23,8 @@ import {
   harvestBindingVariables,
   harvestBindingStatements,
 } from "./binding.mjs";
+
+const {undefined} = globalThis;
 
 const curries = {
   onGhostHit: generateAssertUnreachable("onGhostHit"),
@@ -42,14 +46,26 @@ const test = (code, binding, statements) => {
   );
 };
 
+////////////////////
+// Initialization //
+////////////////////
+
+assertEqual(
+  assertBindingInitialization(makeGhostBinding("variable", "note")),
+  undefined,
+);
+
 ///////////////////////////
 // equalsBindingVariable //
 ///////////////////////////
 
-assertEqual(equalsBindingVariable(makeBinding("variable"), "variable"), true);
+assertEqual(
+  equalsBindingVariable(makeBinding("variable", "note"), "variable"),
+  true,
+);
 
 assertEqual(
-  equalsBindingVariable(makeBinding("variable2"), "variable1"),
+  equalsBindingVariable(makeBinding("variable2", "note"), "variable1"),
   false,
 );
 

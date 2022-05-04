@@ -10,6 +10,7 @@ import {
   isBound,
   isDynamicallyBound,
   declareVariable,
+  declareGhostVariable,
   declareFreshVariable,
   makeInitializeEffect,
   makeLookupExpression,
@@ -77,6 +78,11 @@ export const declareMetaVariable = generateDeclare(
 export const declareBaseVariable = generateDeclare(
   makeBaseVariable,
   declareVariable,
+);
+
+export const declareBaseGhostVariable = generateDeclare(
+  makeBaseVariable,
+  declareGhostVariable,
 );
 
 ////////////////////
