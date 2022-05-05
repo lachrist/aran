@@ -1,4 +1,4 @@
-import {returnFirst, returnSecond, assert} from "../../util.mjs";
+import {returnFirst, assert} from "../../util.mjs";
 
 import {
   makeMetaVariable,
@@ -105,7 +105,7 @@ export const makeBaseInitializeEffect =
 
 const ignoreDynamicFrame = (callbacks) => ({
   ...callbacks,
-  onDynamicFrame: returnSecond,
+  onDynamicFrame: returnFirst,
 });
 
 const generateMakeLookup =

@@ -235,7 +235,7 @@ export const makeInitializeEffect = (scope, variable, expression) => {
 ////////////
 
 const finalizeLookup = (frames, node, onDynamicFrame) =>
-  reduce(reverse(frames), flip(onDynamicFrame), node);
+  reduce(reverse(frames), onDynamicFrame, node);
 
 const generateLookup =
   (lookupBinding) =>

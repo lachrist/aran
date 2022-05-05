@@ -195,7 +195,7 @@ assertEqual(
       {
         ...callbacks,
         onRoot: () => makeLiteralExpression("root"),
-        onDynamicFrame: (frame, expression) =>
+        onDynamicFrame: (expression, frame) =>
           makeSequenceExpression(
             makeExpressionEffect(makeLiteralExpression(frame)),
             expression,
