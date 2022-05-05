@@ -21,7 +21,14 @@
 
 import {concat, map, reduce} from "array-lite";
 
-import {assert, throwError, partial1, returnFirst} from "../../util.mjs";
+import {
+  assert,
+  throwError,
+  partial1,
+  returnFirst,
+  partial2,
+  partial3,
+} from "../../util.mjs";
 
 import {
   makeSequenceEffect,
@@ -37,6 +44,7 @@ import {
 
 import {
   makeBinaryExpression,
+  makeSetEffect,
   makeStrictSetExpression,
   makeGetExpression,
   makeHasExpression,
@@ -75,9 +83,9 @@ const generateMakeDynamicScope =
       object,
     });
 
-export const makeLookupableScope = generateMakeDynamicScope(true, false);
+export const makeLookupableDynamicScope = generateMakeDynamicScope(true, false);
 
-export const makeDeclarableScope = generateMakeDynamicScope(false, true);
+export const makeDeclarableDynamicScope = generateMakeDynamicScope(false, true);
 
 //////////////
 // Property //
@@ -91,6 +99,8 @@ export const initializeScope = (scope, reified) =>
 
 export const useStrictScope = (scope) => makePropertyScope(scope, STRICT, true);
 
+export const isStrictScope = (scope) => lookupScopeProperty(scope, STRICT);
+
 const isGlobalReified = (scope) => lookupScopeProperty(scope, REIFIED);
 
 /////////////
@@ -98,7 +108,7 @@ const isGlobalReified = (scope) => lookupScopeProperty(scope, REIFIED);
 /////////////
 
 export const makePreludeStatementArray = (scope, variable) => {
-  if (!isBound(scope) && lookupScopeProperty(scope, REIFIED)) {
+  if (!isBound(scope) && isGlobalReified(scope)) {
     return [
       makeEffectStatement(
         makeExpressionEffect(
@@ -129,24 +139,6 @@ const makeExportUndefinedStatement = (specifier) =>
     makeExportEffect(specifier, makeLiteralExpression({undefined: null})),
   );
 
-const makeLooseDynamicDeclareEffect = (object, variable) =>
-  makeExpressionEffect(
-    makeConditionalExpression(
-      makeHasExpression(object, makeLiteralExpression(variable)),
-      makeLiteralExpression({undefined: null}),
-      makeDefinePropertyExpression(
-        object,
-        makeLiteralExpression(variable),
-        makeSimpleObjectExpression(makeLiteralExpression(null), {
-          configurable: makeLiteralExpression(false),
-          enumerable: makeLiteralExpression(true),
-          writable: makeLiteralExpression(true),
-          value: makeLiteralExpression({undefined: null}),
-        }),
-      ),
-    ),
-  );
-
 export const makeLooseDeclareStatementArray = (scope, variable, specifiers) => {
   if (isStaticallyBound(scope)) {
     declareVariable(scope, variable, {
@@ -175,7 +167,19 @@ export const makeLooseDeclareStatementArray = (scope, variable, specifiers) => {
       "dynamically bound loose declaration should not be exported",
     );
     return [
-      makeEffectStatement(makeLooseDynamicDeclareEffect(object, variable)),
+      makeEffectStatement(
+        makeExpressionEffect(
+          makeConditionalExpression(
+            makeHasExpression(object, makeLiteralExpression(variable)),
+            makeLiteralExpression({undefined: null}),
+            makeStrictSetExpression(
+              object,
+              makeLiteralExpression(variable),
+              makeLiteralExpression({undefined: null}),
+            ),
+          ),
+        ),
+      ),
     ];
   } else {
     assert(
@@ -185,9 +189,24 @@ export const makeLooseDeclareStatementArray = (scope, variable, specifiers) => {
     if (isGlobalReified(scope)) {
       return [
         makeEffectStatement(
-          makeLooseDynamicDeclareEffect(
-            makeDirectIntrinsicExpression("aran.globalObject"),
-            variable,
+          makeExpressionEffect(
+            makeConditionalExpression(
+              makeHasExpression(
+                makeDirectIntrinsicExpression("aran.globalObject"),
+                makeLiteralExpression(variable),
+              ),
+              makeLiteralExpression({undefined: null}),
+              makeDefinePropertyExpression(
+                makeDirectIntrinsicExpression("aran.globalObject"),
+                makeLiteralExpression(variable),
+                makeSimpleObjectExpression(makeLiteralExpression(null), {
+                  configurable: makeLiteralExpression(false),
+                  enumerable: makeLiteralExpression(true),
+                  writable: makeLiteralExpression(true),
+                  value: makeLiteralExpression({undefined: null}),
+                }),
+              ),
+            ),
           ),
         ),
       ];
@@ -361,8 +380,6 @@ const isSpecialVariable = (identifier) =>
   identifier === "new.target" ||
   identifier === "import.meta";
 
-const dummy_note = {writable: true, import: null, exports: []};
-
 const generateWrite = (write, specifiers) => (right) =>
   reduce(specifiers, generateMakeSequenceExport(right), write(right));
 
@@ -372,10 +389,10 @@ const makeConstantAssignmentEffect = (_right) =>
   );
 
 const generateOnLiveHit =
-  ({onStaticLiveHit}) =>
+  ({onLiveHit}) =>
   (read, write, {writable, import: import_, exports: specifiers}) => {
     assert(import_ === null, "initialized import declaration");
-    return onStaticLiveHit(
+    return onLiveHit(
       read,
       writable
         ? generateWrite(write, specifiers)
@@ -384,14 +401,14 @@ const generateOnLiveHit =
   };
 
 const generateOnDeadHit =
-  ({onStaticHit, onDeadHit}) =>
+  ({onLiveHit, onDeadHit}) =>
   ({writable, import: import_}) => {
     if (import_ === null) {
       return onDeadHit();
     } else {
       assert(!writable, "writable import declaration");
-      return onStaticHit(
-        () => makeImportExpression(import_.source, import_.specifier),
+      return onLiveHit(
+        partial2(makeImportExpression, import_.source, import_.specifier),
         makeConstantAssignmentEffect,
       );
     }
@@ -403,7 +420,7 @@ const generateOnRoot =
     strict,
     key,
     reified,
-    {onDynamicHit, onDeadHit, onMiss, onGlobal},
+    {onLiveHit, onDeadHit, onMiss, onGlobal},
   ) =>
   () => {
     if (reified) {
@@ -421,10 +438,19 @@ const generateOnRoot =
             ),
             makeDirectIntrinsicExpression("aran.deadzone"),
           ),
-          onDeadHit(dummy_note),
-          onDynamicHit(
-            true,
-            makeDirectIntrinsicExpression("aran.globalRecord"),
+          onDeadHit(),
+          onLiveHit(
+            partial2(
+              makeGetExpression,
+              makeDirectIntrinsicExpression("aran.globalRecord"),
+              key,
+            ),
+            partial3(
+              makeSetEffect,
+              true,
+              makeDirectIntrinsicExpression("aran.globalRecord"),
+              key,
+            ),
           ),
         ),
         makeConditional(
@@ -432,20 +458,29 @@ const generateOnRoot =
             makeDirectIntrinsicExpression("aran.globalObject"),
             key,
           ),
-          onDynamicHit(
-            strict,
-            makeDirectIntrinsicExpression("aran.globalObject"),
+          onLiveHit(
+            partial2(
+              makeGetExpression,
+              makeDirectIntrinsicExpression("aran.globalObject"),
+              key,
+            ),
+            partial3(
+              makeSetEffect,
+              strict,
+              makeDirectIntrinsicExpression("aran.globalObject"),
+              key,
+            ),
           ),
-          onMiss(strict),
+          onMiss(),
         ),
       );
     } else {
-      return onGlobal(strict);
+      return onGlobal();
     }
   };
 
 const generateOnDynamicFrame =
-  (makeConditional, strict, key, {onDynamicHit}) =>
+  (makeConditional, strict, key, {onLiveHit}) =>
   (node, {lookupable, unscopable, object}) => {
     if (lookupable) {
       if (unscopable) {
@@ -456,7 +491,7 @@ const generateOnDynamicFrame =
               makeDirectIntrinsicExpression("Symbol.unscopables"),
             ),
             makeConditionalExpression(
-              makeHasExpression(
+              makeGetExpression(
                 makeGetExpression(
                   object,
                   makeDirectIntrinsicExpression("Symbol.unscopables"),
@@ -468,13 +503,19 @@ const generateOnDynamicFrame =
             ),
             makeHasExpression(object, key),
           ),
-          onDynamicHit(strict, object),
+          onLiveHit(
+            partial2(makeGetExpression, object, key),
+            partial3(makeSetEffect, strict, object, key),
+          ),
           node,
         );
       } else {
         return makeConditional(
           makeHasExpression(object, key),
-          onDynamicHit(strict, object),
+          onLiveHit(
+            partial2(makeGetExpression, object, key),
+            partial3(makeSetEffect, strict, object, key),
+          ),
           node,
         );
       }
@@ -486,7 +527,7 @@ const generateOnDynamicFrame =
 const generateMakeLookup =
   (makeLookup, makeConditional) => (scope, variable, callbacks) => {
     const key = makeLiteralExpression(variable);
-    const strict = lookupScopeProperty(scope, STRICT);
+    const strict = isStrictScope(scope);
     return makeLookup(scope, variable, {
       onLiveHit: generateOnLiveHit(callbacks),
       onDeadHit: generateOnDeadHit(callbacks),
