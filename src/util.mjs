@@ -174,7 +174,16 @@ export const flip = (f) => {
   }
 };
 
-export const bind = (f, g) => (x) => f(g(x));
+export const bind =
+  (f, g) =>
+  (...xs) =>
+    f(apply(g, undefined, xs));
+export const bind0 = (f, g) => () => f(g());
+export const bind1 = (f, g) => (x1) => f(g(x1));
+export const bind2 = (f, g) => (x1, x2) => f(g(x1, x2));
+export const bind3 = (f, g) => (x1, x2, x3) => f(g(x1, x2, x3));
+export const bind4 = (f, g) => (x1, x2, x3, x4) => f(g(x1, x2, x3, x4));
+export const bind5 = (f, g) => (x1, x2, x3, x4, x5) => f(g(x1, x2, x3, x4, x5));
 
 export const returnFirst = (x1) => x1;
 export const returnSecond = (_x1, x2) => x2;

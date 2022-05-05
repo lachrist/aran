@@ -1,4 +1,4 @@
-import {slice} from "array-lite";
+import {slice, concat} from "array-lite";
 
 import {assertThrow, assertEqual, assertDeepEqual} from "./__fixture__.mjs";
 
@@ -11,6 +11,12 @@ import {
   incrementCounter,
   createCounter,
   bind,
+  bind0,
+  bind1,
+  bind2,
+  bind3,
+  bind4,
+  bind5,
   returnFirst,
   returnSecond,
   returnThird,
@@ -41,6 +47,10 @@ const {
   undefined,
   Reflect: {defineProperty, apply},
 } = globalThis;
+
+const concatTwice = (xs) => concat(xs, xs);
+
+const returnArguments = (...xs) => xs;
 
 const generateReturnArguments = (length) => {
   const f = (...xs) => xs;
@@ -169,12 +179,27 @@ assertDeepEqual(
 );
 assertThrow(() => flip(generateReturnArguments(6)));
 
-assertEqual(
-  bind(
-    (x) => 2 * x,
-    (x) => x + 1,
-  )(2),
-  6,
+assertDeepEqual(bind0(concatTwice, returnArguments)(1, 2, 3, 4, 5, 6), []);
+assertDeepEqual(bind1(concatTwice, returnArguments)(1, 2, 3, 4, 5, 6), [1, 1]);
+assertDeepEqual(
+  bind2(concatTwice, returnArguments)(1, 2, 3, 4, 5, 6),
+  [1, 2, 1, 2],
+);
+assertDeepEqual(
+  bind3(concatTwice, returnArguments)(1, 2, 3, 4, 5, 6),
+  [1, 2, 3, 1, 2, 3],
+);
+assertDeepEqual(
+  bind4(concatTwice, returnArguments)(1, 2, 3, 4, 5, 6),
+  [1, 2, 3, 4, 1, 2, 3, 4],
+);
+assertDeepEqual(
+  bind5(concatTwice, returnArguments)(1, 2, 3, 4, 5, 6),
+  [1, 2, 3, 4, 5, 1, 2, 3, 4, 5],
+);
+assertDeepEqual(
+  bind(concatTwice, returnArguments)(1, 2, 3, 4, 5, 6),
+  [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6],
 );
 
 assertEqual(returnFirst(1), 1);
