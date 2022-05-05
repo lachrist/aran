@@ -6,7 +6,7 @@ import {
   makeTypeofGlobalExpression,
   makeGetExpression,
   makeHasExpression,
-  makeStrictSetExpression,
+  makeSetExpression,
   makeObjectExpression,
   makeSimpleObjectExpression,
   makeUnaryExpression,
@@ -41,12 +41,23 @@ test(
 );
 
 test(
-  makeStrictSetExpression(
+  makeSetExpression(
+    true,
     makeLiteralExpression("object"),
     makeLiteralExpression("key"),
     makeLiteralExpression("value"),
   ),
   "intrinsic('aran.setStrict')(undefined, 'object', 'key', 'value')",
+);
+
+test(
+  makeSetExpression(
+    false,
+    makeLiteralExpression("object"),
+    makeLiteralExpression("key"),
+    makeLiteralExpression("value"),
+  ),
+  "intrinsic('aran.setSloppy')(undefined, 'object', 'key', 'value')",
 );
 
 test(

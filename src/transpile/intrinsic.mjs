@@ -1,8 +1,9 @@
 import {includes, concat, flat, map} from "array-lite";
 
-import {assert} from "../util.mjs";
+import {assert, bind4, bind5} from "../util.mjs";
 
 import {
+  makeExpressionEffect,
   makeApplyExpression,
   makeIntrinsicExpression,
   makeLiteralExpression,
@@ -122,6 +123,29 @@ export const makeStrictSetExpression = generateMakeApply3("aran.setStrict");
 export const makeDefinePropertyExpression = generateMakeApply3(
   "Reflect.defineProperty",
 );
+export const makeSetExpression = (
+  strict,
+  object,
+  key,
+  value,
+  annotation = undefined,
+) =>
+  (strict ? makeStrictSetExpression : makeSloppySetExpression)(
+    object,
+    key,
+    value,
+    annotation,
+  );
+
+export const makeStrictSetEffect = bind4(
+  makeExpressionEffect,
+  makeStrictSetExpression,
+);
+export const makeSloppytSetEffect = bind4(
+  makeExpressionEffect,
+  makeSloppySetExpression,
+);
+export const makeSetEffect = bind5(makeExpressionEffect, makeSetExpression);
 
 ////////////
 // global //
