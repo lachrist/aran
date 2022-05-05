@@ -29,8 +29,7 @@ import {
   equalsBindingVariable,
   makeBindingInitializeEffect,
   accessBinding,
-  makeBindingLookupExpression,
-  makeBindingLookupEffect,
+  makeBindingLookupNode,
   harvestBindingVariables,
   harvestBindingStatements,
 } from "./binding.mjs";
@@ -237,34 +236,34 @@ export const makeInitializeEffect = (scope, variable, expression) => {
 const finalizeLookup = (frames, node, onDynamicFrame) =>
   reduce(reverse(frames), onDynamicFrame, node);
 
-const generateLookup =
-  (lookupBinding) =>
-  (scope, variable, {onRoot, onDynamicFrame, ...callbacks}) => {
-    let escaped = false;
-    const predicate = partial1(equalsBindingVariableFlipped, variable);
-    const frames = [];
-    while (scope.type !== ROOT_SCOPE_TYPE) {
-      if (scope.type === DYNAMIC_SCOPE_TYPE) {
-        push(frames, scope.frame);
-      } else if (scope.type === CLOSURE_SCOPE_TYPE) {
-        escaped = true;
-      } else if (scope.type === STATIC_SCOPE_TYPE) {
-        const binding = find(scope.bindings, predicate);
-        if (binding !== undefined) {
-          return finalizeLookup(
-            frames,
-            lookupBinding(binding, escaped, callbacks),
-            onDynamicFrame,
-          );
-        }
+export const makeLookupNode = (
+  scope,
+  variable,
+  right,
+  {onRoot, onDynamicFrame, ...callbacks},
+) => {
+  let escaped = false;
+  const predicate = partial1(equalsBindingVariableFlipped, variable);
+  const frames = [];
+  while (scope.type !== ROOT_SCOPE_TYPE) {
+    if (scope.type === DYNAMIC_SCOPE_TYPE) {
+      push(frames, scope.frame);
+    } else if (scope.type === CLOSURE_SCOPE_TYPE) {
+      escaped = true;
+    } else if (scope.type === STATIC_SCOPE_TYPE) {
+      const binding = find(scope.bindings, predicate);
+      if (binding !== undefined) {
+        return finalizeLookup(
+          frames,
+          makeBindingLookupNode(binding, escaped, right, callbacks),
+          onDynamicFrame,
+        );
       }
-      scope = scope.parent;
     }
-    return finalizeLookup(frames, onRoot(), onDynamicFrame);
-  };
-
-export const makeLookupExpression = generateLookup(makeBindingLookupExpression);
-export const makeLookupEffect = generateLookup(makeBindingLookupEffect);
+    scope = scope.parent;
+  }
+  return finalizeLookup(frames, onRoot(), onDynamicFrame);
+};
 
 //////////
 // eval //

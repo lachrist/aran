@@ -19,16 +19,6 @@ const NO = false;
 const MAYBE = null;
 const NEVER = undefined;
 
-const generateRead =
-  ({variable}) =>
-  () =>
-    makeReadExpression(makeBaseVariable(variable));
-
-const generateWrite =
-  ({variable}) =>
-  (expression) =>
-    makeWriteEffect(makeBaseVariable(variable), expression);
-
 const generateMakeBinding = (initialization) => (variable, note) => ({
   variable,
   note,
@@ -70,31 +60,35 @@ export const accessBinding = (escaped, {state}) => {
   }
 };
 
-const generateLookup =
-  (makeConditional) =>
-  (binding, escaped, {onDeadHit, onLiveHit}) => {
-    const {state, variable, note} = binding;
-    if (state.initialization === YES) {
-      return onLiveHit(generateRead(binding), generateWrite(binding), note);
-    } else if (
-      state.initialization === NEVER ||
-      (state.initialization === NO && !escaped)
-    ) {
-      return onDeadHit(note);
-    } else {
-      state.deadzone = true;
-      return makeConditional(
-        makeReadExpression(makeMetaVariable(variable)),
-        onLiveHit(generateRead(binding), generateWrite(binding), note),
-        onDeadHit(note),
-      );
-    }
-  };
-
-export const makeBindingLookupExpression = generateLookup(
-  makeConditionalExpression,
-);
-export const makeBindingLookupEffect = generateLookup(makeConditionalEffect);
+export const makeBindingLookupNode = (
+  binding,
+  escaped,
+  right,
+  {onDeadHit, onLiveHit},
+) => {
+  const {state, variable, note} = binding;
+  const node =
+    right === null
+      ? makeReadExpression(makeBaseVariable(variable))
+      : makeWriteEffect(makeBaseVariable(variable), right);
+  if (state.initialization === YES) {
+    return onLiveHit(node, note);
+  } else if (
+    state.initialization === NEVER ||
+    (state.initialization === NO && !escaped)
+  ) {
+    return onDeadHit(note);
+  } else {
+    state.deadzone = true;
+    const makeConditional =
+      right === null ? makeConditionalExpression : makeConditionalEffect;
+    return makeConditional(
+      makeReadExpression(makeMetaVariable(variable)),
+      onLiveHit(node, note),
+      onDeadHit(note),
+    );
+  }
+};
 
 export const assertBindingInitialization = ({state}) => {
   assert(state.initialization !== NO, "missing variable initialization");

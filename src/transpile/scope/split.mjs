@@ -13,8 +13,7 @@ import {
   declareGhostVariable,
   declareFreshVariable,
   makeInitializeEffect,
-  makeLookupExpression,
-  makeLookupEffect,
+  makeLookupNode,
   makePropertyScope,
   lookupScopeProperty,
 } from "./core.mjs";
@@ -109,30 +108,20 @@ const ignoreDynamicFrame = (callbacks) => ({
 });
 
 const generateMakeLookup =
-  (makeVariable, makeLookup, transformCallbacks) =>
-  (scope, variable, callbacks) =>
-    makeLookup(scope, makeVariable(variable), transformCallbacks(callbacks));
+  (makeVariable, transformCallbacks) => (scope, variable, right, callbacks) =>
+    makeLookupNode(
+      scope,
+      makeVariable(variable),
+      right,
+      transformCallbacks(callbacks),
+    );
 
-export const makeMetaLookupExpression = generateMakeLookup(
+export const makeMetaLookupNode = generateMakeLookup(
   makeMetaVariable,
-  makeLookupExpression,
   ignoreDynamicFrame,
 );
 
-export const makeBaseLookupExpression = generateMakeLookup(
+export const makeBaseLookupNode = generateMakeLookup(
   makeBaseVariable,
-  makeLookupExpression,
-  returnFirst,
-);
-
-export const makeMetaLookupEffect = generateMakeLookup(
-  makeMetaVariable,
-  makeLookupEffect,
-  ignoreDynamicFrame,
-);
-
-export const makeBaseLookupEffect = generateMakeLookup(
-  makeBaseVariable,
-  makeLookupEffect,
   returnFirst,
 );

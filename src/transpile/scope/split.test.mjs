@@ -4,7 +4,11 @@ import {
   generateAssertUnreachable,
 } from "../../__fixture__.mjs";
 
-import {makeLiteralExpression, makeEffectStatement} from "../../ast/index.mjs";
+import {
+  makeLiteralExpression,
+  makeEffectStatement,
+  makeExpressionEffect,
+} from "../../ast/index.mjs";
 
 import {allignBlock} from "../../allign/index.mjs";
 
@@ -17,7 +21,7 @@ import {
   lookupMetaScopeProperty,
   declareMetaVariable,
   makeMetaInitializeEffect,
-  makeMetaLookupEffect,
+  makeMetaLookupNode,
 } from "./split.mjs";
 
 assertEqual(isMetaBound(makeRootScope()), false);
@@ -46,17 +50,26 @@ assertEqual(
           ),
         ),
         makeEffectStatement(
-          makeMetaLookupEffect(makeBaseDynamicScope(scope, "frame"), variable, {
-            __proto__: null,
-            onDeadHit: generateAssertUnreachable("onDeadHit"),
-            onLiveHit: (_read, write, note) =>
-              write(makeLiteralExpression(note)),
-            onRoot: generateAssertUnreachable("onRoot"),
-          }),
+          makeExpressionEffect(
+            makeMetaLookupNode(
+              makeBaseDynamicScope(scope, "frame"),
+              variable,
+              null,
+              {
+                __proto__: null,
+                onDeadHit: generateAssertUnreachable("onDeadHit"),
+                onLiveHit: (node, note) => {
+                  assertEqual(note, "note");
+                  return node;
+                },
+                onRoot: generateAssertUnreachable("onRoot"),
+              },
+            ),
+          ),
         ),
       ];
     }),
-    "{ let x; x = 'init'; x = 'note'; }",
+    "{ let x; x = 'init'; effect(x); }",
   ),
   null,
 );

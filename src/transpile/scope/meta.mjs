@@ -9,6 +9,7 @@
 // type Remainder = Maybe Expression
 
 import {
+  returnFirst,
   throwError,
   partial1,
   partial2,
@@ -32,8 +33,7 @@ import {
   isMetaBound as isBound,
   declareMetaVariable as declareVariable_,
   makeMetaInitializeEffect as makeInitializeEffect_,
-  makeMetaLookupExpression as makeLookupExpression,
-  makeMetaLookupEffect as makeLookupEffect,
+  makeMetaLookupNode as makeLookupNode,
 } from "./split.mjs";
 
 const COUNTER = "counter";
@@ -98,12 +98,10 @@ export const makeInitializeEffect = (scope, variable, expression) =>
 // Read //
 //////////
 
-const readLiveHit = (read, _write, _note) => read();
-
 export const makeReadExpression = (scope, variable) =>
-  makeLookupExpression(scope, variable, {
+  makeLookupNode(scope, variable, null, {
     onDeadHit,
-    onLiveHit: readLiveHit,
+    onLiveHit: returnFirst,
     onRoot: partial1(makeReadGlobalExpression, variable),
   });
 
@@ -111,12 +109,9 @@ export const makeReadExpression = (scope, variable) =>
 // Write //
 ///////////
 
-const generateWriteLiveHit = (expression) => (_read, write, _note) =>
-  write(expression);
-
-export const makeWriteEffect = (scope, variable, expression) =>
-  makeLookupEffect(scope, variable, {
+export const makeWriteEffect = (scope, variable, right) =>
+  makeLookupNode(scope, variable, right, {
     onDeadHit,
-    onLiveHit: generateWriteLiveHit(expression),
-    onRoot: partial2(makeWriteGlobalEffect, variable, expression),
+    onLiveHit: returnFirst,
+    onRoot: partial2(makeWriteGlobalEffect, variable, right),
   });

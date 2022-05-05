@@ -3,7 +3,6 @@ import {concat} from "array-lite";
 import {assertEqual, generateAssertUnreachable} from "../../__fixture__.mjs";
 
 import {
-  makeSequenceExpression,
   makeExpressionEffect,
   makeLiteralExpression,
   makeEffectStatement,
@@ -19,7 +18,7 @@ import {
   equalsBindingVariable,
   makeBindingInitializeEffect,
   accessBinding,
-  makeBindingLookupExpression,
+  makeBindingLookupNode,
   harvestBindingVariables,
   harvestBindingStatements,
 } from "./binding.mjs";
@@ -76,12 +75,20 @@ assertEqual(
 {
   const binding = makeBinding("variable", "note");
   test(
-    "{ let x; effect('dead'); x = 'init'; effect((x = 'right', x)); }",
+    `
+      {
+        let x;
+        effect('dead');
+        x = 'init';
+        effect(x);
+        x = 'right';
+      }
+    `,
     binding,
     [
       makeEffectStatement(
         makeExpressionEffect(
-          makeBindingLookupExpression(binding, false, {
+          makeBindingLookupNode(binding, false, null, {
             ...callbacks,
             onDeadHit: (note) => {
               assertEqual(note, "note");
@@ -99,17 +106,23 @@ assertEqual(
       ),
       makeEffectStatement(
         makeExpressionEffect(
-          makeBindingLookupExpression(binding, false, {
+          makeBindingLookupNode(binding, false, null, {
             ...callbacks,
-            onLiveHit: (read, write, note) => {
+            onLiveHit: (node, note) => {
               assertEqual(note, "note");
-              return makeSequenceExpression(
-                write(makeLiteralExpression("right")),
-                read(),
-              );
+              return node;
             },
           }),
         ),
+      ),
+      makeEffectStatement(
+        makeBindingLookupNode(binding, false, makeLiteralExpression("right"), {
+          ...callbacks,
+          onLiveHit: (node, note) => {
+            assertEqual(note, "note");
+            return node;
+          },
+        }),
       ),
     ],
   );
@@ -127,6 +140,7 @@ assertEqual(
         let $x, _x;
         _x = false;
         effect(_x ? $x : 'dead');
+        _x ? $x = 'right' : effect('dead');
         ($x = 'init', _x = true);
       }
     `,
@@ -134,11 +148,11 @@ assertEqual(
     [
       makeEffectStatement(
         makeExpressionEffect(
-          makeBindingLookupExpression(binding, true, {
+          makeBindingLookupNode(binding, true, null, {
             ...callbacks,
-            onLiveHit: (read, _write, note) => {
+            onLiveHit: (node, note) => {
               assertEqual(note, "note");
-              return read();
+              return node;
             },
             onDeadHit: (note) => {
               assertEqual(note, "note");
@@ -146,6 +160,19 @@ assertEqual(
             },
           }),
         ),
+      ),
+      makeEffectStatement(
+        makeBindingLookupNode(binding, true, makeLiteralExpression("right"), {
+          ...callbacks,
+          onLiveHit: (node, note) => {
+            assertEqual(note, "note");
+            return node;
+          },
+          onDeadHit: (note) => {
+            assertEqual(note, "note");
+            return makeExpressionEffect(makeLiteralExpression("dead"));
+          },
+        }),
       ),
       makeEffectStatement(
         makeBindingInitializeEffect(
@@ -208,11 +235,11 @@ assertEqual(
       ),
       makeEffectStatement(
         makeExpressionEffect(
-          makeBindingLookupExpression(binding, false, {
+          makeBindingLookupNode(binding, false, null, {
             ...callbacks,
-            onLiveHit: (read, _write, note) => {
+            onLiveHit: (node, note) => {
               assertEqual(note, "note");
-              return read();
+              return node;
             },
             onDeadHit: (note) => {
               assertEqual(note, "note");
@@ -234,7 +261,7 @@ assertEqual(
   test("{ effect('ghost'); }", binding, [
     makeEffectStatement(
       makeExpressionEffect(
-        makeBindingLookupExpression(binding, false, {
+        makeBindingLookupNode(binding, false, null, {
           ...callbacks,
           onDeadHit: (note) => {
             assertEqual(note, "note");

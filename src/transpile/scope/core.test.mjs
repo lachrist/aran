@@ -28,7 +28,7 @@ import {
   declareVariable,
   declareFreshVariable,
   makeInitializeEffect,
-  makeLookupExpression,
+  makeLookupNode,
   makeScopeEvalExpression,
 } from "./core.mjs";
 
@@ -83,11 +83,11 @@ assertEqual(
       return [
         makeEffectStatement(
           makeExpressionEffect(
-            makeLookupExpression(makeClosureScope(scope), "variable_1_1", {
+            makeLookupNode(makeClosureScope(scope), "variable_1_1", null, {
               ...callbacks,
-              onLiveHit: (read, _write, note) => {
+              onLiveHit: (node, note) => {
                 assertEqual(note, "note");
-                return read();
+                return node;
               },
               onDeadHit: (note) => {
                 assertEqual(note, "note");
@@ -139,11 +139,11 @@ assertEqual(
         ),
         makeEffectStatement(
           makeExpressionEffect(
-            makeLookupExpression(makeClosureScope(scope1), "variable", {
+            makeLookupNode(makeClosureScope(scope1), "variable", null, {
               ...callbacks,
-              onLiveHit: (read, _write, note) => {
+              onLiveHit: (node, note) => {
                 assertEqual(note, "note");
-                return read();
+                return node;
               },
               onDeadHit: (note) => {
                 assertEqual(note, "note");
@@ -174,7 +174,7 @@ assertEqual(
 
 assertEqual(
   allignExpression(
-    makeLookupExpression(makeRootScope(), "variable", {
+    makeLookupNode(makeRootScope(), "variable", null, {
       ...callbacks,
       onRoot: () => makeLiteralExpression("root"),
     }),
@@ -189,9 +189,10 @@ assertEqual(
 
 assertEqual(
   allignExpression(
-    makeLookupExpression(
+    makeLookupNode(
       makeDynamicScope(makeRootScope(), "frame"),
       "variable",
+      null,
       {
         ...callbacks,
         onRoot: () => makeLiteralExpression("root"),
