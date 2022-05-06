@@ -7,6 +7,7 @@ import {
   makeGetExpression,
   makeHasExpression,
   makeSetExpression,
+  makeDeleteExpression,
   makeObjectExpression,
   makeSimpleObjectExpression,
   makeUnaryExpression,
@@ -24,7 +25,7 @@ test(
     makeLiteralExpression("object"),
     makeLiteralExpression("key"),
   ),
-  "intrinsic('aran.binary')(undefined, 'in', 'key', 'object')",
+  "intrinsic('aran.has')(undefined, 'object', 'key')",
 );
 
 test(
@@ -58,6 +59,24 @@ test(
     makeLiteralExpression("value"),
   ),
   "intrinsic('aran.setSloppy')(undefined, 'object', 'key', 'value')",
+);
+
+test(
+  makeDeleteExpression(
+    true,
+    makeLiteralExpression("object"),
+    makeLiteralExpression("key"),
+  ),
+  "intrinsic('aran.deleteStrict')(undefined, 'object', 'key')",
+);
+
+test(
+  makeDeleteExpression(
+    false,
+    makeLiteralExpression("object"),
+    makeLiteralExpression("key"),
+  ),
+  "intrinsic('aran.deleteSloppy')(undefined, 'object', 'key')",
 );
 
 test(

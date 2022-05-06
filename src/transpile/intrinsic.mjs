@@ -1,9 +1,8 @@
 import {includes, concat, flat, map} from "array-lite";
 
-import {assert, bind4, bind5} from "../util.mjs";
+import {assert} from "../util.mjs";
 
 import {
-  makeExpressionEffect,
   makeApplyExpression,
   makeIntrinsicExpression,
   makeLiteralExpression,
@@ -115,14 +114,27 @@ export const makeSimpleObjectExpression = (
     annotation,
   );
 
-export const makeHasExpression = (object, key, annotation = undefined) =>
-  makeBinaryExpression("in", key, object, annotation);
+export const makeHasExpression = generateMakeApply2("aran.has");
 export const makeGetExpression = generateMakeApply2("aran.get");
 export const makeSloppySetExpression = generateMakeApply3("aran.setSloppy");
 export const makeStrictSetExpression = generateMakeApply3("aran.setStrict");
-export const makeDefinePropertyExpression = generateMakeApply3(
-  "Reflect.defineProperty",
-);
+export const makeSloppyDeleteExpression =
+  generateMakeApply2("aran.deleteSloppy");
+export const makeStrictDeleteExpression =
+  generateMakeApply2("aran.deleteStrict");
+
+export const makeDeleteExpression = (
+  strict,
+  object,
+  key,
+  annotation = undefined,
+) =>
+  (strict ? makeStrictDeleteExpression : makeSloppyDeleteExpression)(
+    object,
+    key,
+    annotation,
+  );
+
 export const makeSetExpression = (
   strict,
   object,
@@ -137,15 +149,9 @@ export const makeSetExpression = (
     annotation,
   );
 
-export const makeStrictSetEffect = bind4(
-  makeExpressionEffect,
-  makeStrictSetExpression,
+export const makeDefinePropertyExpression = generateMakeApply3(
+  "Reflect.defineProperty",
 );
-export const makeSloppytSetEffect = bind4(
-  makeExpressionEffect,
-  makeSloppySetExpression,
-);
-export const makeSetEffect = bind5(makeExpressionEffect, makeSetExpression);
 
 ////////////
 // global //
