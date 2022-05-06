@@ -3,6 +3,7 @@ import {concat, forEach} from "array-lite";
 import {assertEqual, generateAssertUnreachable} from "../../__fixture__.mjs";
 
 import {
+  makeSequenceEffect,
   makeSequenceExpression,
   makeEffectStatement,
   makeExpressionEffect,
@@ -17,6 +18,8 @@ import {allignBlock, allignProgram} from "../../allign/index.mjs";
 import {makeRootScope, makeScopeBlock} from "./split.mjs";
 
 import {
+  READ,
+  DELETE,
   isStrictScope,
   useStrictScope,
   makeLookupableDynamicScope,
@@ -27,7 +30,7 @@ import {
   makeRigidDeclareStatementArray,
   makeRigidInitializeStatementArray,
   declareImportVariable,
-  makeLookupExpression,
+  makeLookupNode,
 } from "./base.mjs";
 
 const callbacks = {
@@ -108,7 +111,7 @@ assertEqual(
     [
       makeEffectStatement(
         makeExpressionEffect(
-          makeLookupExpression(scope, "variable", {
+          makeLookupNode(scope, "variable", READ, {
             ...callbacks,
             onGlobal: () => makeLiteralExpression("global"),
           }),
@@ -132,15 +135,14 @@ assertEqual(
     `
       effect(
         (
-          intrinsic("aran.binary")(
+          intrinsic("aran.has")(
             undefined,
-            "in",
-            "variable",
-            intrinsic("aran.globalRecord"),
+            intrinsic('aran.globalRecord'),
+            'variable',
           ) ?
-          intrinsic("aran.throw")(
+          intrinsic('aran.throw')(
             undefined,
-            new (intrinsic("SyntaxError"))("Identifier 'variable' has already been declared"),
+            new (intrinsic('SyntaxError'))('Identifier \\'variable\\' has already been declared'),
           ) :
           undefined
         ),
@@ -154,11 +156,10 @@ assertEqual(
     `
       effect(
         (
-          intrinsic('aran.binary')(
+          intrinsic('aran.has')(
             undefined,
-            'in',
-            'variable',
             intrinsic('aran.globalObject'),
+            'variable',
           ) ?
           undefined :
           intrinsic('Reflect.defineProperty')(
@@ -239,12 +240,12 @@ assertEqual(
     [
       makeEffectStatement(
         makeExpressionEffect(
-          makeLookupExpression(scope, "variable", {
+          makeLookupNode(scope, "variable", READ, {
             ...callbacks,
-            onLiveHit: (read, write) =>
+            onLiveHit: (expression) =>
               makeSequenceExpression(
-                write(makeLiteralExpression("right")),
-                read(),
+                makeExpressionEffect(makeLiteralExpression("live")),
+                expression,
               ),
             onDeadHit: () => makeLiteralExpression("dead"),
             onMiss: () => makeLiteralExpression("miss"),
@@ -255,11 +256,10 @@ assertEqual(
     `
       effect(
         (
-          intrinsic('aran.binary')(
+          intrinsic('aran.has')(
             undefined,
-            'in',
-            'variable',
             intrinsic('aran.globalRecord'),
+            'variable',
           ) ?
           (
             intrinsic('aran.binary')(
@@ -274,14 +274,7 @@ assertEqual(
             ) ?
             'dead' :
             (
-              effect(
-                intrinsic('aran.setStrict')(
-                  undefined,
-                  intrinsic('aran.globalRecord'),
-                  'variable',
-                  'right',
-                ),
-              ),
+              effect('live'),
               intrinsic('aran.get')(
                 undefined,
                 intrinsic('aran.globalRecord'),
@@ -290,21 +283,13 @@ assertEqual(
             )
           ) :
           (
-            intrinsic('aran.binary')(
+            intrinsic('aran.has')(
               undefined,
-              'in',
-              'variable',
               intrinsic('aran.globalObject'),
+              'variable',
             ) ?
             (
-              effect(
-                intrinsic('aran.setSloppy')(
-                  undefined,
-                  intrinsic('aran.globalObject'),
-                  'variable',
-                  'right',
-                ),
-              ),
+              effect('live'),
               intrinsic('aran.get')(
                 undefined,
                 intrinsic('aran.globalObject'),
@@ -331,15 +316,37 @@ assertEqual(
       return [
         makeEffectStatement(
           makeExpressionEffect(
-            makeLookupExpression(scope, "variable", {
+            makeLookupNode(scope, "variable", READ, {
               ...callbacks,
-              onLiveHit: (read, write) =>
+              onLiveHit: (expression) =>
                 makeSequenceExpression(
-                  write(makeLiteralExpression("right")),
-                  read(),
+                  makeExpressionEffect(makeLiteralExpression("read")),
+                  expression,
                 ),
             }),
           ),
+        ),
+        makeEffectStatement(
+          makeExpressionEffect(
+            makeLookupNode(scope, "variable", DELETE, {
+              ...callbacks,
+              onLiveHit: (expression) =>
+                makeSequenceExpression(
+                  makeExpressionEffect(makeLiteralExpression("delete")),
+                  expression,
+                ),
+            }),
+          ),
+        ),
+        makeEffectStatement(
+          makeLookupNode(scope, "variable", makeLiteralExpression("right"), {
+            ...callbacks,
+            onLiveHit: (effect) =>
+              makeSequenceEffect(
+                makeExpressionEffect(makeLiteralExpression("write")),
+                effect,
+              ),
+          }),
         ),
       ];
     }),
@@ -347,14 +354,24 @@ assertEqual(
       {
         effect(
           (
-            effect(
-              intrinsic('aran.throw')(
-                undefined,
-                new (intrinsic('TypeError'))('Assignment to constant variable'),
-              ),
-            ),
+            effect('read'),
             importStatic('source', 'specifier')
           ),
+        );
+        effect(
+          (
+            effect('delete'),
+            true
+          ),
+        );
+        (
+          effect('write'),
+          effect(
+            intrinsic('aran.throw')(
+              undefined,
+              new (intrinsic('TypeError'))('Assignment to constant variable'),
+            ),
+          )
         );
       }
     `,
@@ -391,7 +408,7 @@ forEach([true, false], (writable) => {
           [
             makeEffectStatement(
               makeExpressionEffect(
-                makeLookupExpression(scope, "variable", {
+                makeLookupNode(scope, "variable", READ, {
                   ...callbacks,
                   onDeadHit: () => makeLiteralExpression("dead"),
                 }),
@@ -407,14 +424,41 @@ forEach([true, false], (writable) => {
           [
             makeEffectStatement(
               makeExpressionEffect(
-                makeLookupExpression(scope, "variable", {
+                makeLookupNode(scope, "variable", READ, {
                   ...callbacks,
-                  onLiveHit: (read, write) =>
+                  onLiveHit: (expression) =>
                     makeSequenceExpression(
-                      write(makeLiteralExpression("right")),
-                      read(),
+                      makeExpressionEffect(makeLiteralExpression("read")),
+                      expression,
                     ),
                 }),
+              ),
+            ),
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeLookupNode(scope, "variable", DELETE, {
+                  ...callbacks,
+                  onLiveHit: (expression) =>
+                    makeSequenceExpression(
+                      makeExpressionEffect(makeLiteralExpression("delete")),
+                      expression,
+                    ),
+                }),
+              ),
+            ),
+            makeEffectStatement(
+              makeLookupNode(
+                scope,
+                "variable",
+                makeLiteralExpression("right"),
+                {
+                  ...callbacks,
+                  onLiveHit: (effect) =>
+                    makeSequenceEffect(
+                      makeExpressionEffect(makeLiteralExpression("write")),
+                      effect,
+                    ),
+                },
               ),
             ),
           ],
@@ -430,25 +474,35 @@ forEach([true, false], (writable) => {
           );
           effect(
             (
-              ${
-                writable
-                  ? `
-                    (
-                      variable = 'right',
-                      exportStatic('specifier', 'right')
-                    )
-                  `
-                  : `
-                    effect(
-                      intrinsic('aran.throw')(
-                        undefined,
-                        new (intrinsic('TypeError'))('Assignment to constant variable'),
-                      ),
-                    )
-                  `
-              },
+              effect('read'),
               variable
             ),
+          );
+          effect(
+            (
+              effect('delete'),
+              true
+            ),
+          );
+          (
+            effect('write'),
+            ${
+              writable
+                ? `
+                  (
+                    variable = 'right',
+                    exportStatic('specifier', 'right')
+                  )
+                `
+                : `
+                  effect(
+                    intrinsic('aran.throw')(
+                      undefined,
+                      new (intrinsic('TypeError'))('Assignment to constant variable'),
+                    ),
+                  )
+                `
+            }
           );
         }
       `,
@@ -481,11 +535,10 @@ assertEqual(
       {
         effect(
           (
-            intrinsic('aran.binary')(
+            intrinsic('aran.has')(
               undefined,
-              'in',
-              'variable',
               'object',
+              'variable',
             ) ?
             undefined :
             intrinsic('aran.setStrict')(
@@ -511,13 +564,14 @@ assertEqual(
       [
         makeEffectStatement(
           makeExpressionEffect(
-            makeLookupExpression(
+            makeLookupNode(
               makeDeclarableDynamicScope(
                 initializeScope(makeRootScope(false)),
                 false,
                 makeLiteralExpression("object"),
               ),
               "variable",
+              READ,
               {
                 ...callbacks,
                 onGlobal: () => makeLiteralExpression("global"),
@@ -545,13 +599,14 @@ assertEqual(
       [
         makeEffectStatement(
           makeExpressionEffect(
-            makeLookupExpression(
+            makeLookupNode(
               makeLookupableDynamicScope(
                 initializeScope(makeRootScope(false)),
                 false,
                 makeLiteralExpression("object"),
               ),
               "this",
+              READ,
               {
                 ...callbacks,
                 onGlobal: () => makeLiteralExpression("global"),
@@ -571,46 +626,137 @@ assertEqual(
 );
 
 // loookup without unscopable //
-assertEqual(
-  allignBlock(
-    makeBlock(
-      [],
-      [],
-      [
-        makeEffectStatement(
-          makeExpressionEffect(
-            makeLookupExpression(
-              makeLookupableDynamicScope(
-                initializeScope(makeRootScope(false)),
-                false,
-                makeLiteralExpression("object"),
-              ),
-              "variable",
-              {
+{
+  const scope = makeLookupableDynamicScope(
+    initializeScope(makeRootScope(false)),
+    false,
+    makeLiteralExpression("object"),
+  );
+  // read //
+  assertEqual(
+    allignBlock(
+      makeBlock(
+        [],
+        [],
+        [
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeLookupNode(scope, "variable", READ, {
                 ...callbacks,
-                onLiveHit: (read, write) =>
-                  makeSequenceExpression(
-                    write(makeLiteralExpression("right")),
-                    read(),
-                  ),
                 onGlobal: () => makeLiteralExpression("global"),
-              },
+                onLiveHit: (expression) =>
+                  makeSequenceExpression(
+                    makeExpressionEffect(makeLiteralExpression("read")),
+                    expression,
+                  ),
+              }),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
+      `
+        {
+          effect(
+            (
+              intrinsic('aran.has')(
+                undefined,
+                'object',
+                'variable',
+              ) ?
+              (
+                effect('read'),
+                intrinsic('aran.get')(
+                  undefined,
+                  'object',
+                  'variable',
+                )
+              ) :
+              'global'
+            ),
+          );
+        }
+      `,
     ),
-    `
-      {
-        effect(
+    null,
+  );
+  // delete //
+  assertEqual(
+    allignBlock(
+      makeBlock(
+        [],
+        [],
+        [
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeLookupNode(scope, "variable", DELETE, {
+                ...callbacks,
+                onGlobal: () => makeLiteralExpression("global"),
+                onLiveHit: (expression) =>
+                  makeSequenceExpression(
+                    makeExpressionEffect(makeLiteralExpression("delete")),
+                    expression,
+                  ),
+              }),
+            ),
+          ),
+        ],
+      ),
+      `
+        {
+          effect(
+            (
+              intrinsic('aran.has')(
+                undefined,
+                'object',
+                'variable',
+              ) ?
+              (
+                effect('delete'),
+                intrinsic('aran.deleteSloppy')(
+                  undefined,
+                  'object',
+                  'variable',
+                )
+              ) :
+              'global'
+            ),
+          );
+        }
+      `,
+    ),
+    null,
+  );
+  // write //
+  assertEqual(
+    allignBlock(
+      makeBlock(
+        [],
+        [],
+        [
+          makeEffectStatement(
+            makeLookupNode(scope, "variable", makeLiteralExpression("right"), {
+              ...callbacks,
+              onGlobal: () =>
+                makeExpressionEffect(makeLiteralExpression("global")),
+              onLiveHit: (effect) =>
+                makeSequenceEffect(
+                  makeExpressionEffect(makeLiteralExpression("write")),
+                  effect,
+                ),
+            }),
+          ),
+        ],
+      ),
+      `
+        {
           (
-            intrinsic('aran.binary')(
+            intrinsic('aran.has')(
               undefined,
-              'in',
-              'variable',
               'object',
+              'variable',
             ) ?
             (
+              effect('write'),
               effect(
                 intrinsic('aran.setSloppy')(
                   undefined,
@@ -618,21 +764,16 @@ assertEqual(
                   'variable',
                   'right',
                 ),
-              ),
-              intrinsic('aran.get')(
-                undefined,
-                'object',
-                'variable',
               )
             ) :
-            'global'
-          ),
-        );
-      }
-    `,
-  ),
-  null,
-);
+            effect('global')
+          );
+        }
+      `,
+    ),
+    null,
+  );
+}
 
 // lookup with unscopable //
 assertEqual(
@@ -643,19 +784,20 @@ assertEqual(
       [
         makeEffectStatement(
           makeExpressionEffect(
-            makeLookupExpression(
+            makeLookupNode(
               makeLookupableDynamicScope(
                 initializeScope(makeRootScope(false)),
                 true,
                 makeLiteralExpression("object"),
               ),
               "variable",
+              READ,
               {
                 ...callbacks,
-                onLiveHit: (read, write) =>
+                onLiveHit: (node) =>
                   makeSequenceExpression(
-                    write(makeLiteralExpression("right")),
-                    read(),
+                    makeExpressionEffect(makeLiteralExpression("read")),
+                    node,
                   ),
                 onGlobal: () => makeLiteralExpression("global"),
               },
@@ -685,29 +827,20 @@ assertEqual(
                   'variable',
                 ) ?
                 false :
-                intrinsic('aran.binary')(
+                intrinsic('aran.has')(
                   undefined,
-                  'in',
-                  'variable',
                   'object',
+                  'variable',
                 )
               ) :
-              intrinsic('aran.binary')(
+              intrinsic('aran.has')(
                 undefined,
-                'in',
-                'variable',
                 'object',
+                'variable',
               )
             ) ?
             (
-              effect(
-                intrinsic('aran.setSloppy')(
-                  undefined,
-                  'object',
-                  'variable',
-                  'right',
-                ),
-              ),
+              effect('read'),
               intrinsic('aran.get')(
                 undefined,
                 'object',
