@@ -2,5 +2,6 @@
 - core.mjs
 - split.mjs
 - * meta.mjs
-  * base.mjs
+  * - dynamic.mjs
+    - base.mjs
 - index.mjs
