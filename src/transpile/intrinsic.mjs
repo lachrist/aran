@@ -149,7 +149,7 @@ export const makeSetExpression = (
     annotation,
   );
 
-export const makeDefinePropertyExpression = generateMakeApply3(
+export const makeDefineExpression = generateMakeApply3(
   "Reflect.defineProperty",
 );
 
