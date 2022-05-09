@@ -21,7 +21,7 @@ import {
   lookupMetaScopeProperty,
   declareMetaVariable,
   makeMetaInitializeEffect,
-  makeMetaLookupNode,
+  makeMetaLookupExpression,
 } from "./split.mjs";
 
 assertEqual(isMetaBound(makeRootScope()), false);
@@ -51,7 +51,7 @@ assertEqual(
         ),
         makeEffectStatement(
           makeExpressionEffect(
-            makeMetaLookupNode(
+            makeMetaLookupExpression(
               makeBaseDynamicScope(scope, "frame"),
               variable,
               null,

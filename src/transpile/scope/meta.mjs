@@ -33,7 +33,8 @@ import {
   isMetaBound as isBound,
   declareMetaVariable as declareVariable_,
   makeMetaInitializeEffect as makeInitializeEffect_,
-  makeMetaLookupNode as makeLookupNode,
+  makeMetaLookupExpression as makeLookupExpression,
+  makeMetaLookupEffect as makeLookupEffect,
 } from "./split.mjs";
 
 const COUNTER = "counter";
@@ -99,7 +100,7 @@ export const makeInitializeEffect = (scope, variable, expression) =>
 //////////
 
 export const makeReadExpression = (scope, variable) =>
-  makeLookupNode(scope, variable, null, {
+  makeLookupExpression(scope, variable, null, {
     onDeadHit,
     onLiveHit: returnFirst,
     onRoot: partialx(makeReadGlobalExpression, variable),
@@ -110,7 +111,7 @@ export const makeReadExpression = (scope, variable) =>
 ///////////
 
 export const makeWriteEffect = (scope, variable, right) =>
-  makeLookupNode(scope, variable, right, {
+  makeLookupEffect(scope, variable, right, {
     onDeadHit,
     onLiveHit: returnFirst,
     onRoot: partialxx(makeWriteGlobalEffect, variable, right),

@@ -28,7 +28,7 @@ import {
   declareVariable,
   declareFreshVariable,
   makeInitializeEffect,
-  makeLookupNode,
+  makeLookupExpression,
   makeScopeEvalExpression,
 } from "./core.mjs";
 
@@ -83,17 +83,22 @@ assertEqual(
       return [
         makeEffectStatement(
           makeExpressionEffect(
-            makeLookupNode(makeClosureScope(scope), "variable_1_1", null, {
-              ...callbacks,
-              onLiveHit: (node, note) => {
-                assertEqual(note, "note");
-                return node;
+            makeLookupExpression(
+              makeClosureScope(scope),
+              "variable_1_1",
+              null,
+              {
+                ...callbacks,
+                onLiveHit: (node, note) => {
+                  assertEqual(note, "note");
+                  return node;
+                },
+                onDeadHit: (note) => {
+                  assertEqual(note, "note");
+                  return makeLiteralExpression("dead");
+                },
               },
-              onDeadHit: (note) => {
-                assertEqual(note, "note");
-                return makeLiteralExpression("dead");
-              },
-            }),
+            ),
           ),
         ),
         makeEffectStatement(
@@ -139,7 +144,7 @@ assertEqual(
         ),
         makeEffectStatement(
           makeExpressionEffect(
-            makeLookupNode(makeClosureScope(scope1), "variable", null, {
+            makeLookupExpression(makeClosureScope(scope1), "variable", null, {
               ...callbacks,
               onLiveHit: (node, note) => {
                 assertEqual(note, "note");
@@ -174,7 +179,7 @@ assertEqual(
 
 assertEqual(
   allignExpression(
-    makeLookupNode(makeRootScope(), "variable", null, {
+    makeLookupExpression(makeRootScope(), "variable", null, {
       ...callbacks,
       onRoot: () => makeLiteralExpression("root"),
     }),
@@ -189,7 +194,7 @@ assertEqual(
 
 assertEqual(
   allignExpression(
-    makeLookupNode(
+    makeLookupExpression(
       makeDynamicScope(makeRootScope(), "frame"),
       "variable",
       null,

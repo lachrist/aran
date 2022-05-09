@@ -25,13 +25,14 @@ import {freshenVariable} from "../../variable.mjs";
 import {
   makeBinding,
   makeGhostBinding,
-  assertBindingInitialization,
-  equalsBindingVariable,
-  makeBindingInitializeEffect,
-  accessBinding,
-  makeBindingLookupNode,
-  harvestBindingVariables,
-  harvestBindingStatements,
+  assertInitialization as assertBindingInitialization,
+  matches as matchesBinding,
+  makeInitializeEffect as makeBindingInitializeEffect,
+  access as accessBinding,
+  makeLookupExpression as makeBindingLookupExpression,
+  makeLookupEffect as makeBindingLookupEffect,
+  harvestVariables as harvestBindingVariables,
+  harvestStatements as harvestBindingStatements,
 } from "./binding.mjs";
 
 const {Error, undefined} = globalThis;
@@ -168,8 +169,7 @@ export const generateDeclareStatic =
     );
     variable = transformVariable(variable, scope.depth, scope.counter);
     assert(
-      find(scope.bindings, partial_x(equalsBindingVariable, variable)) ===
-        undefined,
+      find(scope.bindings, partial_x(matchesBinding, variable)) === undefined,
       "duplicate static variable declaration",
     );
     push(scope.bindings, bind(variable, note));
@@ -212,7 +212,7 @@ export const declareFreshVariable = generateDeclareStatic(
 // }
 
 export const makeInitializeEffect = (scope, variable, expression) => {
-  const predicate = partial_x(equalsBindingVariable, variable);
+  const predicate = partial_x(matchesBinding, variable);
   let distant = false;
   let binding = undefined;
   while (binding === undefined) {
@@ -234,41 +234,44 @@ export const makeInitializeEffect = (scope, variable, expression) => {
 const finalizeLookup = (frames, node, onDynamicFrame) =>
   reduce(reverse(frames), onDynamicFrame, node);
 
-export const makeLookupNode = (
-  scope,
-  variable,
-  right,
-  {onRoot, onDynamicFrame, ...callbacks},
-) => {
-  let escaped = false;
-  const predicate = partial_x(equalsBindingVariable, variable);
-  const frames = [];
-  while (scope.type !== ROOT_SCOPE_TYPE) {
-    if (scope.type === DYNAMIC_SCOPE_TYPE) {
-      push(frames, scope.frame);
-    } else if (scope.type === CLOSURE_SCOPE_TYPE) {
-      escaped = true;
-    } else if (scope.type === STATIC_SCOPE_TYPE) {
-      const binding = find(scope.bindings, predicate);
-      if (binding !== undefined) {
-        return finalizeLookup(
-          frames,
-          makeBindingLookupNode(binding, escaped, right, callbacks),
-          onDynamicFrame,
-        );
+const generateMakeLookupNode =
+  (makeBindingLookupNode) =>
+  (scope, variable, right, {onRoot, onDynamicFrame, ...callbacks}) => {
+    let escaped = false;
+    const predicate = partial_x(matchesBinding, variable);
+    const frames = [];
+    while (scope.type !== ROOT_SCOPE_TYPE) {
+      if (scope.type === DYNAMIC_SCOPE_TYPE) {
+        push(frames, scope.frame);
+      } else if (scope.type === CLOSURE_SCOPE_TYPE) {
+        escaped = true;
+      } else if (scope.type === STATIC_SCOPE_TYPE) {
+        const binding = find(scope.bindings, predicate);
+        if (binding !== undefined) {
+          return finalizeLookup(
+            frames,
+            makeBindingLookupNode(binding, escaped, right, callbacks),
+            onDynamicFrame,
+          );
+        }
       }
+      scope = scope.parent;
     }
-    scope = scope.parent;
-  }
-  return finalizeLookup(frames, onRoot(), onDynamicFrame);
-};
+    return finalizeLookup(frames, onRoot(), onDynamicFrame);
+  };
+
+export const makeLookupExpression = generateMakeLookupNode(
+  makeBindingLookupExpression,
+);
+
+export const makeLookupEffect = generateMakeLookupNode(makeBindingLookupEffect);
 
 //////////
 // eval //
 //////////
 
 const includesBindingVariable = (binding, variables) =>
-  some(variables, partialx_(equalsBindingVariable, binding));
+  some(variables, partialx_(matchesBinding, binding));
 
 export const makeScopeEvalExpression = (scope, expression) => {
   let variables = [];
