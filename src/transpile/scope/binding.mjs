@@ -54,7 +54,7 @@ export const makeBindingInitializeEffect = (binding, distant, expression) => {
     : effect;
 };
 
-export const accessBinding = (escaped, {state}) => {
+export const accessBinding = ({state}, escaped) => {
   if (state.initialization === NO && escaped) {
     state.deadzone = true;
   }

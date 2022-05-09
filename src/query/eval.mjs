@@ -1,6 +1,6 @@
 import {map, some, filter} from "array-lite";
 
-import {hasOwnProperty, partial1} from "../util.mjs";
+import {get, hasOwnProperty, partialx_} from "../util.mjs";
 
 const {
   Array: {isArray},
@@ -22,8 +22,6 @@ const isNodeKey = (key) =>
   key !== "start" &&
   key !== "end";
 
-const get = (object, key) => object[key];
-
 export const hasDirectEvalCall = (any) => {
   if (isArray(any)) {
     return some(any, hasDirectEvalCall);
@@ -39,12 +37,12 @@ export const hasDirectEvalCall = (any) => {
         return false;
       } else {
         return some(
-          map(filter(ownKeys(any), isNodeKey), partial1(get, any)),
+          map(filter(ownKeys(any), isNodeKey), partialx_(get, any)),
           hasDirectEvalCall,
         );
       }
     } else {
-      return some(map(ownKeys(any), partial1(get, any)), hasDirectEvalCall);
+      return some(map(ownKeys(any), partialx_(get, any)), hasDirectEvalCall);
     }
   } else {
     return false;

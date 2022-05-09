@@ -13,6 +13,7 @@ const {
     prototype: {toString: toObjectString},
   },
   Error,
+  Symbol,
   String,
   String: {
     prototype: {substring, replace},
@@ -155,24 +156,24 @@ export const incrementCounter = (counter) => {
 // Function Utility //
 //////////////////////
 
-export const flip = (f) => {
-  switch (f.length) {
-    case 0:
-      return () => f();
-    case 1:
-      return (_x1) => f(undefined);
-    case 2:
-      return (x1, x2) => f(x2, x1);
-    case 3:
-      return (x1, x2, x3) => f(x2, x1, x3);
-    case 4:
-      return (x1, x2, x3, x4) => f(x2, x1, x3, x4);
-    case 5:
-      return (x1, x2, x3, x4, x5) => f(x2, x1, x3, x4, x5);
-    default:
-      throw new Error("arity out of bounds");
-  }
-};
+// export const flip = (f) => {
+//   switch (f.length) {
+//     case 0:
+//       return () => f();
+//     case 1:
+//       return (_x1) => f(undefined);
+//     case 2:
+//       return (x1, x2) => f(x2, x1);
+//     case 3:
+//       return (x1, x2, x3) => f(x2, x1, x3);
+//     case 4:
+//       return (x1, x2, x3, x4) => f(x2, x1, x3, x4);
+//     case 5:
+//       return (x1, x2, x3, x4, x5) => f(x2, x1, x3, x4, x5);
+//     default:
+//       throw new Error("arity out of bounds");
+//   }
+// };
 
 export const bind =
   (f, g) =>
@@ -196,9 +197,71 @@ export const dropFirst =
   (_x, ...xs) =>
     apply(f, undefined, xs);
 
+export const PARTIAL = Symbol("partial");
+
+export const partial =
+  (f, ...xs) =>
+  (...ys) => {
+    const zs = [];
+    const length1 = xs.length;
+    const length2 = ys.length;
+    let index2 = 0;
+    for (let index1 = 0; index1 < length1; index1 += 1) {
+      if (xs[index1] === PARTIAL) {
+        assert(index2 < length2, "missing secondary arguments");
+        zs[index1] = ys[index2];
+        index2 += 1;
+      } else {
+        zs[index1] = xs[index1];
+      }
+    }
+    assert(index2 === length2, "too many secondary arguments");
+    return apply(f, undefined, zs);
+  };
+
+export const partial_ = (f) => (x1) => f(x1);
+export const partialx = (f, x1) => () => f(x1);
+
+export const partial__ = (f) => (x1, x2) => f(x1, x2);
+export const partialx_ = (f, x1) => (x2) => f(x1, x2);
+export const partial_x = (f, x2) => (x1) => f(x1, x2);
+export const partialxx = (f, x1, x2) => () => f(x1, x2);
+
+export const partial___ = (f) => (x1, x2, x3) => f(x1, x2, x3);
+export const partialx__ = (f, x1) => (x2, x3) => f(x1, x2, x3);
+export const partial_x_ = (f, x2) => (x1, x3) => f(x1, x2, x3);
+export const partial__x = (f, x3) => (x1, x2) => f(x1, x2, x3);
+export const partialxx_ = (f, x1, x2) => (x3) => f(x1, x2, x3);
+export const partialx_x = (f, x1, x3) => (x2) => f(x1, x2, x3);
+export const partial_xx = (f, x2, x3) => (x1) => f(x1, x2, x3);
+export const partialxxx = (f, x1, x2, x3) => () => f(x1, x2, x3);
+
+export const partial____ = (f) => (x1, x2, x3, x4) => f(x1, x2, x3, x4);
+export const partialx___ = (f, x1) => (x2, x3, x4) => f(x1, x2, x3, x4);
+export const partial_x__ = (f, x2) => (x1, x3, x4) => f(x1, x2, x3, x4);
+export const partial__x_ = (f, x3) => (x1, x2, x4) => f(x1, x2, x3, x4);
+export const partial___x = (f, x4) => (x1, x2, x3) => f(x1, x2, x3, x4);
+export const partialxx__ = (f, x1, x2) => (x3, x4) => f(x1, x2, x3, x4);
+export const partialx_x_ = (f, x1, x3) => (x2, x4) => f(x1, x2, x3, x4);
+export const partialx__x = (f, x1, x4) => (x2, x3) => f(x1, x2, x3, x4);
+export const partial_xx_ = (f, x2, x3) => (x1, x4) => f(x1, x2, x3, x4);
+export const partial_x_x = (f, x2, x4) => (x1, x3) => f(x1, x2, x3, x4);
+export const partial__xx = (f, x3, x4) => (x1, x2) => f(x1, x2, x3, x4);
+export const partialxxx_ = (f, x1, x2, x3) => (x4) => f(x1, x2, x3, x4);
+export const partialxx_x = (f, x1, x2, x4) => (x3) => f(x1, x2, x3, x4);
+export const partialx_xx = (f, x1, x3, x4) => (x2) => f(x1, x2, x3, x4);
+export const partial_xxx = (f, x2, x3, x4) => (x1) => f(x1, x2, x3, x4);
+export const partialxxxx = (f, x1, x2, x3, x4) => () => f(x1, x2, x3, x4);
+
 ////////////
 // Object //
 ////////////
+
+export const get = (object, key) => object[key];
+
+export const set = (object, key, value) => {
+  object[key] = value;
+};
 
 export const hasOwnProperty = (object, key) =>
   getOwnPropertyDescriptor(object, key) !== undefined;
@@ -236,80 +299,6 @@ export const getUUID = () => {
   return uuid;
 };
 export const getLatestUUID = () => uuid;
-
-/////////////
-// partial //
-/////////////
-
-export const partial =
-  (f, ...xs) =>
-  (...ys) =>
-    apply(f, undefined, concat(xs, ys));
-
-export const partial1 = (f, x1) => {
-  switch (f.length) {
-    case 1:
-      return () => f(x1);
-    case 2:
-      return (x2) => f(x1, x2);
-    case 3:
-      return (x2, x3) => f(x1, x2, x3);
-    case 4:
-      return (x2, x3, x4) => f(x1, x2, x3, x4);
-    case 5:
-      return (x2, x3, x4, x5) => f(x1, x2, x3, x4, x5);
-    default:
-      throw new Error("arity out of bound");
-  }
-};
-
-export const partial2 = (f, x1, x2) => {
-  switch (f.length) {
-    case 2:
-      return () => f(x1, x2);
-    case 3:
-      return (x3) => f(x1, x2, x3);
-    case 4:
-      return (x3, x4) => f(x1, x2, x3, x4);
-    case 5:
-      return (x3, x4, x5) => f(x1, x2, x3, x4, x5);
-    default:
-      throw new Error("arity out of bound");
-  }
-};
-
-export const partial3 = (f, x1, x2, x3) => {
-  switch (f.length) {
-    case 3:
-      return () => f(x1, x2, x3);
-    case 4:
-      return (x4) => f(x1, x2, x3, x4);
-    case 5:
-      return (x4, x5) => f(x1, x2, x3, x4, x5);
-    default:
-      throw new Error("arity out of bound");
-  }
-};
-
-export const partial4 = (f, x1, x2, x3, x4) => {
-  switch (f.length) {
-    case 4:
-      return () => f(x1, x2, x3, x4);
-    case 5:
-      return (x5) => f(x1, x2, x3, x4, x5);
-    default:
-      throw new Error("arity out of bound");
-  }
-};
-
-export const partial5 = (f, x1, x2, x3, x4, x5) => {
-  switch (f.length) {
-    case 5:
-      return () => f(x1, x2, x3, x4, x5);
-    default:
-      throw new Error("arity out of bound");
-  }
-};
 
 // ///////////
 // // Curry //

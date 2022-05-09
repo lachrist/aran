@@ -11,8 +11,8 @@
 import {
   returnFirst,
   throwError,
-  partial1,
-  partial2,
+  partialx,
+  partialxx,
   createCounter,
   incrementCounter,
 } from "../../util.mjs";
@@ -38,7 +38,7 @@ import {
 
 const COUNTER = "counter";
 
-const onDeadHit = partial1(
+const onDeadHit = partialx(
   throwError,
   "meta variable should never be in deadzone",
 );
@@ -102,7 +102,7 @@ export const makeReadExpression = (scope, variable) =>
   makeLookupNode(scope, variable, null, {
     onDeadHit,
     onLiveHit: returnFirst,
-    onRoot: partial1(makeReadGlobalExpression, variable),
+    onRoot: partialx(makeReadGlobalExpression, variable),
   });
 
 ///////////
@@ -113,5 +113,5 @@ export const makeWriteEffect = (scope, variable, right) =>
   makeLookupNode(scope, variable, right, {
     onDeadHit,
     onLiveHit: returnFirst,
-    onRoot: partial2(makeWriteGlobalEffect, variable, right),
+    onRoot: partialxx(makeWriteGlobalEffect, variable, right),
   });

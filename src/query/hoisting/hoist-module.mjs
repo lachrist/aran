@@ -1,6 +1,6 @@
 import {map, flatMap} from "array-lite";
 
-import {partial1} from "../../util.mjs";
+import {partialx_} from "../../util.mjs";
 
 import {collectDeclarator} from "./collect.mjs";
 
@@ -101,7 +101,7 @@ const visitors = {
   },
   ExportAllDeclaration: (_node) => [],
   ImportDeclaration: (node) =>
-    map(node.specifiers, partial1(visitImportSpecifier, node.source.value)),
+    map(node.specifiers, partialx_(visitImportSpecifier, node.source.value)),
 };
 
 export const hoistModule = (node) => {

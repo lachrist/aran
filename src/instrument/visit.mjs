@@ -12,7 +12,7 @@ import {
 } from "array-lite";
 
 import {
-  partial1,
+  partialx,
   assert,
   throwError,
   incrementCounter,
@@ -134,7 +134,7 @@ const makeInitializeStatement = (scope, variable) =>
 // makeOptimizedTryStatementArray //
 ////////////////////////////////////
 
-const returnTrue = partial1(returnFirst, true);
+const returnTrue = partialx(returnFirst, true);
 
 const throw_error_expression_pattern = [
   "ApplyExpression",
@@ -193,7 +193,7 @@ const makeOptimizedTryStatementArray = (
 // Visit //
 ///////////
 
-const default_callback = partial1(throwError, "missing instrument callback");
+const default_callback = partialx(throwError, "missing instrument callback");
 const generateVisit = (callbacks) => (context, node) =>
   dispatchNode(context, node, callbacks, default_callback);
 const generateContextlessVisit = (callbacks) => (node) =>

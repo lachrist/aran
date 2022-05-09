@@ -13,8 +13,8 @@ import {
   returnFirst,
   assert,
   push,
-  partial1,
-  flip,
+  partialx_,
+  partial_x,
   createCounter,
 } from "../../util.mjs";
 
@@ -55,8 +55,6 @@ const getBindingScope = (scope) => {
   }
   return scope;
 };
-
-const equalsBindingVariableFlipped = flip(equalsBindingVariable);
 
 ////////////
 // Extend //
@@ -170,7 +168,7 @@ export const generateDeclareStatic =
     );
     variable = transformVariable(variable, scope.depth, scope.counter);
     assert(
-      find(scope.bindings, partial1(equalsBindingVariableFlipped, variable)) ===
+      find(scope.bindings, partial_x(equalsBindingVariable, variable)) ===
         undefined,
       "duplicate static variable declaration",
     );
@@ -214,7 +212,7 @@ export const declareFreshVariable = generateDeclareStatic(
 // }
 
 export const makeInitializeEffect = (scope, variable, expression) => {
-  const predicate = partial1(equalsBindingVariableFlipped, variable);
+  const predicate = partial_x(equalsBindingVariable, variable);
   let distant = false;
   let binding = undefined;
   while (binding === undefined) {
@@ -243,7 +241,7 @@ export const makeLookupNode = (
   {onRoot, onDynamicFrame, ...callbacks},
 ) => {
   let escaped = false;
-  const predicate = partial1(equalsBindingVariableFlipped, variable);
+  const predicate = partial_x(equalsBindingVariable, variable);
   const frames = [];
   while (scope.type !== ROOT_SCOPE_TYPE) {
     if (scope.type === DYNAMIC_SCOPE_TYPE) {
@@ -269,8 +267,8 @@ export const makeLookupNode = (
 // eval //
 //////////
 
-const includesBindingVariable = (variables, binding) =>
-  some(variables, partial1(equalsBindingVariable, binding));
+const includesBindingVariable = (binding, variables) =>
+  some(variables, partialx_(equalsBindingVariable, binding));
 
 export const makeScopeEvalExpression = (scope, expression) => {
   let variables = [];
@@ -281,9 +279,9 @@ export const makeScopeEvalExpression = (scope, expression) => {
     } else if (scope.type === STATIC_SCOPE_TYPE) {
       const bindings = filterOut(
         scope.bindings,
-        partial1(includesBindingVariable, variables),
+        partial_x(includesBindingVariable, variables),
       );
-      forEach(bindings, partial1(accessBinding, escaped));
+      forEach(bindings, partial_x(accessBinding, escaped));
       variables = concat(variables, flatMap(bindings, harvestBindingVariables));
     }
     scope = scope.parent;

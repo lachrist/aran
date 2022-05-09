@@ -187,7 +187,7 @@ assertEqual(
 
 {
   const binding = makeBinding("variable", "note");
-  accessBinding(true, binding);
+  accessBinding(binding, true);
   test(
     `
       {

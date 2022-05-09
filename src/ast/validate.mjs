@@ -12,7 +12,7 @@ import {
   flatMap,
 } from "array-lite";
 
-import {partial1, assert, expect, throwError, returnFirst} from "../util.mjs";
+import {partialx, assert, expect, throwError, returnFirst} from "../util.mjs";
 
 import {getSyntax, isSyntaxType} from "./syntax.mjs";
 
@@ -40,13 +40,13 @@ const {
 
 const syntax = getSyntax();
 
-const returnFalse = partial1(returnFirst, false);
+const returnFalse = partialx(returnFirst, false);
 
-const returnEmptyArray = partial1(returnFirst, []);
+const returnEmptyArray = partialx(returnFirst, []);
 
-const returnNaN = partial1(returnFirst, NaN);
+const returnNaN = partialx(returnFirst, NaN);
 
-const throwMissingCallback = partial1(throwError, "missing callback");
+const throwMissingCallback = partialx(throwError, "missing callback");
 
 const generateGetNodeKind = () => {
   const kinds = {__proto__: null};
@@ -189,23 +189,23 @@ const extractExportSpecifierArray = generateQuery(
 
 const immutable_trap_object = {
   __proto__: null,
-  setPrototypeOf: partial1(
+  setPrototypeOf: partialx(
     throwError,
     "caught setPrototypeOf on immutable node",
   ),
-  preventExtensions: partial1(
+  preventExtensions: partialx(
     throwError,
     "caught preventExtensions on immutable node",
   ),
-  defineProperty: partial1(
+  defineProperty: partialx(
     throwError,
     "caught defineProperty on immutable node",
   ),
-  deleteProperty: partial1(
+  deleteProperty: partialx(
     throwError,
     "caught deleteProperty on immutable node",
   ),
-  set: partial1(throwError, "caught set on immutable node"),
+  set: partialx(throwError, "caught set on immutable node"),
 };
 
 const digestable = [
