@@ -7,6 +7,7 @@ import {
 } from "../../ast/index.mjs";
 
 import {
+  makeUnaryExpression,
   makeHasExpression,
   makeGetExpression,
   makeSetExpression,
@@ -25,7 +26,8 @@ export {READ} from "./split.mjs";
 
 const {Symbol} = globalThis;
 
-export const DELETE = Symbol("delete");
+export const DISCARD = Symbol("delete");
+export const TYPEOF = Symbol("typeof");
 
 const EMPTY = null;
 const RIGID = true;
@@ -191,21 +193,20 @@ export const makeLookupNode = (
 ) => {
   if (unscopable === null) {
     return next;
-  } else if (right === READ) {
+  } else if (right === READ || right === TYPEOF || right === DISCARD) {
+    let expression =
+      right === DISCARD
+        ? makeDeleteExpression(strict, frame, makeLiteralExpression(variable))
+        : makeGetExpression(frame, makeLiteralExpression(variable));
+    if (right === TYPEOF) {
+      expression = makeUnaryExpression("typeof", expression);
+    }
+    if (right !== DISCARD) {
+      expression = makeDeadzoneExpression(scoping, frame, variable, expression);
+    }
     return makeConditionalExpression(
       makeScopableExpression(unscopable, frame, variable),
-      makeDeadzoneExpression(
-        scoping,
-        frame,
-        variable,
-        makeGetExpression(frame, makeLiteralExpression(variable)),
-      ),
-      next,
-    );
-  } else if (right === DELETE) {
-    return makeConditionalExpression(
-      makeScopableExpression(unscopable, frame, variable),
-      makeDeleteExpression(strict, frame, makeLiteralExpression(variable)),
+      expression,
       next,
     );
   } else {

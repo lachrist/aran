@@ -14,7 +14,8 @@ import {
 
 import {
   READ,
-  DELETE,
+  DISCARD,
+  TYPEOF,
   // makeEmptyDynamicFrame,
   makeLooseDynamicFrame,
   makeRigidDynamicFrame,
@@ -366,14 +367,39 @@ assertEqual(
   null,
 );
 
-// delete //
+// typeof //
 assertEqual(
   allignExpression(
     makeLookupNode(
       makeLooseDynamicFrame(false, makeLiteralExpression("frame")),
       false,
       "variable",
-      DELETE,
+      TYPEOF,
+      makeLiteralExpression("next"),
+    ),
+    `
+      (
+        intrinsic('aran.has')(undefined, 'frame', 'variable') ?
+        intrinsic('aran.unary')(
+          undefined,
+          'typeof',
+          intrinsic('aran.get')(undefined, 'frame', 'variable'),
+        ) :
+        'next'
+      )
+    `,
+  ),
+  null,
+);
+
+// discard //
+assertEqual(
+  allignExpression(
+    makeLookupNode(
+      makeLooseDynamicFrame(false, makeLiteralExpression("frame")),
+      false,
+      "variable",
+      DISCARD,
       makeLiteralExpression("next"),
     ),
     `
