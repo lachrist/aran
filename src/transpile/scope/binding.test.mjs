@@ -12,6 +12,7 @@ import {
 import {allignBlock} from "../../allign/index.mjs";
 
 import {
+  READ,
   makeBinding,
   makeGhostBinding,
   assertInitialization,
@@ -83,7 +84,7 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
     [
       makeEffectStatement(
         makeExpressionEffect(
-          makeLookupExpression(binding, false, null, {
+          makeLookupExpression(binding, false, READ, {
             ...callbacks,
             onDeadHit: (note) => {
               assertEqual(note, "note");
@@ -97,7 +98,7 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
       ),
       makeEffectStatement(
         makeExpressionEffect(
-          makeLookupExpression(binding, false, null, {
+          makeLookupExpression(binding, false, READ, {
             ...callbacks,
             onLiveHit: (node, note) => {
               assertEqual(note, "note");
@@ -139,7 +140,7 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
     [
       makeEffectStatement(
         makeExpressionEffect(
-          makeLookupExpression(binding, true, null, {
+          makeLookupExpression(binding, true, READ, {
             ...callbacks,
             onLiveHit: (node, note) => {
               assertEqual(note, "note");
@@ -214,7 +215,7 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
       ),
       makeEffectStatement(
         makeExpressionEffect(
-          makeLookupExpression(binding, false, null, {
+          makeLookupExpression(binding, false, READ, {
             ...callbacks,
             onLiveHit: (node, note) => {
               assertEqual(note, "note");
@@ -240,7 +241,7 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
   test("{ effect('ghost'); }", binding, [
     makeEffectStatement(
       makeExpressionEffect(
-        makeLookupExpression(binding, false, null, {
+        makeLookupExpression(binding, false, READ, {
           ...callbacks,
           onDeadHit: (note) => {
             assertEqual(note, "note");

@@ -19,7 +19,13 @@ import {
   makeThrowReferenceErrorExpression,
 } from "../intrinsic.mjs";
 
-const {undefined} = globalThis;
+import {READ} from "./split.mjs";
+
+export {READ} from "./split.mjs";
+
+const {Symbol} = globalThis;
+
+export const DELETE = Symbol("delete");
 
 const EMPTY = null;
 const RIGID = true;
@@ -138,9 +144,6 @@ export const makeRigidInitializeStatementArray = (
 ////////////
 // Lookup //
 ////////////
-
-export const READ = null;
-export const DELETE = undefined;
 
 const makeScopableExpression = (unscopable, frame, variable) =>
   unscopable

@@ -28,6 +28,7 @@ import {
 } from "../intrinsic.mjs";
 
 import {
+  READ,
   makeMetaPropertyScope as makePropertyScope,
   lookupMetaScopeProperty as lookupScopeProperty,
   isMetaBound as isBound,
@@ -100,7 +101,7 @@ export const makeInitializeEffect = (scope, variable, expression) =>
 //////////
 
 export const makeReadExpression = (scope, variable) =>
-  makeLookupExpression(scope, variable, null, {
+  makeLookupExpression(scope, variable, READ, {
     onDeadHit,
     onLiveHit: returnFirst,
     onRoot: partialx(makeReadGlobalExpression, variable),

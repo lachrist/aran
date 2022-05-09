@@ -12,8 +12,9 @@ import {
   makeEffectStatement,
 } from "../../ast/index.mjs";
 
-const {undefined} = globalThis;
+const {Symbol, undefined} = globalThis;
 
+export const READ = Symbol("read");
 const YES = true;
 const NO = false;
 const MAYBE = null;
@@ -65,7 +66,7 @@ const generateMakeLookupNode =
   (binding, escaped, right, {onDeadHit, onLiveHit}) => {
     const {state, variable, note} = binding;
     const node =
-      right === null
+      right === READ
         ? makeReadExpression(makeBaseVariable(variable))
         : makeWriteEffect(makeBaseVariable(variable), right);
     if (state.initialization === YES) {

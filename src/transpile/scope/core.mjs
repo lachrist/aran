@@ -35,6 +35,8 @@ import {
   harvestStatements as harvestBindingStatements,
 } from "./binding.mjs";
 
+export {READ} from "./binding.mjs";
+
 const {Error, undefined} = globalThis;
 
 const ROOT_SCOPE_TYPE = "root";

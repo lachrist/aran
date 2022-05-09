@@ -13,6 +13,7 @@ import {
 import {allignBlock} from "../../allign/index.mjs";
 
 import {
+  READ,
   makeBaseDynamicScope,
   isMetaBound,
   makeRootScope,
@@ -54,7 +55,7 @@ assertEqual(
             makeMetaLookupExpression(
               makeBaseDynamicScope(scope, "frame"),
               variable,
-              null,
+              READ,
               {
                 __proto__: null,
                 onDeadHit: generateAssertUnreachable("onDeadHit"),

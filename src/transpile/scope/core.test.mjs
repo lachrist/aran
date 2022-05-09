@@ -15,6 +15,7 @@ import {
 import {allignBlock, allignExpression} from "../../allign/index.mjs";
 
 import {
+  READ,
   makePropertyScope,
   makeRootScope,
   makeClosureScope,
@@ -86,7 +87,7 @@ assertEqual(
             makeLookupExpression(
               makeClosureScope(scope),
               "variable_1_1",
-              null,
+              READ,
               {
                 ...callbacks,
                 onLiveHit: (node, note) => {
@@ -144,7 +145,7 @@ assertEqual(
         ),
         makeEffectStatement(
           makeExpressionEffect(
-            makeLookupExpression(makeClosureScope(scope1), "variable", null, {
+            makeLookupExpression(makeClosureScope(scope1), "variable", READ, {
               ...callbacks,
               onLiveHit: (node, note) => {
                 assertEqual(note, "note");
@@ -179,7 +180,7 @@ assertEqual(
 
 assertEqual(
   allignExpression(
-    makeLookupExpression(makeRootScope(), "variable", null, {
+    makeLookupExpression(makeRootScope(), "variable", READ, {
       ...callbacks,
       onRoot: () => makeLiteralExpression("root"),
     }),
@@ -197,7 +198,7 @@ assertEqual(
     makeLookupExpression(
       makeDynamicScope(makeRootScope(), "frame"),
       "variable",
-      null,
+      READ,
       {
         ...callbacks,
         onRoot: () => makeLiteralExpression("root"),
