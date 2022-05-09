@@ -24,6 +24,7 @@ import {
   returnFifth,
   dropFirst,
   throwError,
+  throwAny,
   switch0,
   switch1,
   switch2,
@@ -239,6 +240,8 @@ assertEqual(returnFifth(1, 2, 3, 4, 5), 5);
 assertDeepEqual(dropFirst((...xs) => xs)(1, 2, 3), [2, 3]);
 
 assertThrow(() => throwError("foo"));
+
+assertThrow(() => throwAny("foo"));
 
 assertDeepEqual(
   partial(returnArguments, 1, PARTIAL, 3, PARTIAL, 5)(2, 4),

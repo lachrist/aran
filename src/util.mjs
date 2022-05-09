@@ -46,6 +46,10 @@ export const switch2 = (clauses, discriminant, argument1, argument2) => {
   return clause(discriminant, argument1, argument2);
 };
 
+export const throwAny = (any) => {
+  throw any;
+};
+
 export const throwError = (message) => {
   throw new Error(message);
 };
