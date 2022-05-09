@@ -14,13 +14,14 @@ import {allignBlock} from "../../allign/index.mjs";
 import {
   makeBinding,
   makeGhostBinding,
-  assertBindingInitialization,
-  equalsBindingVariable,
-  makeBindingInitializeEffect,
-  accessBinding,
-  makeBindingLookupNode,
-  harvestBindingVariables,
-  harvestBindingStatements,
+  assertInitialization,
+  matches,
+  makeInitializeEffect,
+  access,
+  makeLookupExpression,
+  makeLookupEffect,
+  harvestVariables,
+  harvestStatements,
 } from "./binding.mjs";
 
 const {undefined} = globalThis;
@@ -36,8 +37,8 @@ const test = (code, binding, statements) => {
     allignBlock(
       makeBlock(
         [],
-        harvestBindingVariables(binding),
-        concat(harvestBindingStatements(binding), statements),
+        harvestVariables(binding),
+        concat(harvestStatements(binding), statements),
       ),
       code,
     ),
@@ -50,23 +51,17 @@ const test = (code, binding, statements) => {
 ////////////////////
 
 assertEqual(
-  assertBindingInitialization(makeGhostBinding("variable", "note")),
+  assertInitialization(makeGhostBinding("variable", "note")),
   undefined,
 );
 
-///////////////////////////
-// equalsBindingVariable //
-///////////////////////////
+/////////////
+// matches //
+/////////////
 
-assertEqual(
-  equalsBindingVariable(makeBinding("variable", "note"), "variable"),
-  true,
-);
+assertEqual(matches(makeBinding("variable", "note"), "variable"), true);
 
-assertEqual(
-  equalsBindingVariable(makeBinding("variable2", "note"), "variable1"),
-  false,
-);
+assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
 
 /////////////////
 // No deadzone //
@@ -88,7 +83,7 @@ assertEqual(
     [
       makeEffectStatement(
         makeExpressionEffect(
-          makeBindingLookupNode(binding, false, null, {
+          makeLookupExpression(binding, false, null, {
             ...callbacks,
             onDeadHit: (note) => {
               assertEqual(note, "note");
@@ -98,15 +93,11 @@ assertEqual(
         ),
       ),
       makeEffectStatement(
-        makeBindingInitializeEffect(
-          binding,
-          false,
-          makeLiteralExpression("init"),
-        ),
+        makeInitializeEffect(binding, false, makeLiteralExpression("init")),
       ),
       makeEffectStatement(
         makeExpressionEffect(
-          makeBindingLookupNode(binding, false, null, {
+          makeLookupExpression(binding, false, null, {
             ...callbacks,
             onLiveHit: (node, note) => {
               assertEqual(note, "note");
@@ -116,7 +107,7 @@ assertEqual(
         ),
       ),
       makeEffectStatement(
-        makeBindingLookupNode(binding, false, makeLiteralExpression("right"), {
+        makeLookupEffect(binding, false, makeLiteralExpression("right"), {
           ...callbacks,
           onLiveHit: (node, note) => {
             assertEqual(note, "note");
@@ -148,7 +139,7 @@ assertEqual(
     [
       makeEffectStatement(
         makeExpressionEffect(
-          makeBindingLookupNode(binding, true, null, {
+          makeLookupExpression(binding, true, null, {
             ...callbacks,
             onLiveHit: (node, note) => {
               assertEqual(note, "note");
@@ -162,7 +153,7 @@ assertEqual(
         ),
       ),
       makeEffectStatement(
-        makeBindingLookupNode(binding, true, makeLiteralExpression("right"), {
+        makeLookupEffect(binding, true, makeLiteralExpression("right"), {
           ...callbacks,
           onLiveHit: (node, note) => {
             assertEqual(note, "note");
@@ -175,11 +166,7 @@ assertEqual(
         }),
       ),
       makeEffectStatement(
-        makeBindingInitializeEffect(
-          binding,
-          false,
-          makeLiteralExpression("init"),
-        ),
+        makeInitializeEffect(binding, false, makeLiteralExpression("init")),
       ),
     ],
   );
@@ -187,7 +174,7 @@ assertEqual(
 
 {
   const binding = makeBinding("variable", "note");
-  accessBinding(binding, true);
+  access(binding, true);
   test(
     `
       {
@@ -199,11 +186,7 @@ assertEqual(
     binding,
     [
       makeEffectStatement(
-        makeBindingInitializeEffect(
-          binding,
-          false,
-          makeLiteralExpression("init"),
-        ),
+        makeInitializeEffect(binding, false, makeLiteralExpression("init")),
       ),
     ],
   );
@@ -227,15 +210,11 @@ assertEqual(
     binding,
     [
       makeEffectStatement(
-        makeBindingInitializeEffect(
-          binding,
-          true,
-          makeLiteralExpression("init"),
-        ),
+        makeInitializeEffect(binding, true, makeLiteralExpression("init")),
       ),
       makeEffectStatement(
         makeExpressionEffect(
-          makeBindingLookupNode(binding, false, null, {
+          makeLookupExpression(binding, false, null, {
             ...callbacks,
             onLiveHit: (node, note) => {
               assertEqual(note, "note");
@@ -261,7 +240,7 @@ assertEqual(
   test("{ effect('ghost'); }", binding, [
     makeEffectStatement(
       makeExpressionEffect(
-        makeBindingLookupNode(binding, false, null, {
+        makeLookupExpression(binding, false, null, {
           ...callbacks,
           onDeadHit: (note) => {
             assertEqual(note, "note");

@@ -32,10 +32,10 @@ export const makeBinding = generateMakeBinding(NO);
 
 export const makeGhostBinding = generateMakeBinding(NEVER);
 
-export const equalsBindingVariable = ({variable: variable1}, variable2) =>
+export const matches = ({variable: variable1}, variable2) =>
   variable1 === variable2;
 
-export const makeBindingInitializeEffect = (binding, distant, expression) => {
+export const makeInitializeEffect = (binding, distant, expression) => {
   const {state, variable} = binding;
   assert(state.initialization === NO, "duplicate/ghost binding initialization");
   state.initialization = distant ? MAYBE : YES;
@@ -54,47 +54,48 @@ export const makeBindingInitializeEffect = (binding, distant, expression) => {
     : effect;
 };
 
-export const accessBinding = ({state}, escaped) => {
+export const access = ({state}, escaped) => {
   if (state.initialization === NO && escaped) {
     state.deadzone = true;
   }
 };
 
-export const makeBindingLookupNode = (
-  binding,
-  escaped,
-  right,
-  {onDeadHit, onLiveHit},
-) => {
-  const {state, variable, note} = binding;
-  const node =
-    right === null
-      ? makeReadExpression(makeBaseVariable(variable))
-      : makeWriteEffect(makeBaseVariable(variable), right);
-  if (state.initialization === YES) {
-    return onLiveHit(node, note);
-  } else if (
-    state.initialization === NEVER ||
-    (state.initialization === NO && !escaped)
-  ) {
-    return onDeadHit(note);
-  } else {
-    state.deadzone = true;
-    const makeConditional =
-      right === null ? makeConditionalExpression : makeConditionalEffect;
-    return makeConditional(
-      makeReadExpression(makeMetaVariable(variable)),
-      onLiveHit(node, note),
-      onDeadHit(note),
-    );
-  }
-};
+const generateMakeLookupNode =
+  (makeConditional) =>
+  (binding, escaped, right, {onDeadHit, onLiveHit}) => {
+    const {state, variable, note} = binding;
+    const node =
+      right === null
+        ? makeReadExpression(makeBaseVariable(variable))
+        : makeWriteEffect(makeBaseVariable(variable), right);
+    if (state.initialization === YES) {
+      return onLiveHit(node, note);
+    } else if (
+      state.initialization === NEVER ||
+      (state.initialization === NO && !escaped)
+    ) {
+      return onDeadHit(note);
+    } else {
+      state.deadzone = true;
+      return makeConditional(
+        makeReadExpression(makeMetaVariable(variable)),
+        onLiveHit(node, note),
+        onDeadHit(note),
+      );
+    }
+  };
 
-export const assertBindingInitialization = ({state}) => {
+export const makeLookupExpression = generateMakeLookupNode(
+  makeConditionalExpression,
+);
+
+export const makeLookupEffect = generateMakeLookupNode(makeConditionalEffect);
+
+export const assertInitialization = ({state}) => {
   assert(state.initialization !== NO, "missing variable initialization");
 };
 
-export const harvestBindingVariables = ({state, variable}) => {
+export const harvestVariables = ({state, variable}) => {
   if (state.initialization === NEVER) {
     return [];
   } else if (state.deadzone) {
@@ -104,7 +105,7 @@ export const harvestBindingVariables = ({state, variable}) => {
   }
 };
 
-export const harvestBindingStatements = ({state, variable}) => {
+export const harvestStatements = ({state, variable}) => {
   if (!state.deadzone) {
     return [];
   } else {
