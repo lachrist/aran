@@ -29,8 +29,8 @@ const {undefined} = globalThis;
 
 const callbacks = {
   onGhostHit: generateAssertUnreachable("onGhostHit"),
-  onDeadHit: generateAssertUnreachable("onDeadHit"),
-  onLiveHit: generateAssertUnreachable("onLiveHit"),
+  onStaticDeadHit: generateAssertUnreachable("onStaticDeadHit"),
+  onStaticLiveHit: generateAssertUnreachable("onStaticLiveHit"),
 };
 
 const test = (code, binding, statements) => {
@@ -86,7 +86,7 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
         makeExpressionEffect(
           makeLookupExpression(binding, false, READ, {
             ...callbacks,
-            onDeadHit: (note) => {
+            onStaticDeadHit: (note) => {
               assertEqual(note, "note");
               return makeLiteralExpression("dead");
             },
@@ -100,7 +100,7 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
         makeExpressionEffect(
           makeLookupExpression(binding, false, READ, {
             ...callbacks,
-            onLiveHit: (node, note) => {
+            onStaticLiveHit: (node, note) => {
               assertEqual(note, "note");
               return node;
             },
@@ -110,7 +110,7 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
       makeEffectStatement(
         makeLookupEffect(binding, false, makeLiteralExpression("right"), {
           ...callbacks,
-          onLiveHit: (node, note) => {
+          onStaticLiveHit: (node, note) => {
             assertEqual(note, "note");
             return node;
           },
@@ -142,11 +142,11 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
         makeExpressionEffect(
           makeLookupExpression(binding, true, READ, {
             ...callbacks,
-            onLiveHit: (node, note) => {
+            onStaticLiveHit: (node, note) => {
               assertEqual(note, "note");
               return node;
             },
-            onDeadHit: (note) => {
+            onStaticDeadHit: (note) => {
               assertEqual(note, "note");
               return makeLiteralExpression("dead");
             },
@@ -156,11 +156,11 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
       makeEffectStatement(
         makeLookupEffect(binding, true, makeLiteralExpression("right"), {
           ...callbacks,
-          onLiveHit: (node, note) => {
+          onStaticLiveHit: (node, note) => {
             assertEqual(note, "note");
             return node;
           },
-          onDeadHit: (note) => {
+          onStaticDeadHit: (note) => {
             assertEqual(note, "note");
             return makeExpressionEffect(makeLiteralExpression("dead"));
           },
@@ -217,11 +217,11 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
         makeExpressionEffect(
           makeLookupExpression(binding, false, READ, {
             ...callbacks,
-            onLiveHit: (node, note) => {
+            onStaticLiveHit: (node, note) => {
               assertEqual(note, "note");
               return node;
             },
-            onDeadHit: (note) => {
+            onStaticDeadHit: (note) => {
               assertEqual(note, "note");
               return makeLiteralExpression("dead");
             },
@@ -243,7 +243,7 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
       makeExpressionEffect(
         makeLookupExpression(binding, false, READ, {
           ...callbacks,
-          onDeadHit: (note) => {
+          onStaticDeadHit: (note) => {
             assertEqual(note, "note");
             return makeLiteralExpression("ghost");
           },

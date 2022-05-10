@@ -63,25 +63,25 @@ export const access = ({state}, escaped) => {
 
 const generateMakeLookupNode =
   (makeConditional) =>
-  (binding, escaped, right, {onDeadHit, onLiveHit}) => {
+  (binding, escaped, right, {onStaticDeadHit, onStaticLiveHit}) => {
     const {state, variable, note} = binding;
     const node =
       right === READ
         ? makeReadExpression(makeBaseVariable(variable))
         : makeWriteEffect(makeBaseVariable(variable), right);
     if (state.initialization === YES) {
-      return onLiveHit(node, note);
+      return onStaticLiveHit(node, note);
     } else if (
       state.initialization === NEVER ||
       (state.initialization === NO && !escaped)
     ) {
-      return onDeadHit(note);
+      return onStaticDeadHit(note);
     } else {
       state.deadzone = true;
       return makeConditional(
         makeReadExpression(makeMetaVariable(variable)),
-        onLiveHit(node, note),
-        onDeadHit(note),
+        onStaticLiveHit(node, note),
+        onStaticDeadHit(note),
       );
     }
   };

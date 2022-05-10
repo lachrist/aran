@@ -25,7 +25,7 @@ import {
   isBound,
   isStaticallyBound,
   isDynamicallyBound,
-  getBindingDynamicFrame,
+  getBindingDynamicExtrinsic,
   declareVariable,
   declareFreshVariable,
   makeInitializeEffect,
@@ -34,10 +34,10 @@ import {
 } from "./core.mjs";
 
 const callbacks = {
-  onRoot: generateAssertUnreachable("onRoot"),
-  onLiveHit: generateAssertUnreachable("onLiveHit"),
-  onDeadHit: generateAssertUnreachable("onDeadHit"),
-  onDynamicFrame: generateAssertUnreachable("onDynamicFrame"),
+  onStaticMiss: generateAssertUnreachable("onStaticMiss"),
+  onStaticLiveHit: generateAssertUnreachable("onStaticLiveHit"),
+  onStaticDeadHit: generateAssertUnreachable("onStaticDeadHit"),
+  onDynamicExtrinsic: generateAssertUnreachable("onDynamicExtrinsic"),
 };
 
 //////////////
@@ -61,12 +61,12 @@ const callbacks = {
   assertEqual(isBound(scope1), false);
   assertEqual(isStaticallyBound(scope1), false);
   assertEqual(isDynamicallyBound(scope1), false);
-  const scope2 = makeDynamicScope(scope1, "frame");
+  const scope2 = makeDynamicScope(scope1, "extrinsic");
   const scope3 = makePropertyScope(scope2, "key", "value");
   assertEqual(isBound(scope3), true);
   assertEqual(isStaticallyBound(scope3), false);
   assertEqual(isDynamicallyBound(scope3), true);
-  assertEqual(getBindingDynamicFrame(scope3), "frame");
+  assertEqual(getBindingDynamicExtrinsic(scope3), "extrinsic");
 }
 
 /////////////
@@ -90,11 +90,11 @@ assertEqual(
               READ,
               {
                 ...callbacks,
-                onLiveHit: (node, note) => {
+                onStaticLiveHit: (node, note) => {
                   assertEqual(note, "note");
                   return node;
                 },
-                onDeadHit: (note) => {
+                onStaticDeadHit: (note) => {
                   assertEqual(note, "note");
                   return makeLiteralExpression("dead");
                 },
@@ -147,11 +147,11 @@ assertEqual(
           makeExpressionEffect(
             makeLookupExpression(makeClosureScope(scope1), "variable", READ, {
               ...callbacks,
-              onLiveHit: (node, note) => {
+              onStaticLiveHit: (node, note) => {
                 assertEqual(note, "note");
                 return node;
               },
-              onDeadHit: (note) => {
+              onStaticDeadHit: (note) => {
                 assertEqual(note, "note");
                 return makeLiteralExpression("dead");
               },
@@ -182,7 +182,7 @@ assertEqual(
   allignExpression(
     makeLookupExpression(makeRootScope(), "variable", READ, {
       ...callbacks,
-      onRoot: () => makeLiteralExpression("root"),
+      onStaticMiss: () => makeLiteralExpression("root"),
     }),
     "'root'",
   ),
@@ -196,20 +196,20 @@ assertEqual(
 assertEqual(
   allignExpression(
     makeLookupExpression(
-      makeDynamicScope(makeRootScope(), "frame"),
+      makeDynamicScope(makeRootScope(), "extrinsic"),
       "variable",
       READ,
       {
         ...callbacks,
-        onRoot: () => makeLiteralExpression("root"),
-        onDynamicFrame: (expression, frame) =>
+        onStaticMiss: () => makeLiteralExpression("root"),
+        onDynamicExtrinsic: (expression, extrinsic) =>
           makeSequenceExpression(
-            makeExpressionEffect(makeLiteralExpression(frame)),
+            makeExpressionEffect(makeLiteralExpression(extrinsic)),
             expression,
           ),
       },
     ),
-    "(effect('frame'), 'root')",
+    "(effect('extrinsic'), 'root')",
   ),
   null,
 );

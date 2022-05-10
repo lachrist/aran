@@ -36,7 +36,7 @@ export {
   isBound as isBaseBound,
   isStaticallyBound as isBaseStaticallyBound,
   isDynamicallyBound as isBaseDynamicallyBound,
-  getBindingDynamicFrame as getBaseBindingDynamicFrame,
+  getBindingDynamicExtrinsic as getBaseBindingDynamicExtrinsic,
   makeScopeEvalExpression,
 } from "./core.mjs";
 
@@ -60,7 +60,10 @@ export const lookupBaseScopeProperty = generateLookupScopeProperty("base");
 /////////////
 
 export const isMetaBound = (scope) => {
-  assert(!isDynamicallyBound(scope), "unexpected dynamic frame");
+  assert(
+    !isDynamicallyBound(scope),
+    "meta variables should never be dynamically bound",
+  );
   return isBound(scope);
 };
 
@@ -104,9 +107,9 @@ export const makeBaseInitializeEffect =
 // makeLookup //
 ////////////////
 
-const ignoreDynamicFrame = (callbacks) => ({
+const ignoreDynamicExtrinsic = (callbacks) => ({
   ...callbacks,
-  onDynamicFrame: returnFirst,
+  onDynamicExtrinsic: returnFirst,
 });
 
 const generateMakeLookup =
@@ -122,13 +125,13 @@ const generateMakeLookup =
 export const makeMetaLookupExpression = generateMakeLookup(
   makeLookupExpression,
   makeMetaVariable,
-  ignoreDynamicFrame,
+  ignoreDynamicExtrinsic,
 );
 
 export const makeMetaLookupEffect = generateMakeLookup(
   makeLookupEffect,
   makeMetaVariable,
-  ignoreDynamicFrame,
+  ignoreDynamicExtrinsic,
 );
 
 export const makeBaseLookupExpression = generateMakeLookup(

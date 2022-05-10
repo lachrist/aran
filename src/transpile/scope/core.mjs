@@ -82,11 +82,11 @@ export const makePropertyScope = (parent, key, value) => ({
   value,
 });
 
-export const makeDynamicScope = (parent, frame) => ({
+export const makeDynamicScope = (parent, extrinsic) => ({
   type: DYNAMIC_SCOPE_TYPE,
   parent,
   depth: parent.depth + 1,
-  frame,
+  extrinsic,
 });
 
 // Usage for ghost variables:
@@ -148,14 +148,14 @@ export const isStaticallyBound = generateIsBound(STATIC_SCOPE_TYPE);
 
 export const isDynamicallyBound = generateIsBound(DYNAMIC_SCOPE_TYPE);
 
-////////////////////////////
-// getBindingDynamicFrame //
-////////////////////////////
+////////////////////////////////
+// getBindingDynamicExtrinsic //
+////////////////////////////////
 
-export const getBindingDynamicFrame = (scope) => {
+export const getBindingDynamicExtrinsic = (scope) => {
   scope = getBindingScope(scope);
   assert(scope.type === DYNAMIC_SCOPE_TYPE, "expected dynamic scope type");
-  return scope.frame;
+  return scope.extrinsic;
 };
 
 /////////////
@@ -233,33 +233,38 @@ export const makeInitializeEffect = (scope, variable, expression) => {
 // lookup //
 ////////////
 
-const finalizeLookup = (frames, node, onDynamicFrame) =>
-  reduce(reverse(frames), onDynamicFrame, node);
+const finalizeLookup = (extrinsics, node, onDynamicExtrinsic) =>
+  reduce(reverse(extrinsics), onDynamicExtrinsic, node);
 
 const generateMakeLookupNode =
   (makeBindingLookupNode) =>
-  (scope, variable, right, {onRoot, onDynamicFrame, ...callbacks}) => {
+  (
+    scope,
+    variable,
+    right,
+    {onStaticMiss, onDynamicExtrinsic, ...callbacks},
+  ) => {
     let escaped = false;
     const predicate = partial_x(matchesBinding, variable);
-    const frames = [];
+    const extrinsics = [];
     while (scope.type !== ROOT_SCOPE_TYPE) {
       if (scope.type === DYNAMIC_SCOPE_TYPE) {
-        push(frames, scope.frame);
+        push(extrinsics, scope.extrinsic);
       } else if (scope.type === CLOSURE_SCOPE_TYPE) {
         escaped = true;
       } else if (scope.type === STATIC_SCOPE_TYPE) {
         const binding = find(scope.bindings, predicate);
         if (binding !== undefined) {
           return finalizeLookup(
-            frames,
+            extrinsics,
             makeBindingLookupNode(binding, escaped, right, callbacks),
-            onDynamicFrame,
+            onDynamicExtrinsic,
           );
         }
       }
       scope = scope.parent;
     }
-    return finalizeLookup(frames, onRoot(), onDynamicFrame);
+    return finalizeLookup(extrinsics, onStaticMiss(), onDynamicExtrinsic);
   };
 
 export const makeLookupExpression = generateMakeLookupNode(

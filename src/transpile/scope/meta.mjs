@@ -40,7 +40,7 @@ import {
 
 const COUNTER = "counter";
 
-const onDeadHit = partialx(
+const onStaticDeadHit = partialx(
   throwError,
   "meta variable should never be in deadzone",
 );
@@ -102,9 +102,9 @@ export const makeInitializeEffect = (scope, variable, expression) =>
 
 export const makeReadExpression = (scope, variable) =>
   makeLookupExpression(scope, variable, READ, {
-    onDeadHit,
-    onLiveHit: returnFirst,
-    onRoot: partialx(makeReadGlobalExpression, variable),
+    onStaticDeadHit,
+    onStaticLiveHit: returnFirst,
+    onStaticMiss: partialx(makeReadGlobalExpression, variable),
   });
 
 ///////////
@@ -113,7 +113,7 @@ export const makeReadExpression = (scope, variable) =>
 
 export const makeWriteEffect = (scope, variable, right) =>
   makeLookupEffect(scope, variable, right, {
-    onDeadHit,
-    onLiveHit: returnFirst,
-    onRoot: partialxx(makeWriteGlobalEffect, variable, right),
+    onStaticDeadHit,
+    onStaticLiveHit: returnFirst,
+    onStaticMiss: partialxx(makeWriteGlobalEffect, variable, right),
   });

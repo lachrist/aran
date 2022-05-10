@@ -25,6 +25,13 @@ import {
   makeMetaLookupExpression,
 } from "./split.mjs";
 
+const callbacks = {
+  onStaticMiss: generateAssertUnreachable("onStaticMiss"),
+  onStaticLiveHit: generateAssertUnreachable("onStaticLiveHit"),
+  onStaticDeadHit: generateAssertUnreachable("onStaticDeadHit"),
+  onDynamicExtrinsic: generateAssertUnreachable("onDynamicExtrinsic"),
+};
+
 assertEqual(isMetaBound(makeRootScope()), false);
 
 assertThrow(() => isMetaBound(makeBaseDynamicScope(makeRootScope()), "frame"));
@@ -57,13 +64,13 @@ assertEqual(
               variable,
               READ,
               {
-                __proto__: null,
-                onDeadHit: generateAssertUnreachable("onDeadHit"),
-                onLiveHit: (node, note) => {
+                ...callbacks,
+                onStaticDeadHit: generateAssertUnreachable("onDeadHit"),
+                onStaticLiveHit: (node, note) => {
                   assertEqual(note, "note");
                   return node;
                 },
-                onRoot: generateAssertUnreachable("onRoot"),
+                onStaticMiss: generateAssertUnreachable("onRoot"),
               },
             ),
           ),
