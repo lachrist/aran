@@ -1,4 +1,4 @@
-import {assertEqual} from "../__fixture__.mjs";
+import {assertSuccess} from "../__fixture__.mjs";
 
 import {createCounter} from "../util.mjs";
 
@@ -32,7 +32,7 @@ const makeContext = (namespace, pointcut) => ({
 });
 
 const generateTest = (parse, allign, visit) => (context, code1, code2) => {
-  assertEqual(allign(visit(context, parse(code1)), code2), null);
+  assertSuccess(allign(visit(context, parse(code1)), code2));
 };
 const testProgram = generateTest(parseProgram, allignProgram, visitProgram);
 const testBlock = generateTest(parseBlock, allignBlock, visitBlock);

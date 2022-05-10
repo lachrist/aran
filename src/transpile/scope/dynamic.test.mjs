@@ -1,4 +1,4 @@
-import {assertEqual} from "../../__fixture__.mjs";
+import {assertSuccess} from "../../__fixture__.mjs";
 
 import {
   makeBlock,
@@ -31,7 +31,7 @@ import {
 /////////////
 
 // loose prelude //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -43,11 +43,10 @@ assertEqual(
     ),
     "{}",
   ),
-  null,
 );
 
 // rigid prelude //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -76,7 +75,6 @@ assertEqual(
       }
     `,
   ),
-  null,
 );
 
 ///////////
@@ -84,7 +82,7 @@ assertEqual(
 ///////////
 
 // empty declaration //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -96,11 +94,10 @@ assertEqual(
     ),
     "{}",
   ),
-  null,
 );
 
 // loose declaration //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -135,7 +132,6 @@ assertEqual(
       }
     `,
   ),
-  null,
 );
 
 ///////////
@@ -143,7 +139,7 @@ assertEqual(
 ///////////
 
 // empty declaration //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -155,11 +151,10 @@ assertEqual(
     ),
     "{}",
   ),
-  null,
 );
 
 // rigid declaration //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -187,11 +182,10 @@ assertEqual(
       }
     `,
   ),
-  null,
 );
 
 // empty initialization //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -205,11 +199,10 @@ assertEqual(
     ),
     "{}",
   ),
-  null,
 );
 
 // rigid initialization //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -239,7 +232,6 @@ assertEqual(
       }
     `,
   ),
-  null,
 );
 
 ////////////
@@ -247,7 +239,7 @@ assertEqual(
 ////////////
 
 // read unlookupable //
-assertEqual(
+assertSuccess(
   allignExpression(
     makeLookupNode(
       makeLooseDynamicFrame(null, makeLiteralExpression("frame")),
@@ -258,11 +250,10 @@ assertEqual(
     ),
     "'next'",
   ),
-  null,
 );
 
 // read loose //
-assertEqual(
+assertSuccess(
   allignExpression(
     makeLookupNode(
       makeLooseDynamicFrame(false, makeLiteralExpression("frame")),
@@ -279,11 +270,10 @@ assertEqual(
       )
     `,
   ),
-  null,
 );
 
 // read rigid //
-assertEqual(
+assertSuccess(
   allignExpression(
     makeLookupNode(
       makeRigidDynamicFrame(false, makeLiteralExpression("frame")),
@@ -312,11 +302,10 @@ assertEqual(
       )
     `,
   ),
-  null,
 );
 
 // read unscopable //
-assertEqual(
+assertSuccess(
   allignExpression(
     makeLookupNode(
       makeLooseDynamicFrame(true, makeLiteralExpression("frame")),
@@ -350,11 +339,10 @@ assertEqual(
       )
     `,
   ),
-  null,
 );
 
 // typeof //
-assertEqual(
+assertSuccess(
   allignExpression(
     makeLookupNode(
       makeLooseDynamicFrame(false, makeLiteralExpression("frame")),
@@ -374,11 +362,10 @@ assertEqual(
       )
     `,
   ),
-  null,
 );
 
 // discard //
-assertEqual(
+assertSuccess(
   allignExpression(
     makeLookupNode(
       makeLooseDynamicFrame(false, makeLiteralExpression("frame")),
@@ -395,12 +382,10 @@ assertEqual(
       )
     `,
   ),
-  null,
 );
 
 // write //
-// delete //
-assertEqual(
+assertSuccess(
   allignEffect(
     makeLookupNode(
       makeLooseDynamicFrame(false, makeLiteralExpression("frame")),
@@ -423,5 +408,4 @@ assertEqual(
       )
     `,
   ),
-  null,
 );

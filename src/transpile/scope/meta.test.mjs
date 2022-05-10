@@ -1,4 +1,4 @@
-import "../../__fixture__.mjs";
+import {assertSuccess} from "../../__fixture__.mjs";
 
 import {
   makeLiteralExpression,
@@ -32,32 +32,38 @@ import {
   const scope = initializeScope(makeRootScope());
   restoreScope(scope, backupScope(scope) + 1);
   const variable = declareVariable(scope, "variable");
-  allignEffect(
-    makeInitializeEffect(scope, variable, makeLiteralExpression("init")),
-    `effect(
-      intrinsic('aran.setStrict')(
-        intrinsic('aran.globalCache'),
-        '${variable}',
-        'init',
-      ),
-    )`,
+  assertSuccess(
+    allignEffect(
+      makeInitializeEffect(scope, variable, makeLiteralExpression("init")),
+      `effect(
+        intrinsic.aran.setStrict(
+          intrinsic.aran.globalCache,
+          '${variable}',
+          'init',
+        ),
+      )`,
+    ),
   );
-  allignExpression(
-    makeReadExpression(scope, variable),
-    `intrinsic('aran.get')(
-      intrinsic('aran.globalCache'),
-      '${variable}',
-    )`,
-  );
-  allignEffect(
-    makeWriteEffect(scope, variable, makeLiteralExpression("right")),
-    `effect(
-      intrinsic('aran.setStrict')(
-        intrinsic('aran.globalCache'),
+  assertSuccess(
+    allignExpression(
+      makeReadExpression(scope, variable),
+      `intrinsic.aran.get(
+        intrinsic.aran.globalCache,
         '${variable}',
-        'right',
-      ),
-    )`,
+      )`,
+    ),
+  );
+  assertSuccess(
+    allignEffect(
+      makeWriteEffect(scope, variable, makeLiteralExpression("right")),
+      `effect(
+        intrinsic.aran.setStrict(
+          intrinsic.aran.globalCache,
+          '${variable}',
+          'right',
+        ),
+      )`,
+    ),
   );
 }
 
@@ -65,20 +71,22 @@ import {
 // block //
 ///////////
 
-allignBlock(
-  makeScopeBlock(initializeScope(makeRootScope()), [], (scope) => {
-    const variable = declareVariable(scope, "variable");
-    return [
-      makeEffectStatement(
-        makeInitializeEffect(scope, variable, makeLiteralExpression("init")),
-      ),
-      makeEffectStatement(
-        makeExpressionEffect(makeReadExpression(scope, variable)),
-      ),
-      makeEffectStatement(
-        makeWriteEffect(scope, variable, makeLiteralExpression("right")),
-      ),
-    ];
-  }),
-  "{ let x; x = 'init'; effect(x); x = 'right'; }",
+assertSuccess(
+  allignBlock(
+    makeScopeBlock(initializeScope(makeRootScope()), [], (scope) => {
+      const variable = declareVariable(scope, "variable");
+      return [
+        makeEffectStatement(
+          makeInitializeEffect(scope, variable, makeLiteralExpression("init")),
+        ),
+        makeEffectStatement(
+          makeExpressionEffect(makeReadExpression(scope, variable)),
+        ),
+        makeEffectStatement(
+          makeWriteEffect(scope, variable, makeLiteralExpression("right")),
+        ),
+      ];
+    }),
+    "{ let x; x = 'init'; effect(x); x = 'right'; }",
+  ),
 );

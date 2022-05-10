@@ -1,6 +1,7 @@
 import {
   assertThrow,
   assertEqual,
+  assertSuccess,
   generateAssertUnreachable,
 } from "../../__fixture__.mjs";
 
@@ -73,7 +74,7 @@ const callbacks = {
 // Regular //
 /////////////
 
-assertEqual(
+assertSuccess(
   allignBlock(
     makeScopeBlock(makeRootScope(), [], (scope) => {
       scope = makePropertyScope(scope, "key", "value");
@@ -120,14 +121,13 @@ assertEqual(
       }
     `,
   ),
-  null,
 );
 
 ////////////////////////////
 // Distant Initialization //
 ////////////////////////////
 
-assertEqual(
+assertSuccess(
   allignBlock(
     makeScopeBlock(makeRootScope(), [], (scope1) => {
       assertEqual(declareVariable(scope1, "variable", "note"), "variable");
@@ -171,14 +171,13 @@ assertEqual(
       }
     `,
   ),
-  null,
 );
 
 //////////
 // Root //
 //////////
 
-assertEqual(
+assertSuccess(
   allignExpression(
     makeLookupExpression(makeRootScope(), "variable", READ, {
       ...callbacks,
@@ -186,14 +185,13 @@ assertEqual(
     }),
     "'root'",
   ),
-  null,
 );
 
 ///////////////////
 // Dynamic Frame //
 ///////////////////
 
-assertEqual(
+assertSuccess(
   allignExpression(
     makeLookupExpression(
       makeDynamicScope(makeRootScope(), "extrinsic"),
@@ -211,14 +209,13 @@ assertEqual(
     ),
     "(effect('extrinsic'), 'root')",
   ),
-  null,
 );
 
 //////////
 // Eval //
 //////////
 
-assertEqual(
+assertSuccess(
   allignBlock(
     makeScopeBlock(makeRootScope(), [], (scope) => {
       assertEqual(declareVariable(scope, "variable", "note"), "variable");
@@ -249,5 +246,4 @@ assertEqual(
       }
     `,
   ),
-  null,
 );

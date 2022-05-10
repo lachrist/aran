@@ -1,4 +1,4 @@
-import {assertEqual, assertDeepEqual} from "../__fixture__.mjs";
+import {assertDeepEqual, assertSuccess} from "../__fixture__.mjs";
 import {makeBlock, makeLiteralExpression} from "../ast/index.mjs";
 import {allignBlock, allignExpression} from "../allign/index.mjs";
 
@@ -11,7 +11,7 @@ const {String} = globalThis;
 ////////////
 // bypass //
 ////////////
-assertEqual(
+assertSuccess(
   allignExpression(
     makeTrapExpression(
       {
@@ -27,7 +27,6 @@ assertEqual(
     ),
     `123n;`,
   ),
-  null,
 );
 
 ////////////////////
@@ -41,7 +40,7 @@ assertEqual(
     duplicable: false,
     initialized: false,
   });
-  assertEqual(
+  assertSuccess(
     allignBlock(
       makeBlock(
         [],
@@ -85,14 +84,13 @@ assertEqual(
         );
       }`,
     ),
-    null,
   );
 }
 
 /////////////////////
 // arrival (empty) //
 /////////////////////
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -123,7 +121,6 @@ assertEqual(
       );
     }`,
   ),
-  null,
 );
 
 ///////////
@@ -143,7 +140,7 @@ assertEqual(
     duplicable: false,
     initialized: false,
   });
-  assertEqual(
+  assertSuccess(
     allignBlock(
       makeBlock(
         [],
@@ -181,14 +178,13 @@ assertEqual(
         );
       }`,
     ),
-    null,
   );
 }
 
 ////////////
 // Invoke //
 ////////////
-assertEqual(
+assertSuccess(
   allignExpression(
     makeTrapExpression(
       {
@@ -206,5 +202,4 @@ assertEqual(
       intrinsic.Array.of("argument"),
     )`,
   ),
-  null,
 );

@@ -1,4 +1,5 @@
 import {
+  assertSuccess,
   assertEqual,
   assertThrow,
   generateAssertUnreachable,
@@ -44,7 +45,7 @@ assertEqual(
   "value",
 );
 
-assertEqual(
+assertSuccess(
   allignBlock(
     makeScopeBlock(makeRootScope(), [], (scope) => {
       assertEqual(isMetaBound(scope), true);
@@ -79,5 +80,4 @@ assertEqual(
     }),
     "{ let x; x = 'init'; effect(x); }",
   ),
-  null,
 );

@@ -1,6 +1,10 @@
 import {concat} from "array-lite";
 
-import {assertEqual, generateAssertUnreachable} from "../../__fixture__.mjs";
+import {
+  assertSuccess,
+  assertEqual,
+  generateAssertUnreachable,
+} from "../../__fixture__.mjs";
 
 import {
   makeExpressionEffect,
@@ -34,7 +38,7 @@ const callbacks = {
 };
 
 const test = (code, binding, statements) => {
-  assertEqual(
+  assertSuccess(
     allignBlock(
       makeBlock(
         [],
@@ -43,7 +47,6 @@ const test = (code, binding, statements) => {
       ),
       code,
     ),
-    null,
   );
 };
 

@@ -1,6 +1,12 @@
-import {assertThrow, assertEqual, assertDeepEqual} from "../__fixture__.mjs";
+import {
+  assertThrow,
+  assertEqual,
+  assertSuccess,
+  assertDeepEqual,
+} from "../__fixture__.mjs";
 
 import {makeLiteralExpression} from "../ast/index.mjs";
+
 import {allignEffect, allignExpression} from "../allign/index.mjs";
 
 import {
@@ -51,20 +57,18 @@ import {
     /^Error: unused variable should not be initialized/u,
   );
   assertEqual(isScopeVariableUsed(scope, "variable"), false);
-  assertEqual(
+  assertSuccess(
     allignExpression(makeScopeReadExpression(scope, "variable"), "_x;"),
-    null,
   );
   assertEqual(isScopeVariableUsed(scope, "variable"), true);
   assertDeepEqual(getUsedScopeVariableArray(scope), ["variable"]);
   // Initialize //
   assertEqual(isScopeVariableInitialized(scope, "variable"), false);
-  assertEqual(
+  assertSuccess(
     allignEffect(
       makeScopeInitializeEffect(scope, "variable", makeLiteralExpression(123)),
       "_x = 123;",
     ),
-    null,
   );
   assertEqual(isScopeVariableInitialized(scope, "variable"), true);
   assertThrow(
@@ -82,7 +86,7 @@ import {
     duplicable: false,
     initialized: true,
   });
-  assertEqual(
+  assertSuccess(
     allignExpression(
       makeScopeReadExpression(scope, "variable"),
       `intrinsic.aran.get(
@@ -90,14 +94,13 @@ import {
         'variable'
       );`,
     ),
-    null,
   );
   assertThrow(
     () =>
       makeScopeInitializeEffect(scope, "variable", makeLiteralExpression(123)),
     /^Error: duplicate variable initialization/u,
   );
-  assertEqual(
+  assertSuccess(
     allignEffect(
       makeScopeWriteEffect(scope, "variable", makeLiteralExpression(123)),
       `effect(
@@ -108,6 +111,5 @@ import {
         ),
       );`,
     ),
-    null,
   );
 }

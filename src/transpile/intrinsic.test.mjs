@@ -1,4 +1,4 @@
-import {assertEqual} from "../__fixture__.mjs";
+import {assertSuccess} from "../__fixture__.mjs";
 import {makeLiteralExpression} from "../ast/index.mjs";
 import {allignExpression} from "../allign/index.mjs";
 
@@ -17,7 +17,7 @@ import {
 } from "./intrinsic.mjs";
 
 const test = (expression, code) => {
-  assertEqual(allignExpression(expression, code), null);
+  assertSuccess(allignExpression(expression, code));
 };
 
 test(

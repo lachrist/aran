@@ -18,6 +18,18 @@ export const {
   notDeepEqual: assertNotDeepEqual
 } = Assert;
 
+export const assertSuccess = (either) => {
+  if (either !== null) {
+    throw new Error(either);
+  }
+};
+
+export const assertFailure = (either) => {
+  if (either === null) {
+    throw new Error("missing failure");
+  }
+};
+
 export const generateAssertUnreachable = (message) => () => {
   assertUnreachable(message);
 };

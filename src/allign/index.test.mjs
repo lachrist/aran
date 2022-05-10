@@ -1,10 +1,7 @@
-import {assertEqual} from "../__fixture__.mjs";
+import {assertSuccess, assertFailure} from "../__fixture__.mjs";
 import {makeLiteralExpression} from "../ast/index.mjs";
 import {allignExpression} from "./index.mjs";
 
-assertEqual(allignExpression(makeLiteralExpression(123), "123;"), null);
+assertSuccess(allignExpression(makeLiteralExpression(123), "123;"));
 
-assertEqual(
-  typeof allignExpression(makeLiteralExpression(123), "456;"),
-  "string",
-);
+assertFailure(allignExpression(makeLiteralExpression(123), "456;"));
