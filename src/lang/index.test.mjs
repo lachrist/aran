@@ -17,9 +17,14 @@ import {
   stringifyStatement,
 } from "./index.mjs";
 
-const generateTest = (parse, stringify) => (code) => {
-  assertEqual(stringify(parse(code)), stringifyPrettier(parseAcornLoose(code)));
-};
+const generateTest =
+  (parse, stringify) =>
+  (code1, code2 = code1) => {
+    assertEqual(
+      stringify(parse(code1)),
+      stringifyPrettier(parseAcornLoose(code2)),
+    );
+  };
 
 const testExpression = generateTest(parseExpression, stringifyExpression);
 const testEffect = generateTest(parseEffect, stringifyEffect);
@@ -39,7 +44,11 @@ testExpression("123n;");
 testExpression("undefined;");
 testExpression("null;");
 
-testExpression("intrinsic('ReferenceError');");
+testExpression("intrinsic['ReferenceError'];");
+testExpression(
+  "intrinsic.Symbol.unscopables;",
+  "intrinsic['Symbol.unscopables'];",
+);
 
 testExpression("importStatic('specifier', 'source');");
 
@@ -61,11 +70,39 @@ testExpression("123 ? 456 : 789;");
 
 testExpression("eval([variable1, variable2], 123);");
 
-testExpression("123(456, 789)");
+testExpression("123(456, 789);", "123(!undefined, 456, 789)");
+testExpression(
+  "intrinsic['ReferenceError'](123, 456);",
+  "intrinsic['ReferenceError'](!undefined, 123, 456);",
+);
+testExpression(
+  "intrinsic.ReferenceError(123, 456);",
+  "intrinsic['ReferenceError'](!undefined, 123, 456);",
+);
 
-testExpression("123[456](789)");
+testExpression("123(!456, 789);");
+testExpression(
+  "intrinsic['ReferenceError'](!123, 456, 789);",
+  "intrinsic['ReferenceError'](!123, 456, 789);",
+);
+testExpression(
+  "intrinsic.ReferenceError(!123, 456, 789);",
+  "intrinsic['ReferenceError'](!123, 456, 789);",
+);
 
-testExpression("new 123(456)");
+testExpression("123[456](789);");
+testExpression(
+  "intrinsic.ReferenceError[123](789);",
+  "intrinsic['ReferenceError'][123](789);",
+);
+testExpression("intrinsic['ReferenceError'][123](789);");
+
+testExpression("new 123(456, 789);");
+testExpression(
+  "new intrinsic.ReferenceError(123, 456)",
+  "new intrinsic['ReferenceError'](123, 456)",
+);
+testExpression("new intrinsic['ReferenceError'](123, 456)");
 
 ////////////
 // Effect //

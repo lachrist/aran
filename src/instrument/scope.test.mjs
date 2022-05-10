@@ -85,9 +85,8 @@ import {
   assertEqual(
     allignExpression(
       makeScopeReadExpression(scope, "variable"),
-      `intrinsic('aran.get')(
-        undefined,
-        intrinsic('aran.readGlobal')(undefined, "namespace"),
+      `intrinsic.aran.get(
+        intrinsic.aran.readGlobal("namespace"),
         'variable'
       );`,
     ),
@@ -102,9 +101,8 @@ import {
     allignEffect(
       makeScopeWriteEffect(scope, "variable", makeLiteralExpression(123)),
       `effect(
-        intrinsic('aran.setStrict')(
-          undefined,
-          intrinsic('aran.readGlobal')(undefined, "namespace"),
+        intrinsic.aran.setStrict(
+          intrinsic.aran.readGlobal("namespace"),
           'variable',
           123,
         ),

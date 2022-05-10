@@ -56,9 +56,9 @@ testProgram(
   `"script"; return () => { return 123; }`,
   `
     "script";
-    let scope = intrinsic("aran.createObject")(undefined, null);
+    let scope = intrinsic.aran.createObject(null);
     effect(
-      intrinsic("aran.readGlobal")(undefined, "traps")["arrival"](
+      intrinsic.aran.readGlobal("traps")["arrival"](
         "script",
         null,
         null,
@@ -67,18 +67,16 @@ testProgram(
     );
     return (
       effect(
-        intrinsic("aran.setStrict")(
-          undefined,
-          intrinsic("aran.readGlobal")(undefined, "scope"),
+        intrinsic.aran.setStrict(
+          intrinsic.aran.readGlobal("scope"),
           "Ncallee1",
           () => {
             effect(
-              intrinsic("aran.readGlobal")(undefined, "traps")["arrival"](
+              intrinsic.aran.readGlobal("traps")["arrival"](
                 "arrow",
                 null,
-                intrinsic("aran.get")(
-                  undefined,
-                  intrinsic("aran.readGlobal")(undefined, "scope"),
+                intrinsic.aran.get(
+                  intrinsic.aran.readGlobal("scope"),
                   "Ncallee1",
                 ),
                 "1:17",
@@ -88,9 +86,8 @@ testProgram(
           },
         ),
       ),
-      intrinsic("aran.get")(
-        undefined,
-        intrinsic("aran.readGlobal")(undefined, "scope"),
+      intrinsic.aran.get(
+        intrinsic.aran.readGlobal("scope"),
         "Ncallee1",
       )
     );
@@ -141,24 +138,24 @@ testBlock(
   }`,
   `label: {
     let _LAB, _NEW, _OLD;
-    _LAB = intrinsic("aran.createObject")(
-      undefined, null,
+    _LAB = intrinsic.aran.createObject(
+      null,
       "kind", "break",
       "name", null,
       "identifier", "${makeEmptyBreakLabel("label")}",
     );
-    _NEW = intrinsic("aran.createObject")(
-      undefined, null,
+    _NEW = intrinsic.aran.createObject(
+      null,
       "kind", "meta",
       "name", "variable",
       "identifier", "${makeMetaVariable("variable")}",
     );
     effect(
-      intrinsic("aran.readGlobal")(undefined, "traps")["break"](_LAB, "3:4"),
+      intrinsic.aran.readGlobal("traps")["break"](_LAB, "3:4"),
     );
     break label;
     effect(
-      intrinsic("aran.readGlobal")(undefined, "traps")["read"](_NEW, _OLD, "4:11"),
+      intrinsic.aran.readGlobal("traps")["read"](_NEW, _OLD, "4:11"),
     );
   }`,
 );
@@ -178,14 +175,13 @@ testBlock(
       effect(123);
     } catch {
       effect(
-        intrinsic("aran.throw")(
-          undefined,
-          intrinsic("aran.get")(undefined, input, "error"),
+        intrinsic.aran.throw(
+          intrinsic.aran.get(input, "error"),
         ),
       );
     } finally {
       effect(
-        intrinsic("aran.readGlobal")(undefined, "traps")["leave"]("1:0"),
+        intrinsic.aran.readGlobal("traps")["leave"]("1:0"),
       );
     }
   }`,
@@ -246,7 +242,7 @@ testBlockIdentity(`{ 123 ? effect(456) : effect(789); }`);
 testBlockIdentity(`{ effect(() => { return 123; }); }`);
 
 testBlockIdentity(`{ effect(input); }`);
-testBlockIdentity(`{ effect(intrinsic("ReferenceError")); }`);
+testBlockIdentity(`{ effect(intrinsic.ReferenceError); }`);
 testBlockIdentity(`{ effect(123); }`);
 testBlockIdentity(`{ effect(importStatic("source", "specifier")); }`);
 testBlockIdentity(`{ let variable; effect(variable); }`);
@@ -279,13 +275,13 @@ testBlockIdentity(`{ effect(123[456](789)); }`);
     `{
       let this1;
       effect(
-        intrinsic("aran.readGlobal")(undefined, "traps")["apply"](
+        intrinsic.aran.readGlobal("traps")["apply"](
           (
             this1 = 123,
-            intrinsic("aran.get")(undefined, this1, 456)
+            intrinsic.aran.get(this1, 456)
           ),
           this1,
-          intrinsic("Array.of")(undefined, 789),
+          intrinsic.Array.of(789),
         ),
       );
     }`,

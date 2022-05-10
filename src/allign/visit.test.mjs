@@ -45,15 +45,11 @@ assertExpression("123;", "input;", false);
 assertExpression("input;", "input;", true);
 
 assertExpression(
-  "intrinsic('ReferenceError');",
-  "intrinsic('ReferenceError')",
+  "intrinsic.ReferenceError;",
+  "intrinsic.ReferenceError;",
   true,
 );
-assertExpression(
-  "intrinsic('ReferenceError');",
-  "intrinsic('SyntaxError')",
-  false,
-);
+assertExpression("intrinsic.ReferenceError;", "intrinsic.SyntaxError;", false);
 
 assertExpression("123;", "123;", true);
 assertExpression("123;", "321;", false);
@@ -97,10 +93,10 @@ assertExpression("123 ? 456 : 789;", "321 ? 456 : 789;", false);
 assertExpression("123 ? 456 : 789;", "123 ? 654 : 789;", false);
 assertExpression("123 ? 456 : 789;", "123 ? 456 : 987;", false);
 
-assertExpression("123(456, 789);", "123(456, 789);", true);
-assertExpression("123(456, 789);", "321(456, 789);", false);
-assertExpression("123(456, 789);", "123(654, 789);", false);
-assertExpression("123(456, 789);", "123(456, 987);", false);
+assertExpression("123(!456, 789);", "123(!456, 789);", true);
+assertExpression("123(!456, 789);", "321(!456, 789);", false);
+assertExpression("123(!456, 789);", "123(!654, 789);", false);
+assertExpression("123(!456, 789);", "123(!456, 987);", false);
 
 assertExpression("123[456](789);", "123[456](789);", true);
 assertExpression("123[456](789);", "321[456](789);", false);

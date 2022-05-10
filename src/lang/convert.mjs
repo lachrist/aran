@@ -87,7 +87,6 @@ const expectSyntax = (node, check) => {
 ///////////
 
 const generateConvert = (convertors) => (node) => {
-  // console.log(node.type, convertors);
   expectSyntax(node, node.type in convertors);
   const convertor = convertors[node.type];
   return convertor(node);
@@ -132,31 +131,27 @@ export const convertProgram = generateConvert({
         map(slice(node.body, 1, node.body.length), convertStatement),
         locate(node.loc),
       );
-    }
-    if (directive === MODULE_PROGRAM_DIRECTIVE) {
+    } else if (directive === MODULE_PROGRAM_DIRECTIVE) {
       expectSyntax(node, node.body.length > 1);
       return makeModuleProgram(
         map(slice(node.body, 1, node.body.length - 1), convertLink),
         convertBlock(node.body[node.body.length - 1]),
         locate(node.loc),
       );
-    }
-    if (directive === GLOBAL_EVAL_PROGRAM_DIRECTIVE) {
+    } else if (directive === GLOBAL_EVAL_PROGRAM_DIRECTIVE) {
       expectSyntax(node, node.body.length === 2);
       return makeGlobalEvalProgram(
         convertBlock(node.body[1]),
         locate(node.loc),
       );
-    }
-    if (directive === LOCAL_EVAL_PROGRAM_DIRECTIVE) {
+    } else if (directive === LOCAL_EVAL_PROGRAM_DIRECTIVE) {
       expectSyntax(node, node.body.length === 2 || node.body.length === 3);
       return makeLocalEvalProgram(
         node.body.length === 2 ? [] : convertDeclaration(node.body[1]),
         convertBlock(node.body[node.body.length - 1]),
         locate(node.loc),
       );
-    }
-    if (directive === ENCLAVE_EVAL_PROGRAM_DIRECTIVE) {
+    } else if (directive === ENCLAVE_EVAL_PROGRAM_DIRECTIVE) {
       expectSyntax(node, node.body.length === 3);
       expectSyntax(node, node.body[1].type === "ExpressionStatement");
       return makeEnclaveEvalProgram(
@@ -164,8 +159,9 @@ export const convertProgram = generateConvert({
         convertBlock(node.body[2]),
         locate(node.loc),
       );
+    } else {
+      throw makeSyntaxError(node);
     }
-    throw makeSyntaxError(node);
   },
 });
 
@@ -174,18 +170,19 @@ export const convertLink = generateConvert({
   ImportDeclaration: (node) => {
     if (node.specifiers.length === 0) {
       return makeImportLink(node.source.value, null, locate(node.loc));
+    } else {
+      expectSyntax(node, node.specifiers.length === 1);
+      expectSyntax(node, node.specifiers[0].type === "ImportSpecifier");
+      expectSyntax(
+        node,
+        node.specifiers[0].imported.name === node.specifiers[0].local.name,
+      );
+      return makeImportLink(
+        node.source.value,
+        node.specifiers[0].imported.name,
+        locate(node.loc),
+      );
     }
-    expectSyntax(node, node.specifiers.length === 1);
-    expectSyntax(node, node.specifiers[0].type === "ImportSpecifier");
-    expectSyntax(
-      node,
-      node.specifiers[0].imported.name === node.specifiers[0].local.name,
-    );
-    return makeImportLink(
-      node.source.value,
-      node.specifiers[0].imported.name,
-      locate(node.loc),
-    );
   },
   ExportAllDeclaration: (node) => {
     return makeAggregateLink(
@@ -204,13 +201,14 @@ export const convertLink = generateConvert({
         node.specifiers[0].exported.name === node.specifiers[0].local.name,
       );
       return makeExportLink(node.specifiers[0].exported.name, locate(node.loc));
+    } else {
+      return makeAggregateLink(
+        node.source.value,
+        node.specifiers[0].local.name,
+        node.specifiers[0].exported.name,
+        locate(node.loc),
+      );
     }
-    return makeAggregateLink(
-      node.source.value,
-      node.specifiers[0].local.name,
-      node.specifiers[0].exported.name,
-      locate(node.loc),
-    );
   },
 });
 
@@ -351,8 +349,7 @@ export const convertEffect = generateConvert({
         convertExpression(node.arguments[1]),
         locate(node.loc),
       );
-    }
-    if (
+    } else if (
       node.callee.type === "Identifier" &&
       node.callee.name === EFFECT_KEYWORD
     ) {
@@ -361,8 +358,9 @@ export const convertEffect = generateConvert({
         convertExpression(node.arguments[0]),
         locate(node.loc),
       );
+    } else {
+      throw makeSyntaxError(node);
     }
-    throw makeSyntaxError(node);
   },
   AssignmentExpression: (node) => {
     expectSyntax(node, node.operator === "=");
@@ -380,8 +378,9 @@ export const convertExpression = generateConvert({
   Literal: (node) => {
     if (getOwnPropertyDescriptor(node, "bigint") !== undefined) {
       return makeLiteralExpression({bigint: node.bigint}, locate(node.loc));
+    } else {
+      return makeLiteralExpression(node.value, locate(node.loc));
     }
-    return makeLiteralExpression(node.value, locate(node.loc));
   },
   ArrowFunctionExpression: (node) => {
     expectSyntax(node, node.params.length === 0);
@@ -406,11 +405,11 @@ export const convertExpression = generateConvert({
   Identifier: (node) => {
     if (node.name === UNDEFINED_KEYWORD) {
       return makeLiteralExpression({undefined: null}, locate(node.loc));
-    }
-    if (node.name === INPUT_KEYWORD) {
+    } else if (node.name === INPUT_KEYWORD) {
       return makeInputExpression(locate(node.loc));
+    } else {
+      return makeReadExpression(node.name, locate(node.loc));
     }
-    return makeReadExpression(node.name, locate(node.loc));
   },
   SequenceExpression: (node) => {
     expectSyntax(node, node.expressions.length === 2);
@@ -434,6 +433,33 @@ export const convertExpression = generateConvert({
       locate(node.loc),
     );
   },
+  MemberExpression: (node) => {
+    if (
+      node.object.type === "Identifier" &&
+      node.object.name === INTRINSIC_KEYWORD &&
+      node.computed
+    ) {
+      expectSyntax(node, !node.optional);
+      expectSyntax(node, node.property.type === "Literal");
+      expectSyntax(node, typeof node.property.value === "string");
+      return makeIntrinsicExpression(node.property.value, locate(node.loc));
+    } else {
+      const loc = locate(node.loc);
+      let intrinsic = null;
+      while (node.type === "MemberExpression") {
+        expectSyntax(node, !node.optional);
+        expectSyntax(node, !node.computed);
+        intrinsic =
+          intrinsic === null
+            ? node.property.name
+            : `${node.property.name}.${intrinsic}`;
+        node = node.object;
+      }
+      expectSyntax(node, node.type === "Identifier");
+      expectSyntax(node, node.name === INTRINSIC_KEYWORD);
+      return makeIntrinsicExpression(intrinsic, loc);
+    }
+  },
   // Combiners //
   CallExpression: (node) => {
     expectSyntax(node, node.optional === false);
@@ -447,8 +473,7 @@ export const convertExpression = generateConvert({
         convertExpression(node.arguments[0]),
         locate(node.loc),
       );
-    }
-    if (
+    } else if (
       node.callee.type === "Identifier" &&
       node.callee.name === YIELD_DELEGATE_KEYWORD
     ) {
@@ -458,16 +483,7 @@ export const convertExpression = generateConvert({
         convertExpression(node.arguments[0]),
         locate(node.loc),
       );
-    }
-    if (
-      node.callee.type === "Identifier" &&
-      node.callee.name === INTRINSIC_KEYWORD
-    ) {
-      expectSyntax(node, node.arguments.length === 1);
-      expectSyntax(node, node.arguments[0].type === "Literal");
-      return makeIntrinsicExpression(node.arguments[0].value, locate(node.loc));
-    }
-    if (
+    } else if (
       node.callee.type === "Identifier" &&
       node.callee.name === IMPORT_KEYWORD
     ) {
@@ -479,8 +495,7 @@ export const convertExpression = generateConvert({
         node.arguments[1].value,
         locate(node.loc),
       );
-    }
-    if (
+    } else if (
       node.callee.type === "Identifier" &&
       node.callee.name === EVAL_KEYWORD
     ) {
@@ -491,24 +506,38 @@ export const convertExpression = generateConvert({
         convertExpression(node.arguments[1]),
         locate(node.loc),
       );
-    }
-    if (node.callee.type === "MemberExpression") {
+    } else if (
+      node.callee.type === "MemberExpression" &&
+      node.callee.computed &&
+      (node.callee.object.type !== "Identifier" ||
+        node.callee.object.name !== INTRINSIC_KEYWORD)
+    ) {
       expectSyntax(node, !node.callee.optional);
-      expectSyntax(node, node.callee.computed);
       return makeInvokeExpression(
         convertExpression(node.callee.object),
         convertExpression(node.callee.property),
         map(node.arguments, convertExpression),
         locate(node.loc),
       );
+    } else if (
+      node.arguments.length > 0 &&
+      node.arguments[0].type === "UnaryExpression" &&
+      node.arguments[0].operator === "!"
+    ) {
+      return makeApplyExpression(
+        convertExpression(node.callee),
+        convertExpression(node.arguments[0].argument),
+        map(slice(node.arguments, 1, node.arguments.length), convertExpression),
+        locate(node.loc),
+      );
+    } else {
+      return makeApplyExpression(
+        convertExpression(node.callee),
+        makeLiteralExpression({undefined: null}),
+        map(node.arguments, convertExpression),
+        locate(node.loc),
+      );
     }
-    expectSyntax(node, node.arguments.length > 0);
-    return makeApplyExpression(
-      convertExpression(node.callee),
-      convertExpression(node.arguments[0]),
-      map(slice(node.arguments, 1, node.arguments.length), convertExpression),
-      locate(node.loc),
-    );
   },
   NewExpression: (node) => {
     return makeConstructExpression(

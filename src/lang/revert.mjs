@@ -175,6 +175,12 @@ const makeNewExpression = (callee, $arguments) => ({
   callee,
   arguments: $arguments,
 });
+const makeUnaryExpression = (operator, argument) => ({
+  type: "UnaryExpression",
+  prefix: true,
+  operator,
+  argument,
+});
 
 ///////////////
 // Transform //
@@ -396,9 +402,11 @@ export const revertExpression = generateRevert({
       : makeLiteral(primitive);
   },
   IntrinsicExpression: (_context, intrinsic, _annotation) =>
-    makeCallExpression(makeIdentifier(INTRINSIC_KEYWORD), [
+    makeMemberExpression(
+      true,
+      makeIdentifier(INTRINSIC_KEYWORD),
       makeLiteral(intrinsic),
-    ]),
+    ),
   ImportExpression: (_context, source, specifier, _annotation) =>
     makeCallExpression(makeIdentifier(IMPORT_KEYWORD), [
       makeLiteral(source),
@@ -462,7 +470,7 @@ export const revertExpression = generateRevert({
     makeCallExpression(
       revertExpression(expression1),
       concat(
-        [revertExpression(expression2)],
+        [makeUnaryExpression("!", revertExpression(expression2))],
         map(expressions, revertExpression),
       ),
     ),

@@ -61,14 +61,12 @@ assertEqual(
       {
         effect(
           (
-            intrinsic('aran.has')(
-              undefined,
+            intrinsic.aran.has(
               'frame',
               'variable',
             ) ?
-            intrinsic('aran.throw')(
-              undefined,
-              new (intrinsic('SyntaxError'))(
+            intrinsic.aran.throw(
+              new intrinsic.SyntaxError(
                 'Identifier \\'variable\\' has already been declared',
               ),
             ) :
@@ -116,18 +114,15 @@ assertEqual(
       {
         effect(
           (
-            intrinsic('aran.has')(
-              undefined,
+            intrinsic.aran.has(
               'frame',
               'variable'
             ) ?
             undefined :
-            intrinsic('Reflect.defineProperty')(
-              undefined,
+            intrinsic.Reflect.defineProperty(
               'frame',
               'variable',
-              intrinsic('aran.createObject')(
-                undefined,
+              intrinsic.aran.createObject(
                 null,
                 'configurable', false,
                 'enumerable', true,
@@ -177,16 +172,14 @@ assertEqual(
     `
       {
         effect(
-          intrinsic('Reflect.defineProperty')(
-            undefined,
+          intrinsic.Reflect.defineProperty(
             'frame',
             'variable',
-            intrinsic('aran.createObject')(
-              undefined,
+            intrinsic.aran.createObject(
               null,
               'configurable', false,
               'enumerable', true,
-              'value', intrinsic('aran.deadzone'),
+              'value', intrinsic.aran.deadzone,
               'writable', true,
             ),
           ),
@@ -231,12 +224,10 @@ assertEqual(
     `
       {
         effect(
-          intrinsic('Reflect.defineProperty')(
-            undefined,
+          intrinsic.Reflect.defineProperty(
             'frame',
             'variable',
-            intrinsic('aran.createObject')(
-              undefined,
+            intrinsic.aran.createObject(
               null,
               'configurable', false,
               'enumerable', true,
@@ -282,8 +273,8 @@ assertEqual(
     ),
     `
       (
-        intrinsic('aran.has')(undefined, 'frame', 'variable') ?
-        intrinsic('aran.get')(undefined, 'frame', 'variable') :
+        intrinsic.aran.has('frame', 'variable') ?
+        intrinsic.aran.get('frame', 'variable') :
         'next'
       )
     `,
@@ -303,21 +294,19 @@ assertEqual(
     ),
     `
       (
-        intrinsic('aran.has')(undefined, 'frame', 'variable') ?
+        intrinsic.aran.has('frame', 'variable') ?
         (
-          intrinsic('aran.binary')(
-            undefined,
+          intrinsic.aran.binary(
             '===',
-            intrinsic('aran.get')(undefined, 'frame', 'variable'),
-            intrinsic('aran.deadzone'),
+            intrinsic.aran.get('frame', 'variable'),
+            intrinsic.aran.deadzone,
           ) ?
-          intrinsic('aran.throw')(
-            undefined,
-            new (intrinsic('ReferenceError'))(
+          intrinsic.aran.throw(
+            new intrinsic.ReferenceError(
               'Cannot access \\'variable\\' before initialization',
             ),
           ) :
-          intrinsic('aran.get')(undefined, 'frame', 'variable')
+          intrinsic.aran.get('frame', 'variable')
         ) :
         'next'
       )
@@ -339,27 +328,24 @@ assertEqual(
     `
       (
         (
-          intrinsic('aran.get')(
-            undefined,
+          intrinsic.aran.get(
             'frame',
-            intrinsic('Symbol.unscopables'),
+            intrinsic.Symbol.unscopables,
           ) ?
           (
-            intrinsic('aran.get')(
-              undefined,
-              intrinsic('aran.get')(
-                undefined,
+            intrinsic.aran.get(
+              intrinsic.aran.get(
                 'frame',
-                intrinsic('Symbol.unscopables'),
+                intrinsic.Symbol.unscopables,
               ),
               'variable',
             ) ?
             false :
-            intrinsic('aran.has')(undefined, 'frame', 'variable')
+            intrinsic.aran.has('frame', 'variable')
           ) :
-          intrinsic('aran.has')(undefined, 'frame', 'variable')
+          intrinsic.aran.has('frame', 'variable')
         ) ?
-        intrinsic('aran.get')(undefined, 'frame', 'variable') :
+        intrinsic.aran.get('frame', 'variable') :
         'next'
       )
     `,
@@ -379,11 +365,10 @@ assertEqual(
     ),
     `
       (
-        intrinsic('aran.has')(undefined, 'frame', 'variable') ?
-        intrinsic('aran.unary')(
-          undefined,
+        intrinsic.aran.has('frame', 'variable') ?
+        intrinsic.aran.unary(
           'typeof',
-          intrinsic('aran.get')(undefined, 'frame', 'variable'),
+          intrinsic.aran.get('frame', 'variable'),
         ) :
         'next'
       )
@@ -404,8 +389,8 @@ assertEqual(
     ),
     `
       (
-        intrinsic('aran.has')(undefined, 'frame', 'variable') ?
-        intrinsic('aran.deleteSloppy')(undefined, 'frame', 'variable') :
+        intrinsic.aran.has('frame', 'variable') ?
+        intrinsic.aran.deleteSloppy('frame', 'variable') :
         'next'
       )
     `,
@@ -426,10 +411,9 @@ assertEqual(
     ),
     `
       (
-        intrinsic('aran.has')(undefined, 'frame', 'variable') ?
+        intrinsic.aran.has('frame', 'variable') ?
         effect(
-          intrinsic('aran.setSloppy')(
-            undefined,
+          intrinsic.aran.setSloppy(
             'frame',
             'variable',
             'right',

@@ -70,12 +70,10 @@ assertEqual(
       `{
         let _callee;
         effect(
-          intrinsic("aran.readGlobal")(undefined, "namespace")["arrival"](
+          intrinsic.aran.readGlobal("namespace")["arrival"](
             "kind",
-            intrinsic("Array.of")(
-              undefined,
-              intrinsic("aran.createObject")(
-                undefined,
+            intrinsic.Array.of(
+              intrinsic.aran.createObject(
                 null,
                 "link_key",
                 "link_value",
@@ -116,7 +114,7 @@ assertEqual(
     ),
     `{
       effect(
-        intrinsic("aran.readGlobal")(undefined, "namespace")["arrival"](
+        intrinsic.aran.readGlobal("namespace")["arrival"](
           "kind",
           null,
           null,
@@ -174,10 +172,10 @@ assertEqual(
       `{
         let _label, _variable;
         effect(
-          intrinsic("aran.readGlobal")(undefined, "namespace")["enter"](
+          intrinsic.aran.readGlobal("namespace")["enter"](
             "kind",
-            intrinsic("Array.of")(undefined, _label),
-            intrinsic("Array.of")(undefined, _variable),
+            intrinsic.Array.of(_label),
+            intrinsic.Array.of(_variable),
             123,
           ),
         );
@@ -202,10 +200,10 @@ assertEqual(
       (cut) => makeLiteralExpression(`key_${String(cut)}`),
       [makeLiteralExpression("argument")],
     ),
-    `intrinsic("aran.readGlobal")(undefined, "namespace")["apply"](
+    `intrinsic.aran.readGlobal("namespace")["apply"](
       "object_true",
       "key_true",
-      intrinsic("Array.of")(undefined, "argument"),
+      intrinsic.Array.of("argument"),
     )`,
   ),
   null,

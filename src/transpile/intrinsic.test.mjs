@@ -25,12 +25,12 @@ test(
     makeLiteralExpression("object"),
     makeLiteralExpression("key"),
   ),
-  "intrinsic('aran.has')(undefined, 'object', 'key')",
+  "intrinsic.aran.has('object', 'key')",
 );
 
 test(
   makeTypeofGlobalExpression(makeLiteralExpression("variable")),
-  "intrinsic('aran.typeofGlobal')(undefined, 'variable')",
+  "intrinsic.aran.typeofGlobal('variable')",
 );
 
 test(
@@ -38,7 +38,7 @@ test(
     makeLiteralExpression("object"),
     makeLiteralExpression("key"),
   ),
-  "intrinsic('aran.get')(undefined, 'object', 'key')",
+  "intrinsic.aran.get('object', 'key')",
 );
 
 test(
@@ -48,7 +48,7 @@ test(
     makeLiteralExpression("key"),
     makeLiteralExpression("value"),
   ),
-  "intrinsic('aran.setStrict')(undefined, 'object', 'key', 'value')",
+  "intrinsic.aran.setStrict('object', 'key', 'value')",
 );
 
 test(
@@ -58,7 +58,7 @@ test(
     makeLiteralExpression("key"),
     makeLiteralExpression("value"),
   ),
-  "intrinsic('aran.setSloppy')(undefined, 'object', 'key', 'value')",
+  "intrinsic.aran.setSloppy('object', 'key', 'value')",
 );
 
 test(
@@ -67,7 +67,7 @@ test(
     makeLiteralExpression("object"),
     makeLiteralExpression("key"),
   ),
-  "intrinsic('aran.deleteStrict')(undefined, 'object', 'key')",
+  "intrinsic.aran.deleteStrict('object', 'key')",
 );
 
 test(
@@ -76,19 +76,19 @@ test(
     makeLiteralExpression("object"),
     makeLiteralExpression("key"),
   ),
-  "intrinsic('aran.deleteSloppy')(undefined, 'object', 'key')",
+  "intrinsic.aran.deleteSloppy('object', 'key')",
 );
 
 test(
   makeObjectExpression(makeLiteralExpression("prototype"), [
     [makeLiteralExpression("key"), makeLiteralExpression("value")],
   ]),
-  "intrinsic('aran.createObject')(undefined, 'prototype', 'key', 'value')",
+  "intrinsic.aran.createObject('prototype', 'key', 'value')",
 );
 
 test(
   makeObjectExpression(makeLiteralExpression("prototype"), [], "annotation"),
-  "intrinsic('aran.createObject')(undefined, 'prototype')",
+  "intrinsic.aran.createObject('prototype')",
 );
 
 test(
@@ -97,12 +97,12 @@ test(
     {key: makeLiteralExpression("value")},
     "annotation",
   ),
-  "intrinsic('aran.createObject')(undefined, 'prototype', 'key', 'value')",
+  "intrinsic.aran.createObject('prototype', 'key', 'value')",
 );
 
 test(
   makeUnaryExpression("!", makeLiteralExpression("argument")),
-  "intrinsic('aran.unary')(undefined, '!', 'argument')",
+  "intrinsic.aran.unary('!', 'argument')",
 );
 
 test(
@@ -111,12 +111,12 @@ test(
     makeLiteralExpression("left"),
     makeLiteralExpression("right"),
   ),
-  "intrinsic('aran.binary')(undefined, '+', 'left', 'right')",
+  "intrinsic.aran.binary('+', 'left', 'right')",
 );
 
 test(
   makeThrowSyntaxErrorExpression("message"),
-  "intrinsic('aran.throw')(undefined, new (intrinsic('SyntaxError'))('message'))",
+  "intrinsic.aran.throw(new intrinsic.SyntaxError('message'))",
 );
 
-test(makeDirectIntrinsicExpression("globalThis"), "intrinsic('globalThis')");
+test(makeDirectIntrinsicExpression("globalThis"), "intrinsic.globalThis");
