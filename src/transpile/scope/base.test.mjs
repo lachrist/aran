@@ -1,6 +1,6 @@
 import {concat, forEach} from "array-lite";
 
-import {assertEqual, generateAssertUnreachable} from "../../__fixture__.mjs";
+import {assertSuccess, generateAssertUnreachable} from "../../__fixture__.mjs";
 
 import {
   makeSequenceEffect,
@@ -18,19 +18,17 @@ import {allignBlock, allignProgram} from "../../allign/index.mjs";
 import {makeRootScope, makeScopeBlock} from "./split.mjs";
 
 import {
-  READ,
-  DELETE,
-  isStrictScope,
-  useStrictScope,
-  makeLookupableDynamicScope,
-  makeDeclarableDynamicScope,
   initializeScope,
   makePreludeStatementArray,
   makeLooseDeclareStatementArray,
   makeRigidDeclareStatementArray,
   makeRigidInitializeStatementArray,
   declareImportVariable,
-  makeLookupNode,
+  makeReadExpression,
+  makeTypeofExpression,
+  makeDiscardExpression,
+  makeWriteEffect,
+  makeStaticWriteEffect,
 } from "./base.mjs";
 
 const callbacks = {
@@ -57,17 +55,6 @@ const testScript = (statements, code) => {
     null,
   );
 };
-
-////////////
-// Strict //
-////////////
-
-assertEqual(isStrictScope(initializeScope(makeRootScope(false))), false);
-
-assertEqual(
-  isStrictScope(useStrictScope(initializeScope(makeRootScope(false)))),
-  true,
-);
 
 ////////////////////////
 // Global Non-Reified //
@@ -106,20 +93,34 @@ assertEqual(
     );
   });
 
-  // lookup //
-  testScript(
-    [
-      makeEffectStatement(
-        makeExpressionEffect(
-          makeLookupNode(scope, "variable", READ, {
-            ...callbacks,
-            onGlobal: () => makeLiteralExpression("global"),
-          }),
-        ),
-      ),
-    ],
-    "effect('global');",
+  // read //
+  assertEqual(
+    allignExpression(
+      makeReadExpression(scope, "variable"),
+      "aran.readGlobal('variable')",
+    ),
+    null,
   );
+
+  // typeof //
+  assertEqual(
+    allignExpression(
+      makeTypeofExpression(scope, "variable"),
+      "aran.typeofGlobal('variable')",
+    ),
+    null,
+  );
+
+  // discard //
+  assertEqual(
+    allignExpression(
+      makeDiscardExpression(scope, "variable"),
+      "aran.deleteGlobal('variable')",
+    ),
+    null,
+  );
+
+  // write //
 }
 
 ////////////////////
@@ -309,7 +310,7 @@ assertEqual(
 ////////////
 
 // import //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeScopeBlock(initializeScope(makeRootScope(), true), [], (scope) => {
       declareImportVariable(scope, "variable", "source", "specifier");
@@ -376,11 +377,10 @@ assertEqual(
       }
     `,
   ),
-  null,
 );
 
 // loose //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeScopeBlock(initializeScope(makeRootScope(), true), [], (scope) =>
       makeLooseDeclareStatementArray(scope, "variable", ["specifier"]),
@@ -393,12 +393,11 @@ assertEqual(
       }
     `,
   ),
-  null,
 );
 
 // rigid //
 forEach([true, false], (writable) => {
-  assertEqual(
+  assertSuccess(
     allignBlock(
       makeScopeBlock(initializeScope(makeRootScope(), true), [], (scope) =>
         concat(
@@ -412,6 +411,13 @@ forEach([true, false], (writable) => {
                   ...callbacks,
                   onDeadHit: () => makeLiteralExpression("dead"),
                 }),
+              ),
+            ),
+            makeEffectStatement(
+              makeSimpleWriteEffect(
+                scope,
+                "variable",
+                makeLiteralExpression("right"),
               ),
             ),
           ],
@@ -461,6 +467,13 @@ forEach([true, false], (writable) => {
                 },
               ),
             ),
+            makeEffectStatement(
+              makeSimpleWriteEffect(
+                scope,
+                "variable",
+                makeLiteralExpression("right"),
+              ),
+            ),
           ],
         ),
       ),
@@ -468,6 +481,9 @@ forEach([true, false], (writable) => {
         {
           let variable;
           effect('dead');
+          (
+            effect('right'),
+            throw new Error();
           (
             variable = 'init',
             exportStatic('specifier', 'init')
@@ -507,7 +523,6 @@ forEach([true, false], (writable) => {
         }
       `,
     ),
-    null,
   );
 });
 
@@ -516,7 +531,7 @@ forEach([true, false], (writable) => {
 /////////////
 
 // declare loose //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -552,11 +567,10 @@ assertEqual(
       }
     `,
   ),
-  null,
 );
 
 // lookup not lookupable //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -587,11 +601,10 @@ assertEqual(
       }
     `,
   ),
-  null,
 );
 
 // lookup special //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -622,7 +635,6 @@ assertEqual(
       }
     `,
   ),
-  null,
 );
 
 // loookup without unscopable //
@@ -633,7 +645,7 @@ assertEqual(
     makeLiteralExpression("object"),
   );
   // read //
-  assertEqual(
+  assertSuccess(
     allignBlock(
       makeBlock(
         [],
@@ -677,10 +689,9 @@ assertEqual(
         }
       `,
     ),
-    null,
   );
   // delete //
-  assertEqual(
+  assertSuccess(
     allignBlock(
       makeBlock(
         [],
@@ -724,10 +735,9 @@ assertEqual(
         }
       `,
     ),
-    null,
   );
   // write //
-  assertEqual(
+  assertSuccess(
     allignBlock(
       makeBlock(
         [],
@@ -771,12 +781,11 @@ assertEqual(
         }
       `,
     ),
-    null,
   );
 }
 
 // lookup with unscopable //
-assertEqual(
+assertSuccess(
   allignBlock(
     makeBlock(
       [],
@@ -853,5 +862,4 @@ assertEqual(
       }
     `,
   ),
-  null,
 );

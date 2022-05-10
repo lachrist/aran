@@ -19,9 +19,22 @@
 // Thrown:
 // ReferenceError: flat is not defined
 
-import {concat, map, reduce} from "array-lite";
+import {concat, map, reduce, flatMap} from "array-lite";
 
-import {assert, throwError, partial1, returnFirst} from "../../util.mjs";
+import {
+  assert,
+  throwError,
+  returnFirst,
+  flip,
+  throwAny,
+  partialx,
+  partialx_,
+  partial_x,
+  partial_xx,
+  partialxx_,
+  partial_xxx,
+  partial_xxx_,
+} from "../../util.mjs";
 
 import {
   makeSequenceEffect,
@@ -30,104 +43,116 @@ import {
   makeImportExpression,
   makeEffectStatement,
   makeExpressionEffect,
-  makeConditionalEffect,
-  makeConditionalExpression,
   makeLiteralExpression,
 } from "../../ast/index.mjs";
 
 import {
-  makeDeleteExpression,
-  makeBinaryExpression,
   makeSetExpression,
-  makeStrictSetExpression,
-  makeGetExpression,
-  makeHasExpression,
-  makeSimpleObjectExpression,
-  makeDefinePropertyExpression,
+  makeUnaryExpression,
   makeDirectIntrinsicExpression,
-  makeThrowSyntaxErrorExpression,
   makeThrowTypeErrorExpression,
+  makeThrowReferenceErrorExpression,
+  makeGlobalDiscardExpression,
+  makeGlobalReadExpression,
+  makeGlobalTypeofExpression,
+  makeGlobalWriteExpression,
 } from "../intrinsic.mjs";
 
 import {
+  READ as STATIC_READ,
   makeBasePropertyScope as makePropertyScope,
   lookupBaseScopeProperty as lookupScopeProperty,
-  isBaseBound as isBound,
   isBaseStaticallyBound as isStaticallyBound,
   isBaseDynamicallyBound as isDynamicallyBound,
-  getBaseBindingDynamicFrame as getBindingDynamicFrame,
-  makeBaseDynamicScope as makeDynamicScope,
-  declareBaseVariable as declareVariable,
-  declareBaseGhostVariable as declareGhostVariable,
-  makeBaseInitializeEffect as makeInitializeEffect,
-  makeBaseLookupNode as makeLookupNode_,
+  getBaseBindingDynamicExtrinsic as getBindingDynamicExtrinsic,
+  declareBaseVariable as declareStaticVariable,
+  declareBaseGhostVariable as declareStaticGhostVariable,
+  makeBaseInitializeEffect as makeStaticInitializeEffect,
+  makeBaseLookupEffect as makeStaticLookupEffect,
+  makeBaseLookupExpre as makeStaticLookupExpression,
 } from "./split.mjs";
 
-const {undefined} = globalThis;
+import {
+  READ as READ_DYNAMIC,
+  DISCARD as DISCARD_DYNAMIC,
+  TYPEOF as TYPEOF_DYNAMIC,
+  makePreludeStatementArray as makeDynamicPreludeStatementArray,
+  makeLooseDeclareStatementArray as makeDynamicLooseDeclareStatementArray,
+  makeRigidDeclareStatementArray as makeDynamicRigidDeclareStatementArray,
+  makeRigidInitializeStatementArray as makeDynamicRigidInitializeStatementArray,
+  makeLookupNode as makeDynamicLookupNode,
+} from "./dynamic.mjs";
 
-export const READ = null;
-export const DELETE = undefined;
+export {makeBaseDynamicScope as makeDynamicScope} from "./split.mjs";
 
-const generateMakeConditional = (right) =>
-  right === READ || right === DELETE
-    ? makeConditionalExpression
-    : makeConditionalEffect;
+export {
+  makeEmptyDynamicFrame,
+  makeLooseDynamicFrame,
+  makeRigidDynamicFrame,
+} from "./dynamic.mjs";
 
-//////////////////
-// DynamicFrame //
-//////////////////
+const {Symbol} = globalThis;
 
-const generateMakeDynamicScope =
-  (lookupable, declarable) => (parent, unscopable, object) =>
-    makeDynamicScope(parent, {
-      lookupable,
-      declarable,
-      unscopable,
-      object,
-    });
+const isSpecialVariable = (identifier) =>
+  identifier === "this" ||
+  identifier === "new.target" ||
+  identifier === "import.meta";
 
-export const makeLookupableDynamicScope = generateMakeDynamicScope(true, false);
+const generateMakeSequenceExportEffect = (right) => (effect, specifier) =>
+  makeSequenceEffect(effect, makeExportEffect(specifier, right));
 
-export const makeDeclarableDynamicScope = generateMakeDynamicScope(false, true);
+const makeExportUndefinedStatement = (specifier) =>
+  makeEffectStatement(
+    makeExportEffect(specifier, makeLiteralExpression({undefined: null})),
+  );
+
+const throwUnexpectedStaticDeadHit = partialx(
+  throwError,
+  "unexpected dead hit",
+);
+
+const throwUnexpectedDynamicExtrinsic = partialx(
+  throwError,
+  "unexpected dynamic extrinsic",
+);
+const throwUnexpectedStaticMiss = partialx(throwError, "unexpected root scope");
+
+const makeDeadzoneExpression = (variable, {import: import_}) =>
+  import_ === null
+    ? makeThrowReferenceErrorExpression(
+        `Cannot access '${variable}' before initialization`,
+      )
+    : makeImportExpression(import_.source, import_.specifier);
+
+const makeDeadzoneEffect = (variable, note) =>
+  makeExpressionEffect(makeDeadzoneExpression(variable, note));
 
 //////////////
 // Property //
 //////////////
 
-const STRICT = "strict";
 const REIFIED = "reified";
+const STRICT = "strict";
 
 export const initializeScope = (scope, reified) =>
-  makePropertyScope(makePropertyScope(scope, REIFIED, reified), STRICT, false);
+  makePropertyScope(makePropertyScope(scope, STRICT, false), REIFIED, reified);
 
-export const useStrictScope = (scope) => makePropertyScope(scope, STRICT, true);
+export const isGlobalScopeReified = partial_x(lookupScopeProperty, REIFIED);
 
-export const isStrictScope = (scope) => lookupScopeProperty(scope, STRICT);
+export const useStrictScope = partial_xx(makePropertyScope, STRICT, true);
 
-const isGlobalReified = (scope) => lookupScopeProperty(scope, REIFIED);
+export const isStrictScope = partial_x(lookupScopeProperty, STRICT);
 
 /////////////
 // Prelude //
 /////////////
 
 export const makePreludeStatementArray = (scope, variable) => {
-  if (!isBound(scope) && isGlobalReified(scope)) {
-    return [
-      makeEffectStatement(
-        makeExpressionEffect(
-          makeConditionalExpression(
-            makeHasExpression(
-              makeDirectIntrinsicExpression("aran.globalRecord"),
-              makeLiteralExpression(variable),
-            ),
-            makeThrowSyntaxErrorExpression(
-              `Identifier '${variable}' has already been declared`,
-            ),
-            makeLiteralExpression({undefined: null}),
-          ),
-        ),
-      ),
-    ];
+  if (isDynamicallyBound(scope)) {
+    return flatMap(
+      getBindingDynamicExtrinsic(scope),
+      partial_x(makeDynamicPreludeStatementArray, variable),
+    );
   } else {
     return [];
   }
@@ -137,14 +162,9 @@ export const makePreludeStatementArray = (scope, variable) => {
 // Loose //
 ///////////
 
-const makeExportUndefinedStatement = (specifier) =>
-  makeEffectStatement(
-    makeExportEffect(specifier, makeLiteralExpression({undefined: null})),
-  );
-
 export const makeLooseDeclareStatementArray = (scope, variable, specifiers) => {
   if (isStaticallyBound(scope)) {
-    declareVariable(scope, variable, {
+    declareStaticVariable(scope, variable, {
       writable: true,
       import: null,
       exports: specifiers,
@@ -152,7 +172,7 @@ export const makeLooseDeclareStatementArray = (scope, variable, specifiers) => {
     return concat(
       [
         makeEffectStatement(
-          makeInitializeEffect(
+          makeStaticInitializeEffect(
             scope,
             variable,
             makeLiteralExpression({undefined: null}),
@@ -161,58 +181,20 @@ export const makeLooseDeclareStatementArray = (scope, variable, specifiers) => {
       ],
       map(specifiers, makeExportUndefinedStatement),
     );
-  } else if (isDynamicallyBound(scope)) {
-    const {declarable, unscopable, object} = getBindingDynamicFrame(scope);
-    assert(declarable, "expected declarable dynamic frame");
-    assert(!unscopable, "unxpected unscopable dynamic frame");
-    assert(
-      specifiers.length === 0,
-      "dynamically bound loose declaration should not be exported",
-    );
-    return [
-      makeEffectStatement(
-        makeExpressionEffect(
-          makeConditionalExpression(
-            makeHasExpression(object, makeLiteralExpression(variable)),
-            makeLiteralExpression({undefined: null}),
-            makeStrictSetExpression(
-              object,
-              makeLiteralExpression(variable),
-              makeLiteralExpression({undefined: null}),
-            ),
-          ),
-        ),
-      ),
-    ];
   } else {
     assert(
-      specifiers.length === 0,
-      "globally bound loose declaration should not be exported",
+      !isSpecialVariable(variable),
+      "unexpected special variable for non-static loose declaration",
     );
-    if (isGlobalReified(scope)) {
-      return [
-        makeEffectStatement(
-          makeExpressionEffect(
-            makeConditionalExpression(
-              makeHasExpression(
-                makeDirectIntrinsicExpression("aran.globalObject"),
-                makeLiteralExpression(variable),
-              ),
-              makeLiteralExpression({undefined: null}),
-              makeDefinePropertyExpression(
-                makeDirectIntrinsicExpression("aran.globalObject"),
-                makeLiteralExpression(variable),
-                makeSimpleObjectExpression(makeLiteralExpression(null), {
-                  configurable: makeLiteralExpression(false),
-                  enumerable: makeLiteralExpression(true),
-                  writable: makeLiteralExpression(true),
-                  value: makeLiteralExpression({undefined: null}),
-                }),
-              ),
-            ),
-          ),
-        ),
-      ];
+    assert(
+      specifiers.length === 0,
+      "loose declaration can only be exported statically",
+    );
+    if (isDynamicallyBound(scope)) {
+      return flatMap(
+        getBindingDynamicExtrinsic(scope),
+        partial_x(makeDynamicLooseDeclareStatementArray, variable),
+      );
     } else {
       return [
         makeDeclareStatement(
@@ -236,7 +218,7 @@ export const makeRigidDeclareStatementArray = (
   specifiers,
 ) => {
   if (isStaticallyBound(scope)) {
-    declareVariable(scope, variable, {
+    declareStaticVariable(scope, variable, {
       writable,
       import: null,
       exports: specifiers,
@@ -244,103 +226,66 @@ export const makeRigidDeclareStatementArray = (
     return [];
   } else {
     assert(
-      !isDynamicallyBound(scope),
-      "rigid declaration should not be dynamically bound",
+      !isSpecialVariable(variable),
+      "unexpected special variable for non-static rigid declaration",
     );
     assert(
       specifiers.length === 0,
-      "rigid global declaration should not be exported",
+      "rigid declaration can only be exported statically",
     );
-    if (isGlobalReified(scope)) {
-      return [
-        makeEffectStatement(
-          makeExpressionEffect(
-            makeStrictSetExpression(
-              makeDirectIntrinsicExpression("aran.globalRecord"),
-              makeLiteralExpression(variable),
-              makeDirectIntrinsicExpression("aran.deadzone"),
-            ),
-          ),
-        ),
-      ];
+    if (isDynamicallyBound(scope)) {
+      return flatMap(
+        getBindingDynamicExtrinsic(scope),
+        partial_x(makeDynamicRigidDeclareStatementArray, variable),
+      );
     } else {
       return [];
     }
   }
 };
 
-const generateMakeSequenceExport = (right) => (effect, specifier) =>
-  makeSequenceEffect(effect, makeExportEffect(specifier, right));
-
-const onInitializeLiveHit = partial1(throwError, "duplicate initialization");
-const onInitializeDynamicFrame = partial1(
-  throwError,
-  "unexpected dynamic frame",
-);
-const onInitializeRoot = partial1(throwError, "unexpected root scope");
-const generateOnInitializeDeadHit =
-  (scope, variable, right) =>
-  ({exports: specifiers}) =>
-    reduce(
-      specifiers,
-      generateMakeSequenceExport(right),
-      makeInitializeEffect(scope, variable, right),
-    );
+const generateMakeInitializeExportEffect =
+  (effect) =>
+  (expression, {exports: specifiers}) =>
+    reduce(specifiers, generateMakeSequenceExportEffect(expression), effect);
 
 export const makeRigidInitializeStatementArray = (
   scope,
   variable,
   writable,
-  right,
+  expression,
 ) => {
   if (isStaticallyBound(scope)) {
     return [
       makeEffectStatement(
-        makeLookupNode_(scope, variable, right, {
-          onLiveHit: onInitializeLiveHit,
-          onDeadHit: generateOnInitializeDeadHit(scope, variable, right),
-          onDynamicFrame: onInitializeDynamicFrame,
-          onRoot: onInitializeRoot,
+        makeStaticLookupEffect(scope, variable, STATIC_READ, {
+          onStaticLiveHit: generateMakeInitializeExportEffect(
+            makeStaticInitializeEffect(scope, variable, expression),
+          ),
+          onStaticDeadHit: throwUnexpectedStaticDeadHit,
+          onDynamicExtrinsic: throwUnexpectedDynamicExtrinsic,
+          onStaticMiss: throwUnexpectedStaticMiss,
         }),
       ),
     ];
   } else {
     assert(
-      !isDynamicallyBound(scope),
-      "rigid declaration should not be dynamically bound",
+      !isSpecialVariable(variable),
+      "unexpected special variable for non-static rigid initialization",
     );
-    if (isGlobalReified(scope)) {
-      if (writable) {
-        return [
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeStrictSetExpression(
-                makeDirectIntrinsicExpression("aran.globalRecord"),
-                makeLiteralExpression(variable),
-                right,
-              ),
-            ),
-          ),
-        ];
-      } else {
-        return [
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeDefinePropertyExpression(
-                makeDirectIntrinsicExpression("aran.globalRecord"),
-                makeLiteralExpression(variable),
-                makeSimpleObjectExpression(makeLiteralExpression(null), {
-                  writable: makeLiteralExpression(false),
-                  value: right,
-                }),
-              ),
-            ),
-          ),
-        ];
-      }
+    if (isDynamicallyBound(scope)) {
+      return flatMap(
+        getBindingDynamicExtrinsic(scope),
+        partial_xxx(
+          makeDynamicRigidInitializeStatementArray,
+          variable,
+          writable,
+          expression,
+        ),
+      );
     } else {
       return [
-        makeDeclareStatement(writable ? "let" : "const", variable, right),
+        makeDeclareStatement(writable ? "let" : "const", variable, expression),
       ];
     }
   }
@@ -355,7 +300,7 @@ export const declareImportVariable = (scope, variable, source, specifier) => {
     isStaticallyBound(scope),
     "imported variables should be statically bound",
   );
-  declareGhostVariable(scope, variable, {
+  declareStaticGhostVariable(scope, variable, {
     writable: false,
     import: {source, specifier},
     exports: [],
@@ -366,166 +311,192 @@ export const declareImportVariable = (scope, variable, source, specifier) => {
 // Lookup //
 ////////////
 
-const isSpecialVariable = (identifier) =>
-  identifier === "this" ||
-  identifier === "new.target" ||
-  identifier === "import.meta";
-
-const generateOnLiveHit =
-  (right, {onLiveHit}) =>
-  (node, {writable, import: import_, exports: specifiers}) => {
-    assert(import_ === null, "initialized import declaration");
-    if (right === DELETE) {
-      return onLiveHit(makeLiteralExpression(true));
-    } else if (right === READ) {
-      return onLiveHit(node);
-    } else if (!writable) {
-      return onLiveHit(
-        makeExpressionEffect(
-          makeThrowTypeErrorExpression("Assignment to constant variable"),
+const generateMakeDynamicLookupNode =
+  (scope, variable, right) => (expression, frames) =>
+    reduce(
+      frames,
+      flip(
+        partial_xxx_(
+          makeDynamicLookupNode,
+          isStrictScope(scope),
+          variable,
+          right,
         ),
-      );
-    } else {
-      return onLiveHit(
-        reduce(specifiers, generateMakeSequenceExport(right), node),
-      );
-    }
-  };
+      ),
+      expression,
+    );
 
-const generateOnDeadHit =
-  (right, {onLiveHit, onDeadHit}) =>
-  ({writable, import: import_}) => {
-    if (import_ === null) {
-      return onDeadHit();
-    } else if (right === READ) {
-      return onLiveHit(makeImportExpression(import_.source, import_.specifier));
-    } else if (right === DELETE) {
-      return onLiveHit(makeLiteralExpression(true));
-    } else {
-      assert(!writable, "writable import declaration");
-      return onLiveHit(
-        makeExpressionEffect(
-          makeThrowTypeErrorExpression("Assignment to constant variable"),
-        ),
-      );
-    }
-  };
+//////////
+// Read //
+//////////
 
-const makeDynamicLookupNode = (strict, object, key, right) => {
-  if (right === READ) {
-    return makeGetExpression(object, key);
-  } else if (right === DELETE) {
-    return makeDeleteExpression(strict, object, key);
-  } else {
-    return makeExpressionEffect(makeSetExpression(strict, object, key, right));
-  }
-};
+const generateMakeRootReadExpression = (scope, variable) => () =>
+  isGlobalScopeReified(scope)
+    ? makeThrowReferenceErrorExpression(`${variable} is not defined`)
+    : makeGlobalReadExpression(variable);
 
-const generateOnRoot =
-  (reified, strict, key, right, {onLiveHit, onDeadHit, onMiss, onGlobal}) =>
-  () => {
-    if (reified) {
-      const makeConditional = generateMakeConditional(right);
-      return makeConditional(
-        makeHasExpression(
-          makeDirectIntrinsicExpression("aran.globalRecord"),
-          key,
-        ),
-        makeConditional(
-          makeBinaryExpression(
-            "===",
-            makeGetExpression(
-              makeDirectIntrinsicExpression("aran.globalRecord"),
-              key,
-            ),
-            makeDirectIntrinsicExpression("aran.deadzone"),
-          ),
-          onDeadHit(),
-          onLiveHit(
-            makeDynamicLookupNode(
-              true,
-              makeDirectIntrinsicExpression("aran.globalRecord"),
-              key,
-              right,
-            ),
-          ),
-        ),
-        makeConditional(
-          makeHasExpression(
-            makeDirectIntrinsicExpression("aran.globalObject"),
-            key,
-          ),
-          onLiveHit(
-            makeDynamicLookupNode(
-              strict,
-              makeDirectIntrinsicExpression("aran.globalObject"),
-              key,
-              right,
-            ),
-          ),
-          onMiss(),
-        ),
-      );
-    } else {
-      return onGlobal();
-    }
-  };
-
-const generateOnDynamicFrame =
-  (strict, key, right, {onLiveHit}) =>
-  (node, {lookupable, unscopable, object}) => {
-    const makeConditional = generateMakeConditional(right);
-    if (lookupable) {
-      if (unscopable) {
-        return makeConditional(
-          makeConditionalExpression(
-            makeGetExpression(
-              object,
-              makeDirectIntrinsicExpression("Symbol.unscopables"),
-            ),
-            makeConditionalExpression(
-              makeGetExpression(
-                makeGetExpression(
-                  object,
-                  makeDirectIntrinsicExpression("Symbol.unscopables"),
-                ),
-                key,
-              ),
-              makeLiteralExpression(false),
-              makeHasExpression(object, key),
-            ),
-            makeHasExpression(object, key),
-          ),
-          onLiveHit(makeDynamicLookupNode(strict, object, key, right)),
-          node,
-        );
-      } else {
-        return makeConditional(
-          makeHasExpression(object, key),
-          onLiveHit(makeDynamicLookupNode(strict, object, key, right)),
-          node,
-        );
-      }
-    } else {
-      return node;
-    }
-  };
-
-export const makeLookupNode = (scope, variable, right, callbacks) => {
-  const key = makeLiteralExpression(variable);
-  const strict = isStrictScope(scope);
-  return makeLookupNode_(scope, variable, right === DELETE ? READ : right, {
-    onLiveHit: generateOnLiveHit(right, callbacks),
-    onDeadHit: generateOnDeadHit(right, callbacks),
-    onRoot: generateOnRoot(
-      isGlobalReified(scope),
-      strict,
-      key,
-      right,
-      callbacks,
+export const makeReadExpression = (scope, variable) =>
+  makeStaticLookupExpression(scope, variable, STATIC_READ, {
+    onStaticLiveHit: returnFirst,
+    onStaticDeadHit: partialx_(makeDeadzoneExpression, variable),
+    onDynamicExtrinsic: generateMakeDynamicLookupNode(
+      scope,
+      variable,
+      READ_DYNAMIC,
     ),
-    onDynamicFrame: isSpecialVariable(variable)
-      ? returnFirst
-      : generateOnDynamicFrame(strict, key, right, callbacks),
+    onStaticMiss: generateMakeRootReadExpression(scope, variable),
   });
+
+////////////
+// Typeof //
+////////////
+
+const makeLiveTypeofExpression = partialx_(makeUnaryExpression, "typeof");
+
+const generateMakeRootTypeofExpression = (scope, variable) => () =>
+  isGlobalScopeReified(scope)
+    ? makeLiteralExpression("undefined")
+    : makeGlobalTypeofExpression(variable);
+
+export const makeTypeofExpression = (scope, variable) =>
+  makeStaticLookupExpression(scope, variable, STATIC_READ, {
+    onStaticLiveHit: makeLiveTypeofExpression,
+    onStaticDeadHit: partialx_(makeDeadzoneExpression, variable),
+    onDynamicExtrinsic: generateMakeDynamicLookupNode(
+      scope,
+      variable,
+      TYPEOF_DYNAMIC,
+    ),
+    onStaticMiss: generateMakeRootTypeofExpression(scope, variable),
+  });
+
+/////////////
+// Discard //
+/////////////
+
+export const generateMakeStaticDiscardExpression = (scope) => () =>
+  isStrictScope(scope)
+    ? // This should never happen in practice because deleting
+      // an unqualified identifier is not allowed in strict mode.
+      // Nonetheless we leave it for consistency reason.
+      makeThrowTypeErrorExpression("Cannot delete variable")
+    : makeLiteralExpression(false);
+
+const generateMakeRootDiscardExpression = (scope, variable) => () =>
+  isGlobalScopeReified(scope)
+    ? makeLiteralExpression(true)
+    : makeGlobalDiscardExpression(isStrictScope(scope), variable);
+
+export const makeDiscardExpression = (scope, variable) =>
+  makeStaticLookupExpression(scope, variable, STATIC_READ, {
+    onStaticLiveHit: generateMakeStaticDiscardExpression(scope),
+    onStaticDeadHit: generateMakeStaticDiscardExpression(scope),
+    onDynamicExtrinsic: generateMakeDynamicLookupNode(
+      scope,
+      variable,
+      DISCARD_DYNAMIC,
+    ),
+    onStaticMiss: generateMakeRootDiscardExpression(scope, variable),
+  });
+
+///////////
+// Write //
+///////////
+
+const generateMakeWriteRootEffect = (scope, variable, pure) => () =>
+  makeExpressionEffect(
+    isGlobalScopeReified(scope)
+      ? isStrictScope(scope)
+        ? makeThrowTypeErrorExpression(`${variable} is not defined`)
+        : makeSetExpression(
+            true,
+            makeDirectIntrinsicExpression("aran.globalObject"),
+            variable,
+            pure,
+          )
+      : makeGlobalWriteExpression(isStrictScope(scope), variable, pure),
+  );
+
+const generateMakeWriteLiveHitEffect =
+  (pure) =>
+  (effect, {writable, exports: specifiers}) =>
+    writable
+      ? reduce(specifiers, generateMakeSequenceExportEffect(pure), effect)
+      : makeExpressionEffect(
+          makeThrowTypeErrorExpression("Assignment to constant variable"),
+        );
+
+export const makeWriteExpression = (scope, variable, pure) =>
+  makeStaticLookupEffect(scope, variable, pure, {
+    onStaticLiveHit: generateMakeWriteLiveHitEffect(pure),
+    onStaticDeadHit: partialx_(makeDeadzoneEffect, variable),
+    onDynamicExtrinsic: generateMakeDynamicLookupNode(scope, variable, pure),
+    onStaticMiss: generateMakeWriteRootEffect(scope, variable, pure),
+  });
+
+//////////////////
+// Static Write //
+//////////////////
+
+// This is sometimes usefull to avoid storing values in meta variables.
+
+const DYNAMIC = Symbol("complex");
+
+const throwDynamic = partialx(throwAny, DYNAMIC);
+
+const generateMakeImpureWriteEffect =
+  (scope, variable, expression) =>
+  (effect, {writable, exports: specifiers}) => {
+    if (writable) {
+      // If this lookup succeed, we can assume that
+      // makeLookupNode(scope, variable, READ) will
+      // simply be an identifier read.
+      return reduce(
+        specifiers,
+        generateMakeSequenceExportEffect(
+          makeStaticLookupExpression(scope, variable, STATIC_READ, {
+            onStaticDeadHit: throwUnexpectedStaticDeadHit,
+            onStaticLiveHit: returnFirst,
+            onStaticMiss: throwUnexpectedStaticMiss,
+            // NB: this onDynamicExtrinsic be cause throwDynamic by parent call
+            onDynamicExtrinsic: returnFirst,
+          }),
+        ),
+        effect,
+      );
+    } else {
+      return makeSequenceEffect(
+        makeExpressionEffect(expression),
+        makeExpressionEffect(
+          makeThrowTypeErrorExpression("Assignment to constant variable"),
+        ),
+      );
+    }
+  };
+
+const makeImpureDeadzoneEffect = (expression, variable, note) =>
+  makeSequenceEffect(
+    makeExpressionEffect(expression),
+    makeDeadzoneEffect(variable, note),
+  );
+
+export const makeStaticWriteEffect = (scope, variable, expression) => {
+  try {
+    return makeStaticLookupEffect(scope, variable, expression, {
+      onStaticLiveHit: generateMakeImpureWriteEffect(scope, variable),
+      onStaticDeadHit: partialxx_(
+        makeImpureDeadzoneEffect,
+        expression,
+        variable,
+      ),
+      onStaticMiss: throwDynamic,
+      onDynamicExtrinsic: throwDynamic,
+    });
+  } catch (error) {
+    if (error === DYNAMIC) {
+      return null;
+    } else {
+      throw error;
+    }
+  }
 };
