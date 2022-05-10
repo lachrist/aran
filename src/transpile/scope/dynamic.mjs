@@ -20,12 +20,9 @@ import {
   makeThrowReferenceErrorExpression,
 } from "../intrinsic.mjs";
 
-import {READ} from "./split.mjs";
-
-export {READ} from "./split.mjs";
-
 const {Symbol} = globalThis;
 
+export const READ = Symbol("read");
 export const DISCARD = Symbol("delete");
 export const TYPEOF = Symbol("typeof");
 
