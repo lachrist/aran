@@ -1,6 +1,6 @@
 /* eslint-disable arrow-body-style, no-use-before-define */
 
-import {slice, map, concat} from "array-lite";
+import {slice, map, concat, includes} from "array-lite";
 
 import {format, expect, assert} from "../util.mjs";
 
@@ -68,6 +68,18 @@ const {
   SyntaxError,
   Reflect: {getOwnPropertyDescriptor},
 } = globalThis;
+
+const keywords = [
+  EFFECT_KEYWORD,
+  EVAL_KEYWORD,
+  UNDEFINED_KEYWORD,
+  INPUT_KEYWORD,
+  INTRINSIC_KEYWORD,
+  YIELD_DELEGATE_KEYWORD,
+  YIELD_STRAIGHT_KEYWORD,
+  EXPORT_KEYWORD,
+  IMPORT_KEYWORD,
+];
 
 ///////////
 // Error //
@@ -408,6 +420,7 @@ export const convertExpression = generateConvert({
     } else if (node.name === INPUT_KEYWORD) {
       return makeInputExpression(locate(node.loc));
     } else {
+      expectSyntax(node, !includes(keywords, node.name));
       return makeReadExpression(node.name, locate(node.loc));
     }
   },
