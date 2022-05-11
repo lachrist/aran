@@ -71,15 +71,12 @@ input = {
   "import.meta": import.meta,
 };
 
-// Script
+// Script //
 input = {
   __proto__: null,
   "this": this,
   "import": (source) => import("source"),
 };
-
-// LocalEval [Identifier]
-input = {__proto__:null};
 
 // LocalEval //
 const input = {__proto__:null};
@@ -97,7 +94,8 @@ const input = {
   __proto__: null,
   "this": this,
   "import": (source) => import(source),
-  "new.target": [enclaves.includes("new.target") ? "new.target" : "null"],
+  "import.meta": [enclaves.includes("import.meta") ? "import.meta" : null],
+  "new.target": [enclaves.includes("new.target") ? "new.target" : null],
   "super.set": [enclaves.includes("super.set")
     ? "(key, value) => { super[key] = value; }"
     : "() => { throw new SyntaxError('Cannot access super property'); }"
@@ -110,6 +108,7 @@ const input = {
     ? "(values) => super(... values)"
     : "() => { throw new SyntaxError('Cannot call super'); }"
   ],
+  "scope.delete": (variable) => eval(`(delete ${variable});`),
   "scope.typeof": (variable) => eval(`(typeof ${variable});`),
   "scope.read": (variable) => eval(`(${variable});`),
   "scope.write": (variable, value) => {
@@ -124,10 +123,6 @@ const input = {
     }
   },
 };
-
-// Local Eval //
-
-const input = {__proto__: null};
 
 // Invoke //
 
