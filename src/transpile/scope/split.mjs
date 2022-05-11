@@ -14,6 +14,7 @@ import {
   declareFreshVariable,
   makeInitializeEffect,
   makeLookupExpression,
+  makeLookupStatementArray,
   makeLookupEffect,
   makePropertyScope,
   lookupScopeProperty,
@@ -142,6 +143,12 @@ export const makeBaseLookupExpression = generateMakeLookup(
 
 export const makeBaseLookupEffect = generateMakeLookup(
   makeLookupEffect,
+  makeBaseVariable,
+  returnFirst,
+);
+
+export const makeBaseLookupStatementArray = generateMakeLookup(
+  makeLookupStatementArray,
   makeBaseVariable,
   returnFirst,
 );

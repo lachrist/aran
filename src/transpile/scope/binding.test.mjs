@@ -25,6 +25,7 @@ import {
   access,
   makeLookupExpression,
   makeLookupEffect,
+  makeLookupStatementArray,
   harvestVariables,
   harvestStatements,
 } from "./binding.mjs";
@@ -67,9 +68,9 @@ assertEqual(matches(makeBinding("variable", "note"), "variable"), true);
 
 assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
 
-/////////////////
-// No deadzone //
-/////////////////
+/////////////////////////
+// No Dynamic Deadzone //
+/////////////////////////
 
 {
   const binding = makeBinding("variable", "note");
@@ -80,7 +81,6 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
         effect('dead');
         x = 'init';
         effect(x);
-        x = 'right';
       }
     `,
     binding,
@@ -110,71 +110,13 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
           }),
         ),
       ),
-      makeEffectStatement(
-        makeLookupEffect(binding, false, makeLiteralExpression("right"), {
-          ...callbacks,
-          onStaticLiveHit: (node, note) => {
-            assertEqual(note, "note");
-            return node;
-          },
-        }),
-      ),
     ],
   );
 }
 
-//////////////
-// Deadzone //
-//////////////
-
-{
-  const binding = makeBinding("variable", "note");
-  test(
-    `
-      {
-        let $x, _x;
-        _x = false;
-        effect(_x ? $x : 'dead');
-        _x ? $x = 'right' : effect('dead');
-        ($x = 'init', _x = true);
-      }
-    `,
-    binding,
-    [
-      makeEffectStatement(
-        makeExpressionEffect(
-          makeLookupExpression(binding, true, READ, {
-            ...callbacks,
-            onStaticLiveHit: (node, note) => {
-              assertEqual(note, "note");
-              return node;
-            },
-            onStaticDeadHit: (note) => {
-              assertEqual(note, "note");
-              return makeLiteralExpression("dead");
-            },
-          }),
-        ),
-      ),
-      makeEffectStatement(
-        makeLookupEffect(binding, true, makeLiteralExpression("right"), {
-          ...callbacks,
-          onStaticLiveHit: (node, note) => {
-            assertEqual(note, "note");
-            return node;
-          },
-          onStaticDeadHit: (note) => {
-            assertEqual(note, "note");
-            return makeExpressionEffect(makeLiteralExpression("dead"));
-          },
-        }),
-      ),
-      makeEffectStatement(
-        makeInitializeEffect(binding, false, makeLiteralExpression("init")),
-      ),
-    ],
-  );
-}
+////////////
+// Access //
+////////////
 
 {
   const binding = makeBinding("variable", "note");
@@ -209,16 +151,39 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
         _x = false;
         ($x = 'init', _x = true);
         effect(_x ? $x : 'dead');
+        _x
+          ? $x = 'right'
+          : effect('dead');
+        if (_x) {
+          effect($x);
+        } else {
+          effect('dead');
+        }
       }
     `,
     binding,
-    [
-      makeEffectStatement(
-        makeInitializeEffect(binding, true, makeLiteralExpression("init")),
-      ),
-      makeEffectStatement(
-        makeExpressionEffect(
-          makeLookupExpression(binding, false, READ, {
+    concat(
+      [
+        makeEffectStatement(
+          makeInitializeEffect(binding, true, makeLiteralExpression("init")),
+        ),
+        makeEffectStatement(
+          makeExpressionEffect(
+            makeLookupExpression(binding, false, READ, {
+              ...callbacks,
+              onStaticLiveHit: (node, note) => {
+                assertEqual(note, "note");
+                return node;
+              },
+              onStaticDeadHit: (note) => {
+                assertEqual(note, "note");
+                return makeLiteralExpression("dead");
+              },
+            }),
+          ),
+        ),
+        makeEffectStatement(
+          makeLookupEffect(binding, false, makeLiteralExpression("right"), {
             ...callbacks,
             onStaticLiveHit: (node, note) => {
               assertEqual(note, "note");
@@ -226,12 +191,27 @@ assertEqual(matches(makeBinding("variable2", "note"), "variable1"), false);
             },
             onStaticDeadHit: (note) => {
               assertEqual(note, "note");
-              return makeLiteralExpression("dead");
+              return makeExpressionEffect(makeLiteralExpression("dead"));
             },
           }),
         ),
-      ),
-    ],
+      ],
+      makeLookupStatementArray(binding, false, READ, {
+        ...callbacks,
+        onStaticLiveHit: (node, note) => {
+          assertEqual(note, "note");
+          return [makeEffectStatement(makeExpressionEffect(node))];
+        },
+        onStaticDeadHit: (note) => {
+          assertEqual(note, "note");
+          return [
+            makeEffectStatement(
+              makeExpressionEffect(makeLiteralExpression("dead")),
+            ),
+          ];
+        },
+      }),
+    ),
   );
 }
 

@@ -29,6 +29,7 @@ import {
   matches as matchesBinding,
   makeInitializeEffect as makeBindingInitializeEffect,
   access as accessBinding,
+  makeLookupStatementArray as makeBindingLookupStatementArray,
   makeLookupExpression as makeBindingLookupExpression,
   makeLookupEffect as makeBindingLookupEffect,
   harvestVariables as harvestBindingVariables,
@@ -236,7 +237,7 @@ export const makeInitializeEffect = (scope, variable, expression) => {
 const finalizeLookup = (extrinsics, node, onDynamicExtrinsic) =>
   reduce(reverse(extrinsics), onDynamicExtrinsic, node);
 
-const generateMakeLookupNode =
+const generateLookup =
   (makeBindingLookupNode) =>
   (
     scope,
@@ -267,11 +268,13 @@ const generateMakeLookupNode =
     return finalizeLookup(extrinsics, onStaticMiss(), onDynamicExtrinsic);
   };
 
-export const makeLookupExpression = generateMakeLookupNode(
-  makeBindingLookupExpression,
-);
+export const makeLookupExpression = generateLookup(makeBindingLookupExpression);
 
-export const makeLookupEffect = generateMakeLookupNode(makeBindingLookupEffect);
+export const makeLookupEffect = generateLookup(makeBindingLookupEffect);
+
+export const makeLookupStatementArray = generateLookup(
+  makeBindingLookupStatementArray,
+);
 
 //////////
 // eval //

@@ -3,6 +3,8 @@ import {assert} from "../../util.mjs";
 import {makeBaseVariable, makeMetaVariable} from "../../variable.mjs";
 
 import {
+  makeBlock,
+  makeIfStatement,
   makeSequenceEffect,
   makeConditionalEffect,
   makeConditionalExpression,
@@ -12,13 +14,14 @@ import {
   makeEffectStatement,
 } from "../../ast/index.mjs";
 
-const {Symbol, undefined} = globalThis;
+const {Symbol} = globalThis;
 
 export const READ = Symbol("read");
-const YES = true;
-const NO = false;
-const MAYBE = null;
-const NEVER = undefined;
+
+const YES = "yes";
+const NO = "no";
+const MAYBE = "maybe";
+const NEVER = "never";
 
 const generateMakeBinding = (initialization) => (variable, note) => ({
   variable,
@@ -61,7 +64,7 @@ export const access = ({state}, escaped) => {
   }
 };
 
-const generateMakeLookupNode =
+const generateLookup =
   (makeConditional) =>
   (binding, escaped, right, {onStaticDeadHit, onStaticLiveHit}) => {
     const {state, variable, note} = binding;
@@ -86,11 +89,21 @@ const generateMakeLookupNode =
     }
   };
 
-export const makeLookupExpression = generateMakeLookupNode(
-  makeConditionalExpression,
-);
+export const makeLookupExpression = generateLookup(makeConditionalExpression);
 
-export const makeLookupEffect = generateMakeLookupNode(makeConditionalEffect);
+export const makeLookupEffect = generateLookup(makeConditionalEffect);
+
+const makeConditionalStatementArray = (test, statements1, statements2) => [
+  makeIfStatement(
+    test,
+    makeBlock([], [], statements1),
+    makeBlock([], [], statements2),
+  ),
+];
+
+export const makeLookupStatementArray = generateLookup(
+  makeConditionalStatementArray,
+);
 
 export const assertInitialization = ({state}) => {
   assert(state.initialization !== NO, "missing variable initialization");
