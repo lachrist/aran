@@ -36,9 +36,12 @@ import {
   push,
   getUUID,
   getLatestUUID,
-  // flip,
+  flipxx,
+  flip_xx,
+  flipx_x,
+  flipxx_,
   PARTIAL,
-  partial,
+  partial as partialGeneric,
   partial_,
   partialx,
   partial__,
@@ -69,6 +72,7 @@ import {
   partialx_xx,
   partial_xxx,
   partialxxxx,
+  partial_xxx_,
 } from "./util.mjs";
 
 const {
@@ -243,8 +247,24 @@ assertThrow(() => throwError("foo"));
 
 assertThrow(() => throwAny("foo"));
 
+forEach(
+  [
+    [flipxx, [1, 0]],
+    [flip_xx, [0, 2, 1]],
+    [flipx_x, [2, 1, 0]],
+    [flipxx_, [1, 0, 2]],
+  ],
+  ([flip, xs]) => {
+    const ys = [];
+    for (let index = 0; index < xs.length; index += 1) {
+      push(ys, index);
+    }
+    assertDeepEqual(apply(flip(returnArguments), undefined, xs), ys);
+  },
+);
+
 assertDeepEqual(
-  partial(returnArguments, 1, PARTIAL, 3, PARTIAL, 5)(2, 4),
+  partialGeneric(returnArguments, 1, PARTIAL, 3, PARTIAL, 5)(2, 4),
   [1, 2, 3, 4, 5],
 );
 
@@ -280,8 +300,9 @@ forEach(
     [partialx_xx, [true, false, true, true]],
     [partial_xxx, [false, true, true, true]],
     [partialxxxx, [true, true, true, true]],
+    [partial_xxx_, [false, true, true, true, false]],
   ],
-  ([f, guide]) => {
+  ([partial, guide]) => {
     const xs = [];
     const ys = [];
     const zs = [];
@@ -290,7 +311,7 @@ forEach(
       push(guide[index] ? ys : zs, index);
     }
     assertDeepEqual(
-      apply(apply(f, undefined, [returnArguments, ...ys]), undefined, zs),
+      apply(apply(partial, undefined, [returnArguments, ...ys]), undefined, zs),
       xs,
     );
   },

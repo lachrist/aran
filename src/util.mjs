@@ -160,24 +160,10 @@ export const incrementCounter = (counter) => {
 // Function Utility //
 //////////////////////
 
-// export const flip = (f) => {
-//   switch (f.length) {
-//     case 0:
-//       return () => f();
-//     case 1:
-//       return (_x1) => f(undefined);
-//     case 2:
-//       return (x1, x2) => f(x2, x1);
-//     case 3:
-//       return (x1, x2, x3) => f(x2, x1, x3);
-//     case 4:
-//       return (x1, x2, x3, x4) => f(x2, x1, x3, x4);
-//     case 5:
-//       return (x1, x2, x3, x4, x5) => f(x2, x1, x3, x4, x5);
-//     default:
-//       throw new Error("arity out of bounds");
-//   }
-// };
+export const flipxx = (f) => (x2, x1) => f(x1, x2);
+export const flip_xx = (f) => (x1, x3, x2) => f(x1, x2, x3);
+export const flipx_x = (f) => (x3, x2, x1) => f(x1, x2, x3);
+export const flipxx_ = (f) => (x2, x1, x3) => f(x1, x2, x3);
 
 export const bind =
   (f, g) =>
@@ -256,6 +242,9 @@ export const partialxx_x = (f, x1, x2, x4) => (x3) => f(x1, x2, x3, x4);
 export const partialx_xx = (f, x1, x3, x4) => (x2) => f(x1, x2, x3, x4);
 export const partial_xxx = (f, x2, x3, x4) => (x1) => f(x1, x2, x3, x4);
 export const partialxxxx = (f, x1, x2, x3, x4) => () => f(x1, x2, x3, x4);
+
+export const partial_xxx_ = (f, x2, x3, x4) => (x1, x5) =>
+  f(x1, x2, x3, x4, x5);
 
 ////////////
 // Object //
