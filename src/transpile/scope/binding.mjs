@@ -34,6 +34,20 @@ const generateMakeBinding = (initialization) => (variable, note) => ({
 
 export const makeBinding = generateMakeBinding(NO);
 
+// Usage for ghost variables:
+//   - Shadowing variables for for-in & for-of loops:
+//     for (let x in x) { 123; }
+//     >> {
+//     >>   // let x; (ghosted out)
+//     >>   const target = ((() => { throw new ReferenceError("Deadzone") }) ());
+//     >>   const keys = ...;
+//     >>   const length = keys.length;
+//     >>   let index = 0;
+//     >>   while (index < length) {
+//     >>     let x = keys[index];
+//     >>     { 123; } } }
+//   - Imports
+
 export const makeGhostBinding = generateMakeBinding(NEVER);
 
 export const matches = ({variable: variable1}, variable2) =>

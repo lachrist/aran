@@ -21,6 +21,7 @@ import {
   makeRootScope,
   makeClosureScope,
   makeDynamicScope,
+  makeStaticScope,
   makeScopeBlock,
   lookupScopeProperty,
   isBound,
@@ -74,22 +75,92 @@ const callbacks = {
 // Regular //
 /////////////
 
-assertSuccess(
-  allignBlock(
-    makeScopeBlock(makeRootScope(), [], (scope) => {
-      scope = makePropertyScope(scope, "key", "value");
-      assertEqual(
-        declareFreshVariable(scope, "variable", "note"),
-        "variable_1_1",
-      );
-      return [
-        makeEffectStatement(
-          makeExpressionEffect(
-            makeLookupExpression(
-              makeClosureScope(scope),
+{
+  const scope = makePropertyScope(
+    makeStaticScope(makeRootScope()),
+    "key",
+    "value",
+  );
+  assertEqual(declareFreshVariable(scope, "variable", "note"), "variable_1_1");
+  assertSuccess(
+    allignBlock(
+      makeScopeBlock(
+        scope,
+        [],
+        [
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeLookupExpression(
+                makeClosureScope(scope),
+                "variable_1_1",
+                READ,
+                {
+                  ...callbacks,
+                  onStaticLiveHit: (node, note) => {
+                    assertEqual(note, "note");
+                    return node;
+                  },
+                  onStaticDeadHit: (note) => {
+                    assertEqual(note, "note");
+                    return makeLiteralExpression("dead");
+                  },
+                },
+              ),
+            ),
+          ),
+          makeEffectStatement(
+            makeInitializeEffect(
+              scope,
               "variable_1_1",
-              READ,
-              {
+              makeLiteralExpression("init"),
+            ),
+          ),
+        ],
+      ),
+      `
+        {
+          let x, _x;
+          _x = false;
+          effect(_x ? x : 'dead');
+          (x = 'init', _x = true);
+        }
+      `,
+    ),
+  );
+}
+
+////////////////////////////
+// Distant Initialization //
+////////////////////////////
+
+{
+  const scope1 = makeStaticScope(makeRootScope());
+  assertEqual(declareVariable(scope1, "variable", "note"), "variable");
+  const scope2 = makeStaticScope(scope1);
+  assertSuccess(
+    allignBlock(
+      makeScopeBlock(
+        scope1,
+        [],
+        [
+          makeBlockStatement(
+            makeScopeBlock(
+              scope2,
+              [],
+              [
+                makeEffectStatement(
+                  makeInitializeEffect(
+                    scope2,
+                    "variable",
+                    makeLiteralExpression("init"),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeLookupExpression(makeClosureScope(scope1), "variable", READ, {
                 ...callbacks,
                 onStaticLiveHit: (node, note) => {
                   assertEqual(note, "note");
@@ -99,79 +170,24 @@ assertSuccess(
                   assertEqual(note, "note");
                   return makeLiteralExpression("dead");
                 },
-              },
+              }),
             ),
           ),
-        ),
-        makeEffectStatement(
-          makeInitializeEffect(
-            scope,
-            "variable_1_1",
-            makeLiteralExpression("init"),
-          ),
-        ),
-      ];
-    }),
-    `
-      {
-        let x, _x;
-        _x = false;
-        effect(_x ? x : 'dead');
-        (x = 'init', _x = true);
-      }
-    `,
-  ),
-);
-
-////////////////////////////
-// Distant Initialization //
-////////////////////////////
-
-assertSuccess(
-  allignBlock(
-    makeScopeBlock(makeRootScope(), [], (scope1) => {
-      assertEqual(declareVariable(scope1, "variable", "note"), "variable");
-      return [
-        makeBlockStatement(
-          makeScopeBlock(scope1, [], (scope2) => [
-            makeEffectStatement(
-              makeInitializeEffect(
-                scope2,
-                "variable",
-                makeLiteralExpression("init"),
-              ),
-            ),
-          ]),
-        ),
-        makeEffectStatement(
-          makeExpressionEffect(
-            makeLookupExpression(makeClosureScope(scope1), "variable", READ, {
-              ...callbacks,
-              onStaticLiveHit: (node, note) => {
-                assertEqual(note, "note");
-                return node;
-              },
-              onStaticDeadHit: (note) => {
-                assertEqual(note, "note");
-                return makeLiteralExpression("dead");
-              },
-            }),
-          ),
-        ),
-      ];
-    }),
-    `
-      {
-        let x, _x;
-        _x = false;
+        ],
+      ),
+      `
         {
-          (x = 'init', _x = true);
+          let x, _x;
+          _x = false;
+          {
+            (x = 'init', _x = true);
+          }
+          effect(_x ? x : 'dead');
         }
-        effect(_x ? x : 'dead');
-      }
-    `,
-  ),
-);
+      `,
+    ),
+  );
+}
 
 //////////
 // Root //
@@ -215,35 +231,40 @@ assertSuccess(
 // Eval //
 //////////
 
-assertSuccess(
-  allignBlock(
-    makeScopeBlock(makeRootScope(), [], (scope) => {
-      assertEqual(declareVariable(scope, "variable", "note"), "variable");
-      return [
-        makeEffectStatement(
-          makeExpressionEffect(
-            makeScopeEvalExpression(
-              makeClosureScope(scope),
-              makeLiteralExpression("eval"),
+{
+  const scope = makeStaticScope(makeRootScope());
+  assertEqual(declareVariable(scope, "variable", "note"), "variable");
+  assertSuccess(
+    allignBlock(
+      makeScopeBlock(
+        scope,
+        [],
+        [
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeScopeEvalExpression(
+                makeClosureScope(scope),
+                makeLiteralExpression("eval"),
+              ),
             ),
           ),
-        ),
-        makeEffectStatement(
-          makeInitializeEffect(
-            scope,
-            "variable",
-            makeLiteralExpression("init"),
+          makeEffectStatement(
+            makeInitializeEffect(
+              scope,
+              "variable",
+              makeLiteralExpression("init"),
+            ),
           ),
-        ),
-      ];
-    }),
-    `
-      {
-        let x, _x;
-        _x = false;
-        effect(eval([x, _x], 'eval'));
-        (x = 'init', _x = true);
-      }
-    `,
-  ),
-);
+        ],
+      ),
+      `
+        {
+          let x, _x;
+          _x = false;
+          effect(eval([x, _x], 'eval'));
+          (x = 'init', _x = true);
+        }
+      `,
+    ),
+  );
+}

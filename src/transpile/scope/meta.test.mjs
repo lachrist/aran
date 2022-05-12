@@ -12,7 +12,7 @@ import {
   allignBlock,
 } from "../../allign/index.mjs";
 
-import {makeRootScope, makeScopeBlock} from "./split.mjs";
+import {makeRootScope, makeScopeBlock, makeStaticScope} from "./split.mjs";
 
 import {
   initializeScope,
@@ -71,22 +71,31 @@ import {
 // block //
 ///////////
 
-assertSuccess(
-  allignBlock(
-    makeScopeBlock(initializeScope(makeRootScope()), [], (scope) => {
-      const variable = declareVariable(scope, "variable");
-      return [
-        makeEffectStatement(
-          makeInitializeEffect(scope, variable, makeLiteralExpression("init")),
-        ),
-        makeEffectStatement(
-          makeExpressionEffect(makeReadExpression(scope, variable)),
-        ),
-        makeEffectStatement(
-          makeWriteEffect(scope, variable, makeLiteralExpression("right")),
-        ),
-      ];
-    }),
-    "{ let x; x = 'init'; effect(x); x = 'right'; }",
-  ),
-);
+{
+  const scope = makeStaticScope(initializeScope(makeRootScope()));
+  const variable = declareVariable(scope, "variable");
+  assertSuccess(
+    allignBlock(
+      makeScopeBlock(
+        scope,
+        [],
+        [
+          makeEffectStatement(
+            makeInitializeEffect(
+              scope,
+              variable,
+              makeLiteralExpression("init"),
+            ),
+          ),
+          makeEffectStatement(
+            makeExpressionEffect(makeReadExpression(scope, variable)),
+          ),
+          makeEffectStatement(
+            makeWriteEffect(scope, variable, makeLiteralExpression("right")),
+          ),
+        ],
+      ),
+      "{ let x; x = 'init'; effect(x); x = 'right'; }",
+    ),
+  );
+}

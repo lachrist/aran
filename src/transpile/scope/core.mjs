@@ -90,29 +90,23 @@ export const makeDynamicScope = (parent, extrinsic) => ({
   extrinsic,
 });
 
-// Usage for ghost variables:
-//   - Shadowing variables for for-in & for-of loops:
-//     for (let x in x) { 123; }
-//     >> {
-//     >>   // let x; (ghosted out)
-//     >>   const target = ((() => { throw new ReferenceError("Deadzone") }) ());
-//     >>   const keys = ...;
-//     >>   const length = keys.length;
-//     >>   let index = 0;
-//     >>   while (index < length) {
-//     >>     let x = keys[index];
-//     >>     { 123; } } }
-//   - Imports
+export const makeStaticScope = (parent) => ({
+  type: STATIC_SCOPE_TYPE,
+  parent,
+  bindings: [],
+  depth: parent.depth + 1,
+  counter: createCounter(),
+});
 
-export const makeScopeBlock = (parent, labels, callback) => {
-  const bindings = [];
-  const statements = callback({
-    type: STATIC_SCOPE_TYPE,
-    parent,
-    bindings,
-    depth: parent.depth + 1,
-    counter: createCounter(),
-  });
+export const makeScopeBlock = (scope, labels, statements) => {
+  while (scope.type === PROPERTY_SCOPE_TYPE) {
+    scope = scope.parent;
+  }
+  assert(
+    scope.type === STATIC_SCOPE_TYPE,
+    "expected static scope for creating block",
+  );
+  const {bindings} = scope;
   forEach(bindings, assertBindingInitialization);
   return makeBlock(
     labels,

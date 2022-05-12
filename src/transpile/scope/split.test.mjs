@@ -18,6 +18,7 @@ import {
   makeBaseDynamicScope,
   isMetaBound,
   makeRootScope,
+  makeStaticScope,
   makeScopeBlock,
   makeMetaPropertyScope,
   lookupMetaScopeProperty,
@@ -45,39 +46,44 @@ assertEqual(
   "value",
 );
 
-assertSuccess(
-  allignBlock(
-    makeScopeBlock(makeRootScope(), [], (scope) => {
-      assertEqual(isMetaBound(scope), true);
-      const variable = declareMetaVariable(scope, "variable", "note");
-      return [
-        makeEffectStatement(
-          makeMetaInitializeEffect(
-            scope,
-            variable,
-            makeLiteralExpression("init"),
-          ),
-        ),
-        makeEffectStatement(
-          makeExpressionEffect(
-            makeMetaLookupExpression(
-              makeBaseDynamicScope(scope, "frame"),
+{
+  const scope = makeStaticScope(makeRootScope());
+  assertEqual(isMetaBound(scope), true);
+  const variable = declareMetaVariable(scope, "variable", "note");
+  assertSuccess(
+    allignBlock(
+      makeScopeBlock(
+        scope,
+        [],
+        [
+          makeEffectStatement(
+            makeMetaInitializeEffect(
+              scope,
               variable,
-              READ,
-              {
-                ...callbacks,
-                onStaticDeadHit: generateAssertUnreachable("onDeadHit"),
-                onStaticLiveHit: (node, note) => {
-                  assertEqual(note, "note");
-                  return node;
-                },
-                onStaticMiss: generateAssertUnreachable("onRoot"),
-              },
+              makeLiteralExpression("init"),
             ),
           ),
-        ),
-      ];
-    }),
-    "{ let x; x = 'init'; effect(x); }",
-  ),
-);
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeMetaLookupExpression(
+                makeBaseDynamicScope(scope, "frame"),
+                variable,
+                READ,
+                {
+                  ...callbacks,
+                  onStaticDeadHit: generateAssertUnreachable("onDeadHit"),
+                  onStaticLiveHit: (node, note) => {
+                    assertEqual(note, "note");
+                    return node;
+                  },
+                  onStaticMiss: generateAssertUnreachable("onRoot"),
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+      "{ let x; x = 'init'; effect(x); }",
+    ),
+  );
+}

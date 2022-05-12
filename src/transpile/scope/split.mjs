@@ -31,6 +31,7 @@ import {
 export {
   READ,
   makeRootScope,
+  makeStaticScope,
   makeScopeBlock,
   makeClosureScope,
   makeDynamicScope as makeBaseDynamicScope,
