@@ -2,6 +2,7 @@
 - ast
 - lang
 - allign
+- intrinsic.mjs
 - variable.mjs
 - label.mjs
 - instrument
