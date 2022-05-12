@@ -243,8 +243,19 @@ export const partialx_xx = (f, x1, x3, x4) => (x2) => f(x1, x2, x3, x4);
 export const partial_xxx = (f, x2, x3, x4) => (x1) => f(x1, x2, x3, x4);
 export const partialxxxx = (f, x1, x2, x3, x4) => () => f(x1, x2, x3, x4);
 
+export const partialx____ = (f, x1) => (x2, x3, x4, x5) =>
+  f(x1, x2, x3, x4, x5);
+export const partialxx___ = (f, x1, x2) => (x3, x4, x5) =>
+  f(x1, x2, x3, x4, x5);
 export const partial_xxx_ = (f, x2, x3, x4) => (x1, x5) =>
   f(x1, x2, x3, x4, x5);
+
+export const partialxx____ = (f, x1, x2) => (x3, x4, x5, x6) =>
+  f(x1, x2, x3, x4, x5, x6);
+
+export const partialxx_x_x_x__ =
+  (f, x1, x2, x4, x6, x8) => (x3, x5, x7, x9, x10) =>
+    f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10);
 
 ////////////
 // Object //

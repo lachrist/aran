@@ -72,7 +72,11 @@ import {
   partialx_xx,
   partial_xxx,
   partialxxxx,
+  partialx____,
+  partialxx___,
   partial_xxx_,
+  partialxx____,
+  partialxx_x_x_x__,
 } from "./util.mjs";
 
 const {
@@ -300,7 +304,14 @@ forEach(
     [partialx_xx, [true, false, true, true]],
     [partial_xxx, [false, true, true, true]],
     [partialxxxx, [true, true, true, true]],
+    [partialx____, [true, false, false, false, false]],
+    [partialxx___, [true, true, false, false, false]],
     [partial_xxx_, [false, true, true, true, false]],
+    [partialxx____, [true, true, false, false, false, false]],
+    [
+      partialxx_x_x_x__,
+      [true, true, false, true, false, true, false, true, false, false],
+    ],
   ],
   ([partial, guide]) => {
     const xs = [];
