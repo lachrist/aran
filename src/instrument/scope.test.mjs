@@ -90,7 +90,7 @@ import {
     allignExpression(
       makeScopeReadExpression(scope, "variable"),
       `intrinsic.aran.get(
-        intrinsic.aran.readGlobal("namespace"),
+        intrinsic.aran.getGlobal("namespace"),
         'variable'
       );`,
     ),
@@ -105,7 +105,7 @@ import {
       makeScopeWriteEffect(scope, "variable", makeLiteralExpression(123)),
       `effect(
         intrinsic.aran.setStrict(
-          intrinsic.aran.readGlobal("namespace"),
+          intrinsic.aran.getGlobal("namespace"),
           'variable',
           123,
         ),

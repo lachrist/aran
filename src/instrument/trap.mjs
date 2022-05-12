@@ -1,4 +1,4 @@
-import {map, zip, unzip, concat, flat} from "array-lite";
+import {map, zip, unzip} from "array-lite";
 
 import {
   partialx,
@@ -13,12 +13,17 @@ import {
   fromLiteral,
   makeLiteralExpression,
   makeApplyExpression,
-  makeIntrinsicExpression,
   makeConstructExpression,
   makeExpressionEffect,
   makeEffectStatement,
   makeInvokeExpression,
 } from "../ast/index.mjs";
+
+import {
+  makeArrayExpression,
+  makeObjectExpression,
+  makeGetGlobalExpression,
+} from "../intrinsic.mjs";
 
 import {lookupScopeVariable, makeScopeReadExpression} from "./scope.mjs";
 
@@ -50,27 +55,21 @@ const getScopeDataArray = (pairs) => map(pairs, getScopeData);
 const getScopeNullableData = (pair) =>
   pair === null ? null : getScopeData(pair);
 
-const makeArrayExpression = (expressions) =>
-  makeApplyExpression(
-    makeIntrinsicExpression("Array.of"),
-    makeLiteralExpression({undefined: null}),
-    expressions,
-  );
-
 const makeScopeExpression = (pair) => makeScopeReadExpression(pair[0], pair[1]);
 const makeScopeArrayExpression = (pairs) =>
   makeArrayExpression(map(pairs, makeScopeExpression));
 const makeScopeNullableExpression = (pair) =>
   pair === null ? makeLiteralExpression(null) : makeScopeExpression(pair);
 
+const makeProperty = ({0: key, 1: value}) => [
+  makeLiteralExpression(key),
+  makeLiteralExpression(value),
+];
+
 const makeLiteralObjectExpression = (object) =>
-  makeApplyExpression(
-    makeIntrinsicExpression("aran.createObject"),
-    makeLiteralExpression({undefined: null}),
-    concat(
-      [makeLiteralExpression(null)],
-      map(flat(toEntries(object)), makeLiteralExpression),
-    ),
+  makeObjectExpression(
+    makeLiteralExpression(null),
+    map(toEntries(object), makeProperty),
   );
 
 const makeLiteralObjectArrayExpression = (objects) =>
@@ -275,11 +274,7 @@ const generateMakeTrapNode =
     )
       ? makeNode(
           makeInvokeExpression(
-            makeApplyExpression(
-              makeIntrinsicExpression("aran.readGlobal"),
-              makeLiteralExpression({undefined: null}),
-              [makeLiteralExpression(namespace)],
-            ),
+            makeGetGlobalExpression(makeLiteralExpression(namespace)),
             makeLiteralExpression(name === "invoke" ? "apply" : name),
             map(zip(traps[name].dynamic, values), applyPair),
           ),

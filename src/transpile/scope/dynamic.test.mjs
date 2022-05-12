@@ -60,9 +60,10 @@ assertSuccess(
       {
         effect(
           (
-            intrinsic.aran.has(
-              'frame',
+            intrinsic.aran.binary(
+              'in',
               'variable',
+              'frame',
             ) ?
             intrinsic.aran.throw(
               new intrinsic.SyntaxError(
@@ -111,9 +112,10 @@ assertSuccess(
       {
         effect(
           (
-            intrinsic.aran.has(
+            intrinsic.aran.binary(
+              'in',
+              'variable',
               'frame',
-              'variable'
             ) ?
             undefined :
             intrinsic.Reflect.defineProperty(
@@ -121,10 +123,10 @@ assertSuccess(
               'variable',
               intrinsic.aran.createObject(
                 null,
-                'configurable', false,
-                'enumerable', true,
                 'value', undefined,
                 'writable', true,
+                'enumerable', true,
+                'configurable', false,
               ),
             )
           ),
@@ -172,10 +174,10 @@ assertSuccess(
             'variable',
             intrinsic.aran.createObject(
               null,
-              'configurable', false,
-              'enumerable', true,
               'value', intrinsic.aran.deadzone,
               'writable', true,
+              'enumerable', true,
+              'configurable', false,
             ),
           ),
         );
@@ -222,10 +224,10 @@ assertSuccess(
             'variable',
             intrinsic.aran.createObject(
               null,
-              'configurable', false,
-              'enumerable', true,
               'value', 'right',
               'writable', false,
+              'enumerable', true,
+              'configurable', false,
             ),
           ),
         );
@@ -264,7 +266,7 @@ assertSuccess(
     ),
     `
       (
-        intrinsic.aran.has('frame', 'variable') ?
+        intrinsic.aran.binary('in', 'variable', 'frame') ?
         intrinsic.aran.get('frame', 'variable') :
         'next'
       )
@@ -284,7 +286,7 @@ assertSuccess(
     ),
     `
       (
-        intrinsic.aran.has('frame', 'variable') ?
+        intrinsic.aran.binary('in', 'variable', 'frame') ?
         (
           intrinsic.aran.binary(
             '===',
@@ -330,9 +332,9 @@ assertSuccess(
               'variable',
             ) ?
             false :
-            intrinsic.aran.has('frame', 'variable')
+            intrinsic.aran.binary('in', 'variable', 'frame')
           ) :
-          intrinsic.aran.has('frame', 'variable')
+          intrinsic.aran.binary('in', 'variable', 'frame')
         ) ?
         intrinsic.aran.get('frame', 'variable') :
         'next'
@@ -353,7 +355,7 @@ assertSuccess(
     ),
     `
       (
-        intrinsic.aran.has('frame', 'variable') ?
+        intrinsic.aran.binary('in', 'variable', 'frame') ?
         intrinsic.aran.unary(
           'typeof',
           intrinsic.aran.get('frame', 'variable'),
@@ -376,7 +378,7 @@ assertSuccess(
     ),
     `
       (
-        intrinsic.aran.has('frame', 'variable') ?
+        intrinsic.aran.binary('in', 'variable', 'frame') ?
         intrinsic.aran.deleteSloppy('frame', 'variable') :
         'next'
       )
@@ -396,7 +398,7 @@ assertSuccess(
     ),
     `
       (
-        intrinsic.aran.has('frame', 'variable') ?
+        intrinsic.aran.binary('in', 'variable', 'frame') ?
         effect(
           intrinsic.aran.setSloppy(
             'frame',

@@ -23,9 +23,9 @@ import {freshenVariable} from "../../variable.mjs";
 
 import {
   makeGetExpression,
-  makeStrictSetExpression,
-  makeDirectIntrinsicExpression,
-} from "../intrinsic.mjs";
+  makeSetStrictExpression,
+  makeGlobalCacheExpression,
+} from "../../intrinsic.mjs";
 
 import {
   READ,
@@ -47,14 +47,14 @@ const onStaticDeadHit = partialx(
 
 const makeReadGlobalExpression = (variable) =>
   makeGetExpression(
-    makeDirectIntrinsicExpression("aran.globalCache"),
+    makeGlobalCacheExpression(),
     makeLiteralExpression(variable),
   );
 
 const makeWriteGlobalEffect = (variable, expression) =>
   makeExpressionEffect(
-    makeStrictSetExpression(
-      makeDirectIntrinsicExpression("aran.globalCache"),
+    makeSetStrictExpression(
+      makeGlobalCacheExpression(),
       makeLiteralExpression(variable),
       expression,
     ),

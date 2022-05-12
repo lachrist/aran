@@ -69,7 +69,7 @@ assertSuccess(
       `{
         let _callee;
         effect(
-          intrinsic.aran.readGlobal("namespace")["arrival"](
+          intrinsic.aran.getGlobal("namespace")["arrival"](
             "kind",
             intrinsic.Array.of(
               intrinsic.aran.createObject(
@@ -112,7 +112,7 @@ assertSuccess(
     ),
     `{
       effect(
-        intrinsic.aran.readGlobal("namespace")["arrival"](
+        intrinsic.aran.getGlobal("namespace")["arrival"](
           "kind",
           null,
           null,
@@ -169,7 +169,7 @@ assertSuccess(
       `{
         let _label, _variable;
         effect(
-          intrinsic.aran.readGlobal("namespace")["enter"](
+          intrinsic.aran.getGlobal("namespace")["enter"](
             "kind",
             intrinsic.Array.of(_label),
             intrinsic.Array.of(_variable),
@@ -196,7 +196,7 @@ assertSuccess(
       (cut) => makeLiteralExpression(`key_${String(cut)}`),
       [makeLiteralExpression("argument")],
     ),
-    `intrinsic.aran.readGlobal("namespace")["apply"](
+    `intrinsic.aran.getGlobal("namespace")["apply"](
       "object_true",
       "key_true",
       intrinsic.Array.of("argument"),

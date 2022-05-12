@@ -3,11 +3,15 @@ import {filter} from "array-lite";
 import {
   makeWriteEffect,
   makeExpressionEffect,
-  makeApplyExpression,
-  makeIntrinsicExpression,
   makeLiteralExpression,
   makeReadExpression,
 } from "../ast/index.mjs";
+
+import {
+  makeGetExpression,
+  makeGetGlobalExpression,
+  makeSetStrictExpression,
+} from "../intrinsic.mjs";
 
 import {assert} from "../util.mjs";
 
@@ -62,18 +66,10 @@ export const makeScopeWriteEffect = (scope, variable, expression) => {
   return binding.script === null
     ? makeWriteEffect(variable, expression)
     : makeExpressionEffect(
-        makeApplyExpression(
-          makeIntrinsicExpression("aran.setStrict"),
-          makeLiteralExpression({undefined: null}),
-          [
-            makeApplyExpression(
-              makeIntrinsicExpression("aran.readGlobal"),
-              makeLiteralExpression({undefined: null}),
-              [makeLiteralExpression(binding.script)],
-            ),
-            makeLiteralExpression(variable),
-            expression,
-          ],
+        makeSetStrictExpression(
+          makeGetGlobalExpression(makeLiteralExpression(binding.script)),
+          makeLiteralExpression(variable),
+          expression,
         ),
       );
 };
@@ -93,17 +89,9 @@ export const makeScopeReadExpression = (scope, variable) => {
   binding.used = true;
   return binding.script === null
     ? makeReadExpression(variable)
-    : makeApplyExpression(
-        makeIntrinsicExpression("aran.get"),
-        makeLiteralExpression({undefined: null}),
-        [
-          makeApplyExpression(
-            makeIntrinsicExpression("aran.readGlobal"),
-            makeLiteralExpression({undefined: null}),
-            [makeLiteralExpression(binding.script)],
-          ),
-          makeLiteralExpression(variable),
-        ],
+    : makeGetExpression(
+        makeGetGlobalExpression(makeLiteralExpression(binding.script)),
+        makeLiteralExpression(variable),
       );
 };
 

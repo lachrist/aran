@@ -8,17 +8,17 @@ import {
 
 import {
   makeUnaryExpression,
-  makeHasExpression,
   makeGetExpression,
   makeSetExpression,
   makeDeleteExpression,
   makeDefineExpression,
   makeBinaryExpression,
-  makeSimpleObjectExpression,
-  makeDirectIntrinsicExpression,
+  makeDataDescriptorExpression,
+  makeSymbolUnscopablesExpression,
+  makeDeadzoneExpression,
   makeThrowSyntaxErrorExpression,
   makeThrowReferenceErrorExpression,
-} from "../intrinsic.mjs";
+} from "../../intrinsic.mjs";
 
 const {Symbol} = globalThis;
 
@@ -52,9 +52,15 @@ export const makePreludeStatementArray = ({scoping, frame}, variable) =>
         makeEffectStatement(
           makeExpressionEffect(
             makeConditionalExpression(
-              makeHasExpression(frame, makeLiteralExpression(variable)),
+              makeBinaryExpression(
+                "in",
+                makeLiteralExpression(variable),
+                frame,
+              ),
               makeThrowSyntaxErrorExpression(
-                `Identifier '${variable}' has already been declared`,
+                makeLiteralExpression(
+                  `Identifier '${variable}' has already been declared`,
+                ),
               ),
               makeLiteralExpression({undefined: null}),
             ),
@@ -73,17 +79,21 @@ export const makeLooseDeclareStatementArray = ({scoping, frame}, variable) =>
         makeEffectStatement(
           makeExpressionEffect(
             makeConditionalExpression(
-              makeHasExpression(frame, makeLiteralExpression(variable)),
+              makeBinaryExpression(
+                "in",
+                makeLiteralExpression(variable),
+                frame,
+              ),
               makeLiteralExpression({undefined: null}),
               makeDefineExpression(
                 frame,
                 makeLiteralExpression(variable),
-                makeSimpleObjectExpression(makeLiteralExpression(null), {
-                  configurable: makeLiteralExpression(false),
-                  enumerable: makeLiteralExpression(true),
-                  value: makeLiteralExpression({undefined: null}),
-                  writable: makeLiteralExpression(true),
-                }),
+                makeDataDescriptorExpression(
+                  makeLiteralExpression({undefined: null}),
+                  makeLiteralExpression(true),
+                  makeLiteralExpression(true),
+                  makeLiteralExpression(false),
+                ),
               ),
             ),
           ),
@@ -103,12 +113,12 @@ export const makeRigidDeclareStatementArray = ({scoping, frame}, variable) =>
             makeDefineExpression(
               frame,
               makeLiteralExpression(variable),
-              makeSimpleObjectExpression(makeLiteralExpression(null), {
-                configurable: makeLiteralExpression(false),
-                enumerable: makeLiteralExpression(true),
-                value: makeDirectIntrinsicExpression("aran.deadzone"),
-                writable: makeLiteralExpression(true),
-              }),
+              makeDataDescriptorExpression(
+                makeDeadzoneExpression(),
+                makeLiteralExpression(true),
+                makeLiteralExpression(true),
+                makeLiteralExpression(false),
+              ),
             ),
           ),
         ),
@@ -128,12 +138,12 @@ export const makeRigidInitializeStatementArray = (
             makeDefineExpression(
               frame,
               makeLiteralExpression(variable),
-              makeSimpleObjectExpression(makeLiteralExpression(null), {
-                configurable: makeLiteralExpression(false),
-                enumerable: makeLiteralExpression(true),
-                value: expression,
-                writable: makeLiteralExpression(writable),
-              }),
+              makeDataDescriptorExpression(
+                expression,
+                makeLiteralExpression(writable),
+                makeLiteralExpression(true),
+                makeLiteralExpression(false),
+              ),
             ),
           ),
         ),
@@ -147,35 +157,31 @@ export const makeRigidInitializeStatementArray = (
 const makeScopableExpression = (unscopable, frame, variable) =>
   unscopable
     ? makeConditionalExpression(
-        makeGetExpression(
-          frame,
-          makeDirectIntrinsicExpression("Symbol.unscopables"),
-        ),
+        makeGetExpression(frame, makeSymbolUnscopablesExpression()),
         makeConditionalExpression(
           makeGetExpression(
-            makeGetExpression(
-              frame,
-              makeDirectIntrinsicExpression("Symbol.unscopables"),
-            ),
+            makeGetExpression(frame, makeSymbolUnscopablesExpression()),
             makeLiteralExpression(variable),
           ),
           makeLiteralExpression(false),
-          makeHasExpression(frame, makeLiteralExpression(variable)),
+          makeBinaryExpression("in", makeLiteralExpression(variable), frame),
         ),
-        makeHasExpression(frame, makeLiteralExpression(variable)),
+        makeBinaryExpression("in", makeLiteralExpression(variable), frame),
       )
-    : makeHasExpression(frame, makeLiteralExpression(variable));
+    : makeBinaryExpression("in", makeLiteralExpression(variable), frame);
 
-const makeDeadzoneExpression = (scoping, frame, variable, alternate) =>
+const makeCheckDeadzoneExpression = (scoping, frame, variable, alternate) =>
   scoping === RIGID
     ? makeConditionalExpression(
         makeBinaryExpression(
           "===",
           makeGetExpression(frame, makeLiteralExpression(variable)),
-          makeDirectIntrinsicExpression("aran.deadzone"),
+          makeDeadzoneExpression(),
         ),
         makeThrowReferenceErrorExpression(
-          `Cannot access '${variable}' before initialization`,
+          makeLiteralExpression(
+            `Cannot access '${variable}' before initialization`,
+          ),
         ),
         alternate,
       )
@@ -199,7 +205,12 @@ export const makeLookupNode = (
       expression = makeUnaryExpression("typeof", expression);
     }
     if (right !== DISCARD) {
-      expression = makeDeadzoneExpression(scoping, frame, variable, expression);
+      expression = makeCheckDeadzoneExpression(
+        scoping,
+        frame,
+        variable,
+        expression,
+      );
     }
     return makeConditionalExpression(
       makeScopableExpression(unscopable, frame, variable),
@@ -210,7 +221,7 @@ export const makeLookupNode = (
     return makeConditionalEffect(
       makeScopableExpression(unscopable, frame, variable),
       makeExpressionEffect(
-        makeDeadzoneExpression(
+        makeCheckDeadzoneExpression(
           scoping,
           frame,
           variable,

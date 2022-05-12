@@ -58,7 +58,7 @@ testProgram(
     "script";
     let scope = intrinsic.aran.createObject(null);
     effect(
-      intrinsic.aran.readGlobal("traps")["arrival"](
+      intrinsic.aran.getGlobal("traps")["arrival"](
         "script",
         null,
         null,
@@ -68,15 +68,15 @@ testProgram(
     return (
       effect(
         intrinsic.aran.setStrict(
-          intrinsic.aran.readGlobal("scope"),
+          intrinsic.aran.getGlobal("scope"),
           "Ncallee1",
           () => {
             effect(
-              intrinsic.aran.readGlobal("traps")["arrival"](
+              intrinsic.aran.getGlobal("traps")["arrival"](
                 "arrow",
                 null,
                 intrinsic.aran.get(
-                  intrinsic.aran.readGlobal("scope"),
+                  intrinsic.aran.getGlobal("scope"),
                   "Ncallee1",
                 ),
                 "1:17",
@@ -87,7 +87,7 @@ testProgram(
         ),
       ),
       intrinsic.aran.get(
-        intrinsic.aran.readGlobal("scope"),
+        intrinsic.aran.getGlobal("scope"),
         "Ncallee1",
       )
     );
@@ -151,11 +151,11 @@ testBlock(
       "identifier", "${makeMetaVariable("variable")}",
     );
     effect(
-      intrinsic.aran.readGlobal("traps")["break"](_LAB, "3:4"),
+      intrinsic.aran.getGlobal("traps")["break"](_LAB, "3:4"),
     );
     break label;
     effect(
-      intrinsic.aran.readGlobal("traps")["read"](_NEW, _OLD, "4:11"),
+      intrinsic.aran.getGlobal("traps")["read"](_NEW, _OLD, "4:11"),
     );
   }`,
 );
@@ -181,7 +181,7 @@ testBlock(
       );
     } finally {
       effect(
-        intrinsic.aran.readGlobal("traps")["leave"]("1:0"),
+        intrinsic.aran.getGlobal("traps")["leave"]("1:0"),
       );
     }
   }`,
@@ -275,7 +275,7 @@ testBlockIdentity(`{ effect(123[456](789)); }`);
     `{
       let this1;
       effect(
-        intrinsic.aran.readGlobal("traps")["apply"](
+        intrinsic.aran.getGlobal("traps")["apply"](
           (
             this1 = 123,
             intrinsic.aran.get(this1, 456)
