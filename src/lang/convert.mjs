@@ -8,9 +8,9 @@ import {
   extractNode,
   makeScriptProgram,
   makeModuleProgram,
-  makeLocalEvalProgram,
   makeGlobalEvalProgram,
-  makeEnclaveEvalProgram,
+  makeInternalLocalEvalProgram,
+  makeExternalLocalEvalProgram,
   makeImportLink,
   makeExportLink,
   makeAggregateLink,
@@ -49,8 +49,8 @@ import {
   MODULE_PROGRAM_DIRECTIVE,
   SCRIPT_PROGRAM_DIRECTIVE,
   GLOBAL_EVAL_PROGRAM_DIRECTIVE,
-  LOCAL_EVAL_PROGRAM_DIRECTIVE,
-  ENCLAVE_EVAL_PROGRAM_DIRECTIVE,
+  INTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE,
+  EXTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE,
   EFFECT_KEYWORD,
   EVAL_KEYWORD,
   UNDEFINED_KEYWORD,
@@ -156,17 +156,17 @@ export const convertProgram = generateConvert({
         convertBlock(node.body[1]),
         locate(node.loc),
       );
-    } else if (directive === LOCAL_EVAL_PROGRAM_DIRECTIVE) {
+    } else if (directive === INTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE) {
       expectSyntax(node, node.body.length === 2 || node.body.length === 3);
-      return makeLocalEvalProgram(
+      return makeInternalLocalEvalProgram(
         node.body.length === 2 ? [] : convertDeclaration(node.body[1]),
         convertBlock(node.body[node.body.length - 1]),
         locate(node.loc),
       );
-    } else if (directive === ENCLAVE_EVAL_PROGRAM_DIRECTIVE) {
+    } else if (directive === EXTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE) {
       expectSyntax(node, node.body.length === 3);
       expectSyntax(node, node.body[1].type === "ExpressionStatement");
-      return makeEnclaveEvalProgram(
+      return makeExternalLocalEvalProgram(
         convertEnclaveArray(node.body[1].expression),
         convertBlock(node.body[2]),
         locate(node.loc),

@@ -19,9 +19,9 @@ const syntax = {
     __proto__: null,
     ScriptProgram: [["Statement", "*"]],
     ModuleProgram: [["Link", "*"], "Block"],
-    LocalEvalProgram: [["Variable", "*"], "Block"],
     GlobalEvalProgram: ["Block"],
-    EnclaveEvalProgram: [["Enclave", "*"], "Block"],
+    InternalLocalEvalProgram: [["Variable", "*"], "Block"],
+    ExternalLocalEvalProgram: [["Enclave", "*"], "Block"],
   },
   Link: {
     __proto__: null,
@@ -163,6 +163,7 @@ const predicates = {
   Enclave: generateIsEnumeration([
     "this",
     "new.target",
+    "import.meta",
     "super.get",
     "super.set",
     "super.call",

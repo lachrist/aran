@@ -14,7 +14,8 @@ assertThrow(() => {
   makeValidNode("Block", [], ["foo", "bar", "qux", "bar"], []);
 });
 
-// Duplicate LocalEvalProgram Variables && Duplicate EnclaveEvalProgram Enclaves //
+// 1) Duplicate InternalLocalEvalProgram Variables
+// 2) Duplicate ExternalLocalEvalProgram Enclaves
 {
   const completion_block = makeValidNode(
     "Block",
@@ -22,22 +23,26 @@ assertThrow(() => {
     [],
     [makeValidNode("ReturnStatement", makeValidNode("LiteralExpression", 123))],
   );
-  makeValidNode("LocalEvalProgram", ["foo", "bar", "qux"], completion_block);
+  makeValidNode(
+    "InternalLocalEvalProgram",
+    ["foo", "bar", "qux"],
+    completion_block,
+  );
   assertThrow(() => {
     makeValidNode(
-      "LocalEvalProgram",
+      "InternalLocalEvalProgram",
       ["foo", "bar", "qux", "bar"],
       completion_block,
     );
   });
   makeValidNode(
-    "EnclaveEvalProgram",
+    "ExternalLocalEvalProgram",
     ["super.get", "super.set"],
     completion_block,
   );
   assertThrow(() => {
     makeValidNode(
-      "EnclaveEvalProgram",
+      "ExternalLocalEvalProgram",
       ["super.get", "super.set", "super.get"],
       completion_block,
     );
@@ -423,7 +428,7 @@ const testVariable = (makeValidVariableEffect) => {
     [variable_statement, return_statement],
   );
   makeValidNode("GlobalEvalProgram", bound_block);
-  makeValidNode("LocalEvalProgram", ["variable"], unbound_block);
+  makeValidNode("InternalLocalEvalProgram", ["variable"], unbound_block);
   assertThrow(() => {
     makeValidNode("GlobalEvalProgram", unbound_block);
   });
@@ -477,7 +482,7 @@ testVariable((variable) =>
   assertThrow(() => makeBlock(rigid_declare_statement));
   // EnclaveEvalProgram //
   const makeEnclaveEvalProgram = (statement) =>
-    makeValidNode("EnclaveEvalProgram", [], makeBlock(statement));
+    makeValidNode("ExternalLocalEvalProgram", [], makeBlock(statement));
   makeEnclaveEvalProgram(loose_declare_statement);
   assertThrow(() => makeEnclaveEvalProgram(rigid_declare_statement));
   // ClosureExpression //

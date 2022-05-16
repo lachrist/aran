@@ -298,22 +298,22 @@ const generateValidateNode = () => {
           : NaN,
       );
     },
-    LocalEvalProgram: (digest, variables, block, _annotation) => {
+    GlobalEvalProgram: (digest, block, _annotation) =>
+      checkoutBlockProgram("GlobalEvalProgram", digest, block),
+    InternalLocalEvalProgram: (digest, variables, block, _annotation) => {
       assert(!some(variables, isDuplicate), "duplicate variable found Block");
       digest = filterOut(digest, (node) =>
         isBoundVariableNode(node, variables),
       );
-      return checkoutBlockProgram("LocalEvalProgram", digest, block);
+      return checkoutBlockProgram("InternalLocalEvalProgram", digest, block);
     },
-    GlobalEvalProgram: (digest, block, _annotation) =>
-      checkoutBlockProgram("LocalEvalProgram", digest, block),
-    EnclaveEvalProgram: (digest, enclaves, block, _annotation) => {
+    ExternalLocalEvalProgram: (digest, enclaves, block, _annotation) => {
       assert(
         !some(enclaves, isDuplicate),
-        "duplicate enclaves found in EvalProgram",
+        "duplicate enclaves found in ExternalLocalEvalProgram",
       );
       digest = filterOut(digest, isLooseDeclareStatement);
-      return checkoutBlockProgram("EnclaveEvalProgram", digest, block);
+      return checkoutBlockProgram("ExternalLocalEvalProgram", digest, block);
     },
     AggregateLink: (digest, _source, specifier1, specifier2, _annotation) => {
       // export Foo as *   from "source"; // invalid

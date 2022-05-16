@@ -98,15 +98,15 @@ testProgram(
 testProgramIdentity(`"script"; return 123;`);
 
 // EnclaveEvalProgram //
-testProgramIdentity(`"enclave eval"; ["this", "new.target"]; { return 123; }`);
+testProgramIdentity(`"external"; ["this", "new.target"]; { return 123; }`);
 
 // LocalEvalProgram //
 testProgramIdentity(
-  `"local eval"; let variable1, variable2; { return variable1; }`,
+  `"internal"; let variable1, variable2; { return variable1; }`,
 );
 
 // GlobalEvalProgram //
-testProgramIdentity(`"global eval"; { return 123; }`);
+testProgramIdentity(`"eval"; { return 123; }`);
 
 // ModuleProgram //
 testProgramIdentity(`

@@ -109,7 +109,7 @@ export const visitProgram = generateVisitNode({
   GlobalEvalProgram: (error, block1, _annotation1, block2, _annotation2) => [
     visitBlock(appendErrorSegment(error, ".body"), block1, block2),
   ],
-  LocalEvalProgram: (
+  InternalLocalEvalProgram: (
     error,
     variables1,
     block1,
@@ -125,7 +125,7 @@ export const visitProgram = generateVisitNode({
       visitBlock(appendErrorSegment(error, ".body"), block1, block2),
     ),
   ],
-  EnclaveEvalProgram: (
+  ExternalLocalEvalProgram: (
     error,
     enclaves1,
     block1,

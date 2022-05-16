@@ -165,7 +165,8 @@ assertThrow(() => {
 
 testProgram("'script'; return 123;");
 testProgram("'module'; import 'source'; { return 123; }");
-testProgram("'enclave eval'; ['new.target', 'this']; { return 123; }");
-testProgram("'local eval'; let variable1, variable2; { return 123; }");
-testProgram("'local eval'; { return 123; }");
-testProgram("'global eval'; { return 123; }");
+testProgram("'eval'; { return 123; }");
+testProgram("'external'; ['new.target', 'this']; { return 123; }");
+testProgram("'external'; []; { return 123; }");
+testProgram("'internal'; let variable1, variable2; { return 123; }");
+testProgram("'internal'; { return 123; }");

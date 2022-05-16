@@ -10,8 +10,8 @@ import {
   MODULE_PROGRAM_DIRECTIVE,
   SCRIPT_PROGRAM_DIRECTIVE,
   GLOBAL_EVAL_PROGRAM_DIRECTIVE,
-  LOCAL_EVAL_PROGRAM_DIRECTIVE,
-  ENCLAVE_EVAL_PROGRAM_DIRECTIVE,
+  INTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE,
+  EXTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE,
   EFFECT_KEYWORD,
   EVAL_KEYWORD,
   UNDEFINED_KEYWORD,
@@ -235,14 +235,14 @@ export const revertProgram = generateRevert({
       ),
       revertBlock(block),
     ]),
-  LocalEvalProgram: (_context, variables, block, _annotation) =>
+  InternalLocalEvalProgram: (_context, variables, block, _annotation) =>
     makeProgram(
       "script",
       concat(
         [
           makeDirective(
-            makeLiteral(LOCAL_EVAL_PROGRAM_DIRECTIVE),
-            LOCAL_EVAL_PROGRAM_DIRECTIVE,
+            makeLiteral(INTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE),
+            INTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE,
           ),
         ],
         variables.length === 0
@@ -256,11 +256,11 @@ export const revertProgram = generateRevert({
         [revertBlock(block)],
       ),
     ),
-  EnclaveEvalProgram: (_context, enclaves, block, _annotation) =>
+  ExternalLocalEvalProgram: (_context, enclaves, block, _annotation) =>
     makeProgram("script", [
       makeDirective(
-        makeLiteral(ENCLAVE_EVAL_PROGRAM_DIRECTIVE),
-        ENCLAVE_EVAL_PROGRAM_DIRECTIVE,
+        makeLiteral(EXTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE),
+        EXTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE,
       ),
       makeExpressionStatement(makeArrayExpression(map(enclaves, makeLiteral))),
       revertBlock(block),

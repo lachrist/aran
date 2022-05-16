@@ -367,45 +367,37 @@ assertProgram(
   false,
 );
 
+assertProgram("'eval'; { return 123; }", "'eval'; { return 123; }", true);
+assertProgram("'eval'; { return 123; }", "'eval'; { return 321; }", false);
+
 assertProgram(
-  "'global eval'; { return 123; }",
-  "'global eval'; { return 123; }",
+  "'internal'; let x; { return x; }",
+  "'internal'; let X; { return X; }",
   true,
 );
 assertProgram(
-  "'global eval'; { return 123; }",
-  "'global eval'; { return 321; }",
+  "'internal'; let x; { return 123; }",
+  "'internal'; { return 123; }",
+  false,
+);
+assertProgram(
+  "'internal'; { return 123; }",
+  "'internal'; { return 312; }",
   false,
 );
 
 assertProgram(
-  "'local eval'; let x; { return x; }",
-  "'local eval'; let X; { return X; }",
+  "'external'; []; { return 123; }",
+  "'external'; []; { return 123; }",
   true,
 );
 assertProgram(
-  "'local eval'; let x; { return 123; }",
-  "'local eval'; { return 123; }",
+  "'external'; []; { return 123; }",
+  "'external'; []; { return 321; }",
   false,
 );
 assertProgram(
-  "'local eval'; { return 123; }",
-  "'local eval'; { return 312; }",
-  false,
-);
-
-assertProgram(
-  "'enclave eval'; []; { return 123; }",
-  "'enclave eval'; []; { return 123; }",
-  true,
-);
-assertProgram(
-  "'enclave eval'; []; { return 123; }",
-  "'enclave eval'; []; { return 321; }",
-  false,
-);
-assertProgram(
-  "'enclave eval'; ['this']; { return 123; }",
-  "'enclave eval'; ['new.target']; { return 123; }",
+  "'external'; ['this']; { return 123; }",
+  "'external'; ['new.target']; { return 123; }",
   false,
 );

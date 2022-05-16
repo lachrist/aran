@@ -25,8 +25,8 @@ import {
   makeScriptProgram,
   makeModuleProgram,
   makeGlobalEvalProgram,
-  makeLocalEvalProgram,
-  makeEnclaveEvalProgram,
+  makeInternalLocalEvalProgram,
+  makeExternalLocalEvalProgram,
   makeBlock,
   makeEffectStatement,
   makeReturnStatement,
@@ -283,8 +283,8 @@ export const visitProgram = generateVisit({
         block,
       ),
     ),
-  LocalEvalProgram: (context, variables, block, serial) =>
-    makeLocalEvalProgram(
+  InternalLocalEvalProgram: (context, variables, block, serial) =>
+    makeInternalLocalEvalProgram(
       map(variables, makeOldVariable),
       visitBlock(
         {
@@ -310,8 +310,8 @@ export const visitProgram = generateVisit({
         block,
       ),
     ),
-  EnclaveEvalProgram: (context, enclaves, block, serial) =>
-    makeEnclaveEvalProgram(
+  ExternalLocalEvalProgram: (context, enclaves, block, serial) =>
+    makeExternalLocalEvalProgram(
       enclaves,
       visitBlock(
         {
