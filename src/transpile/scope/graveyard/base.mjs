@@ -60,6 +60,7 @@ import {
 
 import {
   READ as STATIC_READ,
+  makeBaseDynamicScope as makeDynamicScope,
   makeBasePropertyScope as makePropertyScope,
   lookupBaseScopeProperty as lookupScopeProperty,
   isBaseStaticallyBound as isStaticallyBound,
@@ -69,7 +70,8 @@ import {
   declareBaseGhostVariable as declareStaticGhostVariable,
   makeBaseInitializeEffect as makeStaticInitializeEffect,
   makeBaseLookupEffect as makeStaticLookupEffect,
-  makeBaseLookupExpre as makeStaticLookupExpression,
+  makeBaseLookupExpression as makeStaticLookupExpression,
+  makeBaseLookupStatementArray as makeLookupStatementArray
 } from "./split.mjs";
 
 import {
@@ -83,20 +85,19 @@ import {
   makeLookupNode as makeDynamicLookupNode,
 } from "./dynamic.mjs";
 
-export {makeBaseDynamicScope as makeDynamicScope} from "./split.mjs";
-
 export {
   makeEmptyDynamicFrame,
   makeLooseDynamicFrame,
   makeRigidDynamicFrame,
 } from "./dynamic.mjs";
 
-const {Symbol} = globalThis;
+const {Symbol, Reflect:{apply}, String:{prototype:{includes:includesString}}} = globalThis;
 
-const isSpecialVariable = (identifier) =>
-  identifier === "this" ||
-  identifier === "new.target" ||
-  identifier === "import.meta";
+const META_PROPERTY_MARKER = ["."];
+
+const isMetaPropertyVariable = (variable) => apply(includesString, variable, META_PROPERTY_MARKER);
+
+export const isSpecialVariable = (variable) => variable === "this" || variable === "import" || isMetaPropertyVariable(variable);
 
 const generateMakeSequenceExportEffect = (right) => (effect, specifier) =>
   makeSequenceEffect(effect, makeExportEffect(specifier, right));
@@ -117,12 +118,15 @@ const throwUnexpectedDynamicExtrinsic = partialx(
 );
 const throwUnexpectedStaticMiss = partialx(throwError, "unexpected root scope");
 
-const makeDeadzoneExpression = (variable, {import: import_}) =>
-  import_ === null
-    ? makeThrowReferenceErrorExpression(
-        `Cannot access '${variable}' before initialization`,
-      )
-    : makeImportExpression(import_.source, import_.specifier);
+const makeDeadzoneExpression = (variable, {import: import_}) => {
+  if (import_ === null) {
+    return makeThrowReferenceErrorExpression(
+      `Cannot access '${variable}' before initialization`,
+    );
+  } else {
+    return makeImportExpression(import_.source, import_.specifier);
+  }
+};
 
 const makeDeadzoneEffect = (variable, note) =>
   makeExpressionEffect(makeDeadzoneExpression(variable, note));
@@ -131,38 +135,118 @@ const makeDeadzoneEffect = (variable, note) =>
 // Property //
 //////////////
 
-const REIFIED = "reified";
+const ROOT = "root";
 const STRICT = "strict";
+const EARLY_SYNTAX_ERROR = "early-syntax-error";
 
-export const initializeScope = (scope, reified) =>
-  makePropertyScope(makePropertyScope(scope, STRICT, false), REIFIED, reified);
+const ENCLAVE_ROOT = null;
+const REIFIED_GLOBAL_ROOT = true;
+const NON_REIFIED_GLOBAL_ROOT = true;
 
-export const isGlobalScopeReified = partial_x(lookupScopeProperty, REIFIED);
+export const initializeEnclaveScope = (scope) => {
+  scope = makePropertyScope(scope, STRICT, false);
+  scope = makePropertyScope(scope, EARLY_SYNTAX_ERROR, []);
+  scope = makePropertyScope(scope, ROOT, ENCLAVE_ROOT);
+  return scope;
+};
+
+export const restoreScope = (scope) => {
+  scope = makePropertyScope(scope, EARLY_SYNTAX_ERROR, []);
+  return scope;
+};
+
+export const initializeGlobalScope = (scope, frames) => {
+  scope = makePropertyScope(scope, STRICT, false);
+  scope = makePropertyScope(scope, EARLY_SYNTAX_ERROR, []);
+  if (frames === null) {
+    scope = makePropertyScope(scope, ROOT, NON_REIFIED_GLOBAL_ROOT);
+  } else {
+    scope = makePropertyScope(scope, ROOT, REIFIED_GLOBAL_ROOT);
+    scope = makeDynamicScope(scope, frames);
+  }
+  return scope;
+};
+
+const getEarlySyntaxErrorMessageArray = partial_x(lookupScopeProperty, EARLY_SYNTAX_ERROR);
+
+export const isRootScopeEnclave = (scope) => lookupScopeProperty(scope, ROOT) === ENCLAVE_ROOT;
+
+export const isRootScopeReified = (scope) => {
+  const root = lookupScopeProperty(scope, ROOT);
+  assert(root !== ENCLAVE_ROOT, "only global scope should be query for reified");
+  return root === REIFIED_GLOBAL_ROOT;
+};
 
 export const useStrictScope = partial_xx(makePropertyScope, STRICT, true);
 
 export const isStrictScope = partial_x(lookupScopeProperty, STRICT);
 
+///////////////////
+// Dynamic Scope //
+///////////////////
+
+const makeDynamicScope = (scope, frames) => makeDynamicScope(scope, {frames, variables:[]});
+
+const makeDynamicAllPreludeStatementArray = (frame, variables) => map(
+  variables,
+  partialx_(makeDynamicPreludeStatementArray, frame),
+);
+
+const makeDynamicStatementArray = (scope, statements) => {
+  assert(isDynamicallyBound(scope), "expected dynamic scope");
+  const {frames, variables} = getBindingDynamicExtrinsic(scope);
+  return concat(
+    return map(
+      frames,
+      partial_x(makeDynamicAllPreludeStatementArray, variables),
+    ),
+    statements,
+  );
+};
+
 /////////////
-// Prelude //
+// Special //
 /////////////
 
-export const makePreludeStatementArray = (scope, variable) => {
-  if (isDynamicallyBound(scope)) {
-    return flatMap(
-      getBindingDynamicExtrinsic(scope),
-      partial_x(makeDynamicPreludeStatementArray, variable),
-    );
-  } else {
-    return [];
-  }
+export const makeSpecialDefineStatementArray = (scope, variable, expression) => {
+  assert(isSpecialVariable(variable), "expected special variable");
+  assert(isStaticallyBound(scope), "expected static scope for special variable declaration");
+  declareStaticVariable(scope, variable, {
+    writable: false,
+    import: null,
+    exports: [],
+  });
+  return [
+    makeEffectStatement(
+      makeStaticInitializeEffect(scope, variable, expression),
+    ),
+  ];
+};
+
+export const makeEarlySyntaxErrorExpression = (scope, variable) => {
+  push(
+    getEarlySyntaxErrorMessageArray(scope),
+    `${variable} cannot appear in this context`,
+  );
+  return makeLiteralExpression("early-syntax-error-dummy");
+};
+
+export const makeReadSpecialExpression = (scope, variable) => {
+  assert(isSpecialVariable(variable), "expected special variable");
+  const callback = partialxx(makeEarlySyntaxErrorExpression, scope, variable);
+  return makeStaticLookupExpression(scope, variable, STATIC_READ, {
+    onStaticLiveHit: returnFirst,
+    onStaticDeadHit: callback,
+    onDynamicExtrinsic: returnFirst,
+    onStaticMiss: callback,
+  });
 };
 
 ///////////
 // Loose //
 ///////////
 
-export const makeLooseDeclareStatementArray = (scope, variable, specifiers) => {
+export const makeLooseDefineStatementArray = (scope, variable, specifiers) => {
   if (isStaticallyBound(scope)) {
     declareStaticVariable(scope, variable, {
       writable: true,
@@ -191,8 +275,10 @@ export const makeLooseDeclareStatementArray = (scope, variable, specifiers) => {
       "loose declaration can only be exported statically",
     );
     if (isDynamicallyBound(scope)) {
+      const {frames, variables} = getBindingDynamicExtrinsic(scope);
+      push(variables, variable);
       return flatMap(
-        getBindingDynamicExtrinsic(scope),
+        frames,
         partial_x(makeDynamicLooseDeclareStatementArray, variable),
       );
     } else {
@@ -234,8 +320,10 @@ export const makeRigidDeclareStatementArray = (
       "rigid declaration can only be exported statically",
     );
     if (isDynamicallyBound(scope)) {
+      const {frames, variables} = getBindingDynamicExtrinsic(scope);
+      push(variables, variable);
       return flatMap(
-        getBindingDynamicExtrinsic(scope),
+        frames,
         partial_x(makeDynamicRigidDeclareStatementArray, variable),
       );
     } else {
@@ -274,8 +362,9 @@ export const makeRigidInitializeStatementArray = (
       "unexpected special variable for non-static rigid initialization",
     );
     if (isDynamicallyBound(scope)) {
+      const {frames} = getBindingDynamicExtrinsic(scope);
       return flatMap(
-        getBindingDynamicExtrinsic(scope),
+        frames,
         partial_xxx(
           makeDynamicRigidInitializeStatementArray,
           variable,
@@ -312,8 +401,9 @@ export const declareImportVariable = (scope, variable, source, specifier) => {
 ////////////
 
 const generateMakeDynamicLookupNode =
-  (scope, variable, right) => (expression, frames) =>
-    reduce(
+  (scope, variable, right) => isSpecialVariable(variable)
+    : returnFirst
+    ? (expression, frames) => reduce(
       frames,
       flip(
         partial_xxx_(
@@ -330,10 +420,19 @@ const generateMakeDynamicLookupNode =
 // Read //
 //////////
 
-const generateMakeRootReadExpression = (scope, variable) => () =>
-  isGlobalScopeReified(scope)
-    ? makeThrowReferenceErrorExpression(`${variable} is not defined`)
-    : makeGlobalReadExpression(variable);
+const generateMakeRootReadExpression = (scope, variable) => () => {
+  if (isRootScopeEnclave(scope)) {
+    return makeApplyExpression(
+      makeReadExpression(scope, "scope.read"),
+      makeLiteralExpression({undefined:null}),
+      [makeLiteralExpression(variable)],
+    );
+  } else if (isRootScopeReified(scope)) {
+    return makeThrowReferenceErrorExpression(`${variable} is not defined`);
+  } else {
+    return makeGlobalReadExpression(variable);
+  }
+};
 
 export const makeReadExpression = (scope, variable) =>
   makeStaticLookupExpression(scope, variable, STATIC_READ, {
@@ -353,10 +452,19 @@ export const makeReadExpression = (scope, variable) =>
 
 const makeLiveTypeofExpression = partialx_(makeUnaryExpression, "typeof");
 
-const generateMakeRootTypeofExpression = (scope, variable) => () =>
-  isGlobalScopeReified(scope)
-    ? makeLiteralExpression("undefined")
-    : makeGlobalTypeofExpression(variable);
+const generateMakeRootTypeofExpression = (scope, variable) => () => {
+  if (isRootScopeEnclave(scope)) {
+    return makeApplyExpression(
+      makeReadExpression(scope, "scope.typeof"),
+      makeLiteralExpression({undefined:null}),
+      [makeLiteralExpression(variable)],
+    );
+  } else if (isRootScopeReified(scope)) {
+    return makeLiteralExpression("undefined");
+  } else {
+    return makeGlobalTypeofExpression(variable);
+  }
+};
 
 export const makeTypeofExpression = (scope, variable) =>
   makeStaticLookupExpression(scope, variable, STATIC_READ, {
@@ -382,10 +490,22 @@ export const generateMakeStaticDiscardExpression = (scope) => () =>
       makeThrowTypeErrorExpression("Cannot delete variable")
     : makeLiteralExpression(false);
 
-const generateMakeRootDiscardExpression = (scope, variable) => () =>
-  isGlobalScopeReified(scope)
-    ? makeLiteralExpression(true)
-    : makeGlobalDiscardExpression(isStrictScope(scope), variable);
+const generateMakeRootDiscardExpression = (scope, variable) => () => {
+  if (isRootScopeEnclave(scope)) {
+    return makeApplyExpression(
+      makeReadExpression(
+        scope,
+        isStrictScope(scope) ? "scope.deleteStrict" : "scope.deleteSloppy",
+      ),
+      makeLiteralExpression({undefined:null}),
+      [makeLiteralExpression(variable)],
+    );
+  } else if (isRootScopeReified(scope)) {
+    return makeLiteralExpression(true);
+  } else {
+    return makeGlobalDiscardExpression(isStrictScope(scope), variable);
+  }
+};
 
 export const makeDiscardExpression = (scope, variable) =>
   makeStaticLookupExpression(scope, variable, STATIC_READ, {
@@ -402,6 +522,35 @@ export const makeDiscardExpression = (scope, variable) =>
 ///////////
 // Write //
 ///////////
+
+const generateMakeRootWriteEffect = (scope, variable) => () => {
+  if (isRootScopeEnclave(scope)) {
+    return makeExpressionEffect(
+      makeApplyExpression(
+        makeReadExpression(
+          scope,
+          isStrictScope(scope) ? "scope.writeStrict" : "scope.writeSloppy",
+        ),
+        makeLiteralExpression({undefined:null}),
+        [makeLiteralExpression(variable)],
+      ),
+    );
+  } else if (isRootScopeReified(scope)) {
+    if (isStrictScope(scope)) {
+      return makeThrowTypeErrorExpression(`${variable} is not defined`)
+    } else {
+      return makeSetExpression(
+        true,
+        makeDirectIntrinsicExpression("aran.globalObject"),
+        variable,
+        pure,
+      );
+    }
+  } else {
+    return makeGlobalWriteExpression(isStrictScope(scope), variable, pure),
+  }
+};
+
 
 const generateMakeWriteRootEffect = (scope, variable, pure) => () =>
   makeExpressionEffect(

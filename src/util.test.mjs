@@ -77,6 +77,16 @@ import {
   partial_xxx_,
   partialxx____,
   partialxx_x_x_x__,
+  // Arithmetic //
+  multiply,
+  add,
+  devides,
+  // List //
+  cons,
+  car,
+  cdr,
+  convertArrayList,
+  convertListArray,
 } from "./util.mjs";
 
 const {
@@ -359,6 +369,29 @@ assertEqual(getLast(["element1", "element2"]), "element2");
   assertEqual(push(array, "element2"), undefined);
   assertDeepEqual(array, ["element1", "element2"]);
 }
+
+//////////
+// List //
+//////////
+
+assertEqual(car(cons(123, 456)), 123);
+
+assertEqual(cdr(cons(123, 456)), 456);
+
+assertDeepEqual(convertArrayList([1, 2, 3]), cons(1, cons(2, cons(3, null))));
+
+assertDeepEqual(convertListArray(cons(1, cons(2, cons(3, null)))), [1, 2, 3]);
+
+////////////////
+// Arithmetic //
+////////////////
+
+assertEqual(multiply(2, 3), 6);
+
+assertEqual(add(2, 3), 5);
+
+assertEqual(devides(4, 2), true);
+assertEqual(devides(4, 3), false);
 
 // /////////////
 // // Partial //
