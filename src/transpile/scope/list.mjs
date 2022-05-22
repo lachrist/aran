@@ -1,5 +1,6 @@
 
 import {
+  NIL,
   cons,
   car,
   cdr,
@@ -10,7 +11,11 @@ export {
   fromArrayList as unpack,
 } from "../../util.mjs";
 
-export const ROOT = null;
+//////////
+// ROOT //
+//////////
+
+export const ROOT = NIL;
 
 //////////////
 // Property //
@@ -28,7 +33,7 @@ export const set = (scope, key, value) => cons(
 );
 
 export const get = (scope, key) => {
-  while (scope !== null) {
+  while (scope !== NIL) {
     const point = car(scope);
     if (point.type === PROPERTY_TYPE && point.key === key) {
       return point.value;
@@ -38,33 +43,33 @@ export const get = (scope, key) => {
   throw new Error("missing scope property");
 };
 
-//////////
-// Page //
-//////////
+///////////
+// Frame //
+///////////
 
-const PAGE_TYPE = "page";
+const FRAME_TYPE = "frame";
 
 const CLOSURE_TYPE = "closure";
 
-export const extend = (scope, page) => cons(
+export const extend = (scope, frame) => cons(
   {
-    type: PAGE_TYPE,
-    page,
+    type: FRAME_TYPE,
+    frame,
   },
   scope,
 );
 
 export const enclose = partialx_(cons, {type:CLOSURE_TYPE});
 
-export const lookup = (scope, escaped) => {
-  if (scope === null) {
+export const fetch = (scope, escaped) => {
+  if (scope === NIL) {
     throw new Error("unbound scope");
   } else {
     const point = car(scope);
-    if (point.type === PAGE_TYPE) {
+    if (point.type === FRAME_TYPE) {
       return {
-        page: point.page,
         scope: cdr(scope),
+        frame: point.frame,
         escaped,
       };
     } else {

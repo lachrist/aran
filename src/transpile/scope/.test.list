@@ -1,5 +1,5 @@
-- * core.mjs
-  * -kind.mjs
-    - frames
+- * - list.mjs
+    - property.mjs
+  * - frames
     - frame.mjs
 - 

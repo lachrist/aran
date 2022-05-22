@@ -322,6 +322,8 @@ export const getLatestUUID = () => uuid;
 // List //
 //////////
 
+export const NIL = null;
+
 export const cons = (x, y) => [x, y];
 
 export const car = ({0: x}) => x;
@@ -329,7 +331,7 @@ export const car = ({0: x}) => x;
 export const cdr = ({1: y}) => y;
 
 export const convertArrayList = (array) => {
-  let list = null;
+  let list = NIL;
   for (let index = array.length - 1; index >= 0; index -= 1) {
     list = cons(array[index], list);
   }
@@ -338,7 +340,7 @@ export const convertArrayList = (array) => {
 
 export const convertListArray = (list) => {
   const array = [];
-  while (list !== null) {
+  while (list !== NIL) {
     push(array, car(list));
     list = cdr(list);
   }

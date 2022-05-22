@@ -1,19 +1,19 @@
 
 export const kinds = ["let", "const", "class"];
 
-export const create = (object) => ({
-  object,
+export const create = (record) => ({
+  record,
   variables: [],
 });
 
 export const harvestHeader = constant_([]);
 
-export const harvestPrelude = ({object, variables}) => map(
+export const harvestPrelude = ({record, variables}) => map(
   variables,
-  partialx_(makeDuplicateStatement, object),
+  partialx_(makeDuplicateStatement, record),
 );
 
-export const declare = ({variables, object}, kind, variable, import_, _exports) => {
+export const declare = ({variables, record}, kind, variable, import_, _exports) => {
   push(variables, variable);
   if (includes(kinds, kind)) {
     assert(import_ === null, "unexpected global imported variable");
@@ -22,7 +22,7 @@ export const declare = ({variables, object}, kind, variable, import_, _exports) 
       makeEffectStatement(
         makeExpressionEffect(
           makeDefineExpression(
-            object,
+            record,
             makeLiteralExpression(variable),
             makeDataDescriptorExpression(
               makeDeadzoneExpression(),
@@ -39,11 +39,11 @@ export const declare = ({variables, object}, kind, variable, import_, _exports) 
   }
 };
 
-export const initialize = ({object}, kind, variable, expression) => {
+export const initialize = ({record}, kind, variable, expression) => {
   if (includes(kinds, kind)) {
     return makeExpressionEffect(
       makeDefineExpression(
-        object,
+        record,
         makeLiteralExpression(variable),
         makeDataDescriptorExpression(
           expression,
@@ -58,11 +58,11 @@ export const initialize = ({object}, kind, variable, expression) => {
   }
 };
 
-const makeDeadzoneExpression = (variable, object, alive) => makeConditionalEffect(
+const makeDeadzoneExpression = (variable, record, alive) => makeConditionalEffect(
   makeBinaryExpression(
     "==="
     makeGetExpression(
-      object,
+      record,
       makeLiteralExpression(variable),
     ),
     makeDeadzoneExpression(),
@@ -71,29 +71,29 @@ const makeDeadzoneExpression = (variable, object, alive) => makeConditionalEffec
   alive,
 );
 
-export const lookup = (next, {object}, _escaped, strict, variable, right) => {
+export const lookup = (next, {record}, _escaped, strict, variable, right) => {
   const key = makeLiteralExpression(variable);
   if (isReadWrite(right)) {
     return makeConditionalEffect(
-      makeBinaryExpression("in", key, object),
+      makeBinaryExpression("in", key, record),
       makeExpressionEffect(
         makeDeadzoneExpression(
           variable,
-          object,
-          makeDynamicLookupExpression(strict, object, key, right),
+          record,
+          makeDynamicLookupExpression(strict, record, key, right),
         ),
       ),
       next(),
     );
   } else {
     return makeConditionalExpression(
-      makeBinaryExpression("in", key, object),
+      makeBinaryExpression("in", key, record),
       isDeleteRight(right)
-        ? makeDynamicLookupNode(strict, object, key, right)
+        ? makeDynamicLookupNode(strict, record, key, right)
         : makeDeadzoneExpression(
           variable,
-          object,
-          makeDynamicLookupNode(strict, object, key, right)
+          record,
+          makeDynamicLookupNode(strict, record, key, right)
         ),
       next(),
     );

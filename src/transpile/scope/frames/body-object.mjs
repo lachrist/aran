@@ -1,9 +1,9 @@
 
 const kinds = ["var", "function"];
 
-export const create = () => ({
+export const create = (object) => ({
   object,
-  variables,
+  variables: [],
 });
 
 export const harvest = constant_({prelude:[], header: []});
