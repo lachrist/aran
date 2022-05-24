@@ -1,15 +1,6 @@
+import {NIL, cons, car, cdr} from "../../util.mjs";
 
-import {
-  NIL,
-  cons,
-  car,
-  cdr,
-} from "../../util.mjs";
-
-export {
-  fromListArray as pack,
-  fromArrayList as unpack,
-} from "../../util.mjs";
+export {fromListArray as pack, fromArrayList as unpack} from "../../util.mjs";
 
 //////////
 // ROOT //
@@ -23,14 +14,15 @@ export const ROOT = NIL;
 
 const PROPERTY_TYPE = "property";
 
-export const set = (scope, key, value) => cons(
-  {
-    type: PROPERTY_TYPE,
-    key,
-    value,
-  },
-  scope,
-);
+export const set = (scope, key, value) =>
+  cons(
+    {
+      type: PROPERTY_TYPE,
+      key,
+      value,
+    },
+    scope,
+  );
 
 export const get = (scope, key) => {
   while (scope !== NIL) {
@@ -51,15 +43,16 @@ const FRAME_TYPE = "frame";
 
 const CLOSURE_TYPE = "closure";
 
-export const extend = (scope, frame) => cons(
-  {
-    type: FRAME_TYPE,
-    frame,
-  },
-  scope,
-);
+export const extend = (scope, frame) =>
+  cons(
+    {
+      type: FRAME_TYPE,
+      frame,
+    },
+    scope,
+  );
 
-export const enclose = partialx_(cons, {type:CLOSURE_TYPE});
+export const enclose = partialx_(cons, {type: CLOSURE_TYPE});
 
 export const fetch = (scope, escaped) => {
   if (scope === NIL) {

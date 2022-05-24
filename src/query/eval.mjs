@@ -1,6 +1,6 @@
 import {map, some, filter} from "array-lite";
 
-import {get, hasOwnProperty, partialx_} from "../util.mjs";
+import {get, hasOwnProperty, partialx_} from "../util/index.mjs";
 
 const {
   Array: {isArray},

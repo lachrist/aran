@@ -1,5 +1,5 @@
 import {includes, concat} from "array-lite";
-import {InvalidOptionsAranError} from "../util.mjs";
+import {InvalidOptionsAranError} from "../util/index.mjs";
 
 const {
   undefined,

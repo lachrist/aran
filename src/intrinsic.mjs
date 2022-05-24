@@ -10,7 +10,7 @@ import {
   partialxx___,
   partialxx____,
   partialxx_x_x_x__,
-} from "./util.mjs";
+} from "./util/index.mjs";
 
 import {
   makeApplyExpression,

@@ -1,5 +1,6 @@
 import {some} from "array-lite";
-import {assert, hasOwnProperty} from "../util.mjs";
+
+import {assert, hasOwnProperty} from "../util/index.mjs";
 
 const isStrictDirective = (node) =>
   node.type === "ExpressionStatement" &&

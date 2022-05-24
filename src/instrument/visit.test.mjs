@@ -1,6 +1,6 @@
 import {assertSuccess} from "../__fixture__.mjs";
 
-import {createCounter} from "../util.mjs";
+import {createCounter} from "../util/index.mjs";
 
 import {makeMetaVariable} from "../variable.mjs";
 import {makeEmptyBreakLabel} from "../label.mjs";
@@ -21,7 +21,7 @@ import {createRootScope} from "./scope.mjs";
 
 const makeContext = (namespace, pointcut) => ({
   scope: createRootScope(),
-  counter: createCounter(),
+  counter: createCounter(0),
   kind: null,
   header: [],
   script: null,

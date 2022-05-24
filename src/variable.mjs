@@ -10,7 +10,7 @@
 
 import {forEach} from "array-lite";
 
-import {incrementCounter} from "./util.mjs";
+import {incrementCounter} from "./util/index.mjs";
 
 const {
   Reflect: {apply},

@@ -1,5 +1,5 @@
 
-import {extend} from "./list.mjs";
+import {extend, pack, unpack} from "./list.mjs";
 
 import {
   useStrict,

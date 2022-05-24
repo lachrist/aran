@@ -1,13 +1,19 @@
 import {map, flatMap, concat, includes, every} from "array-lite";
-import {assert} from "../../util.mjs";
+
+import {assert} from "../../util/index.mjs";
+
 import {collectPattern} from "./collect.mjs";
+
 import {
   checkoutDeclarationArray,
   makeSimpleParameterDeclaration,
   makeParameterDeclaration,
 } from "./declaration.mjs";
+
 import {hoistShallow} from "./hoist-shallow.mjs";
+
 import {hoistDeep} from "./hoist-deep.mjs";
+
 import {hoistModule} from "./hoist-module.mjs";
 
 export {

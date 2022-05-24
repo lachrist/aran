@@ -1,13 +1,13 @@
 import {map, zip, unzip} from "array-lite";
 
 import {
-  partialx,
-  throwError,
-  returnFirst,
-  returnSecond,
-  returnThird,
-  returnFourth,
-} from "../util.mjs";
+  constant,
+  deadcode,
+  returnx,
+  return_x,
+  return__x,
+  return___x,
+} from "../util/index.mjs";
 
 import {
   fromLiteral,
@@ -46,8 +46,8 @@ const EXPRESSION_BYPASS = "expression";
 const call = (x) => (f) => f(x);
 
 const callTrue = call(true);
-const returnNull = partialx(returnFirst, null);
-const returnEmptyArray = partialx(returnFirst, []);
+const returnNull = constant(null);
+const returnEmptyArray = constant([]);
 const mapReturnNull = (array) => map(array, returnNull);
 
 const getScopeData = (pair) => lookupScopeVariable(pair[0], pair[1]);
@@ -84,13 +84,13 @@ const makeNullableLiteralObjectArrayExpression = (objects) =>
 // Type Argument //
 ///////////////////
 
-const expression_arg = [returnNull, returnFirst];
+const expression_arg = [returnNull, returnx];
 const expression_array_arg = [mapReturnNull, makeArrayExpression];
-const primitive_arg = [returnFirst, makeLiteralExpression];
+const primitive_arg = [returnx, makeLiteralExpression];
 const literal_arg = [fromLiteral, makeLiteralExpression];
 const scope_arg = [getScopeData, makeScopeExpression];
 const scope_array_arg = [getScopeDataArray, makeScopeArrayExpression];
-const link_array_arg = [returnFirst, makeNullableLiteralObjectArrayExpression];
+const link_array_arg = [returnx, makeNullableLiteralObjectArrayExpression];
 const nullable_scope_arg = [getScopeNullableData, makeScopeNullableExpression];
 const visit_arg = [returnNull, callTrue];
 
@@ -121,9 +121,9 @@ const variable_array_arg = scope_array_arg;
 //////////////
 
 const missing_bypasses = {
-  [STATEMENT_BYPASS]: partialx(throwError, "missing statement bypass"),
-  [EFFECT_BYPASS]: partialx(throwError, "missing effect bypass"),
-  [EXPRESSION_BYPASS]: partialx(throwError, "missing expression bypass"),
+  [STATEMENT_BYPASS]: deadcode("missing statement bypass"),
+  [EFFECT_BYPASS]: deadcode("missing effect bypass"),
+  [EXPRESSION_BYPASS]: deadcode("missing expression bypass"),
 };
 
 const generateMakeTrap =
@@ -170,68 +170,48 @@ const traps = {
   //////////////
   // Producer //
   //////////////
-  parameters: makeExpressionTrap(returnFirst, expression_arg, serial_arg),
-  intrinsic: makeExpressionTrap(
-    returnSecond,
-    name_arg,
-    expression_arg,
-    serial_arg,
-  ),
+  parameters: makeExpressionTrap(returnx, expression_arg, serial_arg),
+  intrinsic: makeExpressionTrap(return_x, name_arg, expression_arg, serial_arg),
   literal: makeExpressionTrap(makeLiteralExpression, literal_arg, serial_arg),
   import: makeExpressionTrap(
-    returnThird,
+    return__x,
     source_arg,
     specifier_arg,
     expression_arg,
   ),
   closure: makeExpressionTrap(
-    returnFourth,
+    return___x,
     kind_arg,
     asynchronous_arg,
     generator_arg,
     expression_arg,
     serial_arg,
   ),
-  read: makeExpressionTrap(
-    returnSecond,
-    variable_arg,
-    expression_arg,
-    serial_arg,
-  ),
-  failure: makeExpressionTrap(returnFirst, expression_arg, serial_arg),
+  read: makeExpressionTrap(return_x, variable_arg, expression_arg, serial_arg),
+  failure: makeExpressionTrap(returnx, expression_arg, serial_arg),
   //////////////
   // Consumer //
   //////////////
-  eval: makeExpressionTrap(returnFirst, expression_arg, serial_arg),
-  await: makeExpressionTrap(returnFirst, expression_arg, serial_arg),
-  yield: makeExpressionTrap(
-    returnSecond,
-    delegate_arg,
-    expression_arg,
-    serial_arg,
-  ),
-  drop: makeExpressionTrap(returnFirst, expression_arg, serial_arg),
+  eval: makeExpressionTrap(returnx, expression_arg, serial_arg),
+  await: makeExpressionTrap(returnx, expression_arg, serial_arg),
+  yield: makeExpressionTrap(return_x, delegate_arg, expression_arg, serial_arg),
+  drop: makeExpressionTrap(returnx, expression_arg, serial_arg),
   export: makeExpressionTrap(
-    returnSecond,
+    return_x,
     specifier_arg,
     expression_arg,
     serial_arg,
   ),
-  write: makeExpressionTrap(
-    returnSecond,
-    variable_arg,
-    expression_arg,
-    serial_arg,
-  ),
-  test: makeExpressionTrap(returnFirst, expression_arg, serial_arg),
+  write: makeExpressionTrap(return_x, variable_arg, expression_arg, serial_arg),
+  test: makeExpressionTrap(returnx, expression_arg, serial_arg),
   declare: makeExpressionTrap(
-    returnThird,
+    return__x,
     kind_arg,
     global_variable_arg,
     expression_arg,
     serial_arg,
   ),
-  return: makeExpressionTrap(returnFirst, expression_arg, serial_arg),
+  return: makeExpressionTrap(returnx, expression_arg, serial_arg),
   //////////////
   // Combiner //
   //////////////
@@ -288,7 +268,7 @@ export const makeTrapStatementArray = generateMakeTrapNode(
 
 export const makeTrapExpression = generateMakeTrapNode(
   EXPRESSION_BYPASS,
-  returnFirst,
+  returnx,
 );
 
 export const makeTrapEffect = generateMakeTrapNode(

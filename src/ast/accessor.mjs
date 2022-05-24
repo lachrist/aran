@@ -1,5 +1,5 @@
 import {concat, slice, every, zip} from "array-lite";
-import {assert} from "../util.mjs";
+import {assert} from "../util/index.mjs";
 import {isLiteral, fromLiteral} from "./literal.mjs";
 
 const {

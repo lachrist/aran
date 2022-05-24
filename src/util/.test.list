@@ -1,0 +1,12 @@
+- * array.mjs
+  * closure.mjs
+  * counter.mjs
+  * curry.mjs
+  * dispatch.mjs
+  * list.mjs
+  * number.mjs
+  * object.mjs
+  * report.mjs
+  * string.mjs
+  * uuid.mjs
+- index.mjs

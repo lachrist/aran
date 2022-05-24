@@ -1,4 +1,4 @@
-import {assert, returnFirst} from "../../util.mjs";
+import {assert, returnx} from "../../util/index.mjs";
 
 export const UNVALUED = false;
 
@@ -9,4 +9,4 @@ export const labelizeValuation = (valuation) => {
   return valuation;
 };
 
-export const valuateLabel = returnFirst;
+export const valuateLabel = returnx;

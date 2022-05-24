@@ -11,13 +11,7 @@ import {
   flat,
 } from "array-lite";
 
-import {
-  partialx,
-  assert,
-  throwError,
-  incrementCounter,
-  returnFirst,
-} from "../util.mjs";
+import {deadcode, constant, assert, incrementCounter} from "../util/index.mjs";
 
 import {
   matchNode,
@@ -134,7 +128,7 @@ const makeInitializeStatement = (scope, variable) =>
 // makeOptimizedTryStatementArray //
 ////////////////////////////////////
 
-const returnTrue = partialx(returnFirst, true);
+const returnTrue = constant(true);
 
 const throw_error_expression_pattern = [
   "ApplyExpression",
@@ -193,7 +187,7 @@ const makeOptimizedTryStatementArray = (
 // Visit //
 ///////////
 
-const default_callback = partialx(throwError, "missing instrument callback");
+const default_callback = deadcode("missing instrument callback");
 const generateVisit = (callbacks) => (context, node) =>
   dispatchNode(context, node, callbacks, default_callback);
 const generateContextlessVisit = (callbacks) => (node) =>

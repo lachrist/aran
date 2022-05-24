@@ -1,4 +1,4 @@
-import {createCounter} from "../util.mjs";
+import {createCounter} from "../util/index.mjs";
 import {createRootScope} from "./scope.mjs";
 import {visitProgram} from "./visit.mjs";
 
@@ -10,7 +10,7 @@ export const instrumentProgram = (
 ) =>
   visitProgram(
     {
-      counter: createCounter(),
+      counter: createCounter(0),
       scope: createRootScope(),
       script: scope_enclave_variable,
       trap: {

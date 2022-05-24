@@ -12,7 +12,15 @@ import {
   flatMap,
 } from "array-lite";
 
-import {partialx, assert, expect, throwError, returnFirst} from "../util.mjs";
+import {
+  assert,
+  expect,
+  constant__,
+  deadcode_,
+  deadcode__,
+  deadcode___,
+  deadcode____,
+} from "../util/index.mjs";
 
 import {getSyntax, isSyntaxType} from "./syntax.mjs";
 
@@ -40,13 +48,13 @@ const {
 
 const syntax = getSyntax();
 
-const returnFalse = partialx(returnFirst, false);
+const returnFalse = constant__(false);
 
-const returnEmptyArray = partialx(returnFirst, []);
+const returnEmptyArray = constant__([]);
 
-const returnNaN = partialx(returnFirst, NaN);
+const returnNaN = constant__(NaN);
 
-const throwMissingCallback = partialx(throwError, "missing callback");
+const throwMissingCallback = deadcode__("missing callback");
 
 const generateGetNodeKind = () => {
   const kinds = {__proto__: null};
@@ -189,23 +197,11 @@ const extractExportSpecifierArray = generateQuery(
 
 const immutable_trap_object = {
   __proto__: null,
-  setPrototypeOf: partialx(
-    throwError,
-    "caught setPrototypeOf on immutable node",
-  ),
-  preventExtensions: partialx(
-    throwError,
-    "caught preventExtensions on immutable node",
-  ),
-  defineProperty: partialx(
-    throwError,
-    "caught defineProperty on immutable node",
-  ),
-  deleteProperty: partialx(
-    throwError,
-    "caught deleteProperty on immutable node",
-  ),
-  set: partialx(throwError, "caught set on immutable node"),
+  setPrototypeOf: deadcode__("caught setPrototypeOf on immutable node"),
+  preventExtensions: deadcode_("caught preventExtensions on immutable node"),
+  defineProperty: deadcode___("caught defineProperty on immutable node"),
+  deleteProperty: deadcode__("caught deleteProperty on immutable node"),
+  set: deadcode____("caught set on immutable node"),
 };
 
 const digestable = [

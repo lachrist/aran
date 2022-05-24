@@ -1,6 +1,6 @@
 import {map, flatMap} from "array-lite";
 
-import {partialx_} from "../../util.mjs";
+import {partialx_} from "../../util/index.mjs";
 
 import {collectDeclarator} from "./collect.mjs";
 

@@ -1,5 +1,5 @@
 import {map, concat, flatMap} from "array-lite";
-import {assert} from "../../util.mjs";
+import {assert} from "../../util/index.mjs";
 import {VALUED, UNVALUED} from "./valuation.mjs";
 import {makeFreeCompletion, getCompletionNode} from "./completion.mjs";
 import {

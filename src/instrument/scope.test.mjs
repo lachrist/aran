@@ -40,7 +40,10 @@ import {
         duplicable: false,
         initialized: false,
       }),
-    /^Error: duplicate variable declaration/u,
+    {
+      name: "AssertionError",
+      message: "duplicate variable declaration",
+    },
   );
   declareScopeVariable(scope, {
     variable: "variable",
@@ -54,7 +57,10 @@ import {
   assertThrow(
     () =>
       makeScopeInitializeEffect(scope, "variable", makeLiteralExpression(123)),
-    /^Error: unused variable should not be initialized/u,
+    {
+      name: "AssertionError",
+      message: "unused variable should not be initialized",
+    },
   );
   assertEqual(isScopeVariableUsed(scope, "variable"), false);
   assertSuccess(
@@ -74,7 +80,10 @@ import {
   assertThrow(
     () =>
       makeScopeInitializeEffect(scope, "variable", makeLiteralExpression(123)),
-    /^Error: duplicate variable initialization/u,
+    {
+      name: "AssertionError",
+      message: "duplicate variable initialization",
+    },
   );
 }
 
@@ -98,7 +107,10 @@ import {
   assertThrow(
     () =>
       makeScopeInitializeEffect(scope, "variable", makeLiteralExpression(123)),
-    /^Error: duplicate variable initialization/u,
+    {
+      name: "AssertionError",
+      message: "duplicate variable initialization",
+    },
   );
   assertSuccess(
     allignEffect(

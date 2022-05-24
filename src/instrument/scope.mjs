@@ -13,7 +13,7 @@ import {
   makeSetStrictExpression,
 } from "../intrinsic.mjs";
 
-import {assert} from "../util.mjs";
+import {assert} from "../util/index.mjs";
 
 const {
   undefined,
