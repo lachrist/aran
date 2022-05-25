@@ -1,9 +1,25 @@
+import {constant_, constant_____, constant____} from "../../../util/index.mjs";
 
-import {constant} from "../util.mjs";
+import {
+  makeExpressionEffect,
+  makeLiteralExpression,
+} from "../../../ast/index.mjs";
 
-export {identity as create} from "../util.mjs";
+import {
+  makeSetExpression,
+  makeThrowReferenceErrorExpression,
+} from "../../../intrinsic.mjs";
 
-export const harvest = constant_({header:[], prelude:[]);
+import {
+  isRead as isReadRight,
+  isDelete as isDeleteRight,
+  isTypeof as isTypeofRight,
+  accessWrite as accessRightWrite,
+} from "../right.mjs";
+
+export {returnx as create} from "../../../util/index.mjs";
+
+export const harvest = constant_({header: [], prelude: []});
 
 export const declare = constant_____(null);
 
@@ -11,22 +27,24 @@ export const initialize = constant____(null);
 
 export const lookup = (_next, frame, _escaped, strict, variable, right) => {
   if (isTypeofRight(right)) {
-    return makeLiteralExpression("undefined"),
+    return makeLiteralExpression("undefined");
   } else if (isDeleteRight(right)) {
     return makeLiteralExpression(true);
   } else if (isReadRight(right)) {
-    return makeThrowReferenceError(`${variable} is not defined`);
+    return makeThrowReferenceErrorExpression(`${variable} is not defined`);
   } else {
     if (strict) {
       return makeExpressionEffect(
-        makeThrowReferenceError(`${variable} is not defined`),
+        makeThrowReferenceErrorExpression(`${variable} is not defined`),
       );
     } else {
-      return makeSetExpression(
-        strict,
-        makeIntrinsicExpression(frame),
-        makeLiteralExpression(),
-        getRightExpression(right),
+      return makeExpressionEffect(
+        makeSetExpression(
+          strict,
+          frame,
+          makeLiteralExpression(variable),
+          accessRightWrite(right),
+        ),
       );
     }
   }
