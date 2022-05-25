@@ -134,9 +134,14 @@ export const partialxx_x_x_x__ =
     f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10);
 
 export const partialxf_ = (f, x1, f2) => (x2, x3) => f(x1, f2(x2), x3);
+
 export const partialxf__ = (f, x1, f2) => (x2, x3, x4) => f(x1, f2(x2), x3, x4);
+
 export const partialxxf__ = (f, x1, x2, f3) => (x3, x4, x5) =>
   f(x1, x2, f3(x3), x4, x5);
+
+export const partialxf___ = (f, x1, f2) => (x2, x3, x4, x5) =>
+  f(x1, f2(x2), x3, x4, x5);
 
 // export const dropFirst =
 //   (f) =>
