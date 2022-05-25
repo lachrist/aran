@@ -29,7 +29,7 @@ assertSuccess(
     makeScriptProgram(
       concat(
         declare(
-          create(makeLiteralExpression("object")),
+          create("layer", makeLiteralExpression("object")),
           "kind",
           "variable",
           null,
@@ -50,7 +50,7 @@ assertSuccess(
     makeScriptProgram(
       concat(
         initialize(
-          create(makeLiteralExpression("object")),
+          create("layer", makeLiteralExpression("object")),
           "kind",
           "variable",
           makeLiteralExpression("value"),
@@ -72,7 +72,7 @@ assertSuccess(
   allignExpression(
     lookup(
       next,
-      create(makeLiteralExpression("object")),
+      create("layer", makeLiteralExpression("object")),
       true,
       true,
       "variable",
@@ -86,7 +86,7 @@ assertSuccess(
   allignExpression(
     lookup(
       next,
-      create(makeLiteralExpression("object")),
+      create("layer", makeLiteralExpression("object")),
       true,
       true,
       "variable",
@@ -105,7 +105,7 @@ assertSuccess(
   allignExpression(
     lookup(
       next,
-      create(makeLiteralExpression("object")),
+      create("layer", makeLiteralExpression("object")),
       true,
       true,
       "variable",
@@ -119,7 +119,7 @@ assertSuccess(
   allignEffect(
     lookup(
       next,
-      create(makeLiteralExpression("object")),
+      create("layer", makeLiteralExpression("object")),
       false,
       true,
       "variable",

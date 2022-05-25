@@ -1,4 +1,4 @@
-import {returnx, assert, constant_} from "../../../util/index.mjs";
+import {return_x, assert, constant_} from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -14,7 +14,7 @@ import {
 
 import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
-export const create = returnx;
+export const create = return_x;
 
 export const harvest = constant_({prelude: [], header: []});
 

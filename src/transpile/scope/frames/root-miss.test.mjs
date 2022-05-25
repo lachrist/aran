@@ -18,7 +18,7 @@ assertSuccess(
   allignExpression(
     lookup(
       next,
-      create(makeLiteralExpression("object")),
+      create("layer", makeLiteralExpression("object")),
       true,
       true,
       "variable",
@@ -36,7 +36,7 @@ assertSuccess(
   allignExpression(
     lookup(
       next,
-      create(makeLiteralExpression("object")),
+      create("layer", makeLiteralExpression("object")),
       true,
       true,
       "variable",
@@ -50,7 +50,7 @@ assertSuccess(
   allignExpression(
     lookup(
       next,
-      create(makeLiteralExpression("object")),
+      create("layer", makeLiteralExpression("object")),
       true,
       true,
       "variable",
@@ -64,7 +64,7 @@ assertSuccess(
   allignEffect(
     lookup(
       next,
-      create(makeLiteralExpression("object")),
+      create("layer", makeLiteralExpression("object")),
       true,
       true,
       "variable",
@@ -84,7 +84,7 @@ assertSuccess(
   allignEffect(
     lookup(
       next,
-      create(makeLiteralExpression("object")),
+      create("layer", makeLiteralExpression("object")),
       false,
       true,
       "variable",

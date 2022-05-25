@@ -1,4 +1,4 @@
-import {hasOwnProperty, assert, constant} from "../../../util/index.mjs";
+import {hasOwnProperty, assert, constant__} from "../../../util/index.mjs";
 
 import {
   makeExpressionEffect,
@@ -22,7 +22,7 @@ const kinds = {
   function: "var",
 };
 
-export const create = constant(null);
+export const create = constant__(null);
 
 export const declare = (_frame, kind, _variable, iimport, eexports) => {
   assert(hasOwnProperty(kinds, kind), "unexpected kind");

@@ -27,7 +27,7 @@ const next = () => {
 assertSuccess(
   allignProgram(
     makeScriptProgram(
-      concat(declare(create(null), "const", "variable", null, []), [
+      concat(declare(create("layer", null), "const", "variable", null, []), [
         makeReturnStatement(makeLiteralExpression("completion")),
       ]),
     ),
@@ -43,7 +43,7 @@ assertSuccess(
     makeScriptProgram(
       concat(
         initialize(
-          create(null),
+          create("layer", null),
           "const",
           "variable",
           makeLiteralExpression("value"),
@@ -61,21 +61,21 @@ assertSuccess(
 
 assertSuccess(
   allignExpression(
-    lookup(next, create(null), true, true, "variable", makeRead()),
+    lookup(next, create("layer", null), true, true, "variable", makeRead()),
     "intrinsic.aran.getGlobal('variable')",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    lookup(next, create(null), true, true, "variable", makeTypeof()),
+    lookup(next, create("layer", null), true, true, "variable", makeTypeof()),
     "intrinsic.aran.typeofGlobal('variable')",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    lookup(next, create(null), false, true, "variable", makeDiscard()),
+    lookup(next, create("layer", null), false, true, "variable", makeDiscard()),
     "intrinsic.aran.deleteGlobalSloppy('variable')",
   ),
 );
@@ -84,7 +84,7 @@ assertSuccess(
   allignEffect(
     lookup(
       next,
-      create(null),
+      create("layer", null),
       true,
       false,
       "variable",

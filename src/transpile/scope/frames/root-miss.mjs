@@ -1,5 +1,5 @@
 import {
-  returnx,
+  return_x,
   constant_,
   deadcode_____,
   deadcode____,
@@ -17,7 +17,7 @@ import {
 
 import {isRead, isDiscard, isTypeof, accessWrite} from "../right.mjs";
 
-export const create = returnx;
+export const create = return_x;
 
 export const harvest = constant_({header: [], prelude: []});
 
