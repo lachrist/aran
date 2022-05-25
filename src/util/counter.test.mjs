@@ -1,5 +1,22 @@
 import {assertEqual} from "../__fixture__.mjs";
 
-import {incrementCounter, createCounter} from "./counter.mjs";
+import {
+  incrementCounter,
+  createCounter,
+  getCounter,
+  setCounter,
+} from "./counter.mjs";
 
-assertEqual(incrementCounter(createCounter(0)), 1);
+const {undefined} = globalThis;
+
+{
+  const counter = createCounter(123);
+  assertEqual(incrementCounter(counter), 124);
+  assertEqual(incrementCounter(counter), 125);
+}
+
+{
+  const counter = createCounter(0);
+  assertEqual(setCounter(counter, 123), undefined);
+  assertEqual(getCounter(counter), 123);
+}
