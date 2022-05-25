@@ -5,11 +5,14 @@ import {
   partialx,
   partialx__,
   partialx___,
-  partialxx__,
   partialx____,
   partialxx___,
   partialxx____,
   partialxx_x_x_x__,
+  partialxf_,
+  partialxf__,
+  partialxxf__,
+  partialxf___,
 } from "./util/index.mjs";
 
 import {
@@ -70,34 +73,6 @@ const makeIntrinsicApplyExpression3 = (
     annotation,
   );
 
-const makeLiteralIntrinsicApplyExpression1 = (
-  name,
-  literal,
-  expression1,
-  annotation = undefined,
-) =>
-  makeIntrinsicApplyExpression2(
-    name,
-    makeLiteralExpression(literal),
-    expression1,
-    annotation,
-  );
-
-const makeLiteralIntrinsicApplyExpression2 = (
-  name,
-  literal,
-  expression1,
-  expression2,
-  annotation = undefined,
-) =>
-  makeIntrinsicApplyExpression3(
-    name,
-    makeLiteralExpression(literal),
-    expression1,
-    expression2,
-    annotation,
-  );
-
 // const makeDualIntrinsicApplyExpression1 = (
 //   name1,
 //   name2,
@@ -147,14 +122,16 @@ const makeDualIntrinsicApplyExpression3 = (
 // operator //
 //////////////
 
-export const makeUnaryExpression = partialx___(
-  makeLiteralIntrinsicApplyExpression1,
+export const makeUnaryExpression = partialxf__(
+  makeIntrinsicApplyExpression2,
   "aran.unary",
+  makeLiteralExpression,
 );
 
-export const makeBinaryExpression = partialx____(
-  makeLiteralIntrinsicApplyExpression2,
+export const makeBinaryExpression = partialxf___(
+  makeIntrinsicApplyExpression3,
   "aran.binary",
+  makeLiteralExpression,
 );
 
 ////////////
@@ -270,83 +247,86 @@ export const makeSetExpression = partialxx____(
 // global //
 ////////////
 
-export const makeTypeofGlobalExpression = partialx__(
+export const makeTypeofGlobalExpression = partialxf_(
   makeIntrinsicApplyExpression1,
   "aran.typeofGlobal",
+  makeLiteralExpression,
 );
 
-export const makeGetGlobalExpression = partialx__(
+export const makeGetGlobalExpression = partialxf_(
   makeIntrinsicApplyExpression1,
   "aran.getGlobal",
+  makeLiteralExpression,
 );
 
-export const makeDeleteGlobalSloppyExpression = partialx__(
+export const makeDeleteGlobalSloppyExpression = partialxf_(
   makeIntrinsicApplyExpression1,
   "aran.deleteGlobalSloppy",
+  makeLiteralExpression,
 );
 
 export const makeDeleteGlobalExpression = (
   strict,
-  expression,
+  variable,
   annotation = undefined,
 ) => {
   assert(!strict, "unexpected strict global delete");
-  return makeDeleteGlobalSloppyExpression(expression, annotation);
+  return makeDeleteGlobalSloppyExpression(variable, annotation);
 };
 
-export const makeSetGlobalStrictExpression = partialx___(
+export const makeSetGlobalStrictExpression = partialxf__(
   makeIntrinsicApplyExpression2,
   "aran.setGlobalStrict",
+  makeLiteralExpression,
 );
 
-export const makeSetGlobalSloppyExpression = partialx___(
+export const makeSetGlobalSloppyExpression = partialxf__(
   makeIntrinsicApplyExpression2,
   "aran.setGlobalSloppy",
+  makeLiteralExpression,
 );
 
-export const makeSetGlobalExpression = partialxx___(
+export const makeSetGlobalExpression = partialxxf__(
   makeDualIntrinsicApplyExpression2,
   "aran.setGlobalStrict",
   "aran.setGlobalSloppy",
+  makeLiteralExpression,
 );
 
 ///////////
 // throw //
 ///////////
 
-const makeApplyConstructExpression1 = (
-  name1,
-  name2,
-  expression,
-  annotation = undefined,
-) =>
+const makeThrowExpression = (name, message, annotation = undefined) =>
   makeIntrinsicApplyExpression(
-    name1,
-    [makeIntrinsicConstructExpression(name2, [expression], annotation)],
+    "aran.throw",
+    [
+      makeIntrinsicConstructExpression(
+        name,
+        [makeLiteralExpression(message)],
+        annotation,
+      ),
+    ],
     annotation,
   );
 
-export const makeThrowReferenceErrorExpression = partialxx__(
-  makeApplyConstructExpression1,
-  "aran.throw",
+export const makeThrowReferenceErrorExpression = partialx__(
+  makeThrowExpression,
   "ReferenceError",
 );
 
-export const makeThrowSyntaxErrorExpression = partialxx__(
-  makeApplyConstructExpression1,
-  "aran.throw",
+export const makeThrowSyntaxErrorExpression = partialx__(
+  makeThrowExpression,
   "SyntaxError",
 );
 
-export const makeThrowTypeErrorExpression = partialxx__(
-  makeApplyConstructExpression1,
-  "aran.throw",
+export const makeThrowTypeErrorExpression = partialx__(
+  makeThrowExpression,
   "TypeError",
 );
 
-export const makeThrowAranErrorExpression = partialxx__(
-  makeApplyConstructExpression1,
-  "aran.throw",
+export const makeThrowAranErrorExpression = partialx__(
+  makeThrowExpression,
   "aran.AranError",
 );
 

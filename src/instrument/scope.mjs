@@ -67,7 +67,7 @@ export const makeScopeWriteEffect = (scope, variable, expression) => {
     ? makeWriteEffect(variable, expression)
     : makeExpressionEffect(
         makeSetStrictExpression(
-          makeGetGlobalExpression(makeLiteralExpression(binding.script)),
+          makeGetGlobalExpression(binding.script),
           makeLiteralExpression(variable),
           expression,
         ),
@@ -90,7 +90,7 @@ export const makeScopeReadExpression = (scope, variable) => {
   return binding.script === null
     ? makeReadExpression(variable)
     : makeGetExpression(
-        makeGetGlobalExpression(makeLiteralExpression(binding.script)),
+        makeGetGlobalExpression(binding.script),
         makeLiteralExpression(variable),
       );
 };

@@ -12,8 +12,6 @@ import {
   makeDeleteExpression,
   makeSetExpression,
   makeDataDescriptorExpression,
-  makeUnaryExpression,
-  makeBinaryExpression,
   makeThrowSyntaxErrorExpression,
 } from "./intrinsic.mjs";
 
@@ -22,13 +20,13 @@ const test = (expression, code) => {
 };
 
 test(
-  makeGetGlobalExpression(makeLiteralExpression(123)),
-  "intrinsic.aran.getGlobal(123)",
+  makeGetGlobalExpression("variable"),
+  "intrinsic.aran.getGlobal('variable')",
 );
 
 test(
-  makeDeleteGlobalExpression(false, makeLiteralExpression(123)),
-  "intrinsic.aran.deleteGlobalSloppy(123)",
+  makeDeleteGlobalExpression(false, "variable"),
+  "intrinsic.aran.deleteGlobalSloppy('variable')",
 );
 
 forEach([true, false], (strict) => {
@@ -55,20 +53,6 @@ forEach([true, false], (strict) => {
 });
 
 test(
-  makeUnaryExpression("!", makeLiteralExpression(123)),
-  "intrinsic.aran.unary('!', 123)",
-);
-
-test(
-  makeBinaryExpression(
-    "+",
-    makeLiteralExpression(123),
-    makeLiteralExpression(456),
-  ),
-  "intrinsic.aran.binary('+', 123, 456)",
-);
-
-test(
   makeDataDescriptorExpression(
     makeLiteralExpression(123),
     makeLiteralExpression(456),
@@ -79,6 +63,6 @@ test(
 );
 
 test(
-  makeThrowSyntaxErrorExpression(makeLiteralExpression(123)),
-  "intrinsic.aran.throw(new intrinsic.SyntaxError(123))",
+  makeThrowSyntaxErrorExpression("message"),
+  "intrinsic.aran.throw(new intrinsic.SyntaxError('message'))",
 );

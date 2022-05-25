@@ -254,7 +254,7 @@ const generateMakeTrapNode =
     )
       ? makeNode(
           makeInvokeExpression(
-            makeGetGlobalExpression(makeLiteralExpression(namespace)),
+            makeGetGlobalExpression(namespace),
             makeLiteralExpression(name === "invoke" ? "apply" : name),
             map(zip(traps[name].dynamic, values), applyPair),
           ),
