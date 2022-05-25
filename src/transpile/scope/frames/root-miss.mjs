@@ -1,9 +1,4 @@
-import {
-  return_x,
-  constant_,
-  deadcode_____,
-  deadcode____,
-} from "../../../util/index.mjs";
+import {constant_, deadcode_____, deadcode____} from "../../../util/index.mjs";
 
 import {
   makeExpressionEffect,
@@ -17,7 +12,7 @@ import {
 
 import {isRead, isDiscard, isTypeof, accessWrite} from "../right.mjs";
 
-export const create = return_x;
+export const create = (_layer, {dynamic}) => dynamic;
 
 export const harvest = constant_({header: [], prelude: []});
 

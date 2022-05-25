@@ -24,10 +24,12 @@ const next = () => {
   throw new Error("next should never be called");
 };
 
+const frame = create("layer", {});
+
 assertSuccess(
   allignProgram(
     makeScriptProgram(
-      concat(declare(create("layer", null), "const", "variable", null, []), [
+      concat(declare(frame, "const", "variable", null, []), [
         makeReturnStatement(makeLiteralExpression("completion")),
       ]),
     ),
@@ -42,12 +44,7 @@ assertSuccess(
   allignProgram(
     makeScriptProgram(
       concat(
-        initialize(
-          create("layer", null),
-          "const",
-          "variable",
-          makeLiteralExpression("value"),
-        ),
+        initialize(frame, "const", "variable", makeLiteralExpression("value")),
         [makeReturnStatement(makeLiteralExpression("completion"))],
       ),
     ),
@@ -61,21 +58,21 @@ assertSuccess(
 
 assertSuccess(
   allignExpression(
-    lookup(next, create("layer", null), true, true, "variable", makeRead()),
+    lookup(next, frame, true, true, "variable", makeRead()),
     "intrinsic.aran.getGlobal('variable')",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    lookup(next, create("layer", null), true, true, "variable", makeTypeof()),
+    lookup(next, frame, true, true, "variable", makeTypeof()),
     "intrinsic.aran.typeofGlobal('variable')",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    lookup(next, create("layer", null), false, true, "variable", makeDiscard()),
+    lookup(next, frame, false, true, "variable", makeDiscard()),
     "intrinsic.aran.deleteGlobalSloppy('variable')",
   ),
 );
@@ -84,7 +81,7 @@ assertSuccess(
   allignEffect(
     lookup(
       next,
-      create("layer", null),
+      frame,
       true,
       false,
       "variable",

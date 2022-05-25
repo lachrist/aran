@@ -1,4 +1,4 @@
-import {return_x, assert, constant_} from "../../../util/index.mjs";
+import {assert, constant_} from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -14,7 +14,7 @@ import {
 
 import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
-export const create = return_x;
+export const create = (_layer, {dynamic}) => dynamic;
 
 export const harvest = constant_({prelude: [], header: []});
 

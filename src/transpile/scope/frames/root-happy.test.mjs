@@ -24,19 +24,14 @@ const next = () => {
   throw new Error("next should never be called");
 };
 
+const frame = create("layer", {dynamic: makeLiteralExpression("object")});
+
 assertSuccess(
   allignProgram(
     makeScriptProgram(
-      concat(
-        declare(
-          create("layer", makeLiteralExpression("object")),
-          "kind",
-          "variable",
-          null,
-          [],
-        ),
-        [makeReturnStatement(makeLiteralExpression("completion"))],
-      ),
+      concat(declare(frame, "kind", "variable", null, []), [
+        makeReturnStatement(makeLiteralExpression("completion")),
+      ]),
     ),
     `
       'script';
@@ -49,12 +44,7 @@ assertSuccess(
   allignProgram(
     makeScriptProgram(
       concat(
-        initialize(
-          create("layer", makeLiteralExpression("object")),
-          "kind",
-          "variable",
-          makeLiteralExpression("value"),
-        ),
+        initialize(frame, "kind", "variable", makeLiteralExpression("value")),
         [makeReturnStatement(makeLiteralExpression("completion"))],
       ),
     ),
@@ -70,28 +60,14 @@ assertSuccess(
 
 assertSuccess(
   allignExpression(
-    lookup(
-      next,
-      create("layer", makeLiteralExpression("object")),
-      true,
-      true,
-      "variable",
-      makeRead(),
-    ),
+    lookup(next, frame, true, true, "variable", makeRead()),
     "intrinsic.aran.get('object', 'variable')",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    lookup(
-      next,
-      create("layer", makeLiteralExpression("object")),
-      true,
-      true,
-      "variable",
-      makeTypeof(),
-    ),
+    lookup(next, frame, true, true, "variable", makeTypeof()),
     `
       intrinsic.aran.unary(
         'typeof',
@@ -103,14 +79,7 @@ assertSuccess(
 
 assertSuccess(
   allignExpression(
-    lookup(
-      next,
-      create("layer", makeLiteralExpression("object")),
-      true,
-      true,
-      "variable",
-      makeDiscard(),
-    ),
+    lookup(next, frame, true, true, "variable", makeDiscard()),
     "false",
   ),
 );
@@ -119,7 +88,7 @@ assertSuccess(
   allignEffect(
     lookup(
       next,
-      create("layer", makeLiteralExpression("object")),
+      frame,
       false,
       true,
       "variable",

@@ -14,16 +14,11 @@ const next = () => {
   throw new Error("next should never be called");
 };
 
+const frame = create("layer", {dynamic: makeLiteralExpression("object")});
+
 assertSuccess(
   allignExpression(
-    lookup(
-      next,
-      create("layer", makeLiteralExpression("object")),
-      true,
-      true,
-      "variable",
-      makeRead(),
-    ),
+    lookup(next, frame, true, true, "variable", makeRead()),
     `
       intrinsic.aran.throw(
         new intrinsic.ReferenceError('variable is not defined'),
@@ -34,28 +29,14 @@ assertSuccess(
 
 assertSuccess(
   allignExpression(
-    lookup(
-      next,
-      create("layer", makeLiteralExpression("object")),
-      true,
-      true,
-      "variable",
-      makeTypeof(),
-    ),
+    lookup(next, frame, true, true, "variable", makeTypeof()),
     "'undefined'",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    lookup(
-      next,
-      create("layer", makeLiteralExpression("object")),
-      true,
-      true,
-      "variable",
-      makeDiscard(),
-    ),
+    lookup(next, frame, true, true, "variable", makeDiscard()),
     "true",
   ),
 );
@@ -64,7 +45,7 @@ assertSuccess(
   allignEffect(
     lookup(
       next,
-      create("layer", makeLiteralExpression("object")),
+      frame,
       true,
       true,
       "variable",
@@ -84,7 +65,7 @@ assertSuccess(
   allignEffect(
     lookup(
       next,
-      create("layer", makeLiteralExpression("object")),
+      frame,
       false,
       true,
       "variable",
