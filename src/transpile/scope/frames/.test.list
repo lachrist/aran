@@ -1,3 +1,6 @@
-* root-miss.mjs
-* root-happy.mjs
-* root-global.mjs
+- __fixture__.mjs
+- * root-miss.mjs
+  * root-happy.mjs
+  * root-global.mjs
+  * root-enclave.mjs
+  * body-happy.mjs

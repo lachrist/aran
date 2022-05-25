@@ -42,10 +42,6 @@ export const initialize = (_frame, kind, variable, expression) => {
   }
 };
 
-export const lookupFinal = (_frame, _strict, _escaped, _variable, _right) => {
-  throw new Error("unexpected final position");
-};
-
 export const lookup = (next, frame, strict, _escaped, variable, right) => {
   if (isBaseVariable(variable)) {
     const key = makeLiteralExpression(

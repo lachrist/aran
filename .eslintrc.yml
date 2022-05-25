@@ -395,7 +395,7 @@ rules:
   # import/no-named-as-default: error
   import/no-named-default: error
   # import/no-named-export: error
-  import/no-namespace: error
+  # import/no-namespace: error
   import/no-nodejs-modules: error
   # import/no-relative-packages: error
   # import/no-relative-parent-imports: error
