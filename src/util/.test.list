@@ -4,9 +4,8 @@
   * curry.mjs
   * dispatch.mjs
   * list.mjs
-  * number.mjs
   * object.mjs
+  * operation.mjs
   * report.mjs
-  * string.mjs
   * uuid.mjs
 - index.mjs
