@@ -4,15 +4,17 @@ import {
   isStrict,
   useStrict,
   incrementGlobalCounter,
-  restoreGlobalCounter,
+  resetGlobalCounter,
   createRoot,
 } from "./property.mjs";
+
+const {undefined} = globalThis;
 
 {
   const scope = createRoot(0);
   assertEqual(incrementGlobalCounter(scope), 1);
   assertEqual(incrementGlobalCounter(scope), 2);
-  restoreGlobalCounter(scope, 10);
+  assertEqual(resetGlobalCounter(scope, 10), undefined);
   assertEqual(incrementGlobalCounter(scope), 11);
   assertEqual(incrementGlobalCounter(scope), 12);
 }

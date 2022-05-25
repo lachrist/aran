@@ -5,8 +5,8 @@ export const incrementCounter = (counter) => {
   return counter.value;
 };
 
-export const setCounter = (counter, value) => {
+export const resetCounter = (counter, value) => {
   counter.value = value;
 };
 
-export const getCounter = ({value}) => value;
+export const gaugeCounter = ({value}) => value;

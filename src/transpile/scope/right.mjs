@@ -2,6 +2,7 @@ import {
   constant,
   createCounter,
   incrementCounter,
+  gaugeCounter,
   assert,
   equals,
   partialx_,
@@ -30,22 +31,20 @@ export const isDelete = partialx_(equals, DELETE);
 export const isWrite = (right) =>
   right !== READ && right !== TYPEOF && right !== DELETE;
 
-const generateMakeWrite = (pure) => (expression) => ({
-  pure,
+export const makeWrite = (expression) => ({
   counter: createCounter(0),
   expression,
 });
 
-export const makePureWrite = generateMakeWrite(true);
-
-export const makeImpureWrite = generateMakeWrite(false);
-
-export const getWriteExpression = (right) => {
+export const accessWrite = (right) => {
   assert(isWrite(right), "expected write right");
-  const {pure, counter, expression} = right;
-  assert(
-    incrementCounter(counter) === 1 || pure,
-    "impure right expression should only be used once",
-  );
+  const {counter, expression} = right;
+  incrementCounter(counter);
   return expression;
+};
+
+export const accountWrite = (right) => {
+  assert(isWrite(right), "expected write right");
+  const {counter} = right;
+  return gaugeCounter(counter);
 };

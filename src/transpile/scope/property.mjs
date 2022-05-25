@@ -1,7 +1,7 @@
 import {
   partial_x,
   partial_xx,
-  setCounter,
+  resetCounter,
   createCounter,
   incrementCounter,
 } from "../../util/index.mjs";
@@ -27,8 +27,8 @@ const GLOBAL_COUNTER = "global-counter";
 export const incrementGlobalCounter = (scope) =>
   incrementCounter(search(scope, GLOBAL_COUNTER));
 
-export const restoreGlobalCounter = (scope, value) => {
-  setCounter(search(scope, GLOBAL_COUNTER), value);
+export const resetGlobalCounter = (scope, value) => {
+  resetCounter(search(scope, GLOBAL_COUNTER), value);
 };
 
 //////////

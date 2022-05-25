@@ -3,8 +3,8 @@ import {assertEqual} from "../__fixture__.mjs";
 import {
   incrementCounter,
   createCounter,
-  getCounter,
-  setCounter,
+  gaugeCounter,
+  resetCounter,
 } from "./counter.mjs";
 
 const {undefined} = globalThis;
@@ -17,6 +17,6 @@ const {undefined} = globalThis;
 
 {
   const counter = createCounter(0);
-  assertEqual(setCounter(counter, 123), undefined);
-  assertEqual(getCounter(counter), 123);
+  assertEqual(resetCounter(counter, 123), undefined);
+  assertEqual(gaugeCounter(counter), 123);
 }
