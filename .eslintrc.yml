@@ -225,7 +225,7 @@ rules:
   # no-label-var >> LabeledStatement disabled by no-restricted-syntax
   # no-labels >> LabeledStatement disabled by no-restricted-syntax
   no-lone-blocks: error
-  no-lonely-if: error
+  # no-lonely-if: error >> sometimes it makes more sense to group a secondary branching in the else clause.
   # no-loop-func >> FunctionDeclaration disabled by no-restricted-syntax
   no-loss-of-precision: error
   # no-magic-numbers
