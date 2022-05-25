@@ -1,6 +1,7 @@
 import {returnx, assert, constant_} from "../../../util/index.mjs";
 
 import {
+  makeEffectStatement,
   makeLiteralExpression,
   makeExpressionEffect,
 } from "../../../ast/index.mjs";
@@ -23,12 +24,19 @@ export const declare = (_frame, _kind, _variable, iimport, eexports) => {
   return [];
 };
 
-export const initialize = (frame, _kind, variable, expression) =>
-  makeExpressionEffect(
-    makeSetStrictExpression(frame, makeLiteralExpression(variable), expression),
-  );
+export const initialize = (frame, _kind, variable, expression) => [
+  makeEffectStatement(
+    makeExpressionEffect(
+      makeSetStrictExpression(
+        frame,
+        makeLiteralExpression(variable),
+        expression,
+      ),
+    ),
+  ),
+];
 
-export const lookup = (_next, frame, _escaped, _strict, variable, right) => {
+export const lookup = (_next, frame, _strict, _escaped, variable, right) => {
   if (isRead(right)) {
     return makeGetExpression(frame, makeLiteralExpression(variable));
   } else if (isTypeof(right)) {

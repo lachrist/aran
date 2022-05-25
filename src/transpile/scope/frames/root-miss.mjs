@@ -1,8 +1,8 @@
 import {
   returnx,
   constant_,
-  constant_____,
-  constant____,
+  deadcode_____,
+  deadcode____,
 } from "../../../util/index.mjs";
 
 import {
@@ -21,11 +21,11 @@ export const create = returnx;
 
 export const harvest = constant_({header: [], prelude: []});
 
-export const declare = constant_____(null);
+export const declare = deadcode_____("declare unsupported");
 
-export const initialize = constant____(null);
+export const initialize = deadcode____("initialize unsupported");
 
-export const lookup = (_next, frame, _escaped, strict, variable, right) => {
+export const lookup = (_next, frame, strict, _escaped, variable, right) => {
   if (isTypeof(right)) {
     return makeLiteralExpression("undefined");
   } else if (isDelete(right)) {

@@ -16,7 +16,7 @@ import {
 
 import {makeRead, makeTypeof, makeDelete, makeWrite} from "../right.mjs";
 
-import {declare, initialize, create, lookup} from "./root-happy.mjs";
+import {declare, initialize, create, lookup} from "./root-global.mjs";
 
 const {Error} = globalThis;
 
@@ -27,16 +27,9 @@ const next = () => {
 assertSuccess(
   allignProgram(
     makeScriptProgram(
-      concat(
-        declare(
-          create(makeLiteralExpression("object")),
-          "kind",
-          "variable",
-          null,
-          [],
-        ),
-        [makeReturnStatement(makeLiteralExpression("completion"))],
-      ),
+      concat(declare(create(null), "const", "variable", null, []), [
+        makeReturnStatement(makeLiteralExpression("completion")),
+      ]),
     ),
     `
       'script';
@@ -50,8 +43,8 @@ assertSuccess(
     makeScriptProgram(
       concat(
         initialize(
-          create(makeLiteralExpression("object")),
-          "kind",
+          create(null),
+          "const",
           "variable",
           makeLiteralExpression("value"),
         ),
@@ -60,9 +53,7 @@ assertSuccess(
     ),
     `
       'script';
-      effect(
-        intrinsic.aran.setStrict('object', 'variable', 'value'),
-      );
+      const variable = 'value';
       return 'completion';
     `,
   ),
@@ -70,48 +61,22 @@ assertSuccess(
 
 assertSuccess(
   allignExpression(
-    lookup(
-      next,
-      create(makeLiteralExpression("object")),
-      true,
-      true,
-      "variable",
-      makeRead(),
-    ),
-    "intrinsic.aran.get('object', 'variable')",
+    lookup(next, create(null), true, true, "variable", makeRead()),
+    "intrinsic.aran.getGlobal('variable')",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    lookup(
-      next,
-      create(makeLiteralExpression("object")),
-      true,
-      true,
-      "variable",
-      makeTypeof(),
-    ),
-    `
-      intrinsic.aran.unary(
-        'typeof',
-        intrinsic.aran.get('object', 'variable'),
-      )
-    `,
+    lookup(next, create(null), true, true, "variable", makeTypeof()),
+    "intrinsic.aran.typeofGlobal('variable')",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    lookup(
-      next,
-      create(makeLiteralExpression("object")),
-      true,
-      true,
-      "variable",
-      makeDelete(),
-    ),
-    "false",
+    lookup(next, create(null), false, true, "variable", makeDelete()),
+    "intrinsic.aran.deleteGlobalSloppy('variable')",
   ),
 );
 
@@ -119,15 +84,15 @@ assertSuccess(
   allignEffect(
     lookup(
       next,
-      create(makeLiteralExpression("object")),
-      false,
+      create(null),
       true,
+      false,
       "variable",
       makeWrite(makeLiteralExpression("value")),
     ),
     `
       effect(
-        intrinsic.aran.setStrict('object', 'variable', 'value'),
+        intrinsic.aran.setGlobalStrict('variable', 'value'),
       )
     `,
   ),

@@ -85,8 +85,8 @@ assertSuccess(
     lookup(
       next,
       create(makeLiteralExpression("object")),
-      true,
       false,
+      true,
       "variable",
       makeWrite(makeLiteralExpression("value")),
     ),
