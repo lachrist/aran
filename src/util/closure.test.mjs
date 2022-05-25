@@ -14,6 +14,7 @@ import {
   constant__,
   constant___,
   constant____,
+  constant_____,
   returnx,
   returnx_,
   return_x,
@@ -145,6 +146,7 @@ forEach(
     [constant__, 2],
     [constant___, 3],
     [constant____, 4],
+    [constant_____, 5],
   ],
   ([generate, length]) => {
     assertEqual(apply(generate("foo"), undefined, Array(length)), "foo");
