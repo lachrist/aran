@@ -11,8 +11,8 @@ import {
   partialxx_x_x_x__,
   partialxf_,
   partialxf__,
-  partialxxf__,
   partialxf___,
+  partialxx_f__,
 } from "./util/index.mjs";
 
 import {
@@ -286,7 +286,7 @@ export const makeSetGlobalSloppyExpression = partialxf__(
   makeLiteralExpression,
 );
 
-export const makeSetGlobalExpression = partialxxf__(
+export const makeSetGlobalExpression = partialxx_f__(
   makeDualIntrinsicApplyExpression2,
   "aran.setGlobalStrict",
   "aran.setGlobalSloppy",
