@@ -1,3 +1,9 @@
+import {
+  partial_x,
+  partial_xx,
+  createCounter,
+  incrementCounter,
+} from "../../util/index.mjs";
 
 import {ROOT, set, get} from "./list.mjs";
 
@@ -18,12 +24,12 @@ export const useStrict = partial_xx(set, STRICT, true);
 const GLOBAL_COUNTER = "global-counter";
 
 export const incrementGlobalCounter = (scope) =>
-  incrementCounter(get(scope, GLOBAL_COUNTER);
+  incrementCounter(get(scope, GLOBAL_COUNTER));
 
 export const restoreGlobalCounter = (scope, value1) => {
   const counter = get(scope, GLOBAL_COUNTER);
   let value2 = incrementCounter(counter);
-  while (value2 <= value1) {
+  while (value2 < value1) {
     value2 = incrementCounter(counter);
   }
 };
@@ -32,8 +38,5 @@ export const restoreGlobalCounter = (scope, value1) => {
 // Root //
 //////////
 
-export const createRoot = (value) => set(
-  set(ROOT, GLOBAL_COUNTER, createCounter(value)),
-  STRICT,
-  false,
-);
+export const createRoot = (value) =>
+  set(set(ROOT, GLOBAL_COUNTER, createCounter(value)), STRICT, false);

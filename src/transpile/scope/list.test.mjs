@@ -1,21 +1,24 @@
-import {assertEqual, assertDeepEqual} from "../../__fixture__.mjs";
+import {assertThrow, assertEqual, assertDeepEqual} from "../../__fixture__.mjs";
 
 import {ROOT, set, get, extend, enclose, fetch} from "./list.mjs";
 
-assertThrow(() => enclose(get(ROOT, "key")));
+assertThrow(() => get(ROOT, "key"), {
+  name: "Error",
+  message: "missing scope property",
+});
 
-assertEqual(set(ROOT, "key", "value"), "value");
+assertEqual(get(enclose(set(ROOT, "key", "value")), "key"), "value");
 
 assertThrow(() => fetch(ROOT, false));
 
 assertDeepEqual(fetch(extend(ROOT, "frame"), false), {
   scope: ROOT,
   frame: "frame",
-  escped: false,
+  escaped: false,
 });
 
 assertDeepEqual(fetch(enclose(extend(ROOT, "frame")), false), {
   scope: ROOT,
   frame: "frame",
-  escped: true,
+  escaped: true,
 });

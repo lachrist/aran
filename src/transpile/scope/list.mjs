@@ -1,6 +1,11 @@
-import {NIL, cons, car, cdr} from "../../util.mjs";
+import {NIL, cons, car, cdr, partialx_} from "../../util/index.mjs";
 
-export {fromListArray as pack, fromArrayList as unpack} from "../../util.mjs";
+export {
+  convertListArray as pack,
+  convertArrayList as unpack,
+} from "../../util/index.mjs";
+
+const {Error} = globalThis;
 
 //////////
 // ROOT //
@@ -69,7 +74,7 @@ export const fetch = (scope, escaped) => {
       if (point.type === CLOSURE_TYPE) {
         escaped = true;
       }
-      return lookup(cdr(scope), escaped);
+      return fetch(cdr(scope), escaped);
     }
   }
 };
