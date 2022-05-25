@@ -6,7 +6,7 @@ import {assertEqual, assertDeepEqual, assertThrow} from "../__fixture__.mjs";
 import * as Library from "./closure.mjs";
 /* eslint-enable import/no-namespace */
 
-import {assert, partialxx____, partialxx_x_x_x__} from "./closure.mjs";
+import {assert, partialxx_x_x_x__} from "./closure.mjs";
 
 const {
   Array,
@@ -46,7 +46,7 @@ assertThrow(() => assert(false, "foo"), {
   message: "foo",
 });
 
-forEach(combine(4, "_"), (description) => {
+forEach(combine(5, "_"), (description) => {
   const deadcode = Library[`deadcode${description}`];
   assertThrow(
     () => apply(deadcode("message"), undefined, Array(description.length)),
@@ -88,7 +88,7 @@ forEach(["xx", "_xx", "x_x", "xx_"], (description) => {
   );
 });
 
-forEach(combine(5, ["", "_", "x", "f"]), (description) => {
+forEach(combine(6, ["", "_", "x", "f"]), (description) => {
   if (
     getOwnPropertyDescriptor(Library, `partial${description}`) !== undefined
   ) {
@@ -111,11 +111,6 @@ forEach(combine(5, ["", "_", "x", "f"]), (description) => {
     );
   }
 });
-
-assertDeepEqual(
-  partialxx____(returnArguments, 1, 2)(3, 4, 5, 6),
-  [1, 2, 3, 4, 5, 6],
-);
 
 assertDeepEqual(
   partialxx_x_x_x__(returnArguments, 1, 2, 4, 6, 8)(3, 5, 7, 9, 0),

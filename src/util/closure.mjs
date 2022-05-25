@@ -46,6 +46,10 @@ export const deadcode____ = (message) => (_x1, _x2, _x3, _x4) => {
   throw new DeadcodeError(message);
 };
 
+export const deadcode_____ = (message) => (_x1, _x2, _x3, _x4, _x5) => {
+  throw new DeadcodeError(message);
+};
+
 //////////////
 // Constant //
 //////////////
@@ -142,6 +146,9 @@ export const partialxxf__ = (f, x1, x2, f3) => (x3, x4, x5) =>
 
 export const partialxf___ = (f, x1, f2) => (x2, x3, x4, x5) =>
   f(x1, f2(x2), x3, x4, x5);
+
+export const partialxx_f__ = (f, x1, x2, f4) => (x3, x4, x5, x6) =>
+  f(x1, x2, x3, f4(x4), x5, x6);
 
 // export const dropFirst =
 //   (f) =>
