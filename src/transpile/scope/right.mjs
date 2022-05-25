@@ -14,22 +14,22 @@ const READ = Symbol("read");
 
 const TYPEOF = Symbol("typeof");
 
-const DELETE = Symbol("delete");
+const DISCARD = Symbol("discard");
 
 export const makeRead = constant(READ);
 
 export const makeTypeof = constant(TYPEOF);
 
-export const makeDelete = constant(DELETE);
+export const makeDiscard = constant(DISCARD);
 
 export const isRead = partialx_(equals, READ);
 
 export const isTypeof = partialx_(equals, TYPEOF);
 
-export const isDelete = partialx_(equals, DELETE);
+export const isDiscard = partialx_(equals, DISCARD);
 
 export const isWrite = (right) =>
-  right !== READ && right !== TYPEOF && right !== DELETE;
+  right !== READ && right !== TYPEOF && right !== DISCARD;
 
 export const makeWrite = (expression) => ({
   counter: createCounter(0),

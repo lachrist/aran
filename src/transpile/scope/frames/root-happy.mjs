@@ -12,7 +12,7 @@ import {
   makeSetStrictExpression,
 } from "../../../intrinsic.mjs";
 
-import {isRead, isTypeof, isDelete, accessWrite} from "../right.mjs";
+import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
 export const create = returnx;
 
@@ -44,7 +44,7 @@ export const lookup = (_next, frame, _strict, _escaped, variable, right) => {
       "typeof",
       makeGetExpression(frame, makeLiteralExpression(variable)),
     );
-  } else if (isDelete(right)) {
+  } else if (isDiscard(right)) {
     return makeLiteralExpression(false);
   } else {
     return makeExpressionEffect(

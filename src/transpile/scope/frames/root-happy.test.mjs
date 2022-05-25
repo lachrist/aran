@@ -14,7 +14,7 @@ import {
   allignExpression,
 } from "../../../allign/index.mjs";
 
-import {makeRead, makeTypeof, makeDelete, makeWrite} from "../right.mjs";
+import {makeRead, makeTypeof, makeDiscard, makeWrite} from "../right.mjs";
 
 import {declare, initialize, create, lookup} from "./root-happy.mjs";
 
@@ -109,7 +109,7 @@ assertSuccess(
       true,
       true,
       "variable",
-      makeDelete(),
+      makeDiscard(),
     ),
     "false",
   ),

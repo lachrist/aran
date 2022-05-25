@@ -15,7 +15,7 @@ import {
   makeThrowReferenceErrorExpression,
 } from "../../../intrinsic.mjs";
 
-import {isRead, isDelete, isTypeof, accessWrite} from "../right.mjs";
+import {isRead, isDiscard, isTypeof, accessWrite} from "../right.mjs";
 
 export const create = returnx;
 
@@ -28,7 +28,7 @@ export const initialize = deadcode____("initialize unsupported");
 export const lookup = (_next, frame, strict, _escaped, variable, right) => {
   if (isTypeof(right)) {
     return makeLiteralExpression("undefined");
-  } else if (isDelete(right)) {
+  } else if (isDiscard(right)) {
     return makeLiteralExpression(true);
   } else if (isRead(right)) {
     return makeThrowReferenceErrorExpression(`${variable} is not defined`);

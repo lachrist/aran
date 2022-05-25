@@ -4,7 +4,7 @@ import {makeLiteralExpression} from "../../../ast/index.mjs";
 
 import {allignEffect, allignExpression} from "../../../allign/index.mjs";
 
-import {makeRead, makeTypeof, makeDelete, makeWrite} from "../right.mjs";
+import {makeRead, makeTypeof, makeDiscard, makeWrite} from "../right.mjs";
 
 import {create, lookup} from "./root-miss.mjs";
 
@@ -54,7 +54,7 @@ assertSuccess(
       true,
       true,
       "variable",
-      makeDelete(),
+      makeDiscard(),
     ),
     "true",
   ),

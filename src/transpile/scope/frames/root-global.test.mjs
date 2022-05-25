@@ -14,7 +14,7 @@ import {
   allignExpression,
 } from "../../../allign/index.mjs";
 
-import {makeRead, makeTypeof, makeDelete, makeWrite} from "../right.mjs";
+import {makeRead, makeTypeof, makeDiscard, makeWrite} from "../right.mjs";
 
 import {declare, initialize, create, lookup} from "./root-global.mjs";
 
@@ -75,7 +75,7 @@ assertSuccess(
 
 assertSuccess(
   allignExpression(
-    lookup(next, create(null), false, true, "variable", makeDelete()),
+    lookup(next, create(null), false, true, "variable", makeDiscard()),
     "intrinsic.aran.deleteGlobalSloppy('variable')",
   ),
 );
