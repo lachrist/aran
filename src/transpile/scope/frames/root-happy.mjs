@@ -1,57 +1,50 @@
+import {returnx, assert, constant_} from "../../../util/index.mjs";
 
 import {
-  isMetaVariable,
-  getVariableBody,
-} from "../variable.mjs";
+  makeLiteralExpression,
+  makeExpressionEffect,
+} from "../../../ast/index.mjs";
 
 import {
-  isReadRight,
-  isTypeofRight,
-  isDeleteRight,
-  getRightExpression,
-} from "../right.mjs";
+  makeGetExpression,
+  makeUnaryExpression,
+  makeSetStrictExpression,
+} from "../../../intrinsic.mjs";
 
-export {create as identity} from "../../util.mjs";
+import {isRead, isTypeof, isDelete, accessWrite} from "../right.mjs";
 
-export const harvest = constant_({prelude:[], header:[]});
+export const create = returnx;
 
-export const declare = (_frame, kind, variable, import_, exports_) => {
-  assert(import_ === null, "unexpected imported declaration");
-  assert(exports_.length === 0, "unexpected exported declaration");
+export const harvest = constant_({prelude: [], header: []});
+
+export const declare = (_frame, _kind, _variable, iimport, eexports) => {
+  assert(iimport === null, "unexpected imported declaration");
+  assert(eexports.length === 0, "unexpected exported declaration");
   return [];
 };
 
-export const initialize = (frame, kind, variable, expression) => makeExpressionEffect(
-  makeStrictSetExpression(
-    makeIntrinsicExpression(frame),
-    makeLiteralExpression(variable),
-    expression,
-  ),
-);
+export const initialize = (frame, _kind, variable, expression) =>
+  makeExpressionEffect(
+    makeSetStrictExpression(frame, makeLiteralExpression(variable), expression),
+  );
 
-export const lookup = (next, frame, _escaped, _strict, variable, right) => {
-  if (isReadRight(right)) {
-    return makeGetExpression(
-      makeIntrinsicExpression(frame),
-      makeLiteralExpression(variable),
-    );
-  } else if (isTypeofRight(right)) {
+export const lookup = (_next, frame, _escaped, _strict, variable, right) => {
+  if (isRead(right)) {
+    return makeGetExpression(frame, makeLiteralExpression(variable));
+  } else if (isTypeof(right)) {
     return makeUnaryExpression(
       "typeof",
-      makeGetExpression(
-        makeIntrinsicExpression(frame),
-        makeLiteralExpression(variable),
-      ),
+      makeGetExpression(frame, makeLiteralExpression(variable)),
     );
-  } else if (isDeleteRight(right)) {
+  } else if (isDelete(right)) {
     return makeLiteralExpression(false);
   } else {
     return makeExpressionEffect(
       makeSetStrictExpression(
-        makeIntrinsicExpression(frame),
+        frame,
         makeLiteralExpression(variable),
-        getRightExpression(right),
-      )
+        accessWrite(right),
+      ),
     );
   }
 };

@@ -1,4 +1,9 @@
-import {constant_, constant_____, constant____} from "../../../util/index.mjs";
+import {
+  returnx,
+  constant_,
+  constant_____,
+  constant____,
+} from "../../../util/index.mjs";
 
 import {
   makeExpressionEffect,
@@ -10,14 +15,9 @@ import {
   makeThrowReferenceErrorExpression,
 } from "../../../intrinsic.mjs";
 
-import {
-  isRead as isReadRight,
-  isDelete as isDeleteRight,
-  isTypeof as isTypeofRight,
-  accessWrite as accessRightWrite,
-} from "../right.mjs";
+import {isRead, isDelete, isTypeof, accessWrite} from "../right.mjs";
 
-export {returnx as create} from "../../../util/index.mjs";
+export const create = returnx;
 
 export const harvest = constant_({header: [], prelude: []});
 
@@ -26,11 +26,11 @@ export const declare = constant_____(null);
 export const initialize = constant____(null);
 
 export const lookup = (_next, frame, _escaped, strict, variable, right) => {
-  if (isTypeofRight(right)) {
+  if (isTypeof(right)) {
     return makeLiteralExpression("undefined");
-  } else if (isDeleteRight(right)) {
+  } else if (isDelete(right)) {
     return makeLiteralExpression(true);
-  } else if (isReadRight(right)) {
+  } else if (isRead(right)) {
     return makeThrowReferenceErrorExpression(`${variable} is not defined`);
   } else {
     if (strict) {
@@ -43,7 +43,7 @@ export const lookup = (_next, frame, _escaped, strict, variable, right) => {
           strict,
           frame,
           makeLiteralExpression(variable),
-          accessRightWrite(right),
+          accessWrite(right),
         ),
       );
     }
