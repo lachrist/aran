@@ -1,6 +1,6 @@
 import {includes} from "array-lite";
 
-import {return_x, assert} from "../../../util/index.mjs";
+import {return_x, constant_, assert} from "../../../util/index.mjs";
 
 import {
   makeApplyExpression,
@@ -14,6 +14,8 @@ import {isWrite, isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 const kinds = ["var", "function"];
 
 export const create = return_x;
+
+export const harvest = constant_({header: [], prelude: []});
 
 export const declare = (_frame, kind, _variable, iimport, eexports) => {
   assert(includes(kinds, kind), "unexpected kind");

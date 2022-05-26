@@ -1,93 +1,93 @@
-import {forEach, map} from "array-lite";
-
 import {assertSuccess} from "../../../__fixture__.mjs";
 
-import {makeBlock, makeLiteralExpression} from "../../../ast/index.mjs";
+import {makeLiteralExpression} from "../../../ast/index.mjs";
 
-import {
-  allignBlock,
-  allignEffect,
-  allignExpression,
-} from "../../../allign/index.mjs";
+import {testBlock} from "./__fixture__.mjs";
 
-import {makeRead, makeTypeof, makeDiscard, makeWrite} from "../right.mjs";
+import * as Frame from "./root-enclave.mjs";
 
-import {declare, initialize, create, lookup} from "./root-enclave.mjs";
-
-const {
-  Error,
-  Object: {fromEntries},
-} = globalThis;
-
-const next = () => {
-  throw new Error("next should never be called");
-};
-
-const frame = create(
-  "layer",
-  fromEntries(
-    map(["read", "typeof", "discard", "write"], (name) => [
-      name,
-      {
-        strict: makeLiteralExpression(`${name}-strict`),
-        sloppy: makeLiteralExpression(`${name}-sloppy`),
+assertSuccess(
+  testBlock(Frame, {
+    options: {
+      read: {
+        strict: makeLiteralExpression("read-strict"),
+        sloppy: makeLiteralExpression("read-sloppy"),
       },
-    ]),
-  ),
+      typeof: {
+        strict: makeLiteralExpression("typeof-strict"),
+        sloppy: makeLiteralExpression("typeof-sloppy"),
+      },
+      discard: {
+        strict: makeLiteralExpression("discard-strict"),
+        sloppy: makeLiteralExpression("discard-sloppy"),
+      },
+      write: {
+        strict: makeLiteralExpression("write-strict"),
+        sloppy: makeLiteralExpression("write-sloppy"),
+      },
+    },
+    scenarios: [
+      {
+        type: "declare",
+        kind: "var",
+      },
+      {
+        type: "initialize",
+        kind: "var",
+        variable: "variable",
+        initialization: "initialization",
+        code: "var variable = 'initialization';",
+      },
+      {
+        type: "read",
+        strict: true,
+        variable: "variable",
+        code: "('read-strict')('variable')",
+      },
+      {
+        type: "read",
+        strict: false,
+        variable: "variable",
+        code: "('read-sloppy')('variable')",
+      },
+      {
+        type: "typeof",
+        strict: true,
+        variable: "variable",
+        code: "('typeof-strict')('variable')",
+      },
+      {
+        type: "typeof",
+        strict: false,
+        variable: "variable",
+        code: "('typeof-sloppy')('variable')",
+      },
+      {
+        type: "discard",
+        strict: true,
+        variable: "variable",
+        code: "('discard-strict')('variable')",
+      },
+      {
+        type: "discard",
+        strict: false,
+        variable: "variable",
+        code: "('discard-sloppy')('variable')",
+      },
+      {
+        type: "write",
+        strict: true,
+        variable: "variable",
+        assignment: "assignment",
+        code: "effect(('write-strict')('variable', 'assignment'))",
+      },
+      {
+        type: "write",
+        strict: false,
+        variable: "variable",
+        assignment: "assignment",
+        code: "effect(('write-sloppy')('variable', 'assignment'))",
+      },
+    ],
+  }),
 );
-
-assertSuccess(
-  allignBlock(
-    makeBlock([], [], declare(frame, "var", "variable", null, [])),
-    "{}",
-  ),
-);
-
-assertSuccess(
-  allignBlock(
-    makeBlock(
-      [],
-      [],
-      initialize(frame, "var", "variable", makeLiteralExpression("value")),
-    ),
-    "{ var variable = 'value'; }",
-  ),
-);
-
-forEach(
-  [
-    [makeRead(), "read"],
-    [makeTypeof(), "typeof"],
-    [makeDiscard(), "discard"],
-  ],
-  ([right, name]) => {
-    forEach([true, false], (strict) => {
-      assertSuccess(
-        allignExpression(
-          lookup(next, frame, strict, true, "variable", right),
-          `('${name}-${strict ? "strict" : "sloppy"}')('variable')`,
-        ),
-      );
-    });
-  },
-);
-
-forEach([true, false], (strict) => {
-  assertSuccess(
-    allignEffect(
-      lookup(
-        next,
-        frame,
-        strict,
-        true,
-        "variable",
-        makeWrite(makeLiteralExpression("value")),
-      ),
-      `
-        effect(
-          ('write-${strict ? "strict" : "sloppy"}')('variable', 'value'),
-        )
-      `,
-    ),
-  );
-});

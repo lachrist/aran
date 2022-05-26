@@ -1,103 +1,58 @@
-import {concat} from "array-lite";
-
 import {assertSuccess} from "../../../__fixture__.mjs";
 
-import {
-  makeScriptProgram,
-  makeLiteralExpression,
-  makeReturnStatement,
-} from "../../../ast/index.mjs";
+import {makeLiteralExpression} from "../../../ast/index.mjs";
 
-import {
-  allignProgram,
-  allignEffect,
-  allignExpression,
-} from "../../../allign/index.mjs";
+import {testBlock} from "./__fixture__.mjs";
 
-import {makeRead, makeTypeof, makeDiscard, makeWrite} from "../right.mjs";
-
-import {declare, initialize, create, lookup} from "./root-happy.mjs";
-
-const {Error} = globalThis;
-
-const next = () => {
-  throw new Error("next should never be called");
-};
-
-const frame = create("layer", {dynamic: makeLiteralExpression("object")});
+import * as Frame from "./root-happy.mjs";
 
 assertSuccess(
-  allignProgram(
-    makeScriptProgram(
-      concat(declare(frame, "kind", "variable", null, []), [
-        makeReturnStatement(makeLiteralExpression("completion")),
-      ]),
-    ),
-    `
-      'script';
-      return 'completion';
-    `,
-  ),
-);
-
-assertSuccess(
-  allignProgram(
-    makeScriptProgram(
-      concat(
-        initialize(frame, "kind", "variable", makeLiteralExpression("value")),
-        [makeReturnStatement(makeLiteralExpression("completion"))],
-      ),
-    ),
-    `
-      'script';
-      effect(
-        intrinsic.aran.setStrict('object', 'variable', 'value'),
-      );
-      return 'completion';
-    `,
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    lookup(next, frame, true, true, "variable", makeRead()),
-    "intrinsic.aran.get('object', 'variable')",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    lookup(next, frame, true, true, "variable", makeTypeof()),
-    `
-      intrinsic.aran.unary(
-        'typeof',
-        intrinsic.aran.get('object', 'variable'),
-      )
-    `,
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    lookup(next, frame, true, true, "variable", makeDiscard()),
-    "false",
-  ),
-);
-
-assertSuccess(
-  allignEffect(
-    lookup(
-      next,
-      frame,
-      false,
-      true,
-      "variable",
-      makeWrite(makeLiteralExpression("value")),
-    ),
-    `
-      effect(
-        intrinsic.aran.setStrict('object', 'variable', 'value'),
-      )
-    `,
-  ),
+  testBlock(Frame, {
+    options: {
+      dynamic: makeLiteralExpression("dynamic"),
+    },
+    scenarios: [
+      {
+        type: "declare",
+      },
+      {
+        type: "initialize",
+        variable: "variable",
+        initialization: "initialization",
+        code: `
+          effect(
+            intrinsic.aran.setStrict('dynamic', 'variable', 'initialization'),
+          )
+        `,
+      },
+      {
+        type: "read",
+        variable: "variable",
+        code: "intrinsic.aran.get('dynamic', 'variable')",
+      },
+      {
+        type: "typeof",
+        code: `
+          intrinsic.aran.unary(
+            'typeof',
+            intrinsic.aran.get('dynamic', 'variable'),
+          )
+        `,
+      },
+      {
+        type: "discard",
+        code: "false",
+      },
+      {
+        type: "write",
+        variable: "variable",
+        assignment: "assignment",
+        code: `
+          effect(
+            intrinsic.aran.setStrict('dynamic', 'variable', 'assignment'),
+          )
+        `,
+      },
+    ],
+  }),
 );

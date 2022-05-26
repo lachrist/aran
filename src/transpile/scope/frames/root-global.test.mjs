@@ -1,96 +1,50 @@
-import {concat} from "array-lite";
-
 import {assertSuccess} from "../../../__fixture__.mjs";
 
-import {
-  makeScriptProgram,
-  makeLiteralExpression,
-  makeReturnStatement,
-} from "../../../ast/index.mjs";
+import {testScript} from "./__fixture__.mjs";
 
-import {
-  allignProgram,
-  allignEffect,
-  allignExpression,
-} from "../../../allign/index.mjs";
-
-import {makeRead, makeTypeof, makeDiscard, makeWrite} from "../right.mjs";
-
-import {declare, initialize, create, lookup} from "./root-global.mjs";
-
-const {Error} = globalThis;
-
-const next = () => {
-  throw new Error("next should never be called");
-};
-
-const frame = create("layer", {});
+import * as Frame from "./root-global.mjs";
 
 assertSuccess(
-  allignProgram(
-    makeScriptProgram(
-      concat(declare(frame, "const", "variable", null, []), [
-        makeReturnStatement(makeLiteralExpression("completion")),
-      ]),
-    ),
-    `
-      'script';
-      return 'completion';
-    `,
-  ),
-);
-
-assertSuccess(
-  allignProgram(
-    makeScriptProgram(
-      concat(
-        initialize(frame, "const", "variable", makeLiteralExpression("value")),
-        [makeReturnStatement(makeLiteralExpression("completion"))],
-      ),
-    ),
-    `
-      'script';
-      const variable = 'value';
-      return 'completion';
-    `,
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    lookup(next, frame, true, true, "variable", makeRead()),
-    "intrinsic.aran.getGlobal('variable')",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    lookup(next, frame, true, true, "variable", makeTypeof()),
-    "intrinsic.aran.typeofGlobal('variable')",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    lookup(next, frame, false, true, "variable", makeDiscard()),
-    "intrinsic.aran.deleteGlobalSloppy('variable')",
-  ),
-);
-
-assertSuccess(
-  allignEffect(
-    lookup(
-      next,
-      frame,
-      true,
-      false,
-      "variable",
-      makeWrite(makeLiteralExpression("value")),
-    ),
-    `
-      effect(
-        intrinsic.aran.setGlobalStrict('variable', 'value'),
-      )
-    `,
-  ),
+  testScript(Frame, {
+    scenarios: [
+      {
+        type: "declare",
+        kind: "const",
+      },
+      {
+        type: "initialize",
+        kind: "const",
+        variable: "variable",
+        initialization: "initialization",
+        code: "const variable = 'initialization';",
+      },
+      {
+        type: "read",
+        variable: "variable",
+        code: "intrinsic.aran.getGlobal('variable')",
+      },
+      {
+        type: "typeof",
+        variable: "variable",
+        code: "intrinsic.aran.typeofGlobal('variable')",
+      },
+      {
+        type: "discard",
+        strict: false,
+        variable: "variable",
+        code: "intrinsic.aran.deleteGlobalSloppy('variable')",
+      },
+      {
+        type: "write",
+        strict: true,
+        variable: "variable",
+        assignment: "assignment",
+        code: `
+          effect(
+            intrinsic.aran.setGlobalStrict('variable', 'assignment'),
+          )
+        `,
+      },
+    ],
+  }),
 );

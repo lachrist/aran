@@ -3,13 +3,15 @@ import {concat, join, flatMap} from "array-lite";
 import {assert} from "../../../util/index.mjs";
 
 import {
+  makeScriptProgram,
   makeBlock,
   makeLiteralExpression,
   makeEffectStatement,
   makeExpressionEffect,
+  makeReturnStatement,
 } from "../../../ast/index.mjs";
 
-import {allignBlock} from "../../../allign/index.mjs";
+import {allignBlock, allignProgram} from "../../../allign/index.mjs";
 
 import {makeRead, makeTypeof, makeDiscard, makeWrite} from "../right.mjs";
 
@@ -44,6 +46,22 @@ export const makeRight = (type) => {
   }
 };
 
+const finalizeScript = (variables, statements, code) => {
+  assert(variables.length === 0, "variables in script");
+  return allignProgram(
+    makeScriptProgram(
+      concat(statements, [
+        makeReturnStatement(makeLiteralExpression("completion")),
+      ]),
+    ),
+    `
+      'script';
+      ${code}
+      return 'completion';
+    `,
+  );
+};
+
 /* c8 ignore stop */
 
 const fromJust = (maybe) => {
@@ -66,76 +84,82 @@ export const default_scenario = {
   assignment: "assignment",
 };
 
-export const testBlock = (
-  {create, harvest, declare, initialize, lookup},
-  {head = "", scenarios = [], layer = "layer", options = {}},
-) => {
-  const frame = create(layer, options);
-  const body = [];
-  const statements2 = flatMap(scenarios, (scenario) => {
-    scenario = assign({}, default_scenario, scenario);
-    if (scenario.type === "declare") {
-      body[body.length] = scenario.code;
-      return fromJust(
-        declare(
-          frame,
-          scenario.kind,
-          scenario.variable,
-          scenario.import,
-          scenario.exports,
-        ),
-      );
-    } else if (scenario.type === "initialize") {
-      body[body.length] = scenario.code;
-      return fromJust(
-        initialize(
-          frame,
-          scenario.kind,
-          scenario.variable,
-          makeLiteralExpression(scenario.initialization),
-        ),
-      );
-    } else {
-      if (scenario.type === "write") {
-        body[body.length] = `${scenario.code};`;
-        return [
-          makeEffectStatement(
-            lookup(
-              makeNext(scenario.next),
-              frame,
-              scenario.strict,
-              scenario.escaped,
-              scenario.variable,
-              makeWrite(makeLiteralExpression(scenario.assignment)),
-            ),
+const finalizeBlock = (variables, statements, code) =>
+  allignBlock(makeBlock([], variables, statements), `{${code}}`);
+
+const generateTest =
+  (finalize) =>
+  (
+    {create, harvest, declare, initialize, lookup},
+    {head = "", scenarios = [], layer = "layer", options = {}},
+  ) => {
+    const frame = create(layer, options);
+    const body = [];
+    const statements2 = flatMap(scenarios, (scenario) => {
+      scenario = assign({}, default_scenario, scenario);
+      if (scenario.type === "declare") {
+        body[body.length] = scenario.code;
+        return fromJust(
+          declare(
+            frame,
+            scenario.kind,
+            scenario.variable,
+            scenario.import,
+            scenario.exports,
           ),
-        ];
+        );
+      } else if (scenario.type === "initialize") {
+        body[body.length] = scenario.code;
+        return fromJust(
+          initialize(
+            frame,
+            scenario.kind,
+            scenario.variable,
+            makeLiteralExpression(scenario.initialization),
+          ),
+        );
       } else {
-        body[body.length] = `effect(${scenario.code});`;
-        return [
-          makeEffectStatement(
-            makeExpressionEffect(
+        if (scenario.type === "write") {
+          body[body.length] = `${scenario.code};`;
+          return [
+            makeEffectStatement(
               lookup(
                 makeNext(scenario.next),
                 frame,
                 scenario.strict,
                 scenario.escaped,
                 scenario.variable,
-                makeRight(scenario.type),
+                makeWrite(makeLiteralExpression(scenario.assignment)),
               ),
             ),
-          ),
-        ];
+          ];
+        } else {
+          body[body.length] = `effect(${scenario.code});`;
+          return [
+            makeEffectStatement(
+              makeExpressionEffect(
+                lookup(
+                  makeNext(scenario.next),
+                  frame,
+                  scenario.strict,
+                  scenario.escaped,
+                  scenario.variable,
+                  makeRight(scenario.type),
+                ),
+              ),
+            ),
+          ];
+        }
       }
-    }
-  });
-  const {header: variables, prelude: statements1} = harvest(frame);
-  const block = makeBlock([], variables, concat(statements1, statements2));
-  const code = `
-    {
-      ${head}
-      ${join(body, "\n")}
-    }
-  `;
-  return allignBlock(block, code);
-};
+    });
+    const {header: variables, prelude: statements1} = harvest(frame);
+    return finalize(
+      variables,
+      concat(statements1, statements2),
+      `${head}${join(body, "\n")}`,
+    );
+  };
+
+export const testBlock = generateTest(finalizeBlock);
+
+export const testScript = generateTest(finalizeScript);
