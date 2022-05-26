@@ -24,6 +24,14 @@ const nextForbidden = () => {
   throw new Error("unexpected next");
 };
 
+const makeNext = (next) => {
+  if (next === null) {
+    return nextForbidden;
+  } else {
+    return () => makeLiteralExpression(next);
+  }
+};
+
 export const makeRight = (type) => {
   if (type === "read") {
     return makeRead();
@@ -52,7 +60,7 @@ export const default_scenario = {
   strict: false,
   escaped: false,
   value: "value",
-  next: nextForbidden,
+  next: null,
   code: "",
   initialization: "initialization",
   assignment: "assignment",
@@ -93,7 +101,7 @@ export const testBlock = (
         return [
           makeEffectStatement(
             lookup(
-              scenario.next,
+              makeNext(scenario.next),
               frame,
               scenario.strict,
               scenario.escaped,
@@ -108,7 +116,7 @@ export const testBlock = (
           makeEffectStatement(
             makeExpressionEffect(
               lookup(
-                scenario.next,
+                makeNext(scenario.next),
                 frame,
                 scenario.strict,
                 scenario.escaped,

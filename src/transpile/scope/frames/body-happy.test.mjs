@@ -1,7 +1,5 @@
 import {assertSuccess} from "../../../__fixture__.mjs";
 
-import {makeLiteralExpression} from "../../../ast/index.mjs";
-
 import {testBlock} from "./__fixture__.mjs";
 
 import * as Frame from "./body-happy.mjs";
@@ -12,7 +10,7 @@ assertSuccess(
     scenarios: [
       {
         type: "read",
-        next: () => makeLiteralExpression("next"),
+        next: "next",
         code: "'next'",
       },
       {
