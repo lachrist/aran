@@ -89,10 +89,11 @@ const generateTest =
     const body = [];
     const statements2 = flatMap(scenarios, (scenario) => {
       scenario = assign({}, default_scenario, scenario);
-      assert(scenario.type !== null, "missing scenarion type");
+      assert(scenario.type !== null, "missing scenario type");
       if (scenario.type === "declare") {
         const maybe = declare(
           frame,
+          scenario.strict,
           scenario.kind,
           scenario.variable,
           scenario.import,
@@ -107,6 +108,7 @@ const generateTest =
       } else if (scenario.type === "initialize") {
         const maybe = initialize(
           frame,
+          scenario.strict,
           scenario.kind,
           scenario.variable,
           scenario.right,

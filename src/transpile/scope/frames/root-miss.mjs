@@ -1,4 +1,8 @@
-import {constant_, deadcode_____, deadcode____} from "../../../util/index.mjs";
+import {
+  constant_,
+  deadcode______,
+  deadcode_____,
+} from "../../../util/index.mjs";
 
 import {
   makeExpressionEffect,
@@ -16,9 +20,9 @@ export const create = (_layer, {dynamic}) => dynamic;
 
 export const harvest = constant_({header: [], prelude: []});
 
-export const declare = deadcode_____("declare unsupported");
+export const declare = deadcode______("declare unsupported");
 
-export const initialize = deadcode____("initialize unsupported");
+export const initialize = deadcode_____("initialize unsupported");
 
 export const lookup = (_next, frame, strict, _escaped, variable, right) => {
   if (isTypeof(right)) {

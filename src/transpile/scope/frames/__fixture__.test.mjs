@@ -34,8 +34,9 @@ assertSuccess(
           ],
         };
       },
-      declare: (frame, kind, variable, iimport, eexports) => {
+      declare: (frame, strict, kind, variable, iimport, eexports) => {
         assertEqual(frame, "frame");
+        assertEqual(strict, true);
         assertEqual(kind, "kind");
         assertEqual(variable, "variable"), assertEqual(iimport, null);
         assertDeepEqual(eexports, []);
@@ -45,8 +46,9 @@ assertSuccess(
           ),
         ];
       },
-      initialize: (frame, kind, variable, expression) => {
+      initialize: (frame, strict, kind, variable, expression) => {
         assertEqual(frame, "frame");
+        assertEqual(strict, true);
         assertEqual(kind, "kind");
         assertEqual(variable, "variable");
         return [makeEffectStatement(makeExpressionEffect(expression))];
@@ -74,6 +76,7 @@ assertSuccess(
       scenarios: [
         {
           type: "declare",
+          strict: true,
           kind: "kind",
           variable: "variable",
           import: null,
@@ -82,6 +85,7 @@ assertSuccess(
         },
         {
           type: "initialize",
+          strict: true,
           kind: "kind",
           variable: "variable",
           right: makeLiteralExpression("right"),
@@ -89,17 +93,17 @@ assertSuccess(
         },
         {
           type: "write",
-          variable: "variable",
           strict: false,
           escaped: false,
+          variable: "variable",
           right: makeLiteralExpression("right"),
           code: "effect('right')",
         },
         {
           type: "read",
-          variable: "variable",
           strict: false,
           escaped: false,
+          variable: "variable",
           code: "'read'",
         },
       ],

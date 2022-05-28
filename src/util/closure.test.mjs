@@ -46,7 +46,7 @@ assertThrow(() => assert(false, "foo"), {
   message: "foo",
 });
 
-forEach(combine(5, "_"), (description) => {
+forEach(combine(6, "_"), (description) => {
   const deadcode = Library[`deadcode${description}`];
   assertThrow(
     () => apply(deadcode("message"), undefined, Array(description.length)),

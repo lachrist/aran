@@ -7,7 +7,7 @@ import {
 
 import {testBlock} from "./__fixture__.mjs";
 
-import * as Frame from "./body-record.mjs";
+import * as Frame from "./body-object.mjs";
 
 assertSuccess(
   testBlock(Frame, {
@@ -100,6 +100,31 @@ assertSuccess(
               ),
             ) :
             intrinsic.aran.get('dynamic', 'variable')
+          ) :
+          'next'
+        )`,
+      },
+      {
+        type: "typeof",
+        next: () => makeLiteralExpression("next"),
+        variable: "variable",
+        code: `(
+          intrinsic.aran.binary('in', 'variable', 'dynamic') ?
+          (
+            intrinsic.aran.binary(
+              '===',
+              intrinsic.aran.get('dynamic', 'variable'),
+              intrinsic.aran.deadzone
+            ) ?
+            intrinsic.aran.throw(
+              new intrinsic.ReferenceError(
+                'Cannot access \\'variable\\' before initialization',
+              ),
+            ) :
+            intrinsic.aran.unary(
+              'typeof',
+              intrinsic.aran.get('dynamic', 'variable'),
+            )
           ) :
           'next'
         )`,

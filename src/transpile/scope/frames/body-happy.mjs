@@ -35,6 +35,7 @@ export const harvest = ({bindings}) => ({
 
 export const declare = (
   {layer, bindings},
+  _strict,
   _kind,
   variable,
   import_,
@@ -48,7 +49,13 @@ export const declare = (
   return [];
 };
 
-export const initialize = ({layer, bindings}, _kind, variable, expression) => {
+export const initialize = (
+  {layer, bindings},
+  _strict,
+  _kind,
+  variable,
+  expression,
+) => {
   variable = `${layer}${variable}`;
   assert(hasOwnProperty(bindings, variable), "missing variable declaration");
   assert(!bindings[variable], "duplicate variable initialization");

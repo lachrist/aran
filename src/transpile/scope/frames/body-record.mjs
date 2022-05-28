@@ -14,16 +14,15 @@ import {
   makeThrowSyntaxErrorExpression,
   makeThrowReferenceErrorExpression,
   makeDefineExpression,
-  makeUnaryExpression,
   makeBinaryExpression,
   makeGetExpression,
-  makeDeleteExpression,
-  makeSetExpression,
   makeDataDescriptorExpression,
   makeDeadzoneExpression,
 } from "../../../intrinsic.mjs";
 
-import {isRead, isTypeof, isDiscard, isWrite, accessWrite} from "../right.mjs";
+import {isDiscard, isWrite} from "../right.mjs";
+
+import {makeDynamicLookupExpression} from "./helper.mjs";
 
 export const kinds = ["let", "const", "class"];
 
@@ -52,6 +51,7 @@ export const harvest = ({dynamic, variables}) => ({
 
 export const declare = (
   {variables, dynamic},
+  _strict,
   kind,
   variable,
   iimport,
@@ -82,7 +82,7 @@ export const declare = (
   }
 };
 
-export const initialize = ({dynamic}, kind, variable, expression) => {
+export const initialize = ({dynamic}, _strict, kind, variable, expression) => {
   if (includes(kinds, kind)) {
     return [
       makeEffectStatement(
@@ -118,18 +118,6 @@ const makeDeadzoneConditionalExpression = (variable, dynamic, alive) =>
     alive,
   );
 
-const makeLookupExpression = (strict, object, key, right) => {
-  if (isRead(right)) {
-    return makeGetExpression(object, key);
-  } else if (isTypeof(right)) {
-    return makeUnaryExpression("typeof", makeGetExpression(object, key));
-  } else if (isDiscard(right)) {
-    return makeDeleteExpression(strict, object, key);
-  } else {
-    return makeSetExpression(strict, object, key, accessWrite(right));
-  }
-};
-
 export const lookup = (next, {dynamic}, strict, _escaped, variable, right) => {
   const key = makeLiteralExpression(variable);
   if (isWrite(right)) {
@@ -139,7 +127,7 @@ export const lookup = (next, {dynamic}, strict, _escaped, variable, right) => {
         makeDeadzoneConditionalExpression(
           variable,
           dynamic,
-          makeLookupExpression(strict, dynamic, key, right),
+          makeDynamicLookupExpression(strict, dynamic, key, right),
         ),
       ),
       next(),
@@ -148,11 +136,11 @@ export const lookup = (next, {dynamic}, strict, _escaped, variable, right) => {
     return makeConditionalExpression(
       makeBinaryExpression("in", key, dynamic),
       isDiscard(right)
-        ? makeLookupExpression(strict, dynamic, key, right)
+        ? makeDynamicLookupExpression(strict, dynamic, key, right)
         : makeDeadzoneConditionalExpression(
             variable,
             dynamic,
-            makeLookupExpression(strict, dynamic, key, right),
+            makeDynamicLookupExpression(strict, dynamic, key, right),
           ),
       next(),
     );

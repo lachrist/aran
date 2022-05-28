@@ -18,13 +18,20 @@ export const create = (_layer, {dynamic}) => dynamic;
 
 export const harvest = constant_({prelude: [], header: []});
 
-export const declare = (_frame, _kind, _variable, iimport, eexports) => {
+export const declare = (
+  _frame,
+  _strict,
+  _kind,
+  _variable,
+  iimport,
+  eexports,
+) => {
   assert(iimport === null, "unexpected imported declaration");
   assert(eexports.length === 0, "unexpected exported declaration");
   return [];
 };
 
-export const initialize = (frame, _kind, variable, expression) => [
+export const initialize = (frame, _strict, _kind, variable, expression) => [
   makeEffectStatement(
     makeExpressionEffect(
       makeSetStrictExpression(

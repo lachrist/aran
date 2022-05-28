@@ -17,14 +17,21 @@ export const create = return_x;
 
 export const harvest = constant_({header: [], prelude: []});
 
-export const declare = (_frame, kind, _variable, iimport, eexports) => {
+export const declare = (
+  _frame,
+  _strict,
+  kind,
+  _variable,
+  iimport,
+  eexports,
+) => {
   assert(includes(kinds, kind), "unexpected kind");
   assert(iimport === null, "unexpected imported variable");
   assert(eexports.length === 0, "unexpected exported variable");
   return [];
 };
 
-export const initialize = (_frame, kind, variable, expression) => {
+export const initialize = (_frame, _strict, kind, variable, expression) => {
   assert(includes(kinds, kind), "unexpected kind");
   return [makeDeclareStatement("var", variable, expression)];
 };

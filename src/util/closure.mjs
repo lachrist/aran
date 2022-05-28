@@ -50,6 +50,10 @@ export const deadcode_____ = (message) => (_x1, _x2, _x3, _x4, _x5) => {
   throw new DeadcodeError(message);
 };
 
+export const deadcode______ = (message) => (_x1, _x2, _x3, _x4, _x5, _x6) => {
+  throw new DeadcodeError(message);
+};
+
 //////////////
 // Constant //
 //////////////
