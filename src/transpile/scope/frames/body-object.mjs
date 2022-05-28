@@ -28,45 +28,51 @@ export const create = (_layer, {dynamic}) => dynamic;
 export const harvest = constant_({prelude: [], header: []});
 
 export const declare = (frame, _strict, kind, variable, iimport, eexports) => {
-  assert(includes(kinds, kind), "unexpected kind");
-  assert(iimport === null, "unexpected global imported variable");
-  assert(eexports.length === 0, "unexpected global exported variable");
-  return [
-    makeEffectStatement(
-      makeExpressionEffect(
-        makeConditionalExpression(
-          makeBinaryExpression("in", makeLiteralExpression(variable), frame),
-          makeLiteralExpression({undefined: null}),
-          makeDefineExpression(
-            frame,
-            makeLiteralExpression(variable),
-            makeDataDescriptorExpression(
-              makeLiteralExpression({undefined: null}),
-              makeLiteralExpression(true),
-              makeLiteralExpression(true),
-              makeLiteralExpression(false),
+  if (includes(kinds, kind)) {
+    assert(iimport === null, "unexpected global imported variable");
+    assert(eexports.length === 0, "unexpected global exported variable");
+    return [
+      makeEffectStatement(
+        makeExpressionEffect(
+          makeConditionalExpression(
+            makeBinaryExpression("in", makeLiteralExpression(variable), frame),
+            makeLiteralExpression({undefined: null}),
+            makeDefineExpression(
+              frame,
+              makeLiteralExpression(variable),
+              makeDataDescriptorExpression(
+                makeLiteralExpression({undefined: null}),
+                makeLiteralExpression(true),
+                makeLiteralExpression(true),
+                makeLiteralExpression(false),
+              ),
             ),
           ),
         ),
       ),
-    ),
-  ];
+    ];
+  } else {
+    return null;
+  }
 };
 
 export const initialize = (frame, strict, kind, variable, expression) => {
-  assert(includes(kinds, kind), "unexpected kind");
-  return [
-    makeEffectStatement(
-      makeExpressionEffect(
-        makeSetExpression(
-          strict,
-          frame,
-          makeLiteralExpression(variable),
-          expression,
+  if (includes(kinds, kind)) {
+    return [
+      makeEffectStatement(
+        makeExpressionEffect(
+          makeSetExpression(
+            strict,
+            frame,
+            makeLiteralExpression(variable),
+            expression,
+          ),
         ),
       ),
-    ),
-  ];
+    ];
+  } else {
+    return null;
+  }
 };
 
 export const lookup = (next, frame, strict, _escaped, variable, right) => {

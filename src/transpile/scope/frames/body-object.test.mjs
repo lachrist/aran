@@ -18,6 +18,10 @@ assertSuccess(
     scenarios: [
       {
         type: "declare",
+        kind: "const",
+      },
+      {
+        type: "declare",
         kind: "var",
         variable: "variable",
         code: `effect(
@@ -37,6 +41,10 @@ assertSuccess(
             )
           ),
         );`,
+      },
+      {
+        type: "initialize",
+        kind: "const",
       },
       {
         type: "initialize",
