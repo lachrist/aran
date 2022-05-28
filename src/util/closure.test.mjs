@@ -57,7 +57,7 @@ forEach(combine(6, "_"), (description) => {
   );
 });
 
-forEach(combine(5, "_"), (description) => {
+forEach(combine(6, "_"), (description) => {
   const constant = Library[`constant${description}`];
   assertEqual(
     apply(constant("result"), undefined, Array(description.length)),

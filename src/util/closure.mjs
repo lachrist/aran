@@ -64,6 +64,7 @@ export const constant__ = (x) => (_y1, _y2) => x;
 export const constant___ = (x) => (_y1, _y2, _y3) => x;
 export const constant____ = (x) => (_y1, _y2, _y3, _y4) => x;
 export const constant_____ = (x) => (_y1, _y2, _y3, _y4, _y5) => x;
+export const constant______ = (x) => (_y1, _y2, _y3, _y4, _y5, _y6) => x;
 
 //////////
 // Flip //
