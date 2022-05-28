@@ -14,73 +14,39 @@ assertSuccess(
     options: {
       dynamic: makeLiteralExpression("dynamic"),
     },
-    head: `
-      effect(
-        (
-          intrinsic.aran.binary('in', 'VARIABLE', 'dynamic') ?
-          intrinsic.aran.throw(
-            new intrinsic.SyntaxError('Identifier \\'VARIABLE\\' has already been declared')
-          ) :
-          undefined
-        ),
-      );
-      effect(
-        (
-          intrinsic.aran.binary('in', 'variable', 'dynamic') ?
-          intrinsic.aran.throw(
-            new intrinsic.SyntaxError('Identifier \\'variable\\' has already been declared')
-          ) :
-          undefined
-        ),
-      );
-    `,
+    head: "",
     scenarios: [
       {
         type: "declare",
         kind: "var",
-        variable: "VARIABLE",
-      },
-      {
-        type: "declare",
-        kind: "const",
         variable: "variable",
         code: `effect(
-          intrinsic.Reflect.defineProperty(
-            'dynamic',
-            'variable',
-            intrinsic.aran.createObject(
-              null,
-              'value', intrinsic.aran.deadzone,
-              'writable', true,
-              'enumerable', true,
-              'configurable', false,
-            ),
+          (
+            intrinsic.aran.binary('in', 'variable', 'dynamic') ?
+            undefined :
+            intrinsic.Reflect.defineProperty(
+              'dynamic',
+              'variable',
+              intrinsic.aran.createObject(
+                null,
+                'value', undefined,
+                'writable', true,
+                'enumerable', true,
+                'configurable', false,
+              ),
+            )
           ),
         );`,
       },
       {
         type: "initialize",
+        strict: true,
         kind: "var",
-        variable: "VARIABLE",
-      },
-      {
-        type: "initialize",
-        kind: "const",
         variable: "variable",
         right: makeLiteralExpression("right"),
         code: `effect(
-          intrinsic.Reflect.defineProperty(
-            'dynamic',
-            'variable',
-            intrinsic.aran.createObject(
-              null,
-              'value', 'right',
-              'writable', false,
-              'enumerable', true,
-              'configurable', false,
-            ),
-          ),
-        );`,
+          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
+        )`,
       },
       {
         type: "read",
@@ -88,55 +54,7 @@ assertSuccess(
         variable: "variable",
         code: `(
           intrinsic.aran.binary('in', 'variable', 'dynamic') ?
-          (
-            intrinsic.aran.binary(
-              '===',
-              intrinsic.aran.get('dynamic', 'variable'),
-              intrinsic.aran.deadzone
-            ) ?
-            intrinsic.aran.throw(
-              new intrinsic.ReferenceError(
-                'Cannot access \\'variable\\' before initialization',
-              ),
-            ) :
-            intrinsic.aran.get('dynamic', 'variable')
-          ) :
-          'next'
-        )`,
-      },
-      {
-        type: "typeof",
-        next: () => makeLiteralExpression("next"),
-        variable: "variable",
-        code: `(
-          intrinsic.aran.binary('in', 'variable', 'dynamic') ?
-          (
-            intrinsic.aran.binary(
-              '===',
-              intrinsic.aran.get('dynamic', 'variable'),
-              intrinsic.aran.deadzone
-            ) ?
-            intrinsic.aran.throw(
-              new intrinsic.ReferenceError(
-                'Cannot access \\'variable\\' before initialization',
-              ),
-            ) :
-            intrinsic.aran.unary(
-              'typeof',
-              intrinsic.aran.get('dynamic', 'variable'),
-            )
-          ) :
-          'next'
-        )`,
-      },
-      {
-        type: "discard",
-        next: () => makeLiteralExpression("next"),
-        strict: false,
-        variable: "variable",
-        code: `(
-          intrinsic.aran.binary('in', 'variable', 'dynamic') ?
-          intrinsic.aran.deleteSloppy('dynamic', 'variable') :
+          intrinsic.aran.get('dynamic', 'variable') :
           'next'
         )`,
       },
@@ -149,19 +67,7 @@ assertSuccess(
         code: `(
           intrinsic.aran.binary('in', 'variable', 'dynamic') ?
           effect(
-            (
-              intrinsic.aran.binary(
-                '===',
-                intrinsic.aran.get('dynamic', 'variable'),
-                intrinsic.aran.deadzone
-              ) ?
-              intrinsic.aran.throw(
-                new intrinsic.ReferenceError(
-                  'Cannot access \\'variable\\' before initialization',
-                ),
-              ) :
-              intrinsic.aran.setStrict('dynamic', 'variable', 'right')
-            ),
+            intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
           ) :
           effect('next')
         )`,
