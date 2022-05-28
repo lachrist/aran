@@ -30,6 +30,7 @@ assertSuccess(
       {
         type: "declare",
         kind: "var",
+        code: "",
       },
       {
         type: "initialize",

@@ -10,6 +10,7 @@ assertSuccess(
       {
         type: "declare",
         kind: "const",
+        code: "",
       },
       {
         type: "initialize",

@@ -26,11 +26,19 @@ const nextForbidden = () => {
   throw new Error("unexpected next");
 };
 
-const makeNext = (next) => {
+const makeNextExpression = (next) => {
   if (next === null) {
     return nextForbidden;
   } else {
     return () => makeLiteralExpression(next);
+  }
+};
+
+const makeNextEffect = (next) => {
+  if (next === null) {
+    return nextForbidden;
+  } else {
+    return () => makeExpressionEffect(makeLiteralExpression(next));
   }
 };
 
@@ -64,10 +72,10 @@ const finalizeScript = (variables, statements, code) => {
 
 /* c8 ignore stop */
 
-const fromJust = (maybe) => {
-  assert(maybe !== null, "unexpected nothing");
-  return maybe;
-};
+// const fromJust = (maybe) => {
+//   assert(maybe !== null, "unexpected nothing");
+//   return maybe;
+// };
 
 export const default_scenario = {
   type: "declare",
@@ -79,7 +87,7 @@ export const default_scenario = {
   escaped: false,
   value: "value",
   next: null,
-  code: "",
+  code: null,
   initialization: "initialization",
   assignment: "assignment",
 };
@@ -98,33 +106,43 @@ const generateTest =
     const statements2 = flatMap(scenarios, (scenario) => {
       scenario = assign({}, default_scenario, scenario);
       if (scenario.type === "declare") {
-        body[body.length] = scenario.code;
-        return fromJust(
-          declare(
-            frame,
-            scenario.kind,
-            scenario.variable,
-            scenario.import,
-            scenario.exports,
-          ),
+        const maybe = declare(
+          frame,
+          scenario.kind,
+          scenario.variable,
+          scenario.import,
+          scenario.exports,
         );
+        assert(
+          (maybe === null) === (scenario.code === null),
+          "bypass declaration mismatch",
+        );
+        if (scenario.code !== null) {
+          body[body.length] = scenario.code;
+        }
+        return maybe === null ? [] : maybe;
       } else if (scenario.type === "initialize") {
-        body[body.length] = scenario.code;
-        return fromJust(
-          initialize(
-            frame,
-            scenario.kind,
-            scenario.variable,
-            makeLiteralExpression(scenario.initialization),
-          ),
+        const maybe = initialize(
+          frame,
+          scenario.kind,
+          scenario.variable,
+          makeLiteralExpression(scenario.initialization),
         );
+        assert(
+          (maybe === null) === (scenario.code === null),
+          "bypass initialization mismatch",
+        );
+        if (scenario.code !== null) {
+          body[body.length] = scenario.code;
+        }
+        return maybe === null ? [] : maybe;
       } else {
         if (scenario.type === "write") {
           body[body.length] = `${scenario.code};`;
           return [
             makeEffectStatement(
               lookup(
-                makeNext(scenario.next),
+                makeNextEffect(scenario.next),
                 frame,
                 scenario.strict,
                 scenario.escaped,
@@ -139,7 +157,7 @@ const generateTest =
             makeEffectStatement(
               makeExpressionEffect(
                 lookup(
-                  makeNext(scenario.next),
+                  makeNextExpression(scenario.next),
                   frame,
                   scenario.strict,
                   scenario.escaped,

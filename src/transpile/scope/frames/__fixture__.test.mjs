@@ -92,3 +92,40 @@ assertSuccess(
     },
   ),
 );
+
+assertSuccess(
+  testBlock(
+    {
+      create: (_layer, _options) => null,
+      harvest: (_frame) => ({
+        header: [],
+        prelude: [],
+      }),
+      declare: (_frame, _kind, _variable, _iimport, _eexports) => null,
+      initialize: (_frame, _kind, _variable, _expression) => null,
+      lookup: (next, _frame, _strict, _escaped, _variable, _right) => next(),
+    },
+    {
+      layer: "layer",
+      options: {},
+      scenarios: [
+        {
+          type: "declare",
+        },
+        {
+          type: "initialize",
+        },
+        {
+          type: "read",
+          next: "next",
+          code: "'next'",
+        },
+        {
+          type: "read",
+          next: "next",
+          code: "'next'",
+        },
+      ],
+    },
+  ),
+);

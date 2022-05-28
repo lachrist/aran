@@ -14,6 +14,7 @@ assertSuccess(
     scenarios: [
       {
         type: "declare",
+        code: "",
       },
       {
         type: "initialize",
