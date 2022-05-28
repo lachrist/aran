@@ -205,7 +205,12 @@ rules:
   # no-extend-native >> No globals
   # no-extra-bind >> Heuristic
   # no-extra-boolean-cast >> Heuristic
-  no-extra-parens: [error, all, {nestedBinaryExpressions: false, enforceForSequenceExpressions: false}]
+  no-extra-parens:
+    - error
+    - all
+    - enforceForArrowConditionals: false
+      nestedBinaryExpressions: false
+      enforceForSequenceExpressions: false
   no-extra-semi: error
   # no-extra-strict >> deprecated
   # no-fallthrough >> SwitchStatement disabled by no-restricted-syntax

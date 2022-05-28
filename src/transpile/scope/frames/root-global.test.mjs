@@ -1,5 +1,7 @@
 import {assertSuccess} from "../../../__fixture__.mjs";
 
+import {makeLiteralExpression} from "../../../ast/index.mjs";
+
 import {testScript} from "./__fixture__.mjs";
 
 import * as Frame from "./root-global.mjs";
@@ -16,8 +18,8 @@ assertSuccess(
         type: "initialize",
         kind: "const",
         variable: "variable",
-        initialization: "initialization",
-        code: "const variable = 'initialization';",
+        right: makeLiteralExpression("right"),
+        code: "const variable = 'right';",
       },
       {
         type: "read",
@@ -39,12 +41,10 @@ assertSuccess(
         type: "write",
         strict: true,
         variable: "variable",
-        assignment: "assignment",
-        code: `
-          effect(
-            intrinsic.aran.setGlobalStrict('variable', 'assignment'),
-          )
-        `,
+        right: makeLiteralExpression("right"),
+        code: `effect(
+          intrinsic.aran.setGlobalStrict('variable', 'right'),
+        )`,
       },
     ],
   }),

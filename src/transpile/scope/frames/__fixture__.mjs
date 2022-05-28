@@ -26,22 +26,6 @@ const nextForbidden = () => {
   throw new Error("unexpected next");
 };
 
-const makeNextExpression = (next) => {
-  if (next === null) {
-    return nextForbidden;
-  } else {
-    return () => makeLiteralExpression(next);
-  }
-};
-
-const makeNextEffect = (next) => {
-  if (next === null) {
-    return nextForbidden;
-  } else {
-    return () => makeExpressionEffect(makeLiteralExpression(next));
-  }
-};
-
 export const makeRight = (type) => {
   if (type === "read") {
     return makeRead();
@@ -72,24 +56,24 @@ const finalizeScript = (variables, statements, code) => {
 
 /* c8 ignore stop */
 
-// const fromJust = (maybe) => {
-//   assert(maybe !== null, "unexpected nothing");
-//   return maybe;
-// };
+const fromJust = (maybe) => {
+  assert(maybe !== null, "unexpected nothing");
+  return maybe;
+};
+
+const orElse = (maybe, value) => (maybe === null ? value : maybe);
 
 export const default_scenario = {
-  type: "declare",
-  kind: "kind",
-  variable: "variable",
+  type: null,
+  kind: "dummy-kind",
+  variable: "dummy_variable",
   import: null,
   exports: [],
   strict: false,
   escaped: false,
-  value: "value",
-  next: null,
+  next: nextForbidden,
   code: null,
-  initialization: "initialization",
-  assignment: "assignment",
+  right: makeLiteralExpression("dummy-right"),
 };
 
 const finalizeBlock = (variables, statements, code) =>
@@ -105,6 +89,7 @@ const generateTest =
     const body = [];
     const statements2 = flatMap(scenarios, (scenario) => {
       scenario = assign({}, default_scenario, scenario);
+      assert(scenario.type !== null, "missing scenarion type");
       if (scenario.type === "declare") {
         const maybe = declare(
           frame,
@@ -117,47 +102,43 @@ const generateTest =
           (maybe === null) === (scenario.code === null),
           "bypass declaration mismatch",
         );
-        if (scenario.code !== null) {
-          body[body.length] = scenario.code;
-        }
-        return maybe === null ? [] : maybe;
+        body[body.length] = orElse(scenario.code, "");
+        return orElse(maybe, []);
       } else if (scenario.type === "initialize") {
         const maybe = initialize(
           frame,
           scenario.kind,
           scenario.variable,
-          makeLiteralExpression(scenario.initialization),
+          scenario.right,
         );
         assert(
           (maybe === null) === (scenario.code === null),
           "bypass initialization mismatch",
         );
-        if (scenario.code !== null) {
-          body[body.length] = scenario.code;
-        }
-        return maybe === null ? [] : maybe;
+        body[body.length] = orElse(scenario.code, "");
+        return orElse(maybe, []);
       } else {
         if (scenario.type === "write") {
-          body[body.length] = `${scenario.code};`;
+          body[body.length] = `${fromJust(scenario.code)};`;
           return [
             makeEffectStatement(
               lookup(
-                makeNextEffect(scenario.next),
+                scenario.next,
                 frame,
                 scenario.strict,
                 scenario.escaped,
                 scenario.variable,
-                makeWrite(makeLiteralExpression(scenario.assignment)),
+                makeWrite(scenario.right),
               ),
             ),
           ];
         } else {
-          body[body.length] = `effect(${scenario.code});`;
+          body[body.length] = `effect(${fromJust(scenario.code)});`;
           return [
             makeEffectStatement(
               makeExpressionEffect(
                 lookup(
-                  makeNextExpression(scenario.next),
+                  scenario.next,
                   frame,
                   scenario.strict,
                   scenario.escaped,

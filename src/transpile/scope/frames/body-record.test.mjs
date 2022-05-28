@@ -1,6 +1,9 @@
 import {assertSuccess} from "../../../__fixture__.mjs";
 
-import {makeLiteralExpression} from "../../../ast/index.mjs";
+import {
+  makeExpressionEffect,
+  makeLiteralExpression,
+} from "../../../ast/index.mjs";
 
 import {testBlock} from "./__fixture__.mjs";
 
@@ -8,6 +11,9 @@ import * as Frame from "./body-record.mjs";
 
 assertSuccess(
   testBlock(Frame, {
+    options: {
+      dynamic: makeLiteralExpression("dynamic"),
+    },
     head: `
       effect(
         (
@@ -28,9 +34,6 @@ assertSuccess(
         ),
       );
     `,
-    options: {
-      dynamic: makeLiteralExpression("dynamic"),
-    },
     scenarios: [
       {
         type: "declare",
@@ -64,14 +67,14 @@ assertSuccess(
         type: "initialize",
         kind: "const",
         variable: "variable",
-        initialization: "initialization",
+        right: makeLiteralExpression("right"),
         code: `effect(
           intrinsic.Reflect.defineProperty(
             'dynamic',
             'variable',
             intrinsic.aran.createObject(
               null,
-              'value', 'initialization',
+              'value', 'right',
               'writable', false,
               'enumerable', true,
               'configurable', false,
@@ -81,7 +84,7 @@ assertSuccess(
       },
       {
         type: "read",
-        next: "next",
+        next: () => makeLiteralExpression("next"),
         variable: "variable",
         code: `(
           intrinsic.aran.binary('in', 'variable', 'dynamic') ?
@@ -103,7 +106,7 @@ assertSuccess(
       },
       {
         type: "typeof",
-        next: "next",
+        next: () => makeLiteralExpression("next"),
         variable: "variable",
         code: `(
           intrinsic.aran.binary('in', 'variable', 'dynamic') ?
@@ -128,7 +131,7 @@ assertSuccess(
       },
       {
         type: "discard",
-        next: "next",
+        next: () => makeLiteralExpression("next"),
         strict: false,
         variable: "variable",
         code: `(
@@ -139,10 +142,10 @@ assertSuccess(
       },
       {
         type: "write",
-        next: "next",
+        next: () => makeExpressionEffect(makeLiteralExpression("next")),
         strict: true,
         variable: "variable",
-        assignment: "assignment",
+        right: makeLiteralExpression("right"),
         code: `(
           intrinsic.aran.binary('in', 'variable', 'dynamic') ?
           effect(
@@ -157,7 +160,7 @@ assertSuccess(
                   'Cannot access \\'variable\\' before initialization',
                 ),
               ) :
-              intrinsic.aran.setStrict('dynamic', 'variable', 'assignment')
+              intrinsic.aran.setStrict('dynamic', 'variable', 'right')
             ),
           ) :
           effect('next')

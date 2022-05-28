@@ -19,12 +19,10 @@ assertSuccess(
       {
         type: "initialize",
         variable: "variable",
-        initialization: "initialization",
-        code: `
-          effect(
-            intrinsic.aran.setStrict('dynamic', 'variable', 'initialization'),
-          )
-        `,
+        right: makeLiteralExpression("right"),
+        code: `effect(
+          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
+        );`,
       },
       {
         type: "read",
@@ -33,6 +31,7 @@ assertSuccess(
       },
       {
         type: "typeof",
+        variable: "variable",
         code: `
           intrinsic.aran.unary(
             'typeof',
@@ -47,10 +46,10 @@ assertSuccess(
       {
         type: "write",
         variable: "variable",
-        assignment: "assignment",
+        right: makeLiteralExpression("right"),
         code: `
           effect(
-            intrinsic.aran.setStrict('dynamic', 'variable', 'assignment'),
+            intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
           )
         `,
       },

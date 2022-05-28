@@ -31,6 +31,7 @@ assertSuccess(
       },
       {
         type: "write",
+        variable: "variable",
         strict: true,
         code: `
           effect(
@@ -44,10 +45,10 @@ assertSuccess(
         type: "write",
         strict: false,
         variable: "variable",
-        assignment: "assignment",
+        right: makeLiteralExpression("right"),
         code: `
           effect(
-            intrinsic.aran.setSloppy('dynamic', 'variable', 'assignment'),
+            intrinsic.aran.setSloppy('dynamic', 'variable', 'right'),
           )
         `,
       },
