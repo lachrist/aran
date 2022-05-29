@@ -26,11 +26,6 @@ import {makeDynamicLookupExpression} from "./helper.mjs";
 
 export const kinds = ["let", "const", "class"];
 
-export const create = (_layer, {dynamic}) => ({
-  dynamic,
-  variables: [],
-});
-
 export const makeDuplicateStatement = (expression, variable) =>
   makeEffectStatement(
     makeExpressionEffect(
@@ -43,6 +38,11 @@ export const makeDuplicateStatement = (expression, variable) =>
       ),
     ),
   );
+
+export const create = (_layer, {dynamic}) => ({
+  dynamic,
+  variables: [],
+});
 
 export const harvest = ({dynamic, variables}) => ({
   header: [],

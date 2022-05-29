@@ -3,20 +3,50 @@ import {
   constant,
 } from "../../util.mjs";
 
-export const create = constant(null);
+const kinds = ["var", "function", "import"];
 
-const makeKeyExpression = (variable) => makeLiteralExpression(getVariableBody(variable));
+export const create = (layer, _options) => ({
+  layer,
+  variables: [],
+});
 
-const mapping = {
-  __proto__: null,
-  "let": "let",
-  "class": "let",
-  "const": "const",
-  "var": "var",
-  "function": "var",
+export const harvest = ({variables}) => ({
+  headers: variables,
+  prelude: [],
+});
+
+export const makeExportUndefinedStatement = (eexport) => makeEffectStatement(
+  makeExportEffect(eexport, makeLiteralExpression({undefined:null})),
+);
+
+export const declare = ({layer, variables}, kind, variable, import_, exports_) => {
+  if (includes(kinds, kind)) {
+    variable = `${layer}${variable}`;
+    if (!includes(variables, variable)) {
+      push(variables, variable);
+    }
+    if (kind === "import") {
+      return concat(
+        [
+          makeEffectStatement(
+            makeWriteEffect(variable, makeLiteralExpression({undefined:null})),
+          ),
+        ],
+    } else {
+      return concat(
+        [
+          makeEffectStatement(
+            makeWriteEffect(variable, makeLiteralExpression({undefined:null})),
+          ),
+        ],
+        map(eexports, makeExportUndefinedStatement),
+      );
+    }
+  } else {
+    return null;
+  }
 };
 
-export const declare = (_frame, kind, variable, import_, exports_) => {
   if (isBaseVariable(variable)) {
     assert(kind in mapping, "unexpected variable kind");
     assert(import_ === null, "unexpected imported variable");

@@ -11,6 +11,10 @@ import {makeUnaryExpression} from "../../../intrinsic.mjs";
 
 import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
+const {
+  Reflect: {ownKeys, defineProperty},
+} = globalThis;
+
 const descriptor = {
   __proto__: null,
   value: false,
@@ -18,10 +22,6 @@ const descriptor = {
   configurable: true,
   enumerable: true,
 };
-
-const {
-  Reflect: {ownKeys, defineProperty},
-} = globalThis;
 
 export const create = (layer, _options) => ({
   layer,
