@@ -1,113 +1,135 @@
+import {concat, includes, map, reduce} from "array-lite";
 
 import {
-  constant,
-} from "../../util.mjs";
+  partial_x,
+  partial__x,
+  pushAll,
+  assert,
+  hasOwnProperty,
+} from "../../../util/index.mjs";
 
-const kinds = ["var", "function", "import"];
+import {
+  makeExportEffect,
+  makeSequenceEffect,
+  makeEffectStatement,
+  makeWriteEffect,
+  makeReadExpression,
+  makeLiteralExpression,
+} from "../../../ast/index.mjs";
+
+import {makeUnaryExpression} from "../../../intrinsic.mjs";
+
+import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
+
+const {
+  Reflect: {ownKeys, defineProperty},
+} = globalThis;
+
+const kinds = ["var", "function"];
+
+const descriptor = {
+  __proto__: null,
+  value: null,
+  writable: false,
+  enumerable: false,
+  configurable: false,
+};
 
 export const create = (layer, _options) => ({
   layer,
-  variables: [],
+  bindings: {},
 });
 
-export const harvest = ({variables}) => ({
-  headers: variables,
+export const harvest = ({bindings}) => ({
+  header: ownKeys(bindings),
   prelude: [],
 });
 
-export const makeExportUndefinedStatement = (eexport) => makeEffectStatement(
-  makeExportEffect(eexport, makeLiteralExpression({undefined:null})),
-);
+const makeExportStatement = (specifier, expression) =>
+  makeEffectStatement(makeExportEffect(specifier, expression));
 
-export const declare = ({layer, variables}, kind, variable, import_, exports_) => {
+const makeExportUndefinedStatement = (specifier) =>
+  makeEffectStatement(
+    makeExportEffect(specifier, makeLiteralExpression({undefined: null})),
+  );
+
+const makeExportSequenceEffect = (effect, specifier, expression) =>
+  makeSequenceEffect(effect, makeExportEffect(specifier, expression));
+
+export const declare = (
+  {layer, bindings},
+  _strict,
+  kind,
+  variable,
+  iimport,
+  eexports,
+) => {
+  if (includes(kinds, kind)) {
+    assert(iimport === null, "unexpected imported variable");
+    variable = `${layer}${variable}`;
+    if (!hasOwnProperty(bindings, variable)) {
+      defineProperty(bindings, variable, {__proto__: descriptor, value: []});
+    }
+    pushAll(bindings[variable], eexports);
+    return concat(
+      [
+        makeEffectStatement(
+          makeWriteEffect(variable, makeLiteralExpression({undefined: null})),
+        ),
+      ],
+      map(eexports, makeExportUndefinedStatement),
+    );
+  } else {
+    return null;
+  }
+};
+
+export const initialize = (
+  {layer, bindings},
+  _strict,
+  kind,
+  variable,
+  expression,
+) => {
   if (includes(kinds, kind)) {
     variable = `${layer}${variable}`;
-    if (!includes(variables, variable)) {
-      push(variables, variable);
-    }
-    if (kind === "import") {
-      return concat(
-        [
-          makeEffectStatement(
-            makeWriteEffect(variable, makeLiteralExpression({undefined:null})),
-          ),
-        ],
-    } else {
-      return concat(
-        [
-          makeEffectStatement(
-            makeWriteEffect(variable, makeLiteralExpression({undefined:null})),
-          ),
-        ],
-        map(eexports, makeExportUndefinedStatement),
-      );
-    }
-  } else {
-    return null;
-  }
-};
-
-  if (isBaseVariable(variable)) {
-    assert(kind in mapping, "unexpected variable kind");
-    assert(import_ === null, "unexpected imported variable");
-    assert(exports_.length === 0, "unexpected exported variable");
-    return [];
-  } else {
-    return null;
-  }
-};
-
-export const initialize = (_frame, kind, variable, expression) => {
-  if (isBaseVariable(variable)) {
-    assert(kind in mapping, "unexpected variable kind");
-    return [
-      makeDeclareStatement(
-        mapping[kind],
-        getVariableBody(variable),
-        expression,
-      );
-    ];
-  } else {
-    return null;
-  }
-};
-
-export const lookup = (next, frame, strict, _escaped, variable, right) => {
-  if (isBaseVariable(variable)) {
-    const key = makeLiteralExpression(
-      getVariableBody(variable),
+    assert(
+      hasOwnProperty(bindings, variable),
+      "missing variable for initialization",
     );
-    if (isReadRight(right)) {
-      return makeConditionalExpression(
-        makeBinaryExpression("in", key, frame),
-        makeGetExpression(frame, key),
-        next(),
-      );
-    } else if (isTypeofRight(right)) {
-      return makeConditionalExpression(
-        makeBinaryExpression("in", key, frame),
-        makeUnaryExpression(
-          "typeof",
-          makeGetExpression(frame, key),
-        ),
-        next(),
-      );
-    } else if (isDeleteRight(right)) {
-      return makeConditionalExpression(
-        makeBinaryExpression("in", key, frame),
-        makeDeleteExpression(frame, key),
-        next(),
-      );
+    return concat(
+      [makeEffectStatement(makeWriteEffect(variable, expression))],
+      map(
+        bindings[variable],
+        partial_x(makeExportStatement, makeReadExpression(variable)),
+      ),
+    );
+  } else {
+    return null;
+  }
+};
+
+export const lookup = (
+  next,
+  {layer, bindings},
+  _strict,
+  _escaped,
+  variable,
+  right,
+) => {
+  variable = `${layer}${variable}`;
+  if (hasOwnProperty(bindings, variable)) {
+    if (isRead(right)) {
+      return makeReadExpression(variable);
+    } else if (isTypeof(right)) {
+      return makeUnaryExpression("typeof", makeReadExpression(variable));
+    } else if (isDiscard(right)) {
+      return makeLiteralExpression(false);
     } else {
-      return makeConditionalEffect(
-        makeBinaryExpression("in", key, frame),
-        makeSetExpression(
-          strict,
-          object,
-          key,
-          right,
-        ),
-        next(),
+      return reduce(
+        bindings[variable],
+        partial__x(makeExportSequenceEffect, makeReadExpression(variable)),
+        makeWriteEffect(variable, accessWrite(right)),
       );
     }
   } else {

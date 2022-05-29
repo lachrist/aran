@@ -8,7 +8,7 @@ import * as Frame from "./body-happy.mjs";
 
 assertSuccess(
   testBlock(Frame, {
-    head: "let variable;",
+    head: "let VARIABLE;",
     scenarios: [
       {
         type: "read",
@@ -17,29 +17,35 @@ assertSuccess(
       },
       {
         type: "declare",
+        variable: "variable",
         code: "",
       },
       {
         type: "initialize",
+        variable: "variable",
         right: makeLiteralExpression("right"),
-        code: "variable = 'right';",
+        code: "VARIABLE = 'right';",
       },
       {
         type: "read",
-        code: "variable",
+        variable: "variable",
+        code: "VARIABLE",
       },
       {
         type: "typeof",
-        code: "intrinsic.aran.unary('typeof', variable)",
+        variable: "variable",
+        code: "intrinsic.aran.unary('typeof', VARIABLE)",
       },
       {
         type: "discard",
+        variable: "variable",
         code: "false",
       },
       {
         type: "write",
+        variable: "variable",
         right: makeLiteralExpression("right"),
-        code: "variable = 'right'",
+        code: "VARIABLE = 'right'",
       },
     ],
   }),

@@ -4,10 +4,11 @@ import {makeLiteralExpression} from "../../../ast/index.mjs";
 
 import {testBlock} from "./__fixture__.mjs";
 
-import * as Frame from "./body-import.mjs";
+import * as Frame from "./body-closure.mjs";
 
 assertSuccess(
   testBlock(Frame, {
+    head: "let VARIABLE;",
     scenarios: [
       {
         type: "declare",
@@ -15,37 +16,43 @@ assertSuccess(
       },
       {
         type: "declare",
-        kind: "import",
+        kind: "var",
         variable: "variable",
-        import: {
-          source: "source",
-          specifier: "specifier",
-        },
-        exports: [],
-        code: "",
+        import: null,
+        exports: ["specifier"],
+        code: `
+          VARIABLE = undefined;
+          exportStatic('specifier', undefined);
+        `,
       },
       {
         type: "initialize",
         kind: "kind",
       },
       {
+        type: "initialize",
+        kind: "var",
+        variable: "variable",
+        right: makeLiteralExpression("right"),
+        code: `
+          VARIABLE = 'right';
+          exportStatic('specifier', VARIABLE);
+        `,
+      },
+      {
         type: "read",
-        variable: "VARIABLE",
         next: () => makeLiteralExpression("next"),
         code: "'next'",
       },
       {
         type: "read",
         variable: "variable",
-        code: "importStatic('source', 'specifier')",
+        code: "VARIABLE",
       },
       {
         type: "typeof",
         variable: "variable",
-        code: `intrinsic.aran.unary(
-          'typeof',
-          importStatic('source', 'specifier'),
-        )`,
+        code: "intrinsic.aran.unary('typeof', VARIABLE)",
       },
       {
         type: "discard",
@@ -55,10 +62,10 @@ assertSuccess(
       {
         type: "write",
         variable: "variable",
-        code: `effect(
-          intrinsic.aran.throw(
-            new intrinsic.TypeError('Assignment to constant variable.'),
-          ),
+        right: makeLiteralExpression("right"),
+        code: `(
+          VARIABLE = 'right',
+          exportStatic('specifier', VARIABLE)
         )`,
       },
     ],
