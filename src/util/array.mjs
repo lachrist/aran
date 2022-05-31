@@ -24,3 +24,21 @@ export const pop = (array) => {
   array.length -= 1;
   return last;
 };
+
+export const shift = (array) => {
+  const {length} = array;
+  const element = array[0];
+  for (let index = 0; index < length - 1; index += 1) {
+    array[index] = array[index + 1];
+  }
+  array.length -= 1;
+  return element;
+};
+
+export const unshift = (array, element) => {
+  const {length} = array;
+  for (let index = length; index > 0; index -= 1) {
+    array[index] = array[index - 1];
+  }
+  array[0] = element;
+};
