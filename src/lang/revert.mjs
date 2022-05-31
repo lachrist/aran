@@ -479,19 +479,19 @@ export const revertExpression = generateRevert({
       revertExpression(expression),
       map(expressions, revertExpression),
     ),
-  InvokeExpression: (
-    _context,
-    expression1,
-    expression2,
-    expressions,
-    _annotation,
-  ) =>
-    makeCallExpression(
-      makeMemberExpression(
-        true,
-        revertExpression(expression1),
-        revertExpression(expression2),
-      ),
-      map(expressions, revertExpression),
-    ),
+  // InvokeExpression: (
+  //   _context,
+  //   expression1,
+  //   expression2,
+  //   expressions,
+  //   _annotation,
+  // ) =>
+  //   makeCallExpression(
+  //     makeMemberExpression(
+  //       true,
+  //       revertExpression(expression1),
+  //       revertExpression(expression2),
+  //     ),
+  //     map(expressions, revertExpression),
+  //   ),
 });

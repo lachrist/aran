@@ -587,33 +587,33 @@ export const visitExpression = generateVisitNode({
       expressions2,
     ),
   ],
-  InvokeExpression: (
-    error,
-    expression11,
-    expression12,
-    expressions1,
-    _annotation1,
-    expression21,
-    expression22,
-    expressions2,
-    _annotation2,
-  ) => [
-    visitExpression(
-      appendErrorSegment(error, ".object"),
-      expression11,
-      expression21,
-    ),
-    visitExpression(
-      appendErrorSegment(error, ".property"),
-      expression12,
-      expression22,
-    ),
-    visitAllExpression(
-      appendErrorSegment(error, ".arguments"),
-      expressions1,
-      expressions2,
-    ),
-  ],
+  // InvokeExpression: (
+  //   error,
+  //   expression11,
+  //   expression12,
+  //   expressions1,
+  //   _annotation1,
+  //   expression21,
+  //   expression22,
+  //   expressions2,
+  //   _annotation2,
+  // ) => [
+  //   visitExpression(
+  //     appendErrorSegment(error, ".object"),
+  //     expression11,
+  //     expression21,
+  //   ),
+  //   visitExpression(
+  //     appendErrorSegment(error, ".property"),
+  //     expression12,
+  //     expression22,
+  //   ),
+  //   visitAllExpression(
+  //     appendErrorSegment(error, ".arguments"),
+  //     expressions1,
+  //     expressions2,
+  //   ),
+  // ],
   ConstructExpression: (
     error,
     expression1,

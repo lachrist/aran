@@ -76,7 +76,7 @@ const syntax = {
     // Combiners //
     EvalExpression: [["Variable", "*"], "Expression"],
     ApplyExpression: ["Expression", "Expression", ["Expression", "*"]],
-    InvokeExpression: ["Expression", "Expression", ["Expression", "*"]],
+    // InvokeExpression: ["Expression", "Expression", ["Expression", "*"]],
     ConstructExpression: ["Expression", ["Expression", "*"]],
   },
 };

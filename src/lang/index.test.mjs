@@ -90,12 +90,12 @@ testExpression(
   "intrinsic['ReferenceError'](!123, 456, 789);",
 );
 
-testExpression("123[456](789);");
-testExpression(
-  "intrinsic.ReferenceError[123](789);",
-  "intrinsic['ReferenceError'][123](789);",
-);
-testExpression("intrinsic['ReferenceError'][123](789);");
+// testExpression("123[456](789);");
+// testExpression(
+//   "intrinsic.ReferenceError[123](789);",
+//   "intrinsic['ReferenceError'][123](789);",
+// );
+// testExpression("intrinsic['ReferenceError'][123](789);");
 
 testExpression("new 123(456, 789);");
 testExpression(

@@ -98,10 +98,10 @@ assertExpression("123(!456, 789);", "321(!456, 789);", false);
 assertExpression("123(!456, 789);", "123(!654, 789);", false);
 assertExpression("123(!456, 789);", "123(!456, 987);", false);
 
-assertExpression("123[456](789);", "123[456](789);", true);
-assertExpression("123[456](789);", "321[456](789);", false);
-assertExpression("123[456](789);", "123[654](789);", false);
-assertExpression("123[456](789);", "123[456](987);", false);
+// assertExpression("123[456](789);", "123[456](789);", true);
+// assertExpression("123[456](789);", "321[456](789);", false);
+// assertExpression("123[456](789);", "123[654](789);", false);
+// assertExpression("123[456](789);", "123[456](987);", false);
 
 assertExpression("new 123(456);", "new 123(456);", true);
 assertExpression("new 123(456);", "new 321(456);", false);

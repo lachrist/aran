@@ -42,7 +42,7 @@ import {
   makeEvalExpression,
   makeApplyExpression,
   makeConstructExpression,
-  makeInvokeExpression,
+  // makeInvokeExpression,
 } from "../ast/index.mjs";
 
 import {
@@ -519,19 +519,19 @@ export const convertExpression = generateConvert({
         convertExpression(node.arguments[1]),
         locate(node.loc),
       );
-    } else if (
-      node.callee.type === "MemberExpression" &&
-      node.callee.computed &&
-      (node.callee.object.type !== "Identifier" ||
-        node.callee.object.name !== INTRINSIC_KEYWORD)
-    ) {
-      expectSyntax(node, !node.callee.optional);
-      return makeInvokeExpression(
-        convertExpression(node.callee.object),
-        convertExpression(node.callee.property),
-        map(node.arguments, convertExpression),
-        locate(node.loc),
-      );
+      // } else if (
+      //   node.callee.type === "MemberExpression" &&
+      //   node.callee.computed &&
+      //   (node.callee.object.type !== "Identifier" ||
+      //     node.callee.object.name !== INTRINSIC_KEYWORD)
+      // ) {
+      //   expectSyntax(node, !node.callee.optional);
+      //   return makeInvokeExpression(
+      //     convertExpression(node.callee.object),
+      //     convertExpression(node.callee.property),
+      //     map(node.arguments, convertExpression),
+      //     locate(node.loc),
+      //   );
     } else if (
       node.arguments.length > 0 &&
       node.arguments[0].type === "UnaryExpression" &&
