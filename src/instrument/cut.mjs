@@ -15,42 +15,38 @@ const {
   },
 } = globalThis;
 
-export const applyPoint = (point, context, name, values) => {
+const applyPoint = (point, context, name, values) => {
   if (typeof point === "boolean") {
     return point;
-  }
-  if (typeof point === "function") {
+  } else if (typeof point === "function") {
     return apply(point, context, values);
+  } else {
+    throw new InvalidOptionsAranError(
+      `Pointcut value for ${name} is invalid. It should either be: missing, a boolean, or a function.`,
+    );
   }
-  throw new InvalidOptionsAranError(
-    `Pointcut value for ${name} is invalid. It should either be: missing, a boolean, or a function.`,
-  );
 };
 
 export const cut = (pointcut, name, values) => {
   if (typeof pointcut === "boolean") {
     return pointcut;
-  }
-  if (isArray(pointcut)) {
+  } else if (isArray(pointcut)) {
     return includes(pointcut, name);
-  }
-  if (pointcut instanceof Set) {
+  } else if (pointcut instanceof Set) {
     return apply(hasSet, pointcut, [name]);
-  }
-  if (pointcut instanceof Map) {
+  } else if (pointcut instanceof Map) {
     return apply(hasMap, pointcut, [name])
       ? applyPoint(apply(getMap, pointcut, [name]), pointcut, name, values)
       : false;
-  }
-  if (typeof pointcut === "object" && pointcut !== null) {
+  } else if (typeof pointcut === "object" && pointcut !== null) {
     return name in pointcut
       ? applyPoint(pointcut[name], pointcut, name, values)
       : false;
-  }
-  if (typeof pointcut === "function") {
+  } else if (typeof pointcut === "function") {
     return apply(pointcut, undefined, concat([name], values));
+  } else {
+    throw new InvalidOptionsAranError(
+      "invalid pointcut format. It should either be: a boolean, an array, a set, a map, an object, or a function.",
+    );
   }
-  throw new InvalidOptionsAranError(
-    "invalid pointcut format. It should either be: a boolean, an array, a set, a map, an object, or a function.",
-  );
 };
