@@ -90,6 +90,27 @@ export const return_x__ = (_x1, x2, _x3, _x4) => x2;
 export const return__x_ = (_x1, _x2, x3, _x4) => x3;
 export const return___x = (_x1, _x2, _x3, x4) => x4;
 
+//////////
+// Drop //
+//////////
+
+export const drop_ = (f) => (x1) => f(x1);
+export const dropx = (f) => (_x1) => f();
+
+export const drop__ = (f) => (x1, x2) => f(x1, x2);
+export const dropx_ = (f) => (_x1, x2) => f(x2);
+export const drop_x = (f) => (x1, _x2) => f(x1);
+export const dropxx = (f) => (_x1, _x2) => f();
+
+export const drop___ = (f) => (x1, x2, x3) => f(x1, x2, x3);
+export const dropx__ = (f) => (_x1, x2, x3) => f(x2, x3);
+export const drop_x_ = (f) => (x1, _x2, x3) => f(x1, x3);
+export const drop__x = (f) => (x1, x2, _x3) => f(x1, x2);
+export const drop_xx = (f) => (x1, _x2, _x3) => f(x1);
+export const dropx_x = (f) => (_x1, x2, _x3) => f(x2);
+export const dropxx_ = (f) => (_x1, _x2, x3) => f(x3);
+export const dropxxx = (f) => (_x1, _x2, _x3) => f();
+
 /////////////
 // Partial //
 /////////////

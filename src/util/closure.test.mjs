@@ -88,6 +88,21 @@ forEach(["xx", "_xx", "x_x", "xx_"], (description) => {
   );
 });
 
+forEach(combine(3, ["", "_", "x"]), (description) => {
+  if (getOwnPropertyDescriptor(Library, `drop${description}`) !== undefined) {
+    const drop = Library[`drop${description}`];
+    const xs = [];
+    const ys = [];
+    for (let index = 0; index < description.length; index += 1) {
+      xs[xs.length] = index;
+      if (description[index] === "_") {
+        ys[ys.length] = index;
+      }
+    }
+    assertDeepEqual(apply(drop(returnArguments), undefined, xs), ys);
+  }
+});
+
 forEach(combine(6, ["", "_", "x", "f"]), (description) => {
   if (
     getOwnPropertyDescriptor(Library, `partial${description}`) !== undefined
