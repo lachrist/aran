@@ -1,8 +1,9 @@
-import {concat, flatMap} from "array-lite";
+import {concat, flatMap, map} from "array-lite";
 
 import {
   assert,
   partialx,
+  partialx_,
   partialx__,
   partialx___,
   partialx____,
@@ -22,7 +23,11 @@ import {
   makeConstructExpression,
 } from "./ast/index.mjs";
 
-const {undefined} = globalThis;
+const {
+  Array: {isArray},
+  undefined,
+  Reflect: {ownKeys},
+} = globalThis;
 
 const makeIntrinsicConstructExpression = (
   name,
@@ -329,6 +334,33 @@ export const makeThrowAranErrorExpression = partialx__(
   makeThrowExpression,
   "aran.AranError",
 );
+
+//////////
+// json //
+//////////
+
+/* eslint-disable no-use-before-define */
+
+const makeJSONProperty = (object, key) => {
+  assert(typeof key === "string", "unexpected symbol property");
+  return [makeLiteralExpression(key), makeJSONExpression(object[key])];
+};
+
+export const makeJSONExpression = (json, annotation = undefined) => {
+  if (isArray(json)) {
+    return makeArrayExpression(map(json, makeJSONExpression), annotation);
+  } else if (typeof json === "object" && json !== null) {
+    return makeObjectExpression(
+      makeLiteralExpression(null),
+      map(ownKeys(json), partialx_(makeJSONProperty, json)),
+      annotation,
+    );
+  } else {
+    return makeLiteralExpression(json);
+  }
+};
+
+/* eslint-enable no-use-before-define */
 
 //////////
 // data //

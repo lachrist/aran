@@ -13,6 +13,7 @@ import {
   makeSetExpression,
   makeDataDescriptorExpression,
   makeThrowSyntaxErrorExpression,
+  makeJSONExpression,
 } from "./intrinsic.mjs";
 
 const test = (expression, code) => {
@@ -65,4 +66,13 @@ test(
 test(
   makeThrowSyntaxErrorExpression("message"),
   "intrinsic.aran.throw(new intrinsic.SyntaxError('message'))",
+);
+
+test(makeJSONExpression(null), "null");
+
+test(makeJSONExpression([1, 2, 3]), "intrinsic.Array.of(1, 2, 3)");
+
+test(
+  makeJSONExpression({foo: "bar"}),
+  "intrinsic.aran.createObject(null, 'foo', 'bar')",
 );
