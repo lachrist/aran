@@ -89,6 +89,11 @@ export const returnx___ = (x1, _x2, _x3, _x4) => x1;
 export const return_x__ = (_x1, x2, _x3, _x4) => x2;
 export const return__x_ = (_x1, _x2, x3, _x4) => x3;
 export const return___x = (_x1, _x2, _x3, x4) => x4;
+export const returnx____ = (x1, _x2, _x3, _x4, _x5) => x1;
+export const return_x___ = (_x1, x2, _x3, _x4, _x5) => x2;
+export const return__x__ = (_x1, _x2, x3, _x4, _x5) => x3;
+export const return___x_ = (_x1, _x2, _x3, x4, _x5) => x4;
+export const return____x = (_x1, _x2, _x3, _x4, x5) => x5;
 
 //////////
 // Drop //
@@ -149,6 +154,8 @@ export const partialx_xx = (f, x1, x3, x4) => (x2) => f(x1, x2, x3, x4);
 export const partial_xxx = (f, x2, x3, x4) => (x1) => f(x1, x2, x3, x4);
 export const partialxxxx = (f, x1, x2, x3, x4) => () => f(x1, x2, x3, x4);
 
+export const partialxxx__ = (f, x1, x2, x3) => (x4, x5) =>
+  f(x1, x2, x3, x4, x5);
 export const partialx____ = (f, x1) => (x2, x3, x4, x5) =>
   f(x1, x2, x3, x4, x5);
 export const partialxx___ = (f, x1, x2) => (x3, x4, x5) =>

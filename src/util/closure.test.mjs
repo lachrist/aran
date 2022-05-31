@@ -46,7 +46,7 @@ assertThrow(() => assert(false, "foo"), {
   message: "foo",
 });
 
-forEach(combine(6, "_"), (description) => {
+forEach(combine(6, ["_"]), (description) => {
   const deadcode = Library[`deadcode${description}`];
   assertThrow(
     () => apply(deadcode("message"), undefined, Array(description.length)),
@@ -57,7 +57,7 @@ forEach(combine(6, "_"), (description) => {
   );
 });
 
-forEach(combine(6, "_"), (description) => {
+forEach(combine(6, ["_"]), (description) => {
   const constant = Library[`constant${description}`];
   assertEqual(
     apply(constant("result"), undefined, Array(description.length)),
@@ -65,15 +65,14 @@ forEach(combine(6, "_"), (description) => {
   );
 });
 
-forEach(
-  ["x", "x_", "_x", "x__", "_x_", "__x", "x___", "_x__", "__x_", "___x"],
-  (description) => {
+forEach(combine(5, ["", "_", "x"]), (description) => {
+  if (getOwnPropertyDescriptor(Library, `return${description}`) !== undefined) {
     const array = Array(description.length);
     array[apply(indexOfString, description, ["x"])] = "result";
     const rreturn = Library[`return${description}`];
     assertEqual(apply(rreturn, undefined, array), "result");
-  },
-);
+  }
+});
 
 forEach(["xx", "_xx", "x_x", "xx_"], (description) => {
   const array = map(Array(description.length), populateIndex);
