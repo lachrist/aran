@@ -94,6 +94,13 @@ const getThird = (object) => object[2];
         [123, 123, "123"],
       ],
       [
+        "arrival",
+        ["kind", "kind", "'kind'"],
+        [["link"], ["link"], "intrinsic.Array.of('link')"],
+        [null, null, "null"],
+        [123, 123, "123"],
+      ],
+      [
         "enter",
         ["kind", "kind", "'kind'"],
         [["label"], ["LABEL"], ["intrinsic.Array.of(Label)"]],

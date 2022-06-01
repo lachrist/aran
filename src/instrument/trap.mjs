@@ -11,6 +11,7 @@ import {
   return_x_,
   return__x_,
   return___x_,
+  partialx__,
   partialxxx__,
   dropx_,
   partialxx_,
@@ -64,6 +65,17 @@ const makeSplitScopeReadArrayExpression = (scope, split, variables) =>
     map(variables, partialxx_(makeSplitScopeReadExpression, scope, split)),
   );
 
+const testNullStatic = (closure, scope, value) =>
+  value === null ? null : closure(scope, value);
+
+const testNullDynamic = (closure, scope, value) =>
+  value === null ? makeLiteralExpression(null) : closure(scope, value);
+
+const testNull = ([closure1, closure2]) => [
+  partialx__(testNullStatic, closure1),
+  partialx__(testNullDynamic, closure2),
+];
+
 //////////////
 // Argument //
 //////////////
@@ -112,7 +124,7 @@ const link_array_arg = json_arg;
 
 const label_arg = lab_arg;
 const variable_arg = var_arg;
-const callee_arg = new_arg;
+const callee_arg = testNull(new_arg);
 
 const label_array_arg = lab_array_arg;
 const variable_array_arg = var_array_arg;
