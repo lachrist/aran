@@ -2,9 +2,6 @@ import {assertSuccess} from "../__fixture__.mjs";
 
 import {createCounter} from "../util/index.mjs";
 
-import {makeMetaVariable} from "../variable.mjs";
-import {makeEmptyBreakLabel} from "../label.mjs";
-
 import {
   makeEffectStatement,
   makeExpressionEffect,
@@ -20,6 +17,8 @@ import {visitProgram, visitBlock} from "./visit.mjs";
 import {createRootScope} from "./scope.mjs";
 
 const makeContext = (namespace, pointcut) => ({
+  unmangleVariable: (variable) => ({variable}),
+  unmangleLabel: (label) => ({label}),
   scope: createRootScope(),
   counter: createCounter(0),
   kind: null,
@@ -102,7 +101,13 @@ testProgramIdentity(`"external"; ["this", "new.target"]; { return 123; }`);
 
 // LocalEvalProgram //
 testProgramIdentity(
-  `"internal"; let variable1, variable2; { return variable1; }`,
+  `
+    "internal";
+    let variable1, variable2;
+    {
+      return variable1;
+    }
+  `,
 );
 
 // GlobalEvalProgram //
@@ -123,7 +128,7 @@ testProgramIdentity(`
 // Block //
 ///////////
 
-testBlockIdentity(`label: {let _variable; debugger;}`);
+testBlockIdentity(`label: {let variable; debugger;}`);
 
 testBlock(
   {
@@ -131,31 +136,21 @@ testBlock(
     header: [],
     kind: "block",
   },
-  `${makeEmptyBreakLabel("label")}: {
-    let ${makeMetaVariable("variable")};
-    break ${makeEmptyBreakLabel("label")};
-    effect(${makeMetaVariable("variable")});
+  `label: {
+    let variable;
+    break label;
+    effect(variable);
   }`,
   `label: {
-    let _LAB, _NEW, _OLD;
-    _LAB = intrinsic.aran.createObject(
-      null,
-      "kind", "break",
-      "name", null,
-      "identifier", "${makeEmptyBreakLabel("label")}",
-    );
-    _NEW = intrinsic.aran.createObject(
-      null,
-      "kind", "meta",
-      "name", "variable",
-      "identifier", "${makeMetaVariable("variable")}",
-    );
+    let _LAB, _VAR, _OLD;
+    _LAB = intrinsic.aran.createObject(null, "label", "label");
+    _VAR = intrinsic.aran.createObject(null, "variable", "variable");
     effect(
       intrinsic.aran.getGlobal("traps")["break"](_LAB, "3:4"),
     );
     break label;
     effect(
-      intrinsic.aran.getGlobal("traps")["read"](_NEW, _OLD, "4:11"),
+      intrinsic.aran.getGlobal("traps")["read"](_VAR, _OLD, "4:11"),
     );
   }`,
 );
@@ -256,34 +251,35 @@ testBlockIdentity(`{ let variable; effect(eval([variable], 123)); }`);
 
 testBlockIdentity(`{ effect(123(456, 789)); }`);
 testBlockIdentity(`{ effect(new 123(456)); }`);
-testBlockIdentity(`{ effect(123[456](789)); }`);
-{
-  let done = false;
-  testBlock(
-    makeContext("traps", {
-      __proto__: null,
-      apply: () => {
-        if (done) {
-          return false;
-        } else {
-          done = true;
-          return true;
-        }
-      },
-    }),
-    `{ effect(123[456](789)); }`,
-    `{
-      let this1;
-      effect(
-        intrinsic.aran.getGlobal("traps")["apply"](
-          (
-            this1 = 123,
-            intrinsic.aran.get(this1, 456)
-          ),
-          this1,
-          intrinsic.Array.of(789),
-        ),
-      );
-    }`,
-  );
-}
+
+// testBlockIdentity(`{ effect(123[456](789)); }`);
+// {
+//   let done = false;
+//   testBlock(
+//     makeContext("traps", {
+//       __proto__: null,
+//       apply: () => {
+//         if (done) {
+//           return false;
+//         } else {
+//           done = true;
+//           return true;
+//         }
+//       },
+//     }),
+//     `{ effect(123[456](789)); }`,
+//     `{
+//       let this1;
+//       effect(
+//         intrinsic.aran.getGlobal("traps")["apply"](
+//           (
+//             this1 = 123,
+//             intrinsic.aran.get(this1, 456)
+//           ),
+//           this1,
+//           intrinsic.Array.of(789),
+//         ),
+//       );
+//     }`,
+//   );
+// }

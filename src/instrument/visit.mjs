@@ -1,27 +1,25 @@
 /* eslint-disable no-use-before-define */
 
-import {
-  map,
-  concat,
-  filter,
-  flatMap,
-  reduce,
-  zip,
-  repeat,
-  flat,
-} from "array-lite";
+import {includes, forEach, map, concat, filter, flatMap} from "array-lite";
 
-import {deadcode, constant, assert, incrementCounter} from "../util/index.mjs";
+import {
+  partialx_,
+  partialxx_,
+  partialx_xx,
+  partial__xx,
+  partialxx_x,
+  deadcode,
+  constant,
+  incrementCounter,
+} from "../util/index.mjs";
 
 import {
   matchNode,
   dispatchNode,
-  makeScriptProgram,
+  makeBlock,
   makeModuleProgram,
   makeGlobalEvalProgram,
-  makeInternalLocalEvalProgram,
   makeExternalLocalEvalProgram,
-  makeBlock,
   makeEffectStatement,
   makeReturnStatement,
   makeBreakStatement,
@@ -31,7 +29,6 @@ import {
   makeIfStatement,
   makeWhileStatement,
   makeTryStatement,
-  makeWriteEffect as makeRawWriteEffect,
   makeExportEffect,
   makeSequenceEffect,
   makeConditionalEffect,
@@ -40,89 +37,86 @@ import {
   makeLiteralExpression,
   makeIntrinsicExpression,
   makeImportExpression,
-  makeReadExpression as makeRawReadExpression,
   makeClosureExpression,
   makeAwaitExpression,
   makeYieldExpression,
   makeSequenceExpression,
   makeConditionalExpression,
-  makeEvalExpression,
   makeApplyExpression,
 } from "../ast/index.mjs";
 
-import {unmangleLabel, unmangleVariable} from "./unmangle.mjs";
-
-import {makeMetaVariable} from "../variable.mjs";
+import {makeJSONExpression, makeGetGlobalExpression} from "../intrinsic.mjs";
 
 import {
-  makeNewVariable,
-  makeOldVariable,
-  makeLabVariable,
-  makeVarVariable,
-  getVariableBody,
-  isLabVariable,
-  isVarVariable,
-} from "./variable.mjs";
+  extendScope,
+  makeScopeBlock,
+  makeScopeInternalLocalEvalProgram,
+  makeScopeScriptProgram,
+} from "./scope.mjs";
+
+import {
+  VAR_SPLIT,
+  LAB_SPLIT,
+  NEW_SPLIT,
+  OLD_SPLIT,
+  declareSplitScope,
+  isSplitScopeUsed,
+  makeSplitScopeWriteEffect,
+  makeSplitScopeReadExpression,
+  makeSplitScopeEvalExpression,
+} from "./split.mjs";
 
 import {makeTrapExpression, makeTrapStatementArray} from "./trap.mjs";
 
-import {
-  extendScriptScope,
-  extendScope,
-  declareScopeVariable,
-  isScopeVariableUsed,
-  isScopeVariableInitialized,
-  makeScopeInitializeEffect,
-  makeScopeReadExpression,
-  makeScopeWriteEffect,
-  getUsedScopeVariableArray,
-} from "./scope.mjs";
+const {undefined, String} = globalThis;
 
-const {
-  Error,
-  undefined,
-  String,
-  Object: {entries: toEntries},
-} = globalThis;
+const returnNull = constant(null);
 
-////////////////
-// Initialize //
-////////////////
-
-const makeLiteralObjectExpression = (object) =>
-  makeApplyExpression(
-    makeIntrinsicExpression("aran.createObject"),
-    makeLiteralExpression({undefined: null}),
-    concat(
-      [makeLiteralExpression(null)],
-      map(flat(toEntries(object)), makeLiteralExpression),
-    ),
-  );
-
-export const makeInitializeExpression = (variable) => {
-  if (isLabVariable(variable)) {
-    return makeLiteralObjectExpression(
-      unmangleLabel(getVariableBody(variable)),
-    );
-  }
-  if (isVarVariable(variable)) {
-    return makeLiteralObjectExpression(
-      unmangleVariable(getVariableBody(variable)),
-    );
-  }
-  /* c8 ignore start */
-  throw new Error("could not initialize variable");
-  /* c8 ignore stop */
+const declareSplitScopeMangled = (scope, split, variable, unmangle) => {
+  declareSplitScope(scope, split, variable, unmangle(variable));
 };
 
-const makeInitializeStatement = (scope, variable) =>
+const makeMangleInitializeStatement = (scope, split, variable, unmangle) =>
   makeEffectStatement(
-    makeScopeInitializeEffect(
+    makeSplitScopeWriteEffect(
       scope,
+      split,
       variable,
-      makeInitializeExpression(variable),
+      makeJSONExpression(unmangle(variable)),
     ),
   );
+
+// ////////////////
+// // Initialize //
+// ////////////////
+//
+// export const makeInitializeExpression = (
+//   {unmangleVariable, unmangleLabel},
+//   variable,
+// ) => {
+//   if (isLabVariable(variable)) {
+//     return makeJSONExpression(
+//       unmangleLabel(getVariableBody(variable)),
+//     );
+//   }
+//   if (isVarVariable(variable)) {
+//     return makeJSONExpression(
+//       unmangleVariable(getVariableBody(variable)),
+//     );
+//   }
+//   /* c8 ignore start */
+//   throw new Error("could not initialize variable");
+//   /* c8 ignore stop */
+// };
+//
+// const makeInitializeStatement = (context, variable) =>
+//   makeEffectStatement(
+//     makeScopeInitializeEffect(
+//       context.scope,
+//       variable,
+//       makeInitializeExpression(context, variable),
+//     ),
+//   );
 
 ////////////////////////////////////
 // makeOptimizedTryStatementArray //
@@ -162,7 +156,7 @@ const throw_return_error_statement_array_pattern = [
 ];
 
 const makeOptimizedTryStatementArray = (
-  is_completion,
+  closed,
   statements1,
   statements2,
   statements3,
@@ -170,7 +164,7 @@ const makeOptimizedTryStatementArray = (
   matchNode(
     null,
     statements2,
-    is_completion
+    closed
       ? throw_return_error_statement_array_pattern
       : throw_error_statement_array_pattern,
   ) && statements3.length === 0
@@ -183,657 +177,710 @@ const makeOptimizedTryStatementArray = (
         ),
       ];
 
-///////////
-// Visit //
-///////////
+//////////
+// Link //
+//////////
 
-const default_callback = deadcode("missing instrument callback");
-const generateVisit = (callbacks) => (context, node) =>
-  dispatchNode(context, node, callbacks, default_callback);
-const generateContextlessVisit = (callbacks) => (node) =>
-  dispatchNode(null, node, callbacks, default_callback);
+export const jsonifyLink = partialx_xx(
+  dispatchNode,
+  null,
+  {
+    __proto__: null,
+    ImportLink: (_context, source, specifier, _serial) => ({
+      type: "import",
+      source,
+      import: specifier,
+    }),
+    ExportLink: (_context, specifier, _serial) => ({
+      type: "export",
+      export: specifier,
+    }),
+    AggregateLink: (_context, source, specifier1, specifier2, _serial) => ({
+      type: "aggregate",
+      source,
+      import: specifier1,
+      export: specifier2,
+    }),
+  },
+  deadcode("unexpected link type"),
+);
 
 /////////////
 // Program //
 /////////////
 
-export const visitProgram = generateVisit({
-  __proto__: null,
-  ScriptProgram: (context, statements, serial) => {
-    const scope = extendScriptScope(context.scope, context.script);
-    const child_context = {...context, scope};
-    const visited_statements = flatMap(statements, (statement) =>
-      visitStatement(child_context, statement),
-    );
-    const variables = getUsedScopeVariableArray(scope);
-    return makeScriptProgram(
-      concat(
-        variables.length > 0
-          ? [
-              makeDeclareStatement(
-                "let",
-                context.script,
-                makeApplyExpression(
-                  makeIntrinsicExpression("aran.createObject"),
-                  makeLiteralExpression({undefined: null}),
-                  [makeLiteralExpression(null)],
+export const visitProgram = partial__xx(
+  dispatchNode,
+  {
+    __proto__: null,
+    ScriptProgram: (context, statements1, serial) => {
+      const namespace = `namespace${String(incrementCounter(context.counter))}`;
+      declareSplitScope(context.scope, NEW_SPLIT, namespace, null);
+      const statements2 = concat(
+        [
+          makeTrapStatementArray(
+            context.pointcut,
+            namespace,
+            context.scope,
+            "arrival",
+            "script",
+            null,
+            null,
+            serial,
+          ),
+        ],
+        flatMap(
+          statements1,
+          partialx_(visitStatement, {
+            ...context,
+            namespace,
+          }),
+        ),
+      );
+      return makeScopeScriptProgram(
+        context.scope,
+        concat(
+          isSplitScopeUsed(context.scope, NEW_SPLIT, namespace)
+            ? [
+                makeSplitScopeWriteEffect(
+                  context.scope,
+                  NEW_SPLIT,
+                  namespace,
+                  makeGetGlobalExpression("TODO"),
                 ),
-              ),
-            ]
-          : [],
-        map(
-          filter(
-            variables,
-            (variable) => !isScopeVariableInitialized(scope, variable),
-          ),
-          (variable) => makeInitializeStatement(scope, variable),
+              ]
+            : [],
+          statements2,
         ),
-        makeTrapStatementArray(
-          context.trap,
-          "arrival",
-          "script",
-          null,
-          null,
-          serial,
+      );
+    },
+    ModuleProgram: (context, links, block, serial) =>
+      makeModuleProgram(
+        links,
+        visitBlock(
+          {
+            ...context,
+            kind: "module",
+            arrival: {
+              kind: "module",
+              links: map(links, partialx_(jsonifyLink, context)),
+              callee: null,
+              serial,
+            },
+          },
+          block,
         ),
-        visited_statements,
       ),
-    );
+    GlobalEvalProgram: (context, block, serial) =>
+      makeGlobalEvalProgram(
+        visitBlock(
+          {
+            ...context,
+            kind: "global-eval",
+            arrival: {
+              kind: "global-eval",
+              links: null,
+              callee: null,
+              serial,
+            },
+          },
+          block,
+        ),
+      ),
+    InternalLocalEvalProgram: (context, variables, block, serial) => {
+      const scope = extendScope(context.scope);
+      forEach(
+        variables,
+        partialxx_x(declareSplitScopeMangled, scope, OLD_SPLIT, returnNull),
+      );
+      forEach(
+        variables,
+        partialxx_x(
+          declareSplitScopeMangled,
+          scope,
+          VAR_SPLIT,
+          context.unmangleVariable,
+        ),
+      );
+      return makeScopeInternalLocalEvalProgram(
+        scope,
+        visitBlock(
+          {
+            ...context,
+            scope,
+            kind: "local-eval",
+            arrival: {
+              kind: "local-eval",
+              links: null,
+              callee: null,
+              serial,
+            },
+          },
+          block,
+        ),
+      );
+    },
+    ExternalLocalEvalProgram: (context, enclaves, block, serial) =>
+      makeExternalLocalEvalProgram(
+        enclaves,
+        visitBlock(
+          {
+            ...context,
+            kind: "enclave-eval",
+            arrival: {
+              kind: "enclave-eval",
+              links: null,
+              callee: null,
+              serial,
+            },
+          },
+          block,
+        ),
+      ),
   },
-  ModuleProgram: (context, links, block, serial) =>
-    makeModuleProgram(
-      links,
-      visitBlock(
-        {
-          ...context,
-          kind: "module",
-          header: makeTrapStatementArray(
-            context.trap,
-            "arrival",
-            "module",
-            map(links, visitLink),
-            null,
-            serial,
-          ),
-        },
-        block,
-      ),
-    ),
-  GlobalEvalProgram: (context, block, serial) =>
-    makeGlobalEvalProgram(
-      visitBlock(
-        {
-          ...context,
-          kind: "global-eval",
-          header: makeTrapStatementArray(
-            context.trap,
-            "arrival",
-            "global-eval",
-            null,
-            null,
-            serial,
-          ),
-        },
-        block,
-      ),
-    ),
-  InternalLocalEvalProgram: (context, variables, block, serial) =>
-    makeInternalLocalEvalProgram(
-      map(variables, makeOldVariable),
-      visitBlock(
-        {
-          ...context,
-          scope: reduce(
-            concat(
-              map(variables, makeVarDeclaration),
-              map(variables, makeOldDeclaration),
-            ),
-            accumulateDeclaration,
-            extendScope(context.scope),
-          ),
-          kind: "local-eval",
-          header: makeTrapStatementArray(
-            context.trap,
-            "arrival",
-            "local-eval",
-            null,
-            null,
-            serial,
-          ),
-        },
-        block,
-      ),
-    ),
-  ExternalLocalEvalProgram: (context, enclaves, block, serial) =>
-    makeExternalLocalEvalProgram(
-      enclaves,
-      visitBlock(
-        {
-          ...context,
-          kind: "enclave-eval",
-          header: makeTrapStatementArray(
-            context.trap,
-            "arrival",
-            "enclave-eval",
-            null,
-            null,
-            serial,
-          ),
-        },
-        block,
-      ),
-    ),
-});
-
-///////////
-// Links //
-///////////
-
-export const visitLink = generateContextlessVisit({
-  __proto__: null,
-  ImportLink: (_context, source, specifier, _serial) => ({
-    type: "import",
-    source,
-    import: specifier,
-  }),
-  ExportLink: (_context, specifier, _serial) => ({
-    type: "export",
-    export: specifier,
-  }),
-  AggregateLink: (_context, source, specifier1, specifier2, _serial) => ({
-    type: "aggregate",
-    source,
-    import: specifier1,
-    export: specifier2,
-  }),
-});
+  deadcode("unexpected program type"),
+);
 
 ///////////
 // Block //
 ///////////
 
-const isCompletionKind = (kind) =>
-  kind === "eval" ||
-  kind === "module" ||
-  kind === "arrow" ||
-  kind === "function" ||
-  kind === "method" ||
-  kind === "constructor";
+const closed_kind_array = [
+  "eval",
+  "module",
+  "arrow",
+  "function",
+  "method",
+  "constructor",
+];
 
-const accumulateDeclaration = (scope, declaration) => {
-  declareScopeVariable(scope, declaration);
-  return scope;
-};
+const root_kind_array = [
+  "script",
+  "module",
+  "global-eval",
+  "local-eval",
+  "enclave-eval",
+];
 
-const makeOldDeclaration = (variable) => ({
-  variable: makeOldVariable(variable),
-  value: null,
-  duplicable: false,
-  initialized: true,
-});
-
-const makeVarDeclaration = (variable) => ({
-  variable: makeVarVariable(variable),
-  value: unmangleVariable(variable),
-  duplicable: false,
-  initialized: false,
-});
-
-const makeLabDeclaration = (label) => ({
-  variable: makeLabVariable(label),
-  value: unmangleLabel(label),
-  duplicable: false,
-  initialized: false,
-});
-
-export const visitBlock = generateVisit({
-  __proto__: null,
-  Block: (context, labels, variables, statements, serial) => {
-    const child_scope = reduce(
-      concat(
-        map(labels, makeLabDeclaration),
-        map(variables, makeVarDeclaration),
-        map(variables, makeOldDeclaration),
-      ),
-      accumulateDeclaration,
-      extendScope(context.scope),
-    );
-    const child_context = {
-      ...context,
-      scope: child_scope,
-      header: null,
-      kind: null,
-    };
-    const is_completion = isCompletionKind(context.kind);
-    const enter_statements = makeTrapStatementArray(
-      context.trap,
-      "enter",
-      context.kind,
-      zip(repeat(child_scope, labels.length), map(labels, makeLabVariable)),
-      zip(
-        repeat(child_scope, variables.length),
-        map(variables, makeVarVariable),
-      ),
-      serial,
-    );
-    const visited_statements = flatMap(statements, (statement) =>
-      visitStatement(child_context, statement),
-    );
-    const completion_statements = is_completion
-      ? []
-      : makeTrapStatementArray(context.trap, "completion", serial);
-    const failure_expression = makeApplyExpression(
-      makeIntrinsicExpression("aran.throw"),
-      makeLiteralExpression({undefined: null}),
-      [
-        makeTrapExpression(
-          context.trap,
-          "failure",
-          makeApplyExpression(
-            makeIntrinsicExpression("aran.get"),
-            makeLiteralExpression({undefined: null}),
-            [makeInputExpression(), makeLiteralExpression("error")],
+export const visitBlock = partial__xx(
+  dispatchNode,
+  {
+    __proto__: null,
+    Block: (context, labels, variables, statements, serial) => {
+      const scope = extendScope(context.scope);
+      forEach(
+        labels,
+        partialxx_x(
+          declareSplitScopeMangled,
+          scope,
+          LAB_SPLIT,
+          context.unmangleLabel,
+        ),
+      );
+      forEach(
+        variables,
+        partialxx_x(
+          declareSplitScopeMangled,
+          scope,
+          VAR_SPLIT,
+          context.unmangleVariable,
+        ),
+      );
+      forEach(
+        variables,
+        partialxx_x(declareSplitScopeMangled, scope, OLD_SPLIT, returnNull),
+      );
+      if (includes(root_kind_array, context.kind)) {
+        const namespace = `namespace${String(
+          incrementCounter(context.counter),
+        )}`;
+        context = {...context, namespace};
+        declareSplitScope(scope, NEW_SPLIT, namespace, null);
+      }
+      const closed = includes(closed_kind_array, context.kind);
+      const enter_statements = makeTrapStatementArray(
+        context.pointcut,
+        context.namespace,
+        scope,
+        "enter",
+        context.kind,
+        labels,
+        variables,
+        serial,
+      );
+      const visited_statements = flatMap(
+        statements,
+        partialx_(visitStatement, {
+          ...context,
+          scope,
+          arrival: null,
+          kind: null,
+        }),
+      );
+      const completion_statements = closed
+        ? []
+        : makeTrapStatementArray(
+            context.pointcut,
+            context.namespace,
+            scope,
+            "completion",
+            serial,
+          );
+      const failure_expression = makeApplyExpression(
+        makeIntrinsicExpression("aran.throw"),
+        makeLiteralExpression({undefined: null}),
+        [
+          makeTrapExpression(
+            context.pointcut,
+            context.namespace,
+            scope,
+            "failure",
+            makeApplyExpression(
+              makeIntrinsicExpression("aran.get"),
+              makeLiteralExpression({undefined: null}),
+              [makeInputExpression(), makeLiteralExpression("error")],
+            ),
+            serial,
           ),
-          serial,
-        ),
-      ],
-    );
-    const failure_statements = [
-      is_completion
-        ? makeReturnStatement(failure_expression)
-        : makeEffectStatement(makeExpressionEffect(failure_expression)),
-    ];
-    const leave_statements = makeTrapStatementArray(
-      context.trap,
-      "leave",
-      serial,
-    );
-    const scope_variables = getUsedScopeVariableArray(child_scope);
-    return makeBlock(
-      labels,
-      scope_variables,
-      concat(
-        context.header,
-        map(
-          filter(
-            scope_variables,
-            (variable) => !isScopeVariableInitialized(child_scope, variable),
+        ],
+      );
+      const failure_statements = [
+        closed
+          ? makeReturnStatement(failure_expression)
+          : makeEffectStatement(makeExpressionEffect(failure_expression)),
+      ];
+      const leave_statements = makeTrapStatementArray(
+        context.pointcut,
+        context.namespace,
+        scope,
+        "leave",
+        serial,
+      );
+      return makeScopeBlock(
+        scope,
+        labels,
+        concat(
+          includes(root_kind_array, context.kind) &&
+            isSplitScopeUsed(scope, NEW_SPLIT, context.namespace)
+            ? [
+                makeEffectStatement(
+                  makeSplitScopeWriteEffect(
+                    scope,
+                    NEW_SPLIT,
+                    context.namespace,
+                    makeGetGlobalExpression("TODO"),
+                  ),
+                ),
+              ]
+            : [],
+          context.arrival === null
+            ? []
+            : [
+                makeTrapStatementArray(
+                  context.pointcut,
+                  context.namespace,
+                  scope,
+                  "arrival",
+                  context.arrival.kind,
+                  context.arrival.links,
+                  context.arrival.callee,
+                  context.arrival.serial,
+                ),
+              ],
+          map(
+            filter(labels, partialxx_(isSplitScopeUsed, scope, LAB_SPLIT)),
+            partialxx_x(
+              makeMangleInitializeStatement,
+              scope,
+              LAB_SPLIT,
+              context.unmangleLabel,
+            ),
           ),
-          (variable) => makeInitializeStatement(child_scope, variable),
+          map(
+            filter(variables, partialxx_(isSplitScopeUsed, scope, VAR_SPLIT)),
+            partialxx_x(
+              makeMangleInitializeStatement,
+              scope,
+              VAR_SPLIT,
+              context.unmangleVariable,
+            ),
+          ),
+          makeOptimizedTryStatementArray(
+            closed,
+            concat(enter_statements, visited_statements, completion_statements),
+            failure_statements,
+            leave_statements,
+          ),
         ),
-        makeOptimizedTryStatementArray(
-          is_completion,
-          concat(enter_statements, visited_statements, completion_statements),
-          failure_statements,
-          leave_statements,
-        ),
-      ),
-    );
+      );
+    },
   },
-});
+  deadcode("unexpected block type"),
+);
 
 ///////////////
 // Statement //
 ///////////////
 
-export const visitStatement = generateVisit({
-  __proto__: null,
-  ReturnStatement: (context, expression, serial) => [
-    makeReturnStatement(
-      makeTrapExpression(
-        context.trap,
-        "return",
-        visitExpression(context, expression),
-        serial,
+export const visitStatement = partial__xx(
+  dispatchNode,
+  {
+    __proto__: null,
+    ReturnStatement: (context, expression, serial) => [
+      makeReturnStatement(
+        makeTrapExpression(
+          context.scope,
+          context.traping,
+          "return",
+          visitExpression(context, expression),
+          serial,
+        ),
       ),
-    ),
-  ],
-  DebuggerStatement: (context, serial) =>
-    concat(makeTrapStatementArray(context.trap, "debugger", serial), [
-      makeDebuggerStatement(),
-    ]),
-  BreakStatement: (context, label, serial) =>
-    concat(
-      makeTrapStatementArray(
-        context.trap,
-        "break",
-        [context.scope, makeLabVariable(label)],
-        serial,
+    ],
+    DebuggerStatement: (context, serial) =>
+      concat(
+        makeTrapStatementArray(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "debugger",
+          serial,
+        ),
+        [makeDebuggerStatement()],
       ),
-      [makeBreakStatement(label)],
-    ),
-  EffectStatement: (context, effect, _serial) => [
-    makeEffectStatement(visitEffect(context, effect)),
-  ],
-  DeclareStatement: (context, kind, variable, expression, serial) => [
-    makeDeclareStatement(
-      kind,
-      variable,
-      makeTrapExpression(
-        context.trap,
-        "declare",
+    BreakStatement: (context, label, serial) =>
+      concat(
+        makeTrapStatementArray(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "break",
+          label,
+          serial,
+        ),
+        [makeBreakStatement(label)],
+      ),
+    EffectStatement: (context, effect, _serial) => [
+      makeEffectStatement(visitEffect(context, effect)),
+    ],
+    DeclareStatement: (context, kind, variable, expression, serial) => [
+      makeDeclareStatement(
         kind,
         variable,
-        visitExpression(context, expression),
-        serial,
+        makeTrapExpression(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "declare",
+          kind,
+          variable,
+          visitExpression(context, expression),
+          serial,
+        ),
       ),
-    ),
-  ],
-  BlockStatement: (context, block, _serial) => [
-    makeBlockStatement(
-      visitBlock({...context, kind: "block", header: []}, block),
-    ),
-  ],
-  IfStatement: (context, expression, block1, block2, serial) => [
-    makeIfStatement(
-      makeTrapExpression(
-        context.trap,
-        "test",
-        visitExpression(context, expression),
-        serial,
+    ],
+    BlockStatement: (context, block, _serial) => [
+      makeBlockStatement(
+        visitBlock({...context, kind: "block", arrival: null}, block),
       ),
-      visitBlock({...context, kind: "consequent", header: []}, block1),
-      visitBlock({...context, kind: "alternate", header: []}, block2),
-    ),
-  ],
-  WhileStatement: (context, expression, block, serial) => [
-    makeWhileStatement(
-      makeTrapExpression(
-        context.trap,
-        "test",
-        visitExpression(context, expression),
-        serial,
+    ],
+    IfStatement: (context, expression, block1, block2, serial) => [
+      makeIfStatement(
+        makeTrapExpression(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "test",
+          visitExpression(context, expression),
+          serial,
+        ),
+        visitBlock({...context, kind: "consequent", arrival: null}, block1),
+        visitBlock({...context, kind: "alternate", arrival: null}, block2),
       ),
-      visitBlock({...context, kind: "while", header: []}, block),
-    ),
-  ],
-  TryStatement: (context, block1, block2, block3, _serial) => [
-    makeTryStatement(
-      visitBlock({...context, kind: "try", header: []}, block1),
-      visitBlock({...context, kind: "catch", header: []}, block2),
-      visitBlock({...context, kind: "finally", header: []}, block3),
-    ),
-  ],
-});
+    ],
+    WhileStatement: (context, expression, block, serial) => [
+      makeWhileStatement(
+        makeTrapExpression(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "test",
+          visitExpression(context, expression),
+          serial,
+        ),
+        visitBlock({...context, kind: "while", arrival: null}, block),
+      ),
+    ],
+    TryStatement: (context, block1, block2, block3, _serial) => [
+      makeTryStatement(
+        visitBlock({...context, kind: "try", arrival: null}, block1),
+        visitBlock({...context, kind: "catch", arrival: null}, block2),
+        visitBlock({...context, kind: "finally", arrival: null}, block3),
+      ),
+    ],
+  },
+  deadcode("unexpected statement type"),
+);
 
 ////////////
 // Effect //
 ////////////
 
-export const visitEffect = generateVisit({
-  __proto__: null,
-  WriteEffect: (context, variable, expression, serial) =>
-    makeScopeWriteEffect(
-      context.scope,
-      makeOldVariable(variable),
-      makeTrapExpression(
-        context.trap,
-        "write",
-        [context.scope, makeVarVariable(variable)],
-        visitExpression(context, expression),
-        serial,
+export const visitEffect = partial__xx(
+  dispatchNode,
+  {
+    __proto__: null,
+    WriteEffect: (context, variable, expression, serial) =>
+      makeSplitScopeWriteEffect(
+        context.scope,
+        OLD_SPLIT,
+        makeTrapExpression(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "write",
+          variable,
+          visitExpression(context, expression),
+          serial,
+        ),
       ),
-    ),
-  ExportEffect: (context, specifier, expression, serial) =>
-    makeExportEffect(
-      specifier,
-      makeTrapExpression(
-        context.trap,
-        "export",
+    ExportEffect: (context, specifier, expression, serial) =>
+      makeExportEffect(
         specifier,
-        visitExpression(context, expression),
-        serial,
+        makeTrapExpression(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "export",
+          specifier,
+          visitExpression(context, expression),
+          serial,
+        ),
       ),
-    ),
-  SequenceEffect: (context, effect1, effect2, _serial) =>
-    makeSequenceEffect(
-      visitEffect(context, effect1),
-      visitEffect(context, effect2),
-    ),
-  ConditionalEffect: (context, expression, effect1, effect2, serial) =>
-    makeConditionalEffect(
-      makeTrapExpression(
-        context.trap,
-        "test",
-        visitExpression(context, expression),
-        serial,
+    SequenceEffect: (context, effect1, effect2, _serial) =>
+      makeSequenceEffect(
+        visitEffect(context, effect1),
+        visitEffect(context, effect2),
       ),
-      visitEffect(context, effect1),
-      visitEffect(context, effect2),
-    ),
-  ExpressionEffect: (context, expression, serial) =>
-    makeExpressionEffect(
-      makeTrapExpression(
-        context.trap,
-        "drop",
-        visitExpression(context, expression),
-        serial,
+    ConditionalEffect: (context, expression, effect1, effect2, serial) =>
+      makeConditionalEffect(
+        makeTrapExpression(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "test",
+          visitExpression(context, expression),
+          serial,
+        ),
+        visitEffect(context, effect1),
+        visitEffect(context, effect2),
       ),
-    ),
-});
+    ExpressionEffect: (context, expression, serial) =>
+      makeExpressionEffect(
+        makeTrapExpression(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "drop",
+          visitExpression(context, expression),
+          serial,
+        ),
+      ),
+  },
+  deadcode("unexpected effect type"),
+);
 
 ////////////////
 // Expression //
 ////////////////
 
-export const visitExpression = generateVisit({
-  __proto__: null,
-  InputExpression: (context, serial) =>
-    makeTrapExpression(
-      context.trap,
-      "parameters",
-      makeInputExpression(),
-      serial,
-    ),
-  LiteralExpression: (context, literal, serial) =>
-    makeTrapExpression(context.trap, "literal", literal, serial),
-  IntrinsicExpression: (context, name, serial) =>
-    makeTrapExpression(
-      context.trap,
-      "intrinsic",
-      name,
-      makeIntrinsicExpression(name),
-      serial,
-    ),
-  ImportExpression: (context, source, specifier, serial) =>
-    makeTrapExpression(
-      context.trap,
-      "import",
-      source,
-      specifier,
-      makeImportExpression(source, specifier),
-      serial,
-    ),
-  ReadExpression: (context, variable, serial) =>
-    makeTrapExpression(
-      context.trap,
-      "read",
-      [context.scope, makeVarVariable(variable)],
-      makeScopeReadExpression(context.scope, makeOldVariable(variable)),
-      serial,
-    ),
-  ClosureExpression: (
-    context,
-    kind,
-    asynchronous,
-    generator,
-    block,
-    serial,
-  ) => {
-    const callee_variable = makeNewVariable(
-      `callee${String(incrementCounter(context.counter))}`,
-    );
-    declareScopeVariable(context.scope, {
-      variable: callee_variable,
-      value: null,
-      duplicable: false,
-      initialized: false,
-    });
-    const expression = makeTrapExpression(
-      context.trap,
-      "closure",
+export const visitExpression = partial__xx(
+  dispatchNode,
+  {
+    __proto__: null,
+    InputExpression: (context, serial) =>
+      makeTrapExpression(
+        context.pointcut,
+        context.namespace,
+        context.scope,
+        "parameters",
+        makeInputExpression(),
+        serial,
+      ),
+    LiteralExpression: (context, literal, serial) =>
+      makeTrapExpression(
+        context.pointcut,
+        context.namespace,
+        context.scope,
+        "literal",
+        literal,
+        serial,
+      ),
+    IntrinsicExpression: (context, name, serial) =>
+      makeTrapExpression(
+        context.pointcut,
+        context.namespace,
+        context.scope,
+        "intrinsic",
+        name,
+        makeIntrinsicExpression(name),
+        serial,
+      ),
+    ImportExpression: (context, source, specifier, serial) =>
+      makeTrapExpression(
+        context.pointcut,
+        context.namespace,
+        context.scope,
+        "import",
+        source,
+        specifier,
+        makeImportExpression(source, specifier),
+        serial,
+      ),
+    ReadExpression: (context, variable, serial) =>
+      makeTrapExpression(
+        context.pointcut,
+        context.namespace,
+        context.scope,
+        "read",
+        variable,
+        makeSplitScopeReadExpression(context.scope, OLD_SPLIT, variable),
+        serial,
+      ),
+    ClosureExpression: (
+      context,
       kind,
       asynchronous,
       generator,
-      makeClosureExpression(
+      block,
+      serial,
+    ) => {
+      const callee = `callee${String(incrementCounter(context.counter))}`;
+      declareSplitScope(context.scope, NEW_SPLIT, callee, null);
+      const expression = makeTrapExpression(
+        context.pointcut,
+        context.namespace,
+        context.scope,
+        "closure",
         kind,
         asynchronous,
         generator,
-        visitBlock(
-          {
-            ...context,
-            kind,
-            header: makeTrapStatementArray(
-              context.trap,
-              "arrival",
+        makeClosureExpression(
+          kind,
+          asynchronous,
+          generator,
+          visitBlock(
+            {
+              ...context,
               kind,
-              null,
-              [context.scope, callee_variable],
-              serial,
-            ),
-          },
-          block,
+              arrival: {
+                kind,
+                links: null,
+                callee,
+                serial,
+              },
+            },
+            block,
+          ),
+        ),
+      );
+      if (isSplitScopeUsed(context.scope, NEW_SPLIT, callee)) {
+        return makeSequenceExpression(
+          makeSplitScopeWriteEffect(
+            context.scope,
+            NEW_SPLIT,
+            callee,
+            expression,
+          ),
+          makeSplitScopeReadExpression(context.scope, NEW_SPLIT, callee),
+        );
+      } else {
+        return expression;
+      }
+    },
+    AwaitExpression: (context, expression, serial) =>
+      makeAwaitExpression(
+        makeTrapExpression(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "await",
+          visitExpression(context, expression),
+          serial,
         ),
       ),
-    );
-    return isScopeVariableUsed(context.scope, callee_variable)
-      ? makeSequenceExpression(
-          makeScopeInitializeEffect(context.scope, callee_variable, expression),
-          makeScopeReadExpression(context.scope, callee_variable),
-        )
-      : expression;
-  },
-  AwaitExpression: (context, expression, serial) =>
-    makeAwaitExpression(
-      makeTrapExpression(
-        context.trap,
-        "await",
-        visitExpression(context, expression),
-        serial,
-      ),
-    ),
-  YieldExpression: (context, delegate, expression, serial) =>
-    makeYieldExpression(
-      delegate,
-      makeTrapExpression(
-        context.trap,
-        "yield",
+    YieldExpression: (context, delegate, expression, serial) =>
+      makeYieldExpression(
         delegate,
-        visitExpression(context, expression),
-        serial,
+        makeTrapExpression(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "yield",
+          delegate,
+          visitExpression(context, expression),
+          serial,
+        ),
       ),
-    ),
-  SequenceExpression: (context, effect, expression, _serial) =>
-    makeSequenceExpression(
-      visitEffect(context, effect),
-      visitExpression(context, expression),
-    ),
-  ConditionalExpression: (
-    context,
-    expression1,
-    expression2,
-    expression3,
-    serial,
-  ) =>
-    makeConditionalExpression(
+    SequenceExpression: (context, effect, expression, _serial) =>
+      makeSequenceExpression(
+        visitEffect(context, effect),
+        visitExpression(context, expression),
+      ),
+    ConditionalExpression: (
+      context,
+      expression1,
+      expression2,
+      expression3,
+      serial,
+    ) =>
+      makeConditionalExpression(
+        makeTrapExpression(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "test",
+          visitExpression(context, expression1),
+          serial,
+        ),
+        visitExpression(context, expression2),
+        visitExpression(context, expression3),
+      ),
+    EvalExpression: (context, variables, expression, serial) =>
+      makeSplitScopeEvalExpression(
+        variables,
+        [OLD_SPLIT, VAR_SPLIT],
+        makeTrapExpression(
+          context.pointcut,
+          context.namespace,
+          context.scope,
+          "eval",
+          visitExpression(context, expression),
+          serial,
+        ),
+      ),
+    // Combiners //
+    ApplyExpression: (context, expression1, expression2, expressions, serial) =>
       makeTrapExpression(
-        context.trap,
-        "test",
+        context.pointcut,
+        context.namespace,
+        context.scope,
+        "apply",
         visitExpression(context, expression1),
+        visitExpression(context, expression2),
+        map(expressions, partialx_(visitExpression, context)),
         serial,
       ),
-      visitExpression(context, expression2),
-      visitExpression(context, expression3),
-    ),
-  EvalExpression: (context, variables, expression, serial) =>
-    makeEvalExpression(
-      map(variables, makeOldVariable),
+    ConstructExpression: (context, expression, expressions, serial) =>
       makeTrapExpression(
-        context.trap,
-        "eval",
+        context.pointcut,
+        context.namespace,
+        context.scope,
+        "construct",
         visitExpression(context, expression),
+        map(expressions, partialx_(visitExpression, context)),
         serial,
       ),
-    ),
-  // Combiners //
-  ApplyExpression: (context, expression1, expression2, expressions, serial) =>
-    makeTrapExpression(
-      context.trap,
-      "apply",
-      visitExpression(context, expression1),
-      visitExpression(context, expression2),
-      map(expressions, (arg_expression) =>
-        visitExpression(context, arg_expression),
-      ),
-      serial,
-    ),
-  ConstructExpression: (context, expression, expressions, serial) =>
-    makeTrapExpression(
-      context.trap,
-      "construct",
-      visitExpression(context, expression),
-      map(expressions, (arg_expression) =>
-        visitExpression(context, arg_expression),
-      ),
-      serial,
-    ),
-  InvokeExpression: (
-    context,
-    expression1,
-    expression2,
-    expressions,
-    serial,
-  ) => {
-    let this_variable = null;
-    return makeTrapExpression(
-      context.trap,
-      "invoke",
-      (cut) => {
-        if (cut) {
-          this_variable = makeMetaVariable(
-            `this_${String(incrementCounter(context.counter))}`,
-          );
-          declareScopeVariable(context.scope, {
-            variable: makeOldVariable(this_variable),
-            value: null,
-            duplicable: false,
-            initialized: true,
-          });
-          declareScopeVariable(context.scope, {
-            variable: makeVarVariable(this_variable),
-            value: unmangleVariable(this_variable),
-            duplicable: false,
-            initialized: false,
-          });
-          return visitExpression(
-            context,
-            makeSequenceExpression(
-              makeRawWriteEffect(this_variable, expression1, serial),
-              makeApplyExpression(
-                makeIntrinsicExpression("aran.get", serial),
-                makeLiteralExpression({undefined: null}, serial),
-                [makeRawReadExpression(this_variable, serial), expression2],
-                serial,
-              ),
-              serial,
-            ),
-          );
-        } else {
-          return visitExpression(context, expression1);
-        }
-      },
-      (cut) => {
-        if (cut) {
-          assert(this_variable !== null, "expected presence of this variable");
-          return visitExpression(
-            context,
-            makeRawReadExpression(this_variable, serial),
-          );
-        } else {
-          return visitExpression(context, expression2);
-        }
-      },
-      map(expressions, (expression) => visitExpression(context, expression)),
-    );
   },
-});
+  deadcode("unexpected expression type"),
+);
