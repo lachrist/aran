@@ -197,7 +197,7 @@ const argumentize = (scope, trap, timing, value, index) => {
   return closure(scope, value);
 };
 
-const makeTrapMaybeNode = (scope, {namespace, pointcut}, name, values) => {
+const makeTrapMaybeNode = (pointcut, namespace, scope, name, values) => {
   assert(hasOwnProperty(traps, name), "missing trap");
   const trap = traps[name];
   assert(trap.length - 1 === values.length, "trap arity mismatch");
@@ -217,14 +217,26 @@ const makeTrapMaybeNode = (scope, {namespace, pointcut}, name, values) => {
   }
 };
 
-export const makeTrapExpression = (scope, traping, name, ...values) => {
-  const maybe = makeTrapMaybeNode(scope, traping, name, values);
+export const makeTrapExpression = (
+  pointcut,
+  namespace,
+  scope,
+  name,
+  ...values
+) => {
+  const maybe = makeTrapMaybeNode(pointcut, namespace, scope, name, values);
   assert(maybe !== null, "unexpected informer trap");
   return maybe;
 };
 
-export const makeTrapStatementArray = (scope, traping, name, ...values) => {
-  const maybe = makeTrapMaybeNode(scope, traping, name, values);
+export const makeTrapStatementArray = (
+  pointcut,
+  namespace,
+  scope,
+  name,
+  ...values
+) => {
+  const maybe = makeTrapMaybeNode(pointcut, namespace, scope, name, values);
   return maybe === null
     ? []
     : [makeEffectStatement(makeExpressionEffect(maybe))];

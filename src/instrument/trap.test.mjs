@@ -41,12 +41,7 @@ const getThird = (object) => object[2];
       makeScopeBlock(
         scope,
         [],
-        makeTrapStatementArray(
-          scope,
-          {pointcut: false, namespace: "namespace"},
-          "debugger",
-          123,
-        ),
+        makeTrapStatementArray(false, "namespace", scope, "debugger", 123),
       ),
       "{}",
     ),
@@ -61,12 +56,7 @@ const getThird = (object) => object[2];
       makeScopeBlock(
         scope,
         [],
-        makeTrapStatementArray(
-          scope,
-          {pointcut: true, namespace: "namespace"},
-          "debugger",
-          123,
-        ),
+        makeTrapStatementArray(true, "namespace", scope, "debugger", 123),
       ),
       `
         {
@@ -261,17 +251,15 @@ const getThird = (object) => object[2];
               makeEffectStatement(
                 makeExpressionEffect(
                   makeTrapExpression(
-                    scope,
-                    {
-                      namespace: "namespace",
-                      pointcut: (name2, ...args) => {
-                        assertEqual(done, false);
-                        done = true;
-                        assertEqual(name1, name2);
-                        assertDeepEqual(args, map(specs, getSecond));
-                        return true;
-                      },
+                    (name2, ...args) => {
+                      assertEqual(done, false);
+                      done = true;
+                      assertEqual(name1, name2);
+                      assertDeepEqual(args, map(specs, getSecond));
+                      return true;
                     },
+                    "namespace",
+                    scope,
                     name1,
                     ...map(specs, getFirst),
                   ),
