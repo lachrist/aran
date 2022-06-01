@@ -19,6 +19,8 @@ import {
   makeScopeWriteEffect,
   makeScopeBlock,
   makeScopeScriptProgram,
+  makeScopeEvalExpression,
+  makeScopeInternalLocalEvalProgram,
 } from "./scope.mjs";
 
 const {undefined} = globalThis;
@@ -91,6 +93,42 @@ const {undefined} = globalThis;
         effect(variable);
         variable = 'right';
       }`,
+    ),
+  );
+}
+
+{
+  const scope = extendScope(createRootScope("secret_"));
+  declareScope(scope, "variable");
+  assertSuccess(
+    allignProgram(
+      makeScopeInternalLocalEvalProgram(
+        scope,
+        makeScopeBlock(
+          extendScope(scope),
+          [],
+          [
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeEvalExpression(
+                  scope,
+                  ["variable"],
+                  makeLiteralExpression("code"),
+                ),
+              ),
+            ),
+            makeReturnStatement(makeLiteralExpression("completion")),
+          ],
+        ),
+      ),
+      `
+        'internal';
+        let variable;
+        {
+          effect(eval([variable], 'code'));
+          return 'completion';
+        }
+      `,
     ),
   );
 }
