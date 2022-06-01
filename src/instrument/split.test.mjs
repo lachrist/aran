@@ -17,6 +17,7 @@ import {
   isSplitScopeUsed,
   makeSplitScopeReadExpression,
   makeSplitScopeWriteEffect,
+  makeSplitScopeEvalExpression,
 } from "./split.mjs";
 
 const {undefined} = globalThis;
@@ -51,6 +52,16 @@ const {undefined} = globalThis;
               makeSplitScopeReadExpression(scope, VAR_SPLIT, "variable"),
             ),
           ),
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeSplitScopeEvalExpression(
+                scope,
+                [VAR_SPLIT],
+                ["variable"],
+                makeLiteralExpression("code"),
+              ),
+            ),
+          ),
         ],
       ),
       `
@@ -58,6 +69,7 @@ const {undefined} = globalThis;
           let x;
           x = 'right';
           effect(x);
+          effect(eval([x], 'code'));
         }
       `,
     ),
