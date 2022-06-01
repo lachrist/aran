@@ -1,27 +1,23 @@
-import {createCounter} from "../util/index.mjs";
 import {createRootScope} from "./scope.mjs";
 import {visitProgram} from "./visit.mjs";
 
 export const instrumentProgram = (
-  pointcut,
   program,
-  {traps, scope},
+  pointcut,
+  {counter, secret, advice},
   {unmangleVariable, unmangleLabel},
 ) =>
   visitProgram(
     {
-
       unmangleVariable,
       unmangleLabel,
-      counter: createCounter(0),
-      scope: createRootScope(),
-      script: scope,
-      trap: {
-        namespace: traps,
-        pointcut,
-      },
+      counter,
+      scope: createRootScope(secret),
+      pointcut,
+      advice,
       kind: null,
-      header: null,
+      arrival: null,
+      namespace: null,
     },
     program,
   );

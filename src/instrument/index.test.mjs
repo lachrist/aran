@@ -1,5 +1,7 @@
 import {assertSuccess} from "../__fixture__.mjs";
 
+import {createCounter} from "../util/index.mjs";
+
 import {allignProgram} from "../allign/index.mjs";
 
 import {parseProgram} from "../lang/index.mjs";
@@ -12,14 +14,23 @@ const {Error} = globalThis;
   const code = `"script"; return 123;`;
   assertSuccess(
     allignProgram(
-      instrumentProgram("scope", "traps", false, parseProgram(code), {
-        unmangleLabel: (_label) => {
-          throw new Error("unexpected label");
+      instrumentProgram(
+        parseProgram(code),
+        false,
+        {
+          counter: createCounter(0),
+          secret: "secret",
+          advice: "advice",
         },
-        unmangleVariable: (_variable) => {
-          throw new Error("unexpected variable");
+        {
+          unmangleLabel: (_label) => {
+            throw new Error("unexpected label");
+          },
+          unmangleVariable: (_variable) => {
+            throw new Error("unexpected variable");
+          },
         },
-      }),
+      ),
       code,
     ),
   );

@@ -246,7 +246,7 @@ export const visitProgram = partial__xx(
                     context.scope,
                     NEW_SPLIT,
                     namespace,
-                    makeGetGlobalExpression(context.global),
+                    makeGetGlobalExpression(context.advice),
                   ),
                 ),
               ]
@@ -471,7 +471,7 @@ const visitBlock = partial__xx(
                     scope,
                     NEW_SPLIT,
                     context.namespace,
-                    makeGetGlobalExpression(context.global),
+                    makeGetGlobalExpression(context.advice),
                   ),
                 ),
               ]

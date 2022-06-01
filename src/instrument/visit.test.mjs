@@ -14,7 +14,7 @@ const makeContext = (pointcut) => ({
   unmangleVariable: (variable) => ({variable}),
   unmangleLabel: (label) => ({label}),
   scope: createRootScope("secret_"),
-  global: "global",
+  advice: "advice",
   counter: createCounter(0),
   kind: null,
   arrival: null,
@@ -51,7 +51,7 @@ test(
     effect(
       intrinsic.aran.setGlobalStrict(
         'secret_Nnamespace1',
-        intrinsic.aran.getGlobal('global'),
+        intrinsic.aran.getGlobal('advice'),
       ),
     );
     effect(
@@ -131,7 +131,7 @@ testIdentity(`
 test(
   {
     ...makeContext(["break", "read"]),
-    global: "global",
+    advice: "advice",
     unmangleLabel: (label) => ({LABEL: label}),
     unmangleVariable: (variable) => ({VARIABLE: variable}),
   },
@@ -150,7 +150,7 @@ test(
     'module';
     {
       let namespace;
-      namespace = intrinsic.aran.getGlobal('global');
+      namespace = intrinsic.aran.getGlobal('advice');
       label: {
         let _OLD, _LAB, _VAR;
         _LAB = intrinsic.aran.createObject(null, "LABEL", "label");
@@ -171,7 +171,7 @@ test(
 test(
   {
     ...makeContext(["leave"]),
-    global: "global",
+    advice: "advice",
   },
   `
     'module';
@@ -183,7 +183,7 @@ test(
     'module';
     {
       let namespace;
-      namespace = intrinsic.aran.getGlobal('global');
+      namespace = intrinsic.aran.getGlobal('advice');
       try {
         return 'completion';
       } catch {
@@ -328,7 +328,7 @@ test(
     ...makeContext(
       (name, ...values) => name === "arrival" && values[0] === "arrow",
     ),
-    global: "global",
+    advice: "advice",
   },
   `
     'module';
@@ -342,7 +342,7 @@ test(
     'module';
     {
       let namespace, callee;
-      namespace = intrinsic.aran.getGlobal('global');
+      namespace = intrinsic.aran.getGlobal('advice');
       return (
         callee = () => {
           effect(
