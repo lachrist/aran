@@ -3,18 +3,21 @@ import {createRootScope} from "./scope.mjs";
 import {visitProgram} from "./visit.mjs";
 
 export const instrumentProgram = (
-  scope_enclave_variable,
-  trap_enclave_variable,
   pointcut,
   program,
+  {traps, scope},
+  {unmangleVariable, unmangleLabel},
 ) =>
   visitProgram(
     {
+
+      unmangleVariable,
+      unmangleLabel,
       counter: createCounter(0),
       scope: createRootScope(),
-      script: scope_enclave_variable,
+      script: scope,
       trap: {
-        namespace: trap_enclave_variable,
+        namespace: traps,
         pointcut,
       },
       kind: null,

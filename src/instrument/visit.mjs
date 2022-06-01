@@ -182,7 +182,7 @@ const makeOptimizedTryStatementArray = (
 // Link //
 //////////
 
-export const jsonifyLink = partialx_xx(
+const jsonifyLink = partialx_xx(
   dispatchNode,
   null,
   {
@@ -292,11 +292,6 @@ export const visitProgram = partial__xx(
       const scope = extendScope(context.scope);
       forEach(
         variables,
-        partialxx_x(declareSplitScopeMangled, scope, OLD_SPLIT, returnNull),
-      );
-      forEach(variables, partialxx_(useSplitScope, scope, OLD_SPLIT));
-      forEach(
-        variables,
         partialxx_x(
           declareSplitScopeMangled,
           scope,
@@ -304,6 +299,11 @@ export const visitProgram = partial__xx(
           context.unmangleVariable,
         ),
       );
+      forEach(
+        variables,
+        partialxx_x(declareSplitScopeMangled, scope, OLD_SPLIT, returnNull),
+      );
+      forEach(variables, partialxx_(useSplitScope, scope, OLD_SPLIT));
       return makeScopeInternalLocalEvalProgram(
         scope,
         visitBlock(
@@ -364,7 +364,7 @@ const root_kind_array = [
   "enclave-eval",
 ];
 
-export const visitBlock = partial__xx(
+const visitBlock = partial__xx(
   dispatchNode,
   {
     __proto__: null,
@@ -523,7 +523,7 @@ export const visitBlock = partial__xx(
 // Statement //
 ///////////////
 
-export const visitStatement = partial__xx(
+const visitStatement = partial__xx(
   dispatchNode,
   {
     __proto__: null,
@@ -628,7 +628,7 @@ export const visitStatement = partial__xx(
 // Effect //
 ////////////
 
-export const visitEffect = partial__xx(
+const visitEffect = partial__xx(
   dispatchNode,
   {
     __proto__: null,
@@ -636,6 +636,7 @@ export const visitEffect = partial__xx(
       makeSplitScopeWriteEffect(
         context.scope,
         OLD_SPLIT,
+        variable,
         makeTrapExpression(
           context.pointcut,
           context.namespace,
@@ -696,7 +697,7 @@ export const visitEffect = partial__xx(
 // Expression //
 ////////////////
 
-export const visitExpression = partial__xx(
+const visitExpression = partial__xx(
   dispatchNode,
   {
     __proto__: null,
@@ -785,6 +786,7 @@ export const visitExpression = partial__xx(
             block,
           ),
         ),
+        serial,
       );
       if (isSplitScopeUsed(context.scope, NEW_SPLIT, callee)) {
         return makeSequenceExpression(
@@ -850,8 +852,9 @@ export const visitExpression = partial__xx(
       ),
     EvalExpression: (context, variables, expression, serial) =>
       makeSplitScopeEvalExpression(
-        variables,
+        context.scope,
         [OLD_SPLIT, VAR_SPLIT],
+        variables,
         makeTrapExpression(
           context.pointcut,
           context.namespace,
