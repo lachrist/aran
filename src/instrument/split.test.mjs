@@ -15,6 +15,7 @@ import {
   declareSplitScope,
   lookupSplitScope,
   isSplitScopeUsed,
+  useSplitScope,
   makeSplitScopeReadExpression,
   makeSplitScopeWriteEffect,
   makeSplitScopeEvalExpression,
@@ -33,6 +34,8 @@ const {undefined} = globalThis;
     "note",
   );
   assertEqual(isSplitScopeUsed(scope, VAR_SPLIT, "variable"), false);
+  assertEqual(useSplitScope(scope, VAR_SPLIT, "variable"), undefined);
+  assertEqual(isSplitScopeUsed(scope, VAR_SPLIT, "variable"), true);
   assertSuccess(
     allignBlock(
       makeScopeBlock(

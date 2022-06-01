@@ -127,6 +127,11 @@ export const makeScopeScriptProgram = ({parent, secret, used}, statements) => {
   );
 };
 
+export const useScope = (scope, variable) => {
+  const {used} = getBindingScope(scope, variable);
+  pushUnique(used, variable);
+};
+
 export const makeScopeInternalLocalEvalProgram = ({parent, used}, block) => {
   assert(parent !== null, "expected body scope");
   return makeInternalLocalEvalProgram(used, block);

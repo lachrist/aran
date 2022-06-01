@@ -3,6 +3,7 @@ import {flatMap, map} from "array-lite";
 import {append, partialx_, partial_x} from "../util/index.mjs";
 
 import {
+  useScope,
   declareScope,
   lookupScope,
   isScopeUsed,
@@ -24,6 +25,9 @@ export const lookupSplitScope = (scope, prefix, variable) =>
 
 export const isSplitScopeUsed = (scope, prefix, variable) =>
   isScopeUsed(scope, `${prefix}${variable}`);
+
+export const useSplitScope = (scope, prefix, variable) =>
+  useScope(scope, `${prefix}${variable}`);
 
 export const makeSplitScopeReadExpression = (scope, prefix, variable) =>
   makeScopeReadExpression(scope, `${prefix}${variable}`);

@@ -17,6 +17,7 @@ import {
   isScopeUsed,
   makeScopeReadExpression,
   makeScopeWriteEffect,
+  useScope,
   makeScopeBlock,
   makeScopeScriptProgram,
   makeScopeEvalExpression,
@@ -34,7 +35,7 @@ const {undefined} = globalThis;
   assertEqual(declareScope(scope, "variable", "note"), undefined);
   assertEqual(lookupScope(extendScope(scope), "variable"), "note");
   assertEqual(isScopeUsed(scope, "variable"), false);
-  makeScopeReadExpression(scope, "variable");
+  assertEqual(useScope(scope, "variable"), undefined);
   assertEqual(isScopeUsed(scope, "variable"), true);
 }
 

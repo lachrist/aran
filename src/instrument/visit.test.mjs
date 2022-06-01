@@ -2,11 +2,11 @@ import {assertSuccess} from "../__fixture__.mjs";
 
 import {createCounter} from "../util/index.mjs";
 
-import {
-  makeEffectStatement,
-  makeExpressionEffect,
-  makeLiteralExpression,
-} from "../ast/index.mjs";
+// import {
+//   makeEffectStatement,
+//   makeExpressionEffect,
+//   makeLiteralExpression,
+// } from "../ast/index.mjs";
 
 import {parseProgram, parseBlock} from "../lang/index.mjs";
 
@@ -16,18 +16,16 @@ import {visitProgram, visitBlock} from "./visit.mjs";
 
 import {createRootScope} from "./scope.mjs";
 
-const makeContext = (namespace, pointcut) => ({
+const makeContext = (pointcut) => ({
   unmangleVariable: (variable) => ({variable}),
   unmangleLabel: (label) => ({label}),
-  scope: createRootScope(),
+  scope: createRootScope("secret_"),
+  global: "global",
   counter: createCounter(0),
   kind: null,
-  header: [],
-  script: null,
-  trap: {
-    namespace,
-    pointcut,
-  },
+  arrival: null,
+  namespace: null,
+  pointcut,
 });
 
 const generateTest = (parse, allign, visit) => (context, code1, code2) => {
@@ -37,7 +35,7 @@ const testProgram = generateTest(parseProgram, allignProgram, visitProgram);
 const testBlock = generateTest(parseBlock, allignBlock, visitBlock);
 
 const generateTestIdentity = (test) => (code) => {
-  test(makeContext(null, false), code, code);
+  test(makeContext(false), code, code);
 };
 const testProgramIdentity = generateTestIdentity(testProgram);
 const testBlockIdentity = generateTestIdentity(testBlock);
@@ -49,60 +47,60 @@ const testBlockIdentity = generateTestIdentity(testBlock);
 // Script (unoptimized) //
 testProgram(
   {
-    ...makeContext("traps", ["arrival"]),
-    script: "scope",
+    ...makeContext(["arrival"]),
   },
-  `"script"; return () => { return 123; }`,
+  `
+    'script';
+    return 'completion';
+  `,
   `
     "script";
-    let scope = intrinsic.aran.createObject(null);
+    let secret_Nnamespace1 = undefined;
     effect(
-      intrinsic.aran.getGlobal("traps")["arrival"](
+      intrinsic.aran.setGlobalStrict(
+        'secret_Nnamespace1',
+        intrinsic.aran.getGlobal('global'),
+      ),
+    );
+    effect(
+      intrinsic.aran.get(
+        intrinsic.aran.getGlobal("secret_Nnamespace1"),
+        "arrival",
+      )(
+        !intrinsic.aran.getGlobal("secret_Nnamespace1"),
         "script",
         null,
         null,
         "1:0",
       ),
     );
-    return (
-      effect(
-        intrinsic.aran.setStrict(
-          intrinsic.aran.getGlobal("scope"),
-          "Ncallee1",
-          () => {
-            effect(
-              intrinsic.aran.getGlobal("traps")["arrival"](
-                "arrow",
-                null,
-                intrinsic.aran.get(
-                  intrinsic.aran.getGlobal("scope"),
-                  "Ncallee1",
-                ),
-                "1:17",
-              ),
-            );
-            return 123;
-          },
-        ),
-      ),
-      intrinsic.aran.get(
-        intrinsic.aran.getGlobal("scope"),
-        "Ncallee1",
-      )
-    );
+    return 'completion';
   `,
 );
 
 // (ScriptProgram optimized) //
-testProgramIdentity(`"script"; return 123;`);
+testProgramIdentity(
+  `
+    'script';
+    return 'completion';
+  `,
+);
 
 // EnclaveEvalProgram //
-testProgramIdentity(`"external"; ["this", "new.target"]; { return 123; }`);
+testProgramIdentity(
+  `
+    'external';
+    ['this', 'new.target'];
+    {
+      return 'completion';
+    }
+  `,
+);
 
 // LocalEvalProgram //
 testProgramIdentity(
   `
-    "internal";
+    'internal';
     let variable1, variable2;
     {
       return variable1;
@@ -111,18 +109,27 @@ testProgramIdentity(
 );
 
 // GlobalEvalProgram //
-testProgramIdentity(`"eval"; { return 123; }`);
+testProgramIdentity(
+  `
+    'eval';
+    {
+      return 'completion';
+    }
+  `,
+);
 
 // ModuleProgram //
-testProgramIdentity(`
-  "module";
-  import {specifier1} from "source";
-  export {specifier2};
-  export {specifier3 as specifier4} from "source";
-  {
-    return 123;
-  }
-`);
+testProgramIdentity(
+  `
+    'module';
+    import {specifier1} from 'source';
+    export {specifier2};
+    export {specifier3 as specifier4} from 'source';
+    {
+      return 'completion';
+    }
+  `,
+);
 
 ///////////
 // Block //
@@ -132,8 +139,8 @@ testBlockIdentity(`label: {let variable; debugger;}`);
 
 testBlock(
   {
-    ...makeContext("traps", ["break", "read"]),
-    header: [],
+    ...makeContext(["break", "read"]),
+    arrival: null,
     kind: "block",
   },
   `label: {
@@ -157,11 +164,9 @@ testBlock(
 
 testBlock(
   {
-    ...makeContext("traps", ["leave"]),
+    ...makeContext(["leave"]),
     kind: "block",
-    header: [
-      makeEffectStatement(makeExpressionEffect(makeLiteralExpression(456))),
-    ],
+    arrival: ["block", null, null, 123],
   },
   `{ effect(123); }`,
   `{
@@ -214,7 +219,7 @@ testBlockIdentity(`{ 123 ? effect(456) : effect(789); }`);
 ////////////////
 
 // testBlock(
-//   makeContext("traps", ["arrival"]),
+//   makeContext(["arrival"]),
 //   `{ effect(() => { return 123; }); }`,
 //   `{
 //     let _callee;

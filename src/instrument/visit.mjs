@@ -61,6 +61,7 @@ import {
   OLD_SPLIT,
   declareSplitScope,
   isSplitScopeUsed,
+  useSplitScope,
   makeSplitScopeWriteEffect,
   makeSplitScopeReadExpression,
   makeSplitScopeEvalExpression,
@@ -217,18 +218,16 @@ export const visitProgram = partial__xx(
       const namespace = `namespace${String(incrementCounter(context.counter))}`;
       declareSplitScope(context.scope, NEW_SPLIT, namespace, null);
       const statements2 = concat(
-        [
-          makeTrapStatementArray(
-            context.pointcut,
-            namespace,
-            context.scope,
-            "arrival",
-            "script",
-            null,
-            null,
-            serial,
-          ),
-        ],
+        makeTrapStatementArray(
+          context.pointcut,
+          namespace,
+          context.scope,
+          "arrival",
+          "script",
+          null,
+          null,
+          serial,
+        ),
         flatMap(
           statements1,
           partialx_(visitStatement, {
@@ -242,11 +241,13 @@ export const visitProgram = partial__xx(
         concat(
           isSplitScopeUsed(context.scope, NEW_SPLIT, namespace)
             ? [
-                makeSplitScopeWriteEffect(
-                  context.scope,
-                  NEW_SPLIT,
-                  namespace,
-                  makeGetGlobalExpression("TODO"),
+                makeEffectStatement(
+                  makeSplitScopeWriteEffect(
+                    context.scope,
+                    NEW_SPLIT,
+                    namespace,
+                    makeGetGlobalExpression(context.global),
+                  ),
                 ),
               ]
             : [],
@@ -263,7 +264,7 @@ export const visitProgram = partial__xx(
             kind: "module",
             arrival: {
               kind: "module",
-              links: map(links, partialx_(jsonifyLink, context)),
+              links: map(links, jsonifyLink),
               callee: null,
               serial,
             },
@@ -293,6 +294,7 @@ export const visitProgram = partial__xx(
         variables,
         partialxx_x(declareSplitScopeMangled, scope, OLD_SPLIT, returnNull),
       );
+      forEach(variables, partialxx_(useSplitScope, scope, OLD_SPLIT));
       forEach(
         variables,
         partialxx_x(
@@ -390,6 +392,7 @@ export const visitBlock = partial__xx(
         variables,
         partialxx_x(declareSplitScopeMangled, scope, OLD_SPLIT, returnNull),
       );
+      forEach(variables, partialxx_(useSplitScope, scope, OLD_SPLIT));
       if (includes(root_kind_array, context.kind)) {
         const namespace = `namespace${String(
           incrementCounter(context.counter),
@@ -468,25 +471,23 @@ export const visitBlock = partial__xx(
                     scope,
                     NEW_SPLIT,
                     context.namespace,
-                    makeGetGlobalExpression("TODO"),
+                    makeGetGlobalExpression(context.global),
                   ),
                 ),
               ]
             : [],
           context.arrival === null
             ? []
-            : [
-                makeTrapStatementArray(
-                  context.pointcut,
-                  context.namespace,
-                  scope,
-                  "arrival",
-                  context.arrival.kind,
-                  context.arrival.links,
-                  context.arrival.callee,
-                  context.arrival.serial,
-                ),
-              ],
+            : makeTrapStatementArray(
+                context.pointcut,
+                context.namespace,
+                scope,
+                "arrival",
+                context.arrival.kind,
+                context.arrival.links,
+                context.arrival.callee,
+                context.arrival.serial,
+              ),
           map(
             filter(labels, partialxx_(isSplitScopeUsed, scope, LAB_SPLIT)),
             partialxx_x(
@@ -529,8 +530,9 @@ export const visitStatement = partial__xx(
     ReturnStatement: (context, expression, serial) => [
       makeReturnStatement(
         makeTrapExpression(
+          context.pointcut,
+          context.namespace,
           context.scope,
-          context.traping,
           "return",
           visitExpression(context, expression),
           serial,
