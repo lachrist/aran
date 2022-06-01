@@ -24,7 +24,7 @@ import {
 const {undefined} = globalThis;
 
 {
-  const scope = createRootScope();
+  const scope = createRootScope("secret_");
   assertThrow(() => lookupScope(extendScope(scope), "variable"), {
     name: "Error",
     message: "missing variable",
@@ -37,7 +37,7 @@ const {undefined} = globalThis;
 }
 
 {
-  const scope = createRootScope();
+  const scope = createRootScope("secret_");
   declareScope(scope, "variable", "note");
   assertSuccess(
     allignProgram(
@@ -56,9 +56,9 @@ const {undefined} = globalThis;
       ]),
       `
         'script';
-        let variable = undefined;
-        effect(intrinsic.aran.getGlobal('variable'));
-        effect(intrinsic.aran.setGlobalStrict('variable', 'right'));
+        let secret_variable = undefined;
+        effect(intrinsic.aran.getGlobal('secret_variable'));
+        effect(intrinsic.aran.setGlobalStrict('secret_variable', 'right'));
         return 'completion';
       `,
     ),
@@ -66,7 +66,7 @@ const {undefined} = globalThis;
 }
 
 {
-  const scope = extendScope(createRootScope());
+  const scope = extendScope(createRootScope("secret_"));
   declareScope(scope, "variable");
   assertSuccess(
     allignBlock(

@@ -1,9 +1,10 @@
 import {concat, map, includes} from "array-lite";
 
 import {
+  append,
   push,
   hasOwnProperty,
-  partialx,
+  partialx_,
   partialx_x,
   partial__x,
   assert,
@@ -31,11 +32,17 @@ const {
 
 export const extendScope = (parent) => ({
   parent,
+  secret: null,
   bindings: {},
   used: [],
 });
 
-export const createRootScope = partialx(extendScope, null);
+export const createRootScope = (secret) => ({
+  parent: null,
+  secret,
+  bindings: {},
+  used: [],
+});
 
 const descriptor = {
   __proto__: null,
@@ -80,18 +87,20 @@ const pushUnique = (array, element) => {
 };
 
 export const makeScopeReadExpression = (scope, variable) => {
-  const {used, parent} = getBindingScope(scope, variable);
+  const {used, secret, parent} = getBindingScope(scope, variable);
   pushUnique(used, variable);
   return parent === null
-    ? makeGetGlobalExpression(variable)
+    ? makeGetGlobalExpression(`${secret}${variable}`)
     : makeReadExpression(variable);
 };
 
 export const makeScopeWriteEffect = (scope, variable, expression) => {
-  const {used, parent} = getBindingScope(scope, variable);
+  const {used, secret, parent} = getBindingScope(scope, variable);
   pushUnique(used, variable);
   return parent === null
-    ? makeExpressionEffect(makeSetGlobalStrictExpression(variable, expression))
+    ? makeExpressionEffect(
+        makeSetGlobalStrictExpression(`${secret}${variable}`, expression),
+      )
     : makeWriteEffect(variable, expression);
 };
 
@@ -106,9 +115,12 @@ const makeUndefinedDeclareStatement = partialx_x(
   makeLiteralExpression({undefined: null}),
 );
 
-export const makeScopeScriptProgram = ({parent, used}, statements) => {
+export const makeScopeScriptProgram = ({parent, secret, used}, statements) => {
   assert(parent === null, "expected root scope");
   return makeScriptProgram(
-    concat(map(used, makeUndefinedDeclareStatement), statements),
+    concat(
+      map(map(used, partialx_(append, secret)), makeUndefinedDeclareStatement),
+      statements,
+    ),
   );
 };
