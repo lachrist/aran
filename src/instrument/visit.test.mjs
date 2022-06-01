@@ -203,69 +203,288 @@ test(
 // Statement //
 ///////////////
 
-testIdentity(`'module'; { debugger; return 'completion'; }`);
-testIdentity(`'module'; { label: { break label; } return 'completion'; }`);
-testIdentity(`'module'; { return 'completion'; }`);
-testIdentity(`'module'; { effect(123); return 'completion'; }`);
-testIdentity(`{ var variable = 123; }`);
+testIdentity(`
+  'module';
+  {
+    debugger;
+    return 'completion';
+  }
+`);
 
-testIdentity(`{ { effect(123); } }`);
-testIdentity(`{ while (123) { effect(456); } }`);
-testIdentity(`{ if (123) { effect(456); } else { effect(789); } }`);
-testIdentity(
-  `{ try { effect(123); } catch { effect(456); } finally { effect(789); } }`,
-);
+testIdentity(`
+  'module';
+  {
+    label: { break label; }
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    effect(123);
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'script';
+  {
+    var variable = 123;
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    { effect(123); }
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    while (123) { effect(456); }
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    if (123) { effect(456); } else { effect(789); }
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    try { effect(123); } catch { effect(456); } finally { effect(789); }
+    return 'completion';
+  }`);
 
 ////////////
 // Effect //
 ////////////
 
-testIdentity(`{ effect(123); }`);
-testIdentity(`{ let variable; variable = 123; }`);
-testIdentity(`{ exportStatic("specifier", 123); }`);
-testIdentity(`{ (effect(123), effect(456)); }`);
-testIdentity(`{ 123 ? effect(456) : effect(789); }`);
+testIdentity(`
+  'module';
+  {
+    effect(123);
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    let variable;
+    variable = 123;
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'module';
+  export {specifier};
+  {
+    exportStatic("specifier", 123);
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    (effect(123), effect(456));
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    123 ? effect(456) : effect(789);
+    return 'completion';
+  }
+`);
 
 ////////////////
 // Expression //
 ////////////////
 
-// testBlock(
-//   makeContext(["arrival"]),
-//   `{ effect(() => { return 123; }); }`,
-//   `{
-//     let _callee;
-//     effect(
-//       (
-//         _callee = () => {
-//           effect(
-//             intrinsic
-//               ("Reflect.get")
-//               (undefined, $traps, "arrival")
-//               ($traps, "arrow", null, _callee, "1:9")
-//           );
-//           return 123;
-//         },
-//         _callee
-//       )
-//     );
-//   }`,
-// );
+test(
+  {
+    ...makeContext(
+      (name, ...values) => name === "arrival" && values[0] === "arrow",
+    ),
+    global: "global",
+  },
+  `
+    'module';
+    {
+      return () => {
+        return 123;
+      };
+    }
+  `,
+  `
+    'module';
+    {
+      let namespace, callee;
+      namespace = intrinsic.aran.getGlobal('global');
+      return (
+        callee = () => {
+          effect(
+            intrinsic.aran.get(namespace, "arrival")(
+              !namespace,
+              "arrow",
+              null,
+              callee,
+              "4:13",
+            ),
+          );
+          return 123;
+        },
+        callee
+      );
+    }
+  `,
+);
 
-testIdentity(`{ effect(() => { return 'completion'; }); }`);
+testIdentity(`
+  'module';
+  {
+    return () => {
+      return 'completion';
+    };
+  }
+`);
 
-testIdentity(`{ effect(input); }`);
-testIdentity(`{ effect(intrinsic.ReferenceError); }`);
-testIdentity(`{ effect(123); }`);
-testIdentity(`{ effect(importStatic("source", "specifier")); }`);
-testIdentity(`{ let variable; effect(variable); }`);
+testIdentity(`
+  'module';
+  {
+    return input;
+  }
+`);
 
-testIdentity(`{ effect((effect(123), 456)); }`);
-testIdentity(`{ effect(123 ? 456 : 789); }`);
-testIdentity(`{ effect(await 123); }`);
-testIdentity(`{ effect(yieldStraight(123)); }`);
-testIdentity(`{ effect(yieldDelegate(123)); }`);
-// testIdentity(`{ let variable; effect(eval([variable], 123)); }`);
+testIdentity(`
+  'module';
+  {
+    return intrinsic.ReferenceError;
+  }
+`);
 
-testIdentity(`{ effect(123(456, 789)); }`);
-testIdentity(`{ effect(new 123(456)); }`);
+testIdentity(`
+  'module';
+  {
+    return 123;
+  }
+`);
+
+testIdentity(`
+  'module';
+  import {specifier} from "source";
+  {
+    return importStatic("source", "specifier");
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    let variable;
+    return variable;
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    return (effect(123), 456);
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    return 123 ? 456 : 789;
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    return async () => {
+      return await 123;
+    };
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    return function* () {
+      return yieldStraight(123);
+    };
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    return function* () {
+      return yieldDelegate(123);
+    };
+  }
+`);
+
+test(
+  {
+    ...makeContext(false),
+    unmangleVariable: (variable) => ({VARIABLE: variable}),
+  },
+  `
+    'module';
+    {
+      let variable;
+      return eval([variable], 123);
+    }
+  `,
+  `
+    'module';
+    {
+      let old_variable, new_variable;
+      new_variable = intrinsic.aran.createObject(
+        null,
+        "VARIABLE",
+        "variable",
+      );
+      return eval([old_variable, new_variable], 123);
+    }
+  `,
+);
+
+testIdentity(`
+  'module';
+  {
+    return 123(456, 789);
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    return new 123(456);
+  }
+`);
