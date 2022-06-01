@@ -3,7 +3,6 @@ import {join, concat, forEach, map} from "array-lite";
 import {assertEqual, assertDeepEqual, assertSuccess} from "../__fixture__.mjs";
 
 import {
-  makeBlock,
   makeEffectStatement,
   makeExpressionEffect,
   makeIntrinsicExpression,
@@ -12,11 +11,20 @@ import {
   makeReturnStatement,
   makeImportExpression,
   makeReadExpression,
+  makeInputExpression,
 } from "../ast/index.mjs";
 
 import {allignBlock} from "../allign/index.mjs";
 
-import {extendScope, createRootScope, declareScope} from "./scope.mjs";
+import {makeScopeBlock, extendScope, createRootScope} from "./scope.mjs";
+
+import {
+  VAR_SPLIT,
+  LAB_SPLIT,
+  NEW_SPLIT,
+  makeSplitScopeReadExpression,
+  declareSplitScope,
+} from "./split.mjs";
 
 import {makeTrapExpression, makeTrapStatementArray} from "./trap.mjs";
 
@@ -26,31 +34,36 @@ const getFirst = (object) => object[0];
 const getSecond = (object) => object[1];
 const getThird = (object) => object[2];
 
-assertSuccess(
-  allignBlock(
-    makeBlock(
-      [],
-      [],
-      makeTrapStatementArray(
-        {pointcut: false, namespace: "namespace", scope: createRootScope()},
-        "debugger",
-        123,
-      ),
-    ),
-    "{}",
-  ),
-);
-
 {
-  const scope = extendScope(createRootScope());
-  declareScope(scope, "namespace", null);
+  const scope = extendScope(createRootScope("secret_"));
   assertSuccess(
     allignBlock(
-      makeBlock(
+      makeScopeBlock(
+        scope,
         [],
-        ["namespace"],
         makeTrapStatementArray(
-          {pointcut: true, namespace: "namespace", scope},
+          scope,
+          {pointcut: false, namespace: "namespace"},
+          "debugger",
+          123,
+        ),
+      ),
+      "{}",
+    ),
+  );
+}
+
+{
+  const scope = extendScope(createRootScope("secret_"));
+  declareSplitScope(scope, NEW_SPLIT, "namespace", "NAMESPACE");
+  assertSuccess(
+    allignBlock(
+      makeScopeBlock(
+        scope,
+        [],
+        makeTrapStatementArray(
+          scope,
+          {pointcut: true, namespace: "namespace"},
           "debugger",
           123,
         ),
@@ -71,11 +84,15 @@ assertSuccess(
 }
 
 {
-  const scope = extendScope(createRootScope());
-  declareScope(scope, "variable", "VARIABLE");
-  declareScope(scope, "label", "LABEL");
-  declareScope(scope, "callee", null);
-  declareScope(scope, "namespace", null);
+  const scope = extendScope(createRootScope("secret_"));
+  declareSplitScope(scope, VAR_SPLIT, "variable", "VARIABLE");
+  declareSplitScope(scope, LAB_SPLIT, "label", "LABEL");
+  declareSplitScope(scope, NEW_SPLIT, "callee", "CALLEE");
+  declareSplitScope(scope, NEW_SPLIT, "namespace", "NAMESPACE");
+  makeSplitScopeReadExpression(scope, VAR_SPLIT, "variable");
+  makeSplitScopeReadExpression(scope, LAB_SPLIT, "label");
+  makeSplitScopeReadExpression(scope, NEW_SPLIT, "callee");
+  makeSplitScopeReadExpression(scope, NEW_SPLIT, "namespace");
   forEach(
     [
       // Informers //
@@ -83,7 +100,7 @@ assertSuccess(
         "arrival",
         ["kind", "kind", "'kind'"],
         [["link"], ["link"], "intrinsic.Array.of('link')"],
-        ["callee", null, "Callee"],
+        ["callee", "CALLEE", "Callee"],
         [123, 123, "123"],
       ],
       [
@@ -98,11 +115,7 @@ assertSuccess(
       ["debugger", [123, 123, "123"]],
       ["break", ["label", "LABEL", "Label"], [123, 123, "123"]],
       // Producers //
-      [
-        "parameters",
-        [makeLiteralExpression(456), null, "456"],
-        [123, 123, "123"],
-      ],
+      ["parameters", [makeInputExpression(), null, "input"], [123, 123, "123"]],
       [
         "intrinsic",
         ["aran.get", "aran.get", "'aran.get'"],
@@ -135,8 +148,8 @@ assertSuccess(
             "arrow",
             true,
             false,
-            makeBlock(
-              [],
+            makeScopeBlock(
+              extendScope(scope),
               [],
               [makeReturnStatement(makeLiteralExpression("completion"))],
             ),
@@ -241,15 +254,15 @@ assertSuccess(
       let done = false;
       assertSuccess(
         allignBlock(
-          makeBlock(
+          makeScopeBlock(
+            scope,
             [],
-            ["variable", "label", "callee", "namespace"],
             [
               makeEffectStatement(
                 makeExpressionEffect(
                   makeTrapExpression(
+                    scope,
                     {
-                      scope,
                       namespace: "namespace",
                       pointcut: (name2, ...args) => {
                         assertEqual(done, false);

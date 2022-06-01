@@ -13,7 +13,8 @@ import {
   return___x_,
   partialxxx__,
   dropx_,
-  partialx_,
+  partialxx_,
+  partial_x_,
   hasOwnProperty,
 } from "../util/index.mjs";
 
@@ -32,7 +33,13 @@ import {
   makeJSONExpression,
 } from "../intrinsic.mjs";
 
-import {lookupScope, makeScopeReadExpression} from "./scope.mjs";
+import {
+  NEW_SPLIT,
+  LAB_SPLIT,
+  VAR_SPLIT,
+  lookupSplitScope,
+  makeSplitScopeReadExpression,
+} from "./split.mjs";
 
 import {cut} from "./cut.mjs";
 
@@ -49,12 +56,12 @@ const returnNull = constant(null);
 
 const mapNull = (array) => map(array, returnNull);
 
-const lookupAllScope = (scope, variables) =>
-  map(variables, partialx_(lookupScope, scope));
+const lookupAllScope = (scope, split, variables) =>
+  map(variables, partialxx_(lookupSplitScope, scope, split));
 
-const makeScopeReadArrayExpression = (scope, variables) =>
+const makeSplitScopeReadArrayExpression = (scope, split, variables) =>
   makeArrayExpression(
-    map(variables, partialx_(makeScopeReadExpression, scope)),
+    map(variables, partialxx_(makeSplitScopeReadExpression, scope, split)),
   );
 
 //////////////
@@ -65,9 +72,27 @@ const expression_arg = [constant__(null), return_x];
 const expression_array_arg = [dropx_(mapNull), dropx_(makeArrayExpression)];
 const primitive_arg = [return_x, dropx_(makeLiteralExpression)];
 const literal_arg = [dropx_(fromLiteral), dropx_(makeLiteralExpression)];
-const scope_arg = [lookupScope, makeScopeReadExpression];
-const scope_array_arg = [lookupAllScope, makeScopeReadArrayExpression];
-const link_array_arg = [return_x, dropx_(makeJSONExpression)];
+const json_arg = [return_x, dropx_(makeJSONExpression)];
+const new_arg = [
+  partial_x_(lookupSplitScope, NEW_SPLIT),
+  partial_x_(makeSplitScopeReadExpression, NEW_SPLIT),
+];
+const var_arg = [
+  partial_x_(lookupSplitScope, VAR_SPLIT),
+  partial_x_(makeSplitScopeReadExpression, VAR_SPLIT),
+];
+const lab_arg = [
+  partial_x_(lookupSplitScope, LAB_SPLIT),
+  partial_x_(makeSplitScopeReadExpression, LAB_SPLIT),
+];
+const var_array_arg = [
+  partial_x_(lookupAllScope, VAR_SPLIT),
+  partial_x_(makeSplitScopeReadArrayExpression, VAR_SPLIT),
+];
+const lab_array_arg = [
+  partial_x_(lookupAllScope, LAB_SPLIT),
+  partial_x_(makeSplitScopeReadArrayExpression, LAB_SPLIT),
+];
 
 //////////////////////
 // Synonym Argument //
@@ -83,12 +108,14 @@ const specifier_arg = primitive_arg;
 const source_arg = primitive_arg;
 const delegate_arg = primitive_arg;
 
-const label_arg = scope_arg;
-const variable_arg = scope_arg;
-const callee_arg = scope_arg;
+const link_array_arg = json_arg;
 
-const label_array_arg = scope_array_arg;
-const variable_array_arg = scope_array_arg;
+const label_arg = lab_arg;
+const variable_arg = var_arg;
+const callee_arg = new_arg;
+
+const label_array_arg = lab_array_arg;
+const variable_array_arg = var_array_arg;
 
 /////////////
 // Library //
@@ -170,7 +197,7 @@ const argumentize = (scope, trap, timing, value, index) => {
   return closure(scope, value);
 };
 
-const makeTrapMaybeNode = ({scope, namespace, pointcut}, name, values) => {
+const makeTrapMaybeNode = (scope, {namespace, pointcut}, name, values) => {
   assert(hasOwnProperty(traps, name), "missing trap");
   const trap = traps[name];
   assert(trap.length - 1 === values.length, "trap arity mismatch");
@@ -179,10 +206,10 @@ const makeTrapMaybeNode = ({scope, namespace, pointcut}, name, values) => {
   ) {
     return makeApplyExpression(
       makeGetExpression(
-        makeScopeReadExpression(scope, namespace),
+        makeSplitScopeReadExpression(scope, NEW_SPLIT, namespace),
         makeLiteralExpression(name),
       ),
-      makeScopeReadExpression(scope, namespace),
+      makeSplitScopeReadExpression(scope, NEW_SPLIT, namespace),
       map(values, partialxxx__(argumentize, scope, trap, 1)),
     );
   } else {
@@ -190,14 +217,14 @@ const makeTrapMaybeNode = ({scope, namespace, pointcut}, name, values) => {
   }
 };
 
-export const makeTrapExpression = (context, name, ...values) => {
-  const maybe = makeTrapMaybeNode(context, name, values);
+export const makeTrapExpression = (scope, traping, name, ...values) => {
+  const maybe = makeTrapMaybeNode(scope, traping, name, values);
   assert(maybe !== null, "unexpected informer trap");
   return maybe;
 };
 
-export const makeTrapStatementArray = (context, name, ...values) => {
-  const maybe = makeTrapMaybeNode(context, name, values);
+export const makeTrapStatementArray = (scope, traping, name, ...values) => {
+  const maybe = makeTrapMaybeNode(scope, traping, name, values);
   return maybe === null
     ? []
     : [makeEffectStatement(makeExpressionEffect(maybe))];
