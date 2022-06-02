@@ -109,7 +109,7 @@ forEach(["xx", "_xx", "x_x", "xx_"], (description) => {
   );
 });
 
-forEach(combine(3, ["", "_", "x"]), (description) => {
+forEach(combine(6, ["", "_", "x"]), (description) => {
   if (getOwnPropertyDescriptor(Library, `drop${description}`) !== undefined) {
     const drop = Library[`drop${description}`];
     const xs = [];
