@@ -1,4 +1,4 @@
-import {forEach, map, flatMap, concat} from "array-lite";
+import {reduce, forEach, map, flatMap, concat} from "array-lite";
 
 import {assertEqual, assertDeepEqual, assertThrow} from "../__fixture__.mjs";
 
@@ -22,8 +22,6 @@ const tag = (x) => x + 100;
 
 const untag = (x) => x - 100;
 
-const populateIndex = (_element, index, _array) => index;
-
 const combine = (size, prefixes) => {
   if (size === 0) {
     return [""];
@@ -39,6 +37,16 @@ const combine = (size, prefixes) => {
 
 const returnArguments = (...xs) => xs;
 
+const enumerate = (start, end) => {
+  const array = Array(end - start);
+  for (let index = start; index < end; index += 1) {
+    array[index - start] = index;
+  }
+  return array;
+};
+
+const sum = (array) => reduce(array, (x1, x2) => x1 + x2, 0);
+
 assertEqual(assert(true, "foo"), undefined);
 
 assertThrow(() => assert(false, "foo"), {
@@ -49,7 +57,8 @@ assertThrow(() => assert(false, "foo"), {
 forEach(combine(6, ["_"]), (description) => {
   const deadcode = Library[`deadcode${description}`];
   assertThrow(
-    () => apply(deadcode("message"), undefined, Array(description.length)),
+    () =>
+      apply(deadcode("message"), undefined, enumerate(0, description.length)),
     {
       name: "DeadcodeError",
       message: "message",
@@ -60,22 +69,35 @@ forEach(combine(6, ["_"]), (description) => {
 forEach(combine(6, ["_"]), (description) => {
   const constant = Library[`constant${description}`];
   assertEqual(
-    apply(constant("result"), undefined, Array(description.length)),
+    apply(constant("result"), undefined, enumerate(0, description.length)),
     "result",
+  );
+});
+
+forEach(combine(6, ["_"]), (description) => {
+  const bind = Library[`bind${description}`];
+  assertDeepEqual(
+    apply(
+      bind(sum, returnArguments),
+      undefined,
+      enumerate(0, description.length),
+    ),
+    sum(enumerate(0, description.length)),
   );
 });
 
 forEach(combine(5, ["", "_", "x"]), (description) => {
   if (getOwnPropertyDescriptor(Library, `return${description}`) !== undefined) {
-    const array = Array(description.length);
-    array[apply(indexOfString, description, ["x"])] = "result";
     const rreturn = Library[`return${description}`];
-    assertEqual(apply(rreturn, undefined, array), "result");
+    assertEqual(
+      apply(rreturn, undefined, enumerate(0, description.length)),
+      apply(indexOfString, description, ["x"]),
+    );
   }
 });
 
 forEach(["xx", "_xx", "x_x", "xx_"], (description) => {
-  const array = map(Array(description.length), populateIndex);
+  const array = enumerate(0, description.length);
   const index1 = apply(indexOfString, description, ["x"]);
   const index2 = apply(lastIndexOfString, description, ["x"]);
   array[index1] = index2;
@@ -83,7 +105,7 @@ forEach(["xx", "_xx", "x_x", "xx_"], (description) => {
   const flip = Library[`flip${description}`];
   assertDeepEqual(
     apply(flip(returnArguments), undefined, array),
-    map(Array(description.length), populateIndex),
+    enumerate(0, description.length),
   );
 });
 
@@ -121,7 +143,7 @@ forEach(combine(6, ["", "_", "x", "f"]), (description) => {
     }
     assertDeepEqual(
       apply(apply(partial, undefined, [returnArguments, ...xs]), undefined, ys),
-      map(Array(description.length), populateIndex),
+      enumerate(0, description.length),
     );
   }
 });

@@ -116,6 +116,20 @@ export const dropx_x = (f) => (_x1, x2, _x3) => f(x2);
 export const dropxx_ = (f) => (_x1, _x2, x3) => f(x3);
 export const dropxxx = (f) => (_x1, _x2, _x3) => f();
 
+//////////
+// Bind //
+//////////
+
+export const bind = (f, g) => () => f(g());
+export const bind_ = (f, g) => (x1) => f(g(x1));
+export const bind__ = (f, g) => (x1, x2) => f(g(x1, x2));
+export const bind___ = (f, g) => (x1, x2, x3) => f(g(x1, x2, x3));
+export const bind____ = (f, g) => (x1, x2, x3, x4) => f(g(x1, x2, x3, x4));
+export const bind_____ = (f, g) => (x1, x2, x3, x4, x5) =>
+  f(g(x1, x2, x3, x4, x5));
+export const bind______ = (f, g) => (x1, x2, x3, x4, x5, x6) =>
+  f(g(x1, x2, x3, x4, x5, x6));
+
 /////////////
 // Partial //
 /////////////
