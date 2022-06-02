@@ -67,7 +67,7 @@ const generateMakeLookupNode =
   (next, _escaped, strict, {layer, bindings}, variable, right) => {
     if (hasOwnProperty(bindings, variable)) {
       assert(bindings[variable], "missing variable initialization");
-      return makeStaticLookupNode(strict, layer, variable, right);
+      return makeStaticLookupNode(strict, layer, variable, right, []);
     } else {
       return next();
     }

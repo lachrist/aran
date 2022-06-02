@@ -34,28 +34,28 @@ import {
 
 assertSuccess(
   allignExpression(
-    makeStaticLookupExpression(true, BASE, "variable", makeRead()),
+    makeStaticLookupExpression(true, BASE, "variable", makeRead(), []),
     "variable",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    makeStaticLookupExpression(true, BASE, "variable", makeTypeof()),
+    makeStaticLookupExpression(true, BASE, "variable", makeTypeof(), []),
     "intrinsic.aran.unary('typeof', variable)",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    makeStaticLookupExpression(true, BASE, "variable", makeDiscard()),
+    makeStaticLookupExpression(true, BASE, "variable", makeDiscard(), []),
     `intrinsic.aran.throw(new intrinsic.TypeError("Cannot discard variable 'variable' because it is static"))`,
   ),
 );
 
 assertSuccess(
   allignExpression(
-    makeStaticLookupExpression(false, BASE, "variable", makeDiscard()),
+    makeStaticLookupExpression(false, BASE, "variable", makeDiscard(), []),
     "false",
   ),
 );
@@ -67,14 +67,15 @@ assertSuccess(
       BASE,
       "variable",
       makeWrite(makeLiteralExpression("right")),
+      ["specifier"],
     ),
-    "(variable = 'right', undefined)",
+    "((variable = 'right', exportStatic('specifier', variable)), undefined)",
   ),
 );
 
 assertSuccess(
   allignEffect(
-    makeStaticLookupEffect(false, BASE, "variable", makeRead()),
+    makeStaticLookupEffect(false, BASE, "variable", makeRead(), []),
     "effect(variable)",
   ),
 );

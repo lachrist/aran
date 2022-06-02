@@ -1,4 +1,6 @@
-import {partial_x, bind____} from "../../../util/index.mjs";
+import {reduce} from "array-lite";
+
+import {partial_x, partial__x, bind____} from "../../../util/index.mjs";
 
 import {
   makeWriteEffect,
@@ -27,7 +29,13 @@ import {isWrite, isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
 /* eslint-disable no-use-before-define */
 
-export const makeStaticLookupExpression = (strict, layer, variable, right) => {
+export const makeStaticLookupExpression = (
+  strict,
+  layer,
+  variable,
+  right,
+  eexports,
+) => {
   if (isRead(right)) {
     return makeReadExpression(makeVariable(layer, variable));
   } else if (isTypeof(right)) {
@@ -43,15 +51,28 @@ export const makeStaticLookupExpression = (strict, layer, variable, right) => {
       : makeLiteralExpression(false);
   } else {
     return makeSequenceExpression(
-      makeStaticLookupEffect(strict, layer, variable, right),
+      makeStaticLookupEffect(strict, layer, variable, right, eexports),
       makeLiteralExpression({undefined: null}),
     );
   }
 };
 
-export const makeStaticLookupEffect = (strict, layer, variable, right) => {
+export const makeStaticLookupEffect = (
+  strict,
+  layer,
+  variable,
+  right,
+  eexports,
+) => {
   if (isWrite(right)) {
-    return makeWriteEffect(makeVariable(layer, variable), accessWrite(right));
+    return reduce(
+      eexports,
+      partial__x(
+        makeExportSequenceEffect,
+        makeReadExpression(makeVariable(layer, variable)),
+      ),
+      makeWriteEffect(makeVariable(layer, variable), accessWrite(right)),
+    );
   } else {
     return makeExpressionEffect(
       makeStaticLookupExpression(strict, layer, variable, right),
