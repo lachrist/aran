@@ -1,9 +1,8 @@
-import {concat, includes, map, reduce} from "array-lite";
+import {concat, includes, map} from "array-lite";
 
 import {
   partialx_,
   partial_x,
-  partial__x,
   pushAll,
   assert,
   hasOwnProperty,
@@ -16,16 +15,13 @@ import {
   makeLiteralExpression,
 } from "../../../ast/index.mjs";
 
-import {makeUnaryExpression} from "../../../intrinsic.mjs";
-
 import {makeVariable} from "../variable.mjs";
 
-import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
-
 import {
+  makeStaticLookupEffect,
+  makeStaticLookupExpression,
   makeExportUndefinedStatement,
   makeExportStatement,
-  makeExportSequenceEffect,
 } from "./helper.mjs";
 
 const {
@@ -52,9 +48,9 @@ export const harvest = ({layer, bindings}) => ({
   prelude: [],
 });
 
-export const declare = (
-  {layer, bindings},
+export const makeDeclareStatements = (
   _strict,
+  {layer, bindings},
   kind,
   variable,
   iimport,
@@ -82,9 +78,9 @@ export const declare = (
   }
 };
 
-export const initialize = (
-  {layer, bindings},
+export const makeInitializeStatements = (
   _strict,
+  {layer, bindings},
   kind,
   variable,
   expression,
@@ -113,35 +109,25 @@ export const initialize = (
   }
 };
 
-export const lookup = (
-  next,
-  {layer, bindings},
-  _strict,
-  _escaped,
-  variable,
-  right,
-) => {
-  if (hasOwnProperty(bindings, variable)) {
-    if (isRead(right)) {
-      return makeReadExpression(makeVariable(layer, variable));
-    } else if (isTypeof(right)) {
-      return makeUnaryExpression(
-        "typeof",
-        makeReadExpression(makeVariable(layer, variable)),
-      );
-    } else if (isDiscard(right)) {
-      return makeLiteralExpression(false);
-    } else {
-      return reduce(
+const generateMakeLookupNode =
+  (makeStaticLookupNode) =>
+  (next, _escaped, strict, {layer, bindings}, variable, right) => {
+    if (hasOwnProperty(bindings, variable)) {
+      assert(bindings[variable], "missing variable initialization");
+      return makeStaticLookupNode(
+        strict,
+        layer,
+        variable,
+        right,
         bindings[variable],
-        partial__x(
-          makeExportSequenceEffect,
-          makeReadExpression(makeVariable(layer, variable)),
-        ),
-        makeWriteEffect(makeVariable(layer, variable), accessWrite(right)),
       );
+    } else {
+      return next();
     }
-  } else {
-    return next();
-  }
-};
+  };
+
+export const makeLookupExpression = generateMakeLookupNode(
+  makeStaticLookupExpression,
+);
+
+export const makeLookupEffect = generateMakeLookupNode(makeStaticLookupEffect);

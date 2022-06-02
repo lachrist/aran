@@ -41,26 +41,31 @@ assertSuccess(
       },
       {
         type: "read",
+        output: "expression",
         next: () => makeLiteralExpression("next"),
         code: "'next'",
       },
       {
         type: "read",
+        output: "expression",
         variable: "variable",
         code: "VARIABLE",
       },
       {
         type: "typeof",
+        output: "expression",
         variable: "variable",
         code: "intrinsic.aran.unary('typeof', VARIABLE)",
       },
       {
         type: "discard",
+        output: "expression",
         variable: "variable",
         code: "false",
       },
       {
         type: "write",
+        output: "effect",
         variable: "variable",
         right: makeLiteralExpression("right"),
         code: `(
