@@ -6,12 +6,11 @@ import {
   makeLiteralExpression,
 } from "../../../ast/index.mjs";
 
-import {
-  makeUnaryExpression,
-  makeThrowTypeErrorExpression,
-} from "../../../intrinsic.mjs";
+import {makeUnaryExpression} from "../../../intrinsic.mjs";
 
 import {isRead, isTypeof, isDiscard} from "../right.mjs";
+
+import {makeThrowConstantExpression} from "./helper.mjs";
 
 const {
   Reflect: {defineProperty},
@@ -59,9 +58,7 @@ export const lookup = (next, frame, _strict, _escaped, variable, right) => {
     } else if (isDiscard(right)) {
       return makeLiteralExpression(false);
     } else {
-      return makeExpressionEffect(
-        makeThrowTypeErrorExpression("Assignment to constant variable."),
-      );
+      return makeExpressionEffect(makeThrowConstantExpression(variable));
     }
   } else {
     return next();

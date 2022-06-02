@@ -9,6 +9,8 @@ import {
 
 import {makeUnaryExpression} from "../../../intrinsic.mjs";
 
+import {makeVariable} from "../variable.mjs";
+
 import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
 const {
@@ -41,7 +43,7 @@ export const declare = (
   import_,
   exports_,
 ) => {
-  variable = `${layer}${variable}`;
+  variable = makeVariable(layer, variable);
   assert(import_ === null, "unexpected imported variable");
   assert(exports_.length === 0, "unexpected exported variable");
   assert(!hasOwnProperty(bindings, variable), "duplicate variable declaration");
@@ -56,7 +58,7 @@ export const initialize = (
   variable,
   expression,
 ) => {
-  variable = `${layer}${variable}`;
+  variable = makeVariable(layer, variable);
   assert(hasOwnProperty(bindings, variable), "missing variable declaration");
   assert(!bindings[variable], "duplicate variable initialization");
   bindings[variable] = true;
@@ -71,7 +73,7 @@ export const lookup = (
   variable,
   right,
 ) => {
-  variable = `${layer}${variable}`;
+  variable = makeVariable(layer, variable);
   if (hasOwnProperty(bindings, variable)) {
     assert(bindings[variable], "missing variable initialization");
     if (isRead(right)) {

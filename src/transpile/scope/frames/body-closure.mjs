@@ -9,8 +9,6 @@ import {
 } from "../../../util/index.mjs";
 
 import {
-  makeExportEffect,
-  makeSequenceEffect,
   makeEffectStatement,
   makeWriteEffect,
   makeReadExpression,
@@ -19,7 +17,15 @@ import {
 
 import {makeUnaryExpression} from "../../../intrinsic.mjs";
 
+import {makeVariable} from "../variable.mjs";
+
 import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
+
+import {
+  makeExportUndefinedStatement,
+  makeExportStatement,
+  makeExportSequenceEffect,
+} from "./helper.mjs";
 
 const {
   Reflect: {ownKeys, defineProperty},
@@ -45,17 +51,6 @@ export const harvest = ({bindings}) => ({
   prelude: [],
 });
 
-const makeExportStatement = (specifier, expression) =>
-  makeEffectStatement(makeExportEffect(specifier, expression));
-
-const makeExportUndefinedStatement = (specifier) =>
-  makeEffectStatement(
-    makeExportEffect(specifier, makeLiteralExpression({undefined: null})),
-  );
-
-const makeExportSequenceEffect = (effect, specifier, expression) =>
-  makeSequenceEffect(effect, makeExportEffect(specifier, expression));
-
 export const declare = (
   {layer, bindings},
   _strict,
@@ -66,7 +61,7 @@ export const declare = (
 ) => {
   if (includes(kinds, kind)) {
     assert(iimport === null, "unexpected imported variable");
-    variable = `${layer}${variable}`;
+    variable = makeVariable(layer, variable);
     if (!hasOwnProperty(bindings, variable)) {
       defineProperty(bindings, variable, {__proto__: descriptor, value: []});
     }
@@ -92,7 +87,7 @@ export const initialize = (
   expression,
 ) => {
   if (includes(kinds, kind)) {
-    variable = `${layer}${variable}`;
+    variable = makeVariable(layer, variable);
     assert(
       hasOwnProperty(bindings, variable),
       "missing variable for initialization",
@@ -117,7 +112,7 @@ export const lookup = (
   variable,
   right,
 ) => {
-  variable = `${layer}${variable}`;
+  variable = makeVariable(layer, variable);
   if (hasOwnProperty(bindings, variable)) {
     if (isRead(right)) {
       return makeReadExpression(variable);

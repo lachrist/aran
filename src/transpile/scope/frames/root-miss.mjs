@@ -9,10 +9,9 @@ import {
   makeLiteralExpression,
 } from "../../../ast/index.mjs";
 
-import {
-  makeSetExpression,
-  makeThrowReferenceErrorExpression,
-} from "../../../intrinsic.mjs";
+import {makeSetExpression} from "../../../intrinsic.mjs";
+
+import {makeThrowMissingExpression} from "./helper.mjs";
 
 import {isRead, isDiscard, isTypeof, accessWrite} from "../right.mjs";
 
@@ -30,12 +29,10 @@ export const lookup = (_next, frame, strict, _escaped, variable, right) => {
   } else if (isDiscard(right)) {
     return makeLiteralExpression(true);
   } else if (isRead(right)) {
-    return makeThrowReferenceErrorExpression(`${variable} is not defined`);
+    return makeThrowMissingExpression(variable);
   } else {
     if (strict) {
-      return makeExpressionEffect(
-        makeThrowReferenceErrorExpression(`${variable} is not defined`),
-      );
+      return makeExpressionEffect(makeThrowMissingExpression(variable));
     } else {
       return makeExpressionEffect(
         makeSetExpression(

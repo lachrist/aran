@@ -11,8 +11,6 @@ import {
 } from "../../../ast/index.mjs";
 
 import {
-  makeThrowSyntaxErrorExpression,
-  makeThrowReferenceErrorExpression,
   makeDefineExpression,
   makeBinaryExpression,
   makeGetExpression,
@@ -22,7 +20,11 @@ import {
 
 import {isDiscard, isWrite} from "../right.mjs";
 
-import {makeDynamicLookupExpression} from "./helper.mjs";
+import {
+  makeDynamicLookupExpression,
+  makeThrowDeadzoneExpression,
+  makeThrowDuplicateExpression,
+} from "./helper.mjs";
 
 export const kinds = ["let", "const", "class"];
 
@@ -31,9 +33,7 @@ export const makeDuplicateStatement = (expression, variable) =>
     makeExpressionEffect(
       makeConditionalExpression(
         makeBinaryExpression("in", makeLiteralExpression(variable), expression),
-        makeThrowSyntaxErrorExpression(
-          `Identifier '${variable}' has already been declared`,
-        ),
+        makeThrowDuplicateExpression(variable),
         makeLiteralExpression({undefined: null}),
       ),
     ),
@@ -112,9 +112,7 @@ const makeDeadzoneConditionalExpression = (variable, dynamic, alive) =>
       makeGetExpression(dynamic, makeLiteralExpression(variable)),
       makeDeadzoneExpression(),
     ),
-    makeThrowReferenceErrorExpression(
-      `Cannot access '${variable}' before initialization`,
-    ),
+    makeThrowDeadzoneExpression(variable),
     alive,
   );
 

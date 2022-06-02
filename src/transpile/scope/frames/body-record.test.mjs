@@ -19,7 +19,7 @@ assertSuccess(
         (
           intrinsic.aran.binary('in', 'VARIABLE', 'dynamic') ?
           intrinsic.aran.throw(
-            new intrinsic.SyntaxError('Identifier \\'VARIABLE\\' has already been declared')
+            new intrinsic.SyntaxError("Variable 'VARIABLE' has already been declared")
           ) :
           undefined
         ),
@@ -28,7 +28,7 @@ assertSuccess(
         (
           intrinsic.aran.binary('in', 'variable', 'dynamic') ?
           intrinsic.aran.throw(
-            new intrinsic.SyntaxError('Identifier \\'variable\\' has already been declared')
+            new intrinsic.SyntaxError("Variable 'variable' has already been declared")
           ) :
           undefined
         ),
@@ -96,7 +96,7 @@ assertSuccess(
             ) ?
             intrinsic.aran.throw(
               new intrinsic.ReferenceError(
-                'Cannot access \\'variable\\' before initialization',
+                "Cannot access variable 'variable' before initialization",
               ),
             ) :
             intrinsic.aran.get('dynamic', 'variable')
@@ -132,7 +132,7 @@ assertSuccess(
               ) ?
               intrinsic.aran.throw(
                 new intrinsic.ReferenceError(
-                  'Cannot access \\'variable\\' before initialization',
+                  "Cannot access variable 'variable' before initialization",
                 ),
               ) :
               intrinsic.aran.setStrict('dynamic', 'variable', 'right')
