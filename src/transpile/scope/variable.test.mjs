@@ -18,20 +18,20 @@ assertThrow(() => unmangleVariable("foo"), {
 });
 
 assertDeepEqual(
-  unmangleVariable(makeVariable(BASE, makeVariableBody("name"))),
+  unmangleVariable(makeVariable(BASE, makeVariableBody("new.target"))),
   {
     layer: "base",
     shadow: false,
-    name: "name",
+    name: "new.target",
   },
 );
 
 assertDeepEqual(
-  unmangleVariable(makeShadowVariable(BASE, makeVariableBody("name"))),
+  unmangleVariable(makeShadowVariable(BASE, makeVariableBody("import.meta"))),
   {
     layer: "base",
     shadow: true,
-    name: "name",
+    name: "import.meta",
   },
 );
 

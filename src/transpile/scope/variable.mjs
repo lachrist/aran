@@ -30,7 +30,22 @@ const THREE_SINGLETON = [3];
 const SEPARATOR = "_";
 const SEPARATOR_SINGLETON = [SEPARATOR];
 
-export const makeVariableBody = (name) => `${SEPARATOR}${name}`;
+const mapping = [
+  ["new.target", "0newtarget"],
+  ["import.meta", "0importmeta"],
+];
+
+const transform = (string, index1, index2) => {
+  for (let index = 0; index < mapping.length; index += 1) {
+    if (mapping[index][index1] === string) {
+      return mapping[index][index2];
+    }
+  }
+  return string;
+};
+
+export const makeVariableBody = (name) =>
+  `${SEPARATOR}${transform(name, 0, 1)}`;
 
 export const makeIndexedVariableBody = (name, counter) =>
   `${apply(
@@ -53,7 +68,7 @@ export const unmangleVariable = (variable) => {
     return {
       layer: "base",
       shadow: variable[1] === SHADOW,
-      name: apply(subString, variable, THREE_SINGLETON),
+      name: transform(apply(subString, variable, THREE_SINGLETON), 1, 0),
     };
   } else if (variable[0] === META) {
     assert(variable[1] === ORIGINAL, "expected an original meta variable");
@@ -67,7 +82,7 @@ export const unmangleVariable = (variable) => {
     return {
       layer: "meta",
       index: head,
-      description: join(segments, SEPARATOR),
+      description: transform(join(segments, SEPARATOR), 1, 0),
     };
   } else {
     throw new Error("invalid variable layer");
