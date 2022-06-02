@@ -1,6 +1,7 @@
 import {concat, includes, map, reduce} from "array-lite";
 
 import {
+  partialx_,
   partial_x,
   partial__x,
   pushAll,
@@ -46,8 +47,8 @@ export const create = (layer, _options) => ({
   bindings: {},
 });
 
-export const harvest = ({bindings}) => ({
-  header: ownKeys(bindings),
+export const harvest = ({layer, bindings}) => ({
+  header: map(ownKeys(bindings), partialx_(makeVariable, layer)),
   prelude: [],
 });
 
@@ -61,7 +62,6 @@ export const declare = (
 ) => {
   if (includes(kinds, kind)) {
     assert(iimport === null, "unexpected imported variable");
-    variable = makeVariable(layer, variable);
     if (!hasOwnProperty(bindings, variable)) {
       defineProperty(bindings, variable, {__proto__: descriptor, value: []});
     }
@@ -69,7 +69,10 @@ export const declare = (
     return concat(
       [
         makeEffectStatement(
-          makeWriteEffect(variable, makeLiteralExpression({undefined: null})),
+          makeWriteEffect(
+            makeVariable(layer, variable),
+            makeLiteralExpression({undefined: null}),
+          ),
         ),
       ],
       map(eexports, makeExportUndefinedStatement),
@@ -87,16 +90,22 @@ export const initialize = (
   expression,
 ) => {
   if (includes(kinds, kind)) {
-    variable = makeVariable(layer, variable);
     assert(
       hasOwnProperty(bindings, variable),
       "missing variable for initialization",
     );
     return concat(
-      [makeEffectStatement(makeWriteEffect(variable, expression))],
+      [
+        makeEffectStatement(
+          makeWriteEffect(makeVariable(layer, variable), expression),
+        ),
+      ],
       map(
         bindings[variable],
-        partial_x(makeExportStatement, makeReadExpression(variable)),
+        partial_x(
+          makeExportStatement,
+          makeReadExpression(makeVariable(layer, variable)),
+        ),
       ),
     );
   } else {
@@ -112,19 +121,24 @@ export const lookup = (
   variable,
   right,
 ) => {
-  variable = makeVariable(layer, variable);
   if (hasOwnProperty(bindings, variable)) {
     if (isRead(right)) {
-      return makeReadExpression(variable);
+      return makeReadExpression(makeVariable(layer, variable));
     } else if (isTypeof(right)) {
-      return makeUnaryExpression("typeof", makeReadExpression(variable));
+      return makeUnaryExpression(
+        "typeof",
+        makeReadExpression(makeVariable(layer, variable)),
+      );
     } else if (isDiscard(right)) {
       return makeLiteralExpression(false);
     } else {
       return reduce(
         bindings[variable],
-        partial__x(makeExportSequenceEffect, makeReadExpression(variable)),
-        makeWriteEffect(variable, accessWrite(right)),
+        partial__x(
+          makeExportSequenceEffect,
+          makeReadExpression(makeVariable(layer, variable)),
+        ),
+        makeWriteEffect(makeVariable(layer, variable), accessWrite(right)),
       );
     }
   } else {

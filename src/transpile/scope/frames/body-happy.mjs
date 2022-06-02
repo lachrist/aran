@@ -1,4 +1,6 @@
-import {assert, hasOwnProperty} from "../../../util/index.mjs";
+import {map} from "array-lite";
+
+import {partialx_, assert, hasOwnProperty} from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -30,20 +32,19 @@ export const create = (layer, _options) => ({
   bindings: {},
 });
 
-export const harvest = ({bindings}) => ({
-  header: ownKeys(bindings),
+export const harvest = ({layer, bindings}) => ({
+  header: map(ownKeys(bindings), partialx_(makeVariable, layer)),
   prelude: [],
 });
 
 export const declare = (
-  {layer, bindings},
+  {bindings},
   _strict,
   _kind,
   variable,
   import_,
   exports_,
 ) => {
-  variable = makeVariable(layer, variable);
   assert(import_ === null, "unexpected imported variable");
   assert(exports_.length === 0, "unexpected exported variable");
   assert(!hasOwnProperty(bindings, variable), "duplicate variable declaration");
@@ -58,11 +59,14 @@ export const initialize = (
   variable,
   expression,
 ) => {
-  variable = makeVariable(layer, variable);
   assert(hasOwnProperty(bindings, variable), "missing variable declaration");
   assert(!bindings[variable], "duplicate variable initialization");
   bindings[variable] = true;
-  return [makeEffectStatement(makeWriteEffect(variable, expression))];
+  return [
+    makeEffectStatement(
+      makeWriteEffect(makeVariable(layer, variable), expression),
+    ),
+  ];
 };
 
 export const lookup = (
@@ -73,17 +77,19 @@ export const lookup = (
   variable,
   right,
 ) => {
-  variable = makeVariable(layer, variable);
   if (hasOwnProperty(bindings, variable)) {
     assert(bindings[variable], "missing variable initialization");
     if (isRead(right)) {
-      return makeReadExpression(variable);
+      return makeReadExpression(makeVariable(layer, variable));
     } else if (isTypeof(right)) {
-      return makeUnaryExpression("typeof", makeReadExpression(variable));
+      return makeUnaryExpression(
+        "typeof",
+        makeReadExpression(makeVariable(layer, variable)),
+      );
     } else if (isDiscard(right)) {
       return makeLiteralExpression(false);
     } else {
-      return makeWriteEffect(variable, accessWrite(right));
+      return makeWriteEffect(makeVariable(layer, variable), accessWrite(right));
     }
   } else {
     return next();
