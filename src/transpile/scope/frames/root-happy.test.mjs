@@ -26,32 +26,33 @@ assertSuccess(
       },
       {
         type: "read",
+        output: "expression",
         variable: "variable",
         code: "intrinsic.aran.get('dynamic', 'variable')",
       },
       {
         type: "typeof",
+        output: "expression",
         variable: "variable",
-        code: `
-          intrinsic.aran.unary(
-            'typeof',
-            intrinsic.aran.get('dynamic', 'variable'),
-          )
-        `,
+        code: `intrinsic.aran.unary(
+          'typeof',
+          intrinsic.aran.get('dynamic', 'variable'),
+        )`,
       },
       {
         type: "discard",
-        code: "false",
+        output: "expression",
+        variable: "variable",
+        strict: false,
+        code: "intrinsic.aran.deleteSloppy('dynamic', 'variable')",
       },
       {
         type: "write",
+        output: "expression",
         variable: "variable",
+        strict: true,
         right: makeLiteralExpression("right"),
-        code: `
-          effect(
-            intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
-          )
-        `,
+        code: "intrinsic.aran.setStrict('dynamic', 'variable', 'right')",
       },
     ],
   }),

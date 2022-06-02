@@ -3,6 +3,7 @@ import {
   assert,
   constant_,
   constant__,
+  bind______,
 } from "../../../util/index.mjs";
 
 import {
@@ -31,9 +32,9 @@ export const create = constant__(null);
 
 export const harvest = constant_({header: [], prelude: []});
 
-export const declare = (
-  _frame,
+export const makeDeclareStatements = (
   _strict,
+  _frame,
   kind,
   _variable,
   iimport,
@@ -45,12 +46,25 @@ export const declare = (
   return [];
 };
 
-export const initialize = (_frame, _strict, kind, variable, expression) => {
+export const makeInitializeStatements = (
+  _strict,
+  _frame,
+  kind,
+  variable,
+  expression,
+) => {
   assert(hasOwnProperty(kinds, kind), "unexpected kind");
   return [makeDeclareStatement(kinds[kind], variable, expression)];
 };
 
-export const lookup = (_next, _frame, strict, _escaped, variable, right) => {
+export const makeLookupExpression = (
+  _next,
+  strict,
+  _escaped,
+  _frame,
+  variable,
+  right,
+) => {
   if (isRead(right)) {
     return makeGetGlobalExpression(variable);
   } else if (isTypeof(right)) {
@@ -58,8 +72,11 @@ export const lookup = (_next, _frame, strict, _escaped, variable, right) => {
   } else if (isDiscard(right)) {
     return makeDeleteGlobalExpression(strict, variable);
   } else {
-    return makeExpressionEffect(
-      makeSetGlobalExpression(strict, variable, accessWrite(right)),
-    );
+    return makeSetGlobalExpression(strict, variable, accessWrite(right));
   }
 };
+
+export const makeLookupEffect = bind______(
+  makeExpressionEffect,
+  makeLookupExpression,
+);

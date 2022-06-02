@@ -1,4 +1,4 @@
-import {assert, constant_} from "../../../util/index.mjs";
+import {assert, dropx_x___, constant_} from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -6,21 +6,20 @@ import {
   makeExpressionEffect,
 } from "../../../ast/index.mjs";
 
-import {
-  makeGetExpression,
-  makeUnaryExpression,
-  makeSetStrictExpression,
-} from "../../../intrinsic.mjs";
+import {makeSetStrictExpression} from "../../../intrinsic.mjs";
 
-import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
+import {
+  makeDynamicLookupExpression,
+  makeDynamicLookupEffect,
+} from "./helper.mjs";
 
 export const create = (_layer, {dynamic}) => dynamic;
 
 export const harvest = constant_({prelude: [], header: []});
 
-export const declare = (
-  _frame,
+export const makeDeclareStatements = (
   _strict,
+  _frame,
   _kind,
   _variable,
   iimport,
@@ -31,7 +30,13 @@ export const declare = (
   return [];
 };
 
-export const initialize = (frame, _strict, _kind, variable, expression) => [
+export const makeInitializeStatements = (
+  _strict,
+  frame,
+  _kind,
+  variable,
+  expression,
+) => [
   makeEffectStatement(
     makeExpressionEffect(
       makeSetStrictExpression(
@@ -43,23 +48,6 @@ export const initialize = (frame, _strict, _kind, variable, expression) => [
   ),
 ];
 
-export const lookup = (_next, frame, _strict, _escaped, variable, right) => {
-  if (isRead(right)) {
-    return makeGetExpression(frame, makeLiteralExpression(variable));
-  } else if (isTypeof(right)) {
-    return makeUnaryExpression(
-      "typeof",
-      makeGetExpression(frame, makeLiteralExpression(variable)),
-    );
-  } else if (isDiscard(right)) {
-    return makeLiteralExpression(false);
-  } else {
-    return makeExpressionEffect(
-      makeSetStrictExpression(
-        frame,
-        makeLiteralExpression(variable),
-        accessWrite(right),
-      ),
-    );
-  }
-};
+export const makeLookupExpression = dropx_x___(makeDynamicLookupExpression);
+
+export const makeLookupEffect = dropx_x___(makeDynamicLookupEffect);

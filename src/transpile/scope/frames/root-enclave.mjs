@@ -1,6 +1,6 @@
 import {includes} from "array-lite";
 
-import {return_x, constant_, assert} from "../../../util/index.mjs";
+import {bind______, return_x, constant_, assert} from "../../../util/index.mjs";
 
 import {
   makeApplyExpression,
@@ -17,9 +17,9 @@ export const create = return_x;
 
 export const harvest = constant_({header: [], prelude: []});
 
-export const declare = (
-  _frame,
+export const makeDeclareStatements = (
   _strict,
+  _frame,
   kind,
   _variable,
   iimport,
@@ -31,7 +31,13 @@ export const declare = (
   return [];
 };
 
-export const initialize = (_frame, _strict, kind, variable, expression) => {
+export const makeInitializeStatements = (
+  _strict,
+  _frame,
+  kind,
+  variable,
+  expression,
+) => {
   assert(includes(kinds, kind), "unexpected kind");
   return [makeDeclareStatement("var", variable, expression)];
 };
@@ -48,15 +54,20 @@ const pick = (frame, right, strict) => {
   }
 };
 
-export const lookup = (_next, frame, strict, _escaped, variable, right) => {
+export const makeLookupExpression = (
+  _next,
+  strict,
+  _escaped,
+  frame,
+  variable,
+  right,
+) => {
   const expression = pick(frame, right, strict);
   if (isWrite(right)) {
-    return makeExpressionEffect(
-      makeApplyExpression(
-        expression,
-        makeLiteralExpression({undefined: null}),
-        [makeLiteralExpression(variable), accessWrite(right)],
-      ),
+    return makeApplyExpression(
+      expression,
+      makeLiteralExpression({undefined: null}),
+      [makeLiteralExpression(variable), accessWrite(right)],
     );
   } else {
     return makeApplyExpression(
@@ -66,3 +77,8 @@ export const lookup = (_next, frame, strict, _escaped, variable, right) => {
     );
   }
 };
+
+export const makeLookupEffect = bind______(
+  makeExpressionEffect,
+  makeLookupExpression,
+);

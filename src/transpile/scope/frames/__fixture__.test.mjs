@@ -9,6 +9,8 @@ import {
   makeEffectStatement,
   makeLiteralExpression,
   makeExpressionEffect,
+  makeWriteEffect,
+  makeReadExpression,
 } from "../../../ast/index.mjs";
 
 import {accessWrite, isWrite, isRead} from "../right.mjs";
@@ -34,7 +36,14 @@ assertSuccess(
           ],
         };
       },
-      declare: (frame, strict, kind, variable, iimport, eexports) => {
+      makeDeclareStatements: (
+        strict,
+        frame,
+        kind,
+        variable,
+        iimport,
+        eexports,
+      ) => {
         assertEqual(frame, "frame");
         assertEqual(strict, true);
         assertEqual(kind, "kind");
@@ -46,24 +55,32 @@ assertSuccess(
           ),
         ];
       },
-      initialize: (frame, strict, kind, variable, expression) => {
+      makeInitializeStatements: (strict, frame, kind, variable, expression) => {
         assertEqual(frame, "frame");
         assertEqual(strict, true);
         assertEqual(kind, "kind");
-        assertEqual(variable, "variable");
-        return [makeEffectStatement(makeExpressionEffect(expression))];
+        return [makeEffectStatement(makeWriteEffect(variable, expression))];
       },
-      lookup: (_next, frame, strict, escaped, variable, right) => {
+      makeLookupEffect: (_next, strict, escaped, frame, variable, right) => {
+        assertEqual(frame, "frame");
+        assertEqual(strict, true);
+        assertEqual(escaped, true);
+        assert(isWrite(right));
+        return makeWriteEffect(variable, accessWrite(right));
+      },
+      makeLookupExpression: (
+        _next,
+        strict,
+        escaped,
+        frame,
+        variable,
+        right,
+      ) => {
         assertEqual(frame, "frame");
         assertEqual(strict, false);
         assertEqual(escaped, false);
-        assertEqual(variable, "variable");
-        if (isWrite(right)) {
-          return makeExpressionEffect(accessWrite(right));
-        } else {
-          assert(isRead(right));
-          return makeLiteralExpression("read");
-        }
+        assert(isRead(right));
+        return makeReadExpression(variable);
       },
     },
     {
@@ -89,61 +106,63 @@ assertSuccess(
           kind: "kind",
           variable: "variable",
           right: makeLiteralExpression("right"),
-          code: "effect('right');",
+          code: "variable = 'right';",
         },
         {
           type: "write",
-          strict: false,
-          escaped: false,
+          output: "effect",
+          strict: true,
+          escaped: true,
           variable: "variable",
           right: makeLiteralExpression("right"),
-          code: "effect('right')",
+          code: "variable = 'right'",
         },
         {
           type: "read",
+          output: "expression",
           strict: false,
           escaped: false,
           variable: "variable",
-          code: "'read'",
+          code: "variable",
         },
       ],
     },
   ),
 );
 
-assertSuccess(
-  testBlock(
-    {
-      create: (_layer, _options) => null,
-      harvest: (_frame) => ({
-        header: [],
-        prelude: [],
-      }),
-      declare: (_frame, _kind, _variable, _iimport, _eexports) => null,
-      initialize: (_frame, _kind, _variable, _expression) => null,
-      lookup: (next, _frame, _strict, _escaped, _variable, _right) => next(),
-    },
-    {
-      layer: "layer",
-      options: {},
-      scenarios: [
-        {
-          type: "declare",
-        },
-        {
-          type: "initialize",
-        },
-        {
-          type: "read",
-          next: () => makeLiteralExpression("next"),
-          code: "'next'",
-        },
-        {
-          type: "write",
-          next: () => makeExpressionEffect(makeLiteralExpression("next")),
-          code: "effect('next')",
-        },
-      ],
-    },
-  ),
-);
+// assertSuccess(
+//   testBlock(
+//     {
+//       create: (_layer, _options) => null,
+//       harvest: (_frame) => ({
+//         header: [],
+//         prelude: [],
+//       }),
+//       declare: (_frame, _kind, _variable, _iimport, _eexports) => null,
+//       initialize: (_frame, _kind, _variable, _expression) => null,
+//       lookup: (next, _frame, _strict, _escaped, _variable, _right) => next(),
+//     },
+//     {
+//       layer: "layer",
+//       options: {},
+//       scenarios: [
+//         {
+//           type: "declare",
+//         },
+//         {
+//           type: "initialize",
+//         },
+//         {
+//           type: "read",
+//           next: () => makeLiteralExpression("next"),
+//           code: "'next'",
+//         },
+//         {
+//           type: "write",
+//           next: () => makeExpressionEffect(makeLiteralExpression("next")),
+//           code: "effect('next')",
+//         },
+//       ],
+//     },
+//   ),
+// );

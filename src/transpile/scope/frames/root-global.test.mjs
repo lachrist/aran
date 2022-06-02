@@ -23,28 +23,30 @@ assertSuccess(
       },
       {
         type: "read",
+        output: "expression",
         variable: "variable",
         code: "intrinsic.aran.getGlobal('variable')",
       },
       {
         type: "typeof",
+        output: "expression",
         variable: "variable",
         code: "intrinsic.aran.typeofGlobal('variable')",
       },
       {
         type: "discard",
+        output: "expression",
         strict: false,
         variable: "variable",
         code: "intrinsic.aran.deleteGlobalSloppy('variable')",
       },
       {
         type: "write",
+        output: "expression",
         strict: true,
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `effect(
-          intrinsic.aran.setGlobalStrict('variable', 'right'),
-        )`,
+        code: "intrinsic.aran.setGlobalStrict('variable', 'right')",
       },
     ],
   }),

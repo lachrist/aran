@@ -1,5 +1,6 @@
 import {
   constant_,
+  bind______,
   deadcode______,
   deadcode_____,
 } from "../../../util/index.mjs";
@@ -19,29 +20,39 @@ export const create = (_layer, {dynamic}) => dynamic;
 
 export const harvest = constant_({header: [], prelude: []});
 
-export const declare = deadcode______("declare unsupported");
+export const makeDeclareStatements = deadcode______("declare unsupported");
 
-export const initialize = deadcode_____("initialize unsupported");
+export const makeInitializeStatements = deadcode_____("initialize unsupported");
 
-export const lookup = (_next, frame, strict, _escaped, variable, right) => {
-  if (isTypeof(right)) {
+export const makeLookupExpression = (
+  _next,
+  strict,
+  _escaped,
+  frame,
+  variable,
+  right,
+) => {
+  if (isRead(right)) {
+    return makeThrowMissingExpression(variable);
+  } else if (isTypeof(right)) {
     return makeLiteralExpression("undefined");
   } else if (isDiscard(right)) {
     return makeLiteralExpression(true);
-  } else if (isRead(right)) {
-    return makeThrowMissingExpression(variable);
   } else {
     if (strict) {
-      return makeExpressionEffect(makeThrowMissingExpression(variable));
+      return makeThrowMissingExpression(variable);
     } else {
-      return makeExpressionEffect(
-        makeSetExpression(
-          strict,
-          frame,
-          makeLiteralExpression(variable),
-          accessWrite(right),
-        ),
+      return makeSetExpression(
+        strict,
+        frame,
+        makeLiteralExpression(variable),
+        accessWrite(right),
       );
     }
   }
 };
+
+export const makeLookupEffect = bind______(
+  makeExpressionEffect,
+  makeLookupExpression,
+);

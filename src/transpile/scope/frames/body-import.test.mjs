@@ -30,17 +30,20 @@ assertSuccess(
       },
       {
         type: "read",
+        output: "expression",
         variable: "VARIABLE",
         next: () => makeLiteralExpression("next"),
         code: "'next'",
       },
       {
         type: "read",
+        output: "expression",
         variable: "variable",
         code: "importStatic('source', 'specifier')",
       },
       {
         type: "typeof",
+        output: "expression",
         variable: "variable",
         code: `intrinsic.aran.unary(
           'typeof',
@@ -49,16 +52,16 @@ assertSuccess(
       },
       {
         type: "discard",
+        output: "expression",
         variable: "variable",
         code: "false",
       },
       {
         type: "write",
+        output: "expression",
         variable: "variable",
-        code: `effect(
-          intrinsic.aran.throw(
-            new intrinsic.TypeError("Cannot assign variable 'variable' because it is a constant"),
-          ),
+        code: `intrinsic.aran.throw(
+          new intrinsic.TypeError("Cannot assign variable 'variable' because it is a constant"),
         )`,
       },
     ],

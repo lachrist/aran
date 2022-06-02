@@ -84,6 +84,7 @@ assertSuccess(
       },
       {
         type: "read",
+        output: "expression",
         next: () => makeLiteralExpression("next"),
         variable: "variable",
         code: `(
@@ -106,6 +107,7 @@ assertSuccess(
       },
       {
         type: "discard",
+        output: "expression",
         next: () => makeLiteralExpression("next"),
         strict: false,
         variable: "variable",
@@ -117,26 +119,29 @@ assertSuccess(
       },
       {
         type: "write",
+        output: "effect",
         next: () => makeExpressionEffect(makeLiteralExpression("next")),
         strict: true,
         variable: "variable",
         right: makeLiteralExpression("right"),
         code: `(
           intrinsic.aran.binary('in', 'variable', 'dynamic') ?
-          effect(
-            (
-              intrinsic.aran.binary(
-                '===',
-                intrinsic.aran.get('dynamic', 'variable'),
-                intrinsic.aran.deadzone
-              ) ?
+          (
+            intrinsic.aran.binary(
+              '===',
+              intrinsic.aran.get('dynamic', 'variable'),
+              intrinsic.aran.deadzone
+            ) ?
+            effect(
               intrinsic.aran.throw(
                 new intrinsic.ReferenceError(
                   "Cannot access variable 'variable' before initialization",
                 ),
-              ) :
-              intrinsic.aran.setStrict('dynamic', 'variable', 'right')
-            ),
+              ),
+            ) :
+            effect(
+              intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
+            )
           ) :
           effect('next')
         )`,

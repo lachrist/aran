@@ -119,6 +119,9 @@ export const dropxxx = (f) => (_x1, _x2, _x3) => f();
 export const dropx__x__ = (f) => (_x1, x2, x3, _x4, x5, x6) =>
   f(x2, x3, x5, x6);
 
+export const dropx_x___ = (f) => (_x1, x2, _x3, x4, x5, x6) =>
+  f(x2, x4, x5, x6);
+
 //////////
 // Bind //
 //////////

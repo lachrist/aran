@@ -58,6 +58,7 @@ assertSuccess(
       },
       {
         type: "read",
+        output: "expression",
         next: () => makeLiteralExpression("next"),
         variable: "variable",
         code: `(
@@ -68,6 +69,7 @@ assertSuccess(
       },
       {
         type: "write",
+        output: "effect",
         next: () => makeExpressionEffect(makeLiteralExpression("next")),
         strict: true,
         variable: "variable",

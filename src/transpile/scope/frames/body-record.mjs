@@ -18,10 +18,11 @@ import {
   makeDeadzoneExpression,
 } from "../../../intrinsic.mjs";
 
-import {isDiscard, isWrite} from "../right.mjs";
+import {isDiscard} from "../right.mjs";
 
 import {
   makeDynamicLookupExpression,
+  makeDynamicLookupEffect,
   makeThrowDeadzoneExpression,
   makeThrowDuplicateExpression,
 } from "./helper.mjs";
@@ -49,9 +50,9 @@ export const harvest = ({dynamic, variables}) => ({
   prelude: map(variables, partialx_(makeDuplicateStatement, dynamic)),
 });
 
-export const declare = (
-  {variables, dynamic},
+export const makeDeclareStatements = (
   _strict,
+  {variables, dynamic},
   kind,
   variable,
   iimport,
@@ -82,7 +83,13 @@ export const declare = (
   }
 };
 
-export const initialize = ({dynamic}, _strict, kind, variable, expression) => {
+export const makeInitializeStatements = (
+  _strict,
+  {dynamic},
+  kind,
+  variable,
+  expression,
+) => {
   if (includes(kinds, kind)) {
     return [
       makeEffectStatement(
@@ -105,42 +112,48 @@ export const initialize = ({dynamic}, _strict, kind, variable, expression) => {
   }
 };
 
-const makeDeadzoneConditionalExpression = (variable, dynamic, alive) =>
+export const makeLookupExpression = (
+  next,
+  strict,
+  _escaped,
+  {dynamic},
+  variable,
+  right,
+) =>
   makeConditionalExpression(
-    makeBinaryExpression(
-      "===",
-      makeGetExpression(dynamic, makeLiteralExpression(variable)),
-      makeDeadzoneExpression(),
-    ),
-    makeThrowDeadzoneExpression(variable),
-    alive,
+    makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
+    isDiscard(right)
+      ? makeDynamicLookupExpression(strict, dynamic, variable, right)
+      : makeConditionalExpression(
+          makeBinaryExpression(
+            "===",
+            makeGetExpression(dynamic, makeLiteralExpression(variable)),
+            makeDeadzoneExpression(),
+          ),
+          makeThrowDeadzoneExpression(variable),
+          makeDynamicLookupExpression(strict, dynamic, variable, right),
+        ),
+    next(),
   );
 
-export const lookup = (next, {dynamic}, strict, _escaped, variable, right) => {
-  const key = makeLiteralExpression(variable);
-  if (isWrite(right)) {
-    return makeConditionalEffect(
-      makeBinaryExpression("in", key, dynamic),
-      makeExpressionEffect(
-        makeDeadzoneConditionalExpression(
-          variable,
-          dynamic,
-          makeDynamicLookupExpression(strict, dynamic, key, right),
-        ),
+export const makeLookupEffect = (
+  next,
+  strict,
+  _escaped,
+  {dynamic},
+  variable,
+  right,
+) =>
+  makeConditionalEffect(
+    makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
+    makeConditionalEffect(
+      makeBinaryExpression(
+        "===",
+        makeGetExpression(dynamic, makeLiteralExpression(variable)),
+        makeDeadzoneExpression(),
       ),
-      next(),
-    );
-  } else {
-    return makeConditionalExpression(
-      makeBinaryExpression("in", key, dynamic),
-      isDiscard(right)
-        ? makeDynamicLookupExpression(strict, dynamic, key, right)
-        : makeDeadzoneConditionalExpression(
-            variable,
-            dynamic,
-            makeDynamicLookupExpression(strict, dynamic, key, right),
-          ),
-      next(),
-    );
-  }
-};
+      makeExpressionEffect(makeThrowDeadzoneExpression(variable)),
+      makeDynamicLookupEffect(strict, dynamic, variable, right),
+    ),
+    next(),
+  );

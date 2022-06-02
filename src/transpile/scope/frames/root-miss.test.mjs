@@ -14,43 +14,38 @@ assertSuccess(
     scenarios: [
       {
         type: "read",
+        output: "expression",
         variable: "variable",
-        code: `
-          intrinsic.aran.throw(
-            new intrinsic.ReferenceError("Variable 'variable' is not defined"),
-          )
-        `,
+        code: `intrinsic.aran.throw(
+          new intrinsic.ReferenceError("Variable 'variable' is not defined"),
+        )`,
       },
       {
         type: "typeof",
+        output: "expression",
         code: "'undefined'",
       },
       {
         type: "discard",
+        output: "expression",
         code: "true",
       },
       {
         type: "write",
+        output: "expression",
         variable: "variable",
         strict: true,
-        code: `
-          effect(
-            intrinsic.aran.throw(
-              new intrinsic.ReferenceError("Variable 'variable' is not defined"),
-            ),
-          )
-        `,
+        code: `intrinsic.aran.throw(
+          new intrinsic.ReferenceError("Variable 'variable' is not defined"),
+        )`,
       },
       {
         type: "write",
+        output: "expression",
         strict: false,
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `
-          effect(
-            intrinsic.aran.setSloppy('dynamic', 'variable', 'right'),
-          )
-        `,
+        code: "intrinsic.aran.setSloppy('dynamic', 'variable', 'right')",
       },
     ],
   }),

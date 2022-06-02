@@ -17,9 +17,10 @@ import {
   makeDataDescriptorExpression,
 } from "../../../intrinsic.mjs";
 
-import {isWrite} from "../right.mjs";
-
-import {makeDynamicLookupExpression} from "./helper.mjs";
+import {
+  makeDynamicLookupExpression,
+  makeDynamicLookupEffect,
+} from "./helper.mjs";
 
 const kinds = ["var", "function"];
 
@@ -27,7 +28,14 @@ export const create = (_layer, {dynamic}) => dynamic;
 
 export const harvest = constant_({prelude: [], header: []});
 
-export const declare = (frame, _strict, kind, variable, iimport, eexports) => {
+export const makeDeclareStatements = (
+  _strict,
+  frame,
+  kind,
+  variable,
+  iimport,
+  eexports,
+) => {
   if (includes(kinds, kind)) {
     assert(iimport === null, "unexpected global imported variable");
     assert(eexports.length === 0, "unexpected global exported variable");
@@ -56,7 +64,13 @@ export const declare = (frame, _strict, kind, variable, iimport, eexports) => {
   }
 };
 
-export const initialize = (frame, strict, kind, variable, expression) => {
+export const makeInitializeStatements = (
+  strict,
+  frame,
+  kind,
+  variable,
+  expression,
+) => {
   if (includes(kinds, kind)) {
     return [
       makeEffectStatement(
@@ -75,21 +89,30 @@ export const initialize = (frame, strict, kind, variable, expression) => {
   }
 };
 
-export const lookup = (next, frame, strict, _escaped, variable, right) => {
-  const key = makeLiteralExpression(variable);
-  if (isWrite(right)) {
-    return makeConditionalEffect(
-      makeBinaryExpression("in", key, frame),
-      makeExpressionEffect(
-        makeDynamicLookupExpression(strict, frame, key, right),
-      ),
-      next(),
-    );
-  } else {
-    return makeConditionalExpression(
-      makeBinaryExpression("in", key, frame),
-      makeDynamicLookupExpression(strict, frame, key, right),
-      next(),
-    );
-  }
-};
+export const makeLookupEffect = (
+  next,
+  strict,
+  _escaped,
+  frame,
+  variable,
+  right,
+) =>
+  makeConditionalEffect(
+    makeBinaryExpression("in", makeLiteralExpression(variable), frame),
+    makeDynamicLookupEffect(strict, frame, variable, right),
+    next(),
+  );
+
+export const makeLookupExpression = (
+  next,
+  strict,
+  _escaped,
+  frame,
+  variable,
+  right,
+) =>
+  makeConditionalExpression(
+    makeBinaryExpression("in", makeLiteralExpression(variable), frame),
+    makeDynamicLookupExpression(strict, frame, variable, right),
+    next(),
+  );

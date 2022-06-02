@@ -11,10 +11,14 @@ import {
   allignExpression,
 } from "../../../allign/index.mjs";
 
+import {BASE} from "../variable.mjs";
+
 import {makeRead, makeTypeof, makeDiscard, makeWrite} from "../right.mjs";
 
 import {
+  makeStaticLookupExpression,
   makeDynamicLookupExpression,
+  makeStaticLookupEffect,
   makeThrowDuplicateExpression,
   makeThrowMissingExpression,
   makeThrowDeadzoneExpression,
@@ -24,15 +28,70 @@ import {
   makeExportSequenceEffect,
 } from "./helper.mjs";
 
+//////////////////////
+// makeStaticLookup //
+//////////////////////
+
+assertSuccess(
+  allignExpression(
+    makeStaticLookupExpression(true, BASE, "variable", makeRead()),
+    "variable",
+  ),
+);
+
+assertSuccess(
+  allignExpression(
+    makeStaticLookupExpression(true, BASE, "variable", makeTypeof()),
+    "intrinsic.aran.unary('typeof', variable)",
+  ),
+);
+
+assertSuccess(
+  allignExpression(
+    makeStaticLookupExpression(true, BASE, "variable", makeDiscard()),
+    `intrinsic.aran.throw(new intrinsic.TypeError("Cannot discard variable 'variable' because it is static"))`,
+  ),
+);
+
+assertSuccess(
+  allignExpression(
+    makeStaticLookupExpression(false, BASE, "variable", makeDiscard()),
+    "false",
+  ),
+);
+
+assertSuccess(
+  allignExpression(
+    makeStaticLookupExpression(
+      false,
+      BASE,
+      "variable",
+      makeWrite(makeLiteralExpression("right")),
+    ),
+    "(variable = 'right', undefined)",
+  ),
+);
+
+assertSuccess(
+  allignEffect(
+    makeStaticLookupEffect(false, BASE, "variable", makeRead()),
+    "effect(variable)",
+  ),
+);
+
+///////////////////////
+// makeDynamicLookup //
+///////////////////////
+
 assertSuccess(
   allignExpression(
     makeDynamicLookupExpression(
       true,
-      makeLiteralExpression("object"),
-      makeLiteralExpression("key"),
+      makeLiteralExpression("frame"),
+      "variable",
       makeRead(),
     ),
-    "intrinsic.aran.get('object', 'key')",
+    "intrinsic.aran.get('frame', 'variable')",
   ),
 );
 
@@ -40,11 +99,11 @@ assertSuccess(
   allignExpression(
     makeDynamicLookupExpression(
       true,
-      makeLiteralExpression("object"),
-      makeLiteralExpression("key"),
+      makeLiteralExpression("frame"),
+      "variable",
       makeTypeof(),
     ),
-    "intrinsic.aran.unary('typeof', intrinsic.aran.get('object', 'key'))",
+    "intrinsic.aran.unary('typeof', intrinsic.aran.get('frame', 'variable'))",
   ),
 );
 
@@ -52,11 +111,11 @@ assertSuccess(
   allignExpression(
     makeDynamicLookupExpression(
       true,
-      makeLiteralExpression("object"),
-      makeLiteralExpression("key"),
+      makeLiteralExpression("frame"),
+      "variable",
       makeDiscard(),
     ),
-    "intrinsic.aran.deleteStrict('object', 'key')",
+    "intrinsic.aran.deleteStrict('frame', 'variable')",
   ),
 );
 
@@ -64,13 +123,17 @@ assertSuccess(
   allignExpression(
     makeDynamicLookupExpression(
       false,
-      makeLiteralExpression("object"),
-      makeLiteralExpression("key"),
+      makeLiteralExpression("frame"),
+      "variable",
       makeWrite(makeLiteralExpression("right")),
     ),
-    "intrinsic.aran.setSloppy('object', 'key', 'right')",
+    "intrinsic.aran.setSloppy('frame', 'variable', 'right')",
   ),
 );
+
+///////////
+// Other //
+///////////
 
 assertSuccess(
   allignExpression(

@@ -2,18 +2,11 @@ import {map} from "array-lite";
 
 import {partialx_, assert, hasOwnProperty} from "../../../util/index.mjs";
 
-import {
-  makeEffectStatement,
-  makeWriteEffect,
-  makeReadExpression,
-  makeLiteralExpression,
-} from "../../../ast/index.mjs";
-
-import {makeUnaryExpression} from "../../../intrinsic.mjs";
+import {makeEffectStatement, makeWriteEffect} from "../../../ast/index.mjs";
 
 import {makeVariable} from "../variable.mjs";
 
-import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
+import {makeStaticLookupExpression, makeStaticLookupEffect} from "./helper.mjs";
 
 const {
   Reflect: {ownKeys, defineProperty},
@@ -37,9 +30,9 @@ export const harvest = ({layer, bindings}) => ({
   prelude: [],
 });
 
-export const declare = (
-  {bindings},
+export const makeDeclareStatements = (
   _strict,
+  {bindings},
   _kind,
   variable,
   import_,
@@ -52,9 +45,9 @@ export const declare = (
   return [];
 };
 
-export const initialize = (
-  {layer, bindings},
+export const makeInitializeStatements = (
   _strict,
+  {layer, bindings},
   _kind,
   variable,
   expression,
@@ -69,29 +62,19 @@ export const initialize = (
   ];
 };
 
-export const lookup = (
-  next,
-  {layer, bindings},
-  _escaped,
-  _strict,
-  variable,
-  right,
-) => {
-  if (hasOwnProperty(bindings, variable)) {
-    assert(bindings[variable], "missing variable initialization");
-    if (isRead(right)) {
-      return makeReadExpression(makeVariable(layer, variable));
-    } else if (isTypeof(right)) {
-      return makeUnaryExpression(
-        "typeof",
-        makeReadExpression(makeVariable(layer, variable)),
-      );
-    } else if (isDiscard(right)) {
-      return makeLiteralExpression(false);
+const generateMakeLookupNode =
+  (makeStaticLookupNode) =>
+  (next, _escaped, strict, {layer, bindings}, variable, right) => {
+    if (hasOwnProperty(bindings, variable)) {
+      assert(bindings[variable], "missing variable initialization");
+      return makeStaticLookupNode(strict, layer, variable, right);
     } else {
-      return makeWriteEffect(makeVariable(layer, variable), accessWrite(right));
+      return next();
     }
-  } else {
-    return next();
-  }
-};
+  };
+
+export const makeLookupExpression = generateMakeLookupNode(
+  makeStaticLookupExpression,
+);
+
+export const makeLookupEffect = generateMakeLookupNode(makeStaticLookupEffect);

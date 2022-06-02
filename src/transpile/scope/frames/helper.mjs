@@ -1,6 +1,10 @@
-import {partial_x} from "../../../util/index.mjs";
+import {partial_x, bind____} from "../../../util/index.mjs";
 
 import {
+  makeWriteEffect,
+  makeExpressionEffect,
+  makeSequenceExpression,
+  makeReadExpression,
   makeEffectStatement,
   makeExportEffect,
   makeLiteralExpression,
@@ -17,19 +21,70 @@ import {
   makeThrowSyntaxErrorExpression,
 } from "../../../intrinsic.mjs";
 
-import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
+import {makeVariable} from "../variable.mjs";
 
-export const makeDynamicLookupExpression = (strict, object, key, right) => {
+import {isWrite, isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
+
+/* eslint-disable no-use-before-define */
+
+export const makeStaticLookupExpression = (strict, layer, variable, right) => {
   if (isRead(right)) {
-    return makeGetExpression(object, key);
+    return makeReadExpression(makeVariable(layer, variable));
   } else if (isTypeof(right)) {
-    return makeUnaryExpression("typeof", makeGetExpression(object, key));
+    return makeUnaryExpression(
+      "typeof",
+      makeReadExpression(makeVariable(layer, variable)),
+    );
   } else if (isDiscard(right)) {
-    return makeDeleteExpression(strict, object, key);
+    return strict
+      ? makeThrowTypeErrorExpression(
+          `Cannot discard variable '${variable}' because it is static`,
+        )
+      : makeLiteralExpression(false);
   } else {
-    return makeSetExpression(strict, object, key, accessWrite(right));
+    return makeSequenceExpression(
+      makeStaticLookupEffect(strict, layer, variable, right),
+      makeLiteralExpression({undefined: null}),
+    );
   }
 };
+
+export const makeStaticLookupEffect = (strict, layer, variable, right) => {
+  if (isWrite(right)) {
+    return makeWriteEffect(makeVariable(layer, variable), accessWrite(right));
+  } else {
+    return makeExpressionEffect(
+      makeStaticLookupExpression(strict, layer, variable, right),
+    );
+  }
+};
+
+/* eslint-enable no-use-before-define */
+
+export const makeDynamicLookupExpression = (strict, frame, variable, right) => {
+  if (isRead(right)) {
+    return makeGetExpression(frame, makeLiteralExpression(variable));
+  } else if (isTypeof(right)) {
+    return makeUnaryExpression(
+      "typeof",
+      makeGetExpression(frame, makeLiteralExpression(variable)),
+    );
+  } else if (isDiscard(right)) {
+    return makeDeleteExpression(strict, frame, makeLiteralExpression(variable));
+  } else {
+    return makeSetExpression(
+      strict,
+      frame,
+      makeLiteralExpression(variable),
+      accessWrite(right),
+    );
+  }
+};
+
+export const makeDynamicLookupEffect = bind____(
+  makeExpressionEffect,
+  makeDynamicLookupExpression,
+);
 
 export const makeThrowDuplicateExpression = (variable) =>
   makeThrowSyntaxErrorExpression(

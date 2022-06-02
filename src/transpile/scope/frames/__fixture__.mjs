@@ -26,7 +26,7 @@ const nextForbidden = () => {
   throw new Error("unexpected next");
 };
 
-export const makeRight = (type) => {
+export const makeRight = (type, expression) => {
   if (type === "read") {
     return makeRead();
   } else if (type === "typeof") {
@@ -34,7 +34,7 @@ export const makeRight = (type) => {
   } else if (type === "discard") {
     return makeDiscard();
   } else {
-    throw new Error("unexpected type");
+    return makeWrite(expression);
   }
 };
 
@@ -54,6 +54,8 @@ const finalizeScript = (variables, statements, code) => {
   );
 };
 
+const orElse = (maybe, value) => (maybe === null ? value : maybe);
+
 /* c8 ignore stop */
 
 const fromJust = (maybe) => {
@@ -61,10 +63,9 @@ const fromJust = (maybe) => {
   return maybe;
 };
 
-const orElse = (maybe, value) => (maybe === null ? value : maybe);
-
 export const default_scenario = {
   type: null,
+  output: null,
   kind: "dummy-kind",
   variable: "dummy_variable",
   import: null,
@@ -82,7 +83,14 @@ const finalizeBlock = (variables, statements, code) =>
 const generateTest =
   (finalize) =>
   (
-    {create, harvest, declare, initialize, lookup},
+    {
+      create,
+      harvest,
+      makeDeclareStatements,
+      makeInitializeStatements,
+      makeLookupEffect,
+      makeLookupExpression,
+    },
     {head = "", scenarios = [], layer = "layer", options = {}},
   ) => {
     const frame = create(layer, options);
@@ -91,9 +99,9 @@ const generateTest =
       scenario = assign({}, default_scenario, scenario);
       assert(scenario.type !== null, "missing scenario type");
       if (scenario.type === "declare") {
-        const maybe = declare(
-          frame,
+        const maybe = makeDeclareStatements(
           scenario.strict,
+          frame,
           scenario.kind,
           scenario.variable,
           scenario.import,
@@ -106,9 +114,9 @@ const generateTest =
         body[body.length] = orElse(scenario.code, "");
         return orElse(maybe, []);
       } else if (scenario.type === "initialize") {
-        const maybe = initialize(
-          frame,
+        const maybe = makeInitializeStatements(
           scenario.strict,
+          frame,
           scenario.kind,
           scenario.variable,
           scenario.right,
@@ -120,37 +128,40 @@ const generateTest =
         body[body.length] = orElse(scenario.code, "");
         return orElse(maybe, []);
       } else {
-        if (scenario.type === "write") {
+        assert(scenario.output !== null, "missing scenario output");
+        if (scenario.output === "effect") {
           body[body.length] = `${fromJust(scenario.code)};`;
           return [
             makeEffectStatement(
-              lookup(
+              makeLookupEffect(
                 scenario.next,
-                frame,
                 scenario.strict,
                 scenario.escaped,
+                frame,
                 scenario.variable,
-                makeWrite(scenario.right),
+                makeRight(scenario.type, scenario.right),
               ),
             ),
           ];
-        } else {
+        } else if (scenario.output === "expression") {
           body[body.length] = `effect(${fromJust(scenario.code)});`;
           return [
             makeEffectStatement(
               makeExpressionEffect(
-                lookup(
+                makeLookupExpression(
                   scenario.next,
-                  frame,
                   scenario.strict,
                   scenario.escaped,
+                  frame,
                   scenario.variable,
-                  makeRight(scenario.type),
+                  makeRight(scenario.type, scenario.right),
                 ),
               ),
             ),
           ];
-        }
+        } /* c8 ignore start */ else {
+          throw new Error("invalid scenario output");
+        } /* c8 ignore stop */
       }
     });
     const {header: variables, prelude: statements1} = harvest(frame);
