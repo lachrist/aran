@@ -21,7 +21,7 @@ import {
   makeDynamicLookupEffect,
 } from "./helper.mjs";
 
-export const create = (_layer, {dynamic}) => dynamic;
+export const create = (_layer, {dynamic}) => ({dynamic});
 
 export const harvest = constant_({prelude: [], header: []});
 
@@ -31,21 +31,21 @@ export const makeInitializeStatements = constant_____(null);
 
 const generateMakeLookupNode =
   (makeConditionalNode, makeDynamicLookupNode) =>
-  (next, strict, _escaped, frame, variable, right) =>
+  (next, strict, _escaped, {dynamic}, variable, right) =>
     makeConditionalNode(
       makeConditionalExpression(
-        makeGetExpression(frame, makeSymbolUnscopablesExpression()),
+        makeGetExpression(dynamic, makeSymbolUnscopablesExpression()),
         makeConditionalExpression(
           makeGetExpression(
-            makeGetExpression(frame, makeSymbolUnscopablesExpression()),
+            makeGetExpression(dynamic, makeSymbolUnscopablesExpression()),
             makeLiteralExpression(variable),
           ),
           makeLiteralExpression(false),
-          makeBinaryExpression("in", makeLiteralExpression(variable), frame),
+          makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
         ),
-        makeBinaryExpression("in", makeLiteralExpression(variable), frame),
+        makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
       ),
-      makeDynamicLookupNode(strict, frame, variable, right),
+      makeDynamicLookupNode(strict, dynamic, variable, right),
       next(),
     );
 

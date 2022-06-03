@@ -17,16 +17,18 @@ import {accessWrite, isWrite, isRead} from "../right.mjs";
 
 import {testBlock} from "./__fixture__.mjs";
 
+const FRAME = {foo: "bar"};
+
 assertSuccess(
   testBlock(
     {
       create: (layer, options) => {
         assertEqual(layer, "layer");
         assertDeepEqual(options, {});
-        return "frame";
+        return FRAME;
       },
       harvest: (frame) => {
-        assertEqual(frame, "frame");
+        assertEqual(frame, FRAME);
         return {
           header: ["variable"],
           prelude: [
@@ -44,7 +46,7 @@ assertSuccess(
         iimport,
         eexports,
       ) => {
-        assertEqual(frame, "frame");
+        assertEqual(frame, FRAME);
         assertEqual(strict, true);
         assertEqual(kind, "kind");
         assertEqual(variable, "variable"), assertEqual(iimport, null);
@@ -56,13 +58,13 @@ assertSuccess(
         ];
       },
       makeInitializeStatements: (strict, frame, kind, variable, expression) => {
-        assertEqual(frame, "frame");
+        assertEqual(frame, FRAME);
         assertEqual(strict, true);
         assertEqual(kind, "kind");
         return [makeEffectStatement(makeWriteEffect(variable, expression))];
       },
       makeLookupEffect: (_next, strict, escaped, frame, variable, right) => {
-        assertEqual(frame, "frame");
+        assertEqual(frame, FRAME);
         assertEqual(strict, true);
         assertEqual(escaped, true);
         assert(isWrite(right));
@@ -76,7 +78,7 @@ assertSuccess(
         variable,
         right,
       ) => {
-        assertEqual(frame, "frame");
+        assertEqual(frame, FRAME);
         assertEqual(strict, false);
         assertEqual(escaped, false);
         assert(isRead(right));

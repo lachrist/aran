@@ -1,6 +1,6 @@
 import {includes} from "array-lite";
 
-import {bind______, return_x, constant_, assert} from "../../../util/index.mjs";
+import {bind______, constant_, assert} from "../../../util/index.mjs";
 
 import {
   makeApplyExpression,
@@ -13,7 +13,9 @@ import {isWrite, isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
 const kinds = ["var", "function"];
 
-export const create = return_x;
+export const create = (_layer, options) => ({
+  ...options,
+});
 
 export const harvest = constant_({header: [], prelude: []});
 

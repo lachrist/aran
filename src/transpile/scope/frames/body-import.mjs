@@ -29,13 +29,13 @@ const descriptor = {
   configurable: true,
 };
 
-export const create = (_layer, _options) => ({});
+export const create = (_layer, _options) => ({bindings: {}});
 
 export const harvest = constant_({header: [], prelude: []});
 
 export const makeDeclareStatements = (
   _strict,
-  frame,
+  {bindings},
   kind,
   variable,
   iimport,
@@ -44,8 +44,8 @@ export const makeDeclareStatements = (
   if (kind === "import") {
     assert(iimport !== null, "expected imported variable");
     assert(eexports.length === 0, "aggregate should be done as a link");
-    assert(!hasOwnProperty(frame, variable), "duplicate import variable");
-    defineProperty(frame, variable, {__proto__: descriptor, value: iimport});
+    assert(!hasOwnProperty(bindings, variable), "duplicate import variable");
+    defineProperty(bindings, variable, {__proto__: descriptor, value: iimport});
     return [];
   } else {
     return null;
@@ -63,8 +63,8 @@ export const makeInitializeStatements = (
   return null;
 };
 
-const makeHitLookupExpression = (frame, variable, right) => {
-  const {source, specifier} = frame[variable];
+const makeHitLookupExpression = (bindings, variable, right) => {
+  const {source, specifier} = bindings[variable];
   if (isRead(right)) {
     return makeImportExpression(source, specifier);
   } else if (isTypeof(right)) {
@@ -85,9 +85,10 @@ const makeHitLookupEffect = bind___(
 );
 
 export const generateMakeLookupNode =
-  (makeHitLookupNode) => (next, _strict, _escaped, frame, variable, right) => {
-    if (hasOwnProperty(frame, variable)) {
-      return makeHitLookupNode(frame, variable, right);
+  (makeHitLookupNode) =>
+  (next, _strict, _escaped, {bindings}, variable, right) => {
+    if (hasOwnProperty(bindings, variable)) {
+      return makeHitLookupNode(bindings, variable, right);
     } else {
       return next();
     }

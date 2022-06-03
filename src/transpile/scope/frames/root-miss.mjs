@@ -16,7 +16,7 @@ import {makeThrowMissingExpression} from "./helper.mjs";
 
 import {isRead, isDiscard, isTypeof, accessWrite} from "../right.mjs";
 
-export const create = (_layer, {dynamic}) => dynamic;
+export const create = (_layer, {dynamic}) => ({dynamic});
 
 export const harvest = constant_({header: [], prelude: []});
 
@@ -28,7 +28,7 @@ export const makeLookupExpression = (
   _next,
   strict,
   _escaped,
-  frame,
+  {dynamic},
   variable,
   right,
 ) => {
@@ -44,7 +44,7 @@ export const makeLookupExpression = (
     } else {
       return makeSetExpression(
         strict,
-        frame,
+        dynamic,
         makeLiteralExpression(variable),
         accessWrite(right),
       );

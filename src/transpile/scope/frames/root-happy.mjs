@@ -1,4 +1,4 @@
-import {assert, dropx_x___, constant_} from "../../../util/index.mjs";
+import {assert, constant_} from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -13,7 +13,7 @@ import {
   makeDynamicLookupEffect,
 } from "./helper.mjs";
 
-export const create = (_layer, {dynamic}) => dynamic;
+export const create = (_layer, {dynamic}) => ({dynamic});
 
 export const harvest = constant_({prelude: [], header: []});
 
@@ -32,7 +32,7 @@ export const makeDeclareStatements = (
 
 export const makeInitializeStatements = (
   _strict,
-  frame,
+  {dynamic},
   _kind,
   variable,
   expression,
@@ -40,7 +40,7 @@ export const makeInitializeStatements = (
   makeEffectStatement(
     makeExpressionEffect(
       makeSetStrictExpression(
-        frame,
+        dynamic,
         makeLiteralExpression(variable),
         expression,
       ),
@@ -48,6 +48,13 @@ export const makeInitializeStatements = (
   ),
 ];
 
-export const makeLookupExpression = dropx_x___(makeDynamicLookupExpression);
+export const generateMakeLookupNode =
+  (makeDynamicLookupNode) =>
+  (_next, strict, _escaped, {dynamic}, variable, right) =>
+    makeDynamicLookupNode(strict, dynamic, variable, right);
 
-export const makeLookupEffect = dropx_x___(makeDynamicLookupEffect);
+export const makeLookupExpression = generateMakeLookupNode(
+  makeDynamicLookupExpression,
+);
+
+export const makeLookupEffect = generateMakeLookupNode(makeDynamicLookupEffect);

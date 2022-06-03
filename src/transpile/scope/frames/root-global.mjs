@@ -2,7 +2,6 @@ import {
   hasOwnProperty,
   assert,
   constant_,
-  constant__,
   bind______,
 } from "../../../util/index.mjs";
 
@@ -28,7 +27,7 @@ const kinds = {
   function: "var",
 };
 
-export const create = constant__(null);
+export const create = (_layer, _options) => ({});
 
 export const harvest = constant_({header: [], prelude: []});
 

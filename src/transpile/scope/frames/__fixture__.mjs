@@ -1,6 +1,6 @@
 import {concat, join, flatMap} from "array-lite";
 
-import {assert} from "../../../util/index.mjs";
+import {hasOwnProperty, assert} from "../../../util/index.mjs";
 
 import {
   makeScriptProgram,
@@ -94,6 +94,11 @@ const generateTest =
     {head = "", scenarios = [], layer = "layer", options = {}},
   ) => {
     const frame = create(layer, options);
+    assert(
+      typeof frame === "object" && frame !== null,
+      "expected frame to be an object",
+    );
+    assert(!hasOwnProperty(frame, "type"), "unexpected type property in frame");
     const body = [];
     const statements2 = flatMap(scenarios, (scenario) => {
       scenario = assign({}, default_scenario, scenario);
