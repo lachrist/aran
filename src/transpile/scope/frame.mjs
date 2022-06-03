@@ -35,19 +35,16 @@ const libraries = {
   [ROOT_MISS]: RootMiss,
 };
 
-const META = "_";
-const BASE = "$";
-
 ////////////
 // Create //
 ////////////
 
 const generateCreate = (layer, type) => {
   const {create} = libraries[type];
-  return (arg) => ({
+  return (options) => ({
     type,
     layer,
-    content: create(layer, arg),
+    content: create(layer, options),
   });
 };
 
@@ -84,10 +81,15 @@ const harvest = ({type, content}) => {
 // Declare //
 /////////////
 
-const generateDeclare = (layer1) => ({type, layer:layer2, content}, kind, variable, import_, exports_) => {
+const generateDeclare = (layer1) => (strict, {type, layer:layer2, content}, kind, variable, iimport, eexports) => {
   if (layer1 === layer2) {
-    const {declare} = libraries[type];
-    return declare(content, kind, variable, import_, exports_);
+    const {conflict, declare, KINDS} = libraries[type];
+    if (includes(KINDS, kind)) {
+      return declare(strict, content, kind, variable, iimport, eexports);
+    } else {
+      conflict(strict, content, kind, variable);
+      return null;
+    }
   } else {
     return null;
   }

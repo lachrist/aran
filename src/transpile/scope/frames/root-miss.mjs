@@ -16,13 +16,15 @@ import {makeThrowMissingExpression} from "./helper.mjs";
 
 import {isRead, isDiscard, isTypeof, accessWrite} from "../right.mjs";
 
+export const KINDS = [];
+
 export const create = (_layer, {dynamic}) => ({dynamic});
 
 export const harvest = constant_({header: [], prelude: []});
 
-export const makeDeclareStatements = deadcode______("declare unsupported");
+export const makeDeclareStatements = deadcode______("declaration on root-miss frame");
 
-export const makeInitializeStatements = deadcode_____("initialize unsupported");
+export const makeInitializeStatements = deadcode_____("initialization on root-miss frame");
 
 export const makeLookupExpression = (
   _next,

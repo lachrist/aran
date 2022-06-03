@@ -29,39 +29,28 @@ const descriptor = {
   configurable: true,
 };
 
+export const KIND = ["import"];
+
 export const create = (_layer, _options) => ({bindings: {}});
 
 export const harvest = constant_({header: [], prelude: []});
 
 export const makeDeclareStatements = (
-  _strict,
+  strict,
   {bindings},
   kind,
   variable,
   iimport,
   eexports,
 ) => {
-  if (kind === "import") {
-    assert(iimport !== null, "expected imported variable");
-    assert(eexports.length === 0, "aggregate should be done as a link");
-    assert(!hasOwnProperty(bindings, variable), "duplicate import variable");
-    defineProperty(bindings, variable, {__proto__: descriptor, value: iimport});
-    return [];
-  } else {
-    return null;
-  }
+  assert(iimport !== null, "expected imported variable");
+  assert(eexports.length === 0, "aggregate should be done as a link");
+  assert(!hasOwnProperty(bindings, variable), "duplicate variable");
+  defineProperty(bindings, variable, {__proto__: descriptor, value: iimport});
+  return [];
 };
 
-export const makeInitializeStatements = (
-  _strict,
-  _frame,
-  kind,
-  _variable,
-  _expression,
-) => {
-  assert(kind !== "import", "imported variable should not be initialized");
-  return null;
-};
+export const makeInitializeStatements = deadcode_____("imported variable should not be initialized");
 
 const makeHitLookupExpression = (bindings, variable, right) => {
   const {source, specifier} = bindings[variable];

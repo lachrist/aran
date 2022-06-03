@@ -19,12 +19,14 @@ import {
 
 import {isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
-const kinds = {
-  let: "let",
-  class: "let",
-  const: "const",
+export const KINDS = ["var", "function", "let", "const", "class"];
+
+const mapping = {
   var: "var",
   function: "var",
+  let: "let",
+  const: "const",
+  class: "let",
 };
 
 export const create = (_layer, _options) => ({});
@@ -39,7 +41,6 @@ export const makeDeclareStatements = (
   iimport,
   eexports,
 ) => {
-  assert(hasOwnProperty(kinds, kind), "unexpected kind");
   assert(iimport === null, "unexpected imported variable");
   assert(eexports.length === 0, "unexpected exported variable");
   return [];
@@ -51,10 +52,7 @@ export const makeInitializeStatements = (
   kind,
   variable,
   expression,
-) => {
-  assert(hasOwnProperty(kinds, kind), "unexpected kind");
-  return [makeDeclareStatement(kinds[kind], variable, expression)];
-};
+) => [makeDeclareStatement(mapping[kind], variable, expression)];
 
 export const makeLookupExpression = (
   _next,

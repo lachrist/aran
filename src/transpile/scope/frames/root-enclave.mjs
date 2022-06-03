@@ -11,13 +11,11 @@ import {
 
 import {isWrite, isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
-const kinds = ["var", "function"];
+export const KINDS = null;
 
 export const create = (_layer, options) => ({
   ...options,
 });
-
-export const harvest = constant_({header: [], prelude: []});
 
 export const makeDeclareStatements = (
   _strict,
@@ -27,7 +25,6 @@ export const makeDeclareStatements = (
   iimport,
   eexports,
 ) => {
-  assert(includes(kinds, kind), "unexpected kind");
   assert(iimport === null, "unexpected imported variable");
   assert(eexports.length === 0, "unexpected exported variable");
   return [];
@@ -40,7 +37,7 @@ export const makeInitializeStatements = (
   variable,
   expression,
 ) => {
-  assert(includes(kinds, kind), "unexpected kind");
+  assert(kind === "var" || kind === "function", );
   return [makeDeclareStatement("var", variable, expression)];
 };
 

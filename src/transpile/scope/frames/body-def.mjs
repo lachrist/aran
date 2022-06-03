@@ -20,6 +20,8 @@ const descriptor = {
   enumerable: true,
 };
 
+export const KINDS = ["def"];
+
 export const create = (layer, _options) => ({
   layer,
   bindings: {},
@@ -31,16 +33,16 @@ export const harvest = ({layer, bindings}) => ({
 });
 
 export const makeDeclareStatements = (
-  _strict,
+  strict,
   {bindings},
-  _kind,
+  kind,
   variable,
-  import_,
-  exports_,
+  iimport,
+  eexports,
 ) => {
-  assert(import_ === null, "unexpected imported variable");
-  assert(exports_.length === 0, "unexpected exported variable");
-  assert(!hasOwnProperty(bindings, variable), "duplicate variable declaration");
+  assert(iimport === null, "unexpected imported variable");
+  assert(eexports.length === 0, "unexpected exported variable");
+  assert(!hasOwnProperty(bindings, variable), "duplicate variable");
   defineProperty(bindings, variable, descriptor);
   return [];
 };

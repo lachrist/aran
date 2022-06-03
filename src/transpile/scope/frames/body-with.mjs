@@ -21,13 +21,15 @@ import {
   makeDynamicLookupEffect,
 } from "./helper.mjs";
 
+export const KINDS = [];
+
 export const create = (_layer, {dynamic}) => ({dynamic});
 
 export const harvest = constant_({prelude: [], header: []});
 
-export const makeDeclareStatements = constant______(null);
+export const makeDeclareStatements = deadcode______("this should never happen");
 
-export const makeInitializeStatements = constant_____(null);
+export const makeInitializeStatements = deadcode_____("this should never happen");
 
 const generateMakeLookupNode =
   (makeConditionalNode, makeDynamicLookupNode) =>

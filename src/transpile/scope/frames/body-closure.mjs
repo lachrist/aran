@@ -28,8 +28,6 @@ const {
   Reflect: {ownKeys, defineProperty},
 } = globalThis;
 
-const kinds = ["var", "function"];
-
 const descriptor = {
   __proto__: null,
   value: null,
@@ -37,6 +35,10 @@ const descriptor = {
   enumerable: false,
   configurable: false,
 };
+
+const dummy = deadcode("this should never happen");
+
+export const KINDS = ["var", "function"];
 
 export const create = (layer, _options) => ({
   layer,
@@ -50,70 +52,40 @@ export const harvest = ({layer, bindings}) => ({
 
 export const makeDeclareStatements = (
   _strict,
-  {layer, bindings},
+  frame,
   kind,
   variable,
   iimport,
   eexports,
 ) => {
-  if (includes(kinds, kind)) {
-    assert(iimport === null, "unexpected imported variable");
-    if (!hasOwnProperty(bindings, variable)) {
-      defineProperty(bindings, variable, {__proto__: descriptor, value: []});
-    }
-    pushAll(bindings[variable], eexports);
-    return concat(
-      [
-        makeEffectStatement(
-          makeWriteEffect(
-            makeVariable(layer, variable),
-            makeLiteralExpression({undefined: null}),
-          ),
-        ),
-      ],
-      map(eexports, makeExportUndefinedStatement),
-    );
-  } else {
-    return null;
+  assert(iimport === null, "unexpected imported variable");
+  const {bindings} = frame;
+  if (!hasOwnProperty(bindings, variable)) {
+    defineProperty(bindings, variable, {__proto__: descriptor, value: []});
   }
+  pushAll(bindings[variable], eexports);
+  return [
+    makeEffectStatement(
+      makeLookupEffect(
+        dummy,
+        strict,
+        false,
+        frame,
+        variable,
+        makeWrite(makeLiteralExpression({undefined:null})),
+      ),
+    ),
+  ];
 };
 
-export const makeInitializeStatements = (
-  _strict,
-  {layer, bindings},
-  kind,
-  variable,
-  expression,
-) => {
-  if (includes(kinds, kind)) {
-    assert(
-      hasOwnProperty(bindings, variable),
-      "missing variable for initialization",
-    );
-    return concat(
-      [
-        makeEffectStatement(
-          makeWriteEffect(makeVariable(layer, variable), expression),
-        ),
-      ],
-      map(
-        bindings[variable],
-        partial_x(
-          makeExportStatement,
-          makeReadExpression(makeVariable(layer, variable)),
-        ),
-      ),
-    );
-  } else {
-    return null;
-  }
-};
+export const makeInitializeStatements = deadcode_____(
+  "var/function variables should not be initialized",
+);
 
 const generateMakeLookupNode =
   (makeStaticLookupNode) =>
   (next, _escaped, strict, {layer, bindings}, variable, right) => {
     if (hasOwnProperty(bindings, variable)) {
-      assert(bindings[variable], "missing variable initialization");
       return makeStaticLookupNode(
         strict,
         layer,
