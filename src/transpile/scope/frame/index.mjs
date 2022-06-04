@@ -1,5 +1,7 @@
 import {includes} from "array-lite";
 
+import {assert} from "../../../util/index.mjs";
+
 import * as BodyBlock from "./body-block.mjs";
 import * as BodyClosure from "./body-closure.mjs";
 import * as BodyDead from "./body-dead.mjs";
@@ -13,18 +15,18 @@ import * as RootEnclave from "./root-enclave.mjs";
 import * as RootGlobal from "./root-global.mjs";
 import * as RootMiss from "./root-miss.mjs";
 
-const BODY_BLOCK = "body-block";
-const BODY_CLOSURE = "body-closure";
-const BODY_DEAD = "body-dead";
-const BODY_DEF = "body-def";
-const BODY_IMPORT = "body-import";
-const BODY_OBJECT = "body-object";
-const BODY_RECORD = "body-record";
-const BODY_WITH = "body-with";
-const ROOT_DEF = "root-def";
-const ROOT_ENCLAVE = "root-enclave";
-const ROOT_GLOBAL = "root-global";
-const ROOT_MISS = "root-miss";
+export const BODY_BLOCK = "body-block";
+export const BODY_CLOSURE = "body-closure";
+export const BODY_DEAD = "body-dead";
+export const BODY_DEF = "body-def";
+export const BODY_IMPORT = "body-import";
+export const BODY_OBJECT = "body-object";
+export const BODY_RECORD = "body-record";
+export const BODY_WITH = "body-with";
+export const ROOT_DEF = "root-def";
+export const ROOT_ENCLAVE = "root-enclave";
+export const ROOT_GLOBAL = "root-global";
+export const ROOT_MISS = "root-miss";
 
 const libraries = {
   __proto__: null,
@@ -46,45 +48,22 @@ const libraries = {
 // Create //
 ////////////
 
-const generateCreate = (type) => {
-  const {create} = libraries[type];
-  return (layer, options) => ({
+export const create = (type, layer, options) => {
+  const {create: method} = libraries[type];
+  return {
     type,
     layer,
-    ...create(layer, options),
-  });
+    ...method(layer, options),
+  };
 };
-
-export const createBodyBlock = generateCreate(BODY_BLOCK);
-
-export const createBodyClosure = generateCreate(BODY_CLOSURE);
-
-export const createBodyDead = generateCreate(BODY_DEAD);
-
-export const createBodyDef = generateCreate(BODY_DEF);
-
-export const createBodyImport = generateCreate(BODY_IMPORT);
-
-export const createBodyObject = generateCreate(BODY_OBJECT);
-
-export const createBodyRecord = generateCreate(BODY_RECORD);
-
-export const createBodyWith = generateCreate(BODY_WITH);
-
-export const createRootDef = generateCreate(ROOT_DEF);
-
-export const createRootEnclave = generateCreate(ROOT_ENCLAVE);
-
-export const createRootGlobal = generateCreate(ROOT_GLOBAL);
-
-export const createRootMiss = generateCreate(ROOT_MISS);
 
 /////////////
 // Harvest //
 /////////////
 
-export const harvest = (frame) => {
-  const {harvest: method} = libraries[frame.type];
+export const harvest = (type, frame) => {
+  assert(frame.type === type, "frame type mismatch");
+  const {harvest: method} = libraries[type];
   return method(frame);
 };
 

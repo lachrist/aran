@@ -16,7 +16,8 @@ import {BASE, META} from "../variable.mjs";
 import {makeRead} from "../right.mjs";
 
 import {
-  createBodyDef,
+  BODY_DEF,
+  create,
   harvest,
   makeDeclareStatements,
   makeInitializeStatements,
@@ -29,7 +30,7 @@ const STRICT = true;
 
 const ESCAPED = true;
 
-const frame = createBodyDef(META, {});
+const frame = create(BODY_DEF, META, {});
 
 assertEqual(
   makeDeclareStatements(STRICT, frame, "def", BASE, "variable", null, []),
@@ -86,7 +87,7 @@ const body = concat(
   ],
 );
 
-const {header, prelude} = harvest(frame);
+const {header, prelude} = harvest(BODY_DEF, frame);
 
 assertSuccess(
   allignBlock(
