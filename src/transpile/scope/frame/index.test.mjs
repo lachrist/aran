@@ -11,17 +11,16 @@ import {
 
 import {allignBlock} from "../../../allign/index.mjs";
 
+import {BASE, META} from "../variable.mjs";
+
 import {makeRead} from "../right.mjs";
 
 import {
-  createMetaBodyDef,
+  createBodyDef,
   harvest,
-  makeMetaDeclareStatements,
-  makeBaseDeclareStatements,
-  makeMetaInitializeStatements,
-  makeBaseInitializeStatements,
-  makeMetaLookupEffect,
-  makeBaseLookupEffect,
+  makeDeclareStatements,
+  makeInitializeStatements,
+  makeLookupEffect,
 } from "./index.mjs";
 
 const {Error} = globalThis;
@@ -30,18 +29,19 @@ const STRICT = true;
 
 const ESCAPED = true;
 
-const frame = createMetaBodyDef({});
+const frame = createBodyDef(META, {});
 
 assertEqual(
-  makeBaseDeclareStatements(STRICT, frame, "def", "variable", null, []),
+  makeDeclareStatements(STRICT, frame, "def", BASE, "variable", null, []),
   null,
 );
 
 assertEqual(
-  makeBaseInitializeStatements(
+  makeInitializeStatements(
     STRICT,
     frame,
     "def",
+    BASE,
     "variable",
     makeLiteralExpression("right"),
   ),
@@ -49,33 +49,36 @@ assertEqual(
 );
 
 const body = concat(
-  makeMetaDeclareStatements(STRICT, frame, "def", "variable", null, []),
-  makeMetaInitializeStatements(
+  makeDeclareStatements(STRICT, frame, "def", META, "variable", null, []),
+  makeInitializeStatements(
     STRICT,
     frame,
     "def",
+    META,
     "variable",
     makeLiteralExpression("right"),
   ),
   [
     makeEffectStatement(
-      makeBaseLookupEffect(
+      makeLookupEffect(
         () => makeExpressionEffect(makeLiteralExpression("next")),
         STRICT,
         ESCAPED,
         frame,
+        BASE,
         "variable",
         makeRead(),
       ),
     ),
     makeEffectStatement(
-      makeMetaLookupEffect(
+      makeLookupEffect(
         () => {
           throw new Error("unexpected next");
         },
         STRICT,
         ESCAPED,
         frame,
+        META,
         "variable",
         makeRead(),
       ),
