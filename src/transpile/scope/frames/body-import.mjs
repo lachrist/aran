@@ -3,6 +3,7 @@ import {
   constant_,
   assert,
   hasOwnProperty,
+  deadcode_____,
 } from "../../../util/index.mjs";
 
 import {
@@ -36,9 +37,9 @@ export const create = (_layer, _options) => ({bindings: {}});
 export const harvest = constant_({header: [], prelude: []});
 
 export const makeDeclareStatements = (
-  strict,
+  _strict,
   {bindings},
-  kind,
+  _kind,
   variable,
   iimport,
   eexports,
@@ -50,7 +51,9 @@ export const makeDeclareStatements = (
   return [];
 };
 
-export const makeInitializeStatements = deadcode_____("imported variable should not be initialized");
+export const makeInitializeStatements = deadcode_____(
+  "imported variable should not be initialized",
+);
 
 const makeHitLookupExpression = (bindings, variable, right) => {
   const {source, specifier} = bindings[variable];

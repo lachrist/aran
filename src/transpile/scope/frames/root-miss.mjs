@@ -22,9 +22,13 @@ export const create = (_layer, {dynamic}) => ({dynamic});
 
 export const harvest = constant_({header: [], prelude: []});
 
-export const makeDeclareStatements = deadcode______("declaration on root-miss frame");
+export const makeDeclareStatements = deadcode______(
+  "declaration on root-miss frame",
+);
 
-export const makeInitializeStatements = deadcode_____("initialization on root-miss frame");
+export const makeInitializeStatements = deadcode_____(
+  "initialization on root-miss frame",
+);
 
 export const makeLookupExpression = (
   _next,

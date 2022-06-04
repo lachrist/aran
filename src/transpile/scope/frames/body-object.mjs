@@ -1,6 +1,6 @@
-import {includes} from "array-lite";
+import {map, includes} from "array-lite";
 
-import {constant_, assert} from "../../../util/index.mjs";
+import {push, assert, partialx_, deadcode_____} from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -13,32 +13,33 @@ import {
 import {
   makeDefineExpression,
   makeBinaryExpression,
-  makeSetExpression,
   makeDataDescriptorExpression,
 } from "../../../intrinsic.mjs";
 
 import {
+  makeThrowDuplicateExpression,
   makeDynamicLookupExpression,
   makeDynamicLookupEffect,
 } from "./helper.mjs";
 
-const makeConflictStatement = (conflict, variable) => makeEffectStatement(
-  makeExpressionEffect(
-    makeConditionalExpression(
-      makeBinaryExpression(
-        "in",
-        makeLiteralExpression(variable),
-        conflict,
+const makeConflictStatement = (conflict, variable) =>
+  makeEffectStatement(
+    makeExpressionEffect(
+      makeConditionalExpression(
+        makeBinaryExpression("in", makeLiteralExpression(variable), conflict),
+        makeThrowDuplicateExpression(variable),
+        makeLiteralExpression({undefined: null}),
       ),
-      makeThrowDuplicateExpression(variable),
-      makeLiteralExpression(undefined),
     ),
-  ),
-);
+  );
 
 export const KINDS = ["var", "function"];
 
-export const create = (_layer, {dynamic, conflict}) => ({dynamic, conflict, bindings:[]});
+export const create = (_layer, {dynamic, conflict}) => ({
+  dynamic,
+  conflict,
+  bindings: [],
+});
 
 export const harvest = ({conflict, bindings}) => ({
   header: [],
@@ -48,7 +49,7 @@ export const harvest = ({conflict, bindings}) => ({
 export const makeDeclareStatements = (
   _strict,
   {dynamic, bindings},
-  kind,
+  _kind,
   variable,
   iimport,
   eexports,
@@ -62,11 +63,7 @@ export const makeDeclareStatements = (
     makeEffectStatement(
       makeExpressionEffect(
         makeConditionalExpression(
-          makeBinaryExpression(
-            "in",
-            makeLiteralExpression(variable),
-            dynamic,
-          ),
+          makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
           makeLiteralExpression({undefined: null}),
           makeDefineExpression(
             dynamic,
@@ -88,28 +85,14 @@ export const makeInitializeStatements = deadcode_____(
   "var/function variables should not be initialized",
 );
 
-export const generateMakeLookupNode = (makeConditionalNode, makeDynamicLookupNode) => (
-  next,
-  strict,
-  escaped,
-  {dynamic},
-  variable,
-  right,
-) =>
-  makeConditionalNode(
-    makeBinaryExpression(
-      "in",
-      makeLiteralExpression(variable),
-      dynamic,
-    ),
-    makeDynamicLookupNode(
-      strict,
-      dynamic,
-      variable,
-      right,
-    ),
-    next(),
-  );
+export const generateMakeLookupNode =
+  (makeConditionalNode, makeDynamicLookupNode) =>
+  (next, strict, _escaped, {dynamic}, variable, right) =>
+    makeConditionalNode(
+      makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
+      makeDynamicLookupNode(strict, dynamic, variable, right),
+      next(),
+    );
 
 export const makeLookupEffect = generateMakeLookupNode(
   makeConditionalEffect,

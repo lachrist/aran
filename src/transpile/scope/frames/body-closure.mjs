@@ -1,8 +1,9 @@
-import {concat, includes, map} from "array-lite";
+import {map} from "array-lite";
 
 import {
+  deadcode_____,
+  deadcode,
   partialx_,
-  partial_x,
   pushAll,
   assert,
   hasOwnProperty,
@@ -10,19 +11,14 @@ import {
 
 import {
   makeEffectStatement,
-  makeWriteEffect,
-  makeReadExpression,
   makeLiteralExpression,
 } from "../../../ast/index.mjs";
 
 import {makeVariable} from "../variable.mjs";
 
-import {
-  makeStaticLookupEffect,
-  makeStaticLookupExpression,
-  makeExportUndefinedStatement,
-  makeExportStatement,
-} from "./helper.mjs";
+import {makeWrite} from "../right.mjs";
+
+import {makeStaticLookupEffect, makeStaticLookupExpression} from "./helper.mjs";
 
 const {
   Reflect: {ownKeys, defineProperty},
@@ -50,38 +46,6 @@ export const harvest = ({layer, bindings}) => ({
   prelude: [],
 });
 
-export const makeDeclareStatements = (
-  _strict,
-  frame,
-  kind,
-  variable,
-  iimport,
-  eexports,
-) => {
-  assert(iimport === null, "unexpected imported variable");
-  const {bindings} = frame;
-  if (!hasOwnProperty(bindings, variable)) {
-    defineProperty(bindings, variable, {__proto__: descriptor, value: []});
-  }
-  pushAll(bindings[variable], eexports);
-  return [
-    makeEffectStatement(
-      makeLookupEffect(
-        dummy,
-        strict,
-        false,
-        frame,
-        variable,
-        makeWrite(makeLiteralExpression({undefined:null})),
-      ),
-    ),
-  ];
-};
-
-export const makeInitializeStatements = deadcode_____(
-  "var/function variables should not be initialized",
-);
-
 const generateMakeLookupNode =
   (makeStaticLookupNode) =>
   (next, _escaped, strict, {layer, bindings}, variable, right) => {
@@ -103,3 +67,35 @@ export const makeLookupExpression = generateMakeLookupNode(
 );
 
 export const makeLookupEffect = generateMakeLookupNode(makeStaticLookupEffect);
+
+export const makeDeclareStatements = (
+  strict,
+  frame,
+  _kind,
+  variable,
+  iimport,
+  eexports,
+) => {
+  assert(iimport === null, "unexpected imported variable");
+  const {bindings} = frame;
+  if (!hasOwnProperty(bindings, variable)) {
+    defineProperty(bindings, variable, {__proto__: descriptor, value: []});
+  }
+  pushAll(bindings[variable], eexports);
+  return [
+    makeEffectStatement(
+      makeLookupEffect(
+        dummy,
+        strict,
+        false,
+        frame,
+        variable,
+        makeWrite(makeLiteralExpression({undefined: null})),
+      ),
+    ),
+  ];
+};
+
+export const makeInitializeStatements = deadcode_____(
+  "var/function variables should not be initialized",
+);

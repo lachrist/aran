@@ -1,9 +1,4 @@
-import {
-  hasOwnProperty,
-  assert,
-  constant_,
-  bind______,
-} from "../../../util/index.mjs";
+import {assert, constant_, bind______} from "../../../util/index.mjs";
 
 import {
   makeExpressionEffect,
@@ -36,7 +31,7 @@ export const harvest = constant_({header: [], prelude: []});
 export const makeDeclareStatements = (
   _strict,
   _frame,
-  kind,
+  _kind,
   _variable,
   iimport,
   eexports,

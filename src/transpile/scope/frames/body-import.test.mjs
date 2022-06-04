@@ -11,10 +11,6 @@ assertSuccess(
     scenarios: [
       {
         type: "declare",
-        kind: "kind",
-      },
-      {
-        type: "declare",
         kind: "import",
         variable: "variable",
         import: {
@@ -25,13 +21,8 @@ assertSuccess(
         code: "",
       },
       {
-        type: "initialize",
-        kind: "kind",
-      },
-      {
         type: "read",
         output: "expression",
-        variable: "VARIABLE",
         next: () => makeLiteralExpression("next"),
         code: "'next'",
       },

@@ -1,6 +1,4 @@
-import {includes} from "array-lite";
-
-import {bind______, constant_, assert} from "../../../util/index.mjs";
+import {constant_, bind______, assert} from "../../../util/index.mjs";
 
 import {
   makeApplyExpression,
@@ -11,16 +9,18 @@ import {
 
 import {isWrite, isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
-export const KINDS = null;
+export const KINDS = ["var", "function"];
 
 export const create = (_layer, options) => ({
   ...options,
 });
 
+export const harvest = constant_({header: [], prelude: []});
+
 export const makeDeclareStatements = (
   _strict,
   _frame,
-  kind,
+  _kind,
   _variable,
   iimport,
   eexports,
@@ -33,13 +33,10 @@ export const makeDeclareStatements = (
 export const makeInitializeStatements = (
   _strict,
   _frame,
-  kind,
+  _kind,
   variable,
   expression,
-) => {
-  assert(kind === "var" || kind === "function", );
-  return [makeDeclareStatement("var", variable, expression)];
-};
+) => [makeDeclareStatement("var", variable, expression)];
 
 const pick = (frame, right, strict) => {
   if (isRead(right)) {

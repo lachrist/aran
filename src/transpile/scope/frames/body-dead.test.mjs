@@ -10,26 +10,16 @@ assertSuccess(
   testBlock(Frame, {
     scenarios: [
       {
-        type: "read",
-        output: "expression",
-        next: () => makeLiteralExpression("next"),
-        code: "'next'",
-      },
-      {
-        type: "declare",
-        kind: "var",
-        variable: "VARIABLE",
-      },
-      {
         type: "declare",
         kind: "let",
         variable: "variable",
         code: "",
       },
       {
-        type: "initialize",
-        kind: "var",
-        variable: "VARIABLE",
+        type: "read",
+        output: "expression",
+        next: () => makeLiteralExpression("next"),
+        code: "'next'",
       },
       {
         type: "read",

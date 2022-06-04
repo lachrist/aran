@@ -1,6 +1,4 @@
-import {map, includes} from "array-lite";
-
-import {push, assert, partialx_} from "../../../util/index.mjs";
+import {returnx, assert, constant_} from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -24,12 +22,11 @@ import {
   makeDynamicLookupExpression,
   makeDynamicLookupEffect,
   makeThrowDeadzoneExpression,
-  makeThrowDuplicateExpression,
 } from "./helper.mjs";
 
 export const KINDS = ["let", "const", "class"];
 
-export const create = (_layer, _options) => ({});
+export const create = (_layer, {dynamic}) => ({dynamic});
 
 export const harvest = constant_({
   header: [],
@@ -71,49 +68,40 @@ export const makeInitializeStatements = (
   variable,
   expression,
 ) => [
-    makeEffectStatement(
-      makeExpressionEffect(
-        makeDefineExpression(
-          dynamic,
-          makeLiteralExpression(variable),
-          makeDataDescriptorExpression(
-            expression,
-            makeLiteralExpression(kind !== "const"),
-            makeLiteralExpression(true),
-            makeLiteralExpression(false),
-          ),
+  makeEffectStatement(
+    makeExpressionEffect(
+      makeDefineExpression(
+        dynamic,
+        makeLiteralExpression(variable),
+        makeDataDescriptorExpression(
+          expression,
+          makeLiteralExpression(kind !== "const"),
+          makeLiteralExpression(true),
+          makeLiteralExpression(false),
         ),
       ),
     ),
-  ];
+  ),
+];
 
-export const generateMakeLookupNode = (
-  makeConditionalNode,
-  makeDynamicLookupNode,
-  makeLiftNode,
-) => (
-  next,
-  strict,
-  _escaped,
-  {dynamic},
-  variable,
-  right,
-) =>
-  makeConditionalNode(
-    makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
-    isDiscard(right)
-      ? makeDynamicLookupNode(strict, dynamic, variable, right)
-      : makeConditionalExpression(
-          makeBinaryExpression(
-            "===",
-            makeGetExpression(dynamic, makeLiteralExpression(variable)),
-            makeDeadzoneExpression(),
+export const generateMakeLookupNode =
+  (makeConditionalNode, makeDynamicLookupNode, makeLiftNode) =>
+  (next, strict, _escaped, {dynamic}, variable, right) =>
+    makeConditionalNode(
+      makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
+      isDiscard(right)
+        ? makeDynamicLookupNode(strict, dynamic, variable, right)
+        : makeConditionalExpression(
+            makeBinaryExpression(
+              "===",
+              makeGetExpression(dynamic, makeLiteralExpression(variable)),
+              makeDeadzoneExpression(),
+            ),
+            makeLiftNode(makeThrowDeadzoneExpression(variable)),
+            makeDynamicLookupNode(strict, dynamic, variable, right),
           ),
-          makeLiftNode(makeThrowDeadzoneExpression(variable)),
-          makeDynamicLookupNode(strict, dynamic, variable, right),
-        ),
-    next(),
-  );
+      next(),
+    );
 
 export const makeLookupEffect = generateMakeLookupNode(
   makeConditionalEffect,
@@ -124,5 +112,5 @@ export const makeLookupEffect = generateMakeLookupNode(
 export const makeLookupExpression = generateMakeLookupNode(
   makeConditionalExpression,
   makeDynamicLookupExpression,
-  makeExpressionExpression,
+  returnx,
 );

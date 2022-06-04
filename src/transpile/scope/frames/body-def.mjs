@@ -33,9 +33,9 @@ export const harvest = ({layer, bindings}) => ({
 });
 
 export const makeDeclareStatements = (
-  strict,
+  _strict,
   {bindings},
-  kind,
+  _kind,
   variable,
   iimport,
   eexports,

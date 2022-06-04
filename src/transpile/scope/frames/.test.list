@@ -1,10 +1,10 @@
 - * __fixture__.mjs
   * helper.mjs
 - * root-miss.mjs
-  * root-happy.mjs
+  * root-def.mjs
   * root-global.mjs
   * root-enclave.mjs
-  * body-happy.mjs
+  * body-def.mjs
   * body-record.mjs
   * body-object.mjs
   * body-with.mjs

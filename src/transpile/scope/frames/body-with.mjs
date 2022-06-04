@@ -1,7 +1,7 @@
 import {
-  constant_____,
-  constant______,
   constant_,
+  deadcode_____,
+  deadcode______,
 } from "../../../util/index.mjs";
 
 import {
@@ -27,9 +27,13 @@ export const create = (_layer, {dynamic}) => ({dynamic});
 
 export const harvest = constant_({prelude: [], header: []});
 
-export const makeDeclareStatements = deadcode______("this should never happen");
+export const makeDeclareStatements = deadcode______(
+  "declaration on body-with frame",
+);
 
-export const makeInitializeStatements = deadcode_____("this should never happen");
+export const makeInitializeStatements = deadcode_____(
+  "initialization on body-with frame",
+);
 
 const generateMakeLookupNode =
   (makeConditionalNode, makeDynamicLookupNode) =>

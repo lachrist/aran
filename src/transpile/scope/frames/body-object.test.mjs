@@ -1,9 +1,6 @@
 import {assertSuccess} from "../../../__fixture__.mjs";
 
-import {
-  makeExpressionEffect,
-  makeLiteralExpression,
-} from "../../../ast/index.mjs";
+import {makeLiteralExpression} from "../../../ast/index.mjs";
 
 import {testBlock} from "./__fixture__.mjs";
 
@@ -13,13 +10,20 @@ assertSuccess(
   testBlock(Frame, {
     options: {
       dynamic: makeLiteralExpression("dynamic"),
+      conflict: makeLiteralExpression("conflict"),
     },
-    head: "",
+    head: `
+      effect(
+        (
+          intrinsic.aran.binary('in', 'variable', 'conflict') ?
+          intrinsic.aran.throw(
+            new intrinsic.SyntaxError("Variable 'variable' has already been declared")
+          ) :
+          undefined
+        ),
+      );
+    `,
     scenarios: [
-      {
-        type: "declare",
-        kind: "const",
-      },
       {
         type: "declare",
         kind: "var",
@@ -43,20 +47,6 @@ assertSuccess(
         );`,
       },
       {
-        type: "initialize",
-        kind: "const",
-      },
-      {
-        type: "initialize",
-        strict: true,
-        kind: "var",
-        variable: "variable",
-        right: makeLiteralExpression("right"),
-        code: `effect(
-          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
-        )`,
-      },
-      {
         type: "read",
         output: "expression",
         next: () => makeLiteralExpression("next"),
@@ -65,21 +55,6 @@ assertSuccess(
           intrinsic.aran.binary('in', 'variable', 'dynamic') ?
           intrinsic.aran.get('dynamic', 'variable') :
           'next'
-        )`,
-      },
-      {
-        type: "write",
-        output: "effect",
-        next: () => makeExpressionEffect(makeLiteralExpression("next")),
-        strict: true,
-        variable: "variable",
-        right: makeLiteralExpression("right"),
-        code: `(
-          intrinsic.aran.binary('in', 'variable', 'dynamic') ?
-          effect(
-            intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
-          ) :
-          effect('next')
         )`,
       },
     ],

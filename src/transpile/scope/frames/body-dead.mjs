@@ -44,7 +44,7 @@ const {
   Reflect: {ownKeys, defineProperty},
 } = globalThis;
 
-export const KINDS = ["let", "const", "class"];
+export const KINDS = ["let", "const"];
 
 export const create = constant__(_layer, _options) => ({
   bindings: [],

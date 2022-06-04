@@ -54,14 +54,7 @@ const finalizeScript = (variables, statements, code) => {
   );
 };
 
-const orElse = (maybe, value) => (maybe === null ? value : maybe);
-
 /* c8 ignore stop */
-
-const fromJust = (maybe) => {
-  assert(maybe !== null, "unexpected nothing");
-  return maybe;
-};
 
 export const default_scenario = {
   type: null,
@@ -103,8 +96,10 @@ const generateTest =
     const statements2 = flatMap(scenarios, (scenario) => {
       scenario = assign({}, default_scenario, scenario);
       assert(scenario.type !== null, "missing scenario type");
+      assert(scenario.code !== null, "missing scenario code");
       if (scenario.type === "declare") {
-        const maybe = makeDeclareStatements(
+        body[body.length] = scenario.code;
+        return makeDeclareStatements(
           scenario.strict,
           frame,
           scenario.kind,
@@ -112,30 +107,19 @@ const generateTest =
           scenario.import,
           scenario.exports,
         );
-        assert(
-          (maybe === null) === (scenario.code === null),
-          "bypass declaration mismatch",
-        );
-        body[body.length] = orElse(scenario.code, "");
-        return orElse(maybe, []);
       } else if (scenario.type === "initialize") {
-        const maybe = makeInitializeStatements(
+        body[body.length] = scenario.code;
+        return makeInitializeStatements(
           scenario.strict,
           frame,
           scenario.kind,
           scenario.variable,
           scenario.right,
         );
-        assert(
-          (maybe === null) === (scenario.code === null),
-          "bypass initialization mismatch",
-        );
-        body[body.length] = orElse(scenario.code, "");
-        return orElse(maybe, []);
       } else {
         assert(scenario.output !== null, "missing scenario output");
         if (scenario.output === "effect") {
-          body[body.length] = `${fromJust(scenario.code)};`;
+          body[body.length] = `${scenario.code};`;
           return [
             makeEffectStatement(
               makeLookupEffect(
@@ -149,7 +133,7 @@ const generateTest =
             ),
           ];
         } else if (scenario.output === "expression") {
-          body[body.length] = `effect(${fromJust(scenario.code)});`;
+          body[body.length] = `effect(${scenario.code});`;
           return [
             makeEffectStatement(
               makeExpressionEffect(
