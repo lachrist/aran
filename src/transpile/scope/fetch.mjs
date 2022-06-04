@@ -1,58 +1,157 @@
+import {flat} from "array-lite";
 
-import {fetch} from "./list.mjs";
+import {push, assert} from "../../util/index.mjs";
+
+import {
+  extend as extendStructure,
+  fetch as fetchStructure,
+} from "./structure.mjs";
 
 import {isStrict} from "./property.mjs";
 
 import {
+  create as createFrame,
   harvest as harvestFrame,
-  declare as declareFrame,
-  initialize as declareFrame,
-  lookup as lookupFrame,
-} from "./frame.mjs";
+  makeDeclareStatements as makeFrameDeclareStatements,
+  makeInitializeStatements as makeFrameInitializeStatements,
+  makeLookupExpression as makeFrameLookupExpression,
+  makeLookupEffect as makeFrameLookupEffect,
+} from "./frame/index.mjs";
 
-const harvest = (scope1, size) => {
+export const extend = (parent, type, layer, options) =>
+  extendStructure(parent, createFrame(type, layer, options));
+
+export const harvest = (types, scope1) => {
   const headers = [];
   const preludes = [];
-  while (size > 0) {
-    const {scope:scope2, frame, escaped} = fetch(scope1, varia);
+  for (let index = 0; index < types.length; index += 1) {
+    const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
     assert(!escaped, "escaped scope during harvest");
-    const {header, prelude} = harvestFrame(frame);
+    const {header, prelude} = harvestFrame(types[index], frame);
     push(headers, header);
     push(preludes, prelude);
     scope1 = scope2;
-    size -= 1;
   }
-  return {header:flat(header), prelude:flat(prelude)};
+  return {header: flat(headers), prelude: flat(preludes)};
 };
 
-const declare = (scope1, kind, variable, import_, exports_) => {
-  const {scope: scope2, frame, escaped} = fetch(scope1, false);
+export const declare = (
+  strict,
+  scope1,
+  kind,
+  layer,
+  variable,
+  iimport,
+  eexports,
+) => {
+  const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
   assert(!escaped, "escaped scope during declaration");
-  const maybe = declareFrame(frame, kind, variable, import_, exports_);
+  const maybe = makeFrameDeclareStatements(
+    strict,
+    frame,
+    kind,
+    layer,
+    variable,
+    iimport,
+    eexports,
+  );
   return maybe === null
-    ? declare(scope2, kind, variable, import_, exports_)
+    ? declare(strict, scope2, kind, layer, variable, iimport, eexports)
     : maybe;
 };
 
-export const initialize = (scope, kind, variable, expression) => {
-  const {scope: scope2, frame, escaped} = fetch(scope1, false);
-  assert(!escaped, "escaped scope during initialization");
-  const maybe = initializeFrame(frame, kind, variable, expression);
-  return maybe === null
-    ? initialize(scope2, kind, variable, import_, exports_)
-    : maybe;
-};
-
-const loop = (scope1, escaped1, strict, variable, right) => {
-  const {scope: scope2, frame, escaped: escaped2} = fetch(scope1, escaped1);
-  const next = () => loop(scope2, escaped2, strict, variable, right);
-  return lookupFrame(next, frame, escaped2, strict, variable, right);
-};
-
-export const lookup = (scope, variable, right) => loop(
+export const makeDeclareStatements = (
   scope,
-  false,
-  isStrict(scope),
+  kind,
+  layer,
+  variable,
+  iimport,
+  eexports,
+) => declare(isStrict(scope), scope, kind, layer, variable, iimport, eexports);
+
+export const initialize = (
+  strict,
+  scope1,
+  kind,
+  layer,
+  variable,
+  expression,
+) => {
+  const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
+  assert(!escaped, "escaped scope during initialization");
+  const maybe = makeFrameInitializeStatements(
+    strict,
+    frame,
+    kind,
+    layer,
+    variable,
+    expression,
+  );
+  return maybe === null
+    ? initialize(strict, scope2, kind, layer, variable, expression)
+    : maybe;
+};
+
+export const makeInitializeStatements = (
+  scope,
+  kind,
+  layer,
+  variable,
+  expression,
+) => initialize(isStrict(scope), scope, kind, layer, variable, expression);
+
+const lookup = (
+  makeFrameLookupNode,
+  strict,
+  escaped1,
+  scope1,
+  layer,
   variable,
   right,
-);
+) => {
+  const {
+    scope: scope2,
+    frame,
+    escaped: escaped2,
+  } = fetchStructure(scope1, escaped1);
+  return makeFrameLookupNode(
+    () =>
+      lookup(
+        makeFrameLookupNode,
+        strict,
+        escaped2,
+        scope2,
+        layer,
+        variable,
+        right,
+      ),
+    strict,
+    escaped2,
+    frame,
+    layer,
+    variable,
+    right,
+  );
+};
+
+export const makeLookupExpression = (scope, layer, variable, right) =>
+  lookup(
+    makeFrameLookupExpression,
+    isStrict(scope),
+    false,
+    scope,
+    layer,
+    variable,
+    right,
+  );
+
+export const makeLookupEffect = (scope, layer, variable, right) =>
+  lookup(
+    makeFrameLookupEffect,
+    isStrict(scope),
+    false,
+    scope,
+    layer,
+    variable,
+    right,
+  );

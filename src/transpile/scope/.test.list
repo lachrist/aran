@@ -1,7 +1,7 @@
-- variable.mjs
+- * variable.mjs
+  * right.mjs
 - * - structure.mjs
     - property.mjs
-  * - right.mjs
-    - frame
+  * frame
 - fetch.mjs
 - index.mjs
