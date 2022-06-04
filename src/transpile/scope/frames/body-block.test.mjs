@@ -12,26 +12,26 @@ assertSuccess(
     scenarios: [
       {
         type: "declare",
-        kind: "kind",
-      },
-      {
-        type: "declare",
-        kind: "var",
+        kind: "const",
         variable: "variable",
         import: null,
         exports: ["specifier"],
-        code: `
-          VARIABLE = undefined;
-          exportStatic('specifier', undefined);
-        `,
+        code: "",
+      },
+      {
+        type: "read",
+        escaped: false,
+        output: "expression",
+        variable: "variable",
+        code: `intrinsic.aran.throw(
+          new intrinsic.ReferenceError(
+            "Cannot access variable 'variable' before initialization",
+          ),
+        )`,
       },
       {
         type: "initialize",
-        kind: "kind",
-      },
-      {
-        type: "initialize",
-        kind: "var",
+        kind: "const",
         variable: "variable",
         right: makeLiteralExpression("right"),
         code: `
@@ -41,32 +41,69 @@ assertSuccess(
       },
       {
         type: "read",
+        output: "expression",
         next: () => makeLiteralExpression("next"),
         code: "'next'",
       },
       {
         type: "read",
+        output: "expression",
         variable: "variable",
         code: "VARIABLE",
       },
       {
-        type: "typeof",
-        variable: "variable",
-        code: "intrinsic.aran.unary('typeof', VARIABLE)",
-      },
-      {
-        type: "discard",
-        variable: "variable",
-        code: "false",
-      },
-      {
         type: "write",
+        output: "expression",
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `(
-          VARIABLE = 'right',
-          exportStatic('specifier', VARIABLE)
+        code: `intrinsic.aran.throw(
+          new intrinsic.TypeError(
+            "Cannot assign variable 'variable' because it is a constant",
+          ),
         )`,
+      },
+    ],
+  }),
+);
+
+assertSuccess(
+  testBlock(Frame, {
+    head: `
+      let ORIGINAL, SHADOW;
+      SHADOW = false;
+    `,
+    scenarios: [
+      {
+        type: "declare",
+        kind: "const",
+        variable: "variable",
+        import: null,
+        exports: ["specifier"],
+        code: "",
+      },
+      {
+        type: "read",
+        escaped: true,
+        output: "expression",
+        variable: "variable",
+        code: `(
+          SHADOW ?
+          ORIGINAL :
+          intrinsic.aran.throw(new intrinsic.ReferenceError(
+            "Cannot access variable 'variable' before initialization",
+          ))
+        )`,
+      },
+      {
+        type: "initialize",
+        kind: "const",
+        variable: "variable",
+        right: makeLiteralExpression("right"),
+        code: `
+          ORIGINAL = 'right';
+          SHADOW = true;
+          exportStatic('specifier', ORIGINAL);
+        `,
       },
     ],
   }),

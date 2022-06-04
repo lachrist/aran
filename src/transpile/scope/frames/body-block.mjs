@@ -1,10 +1,11 @@
-import {filter, map, concat, reduce, includes} from "array-lite";
+import {filter, map, concat} from "array-lite";
 
 import {
   hasOwnProperty,
   assert,
+  partial_x,
   partialx_,
-  partial__x,
+  returnx,
 } from "../../../util/index.mjs";
 
 import {
@@ -17,48 +18,21 @@ import {
   makeWriteEffect,
 } from "../../../ast/index.mjs";
 
-import {makeUnaryExpression} from "../../../intrinsic.mjs";
-
 import {makeVariable, makeShadowVariable} from "../variable.mjs";
 
-import {isRead, isTypeof, isDiscard, isWrite, accessWrite} from "../right.mjs";
+import {isWrite} from "../right.mjs";
 
 import {
   makeThrowDeadzoneExpression,
   makeExportStatement,
   makeThrowConstantExpression,
-  makeExportSequenceEffect,
+  makeStaticLookupExpression,
+  makeStaticLookupEffect,
 } from "./helper.mjs";
 
 const {
   Reflect: {ownKeys, defineProperty},
 } = globalThis;
-
-const kinds = ["let", "const", "class"];
-
-const makeInitializedLookupNode = (binding, layer, variable, right) => {
-  if (isRead(right)) {
-    return makeReadExpression(makeVariable(layer, variable));
-  } else if (isTypeof(right)) {
-    return makeUnaryExpression(
-      "typeof",
-      makeReadExpression(makeVariable(layer, variable)),
-    );
-  } else if (isDiscard(right)) {
-    return makeLiteralExpression(false);
-  } else {
-    return binding.writable
-      ? reduce(
-          binding.exports,
-          partial__x(
-            makeExportSequenceEffect,
-            makeReadExpression(makeVariable(layer, variable)),
-          ),
-          makeWriteEffect(makeVariable(layer, variable), accessWrite(right)),
-        )
-      : makeExpressionEffect(makeThrowConstantExpression(variable));
-  }
-};
 
 const hasDeadzone = (bindings, variable) => bindings[variable].deadzone;
 
@@ -69,6 +43,16 @@ const makeShadowInitializeStatement = (layer, variable) =>
       makeLiteralExpression(false),
     ),
   );
+
+const descriptor = {
+  __proto__: null,
+  value: null,
+  configurable: true,
+  enumerable: true,
+  writable: true,
+};
+
+export const KINDS = ["let", "const", "class"];
 
 export const create = (layer) => ({
   layer,
@@ -86,7 +70,10 @@ export const harvest = ({layer, bindings}) => {
       map(variables, partialx_(makeVariable, layer)),
       map(deadzone_variables, partialx_(makeShadowVariable, layer)),
     ),
-    prelude: map(deadzone_variables, partialx_(layer, makeShadowInitializeStatement)),
+    prelude: map(
+      deadzone_variables,
+      partialx_(makeShadowInitializeStatement, layer),
+    ),
   };
 };
 
@@ -98,89 +85,102 @@ export const makeDeclareStatements = (
   iimport,
   eexports,
 ) => {
-  if (includes(kinds, kind)) {
-    assert(iimport === null, "unexpected imported variable");
-    assert(!hasOwnProperty(bindings, variable), "duplicate variable");
-    defineProperty(bindings, variable, {
-      initialized: true,
+  assert(iimport === null, "unexpected imported variable");
+  assert(!hasOwnProperty(bindings, variable), "duplicate variable");
+  defineProperty(bindings, variable, {
+    __proto__: descriptor,
+    value: {
+      initialized: false,
       deadzone: false,
       writable: kind !== "const",
       exports: eexports,
-    });
-    return [];
-  } else {
-    return null;
-  }
+    },
+  });
+  return [];
 };
 
-export const makeInitializeStatements = (_strict, {layer, bindings}, kind, variable, expression) => {
-  if (includes(kinds, kind)) {
-    assert(
-      hasOwnProperty(bindings, variable),
-      "missing variable for initialization",
-    );
-    const binding = bindings[variable];
-    assert(!binding.initialized, "duplicate initialization");
-    binding.initialized = true;
-    return concat(
-      [
-        makeEffectStatement(
-          makeWriteEffect(makeVariable(layer, variable), expression),
-        ),
-      ],
-      binding.deadzone
-        ? [makeEffectStatement(makeShadowVariable(layer, variable), true)]
-        : [],
-      map(
-        binding.exports,
-        partialx_(
-          makeExportStatement,
-          makeReadExpression(makeVariable(layer, variable)),
-        ),
-      ),
-    );
-  } else {
-    return null;
-  }
-};
-
-export const makeLookupNode = (
-  next,
-  escaped,
-  variable,
+export const makeInitializeStatements = (
+  _strict,
   {layer, bindings},
-  right,
+  _kind,
+  variable,
+  expression,
 ) => {
-  if (hasOwnProperty(bindings, variable)) {
-    const binding = bindings[variable];
-    if (binding.initialized) {
-      return makeInitializedLookupNode(binding, layer, variable, right);
-    } else {
-      if (isWrite(right)) {
-        if (escaped) {
-          binding.deadzone = true;
-          return makeConditionalEffect(
-            makeReadExpression(makeShadowVariable(layer, variable)),
-            makeInitializedLookupNode(binding, layer, variable, right),
-            makeExpressionEffect(makeThrowDeadzoneExpression(variable)),
-          );
-        } else {
-          return makeExpressionEffect(makeThrowDeadzoneExpression(variable));
-        }
+  assert(
+    hasOwnProperty(bindings, variable),
+    "missing variable for initialization",
+  );
+  const binding = bindings[variable];
+  assert(!binding.initialized, "duplicate initialization");
+  binding.initialized = true;
+  return concat(
+    [
+      makeEffectStatement(
+        makeWriteEffect(makeVariable(layer, variable), expression),
+      ),
+    ],
+    binding.deadzone
+      ? [
+          makeEffectStatement(
+            makeWriteEffect(
+              makeShadowVariable(layer, variable),
+              makeLiteralExpression(true),
+            ),
+          ),
+        ]
+      : [],
+    map(
+      binding.exports,
+      partial_x(
+        makeExportStatement,
+        makeReadExpression(makeVariable(layer, variable)),
+      ),
+    ),
+  );
+};
+
+export const generateMakeLookupNode =
+  (makeStaticLookupNode, makeConditionalNode, makeLiftNode) =>
+  (next, strict, escaped, {layer, bindings}, variable, right) => {
+    if (hasOwnProperty(bindings, variable)) {
+      const binding = bindings[variable];
+      if (!binding.initialized && !escaped) {
+        return makeLiftNode(makeThrowDeadzoneExpression(variable));
       } else {
-        if (escaped) {
-          binding.deadzone = true;
-          return makeConditionalExpression(
-            makeReadExpression(makeShadowVariable(layer, variable)),
-            makeInitializedLookupNode(binding, layer, variable, right),
-            makeThrowDeadzoneExpression(variable),
-          );
+        const node =
+          isWrite(right) && !binding.writable
+            ? makeLiftNode(makeThrowConstantExpression(variable))
+            : makeStaticLookupNode(
+                strict,
+                layer,
+                variable,
+                right,
+                binding.exports,
+              );
+        if (binding.initialized) {
+          return node;
         } else {
-          return makeThrowDeadzoneExpression(variable);
+          binding.deadzone = true;
+          return makeConditionalNode(
+            makeReadExpression(makeShadowVariable(layer, variable)),
+            node,
+            makeLiftNode(makeThrowDeadzoneExpression(variable)),
+          );
         }
       }
+    } else {
+      return next();
     }
-  } else {
-    return next();
-  }
-};
+  };
+
+export const makeLookupExpression = generateMakeLookupNode(
+  makeStaticLookupExpression,
+  makeConditionalExpression,
+  returnx,
+);
+
+export const makeLookupEffect = generateMakeLookupNode(
+  makeStaticLookupEffect,
+  makeConditionalEffect,
+  makeExpressionEffect,
+);

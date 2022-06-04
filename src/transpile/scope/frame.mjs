@@ -1,37 +1,42 @@
 
 import * as BodyBlock from "./frames/body-block.mjs";
 import * as BodyClosure from "./frames/body-closure.mjs";
-import * as BodyHappy from "./frames/body-happy.mjs";
+import * as BodyDead from "./frames/body-dead.mjs";
+import * as BodyDef from "./frames/body-def.mjs";
 import * as BodyObject from "./frames/body-object.mjs";
 import * as BodyRecord from "./frames/body-record.mjs";
 import * as BodyWith from "./frames/body-with.mjs";
+import * as RootDef from "./frames/root-def.mjs";
 import * as RootEnclave from "./frames/root-enclave.mjs";
 import * as RootGlobal from "./frames/root-global.mjs";
-import * as RootHappy from "./frames/root-happy.mjs";
 import * as RootMiss from "./frames/root-miss.mjs";
 
 const BODY_BLOCK = "body-block";
 const BODY_CLOSURE = "body-closure";
-const BODY_HAPPY = "body-happy";
+const BODY_DEAD = "body-dead";
+const BODY_DEF = "body-def";
+const BODY_IMPORT = "body-import";
 const BODY_OBJECT = "body-object";
 const BODY_RECORD = "body-record";
 const BODY_WITH = "body-with";
+const ROOT_DEF = "root-def";
 const ROOT_ENCLAVE = "root-enclave";
 const ROOT_GLOBAL = "root-global";
-const ROOT_HAPPY = "root-happy";
 const ROOT_MISS = "root-miss";
 
 const libraries = {
   __proto__: null,
   [BODY_BLOCK]: BodyBlock,
   [BODY_CLOSURE]: BodyClosure,
-  [BODY_HAPPY]: BodyHappy,
+  [BODY_DEAD]: BodyDead,
+  [BODY_DEF]: BodyDef,
+  [BODY_IMPORT]: BodyImport,
   [BODY_OBJECT]: BodyObject,
   [BODY_RECORD]: BodyRecord,
   [BODY_WITH]: BodyWith,
+  [ROOT_DEF]: RootDef,
   [ROOT_ENCLAVE]: RootEnclave,
   [ROOT_GLOBAL]: RootGlobal,
-  [ROOT_HAPPY]: RootHappy,
   [ROOT_MISS]: RootMiss,
 };
 
@@ -44,50 +49,53 @@ const generateCreate = (layer, type) => {
   return (options) => ({
     type,
     layer,
-    content: create(layer, options),
+    ... create(layer, options),
   });
 };
 
-export const createMetaRoot = generateCreate(META, ROOT_HAPPY);
+export const createBaseBodyBlock = generateCreate(BASE, BODY_BLOCK);
 
-export const createMetaBody = generateCreate(META, BODY_HAPPY);
+export const createBaseBodyClosure = generateCreate(BASE, BODY_CLOSURE);
 
-export const createBaseRootMiss = generateCreate(BASE, ROOT_MISS);
+export const createBaseBodyDead = generateCreate(BASE, BODY_DEAD);
 
-export const createBaseRootGlobal = generateCreate(BASE, ROOT_GLOBAL);
+export const createMetaBodyDef = generateCreate(META, BODY_DEF);
 
-export const createBaseRootEnclave = generateCreate(BASE, ROOT_ENCLAVE);
+export const createBaseBodyImport = generateCreate(BASE, BODY_IMPORT);
 
 export const createBaseBodyObject = generateCreate(BASE, BODY_OBJECT);
 
 export const createBaseBodyRecord = generateCreate(BASE, BODY_RECORD);
 
-export const createBaseBodyClosure = generateCreate(BASE, BODY_CLOSURE);
-
-export const createBaseBodyBlock = generateCreate(BASE, BODY_BLOCK);
-
 export const createBaseBodyWith = generateCreate(BASE, BODY_WITH);
+
+export const createMetaRootDef = generateCreate(META, ROOT_DEF);
+
+export const createBaseRootEnclave = generateCreate(BASE, ROOT_ENCLAVE);
+
+export const createBaseRootGlobal = generateCreate(BASE, ROOT_GLOBAL);
+
+export const createBaseRootMiss = generateCreate(BASE, ROOT_MISS);
 
 /////////////
 // Harvest //
 /////////////
 
-const harvest = ({type, content}) => {
-  const {harvest} = libraries[type];
-  return harvest(content);
+const harvest = (frame) => {
+  const {harvest} = libraries[frame.type];
+  return harvest(frame);
 };
 
 /////////////
 // Declare //
 /////////////
 
-const generateDeclare = (layer1) => (strict, {type, layer:layer2, content}, kind, variable, iimport, eexports) => {
-  if (layer1 === layer2) {
-    const {conflict, declare, KINDS} = libraries[type];
+const generateDeclare = (layer) => (strict, frame, kind, variable, iimport, eexports) => {
+  if (frame.layer === layer) {
+    const {KINDS, makeDeclareStatements} = libraries[frame.type];
     if (includes(KINDS, kind)) {
-      return declare(strict, content, kind, variable, iimport, eexports);
+      return makeDeclareStatements(strict, frame, kind, variable, iimport, eexports);
     } else {
-      conflict(strict, content, kind, variable);
       return null;
     }
   } else {
@@ -95,40 +103,48 @@ const generateDeclare = (layer1) => (strict, {type, layer:layer2, content}, kind
   }
 };
 
-const declareMeta = generateDeclare(META);
+const makeMetaDeclareStatements = generateDeclare(META);
 
-const declareBase = generateDeclare(BASE);
+const makeBaseDeclareStatements = generateDeclare(BASE);
 
 ////////////////
 // Initialize //
 ////////////////
 
-const generateInitialize = (layer1) => ({type, layer:layer2, content}, kind, variable, expression) => {
-  if (layer1 === layer2) {
-    const {initialize} = libraries[type];
-    return initialize(content, kind, variable, expression);
+const generateInitialize = (layer) => (strict, frame, kind, variable, expression) => {
+  if (frame.layer === layer) {
+    const {KINDS, makeInitializeStatements} = libraries[frame.type];
+    if (includes(KINDS, kind) {
+      return makeInitializeStatements(strict, frame, kind, variable, expression);
+    } else {
+      return null;
+    }
   } else {
     return null;
   }
 };
 
-const initializeMeta = generateInitialize(META);
+const makeMetaInitializeStatements = generateInitialize(META);
 
-const initializeBase = generateInitialize(BASE);
+const makeBaseInitializeStatements = generateInitialize(BASE);
 
 ////////////
 // Lookup //
 ////////////
 
-const generateLookup = (layer1) => (next, {type, layer:layer2, content}, escaped, strict, variable, right) => {
-  if (layer1 === layer2) {
-    const {lookup} = libraries[type];
-    return lookup(next, content, escaped, strict, variable, expression);
+const generateLookup = (layer, name) => (next, strict, escaped, frame, variable, right) => {
+  if (frame.layer === layer) {
+    const makeLookupNode = libraries[frame.type][name];
+    return makeLookupNode(next, strict, escaped, frame, variable, right);
   } else {
     return next();
   }
 };
 
-const lookupMeta = generateLookup(META);
+const makeMetaLookupExpression = generateLookup(META, "makeLookupExpression");
 
-const lookupBase = generateLookup(BASE);
+const makeMetaLookupEffect = generateLookup(META, "makeLookupEffect");
+
+const makeBaseLookupExpression = generateLookup(BASE, "makeLookupExpression");
+
+const makeBaseLookupEffect = generateLookup(BASE, "makeLookupEffect");

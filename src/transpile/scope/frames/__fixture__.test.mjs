@@ -17,7 +17,7 @@ import {accessWrite, isWrite, isRead} from "../right.mjs";
 
 import {testBlock} from "./__fixture__.mjs";
 
-const FRAME = {foo: "bar"};
+const FRAME = {layer: "layer"};
 
 assertSuccess(
   testBlock(

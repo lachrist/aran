@@ -13,6 +13,8 @@ import {
 
 import {allignBlock, allignProgram} from "../../../allign/index.mjs";
 
+import {BASE} from "../variable.mjs";
+
 import {makeRead, makeTypeof, makeDiscard, makeWrite} from "../right.mjs";
 
 const {
@@ -84,7 +86,7 @@ const generateTest =
       makeLookupEffect,
       makeLookupExpression,
     },
-    {head = "", scenarios = [], layer = "layer", options = {}},
+    {head = "", scenarios = [], layer = BASE, options = {}},
   ) => {
     const frame = create(layer, options);
     assert(
@@ -92,6 +94,10 @@ const generateTest =
       "expected frame to be an object",
     );
     assert(!hasOwnProperty(frame, "type"), "unexpected type property in frame");
+    assert(
+      !hasOwnProperty(frame, "layer") || frame.layer === layer,
+      "if present, the layer property should match the argument",
+    );
     const body = [];
     const statements2 = flatMap(scenarios, (scenario) => {
       scenario = assign({}, default_scenario, scenario);
