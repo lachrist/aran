@@ -2,7 +2,6 @@
 - * - structure.mjs
     - property.mjs
   * - right.mjs
-    - frames
-    - frame.mjs
+    - frame
 - fetch.mjs
 - index.mjs

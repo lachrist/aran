@@ -25,7 +25,11 @@ assertSuccess(
         type: "read",
         output: "expression",
         variable: "variable",
-        code: "intrinsic.aran.throw(new intrinsic.ReferenceError('foo')",
+        code: `intrinsic.aran.throw(
+          new intrinsic.ReferenceError(
+            "Cannot access variable 'variable' before initialization",
+          ),
+        )`,
       },
       {
         type: "discard",

@@ -1,0 +1,15 @@
+- * __fixture__.mjs
+  * helper.mjs
+- * body-block.mjs
+  * body-closure.mjs
+  * body-dead.mjs
+  * body-def.mjs
+  * body-import.mjs
+  * body-object.mjs
+  * body-record.mjs
+  * body-with.mjs
+  * root-def.mjs
+  * root-enclave.mjs
+  * root-global.mjs
+  * root-miss.mjs
+- index.mjs

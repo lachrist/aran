@@ -12,41 +12,28 @@
 //   }
 // }
 
-import {concat, includes, map} from "array-lite";
+import {includes} from "array-lite";
 
 import {
-  expect,
-  SyntaxAranError,
-  partialx_,
-  partial_x,
-  pushAll,
+  returnx,
+  deadcode_____,
+  push,
+  constant_,
   assert,
-  hasOwnProperty,
 } from "../../../util/index.mjs";
 
 import {
-  makeEffectStatement,
-  makeWriteEffect,
-  makeReadExpression,
+  makeExpressionEffect,
   makeLiteralExpression,
 } from "../../../ast/index.mjs";
 
-import {makeVariable} from "../variable.mjs";
+import {isDiscard} from "../right.mjs";
 
-import {
-  makeStaticLookupEffect,
-  makeStaticLookupExpression,
-  makeExportUndefinedStatement,
-  makeExportStatement,
-} from "./helper.mjs";
-
-const {
-  Reflect: {ownKeys, defineProperty},
-} = globalThis;
+import {makeThrowDeadzoneExpression} from "./helper.mjs";
 
 export const KINDS = ["let", "const"];
 
-export const create = constant__(_layer, _options) => ({
+export const create = (_layer, _options) => ({
   bindings: [],
 });
 
@@ -56,28 +43,30 @@ export const harvest = constant_({
 });
 
 export const makeDeclareStatements = (
-  strict,
+  _strict,
   {bindings},
-  kind,
+  _kind,
   variable,
   iimport,
   eexports,
 ) => {
   assert(iimport === null, "unexpected imported variable");
-  assert(eexports.length === null, "unexpected exported variable");
+  assert(eexports.length === 0, "unexpected exported variable");
   assert(!includes(bindings, variable), "duplicate variable");
   push(bindings, variable);
   return [];
 };
 
-export const makeInitializeStatements = deadcode_____("initialization is forbidden in dead frames");
+export const makeInitializeStatements = deadcode_____(
+  "initialization is forbidden in dead frames",
+);
 
 const generateMakeLookupNode =
   (makeLiftNode) =>
   (next, _escaped, _strict, {bindings}, variable, right) => {
     if (includes(bindings, variable)) {
       if (isDiscard(right)) {
-        return makeLiftNode(makeLiteral(false));
+        return makeLiftNode(makeLiteralExpression(false));
       } else {
         return makeLiftNode(makeThrowDeadzoneExpression(variable));
       }
@@ -86,8 +75,6 @@ const generateMakeLookupNode =
     }
   };
 
-export const makeLookupExpression = generateMakeLookupNode(
-  returnx,
-);
+export const makeLookupExpression = generateMakeLookupNode(returnx);
 
 export const makeLookupEffect = generateMakeLookupNode(makeExpressionEffect);
