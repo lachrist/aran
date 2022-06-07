@@ -18,6 +18,7 @@ import {makeRead} from "../right.mjs";
 import {
   DEFINE_STATIC,
   create,
+  conflict,
   harvest,
   makeDeclareStatements,
   makeInitializeStatements,
@@ -31,6 +32,10 @@ const STRICT = true;
 const ESCAPED = true;
 
 const frame = create(DEFINE_STATIC, META, {});
+
+assertEqual(conflict(STRICT, frame, "def", BASE, "variable"), false);
+
+assertEqual(conflict(STRICT, frame, "def", META, "variable"), true);
 
 assertEqual(
   makeDeclareStatements(STRICT, frame, "def", BASE, "variable", null, []),

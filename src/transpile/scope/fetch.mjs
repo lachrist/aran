@@ -11,12 +11,15 @@ import {isStrict} from "./property.mjs";
 
 import {
   create as createFrame,
+  conflict as conflictFrame,
   harvest as harvestFrame,
   makeDeclareStatements as makeFrameDeclareStatements,
   makeInitializeStatements as makeFrameInitializeStatements,
   makeLookupExpression as makeFrameLookupExpression,
   makeLookupEffect as makeFrameLookupEffect,
 } from "./frame/index.mjs";
+
+const {undefined} = globalThis;
 
 export const extend = (parent, type, layer, options) =>
   extendStructure(parent, createFrame(type, layer, options));
@@ -35,7 +38,18 @@ export const harvest = (types, scope1) => {
   return {header: flat(headers), prelude: flat(preludes)};
 };
 
-export const declare = (
+const conflictLoop = (strict, scope1, kind, layer, variable) => {
+  const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
+  assert(!escaped, "escaped scope during conflict");
+  return conflictFrame(strict, frame, kind, layer, variable)
+    ? undefined
+    : conflictLoop(strict, scope2, kind, layer, variable);
+};
+
+export const conflict = (scope, kind, layer, variable) =>
+  conflictLoop(isStrict(scope), scope, kind, layer, variable);
+
+const declareLoop = (
   strict,
   scope1,
   kind,
@@ -56,7 +70,7 @@ export const declare = (
     eexports,
   );
   return maybe === null
-    ? declare(strict, scope2, kind, layer, variable, iimport, eexports)
+    ? declareLoop(strict, scope2, kind, layer, variable, iimport, eexports)
     : maybe;
 };
 
@@ -67,16 +81,10 @@ export const makeDeclareStatements = (
   variable,
   iimport,
   eexports,
-) => declare(isStrict(scope), scope, kind, layer, variable, iimport, eexports);
+) =>
+  declareLoop(isStrict(scope), scope, kind, layer, variable, iimport, eexports);
 
-export const initialize = (
-  strict,
-  scope1,
-  kind,
-  layer,
-  variable,
-  expression,
-) => {
+const initializeLoop = (strict, scope1, kind, layer, variable, expression) => {
   const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
   assert(!escaped, "escaped scope during initialization");
   const maybe = makeFrameInitializeStatements(
@@ -88,7 +96,7 @@ export const initialize = (
     expression,
   );
   return maybe === null
-    ? initialize(strict, scope2, kind, layer, variable, expression)
+    ? initializeLoop(strict, scope2, kind, layer, variable, expression)
     : maybe;
 };
 
@@ -98,9 +106,9 @@ export const makeInitializeStatements = (
   layer,
   variable,
   expression,
-) => initialize(isStrict(scope), scope, kind, layer, variable, expression);
+) => initializeLoop(isStrict(scope), scope, kind, layer, variable, expression);
 
-const lookup = (
+const lookupLoop = (
   makeFrameLookupNode,
   strict,
   escaped1,
@@ -116,7 +124,7 @@ const lookup = (
   } = fetchStructure(scope1, escaped1);
   return makeFrameLookupNode(
     () =>
-      lookup(
+      lookupLoop(
         makeFrameLookupNode,
         strict,
         escaped2,
@@ -135,7 +143,7 @@ const lookup = (
 };
 
 export const makeLookupExpression = (scope, layer, variable, right) =>
-  lookup(
+  lookupLoop(
     makeFrameLookupExpression,
     isStrict(scope),
     false,
@@ -146,7 +154,7 @@ export const makeLookupExpression = (scope, layer, variable, right) =>
   );
 
 export const makeLookupEffect = (scope, layer, variable, right) =>
-  lookup(
+  lookupLoop(
     makeFrameLookupEffect,
     isStrict(scope),
     false,

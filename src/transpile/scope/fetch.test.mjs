@@ -1,4 +1,4 @@
-import {assertSuccess} from "../../__fixture__.mjs";
+import {assertEqual, assertSuccess} from "../../__fixture__.mjs";
 
 import {concat} from "array-lite";
 
@@ -17,10 +17,11 @@ import {makeRead, makeWrite} from "./right.mjs";
 
 import {createRoot} from "./property.mjs";
 
-import {BODY_DEF, BODY_CLOSURE} from "./frame/index.mjs";
+import {DEFINE_STATIC, CLOSURE_STATIC} from "./frame/index.mjs";
 
 import {
   extend,
+  conflict,
   harvest,
   makeDeclareStatements,
   makeInitializeStatements,
@@ -28,12 +29,16 @@ import {
   makeLookupEffect,
 } from "./fetch.mjs";
 
+const {undefined} = globalThis;
+
 const scope = extend(
-  extend(createRoot(123), BODY_DEF, BASE, {}),
-  BODY_CLOSURE,
+  extend(createRoot(123), DEFINE_STATIC, BASE, {}),
+  CLOSURE_STATIC,
   META,
   {},
 );
+
+assertEqual(conflict(scope, "def", BASE, "variable"), undefined);
 
 const body = concat(
   makeDeclareStatements(scope, "def", BASE, "variable", null, []),
@@ -61,7 +66,7 @@ const body = concat(
   ],
 );
 
-const {header, prelude} = harvest([BODY_CLOSURE, BODY_DEF], scope);
+const {header, prelude} = harvest([CLOSURE_STATIC, DEFINE_STATIC], scope);
 
 assertSuccess(
   allignBlock(

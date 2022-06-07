@@ -85,6 +85,20 @@ export const makeDeclareStatements = (
   }
 };
 
+//////////////
+// Conflict //
+//////////////
+
+export const conflict = (strict, frame, kind, layer, variable) => {
+  const {KINDS, conflict: method} = libraries[frame.type];
+  if (frame.layer === layer) {
+    method(strict, frame, kind, variable);
+    return includes(KINDS, kind);
+  } else {
+    return false;
+  }
+};
+
 ////////////////
 // Initialize //
 ////////////////
