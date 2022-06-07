@@ -16,9 +16,13 @@ import {makeThrowMissingExpression} from "./helper.mjs";
 
 import {isRead, isDiscard, isTypeof, accessWrite} from "../right.mjs";
 
+const {undefined} = globalThis;
+
 export const KINDS = [];
 
 export const create = (_layer, {dynamic}) => ({dynamic});
+
+export const conflict = constant_(undefined);
 
 export const harvest = constant_({header: [], prelude: []});
 

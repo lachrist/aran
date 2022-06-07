@@ -27,6 +27,12 @@ assertSuccess(
         assertDeepEqual(options, {});
         return FRAME;
       },
+      conflict: (strict, frame, kind, variable) => {
+        assertEqual(strict, true);
+        assertEqual(frame, FRAME);
+        assertEqual(kind, "kind");
+        assertEqual(variable, "variable");
+      },
       harvest: (frame) => {
         assertEqual(frame, FRAME);
         return {
@@ -46,8 +52,8 @@ assertSuccess(
         iimport,
         eexports,
       ) => {
-        assertEqual(frame, FRAME);
         assertEqual(strict, true);
+        assertEqual(frame, FRAME);
         assertEqual(kind, "kind");
         assertEqual(variable, "variable"), assertEqual(iimport, null);
         assertDeepEqual(eexports, []);
@@ -58,15 +64,15 @@ assertSuccess(
         ];
       },
       makeInitializeStatements: (strict, frame, kind, variable, expression) => {
-        assertEqual(frame, FRAME);
         assertEqual(strict, true);
+        assertEqual(frame, FRAME);
         assertEqual(kind, "kind");
         return [makeEffectStatement(makeWriteEffect(variable, expression))];
       },
       makeLookupEffect: (_next, strict, escaped, frame, variable, right) => {
-        assertEqual(frame, FRAME);
         assertEqual(strict, true);
         assertEqual(escaped, true);
+        assertEqual(frame, FRAME);
         assert(isWrite(right));
         return makeWriteEffect(variable, accessWrite(right));
       },
@@ -93,6 +99,12 @@ assertSuccess(
       layer: "layer",
       options: {},
       scenarios: [
+        {
+          type: "conflict",
+          strict: true,
+          kind: "kind",
+          variable: "variable",
+        },
         {
           type: "declare",
           strict: true,

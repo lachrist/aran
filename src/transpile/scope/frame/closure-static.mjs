@@ -1,6 +1,7 @@
 import {map} from "array-lite";
 
 import {
+  constant_,
   deadcode_____,
   deadcode,
   partialx_,
@@ -21,6 +22,7 @@ import {makeWrite} from "../right.mjs";
 import {makeStaticLookupEffect, makeStaticLookupExpression} from "./helper.mjs";
 
 const {
+  undefined,
   Reflect: {ownKeys, defineProperty},
 } = globalThis;
 
@@ -40,6 +42,8 @@ export const create = (layer, _options) => ({
   layer,
   bindings: {},
 });
+
+export const conflict = constant_(undefined);
 
 export const harvest = ({layer, bindings}) => ({
   header: map(ownKeys(bindings), partialx_(makeVariable, layer)),

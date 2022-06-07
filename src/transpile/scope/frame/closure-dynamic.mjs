@@ -1,6 +1,4 @@
-import {map, includes} from "array-lite";
-
-import {push, assert, partialx_, deadcode_____} from "../../../util/index.mjs";
+import {constant_, assert, deadcode_____} from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -17,46 +15,33 @@ import {
 } from "../../../intrinsic.mjs";
 
 import {
-  makeThrowDuplicateExpression,
   makeDynamicLookupExpression,
   makeDynamicLookupEffect,
 } from "./helper.mjs";
 
-const makeConflictStatement = (conflict, variable) =>
-  makeEffectStatement(
-    makeExpressionEffect(
-      makeConditionalExpression(
-        makeBinaryExpression("in", makeLiteralExpression(variable), conflict),
-        makeThrowDuplicateExpression(variable),
-        makeLiteralExpression({undefined: null}),
-      ),
-    ),
-  );
+const {undefined} = globalThis;
 
 export const KINDS = ["var", "function"];
 
-export const create = (_layer, {dynamic, conflict}) => ({
+export const create = (_layer, {dynamic}) => ({
   dynamic,
-  conflict,
-  bindings: [],
 });
 
-export const harvest = ({conflict, bindings}) => ({
+export const conflict = constant_(undefined);
+
+export const harvest = constant_({
   header: [],
-  prelude: map(bindings, partialx_(makeConflictStatement, conflict)),
+  prelude: [],
 });
 
 export const makeDeclareStatements = (
   _strict,
-  {dynamic, bindings},
+  {dynamic},
   _kind,
   variable,
   iimport,
   eexports,
 ) => {
-  if (!includes(bindings, variable)) {
-    push(bindings, variable);
-  }
   assert(iimport === null, "unexpected global imported variable");
   assert(eexports.length === 0, "unexpected global exported variable");
   return [

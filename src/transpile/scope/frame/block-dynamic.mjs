@@ -1,4 +1,6 @@
-import {returnx, assert, constant_} from "../../../util/index.mjs";
+import {includes, map} from "array-lite";
+
+import {push, returnx, assert, partialx_} from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -22,15 +24,33 @@ import {
   makeDynamicLookupExpression,
   makeDynamicLookupEffect,
   makeThrowDeadzoneExpression,
+  makeThrowDuplicateExpression,
 } from "./helper.mjs";
+
+const makeConflictStatement = (dynamic, variable) =>
+  makeEffectStatement(
+    makeExpressionEffect(
+      makeConditionalExpression(
+        makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
+        makeThrowDuplicateExpression(variable),
+        makeLiteralExpression({undefined: null}),
+      ),
+    ),
+  );
 
 export const KINDS = ["let", "const", "class"];
 
-export const create = (_layer, {dynamic}) => ({dynamic});
+export const create = (_layer, {dynamic}) => ({dynamic, conflicts: []});
 
-export const harvest = constant_({
+export const conflict = (_strict, {conflicts}, _kind, variable) => {
+  if (!includes(conflicts, variable)) {
+    push(conflicts, variable);
+  }
+};
+
+export const harvest = ({dynamic, conflicts}) => ({
   header: [],
-  prelude: [],
+  prelude: map(conflicts, partialx_(makeConflictStatement, dynamic)),
 });
 
 export const makeDeclareStatements = (

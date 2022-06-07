@@ -18,6 +18,7 @@ import {BASE} from "../variable.mjs";
 import {makeRead, makeTypeof, makeDiscard, makeWrite} from "../right.mjs";
 
 const {
+  undefined,
   Error,
   Object: {assign},
 } = globalThis;
@@ -80,6 +81,7 @@ const generateTest =
   (
     {
       create,
+      conflict,
       harvest,
       makeDeclareStatements,
       makeInitializeStatements,
@@ -102,48 +104,45 @@ const generateTest =
     const statements2 = flatMap(scenarios, (scenario) => {
       scenario = assign({}, default_scenario, scenario);
       assert(scenario.type !== null, "missing scenario type");
-      assert(scenario.code !== null, "missing scenario code");
-      if (scenario.type === "declare") {
-        body[body.length] = scenario.code;
-        return makeDeclareStatements(
-          scenario.strict,
-          frame,
-          scenario.kind,
-          scenario.variable,
-          scenario.import,
-          scenario.exports,
+      if (scenario.type === "conflict") {
+        assert(
+          scenario.code === null,
+          "conflict scenario should not have code",
         );
-      } else if (scenario.type === "initialize") {
-        body[body.length] = scenario.code;
-        return makeInitializeStatements(
-          scenario.strict,
-          frame,
-          scenario.kind,
-          scenario.variable,
-          scenario.right,
+        assert(
+          conflict(scenario.strict, frame, scenario.kind, scenario.variable) ===
+            undefined,
+          "expected conflict to return undefined",
         );
+        return [];
       } else {
-        assert(scenario.output !== null, "missing scenario output");
-        if (scenario.output === "effect") {
-          body[body.length] = `${scenario.code};`;
-          return [
-            makeEffectStatement(
-              makeLookupEffect(
-                scenario.next,
-                scenario.strict,
-                scenario.escaped,
-                frame,
-                scenario.variable,
-                makeRight(scenario.type, scenario.right),
-              ),
-            ),
-          ];
-        } else if (scenario.output === "expression") {
-          body[body.length] = `effect(${scenario.code});`;
-          return [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeLookupExpression(
+        assert(scenario.code !== null, "missing scenarion code");
+        if (scenario.type === "declare") {
+          body[body.length] = scenario.code;
+          return makeDeclareStatements(
+            scenario.strict,
+            frame,
+            scenario.kind,
+            scenario.variable,
+            scenario.import,
+            scenario.exports,
+          );
+        } else if (scenario.type === "initialize") {
+          body[body.length] = scenario.code;
+          return makeInitializeStatements(
+            scenario.strict,
+            frame,
+            scenario.kind,
+            scenario.variable,
+            scenario.right,
+          );
+        } else {
+          assert(scenario.output !== null, "missing scenario output");
+          if (scenario.output === "effect") {
+            body[body.length] = `${scenario.code};`;
+            return [
+              makeEffectStatement(
+                makeLookupEffect(
                   scenario.next,
                   scenario.strict,
                   scenario.escaped,
@@ -152,11 +151,27 @@ const generateTest =
                   makeRight(scenario.type, scenario.right),
                 ),
               ),
-            ),
-          ];
-        } /* c8 ignore start */ else {
-          throw new Error("invalid scenario output");
-        } /* c8 ignore stop */
+            ];
+          } else if (scenario.output === "expression") {
+            body[body.length] = `effect(${scenario.code});`;
+            return [
+              makeEffectStatement(
+                makeExpressionEffect(
+                  makeLookupExpression(
+                    scenario.next,
+                    scenario.strict,
+                    scenario.escaped,
+                    frame,
+                    scenario.variable,
+                    makeRight(scenario.type, scenario.right),
+                  ),
+                ),
+              ),
+            ];
+          } /* c8 ignore start */ else {
+            throw new Error("invalid scenario output");
+          } /* c8 ignore stop */
+        }
       }
     });
     const {header: variables, prelude: statements1} = harvest(frame);

@@ -12,17 +12,7 @@ assertSuccess(
       dynamic: makeLiteralExpression("dynamic"),
       conflict: makeLiteralExpression("conflict"),
     },
-    head: `
-      effect(
-        (
-          intrinsic.aran.binary('in', 'variable', 'conflict') ?
-          intrinsic.aran.throw(
-            new intrinsic.SyntaxError("Variable 'variable' has already been declared")
-          ) :
-          undefined
-        ),
-      );
-    `,
+    head: "",
     scenarios: [
       {
         type: "declare",

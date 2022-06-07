@@ -10,6 +10,10 @@ assertSuccess(
   testBlock(Frame, {
     scenarios: [
       {
+        type: "conflict",
+        variable: "variable",
+      },
+      {
         type: "declare",
         kind: "let",
         variable: "variable",

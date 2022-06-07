@@ -9,6 +9,8 @@ import {
 
 import {isWrite, isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
+const {undefined} = globalThis;
+
 export const KINDS = ["var", "function", "let", "const", "class"];
 
 const mapping = {
@@ -22,6 +24,8 @@ const mapping = {
 export const create = (_layer, options) => ({
   ...options,
 });
+
+export const conflict = constant_(undefined);
 
 export const harvest = constant_({header: [], prelude: []});
 

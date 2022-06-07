@@ -2,46 +2,43 @@ import {includes} from "array-lite";
 
 import {assert} from "../../../util/index.mjs";
 
-import * as BodyBlock from "./body-block.mjs";
-import * as BodyClosure from "./body-closure.mjs";
-import * as BodyDead from "./body-dead.mjs";
-import * as BodyDef from "./body-def.mjs";
-import * as BodyImport from "./body-import.mjs";
-import * as BodyObject from "./body-object.mjs";
-import * as BodyRecord from "./body-record.mjs";
-import * as BodyWith from "./body-with.mjs";
-import * as RootDef from "./root-def.mjs";
-import * as RootEnclave from "./root-enclave.mjs";
-import * as RootGlobal from "./root-global.mjs";
-import * as RootMiss from "./root-miss.mjs";
+import * as BlockDynamic from "./block-dynamic.mjs";
+import * as BlockStaticDead from "./block-static-dead.mjs";
+import * as BlockStatic from "./block-static.mjs";
+import * as ClosureDynamic from "./closure-dynamic.mjs";
+import * as ClosureStatic from "./closure-static.mjs";
+import * as DefineDynamic from "./define-dynamic.mjs";
+import * as DefineStatic from "./define-static.mjs";
+import * as EmptyDynamicWith from "./empty-dynamic-with.mjs";
+import * as EmptyVoid from "./empty-void.mjs";
+import * as Enclave from "./enclave.mjs";
+import * as ImportStatic from "./import-static.mjs";
 
-export const BODY_BLOCK = "body-block";
-export const BODY_CLOSURE = "body-closure";
-export const BODY_DEAD = "body-dead";
-export const BODY_DEF = "body-def";
-export const BODY_IMPORT = "body-import";
-export const BODY_OBJECT = "body-object";
-export const BODY_RECORD = "body-record";
-export const BODY_WITH = "body-with";
-export const ROOT_DEF = "root-def";
-export const ROOT_ENCLAVE = "root-enclave";
-export const ROOT_GLOBAL = "root-global";
-export const ROOT_MISS = "root-miss";
+export const BLOCK_DYNAMIC = "block-dynamic";
+export const BLOCK_STATIC_DEAD = "block-static-dead";
+export const BLOCK_STATIC = "block-static";
+export const CLOSURE_DYNAMIC = "closure-dynamic";
+export const CLOSURE_STATIC = "closure-static";
+export const DEFINE_DYNAMIC = "define-dynamic";
+export const DEFINE_STATIC = "define-static";
+export const EMPTY_DYNAMIC_WITH = "empty-dynamic-with";
+export const EMPTY_VOID = "empty-void";
+export const ENCLAVE = "enclave";
+export const IMPORT_STATIC = "import-static";
 
 const libraries = {
   __proto__: null,
-  [BODY_BLOCK]: BodyBlock,
-  [BODY_CLOSURE]: BodyClosure,
-  [BODY_DEAD]: BodyDead,
-  [BODY_DEF]: BodyDef,
-  [BODY_IMPORT]: BodyImport,
-  [BODY_OBJECT]: BodyObject,
-  [BODY_RECORD]: BodyRecord,
-  [BODY_WITH]: BodyWith,
-  [ROOT_DEF]: RootDef,
-  [ROOT_ENCLAVE]: RootEnclave,
-  [ROOT_GLOBAL]: RootGlobal,
-  [ROOT_MISS]: RootMiss,
+  [BLOCK_DYNAMIC]: BlockDynamic,
+  [BLOCK_STATIC_DEAD]: BlockStaticDead,
+  [BLOCK_STATIC]: BlockStatic,
+  [CLOSURE_DYNAMIC]: ClosureDynamic,
+  [CLOSURE_STATIC]: ClosureStatic,
+  [DEFINE_DYNAMIC]: DefineDynamic,
+  [DEFINE_STATIC]: DefineStatic,
+  [EMPTY_DYNAMIC_WITH]: EmptyDynamicWith,
+  [EMPTY_VOID]: EmptyVoid,
+  [ENCLAVE]: Enclave,
+  [IMPORT_STATIC]: ImportStatic,
 };
 
 ////////////

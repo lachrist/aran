@@ -1,9 +1,11 @@
 import {
+  expect,
   bind___,
   constant_,
   assert,
   hasOwnProperty,
   deadcode_____,
+  SyntaxAranError,
 } from "../../../util/index.mjs";
 
 import {
@@ -33,6 +35,15 @@ const descriptor = {
 export const KIND = ["import"];
 
 export const create = (_layer, _options) => ({bindings: {}});
+
+export const conflict = (_strict, {bindings}, _kind, variable) => {
+  expect(
+    !hasOwnProperty(bindings, variable),
+    SyntaxAranError,
+    "Duplicate variable declaration: %s.",
+    variable,
+  );
+};
 
 export const harvest = constant_({header: [], prelude: []});
 

@@ -13,9 +13,13 @@ import {
   makeDynamicLookupEffect,
 } from "./helper.mjs";
 
+const {undefined} = globalThis;
+
 export const KINDS = ["def"];
 
 export const create = (_layer, {dynamic}) => ({dynamic});
+
+export const conflict = constant_(undefined);
 
 export const harvest = constant_({prelude: [], header: []});
 

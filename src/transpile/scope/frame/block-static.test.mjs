@@ -11,6 +11,10 @@ assertSuccess(
     head: "let VARIABLE;",
     scenarios: [
       {
+        type: "conflict",
+        variable: "variable",
+      },
+      {
         type: "declare",
         kind: "const",
         variable: "variable",

@@ -1,6 +1,11 @@
 import {map} from "array-lite";
 
-import {partialx_, assert, hasOwnProperty} from "../../../util/index.mjs";
+import {
+  constant_,
+  partialx_,
+  assert,
+  hasOwnProperty,
+} from "../../../util/index.mjs";
 
 import {makeEffectStatement, makeWriteEffect} from "../../../ast/index.mjs";
 
@@ -20,12 +25,16 @@ const descriptor = {
   enumerable: true,
 };
 
+const {undefined} = globalThis;
+
 export const KINDS = ["def"];
 
 export const create = (layer, _options) => ({
   layer,
   bindings: {},
 });
+
+export const conflict = constant_(undefined);
 
 export const harvest = ({layer, bindings}) => ({
   header: map(ownKeys(bindings), partialx_(makeVariable, layer)),

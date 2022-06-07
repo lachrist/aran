@@ -1,6 +1,8 @@
 import {filter, map, concat} from "array-lite";
 
 import {
+  expect,
+  SyntaxAranError,
   hasOwnProperty,
   assert,
   partial_x,
@@ -59,6 +61,15 @@ export const create = (layer, {distant}) => ({
   distant,
   bindings: {},
 });
+
+export const conflict = (_strict, {bindings}, _kind, variable) => {
+  expect(
+    !hasOwnProperty(bindings, variable),
+    SyntaxAranError,
+    "Variable '%s' has already been declared",
+    variable,
+  );
+};
 
 export const harvest = ({layer, bindings}) => {
   const variables = ownKeys(bindings);

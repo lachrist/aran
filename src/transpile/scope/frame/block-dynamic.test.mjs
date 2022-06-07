@@ -11,8 +11,22 @@ assertSuccess(
     options: {
       dynamic: makeLiteralExpression("dynamic"),
     },
-    head: "",
+    head: `effect(
+      (
+        intrinsic.aran.binary('in', 'variable', 'dynamic') ?
+        intrinsic.aran.throw(
+          new intrinsic.SyntaxError(
+            "Variable 'variable' has already been declared",
+          ),
+        ) :
+        undefined
+      ),
+    );`,
     scenarios: [
+      {
+        type: "conflict",
+        variable: "variable",
+      },
       {
         type: "declare",
         kind: "const",

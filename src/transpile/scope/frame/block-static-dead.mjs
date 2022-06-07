@@ -15,6 +15,8 @@
 import {includes} from "array-lite";
 
 import {
+  expect,
+  SyntaxAranError,
   returnx,
   deadcode_____,
   push,
@@ -36,6 +38,15 @@ export const KINDS = ["let", "const", "class"];
 export const create = (_layer, _options) => ({
   bindings: [],
 });
+
+export const conflict = (_strict, {bindings}, _kind, variable) => {
+  expect(
+    !includes(bindings, variable),
+    SyntaxAranError,
+    "Variable '%s' has already been declared",
+    variable,
+  );
+};
 
 export const harvest = constant_({
   header: [],
