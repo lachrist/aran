@@ -30,8 +30,6 @@ import {
 } from "./fetch.mjs";
 
 
-
-
 generateMakeBlock = (size) => (scope, labels, statements) => {
   const {header, prelude} = harvest(scope, size);
   return makeBlock(labels, header, concat(prelude, statements));
