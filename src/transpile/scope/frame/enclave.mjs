@@ -9,7 +9,15 @@ import {
 
 import {isWrite, isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
-export const KINDS = ["var", "function"];
+export const KINDS = ["var", "function", "let", "const", "class"];
+
+const mapping = {
+  var: "var",
+  function: "var",
+  let: "let",
+  const: "const",
+  class: "let",
+};
 
 export const create = (_layer, options) => ({
   ...options,
@@ -33,10 +41,10 @@ export const makeDeclareStatements = (
 export const makeInitializeStatements = (
   _strict,
   _frame,
-  _kind,
+  kind,
   variable,
   expression,
-) => [makeDeclareStatement("var", variable, expression)];
+) => [makeDeclareStatement(mapping[kind], variable, expression)];
 
 const pick = (frame, right, strict) => {
   if (isRead(right)) {
