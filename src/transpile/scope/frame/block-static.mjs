@@ -54,8 +54,9 @@ const descriptor = {
 
 export const KINDS = ["let", "const", "class"];
 
-export const create = (layer) => ({
+export const create = (layer, {distant}) => ({
   layer,
+  distant,
   bindings: {},
 });
 
@@ -141,7 +142,7 @@ export const makeInitializeStatements = (
 
 export const generateMakeLookupNode =
   (makeStaticLookupNode, makeConditionalNode, makeLiftNode) =>
-  (next, strict, escaped, {layer, bindings}, variable, right) => {
+  (next, strict, escaped, {distant, layer, bindings}, variable, right) => {
     if (hasOwnProperty(bindings, variable)) {
       const binding = bindings[variable];
       if (!binding.initialized && !escaped) {
@@ -157,7 +158,7 @@ export const generateMakeLookupNode =
                 right,
                 binding.exports,
               );
-        if (binding.initialized) {
+        if (binding.initialized && !distant) {
           return node;
         } else {
           binding.deadzone = true;
