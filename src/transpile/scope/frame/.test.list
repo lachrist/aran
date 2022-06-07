@@ -1,15 +1,15 @@
 - * __fixture__.mjs
   * helper.mjs
-- * body-block.mjs
-  * body-closure.mjs
-  * body-dead.mjs
-  * body-def.mjs
-  * body-import.mjs
-  * body-object.mjs
-  * body-record.mjs
-  * body-with.mjs
-  * root-def.mjs
-  * root-enclave.mjs
-  * root-global.mjs
-  * root-miss.mjs
+- * block-dynamic.mjs
+  * block-static-dead.mjs
+  * block-static.mjs
+  * closure-dynamic.mjs
+  * closure-enclave.mjs
+  * closure-static.mjs
+  * define-dynamic.mjs
+  * define-static.mjs
+  * empty-dynamic-with.mjs
+  * empty-void.mjs
+  * import-static.mjs
+  * total-enclave.mjs
 - index.mjs

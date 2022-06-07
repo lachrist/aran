@@ -4,7 +4,7 @@ import {makeLiteralExpression} from "../../../ast/index.mjs";
 
 import {testBlock} from "./__fixture__.mjs";
 
-import * as Frame from "./body-closure.mjs";
+import * as Frame from "./closure-static.mjs";
 
 assertSuccess(
   testBlock(Frame, {

@@ -2,51 +2,57 @@ import {assertSuccess} from "../../../__fixture__.mjs";
 
 import {makeLiteralExpression} from "../../../ast/index.mjs";
 
-import {testScript} from "./__fixture__.mjs";
+import {testBlock} from "./__fixture__.mjs";
 
-import * as Frame from "./root-global.mjs";
+import * as Frame from "./define-dynamic.mjs";
 
 assertSuccess(
-  testScript(Frame, {
+  testBlock(Frame, {
+    options: {
+      dynamic: makeLiteralExpression("dynamic"),
+    },
     scenarios: [
       {
         type: "declare",
-        kind: "const",
         code: "",
       },
       {
         type: "initialize",
-        kind: "const",
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: "const variable = 'right';",
+        code: `effect(
+          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
+        );`,
       },
       {
         type: "read",
         output: "expression",
         variable: "variable",
-        code: "intrinsic.aran.getGlobal('variable')",
+        code: "intrinsic.aran.get('dynamic', 'variable')",
       },
       {
         type: "typeof",
         output: "expression",
         variable: "variable",
-        code: "intrinsic.aran.typeofGlobal('variable')",
+        code: `intrinsic.aran.unary(
+          'typeof',
+          intrinsic.aran.get('dynamic', 'variable'),
+        )`,
       },
       {
         type: "discard",
         output: "expression",
-        strict: false,
         variable: "variable",
-        code: "intrinsic.aran.deleteGlobalSloppy('variable')",
+        strict: false,
+        code: "intrinsic.aran.deleteSloppy('dynamic', 'variable')",
       },
       {
         type: "write",
         output: "expression",
-        strict: true,
         variable: "variable",
+        strict: true,
         right: makeLiteralExpression("right"),
-        code: "intrinsic.aran.setGlobalStrict('variable', 'right')",
+        code: "intrinsic.aran.setStrict('dynamic', 'variable', 'right')",
       },
     ],
   }),

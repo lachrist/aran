@@ -31,7 +31,7 @@ import {isDiscard} from "../right.mjs";
 
 import {makeThrowDeadzoneExpression} from "./helper.mjs";
 
-export const KINDS = ["let", "const"];
+export const KINDS = ["let", "const", "class"];
 
 export const create = (_layer, _options) => ({
   bindings: [],

@@ -4,31 +4,33 @@ import {makeLiteralExpression} from "../../../ast/index.mjs";
 
 import {testBlock} from "./__fixture__.mjs";
 
-import * as Frame from "./root-def.mjs";
+import * as Frame from "./import-static.mjs";
 
 assertSuccess(
   testBlock(Frame, {
-    options: {
-      dynamic: makeLiteralExpression("dynamic"),
-    },
     scenarios: [
       {
         type: "declare",
+        kind: "import",
+        variable: "variable",
+        import: {
+          source: "source",
+          specifier: "specifier",
+        },
+        exports: [],
         code: "",
       },
       {
-        type: "initialize",
-        variable: "variable",
-        right: makeLiteralExpression("right"),
-        code: `effect(
-          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
-        );`,
+        type: "read",
+        output: "expression",
+        next: () => makeLiteralExpression("next"),
+        code: "'next'",
       },
       {
         type: "read",
         output: "expression",
         variable: "variable",
-        code: "intrinsic.aran.get('dynamic', 'variable')",
+        code: "importStatic('source', 'specifier')",
       },
       {
         type: "typeof",
@@ -36,23 +38,22 @@ assertSuccess(
         variable: "variable",
         code: `intrinsic.aran.unary(
           'typeof',
-          intrinsic.aran.get('dynamic', 'variable'),
+          importStatic('source', 'specifier'),
         )`,
       },
       {
         type: "discard",
         output: "expression",
         variable: "variable",
-        strict: false,
-        code: "intrinsic.aran.deleteSloppy('dynamic', 'variable')",
+        code: "false",
       },
       {
         type: "write",
         output: "expression",
         variable: "variable",
-        strict: true,
-        right: makeLiteralExpression("right"),
-        code: "intrinsic.aran.setStrict('dynamic', 'variable', 'right')",
+        code: `intrinsic.aran.throw(
+          new intrinsic.TypeError("Cannot assign variable 'variable' because it is a constant"),
+        )`,
       },
     ],
   }),

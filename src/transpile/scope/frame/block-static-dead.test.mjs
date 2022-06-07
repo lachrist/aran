@@ -4,20 +4,15 @@ import {makeLiteralExpression} from "../../../ast/index.mjs";
 
 import {testBlock} from "./__fixture__.mjs";
 
-import * as Frame from "./body-import.mjs";
+import * as Frame from "./block-static-dead.mjs";
 
 assertSuccess(
   testBlock(Frame, {
     scenarios: [
       {
         type: "declare",
-        kind: "import",
+        kind: "let",
         variable: "variable",
-        import: {
-          source: "source",
-          specifier: "specifier",
-        },
-        exports: [],
         code: "",
       },
       {
@@ -30,15 +25,10 @@ assertSuccess(
         type: "read",
         output: "expression",
         variable: "variable",
-        code: "importStatic('source', 'specifier')",
-      },
-      {
-        type: "typeof",
-        output: "expression",
-        variable: "variable",
-        code: `intrinsic.aran.unary(
-          'typeof',
-          importStatic('source', 'specifier'),
+        code: `intrinsic.aran.throw(
+          new intrinsic.ReferenceError(
+            "Cannot access variable 'variable' before initialization",
+          ),
         )`,
       },
       {
@@ -46,14 +36,6 @@ assertSuccess(
         output: "expression",
         variable: "variable",
         code: "false",
-      },
-      {
-        type: "write",
-        output: "expression",
-        variable: "variable",
-        code: `intrinsic.aran.throw(
-          new intrinsic.TypeError("Cannot assign variable 'variable' because it is a constant"),
-        )`,
       },
     ],
   }),
