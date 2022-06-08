@@ -1,6 +1,6 @@
 import {reduce} from "array-lite";
 
-import {partial_x, partial__x, bind____} from "../../../util/index.mjs";
+import {partial_x, partial__x, bind_____} from "../../../util/index.mjs";
 
 import {
   makeWriteEffect,
@@ -82,7 +82,13 @@ export const makeStaticLookupEffect = (
 
 /* eslint-enable no-use-before-define */
 
-export const makeDynamicLookupExpression = (strict, frame, variable, right) => {
+export const makeDynamicLookupExpression = (
+  strict,
+  frame,
+  variable,
+  right,
+  observed,
+) => {
   if (isRead(right)) {
     return makeGetExpression(frame, makeLiteralExpression(variable));
   } else if (isTypeof(right)) {
@@ -93,6 +99,9 @@ export const makeDynamicLookupExpression = (strict, frame, variable, right) => {
   } else if (isDiscard(right)) {
     return makeDeleteExpression(strict, frame, makeLiteralExpression(variable));
   } else {
+    if (observed) {
+      accessWrite(right);
+    }
     return makeSetExpression(
       strict,
       frame,
@@ -102,7 +111,7 @@ export const makeDynamicLookupExpression = (strict, frame, variable, right) => {
   }
 };
 
-export const makeDynamicLookupEffect = bind____(
+export const makeDynamicLookupEffect = bind_____(
   makeExpressionEffect,
   makeDynamicLookupExpression,
 );

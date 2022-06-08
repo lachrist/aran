@@ -25,7 +25,10 @@ const {undefined} = globalThis;
 
 export const KINDS = [];
 
-export const create = (_layer, {dynamic}) => ({dynamic});
+export const create = (_layer, {dynamic, observable}) => ({
+  dynamic,
+  observable,
+});
 
 export const conflict = constant_(undefined);
 
@@ -41,7 +44,7 @@ export const makeInitializeStatements = deadcode_____(
 
 const generateMakeLookupNode =
   (makeConditionalNode, makeDynamicLookupNode) =>
-  (next, strict, _escaped, {dynamic}, variable, right) =>
+  (next, strict, _escaped, {dynamic, observable}, variable, right) =>
     makeConditionalNode(
       makeConditionalExpression(
         makeGetExpression(dynamic, makeSymbolUnscopablesExpression()),
@@ -55,7 +58,7 @@ const generateMakeLookupNode =
         ),
         makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
       ),
-      makeDynamicLookupNode(strict, dynamic, variable, right),
+      makeDynamicLookupNode(strict, dynamic, variable, right, observable),
       next(),
     );
 

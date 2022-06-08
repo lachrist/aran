@@ -10,6 +10,7 @@ assertSuccess(
   testBlock(Frame, {
     options: {
       dynamic: makeLiteralExpression("dynamic"),
+      observable: false,
     },
     head: "",
     scenarios: [

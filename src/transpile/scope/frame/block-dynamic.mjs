@@ -40,7 +40,11 @@ const makeConflictStatement = (dynamic, variable) =>
 
 export const KINDS = ["let", "const", "class"];
 
-export const create = (_layer, {dynamic}) => ({dynamic, conflicts: []});
+export const create = (_layer, {dynamic, observable}) => ({
+  dynamic,
+  observable,
+  conflicts: [],
+});
 
 export const conflict = (_strict, {conflicts}, _kind, variable) => {
   if (!includes(conflicts, variable)) {
@@ -106,7 +110,7 @@ export const makeInitializeStatements = (
 
 export const generateMakeLookupNode =
   (makeConditionalNode, makeDynamicLookupNode, makeLiftNode) =>
-  (next, strict, _escaped, {dynamic}, variable, right) =>
+  (next, strict, _escaped, {dynamic, observable}, variable, right) =>
     makeConditionalNode(
       makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
       isDiscard(right)
@@ -118,7 +122,7 @@ export const generateMakeLookupNode =
               makeDeadzoneExpression(),
             ),
             makeLiftNode(makeThrowDeadzoneExpression(variable)),
-            makeDynamicLookupNode(strict, dynamic, variable, right),
+            makeDynamicLookupNode(strict, dynamic, variable, right, observable),
           ),
       next(),
     );

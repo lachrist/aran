@@ -57,7 +57,7 @@ export const makeInitializeStatements = (
 export const generateMakeLookupNode =
   (makeDynamicLookupNode) =>
   (_next, strict, _escaped, {dynamic}, variable, right) =>
-    makeDynamicLookupNode(strict, dynamic, variable, right);
+    makeDynamicLookupNode(strict, dynamic, variable, right, false);
 
 export const makeLookupExpression = generateMakeLookupNode(
   makeDynamicLookupExpression,
