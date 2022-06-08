@@ -1,6 +1,6 @@
 import {join} from "array-lite";
 
-import {shift, assert, incrementCounter} from "../../util/index.mjs";
+import {shift, assert} from "../../util/index.mjs";
 
 const {
   Error,
@@ -47,12 +47,8 @@ const transform = (string, index1, index2) => {
 export const makeVariableBody = (name) =>
   `${SEPARATOR}${transform(name, 0, 1)}`;
 
-export const makeIndexedVariableBody = (name, counter) =>
-  `${apply(
-    stringifyNumber,
-    incrementCounter(counter),
-    ENCODING_SINGLETON,
-  )}_${name}`;
+export const makeIndexedVariableBody = (name, index) =>
+  `${apply(stringifyNumber, index, ENCODING_SINGLETON)}_${name}`;
 
 export const makeShadowVariable = (layer, body) => `${layer}${SHADOW}${body}`;
 

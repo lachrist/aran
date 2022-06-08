@@ -1,7 +1,5 @@
 import {assertThrow, assertDeepEqual} from "../../__fixture__.mjs";
 
-import {createCounter} from "../../util/index.mjs";
-
 import {
   BASE,
   META,
@@ -37,14 +35,11 @@ assertDeepEqual(
 
 assertDeepEqual(
   unmangleVariable(
-    makeVariable(
-      META,
-      makeIndexedVariableBody("description", createCounter(123)),
-    ),
+    makeVariable(META, makeIndexedVariableBody("description", 123)),
   ),
   {
     layer: "meta",
-    index: 124,
+    index: 123,
     description: "description",
   },
 );
