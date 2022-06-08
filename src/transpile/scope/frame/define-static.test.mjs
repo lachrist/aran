@@ -16,12 +16,6 @@ assertSuccess(
         code: "",
       },
       {
-        type: "initialize",
-        variable: "variable",
-        right: makeLiteralExpression("right"),
-        code: "VARIABLE = 'right';",
-      },
-      {
         type: "read",
         output: "expression",
         next: () => makeLiteralExpression("next"),

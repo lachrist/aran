@@ -18,14 +18,6 @@ assertSuccess(
         code: "",
       },
       {
-        type: "initialize",
-        variable: "variable",
-        right: makeLiteralExpression("right"),
-        code: `effect(
-          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
-        );`,
-      },
-      {
         type: "read",
         output: "expression",
         variable: "variable",

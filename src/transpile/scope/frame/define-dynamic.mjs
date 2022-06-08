@@ -1,12 +1,4 @@
-import {assert, constant_} from "../../../util/index.mjs";
-
-import {
-  makeEffectStatement,
-  makeLiteralExpression,
-  makeExpressionEffect,
-} from "../../../ast/index.mjs";
-
-import {makeSetStrictExpression} from "../../../intrinsic.mjs";
+import {assert, constant_, deadcode_____} from "../../../util/index.mjs";
 
 import {
   makeDynamicLookupExpression,
@@ -36,23 +28,9 @@ export const makeDeclareStatements = (
   return [];
 };
 
-export const makeInitializeStatements = (
-  _strict,
-  {dynamic},
-  _kind,
-  variable,
-  expression,
-) => [
-  makeEffectStatement(
-    makeExpressionEffect(
-      makeSetStrictExpression(
-        dynamic,
-        makeLiteralExpression(variable),
-        expression,
-      ),
-    ),
-  ),
-];
+export const makeInitializeStatements = deadcode_____(
+  "defined variable should not be initialized",
+);
 
 export const generateMakeLookupNode =
   (makeDynamicLookupNode) =>
