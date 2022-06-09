@@ -16,7 +16,7 @@ import {BASE, META} from "../variable.mjs";
 import {makeRead} from "../right.mjs";
 
 import {
-  DEFINE_STATIC,
+  CLOSURE_STATIC,
   create,
   conflict,
   harvest,
@@ -31,14 +31,14 @@ const STRICT = true;
 
 const ESCAPED = true;
 
-const frame = create(DEFINE_STATIC, META, {});
+const frame = create(CLOSURE_STATIC, META, {});
 
-assertEqual(conflict(STRICT, frame, "def", BASE, "variable"), false);
+assertEqual(conflict(STRICT, frame, "var", BASE, "variable"), false);
 
-assertEqual(conflict(STRICT, frame, "def", META, "variable"), true);
+assertEqual(conflict(STRICT, frame, "var", META, "variable"), true);
 
 assertEqual(
-  makeDeclareStatements(STRICT, frame, "def", BASE, "variable", null, []),
+  makeDeclareStatements(STRICT, frame, "var", BASE, "variable", null, []),
   null,
 );
 
@@ -46,7 +46,7 @@ assertEqual(
   makeInitializeStatements(
     STRICT,
     frame,
-    "def",
+    "var",
     BASE,
     "variable",
     makeLiteralExpression("right"),
@@ -55,11 +55,11 @@ assertEqual(
 );
 
 const body = concat(
-  makeDeclareStatements(STRICT, frame, "def", META, "variable", null, []),
+  makeDeclareStatements(STRICT, frame, "var", META, "variable", null, []),
   makeInitializeStatements(
     STRICT,
     frame,
-    "def",
+    "var",
     META,
     "variable",
     makeLiteralExpression("right"),
@@ -92,13 +92,14 @@ const body = concat(
   ],
 );
 
-const {header, prelude} = harvest(DEFINE_STATIC, frame);
+const {header, prelude} = harvest(CLOSURE_STATIC, frame);
 
 assertSuccess(
   allignBlock(
     makeBlock([], header, concat(prelude, body)),
     `{
       let VARIABLE;
+      VARIABLE = undefined;
       VARIABLE = 'right';
       effect('next');
       effect(VARIABLE);

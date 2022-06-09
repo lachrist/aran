@@ -22,6 +22,16 @@ assertSuccess(
         );`,
       },
       {
+        type: "initialize",
+        kind: "var",
+        variable: "variable",
+        right: makeLiteralExpression("right"),
+        code: `(
+          VARIABLE = 'right',
+          exportStatic('specifier', VARIABLE)
+        );`,
+      },
+      {
         type: "read",
         output: "expression",
         next: () => makeLiteralExpression("next"),

@@ -2,8 +2,6 @@ import {map} from "array-lite";
 
 import {
   constant_,
-  deadcode_____,
-  deadcode,
   partialx_,
   pushAll,
   assert,
@@ -34,8 +32,6 @@ const descriptor = {
   configurable: false,
 };
 
-const dummy = deadcode("this should never happen");
-
 export const KINDS = ["var", "function"];
 
 export const create = (layer, _options) => ({
@@ -49,6 +45,56 @@ export const harvest = ({layer, bindings}) => ({
   header: map(ownKeys(bindings), partialx_(makeVariable, layer)),
   prelude: [],
 });
+
+export const makeDeclareStatements = (
+  strict,
+  {layer, bindings},
+  _kind,
+  variable,
+  iimport,
+  eexports,
+) => {
+  assert(iimport === null, "unexpected imported variable");
+  if (!hasOwnProperty(bindings, variable)) {
+    defineProperty(bindings, variable, {__proto__: descriptor, value: []});
+  }
+  pushAll(bindings[variable], eexports);
+  return [
+    makeEffectStatement(
+      makeStaticLookupEffect(
+        strict,
+        layer,
+        variable,
+        makeWrite(makeLiteralExpression({undefined: null})),
+        bindings[variable],
+      ),
+    ),
+  ];
+};
+
+export const makeInitializeStatements = (
+  strict,
+  {layer, bindings},
+  _kind,
+  variable,
+  expression,
+) => {
+  assert(
+    hasOwnProperty(bindings, variable),
+    "missing variable for initialization",
+  );
+  return [
+    makeEffectStatement(
+      makeStaticLookupEffect(
+        strict,
+        layer,
+        variable,
+        makeWrite(expression),
+        bindings[variable],
+      ),
+    ),
+  ];
+};
 
 const generateMakeLookupNode =
   (makeStaticLookupNode) =>
@@ -71,35 +117,3 @@ export const makeLookupExpression = generateMakeLookupNode(
 );
 
 export const makeLookupEffect = generateMakeLookupNode(makeStaticLookupEffect);
-
-export const makeDeclareStatements = (
-  strict,
-  frame,
-  _kind,
-  variable,
-  iimport,
-  eexports,
-) => {
-  assert(iimport === null, "unexpected imported variable");
-  const {bindings} = frame;
-  if (!hasOwnProperty(bindings, variable)) {
-    defineProperty(bindings, variable, {__proto__: descriptor, value: []});
-  }
-  pushAll(bindings[variable], eexports);
-  return [
-    makeEffectStatement(
-      makeLookupEffect(
-        dummy,
-        strict,
-        false,
-        frame,
-        variable,
-        makeWrite(makeLiteralExpression({undefined: null})),
-      ),
-    ),
-  ];
-};
-
-export const makeInitializeStatements = deadcode_____(
-  "var/function variables should not be initialized",
-);

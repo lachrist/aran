@@ -38,6 +38,16 @@ assertSuccess(
         );`,
       },
       {
+        type: "initialize",
+        strict: true,
+        kind: "var",
+        variable: "variable",
+        right: makeLiteralExpression("right"),
+        code: `effect(
+          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
+        )`,
+      },
+      {
         type: "read",
         output: "expression",
         next: () => makeLiteralExpression("next"),
