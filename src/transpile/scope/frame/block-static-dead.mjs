@@ -44,7 +44,7 @@ export const conflict = (_strict, {bindings}, _kind, variable) => {
     !includes(bindings, variable),
     SyntaxAranError,
     "Variable '%s' has already been declared",
-    variable,
+    [variable],
   );
 };
 

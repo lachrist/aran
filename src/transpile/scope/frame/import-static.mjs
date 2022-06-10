@@ -41,7 +41,7 @@ export const conflict = (_strict, {bindings}, _kind, variable) => {
     !hasOwnProperty(bindings, variable),
     SyntaxAranError,
     "Duplicate variable declaration: %s.",
-    variable,
+    [variable],
   );
 };
 

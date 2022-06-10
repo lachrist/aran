@@ -67,7 +67,7 @@ export const conflict = (_strict, {bindings}, _kind, variable) => {
     !hasOwnProperty(bindings, variable),
     SyntaxAranError,
     "Variable '%s' has already been declared",
-    variable,
+    [variable],
   );
 };
 
