@@ -115,7 +115,7 @@ export const generateMakeLookupNode =
       makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
       isDiscard(right)
         ? makeDynamicLookupNode(strict, dynamic, variable, right)
-        : makeConditionalExpression(
+        : makeConditionalNode(
             makeBinaryExpression(
               "===",
               makeGetExpression(dynamic, makeLiteralExpression(variable)),
