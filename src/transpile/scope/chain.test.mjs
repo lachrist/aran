@@ -30,8 +30,8 @@ import {
 assertSuccess(
   allignBlock(
     makeChainBlock(
-      ["label"],
       createRoot(123),
+      ["label"],
       [
         createFrame(BLOCK_STATIC, BASE, {}),
         createFrame(DEFINE_STATIC, META, {}),

@@ -54,7 +54,7 @@ const makeScopeNode = (makeNode, scope, frames, makeStatementArray) => {
   return makeNode(variables, concat(statements1, statements2));
 };
 
-export const makeChainBlock = (labels, scope, frames, makeStatementArray) =>
+export const makeChainBlock = (scope, labels, frames, makeStatementArray) =>
   makeScopeNode(
     partialx__(makeBlock, labels),
     scope,
