@@ -2,6 +2,8 @@
   * right.mjs
 - * - structure.mjs
     - property.mjs
-  * frame
-- fetch.mjs
+  * - frame
+    - blueprint.mjs
+- * scope.mjs
+  * blueprint.mjs
 - index.mjs
