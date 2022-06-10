@@ -1,5 +1,7 @@
 import {assertEqual} from "../../__fixture__.mjs";
 
+import {createCounter} from "../../util/index.mjs";
+
 import {
   isStrict,
   useStrict,
@@ -11,10 +13,10 @@ import {
 const {undefined} = globalThis;
 
 {
-  const scope = createRoot(0);
+  const scope = createRoot(createCounter(0));
   assertEqual(incrementGlobalCounter(scope), 1);
   assertEqual(incrementGlobalCounter(scope), 2);
-  assertEqual(resetGlobalCounter(scope, 10), undefined);
+  assertEqual(resetGlobalCounter(scope, createCounter(10)), undefined);
   assertEqual(incrementGlobalCounter(scope), 11);
   assertEqual(incrementGlobalCounter(scope), 12);
 }

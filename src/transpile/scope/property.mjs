@@ -1,10 +1,4 @@
-import {
-  partial_x,
-  partial_xx,
-  resetCounter,
-  createCounter,
-  incrementCounter,
-} from "../../util/index.mjs";
+import {partial_x, partial_xx, incrementCounter} from "../../util/index.mjs";
 
 import {ROOT, define, search} from "./structure.mjs";
 
@@ -22,18 +16,18 @@ export const useStrict = partial_xx(define, STRICT, true);
 // Global Counter //
 ////////////////////
 
-const GLOBAL_COUNTER = "global-counter";
+const STATE = "state";
 
 export const incrementGlobalCounter = (scope) =>
-  incrementCounter(search(scope, GLOBAL_COUNTER));
+  incrementCounter(search(scope, STATE).counter);
 
-export const resetGlobalCounter = (scope, value) => {
-  resetCounter(search(scope, GLOBAL_COUNTER), value);
+export const resetGlobalCounter = (scope, counter) => {
+  search(scope, STATE).counter = counter;
 };
 
 //////////
 // Root //
 //////////
 
-export const createRoot = (value) =>
-  define(define(ROOT, GLOBAL_COUNTER, createCounter(value)), STRICT, false);
+export const createRoot = (counter) =>
+  define(define(ROOT, STATE, {counter}), STRICT, false);
