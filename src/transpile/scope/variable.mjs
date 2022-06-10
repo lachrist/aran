@@ -7,7 +7,11 @@ const {
   parseInt,
   isNaN,
   String: {
-    prototype: {split: splitString, substring: subString},
+    prototype: {
+      split: splitString,
+      substring: subString,
+      replace: replaceString,
+    },
   },
   Reflect: {apply},
   Number: {
@@ -24,28 +28,22 @@ const ORIGINAL = "O";
 const ENCODING = 36;
 const ENCODING_SINGLETON = [ENCODING];
 
+const ONE_SINGLETON = [1];
 const TWO_SINGLETON = [2];
 const THREE_SINGLETON = [3];
 
 const SEPARATOR = "_";
 const SEPARATOR_SINGLETON = [SEPARATOR];
 
-const mapping = [
-  ["new.target", "0newtarget"],
-  ["import.meta", "0importmeta"],
+const CONVERT = [/(\.|_+)/gu, (match) => (match === "." ? "_" : `_${match}`)];
+
+const REVERT = [
+  /(\.|_+)/gu,
+  (match) => (match === "_" ? "." : apply(subString, match, ONE_SINGLETON)),
 ];
 
-const transform = (string, index1, index2) => {
-  for (let index = 0; index < mapping.length; index += 1) {
-    if (mapping[index][index1] === string) {
-      return mapping[index][index2];
-    }
-  }
-  return string;
-};
-
 export const makeVariableBody = (name) =>
-  `${SEPARATOR}${transform(name, 0, 1)}`;
+  `${SEPARATOR}${apply(replaceString, name, CONVERT)}`;
 
 export const makeIndexedVariableBody = (name, index) =>
   `${apply(stringifyNumber, index, ENCODING_SINGLETON)}_${name}`;
@@ -64,7 +62,11 @@ export const unmangleVariable = (variable) => {
     return {
       layer: "base",
       shadow: variable[1] === SHADOW,
-      name: transform(apply(subString, variable, THREE_SINGLETON), 1, 0),
+      name: apply(
+        replaceString,
+        apply(subString, variable, THREE_SINGLETON),
+        REVERT,
+      ),
     };
   } else if (variable[0] === META) {
     assert(variable[1] === ORIGINAL, "expected an original meta variable");
@@ -78,7 +80,7 @@ export const unmangleVariable = (variable) => {
     return {
       layer: "meta",
       index: head,
-      description: transform(join(segments, SEPARATOR), 1, 0),
+      description: apply(replaceString, join(segments, SEPARATOR), REVERT),
     };
   } else {
     throw new Error("invalid variable layer");

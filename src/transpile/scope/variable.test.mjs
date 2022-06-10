@@ -25,11 +25,11 @@ assertDeepEqual(
 );
 
 assertDeepEqual(
-  unmangleVariable(makeShadowVariable(BASE, makeVariableBody("import.meta"))),
+  unmangleVariable(makeShadowVariable(BASE, makeVariableBody("import_meta"))),
   {
     layer: "base",
     shadow: true,
-    name: "import.meta",
+    name: "import_meta",
   },
 );
 
