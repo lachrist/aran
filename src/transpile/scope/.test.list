@@ -2,7 +2,6 @@
   * right.mjs
 - * - structure.mjs
     - property.mjs
-  * - frame
-    - blueprint.mjs
+  * frame
 - chain.mjs
 - index.mjs
