@@ -21,23 +21,21 @@ import {
 } from "./frame/index.mjs";
 
 import {
-  makeScopeBlock,
+  makeChainBlock,
   makeDeclareStatements,
   makeInitializeStatements,
   makeLookupEffect,
-} from "./scope.mjs";
-
-// const {undefined} = globalThis;
+} from "./chain.mjs";
 
 assertSuccess(
   allignBlock(
-    makeScopeBlock(
+    makeChainBlock(
+      ["label"],
       createRoot(123),
       [
         createFrame(BLOCK_STATIC, BASE, {}),
         createFrame(DEFINE_STATIC, META, {}),
       ],
-      ["label"],
       (scope) =>
         concat(
           makeDeclareStatements(scope, "const", BASE, "variable", null, []),
