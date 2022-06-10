@@ -188,7 +188,7 @@ export const CLOSURE_DYNAMIC_BLOCK = [
   [DEFINE_STATIC, META, {}],
 ];
 
-export const FOR_BLOCK = [
+export const DEAD_BLOCK = [
   [BLOCK_STATIC_DEAD, BASE, {}],
   [DEFINE_STATIC, META, {}],
 ];

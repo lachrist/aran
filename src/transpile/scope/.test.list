@@ -4,6 +4,5 @@
     - property.mjs
   * - frame
     - blueprint.mjs
-- * scope.mjs
-  * blueprint.mjs
+- chain.mjs
 - index.mjs
