@@ -21,8 +21,8 @@ const mapping = {
   class: "let",
 };
 
-export const create = (_layer, options) => ({
-  ...options,
+export const create = (_layer, {enclaves}) => ({
+  enclaves,
 });
 
 export const conflict = constant_(undefined);
@@ -50,15 +50,15 @@ export const makeInitializeStatements = (
   expression,
 ) => [makeDeclareStatement(mapping[kind], variable, expression)];
 
-const pick = (frame, right, strict) => {
+const pick = (enclaves, right, strict) => {
   if (isRead(right)) {
-    return frame.read[strict ? "strict" : "sloppy"];
+    return enclaves.read;
   } else if (isTypeof(right)) {
-    return frame.typeof[strict ? "strict" : "sloppy"];
+    return enclaves.typeof;
   } else if (isDiscard(right)) {
-    return frame.discard[strict ? "strict" : "sloppy"];
+    return enclaves[strict ? "discardStrict" : "discardSloppy"];
   } else {
-    return frame.write[strict ? "strict" : "sloppy"];
+    return enclaves[strict ? "writeStrict" : "writeSloppy"];
   }
 };
 
@@ -66,11 +66,11 @@ export const makeLookupExpression = (
   _next,
   strict,
   _escaped,
-  frame,
+  {enclaves},
   variable,
   right,
 ) => {
-  const expression = pick(frame, right, strict);
+  const expression = pick(enclaves, right, strict);
   if (isWrite(right)) {
     return makeApplyExpression(
       expression,

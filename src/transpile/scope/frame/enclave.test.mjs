@@ -9,21 +9,13 @@ import * as Frame from "./enclave.mjs";
 assertSuccess(
   testBlock(Frame, {
     options: {
-      read: {
-        strict: makeLiteralExpression("read-strict"),
-        sloppy: makeLiteralExpression("read-sloppy"),
-      },
-      typeof: {
-        strict: makeLiteralExpression("typeof-strict"),
-        sloppy: makeLiteralExpression("typeof-sloppy"),
-      },
-      discard: {
-        strict: makeLiteralExpression("discard-strict"),
-        sloppy: makeLiteralExpression("discard-sloppy"),
-      },
-      write: {
-        strict: makeLiteralExpression("write-strict"),
-        sloppy: makeLiteralExpression("write-sloppy"),
+      enclaves: {
+        read: makeLiteralExpression("read"),
+        typeof: makeLiteralExpression("typeof"),
+        discardStrict: makeLiteralExpression("discardStrict"),
+        discardSloppy: makeLiteralExpression("discardSloppy"),
+        writeStrict: makeLiteralExpression("writeStrict"),
+        writeSloppy: makeLiteralExpression("writeSloppy"),
       },
     },
     scenarios: [
@@ -42,44 +34,28 @@ assertSuccess(
       {
         type: "read",
         output: "expression",
-        strict: true,
         variable: "variable",
-        code: "('read-strict')('variable')",
-      },
-      {
-        type: "read",
-        output: "expression",
-        strict: false,
-        variable: "variable",
-        code: "('read-sloppy')('variable')",
+        code: "('read')('variable')",
       },
       {
         type: "typeof",
         output: "expression",
-        strict: true,
         variable: "variable",
-        code: "('typeof-strict')('variable')",
-      },
-      {
-        type: "typeof",
-        output: "expression",
-        strict: false,
-        variable: "variable",
-        code: "('typeof-sloppy')('variable')",
+        code: "('typeof')('variable')",
       },
       {
         type: "discard",
         output: "expression",
         strict: true,
         variable: "variable",
-        code: "('discard-strict')('variable')",
+        code: "('discardStrict')('variable')",
       },
       {
         type: "discard",
         output: "expression",
         strict: false,
         variable: "variable",
-        code: "('discard-sloppy')('variable')",
+        code: "('discardSloppy')('variable')",
       },
       {
         type: "write",
@@ -87,7 +63,7 @@ assertSuccess(
         strict: true,
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: "('write-strict')('variable', 'right')",
+        code: "('writeStrict')('variable', 'right')",
       },
       {
         type: "write",
@@ -95,7 +71,7 @@ assertSuccess(
         strict: false,
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: "('write-sloppy')('variable', 'right')",
+        code: "('writeSloppy')('variable', 'right')",
       },
     ],
   }),
