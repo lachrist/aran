@@ -1,7 +1,5 @@
 import {includes} from "array-lite";
 
-import {assert} from "../../../util/index.mjs";
-
 import * as BlockDynamic from "./block-dynamic.mjs";
 import * as BlockStaticDead from "./block-static-dead.mjs";
 import * as BlockStatic from "./block-static.mjs";
@@ -58,9 +56,8 @@ export const create = (type, layer, options) => {
 // Harvest //
 /////////////
 
-export const harvest = (type, frame) => {
-  assert(frame.type === type, "frame type mismatch");
-  const {harvest: method} = libraries[type];
+export const harvest = (frame) => {
+  const {harvest: method} = libraries[frame.type];
   return method(frame);
 };
 

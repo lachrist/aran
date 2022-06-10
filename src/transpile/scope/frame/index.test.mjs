@@ -92,7 +92,7 @@ const body = concat(
   ],
 );
 
-const {header, prelude} = harvest(CLOSURE_STATIC, frame);
+const {header, prelude} = harvest(frame);
 
 assertSuccess(
   allignBlock(
