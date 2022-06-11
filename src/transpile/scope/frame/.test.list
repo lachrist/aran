@@ -10,6 +10,7 @@
   * empty-dynamic-with.mjs
   * empty-void.mjs
   * enclave.mjs
+  * illegal.mjs
   * import-static.mjs
   * intrinsic.mjs
 - index.mjs
