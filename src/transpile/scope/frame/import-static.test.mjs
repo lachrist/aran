@@ -11,6 +11,7 @@ assertSuccess(
     scenarios: [
       {
         type: "conflict",
+        kind: "import",
         variable: "variable",
       },
       {

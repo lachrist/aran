@@ -1,4 +1,4 @@
-import {concat, join, flatMap} from "array-lite";
+import {includes, concat, join, flatMap} from "array-lite";
 
 import {hasOwnProperty, assert} from "../../../util/index.mjs";
 
@@ -62,7 +62,7 @@ const finalizeScript = (variables, statements, code) => {
 export const default_scenario = {
   type: null,
   output: null,
-  kind: "dummy-kind",
+  kind: null,
   variable: "dummy_variable",
   options: {},
   strict: false,
@@ -79,6 +79,7 @@ const generateTest =
   (finalize) =>
   (
     {
+      KINDS,
       create,
       conflict,
       harvest,
@@ -117,6 +118,7 @@ const generateTest =
       } else {
         assert(scenario.code !== null, "missing scenarion code");
         if (scenario.type === "declare") {
+          assert(includes(KINDS, scenario.kind), "unbound declare kind");
           body[body.length] = scenario.code;
           return makeDeclareStatements(
             scenario.strict,
@@ -126,6 +128,7 @@ const generateTest =
             scenario.options,
           );
         } else if (scenario.type === "initialize") {
+          assert(includes(KINDS, scenario.kind), "unbound initialize kind");
           body[body.length] = scenario.code;
           return makeInitializeStatements(
             scenario.strict,

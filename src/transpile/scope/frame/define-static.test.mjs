@@ -12,6 +12,7 @@ assertSuccess(
     scenarios: [
       {
         type: "declare",
+        kind: "def",
         variable: "variable",
         code: "",
       },

@@ -29,7 +29,7 @@ const descriptor = {
   configurable: true,
 };
 
-export const KINDS = ["synonym"];
+export const KINDS = ["intrinsic"];
 
 export const create = (_layer, _options) => ({bindings: {}});
 

@@ -32,7 +32,7 @@ const descriptor = {
   configurable: true,
 };
 
-export const KIND = ["import"];
+export const KINDS = ["import"];
 
 export const create = (_layer, _options) => ({bindings: {}});
 

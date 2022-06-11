@@ -11,6 +11,7 @@ assertSuccess(
     scenarios: [
       {
         type: "declare",
+        kind: "intrinsic",
         variable: "variable",
         options: {
           intrinsic: "ReferenceError",

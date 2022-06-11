@@ -22,6 +22,7 @@ const FRAME = {layer: "layer"};
 assertSuccess(
   testBlock(
     {
+      KINDS: ["kind"],
       create: (layer, options) => {
         assertEqual(layer, "layer");
         assertDeepEqual(options, {});
