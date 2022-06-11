@@ -27,6 +27,7 @@ import {makeGetExpression} from "../../intrinsic.mjs";
 
 import {
   BASE,
+  SPEC,
   META,
   makeVariableBody,
   makeIndexedVariableBody,
@@ -86,7 +87,7 @@ const {
 // meta //
 //////////
 
-const declareMeta = (scope, name) => {
+export const declareMeta = (scope, name) => {
   const meta = makeIndexedVariableBody(name, incrementGlobalCounter(scope));
   const statements = makeDeclareStatements(scope, "def", META, meta, null, []);
   assert(statements.length === 0, "unexpected declare statement for meta");
@@ -102,6 +103,29 @@ export const makeMetaWriteEffect = (scope, meta, expression) => {
   assert(accountWrite(right) === 1, "expected single write access");
   return effect;
 };
+
+//////////
+// spec //
+//////////
+
+export const makeSpecDefineStatements = (scope, name, expression) => {
+  const body = makeVariableBody(name);
+  return concat(
+    makeDeclareStatements(scope, "def", SPEC, body, null, []),
+    makeInitializeStatements(scope, "def", SPEC, body, expression),
+  );
+};
+
+export const makeSpecIntrinsicStatements = (scope, name, intrinsic) =>
+  makeDeclareStatements(scope, "intrinsic", SPEC, makeVariableBody(name), {
+    intrinsic,
+  });
+
+export const makeSpecIllegalStatements = (scope, name) =>
+  makeDeclareStatements(scope, "illegal", SPEC, makeVariableBody(name), {name});
+
+export const makeSpecReadExpression = (scope, name) =>
+  makeLookupExpression(scope, SPEC, makeVariableBody(name), makeRead());
 
 //////////
 // base //
@@ -192,6 +216,72 @@ export const makeBaseWriteEffect = (scope, variable, expression) => {
   }
 };
 
+// export const makeSuperGetExpression = (scope, expression) => {
+//   try {
+//     return makeGetExpression(
+//       makeBaseReadExpression(scope, "super"),
+//       expression,
+//     );
+//   } catch (error) {
+//     if (error instanceof SyntaxAranError) {
+//       return makeApplyExpression(
+//         makeBaseReadExpression(scope, "super.get"),
+//         makeLiteralExpression({undefined:null}),
+//         [expression],
+//       );
+//     } else {
+//       throw error;
+//     }
+//   }
+// };
+//
+// export const makeSuperSetExpression = (scope, expression1, expression2) => {
+//   try {
+//     return makeSetExpression(
+//       isStrict(scope),
+//       makeBaseReadExpression(scope, "super"),
+//       expression1,
+//       expression2
+//     );
+//   } catch (error) {
+//     if (error instanceof SyntaxAranError) {
+//       return makeApplyExpression(
+//         makeBaseReadExpression(scope, isStrict(scope) ? "super.setStrict" : "supser.setSloppy"),
+//         makeLiteralExpression({undefined:null}),
+//         [expression1, expression2],
+//       );
+//     } else {
+//       throw error;
+//     }
+//   }
+// };
+//
+// export const makeSuperCallExpression = (scope, expressions) => {
+//   try {
+//     return makeApplyExpression(
+//       makeBaseReadExpression(scope, "super"),
+//       makeLiteralExpression({undefined:null}),
+//       expressions,
+//     );
+//   } catch (error) {
+//     if (error instanceof SyntaxAranError) {
+//       return makeApplyExpression(
+//         makeBaseReadExpression(scope, "super.call"),
+//         makeLiteralExpression({undefined:null}),
+//         expressions,
+//       );
+//     } else {
+//       throw error;
+//     }
+//   }
+// };
+//
+// export const makeSuperCallExpression = (scope, expression) => {
+//   try {
+//     return makeApplyExpression(
+//
+//     );
+
 //////////////////////
 // makeDynamicBlock //
 //////////////////////
@@ -237,8 +327,10 @@ export const makeWithBlock = partial__x_x_(
 const enclave_presence_entries = [
   ["read", true],
   ["typeof", true],
-  ["discardStrict", false][("discardSloppy", null)],
-  ["writeStrict", true][("writeSloppy", null)],
+  ["discardStrict", false],
+  ["discardSloppy", null],
+  ["writeStrict", true],
+  ["writeSloppy", null],
 ];
 
 const makeDummyEnclaveEntry = ([name]) => [
@@ -301,6 +393,8 @@ export const makeScopeExternalLocalEvalProgram = (
         [
           createFrame(DEFINE_STATIC, META, {}),
           createFrame(ENCLAVE, BASE, {enclaves}),
+          // NB: Everything that is in the allowances should be reported as internal error
+          createFrame(MASK, BASE, {masking: global_masking}),
         ],
         strict ? [createFrame(CLOSURE_STATIC, BASE, {})] : [],
         [createFrame(BLOCK_STATIC, BASE, {distant: false})],
@@ -313,6 +407,8 @@ export const makeScopeExternalLocalEvalProgram = (
 /////////////////////
 // makeGlobalBlock //
 /////////////////////
+
+const global_masking = fromEntries(map(specials, makeMaskingEntry));
 
 const makeGlobalBaseFrameArray = (enclave) =>
   enclave
@@ -353,6 +449,8 @@ export const makeScopeScriptProgram = (
         createFrame(DEFINE_DYNAMIC, META, {
           dynamic: makeIntrinsicExpression("aran.globalCache"),
         }),
+        createFrame(INTRINSIC, SPEC, {}),
+        createFrame(ILLEGAL, SPEC, {}),
       ],
       makeGlobalBaseFrameArray(enclave),
     ),
@@ -369,7 +467,12 @@ export const makeScopeModuleProgram = (
       useStrict(createRoot(counter)),
       [],
       concat(
-        [createFrame(DEFINE_STATIC, META, {})],
+        [
+          createFrame(DEFINE_STATIC, META, {}),
+          createFrame(DEFINE_STATIC, SPEC, {}),
+          createFrame(INTRINSIC, SPEC, {}),
+          createFrame(ILLEGAL, SPEC, {}),
+        ],
         makeGlobalBaseFrameArray(enclave),
         [
           createFrame(CLOSURE_STATIC, BASE, {}),
@@ -390,7 +493,12 @@ export const makeScopeGlobalEvalProgram = (
       strict ? useStrict(createRoot(counter)) : createRoot(counter),
       [],
       concat(
-        [createFrame(DEFINE_STATIC, META, {})],
+        [
+          createFrame(DEFINE_STATIC, META, {}),
+          createFrame(DEFINE_STATIC, SPEC, {}),
+          createFrame(INTRINSIC, SPEC, {}),
+          createFrame(ILLEGAL, SPEC, {}),
+        ],
         makeGlobalBaseFrameArray(enclave),
         strict ? [createFrame(CLOSURE_STATIC, BASE, {})] : [],
         [createFrame(BLOCK_STATIC, BASE, {distant: false})],
@@ -443,6 +551,10 @@ export const makeDeadBlock = partial__x_(makeBluePrintBlock, [
 // Other //
 ///////////
 
+const closure_masking = fromEntries(
+  map(filterOut(specials, partialx_(equals, "import.meta")), makeMaskingEntry),
+);
+
 export const makeScopeClosureExpression = (
   scope,
   {strict, type, asynchronous, generator},
@@ -455,11 +567,19 @@ export const makeScopeClosureExpression = (
     makeChainBlock(
       strict ? useStrict(enclose(scope)) : enclose(scope),
       [],
-      [
-        createFrame(DEFINE_STATIC, BASE, {}),
-        createFrame(CLOSURE_STATIC, BASE, {}),
-        createFrame(BLOCK_STATIC, BASE, {distant: false}),
-      ],
+      concat(
+        [
+          createFrame(DEFINE_STATIC, BASE, {}),
+          createFrame(DEFINE_STATIC, SPEC, {}),
+          createFrame(INTRINSIC, SPEC, {}),
+          createFrame(ILLEGAL, SPEC, {}),
+        ],
+        type === "arrow"
+          ? []
+          : // NB: 'this' and 'new.target' should be reported as internal error.
+            [createFrame(MASK, BASE, {masking: closure_masking})],
+        [createFrame(BLOCK_STATIC, BASE, {distant: false})],
+      ),
       makeStatementArray,
     ),
   );
@@ -477,7 +597,12 @@ export const makeScopeInternalLocalEvalProgram = (
       strict ? useStrict(scope) : scope,
       [],
       concat(
-        [createFrame(DEFINE_STATIC, META, {})],
+        [
+          createFrame(DEFINE_STATIC, META, {}),
+          createFrame(DEFINE_STATIC, SPEC, {}),
+          createFrame(INTRINSIC, SPEC, {}),
+          createFrame(ILLEGAL, SPEC, {}),
+        ],
         strict ? [createFrame(CLOSURE_STATIC, BASE, {})] : [],
         [createFrame(BLOCK_STATIC, BASE, {distant: false})],
       ),
