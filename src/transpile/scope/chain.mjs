@@ -67,15 +67,7 @@ export const makeChainScriptProgram = partialx___(
   makeScriptProgram,
 );
 
-const declareLoop = (
-  strict,
-  scope1,
-  kind,
-  layer,
-  variable,
-  iimport,
-  eexports,
-) => {
+const declareLoop = (strict, scope1, kind, layer, variable, options) => {
   const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
   assert(!escaped, "escaped scope during declaration");
   conflictFrame(strict, frame, kind, layer, variable);
@@ -85,23 +77,15 @@ const declareLoop = (
     kind,
     layer,
     variable,
-    iimport,
-    eexports,
+    options,
   );
   return maybe === null
-    ? declareLoop(strict, scope2, kind, layer, variable, iimport, eexports)
+    ? declareLoop(strict, scope2, kind, layer, variable, options)
     : maybe;
 };
 
-export const makeDeclareStatements = (
-  scope,
-  kind,
-  layer,
-  variable,
-  iimport,
-  eexports,
-) =>
-  declareLoop(isStrict(scope), scope, kind, layer, variable, iimport, eexports);
+export const makeDeclareStatements = (scope, kind, layer, variable, options) =>
+  declareLoop(isStrict(scope), scope, kind, layer, variable, options);
 
 const initializeLoop = (strict, scope1, kind, layer, variable, expression) => {
   const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);

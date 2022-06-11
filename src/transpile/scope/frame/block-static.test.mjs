@@ -18,8 +18,7 @@ assertSuccess(
         type: "declare",
         kind: "const",
         variable: "variable",
-        import: null,
-        exports: ["specifier"],
+        options: {exports: ["specifier"]},
         code: "",
       },
       {
@@ -81,8 +80,7 @@ assertSuccess(
         type: "declare",
         kind: "const",
         variable: "variable",
-        import: null,
-        exports: ["specifier"],
+        options: {exports: ["specifier"]},
         code: "",
       },
       {

@@ -38,7 +38,7 @@ assertEqual(conflict(STRICT, frame, "var", BASE, "variable"), false);
 assertEqual(conflict(STRICT, frame, "var", META, "variable"), true);
 
 assertEqual(
-  makeDeclareStatements(STRICT, frame, "var", BASE, "variable", null, []),
+  makeDeclareStatements(STRICT, frame, "var", BASE, "variable", {exports: []}),
   null,
 );
 
@@ -55,7 +55,7 @@ assertEqual(
 );
 
 const body = concat(
-  makeDeclareStatements(STRICT, frame, "var", META, "variable", null, []),
+  makeDeclareStatements(STRICT, frame, "var", META, "variable", {exports: []}),
   makeInitializeStatements(
     STRICT,
     frame,

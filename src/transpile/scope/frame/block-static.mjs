@@ -94,10 +94,8 @@ export const makeDeclareStatements = (
   {bindings},
   kind,
   variable,
-  iimport,
-  eexports,
+  {exports: eexports},
 ) => {
-  assert(iimport === null, "unexpected imported variable");
   assert(!hasOwnProperty(bindings, variable), "duplicate variable");
   defineProperty(bindings, variable, {
     __proto__: descriptor,

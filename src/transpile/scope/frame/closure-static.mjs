@@ -51,10 +51,8 @@ export const makeDeclareStatements = (
   {layer, bindings},
   _kind,
   variable,
-  iimport,
-  eexports,
+  {exports: eexports},
 ) => {
-  assert(iimport === null, "unexpected imported variable");
   if (!hasOwnProperty(bindings, variable)) {
     defineProperty(bindings, variable, {__proto__: descriptor, value: []});
   }

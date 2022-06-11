@@ -71,12 +71,11 @@ export const makeDeclareStatements = (
   kind,
   layer,
   variable,
-  iimport,
-  eexports,
+  options,
 ) => {
   const {KINDS, makeDeclareStatements: method} = libraries[frame.type];
   if (frame.layer === layer && includes(KINDS, kind)) {
-    return method(strict, frame, kind, variable, iimport, eexports);
+    return method(strict, frame, kind, variable, options);
   } else {
     return null;
   }

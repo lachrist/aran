@@ -14,8 +14,7 @@ assertSuccess(
         type: "declare",
         kind: "var",
         variable: "variable",
-        import: null,
-        exports: ["specifier"],
+        options: {exports: ["specifier"]},
         code: `(
           VARIABLE = undefined,
           exportStatic('specifier', VARIABLE)

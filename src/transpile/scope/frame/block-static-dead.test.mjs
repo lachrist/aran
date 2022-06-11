@@ -17,6 +17,7 @@ assertSuccess(
         type: "declare",
         kind: "let",
         variable: "variable",
+        options: {exports: []},
         code: "",
       },
       {

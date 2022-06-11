@@ -32,6 +32,7 @@ assertSuccess(
         type: "declare",
         kind: "const",
         variable: "variable",
+        options: {exports: []},
         code: `effect(
           intrinsic.Reflect.defineProperty(
             'dynamic',

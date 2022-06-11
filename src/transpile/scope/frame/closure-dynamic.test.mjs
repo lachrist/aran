@@ -19,6 +19,7 @@ assertSuccess(
         type: "declare",
         kind: "var",
         variable: "variable",
+        options: {exports: []},
         code: `effect(
           (
             intrinsic.aran.binary('in', 'variable', 'dynamic') ?

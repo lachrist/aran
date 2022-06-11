@@ -34,10 +34,8 @@ export const makeDeclareStatements = (
   _frame,
   _kind,
   _variable,
-  iimport,
-  eexports,
+  {exports: eexports},
 ) => {
-  assert(iimport === null, "unexpected imported variable");
   assert(eexports.length === 0, "unexpected exported variable");
   return [];
 };

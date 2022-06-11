@@ -62,10 +62,8 @@ export const makeDeclareStatements = (
   {dynamic},
   _kind,
   variable,
-  iimport,
-  eexports,
+  {exports: eexports},
 ) => {
-  assert(iimport === null, "unexpected global imported variable");
   assert(eexports.length === 0, "unexpected global exported variable");
   return [
     makeEffectStatement(

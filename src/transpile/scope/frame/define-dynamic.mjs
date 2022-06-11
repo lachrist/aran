@@ -1,4 +1,4 @@
-import {assert, constant_, deadcode_____} from "../../../util/index.mjs";
+import {constant_, deadcode_____} from "../../../util/index.mjs";
 
 import {
   makeDynamicLookupExpression,
@@ -20,13 +20,8 @@ export const makeDeclareStatements = (
   _frame,
   _kind,
   _variable,
-  iimport,
-  eexports,
-) => {
-  assert(iimport === null, "unexpected imported declaration");
-  assert(eexports.length === 0, "unexpected exported declaration");
-  return [];
-};
+  _options,
+) => [];
 
 export const makeInitializeStatements = deadcode_____(
   "defined variable should not be initialized",

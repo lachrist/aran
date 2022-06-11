@@ -17,11 +17,10 @@ assertSuccess(
         type: "declare",
         kind: "import",
         variable: "variable",
-        import: {
+        options: {
           source: "source",
           specifier: "specifier",
         },
-        exports: [],
         code: "",
       },
       {

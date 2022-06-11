@@ -52,13 +52,13 @@ export const makeDeclareStatements = (
   {bindings},
   _kind,
   variable,
-  iimport,
-  eexports,
+  {source, specifier},
 ) => {
-  assert(iimport !== null, "expected imported variable");
-  assert(eexports.length === 0, "aggregate should be done as a link");
   assert(!hasOwnProperty(bindings, variable), "duplicate variable");
-  defineProperty(bindings, variable, {__proto__: descriptor, value: iimport});
+  defineProperty(bindings, variable, {
+    __proto__: descriptor,
+    value: {source, specifier},
+  });
   return [];
 };
 

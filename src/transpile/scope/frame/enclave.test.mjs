@@ -22,6 +22,7 @@ assertSuccess(
       {
         type: "declare",
         kind: "var",
+        options: {exports: []},
         code: "",
       },
       {

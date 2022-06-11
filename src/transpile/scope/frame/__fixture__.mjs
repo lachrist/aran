@@ -64,8 +64,7 @@ export const default_scenario = {
   output: null,
   kind: "dummy-kind",
   variable: "dummy_variable",
-  import: null,
-  exports: [],
+  options: {},
   strict: false,
   escaped: false,
   next: nextForbidden,
@@ -124,8 +123,7 @@ const generateTest =
             frame,
             scenario.kind,
             scenario.variable,
-            scenario.import,
-            scenario.exports,
+            scenario.options,
           );
         } else if (scenario.type === "initialize") {
           body[body.length] = scenario.code;

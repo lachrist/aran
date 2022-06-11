@@ -44,19 +44,12 @@ assertSuccess(
           ],
         };
       },
-      makeDeclareStatements: (
-        strict,
-        frame,
-        kind,
-        variable,
-        iimport,
-        eexports,
-      ) => {
+      makeDeclareStatements: (strict, frame, kind, variable, options) => {
         assertEqual(strict, true);
         assertEqual(frame, FRAME);
         assertEqual(kind, "kind");
-        assertEqual(variable, "variable"), assertEqual(iimport, null);
-        assertDeepEqual(eexports, []);
+        assertEqual(variable, "variable");
+        assertDeepEqual(options, {options: null});
         return [
           makeEffectStatement(
             makeExpressionEffect(makeLiteralExpression("declaration")),
@@ -110,8 +103,7 @@ assertSuccess(
           strict: true,
           kind: "kind",
           variable: "variable",
-          import: null,
-          exports: [],
+          options: {options: null},
           code: "effect('declaration');",
         },
         {

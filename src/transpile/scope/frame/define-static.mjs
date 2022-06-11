@@ -33,11 +33,8 @@ export const makeDeclareStatements = (
   {bindings},
   _kind,
   variable,
-  iimport,
-  eexports,
+  _options,
 ) => {
-  assert(iimport === null, "unexpected imported variable");
-  assert(eexports.length === 0, "unexpected exported variable");
   assert(!includes(bindings, variable), "duplicate variable");
   push(bindings, variable);
   return [];

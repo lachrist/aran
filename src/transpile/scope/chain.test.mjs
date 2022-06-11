@@ -38,7 +38,9 @@ assertSuccess(
       ],
       (scope) =>
         concat(
-          makeDeclareStatements(scope, "const", BASE, "variable", null, []),
+          makeDeclareStatements(scope, "const", BASE, "variable", {
+            exports: [],
+          }),
           [
             makeEffectStatement(
               makeLookupEffect(enclose(scope), BASE, "variable", makeRead()),
@@ -74,53 +76,3 @@ assertSuccess(
     `,
   ),
 );
-
-//
-// const scope = extend(
-//   extend(createRoot(123), DEFINE_STATIC, BASE, {}),
-//   CLOSURE_STATIC,
-//   META,
-//   {},
-// );
-//
-// assertEqual(conflict(scope, "def", BASE, "variable"), undefined);
-//
-// const body = concat(
-//   makeDeclareStatements(scope, "def", BASE, "variable", null, []),
-//   makeInitializeStatements(
-//     scope,
-//     "def",
-//     BASE,
-//     "variable",
-//     makeLiteralExpression("init"),
-//   ),
-//   [
-//     makeEffectStatement(
-//       makeExpressionEffect(
-//         makeLookupExpression(scope, BASE, "variable", makeRead()),
-//       ),
-//     ),
-//     makeEffectStatement(
-//       makeLookupEffect(
-//         scope,
-//         BASE,
-//         "variable",
-//         makeWrite(makeLiteralExpression("right")),
-//       ),
-//     ),
-//   ],
-// );
-//
-// const {header, prelude} = harvest([CLOSURE_STATIC, DEFINE_STATIC], scope);
-//
-// assertSuccess(
-//   allignBlock(
-//     makeBlock([], header, concat(prelude, body)),
-//     `{
-//       let VARIABLE;
-//       VARIABLE = 'init';
-//       effect(VARIABLE);
-//       VARIABLE = 'right';
-//     }`,
-//   ),
-// );
