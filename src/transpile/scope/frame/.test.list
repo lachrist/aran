@@ -11,4 +11,5 @@
   * empty-void.mjs
   * enclave.mjs
   * import-static.mjs
+  * intrinsic.mjs
 - index.mjs
