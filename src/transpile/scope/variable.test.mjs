@@ -21,6 +21,7 @@ assertDeepEqual(
     layer: "base",
     shadow: false,
     name: "new.target",
+    identifier: "BO_new_target",
   },
 );
 
@@ -30,6 +31,7 @@ assertDeepEqual(
     layer: "base",
     shadow: true,
     name: "import_meta",
+    identifier: "BS_import__meta",
   },
 );
 
@@ -41,5 +43,6 @@ assertDeepEqual(
     layer: "meta",
     index: 123,
     description: "description",
+    identifier: "MO3f_description",
   },
 );
