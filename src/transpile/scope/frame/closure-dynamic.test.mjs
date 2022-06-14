@@ -10,33 +10,31 @@ assertSuccess(
   testBlock(Frame, {
     options: {
       dynamic: makeLiteralExpression("dynamic"),
-      observable: false,
-      conflict: makeLiteralExpression("conflict"),
+      observable: true,
     },
-    head: "",
+    head: `effect(
+      (
+        intrinsic.aran.binary('in', 'variable', 'dynamic') ?
+        undefined :
+        intrinsic.Reflect.defineProperty(
+          'dynamic',
+          'variable',
+          intrinsic.aran.createObject(
+            null,
+            'value', undefined,
+            'writable', true,
+            'enumerable', true,
+            'configurable', false,
+          ),
+        )
+      ),
+    );`,
     scenarios: [
       {
         type: "declare",
         kind: "var",
         variable: "variable",
         options: {exports: []},
-        code: `effect(
-          (
-            intrinsic.aran.binary('in', 'variable', 'dynamic') ?
-            undefined :
-            intrinsic.Reflect.defineProperty(
-              'dynamic',
-              'variable',
-              intrinsic.aran.createObject(
-                null,
-                'value', undefined,
-                'writable', true,
-                'enumerable', true,
-                'configurable', false,
-              ),
-            )
-          ),
-        );`,
       },
       {
         type: "initialize",
@@ -50,13 +48,35 @@ assertSuccess(
       },
       {
         type: "read",
-        output: "expression",
         next: () => makeLiteralExpression("next"),
-        variable: "variable",
-        code: `(
-          intrinsic.aran.binary('in', 'variable', 'dynamic') ?
-          intrinsic.aran.get('dynamic', 'variable') :
+        variable: "VARIABLE",
+        code: `
+          intrinsic.aran.binary('in', 'VARIABLE', 'dynamic') ?
+          intrinsic.aran.get('dynamic', 'VARIABLE') :
           'next'
+        `,
+      },
+      {
+        type: "typeof",
+        variable: "variable",
+        code: `intrinsic.aran.unary(
+          'typeof',
+          intrinsic.aran.get('dynamic', 'variable'),
+        )`,
+      },
+      {
+        type: "discard",
+        strict: false,
+        variable: "variable",
+        code: "intrinsic.aran.deleteSloppy('dynamic', 'variable')",
+      },
+      {
+        type: "write",
+        strict: true,
+        variable: "variable",
+        right: makeLiteralExpression("right"),
+        code: `effect(
+          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
         )`,
       },
     ],

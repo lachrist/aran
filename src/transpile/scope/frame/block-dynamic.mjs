@@ -1,16 +1,27 @@
-import {includes, map} from "array-lite";
+import {concat, includes, map} from "array-lite";
 
-import {push, returnx, assert, partialx_} from "../../../util/index.mjs";
+import {
+  expect,
+  push,
+  assert,
+  partialx_,
+  SyntaxAranError,
+  incrementCounter,
+  partial____xx,
+  partialxxx_____,
+} from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
   makeExpressionEffect,
   makeConditionalExpression,
   makeLiteralExpression,
-  makeConditionalEffect,
 } from "../../../ast/index.mjs";
 
 import {
+  makeUnaryExpression,
+  makeDeleteExpression,
+  makeSetExpression,
   makeDefineExpression,
   makeBinaryExpression,
   makeGetExpression,
@@ -18,11 +29,10 @@ import {
   makeDeadzoneExpression,
 } from "../../../intrinsic.mjs";
 
-import {isDiscard} from "../right.mjs";
-
 import {
-  makeDynamicLookupExpression,
   makeDynamicLookupEffect,
+  makeDynamicLookupExpression,
+  DUPLICATE_TEMPLATE,
   makeThrowDeadzoneExpression,
   makeThrowDuplicateExpression,
 } from "./helper.mjs";
@@ -38,52 +48,67 @@ const makeConflictStatement = (dynamic, variable) =>
     ),
   );
 
+const makeDeclareStatement = (dynamic, variable) =>
+  makeEffectStatement(
+    makeExpressionEffect(
+      makeDefineExpression(
+        dynamic,
+        makeLiteralExpression(variable),
+        makeDataDescriptorExpression(
+          makeDeadzoneExpression(),
+          makeLiteralExpression(true),
+          makeLiteralExpression(true),
+          makeLiteralExpression(false),
+        ),
+      ),
+    ),
+  );
+
 export const KINDS = ["let", "const", "class"];
 
 export const create = (_layer, {dynamic, observable}) => ({
   dynamic,
   observable,
   conflicts: [],
+  bindings: [],
 });
 
-export const conflict = (_strict, {conflicts}, _kind, variable) => {
+export const conflict = (_strict, {conflicts, bindings}, _kind, variable) => {
+  expect(
+    !includes(bindings, variable),
+    SyntaxAranError,
+    DUPLICATE_TEMPLATE,
+    variable,
+  );
   if (!includes(conflicts, variable)) {
     push(conflicts, variable);
   }
 };
 
-export const harvest = ({dynamic, conflicts}) => ({
+export const harvest = ({dynamic, conflicts, bindings}) => ({
   header: [],
-  prelude: map(conflicts, partialx_(makeConflictStatement, dynamic)),
+  prelude: concat(
+    map(conflicts, partialx_(makeConflictStatement, dynamic)),
+    map(bindings, partialx_(makeDeclareStatement, dynamic)),
+  ),
 });
 
-export const makeDeclareStatements = (
+export const declare = (
   _strict,
-  {dynamic},
+  {bindings},
   _kind,
   variable,
   {exports: eexports},
 ) => {
   assert(eexports.length === 0, "unexpected global exported variable");
-  return [
-    makeEffectStatement(
-      makeExpressionEffect(
-        makeDefineExpression(
-          dynamic,
-          makeLiteralExpression(variable),
-          makeDataDescriptorExpression(
-            makeDeadzoneExpression(),
-            makeLiteralExpression(true),
-            makeLiteralExpression(true),
-            makeLiteralExpression(false),
-          ),
-        ),
-      ),
-    ),
-  ];
+  assert(
+    !includes(bindings, variable),
+    "duplicate variable should have been caught by conflict",
+  );
+  push(bindings, variable);
 };
 
-export const makeInitializeStatements = (
+export const makeInitializeStatementArray = (
   _strict,
   {dynamic},
   kind,
@@ -106,33 +131,99 @@ export const makeInitializeStatements = (
   ),
 ];
 
-export const generateMakeLookupNode =
-  (makeConditionalNode, makeDynamicLookupNode, makeLiftNode) =>
-  (next, strict, _escaped, {dynamic, observable}, variable, right) =>
-    makeConditionalNode(
-      makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
-      isDiscard(right)
-        ? makeDynamicLookupNode(strict, dynamic, variable, right)
-        : makeConditionalNode(
-            makeBinaryExpression(
-              "===",
-              makeGetExpression(dynamic, makeLiteralExpression(variable)),
-              makeDeadzoneExpression(),
-            ),
-            makeLiftNode(makeThrowDeadzoneExpression(variable)),
-            makeDynamicLookupNode(strict, dynamic, variable, right, observable),
-          ),
-      next(),
-    );
+const makeDeadzoneConditionalExpression = (dynamic, variable, expression) =>
+  makeConditionalExpression(
+    makeBinaryExpression(
+      "===",
+      makeGetExpression(dynamic, makeLiteralExpression(variable)),
+      makeDeadzoneExpression(),
+    ),
+    makeThrowDeadzoneExpression(variable),
+    expression,
+  );
 
-export const makeLookupEffect = generateMakeLookupNode(
-  makeConditionalEffect,
-  makeDynamicLookupEffect,
-  makeExpressionEffect,
-);
+const test = ({bindings}, variable) => includes(bindings, variable);
 
-export const makeLookupExpression = generateMakeLookupNode(
-  makeConditionalExpression,
+const makeTestExpression = ({dynamic}, variable) =>
+  makeBinaryExpression("in", makeLiteralExpression(variable), dynamic);
+
+export const makeReadExpression = partialxxx_____(
   makeDynamicLookupExpression,
-  returnx,
+  test,
+  makeTestExpression,
+  (_strict, _escaped, {dynamic}, variable) =>
+    makeDeadzoneConditionalExpression(
+      dynamic,
+      variable,
+      makeGetExpression(dynamic, makeLiteralExpression(variable)),
+    ),
 );
+
+export const makeTypeofExpression = partialxxx_____(
+  makeDynamicLookupExpression,
+  test,
+  makeTestExpression,
+  (_strict, _escaped, {dynamic}, variable) =>
+    makeDeadzoneConditionalExpression(
+      dynamic,
+      variable,
+      makeUnaryExpression(
+        "typeof",
+        makeGetExpression(dynamic, makeLiteralExpression(variable)),
+      ),
+    ),
+);
+
+export const makeDiscardExpression = partialxxx_____(
+  makeDynamicLookupExpression,
+  test,
+  makeTestExpression,
+  (strict, _escaped, {dynamic}, variable) =>
+    makeDeleteExpression(strict, dynamic, makeLiteralExpression(variable)),
+);
+
+const makeHitWriteEffect = (
+  strict,
+  _escaped,
+  {dynamic, observable},
+  variable,
+  expression,
+  counter,
+) => {
+  if (observable) {
+    incrementCounter(counter);
+  }
+  incrementCounter(counter);
+  return makeExpressionEffect(
+    makeDeadzoneConditionalExpression(
+      dynamic,
+      variable,
+      makeSetExpression(
+        strict,
+        dynamic,
+        makeLiteralExpression(variable),
+        expression,
+      ),
+    ),
+  );
+};
+
+export const makeWriteEffect = (
+  miss,
+  strict,
+  escaped,
+  frame,
+  variable,
+  expression,
+  counter,
+) =>
+  makeDynamicLookupEffect(
+    test,
+    makeTestExpression,
+    partial____xx(makeHitWriteEffect, expression, counter),
+    miss,
+    strict,
+    escaped,
+    frame,
+    variable,
+  );

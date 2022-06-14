@@ -1,13 +1,17 @@
 import {filter, map, concat} from "array-lite";
 
 import {
+  incrementCounter,
   expect,
   SyntaxAranError,
   hasOwnProperty,
   assert,
+  bind_,
   partial_x,
   partialx_,
-  returnx,
+  partial____xx,
+  partialxx_____,
+  partialxxx____,
 } from "../../../util/index.mjs";
 
 import {
@@ -16,20 +20,21 @@ import {
   makeEffectStatement,
   makeLiteralExpression,
   makeExpressionEffect,
-  makeReadExpression,
-  makeWriteEffect,
+  makeReadExpression as makeRawReadExpression,
+  makeWriteEffect as makeRawWriteEffect,
 } from "../../../ast/index.mjs";
 
-import {makeVariable, makeShadowVariable} from "../variable.mjs";
+import {makeUnaryExpression} from "../../../intrinsic.mjs";
 
-import {isWrite} from "../right.mjs";
+import {layerVariable, layerShadowVariable} from "../variable.mjs";
 
 import {
+  DUPLICATE_TEMPLATE,
   makeThrowDeadzoneExpression,
-  makeExportStatement,
+  makeThrowDiscardExpression,
   makeThrowConstantExpression,
-  makeStaticLookupExpression,
-  makeStaticLookupEffect,
+  makeExportStatement,
+  makeStaticLookupNode,
 } from "./helper.mjs";
 
 const {
@@ -40,8 +45,8 @@ const hasDeadzone = (bindings, variable) => bindings[variable].deadzone;
 
 const makeShadowInitializeStatement = (layer, variable) =>
   makeEffectStatement(
-    makeWriteEffect(
-      makeShadowVariable(layer, variable),
+    makeRawWriteEffect(
+      layerShadowVariable(layer, variable),
       makeLiteralExpression(false),
     ),
   );
@@ -66,7 +71,7 @@ export const conflict = (_strict, {bindings}, _kind, variable) => {
   expect(
     !hasOwnProperty(bindings, variable),
     SyntaxAranError,
-    "Variable '%s' has already been declared",
+    DUPLICATE_TEMPLATE,
     [variable],
   );
 };
@@ -79,8 +84,8 @@ export const harvest = ({layer, bindings}) => {
   );
   return {
     header: concat(
-      map(variables, partialx_(makeVariable, layer)),
-      map(deadzone_variables, partialx_(makeShadowVariable, layer)),
+      map(variables, partialx_(layerVariable, layer)),
+      map(deadzone_variables, partialx_(layerShadowVariable, layer)),
     ),
     prelude: map(
       deadzone_variables,
@@ -89,14 +94,17 @@ export const harvest = ({layer, bindings}) => {
   };
 };
 
-export const makeDeclareStatements = (
+export const declare = (
   _strict,
   {bindings},
   kind,
   variable,
   {exports: eexports},
 ) => {
-  assert(!hasOwnProperty(bindings, variable), "duplicate variable");
+  assert(
+    !hasOwnProperty(bindings, variable),
+    "duplicate variable should have been caught by conflict",
+  );
   defineProperty(bindings, variable, {
     __proto__: descriptor,
     value: {
@@ -106,12 +114,11 @@ export const makeDeclareStatements = (
       exports: eexports,
     },
   });
-  return [];
 };
 
-export const makeInitializeStatements = (
+export const makeInitializeStatementArray = (
   _strict,
-  {layer, bindings},
+  {layer, bindings, distant},
   _kind,
   variable,
   expression,
@@ -126,14 +133,14 @@ export const makeInitializeStatements = (
   return concat(
     [
       makeEffectStatement(
-        makeWriteEffect(makeVariable(layer, variable), expression),
+        makeRawWriteEffect(layerVariable(layer, variable), expression),
       ),
     ],
-    binding.deadzone
+    binding.deadzone || distant
       ? [
           makeEffectStatement(
-            makeWriteEffect(
-              makeShadowVariable(layer, variable),
+            makeRawWriteEffect(
+              layerShadowVariable(layer, variable),
               makeLiteralExpression(true),
             ),
           ),
@@ -143,54 +150,115 @@ export const makeInitializeStatements = (
       binding.exports,
       partial_x(
         makeExportStatement,
-        makeReadExpression(makeVariable(layer, variable)),
+        makeRawReadExpression(layerVariable(layer, variable)),
       ),
     ),
   );
 };
 
-export const generateMakeLookupNode =
-  (makeStaticLookupNode, makeConditionalNode, makeLiftNode) =>
-  (next, strict, escaped, {distant, layer, bindings}, variable, right) => {
-    if (hasOwnProperty(bindings, variable)) {
-      const binding = bindings[variable];
-      if (!binding.initialized && !escaped) {
-        return makeLiftNode(makeThrowDeadzoneExpression(variable));
-      } else {
-        const node =
-          isWrite(right) && !binding.writable
-            ? makeLiftNode(makeThrowConstantExpression(variable))
-            : makeStaticLookupNode(
-                strict,
-                layer,
-                variable,
-                right,
-                binding.exports,
-              );
-        if (binding.initialized && !distant) {
-          return node;
-        } else {
-          binding.deadzone = true;
-          return makeConditionalNode(
-            makeReadExpression(makeShadowVariable(layer, variable)),
-            node,
-            makeLiftNode(makeThrowDeadzoneExpression(variable)),
-          );
-        }
-      }
-    } else {
-      return next();
-    }
-  };
+const test = ({bindings}, variable) => hasOwnProperty(bindings, variable);
 
-export const makeLookupExpression = generateMakeLookupNode(
-  makeStaticLookupExpression,
-  makeConditionalExpression,
-  returnx,
+const makeDeadzoneNode = (
+  makeConditionalNode,
+  live,
+  dead,
+  strict,
+  escaped,
+  {layer, distant, bindings},
+  variable,
+) => {
+  const binding = bindings[variable];
+  if (!binding.initialized && !escaped) {
+    return dead(variable);
+  } else if (binding.initialized && !distant) {
+    return live(strict, layer, variable, binding.writable);
+  } else {
+    binding.deadzone = true;
+    return makeConditionalNode(
+      makeRawReadExpression(layerShadowVariable(layer, variable)),
+      live(strict, layer, variable, binding.writable),
+      dead(variable),
+    );
+  }
+};
+
+export const makeReadExpression = partialxx_____(
+  makeStaticLookupNode,
+  test,
+  partialxxx____(
+    makeDeadzoneNode,
+    makeConditionalExpression,
+    (_strict, layer, variable, _writable) =>
+      makeRawReadExpression(layerVariable(layer, variable)),
+    makeThrowDeadzoneExpression,
+  ),
 );
 
-export const makeLookupEffect = generateMakeLookupNode(
-  makeStaticLookupEffect,
-  makeConditionalEffect,
+export const makeTypeofExpression = partialxx_____(
+  makeStaticLookupNode,
+  test,
+  partialxxx____(
+    makeDeadzoneNode,
+    makeConditionalExpression,
+    (_strict, layer, variable, _writable) =>
+      makeUnaryExpression(
+        "typeof",
+        makeRawReadExpression(layerVariable(layer, variable)),
+      ),
+    makeThrowDeadzoneExpression,
+  ),
+);
+
+export const makeDiscardExpression = partialxx_____(
+  makeStaticLookupNode,
+  test,
+  (strict, _escaped, _frame, variable) =>
+    strict
+      ? makeThrowDiscardExpression(variable)
+      : makeLiteralExpression(false),
+);
+
+const makeLiveWriteEffect = (
+  _strict,
+  layer,
+  variable,
+  writable,
+  expression,
+  counter,
+) => {
+  if (writable) {
+    incrementCounter(counter);
+    return makeRawWriteEffect(layerVariable(layer, variable), expression);
+  } else {
+    return makeExpressionEffect(makeThrowConstantExpression(variable));
+  }
+};
+
+const makeDeadWriteEffect = bind_(
   makeExpressionEffect,
+  makeThrowDeadzoneExpression,
 );
+
+export const makeWriteEffect = (
+  next,
+  strict,
+  escaped,
+  frame,
+  variable,
+  expression,
+  counter,
+) =>
+  makeStaticLookupNode(
+    test,
+    partialxxx____(
+      makeDeadzoneNode,
+      makeConditionalEffect,
+      partial____xx(makeLiveWriteEffect, expression, counter),
+      makeDeadWriteEffect,
+    ),
+    next,
+    strict,
+    escaped,
+    frame,
+    variable,
+  );

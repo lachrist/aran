@@ -8,17 +8,19 @@ import * as Frame from "./closure-static.mjs";
 
 assertSuccess(
   testBlock(Frame, {
-    head: "let VARIABLE;",
+    head: `
+      let VARIABLE;
+      (
+        VARIABLE = undefined,
+        exportStatic('specifier', VARIABLE)
+      );
+    `,
     scenarios: [
       {
         type: "declare",
         kind: "var",
         variable: "variable",
         options: {exports: ["specifier"]},
-        code: `(
-          VARIABLE = undefined,
-          exportStatic('specifier', VARIABLE)
-        );`,
       },
       {
         type: "initialize",
@@ -32,15 +34,38 @@ assertSuccess(
       },
       {
         type: "read",
-        output: "expression",
-        next: () => makeLiteralExpression("next"),
-        code: "'next'",
-      },
-      {
-        type: "read",
-        output: "expression",
         variable: "variable",
         code: "VARIABLE",
+      },
+      {
+        type: "typeof",
+        variable: "variable",
+        code: "intrinsic.aran.unary('typeof', VARIABLE)",
+      },
+      {
+        type: "discard",
+        strict: true,
+        variable: "variable",
+        code: `intrinsic.aran.throw(
+          new intrinsic.TypeError(
+            "Cannot discard variable 'variable' because it is static",
+          ),
+        )`,
+      },
+      {
+        type: "discard",
+        strict: false,
+        variable: "variable",
+        code: "false",
+      },
+      {
+        type: "write",
+        variable: "variable",
+        right: makeLiteralExpression("right"),
+        code: `(
+          VARIABLE = 'right',
+          exportStatic('specifier', VARIABLE)
+        )`,
       },
     ],
   }),
