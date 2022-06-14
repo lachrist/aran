@@ -3,7 +3,6 @@ import {join} from "array-lite";
 import {shift, assert} from "../../util/index.mjs";
 
 const {
-  Error,
   parseInt,
   isNaN,
   String: {
@@ -31,61 +30,61 @@ const ENCODING_SINGLETON = [ENCODING];
 
 const ONE_SINGLETON = [1];
 const TWO_SINGLETON = [2];
-const THREE_SINGLETON = [3];
 
 const SEPARATOR = "_";
 const SEPARATOR_SINGLETON = [SEPARATOR];
 
-const CONVERT = [/(\.|_+)/gu, (match) => (match === "." ? "_" : `_${match}`)];
+const CONVERT = [/(\.|(_+))/gu, (match) => (match === "." ? "_" : `_${match}`)];
 
 const REVERT = [
-  /(\.|_+)/gu,
+  /_+/gu,
   (match) => (match === "_" ? "." : apply(subString, match, ONE_SINGLETON)),
 ];
 
-export const makeVariableBody = (name) =>
-  `${SEPARATOR}${apply(replaceString, name, CONVERT)}`;
+const LAYER_MAPPING = {
+  __proto__: null,
+  [BASE]: "base",
+  [SPEC]: "spec",
+  [META]: "meta",
+};
 
-export const makeIndexedVariableBody = (name, index) =>
-  `${apply(stringifyNumber, index, ENCODING_SINGLETON)}_${name}`;
+const SHADOWING_MAPPING = {
+  __proto__: null,
+  [ORIGINAL]: false,
+  [SHADOW]: true,
+};
 
-export const makeShadowVariable = (layer, body) => `${layer}${SHADOW}${body}`;
+export const indexVariable = (name, index) =>
+  `0${apply(stringifyNumber, index, ENCODING_SINGLETON)}${SEPARATOR}${name}`;
 
-export const makeVariable = (layer, body) => `${layer}${ORIGINAL}${body}`;
-
-export const unmangleVariable = (variable) => {
-  if (variable[0] === BASE || variable[0] === SPEC) {
-    assert(
-      variable[1] === ORIGINAL || variable[1] === SHADOW,
-      "invalid base/spec variable shadowing",
-    );
-    assert(variable[2] === SEPARATOR, "unexpected indexed base/spec variable");
-    return {
-      layer: "base",
-      shadow: variable[1] === SHADOW,
-      name: apply(
-        replaceString,
-        apply(subString, variable, THREE_SINGLETON),
-        REVERT,
-      ),
-      identifier: variable,
-    };
-  } else if (variable[0] === META) {
-    assert(variable[1] === ORIGINAL, "expected an original meta variable");
-    const segments = apply(
-      splitString,
-      apply(subString, variable, TWO_SINGLETON),
-      SEPARATOR_SINGLETON,
-    );
-    const head = parseInt(shift(segments), ENCODING);
-    assert(!isNaN(head), "invalid meta variable index");
-    return {
-      layer: "meta",
-      index: head,
-      description: apply(replaceString, join(segments, SEPARATOR), REVERT),
-      identifier: variable,
-    };
+const unindexVariable = (variable) => {
+  if (variable[0] === "0") {
+    const segments = apply(splitString, variable, SEPARATOR_SINGLETON);
+    const index = parseInt(shift(segments), ENCODING);
+    assert(!isNaN(index), "invalid variable index");
+    return {index, name: join(segments, SEPARATOR)};
   } else {
-    throw new Error("invalid variable layer");
+    return {index: null, name: variable};
   }
+};
+
+const generateLayer = (shadowing) => (layer, variable) =>
+  `${layer}${shadowing}${apply(replaceString, variable, CONVERT)}`;
+
+export const layerShadowVariable = generateLayer(SHADOW);
+
+export const layerVariable = generateLayer(ORIGINAL);
+
+export const unlayerVariable = (variable) => {
+  assert(variable[0] in LAYER_MAPPING, "invalid variable layer");
+  assert(variable[1] in SHADOWING_MAPPING, "invalid variable shadowing");
+  const {index, name} = unindexVariable(
+    apply(replaceString, apply(subString, variable, TWO_SINGLETON), REVERT),
+  );
+  return {
+    layer: LAYER_MAPPING[variable[0]],
+    shadow: SHADOWING_MAPPING[variable[1]],
+    index,
+    name,
+  };
 };

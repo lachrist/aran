@@ -1,9 +1,10 @@
 import {
-  assert,
   assertEqual,
   assertDeepEqual,
   assertSuccess,
 } from "../../../__fixture__.mjs";
+
+import {push} from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -13,11 +14,7 @@ import {
   makeReadExpression,
 } from "../../../ast/index.mjs";
 
-import {accessWrite, isWrite, isRead} from "../right.mjs";
-
 import {testBlock} from "./__fixture__.mjs";
-
-const FRAME = {layer: "layer"};
 
 assertSuccess(
   testBlock(
@@ -26,69 +23,63 @@ assertSuccess(
       create: (layer, options) => {
         assertEqual(layer, "layer");
         assertDeepEqual(options, {});
-        return FRAME;
+        return {layer, header: [], prelude: []};
       },
-      conflict: (strict, frame, kind, variable) => {
+      harvest: ({header, prelude}) => ({
+        header,
+        prelude,
+      }),
+      conflict: (strict, {prelude}, kind, variable) => {
         assertEqual(strict, true);
-        assertEqual(frame, FRAME);
         assertEqual(kind, "kind");
         assertEqual(variable, "variable");
-      },
-      harvest: (frame) => {
-        assertEqual(frame, FRAME);
-        return {
-          header: ["variable"],
-          prelude: [
-            makeEffectStatement(
-              makeExpressionEffect(makeLiteralExpression("prelude")),
-            ),
-          ],
-        };
-      },
-      makeDeclareStatements: (strict, frame, kind, variable, options) => {
-        assertEqual(strict, true);
-        assertEqual(frame, FRAME);
-        assertEqual(kind, "kind");
-        assertEqual(variable, "variable");
-        assertDeepEqual(options, {options: null});
-        return [
+        push(
+          prelude,
           makeEffectStatement(
-            makeExpressionEffect(makeLiteralExpression("declaration")),
+            makeExpressionEffect(makeLiteralExpression("conflict")),
           ),
-        ];
+        );
       },
-      makeInitializeStatements: (strict, frame, kind, variable, expression) => {
+      declare: (strict, {header}, kind, variable, options) => {
         assertEqual(strict, true);
-        assertEqual(frame, FRAME);
+        assertEqual(kind, "kind");
+        assertDeepEqual(options, {options: null});
+        push(header, variable);
+      },
+      makeInitializeStatementArray: (
+        strict,
+        _frame,
+        kind,
+        variable,
+        expression,
+      ) => {
+        assertEqual(strict, true);
         assertEqual(kind, "kind");
         return [makeEffectStatement(makeWriteEffect(variable, expression))];
       },
-      makeLookupEffect: (_next, strict, escaped, frame, variable, right) => {
-        assertEqual(strict, true);
-        assertEqual(escaped, true);
-        assertEqual(frame, FRAME);
-        assert(isWrite(right));
-        return makeWriteEffect(variable, accessWrite(right));
-      },
-      makeLookupExpression: (
+      makeWriteEffect: (
         _next,
         strict,
         escaped,
-        frame,
+        _frame,
         variable,
-        right,
+        expression,
+        _counter,
       ) => {
-        assertEqual(frame, FRAME);
+        assertEqual(strict, true);
+        assertEqual(escaped, true);
+        return makeWriteEffect(variable, expression);
+      },
+      makeReadExpression: (_next, strict, escaped, _frame, variable) => {
         assertEqual(strict, false);
         assertEqual(escaped, false);
-        assert(isRead(right));
         return makeReadExpression(variable);
       },
     },
     {
       head: `
         let variable;
-        effect('prelude');
+        effect('conflict');
       `,
       layer: "layer",
       options: {},
@@ -105,7 +96,6 @@ assertSuccess(
           kind: "kind",
           variable: "variable",
           options: {options: null},
-          code: "effect('declaration');",
         },
         {
           type: "initialize",
@@ -117,7 +107,6 @@ assertSuccess(
         },
         {
           type: "write",
-          output: "effect",
           strict: true,
           escaped: true,
           variable: "variable",
@@ -126,7 +115,6 @@ assertSuccess(
         },
         {
           type: "read",
-          output: "expression",
           strict: false,
           escaped: false,
           variable: "variable",
@@ -136,40 +124,3 @@ assertSuccess(
     },
   ),
 );
-
-// assertSuccess(
-//   testBlock(
-//     {
-//       create: (_layer, _options) => null,
-//       harvest: (_frame) => ({
-//         header: [],
-//         prelude: [],
-//       }),
-//       declare: (_frame, _kind, _variable, _iimport, _eexports) => null,
-//       initialize: (_frame, _kind, _variable, _expression) => null,
-//       lookup: (next, _frame, _strict, _escaped, _variable, _right) => next(),
-//     },
-//     {
-//       layer: "layer",
-//       options: {},
-//       scenarios: [
-//         {
-//           type: "declare",
-//         },
-//         {
-//           type: "initialize",
-//         },
-//         {
-//           type: "read",
-//           next: () => makeLiteralExpression("next"),
-//           code: "'next'",
-//         },
-//         {
-//           type: "write",
-//           next: () => makeExpressionEffect(makeLiteralExpression("next")),
-//           code: "effect('next')",
-//         },
-//       ],
-//     },
-//   ),
-// );

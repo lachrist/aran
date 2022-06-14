@@ -1,4 +1,4 @@
-import {assertSuccess} from "../../../__fixture__.mjs";
+import {assertSuccess, assertDeepEqual} from "../../../__fixture__.mjs";
 
 import {
   makeExpressionEffect,
@@ -11,134 +11,161 @@ import {
   allignExpression,
 } from "../../../allign/index.mjs";
 
-import {BASE} from "../variable.mjs";
-
-import {makeRead, makeTypeof, makeDiscard, makeWrite} from "../right.mjs";
-
 import {
-  makeStaticLookupExpression,
+  makeStaticLookupNode,
   makeDynamicLookupExpression,
-  makeStaticLookupEffect,
+  makeExportStatement,
+  makeExportUndefinedStatement,
+  makeExportSequenceEffect,
   makeThrowDuplicateExpression,
   makeThrowMissingExpression,
   makeThrowDeadzoneExpression,
   makeThrowConstantExpression,
-  makeExportStatement,
-  makeExportUndefinedStatement,
-  makeExportSequenceEffect,
+  makeThrowDiscardExpression,
 } from "./helper.mjs";
 
-//////////////////////
-// makeStaticLookup //
-//////////////////////
+const {Error} = globalThis;
+
+////////////////////////////////
+// makeStaticLookupExpression //
+////////////////////////////////
 
 assertSuccess(
   allignExpression(
-    makeStaticLookupExpression(true, BASE, "variable", makeRead(), []),
-    "variable",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeStaticLookupExpression(true, BASE, "variable", makeTypeof(), []),
-    "intrinsic.aran.unary('typeof', variable)",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeStaticLookupExpression(true, BASE, "variable", makeDiscard(), []),
-    `intrinsic.aran.throw(new intrinsic.TypeError("Cannot discard variable 'variable' because it is static"))`,
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeStaticLookupExpression(false, BASE, "variable", makeDiscard(), []),
-    "false",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeStaticLookupExpression(
+    makeStaticLookupNode(
+      (...args) => {
+        assertDeepEqual(args, ["frame", "variable"]);
+        return true;
+      },
+      (...args) => {
+        assertDeepEqual(args, [true, false, "frame", "variable"]);
+        return makeLiteralExpression("here");
+      },
+      () => {
+        throw new Error("next");
+      },
+      true,
       false,
-      BASE,
+      "frame",
       "variable",
-      makeWrite(makeLiteralExpression("right")),
-      ["specifier"],
     ),
-    "((variable = 'right', exportStatic('specifier', variable)), undefined)",
+    "'here'",
+  ),
+);
+
+assertSuccess(
+  allignExpression(
+    makeStaticLookupNode(
+      (...args) => {
+        assertDeepEqual(args, ["frame", "variable"]);
+        return false;
+      },
+      () => {
+        throw new Error("here");
+      },
+      (...args) => {
+        assertDeepEqual(args, []);
+        return makeLiteralExpression("next");
+      },
+      true,
+      false,
+      "frame",
+      "variable",
+    ),
+    "'next'",
+  ),
+);
+
+////////////////////////////////
+// makeDynamicLookupExpression //
+////////////////////////////////
+
+assertSuccess(
+  allignExpression(
+    makeDynamicLookupExpression(
+      (...args) => {
+        assertDeepEqual(args, ["frame", "variable"]);
+        return true;
+      },
+      () => {
+        throw new Error("test");
+      },
+      (...args) => {
+        assertDeepEqual(args, [true, false, "frame", "variable"]);
+        return makeLiteralExpression("here");
+      },
+      () => {
+        throw new Error("next");
+      },
+      true,
+      false,
+      "frame",
+      "variable",
+    ),
+    "'here'",
+  ),
+);
+
+assertSuccess(
+  allignExpression(
+    makeDynamicLookupExpression(
+      (...args) => {
+        assertDeepEqual(args, ["frame", "variable"]);
+        return false;
+      },
+      (...args) => {
+        assertDeepEqual(args, ["frame", "variable"]);
+        return makeLiteralExpression("test");
+      },
+      (...args) => {
+        assertDeepEqual(args, [true, false, "frame", "variable"]);
+        return makeLiteralExpression("here");
+      },
+      (...args) => {
+        assertDeepEqual(args, []);
+        return makeLiteralExpression("next");
+      },
+      true,
+      false,
+      "frame",
+      "variable",
+    ),
+    "('test' ? 'here' : 'next')",
+  ),
+);
+
+////////////
+// Export //
+////////////
+
+assertSuccess(
+  allignStatement(
+    makeExportStatement("specifier", makeLiteralExpression(123)),
+    `exportStatic('specifier', 123);`,
+  ),
+);
+
+assertSuccess(
+  allignStatement(
+    makeExportUndefinedStatement("specifier"),
+    `exportStatic('specifier', undefined);`,
   ),
 );
 
 assertSuccess(
   allignEffect(
-    makeStaticLookupEffect(false, BASE, "variable", makeRead(), []),
-    "effect(variable)",
-  ),
-);
-
-///////////////////////
-// makeDynamicLookup //
-///////////////////////
-
-assertSuccess(
-  allignExpression(
-    makeDynamicLookupExpression(
-      true,
-      makeLiteralExpression("frame"),
-      "variable",
-      makeRead(),
-      false,
+    makeExportSequenceEffect(
+      makeExpressionEffect(makeLiteralExpression(123)),
+      "specifier",
+      makeLiteralExpression(456),
     ),
-    "intrinsic.aran.get('frame', 'variable')",
+    `(effect(123), exportStatic('specifier', 456))`,
   ),
 );
 
-assertSuccess(
-  allignExpression(
-    makeDynamicLookupExpression(
-      true,
-      makeLiteralExpression("frame"),
-      "variable",
-      makeTypeof(),
-      false,
-    ),
-    "intrinsic.aran.unary('typeof', intrinsic.aran.get('frame', 'variable'))",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeDynamicLookupExpression(
-      true,
-      makeLiteralExpression("frame"),
-      "variable",
-      makeDiscard(),
-      false,
-    ),
-    "intrinsic.aran.deleteStrict('frame', 'variable')",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeDynamicLookupExpression(
-      false,
-      makeLiteralExpression("frame"),
-      "variable",
-      makeWrite(makeLiteralExpression("right")),
-      true,
-    ),
-    "intrinsic.aran.setSloppy('frame', 'variable', 'right')",
-  ),
-);
-
-///////////
-// Other //
-///////////
+////////////
+// Report //
+////////////
 
 assertSuccess(
   allignExpression(
@@ -163,32 +190,14 @@ assertSuccess(
 
 assertSuccess(
   allignExpression(
+    makeThrowDiscardExpression("variable"),
+    `intrinsic.aran.throw(new intrinsic.TypeError("Cannot discard variable 'variable' because it is static"))`,
+  ),
+);
+
+assertSuccess(
+  allignExpression(
     makeThrowConstantExpression("variable"),
-    `intrinsic.aran.throw(new intrinsic.TypeError("Cannot assign variable 'variable' because it is a constant"))`,
-  ),
-);
-
-assertSuccess(
-  allignStatement(
-    makeExportStatement("specifier", makeLiteralExpression(123)),
-    `exportStatic('specifier', 123);`,
-  ),
-);
-
-assertSuccess(
-  allignStatement(
-    makeExportUndefinedStatement("specifier"),
-    `exportStatic('specifier', undefined);`,
-  ),
-);
-
-assertSuccess(
-  allignEffect(
-    makeExportSequenceEffect(
-      makeExpressionEffect(makeLiteralExpression(123)),
-      "specifier",
-      makeLiteralExpression(456),
-    ),
-    `(effect(123), exportStatic('specifier', 456))`,
+    `intrinsic.aran.throw(new intrinsic.TypeError("Cannot assign variable 'variable' because it is constant"))`,
   ),
 );

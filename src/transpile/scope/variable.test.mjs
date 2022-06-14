@@ -1,48 +1,27 @@
-import {assertThrow, assertDeepEqual} from "../../__fixture__.mjs";
+import {assertDeepEqual} from "../../__fixture__.mjs";
 
 import {
   BASE,
   META,
-  makeVariable,
-  makeShadowVariable,
-  makeVariableBody,
-  makeIndexedVariableBody,
-  unmangleVariable,
+  layerVariable,
+  layerShadowVariable,
+  indexVariable,
+  unlayerVariable,
 } from "./variable.mjs";
 
-assertThrow(() => unmangleVariable("foo"), {
-  name: "Error",
-  message: "invalid variable layer",
+assertDeepEqual(unlayerVariable(layerShadowVariable(BASE, "new.target")), {
+  layer: "base",
+  shadow: true,
+  name: "new.target",
+  index: null,
 });
 
 assertDeepEqual(
-  unmangleVariable(makeVariable(BASE, makeVariableBody("new.target"))),
-  {
-    layer: "base",
-    shadow: false,
-    name: "new.target",
-    identifier: "BO_new_target",
-  },
-);
-
-assertDeepEqual(
-  unmangleVariable(makeShadowVariable(BASE, makeVariableBody("import_meta"))),
-  {
-    layer: "base",
-    shadow: true,
-    name: "import_meta",
-    identifier: "BS_import__meta",
-  },
-);
-
-assertDeepEqual(
-  unmangleVariable(
-    makeVariable(META, makeIndexedVariableBody("description", 123)),
-  ),
+  unlayerVariable(layerVariable(META, indexVariable("foo_bar", 123))),
   {
     layer: "meta",
+    shadow: false,
+    name: "foo_bar",
     index: 123,
-    description: "description",
-    identifier: "MO3f_description",
   },
 );

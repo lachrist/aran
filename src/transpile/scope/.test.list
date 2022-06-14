@@ -1,7 +1,6 @@
-- * variable.mjs
-  * right.mjs
 - * - structure.mjs
     - property.mjs
-  * frame
+  * - variable.mjs
+    - frame
 - chain.mjs
 - index.mjs
