@@ -6,7 +6,7 @@ import {assertEqual, assertDeepEqual, assertThrow} from "../__fixture__.mjs";
 import * as Library from "./closure.mjs";
 /* eslint-enable import/no-namespace */
 
-import {assert, partialxx_x_x_x__} from "./closure.mjs";
+import {assert} from "./closure.mjs";
 
 const {
   Array,
@@ -109,7 +109,7 @@ forEach(["xx", "_xx", "x_x", "xx_"], (description) => {
   );
 });
 
-forEach(combine(6, ["", "_", "x"]), (description) => {
+forEach(concat(combine(6, ["", "_", "x"]), ["_____xx"]), (description) => {
   if (getOwnPropertyDescriptor(Library, `drop${description}`) !== undefined) {
     const drop = Library[`drop${description}`];
     const xs = [];
@@ -124,33 +124,41 @@ forEach(combine(6, ["", "_", "x"]), (description) => {
   }
 });
 
-forEach(combine(6, ["", "_", "x", "f"]), (description) => {
-  if (
-    getOwnPropertyDescriptor(Library, `partial${description}`) !== undefined
-  ) {
-    const partial = Library[`partial${description}`];
-    const xs = [];
-    const ys = [];
-    for (let index = 0; index < description.length; index += 1) {
-      if (description[index] === "x") {
-        xs[xs.length] = index;
-      } else if (description[index] === "f") {
-        xs[xs.length] = untag;
-        ys[ys.length] = tag(index);
-      } else {
-        ys[ys.length] = index;
+forEach(
+  concat(combine(6, ["", "_", "x", "f"]), [
+    "xx_____",
+    "x______",
+    "xxx____",
+    "xxx_____",
+    "xx_x_x_x__",
+  ]),
+  (description) => {
+    if (
+      getOwnPropertyDescriptor(Library, `partial${description}`) !== undefined
+    ) {
+      const partial = Library[`partial${description}`];
+      const xs = [];
+      const ys = [];
+      for (let index = 0; index < description.length; index += 1) {
+        if (description[index] === "x") {
+          xs[xs.length] = index;
+        } else if (description[index] === "f") {
+          xs[xs.length] = untag;
+          ys[ys.length] = tag(index);
+        } else {
+          ys[ys.length] = index;
+        }
       }
+      assertDeepEqual(
+        apply(
+          apply(partial, undefined, [returnArguments, ...xs]),
+          undefined,
+          ys,
+        ),
+        enumerate(0, description.length),
+      );
     }
-    assertDeepEqual(
-      apply(apply(partial, undefined, [returnArguments, ...xs]), undefined, ys),
-      enumerate(0, description.length),
-    );
-  }
-});
-
-assertDeepEqual(
-  partialxx_x_x_x__(returnArguments, 1, 2, 4, 6, 8)(3, 5, 7, 9, 0),
-  [1, 2, 3, 4, 5, 6, 7, 8, 9, 0],
+  },
 );
 
 // const concatTwice = (xs) => concat(xs, xs);
