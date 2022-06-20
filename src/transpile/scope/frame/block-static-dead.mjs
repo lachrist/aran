@@ -12,44 +12,38 @@
 //   }
 // }
 
-import {includes} from "array-lite";
-
 import {
-  expect,
-  SyntaxAranError,
+  hasOwnProperty,
   deadcode_____,
-  bind____,
-  dropxxx_,
-  push,
+  bind_____,
+  dropxxx_x,
   constant_,
-  partialxx_____,
-  drop_____xx,
+  partialxx______,
   assert,
 } from "../../../util/index.mjs";
 
-import {
-  makeExpressionEffect,
-  makeLiteralExpression,
-} from "../../../ast/index.mjs";
+import {makeExpressionEffect} from "../../../ast/index.mjs";
 
 import {
+  testStatic,
+  conflictStatic,
+  makeStaticDiscardExpression,
   makeStaticLookupNode,
-  DUPLICATE_TEMPLATE,
-  makeThrowDiscardExpression,
+  NULL_DATA_DESCRIPTOR,
   makeThrowDeadzoneExpression,
 } from "./helper.mjs";
+
+const {
+  Reflect: {defineProperty},
+} = globalThis;
 
 export const KINDS = ["let", "const", "class"];
 
 export const create = (_layer, _options) => ({
-  bindings: [],
+  static: {},
 });
 
-export const conflict = (_strict, {bindings}, _kind, variable) => {
-  expect(!includes(bindings, variable), SyntaxAranError, DUPLICATE_TEMPLATE, [
-    variable,
-  ]);
-};
+export const conflict = conflictStatic;
 
 export const harvest = constant_({
   header: [],
@@ -58,50 +52,47 @@ export const harvest = constant_({
 
 export const declare = (
   _strict,
-  {bindings},
+  {static: bindings},
   _kind,
   variable,
-  {exports: eexports},
+  {exports: specifiers},
 ) => {
-  assert(eexports.length === 0, "unexpected exported variable");
+  assert(specifiers.length === 0, "unexpected exported variable");
   assert(
-    !includes(bindings, variable),
+    !hasOwnProperty(bindings, variable),
     "duplicate variable should have been caught by conflict",
   );
-  push(bindings, variable);
+  defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
 };
 
-export const makeInitializeStatements = deadcode_____(
+export const makeInitializeStatementArray = deadcode_____(
   "initialization is forbidden in dead frames",
 );
 
-const test = ({bindings}, variable) => includes(bindings, variable);
-
-export const makeReadExpression = partialxx_____(
-  makeStaticLookupNode,
-  test,
-  dropxxx_(makeThrowDeadzoneExpression),
+const makeThrowDeadzoneExpressionDropped = dropxxx_x(
+  makeThrowDeadzoneExpression,
 );
 
-export const makeTypeofExpression = partialxx_____(
+export const makeReadExpression = partialxx______(
   makeStaticLookupNode,
-  test,
-  dropxxx_(makeThrowDeadzoneExpression),
+  testStatic,
+  makeThrowDeadzoneExpressionDropped,
 );
 
-export const makeDiscardExpression = partialxx_____(
+export const makeTypeofExpression = partialxx______(
   makeStaticLookupNode,
-  test,
-  (strict, _escaped, _frame, variable) =>
-    strict
-      ? makeThrowDiscardExpression(variable)
-      : makeLiteralExpression(false),
+  testStatic,
+  makeThrowDeadzoneExpressionDropped,
 );
 
-export const makeWriteEffect = drop_____xx(
-  partialxx_____(
-    makeStaticLookupNode,
-    test,
-    bind____(makeExpressionEffect, dropxxx_(makeThrowDeadzoneExpression)),
-  ),
+export const makeDiscardExpression = partialxx______(
+  makeStaticLookupNode,
+  testStatic,
+  makeStaticDiscardExpression,
+);
+
+export const makeWriteEffect = partialxx______(
+  makeStaticLookupNode,
+  testStatic,
+  bind_____(makeExpressionEffect, makeThrowDeadzoneExpressionDropped),
 );

@@ -1,38 +1,35 @@
 import {
-  bind_____,
-  constant_,
   assert,
-  hasOwnProperty,
+  constant_,
+  bind_____,
   dropxxx_x,
   deadcode_____,
   partialxx______,
+  hasOwnProperty,
 } from "../../../util/index.mjs";
 
-import {
-  makeExpressionEffect,
-  makeImportExpression,
-} from "../../../ast/index.mjs";
+import {makeExpressionEffect} from "../../../ast/index.mjs";
 
 import {makeUnaryExpression} from "../../../intrinsic.mjs";
 
 import {
   NULL_DATA_DESCRIPTOR,
-  makeThrowConstantExpression,
-  conflictStatic,
   makeStaticLookupNode,
   testStatic,
   makeStaticDiscardExpression,
+  makeThrowConstantExpression,
 } from "./helper.mjs";
 
 const {
+  undefined,
   Reflect: {defineProperty},
 } = globalThis;
 
-export const KINDS = ["import"];
+export const KINDS = ["macro"];
 
 export const create = (_layer, _options) => ({static: {}});
 
-export const conflict = conflictStatic;
+export const conflict = constant_(undefined);
 
 export const harvest = constant_({header: [], prelude: []});
 
@@ -41,41 +38,31 @@ export const declare = (
   {static: bindings},
   _kind,
   variable,
-  {source, specifier},
+  {binding},
 ) => {
-  assert(
-    !hasOwnProperty(bindings, variable),
-    "duplicate variable should have been caught by conflict",
-  );
+  assert(!hasOwnProperty(bindings, variable), "duplicate intrinsic variable");
   defineProperty(bindings, variable, {
     __proto__: NULL_DATA_DESCRIPTOR,
-    value: {source, specifier},
+    value: binding,
   });
 };
 
 export const makeInitializeStatementArray = deadcode_____(
-  "import variable should not be initialized",
+  "initialization on intrinsic frame",
 );
 
 export const makeReadExpression = partialxx______(
   makeStaticLookupNode,
   testStatic,
-  (_strict, _escaped, {static: bindings}, variable, _options) => {
-    const {source, specifier} = bindings[variable];
-    return makeImportExpression(source, specifier);
-  },
+  (_strict, _escaped, {static: bindings}, variable, _options) =>
+    bindings[variable],
 );
 
 export const makeTypeofExpression = partialxx______(
   makeStaticLookupNode,
   testStatic,
-  (_strict, _escaped, {static: bindings}, variable, _options) => {
-    const {source, specifier} = bindings[variable];
-    return makeUnaryExpression(
-      "typeof",
-      makeImportExpression(source, specifier),
-    );
-  },
+  (_strict, _escaped, {static: bindings}, variable, _options) =>
+    makeUnaryExpression("typeof", bindings[variable]),
 );
 
 export const makeDiscardExpression = partialxx______(

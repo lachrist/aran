@@ -63,16 +63,23 @@ assertSuccess(
         escaped,
         _frame,
         variable,
-        expression,
-        _counter,
+        {expression},
       ) => {
         assertEqual(strict, true);
         assertEqual(escaped, true);
         return makeWriteEffect(variable, expression);
       },
-      makeReadExpression: (_next, strict, escaped, _frame, variable) => {
+      makeReadExpression: (
+        _next,
+        strict,
+        escaped,
+        _frame,
+        variable,
+        options,
+      ) => {
         assertEqual(strict, false);
         assertEqual(escaped, false);
+        assertEqual(options, null);
         return makeReadExpression(variable);
       },
     },

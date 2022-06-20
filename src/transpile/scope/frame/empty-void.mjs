@@ -1,20 +1,17 @@
 import {
   constant_,
-  bind______,
+  dropxxxx_x,
   deadcode______,
   deadcode_____,
+  constant______,
 } from "../../../util/index.mjs";
 
 import {
-  makeExpressionEffect,
   makeLiteralExpression,
+  makeExpressionEffect,
 } from "../../../ast/index.mjs";
 
-import {makeSetExpression} from "../../../intrinsic.mjs";
-
-import {makeThrowMissingExpression} from "./helper.mjs";
-
-import {isRead, isDiscard, isTypeof, accessWrite} from "../right.mjs";
+import {makeThrowMissingExpression, makeDynamicWriteEffect} from "./helper.mjs";
 
 const {undefined} = globalThis;
 
@@ -26,43 +23,33 @@ export const conflict = constant_(undefined);
 
 export const harvest = constant_({header: [], prelude: []});
 
-export const makeDeclareStatements = deadcode______(
-  "declaration on root-miss frame",
+export const declare = deadcode______("declaration on empty-void frame");
+
+export const makeInitializeStatementArray = deadcode_____(
+  "initialization on empty-void frame",
 );
 
-export const makeInitializeStatements = deadcode_____(
-  "initialization on root-miss frame",
+export const makeReadExpression = dropxxxx_x(makeThrowMissingExpression);
+
+export const makeTypeofExpression = constant______(
+  makeLiteralExpression("undefined"),
 );
 
-export const makeLookupExpression = (
+export const makeDiscardExpression = constant______(
+  makeLiteralExpression(true),
+);
+
+export const makeWriteEffect = (
   _next,
   strict,
-  _escaped,
-  {dynamic},
+  escaped,
+  frame,
   variable,
-  right,
+  options,
 ) => {
-  if (isRead(right)) {
-    return makeThrowMissingExpression(variable);
-  } else if (isTypeof(right)) {
-    return makeLiteralExpression("undefined");
-  } else if (isDiscard(right)) {
-    return makeLiteralExpression(true);
+  if (strict) {
+    return makeExpressionEffect(makeThrowMissingExpression(variable));
   } else {
-    if (strict) {
-      return makeThrowMissingExpression(variable);
-    } else {
-      return makeSetExpression(
-        strict,
-        dynamic,
-        makeLiteralExpression(variable),
-        accessWrite(right),
-      );
-    }
+    return makeDynamicWriteEffect(strict, escaped, frame, variable, options);
   }
 };
-
-export const makeLookupEffect = bind______(
-  makeExpressionEffect,
-  makeLookupExpression,
-);

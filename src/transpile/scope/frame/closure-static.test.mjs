@@ -10,10 +10,8 @@ assertSuccess(
   testBlock(Frame, {
     head: `
       let VARIABLE;
-      (
-        VARIABLE = undefined,
-        exportStatic('specifier', VARIABLE)
-      );
+      VARIABLE = undefined;
+      exportStatic('specifier', undefined);
     `,
     scenarios: [
       {
@@ -27,36 +25,10 @@ assertSuccess(
         kind: "var",
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `(
-          VARIABLE = 'right',
-          exportStatic('specifier', VARIABLE)
-        );`,
-      },
-      {
-        type: "read",
-        variable: "variable",
-        code: "VARIABLE",
-      },
-      {
-        type: "typeof",
-        variable: "variable",
-        code: "intrinsic.aran.unary('typeof', VARIABLE)",
-      },
-      {
-        type: "discard",
-        strict: true,
-        variable: "variable",
-        code: `intrinsic.aran.throw(
-          new intrinsic.TypeError(
-            "Cannot discard variable 'variable' because it is static",
-          ),
-        )`,
-      },
-      {
-        type: "discard",
-        strict: false,
-        variable: "variable",
-        code: "false",
+        code: `
+          VARIABLE = 'right';
+          exportStatic('specifier', VARIABLE);
+        `,
       },
       {
         type: "write",

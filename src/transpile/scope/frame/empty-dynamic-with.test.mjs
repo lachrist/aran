@@ -1,6 +1,9 @@
 import {assertSuccess} from "../../../__fixture__.mjs";
 
-import {makeLiteralExpression} from "../../../ast/index.mjs";
+import {
+  makeLiteralExpression,
+  makeExpressionEffect,
+} from "../../../ast/index.mjs";
 
 import {testBlock} from "./__fixture__.mjs";
 
@@ -10,14 +13,16 @@ assertSuccess(
   testBlock(Frame, {
     options: {
       dynamic: makeLiteralExpression("dynamic"),
-      observable: false,
+      observable: true,
     },
     head: "",
     scenarios: [
       {
-        type: "read",
+        type: "write",
+        strict: false,
         output: "expression",
-        next: () => makeLiteralExpression("next"),
+        next: () => makeExpressionEffect(makeLiteralExpression("next")),
+        right: makeLiteralExpression("right"),
         variable: "variable",
         code: `(
           (
@@ -32,8 +37,10 @@ assertSuccess(
             ) :
             intrinsic.aran.binary('in', 'variable', 'dynamic')
           ) ?
-          intrinsic.aran.get('dynamic', 'variable') :
-          'next'
+          effect(
+            intrinsic.aran.setSloppy('dynamic', 'variable', 'right'),
+          ) :
+          effect('next')
         )`,
       },
     ],

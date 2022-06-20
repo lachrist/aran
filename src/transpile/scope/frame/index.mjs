@@ -10,7 +10,9 @@ import * as DefineStatic from "./define-static.mjs";
 import * as EmptyDynamicWith from "./empty-dynamic-with.mjs";
 import * as EmptyVoid from "./empty-void.mjs";
 import * as Enclave from "./enclave.mjs";
+import * as Illegal from "./illegal.mjs";
 import * as ImportStatic from "./import-static.mjs";
+import * as Macro from "./macro.mjs";
 
 export const BLOCK_DYNAMIC = "block-dynamic";
 export const BLOCK_STATIC_DEAD = "block-static-dead";
@@ -22,7 +24,9 @@ export const DEFINE_STATIC = "define-static";
 export const EMPTY_DYNAMIC_WITH = "empty-dynamic-with";
 export const EMPTY_VOID = "empty-void";
 export const ENCLAVE = "enclave";
+export const ILLEGAL = "illegal";
 export const IMPORT_STATIC = "import-static";
+export const MACRO = "macro";
 
 const libraries = {
   __proto__: null,
@@ -36,7 +40,9 @@ const libraries = {
   [EMPTY_DYNAMIC_WITH]: EmptyDynamicWith,
   [EMPTY_VOID]: EmptyVoid,
   [ENCLAVE]: Enclave,
+  [ILLEGAL]: Illegal,
   [IMPORT_STATIC]: ImportStatic,
+  [MACRO]: Macro,
 };
 
 ////////////
@@ -61,26 +67,6 @@ export const harvest = (frame) => {
   return method(frame);
 };
 
-/////////////
-// Declare //
-/////////////
-
-export const makeDeclareStatements = (
-  strict,
-  frame,
-  kind,
-  layer,
-  variable,
-  options,
-) => {
-  const {KINDS, makeDeclareStatements: method} = libraries[frame.type];
-  if (frame.layer === layer && includes(KINDS, kind)) {
-    return method(strict, frame, kind, variable, options);
-  } else {
-    return null;
-  }
-};
-
 //////////////
 // Conflict //
 //////////////
@@ -95,11 +81,25 @@ export const conflict = (strict, frame, kind, layer, variable) => {
   }
 };
 
+/////////////
+// Declare //
+/////////////
+
+export const declare = (strict, frame, kind, layer, variable, options) => {
+  const {KINDS, declare: method} = libraries[frame.type];
+  if (frame.layer === layer && includes(KINDS, kind)) {
+    method(strict, frame, kind, variable, options);
+    return true;
+  } else {
+    return false;
+  }
+};
+
 ////////////////
 // Initialize //
 ////////////////
 
-export const makeInitializeStatements = (
+export const makeInitializeStatementArray = (
   strict,
   frame,
   kind,
@@ -107,7 +107,7 @@ export const makeInitializeStatements = (
   variable,
   expression,
 ) => {
-  const {KINDS, makeInitializeStatements: method} = libraries[frame.type];
+  const {KINDS, makeInitializeStatementArray: method} = libraries[frame.type];
   if (frame.layer === layer && includes(KINDS, kind)) {
     return method(strict, frame, kind, variable, expression);
   } else {
@@ -120,15 +120,19 @@ export const makeInitializeStatements = (
 ////////////
 
 const generateLookup =
-  (name) => (next, strict, escaped, frame, layer, variable, right) => {
+  (name) => (next, strict, escaped, frame, layer, variable, options) => {
     if (frame.layer === layer) {
       const makeLookupNode = libraries[frame.type][name];
-      return makeLookupNode(next, strict, escaped, frame, variable, right);
+      return makeLookupNode(next, strict, escaped, frame, variable, options);
     } else {
       return next();
     }
   };
 
-export const makeLookupExpression = generateLookup("makeLookupExpression");
+export const makeReadExpression = generateLookup("makeReadExpression");
 
-export const makeLookupEffect = generateLookup("makeLookupEffect");
+export const makeTypeofExpression = generateLookup("makeTypeofExpression");
+
+export const makeDiscardExpression = generateLookup("makeDiscardExpression");
+
+export const makeWriteEffect = generateLookup("makeWriteEffect");

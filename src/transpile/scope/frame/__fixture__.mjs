@@ -136,8 +136,10 @@ const generateTest =
               scenario.escaped,
               frame,
               scenario.variable,
-              scenario.right,
-              createCounter(0),
+              {
+                expression: scenario.right,
+                counter: createCounter(0),
+              },
             ),
           ),
         ];
@@ -153,6 +155,7 @@ const generateTest =
                 scenario.escaped,
                 frame,
                 scenario.variable,
+                null,
               ),
             ),
           ),

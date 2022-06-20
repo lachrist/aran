@@ -1,19 +1,44 @@
-import {assertSuccess, assertDeepEqual} from "../../../__fixture__.mjs";
+import {
+  assertThrow,
+  assertSuccess,
+  assertEqual,
+} from "../../../__fixture__.mjs";
 
 import {
-  makeExpressionEffect,
+  SyntaxAranError,
+  createCounter,
+  incrementCounter,
+} from "../../../util/index.mjs";
+
+import {
   makeLiteralExpression,
+  makeExpressionEffect,
 } from "../../../ast/index.mjs";
 
 import {
-  allignEffect,
   allignStatement,
+  allignEffect,
   allignExpression,
 } from "../../../allign/index.mjs";
 
+import {BASE} from "../variable.mjs";
+
 import {
   makeStaticLookupNode,
+  testStatic,
+  conflictStatic,
+  makeStaticReadExpression,
+  makeStaticTypeofExpression,
+  makeStaticDiscardExpression,
+  makeStaticWriteEffect,
   makeDynamicLookupExpression,
+  makeDynamicTestExpression,
+  makeObservableDynamicTestExpression,
+  makeDynamicReadExpression,
+  makeDynamicTypeofExpression,
+  makeDynamicDiscardExpression,
+  makeDynamicLookupEffect,
+  makeDynamicWriteEffect,
   makeExportStatement,
   makeExportUndefinedStatement,
   makeExportSequenceEffect,
@@ -24,113 +49,64 @@ import {
   makeThrowDiscardExpression,
 } from "./helper.mjs";
 
-const {Error} = globalThis;
+const {Error, undefined} = globalThis;
 
-////////////////////////////////
-// makeStaticLookupExpression //
-////////////////////////////////
+////////////
+// Report //
+////////////
 
 assertSuccess(
   allignExpression(
-    makeStaticLookupNode(
-      (...args) => {
-        assertDeepEqual(args, ["frame", "variable"]);
-        return true;
-      },
-      (...args) => {
-        assertDeepEqual(args, [true, false, "frame", "variable"]);
-        return makeLiteralExpression("here");
-      },
-      () => {
-        throw new Error("next");
-      },
-      true,
-      false,
-      "frame",
-      "variable",
-    ),
-    "'here'",
+    makeThrowDuplicateExpression("variable"),
+    `intrinsic.aran.throw(
+      new intrinsic.SyntaxError(
+        "Variable 'variable' has already been declared",
+      ),
+    )`,
   ),
 );
 
 assertSuccess(
   allignExpression(
-    makeStaticLookupNode(
-      (...args) => {
-        assertDeepEqual(args, ["frame", "variable"]);
-        return false;
-      },
-      () => {
-        throw new Error("here");
-      },
-      (...args) => {
-        assertDeepEqual(args, []);
-        return makeLiteralExpression("next");
-      },
-      true,
-      false,
-      "frame",
-      "variable",
-    ),
-    "'next'",
-  ),
-);
-
-////////////////////////////////
-// makeDynamicLookupExpression //
-////////////////////////////////
-
-assertSuccess(
-  allignExpression(
-    makeDynamicLookupExpression(
-      (...args) => {
-        assertDeepEqual(args, ["frame", "variable"]);
-        return true;
-      },
-      () => {
-        throw new Error("test");
-      },
-      (...args) => {
-        assertDeepEqual(args, [true, false, "frame", "variable"]);
-        return makeLiteralExpression("here");
-      },
-      () => {
-        throw new Error("next");
-      },
-      true,
-      false,
-      "frame",
-      "variable",
-    ),
-    "'here'",
+    makeThrowMissingExpression("variable"),
+    `intrinsic.aran.throw(
+      new intrinsic.ReferenceError(
+        "Variable 'variable' is not defined",
+      ),
+    )`,
   ),
 );
 
 assertSuccess(
   allignExpression(
-    makeDynamicLookupExpression(
-      (...args) => {
-        assertDeepEqual(args, ["frame", "variable"]);
-        return false;
-      },
-      (...args) => {
-        assertDeepEqual(args, ["frame", "variable"]);
-        return makeLiteralExpression("test");
-      },
-      (...args) => {
-        assertDeepEqual(args, [true, false, "frame", "variable"]);
-        return makeLiteralExpression("here");
-      },
-      (...args) => {
-        assertDeepEqual(args, []);
-        return makeLiteralExpression("next");
-      },
-      true,
-      false,
-      "frame",
-      "variable",
-    ),
-    "('test' ? 'here' : 'next')",
+    makeThrowDeadzoneExpression("variable"),
+    `intrinsic.aran.throw(
+      new intrinsic.ReferenceError(
+        "Cannot access variable 'variable' before initialization",
+      ),
+    )`,
+  ),
+);
+
+assertSuccess(
+  allignExpression(
+    makeThrowDiscardExpression("variable"),
+    `intrinsic.aran.throw(
+      new intrinsic.TypeError(
+        "Cannot discard variable 'variable' because it is static",
+      ),
+    )`,
+  ),
+);
+
+assertSuccess(
+  allignExpression(
+    makeThrowConstantExpression("variable"),
+    `intrinsic.aran.throw(
+      new intrinsic.TypeError(
+        "Cannot assign variable 'variable' because it is constant",
+      ),
+    )`,
   ),
 );
 
@@ -163,41 +139,285 @@ assertSuccess(
   ),
 );
 
-////////////
-// Report //
-////////////
+////////////////////////////////
+// makeStaticLookupExpression //
+////////////////////////////////
+
+const STRICT = true;
+
+const LAYER = BASE;
+
+const ESCAPED = true;
+
+const next = () => {
+  throw new Error("next");
+};
+
+assertEqual(
+  conflictStatic(STRICT, {static: {}}, "kind", "variable"),
+  undefined,
+);
+
+assertThrow(
+  () => conflictStatic(STRICT, {static: {variable: null}}, "kind", "variable"),
+  SyntaxAranError,
+);
 
 assertSuccess(
   allignExpression(
-    makeThrowDuplicateExpression("variable"),
-    `intrinsic.aran.throw(new intrinsic.SyntaxError("Variable 'variable' has already been declared"))`,
+    makeStaticLookupNode(
+      testStatic,
+      makeStaticReadExpression,
+      () => makeLiteralExpression("next"),
+      STRICT,
+      ESCAPED,
+      {layer: LAYER, static: {}},
+      "variable",
+      "options",
+    ),
+    "'next'",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    makeThrowMissingExpression("variable"),
-    `intrinsic.aran.throw(new intrinsic.ReferenceError("Variable 'variable' is not defined"))`,
+    makeStaticLookupNode(
+      testStatic,
+      makeStaticReadExpression,
+      next,
+      STRICT,
+      ESCAPED,
+      {layer: LAYER, static: {variable: null}},
+      "variable",
+      "options",
+    ),
+    "VARIABLE",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    makeThrowDeadzoneExpression("variable"),
-    `intrinsic.aran.throw(new intrinsic.ReferenceError("Cannot access variable 'variable' before initialization"))`,
+    makeStaticLookupNode(
+      testStatic,
+      makeStaticTypeofExpression,
+      next,
+      STRICT,
+      ESCAPED,
+      {layer: LAYER, static: {variable: null}},
+      "variable",
+      "options",
+    ),
+    "intrinsic.aran.unary('typeof', VARIABLE)",
   ),
 );
 
 assertSuccess(
   allignExpression(
-    makeThrowDiscardExpression("variable"),
-    `intrinsic.aran.throw(new intrinsic.TypeError("Cannot discard variable 'variable' because it is static"))`,
+    makeStaticLookupNode(
+      testStatic,
+      makeStaticDiscardExpression,
+      next,
+      true,
+      ESCAPED,
+      {layer: LAYER, static: {variable: null}},
+      "variable",
+      "options",
+    ),
+    `intrinsic.aran.throw(
+      new intrinsic.TypeError(
+        "Cannot discard variable 'variable' because it is static",
+      ),
+    )`,
   ),
 );
 
 assertSuccess(
   allignExpression(
-    makeThrowConstantExpression("variable"),
-    `intrinsic.aran.throw(new intrinsic.TypeError("Cannot assign variable 'variable' because it is constant"))`,
+    makeStaticLookupNode(
+      testStatic,
+      makeStaticDiscardExpression,
+      next,
+      false,
+      ESCAPED,
+      {layer: LAYER, static: {variable: null}},
+      "variable",
+      "options",
+    ),
+    "false",
   ),
 );
+
+{
+  const counter = createCounter(0);
+  assertSuccess(
+    allignEffect(
+      makeStaticLookupNode(
+        testStatic,
+        makeStaticWriteEffect,
+        next,
+        STRICT,
+        ESCAPED,
+        {layer: LAYER, static: {variable: null}},
+        "variable",
+        {expression: makeLiteralExpression("right"), counter},
+      ),
+      "VARIABLE = 'right'",
+    ),
+  );
+  assertEqual(incrementCounter(counter), 2);
+}
+
+////////////////////////////////
+// makeDynamicLookupExpression //
+////////////////////////////////
+
+const OBSERVABLE = true;
+
+assertSuccess(
+  allignExpression(
+    makeDynamicLookupExpression(
+      testStatic,
+      makeDynamicTestExpression,
+      makeDynamicReadExpression,
+      () => makeLiteralExpression("next"),
+      STRICT,
+      ESCAPED,
+      {
+        observable: OBSERVABLE,
+        dynamic: makeLiteralExpression("dynamic"),
+        static: {},
+      },
+      "variable",
+      "options",
+    ),
+    `
+      intrinsic.aran.binary('in', 'variable', 'dynamic') ?
+      intrinsic.aran.get('dynamic', 'variable') :
+      'next'
+    `,
+  ),
+);
+
+assertSuccess(
+  allignExpression(
+    makeDynamicLookupExpression(
+      testStatic,
+      makeDynamicTestExpression,
+      makeDynamicReadExpression,
+      next,
+      STRICT,
+      ESCAPED,
+      {
+        observable: OBSERVABLE,
+        dynamic: makeLiteralExpression("dynamic"),
+        static: {variable: null},
+      },
+      "variable",
+      "options",
+    ),
+    "intrinsic.aran.get('dynamic', 'variable')",
+  ),
+);
+
+assertSuccess(
+  allignExpression(
+    makeDynamicLookupExpression(
+      testStatic,
+      makeDynamicTestExpression,
+      makeDynamicTypeofExpression,
+      next,
+      STRICT,
+      ESCAPED,
+      {
+        observable: OBSERVABLE,
+        dynamic: makeLiteralExpression("dynamic"),
+        static: {variable: null},
+      },
+      "variable",
+      "options",
+    ),
+    `intrinsic.aran.unary(
+      'typeof',
+      intrinsic.aran.get('dynamic', 'variable'),
+    )`,
+  ),
+);
+
+assertSuccess(
+  allignExpression(
+    makeDynamicLookupExpression(
+      testStatic,
+      makeDynamicTestExpression,
+      makeDynamicDiscardExpression,
+      next,
+      true,
+      ESCAPED,
+      {
+        observable: OBSERVABLE,
+        dynamic: makeLiteralExpression("dynamic"),
+        static: {variable: null},
+      },
+      "variable",
+      "options",
+    ),
+    "intrinsic.aran.deleteStrict('dynamic', 'variable')",
+  ),
+);
+
+{
+  const counter = createCounter(0);
+  assertSuccess(
+    allignEffect(
+      makeDynamicLookupEffect(
+        testStatic,
+        makeObservableDynamicTestExpression,
+        makeDynamicWriteEffect,
+        next,
+        false,
+        ESCAPED,
+        {
+          observable: true,
+          dynamic: makeLiteralExpression("dynamic"),
+          static: {variable: null},
+        },
+        "variable",
+        {expression: makeLiteralExpression("right"), counter},
+      ),
+      `effect(
+        intrinsic.aran.setSloppy('dynamic', 'variable', 'right'),
+      )`,
+    ),
+  );
+  assertEqual(incrementCounter(counter), 2);
+}
+
+{
+  const counter = createCounter(0);
+  assertSuccess(
+    allignEffect(
+      makeDynamicLookupEffect(
+        testStatic,
+        makeObservableDynamicTestExpression,
+        makeDynamicWriteEffect,
+        () => makeExpressionEffect(makeLiteralExpression("next")),
+        false,
+        ESCAPED,
+        {
+          observable: true,
+          dynamic: makeLiteralExpression("dynamic"),
+          static: {},
+        },
+        "variable",
+        {expression: makeLiteralExpression("right"), counter},
+      ),
+      `
+        intrinsic.aran.binary("in", "variable", "dynamic") ?
+        effect(
+          intrinsic.aran.setSloppy('dynamic', 'variable', 'right'),
+        ) :
+        effect("next")
+      `,
+    ),
+  );
+  assertEqual(incrementCounter(counter), 4);
+}

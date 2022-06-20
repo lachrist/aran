@@ -1,7 +1,5 @@
 import {assertThrow} from "../../../__fixture__.mjs";
 
-import {makeLiteralExpression} from "../../../ast/index.mjs";
-
 import {testBlock} from "./__fixture__.mjs";
 
 import * as Frame from "./illegal.mjs";
@@ -17,17 +15,9 @@ assertThrow(
           options: {
             name: "name",
           },
-          code: "effect('dummy');",
         },
         {
           type: "read",
-          output: "expression",
-          next: () => makeLiteralExpression("next"),
-          code: "'dummy'",
-        },
-        {
-          type: "read",
-          output: "expression",
           variable: "variable",
           code: "'dummy'",
         },

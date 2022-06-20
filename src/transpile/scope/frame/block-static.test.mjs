@@ -8,12 +8,9 @@ import * as Frame from "./block-static.mjs";
 
 assertSuccess(
   testBlock(Frame, {
+    options: {distant: false},
     head: "let VARIABLE;",
     scenarios: [
-      {
-        type: "conflict",
-        variable: "variable",
-      },
       {
         type: "declare",
         kind: "let",
@@ -21,21 +18,13 @@ assertSuccess(
         options: {exports: []},
       },
       {
-        type: "initialize",
-        kind: "const",
-        variable: "variable",
-        right: makeLiteralExpression("right"),
-        code: "VARIABLE = 'right';",
-      },
-      {
         type: "read",
         variable: "variable",
-        code: "VARIABLE",
-      },
-      {
-        type: "typeof",
-        variable: "variable",
-        code: "intrinsic.aran.unary('typeof', VARIABLE)",
+        code: `intrinsic.aran.throw(
+          new intrinsic.ReferenceError(
+            "Cannot access variable 'variable' before initialization",
+          ),
+        )`,
       },
       {
         type: "discard",
@@ -44,14 +33,11 @@ assertSuccess(
         code: "false",
       },
       {
-        type: "discard",
-        strict: true,
+        type: "initialize",
+        kind: "let",
         variable: "variable",
-        code: `intrinsic.aran.throw(
-          new intrinsic.TypeError(
-            "Cannot discard variable 'variable' because it is static",
-          ),
-        )`,
+        right: makeLiteralExpression("right"),
+        code: "VARIABLE = 'right';",
       },
       {
         type: "write",
@@ -76,15 +62,6 @@ assertSuccess(
         kind: "const",
         variable: "variable",
         options: {exports: ["specifier"]},
-      },
-      {
-        type: "read",
-        variable: "variable",
-        code: `intrinsic.aran.throw(
-          new intrinsic.ReferenceError(
-            "Cannot access variable 'variable' before initialization",
-          ),
-        )`,
       },
       {
         type: "initialize",

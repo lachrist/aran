@@ -12,5 +12,5 @@
   * enclave.mjs
   * illegal.mjs
   * import-static.mjs
-  * intrinsic.mjs
+  * macro.mjs
 - index.mjs

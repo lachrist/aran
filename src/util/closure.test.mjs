@@ -129,7 +129,9 @@ forEach(
     "xx_____",
     "x______",
     "xxx____",
+    "xx______",
     "xxx_____",
+    "xxx______",
     "xx_x_x_x__",
   ]),
   (description) => {

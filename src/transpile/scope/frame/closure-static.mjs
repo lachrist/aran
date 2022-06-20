@@ -1,12 +1,12 @@
-import {reduce, map} from "array-lite";
+import {concat, reduce, map, flatMap} from "array-lite";
 
 import {
-  incrementCounter,
   constant_,
   partialx_,
+  partial_x,
   partial__x,
-  partial____xx,
-  partialxx_____,
+  partialxx_,
+  partialxx______,
   pushAll,
   assert,
   hasOwnProperty,
@@ -19,14 +19,18 @@ import {
   makeWriteEffect as makeRawWriteEffect,
 } from "../../../ast/index.mjs";
 
-import {makeUnaryExpression} from "../../../intrinsic.mjs";
-
 import {layerVariable} from "../variable.mjs";
 
 import {
+  NULL_DATA_DESCRIPTOR,
   makeExportSequenceEffect,
+  makeExportStatement,
   makeStaticLookupNode,
-  makeThrowDiscardExpression,
+  testStatic,
+  makeStaticReadExpression,
+  makeStaticTypeofExpression,
+  makeStaticDiscardExpression,
+  makeStaticWriteEffect,
 } from "./helper.mjs";
 
 const {
@@ -34,129 +38,115 @@ const {
   Reflect: {ownKeys, defineProperty},
 } = globalThis;
 
-const descriptor = {
-  __proto__: null,
-  value: null,
-  writable: false,
-  enumerable: false,
-  configurable: false,
-};
-
-const makeUpdateEffect = ({layer, bindings}, variable, expression) =>
-  reduce(
-    bindings[variable],
-    partial__x(
-      makeExportSequenceEffect,
-      makeRawReadExpression(layerVariable(layer, variable)),
-    ),
-    makeRawWriteEffect(layerVariable(layer, variable), expression),
-  );
-
 export const KINDS = ["var", "function"];
 
 export const create = (layer, _options) => ({
   layer,
-  bindings: {},
+  static: {},
 });
 
 export const conflict = constant_(undefined);
 
-const makeDeclareStatement = (frame, variable) =>
-  makeEffectStatement(
-    makeUpdateEffect(frame, variable, makeLiteralExpression({undefined: null})),
+const makeDeclareStatementArray = (bindings, layer, variable) =>
+  concat(
+    [
+      makeEffectStatement(
+        makeRawWriteEffect(
+          layerVariable(layer, variable),
+          makeLiteralExpression({undefined: null}),
+        ),
+      ),
+    ],
+    map(
+      bindings[variable],
+      partial_x(makeExportStatement, makeLiteralExpression({undefined: null})),
+    ),
   );
 
-export const harvest = (frame) => {
-  const {bindings, layer} = frame;
+export const harvest = ({static: bindings, layer}) => {
   const keys = ownKeys(bindings);
   return {
     header: map(keys, partialx_(layerVariable, layer)),
-    prelude: map(keys, partialx_(makeDeclareStatement, frame)),
+    prelude: flatMap(
+      keys,
+      partialxx_(makeDeclareStatementArray, bindings, layer),
+    ),
   };
 };
 
 export const declare = (
   _strict,
-  {bindings},
+  {static: bindings},
   _kind,
   variable,
-  {exports: eexports},
+  {exports: specifiers},
 ) => {
   if (!hasOwnProperty(bindings, variable)) {
-    defineProperty(bindings, variable, {__proto__: descriptor, value: []});
+    defineProperty(bindings, variable, {
+      __proto__: NULL_DATA_DESCRIPTOR,
+      value: [],
+    });
   }
-  pushAll(bindings[variable], eexports);
+  pushAll(bindings[variable], specifiers);
 };
 
 export const makeInitializeStatementArray = (
   _strict,
-  frame,
+  {static: bindings, layer},
   _kind,
   variable,
   expression,
 ) => {
   assert(
-    hasOwnProperty(frame.bindings, variable),
+    hasOwnProperty(bindings, variable),
     "missing variable for initialization",
   );
-  return [makeEffectStatement(makeUpdateEffect(frame, variable, expression))];
-};
-
-const test = ({bindings}, variable) => hasOwnProperty(bindings, variable);
-
-export const makeReadExpression = partialxx_____(
-  makeStaticLookupNode,
-  test,
-  (_strict, _escaped, {layer}, variable) =>
-    makeRawReadExpression(layerVariable(layer, variable)),
-);
-
-export const makeTypeofExpression = partialxx_____(
-  makeStaticLookupNode,
-  test,
-  (_strict, _escaped, {layer}, variable) =>
-    makeUnaryExpression(
-      "typeof",
-      makeRawReadExpression(layerVariable(layer, variable)),
+  return concat(
+    [
+      makeEffectStatement(
+        makeRawWriteEffect(layerVariable(layer, variable), expression),
+      ),
+    ],
+    map(
+      bindings[variable],
+      partial_x(
+        makeExportStatement,
+        makeRawReadExpression(layerVariable(layer, variable)),
+      ),
     ),
-);
-
-export const makeDiscardExpression = partialxx_____(
-  makeStaticLookupNode,
-  test,
-  (strict, _escaped, _frame, variable) =>
-    strict
-      ? makeThrowDiscardExpression(variable)
-      : makeLiteralExpression(false),
-);
-
-const makeHitWriteEffect = (
-  _strict,
-  _escaped,
-  frame,
-  variable,
-  expression,
-  counter,
-) => {
-  incrementCounter(counter);
-  return makeUpdateEffect(frame, variable, expression);
+  );
 };
 
-export const makeWriteEffect = (
-  next,
-  strict,
-  escaped,
-  frame,
-  variable,
-  expression,
-  counter,
-) =>
-  makeStaticLookupNode(
-    test,
-    partial____xx(makeHitWriteEffect, expression, counter),
-    next,
-    strict,
-    escaped,
-    frame,
-    variable,
-  );
+export const makeReadExpression = partialxx______(
+  makeStaticLookupNode,
+  testStatic,
+  makeStaticReadExpression,
+);
+
+export const makeTypeofExpression = partialxx______(
+  makeStaticLookupNode,
+  testStatic,
+  makeStaticTypeofExpression,
+);
+
+export const makeDiscardExpression = partialxx______(
+  makeStaticLookupNode,
+  testStatic,
+  makeStaticDiscardExpression,
+);
+
+export const makeWriteEffect = partialxx______(
+  makeStaticLookupNode,
+  testStatic,
+  (strict, escaped, frame, variable, options) => {
+    const {static: bindings} = frame;
+    return reduce(
+      bindings[variable],
+      partial__x(
+        makeExportSequenceEffect,
+        makeStaticReadExpression(strict, escaped, frame, variable, options),
+      ),
+      makeStaticWriteEffect(strict, escaped, frame, variable, options),
+    );
+  },
+);

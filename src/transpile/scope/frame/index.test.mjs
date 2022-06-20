@@ -13,16 +13,14 @@ import {allignBlock} from "../../../allign/index.mjs";
 
 import {BASE, META} from "../variable.mjs";
 
-import {makeRead} from "../right.mjs";
-
 import {
   CLOSURE_STATIC,
   create,
-  conflict,
   harvest,
-  makeDeclareStatements,
-  makeInitializeStatements,
-  makeLookupEffect,
+  conflict,
+  declare,
+  makeInitializeStatementArray,
+  makeReadExpression,
 } from "./index.mjs";
 
 const {Error} = globalThis;
@@ -38,12 +36,12 @@ assertEqual(conflict(STRICT, frame, "var", BASE, "variable"), false);
 assertEqual(conflict(STRICT, frame, "var", META, "variable"), true);
 
 assertEqual(
-  makeDeclareStatements(STRICT, frame, "var", BASE, "variable", {exports: []}),
-  null,
+  declare(STRICT, frame, "var", BASE, "variable", {exports: []}),
+  false,
 );
 
 assertEqual(
-  makeInitializeStatements(
+  makeInitializeStatementArray(
     STRICT,
     frame,
     "var",
@@ -54,9 +52,13 @@ assertEqual(
   null,
 );
 
+assertEqual(
+  declare(STRICT, frame, "var", META, "variable", {exports: []}),
+  true,
+);
+
 const body = concat(
-  makeDeclareStatements(STRICT, frame, "var", META, "variable", {exports: []}),
-  makeInitializeStatements(
+  makeInitializeStatementArray(
     STRICT,
     frame,
     "var",
@@ -66,27 +68,31 @@ const body = concat(
   ),
   [
     makeEffectStatement(
-      makeLookupEffect(
-        () => makeExpressionEffect(makeLiteralExpression("next")),
-        STRICT,
-        ESCAPED,
-        frame,
-        BASE,
-        "variable",
-        makeRead(),
+      makeExpressionEffect(
+        makeReadExpression(
+          () => makeLiteralExpression("next"),
+          STRICT,
+          ESCAPED,
+          frame,
+          BASE,
+          "variable",
+          null,
+        ),
       ),
     ),
     makeEffectStatement(
-      makeLookupEffect(
-        () => {
-          throw new Error("unexpected next");
-        },
-        STRICT,
-        ESCAPED,
-        frame,
-        META,
-        "variable",
-        makeRead(),
+      makeExpressionEffect(
+        makeReadExpression(
+          () => {
+            throw new Error("unexpected next");
+          },
+          STRICT,
+          ESCAPED,
+          frame,
+          META,
+          "variable",
+          null,
+        ),
       ),
     ),
   ],

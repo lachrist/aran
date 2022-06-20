@@ -1,13 +1,11 @@
-import {map, includes} from "array-lite";
+import {map} from "array-lite";
 
 import {
-  push,
+  hasOwnProperty,
   assert,
-  incrementCounter,
   constant_,
   partialx_,
-  partialxxx_____,
-  partial____xx,
+  partialxxx______,
 } from "../../../util/index.mjs";
 
 import {
@@ -18,9 +16,6 @@ import {
 } from "../../../ast/index.mjs";
 
 import {
-  makeUnaryExpression,
-  makeDeleteExpression,
-  makeGetExpression,
   makeSetExpression,
   makeDefineExpression,
   makeBinaryExpression,
@@ -28,17 +23,28 @@ import {
 } from "../../../intrinsic.mjs";
 
 import {
+  NULL_DATA_DESCRIPTOR,
+  testStatic,
+  makeDynamicTestExpression,
+  makeObservableDynamicTestExpression,
   makeDynamicLookupExpression,
   makeDynamicLookupEffect,
+  makeDynamicReadExpression,
+  makeDynamicTypeofExpression,
+  makeDynamicDiscardExpression,
+  makeDynamicWriteEffect,
 } from "./helper.mjs";
 
-const {undefined} = globalThis;
+const {
+  undefined,
+  Reflect: {ownKeys, defineProperty},
+} = globalThis;
 
 export const KINDS = ["var", "function"];
 
 export const create = (_layer, {dynamic, observable}) => ({
   dynamic,
-  bindings: [],
+  static: {},
   observable,
 });
 
@@ -64,32 +70,35 @@ const makeDeclareStatement = (dynamic, variable) =>
     ),
   );
 
-export const harvest = ({dynamic, bindings}) => ({
+export const harvest = ({dynamic: expression, static: bindings}) => ({
   header: [],
-  prelude: map(bindings, partialx_(makeDeclareStatement, dynamic)),
+  prelude: map(ownKeys(bindings), partialx_(makeDeclareStatement, expression)),
 });
 
 export const declare = (
   _strict,
-  {bindings},
+  {static: bindings},
   _kind,
   variable,
-  {exports: eexports},
+  {exports: specifiers},
 ) => {
-  assert(eexports.length === 0, "unexpected global exported variable");
-  if (!includes(bindings, variable)) {
-    push(bindings, variable);
+  assert(specifiers.length === 0, "unexpected global exported variable");
+  if (!hasOwnProperty(bindings, variable)) {
+    defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
   }
 };
 
 export const makeInitializeStatementArray = (
   strict,
-  {dynamic, bindings},
+  {dynamic, static: bindings},
   _kind,
   variable,
   expression,
 ) => {
-  assert(includes(bindings, variable), "missing binding for variable");
+  assert(
+    hasOwnProperty(bindings, variable),
+    "missing binding for variable initialization",
+  );
   return [
     makeEffectStatement(
       makeExpressionEffect(
@@ -104,76 +113,30 @@ export const makeInitializeStatementArray = (
   ];
 };
 
-const test = ({bindings}, variable) => includes(bindings, variable);
-
-const makeTestExpression = ({dynamic}, variable) =>
-  makeBinaryExpression("in", makeLiteralExpression(variable), dynamic);
-
-export const makeReadExpression = partialxxx_____(
+export const makeReadExpression = partialxxx______(
   makeDynamicLookupExpression,
-  test,
-  makeTestExpression,
-  (_strict, _escaped, {dynamic}, variable) =>
-    makeGetExpression(dynamic, makeLiteralExpression(variable)),
+  testStatic,
+  makeDynamicTestExpression,
+  makeDynamicReadExpression,
 );
 
-export const makeTypeofExpression = partialxxx_____(
+export const makeTypeofExpression = partialxxx______(
   makeDynamicLookupExpression,
-  test,
-  makeTestExpression,
-  (_strict, _escaped, {dynamic}, variable) =>
-    makeUnaryExpression(
-      "typeof",
-      makeGetExpression(dynamic, makeLiteralExpression(variable)),
-    ),
+  testStatic,
+  makeDynamicTestExpression,
+  makeDynamicTypeofExpression,
 );
 
-export const makeDiscardExpression = partialxxx_____(
+export const makeDiscardExpression = partialxxx______(
   makeDynamicLookupExpression,
-  test,
-  makeTestExpression,
-  (strict, _escaped, {dynamic}, variable) =>
-    makeDeleteExpression(strict, dynamic, makeLiteralExpression(variable)),
+  testStatic,
+  makeDynamicTestExpression,
+  makeDynamicDiscardExpression,
 );
 
-const makeHitWriteEffect = (
-  strict,
-  _escaped,
-  {observable, dynamic},
-  variable,
-  expression,
-  counter,
-) => {
-  if (observable) {
-    incrementCounter(counter);
-  }
-  incrementCounter(counter);
-  return makeExpressionEffect(
-    makeSetExpression(
-      strict,
-      dynamic,
-      makeLiteralExpression(variable),
-      expression,
-    ),
-  );
-};
-
-export const makeWriteEffect = (
-  next,
-  strict,
-  escaped,
-  frame,
-  variable,
-  expression,
-  counter,
-) =>
-  makeDynamicLookupEffect(
-    test,
-    makeTestExpression,
-    partial____xx(makeHitWriteEffect, expression, counter),
-    next,
-    strict,
-    escaped,
-    frame,
-    variable,
-  );
+export const makeWriteEffect = partialxxx______(
+  makeDynamicLookupEffect,
+  testStatic,
+  makeObservableDynamicTestExpression,
+  makeDynamicWriteEffect,
+);

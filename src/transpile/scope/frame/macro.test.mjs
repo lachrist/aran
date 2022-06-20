@@ -4,52 +4,45 @@ import {makeLiteralExpression} from "../../../ast/index.mjs";
 
 import {testBlock} from "./__fixture__.mjs";
 
-import * as Frame from "./intrinsic.mjs";
+import * as Frame from "./macro.mjs";
 
 assertSuccess(
   testBlock(Frame, {
     scenarios: [
       {
         type: "declare",
-        kind: "intrinsic",
+        kind: "macro",
         variable: "variable",
         options: {
-          intrinsic: "ReferenceError",
+          binding: makeLiteralExpression("binding"),
         },
-        code: "",
       },
       {
         type: "read",
-        output: "expression",
-        next: () => makeLiteralExpression("next"),
-        code: "'next'",
-      },
-      {
-        type: "read",
-        output: "expression",
         variable: "variable",
-        code: "intrinsic.ReferenceError",
+        code: "'binding'",
       },
       {
         type: "typeof",
-        output: "expression",
         variable: "variable",
-        code: `intrinsic.aran.unary(
-          'typeof',
-          intrinsic.ReferenceError,
-        )`,
+        code: `intrinsic.aran.unary('typeof', 'binding')`,
       },
       {
         type: "discard",
-        output: "expression",
+        strict: false,
         variable: "variable",
         code: "false",
       },
       {
         type: "write",
-        output: "expression",
         variable: "variable",
-        code: "undefined",
+        code: `effect(
+          intrinsic.aran.throw(
+            new intrinsic.TypeError(
+              "Cannot assign variable 'variable' because it is constant",
+            ),
+          ),
+        )`,
       },
     ],
   }),

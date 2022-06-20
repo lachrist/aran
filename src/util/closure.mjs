@@ -118,6 +118,9 @@ export const dropxxx = (f) => (_x1, _x2, _x3) => f();
 
 export const dropxxx_ = (f) => (_x1, _x2, _x3, x4) => f(x4);
 
+export const dropxxx_x = (f) => (_x1, _x2, _x3, x4, _x5) => f(x4);
+
+export const dropxxxx_x = (f) => (_x1, _x2, _x3, _x4, x5, _x6) => f(x5);
 export const dropx__x__ = (f) => (_x1, x2, x3, _x4, x5, x6) =>
   f(x2, x3, x5, x6);
 export const dropx_x___ = (f) => (_x1, x2, _x3, x4, x5, x6) =>
@@ -199,8 +202,13 @@ export const partialx______ = (f, x1) => (x2, x3, x4, x5, x6, x7) =>
 export const partialxx_____ = (f, x1, x2) => (x3, x4, x5, x6, x7) =>
   f(x1, x2, x3, x4, x5, x6, x7);
 
+export const partialxx______ = (f, x1, x2) => (x3, x4, x5, x6, x7, x8) =>
+  f(x1, x2, x3, x4, x5, x6, x7, x8);
 export const partialxxx_____ = (f, x1, x2, x3) => (x4, x5, x6, x7, x8) =>
   f(x1, x2, x3, x4, x5, x6, x7, x8);
+
+export const partialxxx______ = (f, x1, x2, x3) => (x4, x5, x6, x7, x8, x9) =>
+  f(x1, x2, x3, x4, x5, x6, x7, x8, x9);
 
 export const partialxx_x_x_x__ =
   (f, x1, x2, x4, x6, x8) => (x3, x5, x7, x9, x10) =>

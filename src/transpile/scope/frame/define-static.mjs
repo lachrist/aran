@@ -1,61 +1,79 @@
 import {includes, map} from "array-lite";
 
 import {
-  push,
   constant_,
   partialx_,
+  partialxx______,
   assert,
   deadcode_____,
 } from "../../../util/index.mjs";
 
-import {makeVariable} from "../variable.mjs";
+import {layerVariable} from "../variable.mjs";
 
-import {makeStaticLookupExpression, makeStaticLookupEffect} from "./helper.mjs";
+import {
+  NULL_DATA_DESCRIPTOR,
+  testStatic,
+  makeStaticLookupNode,
+  makeStaticReadExpression,
+  makeStaticTypeofExpression,
+  makeStaticDiscardExpression,
+  makeStaticWriteEffect,
+} from "./helper.mjs";
 
-const {undefined} = globalThis;
+const {
+  undefined,
+  Reflect: {ownKeys, defineProperty},
+} = globalThis;
 
-export const KINDS = ["def"];
+export const KINDS = ["define"];
 
 export const create = (layer, _options) => ({
   layer,
-  bindings: [],
+  static: {},
 });
 
 export const conflict = constant_(undefined);
 
-export const harvest = ({layer, bindings}) => ({
-  header: map(bindings, partialx_(makeVariable, layer)),
+export const harvest = ({layer, static: bindings}) => ({
+  header: map(ownKeys(bindings), partialx_(layerVariable, layer)),
   prelude: [],
 });
 
-export const makeDeclareStatements = (
+export const declare = (
   _strict,
-  {bindings},
+  {static: bindings},
   _kind,
   variable,
   _options,
 ) => {
-  assert(!includes(bindings, variable), "duplicate variable");
-  push(bindings, variable);
-  return [];
+  assert(!includes(bindings, variable), "duplicate define variable");
+  defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
 };
 
 export const makeInitializeStatements = deadcode_____(
-  "defined variable should not be initialized",
+  "define variable should not be initialized",
 );
 
-const generateMakeLookupNode =
-  (makeStaticLookupNode) =>
-  (next, _escaped, strict, {layer, bindings}, variable, right) => {
-    if (includes(bindings, variable)) {
-      return makeStaticLookupNode(strict, layer, variable, right, []);
-    } else {
-      return next();
-    }
-  };
-
-export const makeLookupExpression = generateMakeLookupNode(
-  makeStaticLookupExpression,
+export const makeReadExpression = partialxx______(
+  makeStaticLookupNode,
+  testStatic,
+  makeStaticReadExpression,
 );
 
-export const makeLookupEffect = generateMakeLookupNode(makeStaticLookupEffect);
+export const makeTypeofExpression = partialxx______(
+  makeStaticLookupNode,
+  testStatic,
+  makeStaticTypeofExpression,
+);
+
+export const makeDiscardExpression = partialxx______(
+  makeStaticLookupNode,
+  testStatic,
+  makeStaticDiscardExpression,
+);
+
+export const makeWriteEffect = partialxx______(
+  makeStaticLookupNode,
+  testStatic,
+  makeStaticWriteEffect,
+);

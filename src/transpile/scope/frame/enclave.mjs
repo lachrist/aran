@@ -1,4 +1,4 @@
-import {constant_, bind______, assert} from "../../../util/index.mjs";
+import {constant_, assert, incrementCounter} from "../../../util/index.mjs";
 
 import {
   makeApplyExpression,
@@ -6,8 +6,6 @@ import {
   makeExpressionEffect,
   makeDeclareStatement,
 } from "../../../ast/index.mjs";
-
-import {isWrite, isRead, isTypeof, isDiscard, accessWrite} from "../right.mjs";
 
 const {undefined} = globalThis;
 
@@ -29,18 +27,17 @@ export const conflict = constant_(undefined);
 
 export const harvest = constant_({header: [], prelude: []});
 
-export const makeDeclareStatements = (
+export const declare = (
   _strict,
   _frame,
   _kind,
   _variable,
-  {exports: eexports},
+  {exports: specifiers},
 ) => {
-  assert(eexports.length === 0, "unexpected exported variable");
-  return [];
+  assert(specifiers.length === 0, "unexpected exported variable");
 };
 
-export const makeInitializeStatements = (
+export const makeInitializeStatementArray = (
   _strict,
   _frame,
   kind,
@@ -48,43 +45,41 @@ export const makeInitializeStatements = (
   expression,
 ) => [makeDeclareStatement(mapping[kind], variable, expression)];
 
-const pick = (enclaves, right, strict) => {
-  if (isRead(right)) {
-    return enclaves.read;
-  } else if (isTypeof(right)) {
-    return enclaves.typeof;
-  } else if (isDiscard(right)) {
-    return enclaves[strict ? "discardStrict" : "discardSloppy"];
-  } else {
-    return enclaves[strict ? "writeStrict" : "writeSloppy"];
-  }
-};
+export const generateMakeLookupExpression =
+  (strict_key, sloppy_key) =>
+  (_next, strict, _escaped, {enclaves}, variable, _options) =>
+    makeApplyExpression(
+      enclaves[strict ? strict_key : sloppy_key],
+      makeLiteralExpression({undefined: null}),
+      [makeLiteralExpression(variable)],
+    );
 
-export const makeLookupExpression = (
+export const makeReadExpression = generateMakeLookupExpression("read", "read");
+
+export const makeTypeofExpression = generateMakeLookupExpression(
+  "typeof",
+  "typeof",
+);
+
+export const makeDiscardExpression = generateMakeLookupExpression(
+  "discardStrict",
+  "discardSloppy",
+);
+
+export const makeWriteEffect = (
   _next,
   strict,
   _escaped,
   {enclaves},
   variable,
-  right,
+  {counter, expression},
 ) => {
-  const expression = pick(enclaves, right, strict);
-  if (isWrite(right)) {
-    return makeApplyExpression(
-      expression,
+  incrementCounter(counter);
+  return makeExpressionEffect(
+    makeApplyExpression(
+      enclaves[strict ? "writeStrict" : "writeSloppy"],
       makeLiteralExpression({undefined: null}),
-      [makeLiteralExpression(variable), accessWrite(right)],
-    );
-  } else {
-    return makeApplyExpression(
-      expression,
-      makeLiteralExpression({undefined: null}),
-      [makeLiteralExpression(variable)],
-    );
-  }
+      [makeLiteralExpression(variable), expression],
+    ),
+  );
 };
-
-export const makeLookupEffect = bind______(
-  makeExpressionEffect,
-  makeLookupExpression,
-);

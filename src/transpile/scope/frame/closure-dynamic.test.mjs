@@ -48,36 +48,8 @@ assertSuccess(
       },
       {
         type: "read",
-        next: () => makeLiteralExpression("next"),
-        variable: "VARIABLE",
-        code: `
-          intrinsic.aran.binary('in', 'VARIABLE', 'dynamic') ?
-          intrinsic.aran.get('dynamic', 'VARIABLE') :
-          'next'
-        `,
-      },
-      {
-        type: "typeof",
         variable: "variable",
-        code: `intrinsic.aran.unary(
-          'typeof',
-          intrinsic.aran.get('dynamic', 'variable'),
-        )`,
-      },
-      {
-        type: "discard",
-        strict: false,
-        variable: "variable",
-        code: "intrinsic.aran.deleteSloppy('dynamic', 'variable')",
-      },
-      {
-        type: "write",
-        strict: true,
-        variable: "variable",
-        right: makeLiteralExpression("right"),
-        code: `effect(
-          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
-        )`,
+        code: "intrinsic.aran.get('dynamic', 'variable')",
       },
     ],
   }),

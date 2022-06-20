@@ -1,5 +1,7 @@
 import {assertSuccess} from "../../../__fixture__.mjs";
 
+import {makeLiteralExpression} from "../../../ast/index.mjs";
+
 import {testBlock} from "./__fixture__.mjs";
 
 import * as Frame from "./block-static-dead.mjs";
@@ -7,10 +9,6 @@ import * as Frame from "./block-static-dead.mjs";
 assertSuccess(
   testBlock(Frame, {
     scenarios: [
-      {
-        type: "conflict",
-        variable: "variable",
-      },
       {
         type: "declare",
         kind: "let",
@@ -20,18 +18,18 @@ assertSuccess(
       {
         type: "discard",
         strict: false,
-        output: "expression",
         variable: "variable",
         code: "false",
       },
       {
-        type: "discard",
-        strict: true,
-        output: "expression",
+        type: "write",
         variable: "variable",
-        code: `intrinsic.aran.throw(
-          new intrinsic.TypeError(
-            "Cannot discard variable 'variable' because it is static",
+        right: makeLiteralExpression("right"),
+        code: `effect(
+          intrinsic.aran.throw(
+            new intrinsic.ReferenceError(
+              "Cannot access variable 'variable' before initialization",
+            ),
           ),
         )`,
       },

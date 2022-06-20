@@ -1,39 +1,80 @@
-import {constant_, deadcode_____} from "../../../util/index.mjs";
+import {
+  hasOwnProperty,
+  constant_,
+  deadcode_____,
+  partialxxx______,
+  assert,
+} from "../../../util/index.mjs";
 
 import {
+  NULL_DATA_DESCRIPTOR,
+  testStatic,
   makeDynamicLookupExpression,
   makeDynamicLookupEffect,
+  makeObservableDynamicTestExpression,
+  makeDynamicTestExpression,
+  makeDynamicReadExpression,
+  makeDynamicTypeofExpression,
+  makeDynamicDiscardExpression,
+  makeDynamicWriteEffect,
 } from "./helper.mjs";
 
-const {undefined} = globalThis;
+const {
+  undefined,
+  Reflect: {defineProperty},
+} = globalThis;
 
-export const KINDS = ["def"];
+export const KINDS = ["define"];
 
-export const create = (_layer, {dynamic}) => ({dynamic});
+export const create = (_layer, {dynamic}) => ({
+  dynamic,
+  static: {},
+  observable: false,
+});
 
 export const conflict = constant_(undefined);
 
 export const harvest = constant_({prelude: [], header: []});
 
-export const makeDeclareStatements = (
+export const declare = (
   _strict,
-  _frame,
+  {static: bindings},
   _kind,
-  _variable,
+  variable,
   _options,
-) => [];
+) => {
+  assert(!hasOwnProperty(bindings, variable), "duplicate define variable");
+  defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
+};
 
-export const makeInitializeStatements = deadcode_____(
-  "defined variable should not be initialized",
+export const makeInitializeStatementArray = deadcode_____(
+  "define variable should not be initialized",
 );
 
-export const generateMakeLookupNode =
-  (makeDynamicLookupNode) =>
-  (_next, strict, _escaped, {dynamic}, variable, right) =>
-    makeDynamicLookupNode(strict, dynamic, variable, right, false);
-
-export const makeLookupExpression = generateMakeLookupNode(
+export const makeReadExpression = partialxxx______(
   makeDynamicLookupExpression,
+  testStatic,
+  makeDynamicTestExpression,
+  makeDynamicReadExpression,
 );
 
-export const makeLookupEffect = generateMakeLookupNode(makeDynamicLookupEffect);
+export const makeTypeofExpression = partialxxx______(
+  makeDynamicLookupExpression,
+  testStatic,
+  makeDynamicTestExpression,
+  makeDynamicTypeofExpression,
+);
+
+export const makeDiscardExpression = partialxxx______(
+  makeDynamicLookupExpression,
+  testStatic,
+  makeDynamicTestExpression,
+  makeDynamicDiscardExpression,
+);
+
+export const makeWriteEffect = partialxxx______(
+  makeDynamicLookupEffect,
+  testStatic,
+  makeObservableDynamicTestExpression,
+  makeDynamicWriteEffect,
+);

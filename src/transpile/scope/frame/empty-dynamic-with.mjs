@@ -1,13 +1,14 @@
 import {
   constant_,
+  constant__,
   deadcode_____,
-  deadcode______,
+  partialxxx______,
+  incrementCounter,
 } from "../../../util/index.mjs";
 
 import {
   makeConditionalExpression,
   makeLiteralExpression,
-  makeConditionalEffect,
 } from "../../../ast/index.mjs";
 
 import {
@@ -19,6 +20,10 @@ import {
 import {
   makeDynamicLookupExpression,
   makeDynamicLookupEffect,
+  makeDynamicReadExpression,
+  makeDynamicTypeofExpression,
+  makeDynamicDiscardExpression,
+  makeDynamicWriteEffect,
 } from "./helper.mjs";
 
 const {undefined} = globalThis;
@@ -34,40 +39,62 @@ export const conflict = constant_(undefined);
 
 export const harvest = constant_({prelude: [], header: []});
 
-export const makeDeclareStatements = deadcode______(
-  "declaration on body-with frame",
-);
+export const declare = deadcode_____("declaration on body-with frame");
 
 export const makeInitializeStatements = deadcode_____(
   "initialization on body-with frame",
 );
 
-const generateMakeLookupNode =
-  (makeConditionalNode, makeDynamicLookupNode) =>
-  (next, strict, _escaped, {dynamic, observable}, variable, right) =>
-    makeConditionalNode(
-      makeConditionalExpression(
-        makeGetExpression(dynamic, makeSymbolUnscopablesExpression()),
-        makeConditionalExpression(
-          makeGetExpression(
-            makeGetExpression(dynamic, makeSymbolUnscopablesExpression()),
-            makeLiteralExpression(variable),
-          ),
-          makeLiteralExpression(false),
-          makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
-        ),
-        makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
-      ),
-      makeDynamicLookupNode(strict, dynamic, variable, right, observable),
-      next(),
-    );
+const testStatic = constant__(false);
 
-export const makeLookupEffect = generateMakeLookupNode(
-  makeConditionalEffect,
-  makeDynamicLookupEffect,
+const makeDynamicTestExpression = ({dynamic}, variable, _options) =>
+  makeConditionalExpression(
+    makeGetExpression(dynamic, makeSymbolUnscopablesExpression()),
+    makeConditionalExpression(
+      makeGetExpression(
+        makeGetExpression(dynamic, makeSymbolUnscopablesExpression()),
+        makeLiteralExpression(variable),
+      ),
+      makeLiteralExpression(false),
+      makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
+    ),
+    makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
+  );
+
+export const makeReadExpression = partialxxx______(
+  makeDynamicLookupExpression,
+  testStatic,
+  makeDynamicTestExpression,
+  makeDynamicReadExpression,
 );
 
-export const makeLookupExpression = generateMakeLookupNode(
-  makeConditionalExpression,
+export const makeTypeofExpression = partialxxx______(
   makeDynamicLookupExpression,
+  testStatic,
+  makeDynamicTestExpression,
+  makeDynamicTypeofExpression,
+);
+
+export const makeDiscardExpression = partialxxx______(
+  makeDynamicLookupExpression,
+  testStatic,
+  makeDynamicTestExpression,
+  makeDynamicDiscardExpression,
+);
+
+const makeObservableDynamicTestExpression = (frame, variable, options) => {
+  const {observable} = frame;
+  if (observable) {
+    const {counter} = options;
+    incrementCounter(counter);
+    incrementCounter(counter);
+  }
+  return makeDynamicTestExpression(frame, variable, options);
+};
+
+export const makeWriteEffect = partialxxx______(
+  makeDynamicLookupEffect,
+  testStatic,
+  makeObservableDynamicTestExpression,
+  makeDynamicWriteEffect,
 );
