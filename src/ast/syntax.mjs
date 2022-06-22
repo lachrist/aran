@@ -21,7 +21,7 @@ const syntax = {
     ModuleProgram: [["Link", "*"], "Block"],
     GlobalEvalProgram: ["Block"],
     InternalLocalEvalProgram: [["Variable", "*"], "Block"],
-    ExternalLocalEvalProgram: [["Enclave", "*"], "Block"],
+    ExternalLocalEvalProgram: [["Special", "*"], "Block"],
   },
   Link: {
     __proto__: null,
@@ -160,7 +160,7 @@ const isIdentifier = (any) =>
 
 const predicates = {
   __proto__: null,
-  Enclave: generateIsEnumeration([
+  Special: generateIsEnumeration([
     "this",
     "new.target",
     "import.meta",

@@ -76,7 +76,7 @@ testIdentity(`
   return 'completion';
 `);
 
-// EnclaveEvalProgram //
+// ExternalLocalEvalProgram //
 testIdentity(`
   'external';
   ['this', 'new.target'];
@@ -85,7 +85,7 @@ testIdentity(`
   }
 `);
 
-// LocalEvalProgram //
+// InternalLocalEvalProgram //
 testIdentity(`
   'internal';
   let variable1, variable2;

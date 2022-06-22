@@ -256,13 +256,13 @@ export const revertProgram = generateRevert({
         [revertBlock(block)],
       ),
     ),
-  ExternalLocalEvalProgram: (_context, enclaves, block, _annotation) =>
+  ExternalLocalEvalProgram: (_context, specials, block, _annotation) =>
     makeProgram("script", [
       makeDirective(
         makeLiteral(EXTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE),
         EXTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE,
       ),
-      makeExpressionStatement(makeArrayExpression(map(enclaves, makeLiteral))),
+      makeExpressionStatement(makeArrayExpression(map(specials, makeLiteral))),
       revertBlock(block),
     ]),
 });

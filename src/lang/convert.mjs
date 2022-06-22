@@ -109,8 +109,9 @@ const convertIdentifier = (node) => {
   return node.name;
 };
 
-const convertEnclave = (node) => {
+const convertSpecial = (node) => {
   expectSyntax(node, node.type === "Literal");
+  expectSyntax(node, typeof node.value === "string");
   return node.value;
 };
 
@@ -126,9 +127,9 @@ const convertDeclaration = (node) => {
   return map(node.declarations, convertDeclarator);
 };
 
-const convertEnclaveArray = (node) => {
+const convertSpecialArray = (node) => {
   expectSyntax(node, node.type === "ArrayExpression");
-  return map(node.elements, convertEnclave);
+  return map(node.elements, convertSpecial);
 };
 
 export const convertProgram = generateConvert({
@@ -167,7 +168,7 @@ export const convertProgram = generateConvert({
       expectSyntax(node, node.body.length === 3);
       expectSyntax(node, node.body[1].type === "ExpressionStatement");
       return makeExternalLocalEvalProgram(
-        convertEnclaveArray(node.body[1].expression),
+        convertSpecialArray(node.body[1].expression),
         convertBlock(node.body[2]),
         locate(node.loc),
       );

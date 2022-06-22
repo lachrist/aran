@@ -310,9 +310,9 @@ export const visitProgram = partial__xx(
           {
             ...context,
             scope,
-            kind: "local-eval",
+            kind: "internal-local-eval",
             arrival: {
-              kind: "local-eval",
+              kind: "internal-local-eval",
               links: null,
               callee: null,
               serial,
@@ -322,15 +322,15 @@ export const visitProgram = partial__xx(
         ),
       );
     },
-    ExternalLocalEvalProgram: (context, enclaves, block, serial) =>
+    ExternalLocalEvalProgram: (context, specials, block, serial) =>
       makeExternalLocalEvalProgram(
-        enclaves,
+        specials,
         visitBlock(
           {
             ...context,
-            kind: "enclave-eval",
+            kind: "external-local-eval",
             arrival: {
-              kind: "enclave-eval",
+              kind: "external-local-eval",
               links: null,
               callee: null,
               serial,
@@ -360,8 +360,8 @@ const root_kind_array = [
   "script",
   "module",
   "global-eval",
-  "local-eval",
-  "enclave-eval",
+  "internal-local-eval",
+  "external-local-eval",
 ];
 
 const visitBlock = partial__xx(
