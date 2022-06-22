@@ -42,8 +42,8 @@ const {
 
 export const KINDS = ["var", "function"];
 
-export const create = (_layer, {dynamic, observable}) => ({
-  dynamic,
+export const create = (_layer, {macro, observable}) => ({
+  dynamic: macro,
   static: {},
   observable,
 });

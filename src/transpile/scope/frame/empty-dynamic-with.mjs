@@ -30,8 +30,8 @@ const {undefined} = globalThis;
 
 export const KINDS = [];
 
-export const create = (_layer, {dynamic, observable}) => ({
-  dynamic,
+export const create = (_layer, {macro, observable}) => ({
+  dynamic: macro,
   observable,
 });
 

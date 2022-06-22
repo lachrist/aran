@@ -26,10 +26,10 @@ const {
 
 export const KINDS = ["define"];
 
-export const create = (_layer, {dynamic}) => ({
-  dynamic,
+export const create = (_layer, {macro, observable}) => ({
+  dynamic: macro,
   static: {},
-  observable: false,
+  observable,
 });
 
 export const conflict = constant_(undefined);

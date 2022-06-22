@@ -9,7 +9,7 @@ import * as Frame from "./define-dynamic.mjs";
 assertSuccess(
   testBlock(Frame, {
     options: {
-      dynamic: makeLiteralExpression("dynamic"),
+      macro: makeLiteralExpression("dynamic"),
     },
     scenarios: [
       {
