@@ -8,14 +8,14 @@ import {
 } from "./mapping.mjs";
 
 export const getResultError = (result) => {
-  if (!isMapping(result.variable)) {
-    return result.variable;
+  if (result.structural !== null) {
+    return result.structural;
   }
   if (!isMapping(result.label)) {
     return result.label;
   }
-  if (result.structural !== null) {
-    return result.structural;
+  if (!isMapping(result.variable)) {
+    return result.variable;
   }
   return null;
 };
