@@ -1,6 +1,7 @@
 import {
   assert,
   constant_,
+  constant___,
   bind_____,
   dropxxx_x,
   deadcode_____,
@@ -31,7 +32,9 @@ export const create = (_layer, _options) => ({static: {}});
 
 export const conflict = constant_(undefined);
 
-export const harvest = constant_({header: [], prelude: []});
+export const harvestHeader = constant_([]);
+
+export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
@@ -50,6 +53,8 @@ export const declare = (
 export const makeInitializeStatementArray = deadcode_____(
   "initialization on intrinsic frame",
 );
+
+export const lookupAll = constant___(undefined);
 
 export const makeReadExpression = partialxx______(
   makeStaticLookupNode,

@@ -71,6 +71,8 @@ import {
   makeLookupEffect,
 } from "./chain.mjs";
 
+export {makeEvalExpression} from "./chain.mjs";
+
 const {
   Object: {fromEntries},
 } = globalThis;

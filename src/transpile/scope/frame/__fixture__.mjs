@@ -74,10 +74,12 @@ const generateTest =
       KINDS,
       create,
       conflict,
-      harvest,
+      harvestPrelude,
+      harvestHeader,
       declare,
       makeInitializeStatementArray,
       makeWriteEffect,
+      lookupAll,
       ...Library
     },
     {head = "", scenarios = [], layer = BASE, options = {}},
@@ -93,7 +95,7 @@ const generateTest =
       "if present, the layer property should match the argument",
     );
     let body = "";
-    const statements2 = flatMap(scenarios, (scenario) => {
+    const statements = flatMap(scenarios, (scenario) => {
       scenario = assign({}, default_scenario, scenario);
       assert(scenario.type !== null, "missing scenario type");
       if (scenario.type === "conflict") {
@@ -126,6 +128,12 @@ const generateTest =
           scenario.variable,
           scenario.right,
         );
+      } else if (scenario.type === "lookup-all") {
+        assert(
+          lookupAll(scenario.strict, scenario.escaped, frame) === undefined,
+          "expected lookupAll to return undefined",
+        );
+        return [];
       } else if (scenario.type === "write") {
         body = `${body}\n(${scenario.code});`;
         return [
@@ -162,11 +170,9 @@ const generateTest =
         ];
       }
     });
-    const {header: variables, prelude: statements1} = harvest(frame);
-    // console.log(`${head}${body}`);
     return finalize(
-      variables,
-      concat(statements1, statements2),
+      harvestHeader(frame),
+      concat(harvestPrelude(frame), statements),
       `${head}${body}`,
     );
   };

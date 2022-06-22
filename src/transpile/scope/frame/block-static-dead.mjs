@@ -18,6 +18,7 @@ import {
   bind_____,
   dropxxx_x,
   constant_,
+  constant___,
   partialxx______,
   assert,
 } from "../../../util/index.mjs";
@@ -34,6 +35,7 @@ import {
 } from "./helper.mjs";
 
 const {
+  undefined,
   Reflect: {defineProperty},
 } = globalThis;
 
@@ -45,10 +47,9 @@ export const create = (_layer, _options) => ({
 
 export const conflict = conflictStatic;
 
-export const harvest = constant_({
-  header: [],
-  prelude: [],
-});
+export const harvestHeader = constant_([]);
+
+export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
@@ -72,6 +73,8 @@ export const makeInitializeStatementArray = deadcode_____(
 const makeThrowDeadzoneExpressionDropped = dropxxx_x(
   makeThrowDeadzoneExpression,
 );
+
+export const lookupAll = constant___(undefined);
 
 export const makeReadExpression = partialxx______(
   makeStaticLookupNode,

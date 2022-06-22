@@ -1,5 +1,6 @@
 import {
   bind_____,
+  constant___,
   constant_,
   assert,
   hasOwnProperty,
@@ -25,6 +26,7 @@ import {
 } from "./helper.mjs";
 
 const {
+  undefined,
   Reflect: {defineProperty},
 } = globalThis;
 
@@ -34,7 +36,9 @@ export const create = (_layer, _options) => ({static: {}});
 
 export const conflict = conflictStatic;
 
-export const harvest = constant_({header: [], prelude: []});
+export const harvestHeader = constant_([]);
+
+export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
@@ -56,6 +60,8 @@ export const declare = (
 export const makeInitializeStatementArray = deadcode_____(
   "import variable should not be initialized",
 );
+
+export const lookupAll = constant___(undefined);
 
 export const makeReadExpression = partialxx______(
   makeStaticLookupNode,

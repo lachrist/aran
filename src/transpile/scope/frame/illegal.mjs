@@ -1,6 +1,7 @@
 import {
   assert,
   constant_,
+  constant___,
   deadcode_____,
   partialxx______,
   hasOwnProperty,
@@ -24,7 +25,9 @@ export const create = (_layer, _options) => ({static: {}});
 
 export const conflict = constant_(undefined);
 
-export const harvest = constant_({header: [], prelude: []});
+export const harvestHeader = constant_([]);
+
+export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
@@ -43,6 +46,8 @@ export const declare = (
 export const makeInitializeStatements = deadcode_____(
   "initialization on illegal frame",
 );
+
+export const lookupAll = constant___(undefined);
 
 const makeLookupNode = partialxx______(
   makeStaticLookupNode,

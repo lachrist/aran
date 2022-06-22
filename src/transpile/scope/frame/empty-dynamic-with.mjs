@@ -2,6 +2,7 @@ import {
   constant_,
   constant__,
   deadcode_____,
+  constant___,
   partialxxx______,
   incrementCounter,
 } from "../../../util/index.mjs";
@@ -37,13 +38,17 @@ export const create = (_layer, {macro, observable}) => ({
 
 export const conflict = constant_(undefined);
 
-export const harvest = constant_({prelude: [], header: []});
+export const harvestHeader = constant_([]);
+
+export const harvestPrelude = constant_([]);
 
 export const declare = deadcode_____("declaration on body-with frame");
 
 export const makeInitializeStatements = deadcode_____(
   "initialization on body-with frame",
 );
+
+export const lookupAll = constant___(undefined);
 
 const testStatic = constant__(false);
 

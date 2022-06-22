@@ -62,10 +62,14 @@ export const create = (type, layer, options) => {
 // Harvest //
 /////////////
 
-export const harvest = (frame) => {
-  const {harvest: method} = libraries[frame.type];
+const generateHarvest = (name) => (frame) => {
+  const method = libraries[frame.type][name];
   return method(frame);
 };
+
+export const harvestHeader = generateHarvest("harvestHeader");
+
+export const harvestPrelude = generateHarvest("harvestPrelude");
 
 //////////////
 // Conflict //
@@ -113,6 +117,15 @@ export const makeInitializeStatementArray = (
   } else {
     return null;
   }
+};
+
+///////////////
+// LookupAll //
+///////////////
+
+export const lookupAll = (strict, escaped, frame) => {
+  const {lookupAll: method} = libraries[frame.type];
+  method(strict, escaped, frame);
 };
 
 ////////////

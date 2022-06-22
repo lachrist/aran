@@ -1,11 +1,13 @@
 import {concat, includes, map} from "array-lite";
 
 import {
+  constant_,
   hasOwnProperty,
   push,
   assert,
   partialx_,
   bind_,
+  constant___,
   partialxxx______,
 } from "../../../util/index.mjs";
 
@@ -42,6 +44,7 @@ import {
 } from "./helper.mjs";
 
 const {
+  undefined,
   Reflect: {ownKeys, defineProperty},
 } = globalThis;
 
@@ -89,13 +92,13 @@ const makeDeclareStatement = (dynamic, variable) =>
     ),
   );
 
-export const harvest = ({dynamic, conflicts, static: bindings}) => ({
-  header: [],
-  prelude: concat(
+export const harvestHeader = constant_([]);
+
+export const harvestPrelude = ({dynamic, conflicts, static: bindings}) =>
+  concat(
     map(conflicts, partialx_(makeConflictStatement, dynamic)),
     map(ownKeys(bindings), partialx_(makeDeclareStatement, dynamic)),
-  ),
-});
+  );
 
 export const declare = (
   _strict,
@@ -149,6 +152,8 @@ const generateMakeDeadzoneNode =
       makeLiveNode(strict, escaped, frame, variable, options),
     );
   };
+
+export const lookupAll = constant___(undefined);
 
 export const makeReadExpression = partialxxx______(
   makeDynamicLookupExpression,

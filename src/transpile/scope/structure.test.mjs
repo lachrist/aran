@@ -1,6 +1,18 @@
 import {assertThrow, assertEqual, assertDeepEqual} from "../../__fixture__.mjs";
 
-import {ROOT, define, search, extend, enclose, fetch} from "./structure.mjs";
+import {
+  ROOT,
+  isRoot,
+  define,
+  search,
+  extend,
+  enclose,
+  fetch,
+} from "./structure.mjs";
+
+assertEqual(isRoot(ROOT), true);
+
+assertEqual(isRoot(enclose(extend(ROOT, "frame"))), false);
 
 assertThrow(() => search(ROOT, "key"), {
   name: "Error",

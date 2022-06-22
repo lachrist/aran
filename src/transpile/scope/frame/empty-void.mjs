@@ -4,6 +4,7 @@ import {
   deadcode______,
   deadcode_____,
   constant______,
+  constant___,
 } from "../../../util/index.mjs";
 
 import {
@@ -24,13 +25,17 @@ export const create = (_layer, {macro, observable}) => ({
 
 export const conflict = constant_(undefined);
 
-export const harvest = constant_({header: [], prelude: []});
+export const harvestHeader = constant_([]);
+
+export const harvestPrelude = constant_([]);
 
 export const declare = deadcode______("declaration on empty-void frame");
 
 export const makeInitializeStatementArray = deadcode_____(
   "initialization on empty-void frame",
 );
+
+export const lookupAll = constant___(undefined);
 
 export const makeReadExpression = dropxxxx_x(makeThrowMissingExpression);
 

@@ -32,16 +32,12 @@ import {
 const isUnique = (element, index, array) =>
   !includes(slice(array, 0, index), element);
 
-const harvest = (
-  {header: header2, prelude: prelude2, scope: scope1},
-  _input,
-) => {
+const harvest = ({header, prelude, scope: scope1}, _frame) => {
   const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
   assert(!escaped, "escaped scope during harvest");
-  const {header: header1, prelude: prelude1} = harvestFrame(frame);
   return {
-    header: concat(header1, header2),
-    prelude: concat(prelude1, prelude2),
+    header: concat(harvestFrameHeader(frame), header),
+    prelude: concat(harvestFramePrelude(frame), prelude),
     scope: scope2,
   };
 };
@@ -49,6 +45,8 @@ const harvest = (
 const makeScopeNode = (makeNode, scope, frames, makeStatementArray) => {
   scope = reduce(frames, extendStructure, scope);
   const statements2 = makeStatementArray(scope);
+  const header = [];
+  const prelude = [];
   const {prelude: statements1, header: variables} = reduce(frames, harvest, {
     header: [],
     prelude: [],
@@ -70,6 +68,32 @@ export const makeScriptProgram = partialx___(
   makeScopeNode,
   makeRawScriptProgram,
 );
+
+//////////
+// Eval //
+//////////
+
+const harvestHeader = (scope1) => {
+  if (isRootStructure(scope1)) {
+    return [];
+  } else {
+    const {scope: scope2, frame} = fetchStructure(scope, false);
+    return concat(harvestHeader(scope2), harvestFrameHeader(frame));
+  }
+};
+
+const lookupAll = (strict, escaped1, scope1) => {
+  if (!isRootStructure(scope1)) {
+    const {scope:scope2, escaped:escaped2, frame} = fetchStructure(scope, escaped1);
+    lookupFrameAll(strict, escaped2, frame);
+    lookupAll(strict, escaped2, scope2);
+  }
+};
+
+export const makeScopeEvalExpression = (scope, expression) => {
+  lookupAll(scope);
+  return makeEvalExpression(harvestHeader(scope), expression);
+};
 
 /////////////
 // Declare //

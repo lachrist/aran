@@ -16,7 +16,9 @@ import {BASE, META} from "../variable.mjs";
 import {
   CLOSURE_STATIC,
   create,
-  harvest,
+  harvestHeader,
+  harvestPrelude,
+  lookupAll,
   conflict,
   declare,
   makeInitializeStatementArray,
@@ -56,6 +58,8 @@ assertEqual(
   declare(STRICT, frame, "var", META, "variable", {exports: []}),
   true,
 );
+
+lookupAll(STRICT, ESCAPED, frame);
 
 const body = concat(
   makeInitializeStatementArray(
@@ -98,11 +102,9 @@ const body = concat(
   ],
 );
 
-const {header, prelude} = harvest(frame);
-
 assertSuccess(
   allignBlock(
-    makeBlock([], header, concat(prelude, body)),
+    makeBlock([], harvestHeader(frame), concat(harvestPrelude(frame), body)),
     `{
       let VARIABLE;
       VARIABLE = undefined;

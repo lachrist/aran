@@ -59,6 +59,13 @@ export const extend = (scope, frame) =>
 
 export const enclose = partialx_(cons, {type: CLOSURE_TYPE});
 
+export const isRoot = (scope) =>
+  scope === NIL
+    ? true
+    : car(scope).type === FRAME_TYPE
+    ? false
+    : isRoot(cdr(scope));
+
 export const fetch = (scope, escaped) => {
   if (scope === NIL) {
     throw new Error("unbound scope");

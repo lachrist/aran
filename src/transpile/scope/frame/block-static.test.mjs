@@ -19,6 +19,7 @@ assertSuccess(
       },
       {
         type: "read",
+        escaped: false,
         variable: "variable",
         code: `intrinsic.aran.throw(
           new intrinsic.ReferenceError(
@@ -64,6 +65,11 @@ assertSuccess(
         options: {exports: ["specifier"]},
       },
       {
+        type: "lookup-all",
+        strict: true,
+        escaped: false,
+      },
+      {
         type: "initialize",
         kind: "const",
         variable: "variable",
@@ -73,6 +79,11 @@ assertSuccess(
           _VARIABLE = true;
           exportStatic('specifier', VARIABLE);
         `,
+      },
+      {
+        type: "lookup-all",
+        strict: true,
+        escaped: false,
       },
       {
         type: "write",

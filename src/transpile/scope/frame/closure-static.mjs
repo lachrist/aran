@@ -7,6 +7,7 @@ import {
   partial__x,
   partialxx_,
   partialxx______,
+  constant___,
   pushAll,
   assert,
   hasOwnProperty,
@@ -63,16 +64,14 @@ const makeDeclareStatementArray = (bindings, layer, variable) =>
     ),
   );
 
-export const harvest = ({static: bindings, layer}) => {
-  const keys = ownKeys(bindings);
-  return {
-    header: map(keys, partialx_(layerVariable, layer)),
-    prelude: flatMap(
-      keys,
-      partialxx_(makeDeclareStatementArray, bindings, layer),
-    ),
-  };
-};
+export const harvestHeader = ({static: bindings, layer}) =>
+  map(ownKeys(bindings), partialx_(layerVariable, layer));
+
+export const harvestPrelude = ({static: bindings, layer}) =>
+  flatMap(
+    ownKeys(bindings),
+    partialxx_(makeDeclareStatementArray, bindings, layer),
+  );
 
 export const declare = (
   _strict,
@@ -116,6 +115,8 @@ export const makeInitializeStatementArray = (
     ),
   );
 };
+
+export const lookupAll = constant___(undefined);
 
 export const makeReadExpression = partialxx______(
   makeStaticLookupNode,

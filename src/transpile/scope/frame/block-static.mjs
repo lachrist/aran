@@ -57,23 +57,20 @@ const makeShadowInitializeStatement = (layer, variable) =>
     ),
   );
 
-export const harvest = ({static: bindings, layer}) => {
-  const variables = ownKeys(bindings);
-  const deadzone_variables = filter(
-    variables,
-    partialx_(hasDeadzone, bindings),
+export const harvestHeader = ({static: bindings, layer}) =>
+  concat(
+    map(ownKeys(bindings), partialx_(layerVariable, layer)),
+    map(
+      filter(ownKeys(bindings), partialx_(hasDeadzone, bindings)),
+      partialx_(layerShadowVariable, layer),
+    ),
   );
-  return {
-    header: concat(
-      map(variables, partialx_(layerVariable, layer)),
-      map(deadzone_variables, partialx_(layerShadowVariable, layer)),
-    ),
-    prelude: map(
-      deadzone_variables,
-      partialx_(makeShadowInitializeStatement, layer),
-    ),
-  };
-};
+
+export const harvestPrelude = ({static: bindings, layer}) =>
+  map(
+    filter(ownKeys(bindings), partialx_(hasDeadzone, bindings)),
+    partialx_(makeShadowInitializeStatement, layer),
+  );
 
 export const conflict = conflictStatic;
 
@@ -137,6 +134,21 @@ export const makeInitializeStatementArray = (
       ),
     ),
   );
+};
+
+export const lookupAll = (_strict, escaped, {static: bindings, distant}) => {
+  const variables = ownKeys(bindings);
+  if (escaped || distant) {
+    for (let index = 0; index < variables.length; index += 1) {
+      const binding = bindings[variables[index]];
+      if (
+        (!binding.initialized && escaped) ||
+        (binding.initialized && distant)
+      ) {
+        binding.deadzone = true;
+      }
+    }
+  }
 };
 
 const generateMakeDeadzoneNode =

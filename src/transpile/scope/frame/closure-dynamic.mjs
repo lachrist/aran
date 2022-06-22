@@ -4,6 +4,7 @@ import {
   hasOwnProperty,
   assert,
   constant_,
+  constant___,
   partialx_,
   partialxxx______,
 } from "../../../util/index.mjs";
@@ -70,10 +71,10 @@ const makeDeclareStatement = (dynamic, variable) =>
     ),
   );
 
-export const harvest = ({dynamic: expression, static: bindings}) => ({
-  header: [],
-  prelude: map(ownKeys(bindings), partialx_(makeDeclareStatement, expression)),
-});
+export const harvestHeader = constant_([]);
+
+export const harvestPrelude = ({dynamic: expression, static: bindings}) =>
+  map(ownKeys(bindings), partialx_(makeDeclareStatement, expression));
 
 export const declare = (
   _strict,
@@ -112,6 +113,8 @@ export const makeInitializeStatementArray = (
     ),
   ];
 };
+
+export const lookupAll = constant___(undefined);
 
 export const makeReadExpression = partialxxx______(
   makeDynamicLookupExpression,

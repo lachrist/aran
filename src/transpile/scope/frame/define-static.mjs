@@ -6,6 +6,7 @@ import {
   partialxx______,
   assert,
   deadcode_____,
+  constant___,
 } from "../../../util/index.mjs";
 
 import {layerVariable} from "../variable.mjs";
@@ -34,10 +35,10 @@ export const create = (layer, _options) => ({
 
 export const conflict = constant_(undefined);
 
-export const harvest = ({layer, static: bindings}) => ({
-  header: map(ownKeys(bindings), partialx_(layerVariable, layer)),
-  prelude: [],
-});
+export const harvestHeader = ({layer, static: bindings}) =>
+  map(ownKeys(bindings), partialx_(layerVariable, layer));
+
+export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
@@ -53,6 +54,8 @@ export const declare = (
 export const makeInitializeStatements = deadcode_____(
   "define variable should not be initialized",
 );
+
+export const lookupAll = constant___(undefined);
 
 export const makeReadExpression = partialxx______(
   makeStaticLookupNode,

@@ -4,6 +4,7 @@ import {
   deadcode_____,
   partialxxx______,
   assert,
+  constant___,
 } from "../../../util/index.mjs";
 
 import {
@@ -34,7 +35,9 @@ export const create = (_layer, {macro, observable}) => ({
 
 export const conflict = constant_(undefined);
 
-export const harvest = constant_({prelude: [], header: []});
+export const harvestHeader = constant_([]);
+
+export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
@@ -50,6 +53,8 @@ export const declare = (
 export const makeInitializeStatementArray = deadcode_____(
   "define variable should not be initialized",
 );
+
+export const lookupAll = constant___(undefined);
 
 export const makeReadExpression = partialxxx______(
   makeDynamicLookupExpression,

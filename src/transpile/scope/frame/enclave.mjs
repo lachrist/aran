@@ -1,4 +1,9 @@
-import {constant_, assert, incrementCounter} from "../../../util/index.mjs";
+import {
+  constant_,
+  constant___,
+  assert,
+  incrementCounter,
+} from "../../../util/index.mjs";
 
 import {
   makeApplyExpression,
@@ -25,7 +30,9 @@ export const create = (_layer, {macros}) => ({
 
 export const conflict = constant_(undefined);
 
-export const harvest = constant_({header: [], prelude: []});
+export const harvestHeader = constant_([]);
+
+export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
@@ -44,6 +51,8 @@ export const makeInitializeStatementArray = (
   variable,
   expression,
 ) => [makeDeclareStatement(mapping[kind], variable, expression)];
+
+export const lookupAll = constant___(undefined);
 
 export const generateMakeLookupExpression =
   (strict_key, sloppy_key) =>

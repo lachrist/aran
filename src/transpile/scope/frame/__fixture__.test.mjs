@@ -25,10 +25,8 @@ assertSuccess(
         assertDeepEqual(options, {});
         return {layer, header: [], prelude: []};
       },
-      harvest: ({header, prelude}) => ({
-        header,
-        prelude,
-      }),
+      harvestHeader: ({header}) => header,
+      harvestPrelude: ({prelude}) => prelude,
       conflict: (strict, {prelude}, kind, variable) => {
         assertEqual(strict, true);
         assertEqual(kind, "kind");
@@ -57,6 +55,7 @@ assertSuccess(
         assertEqual(kind, "kind");
         return [makeEffectStatement(makeWriteEffect(variable, expression))];
       },
+      lookupAll: (_strict, _escaped, _frame) => {},
       makeWriteEffect: (
         _next,
         strict,
@@ -111,6 +110,11 @@ assertSuccess(
           variable: "variable",
           right: makeLiteralExpression("right"),
           code: "variable = 'right';",
+        },
+        {
+          type: "lookup-all",
+          strict: true,
+          escaped: false,
         },
         {
           type: "write",
