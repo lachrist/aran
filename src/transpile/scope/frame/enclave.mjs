@@ -19,8 +19,8 @@ const mapping = {
   class: "let",
 };
 
-export const create = (_layer, {enclaves}) => ({
-  enclaves,
+export const create = (_layer, {macros}) => ({
+  enclaves: macros,
 });
 
 export const conflict = constant_(undefined);

@@ -9,7 +9,7 @@ import * as Frame from "./enclave.mjs";
 assertSuccess(
   testBlock(Frame, {
     options: {
-      enclaves: {
+      macros: {
         read: makeLiteralExpression("read"),
         typeof: makeLiteralExpression("typeof"),
         discardStrict: makeLiteralExpression("discardStrict"),
