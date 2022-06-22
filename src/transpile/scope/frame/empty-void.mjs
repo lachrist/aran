@@ -17,7 +17,10 @@ const {undefined} = globalThis;
 
 export const KINDS = [];
 
-export const create = (_layer, {dynamic}) => ({dynamic});
+export const create = (_layer, {macro, observable}) => ({
+  dynamic: macro,
+  observable,
+});
 
 export const conflict = constant_(undefined);
 
