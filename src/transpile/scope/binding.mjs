@@ -1,6 +1,6 @@
 import {partial_x, partial_xx, incrementCounter} from "../../util/index.mjs";
 
-import {ROOT, define, search} from "./structure.mjs";
+import {ROOT, defineBinding, lookupBinding} from "./core.mjs";
 
 ////////////
 // Strict //
@@ -8,9 +8,9 @@ import {ROOT, define, search} from "./structure.mjs";
 
 const STRICT = "strict";
 
-export const isStrict = partial_x(search, STRICT);
+export const isStrict = partial_x(lookupBinding, STRICT);
 
-export const useStrict = partial_xx(define, STRICT, true);
+export const useStrict = partial_xx(defineBinding, STRICT, true);
 
 ////////////////////
 // Global Counter //
@@ -19,10 +19,10 @@ export const useStrict = partial_xx(define, STRICT, true);
 const STATE = "state";
 
 export const incrementGlobalCounter = (scope) =>
-  incrementCounter(search(scope, STATE).counter);
+  incrementCounter(lookupBinding(scope, STATE).counter);
 
 export const resetGlobalCounter = (scope, counter) => {
-  search(scope, STATE).counter = counter;
+  lookupBinding(scope, STATE).counter = counter;
 };
 
 //////////
@@ -30,4 +30,4 @@ export const resetGlobalCounter = (scope, counter) => {
 //////////
 
 export const createRoot = (counter) =>
-  define(define(ROOT, STATE, {counter}), STRICT, false);
+  defineBinding(defineBinding(ROOT, STATE, {counter}), STRICT, false);

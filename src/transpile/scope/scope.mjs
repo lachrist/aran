@@ -3,26 +3,26 @@ import {concat, reduce, includes, slice, every} from "array-lite";
 import {assert, partialx__, partialx___} from "../../util/index.mjs";
 
 import {
-  makeScriptProgram as makeRawScriptProgram,
-  makeBlock as makeRawBlock,
+  makeScriptProgram,
+  makeBlock,
+  makeEvalExpression,
 } from "../../ast/index.mjs";
 
-import {
-  extend as extendStructure,
-  fetch as fetchStructure,
-} from "./structure.mjs";
+import {appendFrame, drawFrame, isRoot} from "./core.mjs";
 
-import {isStrict} from "./property.mjs";
+import {isStrict} from "./binding.mjs";
 
 import {
-  conflict as conflictFrame,
-  harvest as harvestFrame,
-  declare as declareFrame,
-  makeInitializeStatementArray as makeFrameInitializeStatementArray,
-  makeReadExpression as makeFrameReadExpression,
-  makeTypeofExpression as makeFrameTypeofExpression,
-  makeDiscardExpression as makeFrameDiscardExpression,
-  makeWriteEffect as makeFrameWriteEffect,
+  conflictFrame,
+  harvestFrameHeader,
+  harvestFramePrelude,
+  declareFrame,
+  makeFrameInitializeStatementArray,
+  lookupFrameAll,
+  makeFrameReadExpression,
+  makeFrameTypeofExpression,
+  makeFrameDiscardExpression,
+  makeFrameWriteEffect,
 } from "./frame/index.mjs";
 
 ///////////
@@ -33,7 +33,7 @@ const isUnique = (element, index, array) =>
   !includes(slice(array, 0, index), element);
 
 const harvest = ({header, prelude, scope: scope1}, _frame) => {
-  const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
+  const {scope: scope2, frame, escaped} = drawFrame(scope1, false);
   assert(!escaped, "escaped scope during harvest");
   return {
     header: concat(harvestFrameHeader(frame), header),
@@ -43,10 +43,8 @@ const harvest = ({header, prelude, scope: scope1}, _frame) => {
 };
 
 const makeScopeNode = (makeNode, scope, frames, makeStatementArray) => {
-  scope = reduce(frames, extendStructure, scope);
+  scope = reduce(frames, appendFrame, scope);
   const statements2 = makeStatementArray(scope);
-  const header = [];
-  const prelude = [];
   const {prelude: statements1, header: variables} = reduce(frames, harvest, {
     header: [],
     prelude: [],
@@ -56,17 +54,17 @@ const makeScopeNode = (makeNode, scope, frames, makeStatementArray) => {
   return makeNode(variables, concat(statements1, statements2));
 };
 
-export const makeBlock = (scope, labels, frames, makeStatementArray) =>
+export const makeScopeBlock = (scope, labels, frames, makeStatementArray) =>
   makeScopeNode(
-    partialx__(makeRawBlock, labels),
+    partialx__(makeBlock, labels),
     scope,
     frames,
     makeStatementArray,
   );
 
-export const makeScriptProgram = partialx___(
+export const makeScopeScriptProgram = partialx___(
   makeScopeNode,
-  makeRawScriptProgram,
+  makeScriptProgram,
 );
 
 //////////
@@ -74,24 +72,28 @@ export const makeScriptProgram = partialx___(
 //////////
 
 const harvestHeader = (scope1) => {
-  if (isRootStructure(scope1)) {
+  if (isRoot(scope1)) {
     return [];
   } else {
-    const {scope: scope2, frame} = fetchStructure(scope, false);
+    const {scope: scope2, frame} = drawFrame(scope1, false);
     return concat(harvestHeader(scope2), harvestFrameHeader(frame));
   }
 };
 
 const lookupAll = (strict, escaped1, scope1) => {
-  if (!isRootStructure(scope1)) {
-    const {scope:scope2, escaped:escaped2, frame} = fetchStructure(scope, escaped1);
+  if (!isRoot(scope1)) {
+    const {
+      scope: scope2,
+      escaped: escaped2,
+      frame,
+    } = drawFrame(scope1, escaped1);
     lookupFrameAll(strict, escaped2, frame);
     lookupAll(strict, escaped2, scope2);
   }
 };
 
 export const makeScopeEvalExpression = (scope, expression) => {
-  lookupAll(scope);
+  lookupAll(isStrict(scope), false, scope);
   return makeEvalExpression(harvestHeader(scope), expression);
 };
 
@@ -100,7 +102,7 @@ export const makeScopeEvalExpression = (scope, expression) => {
 /////////////
 
 const declareLoop = (strict, scope1, kind, layer, variable, options) => {
-  const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
+  const {scope: scope2, frame, escaped} = drawFrame(scope1, false);
   assert(!escaped, "escaped scope during declaration");
   conflictFrame(strict, frame, kind, layer, variable);
   if (!declareFrame(strict, frame, kind, layer, variable, options)) {
@@ -108,7 +110,7 @@ const declareLoop = (strict, scope1, kind, layer, variable, options) => {
   }
 };
 
-export const declare = (scope, kind, layer, variable, options) =>
+export const declareScope = (scope, kind, layer, variable, options) =>
   declareLoop(isStrict(scope), scope, kind, layer, variable, options);
 
 ////////////////
@@ -116,7 +118,7 @@ export const declare = (scope, kind, layer, variable, options) =>
 ////////////////
 
 const initializeLoop = (strict, scope1, kind, layer, variable, expression) => {
-  const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
+  const {scope: scope2, frame, escaped} = drawFrame(scope1, false);
   assert(!escaped, "escaped scope during initialization");
   const maybe = makeFrameInitializeStatementArray(
     strict,
@@ -134,7 +136,7 @@ const initializeLoop = (strict, scope1, kind, layer, variable, expression) => {
   }
 };
 
-export const makeInitializeStatementArray = (
+export const makeScopeInitializeStatementArray = (
   scope,
   kind,
   layer,
@@ -155,11 +157,7 @@ const lookupLoop = (
   variable,
   options,
 ) => {
-  const {
-    scope: scope2,
-    frame,
-    escaped: escaped2,
-  } = fetchStructure(scope1, escaped1);
+  const {scope: scope2, frame, escaped: escaped2} = drawFrame(scope1, escaped1);
   return makeFrameLookupNode(
     () =>
       lookupLoop(
@@ -192,10 +190,14 @@ const generateLookup =
       options,
     );
 
-export const makeReadExpression = generateLookup(makeFrameReadExpression);
+export const makeScopeReadExpression = generateLookup(makeFrameReadExpression);
 
-export const makeTypeofExpression = generateLookup(makeFrameTypeofExpression);
+export const makeScopeTypeofExpression = generateLookup(
+  makeFrameTypeofExpression,
+);
 
-export const makeDiscardExpression = generateLookup(makeFrameDiscardExpression);
+export const makeScopeDiscardExpression = generateLookup(
+  makeFrameDiscardExpression,
+);
 
-export const makeWriteEffect = generateLookup(makeFrameWriteEffect);
+export const makeScopeWriteEffect = generateLookup(makeFrameWriteEffect);

@@ -12,26 +12,23 @@ import {allignBlock} from "../../allign/index.mjs";
 
 import {BASE, META} from "./variable.mjs";
 
-import {enclose} from "./structure.mjs";
+import {enclose} from "./core.mjs";
 
-import {createRoot} from "./property.mjs";
+import {createRoot} from "./binding.mjs";
 
-import {
-  create as createFrame,
-  BLOCK_STATIC,
-  DEFINE_STATIC,
-} from "./frame/index.mjs";
+import {createFrame, BLOCK_STATIC, DEFINE_STATIC} from "./frame/index.mjs";
 
 import {
-  makeBlock,
-  declare,
-  makeInitializeStatementArray,
-  makeReadExpression,
-} from "./chain.mjs";
+  makeScopeBlock,
+  declareScope,
+  makeScopeInitializeStatementArray,
+  makeScopeEvalExpression,
+  makeScopeReadExpression,
+} from "./scope.mjs";
 
 assertSuccess(
   allignBlock(
-    makeBlock(
+    makeScopeBlock(
       createRoot(123),
       ["label"],
       [
@@ -39,16 +36,21 @@ assertSuccess(
         createFrame(DEFINE_STATIC, META, {}),
       ],
       (scope) => {
-        declare(scope, "const", BASE, "variable", {exports: []});
+        declareScope(scope, "const", BASE, "variable", {exports: []});
         return concat(
           [
             makeEffectStatement(
               makeExpressionEffect(
-                makeReadExpression(enclose(scope), BASE, "variable", null),
+                makeScopeReadExpression(enclose(scope), BASE, "variable", null),
+              ),
+            ),
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeEvalExpression(scope, makeLiteralExpression("code")),
               ),
             ),
           ],
-          makeInitializeStatementArray(
+          makeScopeInitializeStatementArray(
             scope,
             "const",
             BASE,
@@ -73,7 +75,10 @@ assertSuccess(
             )
           ),
         );
-        variable = 'right';
+        effect(
+          eval([variable, initialized], "code"),
+        );
+        variable = "right";
         initialized = true;
       }
     `,

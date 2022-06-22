@@ -10,12 +10,12 @@ import {
 } from "../../util/index.mjs";
 
 import {
-  makeModuleProgram,
-  makeGlobalEvalProgram,
-  makeExternalLocalEvalProgram,
-  makeInternalLocalEvalProgram,
+  makeModuleProgram as makeRawModuleProgram,
+  makeGlobalEvalProgram as makeRawGlobalEvalProgram,
+  makeExternalLocalEvalProgram as makeRawExternalLocalEvalProgram,
+  makeInternalLocalEvalProgram as makeRawInternalLocalEvalProgram,
+  makeClosureExpression as makeRawClosureExpression,
   makeIntrinsicExpression,
-  makeClosureExpression,
   makeEffectStatement,
   makeSequenceEffect,
   makeExpressionEffect,
@@ -212,13 +212,13 @@ const makeDynamicBlock = (
     makeStatementArray,
   );
 
-export const makeDynamicClosureBlock = partial__x_x_(
+export const makeScopeDynamicClosureBlock = partial__x_x_(
   makeDynamicBlock,
   CLOSURE_DYNAMIC,
   false,
 );
 
-export const makeWithBlock = partial__x_x_(
+export const makeScopeWithBlock = partial__x_x_(
   makeDynamicBlock,
   EMPTY_DYNAMIC_WITH,
   true,
@@ -263,23 +263,23 @@ const initializeEnclave = (scope, [name, variable]) =>
       ];
 
 const populateEnclave = (scope, macros, [name, variable]) => {
-  defineProperty(
-    macros,
-    name,
-    {
-      __proto__: null,
-      value: variable === null
+  defineProperty(macros, name, {
+    __proto__: null,
+    value:
+      variable === null
         ? makeLiteralExpression(`unexpected call to enclave.${name}`)
         : makeMetaReadExpression(scope, variable),
-      writable: true,
-      configurable: true,
-      enumerable: true,
-    },
-  );
+    writable: true,
+    configurable: true,
+    enumerable: true,
+  });
 };
 
 const makeEnclaveStatementArray = (scope, macros, makeStatementArray) => {
-  const entries = map(enclave_presence_entries, partialx_(declareEnclave, scope));
+  const entries = map(
+    enclave_presence_entries,
+    partialx_(declareEnclave, scope),
+  );
   forEach(entries, partialxx_(populateEnclave, scope, macros));
   return concat(
     flatMap(entries, partialx_(initializeEnclave, scope)),
@@ -433,7 +433,7 @@ const makeBlueprintBlock = (scope, labels, blueprints, makeStatementArray) =>
     makeStatementArray,
   );
 
-export const makeStaticClosureBlock = partial__x_(makeBlueprintBlock, [
+export const makeScopeStaticClosureBlock = partial__x_(makeBlueprintBlock, [
   [MACRO, META, {}],
   [DEFINE_STATIC, META, {}],
   [CLOSURE_STATIC, BASE, {}],
@@ -446,18 +446,18 @@ export const makeScopeBlock = partial__x_(makeBlueprintBlock, [
   [BLOCK_STATIC, BASE, {distant: false}],
 ]);
 
-export const makeDistantBlock = partial__x_(makeBlueprintBlock, [
+export const makeScopeDistantBlock = partial__x_(makeBlueprintBlock, [
   [MACRO, META, {}],
   [DEFINE_STATIC, META, {}],
   [BLOCK_STATIC, META, {distant: true}],
 ]);
 
-export const makeEmptyBlock = partial__x_(makeBlueprintBlock, [
+export const makeScopeEmptyBlock = partial__x_(makeBlueprintBlock, [
   [MACRO, META, {}],
   [DEFINE_STATIC, META, {}],
 ]);
 
-export const makeDeadBlock = partial__x_(makeBlueprintBlock, [
+export const makeScopeDeadBlock = partial__x_(makeBlueprintBlock, [
   [MACRO, META, {}],
   [DEFINE_STATIC, META, {}],
   [BLOCK_STATIC_DEAD, BASE, {}],

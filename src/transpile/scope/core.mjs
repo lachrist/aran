@@ -19,7 +19,7 @@ export const ROOT = NIL;
 
 const PROPERTY_TYPE = "property";
 
-export const define = (scope, key, value) =>
+export const defineBinding = (scope, key, value) =>
   cons(
     {
       type: PROPERTY_TYPE,
@@ -29,7 +29,7 @@ export const define = (scope, key, value) =>
     scope,
   );
 
-export const search = (scope, key) => {
+export const lookupBinding = (scope, key) => {
   while (scope !== NIL) {
     const point = car(scope);
     if (point.type === PROPERTY_TYPE && point.key === key) {
@@ -48,7 +48,7 @@ const FRAME_TYPE = "frame";
 
 const CLOSURE_TYPE = "closure";
 
-export const extend = (scope, frame) =>
+export const appendFrame = (scope, frame) =>
   cons(
     {
       type: FRAME_TYPE,
@@ -66,7 +66,7 @@ export const isRoot = (scope) =>
     ? false
     : isRoot(cdr(scope));
 
-export const fetch = (scope, escaped) => {
+export const drawFrame = (scope, escaped) => {
   if (scope === NIL) {
     throw new Error("unbound scope");
   } else {
@@ -81,7 +81,7 @@ export const fetch = (scope, escaped) => {
       if (point.type === CLOSURE_TYPE) {
         escaped = true;
       }
-      return fetch(cdr(scope), escaped);
+      return drawFrame(cdr(scope), escaped);
     }
   }
 };

@@ -8,7 +8,7 @@ import {
   incrementGlobalCounter,
   resetGlobalCounter,
   createRoot,
-} from "./property.mjs";
+} from "./binding.mjs";
 
 const {undefined} = globalThis;
 

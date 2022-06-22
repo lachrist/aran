@@ -49,7 +49,7 @@ const libraries = {
 // Create //
 ////////////
 
-export const create = (type, layer, options) => {
+export const createFrame = (type, layer, options) => {
   const {create: method} = libraries[type];
   return {
     type,
@@ -67,15 +67,15 @@ const generateHarvest = (name) => (frame) => {
   return method(frame);
 };
 
-export const harvestHeader = generateHarvest("harvestHeader");
+export const harvestFrameHeader = generateHarvest("harvestHeader");
 
-export const harvestPrelude = generateHarvest("harvestPrelude");
+export const harvestFramePrelude = generateHarvest("harvestPrelude");
 
 //////////////
 // Conflict //
 //////////////
 
-export const conflict = (strict, frame, kind, layer, variable) => {
+export const conflictFrame = (strict, frame, kind, layer, variable) => {
   const {KINDS, conflict: method} = libraries[frame.type];
   if (frame.layer === layer) {
     method(strict, frame, kind, variable);
@@ -89,7 +89,7 @@ export const conflict = (strict, frame, kind, layer, variable) => {
 // Declare //
 /////////////
 
-export const declare = (strict, frame, kind, layer, variable, options) => {
+export const declareFrame = (strict, frame, kind, layer, variable, options) => {
   const {KINDS, declare: method} = libraries[frame.type];
   if (frame.layer === layer && includes(KINDS, kind)) {
     method(strict, frame, kind, variable, options);
@@ -103,7 +103,7 @@ export const declare = (strict, frame, kind, layer, variable, options) => {
 // Initialize //
 ////////////////
 
-export const makeInitializeStatementArray = (
+export const makeFrameInitializeStatementArray = (
   strict,
   frame,
   kind,
@@ -123,7 +123,7 @@ export const makeInitializeStatementArray = (
 // LookupAll //
 ///////////////
 
-export const lookupAll = (strict, escaped, frame) => {
+export const lookupFrameAll = (strict, escaped, frame) => {
   const {lookupAll: method} = libraries[frame.type];
   method(strict, escaped, frame);
 };
@@ -142,10 +142,12 @@ const generateLookup =
     }
   };
 
-export const makeReadExpression = generateLookup("makeReadExpression");
+export const makeFrameReadExpression = generateLookup("makeReadExpression");
 
-export const makeTypeofExpression = generateLookup("makeTypeofExpression");
+export const makeFrameTypeofExpression = generateLookup("makeTypeofExpression");
 
-export const makeDiscardExpression = generateLookup("makeDiscardExpression");
+export const makeFrameDiscardExpression = generateLookup(
+  "makeDiscardExpression",
+);
 
-export const makeWriteEffect = generateLookup("makeWriteEffect");
+export const makeFrameWriteEffect = generateLookup("makeWriteEffect");

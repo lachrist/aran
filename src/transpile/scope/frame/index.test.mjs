@@ -15,14 +15,14 @@ import {BASE, META} from "../variable.mjs";
 
 import {
   CLOSURE_STATIC,
-  create,
-  harvestHeader,
-  harvestPrelude,
-  lookupAll,
-  conflict,
-  declare,
-  makeInitializeStatementArray,
-  makeReadExpression,
+  createFrame,
+  harvestFrameHeader,
+  harvestFramePrelude,
+  lookupFrameAll,
+  conflictFrame,
+  declareFrame,
+  makeFrameInitializeStatementArray,
+  makeFrameReadExpression,
 } from "./index.mjs";
 
 const {Error} = globalThis;
@@ -31,19 +31,19 @@ const STRICT = true;
 
 const ESCAPED = true;
 
-const frame = create(CLOSURE_STATIC, META, {});
+const frame = createFrame(CLOSURE_STATIC, META, {});
 
-assertEqual(conflict(STRICT, frame, "var", BASE, "variable"), false);
+assertEqual(conflictFrame(STRICT, frame, "var", BASE, "variable"), false);
 
-assertEqual(conflict(STRICT, frame, "var", META, "variable"), true);
+assertEqual(conflictFrame(STRICT, frame, "var", META, "variable"), true);
 
 assertEqual(
-  declare(STRICT, frame, "var", BASE, "variable", {exports: []}),
+  declareFrame(STRICT, frame, "var", BASE, "variable", {exports: []}),
   false,
 );
 
 assertEqual(
-  makeInitializeStatementArray(
+  makeFrameInitializeStatementArray(
     STRICT,
     frame,
     "var",
@@ -55,14 +55,14 @@ assertEqual(
 );
 
 assertEqual(
-  declare(STRICT, frame, "var", META, "variable", {exports: []}),
+  declareFrame(STRICT, frame, "var", META, "variable", {exports: []}),
   true,
 );
 
-lookupAll(STRICT, ESCAPED, frame);
+lookupFrameAll(STRICT, ESCAPED, frame);
 
 const body = concat(
-  makeInitializeStatementArray(
+  makeFrameInitializeStatementArray(
     STRICT,
     frame,
     "var",
@@ -73,7 +73,7 @@ const body = concat(
   [
     makeEffectStatement(
       makeExpressionEffect(
-        makeReadExpression(
+        makeFrameReadExpression(
           () => makeLiteralExpression("next"),
           STRICT,
           ESCAPED,
@@ -86,7 +86,7 @@ const body = concat(
     ),
     makeEffectStatement(
       makeExpressionEffect(
-        makeReadExpression(
+        makeFrameReadExpression(
           () => {
             throw new Error("unexpected next");
           },
@@ -104,7 +104,11 @@ const body = concat(
 
 assertSuccess(
   allignBlock(
-    makeBlock([], harvestHeader(frame), concat(harvestPrelude(frame), body)),
+    makeBlock(
+      [],
+      harvestFrameHeader(frame),
+      concat(harvestFramePrelude(frame), body),
+    ),
     `{
       let VARIABLE;
       VARIABLE = undefined;

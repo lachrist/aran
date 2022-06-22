@@ -1,6 +1,6 @@
-- * - structure.mjs
-    - property.mjs
+- * - core.mjs
+    - binding.mjs
   * - variable.mjs
     - frame
-- chain.mjs
+- scope.mjs
 - index.mjs
