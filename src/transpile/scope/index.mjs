@@ -34,14 +34,6 @@ import {
 } from "./variable.mjs";
 
 import {
-  makeRead,
-  makeTypeof,
-  makeDiscard,
-  makeWrite,
-  accountWrite,
-} from "./right.mjs";
-
-import {
   // pack,
   unpack,
   enclose,
@@ -87,20 +79,24 @@ const {
 // meta //
 //////////
 
-export const declareMeta = (scope, name) => {
-  const meta = makeIndexedVariableBody(name, incrementGlobalCounter(scope));
-  const statements = makeDeclareStatements(scope, "def", META, meta, null, []);
-  assert(statements.length === 0, "unexpected declare statement for meta");
-  return meta;
+const declareMetaGeneric = (scope, kind, variable, options) => {
+  variable = indexVariable(name, incrementGlobalCounter(scope));
+  declare(scope, kind, META, variable, options);
+  return variable;
 };
 
+export const declareMeta = partial_x_x(declareMetaGeneric, "define", null);
+
+export const declareMetaMacro = (scope, variable, expression) =>
+  declareMetaGeneric(scope, "macro", variable, {binding: expression});
+
 export const makeMetaReadExpression = (scope, meta) =>
-  makeLookupExpression(scope, META, meta, makeRead());
+  makeReadExpression(scope, META, meta, null);
 
 export const makeMetaWriteEffect = (scope, meta, expression) => {
-  const right = makeWrite(expression);
-  const effect = makeLookupEffect(scope, META, meta, makeWrite(expression));
-  assert(accountWrite(right) === 1, "expected single write access");
+  const counter = createCounter(0);
+  const effect = makeLookupEffect(scope, META, meta, {expression, counter});
+  assert(gaugeCounter(counter) === 1, "expected single write access");
   return effect;
 };
 
@@ -108,179 +104,84 @@ export const makeMetaWriteEffect = (scope, meta, expression) => {
 // spec //
 //////////
 
-export const makeSpecDefineStatements = (scope, name, expression) => {
-  const body = makeVariableBody(name);
-  return concat(
-    makeDeclareStatements(scope, "def", SPEC, body, null, []),
-    makeInitializeStatements(scope, "def", SPEC, body, expression),
-  );
-};
+export const declareSpecMacro = (scope, variable, binding) =>
+  declare(scope, "macro", SPEC, variable, {binding});
 
-export const makeSpecIntrinsicStatements = (scope, name, intrinsic) =>
-  makeDeclareStatements(scope, "intrinsic", SPEC, makeVariableBody(name), {
-    intrinsic,
-  });
+export const declareSpecIllegal = (scope, variable) =>
+  declare(scope, "illegal", SPEC, variable, {name: variable});
 
-export const makeSpecIllegalStatements = (scope, name) =>
-  makeDeclareStatements(scope, "illegal", SPEC, makeVariableBody(name), {name});
+export const declareSpec = partial_xx_x(declare, "define", SPEC, null);
 
-export const makeSpecReadExpression = (scope, name) =>
-  makeLookupExpression(scope, SPEC, makeVariableBody(name), makeRead());
+export const makeSpecInitializeStatementArray = partial_xx__(
+  makeInitializeStatementArray,
+  "define",
+  SPEC,
+);
+
+export const makeSpecReadExpression = (scope, variable) =>
+  partial_x_x(makeReadExpression, SPEC, null);
 
 //////////
 // base //
 //////////
 
-export const makeBaseDeclareStatementArray = (
-  scope,
-  kind,
-  variable,
-  iimport,
-  eexports,
-) =>
-  makeDeclareStatements(
-    scope,
-    kind,
-    BASE,
-    makeVariableBody(variable),
-    iimport,
-    eexports,
-  );
+export const declareBaseImport = (scope, variable, source, specifier) =>
+  declare(scope, "import", variable, {source, specifier});
 
-export const makeBaseInitializeStatementArray = (
-  scope,
-  kind,
-  variable,
-  expression,
-) =>
-  makeInitializeStatements(
-    scope,
-    kind,
-    BASE,
-    makeVariableBody(variable),
-    expression,
-  );
+export const declareBase = (scope, kind, variable, specifiers) =>
+  declare(scope, kind, BASE, variable, {exports: specifiers});
 
-export const makeBaseReadExpression = (scope, variable) =>
-  makeLookupExpression(scope, BASE, makeVariableBody(variable), makeRead());
+export const makeBaseInitializeStatementArray = partial__x__(
+  makeInitializeStatementArray,
+  BASE,
+);
 
-export const makeBaseTypeofExpression = (scope, variable) =>
-  makeLookupExpression(scope, BASE, makeVariableBody(variable), makeTypeof());
+export const makeBaseReadExpression = partial_x_x(
+  makeReadExpression,
+  BASE,
+  null,
+);
 
-export const makeBaseDiscardExpression = (scope, variable) =>
-  makeLookupExpression(scope, BASE, makeVariableBody(variable), makeDiscard());
+export const makeBaseTypeofExpression = partial_x_x(
+  makeTypeofExpression,
+  BASE,
+  null,
+);
 
-export const makeBaseMetaWriteEffect = (scope, variable, meta) =>
-  makeLookupEffect(
-    scope,
-    BASE,
-    makeVariableBody(variable),
-    makeWrite(makeMetaReadExpression(scope, meta)),
-  );
+export const makeBaseDiscardExpression = partial_x_x(
+  makeDiscardExpression,
+  BASE,
+  null,
+);
 
-export const makeBasePrimitiveWriteEffect = (scope, variable, primitive) =>
-  makeLookupEffect(
-    scope,
-    BASE,
-    makeVariableBody(variable),
-    makeWrite(makeLiteralExpression(primitive)),
-  );
-
-export const makeBaseIntrinsicWriteEffect = (scope, variable, intrinsic) =>
-  makeLookupEffect(
-    scope,
-    BASE,
-    makeVariableBody(variable),
-    makeWrite(makeIntrinsicExpression(intrinsic)),
-  );
+export const makeBaseMacroWriteEffect = (scope, variable, macro) =>
+  makeWriteEffect(scope, BASE, makeVariableBody(variable), {
+    expression: macro,
+    counter: createCounter(0),
+  });
 
 export const makeBaseWriteEffect = (scope, variable, expression) => {
-  const right = makeWrite(expression);
-  const effect = makeLookupEffect(
-    scope,
-    BASE,
-    makeVariableBody(variable),
-    right,
-  );
-  const access = accountWrite(right);
-  if (access === 0) {
+  const counter = createCounter(0);
+  const effect = makeWriteEffect(scope, BASE, variable, {
+    expression,
+    counter,
+  });
+  if (gaugeCounter(counter) === 0) {
     return makeSequenceEffect(makeExpressionEffect(expression), effect);
-  } else if (access === 1) {
+  } else if (gaugeCounter(counter) === 1) {
     return effect;
   } else {
     const meta = declareMeta(scope, "right");
     return makeSequenceEffect(
       makeMetaWriteEffect(scope, meta, expression),
-      makeBaseMetaWriteEffect(scope, variable, meta),
+      makeBaseMacroWriteEffect(
+        scope,
+        variable,
+        makeMetaReadExpression(scope, meta),
+      ),
     );
   }
 };
-
-// export const makeSuperGetExpression = (scope, expression) => {
-//   try {
-//     return makeGetExpression(
-//       makeBaseReadExpression(scope, "super"),
-//       expression,
-//     );
-//   } catch (error) {
-//     if (error instanceof SyntaxAranError) {
-//       return makeApplyExpression(
-//         makeBaseReadExpression(scope, "super.get"),
-//         makeLiteralExpression({undefined:null}),
-//         [expression],
-//       );
-//     } else {
-//       throw error;
-//     }
-//   }
-// };
-//
-// export const makeSuperSetExpression = (scope, expression1, expression2) => {
-//   try {
-//     return makeSetExpression(
-//       isStrict(scope),
-//       makeBaseReadExpression(scope, "super"),
-//       expression1,
-//       expression2
-//     );
-//   } catch (error) {
-//     if (error instanceof SyntaxAranError) {
-//       return makeApplyExpression(
-//         makeBaseReadExpression(scope, isStrict(scope) ? "super.setStrict" : "supser.setSloppy"),
-//         makeLiteralExpression({undefined:null}),
-//         [expression1, expression2],
-//       );
-//     } else {
-//       throw error;
-//     }
-//   }
-// };
-//
-// export const makeSuperCallExpression = (scope, expressions) => {
-//   try {
-//     return makeApplyExpression(
-//       makeBaseReadExpression(scope, "super"),
-//       makeLiteralExpression({undefined:null}),
-//       expressions,
-//     );
-//   } catch (error) {
-//     if (error instanceof SyntaxAranError) {
-//       return makeApplyExpression(
-//         makeBaseReadExpression(scope, "super.call"),
-//         makeLiteralExpression({undefined:null}),
-//         expressions,
-//       );
-//     } else {
-//       throw error;
-//     }
-//   }
-// };
-//
-// export const makeSuperCallExpression = (scope, expression) => {
-//   try {
-//     return makeApplyExpression(
-//
-//     );
 
 //////////////////////
 // makeDynamicBlock //
@@ -290,17 +191,18 @@ const makeDynamicBlock = (
   scope,
   labels,
   type,
-  meta,
+  variable,
   observable,
   makeStatementArray,
 ) =>
-  makeChainBlock(
+  makeBlock(
     scope,
     labels,
     [
+      createFrame(MACRO, META, {}),
       createFrame(DEFINE_STATIC, META, {}),
       createFrame(type, BASE, {
-        dynamic: makeMetaReadExpression(scope, meta),
+        macro: makeMetaReadExpression(scope, variable),
         observable,
       }),
       createFrame(BLOCK_STATIC, BASE, {distant: false}),
@@ -338,68 +240,74 @@ const makeDummyEnclaveEntry = ([name]) => [
   makeLiteralExpression(`dummy-${name}`),
 ];
 
-const enclave_dummy_entries = map(
-  enclave_presence_entries,
-  makeDummyEnclaveEntry,
-);
-
-const declareEnclave = (scope, [enclave, presence]) => [
+const declareEnclave = (scope, [name, presence]) => [
   enclave,
   presence === false || (presence === null && isStrict(scope))
     ? null
-    : declareMeta(scope, `enclave.${enclave}`),
+    : declareMeta(scope, `enclave.${name}`),
 ];
 
-const initializeEnclave = (scope, [enclave, meta]) =>
-  meta === null
+const initializeEnclave = (scope, [name, variable]) =>
+  variable === null
     ? []
     : [
         makeEffectStatement(
           makeMetaWriteEffect(
             scope,
-            meta,
-            makeGetExpression(makeInputExpression(), `scope.${enclave}`),
+            variable,
+            makeGetExpression(makeInputExpression(), `scope.${name}`),
           ),
         ),
       ];
 
-const populateEnclave = (scope, enclaves, [enclave, meta]) => {
-  enclaves[enclave] =
-    meta === null
-      ? makeLiteralExpression(`unexpected call to enclave.${enclave}`)
-      : makeMetaReadExpression(scope, meta);
+const populateEnclave = (scope, macros, [name, variable]) => {
+  defineProperty(
+    macros,
+    name,
+    {
+      __proto__: null,
+      value: variable === null
+        ? makeLiteralExpression(`unexpected call to enclave.${name}`)
+        : makeMetaReadExpression(scope, variable),
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    },
+  );
 };
 
-const makeEnclaveStatementArray = (scope, enclaves, makeStatementArray) => {
-  const metas = map(enclave_presence_entries, partialx_(declareEnclave, scope));
-  forEach(metas, partialxx_(populateEnclave, scope, enclaves));
+const makeEnclaveStatementArray = (scope, macros, makeStatementArray) => {
+  const entries = map(enclave_presence_entries, partialx_(declareEnclave, scope));
+  forEach(entries, partialxx_(populateEnclave, scope, macros));
   return concat(
-    flatMap(metas, partialx_(initializeEnclave, scope)),
+    flatMap(entries, partialx_(initializeEnclave, scope)),
     makeStatementArray(scope),
   );
 };
 
 export const makeScopeExternalLocalEvalProgram = (
-  {strict, allowances, counter},
+  {strict, specials, counter},
   makeStatementArray,
 ) => {
-  const enclaves = fromEntries(enclave_dummy_entries);
+  const macros = {};
   return makeExternalLocalEvalProgram(
-    allowances,
-    makeChainBlock(
+    specials,
+    makeBlock(
       strict ? useStrict(createRoot(counter)) : createRoot(counter),
       [],
       concat(
         [
+          createFrame(MACRO, META, {}),
           createFrame(DEFINE_STATIC, META, {}),
-          createFrame(ENCLAVE, BASE, {enclaves}),
-          // NB: Everything that is in the allowances should be reported as internal error
-          createFrame(MASK, BASE, {masking: global_masking}),
+          createFrame(ILLEGAL, SPEC, {}),
+          createFrame(MACRO, SPEC, {}),
+          createFrame(DEFINE, SPEC, {}),
+          createFrame(ENCLAVE, BASE, {macros}),
         ],
         strict ? [createFrame(CLOSURE_STATIC, BASE, {})] : [],
         [createFrame(BLOCK_STATIC, BASE, {distant: false})],
       ),
-      partial_xx(makeEnclaveStatementArray, enclaves, makeStatementArray),
+      partial_xx(makeEnclaveStatementArray, macros, makeStatementArray),
     ),
   );
 };
@@ -408,25 +316,24 @@ export const makeScopeExternalLocalEvalProgram = (
 // makeGlobalBlock //
 /////////////////////
 
-const global_masking = fromEntries(map(specials, makeMaskingEntry));
-
 const makeGlobalBaseFrameArray = (enclave) =>
   enclave
     ? [
         createFrame(ENCLAVE, BASE, {
-          read: makeIntrinsicExpression("aran.getGlobal"),
+          read: makeIntrinsicExpression("aran.readGlobal"),
           typeof: makeIntrinsicExpression("aran.typeofGlobal"),
-          discardSloppy: makeIntrinsicExpression("aran.deleteGlobalSloppy"),
+          discardSloppy: makeIntrinsicExpression("aran.discardGlobalSloppy"),
           discardStrict: makeLiteralExpression(
             "delete unqualified identifier should never happen in strict mode",
           ),
-          writeSloppy: makeIntrinsicExpression("aran.setGlobalSloppy"),
-          writeStrict: makeIntrinsicExpression("aran.setGlobalStrict"),
+          writeSloppy: makeIntrinsicExpression("aran.writeGlobalSloppy"),
+          writeStrict: makeIntrinsicExpression("aran.writeGlobalStrict"),
         }),
       ]
     : [
         createFrame(EMPTY_VOID, BASE, {
           dynamic: makeIntrinsicExpression("aran.globalObject"),
+          observable: true,
         }),
         createFrame(CLOSURE_DYNAMIC, BASE, {
           dynamic: makeIntrinsicExpression("aran.globalObject"),
@@ -434,7 +341,7 @@ const makeGlobalBaseFrameArray = (enclave) =>
         }),
         createFrame(BLOCK_DYNAMIC, BASE, {
           dynamic: makeIntrinsicExpression("aran.globalRecord"),
-          observable: true,
+          observable: false,
         }),
       ];
 
@@ -446,8 +353,9 @@ export const makeScopeScriptProgram = (
     strict ? useStrict(createRoot(counter)) : createRoot(counter),
     concat(
       [
+        createFrame(MACRO, META, {}),
         createFrame(DEFINE_DYNAMIC, META, {
-          dynamic: makeIntrinsicExpression("aran.globalCache"),
+          macro: makeIntrinsicExpression("aran.globalCache"),
         }),
         createFrame(INTRINSIC, SPEC, {}),
         createFrame(ILLEGAL, SPEC, {}),
@@ -468,6 +376,7 @@ export const makeScopeModuleProgram = (
       [],
       concat(
         [
+          createFrame(MACRO, META, {}),
           createFrame(DEFINE_STATIC, META, {}),
           createFrame(DEFINE_STATIC, SPEC, {}),
           createFrame(INTRINSIC, SPEC, {}),
@@ -514,46 +423,47 @@ export const makeScopeGlobalEvalProgram = (
 const createBlueprintFrame = ([type, layer, options]) =>
   createFrame(type, layer, options);
 
-const makeBluePrintBlock = (scope, labels, blueprints, makeStatementArray) =>
-  makeChainBlock(
+const makeBlueprintBlock = (scope, labels, blueprints, makeStatementArray) =>
+  makeBlock(
     scope,
     labels,
     map(blueprints, createBlueprintFrame),
     makeStatementArray,
   );
 
-export const makeScopeBlock = partial__x_(makeBluePrintBlock, [
+export const makeStaticClosureBlock = partial__x_(makeBlueprintBlock, [
+  [MACRO, META, {}],
+  [DEFINE_STATIC, META, {}],
+  [CLOSURE_STATIC, BASE, {}],
+  [BLOCK_STATIC, BASE, {distant: false}],
+]);
+
+export const makeScopeBlock = partial__x_(makeBlueprintBlock, [
+  [MACRO, META, {}],
   [DEFINE_STATIC, META, {}],
   [BLOCK_STATIC, BASE, {distant: false}],
 ]);
 
-export const makeStaticClosureBlock = partial__x_(makeBluePrintBlock, [
-  [DEFINE_STATIC, META, {}],
-  [CLOSURE_STATIC, META, {}],
-  [BLOCK_STATIC, META, {distant: false}],
-]);
-
-export const makeDistantBlock = partial__x_(makeBluePrintBlock, [
+export const makeDistantBlock = partial__x_(makeBlueprintBlock, [
+  [MACRO, META, {}],
   [DEFINE_STATIC, META, {}],
   [BLOCK_STATIC, META, {distant: true}],
 ]);
 
-export const makeEmptyBlock = partial__x_(makeBluePrintBlock, [
+export const makeEmptyBlock = partial__x_(makeBlueprintBlock, [
+  [MACRO, META, {}],
   [DEFINE_STATIC, META, {}],
 ]);
 
-export const makeDeadBlock = partial__x_(makeBluePrintBlock, [
+export const makeDeadBlock = partial__x_(makeBlueprintBlock, [
+  [MACRO, META, {}],
   [DEFINE_STATIC, META, {}],
-  [BLOCK_STATIC_DEAD, META, {}],
+  [BLOCK_STATIC_DEAD, BASE, {}],
 ]);
 
 ///////////
 // Other //
 ///////////
-
-const closure_masking = fromEntries(
-  map(filterOut(specials, partialx_(equals, "import.meta")), makeMaskingEntry),
-);
 
 export const makeScopeClosureExpression = (
   scope,
@@ -567,19 +477,14 @@ export const makeScopeClosureExpression = (
     makeChainBlock(
       strict ? useStrict(enclose(scope)) : enclose(scope),
       [],
-      concat(
-        [
-          createFrame(DEFINE_STATIC, BASE, {}),
-          createFrame(DEFINE_STATIC, SPEC, {}),
-          createFrame(INTRINSIC, SPEC, {}),
-          createFrame(ILLEGAL, SPEC, {}),
-        ],
-        type === "arrow"
-          ? []
-          : // NB: 'this' and 'new.target' should be reported as internal error.
-            [createFrame(MASK, BASE, {masking: closure_masking})],
-        [createFrame(BLOCK_STATIC, BASE, {distant: false})],
-      ),
+      [
+        createFrame(MACRO, META, {}),
+        createFrame(DEFINE_STATIC, META, {}),
+        createFrame(ILLEGAL, SPEC, {}),
+        createFrame(MACRO, SPEC, {}),
+        createFrame(DEFINE_STATIC, SPEC, {}),
+        createFrame(BLOCK_STATIC, BASE, {distant: false}),
+      ],
       makeStatementArray,
     ),
   );
@@ -598,10 +503,11 @@ export const makeScopeInternalLocalEvalProgram = (
       [],
       concat(
         [
+          createFrame(MACRO, META, {}),
           createFrame(DEFINE_STATIC, META, {}),
-          createFrame(DEFINE_STATIC, SPEC, {}),
-          createFrame(INTRINSIC, SPEC, {}),
           createFrame(ILLEGAL, SPEC, {}),
+          createFrame(MACRO, SPEC, {}),
+          createFrame(DEFINE_STATIC, SPEC, {}),
         ],
         strict ? [createFrame(CLOSURE_STATIC, BASE, {})] : [],
         [createFrame(BLOCK_STATIC, BASE, {distant: false})],

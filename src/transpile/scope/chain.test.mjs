@@ -2,13 +2,15 @@ import {concat} from "array-lite";
 
 import {assertSuccess} from "../../__fixture__.mjs";
 
-import {makeLiteralExpression, makeEffectStatement} from "../../ast/index.mjs";
+import {
+  makeLiteralExpression,
+  makeEffectStatement,
+  makeExpressionEffect,
+} from "../../ast/index.mjs";
 
 import {allignBlock} from "../../allign/index.mjs";
 
 import {BASE, META} from "./variable.mjs";
-
-import {makeRead} from "./right.mjs";
 
 import {enclose} from "./structure.mjs";
 
@@ -21,54 +23,55 @@ import {
 } from "./frame/index.mjs";
 
 import {
-  makeChainBlock,
-  makeDeclareStatements,
-  makeInitializeStatements,
-  makeLookupEffect,
+  makeBlock,
+  declare,
+  makeInitializeStatementArray,
+  makeReadExpression,
 } from "./chain.mjs";
 
 assertSuccess(
   allignBlock(
-    makeChainBlock(
+    makeBlock(
       createRoot(123),
       ["label"],
       [
         createFrame(BLOCK_STATIC, BASE, {}),
         createFrame(DEFINE_STATIC, META, {}),
       ],
-      (scope) =>
-        concat(
-          makeDeclareStatements(scope, "const", BASE, "variable", {
-            exports: [],
-          }),
+      (scope) => {
+        declare(scope, "const", BASE, "variable", {exports: []});
+        return concat(
           [
             makeEffectStatement(
-              makeLookupEffect(enclose(scope), BASE, "variable", makeRead()),
+              makeExpressionEffect(
+                makeReadExpression(enclose(scope), BASE, "variable", null),
+              ),
             ),
           ],
-          makeInitializeStatements(
+          makeInitializeStatementArray(
             scope,
             "const",
             BASE,
             "variable",
             makeLiteralExpression("right"),
           ),
-        ),
+        );
+      },
     ),
     `
       label: {
         let variable, initialized;
         initialized = false;
-        (
-          initialized ?
-          effect(variable) :
-          effect(
+        effect(
+          (
+            initialized ?
+            variable :
             intrinsic.aran.throw(
               new intrinsic.ReferenceError(
                 "Cannot access variable 'variable' before initialization",
               ),
-            ),
-          )
+            )
+          ),
         );
         variable = 'right';
         initialized = true;

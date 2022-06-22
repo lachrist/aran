@@ -1,13 +1,11 @@
 import {concat, reduce, includes, slice, every} from "array-lite";
 
-import {
-  assert,
-  partialx__,
-  partialx___,
-  partialx____,
-} from "../../util/index.mjs";
+import {assert, partialx__, partialx___} from "../../util/index.mjs";
 
-import {makeScriptProgram, makeBlock} from "../../ast/index.mjs";
+import {
+  makeScriptProgram as makeRawScriptProgram,
+  makeBlock as makeRawBlock,
+} from "../../ast/index.mjs";
 
 import {
   extend as extendStructure,
@@ -19,11 +17,17 @@ import {isStrict} from "./property.mjs";
 import {
   conflict as conflictFrame,
   harvest as harvestFrame,
-  makeDeclareStatements as makeFrameDeclareStatements,
-  makeInitializeStatements as makeFrameInitializeStatements,
-  makeLookupExpression as makeFrameLookupExpression,
-  makeLookupEffect as makeFrameLookupEffect,
+  declare as declareFrame,
+  makeInitializeStatementArray as makeFrameInitializeStatementArray,
+  makeReadExpression as makeFrameReadExpression,
+  makeTypeofExpression as makeFrameTypeofExpression,
+  makeDiscardExpression as makeFrameDiscardExpression,
+  makeWriteEffect as makeFrameWriteEffect,
 } from "./frame/index.mjs";
+
+///////////
+// Block //
+///////////
 
 const isUnique = (element, index, array) =>
   !includes(slice(array, 0, index), element);
@@ -54,43 +58,43 @@ const makeScopeNode = (makeNode, scope, frames, makeStatementArray) => {
   return makeNode(variables, concat(statements1, statements2));
 };
 
-export const makeChainBlock = (scope, labels, frames, makeStatementArray) =>
+export const makeBlock = (scope, labels, frames, makeStatementArray) =>
   makeScopeNode(
-    partialx__(makeBlock, labels),
+    partialx__(makeRawBlock, labels),
     scope,
     frames,
     makeStatementArray,
   );
 
-export const makeChainScriptProgram = partialx___(
+export const makeScriptProgram = partialx___(
   makeScopeNode,
-  makeScriptProgram,
+  makeRawScriptProgram,
 );
+
+/////////////
+// Declare //
+/////////////
 
 const declareLoop = (strict, scope1, kind, layer, variable, options) => {
   const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
   assert(!escaped, "escaped scope during declaration");
   conflictFrame(strict, frame, kind, layer, variable);
-  const maybe = makeFrameDeclareStatements(
-    strict,
-    frame,
-    kind,
-    layer,
-    variable,
-    options,
-  );
-  return maybe === null
-    ? declareLoop(strict, scope2, kind, layer, variable, options)
-    : maybe;
+  if (!declareFrame(strict, frame, kind, layer, variable, options)) {
+    declareLoop(strict, scope2, kind, layer, variable, options);
+  }
 };
 
-export const makeDeclareStatements = (scope, kind, layer, variable, options) =>
+export const declare = (scope, kind, layer, variable, options) =>
   declareLoop(isStrict(scope), scope, kind, layer, variable, options);
+
+////////////////
+// Initialize //
+////////////////
 
 const initializeLoop = (strict, scope1, kind, layer, variable, expression) => {
   const {scope: scope2, frame, escaped} = fetchStructure(scope1, false);
   assert(!escaped, "escaped scope during initialization");
-  const maybe = makeFrameInitializeStatements(
+  const maybe = makeFrameInitializeStatementArray(
     strict,
     frame,
     kind,
@@ -106,13 +110,17 @@ const initializeLoop = (strict, scope1, kind, layer, variable, expression) => {
   }
 };
 
-export const makeInitializeStatements = (
+export const makeInitializeStatementArray = (
   scope,
   kind,
   layer,
   variable,
   expression,
 ) => initializeLoop(isStrict(scope), scope, kind, layer, variable, expression);
+
+////////////
+// Lookup //
+////////////
 
 const lookupLoop = (
   makeFrameLookupNode,
@@ -121,7 +129,7 @@ const lookupLoop = (
   scope1,
   layer,
   variable,
-  right,
+  options,
 ) => {
   const {
     scope: scope2,
@@ -137,34 +145,33 @@ const lookupLoop = (
         scope2,
         layer,
         variable,
-        right,
+        options,
       ),
     strict,
     escaped2,
     frame,
     layer,
     variable,
-    right,
+    options,
   );
 };
 
-const makeLookupNode = (makeFrameLookupNode, scope, layer, variable, right) =>
-  lookupLoop(
-    makeFrameLookupNode,
-    isStrict(scope),
-    false,
-    scope,
-    layer,
-    variable,
-    right,
-  );
+const generateLookup =
+  (makeFrameLookupNode) => (scope, layer, variable, options) =>
+    lookupLoop(
+      makeFrameLookupNode,
+      isStrict(scope),
+      false,
+      scope,
+      layer,
+      variable,
+      options,
+    );
 
-export const makeLookupExpression = partialx____(
-  makeLookupNode,
-  makeFrameLookupExpression,
-);
+export const makeReadExpression = generateLookup(makeFrameReadExpression);
 
-export const makeLookupEffect = partialx____(
-  makeLookupNode,
-  makeFrameLookupEffect,
-);
+export const makeTypeofExpression = generateLookup(makeFrameTypeofExpression);
+
+export const makeDiscardExpression = generateLookup(makeFrameDiscardExpression);
+
+export const makeWriteEffect = generateLookup(makeFrameWriteEffect);
