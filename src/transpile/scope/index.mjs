@@ -1,20 +1,24 @@
 import {flatMap, concat, map, forEach} from "array-lite";
 
 import {
+  constant,
+  createCounter,
+  gaugeCounter,
   assert,
   partialx_,
   partial_xx,
   partialxx_,
-  partial__x_x_,
-  partial__x_,
+  partial_x_x,
+  partial_xx_x,
+  partial_xx__,
+  partial__x__,
 } from "../../util/index.mjs";
 
 import {
-  makeModuleProgram as makeRawModuleProgram,
-  makeGlobalEvalProgram as makeRawGlobalEvalProgram,
-  makeExternalLocalEvalProgram as makeRawExternalLocalEvalProgram,
-  makeInternalLocalEvalProgram as makeRawInternalLocalEvalProgram,
-  makeClosureExpression as makeRawClosureExpression,
+  makeModuleProgram,
+  makeGlobalEvalProgram,
+  makeExternalLocalEvalProgram,
+  makeClosureExpression,
   makeIntrinsicExpression,
   makeEffectStatement,
   makeSequenceEffect,
@@ -25,30 +29,20 @@ import {
 
 import {makeGetExpression} from "../../intrinsic.mjs";
 
-import {
-  BASE,
-  SPEC,
-  META,
-  makeVariableBody,
-  makeIndexedVariableBody,
-} from "./variable.mjs";
+import {BASE, SPEC, META, indexVariable} from "./variable.mjs";
+
+import {encloseScope} from "./core.mjs";
 
 import {
-  // pack,
-  unpack,
-  enclose,
-} from "./structure.mjs";
+  useStrictScope,
+  isStrictScope,
+  incrementScopeCounter,
+  resetScopeCounter,
+  createRootScope,
+} from "./binding.mjs";
 
 import {
-  useStrict,
-  isStrict,
-  incrementGlobalCounter,
-  resetGlobalCounter,
-  createRoot,
-} from "./property.mjs";
-
-import {
-  create as createFrame,
+  createFrame,
   BLOCK_DYNAMIC,
   BLOCK_STATIC_DEAD,
   BLOCK_STATIC,
@@ -59,22 +53,29 @@ import {
   EMPTY_DYNAMIC_WITH,
   EMPTY_VOID,
   ENCLAVE,
+  ILLEGAL,
   IMPORT_STATIC,
+  MACRO,
 } from "./frame/index.mjs";
 
 import {
-  makeChainBlock,
-  makeChainScriptProgram,
-  makeDeclareStatements,
-  makeInitializeStatements,
-  makeLookupExpression,
-  makeLookupEffect,
-} from "./chain.mjs";
+  makeScopeFrameBlock,
+  makeScopeFrameScriptProgram,
+  declareScope,
+  makeScopeInitializeStatementArray,
+  makeScopeReadExpression,
+  makeScopeTypeofExpression,
+  makeScopeDiscardExpression,
+  makeScopeWriteEffect,
+  makeScopeFrameInternalLocalEvalProgram,
+} from "./frame.mjs";
 
-export {makeEvalExpression} from "./chain.mjs";
+export {packScope, unpackScope} from "./core.mjs";
+
+export {makeScopeEvalExpression} from "./frame.mjs";
 
 const {
-  Object: {fromEntries},
+  Reflect: {defineProperty},
 } = globalThis;
 
 //////////
@@ -82,8 +83,8 @@ const {
 //////////
 
 const declareMetaGeneric = (scope, kind, variable, options) => {
-  variable = indexVariable(name, incrementGlobalCounter(scope));
-  declare(scope, kind, META, variable, options);
+  variable = indexVariable(variable, incrementScopeCounter(scope));
+  declareScope(scope, kind, META, variable, options);
   return variable;
 };
 
@@ -93,11 +94,11 @@ export const declareMetaMacro = (scope, variable, expression) =>
   declareMetaGeneric(scope, "macro", variable, {binding: expression});
 
 export const makeMetaReadExpression = (scope, meta) =>
-  makeReadExpression(scope, META, meta, null);
+  makeScopeReadExpression(scope, META, meta, null);
 
 export const makeMetaWriteEffect = (scope, meta, expression) => {
   const counter = createCounter(0);
-  const effect = makeLookupEffect(scope, META, meta, {expression, counter});
+  const effect = makeScopeWriteEffect(scope, META, meta, {expression, counter});
   assert(gaugeCounter(counter) === 1, "expected single write access");
   return effect;
 };
@@ -107,64 +108,67 @@ export const makeMetaWriteEffect = (scope, meta, expression) => {
 //////////
 
 export const declareSpecMacro = (scope, variable, binding) =>
-  declare(scope, "macro", SPEC, variable, {binding});
+  declareScope(scope, "macro", SPEC, variable, {binding});
 
 export const declareSpecIllegal = (scope, variable) =>
-  declare(scope, "illegal", SPEC, variable, {name: variable});
+  declareScope(scope, "illegal", SPEC, variable, {name: variable});
 
-export const declareSpec = partial_xx_x(declare, "define", SPEC, null);
+export const declareSpec = partial_xx_x(declareScope, "define", SPEC, null);
 
 export const makeSpecInitializeStatementArray = partial_xx__(
-  makeInitializeStatementArray,
+  makeScopeInitializeStatementArray,
   "define",
   SPEC,
 );
 
-export const makeSpecReadExpression = (scope, variable) =>
-  partial_x_x(makeReadExpression, SPEC, null);
+export const makeSpecReadExpression = partial_x_x(
+  makeScopeReadExpression,
+  SPEC,
+  null,
+);
 
 //////////
 // base //
 //////////
 
 export const declareBaseImport = (scope, variable, source, specifier) =>
-  declare(scope, "import", variable, {source, specifier});
+  declareScope(scope, "import", variable, {source, specifier});
 
 export const declareBase = (scope, kind, variable, specifiers) =>
-  declare(scope, kind, BASE, variable, {exports: specifiers});
+  declareScope(scope, kind, BASE, variable, {exports: specifiers});
 
 export const makeBaseInitializeStatementArray = partial__x__(
-  makeInitializeStatementArray,
+  makeScopeInitializeStatementArray,
   BASE,
 );
 
 export const makeBaseReadExpression = partial_x_x(
-  makeReadExpression,
+  makeScopeReadExpression,
   BASE,
   null,
 );
 
 export const makeBaseTypeofExpression = partial_x_x(
-  makeTypeofExpression,
+  makeScopeTypeofExpression,
   BASE,
   null,
 );
 
 export const makeBaseDiscardExpression = partial_x_x(
-  makeDiscardExpression,
+  makeScopeDiscardExpression,
   BASE,
   null,
 );
 
 export const makeBaseMacroWriteEffect = (scope, variable, macro) =>
-  makeWriteEffect(scope, BASE, makeVariableBody(variable), {
+  makeScopeWriteEffect(scope, BASE, variable, {
     expression: macro,
     counter: createCounter(0),
   });
 
 export const makeBaseWriteEffect = (scope, variable, expression) => {
   const counter = createCounter(0);
-  const effect = makeWriteEffect(scope, BASE, variable, {
+  const effect = makeScopeWriteEffect(scope, BASE, variable, {
     expression,
     counter,
   });
@@ -185,43 +189,128 @@ export const makeBaseWriteEffect = (scope, variable, expression) => {
   }
 };
 
+///////////////
+// Blueprint //
+///////////////
+
+const createMetaFrameArray = () => [
+  createFrame(MACRO, META, {}),
+  createFrame(DEFINE_STATIC, META, {}),
+];
+
+const createTransparentMetaFrameArray = () => [
+  createFrame(MACRO, META, {}),
+  createFrame(DEFINE_DYNAMIC, META, {
+    macro: makeIntrinsicExpression("aran.globalCache"),
+    observable: false,
+  }),
+];
+
+const createSpecFrameArray = () => [
+  createFrame(ILLEGAL, SPEC, {}),
+  createFrame(MACRO, SPEC, {}),
+  createFrame(DEFINE_STATIC, SPEC, {}),
+];
+
+const createTransparentSpecFrameArray = () => [
+  createFrame(ILLEGAL, SPEC, {}),
+  createFrame(MACRO, SPEC, {}),
+];
+
+const createExternalGlobalBaseFrameArray = (macros) => [
+  createFrame(ENCLAVE, BASE, {macros}),
+];
+
+const createInternalGlobalBaseFrameArray = (enclave) =>
+  enclave
+    ? [
+        createFrame(ENCLAVE, BASE, {
+          read: makeIntrinsicExpression("aran.readGlobal"),
+          typeof: makeIntrinsicExpression("aran.typeofGlobal"),
+          discardSloppy: makeIntrinsicExpression("aran.discardGlobalSloppy"),
+          discardStrict: makeLiteralExpression(
+            "delete unqualified identifier should never happen in strict mode",
+          ),
+          writeSloppy: makeIntrinsicExpression("aran.writeGlobalSloppy"),
+          writeStrict: makeIntrinsicExpression("aran.writeGlobalStrict"),
+        }),
+      ]
+    : [
+        createFrame(EMPTY_VOID, BASE, {
+          dynamic: makeIntrinsicExpression("aran.globalObject"),
+          observable: true,
+        }),
+        createFrame(CLOSURE_DYNAMIC, BASE, {
+          dynamic: makeIntrinsicExpression("aran.globalObject"),
+          observable: true,
+        }),
+        createFrame(BLOCK_DYNAMIC, BASE, {
+          dynamic: makeIntrinsicExpression("aran.globalRecord"),
+          observable: false,
+        }),
+      ];
+
+const createEvalBaseFrameArray = (strict) =>
+  concat(strict ? [createFrame(CLOSURE_STATIC, BASE, {})] : [], [
+    createFrame(BLOCK_STATIC, BASE, {distant: false}),
+  ]);
+
+const createModuleBaseFrameArray = () => [
+  createFrame(CLOSURE_STATIC, BASE, {}),
+  createFrame(BLOCK_STATIC, BASE, {distant: false}),
+  createFrame(IMPORT_STATIC, BASE, {}),
+];
+
+const createStaticClosureBaseFrameArray = () => [
+  createFrame(CLOSURE_STATIC, BASE, {}),
+  createFrame(BLOCK_STATIC, BASE, {distant: false}),
+];
+
+const createDynamicClosureBaseFrameArray = (macro) => [
+  createFrame(CLOSURE_STATIC, BASE, {macro, observable: false}),
+  createFrame(BLOCK_STATIC, BASE, {distant: false}),
+];
+
+const createWithBaseFrameArray = (macro) => [
+  createFrame(EMPTY_DYNAMIC_WITH, BASE, {macro, observable: true}),
+  createFrame(BLOCK_STATIC, BASE, {distant: false}),
+];
+
+const createBlockBaseFrameArray = () => [
+  createFrame(BLOCK_STATIC, BASE, {distant: false}),
+];
+
+const createDistantBlockBaseFrameArray = () => [
+  createFrame(BLOCK_STATIC, BASE, {distant: true}),
+];
+
+const createDeadBlockBaseFrameArray = () => [
+  createFrame(BLOCK_STATIC_DEAD, BASE, {}),
+];
+
 //////////////////////
 // makeDynamicBlock //
 //////////////////////
 
-const makeDynamicBlock = (
-  scope,
-  labels,
-  type,
-  variable,
-  observable,
-  makeStatementArray,
-) =>
-  makeBlock(
-    scope,
-    labels,
-    [
-      createFrame(MACRO, META, {}),
-      createFrame(DEFINE_STATIC, META, {}),
-      createFrame(type, BASE, {
-        macro: makeMetaReadExpression(scope, variable),
-        observable,
-      }),
-      createFrame(BLOCK_STATIC, BASE, {distant: false}),
-    ],
-    makeStatementArray,
-  );
+const generateMakeScopeDynamicBlock =
+  (createBaseFrameArray) =>
+  (scope, {labels, frame: variable}, makeStatementArray) =>
+    makeScopeFrameBlock(
+      scope,
+      labels,
+      concat(
+        createMetaFrameArray(),
+        createBaseFrameArray(makeMetaReadExpression(scope, variable)),
+      ),
+      makeStatementArray,
+    );
 
-export const makeScopeDynamicClosureBlock = partial__x_x_(
-  makeDynamicBlock,
-  CLOSURE_DYNAMIC,
-  false,
+export const makeScopeDynamicClosureBlock = generateMakeScopeDynamicBlock(
+  createDynamicClosureBaseFrameArray,
 );
 
-export const makeScopeWithBlock = partial__x_x_(
-  makeDynamicBlock,
-  EMPTY_DYNAMIC_WITH,
-  true,
+export const makeScopeWithBlock = generateMakeScopeDynamicBlock(
+  createWithBaseFrameArray,
 );
 
 ///////////////////////////////////////
@@ -237,14 +326,9 @@ const enclave_presence_entries = [
   ["writeSloppy", null],
 ];
 
-const makeDummyEnclaveEntry = ([name]) => [
-  name,
-  makeLiteralExpression(`dummy-${name}`),
-];
-
 const declareEnclave = (scope, [name, presence]) => [
-  enclave,
-  presence === false || (presence === null && isStrict(scope))
+  name,
+  presence === false || (presence === null && isStrictScope(scope))
     ? null
     : declareMeta(scope, `enclave.${name}`),
 ];
@@ -294,20 +378,16 @@ export const makeScopeExternalLocalEvalProgram = (
   const macros = {};
   return makeExternalLocalEvalProgram(
     specials,
-    makeBlock(
-      strict ? useStrict(createRoot(counter)) : createRoot(counter),
+    makeScopeFrameBlock(
+      strict
+        ? useStrictScope(createRootScope(counter))
+        : createRootScope(counter),
       [],
       concat(
-        [
-          createFrame(MACRO, META, {}),
-          createFrame(DEFINE_STATIC, META, {}),
-          createFrame(ILLEGAL, SPEC, {}),
-          createFrame(MACRO, SPEC, {}),
-          createFrame(DEFINE, SPEC, {}),
-          createFrame(ENCLAVE, BASE, {macros}),
-        ],
-        strict ? [createFrame(CLOSURE_STATIC, BASE, {})] : [],
-        [createFrame(BLOCK_STATIC, BASE, {distant: false})],
+        createMetaFrameArray(),
+        createSpecFrameArray(),
+        createExternalGlobalBaseFrameArray(macros),
+        createEvalBaseFrameArray(strict),
       ),
       partial_xx(makeEnclaveStatementArray, macros, makeStatementArray),
     ),
@@ -318,54 +398,21 @@ export const makeScopeExternalLocalEvalProgram = (
 // makeGlobalBlock //
 /////////////////////
 
-const makeGlobalBaseFrameArray = (enclave) =>
-  enclave
-    ? [
-        createFrame(ENCLAVE, BASE, {
-          read: makeIntrinsicExpression("aran.readGlobal"),
-          typeof: makeIntrinsicExpression("aran.typeofGlobal"),
-          discardSloppy: makeIntrinsicExpression("aran.discardGlobalSloppy"),
-          discardStrict: makeLiteralExpression(
-            "delete unqualified identifier should never happen in strict mode",
-          ),
-          writeSloppy: makeIntrinsicExpression("aran.writeGlobalSloppy"),
-          writeStrict: makeIntrinsicExpression("aran.writeGlobalStrict"),
-        }),
-      ]
-    : [
-        createFrame(EMPTY_VOID, BASE, {
-          dynamic: makeIntrinsicExpression("aran.globalObject"),
-          observable: true,
-        }),
-        createFrame(CLOSURE_DYNAMIC, BASE, {
-          dynamic: makeIntrinsicExpression("aran.globalObject"),
-          observable: true,
-        }),
-        createFrame(BLOCK_DYNAMIC, BASE, {
-          dynamic: makeIntrinsicExpression("aran.globalRecord"),
-          observable: false,
-        }),
-      ];
-
 export const makeScopeScriptProgram = (
   {strict, enclave, counter},
   makeStatementArray,
-) =>
-  makeChainScriptProgram(
-    strict ? useStrict(createRoot(counter)) : createRoot(counter),
+) => {
+  const scope = createRootScope(counter);
+  return makeScopeFrameScriptProgram(
+    strict ? useStrictScope(scope) : scope,
     concat(
-      [
-        createFrame(MACRO, META, {}),
-        createFrame(DEFINE_DYNAMIC, META, {
-          macro: makeIntrinsicExpression("aran.globalCache"),
-        }),
-        createFrame(INTRINSIC, SPEC, {}),
-        createFrame(ILLEGAL, SPEC, {}),
-      ],
-      makeGlobalBaseFrameArray(enclave),
+      createTransparentMetaFrameArray(),
+      createTransparentSpecFrameArray(),
+      createInternalGlobalBaseFrameArray(enclave),
     ),
     makeStatementArray,
   );
+};
 
 export const makeScopeModuleProgram = (
   {enclave, counter, links},
@@ -373,23 +420,14 @@ export const makeScopeModuleProgram = (
 ) =>
   makeModuleProgram(
     links,
-    makeChainBlock(
-      useStrict(createRoot(counter)),
+    makeScopeFrameBlock(
+      useStrictScope(createRootScope(counter)),
       [],
       concat(
-        [
-          createFrame(MACRO, META, {}),
-          createFrame(DEFINE_STATIC, META, {}),
-          createFrame(DEFINE_STATIC, SPEC, {}),
-          createFrame(INTRINSIC, SPEC, {}),
-          createFrame(ILLEGAL, SPEC, {}),
-        ],
-        makeGlobalBaseFrameArray(enclave),
-        [
-          createFrame(CLOSURE_STATIC, BASE, {}),
-          createFrame(BLOCK_STATIC, BASE, {distant: false}),
-          createFrame(IMPORT_STATIC, BASE, {}),
-        ],
+        createMetaFrameArray(),
+        createSpecFrameArray(),
+        createInternalGlobalBaseFrameArray(enclave),
+        createModuleBaseFrameArray(),
       ),
       makeStatementArray,
     ),
@@ -398,70 +436,54 @@ export const makeScopeModuleProgram = (
 export const makeScopeGlobalEvalProgram = (
   {strict, enclave, counter},
   makeStatementArray,
-) =>
-  makeGlobalEvalProgram(
-    makeChainBlock(
-      strict ? useStrict(createRoot(counter)) : createRoot(counter),
+) => {
+  const scope = createRootScope(counter);
+  return makeGlobalEvalProgram(
+    makeScopeFrameBlock(
+      strict ? useStrictScope(scope) : scope,
       [],
       concat(
-        [
-          createFrame(DEFINE_STATIC, META, {}),
-          createFrame(DEFINE_STATIC, SPEC, {}),
-          createFrame(INTRINSIC, SPEC, {}),
-          createFrame(ILLEGAL, SPEC, {}),
-        ],
-        makeGlobalBaseFrameArray(enclave),
-        strict ? [createFrame(CLOSURE_STATIC, BASE, {})] : [],
-        [createFrame(BLOCK_STATIC, BASE, {distant: false})],
+        createMetaFrameArray(),
+        createSpecFrameArray(),
+        createInternalGlobalBaseFrameArray(enclave),
+        createEvalBaseFrameArray(strict),
       ),
       makeStatementArray,
     ),
   );
+};
 
 ////////////////////////
 // makeBluePrintBlock //
 ////////////////////////
 
-const createBlueprintFrame = ([type, layer, options]) =>
-  createFrame(type, layer, options);
+const generateMakeBlueprintBlock =
+  (createBaseFrameArray) =>
+  (scope, {labels}, makeStatementArray) =>
+    makeScopeFrameBlock(
+      scope,
+      labels,
+      concat(createMetaFrameArray(), createBaseFrameArray()),
+      makeStatementArray,
+    );
 
-const makeBlueprintBlock = (scope, labels, blueprints, makeStatementArray) =>
-  makeBlock(
-    scope,
-    labels,
-    map(blueprints, createBlueprintFrame),
-    makeStatementArray,
-  );
+export const makeScopeBlock = generateMakeBlueprintBlock(
+  createBlockBaseFrameArray,
+);
 
-export const makeScopeStaticClosureBlock = partial__x_(makeBlueprintBlock, [
-  [MACRO, META, {}],
-  [DEFINE_STATIC, META, {}],
-  [CLOSURE_STATIC, BASE, {}],
-  [BLOCK_STATIC, BASE, {distant: false}],
-]);
+export const makeScopeDistantBlock = generateMakeBlueprintBlock(
+  createDistantBlockBaseFrameArray,
+);
 
-export const makeScopeBlock = partial__x_(makeBlueprintBlock, [
-  [MACRO, META, {}],
-  [DEFINE_STATIC, META, {}],
-  [BLOCK_STATIC, BASE, {distant: false}],
-]);
+export const makeScopeDeadBlock = generateMakeBlueprintBlock(
+  createDeadBlockBaseFrameArray,
+);
 
-export const makeScopeDistantBlock = partial__x_(makeBlueprintBlock, [
-  [MACRO, META, {}],
-  [DEFINE_STATIC, META, {}],
-  [BLOCK_STATIC, META, {distant: true}],
-]);
+export const makeScopeEmptyBlock = generateMakeBlueprintBlock(constant([]));
 
-export const makeScopeEmptyBlock = partial__x_(makeBlueprintBlock, [
-  [MACRO, META, {}],
-  [DEFINE_STATIC, META, {}],
-]);
-
-export const makeScopeDeadBlock = partial__x_(makeBlueprintBlock, [
-  [MACRO, META, {}],
-  [DEFINE_STATIC, META, {}],
-  [BLOCK_STATIC_DEAD, BASE, {}],
-]);
+export const makeScopeStaticClosureBlock = generateMakeBlueprintBlock(
+  createStaticClosureBaseFrameArray,
+);
 
 ///////////
 // Other //
@@ -476,45 +498,34 @@ export const makeScopeClosureExpression = (
     type,
     asynchronous,
     generator,
-    makeChainBlock(
-      strict ? useStrict(enclose(scope)) : enclose(scope),
+    makeScopeFrameBlock(
+      encloseScope(strict ? useStrictScope(scope) : scope),
       [],
-      [
-        createFrame(MACRO, META, {}),
-        createFrame(DEFINE_STATIC, META, {}),
-        createFrame(ILLEGAL, SPEC, {}),
-        createFrame(MACRO, SPEC, {}),
-        createFrame(DEFINE_STATIC, SPEC, {}),
-        createFrame(BLOCK_STATIC, BASE, {distant: false}),
-      ],
+      concat(
+        createMetaFrameArray(),
+        createSpecFrameArray(),
+        createBlockBaseFrameArray(),
+      ),
       makeStatementArray,
     ),
   );
 
 export const makeScopeInternalLocalEvalProgram = (
-  {variables, strict, counter},
-  packed_scope,
+  scope,
+  {strict, counter},
   makeStatementArray,
 ) => {
-  const scope = unpack(packed_scope);
-  resetGlobalCounter(scope, counter);
-  return makeInternalLocalEvalProgram(
-    variables,
-    makeChainBlock(
-      strict ? useStrict(scope) : scope,
-      [],
-      concat(
-        [
-          createFrame(MACRO, META, {}),
-          createFrame(DEFINE_STATIC, META, {}),
-          createFrame(ILLEGAL, SPEC, {}),
-          createFrame(MACRO, SPEC, {}),
-          createFrame(DEFINE_STATIC, SPEC, {}),
-        ],
-        strict ? [createFrame(CLOSURE_STATIC, BASE, {})] : [],
-        [createFrame(BLOCK_STATIC, BASE, {distant: false})],
-      ),
-      makeStatementArray,
+  resetScopeCounter(scope, counter);
+  if (strict) {
+    scope = useStrictScope(scope);
+  }
+  return makeScopeFrameInternalLocalEvalProgram(
+    scope,
+    concat(
+      createMetaFrameArray(),
+      createSpecFrameArray(),
+      createEvalBaseFrameArray(isStrictScope(scope)),
     ),
+    makeStatementArray,
   );
 };
