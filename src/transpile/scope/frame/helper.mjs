@@ -1,9 +1,10 @@
 import {
+  assert,
   expect,
-  SyntaxAranError,
   partial_x,
   hasOwnProperty,
   incrementCounter,
+  SyntaxAranError,
 } from "../../../util/index.mjs";
 
 import {
@@ -126,7 +127,16 @@ export const makeDynamicLookupEffect = generateLookupDynamicArray(
 // Static //
 ////////////
 
-export const conflictStatic = (
+export const conflictStaticInternal = (
+  _strict,
+  {static: bindings},
+  _kind,
+  variable,
+) => {
+  assert(!hasOwnProperty(bindings, variable), "duplicate variable");
+};
+
+export const conflictStaticExternal = (
   _strict,
   {static: bindings},
   _kind,

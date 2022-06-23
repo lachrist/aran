@@ -27,7 +27,7 @@ import {makeExpressionEffect} from "../../../ast/index.mjs";
 
 import {
   testStatic,
-  conflictStatic,
+  conflictStaticExternal,
   makeStaticDiscardExpression,
   makeStaticLookupNode,
   NULL_DATA_DESCRIPTOR,
@@ -45,7 +45,7 @@ export const create = (_layer, _options) => ({
   static: {},
 });
 
-export const conflict = conflictStatic;
+export const conflict = conflictStaticExternal;
 
 export const harvestHeader = constant_([]);
 

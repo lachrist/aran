@@ -10,6 +10,7 @@ import {
 
 import {
   NULL_DATA_DESCRIPTOR,
+  conflictStaticInternal,
   makeStaticLookupNode,
   testStatic,
 } from "./helper.mjs";
@@ -23,7 +24,7 @@ export const KINDS = ["illegal"];
 
 export const create = (_layer, _options) => ({static: {}});
 
-export const conflict = constant_(undefined);
+export const conflict = conflictStaticInternal;
 
 export const harvestHeader = constant_([]);
 

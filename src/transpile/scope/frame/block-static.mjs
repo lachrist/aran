@@ -23,7 +23,7 @@ import {layerVariable, layerShadowVariable} from "../variable.mjs";
 
 import {
   NULL_DATA_DESCRIPTOR,
-  conflictStatic,
+  conflictStaticExternal,
   testStatic,
   makeStaticReadExpression,
   makeStaticTypeofExpression,
@@ -72,7 +72,7 @@ export const harvestPrelude = ({static: bindings, layer}) =>
     partialx_(makeShadowInitializeStatement, layer),
   );
 
-export const conflict = conflictStatic;
+export const conflict = conflictStaticExternal;
 
 export const declare = (
   _strict,

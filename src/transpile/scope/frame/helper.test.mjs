@@ -1,14 +1,12 @@
+import {forEach} from "array-lite";
+
 import {
   assertThrow,
   assertSuccess,
   assertEqual,
 } from "../../../__fixture__.mjs";
 
-import {
-  SyntaxAranError,
-  createCounter,
-  incrementCounter,
-} from "../../../util/index.mjs";
+import {createCounter, incrementCounter} from "../../../util/index.mjs";
 
 import {
   makeLiteralExpression,
@@ -26,7 +24,8 @@ import {BASE} from "../variable.mjs";
 import {
   makeStaticLookupNode,
   testStatic,
-  conflictStatic,
+  conflictStaticInternal,
+  conflictStaticExternal,
   makeStaticReadExpression,
   makeStaticTypeofExpression,
   makeStaticDiscardExpression,
@@ -153,15 +152,15 @@ const next = () => {
   throw new Error("next");
 };
 
-assertEqual(
-  conflictStatic(STRICT, {static: {}}, "kind", "variable"),
-  undefined,
-);
-
-assertThrow(
-  () => conflictStatic(STRICT, {static: {variable: null}}, "kind", "variable"),
-  SyntaxAranError,
-);
+forEach([conflictStaticInternal, conflictStaticExternal], (conflictStatic) => {
+  assertEqual(
+    conflictStatic(STRICT, {static: {}}, "kind", "variable"),
+    undefined,
+  );
+  assertThrow(() =>
+    conflictStatic(STRICT, {static: {variable: null}}, "kind", "variable"),
+  );
+});
 
 assertSuccess(
   allignExpression(

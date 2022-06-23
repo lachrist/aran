@@ -19,7 +19,7 @@ import {makeUnaryExpression} from "../../../intrinsic.mjs";
 import {
   NULL_DATA_DESCRIPTOR,
   makeThrowConstantExpression,
-  conflictStatic,
+  conflictStaticExternal,
   makeStaticLookupNode,
   testStatic,
   makeStaticDiscardExpression,
@@ -34,7 +34,7 @@ export const KINDS = ["import"];
 
 export const create = (_layer, _options) => ({static: {}});
 
-export const conflict = conflictStatic;
+export const conflict = conflictStaticExternal;
 
 export const harvestHeader = constant_([]);
 

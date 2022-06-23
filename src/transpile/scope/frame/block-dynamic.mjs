@@ -29,7 +29,7 @@ import {
 
 import {
   NULL_DATA_DESCRIPTOR,
-  conflictStatic,
+  conflictStaticExternal,
   testStatic,
   makeDynamicTestExpression,
   makeObservableDynamicTestExpression,
@@ -58,7 +58,7 @@ export const create = (_layer, {macro, observable}) => ({
 });
 
 export const conflict = (strict, frame, kind, variable) => {
-  conflictStatic(strict, frame, kind, variable);
+  conflictStaticExternal(strict, frame, kind, variable);
   const {conflicts} = frame;
   if (!includes(conflicts, variable)) {
     push(conflicts, variable);

@@ -14,6 +14,7 @@ import {layerVariable} from "../variable.mjs";
 import {
   NULL_DATA_DESCRIPTOR,
   testStatic,
+  conflictStaticInternal,
   makeStaticLookupNode,
   makeStaticReadExpression,
   makeStaticTypeofExpression,
@@ -33,7 +34,7 @@ export const create = (layer, _options) => ({
   static: {},
 });
 
-export const conflict = constant_(undefined);
+export const conflict = conflictStaticInternal;
 
 export const harvestHeader = ({layer, static: bindings}) =>
   map(ownKeys(bindings), partialx_(layerVariable, layer));

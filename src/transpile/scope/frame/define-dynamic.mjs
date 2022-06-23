@@ -10,6 +10,7 @@ import {
 import {
   NULL_DATA_DESCRIPTOR,
   testStatic,
+  conflictStaticInternal,
   makeDynamicLookupExpression,
   makeDynamicLookupEffect,
   makeObservableDynamicTestExpression,
@@ -33,7 +34,7 @@ export const create = (_layer, {macro, observable}) => ({
   observable,
 });
 
-export const conflict = constant_(undefined);
+export const conflict = conflictStaticInternal;
 
 export const harvestHeader = constant_([]);
 
