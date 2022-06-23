@@ -1,39 +1,48 @@
 import {assertThrow, assertEqual, assertDeepEqual} from "../../__fixture__.mjs";
 
 import {
-  ROOT,
-  isRoot,
-  defineBinding,
-  lookupBinding,
-  appendFrame,
-  enclose,
-  drawFrame,
+  ROOT_SCOPE,
+  hasScopeFrame,
+  defineScopeBinding,
+  lookupScopeBinding,
+  pushScopeFrame,
+  encloseScope,
+  popScopeFrame,
 } from "./core.mjs";
 
-assertEqual(isRoot(ROOT), true);
+assertEqual(hasScopeFrame(ROOT_SCOPE), false);
 
-assertEqual(isRoot(enclose(appendFrame(ROOT, "frame"))), false);
+assertEqual(
+  hasScopeFrame(encloseScope(pushScopeFrame(ROOT_SCOPE, "frame"))),
+  true,
+);
 
-assertThrow(() => lookupBinding(ROOT, "key"), {
+assertThrow(() => lookupScopeBinding(ROOT_SCOPE, "key"), {
   name: "Error",
   message: "missing scope property",
 });
 
 assertEqual(
-  lookupBinding(enclose(defineBinding(ROOT, "key", "value")), "key"),
+  lookupScopeBinding(
+    encloseScope(defineScopeBinding(ROOT_SCOPE, "key", "value")),
+    "key",
+  ),
   "value",
 );
 
-assertThrow(() => drawFrame(ROOT, false));
+assertThrow(() => popScopeFrame(ROOT_SCOPE, false));
 
-assertDeepEqual(drawFrame(appendFrame(ROOT, "frame"), false), {
-  scope: ROOT,
+assertDeepEqual(popScopeFrame(pushScopeFrame(ROOT_SCOPE, "frame"), false), {
+  scope: ROOT_SCOPE,
   frame: "frame",
   escaped: false,
 });
 
-assertDeepEqual(drawFrame(enclose(appendFrame(ROOT, "frame")), false), {
-  scope: ROOT,
-  frame: "frame",
-  escaped: true,
-});
+assertDeepEqual(
+  popScopeFrame(encloseScope(pushScopeFrame(ROOT_SCOPE, "frame")), false),
+  {
+    scope: ROOT_SCOPE,
+    frame: "frame",
+    escaped: true,
+  },
+);

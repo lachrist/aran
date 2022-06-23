@@ -3,14 +3,15 @@ import {concat, reduce, includes, slice, every} from "array-lite";
 import {assert, partialx__, partialx___} from "../../util/index.mjs";
 
 import {
+  makeInternalLocalEvalProgram,
   makeScriptProgram,
   makeBlock,
   makeEvalExpression,
 } from "../../ast/index.mjs";
 
-import {appendFrame, drawFrame, isRoot} from "./core.mjs";
+import {pushScopeFrame, popScopeFrame, hasScopeFrame} from "./core.mjs";
 
-import {isStrict} from "./binding.mjs";
+import {isStrictScope} from "./binding.mjs";
 
 import {
   conflictFrame,
@@ -33,7 +34,7 @@ const isUnique = (element, index, array) =>
   !includes(slice(array, 0, index), element);
 
 const harvest = ({header, prelude, scope: scope1}, _frame) => {
-  const {scope: scope2, frame, escaped} = drawFrame(scope1, false);
+  const {scope: scope2, frame, escaped} = popScopeFrame(scope1, false);
   assert(!escaped, "escaped scope during harvest");
   return {
     header: concat(harvestFrameHeader(frame), header),
@@ -43,7 +44,7 @@ const harvest = ({header, prelude, scope: scope1}, _frame) => {
 };
 
 const makeScopeNode = (makeNode, scope, frames, makeStatementArray) => {
-  scope = reduce(frames, appendFrame, scope);
+  scope = reduce(frames, pushScopeFrame, scope);
   const statements2 = makeStatementArray(scope);
   const {prelude: statements1, header: variables} = reduce(frames, harvest, {
     header: [],
@@ -54,7 +55,12 @@ const makeScopeNode = (makeNode, scope, frames, makeStatementArray) => {
   return makeNode(variables, concat(statements1, statements2));
 };
 
-export const makeScopeBlock = (scope, labels, frames, makeStatementArray) =>
+export const makeScopeFrameBlock = (
+  scope,
+  labels,
+  frames,
+  makeStatementArray,
+) =>
   makeScopeNode(
     partialx__(makeBlock, labels),
     scope,
@@ -62,7 +68,7 @@ export const makeScopeBlock = (scope, labels, frames, makeStatementArray) =>
     makeStatementArray,
   );
 
-export const makeScopeScriptProgram = partialx___(
+export const makeScopeFrameScriptProgram = partialx___(
   makeScopeNode,
   makeScriptProgram,
 );
@@ -72,28 +78,42 @@ export const makeScopeScriptProgram = partialx___(
 //////////
 
 const harvestHeader = (scope1) => {
-  if (isRoot(scope1)) {
-    return [];
-  } else {
-    const {scope: scope2, frame} = drawFrame(scope1, false);
+  if (hasScopeFrame(scope1)) {
+    const {scope: scope2, frame} = popScopeFrame(scope1, false);
     return concat(harvestHeader(scope2), harvestFrameHeader(frame));
+  } else {
+    return [];
   }
 };
 
 const lookupAll = (strict, escaped1, scope1) => {
-  if (!isRoot(scope1)) {
+  if (hasScopeFrame(scope1)) {
     const {
       scope: scope2,
       escaped: escaped2,
       frame,
-    } = drawFrame(scope1, escaped1);
+    } = popScopeFrame(scope1, escaped1);
     lookupFrameAll(strict, escaped2, frame);
     lookupAll(strict, escaped2, scope2);
   }
 };
 
+const makeLabelessBlock = partialx__(makeBlock, []);
+
+export const makeScopeFrameInternalLocalEvalProgram = (
+  scope,
+  frames,
+  makeStatementArray,
+) =>
+  makeInternalLocalEvalProgram(
+    harvestHeader(scope),
+    makeScopeNode(makeLabelessBlock, scope, frames, makeStatementArray),
+  );
+
 export const makeScopeEvalExpression = (scope, expression) => {
-  lookupAll(isStrict(scope), false, scope);
+  // We need to assume the worse case regarding deadzone.
+  // That is that the eval code will lookup variables from closures.
+  lookupAll(isStrictScope(scope), true, scope);
   return makeEvalExpression(harvestHeader(scope), expression);
 };
 
@@ -102,7 +122,7 @@ export const makeScopeEvalExpression = (scope, expression) => {
 /////////////
 
 const declareLoop = (strict, scope1, kind, layer, variable, options) => {
-  const {scope: scope2, frame, escaped} = drawFrame(scope1, false);
+  const {scope: scope2, frame, escaped} = popScopeFrame(scope1, false);
   assert(!escaped, "escaped scope during declaration");
   conflictFrame(strict, frame, kind, layer, variable);
   if (!declareFrame(strict, frame, kind, layer, variable, options)) {
@@ -111,14 +131,14 @@ const declareLoop = (strict, scope1, kind, layer, variable, options) => {
 };
 
 export const declareScope = (scope, kind, layer, variable, options) =>
-  declareLoop(isStrict(scope), scope, kind, layer, variable, options);
+  declareLoop(isStrictScope(scope), scope, kind, layer, variable, options);
 
 ////////////////
 // Initialize //
 ////////////////
 
 const initializeLoop = (strict, scope1, kind, layer, variable, expression) => {
-  const {scope: scope2, frame, escaped} = drawFrame(scope1, false);
+  const {scope: scope2, frame, escaped} = popScopeFrame(scope1, false);
   assert(!escaped, "escaped scope during initialization");
   const maybe = makeFrameInitializeStatementArray(
     strict,
@@ -142,7 +162,15 @@ export const makeScopeInitializeStatementArray = (
   layer,
   variable,
   expression,
-) => initializeLoop(isStrict(scope), scope, kind, layer, variable, expression);
+) =>
+  initializeLoop(
+    isStrictScope(scope),
+    scope,
+    kind,
+    layer,
+    variable,
+    expression,
+  );
 
 ////////////
 // Lookup //
@@ -157,7 +185,11 @@ const lookupLoop = (
   variable,
   options,
 ) => {
-  const {scope: scope2, frame, escaped: escaped2} = drawFrame(scope1, escaped1);
+  const {
+    scope: scope2,
+    frame,
+    escaped: escaped2,
+  } = popScopeFrame(scope1, escaped1);
   return makeFrameLookupNode(
     () =>
       lookupLoop(
@@ -182,7 +214,7 @@ const generateLookup =
   (makeFrameLookupNode) => (scope, layer, variable, options) =>
     lookupLoop(
       makeFrameLookupNode,
-      isStrict(scope),
+      isStrictScope(scope),
       false,
       scope,
       layer,

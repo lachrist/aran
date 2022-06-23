@@ -181,6 +181,12 @@ export const partialx_xx = (f, x1, x3, x4) => (x2) => f(x1, x2, x3, x4);
 export const partial_xxx = (f, x2, x3, x4) => (x1) => f(x1, x2, x3, x4);
 export const partialxxxx = (f, x1, x2, x3, x4) => () => f(x1, x2, x3, x4);
 
+export const partial_xx_x = (f, x2, x3, x5) => (x1, x4) =>
+  f(x1, x2, x3, x4, x5);
+export const partial_xx__ = (f, x2, x3) => (x1, x4, x5) =>
+  f(x1, x2, x3, x4, x5);
+export const partial__x__ = (f, x3) => (x1, x2, x4, x5) =>
+  f(x1, x2, x3, x4, x5);
 export const partialxxx__ = (f, x1, x2, x3) => (x4, x5) =>
   f(x1, x2, x3, x4, x5);
 export const partialx____ = (f, x1) => (x2, x3, x4, x5) =>
@@ -190,6 +196,8 @@ export const partialxx___ = (f, x1, x2) => (x3, x4, x5) =>
 export const partial_xxx_ = (f, x2, x3, x4) => (x1, x5) =>
   f(x1, x2, x3, x4, x5);
 
+export const partial__x_x_ = (f, x3, x5) => (x1, x2, x4, x6) =>
+  f(x1, x2, x3, x4, x5, x6);
 export const partial____xx = (f, x5, x6) => (x1, x2, x3, x4) =>
   f(x1, x2, x3, x4, x5, x6);
 export const partialxx____ = (f, x1, x2) => (x3, x4, x5, x6) =>

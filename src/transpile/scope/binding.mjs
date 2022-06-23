@@ -1,6 +1,6 @@
 import {partial_x, partial_xx, incrementCounter} from "../../util/index.mjs";
 
-import {ROOT, defineBinding, lookupBinding} from "./core.mjs";
+import {ROOT_SCOPE, defineScopeBinding, lookupScopeBinding} from "./core.mjs";
 
 ////////////
 // Strict //
@@ -8,9 +8,9 @@ import {ROOT, defineBinding, lookupBinding} from "./core.mjs";
 
 const STRICT = "strict";
 
-export const isStrict = partial_x(lookupBinding, STRICT);
+export const isStrictScope = partial_x(lookupScopeBinding, STRICT);
 
-export const useStrict = partial_xx(defineBinding, STRICT, true);
+export const useStrictScope = partial_xx(defineScopeBinding, STRICT, true);
 
 ////////////////////
 // Global Counter //
@@ -18,16 +18,20 @@ export const useStrict = partial_xx(defineBinding, STRICT, true);
 
 const STATE = "state";
 
-export const incrementGlobalCounter = (scope) =>
-  incrementCounter(lookupBinding(scope, STATE).counter);
+export const incrementScopeCounter = (scope) =>
+  incrementCounter(lookupScopeBinding(scope, STATE).counter);
 
-export const resetGlobalCounter = (scope, counter) => {
-  lookupBinding(scope, STATE).counter = counter;
+export const resetScopeCounter = (scope, counter) => {
+  lookupScopeBinding(scope, STATE).counter = counter;
 };
 
 //////////
 // Root //
 //////////
 
-export const createRoot = (counter) =>
-  defineBinding(defineBinding(ROOT, STATE, {counter}), STRICT, false);
+export const createRootScope = (counter) =>
+  defineScopeBinding(
+    defineScopeBinding(ROOT_SCOPE, STATE, {counter}),
+    STRICT,
+    false,
+  );

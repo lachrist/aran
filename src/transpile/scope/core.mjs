@@ -1,38 +1,42 @@
 import {NIL, cons, car, cdr, partialx_} from "../../util/index.mjs";
 
 export {
-  convertListArray as pack,
-  convertArrayList as unpack,
+  convertListArray as packScope,
+  convertArrayList as unpackScope,
 } from "../../util/index.mjs";
 
 const {Error} = globalThis;
+
+const BINDING_TYPE = "property";
+
+const FRAME_TYPE = "frame";
+
+const CLOSURE_TYPE = "closure";
 
 //////////
 // ROOT //
 //////////
 
-export const ROOT = NIL;
+export const ROOT_SCOPE = NIL;
 
-//////////////
-// Property //
-//////////////
+/////////////
+// Binding //
+/////////////
 
-const PROPERTY_TYPE = "property";
-
-export const defineBinding = (scope, key, value) =>
+export const defineScopeBinding = (scope, key, value) =>
   cons(
     {
-      type: PROPERTY_TYPE,
+      type: BINDING_TYPE,
       key,
       value,
     },
     scope,
   );
 
-export const lookupBinding = (scope, key) => {
+export const lookupScopeBinding = (scope, key) => {
   while (scope !== NIL) {
     const point = car(scope);
-    if (point.type === PROPERTY_TYPE && point.key === key) {
+    if (point.type === BINDING_TYPE && point.key === key) {
       return point.value;
     }
     scope = cdr(scope);
@@ -44,11 +48,9 @@ export const lookupBinding = (scope, key) => {
 // Frame //
 ///////////
 
-const FRAME_TYPE = "frame";
+export const encloseScope = partialx_(cons, {type: CLOSURE_TYPE});
 
-const CLOSURE_TYPE = "closure";
-
-export const appendFrame = (scope, frame) =>
+export const pushScopeFrame = (scope, frame) =>
   cons(
     {
       type: FRAME_TYPE,
@@ -57,16 +59,14 @@ export const appendFrame = (scope, frame) =>
     scope,
   );
 
-export const enclose = partialx_(cons, {type: CLOSURE_TYPE});
-
-export const isRoot = (scope) =>
+export const hasScopeFrame = (scope) =>
   scope === NIL
-    ? true
-    : car(scope).type === FRAME_TYPE
     ? false
-    : isRoot(cdr(scope));
+    : car(scope).type === FRAME_TYPE
+    ? true
+    : hasScopeFrame(cdr(scope));
 
-export const drawFrame = (scope, escaped) => {
+export const popScopeFrame = (scope, escaped) => {
   if (scope === NIL) {
     throw new Error("unbound scope");
   } else {
@@ -81,7 +81,7 @@ export const drawFrame = (scope, escaped) => {
       if (point.type === CLOSURE_TYPE) {
         escaped = true;
       }
-      return drawFrame(cdr(scope), escaped);
+      return popScopeFrame(cdr(scope), escaped);
     }
   }
 };

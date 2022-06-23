@@ -3,24 +3,27 @@ import {assertEqual} from "../../__fixture__.mjs";
 import {createCounter} from "../../util/index.mjs";
 
 import {
-  isStrict,
-  useStrict,
-  incrementGlobalCounter,
-  resetGlobalCounter,
-  createRoot,
+  isStrictScope,
+  useStrictScope,
+  incrementScopeCounter,
+  resetScopeCounter,
+  createRootScope,
 } from "./binding.mjs";
 
 const {undefined} = globalThis;
 
 {
-  const scope = createRoot(createCounter(0));
-  assertEqual(incrementGlobalCounter(scope), 1);
-  assertEqual(incrementGlobalCounter(scope), 2);
-  assertEqual(resetGlobalCounter(scope, createCounter(10)), undefined);
-  assertEqual(incrementGlobalCounter(scope), 11);
-  assertEqual(incrementGlobalCounter(scope), 12);
+  const scope = createRootScope(createCounter(0));
+  assertEqual(incrementScopeCounter(scope), 1);
+  assertEqual(incrementScopeCounter(scope), 2);
+  assertEqual(resetScopeCounter(scope, createCounter(10)), undefined);
+  assertEqual(incrementScopeCounter(scope), 11);
+  assertEqual(incrementScopeCounter(scope), 12);
 }
 
-assertEqual(isStrict(createRoot()), false);
+assertEqual(isStrictScope(createRootScope(createCounter(0))), false);
 
-assertEqual(isStrict(useStrict(createRoot())), true);
+assertEqual(
+  isStrictScope(useStrictScope(createRootScope(createCounter(0)))),
+  true,
+);
