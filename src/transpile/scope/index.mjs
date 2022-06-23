@@ -194,27 +194,27 @@ export const makeBaseWriteEffect = (scope, variable, expression) => {
 ///////////////
 
 const createMetaFrameArray = () => [
-  createFrame(MACRO, META, {}),
   createFrame(DEFINE_STATIC, META, {}),
+  createFrame(MACRO, META, {}),
 ];
 
 const createTransparentMetaFrameArray = () => [
-  createFrame(MACRO, META, {}),
   createFrame(DEFINE_DYNAMIC, META, {
     macro: makeIntrinsicExpression("aran.globalCache"),
     observable: false,
   }),
+  createFrame(MACRO, META, {}),
 ];
 
 const createSpecFrameArray = () => [
-  createFrame(ILLEGAL, SPEC, {}),
-  createFrame(MACRO, SPEC, {}),
   createFrame(DEFINE_STATIC, SPEC, {}),
+  createFrame(MACRO, SPEC, {}),
+  createFrame(ILLEGAL, SPEC, {}),
 ];
 
 const createTransparentSpecFrameArray = () => [
-  createFrame(ILLEGAL, SPEC, {}),
   createFrame(MACRO, SPEC, {}),
+  createFrame(ILLEGAL, SPEC, {}),
 ];
 
 const createExternalGlobalBaseFrameArray = (macros) => [
