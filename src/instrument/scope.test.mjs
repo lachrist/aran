@@ -60,8 +60,8 @@ const {undefined} = globalThis;
       `
         'script';
         let secret_variable = undefined;
-        effect(intrinsic.aran.getGlobal('secret_variable'));
-        effect(intrinsic.aran.setGlobalStrict('secret_variable', 'right'));
+        effect(intrinsic.aran.readGlobal('secret_variable'));
+        effect(intrinsic.aran.writeGlobalStrict('secret_variable', 'right'));
         return 'completion';
       `,
     ),

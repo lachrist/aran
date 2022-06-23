@@ -49,17 +49,17 @@ test(
     "script";
     let secret_Nnamespace1 = undefined;
     effect(
-      intrinsic.aran.setGlobalStrict(
+      intrinsic.aran.writeGlobalStrict(
         'secret_Nnamespace1',
-        intrinsic.aran.getGlobal('advice'),
+        intrinsic.aran.readGlobal('advice'),
       ),
     );
     effect(
       intrinsic.aran.get(
-        intrinsic.aran.getGlobal("secret_Nnamespace1"),
+        intrinsic.aran.readGlobal("secret_Nnamespace1"),
         "arrival",
       )(
-        !intrinsic.aran.getGlobal("secret_Nnamespace1"),
+        !intrinsic.aran.readGlobal("secret_Nnamespace1"),
         "script",
         null,
         null,
@@ -150,7 +150,7 @@ test(
     'module';
     {
       let namespace;
-      namespace = intrinsic.aran.getGlobal('advice');
+      namespace = intrinsic.aran.readGlobal('advice');
       label: {
         let _OLD, _LAB, _VAR;
         _LAB = intrinsic.aran.createObject(null, "LABEL", "label");
@@ -183,7 +183,7 @@ test(
     'module';
     {
       let namespace;
-      namespace = intrinsic.aran.getGlobal('advice');
+      namespace = intrinsic.aran.readGlobal('advice');
       try {
         return 'completion';
       } catch {
@@ -342,7 +342,7 @@ test(
     'module';
     {
       let namespace, callee;
-      namespace = intrinsic.aran.getGlobal('advice');
+      namespace = intrinsic.aran.readGlobal('advice');
       return (
         callee = () => {
           effect(

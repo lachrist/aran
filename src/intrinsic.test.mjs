@@ -7,8 +7,8 @@ import {makeLiteralExpression} from "./ast/index.mjs";
 import {allignExpression} from "./allign/index.mjs";
 
 import {
-  makeGetGlobalExpression,
-  makeDeleteGlobalExpression,
+  makeReadGlobalExpression,
+  makeDiscardGlobalExpression,
   makeDeleteExpression,
   makeSetExpression,
   makeDataDescriptorExpression,
@@ -21,13 +21,13 @@ const test = (expression, code) => {
 };
 
 test(
-  makeGetGlobalExpression("variable"),
-  "intrinsic.aran.getGlobal('variable')",
+  makeReadGlobalExpression("variable"),
+  "intrinsic.aran.readGlobal('variable')",
 );
 
 test(
-  makeDeleteGlobalExpression(false, "variable"),
-  "intrinsic.aran.deleteGlobalSloppy('variable')",
+  makeDiscardGlobalExpression(false, "variable"),
+  "intrinsic.aran.discardGlobalSloppy('variable')",
 );
 
 forEach([true, false], (strict) => {

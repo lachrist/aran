@@ -258,43 +258,43 @@ export const makeTypeofGlobalExpression = partialxf_(
   makeLiteralExpression,
 );
 
-export const makeGetGlobalExpression = partialxf_(
+export const makeReadGlobalExpression = partialxf_(
   makeIntrinsicApplyExpression1,
-  "aran.getGlobal",
+  "aran.readGlobal",
   makeLiteralExpression,
 );
 
-export const makeDeleteGlobalSloppyExpression = partialxf_(
+export const makeDiscardGlobalSloppyExpression = partialxf_(
   makeIntrinsicApplyExpression1,
-  "aran.deleteGlobalSloppy",
+  "aran.discardGlobalSloppy",
   makeLiteralExpression,
 );
 
-export const makeDeleteGlobalExpression = (
+export const makeDiscardGlobalExpression = (
   strict,
   variable,
   annotation = undefined,
 ) => {
   assert(!strict, "unexpected strict global delete");
-  return makeDeleteGlobalSloppyExpression(variable, annotation);
+  return makeDiscardGlobalSloppyExpression(variable, annotation);
 };
 
-export const makeSetGlobalStrictExpression = partialxf__(
+export const makeWriteGlobalStrictExpression = partialxf__(
   makeIntrinsicApplyExpression2,
-  "aran.setGlobalStrict",
+  "aran.writeGlobalStrict",
   makeLiteralExpression,
 );
 
-export const makeSetGlobalSloppyExpression = partialxf__(
+export const makeWriteGlobalSloppyExpression = partialxf__(
   makeIntrinsicApplyExpression2,
-  "aran.setGlobalSloppy",
+  "aran.writeGlobalSloppy",
   makeLiteralExpression,
 );
 
-export const makeSetGlobalExpression = partialxx_f__(
+export const makeWriteGlobalExpression = partialxx_f__(
   makeDualIntrinsicApplyExpression2,
-  "aran.setGlobalStrict",
-  "aran.setGlobalSloppy",
+  "aran.writeGlobalStrict",
+  "aran.writeGlobalSloppy",
   makeLiteralExpression,
 );
 

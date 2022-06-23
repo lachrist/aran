@@ -23,8 +23,8 @@ import {
 } from "../ast/index.mjs";
 
 import {
-  makeGetGlobalExpression,
-  makeSetGlobalStrictExpression,
+  makeReadGlobalExpression,
+  makeWriteGlobalStrictExpression,
 } from "../intrinsic.mjs";
 
 const {
@@ -92,7 +92,7 @@ export const makeScopeReadExpression = (scope, variable) => {
   const {used, secret, parent} = getBindingScope(scope, variable);
   pushUnique(used, variable);
   return parent === null
-    ? makeGetGlobalExpression(`${secret}${variable}`)
+    ? makeReadGlobalExpression(`${secret}${variable}`)
     : makeReadExpression(variable);
 };
 
@@ -101,7 +101,7 @@ export const makeScopeWriteEffect = (scope, variable, expression) => {
   pushUnique(used, variable);
   return parent === null
     ? makeExpressionEffect(
-        makeSetGlobalStrictExpression(`${secret}${variable}`, expression),
+        makeWriteGlobalStrictExpression(`${secret}${variable}`, expression),
       )
     : makeWriteEffect(variable, expression);
 };

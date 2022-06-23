@@ -45,7 +45,7 @@ import {
   makeApplyExpression,
 } from "../ast/index.mjs";
 
-import {makeJSONExpression, makeGetGlobalExpression} from "../intrinsic.mjs";
+import {makeJSONExpression, makeReadGlobalExpression} from "../intrinsic.mjs";
 
 import {
   extendScope,
@@ -246,7 +246,7 @@ export const visitProgram = partial__xx(
                     context.scope,
                     NEW_SPLIT,
                     namespace,
-                    makeGetGlobalExpression(context.advice),
+                    makeReadGlobalExpression(context.advice),
                   ),
                 ),
               ]
@@ -471,7 +471,7 @@ const visitBlock = partial__xx(
                     scope,
                     NEW_SPLIT,
                     context.namespace,
-                    makeGetGlobalExpression(context.advice),
+                    makeReadGlobalExpression(context.advice),
                   ),
                 ),
               ]
