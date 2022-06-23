@@ -70,7 +70,10 @@ export const makeScopeFrameBlock = (
 
 export const makeScopeFrameScriptProgram = partialx___(
   makeScopeNode,
-  makeScriptProgram,
+  (variables, statements) => {
+    assert(variables.length === 0, "unexpected script header");
+    return makeScriptProgram(statements);
+  },
 );
 
 //////////

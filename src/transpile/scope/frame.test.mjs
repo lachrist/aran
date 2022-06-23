@@ -27,11 +27,12 @@ import {
 } from "./frame/index.mjs";
 
 import {
+  makeScopeFrameInternalLocalEvalProgram,
+  makeScopeFrameScriptProgram,
   makeScopeFrameBlock,
   declareScope,
   makeScopeInitializeStatementArray,
   makeScopeEvalExpression,
-  makeScopeFrameInternalLocalEvalProgram,
   makeScopeReadExpression,
 } from "./frame.mjs";
 
@@ -135,13 +136,40 @@ assertSuccess(
             variable :
             intrinsic.aran.throw(
               new intrinsic.ReferenceError(
-                "Cannot access variable 'variable' before initialization"
+                "Cannot access variable 'variable' before initialization",
               ),
             )
           ),
         );
         return "completion";
       }
+    `,
+  ),
+);
+
+assertSuccess(
+  allignProgram(
+    makeScopeFrameScriptProgram(
+      createRootScope(createCounter(0)),
+      [createFrame(MACRO, META, {})],
+      (scope) => {
+        declareScope(scope, "macro", META, "variable", {
+          binding: makeLiteralExpression("binding"),
+        });
+        return [
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeScopeReadExpression(scope, META, "variable"),
+            ),
+          ),
+          makeReturnStatement(makeLiteralExpression("completion")),
+        ];
+      },
+    ),
+    `
+      "script";
+      effect("binding");
+      return "completion";
     `,
   ),
 );
