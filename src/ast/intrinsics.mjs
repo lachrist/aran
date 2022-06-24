@@ -16,7 +16,7 @@ const intrinsics = [
   "aran.writeGlobalSloppy",
   "aran.deleteStrict",
   "aran.deleteSloppy",
-  "aran.discardGlobalStrict",
+  // "aran.discardGlobalStrict",
   "aran.discardGlobalSloppy",
   "aran.deadzone",
   "aran.AranError",
