@@ -52,7 +52,7 @@ export const declare = (
   defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
 };
 
-export const makeInitializeStatements = deadcode_____(
+export const makeInitializeStatementArray = deadcode_____(
   "define variable should not be initialized",
 );
 
