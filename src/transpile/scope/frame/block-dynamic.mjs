@@ -112,45 +112,62 @@ export const declare = (
     !hasOwnProperty(bindings, variable),
     "duplicate variable should have been caught by conflict",
   );
-  defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
+  defineProperty(bindings, variable, {
+    __proto__: NULL_DATA_DESCRIPTOR,
+    value: false,
+  });
 };
 
 export const makeInitializeStatementArray = (
   _strict,
-  {dynamic},
+  {dynamic: macro, static: bindings},
   kind,
   variable,
   expression,
-) => [
-  makeEffectStatement(
-    makeExpressionEffect(
-      makeDefineExpression(
-        dynamic,
-        makeLiteralExpression(variable),
-        makeDataDescriptorExpression(
-          expression,
-          makeLiteralExpression(kind !== "const"),
-          makeLiteralExpression(true),
-          makeLiteralExpression(false),
+) => {
+  assert(
+    hasOwnProperty(bindings, variable),
+    "missing variable for initialization",
+  );
+  assert(bindings[variable] === false, "duplicate variable initialization");
+  bindings[variable] = true;
+  return [
+    makeEffectStatement(
+      makeExpressionEffect(
+        makeDefineExpression(
+          macro,
+          makeLiteralExpression(variable),
+          makeDataDescriptorExpression(
+            expression,
+            makeLiteralExpression(kind !== "const"),
+            makeLiteralExpression(true),
+            makeLiteralExpression(false),
+          ),
         ),
       ),
     ),
-  ),
-];
+  ];
+};
 
 const generateMakeDeadzoneNode =
   (makeConditionalNode, makeDeadNode, makeLiveNode) =>
   (strict, escaped, frame, variable, options) => {
-    const {dynamic} = frame;
-    return makeConditionalNode(
-      makeBinaryExpression(
-        "===",
-        makeGetExpression(dynamic, makeLiteralExpression(variable)),
-        makeDeadzoneExpression(),
-      ),
-      makeDeadNode(variable),
-      makeLiveNode(strict, escaped, frame, variable, options),
-    );
+    const {dynamic: macro, static: bindings} = frame;
+    if (hasOwnProperty(bindings, variable) && bindings[variable]) {
+      return makeLiveNode(strict, escaped, frame, variable, options);
+    } else if (hasOwnProperty(bindings, variable) && !escaped) {
+      return makeDeadNode(variable);
+    } else {
+      return makeConditionalNode(
+        makeBinaryExpression(
+          "===",
+          makeGetExpression(macro, makeLiteralExpression(variable)),
+          makeDeadzoneExpression(),
+        ),
+        makeDeadNode(variable),
+        makeLiveNode(strict, escaped, frame, variable, options),
+      );
+    }
   };
 
 export const lookupAll = constant___(undefined);

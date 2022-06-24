@@ -50,6 +50,43 @@ assertSuccess(
         options: {exports: []},
       },
       {
+        type: "write",
+        escaped: false,
+        strict: false,
+        variable: "variable",
+        code: `effect(
+          intrinsic.aran.throw(
+            new intrinsic.ReferenceError(
+              "Cannot access variable 'variable' before initialization",
+            ),
+          ),
+        )`,
+      },
+      {
+        type: "write",
+        escaped: true,
+        strict: false,
+        variable: "variable",
+        right: makeLiteralExpression("right"),
+        code: `(
+          intrinsic.aran.binary(
+            '===',
+            intrinsic.aran.get('dynamic', 'variable'),
+            intrinsic.aran.deadzone
+          ) ?
+          effect(
+            intrinsic.aran.throw(
+              new intrinsic.ReferenceError(
+                "Cannot access variable 'variable' before initialization",
+              ),
+            ),
+          ) :
+          effect(
+            intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
+          )
+        )`,
+      },
+      {
         type: "initialize",
         kind: "const",
         variable: "variable",
@@ -70,25 +107,11 @@ assertSuccess(
       },
       {
         type: "write",
-        strict: true,
+        strict: false,
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `(
-          intrinsic.aran.binary(
-            '===',
-            intrinsic.aran.get('dynamic', 'variable'),
-            intrinsic.aran.deadzone
-          ) ?
-          effect(
-            intrinsic.aran.throw(
-              new intrinsic.ReferenceError(
-                "Cannot access variable 'variable' before initialization",
-              ),
-            ),
-          ) :
-          effect(
-            intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
-          )
+        code: `effect(
+          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
         )`,
       },
     ],
