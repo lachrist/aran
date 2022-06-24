@@ -294,13 +294,16 @@ const generateValidateNode = () => {
           : NaN,
       );
     },
-    GlobalEvalProgram: (digest, block, _annotation) =>
-      checkoutBlockProgram("GlobalEvalProgram", digest, block),
+    GlobalEvalProgram: (digest, block, _annotation) => {
+      digest = filterOut(digest, isLooseDeclareStatement);
+      return checkoutBlockProgram("GlobalEvalProgram", digest, block);
+    },
     InternalLocalEvalProgram: (digest, variables, block, _annotation) => {
       assert(!some(variables, isDuplicate), "duplicate variable found Block");
       digest = filterOut(digest, (node) =>
         isBoundVariableNode(node, variables),
       );
+      digest = filterOut(digest, isLooseDeclareStatement);
       return checkoutBlockProgram("InternalLocalEvalProgram", digest, block);
     },
     ExternalLocalEvalProgram: (digest, enclaves, block, _annotation) => {
