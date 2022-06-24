@@ -15,7 +15,7 @@ assertSuccess(
         type: "declare",
         kind: "let",
         variable: "variable",
-        options: {exports: []},
+        options: {exports: ["specifier"]},
       },
       {
         type: "read",
@@ -38,13 +38,19 @@ assertSuccess(
         kind: "let",
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: "VARIABLE = 'right';",
+        code: `
+          VARIABLE = 'right';
+          exportStatic('specifier', VARIABLE);
+        `,
       },
       {
         type: "write",
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: "VARIABLE = 'right'",
+        code: `(
+          VARIABLE = 'right',
+          exportStatic('specifier', VARIABLE)
+        )`,
       },
     ],
   }),
@@ -62,7 +68,7 @@ assertSuccess(
         type: "declare",
         kind: "const",
         variable: "variable",
-        options: {exports: ["specifier"]},
+        options: {exports: []},
       },
       {
         type: "lookup-all",
@@ -77,7 +83,6 @@ assertSuccess(
         code: `
           VARIABLE = 'right';
           _VARIABLE = true;
-          exportStatic('specifier', VARIABLE);
         `,
       },
       {

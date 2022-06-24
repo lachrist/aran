@@ -1,4 +1,4 @@
-import {filter, map, concat} from "array-lite";
+import {reduce, filter, map, concat} from "array-lite";
 
 import {
   hasOwnProperty,
@@ -6,6 +6,7 @@ import {
   bind_,
   partial_x,
   partialx_,
+  partial__x,
   partialxx______,
 } from "../../../util/index.mjs";
 
@@ -32,6 +33,7 @@ import {
   makeThrowDeadzoneExpression,
   makeThrowConstantExpression,
   makeExportStatement,
+  makeExportSequenceEffect,
   makeStaticLookupNode,
 } from "./helper.mjs";
 
@@ -205,7 +207,14 @@ export const makeWriteEffect = partialxx______(
     (strict, escaped, frame, variable, options) => {
       const {static: bindings} = frame;
       return bindings[variable].writable
-        ? makeStaticWriteEffect(strict, escaped, frame, variable, options)
+        ? reduce(
+            bindings[variable].exports,
+            partial__x(
+              makeExportSequenceEffect,
+              makeStaticReadExpression(strict, escaped, frame, variable, null),
+            ),
+            makeStaticWriteEffect(strict, escaped, frame, variable, options),
+          )
         : makeExpressionEffect(makeThrowConstantExpression(variable));
     },
   ),
