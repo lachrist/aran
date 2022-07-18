@@ -75,7 +75,7 @@ export const layerShadowVariable = generateLayer(SHADOW);
 
 export const layerVariable = generateLayer(ORIGINAL);
 
-export const unlayerVariable = (variable) => {
+export const unmangleVariable = (variable) => {
   assert(variable[0] in LAYER_MAPPING, "invalid variable layer");
   assert(variable[1] in SHADOWING_MAPPING, "invalid variable shadowing");
   const {index, name} = unindexVariable(

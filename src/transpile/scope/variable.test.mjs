@@ -6,10 +6,10 @@ import {
   layerVariable,
   layerShadowVariable,
   indexVariable,
-  unlayerVariable,
+  unmangleVariable,
 } from "./variable.mjs";
 
-assertDeepEqual(unlayerVariable(layerShadowVariable(BASE, "new.target")), {
+assertDeepEqual(unmangleVariable(layerShadowVariable(BASE, "new.target")), {
   layer: "base",
   shadow: true,
   name: "new.target",
@@ -17,7 +17,7 @@ assertDeepEqual(unlayerVariable(layerShadowVariable(BASE, "new.target")), {
 });
 
 assertDeepEqual(
-  unlayerVariable(layerVariable(META, indexVariable("foo_bar", 123))),
+  unmangleVariable(layerVariable(META, indexVariable("foo_bar", 123))),
   {
     layer: "meta",
     shadow: false,

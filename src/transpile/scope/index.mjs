@@ -73,6 +73,8 @@ export {packScope, unpackScope} from "./core.mjs";
 
 export {makeScopeEvalExpression} from "./frame.mjs";
 
+export {unmangleVariable} from "./variable.mjs";
+
 const {
   Reflect: {defineProperty},
 } = globalThis;
