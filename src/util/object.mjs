@@ -1,5 +1,6 @@
 const {
   undefined,
+  Object,
   Reflect: {getOwnPropertyDescriptor},
 } = globalThis;
 
@@ -9,5 +10,9 @@ export const set = (object, key, value) => {
   object[key] = value;
 };
 
-export const hasOwnProperty = (object, key) =>
-  getOwnPropertyDescriptor(object, key) !== undefined;
+/* c8 ignore start */
+export const hasOwnProperty =
+  getOwnPropertyDescriptor(Object, "hasOwn") === undefined
+    ? (object, key) => getOwnPropertyDescriptor(object, key) !== undefined
+    : Object.hasOwn;
+/* c8 ignore stop */
