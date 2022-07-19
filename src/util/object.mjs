@@ -4,6 +4,14 @@ const {
   Reflect: {getOwnPropertyDescriptor},
 } = globalThis;
 
+export const NULL_DATA_DESCRIPTOR = {
+  __proto__: null,
+  writable: true,
+  configurable: true,
+  enumerable: true,
+  value: null,
+};
+
 export const get = (object, key) => object[key];
 
 export const set = (object, key, value) => {

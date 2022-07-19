@@ -1,4 +1,5 @@
 import {
+  NULL_DATA_DESCRIPTOR,
   hasOwnProperty,
   constant_,
   deadcode_____,
@@ -8,7 +9,6 @@ import {
 } from "../../../util/index.mjs";
 
 import {
-  NULL_DATA_DESCRIPTOR,
   testStatic,
   conflictStaticInternal,
   makeDynamicLookupExpression,

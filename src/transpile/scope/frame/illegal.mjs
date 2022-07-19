@@ -1,4 +1,5 @@
 import {
+  NULL_DATA_DESCRIPTOR,
   assert,
   constant_,
   constant___,
@@ -9,7 +10,6 @@ import {
 } from "../../../util/index.mjs";
 
 import {
-  NULL_DATA_DESCRIPTOR,
   conflictStaticInternal,
   makeStaticLookupNode,
   testStatic,

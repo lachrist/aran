@@ -1,6 +1,7 @@
 import {reduce, filter, map, concat} from "array-lite";
 
 import {
+  NULL_DATA_DESCRIPTOR,
   hasOwnProperty,
   assert,
   bind_,
@@ -23,7 +24,6 @@ import {
 import {layerVariable, layerShadowVariable} from "../variable.mjs";
 
 import {
-  NULL_DATA_DESCRIPTOR,
   conflictStaticExternal,
   testStatic,
   makeStaticReadExpression,

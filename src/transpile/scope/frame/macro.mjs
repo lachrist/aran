@@ -1,4 +1,5 @@
 import {
+  NULL_DATA_DESCRIPTOR,
   assert,
   constant_,
   constant___,
@@ -14,7 +15,6 @@ import {makeExpressionEffect} from "../../../ast/index.mjs";
 import {makeUnaryExpression} from "../../../intrinsic.mjs";
 
 import {
-  NULL_DATA_DESCRIPTOR,
   makeStaticLookupNode,
   testStatic,
   conflictStaticInternal,

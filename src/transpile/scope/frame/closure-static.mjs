@@ -1,6 +1,7 @@
 import {concat, reduce, map, flatMap} from "array-lite";
 
 import {
+  NULL_DATA_DESCRIPTOR,
   constant_,
   partialx_,
   partial_x,
@@ -23,7 +24,6 @@ import {
 import {layerVariable} from "../variable.mjs";
 
 import {
-  NULL_DATA_DESCRIPTOR,
   makeExportSequenceEffect,
   makeExportStatement,
   makeStaticLookupNode,

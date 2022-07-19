@@ -1,6 +1,7 @@
 import {concat, includes, map} from "array-lite";
 
 import {
+  NULL_DATA_DESCRIPTOR,
   constant_,
   hasOwnProperty,
   push,
@@ -28,7 +29,6 @@ import {
 } from "../../../intrinsic.mjs";
 
 import {
-  NULL_DATA_DESCRIPTOR,
   conflictStaticExternal,
   testStatic,
   makeDynamicTestExpression,

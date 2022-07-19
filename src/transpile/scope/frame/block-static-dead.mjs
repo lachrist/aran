@@ -13,6 +13,7 @@
 // }
 
 import {
+  NULL_DATA_DESCRIPTOR,
   hasOwnProperty,
   deadcode_____,
   bind_____,
@@ -30,7 +31,6 @@ import {
   conflictStaticExternal,
   makeStaticDiscardExpression,
   makeStaticLookupNode,
-  NULL_DATA_DESCRIPTOR,
   makeThrowDeadzoneExpression,
 } from "./helper.mjs";
 

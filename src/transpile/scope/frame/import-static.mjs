@@ -1,4 +1,5 @@
 import {
+  NULL_DATA_DESCRIPTOR,
   bind_____,
   constant___,
   constant_,
@@ -17,7 +18,6 @@ import {
 import {makeUnaryExpression} from "../../../intrinsic.mjs";
 
 import {
-  NULL_DATA_DESCRIPTOR,
   makeThrowConstantExpression,
   conflictStaticExternal,
   makeStaticLookupNode,

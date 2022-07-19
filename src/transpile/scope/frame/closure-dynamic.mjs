@@ -1,6 +1,7 @@
 import {map} from "array-lite";
 
 import {
+  NULL_DATA_DESCRIPTOR,
   hasOwnProperty,
   assert,
   constant_,
@@ -24,7 +25,6 @@ import {
 } from "../../../intrinsic.mjs";
 
 import {
-  NULL_DATA_DESCRIPTOR,
   testStatic,
   makeDynamicTestExpression,
   makeObservableDynamicTestExpression,

@@ -1,6 +1,7 @@
 import {includes, map} from "array-lite";
 
 import {
+  NULL_DATA_DESCRIPTOR,
   constant_,
   partialx_,
   partialxx______,
@@ -12,7 +13,6 @@ import {
 import {layerVariable} from "../variable.mjs";
 
 import {
-  NULL_DATA_DESCRIPTOR,
   testStatic,
   conflictStaticInternal,
   makeStaticLookupNode,

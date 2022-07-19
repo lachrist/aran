@@ -259,15 +259,3 @@ export const makeDynamicWriteEffect = (
     ),
   );
 };
-
-///////////
-// Other //
-///////////
-
-export const NULL_DATA_DESCRIPTOR = {
-  __proto__: null,
-  value: null,
-  writable: true,
-  enumerable: true,
-  configurable: true,
-};
