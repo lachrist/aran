@@ -2,6 +2,8 @@ import {assertEqual, assertDeepEqual} from "../../__fixture__.mjs";
 
 import {createCounter} from "../../util/index.mjs";
 
+import {ROOT_SCOPE} from "../scope/index.mjs";
+
 import {
   createRootContext,
   setContextEvalScope,
@@ -20,7 +22,7 @@ import {
 const {undefined} = globalThis;
 
 const createTestContext = ({
-  scope = "scope",
+  scope = ROOT_SCOPE,
   nodes = [],
   evals = {},
   counter = createCounter(0),
@@ -38,23 +40,26 @@ const createTestContext = ({
 {
   const evals = {};
   assertEqual(
-    setContextEvalScope(createTestContext({evals}), 123, "eval-scope"),
+    setContextEvalScope(createTestContext({evals}), 123, ROOT_SCOPE),
     undefined,
   );
-  assertDeepEqual(evals, {123: "eval-scope"});
+  assertDeepEqual(evals, {123: ROOT_SCOPE});
 }
 
 ///////////
 // Scope //
 ///////////
 
-assertEqual(getContextScope(createTestContext({scope: "scope"})), "scope");
+assertEqual(
+  getContextScope(createTestContext({scope: ROOT_SCOPE})),
+  ROOT_SCOPE,
+);
 
 assertEqual(
   getContextScope(
-    setContextScope(createTestContext({scope: "scope"}), "SCOPE"),
+    setContextScope(createTestContext({scope: ROOT_SCOPE}), ROOT_SCOPE),
   ),
-  "SCOPE",
+  ROOT_SCOPE,
 );
 
 ////////////

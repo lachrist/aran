@@ -7,81 +7,37 @@ export {
 
 const {Error} = globalThis;
 
-const BINDING_TYPE = "property";
-
-const FRAME_TYPE = "frame";
-
-const CLOSURE_TYPE = "closure";
-
-//////////
-// ROOT //
-//////////
+const CLOSURE_FRAME = null;
 
 export const ROOT_SCOPE = NIL;
 
-/////////////
-// Binding //
-/////////////
+export const encloseScope = partialx_(cons, CLOSURE_FRAME);
 
-export const defineScopeBinding = (scope, key, value) =>
-  cons(
-    {
-      type: BINDING_TYPE,
-      key,
-      value,
-    },
-    scope,
-  );
+export const pushScopeFrame = (scope, frame) => cons(frame, scope);
 
-export const lookupScopeBinding = (scope, key) => {
-  while (scope !== NIL) {
-    const point = car(scope);
-    if (point.type === BINDING_TYPE && point.key === key) {
-      return point.value;
-    }
-    scope = cdr(scope);
+export const hasScopeFrame = (scope) => {
+  if (scope === ROOT_SCOPE) {
+    return false;
+  } else if (car(scope) === CLOSURE_FRAME) {
+    return hasScopeFrame(cdr(scope));
+  } else {
+    return true;
   }
-  throw new Error("missing scope property");
 };
 
-///////////
-// Frame //
-///////////
-
-export const encloseScope = partialx_(cons, {type: CLOSURE_TYPE});
-
-export const pushScopeFrame = (scope, frame) =>
-  cons(
-    {
-      type: FRAME_TYPE,
-      frame,
-    },
-    scope,
-  );
-
-export const hasScopeFrame = (scope) =>
-  scope === NIL
-    ? false
-    : car(scope).type === FRAME_TYPE
-    ? true
-    : hasScopeFrame(cdr(scope));
-
 export const popScopeFrame = (scope, escaped) => {
-  if (scope === NIL) {
-    throw new Error("unbound scope");
+  if (scope === ROOT_SCOPE) {
+    throw new Error("cannot pop frame from the root scope");
   } else {
-    const point = car(scope);
-    if (point.type === FRAME_TYPE) {
+    const frame = car(scope);
+    if (frame === CLOSURE_FRAME) {
+      return popScopeFrame(cdr(scope), true);
+    } else {
       return {
         scope: cdr(scope),
-        frame: point.frame,
+        frame,
         escaped,
       };
-    } else {
-      if (point.type === CLOSURE_TYPE) {
-        escaped = true;
-      }
-      return popScopeFrame(cdr(scope), escaped);
     }
   }
 };

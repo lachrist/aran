@@ -1,7 +1,5 @@
 import {concat} from "array-lite";
 
-import {createCounter} from "../../util/index.mjs";
-
 import {assertSuccess} from "../../__fixture__.mjs";
 
 import {
@@ -15,9 +13,7 @@ import {allignBlock, allignProgram} from "../../allign/index.mjs";
 
 import {BASE, META} from "./variable.mjs";
 
-import {packScope, unpackScope, encloseScope} from "./core.mjs";
-
-import {createRootScope} from "./binding.mjs";
+import {ROOT_SCOPE, packScope, unpackScope, encloseScope} from "./core.mjs";
 
 import {
   createFrame,
@@ -40,6 +36,8 @@ const {
   JSON: {stringify: stringifyJSON, parse: parseJSON},
 } = globalThis;
 
+const STRICT = false;
+
 let serialized_scope = null;
 
 const spyScope = (scope, result) => {
@@ -50,26 +48,32 @@ const spyScope = (scope, result) => {
 assertSuccess(
   allignBlock(
     makeScopeFrameBlock(
-      createRootScope(createCounter(123)),
+      STRICT,
+      ROOT_SCOPE,
       ["label"],
       [
         createFrame(BLOCK_STATIC, BASE, {}),
         createFrame(DEFINE_STATIC, META, {}),
       ],
       (scope) => {
-        declareScope(scope, "const", BASE, "variable", {exports: []});
+        declareScope(STRICT, scope, "const", BASE, "variable", {exports: []});
         return concat(
           [
             makeEffectStatement(
               makeExpressionEffect(
                 spyScope(
                   scope,
-                  makeScopeEvalExpression(scope, makeLiteralExpression("code")),
+                  makeScopeEvalExpression(
+                    STRICT,
+                    scope,
+                    makeLiteralExpression("code"),
+                  ),
                 ),
               ),
             ),
           ],
           makeScopeInitializeStatementArray(
+            STRICT,
             scope,
             "const",
             BASE,
@@ -79,7 +83,7 @@ assertSuccess(
           [
             makeEffectStatement(
               makeExpressionEffect(
-                makeScopeReadExpression(scope, BASE, "variable", null),
+                makeScopeReadExpression(STRICT, scope, BASE, "variable", null),
               ),
             ),
           ],
@@ -104,21 +108,27 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeFrameInternalLocalEvalProgram(
+      STRICT,
       unpackScope(parseJSON(serialized_scope)),
       [createFrame(MACRO, META, {})],
       (scope) => {
-        declareScope(scope, "macro", META, "VARIABLE", {
+        declareScope(STRICT, scope, "macro", META, "VARIABLE", {
           binding: makeLiteralExpression(123),
         });
         return [
           makeEffectStatement(
             makeExpressionEffect(
-              makeScopeReadExpression(scope, META, "VARIABLE"),
+              makeScopeReadExpression(STRICT, scope, META, "VARIABLE"),
             ),
           ),
           makeEffectStatement(
             makeExpressionEffect(
-              makeScopeReadExpression(encloseScope(scope), BASE, "variable"),
+              makeScopeReadExpression(
+                STRICT,
+                encloseScope(scope),
+                BASE,
+                "variable",
+              ),
             ),
           ),
           makeReturnStatement(makeLiteralExpression("completion")),
@@ -150,16 +160,17 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeFrameScriptProgram(
-      createRootScope(createCounter(0)),
+      STRICT,
+      ROOT_SCOPE,
       [createFrame(MACRO, META, {})],
       (scope) => {
-        declareScope(scope, "macro", META, "variable", {
+        declareScope(STRICT, scope, "macro", META, "variable", {
           binding: makeLiteralExpression("binding"),
         });
         return [
           makeEffectStatement(
             makeExpressionEffect(
-              makeScopeReadExpression(scope, META, "variable"),
+              makeScopeReadExpression(STRICT, scope, META, "variable"),
             ),
           ),
           makeReturnStatement(makeLiteralExpression("completion")),
