@@ -118,7 +118,7 @@ assertSuccess(
         return [
           makeEffectStatement(
             makeExpressionEffect(
-              makeScopeReadExpression(STRICT, scope, META, "VARIABLE"),
+              makeScopeReadExpression(STRICT, scope, META, "VARIABLE", null),
             ),
           ),
           makeEffectStatement(
@@ -128,6 +128,7 @@ assertSuccess(
                 encloseScope(scope),
                 BASE,
                 "variable",
+                null,
               ),
             ),
           ),
@@ -170,7 +171,7 @@ assertSuccess(
         return [
           makeEffectStatement(
             makeExpressionEffect(
-              makeScopeReadExpression(STRICT, scope, META, "variable"),
+              makeScopeReadExpression(STRICT, scope, META, "variable", null),
             ),
           ),
           makeReturnStatement(makeLiteralExpression("completion")),
