@@ -5,11 +5,11 @@ import {createCounter} from "../../util/index.mjs";
 import {ROOT_SCOPE} from "../scope/index.mjs";
 
 import {
-  createRootContext,
-  setContextEvalScope,
-  getContextCounter,
+  createContext,
+  saveContext,
+  loadContext,
   setContextScope,
-  getContextScope,
+  getContextScoping,
   strictifyContext,
   isContextStrict,
   getContextSubfield,
@@ -22,44 +22,43 @@ import {
 const {undefined} = globalThis;
 
 const createTestContext = ({
-  scope = ROOT_SCOPE,
   nodes = [],
-  evals = {},
+  storage = {},
   counter = createCounter(0),
 }) =>
-  createRootContext(scope, {
+  createContext({
     nodes,
-    evals,
+    storage,
     counter,
   });
 
-//////////
-// Eval //
-//////////
+/////////////
+// Storage //
+/////////////
 
 {
-  const evals = {};
-  assertEqual(
-    setContextEvalScope(createTestContext({evals}), 123, ROOT_SCOPE),
-    undefined,
-  );
-  assertDeepEqual(evals, {123: ROOT_SCOPE});
+  const root = {nodes: [], storage: {}, counter: createCounter()};
+  const context = createContext(root);
+  assertEqual(saveContext(context, 123), undefined);
+  assertDeepEqual(loadContext(root, 123), context);
 }
 
 ///////////
 // Scope //
 ///////////
 
-assertEqual(
-  getContextScope(createTestContext({scope: ROOT_SCOPE})),
-  ROOT_SCOPE,
-);
-
-assertEqual(
-  getContextScope(
-    setContextScope(createTestContext({scope: ROOT_SCOPE}), ROOT_SCOPE),
+assertDeepEqual(
+  getContextScoping(
+    setContextScope(
+      createTestContext({counter: createCounter(123)}),
+      ROOT_SCOPE,
+    ),
   ),
-  ROOT_SCOPE,
+  {
+    strict: false,
+    scope: ROOT_SCOPE,
+    counter: createCounter(123),
+  },
 );
 
 ////////////
@@ -69,15 +68,6 @@ assertEqual(
 assertEqual(isContextStrict(createTestContext({})), false);
 
 assertEqual(isContextStrict(strictifyContext(createTestContext({}))), true);
-
-/////////////
-// Counter //
-/////////////
-
-{
-  const counter = createCounter(0);
-  assertEqual(getContextCounter(createTestContext({counter})), counter);
-}
 
 //////////////////
 // applyVisitor //
@@ -94,7 +84,7 @@ assertEqual(
     },
     {type: "type"},
     123,
-    createRootContext({}),
+    createTestContext({}),
   ),
   "result",
 );
