@@ -1,11 +1,18 @@
-import {NIL, cons, car, cdr, partialx_} from "../../util/index.mjs";
-
-export {
-  convertListArray as packScope,
-  convertArrayList as unpackScope,
+import {
+  bind_,
+  partialx_,
+  NIL,
+  cons,
+  car,
+  cdr,
+  convertListArray,
+  convertArrayList,
 } from "../../util/index.mjs";
 
-const {Error} = globalThis;
+const {
+  Error,
+  JSON: {parse: parseJSON, stringify: stringifyJSON},
+} = globalThis;
 
 const CLOSURE_FRAME = null;
 
@@ -41,3 +48,9 @@ export const popScopeFrame = (scope, escaped) => {
     }
   }
 };
+
+const deepClone = bind_(parseJSON, stringifyJSON);
+
+export const packScope = bind_(deepClone, convertListArray);
+
+export const unpackScope = bind_(deepClone, convertArrayList);
