@@ -6,13 +6,9 @@ import {
   createCounter,
   gaugeCounter,
   assert,
-  partialxxx_x,
+  partial_x_x,
+  partialxx_x,
   partialx_xxx,
-  partial__x_x,
-  partial__x__,
-  partial__x__x,
-  partial__xx_x,
-  partial___x__,
 } from "../../util/index.mjs";
 
 import {
@@ -52,6 +48,7 @@ import {
 } from "./frame/index.mjs";
 
 import {
+  makeScopeEvalExpression as makeScopeEvalExpression_,
   makeScopeFrameBlock,
   makeScopeFrameScriptProgram,
   declareScope,
@@ -64,8 +61,6 @@ import {
 } from "./frame.mjs";
 
 export {ROOT_SCOPE, packScope, unpackScope} from "./core.mjs";
-
-export {makeScopeEvalExpression} from "./frame.mjs";
 
 export {unmangleVariable} from "./variable.mjs";
 
@@ -90,14 +85,19 @@ const makeOptimisticWriteEffect = (
 };
 
 //////////
+// Eval //
+//////////
+
+export const makeScopeEvalExpression = ({strict, scope}, expression) =>
+  makeScopeEvalExpression_(strict, scope, expression);
+
+//////////
 // meta //
 //////////
 
 const declareMetaGeneric = (
-  strict,
-  scope,
+  {strict, scope, counter},
   kind,
-  counter,
   variable,
   options,
 ) => {
@@ -106,26 +106,18 @@ const declareMetaGeneric = (
   return variable;
 };
 
-export const declareMeta = partial__x__x(declareMetaGeneric, "define", null);
+export const declareMeta = partial_x_x(declareMetaGeneric, "define", null);
 
-export const declareMetaMacro = (
-  strict,
-  scope,
-  counter,
-  variable,
-  expression,
-) =>
-  declareMetaGeneric(strict, scope, "macro", counter, variable, {
+export const declareMetaMacro = (context, variable, expression) =>
+  declareMetaGeneric(context, "macro", variable, {
     binding: expression,
   });
 
-export const makeMetaReadExpression = (strict, scope, meta) =>
+export const makeMetaReadExpression = ({strict, scope}, meta) =>
   makeScopeReadExpression(strict, scope, META, meta, null);
 
-export const makeMetaWriteEffect = partial__x__(
-  makeOptimisticWriteEffect,
-  META,
-);
+export const makeMetaWriteEffect = ({strict, scope}, meta, expression) =>
+  makeOptimisticWriteEffect(strict, scope, META, meta, expression);
 
 export const makeMetaInitializeEffect = makeMetaWriteEffect;
 
@@ -133,89 +125,87 @@ export const makeMetaInitializeEffect = makeMetaWriteEffect;
 // spec //
 //////////
 
-export const declareSpecMacro = (strict, scope, variable, binding) =>
+export const declareSpecMacro = ({strict, scope}, variable, binding) =>
   declareScope(strict, scope, "macro", SPEC, variable, {binding});
 
-export const declareSpecIllegal = (strict, scope, variable) =>
+export const declareSpecIllegal = ({strict, scope}, variable) =>
   declareScope(strict, scope, "illegal", SPEC, variable, {name: variable});
 
-export const declareSpec = partial__xx_x(declareScope, "define", SPEC, null);
+export const declareSpec = ({strict, scope}, variable) =>
+  declareScope(strict, scope, "define", SPEC, variable, null);
 
-export const makeSpecInitializeEffect = partial__x__(
-  makeOptimisticWriteEffect,
-  SPEC,
-);
+export const makeSpecInitializeEffect = (
+  {strict, scope},
+  variable,
+  expression,
+) => makeOptimisticWriteEffect(strict, scope, SPEC, variable, expression);
 
-export const makeSpecReadExpression = partial__x_x(
-  makeScopeReadExpression,
-  SPEC,
-  null,
-);
+export const makeSpecReadExpression = ({strict, scope}, variable) =>
+  makeScopeReadExpression(strict, scope, SPEC, variable, null);
 
 //////////
 // base //
 //////////
 
-export const declareBaseImport = (strict, scope, variable, source, specifier) =>
-  declareScope(strict, scope, "import", BASE, variable, {source, specifier});
+export const declareBaseImport = (
+  {strict, scope},
+  variable,
+  source,
+  specifier,
+) => declareScope(strict, scope, "import", BASE, variable, {source, specifier});
 
-export const declareBase = (strict, scope, kind, variable, specifiers) =>
+export const declareBase = ({strict, scope}, kind, variable, specifiers) =>
   declareScope(strict, scope, kind, BASE, variable, {exports: specifiers});
 
-export const makeBaseInitializeStatementArray = partial___x__(
-  makeScopeInitializeStatementArray,
-  BASE,
-);
+export const makeBaseInitializeStatementArray = (
+  {strict, scope},
+  kind,
+  variable,
+  expression,
+) =>
+  makeScopeInitializeStatementArray(
+    strict,
+    scope,
+    kind,
+    BASE,
+    variable,
+    expression,
+  );
 
-export const makeBaseReadExpression = partial__x_x(
-  makeScopeReadExpression,
-  BASE,
-  null,
-);
+export const makeBaseReadExpression = ({strict, scope}, variable) =>
+  makeScopeReadExpression(strict, scope, BASE, variable, null);
 
-export const makeBaseTypeofExpression = partial__x_x(
-  makeScopeTypeofExpression,
-  BASE,
-  null,
-);
+export const makeBaseTypeofExpression = ({strict, scope}, variable) =>
+  makeScopeTypeofExpression(strict, scope, BASE, variable, null);
 
-export const makeBaseDiscardExpression = partial__x_x(
-  makeScopeDiscardExpression,
-  BASE,
-  null,
-);
+export const makeBaseDiscardExpression = ({strict, scope}, variable) =>
+  makeScopeDiscardExpression(strict, scope, BASE, variable, null);
 
-export const makeBaseMacroWriteEffect = (strict, scope, variable, macro) =>
+export const makeBaseMacroWriteEffect = ({strict, scope}, variable, macro) =>
   makeScopeWriteEffect(strict, scope, BASE, variable, {
     expression: macro,
     counter: createCounter(0),
   });
 
-export const makeBaseWriteEffect = (
-  strict,
-  scope,
-  counter1,
-  variable,
-  expression,
-) => {
-  const counter2 = createCounter(0);
+export const makeBaseWriteEffect = (context, variable, expression) => {
+  const {strict, scope} = context;
+  const counter = createCounter(0);
   const effect = makeScopeWriteEffect(strict, scope, BASE, variable, {
     expression,
-    counter: counter2,
+    counter,
   });
-  if (gaugeCounter(counter2) === 0) {
+  if (gaugeCounter(counter) === 0) {
     return makeSequenceEffect(makeExpressionEffect(expression), effect);
-  } else if (gaugeCounter(counter2) === 1) {
+  } else if (gaugeCounter(counter) === 1) {
     return effect;
   } else {
-    const meta = declareMeta(strict, scope, counter1, "right");
+    const meta = declareMeta(context, "right");
     return makeSequenceEffect(
-      makeMetaWriteEffect(strict, scope, meta, expression),
+      makeMetaWriteEffect(context, meta, expression),
       makeBaseMacroWriteEffect(
-        strict,
-        scope,
+        context,
         variable,
-        makeMetaReadExpression(strict, scope, meta),
+        makeMetaReadExpression(context, meta),
       ),
     );
   }
@@ -328,7 +318,7 @@ const createDeadBlockBaseFrameArray = () => [
 
 const generateMakeScopeDynamicBlock =
   (createBaseFrameArray) =>
-  (strict, scope, labels, macro, makeStatementArray) =>
+  ({strict, scope}, labels, macro, makeStatementArray) =>
     makeScopeFrameBlock(
       strict,
       scope,
@@ -358,11 +348,11 @@ const enclave_name_array = [
   "writeSloppy",
 ];
 
-const populateEnclave = (strict, scope, macros, name, variable) => {
+const populateEnclave = (context, macros, name, variable) => {
   defineProperty(macros, name, {
     __proto__: null,
     value: makeGetExpression(
-      makeMetaReadExpression(strict, scope, variable),
+      makeMetaReadExpression(context, variable),
       makeLiteralExpression(`scope.${name}`),
     ),
     writable: true,
@@ -378,15 +368,16 @@ const makeEnclaveStatementArray = (
   macros,
   makeStatementArray,
 ) => {
-  const variable = declareMeta(strict, scope, counter, "input");
+  const context = {strict, scope, counter};
+  const variable = declareMeta(context, "input");
   forEach(
     enclave_name_array,
-    partialxxx_x(populateEnclave, strict, scope, macros, variable),
+    partialxx_x(populateEnclave, context, macros, variable),
   );
   return concat(
     [
       makeEffectStatement(
-        makeMetaWriteEffect(strict, scope, variable, makeInputExpression()),
+        makeMetaWriteEffect(context, variable, makeInputExpression()),
       ),
     ],
     makeStatementArray(scope),
@@ -394,11 +385,9 @@ const makeEnclaveStatementArray = (
 };
 
 export const makeScopeExternalLocalEvalProgram = (
-  strict,
-  scope,
+  {strict, scope, counter},
   enclave,
   specials,
-  counter,
   makeStatementArray,
 ) => {
   assert(
@@ -434,8 +423,7 @@ export const makeScopeExternalLocalEvalProgram = (
 /////////////////////
 
 export const makeScopeScriptProgram = (
-  strict,
-  scope,
+  {strict, scope},
   enclave,
   makeStatementArray,
 ) =>
@@ -451,8 +439,7 @@ export const makeScopeScriptProgram = (
   );
 
 export const makeScopeModuleProgram = (
-  strict,
-  scope,
+  {strict, scope},
   enclave,
   links,
   makeStatementArray,
@@ -476,8 +463,7 @@ export const makeScopeModuleProgram = (
 };
 
 export const makeScopeGlobalEvalProgram = (
-  strict,
-  scope,
+  {strict, scope},
   enclave,
   makeStatementArray,
 ) =>
@@ -501,7 +487,8 @@ export const makeScopeGlobalEvalProgram = (
 ////////////////////////
 
 const generateMakeBlueprintBlock =
-  (createBaseFrameArray) => (strict, scope, labels, makeStatementArray) =>
+  (createBaseFrameArray) =>
+  ({strict, scope}, labels, makeStatementArray) =>
     makeScopeFrameBlock(
       strict,
       scope,
@@ -533,8 +520,7 @@ export const makeScopeStaticClosureBlock = generateMakeBlueprintBlock(
 ///////////
 
 export const makeScopeClosureExpression = (
-  strict,
-  scope,
+  {strict, scope},
   type,
   asynchronous,
   generator,
@@ -558,8 +544,7 @@ export const makeScopeClosureExpression = (
   );
 
 export const makeScopeInternalLocalEvalProgram = (
-  strict,
-  scope,
+  {strict, scope},
   enclave,
   makeStatementArray,
 ) => {

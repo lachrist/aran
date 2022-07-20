@@ -64,6 +64,16 @@ const STRICT = true;
 
 const ENCLAVE = true;
 
+const createContext = ({
+  strict = STRICT,
+  scope = ROOT_SCOPE,
+  counter = createCounter(0),
+}) => ({
+  strict,
+  scope,
+  counter,
+});
+
 ////////////////////////////
 // makeScopeScriptProgram //
 ////////////////////////////
@@ -71,29 +81,27 @@ const ENCLAVE = true;
 // meta //
 assertSuccess(
   allignProgram(
-    makeScopeScriptProgram(true, ROOT_SCOPE, ENCLAVE, (scope) => {
-      const variable1 = declareMeta(true, scope, createCounter(0), "variable1");
+    makeScopeScriptProgram(createContext({strict: true}), ENCLAVE, (scope) => {
+      const context = createContext({strict: true, scope});
+      const variable1 = declareMeta(context, "variable1");
       const variable2 = declareMetaMacro(
-        true,
-        scope,
-        createCounter(0),
+        context,
         "variable2",
         makeLiteralExpression("binding"),
       );
       return [
         makeEffectStatement(
           makeMetaInitializeEffect(
-            true,
-            scope,
+            context,
             variable1,
             makeLiteralExpression("right"),
           ),
         ),
         makeEffectStatement(
-          makeExpressionEffect(makeMetaReadExpression(true, scope, variable1)),
+          makeExpressionEffect(makeMetaReadExpression(context, variable1)),
         ),
         makeEffectStatement(
-          makeExpressionEffect(makeMetaReadExpression(true, scope, variable2)),
+          makeExpressionEffect(makeMetaReadExpression(context, variable2)),
         ),
         makeReturnStatement(makeLiteralExpression("completion")),
       ];
@@ -122,24 +130,24 @@ assertSuccess(
 // spec //
 assertSuccess(
   allignProgram(
-    makeScopeScriptProgram(STRICT, ROOT_SCOPE, ENCLAVE, (scope) => {
+    makeScopeScriptProgram(createContext({}), ENCLAVE, (scope) => {
+      const context = createContext({scope});
       assertEqual(
         declareSpecMacro(
-          STRICT,
-          scope,
+          context,
           "this",
           makeIntrinsicExpression("aran.globalObject"),
         ),
         undefined,
       );
-      assertEqual(declareSpecIllegal(STRICT, scope, "import.meta"), undefined);
-      assertThrow(() => makeSpecReadExpression(STRICT, scope, "import.meta"), {
+      assertEqual(declareSpecIllegal(context, "import.meta"), undefined);
+      assertThrow(() => makeSpecReadExpression(context, "import.meta"), {
         name: "Error",
         message: "Illegal import.meta",
       });
       return [
         makeEffectStatement(
-          makeExpressionEffect(makeSpecReadExpression(STRICT, scope, "this")),
+          makeExpressionEffect(makeSpecReadExpression(context, "this")),
         ),
         makeReturnStatement(makeLiteralExpression("completion")),
       ];
@@ -155,37 +163,31 @@ assertSuccess(
 // base strict enclave //
 assertSuccess(
   allignProgram(
-    makeScopeScriptProgram(true, ROOT_SCOPE, true, (scope) => {
-      assertEqual(declareBase(true, scope, "let", "variable", []), undefined);
+    makeScopeScriptProgram(createContext({strict: true}), true, (scope) => {
+      const context = createContext({strict: true, scope});
+      assertEqual(declareBase(context, "let", "variable", []), undefined);
       return concat(
         makeBaseInitializeStatementArray(
-          true,
-          scope,
+          context,
           "let",
           "variable",
           makeLiteralExpression("init"),
         ),
         [
           makeEffectStatement(
-            makeExpressionEffect(
-              makeBaseReadExpression(true, scope, "variable"),
-            ),
+            makeExpressionEffect(makeBaseReadExpression(context, "variable")),
+          ),
+          makeEffectStatement(
+            makeExpressionEffect(makeBaseTypeofExpression(context, "variable")),
           ),
           makeEffectStatement(
             makeExpressionEffect(
-              makeBaseTypeofExpression(true, scope, "variable"),
-            ),
-          ),
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeBaseDiscardExpression(true, scope, "variable"),
+              makeBaseDiscardExpression(context, "variable"),
             ),
           ),
           makeEffectStatement(
             makeBaseWriteEffect(
-              true,
-              scope,
-              createCounter(0),
+              context,
               "variable",
               makeLiteralExpression("right"),
             ),
@@ -214,37 +216,31 @@ assertSuccess(
 // base sloppy refied //
 assertSuccess(
   allignProgram(
-    makeScopeScriptProgram(false, ROOT_SCOPE, false, (scope) => {
-      assertEqual(declareBase(false, scope, "let", "variable", []), undefined);
+    makeScopeScriptProgram({strict: false}, false, (scope) => {
+      const context = createContext({strict: false, scope});
+      assertEqual(declareBase(context, "let", "variable", []), undefined);
       return concat(
         makeBaseInitializeStatementArray(
-          false,
-          scope,
+          context,
           "let",
           "variable",
           makeLiteralExpression("init"),
         ),
         [
           makeEffectStatement(
-            makeExpressionEffect(
-              makeBaseReadExpression(false, scope, "variable"),
-            ),
+            makeExpressionEffect(makeBaseReadExpression(context, "variable")),
+          ),
+          makeEffectStatement(
+            makeExpressionEffect(makeBaseTypeofExpression(context, "variable")),
           ),
           makeEffectStatement(
             makeExpressionEffect(
-              makeBaseTypeofExpression(false, scope, "variable"),
-            ),
-          ),
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeBaseDiscardExpression(false, scope, "variable"),
+              makeBaseDiscardExpression(context, "variable"),
             ),
           ),
           makeEffectStatement(
             makeBaseWriteEffect(
-              false,
-              scope,
-              createCounter(0),
+              context,
               "variable",
               makeLiteralExpression("right"),
             ),
@@ -336,33 +332,36 @@ assertSuccess(
 // meta //
 assertSuccess(
   allignProgram(
-    makeScopeModuleProgram(true, ROOT_SCOPE, ENCLAVE, [], (scope) => {
-      const variable1 = declareMeta(true, scope, createCounter(0), "variable1");
-      const variable2 = declareMetaMacro(
-        true,
-        scope,
-        createCounter(0),
-        "variable2",
-        makeLiteralExpression("binding"),
-      );
-      return [
-        makeEffectStatement(
-          makeMetaInitializeEffect(
-            true,
-            scope,
-            variable1,
-            makeLiteralExpression("right"),
+    makeScopeModuleProgram(
+      createContext({strict: true}),
+      ENCLAVE,
+      [],
+      (scope) => {
+        const context = createContext({strict: true, scope});
+        const variable1 = declareMeta(context, "variable1");
+        const variable2 = declareMetaMacro(
+          context,
+          "variable2",
+          makeLiteralExpression("binding"),
+        );
+        return [
+          makeEffectStatement(
+            makeMetaInitializeEffect(
+              context,
+              variable1,
+              makeLiteralExpression("right"),
+            ),
           ),
-        ),
-        makeEffectStatement(
-          makeExpressionEffect(makeMetaReadExpression(true, scope, variable1)),
-        ),
-        makeEffectStatement(
-          makeExpressionEffect(makeMetaReadExpression(true, scope, variable2)),
-        ),
-        makeReturnStatement(makeLiteralExpression("completion")),
-      ];
-    }),
+          makeEffectStatement(
+            makeExpressionEffect(makeMetaReadExpression(context, variable1)),
+          ),
+          makeEffectStatement(
+            makeExpressionEffect(makeMetaReadExpression(context, variable2)),
+          ),
+          makeReturnStatement(makeLiteralExpression("completion")),
+        ];
+      },
+    ),
     `
       "module";
       {
@@ -379,42 +378,46 @@ assertSuccess(
 // spec //
 assertSuccess(
   allignProgram(
-    makeScopeModuleProgram(true, ROOT_SCOPE, ENCLAVE, [], (scope) => {
-      assertEqual(
-        declareSpecMacro(
-          true,
-          scope,
-          "this",
-          makeIntrinsicExpression("aran.globalObject"),
-        ),
-        undefined,
-      );
-      assertEqual(declareSpecIllegal(true, scope, "new.target"), undefined);
-      assertThrow(() => makeSpecReadExpression(true, scope, "new.target"), {
-        name: "Error",
-        message: "Illegal new.target",
-      });
-      assertEqual(declareSpec(true, scope, "import.meta"), undefined);
-      return [
-        makeEffectStatement(
-          makeSpecInitializeEffect(
-            true,
-            scope,
-            "import.meta",
-            makeLiteralExpression("init"),
+    makeScopeModuleProgram(
+      createContext({strict: true}),
+      ENCLAVE,
+      [],
+      (scope) => {
+        const context = createContext({strict: true, scope});
+        assertEqual(
+          declareSpecMacro(
+            context,
+            "this",
+            makeIntrinsicExpression("aran.globalObject"),
           ),
-        ),
-        makeEffectStatement(
-          makeExpressionEffect(makeSpecReadExpression(true, scope, "this")),
-        ),
-        makeEffectStatement(
-          makeExpressionEffect(
-            makeSpecReadExpression(true, scope, "import.meta"),
+          undefined,
+        );
+        assertEqual(declareSpecIllegal(context, "new.target"), undefined);
+        assertThrow(() => makeSpecReadExpression(context, "new.target"), {
+          name: "Error",
+          message: "Illegal new.target",
+        });
+        assertEqual(declareSpec(context, "import.meta"), undefined);
+        return [
+          makeEffectStatement(
+            makeSpecInitializeEffect(
+              context,
+              "import.meta",
+              makeLiteralExpression("init"),
+            ),
           ),
-        ),
-        makeReturnStatement(makeLiteralExpression("completion")),
-      ];
-    }),
+          makeEffectStatement(
+            makeExpressionEffect(makeSpecReadExpression(context, "this")),
+          ),
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeSpecReadExpression(context, "import.meta"),
+            ),
+          ),
+          makeReturnStatement(makeLiteralExpression("completion")),
+        ];
+      },
+    ),
     `
       "module";
       {
@@ -432,23 +435,22 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeModuleProgram(
-      true,
-      ROOT_SCOPE,
+      createContext({strict: true}),
       ENCLAVE,
       [makeImportLink("source", "imported"), makeExportLink("exported")],
       (scope) => {
+        const context = createContext({strict: true, scope});
         assertEqual(
-          declareBase(true, scope, "let", "variable1", ["exported"]),
+          declareBase(context, "let", "variable1", ["exported"]),
           undefined,
         );
         assertEqual(
-          declareBaseImport(true, scope, "variable2", "source", "imported"),
+          declareBaseImport(context, "variable2", "source", "imported"),
           undefined,
         );
         return concat(
           makeBaseInitializeStatementArray(
-            true,
-            scope,
+            context,
             "let",
             "variable1",
             makeLiteralExpression("init"),
@@ -456,31 +458,29 @@ assertSuccess(
           [
             makeEffectStatement(
               makeExpressionEffect(
-                makeBaseReadExpression(true, scope, "variable1"),
+                makeBaseReadExpression(context, "variable1"),
               ),
             ),
             makeEffectStatement(
               makeExpressionEffect(
-                makeBaseTypeofExpression(true, scope, "variable1"),
+                makeBaseTypeofExpression(context, "variable1"),
               ),
             ),
             makeEffectStatement(
               makeExpressionEffect(
-                makeBaseDiscardExpression(true, scope, "variable1"),
+                makeBaseDiscardExpression(context, "variable1"),
               ),
             ),
             makeEffectStatement(
               makeBaseWriteEffect(
-                true,
-                scope,
-                createCounter(0),
+                context,
                 "variable1",
                 makeLiteralExpression("right"),
               ),
             ),
             makeEffectStatement(
               makeExpressionEffect(
-                makeBaseReadExpression(true, scope, "variable2"),
+                makeBaseReadExpression(context, "variable2"),
               ),
             ),
             makeReturnStatement(makeLiteralExpression("completion")),
@@ -525,17 +525,18 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeExternalLocalEvalProgram(
-      true,
-      ROOT_SCOPE,
+      createContext({strict: true}),
       true,
       ["this"],
-      createCounter(0),
-      (scope) => [
-        makeEffectStatement(
-          makeExpressionEffect(makeBaseReadExpression(true, scope, "variable")),
-        ),
-        makeReturnStatement(makeLiteralExpression("completion")),
-      ],
+      (scope) => {
+        const context = createContext({strict: true, scope});
+        return [
+          makeEffectStatement(
+            makeExpressionEffect(makeBaseReadExpression(context, "variable")),
+          ),
+          makeReturnStatement(makeLiteralExpression("completion")),
+        ];
+      },
     ),
     `
       "external";
@@ -560,34 +561,31 @@ assertSuccess(
   let serialized_scope = null;
   assertSuccess(
     allignProgram(
-      makeScopeGlobalEvalProgram(false, ROOT_SCOPE, true, (scope) => {
-        assertEqual(
-          declareBase(false, scope, "let", "variable1", []),
-          undefined,
-        );
-        const statements1 = makeBaseInitializeStatementArray(
-          false,
-          scope,
-          "let",
-          "variable1",
-          makeLiteralExpression("init1"),
-        );
-        const statements2 = [
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeScopeEvalExpression(
-                false,
-                scope,
-                makeLiteralExpression("code"),
+      makeScopeGlobalEvalProgram(
+        createContext({strict: false}),
+        true,
+        (scope) => {
+          const context = createContext({strict: false, scope});
+          assertEqual(declareBase(context, "let", "variable1", []), undefined);
+          const statements1 = makeBaseInitializeStatementArray(
+            context,
+            "let",
+            "variable1",
+            makeLiteralExpression("init1"),
+          );
+          const statements2 = [
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeEvalExpression(context, makeLiteralExpression("code")),
               ),
             ),
-          ),
-        ];
-        serialized_scope = stringifyJSON(packScope(scope));
-        return concat(statements1, statements2, [
-          makeReturnStatement(makeLiteralExpression("completion")),
-        ]);
-      }),
+          ];
+          serialized_scope = stringifyJSON(packScope(scope));
+          return concat(statements1, statements2, [
+            makeReturnStatement(makeLiteralExpression("completion")),
+          ]);
+        },
+      ),
       `
         "eval";
         {
@@ -602,36 +600,31 @@ assertSuccess(
   assertSuccess(
     allignProgram(
       makeScopeInternalLocalEvalProgram(
-        false,
-        unpackScope(parseJSON(serialized_scope)),
+        createContext({
+          strict: false,
+          scope: unpackScope(parseJSON(serialized_scope)),
+        }),
         false,
         (scope) => {
-          assertEqual(
-            declareBase(false, scope, "let", "variable2", []),
-            undefined,
-          );
-          assertEqual(
-            declareBase(false, scope, "var", "variable3", []),
-            undefined,
-          );
+          const context = createContext({strict: false, scope});
+          assertEqual(declareBase(context, "let", "variable2", []), undefined);
+          assertEqual(declareBase(context, "var", "variable3", []), undefined);
           return concat(
             [
               makeEffectStatement(
                 makeExpressionEffect(
-                  makeBaseReadExpression(false, scope, "variable1"),
+                  makeBaseReadExpression(context, "variable1"),
                 ),
               ),
             ],
             makeBaseInitializeStatementArray(
-              false,
-              scope,
+              context,
               "let",
               "variable2",
               makeLiteralExpression("init2"),
             ),
             makeBaseInitializeStatementArray(
-              false,
-              scope,
+              context,
               "var",
               "variable3",
               makeLiteralExpression("init3"),
@@ -661,39 +654,46 @@ assertSuccess(
 
 assertSuccess(
   allignProgram(
-    makeScopeGlobalEvalProgram(STRICT, ROOT_SCOPE, true, (scope1) => [
-      makeBlockStatement(
-        makeScopeDynamicClosureBlock(
-          STRICT,
-          scope1,
-          ["label"],
-          makeLiteralExpression("frame"),
-          (scope2) => [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeBaseReadExpression(STRICT, scope2, "variable"),
-              ),
-            ),
-          ],
+    makeScopeGlobalEvalProgram(createContext({}), true, (scope1) => {
+      const context1 = createContext({scope: scope1});
+      return [
+        makeBlockStatement(
+          makeScopeDynamicClosureBlock(
+            context1,
+            ["label"],
+            makeLiteralExpression("frame"),
+            (scope2) => {
+              const context2 = createContext({scope: scope2});
+              return [
+                makeEffectStatement(
+                  makeExpressionEffect(
+                    makeBaseReadExpression(context2, "variable"),
+                  ),
+                ),
+              ];
+            },
+          ),
         ),
-      ),
-      makeBlockStatement(
-        makeScopeDynamicWithBlock(
-          STRICT,
-          scope1,
-          ["label"],
-          makeLiteralExpression("frame"),
-          (scope2) => [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeBaseReadExpression(STRICT, scope2, "variable"),
-              ),
-            ),
-          ],
+        makeBlockStatement(
+          makeScopeDynamicWithBlock(
+            context1,
+            ["label"],
+            makeLiteralExpression("frame"),
+            (scope2) => {
+              const context2 = createContext({scope: scope2});
+              return [
+                makeEffectStatement(
+                  makeExpressionEffect(
+                    makeBaseReadExpression(context2, "variable"),
+                  ),
+                ),
+              ];
+            },
+          ),
         ),
-      ),
-      makeReturnStatement(makeLiteralExpression("completion")),
-    ]),
+        makeReturnStatement(makeLiteralExpression("completion")),
+      ];
+    }),
     `
     "eval";
     {
@@ -738,31 +738,35 @@ assertSuccess(
 
 assertSuccess(
   allignProgram(
-    makeScopeGlobalEvalProgram(STRICT, ROOT_SCOPE, ENCLAVE, (scope1) => [
-      makeEffectStatement(
-        makeExpressionEffect(
-          makeScopeClosureExpression(
-            STRICT,
-            scope1,
-            "arrow",
-            false,
-            false,
-            (scope2) => [
-              makeBlockStatement(
-                makeScopeStaticClosureBlock(
-                  STRICT,
-                  scope2,
-                  ["label"],
-                  (_scope3) => [],
-                ),
-              ),
-              makeReturnStatement(makeLiteralExpression("completion")),
-            ],
+    makeScopeGlobalEvalProgram(createContext({}), ENCLAVE, (scope1) => {
+      const context1 = createContext({scope: scope1});
+      return [
+        makeEffectStatement(
+          makeExpressionEffect(
+            makeScopeClosureExpression(
+              context1,
+              "arrow",
+              false,
+              false,
+              (scope2) => {
+                const context2 = createContext({scope: scope2});
+                return [
+                  makeBlockStatement(
+                    makeScopeStaticClosureBlock(
+                      context2,
+                      ["label"],
+                      (_scope3) => [],
+                    ),
+                  ),
+                  makeReturnStatement(makeLiteralExpression("completion")),
+                ];
+              },
+            ),
           ),
         ),
-      ),
-      makeReturnStatement(makeLiteralExpression("completion")),
-    ]),
+        makeReturnStatement(makeLiteralExpression("completion")),
+      ];
+    }),
     `
     "eval";
     {
@@ -784,24 +788,28 @@ assertSuccess(
 
 assertSuccess(
   allignProgram(
-    makeScopeGlobalEvalProgram(STRICT, ROOT_SCOPE, ENCLAVE, (scope1) => [
-      makeBlockStatement(
-        makeScopeDeadBlock(STRICT, scope1, ["label"], (scope2) => {
-          assertEqual(
-            declareBase(STRICT, scope2, "let", "variable", []),
-            undefined,
-          );
-          return [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeBaseReadExpression(STRICT, scope2, "variable"),
+    makeScopeGlobalEvalProgram(createContext({}), ENCLAVE, (scope1) => {
+      const context1 = createContext({scope: scope1});
+      return [
+        makeBlockStatement(
+          makeScopeDeadBlock(context1, ["label"], (scope2) => {
+            const context2 = createContext({scope: scope2});
+            assertEqual(
+              declareBase(context2, "let", "variable", []),
+              undefined,
+            );
+            return [
+              makeEffectStatement(
+                makeExpressionEffect(
+                  makeBaseReadExpression(context2, "variable"),
+                ),
               ),
-            ),
-          ];
-        }),
-      ),
-      makeReturnStatement(makeLiteralExpression("completion")),
-    ]),
+            ];
+          }),
+        ),
+        makeReturnStatement(makeLiteralExpression("completion")),
+      ];
+    }),
     `
     "eval";
     {
@@ -826,35 +834,39 @@ assertSuccess(
 
 assertSuccess(
   allignProgram(
-    makeScopeGlobalEvalProgram(STRICT, ROOT_SCOPE, ENCLAVE, (scope1) => [
-      makeBlockStatement(
-        makeScopeDistantBlock(STRICT, scope1, ["label1"], (scope2) => {
-          assertEqual(
-            declareBase(STRICT, scope2, "let", "variable", []),
-            undefined,
-          );
-          return [
-            makeBlockStatement(
-              makeScopeEmptyBlock(STRICT, scope2, ["label2"], (scope3) =>
-                makeBaseInitializeStatementArray(
-                  STRICT,
-                  scope3,
-                  "let",
-                  "variable",
-                  makeLiteralExpression("init"),
+    makeScopeGlobalEvalProgram(createContext({}), ENCLAVE, (scope1) => {
+      const context1 = createContext({scope: scope1});
+      return [
+        makeBlockStatement(
+          makeScopeDistantBlock(context1, ["label1"], (scope2) => {
+            const context2 = createContext({scope: scope2});
+            assertEqual(
+              declareBase(context2, "let", "variable", []),
+              undefined,
+            );
+            return [
+              makeBlockStatement(
+                makeScopeEmptyBlock(context2, ["label2"], (scope3) => {
+                  const context3 = createContext({scope: scope3});
+                  return makeBaseInitializeStatementArray(
+                    context3,
+                    "let",
+                    "variable",
+                    makeLiteralExpression("init"),
+                  );
+                }),
+              ),
+              makeEffectStatement(
+                makeExpressionEffect(
+                  makeBaseReadExpression(context2, "variable"),
                 ),
               ),
-            ),
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeBaseReadExpression(STRICT, scope2, "variable"),
-              ),
-            ),
-          ];
-        }),
-      ),
-      makeReturnStatement(makeLiteralExpression("completion")),
-    ]),
+            ];
+          }),
+        ),
+        makeReturnStatement(makeLiteralExpression("completion")),
+      ];
+    }),
     `
       "eval";
       {
@@ -889,40 +901,41 @@ assertSuccess(
 
 assertSuccess(
   allignProgram(
-    makeScopeGlobalEvalProgram(false, ROOT_SCOPE, false, (scope) => {
-      assertEqual(declareBase(false, scope, "let", "variable", []), undefined);
-      return concat(
-        [
-          makeEffectStatement(
-            makeBaseWriteEffect(
-              false,
-              scope,
-              createCounter(0),
-              "variable",
-              makeLiteralExpression("right"),
+    makeScopeGlobalEvalProgram(
+      createContext({strict: false}),
+      false,
+      (scope) => {
+        const context = createContext({strict: false, scope});
+        assertEqual(declareBase(context, "let", "variable", []), undefined);
+        return concat(
+          [
+            makeEffectStatement(
+              makeBaseWriteEffect(
+                context,
+                "variable",
+                makeLiteralExpression("right"),
+              ),
             ),
-          ),
-        ],
-        [
-          makeEffectStatement(
-            makeBaseMacroWriteEffect(
-              false,
-              scope,
-              "variable",
-              makeLiteralExpression("right"),
+          ],
+          [
+            makeEffectStatement(
+              makeBaseMacroWriteEffect(
+                context,
+                "variable",
+                makeLiteralExpression("right"),
+              ),
             ),
+          ],
+          makeBaseInitializeStatementArray(
+            context,
+            "let",
+            "variable",
+            makeLiteralExpression("init"),
           ),
-        ],
-        makeBaseInitializeStatementArray(
-          false,
-          scope,
-          "let",
-          "variable",
-          makeLiteralExpression("init"),
-        ),
-        [makeReturnStatement(makeLiteralExpression("completion"))],
-      );
-    }),
+          [makeReturnStatement(makeLiteralExpression("completion"))],
+        );
+      },
+    ),
     `
     "eval";
     {
@@ -953,36 +966,42 @@ assertSuccess(
 
 assertSuccess(
   allignProgram(
-    makeScopeGlobalEvalProgram(false, ROOT_SCOPE, true, (scope1) => [
-      makeBlockStatement(
-        makeScopeDynamicClosureBlock(
-          false,
-          scope1,
-          [],
-          makeLiteralExpression("frame"),
-          (scope2) => [
-            makeEffectStatement(
-              makeBaseWriteEffect(
-                false,
-                scope2,
-                createCounter(0),
-                "variable",
-                makeLiteralExpression("right"),
-              ),
+    makeScopeGlobalEvalProgram(
+      createContext({strict: false}),
+      true,
+      (scope1) => {
+        const context1 = createContext({strict: false, scope: scope1});
+        return [
+          makeBlockStatement(
+            makeScopeDynamicClosureBlock(
+              context1,
+              [],
+              makeLiteralExpression("frame"),
+              (scope2) => {
+                const context2 = createContext({strict: false, scope: scope2});
+                return [
+                  makeEffectStatement(
+                    makeBaseWriteEffect(
+                      context2,
+                      "variable",
+                      makeLiteralExpression("right"),
+                    ),
+                  ),
+                  makeEffectStatement(
+                    makeBaseMacroWriteEffect(
+                      context2,
+                      "variable",
+                      makeLiteralExpression("right"),
+                    ),
+                  ),
+                ];
+              },
             ),
-            makeEffectStatement(
-              makeBaseMacroWriteEffect(
-                false,
-                scope2,
-                "variable",
-                makeLiteralExpression("right"),
-              ),
-            ),
-          ],
-        ),
-      ),
-      makeReturnStatement(makeLiteralExpression("completion")),
-    ]),
+          ),
+          makeReturnStatement(makeLiteralExpression("completion")),
+        ];
+      },
+    ),
     `
     "eval";
     {
