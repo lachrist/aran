@@ -108,8 +108,8 @@ const declareMetaGeneric = (
 
 export const declareMeta = partial_x_x(declareMetaGeneric, "define", null);
 
-export const declareMetaMacro = (context, variable, expression) =>
-  declareMetaGeneric(context, "macro", variable, {
+export const declareMetaMacro = (scoping, variable, expression) =>
+  declareMetaGeneric(scoping, "macro", variable, {
     binding: expression,
   });
 
@@ -187,8 +187,8 @@ export const makeBaseMacroWriteEffect = ({strict, scope}, variable, macro) =>
     counter: createCounter(0),
   });
 
-export const makeBaseWriteEffect = (context, variable, expression) => {
-  const {strict, scope} = context;
+export const makeBaseWriteEffect = (scoping, variable, expression) => {
+  const {strict, scope} = scoping;
   const counter = createCounter(0);
   const effect = makeScopeWriteEffect(strict, scope, BASE, variable, {
     expression,
@@ -199,13 +199,13 @@ export const makeBaseWriteEffect = (context, variable, expression) => {
   } else if (gaugeCounter(counter) === 1) {
     return effect;
   } else {
-    const meta = declareMeta(context, "right");
+    const meta = declareMeta(scoping, "right");
     return makeSequenceEffect(
-      makeMetaWriteEffect(context, meta, expression),
+      makeMetaWriteEffect(scoping, meta, expression),
       makeBaseMacroWriteEffect(
-        context,
+        scoping,
         variable,
-        makeMetaReadExpression(context, meta),
+        makeMetaReadExpression(scoping, meta),
       ),
     );
   }
@@ -348,11 +348,11 @@ const enclave_name_array = [
   "writeSloppy",
 ];
 
-const populateEnclave = (context, macros, name, variable) => {
+const populateEnclave = (scoping, macros, name, variable) => {
   defineProperty(macros, name, {
     __proto__: null,
     value: makeGetExpression(
-      makeMetaReadExpression(context, variable),
+      makeMetaReadExpression(scoping, variable),
       makeLiteralExpression(`scope.${name}`),
     ),
     writable: true,
@@ -368,16 +368,16 @@ const makeEnclaveStatementArray = (
   macros,
   makeStatementArray,
 ) => {
-  const context = {strict, scope, counter};
-  const variable = declareMeta(context, "input");
+  const scoping = {strict, scope, counter};
+  const variable = declareMeta(scoping, "input");
   forEach(
     enclave_name_array,
-    partialxx_x(populateEnclave, context, macros, variable),
+    partialxx_x(populateEnclave, scoping, macros, variable),
   );
   return concat(
     [
       makeEffectStatement(
-        makeMetaWriteEffect(context, variable, makeInputExpression()),
+        makeMetaWriteEffect(scoping, variable, makeInputExpression()),
       ),
     ],
     makeStatementArray(scope),
