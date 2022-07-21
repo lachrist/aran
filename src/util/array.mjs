@@ -42,3 +42,14 @@ export const unshift = (array, element) => {
   }
   array[0] = element;
 };
+
+export const isDuplicate = (element, index, array) => {
+  index += 1;
+  while (index < array.length) {
+    if (array[index] === element) {
+      return true;
+    }
+    index += 1;
+  }
+  return false;
+};

@@ -1,40 +1,28 @@
-import {assertEqual, assertDeepEqual} from "../../__fixture__.mjs";
+import {assertEqual, assertDeepEqual, assertThrow} from "../../__fixture__.mjs";
+
+import {SyntaxAranError} from "../../util/index.mjs";
 
 import {
   makeVoidDeclaration,
   makeVarDeclaration,
   makeLetDeclaration,
-  makeConstDeclaration,
   makeImportDeclaration,
   exportDeclaration,
+  getDeclarationKind,
   getDeclarationVariable,
   isDeclarationImported,
-  isDeclarationLoose,
-  isDeclarationRigid,
   getDeclarationImportSource,
   getDeclarationImportSpecifier,
   getDeclarationExportSpecifierArray,
-  isDeclarationWritable,
   checkoutDeclarationArray,
 } from "./declaration.mjs";
 
-assertEqual(getDeclarationVariable(makeVarDeclaration("variable")), "variable");
+assertEqual(
+  getDeclarationVariable(makeVoidDeclaration("variable")),
+  "variable",
+);
 
-{
-  const declaration = exportDeclaration(
-    makeVarDeclaration("variable"),
-    "specifier",
-  );
-  assertDeepEqual(getDeclarationExportSpecifierArray(declaration), [
-    "specifier",
-  ]);
-  assertDeepEqual(
-    getDeclarationExportSpecifierArray(
-      exportDeclaration(declaration, "specifier"),
-    ),
-    ["specifier"],
-  );
-}
+assertEqual(getDeclarationKind(makeVoidDeclaration("variable")), "void");
 
 {
   const declaration = makeImportDeclaration("variable", "source", "specifier");
@@ -43,14 +31,34 @@ assertEqual(getDeclarationVariable(makeVarDeclaration("variable")), "variable");
   assertEqual(getDeclarationImportSpecifier(declaration), "specifier");
 }
 
-assertEqual(isDeclarationWritable(makeLetDeclaration("variable")), true);
-assertEqual(isDeclarationWritable(makeConstDeclaration("variable")), false);
+assertDeepEqual(
+  getDeclarationExportSpecifierArray(
+    exportDeclaration(
+      exportDeclaration(
+        exportDeclaration(makeVoidDeclaration("variable"), "SPECIFIER"),
+        "specifier",
+      ),
+      "specifier",
+    ),
+  ),
+  ["SPECIFIER", "specifier"],
+);
 
-assertEqual(isDeclarationLoose(makeVarDeclaration("variable")), true);
-assertEqual(isDeclarationLoose(makeLetDeclaration("variable")), false);
+assertDeepEqual(
+  checkoutDeclarationArray([
+    exportDeclaration(makeVoidDeclaration("variable"), "specifier"),
+    makeLetDeclaration("variable"),
+  ]),
+  [exportDeclaration(makeLetDeclaration("variable"), "specifier")],
+);
 
-assertEqual(isDeclarationRigid(makeVarDeclaration("variable")), false);
-assertEqual(isDeclarationRigid(makeLetDeclaration("variable")), true);
+assertDeepEqual(
+  checkoutDeclarationArray([
+    makeLetDeclaration("variable"),
+    exportDeclaration(makeVoidDeclaration("variable"), "specifier"),
+  ]),
+  [exportDeclaration(makeLetDeclaration("variable"), "specifier")],
+);
 
 assertDeepEqual(
   checkoutDeclarationArray([
@@ -59,29 +67,12 @@ assertDeepEqual(
   ]),
   [makeVarDeclaration("variable")],
 );
-assertDeepEqual(
-  checkoutDeclarationArray([
-    exportDeclaration(makeVarDeclaration("variable"), "specifier1"),
-    exportDeclaration(makeVarDeclaration("variable"), "specifier2"),
-  ]),
-  [
-    exportDeclaration(
-      exportDeclaration(makeVarDeclaration("variable"), "specifier1"),
-      "specifier2",
-    ),
-  ],
-);
-assertDeepEqual(
-  checkoutDeclarationArray([
-    makeConstDeclaration("variable"),
-    exportDeclaration(makeVoidDeclaration("variable"), "specifier"),
-  ]),
-  [exportDeclaration(makeConstDeclaration("variable"), "specifier")],
-);
-assertDeepEqual(
-  checkoutDeclarationArray([
-    exportDeclaration(makeVoidDeclaration("variable"), "specifier"),
-    makeConstDeclaration("variable"),
-  ]),
-  [exportDeclaration(makeConstDeclaration("variable"), "specifier")],
+
+assertThrow(
+  () =>
+    checkoutDeclarationArray([
+      makeLetDeclaration("variable"),
+      makeLetDeclaration("variable"),
+    ]),
+  SyntaxAranError,
 );

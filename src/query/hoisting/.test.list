@@ -1,6 +1,5 @@
-- * collect.mjs
-  * declaration.mjs
+- declaration.mjs
+- helper.mjs
 - * hoist-shallow.mjs
   * hoist-deep.mjs
-  * hoist-module.mjs
 - index.mjs

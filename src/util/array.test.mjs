@@ -1,6 +1,15 @@
 import {assertThrow, assertEqual, assertDeepEqual} from "../__fixture__.mjs";
 
-import {empty, getLast, push, pop, pushAll, shift, unshift} from "./array.mjs";
+import {
+  empty,
+  getLast,
+  push,
+  pop,
+  pushAll,
+  shift,
+  unshift,
+  isDuplicate,
+} from "./array.mjs";
 
 const {undefined} = globalThis;
 
@@ -38,3 +47,7 @@ assertEqual(getLast([1, 2, 3]), 3);
   assertEqual(unshift(array, 1), undefined);
   assertDeepEqual(array, [1, 2, 3]);
 }
+
+assertEqual(isDuplicate("bar", 1, ["foo", "bar", "qux"]), false);
+
+assertEqual(isDuplicate("bar", 1, ["foo", "bar", "bar"]), true);

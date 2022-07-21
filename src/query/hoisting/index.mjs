@@ -1,27 +1,19 @@
-import {map, flatMap, concat, includes, every} from "array-lite";
+import {map, flatMap, concat, every, filterOut} from "array-lite";
 
-import {assert} from "../../util/index.mjs";
+import {collectPattern} from "./helper.mjs";
 
-import {collectPattern} from "./collect.mjs";
-
-import {
-  checkoutDeclarationArray,
-  makeSimpleParameterDeclaration,
-  makeParameterDeclaration,
-} from "./declaration.mjs";
+import {checkoutDeclarationArray, makeLetDeclaration} from "./declaration.mjs";
 
 import {hoistShallow} from "./hoist-shallow.mjs";
 
 import {hoistDeep} from "./hoist-deep.mjs";
 
-import {hoistModule} from "./hoist-module.mjs";
+import {isDuplicate} from "../../util/index.mjs";
 
 export {
-  isDeclarationImported,
-  isDeclarationLoose,
-  isDeclarationRigid,
-  isDeclarationWritable,
+  getDeclarationKind,
   getDeclarationVariable,
+  isDeclarationImported,
   getDeclarationImportSource,
   getDeclarationImportSpecifier,
   getDeclarationExportSpecifierArray,
@@ -29,58 +21,22 @@ export {
 
 const isIdentifier = ({type}) => type === "Identifier";
 
-const getConsequent = ({consequent}) => consequent;
+const getName = ({name}) => name;
 
-const generateHoist = (types, hoist) => (node) => {
-  assert(includes(types, node.type), "invalid node");
-  return checkoutDeclarationArray(hoist(node));
-};
+export const hoistBodyShallow = (nodes) =>
+  checkoutDeclarationArray(flatMap(nodes, hoistShallow));
 
-export const hoistProgram = generateHoist(["Program"], (node) => {
-  const declarations = concat(
-    flatMap(node.body, hoistDeep),
-    flatMap(node.body, hoistShallow),
+export const hoistBodyDeep = (nodes) =>
+  checkoutDeclarationArray(
+    concat(flatMap(nodes, hoistDeep), flatMap(nodes, hoistShallow)),
   );
-  return node.sourceType === "module"
-    ? concat(flatMap(node.body, hoistModule), declarations)
-    : declarations;
-});
 
-export const hoistBlockStatement = generateHoist(["BlockStatement"], (node) =>
-  flatMap(node.body, hoistShallow),
-);
-
-export const hoistSwitchStatement = generateHoist(["SwitchStatement"], (node) =>
-  flatMap(flatMap(node.cases, getConsequent), hoistShallow),
-);
-
-export const hoistCatchClauseHead = generateHoist(["CatchClause"], (node) =>
-  node.param === null
-    ? []
-    : map(
-        collectPattern(node.param),
-        node.param.type === "Identifier"
-          ? makeSimpleParameterDeclaration
-          : makeParameterDeclaration,
-      ),
-);
-
-export const hoistClosureHead = generateHoist(
-  ["FunctionDeclaration", "ArrowFunctionExpression", "FunctionExpression"],
-  (node) =>
+export const hoistHead = (patterns) =>
+  checkoutDeclarationArray(
     map(
-      flatMap(node.params, collectPattern),
-      node.type !== "ArrowFunctionExpression" &&
-        every(node.params, isIdentifier)
-        ? makeSimpleParameterDeclaration
-        : makeParameterDeclaration,
+      every(patterns, isIdentifier)
+        ? filterOut(map(patterns, getName), isDuplicate)
+        : flatMap(patterns, collectPattern),
+      makeLetDeclaration,
     ),
-);
-
-export const hoistClosureBody = generateHoist(
-  ["FunctionDeclaration", "ArrowFunctionExpression", "FunctionExpression"],
-  (node) =>
-    node.type === "ArrowFunctionExpression" && node.expression
-      ? []
-      : concat(hoistDeep(node.body), flatMap(node.body.body, hoistShallow)),
-);
+  );

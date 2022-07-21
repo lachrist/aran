@@ -1,6 +1,6 @@
-import {includes, concat, filterOut} from "array-lite";
+import {concat, filterOut} from "array-lite";
 
-import {partialx, assert} from "../../util/index.mjs";
+import {SyntaxAranError, assert, isDuplicate} from "../../util/index.mjs";
 
 const {
   Reflect: {apply},
@@ -11,150 +11,99 @@ const {
   Array: {from: toArray},
 } = globalThis;
 
-////////////////
-// Contructor //
-////////////////
+//////////
+// Base //
+//////////
+
+export const generateMakeDeclaration = (kind) => (variable) => ({
+  kind,
+  variable,
+  import: null,
+  exports: [],
+});
+
+export const makeVoidDeclaration = generateMakeDeclaration("void");
+
+export const makeVarDeclaration = generateMakeDeclaration("var");
+
+export const makeLetDeclaration = generateMakeDeclaration("let");
+
+export const makeConstDeclaration = generateMakeDeclaration("const");
 
 export const makeImportDeclaration = (variable, source, specifier) => ({
-  writable: false,
-  duplicable: false,
+  kind: "import",
+  variable,
   import: {source, specifier},
   exports: [],
-  variable,
 });
 
-const generateMakeDeclaration =
-  ({writable, duplicable}) =>
-  (variable) => ({
-    writable,
-    duplicable,
-    import: null,
-    exports: [],
-    variable,
-  });
-
-export const makeVoidDeclaration = generateMakeDeclaration({
-  writable: true,
-  duplicable: null,
-});
-export const makeVarDeclaration = generateMakeDeclaration({
-  writable: true,
-  duplicable: true,
-});
-export const makeFunctionDeclaration = generateMakeDeclaration({
-  writable: true,
-  duplicable: true,
-});
-export const makeSimpleParameterDeclaration = generateMakeDeclaration({
-  writable: true,
-  duplicable: true,
-});
-
-export const makeConstDeclaration = generateMakeDeclaration({
-  writable: false,
-  duplicable: false,
-});
-export const makeLetDeclaration = generateMakeDeclaration({
-  writable: true,
-  duplicable: false,
-});
-export const makeParameterDeclaration = generateMakeDeclaration({
-  writable: true,
-  duplicable: false,
-});
-export const makeClassDeclaration = generateMakeDeclaration({
-  writable: true,
-  duplicable: false,
-});
-
-/////////////
-// Mutator //
-/////////////
-
-export const exportDeclaration = (declaration, specifier) =>
-  includes(declaration.exports, specifier)
-    ? declaration
-    : {
-        ...declaration,
-        exports: concat(declaration.exports, [specifier]),
-      };
-
-//////////////
-// Accessor //
-//////////////
-
-export const isDeclarationImported = ({import: $import}) => $import !== null;
-
-export const isDeclarationLoose = ({duplicable}) => {
-  assert(duplicable !== null, "query on void variable");
-  return duplicable;
-};
-
-export const isDeclarationRigid = ({duplicable}) => {
-  assert(duplicable !== null, "query on void variable");
-  return !duplicable;
-};
-
-export const isDeclarationWritable = ({writable}) => writable;
+export const getDeclarationKind = ({kind}) => kind;
 
 export const getDeclarationVariable = ({variable}) => variable;
+
+export const isDeclarationImported = ({import: import_}) => import_ !== null;
 
 export const getDeclarationImportSource = ({import: {source}}) => source;
 
 export const getDeclarationImportSpecifier = ({import: {specifier}}) =>
   specifier;
 
-export const getDeclarationExportSpecifierArray = ({exports}) => exports;
+export const getDeclarationExportSpecifierArray = ({exports: exports_}) =>
+  filterOut(exports_, isDuplicate);
+
+export const exportDeclaration = (
+  {kind, variable, import: import_, exports: exports_},
+  specifier,
+) => ({
+  kind,
+  variable,
+  import: import_,
+  exports: concat(exports_, [specifier]),
+});
 
 //////////////
-// checkout //
+// Checkout //
 //////////////
 
-const mergeDuplicable = (duplicable1, duplicable2) => {
-  if (duplicable1 === null) {
-    return duplicable2;
-  } else if (duplicable2 === null) {
-    return duplicable1;
+const mergeKind = (kind1, kind2, variable) => {
+  if (kind1 === "void") {
+    return kind2;
+  } else if (kind2 === "void") {
+    return kind1;
+  } else if (kind1 === "var" && kind2 === "var") {
+    return "var";
   } else {
-    assert(
-      duplicable1 === true && duplicable2 === true,
-      "duplicate variable declaration",
+    throw new SyntaxAranError(
+      `Identifier '${variable}' has already been declared`,
     );
-    return true;
   }
 };
 
-const mergeDeclaration = (declaration1, declaration2) => {
+const mergeDeclaration = (
+  {kind: kind1, variable: variable1, import: import1, exports: exports1},
+  {kind: kind2, variable: variable2, import: import2, exports: exports2},
+) => {
+  assert(variable1 === variable2, "expected duplicate declaration");
   assert(
-    declaration1.variable === declaration2.variable,
-    "duplicate variable mismatch",
-  );
-  const duplicable = mergeDuplicable(
-    declaration1.duplicable,
-    declaration2.duplicable,
-  );
-  assert(
-    declaration1.import === null && declaration2.import === null,
+    import1 === null && import2 === null,
     "imported variable should not be duplicable",
   );
   return {
-    duplicable,
-    writable: declaration1.writable && declaration2.writable,
+    kind: mergeKind(kind1, kind2, variable1),
+    variable: variable1,
     import: null,
-    exports: concat(
-      declaration1.exports,
-      filterOut(declaration2.exports, partialx(includes, declaration1.exports)),
-    ),
-    variable: declaration1.variable,
+    exports: concat(exports1, exports2),
   };
 };
+
+const isKindVoid = ({kind}) => kind === "void";
 
 export const checkoutDeclarationArray = (declarations) => {
   const {length} = declarations;
   const mapping = new Map();
   for (let index = 0; index < length; index += 1) {
     const declaration = declarations[index];
-    const variable = getDeclarationVariable(declaration);
+    const {variable} = declaration;
     if (apply(hasMap, mapping, [variable])) {
       apply(setMap, mapping, [
         variable,
@@ -164,5 +113,5 @@ export const checkoutDeclarationArray = (declarations) => {
       apply(setMap, mapping, [variable, declaration]);
     }
   }
-  return toArray(apply(getMapValues, mapping, []));
+  return filterOut(toArray(apply(getMapValues, mapping, [])), isKindVoid);
 };
