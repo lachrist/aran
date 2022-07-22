@@ -1,6 +1,6 @@
 - context.mjs
 - visit.mjs
-- * expression.mjs
+- * program.mjs
+  * expression.mjs
   * statement.mjs
-  * program.mjs
 - index.mjs

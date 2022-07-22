@@ -126,7 +126,7 @@ const visitBody = (type, nodes, context) => {
         ),
         [
           makeReturnStatement(
-            visitExpression(nodes[nodes.length - 1], context, null),
+            visitExpression(nodes[nodes.length - 1].expression, context, null),
           ),
         ],
       );
@@ -181,7 +181,7 @@ export const visitProgram = partialxx___(
   {
     Program: (node, context, specific) => {
       assert(
-        ((node.sourceType === "module") === specific.type) === MODULE,
+        (node.sourceType === "module") === (specific.type === MODULE),
         "Program.sourceType mismatch",
       );
       const makeScopeProgram = generateMakeScopeProgram(specific, node);
@@ -189,7 +189,7 @@ export const visitProgram = partialxx___(
         getContextScoping(context),
         specific.enclave,
         bind_(
-          partialxx_(visitBody, node.source.type, sortBody(node.body)),
+          partialxx_(visitBody, node.sourceType, sortBody(node.body)),
           partialx_(setContextScope, context),
         ),
       );
