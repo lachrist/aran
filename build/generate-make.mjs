@@ -49,7 +49,18 @@ writeFile(
             };`,
         ),
       ),
-      [""],
+      [
+        "",
+        `
+          import {slice} from "array-lite";
+          export const annotateNode = (node, annotation) => {
+            node = slice(node, 0, node.length);
+            node[node.length - 1] = annotation;
+            return ${is_debug_mode ? "validateNode(node)" : "node"};
+          };
+        `,
+        "",
+      ],
     ),
     "\n",
   ),
