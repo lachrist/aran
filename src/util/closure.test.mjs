@@ -134,6 +134,7 @@ forEach(
     "xxx_____",
     "xxx______",
     "xx_x_x_x__",
+    "x__xx_x_x_",
   ]),
   (description) => {
     if (
