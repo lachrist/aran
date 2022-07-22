@@ -1,6 +1,6 @@
 import {map, concat, flatMap} from "array-lite";
 
-import {assert, partialx_x, deadcode} from "../../util/index.mjs";
+import {partialx_x, deadcode} from "../../util/index.mjs";
 
 import {applyVisitor} from "../visit.mjs";
 
@@ -106,8 +106,5 @@ const visit = partialx_x(
   deadcode("invalid node type"),
 );
 
-export const inferCompletionNodeArray = (node) => {
-  assert(node.type === "Program", "Expected a program node");
-  assert(node.sourceType === "script", "Only script program have completion");
-  return map(chainResult(visitAll(node.body), UNVALUED), getCompletionNode);
-};
+export const inferCompletionNodeArray = (nodes) =>
+  map(chainResult(visitAll(nodes), UNVALUED), getCompletionNode);

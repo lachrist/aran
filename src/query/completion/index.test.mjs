@@ -16,8 +16,8 @@ const get = (object, key) => object[key];
 const test = (code, ...paths) => {
   const program = parseScript(code);
   assertDeepEqual(
-    new Set(inferCompletionNodeArray(program)),
-    new Set(map(paths, (path) => reduce(path, get, program))),
+    new Set(inferCompletionNodeArray(program.body)),
+    new Set(map(paths, (path) => reduce(path, get, program.body))),
   );
 };
 
@@ -25,9 +25,9 @@ const test = (code, ...paths) => {
 // Program //
 /////////////
 
-test("123;", ["body", 0]);
+test("123;", [0]);
 
-test("123; debugger;", ["body", 0]);
+test("123; debugger;", [0]);
 
 ///////////
 // Label //
@@ -35,61 +35,57 @@ test("123; debugger;", ["body", 0]);
 
 test(
   "123; label: { 456; break label; 789; }",
-  ["body", 1, "body", "body", 0],
-  ["body", 1, "body", "body", 2],
+  [1, "body", "body", 0],
+  [1, "body", "body", 2],
 );
 
 //////////
 // Loop //
 //////////
 
-test("123; while (456) 789;", ["body", 1], ["body", 1, "body"]);
+test("123; while (456) 789;", [1], [1, "body"]);
 
 test(
   "while (123) { 456; break; 789; }",
-  ["body", 0],
-  ["body", 0, "body", "body", 0],
-  ["body", 0, "body", "body", 2],
+  [0],
+  [0, "body", "body", 0],
+  [0, "body", "body", 2],
 );
 
 test(
   "label: { while (123) { break label; 456; } 789; }",
-  ["body", 0, "body", "body", 0],
-  ["body", 0, "body", "body", 1],
+  [0, "body", "body", 0],
+  [0, "body", "body", 1],
 );
 
 ///////////////////
 // WithStatement //
 ///////////////////
 
-test("123; with (456) debugger;", ["body", 1]);
+test("123; with (456) debugger;", [1]);
 
-test("with (123) 456;", ["body", 0, "body"]);
+test("with (123) 456;", [0, "body"]);
 
 /////////////////
 // IfStatement //
 /////////////////
 
-test("123; if (456) 789;", ["body", 1], ["body", 1, "consequent"]);
+test("123; if (456) 789;", [1], [1, "consequent"]);
 
-test("if (123) 456; else debugger;", ["body", 0], ["body", 0, "consequent"]);
+test("if (123) 456; else debugger;", [0], [0, "consequent"]);
 
-test(
-  "if (123) 456; else 789;",
-  ["body", 0, "consequent"],
-  ["body", 0, "alternate"],
-);
+test("if (123) 456; else 789;", [0, "consequent"], [0, "alternate"]);
 
 test(
   "label: { if (123) break label; else 456; 789; }",
-  ["body", 0, "body", "body", 0],
-  ["body", 0, "body", "body", 1],
+  [0, "body", "body", 0],
+  [0, "body", "body", 1],
 );
 
 test(
   "label: { if (123) 456; else break label; 789; }",
-  ["body", 0, "body", "body", 0],
-  ["body", 0, "body", "body", 1],
+  [0, "body", "body", 0],
+  [0, "body", "body", 1],
 );
 
 //////////////////
@@ -98,26 +94,22 @@ test(
 
 test(
   "123; try { 456; } catch { 789; }",
-  ["body", 1, "block", "body", 0],
-  ["body", 1, "handler", "body", "body", 0],
+  [1, "block", "body", 0],
+  [1, "handler", "body", "body", 0],
 );
 
-test(
-  "try { 123; } finally { 456; }",
-  ["body", 0],
-  ["body", 0, "block", "body", 0],
-);
+test("try { 123; } finally { 456; }", [0], [0, "block", "body", 0]);
 
 test(
   "label: { try { break label; } catch { 123; } 456; }",
-  ["body", 0, "body", "body", 0],
-  ["body", 0, "body", "body", 1],
+  [0, "body", "body", 0],
+  [0, "body", "body", 1],
 );
 
 test(
   "label: { try { 123; } catch { break label; } 456; }",
-  ["body", 0, "body", "body", 0],
-  ["body", 0, "body", "body", 1],
+  [0, "body", "body", 0],
+  [0, "body", "body", 1],
 );
 
 ////////////
@@ -138,10 +130,10 @@ test(
         9;
     }
   `,
-  ["body", 0],
-  ["body", 0, "cases", 0, "consequent", 1],
-  ["body", 0, "cases", 1, "consequent", 1],
-  ["body", 0, "cases", 2, "consequent", 1],
+  [0],
+  [0, "cases", 0, "consequent", 1],
+  [0, "cases", 1, "consequent", 1],
+  [0, "cases", 2, "consequent", 1],
 );
 
 test(
@@ -153,9 +145,9 @@ test(
         4;
     }
   `,
-  ["body", 0],
-  ["body", 0, "cases", 0, "consequent", 0],
-  ["body", 0, "cases", 0, "consequent", 2],
+  [0],
+  [0, "cases", 0, "consequent", 0],
+  [0, "cases", 0, "consequent", 2],
 );
 
 test(
@@ -167,6 +159,6 @@ test(
         break;
     }
   `,
-  ["body", 0],
-  ["body", 0, "cases", 0, "consequent", 0],
+  [0],
+  [0, "cases", 0, "consequent", 0],
 );
