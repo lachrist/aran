@@ -11,6 +11,7 @@ import {
   getNodeFieldArray,
   dispatchNode,
   extractNode,
+  annotateNode,
   matchNode,
   getNodeAnnotation,
   allignNode,
@@ -41,6 +42,11 @@ assertEqual(
 );
 assertDeepEqual(getNodeAnnotation(makeNode("LiteralExpression", 123)), null);
 assertDeepEqual(getNodeFieldArray(makeNode("LiteralExpression", 123)), [123]);
+
+assertDeepEqual(
+  annotateNode(makeNode("LiteralExpression", 123), "@"),
+  makeAnnotatedNode("LiteralExpression", 123, "@"),
+);
 
 /////////////////////////////////
 // extractNode && dispatchNode //

@@ -85,6 +85,12 @@ export const matchNode = (context, value, pattern) => {
   return value === pattern;
 };
 
+export const annotateNode = (node, annotation) => {
+  node = slice(node, 0, node.length);
+  node[node.length - 1] = annotation;
+  return node;
+};
+
 // allignNode is only used for testing so we don't care about performance and use reflection.
 export const allignNode = (
   context,
