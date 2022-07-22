@@ -12,11 +12,7 @@ import {
   getContextScoping,
   strictifyContext,
   isContextStrict,
-  getContextSubfield,
-  applyVisitor,
-  visit0,
-  visit1,
-  visit2,
+  serializeContextNode,
 } from "./context.mjs";
 
 const {undefined} = globalThis;
@@ -69,88 +65,15 @@ assertEqual(isContextStrict(createTestContext({})), false);
 
 assertEqual(isContextStrict(strictifyContext(createTestContext({}))), true);
 
-//////////////////
-// applyVisitor //
-//////////////////
-
-assertEqual(
-  applyVisitor(
-    {
-      type: (node, serial, _context) => {
-        assertDeepEqual(node, {type: "type"});
-        assertEqual(serial, 123);
-        return "result";
-      },
-    },
-    {type: "type"},
-    123,
-    createTestContext({}),
-  ),
-  "result",
-);
-
-////////////
-// visit0 //
-////////////
+//////////////////////////
+// serializeContextNode //
+//////////////////////////
 
 {
   const nodes = [];
   assertEqual(
-    visit0(
-      (node, serial, _context) => {
-        assertEqual(node, "node");
-        assertEqual(serial, 0);
-        return "result";
-      },
-      "node",
-      createTestContext({nodes}),
-    ),
-    "result",
+    serializeContextNode(createTestContext({nodes}), {type: "type"}),
+    0,
   );
-  assertDeepEqual(nodes, ["node"]);
-}
-
-{
-  const nodes = [];
-  assertEqual(
-    visit1(
-      (node, serial, context) => {
-        assertEqual(node, "node");
-        assertEqual(serial, 0);
-        assertEqual(getContextSubfield(context, "type", "key"), "value");
-        return "result";
-      },
-      "node",
-      createTestContext({nodes}),
-      "type",
-      "key",
-      "value",
-    ),
-    "result",
-  );
-  assertDeepEqual(nodes, ["node"]);
-}
-
-{
-  const nodes = [];
-  assertEqual(
-    visit2(
-      (node, serial, context) => {
-        assertEqual(node, "node");
-        assertEqual(serial, 0);
-        assertEqual(getContextSubfield(context, "type", "key1"), "value1");
-        assertEqual(getContextSubfield(context, "type", "key2"), "value2");
-        return "result";
-      },
-      "node",
-      createTestContext({nodes}),
-      "type",
-      "key1",
-      "value1",
-      "key2",
-      "value2",
-    ),
-    "result",
-  );
-  assertDeepEqual(nodes, ["node"]);
+  assertDeepEqual(nodes, [{type: "type"}]);
 }

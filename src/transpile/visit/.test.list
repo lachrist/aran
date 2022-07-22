@@ -1,4 +1,6 @@
 - context.mjs
+- visit.mjs
 - * expression.mjs
-  * pattern.mjs
+  * statement.mjs
+  * program.mjs
 - index.mjs
