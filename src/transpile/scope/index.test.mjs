@@ -40,17 +40,16 @@ import {
   makeBaseDiscardExpression,
   makeBaseMacroWriteEffect,
   makeBaseWriteEffect,
-  makeScopeDynamicClosureBlock,
-  makeScopeDynamicWithBlock,
+  makeScopeClosureDynamicBlock,
+  makeScopeWithDynamicBlock,
   makeScopeExternalLocalEvalProgram,
   makeScopeScriptProgram,
   makeScopeModuleProgram,
   makeScopeGlobalEvalProgram,
-  // makeScopeBlock,
-  makeScopeDistantBlock,
-  makeScopeDeadBlock,
-  makeScopeEmptyBlock,
-  makeScopeStaticClosureBlock,
+  makeScopeDistantStaticBlock,
+  makeScopeDeadStaticBlock,
+  makeScopeEmptyStaticBlock,
+  makeScopeClosureStaticBlock,
   makeScopeClosureExpression,
   makeScopeInternalLocalEvalProgram,
 } from "./index.mjs";
@@ -649,7 +648,7 @@ assertSuccess(
 }
 
 ///////////////////////////////////////////////////////////////
-// makeScopeDynamicClosureBlock && makeScopeDynamicWithBlock //
+// makeScopeClosureDynamicBlock && makeScopeWithDynamicBlock //
 ///////////////////////////////////////////////////////////////
 
 assertSuccess(
@@ -658,7 +657,7 @@ assertSuccess(
       const scoping1 = createScoping({scope: scope1});
       return [
         makeBlockStatement(
-          makeScopeDynamicClosureBlock(
+          makeScopeClosureDynamicBlock(
             scoping1,
             ["label"],
             makeLiteralExpression("frame"),
@@ -675,7 +674,7 @@ assertSuccess(
           ),
         ),
         makeBlockStatement(
-          makeScopeDynamicWithBlock(
+          makeScopeWithDynamicBlock(
             scoping1,
             ["label"],
             makeLiteralExpression("frame"),
@@ -733,7 +732,7 @@ assertSuccess(
 );
 
 ///////////////////////////////////////////////////////////////
-// makeScopeStaticClosureBlock && makeScopeClosureExpression //
+// makeScopeClosureStaticBlock && makeScopeClosureExpression //
 ///////////////////////////////////////////////////////////////
 
 assertSuccess(
@@ -752,7 +751,7 @@ assertSuccess(
                 const scoping2 = createScoping({scope: scope2});
                 return [
                   makeBlockStatement(
-                    makeScopeStaticClosureBlock(
+                    makeScopeClosureStaticBlock(
                       scoping2,
                       ["label"],
                       (_scope3) => [],
@@ -783,7 +782,7 @@ assertSuccess(
 );
 
 ////////////////////////
-// makeScopeDeadBlock //
+// makeScopeDeadStaticBlock //
 ////////////////////////
 
 assertSuccess(
@@ -792,7 +791,7 @@ assertSuccess(
       const scoping1 = createScoping({scope: scope1});
       return [
         makeBlockStatement(
-          makeScopeDeadBlock(scoping1, ["label"], (scope2) => {
+          makeScopeDeadStaticBlock(scoping1, ["label"], (scope2) => {
             const scoping2 = createScoping({scope: scope2});
             assertEqual(
               declareBase(scoping2, "let", "variable", []),
@@ -829,7 +828,7 @@ assertSuccess(
 );
 
 ///////////////////////////
-// makeScopeDistantBlock //
+// makeScopeDistantStaticBlock //
 ///////////////////////////
 
 assertSuccess(
@@ -838,7 +837,7 @@ assertSuccess(
       const scoping1 = createScoping({scope: scope1});
       return [
         makeBlockStatement(
-          makeScopeDistantBlock(scoping1, ["label1"], (scope2) => {
+          makeScopeDistantStaticBlock(scoping1, ["label1"], (scope2) => {
             const scoping2 = createScoping({scope: scope2});
             assertEqual(
               declareBase(scoping2, "let", "variable", []),
@@ -846,7 +845,7 @@ assertSuccess(
             );
             return [
               makeBlockStatement(
-                makeScopeEmptyBlock(scoping2, ["label2"], (scope3) => {
+                makeScopeEmptyStaticBlock(scoping2, ["label2"], (scope3) => {
                   const scoping3 = createScoping({scope: scope3});
                   return makeBaseInitializeStatementArray(
                     scoping3,
@@ -973,7 +972,7 @@ assertSuccess(
         const scoping1 = createScoping({strict: false, scope: scope1});
         return [
           makeBlockStatement(
-            makeScopeDynamicClosureBlock(
+            makeScopeClosureDynamicBlock(
               scoping1,
               [],
               makeLiteralExpression("frame"),

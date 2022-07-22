@@ -327,11 +327,11 @@ const generateMakeScopeDynamicBlock =
       makeStatementArray,
     );
 
-export const makeScopeDynamicClosureBlock = generateMakeScopeDynamicBlock(
+export const makeScopeClosureDynamicBlock = generateMakeScopeDynamicBlock(
   createDynamicClosureBaseFrameArray,
 );
 
-export const makeScopeDynamicWithBlock = generateMakeScopeDynamicBlock(
+export const makeScopeWithDynamicBlock = generateMakeScopeDynamicBlock(
   createWithBaseFrameArray,
 );
 
@@ -497,21 +497,23 @@ const generateMakeBlueprintBlock =
       makeStatementArray,
     );
 
-export const makeScopeBlock = generateMakeBlueprintBlock(
+export const makeScopeNormalStaticBlock = generateMakeBlueprintBlock(
   createBlockBaseFrameArray,
 );
 
-export const makeScopeDistantBlock = generateMakeBlueprintBlock(
+export const makeScopeDistantStaticBlock = generateMakeBlueprintBlock(
   createDistantBlockBaseFrameArray,
 );
 
-export const makeScopeDeadBlock = generateMakeBlueprintBlock(
+export const makeScopeDeadStaticBlock = generateMakeBlueprintBlock(
   createDeadBlockBaseFrameArray,
 );
 
-export const makeScopeEmptyBlock = generateMakeBlueprintBlock(constant([]));
+export const makeScopeEmptyStaticBlock = generateMakeBlueprintBlock(
+  constant([]),
+);
 
-export const makeScopeStaticClosureBlock = generateMakeBlueprintBlock(
+export const makeScopeClosureStaticBlock = generateMakeBlueprintBlock(
   createStaticClosureBaseFrameArray,
 );
 
