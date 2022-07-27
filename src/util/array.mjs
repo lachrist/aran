@@ -1,3 +1,5 @@
+import {lastIndexOf} from "array-lite";
+
 const {
   Object: {freeze},
 } = globalThis;
@@ -43,13 +45,16 @@ export const unshift = (array, element) => {
   array[0] = element;
 };
 
-export const isDuplicate = (element, index, array) => {
-  index += 1;
-  while (index < array.length) {
-    if (array[index] === element) {
-      return true;
-    }
-    index += 1;
-  }
-  return false;
-};
+export const isDuplicate = (element, index, array) =>
+  lastIndexOf(array, element) > index;
+
+// export const isDuplicate = (element, index, array) => {
+//   index += 1;
+//   while (index < array.length) {
+//     if (array[index] === element) {
+//       return true;
+//     }
+//     index += 1;
+//   }
+//   return false;
+// };
