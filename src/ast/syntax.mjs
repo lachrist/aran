@@ -1,5 +1,9 @@
 import {includes} from "array-lite";
+
+import {hasOwnProperty, assert, partialx_, partial_x} from "../util/index.mjs";
+
 import {getIntrinsicArray} from "./intrinsics.mjs";
+
 import {isLiteral} from "./literal.mjs";
 
 const {
@@ -14,23 +18,17 @@ const {
 ////////////
 
 const syntax = {
-  __proto__: null,
   Program: {
-    __proto__: null,
     ScriptProgram: [["Statement", "*"]],
     ModuleProgram: [["Link", "*"], "Block"],
-    GlobalEvalProgram: ["Block"],
-    InternalLocalEvalProgram: [["Variable", "*"], "Block"],
-    ExternalLocalEvalProgram: [["Special", "*"], "Block"],
+    EvalProgram: [["Parameter", "*"], ["Variable", "*"], "Block"],
   },
   Link: {
-    __proto__: null,
     ImportLink: ["Source", "NullableSpecifier"],
     ExportLink: ["Specifier"],
     AggregateLink: ["Source", "NullableSpecifier", "NullableSpecifier"],
   },
   Block: {
-    __proto__: null,
     Block: [
       ["Label", "*"],
       ["Variable", "*"],
@@ -38,13 +36,12 @@ const syntax = {
     ],
   },
   Statement: {
-    __proto__: null,
     // BlockLess //
     EffectStatement: ["Effect"],
     ReturnStatement: ["Expression"],
     BreakStatement: ["Label"],
     DebuggerStatement: [],
-    DeclareStatement: ["DeclareType", "Variable", "Expression"],
+    DeclareExternalStatement: ["DeclareType", "Variable", "Expression"],
     // BlockFull //
     BlockStatement: ["Block"],
     IfStatement: ["Expression", "Block", "Block"],
@@ -52,21 +49,22 @@ const syntax = {
     TryStatement: ["Block", "Block", "Block"],
   },
   Effect: {
-    __proto__: null,
     WriteEffect: ["Variable", "Expression"],
+    WriteExternalEffect: ["Variable", "Expression"],
     ExportEffect: ["Specifier", "Expression"],
     SequenceEffect: ["Effect", "Effect"],
     ConditionalEffect: ["Expression", "Effect", "Effect"],
     ExpressionEffect: ["Expression"],
   },
   Expression: {
-    __proto__: null,
     // Producer //
-    InputExpression: [],
+    ParameterExpression: ["Parameter"],
     LiteralExpression: ["Literal"],
     IntrinsicExpression: ["Intrinsic"],
     ImportExpression: ["Source", "NullableSpecifier"],
     ReadExpression: ["Variable"],
+    ReadExternalExpression: ["Variable"],
+    TypeofExternalExpression: ["Variable"],
     ClosureExpression: ["ClosureType", "Asynchronous", "Generator", "Block"],
     // Control //
     AwaitExpression: ["Expression"],
@@ -74,7 +72,7 @@ const syntax = {
     SequenceExpression: ["Effect", "Expression"],
     ConditionalExpression: ["Expression", "Expression", "Expression"],
     // Combiners //
-    EvalExpression: [["Variable", "*"], "Expression"],
+    EvalExpression: [["Parameter", "*"], ["Variable", "*"], "Expression"],
     ApplyExpression: ["Expression", "Expression", ["Expression", "*"]],
     // InvokeExpression: ["Expression", "Expression", ["Expression", "*"]],
     ConstructExpression: ["Expression", ["Expression", "*"]],
@@ -87,68 +85,62 @@ export const getSyntax = () => syntax;
 // Belongs //
 /////////////
 
-const generateIsEnumeration = (enumeration) => (any) =>
-  includes(enumeration, any);
-
 /* eslint-disable valid-typeof */
-const generateIsType = (type) => (any) => typeof any === type;
+const isTypeof = (any, type) => typeof any === type;
 /* eslint-enable valid-typeof */
 
-const keywords = [
-  // Keywords //
-  "break",
-  "case",
-  "catch",
-  "class",
-  "const",
-  "continue",
-  "debugger",
-  "default",
-  "delete",
-  "do",
-  "else",
-  "exports",
-  "extends",
-  "finally",
-  "for",
-  "function",
-  "if",
-  "import",
-  "in",
-  "instanceof",
-  "new",
-  "return",
-  "super",
-  "switch",
-  "this",
-  "throw",
-  "try",
-  "typeof",
-  "var",
-  "void",
-  "while",
-  "with",
-  "await", // context-dependent
-  "let", // strict mode
-  "static", // strict mode
-  "yield", // context-dependent
-  // FutureReservedWord //
-  "enum",
-  "implements", // strict mode
-  "package", // strict mode
-  "protected", // strict mode
-  "interface", // strict mode
-  "private", // strict mode
-  "public", // strict mode
-  // NullLiteral
-  "null",
-  // BooleanLiteral //
-  "true",
-  "false",
-  // Special //
-  "arguments",
-  "eval",
-];
+// const keywords = [
+//   // Keywords //
+//   "break",
+//   "case",
+//   "catch",
+//   "class",
+//   "const",
+//   "continue",
+//   "debugger",
+//   "default",
+//   "delete",
+//   "do",
+//   "else",
+//   "exports",
+//   "extends",
+//   "finally",
+//   "for",
+//   "function",
+//   "if",
+//   "import",
+//   "in",
+//   "instanceof",
+//   "new",
+//   "return",
+//   "super",
+//   "switch",
+//   "this",
+//   "throw",
+//   "try",
+//   "typeof",
+//   "var",
+//   "void",
+//   "while",
+//   "with",
+//   "await", // context-dependent
+//   "let", // strict mode
+//   "static", // strict mode
+//   "yield", // context-dependent
+//   // FutureReservedWord //
+//   "enum",
+//   "implements", // strict mode
+//   "package", // strict mode
+//   "protected", // strict mode
+//   "interface", // strict mode
+//   "private", // strict mode
+//   "public", // strict mode
+//   // NullLiteral
+//   "null",
+//   // BooleanLiteral //
+//   "true",
+//   "false",
+// ];
 
 const isIdentifier = (any) =>
   typeof any === "string" &&
@@ -158,37 +150,42 @@ const isIdentifier = (any) =>
     [any],
   );
 
+const parameters = [
+  "error",
+  "arguments",
+  "this",
+  "new.target",
+  "super.get",
+  "super.set",
+  "super.call",
+  "import",
+  "import.meta",
+];
+
 const predicates = {
-  __proto__: null,
-  Special: generateIsEnumeration([
-    "this",
-    "new.target",
-    "import.meta",
-    "super.get",
-    "super.set",
-    "super.call",
-  ]),
-  DeclareType: generateIsEnumeration(["var", "let", "const"]),
-  ClosureType: generateIsEnumeration([
+  Parameter: partialx_(includes, parameters),
+  DeclareType: partialx_(includes, ["var", "let", "const"]),
+  ClosureType: partialx_(includes, [
     "arrow",
     "function",
     "constructor",
     "method",
   ]),
-  Intrinsic: generateIsEnumeration(getIntrinsicArray()),
-  Strict: generateIsType("boolean"),
-  Asynchronous: generateIsType("boolean"),
-  Generator: generateIsType("boolean"),
-  Delegate: generateIsType("boolean"),
-  Source: (any) => typeof any === "string",
+  Intrinsic: partialx_(includes, getIntrinsicArray()),
+  Strict: partial_x(isTypeof, "boolean"),
+  Asynchronous: partial_x(isTypeof, "boolean"),
+  Generator: partial_x(isTypeof, "boolean"),
+  Delegate: partial_x(isTypeof, "boolean"),
+  Source: partial_x(isTypeof, "string"),
   Literal: isLiteral,
   Specifier: isIdentifier,
   NullableSpecifier: (any) => any === null || isIdentifier(any),
-  Variable: (any) => isIdentifier(any) && !includes(keywords, any),
-  Label: (any) => isIdentifier(any) && !includes(keywords, any),
+  Label: isIdentifier,
+  Variable: isIdentifier,
 };
 
 export const isSyntaxType = (any, type) => {
+  assert(hasOwnProperty(predicates, type), "missing predicate");
   const predicate = predicates[type];
   return predicate(any);
 };

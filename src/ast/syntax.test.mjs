@@ -22,8 +22,8 @@ assertEqual(isSyntaxType("new.target", "NullableSpecifier"), false);
 
 // Label //
 assertEqual(isSyntaxType("foo", "Label"), true);
-assertEqual(isSyntaxType("this", "Label"), false);
+assertEqual(isSyntaxType("this", "Label"), true);
 
 // Variable //
 assertEqual(isSyntaxType("foo", "Variable"), true);
-assertEqual(isSyntaxType("this", "Variable"), false);
+assertEqual(isSyntaxType("this", "Variable"), true);
