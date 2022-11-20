@@ -1,3 +1,63 @@
+
+// super.call
+// super.get
+// super.set
+//
+// this
+// arguments
+// new.target
+// import
+// import.meta
+
+let x = aran.declareExternalBefore("x", 123);
+aran.declareExternalAfter("x");
+
+(
+  aran.readExternalBefore("x"),
+  aran.readExternalAfter("x", x),
+)
+
+(
+  x = aran.writeStrictExternalBefore("x", 123),
+  aran.writeStrictExternalAfter("x"),
+)
+
+aran.writeExternalStrictAfter(
+  "x",
+  x = aran.writeExternalStrictBefore("x", 123),
+);
+
+
+scope.declare
+scope.read
+scope.writeStrict
+scope.writeSloppy
+scope.typeof
+scope.discardSloppy
+
+
+getSuper
+callSuper
+setSuperStrict
+setSuperSloppy
+
+declareExternal
+readExternal
+typeofExternal
+discardExternal
+writeExternalStrict
+writeExternalSloppy
+
+this
+newtarget
+
+
+let external1, ...;
+
+let external
+let external
+
+
 const global_declare_cache = {__proto__:null};
 const global_read_cache = {__proto__:null};
 const global_write_cache = {__proto__:null};
@@ -14,6 +74,12 @@ aran.object = (prototype, ... properties) => {
   setPrototypeOf(object, prototype);
   return object;
 };
+aran.get = (object, key) => object[key];
+aran.setSloppy = (object, key, value) => {
+  Reflect.set(Object(object), key, value);
+  return value;
+};
+aran.setStrict = (object, key, value) => object[key] = value;
 aran.throw = (error) => { throw error; };
 aran.unary = (operator, argument) => {};
 aran.binary = (operator, left, right) => {};
@@ -52,12 +118,6 @@ aran.writeGlobal = (variable, value) => {
     writeVariable(value)
   }
 };
-aran.get = (object, key) => object[key];
-aran.setSloppy = (object, key, value) => {
-  Reflect.set(Object(object), key, value);
-  return value;
-};
-aran.setStrict = (object, key, value) => object[key] = value;
 
 // Global Code //
 
