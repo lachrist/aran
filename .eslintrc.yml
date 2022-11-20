@@ -80,7 +80,11 @@ rules:
     - Property[kind="get"]
     - Property[kind="set"]
     # Ignored Variable
-    - :not(ObjectExpression > Property[computed=false] > Identifier.key):not(MemberExpression[computed=false] > Identifier.property):not(FunctionExpression > Identifier.params):not(ArrowFunctionExpression > Identifier.params)Identifier[name=/^_/u]
+    # - :not(ObjectExpression > Property[computed=false] > Identifier.key)
+    #   :not(MemberExpression[computed=false] > Identifier.property)
+    #   :not(FunctionExpression > Identifier.params)
+    #   :not(ArrowFunctionExpression > Identifier.params)
+    #     Identifier[name=/^_/u]
     # Variable declaration
     - VariableDeclaration[kind=var]
     - VariableDeclaration[declarations.length>1]
