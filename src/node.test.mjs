@@ -1,14 +1,17 @@
-import {assertEqual, assertDeepEqual} from "./__fixture__.mjs";
+import {assertThrow, assertEqual, assertDeepEqual} from "./__fixture__.mjs";
 
 import {
   isObjectNode,
   getObjectNodeType,
   isArrayNode,
+  throwUnexpectedArrayNodeType,
+  throwUnexpectedObjectNodeType,
   getArrayNodeType,
   getArrayNodeContent,
   dispatchObjectNode0,
   dispatchObjectNode1,
   dispatchObjectNode2,
+  allignObjectNode0,
 } from "./node.mjs";
 
 const {Error} = globalThis;
@@ -27,9 +30,19 @@ assertEqual(getArrayNodeType(["type"]), "type");
 
 assertDeepEqual(getArrayNodeContent(["type", 123, 456]), [123, 456]);
 
-///////
-// 0 //
-///////
+assertThrow(
+  () => throwUnexpectedArrayNodeType(["TYPE"]),
+  /^Error: unexpected array node type TYPE$/u,
+);
+
+assertThrow(
+  () => throwUnexpectedObjectNodeType({type: "TYPE"}),
+  /^Error: unexpected object node type TYPE$/u,
+);
+
+///////////////////
+// dispatchNode0 //
+///////////////////
 
 assertEqual(
   dispatchObjectNode0(
@@ -63,9 +76,9 @@ assertEqual(
   "result",
 );
 
-///////
-// 1 //
-///////
+///////////////////
+// dispatchNode1 //
+///////////////////
 
 assertEqual(
   dispatchObjectNode1(
@@ -101,9 +114,9 @@ assertEqual(
   "result",
 );
 
-///////
-// 2 //
-///////
+///////////////////
+// dispatchNode2 //
+///////////////////
 
 assertEqual(
   dispatchObjectNode2(
@@ -137,6 +150,50 @@ assertEqual(
     {type: "type"},
     "extra1",
     "extra2",
+  ),
+  "result",
+);
+
+/////////////////
+// allignNode0 //
+/////////////////
+
+assertEqual(
+  allignObjectNode0(
+    {
+      type: (...args) => {
+        assertDeepEqual(args, [
+          {type: "type", foo: 123},
+          {type: "type", foo: 456},
+        ]);
+        return "result";
+      },
+    },
+    () => {
+      throw new Error("unreachable");
+    },
+    {type: "type", foo: 123},
+    {type: "type", foo: 456},
+  ),
+  "result",
+);
+
+assertEqual(
+  allignObjectNode0(
+    {
+      type: () => {
+        throw new Error("unreachable");
+      },
+    },
+    (...args) => {
+      assertDeepEqual(args, [
+        {type: "type", foo: 123},
+        {type: "TYPE", foo: 456},
+      ]);
+      return "result";
+    },
+    {type: "type", foo: 123},
+    {type: "TYPE", foo: 456},
   ),
   "result",
 );

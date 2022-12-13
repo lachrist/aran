@@ -8,6 +8,7 @@ import {
 } from "./util/index.mjs";
 
 const {
+  Error,
   Array: {isArray},
 } = globalThis;
 
@@ -30,9 +31,17 @@ export const getArrayNodeContent = (array) => slice(array, 1, array.length);
 
 export const getObjectNodeType = ({type}) => type;
 
-///////
-// 0 //
-///////
+export const throwUnexpectedArrayNodeType = ({0: type}) => {
+  throw new Error(`unexpected array node type ${type}`);
+};
+
+export const throwUnexpectedObjectNodeType = ({type}) => {
+  throw new Error(`unexpected object node type ${type}`);
+};
+
+///////////////////
+// dispatchNode0 //
+///////////////////
 
 const dispatchNode0 = (getType, clauses, default_clause, node) => {
   const type = getType(node);
@@ -51,9 +60,9 @@ export const dispatchObjectNode0 = partialx___(
   getObjectNodeType,
 );
 
-///////
-// 1 //
-///////
+///////////////////
+// dispatchNode1 //
+///////////////////
 
 const dispatchNode1 = (getType, clauses, default_clause, node, extra1) => {
   const type = getType(node);
@@ -72,9 +81,9 @@ export const dispatchObjectNode1 = partialx____(
   getObjectNodeType,
 );
 
-///////
-// 2 //
-///////
+///////////////////
+// dispatchNode2 //
+///////////////////
 
 const dispatchNode2 = (
   getType,
@@ -102,3 +111,22 @@ export const dispatchObjectNode2 = partialx_____(
   dispatchNode2,
   getObjectNodeType,
 );
+
+/////////////////
+// allignNode0 //
+/////////////////
+
+const allignNode0 = (getType, clauses, default_clause, node1, node2) => {
+  const type1 = getType(node1);
+  const type2 = getType(node2);
+  if (type1 === type2 && hasOwn(clauses, type1)) {
+    const clause = clauses[type1];
+    return clause(node1, node2);
+  } else {
+    return default_clause(node1, node2);
+  }
+};
+
+export const allignArrayNode0 = partialx____(allignNode0, getArrayNodeType);
+
+export const allignObjectNode0 = partialx____(allignNode0, getObjectNodeType);
