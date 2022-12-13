@@ -202,6 +202,8 @@ export const partialxx___ = (f, x1, x2) => (x3, x4, x5) =>
 export const partial_xxx_ = (f, x2, x3, x4) => (x1, x5) =>
   f(x1, x2, x3, x4, x5);
 
+export const partialx_____ = (f, x1) => (x2, x3, x4, x5, x6) =>
+  f(x1, x2, x3, x4, x5, x6);
 export const partial__xx_x = (f, x3, x4, x6) => (x1, x2, x5) =>
   f(x1, x2, x3, x4, x5, x6);
 export const partial__x__x = (f, x3, x6) => (x1, x2, x4, x5) =>

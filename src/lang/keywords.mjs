@@ -1,8 +1,6 @@
 export const MODULE_PROGRAM_DIRECTIVE = "module";
 export const SCRIPT_PROGRAM_DIRECTIVE = "script";
-export const GLOBAL_EVAL_PROGRAM_DIRECTIVE = "eval";
-export const INTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE = "internal";
-export const EXTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE = "external";
+export const EVAL_PROGRAM_DIRECTIVE = "eval";
 export const EFFECT_KEYWORD = "effect";
 export const EVAL_KEYWORD = "eval";
 export const UNDEFINED_KEYWORD = "undefined";

@@ -1,3 +1,4 @@
+import {stringifyPrettier} from "./prettier.mjs";
 import {
   revertExpression,
   revertEffect,
@@ -6,7 +7,6 @@ import {
   revertStatement,
   revertProgram,
 } from "./revert.mjs";
-import {stringifyPrettier} from "./prettier.mjs";
 
 const makeProgram = (body) => ({
   type: "Program",

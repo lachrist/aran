@@ -13,12 +13,14 @@ import {
 
 const generateParseProgram = (convert) => (code) =>
   convert(parseAcornLoose(code));
+
 const generateParseStatement = (convert) => (code) => {
   const node = parseAcornLoose(code);
   assert(node.type === "Program");
   assert(node.body.length === 1);
   return convert(node.body[0]);
 };
+
 const generateParseExpression = (convert) => (code) => {
   const node = parseAcornLoose(code);
   assert(node.type === "Program");

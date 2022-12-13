@@ -27,22 +27,22 @@ export const isLiteral = (any) =>
 export const toLiteral = (primitive) => {
   if (primitive === undefined) {
     return {undefined: null};
-  }
-  if (typeof primitive === "bigint") {
+  } else if (typeof primitive === "bigint") {
     return {bigint: String(primitive)};
+  } else {
+    return primitive;
   }
-  return primitive;
 };
 
 export const fromLiteral = (literal) => {
   if (typeof literal === "object" && literal !== null) {
     if (getOwnPropertyDescriptor(literal, "undefined") !== undefined) {
       return undefined;
-    }
-    if (getOwnPropertyDescriptor(literal, "bigint") !== undefined) {
+    } else if (getOwnPropertyDescriptor(literal, "bigint") !== undefined) {
       return BigInt(literal.bigint);
+    } else {
+      throw new Error("invalid literal");
     }
-    throw new Error("invalid literal");
   }
   return literal;
 };

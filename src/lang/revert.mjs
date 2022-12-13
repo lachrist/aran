@@ -2,20 +2,19 @@
 
 import {concat, map, reduceRight} from "array-lite";
 
-import {deadcode__} from "../util/index.mjs";
+import {hasOwn, assert, partial_x, partialxx_} from "../util/index.mjs";
 
-import {dispatchNode, fromLiteral} from "../ast/index.mjs";
+import {dispatchArrayNode0, throwUnexpectedArrayNodeType} from "../node.mjs";
+
+import {fromLiteral} from "../ast/index.mjs";
 
 import {
   MODULE_PROGRAM_DIRECTIVE,
   SCRIPT_PROGRAM_DIRECTIVE,
-  GLOBAL_EVAL_PROGRAM_DIRECTIVE,
-  INTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE,
-  EXTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE,
+  EVAL_PROGRAM_DIRECTIVE,
   EFFECT_KEYWORD,
   EVAL_KEYWORD,
   UNDEFINED_KEYWORD,
-  INPUT_KEYWORD,
   INTRINSIC_KEYWORD,
   YIELD_DELEGATE_KEYWORD,
   YIELD_STRAIGHT_KEYWORD,
@@ -52,6 +51,12 @@ const makeIfStatement = (test, consequent, alternate) => ({
   test,
   consequent,
   alternate,
+});
+const makeSuper = () => ({
+  type: "Super",
+});
+const makeThisExpression = () => ({
+  type: "ThisExpression",
 });
 const makeWhileStatement = (test, body) => ({
   type: "WhileStatement",
@@ -115,6 +120,7 @@ const makeVariableDeclarator = (id, init) => ({
   id,
   init,
 });
+const makeEmptyVariableDeclarator = partial_x(makeVariableDeclarator, null);
 const makeArrayExpression = (elements) => ({type: "ArrayExpression", elements});
 const makeExpressionStatement = (expression) => ({
   type: "ExpressionStatement",
@@ -144,6 +150,11 @@ const makeCallExpression = (callee, $arguments) => ({
   optional: false,
   callee,
   arguments: $arguments,
+});
+const makeMetaProperty = (name1, name2) => ({
+  type: "MetaProperty",
+  meta: makeIdentifier(name1),
+  property: makeIdentifier(name2),
 });
 const makeSequenceExpression = (expressions) => ({
   type: "SequenceExpression",
@@ -182,316 +193,327 @@ const makeUnaryExpression = (operator, argument) => ({
   argument,
 });
 
-///////////////
-// Transform //
-///////////////
-
-const transformVariableDeclator = (variable) =>
-  makeVariableDeclarator(makeIdentifier(variable), null);
-
 ////////////
 // Revert //
 ////////////
 
-const default_callback = deadcode__("could not revert node");
+const parameter_mapping = {
+  "__proto__": null,
+  "error": makeIdentifier("error"),
+  "arguments": makeIdentifier("arguments"),
+  "this": makeThisExpression(),
+  "new.target": makeMetaProperty("new", "target"),
+  "import.meta": makeMetaProperty("import", "meta"),
+  "import": makeMetaProperty("import", "dynamic"),
+  "super.get": makeMemberExpression(false, makeSuper(), makeIdentifier("get")),
+  "super.set": makeMemberExpression(false, makeSuper(), makeIdentifier("set")),
+  "super.call": makeMemberExpression(
+    false,
+    makeSuper(),
+    makeIdentifier("call"),
+  ),
+};
 
-const generateRevert = (callbacks) => (node) =>
-  dispatchNode(null, node, callbacks, default_callback);
+const revertParameter = (parameter) => {
+  assert(hasOwn(parameter_mapping, parameter), "unexpected parameter name");
+  return parameter_mapping[parameter];
+};
 
-export const revertProgram = generateRevert({
-  __proto__: null,
-  ScriptProgram: (_context, statements, _annotation) =>
-    makeProgram(
-      "script",
-      concat(
-        [
-          makeDirective(
-            makeLiteral(SCRIPT_PROGRAM_DIRECTIVE),
-            SCRIPT_PROGRAM_DIRECTIVE,
-          ),
-        ],
-        map(statements, revertStatement),
-      ),
-    ),
-  ModuleProgram: (_context, links, block, _annotation) =>
-    makeProgram(
-      "module",
-      concat(
-        [
-          makeDirective(
-            makeLiteral(MODULE_PROGRAM_DIRECTIVE),
-            MODULE_PROGRAM_DIRECTIVE,
-          ),
-        ],
-        map(links, revertLink),
-        [revertBlock(block)],
-      ),
-    ),
-  GlobalEvalProgram: (_context, block, _annotation) =>
-    makeProgram("script", [
-      makeDirective(
-        makeLiteral(GLOBAL_EVAL_PROGRAM_DIRECTIVE),
-        GLOBAL_EVAL_PROGRAM_DIRECTIVE,
-      ),
-      revertBlock(block),
-    ]),
-  InternalLocalEvalProgram: (_context, variables, block, _annotation) =>
-    makeProgram(
-      "script",
-      concat(
-        [
-          makeDirective(
-            makeLiteral(INTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE),
-            INTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE,
-          ),
-        ],
-        variables.length === 0
-          ? []
-          : [
-              makeVariableDeclaration(
-                "let",
-                map(variables, transformVariableDeclator),
-              ),
-            ],
-        [revertBlock(block)],
-      ),
-    ),
-  ExternalLocalEvalProgram: (_context, specials, block, _annotation) =>
-    makeProgram("script", [
-      makeDirective(
-        makeLiteral(EXTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE),
-        EXTERNAL_LOCAL_EVAL_PROGRAM_DIRECTIVE,
-      ),
-      makeExpressionStatement(makeArrayExpression(map(specials, makeLiteral))),
-      revertBlock(block),
-    ]),
-});
-
-export const revertLink = generateRevert({
-  __proto__: null,
-  ImportLink: (_context, source, specifier, _annotation) =>
-    makeImportDeclaration(
-      specifier === null
-        ? []
-        : [
-            makeImportSpecifier(
-              makeIdentifier(specifier),
-              makeIdentifier(specifier),
-            ),
-          ],
-      makeLiteral(source),
-    ),
-  ExportLink: (_context, specifier, _annotation) =>
-    makeExportNamedDeclaration(
-      [
-        makeExportSpecifier(
-          makeIdentifier(specifier),
-          makeIdentifier(specifier),
-        ),
-      ],
-      null,
-    ),
-  AggregateLink: (_context, source, specifier1, specifier2, _annotation) =>
-    specifier1 === null
-      ? makeExportAllDeclaration(
-          specifier2 === null ? null : makeIdentifier(specifier2),
-          makeLiteral(source),
-        )
-      : makeExportNamedDeclaration(
-          [
-            makeExportSpecifier(
-              makeIdentifier(specifier1),
-              makeIdentifier(specifier2),
-            ),
-          ],
-          makeLiteral(source),
-        ),
-});
-
-export const accumulateLabel = (node, label) =>
-  makeLabeledStatement(makeIdentifier(label), node);
-
-export const revertBlock = generateRevert({
-  __proto__: null,
-  Block: (_context, labels, variables, statements, _annotation) =>
-    reduceRight(
-      labels,
-      accumulateLabel,
-      makeBlockStatement(
+export const revertProgram = partialxx_(
+  dispatchArrayNode0,
+  {
+    __proto__: null,
+    ScriptProgram: ({1: statements}) =>
+      makeProgram(
+        "script",
         concat(
+          [
+            makeDirective(
+              makeLiteral(SCRIPT_PROGRAM_DIRECTIVE),
+              SCRIPT_PROGRAM_DIRECTIVE,
+            ),
+          ],
+          map(statements, revertStatement),
+        ),
+      ),
+    ModuleProgram: ({1: links, 2: block}) =>
+      makeProgram(
+        "module",
+        concat(
+          [
+            makeDirective(
+              makeLiteral(MODULE_PROGRAM_DIRECTIVE),
+              MODULE_PROGRAM_DIRECTIVE,
+            ),
+          ],
+          map(links, revertLink),
+          [revertBlock(block)],
+        ),
+      ),
+    EvalProgram: ({1: parameters, 2: variables, 3: block}) =>
+      makeProgram(
+        "script",
+        concat(
+          [
+            makeDirective(
+              makeLiteral(EVAL_PROGRAM_DIRECTIVE),
+              EVAL_PROGRAM_DIRECTIVE,
+            ),
+            makeExpressionStatement(
+              makeArrayExpression(map(parameters, revertParameter)),
+            ),
+          ],
           variables.length === 0
             ? []
             : [
                 makeVariableDeclaration(
                   "let",
-                  map(variables, transformVariableDeclator),
+                  map(variables, makeEmptyVariableDeclarator),
                 ),
               ],
-          map(statements, revertStatement),
+          [revertBlock(block)],
         ),
       ),
-    ),
-});
+  },
+  throwUnexpectedArrayNodeType,
+);
 
-export const revertStatement = generateRevert({
-  __proto__: null,
-  DebuggerStatement: (_context, _annotation) => makeDebuggerStatement(),
-  ReturnStatement: (_context, expression, _annotation) =>
-    makeReturnStatement(revertExpression(expression)),
-  BreakStatement: (_context, label, _annotation) =>
-    makeBreakStatement(makeIdentifier(label)),
-  BlockStatement: (_context, block, _annotation) => revertBlock(block),
-  IfStatement: (_context, expression, block1, block2, _annotation) =>
-    makeIfStatement(
-      revertExpression(expression),
-      revertBlock(block1),
-      revertBlock(block2),
-    ),
-  WhileStatement: (_context, expression, block, _annotation) =>
-    makeWhileStatement(revertExpression(expression), revertBlock(block)),
-  TryStatement: (_context, block1, block2, block3, _annotation) =>
-    makeTryStatement(
-      revertBlock(block1),
-      makeCatchClause(revertBlock(block2)),
-      revertBlock(block3),
-    ),
-  EffectStatement: (_context, effect, _annotation) =>
-    makeExpressionStatement(revertEffect(effect)),
-  DeclareStatement: (_context, kind, variable, expression, _annotation) =>
-    makeVariableDeclaration(kind, [
-      makeVariableDeclarator(
+export const revertLink = partialxx_(
+  dispatchArrayNode0,
+  {
+    __proto__: null,
+    ImportLink: ({1: source, 2: specifier}) =>
+      makeImportDeclaration(
+        specifier === null
+          ? []
+          : [
+              makeImportSpecifier(
+                makeIdentifier(specifier),
+                makeIdentifier(specifier),
+              ),
+            ],
+        makeLiteral(source),
+      ),
+    ExportLink: ({1: specifier}) =>
+      makeExportNamedDeclaration(
+        [
+          makeExportSpecifier(
+            makeIdentifier(specifier),
+            makeIdentifier(specifier),
+          ),
+        ],
+        null,
+      ),
+    AggregateLink: ({1: source, 2: specifier1, 3: specifier2}) =>
+      specifier1 === null
+        ? makeExportAllDeclaration(
+            specifier2 === null ? null : makeIdentifier(specifier2),
+            makeLiteral(source),
+          )
+        : makeExportNamedDeclaration(
+            [
+              makeExportSpecifier(
+                makeIdentifier(specifier1),
+                makeIdentifier(specifier2),
+              ),
+            ],
+            makeLiteral(source),
+          ),
+  },
+  throwUnexpectedArrayNodeType,
+);
+
+export const accumulateLabel = (node, label) =>
+  makeLabeledStatement(makeIdentifier(label), node);
+
+export const revertBlock = partialxx_(
+  dispatchArrayNode0,
+  {
+    __proto__: null,
+    Block: ({1: labels, 2: variables, 3: statements}) =>
+      reduceRight(
+        labels,
+        accumulateLabel,
+        makeBlockStatement(
+          concat(
+            variables.length === 0
+              ? []
+              : [
+                  makeVariableDeclaration(
+                    "let",
+                    map(variables, makeEmptyVariableDeclarator),
+                  ),
+                ],
+            map(statements, revertStatement),
+          ),
+        ),
+      ),
+  },
+  throwUnexpectedArrayNodeType,
+);
+
+export const revertStatement = partialxx_(
+  dispatchArrayNode0,
+  {
+    __proto__: null,
+    DebuggerStatement: ({}) => makeDebuggerStatement(),
+    ReturnStatement: ({1: expression}) =>
+      makeReturnStatement(revertExpression(expression)),
+    BreakStatement: ({1: label}) => makeBreakStatement(makeIdentifier(label)),
+    BlockStatement: ({1: block}) => revertBlock(block),
+    IfStatement: ({1: expression, 2: block1, 3: block2}) =>
+      makeIfStatement(
+        revertExpression(expression),
+        revertBlock(block1),
+        revertBlock(block2),
+      ),
+    WhileStatement: ({1: expression, 2: block}) =>
+      makeWhileStatement(revertExpression(expression), revertBlock(block)),
+    TryStatement: ({1: block1, 2: block2, 3: block3}) =>
+      makeTryStatement(
+        revertBlock(block1),
+        makeCatchClause(revertBlock(block2)),
+        revertBlock(block3),
+      ),
+    EffectStatement: ({1: effect}) =>
+      makeExpressionStatement(revertEffect(effect)),
+    DeclareExternalStatement: ({1: kind, 2: variable, 3: expression}) =>
+      makeVariableDeclaration(kind, [
+        makeVariableDeclarator(
+          makeIdentifier(`_${variable}`),
+          revertExpression(expression),
+        ),
+      ]),
+  },
+  throwUnexpectedArrayNodeType,
+);
+
+export const revertEffect = partialxx_(
+  dispatchArrayNode0,
+  {
+    __proto__: null,
+    WriteEffect: ({1: variable, 2: expression}) =>
+      makeAssignmentExpression(
         makeIdentifier(variable),
         revertExpression(expression),
       ),
-    ]),
-});
-
-export const revertEffect = generateRevert({
-  __proto__: null,
-  WriteEffect: (_context, variable, expression, _annotation) =>
-    makeAssignmentExpression(
-      makeIdentifier(variable),
-      revertExpression(expression),
-    ),
-  ExportEffect: (_context, specifier, expression, _annotation) =>
-    makeCallExpression(makeIdentifier(EXPORT_KEYWORD), [
-      makeLiteral(specifier),
-      revertExpression(expression),
-    ]),
-  SequenceEffect: (_context, effect1, effect2, _annotation) =>
-    makeSequenceExpression([revertEffect(effect1), revertEffect(effect2)]),
-  ConditionalEffect: (_context, expression, effect1, effect2, _annotation) =>
-    makeConditionalExpression(
-      revertExpression(expression),
-      revertEffect(effect1),
-      revertEffect(effect2),
-    ),
-  ExpressionEffect: (_context, expression, _annotation) =>
-    makeCallExpression(makeIdentifier(EFFECT_KEYWORD), [
-      revertExpression(expression),
-    ]),
-});
-
-export const revertExpression = generateRevert({
-  __proto__: null,
-  InputExpression: (_context, _annotation) => makeIdentifier(INPUT_KEYWORD),
-  LiteralExpression: (_context, literal, _annotation) => {
-    const primitive = fromLiteral(literal);
-    return primitive === undefined
-      ? makeIdentifier(UNDEFINED_KEYWORD)
-      : makeLiteral(primitive);
-  },
-  IntrinsicExpression: (_context, intrinsic, _annotation) =>
-    makeMemberExpression(
-      true,
-      makeIdentifier(INTRINSIC_KEYWORD),
-      makeLiteral(intrinsic),
-    ),
-  ImportExpression: (_context, source, specifier, _annotation) =>
-    makeCallExpression(makeIdentifier(IMPORT_KEYWORD), [
-      makeLiteral(source),
-      makeLiteral(specifier),
-    ]),
-  ReadExpression: (_context, variable, _annotation) => makeIdentifier(variable),
-  ClosureExpression: (
-    _context,
-    kind,
-    asynchronous,
-    generator,
-    block,
-    _annotation,
-  ) =>
-    kind === "arrow"
-      ? makeArrowFunctionExpression(asynchronous, revertBlock(block))
-      : makeFunctionExpression(
-          kind === "function" ? null : makeIdentifier(kind),
-          asynchronous,
-          generator,
-          revertBlock(block),
-        ),
-  AwaitExpression: (_context, expression, _annotation) =>
-    makeAwaitExpression(revertExpression(expression)),
-  YieldExpression: (_context, delegate, expression, _annotation) =>
-    makeCallExpression(
-      makeIdentifier(
-        delegate ? YIELD_DELEGATE_KEYWORD : YIELD_STRAIGHT_KEYWORD,
+    WriteExternalEffect: ({1: variable, 2: expression}) =>
+      makeAssignmentExpression(
+        makeIdentifier(`_${variable}`),
+        revertExpression(expression),
       ),
-      [revertExpression(expression)],
-    ),
-  SequenceExpression: (_context, effect, expression, _annotation) =>
-    makeSequenceExpression([
-      revertEffect(effect),
-      revertExpression(expression),
-    ]),
-  ConditionalExpression: (
-    _context,
-    expression1,
-    expression2,
-    expression3,
-    _annotation,
-  ) =>
-    makeConditionalExpression(
-      revertExpression(expression1),
-      revertExpression(expression2),
-      revertExpression(expression3),
-    ),
-  EvalExpression: (_context, variables, expression, _annotation) =>
-    makeCallExpression(makeIdentifier(EVAL_KEYWORD), [
-      makeArrayExpression(map(variables, makeIdentifier)),
-      revertExpression(expression),
-    ]),
-  ApplyExpression: (
-    _context,
-    expression1,
-    expression2,
-    expressions,
-    _annotation,
-  ) =>
-    makeCallExpression(
-      revertExpression(expression1),
-      concat(
-        [makeUnaryExpression("!", revertExpression(expression2))],
+    ExportEffect: ({1: specifier, 2: expression}) =>
+      makeCallExpression(makeIdentifier(EXPORT_KEYWORD), [
+        makeLiteral(specifier),
+        revertExpression(expression),
+      ]),
+    SequenceEffect: ({1: effect1, 2: effect2}) =>
+      makeSequenceExpression([revertEffect(effect1), revertEffect(effect2)]),
+    ConditionalEffect: ({1: expression, 2: effect1, 3: effect2}) =>
+      makeConditionalExpression(
+        revertExpression(expression),
+        revertEffect(effect1),
+        revertEffect(effect2),
+      ),
+    ExpressionEffect: ({1: expression}) =>
+      makeCallExpression(makeIdentifier(EFFECT_KEYWORD), [
+        revertExpression(expression),
+      ]),
+  },
+  throwUnexpectedArrayNodeType,
+);
+
+export const revertExpression = partialxx_(
+  dispatchArrayNode0,
+  {
+    __proto__: null,
+    ParameterExpression: ({1: parameter}) => revertParameter(parameter),
+    LiteralExpression: ({1: literal}) => {
+      const primitive = fromLiteral(literal);
+      if (primitive === undefined) {
+        return makeIdentifier(UNDEFINED_KEYWORD);
+      } else {
+        return makeLiteral(primitive);
+      }
+    },
+    IntrinsicExpression: ({1: intrinsic}) =>
+      makeMemberExpression(
+        true,
+        makeIdentifier(INTRINSIC_KEYWORD),
+        makeLiteral(intrinsic),
+      ),
+    ImportExpression: ({1: source, 2: specifier}) =>
+      makeCallExpression(makeIdentifier(IMPORT_KEYWORD), [
+        makeLiteral(source),
+        makeLiteral(specifier),
+      ]),
+    ReadExpression: ({1: variable}) => makeIdentifier(variable),
+    ReadExternalExpression: ({1: variable}) => makeIdentifier(`_${variable}`),
+    TypeofExternalExpression: ({1: variable}) =>
+      makeUnaryExpression("typeof", makeIdentifier(`_${variable}`)),
+    ClosureExpression: ({1: kind, 2: asynchronous, 3: generator, 4: block}) =>
+      kind === "arrow"
+        ? makeArrowFunctionExpression(asynchronous, revertBlock(block))
+        : makeFunctionExpression(
+            kind === "function" ? null : makeIdentifier(kind),
+            asynchronous,
+            generator,
+            revertBlock(block),
+          ),
+    AwaitExpression: ({1: expression}) =>
+      makeAwaitExpression(revertExpression(expression)),
+    YieldExpression: ({1: delegate, 2: expression}) =>
+      makeCallExpression(
+        makeIdentifier(
+          delegate ? YIELD_DELEGATE_KEYWORD : YIELD_STRAIGHT_KEYWORD,
+        ),
+        [revertExpression(expression)],
+      ),
+    SequenceExpression: ({1: effect, 2: expression}) =>
+      makeSequenceExpression([
+        revertEffect(effect),
+        revertExpression(expression),
+      ]),
+    ConditionalExpression: ({1: expression1, 2: expression2, 3: expression3}) =>
+      makeConditionalExpression(
+        revertExpression(expression1),
+        revertExpression(expression2),
+        revertExpression(expression3),
+      ),
+    EvalExpression: ({1: parameters, 2: variables, 3: expression}) =>
+      makeCallExpression(makeIdentifier(EVAL_KEYWORD), [
+        makeArrayExpression(map(parameters, revertParameter)),
+        makeArrayExpression(map(variables, makeIdentifier)),
+        revertExpression(expression),
+      ]),
+    ApplyExpression: ({1: expression1, 2: expression2, 3: expressions}) =>
+      makeCallExpression(
+        revertExpression(expression1),
+        concat(
+          [makeUnaryExpression("!", revertExpression(expression2))],
+          map(expressions, revertExpression),
+        ),
+      ),
+    ConstructExpression: ({1: expression, 2: expressions}) =>
+      makeNewExpression(
+        revertExpression(expression),
         map(expressions, revertExpression),
       ),
-    ),
-  ConstructExpression: (_context, expression, expressions, _annotation) =>
-    makeNewExpression(
-      revertExpression(expression),
-      map(expressions, revertExpression),
-    ),
-  // InvokeExpression: (
-  //   _context,
-  //   expression1,
-  //   expression2,
-  //   expressions,
-  //   _annotation,
-  // ) =>
-  //   makeCallExpression(
-  //     makeMemberExpression(
-  //       true,
-  //       revertExpression(expression1),
-  //       revertExpression(expression2),
-  //     ),
-  //     map(expressions, revertExpression),
-  //   ),
-});
+    // InvokeExpression: (
+    //   _context,
+    //   expression1,
+    //   expression2,
+    //   expressions,
+    //   _annotation,
+    // ) =>
+    //   makeCallExpression(
+    //     makeMemberExpression(
+    //       true,
+    //       revertExpression(expression1),
+    //       revertExpression(expression2),
+    //     ),
+    //     map(expressions, revertExpression),
+    //   ),
+  },
+  throwUnexpectedArrayNodeType,
+);

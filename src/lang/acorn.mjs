@@ -12,7 +12,10 @@ const options = {
 class LooseParser extends AcornParser {
   raiseRecoverable(_position, _message) {}
   raise(position, message) {
-    if (message !== "Unsyntactic break") {
+    if (
+      message !== "Unsyntactic break" &&
+      message !== "'super' keyword outside a method"
+    ) {
       super.raise(position, message);
     }
   }

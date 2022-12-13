@@ -1,9 +1,7 @@
 import {includes} from "array-lite";
-
-import {getIntrinsicArray} from "./intrinsics.mjs";
-
 import {hasOwn, assert, partialx_, partial_x} from "../util/index.mjs";
 import {isLiteral} from "./literal.mjs";
+import {getIntrinsicArray} from "./intrinsics.mjs";
 
 const {
   Reflect: {apply},
@@ -153,12 +151,12 @@ const parameters = [
   "error",
   "arguments",
   "this",
+  "import",
+  "import.meta",
   "new.target",
   "super.get",
   "super.set",
   "super.call",
-  "import",
-  "import.meta",
 ];
 
 const predicates = {
