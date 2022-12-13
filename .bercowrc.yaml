@@ -1,0 +1,19 @@
+plugins:
+  '@bercow/link-adjacent': {}
+  '@bercow/order-esm-import': {}
+  '@bercow/prettier':
+    prettier-options: '.'
+  '@bercow/eslint':
+    babel-parser-options:
+      sourceType: module
+  '@bercow/spawn':
+    command: npx
+    command-win32: npx.cmd
+    argv:
+      - c8
+      - --100
+      - --include
+      - $RELATIVE_MAIN_PATH
+      - --
+      - node
+      - $RELATIVE_TEST_PATH

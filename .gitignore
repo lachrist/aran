@@ -2,5 +2,4 @@
 /src/**/generated-*
 /node_modules/
 /coverage/
-/.turtle.json
-/yo*
+/tmp

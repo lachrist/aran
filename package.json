@@ -15,9 +15,8 @@
     "build-debug": "node build/generate-make.mjs DEBUG",
     "lint": "npx eslint",
     "format": "npx prettier -w",
-    "test": "/bin/sh shell/test.sh",
-    "coverage": "/bin/sh shell/coverage.sh",
-    "unit": "/bin/sh shell/unit.sh"
+    "test": "npx bercow",
+    "coverage": "/bin/sh shell/coverage.sh"
   },
   "keywords": [
     "JavaScript",
@@ -37,10 +36,15 @@
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-local": "^1.0.0",
     "pegjs": "^0.10.0",
-    "prettier": "^2.4.1",
-    "test-turtle": "^4.0.2"
+    "prettier": "^2.4.1"
   },
   "dependencies": {
+    "@bercow/core": "^0.2.0",
+    "@bercow/eslint": "^0.1.0",
+    "@bercow/link-adjacent": "^0.1.0",
+    "@bercow/order-esm-import": "^0.1.0",
+    "@bercow/prettier": "^0.1.0",
+    "@bercow/spawn": "^0.2.0",
     "array-lite": "^0.2.0"
   }
 }
