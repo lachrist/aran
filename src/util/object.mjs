@@ -19,7 +19,7 @@ export const set = (object, key, value) => {
 };
 
 /* c8 ignore start */
-export const hasOwnProperty =
+export const hasOwn =
   getOwnPropertyDescriptor(Object, "hasOwn") === undefined
     ? (object, key) => getOwnPropertyDescriptor(object, key) !== undefined
     : Object.hasOwn;

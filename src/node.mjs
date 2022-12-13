@@ -4,7 +4,7 @@ import {
   partialx___,
   partialx____,
   partialx_____,
-  hasOwnProperty,
+  hasOwn,
 } from "./util/index.mjs";
 
 const {
@@ -21,7 +21,7 @@ export const isArrayNode = (any) =>
 export const isObjectNode = (any) =>
   typeof any === "object" &&
   any !== null &&
-  hasOwnProperty(any, "type") &&
+  hasOwn(any, "type") &&
   typeof any.type === "string";
 
 export const getArrayNodeType = ({0: type}) => type;
@@ -36,7 +36,7 @@ export const getObjectNodeType = ({type}) => type;
 
 const dispatchNode0 = (getType, clauses, default_clause, node) => {
   const type = getType(node);
-  if (hasOwnProperty(clauses, type)) {
+  if (hasOwn(clauses, type)) {
     const clause = clauses[type];
     return clause(node);
   } else {
@@ -57,7 +57,7 @@ export const dispatchObjectNode0 = partialx___(
 
 const dispatchNode1 = (getType, clauses, default_clause, node, extra1) => {
   const type = getType(node);
-  if (hasOwnProperty(clauses, type)) {
+  if (hasOwn(clauses, type)) {
     const clause = clauses[type];
     return clause(node, extra1);
   } else {
@@ -85,7 +85,7 @@ const dispatchNode2 = (
   extra2,
 ) => {
   const type = getType(node);
-  if (hasOwnProperty(clauses, type)) {
+  if (hasOwn(clauses, type)) {
     const clause = clauses[type];
     return clause(node, extra1, extra2);
   } else {

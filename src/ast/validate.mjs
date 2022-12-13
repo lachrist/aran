@@ -16,7 +16,7 @@ import {
 import {
   isDuplicate,
   NULL_DATA_DESCRIPTOR,
-  hasOwnProperty,
+  hasOwn,
   assert,
   partial_x,
   partial_xx,
@@ -79,7 +79,7 @@ const syntax = getSyntax();
 
 const kinds = ownKeys(syntax);
 
-const isTypeKind = (kind, type) => hasOwnProperty(syntax[kind], type);
+const isTypeKind = (kind, type) => hasOwn(syntax[kind], type);
 
 const getNodeKind = (node) =>
   find(kinds, partial_x(isTypeKind, getArrayNodeType(node)));
@@ -263,7 +263,7 @@ const digestSubfield = (value, index, type, path) =>
 
 const digestField = (value, type, path) => {
   if (typeof type === "string") {
-    if (hasOwnProperty(syntax, type)) {
+    if (hasOwn(syntax, type)) {
       const digest = loadDigest(type, value);
       assert(digest !== undefined, `missing node at ${path}`);
       return digest;

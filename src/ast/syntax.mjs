@@ -1,9 +1,8 @@
 import {includes} from "array-lite";
 
-import {hasOwnProperty, assert, partialx_, partial_x} from "../util/index.mjs";
-
 import {getIntrinsicArray} from "./intrinsics.mjs";
 
+import {hasOwn, assert, partialx_, partial_x} from "../util/index.mjs";
 import {isLiteral} from "./literal.mjs";
 
 const {
@@ -171,6 +170,7 @@ const predicates = {
     "constructor",
     "method",
   ]),
+
   Intrinsic: partialx_(includes, getIntrinsicArray()),
   Strict: partial_x(isTypeof, "boolean"),
   Asynchronous: partial_x(isTypeof, "boolean"),
@@ -185,7 +185,7 @@ const predicates = {
 };
 
 export const isSyntaxType = (any, type) => {
-  assert(hasOwnProperty(predicates, type), "missing predicate");
+  assert(hasOwn(predicates, type), "missing predicate");
   const predicate = predicates[type];
   return predicate(any);
 };
