@@ -16,8 +16,6 @@ import {
   EVAL_KEYWORD,
   UNDEFINED_KEYWORD,
   INTRINSIC_KEYWORD,
-  YIELD_DELEGATE_KEYWORD,
-  YIELD_STRAIGHT_KEYWORD,
   EXPORT_KEYWORD,
   IMPORT_KEYWORD,
 } from "./keywords.mjs";
@@ -181,6 +179,11 @@ const makeArrowFunctionExpression = ($async, body) => ({
   body,
 });
 const makeAwaitExpression = (argument) => ({type: "AwaitExpression", argument});
+const makeYieldExpression = (delegate, argument) => ({
+  type: "YieldExpression",
+  delegate,
+  argument,
+});
 const makeNewExpression = (callee, $arguments) => ({
   type: "NewExpression",
   callee,
@@ -463,12 +466,7 @@ export const revertExpression = partialxx_(
     AwaitExpression: ({1: expression}) =>
       makeAwaitExpression(revertExpression(expression)),
     YieldExpression: ({1: delegate, 2: expression}) =>
-      makeCallExpression(
-        makeIdentifier(
-          delegate ? YIELD_DELEGATE_KEYWORD : YIELD_STRAIGHT_KEYWORD,
-        ),
-        [revertExpression(expression)],
-      ),
+      makeYieldExpression(delegate, revertExpression(expression)),
     SequenceExpression: ({1: effect, 2: expression}) =>
       makeSequenceExpression([
         revertEffect(effect),

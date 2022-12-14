@@ -28,7 +28,7 @@
     "Shadow Execution"
   ],
   "devDependencies": {
-    "acorn": "^8.6.0",
+    "@babel/parser": "^7.20.5",
     "c8": "^7.10.0",
     "chalk": "^4.1.2",
     "diff": "^5.0.0",

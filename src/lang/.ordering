@@ -1,5 +1,5 @@
 keywords.mjs
-acorn.mjs
+babel.mjs
 prettier.mjs
 convert.mjs
 revert.mjs

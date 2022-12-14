@@ -1,5 +1,5 @@
 import {assertEqual, assertThrow} from "../__fixture__.mjs";
-import {parseAcornLoose} from "./acorn.mjs";
+import {parseBabel} from "./babel.mjs";
 import {stringifyPrettier} from "./prettier.mjs";
 
 import {
@@ -21,10 +21,7 @@ const generateTest =
   (parse, stringify) =>
   (code1, code2 = code1) => {
     // console.log("grunt", globalThis.JSON.stringify(parse(code1), null, 2));
-    assertEqual(
-      stringify(parse(code1)),
-      stringifyPrettier(parseAcornLoose(code2)),
-    );
+    assertEqual(stringify(parse(code1)), stringifyPrettier(parseBabel(code2)));
   };
 
 const testExpression = generateTest(parseExpression, stringifyExpression);
@@ -75,8 +72,8 @@ testExpression("(async function* method () { return 123; });");
 
 testExpression("await 123;");
 
-testExpression("yieldStraight(123);");
-testExpression("yieldDelegate(123);");
+testExpression("yield 123;");
+testExpression("yield* 123;");
 
 testExpression("(effect(123), 456);");
 

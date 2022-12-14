@@ -65,8 +65,6 @@ import {
   EVAL_KEYWORD,
   UNDEFINED_KEYWORD,
   INTRINSIC_KEYWORD,
-  YIELD_DELEGATE_KEYWORD,
-  YIELD_STRAIGHT_KEYWORD,
   EXPORT_KEYWORD,
   IMPORT_KEYWORD,
 } from "./keywords.mjs";
@@ -533,6 +531,13 @@ export const convertExpression = partialxx_(
         locate(node.loc),
       );
     },
+    YieldExpression: (node) => {
+      return makeYieldExpression(
+        node.delegate,
+        convertExpression(node.argument),
+        locate(node.loc),
+      );
+    },
     MemberExpression: (node) => {
       if (node.object.type === "Super") {
         expectSyntax(!node.computed, node);
@@ -579,26 +584,6 @@ export const convertExpression = partialxx_(
     CallExpression: (node) => {
       expectSyntax(node.optional === false, node);
       if (
-        node.callee.type === "Identifier" &&
-        node.callee.name === YIELD_STRAIGHT_KEYWORD
-      ) {
-        expectSyntax(node.arguments.length === 1, node);
-        return makeYieldExpression(
-          false,
-          convertExpression(node.arguments[0]),
-          locate(node.loc),
-        );
-      } else if (
-        node.callee.type === "Identifier" &&
-        node.callee.name === YIELD_DELEGATE_KEYWORD
-      ) {
-        expectSyntax(node.arguments.length === 1, node);
-        return makeYieldExpression(
-          true,
-          convertExpression(node.arguments[0]),
-          locate(node.loc),
-        );
-      } else if (
         node.callee.type === "Identifier" &&
         node.callee.name === IMPORT_KEYWORD
       ) {

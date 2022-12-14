@@ -1,6 +1,6 @@
 import {assert} from "../util/index.mjs";
 
-import {parseAcornLoose} from "./acorn.mjs";
+import {parseBabel} from "./babel.mjs";
 
 import {
   convertProgram,
@@ -11,18 +11,17 @@ import {
   convertExpression,
 } from "./convert.mjs";
 
-const generateParseProgram = (convert) => (code) =>
-  convert(parseAcornLoose(code));
+const generateParseProgram = (convert) => (code) => convert(parseBabel(code));
 
 const generateParseStatement = (convert) => (code) => {
-  const node = parseAcornLoose(code);
+  const node = parseBabel(code);
   assert(node.type === "Program");
   assert(node.body.length === 1);
   return convert(node.body[0]);
 };
 
 const generateParseExpression = (convert) => (code) => {
-  const node = parseAcornLoose(code);
+  const node = parseBabel(code);
   assert(node.type === "Program");
   assert(node.body.length === 1);
   assert(node.body[0].type === "ExpressionStatement");
