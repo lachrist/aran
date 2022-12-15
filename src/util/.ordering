@@ -3,6 +3,7 @@ array.mjs
 closure.mjs
 counter.mjs
 curry.mjs
+either.mjs
 list.mjs
 object.mjs
 operation.mjs
