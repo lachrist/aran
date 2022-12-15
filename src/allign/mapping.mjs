@@ -1,60 +1,73 @@
+import {
+  makeLeft,
+  makeRight,
+  isLeft,
+  fromLeft,
+  fromRight,
+} from "../util/index.mjs";
 import { setErrorValuePair } from "./error.mjs";
 
-const {
-  Reflect: { getPrototypeOf },
-} = globalThis;
+export const hasMappingError = isLeft;
 
-export const isMapping = (object) => getPrototypeOf(object) === null;
+export const getMappingError = fromLeft;
 
-export const makeEmptyMapping = () => ({ __proto__: null });
+export const makeEmptyMapping = () => makeRight({ __proto__: null });
 
-export const makeSingleMapping = (key, value) => ({
-  __proto__: null,
-  [key]: value,
-});
+export const makeSingleMapping = (key, value) =>
+  makeRight({
+    __proto__: null,
+    [key]: value,
+  });
 
-export const combineMapping = (error, mapping1, mapping2) => {
-  if (!isMapping(mapping1)) {
-    return mapping1;
-  }
-  if (!isMapping(mapping2)) {
-    return mapping2;
-  }
-  for (const key1 in mapping1) {
-    for (const key2 in mapping2) {
-      if ((key1 === key2) !== (mapping1[key1] === mapping2[key2])) {
-        return setErrorValuePair(
-          error,
-          [key1, key2],
-          [mapping1[key1], mapping2[key2]],
-        );
-      }
-    }
-  }
-  return { __proto__: null, ...mapping1, ...mapping2 };
-};
-
-const deleteMapping = (mapping1, key) => {
-  const mapping2 = { __proto__: null, ...mapping1 };
-  delete mapping2[key];
-  return mapping2;
-};
-
-export const bindMapping = (error, key1, value1, mapping) => {
-  if (!isMapping(mapping)) {
-    return mapping;
-  }
-  if (key1 in mapping) {
-    if (mapping[key1] !== value1) {
-      return setErrorValuePair(error, [key1, key1], [value1, mapping[key1]]);
-    }
-    return deleteMapping(mapping, key1);
+export const combineMapping = (either1, either2, error) => {
+  if (isLeft(either1)) {
+    return either1;
+  } else if (isLeft(either2)) {
+    return either2;
   } else {
-    for (const key2 in mapping) {
-      if (mapping[key2] === value1) {
-        return setErrorValuePair(error, [key1, key2], [value1, value1]);
+    const object1 = fromRight(either1);
+    const object2 = fromRight(either2);
+    for (const key1 in object1) {
+      for (const key2 in object2) {
+        if ((key1 === key2) !== (object1[key1] === object2[key2])) {
+          return makeLeft(
+            setErrorValuePair(
+              error,
+              [key1, key2],
+              [object1[key1], object2[key2]],
+            ),
+          );
+        }
       }
     }
-    return mapping;
+    return makeRight({ __proto__: null, ...object1, ...object2 });
+  }
+};
+
+export const bindMapping = (either, key1, value1, error) => {
+  if (isLeft(either)) {
+    return either;
+  } else {
+    const object = fromRight(either);
+    if (key1 in object) {
+      if (object[key1] !== value1) {
+        return makeLeft(
+          setErrorValuePair(error, [key1, key1], [value1, object[key1]]),
+        );
+      } else {
+        const copy_object = { __proto__: null, ...object };
+        delete copy_object[key1];
+        return makeRight(copy_object);
+      }
+    } else {
+      for (const key2 in object) {
+        if (object[key2] === value1) {
+          return makeLeft(
+            setErrorValuePair(error, [key1, key2], [value1, value1]),
+          );
+        }
+      }
+      return either;
+    }
   }
 };

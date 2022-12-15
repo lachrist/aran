@@ -20,9 +20,8 @@ import {
 
 const generateAssert = (parse, visit) => (code1, code2, success) => {
   const error = getResultError(
-    visit(makeRootError(), parse(code1), parse(code2)),
+    visit(parse(code1), parse(code2), makeRootError()),
   );
-
   if (success) {
     assertEqual(error, null);
   } else {
@@ -37,13 +36,15 @@ const assertBlock = generateAssert(parseBlock, visitBlock);
 const assertStatement = generateAssert(parseStatement, visitStatement);
 const assertProgram = generateAssert(parseProgram, visitProgram);
 
-assertExpression("123;", "input;", false);
+assertExpression("123;", "_x;", false);
 
 ////////////////
 // Expression //
 ////////////////
 
-assertExpression("input;", "input;", true);
+assertExpression("this;", "this;", true);
+
+assertExpression("this;", "new.target;", false);
 
 assertExpression(
   "intrinsic.ReferenceError;",
@@ -60,6 +61,12 @@ assertExpression("123n;", "123n;", true);
 assertExpression("123n;", "321n;", false);
 
 assertExpression("x;", "X;", true);
+
+assertExpression("_x;", "_x;", true);
+assertExpression("_x;", "_X;", false);
+
+assertExpression("typeof _x;", "typeof _x;", true);
+assertExpression("typeof _x;", "typeof _X;", false);
 
 assertExpression(
   "importStatic('source', 'specifier');",
@@ -82,11 +89,11 @@ assertExpression(
 assertExpression("await 123;", "await 123;", true);
 assertExpression("await 123;", "await 321;", false);
 
-assertExpression("yieldStraight(123);", "yieldStraight(123);", true);
-assertExpression("yieldDelegate(123);", "yieldDelegate(123);", true);
-assertExpression("yieldStraight(123);", "yieldDelegate(123);", false);
-assertExpression("yieldStraight(123);", "yieldStraight(321);", false);
-assertExpression("yieldDelegate(123);", "yieldDelegate(321);", false);
+assertExpression("yield 123;", "yield 123;", true);
+assertExpression("yield* 123;", "yield* 123;", true);
+assertExpression("yield 123;", "yield* 123;", false);
+assertExpression("yield* 123;", "yield 123;", false);
+assertExpression("yield 123;", "yield 321;", false);
 
 assertExpression("(effect(123), 456);", "(effect(123), 456);", true);
 assertExpression("(effect(123), 456);", "(effect(321), 456);", false);
@@ -141,9 +148,14 @@ assertExpression(
   false,
 );
 
-assertExpression("eval([x], 123);", "eval([x], 123);", true);
-assertExpression("eval([x], 123);", "eval([x], 321);", false);
-assertExpression("eval([x], x);", "eval([x], X);", false);
+assertExpression("eval([this], [x], 123);", "eval([this], [x], 123);", true);
+assertExpression(
+  "eval([this], [x], 123);",
+  "eval([new.target], [x], 123);",
+  false,
+);
+assertExpression("eval([this], [x], 123);", "eval([this], [x], 321);", false);
+assertExpression("eval([this], [x], x);", "eval([this], [X], x);", false);
 
 ////////////
 // Effect //
@@ -172,6 +184,10 @@ assertEffect(
 
 assertEffect("x = 123;", "X = 123;", true);
 assertEffect("x = 123;", "x = 321;", false);
+
+assertEffect("_x = 123;", "_x = 123;", true);
+assertEffect("_x = 123;", "_x = 321;", false);
+assertEffect("_x = 123;", "_X = 123;", false);
 
 assertEffect(
   "(effect(123), effect(456));",
@@ -229,10 +245,10 @@ assertStatement("break l;", "break L;", true);
 assertStatement("return 123;", "return 123;", true);
 assertStatement("return 123;", "return 321;", false);
 
-assertStatement("let x = 123;", "let x = 123;", true);
-assertStatement("let x = 123;", "const x = 123;", false);
-assertStatement("let x = 123;", "let y = 123;", false);
-assertStatement("let x = 123;", "let x = 321;", false);
+assertStatement("let _x = 123;", "let _x = 123;", true);
+assertStatement("let _x = 123;", "const _x = 123;", false);
+assertStatement("let _x = 123;", "let _y = 123;", false);
+assertStatement("let _x = 123;", "let _x = 321;", false);
 
 assertStatement("{ effect(123); }", "{ effect(123); }", true);
 assertStatement("{ effect(123); }", "{ effect(321); }", false);
@@ -364,11 +380,11 @@ assertBlock(
   true,
 );
 
-assertBlock("{ let _x; _x = _x; }", "{ let _y; _y = _y; }", true);
-assertBlock("{ let _x; _x = _x; }", "{ let _x; _y = _y; }", false);
+assertBlock("{ let x; x = x; }", "{ let y; y = y; }", true);
+assertBlock("{ let x; x = x; }", "{ let x; y = y; }", false);
 assertBlock(
-  "{ let _x; _x = _x; { let _x; _x = _x } }",
-  "{ let _x; _x = _x; { let _X; _X = _X } }",
+  "{ let x; x = x; { let x; x = x } }",
+  "{ let x; x = x; { let X; X = X } }",
   true,
 );
 
@@ -398,49 +414,25 @@ assertProgram(
 );
 
 assertProgram(
-  "'global-eval'; { return 123; }",
-  "'global-eval'; { return 123; }",
+  "'eval'; [this]; let x; { return 123; }",
+  "'eval'; [this]; let x; { return 123; }",
   true,
 );
 
 assertProgram(
-  "'global-eval'; { return 123; }",
-  "'global-eval'; { return 321; }",
+  "'eval'; [this]; let x; { return 123; }",
+  "'eval'; [this]; let x; { return 321; }",
   false,
 );
 
 assertProgram(
-  "'internal-local-eval'; let x; { return x; }",
-  "'internal-local-eval'; let X; { return X; }",
-  true,
-);
-
-assertProgram(
-  "'internal-local-eval'; let x; { return 123; }",
-  "'internal-local-eval'; { return 123; }",
+  "'eval'; [this]; let x; { return 123; }",
+  "'eval'; [new.target]; let x; { return 123; }",
   false,
 );
 
 assertProgram(
-  "'internal-local-eval'; { return 123; }",
-  "'internal-local-eval'; { return 312; }",
-  false,
-);
-
-assertProgram(
-  "'external-local-eval'; []; { return 123; }",
-  "'external-local-eval'; []; { return 123; }",
-  true,
-);
-
-assertProgram(
-  "'external-local-eval'; []; { return 123; }",
-  "'external-local-eval'; []; { return 321; }",
-  false,
-);
-
-assertProgram(
-  "'external-local-eval'; ['this']; { return 123; }",
-  "'external-local-eval'; ['new.target']; { return 123; }",
+  "'eval'; [this]; let x; { return x; }",
+  "'eval'; [this]; let x; { return X; }",
   false,
 );

@@ -1,19 +1,18 @@
-/* eslint-disable no-use-before-define */
-import { zip, reduce, concat, map } from "array-lite";
-
-import { allignArrayNode0 } from "../node.mjs";
-
-import { deadcode__ } from "../util/index.mjs";
-
-import { fromLiteral, getNodeType, getNodeAnnotation } from "../ast/index.mjs";
-
+/* eslint-disable no-use-before-define */ import {
+  zip,
+  reduce,
+  concat,
+  map,
+} from "array-lite";
+import { partialx___, partialx____ } from "../util/index.mjs";
+import { allignArrayNode1 } from "../node.mjs";
+import { fromLiteral } from "../ast/index.mjs";
 import {
   appendErrorSegment,
   setErrorMessage,
   setErrorAnnotationPair,
   setErrorValuePair,
 } from "./error.mjs";
-
 import {
   makeEmptyResult,
   makeSingleLabelResult,
@@ -28,7 +27,7 @@ const { String } = globalThis;
 const makeSinglePairVariableResult = (pair) =>
   makeSingleVariableResult(pair[0], pair[1]);
 
-const visitLiteral = (error, literal1, literal2) =>
+const visitLiteral = (literal1, literal2, error) =>
   makeEmptyResult(
     fromLiteral(literal1) === fromLiteral(literal2)
       ? null
@@ -39,7 +38,7 @@ const visitLiteral = (error, literal1, literal2) =>
         ),
   );
 
-const visitPrimitive = (error, primitive1, primitive2) =>
+const visitPrimitive = (primitive1, primitive2, error) =>
   makeEmptyResult(
     primitive1 === primitive2
       ? null
@@ -50,11 +49,9 @@ const visitPrimitive = (error, primitive1, primitive2) =>
         ),
   );
 
-const default_callback = deadcode__("could not visit node");
-
-const generateVisitNode = (callbacks) => (node1, node2, error) => {
-  const type1 = getNodeType(node1);
-  const type2 = getNodeType(node2);
+const visitNode = (clauses, node1, node2, error) => {
+  const { 0: type1 } = node1;
+  const { 0: type2 } = node2;
   if (type1 !== type2) {
     return makeEmptyResult(
       setErrorValuePair(
@@ -63,526 +60,399 @@ const generateVisitNode = (callbacks) => (node1, node2, error) => {
         type2,
       ),
     );
+  } else {
+    const child_error = setErrorAnnotationPair(
+      appendErrorSegment(error, `(${type1})`),
+      node1[node1.length - 1],
+      node2[node2.length - 1],
+    );
+    return reduce(
+      allignArrayNode1(clauses, node1, node2, child_error),
+      (result1, result2) => combineResult(result1, result2, child_error),
+      makeEmptyResult(null),
+    );
   }
-  const child_error = setErrorAnnotationPair(
-    appendErrorSegment(error, `(${type1})`),
-    getNodeAnnotation(node1),
-    getNodeAnnotation(node2),
-  );
-  return reduce(
-    allignNodeArray1(node1, node2, callbacks, default_callback, child_error),
-    (result1, result2) => combineResult(child_error, result1, result2),
-    makeEmptyResult(null),
-  );
 };
 
-export const visitProgram = generateVisitNode({
-  __proto__: null,
+export const visitProgram = partialx___(visitNode, {
   // Program //
-  ScriptProgram: (
-    error,
-    statements1,
-    _annotation1,
-    statements2,
-    _annotation2,
-  ) => [
+  ScriptProgram: ({ 1: statements1 }, { 1: statements2 }, error) => [
     visitAllStatement(
-      appendErrorSegment(error, ".body"),
       statements1,
       statements2,
+      appendErrorSegment(error, ".body"),
     ),
   ],
   ModuleProgram: (
+    { 1: links1, 2: block1 },
+    { 1: links2, 2: block2 },
     error,
-    links1,
-    block1,
-    _annotation1,
-    links2,
-    block2,
-    _annotation2,
   ) => [
-    visitAllLink(appendErrorSegment(error, ".links"), links1, links2),
-    visitBlock(appendErrorSegment(error, ".body"), block1, block2),
+    visitAllLink(links1, links2, appendErrorSegment(error, ".links")),
+    visitBlock(block1, block2, appendErrorSegment(error, ".body")),
   ],
-  GlobalEvalProgram: (error, block1, _annotation1, block2, _annotation2) => [
-    visitBlock(appendErrorSegment(error, ".body"), block1, block2),
-  ],
-  InternalLocalEvalProgram: (
+  EvalProgram: (
+    { 1: parameters1, 2: variables1, 3: block1 },
+    { 1: parameters2, 2: variables2, 3: block2 },
     error,
-    variables1,
-    block1,
-    _annotation1,
-    variables2,
-    block2,
-    _annotation2,
-  ) => [
-    bindAllVariable(
-      appendErrorSegment(error, ".variables"),
-      variables1,
-      variables2,
-      visitBlock(appendErrorSegment(error, ".body"), block1, block2),
-    ),
-  ],
-  ExternalLocalEvalProgram: (
-    error,
-    enclaves1,
-    block1,
-    _annotation1,
-    enclaves2,
-    block2,
-    _annotation2,
   ) => [
     visitAllPrimitive(
-      appendErrorSegment(error, ".enclaves"),
-      enclaves1,
-      enclaves2,
+      parameters1,
+      parameters2,
+      appendErrorSegment(error, ".parameters"),
     ),
-    visitBlock(appendErrorSegment(error, ".body"), block1, block2),
+    bindAllVariable(
+      visitBlock(block1, block2, appendErrorSegment(error, ".body")),
+      variables1,
+      variables2,
+      appendErrorSegment(error, ".variables"),
+    ),
   ],
 });
 
-export const visitLink = generateVisitNode({
-  __proto__: null,
+export const visitLink = partialx___(visitNode, {
   ImportLink: (
+    { 1: specifier1, 2: source1 },
+    { 1: specifier2, 2: source2 },
     error,
-    specifier1,
-    source1,
-    _annotation1,
-    specifier2,
-    source2,
-    _annotation2,
   ) => [
     visitPrimitive(
-      appendErrorSegment(error, ".specifier"),
       specifier1,
       specifier2,
+      appendErrorSegment(error, ".specifier"),
     ),
-    visitPrimitive(appendErrorSegment(error, ".source"), source1, source2),
+    visitPrimitive(source1, source2, appendErrorSegment(error, ".source")),
   ],
-  ExportLink: (error, specifier1, _annotation1, specifier2, _annotation2) => [
+  ExportLink: ({ 1: specifier1 }, { 1: specifier2 }, error) => [
     visitPrimitive(
-      appendErrorSegment(error, ".specifier"),
       specifier1,
       specifier2,
+      appendErrorSegment(error, ".specifier"),
     ),
   ],
   AggregateLink: (
+    { 1: source1, 2: specifier11, 3: specifier12 },
+    { 1: source2, 2: specifier21, 3: specifier22 },
     error,
-    source1,
-    specifier11,
-    specifier12,
-    _annotation1,
-    source2,
-    specifier21,
-    specifier22,
-    _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, ".source"), source1, source2),
+    visitPrimitive(source1, source2, appendErrorSegment(error, ".source")),
     visitPrimitive(
-      appendErrorSegment(error, ".imported"),
       specifier11,
       specifier21,
+      appendErrorSegment(error, ".imported"),
     ),
     visitPrimitive(
-      appendErrorSegment(error, ".exported"),
       specifier12,
       specifier22,
+      appendErrorSegment(error, ".exported"),
     ),
   ],
 });
 
-export const visitBlock = generateVisitNode({
-  __proto__: null,
+export const visitBlock = partialx___(visitNode, {
   Block: (
+    { 1: labels1, 2: variables1, 3: statements1 },
+    { 1: labels2, 2: variables2, 3: statements2 },
     error,
-    labels1,
-    variables1,
-    statements1,
-    _annotation1,
-    labels2,
-    variables2,
-    statements2,
-    _annotation2,
   ) => [
     bindAllLabel(
-      appendErrorSegment(error, ".labels"),
-      labels1,
-      labels2,
       bindAllVariable(
-        appendErrorSegment(error, ".variables"),
-        variables1,
-        variables2,
         visitAllStatement(
-          appendErrorSegment(error, ".body"),
           statements1,
           statements2,
+          appendErrorSegment(error, ".body"),
         ),
+        variables1,
+        variables2,
+        appendErrorSegment(error, ".variables"),
       ),
+      labels1,
+      labels2,
+      appendErrorSegment(error, ".labels"),
     ),
   ],
 });
 
-export const visitStatement = generateVisitNode({
-  __proto__: null,
-  EffectStatement: (error, effect1, _annotation1, effect2, _annotation2) => [
-    visitEffect(appendErrorSegment(error, ".body"), effect1, effect2),
+export const visitStatement = partialx___(visitNode, {
+  EffectStatement: ({ 1: effect1 }, { 1: effect2 }, error) => [
+    visitEffect(effect1, effect2, appendErrorSegment(error, ".body")),
   ],
-  DeclareStatement: (
+  DeclareExternalStatement: (
+    { 1: kind1, 2: variable1, 3: expression1 },
+    { 1: kind2, 2: variable2, 3: expression2 },
     error,
-    kind1,
-    identifier1,
-    expression1,
-    _annotation1,
-    kind2,
-    identifier2,
-    expression2,
-    _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, ".kind"), kind1, kind2),
-    visitPrimitive(appendErrorSegment(error, ".id"), identifier1, identifier2),
+    visitPrimitive(kind1, kind2, appendErrorSegment(error, ".kind")),
+    visitPrimitive(variable1, variable2, appendErrorSegment(error, ".id")),
     visitExpression(
+      expression1,
+      expression2,
       appendErrorSegment(error, ".init"),
-      expression1,
-      expression2,
     ),
   ],
-  ReturnStatement: (
-    error,
-    expression1,
-    _annotation1,
-    expression2,
-    _annotation2,
-  ) => [
+  ReturnStatement: ({ 1: expression1 }, { 1: expression2 }, error) => [
     visitExpression(
-      appendErrorSegment(error, ".argument"),
       expression1,
       expression2,
+      appendErrorSegment(error, ".argument"),
     ),
   ],
-  BreakStatement: (_error, label1, _annotation1, label2, _annotation2) => [
+  BreakStatement: ({ 1: label1 }, { 1: label2 }, _error) => [
     makeSingleLabelResult(label1, label2),
   ],
-  DebuggerStatement: (_error, _annotation1, _annotation2) => [],
-  BlockStatement: (error, block1, _annotation1, block2, _annotation2) => [
-    visitBlock(appendErrorSegment(error, ".body"), block1, block2),
+  DebuggerStatement: ({}, {}, _error) => [],
+  BlockStatement: ({ 1: block1 }, { 1: block2 }, error) => [
+    visitBlock(block1, block2, appendErrorSegment(error, ".body")),
   ],
   IfStatement: (
+    { 1: expression1, 2: block11, 3: block12 },
+    { 1: expression2, 2: block21, 3: block22 },
     error,
-    expression1,
-    block11,
-    block12,
-    _annotation1,
-    expression2,
-    block21,
-    block22,
-    _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, ".test"),
       expression1,
       expression2,
+      appendErrorSegment(error, ".test"),
     ),
-    visitBlock(appendErrorSegment(error, ".consequent"), block11, block21),
-    visitBlock(appendErrorSegment(error, ".alternate"), block12, block22),
+    visitBlock(block11, block21, appendErrorSegment(error, ".consequent")),
+    visitBlock(block12, block22, appendErrorSegment(error, ".alternate")),
   ],
   WhileStatement: (
+    { 1: expression1, 2: block1 },
+    { 1: expression2, 2: block2 },
     error,
-    expression1,
-    block1,
-    _annotation1,
-    expression2,
-    block2,
-    _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, ".test"),
       expression1,
       expression2,
+      appendErrorSegment(error, ".test"),
     ),
-    visitBlock(appendErrorSegment(error, ".consequent"), block1, block2),
+    visitBlock(block1, block2, appendErrorSegment(error, ".consequent")),
   ],
   TryStatement: (
+    { 1: block11, 2: block12, 3: block13 },
+    { 1: block21, 2: block22, 3: block23 },
     error,
-    block11,
-    block12,
-    block13,
-    _annotation1,
-    block21,
-    block22,
-    block23,
-    _annotation2,
   ) => [
-    visitBlock(appendErrorSegment(error, ".body"), block11, block21),
-    visitBlock(appendErrorSegment(error, ".handler"), block12, block22),
-    visitBlock(appendErrorSegment(error, ".finalizer"), block13, block23),
+    visitBlock(block11, block21, appendErrorSegment(error, ".body")),
+    visitBlock(block12, block22, appendErrorSegment(error, ".handler")),
+    visitBlock(block13, block23, appendErrorSegment(error, ".finalizer")),
   ],
 });
 
-export const visitEffect = generateVisitNode({
-  __proto__: null,
+export const visitEffect = partialx___(visitNode, {
   WriteEffect: (
+    { 1: variable1, 2: expression1 },
+    { 1: variable2, 2: expression2 },
     error,
-    identifier1,
-    expression1,
-    _annotation1,
-    identifier2,
-    expression2,
-    _annotation2,
   ) => [
-    makeSingleVariableResult(identifier1, identifier2),
+    makeSingleVariableResult(variable1, variable2),
     visitExpression(
-      appendErrorSegment(error, ".right"),
       expression1,
       expression2,
+      appendErrorSegment(error, ".right"),
+    ),
+  ],
+  WriteExternalEffect: (
+    { 1: variable1, 2: expression1 },
+    { 1: variable2, 2: expression2 },
+    error,
+  ) => [
+    visitPrimitive(variable1, variable2, appendErrorSegment(error, ".name")),
+    visitExpression(
+      expression1,
+      expression2,
+      appendErrorSegment(error, ".right"),
     ),
   ],
   ExportEffect: (
+    { 1: specifier1, 2: expression1 },
+    { 1: specifier2, 2: expression2 },
     error,
-    specifier1,
-    expression1,
-    _annotation1,
-    specifier2,
-    expression2,
-    _annotation2,
   ) => [
     visitPrimitive(
-      appendErrorSegment(error, ".specifier"),
       specifier1,
       specifier2,
+      appendErrorSegment(error, ".specifier"),
     ),
     visitExpression(
-      appendErrorSegment(error, ".right"),
       expression1,
       expression2,
+      appendErrorSegment(error, ".right"),
     ),
   ],
   SequenceEffect: (
+    { 1: effect11, 2: effect12 },
+    { 1: effect21, 2: effect22 },
     error,
-    effect11,
-    effect12,
-    _annotation1,
-    effect21,
-    effect22,
-    _annotation2,
   ) => [
-    visitEffect(appendErrorSegment(error, ".first"), effect11, effect21),
-    visitEffect(appendErrorSegment(error, ".second"), effect12, effect22),
+    visitEffect(effect11, effect21, appendErrorSegment(error, ".first")),
+    visitEffect(effect12, effect22, appendErrorSegment(error, ".second")),
   ],
   ConditionalEffect: (
+    { 1: expression1, 2: effect11, 3: effect12 },
+    { 1: expression2, 2: effect21, 3: effect22 },
     error,
-    expression1,
-    effect11,
-    effect12,
-    _annotation1,
-    expression2,
-    effect21,
-    effect22,
-    _annotation2,
   ) => [
     visitExpression(
+      expression1,
+      expression2,
       appendErrorSegment(error, ".test"),
-      expression1,
-      expression2,
     ),
-    visitEffect(appendErrorSegment(error, ".first"), effect11, effect21),
-    visitEffect(appendErrorSegment(error, ".second"), effect12, effect22),
+    visitEffect(effect11, effect21, appendErrorSegment(error, ".first")),
+    visitEffect(effect12, effect22, appendErrorSegment(error, ".second")),
   ],
-  ExpressionEffect: (
-    error,
-    expression1,
-    _annotation1,
-    expression2,
-    _annotation2,
-  ) => [
+  ExpressionEffect: ({ 1: expression1 }, { 1: expression2 }, error) => [
     visitExpression(
-      appendErrorSegment(error, ".expression"),
       expression1,
       expression2,
+      appendErrorSegment(error, ".expression"),
     ),
   ],
 });
 
-export const visitExpression = generateVisitNode({
-  __proto__: null,
-  InputExpression: (_error, _annotation1, _annotation2) => [],
-  LiteralExpression: (
-    error,
-    literal1,
-    _annotation1,
-    literal2,
-    _annotation2,
-  ) => [visitLiteral(appendErrorSegment(error, ".value"), literal1, literal2)],
-  IntrinsicExpression: (
-    error,
-    intrinsic1,
-    _annotation1,
-    intrinsic2,
-    _annotation2,
-  ) => [
-    visitPrimitive(appendErrorSegment(error, ".name"), intrinsic1, intrinsic2),
+export const visitExpression = partialx___(visitNode, {
+  ParameterExpression: ({ 1: parameter1 }, { 1: parameter2 }, error) => [
+    visitPrimitive(parameter1, parameter2, appendErrorSegment(error, ".name")),
+  ],
+  LiteralExpression: ({ 1: literal1 }, { 1: literal2 }, error) => [
+    visitLiteral(literal1, literal2, appendErrorSegment(error, ".value")),
+  ],
+  IntrinsicExpression: ({ 1: intrinsic1 }, { 1: intrinsic2 }, error) => [
+    visitPrimitive(intrinsic1, intrinsic2, appendErrorSegment(error, ".name")),
   ],
   ClosureExpression: (
+    { 1: kind1, 2: asynchronous1, 3: generator1, 4: block1 },
+    { 1: kind2, 2: asynchronous2, 3: generator2, 4: block2 },
     error,
-    kind1,
-    asynchronous1,
-    generator1,
-    block1,
-    _annotation1,
-    kind2,
-    asynchronous2,
-    generator2,
-    block2,
-    _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, ".kind"), kind1, kind2),
+    visitPrimitive(kind1, kind2, appendErrorSegment(error, ".kind")),
     visitPrimitive(
-      appendErrorSegment(error, ".asynchronous"),
       asynchronous1,
       asynchronous2,
+      appendErrorSegment(error, ".asynchronous"),
     ),
     visitPrimitive(
-      appendErrorSegment(error, ".generator"),
       generator1,
       generator2,
+      appendErrorSegment(error, ".generator"),
     ),
     // We do not have to unbind labels because there
-    // should be no unbound labels in closure' body.
-    visitBlock(appendErrorSegment(error, ".body"), block1, block2),
+    // should be no unbound labels in the closure body.
+    visitBlock(block1, block2, appendErrorSegment(error, ".body")),
   ],
-  ReadExpression: (
-    _error,
-    identifier1,
-    _annotation1,
-    identifier2,
-    _annotation2,
-  ) => [makeSingleVariableResult(identifier1, identifier2)],
+  ReadExpression: ({ 1: variable1 }, { 1: variable2 }, _error) => [
+    makeSingleVariableResult(variable1, variable2),
+  ],
+  ReadExternalExpression: ({ 1: variable1 }, { 1: variable2 }, error) => [
+    visitPrimitive(variable1, variable2, appendErrorSegment(error, ".name")),
+  ],
+  TypeofExternalExpression: ({ 1: variable1 }, { 1: variable2 }, error) => [
+    visitPrimitive(variable1, variable2, appendErrorSegment(error, ".name")),
+  ],
   SequenceExpression: (
+    { 1: effect1, 2: expression1 },
+    { 1: effect2, 2: expression2 },
     error,
-    effect1,
-    expression1,
-    _annotation1,
-    effect2,
-    expression2,
-    _annotation2,
   ) => [
-    visitEffect(appendErrorSegment(error, ".first"), effect1, effect2),
+    visitEffect(effect1, effect2, appendErrorSegment(error, ".first")),
     visitExpression(
-      appendErrorSegment(error, ".second"),
       expression1,
       expression2,
+      appendErrorSegment(error, ".second"),
     ),
   ],
   ConditionalExpression: (
+    { 1: expression11, 2: expression12, 3: expression13 },
+    { 1: expression21, 2: expression22, 3: expression23 },
     error,
-    expression11,
-    expression12,
-    expression13,
-    _annotation1,
-    expression21,
-    expression22,
-    expression23,
-    _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, ".test"),
       expression11,
       expression21,
+      appendErrorSegment(error, ".test"),
     ),
     visitExpression(
-      appendErrorSegment(error, ".consequent"),
       expression12,
       expression22,
+      appendErrorSegment(error, ".consequent"),
     ),
     visitExpression(
-      appendErrorSegment(error, ".alternate"),
       expression13,
       expression23,
+      appendErrorSegment(error, ".alternate"),
     ),
   ],
   YieldExpression: (
+    { 1: delegate1, 2: expression1 },
+    { 1: delegate2, 2: expression2 },
     error,
-    delegate1,
-    expression1,
-    _annotation1,
-    delegate2,
-    expression2,
-    _annotation2,
   ) => [
     visitPrimitive(
-      appendErrorSegment(error, ".delegate"),
       delegate1,
       delegate2,
+      appendErrorSegment(error, ".delegate"),
     ),
     visitExpression(
-      appendErrorSegment(error, ".argument"),
       expression1,
       expression2,
+      appendErrorSegment(error, ".argument"),
     ),
   ],
-  AwaitExpression: (
-    error,
-    expression1,
-    _annotation1,
-    expression2,
-    _annotation2,
-  ) => [
+  AwaitExpression: ({ 1: expression1 }, { 1: expression2 }, error) => [
     visitExpression(
-      appendErrorSegment(error, ".argument"),
       expression1,
       expression2,
+      appendErrorSegment(error, ".argument"),
     ),
   ],
   EvalExpression: (
+    { 1: parameters1, 2: variables1, 3: expression1 },
+    { 1: parameters2, 2: variables2, 3: expression2 },
     error,
-    variables1,
-    expression1,
-    _annotation1,
-    variables2,
-    expression2,
-    _annotation2,
   ) =>
     concat(
       [
+        visitAllPrimitive(
+          parameters1,
+          parameters2,
+          appendErrorSegment(error, ".parameters"),
+        ),
+
         visitPrimitive(
-          appendErrorSegment(error, ".variables.length"),
           variables1.length,
           variables2.length,
+          appendErrorSegment(error, ".variables.length"),
         ),
       ],
       map(zip(variables1, variables2), makeSinglePairVariableResult),
       [
         visitExpression(
-          appendErrorSegment(error, ".argument"),
           expression1,
           expression2,
+          appendErrorSegment(error, ".argument"),
         ),
       ],
     ),
   ApplyExpression: (
+    { 1: expression11, 2: expression12, 3: expressions1 },
+    { 1: expression21, 2: expression22, 3: expressions2 },
     error,
-    expression11,
-    expression12,
-    expressions1,
-    _annotation1,
-    expression21,
-    expression22,
-    expressions2,
-    _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, ".callee"),
       expression11,
       expression21,
+      appendErrorSegment(error, ".callee"),
     ),
     visitExpression(
-      appendErrorSegment(error, ".this"),
       expression12,
       expression22,
+      appendErrorSegment(error, ".this"),
     ),
     visitAllExpression(
-      appendErrorSegment(error, ".arguments"),
       expressions1,
       expressions2,
+      appendErrorSegment(error, ".arguments"),
     ),
   ],
   // InvokeExpression: (
@@ -613,89 +483,82 @@ export const visitExpression = generateVisitNode({
   //   ),
   // ],
   ConstructExpression: (
+    { 1: expression1, 2: expressions1 },
+    { 1: expression2, 2: expressions2 },
     error,
-    expression1,
-    expressions1,
-    _annotation1,
-    expression2,
-    expressions2,
-    _annotation2,
   ) => [
     visitExpression(
-      appendErrorSegment(error, ".callee"),
       expression1,
       expression2,
+      appendErrorSegment(error, ".callee"),
     ),
     visitAllExpression(
-      appendErrorSegment(error, ".arguments"),
       expressions1,
       expressions2,
+      appendErrorSegment(error, ".arguments"),
     ),
   ],
   ImportExpression: (
+    { 1: source1, 2: specifier1 },
+    { 1: source2, 2: specifier2 },
     error,
-    source1,
-    specifier1,
-    _annotation1,
-    source2,
-    specifier2,
-    _annotation2,
   ) => [
-    visitPrimitive(appendErrorSegment(error, ".source"), source1, source2),
+    visitPrimitive(source1, source2, appendErrorSegment(error, ".source")),
     visitPrimitive(
-      appendErrorSegment(error, ".specifier"),
       specifier1,
       specifier2,
+      appendErrorSegment(error, ".specifier"),
     ),
   ],
 });
 
-const generateCombineAll =
-  (combine) => (error, array1, array2, initial_result) =>
-    combineResult(
-      error,
-      visitPrimitive(
-        appendErrorSegment(error, ".length"),
-        array1.length,
-        array2.length,
-      ),
-      reduce(
-        zip(array1, array2),
-        (result, pair, index) =>
-          combine(
-            appendErrorSegment(error, `[${String(index)}]`),
-            pair[0],
-            pair[1],
-            result,
-          ),
-        initial_result,
-      ),
-    );
-const bindAllLabel = generateCombineAll(bindResultLabel);
-const bindAllVariable = generateCombineAll(bindResultVariable);
-
-const generateVisitAll = (visit) => (error, array1, array2) =>
+const bindAll = (bind, initial_result, array1, array2, error) =>
   combineResult(
-    error,
     visitPrimitive(
-      appendErrorSegment(error, ".length"),
       array1.length,
       array2.length,
+      appendErrorSegment(error, ".length"),
+    ),
+    reduce(
+      zip(array1, array2),
+      (result, pair, index) =>
+        bind(
+          result,
+          pair[0],
+          pair[1],
+          appendErrorSegment(error, `[${String(index)}]`),
+        ),
+      initial_result,
+    ),
+    error,
+  );
+
+const bindAllLabel = partialx____(bindAll, bindResultLabel);
+const bindAllVariable = partialx____(bindAll, bindResultVariable);
+
+const visitArray = (visit, array1, array2, error) =>
+  combineResult(
+    visitPrimitive(
+      array1.length,
+      array2.length,
+      appendErrorSegment(error, ".length"),
     ),
     reduce(
       zip(array1, array2),
       (result, pair, index) => {
         const child_error = appendErrorSegment(error, `[${String(index)}]`);
         return combineResult(
-          child_error,
           result,
-          visit(child_error, pair[0], pair[1]),
+          visit(pair[0], pair[1], child_error),
+          child_error,
         );
       },
       makeEmptyResult(null),
     ),
+    error,
   );
-const visitAllPrimitive = generateVisitAll(visitPrimitive);
-const visitAllExpression = generateVisitAll(visitExpression);
-const visitAllStatement = generateVisitAll(visitStatement);
-const visitAllLink = generateVisitAll(visitLink);
+
+const visitAllPrimitive = partialx___(visitArray, visitPrimitive);
+const visitAllExpression = partialx___(visitArray, visitExpression);
+const visitAllStatement = partialx___(visitArray, visitStatement);
+const visitAllLink = partialx___(visitArray, visitLink);

@@ -1,6 +1,7 @@
 import { setErrorMessage } from "./error.mjs";
 import {
-  isMapping,
+  hasMappingError,
+  getMappingError,
   makeEmptyMapping,
   makeSingleMapping,
   combineMapping,
@@ -10,14 +11,13 @@ import {
 export const getResultError = (result) => {
   if (result.structural !== null) {
     return result.structural;
+  } else if (hasMappingError(result.label)) {
+    return getMappingError(result.label);
+  } else if (hasMappingError(result.variable)) {
+    return getMappingError(result.variable);
+  } else {
+    return null;
   }
-  if (!isMapping(result.label)) {
-    return result.label;
-  }
-  if (!isMapping(result.variable)) {
-    return result.variable;
-  }
-  return null;
 };
 
 export const makeEmptyResult = (error) => ({
@@ -38,39 +38,39 @@ export const makeSingleLabelResult = (label1, label2) => ({
   structural: null,
 });
 
-export const combineResult = (error, result1, result2) => ({
+export const combineResult = (result1, result2, error) => ({
   variable: combineMapping(
-    setErrorMessage(error, "Variable combination mismatch"),
     result1.variable,
     result2.variable,
+    setErrorMessage(error, "Variable combination mismatch"),
   ),
   label: combineMapping(
-    setErrorMessage(error, "Label combination mismatch"),
     result1.label,
     result2.label,
+    setErrorMessage(error, "Label combination mismatch"),
   ),
   structural:
     result1.structural === null ? result2.structural : result1.structural,
 });
 
-export const bindResultVariable = (error, variable1, variable2, result) => ({
+export const bindResultVariable = (result, variable1, variable2, error) => ({
   variable: bindMapping(
-    setErrorMessage(error, "Variable binding mismatch"),
+    result.variable,
     variable1,
     variable2,
-    result.variable,
+    setErrorMessage(error, "Variable binding mismatch"),
   ),
   label: result.label,
   structural: result.structural,
 });
 
-export const bindResultLabel = (error, label1, label2, result) => ({
+export const bindResultLabel = (result, label1, label2, error) => ({
   variable: result.variable,
   label: bindMapping(
-    setErrorMessage(error, "Label binding mismatch"),
+    result.label,
     label1,
     label2,
-    result.label,
+    setErrorMessage(error, "Label binding mismatch"),
   ),
   structural: result.structural,
 });

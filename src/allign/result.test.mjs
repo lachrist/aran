@@ -19,9 +19,9 @@ assertEqual(getResultError(makeEmptyResult(null)), null);
 assertNotEqual(
   getResultError(
     combineResult(
-      "path",
       makeEmptyResult(makeRootError()),
       makeEmptyResult(null),
+      makeRootError(),
     ),
   ),
   null,
@@ -29,20 +29,20 @@ assertNotEqual(
 
 assertDeepEqual(
   bindResultVariable(
-    "path",
+    makeSingleVariableResult("variable1", "variable2"),
     "variable1",
     "variable2",
-    makeSingleVariableResult("variable1", "variable2"),
+    makeRootError(),
   ),
   makeEmptyResult(null),
 );
 
 assertDeepEqual(
   bindResultLabel(
-    "path",
+    makeSingleLabelResult("label1", "label2"),
     "label1",
     "label2",
-    makeSingleLabelResult("label1", "label2"),
+    makeRootError(),
   ),
   makeEmptyResult(null),
 );
@@ -50,9 +50,9 @@ assertDeepEqual(
 assertNotEqual(
   getResultError(
     combineResult(
-      "path",
       makeSingleVariableResult("variable11", "variable12"),
       makeSingleVariableResult("variable11", "variable22"),
+      makeRootError(),
     ),
   ),
   null,
@@ -61,9 +61,9 @@ assertNotEqual(
 assertNotEqual(
   getResultError(
     combineResult(
-      "path",
       makeSingleLabelResult("label11", "label12"),
       makeSingleLabelResult("label11", "label22"),
+      makeRootError(),
     ),
   ),
   null,

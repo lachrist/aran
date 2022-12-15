@@ -36,7 +36,7 @@ const {
 } = globalThis;
 
 const generateAllign = (parse, stringify, visit) => (node, code) => {
-  const error = getResultError(visit(makeRootError(), node, parse(code)));
+  const error = getResultError(visit(node, parse(code), makeRootError()));
   if (error === null) {
     return null;
   } else {
