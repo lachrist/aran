@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define */
 
-import {includes, forEach, map, concat, filter, flatMap} from "array-lite";
+import { includes, forEach, map, concat, filter, flatMap } from "array-lite";
 
 import {
   partialx_,
@@ -45,7 +45,7 @@ import {
   makeApplyExpression,
 } from "../ast/index.mjs";
 
-import {makeJSONExpression, makeReadGlobalExpression} from "../intrinsic.mjs";
+import { makeJSONExpression, makeReadGlobalExpression } from "../intrinsic.mjs";
 
 import {
   extendScope,
@@ -67,9 +67,9 @@ import {
   makeSplitScopeEvalExpression,
 } from "./split.mjs";
 
-import {makeTrapExpression, makeTrapStatementArray} from "./trap.mjs";
+import { makeTrapExpression, makeTrapStatementArray } from "./trap.mjs";
 
-const {undefined, String} = globalThis;
+const { undefined, String } = globalThis;
 
 const returnNull = constant(null);
 
@@ -397,7 +397,7 @@ const visitBlock = partial__xx(
         const namespace = `namespace${String(
           incrementCounter(context.counter),
         )}`;
-        context = {...context, namespace};
+        context = { ...context, namespace };
         declareSplitScope(scope, NEW_SPLIT, namespace, null);
       }
       const closed = includes(closed_kind_array, context.kind);
@@ -431,7 +431,7 @@ const visitBlock = partial__xx(
           );
       const failure_expression = makeApplyExpression(
         makeIntrinsicExpression("aran.throw"),
-        makeLiteralExpression({undefined: null}),
+        makeLiteralExpression({ undefined: null }),
         [
           makeTrapExpression(
             context.pointcut,
@@ -440,7 +440,7 @@ const visitBlock = partial__xx(
             "failure",
             makeApplyExpression(
               makeIntrinsicExpression("aran.get"),
-              makeLiteralExpression({undefined: null}),
+              makeLiteralExpression({ undefined: null }),
               [makeInputExpression(), makeLiteralExpression("error")],
             ),
             serial,
@@ -583,7 +583,7 @@ const visitStatement = partial__xx(
     ],
     BlockStatement: (context, block, _serial) => [
       makeBlockStatement(
-        visitBlock({...context, kind: "block", arrival: null}, block),
+        visitBlock({ ...context, kind: "block", arrival: null }, block),
       ),
     ],
     IfStatement: (context, expression, block1, block2, serial) => [
@@ -596,8 +596,8 @@ const visitStatement = partial__xx(
           visitExpression(context, expression),
           serial,
         ),
-        visitBlock({...context, kind: "consequent", arrival: null}, block1),
-        visitBlock({...context, kind: "alternate", arrival: null}, block2),
+        visitBlock({ ...context, kind: "consequent", arrival: null }, block1),
+        visitBlock({ ...context, kind: "alternate", arrival: null }, block2),
       ),
     ],
     WhileStatement: (context, expression, block, serial) => [
@@ -610,14 +610,14 @@ const visitStatement = partial__xx(
           visitExpression(context, expression),
           serial,
         ),
-        visitBlock({...context, kind: "while", arrival: null}, block),
+        visitBlock({ ...context, kind: "while", arrival: null }, block),
       ),
     ],
     TryStatement: (context, block1, block2, block3, _serial) => [
       makeTryStatement(
-        visitBlock({...context, kind: "try", arrival: null}, block1),
-        visitBlock({...context, kind: "catch", arrival: null}, block2),
-        visitBlock({...context, kind: "finally", arrival: null}, block3),
+        visitBlock({ ...context, kind: "try", arrival: null }, block1),
+        visitBlock({ ...context, kind: "catch", arrival: null }, block2),
+        visitBlock({ ...context, kind: "finally", arrival: null }, block3),
       ),
     ],
   },

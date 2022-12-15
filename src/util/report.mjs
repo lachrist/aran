@@ -1,15 +1,15 @@
-import {concat} from "array-lite";
+import { concat } from "array-lite";
 
 const {
-  JSON: {stringify},
-  Reflect: {apply, getOwnPropertyDescriptor},
+  JSON: { stringify },
+  Reflect: { apply, getOwnPropertyDescriptor },
   Object: {
-    prototype: {toString: toObjectString},
+    prototype: { toString: toObjectString },
   },
   Error,
   String,
   String: {
-    prototype: {substring, replace},
+    prototype: { substring, replace },
   },
   undefined,
 } = globalThis;
@@ -63,7 +63,7 @@ export const format = (template, values) => {
           getOwnPropertyDescriptor(descriptor, "value") !== undefined,
           "'message' property is an accessor",
         );
-        const {value: error_message} = descriptor;
+        const { value: error_message } = descriptor;
         assert(
           typeof error_message === "string",
           "expected 'message' property value to be a string",

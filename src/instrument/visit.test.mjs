@@ -1,18 +1,18 @@
-import {assertSuccess} from "../__fixture__.mjs";
+import { assertSuccess } from "../__fixture__.mjs";
 
-import {createCounter} from "../util/index.mjs";
+import { createCounter } from "../util/index.mjs";
 
-import {parseProgram} from "../lang/index.mjs";
+import { parseProgram } from "../lang/index.mjs";
 
-import {allignProgram} from "../allign/index.mjs";
+import { allignProgram } from "../allign/index.mjs";
 
-import {visitProgram} from "./visit.mjs";
+import { visitProgram } from "./visit.mjs";
 
-import {createRootScope} from "./scope.mjs";
+import { createRootScope } from "./scope.mjs";
 
 const makeContext = (pointcut) => ({
-  unmangleVariable: (variable) => ({variable}),
-  unmangleLabel: (label) => ({label}),
+  unmangleVariable: (variable) => ({ variable }),
+  unmangleLabel: (label) => ({ label }),
   scope: createRootScope("secret_"),
   advice: "advice",
   counter: createCounter(0),
@@ -87,7 +87,7 @@ testIdentity(`
 
 // InternalLocalEvalProgram //
 testIdentity(`
-  'internal';
+  'internal-local-eval';
   let variable1, variable2;
   {
     return variable1;
@@ -96,7 +96,7 @@ testIdentity(`
 
 // GlobalEvalProgram //
 testIdentity(`
-  'eval';
+  'global-eval';
   {
     return 'completion';
   }
@@ -132,8 +132,8 @@ test(
   {
     ...makeContext(["break", "read"]),
     advice: "advice",
-    unmangleLabel: (label) => ({LABEL: label}),
-    unmangleVariable: (variable) => ({VARIABLE: variable}),
+    unmangleLabel: (label) => ({ LABEL: label }),
+    unmangleVariable: (variable) => ({ VARIABLE: variable }),
   },
   `
     'module'
@@ -452,7 +452,7 @@ testIdentity(`
 test(
   {
     ...makeContext(false),
-    unmangleVariable: (variable) => ({VARIABLE: variable}),
+    unmangleVariable: (variable) => ({ VARIABLE: variable }),
   },
   `
     'module';

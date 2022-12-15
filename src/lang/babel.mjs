@@ -1,8 +1,8 @@
-import {forEach} from "array-lite";
-import {parseExpression} from "@babel/parser";
-import {hasOwn} from "../util/index.mjs";
+import { forEach } from "array-lite";
+import { parseExpression } from "@babel/parser";
+import { hasOwn } from "../util/index.mjs";
 
-const {undefined} = globalThis;
+const { undefined } = globalThis;
 
 const options = {
   sourceType: "module",

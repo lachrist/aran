@@ -1,7 +1,7 @@
-import {assertEqual, assertDeepEqual, assertThrow} from "../__fixture__.mjs";
-import {cut} from "./cut.mjs";
+import { assertEqual, assertDeepEqual, assertThrow } from "../__fixture__.mjs";
+import { cut } from "./cut.mjs";
 
-const {undefined, Set, Map} = globalThis;
+const { undefined, Set, Map } = globalThis;
 
 assertEqual(cut(true, "name", []), true);
 assertEqual(cut(false, "name", []), false);
@@ -35,9 +35,9 @@ assertEqual(
   "result",
 );
 
-assertEqual(cut({__proto__: null, name: true}, "name", []), true);
-assertEqual(cut({__proto__: null, name: false}, "name", []), false);
-assertEqual(cut({__proto__: null, name1: false}, "name2", []), false);
+assertEqual(cut({ __proto__: null, name: true }, "name", []), true);
+assertEqual(cut({ __proto__: null, name: false }, "name", []), false);
+assertEqual(cut({ __proto__: null, name1: false }, "name2", []), false);
 assertEqual(
   cut(
     {
@@ -72,4 +72,4 @@ assertEqual(
 );
 
 assertThrow(() => cut(123, "name", ["value"]));
-assertThrow(() => cut({name: 123}, "name", ["value"]));
+assertThrow(() => cut({ name: 123 }, "name", ["value"]));

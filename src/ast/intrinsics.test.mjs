@@ -1,2 +1,2 @@
-import {getIntrinsicArray} from "./intrinsics.mjs";
+import { getIntrinsicArray } from "./intrinsics.mjs";
 getIntrinsicArray();

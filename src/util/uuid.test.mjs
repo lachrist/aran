@@ -1,5 +1,5 @@
-import {assertEqual} from "../__fixture__.mjs";
+import { assertEqual } from "../__fixture__.mjs";
 
-import {getUUID, getLatestUUID} from "./uuid.mjs";
+import { getUUID, getLatestUUID } from "./uuid.mjs";
 
 assertEqual(getUUID(), getLatestUUID());

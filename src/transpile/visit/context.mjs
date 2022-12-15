@@ -4,10 +4,10 @@ import {
   NULL_DATA_DESCRIPTOR,
 } from "../../util/index.mjs";
 
-import {ROOT_SCOPE, packScope, unpackScope} from "../scope/index.mjs";
+import { ROOT_SCOPE, packScope, unpackScope } from "../scope/index.mjs";
 
 const {
-  Reflect: {defineProperty},
+  Reflect: { defineProperty },
 } = globalThis;
 
 export const createContext = (root) => ({
@@ -18,9 +18,9 @@ export const createContext = (root) => ({
 });
 
 export const loadContext = (root, serial) => {
-  const {storage} = root;
+  const { storage } = root;
   assert(hasOwnProperty(storage, serial), "missing eval scope");
-  const {strict, scope} = storage[serial];
+  const { strict, scope } = storage[serial];
   return {
     root,
     strict,
@@ -29,7 +29,7 @@ export const loadContext = (root, serial) => {
   };
 };
 
-export const saveContext = ({root: {storage}, strict, scope}, serial) => {
+export const saveContext = ({ root: { storage }, strict, scope }, serial) => {
   assert(!hasOwnProperty(storage), serial, "duplicate eval scope");
   defineProperty(storage, serial, {
     __proto__: NULL_DATA_DESCRIPTOR,
@@ -40,19 +40,19 @@ export const saveContext = ({root: {storage}, strict, scope}, serial) => {
   });
 };
 
-export const setContextScope = (context, scope) => ({...context, scope});
+export const setContextScope = (context, scope) => ({ ...context, scope });
 
-export const getContextScoping = ({scope, strict, root: {counter}}) => ({
+export const getContextScoping = ({ scope, strict, root: { counter } }) => ({
   scope,
   strict,
   counter,
 });
 
-export const strictifyContext = (context) => ({...context, strict: true});
+export const strictifyContext = (context) => ({ ...context, strict: true });
 
-export const isContextStrict = ({strict}) => strict;
+export const isContextStrict = ({ strict }) => strict;
 
-export const serializeContextNode = ({root: {nodes}}, node) => {
+export const serializeContextNode = ({ root: { nodes } }, node) => {
   const serial = nodes.length;
   nodes[serial] = node;
   return serial;

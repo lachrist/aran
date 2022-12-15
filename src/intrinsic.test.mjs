@@ -1,10 +1,10 @@
-import {forEach} from "array-lite";
+import { forEach } from "array-lite";
 
-import {assertSuccess} from "./__fixture__.mjs";
+import { assertSuccess } from "./__fixture__.mjs";
 
-import {makeLiteralExpression} from "./ast/index.mjs";
+import { makeLiteralExpression } from "./ast/index.mjs";
 
-import {allignExpression} from "./allign/index.mjs";
+import { allignExpression } from "./allign/index.mjs";
 
 import {
   makeReadGlobalExpression,
@@ -73,6 +73,6 @@ test(makeJSONExpression(null), "null");
 test(makeJSONExpression([1, 2, 3]), "intrinsic.Array.of(1, 2, 3)");
 
 test(
-  makeJSONExpression({foo: "bar"}),
+  makeJSONExpression({ foo: "bar" }),
   "intrinsic.aran.createObject(null, 'foo', 'bar')",
 );

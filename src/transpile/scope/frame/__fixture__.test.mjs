@@ -4,7 +4,7 @@ import {
   assertSuccess,
 } from "../../../__fixture__.mjs";
 
-import {push} from "../../../util/index.mjs";
+import { push } from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -14,7 +14,7 @@ import {
   makeReadExpression,
 } from "../../../ast/index.mjs";
 
-import {testBlock} from "./__fixture__.mjs";
+import { testBlock } from "./__fixture__.mjs";
 
 assertSuccess(
   testBlock(
@@ -23,11 +23,11 @@ assertSuccess(
       create: (layer, options) => {
         assertEqual(layer, "layer");
         assertDeepEqual(options, {});
-        return {layer, header: [], prelude: []};
+        return { layer, header: [], prelude: [] };
       },
-      harvestHeader: ({header}) => header,
-      harvestPrelude: ({prelude}) => prelude,
-      conflict: (strict, {prelude}, kind, variable) => {
+      harvestHeader: ({ header }) => header,
+      harvestPrelude: ({ prelude }) => prelude,
+      conflict: (strict, { prelude }, kind, variable) => {
         assertEqual(strict, true);
         assertEqual(kind, "kind");
         assertEqual(variable, "variable");
@@ -38,10 +38,10 @@ assertSuccess(
           ),
         );
       },
-      declare: (strict, {header}, kind, variable, options) => {
+      declare: (strict, { header }, kind, variable, options) => {
         assertEqual(strict, true);
         assertEqual(kind, "kind");
-        assertDeepEqual(options, {options: null});
+        assertDeepEqual(options, { options: null });
         push(header, variable);
       },
       makeInitializeStatementArray: (
@@ -62,7 +62,7 @@ assertSuccess(
         escaped,
         _frame,
         variable,
-        {expression},
+        { expression },
       ) => {
         assertEqual(strict, true);
         assertEqual(escaped, true);
@@ -101,7 +101,7 @@ assertSuccess(
           strict: true,
           kind: "kind",
           variable: "variable",
-          options: {options: null},
+          options: { options: null },
         },
         {
           type: "initialize",

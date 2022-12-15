@@ -1,4 +1,4 @@
-import {concat, forEach} from "array-lite";
+import { concat, forEach } from "array-lite";
 
 import {
   constant,
@@ -24,11 +24,11 @@ import {
   makeInputExpression,
 } from "../../ast/index.mjs";
 
-import {makeGetExpression} from "../../intrinsic.mjs";
+import { makeGetExpression } from "../../intrinsic.mjs";
 
-import {BASE, SPEC, META, indexVariable} from "./variable.mjs";
+import { BASE, SPEC, META, indexVariable } from "./variable.mjs";
 
-import {encloseScope} from "./core.mjs";
+import { encloseScope } from "./core.mjs";
 
 import {
   createFrame,
@@ -60,12 +60,12 @@ import {
   makeScopeFrameInternalLocalEvalProgram,
 } from "./frame.mjs";
 
-export {ROOT_SCOPE, packScope, unpackScope} from "./core.mjs";
+export { ROOT_SCOPE, packScope, unpackScope } from "./core.mjs";
 
-export {unmangleVariable} from "./variable.mjs";
+export { unmangleVariable } from "./variable.mjs";
 
 const {
-  Reflect: {defineProperty},
+  Reflect: { defineProperty },
 } = globalThis;
 
 const makeOptimisticWriteEffect = (
@@ -88,7 +88,7 @@ const makeOptimisticWriteEffect = (
 // Eval //
 //////////
 
-export const makeScopeEvalExpression = ({strict, scope}, expression) =>
+export const makeScopeEvalExpression = ({ strict, scope }, expression) =>
   makeScopeEvalExpression_(strict, scope, expression);
 
 //////////
@@ -96,7 +96,7 @@ export const makeScopeEvalExpression = ({strict, scope}, expression) =>
 //////////
 
 const declareMetaGeneric = (
-  {strict, scope, counter},
+  { strict, scope, counter },
   kind,
   variable,
   options,
@@ -113,10 +113,10 @@ export const declareMetaMacro = (scoping, variable, expression) =>
     binding: expression,
   });
 
-export const makeMetaReadExpression = ({strict, scope}, meta) =>
+export const makeMetaReadExpression = ({ strict, scope }, meta) =>
   makeScopeReadExpression(strict, scope, META, meta, null);
 
-export const makeMetaWriteEffect = ({strict, scope}, meta, expression) =>
+export const makeMetaWriteEffect = ({ strict, scope }, meta, expression) =>
   makeOptimisticWriteEffect(strict, scope, META, meta, expression);
 
 export const makeMetaInitializeEffect = makeMetaWriteEffect;
@@ -125,22 +125,22 @@ export const makeMetaInitializeEffect = makeMetaWriteEffect;
 // spec //
 //////////
 
-export const declareSpecMacro = ({strict, scope}, variable, binding) =>
-  declareScope(strict, scope, "macro", SPEC, variable, {binding});
+export const declareSpecMacro = ({ strict, scope }, variable, binding) =>
+  declareScope(strict, scope, "macro", SPEC, variable, { binding });
 
-export const declareSpecIllegal = ({strict, scope}, variable) =>
-  declareScope(strict, scope, "illegal", SPEC, variable, {name: variable});
+export const declareSpecIllegal = ({ strict, scope }, variable) =>
+  declareScope(strict, scope, "illegal", SPEC, variable, { name: variable });
 
-export const declareSpec = ({strict, scope}, variable) =>
+export const declareSpec = ({ strict, scope }, variable) =>
   declareScope(strict, scope, "define", SPEC, variable, null);
 
 export const makeSpecInitializeEffect = (
-  {strict, scope},
+  { strict, scope },
   variable,
   expression,
 ) => makeOptimisticWriteEffect(strict, scope, SPEC, variable, expression);
 
-export const makeSpecReadExpression = ({strict, scope}, variable) =>
+export const makeSpecReadExpression = ({ strict, scope }, variable) =>
   makeScopeReadExpression(strict, scope, SPEC, variable, null);
 
 //////////
@@ -148,17 +148,18 @@ export const makeSpecReadExpression = ({strict, scope}, variable) =>
 //////////
 
 export const declareBaseImport = (
-  {strict, scope},
+  { strict, scope },
   variable,
   source,
   specifier,
-) => declareScope(strict, scope, "import", BASE, variable, {source, specifier});
+) =>
+  declareScope(strict, scope, "import", BASE, variable, { source, specifier });
 
-export const declareBase = ({strict, scope}, kind, variable, specifiers) =>
-  declareScope(strict, scope, kind, BASE, variable, {exports: specifiers});
+export const declareBase = ({ strict, scope }, kind, variable, specifiers) =>
+  declareScope(strict, scope, kind, BASE, variable, { exports: specifiers });
 
 export const makeBaseInitializeStatementArray = (
-  {strict, scope},
+  { strict, scope },
   kind,
   variable,
   expression,
@@ -172,23 +173,23 @@ export const makeBaseInitializeStatementArray = (
     expression,
   );
 
-export const makeBaseReadExpression = ({strict, scope}, variable) =>
+export const makeBaseReadExpression = ({ strict, scope }, variable) =>
   makeScopeReadExpression(strict, scope, BASE, variable, null);
 
-export const makeBaseTypeofExpression = ({strict, scope}, variable) =>
+export const makeBaseTypeofExpression = ({ strict, scope }, variable) =>
   makeScopeTypeofExpression(strict, scope, BASE, variable, null);
 
-export const makeBaseDiscardExpression = ({strict, scope}, variable) =>
+export const makeBaseDiscardExpression = ({ strict, scope }, variable) =>
   makeScopeDiscardExpression(strict, scope, BASE, variable, null);
 
-export const makeBaseMacroWriteEffect = ({strict, scope}, variable, macro) =>
+export const makeBaseMacroWriteEffect = ({ strict, scope }, variable, macro) =>
   makeScopeWriteEffect(strict, scope, BASE, variable, {
     expression: macro,
     counter: createCounter(0),
   });
 
 export const makeBaseWriteEffect = (scoping, variable, expression) => {
-  const {strict, scope} = scoping;
+  const { strict, scope } = scoping;
   const counter = createCounter(0);
   const effect = makeScopeWriteEffect(strict, scope, BASE, variable, {
     expression,
@@ -240,7 +241,7 @@ const createTransparentSpecFrameArray = () => [
 ];
 
 const createExternalGlobalBaseFrameArray = (macros) => [
-  createFrame(ENCLAVE, BASE, {macros}),
+  createFrame(ENCLAVE, BASE, { macros }),
 ];
 
 const createInternalGlobalBaseFrameArray = (enclave) =>
@@ -276,36 +277,36 @@ const createInternalGlobalBaseFrameArray = (enclave) =>
 
 const createEvalBaseFrameArray = (strict) =>
   concat(strict ? [createFrame(CLOSURE_STATIC, BASE, {})] : [], [
-    createFrame(BLOCK_STATIC, BASE, {distant: false}),
+    createFrame(BLOCK_STATIC, BASE, { distant: false }),
   ]);
 
 const createModuleBaseFrameArray = () => [
   createFrame(CLOSURE_STATIC, BASE, {}),
-  createFrame(BLOCK_STATIC, BASE, {distant: false}),
+  createFrame(BLOCK_STATIC, BASE, { distant: false }),
   createFrame(IMPORT_STATIC, BASE, {}),
 ];
 
 const createStaticClosureBaseFrameArray = () => [
   createFrame(CLOSURE_STATIC, BASE, {}),
-  createFrame(BLOCK_STATIC, BASE, {distant: false}),
+  createFrame(BLOCK_STATIC, BASE, { distant: false }),
 ];
 
 const createDynamicClosureBaseFrameArray = (macro) => [
-  createFrame(CLOSURE_DYNAMIC, BASE, {macro, observable: false}),
-  createFrame(BLOCK_STATIC, BASE, {distant: false}),
+  createFrame(CLOSURE_DYNAMIC, BASE, { macro, observable: false }),
+  createFrame(BLOCK_STATIC, BASE, { distant: false }),
 ];
 
 const createWithBaseFrameArray = (macro) => [
-  createFrame(EMPTY_DYNAMIC_WITH, BASE, {macro, observable: true}),
-  createFrame(BLOCK_STATIC, BASE, {distant: false}),
+  createFrame(EMPTY_DYNAMIC_WITH, BASE, { macro, observable: true }),
+  createFrame(BLOCK_STATIC, BASE, { distant: false }),
 ];
 
 const createBlockBaseFrameArray = () => [
-  createFrame(BLOCK_STATIC, BASE, {distant: false}),
+  createFrame(BLOCK_STATIC, BASE, { distant: false }),
 ];
 
 const createDistantBlockBaseFrameArray = () => [
-  createFrame(BLOCK_STATIC, BASE, {distant: true}),
+  createFrame(BLOCK_STATIC, BASE, { distant: true }),
 ];
 
 const createDeadBlockBaseFrameArray = () => [
@@ -318,7 +319,7 @@ const createDeadBlockBaseFrameArray = () => [
 
 const generateMakeScopeDynamicBlock =
   (createBaseFrameArray) =>
-  ({strict, scope}, labels, macro, makeStatementArray) =>
+  ({ strict, scope }, labels, macro, makeStatementArray) =>
     makeScopeFrameBlock(
       strict,
       scope,
@@ -368,7 +369,7 @@ const makeEnclaveStatementArray = (
   macros,
   makeStatementArray,
 ) => {
-  const scoping = {strict, scope, counter};
+  const scoping = { strict, scope, counter };
   const variable = declareMeta(scoping, "input");
   forEach(
     enclave_name_array,
@@ -385,7 +386,7 @@ const makeEnclaveStatementArray = (
 };
 
 export const makeScopeExternalLocalEvalProgram = (
-  {strict, scope, counter},
+  { strict, scope, counter },
   enclave,
   specials,
   makeStatementArray,
@@ -423,7 +424,7 @@ export const makeScopeExternalLocalEvalProgram = (
 /////////////////////
 
 export const makeScopeScriptProgram = (
-  {strict, scope},
+  { strict, scope },
   enclave,
   makeStatementArray,
 ) =>
@@ -439,7 +440,7 @@ export const makeScopeScriptProgram = (
   );
 
 export const makeScopeModuleProgram = (
-  {strict, scope},
+  { strict, scope },
   enclave,
   links,
   makeStatementArray,
@@ -463,7 +464,7 @@ export const makeScopeModuleProgram = (
 };
 
 export const makeScopeGlobalEvalProgram = (
-  {strict, scope},
+  { strict, scope },
   enclave,
   makeStatementArray,
 ) =>
@@ -488,7 +489,7 @@ export const makeScopeGlobalEvalProgram = (
 
 const generateMakeBlueprintBlock =
   (createBaseFrameArray) =>
-  ({strict, scope}, labels, makeStatementArray) =>
+  ({ strict, scope }, labels, makeStatementArray) =>
     makeScopeFrameBlock(
       strict,
       scope,
@@ -522,7 +523,7 @@ export const makeScopeClosureStaticBlock = generateMakeBlueprintBlock(
 ///////////
 
 export const makeScopeClosureExpression = (
-  {strict, scope},
+  { strict, scope },
   type,
   asynchronous,
   generator,
@@ -546,7 +547,7 @@ export const makeScopeClosureExpression = (
   );
 
 export const makeScopeInternalLocalEvalProgram = (
-  {strict, scope},
+  { strict, scope },
   enclave,
   makeStatementArray,
 ) => {

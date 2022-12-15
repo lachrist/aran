@@ -1,8 +1,8 @@
-import {assertSuccess} from "../../../__fixture__.mjs";
+import { assertSuccess } from "../../../__fixture__.mjs";
 
-import {makeLiteralExpression} from "../../../ast/index.mjs";
+import { makeLiteralExpression } from "../../../ast/index.mjs";
 
-import {testBlock} from "./__fixture__.mjs";
+import { testBlock } from "./__fixture__.mjs";
 
 import * as Frame from "./enclave.mjs";
 
@@ -22,7 +22,7 @@ assertSuccess(
       {
         type: "declare",
         kind: "var",
-        options: {exports: []},
+        options: { exports: [] },
         code: "",
       },
       {

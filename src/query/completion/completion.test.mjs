@@ -1,4 +1,4 @@
-import {assertEqual, assertDeepEqual} from "../../__fixture__.mjs";
+import { assertEqual, assertDeepEqual } from "../../__fixture__.mjs";
 import {
   isFreeCompletion,
   isBoundedCompletion,
@@ -9,7 +9,7 @@ import {
   getCompletionNode,
 } from "./completion.mjs";
 
-const node = {type: "DebuggerStatement"};
+const node = { type: "DebuggerStatement" };
 
 assertEqual(isFreeCompletion(makeFreeCompletion(node)), true);
 

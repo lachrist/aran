@@ -1,6 +1,6 @@
 /* eslint-disable arrow-body-style, no-use-before-define */
 
-import {slice, map, concat} from "array-lite";
+import { slice, map, concat } from "array-lite";
 
 import {
   partialxx_,
@@ -72,11 +72,11 @@ import {
 const {
   String,
   String: {
-    prototype: {substring},
+    prototype: { substring },
   },
   undefined,
   SyntaxError,
-  Reflect: {apply, getOwnPropertyDescriptor},
+  Reflect: { apply, getOwnPropertyDescriptor },
 } = globalThis;
 
 const ONE = [1];
@@ -461,7 +461,7 @@ export const convertExpression = partialxx_(
     __proto__: null,
     Literal: (node) => {
       if (getOwnPropertyDescriptor(node, "bigint") !== undefined) {
-        return makeLiteralExpression({bigint: node.bigint}, locate(node.loc));
+        return makeLiteralExpression({ bigint: node.bigint }, locate(node.loc));
       } else {
         return makeLiteralExpression(node.value, locate(node.loc));
       }
@@ -497,7 +497,7 @@ export const convertExpression = partialxx_(
     },
     Identifier: (node) => {
       if (node.name === UNDEFINED_KEYWORD) {
-        return makeLiteralExpression({undefined: null}, locate(node.loc));
+        return makeLiteralExpression({ undefined: null }, locate(node.loc));
       } else if (node.name === "error" || node.name === "arguments") {
         return makeParameterExpression(node.name, locate(node.loc));
       } else if (node.name[0] === "_") {
@@ -636,7 +636,7 @@ export const convertExpression = partialxx_(
       } else {
         return makeApplyExpression(
           convertExpression(node.callee),
-          makeLiteralExpression({undefined: null}),
+          makeLiteralExpression({ undefined: null }),
           map(node.arguments, convertExpression),
           locate(node.loc),
         );

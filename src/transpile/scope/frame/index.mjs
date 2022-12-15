@@ -1,4 +1,4 @@
-import {includes} from "array-lite";
+import { includes } from "array-lite";
 
 import * as BlockDynamic from "./block-dynamic.mjs";
 import * as BlockStaticDead from "./block-static-dead.mjs";
@@ -50,7 +50,7 @@ const libraries = {
 ////////////
 
 export const createFrame = (type, layer, options) => {
-  const {create: method} = libraries[type];
+  const { create: method } = libraries[type];
   return {
     type,
     layer,
@@ -76,7 +76,7 @@ export const harvestFramePrelude = generateHarvest("harvestPrelude");
 //////////////
 
 export const conflictFrame = (strict, frame, kind, layer, variable) => {
-  const {KINDS, conflict: method} = libraries[frame.type];
+  const { KINDS, conflict: method } = libraries[frame.type];
   if (frame.layer === layer) {
     method(strict, frame, kind, variable);
     return includes(KINDS, kind);
@@ -90,7 +90,7 @@ export const conflictFrame = (strict, frame, kind, layer, variable) => {
 /////////////
 
 export const declareFrame = (strict, frame, kind, layer, variable, options) => {
-  const {KINDS, declare: method} = libraries[frame.type];
+  const { KINDS, declare: method } = libraries[frame.type];
   if (frame.layer === layer && includes(KINDS, kind)) {
     method(strict, frame, kind, variable, options);
     return true;
@@ -111,7 +111,7 @@ export const makeFrameInitializeStatementArray = (
   variable,
   expression,
 ) => {
-  const {KINDS, makeInitializeStatementArray: method} = libraries[frame.type];
+  const { KINDS, makeInitializeStatementArray: method } = libraries[frame.type];
   if (frame.layer === layer && includes(KINDS, kind)) {
     return method(strict, frame, kind, variable, expression);
   } else {
@@ -124,7 +124,7 @@ export const makeFrameInitializeStatementArray = (
 ///////////////
 
 export const lookupFrameAll = (strict, escaped, frame) => {
-  const {lookupAll: method} = libraries[frame.type];
+  const { lookupAll: method } = libraries[frame.type];
   method(strict, escaped, frame);
 };
 

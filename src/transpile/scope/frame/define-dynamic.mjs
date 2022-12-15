@@ -23,12 +23,12 @@ import {
 
 const {
   undefined,
-  Reflect: {defineProperty},
+  Reflect: { defineProperty },
 } = globalThis;
 
 export const KINDS = ["define"];
 
-export const create = (_layer, {macro, observable}) => ({
+export const create = (_layer, { macro, observable }) => ({
   dynamic: macro,
   static: {},
   observable,
@@ -42,7 +42,7 @@ export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
-  {static: bindings},
+  { static: bindings },
   _kind,
   variable,
   _options,

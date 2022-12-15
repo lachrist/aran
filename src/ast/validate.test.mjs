@@ -1,6 +1,6 @@
-import {assertThrow} from "../__fixture__.mjs";
+import { assertThrow } from "../__fixture__.mjs";
 
-import {validateNode} from "./validate.mjs";
+import { validateNode } from "./validate.mjs";
 
 const makeValidNode = (...args) => validateNode([...args, "annotation"]);
 
@@ -11,7 +11,7 @@ assertThrow(() => makeValidNode("MissingType"));
 assertThrow(() => makeValidNode("LiteralExpression", []));
 
 {
-  const circular = {circular: null};
+  const circular = { circular: null };
   circular.circular = circular;
   assertThrow(() => makeValidNode("LiteralExpression", circular));
 }

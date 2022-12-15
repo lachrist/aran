@@ -1,12 +1,12 @@
-import {parse as parseAcorn} from "acorn";
+import { parse as parseAcorn } from "acorn";
 
-import {assertSuccess} from "../../__fixture__.mjs";
+import { assertSuccess } from "../../__fixture__.mjs";
 
-import {createCounter} from "../../util/index.mjs";
+import { createCounter } from "../../util/index.mjs";
 
-import {allignProgram} from "../../allign/index.mjs";
+import { allignProgram } from "../../allign/index.mjs";
 
-import {createContext} from "./context.mjs";
+import { createContext } from "./context.mjs";
 
 import {
   MODULE,
@@ -44,10 +44,35 @@ export const testProgram = (code1, code2, specific) => {
 };
 
 testProgram(
+  "",
+  `
+    "global-eval";
+    return undefined;
+  `,
+  { type: GLOBAL_EVAL },
+);
+
+testProgram(
   "123;",
   `
-    "script";
+    "global-eval";
     return 123;
   `,
-  {type: SCRIPT},
+  { type: GLOBAL_EVAL },
+);
+
+testProgram(
+  `
+    123;
+    debugger;
+  `,
+  `
+    "global-eval";
+    let completion;
+    completion = undefined;
+    completion = 123;
+    debugger;
+    return completion;
+  `,
+  { type: GLOBAL_EVAL },
 );

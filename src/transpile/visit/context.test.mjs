@@ -1,8 +1,8 @@
-import {assertEqual, assertDeepEqual} from "../../__fixture__.mjs";
+import { assertEqual, assertDeepEqual } from "../../__fixture__.mjs";
 
-import {createCounter} from "../../util/index.mjs";
+import { createCounter } from "../../util/index.mjs";
 
-import {ROOT_SCOPE} from "../scope/index.mjs";
+import { ROOT_SCOPE } from "../scope/index.mjs";
 
 import {
   createContext,
@@ -15,7 +15,7 @@ import {
   serializeContextNode,
 } from "./context.mjs";
 
-const {undefined} = globalThis;
+const { undefined } = globalThis;
 
 const createTestContext = ({
   nodes = [],
@@ -33,7 +33,7 @@ const createTestContext = ({
 /////////////
 
 {
-  const root = {nodes: [], storage: {}, counter: createCounter()};
+  const root = { nodes: [], storage: {}, counter: createCounter() };
   const context = createContext(root);
   assertEqual(saveContext(context, 123), undefined);
   assertDeepEqual(loadContext(root, 123), context);
@@ -46,7 +46,7 @@ const createTestContext = ({
 assertDeepEqual(
   getContextScoping(
     setContextScope(
-      createTestContext({counter: createCounter(123)}),
+      createTestContext({ counter: createCounter(123) }),
       ROOT_SCOPE,
     ),
   ),
@@ -72,8 +72,8 @@ assertEqual(isContextStrict(strictifyContext(createTestContext({}))), true);
 {
   const nodes = [];
   assertEqual(
-    serializeContextNode(createTestContext({nodes}), {type: "type"}),
+    serializeContextNode(createTestContext({ nodes }), { type: "type" }),
     0,
   );
-  assertDeepEqual(nodes, [{type: "type"}]);
+  assertDeepEqual(nodes, [{ type: "type" }]);
 }

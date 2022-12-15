@@ -1,4 +1,4 @@
-import {assert, returnx} from "../../util/index.mjs";
+import { assert, returnx } from "../../util/index.mjs";
 
 export const UNVALUED = false;
 

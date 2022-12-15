@@ -1,7 +1,7 @@
-import {lastIndexOf} from "array-lite";
+import { lastIndexOf } from "array-lite";
 
 const {
-  Object: {freeze},
+  Object: { freeze },
 } = globalThis;
 
 export const empty = freeze([]);
@@ -13,8 +13,8 @@ export const push = (array, element) => {
 };
 
 export const pushAll = (array1, array2) => {
-  let {length: length1} = array1;
-  const {length: length2} = array2;
+  let { length: length1 } = array1;
+  const { length: length2 } = array2;
   for (let index2 = 0; index2 < length2; index2 += 1) {
     array1[length1] = array2[index2];
     length1 += 1;
@@ -28,7 +28,7 @@ export const pop = (array) => {
 };
 
 export const shift = (array) => {
-  const {length} = array;
+  const { length } = array;
   const element = array[0];
   for (let index = 0; index < length - 1; index += 1) {
     array[index] = array[index + 1];
@@ -38,7 +38,7 @@ export const shift = (array) => {
 };
 
 export const unshift = (array, element) => {
-  const {length} = array;
+  const { length } = array;
   for (let index = length; index > 0; index -= 1) {
     array[index] = array[index - 1];
   }

@@ -30,7 +30,7 @@ import {
   makeThrowSyntaxErrorExpression,
 } from "../../../intrinsic.mjs";
 
-import {layerVariable} from "../variable.mjs";
+import { layerVariable } from "../variable.mjs";
 
 ////////////
 // Export //
@@ -41,7 +41,7 @@ export const makeExportStatement = (specifier, expression) =>
 
 export const makeExportUndefinedStatement = partial_x(
   makeExportStatement,
-  makeLiteralExpression({undefined: null}),
+  makeLiteralExpression({ undefined: null }),
 );
 
 export const makeExportSequenceEffect = (effect, specifier, expression) =>
@@ -129,7 +129,7 @@ export const makeDynamicLookupEffect = generateLookupDynamicArray(
 
 export const conflictStaticInternal = (
   _strict,
-  {static: bindings},
+  { static: bindings },
   _kind,
   variable,
 ) => {
@@ -138,7 +138,7 @@ export const conflictStaticInternal = (
 
 export const conflictStaticExternal = (
   _strict,
-  {static: bindings},
+  { static: bindings },
   _kind,
   variable,
 ) => {
@@ -150,13 +150,13 @@ export const conflictStaticExternal = (
   );
 };
 
-export const testStatic = ({static: bindings}, variable, _options) =>
+export const testStatic = ({ static: bindings }, variable, _options) =>
   hasOwnProperty(bindings, variable);
 
 export const makeStaticReadExpression = (
   _strict,
   _escaped,
-  {layer},
+  { layer },
   variable,
   _options,
 ) => makeReadExpression(layerVariable(layer, variable));
@@ -164,7 +164,7 @@ export const makeStaticReadExpression = (
 export const makeStaticTypeofExpression = (
   _strict,
   _escaped,
-  {layer},
+  { layer },
   variable,
   _options,
 ) =>
@@ -185,9 +185,9 @@ export const makeStaticDiscardExpression = (
 export const makeStaticWriteEffect = (
   _strict,
   _escaped,
-  {layer},
+  { layer },
   variable,
-  {expression, counter},
+  { expression, counter },
 ) => {
   incrementCounter(counter);
   return makeWriteEffect(layerVariable(layer, variable), expression);
@@ -197,7 +197,7 @@ export const makeStaticWriteEffect = (
 // Dynamic //
 /////////////
 
-export const makeDynamicTestExpression = ({dynamic}, variable, _options) =>
+export const makeDynamicTestExpression = ({ dynamic }, variable, _options) =>
   makeBinaryExpression("in", makeLiteralExpression(variable), dynamic);
 
 export const makeObservableDynamicTestExpression = (
@@ -205,9 +205,9 @@ export const makeObservableDynamicTestExpression = (
   variable,
   options,
 ) => {
-  const {observable} = frame;
+  const { observable } = frame;
   if (observable) {
-    const {counter} = options;
+    const { counter } = options;
     incrementCounter(counter);
     incrementCounter(counter);
   }
@@ -217,7 +217,7 @@ export const makeObservableDynamicTestExpression = (
 export const makeDynamicReadExpression = (
   _strict,
   _escaped,
-  {dynamic},
+  { dynamic },
   variable,
   _options,
 ) => makeGetExpression(dynamic, makeLiteralExpression(variable));
@@ -225,7 +225,7 @@ export const makeDynamicReadExpression = (
 export const makeDynamicTypeofExpression = (
   _strict,
   _escaped,
-  {dynamic},
+  { dynamic },
   variable,
   _options,
 ) =>
@@ -237,7 +237,7 @@ export const makeDynamicTypeofExpression = (
 export const makeDynamicDiscardExpression = (
   strict,
   _escaped,
-  {dynamic},
+  { dynamic },
   variable,
   _options,
 ) => makeDeleteExpression(strict, dynamic, makeLiteralExpression(variable));
@@ -245,9 +245,9 @@ export const makeDynamicDiscardExpression = (
 export const makeDynamicWriteEffect = (
   strict,
   _escaped,
-  {dynamic},
+  { dynamic },
   variable,
-  {expression, counter},
+  { expression, counter },
 ) => {
   incrementCounter(counter);
   return makeExpressionEffect(

@@ -1,4 +1,4 @@
-import {assertThrow, assertEqual, assertDeepEqual} from "../__fixture__.mjs";
+import { assertThrow, assertEqual, assertDeepEqual } from "../__fixture__.mjs";
 
 import {
   inspect,
@@ -10,7 +10,7 @@ import {
 
 const {
   Error,
-  Reflect: {apply},
+  Reflect: { apply },
 } = globalThis;
 
 assertEqual(inspect("foo"), '"foo"');

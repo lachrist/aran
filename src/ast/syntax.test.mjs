@@ -1,5 +1,5 @@
-import {assertEqual} from "../__fixture__.mjs";
-import {getSyntax, isSyntaxType} from "./syntax.mjs";
+import { assertEqual } from "../__fixture__.mjs";
+import { getSyntax, isSyntaxType } from "./syntax.mjs";
 getSyntax();
 
 // Enumeration //

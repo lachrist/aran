@@ -1,6 +1,6 @@
-import {includes, concat, flatMap} from "array-lite";
+import { includes, concat, flatMap } from "array-lite";
 
-import {createCounter, hasOwnProperty, assert} from "../../../util/index.mjs";
+import { createCounter, hasOwnProperty, assert } from "../../../util/index.mjs";
 
 import {
   makeScriptProgram,
@@ -11,14 +11,14 @@ import {
   makeReturnStatement,
 } from "../../../ast/index.mjs";
 
-import {allignBlock, allignProgram} from "../../../allign/index.mjs";
+import { allignBlock, allignProgram } from "../../../allign/index.mjs";
 
-import {BASE} from "../variable.mjs";
+import { BASE } from "../variable.mjs";
 
 const {
   undefined,
   Error,
-  Object: {assign},
+  Object: { assign },
 } = globalThis;
 
 /* c8 ignore start */
@@ -82,7 +82,7 @@ const generateTest =
       lookupAll,
       ...Library
     },
-    {head = "", scenarios = [], layer = BASE, options = {}},
+    { head = "", scenarios = [], layer = BASE, options = {} },
   ) => {
     const frame = create(layer, options);
     assert(

@@ -1,4 +1,4 @@
-import {forEach} from "array-lite";
+import { forEach } from "array-lite";
 
 import {
   assertThrow,
@@ -6,7 +6,7 @@ import {
   assertEqual,
 } from "../../../__fixture__.mjs";
 
-import {createCounter, incrementCounter} from "../../../util/index.mjs";
+import { createCounter, incrementCounter } from "../../../util/index.mjs";
 
 import {
   makeLiteralExpression,
@@ -19,7 +19,7 @@ import {
   allignExpression,
 } from "../../../allign/index.mjs";
 
-import {BASE} from "../variable.mjs";
+import { BASE } from "../variable.mjs";
 
 import {
   makeStaticLookupNode,
@@ -48,7 +48,7 @@ import {
   makeThrowDiscardExpression,
 } from "./helper.mjs";
 
-const {Error, undefined} = globalThis;
+const { Error, undefined } = globalThis;
 
 ////////////
 // Report //
@@ -154,11 +154,11 @@ const next = () => {
 
 forEach([conflictStaticInternal, conflictStaticExternal], (conflictStatic) => {
   assertEqual(
-    conflictStatic(STRICT, {static: {}}, "kind", "variable"),
+    conflictStatic(STRICT, { static: {} }, "kind", "variable"),
     undefined,
   );
   assertThrow(() =>
-    conflictStatic(STRICT, {static: {variable: null}}, "kind", "variable"),
+    conflictStatic(STRICT, { static: { variable: null } }, "kind", "variable"),
   );
 });
 
@@ -170,7 +170,7 @@ assertSuccess(
       () => makeLiteralExpression("next"),
       STRICT,
       ESCAPED,
-      {layer: LAYER, static: {}},
+      { layer: LAYER, static: {} },
       "variable",
       "options",
     ),
@@ -186,7 +186,7 @@ assertSuccess(
       next,
       STRICT,
       ESCAPED,
-      {layer: LAYER, static: {variable: null}},
+      { layer: LAYER, static: { variable: null } },
       "variable",
       "options",
     ),
@@ -202,7 +202,7 @@ assertSuccess(
       next,
       STRICT,
       ESCAPED,
-      {layer: LAYER, static: {variable: null}},
+      { layer: LAYER, static: { variable: null } },
       "variable",
       "options",
     ),
@@ -218,7 +218,7 @@ assertSuccess(
       next,
       true,
       ESCAPED,
-      {layer: LAYER, static: {variable: null}},
+      { layer: LAYER, static: { variable: null } },
       "variable",
       "options",
     ),
@@ -238,7 +238,7 @@ assertSuccess(
       next,
       false,
       ESCAPED,
-      {layer: LAYER, static: {variable: null}},
+      { layer: LAYER, static: { variable: null } },
       "variable",
       "options",
     ),
@@ -256,9 +256,9 @@ assertSuccess(
         next,
         STRICT,
         ESCAPED,
-        {layer: LAYER, static: {variable: null}},
+        { layer: LAYER, static: { variable: null } },
         "variable",
-        {expression: makeLiteralExpression("right"), counter},
+        { expression: makeLiteralExpression("right"), counter },
       ),
       "VARIABLE = 'right'",
     ),
@@ -309,7 +309,7 @@ assertSuccess(
       {
         observable: OBSERVABLE,
         dynamic: makeLiteralExpression("dynamic"),
-        static: {variable: null},
+        static: { variable: null },
       },
       "variable",
       "options",
@@ -330,7 +330,7 @@ assertSuccess(
       {
         observable: OBSERVABLE,
         dynamic: makeLiteralExpression("dynamic"),
-        static: {variable: null},
+        static: { variable: null },
       },
       "variable",
       "options",
@@ -354,7 +354,7 @@ assertSuccess(
       {
         observable: OBSERVABLE,
         dynamic: makeLiteralExpression("dynamic"),
-        static: {variable: null},
+        static: { variable: null },
       },
       "variable",
       "options",
@@ -377,10 +377,10 @@ assertSuccess(
         {
           observable: true,
           dynamic: makeLiteralExpression("dynamic"),
-          static: {variable: null},
+          static: { variable: null },
         },
         "variable",
-        {expression: makeLiteralExpression("right"), counter},
+        { expression: makeLiteralExpression("right"), counter },
       ),
       `effect(
         intrinsic.aran.setSloppy('dynamic', 'variable', 'right'),
@@ -407,7 +407,7 @@ assertSuccess(
           static: {},
         },
         "variable",
-        {expression: makeLiteralExpression("right"), counter},
+        { expression: makeLiteralExpression("right"), counter },
       ),
       `
         intrinsic.aran.binary("in", "variable", "dynamic") ?

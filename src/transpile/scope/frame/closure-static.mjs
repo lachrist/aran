@@ -1,4 +1,4 @@
-import {concat, reduce, map, flatMap} from "array-lite";
+import { concat, reduce, map, flatMap } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
@@ -21,7 +21,7 @@ import {
   makeWriteEffect as makeRawWriteEffect,
 } from "../../../ast/index.mjs";
 
-import {layerVariable} from "../variable.mjs";
+import { layerVariable } from "../variable.mjs";
 
 import {
   makeExportSequenceEffect,
@@ -36,7 +36,7 @@ import {
 
 const {
   undefined,
-  Reflect: {ownKeys, defineProperty},
+  Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
 export const KINDS = ["var", "function"];
@@ -54,20 +54,23 @@ const makeDeclareStatementArray = (bindings, layer, variable) =>
       makeEffectStatement(
         makeRawWriteEffect(
           layerVariable(layer, variable),
-          makeLiteralExpression({undefined: null}),
+          makeLiteralExpression({ undefined: null }),
         ),
       ),
     ],
     map(
       bindings[variable],
-      partial_x(makeExportStatement, makeLiteralExpression({undefined: null})),
+      partial_x(
+        makeExportStatement,
+        makeLiteralExpression({ undefined: null }),
+      ),
     ),
   );
 
-export const harvestHeader = ({static: bindings, layer}) =>
+export const harvestHeader = ({ static: bindings, layer }) =>
   map(ownKeys(bindings), partialx_(layerVariable, layer));
 
-export const harvestPrelude = ({static: bindings, layer}) =>
+export const harvestPrelude = ({ static: bindings, layer }) =>
   flatMap(
     ownKeys(bindings),
     partialxx_(makeDeclareStatementArray, bindings, layer),
@@ -75,10 +78,10 @@ export const harvestPrelude = ({static: bindings, layer}) =>
 
 export const declare = (
   _strict,
-  {static: bindings},
+  { static: bindings },
   _kind,
   variable,
-  {exports: specifiers},
+  { exports: specifiers },
 ) => {
   if (!hasOwnProperty(bindings, variable)) {
     defineProperty(bindings, variable, {
@@ -91,7 +94,7 @@ export const declare = (
 
 export const makeInitializeStatementArray = (
   _strict,
-  {static: bindings, layer},
+  { static: bindings, layer },
   _kind,
   variable,
   expression,
@@ -140,7 +143,7 @@ export const makeWriteEffect = partialxx______(
   makeStaticLookupNode,
   testStatic,
   (strict, escaped, frame, variable, options) => {
-    const {static: bindings} = frame;
+    const { static: bindings } = frame;
     return reduce(
       bindings[variable],
       partial__x(

@@ -1,7 +1,7 @@
 const {
   undefined,
   Object,
-  Reflect: {getOwnPropertyDescriptor},
+  Reflect: { getOwnPropertyDescriptor },
 } = globalThis;
 
 export const NULL_DATA_DESCRIPTOR = {

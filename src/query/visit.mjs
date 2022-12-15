@@ -1,4 +1,4 @@
-import {hasOwnProperty} from "../util/index.mjs";
+import { hasOwnProperty } from "../util/index.mjs";
 
 export const applyVisitor = (visitors, node, missing) => {
   if (hasOwnProperty(visitors, node.type)) {

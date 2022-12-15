@@ -1,6 +1,6 @@
-import {assertEqual, assertDeepEqual} from "../__fixture__.mjs";
+import { assertEqual, assertDeepEqual } from "../__fixture__.mjs";
 
-import {cons, car, cdr, convertArrayList, convertListArray} from "./list.mjs";
+import { cons, car, cdr, convertArrayList, convertListArray } from "./list.mjs";
 
 assertEqual(car(cons(123, 456)), 123);
 

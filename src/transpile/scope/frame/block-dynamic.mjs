@@ -1,4 +1,4 @@
-import {concat, includes, map} from "array-lite";
+import { concat, includes, map } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
@@ -45,12 +45,12 @@ import {
 
 const {
   undefined,
-  Reflect: {ownKeys, defineProperty},
+  Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
 export const KINDS = ["let", "const", "class"];
 
-export const create = (_layer, {macro, observable}) => ({
+export const create = (_layer, { macro, observable }) => ({
   dynamic: macro,
   observable,
   conflicts: [],
@@ -59,7 +59,7 @@ export const create = (_layer, {macro, observable}) => ({
 
 export const conflict = (strict, frame, kind, variable) => {
   conflictStaticExternal(strict, frame, kind, variable);
-  const {conflicts} = frame;
+  const { conflicts } = frame;
   if (!includes(conflicts, variable)) {
     push(conflicts, variable);
   }
@@ -71,7 +71,7 @@ const makeConflictStatement = (dynamic, variable) =>
       makeConditionalExpression(
         makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
         makeThrowDuplicateExpression(variable),
-        makeLiteralExpression({undefined: null}),
+        makeLiteralExpression({ undefined: null }),
       ),
     ),
   );
@@ -94,7 +94,7 @@ const makeDeclareStatement = (dynamic, variable) =>
 
 export const harvestHeader = constant_([]);
 
-export const harvestPrelude = ({dynamic, conflicts, static: bindings}) =>
+export const harvestPrelude = ({ dynamic, conflicts, static: bindings }) =>
   concat(
     map(conflicts, partialx_(makeConflictStatement, dynamic)),
     map(ownKeys(bindings), partialx_(makeDeclareStatement, dynamic)),
@@ -102,10 +102,10 @@ export const harvestPrelude = ({dynamic, conflicts, static: bindings}) =>
 
 export const declare = (
   _strict,
-  {static: bindings},
+  { static: bindings },
   _kind,
   variable,
-  {exports: specifiers},
+  { exports: specifiers },
 ) => {
   assert(specifiers.length === 0, "unexpected global exported variable");
   assert(
@@ -120,7 +120,7 @@ export const declare = (
 
 export const makeInitializeStatementArray = (
   _strict,
-  {dynamic: macro, static: bindings},
+  { dynamic: macro, static: bindings },
   kind,
   variable,
   expression,
@@ -152,7 +152,7 @@ export const makeInitializeStatementArray = (
 const generateMakeDeadzoneNode =
   (makeConditionalNode, makeDeadNode, makeLiveNode) =>
   (strict, escaped, frame, variable, options) => {
-    const {dynamic: macro, static: bindings} = frame;
+    const { dynamic: macro, static: bindings } = frame;
     if (hasOwnProperty(bindings, variable) && bindings[variable]) {
       return makeLiveNode(strict, escaped, frame, variable, options);
     } else if (hasOwnProperty(bindings, variable) && !escaped) {

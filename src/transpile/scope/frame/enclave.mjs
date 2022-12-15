@@ -12,7 +12,7 @@ import {
   makeDeclareStatement,
 } from "../../../ast/index.mjs";
 
-const {undefined} = globalThis;
+const { undefined } = globalThis;
 
 export const KINDS = ["var", "function", "let", "const", "class"];
 
@@ -24,7 +24,7 @@ const mapping = {
   class: "let",
 };
 
-export const create = (_layer, {macros}) => ({
+export const create = (_layer, { macros }) => ({
   enclaves: macros,
 });
 
@@ -39,7 +39,7 @@ export const declare = (
   _frame,
   _kind,
   _variable,
-  {exports: specifiers},
+  { exports: specifiers },
 ) => {
   assert(specifiers.length === 0, "unexpected exported variable");
 };
@@ -56,10 +56,10 @@ export const lookupAll = constant___(undefined);
 
 export const generateMakeLookupExpression =
   (strict_key, sloppy_key) =>
-  (_next, strict, _escaped, {enclaves}, variable, _options) =>
+  (_next, strict, _escaped, { enclaves }, variable, _options) =>
     makeApplyExpression(
       enclaves[strict ? strict_key : sloppy_key],
-      makeLiteralExpression({undefined: null}),
+      makeLiteralExpression({ undefined: null }),
       [makeLiteralExpression(variable)],
     );
 
@@ -79,15 +79,15 @@ export const makeWriteEffect = (
   _next,
   strict,
   _escaped,
-  {enclaves},
+  { enclaves },
   variable,
-  {counter, expression},
+  { counter, expression },
 ) => {
   incrementCounter(counter);
   return makeExpressionEffect(
     makeApplyExpression(
       enclaves[strict ? "writeStrict" : "writeSloppy"],
-      makeLiteralExpression({undefined: null}),
+      makeLiteralExpression({ undefined: null }),
       [makeLiteralExpression(variable), expression],
     ),
   );

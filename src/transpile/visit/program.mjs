@@ -1,4 +1,4 @@
-import {map, forEach, concat, flatMap, slice} from "array-lite";
+import { map, forEach, concat, flatMap, slice } from "array-lite";
 
 import {
   assert,
@@ -41,15 +41,15 @@ import {
   makeScopeInternalLocalEvalProgram,
 } from "../scope/index.mjs";
 
-import {getContextScoping, setContextScope} from "./context.mjs";
+import { getContextScoping, setContextScope } from "./context.mjs";
 
-import {applyVisitor} from "./visit.mjs";
+import { applyVisitor } from "./visit.mjs";
 
-import {visitExpression} from "./expression.mjs";
+import { visitExpression } from "./expression.mjs";
 
-import {visitStatement} from "./statement.mjs";
+import { visitStatement } from "./statement.mjs";
 
-const {Error} = globalThis;
+const { Error } = globalThis;
 
 export const SCRIPT = "script";
 export const MODULE = "module";
@@ -113,11 +113,11 @@ const visitBody = (type, nodes, context) => {
   forEach(hoistBodyDeep(nodes), partialx_(declare, getContextScoping(context)));
   if (type === "module") {
     return concat(flatMap(nodes, partial_xx(visitStatement, context, null)), [
-      makeReturnStatement(makeLiteralExpression({undefined: null})),
+      makeReturnStatement(makeLiteralExpression({ undefined: null })),
     ]);
   } else if (type === "script") {
     if (nodes.length === 0) {
-      return [makeReturnStatement(makeLiteralExpression({undefined: null}))];
+      return [makeReturnStatement(makeLiteralExpression({ undefined: null }))];
     } else if (nodes[nodes.length - 1].type === "ExpressionStatement") {
       return concat(
         flatMap(
@@ -139,14 +139,14 @@ const visitBody = (type, nodes, context) => {
             makeMetaInitializeEffect(
               scoping,
               meta,
-              makeLiteralExpression({undefined: null}),
+              makeLiteralExpression({ undefined: null }),
             ),
           ),
         ],
         flatMap(
           nodes,
           partial_xx(visitStatement, context, {
-            completion: {meta, nodes: inferCompletionNodeArray(nodes)},
+            completion: { meta, nodes: inferCompletionNodeArray(nodes) },
           }),
         ),
         [makeReturnStatement(makeMetaReadExpression(scoping, meta))],
@@ -195,5 +195,5 @@ export const visitProgram = partialxx___(
       );
     },
   },
-  {type: MODULE, enclave: false, specials: []},
+  { type: MODULE, enclave: false, specials: [] },
 );

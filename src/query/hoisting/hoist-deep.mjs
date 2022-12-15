@@ -1,10 +1,10 @@
-import {concat, flatMap} from "array-lite";
+import { concat, flatMap } from "array-lite";
 
-import {constant_, deadcode_, partialx_x} from "../../util/index.mjs";
+import { constant_, deadcode_, partialx_x } from "../../util/index.mjs";
 
-import {applyVisitor} from "../visit.mjs";
+import { applyVisitor } from "../visit.mjs";
 
-import {makeVarDeclaration, exportDeclaration} from "./declaration.mjs";
+import { makeVarDeclaration, exportDeclaration } from "./declaration.mjs";
 
 import {
   hoistExportSpecifier,
@@ -12,7 +12,7 @@ import {
   hoistExportVariableDeclaration,
 } from "./helper.mjs";
 
-const getConsequent = ({consequent}) => consequent;
+const getConsequent = ({ consequent }) => consequent;
 
 const returnEmpty = constant_([]);
 

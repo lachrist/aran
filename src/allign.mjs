@@ -37,7 +37,6 @@ exports.match = (node1, node2, callback, _result, _message) => (
       ))
 );
 
-
 // (success, result) =>
 //   success,
 //   (
@@ -108,7 +107,6 @@ const colorize = (added, removed) => {
   }
   return "grey";
 };
-
 
 export * from "./parse.mjs";
 export * from "./generate.mjs";

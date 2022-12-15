@@ -1,15 +1,15 @@
-import {flatMap, concat, map, join} from "array-lite";
+import { flatMap, concat, map, join } from "array-lite";
 /* eslint-disable import/no-nodejs-modules */
-import {writeFileSync as writeFile} from "fs";
+import { writeFileSync as writeFile } from "fs";
 /* eslint-enable import/no-nodejs-modules */
-import {getSyntax} from "../src/ast/syntax.mjs";
+import { getSyntax } from "../src/ast/syntax.mjs";
 
 const {
   String,
   Array,
-  process: {argv},
-  Reflect: {ownKeys},
-  JSON: {stringify: stringifyJSON},
+  process: { argv },
+  Reflect: { ownKeys },
+  JSON: { stringify: stringifyJSON },
 } = globalThis;
 
 const is_debug_mode = argv.length > 2 && argv[2] === "DEBUG";
@@ -32,9 +32,7 @@ writeFile(
   "src/ast/generated-make.mjs",
   join(
     concat(
-      is_debug_mode
-        ? ["import {validateNode} from './validate.mjs';"]
-        : [],
+      is_debug_mode ? ["import {validateNode} from './validate.mjs';"] : [],
       flatMap(ownKeys(syntax), (kind) =>
         map(
           ownKeys(syntax[kind]),

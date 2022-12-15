@@ -1,4 +1,4 @@
-import {concat, flatMap, map} from "array-lite";
+import { concat, flatMap, map } from "array-lite";
 
 import {
   assert,
@@ -24,9 +24,9 @@ import {
 } from "./ast/index.mjs";
 
 const {
-  Array: {isArray},
+  Array: { isArray },
   undefined,
-  Reflect: {ownKeys},
+  Reflect: { ownKeys },
 } = globalThis;
 
 const makeIntrinsicConstructExpression = (
@@ -47,7 +47,7 @@ const makeIntrinsicApplyExpression = (
 ) =>
   makeApplyExpression(
     makeIntrinsicExpression(name),
-    makeLiteralExpression({undefined: null}),
+    makeLiteralExpression({ undefined: null }),
     expressions,
     annotation,
   );
@@ -148,7 +148,7 @@ export const makeArrayExpression = partialx__(
   "Array.of",
 );
 
-const flatenProperty = ({0: name, 1: value}) =>
+const flatenProperty = ({ 0: name, 1: value }) =>
   value === null ? [] : [name, value];
 
 export const makeObjectExpression = (

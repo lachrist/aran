@@ -1,4 +1,4 @@
-import {reduce, filter, map, concat} from "array-lite";
+import { reduce, filter, map, concat } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
@@ -21,7 +21,7 @@ import {
   makeWriteEffect as makeRawWriteEffect,
 } from "../../../ast/index.mjs";
 
-import {layerVariable, layerShadowVariable} from "../variable.mjs";
+import { layerVariable, layerShadowVariable } from "../variable.mjs";
 
 import {
   conflictStaticExternal,
@@ -38,12 +38,12 @@ import {
 } from "./helper.mjs";
 
 const {
-  Reflect: {ownKeys, defineProperty},
+  Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
 export const KINDS = ["let", "const", "class"];
 
-export const create = (layer, {distant}) => ({
+export const create = (layer, { distant }) => ({
   layer,
   distant,
   static: {},
@@ -59,7 +59,7 @@ const makeShadowInitializeStatement = (layer, variable) =>
     ),
   );
 
-export const harvestHeader = ({static: bindings, layer}) =>
+export const harvestHeader = ({ static: bindings, layer }) =>
   concat(
     map(ownKeys(bindings), partialx_(layerVariable, layer)),
     map(
@@ -68,7 +68,7 @@ export const harvestHeader = ({static: bindings, layer}) =>
     ),
   );
 
-export const harvestPrelude = ({static: bindings, layer}) =>
+export const harvestPrelude = ({ static: bindings, layer }) =>
   map(
     filter(ownKeys(bindings), partialx_(hasDeadzone, bindings)),
     partialx_(makeShadowInitializeStatement, layer),
@@ -78,10 +78,10 @@ export const conflict = conflictStaticExternal;
 
 export const declare = (
   _strict,
-  {static: bindings},
+  { static: bindings },
   kind,
   variable,
-  {exports: specifiers},
+  { exports: specifiers },
 ) => {
   assert(
     !hasOwnProperty(bindings, variable),
@@ -100,7 +100,7 @@ export const declare = (
 
 export const makeInitializeStatementArray = (
   _strict,
-  {static: bindings, layer, distant},
+  { static: bindings, layer, distant },
   _kind,
   variable,
   expression,
@@ -138,7 +138,7 @@ export const makeInitializeStatementArray = (
   );
 };
 
-export const lookupAll = (_strict, escaped, {static: bindings, distant}) => {
+export const lookupAll = (_strict, escaped, { static: bindings, distant }) => {
   const variables = ownKeys(bindings);
   if (escaped || distant) {
     for (let index = 0; index < variables.length; index += 1) {
@@ -156,7 +156,7 @@ export const lookupAll = (_strict, escaped, {static: bindings, distant}) => {
 const generateMakeDeadzoneNode =
   (makeConditionalNode, makeDeadNode, makeLiveNode) =>
   (strict, escaped, frame, variable, options) => {
-    const {static: bindings, distant, layer} = frame;
+    const { static: bindings, distant, layer } = frame;
     const binding = bindings[variable];
     if (!binding.initialized && !escaped) {
       return makeDeadNode(variable);
@@ -205,7 +205,7 @@ export const makeWriteEffect = partialxx______(
     makeConditionalEffect,
     bind_(makeExpressionEffect, makeThrowDeadzoneExpression),
     (strict, escaped, frame, variable, options) => {
-      const {static: bindings} = frame;
+      const { static: bindings } = frame;
       return bindings[variable].writable
         ? reduce(
             bindings[variable].exports,

@@ -1,6 +1,6 @@
-import {parse as parseAcorn} from "acorn";
-import {assertEqual} from "../__fixture__.mjs";
-import {isProgramStrict, isClosureStrict} from "./strict.mjs";
+import { parse as parseAcorn } from "acorn";
+import { assertEqual } from "../__fixture__.mjs";
+import { isProgramStrict, isClosureStrict } from "./strict.mjs";
 
 const script_options = {
   sourceType: "script",

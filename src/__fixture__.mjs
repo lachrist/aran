@@ -1,11 +1,10 @@
-
 /* eslint-disable no-nodejs-modules */
-import {strict as Assert} from "assert";
+import { strict as Assert } from "assert";
 /* eslint-enable no-nodejs-modules */
 
-const {Error} = globalThis;
+const { Error } = globalThis;
 
-Error.stackTraceLimit = 1/0;
+Error.stackTraceLimit = 1 / 0;
 
 export const {
   fail: assertUnreachable,
@@ -15,7 +14,7 @@ export const {
   deepEqual: assertDeepEqual,
   match: assertMatch,
   notEqual: assertNotEqual,
-  notDeepEqual: assertNotDeepEqual
+  notDeepEqual: assertNotDeepEqual,
 } = Assert;
 
 export const assertSuccess = (either) => {

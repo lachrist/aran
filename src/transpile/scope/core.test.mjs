@@ -1,4 +1,8 @@
-import {assertThrow, assertEqual, assertDeepEqual} from "../../__fixture__.mjs";
+import {
+  assertThrow,
+  assertEqual,
+  assertDeepEqual,
+} from "../../__fixture__.mjs";
 
 import {
   ROOT_SCOPE,

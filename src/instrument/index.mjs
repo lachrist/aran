@@ -1,11 +1,11 @@
-import {createRootScope} from "./scope.mjs";
-import {visitProgram} from "./visit.mjs";
+import { createRootScope } from "./scope.mjs";
+import { visitProgram } from "./visit.mjs";
 
 export const instrumentProgram = (
   program,
   pointcut,
-  {counter, secret, advice},
-  {unmangleVariable, unmangleLabel},
+  { counter, secret, advice },
+  { unmangleVariable, unmangleLabel },
 ) =>
   visitProgram(
     {

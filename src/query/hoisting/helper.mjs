@@ -1,8 +1,8 @@
-import {map, flatMap, filter} from "array-lite";
+import { map, flatMap, filter } from "array-lite";
 
-import {partialx_x, deadcode_} from "../../util/index.mjs";
+import { partialx_x, deadcode_ } from "../../util/index.mjs";
 
-import {applyVisitor} from "../visit.mjs";
+import { applyVisitor } from "../visit.mjs";
 
 import {
   makeVoidDeclaration,
@@ -53,7 +53,7 @@ export const hoistExportSpecifier = partialx_x(
 // visitVariableDeclaration //
 //////////////////////////////
 
-const getDeclaratorPattern = ({id}) => id;
+const getDeclaratorPattern = ({ id }) => id;
 
 const generateVisitVariableDeclaration = (makers) => (node) =>
   map(

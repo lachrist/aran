@@ -1,6 +1,6 @@
-import {concat} from "array-lite";
+import { concat } from "array-lite";
 
-import {assertSuccess} from "../../__fixture__.mjs";
+import { assertSuccess } from "../../__fixture__.mjs";
 
 import {
   makeReturnStatement,
@@ -9,11 +9,11 @@ import {
   makeExpressionEffect,
 } from "../../ast/index.mjs";
 
-import {allignBlock, allignProgram} from "../../allign/index.mjs";
+import { allignBlock, allignProgram } from "../../allign/index.mjs";
 
-import {BASE, META} from "./variable.mjs";
+import { BASE, META } from "./variable.mjs";
 
-import {ROOT_SCOPE, packScope, unpackScope, encloseScope} from "./core.mjs";
+import { ROOT_SCOPE, packScope, unpackScope, encloseScope } from "./core.mjs";
 
 import {
   createFrame,
@@ -33,7 +33,7 @@ import {
 } from "./frame.mjs";
 
 const {
-  JSON: {stringify: stringifyJSON, parse: parseJSON},
+  JSON: { stringify: stringifyJSON, parse: parseJSON },
 } = globalThis;
 
 const STRICT = false;
@@ -56,7 +56,7 @@ assertSuccess(
         createFrame(DEFINE_STATIC, META, {}),
       ],
       (scope) => {
-        declareScope(STRICT, scope, "const", BASE, "variable", {exports: []});
+        declareScope(STRICT, scope, "const", BASE, "variable", { exports: [] });
         return concat(
           [
             makeEffectStatement(

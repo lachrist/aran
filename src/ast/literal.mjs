@@ -3,10 +3,10 @@ const {
   String,
   BigInt,
   undefined,
-  Object: {prototype: object_prototype},
-  Reflect: {ownKeys, getPrototypeOf, apply, getOwnPropertyDescriptor},
+  Object: { prototype: object_prototype },
+  Reflect: { ownKeys, getPrototypeOf, apply, getOwnPropertyDescriptor },
   RegExp: {
-    prototype: {test: testRegExp},
+    prototype: { test: testRegExp },
   },
 } = globalThis;
 
@@ -26,9 +26,9 @@ export const isLiteral = (any) =>
 
 export const toLiteral = (primitive) => {
   if (primitive === undefined) {
-    return {undefined: null};
+    return { undefined: null };
   } else if (typeof primitive === "bigint") {
-    return {bigint: String(primitive)};
+    return { bigint: String(primitive) };
   } else {
     return primitive;
   }

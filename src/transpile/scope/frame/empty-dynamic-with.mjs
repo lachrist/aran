@@ -27,11 +27,11 @@ import {
   makeDynamicWriteEffect,
 } from "./helper.mjs";
 
-const {undefined} = globalThis;
+const { undefined } = globalThis;
 
 export const KINDS = [];
 
-export const create = (_layer, {macro, observable}) => ({
+export const create = (_layer, { macro, observable }) => ({
   dynamic: macro,
   observable,
 });
@@ -52,7 +52,7 @@ export const lookupAll = constant___(undefined);
 
 const testStatic = constant__(false);
 
-const makeDynamicTestExpression = ({dynamic}, variable, _options) =>
+const makeDynamicTestExpression = ({ dynamic }, variable, _options) =>
   makeConditionalExpression(
     makeGetExpression(dynamic, makeSymbolUnscopablesExpression()),
     makeConditionalExpression(
@@ -88,9 +88,9 @@ export const makeDiscardExpression = partialxxx______(
 );
 
 const makeObservableDynamicTestExpression = (frame, variable, options) => {
-  const {observable} = frame;
+  const { observable } = frame;
   if (observable) {
-    const {counter} = options;
+    const { counter } = options;
     incrementCounter(counter);
     incrementCounter(counter);
   }

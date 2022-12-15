@@ -1,11 +1,11 @@
-import {assertSuccess} from "../../../__fixture__.mjs";
+import { assertSuccess } from "../../../__fixture__.mjs";
 
 import {
   makeLiteralExpression,
   makeExpressionEffect,
 } from "../../../ast/index.mjs";
 
-import {testBlock} from "./__fixture__.mjs";
+import { testBlock } from "./__fixture__.mjs";
 
 import * as Frame from "./empty-dynamic-with.mjs";
 

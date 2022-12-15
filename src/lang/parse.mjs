@@ -1,6 +1,6 @@
-import {assert} from "../util/index.mjs";
+import { assert } from "../util/index.mjs";
 
-import {parseBabel} from "./babel.mjs";
+import { parseBabel } from "./babel.mjs";
 
 import {
   convertProgram,

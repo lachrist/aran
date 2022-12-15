@@ -1,4 +1,4 @@
-import {assertThrow, assertEqual, assertDeepEqual} from "../__fixture__.mjs";
+import { assertThrow, assertEqual, assertDeepEqual } from "../__fixture__.mjs";
 
 import {
   empty,
@@ -11,7 +11,7 @@ import {
   isDuplicate,
 } from "./array.mjs";
 
-const {undefined} = globalThis;
+const { undefined } = globalThis;
 
 assertThrow(() => push(empty, 1));
 assertDeepEqual(empty, []);

@@ -24,7 +24,7 @@ import {
   assert,
 } from "../../../util/index.mjs";
 
-import {makeExpressionEffect} from "../../../ast/index.mjs";
+import { makeExpressionEffect } from "../../../ast/index.mjs";
 
 import {
   testStatic,
@@ -36,7 +36,7 @@ import {
 
 const {
   undefined,
-  Reflect: {defineProperty},
+  Reflect: { defineProperty },
 } = globalThis;
 
 export const KINDS = ["let", "const", "class"];
@@ -53,10 +53,10 @@ export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
-  {static: bindings},
+  { static: bindings },
   _kind,
   variable,
-  {exports: specifiers},
+  { exports: specifiers },
 ) => {
   assert(specifiers.length === 0, "unexpected exported variable");
   assert(

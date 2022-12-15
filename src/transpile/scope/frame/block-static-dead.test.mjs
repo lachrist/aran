@@ -1,8 +1,8 @@
-import {assertSuccess} from "../../../__fixture__.mjs";
+import { assertSuccess } from "../../../__fixture__.mjs";
 
-import {makeLiteralExpression} from "../../../ast/index.mjs";
+import { makeLiteralExpression } from "../../../ast/index.mjs";
 
-import {testBlock} from "./__fixture__.mjs";
+import { testBlock } from "./__fixture__.mjs";
 
 import * as Frame from "./block-static-dead.mjs";
 
@@ -13,7 +13,7 @@ assertSuccess(
         type: "declare",
         kind: "let",
         variable: "variable",
-        options: {exports: []},
+        options: { exports: [] },
       },
       {
         type: "discard",

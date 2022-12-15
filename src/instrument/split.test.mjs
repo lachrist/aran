@@ -1,6 +1,6 @@
-import {assertEqual, assertSuccess} from "../__fixture__.mjs";
+import { assertEqual, assertSuccess } from "../__fixture__.mjs";
 
-import {allignBlock} from "../allign/index.mjs";
+import { allignBlock } from "../allign/index.mjs";
 
 import {
   makeEffectStatement,
@@ -8,7 +8,7 @@ import {
   makeLiteralExpression,
 } from "../ast/index.mjs";
 
-import {extendScope, createRootScope, makeScopeBlock} from "./scope.mjs";
+import { extendScope, createRootScope, makeScopeBlock } from "./scope.mjs";
 
 import {
   VAR_SPLIT,
@@ -21,7 +21,7 @@ import {
   makeSplitScopeEvalExpression,
 } from "./split.mjs";
 
-const {undefined} = globalThis;
+const { undefined } = globalThis;
 
 {
   const scope = extendScope(createRootScope("secret_"));

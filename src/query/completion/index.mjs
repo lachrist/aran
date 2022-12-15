@@ -1,12 +1,12 @@
-import {map, concat, flatMap} from "array-lite";
+import { map, concat, flatMap } from "array-lite";
 
-import {partialx_x, deadcode} from "../../util/index.mjs";
+import { partialx_x, deadcode } from "../../util/index.mjs";
 
-import {applyVisitor} from "../visit.mjs";
+import { applyVisitor } from "../visit.mjs";
 
-import {VALUED, UNVALUED} from "./valuation.mjs";
+import { VALUED, UNVALUED } from "./valuation.mjs";
 
-import {makeFreeCompletion, getCompletionNode} from "./completion.mjs";
+import { makeFreeCompletion, getCompletionNode } from "./completion.mjs";
 
 import {
   makeResult,
@@ -90,7 +90,7 @@ const visit = partialx_x(
         VALUED,
         concat(
           [makeFreeCompletion(node)],
-          flatMap(node.cases, ({consequent: nodes}) =>
+          flatMap(node.cases, ({ consequent: nodes }) =>
             prefaceResult(releaseNullResult(visitAll(nodes)), node),
           ),
         ),

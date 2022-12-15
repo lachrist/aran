@@ -1,6 +1,6 @@
-import {assertEqual} from "../__fixture__.mjs";
+import { assertEqual } from "../__fixture__.mjs";
 
-import {add, multiply, devides, append, equals} from "./operation.mjs";
+import { add, multiply, devides, append, equals } from "./operation.mjs";
 
 assertEqual(add(2, 3), 5);
 

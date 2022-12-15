@@ -2,9 +2,9 @@ export const NIL = null;
 
 export const cons = (x, y) => [x, y];
 
-export const car = ({0: x}) => x;
+export const car = ({ 0: x }) => x;
 
-export const cdr = ({1: y}) => y;
+export const cdr = ({ 1: y }) => y;
 
 export const convertArrayList = (array) => {
   let list = NIL;

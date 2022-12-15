@@ -1,21 +1,21 @@
-import {assertSuccess} from "../../../__fixture__.mjs";
+import { assertSuccess } from "../../../__fixture__.mjs";
 
-import {makeLiteralExpression} from "../../../ast/index.mjs";
+import { makeLiteralExpression } from "../../../ast/index.mjs";
 
-import {testBlock} from "./__fixture__.mjs";
+import { testBlock } from "./__fixture__.mjs";
 
 import * as Frame from "./block-static.mjs";
 
 assertSuccess(
   testBlock(Frame, {
-    options: {distant: false},
+    options: { distant: false },
     head: "let VARIABLE;",
     scenarios: [
       {
         type: "declare",
         kind: "let",
         variable: "variable",
-        options: {exports: ["specifier"]},
+        options: { exports: ["specifier"] },
       },
       {
         type: "read",
@@ -58,7 +58,7 @@ assertSuccess(
 
 assertSuccess(
   testBlock(Frame, {
-    options: {distant: true},
+    options: { distant: true },
     head: `
       let VARIABLE, _VARIABLE;
       _VARIABLE = false;
@@ -68,7 +68,7 @@ assertSuccess(
         type: "declare",
         kind: "const",
         variable: "variable",
-        options: {exports: []},
+        options: { exports: [] },
       },
       {
         type: "lookup-all",

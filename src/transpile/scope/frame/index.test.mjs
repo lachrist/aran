@@ -1,6 +1,6 @@
-import {concat} from "array-lite";
+import { concat } from "array-lite";
 
-import {assertSuccess, assertEqual} from "../../../__fixture__.mjs";
+import { assertSuccess, assertEqual } from "../../../__fixture__.mjs";
 
 import {
   makeExpressionEffect,
@@ -9,9 +9,9 @@ import {
   makeLiteralExpression,
 } from "../../../ast/index.mjs";
 
-import {allignBlock} from "../../../allign/index.mjs";
+import { allignBlock } from "../../../allign/index.mjs";
 
-import {BASE, META} from "../variable.mjs";
+import { BASE, META } from "../variable.mjs";
 
 import {
   CLOSURE_STATIC,
@@ -25,7 +25,7 @@ import {
   makeFrameReadExpression,
 } from "./index.mjs";
 
-const {Error} = globalThis;
+const { Error } = globalThis;
 
 const STRICT = true;
 
@@ -38,7 +38,7 @@ assertEqual(conflictFrame(STRICT, frame, "var", BASE, "variable"), false);
 assertEqual(conflictFrame(STRICT, frame, "var", META, "variable"), true);
 
 assertEqual(
-  declareFrame(STRICT, frame, "var", BASE, "variable", {exports: []}),
+  declareFrame(STRICT, frame, "var", BASE, "variable", { exports: [] }),
   false,
 );
 
@@ -55,7 +55,7 @@ assertEqual(
 );
 
 assertEqual(
-  declareFrame(STRICT, frame, "var", META, "variable", {exports: []}),
+  declareFrame(STRICT, frame, "var", META, "variable", { exports: [] }),
   true,
 );
 

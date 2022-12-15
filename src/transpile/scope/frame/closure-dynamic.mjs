@@ -1,4 +1,4 @@
-import {map} from "array-lite";
+import { map } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
@@ -38,12 +38,12 @@ import {
 
 const {
   undefined,
-  Reflect: {ownKeys, defineProperty},
+  Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
 export const KINDS = ["var", "function"];
 
-export const create = (_layer, {macro, observable}) => ({
+export const create = (_layer, { macro, observable }) => ({
   dynamic: macro,
   static: {},
   observable,
@@ -56,12 +56,12 @@ const makeDeclareStatement = (dynamic, variable) =>
     makeExpressionEffect(
       makeConditionalExpression(
         makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
-        makeLiteralExpression({undefined: null}),
+        makeLiteralExpression({ undefined: null }),
         makeDefineExpression(
           dynamic,
           makeLiteralExpression(variable),
           makeDataDescriptorExpression(
-            makeLiteralExpression({undefined: null}),
+            makeLiteralExpression({ undefined: null }),
             makeLiteralExpression(true),
             makeLiteralExpression(true),
             makeLiteralExpression(false),
@@ -73,15 +73,15 @@ const makeDeclareStatement = (dynamic, variable) =>
 
 export const harvestHeader = constant_([]);
 
-export const harvestPrelude = ({dynamic: expression, static: bindings}) =>
+export const harvestPrelude = ({ dynamic: expression, static: bindings }) =>
   map(ownKeys(bindings), partialx_(makeDeclareStatement, expression));
 
 export const declare = (
   _strict,
-  {static: bindings},
+  { static: bindings },
   _kind,
   variable,
-  {exports: specifiers},
+  { exports: specifiers },
 ) => {
   assert(specifiers.length === 0, "unexpected global exported variable");
   if (!hasOwnProperty(bindings, variable)) {
@@ -91,7 +91,7 @@ export const declare = (
 
 export const makeInitializeStatementArray = (
   strict,
-  {dynamic, static: bindings},
+  { dynamic, static: bindings },
   _kind,
   variable,
   expression,

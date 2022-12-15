@@ -1,14 +1,17 @@
-import {map, flatMap, concat, every, filterOut} from "array-lite";
+import { map, flatMap, concat, every, filterOut } from "array-lite";
 
-import {collectPattern} from "./helper.mjs";
+import { collectPattern } from "./helper.mjs";
 
-import {checkoutDeclarationArray, makeLetDeclaration} from "./declaration.mjs";
+import {
+  checkoutDeclarationArray,
+  makeLetDeclaration,
+} from "./declaration.mjs";
 
-import {hoistShallow} from "./hoist-shallow.mjs";
+import { hoistShallow } from "./hoist-shallow.mjs";
 
-import {hoistDeep} from "./hoist-deep.mjs";
+import { hoistDeep } from "./hoist-deep.mjs";
 
-import {isDuplicate} from "../../util/index.mjs";
+import { isDuplicate } from "../../util/index.mjs";
 
 export {
   getDeclarationKind,
@@ -19,9 +22,9 @@ export {
   getDeclarationExportSpecifierArray,
 } from "./declaration.mjs";
 
-const isIdentifier = ({type}) => type === "Identifier";
+const isIdentifier = ({ type }) => type === "Identifier";
 
-const getName = ({name}) => name;
+const getName = ({ name }) => name;
 
 export const hoistBodyShallow = (nodes) =>
   checkoutDeclarationArray(flatMap(nodes, hoistShallow));

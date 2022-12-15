@@ -14,7 +14,7 @@ import {
   filterOutCurry,
 } from "./curry.mjs";
 
-const {undefined} = globalThis;
+const { undefined } = globalThis;
 
 assertDeepEqual(
   callCurry(

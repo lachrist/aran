@@ -1,6 +1,6 @@
-import {concat} from "array-lite";
+import { concat } from "array-lite";
 
-import {assertEqual, assertSuccess, assertThrow} from "../../__fixture__.mjs";
+import { assertEqual, assertSuccess, assertThrow } from "../../__fixture__.mjs";
 
 import {
   makeBlockStatement,
@@ -13,9 +13,9 @@ import {
   makeExpressionEffect,
 } from "../../ast/index.mjs";
 
-import {createCounter} from "../../util/index.mjs";
+import { createCounter } from "../../util/index.mjs";
 
-import {allignProgram} from "../../allign/index.mjs";
+import { allignProgram } from "../../allign/index.mjs";
 
 import {
   ROOT_SCOPE,
@@ -56,7 +56,7 @@ import {
 
 const {
   undefined,
-  JSON: {parse: parseJSON, stringify: stringifyJSON},
+  JSON: { parse: parseJSON, stringify: stringifyJSON },
 } = globalThis;
 
 const STRICT = true;
@@ -80,31 +80,35 @@ const createScoping = ({
 // meta //
 assertSuccess(
   allignProgram(
-    makeScopeScriptProgram(createScoping({strict: true}), ENCLAVE, (scope) => {
-      const scoping = createScoping({strict: true, scope});
-      const variable1 = declareMeta(scoping, "variable1");
-      const variable2 = declareMetaMacro(
-        scoping,
-        "variable2",
-        makeLiteralExpression("binding"),
-      );
-      return [
-        makeEffectStatement(
-          makeMetaInitializeEffect(
-            scoping,
-            variable1,
-            makeLiteralExpression("right"),
+    makeScopeScriptProgram(
+      createScoping({ strict: true }),
+      ENCLAVE,
+      (scope) => {
+        const scoping = createScoping({ strict: true, scope });
+        const variable1 = declareMeta(scoping, "variable1");
+        const variable2 = declareMetaMacro(
+          scoping,
+          "variable2",
+          makeLiteralExpression("binding"),
+        );
+        return [
+          makeEffectStatement(
+            makeMetaInitializeEffect(
+              scoping,
+              variable1,
+              makeLiteralExpression("right"),
+            ),
           ),
-        ),
-        makeEffectStatement(
-          makeExpressionEffect(makeMetaReadExpression(scoping, variable1)),
-        ),
-        makeEffectStatement(
-          makeExpressionEffect(makeMetaReadExpression(scoping, variable2)),
-        ),
-        makeReturnStatement(makeLiteralExpression("completion")),
-      ];
-    }),
+          makeEffectStatement(
+            makeExpressionEffect(makeMetaReadExpression(scoping, variable1)),
+          ),
+          makeEffectStatement(
+            makeExpressionEffect(makeMetaReadExpression(scoping, variable2)),
+          ),
+          makeReturnStatement(makeLiteralExpression("completion")),
+        ];
+      },
+    ),
     `
       "script";
       effect(
@@ -130,7 +134,7 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeScriptProgram(createScoping({}), ENCLAVE, (scope) => {
-      const scoping = createScoping({scope});
+      const scoping = createScoping({ scope });
       assertEqual(
         declareSpecMacro(
           scoping,
@@ -162,8 +166,8 @@ assertSuccess(
 // base strict enclave //
 assertSuccess(
   allignProgram(
-    makeScopeScriptProgram(createScoping({strict: true}), true, (scope) => {
-      const scoping = createScoping({strict: true, scope});
+    makeScopeScriptProgram(createScoping({ strict: true }), true, (scope) => {
+      const scoping = createScoping({ strict: true, scope });
       assertEqual(declareBase(scoping, "let", "variable", []), undefined);
       return concat(
         makeBaseInitializeStatementArray(
@@ -215,8 +219,8 @@ assertSuccess(
 // base sloppy refied //
 assertSuccess(
   allignProgram(
-    makeScopeScriptProgram({strict: false}, false, (scope) => {
-      const scoping = createScoping({strict: false, scope});
+    makeScopeScriptProgram({ strict: false }, false, (scope) => {
+      const scoping = createScoping({ strict: false, scope });
       assertEqual(declareBase(scoping, "let", "variable", []), undefined);
       return concat(
         makeBaseInitializeStatementArray(
@@ -332,11 +336,11 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeModuleProgram(
-      createScoping({strict: true}),
+      createScoping({ strict: true }),
       ENCLAVE,
       [],
       (scope) => {
-        const scoping = createScoping({strict: true, scope});
+        const scoping = createScoping({ strict: true, scope });
         const variable1 = declareMeta(scoping, "variable1");
         const variable2 = declareMetaMacro(
           scoping,
@@ -378,11 +382,11 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeModuleProgram(
-      createScoping({strict: true}),
+      createScoping({ strict: true }),
       ENCLAVE,
       [],
       (scope) => {
-        const scoping = createScoping({strict: true, scope});
+        const scoping = createScoping({ strict: true, scope });
         assertEqual(
           declareSpecMacro(
             scoping,
@@ -434,11 +438,11 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeModuleProgram(
-      createScoping({strict: true}),
+      createScoping({ strict: true }),
       ENCLAVE,
       [makeImportLink("source", "imported"), makeExportLink("exported")],
       (scope) => {
-        const scoping = createScoping({strict: true, scope});
+        const scoping = createScoping({ strict: true, scope });
         assertEqual(
           declareBase(scoping, "let", "variable1", ["exported"]),
           undefined,
@@ -524,11 +528,11 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeExternalLocalEvalProgram(
-      createScoping({strict: true}),
+      createScoping({ strict: true }),
       true,
       ["this"],
       (scope) => {
-        const scoping = createScoping({strict: true, scope});
+        const scoping = createScoping({ strict: true, scope });
         return [
           makeEffectStatement(
             makeExpressionEffect(makeBaseReadExpression(scoping, "variable")),
@@ -561,10 +565,10 @@ assertSuccess(
   assertSuccess(
     allignProgram(
       makeScopeGlobalEvalProgram(
-        createScoping({strict: false}),
+        createScoping({ strict: false }),
         true,
         (scope) => {
-          const scoping = createScoping({strict: false, scope});
+          const scoping = createScoping({ strict: false, scope });
           assertEqual(declareBase(scoping, "let", "variable1", []), undefined);
           const statements1 = makeBaseInitializeStatementArray(
             scoping,
@@ -605,7 +609,7 @@ assertSuccess(
         }),
         false,
         (scope) => {
-          const scoping = createScoping({strict: false, scope});
+          const scoping = createScoping({ strict: false, scope });
           assertEqual(declareBase(scoping, "let", "variable2", []), undefined);
           assertEqual(declareBase(scoping, "var", "variable3", []), undefined);
           return concat(
@@ -654,7 +658,7 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeGlobalEvalProgram(createScoping({}), true, (scope1) => {
-      const scoping1 = createScoping({scope: scope1});
+      const scoping1 = createScoping({ scope: scope1 });
       return [
         makeBlockStatement(
           makeScopeClosureDynamicBlock(
@@ -662,7 +666,7 @@ assertSuccess(
             ["label"],
             makeLiteralExpression("frame"),
             (scope2) => {
-              const scoping2 = createScoping({scope: scope2});
+              const scoping2 = createScoping({ scope: scope2 });
               return [
                 makeEffectStatement(
                   makeExpressionEffect(
@@ -679,7 +683,7 @@ assertSuccess(
             ["label"],
             makeLiteralExpression("frame"),
             (scope2) => {
-              const scoping2 = createScoping({scope: scope2});
+              const scoping2 = createScoping({ scope: scope2 });
               return [
                 makeEffectStatement(
                   makeExpressionEffect(
@@ -738,7 +742,7 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeGlobalEvalProgram(createScoping({}), ENCLAVE, (scope1) => {
-      const scoping1 = createScoping({scope: scope1});
+      const scoping1 = createScoping({ scope: scope1 });
       return [
         makeEffectStatement(
           makeExpressionEffect(
@@ -748,7 +752,7 @@ assertSuccess(
               false,
               false,
               (scope2) => {
-                const scoping2 = createScoping({scope: scope2});
+                const scoping2 = createScoping({ scope: scope2 });
                 return [
                   makeBlockStatement(
                     makeScopeClosureStaticBlock(
@@ -788,11 +792,11 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeGlobalEvalProgram(createScoping({}), ENCLAVE, (scope1) => {
-      const scoping1 = createScoping({scope: scope1});
+      const scoping1 = createScoping({ scope: scope1 });
       return [
         makeBlockStatement(
           makeScopeDeadStaticBlock(scoping1, ["label"], (scope2) => {
-            const scoping2 = createScoping({scope: scope2});
+            const scoping2 = createScoping({ scope: scope2 });
             assertEqual(
               declareBase(scoping2, "let", "variable", []),
               undefined,
@@ -834,11 +838,11 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeGlobalEvalProgram(createScoping({}), ENCLAVE, (scope1) => {
-      const scoping1 = createScoping({scope: scope1});
+      const scoping1 = createScoping({ scope: scope1 });
       return [
         makeBlockStatement(
           makeScopeDistantStaticBlock(scoping1, ["label1"], (scope2) => {
-            const scoping2 = createScoping({scope: scope2});
+            const scoping2 = createScoping({ scope: scope2 });
             assertEqual(
               declareBase(scoping2, "let", "variable", []),
               undefined,
@@ -846,7 +850,7 @@ assertSuccess(
             return [
               makeBlockStatement(
                 makeScopeEmptyStaticBlock(scoping2, ["label2"], (scope3) => {
-                  const scoping3 = createScoping({scope: scope3});
+                  const scoping3 = createScoping({ scope: scope3 });
                   return makeBaseInitializeStatementArray(
                     scoping3,
                     "let",
@@ -901,10 +905,10 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeGlobalEvalProgram(
-      createScoping({strict: false}),
+      createScoping({ strict: false }),
       false,
       (scope) => {
-        const scoping = createScoping({strict: false, scope});
+        const scoping = createScoping({ strict: false, scope });
         assertEqual(declareBase(scoping, "let", "variable", []), undefined);
         return concat(
           [
@@ -966,10 +970,10 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeGlobalEvalProgram(
-      createScoping({strict: false}),
+      createScoping({ strict: false }),
       true,
       (scope1) => {
-        const scoping1 = createScoping({strict: false, scope: scope1});
+        const scoping1 = createScoping({ strict: false, scope: scope1 });
         return [
           makeBlockStatement(
             makeScopeClosureDynamicBlock(
@@ -977,7 +981,10 @@ assertSuccess(
               [],
               makeLiteralExpression("frame"),
               (scope2) => {
-                const scoping2 = createScoping({strict: false, scope: scope2});
+                const scoping2 = createScoping({
+                  strict: false,
+                  scope: scope2,
+                });
                 return [
                   makeEffectStatement(
                     makeBaseWriteEffect(

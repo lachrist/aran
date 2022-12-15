@@ -1,6 +1,6 @@
-import {flatMap, map} from "array-lite";
+import { flatMap, map } from "array-lite";
 
-import {append, partialx_, partial_x} from "../util/index.mjs";
+import { append, partialx_, partial_x } from "../util/index.mjs";
 
 import {
   useScope,

@@ -1,4 +1,4 @@
-import {stringifyPrettier} from "./prettier.mjs";
+import { stringifyPrettier } from "./prettier.mjs";
 
 // console.log(
 //   stringifyPrettier(

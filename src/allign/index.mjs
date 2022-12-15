@@ -20,7 +20,7 @@ import {
   getErrorRight,
 } from "./error.mjs";
 
-import {getResultError} from "./result.mjs";
+import { getResultError } from "./result.mjs";
 
 import {
   visitExpression,
@@ -32,7 +32,7 @@ import {
 } from "./visit.mjs";
 
 const {
-  JSON: {stringify: stringifyJSON},
+  JSON: { stringify: stringifyJSON },
 } = globalThis;
 
 const generateAllign = (parse, stringify, visit) => (node, code) => {
@@ -41,8 +41,8 @@ const generateAllign = (parse, stringify, visit) => (node, code) => {
     return null;
   } else {
     const message = getErrorMessage(error);
-    const {value: left} = getErrorLeft(error);
-    const {value: right, annotation: location} = getErrorRight(error);
+    const { value: left } = getErrorLeft(error);
+    const { value: right, annotation: location } = getErrorRight(error);
     return `${message} (${location}): mismatch between ${stringifyJSON(
       left,
     )} and ${stringifyJSON(right)}${"\n"}${stringify(node)}`;

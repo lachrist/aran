@@ -1,4 +1,4 @@
-import {map} from "array-lite";
+import { map } from "array-lite";
 
 import {
   assert,
@@ -42,11 +42,11 @@ import {
   makeSplitScopeReadExpression,
 } from "./split.mjs";
 
-import {cut} from "./cut.mjs";
+import { cut } from "./cut.mjs";
 
 const {
   undefined,
-  Reflect: {apply},
+  Reflect: { apply },
 } = globalThis;
 
 ////////////

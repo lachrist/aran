@@ -1,6 +1,6 @@
-import {assertSuccess} from "../../../__fixture__.mjs";
+import { assertSuccess } from "../../../__fixture__.mjs";
 
-import {testBlock} from "./__fixture__.mjs";
+import { testBlock } from "./__fixture__.mjs";
 
 import * as Frame from "./define-static.mjs";
 

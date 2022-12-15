@@ -1,20 +1,20 @@
-import {reduce, forEach, map, flatMap, concat} from "array-lite";
+import { reduce, forEach, map, flatMap, concat } from "array-lite";
 
-import {assertEqual, assertDeepEqual, assertThrow} from "../__fixture__.mjs";
+import { assertEqual, assertDeepEqual, assertThrow } from "../__fixture__.mjs";
 
 /* eslint-disable import/no-namespace */
 import * as Library from "./closure.mjs";
 /* eslint-enable import/no-namespace */
 
-import {assert} from "./closure.mjs";
+import { assert } from "./closure.mjs";
 
 const {
   Array,
-  Reflect: {apply},
+  Reflect: { apply },
   String: {
-    prototype: {indexOf: indexOfString, lastIndexOf: lastIndexOfString},
+    prototype: { indexOf: indexOfString, lastIndexOf: lastIndexOfString },
   },
-  Reflect: {getOwnPropertyDescriptor},
+  Reflect: { getOwnPropertyDescriptor },
   undefined,
 } = globalThis;
 

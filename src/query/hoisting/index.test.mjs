@@ -1,10 +1,10 @@
-import {parse as parseAcorn} from "acorn";
+import { parse as parseAcorn } from "acorn";
 
-import {assertDeepEqual} from "../../__fixture__.mjs";
+import { assertDeepEqual } from "../../__fixture__.mjs";
 
-import {makeVarDeclaration, makeLetDeclaration} from "./declaration.mjs";
+import { makeVarDeclaration, makeLetDeclaration } from "./declaration.mjs";
 
-import {hoistBodyDeep, hoistBodyShallow, hoistHead} from "./index.mjs";
+import { hoistBodyDeep, hoistBodyShallow, hoistHead } from "./index.mjs";
 
 const options = {
   ecmaVersion: 2021,

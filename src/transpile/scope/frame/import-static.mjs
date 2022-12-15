@@ -15,7 +15,7 @@ import {
   makeImportExpression,
 } from "../../../ast/index.mjs";
 
-import {makeUnaryExpression} from "../../../intrinsic.mjs";
+import { makeUnaryExpression } from "../../../intrinsic.mjs";
 
 import {
   makeThrowConstantExpression,
@@ -27,12 +27,12 @@ import {
 
 const {
   undefined,
-  Reflect: {defineProperty},
+  Reflect: { defineProperty },
 } = globalThis;
 
 export const KINDS = ["import"];
 
-export const create = (_layer, _options) => ({static: {}});
+export const create = (_layer, _options) => ({ static: {} });
 
 export const conflict = conflictStaticExternal;
 
@@ -42,10 +42,10 @@ export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
-  {static: bindings},
+  { static: bindings },
   _kind,
   variable,
-  {source, specifier},
+  { source, specifier },
 ) => {
   assert(
     !hasOwnProperty(bindings, variable),
@@ -53,7 +53,7 @@ export const declare = (
   );
   defineProperty(bindings, variable, {
     __proto__: NULL_DATA_DESCRIPTOR,
-    value: {source, specifier},
+    value: { source, specifier },
   });
 };
 
@@ -66,8 +66,8 @@ export const lookupAll = constant___(undefined);
 export const makeReadExpression = partialxx______(
   makeStaticLookupNode,
   testStatic,
-  (_strict, _escaped, {static: bindings}, variable, _options) => {
-    const {source, specifier} = bindings[variable];
+  (_strict, _escaped, { static: bindings }, variable, _options) => {
+    const { source, specifier } = bindings[variable];
     return makeImportExpression(source, specifier);
   },
 );
@@ -75,8 +75,8 @@ export const makeReadExpression = partialxx______(
 export const makeTypeofExpression = partialxx______(
   makeStaticLookupNode,
   testStatic,
-  (_strict, _escaped, {static: bindings}, variable, _options) => {
-    const {source, specifier} = bindings[variable];
+  (_strict, _escaped, { static: bindings }, variable, _options) => {
+    const { source, specifier } = bindings[variable];
     return makeUnaryExpression(
       "typeof",
       makeImportExpression(source, specifier),

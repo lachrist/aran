@@ -1,8 +1,8 @@
-import {assertDeepEqual} from "../../__fixture__.mjs";
+import { assertDeepEqual } from "../../__fixture__.mjs";
 
-import {VALUED, UNVALUED} from "./valuation.mjs";
+import { VALUED, UNVALUED } from "./valuation.mjs";
 
-import {makeFreeCompletion, makeBoundedCompletion} from "./completion.mjs";
+import { makeFreeCompletion, makeBoundedCompletion } from "./completion.mjs";
 
 import {
   makeResult,
@@ -12,9 +12,9 @@ import {
   getFirstResultValuation,
 } from "./result.mjs";
 
-const node1 = {type: "DebbuggerStatement"};
+const node1 = { type: "DebbuggerStatement" };
 
-const node2 = {type: "EmptyStatement"};
+const node2 = { type: "EmptyStatement" };
 
 ///////////////////////////
 // generateReleaseResult //

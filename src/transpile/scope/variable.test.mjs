@@ -1,4 +1,4 @@
-import {assertDeepEqual} from "../../__fixture__.mjs";
+import { assertDeepEqual } from "../../__fixture__.mjs";
 
 import {
   BASE,

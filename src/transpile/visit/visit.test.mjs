@@ -1,12 +1,12 @@
-import {assertDeepEqual} from "../../__fixture__.mjs";
+import { assertDeepEqual } from "../../__fixture__.mjs";
 
-import {makeLiteralExpression} from "../../ast/index.mjs";
+import { makeLiteralExpression } from "../../ast/index.mjs";
 
-import {createCounter} from "../../util/index.mjs";
+import { createCounter } from "../../util/index.mjs";
 
-import {createContext} from "./context.mjs";
+import { createContext } from "./context.mjs";
 
-import {applyVisitor, applyArrayVisitor} from "./visit.mjs";
+import { applyVisitor, applyArrayVisitor } from "./visit.mjs";
 
 const test = (lift, apply) => {
   const root = {
@@ -18,9 +18,9 @@ const test = (lift, apply) => {
     apply(
       {
         type: (node, context, specific) => {
-          assertDeepEqual(node, {type: "type"});
+          assertDeepEqual(node, { type: "type" });
           assertDeepEqual(context, createContext(root));
-          assertDeepEqual(specific, {foo: "BAR", qux: "buz"});
+          assertDeepEqual(specific, { foo: "BAR", qux: "buz" });
           return lift(makeLiteralExpression(123));
         },
       },
@@ -28,9 +28,9 @@ const test = (lift, apply) => {
         foo: "bar",
         qux: "buz",
       },
-      {type: "type"},
+      { type: "type" },
       createContext(root),
-      {foo: "BAR"},
+      { foo: "BAR" },
     ),
     lift(makeLiteralExpression(123, 0)),
   );

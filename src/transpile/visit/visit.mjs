@@ -1,10 +1,10 @@
-import {map} from "array-lite";
+import { map } from "array-lite";
 
-import {hasOwnProperty, assert, partial_x} from "../../util/index.mjs";
+import { hasOwnProperty, assert, partial_x } from "../../util/index.mjs";
 
-import {annotateNode} from "../../ast/index.mjs";
+import { annotateNode } from "../../ast/index.mjs";
 
-import {serializeContextNode} from "./context.mjs";
+import { serializeContextNode } from "./context.mjs";
 
 const applyVisitorCommon = (
   visitors,
@@ -13,9 +13,13 @@ const applyVisitorCommon = (
   default_specific,
   specific,
 ) => {
+  dispatchNodeObject2(visitors, node, context, {
+    ...default_specific,
+    ...specific,
+  });
   assert(hasOwnProperty(visitors, node.type), `missing ${node.type} visitor`);
   const visitor = visitors[node.type];
-  return visitor(node, context, {...default_specific, ...specific});
+  return visitor(node, context, { ...default_specific, ...specific });
 };
 
 export const applyVisitor = (

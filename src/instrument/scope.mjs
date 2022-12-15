@@ -1,4 +1,4 @@
-import {forEach, concat, map, includes} from "array-lite";
+import { forEach, concat, map, includes } from "array-lite";
 
 import {
   append,
@@ -29,7 +29,7 @@ import {
 
 const {
   Error,
-  Reflect: {defineProperty},
+  Reflect: { defineProperty },
 } = globalThis;
 
 export const extendScope = (parent) => ({
@@ -54,11 +54,11 @@ const descriptor = {
   writable: true,
 };
 
-export const declareScope = ({bindings}, variable, value) => {
+export const declareScope = ({ bindings }, variable, value) => {
   assert(!hasOwnProperty(bindings, variable), "duplicate variable");
   defineProperty(bindings, variable, {
     __proto__: descriptor,
-    value: {value},
+    value: { value },
   });
 };
 
@@ -78,7 +78,7 @@ const lookup = (scope, variable, key) =>
 export const lookupScope = partial__x(lookup, "value");
 
 export const isScopeUsed = (scope, variable) => {
-  const {used} = getBindingScope(scope, variable);
+  const { used } = getBindingScope(scope, variable);
   return includes(used, variable);
 };
 
@@ -89,7 +89,7 @@ const pushUnique = (array, element) => {
 };
 
 export const makeScopeReadExpression = (scope, variable) => {
-  const {used, secret, parent} = getBindingScope(scope, variable);
+  const { used, secret, parent } = getBindingScope(scope, variable);
   pushUnique(used, variable);
   return parent === null
     ? makeReadGlobalExpression(`${secret}${variable}`)
@@ -97,7 +97,7 @@ export const makeScopeReadExpression = (scope, variable) => {
 };
 
 export const makeScopeWriteEffect = (scope, variable, expression) => {
-  const {used, secret, parent} = getBindingScope(scope, variable);
+  const { used, secret, parent } = getBindingScope(scope, variable);
   pushUnique(used, variable);
   return parent === null
     ? makeExpressionEffect(
@@ -106,7 +106,7 @@ export const makeScopeWriteEffect = (scope, variable, expression) => {
     : makeWriteEffect(variable, expression);
 };
 
-export const makeScopeBlock = ({parent, used}, labels, statements) => {
+export const makeScopeBlock = ({ parent, used }, labels, statements) => {
   assert(parent !== null, "expected body scope");
   return makeBlock(labels, used, statements);
 };
@@ -114,10 +114,13 @@ export const makeScopeBlock = ({parent, used}, labels, statements) => {
 const makeUndefinedDeclareStatement = partialx_x(
   makeDeclareStatement,
   "let",
-  makeLiteralExpression({undefined: null}),
+  makeLiteralExpression({ undefined: null }),
 );
 
-export const makeScopeScriptProgram = ({parent, secret, used}, statements) => {
+export const makeScopeScriptProgram = (
+  { parent, secret, used },
+  statements,
+) => {
   assert(parent === null, "expected root scope");
   return makeScriptProgram(
     concat(
@@ -128,17 +131,17 @@ export const makeScopeScriptProgram = ({parent, secret, used}, statements) => {
 };
 
 export const useScope = (scope, variable) => {
-  const {used} = getBindingScope(scope, variable);
+  const { used } = getBindingScope(scope, variable);
   pushUnique(used, variable);
 };
 
-export const makeScopeInternalLocalEvalProgram = ({parent, used}, block) => {
+export const makeScopeInternalLocalEvalProgram = ({ parent, used }, block) => {
   assert(parent !== null, "expected body scope");
   return makeInternalLocalEvalProgram(used, block);
 };
 
 const evaluate = (scope, variable) => {
-  const {used, parent} = getBindingScope(scope, variable);
+  const { used, parent } = getBindingScope(scope, variable);
   assert(parent !== null, "eval variable should not be root");
   pushUnique(used, variable);
 };

@@ -1,9 +1,9 @@
-import {parse as parseAcorn} from "acorn";
-import {map, reduce} from "array-lite";
-import {assertDeepEqual} from "../../__fixture__.mjs";
-import {inferCompletionNodeArray} from "./index.mjs";
+import { parse as parseAcorn } from "acorn";
+import { map, reduce } from "array-lite";
+import { assertDeepEqual } from "../../__fixture__.mjs";
+import { inferCompletionNodeArray } from "./index.mjs";
 
-const {Set} = globalThis;
+const { Set } = globalThis;
 
 const parseScript = (code) =>
   parseAcorn(code, {

@@ -1,6 +1,6 @@
-import {join} from "array-lite";
+import { join } from "array-lite";
 
-import {shift, assert} from "../../util/index.mjs";
+import { shift, assert } from "../../util/index.mjs";
 
 const {
   parseInt,
@@ -12,9 +12,9 @@ const {
       replace: replaceString,
     },
   },
-  Reflect: {apply},
+  Reflect: { apply },
   Number: {
-    prototype: {toString: stringifyNumber},
+    prototype: { toString: stringifyNumber },
   },
 } = globalThis;
 
@@ -62,9 +62,9 @@ const unindexVariable = (variable) => {
     const segments = apply(splitString, variable, SEPARATOR_SINGLETON);
     const index = parseInt(shift(segments), ENCODING);
     assert(!isNaN(index), "invalid variable index");
-    return {index, name: join(segments, SEPARATOR)};
+    return { index, name: join(segments, SEPARATOR) };
   } else {
-    return {index: null, name: variable};
+    return { index: null, name: variable };
   }
 };
 
@@ -78,7 +78,7 @@ export const layerVariable = generateLayer(ORIGINAL);
 export const unmangleVariable = (variable) => {
   assert(variable[0] in LAYER_MAPPING, "invalid variable layer");
   assert(variable[1] in SHADOWING_MAPPING, "invalid variable shadowing");
-  const {index, name} = unindexVariable(
+  const { index, name } = unindexVariable(
     apply(replaceString, apply(subString, variable, TWO_SINGLETON), REVERT),
   );
   return {

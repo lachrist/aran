@@ -1,4 +1,4 @@
-import {assertThrow, assertEqual, assertDeepEqual} from "./__fixture__.mjs";
+import { assertThrow, assertEqual, assertDeepEqual } from "./__fixture__.mjs";
 
 import {
   isObjectNode,
@@ -14,13 +14,13 @@ import {
   allignObjectNode0,
 } from "./node.mjs";
 
-const {Error} = globalThis;
+const { Error } = globalThis;
 
-assertEqual(isObjectNode({type: 123}), false);
+assertEqual(isObjectNode({ type: 123 }), false);
 
-assertEqual(isObjectNode({type: "type"}), true);
+assertEqual(isObjectNode({ type: "type" }), true);
 
-assertEqual(getObjectNodeType({type: "type"}), "type");
+assertEqual(getObjectNodeType({ type: "type" }), "type");
 
 assertEqual(isArrayNode([123]), false);
 
@@ -36,7 +36,7 @@ assertThrow(
 );
 
 assertThrow(
-  () => throwUnexpectedObjectNodeType({type: "TYPE"}),
+  () => throwUnexpectedObjectNodeType({ type: "TYPE" }),
   /^Error: unexpected object node type TYPE$/u,
 );
 
@@ -48,14 +48,14 @@ assertEqual(
   dispatchObjectNode0(
     {
       type: (...args) => {
-        assertDeepEqual(args, [{type: "type"}]);
+        assertDeepEqual(args, [{ type: "type" }]);
         return "result";
       },
     },
     () => {
       throw new Error("unreachable");
     },
-    {type: "type"},
+    { type: "type" },
   ),
   "result",
 );
@@ -68,10 +68,10 @@ assertEqual(
       },
     },
     (...args) => {
-      assertDeepEqual(args, [{type: "type"}]);
+      assertDeepEqual(args, [{ type: "type" }]);
       return "result";
     },
-    {type: "type"},
+    { type: "type" },
   ),
   "result",
 );
@@ -84,14 +84,14 @@ assertEqual(
   dispatchObjectNode1(
     {
       type: (...args) => {
-        assertDeepEqual(args, [{type: "type"}, "extra1"]);
+        assertDeepEqual(args, [{ type: "type" }, "extra1"]);
         return "result";
       },
     },
     () => {
       throw new Error("unreachable");
     },
-    {type: "type"},
+    { type: "type" },
     "extra1",
   ),
   "result",
@@ -105,10 +105,10 @@ assertEqual(
       },
     },
     (...args) => {
-      assertDeepEqual(args, [{type: "type"}, "extra1"]);
+      assertDeepEqual(args, [{ type: "type" }, "extra1"]);
       return "result";
     },
-    {type: "type"},
+    { type: "type" },
     "extra1",
   ),
   "result",
@@ -122,14 +122,14 @@ assertEqual(
   dispatchObjectNode2(
     {
       type: (...args) => {
-        assertDeepEqual(args, [{type: "type"}, "extra1", "extra2"]);
+        assertDeepEqual(args, [{ type: "type" }, "extra1", "extra2"]);
         return "result";
       },
     },
     () => {
       throw new Error("unreachable");
     },
-    {type: "type"},
+    { type: "type" },
     "extra1",
     "extra2",
   ),
@@ -144,10 +144,10 @@ assertEqual(
       },
     },
     (...args) => {
-      assertDeepEqual(args, [{type: "type"}, "extra1", "extra2"]);
+      assertDeepEqual(args, [{ type: "type" }, "extra1", "extra2"]);
       return "result";
     },
-    {type: "type"},
+    { type: "type" },
     "extra1",
     "extra2",
   ),
@@ -163,8 +163,8 @@ assertEqual(
     {
       type: (...args) => {
         assertDeepEqual(args, [
-          {type: "type", foo: 123},
-          {type: "type", foo: 456},
+          { type: "type", foo: 123 },
+          { type: "type", foo: 456 },
         ]);
         return "result";
       },
@@ -172,8 +172,8 @@ assertEqual(
     () => {
       throw new Error("unreachable");
     },
-    {type: "type", foo: 123},
-    {type: "type", foo: 456},
+    { type: "type", foo: 123 },
+    { type: "type", foo: 456 },
   ),
   "result",
 );
@@ -187,13 +187,13 @@ assertEqual(
     },
     (...args) => {
       assertDeepEqual(args, [
-        {type: "type", foo: 123},
-        {type: "TYPE", foo: 456},
+        { type: "type", foo: 123 },
+        { type: "TYPE", foo: 456 },
       ]);
       return "result";
     },
-    {type: "type", foo: 123},
-    {type: "TYPE", foo: 456},
+    { type: "type", foo: 123 },
+    { type: "TYPE", foo: 456 },
   ),
   "result",
 );

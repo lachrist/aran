@@ -1,12 +1,12 @@
-import {includes} from "array-lite";
-import {hasOwn, assert, partialx_, partial_x} from "../util/index.mjs";
-import {isLiteral} from "./literal.mjs";
-import {getIntrinsicArray} from "./intrinsics.mjs";
+import { includes } from "array-lite";
+import { hasOwn, assert, partialx_, partial_x } from "../util/index.mjs";
+import { isLiteral } from "./literal.mjs";
+import { getIntrinsicArray } from "./intrinsics.mjs";
 
 const {
-  Reflect: {apply},
+  Reflect: { apply },
   RegExp: {
-    prototype: {test: testRegExp},
+    prototype: { test: testRegExp },
   },
 } = globalThis;
 

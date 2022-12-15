@@ -1,12 +1,12 @@
 /* eslint-disable no-use-before-define */
 
-import {concat, map, reduceRight} from "array-lite";
+import { concat, map, reduceRight } from "array-lite";
 
-import {hasOwn, assert, partial_x, partialxx_} from "../util/index.mjs";
+import { hasOwn, assert, partial_x, partialxx_ } from "../util/index.mjs";
 
-import {dispatchArrayNode0, throwUnexpectedArrayNodeType} from "../node.mjs";
+import { dispatchArrayNode0, throwUnexpectedArrayNodeType } from "../node.mjs";
 
-import {fromLiteral} from "../ast/index.mjs";
+import { fromLiteral } from "../ast/index.mjs";
 
 import {
   MODULE_PROGRAM_DIRECTIVE,
@@ -23,7 +23,7 @@ import {
 const {
   String,
   undefined,
-  JSON: {stringify: stringifyJSON},
+  JSON: { stringify: stringifyJSON },
 } = globalThis;
 
 //////////
@@ -35,15 +35,18 @@ const makeDirective = (expression, directive) => ({
   expression,
   directive,
 });
-const makeBlockStatement = (body) => ({type: "BlockStatement", body});
+const makeBlockStatement = (body) => ({ type: "BlockStatement", body });
 const makeVariableDeclaration = (kind, declarations) => ({
   type: "VariableDeclaration",
   kind,
   declarations,
 });
-const makeDebuggerStatement = () => ({type: "DebuggerStatement"});
-const makeReturnStatement = (argument) => ({type: "ReturnStatement", argument});
-const makeBreakStatement = (label) => ({type: "BreakStatement", label});
+const makeDebuggerStatement = () => ({ type: "DebuggerStatement" });
+const makeReturnStatement = (argument) => ({
+  type: "ReturnStatement",
+  argument,
+});
+const makeBreakStatement = (label) => ({ type: "BreakStatement", label });
 const makeIfStatement = (test, consequent, alternate) => ({
   type: "IfStatement",
   test,
@@ -67,7 +70,7 @@ const makeTryStatement = (block, handler, finalizer) => ({
   handler,
   finalizer,
 });
-const makeCatchClause = (body) => ({type: "CatchClause", param: null, body});
+const makeCatchClause = (body) => ({ type: "CatchClause", param: null, body });
 const makeLiteral = (value) => ({
   type: "Literal",
   value,
@@ -119,12 +122,15 @@ const makeVariableDeclarator = (id, init) => ({
   init,
 });
 const makeEmptyVariableDeclarator = partial_x(makeVariableDeclarator, null);
-const makeArrayExpression = (elements) => ({type: "ArrayExpression", elements});
+const makeArrayExpression = (elements) => ({
+  type: "ArrayExpression",
+  elements,
+});
 const makeExpressionStatement = (expression) => ({
   type: "ExpressionStatement",
   expression,
 });
-const makeIdentifier = (name) => ({type: "Identifier", name});
+const makeIdentifier = (name) => ({ type: "Identifier", name });
 const makeMemberExpression = (computed, object, property) => ({
   type: "MemberExpression",
   computed,
@@ -178,7 +184,10 @@ const makeArrowFunctionExpression = ($async, body) => ({
   params: [],
   body,
 });
-const makeAwaitExpression = (argument) => ({type: "AwaitExpression", argument});
+const makeAwaitExpression = (argument) => ({
+  type: "AwaitExpression",
+  argument,
+});
 const makeYieldExpression = (delegate, argument) => ({
   type: "YieldExpression",
   delegate,
@@ -226,7 +235,7 @@ export const revertProgram = partialxx_(
   dispatchArrayNode0,
   {
     __proto__: null,
-    ScriptProgram: ({1: statements}) =>
+    ScriptProgram: ({ 1: statements }) =>
       makeProgram(
         "script",
         concat(
@@ -239,7 +248,7 @@ export const revertProgram = partialxx_(
           map(statements, revertStatement),
         ),
       ),
-    ModuleProgram: ({1: links, 2: block}) =>
+    ModuleProgram: ({ 1: links, 2: block }) =>
       makeProgram(
         "module",
         concat(
@@ -253,7 +262,7 @@ export const revertProgram = partialxx_(
           [revertBlock(block)],
         ),
       ),
-    EvalProgram: ({1: parameters, 2: variables, 3: block}) =>
+    EvalProgram: ({ 1: parameters, 2: variables, 3: block }) =>
       makeProgram(
         "script",
         concat(
@@ -285,7 +294,7 @@ export const revertLink = partialxx_(
   dispatchArrayNode0,
   {
     __proto__: null,
-    ImportLink: ({1: source, 2: specifier}) =>
+    ImportLink: ({ 1: source, 2: specifier }) =>
       makeImportDeclaration(
         specifier === null
           ? []
@@ -297,7 +306,7 @@ export const revertLink = partialxx_(
             ],
         makeLiteral(source),
       ),
-    ExportLink: ({1: specifier}) =>
+    ExportLink: ({ 1: specifier }) =>
       makeExportNamedDeclaration(
         [
           makeExportSpecifier(
@@ -307,7 +316,7 @@ export const revertLink = partialxx_(
         ],
         null,
       ),
-    AggregateLink: ({1: source, 2: specifier1, 3: specifier2}) =>
+    AggregateLink: ({ 1: source, 2: specifier1, 3: specifier2 }) =>
       specifier1 === null
         ? makeExportAllDeclaration(
             specifier2 === null ? null : makeIdentifier(specifier2),
@@ -333,7 +342,7 @@ export const revertBlock = partialxx_(
   dispatchArrayNode0,
   {
     __proto__: null,
-    Block: ({1: labels, 2: variables, 3: statements}) =>
+    Block: ({ 1: labels, 2: variables, 3: statements }) =>
       reduceRight(
         labels,
         accumulateLabel,
@@ -360,27 +369,27 @@ export const revertStatement = partialxx_(
   {
     __proto__: null,
     DebuggerStatement: ({}) => makeDebuggerStatement(),
-    ReturnStatement: ({1: expression}) =>
+    ReturnStatement: ({ 1: expression }) =>
       makeReturnStatement(revertExpression(expression)),
-    BreakStatement: ({1: label}) => makeBreakStatement(makeIdentifier(label)),
-    BlockStatement: ({1: block}) => revertBlock(block),
-    IfStatement: ({1: expression, 2: block1, 3: block2}) =>
+    BreakStatement: ({ 1: label }) => makeBreakStatement(makeIdentifier(label)),
+    BlockStatement: ({ 1: block }) => revertBlock(block),
+    IfStatement: ({ 1: expression, 2: block1, 3: block2 }) =>
       makeIfStatement(
         revertExpression(expression),
         revertBlock(block1),
         revertBlock(block2),
       ),
-    WhileStatement: ({1: expression, 2: block}) =>
+    WhileStatement: ({ 1: expression, 2: block }) =>
       makeWhileStatement(revertExpression(expression), revertBlock(block)),
-    TryStatement: ({1: block1, 2: block2, 3: block3}) =>
+    TryStatement: ({ 1: block1, 2: block2, 3: block3 }) =>
       makeTryStatement(
         revertBlock(block1),
         makeCatchClause(revertBlock(block2)),
         revertBlock(block3),
       ),
-    EffectStatement: ({1: effect}) =>
+    EffectStatement: ({ 1: effect }) =>
       makeExpressionStatement(revertEffect(effect)),
-    DeclareExternalStatement: ({1: kind, 2: variable, 3: expression}) =>
+    DeclareExternalStatement: ({ 1: kind, 2: variable, 3: expression }) =>
       makeVariableDeclaration(kind, [
         makeVariableDeclarator(
           makeIdentifier(`_${variable}`),
@@ -395,30 +404,30 @@ export const revertEffect = partialxx_(
   dispatchArrayNode0,
   {
     __proto__: null,
-    WriteEffect: ({1: variable, 2: expression}) =>
+    WriteEffect: ({ 1: variable, 2: expression }) =>
       makeAssignmentExpression(
         makeIdentifier(variable),
         revertExpression(expression),
       ),
-    WriteExternalEffect: ({1: variable, 2: expression}) =>
+    WriteExternalEffect: ({ 1: variable, 2: expression }) =>
       makeAssignmentExpression(
         makeIdentifier(`_${variable}`),
         revertExpression(expression),
       ),
-    ExportEffect: ({1: specifier, 2: expression}) =>
+    ExportEffect: ({ 1: specifier, 2: expression }) =>
       makeCallExpression(makeIdentifier(EXPORT_KEYWORD), [
         makeLiteral(specifier),
         revertExpression(expression),
       ]),
-    SequenceEffect: ({1: effect1, 2: effect2}) =>
+    SequenceEffect: ({ 1: effect1, 2: effect2 }) =>
       makeSequenceExpression([revertEffect(effect1), revertEffect(effect2)]),
-    ConditionalEffect: ({1: expression, 2: effect1, 3: effect2}) =>
+    ConditionalEffect: ({ 1: expression, 2: effect1, 3: effect2 }) =>
       makeConditionalExpression(
         revertExpression(expression),
         revertEffect(effect1),
         revertEffect(effect2),
       ),
-    ExpressionEffect: ({1: expression}) =>
+    ExpressionEffect: ({ 1: expression }) =>
       makeCallExpression(makeIdentifier(EFFECT_KEYWORD), [
         revertExpression(expression),
       ]),
@@ -430,8 +439,8 @@ export const revertExpression = partialxx_(
   dispatchArrayNode0,
   {
     __proto__: null,
-    ParameterExpression: ({1: parameter}) => revertParameter(parameter),
-    LiteralExpression: ({1: literal}) => {
+    ParameterExpression: ({ 1: parameter }) => revertParameter(parameter),
+    LiteralExpression: ({ 1: literal }) => {
       const primitive = fromLiteral(literal);
       if (primitive === undefined) {
         return makeIdentifier(UNDEFINED_KEYWORD);
@@ -439,22 +448,22 @@ export const revertExpression = partialxx_(
         return makeLiteral(primitive);
       }
     },
-    IntrinsicExpression: ({1: intrinsic}) =>
+    IntrinsicExpression: ({ 1: intrinsic }) =>
       makeMemberExpression(
         true,
         makeIdentifier(INTRINSIC_KEYWORD),
         makeLiteral(intrinsic),
       ),
-    ImportExpression: ({1: source, 2: specifier}) =>
+    ImportExpression: ({ 1: source, 2: specifier }) =>
       makeCallExpression(makeIdentifier(IMPORT_KEYWORD), [
         makeLiteral(source),
         makeLiteral(specifier),
       ]),
-    ReadExpression: ({1: variable}) => makeIdentifier(variable),
-    ReadExternalExpression: ({1: variable}) => makeIdentifier(`_${variable}`),
-    TypeofExternalExpression: ({1: variable}) =>
+    ReadExpression: ({ 1: variable }) => makeIdentifier(variable),
+    ReadExternalExpression: ({ 1: variable }) => makeIdentifier(`_${variable}`),
+    TypeofExternalExpression: ({ 1: variable }) =>
       makeUnaryExpression("typeof", makeIdentifier(`_${variable}`)),
-    ClosureExpression: ({1: kind, 2: asynchronous, 3: generator, 4: block}) =>
+    ClosureExpression: ({ 1: kind, 2: asynchronous, 3: generator, 4: block }) =>
       kind === "arrow"
         ? makeArrowFunctionExpression(asynchronous, revertBlock(block))
         : makeFunctionExpression(
@@ -463,28 +472,32 @@ export const revertExpression = partialxx_(
             generator,
             revertBlock(block),
           ),
-    AwaitExpression: ({1: expression}) =>
+    AwaitExpression: ({ 1: expression }) =>
       makeAwaitExpression(revertExpression(expression)),
-    YieldExpression: ({1: delegate, 2: expression}) =>
+    YieldExpression: ({ 1: delegate, 2: expression }) =>
       makeYieldExpression(delegate, revertExpression(expression)),
-    SequenceExpression: ({1: effect, 2: expression}) =>
+    SequenceExpression: ({ 1: effect, 2: expression }) =>
       makeSequenceExpression([
         revertEffect(effect),
         revertExpression(expression),
       ]),
-    ConditionalExpression: ({1: expression1, 2: expression2, 3: expression3}) =>
+    ConditionalExpression: ({
+      1: expression1,
+      2: expression2,
+      3: expression3,
+    }) =>
       makeConditionalExpression(
         revertExpression(expression1),
         revertExpression(expression2),
         revertExpression(expression3),
       ),
-    EvalExpression: ({1: parameters, 2: variables, 3: expression}) =>
+    EvalExpression: ({ 1: parameters, 2: variables, 3: expression }) =>
       makeCallExpression(makeIdentifier(EVAL_KEYWORD), [
         makeArrayExpression(map(parameters, revertParameter)),
         makeArrayExpression(map(variables, makeIdentifier)),
         revertExpression(expression),
       ]),
-    ApplyExpression: ({1: expression1, 2: expression2, 3: expressions}) =>
+    ApplyExpression: ({ 1: expression1, 2: expression2, 3: expressions }) =>
       makeCallExpression(
         revertExpression(expression1),
         concat(
@@ -492,7 +505,7 @@ export const revertExpression = partialxx_(
           map(expressions, revertExpression),
         ),
       ),
-    ConstructExpression: ({1: expression, 2: expressions}) =>
+    ConstructExpression: ({ 1: expression, 2: expressions }) =>
       makeNewExpression(
         revertExpression(expression),
         map(expressions, revertExpression),

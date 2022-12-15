@@ -43,7 +43,7 @@ import {
   dispatchArrayNode2,
 } from "../node.mjs";
 
-import {getSyntax, isSyntaxType} from "./syntax.mjs";
+import { getSyntax, isSyntaxType } from "./syntax.mjs";
 
 const {
   NaN,
@@ -53,11 +53,11 @@ const {
   Error,
   WeakMap,
   undefined,
-  JSON: {stringify: stringifyJSON},
-  Array: {isArray},
-  Reflect: {ownKeys, apply, defineProperty},
+  JSON: { stringify: stringifyJSON },
+  Array: { isArray },
+  Reflect: { ownKeys, apply, defineProperty },
   WeakMap: {
-    prototype: {set: setWeakMap, get: getWeakMap},
+    prototype: { set: setWeakMap, get: getWeakMap },
   },
 } = globalThis;
 
@@ -114,7 +114,7 @@ const isAwaitExpression = partial_x(isNodeType, "AwaitExpression");
 
 const isBreakStatement = partial_x(isNodeType, "BreakStatement");
 
-const doesFirstInclude = ({1: element}, array) => includes(array, element);
+const doesFirstInclude = ({ 1: element }, array) => includes(array, element);
 
 const isBoundDeclareExternalStatement = partialxx__(
   dispatchArrayNode1,
@@ -167,7 +167,7 @@ const isBoundBreakStatement = partialxx__(
 const isBindingImportLink = partialxx___(
   dispatchArrayNode2,
   {
-    ImportLink: ({1: source1, 2: specifier1}, source2, specifier2) =>
+    ImportLink: ({ 1: source1, 2: specifier1 }, source2, specifier2) =>
       source1 === source2 && specifier1 === specifier2,
   },
   constant___(false),
@@ -176,7 +176,7 @@ const isBindingImportLink = partialxx___(
 const isBindingExportLink = partialxx__(
   dispatchArrayNode1,
   {
-    ExportLink: ({1: specifier1}, specifier2) => specifier1 === specifier2,
+    ExportLink: ({ 1: specifier1 }, specifier2) => specifier1 === specifier2,
   },
   constant__(false),
 );
@@ -184,9 +184,9 @@ const isBindingExportLink = partialxx__(
 const isBoundLinkExpression = partialxx__(
   dispatchArrayNode1,
   {
-    ImportExpression: ({1: source, 2: specifier}, links) =>
+    ImportExpression: ({ 1: source, 2: specifier }, links) =>
       some(links, partial_xx(isBindingImportLink, source, specifier)),
-    ExportEffect: ({1: specifier}, links) =>
+    ExportEffect: ({ 1: specifier }, links) =>
       some(links, partial_x(isBindingExportLink, specifier)),
   },
   constant__(false),
@@ -196,10 +196,10 @@ const getStatementCompletion = partialxx_(
   dispatchArrayNode0,
   {
     ReturnStatement: ({}) => 1,
-    BlockStatement: ({1: block}) => getBlockCompletion(block),
-    IfStatement: ({2: block1, 3: block2}) =>
+    BlockStatement: ({ 1: block }) => getBlockCompletion(block),
+    IfStatement: ({ 2: block1, 3: block2 }) =>
       getBlockCompletion(block1) + getBlockCompletion(block2),
-    TryStatement: ({1: block1, 2: block2}) =>
+    TryStatement: ({ 1: block1, 2: block2 }) =>
       getBlockCompletion(block1) + getBlockCompletion(block2),
   },
   constant_(NaN),
@@ -208,7 +208,7 @@ const getStatementCompletion = partialxx_(
 const getBlockCompletion = partialxx_(
   dispatchArrayNode0,
   {
-    Block: ({1: labels, 3: statements}) =>
+    Block: ({ 1: labels, 3: statements }) =>
       labels.length === 0 && statements.length > 0
         ? getStatementCompletion(statements[statements.length - 1])
         : NaN,
@@ -220,7 +220,7 @@ const isLabeledBlock = partialxx_(
   dispatchArrayNode0,
   {
     __proto__: null,
-    Block: ({1: labels}) => labels.length > 0,
+    Block: ({ 1: labels }) => labels.length > 0,
   },
   deadcode_("missing block callback"),
 );
@@ -228,7 +228,7 @@ const isLabeledBlock = partialxx_(
 const extractExportSpecifierArray = partialxx_(
   dispatchArrayNode0,
   {
-    ExportLink: ({1: specifier}) => [specifier],
+    ExportLink: ({ 1: specifier }) => [specifier],
   },
   constant_([]),
 );
@@ -323,7 +323,7 @@ const digestProgramBody = (block, digest) => {
 const digestNodeSpecific = partialxx__(
   dispatchArrayNode1,
   {
-    ModuleProgram: ({1: links, 2: block}, digest) => {
+    ModuleProgram: ({ 1: links, 2: block }, digest) => {
       assert(
         !some(flatMap(links, extractExportSpecifierArray), isDuplicate),
         "duplicate export link found in ModuleProgram",
@@ -332,11 +332,11 @@ const digestNodeSpecific = partialxx__(
       digest = filterOut(digest, partial_x(isBoundLinkExpression, links));
       return digestProgramBody(block, digest);
     },
-    ScriptProgram: ({1: statements}, digest) => {
+    ScriptProgram: ({ 1: statements }, digest) => {
       digest = filterOut(digest, isDeclareExternalStatement);
       return digestProgramBody(makeBlock([], [], statements), digest);
     },
-    EvalProgram: ({1: parameters, 2: variables, 3: block}, digest) => {
+    EvalProgram: ({ 1: parameters, 2: variables, 3: block }, digest) => {
       assert(
         !some(parameters, isDuplicate),
         "dupicate parameter found in EvalProgram",
@@ -349,7 +349,7 @@ const digestNodeSpecific = partialxx__(
       digest = filterOut(digest, partial_x(isBoundParameterNode, parameters));
       return digestProgramBody(block, digest);
     },
-    AggregateLink: ({2: specifier1, 3: specifier2}, digest) => {
+    AggregateLink: ({ 2: specifier1, 3: specifier2 }, digest) => {
       // export Foo as *   from "source"; // invalid
       // export *          from "source"; // valid
       // export *   as Foo from "source"; // valid
@@ -359,7 +359,7 @@ const digestNodeSpecific = partialxx__(
       );
       return digest;
     },
-    Block: ({1: labels, 2: variables}, digest) => {
+    Block: ({ 1: labels, 2: variables }, digest) => {
       assert(!some(labels, isDuplicate), "duplicate label found in Block");
       assert(
         !some(variables, isDuplicate),
@@ -374,7 +374,7 @@ const digestNodeSpecific = partialxx__(
       return digest;
     },
     ClosureExpression: (
-      {1: kind, 2: asynchronous, 3: generator, 4: block},
+      { 1: kind, 2: asynchronous, 3: generator, 4: block },
       digest,
     ) => {
       assert(
@@ -418,7 +418,7 @@ const digestNodeSpecific = partialxx__(
       );
       return digest;
     },
-    TryStatement: ({1: block1, 2: block2, 3: block3}, _digest) => {
+    TryStatement: ({ 1: block1, 2: block2, 3: block3 }, _digest) => {
       assert(
         !isLabeledBlock(block1),
         "TryStatement body should not be a labeled Block",
@@ -437,7 +437,7 @@ const digestNodeSpecific = partialxx__(
         loadDigest("Block", block3),
       );
     },
-    EvalExpression: ({1: parameters, 2: variables}, digest) => {
+    EvalExpression: ({ 1: parameters, 2: variables }, digest) => {
       assert(
         !some(parameters, isDuplicate),
         "duplicate parameter found in EvalExpression",

@@ -10,9 +10,9 @@ import {
   hasOwnProperty,
 } from "../../../util/index.mjs";
 
-import {makeExpressionEffect} from "../../../ast/index.mjs";
+import { makeExpressionEffect } from "../../../ast/index.mjs";
 
-import {makeUnaryExpression} from "../../../intrinsic.mjs";
+import { makeUnaryExpression } from "../../../intrinsic.mjs";
 
 import {
   makeStaticLookupNode,
@@ -24,12 +24,12 @@ import {
 
 const {
   undefined,
-  Reflect: {defineProperty},
+  Reflect: { defineProperty },
 } = globalThis;
 
 export const KINDS = ["macro"];
 
-export const create = (_layer, _options) => ({static: {}});
+export const create = (_layer, _options) => ({ static: {} });
 
 export const conflict = conflictStaticInternal;
 
@@ -39,10 +39,10 @@ export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
-  {static: bindings},
+  { static: bindings },
   _kind,
   variable,
-  {binding},
+  { binding },
 ) => {
   assert(!hasOwnProperty(bindings, variable), "duplicate intrinsic variable");
   defineProperty(bindings, variable, {
@@ -60,14 +60,14 @@ export const lookupAll = constant___(undefined);
 export const makeReadExpression = partialxx______(
   makeStaticLookupNode,
   testStatic,
-  (_strict, _escaped, {static: bindings}, variable, _options) =>
+  (_strict, _escaped, { static: bindings }, variable, _options) =>
     bindings[variable],
 );
 
 export const makeTypeofExpression = partialxx______(
   makeStaticLookupNode,
   testStatic,
-  (_strict, _escaped, {static: bindings}, variable, _options) =>
+  (_strict, _escaped, { static: bindings }, variable, _options) =>
     makeUnaryExpression("typeof", bindings[variable]),
 );
 

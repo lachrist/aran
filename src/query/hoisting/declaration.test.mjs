@@ -1,6 +1,10 @@
-import {assertEqual, assertDeepEqual, assertThrow} from "../../__fixture__.mjs";
+import {
+  assertEqual,
+  assertDeepEqual,
+  assertThrow,
+} from "../../__fixture__.mjs";
 
-import {SyntaxAranError} from "../../util/index.mjs";
+import { SyntaxAranError } from "../../util/index.mjs";
 
 import {
   makeVoidDeclaration,

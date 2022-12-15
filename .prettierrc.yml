@@ -5,7 +5,7 @@ semi: true
 singleQuote: false
 quoteProps: consistent
 trailingComma: all
-bracketSpacing: false
+bracketSpacing: true
 arrowParens: always
 proseWrap: always
 endOfLine: lf

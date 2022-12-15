@@ -1,17 +1,17 @@
-import {includes, concat} from "array-lite";
-import {InvalidOptionsAranError} from "../util/index.mjs";
+import { includes, concat } from "array-lite";
+import { InvalidOptionsAranError } from "../util/index.mjs";
 
 const {
   undefined,
-  Array: {isArray},
-  Reflect: {apply},
+  Array: { isArray },
+  Reflect: { apply },
   Map,
   Map: {
-    prototype: {get: getMap, has: hasMap},
+    prototype: { get: getMap, has: hasMap },
   },
   Set,
   Set: {
-    prototype: {has: hasSet},
+    prototype: { has: hasSet },
   },
 } = globalThis;
 

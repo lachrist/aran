@@ -1,7 +1,7 @@
 const {
-  Reflect: {apply},
+  Reflect: { apply },
   String: {
-    prototype: {substring},
+    prototype: { substring },
   },
 } = globalThis;
 

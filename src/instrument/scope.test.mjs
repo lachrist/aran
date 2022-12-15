@@ -1,4 +1,4 @@
-import {assertThrow, assertEqual, assertSuccess} from "../__fixture__.mjs";
+import { assertThrow, assertEqual, assertSuccess } from "../__fixture__.mjs";
 
 import {
   makeLiteralExpression,
@@ -7,7 +7,7 @@ import {
   makeReturnStatement,
 } from "../ast/index.mjs";
 
-import {allignBlock, allignProgram} from "../allign/index.mjs";
+import { allignBlock, allignProgram } from "../allign/index.mjs";
 
 import {
   extendScope,
@@ -24,7 +24,7 @@ import {
   makeScopeInternalLocalEvalProgram,
 } from "./scope.mjs";
 
-const {undefined} = globalThis;
+const { undefined } = globalThis;
 
 {
   const scope = createRootScope("secret_");
@@ -123,7 +123,7 @@ const {undefined} = globalThis;
         ),
       ),
       `
-        'internal';
+        'internal-local-eval';
         let variable;
         {
           effect(eval([variable], 'code'));

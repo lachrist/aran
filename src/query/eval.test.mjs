@@ -1,6 +1,6 @@
-import {parse as parseAcorn} from "acorn";
-import {assertEqual} from "../__fixture__.mjs";
-import {hasDirectEvalCall} from "./eval.mjs";
+import { parse as parseAcorn } from "acorn";
+import { assertEqual } from "../__fixture__.mjs";
+import { hasDirectEvalCall } from "./eval.mjs";
 
 const options = {
   sourceType: "script",

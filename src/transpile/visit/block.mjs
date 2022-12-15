@@ -1,8 +1,4 @@
-
-import {
-  concat,
-  flatMap,
-} from "array-lite";
+import { concat, flatMap } from "array-lite";
 
 import {
   bind_,
@@ -34,17 +30,11 @@ import {
   makeScopeClosureDynamicBlock,
 } from "../scope/index.mjs";
 
-import {
-  getContextScoping,
-} from "./context.mjs";
+import { getContextScoping } from "./context.mjs";
 
-import {
-  applyVisitor,
-} from "./visit.mjs";
+import { applyVisitor } from "./visit.mjs";
 
-import {
-  visitStatement,
-} from "./statement.mjs";
+import { visitStatement } from "./statement.mjs";
 
 const declare = (scoping, declaration) =>
   declareBase(
@@ -62,32 +52,36 @@ const visitBlockBody = (nodes, context, completion) => {
   return concat(
     flatMap(
       sortStatementArray(nodes),
-      partial_xx(
-        visitStatement,
-        context,
-        {completion},
-      ),
+      partial_xx(visitStatement, context, { completion }),
     ),
     completion === null
-      ? [
-        makeReturnStatement(makeLiteralExpression({undefined:null})),
-      ]
+      ? [makeReturnStatement(makeLiteralExpression({ undefined: null }))]
       : [],
   );
 };
 
-const blocking = { makeStaticBlock: makeScopeRegularStaticBlock, makeDynamicBlock:makeScopeWithDynamicBlock};
+const blocking = {
+  makeStaticBlock: makeScopeRegularStaticBlock,
+  makeDynamicBlock: makeScopeWithDynamicBlock,
+};
 
-const closuring = { makeStaticBlock: makeScopeClosureStaticBlock, makeDynamicBlock:makeScopeClosureDynamicBlock}
+const closuring = {
+  makeStaticBlock: makeScopeClosureStaticBlock,
+  makeDynamicBlock: makeScopeClosureDynamicBlock,
+};
 
-const injectDynamic = (dynamic, {makeStaticBlock, makeDynamicBlock}) => dynamic === null
-  ? makeStaticBlock
-  : partial__x_(makeDynamicBlock, dynamic);
+const injectDynamic = (dynamic, { makeStaticBlock, makeDynamicBlock }) =>
+  dynamic === null ? makeStaticBlock : partial__x_(makeDynamicBlock, dynamic);
 
 export const visitBlock = partialxx___(
   applyVisitor,
   {
-    BlockStatement: (node, serial, context, {labels, dynamic, completion}) => {
+    BlockStatement: (
+      node,
+      serial,
+      context,
+      { labels, dynamic, completion },
+    ) => {
       const makeScopeBlock = injectDynamic(
         dynamic,
         completion === null ? closuring : blocking,

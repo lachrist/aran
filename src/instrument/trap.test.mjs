@@ -1,6 +1,10 @@
-import {join, concat, forEach, map} from "array-lite";
+import { join, concat, forEach, map } from "array-lite";
 
-import {assertEqual, assertDeepEqual, assertSuccess} from "../__fixture__.mjs";
+import {
+  assertEqual,
+  assertDeepEqual,
+  assertSuccess,
+} from "../__fixture__.mjs";
 
 import {
   makeEffectStatement,
@@ -14,9 +18,9 @@ import {
   makeInputExpression,
 } from "../ast/index.mjs";
 
-import {allignBlock} from "../allign/index.mjs";
+import { allignBlock } from "../allign/index.mjs";
 
-import {makeScopeBlock, extendScope, createRootScope} from "./scope.mjs";
+import { makeScopeBlock, extendScope, createRootScope } from "./scope.mjs";
 
 import {
   VAR_SPLIT,
@@ -26,9 +30,9 @@ import {
   declareSplitScope,
 } from "./split.mjs";
 
-import {makeTrapExpression, makeTrapStatementArray} from "./trap.mjs";
+import { makeTrapExpression, makeTrapStatementArray } from "./trap.mjs";
 
-const {undefined} = globalThis;
+const { undefined } = globalThis;
 
 const getFirst = (object) => object[0];
 const getSecond = (object) => object[1];
@@ -121,7 +125,7 @@ const getThird = (object) => object[2];
       ],
       [
         "literal",
-        [{undefined: null}, undefined, "undefined"],
+        [{ undefined: null }, undefined, "undefined"],
         [123, 123, "123"],
       ],
       [

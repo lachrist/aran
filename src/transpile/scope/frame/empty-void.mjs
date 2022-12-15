@@ -12,13 +12,16 @@ import {
   makeExpressionEffect,
 } from "../../../ast/index.mjs";
 
-import {makeThrowMissingExpression, makeDynamicWriteEffect} from "./helper.mjs";
+import {
+  makeThrowMissingExpression,
+  makeDynamicWriteEffect,
+} from "./helper.mjs";
 
-const {undefined} = globalThis;
+const { undefined } = globalThis;
 
 export const KINDS = [];
 
-export const create = (_layer, {macro, observable}) => ({
+export const create = (_layer, { macro, observable }) => ({
   dynamic: macro,
   observable,
 });

@@ -1,4 +1,4 @@
-import {includes, map} from "array-lite";
+import { includes, map } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
@@ -10,7 +10,7 @@ import {
   constant___,
 } from "../../../util/index.mjs";
 
-import {layerVariable} from "../variable.mjs";
+import { layerVariable } from "../variable.mjs";
 
 import {
   testStatic,
@@ -24,7 +24,7 @@ import {
 
 const {
   undefined,
-  Reflect: {ownKeys, defineProperty},
+  Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
 export const KINDS = ["define"];
@@ -36,14 +36,14 @@ export const create = (layer, _options) => ({
 
 export const conflict = conflictStaticInternal;
 
-export const harvestHeader = ({layer, static: bindings}) =>
+export const harvestHeader = ({ layer, static: bindings }) =>
   map(ownKeys(bindings), partialx_(layerVariable, layer));
 
 export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
-  {static: bindings},
+  { static: bindings },
   _kind,
   variable,
   _options,

@@ -1,4 +1,4 @@
-import {setErrorMessage} from "./error.mjs";
+import { setErrorMessage } from "./error.mjs";
 import {
   isMapping,
   makeEmptyMapping,

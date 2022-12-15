@@ -11,7 +11,7 @@ import {
 
 const {
   Error,
-  JSON: {parse: parseJSON, stringify: stringifyJSON},
+  JSON: { parse: parseJSON, stringify: stringifyJSON },
 } = globalThis;
 
 const CLOSURE_FRAME = null;

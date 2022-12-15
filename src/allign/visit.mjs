@@ -1,14 +1,11 @@
 /* eslint-disable no-use-before-define */
-import {zip, reduce, concat, map} from "array-lite";
+import { zip, reduce, concat, map } from "array-lite";
 
-import {deadcode__} from "../util/index.mjs";
+import { allignArrayNode0 } from "../node.mjs";
 
-import {
-  fromLiteral,
-  allignNode,
-  getNodeType,
-  getNodeAnnotation,
-} from "../ast/index.mjs";
+import { deadcode__ } from "../util/index.mjs";
+
+import { fromLiteral, getNodeType, getNodeAnnotation } from "../ast/index.mjs";
 
 import {
   appendErrorSegment,
@@ -26,7 +23,7 @@ import {
   bindResultLabel,
 } from "./result.mjs";
 
-const {String} = globalThis;
+const { String } = globalThis;
 
 const makeSinglePairVariableResult = (pair) =>
   makeSingleVariableResult(pair[0], pair[1]);

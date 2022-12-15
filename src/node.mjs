@@ -1,4 +1,4 @@
-import {slice} from "array-lite";
+import { slice } from "array-lite";
 
 import {
   partialx___,
@@ -9,7 +9,7 @@ import {
 
 const {
   Error,
-  Array: {isArray},
+  Array: { isArray },
 } = globalThis;
 
 ///////////////
@@ -25,17 +25,17 @@ export const isObjectNode = (any) =>
   hasOwn(any, "type") &&
   typeof any.type === "string";
 
-export const getArrayNodeType = ({0: type}) => type;
+export const getArrayNodeType = ({ 0: type }) => type;
 
 export const getArrayNodeContent = (array) => slice(array, 1, array.length);
 
-export const getObjectNodeType = ({type}) => type;
+export const getObjectNodeType = ({ type }) => type;
 
-export const throwUnexpectedArrayNodeType = ({0: type}) => {
+export const throwUnexpectedArrayNodeType = ({ 0: type }) => {
   throw new Error(`unexpected array node type ${type}`);
 };
 
-export const throwUnexpectedObjectNodeType = ({type}) => {
+export const throwUnexpectedObjectNodeType = ({ type }) => {
   throw new Error(`unexpected object node type ${type}`);
 };
 

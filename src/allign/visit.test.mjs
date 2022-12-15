@@ -1,4 +1,4 @@
-import {assertEqual, assertNotEqual} from "../__fixture__.mjs";
+import { assertEqual, assertNotEqual } from "../__fixture__.mjs";
 import {
   parseExpression,
   parseEffect,
@@ -7,8 +7,8 @@ import {
   parseLink,
   parseProgram,
 } from "../lang/index.mjs";
-import {getResultError} from "./result.mjs";
-import {makeRootError} from "./error.mjs";
+import { makeRootError } from "./error.mjs";
+import { getResultError } from "./result.mjs";
 import {
   visitExpression,
   visitEffect,
@@ -22,6 +22,7 @@ const generateAssert = (parse, visit) => (code1, code2, success) => {
   const error = getResultError(
     visit(makeRootError(), parse(code1), parse(code2)),
   );
+
   if (success) {
     assertEqual(error, null);
   } else {
@@ -49,6 +50,7 @@ assertExpression(
   "intrinsic.ReferenceError;",
   true,
 );
+
 assertExpression("intrinsic.ReferenceError;", "intrinsic.SyntaxError;", false);
 
 assertExpression("123;", "123;", true);
@@ -64,11 +66,13 @@ assertExpression(
   "importStatic('source', 'specifier');",
   true,
 );
+
 assertExpression(
   "importStatic('source', 'specifier');",
   "importStatic('SOURCE', 'specifier');",
   false,
 );
+
 assertExpression(
   "importStatic('source', 'specifier');",
   "importStatic('source', 'SPECIFIER');",
@@ -112,21 +116,25 @@ assertExpression(
   "(function () { return 123; });",
   true,
 );
+
 assertExpression(
   "(function () { return 123; });",
   "(function method () { return 123; });",
   false,
 );
+
 assertExpression(
   "(function () { return 123; });",
   "(async function () { return 123; });",
   false,
 );
+
 assertExpression(
   "(function () { return 123; });",
   "(function* () { return 123; });",
   false,
 );
+
 assertExpression(
   "(function () { return 123; });",
   "(function () { return 321; });",
@@ -149,11 +157,13 @@ assertEffect(
   "exportStatic('specifier', 123);",
   true,
 );
+
 assertEffect(
   "exportStatic('specifier', 123);",
   "exportStatic('SPECIFIER', 123);",
   false,
 );
+
 assertEffect(
   "exportStatic('specifier', 123);",
   "exportStatic('specifier', 321);",
@@ -168,11 +178,13 @@ assertEffect(
   "(effect(123), effect(456));",
   true,
 );
+
 assertEffect(
   "(effect(123), effect(456));",
   "(effect(789), effect(456));",
   false,
 );
+
 assertEffect(
   "(effect(123), effect(456));",
   "(effect(123), effect(789));",
@@ -184,16 +196,19 @@ assertEffect(
   "123 ? effect(456) : effect(789);",
   true,
 );
+
 assertEffect(
   "123 ? effect(456) : effect(789);",
   "321 ? effect(456) : effect(789);",
   false,
 );
+
 assertEffect(
   "123 ? effect(456) : effect(789);",
   "123 ? effect(654) : effect(789);",
   false,
 );
+
 assertEffect(
   "123 ? effect(456) : effect(789);",
   "123 ? effect(456) : effect(987);",
@@ -227,16 +242,19 @@ assertStatement(
   "if (123) { effect(456); } else { effect(789); }",
   true,
 );
+
 assertStatement(
   "if (123) { effect(456); } else { effect(789); }",
   "if (321) { effect(456); } else { effect(789); }",
   false,
 );
+
 assertStatement(
   "if (123) { effect(456); } else { effect(789); }",
   "if (123) { effect(654); } else { effect(789); }",
   false,
 );
+
 assertStatement(
   "if (123) { effect(456); } else { effect(789); }",
   "if (123) { effect(456); } else { effect(987); }",
@@ -248,11 +266,13 @@ assertStatement(
   "while (123) { effect(456); }",
   true,
 );
+
 assertStatement(
   "while (123) { effect(456); }",
   "while (321) { effect(456); }",
   false,
 );
+
 assertStatement(
   "while (123) { effect(456); }",
   "while (123) { effect(654); }",
@@ -264,16 +284,19 @@ assertStatement(
   "try { effect(123); } catch { effect(456); } finally { effect(789); }",
   true,
 );
+
 assertStatement(
   "try { effect(123); } catch { effect(456); } finally { effect(789); }",
   "try { effect(321); } catch { effect(456); } finally { effect(789); }",
   false,
 );
+
 assertStatement(
   "try { effect(123); } catch { effect(456); } finally { effect(789); }",
   "try { effect(123); } catch { effect(654); } finally { effect(789); }",
   false,
 );
+
 assertStatement(
   "try { effect(123); } catch { effect(456); } finally { effect(789); }",
   "try { effect(123); } catch { effect(456); } finally { effect(987); }",
@@ -292,11 +315,13 @@ assertLink(
   "import {specifier} from 'source';",
   true,
 );
+
 assertLink(
   "import {specifier} from 'source';",
   "import {SPECIFIER} from 'source';",
   false,
 );
+
 assertLink(
   "import {specifier} from 'source';",
   "import {specifier} from 'SOURCE';",
@@ -308,16 +333,19 @@ assertLink(
   "export {specifier1 as specifier2} from 'source';",
   true,
 );
+
 assertLink(
   "export {specifier1 as specifier2} from 'source';",
   "export {SPECIFIER1 as specifier2} from 'source';",
   false,
 );
+
 assertLink(
   "export {specifier1 as specifier2} from 'source';",
   "export {specifier1 as SPECIFIER2} from 'source';",
   false,
 );
+
 assertLink(
   "export {specifier1 as specifier2} from 'source';",
   "export {specifier1 as specifier2} from 'SOURCE';",
@@ -356,48 +384,63 @@ assertProgram(
   "'module'; export {specifier}; { return 123; }",
   true,
 );
+
 assertProgram(
   "'module'; export {specifier}; { return 123; }",
   "'module'; export {SPECIFIER}; { return 123; }",
   false,
 );
+
 assertProgram(
   "'module'; export {specifier}; { return 123; }",
   "'module'; export {specifier}; { return 321; }",
   false,
 );
 
-assertProgram("'eval'; { return 123; }", "'eval'; { return 123; }", true);
-assertProgram("'eval'; { return 123; }", "'eval'; { return 321; }", false);
-
 assertProgram(
-  "'internal'; let x; { return x; }",
-  "'internal'; let X; { return X; }",
+  "'global-eval'; { return 123; }",
+  "'global-eval'; { return 123; }",
   true,
 );
+
 assertProgram(
-  "'internal'; let x; { return 123; }",
-  "'internal'; { return 123; }",
-  false,
-);
-assertProgram(
-  "'internal'; { return 123; }",
-  "'internal'; { return 312; }",
+  "'global-eval'; { return 123; }",
+  "'global-eval'; { return 321; }",
   false,
 );
 
 assertProgram(
-  "'external'; []; { return 123; }",
-  "'external'; []; { return 123; }",
+  "'internal-local-eval'; let x; { return x; }",
+  "'internal-local-eval'; let X; { return X; }",
   true,
 );
+
 assertProgram(
-  "'external'; []; { return 123; }",
-  "'external'; []; { return 321; }",
+  "'internal-local-eval'; let x; { return 123; }",
+  "'internal-local-eval'; { return 123; }",
   false,
 );
+
 assertProgram(
-  "'external'; ['this']; { return 123; }",
-  "'external'; ['new.target']; { return 123; }",
+  "'internal-local-eval'; { return 123; }",
+  "'internal-local-eval'; { return 312; }",
+  false,
+);
+
+assertProgram(
+  "'external-local-eval'; []; { return 123; }",
+  "'external-local-eval'; []; { return 123; }",
+  true,
+);
+
+assertProgram(
+  "'external-local-eval'; []; { return 123; }",
+  "'external-local-eval'; []; { return 321; }",
+  false,
+);
+
+assertProgram(
+  "'external-local-eval'; ['this']; { return 123; }",
+  "'external-local-eval'; ['new.target']; { return 123; }",
   false,
 );

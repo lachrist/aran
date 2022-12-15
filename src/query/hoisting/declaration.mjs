@@ -1,14 +1,14 @@
-import {concat, filterOut} from "array-lite";
+import { concat, filterOut } from "array-lite";
 
-import {SyntaxAranError, assert, isDuplicate} from "../../util/index.mjs";
+import { SyntaxAranError, assert, isDuplicate } from "../../util/index.mjs";
 
 const {
-  Reflect: {apply},
+  Reflect: { apply },
   Map,
   Map: {
-    prototype: {has: hasMap, set: setMap, get: getMap, values: getMapValues},
+    prototype: { has: hasMap, set: setMap, get: getMap, values: getMapValues },
   },
-  Array: {from: toArray},
+  Array: { from: toArray },
 } = globalThis;
 
 //////////
@@ -33,26 +33,26 @@ export const makeConstDeclaration = generateMakeDeclaration("const");
 export const makeImportDeclaration = (variable, source, specifier) => ({
   kind: "import",
   variable,
-  import: {source, specifier},
+  import: { source, specifier },
   exports: [],
 });
 
-export const getDeclarationKind = ({kind}) => kind;
+export const getDeclarationKind = ({ kind }) => kind;
 
-export const getDeclarationVariable = ({variable}) => variable;
+export const getDeclarationVariable = ({ variable }) => variable;
 
-export const isDeclarationImported = ({import: import_}) => import_ !== null;
+export const isDeclarationImported = ({ import: import_ }) => import_ !== null;
 
-export const getDeclarationImportSource = ({import: {source}}) => source;
+export const getDeclarationImportSource = ({ import: { source } }) => source;
 
-export const getDeclarationImportSpecifier = ({import: {specifier}}) =>
+export const getDeclarationImportSpecifier = ({ import: { specifier } }) =>
   specifier;
 
-export const getDeclarationExportSpecifierArray = ({exports: exports_}) =>
+export const getDeclarationExportSpecifierArray = ({ exports: exports_ }) =>
   filterOut(exports_, isDuplicate);
 
 export const exportDeclaration = (
-  {kind, variable, import: import_, exports: exports_},
+  { kind, variable, import: import_, exports: exports_ },
   specifier,
 ) => ({
   kind,
@@ -80,8 +80,8 @@ const mergeKind = (kind1, kind2, variable) => {
 };
 
 const mergeDeclaration = (
-  {kind: kind1, variable: variable1, import: import1, exports: exports1},
-  {kind: kind2, variable: variable2, import: import2, exports: exports2},
+  { kind: kind1, variable: variable1, import: import1, exports: exports1 },
+  { kind: kind2, variable: variable2, import: import2, exports: exports2 },
 ) => {
   assert(variable1 === variable2, "expected duplicate declaration");
   assert(
@@ -96,14 +96,14 @@ const mergeDeclaration = (
   };
 };
 
-const isKindVoid = ({kind}) => kind === "void";
+const isKindVoid = ({ kind }) => kind === "void";
 
 export const checkoutDeclarationArray = (declarations) => {
-  const {length} = declarations;
+  const { length } = declarations;
   const mapping = new Map();
   for (let index = 0; index < length; index += 1) {
     const declaration = declarations[index];
-    const {variable} = declaration;
+    const { variable } = declaration;
     if (apply(hasMap, mapping, [variable])) {
       apply(setMap, mapping, [
         variable,

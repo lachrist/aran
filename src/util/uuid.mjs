@@ -1,10 +1,10 @@
 const {
-  Math: {random, round},
+  Math: { random, round },
   Number: {
-    prototype: {toString: toNumberString},
+    prototype: { toString: toNumberString },
   },
-  Date: {now},
-  Reflect: {apply},
+  Date: { now },
+  Reflect: { apply },
 } = globalThis;
 
 const ENCODING = [36];

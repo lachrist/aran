@@ -1,8 +1,8 @@
-import {parse as parseAcorn} from "acorn";
+import { parse as parseAcorn } from "acorn";
 
-import {flatMap} from "array-lite";
+import { flatMap } from "array-lite";
 
-import {assertDeepEqual} from "../../__fixture__.mjs";
+import { assertDeepEqual } from "../../__fixture__.mjs";
 
 import {
   exportDeclaration,
@@ -11,7 +11,7 @@ import {
   makeLetDeclaration,
 } from "./declaration.mjs";
 
-import {hoistShallow} from "./hoist-shallow.mjs";
+import { hoistShallow } from "./hoist-shallow.mjs";
 
 const options = {
   ecmaVersion: 2021,

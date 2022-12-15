@@ -1,6 +1,6 @@
-import {parse as parseAcorn} from "acorn";
+import { parse as parseAcorn } from "acorn";
 
-import {assertDeepEqual} from "../../__fixture__.mjs";
+import { assertDeepEqual } from "../../__fixture__.mjs";
 
 import {
   makeVarDeclaration,

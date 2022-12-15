@@ -1,12 +1,12 @@
-import {map} from "array-lite";
+import { map } from "array-lite";
 
-import {assertDeepEqual} from "../__fixture__.mjs";
+import { assertDeepEqual } from "../__fixture__.mjs";
 
-import {sortBody} from "./sort.mjs";
+import { sortBody } from "./sort.mjs";
 
-import {parse as parseAcorn} from "acorn";
+import { parse as parseAcorn } from "acorn";
 
-const getType = ({type}) => type;
+const getType = ({ type }) => type;
 
 const test = (type, code, ...types) => {
   assertDeepEqual(

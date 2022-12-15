@@ -1,6 +1,6 @@
-import {assertThrow} from "../../../__fixture__.mjs";
+import { assertThrow } from "../../../__fixture__.mjs";
 
-import {testBlock} from "./__fixture__.mjs";
+import { testBlock } from "./__fixture__.mjs";
 
 import * as Frame from "./illegal.mjs";
 

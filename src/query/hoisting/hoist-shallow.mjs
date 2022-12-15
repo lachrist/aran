@@ -1,4 +1,4 @@
-import {flatMap, map} from "array-lite";
+import { flatMap, map } from "array-lite";
 
 import {
   deadcode_,
@@ -7,7 +7,7 @@ import {
   constant_,
 } from "../../util/index.mjs";
 
-import {applyVisitor} from "../visit.mjs";
+import { applyVisitor } from "../visit.mjs";
 
 import {
   makeLetDeclaration,

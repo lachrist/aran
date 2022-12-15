@@ -1,4 +1,4 @@
-import {concat, reduce, includes, slice, every} from "array-lite";
+import { concat, reduce, includes, slice, every } from "array-lite";
 
 import {
   assert,
@@ -14,7 +14,7 @@ import {
   makeEvalExpression,
 } from "../../ast/index.mjs";
 
-import {pushScopeFrame, popScopeFrame, hasScopeFrame} from "./core.mjs";
+import { pushScopeFrame, popScopeFrame, hasScopeFrame } from "./core.mjs";
 
 import {
   conflictFrame,
@@ -36,8 +36,8 @@ import {
 const isUnique = (element, index, array) =>
   !includes(slice(array, 0, index), element);
 
-const harvest = ({header, prelude, scope: scope1}, _frame) => {
-  const {scope: scope2, frame, escaped} = popScopeFrame(scope1, false);
+const harvest = ({ header, prelude, scope: scope1 }, _frame) => {
+  const { scope: scope2, frame, escaped } = popScopeFrame(scope1, false);
   assert(!escaped, "escaped scope during harvest");
   return {
     header: concat(harvestFrameHeader(frame), header),
@@ -55,7 +55,7 @@ const makeScopeNode = (
 ) => {
   scope = reduce(frames, pushScopeFrame, scope);
   const statements2 = makeStatementArray(scope);
-  const {prelude: statements1, header: variables} = reduce(frames, harvest, {
+  const { prelude: statements1, header: variables } = reduce(frames, harvest, {
     header: [],
     prelude: [],
     scope,
@@ -93,7 +93,7 @@ export const makeScopeFrameScriptProgram = partialx____(
 
 const harvestHeader = (scope1) => {
   if (hasScopeFrame(scope1)) {
-    const {scope: scope2, frame} = popScopeFrame(scope1, false);
+    const { scope: scope2, frame } = popScopeFrame(scope1, false);
     return concat(harvestHeader(scope2), harvestFrameHeader(frame));
   } else {
     return [];
@@ -144,7 +144,7 @@ export const declareScope = (
   variable,
   options,
 ) => {
-  const {scope: scope2, frame, escaped} = popScopeFrame(scope1, false);
+  const { scope: scope2, frame, escaped } = popScopeFrame(scope1, false);
   assert(!escaped, "escaped scope during declaration");
   conflictFrame(strict, frame, kind, layer, variable);
   if (!declareFrame(strict, frame, kind, layer, variable, options)) {
@@ -164,7 +164,7 @@ export const makeScopeInitializeStatementArray = (
   variable,
   expression,
 ) => {
-  const {scope: scope2, frame, escaped} = popScopeFrame(scope1, false);
+  const { scope: scope2, frame, escaped } = popScopeFrame(scope1, false);
   assert(!escaped, "escaped scope during initialization");
   const maybe = makeFrameInitializeStatementArray(
     strict,

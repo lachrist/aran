@@ -1,10 +1,10 @@
-import {map, some, filter} from "array-lite";
+import { map, some, filter } from "array-lite";
 
-import {get, hasOwnProperty, partialx_} from "../util/index.mjs";
+import { get, hasOwnProperty, partialx_ } from "../util/index.mjs";
 
 const {
-  Array: {isArray},
-  Reflect: {ownKeys},
+  Array: { isArray },
+  Reflect: { ownKeys },
 } = globalThis;
 
 export const isDirectEvalCall = (node) =>

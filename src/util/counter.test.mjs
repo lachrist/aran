@@ -1,4 +1,4 @@
-import {assertEqual} from "../__fixture__.mjs";
+import { assertEqual } from "../__fixture__.mjs";
 
 import {
   incrementCounter,
@@ -7,7 +7,7 @@ import {
   resetCounter,
 } from "./counter.mjs";
 
-const {undefined} = globalThis;
+const { undefined } = globalThis;
 
 {
   const counter = createCounter(123);

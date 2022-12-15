@@ -1,12 +1,12 @@
-import {setErrorValuePair} from "./error.mjs";
+import { setErrorValuePair } from "./error.mjs";
 
 const {
-  Reflect: {getPrototypeOf},
+  Reflect: { getPrototypeOf },
 } = globalThis;
 
 export const isMapping = (object) => getPrototypeOf(object) === null;
 
-export const makeEmptyMapping = () => ({__proto__: null});
+export const makeEmptyMapping = () => ({ __proto__: null });
 
 export const makeSingleMapping = (key, value) => ({
   __proto__: null,
@@ -31,11 +31,11 @@ export const combineMapping = (error, mapping1, mapping2) => {
       }
     }
   }
-  return {__proto__: null, ...mapping1, ...mapping2};
+  return { __proto__: null, ...mapping1, ...mapping2 };
 };
 
 const deleteMapping = (mapping1, key) => {
-  const mapping2 = {__proto__: null, ...mapping1};
+  const mapping2 = { __proto__: null, ...mapping1 };
   delete mapping2[key];
   return mapping2;
 };

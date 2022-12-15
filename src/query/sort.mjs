@@ -1,4 +1,4 @@
-import {concat, filter, filterOut} from "array-lite";
+import { concat, filter, filterOut } from "array-lite";
 
 const isHoisted = (node) =>
   node.type === "FunctionDeclaration" ||

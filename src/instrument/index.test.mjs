@@ -1,14 +1,14 @@
-import {assertSuccess} from "../__fixture__.mjs";
+import { assertSuccess } from "../__fixture__.mjs";
 
-import {createCounter} from "../util/index.mjs";
+import { createCounter } from "../util/index.mjs";
 
-import {allignProgram} from "../allign/index.mjs";
+import { allignProgram } from "../allign/index.mjs";
 
-import {parseProgram} from "../lang/index.mjs";
+import { parseProgram } from "../lang/index.mjs";
 
-import {instrumentProgram} from "./index.mjs";
+import { instrumentProgram } from "./index.mjs";
 
-const {Error} = globalThis;
+const { Error } = globalThis;
 
 {
   const code = `"script"; return 123;`;
