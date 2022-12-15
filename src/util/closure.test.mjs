@@ -6,8 +6,6 @@ import { assertEqual, assertDeepEqual, assertThrow } from "../__fixture__.mjs";
 import * as Library from "./closure.mjs";
 /* eslint-enable import/no-namespace */
 
-import { assert } from "./closure.mjs";
-
 const {
   Array,
   Reflect: { apply },
@@ -46,13 +44,6 @@ const enumerate = (start, end) => {
 };
 
 const sum = (array) => reduce(array, (x1, x2) => x1 + x2, 0);
-
-assertEqual(assert(true, "foo"), undefined);
-
-assertThrow(() => assert(false, "foo"), {
-  name: "AssertionError",
-  message: "foo",
-});
 
 forEach(combine(6, ["_"]), (description) => {
   const deadcode = Library[`deadcode${description}`];

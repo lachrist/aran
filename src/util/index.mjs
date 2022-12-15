@@ -1,3 +1,4 @@
+export * from "./assert.mjs";
 export * from "./array.mjs";
 
 export * from "./closure.mjs";

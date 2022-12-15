@@ -1,4 +1,5 @@
 import { concat } from "array-lite";
+import { assert } from "./assert.mjs";
 
 const {
   JSON: { stringify },
@@ -29,12 +30,6 @@ export const inspect = (value) => {
     return apply(toObjectString, value, EMPTY_ARRAY);
   }
   return String(value);
-};
-
-const assert = (check, message) => {
-  if (!check) {
-    throw new Error(message);
-  }
 };
 
 export const format = (template, values) => {
@@ -79,7 +74,7 @@ export const format = (template, values) => {
       if (marker === "v") {
         return "";
       }
-      return assert(false, "invalid format marker");
+      throw new Error("invalid format marker");
     },
   ]);
   assert(index === values.length, "missing format marker");
