@@ -18,11 +18,11 @@ import {
   NULL_DATA_DESCRIPTOR,
   hasOwn,
   assert,
+  partialx_,
   partial_x,
+  partialx__,
   partial_xx,
-  partialxx_,
-  partialxx__,
-  partialxx___,
+  partialx___,
   partial__xx,
   return_x,
   constant_,
@@ -35,6 +35,7 @@ import {
 } from "../util/index.mjs";
 
 import {
+  DEFAULT_CLAUSE,
   isArrayNode,
   getArrayNodeType,
   getArrayNodeContent,
@@ -116,35 +117,26 @@ const isBreakStatement = partial_x(isNodeType, "BreakStatement");
 
 const doesFirstInclude = ({ 1: element }, array) => includes(array, element);
 
-const isBoundDeclareExternalStatement = partialxx__(
-  dispatchArrayNode1,
-  {
-    DeclareExternalStatement: doesFirstInclude,
-  },
-  constant__(false),
-);
+const isBoundDeclareExternalStatement = partialx__(dispatchArrayNode1, {
+  DeclareExternalStatement: doesFirstInclude,
+  [DEFAULT_CLAUSE]: constant__(false),
+});
 
 const isRigidDeclareStatement = partial_x(isBoundDeclareExternalStatement, [
   "let",
   "const",
 ]);
 
-const isBoundVariableNode = partialxx__(
-  dispatchArrayNode1,
-  {
-    ReadExpression: doesFirstInclude,
-    WriteEffect: doesFirstInclude,
-  },
-  constant__(false),
-);
+const isBoundVariableNode = partialx__(dispatchArrayNode1, {
+  ReadExpression: doesFirstInclude,
+  WriteEffect: doesFirstInclude,
+  [DEFAULT_CLAUSE]: constant__(false),
+});
 
-const isBoundParameterNode = partialxx__(
-  dispatchArrayNode1,
-  {
-    ParameterExpression: doesFirstInclude,
-  },
-  constant__(false),
-);
+const isBoundParameterNode = partialx__(dispatchArrayNode1, {
+  ParameterExpression: doesFirstInclude,
+  [DEFAULT_CLAUSE]: constant__(false),
+});
 
 const isCatchParameterNode = partial_x(isBoundParameterNode, ["error"]);
 
@@ -156,82 +148,55 @@ const isFunctionParameterNode = partial_x(isBoundParameterNode, [
   "arguments",
 ]);
 
-const isBoundBreakStatement = partialxx__(
-  dispatchArrayNode1,
-  {
-    BreakStatement: doesFirstInclude,
-  },
-  constant__(false),
-);
+const isBoundBreakStatement = partialx__(dispatchArrayNode1, {
+  BreakStatement: doesFirstInclude,
+  [DEFAULT_CLAUSE]: constant__(false),
+});
 
-const isBindingImportLink = partialxx___(
-  dispatchArrayNode2,
-  {
-    ImportLink: ({ 1: source1, 2: specifier1 }, source2, specifier2) =>
-      source1 === source2 && specifier1 === specifier2,
-  },
-  constant___(false),
-);
+const isBindingImportLink = partialx___(dispatchArrayNode2, {
+  ImportLink: ({ 1: source1, 2: specifier1 }, source2, specifier2) =>
+    source1 === source2 && specifier1 === specifier2,
+  [DEFAULT_CLAUSE]: constant___(false),
+});
 
-const isBindingExportLink = partialxx__(
-  dispatchArrayNode1,
-  {
-    ExportLink: ({ 1: specifier1 }, specifier2) => specifier1 === specifier2,
-  },
-  constant__(false),
-);
+const isBindingExportLink = partialx__(dispatchArrayNode1, {
+  ExportLink: ({ 1: specifier1 }, specifier2) => specifier1 === specifier2,
+  [DEFAULT_CLAUSE]: constant__(false),
+});
 
-const isBoundLinkExpression = partialxx__(
-  dispatchArrayNode1,
-  {
-    ImportExpression: ({ 1: source, 2: specifier }, links) =>
-      some(links, partial_xx(isBindingImportLink, source, specifier)),
-    ExportEffect: ({ 1: specifier }, links) =>
-      some(links, partial_x(isBindingExportLink, specifier)),
-  },
-  constant__(false),
-);
+const isBoundLinkExpression = partialx__(dispatchArrayNode1, {
+  ImportExpression: ({ 1: source, 2: specifier }, links) =>
+    some(links, partial_xx(isBindingImportLink, source, specifier)),
+  ExportEffect: ({ 1: specifier }, links) =>
+    some(links, partial_x(isBindingExportLink, specifier)),
+  [DEFAULT_CLAUSE]: constant__(false),
+});
 
-const getStatementCompletion = partialxx_(
-  dispatchArrayNode0,
-  {
-    ReturnStatement: ({}) => 1,
-    BlockStatement: ({ 1: block }) => getBlockCompletion(block),
-    IfStatement: ({ 2: block1, 3: block2 }) =>
-      getBlockCompletion(block1) + getBlockCompletion(block2),
-    TryStatement: ({ 1: block1, 2: block2 }) =>
-      getBlockCompletion(block1) + getBlockCompletion(block2),
-  },
-  constant_(NaN),
-);
+const getStatementCompletion = partialx_(dispatchArrayNode0, {
+  ReturnStatement: ({}) => 1,
+  BlockStatement: ({ 1: block }) => getBlockCompletion(block),
+  IfStatement: ({ 2: block1, 3: block2 }) =>
+    getBlockCompletion(block1) + getBlockCompletion(block2),
+  TryStatement: ({ 1: block1, 2: block2 }) =>
+    getBlockCompletion(block1) + getBlockCompletion(block2),
+  [DEFAULT_CLAUSE]: constant_(NaN),
+});
 
-const getBlockCompletion = partialxx_(
-  dispatchArrayNode0,
-  {
-    Block: ({ 1: labels, 3: statements }) =>
-      labels.length === 0 && statements.length > 0
-        ? getStatementCompletion(statements[statements.length - 1])
-        : NaN,
-  },
-  deadcode_("missing block callback"),
-);
+const getBlockCompletion = partialx_(dispatchArrayNode0, {
+  Block: ({ 1: labels, 3: statements }) =>
+    labels.length === 0 && statements.length > 0
+      ? getStatementCompletion(statements[statements.length - 1])
+      : NaN,
+});
 
-const isLabeledBlock = partialxx_(
-  dispatchArrayNode0,
-  {
-    __proto__: null,
-    Block: ({ 1: labels }) => labels.length > 0,
-  },
-  deadcode_("missing block callback"),
-);
+const isLabeledBlock = partialx_(dispatchArrayNode0, {
+  Block: ({ 1: labels }) => labels.length > 0,
+});
 
-const extractExportSpecifierArray = partialxx_(
-  dispatchArrayNode0,
-  {
-    ExportLink: ({ 1: specifier }) => [specifier],
-  },
-  constant_([]),
-);
+const extractExportSpecifierArray = partialx_(dispatchArrayNode0, {
+  ExportLink: ({ 1: specifier }) => [specifier],
+  [DEFAULT_CLAUSE]: constant_([]),
+});
 
 const immutable_trap_object = {
   __proto__: null,
@@ -320,141 +285,135 @@ const digestProgramBody = (block, digest) => {
   return digest;
 };
 
-const digestNodeSpecific = partialxx__(
-  dispatchArrayNode1,
-  {
-    ModuleProgram: ({ 1: links, 2: block }, digest) => {
-      assert(
-        !some(flatMap(links, extractExportSpecifierArray), isDuplicate),
-        "duplicate export link found in ModuleProgram",
-      );
-      digest = filterOut(digest, isAwaitExpression);
-      digest = filterOut(digest, partial_x(isBoundLinkExpression, links));
-      return digestProgramBody(block, digest);
-    },
-    ScriptProgram: ({ 1: statements }, digest) => {
-      digest = filterOut(digest, isDeclareExternalStatement);
-      return digestProgramBody(makeBlock([], [], statements), digest);
-    },
-    EvalProgram: ({ 1: parameters, 2: variables, 3: block }, digest) => {
-      assert(
-        !some(parameters, isDuplicate),
-        "dupicate parameter found in EvalProgram",
-      );
-      assert(
-        !some(variables, isDuplicate),
-        "duplicate variable found in EvalProgram",
-      );
-      digest = filterOut(digest, partial_x(isBoundVariableNode, variables));
-      digest = filterOut(digest, partial_x(isBoundParameterNode, parameters));
-      return digestProgramBody(block, digest);
-    },
-    AggregateLink: ({ 2: specifier1, 3: specifier2 }, digest) => {
-      // export Foo as *   from "source"; // invalid
-      // export *          from "source"; // valid
-      // export *   as Foo from "source"; // valid
-      assert(
-        !(specifier1 !== null && specifier2 === null),
-        "AggregateLink cannot have a non-null imported specifier and a null exported specifier",
-      );
-      return digest;
-    },
-    Block: ({ 1: labels, 2: variables }, digest) => {
-      assert(!some(labels, isDuplicate), "duplicate label found in Block");
-      assert(
-        !some(variables, isDuplicate),
-        "duplicate variable found in Block",
-      );
-      assert(
-        !some(digest, isRigidDeclareStatement),
-        "found rigid DeclareStatement in Block",
-      );
-      digest = filterOut(digest, partial_x(isBoundBreakStatement, labels));
-      digest = filterOut(digest, partial_x(isBoundVariableNode, variables));
-      return digest;
-    },
-    ClosureExpression: (
-      { 1: kind, 2: asynchronous, 3: generator, 4: block },
-      digest,
-    ) => {
-      assert(
-        !isNaN(getBlockCompletion(block)),
-        "ClosureExpression.body should be a completion Block",
-      );
-      assert(
-        !generator || (kind !== "arrow" && kind !== "constructor"),
-        "arrow/constructor ClosureExpression cannot be generator",
-      );
-      assert(
-        !asynchronous || kind !== "constructor",
-        "constructor ClosureExpression cannot be asynchronous",
-      );
-      digest = filterOut(
-        digest,
-        kind === "arrow" ? isArrowParameterNode : isFunctionParameterNode,
-      );
-      digest = filterOut(digest, isReturnStatement);
-      if (generator) {
-        digest = filterOut(digest, isYieldExpression);
-      }
-      if (asynchronous) {
-        digest = filterOut(digest, isAwaitExpression);
-      }
-      assert(
-        !some(digest, isDeclareExternalStatement),
-        "found DeclareStatement in ClosureExpression",
-      );
-      assert(
-        !some(digest, isAwaitExpression),
-        "found AwaitExpression in non-asynchronous ClosureExpression",
-      );
-      assert(
-        !some(digest, isYieldExpression),
-        "found YieldExpression in non-generator ClosureExpression",
-      );
-      assert(
-        !some(digest, isBreakStatement),
-        "found unbound BreakStatement in ClosureExpression >> %j",
-      );
-      return digest;
-    },
-    TryStatement: ({ 1: block1, 2: block2, 3: block3 }, _digest) => {
-      assert(
-        !isLabeledBlock(block1),
-        "TryStatement body should not be a labeled Block",
-      );
-      assert(
-        !isLabeledBlock(block2),
-        "TryStatement handler should not be a labeled Block",
-      );
-      assert(
-        !isLabeledBlock(block3),
-        "TryStatement finalizer should not be a labeled Block",
-      );
-      return concat(
-        loadDigest("Block", block1),
-        filterOut(loadDigest("Block", block2), isCatchParameterNode),
-        loadDigest("Block", block3),
-      );
-    },
-    EvalExpression: ({ 1: parameters, 2: variables }, digest) => {
-      assert(
-        !some(parameters, isDuplicate),
-        "duplicate parameter found in EvalExpression",
-      );
-      assert(
-        !some(variables, isDuplicate),
-        "duplicate variable found in EvalExpression",
-      );
-      return concat(
-        digest,
-        map(parameters, makeParameterExpression),
-        map(variables, makeReadExpression),
-      );
-    },
+const digestNodeSpecific = partialx__(dispatchArrayNode1, {
+  ModuleProgram: ({ 1: links, 2: block }, digest) => {
+    assert(
+      !some(flatMap(links, extractExportSpecifierArray), isDuplicate),
+      "duplicate export link found in ModuleProgram",
+    );
+    digest = filterOut(digest, isAwaitExpression);
+    digest = filterOut(digest, partial_x(isBoundLinkExpression, links));
+    return digestProgramBody(block, digest);
   },
-  return_x,
-);
+  ScriptProgram: ({ 1: statements }, digest) => {
+    digest = filterOut(digest, isDeclareExternalStatement);
+    return digestProgramBody(makeBlock([], [], statements), digest);
+  },
+  EvalProgram: ({ 1: parameters, 2: variables, 3: block }, digest) => {
+    assert(
+      !some(parameters, isDuplicate),
+      "dupicate parameter found in EvalProgram",
+    );
+    assert(
+      !some(variables, isDuplicate),
+      "duplicate variable found in EvalProgram",
+    );
+    digest = filterOut(digest, partial_x(isBoundVariableNode, variables));
+    digest = filterOut(digest, partial_x(isBoundParameterNode, parameters));
+    return digestProgramBody(block, digest);
+  },
+  AggregateLink: ({ 2: specifier1, 3: specifier2 }, digest) => {
+    // export Foo as *   from "source"; // invalid
+    // export *          from "source"; // valid
+    // export *   as Foo from "source"; // valid
+    assert(
+      !(specifier1 !== null && specifier2 === null),
+      "AggregateLink cannot have a non-null imported specifier and a null exported specifier",
+    );
+    return digest;
+  },
+  Block: ({ 1: labels, 2: variables }, digest) => {
+    assert(!some(labels, isDuplicate), "duplicate label found in Block");
+    assert(!some(variables, isDuplicate), "duplicate variable found in Block");
+    assert(
+      !some(digest, isRigidDeclareStatement),
+      "found rigid DeclareStatement in Block",
+    );
+    digest = filterOut(digest, partial_x(isBoundBreakStatement, labels));
+    digest = filterOut(digest, partial_x(isBoundVariableNode, variables));
+    return digest;
+  },
+  ClosureExpression: (
+    { 1: kind, 2: asynchronous, 3: generator, 4: block },
+    digest,
+  ) => {
+    assert(
+      !isNaN(getBlockCompletion(block)),
+      "ClosureExpression.body should be a completion Block",
+    );
+    assert(
+      !generator || (kind !== "arrow" && kind !== "constructor"),
+      "arrow/constructor ClosureExpression cannot be generator",
+    );
+    assert(
+      !asynchronous || kind !== "constructor",
+      "constructor ClosureExpression cannot be asynchronous",
+    );
+    digest = filterOut(
+      digest,
+      kind === "arrow" ? isArrowParameterNode : isFunctionParameterNode,
+    );
+    digest = filterOut(digest, isReturnStatement);
+    if (generator) {
+      digest = filterOut(digest, isYieldExpression);
+    }
+    if (asynchronous) {
+      digest = filterOut(digest, isAwaitExpression);
+    }
+    assert(
+      !some(digest, isDeclareExternalStatement),
+      "found DeclareStatement in ClosureExpression",
+    );
+    assert(
+      !some(digest, isAwaitExpression),
+      "found AwaitExpression in non-asynchronous ClosureExpression",
+    );
+    assert(
+      !some(digest, isYieldExpression),
+      "found YieldExpression in non-generator ClosureExpression",
+    );
+    assert(
+      !some(digest, isBreakStatement),
+      "found unbound BreakStatement in ClosureExpression >> %j",
+    );
+    return digest;
+  },
+  TryStatement: ({ 1: block1, 2: block2, 3: block3 }, _digest) => {
+    assert(
+      !isLabeledBlock(block1),
+      "TryStatement body should not be a labeled Block",
+    );
+    assert(
+      !isLabeledBlock(block2),
+      "TryStatement handler should not be a labeled Block",
+    );
+    assert(
+      !isLabeledBlock(block3),
+      "TryStatement finalizer should not be a labeled Block",
+    );
+    return concat(
+      loadDigest("Block", block1),
+      filterOut(loadDigest("Block", block2), isCatchParameterNode),
+      loadDigest("Block", block3),
+    );
+  },
+  EvalExpression: ({ 1: parameters, 2: variables }, digest) => {
+    assert(
+      !some(parameters, isDuplicate),
+      "duplicate parameter found in EvalExpression",
+    );
+    assert(
+      !some(variables, isDuplicate),
+      "duplicate variable found in EvalExpression",
+    );
+    return concat(
+      digest,
+      map(parameters, makeParameterExpression),
+      map(variables, makeReadExpression),
+    );
+  },
+  [DEFAULT_CLAUSE]: return_x,
+});
 
 export const validateNode = (node) => {
   try {

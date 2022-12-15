@@ -51,7 +51,8 @@ const visitPrimitive = (error, primitive1, primitive2) =>
   );
 
 const default_callback = deadcode__("could not visit node");
-const generateVisitNode = (callbacks) => (error, node1, node2) => {
+
+const generateVisitNode = (callbacks) => (node1, node2, error) => {
   const type1 = getNodeType(node1);
   const type2 = getNodeType(node2);
   if (type1 !== type2) {
@@ -69,7 +70,7 @@ const generateVisitNode = (callbacks) => (error, node1, node2) => {
     getNodeAnnotation(node2),
   );
   return reduce(
-    allignNode(child_error, node1, node2, callbacks, default_callback),
+    allignNodeArray1(node1, node2, callbacks, default_callback, child_error),
     (result1, result2) => combineResult(child_error, result1, result2),
     makeEmptyResult(null),
   );

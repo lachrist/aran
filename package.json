@@ -13,8 +13,8 @@
   "scripts": {
     "build": "node build/generate-make.mjs",
     "build-debug": "node build/generate-make.mjs DEBUG",
-    "lint": "npx eslint",
-    "format": "npx prettier -w",
+    "lint": "npx prettier -c '**/*.mjs' && npx eslint '**/*.mjs'",
+    "format": "npx prettier -w '**/*.mjs'",
     "test": "npx bercow",
     "coverage": "/bin/sh shell/coverage.sh"
   },

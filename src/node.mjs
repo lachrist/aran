@@ -1,6 +1,8 @@
 import { slice } from "array-lite";
 
 import {
+  assert,
+  partialx__,
   partialx___,
   partialx____,
   partialx_____,
@@ -8,9 +10,13 @@ import {
 } from "./util/index.mjs";
 
 const {
-  Error,
+  Symbol,
   Array: { isArray },
 } = globalThis;
+
+export const DEFAULT_CLAUSE = Symbol("node-default-callback");
+
+export const MISMATCH_CLAUSE = Symbol("node-mismatch-callback");
 
 ///////////////
 // ArrayNode //
@@ -31,102 +37,79 @@ export const getArrayNodeContent = (array) => slice(array, 1, array.length);
 
 export const getObjectNodeType = ({ type }) => type;
 
-export const throwUnexpectedArrayNodeType = ({ 0: type }) => {
-  throw new Error(`unexpected array node type ${type}`);
+//////////////
+// dispatch //
+//////////////
+
+const getDispatchClause = (clauses, type) => {
+  if (hasOwn(clauses, type)) {
+    return clauses[type];
+  } else {
+    assert(hasOwn(clauses, DEFAULT_CLAUSE), "missing default clause");
+    return clauses[DEFAULT_CLAUSE];
+  }
 };
 
-export const throwUnexpectedObjectNodeType = ({ type }) => {
-  throw new Error(`unexpected object node type ${type}`);
-};
-
-///////////////////
 // dispatchNode0 //
-///////////////////
 
-const dispatchNode0 = (getType, clauses, default_clause, node) => {
-  const type = getType(node);
-  if (hasOwn(clauses, type)) {
-    const clause = clauses[type];
-    return clause(node);
-  } else {
-    return default_clause(node);
-  }
-};
+const dispatchNode0 = (getType, clauses, node) =>
+  getDispatchClause(clauses, getType(node))(node);
 
-export const dispatchArrayNode0 = partialx___(dispatchNode0, getArrayNodeType);
+export const dispatchArrayNode0 = partialx__(dispatchNode0, getArrayNodeType);
 
-export const dispatchObjectNode0 = partialx___(
-  dispatchNode0,
-  getObjectNodeType,
-);
+export const dispatchObjectNode0 = partialx__(dispatchNode0, getObjectNodeType);
 
-///////////////////
 // dispatchNode1 //
-///////////////////
 
-const dispatchNode1 = (getType, clauses, default_clause, node, extra1) => {
-  const type = getType(node);
-  if (hasOwn(clauses, type)) {
-    const clause = clauses[type];
-    return clause(node, extra1);
-  } else {
-    return default_clause(node, extra1);
-  }
-};
+const dispatchNode1 = (getType, clauses, node, extra1) =>
+  getDispatchClause(clauses, getType(node))(node, extra1);
 
-export const dispatchArrayNode1 = partialx____(dispatchNode1, getArrayNodeType);
+export const dispatchArrayNode1 = partialx___(dispatchNode1, getArrayNodeType);
 
-export const dispatchObjectNode1 = partialx____(
+export const dispatchObjectNode1 = partialx___(
   dispatchNode1,
   getObjectNodeType,
 );
 
-///////////////////
 // dispatchNode2 //
-///////////////////
 
-const dispatchNode2 = (
-  getType,
-  clauses,
-  default_clause,
-  node,
-  extra1,
-  extra2,
-) => {
-  const type = getType(node);
-  if (hasOwn(clauses, type)) {
-    const clause = clauses[type];
-    return clause(node, extra1, extra2);
-  } else {
-    return default_clause(node, extra1, extra2);
-  }
-};
+const dispatchNode2 = (getType, clauses, node, extra1, extra2) =>
+  getDispatchClause(clauses, getType(node))(node, extra1, extra2);
 
-export const dispatchArrayNode2 = partialx_____(
-  dispatchNode2,
-  getArrayNodeType,
-);
+export const dispatchArrayNode2 = partialx____(dispatchNode2, getArrayNodeType);
 
-export const dispatchObjectNode2 = partialx_____(
+export const dispatchObjectNode2 = partialx____(
   dispatchNode2,
   getObjectNodeType,
 );
 
-/////////////////
-// allignNode0 //
-/////////////////
+////////////
+// allign //
+////////////
 
-const allignNode0 = (getType, clauses, default_clause, node1, node2) => {
-  const type1 = getType(node1);
-  const type2 = getType(node2);
-  if (type1 === type2 && hasOwn(clauses, type1)) {
-    const clause = clauses[type1];
-    return clause(node1, node2);
+const getAllignClause = (clauses, type1, type2) => {
+  if (type1 === type2) {
+    return getDispatchClause(clauses, type1);
   } else {
-    return default_clause(node1, node2);
+    assert(hasOwn(clauses, MISMATCH_CLAUSE), "missing mismatch clause");
+    return clauses[MISMATCH_CLAUSE];
   }
 };
+
+// allignNode0 //
+
+const allignNode0 = (getType, clauses, node1, node2) =>
+  getAllignClause(clauses, getType(node1), getType(node2))(node1, node2);
 
 export const allignArrayNode0 = partialx____(allignNode0, getArrayNodeType);
 
 export const allignObjectNode0 = partialx____(allignNode0, getObjectNodeType);
+
+// allign1 //
+
+const allignNode1 = (getType, clauses, node1, node2, extra) =>
+  getAllignClause(clauses, getType(node1), getType(node2))(node1, node2, extra);
+
+export const allignArrayNode1 = partialx_____(allignNode1, getArrayNodeType);
+
+export const allignObjectNode1 = partialx_____(allignNode1, getObjectNodeType);
