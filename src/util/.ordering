@@ -4,6 +4,7 @@ closure.mjs
 counter.mjs
 curry.mjs
 either.mjs
+json.mjs
 list.mjs
 object.mjs
 operation.mjs
