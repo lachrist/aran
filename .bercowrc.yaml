@@ -1,6 +1,7 @@
 plugins:
   '@bercow/link-adjacent': {}
-  '@bercow/order-esm-import': {}
+  '@bercow/order-esm-import':
+    fix: false
   '@bercow/prettier':
     prettier-options: '.'
   '@bercow/eslint':
