@@ -12,12 +12,9 @@ import {
   MODULE_PROGRAM_DIRECTIVE,
   SCRIPT_PROGRAM_DIRECTIVE,
   EVAL_PROGRAM_DIRECTIVE,
-  EFFECT_KEYWORD,
   EVAL_KEYWORD,
   UNDEFINED_KEYWORD,
   INTRINSIC_KEYWORD,
-  EXPORT_KEYWORD,
-  IMPORT_KEYWORD,
 } from "./keywords.mjs";
 
 const {
@@ -203,6 +200,12 @@ const makeUnaryExpression = (operator, argument) => ({
   prefix: true,
   operator,
   argument,
+});
+const makeBinaryExpression = (operator, left, right) => ({
+  type: "BinaryExpression",
+  operator,
+  left,
+  right,
 });
 
 ////////////
@@ -392,10 +395,11 @@ export const revertEffect = partialx_(dispatchArrayNode0, {
       revertExpression(expression),
     ),
   ExportEffect: ({ 1: specifier, 2: expression }) =>
-    makeCallExpression(makeIdentifier(EXPORT_KEYWORD), [
+    makeBinaryExpression(
+      "<<",
       makeLiteral(specifier),
       revertExpression(expression),
-    ]),
+    ),
   SequenceEffect: ({ 1: effect1, 2: effect2 }) =>
     makeSequenceExpression([revertEffect(effect1), revertEffect(effect2)]),
   ConditionalEffect: ({ 1: expression, 2: effect1, 3: effect2 }) =>
@@ -405,9 +409,7 @@ export const revertEffect = partialx_(dispatchArrayNode0, {
       revertEffect(effect2),
     ),
   ExpressionEffect: ({ 1: expression }) =>
-    makeCallExpression(makeIdentifier(EFFECT_KEYWORD), [
-      revertExpression(expression),
-    ]),
+    makeUnaryExpression("void", revertExpression(expression)),
 });
 
 export const revertExpression = partialx_(dispatchArrayNode0, {
@@ -427,10 +429,11 @@ export const revertExpression = partialx_(dispatchArrayNode0, {
       makeLiteral(intrinsic),
     ),
   ImportExpression: ({ 1: source, 2: specifier }) =>
-    makeCallExpression(makeIdentifier(IMPORT_KEYWORD), [
+    makeBinaryExpression(
+      ">>",
       makeLiteral(source),
-      makeLiteral(specifier),
-    ]),
+      makeLiteral(specifier === null ? "*" : specifier),
+    ),
   ReadExpression: ({ 1: variable }) => makeIdentifier(variable),
   ReadExternalExpression: ({ 1: variable }) => makeIdentifier(`_${variable}`),
   TypeofExternalExpression: ({ 1: variable }) =>

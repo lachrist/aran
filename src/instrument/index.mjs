@@ -7,17 +7,14 @@ export const instrumentProgram = (
   { counter, secret, advice },
   { unmangleVariable, unmangleLabel },
 ) =>
-  visitProgram(
-    {
-      unmangleVariable,
-      unmangleLabel,
-      counter,
-      scope: createRootScope(secret),
-      pointcut,
-      advice,
-      kind: null,
-      arrival: null,
-      namespace: null,
-    },
-    program,
-  );
+  visitProgram(program, {
+    unmangleVariable,
+    unmangleLabel,
+    counter,
+    scope: createRootScope(secret),
+    pointcut,
+    advice,
+    kind: null,
+    arrival: null,
+    namespace: null,
+  });

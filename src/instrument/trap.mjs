@@ -16,7 +16,7 @@ import {
   dropx_,
   partialxx_,
   partial_x_,
-  hasOwnProperty,
+  hasOwn,
 } from "../util/index.mjs";
 
 import {
@@ -115,7 +115,7 @@ const asynchronous_arg = primitive_arg;
 const generator_arg = primitive_arg;
 const serial_arg = primitive_arg;
 const name_arg = primitive_arg;
-const global_variable_arg = primitive_arg;
+const external_variable_arg = primitive_arg;
 const specifier_arg = primitive_arg;
 const source_arg = primitive_arg;
 const delegate_arg = primitive_arg;
@@ -135,30 +135,42 @@ const variable_array_arg = var_array_arg;
 
 const traps = {
   // Informer //
-  arrival: [
+  "arrival": [
     constant____(null),
     kind_arg,
     link_array_arg,
     callee_arg,
     serial_arg,
   ],
-  enter: [
+  "enter": [
     constant____(null),
     kind_arg,
     label_array_arg,
     variable_array_arg,
     serial_arg,
   ],
-  completion: [constant_(null), serial_arg],
-  leave: [constant_(null), serial_arg],
-  debugger: [constant_(null), serial_arg],
-  break: [constant__(null), label_arg, serial_arg],
+  "completion": [constant_(null), serial_arg],
+  "leave": [constant_(null), serial_arg],
+  "debugger": [constant_(null), serial_arg],
+  "break": [constant__(null), label_arg, serial_arg],
   // Producer //
-  parameters: [returnx_, expression_arg, serial_arg],
-  intrinsic: [return_x_, name_arg, expression_arg, serial_arg],
-  literal: [makeLiteralExpression, literal_arg, serial_arg],
-  import: [return__x_, source_arg, specifier_arg, expression_arg, serial_arg],
-  closure: [
+  "read-external": [
+    return_x_,
+    external_variable_arg,
+    expression_arg,
+    serial_arg,
+  ],
+  "typeof-external": [
+    return_x_,
+    external_variable_arg,
+    expression_arg,
+    serial_arg,
+  ],
+  "parameter": [return_x_, name_arg, expression_arg, serial_arg],
+  "intrinsic": [return_x_, name_arg, expression_arg, serial_arg],
+  "literal": [makeLiteralExpression, literal_arg, serial_arg],
+  "import": [return__x_, source_arg, specifier_arg, expression_arg, serial_arg],
+  "closure": [
     return___x_,
     kind_arg,
     asynchronous_arg,
@@ -166,33 +178,39 @@ const traps = {
     expression_arg,
     serial_arg,
   ],
-  read: [return_x_, variable_arg, expression_arg, serial_arg],
-  failure: [returnx_, expression_arg, serial_arg],
+  "read": [return_x_, variable_arg, expression_arg, serial_arg],
+  "failure": [returnx_, expression_arg, serial_arg],
   // Consumer //
-  eval: [returnx_, expression_arg, serial_arg],
-  await: [returnx_, expression_arg, serial_arg],
-  yield: [return_x_, delegate_arg, expression_arg, serial_arg],
-  drop: [returnx_, expression_arg, serial_arg],
-  export: [return_x_, specifier_arg, expression_arg, serial_arg],
-  write: [return_x_, variable_arg, expression_arg, serial_arg],
-  test: [returnx_, expression_arg, serial_arg],
-  declare: [
-    return__x_,
-    kind_arg,
-    global_variable_arg,
+  "eval": [returnx_, expression_arg, serial_arg],
+  "await": [returnx_, expression_arg, serial_arg],
+  "yield": [return_x_, delegate_arg, expression_arg, serial_arg],
+  "drop": [returnx_, expression_arg, serial_arg],
+  "export": [return_x_, specifier_arg, expression_arg, serial_arg],
+  "write": [return_x_, variable_arg, expression_arg, serial_arg],
+  "test": [returnx_, expression_arg, serial_arg],
+  "write-external": [
+    return_x_,
+    external_variable_arg,
     expression_arg,
     serial_arg,
   ],
-  return: [returnx_, expression_arg, serial_arg],
+  "declare-external": [
+    return__x_,
+    kind_arg,
+    external_variable_arg,
+    expression_arg,
+    serial_arg,
+  ],
+  "return": [returnx_, expression_arg, serial_arg],
   // Combiner //
-  apply: [
+  "apply": [
     makeApplyExpression,
     expression_arg,
     expression_arg,
     expression_array_arg,
     serial_arg,
   ],
-  construct: [
+  "construct": [
     makeConstructExpression,
     expression_arg,
     expression_array_arg,
@@ -210,7 +228,7 @@ const argumentize = (scope, trap, timing, value, index) => {
 };
 
 const makeTrapMaybeNode = (pointcut, namespace, scope, name, values) => {
-  assert(hasOwnProperty(traps, name), "missing trap");
+  assert(hasOwn(traps, name), "missing trap");
   const trap = traps[name];
   assert(trap.length - 1 === values.length, "trap arity mismatch");
   if (

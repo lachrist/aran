@@ -1,11 +1,7 @@
 import { assertSuccess } from "../__fixture__.mjs";
-
 import { createCounter } from "../util/index.mjs";
-
-import { allignProgram } from "../allign/index.mjs";
-
 import { parseProgram } from "../lang/index.mjs";
-
+import { allignProgram } from "../allign/index.mjs";
 import { instrumentProgram } from "./index.mjs";
 
 const { Error } = globalThis;

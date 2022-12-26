@@ -10,7 +10,7 @@ const options = {
   errorRecovery: true,
   allowImportExportEverywhere: true,
   allowUndeclaredExports: true,
-  startLine: 1,
+  startLine: 0,
   plugins: ["estree"],
 };
 

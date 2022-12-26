@@ -3,7 +3,7 @@ import { forEach, concat, map, includes } from "array-lite";
 import {
   append,
   push,
-  hasOwnProperty,
+  hasOwn,
   partialx_,
   partialx_x,
   partial__x,
@@ -11,21 +11,17 @@ import {
 } from "../util/index.mjs";
 
 import {
-  makeDeclareStatement,
+  makeDeclareExternalStatement,
   makeBlock,
   makeScriptProgram,
+  makeReadExternalExpression,
+  makeWriteExternalEffect,
   makeWriteEffect,
-  makeExpressionEffect,
   makeLiteralExpression,
   makeReadExpression,
-  makeInternalLocalEvalProgram,
+  makeEvalProgram,
   makeEvalExpression,
 } from "../ast/index.mjs";
-
-import {
-  makeReadGlobalExpression,
-  makeWriteGlobalStrictExpression,
-} from "../intrinsic.mjs";
 
 const {
   Error,
@@ -55,7 +51,7 @@ const descriptor = {
 };
 
 export const declareScope = ({ bindings }, variable, value) => {
-  assert(!hasOwnProperty(bindings, variable), "duplicate variable");
+  assert(!hasOwn(bindings, variable), "duplicate variable");
   defineProperty(bindings, variable, {
     __proto__: descriptor,
     value: { value },
@@ -64,7 +60,7 @@ export const declareScope = ({ bindings }, variable, value) => {
 
 const getBindingScope = (scope, variable) => {
   while (scope !== null) {
-    if (hasOwnProperty(scope.bindings, variable)) {
+    if (hasOwn(scope.bindings, variable)) {
       return scope;
     }
     scope = scope.parent;
@@ -92,7 +88,7 @@ export const makeScopeReadExpression = (scope, variable) => {
   const { used, secret, parent } = getBindingScope(scope, variable);
   pushUnique(used, variable);
   return parent === null
-    ? makeReadGlobalExpression(`${secret}${variable}`)
+    ? makeReadExternalExpression(`${secret}${variable}`)
     : makeReadExpression(variable);
 };
 
@@ -100,9 +96,7 @@ export const makeScopeWriteEffect = (scope, variable, expression) => {
   const { used, secret, parent } = getBindingScope(scope, variable);
   pushUnique(used, variable);
   return parent === null
-    ? makeExpressionEffect(
-        makeWriteGlobalStrictExpression(`${secret}${variable}`, expression),
-      )
+    ? makeWriteExternalEffect(`${secret}${variable}`, expression)
     : makeWriteEffect(variable, expression);
 };
 
@@ -111,8 +105,8 @@ export const makeScopeBlock = ({ parent, used }, labels, statements) => {
   return makeBlock(labels, used, statements);
 };
 
-const makeUndefinedDeclareStatement = partialx_x(
-  makeDeclareStatement,
+const makeUndefinedDeclareExternalStatement = partialx_x(
+  makeDeclareExternalStatement,
   "let",
   makeLiteralExpression({ undefined: null }),
 );
@@ -124,7 +118,10 @@ export const makeScopeScriptProgram = (
   assert(parent === null, "expected root scope");
   return makeScriptProgram(
     concat(
-      map(map(used, partialx_(append, secret)), makeUndefinedDeclareStatement),
+      map(
+        map(used, partialx_(append, secret)),
+        makeUndefinedDeclareExternalStatement,
+      ),
       statements,
     ),
   );
@@ -135,9 +132,9 @@ export const useScope = (scope, variable) => {
   pushUnique(used, variable);
 };
 
-export const makeScopeInternalLocalEvalProgram = ({ parent, used }, block) => {
+export const makeScopeEvalProgram = ({ parent, used }, parameters, block) => {
   assert(parent !== null, "expected body scope");
-  return makeInternalLocalEvalProgram(used, block);
+  return makeEvalProgram(parameters, used, block);
 };
 
 const evaluate = (scope, variable) => {
@@ -146,7 +143,12 @@ const evaluate = (scope, variable) => {
   pushUnique(used, variable);
 };
 
-export const makeScopeEvalExpression = (scope, variables, expression) => {
+export const makeScopeEvalExpression = (
+  scope,
+  parameters,
+  variables,
+  expression,
+) => {
   forEach(variables, partialx_(evaluate, scope));
-  return makeEvalExpression(variables, expression);
+  return makeEvalExpression(parameters, variables, expression);
 };

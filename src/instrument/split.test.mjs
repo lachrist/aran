@@ -1,15 +1,11 @@
 import { assertEqual, assertSuccess } from "../__fixture__.mjs";
-
-import { allignBlock } from "../allign/index.mjs";
-
 import {
   makeEffectStatement,
   makeExpressionEffect,
   makeLiteralExpression,
 } from "../ast/index.mjs";
-
+import { allignBlock } from "../allign/index.mjs";
 import { extendScope, createRootScope, makeScopeBlock } from "./scope.mjs";
-
 import {
   VAR_SPLIT,
   declareSplitScope,
@@ -60,6 +56,7 @@ const { undefined } = globalThis;
               makeSplitScopeEvalExpression(
                 scope,
                 [VAR_SPLIT],
+                ["this"],
                 ["variable"],
                 makeLiteralExpression("code"),
               ),
@@ -71,8 +68,8 @@ const { undefined } = globalThis;
         {
           let x;
           x = 'right';
-          effect(x);
-          effect(eval([x], 'code'));
+          void x;
+          void eval([this], [x], 'code');
         }
       `,
     ),

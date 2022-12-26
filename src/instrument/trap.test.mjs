@@ -13,9 +13,11 @@ import {
   makeLiteralExpression,
   makeClosureExpression,
   makeReturnStatement,
+  makeReadExternalExpression,
+  makeTypeofExternalExpression,
   makeImportExpression,
   makeReadExpression,
-  makeInputExpression,
+  makeParameterExpression,
 } from "../ast/index.mjs";
 
 import { allignBlock } from "../allign/index.mjs";
@@ -65,12 +67,10 @@ const getThird = (object) => object[2];
       `
         {
           let Namespace;
-          effect(
-            intrinsic.aran.get(Namespace, 'debugger')(
-              !Namespace,
-              123,
-            ),
-          )
+          void intrinsic.aran.get(Namespace, 'debugger')(
+            !Namespace,
+            123,
+          );
         }
       `,
     ),
@@ -116,7 +116,12 @@ const getThird = (object) => object[2];
       ["debugger", [123, 123, "123"]],
       ["break", ["label", "LABEL", "Label"], [123, 123, "123"]],
       // Producers //
-      ["parameters", [makeInputExpression(), null, "input"], [123, 123, "123"]],
+      [
+        "parameter",
+        ["new.target", "new.target", "'new.target'"],
+        [makeParameterExpression("new.target"), null, "new.target"],
+        [123, 123, "123"],
+      ],
       [
         "intrinsic",
         ["aran.get", "aran.get", "'aran.get'"],
@@ -135,7 +140,7 @@ const getThird = (object) => object[2];
         [
           makeImportExpression("source", "specifier"),
           null,
-          "importStatic('source', 'specifier')",
+          "'source' >> specifier",
         ],
         [123, 123, "123"],
       ],
@@ -164,6 +169,18 @@ const getThird = (object) => object[2];
         "read",
         ["variable", "VARIABLE", "Variable"],
         [makeReadExpression("x"), null, "X"],
+        [123, 123, "123"],
+      ],
+      [
+        "read-external",
+        ["external", "external", "'external'"],
+        [makeReadExternalExpression("external"), null, "_external"],
+        [123, 123, "123"],
+      ],
+      [
+        "typeof-external",
+        ["external", "external", "'external'"],
+        [makeTypeofExternalExpression("external"), null, "typeof _external"],
         [123, 123, "123"],
       ],
       [
@@ -211,9 +228,15 @@ const getThird = (object) => object[2];
         [123, 123, "123"],
       ],
       [
-        "declare",
+        "declare-external",
         ["var", "var", "'var'"],
-        ["global", "global", "'global'"],
+        ["external", "external", "'external'"],
+        [makeLiteralExpression("right"), null, "'right'"],
+        [123, 123, "123"],
+      ],
+      [
+        "write-external",
+        ["external", "external", "'external'"],
         [makeLiteralExpression("right"), null, "'right'"],
         [123, 123, "123"],
       ],
@@ -281,10 +304,8 @@ const getThird = (object) => object[2];
           `
             {
               let Variable, Label, Callee, Namespace;
-              effect(
-                intrinsic.aran.get(Namespace, '${name1}')(
-                  ${join(concat(["!Namespace"], map(specs, getThird)), ", ")}
-                ),
+              void intrinsic.aran.get(Namespace, '${name1}')(
+                ${join(concat(["!Namespace"], map(specs, getThird)), ", ")}
               );
             }
           `,

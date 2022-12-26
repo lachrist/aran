@@ -57,9 +57,12 @@ testExpression(
   "intrinsic.Symbol.unscopables;",
   "intrinsic['Symbol.unscopables'];",
 );
-assertThrow(() => testExpression("(() => {}).unscopables;"));
+assertThrow(() => testExpression("[].unscopables;"));
 
-testExpression("importStatic('specifier', 'source');");
+assertThrow(() => testExpression("'source' >> [];"));
+testExpression("'source' >> 'specifier';");
+testExpression("'source' >> '*';");
+testExpression("'source' >> specifier;", "'source' >> 'specifier';");
 
 testExpression("variable;");
 testExpression("_variable;");
@@ -75,7 +78,7 @@ testExpression("await 123;");
 testExpression("yield 123;");
 testExpression("yield* 123;");
 
-testExpression("(effect(123), 456);");
+testExpression("(void 123, 456);");
 
 testExpression("123 ? 456 : 789;");
 
@@ -125,33 +128,32 @@ assertThrow(() => {
 
 testEffect("variable = 123;");
 testEffect("_variable = 123;");
-testEffect("exportStatic('specifier', 123);");
-testEffect("(effect(123), effect(456));");
-testEffect("123 ? effect(456) : effect(789);");
-testEffect("effect(123);");
+testEffect("'specifier' << 123;");
+testEffect("specifier << 123;", "'specifier' << 123;");
+testEffect("(void 123, void 456);");
+testEffect("123 ? void  456 : void 789;");
+testEffect("void 123;");
 
 ///////////////
 // Statement //
 ///////////////
 
-testStatement("effect(123);");
+testStatement("void 123;");
 testStatement("return 123;");
 testStatement("break label;");
 testStatement("debugger;");
 testStatement("let _variable = 123;");
-testStatement("{ effect(123); }");
-testStatement("label: { effect(123); }");
-testStatement("if (123) { effect(456); } else { effect(789); }");
-testStatement("while (123) { effect(123); }");
-testStatement(
-  "try { effect(123); } catch { effect(456); } finally { effect(789); }",
-);
+testStatement("{ void 123; }");
+testStatement("label: { void 123; }");
+testStatement("if (123) { void 456; } else { void 789; }");
+testStatement("while (123) { void 123; }");
+testStatement("try { void 123; } catch { void 456; } finally { void 789; }");
 
 ///////////
 // Block //
 ///////////
 
-testBlock("label1: label2: { let variable1, variable2; effect(123); }");
+testBlock("label1: label2: { let variable1, variable2; void 123; }");
 testBlock("{}");
 
 //////////

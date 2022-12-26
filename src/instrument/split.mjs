@@ -44,11 +44,13 @@ const appendAll = (prefix, strings) => map(strings, partialx_(append, prefix));
 export const makeSplitScopeEvalExpression = (
   scope,
   prefixes,
+  parameters,
   variables,
   expression,
 ) =>
   makeScopeEvalExpression(
     scope,
+    parameters,
     flatMap(prefixes, partial_x(appendAll, variables)),
     expression,
   );

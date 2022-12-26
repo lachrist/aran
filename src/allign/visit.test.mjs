@@ -68,23 +68,11 @@ assertExpression("_x;", "_X;", false);
 assertExpression("typeof _x;", "typeof _x;", true);
 assertExpression("typeof _x;", "typeof _X;", false);
 
-assertExpression(
-  "importStatic('source', 'specifier');",
-  "importStatic('source', 'specifier');",
-  true,
-);
+assertExpression("'source' >> specifier;", "'source' >> specifier;", true);
 
-assertExpression(
-  "importStatic('source', 'specifier');",
-  "importStatic('SOURCE', 'specifier');",
-  false,
-);
+assertExpression("'source' >> specifier;", "'SOURCE' >> specifier;", false);
 
-assertExpression(
-  "importStatic('source', 'specifier');",
-  "importStatic('source', 'SPECIFIER');",
-  false,
-);
+assertExpression("'source' >> specifier;", "'source' >> SPECIFIER;", false);
 
 assertExpression("await 123;", "await 123;", true);
 assertExpression("await 123;", "await 321;", false);
@@ -95,9 +83,9 @@ assertExpression("yield 123;", "yield* 123;", false);
 assertExpression("yield* 123;", "yield 123;", false);
 assertExpression("yield 123;", "yield 321;", false);
 
-assertExpression("(effect(123), 456);", "(effect(123), 456);", true);
-assertExpression("(effect(123), 456);", "(effect(321), 456);", false);
-assertExpression("(effect(123), 456);", "(effect(123), 654);", false);
+assertExpression("(void 123, 456);", "(void 123, 456);", true);
+assertExpression("(void 123, 456);", "(void 321, 456);", false);
+assertExpression("(void 123, 456);", "(void 123, 654);", false);
 
 assertExpression("123 ? 456 : 789;", "123 ? 456 : 789;", true);
 assertExpression("123 ? 456 : 789;", "321 ? 456 : 789;", false);
@@ -161,26 +149,14 @@ assertExpression("eval([this], [x], x);", "eval([this], [X], x);", false);
 // Effect //
 ////////////
 
-assertEffect("effect(123);", "effect(123);", true);
-assertEffect("effect(123);", "effect(321);", false);
+assertEffect("void 123;", "void 123;", true);
+assertEffect("void 123;", "void 321;", false);
 
-assertEffect(
-  "exportStatic('specifier', 123);",
-  "exportStatic('specifier', 123);",
-  true,
-);
+assertEffect("specifier << 123;", "specifier << 123;", true);
 
-assertEffect(
-  "exportStatic('specifier', 123);",
-  "exportStatic('SPECIFIER', 123);",
-  false,
-);
+assertEffect("specifier << 123;", "SPECIFIER << 123;", false);
 
-assertEffect(
-  "exportStatic('specifier', 123);",
-  "exportStatic('specifier', 321);",
-  false,
-);
+assertEffect("specifier << 123;", "specifier << 321;", false);
 
 assertEffect("x = 123;", "X = 123;", true);
 assertEffect("x = 123;", "x = 321;", false);
@@ -189,47 +165,19 @@ assertEffect("_x = 123;", "_x = 123;", true);
 assertEffect("_x = 123;", "_x = 321;", false);
 assertEffect("_x = 123;", "_X = 123;", false);
 
-assertEffect(
-  "(effect(123), effect(456));",
-  "(effect(123), effect(456));",
-  true,
-);
+assertEffect("(void 123, void 456);", "(void 123, void 456);", true);
 
-assertEffect(
-  "(effect(123), effect(456));",
-  "(effect(789), effect(456));",
-  false,
-);
+assertEffect("(void 123, void 456);", "(void 789, void 456);", false);
 
-assertEffect(
-  "(effect(123), effect(456));",
-  "(effect(123), effect(789));",
-  false,
-);
+assertEffect("(void 123, void 456);", "(void 123, void 789);", false);
 
-assertEffect(
-  "123 ? effect(456) : effect(789);",
-  "123 ? effect(456) : effect(789);",
-  true,
-);
+assertEffect("123 ? void 456 : void 789;", "123 ? void 456 : void 789;", true);
 
-assertEffect(
-  "123 ? effect(456) : effect(789);",
-  "321 ? effect(456) : effect(789);",
-  false,
-);
+assertEffect("123 ? void 456 : void 789;", "321 ? void 456 : void 789;", false);
 
-assertEffect(
-  "123 ? effect(456) : effect(789);",
-  "123 ? effect(654) : effect(789);",
-  false,
-);
+assertEffect("123 ? void 456 : void 789;", "123 ? void 654 : void 789;", false);
 
-assertEffect(
-  "123 ? effect(456) : effect(789);",
-  "123 ? effect(456) : effect(987);",
-  false,
-);
+assertEffect("123 ? void 456 : void 789;", "123 ? void 456 : void 987;", false);
 
 ///////////////
 // Statement //
@@ -237,8 +185,8 @@ assertEffect(
 
 assertStatement("debugger;", "debugger;", true);
 
-assertStatement("effect(123);", "effect(123);", true);
-assertStatement("effect(123);", "effect(321);", false);
+assertStatement("void 123;", "void 123;", true);
+assertStatement("void 123;", "void 321;", false);
 
 assertStatement("break l;", "break L;", true);
 
@@ -250,72 +198,68 @@ assertStatement("let _x = 123;", "const _x = 123;", false);
 assertStatement("let _x = 123;", "let _y = 123;", false);
 assertStatement("let _x = 123;", "let _x = 321;", false);
 
-assertStatement("{ effect(123); }", "{ effect(123); }", true);
-assertStatement("{ effect(123); }", "{ effect(321); }", false);
+assertStatement("{ void 123; }", "{ void 123; }", true);
+assertStatement("{ void 123; }", "{ void 321; }", false);
 
 assertStatement(
-  "if (123) { effect(456); } else { effect(789); }",
-  "if (123) { effect(456); } else { effect(789); }",
+  "if (123) { void 456; } else { void 789; }",
+  "if (123) { void 456; } else { void 789; }",
   true,
 );
 
 assertStatement(
-  "if (123) { effect(456); } else { effect(789); }",
-  "if (321) { effect(456); } else { effect(789); }",
+  "if (123) { void 456; } else { void 789; }",
+  "if (321) { void 456; } else { void 789; }",
   false,
 );
 
 assertStatement(
-  "if (123) { effect(456); } else { effect(789); }",
-  "if (123) { effect(654); } else { effect(789); }",
+  "if (123) { void 456; } else { void 789; }",
+  "if (123) { void 654; } else { void 789; }",
   false,
 );
 
 assertStatement(
-  "if (123) { effect(456); } else { effect(789); }",
-  "if (123) { effect(456); } else { effect(987); }",
+  "if (123) { void 456; } else { void 789; }",
+  "if (123) { void 456; } else { void 987; }",
+  false,
+);
+
+assertStatement("while (123) { void 456; }", "while (123) { void 456; }", true);
+
+assertStatement(
+  "while (123) { void 456; }",
+  "while (321) { void 456; }",
   false,
 );
 
 assertStatement(
-  "while (123) { effect(456); }",
-  "while (123) { effect(456); }",
+  "while (123) { void 456; }",
+  "while (123) { void 654; }",
+  false,
+);
+
+assertStatement(
+  "try { void 123; } catch { void 456; } finally { void 789; }",
+  "try { void 123; } catch { void 456; } finally { void 789; }",
   true,
 );
 
 assertStatement(
-  "while (123) { effect(456); }",
-  "while (321) { effect(456); }",
+  "try { void 123; } catch { void 456; } finally { void 789; }",
+  "try { void 321; } catch { void 456; } finally { void 789; }",
   false,
 );
 
 assertStatement(
-  "while (123) { effect(456); }",
-  "while (123) { effect(654); }",
+  "try { void 123; } catch { void 456; } finally { void 789; }",
+  "try { void 123; } catch { void 654; } finally { void 789; }",
   false,
 );
 
 assertStatement(
-  "try { effect(123); } catch { effect(456); } finally { effect(789); }",
-  "try { effect(123); } catch { effect(456); } finally { effect(789); }",
-  true,
-);
-
-assertStatement(
-  "try { effect(123); } catch { effect(456); } finally { effect(789); }",
-  "try { effect(321); } catch { effect(456); } finally { effect(789); }",
-  false,
-);
-
-assertStatement(
-  "try { effect(123); } catch { effect(456); } finally { effect(789); }",
-  "try { effect(123); } catch { effect(654); } finally { effect(789); }",
-  false,
-);
-
-assertStatement(
-  "try { effect(123); } catch { effect(456); } finally { effect(789); }",
-  "try { effect(123); } catch { effect(456); } finally { effect(987); }",
+  "try { void 123; } catch { void 456; } finally { void 789; }",
+  "try { void 123; } catch { void 456; } finally { void 987; }",
   false,
 );
 

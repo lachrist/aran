@@ -57,12 +57,9 @@ import {
   MODULE_PROGRAM_DIRECTIVE,
   SCRIPT_PROGRAM_DIRECTIVE,
   EVAL_PROGRAM_DIRECTIVE,
-  EFFECT_KEYWORD,
   EVAL_KEYWORD,
   UNDEFINED_KEYWORD,
   INTRINSIC_KEYWORD,
-  EXPORT_KEYWORD,
-  IMPORT_KEYWORD,
 } from "./keywords.mjs";
 
 const {
@@ -344,6 +341,17 @@ export const convertStatement = partialx_(dispatchObjectNode0, {
   },
 });
 
+export const convertSpecifier = (node) => {
+  if (node.type === "Literal") {
+    expectSyntax(typeof node.value === "string", node);
+    return node.value === "*" ? null : node.value;
+  } else if (node.type === "Identifier") {
+    return node.name;
+  } else {
+    throw makeSyntaxError(node);
+  }
+};
+
 export const convertEffect = partialx_(dispatchObjectNode0, {
   SequenceExpression: (node) => {
     expectSyntax(node.expressions.length === 2, node);
@@ -361,30 +369,20 @@ export const convertEffect = partialx_(dispatchObjectNode0, {
       locate(node.loc),
     );
   },
-  CallExpression: (node) => {
-    if (
-      node.callee.type === "Identifier" &&
-      node.callee.name === EXPORT_KEYWORD
-    ) {
-      expectSyntax(node.arguments.length === 2, node);
-      expectSyntax(node.arguments[0].type === "Literal", node);
-      return makeExportEffect(
-        node.arguments[0].value,
-        convertExpression(node.arguments[1]),
-        locate(node.loc),
-      );
-    } else if (
-      node.callee.type === "Identifier" &&
-      node.callee.name === EFFECT_KEYWORD
-    ) {
-      expectSyntax(node.arguments.length === 1, node);
-      return makeExpressionEffect(
-        convertExpression(node.arguments[0]),
-        locate(node.loc),
-      );
-    } else {
-      throw makeSyntaxError(node);
-    }
+  UnaryExpression: (node) => {
+    expectSyntax(node.operator === "void", node);
+    return makeExpressionEffect(
+      convertExpression(node.argument),
+      locate(node.loc),
+    );
+  },
+  BinaryExpression: (node) => {
+    expectSyntax(node.operator === "<<", node);
+    return makeExportEffect(
+      convertSpecifier(node.left),
+      convertExpression(node.right),
+      locate(node.loc),
+    );
   },
   AssignmentExpression: (node) => {
     expectSyntax(node.operator === "=", node);
@@ -543,22 +541,19 @@ export const convertExpression = partialx_(dispatchObjectNode0, {
       throw makeSyntaxError(node);
     } /* c8 ignore stop */
   },
-  // Combiners //
+  BinaryExpression: (node) => {
+    expectSyntax(node.operator === ">>", node);
+    expectSyntax(node.left.type === "Literal", node);
+    expectSyntax(typeof node.left.value === "string", node);
+    return makeImportExpression(
+      node.left.value,
+      convertSpecifier(node.right),
+      locate(node.loc),
+    );
+  },
   CallExpression: (node) => {
     expectSyntax(node.optional === false, node);
     if (
-      node.callee.type === "Identifier" &&
-      node.callee.name === IMPORT_KEYWORD
-    ) {
-      expectSyntax(node.arguments.length === 2, node);
-      expectSyntax(node.arguments[0].type === "Literal", node);
-      expectSyntax(node.arguments[1].type === "Literal", node);
-      return makeImportExpression(
-        node.arguments[0].value,
-        node.arguments[1].value,
-        locate(node.loc),
-      );
-    } else if (
       node.callee.type === "Identifier" &&
       node.callee.name === EVAL_KEYWORD
     ) {

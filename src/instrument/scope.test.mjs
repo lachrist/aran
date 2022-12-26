@@ -21,7 +21,7 @@ import {
   makeScopeBlock,
   makeScopeScriptProgram,
   makeScopeEvalExpression,
-  makeScopeInternalLocalEvalProgram,
+  makeScopeEvalProgram,
 } from "./scope.mjs";
 
 const { undefined } = globalThis;
@@ -59,9 +59,9 @@ const { undefined } = globalThis;
       ]),
       `
         'script';
-        let secret_variable = undefined;
-        effect(intrinsic.aran.readGlobal('secret_variable'));
-        effect(intrinsic.aran.writeGlobalStrict('secret_variable', 'right'));
+        let _secret_variable = undefined;
+        void _secret_variable;
+        _secret_variable = 'right';
         return 'completion';
       `,
     ),
@@ -91,7 +91,7 @@ const { undefined } = globalThis;
       ),
       `label1: label2: {
         let variable;
-        effect(variable);
+        void variable;
         variable = 'right';
       }`,
     ),
@@ -103,8 +103,9 @@ const { undefined } = globalThis;
   declareScope(scope, "variable");
   assertSuccess(
     allignProgram(
-      makeScopeInternalLocalEvalProgram(
+      makeScopeEvalProgram(
         scope,
+        ["this"],
         makeScopeBlock(
           extendScope(scope),
           [],
@@ -113,6 +114,7 @@ const { undefined } = globalThis;
               makeExpressionEffect(
                 makeScopeEvalExpression(
                   scope,
+                  ["this"],
                   ["variable"],
                   makeLiteralExpression("code"),
                 ),
@@ -123,10 +125,11 @@ const { undefined } = globalThis;
         ),
       ),
       `
-        'internal-local-eval';
+        'eval';
+        [this];
         let variable;
         {
-          effect(eval([variable], 'code'));
+          void eval([this], [variable], 'code');
           return 'completion';
         }
       `,

@@ -6,9 +6,9 @@ import { parseProgram } from "../lang/index.mjs";
 
 import { allignProgram } from "../allign/index.mjs";
 
-import { visitProgram } from "./visit.mjs";
-
 import { createRootScope } from "./scope.mjs";
+
+import { visitProgram } from "./visit.mjs";
 
 const makeContext = (pointcut) => ({
   unmangleVariable: (variable) => ({ variable }),
@@ -24,7 +24,7 @@ const makeContext = (pointcut) => ({
 
 const test = (context, code1, code2) => {
   assertSuccess(
-    allignProgram(visitProgram(context, parseProgram(code1)), code2),
+    allignProgram(visitProgram(parseProgram(code1), context), code2),
   );
 };
 
@@ -47,24 +47,17 @@ test(
   `,
   `
     "script";
-    let secret_Nnamespace1 = undefined;
-    effect(
-      intrinsic.aran.writeGlobalStrict(
-        'secret_Nnamespace1',
-        intrinsic.aran.readGlobal('advice'),
-      ),
-    );
-    effect(
-      intrinsic.aran.get(
-        intrinsic.aran.readGlobal("secret_Nnamespace1"),
-        "arrival",
-      )(
-        !intrinsic.aran.readGlobal("secret_Nnamespace1"),
-        "script",
-        null,
-        null,
-        "1:0",
-      ),
+    let _secret_Nnamespace1 = undefined;
+    _secret_Nnamespace1 = _advice;
+    void intrinsic.aran.get(
+      _secret_Nnamespace1,
+      "arrival",
+    )(
+      !_secret_Nnamespace1,
+      "script",
+      null,
+      null,
+      "0:16",
     );
     return 'completion';
   `,
@@ -76,29 +69,13 @@ testIdentity(`
   return 'completion';
 `);
 
-// ExternalLocalEvalProgram //
+// EvalProgram //
 testIdentity(`
-  'external';
-  ['this', 'new.target'];
-  {
-    return 'completion';
-  }
-`);
-
-// InternalLocalEvalProgram //
-testIdentity(`
-  'internal-local-eval';
+  'eval';
+  [this, new.target];
   let variable1, variable2;
   {
     return variable1;
-  }
-`);
-
-// GlobalEvalProgram //
-testIdentity(`
-  'global-eval';
-  {
-    return 'completion';
   }
 `);
 
@@ -141,7 +118,7 @@ test(
       label: {
         let variable;
         break label;
-        effect(variable);
+        void variable;
       }
       return 'completion';
     }
@@ -150,18 +127,14 @@ test(
     'module';
     {
       let namespace;
-      namespace = intrinsic.aran.readGlobal('advice');
+      namespace = _advice;
       label: {
-        let _OLD, _LAB, _VAR;
-        _LAB = intrinsic.aran.createObject(null, "LABEL", "label");
-        _VAR = intrinsic.aran.createObject(null, "VARIABLE", "variable");
-        effect(
-          intrinsic.aran.get(namespace, "break")(!namespace, _LAB, "6:8"),
-        );
+        let OLD, LAB, VAR;
+        LAB = intrinsic.aran.createObject(null, "LABEL", "label");
+        VAR = intrinsic.aran.createObject(null, "VARIABLE", "variable");
+        void intrinsic.aran.get(namespace, "break")(!namespace, LAB, "6:8");
         break label;
-        effect(
-          intrinsic.aran.get(namespace, "read")(!namespace, _VAR, _OLD, "7:15"),
-        );
+        void intrinsic.aran.get(namespace, "read")(!namespace, VAR, OLD, "7:13");
       }
       return 'completion';
     }
@@ -183,17 +156,13 @@ test(
     'module';
     {
       let namespace;
-      namespace = intrinsic.aran.readGlobal('advice');
+      namespace = _advice
       try {
         return 'completion';
       } catch {
-        return intrinsic.aran.throw(
-          intrinsic.aran.get(input, 'error'),
-        );
+        return intrinsic.aran.throw(error);
       } finally {
-        effect(
-          intrinsic.aran.get(namespace, 'leave')(!namespace, '3:4'),
-        );
+        void intrinsic.aran.get(namespace, 'leave')(!namespace, '3:4');
       }
     }
   `,
@@ -229,7 +198,7 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    effect(123);
+    void 123;
     return 'completion';
   }
 `);
@@ -237,7 +206,7 @@ testIdentity(`
 testIdentity(`
   'script';
   {
-    var variable = 123;
+    var _variable = 123;
     return 'completion';
   }
 `);
@@ -245,7 +214,7 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    { effect(123); }
+    { void 123; }
     return 'completion';
   }
 `);
@@ -253,7 +222,7 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    while (123) { effect(456); }
+    while (123) { void 456; }
     return 'completion';
   }
 `);
@@ -261,7 +230,7 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    if (123) { effect(456); } else { effect(789); }
+    if (123) { void 456; } else { void 789; }
     return 'completion';
   }
 `);
@@ -269,7 +238,7 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    try { effect(123); } catch { effect(456); } finally { effect(789); }
+    try { void 123; } catch { void 456; } finally { void 789; }
     return 'completion';
   }`);
 
@@ -280,7 +249,7 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    effect(123);
+    void 123;
     return 'completion';
   }
 `);
@@ -296,9 +265,17 @@ testIdentity(`
 
 testIdentity(`
   'module';
+  {
+    _variable = 123;
+    return 'completion';
+  }
+`);
+
+testIdentity(`
+  'module';
   export {specifier};
   {
-    exportStatic("specifier", 123);
+    specifier << 123;
     return 'completion';
   }
 `);
@@ -306,7 +283,7 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    (effect(123), effect(456));
+    (void 123, void 456);
     return 'completion';
   }
 `);
@@ -314,7 +291,7 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    123 ? effect(456) : effect(789);
+    123 ? void 456 : void 789;
     return 'completion';
   }
 `);
@@ -342,17 +319,15 @@ test(
     'module';
     {
       let namespace, callee;
-      namespace = intrinsic.aran.readGlobal('advice');
+      namespace = _advice;
       return (
         callee = () => {
-          effect(
-            intrinsic.aran.get(namespace, "arrival")(
-              !namespace,
-              "arrow",
-              null,
-              callee,
-              "4:13",
-            ),
+          void intrinsic.aran.get(namespace, "arrival")(
+            !namespace,
+            "arrow",
+            null,
+            callee,
+            "4:13",
           );
           return 123;
         },
@@ -374,7 +349,7 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    return input;
+    return this;
   }
 `);
 
@@ -396,7 +371,7 @@ testIdentity(`
   'module';
   import {specifier} from "source";
   {
-    return importStatic("source", "specifier");
+    return "source" >> specifier;
   }
 `);
 
@@ -411,7 +386,21 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    return (effect(123), 456);
+    return _variable;
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    return typeof _variable;
+  }
+`);
+
+testIdentity(`
+  'module';
+  {
+    return (void 123, 456);
   }
 `);
 
@@ -435,7 +424,7 @@ testIdentity(`
   'module';
   {
     return function* () {
-      return yieldStraight(123);
+      return yield 123;
     };
   }
 `);
@@ -444,7 +433,7 @@ testIdentity(`
   'module';
   {
     return function* () {
-      return yieldDelegate(123);
+      return yield* 123;
     };
   }
 `);
@@ -458,7 +447,7 @@ test(
     'module';
     {
       let variable;
-      return eval([variable], 123);
+      return eval([this], [variable], 123);
     }
   `,
   `
@@ -470,7 +459,7 @@ test(
         "VARIABLE",
         "variable",
       );
-      return eval([old_variable, new_variable], 123);
+      return eval([this], [old_variable, new_variable], 123);
     }
   `,
 );
