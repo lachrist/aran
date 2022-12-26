@@ -174,13 +174,13 @@ const getThird = (object) => object[2];
       [
         "read-external",
         ["external", "external", "'external'"],
-        [makeReadExternalExpression("external"), null, "_external"],
+        [makeReadExternalExpression("external"), null, "[external]"],
         [123, 123, "123"],
       ],
       [
         "typeof-external",
         ["external", "external", "'external'"],
-        [makeTypeofExternalExpression("external"), null, "typeof _external"],
+        [makeTypeofExternalExpression("external"), null, "typeof [external]"],
         [123, 123, "123"],
       ],
       [

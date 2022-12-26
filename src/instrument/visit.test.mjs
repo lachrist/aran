@@ -47,13 +47,13 @@ test(
   `,
   `
     "script";
-    let _secret_Nnamespace1 = undefined;
-    _secret_Nnamespace1 = _advice;
+    let [secret_Nnamespace1] = undefined;
+    [secret_Nnamespace1] = [advice];
     void intrinsic.aran.get(
-      _secret_Nnamespace1,
+      [secret_Nnamespace1],
       "arrival",
     )(
-      !_secret_Nnamespace1,
+      ![secret_Nnamespace1],
       "script",
       null,
       null,
@@ -125,7 +125,7 @@ test(
     'module';
     {
       let namespace;
-      namespace = _advice;
+      namespace = [advice];
       label: {
         let OLD, LAB, VAR;
         LAB = intrinsic.aran.createObject(null, "LABEL", "label");
@@ -154,7 +154,7 @@ test(
     'module';
     {
       let namespace;
-      namespace = _advice
+      namespace = [advice];
       try {
         return 'completion';
       } catch {
@@ -204,7 +204,7 @@ testIdentity(`
 testIdentity(`
   'script';
   {
-    var _variable = 123;
+    var [variable] = 123;
     return 'completion';
   }
 `);
@@ -264,7 +264,7 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    _variable = 123;
+    [variable] = 123;
     return 'completion';
   }
 `);
@@ -317,7 +317,7 @@ test(
     'module';
     {
       let namespace, callee;
-      namespace = _advice;
+      namespace = [advice];
       return (
         callee = () => {
           void intrinsic.aran.get(namespace, "arrival")(
@@ -384,14 +384,14 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    return _variable;
+    return [variable];
   }
 `);
 
 testIdentity(`
   'module';
   {
-    return typeof _variable;
+    return typeof [variable];
   }
 `);
 

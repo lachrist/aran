@@ -65,8 +65,8 @@ testExpression("'source' >> '*';");
 testExpression("'source' >> specifier;", "'source' >> 'specifier';");
 
 testExpression("variable;");
-testExpression("_variable;");
-testExpression("typeof _variable");
+testExpression("[variable];");
+testExpression("typeof [variable];");
 
 testExpression("(() => { return 123; });");
 testExpression("(async () => { return 123; });");
@@ -127,7 +127,10 @@ assertThrow(() => {
 });
 
 testEffect("variable = 123;");
-testEffect("_variable = 123;");
+assertThrow(() => {
+  testEffect("({variable} = 123);");
+});
+testEffect("[variable] = 123;");
 testEffect("'specifier' << 123;");
 testEffect("specifier << 123;", "'specifier' << 123;");
 testEffect("(void 123, void 456);");
@@ -142,7 +145,7 @@ testStatement("void 123;");
 testStatement("return 123;");
 testStatement("break label;");
 testStatement("debugger;");
-testStatement("let _variable = 123;");
+testStatement("let [variable] = 123;");
 testStatement("{ void 123; }");
 testStatement("label: { void 123; }");
 testStatement("if (123) { void 456; } else { void 789; }");

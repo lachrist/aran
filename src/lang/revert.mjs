@@ -32,6 +32,11 @@ const makeDirective = (expression, directive) => ({
   expression,
   directive,
 });
+const makeArrayPattern = (elements) => ({ type: "ArrayPattern", elements });
+const makeArrayExpression = (elements) => ({
+  type: "ArrayExpression",
+  elements,
+});
 const makeBlockStatement = (body) => ({ type: "BlockStatement", body });
 const makeVariableDeclaration = (kind, declarations) => ({
   type: "VariableDeclaration",
@@ -357,7 +362,7 @@ export const revertStatement = partialx_(dispatchArrayNode0, {
   DeclareExternalStatement: ({ 1: kind, 2: variable, 3: expression }) =>
     makeVariableDeclaration(kind, [
       makeVariableDeclarator(
-        makeIdentifier(`_${variable}`),
+        makeArrayPattern([makeIdentifier(variable)]),
         revertExpression(expression),
       ),
     ]),
@@ -371,7 +376,7 @@ export const revertEffect = partialx_(dispatchArrayNode0, {
     ),
   WriteExternalEffect: ({ 1: variable, 2: expression }) =>
     makeAssignmentExpression(
-      makeIdentifier(`_${variable}`),
+      makeArrayPattern([makeIdentifier(variable)]),
       revertExpression(expression),
     ),
   ExportEffect: ({ 1: specifier, 2: expression }) =>
@@ -415,9 +420,13 @@ export const revertExpression = partialx_(dispatchArrayNode0, {
       makeLiteral(specifier === null ? "*" : specifier),
     ),
   ReadExpression: ({ 1: variable }) => makeIdentifier(variable),
-  ReadExternalExpression: ({ 1: variable }) => makeIdentifier(`_${variable}`),
+  ReadExternalExpression: ({ 1: variable }) =>
+    makeArrayExpression([makeIdentifier(variable)]),
   TypeofExternalExpression: ({ 1: variable }) =>
-    makeUnaryExpression("typeof", makeIdentifier(`_${variable}`)),
+    makeUnaryExpression(
+      "typeof",
+      makeArrayExpression([makeIdentifier(variable)]),
+    ),
   ClosureExpression: ({ 1: kind, 2: asynchronous, 3: generator, 4: block }) =>
     kind === "arrow"
       ? makeArrowFunctionExpression(asynchronous, revertBlock(block))

@@ -64,15 +64,10 @@ import {
 
 const {
   String,
-  String: {
-    prototype: { substring },
-  },
   undefined,
   SyntaxError,
-  Reflect: { apply, getOwnPropertyDescriptor },
+  Reflect: { getOwnPropertyDescriptor },
 } = globalThis;
-
-const ONE = [1];
 
 ///////////
 // Error //
@@ -303,11 +298,15 @@ export const convertStatement = partialx_(dispatchObjectNode0, {
   VariableDeclaration: (node) => {
     expectSyntax(node.declarations.length === 1, node);
     expectSyntax(node.declarations[0].init !== null, node);
-    expectSyntax(node.declarations[0].id.type === "Identifier", node);
-    expectSyntax(node.declarations[0].id.name[0] === "_", node);
+    expectSyntax(node.declarations[0].id.type === "ArrayPattern", node);
+    expectSyntax(node.declarations[0].id.elements.length === 1, node);
+    expectSyntax(
+      node.declarations[0].id.elements[0].type === "Identifier",
+      node,
+    );
     return makeDeclareExternalStatement(
       node.kind,
-      apply(substring, node.declarations[0].id.name, ONE),
+      node.declarations[0].id.elements[0].name,
       convertExpression(node.declarations[0].init),
       locate(node.loc),
     );
@@ -359,19 +358,23 @@ export const convertEffect = partialx_(dispatchObjectNode0, {
   },
   AssignmentExpression: (node) => {
     expectSyntax(node.operator === "=", node);
-    expectSyntax(node.left.type === "Identifier", node);
-    if (node.left.name[0] === "_") {
-      return makeWriteExternalEffect(
-        apply(substring, node.left.name, ONE),
-        convertExpression(node.right),
-        locate(node.loc),
-      );
-    } else {
+    if (node.left.type === "Identifier") {
       return makeWriteEffect(
         node.left.name,
         convertExpression(node.right),
         locate(node.loc),
       );
+    } else if (node.left.type === "ArrayPattern") {
+      expectSyntax(node.left.elements.length === 1, node);
+      expectSyntax(node.left.elements[0] !== null, node);
+      expectSyntax(node.left.elements[0].type === "Identifier", node);
+      return makeWriteExternalEffect(
+        node.left.elements[0].name,
+        convertExpression(node.right),
+        locate(node.loc),
+      );
+    } else {
+      throw makeSyntaxError(node);
     }
   },
 });
@@ -422,23 +425,26 @@ export const convertExpression = partialx_(dispatchObjectNode0, {
   },
   UnaryExpression: (node) => {
     expectSyntax(node.operator === "typeof", node);
-    expectSyntax(node.argument.type === "Identifier", node);
-    expectSyntax(node.argument.name[0] === "_", node);
+    expectSyntax(node.argument.type === "ArrayExpression", node);
+    expectSyntax(node.argument.elements.length === 1, node);
+    expectSyntax(node.argument.elements[0] !== null, node);
+    expectSyntax(node.argument.elements[0].type === "Identifier", node);
     return makeTypeofExternalExpression(
-      apply(substring, node.argument.name, ONE),
+      node.argument.elements[0].name,
       locate(node.loc),
     );
+  },
+  ArrayExpression: (node) => {
+    expectSyntax(node.elements.length === 1, node);
+    expectSyntax(node.elements[0] !== null, node);
+    expectSyntax(node.elements[0].type === "Identifier", node);
+    return makeReadExternalExpression(node.elements[0].name, locate(node.loc));
   },
   Identifier: (node) => {
     if (node.name === UNDEFINED_KEYWORD) {
       return makeLiteralExpression({ undefined: null }, locate(node.loc));
     } else if (node.name === "error" || node.name === "arguments") {
       return makeParameterExpression(node.name, locate(node.loc));
-    } else if (node.name[0] === "_") {
-      return makeReadExternalExpression(
-        apply(substring, node.name, ONE),
-        locate(node.loc),
-      );
     } else {
       return makeReadExpression(node.name, locate(node.loc));
     }

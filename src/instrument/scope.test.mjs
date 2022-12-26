@@ -57,9 +57,9 @@ const { undefined } = globalThis;
       ]),
       `
         'script';
-        let _secret_variable = undefined;
-        void _secret_variable;
-        _secret_variable = 'right';
+        let [secret_variable] = undefined;
+        void [secret_variable];
+        [secret_variable] = 'right';
         return 'completion';
       `,
     ),

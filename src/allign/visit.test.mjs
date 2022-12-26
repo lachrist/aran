@@ -36,7 +36,7 @@ const assertBlock = generateAssert(parseBlock, visitBlock);
 const assertStatement = generateAssert(parseStatement, visitStatement);
 const assertProgram = generateAssert(parseProgram, visitProgram);
 
-assertExpression("123;", "_x;", false);
+assertExpression("123;", "[x];", false);
 
 ////////////////
 // Expression //
@@ -62,11 +62,11 @@ assertExpression("123n;", "321n;", false);
 
 assertExpression("x;", "X;", true);
 
-assertExpression("_x;", "_x;", true);
-assertExpression("_x;", "_X;", false);
+assertExpression("[x];", "[x];", true);
+assertExpression("[x];", "[X];", false);
 
-assertExpression("typeof _x;", "typeof _x;", true);
-assertExpression("typeof _x;", "typeof _X;", false);
+assertExpression("typeof [x];", "typeof [x];", true);
+assertExpression("typeof [x];", "typeof [X];", false);
 
 assertExpression("'source' >> specifier;", "'source' >> specifier;", true);
 
@@ -155,9 +155,9 @@ assertEffect("specifier << 123;", "specifier << 321;", false);
 assertEffect("x = 123;", "X = 123;", true);
 assertEffect("x = 123;", "x = 321;", false);
 
-assertEffect("_x = 123;", "_x = 123;", true);
-assertEffect("_x = 123;", "_x = 321;", false);
-assertEffect("_x = 123;", "_X = 123;", false);
+assertEffect("[x] = 123;", "[x] = 123;", true);
+assertEffect("[x] = 123;", "[x] = 321;", false);
+assertEffect("[x] = 123;", "[X] = 123;", false);
 
 assertEffect("(void 123, void 456);", "(void 123, void 456);", true);
 
@@ -187,10 +187,10 @@ assertStatement("break l;", "break L;", true);
 assertStatement("return 123;", "return 123;", true);
 assertStatement("return 123;", "return 321;", false);
 
-assertStatement("let _x = 123;", "let _x = 123;", true);
-assertStatement("let _x = 123;", "const _x = 123;", false);
-assertStatement("let _x = 123;", "let _y = 123;", false);
-assertStatement("let _x = 123;", "let _x = 321;", false);
+assertStatement("let [x] = 123;", "let [x] = 123;", true);
+assertStatement("let [x] = 123;", "const [x] = 123;", false);
+assertStatement("let [x] = 123;", "let [y] = 123;", false);
+assertStatement("let [x] = 123;", "let [x] = 321;", false);
 
 assertStatement("{ void 123; }", "{ void 123; }", true);
 assertStatement("{ void 123; }", "{ void 321; }", false);
