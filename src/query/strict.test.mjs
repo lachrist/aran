@@ -1,18 +1,6 @@
-import { parse as parseAcorn } from "acorn";
 import { assertEqual } from "../__fixture__.mjs";
+import { parseScript, parseModule } from "../__fixture__parser__.mjs";
 import { isProgramStrict, isClosureStrict } from "./strict.mjs";
-
-const script_options = {
-  sourceType: "script",
-  ecmaVersion: 2021,
-};
-const parseScript = (code) => parseAcorn(code, script_options);
-
-const module_options = {
-  sourceType: "module",
-  ecmaVersion: 2021,
-};
-const parseModule = (code) => parseAcorn(code, module_options);
 
 assertEqual(isProgramStrict(parseScript("'foo'; 'use strict';")), true);
 assertEqual(isProgramStrict(parseModule("123;")), true);

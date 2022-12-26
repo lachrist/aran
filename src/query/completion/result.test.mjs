@@ -1,9 +1,6 @@
 import { assertDeepEqual } from "../../__fixture__.mjs";
-
 import { VALUED, UNVALUED } from "./valuation.mjs";
-
 import { makeFreeCompletion, makeBoundedCompletion } from "./completion.mjs";
-
 import {
   makeResult,
   generateReleaseResult,

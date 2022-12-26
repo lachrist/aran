@@ -1,27 +1,19 @@
-import { parse as parseAcorn } from "acorn";
-
 import { assertDeepEqual } from "../../__fixture__.mjs";
-
+import { parseModule } from "../../__fixture__parser__.mjs";
 import {
   makeVarDeclaration,
   makeVoidDeclaration,
   exportDeclaration,
 } from "./declaration.mjs";
-
 import {
   hoistExportSpecifier,
   hoistVariableDeclaration,
   hoistExportVariableDeclaration,
 } from "./helper.mjs";
 
-const options = {
-  sourceType: "module",
-  ecmaVersion: 2021,
-};
-
 assertDeepEqual(
   hoistExportSpecifier(
-    parseAcorn("var variable; export {variable as specifier};", options).body[1]
+    parseModule("var variable; export {variable as specifier};").body[1]
       .specifiers[0],
   ),
   [exportDeclaration(makeVoidDeclaration("variable"), "specifier")],
@@ -29,7 +21,7 @@ assertDeepEqual(
 
 assertDeepEqual(
   hoistVariableDeclaration(
-    parseAcorn("var [x1, x2 = 123, ... rest] = 456;", options).body[0],
+    parseModule("var [x1, x2 = 123, ... rest] = 456;").body[0],
   ),
   [
     makeVarDeclaration("x1"),
@@ -40,7 +32,7 @@ assertDeepEqual(
 
 assertDeepEqual(
   hoistVariableDeclaration(
-    parseAcorn("var {x1, y:x2, ... rest} = 456;", options).body[0],
+    parseModule("var {x1, y:x2, ... rest} = 456;").body[0],
   ),
   [
     makeVarDeclaration("x1"),
@@ -50,6 +42,6 @@ assertDeepEqual(
 );
 
 assertDeepEqual(
-  hoistExportVariableDeclaration(parseAcorn("var variable;", options).body[0]),
+  hoistExportVariableDeclaration(parseModule("var variable;").body[0]),
   [exportDeclaration(makeVarDeclaration("variable"), "variable")],
 );

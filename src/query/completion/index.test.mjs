@@ -1,15 +1,9 @@
-import { parse as parseAcorn } from "acorn";
 import { map, reduce } from "array-lite";
+import { parseScript } from "../../__fixture__parser__.mjs";
 import { assertDeepEqual } from "../../__fixture__.mjs";
 import { inferCompletionNodeArray } from "./index.mjs";
 
 const { Set } = globalThis;
-
-const parseScript = (code) =>
-  parseAcorn(code, {
-    ecmaVersion: 2021,
-    sourceType: "script",
-  });
 
 const get = (object, key) => object[key];
 

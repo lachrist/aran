@@ -3,9 +3,7 @@ import {
   assertDeepEqual,
   assertThrow,
 } from "../../__fixture__.mjs";
-
 import { SyntaxAranError } from "../../util/index.mjs";
-
 import {
   makeVoidDeclaration,
   makeVarDeclaration,

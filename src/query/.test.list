@@ -1,7 +1,0 @@
-- visit.mjs
-- * completion
-  * hoisting
-  * eval.mjs
-  * strict.mjs
-  * sort.mjs
-- index.mjs

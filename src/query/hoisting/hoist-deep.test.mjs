@@ -1,27 +1,15 @@
-import { parse as parseAcorn } from "acorn";
-
 import { flatMap } from "array-lite";
-
 import { assertDeepEqual } from "../../__fixture__.mjs";
-
+import { parseModule } from "../../__fixture__parser__.mjs";
 import {
   makeVoidDeclaration,
   makeVarDeclaration,
   exportDeclaration,
 } from "./declaration.mjs";
-
 import { hoistDeep } from "./hoist-deep.mjs";
 
-const options = {
-  ecmaVersion: 2021,
-  sourceType: "module",
-};
-
 const test = (code, ...declarations) => {
-  assertDeepEqual(
-    flatMap(parseAcorn(code, options).body, hoistDeep),
-    declarations,
-  );
+  assertDeepEqual(flatMap(parseModule(code).body, hoistDeep), declarations);
 };
 
 test("debugger;");

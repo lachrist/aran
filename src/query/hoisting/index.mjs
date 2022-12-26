@@ -1,26 +1,12 @@
 import { map, flatMap, concat, every, filterOut } from "array-lite";
-
-import { collectPattern } from "./helper.mjs";
-
+import { isDuplicate } from "../../util/index.mjs";
 import {
   checkoutDeclarationArray,
   makeLetDeclaration,
 } from "./declaration.mjs";
-
+import { collectPattern } from "./helper.mjs";
 import { hoistShallow } from "./hoist-shallow.mjs";
-
 import { hoistDeep } from "./hoist-deep.mjs";
-
-import { isDuplicate } from "../../util/index.mjs";
-
-export {
-  getDeclarationKind,
-  getDeclarationVariable,
-  isDeclarationImported,
-  getDeclarationImportSource,
-  getDeclarationImportSpecifier,
-  getDeclarationExportSpecifierArray,
-} from "./declaration.mjs";
 
 const isIdentifier = ({ type }) => type === "Identifier";
 

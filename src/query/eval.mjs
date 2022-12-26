@@ -1,6 +1,6 @@
 import { map, some, filter } from "array-lite";
 
-import { get, hasOwnProperty, partialx_ } from "../util/index.mjs";
+import { get, hasOwn, partialx_ } from "../util/index.mjs";
 
 const {
   Array: { isArray },
@@ -26,7 +26,7 @@ export const hasDirectEvalCall = (any) => {
   if (isArray(any)) {
     return some(any, hasDirectEvalCall);
   } else if (typeof any === "object" && any !== null) {
-    if (hasOwnProperty(any, "type")) {
+    if (hasOwn(any, "type")) {
       if (isDirectEvalCall(any)) {
         return true;
       } else if (

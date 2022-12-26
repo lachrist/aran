@@ -1,10 +1,10 @@
 import { some } from "array-lite";
 
-import { assert, hasOwnProperty } from "../util/index.mjs";
+import { assert, hasOwn } from "../util/index.mjs";
 
 const isStrictDirective = (node) =>
   node.type === "ExpressionStatement" &&
-  hasOwnProperty(node, "directive") &&
+  hasOwn(node, "directive") &&
   node.directive === "use strict";
 
 export const isProgramStrict = (node) => {

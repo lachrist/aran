@@ -1,5 +1,4 @@
 import { concat, filterOut } from "array-lite";
-
 import { SyntaxAranError, assert, isDuplicate } from "../../util/index.mjs";
 
 const {

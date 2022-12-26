@@ -32,3 +32,7 @@ export const assertFailure = (either) => {
 export const generateAssertUnreachable = (message) => () => {
   assertUnreachable(message);
 };
+
+export const parseEstree = (code) => {
+
+};

@@ -1,52 +1,34 @@
 import { map } from "array-lite";
-
 import { assertDeepEqual } from "../__fixture__.mjs";
-
+import { parseScript, parseModule } from "../__fixture__parser__.mjs";
 import { sortBody } from "./sort.mjs";
-
-import { parse as parseAcorn } from "acorn";
 
 const getType = ({ type }) => type;
 
-const test = (type, code, ...types) => {
-  assertDeepEqual(
-    map(
-      sortBody(
-        parseAcorn(code, {
-          ecmaVersion: 2021,
-          sourceType: type,
-        }).body,
-      ),
-      getType,
-    ),
-    types,
-  );
+const test = ({ body }, ...types) => {
+  assertDeepEqual(map(sortBody(body), getType), types);
 };
 
 test(
-  "script",
-  "debugger; function f () {}",
+  parseScript("debugger; function f () {}"),
   "FunctionDeclaration",
   "DebuggerStatement",
 );
 
 test(
-  "script",
-  "debugger; label: function f () {}",
+  parseScript("debugger; label: function f () {}"),
   "LabeledStatement",
   "DebuggerStatement",
 );
 
 test(
-  "module",
-  "debugger; export function f () {}",
+  parseModule("debugger; export function f () {}"),
   "ExportNamedDeclaration",
   "DebuggerStatement",
 );
 
 test(
-  "module",
-  "debugger; export default function f () {}",
+  parseModule("debugger; export default function f () {}"),
   "ExportDefaultDeclaration",
   "DebuggerStatement",
 );

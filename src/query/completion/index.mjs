@@ -1,13 +1,8 @@
 import { map, concat, flatMap } from "array-lite";
-
-import { partialx_x, deadcode } from "../../util/index.mjs";
-
-import { applyVisitor } from "../visit.mjs";
-
+import { partialx_ } from "../../util/index.mjs";
+import { dispatchObjectNode0 } from "../../node.mjs";
 import { VALUED, UNVALUED } from "./valuation.mjs";
-
 import { makeFreeCompletion, getCompletionNode } from "./completion.mjs";
-
 import {
   makeResult,
   generateReleaseResult,
@@ -46,65 +41,60 @@ const visitAll = (nodes) => {
 };
 /* eslint-enable no-use-before-define */
 
-const visit = partialx_x(
-  applyVisitor,
-  {
-    ThrowStatemnt: visitEmpty,
-    EmptyStatement: visitEmpty,
-    DebuggerStatement: visitEmpty,
-    FunctionDeclaration: visitEmpty,
-    ClassDeclaration: visitEmpty,
-    VariableDeclaration: visitEmpty,
-    ContinueStatement: visitEmpty,
-    ExpressionStatement: (node) =>
-      makeResult(VALUED, [makeFreeCompletion(node)]),
-    BreakStatement: (node) =>
-      makeResult(node.label === null ? null : node.label.name, []),
-    BlockStatement: (node) => visitAll(node.body),
-    LabeledStatement: (node) =>
-      generateReleaseResult(node.label.name)(visit(node.body)),
-    TryStatement: (node) =>
-      makeResult(
-        VALUED,
-        concat(
-          prefaceResult(visit(node.block), node),
-          prefaceResult(
-            node.handler === null ? empty_result : visit(node.handler.body),
-            node,
-          ),
+const visit = partialx_(dispatchObjectNode0, {
+  ThrowStatemnt: visitEmpty,
+  EmptyStatement: visitEmpty,
+  DebuggerStatement: visitEmpty,
+  FunctionDeclaration: visitEmpty,
+  ClassDeclaration: visitEmpty,
+  VariableDeclaration: visitEmpty,
+  ContinueStatement: visitEmpty,
+  ExpressionStatement: (node) => makeResult(VALUED, [makeFreeCompletion(node)]),
+  BreakStatement: (node) =>
+    makeResult(node.label === null ? null : node.label.name, []),
+  BlockStatement: (node) => visitAll(node.body),
+  LabeledStatement: (node) =>
+    generateReleaseResult(node.label.name)(visit(node.body)),
+  TryStatement: (node) =>
+    makeResult(
+      VALUED,
+      concat(
+        prefaceResult(visit(node.block), node),
+        prefaceResult(
+          node.handler === null ? empty_result : visit(node.handler.body),
+          node,
         ),
       ),
-    IfStatement: (node) =>
-      makeResult(
-        VALUED,
-        concat(
-          prefaceResult(visit(node.consequent), node),
-          prefaceResult(
-            node.alternate === null ? empty_result : visit(node.alternate),
-            node,
-          ),
+    ),
+  IfStatement: (node) =>
+    makeResult(
+      VALUED,
+      concat(
+        prefaceResult(visit(node.consequent), node),
+        prefaceResult(
+          node.alternate === null ? empty_result : visit(node.alternate),
+          node,
         ),
       ),
-    SwitchStatement: (node) =>
-      makeResult(
-        VALUED,
-        concat(
-          [makeFreeCompletion(node)],
-          flatMap(node.cases, ({ consequent: nodes }) =>
-            prefaceResult(releaseNullResult(visitAll(nodes)), node),
-          ),
+    ),
+  SwitchStatement: (node) =>
+    makeResult(
+      VALUED,
+      concat(
+        [makeFreeCompletion(node)],
+        flatMap(node.cases, ({ consequent: nodes }) =>
+          prefaceResult(releaseNullResult(visitAll(nodes)), node),
         ),
       ),
-    WithStatement: (node) =>
-      makeResult(VALUED, prefaceResult(visit(node.body), node)),
-    WhileStatement: visitLoop,
-    DoWhileStatement: visitLoop,
-    ForStatement: visitLoop,
-    ForInStatement: visitLoop,
-    ForOfStatement: visitLoop,
-  },
-  deadcode("invalid node type"),
-);
+    ),
+  WithStatement: (node) =>
+    makeResult(VALUED, prefaceResult(visit(node.body), node)),
+  WhileStatement: visitLoop,
+  DoWhileStatement: visitLoop,
+  ForStatement: visitLoop,
+  ForInStatement: visitLoop,
+  ForOfStatement: visitLoop,
+});
 
 export const inferCompletionNodeArray = (nodes) =>
   map(chainResult(visitAll(nodes), UNVALUED), getCompletionNode);
