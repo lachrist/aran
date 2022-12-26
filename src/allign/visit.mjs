@@ -1,9 +1,5 @@
-/* eslint-disable no-use-before-define */ import {
-  zip,
-  reduce,
-  concat,
-  map,
-} from "array-lite";
+/* eslint-disable no-use-before-define */
+import { zip, reduce } from "array-lite";
 import { partialx___, partialx____ } from "../util/index.mjs";
 import { allignArrayNode1 } from "../node.mjs";
 import { fromLiteral } from "../ast/index.mjs";
@@ -23,9 +19,6 @@ import {
 } from "./result.mjs";
 
 const { String } = globalThis;
-
-const makeSinglePairVariableResult = (pair) =>
-  makeSingleVariableResult(pair[0], pair[1]);
 
 const visitLiteral = (literal1, literal2, error) =>
   makeEmptyResult(
@@ -91,22 +84,8 @@ export const visitProgram = partialx___(visitNode, {
     visitAllLink(links1, links2, appendErrorSegment(error, ".links")),
     visitBlock(block1, block2, appendErrorSegment(error, ".body")),
   ],
-  EvalProgram: (
-    { 1: parameters1, 2: variables1, 3: block1 },
-    { 1: parameters2, 2: variables2, 3: block2 },
-    error,
-  ) => [
-    visitAllPrimitive(
-      parameters1,
-      parameters2,
-      appendErrorSegment(error, ".parameters"),
-    ),
-    bindAllVariable(
-      visitBlock(block1, block2, appendErrorSegment(error, ".body")),
-      variables1,
-      variables2,
-      appendErrorSegment(error, ".variables"),
-    ),
+  EvalProgram: ({ 1: block1 }, { 1: block2 }, error) => [
+    visitBlock(block1, block2, appendErrorSegment(error, ".body")),
   ],
 });
 
@@ -406,34 +385,13 @@ export const visitExpression = partialx___(visitNode, {
       appendErrorSegment(error, ".argument"),
     ),
   ],
-  EvalExpression: (
-    { 1: parameters1, 2: variables1, 3: expression1 },
-    { 1: parameters2, 2: variables2, 3: expression2 },
-    error,
-  ) =>
-    concat(
-      [
-        visitAllPrimitive(
-          parameters1,
-          parameters2,
-          appendErrorSegment(error, ".parameters"),
-        ),
-
-        visitPrimitive(
-          variables1.length,
-          variables2.length,
-          appendErrorSegment(error, ".variables.length"),
-        ),
-      ],
-      map(zip(variables1, variables2), makeSinglePairVariableResult),
-      [
-        visitExpression(
-          expression1,
-          expression2,
-          appendErrorSegment(error, ".argument"),
-        ),
-      ],
+  EvalExpression: ({ 1: expression1 }, { 1: expression2 }, error) => [
+    visitExpression(
+      expression1,
+      expression2,
+      appendErrorSegment(error, ".argument"),
     ),
+  ],
   ApplyExpression: (
     { 1: expression11, 2: expression12, 3: expressions1 },
     { 1: expression21, 2: expression22, 3: expressions2 },
@@ -558,7 +516,6 @@ const visitArray = (visit, array1, array2, error) =>
     error,
   );
 
-const visitAllPrimitive = partialx___(visitArray, visitPrimitive);
 const visitAllExpression = partialx___(visitArray, visitExpression);
 const visitAllStatement = partialx___(visitArray, visitStatement);
 const visitAllLink = partialx___(visitArray, visitLink);

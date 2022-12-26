@@ -9,7 +9,6 @@ import {
   filter,
   filterOut,
   concat,
-  map,
   flatMap,
 } from "array-lite";
 
@@ -61,13 +60,6 @@ const {
     prototype: { set: setWeakMap, get: getWeakMap },
   },
 } = globalThis;
-
-const makeReadExpression = (variable) => ["ReadExpression", variable];
-
-const makeParameterExpression = (parameter) => [
-  "ParameterExpression",
-  parameter,
-];
 
 const makeBlock = (labels, variables, statements) => [
   "Block",
@@ -299,19 +291,7 @@ const digestNodeSpecific = partialx__(dispatchArrayNode1, {
     digest = filterOut(digest, isDeclareExternalStatement);
     return digestProgramBody(makeBlock([], [], statements), digest);
   },
-  EvalProgram: ({ 1: parameters, 2: variables, 3: block }, digest) => {
-    assert(
-      !some(parameters, isDuplicate),
-      "dupicate parameter found in EvalProgram",
-    );
-    assert(
-      !some(variables, isDuplicate),
-      "duplicate variable found in EvalProgram",
-    );
-    digest = filterOut(digest, partial_x(isBoundVariableNode, variables));
-    digest = filterOut(digest, partial_x(isBoundParameterNode, parameters));
-    return digestProgramBody(block, digest);
-  },
+  EvalProgram: ({ 1: block }, digest) => digestProgramBody(block, digest),
   AggregateLink: ({ 2: specifier1, 3: specifier2 }, digest) => {
     // export Foo as *   from "source"; // invalid
     // export *          from "source"; // valid
@@ -395,21 +375,6 @@ const digestNodeSpecific = partialx__(dispatchArrayNode1, {
       loadDigest("Block", block1),
       filterOut(loadDigest("Block", block2), isCatchParameterNode),
       loadDigest("Block", block3),
-    );
-  },
-  EvalExpression: ({ 1: parameters, 2: variables }, digest) => {
-    assert(
-      !some(parameters, isDuplicate),
-      "duplicate parameter found in EvalExpression",
-    );
-    assert(
-      !some(variables, isDuplicate),
-      "duplicate variable found in EvalExpression",
-    );
-    return concat(
-      digest,
-      map(parameters, makeParameterExpression),
-      map(variables, makeReadExpression),
     );
   },
   [DEFAULT_CLAUSE]: return_x,

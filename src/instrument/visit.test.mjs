@@ -72,10 +72,8 @@ testIdentity(`
 // EvalProgram //
 testIdentity(`
   'eval';
-  [this, new.target];
-  let variable1, variable2;
   {
-    return variable1;
+    return 123;
   }
 `);
 
@@ -438,31 +436,12 @@ testIdentity(`
   }
 `);
 
-test(
+testIdentity(`
+  'module';
   {
-    ...makeContext(false),
-    unmangleVariable: (variable) => ({ VARIABLE: variable }),
-  },
-  `
-    'module';
-    {
-      let variable;
-      return eval([this], [variable], 123);
-    }
-  `,
-  `
-    'module';
-    {
-      let old_variable, new_variable;
-      new_variable = intrinsic.aran.createObject(
-        null,
-        "VARIABLE",
-        "variable",
-      );
-      return eval([this], [old_variable, new_variable], 123);
-    }
-  `,
-);
+    return eval(123);
+  }
+`);
 
 testIdentity(`
   'module';

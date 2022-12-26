@@ -119,10 +119,6 @@ const makeVariableDeclarator = (id, init) => ({
   init,
 });
 const makeEmptyVariableDeclarator = partial_x(makeVariableDeclarator, null);
-const makeArrayExpression = (elements) => ({
-  type: "ArrayExpression",
-  elements,
-});
 const makeExpressionStatement = (expression) => ({
   type: "ExpressionStatement",
   expression,
@@ -262,30 +258,14 @@ export const revertProgram = partialx_(dispatchArrayNode0, {
         [revertBlock(block)],
       ),
     ),
-  EvalProgram: ({ 1: parameters, 2: variables, 3: block }) =>
-    makeProgram(
-      "script",
-      concat(
-        [
-          makeDirective(
-            makeLiteral(EVAL_PROGRAM_DIRECTIVE),
-            EVAL_PROGRAM_DIRECTIVE,
-          ),
-          makeExpressionStatement(
-            makeArrayExpression(map(parameters, revertParameter)),
-          ),
-        ],
-        variables.length === 0
-          ? []
-          : [
-              makeVariableDeclaration(
-                "let",
-                map(variables, makeEmptyVariableDeclarator),
-              ),
-            ],
-        [revertBlock(block)],
+  EvalProgram: ({ 1: block }) =>
+    makeProgram("script", [
+      makeDirective(
+        makeLiteral(EVAL_PROGRAM_DIRECTIVE),
+        EVAL_PROGRAM_DIRECTIVE,
       ),
-    ),
+      revertBlock(block),
+    ]),
 });
 
 export const revertLink = partialx_(dispatchArrayNode0, {
@@ -462,10 +442,8 @@ export const revertExpression = partialx_(dispatchArrayNode0, {
       revertExpression(expression2),
       revertExpression(expression3),
     ),
-  EvalExpression: ({ 1: parameters, 2: variables, 3: expression }) =>
+  EvalExpression: ({ 1: expression }) =>
     makeCallExpression(makeIdentifier(EVAL_KEYWORD), [
-      makeArrayExpression(map(parameters, revertParameter)),
-      makeArrayExpression(map(variables, makeIdentifier)),
       revertExpression(expression),
     ]),
   ApplyExpression: ({ 1: expression1, 2: expression2, 3: expressions }) =>

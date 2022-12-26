@@ -136,14 +136,8 @@ assertExpression(
   false,
 );
 
-assertExpression("eval([this], [x], 123);", "eval([this], [x], 123);", true);
-assertExpression(
-  "eval([this], [x], 123);",
-  "eval([new.target], [x], 123);",
-  false,
-);
-assertExpression("eval([this], [x], 123);", "eval([this], [x], 321);", false);
-assertExpression("eval([this], [x], x);", "eval([this], [X], x);", false);
+assertExpression("eval(123);", "eval(123);", true);
+assertExpression("eval(123);", "eval(321);", false);
 
 ////////////
 // Effect //
@@ -357,26 +351,6 @@ assertProgram(
   false,
 );
 
-assertProgram(
-  "'eval'; [this]; let x; { return 123; }",
-  "'eval'; [this]; let x; { return 123; }",
-  true,
-);
+assertProgram("'eval'; { return 123; }", "'eval'; { return 123; }", true);
 
-assertProgram(
-  "'eval'; [this]; let x; { return 123; }",
-  "'eval'; [this]; let x; { return 321; }",
-  false,
-);
-
-assertProgram(
-  "'eval'; [this]; let x; { return 123; }",
-  "'eval'; [new.target]; let x; { return 123; }",
-  false,
-);
-
-assertProgram(
-  "'eval'; [this]; let x; { return x; }",
-  "'eval'; [this]; let x; { return X; }",
-  false,
-);
+assertProgram("'eval'; { return 123; }", "'eval'; { return 321; }", false);

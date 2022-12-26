@@ -26,40 +26,6 @@ assertThrow(() => {
   makeValidNode("Block", [], ["foo", "bar", "qux", "bar"], []);
 });
 
-// 1) Duplicate EvalProgram Variables
-// 2) Duplicate EvalProgram Parameters
-{
-  const completion_block = makeValidNode(
-    "Block",
-    [],
-    [],
-    [makeValidNode("ReturnStatement", makeValidNode("LiteralExpression", 123))],
-  );
-  makeValidNode(
-    "EvalProgram",
-    ["super.get", "super.set"],
-    [],
-    completion_block,
-  );
-  assertThrow(() => {
-    makeValidNode(
-      "EvalProgram",
-      ["super.get", "super.set", "super.get"],
-      [],
-      completion_block,
-    );
-  });
-  makeValidNode("EvalProgram", [], ["foo", "bar", "qux"], completion_block);
-  assertThrow(() => {
-    makeValidNode(
-      "EvalProgram",
-      [],
-      ["foo", "bar", "qux", "bar"],
-      completion_block,
-    );
-  });
-}
-
 // Duplicate Export Link //
 {
   const link = makeValidNode("ExportLink", "specifier");
@@ -122,7 +88,7 @@ assertThrow(() => {
 {
   const block = makeValidNode("Block", [], [], []);
   assertThrow(() => {
-    makeValidNode("EvalProgram", [], [], block);
+    makeValidNode("EvalProgram", block);
   });
 }
 {
@@ -148,8 +114,6 @@ assertThrow(() => {
 }
 makeValidNode(
   "EvalProgram",
-  [],
-  [],
   makeValidNode(
     "Block",
     [],
@@ -412,21 +376,10 @@ makeValidNode(
   const statements = [
     makeValidNode(
       "ReturnStatement",
-      makeValidNode(
-        "EvalExpression",
-        ["error"],
-        [],
-        makeValidNode("LiteralExpression", 123),
-      ),
+      makeValidNode("ParameterExpression", "error"),
     ),
   ];
   assertThrow(() => makeValidNode("ScriptProgram", statements));
-  makeValidNode(
-    "EvalProgram",
-    ["error"],
-    [],
-    makeValidNode("Block", [], [], statements),
-  );
   makeValidNode("ScriptProgram", [
     makeValidNode(
       "TryStatement",
@@ -469,25 +422,13 @@ const testVariable = (makeValidVariableEffect) => {
     [],
     [variable_statement, return_statement],
   );
-  makeValidNode("EvalProgram", [], [], bound_block);
-  makeValidNode("EvalProgram", [], ["variable"], unbound_block);
+  makeValidNode("EvalProgram", bound_block);
   assertThrow(() => {
-    makeValidNode("EvalProgram", [], [], unbound_block);
+    makeValidNode("EvalProgram", unbound_block);
   });
 };
 testVariable((variable) =>
   makeValidNode("ExpressionEffect", makeValidNode("ReadExpression", variable)),
-);
-testVariable((variable) =>
-  makeValidNode(
-    "ExpressionEffect",
-    makeValidNode(
-      "EvalExpression",
-      [],
-      [variable],
-      makeValidNode("LiteralExpression", 123),
-    ),
-  ),
 );
 testVariable((variable) =>
   makeValidNode(

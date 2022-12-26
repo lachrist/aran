@@ -18,6 +18,7 @@ import { dispatchArrayNode0, dispatchArrayNode1 } from "../node.mjs";
 
 import {
   makeBlock,
+  makeEvalProgram,
   makeModuleProgram,
   makeEffectStatement,
   makeReturnStatement,
@@ -45,15 +46,15 @@ import {
   makeSequenceExpression,
   makeConditionalExpression,
   makeApplyExpression,
+  makeEvalExpression,
 } from "../ast/index.mjs";
 
 import { makeJSONExpression } from "../intrinsic.mjs";
 
 import {
+  makeScopeScriptProgram,
   extendScope,
   makeScopeBlock,
-  makeScopeEvalProgram,
-  makeScopeScriptProgram,
 } from "./scope.mjs";
 
 import {
@@ -66,7 +67,6 @@ import {
   useSplitScope,
   makeSplitScopeWriteEffect,
   makeSplitScopeReadExpression,
-  makeSplitScopeEvalExpression,
 } from "./split.mjs";
 
 import { makeTrapExpression, makeTrapStatementArray } from "./trap.mjs";
@@ -250,31 +250,10 @@ export const visitProgram = partialx__(dispatchArrayNode1, {
         },
       }),
     ),
-  EvalProgram: (
-    { 1: parameters, 2: variables, 3: block, 4: serial },
-    context,
-  ) => {
-    const scope = extendScope(context.scope);
-    forEach(
-      variables,
-      partialxx_x(
-        declareSplitScopeMangled,
-        scope,
-        VAR_SPLIT,
-        context.unmangleVariable,
-      ),
-    );
-    forEach(
-      variables,
-      partialxx_x(declareSplitScopeMangled, scope, OLD_SPLIT, returnNull),
-    );
-    forEach(variables, partialxx_(useSplitScope, scope, OLD_SPLIT));
-    return makeScopeEvalProgram(
-      scope,
-      parameters,
+  EvalProgram: ({ 1: block, 2: serial }, context) =>
+    makeEvalProgram(
       visitBlock(block, {
         ...context,
-        scope,
         kind: "eval",
         arrival: {
           kind: "eval",
@@ -283,8 +262,7 @@ export const visitProgram = partialx__(dispatchArrayNode1, {
           serial,
         },
       }),
-    );
-  },
+    ),
 });
 
 ///////////
@@ -799,15 +777,8 @@ const visitExpression = partialx__(dispatchArrayNode1, {
       visitExpression(expression3, context),
     ),
   // Combiners //
-  EvalExpression: (
-    { 1: parameters, 2: variables, 3: expression, 4: serial },
-    context,
-  ) =>
-    makeSplitScopeEvalExpression(
-      context.scope,
-      [OLD_SPLIT, VAR_SPLIT],
-      parameters,
-      variables,
+  EvalExpression: ({ 1: expression, 2: serial }, context) =>
+    makeEvalExpression(
       makeTrapExpression(
         context.pointcut,
         context.namespace,

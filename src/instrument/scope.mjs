@@ -1,4 +1,4 @@
-import { forEach, concat, map, includes } from "array-lite";
+import { concat, map, includes } from "array-lite";
 
 import {
   append,
@@ -19,8 +19,6 @@ import {
   makeWriteEffect,
   makeLiteralExpression,
   makeReadExpression,
-  makeEvalProgram,
-  makeEvalExpression,
 } from "../ast/index.mjs";
 
 const {
@@ -130,25 +128,4 @@ export const makeScopeScriptProgram = (
 export const useScope = (scope, variable) => {
   const { used } = getBindingScope(scope, variable);
   pushUnique(used, variable);
-};
-
-export const makeScopeEvalProgram = ({ parent, used }, parameters, block) => {
-  assert(parent !== null, "expected body scope");
-  return makeEvalProgram(parameters, used, block);
-};
-
-const evaluate = (scope, variable) => {
-  const { used, parent } = getBindingScope(scope, variable);
-  assert(parent !== null, "eval variable should not be root");
-  pushUnique(used, variable);
-};
-
-export const makeScopeEvalExpression = (
-  scope,
-  parameters,
-  variables,
-  expression,
-) => {
-  forEach(variables, partialx_(evaluate, scope));
-  return makeEvalExpression(parameters, variables, expression);
 };

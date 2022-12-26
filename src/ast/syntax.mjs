@@ -18,7 +18,7 @@ const syntax = {
   Program: {
     ScriptProgram: [["Statement", "*"]],
     ModuleProgram: [["Link", "*"], "Block"],
-    EvalProgram: [["Parameter", "*"], ["Variable", "*"], "Block"],
+    EvalProgram: ["Block"],
   },
   Link: {
     ImportLink: ["Source", "NullableSpecifier"],
@@ -69,7 +69,7 @@ const syntax = {
     SequenceExpression: ["Effect", "Expression"],
     ConditionalExpression: ["Expression", "Expression", "Expression"],
     // Combiners //
-    EvalExpression: [["Parameter", "*"], ["Variable", "*"], "Expression"],
+    EvalExpression: ["Expression"],
     ApplyExpression: ["Expression", "Expression", ["Expression", "*"]],
     // InvokeExpression: ["Expression", "Expression", ["Expression", "*"]],
     ConstructExpression: ["Expression", ["Expression", "*"]],

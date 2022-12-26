@@ -82,7 +82,7 @@ testExpression("(void 123, 456);");
 
 testExpression("123 ? 456 : 789;");
 
-testExpression("eval([error, this], [variable1, variable2], 123);");
+testExpression("eval(123);");
 
 testExpression("123(456, 789);", "123(!undefined, 456, 789)");
 testExpression(
@@ -177,13 +177,6 @@ assertThrow(() => {
   testProgram("'foo';");
 });
 
-assertThrow(() => {
-  testProgram("'eval'; []; 123; 456; 789;");
-});
-
 testProgram("'script'; return 123;");
 testProgram("'module'; import 'source'; { return 123; }");
-testProgram(
-  "'eval'; [import.dynamic, this, super.call]; let variable1, variable2; { return 123; }",
-);
-testProgram("'eval'; [import.meta, new.target, arguments]; { return 123; }");
+testProgram("'eval'; { return 123; }");

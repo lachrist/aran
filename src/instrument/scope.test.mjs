@@ -20,8 +20,6 @@ import {
   useScope,
   makeScopeBlock,
   makeScopeScriptProgram,
-  makeScopeEvalExpression,
-  makeScopeEvalProgram,
 } from "./scope.mjs";
 
 const { undefined } = globalThis;
@@ -94,45 +92,6 @@ const { undefined } = globalThis;
         void variable;
         variable = 'right';
       }`,
-    ),
-  );
-}
-
-{
-  const scope = extendScope(createRootScope("secret_"));
-  declareScope(scope, "variable");
-  assertSuccess(
-    allignProgram(
-      makeScopeEvalProgram(
-        scope,
-        ["this"],
-        makeScopeBlock(
-          extendScope(scope),
-          [],
-          [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeEvalExpression(
-                  scope,
-                  ["this"],
-                  ["variable"],
-                  makeLiteralExpression("code"),
-                ),
-              ),
-            ),
-            makeReturnStatement(makeLiteralExpression("completion")),
-          ],
-        ),
-      ),
-      `
-        'eval';
-        [this];
-        let variable;
-        {
-          void eval([this], [variable], 'code');
-          return 'completion';
-        }
-      `,
     ),
   );
 }

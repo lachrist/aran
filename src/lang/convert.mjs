@@ -91,41 +91,41 @@ const expectSyntax = (check, node) => {
 // Visit //
 ///////////
 
-const convertParameter = partialx__(dispatchObjectNode0, {
-  __proto__: null,
-  Identifier: (node) => {
-    expectSyntax(node.name === "error" || node.name === "arguments", node);
-    return node.name;
-  },
-  ThisExpression: (_node) => "this",
-  MemberExpression: (node) => {
-    expectSyntax(!node.computed, node);
-    expectSyntax(!node.optional, node);
-    expectSyntax(node.property.type === "Identifier", node);
-    expectSyntax(
-      node.property.name === "get" ||
-        node.property.name === "set" ||
-        node.property.name === "call",
-      node,
-    );
-    return `super.${node.property.name}`;
-  },
-  MetaProperty: (node) => {
-    if (node.meta.name === "import") {
-      if (node.property.name === "dynamic") {
-        return "import";
-      } else {
-        expectSyntax(node.property.name === "meta", node);
-        return "import.meta";
-      }
-    } else if (node.meta.name === "new") {
-      expectSyntax(node.property.name === "target", node);
-      return "new.target";
-    } /* c8 ignore start */ else {
-      throw makeSyntaxError(node);
-    } /* c8 ignore stop */
-  },
-});
+// const convertParameter = partialx__(dispatchObjectNode0, {
+//   __proto__: null,
+//   Identifier: (node) => {
+//     expectSyntax(node.name === "error" || node.name === "arguments", node);
+//     return node.name;
+//   },
+//   ThisExpression: (_node) => "this",
+//   MemberExpression: (node) => {
+//     expectSyntax(!node.computed, node);
+//     expectSyntax(!node.optional, node);
+//     expectSyntax(node.property.type === "Identifier", node);
+//     expectSyntax(
+//       node.property.name === "get" ||
+//         node.property.name === "set" ||
+//         node.property.name === "call",
+//       node,
+//     );
+//     return `super.${node.property.name}`;
+//   },
+//   MetaProperty: (node) => {
+//     if (node.meta.name === "import") {
+//       if (node.property.name === "dynamic") {
+//         return "import";
+//       } else {
+//         expectSyntax(node.property.name === "meta", node);
+//         return "import.meta";
+//       }
+//     } else if (node.meta.name === "new") {
+//       expectSyntax(node.property.name === "target", node);
+//       return "new.target";
+//     } /* c8 ignore start */ else {
+//       throw makeSyntaxError(node);
+//     } /* c8 ignore stop */
+//   },
+// });
 
 const convertVariable = (node) => {
   expectSyntax(node.type === "Identifier", node);
@@ -143,16 +143,6 @@ const convertVariableDeclaration = (node) => {
   expectSyntax(node.type === "VariableDeclaration", node);
   expectSyntax(node.kind === "let", node);
   return map(node.declarations, convertVariableDeclarator);
-};
-
-const convertVariableArray = (node) => {
-  expectSyntax(node.type === "ArrayExpression", node);
-  return map(node.elements, convertVariable);
-};
-
-const convertParameterArray = (node) => {
-  expectSyntax(node.type === "ArrayExpression", node);
-  return map(node.elements, convertParameter);
 };
 
 export const convertProgram = partialx_(dispatchObjectNode0, {
@@ -175,25 +165,8 @@ export const convertProgram = partialx_(dispatchObjectNode0, {
         locate(node.loc),
       );
     } else if (directive === EVAL_PROGRAM_DIRECTIVE) {
-      expectSyntax(node.body.length > 1, node);
-      expectSyntax(node.body[1].type === "ExpressionStatement", node);
-      if (node.body.length === 3) {
-        return makeEvalProgram(
-          convertParameterArray(node.body[1].expression),
-          [],
-          convertBlock(node.body[2]),
-          locate(node.loc),
-        );
-      } else if (node.body.length === 4) {
-        return makeEvalProgram(
-          convertParameterArray(node.body[1].expression),
-          convertVariableDeclaration(node.body[2]),
-          convertBlock(node.body[3]),
-          locate(node.loc),
-        );
-      } else {
-        throw makeSyntaxError(node);
-      }
+      expectSyntax(node.body.length === 2, node);
+      return makeEvalProgram(convertBlock(node.body[1]), locate(node.loc));
     } else {
       throw makeSyntaxError(node);
     }
@@ -557,11 +530,9 @@ export const convertExpression = partialx_(dispatchObjectNode0, {
       node.callee.type === "Identifier" &&
       node.callee.name === EVAL_KEYWORD
     ) {
-      expectSyntax(node.arguments.length === 3, node);
+      expectSyntax(node.arguments.length === 1, node);
       return makeEvalExpression(
-        convertParameterArray(node.arguments[0]),
-        convertVariableArray(node.arguments[1]),
-        convertExpression(node.arguments[2]),
+        convertExpression(node.arguments[0]),
         locate(node.loc),
       );
       // } else if (
