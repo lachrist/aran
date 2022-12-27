@@ -3,14 +3,13 @@ import { includes, map } from "array-lite";
 import {
   NULL_DATA_DESCRIPTOR,
   constant_,
-  partialx_,
   partialxx______,
   assert,
   deadcode_____,
   constant___,
 } from "../../../util/index.mjs";
 
-import { layerVariable } from "../variable.mjs";
+import { mangleOriginalVariable } from "../variable.mjs";
 
 import {
   testStatic,
@@ -29,15 +28,14 @@ const {
 
 export const KINDS = ["define"];
 
-export const create = (layer, _options) => ({
-  layer,
+export const create = (_options) => ({
   static: {},
 });
 
 export const conflict = conflictStaticInternal;
 
-export const harvestHeader = ({ layer, static: bindings }) =>
-  map(ownKeys(bindings), partialx_(layerVariable, layer));
+export const harvestHeader = ({ static: bindings }) =>
+  map(ownKeys(bindings), mangleOriginalVariable);
 
 export const harvestPrelude = constant_([]);
 

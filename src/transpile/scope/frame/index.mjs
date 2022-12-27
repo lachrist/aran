@@ -1,4 +1,5 @@
 import { includes } from "array-lite";
+import { getVariableLayer } from "../variable.mjs";
 
 import * as BlockDynamic from "./block-dynamic.mjs";
 import * as BlockStaticDead from "./block-static-dead.mjs";
@@ -50,11 +51,11 @@ const libraries = {
 ////////////
 
 export const createFrame = (type, layer, options) => {
-  const { create: method } = libraries[type];
+  const { create } = libraries[type];
   return {
     type,
     layer,
-    ...method(layer, options),
+    inner: create(options),
   };
 };
 
@@ -63,8 +64,8 @@ export const createFrame = (type, layer, options) => {
 /////////////
 
 const generateHarvest = (name) => (frame) => {
-  const method = libraries[frame.type][name];
-  return method(frame);
+  const { [name]: harvest } = libraries[frame.type];
+  return harvest(frame.inner);
 };
 
 export const harvestFrameHeader = generateHarvest("harvestHeader");
@@ -75,10 +76,10 @@ export const harvestFramePrelude = generateHarvest("harvestPrelude");
 // Conflict //
 //////////////
 
-export const conflictFrame = (strict, frame, kind, layer, variable) => {
-  const { KINDS, conflict: method } = libraries[frame.type];
-  if (frame.layer === layer) {
-    method(strict, frame, kind, variable);
+export const conflictFrame = (strict, frame, kind, variable) => {
+  const { KINDS, conflict } = libraries[frame.type];
+  if (frame.layer === getVariableLayer(variable)) {
+    conflict(strict, frame.inner, kind, variable);
     return includes(KINDS, kind);
   } else {
     return false;
@@ -89,10 +90,10 @@ export const conflictFrame = (strict, frame, kind, layer, variable) => {
 // Declare //
 /////////////
 
-export const declareFrame = (strict, frame, kind, layer, variable, options) => {
-  const { KINDS, declare: method } = libraries[frame.type];
-  if (frame.layer === layer && includes(KINDS, kind)) {
-    method(strict, frame, kind, variable, options);
+export const declareFrame = (strict, frame, kind, variable, options) => {
+  const { KINDS, declare } = libraries[frame.type];
+  if (frame.layer === getVariableLayer(variable) && includes(KINDS, kind)) {
+    declare(strict, frame.inner, kind, variable, options);
     return true;
   } else {
     return false;
@@ -107,13 +108,18 @@ export const makeFrameInitializeStatementArray = (
   strict,
   frame,
   kind,
-  layer,
   variable,
   expression,
 ) => {
-  const { KINDS, makeInitializeStatementArray: method } = libraries[frame.type];
-  if (frame.layer === layer && includes(KINDS, kind)) {
-    return method(strict, frame, kind, variable, expression);
+  const { KINDS, makeInitializeStatementArray } = libraries[frame.type];
+  if (frame.layer === getVariableLayer(variable) && includes(KINDS, kind)) {
+    return makeInitializeStatementArray(
+      strict,
+      frame.inner,
+      kind,
+      variable,
+      expression,
+    );
   } else {
     return null;
   }
@@ -124,8 +130,8 @@ export const makeFrameInitializeStatementArray = (
 ///////////////
 
 export const lookupFrameAll = (strict, escaped, frame) => {
-  const { lookupAll: method } = libraries[frame.type];
-  method(strict, escaped, frame);
+  const { lookupAll } = libraries[frame.type];
+  lookupAll(strict, escaped, frame.inner);
 };
 
 ////////////
@@ -133,10 +139,17 @@ export const lookupFrameAll = (strict, escaped, frame) => {
 ////////////
 
 const generateLookup =
-  (name) => (next, strict, escaped, frame, layer, variable, options) => {
-    if (frame.layer === layer) {
-      const makeLookupNode = libraries[frame.type][name];
-      return makeLookupNode(next, strict, escaped, frame, variable, options);
+  (name) => (next, strict, escaped, frame, variable, options) => {
+    if (frame.layer === getVariableLayer(variable)) {
+      const { [name]: makeLookupNode } = libraries[frame.type];
+      return makeLookupNode(
+        next,
+        strict,
+        escaped,
+        frame.inner,
+        variable,
+        options,
+      );
     } else {
       return next();
     }

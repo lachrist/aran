@@ -24,7 +24,7 @@ const mapping = {
   class: "let",
 };
 
-export const create = (_layer, { macros }) => ({
+export const create = ({ macros }) => ({
   enclaves: macros,
 });
 

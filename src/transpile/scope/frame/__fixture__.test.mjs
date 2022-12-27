@@ -20,10 +20,9 @@ assertSuccess(
   testBlock(
     {
       KINDS: ["kind"],
-      create: (layer, options) => {
-        assertEqual(layer, "layer");
+      create: (options) => {
         assertDeepEqual(options, {});
-        return { layer, header: [], prelude: [] };
+        return { header: [], prelude: [] };
       },
       harvestHeader: ({ header }) => header,
       harvestPrelude: ({ prelude }) => prelude,

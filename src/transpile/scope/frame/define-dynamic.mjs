@@ -28,7 +28,7 @@ const {
 
 export const KINDS = ["define"];
 
-export const create = (_layer, { macro, observable }) => ({
+export const create = ({ macro, observable }) => ({
   dynamic: macro,
   static: {},
   observable,

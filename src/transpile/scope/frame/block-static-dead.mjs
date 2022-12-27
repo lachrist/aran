@@ -41,7 +41,7 @@ const {
 
 export const KINDS = ["let", "const", "class"];
 
-export const create = (_layer, _options) => ({
+export const create = (_options) => ({
   static: {},
 });
 

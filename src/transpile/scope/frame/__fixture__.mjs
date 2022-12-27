@@ -1,6 +1,6 @@
 import { includes, concat, flatMap } from "array-lite";
 
-import { createCounter, hasOwn, assert } from "../../../util/index.mjs";
+import { createCounter, assert } from "../../../util/index.mjs";
 
 import {
   makeScriptProgram,
@@ -13,11 +13,10 @@ import {
 
 import { allignBlock, allignProgram } from "../../../allign/index.mjs";
 
-import { BASE } from "../variable.mjs";
-
 const {
   undefined,
   Error,
+  Array: { isArray },
   Object: { assign },
 } = globalThis;
 
@@ -82,18 +81,10 @@ const generateTest =
       lookupAll,
       ...Library
     },
-    { head = "", scenarios = [], layer = BASE, options = {} },
+    { head = "", scenarios = [], options = {} },
   ) => {
-    const frame = create(layer, options);
-    assert(
-      typeof frame === "object" && frame !== null,
-      "expected frame to be an object",
-    );
-    assert(!hasOwn(frame, "type"), "unexpected type property in frame");
-    assert(
-      !hasOwn(frame, "layer") || frame.layer === layer,
-      "if present, the layer property should match the argument",
-    );
+    assert(isArray(KINDS), "expected KINDS to be an array");
+    const frame = create(options);
     let body = "";
     const statements = flatMap(scenarios, (scenario) => {
       scenario = assign({}, default_scenario, scenario);

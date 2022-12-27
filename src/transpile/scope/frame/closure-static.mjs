@@ -6,7 +6,6 @@ import {
   partialx_,
   partial_x,
   partial__x,
-  partialxx_,
   partialxx______,
   constant___,
   pushAll,
@@ -21,7 +20,7 @@ import {
   makeWriteEffect as makeRawWriteEffect,
 } from "../../../ast/index.mjs";
 
-import { layerVariable } from "../variable.mjs";
+import { mangleOriginalVariable } from "../variable.mjs";
 
 import {
   makeExportSequenceEffect,
@@ -41,19 +40,18 @@ const {
 
 export const KINDS = ["var", "function"];
 
-export const create = (layer, _options) => ({
-  layer,
+export const create = (_options) => ({
   static: {},
 });
 
 export const conflict = constant_(undefined);
 
-const makeDeclareStatementArray = (bindings, layer, variable) =>
+const makeDeclareStatementArray = (bindings, variable) =>
   concat(
     [
       makeEffectStatement(
         makeRawWriteEffect(
-          layerVariable(layer, variable),
+          mangleOriginalVariable(variable),
           makeLiteralExpression({ undefined: null }),
         ),
       ),
@@ -67,14 +65,11 @@ const makeDeclareStatementArray = (bindings, layer, variable) =>
     ),
   );
 
-export const harvestHeader = ({ static: bindings, layer }) =>
-  map(ownKeys(bindings), partialx_(layerVariable, layer));
+export const harvestHeader = ({ static: bindings }) =>
+  map(ownKeys(bindings), mangleOriginalVariable);
 
-export const harvestPrelude = ({ static: bindings, layer }) =>
-  flatMap(
-    ownKeys(bindings),
-    partialxx_(makeDeclareStatementArray, bindings, layer),
-  );
+export const harvestPrelude = ({ static: bindings }) =>
+  flatMap(ownKeys(bindings), partialx_(makeDeclareStatementArray, bindings));
 
 export const declare = (
   _strict,
@@ -94,7 +89,7 @@ export const declare = (
 
 export const makeInitializeStatementArray = (
   _strict,
-  { static: bindings, layer },
+  { static: bindings },
   _kind,
   variable,
   expression,
@@ -103,14 +98,14 @@ export const makeInitializeStatementArray = (
   return concat(
     [
       makeEffectStatement(
-        makeRawWriteEffect(layerVariable(layer, variable), expression),
+        makeRawWriteEffect(mangleOriginalVariable(variable), expression),
       ),
     ],
     map(
       bindings[variable],
       partial_x(
         makeExportStatement,
-        makeRawReadExpression(layerVariable(layer, variable)),
+        makeRawReadExpression(mangleOriginalVariable(variable)),
       ),
     ),
   );

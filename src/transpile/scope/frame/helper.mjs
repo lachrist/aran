@@ -30,7 +30,7 @@ import {
   makeThrowSyntaxErrorExpression,
 } from "../../../intrinsic.mjs";
 
-import { layerVariable } from "../variable.mjs";
+import { mangleOriginalVariable } from "../variable.mjs";
 
 ////////////
 // Export //
@@ -153,21 +153,21 @@ export const testStatic = ({ static: bindings }, variable, _options) =>
 export const makeStaticReadExpression = (
   _strict,
   _escaped,
-  { layer },
+  _frame,
   variable,
   _options,
-) => makeReadExpression(layerVariable(layer, variable));
+) => makeReadExpression(mangleOriginalVariable(variable));
 
 export const makeStaticTypeofExpression = (
   _strict,
   _escaped,
-  { layer },
+  _frame,
   variable,
   _options,
 ) =>
   makeUnaryExpression(
     "typeof",
-    makeReadExpression(layerVariable(layer, variable)),
+    makeReadExpression(mangleOriginalVariable(variable)),
   );
 
 export const makeStaticDiscardExpression = (
@@ -182,12 +182,12 @@ export const makeStaticDiscardExpression = (
 export const makeStaticWriteEffect = (
   _strict,
   _escaped,
-  { layer },
+  _frame,
   variable,
   { expression, counter },
 ) => {
   incrementCounter(counter);
-  return makeWriteEffect(layerVariable(layer, variable), expression);
+  return makeWriteEffect(mangleOriginalVariable(variable), expression);
 };
 
 /////////////

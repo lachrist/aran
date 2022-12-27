@@ -21,7 +21,10 @@ import {
   makeWriteEffect as makeRawWriteEffect,
 } from "../../../ast/index.mjs";
 
-import { layerVariable, layerShadowVariable } from "../variable.mjs";
+import {
+  mangleDeadzoneVariable,
+  mangleOriginalVariable,
+} from "../variable.mjs";
 
 import {
   conflictStaticExternal,
@@ -43,35 +46,34 @@ const {
 
 export const KINDS = ["let", "const", "class"];
 
-export const create = (layer, { distant }) => ({
-  layer,
+export const create = ({ distant }) => ({
   distant,
   static: {},
 });
 
 const hasDeadzone = (bindings, variable) => bindings[variable].deadzone;
 
-const makeShadowInitializeStatement = (layer, variable) =>
+const makeDeadzoneInitializeStatement = (variable) =>
   makeEffectStatement(
     makeRawWriteEffect(
-      layerShadowVariable(layer, variable),
+      mangleDeadzoneVariable(variable),
       makeLiteralExpression(false),
     ),
   );
 
-export const harvestHeader = ({ static: bindings, layer }) =>
+export const harvestHeader = ({ static: bindings }) =>
   concat(
-    map(ownKeys(bindings), partialx_(layerVariable, layer)),
+    map(ownKeys(bindings), mangleOriginalVariable),
     map(
       filter(ownKeys(bindings), partialx_(hasDeadzone, bindings)),
-      partialx_(layerShadowVariable, layer),
+      mangleDeadzoneVariable,
     ),
   );
 
-export const harvestPrelude = ({ static: bindings, layer }) =>
+export const harvestPrelude = ({ static: bindings }) =>
   map(
     filter(ownKeys(bindings), partialx_(hasDeadzone, bindings)),
-    partialx_(makeShadowInitializeStatement, layer),
+    makeDeadzoneInitializeStatement,
   );
 
 export const conflict = conflictStaticExternal;
@@ -100,7 +102,7 @@ export const declare = (
 
 export const makeInitializeStatementArray = (
   _strict,
-  { static: bindings, layer, distant },
+  { static: bindings, distant },
   _kind,
   variable,
   expression,
@@ -112,14 +114,14 @@ export const makeInitializeStatementArray = (
   return concat(
     [
       makeEffectStatement(
-        makeRawWriteEffect(layerVariable(layer, variable), expression),
+        makeRawWriteEffect(mangleOriginalVariable(variable), expression),
       ),
     ],
     binding.deadzone || distant
       ? [
           makeEffectStatement(
             makeRawWriteEffect(
-              layerShadowVariable(layer, variable),
+              mangleDeadzoneVariable(variable),
               makeLiteralExpression(true),
             ),
           ),
@@ -129,7 +131,7 @@ export const makeInitializeStatementArray = (
       binding.exports,
       partial_x(
         makeExportStatement,
-        makeRawReadExpression(layerVariable(layer, variable)),
+        makeRawReadExpression(mangleOriginalVariable(variable)),
       ),
     ),
   );
@@ -153,7 +155,7 @@ export const lookupAll = (_strict, escaped, { static: bindings, distant }) => {
 const generateMakeDeadzoneNode =
   (makeConditionalNode, makeDeadNode, makeLiveNode) =>
   (strict, escaped, frame, variable, options) => {
-    const { static: bindings, distant, layer } = frame;
+    const { static: bindings, distant } = frame;
     const binding = bindings[variable];
     if (!binding.initialized && !escaped) {
       return makeDeadNode(variable);
@@ -162,7 +164,7 @@ const generateMakeDeadzoneNode =
     } else {
       binding.deadzone = true;
       return makeConditionalNode(
-        makeRawReadExpression(layerShadowVariable(layer, variable)),
+        makeRawReadExpression(mangleDeadzoneVariable(variable)),
         makeLiveNode(strict, escaped, frame, variable, options),
         makeDeadNode(variable),
       );

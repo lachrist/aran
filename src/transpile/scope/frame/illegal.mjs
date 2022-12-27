@@ -22,7 +22,7 @@ const {
 
 export const KINDS = ["illegal"];
 
-export const create = (_layer, _options) => ({ static: {} });
+export const create = (_options) => ({ static: {} });
 
 export const conflict = conflictStaticInternal;
 

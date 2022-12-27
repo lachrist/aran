@@ -1,16 +1,13 @@
-import { join } from "array-lite";
+import { includes, join } from "array-lite";
 
-import { shift, assert } from "../../util/index.mjs";
+import { shift, assert, partialx_ } from "../../util/index.mjs";
 
 const {
+  Error,
   parseInt,
   isNaN,
   String: {
-    prototype: {
-      split: splitString,
-      substring: subString,
-      replace: replaceString,
-    },
+    prototype: { split: splitString, substring: subString },
   },
   Reflect: { apply },
   Number: {
@@ -18,73 +15,109 @@ const {
   },
 } = globalThis;
 
-export const BASE = "B";
-export const SPEC = "S";
-export const META = "M";
+const META = "0";
+const BASE = "1";
+const SPEC = "2";
 
-const SHADOW = "S";
+const DEADZONE = "X";
 const ORIGINAL = "O";
 
 const ENCODING = 36;
 const ENCODING_SINGLETON = [ENCODING];
 
-const ONE_SINGLETON = [1];
 const TWO_SINGLETON = [2];
 
 const SEPARATOR = "_";
 const SEPARATOR_SINGLETON = [SEPARATOR];
 
-const CONVERT = [/(\.|(_+))/gu, (match) => (match === "." ? "_" : `_${match}`)];
-
-const REVERT = [
-  /_+/gu,
-  (match) => (match === "_" ? "." : apply(subString, match, ONE_SINGLETON)),
-];
-
-const LAYER_MAPPING = {
+const DEADZONE_MAPPING = {
   __proto__: null,
-  [BASE]: "base",
-  [SPEC]: "spec",
-  [META]: "meta",
-};
-
-const SHADOWING_MAPPING = {
-  __proto__: null,
+  [DEADZONE]: true,
   [ORIGINAL]: false,
-  [SHADOW]: true,
 };
 
-export const indexVariable = (name, index) =>
+export const makeMetaVariable = (name, index) =>
   `0${apply(stringifyNumber, index, ENCODING_SINGLETON)}${SEPARATOR}${name}`;
 
-const unindexVariable = (variable) => {
-  if (variable[0] === "0") {
-    const segments = apply(splitString, variable, SEPARATOR_SINGLETON);
-    const index = parseInt(shift(segments), ENCODING);
-    assert(!isNaN(index), "invalid variable index");
-    return { index, name: join(segments, SEPARATOR) };
+const specials = ["this", "new.target", "import.meta"];
+
+const convertSpecial = (variable) => {
+  if (variable === "new.target") {
+    return "new_target";
+  } else if (variable === "import.meta") {
+    return "import_meta";
   } else {
-    return { index: null, name: variable };
+    return variable;
   }
 };
 
-const generateLayer = (shadowing) => (layer, variable) =>
-  `${layer}${shadowing}${apply(replaceString, variable, CONVERT)}`;
+const revertSpecial = (variable) => {
+  if (variable === "new_target") {
+    return "new.target";
+  } else if (variable === "import_meta") {
+    return "import.meta";
+  } else {
+    return variable;
+  }
+};
 
-export const layerShadowVariable = generateLayer(SHADOW);
+export const getVariableLayer = (variable) => {
+  if (includes(specials, variable)) {
+    return "spec";
+  } else if (variable[0] === META) {
+    return "meta";
+  } else {
+    return "base";
+  }
+};
 
-export const layerVariable = generateLayer(ORIGINAL);
+const mangleVariable = (prefix, variable) => {
+  if (includes(specials, variable)) {
+    return `${prefix}${SPEC}${convertSpecial(variable)}`;
+  } else if (variable[0] === META) {
+    return `${prefix}${variable}`;
+  } else {
+    return `${prefix}${BASE}${variable}`;
+  }
+};
+
+export const mangleDeadzoneVariable = partialx_(mangleVariable, DEADZONE);
+
+export const mangleOriginalVariable = partialx_(mangleVariable, ORIGINAL);
 
 export const unmangleVariable = (variable) => {
-  assert(variable[0] in LAYER_MAPPING, "invalid variable layer");
-  assert(variable[1] in SHADOWING_MAPPING, "invalid variable shadowing");
-  const { index, name } = unindexVariable(
-    apply(replaceString, apply(subString, variable, TWO_SINGLETON), REVERT),
+  assert(
+    variable[0] in DEADZONE_MAPPING,
+    "invalid first character in mangled variable",
   );
-  return {
-    layer: LAYER_MAPPING[variable[0]],
-    shadow: SHADOWING_MAPPING[variable[1]],
-    index,
-    name,
-  };
+  const deadzone = DEADZONE_MAPPING[variable[0]];
+  const body = apply(subString, variable, TWO_SINGLETON);
+  if (variable[1] === META) {
+    const segments = apply(splitString, body, SEPARATOR_SINGLETON);
+    const segment = shift(segments);
+    const index = parseInt(segment, ENCODING);
+    assert(!isNaN(index), "could not parse mangled variable index");
+    return {
+      layer: "meta",
+      deadzone,
+      name: join(segments, SEPARATOR),
+      index,
+    };
+  } else if (variable[1] === BASE) {
+    return {
+      layer: "base",
+      deadzone,
+      name: body,
+      index: null,
+    };
+  } else if (variable[1] === SPEC) {
+    return {
+      layer: "base",
+      deadzone,
+      name: revertSpecial(body),
+      index: null,
+    };
+  } else {
+    throw new Error("invalid second character of mangled variable");
+  }
 };

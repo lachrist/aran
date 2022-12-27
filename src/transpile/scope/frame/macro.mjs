@@ -29,7 +29,9 @@ const {
 
 export const KINDS = ["macro"];
 
-export const create = (_layer, _options) => ({ static: {} });
+export const LAYERING = false;
+
+export const create = (_options) => ({ static: {} });
 
 export const conflict = conflictStaticInternal;
 

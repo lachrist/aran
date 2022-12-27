@@ -11,7 +11,7 @@ import {
 
 import { allignBlock } from "../../../allign/index.mjs";
 
-import { BASE, META } from "../variable.mjs";
+import { makeMetaVariable } from "../variable.mjs";
 
 import {
   CLOSURE_STATIC,
@@ -27,35 +27,38 @@ import {
 
 const { Error } = globalThis;
 
+const META = "meta";
+
 const STRICT = true;
 
 const ESCAPED = true;
 
 const frame = createFrame(CLOSURE_STATIC, META, {});
 
-assertEqual(conflictFrame(STRICT, frame, "var", BASE, "variable"), false);
-
-assertEqual(conflictFrame(STRICT, frame, "var", META, "variable"), true);
+assertEqual(conflictFrame(STRICT, frame, "var", "base"), false);
 
 assertEqual(
-  declareFrame(STRICT, frame, "var", BASE, "variable", { exports: [] }),
-  false,
+  conflictFrame(STRICT, frame, "var", makeMetaVariable("meta", 123)),
+  true,
 );
+
+assertEqual(declareFrame(STRICT, frame, "var", "base", { exports: [] }), false);
 
 assertEqual(
   makeFrameInitializeStatementArray(
     STRICT,
     frame,
     "var",
-    BASE,
-    "variable",
+    "base",
     makeLiteralExpression("right"),
   ),
   null,
 );
 
 assertEqual(
-  declareFrame(STRICT, frame, "var", META, "variable", { exports: [] }),
+  declareFrame(STRICT, frame, "var", makeMetaVariable("meta", 123), {
+    exports: [],
+  }),
   true,
 );
 
@@ -66,8 +69,7 @@ const body = concat(
     STRICT,
     frame,
     "var",
-    META,
-    "variable",
+    makeMetaVariable("meta", 123),
     makeLiteralExpression("right"),
   ),
   [
@@ -78,8 +80,7 @@ const body = concat(
           STRICT,
           ESCAPED,
           frame,
-          BASE,
-          "variable",
+          "base",
           null,
         ),
       ),
@@ -93,8 +94,7 @@ const body = concat(
           STRICT,
           ESCAPED,
           frame,
-          META,
-          "variable",
+          makeMetaVariable("meta", 123),
           null,
         ),
       ),

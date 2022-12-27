@@ -19,8 +19,6 @@ import {
   allignExpression,
 } from "../../../allign/index.mjs";
 
-import { BASE } from "../variable.mjs";
-
 import {
   makeStaticLookupNode,
   testStatic,
@@ -144,8 +142,6 @@ assertSuccess(
 
 const STRICT = true;
 
-const LAYER = BASE;
-
 const ESCAPED = true;
 
 const next = () => {
@@ -170,7 +166,7 @@ assertSuccess(
       () => makeLiteralExpression("next"),
       STRICT,
       ESCAPED,
-      { layer: LAYER, static: {} },
+      { static: {} },
       "variable",
       "options",
     ),
@@ -186,7 +182,7 @@ assertSuccess(
       next,
       STRICT,
       ESCAPED,
-      { layer: LAYER, static: { variable: null } },
+      { static: { variable: null } },
       "variable",
       "options",
     ),
@@ -202,7 +198,7 @@ assertSuccess(
       next,
       STRICT,
       ESCAPED,
-      { layer: LAYER, static: { variable: null } },
+      { static: { variable: null } },
       "variable",
       "options",
     ),
@@ -218,7 +214,7 @@ assertSuccess(
       next,
       true,
       ESCAPED,
-      { layer: LAYER, static: { variable: null } },
+      { static: { variable: null } },
       "variable",
       "options",
     ),
@@ -238,7 +234,7 @@ assertSuccess(
       next,
       false,
       ESCAPED,
-      { layer: LAYER, static: { variable: null } },
+      { static: { variable: null } },
       "variable",
       "options",
     ),
@@ -256,7 +252,7 @@ assertSuccess(
         next,
         STRICT,
         ESCAPED,
-        { layer: LAYER, static: { variable: null } },
+        { static: { variable: null } },
         "variable",
         { expression: makeLiteralExpression("right"), counter },
       ),
