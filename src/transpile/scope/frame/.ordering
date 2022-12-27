@@ -1,0 +1,16 @@
+__fixture__.mjs
+helper.mjs
+block-dynamic.mjs
+block-static-dead.mjs
+block-static.mjs
+closure-dynamic.mjs
+closure-static.mjs
+define-dynamic.mjs
+define-static.mjs
+empty-dynamic-with.mjs
+empty-void.mjs
+enclave.mjs
+illegal.mjs
+import-static.mjs
+macro.mjs
+index.mjs

@@ -11,7 +11,7 @@ import {
   constant___,
   pushAll,
   assert,
-  hasOwnProperty,
+  hasOwn,
 } from "../../../util/index.mjs";
 
 import {
@@ -83,7 +83,7 @@ export const declare = (
   variable,
   { exports: specifiers },
 ) => {
-  if (!hasOwnProperty(bindings, variable)) {
+  if (!hasOwn(bindings, variable)) {
     defineProperty(bindings, variable, {
       __proto__: NULL_DATA_DESCRIPTOR,
       value: [],
@@ -99,10 +99,7 @@ export const makeInitializeStatementArray = (
   variable,
   expression,
 ) => {
-  assert(
-    hasOwnProperty(bindings, variable),
-    "missing variable for initialization",
-  );
+  assert(hasOwn(bindings, variable), "missing variable for initialization");
   return concat(
     [
       makeEffectStatement(

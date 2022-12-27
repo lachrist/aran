@@ -13,28 +13,24 @@ assertSuccess(
       observable: true,
     },
     head: `
-      effect(
-        (
-          intrinsic.aran.binary('in', 'VARIABLE', 'dynamic') ?
-          intrinsic.aran.throw(
-            new intrinsic.SyntaxError(
-              "Variable 'VARIABLE' has already been declared",
-            ),
-          ) :
-          undefined
-        ),
-      );
-      effect(
-        intrinsic.Reflect.defineProperty(
-          'dynamic',
-          'variable',
-          intrinsic.aran.createObject(
-            null,
-            'value', intrinsic.aran.deadzone,
-            'writable', true,
-            'enumerable', true,
-            'configurable', false,
+      void (
+        intrinsic.aran.binary('in', 'VARIABLE', 'dynamic') ?
+        intrinsic.aran.throw(
+          new intrinsic.SyntaxError(
+            "Variable 'VARIABLE' has already been declared",
           ),
+        ) :
+        undefined
+      );
+      void intrinsic.Reflect.defineProperty(
+        'dynamic',
+        'variable',
+        intrinsic.aran.createObject(
+          null,
+          'value', intrinsic.aran.deadzone,
+          'writable', true,
+          'enumerable', true,
+          'configurable', false,
         ),
       );
     `,
@@ -54,11 +50,9 @@ assertSuccess(
         escaped: false,
         strict: false,
         variable: "variable",
-        code: `effect(
-          intrinsic.aran.throw(
-            new intrinsic.ReferenceError(
-              "Cannot access variable 'variable' before initialization",
-            ),
+        code: `void intrinsic.aran.throw(
+          new intrinsic.ReferenceError(
+            "Cannot access variable 'variable' before initialization",
           ),
         )`,
       },
@@ -74,16 +68,12 @@ assertSuccess(
             intrinsic.aran.get('dynamic', 'variable'),
             intrinsic.aran.deadzone
           ) ?
-          effect(
-            intrinsic.aran.throw(
-              new intrinsic.ReferenceError(
-                "Cannot access variable 'variable' before initialization",
-              ),
+          void intrinsic.aran.throw(
+            new intrinsic.ReferenceError(
+              "Cannot access variable 'variable' before initialization",
             ),
           ) :
-          effect(
-            intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
-          )
+          void intrinsic.aran.setStrict('dynamic', 'variable', 'right')
         )`,
       },
       {
@@ -91,17 +81,15 @@ assertSuccess(
         kind: "const",
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `effect(
-          intrinsic.Reflect.defineProperty(
-            'dynamic',
-            'variable',
-            intrinsic.aran.createObject(
-              null,
-              'value', 'right',
-              'writable', false,
-              'enumerable', true,
-              'configurable', false,
-            ),
+        code: `void intrinsic.Reflect.defineProperty(
+          'dynamic',
+          'variable',
+          intrinsic.aran.createObject(
+            null,
+            'value', 'right',
+            'writable', false,
+            'enumerable', true,
+            'configurable', false,
           ),
         );`,
       },
@@ -110,9 +98,7 @@ assertSuccess(
         strict: false,
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `effect(
-          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
-        )`,
+        code: `void intrinsic.aran.setStrict('dynamic', 'variable', 'right')`,
       },
     ],
   }),

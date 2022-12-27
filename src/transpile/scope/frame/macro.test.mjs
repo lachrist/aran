@@ -36,11 +36,9 @@ assertSuccess(
       {
         type: "write",
         variable: "variable",
-        code: `effect(
-          intrinsic.aran.throw(
-            new intrinsic.TypeError(
-              "Cannot assign variable 'variable' because it is constant",
-            ),
+        code: `void intrinsic.aran.throw(
+          new intrinsic.TypeError(
+            "Cannot assign variable 'variable' because it is constant",
           ),
         )`,
       },

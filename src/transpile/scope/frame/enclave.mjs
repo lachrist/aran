@@ -9,7 +9,7 @@ import {
   makeApplyExpression,
   makeLiteralExpression,
   makeExpressionEffect,
-  makeDeclareStatement,
+  makeDeclareExternalStatement,
 } from "../../../ast/index.mjs";
 
 const { undefined } = globalThis;
@@ -50,7 +50,7 @@ export const makeInitializeStatementArray = (
   kind,
   variable,
   expression,
-) => [makeDeclareStatement(mapping[kind], variable, expression)];
+) => [makeDeclareExternalStatement(mapping[kind], variable, expression)];
 
 export const lookupAll = constant___(undefined);
 

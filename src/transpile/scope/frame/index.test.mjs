@@ -113,8 +113,8 @@ assertSuccess(
       let VARIABLE;
       VARIABLE = undefined;
       VARIABLE = 'right';
-      effect('next');
-      effect(VARIABLE);
+      void 'next';
+      void VARIABLE;
     }`,
   ),
 );

@@ -85,7 +85,7 @@ assertSuccess(
     {
       head: `
         let variable;
-        effect('conflict');
+        void 'conflict';
       `,
       layer: "layer",
       options: {},

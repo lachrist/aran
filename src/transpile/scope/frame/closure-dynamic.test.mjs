@@ -12,22 +12,20 @@ assertSuccess(
       macro: makeLiteralExpression("dynamic"),
       observable: true,
     },
-    head: `effect(
-      (
-        intrinsic.aran.binary('in', 'variable', 'dynamic') ?
-        undefined :
-        intrinsic.Reflect.defineProperty(
-          'dynamic',
-          'variable',
-          intrinsic.aran.createObject(
-            null,
-            'value', undefined,
-            'writable', true,
-            'enumerable', true,
-            'configurable', false,
-          ),
-        )
-      ),
+    head: `void (
+      intrinsic.aran.binary('in', 'variable', 'dynamic') ?
+      undefined :
+      intrinsic.Reflect.defineProperty(
+        'dynamic',
+        'variable',
+        intrinsic.aran.createObject(
+          null,
+          'value', undefined,
+          'writable', true,
+          'enumerable', true,
+          'configurable', false,
+        ),
+      )
     );`,
     scenarios: [
       {
@@ -42,9 +40,7 @@ assertSuccess(
         kind: "var",
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `effect(
-          intrinsic.aran.setStrict('dynamic', 'variable', 'right'),
-        )`,
+        code: `void intrinsic.aran.setStrict('dynamic', 'variable', 'right')`,
       },
       {
         type: "read",

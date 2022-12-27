@@ -37,10 +37,8 @@ assertSuccess(
             ) :
             intrinsic.aran.binary('in', 'variable', 'dynamic')
           ) ?
-          effect(
-            intrinsic.aran.setSloppy('dynamic', 'variable', 'right'),
-          ) :
-          effect('next')
+          void intrinsic.aran.setSloppy('dynamic', 'variable', 'right') :
+          void 'next'
         )`,
       },
     ],

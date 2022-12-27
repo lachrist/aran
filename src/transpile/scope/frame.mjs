@@ -8,7 +8,6 @@ import {
 } from "../../util/index.mjs";
 
 import {
-  makeInternalLocalEvalProgram,
   makeScriptProgram,
   makeBlock,
   makeEvalExpression,
@@ -91,15 +90,6 @@ export const makeScopeFrameScriptProgram = partialx____(
 // Eval //
 //////////
 
-const harvestHeader = (scope1) => {
-  if (hasScopeFrame(scope1)) {
-    const { scope: scope2, frame } = popScopeFrame(scope1, false);
-    return concat(harvestHeader(scope2), harvestFrameHeader(frame));
-  } else {
-    return [];
-  }
-};
-
 const lookupAll = (strict, escaped1, scope1) => {
   if (hasScopeFrame(scope1)) {
     const {
@@ -112,24 +102,11 @@ const lookupAll = (strict, escaped1, scope1) => {
   }
 };
 
-const makeLabelessBlock = partialx__(makeBlock, []);
-
-export const makeScopeFrameInternalLocalEvalProgram = (
-  strict,
-  scope,
-  frames,
-  makeStatementArray,
-) =>
-  makeInternalLocalEvalProgram(
-    harvestHeader(scope),
-    makeScopeNode(makeLabelessBlock, strict, scope, frames, makeStatementArray),
-  );
-
 export const makeScopeEvalExpression = (strict, scope, expression) => {
   // We need to assume the worse case regarding deadzone.
   // That is that the eval code will lookup variables from closures.
   lookupAll(strict, true, scope);
-  return makeEvalExpression(harvestHeader(scope), expression);
+  return makeEvalExpression(expression);
 };
 
 /////////////

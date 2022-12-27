@@ -1,6 +1,6 @@
 import {
   NULL_DATA_DESCRIPTOR,
-  hasOwnProperty,
+  hasOwn,
   constant_,
   deadcode_____,
   partialxxx______,
@@ -47,7 +47,7 @@ export const declare = (
   variable,
   _options,
 ) => {
-  assert(!hasOwnProperty(bindings, variable), "duplicate define variable");
+  assert(!hasOwn(bindings, variable), "duplicate define variable");
   defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
 };
 

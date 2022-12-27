@@ -14,7 +14,7 @@
 
 import {
   NULL_DATA_DESCRIPTOR,
-  hasOwnProperty,
+  hasOwn,
   deadcode_____,
   bind_____,
   dropxxx_x,
@@ -60,7 +60,7 @@ export const declare = (
 ) => {
   assert(specifiers.length === 0, "unexpected exported variable");
   assert(
-    !hasOwnProperty(bindings, variable),
+    !hasOwn(bindings, variable),
     "duplicate variable should have been caught by conflict",
   );
   defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);

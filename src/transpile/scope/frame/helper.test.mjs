@@ -116,14 +116,14 @@ assertSuccess(
 assertSuccess(
   allignStatement(
     makeExportStatement("specifier", makeLiteralExpression(123)),
-    `exportStatic('specifier', 123);`,
+    `specifier << 123;`,
   ),
 );
 
 assertSuccess(
   allignStatement(
     makeExportUndefinedStatement("specifier"),
-    `exportStatic('specifier', undefined);`,
+    `specifier << undefined;`,
   ),
 );
 
@@ -134,7 +134,7 @@ assertSuccess(
       "specifier",
       makeLiteralExpression(456),
     ),
-    `(effect(123), exportStatic('specifier', 456))`,
+    `(void 123, specifier << 456)`,
   ),
 );
 
@@ -382,9 +382,7 @@ assertSuccess(
         "variable",
         { expression: makeLiteralExpression("right"), counter },
       ),
-      `effect(
-        intrinsic.aran.setSloppy('dynamic', 'variable', 'right'),
-      )`,
+      `void intrinsic.aran.setSloppy('dynamic', 'variable', 'right')`,
     ),
   );
   assertEqual(incrementCounter(counter), 2);
@@ -411,10 +409,8 @@ assertSuccess(
       ),
       `
         intrinsic.aran.binary("in", "variable", "dynamic") ?
-        effect(
-          intrinsic.aran.setSloppy('dynamic', 'variable', 'right'),
-        ) :
-        effect("next")
+        void intrinsic.aran.setSloppy('dynamic', 'variable', 'right') :
+        void "next"
       `,
     ),
   );

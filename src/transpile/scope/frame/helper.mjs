@@ -2,7 +2,7 @@ import {
   assert,
   expect,
   partial_x,
-  hasOwnProperty,
+  hasOwn,
   incrementCounter,
   SyntaxAranError,
 } from "../../../util/index.mjs";
@@ -133,7 +133,7 @@ export const conflictStaticInternal = (
   _kind,
   variable,
 ) => {
-  assert(!hasOwnProperty(bindings, variable), "duplicate variable");
+  assert(!hasOwn(bindings, variable), "duplicate variable");
 };
 
 export const conflictStaticExternal = (
@@ -142,16 +142,13 @@ export const conflictStaticExternal = (
   _kind,
   variable,
 ) => {
-  expect(
-    !hasOwnProperty(bindings, variable),
-    SyntaxAranError,
-    DUPLICATE_TEMPLATE,
-    [variable],
-  );
+  expect(!hasOwn(bindings, variable), SyntaxAranError, DUPLICATE_TEMPLATE, [
+    variable,
+  ]);
 };
 
 export const testStatic = ({ static: bindings }, variable, _options) =>
-  hasOwnProperty(bindings, variable);
+  hasOwn(bindings, variable);
 
 export const makeStaticReadExpression = (
   _strict,

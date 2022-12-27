@@ -19,14 +19,14 @@ assertSuccess(
       {
         type: "read",
         variable: "variable",
-        code: "importStatic('source', 'specifier')",
+        code: "'source' >> specifier",
       },
       {
         type: "typeof",
         variable: "variable",
         code: `intrinsic.aran.unary(
           'typeof',
-          importStatic('source', 'specifier'),
+          'source' >> specifier,
         )`,
       },
       {
@@ -38,11 +38,9 @@ assertSuccess(
       {
         type: "write",
         variable: "variable",
-        code: `effect(
-          intrinsic.aran.throw(
-            new intrinsic.TypeError(
-              "Cannot assign variable 'variable' because it is constant",
-            ),
+        code: `void intrinsic.aran.throw(
+          new intrinsic.TypeError(
+            "Cannot assign variable 'variable' because it is constant",
           ),
         )`,
       },

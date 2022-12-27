@@ -5,7 +5,7 @@ import {
   constant___,
   deadcode_____,
   partialxx______,
-  hasOwnProperty,
+  hasOwn,
   SyntaxAranError,
 } from "../../../util/index.mjs";
 
@@ -37,7 +37,7 @@ export const declare = (
   variable,
   { name },
 ) => {
-  assert(!hasOwnProperty(bindings, variable), "duplicate variable");
+  assert(!hasOwn(bindings, variable), "duplicate variable");
   defineProperty(bindings, variable, {
     __proto__: NULL_DATA_DESCRIPTOR,
     value: name,

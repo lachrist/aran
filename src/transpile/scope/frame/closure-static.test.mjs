@@ -11,7 +11,7 @@ assertSuccess(
     head: `
       let VARIABLE;
       VARIABLE = undefined;
-      exportStatic('specifier', undefined);
+      specifier << undefined;
     `,
     scenarios: [
       {
@@ -27,7 +27,7 @@ assertSuccess(
         right: makeLiteralExpression("right"),
         code: `
           VARIABLE = 'right';
-          exportStatic('specifier', VARIABLE);
+          specifier << VARIABLE;
         `,
       },
       {
@@ -36,7 +36,7 @@ assertSuccess(
         right: makeLiteralExpression("right"),
         code: `(
           VARIABLE = 'right',
-          exportStatic('specifier', VARIABLE)
+          specifier << VARIABLE
         )`,
       },
     ],

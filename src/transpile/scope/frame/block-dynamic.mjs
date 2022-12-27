@@ -3,7 +3,7 @@ import { concat, includes, map } from "array-lite";
 import {
   NULL_DATA_DESCRIPTOR,
   constant_,
-  hasOwnProperty,
+  hasOwn,
   push,
   assert,
   partialx_,
@@ -109,7 +109,7 @@ export const declare = (
 ) => {
   assert(specifiers.length === 0, "unexpected global exported variable");
   assert(
-    !hasOwnProperty(bindings, variable),
+    !hasOwn(bindings, variable),
     "duplicate variable should have been caught by conflict",
   );
   defineProperty(bindings, variable, {
@@ -125,10 +125,7 @@ export const makeInitializeStatementArray = (
   variable,
   expression,
 ) => {
-  assert(
-    hasOwnProperty(bindings, variable),
-    "missing variable for initialization",
-  );
+  assert(hasOwn(bindings, variable), "missing variable for initialization");
   assert(bindings[variable] === false, "duplicate variable initialization");
   bindings[variable] = true;
   return [
@@ -153,9 +150,9 @@ const generateMakeDeadzoneNode =
   (makeConditionalNode, makeDeadNode, makeLiveNode) =>
   (strict, escaped, frame, variable, options) => {
     const { dynamic: macro, static: bindings } = frame;
-    if (hasOwnProperty(bindings, variable) && bindings[variable]) {
+    if (hasOwn(bindings, variable) && bindings[variable]) {
       return makeLiveNode(strict, escaped, frame, variable, options);
-    } else if (hasOwnProperty(bindings, variable) && !escaped) {
+    } else if (hasOwn(bindings, variable) && !escaped) {
       return makeDeadNode(variable);
     } else {
       return makeConditionalNode(

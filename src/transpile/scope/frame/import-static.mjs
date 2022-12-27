@@ -4,7 +4,7 @@ import {
   constant___,
   constant_,
   assert,
-  hasOwnProperty,
+  hasOwn,
   dropxxx_x,
   deadcode_____,
   partialxx______,
@@ -48,7 +48,7 @@ export const declare = (
   { source, specifier },
 ) => {
   assert(
-    !hasOwnProperty(bindings, variable),
+    !hasOwn(bindings, variable),
     "duplicate variable should have been caught by conflict",
   );
   defineProperty(bindings, variable, {

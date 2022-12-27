@@ -25,11 +25,9 @@ assertSuccess(
         type: "write",
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `effect(
-          intrinsic.aran.throw(
-            new intrinsic.ReferenceError(
-              "Cannot access variable 'variable' before initialization",
-            ),
+        code: `void intrinsic.aran.throw(
+          new intrinsic.ReferenceError(
+            "Cannot access variable 'variable' before initialization",
           ),
         )`,
       },

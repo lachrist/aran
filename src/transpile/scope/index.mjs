@@ -13,8 +13,7 @@ import {
 
 import {
   makeModuleProgram,
-  makeGlobalEvalProgram,
-  makeExternalLocalEvalProgram,
+  makeEvalProgram,
   makeClosureExpression,
   makeIntrinsicExpression,
   makeEffectStatement,
@@ -26,9 +25,15 @@ import {
 
 import { makeGetExpression } from "../../intrinsic.mjs";
 
-import { BASE, SPEC, META, indexVariable } from "./variable.mjs";
+import { encloseScope, ROOT_SCOPE, packScope, unpackScope } from "./core.mjs";
 
-import { encloseScope } from "./core.mjs";
+import {
+  BASE,
+  SPEC,
+  META,
+  indexVariable,
+  unmangleVariable,
+} from "./variable.mjs";
 
 import {
   createFrame,
@@ -57,12 +62,9 @@ import {
   makeScopeTypeofExpression,
   makeScopeDiscardExpression,
   makeScopeWriteEffect,
-  makeScopeFrameInternalLocalEvalProgram,
 } from "./frame.mjs";
 
-export { ROOT_SCOPE, packScope, unpackScope } from "./core.mjs";
-
-export { unmangleVariable } from "./variable.mjs";
+export { ROOT_SCOPE, packScope, unpackScope, unmangleVariable };
 
 const {
   Reflect: { defineProperty },
@@ -388,7 +390,6 @@ const makeEnclaveStatementArray = (
 export const makeScopeExternalLocalEvalProgram = (
   { strict, scope, counter },
   enclave,
-  specials,
   makeStatementArray,
 ) => {
   assert(
@@ -396,8 +397,7 @@ export const makeScopeExternalLocalEvalProgram = (
     "external local eval program should always be enclave",
   );
   const macros = {};
-  return makeExternalLocalEvalProgram(
-    specials,
+  return makeEvalProgram(
     makeScopeFrameBlock(
       strict,
       scope,
@@ -468,7 +468,7 @@ export const makeScopeGlobalEvalProgram = (
   enclave,
   makeStatementArray,
 ) =>
-  makeGlobalEvalProgram(
+  makeEvalProgram(
     makeScopeFrameBlock(
       strict,
       scope,
@@ -555,14 +555,17 @@ export const makeScopeInternalLocalEvalProgram = (
     enclave === false,
     "internal local eval program should not be enclave",
   );
-  return makeScopeFrameInternalLocalEvalProgram(
-    strict,
-    scope,
-    concat(
-      createMetaFrameArray(),
-      createSpecFrameArray(),
-      createEvalBaseFrameArray(strict),
+  return makeEvalProgram(
+    makeScopeFrameBlock(
+      strict,
+      scope,
+      [],
+      concat(
+        createMetaFrameArray(),
+        createSpecFrameArray(),
+        createEvalBaseFrameArray(strict),
+      ),
+      makeStatementArray,
     ),
-    makeStatementArray,
   );
 };

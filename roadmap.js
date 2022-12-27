@@ -9,6 +9,52 @@
 // import
 // import.meta
 
+
+aran.declareGlobal("let", "x", 123);
+-> advice.apply(aran.declareGlobal, undefined, ["let", "x", 123])
+->
+-> advice.apply(aran.declareGlobal, undefined, ["let", "x", 123])
+-> let x = HOLDING;
+
+// 1. No const
+// 2. No external deadzone detection
+//
+// 1. Late detection of duplicate variable
+// 2. No deadzone detection
+
+aran.checkGlobalDuplicate = (variable) => {
+  const is_present = hasOwn(globalThis, variable);
+  if (!is_present) {
+    defineProperty(globalThis, variable, {
+      __proto__: null,
+      value: undefined,
+      configurable: true,
+      writable: true,
+      enumerable: true,
+    });
+  }
+  try {
+    runScript(`throw null; var [${variable}];`);
+  } catch (error) {
+    if (error !== null) {
+      throw error;
+    }
+  } finally {
+    if (!is_present) {
+      deleteProperty(globalThis, variable);
+    }
+  }
+};
+
+
+aran.declareGlobal("var", "x", undefined);
+aran.declareGlobal("let", "x", undefined);
+
+aran.declareGlobal("const", "x", Symbol.deadzone);
+
+aran.writeGlobal("x", 123);
+
+
 let x = aran.declareExternalBefore("x", 123);
 aran.declareExternalAfter("x");
 

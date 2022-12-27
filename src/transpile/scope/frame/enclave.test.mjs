@@ -30,7 +30,7 @@ assertSuccess(
         kind: "var",
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: "var variable = 'right';",
+        code: "var [variable] = 'right';",
       },
       {
         type: "discard",
@@ -49,18 +49,14 @@ assertSuccess(
         strict: true,
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `effect(
-          ('writeStrict')('variable', 'right'),
-        )`,
+        code: `void ('writeStrict')('variable', 'right')`,
       },
       {
         type: "write",
         strict: false,
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `effect(
-          ('writeSloppy')('variable', 'right'),
-        )`,
+        code: `void ('writeSloppy')('variable', 'right')`,
       },
     ],
   }),

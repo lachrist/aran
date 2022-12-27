@@ -3,6 +3,7 @@ import { concat } from "array-lite";
 import { assertSuccess } from "../../__fixture__.mjs";
 
 import {
+  makeEvalProgram,
   makeReturnStatement,
   makeLiteralExpression,
   makeEffectStatement,
@@ -11,9 +12,9 @@ import {
 
 import { allignBlock, allignProgram } from "../../allign/index.mjs";
 
-import { BASE, META } from "./variable.mjs";
-
 import { ROOT_SCOPE, packScope, unpackScope, encloseScope } from "./core.mjs";
+
+import { BASE, META } from "./variable.mjs";
 
 import {
   createFrame,
@@ -23,7 +24,6 @@ import {
 } from "./frame/index.mjs";
 
 import {
-  makeScopeFrameInternalLocalEvalProgram,
   makeScopeFrameScriptProgram,
   makeScopeFrameBlock,
   declareScope,
@@ -94,12 +94,10 @@ assertSuccess(
       label: {
         let variable, initialized;
         initialized = false;
-        effect(
-          eval([variable, initialized], "code"),
-        );
+        void eval("code");
         variable = "right";
         initialized = true;
-        effect(variable);
+        void variable;
       }
     `,
   ),
@@ -107,50 +105,50 @@ assertSuccess(
 
 assertSuccess(
   allignProgram(
-    makeScopeFrameInternalLocalEvalProgram(
-      STRICT,
-      unpackScope(parseJSON(serialized_scope)),
-      [createFrame(MACRO, META, {})],
-      (scope) => {
-        declareScope(STRICT, scope, "macro", META, "VARIABLE", {
-          binding: makeLiteralExpression(123),
-        });
-        return [
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeScopeReadExpression(STRICT, scope, META, "VARIABLE", null),
-            ),
-          ),
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeScopeReadExpression(
-                STRICT,
-                encloseScope(scope),
-                BASE,
-                "variable",
-                null,
+    makeEvalProgram(
+      makeScopeFrameBlock(
+        STRICT,
+        unpackScope(parseJSON(serialized_scope)),
+        [],
+        [createFrame(MACRO, META, {})],
+        (scope) => {
+          declareScope(STRICT, scope, "macro", META, "VARIABLE", {
+            binding: makeLiteralExpression(123),
+          });
+          return [
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeReadExpression(STRICT, scope, META, "VARIABLE", null),
               ),
             ),
-          ),
-          makeReturnStatement(makeLiteralExpression("completion")),
-        ];
-      },
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeReadExpression(
+                  STRICT,
+                  encloseScope(scope),
+                  BASE,
+                  "variable",
+                  null,
+                ),
+              ),
+            ),
+            makeReturnStatement(makeLiteralExpression("completion")),
+          ];
+        },
+      ),
     ),
     `
-      "internal";
-      let variable, initialized;
+      "eval";
       {
-        effect(123);
-        effect(
-          (
-            initialized ?
-            variable :
-            intrinsic.aran.throw(
-              new intrinsic.ReferenceError(
-                "Cannot access variable 'variable' before initialization",
-              ),
-            )
-          ),
+        void 123;
+        void (
+          initialized ?
+          variable :
+          intrinsic.aran.throw(
+            new intrinsic.ReferenceError(
+              "Cannot access variable 'variable' before initialization",
+            ),
+          )
         );
         return "completion";
       }
@@ -180,7 +178,7 @@ assertSuccess(
     ),
     `
       "script";
-      effect("binding");
+      void "binding";
       return "completion";
     `,
   ),

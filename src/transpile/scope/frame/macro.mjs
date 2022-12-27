@@ -7,7 +7,7 @@ import {
   dropxxx_x,
   deadcode_____,
   partialxx______,
-  hasOwnProperty,
+  hasOwn,
 } from "../../../util/index.mjs";
 
 import { makeExpressionEffect } from "../../../ast/index.mjs";
@@ -44,7 +44,7 @@ export const declare = (
   variable,
   { binding },
 ) => {
-  assert(!hasOwnProperty(bindings, variable), "duplicate intrinsic variable");
+  assert(!hasOwn(bindings, variable), "duplicate intrinsic variable");
   defineProperty(bindings, variable, {
     __proto__: NULL_DATA_DESCRIPTOR,
     value: binding,

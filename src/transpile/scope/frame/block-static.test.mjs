@@ -40,7 +40,7 @@ assertSuccess(
         right: makeLiteralExpression("right"),
         code: `
           VARIABLE = 'right';
-          exportStatic('specifier', VARIABLE);
+          specifier << VARIABLE;
         `,
       },
       {
@@ -49,7 +49,7 @@ assertSuccess(
         right: makeLiteralExpression("right"),
         code: `(
           VARIABLE = 'right',
-          exportStatic('specifier', VARIABLE)
+          specifier << VARIABLE
         )`,
       },
     ],
@@ -96,18 +96,14 @@ assertSuccess(
         right: makeLiteralExpression("right"),
         code: `
           _VARIABLE ?
-          effect(
-            intrinsic.aran.throw(
-              new intrinsic.TypeError(
-                "Cannot assign variable 'variable' because it is constant",
-              ),
+          void intrinsic.aran.throw(
+            new intrinsic.TypeError(
+              "Cannot assign variable 'variable' because it is constant",
             ),
           ) :
-          effect(
-            intrinsic.aran.throw(
-              new intrinsic.ReferenceError(
-                "Cannot access variable 'variable' before initialization",
-              ),
+          void intrinsic.aran.throw(
+            new intrinsic.ReferenceError(
+              "Cannot access variable 'variable' before initialization",
             ),
           )
         `,

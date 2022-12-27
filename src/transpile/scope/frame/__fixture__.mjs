@@ -1,6 +1,6 @@
 import { includes, concat, flatMap } from "array-lite";
 
-import { createCounter, hasOwnProperty, assert } from "../../../util/index.mjs";
+import { createCounter, hasOwn, assert } from "../../../util/index.mjs";
 
 import {
   makeScriptProgram,
@@ -89,9 +89,9 @@ const generateTest =
       typeof frame === "object" && frame !== null,
       "expected frame to be an object",
     );
-    assert(!hasOwnProperty(frame, "type"), "unexpected type property in frame");
+    assert(!hasOwn(frame, "type"), "unexpected type property in frame");
     assert(
-      !hasOwnProperty(frame, "layer") || frame.layer === layer,
+      !hasOwn(frame, "layer") || frame.layer === layer,
       "if present, the layer property should match the argument",
     );
     let body = "";
@@ -153,7 +153,7 @@ const generateTest =
         ];
       } else {
         const makeLookupExpression = Library[names[scenario.type]];
-        body = `${body}\neffect(${scenario.code});`;
+        body = `${body}\nvoid (${scenario.code});`;
         return [
           makeEffectStatement(
             makeExpressionEffect(

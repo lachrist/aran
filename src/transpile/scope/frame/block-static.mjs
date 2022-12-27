@@ -2,7 +2,7 @@ import { reduce, filter, map, concat } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
-  hasOwnProperty,
+  hasOwn,
   assert,
   bind_,
   partial_x,
@@ -84,7 +84,7 @@ export const declare = (
   { exports: specifiers },
 ) => {
   assert(
-    !hasOwnProperty(bindings, variable),
+    !hasOwn(bindings, variable),
     "duplicate variable should have been caught by conflict",
   );
   defineProperty(bindings, variable, {
@@ -105,10 +105,7 @@ export const makeInitializeStatementArray = (
   variable,
   expression,
 ) => {
-  assert(
-    hasOwnProperty(bindings, variable),
-    "missing variable for initialization",
-  );
+  assert(hasOwn(bindings, variable), "missing variable for initialization");
   const binding = bindings[variable];
   assert(!binding.initialized, "duplicate initialization");
   binding.initialized = true;

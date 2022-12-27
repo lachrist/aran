@@ -2,7 +2,7 @@ import { map } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
-  hasOwnProperty,
+  hasOwn,
   assert,
   constant_,
   constant___,
@@ -84,7 +84,7 @@ export const declare = (
   { exports: specifiers },
 ) => {
   assert(specifiers.length === 0, "unexpected global exported variable");
-  if (!hasOwnProperty(bindings, variable)) {
+  if (!hasOwn(bindings, variable)) {
     defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
   }
 };
@@ -97,7 +97,7 @@ export const makeInitializeStatementArray = (
   expression,
 ) => {
   assert(
-    hasOwnProperty(bindings, variable),
+    hasOwn(bindings, variable),
     "missing binding for variable initialization",
   );
   return [

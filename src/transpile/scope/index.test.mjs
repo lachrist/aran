@@ -2,6 +2,8 @@ import { concat } from "array-lite";
 
 import { assertEqual, assertSuccess, assertThrow } from "../../__fixture__.mjs";
 
+import { createCounter } from "../../util/index.mjs";
+
 import {
   makeBlockStatement,
   makeExportLink,
@@ -12,8 +14,6 @@ import {
   makeEffectStatement,
   makeExpressionEffect,
 } from "../../ast/index.mjs";
-
-import { createCounter } from "../../util/index.mjs";
 
 import { allignProgram } from "../../allign/index.mjs";
 

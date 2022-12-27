@@ -34,11 +34,9 @@ assertSuccess(
         type: "write",
         variable: "variable",
         strict: true,
-        code: `effect(
-          intrinsic.aran.throw(
-            new intrinsic.ReferenceError(
-              "Variable 'variable' is not defined",
-            ),
+        code: `void intrinsic.aran.throw(
+          new intrinsic.ReferenceError(
+            "Variable 'variable' is not defined",
           ),
         )`,
       },
@@ -47,9 +45,7 @@ assertSuccess(
         strict: false,
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `effect(
-          intrinsic.aran.setSloppy('dynamic', 'variable', 'right'),
-        )`,
+        code: `void intrinsic.aran.setSloppy('dynamic', 'variable', 'right')`,
       },
     ],
   }),
