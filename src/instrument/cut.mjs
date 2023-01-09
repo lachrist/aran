@@ -1,5 +1,5 @@
 import { includes, concat } from "array-lite";
-import { InvalidOptionsAranError } from "../util/index.mjs";
+import { InvalidOptionAranError } from "../util/index.mjs";
 
 const {
   undefined,
@@ -21,7 +21,7 @@ const applyPoint = (point, context, name, values) => {
   } else if (typeof point === "function") {
     return apply(point, context, values);
   } else {
-    throw new InvalidOptionsAranError(
+    throw new InvalidOptionAranError(
       `Pointcut value for ${name} is invalid. It should either be: missing, a boolean, or a function.`,
     );
   }
@@ -45,7 +45,7 @@ export const cut = (pointcut, name, values) => {
   } else if (typeof pointcut === "function") {
     return apply(pointcut, undefined, concat([name], values));
   } else {
-    throw new InvalidOptionsAranError(
+    throw new InvalidOptionAranError(
       "invalid pointcut format. It should either be: a boolean, an array, a set, a map, an object, or a function.",
     );
   }

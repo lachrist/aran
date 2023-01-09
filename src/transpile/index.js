@@ -128,7 +128,7 @@ module.exports = (node, options, _local, _scope) => (
     (
       Throw.assert(
         options.serial === null || global_Reflect_getOwnPropertyDescriptor(options.evals, options.serial) !== void 0,
-        Throw.InvalidOptionsAranError,
+        Throw.InvalidOptionAranError,
         `For internal-local-eval sources, options.serial must refer to scope in options.evals `),
       options.evals[options.serial].scope) :
     (
@@ -213,7 +213,7 @@ module.exports = (node, options, _local, _scope) => (
       serials: options.serials,
       nodes: options.nodes},
     () => Visit.visitProgram(
-      _scope, 
+      _scope,
       node,
       {
         source: sources[options.source.type]})));

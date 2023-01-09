@@ -85,7 +85,7 @@ export const format = (template, values) => {
 export class AranError extends Error {}
 export class SyntaxAranError extends AranError {}
 export class EnclaveLimitationAranError extends AranError {}
-export class InvalidOptionsAranError extends AranError {}
+export class InvalidOptionAranError extends AranError {}
 /* eslint-enable no-restricted-syntax  */
 
 export const expect = (check, Constructor, template, values) => {
