@@ -88,9 +88,48 @@ export class EnclaveLimitationAranError extends AranError {}
 export class InvalidOptionAranError extends AranError {}
 /* eslint-enable no-restricted-syntax  */
 
-export const expect = (check, Constructor, template, values) => {
+export const expect0 = (check, Constructor, template) => {
   if (!check) {
-    throw new Constructor(format(template, values));
+    throw new Constructor(format(template, []));
+  }
+};
+
+export const expect1 = (check, Constructor, template, value) => {
+  if (!check) {
+    throw new Constructor(format(template, [value]));
+  }
+};
+
+export const expect2 = (check, Constructor, template, value1, value2) => {
+  if (!check) {
+    throw new Constructor(format(template, [value1, value2]));
+  }
+};
+
+export const expect3 = (
+  check,
+  Constructor,
+  template,
+  value1,
+  value2,
+  value3,
+) => {
+  if (!check) {
+    throw new Constructor(format(template, [value1, value2, value3]));
+  }
+};
+
+export const expect4 = (
+  check,
+  Constructor,
+  template,
+  value1,
+  value2,
+  value3,
+  value4,
+) => {
+  if (!check) {
+    throw new Constructor(format(template, [value1, value2, value3, value4]));
   }
 };
 

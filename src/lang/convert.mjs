@@ -6,7 +6,7 @@ import {
   partialx_,
   partialx__,
   format,
-  expect,
+  expect2,
   assert,
 } from "../util/index.mjs";
 
@@ -75,11 +75,10 @@ const {
 
 const locate = (loc) => `${String(loc.start.line)}:${String(loc.start.column)}`;
 const TEMPLATE = "Node %s at %s";
-const extractNodeInfo = (node) => [node.type, locate(node.loc)];
 const makeSyntaxError = (node) =>
-  new SyntaxError(format(TEMPLATE, extractNodeInfo(node)));
+  new SyntaxError(format(TEMPLATE, [node.type, locate(node.loc)]));
 const expectSyntax = (check, node) => {
-  expect(check, SyntaxError, TEMPLATE, extractNodeInfo(node));
+  expect2(check, SyntaxError, TEMPLATE, node.type, locate(node.loc));
 };
 
 ///////////
