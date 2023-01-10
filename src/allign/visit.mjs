@@ -47,10 +47,14 @@ const visitNode = (clauses, node1, node2, error) => {
   const { 0: type2 } = node2;
   if (type1 !== type2) {
     return makeEmptyResult(
-      setErrorValuePair(
-        setErrorMessage(error, "Structural mismatch"),
-        type1,
-        type2,
+      setErrorAnnotationPair(
+        setErrorValuePair(
+          setErrorMessage(error, "Structural mismatch"),
+          type1,
+          type2,
+        ),
+        node1[node1.length - 1],
+        node2[node2.length - 1],
       ),
     );
   } else {
