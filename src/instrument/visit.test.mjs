@@ -345,7 +345,7 @@ testIdentity(`
 `);
 
 testIdentity(`
-  'module';
+  'eval';
   {
     return this;
   }

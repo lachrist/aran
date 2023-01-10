@@ -119,11 +119,16 @@ const isRigidDeclareStatement = partial_x(isBoundDeclareExternalStatement, [
   "const",
 ]);
 
+const isVariableNode = ({ 0: type }) =>
+  type === "ReadExpression" || type === "WriteExpression";
+
 const isBoundVariableNode = partialx__(dispatchArrayNode1, {
   ReadExpression: doesFirstInclude,
   WriteEffect: doesFirstInclude,
   [DEFAULT_CLAUSE]: constant__(false),
 });
+
+const isParameterNode = ({ 0: type }) => type === "ParameterExpression";
 
 const isBoundParameterNode = partialx__(dispatchArrayNode1, {
   ParameterExpression: doesFirstInclude,
@@ -291,7 +296,11 @@ const digestNodeSpecific = partialx__(dispatchArrayNode1, {
     digest = filterOut(digest, isDeclareExternalStatement);
     return digestProgramBody(makeBlock([], [], statements), digest);
   },
-  EvalProgram: ({ 1: block }, digest) => digestProgramBody(block, digest),
+  EvalProgram: ({ 1: block }, digest) => {
+    digest = filterOut(digest, isParameterNode);
+    digest = filterOut(digest, isVariableNode);
+    return digestProgramBody(block, digest);
+  },
   AggregateLink: ({ 2: specifier1, 3: specifier2 }, digest) => {
     // export Foo as *   from "source"; // invalid
     // export *          from "source"; // valid

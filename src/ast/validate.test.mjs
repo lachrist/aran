@@ -422,9 +422,9 @@ const testVariable = (makeValidVariableEffect) => {
     [],
     [variable_statement, return_statement],
   );
-  makeValidNode("EvalProgram", bound_block);
+  makeValidNode("ModuleProgram", [], bound_block);
   assertThrow(() => {
-    makeValidNode("EvalProgram", unbound_block);
+    makeValidNode("ModuleProgram", [], unbound_block);
   });
 };
 testVariable((variable) =>
