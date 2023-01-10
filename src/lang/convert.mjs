@@ -497,9 +497,9 @@ export const convertExpression = partialx_(dispatchObjectNode0, {
     ) {
       expectSyntax(node.property.type === "Literal", node);
       expectSyntax(typeof node.property.value === "string", node);
-      return makeIntrinsicExpression(node.property.value);
+      return makeIntrinsicExpression(node.property.value, locate(node.loc));
     } else {
-      return makeIntrinsicExpression(convertIntrinsic(node));
+      return makeIntrinsicExpression(convertIntrinsic(node), locate(node.loc));
     }
   },
   ThisExpression: (node) => makeParameterExpression("this", locate(node.loc)),
