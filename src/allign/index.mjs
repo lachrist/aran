@@ -1,3 +1,5 @@
+import { zip, map, join } from "array-lite";
+
 import {
   parseExpression,
   parseEffect,
@@ -32,10 +34,49 @@ import {
 } from "./visit.mjs";
 
 const {
+  String,
+  undefined,
   JSON: { stringify: stringifyJSON },
+  Reflect: { apply },
+  Math: { max },
+  String: {
+    prototype: { split, padEnd, padStart },
+  },
 } = globalThis;
 
+const getLength = ({ length }) => length;
+
+const addEmptyLine = (lines, target) => {
+  while (lines.length < target) {
+    lines[lines.length] = "";
+  }
+};
+
+const side = (text1, text2) => {
+  const lines1 = apply(split, text1, ["\n"]);
+  const lines2 = apply(split, text2, ["\n"]);
+  const length = max(lines1.length, lines2.length);
+  const pad_index = String(length + 1).length;
+  const pad_line_1 = apply(max, undefined, map(lines1, getLength));
+  const pad_line_2 = apply(max, undefined, map(lines2, getLength));
+  addEmptyLine(lines1, length);
+  addEmptyLine(lines2, length);
+  return join(
+    map(
+      zip(lines1, lines2),
+      ([line1, line2], index) =>
+        `${apply(padStart, String(index + 1), [pad_index, " "])} | ${apply(
+          padEnd,
+          line1,
+          [pad_line_1, " "],
+        )} | ${apply(padEnd, line2, [pad_line_2, " "])} |`,
+    ),
+    "\n",
+  );
+};
+
 const generateAllign = (parse, stringify, visit) => (node, code) => {
+  code = stringify(parse(code));
   const error = getResultError(visit(node, parse(code), makeRootError()));
   if (error === null) {
     return null;
@@ -45,7 +86,7 @@ const generateAllign = (parse, stringify, visit) => (node, code) => {
     const { value: right, annotation: location } = getErrorRight(error);
     return `${message} (${location}): mismatch between ${stringifyJSON(
       left,
-    )} and ${stringifyJSON(right)}${"\n"}${stringify(node)}`;
+    )} and ${stringifyJSON(right)}${"\n"}${side(stringify(node), code)}`;
   }
 };
 

@@ -4,4 +4,14 @@ import { allignExpression } from "./index.mjs";
 
 assertSuccess(allignExpression(makeLiteralExpression(123), "123;"));
 
-assertFailure(allignExpression(makeLiteralExpression(123), "456;"));
+assertFailure(
+  allignExpression(
+    makeLiteralExpression(123),
+    `
+      (
+        void function () { return 456; },
+        function () { return 789; }
+      );
+    `,
+  ),
+);
