@@ -83,9 +83,24 @@ export const format = (template, values) => {
 
 /* eslint-disable no-restricted-syntax */
 export class AranError extends Error {}
-export class SyntaxAranError extends AranError {}
-export class EnclaveLimitationAranError extends AranError {}
-export class InvalidOptionAranError extends AranError {}
+export class SyntaxAranError extends AranError {
+  constructor(message) {
+    super(message);
+    this.name = "SyntaxAranError";
+  }
+}
+export class EnclaveLimitationAranError extends AranError {
+  constructor(message) {
+    super(message);
+    this.name = "EnclaveLimitationAranError";
+  }
+}
+export class InvalidOptionAranError extends AranError {
+  constructor(message) {
+    super(message);
+    this.name = "InvalidOptionAranError";
+  }
+}
 /* eslint-enable no-restricted-syntax  */
 
 export const expect0 = (check, Constructor, template) => {

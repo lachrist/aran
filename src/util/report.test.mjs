@@ -1,6 +1,9 @@
 import { assertThrow, assertEqual, assertDeepEqual } from "../__fixture__.mjs";
 
 import {
+  SyntaxAranError,
+  EnclaveLimitationAranError,
+  InvalidOptionAranError,
   inspect,
   format,
   expect0,
@@ -16,6 +19,16 @@ const {
   Error,
   Reflect: { apply },
 } = globalThis;
+
+const testError = (Constructor) => {
+  const error = new Constructor("message");
+  assertEqual(error.name, Constructor.name);
+  assertEqual(error.message, "message");
+};
+
+testError(SyntaxAranError);
+testError(EnclaveLimitationAranError);
+testError(InvalidOptionAranError);
 
 assertEqual(inspect("foo"), '"foo"');
 assertEqual(inspect(123), "123");
