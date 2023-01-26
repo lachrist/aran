@@ -217,8 +217,8 @@ const digestable = [
   "YieldExpression",
 ];
 
-const digestSubfieldArray = (value, index, types) =>
-  digestSubfield(value, index, types[index]);
+const digestSubfieldArray = (value, index, types, path) =>
+  digestSubfield(value, index, types[index], path);
 
 const digestSubfield = (value, index, type, path) =>
   digestField(value, type, `${path}/${String(index)}`);
