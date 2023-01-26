@@ -7,6 +7,9 @@ import {
 } from "../../__fixture__.mjs";
 
 import {
+  META,
+  BASE,
+  SPEC,
   makeMetaVariable,
   mangleDeadzoneVariable,
   mangleOriginalVariable,
@@ -19,7 +22,7 @@ assertThrow(() => {
 });
 
 forEach(["this", "new.target", "import.meta"], (name) => {
-  assertEqual(getVariableLayer(name), "spec");
+  assertEqual(getVariableLayer(name), SPEC);
   assertDeepEqual(unmangleVariable(mangleDeadzoneVariable(name)), {
     layer: "base",
     deadzone: true,
@@ -30,7 +33,7 @@ forEach(["this", "new.target", "import.meta"], (name) => {
 
 {
   const variable = makeMetaVariable("name", 123);
-  assertEqual(getVariableLayer(variable), "meta");
+  assertEqual(getVariableLayer(variable), META);
   assertDeepEqual(unmangleVariable(mangleOriginalVariable(variable)), {
     layer: "meta",
     deadzone: false,
@@ -39,7 +42,7 @@ forEach(["this", "new.target", "import.meta"], (name) => {
   });
 }
 
-assertEqual(getVariableLayer("name"), "base");
+assertEqual(getVariableLayer("name"), BASE);
 assertDeepEqual(unmangleVariable(mangleOriginalVariable("name")), {
   layer: "base",
   deadzone: false,

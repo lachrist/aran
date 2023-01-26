@@ -15,9 +15,13 @@ const {
   },
 } = globalThis;
 
-const META = "0";
-const BASE = "1";
-const SPEC = "2";
+export const META = "meta";
+export const BASE = "base";
+export const SPEC = "spec";
+
+const META_CHAR = "0";
+const BASE_CHAR = "1";
+const SPEC_CHAR = "2";
 
 const DEADZONE = "X";
 const ORIGINAL = "O";
@@ -63,21 +67,21 @@ const revertSpecial = (variable) => {
 
 export const getVariableLayer = (variable) => {
   if (includes(specials, variable)) {
-    return "spec";
-  } else if (variable[0] === META) {
-    return "meta";
+    return SPEC;
+  } else if (variable[0] === META_CHAR) {
+    return META;
   } else {
-    return "base";
+    return BASE;
   }
 };
 
 const mangleVariable = (prefix, variable) => {
   if (includes(specials, variable)) {
-    return `${prefix}${SPEC}${convertSpecial(variable)}`;
-  } else if (variable[0] === META) {
+    return `${prefix}${SPEC_CHAR}${convertSpecial(variable)}`;
+  } else if (variable[0] === META_CHAR) {
     return `${prefix}${variable}`;
   } else {
-    return `${prefix}${BASE}${variable}`;
+    return `${prefix}${BASE_CHAR}${variable}`;
   }
 };
 
@@ -92,7 +96,7 @@ export const unmangleVariable = (variable) => {
   );
   const deadzone = DEADZONE_MAPPING[variable[0]];
   const body = apply(subString, variable, TWO_SINGLETON);
-  if (variable[1] === META) {
+  if (variable[1] === META_CHAR) {
     const segments = apply(splitString, body, SEPARATOR_SINGLETON);
     const segment = shift(segments);
     const index = parseInt(segment, ENCODING);
@@ -103,14 +107,14 @@ export const unmangleVariable = (variable) => {
       name: join(segments, SEPARATOR),
       index,
     };
-  } else if (variable[1] === BASE) {
+  } else if (variable[1] === BASE_CHAR) {
     return {
       layer: "base",
       deadzone,
       name: body,
       index: null,
     };
-  } else if (variable[1] === SPEC) {
+  } else if (variable[1] === SPEC_CHAR) {
     return {
       layer: "base",
       deadzone,

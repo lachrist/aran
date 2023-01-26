@@ -14,7 +14,7 @@ import { allignBlock, allignProgram } from "../../allign/index.mjs";
 
 import { ROOT_SCOPE, packScope, unpackScope, encloseScope } from "./core.mjs";
 
-import { BASE, META } from "./variable.mjs";
+import { BASE, META, makeMetaVariable } from "./variable.mjs";
 
 import {
   createFrame,
@@ -56,7 +56,7 @@ assertSuccess(
         createFrame(DEFINE_STATIC, META, {}),
       ],
       (scope) => {
-        declareScope(STRICT, scope, "const", BASE, "variable", { exports: [] });
+        declareScope(STRICT, scope, "const", "variable", { exports: [] });
         return concat(
           [
             makeEffectStatement(
@@ -76,14 +76,13 @@ assertSuccess(
             STRICT,
             scope,
             "const",
-            BASE,
             "variable",
             makeLiteralExpression("right"),
           ),
           [
             makeEffectStatement(
               makeExpressionEffect(
-                makeScopeReadExpression(STRICT, scope, BASE, "variable", null),
+                makeScopeReadExpression(STRICT, scope, "variable", null),
               ),
             ),
           ],
@@ -112,13 +111,24 @@ assertSuccess(
         [],
         [createFrame(MACRO, META, {})],
         (scope) => {
-          declareScope(STRICT, scope, "macro", META, "VARIABLE", {
-            binding: makeLiteralExpression(123),
-          });
+          declareScope(
+            STRICT,
+            scope,
+            "macro",
+            makeMetaVariable("VARIABLE", 123),
+            {
+              macro: makeLiteralExpression(123),
+            },
+          );
           return [
             makeEffectStatement(
               makeExpressionEffect(
-                makeScopeReadExpression(STRICT, scope, META, "VARIABLE", null),
+                makeScopeReadExpression(
+                  STRICT,
+                  scope,
+                  makeMetaVariable("VARIABLE", 123),
+                  null,
+                ),
               ),
             ),
             makeEffectStatement(
@@ -126,7 +136,6 @@ assertSuccess(
                 makeScopeReadExpression(
                   STRICT,
                   encloseScope(scope),
-                  BASE,
                   "variable",
                   null,
                 ),
@@ -163,13 +172,24 @@ assertSuccess(
       ROOT_SCOPE,
       [createFrame(MACRO, META, {})],
       (scope) => {
-        declareScope(STRICT, scope, "macro", META, "variable", {
-          binding: makeLiteralExpression("binding"),
-        });
+        declareScope(
+          STRICT,
+          scope,
+          "macro",
+          makeMetaVariable("variable", 123),
+          {
+            macro: makeLiteralExpression("binding"),
+          },
+        );
         return [
           makeEffectStatement(
             makeExpressionEffect(
-              makeScopeReadExpression(STRICT, scope, META, "variable", null),
+              makeScopeReadExpression(
+                STRICT,
+                scope,
+                makeMetaVariable("variable", 123),
+                null,
+              ),
             ),
           ),
           makeReturnStatement(makeLiteralExpression("completion")),

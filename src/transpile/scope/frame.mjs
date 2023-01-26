@@ -4,7 +4,7 @@ import {
   assert,
   partialx__,
   partialx____,
-  partialx_x____,
+  partialx_x___,
 } from "../../util/index.mjs";
 
 import {
@@ -16,7 +16,6 @@ import {
 import { pushScopeFrame, popScopeFrame, hasScopeFrame } from "./core.mjs";
 
 import {
-  conflictFrame,
   harvestFrameHeader,
   harvestFramePrelude,
   declareFrame,
@@ -113,19 +112,11 @@ export const makeScopeEvalExpression = (strict, scope, expression) => {
 // Declare //
 /////////////
 
-export const declareScope = (
-  strict,
-  scope1,
-  kind,
-  layer,
-  variable,
-  options,
-) => {
+export const declareScope = (strict, scope1, kind, variable, options) => {
   const { scope: scope2, frame, escaped } = popScopeFrame(scope1, false);
   assert(!escaped, "escaped scope during declaration");
-  conflictFrame(strict, frame, kind, layer, variable);
-  if (!declareFrame(strict, frame, kind, layer, variable, options)) {
-    declareScope(strict, scope2, kind, layer, variable, options);
+  if (!declareFrame(strict, frame, kind, variable, options)) {
+    declareScope(strict, scope2, kind, variable, options);
   }
 };
 
@@ -137,7 +128,6 @@ export const makeScopeInitializeStatementArray = (
   strict,
   scope1,
   kind,
-  layer,
   variable,
   expression,
 ) => {
@@ -147,17 +137,14 @@ export const makeScopeInitializeStatementArray = (
     strict,
     frame,
     kind,
-    layer,
     variable,
     expression,
   );
   if (maybe === null) {
-    conflictFrame(strict, frame, kind, layer, variable);
     return makeScopeInitializeStatementArray(
       strict,
       scope2,
       kind,
-      layer,
       variable,
       expression,
     );
@@ -175,7 +162,6 @@ const lookup = (
   strict,
   escaped1,
   scope1,
-  layer,
   variable,
   options,
 ) => {
@@ -186,43 +172,34 @@ const lookup = (
   } = popScopeFrame(scope1, escaped1);
   return makeFrameLookupNode(
     () =>
-      lookup(
-        makeFrameLookupNode,
-        strict,
-        escaped2,
-        scope2,
-        layer,
-        variable,
-        options,
-      ),
+      lookup(makeFrameLookupNode, strict, escaped2, scope2, variable, options),
     strict,
     escaped2,
     frame,
-    layer,
     variable,
     options,
   );
 };
 
-export const makeScopeReadExpression = partialx_x____(
+export const makeScopeReadExpression = partialx_x___(
   lookup,
   makeFrameReadExpression,
   false,
 );
 
-export const makeScopeTypeofExpression = partialx_x____(
+export const makeScopeTypeofExpression = partialx_x___(
   lookup,
   makeFrameTypeofExpression,
   false,
 );
 
-export const makeScopeDiscardExpression = partialx_x____(
+export const makeScopeDiscardExpression = partialx_x___(
   lookup,
   makeFrameDiscardExpression,
   false,
 );
 
-export const makeScopeWriteEffect = partialx_x____(
+export const makeScopeWriteEffect = partialx_x___(
   lookup,
   makeFrameWriteEffect,
   false,
