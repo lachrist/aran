@@ -1,4 +1,6 @@
-import { assertSuccess } from "../../../__fixture__.mjs";
+import { assertEqual, assertSuccess } from "../../../__fixture__.mjs";
+
+import { createCounter, gaugeCounter } from "../../../util/index.mjs";
 
 import {
   makeLiteralExpression,
@@ -8,6 +10,10 @@ import {
 import { testBlock } from "./__fixture__.mjs";
 
 import * as Frame from "./empty-dynamic-with.mjs";
+
+const initial = 123;
+
+const counter = createCounter(initial);
 
 assertSuccess(
   testBlock(Frame, {
@@ -19,10 +25,10 @@ assertSuccess(
     scenarios: [
       {
         type: "write",
-        strict: false,
-        output: "expression",
+        strict: true,
         next: () => makeExpressionEffect(makeLiteralExpression("next")),
         right: makeLiteralExpression("right"),
+        counter,
         variable: "variable",
         code: `(
           (
@@ -37,10 +43,12 @@ assertSuccess(
             ) :
             intrinsic.aran.binary('in', 'variable', 'dynamic')
           ) ?
-          void intrinsic.aran.setSloppy('dynamic', 'variable', 'right') :
+          void intrinsic.aran.setStrict('dynamic', 'variable', 'right') :
           void 'next'
         )`,
       },
     ],
   }),
 );
+
+assertEqual(gaugeCounter(counter), initial + 3);

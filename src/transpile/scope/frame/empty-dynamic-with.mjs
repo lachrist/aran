@@ -1,13 +1,15 @@
 import {
+  noop_,
+  dropx__x,
   constant_,
-  constant__,
+  constant____,
   deadcode_____,
   constant___,
-  partialxxx______,
   incrementCounter,
 } from "../../../util/index.mjs";
 
 import {
+  makeConditionalEffect,
   makeConditionalExpression,
   makeLiteralExpression,
 } from "../../../ast/index.mjs";
@@ -16,16 +18,10 @@ import {
   makeGetExpression,
   makeBinaryExpression,
   makeSymbolUnscopablesExpression,
+  makeDeleteSloppyExpression,
 } from "../../../intrinsic.mjs";
 
-import {
-  makeDynamicLookupExpression,
-  makeDynamicLookupEffect,
-  makeDynamicReadExpression,
-  makeDynamicTypeofExpression,
-  makeDynamicDiscardExpression,
-  makeDynamicWriteEffect,
-} from "./helper.mjs";
+import { makeTypeofGetExpression, makeIncrementSetEffect } from "./helper.mjs";
 
 const { undefined } = globalThis;
 
@@ -36,70 +32,74 @@ export const create = ({ macro, observable }) => ({
   observable,
 });
 
-export const conflict = constant_(undefined);
+export const conflict = constant____(undefined);
 
 export const harvestHeader = constant_([]);
 
 export const harvestPrelude = constant_([]);
 
-export const declare = deadcode_____("declaration on body-with frame");
+export const declare = deadcode_____("declare called on empty-dynamic frame");
 
-export const makeInitializeStatements = deadcode_____(
-  "initialization on body-with frame",
+export const makeInitializeStatementArray = deadcode_____(
+  "makeInitializeStatements called on empty-dynamic frame",
 );
 
 export const lookupAll = constant___(undefined);
 
-const testStatic = constant__(false);
-
-const makeDynamicTestExpression = ({ dynamic }, variable, _options) =>
-  makeConditionalExpression(
-    makeGetExpression(dynamic, makeSymbolUnscopablesExpression()),
-    makeConditionalExpression(
-      makeGetExpression(
-        makeGetExpression(dynamic, makeSymbolUnscopablesExpression()),
-        makeLiteralExpression(variable),
+const compileMakeLookupNode =
+  (makeConditionalNode, makePresentNode, observe) =>
+  (
+    next,
+    strict,
+    _escaped,
+    { dynamic: macro, observable },
+    variable,
+    options,
+  ) => {
+    if (observable) {
+      observe(options);
+    }
+    return makeConditionalNode(
+      makeConditionalExpression(
+        makeGetExpression(macro, makeSymbolUnscopablesExpression()),
+        makeConditionalExpression(
+          makeGetExpression(
+            makeGetExpression(macro, makeSymbolUnscopablesExpression()),
+            makeLiteralExpression(variable),
+          ),
+          makeLiteralExpression(false),
+          makeBinaryExpression("in", makeLiteralExpression(variable), macro),
+        ),
+        makeBinaryExpression("in", makeLiteralExpression(variable), macro),
       ),
-      makeLiteralExpression(false),
-      makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
-    ),
-    makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
-  );
+      makePresentNode(strict, macro, makeLiteralExpression(variable), options),
+      next(),
+    );
+  };
 
-export const makeReadExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  makeDynamicReadExpression,
+export const makeReadExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  dropx__x(makeGetExpression),
+  noop_,
 );
 
-export const makeTypeofExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  makeDynamicTypeofExpression,
+export const makeTypeofExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  dropx__x(makeTypeofGetExpression),
+  noop_,
 );
 
-export const makeDiscardExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  makeDynamicDiscardExpression,
+export const makeDiscardExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  dropx__x(makeDeleteSloppyExpression),
+  noop_,
 );
 
-const makeObservableDynamicTestExpression = (frame, variable, options) => {
-  const { observable } = frame;
-  if (observable) {
-    const { counter } = options;
+export const makeWriteEffect = compileMakeLookupNode(
+  makeConditionalEffect,
+  makeIncrementSetEffect,
+  ({ counter }) => {
     incrementCounter(counter);
     incrementCounter(counter);
-  }
-  return makeDynamicTestExpression(frame, variable, options);
-};
-
-export const makeWriteEffect = partialxxx______(
-  makeDynamicLookupEffect,
-  testStatic,
-  makeObservableDynamicTestExpression,
-  makeDynamicWriteEffect,
+  },
 );

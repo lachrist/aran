@@ -1,5 +1,7 @@
 import { assertSuccess } from "../../../__fixture__.mjs";
 
+import { makeLiteralExpression } from "../../../ast/index.mjs";
+
 import { testBlock } from "./__fixture__.mjs";
 
 import * as Frame from "./define-static.mjs";
@@ -9,15 +11,25 @@ assertSuccess(
     head: "let VARIABLE;",
     scenarios: [
       {
+        type: "read",
+        variable: "variable",
+        next: () => makeLiteralExpression("next"),
+        code: `"next"`,
+      },
+      {
+        type: "conflict",
+        variable: "variable",
+      },
+      {
         type: "declare",
         kind: "define",
         variable: "variable",
       },
       {
-        type: "read",
-        output: "expression",
+        type: "write",
         variable: "variable",
-        code: "VARIABLE",
+        right: makeLiteralExpression("right"),
+        code: `VARIABLE = "right"`,
       },
     ],
   }),

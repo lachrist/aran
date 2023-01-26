@@ -9,22 +9,19 @@ assertThrow(
     testBlock(Frame, {
       scenarios: [
         {
+          type: "conflict",
+          variable: "variable",
+        },
+        {
           type: "declare",
           kind: "illegal",
           variable: "variable",
-          options: {
-            name: "name",
-          },
         },
         {
           type: "read",
           variable: "variable",
-          code: "'dummy'",
         },
       ],
     }),
-  {
-    name: "Error",
-    message: "Illegal name",
-  },
+  { name: "SyntaxAranError" },
 );

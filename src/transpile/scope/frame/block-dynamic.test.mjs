@@ -10,7 +10,6 @@ assertSuccess(
   testBlock(Frame, {
     options: {
       macro: makeLiteralExpression("dynamic"),
-      observable: true,
     },
     head: `
       void (
@@ -35,10 +34,44 @@ assertSuccess(
       );
     `,
     scenarios: [
+      // Dynamic //
       {
         type: "conflict",
         variable: "VARIABLE",
       },
+      {
+        type: "discard",
+        variable: "VARIABLE",
+        next: () => makeLiteralExpression("next"),
+        code: `(
+          intrinsic.aran.binary("in", "VARIABLE", "dynamic") ?
+          intrinsic.aran.deleteSloppy("dynamic", "VARIABLE") :
+          "next"
+        )`,
+      },
+      {
+        type: "read",
+        variable: "VARIABLE",
+        next: () => makeLiteralExpression("next"),
+        code: `(
+          intrinsic.aran.binary("in", "VARIABLE", "dynamic") ?
+          (
+            intrinsic.aran.binary(
+              "===",
+              intrinsic.aran.get("dynamic", "VARIABLE"),
+              intrinsic.aran.deadzone,
+            ) ?
+            intrinsic.aran.throw(
+              new intrinsic.ReferenceError(
+                "Cannot access variable 'VARIABLE' before initialization",
+              ),
+            ) :
+            intrinsic.aran.get("dynamic", "VARIABLE")
+          ) :
+          "next"
+        )`,
+      },
+      // Static //
       {
         type: "declare",
         kind: "const",
@@ -46,34 +79,36 @@ assertSuccess(
         options: { exports: [] },
       },
       {
-        type: "write",
-        escaped: false,
-        strict: false,
+        type: "discard",
         variable: "variable",
-        code: `void intrinsic.aran.throw(
+        code: `intrinsic.aran.deleteSloppy("dynamic", "variable")`,
+      },
+      {
+        type: "read",
+        escaped: false,
+        variable: "variable",
+        code: `intrinsic.aran.throw(
           new intrinsic.ReferenceError(
             "Cannot access variable 'variable' before initialization",
           ),
         )`,
       },
       {
-        type: "write",
+        type: "read",
         escaped: true,
-        strict: false,
         variable: "variable",
-        right: makeLiteralExpression("right"),
         code: `(
           intrinsic.aran.binary(
             '===',
             intrinsic.aran.get('dynamic', 'variable'),
             intrinsic.aran.deadzone
           ) ?
-          void intrinsic.aran.throw(
+          intrinsic.aran.throw(
             new intrinsic.ReferenceError(
               "Cannot access variable 'variable' before initialization",
             ),
           ) :
-          void intrinsic.aran.setStrict('dynamic', 'variable', 'right')
+          intrinsic.aran.get('dynamic', 'variable')
         )`,
       },
       {
@@ -94,11 +129,9 @@ assertSuccess(
         );`,
       },
       {
-        type: "write",
-        strict: false,
+        type: "read",
         variable: "variable",
-        right: makeLiteralExpression("right"),
-        code: `void intrinsic.aran.setStrict('dynamic', 'variable', 'right')`,
+        code: `intrinsic.aran.get('dynamic', 'variable')`,
       },
     ],
   }),

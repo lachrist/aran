@@ -1,4 +1,4 @@
-import { assertSuccess } from "../../../__fixture__.mjs";
+import { assertThrow, assertSuccess } from "../../../__fixture__.mjs";
 
 import { makeLiteralExpression } from "../../../ast/index.mjs";
 
@@ -8,16 +8,7 @@ import * as Frame from "./enclave.mjs";
 
 assertSuccess(
   testBlock(Frame, {
-    options: {
-      macros: {
-        read: makeLiteralExpression("read"),
-        typeof: makeLiteralExpression("typeof"),
-        discardStrict: makeLiteralExpression("discardStrict"),
-        discardSloppy: makeLiteralExpression("discardSloppy"),
-        writeStrict: makeLiteralExpression("writeStrict"),
-        writeSloppy: makeLiteralExpression("writeSloppy"),
-      },
-    },
+    options: {},
     scenarios: [
       {
         type: "declare",
@@ -33,31 +24,51 @@ assertSuccess(
         code: "var [variable] = 'right';",
       },
       {
-        type: "discard",
-        strict: true,
+        type: "read",
         variable: "variable",
-        code: "('discardStrict')('variable')",
+        code: `[variable]`,
       },
       {
-        type: "discard",
-        strict: false,
+        type: "typeof",
         variable: "variable",
-        code: "('discardSloppy')('variable')",
+        code: `typeof [variable]`,
       },
       {
         type: "write",
         strict: true,
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `void ('writeStrict')('variable', 'right')`,
-      },
-      {
-        type: "write",
-        strict: false,
-        variable: "variable",
-        right: makeLiteralExpression("right"),
-        code: `void ('writeSloppy')('variable', 'right')`,
+        code: `[variable] = "right"`,
       },
     ],
   }),
+);
+
+assertThrow(
+  () =>
+    testBlock(Frame, {
+      options: {},
+      scenarios: [
+        {
+          type: "discard",
+          variable: "variable",
+        },
+      ],
+    }),
+  { name: "EnclaveLimitationAranError" },
+);
+
+assertThrow(
+  () =>
+    testBlock(Frame, {
+      options: {},
+      scenarios: [
+        {
+          type: "write",
+          strict: false,
+          variable: "variable",
+        },
+      ],
+    }),
+  { name: "EnclaveLimitationAranError" },
 );

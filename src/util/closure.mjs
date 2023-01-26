@@ -36,6 +36,18 @@ export const deadcode______ = (message) => (_x1, _x2, _x3, _x4, _x5, _x6) => {
   throw new DeadcodeError(message);
 };
 
+//////////
+// noop //
+//////////
+
+export const noop = () => {};
+export const noop_ = (_x) => {};
+export const noop__ = (_x1, _x2) => {};
+export const noop___ = (_x1, _x2, _x3) => {};
+export const noop____ = (_x1, _x2, _x3, _x4) => {};
+export const noop_____ = (_x1, _x2, _x3, _x4, _x5) => {};
+export const noop______ = (_x1, _x2, _x3, _x4, _x5, _x6) => {};
+
 //////////////
 // Constant //
 //////////////
@@ -98,8 +110,12 @@ export const dropx_x = (f) => (_x1, x2, _x3) => f(x2);
 export const dropxx_ = (f) => (_x1, _x2, x3) => f(x3);
 export const dropxxx = (f) => (_x1, _x2, _x3) => f();
 
+export const drop_xxx = (f) => (x1, _x2, _x3, _x4) => f(x1);
+export const drop___x = (f) => (x1, x2, x3, _x4) => f(x1, x2, x3);
+export const dropx__x = (f) => (_x1, x2, x3, _x4) => f(x2, x3);
 export const dropxxx_ = (f) => (_x1, _x2, _x3, x4) => f(x4);
 
+export const drop_xxxx = (f) => (x1, _x2, _x3, _x4, _x5) => f(x1);
 export const dropxxx_x = (f) => (_x1, _x2, _x3, x4, _x5) => f(x4);
 
 export const dropxxxx_x = (f) => (_x1, _x2, _x3, _x4, x5, _x6) => f(x5);

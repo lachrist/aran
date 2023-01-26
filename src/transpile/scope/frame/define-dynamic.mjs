@@ -1,25 +1,22 @@
 import {
+  drop__x,
   NULL_DATA_DESCRIPTOR,
   hasOwn,
   constant_,
+  partialx___,
   deadcode_____,
-  partialxxx______,
   assert,
   constant___,
 } from "../../../util/index.mjs";
 
+import { makeLiteralExpression } from "../../../ast/index.mjs";
+
 import {
-  testStatic,
-  conflictStaticInternal,
-  makeDynamicLookupExpression,
-  makeDynamicLookupEffect,
-  makeObservableDynamicTestExpression,
-  makeDynamicTestExpression,
-  makeDynamicReadExpression,
-  makeDynamicTypeofExpression,
-  makeDynamicDiscardExpression,
-  makeDynamicWriteEffect,
-} from "./helper.mjs";
+  makeGetExpression,
+  makeDeleteSloppyExpression,
+} from "../../../intrinsic.mjs";
+
+import { makeTypeofGetExpression, makeIncrementSetEffect } from "./helper.mjs";
 
 const {
   undefined,
@@ -34,7 +31,9 @@ export const create = ({ macro, observable }) => ({
   observable,
 });
 
-export const conflict = conflictStaticInternal;
+export const conflict = (_strict, { static: bindings }, _kind, variable) => {
+  assert(!hasOwn(bindings, variable), "duplicate define variable");
+};
 
 export const harvestHeader = constant_([]);
 
@@ -52,35 +51,40 @@ export const declare = (
 };
 
 export const makeInitializeStatementArray = deadcode_____(
-  "define variable should not be initialized",
+  "makeInitializeStatementArray called on define-dynamic frame",
 );
 
 export const lookupAll = constant___(undefined);
 
-export const makeReadExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  makeDynamicReadExpression,
+const compileMakeLookupNode =
+  (makePresentNode) =>
+  (
+    next,
+    _strict,
+    _escaped,
+    { static: bindings, dynamic: macro },
+    variable,
+    options,
+  ) => {
+    if (hasOwn(bindings, variable)) {
+      return makePresentNode(macro, makeLiteralExpression(variable), options);
+    } else {
+      return next();
+    }
+  };
+
+export const makeReadExpression = compileMakeLookupNode(
+  drop__x(makeGetExpression),
 );
 
-export const makeTypeofExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  makeDynamicTypeofExpression,
+export const makeTypeofExpression = compileMakeLookupNode(
+  drop__x(makeTypeofGetExpression),
 );
 
-export const makeDiscardExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  makeDynamicDiscardExpression,
+export const makeDiscardExpression = compileMakeLookupNode(
+  drop__x(makeDeleteSloppyExpression),
 );
 
-export const makeWriteEffect = partialxxx______(
-  makeDynamicLookupEffect,
-  testStatic,
-  makeObservableDynamicTestExpression,
-  makeDynamicWriteEffect,
+export const makeWriteEffect = compileMakeLookupNode(
+  partialx___(makeIncrementSetEffect, true),
 );

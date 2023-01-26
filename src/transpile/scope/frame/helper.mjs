@@ -1,8 +1,8 @@
+import { reduce } from "array-lite";
+
 import {
-  assert,
-  expect,
+  partial__x,
   partial_x,
-  hasOwn,
   incrementCounter,
   SyntaxAranError,
 } from "../../../util/index.mjs";
@@ -10,27 +10,22 @@ import {
 import {
   makeExpressionEffect,
   makeEffectStatement,
+  makeSequenceEffect,
   makeExportEffect,
   makeLiteralExpression,
-  makeSequenceEffect,
-  makeConditionalEffect,
-  makeConditionalExpression,
-  makeReadExpression,
   makeWriteEffect,
+  makeReadExpression,
+  makeImportExpression,
 } from "../../../ast/index.mjs";
 
 import {
   makeGetExpression,
   makeSetExpression,
-  makeDeleteExpression,
   makeUnaryExpression,
-  makeBinaryExpression,
   makeThrowReferenceErrorExpression,
   makeThrowTypeErrorExpression,
   makeThrowSyntaxErrorExpression,
 } from "../../../intrinsic.mjs";
-
-import { mangleOriginalVariable } from "../variable.mjs";
 
 ////////////
 // Export //
@@ -47,11 +42,17 @@ export const makeExportUndefinedStatement = partial_x(
 export const makeExportSequenceEffect = (effect, specifier, expression) =>
   makeSequenceEffect(effect, makeExportEffect(specifier, expression));
 
-////////////
-// Report //
-////////////
+///////////////////
+// Report Static //
+///////////////////
 
 export const DUPLICATE_TEMPLATE = "Variable '%s' has already been declared";
+
+export const DuplicateError = SyntaxAranError;
+
+////////////////////
+// Report Dynamic //
+////////////////////
 
 export const makeThrowDuplicateExpression = (variable) =>
   makeThrowSyntaxErrorExpression(
@@ -66,6 +67,9 @@ export const makeThrowDeadzoneExpression = (variable) =>
     `Cannot access variable '${variable}' before initialization`,
   );
 
+export const makeThrowDeadzoneEffect = (variable) =>
+  makeExpressionEffect(makeThrowDeadzoneExpression(variable));
+
 export const makeThrowDiscardExpression = (variable) =>
   makeThrowTypeErrorExpression(
     `Cannot discard variable '${variable}' because it is static`,
@@ -76,183 +80,46 @@ export const makeThrowConstantExpression = (variable) =>
     `Cannot assign variable '${variable}' because it is constant`,
   );
 
-////////////
-// Lookup //
-////////////
+export const makeThrowConstantEffect = (variable) =>
+  makeExpressionEffect(makeThrowConstantExpression(variable));
 
-export const makeStaticLookupNode = (
-  test,
-  here,
-  next,
-  strict,
-  escaped,
-  frame,
-  variable,
-  options,
-) =>
-  test(frame, variable)
-    ? here(strict, escaped, frame, variable, options)
-    : next();
+///////////////////
+// Lookup Static //
+///////////////////
 
-const generateLookupDynamicArray =
-  (makeConditionalNode) =>
-  (
-    test,
-    makeTestExpression,
-    here,
-    next,
-    strict,
-    escaped,
-    frame,
-    variable,
-    options,
-  ) =>
-    test(frame, variable, options)
-      ? here(strict, escaped, frame, variable, options)
-      : makeConditionalNode(
-          makeTestExpression(frame, variable, options),
-          here(strict, escaped, frame, variable, options),
-          next(),
-        );
+export const makeTypeofReadExpression = (variable) =>
+  makeUnaryExpression("typeof", makeReadExpression(variable));
 
-export const makeDynamicLookupExpression = generateLookupDynamicArray(
-  makeConditionalExpression,
-);
-
-export const makeDynamicLookupEffect = generateLookupDynamicArray(
-  makeConditionalEffect,
-);
-
-////////////
-// Static //
-////////////
-
-export const conflictStaticInternal = (
-  _strict,
-  { static: bindings },
-  _kind,
-  variable,
-) => {
-  assert(!hasOwn(bindings, variable), "duplicate variable");
-};
-
-export const conflictStaticExternal = (
-  _strict,
-  { static: bindings },
-  _kind,
-  variable,
-) => {
-  expect(!hasOwn(bindings, variable), SyntaxAranError, DUPLICATE_TEMPLATE, [
-    variable,
-  ]);
-};
-
-export const testStatic = ({ static: bindings }, variable, _options) =>
-  hasOwn(bindings, variable);
-
-export const makeStaticReadExpression = (
-  _strict,
-  _escaped,
-  _frame,
-  variable,
-  _options,
-) => makeReadExpression(mangleOriginalVariable(variable));
-
-export const makeStaticTypeofExpression = (
-  _strict,
-  _escaped,
-  _frame,
-  variable,
-  _options,
-) =>
-  makeUnaryExpression(
-    "typeof",
-    makeReadExpression(mangleOriginalVariable(variable)),
-  );
-
-export const makeStaticDiscardExpression = (
-  strict,
-  _escaped,
-  _frame,
-  variable,
-  _options,
-) =>
-  strict ? makeThrowDiscardExpression(variable) : makeLiteralExpression(false);
-
-export const makeStaticWriteEffect = (
-  _strict,
-  _escaped,
-  _frame,
-  variable,
-  { expression, counter },
-) => {
+export const makeIncrementWriteEffect = (variable, { counter, expression }) => {
   incrementCounter(counter);
-  return makeWriteEffect(mangleOriginalVariable(variable), expression);
+  return makeWriteEffect(variable, expression);
 };
 
-/////////////
-// Dynamic //
-/////////////
-
-export const makeDynamicTestExpression = ({ dynamic }, variable, _options) =>
-  makeBinaryExpression("in", makeLiteralExpression(variable), dynamic);
-
-export const makeObservableDynamicTestExpression = (
-  frame,
-  variable,
-  options,
-) => {
-  const { observable } = frame;
-  if (observable) {
-    const { counter } = options;
-    incrementCounter(counter);
-    incrementCounter(counter);
-  }
-  return makeDynamicTestExpression(frame, variable, options);
-};
-
-export const makeDynamicReadExpression = (
-  _strict,
-  _escaped,
-  { dynamic },
-  variable,
-  _options,
-) => makeGetExpression(dynamic, makeLiteralExpression(variable));
-
-export const makeDynamicTypeofExpression = (
-  _strict,
-  _escaped,
-  { dynamic },
-  variable,
-  _options,
-) =>
-  makeUnaryExpression(
-    "typeof",
-    makeGetExpression(dynamic, makeLiteralExpression(variable)),
+export const makeExportIncrementWriteEffect = (variable, specifiers, options) =>
+  reduce(
+    specifiers,
+    partial__x(makeExportSequenceEffect, makeReadExpression(variable)),
+    makeIncrementWriteEffect(variable, options),
   );
 
-export const makeDynamicDiscardExpression = (
-  strict,
-  _escaped,
-  { dynamic },
-  variable,
-  _options,
-) => makeDeleteExpression(strict, dynamic, makeLiteralExpression(variable));
+export const makeTypeofImportExpression = (source, specifier) =>
+  makeUnaryExpression("typeof", makeImportExpression(source, specifier));
 
-export const makeDynamicWriteEffect = (
+////////////////////
+// Lookup Dynamic //
+////////////////////
+
+export const makeTypeofGetExpression = (expression1, expression2) =>
+  makeUnaryExpression("typeof", makeGetExpression(expression1, expression2));
+
+export const makeIncrementSetEffect = (
   strict,
-  _escaped,
-  { dynamic },
-  variable,
-  { expression, counter },
+  expression1,
+  expression2,
+  { counter, expression: expression3 },
 ) => {
   incrementCounter(counter);
   return makeExpressionEffect(
-    makeSetExpression(
-      strict,
-      dynamic,
-      makeLiteralExpression(variable),
-      expression,
-    ),
+    makeSetExpression(strict, expression1, expression2, expression3),
   );
 };

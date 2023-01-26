@@ -10,22 +10,32 @@ assertSuccess(
   testBlock(Frame, {
     scenarios: [
       {
+        type: "read",
+        variable: "variable",
+        next: () => makeLiteralExpression("next"),
+        code: `"next"`,
+      },
+      {
+        type: "conflict",
+        variable: "variable",
+      },
+      {
         type: "declare",
         kind: "macro",
         variable: "variable",
         options: {
-          binding: makeLiteralExpression("binding"),
+          macro: makeLiteralExpression("macro"),
         },
       },
       {
         type: "read",
         variable: "variable",
-        code: "'binding'",
+        code: `"macro"`,
       },
       {
         type: "typeof",
         variable: "variable",
-        code: `intrinsic.aran.unary('typeof', 'binding')`,
+        code: `intrinsic.aran.unary("typeof", "macro")`,
       },
       {
         type: "discard",

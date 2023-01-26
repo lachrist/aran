@@ -12,6 +12,16 @@ assertSuccess(
     head: "let VARIABLE;",
     scenarios: [
       {
+        type: "conflict",
+        variable: "variable",
+      },
+      {
+        type: "read",
+        variable: "variable",
+        next: () => makeLiteralExpression("next"),
+        code: `"next"`,
+      },
+      {
         type: "declare",
         kind: "let",
         variable: "variable",
@@ -29,7 +39,6 @@ assertSuccess(
       },
       {
         type: "discard",
-        strict: false,
         variable: "variable",
         code: "false",
       },
@@ -72,7 +81,6 @@ assertSuccess(
       },
       {
         type: "lookup-all",
-        strict: true,
         escaped: false,
       },
       {
@@ -87,7 +95,6 @@ assertSuccess(
       },
       {
         type: "lookup-all",
-        strict: true,
         escaped: false,
       },
       {

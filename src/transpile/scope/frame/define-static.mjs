@@ -2,23 +2,24 @@ import { includes, map } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
+  hasOwn,
+  drop__x,
   constant_,
-  partialxx______,
   assert,
   deadcode_____,
   constant___,
 } from "../../../util/index.mjs";
 
+import {
+  makeLiteralExpression,
+  makeReadExpression as makeRawReadExpression,
+} from "../../../ast/index.mjs";
+
 import { mangleOriginalVariable } from "../variable.mjs";
 
 import {
-  testStatic,
-  conflictStaticInternal,
-  makeStaticLookupNode,
-  makeStaticReadExpression,
-  makeStaticTypeofExpression,
-  makeStaticDiscardExpression,
-  makeStaticWriteEffect,
+  makeTypeofReadExpression,
+  makeIncrementWriteEffect,
 } from "./helper.mjs";
 
 const {
@@ -29,53 +30,49 @@ const {
 export const KINDS = ["define"];
 
 export const create = (_options) => ({
-  static: {},
+  bindings: {},
 });
 
-export const conflict = conflictStaticInternal;
+export const conflict = (_strict, { bindings }, _kind, variable) => {
+  assert(!hasOwn(bindings, variable), "duplicate define variable");
+};
 
-export const harvestHeader = ({ static: bindings }) =>
+export const harvestHeader = ({ bindings }) =>
   map(ownKeys(bindings), mangleOriginalVariable);
 
 export const harvestPrelude = constant_([]);
 
-export const declare = (
-  _strict,
-  { static: bindings },
-  _kind,
-  variable,
-  _options,
-) => {
+export const declare = (_strict, { bindings }, _kind, variable, _options) => {
   assert(!includes(bindings, variable), "duplicate define variable");
   defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
 };
 
 export const makeInitializeStatementArray = deadcode_____(
-  "define variable should not be initialized",
+  "makeInitializeStatementArray called on define-static frame",
 );
 
 export const lookupAll = constant___(undefined);
 
-export const makeReadExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticReadExpression,
+const compileMakeLookupNode =
+  (makePresentNode) =>
+  (next, _strict, _escaped, { bindings }, variable, options) => {
+    if (hasOwn(bindings, variable)) {
+      return makePresentNode(mangleOriginalVariable(variable), options);
+    } else {
+      return next();
+    }
+  };
+
+export const makeReadExpression = compileMakeLookupNode(
+  drop__x(makeRawReadExpression),
 );
 
-export const makeTypeofExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticTypeofExpression,
+export const makeTypeofExpression = compileMakeLookupNode(
+  drop__x(makeTypeofReadExpression),
 );
 
-export const makeDiscardExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticDiscardExpression,
+export const makeDiscardExpression = compileMakeLookupNode(
+  constant___(makeLiteralExpression(false)),
 );
 
-export const makeWriteEffect = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticWriteEffect,
-);
+export const makeWriteEffect = compileMakeLookupNode(makeIncrementWriteEffect);

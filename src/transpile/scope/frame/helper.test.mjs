@@ -1,12 +1,6 @@
-import { forEach } from "array-lite";
+import { assertSuccess, assertEqual } from "../../../__fixture__.mjs";
 
-import {
-  assertThrow,
-  assertSuccess,
-  assertEqual,
-} from "../../../__fixture__.mjs";
-
-import { createCounter, incrementCounter } from "../../../util/index.mjs";
+import { createCounter, gaugeCounter } from "../../../util/index.mjs";
 
 import {
   makeLiteralExpression,
@@ -20,37 +14,27 @@ import {
 } from "../../../allign/index.mjs";
 
 import {
-  makeStaticLookupNode,
-  testStatic,
-  conflictStaticInternal,
-  conflictStaticExternal,
-  makeStaticReadExpression,
-  makeStaticTypeofExpression,
-  makeStaticDiscardExpression,
-  makeStaticWriteEffect,
-  makeDynamicLookupExpression,
-  makeDynamicTestExpression,
-  makeObservableDynamicTestExpression,
-  makeDynamicReadExpression,
-  makeDynamicTypeofExpression,
-  makeDynamicDiscardExpression,
-  makeDynamicLookupEffect,
-  makeDynamicWriteEffect,
   makeExportStatement,
   makeExportUndefinedStatement,
   makeExportSequenceEffect,
   makeThrowDuplicateExpression,
+  makeThrowDeadzoneEffect,
   makeThrowMissingExpression,
   makeThrowDeadzoneExpression,
   makeThrowConstantExpression,
+  makeThrowConstantEffect,
   makeThrowDiscardExpression,
+  makeTypeofImportExpression,
+  makeTypeofGetExpression,
+  makeTypeofReadExpression,
+  makeIncrementSetEffect,
+  makeIncrementWriteEffect,
+  makeExportIncrementWriteEffect,
 } from "./helper.mjs";
 
-const { Error, undefined } = globalThis;
-
-////////////
-// Report //
-////////////
+////////////////////
+// Report Dynamic //
+////////////////////
 
 assertSuccess(
   allignExpression(
@@ -86,6 +70,17 @@ assertSuccess(
 );
 
 assertSuccess(
+  allignEffect(
+    makeThrowDeadzoneEffect("variable"),
+    `void intrinsic.aran.throw(
+      new intrinsic.ReferenceError(
+        "Cannot access variable 'variable' before initialization",
+      ),
+    )`,
+  ),
+);
+
+assertSuccess(
   allignExpression(
     makeThrowDiscardExpression("variable"),
     `intrinsic.aran.throw(
@@ -100,6 +95,17 @@ assertSuccess(
   allignExpression(
     makeThrowConstantExpression("variable"),
     `intrinsic.aran.throw(
+      new intrinsic.TypeError(
+        "Cannot assign variable 'variable' because it is constant",
+      ),
+    )`,
+  ),
+);
+
+assertSuccess(
+  allignEffect(
+    makeThrowConstantEffect("variable"),
+    `void intrinsic.aran.throw(
       new intrinsic.TypeError(
         "Cannot assign variable 'variable' because it is constant",
       ),
@@ -136,109 +142,14 @@ assertSuccess(
   ),
 );
 
-////////////////////////////////
-// makeStaticLookupExpression //
-////////////////////////////////
-
-const STRICT = true;
-
-const ESCAPED = true;
-
-const next = () => {
-  throw new Error("next");
-};
-
-forEach([conflictStaticInternal, conflictStaticExternal], (conflictStatic) => {
-  assertEqual(
-    conflictStatic(STRICT, { static: {} }, "kind", "variable"),
-    undefined,
-  );
-  assertThrow(() =>
-    conflictStatic(STRICT, { static: { variable: null } }, "kind", "variable"),
-  );
-});
+///////////////////
+// Lookup Static //
+///////////////////
 
 assertSuccess(
   allignExpression(
-    makeStaticLookupNode(
-      testStatic,
-      makeStaticReadExpression,
-      () => makeLiteralExpression("next"),
-      STRICT,
-      ESCAPED,
-      { static: {} },
-      "variable",
-      "options",
-    ),
-    "'next'",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeStaticLookupNode(
-      testStatic,
-      makeStaticReadExpression,
-      next,
-      STRICT,
-      ESCAPED,
-      { static: { variable: null } },
-      "variable",
-      "options",
-    ),
-    "VARIABLE",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeStaticLookupNode(
-      testStatic,
-      makeStaticTypeofExpression,
-      next,
-      STRICT,
-      ESCAPED,
-      { static: { variable: null } },
-      "variable",
-      "options",
-    ),
-    "intrinsic.aran.unary('typeof', VARIABLE)",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeStaticLookupNode(
-      testStatic,
-      makeStaticDiscardExpression,
-      next,
-      true,
-      ESCAPED,
-      { static: { variable: null } },
-      "variable",
-      "options",
-    ),
-    `intrinsic.aran.throw(
-      new intrinsic.TypeError(
-        "Cannot discard variable 'variable' because it is static",
-      ),
-    )`,
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeStaticLookupNode(
-      testStatic,
-      makeStaticDiscardExpression,
-      next,
-      false,
-      ESCAPED,
-      { static: { variable: null } },
-      "variable",
-      "options",
-    ),
-    "false",
+    makeTypeofReadExpression("variable"),
+    `intrinsic.aran.unary("typeof", variable)`,
   ),
 );
 
@@ -246,169 +157,71 @@ assertSuccess(
   const counter = createCounter(0);
   assertSuccess(
     allignEffect(
-      makeStaticLookupNode(
-        testStatic,
-        makeStaticWriteEffect,
-        next,
-        STRICT,
-        ESCAPED,
-        { static: { variable: null } },
-        "variable",
-        { expression: makeLiteralExpression("right"), counter },
-      ),
-      "VARIABLE = 'right'",
+      makeIncrementWriteEffect("variable", {
+        counter,
+        expression: makeLiteralExpression(456),
+      }),
+      `variable = 456`,
     ),
   );
-  assertEqual(incrementCounter(counter), 2);
-}
-
-////////////////////////////////
-// makeDynamicLookupExpression //
-////////////////////////////////
-
-const OBSERVABLE = true;
-
-assertSuccess(
-  allignExpression(
-    makeDynamicLookupExpression(
-      testStatic,
-      makeDynamicTestExpression,
-      makeDynamicReadExpression,
-      () => makeLiteralExpression("next"),
-      STRICT,
-      ESCAPED,
-      {
-        observable: OBSERVABLE,
-        dynamic: makeLiteralExpression("dynamic"),
-        static: {},
-      },
-      "variable",
-      "options",
-    ),
-    `
-      intrinsic.aran.binary('in', 'variable', 'dynamic') ?
-      intrinsic.aran.get('dynamic', 'variable') :
-      'next'
-    `,
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeDynamicLookupExpression(
-      testStatic,
-      makeDynamicTestExpression,
-      makeDynamicReadExpression,
-      next,
-      STRICT,
-      ESCAPED,
-      {
-        observable: OBSERVABLE,
-        dynamic: makeLiteralExpression("dynamic"),
-        static: { variable: null },
-      },
-      "variable",
-      "options",
-    ),
-    "intrinsic.aran.get('dynamic', 'variable')",
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeDynamicLookupExpression(
-      testStatic,
-      makeDynamicTestExpression,
-      makeDynamicTypeofExpression,
-      next,
-      STRICT,
-      ESCAPED,
-      {
-        observable: OBSERVABLE,
-        dynamic: makeLiteralExpression("dynamic"),
-        static: { variable: null },
-      },
-      "variable",
-      "options",
-    ),
-    `intrinsic.aran.unary(
-      'typeof',
-      intrinsic.aran.get('dynamic', 'variable'),
-    )`,
-  ),
-);
-
-assertSuccess(
-  allignExpression(
-    makeDynamicLookupExpression(
-      testStatic,
-      makeDynamicTestExpression,
-      makeDynamicDiscardExpression,
-      next,
-      true,
-      ESCAPED,
-      {
-        observable: OBSERVABLE,
-        dynamic: makeLiteralExpression("dynamic"),
-        static: { variable: null },
-      },
-      "variable",
-      "options",
-    ),
-    "intrinsic.aran.deleteStrict('dynamic', 'variable')",
-  ),
-);
-
-{
-  const counter = createCounter(0);
-  assertSuccess(
-    allignEffect(
-      makeDynamicLookupEffect(
-        testStatic,
-        makeObservableDynamicTestExpression,
-        makeDynamicWriteEffect,
-        next,
-        false,
-        ESCAPED,
-        {
-          observable: true,
-          dynamic: makeLiteralExpression("dynamic"),
-          static: { variable: null },
-        },
-        "variable",
-        { expression: makeLiteralExpression("right"), counter },
-      ),
-      `void intrinsic.aran.setSloppy('dynamic', 'variable', 'right')`,
-    ),
-  );
-  assertEqual(incrementCounter(counter), 2);
+  assertEqual(gaugeCounter(counter), 1);
 }
 
 {
   const counter = createCounter(0);
   assertSuccess(
     allignEffect(
-      makeDynamicLookupEffect(
-        testStatic,
-        makeObservableDynamicTestExpression,
-        makeDynamicWriteEffect,
-        () => makeExpressionEffect(makeLiteralExpression("next")),
-        false,
-        ESCAPED,
-        {
-          observable: true,
-          dynamic: makeLiteralExpression("dynamic"),
-          static: {},
-        },
-        "variable",
-        { expression: makeLiteralExpression("right"), counter },
-      ),
+      makeExportIncrementWriteEffect("variable", ["specifier1", "specifier2"], {
+        counter,
+        expression: makeLiteralExpression("right"),
+      }),
       `
-        intrinsic.aran.binary("in", "variable", "dynamic") ?
-        void intrinsic.aran.setSloppy('dynamic', 'variable', 'right') :
-        void "next"
+        (
+          (
+            variable = "right",
+            specifier1 << variable
+          ),
+          specifier2 << variable
+        )
       `,
     ),
   );
-  assertEqual(incrementCounter(counter), 4);
+  assertEqual(gaugeCounter(counter), 1);
+}
+
+assertSuccess(
+  allignExpression(
+    makeTypeofImportExpression("source", "specifier"),
+    `intrinsic.aran.unary("typeof", "source" >> specifier)`,
+  ),
+);
+
+////////////////////
+// Lookup Dynamic //
+////////////////////
+
+assertSuccess(
+  allignExpression(
+    makeTypeofGetExpression(
+      makeLiteralExpression(123),
+      makeLiteralExpression(456),
+    ),
+    `intrinsic.aran.unary("typeof", intrinsic.aran.get(123, 456))`,
+  ),
+);
+
+{
+  const counter = createCounter(0);
+  assertSuccess(
+    allignEffect(
+      makeIncrementSetEffect(
+        true,
+        makeLiteralExpression(123),
+        makeLiteralExpression(456),
+        { counter, expression: makeLiteralExpression(789) },
+      ),
+      `void intrinsic.aran.setStrict(123, 456, 789)`,
+    ),
+  );
+  assertEqual(gaugeCounter(counter), 1);
 }

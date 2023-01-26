@@ -1,19 +1,13 @@
 import {
   NULL_DATA_DESCRIPTOR,
+  expect1,
   assert,
   constant_,
   constant___,
   deadcode_____,
-  partialxx______,
   hasOwn,
   SyntaxAranError,
 } from "../../../util/index.mjs";
-
-import {
-  conflictStaticInternal,
-  makeStaticLookupNode,
-  testStatic,
-} from "./helper.mjs";
 
 const {
   undefined,
@@ -24,7 +18,9 @@ export const KINDS = ["illegal"];
 
 export const create = (_options) => ({ static: {} });
 
-export const conflict = conflictStaticInternal;
+export const conflict = (_strict, { static: bindings }, _kind, variable) => {
+  assert(!hasOwn(bindings, variable), "duplicate illegal variable");
+};
 
 export const harvestHeader = constant_([]);
 
@@ -35,28 +31,29 @@ export const declare = (
   { static: bindings },
   _kind,
   variable,
-  { name },
+  _options,
 ) => {
-  assert(!hasOwn(bindings, variable), "duplicate variable");
-  defineProperty(bindings, variable, {
-    __proto__: NULL_DATA_DESCRIPTOR,
-    value: name,
-  });
+  assert(!hasOwn(bindings, variable), "duplicate illegal variable");
+  defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
 };
 
-export const makeInitializeStatements = deadcode_____(
-  "initialization on illegal frame",
+export const makeInitializeStatementArray = deadcode_____(
+  "makeInitializeStatementArray called on illegal frame",
 );
 
 export const lookupAll = constant___(undefined);
 
-const makeLookupNode = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  (_strict, _escaped, { static: bindings }, variable, _options) => {
-    throw new SyntaxAranError(`Illegal ${bindings[variable]}`);
-  },
-);
+const makeLookupNode = (
+  next,
+  _strict,
+  _escaped,
+  { static: bindings },
+  variable,
+  _options,
+) => {
+  expect1(!hasOwn(bindings, variable), SyntaxAranError, "Illegal %s", variable);
+  return next();
+};
 
 export const makeReadExpression = makeLookupNode;
 

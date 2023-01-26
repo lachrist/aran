@@ -1,20 +1,25 @@
 import {
   constant_,
   constant___,
+  constant____,
   assert,
+  expect1,
+  dropxxxx_x,
   incrementCounter,
+  EnclaveLimitationAranError,
 } from "../../../util/index.mjs";
 
 import {
-  makeApplyExpression,
-  makeLiteralExpression,
-  makeExpressionEffect,
   makeDeclareExternalStatement,
+  makeReadExternalExpression,
+  makeTypeofExternalExpression,
+  makeWriteExternalEffect,
 } from "../../../ast/index.mjs";
 
-const { undefined } = globalThis;
-
-export const KINDS = ["var", "function", "let", "const", "class"];
+const {
+  undefined,
+  Reflect: { ownKeys },
+} = globalThis;
 
 const mapping = {
   var: "var",
@@ -24,11 +29,11 @@ const mapping = {
   class: "let",
 };
 
-export const create = ({ macros }) => ({
-  enclaves: macros,
-});
+export const KINDS = ownKeys(mapping);
 
-export const conflict = constant_(undefined);
+export const create = ({}) => ({});
+
+export const conflict = constant____(undefined);
 
 export const harvestHeader = constant_([]);
 
@@ -41,7 +46,7 @@ export const declare = (
   _variable,
   { exports: specifiers },
 ) => {
-  assert(specifiers.length === 0, "unexpected exported variable");
+  assert(specifiers.length === 0, "declare exported variable on enclave frame");
 };
 
 export const makeInitializeStatementArray = (
@@ -54,41 +59,38 @@ export const makeInitializeStatementArray = (
 
 export const lookupAll = constant___(undefined);
 
-export const generateMakeLookupExpression =
-  (strict_key, sloppy_key) =>
-  (_next, strict, _escaped, { enclaves }, variable, _options) =>
-    makeApplyExpression(
-      enclaves[strict ? strict_key : sloppy_key],
-      makeLiteralExpression({ undefined: null }),
-      [makeLiteralExpression(variable)],
-    );
+export const makeReadExpression = dropxxxx_x(makeReadExternalExpression);
 
-export const makeReadExpression = generateMakeLookupExpression("read", "read");
+export const makeTypeofExpression = dropxxxx_x(makeTypeofExternalExpression);
 
-export const makeTypeofExpression = generateMakeLookupExpression(
-  "typeof",
-  "typeof",
-);
-
-export const makeDiscardExpression = generateMakeLookupExpression(
-  "discardStrict",
-  "discardSloppy",
-);
+export const makeDiscardExpression = (
+  _next,
+  _strict,
+  _escaped,
+  _frame,
+  variable,
+  _options,
+) => {
+  throw new EnclaveLimitationAranError(
+    `Aran does not support deleting external variable, got: ${variable}`,
+  );
+};
 
 export const makeWriteEffect = (
   _next,
   strict,
   _escaped,
-  { enclaves },
+  _frame,
   variable,
   { counter, expression },
 ) => {
-  incrementCounter(counter);
-  return makeExpressionEffect(
-    makeApplyExpression(
-      enclaves[strict ? "writeStrict" : "writeSloppy"],
-      makeLiteralExpression({ undefined: null }),
-      [makeLiteralExpression(variable), expression],
-    ),
+  expect1(
+    strict,
+    EnclaveLimitationAranError,
+    "Aran does not support assigning to external variable in non-strict mode, got: %s",
+    variable,
   );
+  incrementCounter(counter);
+  incrementCounter(counter);
+  return makeWriteExternalEffect(variable, expression);
 };

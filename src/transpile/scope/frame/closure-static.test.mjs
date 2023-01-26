@@ -15,6 +15,12 @@ assertSuccess(
     `,
     scenarios: [
       {
+        type: "read",
+        variable: "variable",
+        next: () => makeLiteralExpression("next"),
+        code: `"next"`,
+      },
+      {
         type: "declare",
         kind: "var",
         variable: "variable",

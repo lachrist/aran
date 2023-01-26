@@ -1,26 +1,20 @@
 import {
   NULL_DATA_DESCRIPTOR,
   assert,
+  drop_x,
+  return_x,
+  constant__,
   constant_,
   constant___,
-  bind_____,
-  dropxxx_x,
   deadcode_____,
-  partialxx______,
   hasOwn,
 } from "../../../util/index.mjs";
 
-import { makeExpressionEffect } from "../../../ast/index.mjs";
+import { makeLiteralExpression } from "../../../ast/index.mjs";
 
 import { makeUnaryExpression } from "../../../intrinsic.mjs";
 
-import {
-  makeStaticLookupNode,
-  testStatic,
-  conflictStaticInternal,
-  makeStaticDiscardExpression,
-  makeThrowConstantExpression,
-} from "./helper.mjs";
+import { makeThrowConstantEffect } from "./helper.mjs";
 
 const {
   undefined,
@@ -33,7 +27,9 @@ export const LAYERING = false;
 
 export const create = (_options) => ({ static: {} });
 
-export const conflict = conflictStaticInternal;
+export const conflict = (_strict, { static: bindings }, _kind, variable) => {
+  assert(!hasOwn(bindings, variable), "duplicate intrinsic variable");
+};
 
 export const harvestHeader = constant_([]);
 
@@ -44,43 +40,41 @@ export const declare = (
   { static: bindings },
   _kind,
   variable,
-  { binding },
+  { macro },
 ) => {
   assert(!hasOwn(bindings, variable), "duplicate intrinsic variable");
   defineProperty(bindings, variable, {
     __proto__: NULL_DATA_DESCRIPTOR,
-    value: binding,
+    value: macro,
   });
 };
 
 export const makeInitializeStatementArray = deadcode_____(
-  "initialization on intrinsic frame",
+  "makeInitializeStatementArray called on macro frame",
 );
 
 export const lookupAll = constant___(undefined);
 
-export const makeReadExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  (_strict, _escaped, { static: bindings }, variable, _options) =>
-    bindings[variable],
+export const compileMakeLookupNode =
+  (makePresentNode) =>
+  (next, _strict, _escaped, { static: bindings }, variable, _options) => {
+    if (hasOwn(bindings, variable)) {
+      return makePresentNode(variable, bindings[variable]);
+    } else {
+      return next();
+    }
+  };
+
+export const makeReadExpression = compileMakeLookupNode(return_x);
+
+export const makeTypeofExpression = compileMakeLookupNode((_variable, macro) =>
+  makeUnaryExpression("typeof", macro),
 );
 
-export const makeTypeofExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  (_strict, _escaped, { static: bindings }, variable, _options) =>
-    makeUnaryExpression("typeof", bindings[variable]),
+export const makeDiscardExpression = compileMakeLookupNode(
+  constant__(makeLiteralExpression(false)),
 );
 
-export const makeDiscardExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticDiscardExpression,
-);
-
-export const makeWriteEffect = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  bind_____(makeExpressionEffect, dropxxx_x(makeThrowConstantExpression)),
+export const makeWriteEffect = compileMakeLookupNode(
+  drop_x(makeThrowConstantEffect),
 );

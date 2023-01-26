@@ -19,7 +19,6 @@ import {
   harvestFrameHeader,
   harvestFramePrelude,
   lookupFrameAll,
-  conflictFrame,
   declareFrame,
   makeFrameInitializeStatementArray,
   makeFrameReadExpression,
@@ -27,29 +26,42 @@ import {
 
 const { Error } = globalThis;
 
-const META = "meta";
-
 const STRICT = true;
 
 const ESCAPED = true;
 
-const frame = createFrame(CLOSURE_STATIC, META, {});
+const frame = createFrame(CLOSURE_STATIC, "meta", {});
 
-assertEqual(conflictFrame(STRICT, frame, "var", "base"), false);
-
-assertEqual(
-  conflictFrame(STRICT, frame, "var", makeMetaVariable("meta", 123)),
-  true,
-);
-
+// Declare on other layer //
 assertEqual(declareFrame(STRICT, frame, "var", "base", { exports: [] }), false);
 
+// Declare on same layer but other kind //
+assertEqual(
+  declareFrame(STRICT, frame, "const", makeMetaVariable("meta", 123), {
+    exports: [],
+  }),
+  false,
+);
+
+// Initialize on other layer //
 assertEqual(
   makeFrameInitializeStatementArray(
     STRICT,
     frame,
     "var",
     "base",
+    makeLiteralExpression("right"),
+  ),
+  null,
+);
+
+// Initialize on same layer but other kind //
+assertEqual(
+  makeFrameInitializeStatementArray(
+    STRICT,
+    frame,
+    "const",
+    makeMetaVariable("meta", 123),
     makeLiteralExpression("right"),
   ),
   null,

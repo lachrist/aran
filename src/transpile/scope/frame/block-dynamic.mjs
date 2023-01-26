@@ -6,10 +6,11 @@ import {
   hasOwn,
   push,
   assert,
+  expect1,
+  drop__x,
+  partialx___,
   partialx_,
-  bind_,
   constant___,
-  partialxxx______,
 } from "../../../util/index.mjs";
 
 import {
@@ -21,6 +22,7 @@ import {
 } from "../../../ast/index.mjs";
 
 import {
+  makeDeleteSloppyExpression,
   makeDefineExpression,
   makeBinaryExpression,
   makeGetExpression,
@@ -29,17 +31,12 @@ import {
 } from "../../../intrinsic.mjs";
 
 import {
-  conflictStaticExternal,
-  testStatic,
-  makeDynamicTestExpression,
-  makeObservableDynamicTestExpression,
-  makeDynamicLookupEffect,
-  makeDynamicLookupExpression,
-  makeDynamicReadExpression,
-  makeDynamicTypeofExpression,
-  makeDynamicDiscardExpression,
-  makeDynamicWriteEffect,
+  DUPLICATE_TEMPLATE,
+  DuplicateError,
+  makeTypeofGetExpression,
+  makeIncrementSetEffect,
   makeThrowDeadzoneExpression,
+  makeThrowDeadzoneEffect,
   makeThrowDuplicateExpression,
 } from "./helper.mjs";
 
@@ -50,16 +47,24 @@ const {
 
 export const KINDS = ["let", "const", "class"];
 
-export const create = ({ macro, observable }) => ({
+export const create = ({ macro }) => ({
   dynamic: macro,
-  observable,
   conflicts: [],
   static: {},
 });
 
-export const conflict = (strict, frame, kind, variable) => {
-  conflictStaticExternal(strict, frame, kind, variable);
-  const { conflicts } = frame;
+export const conflict = (
+  _strict,
+  { conflicts, static: bindings },
+  _kind,
+  variable,
+) => {
+  expect1(
+    !hasOwn(bindings, variable),
+    DuplicateError,
+    DUPLICATE_TEMPLATE,
+    variable,
+  );
   if (!includes(conflicts, variable)) {
     push(conflicts, variable);
   }
@@ -108,9 +113,11 @@ export const declare = (
   { exports: specifiers },
 ) => {
   assert(specifiers.length === 0, "unexpected global exported variable");
-  assert(
+  expect1(
     !hasOwn(bindings, variable),
-    "duplicate variable should have been caught by conflict",
+    DuplicateError,
+    DUPLICATE_TEMPLATE,
+    variable,
   );
   defineProperty(bindings, variable, {
     __proto__: NULL_DATA_DESCRIPTOR,
@@ -146,66 +153,97 @@ export const makeInitializeStatementArray = (
   ];
 };
 
-const generateMakeDeadzoneNode =
+export const lookupAll = constant___(undefined);
+
+const compileMakeLookupNode =
   (makeConditionalNode, makeDeadNode, makeLiveNode) =>
-  (strict, escaped, frame, variable, options) => {
-    const { dynamic: macro, static: bindings } = frame;
-    if (hasOwn(bindings, variable) && bindings[variable]) {
-      return makeLiveNode(strict, escaped, frame, variable, options);
-    } else if (hasOwn(bindings, variable) && !escaped) {
-      return makeDeadNode(variable);
+  (next, _strict, escaped, frame, variable, options) => {
+    if (hasOwn(frame.static, variable)) {
+      if (makeDeadNode === null) {
+        return makeLiveNode(
+          frame.dynamic,
+          makeLiteralExpression(variable),
+          options,
+        );
+      } else {
+        if (frame.static[variable]) {
+          return makeLiveNode(
+            frame.dynamic,
+            makeLiteralExpression(variable),
+            options,
+          );
+        } else if (escaped) {
+          return makeConditionalNode(
+            makeBinaryExpression(
+              "===",
+              makeGetExpression(frame.dynamic, makeLiteralExpression(variable)),
+              makeDeadzoneExpression(),
+            ),
+            makeDeadNode(variable),
+            makeLiveNode(
+              frame.dynamic,
+              makeLiteralExpression(variable),
+              options,
+            ),
+          );
+        } else {
+          return makeDeadNode(variable);
+        }
+      }
     } else {
       return makeConditionalNode(
         makeBinaryExpression(
-          "===",
-          makeGetExpression(macro, makeLiteralExpression(variable)),
-          makeDeadzoneExpression(),
+          "in",
+          makeLiteralExpression(variable),
+          frame.dynamic,
         ),
-        makeDeadNode(variable),
-        makeLiveNode(strict, escaped, frame, variable, options),
+        makeDeadNode === null
+          ? makeLiveNode(
+              frame.dynamic,
+              makeLiteralExpression(variable),
+              options,
+            )
+          : makeConditionalNode(
+              makeBinaryExpression(
+                "===",
+                makeGetExpression(
+                  frame.dynamic,
+                  makeLiteralExpression(variable),
+                ),
+                makeDeadzoneExpression(),
+              ),
+              makeDeadNode(variable),
+              makeLiveNode(
+                frame.dynamic,
+                makeLiteralExpression(variable),
+                options,
+              ),
+            ),
+        next(),
       );
     }
   };
 
-export const lookupAll = constant___(undefined);
-
-export const makeReadExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  generateMakeDeadzoneNode(
-    makeConditionalExpression,
-    makeThrowDeadzoneExpression,
-    makeDynamicReadExpression,
-  ),
+export const makeReadExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  makeThrowDeadzoneExpression,
+  drop__x(makeGetExpression),
 );
 
-export const makeTypeofExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  generateMakeDeadzoneNode(
-    makeConditionalExpression,
-    makeThrowDeadzoneExpression,
-    makeDynamicTypeofExpression,
-  ),
+export const makeTypeofExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  makeThrowDeadzoneExpression,
+  drop__x(makeTypeofGetExpression),
 );
 
-export const makeDiscardExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  makeDynamicDiscardExpression,
+export const makeDiscardExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  null,
+  drop__x(makeDeleteSloppyExpression),
 );
 
-export const makeWriteEffect = partialxxx______(
-  makeDynamicLookupEffect,
-  testStatic,
-  makeObservableDynamicTestExpression,
-  generateMakeDeadzoneNode(
-    makeConditionalEffect,
-    bind_(makeExpressionEffect, makeThrowDeadzoneExpression),
-    (_strict, escaped, frame, variable, options) =>
-      makeDynamicWriteEffect(true, escaped, frame, variable, options),
-  ),
+export const makeWriteEffect = compileMakeLookupNode(
+  makeConditionalEffect,
+  makeThrowDeadzoneEffect,
+  partialx___(makeIncrementSetEffect, true),
 );

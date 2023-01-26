@@ -1,6 +1,6 @@
 import { includes, concat, flatMap } from "array-lite";
 
-import { createCounter, assert } from "../../../util/index.mjs";
+import { createCounter, assert, hasOwn } from "../../../util/index.mjs";
 
 import {
   makeScriptProgram,
@@ -16,6 +16,7 @@ import { allignBlock, allignProgram } from "../../../allign/index.mjs";
 const {
   undefined,
   Error,
+  Reflect: { ownKeys },
   Array: { isArray },
   Object: { assign },
 } = globalThis;
@@ -54,35 +55,56 @@ export const default_scenario = {
   next: nextForbidden,
   code: "",
   right: makeLiteralExpression("dummy-right"),
+  counter: createCounter(0),
 };
 
 const finalizeBlock = (variables, statements, code) =>
   allignBlock(makeBlock([], variables, statements), `{${code}}`);
 
-const names = {
+const naming = {
   __proto__: null,
   read: "makeReadExpression",
   typeof: "makeTypeofExpression",
   discard: "makeDiscardExpression",
 };
 
+const arities = {
+  create: 1,
+  conflict: 4,
+  harvestPrelude: 1,
+  harvestHeader: 1,
+  declare: 5,
+  makeInitializeStatementArray: 5,
+  makeReadExpression: 6,
+  makeTypeofExpression: 6,
+  makeDiscardExpression: 6,
+  makeWriteEffect: 6,
+};
+
+const names = ownKeys(arities);
+
 const generateTest =
   (finalize) =>
-  (
-    {
+  (Frame, { head = "", scenarios = [], options = {} }) => {
+    for (let index = 0; index < names.length; index += 1) {
+      const name = names[index];
+      assert(hasOwn(Frame, name), `missing ${name}`);
+      assert(
+        Frame[name].length === arities[name],
+        `arity mismatch for ${name}`,
+      );
+    }
+    const {
       KINDS,
       create,
       conflict,
-      harvestPrelude,
       harvestHeader,
+      harvestPrelude,
       declare,
       makeInitializeStatementArray,
-      makeWriteEffect,
       lookupAll,
-      ...Library
-    },
-    { head = "", scenarios = [], options = {} },
-  ) => {
+      makeWriteEffect,
+    } = Frame;
     assert(isArray(KINDS), "expected KINDS to be an array");
     const frame = create(options);
     let body = "";
@@ -137,13 +159,13 @@ const generateTest =
               scenario.variable,
               {
                 expression: scenario.right,
-                counter: createCounter(0),
+                counter: scenario.counter,
               },
             ),
           ),
         ];
       } else {
-        const makeLookupExpression = Library[names[scenario.type]];
+        const makeLookupExpression = Frame[naming[scenario.type]];
         body = `${body}\nvoid (${scenario.code});`;
         return [
           makeEffectStatement(

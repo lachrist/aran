@@ -1,28 +1,24 @@
 import {
   NULL_DATA_DESCRIPTOR,
-  bind_____,
+  expect1,
   constant___,
   constant_,
-  assert,
   hasOwn,
-  dropxxx_x,
+  dropx__,
+  drop_xx,
   deadcode_____,
-  partialxx______,
 } from "../../../util/index.mjs";
 
 import {
-  makeExpressionEffect,
   makeImportExpression,
+  makeLiteralExpression,
 } from "../../../ast/index.mjs";
 
-import { makeUnaryExpression } from "../../../intrinsic.mjs";
-
 import {
-  makeThrowConstantExpression,
-  conflictStaticExternal,
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticDiscardExpression,
+  makeTypeofImportExpression,
+  makeThrowConstantEffect,
+  DuplicateError,
+  DUPLICATE_TEMPLATE,
 } from "./helper.mjs";
 
 const {
@@ -34,7 +30,14 @@ export const KINDS = ["import"];
 
 export const create = (_options) => ({ static: {} });
 
-export const conflict = conflictStaticExternal;
+export const conflict = (_strict, { static: bindings }, _kind, variable) => {
+  expect1(
+    !hasOwn(bindings, variable),
+    DuplicateError,
+    DUPLICATE_TEMPLATE,
+    variable,
+  );
+};
 
 export const harvestHeader = constant_([]);
 
@@ -47,9 +50,11 @@ export const declare = (
   variable,
   { source, specifier },
 ) => {
-  assert(
+  expect1(
     !hasOwn(bindings, variable),
-    "duplicate variable should have been caught by conflict",
+    DuplicateError,
+    DUPLICATE_TEMPLATE,
+    variable,
   );
   defineProperty(bindings, variable, {
     __proto__: NULL_DATA_DESCRIPTOR,
@@ -58,40 +63,34 @@ export const declare = (
 };
 
 export const makeInitializeStatementArray = deadcode_____(
-  "import variable should not be initialized",
+  "makeInitializeStatementArray called on import-static frame",
 );
 
 export const lookupAll = constant___(undefined);
 
-export const makeReadExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  (_strict, _escaped, { static: bindings }, variable, _options) => {
-    const { source, specifier } = bindings[variable];
-    return makeImportExpression(source, specifier);
-  },
+const compileMakeLookupNode =
+  (makePresentNode) =>
+  (next, _strict, _escaped, { static: bindings }, variable, _options) => {
+    if (hasOwn(bindings, variable)) {
+      const { source, specifier } = bindings[variable];
+      return makePresentNode(variable, source, specifier);
+    } else {
+      return next();
+    }
+  };
+
+export const makeReadExpression = compileMakeLookupNode(
+  dropx__(makeImportExpression),
 );
 
-export const makeTypeofExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  (_strict, _escaped, { static: bindings }, variable, _options) => {
-    const { source, specifier } = bindings[variable];
-    return makeUnaryExpression(
-      "typeof",
-      makeImportExpression(source, specifier),
-    );
-  },
+export const makeTypeofExpression = compileMakeLookupNode(
+  dropx__(makeTypeofImportExpression),
 );
 
-export const makeDiscardExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticDiscardExpression,
+export const makeDiscardExpression = compileMakeLookupNode(
+  constant___(makeLiteralExpression(false)),
 );
 
-export const makeWriteEffect = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  bind_____(makeExpressionEffect, dropxxx_x(makeThrowConstantExpression)),
+export const makeWriteEffect = compileMakeLookupNode(
+  drop_xx(makeThrowConstantEffect),
 );

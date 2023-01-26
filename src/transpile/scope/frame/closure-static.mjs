@@ -1,13 +1,12 @@
-import { concat, reduce, map, flatMap } from "array-lite";
+import { concat, map, flatMap } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
-  constant_,
   partialx_,
   partial_x,
-  partial__x,
-  partialxx______,
+  drop_xx,
   constant___,
+  constant____,
   pushAll,
   assert,
   hasOwn,
@@ -23,14 +22,9 @@ import {
 import { mangleOriginalVariable } from "../variable.mjs";
 
 import {
-  makeExportSequenceEffect,
   makeExportStatement,
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticReadExpression,
-  makeStaticTypeofExpression,
-  makeStaticDiscardExpression,
-  makeStaticWriteEffect,
+  makeTypeofReadExpression,
+  makeExportIncrementWriteEffect,
 } from "./helper.mjs";
 
 const {
@@ -41,10 +35,10 @@ const {
 export const KINDS = ["var", "function"];
 
 export const create = (_options) => ({
-  static: {},
+  bindings: {},
 });
 
-export const conflict = constant_(undefined);
+export const conflict = constant____(undefined);
 
 const makeDeclareStatementArray = (bindings, variable) =>
   concat(
@@ -65,15 +59,15 @@ const makeDeclareStatementArray = (bindings, variable) =>
     ),
   );
 
-export const harvestHeader = ({ static: bindings }) =>
+export const harvestHeader = ({ bindings }) =>
   map(ownKeys(bindings), mangleOriginalVariable);
 
-export const harvestPrelude = ({ static: bindings }) =>
+export const harvestPrelude = ({ bindings }) =>
   flatMap(ownKeys(bindings), partialx_(makeDeclareStatementArray, bindings));
 
 export const declare = (
   _strict,
-  { static: bindings },
+  { bindings },
   _kind,
   variable,
   { exports: specifiers },
@@ -89,7 +83,7 @@ export const declare = (
 
 export const makeInitializeStatementArray = (
   _strict,
-  { static: bindings },
+  { bindings },
   _kind,
   variable,
   expression,
@@ -113,36 +107,32 @@ export const makeInitializeStatementArray = (
 
 export const lookupAll = constant___(undefined);
 
-export const makeReadExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticReadExpression,
+const compileMakeLookupNode =
+  (makePresentNode) =>
+  (next, _strict, _escaped, { bindings }, variable, options) => {
+    if (hasOwn(bindings, variable)) {
+      return makePresentNode(
+        mangleOriginalVariable(variable),
+        bindings[variable],
+        options,
+      );
+    } else {
+      return next();
+    }
+  };
+
+export const makeReadExpression = compileMakeLookupNode(
+  drop_xx(makeRawReadExpression),
 );
 
-export const makeTypeofExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticTypeofExpression,
+export const makeTypeofExpression = compileMakeLookupNode(
+  drop_xx(makeTypeofReadExpression),
 );
 
-export const makeDiscardExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticDiscardExpression,
+export const makeDiscardExpression = compileMakeLookupNode(
+  constant___(makeLiteralExpression(false)),
 );
 
-export const makeWriteEffect = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  (strict, escaped, frame, variable, options) => {
-    const { static: bindings } = frame;
-    return reduce(
-      bindings[variable],
-      partial__x(
-        makeExportSequenceEffect,
-        makeStaticReadExpression(strict, escaped, frame, variable, options),
-      ),
-      makeStaticWriteEffect(strict, escaped, frame, variable, options),
-    );
-  },
+export const makeWriteEffect = compileMakeLookupNode(
+  makeExportIncrementWriteEffect,
 );

@@ -1,14 +1,14 @@
-import { reduce, filter, map, concat } from "array-lite";
+import { filter, map, concat } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
   hasOwn,
   assert,
-  bind_,
+  drop_xxxx,
+  constant_____,
   partial_x,
   partialx_,
-  partial__x,
-  partialxx______,
+  expect1,
 } from "../../../util/index.mjs";
 
 import {
@@ -27,17 +27,14 @@ import {
 } from "../variable.mjs";
 
 import {
-  conflictStaticExternal,
-  testStatic,
-  makeStaticReadExpression,
-  makeStaticTypeofExpression,
-  makeStaticDiscardExpression,
-  makeStaticWriteEffect,
+  DuplicateError,
+  DUPLICATE_TEMPLATE,
+  makeThrowDeadzoneEffect,
+  makeTypeofReadExpression,
   makeThrowDeadzoneExpression,
   makeThrowConstantExpression,
+  makeExportIncrementWriteEffect,
   makeExportStatement,
-  makeExportSequenceEffect,
-  makeStaticLookupNode,
 } from "./helper.mjs";
 
 const {
@@ -48,7 +45,7 @@ export const KINDS = ["let", "const", "class"];
 
 export const create = ({ distant }) => ({
   distant,
-  static: {},
+  bindings: {},
 });
 
 const hasDeadzone = (bindings, variable) => bindings[variable].deadzone;
@@ -61,7 +58,7 @@ const makeDeadzoneInitializeStatement = (variable) =>
     ),
   );
 
-export const harvestHeader = ({ static: bindings }) =>
+export const harvestHeader = ({ bindings }) =>
   concat(
     map(ownKeys(bindings), mangleOriginalVariable),
     map(
@@ -70,24 +67,33 @@ export const harvestHeader = ({ static: bindings }) =>
     ),
   );
 
-export const harvestPrelude = ({ static: bindings }) =>
+export const harvestPrelude = ({ bindings }) =>
   map(
     filter(ownKeys(bindings), partialx_(hasDeadzone, bindings)),
     makeDeadzoneInitializeStatement,
   );
 
-export const conflict = conflictStaticExternal;
+export const conflict = (_strict, { bindings }, _kind, variable) => {
+  expect1(
+    !hasOwn(bindings, variable),
+    DuplicateError,
+    DUPLICATE_TEMPLATE,
+    variable,
+  );
+};
 
 export const declare = (
   _strict,
-  { static: bindings },
+  { bindings },
   kind,
   variable,
   { exports: specifiers },
 ) => {
-  assert(
+  expect1(
     !hasOwn(bindings, variable),
-    "duplicate variable should have been caught by conflict",
+    DuplicateError,
+    DUPLICATE_TEMPLATE,
+    variable,
   );
   defineProperty(bindings, variable, {
     __proto__: NULL_DATA_DESCRIPTOR,
@@ -102,7 +108,7 @@ export const declare = (
 
 export const makeInitializeStatementArray = (
   _strict,
-  { static: bindings, distant },
+  { bindings, distant },
   _kind,
   variable,
   expression,
@@ -137,7 +143,7 @@ export const makeInitializeStatementArray = (
   );
 };
 
-export const lookupAll = (_strict, escaped, { static: bindings, distant }) => {
+export const lookupAll = (_strict, escaped, { bindings, distant }) => {
   const variables = ownKeys(bindings);
   if (escaped || distant) {
     for (let index = 0; index < variables.length; index += 1) {
@@ -152,69 +158,78 @@ export const lookupAll = (_strict, escaped, { static: bindings, distant }) => {
   }
 };
 
-const generateMakeDeadzoneNode =
+const compileMakeLookupNode =
   (makeConditionalNode, makeDeadNode, makeLiveNode) =>
-  (strict, escaped, frame, variable, options) => {
-    const { static: bindings, distant } = frame;
-    const binding = bindings[variable];
-    if (!binding.initialized && !escaped) {
-      return makeDeadNode(variable);
-    } else if (binding.initialized && !distant) {
-      return makeLiveNode(strict, escaped, frame, variable, options);
+  (next, _strict, escaped, { bindings, distant }, variable, options) => {
+    if (hasOwn(bindings, variable)) {
+      const binding = bindings[variable];
+      if (makeDeadNode === null) {
+        return makeLiveNode(
+          mangleOriginalVariable(variable),
+          variable,
+          binding.writable,
+          binding.exports,
+          options,
+        );
+      } else {
+        if (!binding.initialized && !escaped) {
+          return makeDeadNode(variable);
+        } else if (binding.initialized && !distant) {
+          return makeLiveNode(
+            mangleOriginalVariable(variable),
+            variable,
+            binding.writable,
+            binding.exports,
+            options,
+          );
+        } else {
+          binding.deadzone = true;
+          return makeConditionalNode(
+            makeRawReadExpression(mangleDeadzoneVariable(variable)),
+            makeLiveNode(
+              mangleOriginalVariable(variable),
+              variable,
+              binding.writable,
+              binding.exports,
+              options,
+            ),
+            makeDeadNode(variable),
+          );
+        }
+      }
     } else {
-      binding.deadzone = true;
-      return makeConditionalNode(
-        makeRawReadExpression(mangleDeadzoneVariable(variable)),
-        makeLiveNode(strict, escaped, frame, variable, options),
-        makeDeadNode(variable),
-      );
+      return next();
     }
   };
 
-export const makeReadExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  generateMakeDeadzoneNode(
-    makeConditionalExpression,
-    makeThrowDeadzoneExpression,
-    makeStaticReadExpression,
-  ),
+export const makeReadExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  makeThrowDeadzoneExpression,
+  drop_xxxx(makeRawReadExpression),
 );
 
-export const makeTypeofExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  generateMakeDeadzoneNode(
-    makeConditionalExpression,
-    makeThrowDeadzoneExpression,
-    makeStaticTypeofExpression,
-  ),
+export const makeTypeofExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  makeThrowDeadzoneExpression,
+  drop_xxxx(makeTypeofReadExpression),
 );
 
-export const makeDiscardExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticDiscardExpression,
+export const makeDiscardExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  null,
+  constant_____(makeLiteralExpression(false)),
 );
 
-export const makeWriteEffect = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  generateMakeDeadzoneNode(
-    makeConditionalEffect,
-    bind_(makeExpressionEffect, makeThrowDeadzoneExpression),
-    (strict, escaped, frame, variable, options) => {
-      const { static: bindings } = frame;
-      return bindings[variable].writable
-        ? reduce(
-            bindings[variable].exports,
-            partial__x(
-              makeExportSequenceEffect,
-              makeStaticReadExpression(strict, escaped, frame, variable, null),
-            ),
-            makeStaticWriteEffect(strict, escaped, frame, variable, options),
-          )
-        : makeExpressionEffect(makeThrowConstantExpression(variable));
-    },
-  ),
+export const makeWriteEffect = compileMakeLookupNode(
+  makeConditionalEffect,
+  makeThrowDeadzoneEffect,
+  (variable, original_variable, writable, specifiers, options) => {
+    if (writable) {
+      return makeExportIncrementWriteEffect(variable, specifiers, options);
+    } else {
+      return makeExpressionEffect(
+        makeThrowConstantExpression(original_variable),
+      );
+    }
+  },
 );

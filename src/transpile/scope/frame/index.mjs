@@ -72,29 +72,20 @@ export const harvestFrameHeader = generateHarvest("harvestHeader");
 
 export const harvestFramePrelude = generateHarvest("harvestPrelude");
 
-//////////////
-// Conflict //
-//////////////
-
-export const conflictFrame = (strict, frame, kind, variable) => {
-  const { KINDS, conflict } = libraries[frame.type];
-  if (frame.layer === getVariableLayer(variable)) {
-    conflict(strict, frame.inner, kind, variable);
-    return includes(KINDS, kind);
-  } else {
-    return false;
-  }
-};
-
 /////////////
 // Declare //
 /////////////
 
 export const declareFrame = (strict, frame, kind, variable, options) => {
-  const { KINDS, declare } = libraries[frame.type];
-  if (frame.layer === getVariableLayer(variable) && includes(KINDS, kind)) {
-    declare(strict, frame.inner, kind, variable, options);
-    return true;
+  const { KINDS, declare, conflict } = libraries[frame.type];
+  if (frame.layer === getVariableLayer(variable)) {
+    if (includes(KINDS, kind)) {
+      declare(strict, frame.inner, kind, variable, options);
+      return true;
+    } else {
+      conflict(strict, frame.inner, kind, variable);
+      return false;
+    }
   } else {
     return false;
   }
@@ -111,15 +102,21 @@ export const makeFrameInitializeStatementArray = (
   variable,
   expression,
 ) => {
-  const { KINDS, makeInitializeStatementArray } = libraries[frame.type];
-  if (frame.layer === getVariableLayer(variable) && includes(KINDS, kind)) {
-    return makeInitializeStatementArray(
-      strict,
-      frame.inner,
-      kind,
-      variable,
-      expression,
-    );
+  const { KINDS, makeInitializeStatementArray, conflict } =
+    libraries[frame.type];
+  if (frame.layer === getVariableLayer(variable)) {
+    if (includes(KINDS, kind)) {
+      return makeInitializeStatementArray(
+        strict,
+        frame.inner,
+        kind,
+        variable,
+        expression,
+      );
+    } else {
+      conflict(strict, frame.inner, kind, variable);
+      return null;
+    }
   } else {
     return null;
   }

@@ -10,6 +10,16 @@ assertSuccess(
   testBlock(Frame, {
     scenarios: [
       {
+        type: "conflict",
+        variable: "variable",
+      },
+      {
+        type: "read",
+        variable: "variable",
+        next: () => makeLiteralExpression("next"),
+        code: `"next"`,
+      },
+      {
         type: "declare",
         kind: "let",
         variable: "variable",
@@ -17,15 +27,13 @@ assertSuccess(
       },
       {
         type: "discard",
-        strict: false,
         variable: "variable",
         code: "false",
       },
       {
-        type: "write",
+        type: "read",
         variable: "variable",
-        right: makeLiteralExpression("right"),
-        code: `void intrinsic.aran.throw(
+        code: `intrinsic.aran.throw(
           new intrinsic.ReferenceError(
             "Cannot access variable 'variable' before initialization",
           ),

@@ -16,22 +16,19 @@ import {
   NULL_DATA_DESCRIPTOR,
   hasOwn,
   deadcode_____,
-  bind_____,
-  dropxxx_x,
   constant_,
   constant___,
-  partialxx______,
   assert,
+  expect1,
 } from "../../../util/index.mjs";
 
-import { makeExpressionEffect } from "../../../ast/index.mjs";
+import { makeLiteralExpression } from "../../../ast/index.mjs";
 
 import {
-  testStatic,
-  conflictStaticExternal,
-  makeStaticDiscardExpression,
-  makeStaticLookupNode,
+  DuplicateError,
+  DUPLICATE_TEMPLATE,
   makeThrowDeadzoneExpression,
+  makeThrowDeadzoneEffect,
 } from "./helper.mjs";
 
 const {
@@ -42,10 +39,17 @@ const {
 export const KINDS = ["let", "const", "class"];
 
 export const create = (_options) => ({
-  static: {},
+  bindings: {},
 });
 
-export const conflict = conflictStaticExternal;
+export const conflict = (_strict, { bindings }, _kind, variable) => {
+  expect1(
+    !hasOwn(bindings, variable),
+    DuplicateError,
+    DUPLICATE_TEMPLATE,
+    variable,
+  );
+};
 
 export const harvestHeader = constant_([]);
 
@@ -53,15 +57,17 @@ export const harvestPrelude = constant_([]);
 
 export const declare = (
   _strict,
-  { static: bindings },
+  { bindings },
   _kind,
   variable,
   { exports: specifiers },
 ) => {
   assert(specifiers.length === 0, "unexpected exported variable");
-  assert(
+  expect1(
     !hasOwn(bindings, variable),
-    "duplicate variable should have been caught by conflict",
+    DuplicateError,
+    DUPLICATE_TEMPLATE,
+    variable,
   );
   defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
 };
@@ -70,32 +76,23 @@ export const makeInitializeStatementArray = deadcode_____(
   "initialization is forbidden in dead frames",
 );
 
-const makeThrowDeadzoneExpressionDropped = dropxxx_x(
+export const lookupAll = constant___(undefined);
+
+const compileMakeLookupNode =
+  (makeNode) =>
+  (next, _strict, _escaped, { bindings }, variable, _options) =>
+    hasOwn(bindings, variable) ? makeNode(variable) : next();
+
+export const makeReadExpression = compileMakeLookupNode(
   makeThrowDeadzoneExpression,
 );
 
-export const lookupAll = constant___(undefined);
-
-export const makeReadExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeThrowDeadzoneExpressionDropped,
+export const makeTypeofExpression = compileMakeLookupNode(
+  makeThrowDeadzoneExpression,
 );
 
-export const makeTypeofExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeThrowDeadzoneExpressionDropped,
+export const makeDiscardExpression = compileMakeLookupNode(
+  constant_(makeLiteralExpression(false)),
 );
 
-export const makeDiscardExpression = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  makeStaticDiscardExpression,
-);
-
-export const makeWriteEffect = partialxx______(
-  makeStaticLookupNode,
-  testStatic,
-  bind_____(makeExpressionEffect, makeThrowDeadzoneExpressionDropped),
-);
+export const makeWriteEffect = compileMakeLookupNode(makeThrowDeadzoneEffect);

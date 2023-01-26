@@ -58,6 +58,14 @@ forEach(combine(6, ["_"]), (description) => {
 });
 
 forEach(combine(6, ["_"]), (description) => {
+  const noop = Library[`noop${description}`];
+  assertEqual(
+    apply(noop, undefined, enumerate(0, description.length)),
+    undefined,
+  );
+});
+
+forEach(combine(6, ["_"]), (description) => {
   const constant = Library[`constant${description}`];
   assertEqual(
     apply(constant("result"), undefined, enumerate(0, description.length)),

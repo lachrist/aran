@@ -13,14 +13,25 @@ assertSuccess(
     },
     scenarios: [
       {
+        type: "read",
+        variable: "variable",
+        next: () => makeLiteralExpression("next"),
+        code: `"next"`,
+      },
+      {
+        type: "conflict",
+        variable: "variable",
+      },
+      {
         type: "declare",
         variable: "variable",
         kind: "define",
       },
       {
-        type: "read",
+        type: "write",
         variable: "variable",
-        code: "intrinsic.aran.get('dynamic', 'variable')",
+        right: makeLiteralExpression("right"),
+        code: "void intrinsic.aran.setStrict('dynamic', 'variable', 'right')",
       },
     ],
   }),

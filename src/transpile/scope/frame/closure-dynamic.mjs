@@ -2,39 +2,36 @@ import { map } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
+  incrementCounter,
   hasOwn,
   assert,
+  noop_,
+  drop__x,
   constant_,
+  partialx___,
   constant___,
+  constant____,
   partialx_,
-  partialxxx______,
 } from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
   makeExpressionEffect,
   makeConditionalExpression,
+  makeConditionalEffect,
   makeLiteralExpression,
 } from "../../../ast/index.mjs";
 
 import {
+  makeDeleteSloppyExpression,
+  makeGetExpression,
   makeSetExpression,
   makeDefineExpression,
   makeBinaryExpression,
   makeDataDescriptorExpression,
 } from "../../../intrinsic.mjs";
 
-import {
-  testStatic,
-  makeDynamicTestExpression,
-  makeObservableDynamicTestExpression,
-  makeDynamicLookupExpression,
-  makeDynamicLookupEffect,
-  makeDynamicReadExpression,
-  makeDynamicTypeofExpression,
-  makeDynamicDiscardExpression,
-  makeDynamicWriteEffect,
-} from "./helper.mjs";
+import { makeTypeofGetExpression, makeIncrementSetEffect } from "./helper.mjs";
 
 const {
   undefined,
@@ -49,7 +46,7 @@ export const create = ({ macro, observable }) => ({
   observable,
 });
 
-export const conflict = constant_(undefined);
+export const conflict = constant____(undefined);
 
 const makeDeclareStatement = (dynamic, variable) =>
   makeEffectStatement(
@@ -90,7 +87,7 @@ export const declare = (
 };
 
 export const makeInitializeStatementArray = (
-  strict,
+  _strict,
   { dynamic, static: bindings },
   _kind,
   variable,
@@ -104,7 +101,7 @@ export const makeInitializeStatementArray = (
     makeEffectStatement(
       makeExpressionEffect(
         makeSetExpression(
-          strict,
+          true,
           dynamic,
           makeLiteralExpression(variable),
           expression,
@@ -116,30 +113,58 @@ export const makeInitializeStatementArray = (
 
 export const lookupAll = constant___(undefined);
 
-export const makeReadExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  makeDynamicReadExpression,
+const compileMakeLookupNode =
+  (makeConditionalNode, makePresentNode, observe) =>
+  (
+    next,
+    _strict,
+    _escaped,
+    { static: bindings, dynamic: macro, observable },
+    variable,
+    options,
+  ) => {
+    if (observable) {
+      observe(options);
+    }
+    const node = makePresentNode(
+      macro,
+      makeLiteralExpression(variable),
+      options,
+    );
+    if (hasOwn(bindings, variable)) {
+      return node;
+    } else {
+      return makeConditionalNode(
+        makeBinaryExpression("in", makeLiteralExpression(variable), macro),
+        node,
+        next(),
+      );
+    }
+  };
+
+export const makeReadExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  drop__x(makeGetExpression),
+  noop_,
 );
 
-export const makeTypeofExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  makeDynamicTypeofExpression,
+export const makeTypeofExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  drop__x(makeTypeofGetExpression),
+  noop_,
 );
 
-export const makeDiscardExpression = partialxxx______(
-  makeDynamicLookupExpression,
-  testStatic,
-  makeDynamicTestExpression,
-  makeDynamicDiscardExpression,
+export const makeDiscardExpression = compileMakeLookupNode(
+  makeConditionalExpression,
+  drop__x(makeDeleteSloppyExpression),
+  noop_,
 );
 
-export const makeWriteEffect = partialxxx______(
-  makeDynamicLookupEffect,
-  testStatic,
-  makeObservableDynamicTestExpression,
-  makeDynamicWriteEffect,
+export const makeWriteEffect = compileMakeLookupNode(
+  makeConditionalEffect,
+  partialx___(makeIncrementSetEffect, true),
+  ({ counter }) => {
+    incrementCounter(counter);
+    incrementCounter(counter);
+  },
 );

@@ -4,7 +4,7 @@ import {
   assertSuccess,
 } from "../../../__fixture__.mjs";
 
-import { push } from "../../../util/index.mjs";
+import { push, deadcode______ } from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -55,18 +55,6 @@ assertSuccess(
         return [makeEffectStatement(makeWriteEffect(variable, expression))];
       },
       lookupAll: (_strict, _escaped, _frame) => {},
-      makeWriteEffect: (
-        _next,
-        strict,
-        escaped,
-        _frame,
-        variable,
-        { expression },
-      ) => {
-        assertEqual(strict, true);
-        assertEqual(escaped, true);
-        return makeWriteEffect(variable, expression);
-      },
       makeReadExpression: (
         _next,
         strict,
@@ -79,6 +67,20 @@ assertSuccess(
         assertEqual(escaped, false);
         assertEqual(options, null);
         return makeReadExpression(variable);
+      },
+      makeTypeofExpression: deadcode______("makeTypeofExpression"),
+      makeDiscardExpression: deadcode______("makeDiscardExpression"),
+      makeWriteEffect: (
+        _next,
+        strict,
+        escaped,
+        _frame,
+        variable,
+        { expression },
+      ) => {
+        assertEqual(strict, true);
+        assertEqual(escaped, true);
+        return makeWriteEffect(variable, expression);
       },
     },
     {
