@@ -1,5 +1,6 @@
 /* eslint-disable no-nodejs-modules */
 import { strict as Assert } from "assert";
+import { stdout } from "process";
 /* eslint-enable no-nodejs-modules */
 
 const { Error } = globalThis;
@@ -17,14 +18,18 @@ export const {
   notDeepEqual: assertNotDeepEqual,
 } = Assert;
 
-export const assertSuccess = (either) => {
-  if (either !== null) {
-    throw new Error(either);
+export const assertSuccess = (maybe) => {
+  if (maybe !== null) {
+    // Sometimes large message are truncated...
+    // Tried stdout.write and writeSync(1, ...)
+    // Nothing works...
+    console.log(maybe);
+    throw new Error("failure");
   }
 };
 
-export const assertFailure = (either) => {
-  if (either === null) {
+export const assertFailure = (maybe) => {
+  if (maybe === null) {
     throw new Error("missing failure");
   }
 };
