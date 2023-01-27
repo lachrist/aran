@@ -120,7 +120,7 @@ const isRigidDeclareStatement = partial_x(isBoundDeclareExternalStatement, [
 ]);
 
 const isVariableNode = ({ 0: type }) =>
-  type === "ReadExpression" || type === "WriteExpression";
+  type === "ReadExpression" || type === "WriteEffect";
 
 const isBoundVariableNode = partialx__(dispatchArrayNode1, {
   ReadExpression: doesFirstInclude,
