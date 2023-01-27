@@ -5,6 +5,7 @@ import { assertEqual, assertSuccess, assertThrow } from "../../__fixture__.mjs";
 import { createCounter } from "../../util/index.mjs";
 
 import {
+  makeDebuggerStatement,
   makeBlockStatement,
   makeExportLink,
   makeImportLink,
@@ -42,16 +43,15 @@ import {
   makeBaseWriteEffect,
   makeScopeClosureDynamicBlock,
   makeScopeWithDynamicBlock,
-  makeScopeExternalLocalEvalProgram,
+  makeScopeLocalEvalProgram,
+  makeScopeGlobalEvalProgram,
   makeScopeScriptProgram,
   makeScopeModuleProgram,
-  makeScopeGlobalEvalProgram,
   makeScopeDistantStaticBlock,
   makeScopeDeadStaticBlock,
   makeScopeEmptyStaticBlock,
   makeScopeClosureStaticBlock,
   makeScopeClosureExpression,
-  makeScopeInternalLocalEvalProgram,
 } from "./index.mjs";
 
 const {
@@ -111,20 +111,16 @@ assertSuccess(
     ),
     `
       "script";
-      effect(
-        intrinsic.aran.setStrict(
-          intrinsic.aran.globalCache,
-          "01_variable1",
-          "right",
-        ),
+      void intrinsic.aran.setStrict(
+        intrinsic.aran.globalCache,
+        "01_variable1",
+        "right",
       );
-      effect(
-        intrinsic.aran.get(
-          intrinsic.aran.globalCache,
-          "01_variable1",
-        ),
+      void intrinsic.aran.get(
+        intrinsic.aran.globalCache,
+        "01_variable1",
       );
-      effect("binding");
+      void "binding";
       return "completion";
     `,
   ),
@@ -145,7 +141,7 @@ assertSuccess(
       );
       assertEqual(declareSpecIllegal(scoping, "import.meta"), undefined);
       assertThrow(() => makeSpecReadExpression(scoping, "import.meta"), {
-        name: "Error",
+        name: "SyntaxAranError",
         message: "Illegal import.meta",
       });
       return [
@@ -157,7 +153,7 @@ assertSuccess(
     }),
     `
       "script";
-      effect(intrinsic.aran.globalObject);
+      void intrinsic.aran.globalObject;
       return "completion";
     `,
   ),
@@ -169,6 +165,15 @@ assertSuccess(
     makeScopeScriptProgram(createScoping({ strict: true }), true, (scope) => {
       const scoping = createScoping({ strict: true, scope });
       assertEqual(declareBase(scoping, "let", "variable", []), undefined);
+      assertThrow(
+        () =>
+          makeEffectStatement(
+            makeExpressionEffect(
+              makeBaseDiscardExpression(scoping, "variable"),
+            ),
+          ),
+        { name: "EnclaveLimitationAranError" },
+      );
       return concat(
         makeBaseInitializeStatementArray(
           scoping,
@@ -184,11 +189,6 @@ assertSuccess(
             makeExpressionEffect(makeBaseTypeofExpression(scoping, "variable")),
           ),
           makeEffectStatement(
-            makeExpressionEffect(
-              makeBaseDiscardExpression(scoping, "variable"),
-            ),
-          ),
-          makeEffectStatement(
             makeBaseWriteEffect(
               scoping,
               "variable",
@@ -201,16 +201,20 @@ assertSuccess(
     }),
     `
       "script";
-      let variable = "init";
-      effect(intrinsic.aran.readGlobal("variable"));
-      effect(intrinsic.aran.typeofGlobal("variable"));
-      effect(
-        (
-          ("delete unqualified identifier should never happen in strict mode")
-          ("variable")
+      let [variable] = "init";
+      void [variable];
+      void typeof [variable];
+      (
+        void intrinsic.aran.setStrict(
+          intrinsic.aran.globalCache,
+          "01_right",
+          "right",
         ),
+        [variable] = intrinsic.aran.get(
+          intrinsic.aran.globalCache,
+          "01_right",
+        )
       );
-      effect(intrinsic.aran.writeGlobalStrict("variable", "right"));
       return "completion";
     `,
   ),
@@ -219,7 +223,7 @@ assertSuccess(
 // base sloppy refied //
 assertSuccess(
   allignProgram(
-    makeScopeScriptProgram({ strict: false }, false, (scope) => {
+    makeScopeScriptProgram(createScoping({ strict: false }), false, (scope) => {
       const scoping = createScoping({ strict: false, scope });
       assertEqual(declareBase(scoping, "let", "variable", []), undefined);
       return concat(
@@ -254,74 +258,60 @@ assertSuccess(
     }),
     `
       "script";
-      effect(
-        (
-          intrinsic.aran.binary(
-            "in",
-            "variable",
-            intrinsic.aran.globalRecord
-          ) ?
-          intrinsic.aran.throw(
-            new intrinsic.SyntaxError(
-              "Variable 'variable' has already been declared"
-            ),
-          ) :
-          undefined
-        ),
-      );
-      effect(
-        intrinsic.Reflect.defineProperty(
-          intrinsic.aran.globalRecord,
+      void (
+        intrinsic.aran.binary(
+          "in",
           "variable",
-          intrinsic.aran.createObject(
-            null,
-            "value", intrinsic.aran.deadzone,
-            "writable", true,
-            "enumerable", true,
-            "configurable", false
+          intrinsic.aran.globalRecord
+        ) ?
+        intrinsic.aran.throw(
+          new intrinsic.SyntaxError(
+            "Variable 'variable' has already been declared"
           ),
+        ) :
+        undefined
+      );
+      void intrinsic.Reflect.defineProperty(
+        intrinsic.aran.globalRecord,
+        "variable",
+        intrinsic.aran.createObject(
+          null,
+          "value", intrinsic.aran.deadzone,
+          "writable", true,
+          "enumerable", true,
+          "configurable", false
         ),
       );
-      effect(
-        intrinsic.Reflect.defineProperty(
-          intrinsic.aran.globalRecord,
-          "variable",
-          intrinsic.aran.createObject(
-            null,
-            "value", "init",
-            "writable", true,
-            "enumerable", true,
-            "configurable", false
-          ),
+      void intrinsic.Reflect.defineProperty(
+        intrinsic.aran.globalRecord,
+        "variable",
+        intrinsic.aran.createObject(
+          null,
+          "value", "init",
+          "writable", true,
+          "enumerable", true,
+          "configurable", false
         ),
       );
-      effect(
+      void intrinsic.aran.get(
+        intrinsic.aran.globalRecord,
+        "variable",
+      );
+      void intrinsic.aran.unary(
+        "typeof",
         intrinsic.aran.get(
           intrinsic.aran.globalRecord,
           "variable",
         ),
       );
-      effect(
-        intrinsic.aran.unary(
-          "typeof",
-          intrinsic.aran.get(
-            intrinsic.aran.globalRecord,
-            "variable",
-          ),
-        )
+      void intrinsic.aran.deleteSloppy(
+        intrinsic.aran.globalRecord,
+        "variable",
       );
-      effect(
-        intrinsic.aran.deleteSloppy(
-          intrinsic.aran.globalRecord,
-          "variable",
-        ),
-      );
-      effect(
-        intrinsic.aran.setStrict(
-          intrinsic.aran.globalRecord,
-          "variable",
-          "right"
-        ),
+      void intrinsic.aran.setStrict(
+        intrinsic.aran.globalRecord,
+        "variable",
+        "right"
       );
       return "completion";
     `,
@@ -370,8 +360,8 @@ assertSuccess(
       {
         let VARIABLE;
         VARIABLE = "right";
-        effect(VARIABLE);
-        effect("binding");
+        void VARIABLE;
+        void "binding";
         return "completion";
       }
     `,
@@ -397,7 +387,7 @@ assertSuccess(
         );
         assertEqual(declareSpecIllegal(scoping, "new.target"), undefined);
         assertThrow(() => makeSpecReadExpression(scoping, "new.target"), {
-          name: "Error",
+          name: "SyntaxAranError",
           message: "Illegal new.target",
         });
         assertEqual(declareSpec(scoping, "import.meta"), undefined);
@@ -426,8 +416,8 @@ assertSuccess(
       {
         let IMPORT_META;
         IMPORT_META = "init";
-        effect(intrinsic.aran.globalObject);
-        effect(IMPORT_META);
+        void intrinsic.aran.globalObject;
+        void IMPORT_META;
         return "completion";
       }
     `,
@@ -498,39 +488,30 @@ assertSuccess(
       {
         let VARIABLE;
         VARIABLE = "init";
-        exportStatic("exported", VARIABLE);
-        effect(VARIABLE);
-        effect(intrinsic.aran.unary("typeof", VARIABLE));
-        effect(
-          intrinsic.aran.throw(
-            new intrinsic.TypeError(
-              "Cannot discard variable 'variable1' because it is static",
-            ),
-          ),
-        );
+        exported << VARIABLE;
+        void VARIABLE;
+        void intrinsic.aran.unary("typeof", VARIABLE);
+        void false;
         (
           VARIABLE = "right",
-          exportStatic("exported", VARIABLE)
+          exported << VARIABLE
         );
-        effect(
-          importStatic("source", "imported"),
-        );
+        void ("source" >> imported);
         return "completion";
       }
     `,
   ),
 );
 
-///////////////////////////////////////
-// makeScopeExternalLocalEvalProgram //
-///////////////////////////////////////
+///////////////////////////////
+// makeScopeLocalEvalProgram //
+///////////////////////////////
 
 assertSuccess(
   allignProgram(
-    makeScopeExternalLocalEvalProgram(
+    makeScopeLocalEvalProgram(
       createScoping({ strict: true }),
       true,
-      ["this"],
       (scope) => {
         const scoping = createScoping({ strict: true, scope });
         return [
@@ -542,23 +523,18 @@ assertSuccess(
       },
     ),
     `
-      "external";
-      ["this"];
+      "eval";
       {
-        let INPUT;
-        INPUT = input;
-        effect(
-          (intrinsic.aran.get(INPUT, "scope.read"))("variable"),
-        );
+        void [variable]
         return "completion";
       }
     `,
   ),
 );
 
-/////////////////////////////////////////////////////////////////////
-// makeScopeInternalLocalEvalProgram && makeScopeGlobalEvalProgram //
-/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
+// makeScopeLocalEvalProgram && makeScopeGlobalEvalProgram //
+/////////////////////////////////////////////////////////////
 
 {
   let serialized_scope = null;
@@ -567,34 +543,55 @@ assertSuccess(
       makeScopeGlobalEvalProgram(
         createScoping({ strict: false }),
         true,
-        (scope) => {
-          const scoping = createScoping({ strict: false, scope });
-          assertEqual(declareBase(scoping, "let", "variable1", []), undefined);
-          const statements1 = makeBaseInitializeStatementArray(
-            scoping,
-            "let",
-            "variable1",
-            makeLiteralExpression("init1"),
-          );
-          const statements2 = [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeEvalExpression(scoping, makeLiteralExpression("code")),
+        (scope1) => {
+          const scoping1 = createScoping({ strict: false, scope: scope1 });
+          assertEqual(declareBase(scoping1, "let", "variable1", []), undefined);
+          return concat(
+            [
+              makeBlockStatement(
+                makeScopeClosureDynamicBlock(
+                  scoping1,
+                  [],
+                  makeLiteralExpression("macro"),
+                  (scope2) => {
+                    const scoping2 = createScoping({
+                      strict: false,
+                      scope: scope2,
+                    });
+                    const statement = makeEffectStatement(
+                      makeExpressionEffect(
+                        makeScopeEvalExpression(
+                          scoping2,
+                          makeLiteralExpression("code"),
+                        ),
+                      ),
+                    );
+                    serialized_scope = stringifyJSON(packScope(scope2));
+                    return [statement];
+                  },
+                ),
               ),
+            ],
+            makeBaseInitializeStatementArray(
+              scoping1,
+              "let",
+              "variable1",
+              makeLiteralExpression("init1"),
             ),
-          ];
-          serialized_scope = stringifyJSON(packScope(scope));
-          return concat(statements1, statements2, [
-            makeReturnStatement(makeLiteralExpression("completion")),
-          ]);
+            [makeReturnStatement(makeLiteralExpression("completion"))],
+          );
         },
       ),
       `
         "eval";
         {
-          let VARIABLE1;
+          let VARIABLE1, VARIABLE1_;
+          VARIABLE1_ = false;
+          {
+            void eval("code");
+          }
           VARIABLE1 = "init1";
-          effect(eval([VARIABLE1], "code"));
+          VARIABLE1_ = true
           return "completion";
         }
       `,
@@ -602,7 +599,7 @@ assertSuccess(
   );
   assertSuccess(
     allignProgram(
-      makeScopeInternalLocalEvalProgram(
+      makeScopeLocalEvalProgram(
         createScoping({
           strict: false,
           scope: unpackScope(parseJSON(serialized_scope)),
@@ -637,13 +634,20 @@ assertSuccess(
         },
       ),
       `
-        "internal";
-        let VARIABLE1;
+        "eval";
         {
           let VARIABLE2;
-          effect(VARIABLE1);
+          void (
+            intrinsic.aran.binary("in", "variable1", "macro") ?
+            intrinsic.aran.get("macro", "variable1") :
+            intrinsic.aran.throw(
+              new intrinsic.ReferenceError(
+                "Cannot access variable 'variable1' before initialization",
+              ),
+            )
+          );
           VARIABLE2 = "init2";
-          var variable3 = "init3";
+          void intrinsic.aran.setStrict("macro", "variable3", "init3");
           return "completion";
         }
       `,
@@ -701,32 +705,28 @@ assertSuccess(
     "eval";
     {
       label: {
-        effect(
-          (
-            intrinsic.aran.binary("in", "variable", "frame") ?
-            intrinsic.aran.get("frame", "variable") :
-            intrinsic.aran.readGlobal("variable")
-          ),
+        void (
+          intrinsic.aran.binary("in", "variable", "frame") ?
+          intrinsic.aran.get("frame", "variable") :
+          [variable]
         );
       }
       label: {
-        effect(
+        void (
           (
+            intrinsic.aran.get("frame", intrinsic.Symbol.unscopables) ?
             (
-              intrinsic.aran.get("frame", intrinsic.Symbol.unscopables) ?
-              (
-                intrinsic.aran.get(
-                  intrinsic.aran.get("frame", intrinsic.Symbol.unscopables),
-                  "variable"
-                ) ?
-                false :
-                intrinsic.aran.binary("in", "variable", "frame")
-              ) :
+              intrinsic.aran.get(
+                intrinsic.aran.get("frame", intrinsic.Symbol.unscopables),
+                "variable"
+              ) ?
+              false :
               intrinsic.aran.binary("in", "variable", "frame")
-            ) ?
-            intrinsic.aran.get("frame", "variable") :
-            intrinsic.aran.readGlobal("variable")
-          ),
+            ) :
+            intrinsic.aran.binary("in", "variable", "frame")
+          ) ?
+          intrinsic.aran.get("frame", "variable") :
+          [variable]
         );
       }
       return "completion";
@@ -758,7 +758,7 @@ assertSuccess(
                     makeScopeClosureStaticBlock(
                       scoping2,
                       ["label"],
-                      (_scope3) => [],
+                      (_scope3) => [makeDebuggerStatement()],
                     ),
                   ),
                   makeReturnStatement(makeLiteralExpression("completion")),
@@ -771,17 +771,17 @@ assertSuccess(
       ];
     }),
     `
-    "eval";
-    {
-      effect(
-        () => {
-          label: {}
+      "eval";
+      {
+        void (() => {
+          label: {
+            debugger;
+          }
           return "completion";
-        },
-      );
-      return "completion";
-    }
-  `,
+        });
+        return "completion";
+      }
+    `,
   ),
 );
 
@@ -817,11 +817,9 @@ assertSuccess(
     "eval";
     {
       label: {
-        effect(
-          intrinsic.aran.throw(
-            new intrinsic.ReferenceError(
-              "Cannot access variable 'variable' before initialization",
-            ),
+        void intrinsic.aran.throw(
+          new intrinsic.ReferenceError(
+            "Cannot access variable 'variable' before initialization",
           ),
         );
       }
@@ -880,16 +878,14 @@ assertSuccess(
             VARIABLE = "init";
             _VARIABLE = true;
           }
-          effect(
-            (
-              _VARIABLE ?
-              VARIABLE :
-              intrinsic.aran.throw(
-                new intrinsic.ReferenceError(
-                  "Cannot access variable 'variable' before initialization",
-                ),
-              )
-            ),
+          void (
+            _VARIABLE ?
+            VARIABLE :
+            intrinsic.aran.throw(
+              new intrinsic.ReferenceError(
+                "Cannot access variable 'variable' before initialization",
+              ),
+            )
           );
         }
         return "completion";
@@ -944,20 +940,16 @@ assertSuccess(
     {
       let VARIABLE;
       (
-        effect("right"),
-        effect(
-          intrinsic.aran.throw(
-            new intrinsic.ReferenceError(
-              "Cannot access variable 'variable' before initialization",
-            ),
-          ),
-        )
-      );
-      effect(
-        intrinsic.aran.throw(
+        void "right",
+        void intrinsic.aran.throw(
           new intrinsic.ReferenceError(
             "Cannot access variable 'variable' before initialization",
           ),
+        )
+      );
+      void intrinsic.aran.throw(
+        new intrinsic.ReferenceError(
+          "Cannot access variable 'variable' before initialization",
         ),
       );
       VARIABLE = "init";
@@ -970,10 +962,10 @@ assertSuccess(
 assertSuccess(
   allignProgram(
     makeScopeGlobalEvalProgram(
-      createScoping({ strict: false }),
+      createScoping({ strict: true }),
       true,
       (scope1) => {
-        const scoping1 = createScoping({ strict: false, scope: scope1 });
+        const scoping1 = createScoping({ strict: true, scope: scope1 });
         return [
           makeBlockStatement(
             makeScopeClosureDynamicBlock(
@@ -982,7 +974,7 @@ assertSuccess(
               makeLiteralExpression("frame"),
               (scope2) => {
                 const scoping2 = createScoping({
-                  strict: false,
+                  strict: true,
                   scope: scope2,
                 });
                 return [
@@ -1017,14 +1009,14 @@ assertSuccess(
           RIGHT = "right",
           (
             intrinsic.aran.binary("in", "variable", "frame") ?
-            effect(intrinsic.aran.setSloppy("frame", "variable", RIGHT)) :
-            effect(intrinsic.aran.writeGlobalSloppy("variable", RIGHT))
+            void intrinsic.aran.setStrict("frame", "variable", RIGHT) :
+            [variable] = RIGHT
           )
         );
         (
           intrinsic.aran.binary("in", "variable", "frame") ?
-          effect(intrinsic.aran.setSloppy("frame", "variable", "right")) :
-          effect(intrinsic.aran.writeGlobalSloppy("variable", "right"))
+          void intrinsic.aran.setStrict("frame", "variable", "right") :
+          [variable] = "right"
         );
       }
       return "completion";

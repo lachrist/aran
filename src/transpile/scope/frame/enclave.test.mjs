@@ -8,7 +8,7 @@ import * as Frame from "./enclave.mjs";
 
 assertSuccess(
   testBlock(Frame, {
-    options: {},
+    options: { program: "script" },
     scenarios: [
       {
         type: "declare",
@@ -47,7 +47,22 @@ assertSuccess(
 assertThrow(
   () =>
     testBlock(Frame, {
-      options: {},
+      options: { program: "eval" },
+      scenarios: [
+        {
+          type: "declare",
+          kind: "var",
+          options: { exports: [] },
+        },
+      ],
+    }),
+  { name: "EnclaveLimitationAranError" },
+);
+
+assertThrow(
+  () =>
+    testBlock(Frame, {
+      options: { program: "script" },
       scenarios: [
         {
           type: "discard",
@@ -61,7 +76,7 @@ assertThrow(
 assertThrow(
   () =>
     testBlock(Frame, {
-      options: {},
+      options: { program: "script" },
       scenarios: [
         {
           type: "write",

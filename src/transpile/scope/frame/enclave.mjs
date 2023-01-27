@@ -31,7 +31,7 @@ const mapping = {
 
 export const KINDS = ownKeys(mapping);
 
-export const create = ({}) => ({});
+export const create = ({ program }) => ({ program });
 
 export const conflict = constant____(undefined);
 
@@ -39,23 +39,41 @@ export const harvestHeader = constant_([]);
 
 export const harvestPrelude = constant_([]);
 
+const checkProgram = ({ program }, variable) => {
+  expect1(
+    program === "script",
+    EnclaveLimitationAranError,
+    "Aran only support declaring external variables in script programs, got: %s",
+    variable,
+  );
+};
+
+// TODO
+// Detect when declare external global variable
+// is made from a local eval program.
+// It should throw an EnclaveLimitationAranError
+
 export const declare = (
   _strict,
-  _frame,
+  frame,
   _kind,
-  _variable,
+  variable,
   { exports: specifiers },
 ) => {
+  checkProgram(frame, variable);
   assert(specifiers.length === 0, "declare exported variable on enclave frame");
 };
 
 export const makeInitializeStatementArray = (
   _strict,
-  _frame,
+  frame,
   kind,
   variable,
   expression,
-) => [makeDeclareExternalStatement(mapping[kind], variable, expression)];
+) => {
+  checkProgram(frame, variable);
+  return [makeDeclareExternalStatement(mapping[kind], variable, expression)];
+};
 
 export const lookupAll = constant___(undefined);
 
@@ -72,7 +90,7 @@ export const makeDiscardExpression = (
   _options,
 ) => {
   throw new EnclaveLimitationAranError(
-    `Aran does not support deleting external variable, got: ${variable}`,
+    `Aran does not support deleting external variables, got: ${variable}`,
   );
 };
 
@@ -87,7 +105,7 @@ export const makeWriteEffect = (
   expect1(
     strict,
     EnclaveLimitationAranError,
-    "Aran does not support assigning to external variable in non-strict mode, got: %s",
+    "Aran does not support assigning to external variables in non-strict mode, got: %s",
     variable,
   );
   incrementCounter(counter);

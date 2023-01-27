@@ -107,7 +107,7 @@ export const harvestPrelude = ({ dynamic, conflicts, static: bindings }) =>
 
 export const declare = (
   _strict,
-  { static: bindings },
+  { static: bindings, conflicts },
   _kind,
   variable,
   { exports: specifiers },
@@ -119,6 +119,9 @@ export const declare = (
     DUPLICATE_TEMPLATE,
     variable,
   );
+  if (!includes(conflicts, variable)) {
+    push(conflicts, variable);
+  }
   defineProperty(bindings, variable, {
     __proto__: NULL_DATA_DESCRIPTOR,
     value: false,

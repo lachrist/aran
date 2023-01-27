@@ -125,6 +125,7 @@ forEach(concat(combine(6, ["", "_", "x"]), ["_____xx"]), (description) => {
 
 forEach(
   concat(combine(6, ["", "_", "x", "f"]), [
+    "x_x___x",
     "xx_____",
     "x______",
     "xxx____",

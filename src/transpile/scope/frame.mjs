@@ -5,6 +5,7 @@ import {
   partialx__,
   partialx____,
   partialx_x___,
+  partialx_x___x,
 } from "../../util/index.mjs";
 
 import {
@@ -103,7 +104,8 @@ const lookupAll = (strict, escaped1, scope1) => {
 
 export const makeScopeEvalExpression = (strict, scope, expression) => {
   // We need to assume the worse case regarding deadzone.
-  // That is that the eval code will lookup variables from closures.
+  // That is that the eval code will lookup variables from
+  // inside closures. So `escaped = true`.
   lookupAll(strict, true, scope);
   return makeEvalExpression(expression);
 };
@@ -181,22 +183,25 @@ const lookup = (
   );
 };
 
-export const makeScopeReadExpression = partialx_x___(
+export const makeScopeReadExpression = partialx_x___x(
   lookup,
   makeFrameReadExpression,
   false,
+  null,
 );
 
-export const makeScopeTypeofExpression = partialx_x___(
+export const makeScopeTypeofExpression = partialx_x___x(
   lookup,
   makeFrameTypeofExpression,
   false,
+  null,
 );
 
-export const makeScopeDiscardExpression = partialx_x___(
+export const makeScopeDiscardExpression = partialx_x___x(
   lookup,
   makeFrameDiscardExpression,
   false,
+  null,
 );
 
 export const makeScopeWriteEffect = partialx_x___(

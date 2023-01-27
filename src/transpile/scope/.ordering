@@ -2,4 +2,6 @@ core.mjs
 variable.mjs
 frame
 frame.mjs
+extend.mjs
+layer.mjs
 index.mjs

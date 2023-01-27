@@ -10,10 +10,10 @@ import {
   partialxx___,
   partialxx____,
   partialxx_x_x_x__,
-  partialxf_,
+  // partialxf_,
   partialxf__,
   partialxf___,
-  partialxx_f__,
+  // partialxx_f__,
 } from "./util/index.mjs";
 
 import {
@@ -52,11 +52,11 @@ const makeIntrinsicApplyExpression = (
     annotation,
   );
 
-const makeIntrinsicApplyExpression1 = (
-  name,
-  expression1,
-  annotation = undefined,
-) => makeIntrinsicApplyExpression(name, [expression1], annotation);
+// const makeIntrinsicApplyExpression1 = (
+//   name,
+//   expression1,
+//   annotation = undefined,
+// ) => makeIntrinsicApplyExpression(name, [expression1], annotation);
 
 const makeIntrinsicApplyExpression2 = (
   name,
@@ -252,51 +252,51 @@ export const makeSetExpression = partialxx____(
 // global //
 ////////////
 
-export const makeTypeofGlobalExpression = partialxf_(
-  makeIntrinsicApplyExpression1,
-  "aran.typeofGlobal",
-  makeLiteralExpression,
-);
-
-export const makeReadGlobalExpression = partialxf_(
-  makeIntrinsicApplyExpression1,
-  "aran.readGlobal",
-  makeLiteralExpression,
-);
-
-export const makeDiscardGlobalSloppyExpression = partialxf_(
-  makeIntrinsicApplyExpression1,
-  "aran.discardGlobalSloppy",
-  makeLiteralExpression,
-);
-
-export const makeDiscardGlobalExpression = (
-  strict,
-  variable,
-  annotation = undefined,
-) => {
-  assert(!strict, "unexpected strict global delete");
-  return makeDiscardGlobalSloppyExpression(variable, annotation);
-};
-
-export const makeWriteGlobalStrictExpression = partialxf__(
-  makeIntrinsicApplyExpression2,
-  "aran.writeGlobalStrict",
-  makeLiteralExpression,
-);
-
-export const makeWriteGlobalSloppyExpression = partialxf__(
-  makeIntrinsicApplyExpression2,
-  "aran.writeGlobalSloppy",
-  makeLiteralExpression,
-);
-
-export const makeWriteGlobalExpression = partialxx_f__(
-  makeDualIntrinsicApplyExpression2,
-  "aran.writeGlobalStrict",
-  "aran.writeGlobalSloppy",
-  makeLiteralExpression,
-);
+// export const makeTypeofGlobalExpression = partialxf_(
+//   makeIntrinsicApplyExpression1,
+//   "aran.typeofGlobal",
+//   makeLiteralExpression,
+// );
+//
+// export const makeReadGlobalExpression = partialxf_(
+//   makeIntrinsicApplyExpression1,
+//   "aran.readGlobal",
+//   makeLiteralExpression,
+// );
+//
+// export const makeDiscardGlobalSloppyExpression = partialxf_(
+//   makeIntrinsicApplyExpression1,
+//   "aran.discardGlobalSloppy",
+//   makeLiteralExpression,
+// );
+//
+// export const makeDiscardGlobalExpression = (
+//   strict,
+//   variable,
+//   annotation = undefined,
+// ) => {
+//   assert(!strict, "unexpected strict global delete");
+//   return makeDiscardGlobalSloppyExpression(variable, annotation);
+// };
+//
+// export const makeWriteGlobalStrictExpression = partialxf__(
+//   makeIntrinsicApplyExpression2,
+//   "aran.writeGlobalStrict",
+//   makeLiteralExpression,
+// );
+//
+// export const makeWriteGlobalSloppyExpression = partialxf__(
+//   makeIntrinsicApplyExpression2,
+//   "aran.writeGlobalSloppy",
+//   makeLiteralExpression,
+// );
+//
+// export const makeWriteGlobalExpression = partialxx_f__(
+//   makeDualIntrinsicApplyExpression2,
+//   "aran.writeGlobalStrict",
+//   "aran.writeGlobalSloppy",
+//   makeLiteralExpression,
+// );
 
 ///////////
 // throw //

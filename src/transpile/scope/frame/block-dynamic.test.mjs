@@ -21,6 +21,15 @@ assertSuccess(
         ) :
         undefined
       );
+      void (
+        intrinsic.aran.binary('in', 'variable', 'dynamic') ?
+        intrinsic.aran.throw(
+          new intrinsic.SyntaxError(
+            "Variable 'variable' has already been declared",
+          ),
+        ) :
+        undefined
+      );
       void intrinsic.Reflect.defineProperty(
         'dynamic',
         'variable',
