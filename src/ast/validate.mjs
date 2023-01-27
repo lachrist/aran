@@ -57,7 +57,7 @@ const {
   Array: { isArray },
   Reflect: { ownKeys, apply, defineProperty },
   WeakMap: {
-    prototype: { set: setWeakMap, get: getWeakMap },
+    prototype: { set: setWeakMap, get: getWeakMap, has: hasWeakMap },
   },
 } = globalThis;
 
@@ -92,7 +92,24 @@ const saveDigest = (kind, node, digest) => {
   apply(setWeakMap, weakmaps[kind], [node, digest]);
 };
 
-const loadDigest = (kind, node) => apply(getWeakMap, weakmaps[kind], [node]);
+const makeDigest = (node, specific_digest) =>
+  includes(digestable, getArrayNodeType(node))
+    ? concat([node], specific_digest)
+    : specific_digest;
+
+const loadDigest = (kind, node) => {
+  if (apply(hasWeakMap, weakmaps[kind], [node])) {
+    return apply(getWeakMap, weakmaps[kind], [node]);
+  } else {
+    assert(isArrayNode(node), "not an array node");
+    assert(getNodeKind(node) === kind, "invalid node type");
+    const generic_digest = digestNodeGeneric(node);
+    const specific_digest = digestNodeSpecific(node, generic_digest);
+    const digest = makeDigest(node, specific_digest);
+    apply(setWeakMap, weakmaps[kind], [node, digest]);
+    return digest;
+  }
+};
 
 const isDeclareExternalStatement = partial_x(
   isNodeType,
@@ -226,9 +243,9 @@ const digestSubfield = (value, index, type, path) =>
 const digestField = (value, type, path) => {
   if (typeof type === "string") {
     if (hasOwn(syntax, type)) {
-      const digest = loadDigest(type, value);
-      assert(digest !== undefined, `missing node at ${path}`);
-      return digest;
+      return loadDigest(type, value);
+      // assert(digest !== undefined, `missing node at ${path}`);
+      // return digest;
     } else {
       assert(isSyntaxType(value, type), `invalid value at ${path}`);
       return [];
@@ -392,19 +409,12 @@ const digestNodeSpecific = partialx__(dispatchArrayNode1, {
 export const validateNode = (node) => {
   try {
     assert(isArrayNode(node), "not an array node");
-    const type = getArrayNodeType(node);
     const kind = getNodeKind(node);
     assert(kind !== undefined, "invalid node type");
     const generic_digest = digestNodeGeneric(node);
     const specific_digest = digestNodeSpecific(node, generic_digest);
     const proxy = new Proxy(node, immutable_trap_object);
-    saveDigest(
-      kind,
-      proxy,
-      includes(digestable, type)
-        ? concat([proxy], specific_digest)
-        : specific_digest,
-    );
+    saveDigest(kind, proxy, makeDigest(proxy, specific_digest));
     return proxy;
   } catch (error) {
     console.log("Faulty node >>", stringifyJSONSafe(node));

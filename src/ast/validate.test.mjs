@@ -16,6 +16,9 @@ assertThrow(() => makeValidNode("LiteralExpression", []));
   assertThrow(() => makeValidNode("LiteralExpression", circular));
 }
 
+// Nested unvalidated node
+validateNode(["ExpressionEffect", ["LiteralExpression", 123, null], null]);
+
 ///////////
 // Local //
 ///////////
