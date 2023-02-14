@@ -23,6 +23,9 @@ import {
 } from "./frame.mjs";
 
 import {
+  ROOT_SCOPE,
+  packScope,
+  unpackScope,
   makeScopeFrameScriptProgram,
   makeScopeFrameBlock,
   declareScope,
@@ -31,18 +34,12 @@ import {
   makeScopeReadExpression,
 } from "./scope.mjs";
 
-const {
-  JSON: { stringify: stringifyJSON, parse: parseJSON },
-} = globalThis;
-
 const STRICT = false;
 
-const ROOT_SCOPE = null;
-
-let serialized_scope = null;
+let packed_scope = null;
 
 const spyScope = (scope, result) => {
-  serialized_scope = stringifyJSON(scope);
+  packed_scope = packScope(scope);
   return result;
 };
 
@@ -108,7 +105,7 @@ assertSuccess(
     makeEvalProgram(
       makeScopeFrameBlock(
         STRICT,
-        parseJSON(serialized_scope),
+        unpackScope(packed_scope),
         [],
         [createFrame(MACRO, META, {})],
         (scope) => {

@@ -7,6 +7,9 @@ import {
   partialx____,
   partial__x_x,
   partial__x__,
+  bind_,
+  convertListArray,
+  convertArrayList,
 } from "../../util/index.mjs";
 
 import {
@@ -26,6 +29,22 @@ import {
   makeFrameDiscardExpression,
   makeFrameWriteEffect,
 } from "./frame.mjs";
+
+const {
+  JSON: { stringify: stringifyJSON, parse: parseJSON },
+} = globalThis;
+
+//////////
+// Core //
+//////////
+
+export const ROOT_SCOPE = null;
+
+const deepClone = bind_(parseJSON, stringifyJSON);
+
+export const packScope = bind_(deepClone, convertListArray);
+
+export const unpackScope = bind_(deepClone, convertArrayList);
 
 ///////////
 // Block //
