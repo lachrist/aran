@@ -31,7 +31,7 @@ export const conflictFrame = (
   _kind,
   variable,
 ) => {
-  assert(!hasOwn(bindings, variable), "duplicate intrinsic variable");
+  assert(!hasOwn(bindings, variable), "duplicate macro variable");
 };
 
 export const harvestFrameHeader = constant_([]);
@@ -45,7 +45,7 @@ export const declareFrame = (
   variable,
   { macro },
 ) => {
-  assert(!hasOwn(bindings, variable), "duplicate intrinsic variable");
+  assert(!hasOwn(bindings, variable), "duplicate macro variable");
   defineProperty(bindings, variable, {
     __proto__: NULL_DATA_DESCRIPTOR,
     value: macro,
