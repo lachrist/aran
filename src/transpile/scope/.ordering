@@ -1,6 +1,7 @@
 variable.mjs
-frame
+frames
 frame.mjs
+scope.mjs
 extend.mjs
 layer.mjs
 index.mjs

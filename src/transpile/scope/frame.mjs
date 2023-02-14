@@ -1,106 +1,100 @@
-import { flatMap, concat, reduce, includes, slice, every } from "array-lite";
+import { includes } from "array-lite";
+import { getVariableLayer } from "./variable.mjs";
 
-import {
-  consFlip,
-  assert,
-  partialx__,
-  partialx____,
-  partial__x_x,
-  partial__x__,
-} from "../../util/index.mjs";
+import * as BlockDynamic from "./frames/block-dynamic.mjs";
+import * as BlockStaticDead from "./frames/block-static-dead.mjs";
+import * as BlockStatic from "./frames/block-static.mjs";
+import * as ClosureDynamic from "./frames/closure-dynamic.mjs";
+import * as ClosureStatic from "./frames/closure-static.mjs";
+import * as DefineDynamic from "./frames/define-dynamic.mjs";
+import * as DefineStatic from "./frames/define-static.mjs";
+import * as EmptyDynamicWith from "./frames/empty-dynamic-with.mjs";
+import * as EmptyVoid from "./frames/empty-void.mjs";
+import * as Enclave from "./frames/enclave.mjs";
+import * as EscapeClosure from "./frames/escape-closure.mjs";
+import * as Illegal from "./frames/illegal.mjs";
+import * as ImportStatic from "./frames/import-static.mjs";
+import * as Macro from "./frames/macro.mjs";
 
-import {
-  makeScriptProgram,
-  makeBlock,
-  makeEvalExpression,
-} from "../../ast/index.mjs";
+export const BLOCK_DYNAMIC = "block-dynamic";
+export const BLOCK_STATIC_DEAD = "block-static-dead";
+export const BLOCK_STATIC = "block-static";
+export const CLOSURE_DYNAMIC = "closure-dynamic";
+export const CLOSURE_STATIC = "closure-static";
+export const DEFINE_DYNAMIC = "define-dynamic";
+export const DEFINE_STATIC = "define-static";
+export const EMPTY_DYNAMIC_WITH = "empty-dynamic-with";
+export const EMPTY_VOID = "empty-void";
+export const ENCLAVE = "enclave";
+export const ESCAPE_CLOSURE = "escape-closure";
+export const ILLEGAL = "illegal";
+export const IMPORT_STATIC = "import-static";
+export const MACRO = "macro";
 
-import {
-  harvestFrameHeader,
-  harvestFramePrelude,
-  declareFrame,
-  makeFrameInitializeStatementArray,
-  lookupFrameAll,
-  makeFrameReadExpression,
-  makeFrameTypeofExpression,
-  makeFrameDiscardExpression,
-  makeFrameWriteEffect,
-} from "./frame/index.mjs";
-
-///////////
-// Block //
-///////////
-
-const isUnique = (element, index, array) =>
-  !includes(slice(array, 0, index), element);
-
-const makeScopeNode = (
-  makeNode,
-  _strict,
-  scope,
-  frames,
-  makeStatementArray,
-) => {
-  scope = reduce(frames, consFlip, scope);
-  const statements2 = makeStatementArray(scope);
-  const variables = flatMap(frames, harvestFrameHeader);
-  const statements1 = flatMap(frames, harvestFramePrelude);
-  assert(every(variables, isUnique), "duplicate variable after grouping");
-  return makeNode(variables, concat(statements1, statements2));
+const libraries = {
+  __proto__: null,
+  [BLOCK_DYNAMIC]: BlockDynamic,
+  [BLOCK_STATIC_DEAD]: BlockStaticDead,
+  [BLOCK_STATIC]: BlockStatic,
+  [CLOSURE_DYNAMIC]: ClosureDynamic,
+  [CLOSURE_STATIC]: ClosureStatic,
+  [DEFINE_DYNAMIC]: DefineDynamic,
+  [DEFINE_STATIC]: DefineStatic,
+  [EMPTY_DYNAMIC_WITH]: EmptyDynamicWith,
+  [EMPTY_VOID]: EmptyVoid,
+  [ENCLAVE]: Enclave,
+  [ESCAPE_CLOSURE]: EscapeClosure,
+  [ILLEGAL]: Illegal,
+  [IMPORT_STATIC]: ImportStatic,
+  [MACRO]: Macro,
 };
 
-export const makeScopeFrameBlock = (
-  strict,
-  scope,
-  labels,
-  frames,
-  makeStatementArray,
-) =>
-  makeScopeNode(
-    partialx__(makeBlock, labels),
-    strict,
-    scope,
-    frames,
-    makeStatementArray,
-  );
+////////////
+// Create //
+////////////
 
-export const makeScopeFrameScriptProgram = partialx____(
-  makeScopeNode,
-  (variables, statements) => {
-    assert(variables.length === 0, "unexpected script header");
-    return makeScriptProgram(statements);
-  },
-);
-
-//////////
-// Eval //
-//////////
-
-const lookupScopeAll = (strict, scope1) => {
-  if (scope1 !== null) {
-    const { car: frame, cdr: scope2 } = scope1;
-    // We need to assume the worse case regarding deadzone.
-    // That is that the eval code will lookup variables from
-    // inside closures. So `escaped = true`.
-    lookupFrameAll(strict, true, frame);
-    lookupScopeAll(strict, scope2);
-  }
+export const createFrame = (type, layer, options) => {
+  const { createFrame: createFrameInner } = libraries[type];
+  return {
+    type,
+    layer,
+    inner: createFrameInner(options),
+  };
 };
 
-export const makeScopeEvalExpression = (strict, scope, expression) => {
-  lookupScopeAll(strict, scope);
-  return makeEvalExpression(expression);
+/////////////
+// Harvest //
+/////////////
+
+const generateHarvest = (name) => (frame) => {
+  const { [name]: harvestFrameInner } = libraries[frame.type];
+  return harvestFrameInner(frame.inner);
 };
+
+export const harvestFrameHeader = generateHarvest("harvestFrameHeader");
+
+export const harvestFramePrelude = generateHarvest("harvestFramePrelude");
 
 /////////////
 // Declare //
 /////////////
 
-export const declareScope = (strict, scope1, kind, variable, options) => {
-  assert(scope1 !== null, "missing binding scope during declaration");
-  const { car: frame, cdr: scope2 } = scope1;
-  if (!declareFrame(strict, frame, kind, variable, options)) {
-    declareScope(strict, scope2, kind, variable, options);
+export const declareFrame = (strict, frame, kind, variable, options) => {
+  const {
+    KINDS,
+    declareFrame: declareFrameInner,
+    conflictFrame: conflictFrameInner,
+  } = libraries[frame.type];
+  if (frame.layer === getVariableLayer(variable)) {
+    if (includes(KINDS, kind)) {
+      declareFrameInner(strict, frame.inner, kind, variable, options);
+      return true;
+    } else {
+      conflictFrameInner(strict, frame.inner, kind, variable);
+      return false;
+    }
+  } else {
+    return false;
   }
 };
 
@@ -108,75 +102,77 @@ export const declareScope = (strict, scope1, kind, variable, options) => {
 // Initialize //
 ////////////////
 
-export const makeScopeInitializeStatementArray = (
+export const makeFrameInitializeStatementArray = (
   strict,
-  scope1,
+  frame,
   kind,
   variable,
   expression,
 ) => {
-  assert(scope1 !== null, "missing binding scope during initialization");
-  const { car: frame, cdr: scope2 } = scope1;
-  const maybe = makeFrameInitializeStatementArray(
-    strict,
-    frame,
-    kind,
-    variable,
-    expression,
-  );
-  if (maybe === null) {
-    return makeScopeInitializeStatementArray(
-      strict,
-      scope2,
-      kind,
-      variable,
-      expression,
-    );
+  const {
+    KINDS,
+    makeFrameInitializeStatementArray: makeFrameInnerInitializeStatementArray,
+    conflictFrame: conflictFrameInner,
+  } = libraries[frame.type];
+  if (frame.layer === getVariableLayer(variable)) {
+    if (includes(KINDS, kind)) {
+      return makeFrameInnerInitializeStatementArray(
+        strict,
+        frame.inner,
+        kind,
+        variable,
+        expression,
+      );
+    } else {
+      conflictFrameInner(strict, frame.inner, kind, variable);
+      return null;
+    }
   } else {
-    return maybe;
+    return null;
   }
+};
+
+///////////////
+// LookupAll //
+///////////////
+
+export const lookupFrameAll = (strict, escaped, frame) => {
+  const { lookupFrameAll: lookupFrameInnerAll } = libraries[frame.type];
+  lookupFrameInnerAll(strict, escaped, frame.inner);
 };
 
 ////////////
 // Lookup //
 ////////////
 
-const compileMakeScopeLookupNode = (makeFrameLookupNode) => {
-  const makeScopeLookupNode = (strict, scope1, escaped, variable, options) => {
-    assert(scope1 !== null, "missing binding scope during declaration");
-    const { car: frame, cdr: scope2 } = scope1;
-    return makeFrameLookupNode(
-      makeScopeLookupNode,
-      strict,
-      frame,
-      scope2,
-      escaped,
-      variable,
-      options,
-    );
+const generateLookup =
+  (name) => (next, strict, frame, scope, escaped, variable, options) => {
+    if (frame.layer === getVariableLayer(variable)) {
+      const { [name]: makeFrameInnerLookupNode } = libraries[frame.type];
+      return makeFrameInnerLookupNode(
+        next,
+        strict,
+        frame.inner,
+        scope,
+        escaped,
+        variable,
+        options,
+      );
+    } else {
+      return next(strict, scope, escaped, variable, options);
+    }
   };
-  return makeScopeLookupNode;
-};
 
-export const makeScopeReadExpression = partial__x_x(
-  compileMakeScopeLookupNode(makeFrameReadExpression),
-  false,
-  null,
+export const makeFrameReadExpression = generateLookup(
+  "makeFrameReadExpression",
 );
 
-export const makeScopeTypeofExpression = partial__x_x(
-  compileMakeScopeLookupNode(makeFrameTypeofExpression),
-  false,
-  null,
+export const makeFrameTypeofExpression = generateLookup(
+  "makeFrameTypeofExpression",
 );
 
-export const makeScopeDiscardExpression = partial__x_x(
-  compileMakeScopeLookupNode(makeFrameDiscardExpression),
-  false,
-  null,
+export const makeFrameDiscardExpression = generateLookup(
+  "makeFrameDiscardExpression",
 );
 
-export const makeScopeWriteEffect = partial__x__(
-  compileMakeScopeLookupNode(makeFrameWriteEffect),
-  false,
-);
+export const makeFrameWriteEffect = generateLookup("makeFrameWriteEffect");

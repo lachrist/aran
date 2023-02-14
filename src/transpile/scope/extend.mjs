@@ -27,9 +27,9 @@ import {
   ILLEGAL,
   IMPORT_STATIC,
   MACRO,
-} from "./frame/index.mjs";
+} from "./frame.mjs";
 
-import { makeScopeFrameBlock, makeScopeFrameScriptProgram } from "./frame.mjs";
+import { makeScopeFrameBlock, makeScopeFrameScriptProgram } from "./scope.mjs";
 
 ///////////////
 // Blueprint //

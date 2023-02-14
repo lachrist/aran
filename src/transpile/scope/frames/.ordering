@@ -14,4 +14,3 @@ escape-closure.mjs
 illegal.mjs
 import-static.mjs
 macro.mjs
-index.mjs

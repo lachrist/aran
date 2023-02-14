@@ -18,7 +18,7 @@ import {
   makeScopeTypeofExpression,
   makeScopeDiscardExpression,
   makeScopeWriteEffect,
-} from "./frame.mjs";
+} from "./scope.mjs";
 
 const makeOptimisticWriteEffect = (strict, scope, variable, expression) => {
   const counter = createCounter(0);

@@ -1,209 +1,135 @@
 import { concat } from "array-lite";
 
-import { assertSuccess } from "../../__fixture__.mjs";
+import { assertSuccess, assertEqual } from "../../__fixture__.mjs";
 
 import {
-  makeEvalProgram,
-  makeReturnStatement,
-  makeLiteralExpression,
-  makeEffectStatement,
   makeExpressionEffect,
+  makeEffectStatement,
+  makeBlock,
+  makeLiteralExpression,
 } from "../../ast/index.mjs";
 
-import { allignBlock, allignProgram } from "../../allign/index.mjs";
+import { allignBlock } from "../../allign/index.mjs";
 
-import { BASE, META, makeMetaVariable } from "./variable.mjs";
+import { makeMetaVariable } from "./variable.mjs";
 
 import {
+  CLOSURE_STATIC,
   createFrame,
-  BLOCK_STATIC,
-  DEFINE_STATIC,
-  ESCAPE_CLOSURE,
-  MACRO,
-} from "./frame/index.mjs";
-
-import {
-  makeScopeFrameScriptProgram,
-  makeScopeFrameBlock,
-  declareScope,
-  makeScopeInitializeStatementArray,
-  makeScopeEvalExpression,
-  makeScopeReadExpression,
+  harvestFrameHeader,
+  harvestFramePrelude,
+  lookupFrameAll,
+  declareFrame,
+  makeFrameInitializeStatementArray,
+  makeFrameReadExpression,
 } from "./frame.mjs";
 
-const {
-  JSON: { stringify: stringifyJSON, parse: parseJSON },
-} = globalThis;
+const { Error } = globalThis;
 
-const STRICT = false;
+const STRICT = true;
 
-const ROOT_SCOPE = null;
+const ESCAPED = true;
 
-let serialized_scope = null;
+const frame = createFrame(CLOSURE_STATIC, "meta", {});
 
-const spyScope = (scope, result) => {
-  serialized_scope = stringifyJSON(scope);
-  return result;
-};
+// Declare on other layer //
+assertEqual(declareFrame(STRICT, frame, "var", "base", { exports: [] }), false);
+
+// Declare on same layer but other kind //
+assertEqual(
+  declareFrame(STRICT, frame, "const", makeMetaVariable("meta", 123), {
+    exports: [],
+  }),
+  false,
+);
+
+// Initialize on other layer //
+assertEqual(
+  makeFrameInitializeStatementArray(
+    STRICT,
+    frame,
+    "var",
+    "base",
+    makeLiteralExpression("right"),
+  ),
+  null,
+);
+
+// Initialize on same layer but other kind //
+assertEqual(
+  makeFrameInitializeStatementArray(
+    STRICT,
+    frame,
+    "const",
+    makeMetaVariable("meta", 123),
+    makeLiteralExpression("right"),
+  ),
+  null,
+);
+
+assertEqual(
+  declareFrame(STRICT, frame, "var", makeMetaVariable("meta", 123), {
+    exports: [],
+  }),
+  true,
+);
+
+lookupFrameAll(STRICT, ESCAPED, frame);
+
+const body = concat(
+  makeFrameInitializeStatementArray(
+    STRICT,
+    frame,
+    "var",
+    makeMetaVariable("meta", 123),
+    makeLiteralExpression("right"),
+  ),
+  [
+    makeEffectStatement(
+      makeExpressionEffect(
+        makeFrameReadExpression(
+          (_strict, _scope, _escaped, _variable, _options) =>
+            makeLiteralExpression("next"),
+          STRICT,
+          frame,
+          "scope",
+          ESCAPED,
+          "base",
+          null,
+        ),
+      ),
+    ),
+    makeEffectStatement(
+      makeExpressionEffect(
+        makeFrameReadExpression(
+          (_strict, _scope, _escaped, _variable, _options) => {
+            throw new Error("unexpected next");
+          },
+          STRICT,
+          frame,
+          "scope",
+          ESCAPED,
+          makeMetaVariable("meta", 123),
+          null,
+        ),
+      ),
+    ),
+  ],
+);
 
 assertSuccess(
   allignBlock(
-    makeScopeFrameBlock(
-      STRICT,
-      ROOT_SCOPE,
-      ["label"],
-      [
-        createFrame(BLOCK_STATIC, BASE, {}),
-        createFrame(DEFINE_STATIC, META, {}),
-      ],
-      (scope) => {
-        declareScope(STRICT, scope, "const", "variable", { exports: [] });
-        return concat(
-          [
-            makeEffectStatement(
-              makeExpressionEffect(
-                spyScope(
-                  scope,
-                  makeScopeEvalExpression(
-                    STRICT,
-                    scope,
-                    makeLiteralExpression("code"),
-                  ),
-                ),
-              ),
-            ),
-          ],
-          makeScopeInitializeStatementArray(
-            STRICT,
-            scope,
-            "const",
-            "variable",
-            makeLiteralExpression("right"),
-          ),
-          [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeReadExpression(STRICT, scope, "variable", null),
-              ),
-            ),
-          ],
-        );
-      },
+    makeBlock(
+      [],
+      harvestFrameHeader(frame),
+      concat(harvestFramePrelude(frame), body),
     ),
-    `
-      label: {
-        let variable, initialized;
-        initialized = false;
-        void eval("code");
-        variable = "right";
-        initialized = true;
-        void variable;
-      }
-    `,
-  ),
-);
-
-assertSuccess(
-  allignProgram(
-    makeEvalProgram(
-      makeScopeFrameBlock(
-        STRICT,
-        parseJSON(serialized_scope),
-        [],
-        [createFrame(MACRO, META, {})],
-        (scope) => {
-          declareScope(
-            STRICT,
-            scope,
-            "macro",
-            makeMetaVariable("VARIABLE", 123),
-            {
-              macro: makeLiteralExpression(123),
-            },
-          );
-          return [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeReadExpression(
-                  STRICT,
-                  scope,
-                  makeMetaVariable("VARIABLE", 123),
-                  null,
-                ),
-              ),
-            ),
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeReadExpression(
-                  STRICT,
-                  {
-                    car: createFrame(ESCAPE_CLOSURE, BASE, {}),
-                    cdr: scope,
-                  },
-                  "variable",
-                  null,
-                ),
-              ),
-            ),
-            makeReturnStatement(makeLiteralExpression("completion")),
-          ];
-        },
-      ),
-    ),
-    `
-      "eval";
-      {
-        void 123;
-        void (
-          initialized ?
-          variable :
-          intrinsic.aran.throw(
-            new intrinsic.ReferenceError(
-              "Cannot access variable 'variable' before initialization",
-            ),
-          )
-        );
-        return "completion";
-      }
-    `,
-  ),
-);
-
-assertSuccess(
-  allignProgram(
-    makeScopeFrameScriptProgram(
-      STRICT,
-      ROOT_SCOPE,
-      [createFrame(MACRO, META, {})],
-      (scope) => {
-        declareScope(
-          STRICT,
-          scope,
-          "macro",
-          makeMetaVariable("variable", 123),
-          {
-            macro: makeLiteralExpression("binding"),
-          },
-        );
-        return [
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeScopeReadExpression(
-                STRICT,
-                scope,
-                makeMetaVariable("variable", 123),
-                null,
-              ),
-            ),
-          ),
-          makeReturnStatement(makeLiteralExpression("completion")),
-        ];
-      },
-    ),
-    `
-      "script";
-      void "binding";
-      return "completion";
-    `,
+    `{
+      let VARIABLE;
+      VARIABLE = undefined;
+      VARIABLE = 'right';
+      void 'next';
+      void VARIABLE;
+    }`,
   ),
 );
