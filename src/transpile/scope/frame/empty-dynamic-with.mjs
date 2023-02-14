@@ -51,8 +51,9 @@ const compileMakeLookupNode =
   (
     next,
     strict,
-    _escaped,
     { dynamic: macro, observable },
+    scope,
+    escaped,
     variable,
     options,
   ) => {
@@ -73,7 +74,7 @@ const compileMakeLookupNode =
         makeBinaryExpression("in", makeLiteralExpression(variable), macro),
       ),
       makePresentNode(strict, macro, makeLiteralExpression(variable), options),
-      next(),
+      next(strict, scope, escaped, variable, options),
     );
   };
 

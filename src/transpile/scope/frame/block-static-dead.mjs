@@ -3,11 +3,11 @@
 // {
 //   y + throwReferenceError("'x' is not initialized");
 //   const iterator = iterator[Symbol.iterator]();
-//   let step = iterator.next();
+//   let step = iterator.next(strict, scope, escaped, variable, options);
 //   while (!step.done) {
 //     let x;
 //     x = step.value;
-//     stop = iterator.next();
+//     stop = iterator.next(strict, scope, escaped, variable, options);
 //     ...;
 //   }
 // }
@@ -80,8 +80,10 @@ export const lookupAll = constant___(undefined);
 
 const compileMakeLookupNode =
   (makeNode) =>
-  (next, _strict, _escaped, { bindings }, variable, _options) =>
-    hasOwn(bindings, variable) ? makeNode(variable) : next();
+  (next, strict, { bindings }, scope, escaped, variable, options) =>
+    hasOwn(bindings, variable)
+      ? makeNode(variable)
+      : next(strict, scope, escaped, variable, options);
 
 export const makeReadExpression = compileMakeLookupNode(
   makeThrowDeadzoneExpression,

@@ -51,7 +51,8 @@ assertSuccess(
       {
         type: "discard",
         variable: "VARIABLE",
-        next: () => makeLiteralExpression("next"),
+        next: (_strict, _frame, _scope, _escaped, _variable, _options) =>
+          makeLiteralExpression("next"),
         code: `(
           intrinsic.aran.binary("in", "VARIABLE", "dynamic") ?
           intrinsic.aran.deleteSloppy("dynamic", "VARIABLE") :
@@ -61,7 +62,8 @@ assertSuccess(
       {
         type: "read",
         variable: "VARIABLE",
-        next: () => makeLiteralExpression("next"),
+        next: (_strict, _frame, _scope, _escaped, _variable, _options) =>
+          makeLiteralExpression("next"),
         code: `(
           intrinsic.aran.binary("in", "VARIABLE", "dynamic") ?
           (

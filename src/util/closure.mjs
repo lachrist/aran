@@ -36,6 +36,11 @@ export const deadcode______ = (message) => (_x1, _x2, _x3, _x4, _x5, _x6) => {
   throw new DeadcodeError(message);
 };
 
+export const deadcode_______ =
+  (message) => (_x1, _x2, _x3, _x4, _x5, _x6, _x7) => {
+    throw new DeadcodeError(message);
+  };
+
 //////////
 // noop //
 //////////
@@ -59,6 +64,7 @@ export const constant___ = (x) => (_y1, _y2, _y3) => x;
 export const constant____ = (x) => (_y1, _y2, _y3, _y4) => x;
 export const constant_____ = (x) => (_y1, _y2, _y3, _y4, _y5) => x;
 export const constant______ = (x) => (_y1, _y2, _y3, _y4, _y5, _y6) => x;
+export const constant_______ = (x) => (_y1, _y2, _y3, _y4, _y5, _y6, _y7) => x;
 
 //////////
 // Flip //
@@ -126,6 +132,7 @@ export const dropx_x___ = (f) => (_x1, x2, _x3, x4, x5, x6) =>
 
 export const drop_____xx = (f) => (x1, x2, x3, x4, x5, _x6, _x7) =>
   f(x1, x2, x3, x4, x5);
+export const dropxxxxx_x = (f) => (_x1, _x2, _x3, _x4, _x5, x6, _x7) => f(x6);
 
 //////////
 // Bind //

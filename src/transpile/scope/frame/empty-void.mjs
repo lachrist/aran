@@ -2,9 +2,9 @@ import {
   incrementCounter,
   constant_,
   constant____,
-  dropxxxx_x,
+  dropxxxxx_x,
   deadcode_____,
-  constant______,
+  constant_______,
   constant___,
 } from "../../../util/index.mjs";
 
@@ -39,21 +39,22 @@ export const makeInitializeStatementArray = deadcode_____(
 
 export const lookupAll = constant___(undefined);
 
-export const makeReadExpression = dropxxxx_x(makeThrowMissingExpression);
+export const makeReadExpression = dropxxxxx_x(makeThrowMissingExpression);
 
-export const makeTypeofExpression = constant______(
+export const makeTypeofExpression = constant_______(
   makeLiteralExpression("undefined"),
 );
 
-export const makeDiscardExpression = constant______(
+export const makeDiscardExpression = constant_______(
   makeLiteralExpression(true),
 );
 
 export const makeWriteEffect = (
   _next,
   strict,
-  _escaped,
   { dynamic: macro },
+  _scope,
+  _escaped,
   variable,
   { counter, expression },
 ) => {

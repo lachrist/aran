@@ -51,6 +51,7 @@ export const default_scenario = {
   variable: "dummy_variable",
   options: {},
   strict: false,
+  scope: null,
   escaped: false,
   next: nextForbidden,
   code: "",
@@ -75,10 +76,10 @@ const arities = {
   harvestHeader: 1,
   declare: 5,
   makeInitializeStatementArray: 5,
-  makeReadExpression: 6,
-  makeTypeofExpression: 6,
-  makeDiscardExpression: 6,
-  makeWriteEffect: 6,
+  makeReadExpression: 7,
+  makeTypeofExpression: 7,
+  makeDiscardExpression: 7,
+  makeWriteEffect: 7,
 };
 
 const names = ownKeys(arities);
@@ -154,8 +155,9 @@ const generateTest =
             makeWriteEffect(
               scenario.next,
               scenario.strict,
-              scenario.escaped,
               frame,
+              scenario.scope,
+              scenario.escaped,
               scenario.variable,
               {
                 expression: scenario.right,
@@ -173,8 +175,9 @@ const generateTest =
               makeLookupExpression(
                 scenario.next,
                 scenario.strict,
-                scenario.escaped,
                 frame,
+                scenario.scope,
+                scenario.escaped,
                 scenario.variable,
                 null,
               ),

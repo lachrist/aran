@@ -88,10 +88,12 @@ const body = concat(
     makeEffectStatement(
       makeExpressionEffect(
         makeFrameReadExpression(
-          () => makeLiteralExpression("next"),
+          (_strict, _scope, _escaped, _variable, _options) =>
+            makeLiteralExpression("next"),
           STRICT,
-          ESCAPED,
           frame,
+          "scope",
+          ESCAPED,
           "base",
           null,
         ),
@@ -100,12 +102,13 @@ const body = concat(
     makeEffectStatement(
       makeExpressionEffect(
         makeFrameReadExpression(
-          () => {
+          (_strict, _scope, _escaped, _variable, _options) => {
             throw new Error("unexpected next");
           },
           STRICT,
-          ESCAPED,
           frame,
+          "scope",
+          ESCAPED,
           makeMetaVariable("meta", 123),
           null,
         ),

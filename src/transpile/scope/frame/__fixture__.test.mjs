@@ -4,7 +4,7 @@ import {
   assertSuccess,
 } from "../../../__fixture__.mjs";
 
-import { push, deadcode______ } from "../../../util/index.mjs";
+import { push, deadcode_______ } from "../../../util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -22,7 +22,7 @@ assertSuccess(
       KINDS: ["kind"],
       create: (options) => {
         assertDeepEqual(options, {});
-        return { header: [], prelude: [] };
+        return { tag: "frame", header: [], prelude: [] };
       },
       harvestHeader: ({ header }) => header,
       harvestPrelude: ({ prelude }) => prelude,
@@ -45,40 +45,49 @@ assertSuccess(
       },
       makeInitializeStatementArray: (
         strict,
-        _frame,
+        { tag },
         kind,
         variable,
         expression,
       ) => {
         assertEqual(strict, true);
+        assertEqual(tag, "frame");
         assertEqual(kind, "kind");
         return [makeEffectStatement(makeWriteEffect(variable, expression))];
       },
       lookupAll: (_strict, _escaped, _frame) => {},
       makeReadExpression: (
-        _next,
+        next,
         strict,
+        { tag },
+        scope,
         escaped,
-        _frame,
         variable,
         options,
       ) => {
+        assertEqual(typeof next, "function");
         assertEqual(strict, false);
+        assertEqual(tag, "frame");
+        assertEqual(scope, "scope");
         assertEqual(escaped, false);
         assertEqual(options, null);
         return makeReadExpression(variable);
       },
-      makeTypeofExpression: deadcode______("makeTypeofExpression"),
-      makeDiscardExpression: deadcode______("makeDiscardExpression"),
+      makeTypeofExpression: deadcode_______("makeTypeofExpression"),
+      makeDiscardExpression: deadcode_______("makeDiscardExpression"),
       makeWriteEffect: (
-        _next,
+        next,
         strict,
+        { tag },
+        scope,
         escaped,
-        _frame,
         variable,
         { expression },
       ) => {
+        assertEqual(typeof next, "function");
         assertEqual(strict, true);
+        assertEqual(tag, "frame");
+        assertEqual(scope, "scope");
         assertEqual(escaped, true);
         return makeWriteEffect(variable, expression);
       },
@@ -121,6 +130,7 @@ assertSuccess(
           type: "write",
           strict: true,
           escaped: true,
+          scope: "scope",
           variable: "variable",
           right: makeLiteralExpression("right"),
           code: "variable = 'right'",
@@ -128,6 +138,7 @@ assertSuccess(
         {
           type: "read",
           strict: false,
+          scope: "scope",
           escaped: false,
           variable: "variable",
           code: "variable",

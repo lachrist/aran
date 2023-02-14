@@ -160,7 +160,7 @@ export const lookupAll = constant___(undefined);
 
 const compileMakeLookupNode =
   (makeConditionalNode, makeDeadNode, makeLiveNode) =>
-  (next, _strict, escaped, frame, variable, options) => {
+  (next, strict, frame, scope, escaped, variable, options) => {
     if (hasOwn(frame.static, variable)) {
       if (makeDeadNode === null) {
         return makeLiveNode(
@@ -222,7 +222,7 @@ const compileMakeLookupNode =
                 options,
               ),
             ),
-        next(),
+        next(strict, scope, escaped, variable, options),
       );
     }
   };

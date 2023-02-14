@@ -70,12 +70,12 @@ export const lookupAll = constant___(undefined);
 
 const compileMakeLookupNode =
   (makePresentNode) =>
-  (next, _strict, _escaped, { static: bindings }, variable, _options) => {
+  (next, strict, { static: bindings }, scope, escaped, variable, options) => {
     if (hasOwn(bindings, variable)) {
       const { source, specifier } = bindings[variable];
       return makePresentNode(variable, source, specifier);
     } else {
-      return next();
+      return next(strict, scope, escaped, variable, options);
     }
   };
 

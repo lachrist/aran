@@ -160,7 +160,7 @@ export const lookupAll = (_strict, escaped, { bindings, distant }) => {
 
 const compileMakeLookupNode =
   (makeConditionalNode, makeDeadNode, makeLiveNode) =>
-  (next, _strict, escaped, { bindings, distant }, variable, options) => {
+  (next, strict, { bindings, distant }, scope, escaped, variable, options) => {
     if (hasOwn(bindings, variable)) {
       const binding = bindings[variable];
       if (makeDeadNode === null) {
@@ -198,7 +198,7 @@ const compileMakeLookupNode =
         }
       }
     } else {
-      return next();
+      return next(strict, scope, escaped, variable, options);
     }
   };
 

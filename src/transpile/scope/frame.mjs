@@ -4,8 +4,8 @@ import {
   assert,
   partialx__,
   partialx____,
-  partialx_x___,
-  partialx_x___x,
+  partial__x_x,
+  partial__x__,
 } from "../../util/index.mjs";
 
 import {
@@ -159,53 +159,45 @@ export const makeScopeInitializeStatementArray = (
 // Lookup //
 ////////////
 
-const lookup = (
-  makeFrameLookupNode,
-  strict,
-  escaped1,
-  scope1,
-  variable,
-  options,
-) => {
-  const {
-    scope: scope2,
-    frame,
-    escaped: escaped2,
-  } = popScopeFrame(scope1, escaped1);
-  return makeFrameLookupNode(
-    () =>
-      lookup(makeFrameLookupNode, strict, escaped2, scope2, variable, options),
-    strict,
-    escaped2,
-    frame,
-    variable,
-    options,
-  );
+const compileMakeScopeLookupNode = (makeFrameLookupNode) => {
+  const makeScopeLookupNode = (strict, scope1, escaped1, variable, options) => {
+    const {
+      scope: scope2,
+      escaped: escape2,
+      frame,
+    } = popScopeFrame(scope1, escaped1);
+    return makeFrameLookupNode(
+      makeScopeLookupNode,
+      strict,
+      frame,
+      scope2,
+      escape2,
+      variable,
+      options,
+    );
+  };
+  return makeScopeLookupNode;
 };
 
-export const makeScopeReadExpression = partialx_x___x(
-  lookup,
-  makeFrameReadExpression,
+export const makeScopeReadExpression = partial__x_x(
+  compileMakeScopeLookupNode(makeFrameReadExpression),
   false,
   null,
 );
 
-export const makeScopeTypeofExpression = partialx_x___x(
-  lookup,
-  makeFrameTypeofExpression,
+export const makeScopeTypeofExpression = partial__x_x(
+  compileMakeScopeLookupNode(makeFrameTypeofExpression),
   false,
   null,
 );
 
-export const makeScopeDiscardExpression = partialx_x___x(
-  lookup,
-  makeFrameDiscardExpression,
+export const makeScopeDiscardExpression = partial__x_x(
+  compileMakeScopeLookupNode(makeFrameDiscardExpression),
   false,
   null,
 );
 
-export const makeScopeWriteEffect = partialx_x___(
-  lookup,
-  makeFrameWriteEffect,
+export const makeScopeWriteEffect = partial__x__(
+  compileMakeScopeLookupNode(makeFrameWriteEffect),
   false,
 );

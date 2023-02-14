@@ -4,7 +4,7 @@ import {
   constant____,
   assert,
   expect1,
-  dropxxxx_x,
+  dropxxxxx_x,
   incrementCounter,
   EnclaveLimitationAranError,
 } from "../../../util/index.mjs";
@@ -77,15 +77,16 @@ export const makeInitializeStatementArray = (
 
 export const lookupAll = constant___(undefined);
 
-export const makeReadExpression = dropxxxx_x(makeReadExternalExpression);
+export const makeReadExpression = dropxxxxx_x(makeReadExternalExpression);
 
-export const makeTypeofExpression = dropxxxx_x(makeTypeofExternalExpression);
+export const makeTypeofExpression = dropxxxxx_x(makeTypeofExternalExpression);
 
 export const makeDiscardExpression = (
   _next,
   _strict,
-  _escaped,
   _frame,
+  _scope,
+  _escaped,
   variable,
   _options,
 ) => {
@@ -97,8 +98,9 @@ export const makeDiscardExpression = (
 export const makeWriteEffect = (
   _next,
   strict,
-  _escaped,
   _frame,
+  _scope,
+  _escaped,
   variable,
   { counter, expression },
 ) => {

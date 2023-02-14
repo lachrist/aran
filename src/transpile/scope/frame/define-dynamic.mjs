@@ -60,16 +60,17 @@ const compileMakeLookupNode =
   (makePresentNode) =>
   (
     next,
-    _strict,
-    _escaped,
+    strict,
     { static: bindings, dynamic: macro },
+    scope,
+    escaped,
     variable,
     options,
   ) => {
     if (hasOwn(bindings, variable)) {
       return makePresentNode(macro, makeLiteralExpression(variable), options);
     } else {
-      return next();
+      return next(strict, scope, escaped, variable, options);
     }
   };
 

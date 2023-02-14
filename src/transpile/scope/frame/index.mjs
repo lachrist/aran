@@ -136,19 +136,20 @@ export const lookupFrameAll = (strict, escaped, frame) => {
 ////////////
 
 const generateLookup =
-  (name) => (next, strict, escaped, frame, variable, options) => {
+  (name) => (next, strict, frame, scope, escaped, variable, options) => {
     if (frame.layer === getVariableLayer(variable)) {
       const { [name]: makeLookupNode } = libraries[frame.type];
       return makeLookupNode(
         next,
         strict,
-        escaped,
         frame.inner,
+        scope,
+        escaped,
         variable,
         options,
       );
     } else {
-      return next();
+      return next(strict, scope, escaped, variable, options);
     }
   };
 

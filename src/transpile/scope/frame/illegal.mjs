@@ -45,14 +45,15 @@ export const lookupAll = constant___(undefined);
 
 const makeLookupNode = (
   next,
-  _strict,
-  _escaped,
+  strict,
   { static: bindings },
+  scope,
+  escaped,
   variable,
-  _options,
+  options,
 ) => {
   expect1(!hasOwn(bindings, variable), SyntaxAranError, "Illegal %s", variable);
-  return next();
+  return next(strict, scope, escaped, variable, options);
 };
 
 export const makeReadExpression = makeLookupNode;

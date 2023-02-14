@@ -109,7 +109,7 @@ export const lookupAll = constant___(undefined);
 
 const compileMakeLookupNode =
   (makePresentNode) =>
-  (next, _strict, _escaped, { bindings }, variable, options) => {
+  (next, strict, { bindings }, scope, escaped, variable, options) => {
     if (hasOwn(bindings, variable)) {
       return makePresentNode(
         mangleOriginalVariable(variable),
@@ -117,7 +117,7 @@ const compileMakeLookupNode =
         options,
       );
     } else {
-      return next();
+      return next(strict, scope, escaped, variable, options);
     }
   };
 

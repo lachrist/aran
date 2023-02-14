@@ -12,7 +12,8 @@ assertSuccess(
       {
         type: "read",
         variable: "variable",
-        next: () => makeLiteralExpression("next"),
+        next: (_strict, _frame, _scope, _escaped, _variable, _options) =>
+          makeLiteralExpression("next"),
         code: `"next"`,
       },
       {

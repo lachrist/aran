@@ -45,7 +45,7 @@ const enumerate = (start, end) => {
 
 const sum = (array) => reduce(array, (x1, x2) => x1 + x2, 0);
 
-forEach(combine(6, ["_"]), (description) => {
+forEach(combine(7, ["_"]), (description) => {
   const deadcode = Library[`deadcode${description}`];
   assertThrow(
     () =>
@@ -65,7 +65,7 @@ forEach(combine(6, ["_"]), (description) => {
   );
 });
 
-forEach(combine(6, ["_"]), (description) => {
+forEach(combine(7, ["_"]), (description) => {
   const constant = Library[`constant${description}`];
   assertEqual(
     apply(constant("result"), undefined, enumerate(0, description.length)),
@@ -108,20 +108,23 @@ forEach(["xx", "_xx", "x_x", "xx_"], (description) => {
   );
 });
 
-forEach(concat(combine(6, ["", "_", "x"]), ["_____xx"]), (description) => {
-  if (getOwnPropertyDescriptor(Library, `drop${description}`) !== undefined) {
-    const drop = Library[`drop${description}`];
-    const xs = [];
-    const ys = [];
-    for (let index = 0; index < description.length; index += 1) {
-      xs[xs.length] = index;
-      if (description[index] === "_") {
-        ys[ys.length] = index;
+forEach(
+  concat(combine(6, ["", "_", "x"]), ["_____xx", "xxxxx_x"]),
+  (description) => {
+    if (getOwnPropertyDescriptor(Library, `drop${description}`) !== undefined) {
+      const drop = Library[`drop${description}`];
+      const xs = [];
+      const ys = [];
+      for (let index = 0; index < description.length; index += 1) {
+        xs[xs.length] = index;
+        if (description[index] === "_") {
+          ys[ys.length] = index;
+        }
       }
+      assertDeepEqual(apply(drop(returnArguments), undefined, xs), ys);
     }
-    assertDeepEqual(apply(drop(returnArguments), undefined, xs), ys);
-  }
-});
+  },
+);
 
 forEach(
   concat(combine(6, ["", "_", "x", "f"]), [
