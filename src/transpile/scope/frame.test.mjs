@@ -12,14 +12,13 @@ import {
 
 import { allignBlock, allignProgram } from "../../allign/index.mjs";
 
-import { ROOT_SCOPE, packScope, unpackScope, encloseScope } from "./core.mjs";
-
 import { BASE, META, makeMetaVariable } from "./variable.mjs";
 
 import {
   createFrame,
   BLOCK_STATIC,
   DEFINE_STATIC,
+  ESCAPE_CLOSURE,
   MACRO,
 } from "./frame/index.mjs";
 
@@ -38,10 +37,12 @@ const {
 
 const STRICT = false;
 
+const ROOT_SCOPE = null;
+
 let serialized_scope = null;
 
 const spyScope = (scope, result) => {
-  serialized_scope = stringifyJSON(packScope(scope));
+  serialized_scope = stringifyJSON(scope);
   return result;
 };
 
@@ -107,7 +108,7 @@ assertSuccess(
     makeEvalProgram(
       makeScopeFrameBlock(
         STRICT,
-        unpackScope(parseJSON(serialized_scope)),
+        parseJSON(serialized_scope),
         [],
         [createFrame(MACRO, META, {})],
         (scope) => {
@@ -135,7 +136,10 @@ assertSuccess(
               makeExpressionEffect(
                 makeScopeReadExpression(
                   STRICT,
-                  encloseScope(scope),
+                  {
+                    car: createFrame(ESCAPE_CLOSURE, BASE, {}),
+                    cdr: scope,
+                  },
                   "variable",
                   null,
                 ),

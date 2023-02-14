@@ -1,6 +1,7 @@
-import { concat, reduce, includes, slice, every } from "array-lite";
+import { flatMap, concat, reduce, includes, slice, every } from "array-lite";
 
 import {
+  consFlip,
   assert,
   partialx__,
   partialx____,
@@ -13,8 +14,6 @@ import {
   makeBlock,
   makeEvalExpression,
 } from "../../ast/index.mjs";
-
-import { pushScopeFrame, popScopeFrame, hasScopeFrame } from "./core.mjs";
 
 import {
   harvestFrameHeader,
@@ -35,16 +34,6 @@ import {
 const isUnique = (element, index, array) =>
   !includes(slice(array, 0, index), element);
 
-const harvest = ({ header, prelude, scope: scope1 }, _frame) => {
-  const { scope: scope2, frame, escaped } = popScopeFrame(scope1, false);
-  assert(!escaped, "escaped scope during harvest");
-  return {
-    header: concat(harvestFrameHeader(frame), header),
-    prelude: concat(harvestFramePrelude(frame), prelude),
-    scope: scope2,
-  };
-};
-
 const makeScopeNode = (
   makeNode,
   _strict,
@@ -52,13 +41,10 @@ const makeScopeNode = (
   frames,
   makeStatementArray,
 ) => {
-  scope = reduce(frames, pushScopeFrame, scope);
+  scope = reduce(frames, consFlip, scope);
   const statements2 = makeStatementArray(scope);
-  const { prelude: statements1, header: variables } = reduce(frames, harvest, {
-    header: [],
-    prelude: [],
-    scope,
-  });
+  const variables = flatMap(frames, harvestFrameHeader);
+  const statements1 = flatMap(frames, harvestFramePrelude);
   assert(every(variables, isUnique), "duplicate variable after grouping");
   return makeNode(variables, concat(statements1, statements2));
 };
@@ -90,23 +76,19 @@ export const makeScopeFrameScriptProgram = partialx____(
 // Eval //
 //////////
 
-const lookupAll = (strict, escaped1, scope1) => {
-  if (hasScopeFrame(scope1)) {
-    const {
-      scope: scope2,
-      escaped: escaped2,
-      frame,
-    } = popScopeFrame(scope1, escaped1);
-    lookupFrameAll(strict, escaped2, frame);
-    lookupAll(strict, escaped2, scope2);
+const lookupScopeAll = (strict, scope1) => {
+  if (scope1 !== null) {
+    const { car: frame, cdr: scope2 } = scope1;
+    // We need to assume the worse case regarding deadzone.
+    // That is that the eval code will lookup variables from
+    // inside closures. So `escaped = true`.
+    lookupFrameAll(strict, true, frame);
+    lookupScopeAll(strict, scope2);
   }
 };
 
 export const makeScopeEvalExpression = (strict, scope, expression) => {
-  // We need to assume the worse case regarding deadzone.
-  // That is that the eval code will lookup variables from
-  // inside closures. So `escaped = true`.
-  lookupAll(strict, true, scope);
+  lookupScopeAll(strict, scope);
   return makeEvalExpression(expression);
 };
 
@@ -115,8 +97,8 @@ export const makeScopeEvalExpression = (strict, scope, expression) => {
 /////////////
 
 export const declareScope = (strict, scope1, kind, variable, options) => {
-  const { scope: scope2, frame, escaped } = popScopeFrame(scope1, false);
-  assert(!escaped, "escaped scope during declaration");
+  assert(scope1 !== null, "missing binding scope during declaration");
+  const { car: frame, cdr: scope2 } = scope1;
   if (!declareFrame(strict, frame, kind, variable, options)) {
     declareScope(strict, scope2, kind, variable, options);
   }
@@ -133,8 +115,8 @@ export const makeScopeInitializeStatementArray = (
   variable,
   expression,
 ) => {
-  const { scope: scope2, frame, escaped } = popScopeFrame(scope1, false);
-  assert(!escaped, "escaped scope during initialization");
+  assert(scope1 !== null, "missing binding scope during initialization");
+  const { car: frame, cdr: scope2 } = scope1;
   const maybe = makeFrameInitializeStatementArray(
     strict,
     frame,
@@ -160,18 +142,15 @@ export const makeScopeInitializeStatementArray = (
 ////////////
 
 const compileMakeScopeLookupNode = (makeFrameLookupNode) => {
-  const makeScopeLookupNode = (strict, scope1, escaped1, variable, options) => {
-    const {
-      scope: scope2,
-      escaped: escape2,
-      frame,
-    } = popScopeFrame(scope1, escaped1);
+  const makeScopeLookupNode = (strict, scope1, escaped, variable, options) => {
+    assert(scope1 !== null, "missing binding scope during declaration");
+    const { car: frame, cdr: scope2 } = scope1;
     return makeFrameLookupNode(
       makeScopeLookupNode,
       strict,
       frame,
       scope2,
-      escape2,
+      escaped,
       variable,
       options,
     );

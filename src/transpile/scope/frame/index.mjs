@@ -11,6 +11,7 @@ import * as DefineStatic from "./define-static.mjs";
 import * as EmptyDynamicWith from "./empty-dynamic-with.mjs";
 import * as EmptyVoid from "./empty-void.mjs";
 import * as Enclave from "./enclave.mjs";
+import * as EscapeClosure from "./escape-closure.mjs";
 import * as Illegal from "./illegal.mjs";
 import * as ImportStatic from "./import-static.mjs";
 import * as Macro from "./macro.mjs";
@@ -25,6 +26,7 @@ export const DEFINE_STATIC = "define-static";
 export const EMPTY_DYNAMIC_WITH = "empty-dynamic-with";
 export const EMPTY_VOID = "empty-void";
 export const ENCLAVE = "enclave";
+export const ESCAPE_CLOSURE = "escape-closure";
 export const ILLEGAL = "illegal";
 export const IMPORT_STATIC = "import-static";
 export const MACRO = "macro";
@@ -41,6 +43,7 @@ const libraries = {
   [EMPTY_DYNAMIC_WITH]: EmptyDynamicWith,
   [EMPTY_VOID]: EmptyVoid,
   [ENCLAVE]: Enclave,
+  [ESCAPE_CLOSURE]: EscapeClosure,
   [ILLEGAL]: Illegal,
   [IMPORT_STATIC]: ImportStatic,
   [MACRO]: Macro,

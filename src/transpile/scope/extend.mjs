@@ -9,8 +9,6 @@ import {
   makeIntrinsicExpression,
 } from "../../ast/index.mjs";
 
-import { encloseScope } from "./core.mjs";
-
 import { BASE, SPEC, META } from "./variable.mjs";
 
 import {
@@ -24,6 +22,7 @@ import {
   DEFINE_STATIC,
   EMPTY_DYNAMIC_WITH,
   EMPTY_VOID,
+  ESCAPE_CLOSURE,
   ENCLAVE,
   ILLEGAL,
   IMPORT_STATIC,
@@ -93,6 +92,12 @@ const createModuleBaseFrameArray = () => [
   createFrame(CLOSURE_STATIC, BASE, {}),
   createFrame(BLOCK_STATIC, BASE, { distant: false }),
   createFrame(IMPORT_STATIC, BASE, {}),
+];
+
+const createEscapeClosureFrameArray = () => [
+  createFrame(ESCAPE_CLOSURE, BASE, {}),
+  createFrame(ESCAPE_CLOSURE, SPEC, {}),
+  createFrame(ESCAPE_CLOSURE, META, {}),
 ];
 
 const createStaticClosureBaseFrameArray = () => [
@@ -223,9 +228,10 @@ export const makeScopeClosureExpression = (
     generator,
     makeScopeFrameBlock(
       strict,
-      encloseScope(scope),
+      scope,
       [],
       concat(
+        createEscapeClosureFrameArray(),
         createMetaFrameArray(),
         createSpecFrameArray(),
         createBlockBaseFrameArray(),

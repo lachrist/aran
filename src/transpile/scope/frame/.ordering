@@ -10,6 +10,7 @@ define-static.mjs
 empty-dynamic-with.mjs
 empty-void.mjs
 enclave.mjs
+escape-closure.mjs
 illegal.mjs
 import-static.mjs
 macro.mjs

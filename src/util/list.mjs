@@ -1,5 +1,7 @@
 export const cons = (x, y) => ({ car: x, cdr: y });
 
+export const consFlip = (y, x) => ({ car: x, cdr: y });
+
 export const car = ({ car: x }) => x;
 
 export const cdr = ({ cdr: y }) => y;
