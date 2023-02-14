@@ -1,15 +1,13 @@
-export const NIL = null;
+export const cons = (x, y) => ({ car: x, cdr: y });
 
-export const cons = (x, y) => [x, y];
+export const car = ({ car: x }) => x;
 
-export const car = ({ 0: x }) => x;
-
-export const cdr = ({ 1: y }) => y;
+export const cdr = ({ cdr: y }) => y;
 
 export const convertArrayList = (array) => {
-  let list = NIL;
+  let list = null;
   for (let index = array.length - 1; index >= 0; index -= 1) {
-    list = cons(array[index], list);
+    list = { car: array[index], cdr: list };
   }
   return list;
 };
@@ -17,10 +15,10 @@ export const convertArrayList = (array) => {
 export const convertListArray = (list) => {
   let length = 0;
   const array = [];
-  while (list !== NIL) {
-    array[length] = car(list);
+  while (list !== null) {
+    array[length] = list.car;
     length += 1;
-    list = cdr(list);
+    list = list.cdr;
   }
   return array;
 };
