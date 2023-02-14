@@ -54,7 +54,7 @@ const libraries = {
 ////////////
 
 export const createFrame = (type, layer, options) => {
-  const { create } = libraries[type];
+  const { createFrame: create } = libraries[type];
   return {
     type,
     layer,
@@ -71,16 +71,20 @@ const generateHarvest = (name) => (frame) => {
   return harvest(frame.inner);
 };
 
-export const harvestFrameHeader = generateHarvest("harvestHeader");
+export const harvestFrameHeader = generateHarvest("harvestFrameHeader");
 
-export const harvestFramePrelude = generateHarvest("harvestPrelude");
+export const harvestFramePrelude = generateHarvest("harvestFramePrelude");
 
 /////////////
 // Declare //
 /////////////
 
 export const declareFrame = (strict, frame, kind, variable, options) => {
-  const { KINDS, declare, conflict } = libraries[frame.type];
+  const {
+    KINDS,
+    declareFrame: declare,
+    conflictFrame: conflict,
+  } = libraries[frame.type];
   if (frame.layer === getVariableLayer(variable)) {
     if (includes(KINDS, kind)) {
       declare(strict, frame.inner, kind, variable, options);
@@ -105,8 +109,11 @@ export const makeFrameInitializeStatementArray = (
   variable,
   expression,
 ) => {
-  const { KINDS, makeInitializeStatementArray, conflict } =
-    libraries[frame.type];
+  const {
+    KINDS,
+    makeFrameInitializeStatementArray: makeInitializeStatementArray,
+    conflictFrame: conflict,
+  } = libraries[frame.type];
   if (frame.layer === getVariableLayer(variable)) {
     if (includes(KINDS, kind)) {
       return makeInitializeStatementArray(
@@ -130,7 +137,7 @@ export const makeFrameInitializeStatementArray = (
 ///////////////
 
 export const lookupFrameAll = (strict, escaped, frame) => {
-  const { lookupAll } = libraries[frame.type];
+  const { lookupFrameAll: lookupAll } = libraries[frame.type];
   lookupAll(strict, escaped, frame.inner);
 };
 
@@ -156,12 +163,16 @@ const generateLookup =
     }
   };
 
-export const makeFrameReadExpression = generateLookup("makeReadExpression");
-
-export const makeFrameTypeofExpression = generateLookup("makeTypeofExpression");
-
-export const makeFrameDiscardExpression = generateLookup(
-  "makeDiscardExpression",
+export const makeFrameReadExpression = generateLookup(
+  "makeFrameReadExpression",
 );
 
-export const makeFrameWriteEffect = generateLookup("makeWriteEffect");
+export const makeFrameTypeofExpression = generateLookup(
+  "makeFrameTypeofExpression",
+);
+
+export const makeFrameDiscardExpression = generateLookup(
+  "makeFrameDiscardExpression",
+);
+
+export const makeFrameWriteEffect = generateLookup("makeFrameWriteEffect");

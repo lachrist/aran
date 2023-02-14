@@ -15,8 +15,8 @@ import {
 import {
   makeEffectStatement,
   makeLiteralExpression,
-  makeReadExpression as makeRawReadExpression,
-  makeWriteEffect as makeRawWriteEffect,
+  makeReadExpression,
+  makeWriteEffect,
 } from "../../../ast/index.mjs";
 
 import { mangleOriginalVariable } from "../variable.mjs";
@@ -34,17 +34,17 @@ const {
 
 export const KINDS = ["var", "function"];
 
-export const create = (_options) => ({
+export const createFrame = (_options) => ({
   bindings: {},
 });
 
-export const conflict = constant____(undefined);
+export const conflictFrame = constant____(undefined);
 
 const makeDeclareStatementArray = (bindings, variable) =>
   concat(
     [
       makeEffectStatement(
-        makeRawWriteEffect(
+        makeWriteEffect(
           mangleOriginalVariable(variable),
           makeLiteralExpression({ undefined: null }),
         ),
@@ -59,13 +59,13 @@ const makeDeclareStatementArray = (bindings, variable) =>
     ),
   );
 
-export const harvestHeader = ({ bindings }) =>
+export const harvestFrameHeader = ({ bindings }) =>
   map(ownKeys(bindings), mangleOriginalVariable);
 
-export const harvestPrelude = ({ bindings }) =>
+export const harvestFramePrelude = ({ bindings }) =>
   flatMap(ownKeys(bindings), partialx_(makeDeclareStatementArray, bindings));
 
-export const declare = (
+export const declareFrame = (
   _strict,
   { bindings },
   _kind,
@@ -81,7 +81,7 @@ export const declare = (
   pushAll(bindings[variable], specifiers);
 };
 
-export const makeInitializeStatementArray = (
+export const makeFrameInitializeStatementArray = (
   _strict,
   { bindings },
   _kind,
@@ -92,20 +92,20 @@ export const makeInitializeStatementArray = (
   return concat(
     [
       makeEffectStatement(
-        makeRawWriteEffect(mangleOriginalVariable(variable), expression),
+        makeWriteEffect(mangleOriginalVariable(variable), expression),
       ),
     ],
     map(
       bindings[variable],
       partial_x(
         makeExportStatement,
-        makeRawReadExpression(mangleOriginalVariable(variable)),
+        makeReadExpression(mangleOriginalVariable(variable)),
       ),
     ),
   );
 };
 
-export const lookupAll = constant___(undefined);
+export const lookupFrameAll = constant___(undefined);
 
 const compileMakeLookupNode =
   (makePresentNode) =>
@@ -121,18 +121,18 @@ const compileMakeLookupNode =
     }
   };
 
-export const makeReadExpression = compileMakeLookupNode(
-  drop_xx(makeRawReadExpression),
+export const makeFrameReadExpression = compileMakeLookupNode(
+  drop_xx(makeReadExpression),
 );
 
-export const makeTypeofExpression = compileMakeLookupNode(
+export const makeFrameTypeofExpression = compileMakeLookupNode(
   drop_xx(makeTypeofReadExpression),
 );
 
-export const makeDiscardExpression = compileMakeLookupNode(
+export const makeFrameDiscardExpression = compileMakeLookupNode(
   constant___(makeLiteralExpression(false)),
 );
 
-export const makeWriteEffect = compileMakeLookupNode(
+export const makeFrameWriteEffect = compileMakeLookupNode(
   makeExportIncrementWriteEffect,
 );

@@ -28,9 +28,14 @@ const {
 
 export const KINDS = ["import"];
 
-export const create = (_options) => ({ static: {} });
+export const createFrame = (_options) => ({ static: {} });
 
-export const conflict = (_strict, { static: bindings }, _kind, variable) => {
+export const conflictFrame = (
+  _strict,
+  { static: bindings },
+  _kind,
+  variable,
+) => {
   expect1(
     !hasOwn(bindings, variable),
     DuplicateError,
@@ -39,11 +44,11 @@ export const conflict = (_strict, { static: bindings }, _kind, variable) => {
   );
 };
 
-export const harvestHeader = constant_([]);
+export const harvestFrameHeader = constant_([]);
 
-export const harvestPrelude = constant_([]);
+export const harvestFramePrelude = constant_([]);
 
-export const declare = (
+export const declareFrame = (
   _strict,
   { static: bindings },
   _kind,
@@ -62,11 +67,11 @@ export const declare = (
   });
 };
 
-export const makeInitializeStatementArray = deadcode_____(
+export const makeFrameInitializeStatementArray = deadcode_____(
   "makeInitializeStatementArray called on import-static frame",
 );
 
-export const lookupAll = constant___(undefined);
+export const lookupFrameAll = constant___(undefined);
 
 const compileMakeLookupNode =
   (makePresentNode) =>
@@ -79,18 +84,18 @@ const compileMakeLookupNode =
     }
   };
 
-export const makeReadExpression = compileMakeLookupNode(
+export const makeFrameReadExpression = compileMakeLookupNode(
   dropx__(makeImportExpression),
 );
 
-export const makeTypeofExpression = compileMakeLookupNode(
+export const makeFrameTypeofExpression = compileMakeLookupNode(
   dropx__(makeTypeofImportExpression),
 );
 
-export const makeDiscardExpression = compileMakeLookupNode(
+export const makeFrameDiscardExpression = compileMakeLookupNode(
   constant___(makeLiteralExpression(false)),
 );
 
-export const makeWriteEffect = compileMakeLookupNode(
+export const makeFrameWriteEffect = compileMakeLookupNode(
   drop_xx(makeThrowConstantEffect),
 );

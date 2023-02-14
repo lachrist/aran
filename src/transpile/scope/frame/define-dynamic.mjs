@@ -25,21 +25,26 @@ const {
 
 export const KINDS = ["define"];
 
-export const create = ({ macro, observable }) => ({
+export const createFrame = ({ macro, observable }) => ({
   dynamic: macro,
   static: {},
   observable,
 });
 
-export const conflict = (_strict, { static: bindings }, _kind, variable) => {
+export const conflictFrame = (
+  _strict,
+  { static: bindings },
+  _kind,
+  variable,
+) => {
   assert(!hasOwn(bindings, variable), "duplicate define variable");
 };
 
-export const harvestHeader = constant_([]);
+export const harvestFrameHeader = constant_([]);
 
-export const harvestPrelude = constant_([]);
+export const harvestFramePrelude = constant_([]);
 
-export const declare = (
+export const declareFrame = (
   _strict,
   { static: bindings },
   _kind,
@@ -50,11 +55,11 @@ export const declare = (
   defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
 };
 
-export const makeInitializeStatementArray = deadcode_____(
+export const makeFrameInitializeStatementArray = deadcode_____(
   "makeInitializeStatementArray called on define-dynamic frame",
 );
 
-export const lookupAll = constant___(undefined);
+export const lookupFrameAll = constant___(undefined);
 
 const compileMakeLookupNode =
   (makePresentNode) =>
@@ -74,18 +79,18 @@ const compileMakeLookupNode =
     }
   };
 
-export const makeReadExpression = compileMakeLookupNode(
+export const makeFrameReadExpression = compileMakeLookupNode(
   drop__x(makeGetExpression),
 );
 
-export const makeTypeofExpression = compileMakeLookupNode(
+export const makeFrameTypeofExpression = compileMakeLookupNode(
   drop__x(makeTypeofGetExpression),
 );
 
-export const makeDiscardExpression = compileMakeLookupNode(
+export const makeFrameDiscardExpression = compileMakeLookupNode(
   drop__x(makeDeleteSloppyExpression),
 );
 
-export const makeWriteEffect = compileMakeLookupNode(
+export const makeFrameWriteEffect = compileMakeLookupNode(
   partialx___(makeIncrementSetEffect, true),
 );

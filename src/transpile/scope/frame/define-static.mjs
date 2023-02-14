@@ -12,7 +12,7 @@ import {
 
 import {
   makeLiteralExpression,
-  makeReadExpression as makeRawReadExpression,
+  makeReadExpression,
 } from "../../../ast/index.mjs";
 
 import { mangleOriginalVariable } from "../variable.mjs";
@@ -29,29 +29,35 @@ const {
 
 export const KINDS = ["define"];
 
-export const create = (_options) => ({
+export const createFrame = (_options) => ({
   bindings: {},
 });
 
-export const conflict = (_strict, { bindings }, _kind, variable) => {
+export const conflictFrame = (_strict, { bindings }, _kind, variable) => {
   assert(!hasOwn(bindings, variable), "duplicate define variable");
 };
 
-export const harvestHeader = ({ bindings }) =>
+export const harvestFrameHeader = ({ bindings }) =>
   map(ownKeys(bindings), mangleOriginalVariable);
 
-export const harvestPrelude = constant_([]);
+export const harvestFramePrelude = constant_([]);
 
-export const declare = (_strict, { bindings }, _kind, variable, _options) => {
+export const declareFrame = (
+  _strict,
+  { bindings },
+  _kind,
+  variable,
+  _options,
+) => {
   assert(!includes(bindings, variable), "duplicate define variable");
   defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
 };
 
-export const makeInitializeStatementArray = deadcode_____(
+export const makeFrameInitializeStatementArray = deadcode_____(
   "makeInitializeStatementArray called on define-static frame",
 );
 
-export const lookupAll = constant___(undefined);
+export const lookupFrameAll = constant___(undefined);
 
 const compileMakeLookupNode =
   (makePresentNode) =>
@@ -63,16 +69,18 @@ const compileMakeLookupNode =
     }
   };
 
-export const makeReadExpression = compileMakeLookupNode(
-  drop__x(makeRawReadExpression),
+export const makeFrameReadExpression = compileMakeLookupNode(
+  drop__x(makeReadExpression),
 );
 
-export const makeTypeofExpression = compileMakeLookupNode(
+export const makeFrameTypeofExpression = compileMakeLookupNode(
   drop__x(makeTypeofReadExpression),
 );
 
-export const makeDiscardExpression = compileMakeLookupNode(
+export const makeFrameDiscardExpression = compileMakeLookupNode(
   constant___(makeLiteralExpression(false)),
 );
 
-export const makeWriteEffect = compileMakeLookupNode(makeIncrementWriteEffect);
+export const makeFrameWriteEffect = compileMakeLookupNode(
+  makeIncrementWriteEffect,
+);

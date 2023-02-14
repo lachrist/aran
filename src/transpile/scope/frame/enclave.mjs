@@ -31,13 +31,13 @@ const mapping = {
 
 export const KINDS = ownKeys(mapping);
 
-export const create = ({ program }) => ({ program });
+export const createFrame = ({ program }) => ({ program });
 
-export const conflict = constant____(undefined);
+export const conflictFrame = constant____(undefined);
 
-export const harvestHeader = constant_([]);
+export const harvestFrameHeader = constant_([]);
 
-export const harvestPrelude = constant_([]);
+export const harvestFramePrelude = constant_([]);
 
 const checkProgram = ({ program }, variable) => {
   expect1(
@@ -53,7 +53,7 @@ const checkProgram = ({ program }, variable) => {
 // is made from a local eval program.
 // It should throw an EnclaveLimitationAranError
 
-export const declare = (
+export const declareFrame = (
   _strict,
   frame,
   _kind,
@@ -64,7 +64,7 @@ export const declare = (
   assert(specifiers.length === 0, "declare exported variable on enclave frame");
 };
 
-export const makeInitializeStatementArray = (
+export const makeFrameInitializeStatementArray = (
   _strict,
   frame,
   kind,
@@ -75,13 +75,15 @@ export const makeInitializeStatementArray = (
   return [makeDeclareExternalStatement(mapping[kind], variable, expression)];
 };
 
-export const lookupAll = constant___(undefined);
+export const lookupFrameAll = constant___(undefined);
 
-export const makeReadExpression = dropxxxxx_x(makeReadExternalExpression);
+export const makeFrameReadExpression = dropxxxxx_x(makeReadExternalExpression);
 
-export const makeTypeofExpression = dropxxxxx_x(makeTypeofExternalExpression);
+export const makeFrameTypeofExpression = dropxxxxx_x(
+  makeTypeofExternalExpression,
+);
 
-export const makeDiscardExpression = (
+export const makeFrameDiscardExpression = (
   _next,
   _strict,
   _frame,
@@ -95,7 +97,7 @@ export const makeDiscardExpression = (
   );
 };
 
-export const makeWriteEffect = (
+export const makeFrameWriteEffect = (
   _next,
   strict,
   _frame,

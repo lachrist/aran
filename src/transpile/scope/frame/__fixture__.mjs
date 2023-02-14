@@ -64,22 +64,23 @@ const finalizeBlock = (variables, statements, code) =>
 
 const naming = {
   __proto__: null,
-  read: "makeReadExpression",
-  typeof: "makeTypeofExpression",
-  discard: "makeDiscardExpression",
+  read: "makeFrameReadExpression",
+  typeof: "makeFrameTypeofExpression",
+  discard: "makeFrameDiscardExpression",
 };
 
 const arities = {
-  create: 1,
-  conflict: 4,
-  harvestPrelude: 1,
-  harvestHeader: 1,
-  declare: 5,
-  makeInitializeStatementArray: 5,
-  makeReadExpression: 7,
-  makeTypeofExpression: 7,
-  makeDiscardExpression: 7,
-  makeWriteEffect: 7,
+  createFrame: 1,
+  conflictFrame: 4,
+  harvestFramePrelude: 1,
+  harvestFrameHeader: 1,
+  declareFrame: 5,
+  lookupFrameAll: 3,
+  makeFrameInitializeStatementArray: 5,
+  makeFrameReadExpression: 7,
+  makeFrameTypeofExpression: 7,
+  makeFrameDiscardExpression: 7,
+  makeFrameWriteEffect: 7,
 };
 
 const names = ownKeys(arities);
@@ -97,32 +98,36 @@ const generateTest =
     }
     const {
       KINDS,
-      create,
-      conflict,
-      harvestHeader,
-      harvestPrelude,
-      declare,
-      makeInitializeStatementArray,
-      lookupAll,
-      makeWriteEffect,
+      createFrame,
+      conflictFrame,
+      harvestFrameHeader,
+      harvestFramePrelude,
+      declareFrame,
+      makeFrameInitializeStatementArray,
+      lookupFrameAll,
+      makeFrameWriteEffect,
     } = Frame;
     assert(isArray(KINDS), "expected KINDS to be an array");
-    const frame = create(options);
+    const frame = createFrame(options);
     let body = "";
     const statements = flatMap(scenarios, (scenario) => {
       scenario = assign({}, default_scenario, scenario);
       assert(scenario.type !== null, "missing scenario type");
       if (scenario.type === "conflict") {
         assert(
-          conflict(scenario.strict, frame, scenario.kind, scenario.variable) ===
-            undefined,
+          conflictFrame(
+            scenario.strict,
+            frame,
+            scenario.kind,
+            scenario.variable,
+          ) === undefined,
           "expected conflict to return undefined",
         );
         return [];
       } else if (scenario.type === "declare") {
         assert(includes(KINDS, scenario.kind), "unbound declare kind");
         assert(
-          declare(
+          declareFrame(
             scenario.strict,
             frame,
             scenario.kind,
@@ -135,7 +140,7 @@ const generateTest =
       } else if (scenario.type === "initialize") {
         assert(includes(KINDS, scenario.kind), "unbound initialize kind");
         body = `${body}\n${scenario.code}`;
-        return makeInitializeStatementArray(
+        return makeFrameInitializeStatementArray(
           scenario.strict,
           frame,
           scenario.kind,
@@ -144,7 +149,8 @@ const generateTest =
         );
       } else if (scenario.type === "lookup-all") {
         assert(
-          lookupAll(scenario.strict, scenario.escaped, frame) === undefined,
+          lookupFrameAll(scenario.strict, scenario.escaped, frame) ===
+            undefined,
           "expected lookupAll to return undefined",
         );
         return [];
@@ -152,7 +158,7 @@ const generateTest =
         body = `${body}\n(${scenario.code});`;
         return [
           makeEffectStatement(
-            makeWriteEffect(
+            makeFrameWriteEffect(
               scenario.next,
               scenario.strict,
               frame,
@@ -167,12 +173,12 @@ const generateTest =
           ),
         ];
       } else {
-        const makeLookupExpression = Frame[naming[scenario.type]];
+        const makeFrameLookupExpression = Frame[naming[scenario.type]];
         body = `${body}\nvoid (${scenario.code});`;
         return [
           makeEffectStatement(
             makeExpressionEffect(
-              makeLookupExpression(
+              makeFrameLookupExpression(
                 scenario.next,
                 scenario.strict,
                 frame,
@@ -187,8 +193,8 @@ const generateTest =
       }
     });
     return finalize(
-      harvestHeader(frame),
-      concat(harvestPrelude(frame), statements),
+      harvestFrameHeader(frame),
+      concat(harvestFramePrelude(frame), statements),
       `${head}${body}`,
     );
   };

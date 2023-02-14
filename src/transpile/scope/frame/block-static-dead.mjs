@@ -38,11 +38,11 @@ const {
 
 export const KINDS = ["let", "const", "class"];
 
-export const create = (_options) => ({
+export const createFrame = (_options) => ({
   bindings: {},
 });
 
-export const conflict = (_strict, { bindings }, _kind, variable) => {
+export const conflictFrame = (_strict, { bindings }, _kind, variable) => {
   expect1(
     !hasOwn(bindings, variable),
     DuplicateError,
@@ -51,11 +51,11 @@ export const conflict = (_strict, { bindings }, _kind, variable) => {
   );
 };
 
-export const harvestHeader = constant_([]);
+export const harvestFrameHeader = constant_([]);
 
-export const harvestPrelude = constant_([]);
+export const harvestFramePrelude = constant_([]);
 
-export const declare = (
+export const declareFrame = (
   _strict,
   { bindings },
   _kind,
@@ -72,11 +72,11 @@ export const declare = (
   defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
 };
 
-export const makeInitializeStatementArray = deadcode_____(
+export const makeFrameInitializeStatementArray = deadcode_____(
   "initialization is forbidden in dead frames",
 );
 
-export const lookupAll = constant___(undefined);
+export const lookupFrameAll = constant___(undefined);
 
 const compileMakeLookupNode =
   (makeNode) =>
@@ -85,16 +85,18 @@ const compileMakeLookupNode =
       ? makeNode(variable)
       : next(strict, scope, escaped, variable, options);
 
-export const makeReadExpression = compileMakeLookupNode(
+export const makeFrameReadExpression = compileMakeLookupNode(
   makeThrowDeadzoneExpression,
 );
 
-export const makeTypeofExpression = compileMakeLookupNode(
+export const makeFrameTypeofExpression = compileMakeLookupNode(
   makeThrowDeadzoneExpression,
 );
 
-export const makeDiscardExpression = compileMakeLookupNode(
+export const makeFrameDiscardExpression = compileMakeLookupNode(
   constant_(makeLiteralExpression(false)),
 );
 
-export const makeWriteEffect = compileMakeLookupNode(makeThrowDeadzoneEffect);
+export const makeFrameWriteEffect = compileMakeLookupNode(
+  makeThrowDeadzoneEffect,
+);

@@ -27,24 +27,26 @@ const { undefined } = globalThis;
 
 export const KINDS = [];
 
-export const create = ({ macro, observable }) => ({
+export const createFrame = ({ macro, observable }) => ({
   dynamic: macro,
   observable,
 });
 
-export const conflict = constant____(undefined);
+export const conflictFrame = constant____(undefined);
 
-export const harvestHeader = constant_([]);
+export const harvestFrameHeader = constant_([]);
 
-export const harvestPrelude = constant_([]);
+export const harvestFramePrelude = constant_([]);
 
-export const declare = deadcode_____("declare called on empty-dynamic frame");
+export const declareFrame = deadcode_____(
+  "declare called on empty-dynamic frame",
+);
 
-export const makeInitializeStatementArray = deadcode_____(
+export const makeFrameInitializeStatementArray = deadcode_____(
   "makeInitializeStatements called on empty-dynamic frame",
 );
 
-export const lookupAll = constant___(undefined);
+export const lookupFrameAll = constant___(undefined);
 
 const compileMakeLookupNode =
   (makeConditionalNode, makePresentNode, observe) =>
@@ -78,25 +80,25 @@ const compileMakeLookupNode =
     );
   };
 
-export const makeReadExpression = compileMakeLookupNode(
+export const makeFrameReadExpression = compileMakeLookupNode(
   makeConditionalExpression,
   dropx__x(makeGetExpression),
   noop_,
 );
 
-export const makeTypeofExpression = compileMakeLookupNode(
+export const makeFrameTypeofExpression = compileMakeLookupNode(
   makeConditionalExpression,
   dropx__x(makeTypeofGetExpression),
   noop_,
 );
 
-export const makeDiscardExpression = compileMakeLookupNode(
+export const makeFrameDiscardExpression = compileMakeLookupNode(
   makeConditionalExpression,
   dropx__x(makeDeleteSloppyExpression),
   noop_,
 );
 
-export const makeWriteEffect = compileMakeLookupNode(
+export const makeFrameWriteEffect = compileMakeLookupNode(
   makeConditionalEffect,
   makeIncrementSetEffect,
   ({ counter }) => {

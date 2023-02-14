@@ -10,21 +10,21 @@ const { undefined } = globalThis;
 
 export const KINDS = [];
 
-export const create = ({}) => ({});
+export const createFrame = ({}) => ({});
 
-export const conflict = constant____(undefined);
+export const conflictFrame = constant____(undefined);
 
-export const declare = deadcode_____("declare called on empty-void frame");
+export const declareFrame = deadcode_____("declare called on empty-void frame");
 
-export const harvestHeader = constant_([]);
+export const harvestFrameHeader = constant_([]);
 
-export const harvestPrelude = constant_([]);
+export const harvestFramePrelude = constant_([]);
 
-export const declareFrame = deadcode______(
+export const declareFrameFrame = deadcode______(
   "declareFrame called on closure frame",
 );
 
-export const makeInitializeStatementArray = deadcode_____(
+export const makeFrameInitializeStatementArray = deadcode_____(
   "makeFrameInitializeStatementArray called on closure frame",
 );
 
@@ -40,10 +40,10 @@ export const makeLookupNode = (
   options,
 ) => next(strict, scope, true, variable, options);
 
-export const makeReadExpression = makeLookupNode;
+export const makeFrameReadExpression = makeLookupNode;
 
-export const makeTypeofExpression = makeLookupNode;
+export const makeFrameTypeofExpression = makeLookupNode;
 
-export const makeDiscardExpression = makeLookupNode;
+export const makeFrameDiscardExpression = makeLookupNode;
 
-export const makeWriteEffect = makeLookupNode;
+export const makeFrameWriteEffect = makeLookupNode;

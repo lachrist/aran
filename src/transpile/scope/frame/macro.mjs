@@ -23,19 +23,22 @@ const {
 
 export const KINDS = ["macro"];
 
-export const LAYERING = false;
+export const createFrame = (_options) => ({ static: {} });
 
-export const create = (_options) => ({ static: {} });
-
-export const conflict = (_strict, { static: bindings }, _kind, variable) => {
+export const conflictFrame = (
+  _strict,
+  { static: bindings },
+  _kind,
+  variable,
+) => {
   assert(!hasOwn(bindings, variable), "duplicate intrinsic variable");
 };
 
-export const harvestHeader = constant_([]);
+export const harvestFrameHeader = constant_([]);
 
-export const harvestPrelude = constant_([]);
+export const harvestFramePrelude = constant_([]);
 
-export const declare = (
+export const declareFrame = (
   _strict,
   { static: bindings },
   _kind,
@@ -49,11 +52,11 @@ export const declare = (
   });
 };
 
-export const makeInitializeStatementArray = deadcode_____(
+export const makeFrameInitializeStatementArray = deadcode_____(
   "makeInitializeStatementArray called on macro frame",
 );
 
-export const lookupAll = constant___(undefined);
+export const lookupFrameAll = constant___(undefined);
 
 export const compileMakeLookupNode =
   (makePresentNode) =>
@@ -65,16 +68,16 @@ export const compileMakeLookupNode =
     }
   };
 
-export const makeReadExpression = compileMakeLookupNode(return_x);
+export const makeFrameReadExpression = compileMakeLookupNode(return_x);
 
-export const makeTypeofExpression = compileMakeLookupNode((_variable, macro) =>
-  makeUnaryExpression("typeof", macro),
+export const makeFrameTypeofExpression = compileMakeLookupNode(
+  (_variable, macro) => makeUnaryExpression("typeof", macro),
 );
 
-export const makeDiscardExpression = compileMakeLookupNode(
+export const makeFrameDiscardExpression = compileMakeLookupNode(
   constant__(makeLiteralExpression(false)),
 );
 
-export const makeWriteEffect = compileMakeLookupNode(
+export const makeFrameWriteEffect = compileMakeLookupNode(
   drop_x(makeThrowConstantEffect),
 );

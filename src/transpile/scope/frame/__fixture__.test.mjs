@@ -20,13 +20,13 @@ assertSuccess(
   testBlock(
     {
       KINDS: ["kind"],
-      create: (options) => {
+      createFrame: (options) => {
         assertDeepEqual(options, {});
         return { tag: "frame", header: [], prelude: [] };
       },
-      harvestHeader: ({ header }) => header,
-      harvestPrelude: ({ prelude }) => prelude,
-      conflict: (strict, { prelude }, kind, variable) => {
+      harvestFrameHeader: ({ header }) => header,
+      harvestFramePrelude: ({ prelude }) => prelude,
+      conflictFrame: (strict, { prelude }, kind, variable) => {
         assertEqual(strict, true);
         assertEqual(kind, "kind");
         assertEqual(variable, "variable");
@@ -37,13 +37,13 @@ assertSuccess(
           ),
         );
       },
-      declare: (strict, { header }, kind, variable, options) => {
+      declareFrame: (strict, { header }, kind, variable, options) => {
         assertEqual(strict, true);
         assertEqual(kind, "kind");
         assertDeepEqual(options, { options: null });
         push(header, variable);
       },
-      makeInitializeStatementArray: (
+      makeFrameInitializeStatementArray: (
         strict,
         { tag },
         kind,
@@ -55,8 +55,8 @@ assertSuccess(
         assertEqual(kind, "kind");
         return [makeEffectStatement(makeWriteEffect(variable, expression))];
       },
-      lookupAll: (_strict, _escaped, _frame) => {},
-      makeReadExpression: (
+      lookupFrameAll: (_strict, _escaped, _frame) => {},
+      makeFrameReadExpression: (
         next,
         strict,
         { tag },
@@ -73,9 +73,9 @@ assertSuccess(
         assertEqual(options, null);
         return makeReadExpression(variable);
       },
-      makeTypeofExpression: deadcode_______("makeTypeofExpression"),
-      makeDiscardExpression: deadcode_______("makeDiscardExpression"),
-      makeWriteEffect: (
+      makeFrameTypeofExpression: deadcode_______("makeTypeofExpression"),
+      makeFrameDiscardExpression: deadcode_______("makeDiscardExpression"),
+      makeFrameWriteEffect: (
         next,
         strict,
         { tag },

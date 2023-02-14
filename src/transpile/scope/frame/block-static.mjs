@@ -17,8 +17,8 @@ import {
   makeEffectStatement,
   makeLiteralExpression,
   makeExpressionEffect,
-  makeReadExpression as makeRawReadExpression,
-  makeWriteEffect as makeRawWriteEffect,
+  makeReadExpression,
+  makeWriteEffect,
 } from "../../../ast/index.mjs";
 
 import {
@@ -43,7 +43,7 @@ const {
 
 export const KINDS = ["let", "const", "class"];
 
-export const create = ({ distant }) => ({
+export const createFrame = ({ distant }) => ({
   distant,
   bindings: {},
 });
@@ -52,13 +52,13 @@ const hasDeadzone = (bindings, variable) => bindings[variable].deadzone;
 
 const makeDeadzoneInitializeStatement = (variable) =>
   makeEffectStatement(
-    makeRawWriteEffect(
+    makeWriteEffect(
       mangleDeadzoneVariable(variable),
       makeLiteralExpression(false),
     ),
   );
 
-export const harvestHeader = ({ bindings }) =>
+export const harvestFrameHeader = ({ bindings }) =>
   concat(
     map(ownKeys(bindings), mangleOriginalVariable),
     map(
@@ -67,13 +67,13 @@ export const harvestHeader = ({ bindings }) =>
     ),
   );
 
-export const harvestPrelude = ({ bindings }) =>
+export const harvestFramePrelude = ({ bindings }) =>
   map(
     filter(ownKeys(bindings), partialx_(hasDeadzone, bindings)),
     makeDeadzoneInitializeStatement,
   );
 
-export const conflict = (_strict, { bindings }, _kind, variable) => {
+export const conflictFrame = (_strict, { bindings }, _kind, variable) => {
   expect1(
     !hasOwn(bindings, variable),
     DuplicateError,
@@ -82,7 +82,7 @@ export const conflict = (_strict, { bindings }, _kind, variable) => {
   );
 };
 
-export const declare = (
+export const declareFrame = (
   _strict,
   { bindings },
   kind,
@@ -106,7 +106,7 @@ export const declare = (
   });
 };
 
-export const makeInitializeStatementArray = (
+export const makeFrameInitializeStatementArray = (
   _strict,
   { bindings, distant },
   _kind,
@@ -120,13 +120,13 @@ export const makeInitializeStatementArray = (
   return concat(
     [
       makeEffectStatement(
-        makeRawWriteEffect(mangleOriginalVariable(variable), expression),
+        makeWriteEffect(mangleOriginalVariable(variable), expression),
       ),
     ],
     binding.deadzone || distant
       ? [
           makeEffectStatement(
-            makeRawWriteEffect(
+            makeWriteEffect(
               mangleDeadzoneVariable(variable),
               makeLiteralExpression(true),
             ),
@@ -137,13 +137,13 @@ export const makeInitializeStatementArray = (
       binding.exports,
       partial_x(
         makeExportStatement,
-        makeRawReadExpression(mangleOriginalVariable(variable)),
+        makeReadExpression(mangleOriginalVariable(variable)),
       ),
     ),
   );
 };
 
-export const lookupAll = (_strict, escaped, { bindings, distant }) => {
+export const lookupFrameAll = (_strict, escaped, { bindings, distant }) => {
   const variables = ownKeys(bindings);
   if (escaped || distant) {
     for (let index = 0; index < variables.length; index += 1) {
@@ -185,7 +185,7 @@ const compileMakeLookupNode =
         } else {
           binding.deadzone = true;
           return makeConditionalNode(
-            makeRawReadExpression(mangleDeadzoneVariable(variable)),
+            makeReadExpression(mangleDeadzoneVariable(variable)),
             makeLiveNode(
               mangleOriginalVariable(variable),
               variable,
@@ -202,25 +202,25 @@ const compileMakeLookupNode =
     }
   };
 
-export const makeReadExpression = compileMakeLookupNode(
+export const makeFrameReadExpression = compileMakeLookupNode(
   makeConditionalExpression,
   makeThrowDeadzoneExpression,
-  drop_xxxx(makeRawReadExpression),
+  drop_xxxx(makeReadExpression),
 );
 
-export const makeTypeofExpression = compileMakeLookupNode(
+export const makeFrameTypeofExpression = compileMakeLookupNode(
   makeConditionalExpression,
   makeThrowDeadzoneExpression,
   drop_xxxx(makeTypeofReadExpression),
 );
 
-export const makeDiscardExpression = compileMakeLookupNode(
+export const makeFrameDiscardExpression = compileMakeLookupNode(
   makeConditionalExpression,
   null,
   constant_____(makeLiteralExpression(false)),
 );
 
-export const makeWriteEffect = compileMakeLookupNode(
+export const makeFrameWriteEffect = compileMakeLookupNode(
   makeConditionalEffect,
   makeThrowDeadzoneEffect,
   (variable, original_variable, writable, specifiers, options) => {

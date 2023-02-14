@@ -40,13 +40,13 @@ const {
 
 export const KINDS = ["var", "function"];
 
-export const create = ({ macro, observable }) => ({
+export const createFrame = ({ macro, observable }) => ({
   dynamic: macro,
   static: {},
   observable,
 });
 
-export const conflict = constant____(undefined);
+export const conflictFrame = constant____(undefined);
 
 const makeDeclareStatement = (dynamic, variable) =>
   makeEffectStatement(
@@ -68,12 +68,14 @@ const makeDeclareStatement = (dynamic, variable) =>
     ),
   );
 
-export const harvestHeader = constant_([]);
+export const harvestFrameHeader = constant_([]);
 
-export const harvestPrelude = ({ dynamic: expression, static: bindings }) =>
-  map(ownKeys(bindings), partialx_(makeDeclareStatement, expression));
+export const harvestFramePrelude = ({
+  dynamic: expression,
+  static: bindings,
+}) => map(ownKeys(bindings), partialx_(makeDeclareStatement, expression));
 
-export const declare = (
+export const declareFrame = (
   _strict,
   { static: bindings },
   _kind,
@@ -86,7 +88,7 @@ export const declare = (
   }
 };
 
-export const makeInitializeStatementArray = (
+export const makeFrameInitializeStatementArray = (
   _strict,
   { dynamic, static: bindings },
   _kind,
@@ -111,7 +113,7 @@ export const makeInitializeStatementArray = (
   ];
 };
 
-export const lookupAll = constant___(undefined);
+export const lookupFrameAll = constant___(undefined);
 
 const compileMakeLookupNode =
   (makeConditionalNode, makePresentNode, observe) =>
@@ -143,25 +145,25 @@ const compileMakeLookupNode =
     }
   };
 
-export const makeReadExpression = compileMakeLookupNode(
+export const makeFrameReadExpression = compileMakeLookupNode(
   makeConditionalExpression,
   drop__x(makeGetExpression),
   noop_,
 );
 
-export const makeTypeofExpression = compileMakeLookupNode(
+export const makeFrameTypeofExpression = compileMakeLookupNode(
   makeConditionalExpression,
   drop__x(makeTypeofGetExpression),
   noop_,
 );
 
-export const makeDiscardExpression = compileMakeLookupNode(
+export const makeFrameDiscardExpression = compileMakeLookupNode(
   makeConditionalExpression,
   drop__x(makeDeleteSloppyExpression),
   noop_,
 );
 
-export const makeWriteEffect = compileMakeLookupNode(
+export const makeFrameWriteEffect = compileMakeLookupNode(
   makeConditionalEffect,
   partialx___(makeIncrementSetEffect, true),
   ({ counter }) => {

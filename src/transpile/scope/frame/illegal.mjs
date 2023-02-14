@@ -16,17 +16,22 @@ const {
 
 export const KINDS = ["illegal"];
 
-export const create = (_options) => ({ static: {} });
+export const createFrame = (_options) => ({ static: {} });
 
-export const conflict = (_strict, { static: bindings }, _kind, variable) => {
+export const conflictFrame = (
+  _strict,
+  { static: bindings },
+  _kind,
+  variable,
+) => {
   assert(!hasOwn(bindings, variable), "duplicate illegal variable");
 };
 
-export const harvestHeader = constant_([]);
+export const harvestFrameHeader = constant_([]);
 
-export const harvestPrelude = constant_([]);
+export const harvestFramePrelude = constant_([]);
 
-export const declare = (
+export const declareFrame = (
   _strict,
   { static: bindings },
   _kind,
@@ -37,11 +42,11 @@ export const declare = (
   defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
 };
 
-export const makeInitializeStatementArray = deadcode_____(
+export const makeFrameInitializeStatementArray = deadcode_____(
   "makeInitializeStatementArray called on illegal frame",
 );
 
-export const lookupAll = constant___(undefined);
+export const lookupFrameAll = constant___(undefined);
 
 const makeLookupNode = (
   next,
@@ -56,10 +61,10 @@ const makeLookupNode = (
   return next(strict, scope, escaped, variable, options);
 };
 
-export const makeReadExpression = makeLookupNode;
+export const makeFrameReadExpression = makeLookupNode;
 
-export const makeTypeofExpression = makeLookupNode;
+export const makeFrameTypeofExpression = makeLookupNode;
 
-export const makeDiscardExpression = makeLookupNode;
+export const makeFrameDiscardExpression = makeLookupNode;
 
-export const makeWriteEffect = makeLookupNode;
+export const makeFrameWriteEffect = makeLookupNode;
