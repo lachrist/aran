@@ -1,3 +1,5 @@
+import { includes } from "array-lite";
+
 import {
   NULL_DATA_DESCRIPTOR,
   assert,
@@ -6,7 +8,6 @@ import {
   constant__,
   constant_,
   constant___,
-  deadcode_____,
   hasOwn,
 } from "../../../util/index.mjs";
 
@@ -21,18 +22,9 @@ const {
   Reflect: { defineProperty },
 } = globalThis;
 
-export const KINDS = ["macro"];
+const KINDS = ["macro"];
 
 export const createFrame = (_options) => ({ static: {} });
-
-export const conflictFrame = (
-  _strict,
-  { static: bindings },
-  _kind,
-  variable,
-) => {
-  assert(!hasOwn(bindings, variable), "duplicate macro variable");
-};
 
 export const harvestFrameHeader = constant_([]);
 
@@ -41,20 +33,33 @@ export const harvestFramePrelude = constant_([]);
 export const declareFrame = (
   _strict,
   { static: bindings },
-  _kind,
+  kind,
   variable,
-  { macro },
+  options,
 ) => {
-  assert(!hasOwn(bindings, variable), "duplicate macro variable");
-  defineProperty(bindings, variable, {
-    __proto__: NULL_DATA_DESCRIPTOR,
-    value: macro,
-  });
+  if (includes(KINDS, kind)) {
+    const { macro } = options;
+    assert(!hasOwn(bindings, variable), "duplicate macro variable");
+    defineProperty(bindings, variable, {
+      __proto__: NULL_DATA_DESCRIPTOR,
+      value: macro,
+    });
+    return true;
+  } else {
+    return false;
+  }
 };
 
-export const makeFrameInitializeStatementArray = deadcode_____(
-  "makeInitializeStatementArray called on macro frame",
-);
+export const makeFrameInitializeStatementArray = (
+  _strict,
+  _frame,
+  kind,
+  _variable,
+  _expression,
+) => {
+  assert(!includes(KINDS, kind), "macro variables should never be initialized");
+  return null;
+};
 
 export const lookupFrameAll = constant___(undefined);
 

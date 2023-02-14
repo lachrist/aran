@@ -1,4 +1,4 @@
-import { includes, concat, flatMap } from "array-lite";
+import { concat, flatMap } from "array-lite";
 
 import { createCounter, assert, hasOwn } from "../../../util/index.mjs";
 
@@ -17,7 +17,6 @@ const {
   undefined,
   Error,
   Reflect: { ownKeys },
-  Array: { isArray },
   Object: { assign },
 } = globalThis;
 
@@ -49,6 +48,8 @@ export const default_scenario = {
   type: null,
   kind: null,
   variable: "dummy_variable",
+  declared: null,
+  initialized: null,
   options: {},
   strict: false,
   scope: null,
@@ -71,7 +72,6 @@ const naming = {
 
 const arities = {
   createFrame: 1,
-  conflictFrame: 4,
   harvestFramePrelude: 1,
   harvestFrameHeader: 1,
   declareFrame: 5,
@@ -96,36 +96,13 @@ const generateTest =
         `arity mismatch for ${name}`,
       );
     }
-    const {
-      KINDS,
-      createFrame,
-      conflictFrame,
-      harvestFrameHeader,
-      harvestFramePrelude,
-      declareFrame,
-      makeFrameInitializeStatementArray,
-      lookupFrameAll,
-      makeFrameWriteEffect,
-    } = Frame;
-    assert(isArray(KINDS), "expected KINDS to be an array");
+    const { createFrame, harvestFrameHeader, harvestFramePrelude } = Frame;
     const frame = createFrame(options);
     let body = "";
     const statements = flatMap(scenarios, (scenario) => {
       scenario = assign({}, default_scenario, scenario);
-      assert(scenario.type !== null, "missing scenario type");
-      if (scenario.type === "conflict") {
-        assert(
-          conflictFrame(
-            scenario.strict,
-            frame,
-            scenario.kind,
-            scenario.variable,
-          ) === undefined,
-          "expected conflict to return undefined",
-        );
-        return [];
-      } else if (scenario.type === "declare") {
-        assert(includes(KINDS, scenario.kind), "unbound declare kind");
+      if (scenario.type === "declare") {
+        const { declareFrame } = Frame;
         assert(
           declareFrame(
             scenario.strict,
@@ -133,21 +110,29 @@ const generateTest =
             scenario.kind,
             scenario.variable,
             scenario.options,
-          ) === undefined,
-          "expected declare to return undefined",
+          ) === scenario.declared,
+          "declared mismatch",
         );
         return [];
       } else if (scenario.type === "initialize") {
-        assert(includes(KINDS, scenario.kind), "unbound initialize kind");
+        const { makeFrameInitializeStatementArray } = Frame;
         body = `${body}\n${scenario.code}`;
-        return makeFrameInitializeStatementArray(
+        const maybe_statement_array = makeFrameInitializeStatementArray(
           scenario.strict,
           frame,
           scenario.kind,
           scenario.variable,
           scenario.right,
         );
+        assert(
+          (maybe_statement_array !== null) === scenario.initialized,
+          "initialized mismatch",
+        );
+        /* c8 ignore start */
+        return maybe_statement_array === null ? [] : maybe_statement_array;
+        /* c8 ignore stop */
       } else if (scenario.type === "lookup-all") {
+        const { lookupFrameAll } = Frame;
         assert(
           lookupFrameAll(scenario.strict, scenario.escaped, frame) ===
             undefined,
@@ -155,6 +140,7 @@ const generateTest =
         );
         return [];
       } else if (scenario.type === "write") {
+        const { makeFrameWriteEffect } = Frame;
         body = `${body}\n(${scenario.code});`;
         return [
           makeEffectStatement(
@@ -172,7 +158,11 @@ const generateTest =
             ),
           ),
         ];
-      } else {
+      } else if (
+        scenario.type === "discard" ||
+        scenario.type === "typeof" ||
+        scenario.type === "read"
+      ) {
         const makeFrameLookupExpression = Frame[naming[scenario.type]];
         body = `${body}\nvoid (${scenario.code});`;
         return [
@@ -190,7 +180,9 @@ const generateTest =
             ),
           ),
         ];
-      }
+      } /* c8 ignore start */ else {
+        throw new Error("invalid scenario type");
+      } /* c8 ignore stop */
     });
     return finalize(
       harvestFrameHeader(frame),

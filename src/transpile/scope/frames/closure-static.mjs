@@ -1,4 +1,4 @@
-import { concat, map, flatMap } from "array-lite";
+import { includes, concat, map, flatMap } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
@@ -6,7 +6,6 @@ import {
   partial_x,
   drop_xx,
   constant___,
-  constant____,
   pushAll,
   assert,
   hasOwn,
@@ -38,8 +37,6 @@ export const createFrame = (_options) => ({
   bindings: {},
 });
 
-export const conflictFrame = constant____(undefined);
-
 const makeDeclareStatementArray = (bindings, variable) =>
   concat(
     [
@@ -68,41 +65,51 @@ export const harvestFramePrelude = ({ bindings }) =>
 export const declareFrame = (
   _strict,
   { bindings },
-  _kind,
+  kind,
   variable,
-  { exports: specifiers },
+  options,
 ) => {
-  if (!hasOwn(bindings, variable)) {
-    defineProperty(bindings, variable, {
-      __proto__: NULL_DATA_DESCRIPTOR,
-      value: [],
-    });
+  if (includes(KINDS, kind)) {
+    const { exports: specifiers } = options;
+    if (!hasOwn(bindings, variable)) {
+      defineProperty(bindings, variable, {
+        __proto__: NULL_DATA_DESCRIPTOR,
+        value: [],
+      });
+    }
+    pushAll(bindings[variable], specifiers);
+    return true;
+  } else {
+    return false;
   }
-  pushAll(bindings[variable], specifiers);
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
   { bindings },
-  _kind,
+  kind,
   variable,
   expression,
 ) => {
-  assert(hasOwn(bindings, variable), "missing variable for initialization");
-  return concat(
-    [
-      makeEffectStatement(
-        makeWriteEffect(mangleOriginalVariable(variable), expression),
+  if (includes(KINDS, kind)) {
+    assert(hasOwn(bindings, variable), "missing variable for initialization");
+    return concat(
+      [
+        makeEffectStatement(
+          makeWriteEffect(mangleOriginalVariable(variable), expression),
+        ),
+      ],
+      map(
+        bindings[variable],
+        partial_x(
+          makeExportStatement,
+          makeReadExpression(mangleOriginalVariable(variable)),
+        ),
       ),
-    ],
-    map(
-      bindings[variable],
-      partial_x(
-        makeExportStatement,
-        makeReadExpression(mangleOriginalVariable(variable)),
-      ),
-    ),
-  );
+    );
+  } else {
+    return null;
+  }
 };
 
 export const lookupFrameAll = constant___(undefined);

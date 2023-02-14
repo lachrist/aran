@@ -22,26 +22,24 @@ assertSuccess(
       KINDS: ["kind"],
       createFrame: (options) => {
         assertDeepEqual(options, {});
-        return { tag: "frame", header: [], prelude: [] };
+        return {
+          tag: "frame",
+          header: [],
+          prelude: [
+            makeEffectStatement(
+              makeExpressionEffect(makeLiteralExpression("prelude")),
+            ),
+          ],
+        };
       },
       harvestFrameHeader: ({ header }) => header,
       harvestFramePrelude: ({ prelude }) => prelude,
-      conflictFrame: (strict, { prelude }, kind, variable) => {
-        assertEqual(strict, true);
-        assertEqual(kind, "kind");
-        assertEqual(variable, "variable");
-        push(
-          prelude,
-          makeEffectStatement(
-            makeExpressionEffect(makeLiteralExpression("conflict")),
-          ),
-        );
-      },
       declareFrame: (strict, { header }, kind, variable, options) => {
         assertEqual(strict, true);
         assertEqual(kind, "kind");
         assertDeepEqual(options, { options: null });
         push(header, variable);
+        return true;
       },
       makeFrameInitializeStatementArray: (
         strict,
@@ -95,23 +93,18 @@ assertSuccess(
     {
       head: `
         let variable;
-        void 'conflict';
+        void 'prelude';
       `,
       layer: "layer",
       options: {},
       scenarios: [
-        {
-          type: "conflict",
-          strict: true,
-          kind: "kind",
-          variable: "variable",
-        },
         {
           type: "declare",
           strict: true,
           kind: "kind",
           variable: "variable",
           options: { options: null },
+          declared: true,
         },
         {
           type: "initialize",
@@ -120,6 +113,7 @@ assertSuccess(
           variable: "variable",
           right: makeLiteralExpression("right"),
           code: "variable = 'right';",
+          initialized: true,
         },
         {
           type: "lookup-all",

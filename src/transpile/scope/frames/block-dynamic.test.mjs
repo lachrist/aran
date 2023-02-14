@@ -45,10 +45,6 @@ assertSuccess(
     scenarios: [
       // Dynamic //
       {
-        type: "conflict",
-        variable: "VARIABLE",
-      },
-      {
         type: "discard",
         variable: "VARIABLE",
         next: (_strict, _frame, _scope, _escaped, _variable, _options) =>
@@ -85,9 +81,24 @@ assertSuccess(
       // Static //
       {
         type: "declare",
+        kind: "var",
+        variable: "VARIABLE",
+        options: { exports: [] },
+        declared: false,
+      },
+      {
+        type: "initialize",
+        kind: "var",
+        variable: "VARIABLE",
+        right: makeLiteralExpression("right"),
+        initialized: false,
+      },
+      {
+        type: "declare",
         kind: "const",
         variable: "variable",
         options: { exports: [] },
+        declared: true,
       },
       {
         type: "discard",
@@ -138,6 +149,7 @@ assertSuccess(
             'configurable', false,
           ),
         );`,
+        initialized: true,
       },
       {
         type: "read",

@@ -11,6 +11,18 @@ assertSuccess(
     head: "let VARIABLE;",
     scenarios: [
       {
+        type: "declare",
+        variable: "VARIABLE",
+        kind: "var",
+        declared: false,
+      },
+      {
+        type: "initialize",
+        variable: "VARIABLE",
+        kind: "var",
+        initialized: false,
+      },
+      {
         type: "read",
         variable: "variable",
         next: (_strict, _frame, _scope, _escaped, _variable, _options) =>
@@ -18,13 +30,10 @@ assertSuccess(
         code: `"next"`,
       },
       {
-        type: "conflict",
-        variable: "variable",
-      },
-      {
         type: "declare",
         kind: "define",
         variable: "variable",
+        declared: true,
       },
       {
         type: "write",

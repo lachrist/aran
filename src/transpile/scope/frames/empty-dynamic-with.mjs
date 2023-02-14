@@ -2,8 +2,7 @@ import {
   noop_,
   dropx__x,
   constant_,
-  constant____,
-  deadcode_____,
+  constant_____,
   constant___,
   incrementCounter,
 } from "../../../util/index.mjs";
@@ -32,19 +31,13 @@ export const createFrame = ({ macro, observable }) => ({
   observable,
 });
 
-export const conflictFrame = constant____(undefined);
-
 export const harvestFrameHeader = constant_([]);
 
 export const harvestFramePrelude = constant_([]);
 
-export const declareFrame = deadcode_____(
-  "declare called on empty-dynamic frame",
-);
+export const declareFrame = constant_____(false);
 
-export const makeFrameInitializeStatementArray = deadcode_____(
-  "makeInitializeStatements called on empty-dynamic frame",
-);
+export const makeFrameInitializeStatementArray = constant_____(null);
 
 export const lookupFrameAll = constant___(undefined);
 

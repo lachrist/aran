@@ -1,4 +1,4 @@
-import { filter, map, concat } from "array-lite";
+import { includes, filter, map, concat } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
@@ -41,7 +41,7 @@ const {
   Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
-export const KINDS = ["let", "const", "class"];
+const KINDS = ["let", "const", "class"];
 
 export const createFrame = ({ distant }) => ({
   distant,
@@ -73,21 +73,12 @@ export const harvestFramePrelude = ({ bindings }) =>
     makeDeadzoneInitializeStatement,
   );
 
-export const conflictFrame = (_strict, { bindings }, _kind, variable) => {
-  expect1(
-    !hasOwn(bindings, variable),
-    DuplicateError,
-    DUPLICATE_TEMPLATE,
-    variable,
-  );
-};
-
 export const declareFrame = (
   _strict,
   { bindings },
   kind,
   variable,
-  { exports: specifiers },
+  options,
 ) => {
   expect1(
     !hasOwn(bindings, variable),
@@ -95,52 +86,68 @@ export const declareFrame = (
     DUPLICATE_TEMPLATE,
     variable,
   );
-  defineProperty(bindings, variable, {
-    __proto__: NULL_DATA_DESCRIPTOR,
-    value: {
-      initialized: false,
-      deadzone: false,
-      writable: kind !== "const",
-      exports: specifiers,
-    },
-  });
+  if (includes(KINDS, kind)) {
+    const { exports: specifiers } = options;
+    defineProperty(bindings, variable, {
+      __proto__: NULL_DATA_DESCRIPTOR,
+      value: {
+        initialized: false,
+        deadzone: false,
+        writable: kind !== "const",
+        exports: specifiers,
+      },
+    });
+    return true;
+  } else {
+    return false;
+  }
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
   { bindings, distant },
-  _kind,
+  kind,
   variable,
   expression,
 ) => {
-  assert(hasOwn(bindings, variable), "missing variable for initialization");
-  const binding = bindings[variable];
-  assert(!binding.initialized, "duplicate initialization");
-  binding.initialized = true;
-  return concat(
-    [
-      makeEffectStatement(
-        makeWriteEffect(mangleOriginalVariable(variable), expression),
-      ),
-    ],
-    binding.deadzone || distant
-      ? [
-          makeEffectStatement(
-            makeWriteEffect(
-              mangleDeadzoneVariable(variable),
-              makeLiteralExpression(true),
+  if (includes(KINDS, kind)) {
+    assert(hasOwn(bindings, variable), "missing variable for initialization");
+    const binding = bindings[variable];
+    assert(!binding.initialized, "duplicate initialization");
+    binding.initialized = true;
+    return concat(
+      [
+        makeEffectStatement(
+          makeWriteEffect(mangleOriginalVariable(variable), expression),
+        ),
+      ],
+      binding.deadzone || distant
+        ? [
+            makeEffectStatement(
+              makeWriteEffect(
+                mangleDeadzoneVariable(variable),
+                makeLiteralExpression(true),
+              ),
             ),
-          ),
-        ]
-      : [],
-    map(
-      binding.exports,
-      partial_x(
-        makeExportStatement,
-        makeReadExpression(mangleOriginalVariable(variable)),
+          ]
+        : [],
+      map(
+        binding.exports,
+        partial_x(
+          makeExportStatement,
+          makeReadExpression(mangleOriginalVariable(variable)),
+        ),
       ),
-    ),
-  );
+    );
+  } else {
+    expect1(
+      !hasOwn(bindings, variable),
+      DuplicateError,
+      DUPLICATE_TEMPLATE,
+      variable,
+    );
+    return null;
+  }
 };
 
 export const lookupFrameAll = (_strict, escaped, { bindings, distant }) => {

@@ -12,10 +12,11 @@
 //   }
 // }
 
+import { includes } from "array-lite";
+
 import {
   NULL_DATA_DESCRIPTOR,
   hasOwn,
-  deadcode_____,
   constant_,
   constant___,
   assert,
@@ -36,20 +37,11 @@ const {
   Reflect: { defineProperty },
 } = globalThis;
 
-export const KINDS = ["let", "const", "class"];
+const KINDS = ["let", "const", "class"];
 
 export const createFrame = (_options) => ({
   bindings: {},
 });
-
-export const conflictFrame = (_strict, { bindings }, _kind, variable) => {
-  expect1(
-    !hasOwn(bindings, variable),
-    DuplicateError,
-    DUPLICATE_TEMPLATE,
-    variable,
-  );
-};
 
 export const harvestFrameHeader = constant_([]);
 
@@ -58,23 +50,42 @@ export const harvestFramePrelude = constant_([]);
 export const declareFrame = (
   _strict,
   { bindings },
-  _kind,
+  kind,
   variable,
-  { exports: specifiers },
+  options,
 ) => {
-  assert(specifiers.length === 0, "unexpected exported variable");
   expect1(
     !hasOwn(bindings, variable),
     DuplicateError,
     DUPLICATE_TEMPLATE,
     variable,
   );
-  defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
+  if (includes(KINDS, kind)) {
+    const { exports: specifiers } = options;
+    assert(specifiers.length === 0, "unexpected exported variable");
+    defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
+    return true;
+  } else {
+    return false;
+  }
 };
 
-export const makeFrameInitializeStatementArray = deadcode_____(
-  "initialization is forbidden in dead frames",
-);
+export const makeFrameInitializeStatementArray = (
+  _strict,
+  { bindings },
+  kind,
+  variable,
+  _expression,
+) => {
+  assert(!includes(KINDS, kind), "initialization on block-static-dead frame");
+  expect1(
+    !hasOwn(bindings, variable),
+    DuplicateError,
+    DUPLICATE_TEMPLATE,
+    variable,
+  );
+  return null;
+};
 
 export const lookupFrameAll = constant___(undefined);
 

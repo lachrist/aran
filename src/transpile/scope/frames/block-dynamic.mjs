@@ -45,7 +45,7 @@ const {
   Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
-export const KINDS = ["let", "const", "class"];
+const KINDS = ["let", "const", "class"];
 
 export const createFrame = ({ macro }) => ({
   dynamic: macro,
@@ -53,12 +53,7 @@ export const createFrame = ({ macro }) => ({
   static: {},
 });
 
-export const conflictFrame = (
-  _strict,
-  { conflicts, static: bindings },
-  _kind,
-  variable,
-) => {
+const checkConflict = (conflicts, bindings, variable) => {
   expect1(
     !hasOwn(bindings, variable),
     DuplicateError,
@@ -107,53 +102,56 @@ export const harvestFramePrelude = ({ dynamic, conflicts, static: bindings }) =>
 
 export const declareFrame = (
   _strict,
-  { static: bindings, conflicts },
-  _kind,
+  { conflicts, static: bindings },
+  kind,
   variable,
-  { exports: specifiers },
+  options,
 ) => {
-  assert(specifiers.length === 0, "unexpected global exported variable");
-  expect1(
-    !hasOwn(bindings, variable),
-    DuplicateError,
-    DUPLICATE_TEMPLATE,
-    variable,
-  );
-  if (!includes(conflicts, variable)) {
-    push(conflicts, variable);
+  checkConflict(conflicts, bindings, variable);
+  if (includes(KINDS, kind)) {
+    const { exports: specifiers } = options;
+    assert(specifiers.length === 0, "unexpected global exported variable");
+    defineProperty(bindings, variable, {
+      __proto__: NULL_DATA_DESCRIPTOR,
+      value: false,
+    });
+    return true;
+  } else {
+    return false;
   }
-  defineProperty(bindings, variable, {
-    __proto__: NULL_DATA_DESCRIPTOR,
-    value: false,
-  });
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
-  { dynamic: macro, static: bindings },
+  { conflicts, dynamic: macro, static: bindings },
   kind,
   variable,
   expression,
 ) => {
-  assert(hasOwn(bindings, variable), "missing variable for initialization");
-  assert(bindings[variable] === false, "duplicate variable initialization");
-  bindings[variable] = true;
-  return [
-    makeEffectStatement(
-      makeExpressionEffect(
-        makeDefineExpression(
-          macro,
-          makeLiteralExpression(variable),
-          makeDataDescriptorExpression(
-            expression,
-            makeLiteralExpression(kind !== "const"),
-            makeLiteralExpression(true),
-            makeLiteralExpression(false),
+  if (includes(KINDS, kind)) {
+    assert(hasOwn(bindings, variable), "missing variable for initialization");
+    assert(bindings[variable] === false, "duplicate variable initialization");
+    bindings[variable] = true;
+    return [
+      makeEffectStatement(
+        makeExpressionEffect(
+          makeDefineExpression(
+            macro,
+            makeLiteralExpression(variable),
+            makeDataDescriptorExpression(
+              expression,
+              makeLiteralExpression(kind !== "const"),
+              makeLiteralExpression(true),
+              makeLiteralExpression(false),
+            ),
           ),
         ),
       ),
-    ),
-  ];
+    ];
+  } else {
+    checkConflict(conflicts, bindings, variable);
+    return null;
+  }
 };
 
 export const lookupFrameAll = constant___(undefined);

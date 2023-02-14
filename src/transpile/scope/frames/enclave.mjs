@@ -1,7 +1,8 @@
+import { includes } from "array-lite";
+
 import {
   constant_,
   constant___,
-  constant____,
   assert,
   expect1,
   dropxxxxx_x,
@@ -29,11 +30,9 @@ const mapping = {
   class: "let",
 };
 
-export const KINDS = ownKeys(mapping);
+const KINDS = ownKeys(mapping);
 
 export const createFrame = ({ program }) => ({ program });
-
-export const conflictFrame = constant____(undefined);
 
 export const harvestFrameHeader = constant_([]);
 
@@ -53,15 +52,18 @@ const checkProgram = ({ program }, variable) => {
 // is made from a local eval program.
 // It should throw an EnclaveLimitationAranError
 
-export const declareFrame = (
-  _strict,
-  frame,
-  _kind,
-  variable,
-  { exports: specifiers },
-) => {
-  checkProgram(frame, variable);
-  assert(specifiers.length === 0, "declare exported variable on enclave frame");
+export const declareFrame = (_strict, frame, kind, variable, options) => {
+  if (includes(KINDS, kind)) {
+    const { exports: specifiers } = options;
+    checkProgram(frame, variable);
+    assert(
+      specifiers.length === 0,
+      "declare exported variable on enclave frame",
+    );
+    return true;
+  } else {
+    return false;
+  }
 };
 
 export const makeFrameInitializeStatementArray = (
@@ -71,8 +73,12 @@ export const makeFrameInitializeStatementArray = (
   variable,
   expression,
 ) => {
-  checkProgram(frame, variable);
-  return [makeDeclareExternalStatement(mapping[kind], variable, expression)];
+  if (includes(KINDS, kind)) {
+    checkProgram(frame, variable);
+    return [makeDeclareExternalStatement(mapping[kind], variable, expression)];
+  } else {
+    return null;
+  }
 };
 
 export const lookupFrameAll = constant___(undefined);

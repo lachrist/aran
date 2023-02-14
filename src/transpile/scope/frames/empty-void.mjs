@@ -1,9 +1,8 @@
 import {
   incrementCounter,
   constant_,
-  constant____,
+  constant_____,
   dropxxxxx_x,
-  deadcode_____,
   constant_______,
   constant___,
 } from "../../../util/index.mjs";
@@ -19,23 +18,17 @@ import { makeThrowMissingExpression } from "./helper.mjs";
 
 const { undefined } = globalThis;
 
-export const KINDS = [];
-
 export const createFrame = ({ macro }) => ({
   dynamic: macro,
 });
-
-export const conflictFrame = constant____(undefined);
 
 export const harvestFrameHeader = constant_([]);
 
 export const harvestFramePrelude = constant_([]);
 
-export const declareFrame = deadcode_____("declare called on empty-void frame");
+export const declareFrame = constant_____(false);
 
-export const makeFrameInitializeStatementArray = deadcode_____(
-  "makeInitializeStatementArray called on empty-void frame",
-);
+export const makeFrameInitializeStatementArray = constant_____(null);
 
 export const lookupFrameAll = constant___(undefined);
 

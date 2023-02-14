@@ -6,7 +6,6 @@ import {
   drop__x,
   constant_,
   assert,
-  deadcode_____,
   constant___,
 } from "../../../util/index.mjs";
 
@@ -33,10 +32,6 @@ export const createFrame = (_options) => ({
   bindings: {},
 });
 
-export const conflictFrame = (_strict, { bindings }, _kind, variable) => {
-  assert(!hasOwn(bindings, variable), "duplicate define variable");
-};
-
 export const harvestFrameHeader = ({ bindings }) =>
   map(ownKeys(bindings), mangleOriginalVariable);
 
@@ -45,17 +40,32 @@ export const harvestFramePrelude = constant_([]);
 export const declareFrame = (
   _strict,
   { bindings },
-  _kind,
+  kind,
   variable,
   _options,
 ) => {
-  assert(!includes(bindings, variable), "duplicate define variable");
-  defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
+  if (includes(KINDS, kind)) {
+    assert(!includes(bindings, variable), "duplicate define variable");
+    defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
+    return true;
+  } else {
+    return false;
+  }
 };
 
-export const makeFrameInitializeStatementArray = deadcode_____(
-  "makeInitializeStatementArray called on define-static frame",
-);
+export const makeFrameInitializeStatementArray = (
+  _strict,
+  _frame,
+  kind,
+  _variable,
+  _expression,
+) => {
+  assert(
+    !includes(KINDS, kind),
+    "define variables should never be initialized",
+  );
+  return null;
+};
 
 export const lookupFrameAll = constant___(undefined);
 

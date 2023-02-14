@@ -9,13 +9,22 @@ assertThrow(
     testBlock(Frame, {
       scenarios: [
         {
-          type: "conflict",
+          type: "declare",
+          kind: "define",
           variable: "variable",
+          declared: false,
+        },
+        {
+          type: "initialize",
+          kind: "define",
+          variable: "variable",
+          initialized: false,
         },
         {
           type: "declare",
           kind: "illegal",
           variable: "variable",
+          declared: true,
         },
         {
           type: "read",

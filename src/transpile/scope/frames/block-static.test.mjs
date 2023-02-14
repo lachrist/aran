@@ -12,8 +12,16 @@ assertSuccess(
     head: "let VARIABLE;",
     scenarios: [
       {
-        type: "conflict",
-        variable: "variable",
+        type: "declare",
+        variable: "VARIABLE",
+        kind: "var",
+        declared: false,
+      },
+      {
+        type: "initialize",
+        variable: "VARIABLE",
+        kind: "var",
+        initialized: false,
       },
       {
         type: "read",
@@ -27,6 +35,7 @@ assertSuccess(
         kind: "let",
         variable: "variable",
         options: { exports: ["specifier"] },
+        declared: true,
       },
       {
         type: "read",
@@ -52,6 +61,7 @@ assertSuccess(
           VARIABLE = 'right';
           specifier << VARIABLE;
         `,
+        initialized: true,
       },
       {
         type: "write",
@@ -79,6 +89,7 @@ assertSuccess(
         kind: "const",
         variable: "variable",
         options: { exports: [] },
+        declared: true,
       },
       {
         type: "lookup-all",
@@ -93,6 +104,7 @@ assertSuccess(
           VARIABLE = 'right';
           _VARIABLE = true;
         `,
+        initialized: true,
       },
       {
         type: "lookup-all",

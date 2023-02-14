@@ -15,6 +15,18 @@ assertSuccess(
     `,
     scenarios: [
       {
+        type: "declare",
+        kind: "let",
+        variable: "variable",
+        declared: false,
+      },
+      {
+        type: "initialize",
+        kind: "let",
+        variable: "variable",
+        initialized: false,
+      },
+      {
         type: "read",
         variable: "variable",
         next: (_strict, _frame, _scope, _escaped, _variable, _options) =>
@@ -26,6 +38,7 @@ assertSuccess(
         kind: "var",
         variable: "variable",
         options: { exports: ["specifier"] },
+        declared: true,
       },
       {
         type: "initialize",
@@ -36,6 +49,7 @@ assertSuccess(
           VARIABLE = 'right';
           specifier << VARIABLE;
         `,
+        initialized: true,
       },
       {
         type: "write",

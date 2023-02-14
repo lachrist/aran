@@ -12,9 +12,22 @@ assertSuccess(
     scenarios: [
       {
         type: "declare",
+        kind: "define",
+        variable: "VARIABLE",
+        declared: false,
+      },
+      {
+        type: "initialize",
+        kind: "define",
+        variable: "VARIABLE",
+        initialized: false,
+      },
+      {
+        type: "declare",
         kind: "var",
         options: { exports: [] },
         code: "",
+        declared: true,
       },
       {
         type: "initialize",
@@ -22,6 +35,7 @@ assertSuccess(
         variable: "variable",
         right: makeLiteralExpression("right"),
         code: "var [variable] = 'right';",
+        initialized: true,
       },
       {
         type: "read",

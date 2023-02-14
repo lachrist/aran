@@ -1,4 +1,3 @@
-import { includes } from "array-lite";
 import { getVariableLayer } from "./variable.mjs";
 
 import * as BlockDynamic from "./frames/block-dynamic.mjs";
@@ -80,19 +79,9 @@ export const harvestFramePrelude = generateHarvest("harvestFramePrelude");
 /////////////
 
 export const declareFrame = (strict, frame, kind, variable, options) => {
-  const {
-    KINDS,
-    declareFrame: declareFrameInner,
-    conflictFrame: conflictFrameInner,
-  } = libraries[frame.type];
+  const { declareFrame: declareFrameInner } = libraries[frame.type];
   if (frame.layer === getVariableLayer(variable)) {
-    if (includes(KINDS, kind)) {
-      declareFrameInner(strict, frame.inner, kind, variable, options);
-      return true;
-    } else {
-      conflictFrameInner(strict, frame.inner, kind, variable);
-      return false;
-    }
+    return declareFrameInner(strict, frame.inner, kind, variable, options);
   } else {
     return false;
   }
@@ -110,23 +99,16 @@ export const makeFrameInitializeStatementArray = (
   expression,
 ) => {
   const {
-    KINDS,
     makeFrameInitializeStatementArray: makeFrameInnerInitializeStatementArray,
-    conflictFrame: conflictFrameInner,
   } = libraries[frame.type];
   if (frame.layer === getVariableLayer(variable)) {
-    if (includes(KINDS, kind)) {
-      return makeFrameInnerInitializeStatementArray(
-        strict,
-        frame.inner,
-        kind,
-        variable,
-        expression,
-      );
-    } else {
-      conflictFrameInner(strict, frame.inner, kind, variable);
-      return null;
-    }
+    return makeFrameInnerInitializeStatementArray(
+      strict,
+      frame.inner,
+      kind,
+      variable,
+      expression,
+    );
   } else {
     return null;
   }

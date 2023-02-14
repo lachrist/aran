@@ -1,4 +1,4 @@
-import { map } from "array-lite";
+import { includes, map } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
@@ -10,7 +10,6 @@ import {
   constant_,
   partialx___,
   constant___,
-  constant____,
   partialx_,
 } from "../../../util/index.mjs";
 
@@ -46,8 +45,6 @@ export const createFrame = ({ macro, observable }) => ({
   observable,
 });
 
-export const conflictFrame = constant____(undefined);
-
 const makeDeclareStatement = (dynamic, variable) =>
   makeEffectStatement(
     makeExpressionEffect(
@@ -78,39 +75,49 @@ export const harvestFramePrelude = ({
 export const declareFrame = (
   _strict,
   { static: bindings },
-  _kind,
+  kind,
   variable,
-  { exports: specifiers },
+  options,
 ) => {
-  assert(specifiers.length === 0, "unexpected global exported variable");
-  if (!hasOwn(bindings, variable)) {
-    defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
+  if (includes(KINDS, kind)) {
+    const { exports: specifiers } = options;
+    assert(specifiers.length === 0, "unexpected global exported variable");
+    if (!hasOwn(bindings, variable)) {
+      defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
+    }
+    return true;
+  } else {
+    return false;
   }
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
   { dynamic, static: bindings },
-  _kind,
+  kind,
   variable,
   expression,
 ) => {
-  assert(
-    hasOwn(bindings, variable),
-    "missing binding for variable initialization",
-  );
-  return [
-    makeEffectStatement(
-      makeExpressionEffect(
-        makeSetExpression(
-          true,
-          dynamic,
-          makeLiteralExpression(variable),
-          expression,
+  if (includes(KINDS, kind)) {
+    assert(
+      hasOwn(bindings, variable),
+      "missing binding for variable initialization",
+    );
+    return [
+      makeEffectStatement(
+        makeExpressionEffect(
+          makeSetExpression(
+            true,
+            dynamic,
+            makeLiteralExpression(variable),
+            expression,
+          ),
         ),
       ),
-    ),
-  ];
+    ];
+  } else {
+    return null;
+  }
 };
 
 export const lookupFrameAll = constant___(undefined);

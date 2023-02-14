@@ -10,8 +10,16 @@ assertSuccess(
   testBlock(Frame, {
     scenarios: [
       {
-        type: "conflict",
-        variable: "variable",
+        type: "declare",
+        variable: "VARIABLE",
+        kind: "var",
+        declared: false,
+      },
+      {
+        type: "initialize",
+        variable: "VARIABLE",
+        kind: "var",
+        initialized: false,
       },
       {
         type: "read",
@@ -25,6 +33,7 @@ assertSuccess(
         kind: "let",
         variable: "variable",
         options: { exports: [] },
+        declared: true,
       },
       {
         type: "discard",

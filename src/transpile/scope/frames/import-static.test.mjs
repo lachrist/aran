@@ -10,15 +10,23 @@ assertSuccess(
   testBlock(Frame, {
     scenarios: [
       {
+        type: "declare",
+        kind: "define",
+        variable: "VARIABLE",
+        declared: false,
+      },
+      {
+        type: "initialize",
+        kind: "define",
+        variable: "VARIABLE",
+        initialized: false,
+      },
+      {
         type: "read",
         variable: "variable",
         next: (_strict, _frame, _scope, _escaped, _variable, _options) =>
           makeLiteralExpression("next"),
         code: `"next"`,
-      },
-      {
-        type: "conflict",
-        variable: "variable",
       },
       {
         type: "declare",
@@ -28,6 +36,7 @@ assertSuccess(
           source: "source",
           specifier: "specifier",
         },
+        declared: true,
       },
       {
         type: "read",

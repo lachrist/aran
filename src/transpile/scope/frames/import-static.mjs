@@ -1,12 +1,14 @@
+import { includes } from "array-lite";
+
 import {
   NULL_DATA_DESCRIPTOR,
+  assert,
   expect1,
   constant___,
   constant_,
   hasOwn,
   dropx__,
   drop_xx,
-  deadcode_____,
 } from "../../../util/index.mjs";
 
 import {
@@ -30,20 +32,6 @@ export const KINDS = ["import"];
 
 export const createFrame = (_options) => ({ static: {} });
 
-export const conflictFrame = (
-  _strict,
-  { static: bindings },
-  _kind,
-  variable,
-) => {
-  expect1(
-    !hasOwn(bindings, variable),
-    DuplicateError,
-    DUPLICATE_TEMPLATE,
-    variable,
-  );
-};
-
 export const harvestFrameHeader = constant_([]);
 
 export const harvestFramePrelude = constant_([]);
@@ -51,9 +39,9 @@ export const harvestFramePrelude = constant_([]);
 export const declareFrame = (
   _strict,
   { static: bindings },
-  _kind,
+  kind,
   variable,
-  { source, specifier },
+  options,
 ) => {
   expect1(
     !hasOwn(bindings, variable),
@@ -61,15 +49,31 @@ export const declareFrame = (
     DUPLICATE_TEMPLATE,
     variable,
   );
-  defineProperty(bindings, variable, {
-    __proto__: NULL_DATA_DESCRIPTOR,
-    value: { source, specifier },
-  });
+  if (includes(KINDS, kind)) {
+    const { source, specifier } = options;
+    defineProperty(bindings, variable, {
+      __proto__: NULL_DATA_DESCRIPTOR,
+      value: { source, specifier },
+    });
+    return true;
+  } else {
+    return false;
+  }
 };
 
-export const makeFrameInitializeStatementArray = deadcode_____(
-  "makeInitializeStatementArray called on import-static frame",
-);
+export const makeFrameInitializeStatementArray = (
+  _strict,
+  _frame,
+  kind,
+  _variable,
+  _expression,
+) => {
+  assert(
+    !includes(KINDS, kind),
+    "import variables should never be initialized",
+  );
+  return null;
+};
 
 export const lookupFrameAll = constant___(undefined);
 

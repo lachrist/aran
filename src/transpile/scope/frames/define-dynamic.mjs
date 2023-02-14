@@ -1,10 +1,11 @@
+import { includes } from "array-lite";
+
 import {
   drop__x,
   NULL_DATA_DESCRIPTOR,
   hasOwn,
   constant_,
   partialx___,
-  deadcode_____,
   assert,
   constant___,
 } from "../../../util/index.mjs";
@@ -31,15 +32,6 @@ export const createFrame = ({ macro, observable }) => ({
   observable,
 });
 
-export const conflictFrame = (
-  _strict,
-  { static: bindings },
-  _kind,
-  variable,
-) => {
-  assert(!hasOwn(bindings, variable), "duplicate define variable");
-};
-
 export const harvestFrameHeader = constant_([]);
 
 export const harvestFramePrelude = constant_([]);
@@ -47,17 +39,29 @@ export const harvestFramePrelude = constant_([]);
 export const declareFrame = (
   _strict,
   { static: bindings },
-  _kind,
+  kind,
   variable,
   _options,
 ) => {
-  assert(!hasOwn(bindings, variable), "duplicate define variable");
-  defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
+  if (includes(KINDS, kind)) {
+    assert(!hasOwn(bindings, variable), "duplicate define variable");
+    defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
+    return true;
+  } else {
+    return false;
+  }
 };
 
-export const makeFrameInitializeStatementArray = deadcode_____(
-  "makeInitializeStatementArray called on define-dynamic frame",
-);
+export const makeFrameInitializeStatementArray = (
+  _strict,
+  _frame,
+  kind,
+  _variable,
+  _expression,
+) => {
+  assert(!includes(KINDS, kind), "define variable should never be initialized");
+  return null;
+};
 
 export const lookupFrameAll = constant___(undefined);
 
