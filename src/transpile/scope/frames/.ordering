@@ -1,4 +1,5 @@
 __fixture__.mjs
+__fixture_new__.mjs
 helper.mjs
 block-dynamic.mjs
 block-static-dead.mjs
