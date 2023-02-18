@@ -2,10 +2,8 @@ import { includes, map } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
-  incrementCounter,
   hasOwn,
   assert,
-  noop_,
   drop__x,
   constant_,
   partialx___,
@@ -39,10 +37,9 @@ const {
 
 export const KINDS = ["var", "function"];
 
-export const createFrame = ({ macro, observable }) => ({
+export const createFrame = ({ macro }) => ({
   dynamic: macro,
   static: {},
-  observable,
 });
 
 const makeDeclareStatement = (dynamic, variable) =>
@@ -123,19 +120,16 @@ export const makeFrameInitializeStatementArray = (
 export const lookupFrameAll = constant___(undefined);
 
 const compileMakeLookupNode =
-  (makeConditionalNode, makePresentNode, observe) =>
+  (makeConditionalNode, makePresentNode) =>
   (
     next,
     strict,
-    { static: bindings, dynamic: macro, observable },
+    { static: bindings, dynamic: macro },
     scope,
     escaped,
     variable,
     options,
   ) => {
-    if (observable) {
-      observe(options);
-    }
     const node = makePresentNode(
       macro,
       makeLiteralExpression(variable),
@@ -155,26 +149,19 @@ const compileMakeLookupNode =
 export const makeFrameReadExpression = compileMakeLookupNode(
   makeConditionalExpression,
   drop__x(makeGetExpression),
-  noop_,
 );
 
 export const makeFrameTypeofExpression = compileMakeLookupNode(
   makeConditionalExpression,
   drop__x(makeTypeofGetExpression),
-  noop_,
 );
 
 export const makeFrameDiscardExpression = compileMakeLookupNode(
   makeConditionalExpression,
   drop__x(makeDeleteSloppyExpression),
-  noop_,
 );
 
 export const makeFrameWriteEffect = compileMakeLookupNode(
   makeConditionalEffect,
   partialx___(makeIncrementSetEffect, true),
-  ({ counter }) => {
-    incrementCounter(counter);
-    incrementCounter(counter);
-  },
 );

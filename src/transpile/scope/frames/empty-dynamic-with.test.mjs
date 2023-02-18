@@ -1,6 +1,4 @@
-import { assertEqual, assertSuccess } from "../../../__fixture__.mjs";
-
-import { createCounter, gaugeCounter } from "../../../util/index.mjs";
+import { assertSuccess } from "../../../__fixture__.mjs";
 
 import {
   makeLiteralExpression,
@@ -10,10 +8,6 @@ import {
 import { testBlock } from "./__fixture__.mjs";
 
 import * as Frame from "./empty-dynamic-with.mjs";
-
-const initial = 123;
-
-const counter = createCounter(initial);
 
 assertSuccess(
   testBlock(Frame, {
@@ -29,7 +23,6 @@ assertSuccess(
         next: (_strict, _frame, _scope, _escaped, _variable, _options) =>
           makeExpressionEffect(makeLiteralExpression("next")),
         right: makeLiteralExpression("right"),
-        counter,
         variable: "variable",
         code: `(
           (
@@ -51,5 +44,3 @@ assertSuccess(
     ],
   }),
 );
-
-assertEqual(gaugeCounter(counter), initial + 3);

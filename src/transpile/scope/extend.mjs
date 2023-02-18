@@ -27,6 +27,7 @@ import {
   ILLEGAL,
   IMPORT_STATIC,
   MACRO,
+  OBSERVABLE,
 } from "./frame.mjs";
 
 import { makeScopeFrameBlock, makeScopeFrameScriptProgram } from "./scope.mjs";
@@ -43,7 +44,6 @@ const createMetaFrameArray = () => [
 const createPseudoMetaFrameArray = () => [
   createFrame(DEFINE_DYNAMIC, META, {
     macro: makeIntrinsicExpression("aran.globalCache"),
-    observable: false,
   }),
   createFrame(MACRO, META, {}),
 ];
@@ -65,15 +65,13 @@ const createRootBaseFrameArray = (enclave, program) =>
     : [
         createFrame(EMPTY_VOID, BASE, {
           macro: makeIntrinsicExpression("aran.globalObject"),
-          observable: true,
         }),
         createFrame(CLOSURE_DYNAMIC, BASE, {
           macro: makeIntrinsicExpression("aran.globalObject"),
-          observable: true,
         }),
+        createFrame(OBSERVABLE, BASE, {}),
         createFrame(BLOCK_DYNAMIC, BASE, {
           macro: makeIntrinsicExpression("aran.globalRecord"),
-          observable: false,
         }),
       ];
 
@@ -106,12 +104,13 @@ const createStaticClosureBaseFrameArray = () => [
 ];
 
 const createDynamicClosureBaseFrameArray = (macro) => [
-  createFrame(CLOSURE_DYNAMIC, BASE, { macro, observable: false }),
+  createFrame(CLOSURE_DYNAMIC, BASE, { macro }),
   createFrame(BLOCK_STATIC, BASE, { distant: false }),
 ];
 
 const createWithBaseFrameArray = (macro) => [
-  createFrame(EMPTY_DYNAMIC_WITH, BASE, { macro, observable: true }),
+  createFrame(EMPTY_DYNAMIC_WITH, BASE, { macro }),
+  createFrame(OBSERVABLE, BASE, {}),
   createFrame(BLOCK_STATIC, BASE, { distant: false }),
 ];
 

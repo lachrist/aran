@@ -14,6 +14,7 @@ import * as EscapeClosure from "./frames/escape-closure.mjs";
 import * as Illegal from "./frames/illegal.mjs";
 import * as ImportStatic from "./frames/import-static.mjs";
 import * as Macro from "./frames/macro.mjs";
+import * as Observable from "./frames/observable.mjs";
 
 export const BLOCK_DYNAMIC = "block-dynamic";
 export const BLOCK_STATIC_DEAD = "block-static-dead";
@@ -29,6 +30,7 @@ export const ESCAPE_CLOSURE = "escape-closure";
 export const ILLEGAL = "illegal";
 export const IMPORT_STATIC = "import-static";
 export const MACRO = "macro";
+export const OBSERVABLE = "observable";
 
 const libraries = {
   __proto__: null,
@@ -46,6 +48,7 @@ const libraries = {
   [ILLEGAL]: Illegal,
   [IMPORT_STATIC]: ImportStatic,
   [MACRO]: Macro,
+  [OBSERVABLE]: Observable,
 };
 
 ////////////

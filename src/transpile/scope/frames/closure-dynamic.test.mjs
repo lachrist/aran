@@ -1,6 +1,4 @@
-import { assertSuccess, assertEqual } from "../../../__fixture__.mjs";
-
-import { createCounter, gaugeCounter } from "../../../util/index.mjs";
+import { assertSuccess } from "../../../__fixture__.mjs";
 
 import { makeLiteralExpression } from "../../../ast/index.mjs";
 
@@ -8,15 +6,10 @@ import { testBlock } from "./__fixture__.mjs";
 
 import * as Frame from "./closure-dynamic.mjs";
 
-const initial = 123;
-
-const counter = createCounter(initial);
-
 assertSuccess(
   testBlock(Frame, {
     options: {
       macro: makeLiteralExpression("dynamic"),
-      observable: true,
     },
     head: `void (
       intrinsic.aran.binary('in', 'variable', 'dynamic') ?
@@ -92,10 +85,7 @@ assertSuccess(
         variable: "variable",
         code: `void intrinsic.aran.setStrict('dynamic', 'variable', 'right')`,
         right: makeLiteralExpression("right"),
-        counter,
       },
     ],
   }),
 );
-
-assertEqual(gaugeCounter(counter), initial + 3);
