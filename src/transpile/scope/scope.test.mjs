@@ -18,7 +18,7 @@ import {
   createFrame,
   BLOCK_STATIC,
   DEFINE_STATIC,
-  ESCAPE_CLOSURE,
+  ESCAPE,
   MACRO,
 } from "./frame.mjs";
 
@@ -134,7 +134,7 @@ assertSuccess(
                 makeScopeReadExpression(
                   STRICT,
                   {
-                    car: createFrame(ESCAPE_CLOSURE, BASE, {}),
+                    car: createFrame(ESCAPE, BASE, {}),
                     cdr: scope,
                   },
                   "variable",

@@ -22,7 +22,7 @@ import {
   DEFINE_STATIC,
   EMPTY_DYNAMIC_WITH,
   EMPTY_VOID,
-  ESCAPE_CLOSURE,
+  ESCAPE,
   ENCLAVE,
   ILLEGAL,
   IMPORT_STATIC,
@@ -93,9 +93,9 @@ const createModuleBaseFrameArray = () => [
 ];
 
 const createEscapeClosureFrameArray = () => [
-  createFrame(ESCAPE_CLOSURE, BASE, {}),
-  createFrame(ESCAPE_CLOSURE, SPEC, {}),
-  createFrame(ESCAPE_CLOSURE, META, {}),
+  createFrame(ESCAPE, BASE, {}),
+  createFrame(ESCAPE, SPEC, {}),
+  createFrame(ESCAPE, META, {}),
 ];
 
 const createStaticClosureBaseFrameArray = () => [
