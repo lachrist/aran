@@ -33,6 +33,7 @@ export const harvestFramePrelude = constant_([]);
 export const declareFrame = (
   _strict,
   { static: bindings },
+  trail,
   kind,
   variable,
   options,
@@ -44,21 +45,22 @@ export const declareFrame = (
       __proto__: NULL_DATA_DESCRIPTOR,
       value: macro,
     });
-    return true;
+    return null;
   } else {
-    return false;
+    return trail;
   }
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
   _frame,
+  trail,
   kind,
   _variable,
   _expression,
 ) => {
   assert(!includes(KINDS, kind), "macro variables should never be initialized");
-  return null;
+  return trail;
 };
 
 export const lookupFrameAll = constant___(undefined);

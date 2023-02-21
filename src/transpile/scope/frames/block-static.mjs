@@ -76,6 +76,7 @@ export const harvestFramePrelude = ({ bindings }) =>
 export const declareFrame = (
   _strict,
   { bindings },
+  trail,
   kind,
   variable,
   options,
@@ -97,15 +98,16 @@ export const declareFrame = (
         exports: specifiers,
       },
     });
-    return true;
+    return null;
   } else {
-    return false;
+    return trail;
   }
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
   { bindings, distant },
+  trail,
   kind,
   variable,
   expression,
@@ -146,7 +148,7 @@ export const makeFrameInitializeStatementArray = (
       DUPLICATE_TEMPLATE,
       variable,
     );
-    return null;
+    return trail;
   }
 };
 

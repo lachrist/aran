@@ -31,6 +31,7 @@ import {
 } from "./frame.mjs";
 
 const {
+  Array: { isArray },
   JSON: { stringify: stringifyJSON, parse: parseJSON },
 } = globalThis;
 
@@ -115,11 +116,20 @@ export const makeScopeEvalExpression = (strict, scope, expression) => {
 // Declare //
 /////////////
 
-export const declareScope = (strict, scope1, kind, variable, options) => {
-  assert(scope1 !== null, "missing binding scope during declaration");
-  const { car: frame, cdr: scope2 } = scope1;
-  if (!declareFrame(strict, frame, kind, variable, options)) {
-    declareScope(strict, scope2, kind, variable, options);
+export const declareScope = (strict, scope, kind, variable, options) => {
+  let maybe_trail = {};
+  while (maybe_trail !== null) {
+    assert(scope !== null, "missing binding scope during declaration");
+    const { car: frame, cdr: parent_scope } = scope;
+    scope = parent_scope;
+    maybe_trail = declareFrame(
+      strict,
+      frame,
+      maybe_trail,
+      kind,
+      variable,
+      options,
+    );
   }
 };
 
@@ -129,31 +139,26 @@ export const declareScope = (strict, scope1, kind, variable, options) => {
 
 export const makeScopeInitializeStatementArray = (
   strict,
-  scope1,
+  scope,
   kind,
   variable,
   expression,
 ) => {
-  assert(scope1 !== null, "missing binding scope during initialization");
-  const { car: frame, cdr: scope2 } = scope1;
-  const maybe = makeFrameInitializeStatementArray(
-    strict,
-    frame,
-    kind,
-    variable,
-    expression,
-  );
-  if (maybe === null) {
-    return makeScopeInitializeStatementArray(
+  let either = {};
+  while (!isArray(either)) {
+    assert(scope !== null, "missing binding scope during initialization");
+    const { car: frame, cdr: parent_scope } = scope;
+    scope = parent_scope;
+    either = makeFrameInitializeStatementArray(
       strict,
-      scope2,
+      frame,
+      either,
       kind,
       variable,
       expression,
     );
-  } else {
-    return maybe;
   }
+  return either;
 };
 
 ////////////

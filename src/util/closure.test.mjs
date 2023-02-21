@@ -85,7 +85,7 @@ forEach(combine(6, ["_"]), (description) => {
   );
 });
 
-forEach(combine(5, ["", "_", "x"]), (description) => {
+forEach(combine(6, ["", "_", "x"]), (description) => {
   if (getOwnPropertyDescriptor(Library, `return${description}`) !== undefined) {
     const rreturn = Library[`return${description}`];
     assertEqual(

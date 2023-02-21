@@ -16,6 +16,7 @@ import { allignBlock, allignProgram } from "../../../allign/index.mjs";
 const {
   undefined,
   Error,
+  Array: { isArray },
   Reflect: { ownKeys },
   Object: { assign },
 } = globalThis;
@@ -54,6 +55,7 @@ export const default_scenario = {
   strict: false,
   scope: null,
   escaped: false,
+  trail: {},
   next: nextForbidden,
   code: "",
   right: makeLiteralExpression("dummy-right"),
@@ -74,9 +76,9 @@ const arities = {
   createFrame: 1,
   harvestFramePrelude: 1,
   harvestFrameHeader: 1,
-  declareFrame: 5,
+  declareFrame: 6,
+  makeFrameInitializeStatementArray: 6,
   lookupFrameAll: 3,
-  makeFrameInitializeStatementArray: 5,
   makeFrameReadExpression: 7,
   makeFrameTypeofExpression: 7,
   makeFrameDiscardExpression: 7,
@@ -104,32 +106,36 @@ const generateTest =
       if (scenario.type === "declare") {
         const { declareFrame } = Frame;
         assert(
-          declareFrame(
+          (declareFrame(
             scenario.strict,
             frame,
+            scenario.trail,
             scenario.kind,
             scenario.variable,
             scenario.options,
-          ) === scenario.declared,
+          ) ===
+            null) ===
+            scenario.declared,
           "declared mismatch",
         );
         return [];
       } else if (scenario.type === "initialize") {
         const { makeFrameInitializeStatementArray } = Frame;
         body = `${body}\n${scenario.code}`;
-        const maybe_statement_array = makeFrameInitializeStatementArray(
+        const either = makeFrameInitializeStatementArray(
           scenario.strict,
           frame,
+          scenario.trail,
           scenario.kind,
           scenario.variable,
           scenario.right,
         );
         assert(
-          (maybe_statement_array !== null) === scenario.initialized,
+          isArray(either) === scenario.initialized,
           "initialized mismatch",
         );
         /* c8 ignore start */
-        return maybe_statement_array === null ? [] : maybe_statement_array;
+        return isArray(either) ? either : [];
         /* c8 ignore stop */
       } else if (scenario.type === "lookup-all") {
         const { lookupFrameAll } = Frame;

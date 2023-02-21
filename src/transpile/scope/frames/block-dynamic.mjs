@@ -103,6 +103,7 @@ export const harvestFramePrelude = ({ dynamic, conflicts, static: bindings }) =>
 export const declareFrame = (
   _strict,
   { conflicts, static: bindings },
+  trail,
   kind,
   variable,
   options,
@@ -115,15 +116,16 @@ export const declareFrame = (
       __proto__: NULL_DATA_DESCRIPTOR,
       value: false,
     });
-    return true;
+    return null;
   } else {
-    return false;
+    return trail;
   }
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
   { conflicts, dynamic: macro, static: bindings },
+  trail,
   kind,
   variable,
   expression,
@@ -150,7 +152,7 @@ export const makeFrameInitializeStatementArray = (
     ];
   } else {
     checkConflict(conflicts, bindings, variable);
-    return null;
+    return trail;
   }
 };
 

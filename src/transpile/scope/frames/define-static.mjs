@@ -40,6 +40,7 @@ export const harvestFramePrelude = constant_([]);
 export const declareFrame = (
   _strict,
   { bindings },
+  trail,
   kind,
   variable,
   _options,
@@ -47,15 +48,16 @@ export const declareFrame = (
   if (includes(KINDS, kind)) {
     assert(!includes(bindings, variable), "duplicate define variable");
     defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
-    return true;
+    return null;
   } else {
-    return false;
+    return trail;
   }
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
   _frame,
+  trail,
   kind,
   _variable,
   _expression,
@@ -64,7 +66,7 @@ export const makeFrameInitializeStatementArray = (
     !includes(KINDS, kind),
     "define variables should never be initialized",
   );
-  return null;
+  return trail;
 };
 
 export const lookupFrameAll = constant___(undefined);

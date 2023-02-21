@@ -50,6 +50,7 @@ export const harvestFramePrelude = constant_([]);
 export const declareFrame = (
   _strict,
   { bindings },
+  trail,
   kind,
   variable,
   options,
@@ -64,15 +65,16 @@ export const declareFrame = (
     const { exports: specifiers } = options;
     assert(specifiers.length === 0, "unexpected exported variable");
     defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
-    return true;
+    return null;
   } else {
-    return false;
+    return trail;
   }
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
   { bindings },
+  trail,
   kind,
   variable,
   _expression,
@@ -84,7 +86,7 @@ export const makeFrameInitializeStatementArray = (
     DUPLICATE_TEMPLATE,
     variable,
   );
-  return null;
+  return trail;
 };
 
 export const lookupFrameAll = constant___(undefined);

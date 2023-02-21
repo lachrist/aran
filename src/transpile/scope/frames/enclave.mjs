@@ -47,37 +47,51 @@ const checkProgram = ({ program }, variable) => {
   );
 };
 
-// TODO
-// Detect when declare external global variable
-// is made from a local eval program.
-// It should throw an EnclaveLimitationAranError
+const checkTrail = ({ program }, variable) => {
+  expect1(
+    !program,
+    EnclaveLimitationAranError,
+    "Aran only support declaring external variables in script programs, got: %s",
+    variable,
+  );
+};
 
-export const declareFrame = (_strict, frame, kind, variable, options) => {
+export const declareFrame = (
+  _strict,
+  frame,
+  trail,
+  kind,
+  variable,
+  options,
+) => {
   if (includes(KINDS, kind)) {
     const { exports: specifiers } = options;
     checkProgram(frame, variable);
+    checkTrail(trail, variable);
     assert(
       specifiers.length === 0,
       "declare exported variable on enclave frame",
     );
-    return true;
+    return null;
   } else {
-    return false;
+    return trail;
   }
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
   frame,
+  trail,
   kind,
   variable,
   expression,
 ) => {
   if (includes(KINDS, kind)) {
     checkProgram(frame, variable);
+    checkTrail(trail, variable);
     return [makeDeclareExternalStatement(mapping[kind], variable, expression)];
   } else {
-    return null;
+    return trail;
   }
 };
 

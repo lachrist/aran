@@ -81,12 +81,19 @@ export const harvestFramePrelude = generateHarvest("harvestFramePrelude");
 // Declare //
 /////////////
 
-export const declareFrame = (strict, frame, kind, variable, options) => {
+export const declareFrame = (strict, frame, trail, kind, variable, options) => {
   const { declareFrame: declareFrameInner } = libraries[frame.type];
   if (frame.layer === getVariableLayer(variable)) {
-    return declareFrameInner(strict, frame.inner, kind, variable, options);
+    return declareFrameInner(
+      strict,
+      frame.inner,
+      trail,
+      kind,
+      variable,
+      options,
+    );
   } else {
-    return false;
+    return trail;
   }
 };
 
@@ -97,6 +104,7 @@ export const declareFrame = (strict, frame, kind, variable, options) => {
 export const makeFrameInitializeStatementArray = (
   strict,
   frame,
+  trail,
   kind,
   variable,
   expression,
@@ -108,12 +116,13 @@ export const makeFrameInitializeStatementArray = (
     return makeFrameInnerInitializeStatementArray(
       strict,
       frame.inner,
+      trail,
       kind,
       variable,
       expression,
     );
   } else {
-    return null;
+    return trail;
   }
 };
 

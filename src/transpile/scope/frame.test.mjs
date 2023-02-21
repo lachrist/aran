@@ -1,6 +1,10 @@
 import { concat } from "array-lite";
 
-import { assertSuccess, assertEqual } from "../../__fixture__.mjs";
+import {
+  assertSuccess,
+  assertEqual,
+  assertDeepEqual,
+} from "../../__fixture__.mjs";
 
 import {
   makeExpressionEffect,
@@ -30,17 +34,22 @@ const STRICT = true;
 
 const ESCAPED = true;
 
+const TRAIL = {};
+
 const frame = createFrame(CLOSURE_STATIC, "meta", {});
 
 // Declare on other layer //
-assertEqual(declareFrame(STRICT, frame, "var", "base", { exports: [] }), false);
+assertDeepEqual(
+  declareFrame(STRICT, frame, TRAIL, "var", "base", { exports: [] }),
+  TRAIL,
+);
 
 // Declare on same layer but other kind //
 assertEqual(
-  declareFrame(STRICT, frame, "const", makeMetaVariable("meta", 123), {
+  declareFrame(STRICT, frame, TRAIL, "const", makeMetaVariable("meta", 123), {
     exports: [],
   }),
-  false,
+  TRAIL,
 );
 
 // Initialize on other layer //
@@ -48,11 +57,12 @@ assertEqual(
   makeFrameInitializeStatementArray(
     STRICT,
     frame,
+    TRAIL,
     "var",
     "base",
     makeLiteralExpression("right"),
   ),
-  null,
+  TRAIL,
 );
 
 // Initialize on same layer but other kind //
@@ -60,18 +70,19 @@ assertEqual(
   makeFrameInitializeStatementArray(
     STRICT,
     frame,
+    TRAIL,
     "const",
     makeMetaVariable("meta", 123),
     makeLiteralExpression("right"),
   ),
-  null,
+  TRAIL,
 );
 
 assertEqual(
-  declareFrame(STRICT, frame, "var", makeMetaVariable("meta", 123), {
+  declareFrame(STRICT, frame, TRAIL, "var", makeMetaVariable("meta", 123), {
     exports: [],
   }),
-  true,
+  null,
 );
 
 lookupFrameAll(STRICT, ESCAPED, frame);
@@ -80,6 +91,7 @@ const body = concat(
   makeFrameInitializeStatementArray(
     STRICT,
     frame,
+    TRAIL,
     "var",
     makeMetaVariable("meta", 123),
     makeLiteralExpression("right"),

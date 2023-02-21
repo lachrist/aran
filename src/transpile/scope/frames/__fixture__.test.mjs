@@ -34,16 +34,17 @@ assertSuccess(
       },
       harvestFrameHeader: ({ header }) => header,
       harvestFramePrelude: ({ prelude }) => prelude,
-      declareFrame: (strict, { header }, kind, variable, options) => {
+      declareFrame: (strict, { header }, _trail, kind, variable, options) => {
         assertEqual(strict, true);
         assertEqual(kind, "kind");
         assertDeepEqual(options, { options: null });
         push(header, variable);
-        return true;
+        return null;
       },
       makeFrameInitializeStatementArray: (
         strict,
         { tag },
+        _trail,
         kind,
         variable,
         expression,

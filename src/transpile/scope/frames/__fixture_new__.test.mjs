@@ -4,7 +4,7 @@ import {
   returnx,
   constant_,
   constant___,
-  constant_____,
+  constant______,
   constant_______,
 } from "../../../util/index.mjs";
 
@@ -26,8 +26,8 @@ const Frame = {
   harvestFramePrelude: constant_([
     makeEffectStatement(makeExpressionEffect(makeLiteralExpression("prelude"))),
   ]),
-  declareFrame: constant_____(undefined),
-  makeFrameInitializeStatementArray: constant_____([]),
+  declareFrame: constant______(undefined),
+  makeFrameInitializeStatementArray: constant______([]),
   lookupFrameAll: constant___(undefined),
   makeFrameReadExpression: constant_______(makeLiteralExpression("read")),
   makeFrameTypeofExpression: constant_______(makeLiteralExpression("typeof")),

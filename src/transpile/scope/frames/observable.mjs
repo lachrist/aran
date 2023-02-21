@@ -2,7 +2,7 @@ import {
   incrementCounter,
   constant_,
   constant___,
-  constant_____,
+  return__x___,
 } from "../../../util/index.mjs";
 
 const { undefined } = globalThis;
@@ -13,9 +13,9 @@ export const harvestFrameHeader = constant_([]);
 
 export const harvestFramePrelude = constant_([]);
 
-export const declareFrame = constant_____(false);
+export const declareFrame = return__x___;
 
-export const makeFrameInitializeStatementArray = constant_____(null);
+export const makeFrameInitializeStatementArray = return__x___;
 
 export const lookupFrameAll = constant___(undefined);
 

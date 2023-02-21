@@ -16,3 +16,4 @@ illegal.mjs
 import-static.mjs
 macro.mjs
 observable.mjs
+trail.mjs

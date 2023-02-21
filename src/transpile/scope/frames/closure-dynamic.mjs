@@ -72,6 +72,7 @@ export const harvestFramePrelude = ({
 export const declareFrame = (
   _strict,
   { static: bindings },
+  trail,
   kind,
   variable,
   options,
@@ -82,15 +83,16 @@ export const declareFrame = (
     if (!hasOwn(bindings, variable)) {
       defineProperty(bindings, variable, NULL_DATA_DESCRIPTOR);
     }
-    return true;
+    return null;
   } else {
-    return false;
+    return trail;
   }
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
   { dynamic, static: bindings },
+  trail,
   kind,
   variable,
   expression,
@@ -113,7 +115,7 @@ export const makeFrameInitializeStatementArray = (
       ),
     ];
   } else {
-    return null;
+    return trail;
   }
 };
 

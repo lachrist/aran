@@ -65,6 +65,7 @@ export const harvestFramePrelude = ({ bindings }) =>
 export const declareFrame = (
   _strict,
   { bindings },
+  trail,
   kind,
   variable,
   options,
@@ -78,15 +79,16 @@ export const declareFrame = (
       });
     }
     pushAll(bindings[variable], specifiers);
-    return true;
+    return null;
   } else {
-    return false;
+    return trail;
   }
 };
 
 export const makeFrameInitializeStatementArray = (
   _strict,
   { bindings },
+  trail,
   kind,
   variable,
   expression,
@@ -108,7 +110,7 @@ export const makeFrameInitializeStatementArray = (
       ),
     );
   } else {
-    return null;
+    return trail;
   }
 };
 
