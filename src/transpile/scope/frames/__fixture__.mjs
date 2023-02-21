@@ -55,7 +55,9 @@ export const default_scenario = {
   strict: false,
   scope: null,
   escaped: false,
-  trail: {},
+  trail: {
+    program: false,
+  },
   next: nextForbidden,
   code: "",
   right: makeLiteralExpression("dummy-right"),

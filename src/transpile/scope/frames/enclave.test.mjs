@@ -8,7 +8,7 @@ import * as Frame from "./enclave.mjs";
 
 assertSuccess(
   testBlock(Frame, {
-    options: { program: "script" },
+    options: {},
     scenarios: [
       {
         type: "declare",
@@ -61,10 +61,13 @@ assertSuccess(
 assertThrow(
   () =>
     testBlock(Frame, {
-      options: { program: "eval" },
+      options: {},
       scenarios: [
         {
           type: "declare",
+          trail: {
+            program: true,
+          },
           kind: "var",
           options: { exports: [] },
         },
@@ -76,7 +79,7 @@ assertThrow(
 assertThrow(
   () =>
     testBlock(Frame, {
-      options: { program: "script" },
+      options: {},
       scenarios: [
         {
           type: "discard",
@@ -90,7 +93,7 @@ assertThrow(
 assertThrow(
   () =>
     testBlock(Frame, {
-      options: { program: "script" },
+      options: {},
       scenarios: [
         {
           type: "write",

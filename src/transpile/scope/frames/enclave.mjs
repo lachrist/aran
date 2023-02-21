@@ -32,22 +32,13 @@ const mapping = {
 
 const KINDS = ownKeys(mapping);
 
-export const createFrame = ({ program }) => ({ program });
+export const createFrame = constant_({});
 
 export const harvestFrameHeader = constant_([]);
 
 export const harvestFramePrelude = constant_([]);
 
-const checkProgram = ({ program }, variable) => {
-  expect1(
-    program === "script",
-    EnclaveLimitationAranError,
-    "Aran only support declaring external variables in script programs, got: %s",
-    variable,
-  );
-};
-
-const checkTrail = ({ program }, variable) => {
+const checkTrailProgram = ({ program }, variable) => {
   expect1(
     !program,
     EnclaveLimitationAranError,
@@ -58,7 +49,7 @@ const checkTrail = ({ program }, variable) => {
 
 export const declareFrame = (
   _strict,
-  frame,
+  _frame,
   trail,
   kind,
   variable,
@@ -66,8 +57,7 @@ export const declareFrame = (
 ) => {
   if (includes(KINDS, kind)) {
     const { exports: specifiers } = options;
-    checkProgram(frame, variable);
-    checkTrail(trail, variable);
+    checkTrailProgram(trail, variable);
     assert(
       specifiers.length === 0,
       "declare exported variable on enclave frame",
@@ -80,15 +70,14 @@ export const declareFrame = (
 
 export const makeFrameInitializeStatementArray = (
   _strict,
-  frame,
+  _frame,
   trail,
   kind,
   variable,
   expression,
 ) => {
   if (includes(KINDS, kind)) {
-    checkProgram(frame, variable);
-    checkTrail(trail, variable);
+    checkTrailProgram(trail, variable);
     return [makeDeclareExternalStatement(mapping[kind], variable, expression)];
   } else {
     return trail;

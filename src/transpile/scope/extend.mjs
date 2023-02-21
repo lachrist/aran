@@ -28,6 +28,7 @@ import {
   IMPORT_STATIC,
   MACRO,
   OBSERVABLE,
+  TRAIL,
 } from "./frame.mjs";
 
 import { makeScopeFrameBlock, makeScopeFrameScriptProgram } from "./scope.mjs";
@@ -81,12 +82,17 @@ const createLocalBaseFrameArray = (enclave, program) =>
 const createEvalBaseFrameArray = (strict) =>
   strict
     ? [
+        createFrame(TRAIL, BASE, { key: "program" }),
         createFrame(CLOSURE_STATIC, BASE, {}),
         createFrame(BLOCK_STATIC, BASE, { distant: false }),
       ]
-    : [createFrame(BLOCK_STATIC, BASE, { distant: false })];
+    : [
+        createFrame(TRAIL, BASE, { key: "program" }),
+        createFrame(BLOCK_STATIC, BASE, { distant: false }),
+      ];
 
 const createModuleBaseFrameArray = () => [
+  createFrame(TRAIL, BASE, { key: "program" }),
   createFrame(CLOSURE_STATIC, BASE, {}),
   createFrame(BLOCK_STATIC, BASE, { distant: false }),
   createFrame(IMPORT_STATIC, BASE, {}),

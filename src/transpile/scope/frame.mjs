@@ -15,6 +15,7 @@ import * as Illegal from "./frames/illegal.mjs";
 import * as ImportStatic from "./frames/import-static.mjs";
 import * as Macro from "./frames/macro.mjs";
 import * as Observable from "./frames/observable.mjs";
+import * as Trail from "./frames/trail.mjs";
 
 export const BLOCK_DYNAMIC = "block-dynamic";
 export const BLOCK_STATIC_DEAD = "block-static-dead";
@@ -31,6 +32,7 @@ export const ILLEGAL = "illegal";
 export const IMPORT_STATIC = "import-static";
 export const MACRO = "macro";
 export const OBSERVABLE = "observable";
+export const TRAIL = "trail";
 
 const libraries = {
   __proto__: null,
@@ -49,6 +51,7 @@ const libraries = {
   [IMPORT_STATIC]: ImportStatic,
   [MACRO]: Macro,
   [OBSERVABLE]: Observable,
+  [TRAIL]: Trail,
 };
 
 ////////////
