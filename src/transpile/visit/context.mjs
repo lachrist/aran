@@ -1,8 +1,4 @@
-import {
-  hasOwnProperty,
-  assert,
-  NULL_DATA_DESCRIPTOR,
-} from "../../util/index.mjs";
+import { hasOwn, assert, NULL_DATA_DESCRIPTOR } from "../../util/index.mjs";
 
 import { ROOT_SCOPE, packScope, unpackScope } from "../scope/index.mjs";
 
@@ -29,9 +25,9 @@ export const loadContext = (root, serial) => {
   };
 };
 
-export const saveContext = ({ root: { storage }, strict, scope }, serial) => {
-  assert(!hasOwnProperty(storage), serial, "duplicate eval scope");
-  defineProperty(storage, serial, {
+export const saveContext = ({ root: { evals }, strict, scope }, serial) => {
+  assert(!hasOwn(evals), serial, "duplicate eval scope");
+  defineProperty(evals, serial, {
     __proto__: NULL_DATA_DESCRIPTOR,
     value: {
       strict,
