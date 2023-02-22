@@ -98,7 +98,7 @@ const createModuleBaseFrameArray = () => [
   createFrame(IMPORT_STATIC, BASE, {}),
 ];
 
-const createEscapeClosureFrameArray = () => [
+const createEscapeFrameArray = () => [
   createFrame(ESCAPE, BASE, {}),
   createFrame(ESCAPE, SPEC, {}),
   createFrame(ESCAPE, META, {}),
@@ -236,7 +236,7 @@ export const makeScopeClosureExpression = (
       scope,
       [],
       concat(
-        createEscapeClosureFrameArray(),
+        createEscapeFrameArray(),
         createMetaFrameArray(),
         createSpecFrameArray(),
         createBlockBaseFrameArray(),
