@@ -133,9 +133,9 @@ export const makeFrameInitializeStatementArray = (
 // LookupAll //
 ///////////////
 
-export const lookupFrameAll = (strict, escaped, frame) => {
+export const lookupFrameAll = (strict, frame) => {
   const { lookupFrameAll: lookupFrameInnerAll } = libraries[frame.type];
-  lookupFrameInnerAll(strict, escaped, frame.inner);
+  lookupFrameInnerAll(strict, frame.inner);
 };
 
 ////////////

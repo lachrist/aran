@@ -19,7 +19,7 @@ const arities = {
   harvestFrameHeader: 1,
   declareFrame: 6,
   makeFrameInitializeStatementArray: 6,
-  lookupFrameAll: 3,
+  lookupFrameAll: 2,
   makeFrameReadExpression: 7,
   makeFrameTypeofExpression: 7,
   makeFrameDiscardExpression: 7,

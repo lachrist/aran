@@ -99,10 +99,7 @@ export const makeScopeFrameScriptProgram = partialx____(
 const lookupScopeAll = (strict, scope1) => {
   if (scope1 !== null) {
     const { car: frame, cdr: scope2 } = scope1;
-    // We need to assume the worse case regarding deadzone.
-    // That is that the eval code will lookup variables from
-    // inside closures. So `escaped = true`.
-    lookupFrameAll(strict, true, frame);
+    lookupFrameAll(strict, frame);
     lookupScopeAll(strict, scope2);
   }
 };

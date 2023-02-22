@@ -85,7 +85,7 @@ assertEqual(
   null,
 );
 
-lookupFrameAll(STRICT, ESCAPED, frame);
+lookupFrameAll(STRICT, frame);
 
 const body = concat(
   makeFrameInitializeStatementArray(

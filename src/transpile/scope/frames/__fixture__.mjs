@@ -78,7 +78,7 @@ const arities = {
   harvestFrameHeader: 1,
   declareFrame: 6,
   makeFrameInitializeStatementArray: 6,
-  lookupFrameAll: 3,
+  lookupFrameAll: 2,
   makeFrameReadExpression: 7,
   makeFrameTypeofExpression: 7,
   makeFrameDiscardExpression: 7,
@@ -140,8 +140,7 @@ const generateTest =
       } else if (scenario.type === "lookup-all") {
         const { lookupFrameAll } = Frame;
         assert(
-          lookupFrameAll(scenario.strict, scenario.escaped, frame) ===
-            undefined,
+          lookupFrameAll(scenario.strict, frame) === undefined,
           "expected lookupAll to return undefined",
         );
         return [];

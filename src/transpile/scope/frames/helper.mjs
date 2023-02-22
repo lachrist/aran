@@ -7,7 +7,7 @@ import {
   SyntaxAranError,
   constant_,
   return__x___,
-  constant___,
+  constant__,
 } from "../../../util/index.mjs";
 
 import {
@@ -138,7 +138,7 @@ export const harvestEmptyFrameHeader = constant_([]);
 export const harvestEmptyFramePrelude = constant_([]);
 export const declareEmptyFrame = return__x___;
 export const makeEmptyFrameInitializeStatementArray = return__x___;
-export const lookupEmptyFrameAll = constant___(undefined);
+export const lookupEmptyFrameAll = constant__(undefined);
 const makeEmptyFrameLookupNode = (
   makeScopeLookupNode,
   strict,

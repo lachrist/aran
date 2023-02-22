@@ -152,17 +152,12 @@ export const makeFrameInitializeStatementArray = (
   }
 };
 
-export const lookupFrameAll = (_strict, escaped, { bindings, distant }) => {
+export const lookupFrameAll = (_strict, { bindings }) => {
   const variables = ownKeys(bindings);
-  if (escaped || distant) {
-    for (let index = 0; index < variables.length; index += 1) {
-      const binding = bindings[variables[index]];
-      if (
-        (!binding.initialized && escaped) ||
-        (binding.initialized && distant)
-      ) {
-        binding.deadzone = true;
-      }
+  for (let index = 0; index < variables.length; index += 1) {
+    const binding = bindings[variables[index]];
+    if (!binding.initialized) {
+      binding.deadzone = true;
     }
   }
 };

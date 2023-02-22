@@ -54,7 +54,7 @@ assertSuccess(
         assertEqual(kind, "kind");
         return [makeEffectStatement(makeWriteEffect(variable, expression))];
       },
-      lookupFrameAll: (_strict, _escaped, _frame) => {},
+      lookupFrameAll: (_strict, _frame) => {},
       makeFrameReadExpression: (
         next,
         strict,

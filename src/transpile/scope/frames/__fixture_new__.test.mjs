@@ -3,7 +3,7 @@ import { assertEqual, assertSuccess } from "../../../__fixture__.mjs";
 import {
   returnx,
   constant_,
-  constant___,
+  constant__,
   constant______,
   constant_______,
 } from "../../../util/index.mjs";
@@ -28,7 +28,7 @@ const Frame = {
   ]),
   declareFrame: constant______(undefined),
   makeFrameInitializeStatementArray: constant______([]),
-  lookupFrameAll: constant___(undefined),
+  lookupFrameAll: constant__(undefined),
   makeFrameReadExpression: constant_______(makeLiteralExpression("read")),
   makeFrameTypeofExpression: constant_______(makeLiteralExpression("typeof")),
   makeFrameDiscardExpression: constant_______(makeLiteralExpression("discard")),
