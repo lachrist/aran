@@ -46,6 +46,10 @@ const {
 
 const KINDS = ["let", "const", "class"];
 
+const INITIALIZED = true;
+const NOT_INITIALIZED = false;
+const MAYBE_INITIALIZED = null;
+
 export const createFrame = ({ macro }) => ({
   dynamic: macro,
   conflicts: [],
@@ -113,7 +117,7 @@ export const declareFrame = (
     assert(specifiers.length === 0, "unexpected global exported variable");
     defineProperty(bindings, variable, {
       __proto__: NULL_DATA_DESCRIPTOR,
-      value: false,
+      value: NOT_INITIALIZED,
     });
     return null;
   } else {
@@ -131,8 +135,15 @@ export const makeFrameInitializeStatementArray = (
 ) => {
   if (includes(KINDS, kind)) {
     assert(hasOwn(bindings, variable), "missing variable for initialization");
-    assert(bindings[variable] === false, "duplicate variable initialization");
-    bindings[variable] = true;
+    assert(
+      bindings[variable] === NOT_INITIALIZED,
+      "duplicate variable initialization",
+    );
+    /* c8 ignore start */
+    bindings[variable] = hasOwn(trail, "distant")
+      ? MAYBE_INITIALIZED
+      : INITIALIZED;
+    /* c8 ignoire stop */
     return [
       makeEffectStatement(
         makeExpressionEffect(
@@ -168,13 +179,15 @@ const compileMakeLookupNode =
           options,
         );
       } else {
-        if (frame.static[variable]) {
+        if (frame.static[variable] === INITIALIZED) {
           return makeLiveNode(
             frame.dynamic,
             makeLiteralExpression(variable),
             options,
           );
-        } else if (escaped) {
+        } else if (frame.static[variable] === NOT_INITIALIZED && !escaped) {
+          return makeDeadNode(variable);
+        } else {
           return makeConditionalNode(
             makeBinaryExpression(
               "===",
@@ -188,8 +201,6 @@ const compileMakeLookupNode =
               options,
             ),
           );
-        } else {
-          return makeDeadNode(variable);
         }
       }
     } else {

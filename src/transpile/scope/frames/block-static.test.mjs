@@ -78,7 +78,7 @@ assertSuccess(
 
 assertSuccess(
   testBlock(Frame, {
-    options: { distant: true },
+    options: {},
     head: `
       let VARIABLE, _VARIABLE;
       _VARIABLE = false;
@@ -99,6 +99,7 @@ assertSuccess(
         type: "initialize",
         kind: "const",
         variable: "variable",
+        trail: { distant: null },
         right: makeLiteralExpression("right"),
         code: `
           VARIABLE = 'right';

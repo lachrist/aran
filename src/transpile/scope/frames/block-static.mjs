@@ -43,8 +43,11 @@ const {
 
 const KINDS = ["let", "const", "class"];
 
-export const createFrame = ({ distant }) => ({
-  distant,
+const INITIALIZED = true;
+const NOT_INITIALIZED = false;
+const MAYBE_INITIALIZED = null;
+
+export const createFrame = ({}) => ({
   bindings: {},
 });
 
@@ -92,7 +95,7 @@ export const declareFrame = (
     defineProperty(bindings, variable, {
       __proto__: NULL_DATA_DESCRIPTOR,
       value: {
-        initialized: false,
+        initialized: NOT_INITIALIZED,
         deadzone: false,
         writable: kind !== "const",
         exports: specifiers,
@@ -106,7 +109,7 @@ export const declareFrame = (
 
 export const makeFrameInitializeStatementArray = (
   _strict,
-  { bindings, distant },
+  { bindings },
   trail,
   kind,
   variable,
@@ -115,15 +118,17 @@ export const makeFrameInitializeStatementArray = (
   if (includes(KINDS, kind)) {
     assert(hasOwn(bindings, variable), "missing variable for initialization");
     const binding = bindings[variable];
-    assert(!binding.initialized, "duplicate initialization");
-    binding.initialized = true;
+    assert(binding.initialized === NOT_INITIALIZED, "duplicate initialization");
+    binding.initialized = hasOwn(trail, "distant")
+      ? MAYBE_INITIALIZED
+      : INITIALIZED;
     return concat(
       [
         makeEffectStatement(
           makeWriteEffect(mangleOriginalVariable(variable), expression),
         ),
       ],
-      binding.deadzone || distant
+      binding.deadzone || binding.initialized === MAYBE_INITIALIZED
         ? [
             makeEffectStatement(
               makeWriteEffect(
@@ -156,7 +161,7 @@ export const lookupFrameAll = (_strict, { bindings }) => {
   const variables = ownKeys(bindings);
   for (let index = 0; index < variables.length; index += 1) {
     const binding = bindings[variables[index]];
-    if (!binding.initialized) {
+    if (binding.initialized !== INITIALIZED) {
       binding.deadzone = true;
     }
   }
@@ -164,7 +169,7 @@ export const lookupFrameAll = (_strict, { bindings }) => {
 
 const compileMakeLookupNode =
   (makeConditionalNode, makeDeadNode, makeLiveNode) =>
-  (next, strict, { bindings, distant }, scope, escaped, variable, options) => {
+  (next, strict, { bindings }, scope, escaped, variable, options) => {
     if (hasOwn(bindings, variable)) {
       const binding = bindings[variable];
       if (makeDeadNode === null) {
@@ -176,9 +181,7 @@ const compileMakeLookupNode =
           options,
         );
       } else {
-        if (!binding.initialized && !escaped) {
-          return makeDeadNode(variable);
-        } else if (binding.initialized && !distant) {
+        if (binding.initialized === INITIALIZED) {
           return makeLiveNode(
             mangleOriginalVariable(variable),
             variable,
@@ -186,6 +189,8 @@ const compileMakeLookupNode =
             binding.exports,
             options,
           );
+        } else if (binding.initialized === NOT_INITIALIZED && !escaped) {
+          return makeDeadNode(variable);
         } else {
           binding.deadzone = true;
           return makeConditionalNode(

@@ -1,6 +1,6 @@
 import { concat } from "array-lite";
 
-import { constant, assert } from "../../util/index.mjs";
+import { assert } from "../../util/index.mjs";
 
 import {
   makeModuleProgram,
@@ -84,17 +84,17 @@ const createEvalBaseFrameArray = (strict) =>
     ? [
         createFrame(TRAIL, BASE, { key: "program" }),
         createFrame(CLOSURE_STATIC, BASE, {}),
-        createFrame(BLOCK_STATIC, BASE, { distant: false }),
+        createFrame(BLOCK_STATIC, BASE, {}),
       ]
     : [
         createFrame(TRAIL, BASE, { key: "program" }),
-        createFrame(BLOCK_STATIC, BASE, { distant: false }),
+        createFrame(BLOCK_STATIC, BASE, {}),
       ];
 
 const createModuleBaseFrameArray = () => [
   createFrame(TRAIL, BASE, { key: "program" }),
   createFrame(CLOSURE_STATIC, BASE, {}),
-  createFrame(BLOCK_STATIC, BASE, { distant: false }),
+  createFrame(BLOCK_STATIC, BASE, {}),
   createFrame(IMPORT_STATIC, BASE, {}),
 ];
 
@@ -106,26 +106,24 @@ const createEscapeFrameArray = () => [
 
 const createStaticClosureBaseFrameArray = () => [
   createFrame(CLOSURE_STATIC, BASE, {}),
-  createFrame(BLOCK_STATIC, BASE, { distant: false }),
+  createFrame(BLOCK_STATIC, BASE, {}),
 ];
 
 const createDynamicClosureBaseFrameArray = (macro) => [
   createFrame(CLOSURE_DYNAMIC, BASE, { macro }),
-  createFrame(BLOCK_STATIC, BASE, { distant: false }),
+  createFrame(BLOCK_STATIC, BASE, {}),
 ];
 
 const createWithBaseFrameArray = (macro) => [
   createFrame(EMPTY_DYNAMIC_WITH, BASE, { macro }),
   createFrame(OBSERVABLE, BASE, {}),
-  createFrame(BLOCK_STATIC, BASE, { distant: false }),
+  createFrame(BLOCK_STATIC, BASE, {}),
 ];
 
-const createBlockBaseFrameArray = () => [
-  createFrame(BLOCK_STATIC, BASE, { distant: false }),
-];
+const createBlockBaseFrameArray = () => [createFrame(BLOCK_STATIC, BASE, {})];
 
 const createDistantBlockBaseFrameArray = () => [
-  createFrame(BLOCK_STATIC, BASE, { distant: true }),
+  createFrame(TRAIL, BASE, { key: "distant" }),
 ];
 
 const createDeadBlockBaseFrameArray = () => [
@@ -264,16 +262,12 @@ export const makeScopeNormalStaticBlock = generateMakeBlueprintBlock(
   createBlockBaseFrameArray,
 );
 
-export const makeScopeDistantStaticBlock = generateMakeBlueprintBlock(
-  createDistantBlockBaseFrameArray,
-);
-
 export const makeScopeDeadStaticBlock = generateMakeBlueprintBlock(
   createDeadBlockBaseFrameArray,
 );
 
-export const makeScopeEmptyStaticBlock = generateMakeBlueprintBlock(
-  constant([]),
+export const makeScopeDistantStaticBlock = generateMakeBlueprintBlock(
+  createDistantBlockBaseFrameArray,
 );
 
 export const makeScopeClosureStaticBlock = generateMakeBlueprintBlock(

@@ -41,15 +41,15 @@ import {
   makeBaseDiscardExpression,
   makeBaseMacroWriteEffect,
   makeBaseWriteEffect,
+  makeScopeNormalStaticBlock,
   makeScopeClosureDynamicBlock,
   makeScopeWithDynamicBlock,
   makeScopeLocalEvalProgram,
   makeScopeGlobalEvalProgram,
   makeScopeScriptProgram,
   makeScopeModuleProgram,
-  makeScopeDistantStaticBlock,
   makeScopeDeadStaticBlock,
-  makeScopeEmptyStaticBlock,
+  makeScopeDistantStaticBlock,
   makeScopeClosureStaticBlock,
   makeScopeClosureExpression,
 } from "./index.mjs";
@@ -839,7 +839,7 @@ assertSuccess(
       const scoping1 = createScoping({ scope: scope1 });
       return [
         makeBlockStatement(
-          makeScopeDistantStaticBlock(scoping1, ["label1"], (scope2) => {
+          makeScopeNormalStaticBlock(scoping1, ["label1"], (scope2) => {
             const scoping2 = createScoping({ scope: scope2 });
             assertEqual(
               declareBase(scoping2, "let", "variable", []),
@@ -847,7 +847,7 @@ assertSuccess(
             );
             return [
               makeBlockStatement(
-                makeScopeEmptyStaticBlock(scoping2, ["label2"], (scope3) => {
+                makeScopeDistantStaticBlock(scoping2, ["label2"], (scope3) => {
                   const scoping3 = createScoping({ scope: scope3 });
                   return makeBaseInitializeStatementArray(
                     scoping3,
