@@ -4,14 +4,17 @@ import {
   NULL_DATA_DESCRIPTOR,
   expect1,
   assert,
-  constant_,
-  constant___,
   hasOwn,
   SyntaxAranError,
 } from "../../../util/index.mjs";
 
+import {
+  harvestEmptyFrameHeader,
+  harvestEmptyFramePrelude,
+  lookupEmptyFrameAll,
+} from "./helper.mjs";
+
 const {
-  undefined,
   Reflect: { defineProperty },
 } = globalThis;
 
@@ -19,9 +22,9 @@ const KINDS = ["illegal"];
 
 export const createFrame = (_options) => ({ static: {} });
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
-export const harvestFramePrelude = constant_([]);
+export const harvestFramePrelude = harvestEmptyFramePrelude;
 
 export const declareFrame = (
   _strict,
@@ -55,7 +58,7 @@ export const makeFrameInitializeStatementArray = (
   return trail;
 };
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 const makeLookupNode = (
   next,

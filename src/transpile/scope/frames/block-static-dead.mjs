@@ -18,7 +18,6 @@ import {
   NULL_DATA_DESCRIPTOR,
   hasOwn,
   constant_,
-  constant___,
   assert,
   expect1,
 } from "../../../util/index.mjs";
@@ -30,10 +29,12 @@ import {
   DUPLICATE_TEMPLATE,
   makeThrowDeadzoneExpression,
   makeThrowDeadzoneEffect,
+  harvestEmptyFrameHeader,
+  harvestEmptyFramePrelude,
+  lookupEmptyFrameAll,
 } from "./helper.mjs";
 
 const {
-  undefined,
   Reflect: { defineProperty },
 } = globalThis;
 
@@ -43,9 +44,9 @@ export const createFrame = (_options) => ({
   bindings: {},
 });
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
-export const harvestFramePrelude = constant_([]);
+export const harvestFramePrelude = harvestEmptyFramePrelude;
 
 export const declareFrame = (
   _strict,
@@ -89,7 +90,7 @@ export const makeFrameInitializeStatementArray = (
   return trail;
 };
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 const compileMakeLookupNode =
   (makeNode) =>

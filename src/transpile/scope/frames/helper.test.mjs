@@ -30,6 +30,7 @@ import {
   makeIncrementSetEffect,
   makeIncrementWriteEffect,
   makeExportIncrementWriteEffect,
+  makeEmptyFrameReadExpression,
 } from "./helper.mjs";
 
 ////////////////////
@@ -225,3 +226,29 @@ assertSuccess(
   );
   assertEqual(gaugeCounter(counter), 1);
 }
+
+/////////////
+// Default //
+/////////////
+
+assertSuccess(
+  allignExpression(
+    makeEmptyFrameReadExpression(
+      (strict, scope, escaped, variable, options) => {
+        assertEqual(strict, true);
+        assertEqual(scope, "scope");
+        assertEqual(escaped, false);
+        assertEqual(variable, "variable");
+        assertEqual(options, "options");
+        return makeLiteralExpression("next");
+      },
+      true,
+      "frame",
+      "scope",
+      false,
+      "variable",
+      "options",
+    ),
+    `"next"`,
+  ),
+);

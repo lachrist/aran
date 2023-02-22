@@ -4,7 +4,6 @@ import {
   NULL_DATA_DESCRIPTOR,
   hasOwn,
   drop__x,
-  constant_,
   assert,
   constant___,
 } from "../../../util/index.mjs";
@@ -19,10 +18,11 @@ import { mangleOriginalVariable } from "../variable.mjs";
 import {
   makeTypeofReadExpression,
   makeIncrementWriteEffect,
+  harvestEmptyFramePrelude,
+  lookupEmptyFrameAll,
 } from "./helper.mjs";
 
 const {
-  undefined,
   Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
@@ -35,7 +35,7 @@ export const createFrame = (_options) => ({
 export const harvestFrameHeader = ({ bindings }) =>
   map(ownKeys(bindings), mangleOriginalVariable);
 
-export const harvestFramePrelude = constant_([]);
+export const harvestFramePrelude = harvestEmptyFramePrelude;
 
 export const declareFrame = (
   _strict,
@@ -69,7 +69,7 @@ export const makeFrameInitializeStatementArray = (
   return trail;
 };
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 const compileMakeLookupNode =
   (makePresentNode) =>

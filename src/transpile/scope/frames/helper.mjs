@@ -5,6 +5,9 @@ import {
   partial_x,
   incrementCounter,
   SyntaxAranError,
+  constant_,
+  return__x___,
+  constant___,
 } from "../../../util/index.mjs";
 
 import {
@@ -26,6 +29,8 @@ import {
   makeThrowTypeErrorExpression,
   makeThrowSyntaxErrorExpression,
 } from "../../../intrinsic.mjs";
+
+const { undefined } = globalThis;
 
 ////////////
 // Export //
@@ -123,3 +128,27 @@ export const makeIncrementSetEffect = (
     makeSetExpression(strict, expression1, expression2, expression3),
   );
 };
+
+/////////////
+// Default //
+/////////////
+
+export const createEmptyFrame = constant_({});
+export const harvestEmptyFrameHeader = constant_([]);
+export const harvestEmptyFramePrelude = constant_([]);
+export const declareEmptyFrame = return__x___;
+export const makeEmptyFrameInitializeStatementArray = return__x___;
+export const lookupEmptyFrameAll = constant___(undefined);
+const makeEmptyFrameLookupNode = (
+  makeScopeLookupNode,
+  strict,
+  _frame,
+  scope,
+  escaped,
+  variable,
+  options,
+) => makeScopeLookupNode(strict, scope, escaped, variable, options);
+export const makeEmptyFrameReadExpression = makeEmptyFrameLookupNode;
+export const makeEmptyFrameTypeofExpression = makeEmptyFrameLookupNode;
+export const makeEmptyFrameDiscardExpression = makeEmptyFrameLookupNode;
+export const makeEmptyFrameWriteEffect = makeEmptyFrameLookupNode;

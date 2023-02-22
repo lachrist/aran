@@ -24,10 +24,10 @@ import {
   makeExportStatement,
   makeTypeofReadExpression,
   makeExportIncrementWriteEffect,
+  lookupEmptyFrameAll,
 } from "./helper.mjs";
 
 const {
-  undefined,
   Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
@@ -114,7 +114,7 @@ export const makeFrameInitializeStatementArray = (
   }
 };
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 const compileMakeLookupNode =
   (makePresentNode) =>

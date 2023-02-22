@@ -2,7 +2,6 @@ import { concat, includes, map } from "array-lite";
 
 import {
   NULL_DATA_DESCRIPTOR,
-  constant_,
   hasOwn,
   push,
   assert,
@@ -10,7 +9,6 @@ import {
   drop__x,
   partialx___,
   partialx_,
-  constant___,
 } from "../../../util/index.mjs";
 
 import {
@@ -38,10 +36,11 @@ import {
   makeThrowDeadzoneExpression,
   makeThrowDeadzoneEffect,
   makeThrowDuplicateExpression,
+  harvestEmptyFrameHeader,
+  lookupEmptyFrameAll,
 } from "./helper.mjs";
 
 const {
-  undefined,
   Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
@@ -92,7 +91,7 @@ const makeDeclareStatement = (dynamic, variable) =>
     ),
   );
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
 export const harvestFramePrelude = ({ dynamic, conflicts, static: bindings }) =>
   concat(
@@ -156,7 +155,7 @@ export const makeFrameInitializeStatementArray = (
   }
 };
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 const compileMakeLookupNode =
   (makeConditionalNode, makeDeadNode, makeLiveNode) =>

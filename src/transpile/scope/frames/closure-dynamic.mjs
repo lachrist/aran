@@ -5,9 +5,7 @@ import {
   hasOwn,
   assert,
   drop__x,
-  constant_,
   partialx___,
-  constant___,
   partialx_,
 } from "../../../util/index.mjs";
 
@@ -28,10 +26,14 @@ import {
   makeDataDescriptorExpression,
 } from "../../../intrinsic.mjs";
 
-import { makeTypeofGetExpression, makeIncrementSetEffect } from "./helper.mjs";
+import {
+  makeTypeofGetExpression,
+  makeIncrementSetEffect,
+  harvestEmptyFrameHeader,
+  lookupEmptyFrameAll,
+} from "./helper.mjs";
 
 const {
-  undefined,
   Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
@@ -62,7 +64,7 @@ const makeDeclareStatement = (dynamic, variable) =>
     ),
   );
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
 export const harvestFramePrelude = ({
   dynamic: expression,
@@ -119,7 +121,7 @@ export const makeFrameInitializeStatementArray = (
   }
 };
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 const compileMakeLookupNode =
   (makeConditionalNode, makePresentNode) =>

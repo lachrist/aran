@@ -1,16 +1,24 @@
-import { constant_, constant___, return__x___ } from "../../../util/index.mjs";
+import {
+  createEmptyFrame,
+  harvestEmptyFrameHeader,
+  harvestEmptyFramePrelude,
+  declareEmptyFrame,
+  makeEmptyFrameInitializeStatementArray,
+  lookupEmptyFrameAll,
+} from "./helper.mjs";
 
-export const createFrame = ({}) => ({});
+export const createFrame = createEmptyFrame;
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
-export const harvestFramePrelude = constant_([]);
+export const harvestFramePrelude = harvestEmptyFramePrelude;
 
-export const declareFrame = return__x___;
+export const declareFrame = declareEmptyFrame;
 
-export const makeFrameInitializeStatementArray = return__x___;
+export const makeFrameInitializeStatementArray =
+  makeEmptyFrameInitializeStatementArray;
 
-export const lookupFrameAll = constant___(true);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 export const makeLookupNode = (
   next,

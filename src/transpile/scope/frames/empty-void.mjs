@@ -1,10 +1,7 @@
 import {
   incrementCounter,
-  constant_,
   dropxxxxx_x,
   constant_______,
-  constant___,
-  return__x___,
 } from "../../../util/index.mjs";
 
 import {
@@ -14,23 +11,29 @@ import {
 
 import { makeSetExpression } from "../../../intrinsic.mjs";
 
-import { makeThrowMissingExpression } from "./helper.mjs";
-
-const { undefined } = globalThis;
+import {
+  makeThrowMissingExpression,
+  harvestEmptyFrameHeader,
+  harvestEmptyFramePrelude,
+  declareEmptyFrame,
+  makeEmptyFrameInitializeStatementArray,
+  lookupEmptyFrameAll,
+} from "./helper.mjs";
 
 export const createFrame = ({ macro }) => ({
   dynamic: macro,
 });
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
-export const harvestFramePrelude = constant_([]);
+export const harvestFramePrelude = harvestEmptyFramePrelude;
 
-export const declareFrame = return__x___;
+export const declareFrame = declareEmptyFrame;
 
-export const makeFrameInitializeStatementArray = return__x___;
+export const makeFrameInitializeStatementArray =
+  makeEmptyFrameInitializeStatementArray;
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 export const makeFrameReadExpression = dropxxxxx_x(makeThrowMissingExpression);
 

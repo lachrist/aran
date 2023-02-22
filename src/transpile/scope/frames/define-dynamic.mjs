@@ -4,10 +4,8 @@ import {
   drop__x,
   NULL_DATA_DESCRIPTOR,
   hasOwn,
-  constant_,
   partialx___,
   assert,
-  constant___,
 } from "../../../util/index.mjs";
 
 import { makeLiteralExpression } from "../../../ast/index.mjs";
@@ -17,10 +15,15 @@ import {
   makeDeleteSloppyExpression,
 } from "../../../intrinsic.mjs";
 
-import { makeTypeofGetExpression, makeIncrementSetEffect } from "./helper.mjs";
+import {
+  makeTypeofGetExpression,
+  makeIncrementSetEffect,
+  harvestEmptyFrameHeader,
+  harvestEmptyFramePrelude,
+  lookupEmptyFrameAll,
+} from "./helper.mjs";
 
 const {
-  undefined,
   Reflect: { defineProperty },
 } = globalThis;
 
@@ -32,9 +35,9 @@ export const createFrame = ({ macro, observable }) => ({
   observable,
 });
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
-export const harvestFramePrelude = constant_([]);
+export const harvestFramePrelude = harvestEmptyFramePrelude;
 
 export const declareFrame = (
   _strict,
@@ -65,7 +68,7 @@ export const makeFrameInitializeStatementArray = (
   return trail;
 };
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 const compileMakeLookupNode =
   (makePresentNode) =>

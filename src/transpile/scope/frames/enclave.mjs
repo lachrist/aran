@@ -1,8 +1,6 @@
 import { includes } from "array-lite";
 
 import {
-  constant_,
-  constant___,
   assert,
   expect1,
   dropxxxxx_x,
@@ -17,8 +15,14 @@ import {
   makeWriteExternalEffect,
 } from "../../../ast/index.mjs";
 
+import {
+  createEmptyFrame,
+  harvestEmptyFrameHeader,
+  harvestEmptyFramePrelude,
+  lookupEmptyFrameAll,
+} from "./helper.mjs";
+
 const {
-  undefined,
   Reflect: { ownKeys },
 } = globalThis;
 
@@ -32,11 +36,11 @@ const mapping = {
 
 const KINDS = ownKeys(mapping);
 
-export const createFrame = constant_({});
+export const createFrame = createEmptyFrame;
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
-export const harvestFramePrelude = constant_([]);
+export const harvestFramePrelude = harvestEmptyFramePrelude;
 
 const checkTrailProgram = ({ program }, variable) => {
   expect1(
@@ -84,7 +88,7 @@ export const makeFrameInitializeStatementArray = (
   }
 };
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 export const makeFrameReadExpression = dropxxxxx_x(makeReadExternalExpression);
 

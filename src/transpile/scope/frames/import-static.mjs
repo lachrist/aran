@@ -5,7 +5,6 @@ import {
   assert,
   expect1,
   constant___,
-  constant_,
   hasOwn,
   dropx__,
   drop_xx,
@@ -21,10 +20,12 @@ import {
   makeThrowConstantEffect,
   DuplicateError,
   DUPLICATE_TEMPLATE,
+  harvestEmptyFrameHeader,
+  harvestEmptyFramePrelude,
+  lookupEmptyFrameAll,
 } from "./helper.mjs";
 
 const {
-  undefined,
   Reflect: { defineProperty },
 } = globalThis;
 
@@ -32,9 +33,9 @@ export const KINDS = ["import"];
 
 export const createFrame = (_options) => ({ static: {} });
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
-export const harvestFramePrelude = constant_([]);
+export const harvestFramePrelude = harvestEmptyFramePrelude;
 
 export const declareFrame = (
   _strict,
@@ -77,7 +78,7 @@ export const makeFrameInitializeStatementArray = (
   return trail;
 };
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 const compileMakeLookupNode =
   (makePresentNode) =>

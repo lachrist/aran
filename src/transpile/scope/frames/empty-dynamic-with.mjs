@@ -1,9 +1,4 @@
-import {
-  dropx__x,
-  constant_,
-  constant___,
-  return__x___,
-} from "../../../util/index.mjs";
+import { dropx__x } from "../../../util/index.mjs";
 
 import {
   makeConditionalEffect,
@@ -18,9 +13,15 @@ import {
   makeDeleteSloppyExpression,
 } from "../../../intrinsic.mjs";
 
-import { makeTypeofGetExpression, makeIncrementSetEffect } from "./helper.mjs";
-
-const { undefined } = globalThis;
+import {
+  makeTypeofGetExpression,
+  makeIncrementSetEffect,
+  harvestEmptyFrameHeader,
+  harvestEmptyFramePrelude,
+  declareEmptyFrame,
+  makeEmptyFrameInitializeStatementArray,
+  lookupEmptyFrameAll,
+} from "./helper.mjs";
 
 export const KINDS = [];
 
@@ -28,15 +29,16 @@ export const createFrame = ({ macro }) => ({
   dynamic: macro,
 });
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
-export const harvestFramePrelude = constant_([]);
+export const harvestFramePrelude = harvestEmptyFramePrelude;
 
-export const declareFrame = return__x___;
+export const declareFrame = declareEmptyFrame;
 
-export const makeFrameInitializeStatementArray = return__x___;
+export const makeFrameInitializeStatementArray =
+  makeEmptyFrameInitializeStatementArray;
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 const compileMakeLookupNode =
   (makeConditionalNode, makePresentNode) =>

@@ -1,10 +1,18 @@
-import { constant_, return__x } from "../../../util/index.mjs";
+import {
+  harvestEmptyFrameHeader,
+  harvestEmptyFramePrelude,
+  lookupEmptyFrameAll,
+  makeEmptyFrameReadExpression,
+  makeEmptyFrameTypeofExpression,
+  makeEmptyFrameDiscardExpression,
+  makeEmptyFrameWriteEffect,
+} from "./helper.mjs";
 
 export const createFrame = ({ key }) => ({ key });
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
-export const harvestFramePrelude = constant_([]);
+export const harvestFramePrelude = harvestEmptyFramePrelude;
 
 export const declareFrame = (
   _strict,
@@ -30,22 +38,12 @@ export const makeFrameInitializeStatementArray = (
   [key]: true,
 });
 
-export const lookupFrameAll = return__x;
+export const lookupFrameAll = lookupEmptyFrameAll;
 
-const makeLookupNode = (
-  next,
-  strict,
-  _frame,
-  scope,
-  escaped,
-  variable,
-  options,
-) => next(strict, scope, escaped, variable, options);
+export const makeFrameReadExpression = makeEmptyFrameReadExpression;
 
-export const makeFrameReadExpression = makeLookupNode;
+export const makeFrameTypeofExpression = makeEmptyFrameTypeofExpression;
 
-export const makeFrameTypeofExpression = makeLookupNode;
+export const makeFrameDiscardExpression = makeEmptyFrameDiscardExpression;
 
-export const makeFrameDiscardExpression = makeLookupNode;
-
-export const makeFrameWriteEffect = makeLookupNode;
+export const makeFrameWriteEffect = makeEmptyFrameWriteEffect;

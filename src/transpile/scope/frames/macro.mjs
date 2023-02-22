@@ -6,8 +6,6 @@ import {
   drop_x,
   return_x,
   constant__,
-  constant_,
-  constant___,
   hasOwn,
 } from "../../../util/index.mjs";
 
@@ -15,10 +13,14 @@ import { makeLiteralExpression } from "../../../ast/index.mjs";
 
 import { makeUnaryExpression } from "../../../intrinsic.mjs";
 
-import { makeThrowConstantEffect } from "./helper.mjs";
+import {
+  makeThrowConstantEffect,
+  harvestEmptyFrameHeader,
+  harvestEmptyFramePrelude,
+  lookupEmptyFrameAll,
+} from "./helper.mjs";
 
 const {
-  undefined,
   Reflect: { defineProperty },
 } = globalThis;
 
@@ -26,9 +28,9 @@ const KINDS = ["macro"];
 
 export const createFrame = (_options) => ({ static: {} });
 
-export const harvestFrameHeader = constant_([]);
+export const harvestFrameHeader = harvestEmptyFrameHeader;
 
-export const harvestFramePrelude = constant_([]);
+export const harvestFramePrelude = harvestEmptyFramePrelude;
 
 export const declareFrame = (
   _strict,
@@ -63,7 +65,7 @@ export const makeFrameInitializeStatementArray = (
   return trail;
 };
 
-export const lookupFrameAll = constant___(undefined);
+export const lookupFrameAll = lookupEmptyFrameAll;
 
 export const compileMakeLookupNode =
   (makePresentNode) =>
