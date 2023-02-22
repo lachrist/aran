@@ -1,27 +1,24 @@
-import { map } from "array-lite";
-
-import { partial_xx, partialxx___ } from "../../util/index.mjs";
-
 import {
+  makeYieldExpression,
+  makeAwaitExpression,
   makeLiteralExpression,
-  makeApplyExpression,
 } from "../../ast/index.mjs";
+import { visitExpression } from "./context.mjs";
 
-import { applyVisitor } from "./visit.mjs";
+const EMPTY = {
+  name: null,
+  dropped: false,
+};
 
-export const visitExpression = partialxx___(
-  applyVisitor,
-  {
-    Literal: (node, _context, {}) => makeLiteralExpression(node.value),
-    CallExpression: (node, context, {}) =>
-      makeApplyExpression(
-        visitExpression(node.callee, context),
-        makeLiteralExpression({ undefined: null }),
-        map(node.arguments, partial_xx(visitExpression, context, null)),
-      ),
-  },
-  {
-    dropped: false,
-    name: null,
-  },
-);
+export default {
+  Literal: (node, _context, _specific) => makeLiteralExpression(node.value),
+  AwaitExpression: (node, context, _specific) =>
+    makeAwaitExpression(visitExpression(node.argument, context, EMPTY)),
+  YieldExpression: (node, context, _specific) =>
+    makeYieldExpression(
+      node.delegate,
+      node.argument === null
+        ? makeLiteralExpression({ undefined: null })
+        : visitExpression(node.argument, context, EMPTY),
+    ),
+};

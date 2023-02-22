@@ -296,3 +296,22 @@ export const makeScopeClosureDynamicBlock = generateMakeScopeDynamicBlock(
 export const makeScopeWithDynamicBlock = generateMakeScopeDynamicBlock(
   createWithBaseFrameArray,
 );
+
+//////////
+// Test //
+//////////
+
+/* c8 ignore start */
+export const makeScopeTestBlock = ({ strict, scope }, makeStatementArray) =>
+  makeScopeFrameBlock(
+    strict,
+    scope,
+    [],
+    [
+      createFrame(DEFINE_STATIC, META, {}),
+      createFrame(ENCLAVE, SPEC, {}),
+      createFrame(ENCLAVE, BASE, {}),
+    ],
+    makeStatementArray,
+  );
+/* c8 ignore stop */

@@ -1,9 +1,18 @@
-import { assertEqual, assertDeepEqual } from "../../__fixture__.mjs";
-
-import { createCounter } from "../../util/index.mjs";
-
+import { flatMap } from "array-lite";
+import {
+  assertEqual,
+  assertDeepEqual,
+  assertSuccess,
+} from "../../__fixture__.mjs";
+import { createCounter, partial_xx } from "../../util/index.mjs";
+import {
+  makeBlock,
+  makeLiteralExpression,
+  makeEffectStatement,
+  makeExpressionEffect,
+} from "../../ast/index.mjs";
+import { allignBlock } from "../../allign/index.mjs";
 import { ROOT_SCOPE } from "../scope/index.mjs";
-
 import {
   createContext,
   saveContext,
@@ -12,31 +21,28 @@ import {
   getContextScoping,
   strictifyContext,
   isContextStrict,
-  serializeContextNode,
+  visitBlock,
+  visitStatement,
+  visitExpression,
 } from "./context.mjs";
 
 const { undefined } = globalThis;
 
-const createTestContext = ({
-  nodes = [],
-  evals = {},
-  counter = createCounter(0),
-}) =>
-  createContext({
-    nodes,
-    evals,
-    counter,
-  });
+const createDefaultRoot = () => ({
+  nodes: [],
+  evals: {},
+  counter: createCounter(0),
+});
 
 ///////////
 // Evals //
 ///////////
 
 {
-  const root = { nodes: [], evals: {}, counter: createCounter(0) };
-  const context = createContext(root);
+  const root = createDefaultRoot();
+  const context = createContext(root, {});
   assertEqual(saveContext(context, 123), undefined);
-  assertDeepEqual(loadContext(root, 123), context);
+  assertDeepEqual(loadContext(123, root, {}), context);
 }
 
 ///////////
@@ -46,7 +52,13 @@ const createTestContext = ({
 assertDeepEqual(
   getContextScoping(
     setContextScope(
-      createTestContext({ counter: createCounter(123) }),
+      createContext(
+        {
+          ...createDefaultRoot(),
+          counter: createCounter(123),
+        },
+        {},
+      ),
       ROOT_SCOPE,
     ),
   ),
@@ -61,19 +73,55 @@ assertDeepEqual(
 // Strict //
 ////////////
 
-assertEqual(isContextStrict(createTestContext({})), false);
-
-assertEqual(isContextStrict(strictifyContext(createTestContext({}))), true);
-
-//////////////////////////
-// serializeContextNode //
-//////////////////////////
-
 {
-  const nodes = [];
-  assertEqual(
-    serializeContextNode(createTestContext({ nodes }), { type: "type" }),
-    0,
-  );
-  assertDeepEqual(nodes, [{ type: "type" }]);
+  const context = createContext(createDefaultRoot(), {});
+  assertEqual(isContextStrict(context), false);
+  assertEqual(isContextStrict(strictifyContext(context)), true);
 }
+
+///////////
+// visit //
+///////////
+
+assertSuccess(
+  allignBlock(
+    visitBlock(
+      {
+        type: "BlockStatement",
+        body: [
+          {
+            type: "ExpressionStatement",
+            expression: {
+              type: "Literal",
+              value: 123,
+            },
+          },
+        ],
+      },
+      createContext(createDefaultRoot(), {
+        Block: {
+          BlockStatement: (node, context, specific) =>
+            makeBlock(
+              [],
+              [],
+              flatMap(node.body, partial_xx(visitStatement, context, specific)),
+            ),
+        },
+        Statement: {
+          ExpressionStatement: (node, context, specific) => [
+            makeEffectStatement(
+              makeExpressionEffect(
+                visitExpression(node.expression, context, specific),
+              ),
+            ),
+          ],
+        },
+        Expression: {
+          Literal: (node, _context, _specific) =>
+            makeLiteralExpression(node.value),
+        },
+      }),
+    ),
+    `{ void 123; }`,
+  ),
+);

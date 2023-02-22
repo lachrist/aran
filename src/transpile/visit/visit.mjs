@@ -6,6 +6,36 @@ import { annotateNode } from "../../ast/index.mjs";
 
 import { serializeContextNode } from "./context.mjs";
 
+const compileVisitNode = (key) => (node, context, specific) => {
+  const serial = serializeContextNode(context, node);
+  return annotateNode(
+    dispatchObjectNode2(context.visitors[key], node, context, specific),
+    serial,
+  );
+};
+
+const compileVisitNodeArray = (key) => (node, context, specific) => {
+  const serial = serializeContextNode(context, node);
+  return map(
+    dispatchObjectNode2(context.visitors[key], node, context, specific),
+    partial_x(annotateNode, serial),
+  );
+};
+
+export const visitExpression = compileVisitNode("expression");
+
+export const visitPattern = compileVisitNode("pattern");
+
+export const visitStatement = compileVisitNodeArray("statement");
+
+
+
+export const generateVisit
+
+export const visitExpression = (node, context, specific) =>
+  return dispatchObjectNode2(context.visitors
+};
+
 const applyVisitorCommon = (
   visitors,
   node,
@@ -13,7 +43,7 @@ const applyVisitorCommon = (
   default_specific,
   specific,
 ) => {
-  dispatchNodeObject2(visitors, node, context, {
+  return dispatchNodeObject2(visitors, node, context, {
     ...default_specific,
     ...specific,
   });
