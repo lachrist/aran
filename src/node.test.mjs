@@ -1,4 +1,4 @@
-import { assertEqual, assertDeepEqual } from "./__fixture__.mjs";
+import { assertThrow, assertEqual, assertDeepEqual } from "./__fixture__.mjs";
 
 import {
   DEFAULT_CLAUSE,
@@ -14,6 +14,11 @@ import {
   allignObjectNode0,
   allignObjectNode1,
 } from "./node.mjs";
+
+assertThrow(
+  () => dispatchObjectNode0({}, { type: "type" }),
+  /^Error: missing dispatch clause$/u,
+);
 
 assertEqual(isObjectNode({ type: 123 }), false);
 

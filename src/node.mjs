@@ -10,6 +10,7 @@ import {
 } from "./util/index.mjs";
 
 const {
+  Error,
   Symbol,
   Array: { isArray },
 } = globalThis;
@@ -44,9 +45,11 @@ export const getObjectNodeType = ({ type }) => type;
 const getDispatchClause = (clauses, type) => {
   if (hasOwn(clauses, type)) {
     return clauses[type];
-  } else {
-    assert(hasOwn(clauses, DEFAULT_CLAUSE), "missing default clause");
+  } else if (hasOwn(clauses, DEFAULT_CLAUSE)) {
     return clauses[DEFAULT_CLAUSE];
+  } else {
+    console.log("Missing dispatch clause", { clauses, type });
+    throw new Error("missing dispatch clause");
   }
 };
 
