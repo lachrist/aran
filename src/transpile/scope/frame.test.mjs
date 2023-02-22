@@ -34,7 +34,7 @@ const STRICT = true;
 
 const ESCAPED = true;
 
-const TRAIL = { program: false };
+const TRAIL = {};
 
 const frame = createFrame(CLOSURE_STATIC, "meta", {});
 

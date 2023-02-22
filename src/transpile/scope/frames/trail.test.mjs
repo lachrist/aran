@@ -8,28 +8,20 @@ const { createFrame, declareFrame, makeFrameInitializeStatementArray } = Frame;
 
 assertFrameLibrary(Frame);
 
-const frame = createFrame({ key: "program" });
+const frame = createFrame({ key: "key" });
 
-assertDeepEqual(
-  declareFrame(
-    STRICT,
-    frame,
-    { program: false, distant: false },
-    "kind",
-    "variable",
-    {},
-  ),
-  { program: true, distant: false },
-);
+assertDeepEqual(declareFrame(STRICT, frame, {}, "kind", "variable", {}), {
+  key: null,
+});
 
 assertDeepEqual(
   makeFrameInitializeStatementArray(
     STRICT,
     frame,
-    { program: false, distant: false },
+    {},
     "kind",
     "variable",
     makeLiteralExpression("right"),
   ),
-  { program: true, distant: false },
+  { key: null },
 );

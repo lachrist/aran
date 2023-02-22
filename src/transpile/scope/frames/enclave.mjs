@@ -1,6 +1,7 @@
 import { includes } from "array-lite";
 
 import {
+  hasOwn,
   assert,
   expect1,
   dropxxxxx_x,
@@ -42,9 +43,9 @@ export const harvestFrameHeader = harvestEmptyFrameHeader;
 
 export const harvestFramePrelude = harvestEmptyFramePrelude;
 
-const checkTrailProgram = ({ program }, variable) => {
+const checkTrailProgram = (trail, variable) => {
   expect1(
-    !program,
+    !hasOwn(trail, "program"),
     EnclaveLimitationAranError,
     "Aran only support declaring external variables in script programs, got: %s",
     variable,

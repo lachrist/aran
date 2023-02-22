@@ -23,7 +23,7 @@ export const declareFrame = (
   _options,
 ) => ({
   ...trail,
-  [key]: true,
+  [key]: null,
 });
 
 export const makeFrameInitializeStatementArray = (
@@ -35,7 +35,7 @@ export const makeFrameInitializeStatementArray = (
   _expression,
 ) => ({
   ...trail,
-  [key]: true,
+  [key]: null,
 });
 
 export const lookupFrameAll = lookupEmptyFrameAll;

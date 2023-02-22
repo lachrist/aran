@@ -117,7 +117,7 @@ export const makeScopeEvalExpression = (strict, scope, expression) => {
 /////////////
 
 export const declareScope = (strict, scope, kind, variable, options) => {
-  let maybe_trail = { program: false };
+  let maybe_trail = {};
   while (maybe_trail !== null) {
     assert(scope !== null, "missing binding scope during declaration");
     const { car: frame, cdr: parent_scope } = scope;
@@ -144,7 +144,7 @@ export const makeScopeInitializeStatementArray = (
   variable,
   expression,
 ) => {
-  let either = { program: false };
+  let either = {};
   while (!isArray(either)) {
     assert(scope !== null, "missing binding scope during initialization");
     const { car: frame, cdr: parent_scope } = scope;

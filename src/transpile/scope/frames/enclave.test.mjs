@@ -66,7 +66,7 @@ assertThrow(
         {
           type: "declare",
           trail: {
-            program: true,
+            program: null,
           },
           kind: "var",
           options: { exports: [] },
