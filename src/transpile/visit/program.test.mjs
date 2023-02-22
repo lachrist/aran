@@ -33,7 +33,7 @@ export const testProgram = (code1, code2, specific) => {
         }),
         createContext({
           nodes: [],
-          storage: {},
+          evals: {},
           counter: createCounter(0),
         }),
         specific,

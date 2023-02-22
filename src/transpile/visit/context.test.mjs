@@ -19,21 +19,21 @@ const { undefined } = globalThis;
 
 const createTestContext = ({
   nodes = [],
-  storage = {},
+  evals = {},
   counter = createCounter(0),
 }) =>
   createContext({
     nodes,
-    storage,
+    evals,
     counter,
   });
 
-/////////////
-// Storage //
-/////////////
+///////////
+// Evals //
+///////////
 
 {
-  const root = { nodes: [], storage: {}, counter: createCounter() };
+  const root = { nodes: [], evals: {}, counter: createCounter(0) };
   const context = createContext(root);
   assertEqual(saveContext(context, 123), undefined);
   assertDeepEqual(loadContext(root, 123), context);

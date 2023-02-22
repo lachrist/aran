@@ -18,9 +18,9 @@ export const createContext = (root) => ({
 });
 
 export const loadContext = (root, serial) => {
-  const { storage } = root;
-  assert(hasOwnProperty(storage, serial), "missing eval scope");
-  const { strict, scope } = storage[serial];
+  const { evals } = root;
+  assert(hasOwn(evals, serial), "missing eval scope");
+  const { strict, scope } = evals[serial];
   return {
     root,
     strict,

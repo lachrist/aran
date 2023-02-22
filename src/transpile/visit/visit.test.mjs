@@ -10,7 +10,7 @@ import { applyVisitor, applyArrayVisitor } from "./visit.mjs";
 
 const test = (lift, apply) => {
   const root = {
-    storage: {},
+    evals: {},
     nodes: [],
     counter: createCounter(0),
   };
