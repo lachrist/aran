@@ -1,6 +1,6 @@
 import { forEach } from "array-lite";
 import { parseExpression } from "@babel/parser";
-import { hasOwn } from "../util/index.mjs";
+import { hasOwn } from "./util/index.mjs";
 
 const { undefined } = globalThis;
 

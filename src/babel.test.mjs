@@ -1,4 +1,4 @@
-import { assertEqual } from "../__fixture__.mjs";
+import { assertEqual } from "./__fixture__.mjs";
 import { parseBabel } from "./babel.mjs";
 
 assertEqual(parseBabel("return 123;").body[0].type, "ReturnStatement");

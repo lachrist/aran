@@ -1,5 +1,5 @@
 import { assertEqual, assertThrow } from "../__fixture__.mjs";
-import { parseBabel } from "./babel.mjs";
+import { parseBabel } from "../babel.mjs";
 import { stringifyPrettier } from "./prettier.mjs";
 
 import {
