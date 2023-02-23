@@ -1,120 +1,134 @@
 /* c8 ignore start */
-import { flatMap } from "array-lite";
-import {
-  assert,
-  assertEqual,
-  assertNotEqual,
-  assertSuccess,
-} from "../../__fixture__.mjs";
-import { createCounter, hasOwn, partial_xx } from "../../util/index.mjs";
+import { flatMap, reduce } from "array-lite";
+import { assert, assertSuccess } from "../../__fixture__.mjs";
+import { createCounter, hasOwn, partialx_xx } from "../../util/index.mjs";
 import { parseBabel } from "../../babel.mjs";
 import {
-  makeReturnStatement,
-  makeBlock,
-  makeClosureExpression,
   makeEffectStatement,
   makeExpressionEffect,
   makeLiteralExpression,
 } from "../../ast/index.mjs";
-import { allignBlock } from "../../allign/index.mjs";
 import {
-  makeScopeTestBlock,
-  makeBaseWriteEffect,
-  makeBaseInitializeStatementArray,
-} from "../scope/index.mjs";
-import {
-  createContext,
-  getContextScoping,
-  setContextScope,
-  visitBlock,
-  visitStatement,
-  visitExpression,
-} from "./context.mjs";
+  allignProgram,
+  allignBlock,
+  allignExpression,
+} from "../../allign/index.mjs";
+import { makeScopeTestBlock } from "../scope/index.mjs";
+import { createContext, setContextScope, visit } from "./context.mjs";
 
-const parseBlock = (code) => {
-  const node = parseBabel(code);
-  assertEqual(node.body.length, 1);
-  return node.body[0];
+const {
+  Reflect: { apply },
+  String: {
+    prototype: { split },
+  },
+} = globalThis;
+
+const splitPath = (path) => (path === null ? [] : apply(split, path, ["/"]));
+
+const get = (node, property) => {
+  assert(hasOwn(node, property));
+  return node[property];
 };
 
-const test_visitor_object = {
-  Block: {
-    BlockStatement: (node, context, _specific) =>
-      makeScopeTestBlock(getContextScoping(context), (scope) =>
+const parseInput = (code, path) => {
+  const node = parseBabel(code);
+  return reduce(splitPath(path), get, node);
+};
+
+const basic_visitor_object = {
+  block: {
+    BlockStatement: (node, context, _site) =>
+      makeScopeTestBlock(context, (scope) =>
         flatMap(
           node.body,
-          partial_xx(visitStatement, setContextScope(context, scope), {}),
+          partialx_xx(visit, "statement", setContextScope(context, scope), {}),
         ),
       ),
   },
-  Closure: (node, _context, specific) => {
-    assertEqual(node.params.length, 0);
-    assertEqual(node.body.type, "BlockStatement");
-    assertEqual(node.body.body.length, 1);
-    assertEqual(node.body.body[0].type, "ReturnStatement");
-    assertNotEqual(node.body.body[1].argument, null);
-    assertEqual(node.body.body[1].argument.type, "Identifier");
-    assertEqual(node.body.body[1].argument.name, "undefined");
-    assert(hasOwn(specific, "kind"));
-    return makeClosureExpression(
-      specific.kind,
-      node.async,
-      node.generator,
-      makeBlock([], [], [makeReturnStatement({ undefined: null })]),
-    );
-  },
-  Pattern: {
-    Identifier: (node, context, specific) => {
-      assert(hasOwn(specific, "right"));
-      assert(hasOwn(specific, "kind"));
-      if (specific.kind === null) {
-        return makeBaseWriteEffect(
-          getContextScoping(context),
-          node.name,
-          specific.right,
-        );
-      } else {
-        return makeBaseInitializeStatementArray(
-          getContextScoping(context),
-          node.name,
-          specific.kind,
-          specific.right,
-        );
-      }
-    },
-  },
-  Statement: {
-    ExpressionStatement: (node, context, _specific) => [
+  statement: {
+    ExpressionStatement: (node, context, _site) => [
       makeEffectStatement(
-        makeExpressionEffect(visitExpression(node.expression, context, {})),
+        makeExpressionEffect(visit("expression", node.expression, context, {})),
       ),
     ],
   },
-  Expression: {
-    Literal: ({ value }, _context, _specific) => makeLiteralExpression(value),
+  expression: {
+    Literal: (node, _context, _site) => makeLiteralExpression(node.value),
   },
 };
 
-export const testBlock = (code1, code2, root, visit) => {
-  assertSuccess(
-    allignBlock(
-      visitBlock(
-        parseBlock(code1),
-        createContext(
-          {
-            counter: createCounter(0),
-            nodes: [],
-            evals: {},
-            ...root,
-          },
-          {
-            ...test_visitor_object,
-            ...visit,
-          },
+const compileTestNode =
+  (allignNode) => (name, input, path, visitors, root, site, output) => {
+    // console.log({name, input, path, visitors, root, site, output});
+    assertSuccess(
+      allignNode(
+        visit(
+          name,
+          parseInput(input, path),
+          createContext(
+            { ...basic_visitor_object, ...visitors },
+            {
+              counter: createCounter(0),
+              nodes: [],
+              evals: {},
+              ...root,
+            },
+          ),
+          site,
         ),
-        {},
+        output,
       ),
-      code2,
-    ),
-  );
-};
+    );
+  };
+
+export const testProgram = compileTestNode(allignProgram);
+
+export const testBlock = compileTestNode(allignBlock);
+
+export const testExpression = compileTestNode(allignExpression);
+
+// const parseBlock = partial_x(parse, ["body", 0]);
+//
+// const parseStatement = partial_x(parse, ["body", 0]);
+//
+// const parseExpression = partial_x(parse, ["body", 0, "expression"]);
+//
+// const test_visitor_object = {
+
+// };
+//
+//
+//
+//
+//
+//
+//
+// export const testExpression = (code1, code2, ) => {
+//   assertSuccess(
+//     allignExpression(
+//       dispatchNode2(visitor, node, createContext(root, visit), )
+// };
+//
+// export const testBlock = (code1, code2, root, visit) => {
+//   assertSuccess(
+//     allignBlock(
+//       visitBlock(
+//         parseBlock(code1),
+//         createContext(
+//           {
+//             counter: createCounter(0),
+//             nodes: [],
+//             evals: {},
+//             ...root,
+//           },
+//           {
+//             ...test_visitor_object,
+//             ...visit,
+//           },
+//         ),
+//         {},
+//       ),
+//       code2,
+//     ),
+//   );
+// };

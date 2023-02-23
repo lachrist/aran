@@ -13,12 +13,11 @@ const {
   Reflect: { defineProperty },
 } = globalThis;
 
-export const createContext = (root, visitors) => ({
+export const createContext = (visitors, root) => ({
+  visitors,
   root,
   strict: false,
   scope: ROOT_SCOPE,
-  specific: null,
-  visitors,
 });
 
 export const loadContext = (serial, root, visitors) => {
@@ -29,7 +28,6 @@ export const loadContext = (serial, root, visitors) => {
     root,
     strict,
     scope: unpackScope(scope),
-    specific: null,
     visitors,
   };
 };
@@ -47,11 +45,7 @@ export const saveContext = ({ root: { evals }, strict, scope }, serial) => {
 
 export const setContextScope = (context, scope) => ({ ...context, scope });
 
-export const getContextScoping = ({ scope, strict, root: { counter } }) => ({
-  scope,
-  strict,
-  counter,
-});
+export const getContextScope = ({ scope }) => scope;
 
 export const strictifyContext = (context) => ({ ...context, strict: true });
 
@@ -63,20 +57,16 @@ const serializeContextNode = ({ root: { nodes } }, node) => {
   return serial;
 };
 
-const compileVisitSingle = (key) => (node, context, specific) =>
+// For testing only //
+export const visit = (key, node, context, site) =>
   annotateNode(
-    dispatchObjectNode2(context.visitors[key], node, context, specific),
+    dispatchObjectNode2(context.visitors[key], node, context, site),
     serializeContextNode(context, node),
   );
 
-const compileVisitMultiple = (key) => (node, context, specific) =>
+// For testing only //
+export const visitMultiple = (key, node, context, site) =>
   map(
-    dispatchObjectNode2(context.visitors[key], node, context, specific),
+    dispatchObjectNode2(context.visitors[key], node, context, site),
     partial_x(annotateNode, serializeContextNode(context, node)),
   );
-
-export const visitBlock = compileVisitSingle("Block");
-
-export const visitExpression = compileVisitSingle("Expression");
-
-export const visitStatement = compileVisitMultiple("Statement");

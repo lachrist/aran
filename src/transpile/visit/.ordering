@@ -1,3 +1,6 @@
 context.mjs
 __fixture__.mjs
+quasi.mjs
+property.mjs
+callee.mjs
 expression.mjs

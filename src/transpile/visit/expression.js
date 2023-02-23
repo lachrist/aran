@@ -1250,12 +1250,12 @@ visitors.BinaryExpression = (scope, node, context) => Tree.BinaryExpression(
 //                 Scope.parameter(scope, "arguments"),
 //                 Tree.PrimitiveExpression(0),
 //                 null))))))));
-// 
+//
 // visitors.Literal = (scope, node, context, kontinuation) => kontinue(
 //   scope,
 //   kontinuation,
 //   Tree.PrimitiveExpression(node.value));
-// 
+//
 // visitors.UnaryExpression = (scope, node, context, kontinuation) => Visit.visitExpression(
 //   scope,
 //   node.left,
@@ -1266,7 +1266,7 @@ visitors.BinaryExpression = (scope, node, context) => Tree.BinaryExpression(
 //     Tree.UnaryExpression(
 //       node.operator,
 //       Scope.makeOpenExpression(scope, box))));
-// 
+//
 // visitors.BinaryExpression = (scope, node, context, kontinuation) => Visit.visitExpression(
 //   scope,
 //   node.left,
@@ -1279,7 +1279,7 @@ visitors.BinaryExpression = (scope, node, context) => Tree.BinaryExpression(
 //       scope,
 //       kontinuation,
 //       Tree.BinaryExpression(expression1, expression2))));
-// 
+//
 // const kontinue = (scope, kontinuation, expression) => (
 //   Scope._is_async(scope) ?
 //   Scope.makeBoxExpression(
