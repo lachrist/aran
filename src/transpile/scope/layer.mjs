@@ -41,7 +41,7 @@ export const makeScopeEvalExpression = ({ strict, scope }, expression) =>
 // meta //
 //////////
 
-const declareMetaGeneric = (
+const declareScopeMetaGeneric = (
   { strict, scope, root: { counter } },
   kind,
   info,
@@ -52,48 +52,55 @@ const declareMetaGeneric = (
   return meta;
 };
 
-export const declareMeta = partial_x_x(declareMetaGeneric, "define", null);
+export const declareScopeMeta = partial_x_x(
+  declareScopeMetaGeneric,
+  "define",
+  null,
+);
 
-export const declareMetaMacro = (context, info, expression) =>
-  declareMetaGeneric(context, "macro", info, {
+export const declareScopeMetaMacro = (context, info, expression) =>
+  declareScopeMetaGeneric(context, "macro", info, {
     macro: expression,
   });
 
-export const makeMetaReadExpression = ({ strict, scope }, meta) =>
+export const makeScopeMetaReadExpression = ({ strict, scope }, meta) =>
   makeScopeReadExpression(strict, scope, meta);
 
-export const makeMetaWriteEffect = ({ strict, scope }, meta, expression) =>
+export const makeScopeMetaWriteEffect = ({ strict, scope }, meta, expression) =>
   makeOptimisticWriteEffect(strict, scope, meta, expression);
 
-export const makeMetaInitializeEffect = makeMetaWriteEffect;
+export const makeScopeMetaInitializeEffect = makeScopeMetaWriteEffect;
 
 //////////
 // spec //
 //////////
 
-export const declareSpecMacro = ({ strict, scope }, spec, macro) => {
+export const declareScopeSpecMacro = ({ strict, scope }, spec, macro) => {
   declareScope(strict, scope, "macro", spec, { macro });
 };
 
-export const declareSpecIllegal = ({ strict, scope }, spec) => {
+export const declareScopeSpecIllegal = ({ strict, scope }, spec) => {
   declareScope(strict, scope, "illegal", spec, null);
 };
 
-export const declareSpec = ({ strict, scope }, spec) => {
+export const declareScopeSpec = ({ strict, scope }, spec) => {
   declareScope(strict, scope, "define", spec, null);
 };
 
-export const makeSpecInitializeEffect = ({ strict, scope }, spec, expression) =>
-  makeOptimisticWriteEffect(strict, scope, spec, expression);
+export const makeScopeSpecInitializeEffect = (
+  { strict, scope },
+  spec,
+  expression,
+) => makeOptimisticWriteEffect(strict, scope, spec, expression);
 
-export const makeSpecReadExpression = ({ strict, scope }, spec) =>
+export const makeScopeSpecReadExpression = ({ strict, scope }, spec) =>
   makeScopeReadExpression(strict, scope, spec);
 
 //////////
 // base //
 //////////
 
-export const declareBaseImport = (
+export const declareScopeBaseImport = (
   { strict, scope },
   base,
   source,
@@ -102,33 +109,33 @@ export const declareBaseImport = (
   declareScope(strict, scope, "import", base, { source, specifier });
 };
 
-export const declareBase = ({ strict, scope }, kind, base, specifiers) => {
+export const declareScopeBase = ({ strict, scope }, kind, base, specifiers) => {
   declareScope(strict, scope, kind, base, { exports: specifiers });
 };
 
-export const makeBaseInitializeStatementArray = (
+export const makeScopeBaseInitializeStatementArray = (
   { strict, scope },
   kind,
   base,
   expression,
 ) => makeScopeInitializeStatementArray(strict, scope, kind, base, expression);
 
-export const makeBaseReadExpression = ({ strict, scope }, base) =>
+export const makeScopeBaseReadExpression = ({ strict, scope }, base) =>
   makeScopeReadExpression(strict, scope, base);
 
-export const makeBaseTypeofExpression = ({ strict, scope }, base) =>
+export const makeScopeBaseTypeofExpression = ({ strict, scope }, base) =>
   makeScopeTypeofExpression(strict, scope, base);
 
-export const makeBaseDiscardExpression = ({ strict, scope }, base) =>
+export const makeScopeBaseDiscardExpression = ({ strict, scope }, base) =>
   makeScopeDiscardExpression(strict, scope, base);
 
-export const makeBaseMacroWriteEffect = ({ strict, scope }, base, macro) =>
+export const makeScopeBaseMacroWriteEffect = ({ strict, scope }, base, macro) =>
   makeScopeWriteEffect(strict, scope, base, {
     expression: macro,
     counter: createCounter(0),
   });
 
-export const makeBaseWriteEffect = (context, base, expression) => {
+export const makeScopeBaseWriteEffect = (context, base, expression) => {
   const { strict, scope } = context;
   const counter = createCounter(0);
   const effect = makeScopeWriteEffect(strict, scope, base, {
@@ -140,13 +147,13 @@ export const makeBaseWriteEffect = (context, base, expression) => {
   } else if (gaugeCounter(counter) === 1) {
     return effect;
   } else {
-    const meta = declareMeta(context, "right");
+    const meta = declareScopeMeta(context, "right");
     return makeSequenceEffect(
-      makeMetaWriteEffect(context, meta, expression),
-      makeBaseMacroWriteEffect(
+      makeScopeMetaWriteEffect(context, meta, expression),
+      makeScopeBaseMacroWriteEffect(
         context,
         base,
-        makeMetaReadExpression(context, meta),
+        makeScopeMetaReadExpression(context, meta),
       ),
     );
   }
