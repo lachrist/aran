@@ -42,7 +42,7 @@ export const makeScopeEvalExpression = ({ strict, scope }, expression) =>
 //////////
 
 const declareMetaGeneric = (
-  { strict, scope, counter },
+  { strict, scope, root: { counter } },
   kind,
   info,
   options,
@@ -54,8 +54,8 @@ const declareMetaGeneric = (
 
 export const declareMeta = partial_x_x(declareMetaGeneric, "define", null);
 
-export const declareMetaMacro = (scoping, info, expression) =>
-  declareMetaGeneric(scoping, "macro", info, {
+export const declareMetaMacro = (context, info, expression) =>
+  declareMetaGeneric(context, "macro", info, {
     macro: expression,
   });
 
@@ -128,8 +128,8 @@ export const makeBaseMacroWriteEffect = ({ strict, scope }, base, macro) =>
     counter: createCounter(0),
   });
 
-export const makeBaseWriteEffect = (scoping, base, expression) => {
-  const { strict, scope } = scoping;
+export const makeBaseWriteEffect = (context, base, expression) => {
+  const { strict, scope } = context;
   const counter = createCounter(0);
   const effect = makeScopeWriteEffect(strict, scope, base, {
     expression,
@@ -140,13 +140,13 @@ export const makeBaseWriteEffect = (scoping, base, expression) => {
   } else if (gaugeCounter(counter) === 1) {
     return effect;
   } else {
-    const meta = declareMeta(scoping, "right");
+    const meta = declareMeta(context, "right");
     return makeSequenceEffect(
-      makeMetaWriteEffect(scoping, meta, expression),
+      makeMetaWriteEffect(context, meta, expression),
       makeBaseMacroWriteEffect(
-        scoping,
+        context,
         base,
-        makeMetaReadExpression(scoping, meta),
+        makeMetaReadExpression(context, meta),
       ),
     );
   }
