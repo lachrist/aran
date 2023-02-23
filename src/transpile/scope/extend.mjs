@@ -1,8 +1,9 @@
-import { concat } from "array-lite";
+import { forEach, concat } from "array-lite";
 
 import { assert } from "../../util/index.mjs";
 
 import {
+  makeLiteralExpression,
   makeModuleProgram,
   makeEvalProgram,
   makeClosureExpression,
@@ -31,7 +32,11 @@ import {
   TRAIL,
 } from "./frame.mjs";
 
-import { makeScopeFrameBlock, makeScopeFrameScriptProgram } from "./scope.mjs";
+import {
+  declareScope,
+  makeScopeFrameBlock,
+  makeScopeFrameScriptProgram,
+} from "./scope.mjs";
 
 ///////////////
 // Blueprint //
@@ -302,16 +307,36 @@ export const makeScopeWithDynamicBlock = generateMakeScopeDynamicBlock(
 //////////
 
 /* c8 ignore start */
-export const makeScopeTestBlock = ({ strict, scope }, makeStatementArray) =>
+export const makeScopeTestBlock = (
+  { strict, scope: scope1 },
+  makeStatementArray,
+) =>
   makeScopeFrameBlock(
     strict,
-    scope,
+    scope1,
     [],
     [
       createFrame(DEFINE_STATIC, META, {}),
-      createFrame(ENCLAVE, SPEC, {}),
+      createFrame(MACRO, SPEC, {}),
       createFrame(ENCLAVE, BASE, {}),
     ],
-    makeStatementArray,
+    (scope2) => {
+      forEach(
+        [
+          "this",
+          "new.target",
+          "import.meta",
+          "super.get",
+          "super.set",
+          "super.call",
+        ],
+        (name) => {
+          declareScope(strict, scope2, "macro", name, {
+            macro: makeLiteralExpression(name),
+          });
+        },
+      );
+      return makeStatementArray(scope2);
+    },
   );
 /* c8 ignore stop */
