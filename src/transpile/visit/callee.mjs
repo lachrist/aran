@@ -9,25 +9,25 @@ const visitExpression = partialx__x(visit, "expression", {
 const visitProperty = partialx__x(visit, "property", {});
 
 export default {
-  MemberExpression: (node, context, { kontinuation }) => {
+  MemberExpression: (node, context, _site) => {
     if (node.object.type === "Super") {
       expect1(
         !node.optional,
         SyntaxAranError,
-        "super get expression should not be optional, at: %j",
+        "illegal optional super get expression at: %j",
         node.loc.start,
       );
-      return kontinuation(
+      return [
         makeApplyExpression(
           makeSpecReadExpression(context, "super.get"),
           makeLiteralExpression({undefined: null}),
           [node.computed ? visitExpression(node, context) : visitProperty(node, context)]
         ),
         makeSpecReadExpression(context, "this"),
-      );
+      ];
     } else {
       const variable = declareMeta(context, "callee_this");
-      return kontinuation(
+      return [
         makeSequenceExpression(
           makeMetaWriteEffect(
             context,
@@ -65,14 +65,14 @@ export default {
             )
         ),
         makeMetaReadExpression(context, variable),
-      );
+      ];
     }
   },
-  [DEFAULT_CLAUSE]: (node, context, { kontinuation }) => kontinuation(
+  [DEFAULT_CLAUSE]: (node, context, _site) => [
     visit("expression", node, context, {
       dropped: false,
       name: null,
     }),
     makeLiteralExpression({undefined:null}),
-  ),
+  ],
 };

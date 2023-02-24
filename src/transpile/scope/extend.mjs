@@ -38,6 +38,9 @@ import {
   makeScopeFrameScriptProgram,
 } from "./scope.mjs";
 
+const compileContextCallback = (callback, context) => (scope) =>
+  callback({ ...context, scope });
+
 ///////////////
 // Blueprint //
 ///////////////
@@ -139,34 +142,30 @@ const createDeadBlockBaseFrameArray = () => [
 // Program //
 /////////////
 
-export const makeScopeScriptProgram = (
-  { strict, scope },
-  enclave,
-  makeStatementArray,
-) =>
+export const makeScopeScriptProgram = (context, enclave, makeStatementArray) =>
   makeScopeFrameScriptProgram(
-    strict,
-    scope,
+    context.strict,
+    context.scope,
     concat(
       createPseudoMetaFrameArray(),
       createPseudoSpecFrameArray(),
       createRootBaseFrameArray(enclave, "script"),
     ),
-    makeStatementArray,
+    compileContextCallback(makeStatementArray, context),
   );
 
 export const makeScopeModuleProgram = (
-  { strict, scope },
+  context,
   enclave,
   links,
   makeStatementArray,
 ) => {
-  assert(strict === true, "module program should always be strict");
+  assert(context.strict === true, "module program should always be strict");
   return makeModuleProgram(
     links,
     makeScopeFrameBlock(
-      strict,
-      scope,
+      context.strict,
+      context.scope,
       [],
       concat(
         createMetaFrameArray(),
@@ -174,48 +173,48 @@ export const makeScopeModuleProgram = (
         createRootBaseFrameArray(enclave, "module"),
         createModuleBaseFrameArray(),
       ),
-      makeStatementArray,
+      compileContextCallback(makeStatementArray, context),
     ),
   );
 };
 
 export const makeScopeGlobalEvalProgram = (
-  { strict, scope },
+  context,
   enclave,
   makeStatementArray,
 ) =>
   makeEvalProgram(
     makeScopeFrameBlock(
-      strict,
-      scope,
+      context.strict,
+      context.scope,
       [],
       concat(
         createMetaFrameArray(),
         createSpecFrameArray(),
         createRootBaseFrameArray(enclave, "eval"),
-        createEvalBaseFrameArray(strict),
+        createEvalBaseFrameArray(context.strict),
       ),
-      makeStatementArray,
+      compileContextCallback(makeStatementArray, context),
     ),
   );
 
 export const makeScopeLocalEvalProgram = (
-  { strict, scope },
+  context,
   enclave,
   makeStatementArray,
 ) =>
   makeEvalProgram(
     makeScopeFrameBlock(
-      strict,
-      scope,
+      context.strict,
+      context.scope,
       [],
       concat(
         createMetaFrameArray(),
         createSpecFrameArray(),
         createLocalBaseFrameArray(enclave, "eval"),
-        createEvalBaseFrameArray(strict),
+        createEvalBaseFrameArray(context.strict),
       ),
-      makeStatementArray,
+      compileContextCallback(makeStatementArray, context),
     ),
   );
 
@@ -224,7 +223,7 @@ export const makeScopeLocalEvalProgram = (
 /////////////
 
 export const makeScopeClosureExpression = (
-  { strict, scope },
+  context,
   type,
   asynchronous,
   generator,
@@ -235,8 +234,8 @@ export const makeScopeClosureExpression = (
     asynchronous,
     generator,
     makeScopeFrameBlock(
-      strict,
-      scope,
+      context.strict,
+      context.scope,
       [],
       concat(
         createEscapeFrameArray(),
@@ -244,7 +243,7 @@ export const makeScopeClosureExpression = (
         createSpecFrameArray(),
         createBlockBaseFrameArray(),
       ),
-      makeStatementArray,
+      compileContextCallback(makeStatementArray, context),
     ),
   );
 
@@ -253,14 +252,13 @@ export const makeScopeClosureExpression = (
 ////////////
 
 const generateMakeBlueprintBlock =
-  (createBaseFrameArray) =>
-  ({ strict, scope }, labels, makeStatementArray) =>
+  (createBaseFrameArray) => (context, labels, makeStatementArray) =>
     makeScopeFrameBlock(
-      strict,
-      scope,
+      context.strict,
+      context.scope,
       labels,
       concat(createMetaFrameArray(), createBaseFrameArray()),
-      makeStatementArray,
+      compileContextCallback(makeStatementArray, context),
     );
 
 export const makeScopeNormalStaticBlock = generateMakeBlueprintBlock(
@@ -284,14 +282,13 @@ export const makeScopeClosureStaticBlock = generateMakeBlueprintBlock(
 /////////////
 
 const generateMakeScopeDynamicBlock =
-  (createBaseFrameArray) =>
-  ({ strict, scope }, labels, macro, makeStatementArray) =>
+  (createBaseFrameArray) => (context, labels, macro, makeStatementArray) =>
     makeScopeFrameBlock(
-      strict,
-      scope,
+      context.strict,
+      context.scope,
       labels,
       concat(createMetaFrameArray(), createBaseFrameArray(macro)),
-      makeStatementArray,
+      compileContextCallback(makeStatementArray, context),
     );
 
 export const makeScopeClosureDynamicBlock = generateMakeScopeDynamicBlock(
@@ -307,20 +304,17 @@ export const makeScopeWithDynamicBlock = generateMakeScopeDynamicBlock(
 //////////
 
 /* c8 ignore start */
-export const makeScopeTestBlock = (
-  { strict, scope: scope1 },
-  makeStatementArray,
-) =>
+export const makeScopeTestBlock = (context, makeStatementArray) =>
   makeScopeFrameBlock(
-    strict,
-    scope1,
+    context.strict,
+    context.scope,
     [],
     [
       createFrame(DEFINE_STATIC, META, {}),
       createFrame(MACRO, SPEC, {}),
       createFrame(ENCLAVE, BASE, {}),
     ],
-    (scope2) => {
+    (scope) => {
       forEach(
         [
           "this",
@@ -331,12 +325,12 @@ export const makeScopeTestBlock = (
           "super.call",
         ],
         (name) => {
-          declareScope(strict, scope2, "macro", name, {
+          declareScope(context.strict, scope, "macro", name, {
             macro: makeLiteralExpression(name),
           });
         },
       );
-      return makeStatementArray(scope2);
+      return makeStatementArray({ ...context, scope });
     },
   );
 /* c8 ignore stop */

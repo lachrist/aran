@@ -1,11 +1,12 @@
-import { includes, join } from "array-lite";
+import { map, join } from "array-lite";
 
-import { shift, assert, partialx_ } from "../../util/index.mjs";
+import { hasOwn, shift, assert, partialx_ } from "../../util/index.mjs";
 
 const {
   Error,
   parseInt,
   isNaN,
+  Object: { fromEntries },
   String: {
     prototype: { split: splitString, substring: subString },
   },
@@ -43,30 +44,23 @@ const DEADZONE_MAPPING = {
 export const makeMetaVariable = (name, index) =>
   `0${apply(stringifyNumber, index, ENCODING_SINGLETON)}${SEPARATOR}${name}`;
 
-const specials = ["this", "new.target", "import.meta"];
+const specials = [
+  ["this", "this"],
+  ["new.target", "new_target"],
+  ["import.meta", "import_meta"],
+  ["super.get", "super_get"],
+  ["super.set", "super_set"],
+  ["super.call", "super_call"],
+];
 
-const convertSpecial = (variable) => {
-  if (variable === "new.target") {
-    return "new_target";
-  } else if (variable === "import.meta") {
-    return "import_meta";
-  } else {
-    return variable;
-  }
-};
+const flip = ({ 0: x, 1: y }) => [y, x];
 
-const revertSpecial = (variable) => {
-  if (variable === "new_target") {
-    return "new.target";
-  } else if (variable === "import_meta") {
-    return "import.meta";
-  } else {
-    return variable;
-  }
-};
+const convert_special_mapping = fromEntries(specials);
+
+const revert_special_mapping = fromEntries(map(specials, flip));
 
 export const getVariableLayer = (variable) => {
-  if (includes(specials, variable)) {
+  if (hasOwn(convert_special_mapping, variable)) {
     return SPEC;
   } else if (variable[0] === META_CHAR) {
     return META;
@@ -76,8 +70,8 @@ export const getVariableLayer = (variable) => {
 };
 
 const mangleVariable = (prefix, variable) => {
-  if (includes(specials, variable)) {
-    return `${prefix}${SPEC_CHAR}${convertSpecial(variable)}`;
+  if (hasOwn(convert_special_mapping, variable)) {
+    return `${prefix}${SPEC_CHAR}${convert_special_mapping[variable]}`;
   } else if (variable[0] === META_CHAR) {
     return `${prefix}${variable}`;
   } else {
@@ -115,10 +109,14 @@ export const unmangleVariable = (variable) => {
       index: null,
     };
   } else if (variable[1] === SPEC_CHAR) {
+    assert(
+      hasOwn(revert_special_mapping, body),
+      "invalid special variable body",
+    );
     return {
       layer: "base",
       deadzone,
-      name: revertSpecial(body),
+      name: revert_special_mapping[body],
       index: null,
     };
   } else {

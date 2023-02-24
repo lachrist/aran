@@ -5,8 +5,7 @@ testExpression(
   "quasi",
   "`foo`;",
   "body/0/expression/quasis/0",
-  { quasi: QuasiVisitor },
-  {},
+  { visitors: { quasi: QuasiVisitor } },
   null,
   `"foo"`,
 );

@@ -42,7 +42,7 @@ export const makeScopeEvalExpression = ({ strict, scope }, expression) =>
 //////////
 
 const declareScopeMetaGeneric = (
-  { strict, scope, root: { counter } },
+  { strict, scope, counter },
   kind,
   info,
   options,
