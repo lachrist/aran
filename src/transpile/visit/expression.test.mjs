@@ -10,15 +10,15 @@ import {
   makeExpressionEffect,
   makeEffectStatement,
 } from "../../ast/index.mjs";
-import { makeScopeTestBlock, makeBaseWriteEffect } from "../scope/index.mjs";
 import {
-  getContextScoping,
-  setContextScope,
-  visit,
-  visitMultiple,
-} from "./context.mjs";
+  makeScopeTestBlock,
+  makeScopeBaseWriteEffect,
+} from "../scope/index.mjs";
+import { visit, visitMany } from "./context.mjs";
 import { testBlock } from "./__fixture__.mjs";
 import QuasiVisitor from "./quasi.mjs";
+import PropertyVisitor from "./property.mjs";
+import CalleeVisitor from "./callee.mjs";
 import ExpressionVisitor from "./expression.mjs";
 
 const DEFAULT_SITE = {
@@ -45,29 +45,20 @@ const visitClosure = (node, _context, site) => {
 
 const visitors = {
   block: {
-    BlockStatement: (node, context, _site) =>
-      makeScopeTestBlock(getContextScoping(context), (scope) =>
-        map(
-          node.body,
-          partialx_xx(
-            visit,
-            "statement",
-            setContextScope(context, scope),
-            {},
-          ),
-        ),
+    BlockStatement: (node, context1, site) =>
+      makeScopeTestBlock(context1, (context2) =>
+        flatMap(node.body, partialx_xx(visitMany, "statement", context2, site)),
       ),
   },
   statement: {
-    ExpressionStatement: (node, context, _site) =>
+    ExpressionStatement: (node, context, site) => [
       makeEffectStatement(
         makeExpressionEffect(
-          visit("expression", node.expression, context, DEFAULT_SITE),
+          visit("expression", node.expression, context, site),
         ),
       ),
+    ],
   },
-  expression: ExpressionVisitor,
-  quasi: QuasiVisitor,
   class: {
     ClassExpression: (node, _context, _site) => {
       assertEqual(node.superClass, null);
@@ -90,16 +81,16 @@ const visitors = {
   },
   pattern: {
     Identifier: (node, context, site) => {
-      assert(hasOwn(site, "right"));
-      assert(hasOwn(site, "kind"));
-      assert(site.kind === null);
-      return makeBaseWriteEffect(
-        getContextScoping(context),
-        node.name,
-        site.right,
-      );
+      assert(hasOwn(site, "right"), "missing right in pattern site");
+      assert(hasOwn(site, "kind"), "missing kind in pattern site");
+      assertEqual(site.kind, null, "unexpected kind in pattern site");
+      return makeScopeBaseWriteEffect(context, node.name, site.right);
     },
   },
+  expression: ExpressionVisitor,
+  quasi: QuasiVisitor,
+  callee: CalleeVisitor,
+  property: PropertyVisitor,
 };
 
 const test = (input, output, site) => {
@@ -107,8 +98,7 @@ const test = (input, output, site) => {
     "block",
     input,
     "body/0",
-    visitors,
-    {},
+    { visitors },
     {
       ...DEFAULT_SITE,
       ...site,
@@ -155,6 +145,34 @@ test(
           intrinsic.aran.binary("+", "bar", 456),
         ),
         "qux",
+      );
+    }
+  `,
+  {},
+);
+
+test(
+  "{ 123`foo${456}\\n${789}qux`; }",
+  `
+    {
+      void (123)(
+        intrinsic.Object.freeze(
+          intrinsic.Object.defineProperty(
+            intrinsic.Array.of("foo", "\\n", "qux"),
+            "raw",
+            intrinsic.aran.createObject(
+              null,
+              "value", intrinsic.Object.freeze(
+                intrinsic.Array.of("foo", "\\\\n", "qux"),
+              ),
+              "writable", false,
+              "enumerable", false,
+              "configurable", false,
+            ),
+          ),
+        ),
+        456,
+        789,
       );
     }
   `,

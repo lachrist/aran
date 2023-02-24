@@ -1,22 +1,33 @@
-import { reduce } from "array-lite";
-import { partialx__x, SyntaxAranError } from "../../util/index.mjs";
+import { concat, reduce, map } from "array-lite";
+import { partial_x, partialx__x, SyntaxAranError } from "../../util/index.mjs";
 import {
+  makeApplyExpression,
   makeYieldExpression,
   makeAwaitExpression,
   makeLiteralExpression,
 } from "../../ast/index.mjs";
-import { makeBinaryExpression } from "../../intrinsic.mjs";
 import {
-  makeBaseReadExpression,
-  makeSpecReadExpression,
+  makeArrayExpression,
+  makeObjectFreezeExpression,
+  makeObjectDefinePropertyExpression,
+  makeDataDescriptorExpression,
+  makeBinaryExpression,
+} from "../../intrinsic.mjs";
+import {
+  makeScopeBaseReadExpression,
+  makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
-import { visit } from "./context.mjs";
+import { visit, visitMany } from "./context.mjs";
 
 const { Array } = globalThis;
 
-const visitProperty = partialx__x(visit, "property", null);
+const visitCallee = partialx__x(visitMany, "callee", null);
 
-const visitQuasi = partialx__x(visit, "quasi", null);
+// const visitProperty = partialx__x(visit, "property", null);
+
+const visitQuasiCooked = partialx__x(visit, "quasi", { cooked: true });
+
+const visitQuasiRaw = partialx__x(visit, "quasi", { cooked: false });
 
 const visitExpression = partialx__x(visit, "expression", {
   dropped: false,
@@ -38,23 +49,15 @@ const getMetaPropertyVariable = (node) => {
   } /* c8 ignore stop */
 };
 
-const visitCallee = (node, context, site) => {
-  assert(node.type === "MemberExpression", "expected MemberExpression");
-
-};
-
 export default {
   // Producer //
   Literal: (node, _context, _site) => makeLiteralExpression(node.value),
   Identifier: (node, context, _site) =>
-    makeBaseReadExpression(context, node.name),
+    makeScopeBaseReadExpression(context, node.name),
   ThisExpression: (_node, context, _site) =>
-    makeSpecReadExpression(context, "this"),
+    makeScopeSpecReadExpression(context, "this"),
   MetaProperty: (node, context, _site) =>
-    makeSpecReadExpression(
-      context,
-      getMetaPropertyVariable(node),
-    ),
+    makeScopeSpecReadExpression(context, getMetaPropertyVariable(node)),
   ArrowFunctionExpression: (node, context, site) =>
     visit("closure", node, context, { kind: "arrow", ...site }),
   FunctionExpression: (node, context, site) =>
@@ -63,7 +66,7 @@ export default {
   // Combinators //
   TemplateLiteral: (node, context, _site) =>
     node.expressions.length === 0
-      ? visitQuasi(node.quasis[0], context)
+      ? visitQuasiCooked(node.quasis[0], context)
       : makeBinaryExpression(
           "+",
           reduce(
@@ -74,69 +77,53 @@ export default {
                 expression,
                 makeBinaryExpression(
                   "+",
-                  visitQuasi(node.quasis[index + 1], context),
+                  visitQuasiCooked(node.quasis[index + 1], context),
                   visitExpression(node.expressions[index + 1], context),
                 ),
               ),
             makeBinaryExpression(
               "+",
-              visitQuasi(node.quasis[0], context),
+              visitQuasiCooked(node.quasis[0], context),
               visitExpression(node.expressions[0], context),
             ),
           ),
-          visitQuasi(node.quasis[node.quasis.length - 1], context),
+          visitQuasiCooked(node.quasis[node.quasis.length - 1], context),
         ),
-
-    // Tagged template cannot lead to a direct eval call because it receives an array instead of a string:
-    // cf: https://www.ecma-international.org/ecma-262/10.0/index.html#sec-performeval
-    visitors.TaggedTemplateExpression = (scope, node, context) => (
-      (
-        (closure) => (
-          // We do not need to check for node.tag.type === "ChainExpression" because:
-          // require("acorn").parse("(123)?.[456]`foo`;")
-          // SyntaxError: Optional chaining cannot appear in the tag of tagged template expressions (1:12)
-          node.tag.type === "MemberExpression" ?
-          Visit.visitMember(
-            scope,
-            node.tag,
-            {
-              kontinuation: (expression1, expression2) => Tree.ApplyExpression(
-                expression1,
-                expression2,
-                closure())}) :
-          Tree.ApplyExpression(
-            Visit.visitExpression(scope, node.tag, null),
-            Tree.PrimitiveExpression(void 0),
-            closure())))
-      (
-        () => ArrayLite.concat(
-          [
-            Intrinsic.makeFreezeExpression(
-              Intrinsic.makeDefinePropertyExpression(
-                Intrinsic.makeArrayExpression(
-                  ArrayLite.map(
-                    node.quasi.quasis,
-                    (quasi) => Tree.PrimitiveExpression(quasi.value.cooked))),
-                Tree.PrimitiveExpression("raw"),
-                {
-                  __proto__: null,
-                  value: Intrinsic.makeFreezeExpression(
-                    Intrinsic.makeArrayExpression(
-                      ArrayLite.map(
-                        node.quasi.quasis,
-                        (quasi) => Tree.PrimitiveExpression(quasi.value.raw))),
-                    true,
-                    Intrinsic.TARGET_RESULT)},
-                true,
-                Intrinsic.TARGET_RESULT),
-              true,
-              Intrinsic.TARGET_RESULT)],
-          ArrayLite.map(
-            node.quasi.expressions,
-            (expression) => Visit.visitExpression(scope, expression, null)))));
-
-
-
+  // Tagged template cannot lead to a direct eval call because it receives an array instead of a string:
+  // cf: https://www.ecma-international.org/ecma-262/10.0/index.html#sec-performeval
+  TaggedTemplateExpression: (node, context, _site) => {
+    const [closure_expression, this_expression] = visitCallee(
+      node.tag,
+      context,
+    );
+    return makeApplyExpression(
+      closure_expression,
+      this_expression,
+      concat(
+        [
+          makeObjectFreezeExpression(
+            makeObjectDefinePropertyExpression(
+              makeArrayExpression(
+                map(node.quasi.quasis, partial_x(visitQuasiCooked, context)),
+              ),
+              makeLiteralExpression("raw"),
+              makeDataDescriptorExpression(
+                makeObjectFreezeExpression(
+                  makeArrayExpression(
+                    map(node.quasi.quasis, partial_x(visitQuasiRaw, context)),
+                  ),
+                ),
+                makeLiteralExpression(false),
+                makeLiteralExpression(false),
+                makeLiteralExpression(false),
+              ),
+            ),
+          ),
+        ],
+        map(node.quasi.expressions, partial_x(visitExpression, context)),
+      ),
+    );
+  },
   AwaitExpression: (node, context, _site) =>
     makeAwaitExpression(visitExpression(node.argument, context)),
   YieldExpression: (node, context, _site) =>

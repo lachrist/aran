@@ -52,11 +52,11 @@ const makeIntrinsicApplyExpression = (
     annotation,
   );
 
-// const makeIntrinsicApplyExpression1 = (
-//   name,
-//   expression1,
-//   annotation = undefined,
-// ) => makeIntrinsicApplyExpression(name, [expression1], annotation);
+const makeIntrinsicApplyExpression1 = (
+  name,
+  expression1,
+  annotation = undefined,
+) => makeIntrinsicApplyExpression(name, [expression1], annotation);
 
 const makeIntrinsicApplyExpression2 = (
   name,
@@ -203,9 +203,9 @@ export const makeAccessorDescriptorExpression = partialxx_x_x_x__(
   makeLiteralExpression("configurable"),
 );
 
-////////////
-// object //
-////////////
+//////////
+// Aran //
+//////////
 
 export const makeGetExpression = partialx___(
   makeIntrinsicApplyExpression2,
@@ -228,11 +228,6 @@ export const makeDeleteExpression = partialxx___(
   "aran.deleteSloppy",
 );
 
-export const makeDefineExpression = partialx____(
-  makeIntrinsicApplyExpression3,
-  "Reflect.defineProperty",
-);
-
 export const makeSetStrictExpression = partialx____(
   makeIntrinsicApplyExpression3,
   "aran.setStrict",
@@ -242,10 +237,38 @@ export const makeSetSloppyExpression = partialx____(
   makeIntrinsicApplyExpression3,
   "aran.setSloppy",
 );
+
 export const makeSetExpression = partialxx____(
   makeDualIntrinsicApplyExpression3,
   "aran.setStrict",
   "aran.setSloppy",
+);
+
+/////////////
+// Reflect //
+/////////////
+
+export const makeReflectDefinePropertyExpression = partialx____(
+  makeIntrinsicApplyExpression3,
+  "Reflect.defineProperty",
+);
+
+////////////
+// Object //
+////////////
+
+// Compared to Reflect, Object methods sometimes lead
+// to more efficient transpiled code because they
+// return the object and allow operation chaining.
+
+export const makeObjectFreezeExpression = partialx__(
+  makeIntrinsicApplyExpression1,
+  "Object.freeze",
+);
+
+export const makeObjectDefinePropertyExpression = partialx____(
+  makeIntrinsicApplyExpression3,
+  "Object.defineProperty",
 );
 
 ////////////

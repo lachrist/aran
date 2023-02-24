@@ -21,7 +21,7 @@ import {
 
 import {
   makeDeleteSloppyExpression,
-  makeDefineExpression,
+  makeReflectDefinePropertyExpression,
   makeBinaryExpression,
   makeGetExpression,
   makeDataDescriptorExpression,
@@ -82,7 +82,7 @@ const makeConflictStatement = (dynamic, variable) =>
 const makeDeclareStatement = (dynamic, variable) =>
   makeEffectStatement(
     makeExpressionEffect(
-      makeDefineExpression(
+      makeReflectDefinePropertyExpression(
         dynamic,
         makeLiteralExpression(variable),
         makeDataDescriptorExpression(
@@ -147,7 +147,7 @@ export const makeFrameInitializeStatementArray = (
     return [
       makeEffectStatement(
         makeExpressionEffect(
-          makeDefineExpression(
+          makeReflectDefinePropertyExpression(
             macro,
             makeLiteralExpression(variable),
             makeDataDescriptorExpression(

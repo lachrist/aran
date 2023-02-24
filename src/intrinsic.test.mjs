@@ -9,6 +9,7 @@ import { allignExpression } from "./allign/index.mjs";
 import {
   // makeReadGlobalExpression,
   // makeDiscardGlobalExpression,
+  makeObjectFreezeExpression,
   makeDeleteExpression,
   makeSetExpression,
   makeDataDescriptorExpression,
@@ -75,4 +76,9 @@ test(makeJSONExpression([1, 2, 3]), "intrinsic.Array.of(1, 2, 3)");
 test(
   makeJSONExpression({ foo: "bar" }),
   "intrinsic.aran.createObject(null, 'foo', 'bar')",
+);
+
+test(
+  makeObjectFreezeExpression(makeLiteralExpression(123)),
+  "intrinsic.Object.freeze(123)",
 );

@@ -21,7 +21,7 @@ import {
   makeDeleteSloppyExpression,
   makeGetExpression,
   makeSetExpression,
-  makeDefineExpression,
+  makeReflectDefinePropertyExpression,
   makeBinaryExpression,
   makeDataDescriptorExpression,
 } from "../../../intrinsic.mjs";
@@ -50,7 +50,7 @@ const makeDeclareStatement = (dynamic, variable) =>
       makeConditionalExpression(
         makeBinaryExpression("in", makeLiteralExpression(variable), dynamic),
         makeLiteralExpression({ undefined: null }),
-        makeDefineExpression(
+        makeReflectDefinePropertyExpression(
           dynamic,
           makeLiteralExpression(variable),
           makeDataDescriptorExpression(
