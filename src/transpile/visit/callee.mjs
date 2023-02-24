@@ -1,14 +1,35 @@
-import { partialx__x } from "../../util/index.mjs";
+import {
+  partialx__x,
+  partialx___,
+  expect1,
+  SyntaxAranError,
+} from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
+import {
+  makeApplyExpression,
+  makeLiteralExpression,
+  makeSequenceExpression,
+  makeConditionalExpression,
+} from "../../ast/index.mjs";
+import { makeGetExpression, makeBinaryExpression } from "../../intrinsic.mjs";
+import {
+  makeScopeMetaReadExpression,
+  makeScopeMetaWriteEffect,
+  makeScopeSpecReadExpression,
+  declareScopeMeta,
+} from "../scope/index.mjs";
+import { visit, visitMany } from "./context.mjs";
 
 const visitExpression = partialx__x(visit, "expression", {
   dropped: false,
   name: null,
 });
 
-const visitProperty = partialx__x(visit, "property", {});
+const visitProperty = partialx___(visit, "property");
 
 export default {
+  ChainExpression: (node, context, site) =>
+    visitMany("callee", node.expression, context, site),
   MemberExpression: (node, context, _site) => {
     if (node.object.type === "Super") {
       expect1(
@@ -19,60 +40,53 @@ export default {
       );
       return [
         makeApplyExpression(
-          makeSpecReadExpression(context, "super.get"),
-          makeLiteralExpression({undefined: null}),
-          [node.computed ? visitExpression(node, context) : visitProperty(node, context)]
+          makeScopeSpecReadExpression(context, "super.get"),
+          makeLiteralExpression({ undefined: null }),
+          [visitProperty(node.property, context, node)],
         ),
-        makeSpecReadExpression(context, "this"),
+        makeScopeSpecReadExpression(context, "this"),
       ];
     } else {
-      const variable = declareMeta(context, "callee_this");
+      const variable = declareScopeMeta(context, "callee_this");
       return [
         makeSequenceExpression(
-          makeMetaWriteEffect(
+          makeScopeMetaWriteEffect(
             context,
             variable,
             visitExpression(node.object, context),
           ),
-          node.optional ?
-            makeConditionalExpression(
-              makeConditionalExpression(
-                makeBinaryExpression(
-                  "===",
-                  makeMetaReadExpression(context, variable),
-                  makeLiteralExpression(null),
+          node.optional
+            ? makeConditionalExpression(
+                makeConditionalExpression(
+                  makeBinaryExpression(
+                    "===",
+                    makeScopeMetaReadExpression(context, variable),
+                    makeLiteralExpression(null),
+                  ),
+                  makeLiteralExpression(true),
+                  makeBinaryExpression(
+                    "===",
+                    makeScopeMetaReadExpression(context, variable),
+                    makeLiteralExpression({ undefined: null }),
+                  ),
                 ),
-                makeLiteralExpression(true),
-                makeBinaryExpression(
-                  "===",
-                  makeMetaReadExpression(context, variable),
-                  makeLiteralExpression({undefined:null}),
+                makeLiteralExpression({ undefined: null }),
+                makeGetExpression(
+                  makeScopeMetaReadExpression(context, variable),
+                  visitProperty(node.property, context, node),
                 ),
-              ),
-              makeLiteralExpression({undefined:null}),
-              makeGetExpression(
-                makeMetaReadExpression(context, variable),
-                node.computed
-                  ? visitExpression(node.property, context)
-                  : visitProperty(node.property, context)
-              ),
-            )
+              )
             : makeGetExpression(
-              makeMetaReadExpression(context, variable),
-              node.computed
-                ? visitExpression(node.property, context)
-                : visitProperty(node.property, context)
-            )
+                makeScopeMetaReadExpression(context, variable),
+                visitProperty(node.property, context, node),
+              ),
         ),
-        makeMetaReadExpression(context, variable),
+        makeScopeMetaReadExpression(context, variable),
       ];
     }
   },
   [DEFAULT_CLAUSE]: (node, context, _site) => [
-    visit("expression", node, context, {
-      dropped: false,
-      name: null,
-    }),
-    makeLiteralExpression({undefined:null}),
+    visitExpression(node, context),
+    makeLiteralExpression({ undefined: null }),
   ],
 };
