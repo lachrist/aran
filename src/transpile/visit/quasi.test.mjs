@@ -1,20 +1,20 @@
 import { testExpression } from "./__fixture__.mjs";
-import QuasiVisitor from "./quasi.mjs";
+import visitors from "./quasi.mjs";
 
 testExpression(
-  "quasi",
+  "Quasi",
   "`foo\\bar`;",
   "body/0/expression/quasis/0",
-  { visitors: { quasi: QuasiVisitor } },
+  { visitors },
   { cooked: true },
   `"foo\\bar"`,
 );
 
 testExpression(
-  "quasi",
+  "Quasi",
   "`foo\\bar`;",
   "body/0/expression/quasis/0",
-  { visitors: { quasi: QuasiVisitor } },
+  { visitors },
   { cooked: false },
   `"foo\\\\bar"`,
 );

@@ -128,6 +128,11 @@ const makeDualIntrinsicApplyExpression3 = (
 // Aran //
 //////////
 
+export const makeArrayExpression = partialx__(
+  makeIntrinsicApplyExpression,
+  "Array.of",
+);
+
 export const makeUnaryExpression = partialxf__(
   makeIntrinsicApplyExpression2,
   "aran.unary",
@@ -138,11 +143,6 @@ export const makeBinaryExpression = partialxf___(
   makeIntrinsicApplyExpression3,
   "aran.binary",
   makeLiteralExpression,
-);
-
-export const makeArrayExpression = partialx__(
-  makeIntrinsicApplyExpression,
-  "Array.of",
 );
 
 const flatenProperty = ({ 0: name, 1: value }) =>
@@ -314,6 +314,15 @@ export const makeReflectDefinePropertyExpression = partialx____(
   "Reflect.defineProperty",
 );
 
+///////////
+// Array //
+///////////
+
+export const makeArrayFromExpression = partialx__(
+  makeIntrinsicApplyExpression1,
+  "Array.from",
+);
+
 ////////////
 // Object //
 ////////////
@@ -330,6 +339,11 @@ export const makeObjectFreezeExpression = partialx__(
 export const makeObjectDefinePropertyExpression = partialx____(
   makeIntrinsicApplyExpression3,
   "Object.defineProperty",
+);
+
+export const makeObjectAssignExpression = partialx___(
+  makeIntrinsicApplyExpression2,
+  "Object.assign",
 );
 
 //////////

@@ -7,28 +7,28 @@ import {
 import { makeScopeTestBlock } from "../scope/index.mjs";
 import { visit } from "./context.mjs";
 import { testBlock } from "./__fixture__.mjs";
-import PropertyVisitor from "./property.mjs";
+import Visitors from "./property.mjs";
 
 const testProperty = (input, output, computed) =>
   testBlock(
-    "root",
+    "Root",
     input,
     "body/0/expression",
     {
       visitors: {
-        root: {
+        Root: {
           [DEFAULT_CLAUSE]: (node, context1, site) =>
             makeScopeTestBlock(context1, (context2) => [
               makeEffectStatement(
-                makeExpressionEffect(visit("property", node, context2, site)),
+                makeExpressionEffect(visit("Property", node, context2, site)),
               ),
             ]),
         },
-        property: PropertyVisitor,
-        expression: {
+        Expression: {
           ThisExpression: (_node, _context, _site) =>
             makeLiteralExpression("this"),
         },
+        ...Visitors,
       },
     },
     { computed },

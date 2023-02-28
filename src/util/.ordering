@@ -1,7 +1,7 @@
 assert.mjs
+closure.mjs
 report.mjs
 array.mjs
-closure.mjs
 counter.mjs
 curry.mjs
 either.mjs

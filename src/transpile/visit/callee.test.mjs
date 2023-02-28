@@ -8,29 +8,29 @@ import {
 import { makeScopeTestBlock } from "../scope/index.mjs";
 import { visitMany } from "./context.mjs";
 import { testBlock } from "./__fixture__.mjs";
-import CalleeVisitor from "./callee.mjs";
+import Visitors from "./callee.mjs";
 
 const makeExpressionStatement = (expression) =>
   makeEffectStatement(makeExpressionEffect(expression));
 
 const visitors = {
-  root: {
+  Root: {
     [DEFAULT_CLAUSE]: (node, context1, _site) =>
       makeScopeTestBlock(context1, (context2) =>
-        map(visitMany("callee", node, context2, {}), makeExpressionStatement),
+        map(visitMany("Callee", node, context2, {}), makeExpressionStatement),
       ),
   },
-  callee: CalleeVisitor,
-  expression: {
+  Expression: {
     Literal: (node, _context, _site) => makeLiteralExpression(node.value),
   },
-  property: {
+  Property: {
     Identifier: (node, _context, _site) => makeLiteralExpression(node.name),
   },
+  ...Visitors,
 };
 
 const test = (input, output) =>
-  testBlock("root", input, "body/0/expression", { visitors }, null, output);
+  testBlock("Root", input, "body/0/expression", { visitors }, null, output);
 
 test(
   `123;`,

@@ -10,19 +10,17 @@ import {
   makeExpressionEffect,
   makeEffectStatement,
 } from "../../ast/index.mjs";
-import {
-  makeScopeTestBlock,
-  makeScopeBaseWriteEffect,
-} from "../scope/index.mjs";
+import { makeScopeTestBlock } from "../scope/index.mjs";
 import { visit, visitMany } from "./context.mjs";
 import { testBlock } from "./__fixture__.mjs";
 import QuasiVisitor from "./quasi.mjs";
 import PropertyVisitor from "./property.mjs";
 import CalleeVisitor from "./callee.mjs";
+import PatternVisitor from "./pattern.mjs";
 import ExpressionVisitor from "./expression.mjs";
 
 const DEFAULT_SITE = {
-  dropped: false,
+  strict: false,
   name: null,
 };
 
@@ -44,22 +42,22 @@ const visitClosure = (node, _context, site) => {
 };
 
 const visitors = {
-  block: {
+  Block: {
     BlockStatement: (node, context1, site) =>
-      makeScopeTestBlock(context1, (context2) =>
-        flatMap(node.body, partialx_xx(visitMany, "statement", context2, site)),
+      makeScopeTestBlock({ ...context1, strict: site.strict }, (context2) =>
+        flatMap(node.body, partialx_xx(visitMany, "Statement", context2, site)),
       ),
   },
-  statement: {
+  Statement: {
     ExpressionStatement: (node, context, site) => [
       makeEffectStatement(
         makeExpressionEffect(
-          visit("expression", node.expression, context, site),
+          visit("Expression", node.expression, context, site),
         ),
       ),
     ],
   },
-  class: {
+  Class: {
     ClassExpression: (node, _context, _site) => {
       assertEqual(node.superClass, null);
       assertEqual(node.body.body.length, 0);
@@ -75,27 +73,20 @@ const visitors = {
       );
     },
   },
-  closure: {
+  Closure: {
     ArrowFunctionExpression: visitClosure,
     FunctionExpression: visitClosure,
   },
-  pattern: {
-    Identifier: (node, context, site) => {
-      assert(hasOwn(site, "right"), "missing right in pattern site");
-      assert(hasOwn(site, "kind"), "missing kind in pattern site");
-      assertEqual(site.kind, null, "unexpected kind in pattern site");
-      return makeScopeBaseWriteEffect(context, node.name, site.right);
-    },
-  },
-  expression: ExpressionVisitor,
-  quasi: QuasiVisitor,
-  callee: CalleeVisitor,
-  property: PropertyVisitor,
+  ...QuasiVisitor,
+  ...CalleeVisitor,
+  ...PropertyVisitor,
+  ...PatternVisitor,
+  ...ExpressionVisitor,
 };
 
 const test = (input, output, site) => {
   testBlock(
-    "block",
+    "Block",
     input,
     "body/0",
     { visitors },
@@ -107,32 +98,38 @@ const test = (input, output, site) => {
   );
 };
 
+// Literal //
 test(`{ 123; }`, `{ void 123; }`, {});
 
+// Identifier //
 test(`{ x }`, `{ void [x]; }`, {});
 
+// ThisExpression //
 test(`{ this; }`, `{ void "this"; }`, {});
 
+// MetaProperty //
 test(`{ new.target; }`, `{ void "new.target"; }`, {});
-
 test(`{ import.meta; }`, `{ void "import.meta"; }`, {});
 
+// ArrowFunctionExpression //
 test(`{ (() => {}); }`, `{ void (() => { return undefined; }); }`, {});
 
+// FunctionExpression //
 test(
   `{ (function () {}); }`,
   `{ void (function () { return undefined; }); }`,
   {},
 );
 
+// ClassExpression //
 test(
   `{ (class {}); }`,
   `{ void (function constructor () { return this; }); }`,
   {},
 );
 
+// TemplateLiteral //
 test("{ `foo`; }", `{ void "foo"; }`, {});
-
 test(
   "{ `foo${123}bar${456}qux`; }",
   `
@@ -151,6 +148,7 @@ test(
   {},
 );
 
+// TaggedTemplateExpression //
 test(
   "{ 123`foo${456}\\n${789}qux`; }",
   `
@@ -179,8 +177,82 @@ test(
   {},
 );
 
+// AwaitExpression //
 test(`{ await 123; }`, `{ void await 123; }`, {});
 
+// YieldExpression //
 test(`{ yield* 123; }`, `{ void (yield* 123); }`, {});
-
 test(`{ yield; }`, `{ void (yield undefined); }`, {});
+
+// AssignmentExpression //
+test(
+  `{ x = 123; }`,
+  `
+    {
+      let right;
+      void (
+        right = 123,
+        ([x] = right, right)
+      );
+    }
+  `,
+  { strict: true },
+);
+test(
+  `{ x **= 123; }`,
+  `
+    {
+      let right;
+      void (
+        right = intrinsic.aran.binary("**", [x], 123),
+        ([x] = right, right)
+      );
+    }
+  `,
+  { strict: true },
+);
+test(
+  `{ (123)[456] = 789; }`,
+  `{ void intrinsic.aran.setSloppy(123, 456, 789); }`,
+  {},
+);
+test(
+  `{ (123)[456] **= 789; }`,
+  `
+    {
+      let object, property;
+      void intrinsic.aran.setSloppy(
+        (object = 123, object),
+        (property = 456, property),
+        intrinsic.aran.binary(
+          "**",
+          intrinsic.aran.get(object, property),
+          789,
+        ),
+      );
+    }
+  `,
+  {},
+);
+test(
+  `{ [x] = 123; }`,
+  `
+    {
+      let right1, right2, iterator;
+      void (
+        right1 = 123,
+        (
+          right2 = right1,
+          (
+            iterator = intrinsic.aran.get(right2, intrinsic.Symbol.iterator)(!right2),
+            (
+              [x] = intrinsic.aran.get(iterator, "next")(!iterator),
+              right1
+            )
+          )
+        )
+      );
+    }
+  `,
+  { strict: true },
+);
