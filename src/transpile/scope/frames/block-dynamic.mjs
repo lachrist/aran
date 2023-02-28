@@ -17,6 +17,7 @@ import {
   makeConditionalEffect,
   makeConditionalExpression,
   makeLiteralExpression,
+  makeIntrinsicExpression,
 } from "../../../ast/index.mjs";
 
 import {
@@ -25,7 +26,6 @@ import {
   makeBinaryExpression,
   makeGetExpression,
   makeDataDescriptorExpression,
-  makeDeadzoneExpression,
 } from "../../../intrinsic.mjs";
 
 import {
@@ -86,7 +86,7 @@ const makeDeclareStatement = (dynamic, variable) =>
         dynamic,
         makeLiteralExpression(variable),
         makeDataDescriptorExpression(
-          makeDeadzoneExpression(),
+          makeIntrinsicExpression("aran.deadzone"),
           makeLiteralExpression(true),
           makeLiteralExpression(true),
           makeLiteralExpression(false),
@@ -192,7 +192,7 @@ const compileMakeLookupNode =
             makeBinaryExpression(
               "===",
               makeGetExpression(frame.dynamic, makeLiteralExpression(variable)),
-              makeDeadzoneExpression(),
+              makeIntrinsicExpression("aran.deadzone"),
             ),
             makeDeadNode(variable),
             makeLiveNode(
@@ -223,7 +223,7 @@ const compileMakeLookupNode =
                   frame.dynamic,
                   makeLiteralExpression(variable),
                 ),
-                makeDeadzoneExpression(),
+                makeIntrinsicExpression("aran.deadzone"),
               ),
               makeDeadNode(variable),
               makeLiveNode(

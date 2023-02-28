@@ -4,12 +4,12 @@ import {
   makeConditionalEffect,
   makeConditionalExpression,
   makeLiteralExpression,
+  makeIntrinsicExpression,
 } from "../../../ast/index.mjs";
 
 import {
   makeGetExpression,
   makeBinaryExpression,
-  makeSymbolUnscopablesExpression,
   makeDeleteSloppyExpression,
 } from "../../../intrinsic.mjs";
 
@@ -45,10 +45,13 @@ const compileMakeLookupNode =
   (next, strict, { dynamic: macro }, scope, escaped, variable, options) =>
     makeConditionalNode(
       makeConditionalExpression(
-        makeGetExpression(macro, makeSymbolUnscopablesExpression()),
+        makeGetExpression(macro, makeIntrinsicExpression("Symbol.unscopables")),
         makeConditionalExpression(
           makeGetExpression(
-            makeGetExpression(macro, makeSymbolUnscopablesExpression()),
+            makeGetExpression(
+              macro,
+              makeIntrinsicExpression("Symbol.unscopables"),
+            ),
             makeLiteralExpression(variable),
           ),
           makeLiteralExpression(false),

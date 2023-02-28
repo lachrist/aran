@@ -2,7 +2,6 @@ import { concat, flatMap, map } from "array-lite";
 
 import {
   assert,
-  partialx,
   partialx_,
   partialx__,
   partialx___,
@@ -337,35 +336,50 @@ export const makeObjectDefinePropertyExpression = partialx____(
 // Data //
 //////////
 
-export const makeGlobalCacheExpression = partialx(
-  makeIntrinsicExpression,
-  "aran.globalCache",
-);
-
-export const makeGlobalObjectExpression = partialx(
-  makeIntrinsicExpression,
-  "aran.globalObject",
-);
-
-export const makeGlobalRecordExpression = partialx(
-  makeIntrinsicExpression,
-  "aran.globalRecord",
-);
-
-export const makeDeadzoneExpression = partialx(
-  makeIntrinsicExpression,
-  "aran.deadzone",
-);
-
-export const makeSymbolIteratorExpression = partialx(
-  makeIntrinsicExpression,
-  "Symbol.iterator",
-);
-
-export const makeSymbolUnscopablesExpression = partialx(
-  makeIntrinsicExpression,
-  "Symbol.unscopables",
-);
+// const intrinsics = [
+//   "aran.globalCache",
+//   "aran.globalObject",
+//   "aran.globalRecord",
+//   "aran.deadzone",
+//   "Symbol.iterator",
+//   "Symbol.unscopables",
+// ];
+//
+// export const makeIntrinsicExpression = (name) => {
+//   assert(includes(intrinsics, name), "invalid direct intrinsic expression");
+//   return makeRawIntrinsicExpression(name);
+// };
+//
+//
+// export const makeGlobalCacheExpression = partialx(
+//   makeIntrinsicExpression,
+//   "aran.globalCache",
+// );
+//
+// export const makeGlobalObjectExpression = partialx(
+//   makeIntrinsicExpression,
+//   "aran.globalObject",
+// );
+//
+// export const makeGlobalRecordExpression = partialx(
+//   makeIntrinsicExpression,
+//   "aran.globalRecord",
+// );
+//
+// export const makeDeadzoneExpression = partialx(
+//   makeIntrinsicExpression,
+//   "aran.deadzone",
+// );
+//
+// export const makeSymbolIteratorExpression = partialx(
+//   makeIntrinsicExpression,
+//   "Symbol.iterator",
+// );
+//
+// export const makeSymbolUnscopablesExpression = partialx(
+//   makeIntrinsicExpression,
+//   "Symbol.unscopables",
+// );
 
 ////////////
 // Global //
