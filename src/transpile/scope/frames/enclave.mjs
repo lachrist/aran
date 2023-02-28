@@ -127,6 +127,5 @@ export const makeFrameWriteEffect = (
     variable,
   );
   incrementCounter(counter);
-  incrementCounter(counter);
   return makeWriteExternalEffect(variable, expression);
 };

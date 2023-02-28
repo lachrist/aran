@@ -206,17 +206,7 @@ assertSuccess(
       let [variable] = "init";
       void [variable];
       void typeof [variable];
-      (
-        void intrinsic.aran.setStrict(
-          intrinsic.aran.globalCache,
-          "01_right",
-          "right",
-        ),
-        [variable] = intrinsic.aran.get(
-          intrinsic.aran.globalCache,
-          "01_right",
-        )
-      );
+      [variable] = "right";
       return "completion";
     `,
   ),
