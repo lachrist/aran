@@ -14,7 +14,7 @@ import {
   makeSetExpression,
   makeDataDescriptorExpression,
   makeThrowSyntaxErrorExpression,
-  makeJSONExpression,
+  makeJsonExpression,
 } from "./intrinsic.mjs";
 
 const test = (expression, code) => {
@@ -69,12 +69,12 @@ test(
   "intrinsic.aran.throw(new intrinsic.SyntaxError('message'))",
 );
 
-test(makeJSONExpression(null), "null");
+test(makeJsonExpression(null), "null");
 
-test(makeJSONExpression([1, 2, 3]), "intrinsic.Array.of(1, 2, 3)");
+test(makeJsonExpression([1, 2, 3]), "intrinsic.Array.of(1, 2, 3)");
 
 test(
-  makeJSONExpression({ foo: "bar" }),
+  makeJsonExpression({ foo: "bar" }),
   "intrinsic.aran.createObject(null, 'foo', 'bar')",
 );
 

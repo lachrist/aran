@@ -10,10 +10,8 @@ import {
   partialxx___,
   partialxx____,
   partialxx_x_x_x__,
-  // partialxf_,
   partialxf__,
   partialxf___,
-  // partialxx_f__,
 } from "./util/index.mjs";
 
 import {
@@ -28,6 +26,10 @@ const {
   undefined,
   Reflect: { ownKeys },
 } = globalThis;
+
+/////////////
+// Factory //
+/////////////
 
 const makeIntrinsicConstructExpression = (
   name,
@@ -123,9 +125,9 @@ const makeDualIntrinsicApplyExpression3 = (
     annotation,
   );
 
-//////////////
-// operator //
-//////////////
+//////////
+// Aran //
+//////////
 
 export const makeUnaryExpression = partialxf__(
   makeIntrinsicApplyExpression2,
@@ -138,10 +140,6 @@ export const makeBinaryExpression = partialxf___(
   "aran.binary",
   makeLiteralExpression,
 );
-
-////////////
-// create //
-////////////
 
 export const makeArrayExpression = partialx__(
   makeIntrinsicApplyExpression,
@@ -161,6 +159,47 @@ export const makeObjectExpression = (
     concat([prototype], flatMap(properties, flatenProperty)),
     annotation,
   );
+
+export const makeGetExpression = partialx___(
+  makeIntrinsicApplyExpression2,
+  "aran.get",
+);
+
+export const makeDeleteStrictExpression = partialx___(
+  makeIntrinsicApplyExpression2,
+  "aran.deleteStrict",
+);
+
+export const makeDeleteSloppyExpression = partialx___(
+  makeIntrinsicApplyExpression2,
+  "aran.deleteSloppy",
+);
+
+export const makeDeleteExpression = partialxx___(
+  makeDualIntrinsicApplyExpression2,
+  "aran.deleteStrict",
+  "aran.deleteSloppy",
+);
+
+export const makeSetStrictExpression = partialx____(
+  makeIntrinsicApplyExpression3,
+  "aran.setStrict",
+);
+
+export const makeSetSloppyExpression = partialx____(
+  makeIntrinsicApplyExpression3,
+  "aran.setSloppy",
+);
+
+export const makeSetExpression = partialxx____(
+  makeDualIntrinsicApplyExpression3,
+  "aran.setStrict",
+  "aran.setSloppy",
+);
+
+////////////////
+// Descriptor //
+////////////////
 
 const makeObjectExpression4 = (
   prototype,
@@ -203,46 +242,69 @@ export const makeAccessorDescriptorExpression = partialxx_x_x_x__(
   makeLiteralExpression("configurable"),
 );
 
+///////////
+// Throw //
+///////////
+
+const makeThrowExpression = (name, message, annotation = undefined) =>
+  makeIntrinsicApplyExpression(
+    "aran.throw",
+    [
+      makeIntrinsicConstructExpression(
+        name,
+        [makeLiteralExpression(message)],
+        annotation,
+      ),
+    ],
+    annotation,
+  );
+
+export const makeThrowReferenceErrorExpression = partialx__(
+  makeThrowExpression,
+  "ReferenceError",
+);
+
+export const makeThrowSyntaxErrorExpression = partialx__(
+  makeThrowExpression,
+  "SyntaxError",
+);
+
+export const makeThrowTypeErrorExpression = partialx__(
+  makeThrowExpression,
+  "TypeError",
+);
+
+export const makeThrowAranErrorExpression = partialx__(
+  makeThrowExpression,
+  "aran.AranError",
+);
+
 //////////
-// Aran //
+// JSON //
 //////////
 
-export const makeGetExpression = partialx___(
-  makeIntrinsicApplyExpression2,
-  "aran.get",
-);
+/* eslint-disable no-use-before-define */
 
-export const makeDeleteStrictExpression = partialx___(
-  makeIntrinsicApplyExpression2,
-  "aran.deleteStrict",
-);
+const makeJsonProperty = (object, key) => {
+  assert(typeof key === "string", "unexpected symbol property");
+  return [makeLiteralExpression(key), makeJsonExpression(object[key])];
+};
 
-export const makeDeleteSloppyExpression = partialx___(
-  makeIntrinsicApplyExpression2,
-  "aran.deleteSloppy",
-);
+export const makeJsonExpression = (json, annotation = undefined) => {
+  if (isArray(json)) {
+    return makeArrayExpression(map(json, makeJsonExpression), annotation);
+  } else if (typeof json === "object" && json !== null) {
+    return makeObjectExpression(
+      makeLiteralExpression(null),
+      map(ownKeys(json), partialx_(makeJsonProperty, json)),
+      annotation,
+    );
+  } else {
+    return makeLiteralExpression(json);
+  }
+};
 
-export const makeDeleteExpression = partialxx___(
-  makeDualIntrinsicApplyExpression2,
-  "aran.deleteStrict",
-  "aran.deleteSloppy",
-);
-
-export const makeSetStrictExpression = partialx____(
-  makeIntrinsicApplyExpression3,
-  "aran.setStrict",
-);
-
-export const makeSetSloppyExpression = partialx____(
-  makeIntrinsicApplyExpression3,
-  "aran.setSloppy",
-);
-
-export const makeSetExpression = partialxx____(
-  makeDualIntrinsicApplyExpression3,
-  "aran.setStrict",
-  "aran.setSloppy",
-);
+/* eslint-enable no-use-before-define */
 
 /////////////
 // Reflect //
@@ -271,8 +333,42 @@ export const makeObjectDefinePropertyExpression = partialx____(
   "Object.defineProperty",
 );
 
+//////////
+// Data //
+//////////
+
+export const makeGlobalCacheExpression = partialx(
+  makeIntrinsicExpression,
+  "aran.globalCache",
+);
+
+export const makeGlobalObjectExpression = partialx(
+  makeIntrinsicExpression,
+  "aran.globalObject",
+);
+
+export const makeGlobalRecordExpression = partialx(
+  makeIntrinsicExpression,
+  "aran.globalRecord",
+);
+
+export const makeDeadzoneExpression = partialx(
+  makeIntrinsicExpression,
+  "aran.deadzone",
+);
+
+export const makeSymbolIteratorExpression = partialx(
+  makeIntrinsicExpression,
+  "Symbol.iterator",
+);
+
+export const makeSymbolUnscopablesExpression = partialx(
+  makeIntrinsicExpression,
+  "Symbol.unscopables",
+);
+
 ////////////
-// global //
+// Global //
 ////////////
 
 // export const makeTypeofGlobalExpression = partialxf_(
@@ -320,101 +416,3 @@ export const makeObjectDefinePropertyExpression = partialx____(
 //   "aran.writeGlobalSloppy",
 //   makeLiteralExpression,
 // );
-
-///////////
-// throw //
-///////////
-
-const makeThrowExpression = (name, message, annotation = undefined) =>
-  makeIntrinsicApplyExpression(
-    "aran.throw",
-    [
-      makeIntrinsicConstructExpression(
-        name,
-        [makeLiteralExpression(message)],
-        annotation,
-      ),
-    ],
-    annotation,
-  );
-
-export const makeThrowReferenceErrorExpression = partialx__(
-  makeThrowExpression,
-  "ReferenceError",
-);
-
-export const makeThrowSyntaxErrorExpression = partialx__(
-  makeThrowExpression,
-  "SyntaxError",
-);
-
-export const makeThrowTypeErrorExpression = partialx__(
-  makeThrowExpression,
-  "TypeError",
-);
-
-export const makeThrowAranErrorExpression = partialx__(
-  makeThrowExpression,
-  "aran.AranError",
-);
-
-//////////
-// json //
-//////////
-
-/* eslint-disable no-use-before-define */
-
-const makeJSONProperty = (object, key) => {
-  assert(typeof key === "string", "unexpected symbol property");
-  return [makeLiteralExpression(key), makeJSONExpression(object[key])];
-};
-
-export const makeJSONExpression = (json, annotation = undefined) => {
-  if (isArray(json)) {
-    return makeArrayExpression(map(json, makeJSONExpression), annotation);
-  } else if (typeof json === "object" && json !== null) {
-    return makeObjectExpression(
-      makeLiteralExpression(null),
-      map(ownKeys(json), partialx_(makeJSONProperty, json)),
-      annotation,
-    );
-  } else {
-    return makeLiteralExpression(json);
-  }
-};
-
-/* eslint-enable no-use-before-define */
-
-//////////
-// data //
-//////////
-
-export const makeGlobalCacheExpression = partialx(
-  makeIntrinsicExpression,
-  "aran.globalCache",
-);
-
-export const makeGlobalObjectExpression = partialx(
-  makeIntrinsicExpression,
-  "aran.globalObject",
-);
-
-export const makeGlobalRecordExpression = partialx(
-  makeIntrinsicExpression,
-  "aran.globalRecord",
-);
-
-export const makeDeadzoneExpression = partialx(
-  makeIntrinsicExpression,
-  "aran.deadzone",
-);
-
-export const makeSymbolIteratorExpression = partialx(
-  makeIntrinsicExpression,
-  "Symbol.iterator",
-);
-
-export const makeSymbolUnscopablesExpression = partialx(
-  makeIntrinsicExpression,
-  "Symbol.unscopables",
-);

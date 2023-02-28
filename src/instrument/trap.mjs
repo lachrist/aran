@@ -31,7 +31,7 @@ import {
 import {
   makeGetExpression,
   makeArrayExpression,
-  makeJSONExpression,
+  makeJsonExpression,
 } from "../intrinsic.mjs";
 
 import {
@@ -84,7 +84,7 @@ const expression_arg = [constant__(null), return_x];
 const expression_array_arg = [dropx_(mapNull), dropx_(makeArrayExpression)];
 const primitive_arg = [return_x, dropx_(makeLiteralExpression)];
 const literal_arg = [dropx_(fromLiteral), dropx_(makeLiteralExpression)];
-const json_arg = [return_x, dropx_(makeJSONExpression)];
+const json_arg = [return_x, dropx_(makeJsonExpression)];
 const new_arg = [
   partial_x_(lookupSplitScope, NEW_SPLIT),
   partial_x_(makeSplitScopeReadExpression, NEW_SPLIT),

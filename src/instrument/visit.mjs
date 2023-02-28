@@ -49,7 +49,7 @@ import {
   makeEvalExpression,
 } from "../ast/index.mjs";
 
-import { makeJSONExpression } from "../intrinsic.mjs";
+import { makeJsonExpression } from "../intrinsic.mjs";
 
 import {
   makeScopeScriptProgram,
@@ -85,7 +85,7 @@ const makeMangleInitializeStatement = (scope, split, variable, unmangle) =>
       scope,
       split,
       variable,
-      makeJSONExpression(unmangle(variable)),
+      makeJsonExpression(unmangle(variable)),
     ),
   );
 
@@ -98,12 +98,12 @@ const makeMangleInitializeStatement = (scope, split, variable, unmangle) =>
 //   variable,
 // ) => {
 //   if (isLabVariable(variable)) {
-//     return makeJSONExpression(
+//     return makeJsonExpression(
 //       unmangleLabel(getVariableBody(variable)),
 //     );
 //   }
 //   if (isVarVariable(variable)) {
-//     return makeJSONExpression(
+//     return makeJsonExpression(
 //       unmangleVariable(getVariableBody(variable)),
 //     );
 //   }
