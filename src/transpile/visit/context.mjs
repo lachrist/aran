@@ -2,6 +2,7 @@ import { map } from "array-lite";
 import {
   createCounter,
   hasOwn,
+  getOwn,
   assert,
   partial_x,
   NULL_DATA_DESCRIPTOR,
@@ -52,12 +53,12 @@ const serializeContextNode = (context, node) => {
 
 export const visit = (key, node, context, site) =>
   annotateNode(
-    dispatchObjectNode2(context.visitors[key], node, context, site),
+    dispatchObjectNode2(getOwn(context.visitors, key), node, context, site),
     serializeContextNode(context, node),
   );
 
 export const visitMany = (key, node, context, site) =>
   map(
-    dispatchObjectNode2(context.visitors[key], node, context, site),
+    dispatchObjectNode2(getOwn(context.visitors, key), node, context, site),
     partial_x(annotateNode, serializeContextNode(context, node)),
   );

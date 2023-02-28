@@ -1,7 +1,7 @@
 /* c8 ignore start */
 import { reduce } from "array-lite";
-import { assert, assertSuccess } from "../../__fixture__.mjs";
-import { hasOwn } from "../../util/index.mjs";
+import { assertSuccess } from "../../__fixture__.mjs";
+import { getOwn } from "../../util/index.mjs";
 import { parseBabel } from "../../babel.mjs";
 import {
   allignProgram,
@@ -19,14 +19,9 @@ const {
 
 const splitPath = (path) => (path === null ? [] : apply(split, path, ["/"]));
 
-const get = (node, property) => {
-  assert(hasOwn(node, property));
-  return node[property];
-};
-
 const parseInput = (code, path) => {
   const node = parseBabel(code);
-  return reduce(splitPath(path), get, node);
+  return reduce(splitPath(path), getOwn, node);
 };
 
 const compileTestNode =

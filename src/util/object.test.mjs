@@ -1,6 +1,6 @@
 import { assertEqual } from "../__fixture__.mjs";
 
-import { set, get, hasOwn } from "./object.mjs";
+import { set, get, hasOwn, getOwn } from "./object.mjs";
 
 const { undefined } = globalThis;
 
@@ -13,3 +13,5 @@ const { undefined } = globalThis;
 assertEqual(hasOwn({ key: "value" }, "key"), true);
 
 assertEqual(hasOwn({ __proto__: { key: "value" } }, "key"), false);
+
+assertEqual(getOwn({ key: "value" }, "key"), "value");
