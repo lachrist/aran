@@ -5,6 +5,7 @@ import {
   EnclaveLimitationAranError,
   InvalidOptionAranError,
   inspect,
+  inspectDeep,
   format,
   expect0,
   expect1,
@@ -32,7 +33,17 @@ testError(InvalidOptionAranError);
 
 assertEqual(inspect("foo"), '"foo"');
 assertEqual(inspect(123), "123");
-assertEqual(inspect({}), "[object Object]");
+assertEqual(inspect({}), "<object>");
+assertEqual(
+  inspect(() => {}),
+  "<function>",
+);
+
+assertEqual(inspectDeep([123, [456], 789], 1), "[123, <array>, 789]");
+assertEqual(
+  inspectDeep({ foo: 123, bar: [456], qux: 789 }, 1),
+  "{ foo:123, bar:<array>, qux:789 }",
+);
 
 assertThrow(() => format("%x", [123]), /^Error: invalid format marker/u);
 assertEqual(format("%%%", []), "%%");
@@ -40,7 +51,9 @@ assertEqual(format("%s", ["foo"]), "foo");
 assertEqual(format("%o", [123]), "123");
 assertEqual(format("%v", [123]), "");
 assertEqual(format("%j", [[123]]), "[123]");
-assertEqual(format("%e", [new Error("foo")]), "foo");
+assertEqual(format("%o", [() => {}]), "<function>");
+assertEqual(format("%O", [new Error("foo")]), "Error: foo");
+assertEqual(format("%1", [[123, [456], 789]]), "[123, <array>, 789]");
 
 ///////////////////
 // expectSuccess //
@@ -73,7 +86,7 @@ assertThrow(
           throw new Error("foo");
         },
         Error,
-        "%o %o %o %o %o %e",
+        "%o %o %o %o %o %O",
         1,
         2,
       ),
@@ -82,7 +95,7 @@ assertThrow(
     ),
   {
     name: "Error",
-    message: "1 2 3 4 5 foo",
+    message: "1 2 3 4 5 Error: foo",
   },
 );
 
