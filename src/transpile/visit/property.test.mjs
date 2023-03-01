@@ -1,44 +1,29 @@
-import { DEFAULT_CLAUSE } from "../../node.mjs";
-import {
-  makeExpressionEffect,
-  makeEffectStatement,
-  makeLiteralExpression,
-} from "../../ast/index.mjs";
-import { makeScopeTestBlock } from "../scope/index.mjs";
+import { makeGetExpression } from "../../intrinsic.mjs";
 import { visit } from "./context.mjs";
-import { testBlock } from "./__fixture__.mjs";
-import Visitors from "./property.mjs";
+import TestVisitor, { test } from "./__fixture__.mjs";
+import PropertyVisitor from "./property.mjs";
 
-const testProperty = (input, output, computed) =>
-  testBlock(
-    "Root",
-    input,
-    "body/0/expression",
-    {
-      visitors: {
-        Root: {
-          [DEFAULT_CLAUSE]: (node, context1, site) =>
-            makeScopeTestBlock(context1, (context2) => [
-              makeEffectStatement(
-                makeExpressionEffect(visit("Property", node, context2, site)),
-              ),
-            ]),
-        },
-        Expression: {
-          ThisExpression: (_node, _context, _site) =>
-            makeLiteralExpression("this"),
-        },
-        ...Visitors,
-      },
-    },
-    { type: "Type", computed },
-    output,
-  );
+const Visitor = {
+  ...TestVisitor,
+  Expression: {
+    ...TestVisitor.Expression,
+    MemberExpression: (node, context, _site) =>
+      makeGetExpression(
+        visit("Expression", node.object, context, { name: null }),
+        visit("Property", node.property, context, node),
+      ),
+  },
+  ...PropertyVisitor,
+};
 
-testProperty(`"key";`, `{ void "key"; }`, false);
-testProperty(`"key";`, `{ void "key"; }`, true);
+const testProperty = (input, output) => {
+  test(input, { visitors: Visitor }, null, output);
+};
 
-testProperty(`key;`, `{ void "key"; }`, false);
-testProperty(`key;`, `{ void [key]; }`, true);
-
-testProperty(`this;`, `{ void "this"; }`, true);
+testProperty(`(123)[456];`, `{ void intrinsic.aran.get(123, 456); }`);
+testProperty(`(123).name;`, `{ void intrinsic.aran.get(123, "name"); }`);
+testProperty(`(123)[name];`, `{ void intrinsic.aran.get(123, [name]); }`);
+testProperty(
+  `(123)[this];`,
+  `{ void intrinsic.aran.get(123, "ThisExpression"); }`,
+);

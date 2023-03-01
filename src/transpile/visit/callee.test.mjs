@@ -1,73 +1,52 @@
-import { map } from "array-lite";
-import { DEFAULT_CLAUSE } from "../../node.mjs";
-import {
-  makeEffectStatement,
-  makeExpressionEffect,
-  makeLiteralExpression,
-} from "../../ast/index.mjs";
-import { makeScopeTestBlock } from "../scope/index.mjs";
+import { assertEqual } from "../../__fixture__.mjs";
+import { makeApplyExpression } from "../../ast/index.mjs";
 import { visitMany } from "./context.mjs";
-import { testBlock } from "./__fixture__.mjs";
-import Visitors from "./callee.mjs";
+import TestVisitor, { test } from "./__fixture__.mjs";
+import PropertyVisitor from "./property.mjs";
+import CalleeVisitor from "./callee.mjs";
 
-const makeExpressionStatement = (expression) =>
-  makeEffectStatement(makeExpressionEffect(expression));
-
-const visitors = {
-  Root: {
-    [DEFAULT_CLAUSE]: (node, context1, _site) =>
-      makeScopeTestBlock(context1, (context2) =>
-        map(visitMany("Callee", node, context2, {}), makeExpressionStatement),
-      ),
-  },
+const Visitor = {
+  ...TestVisitor,
   Expression: {
-    Literal: (node, _context, _site) => makeLiteralExpression(node.value),
+    ...TestVisitor.Expression,
+    CallExpression: (node, context, _site) => {
+      assertEqual(node.arguments.length, 0);
+      const { 0: expression1, 1: expression2 } = visitMany(
+        "Callee",
+        node.callee,
+        context,
+        null,
+      );
+      return makeApplyExpression(expression1, expression2, []);
+    },
   },
-  Property: {
-    Identifier: (node, _context, _site) => makeLiteralExpression(node.name),
-  },
-  ...Visitors,
+  ...PropertyVisitor,
+  ...CalleeVisitor,
 };
 
-const test = (input, output) =>
-  testBlock("Root", input, "body/0/expression", { visitors }, null, output);
+const testCallee = (input, output) => {
+  test(input, { visitors: Visitor }, null, output);
+};
 
-test(
-  `123;`,
-  `
-    {
-      void 123;
-      void undefined;
-    }
-  `,
-);
+testCallee(`(123)();`, `{ void (123)(); }`);
 
-test(
-  `super.key;`,
-  `
-    {
-      void ("super.get")("key");
-      void "this";
-    }
-  `,
-);
+testCallee(`super.key();`, `{ void ("super.get")("key")(!"this"); }`);
 
-test(
-  `(123).key;`,
+testCallee(
+  `(123)[456]();`,
   `
     {
       let callee_this;
       void (
         callee_this = 123,
-        intrinsic.aran.get(callee_this, "key")
-      );
-      void callee_this;
+        intrinsic.aran.get(callee_this, 456)
+      )(!callee_this);
     }
   `,
 );
 
-test(
-  `(123)?.key;`,
+testCallee(
+  `((123)?.[456])();`,
   `
     {
       let callee_this;
@@ -80,10 +59,9 @@ test(
             intrinsic.aran.binary("===", callee_this, undefined)
           ) ?
           undefined :
-          intrinsic.aran.get(callee_this, "key")
+          intrinsic.aran.get(callee_this, 456)
         )
-      );
-      void callee_this;
+      )(!callee_this);
     }
   `,
 );

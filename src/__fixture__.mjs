@@ -3,7 +3,19 @@ import { strict as Assert } from "assert";
 import { stdout } from "process";
 /* eslint-enable no-nodejs-modules */
 
-const { Error } = globalThis;
+const { Error, Reflect: { defineProperty} } = globalThis;
+
+defineProperty(
+  globalThis,
+  "ARAN_DEBUG",
+  {
+    __proto__: null,
+    configurable: false,
+    enumerable: false,
+    writable: false,
+    value: null,
+  },
+);
 
 Error.stackTraceLimit = 1 / 0;
 
@@ -36,8 +48,4 @@ export const assertFailure = (maybe) => {
 
 export const generateAssertUnreachable = (message) => () => {
   assertUnreachable(message);
-};
-
-export const parseEstree = (code) => {
-
 };

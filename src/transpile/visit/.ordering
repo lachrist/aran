@@ -1,10 +1,11 @@
+report.mjs
 context.mjs
 __fixture__.mjs
-# 0
 quasi.mjs
 property.mjs
 callee.mjs
-effect.mjs
 pattern.mjs
-# 1
+assignment.mjs
+update.mjs
+effect.mjs
 expression.mjs

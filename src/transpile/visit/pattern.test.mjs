@@ -1,80 +1,42 @@
-import { map, flatMap } from "array-lite";
 import { assertEqual, assertNotEqual } from "../../__fixture__.mjs";
-import { partialx_xx } from "../../util/index.mjs";
-import {
-  makeEffectStatement,
-  makeLiteralExpression,
-} from "../../ast/index.mjs";
-import { makeScopeTestBlock } from "../scope/index.mjs";
 import { visit, visitMany } from "./context.mjs";
-import { testBlock } from "./__fixture__.mjs";
+import TestVisitor, { test } from "./__fixture__.mjs";
+import PropertyVisitor from "./property.mjs";
 import PatternVisitor from "./pattern.mjs";
 
-const test = (input, output) => {
-  testBlock(
-    "Block",
-    input,
-    "body/0",
-    {
-      visitors: {
-        Block: {
-          BlockStatement: (node, context1, _site) =>
-            makeScopeTestBlock({ ...context1, strict: true }, (context2) =>
-              flatMap(
-                node.body,
-                partialx_xx(visitMany, "Statement", context2, null),
-              ),
-            ),
-        },
-        Statement: {
-          VariableDeclaration: (node, context, _site) => {
-            assertEqual(node.declarations.length, 1);
-            assertNotEqual(node.declarations[0].init, null);
-            return visitMany("Pattern", node.declarations[0].id, context, {
-              kind: node.kind,
-              right: visit(
-                "Expression",
-                node.declarations[0].init,
-                context,
-                null,
-              ),
-            });
-          },
-          ExpressionStatement: (node, context, _site) => {
-            assertEqual(node.expression.type, "AssignmentExpression");
-            return map(
-              visitMany("Pattern", node.expression.left, context, {
-                kind: null,
-                right: visit(
-                  "Expression",
-                  node.expression.right,
-                  context,
-                  null,
-                ),
-              }),
-              makeEffectStatement,
-            );
-          },
-        },
-        Property: {
-          Identifier: (node, _context, { computed }) => {
-            assertEqual(computed, false);
-            return makeLiteralExpression(node.name);
-          },
-        },
-        Expression: {
-          Literal: (node, _context, _site) => makeLiteralExpression(node.value),
-        },
-        ...PatternVisitor,
-      },
+const Visitor = {
+  ...TestVisitor,
+  ...PropertyVisitor,
+  ...PatternVisitor,
+  Statement: {
+    ...TestVisitor.Statement,
+    VariableDeclaration: (node, context, _site) => {
+      assertEqual(node.declarations.length, 1);
+      assertNotEqual(node.declarations[0].init, null);
+      return visitMany("Pattern", node.declarations[0].id, context, {
+        kind: node.kind,
+        right: visit("Expression", node.declarations[0].init, context, null),
+      });
     },
-    null,
-    output,
-  );
+  },
+  Effect: {
+    ...TestVisitor.Effect,
+    AssignmentExpression: (node, context, _site) => {
+      assertEqual(node.operator, "=");
+      return visitMany("Pattern", node.left, context, {
+        kind: null,
+        right: visit("Expression", node.right, context, { name: null }),
+      });
+    },
+  },
 };
 
-test(
-  `{ var [x = 123] = 456; }`,
+const testPattern = (input, output) => {
+  test(input, { visitors: Visitor }, null, output);
+};
+
+testPattern(
+  `"use strict"; var [x = 123] = 456;`,
   `
     {
       let right1, iterator, right2;
@@ -90,21 +52,21 @@ test(
   `,
 );
 
-test(`{ x = 123; }`, `{ [x] = 123; }`);
+testPattern(`"use strict"; x = 123;`, `{ [x] = 123; }`);
 
-test(
-  `{ (123).foo = 789; }`,
+testPattern(
+  `(123)[456] = 789;`,
   `
     {
       let right;
       right = 789;
-      void intrinsic.aran.setStrict(123, "foo", right);
+      void intrinsic.aran.setSloppy(123, 456, right);
     }
   `,
 );
 
-test(
-  `{ [x1, x2, ...xs] = 123; }`,
+testPattern(
+  `"use strict"; [x1, x2, ...xs] = 123;`,
   `
     {
       let right, iterator;
@@ -117,8 +79,8 @@ test(
   `,
 );
 
-test(
-  `{ ({foo:x, bar:y} = 123); }`,
+testPattern(
+  `"use strict"; ({foo:x, bar:y} = 123);`,
   `
     {
       let right;
@@ -142,8 +104,8 @@ test(
   `,
 );
 
-test(
-  `{ ({foo:x, bar:y, ...rest} = 123); }`,
+testPattern(
+  `"use strict"; ({foo:x, bar:y, ...rest} = 123);`,
   `
     {
       let right, key1, key2, rest;

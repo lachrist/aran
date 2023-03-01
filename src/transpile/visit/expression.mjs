@@ -1,20 +1,12 @@
-import { concat, reduce, reduceRight, map } from "array-lite";
+import { concat, reduce, map } from "array-lite";
+import { partialx___, partial_xx, SyntaxAranError } from "../../util/index.mjs";
 import {
-  partialx___,
-  flipxx,
-  partial_xx,
-  SyntaxAranError,
-} from "../../util/index.mjs";
-import {
-  makeSequenceExpression,
   makeApplyExpression,
   makeYieldExpression,
   makeAwaitExpression,
   makeLiteralExpression,
 } from "../../ast/index.mjs";
 import {
-  makeGetExpression,
-  makeSetExpression,
   makeArrayExpression,
   makeObjectFreezeExpression,
   makeObjectDefinePropertyExpression,
@@ -22,35 +14,24 @@ import {
   makeBinaryExpression,
 } from "../../intrinsic.mjs";
 import {
-  declareScopeMeta,
-  makeScopeMetaWriteEffect,
-  makeScopeMetaReadExpression,
   makeScopeBaseReadExpression,
   makeScopeSpecReadExpression,
-  makeScopeBaseMacroWriteEffect,
 } from "../scope/index.mjs";
-import { expectSyntaxValue } from "./report.mjs";
 import { visit, visitMany } from "./context.mjs";
 
-const {
-  Array,
-  Reflect: { apply },
-  String: {
-    prototype: { substring },
-  },
-} = globalThis;
+const { Array } = globalThis;
 
 const ANONYMOUS = { name: null };
 const COOKED = { cooked: true };
 const RAW = { cooked: false };
 
 const visitCallee = partialx___(visitMany, "Callee");
-const visitPattern = partialx___(visitMany, "Pattern");
-const visitProperty = partialx___(visit, "Property");
 const visitQuasi = partialx___(visit, "Quasi");
 const visitExpression = partialx___(visit, "Expression");
 const visitClosure = partialx___(visit, "Closure");
 const visitClass = partialx___(visit, "Class");
+const visitUpdateExpression = partialx___(visit, "UpdateExpression");
+const visitAssignmentExpression = partialx___(visit, "AssignmentExpression");
 
 const getMetaPropertyVariable = (node) => {
   if (node.meta.name === "new" && node.property.name === "target") {
@@ -161,156 +142,9 @@ export default {
           ? makeLiteralExpression({ undefined: null })
           : visitExpression(node.argument, context, ANONYMOUS),
       ),
-    // Evaluation order of member assignment:
-    // ======================================
-    // (console.log("obj"), {
-    //   __proto__: null,
-    //   get foo () {
-    //     console.log("get");
-    //     return {
-    //       __proto__: null,
-    //       toString: () => {
-    //         console.log("toString");
-    //         return "foo";
-    //       }
-    //     };
-    //   },
-    //   set foo (value) {
-    //     console.log("set", value);
-    //   }
-    // })[(console.log("key"), "foo")] += (console.log("val"), "bar");
-    // obj
-    // key
-    // get
-    // qux
-    // toString
-    // 'foobar'
-    //
-    // No objectify in strict mode:
-    // ============================
-    // > function f () { "use strict"; var foo = 1; foo.bar = 123 }
-    // undefined
-    // > f()
-    // Thrown:
-    // TypeError: Cannot create property 'bar' on number '1'
-    //     at f (repl:1:52)
-    AssignmentExpression: (node, context, _site) => {
-      if (node.left.type === "MemberExpression") {
-        if (node.operator === "=") {
-          return makeSetExpression(
-            context.strict,
-            visitExpression(node.left.object, context, ANONYMOUS),
-            visitProperty(node.left.property, context, node.left),
-            visitProperty(node.right, context, ANONYMOUS),
-          );
-        } else {
-          const object_variable = declareScopeMeta(
-            context,
-            "assignment_member_object",
-          );
-          const property_variable = declareScopeMeta(
-            context,
-            "assignment_member_property",
-          );
-          return makeSetExpression(
-            context.strict,
-            makeSequenceExpression(
-              makeScopeMetaWriteEffect(
-                context,
-                object_variable,
-                visitExpression(node.left.object, context, ANONYMOUS),
-              ),
-              makeScopeMetaReadExpression(context, object_variable),
-            ),
-            makeSequenceExpression(
-              makeScopeMetaWriteEffect(
-                context,
-                property_variable,
-                visitProperty(node.left.property, context, node.left),
-              ),
-              makeScopeMetaReadExpression(context, property_variable),
-            ),
-            makeBinaryExpression(
-              apply(substring, node.operator, [0, node.operator.length - 1]),
-              makeGetExpression(
-                makeScopeMetaReadExpression(context, object_variable),
-                makeScopeMetaReadExpression(context, property_variable),
-              ),
-              visitExpression(node.right, context, ANONYMOUS),
-            ),
-          );
-        }
-      } else if (node.left.type === "Identifier") {
-        if (node.operator === "=") {
-          const variable = declareScopeMeta(
-            context,
-            "assignment_identifier_right",
-          );
-          return makeSequenceExpression(
-            makeScopeMetaWriteEffect(
-              context,
-              variable,
-              visitExpression(node.right, context, node.left),
-            ),
-            makeSequenceExpression(
-              makeScopeBaseMacroWriteEffect(
-                context,
-                node.left.name,
-                makeScopeMetaReadExpression(context, variable),
-              ),
-              makeScopeMetaReadExpression(context, variable),
-            ),
-          );
-        } else {
-          const variable = declareScopeMeta(
-            context,
-            "assignment_identifier_right",
-          );
-          return makeSequenceExpression(
-            makeScopeMetaWriteEffect(
-              context,
-              variable,
-              makeBinaryExpression(
-                apply(substring, node.operator, [0, node.operator.length - 1]),
-                makeScopeBaseReadExpression(context, node.left.name),
-                // Name are not transmitted on update:
-                //
-                // > var f = "foo"
-                // undefined
-                // > f += function () {}
-                // 'foofunction () {}'
-                visitExpression(node.right, context, ANONYMOUS),
-              ),
-            ),
-            makeSequenceExpression(
-              makeScopeBaseMacroWriteEffect(
-                context,
-                node.left.name,
-                makeScopeMetaReadExpression(context, variable),
-              ),
-              makeScopeMetaReadExpression(context, variable),
-            ),
-          );
-        }
-      } else {
-        expectSyntaxValue(node, "operator", "=");
-        const variable = declareScopeMeta(context, "assignment_pattern_right");
-        return makeSequenceExpression(
-          makeScopeMetaWriteEffect(
-            context,
-            variable,
-            visitExpression(node.right, context, ANONYMOUS),
-          ),
-          reduceRight(
-            visitPattern(node.left, context, {
-              kind: null,
-              right: makeScopeMetaReadExpression(context, variable),
-            }),
-            flipxx(makeSequenceExpression),
-            makeScopeMetaReadExpression(context, variable),
-          ),
-        );
-      }
-    },
+    AssignmentExpression: (node, context, _site) =>
+      visitAssignmentExpression(node.left, context, node),
+    UpdateExpression: (node, context, _site) =>
+      visitUpdateExpression(node.argument, context, node),
   },
 };
