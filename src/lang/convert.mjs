@@ -2,13 +2,7 @@
 
 import { slice, map, concat } from "array-lite";
 
-import {
-  partialx_,
-  partialx__,
-  format,
-  expect2,
-  assert,
-} from "../util/index.mjs";
+import { partialx_, partialx__, expect2, assert } from "../util/index.mjs";
 
 import { dispatchObjectNode0, dispatchObjectNode1 } from "../node.mjs";
 
@@ -74,11 +68,18 @@ const {
 ///////////
 
 const locate = (loc) => `${String(loc.start.line)}:${String(loc.start.column)}`;
-const TEMPLATE = "Node %s at %s";
 const makeSyntaxError = (node) =>
-  new SyntaxError(format(TEMPLATE, [node.type, locate(node.loc)]));
+  new SyntaxError(`Node ${node.type} at ${locate(node.loc)}`);
 const expectSyntax = (check, node) => {
-  expect2(check, SyntaxError, TEMPLATE, node.type, locate(node.loc));
+  expect2(
+    check,
+    SyntaxError,
+    "Node %x at %x",
+    String,
+    node.type,
+    locate,
+    node.loc,
+  );
 };
 
 ///////////

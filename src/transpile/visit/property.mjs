@@ -1,7 +1,8 @@
-import { SyntaxAranError, expect1, partialx___ } from "../../util/index.mjs";
+import { partialx___ } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
 import { makeLiteralExpression } from "../../ast/index.mjs";
 import { makeScopeBaseReadExpression } from "../scope/index.mjs";
+import { expectSyntaxValue } from "./report.mjs";
 import { visit } from "./context.mjs";
 
 const visitExpression = partialx___(visit, "Expression");
@@ -15,13 +16,8 @@ export default {
         ? makeScopeBaseReadExpression(context, node.name)
         : makeLiteralExpression(node.name),
     Literal: (node, _context, _site) => makeLiteralExpression(node.value),
-    [DEFAULT_CLAUSE]: (node, context, { computed }) => {
-      expect1(
-        computed,
-        "illegal non-computed property at %j",
-        SyntaxAranError,
-        node.loc.start,
-      );
+    [DEFAULT_CLAUSE]: (node, context, site) => {
+      expectSyntaxValue(site, "computed", true);
       return visitExpression(node, context, ANONYMOUS);
     },
   },

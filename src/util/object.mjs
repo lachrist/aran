@@ -1,6 +1,7 @@
-import { expect2 } from "./report.mjs";
+import { inspect1, expect2 } from "./report.mjs";
 
 const {
+  String,
   Error,
   undefined,
   Object,
@@ -29,6 +30,14 @@ export const hasOwn =
 /* c8 ignore stop */
 
 export const getOwn = (obj, key) => {
-  expect2(hasOwn(obj, key), Error, "missing property %j on %1", key, obj);
+  expect2(
+    hasOwn(obj, key),
+    Error,
+    "missing property %x on %x",
+    String,
+    key,
+    inspect1,
+    obj,
+  );
   return obj[key];
 };

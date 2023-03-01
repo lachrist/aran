@@ -1,11 +1,22 @@
-import { assert, SyntaxAranError, partialx___ } from "../../util/index.mjs";
+import { partialx___ } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
-import { makeExpressionEffect } from "../../ast/index.mjs";
-import { makeBinaryExpression } from "../../intrinsic.mjs";
 import {
+  makeLiteralExpression,
+  makeExpressionEffect,
+} from "../../ast/index.mjs";
+import {
+  makeSetExpression,
+  makeGetExpression,
+  makeBinaryExpression,
+} from "../../intrinsic.mjs";
+import {
+  makeScopeMetaWriteEffect,
+  makeScopeMetaReadExpression,
   makeScopeBaseWriteEffect,
   makeScopeBaseReadExpression,
+  declareScopeMeta,
 } from "../scope/index.mjs";
+import { expectSyntaxValue, makeTypeSyntaxError } from "./report.mjs";
 import { visit, visitMany } from "./context.mjs";
 
 const {
@@ -15,11 +26,11 @@ const {
   },
 } = globalThis;
 
-const visitExpression = partialx___(visit, "Expression");
-
-const visitPattern = partialx___(visitMany, "Pattern");
-
 const ANONYMOUS = { name: null };
+
+const visitExpression = partialx___(visit, "Expression");
+const visitPattern = partialx___(visitMany, "Pattern");
+const visitProperty = partialx___(visit, "Property");
 
 export default {
   Effect: {
@@ -57,12 +68,7 @@ export default {
           ];
         }
       } else {
-        assert(
-          node.operator === "=",
-          SyntaxAranError,
-          "unexpected assignment operator with patterns at %j",
-          node.loc.start,
-        );
+        expectSyntaxValue(node, "operator", "=");
         return visitPattern(node.left, context, {
           kind: null,
           right: visitExpression(node.right, context, ANONYMOUS),

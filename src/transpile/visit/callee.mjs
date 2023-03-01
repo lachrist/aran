@@ -1,4 +1,4 @@
-import { partialx___, expect1, SyntaxAranError } from "../../util/index.mjs";
+import { partialx___ } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
   makeApplyExpression,
@@ -13,6 +13,7 @@ import {
   makeScopeSpecReadExpression,
   declareScopeMeta,
 } from "../scope/index.mjs";
+import { expectSyntaxValue } from "./report.mjs";
 import { visit, visitMany } from "./context.mjs";
 
 const ANONYMOUS = { name: null };
@@ -27,12 +28,7 @@ export default {
       visitMany("Callee", node.expression, context, site),
     MemberExpression: (node, context, _site) => {
       if (node.object.type === "Super") {
-        expect1(
-          !node.optional,
-          SyntaxAranError,
-          "illegal optional super get expression at: %j",
-          node.loc.start,
-        );
+        expectSyntaxValue(node, "optional", false);
         return [
           makeApplyExpression(
             makeScopeSpecReadExpression(context, "super.get"),

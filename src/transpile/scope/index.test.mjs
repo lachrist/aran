@@ -141,7 +141,7 @@ assertSuccess(
       assertEqual(declareScopeSpecIllegal(context, "import.meta"), undefined);
       assertThrow(() => makeScopeSpecReadExpression(context, "import.meta"), {
         name: "SyntaxAranError",
-        message: "Illegal import.meta",
+        message: 'Illegal "import.meta"',
       });
       return [
         makeEffectStatement(
@@ -268,7 +268,7 @@ assertSuccess(
         ) ?
         intrinsic.aran.throw(
           new intrinsic.SyntaxError(
-            "Variable 'variable' has already been declared"
+            "Variable \\"variable\\" has already been declared"
           ),
         ) :
         undefined
@@ -392,7 +392,7 @@ assertSuccess(
         assertEqual(declareScopeSpecIllegal(context, "new.target"), undefined);
         assertThrow(() => makeScopeSpecReadExpression(context, "new.target"), {
           name: "SyntaxAranError",
-          message: "Illegal new.target",
+          message: 'Illegal "new.target"',
         });
         assertEqual(declareScopeSpec(context, "import.meta"), undefined);
         return [
@@ -647,7 +647,7 @@ assertSuccess(
             intrinsic.aran.get("macro", "variable1") :
             intrinsic.aran.throw(
               new intrinsic.ReferenceError(
-                "Cannot access variable 'variable1' before initialization",
+                "Cannot access variable \\"variable1\\" before initialization",
               ),
             )
           );
@@ -805,7 +805,7 @@ assertSuccess(
       label: {
         void intrinsic.aran.throw(
           new intrinsic.ReferenceError(
-            "Cannot access variable 'variable' before initialization",
+            "Cannot access variable \\"variable\\" before initialization",
           ),
         );
       }
@@ -864,7 +864,7 @@ assertSuccess(
             VARIABLE :
             intrinsic.aran.throw(
               new intrinsic.ReferenceError(
-                "Cannot access variable 'variable' before initialization",
+                "Cannot access variable \\"variable\\" before initialization",
               ),
             )
           );
@@ -926,13 +926,13 @@ assertSuccess(
         void "right",
         void intrinsic.aran.throw(
           new intrinsic.ReferenceError(
-            "Cannot access variable 'variable' before initialization",
+            "Cannot access variable \\"variable\\" before initialization",
           ),
         )
       );
       void intrinsic.aran.throw(
         new intrinsic.ReferenceError(
-          "Cannot access variable 'variable' before initialization",
+          "Cannot access variable \\"variable\\" before initialization",
         ),
       );
       VARIABLE = "init";

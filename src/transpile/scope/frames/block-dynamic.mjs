@@ -41,6 +41,7 @@ import {
 } from "./helper.mjs";
 
 const {
+  JSON: { stringify: stringifyJSON },
   Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
@@ -61,6 +62,7 @@ const checkConflict = (conflicts, bindings, variable) => {
     !hasOwn(bindings, variable),
     DuplicateError,
     DUPLICATE_TEMPLATE,
+    stringifyJSON,
     variable,
   );
   if (!includes(conflicts, variable)) {

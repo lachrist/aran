@@ -1,22 +1,26 @@
-import { assertThrow, assertEqual, assertDeepEqual } from "../__fixture__.mjs";
-
+import { map, join, forEach, concat, flatMap } from "array-lite";
+import { assertThrow, assertEqual } from "../__fixture__.mjs";
 import {
   SyntaxAranError,
   EnclaveLimitationAranError,
   InvalidOptionAranError,
   inspect,
-  inspectDeep,
   format,
   expect0,
   expect1,
   expect2,
   expect3,
   expect4,
-  expectSuccess,
-  expectDeadcode,
+  expect5,
+  // expectSuccess,
+  // expectDeadcode,
 } from "./report.mjs";
 
 const {
+  Array,
+  String,
+  undefined,
+  RegExp,
   Error,
   Reflect: { apply },
 } = globalThis;
@@ -31,117 +35,80 @@ testError(SyntaxAranError);
 testError(EnclaveLimitationAranError);
 testError(InvalidOptionAranError);
 
-assertEqual(inspect("foo"), '"foo"');
-assertEqual(inspect(123), "123");
-assertEqual(inspect({}), "<object>");
+/////////////
+// Inspect //
+/////////////
+
+assertEqual(inspect("foo", 0), '"foo"');
+assertEqual(inspect(123, 0), "123");
+/* eslint-disable no-restricted-syntax */
 assertEqual(
-  inspect(() => {}),
+  inspect(function f() {}, 0),
   "<function>",
 );
-
-assertEqual(inspectDeep([123, [456], 789], 1), "[123, <array>, 789]");
 assertEqual(
-  inspectDeep({ foo: 123, bar: [456], qux: 789 }, 1),
+  inspect(function () {}, 1),
+  "<function>",
+);
+assertEqual(
+  inspect(function f() {}, 1),
+  "<function f>",
+);
+/* eslint-enable no-restricted-syntax */
+assertEqual(inspect([123], 0), "<array>");
+assertEqual(inspect([123, [456], 789], 1), "[123, <array>, 789]");
+assertEqual(inspect({ foo: 123 }, 0), "<object>");
+assertEqual(
+  inspect({ foo: 123, bar: [456], qux: 789 }, 1),
   "{ foo:123, bar:<array>, qux:789 }",
 );
 
-assertThrow(() => format("%x", [123]), /^Error: invalid format marker/u);
-assertEqual(format("%%%", []), "%%");
-assertEqual(format("%s", ["foo"]), "foo");
-assertEqual(format("%o", [123]), "123");
-assertEqual(format("%v", [123]), "");
-assertEqual(format("%j", [[123]]), "[123]");
-assertEqual(format("%o", [() => {}]), "<function>");
-assertEqual(format("%O", [new Error("foo")]), "Error: foo");
-assertEqual(format("%1", [[123, [456], 789]]), "[123, <array>, 789]");
+////////////
+// Format //
+////////////
 
-///////////////////
-// expectSuccess //
-///////////////////
-
-assertEqual(
-  apply(
-    expectSuccess(
-      /* eslint-disable no-restricted-syntax */
-      function (...args) {
-        assertEqual(this, "ctx");
-        assertDeepEqual(args, ["arg0", "arg1"]);
-        return "result";
-      },
-      /* eslint-enable no-restricted-syntax */
-      Error,
-      "template",
-    ),
-    "ctx",
-    ["arg0", "arg1"],
-  ),
-  "result",
-);
-
+assertEqual(format("%xbar%x", ["foo", "qux"]), "foobarqux");
+assertEqual(format("%x%x%x", ["foo", "bar", "qux"]), "foobarqux");
+assertThrow(() => format("%x", []), /^AssertionError: missing format value$/u);
 assertThrow(
-  () =>
-    apply(
-      expectSuccess(
-        () => {
-          throw new Error("foo");
-        },
-        Error,
-        "%o %o %o %o %o %O",
-        1,
-        2,
-      ),
-      3,
-      [4, 5],
-    ),
-  {
-    name: "Error",
-    message: "1 2 3 4 5 Error: foo",
-  },
-);
-
-////////////////////
-// expectDeadcode //
-////////////////////
-
-assertThrow(
-  () => apply(expectDeadcode(Error, "%o %o %o %o %o", 1, 2), 3, [4, 5]),
-  {
-    name: "Error",
-    message: "1 2 3 4 5",
-  },
+  () => format("", ["foo"]),
+  /^AssertionError: missing format marker$/u,
 );
 
 ////////////
 // expect //
 ////////////
 
-assertThrow(() => expect0(false, Error, "template"), /^Error: template$/u);
-
-assertThrow(
-  () => expect1(false, Error, "template %s", "val1"),
-  /^Error: template val1$/u,
-);
-
-assertThrow(
-  () => expect2(false, Error, "template %s %s", "val1", "val2"),
-  /^Error: template val1 val2$/u,
-);
-
-assertThrow(
-  () => expect3(false, Error, "template %s %s %s", "val1", "val2", "val3"),
-  /^Error: template val1 val2 val3$/u,
-);
-
-assertThrow(
-  () =>
-    expect4(
-      false,
-      Error,
-      "template %s %s %s %s",
-      "val1",
-      "val2",
-      "val3",
-      "val4",
-    ),
-  /^Error: template val1 val2 val3 val4$/u,
-);
+{
+  const toExpectEntry = (_element, index) => [
+    (val) => `${val}-${String(index)}`,
+    `val-${String(index)}`,
+  ];
+  const toExpectMarker = (_element, _index) => " %x";
+  const toExpectResult = (_element, index) =>
+    ` val-${String(index)}-${String(index)}`;
+  forEach([expect0, expect1, expect2, expect3, expect4, expect5], (expect) => {
+    const ruler = new Array((expect.length - 3) / 2);
+    const template = `template${join(map(ruler, toExpectMarker), "")}`;
+    assertThrow(
+      () =>
+        apply(
+          expect,
+          undefined,
+          concat([false, Error, template], flatMap(ruler, toExpectEntry)),
+        ),
+      new RegExp(
+        `^Error: template${join(map(ruler, toExpectResult), "")}$`,
+        "u",
+      ),
+    );
+    assertEqual(
+      apply(
+        expect,
+        undefined,
+        concat([true, Error, template], flatMap(ruler, toExpectEntry)),
+      ),
+      undefined,
+    );
+  });
+}

@@ -38,6 +38,7 @@ import {
 } from "./helper.mjs";
 
 const {
+  JSON: { stringify: stringifyJSON },
   Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
@@ -88,6 +89,7 @@ export const declareFrame = (
     !hasOwn(bindings, variable),
     DuplicateError,
     DUPLICATE_TEMPLATE,
+    stringifyJSON,
     variable,
   );
   if (includes(KINDS, kind)) {
@@ -151,6 +153,7 @@ export const makeFrameInitializeStatementArray = (
       !hasOwn(bindings, variable),
       DuplicateError,
       DUPLICATE_TEMPLATE,
+      stringifyJSON,
       variable,
     );
     return trail;

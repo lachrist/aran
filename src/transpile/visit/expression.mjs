@@ -1,6 +1,5 @@
 import { concat, reduce, reduceRight, map } from "array-lite";
 import {
-  assert,
   partialx___,
   flipxx,
   partial_xx,
@@ -30,6 +29,7 @@ import {
   makeScopeSpecReadExpression,
   makeScopeBaseMacroWriteEffect,
 } from "../scope/index.mjs";
+import { expectSyntaxValue } from "./report.mjs";
 import { visit, visitMany } from "./context.mjs";
 
 const {
@@ -293,12 +293,7 @@ export default {
           );
         }
       } else {
-        assert(
-          node.operator === "=",
-          SyntaxAranError,
-          "unexpected assignment operator with patterns at %j",
-          node.loc.start,
-        );
+        expectSyntaxValue(node, "operator", "=");
         const variable = declareScopeMeta(context, "assignment_pattern_right");
         return makeSequenceExpression(
           makeScopeMetaWriteEffect(

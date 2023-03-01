@@ -31,7 +31,7 @@ const testProperty = (input, output, computed) =>
         ...Visitors,
       },
     },
-    { computed },
+    { type: "Type", computed },
     output,
   );
 

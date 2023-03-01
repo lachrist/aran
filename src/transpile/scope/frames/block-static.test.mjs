@@ -43,7 +43,7 @@ assertSuccess(
         variable: "variable",
         code: `intrinsic.aran.throw(
           new intrinsic.ReferenceError(
-            "Cannot access variable 'variable' before initialization",
+            "Cannot access variable \\"variable\\" before initialization",
           ),
         )`,
       },
@@ -119,12 +119,12 @@ assertSuccess(
           _VARIABLE ?
           void intrinsic.aran.throw(
             new intrinsic.TypeError(
-              "Cannot assign variable 'variable' because it is constant",
+              "Cannot assign variable \\"variable\\" because it is constant",
             ),
           ) :
           void intrinsic.aran.throw(
             new intrinsic.ReferenceError(
-              "Cannot access variable 'variable' before initialization",
+              "Cannot access variable \\"variable\\" before initialization",
             ),
           )
         `,

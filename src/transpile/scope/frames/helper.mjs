@@ -30,7 +30,10 @@ import {
   makeThrowSyntaxErrorExpression,
 } from "../../../intrinsic.mjs";
 
-const { undefined } = globalThis;
+const {
+  undefined,
+  JSON: { stringify: stringifyJSON },
+} = globalThis;
 
 ////////////
 // Export //
@@ -51,7 +54,7 @@ export const makeExportSequenceEffect = (effect, specifier, expression) =>
 // Report Static //
 ///////////////////
 
-export const DUPLICATE_TEMPLATE = "Variable '%s' has already been declared";
+export const DUPLICATE_TEMPLATE = "Variable %x has already been declared";
 
 export const DuplicateError = SyntaxAranError;
 
@@ -61,15 +64,17 @@ export const DuplicateError = SyntaxAranError;
 
 export const makeThrowDuplicateExpression = (variable) =>
   makeThrowSyntaxErrorExpression(
-    `Variable '${variable}' has already been declared`,
+    `Variable ${stringifyJSON(variable)} has already been declared`,
   );
 
 export const makeThrowMissingExpression = (variable) =>
-  makeThrowReferenceErrorExpression(`Variable '${variable}' is not defined`);
+  makeThrowReferenceErrorExpression(
+    `Variable ${stringifyJSON(variable)} is not defined`,
+  );
 
 export const makeThrowDeadzoneExpression = (variable) =>
   makeThrowReferenceErrorExpression(
-    `Cannot access variable '${variable}' before initialization`,
+    `Cannot access variable ${stringifyJSON(variable)} before initialization`,
   );
 
 export const makeThrowDeadzoneEffect = (variable) =>
@@ -77,12 +82,12 @@ export const makeThrowDeadzoneEffect = (variable) =>
 
 export const makeThrowDiscardExpression = (variable) =>
   makeThrowTypeErrorExpression(
-    `Cannot discard variable '${variable}' because it is static`,
+    `Cannot discard variable ${stringifyJSON(variable)} because it is static`,
   );
 
 export const makeThrowConstantExpression = (variable) =>
   makeThrowTypeErrorExpression(
-    `Cannot assign variable '${variable}' because it is constant`,
+    `Cannot assign variable ${stringifyJSON(variable)} because it is constant`,
   );
 
 export const makeThrowConstantEffect = (variable) =>

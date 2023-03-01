@@ -58,7 +58,7 @@ assertSuccess(
         variable: "variable",
         code: `void intrinsic.aran.throw(
           new intrinsic.TypeError(
-            "Cannot assign variable 'variable' because it is constant",
+            "Cannot assign variable \\"variable\\" because it is constant",
           ),
         )`,
       },

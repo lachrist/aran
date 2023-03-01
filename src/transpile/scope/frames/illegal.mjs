@@ -15,6 +15,7 @@ import {
 } from "./helper.mjs";
 
 const {
+  JSON: { stringify: stringifyJSON },
   Reflect: { defineProperty },
 } = globalThis;
 
@@ -69,7 +70,13 @@ const makeLookupNode = (
   variable,
   options,
 ) => {
-  expect1(!hasOwn(bindings, variable), SyntaxAranError, "Illegal %s", variable);
+  expect1(
+    !hasOwn(bindings, variable),
+    SyntaxAranError,
+    "Illegal %x",
+    stringifyJSON,
+    variable,
+  );
   return next(strict, scope, escaped, variable, options);
 };
 

@@ -42,7 +42,7 @@ assertSuccess(
     makeThrowDuplicateExpression("variable"),
     `intrinsic.aran.throw(
       new intrinsic.SyntaxError(
-        "Variable 'variable' has already been declared",
+        "Variable \\"variable\\" has already been declared",
       ),
     )`,
   ),
@@ -53,7 +53,7 @@ assertSuccess(
     makeThrowMissingExpression("variable"),
     `intrinsic.aran.throw(
       new intrinsic.ReferenceError(
-        "Variable 'variable' is not defined",
+        "Variable \\"variable\\" is not defined",
       ),
     )`,
   ),
@@ -64,7 +64,7 @@ assertSuccess(
     makeThrowDeadzoneExpression("variable"),
     `intrinsic.aran.throw(
       new intrinsic.ReferenceError(
-        "Cannot access variable 'variable' before initialization",
+        "Cannot access variable \\"variable\\" before initialization",
       ),
     )`,
   ),
@@ -75,7 +75,7 @@ assertSuccess(
     makeThrowDeadzoneEffect("variable"),
     `void intrinsic.aran.throw(
       new intrinsic.ReferenceError(
-        "Cannot access variable 'variable' before initialization",
+        "Cannot access variable \\"variable\\" before initialization",
       ),
     )`,
   ),
@@ -86,7 +86,7 @@ assertSuccess(
     makeThrowDiscardExpression("variable"),
     `intrinsic.aran.throw(
       new intrinsic.TypeError(
-        "Cannot discard variable 'variable' because it is static",
+        "Cannot discard variable \\"variable\\" because it is static",
       ),
     )`,
   ),
@@ -97,7 +97,7 @@ assertSuccess(
     makeThrowConstantExpression("variable"),
     `intrinsic.aran.throw(
       new intrinsic.TypeError(
-        "Cannot assign variable 'variable' because it is constant",
+        "Cannot assign variable \\"variable\\" because it is constant",
       ),
     )`,
   ),
@@ -108,7 +108,7 @@ assertSuccess(
     makeThrowConstantEffect("variable"),
     `void intrinsic.aran.throw(
       new intrinsic.TypeError(
-        "Cannot assign variable 'variable' because it is constant",
+        "Cannot assign variable \\"variable\\" because it is constant",
       ),
     )`,
   ),

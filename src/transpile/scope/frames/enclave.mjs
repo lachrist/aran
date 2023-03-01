@@ -24,6 +24,7 @@ import {
 } from "./helper.mjs";
 
 const {
+  JSON: { stringify: stringifyJSON },
   Reflect: { ownKeys },
 } = globalThis;
 
@@ -47,7 +48,8 @@ const checkTrailProgram = (trail, variable) => {
   expect1(
     !hasOwn(trail, "program"),
     EnclaveLimitationAranError,
-    "Aran only support declaring external variables in script programs, got: %s",
+    "Aran only support declaring external variables in script programs, got: %x",
+    stringifyJSON,
     variable,
   );
 };
@@ -123,7 +125,8 @@ export const makeFrameWriteEffect = (
   expect1(
     strict,
     EnclaveLimitationAranError,
-    "Aran does not support assigning to external variables in non-strict mode, got: %s",
+    "Aran does not support assigning to external variables in non-strict mode, got: %x",
+    stringifyJSON,
     variable,
   );
   incrementCounter(counter);

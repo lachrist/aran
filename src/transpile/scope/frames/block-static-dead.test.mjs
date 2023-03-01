@@ -45,7 +45,7 @@ assertSuccess(
         variable: "variable",
         code: `intrinsic.aran.throw(
           new intrinsic.ReferenceError(
-            "Cannot access variable 'variable' before initialization",
+            "Cannot access variable \\"variable\\" before initialization",
           ),
         )`,
       },

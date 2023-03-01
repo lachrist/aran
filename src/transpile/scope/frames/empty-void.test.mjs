@@ -17,7 +17,7 @@ assertSuccess(
         variable: "variable",
         code: `intrinsic.aran.throw(
           new intrinsic.ReferenceError(
-            "Variable 'variable' is not defined",
+            "Variable \\"variable\\" is not defined",
           ),
         )`,
       },
@@ -35,7 +35,7 @@ assertSuccess(
         strict: true,
         code: `void intrinsic.aran.throw(
           new intrinsic.ReferenceError(
-            "Variable 'variable' is not defined",
+            "Variable \\"variable\\" is not defined",
           ),
         )`,
       },
