@@ -1,4 +1,5 @@
-import { partialx___ } from "../../util/index.mjs";
+import { flatMap } from "array-lite";
+import { partial_xx, partialx___ } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
 import { makeExpressionEffect } from "../../ast/index.mjs";
 import { visit, visitMany } from "./context.mjs";

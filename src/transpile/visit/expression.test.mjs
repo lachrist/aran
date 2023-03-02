@@ -186,3 +186,9 @@ testExpression(
     }
   `,
 );
+
+// SequenceExpression //
+testExpression(
+  `"use strict"; return (x = 123, 456);`,
+  `{ return ([x] = 123, 456); }`,
+);

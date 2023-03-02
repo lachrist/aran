@@ -24,3 +24,4 @@ testEffect(
   `"use strict"; x++;`,
   `{ [x] = intrinsic.aran.binary("+", [x], 1); }`,
 );
+testEffect(`(123, 456);`, `{ void 123; void 456; }`);

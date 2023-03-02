@@ -154,5 +154,31 @@ export default {
       visitAssignmentExpression(node.left, context, node),
     UpdateExpression: (node, context, _site) =>
       visitUpdateExpression(node.argument, context, node),
+    /////////////
+    // Control //
+    /////////////
+    // Function's name are not propagated through sequences:
+    //
+    // > var o = {x:(123, function () {})}
+    // undefined
+    // > o
+    // { x: [Function] }
+    // > o.x.name
+    // ''
+    SequenceExpression: (node, context, _site) => {
+      expectSyntaxNotEqualDeep(node, "expressions", "length", 0);
+      return reduceRight(
+        flatMap(
+          slice(node.expressions, 0, node.expressions.length - 1),
+          partial_xx(visitEffect, context, null),
+        ),
+        flipxx(makeSequenceExpression),
+        visitExpression(
+          node.expressions[node.expressions.length - 1],
+          context,
+          ANONYMOUS,
+        ),
+      );
+    },
   },
 };
