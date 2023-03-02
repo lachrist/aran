@@ -193,6 +193,9 @@ testExpression(
   `{ return ([x] = 123, 456); }`,
 );
 
+// ConditionalExpression //
+testExpression(`return 123 ? 456 : 789;`, `{ return 123 ? 456 : 789; } `);
+
 // LogicalExpression //
 testExpression(
   `return 123 && 456;`,

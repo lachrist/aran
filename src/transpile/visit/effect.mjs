@@ -46,6 +46,13 @@ export default {
       visitUpdateEffect(node.argument, context, node),
     SequenceExpression: (node, context, _site) =>
       flatMap(node.expressions, partial_xx(visitEffect, context, null)),
+    ConditionalExpression: (node, context, _site) => [
+      makeConditionalEffect(
+        visitExpression(node.test, context, ANONYMOUS),
+        unifyEffectArray(visitEffect(node.consequent, context, null)),
+        unifyEffectArray(visitEffect(node.alternate, context, null)),
+      ),
+    ],
     LogicalExpression: (node, context, _site) => {
       if (node.operator === "&&") {
         return [

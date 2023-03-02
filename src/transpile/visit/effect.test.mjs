@@ -60,3 +60,9 @@ testEffect(
     }
   `,
 );
+
+// ConditionalExpression //
+testEffect(
+  `1 ? (2,3,4) : (5,6,7);`,
+  `{ 1 ? (void 2, (void 3, void 4)) : (void 5, (void 6, void 7)); }`,
+);

@@ -184,6 +184,12 @@ export default {
         ),
       );
     },
+    ConditionalExpression: (node, context, _site) =>
+      makeConditionalExpression(
+        visitExpression(node.test, context, ANONYMOUS),
+        visitExpression(node.consequent, context, ANONYMOUS),
+        visitExpression(node.alternate, context, ANONYMOUS),
+      ),
     LogicalExpression: (node, context, _site) => {
       const variable = declareScopeMeta(
         context,
