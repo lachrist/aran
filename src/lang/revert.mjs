@@ -368,6 +368,16 @@ export const revertStatement = partialx_(dispatchArrayNode0, {
     ]),
 });
 
+export const revertEffectArray = (effects) => {
+  if (effects.length === 0) {
+    return makeIdentifier("undefined");
+  } else if (effects.length === 1) {
+    return revertEffect(effects[0]);
+  } else {
+    return makeSequenceExpression(map(effects, revertEffect));
+  }
+};
+
 export const revertEffect = partialx_(dispatchArrayNode0, {
   WriteEffect: ({ 1: variable, 2: expression }) =>
     makeAssignmentExpression(
@@ -385,13 +395,11 @@ export const revertEffect = partialx_(dispatchArrayNode0, {
       makeLiteral(specifier),
       revertExpression(expression),
     ),
-  SequenceEffect: ({ 1: effect1, 2: effect2 }) =>
-    makeSequenceExpression([revertEffect(effect1), revertEffect(effect2)]),
-  ConditionalEffect: ({ 1: expression, 2: effect1, 3: effect2 }) =>
+  ConditionalEffect: ({ 1: expression, 2: effects1, 3: effects2 }) =>
     makeConditionalExpression(
       revertExpression(expression),
-      revertEffect(effect1),
-      revertEffect(effect2),
+      revertEffectArray(effects1),
+      revertEffectArray(effects2),
     ),
   ExpressionEffect: ({ 1: expression }) =>
     makeUnaryExpression("void", revertExpression(expression)),

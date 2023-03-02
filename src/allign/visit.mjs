@@ -264,17 +264,9 @@ export const visitEffect = partialx___(visitNode, {
       appendErrorSegment(error, ".right"),
     ),
   ],
-  SequenceEffect: (
-    { 1: effect11, 2: effect12 },
-    { 1: effect21, 2: effect22 },
-    error,
-  ) => [
-    visitEffect(effect11, effect21, appendErrorSegment(error, ".first")),
-    visitEffect(effect12, effect22, appendErrorSegment(error, ".second")),
-  ],
   ConditionalEffect: (
-    { 1: expression1, 2: effect11, 3: effect12 },
-    { 1: expression2, 2: effect21, 3: effect22 },
+    { 1: expression1, 2: effects11, 3: effects12 },
+    { 1: expression2, 2: effects21, 3: effects22 },
     error,
   ) => [
     visitExpression(
@@ -282,8 +274,16 @@ export const visitEffect = partialx___(visitNode, {
       expression2,
       appendErrorSegment(error, ".test"),
     ),
-    visitEffect(effect11, effect21, appendErrorSegment(error, ".first")),
-    visitEffect(effect12, effect22, appendErrorSegment(error, ".second")),
+    visitAllEffect(
+      effects11,
+      effects21,
+      appendErrorSegment(error, ".consequent"),
+    ),
+    visitAllEffect(
+      effects12,
+      effects22,
+      appendErrorSegment(error, ".alternate"),
+    ),
   ],
   ExpressionEffect: ({ 1: expression1 }, { 1: expression2 }, error) => [
     visitExpression(
@@ -521,5 +521,6 @@ const visitArray = (visit, array1, array2, error) =>
   );
 
 const visitAllExpression = partialx___(visitArray, visitExpression);
+const visitAllEffect = partialx___(visitArray, visitEffect);
 const visitAllStatement = partialx___(visitArray, visitStatement);
 const visitAllLink = partialx___(visitArray, visitLink);

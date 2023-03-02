@@ -8,6 +8,14 @@ export const empty = freeze([]);
 
 export const getLast = (array) => array[array.length - 1];
 
+// flipped reduceRight //
+export const reduceReverse = (array, accumulate, result) => {
+  for (let index = array.length - 1; index >= 0; index -= 1) {
+    result = accumulate(array[index], result);
+  }
+  return result;
+};
+
 export const push = (array, element) => {
   array[array.length] = element;
 };

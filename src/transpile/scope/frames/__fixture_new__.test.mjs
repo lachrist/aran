@@ -32,9 +32,9 @@ const Frame = {
   makeFrameReadExpression: constant_______(makeLiteralExpression("read")),
   makeFrameTypeofExpression: constant_______(makeLiteralExpression("typeof")),
   makeFrameDiscardExpression: constant_______(makeLiteralExpression("discard")),
-  makeFrameWriteEffect: constant_______(
-    makeExpressionEffect(makeLiteralExpression("read")),
-  ),
+  makeFrameWriteEffectArray: constant_______([
+    makeExpressionEffect(makeLiteralExpression("write")),
+  ]),
 };
 
 assertFrameLibrary(Frame);

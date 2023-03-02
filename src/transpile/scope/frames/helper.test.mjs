@@ -1,37 +1,51 @@
+import { map } from "array-lite";
 import { assertSuccess, assertEqual } from "../../../__fixture__.mjs";
-
 import { createCounter, gaugeCounter } from "../../../util/index.mjs";
-
 import {
+  makeBlock,
+  makeEffectStatement,
   makeLiteralExpression,
-  makeExpressionEffect,
 } from "../../../ast/index.mjs";
-
 import {
   allignStatement,
   allignEffect,
   allignExpression,
+  allignBlock,
 } from "../../../allign/index.mjs";
-
 import {
+  makeConditionalEffectArray,
   makeExportStatement,
   makeExportUndefinedStatement,
-  makeExportSequenceEffect,
   makeThrowDuplicateExpression,
-  makeThrowDeadzoneEffect,
+  makeThrowDeadzoneEffectArray,
   makeThrowMissingExpression,
+  makeThrowMissingEffectArray,
   makeThrowDeadzoneExpression,
   makeThrowConstantExpression,
-  makeThrowConstantEffect,
+  makeThrowConstantEffectArray,
   makeThrowDiscardExpression,
   makeTypeofImportExpression,
   makeTypeofGetExpression,
   makeTypeofReadExpression,
-  makeIncrementSetEffect,
-  makeIncrementWriteEffect,
-  makeExportIncrementWriteEffect,
-  makeEmptyFrameReadExpression,
+  makeIncrementSetEffectArray,
+  makeIncrementWriteEffectArray,
+  makeExportIncrementWriteEffectArray,
+  makeEmptyFrameLookupNode,
 } from "./helper.mjs";
+
+const takeSingleton = (array) => {
+  assertEqual(array.length, 1);
+  return array[0];
+};
+
+assertSuccess(
+  allignEffect(
+    takeSingleton(
+      makeConditionalEffectArray(makeLiteralExpression(123), [], []),
+    ),
+    `123 ? undefined : undefined`,
+  ),
+);
 
 ////////////////////
 // Report Dynamic //
@@ -60,6 +74,17 @@ assertSuccess(
 );
 
 assertSuccess(
+  allignEffect(
+    takeSingleton(makeThrowMissingEffectArray("variable")),
+    `void intrinsic.aran.throw(
+      new intrinsic.ReferenceError(
+        "Variable \\"variable\\" is not defined",
+      ),
+    )`,
+  ),
+);
+
+assertSuccess(
   allignExpression(
     makeThrowDeadzoneExpression("variable"),
     `intrinsic.aran.throw(
@@ -72,7 +97,7 @@ assertSuccess(
 
 assertSuccess(
   allignEffect(
-    makeThrowDeadzoneEffect("variable"),
+    takeSingleton(makeThrowDeadzoneEffectArray("variable")),
     `void intrinsic.aran.throw(
       new intrinsic.ReferenceError(
         "Cannot access variable \\"variable\\" before initialization",
@@ -105,7 +130,7 @@ assertSuccess(
 
 assertSuccess(
   allignEffect(
-    makeThrowConstantEffect("variable"),
+    takeSingleton(makeThrowConstantEffectArray("variable")),
     `void intrinsic.aran.throw(
       new intrinsic.TypeError(
         "Cannot assign variable \\"variable\\" because it is constant",
@@ -132,17 +157,6 @@ assertSuccess(
   ),
 );
 
-assertSuccess(
-  allignEffect(
-    makeExportSequenceEffect(
-      makeExpressionEffect(makeLiteralExpression(123)),
-      "specifier",
-      makeLiteralExpression(456),
-    ),
-    `(void 123, specifier << 456)`,
-  ),
-);
-
 ///////////////////
 // Lookup Static //
 ///////////////////
@@ -158,10 +172,12 @@ assertSuccess(
   const counter = createCounter(0);
   assertSuccess(
     allignEffect(
-      makeIncrementWriteEffect("variable", {
-        counter,
-        expression: makeLiteralExpression(456),
-      }),
+      takeSingleton(
+        makeIncrementWriteEffectArray("variable", {
+          counter,
+          expression: makeLiteralExpression(456),
+        }),
+      ),
       `variable = 456`,
     ),
   );
@@ -171,19 +187,28 @@ assertSuccess(
 {
   const counter = createCounter(0);
   assertSuccess(
-    allignEffect(
-      makeExportIncrementWriteEffect("variable", ["specifier1", "specifier2"], {
-        counter,
-        expression: makeLiteralExpression("right"),
-      }),
-      `
-        (
-          (
-            variable = "right",
-            specifier1 << variable
+    allignBlock(
+      makeBlock(
+        [],
+        [],
+        map(
+          makeExportIncrementWriteEffectArray(
+            "variable",
+            ["specifier1", "specifier2"],
+            {
+              counter,
+              expression: makeLiteralExpression("right"),
+            },
           ),
-          specifier2 << variable
-        )
+          makeEffectStatement,
+        ),
+      ),
+      `
+        {
+          variable = "right";
+          specifier1 << variable;
+          specifier2 << variable;
+        }
       `,
     ),
   );
@@ -215,13 +240,16 @@ assertSuccess(
   const counter = createCounter(0);
   assertSuccess(
     allignEffect(
-      makeIncrementSetEffect(
-        true,
-        makeLiteralExpression(123),
-        makeLiteralExpression(456),
-        { counter, expression: makeLiteralExpression(789) },
+      takeSingleton(
+        makeIncrementSetEffectArray(
+          true,
+          makeLiteralExpression(123),
+          makeLiteralExpression(456),
+          { counter, expression: makeLiteralExpression(789) },
+        ),
+        makeEffectStatement,
       ),
-      `void intrinsic.aran.setStrict(123, 456, 789)`,
+      `void intrinsic.aran.setStrict(123, 456, 789);`,
     ),
   );
   assertEqual(gaugeCounter(counter), 1);
@@ -233,7 +261,7 @@ assertSuccess(
 
 assertSuccess(
   allignExpression(
-    makeEmptyFrameReadExpression(
+    makeEmptyFrameLookupNode(
       (strict, scope, escaped, variable, options) => {
         assertEqual(strict, true);
         assertEqual(scope, "scope");

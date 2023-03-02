@@ -9,6 +9,7 @@ import {
   shift,
   unshift,
   isDuplicate,
+  reduceReverse,
 } from "./array.mjs";
 
 const { undefined } = globalThis;
@@ -17,6 +18,11 @@ assertThrow(() => push(empty, 1));
 assertDeepEqual(empty, []);
 
 assertEqual(getLast([1, 2, 3]), 3);
+
+assertDeepEqual(
+  reduceReverse([1, 2, 3], (x, y) => [x, y], 0),
+  [1, [2, [3, 0]]],
+);
 
 {
   const array = [1, 2, 3];

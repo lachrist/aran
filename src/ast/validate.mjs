@@ -380,7 +380,7 @@ const digestNodeSpecific = partialx__(dispatchArrayNode1, {
     );
     assert(
       !some(digest, isBreakStatement),
-      "found unbound BreakStatement in ClosureExpression >> %j",
+      "found unbound BreakStatement in ClosureExpression",
     );
     return digest;
   },

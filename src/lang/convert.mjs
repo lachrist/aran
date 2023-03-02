@@ -4,7 +4,11 @@ import { slice, map, concat } from "array-lite";
 
 import { partialx_, partialx__, expect2, assert } from "../util/index.mjs";
 
-import { dispatchObjectNode0, dispatchObjectNode1 } from "../node.mjs";
+import {
+  dispatchObjectNode0,
+  dispatchObjectNode1,
+  DEFAULT_CLAUSE,
+} from "../node.mjs";
 
 import {
   makeScriptProgram,
@@ -26,7 +30,6 @@ import {
   makeWriteEffect,
   makeWriteExternalEffect,
   makeExportEffect,
-  makeSequenceEffect,
   makeConditionalEffect,
   makeExpressionEffect,
   makeParameterExpression,
@@ -324,20 +327,21 @@ export const convertSpecifier = (node) => {
   }
 };
 
-export const convertEffect = partialx_(dispatchObjectNode0, {
-  SequenceExpression: (node) => {
-    expectSyntax(node.expressions.length === 2, node);
-    return makeSequenceEffect(
-      convertEffect(node.expressions[0]),
-      convertEffect(node.expressions[1]),
-      locate(node.loc),
-    );
+export const convertEffectArray = partialx_(dispatchObjectNode0, {
+  SequenceExpression: (node) => map(node.expressions, convertEffect),
+  Identifier: (node) => {
+    expectSyntax(node.name === "undefined", node);
+    return [];
   },
+  [DEFAULT_CLAUSE]: (node) => [convertEffect(node)],
+});
+
+export const convertEffect = partialx_(dispatchObjectNode0, {
   ConditionalExpression: (node) => {
     return makeConditionalEffect(
       convertExpression(node.test),
-      convertEffect(node.consequent),
-      convertEffect(node.alternate),
+      convertEffectArray(node.consequent),
+      convertEffectArray(node.alternate),
       locate(node.loc),
     );
   },

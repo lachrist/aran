@@ -30,7 +30,6 @@ import {
   makeWhileStatement,
   makeTryStatement,
   makeExportEffect,
-  makeSequenceEffect,
   makeConditionalEffect,
   makeExpressionEffect,
   makeParameterExpression,
@@ -582,13 +581,8 @@ const visitEffect = partialx__(dispatchArrayNode1, {
         serial,
       ),
     ),
-  SequenceEffect: ({ 1: effect1, 2: effect2, 3: _serial }, context) =>
-    makeSequenceEffect(
-      visitEffect(effect1, context),
-      visitEffect(effect2, context),
-    ),
   ConditionalEffect: (
-    { 1: expression, 2: effect1, 3: effect2, 4: serial },
+    { 1: expression, 2: effects1, 3: effects2, 4: serial },
     context,
   ) =>
     makeConditionalEffect(
@@ -600,8 +594,8 @@ const visitEffect = partialx__(dispatchArrayNode1, {
         visitExpression(expression, context),
         serial,
       ),
-      visitEffect(effect1, context),
-      visitEffect(effect2, context),
+      map(effects1, partial_x(visitEffect, context)),
+      map(effects2, partial_x(visitEffect, context)),
     ),
   ExpressionEffect: ({ 1: expression, 2: serial }, context) =>
     makeExpressionEffect(

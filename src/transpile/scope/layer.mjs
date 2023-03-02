@@ -1,3 +1,5 @@
+import { concat } from "array-lite";
+
 import {
   incrementCounter,
   createCounter,
@@ -6,7 +8,7 @@ import {
   partial_x_x,
 } from "../../util/index.mjs";
 
-import { makeSequenceEffect, makeExpressionEffect } from "../../ast/index.mjs";
+import { makeExpressionEffect } from "../../ast/index.mjs";
 
 import { makeMetaVariable } from "./variable.mjs";
 
@@ -17,17 +19,22 @@ import {
   makeScopeReadExpression,
   makeScopeTypeofExpression,
   makeScopeDiscardExpression,
-  makeScopeWriteEffect,
+  makeScopeWriteEffectArray,
 } from "./scope.mjs";
 
-const makeOptimisticWriteEffect = (strict, scope, variable, expression) => {
+const makeOptimisticWriteEffectArray = (
+  strict,
+  scope,
+  variable,
+  expression,
+) => {
   const counter = createCounter(0);
-  const effect = makeScopeWriteEffect(strict, scope, variable, {
+  const effects = makeScopeWriteEffectArray(strict, scope, variable, {
     expression,
     counter,
   });
   assert(gaugeCounter(counter) === 1, "expected single write access");
-  return effect;
+  return effects;
 };
 
 //////////
@@ -66,10 +73,13 @@ export const declareScopeMetaMacro = (context, info, expression) =>
 export const makeScopeMetaReadExpression = ({ strict, scope }, meta) =>
   makeScopeReadExpression(strict, scope, meta);
 
-export const makeScopeMetaWriteEffect = ({ strict, scope }, meta, expression) =>
-  makeOptimisticWriteEffect(strict, scope, meta, expression);
+export const makeScopeMetaWriteEffectArray = (
+  { strict, scope },
+  meta,
+  expression,
+) => makeOptimisticWriteEffectArray(strict, scope, meta, expression);
 
-export const makeScopeMetaInitializeEffect = makeScopeMetaWriteEffect;
+export const makeScopeMetaInitializeEffectArray = makeScopeMetaWriteEffectArray;
 
 //////////
 // spec //
@@ -87,11 +97,11 @@ export const declareScopeSpec = ({ strict, scope }, spec) => {
   declareScope(strict, scope, "define", spec, null);
 };
 
-export const makeScopeSpecInitializeEffect = (
+export const makeScopeSpecInitializeEffectArray = (
   { strict, scope },
   spec,
   expression,
-) => makeOptimisticWriteEffect(strict, scope, spec, expression);
+) => makeOptimisticWriteEffectArray(strict, scope, spec, expression);
 
 export const makeScopeSpecReadExpression = ({ strict, scope }, spec) =>
   makeScopeReadExpression(strict, scope, spec);
@@ -129,28 +139,32 @@ export const makeScopeBaseTypeofExpression = ({ strict, scope }, base) =>
 export const makeScopeBaseDiscardExpression = ({ strict, scope }, base) =>
   makeScopeDiscardExpression(strict, scope, base);
 
-export const makeScopeBaseMacroWriteEffect = ({ strict, scope }, base, macro) =>
-  makeScopeWriteEffect(strict, scope, base, {
+export const makeScopeBaseMacroWriteEffectArray = (
+  { strict, scope },
+  base,
+  macro,
+) =>
+  makeScopeWriteEffectArray(strict, scope, base, {
     expression: macro,
     counter: createCounter(0),
   });
 
-export const makeScopeBaseWriteEffect = (context, base, expression) => {
+export const makeScopeBaseWriteEffectArray = (context, base, expression) => {
   const { strict, scope } = context;
   const counter = createCounter(0);
-  const effect = makeScopeWriteEffect(strict, scope, base, {
+  const effects = makeScopeWriteEffectArray(strict, scope, base, {
     expression,
     counter,
   });
   if (gaugeCounter(counter) === 0) {
-    return makeSequenceEffect(makeExpressionEffect(expression), effect);
+    return concat([makeExpressionEffect(expression)], effects);
   } else if (gaugeCounter(counter) === 1) {
-    return effect;
+    return effects;
   } else {
     const meta = declareScopeMeta(context, "right");
-    return makeSequenceEffect(
-      makeScopeMetaWriteEffect(context, meta, expression),
-      makeScopeBaseMacroWriteEffect(
+    return concat(
+      makeScopeMetaWriteEffectArray(context, meta, expression),
+      makeScopeBaseMacroWriteEffectArray(
         context,
         base,
         makeScopeMetaReadExpression(context, meta),

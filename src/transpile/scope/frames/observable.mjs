@@ -7,9 +7,7 @@ import {
   declareEmptyFrame,
   makeEmptyFrameInitializeStatementArray,
   lookupEmptyFrameAll,
-  makeEmptyFrameReadExpression,
-  makeEmptyFrameTypeofExpression,
-  makeEmptyFrameDiscardExpression,
+  makeEmptyFrameLookupNode,
 } from "./helper.mjs";
 
 export const createFrame = createEmptyFrame;
@@ -25,13 +23,13 @@ export const makeFrameInitializeStatementArray =
 
 export const lookupFrameAll = lookupEmptyFrameAll;
 
-export const makeFrameReadExpression = makeEmptyFrameReadExpression;
+export const makeFrameReadExpression = makeEmptyFrameLookupNode;
 
-export const makeFrameTypeofExpression = makeEmptyFrameTypeofExpression;
+export const makeFrameTypeofExpression = makeEmptyFrameLookupNode;
 
-export const makeFrameDiscardExpression = makeEmptyFrameDiscardExpression;
+export const makeFrameDiscardExpression = makeEmptyFrameLookupNode;
 
-export const makeFrameWriteEffect = (
+export const makeFrameWriteEffectArray = (
   makeScopeWriteEffect,
   strict,
   _frame,

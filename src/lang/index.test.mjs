@@ -133,8 +133,9 @@ assertThrow(() => {
 testEffect("[variable] = 123;");
 testEffect("'specifier' << 123;");
 testEffect("specifier << 123;", "'specifier' << 123;");
-testEffect("(void 123, void 456);");
-testEffect("123 ? void  456 : void 789;");
+testEffect("123 ? undefined : undefined;");
+testEffect("123 ? void 456 : void 789;");
+testEffect("1 ? (void 2, void 3, void 4) : (void 4, void 5, void 6);");
 testEffect("void 123;");
 
 ///////////////

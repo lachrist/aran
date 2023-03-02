@@ -49,8 +49,7 @@ const syntax = {
     WriteEffect: ["Variable", "Expression"],
     WriteExternalEffect: ["Variable", "Expression"],
     ExportEffect: ["Specifier", "Expression"],
-    SequenceEffect: ["Effect", "Effect"],
-    ConditionalEffect: ["Expression", "Effect", "Effect"],
+    ConditionalEffect: ["Expression", ["Effect", "*"], ["Effect", "*"]],
     ExpressionEffect: ["Expression"],
   },
   Expression: {

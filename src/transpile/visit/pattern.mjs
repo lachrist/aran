@@ -1,13 +1,16 @@
 import { some, map, flatMap, concat } from "array-lite";
 import {
+  reduceReverse,
   push,
   assert,
   SyntaxAranError,
   partial_xx,
+  partialx_,
   partialx___,
 } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
+  makeConditionalEffect,
   makeApplyExpression,
   makeEffectStatement,
   makeExpressionEffect,
@@ -27,10 +30,10 @@ import {
   makeArrayFromExpression,
 } from "../../intrinsic.mjs";
 import {
-  makeScopeBaseWriteEffect,
+  makeScopeBaseWriteEffectArray,
   makeScopeBaseInitializeStatementArray,
   makeScopeMetaReadExpression,
-  makeScopeMetaWriteEffect,
+  makeScopeMetaWriteEffectArray,
   declareScopeMeta,
 } from "../scope/index.mjs";
 import { visit, visitMany } from "./context.mjs";
@@ -74,32 +77,37 @@ const visitPatternElement = partialx___(visitMany, "PatternElement");
 const liftEffect = (kind, effect) =>
   kind === null ? effect : makeEffectStatement(effect);
 
-const makeCheckObjectEffect = (context, variable) =>
-  makeExpressionEffect(
+const makeCheckObjectEffectArray = (context, variable) => [
+  makeConditionalEffect(
     makeConditionalExpression(
-      makeConditionalExpression(
-        makeBinaryExpression(
-          "===",
-          makeScopeMetaReadExpression(context, variable),
-          makeLiteralExpression(null),
-        ),
-        makeLiteralExpression(true),
-        makeBinaryExpression(
-          "===",
-          makeScopeMetaReadExpression(context, variable),
-          makeLiteralExpression({ undefined: null }),
+      makeBinaryExpression(
+        "===",
+        makeScopeMetaReadExpression(context, variable),
+        makeLiteralExpression(null),
+      ),
+      makeLiteralExpression(true),
+      makeBinaryExpression(
+        "===",
+        makeScopeMetaReadExpression(context, variable),
+        makeLiteralExpression({ undefined: null }),
+      ),
+    ),
+    [
+      makeExpressionEffect(
+        makeThrowTypeErrorExpression(
+          "Cannot destructure 'undefined' or 'null'",
         ),
       ),
-      makeThrowTypeErrorExpression("Cannot destructure 'undefined' or 'null'"),
-      makeLiteralExpression({ undefined: null }),
-    ),
-  );
+    ],
+    [],
+  ),
+];
 
 export default {
   Pattern: {
     Identifier: (node, context, site) => {
       if (site.kind === null) {
-        return [makeScopeBaseWriteEffect(context, node.name, site.right)];
+        return makeScopeBaseWriteEffectArray(context, node.name, site.right);
       } else {
         return makeScopeBaseInitializeStatementArray(
           context,
@@ -134,13 +142,8 @@ export default {
         node.loc.start,
       );
       const variable = declareScopeMeta(context, "pattern_member_right");
-      return [
-        liftEffect(
-          site.kind,
-          makeScopeMetaWriteEffect(context, variable, site.right),
-        ),
-        liftEffect(
-          site.kind,
+      return map(
+        concat(makeScopeMetaWriteEffectArray(context, variable, site.right), [
           makeExpressionEffect(
             makeSetExpression(
               context.strict,
@@ -149,18 +152,17 @@ export default {
               makeScopeMetaReadExpression(context, variable),
             ),
           ),
-        ),
-      ];
+        ]),
+        partialx_(liftEffect, site.kind),
+      );
     },
     AssignmentPattern: (node, context, site) => {
       const variable = declareScopeMeta(context, "pattern_assignment_right");
       return concat(
-        [
-          liftEffect(
-            site.kind,
-            makeScopeMetaWriteEffect(context, variable, site.right),
-          ),
-        ],
+        map(
+          makeScopeMetaWriteEffectArray(context, variable, site.right),
+          partialx_(liftEffect, site.kind),
+        ),
         visitPattern(node.left, context, {
           kind: site.kind,
           right: makeConditionalExpression(
@@ -221,14 +223,10 @@ export default {
         "pattern_array_iterator",
       );
       return concat(
-        [
-          liftEffect(
-            site.kind,
-            makeScopeMetaWriteEffect(context, right_variable, site.right),
-          ),
-          liftEffect(
-            site.kind,
-            makeScopeMetaWriteEffect(
+        map(
+          concat(
+            makeScopeMetaWriteEffectArray(context, right_variable, site.right),
+            makeScopeMetaWriteEffectArray(
               context,
               iterator_variable,
               makeApplyExpression(
@@ -241,7 +239,8 @@ export default {
               ),
             ),
           ),
-        ],
+          partialx_(liftEffect, site.kind),
+        ),
         flatMap(
           node.elements,
           partial_xx(visitPatternElement, context, {
@@ -296,16 +295,17 @@ export default {
         );
         const key_variable_array = [];
         return concat(
-          [
-            liftEffect(
-              site.kind,
-              makeScopeMetaWriteEffect(context, right_variable, site.right),
+          map(
+            concat(
+              makeScopeMetaWriteEffectArray(
+                context,
+                right_variable,
+                site.right,
+              ),
+              makeCheckObjectEffectArray(context, right_variable),
             ),
-            liftEffect(
-              site.kind,
-              makeCheckObjectEffect(context, right_variable),
-            ),
-          ],
+            partialx_(liftEffect, site.kind),
+          ),
           flatMap(
             node.properties,
             partial_xx(visitPatternProperty, context, {
@@ -321,16 +321,17 @@ export default {
           "pattern_object_right",
         );
         return concat(
-          [
-            liftEffect(
-              site.kind,
-              makeScopeMetaWriteEffect(context, right_variable, site.right),
+          map(
+            concat(
+              makeScopeMetaWriteEffectArray(
+                context,
+                right_variable,
+                site.right,
+              ),
+              makeCheckObjectEffectArray(context, right_variable),
             ),
-            liftEffect(
-              site.kind,
-              makeCheckObjectEffect(context, right_variable),
-            ),
-          ],
+            partialx_(liftEffect, site.kind),
+          ),
           flatMap(
             node.properties,
             partial_xx(visitPatternProperty, context, {
@@ -381,12 +382,13 @@ export default {
           kind: site.kind,
           right: makeGetExpression(
             makeScopeMetaReadExpression(context, site.right_variable),
-            makeSequenceExpression(
-              makeScopeMetaWriteEffect(
+            reduceReverse(
+              makeScopeMetaWriteEffectArray(
                 context,
                 key_variable,
                 visitProperty(node.key, context, node),
               ),
+              makeSequenceExpression,
               makeScopeMetaReadExpression(context, key_variable),
             ),
           ),
@@ -401,10 +403,9 @@ export default {
       );
       const rest_variable = declareScopeMeta(context, "pattern_object_rest");
       return concat(
-        [
-          liftEffect(
-            site.kind,
-            makeScopeMetaWriteEffect(
+        map(
+          concat(
+            makeScopeMetaWriteEffectArray(
               context,
               rest_variable,
               makeObjectAssignExpression(
@@ -415,18 +416,21 @@ export default {
                 makeScopeMetaReadExpression(context, site.right_variable),
               ),
             ),
-          ),
-        ],
-        map(site.key_variable_array, (variable_key) =>
-          liftEffect(
-            site.kind,
-            makeExpressionEffect(
-              makeDeleteStrictExpression(
-                makeScopeMetaReadExpression(context, rest_variable),
-                makeScopeMetaReadExpression(context, variable_key),
+            map(
+              map(
+                map(
+                  site.key_variable_array,
+                  partialx_(makeScopeMetaReadExpression, context),
+                ),
+                partialx_(
+                  makeDeleteStrictExpression,
+                  makeScopeMetaReadExpression(context, rest_variable),
+                ),
               ),
+              makeExpressionEffect,
             ),
           ),
+          partialx_(liftEffect, site.kind),
         ),
         visitPattern(node.argument, context, {
           kind: site.kind,

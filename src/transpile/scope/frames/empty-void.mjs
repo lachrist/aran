@@ -1,17 +1,10 @@
-import {
-  incrementCounter,
-  dropxxxxx_x,
-  constant_______,
-} from "../../../util/index.mjs";
+import { dropxxxxx_x, constant_______ } from "../../../util/index.mjs";
+
+import { makeLiteralExpression } from "../../../ast/index.mjs";
 
 import {
-  makeLiteralExpression,
-  makeExpressionEffect,
-} from "../../../ast/index.mjs";
-
-import { makeSetExpression } from "../../../intrinsic.mjs";
-
-import {
+  makeIncrementSetEffectArray,
+  makeThrowMissingEffectArray,
   makeThrowMissingExpression,
   harvestEmptyFrameHeader,
   harvestEmptyFramePrelude,
@@ -45,26 +38,23 @@ export const makeFrameDiscardExpression = constant_______(
   makeLiteralExpression(true),
 );
 
-export const makeFrameWriteEffect = (
+export const makeFrameWriteEffectArray = (
   _next,
   strict,
   { dynamic: macro },
   _scope,
   _escaped,
   variable,
-  { counter, expression },
+  options,
 ) => {
   if (strict) {
-    return makeExpressionEffect(makeThrowMissingExpression(variable));
+    return makeThrowMissingEffectArray(variable);
   } else {
-    incrementCounter(counter);
-    return makeExpressionEffect(
-      makeSetExpression(
-        strict,
-        macro,
-        makeLiteralExpression(variable),
-        expression,
-      ),
+    return makeIncrementSetEffectArray(
+      strict,
+      macro,
+      makeLiteralExpression(variable),
+      options,
     );
   }
 };

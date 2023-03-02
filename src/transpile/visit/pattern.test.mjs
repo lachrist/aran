@@ -85,13 +85,13 @@ testPattern(
     {
       let right;
       right = 123;
-      void (
+      (
         (
           intrinsic.aran.binary("===", right, null) ?
           true :
           intrinsic.aran.binary("===", right, undefined)
         ) ?
-        intrinsic.aran.throw(
+        void intrinsic.aran.throw(
           new intrinsic.TypeError(
             "Cannot destructure 'undefined' or 'null'",
           ),
@@ -110,13 +110,13 @@ testPattern(
     {
       let right, key1, key2, rest;
       right = 123;
-      void (
+      (
         (
           intrinsic.aran.binary("===", right, null) ?
           true :
           intrinsic.aran.binary("===", right, undefined)
         ) ?
-        intrinsic.aran.throw(
+        void intrinsic.aran.throw(
           new intrinsic.TypeError(
             "Cannot destructure 'undefined' or 'null'",
           ),

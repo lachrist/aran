@@ -34,16 +34,10 @@ testEffect(`(123, 456);`, `{ void 123; void 456; }`);
 testEffect(`(123, 456);`, `{ void 123; void 456; }`);
 
 // LogicalExpression //
+testEffect(`123 && 456;`, `{ 123 ? void 456 : undefined; }`);
+testEffect(`123 || 456;`, `{ 123 ? undefined : void 456; }`);
 testEffect(
-  `123 && (456, 789, 0);`,
-  `{ 123 ? (void 456, (void 789, void 0)) : void undefined; }`,
-);
-testEffect(
-  `123 || (456, 789, 0);`,
-  `{ 123 ? void undefined : (void 456, (void 789, void 0)); }`,
-);
-testEffect(
-  `123 ?? (456, 789, 0);`,
+  `123 ?? 456;`,
   `
     {
       let left;
@@ -54,15 +48,12 @@ testEffect(
           true :
           intrinsic.aran.binary("===", left, undefined)
         ) ?
-        (void 456, (void 789, void 0)) :
-        void undefined
+        void 456 :
+        undefined
       );
     }
   `,
 );
 
 // ConditionalExpression //
-testEffect(
-  `1 ? (2,3,4) : (5,6,7);`,
-  `{ 1 ? (void 2, (void 3, void 4)) : (void 5, (void 6, void 7)); }`,
-);
+testEffect(`123 ? 456 : 789;`, `{ 123 ? void 456 : void 789; }`);

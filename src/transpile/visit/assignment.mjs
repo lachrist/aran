@@ -1,5 +1,5 @@
-import { reduceRight } from "array-lite";
-import { flipxx, partialx___ } from "../../util/index.mjs";
+import { concat } from "array-lite";
+import { reduceReverse, partialx___ } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
   makeSequenceExpression,
@@ -12,10 +12,10 @@ import {
 } from "../../intrinsic.mjs";
 import {
   declareScopeMeta,
-  makeScopeMetaWriteEffect,
+  makeScopeMetaWriteEffectArray,
   makeScopeMetaReadExpression,
-  makeScopeBaseMacroWriteEffect,
-  makeScopeBaseWriteEffect,
+  makeScopeBaseMacroWriteEffectArray,
+  makeScopeBaseWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
 import { expectSyntaxEqual } from "./report.mjs";
@@ -72,31 +72,27 @@ export default {
   AssignmentEffect: {
     Identifier: (node, context, site) => {
       if (site.operator === "=") {
-        return [
-          makeScopeBaseWriteEffect(
-            context,
-            node.name,
-            visitExpression(site.right, context, node),
-          ),
-        ];
+        return makeScopeBaseWriteEffectArray(
+          context,
+          node.name,
+          visitExpression(site.right, context, node),
+        );
       } else {
-        return [
-          makeScopeBaseWriteEffect(
-            context,
-            node.name,
-            makeBinaryExpression(
-              apply(substring, site.operator, [0, site.operator.length - 1]),
-              makeScopeBaseReadExpression(context, node.name),
-              // Name are not transmitted on update:
-              //
-              // > var f = "foo"
-              // undefined
-              // > f += function () {}
-              // 'foofunction () {}'
-              visitExpression(site.right, context, ANONYMOUS),
-            ),
+        return makeScopeBaseWriteEffectArray(
+          context,
+          node.name,
+          makeBinaryExpression(
+            apply(substring, site.operator, [0, site.operator.length - 1]),
+            makeScopeBaseReadExpression(context, node.name),
+            // Name are not transmitted on update:
+            //
+            // > var f = "foo"
+            // undefined
+            // > f += function () {}
+            // 'foofunction () {}'
+            visitExpression(site.right, context, ANONYMOUS),
           ),
-        ];
+        );
       }
     },
     MemberExpression: (node, context, site) => {
@@ -120,33 +116,38 @@ export default {
           context,
           "AssignmentEffectMemberExpressionProperty",
         );
-        return [
-          makeScopeMetaWriteEffect(
+        return concat(
+          makeScopeMetaWriteEffectArray(
             context,
             object_variable,
             visitExpression(node.object, context, ANONYMOUS),
           ),
-          makeScopeMetaWriteEffect(
+          makeScopeMetaWriteEffectArray(
             context,
             property_variable,
             visitProperty(node.property, context, node),
           ),
-          makeExpressionEffect(
-            makeSetExpression(
-              context.strict,
-              makeScopeMetaReadExpression(context, object_variable),
-              makeScopeMetaReadExpression(context, property_variable),
-              makeBinaryExpression(
-                apply(substring, site.operator, [0, site.operator.length - 1]),
-                makeGetExpression(
-                  makeScopeMetaReadExpression(context, object_variable),
-                  makeScopeMetaReadExpression(context, property_variable),
+          [
+            makeExpressionEffect(
+              makeSetExpression(
+                context.strict,
+                makeScopeMetaReadExpression(context, object_variable),
+                makeScopeMetaReadExpression(context, property_variable),
+                makeBinaryExpression(
+                  apply(substring, site.operator, [
+                    0,
+                    site.operator.length - 1,
+                  ]),
+                  makeGetExpression(
+                    makeScopeMetaReadExpression(context, object_variable),
+                    makeScopeMetaReadExpression(context, property_variable),
+                  ),
+                  visitExpression(site.right, context, ANONYMOUS),
                 ),
-                visitExpression(site.right, context, ANONYMOUS),
               ),
             ),
-          ),
-        ];
+          ],
+        );
       }
     },
     [DEFAULT_CLAUSE]: (node, context, site) => {
@@ -164,50 +165,52 @@ export default {
           context,
           "AssignmentExpressionIdentifierRight",
         );
-        return makeSequenceExpression(
-          makeScopeMetaWriteEffect(
-            context,
-            variable,
-            visitExpression(site.right, context, node),
-          ),
-          makeSequenceExpression(
-            makeScopeBaseMacroWriteEffect(
+        return reduceReverse(
+          concat(
+            makeScopeMetaWriteEffectArray(
+              context,
+              variable,
+              visitExpression(site.right, context, node),
+            ),
+            makeScopeBaseMacroWriteEffectArray(
               context,
               node.name,
               makeScopeMetaReadExpression(context, variable),
             ),
-            makeScopeMetaReadExpression(context, variable),
           ),
+          makeSequenceExpression,
+          makeScopeMetaReadExpression(context, variable),
         );
       } else {
         const variable = declareScopeMeta(
           context,
           "AssignmentExpressionIdentifierResult",
         );
-        return makeSequenceExpression(
-          makeScopeMetaWriteEffect(
-            context,
-            variable,
-            makeBinaryExpression(
-              apply(substring, site.operator, [0, site.operator.length - 1]),
-              makeScopeBaseReadExpression(context, node.name),
-              // Name are not transmitted on update:
-              //
-              // > var f = "foo"
-              // undefined
-              // > f += function () {}
-              // 'foofunction () {}'
-              visitExpression(site.right, context, ANONYMOUS),
+        return reduceReverse(
+          concat(
+            makeScopeMetaWriteEffectArray(
+              context,
+              variable,
+              makeBinaryExpression(
+                apply(substring, site.operator, [0, site.operator.length - 1]),
+                makeScopeBaseReadExpression(context, node.name),
+                // Name are not transmitted on update:
+                //
+                // > var f = "foo"
+                // undefined
+                // > f += function () {}
+                // 'foofunction () {}'
+                visitExpression(site.right, context, ANONYMOUS),
+              ),
             ),
-          ),
-          makeSequenceExpression(
-            makeScopeBaseMacroWriteEffect(
+            makeScopeBaseMacroWriteEffectArray(
               context,
               node.name,
               makeScopeMetaReadExpression(context, variable),
             ),
-            makeScopeMetaReadExpression(context, variable),
           ),
+          makeSequenceExpression,
+          makeScopeMetaReadExpression(context, variable),
         );
       }
     },
@@ -228,30 +231,31 @@ export default {
           context,
           "AssignmentExpressionMemberExpressionProperty",
         );
-        return makeSequenceExpression(
-          makeScopeMetaWriteEffect(
-            context,
-            object_variable,
-            visitExpression(node.object, context, ANONYMOUS),
-          ),
-          makeSequenceExpression(
-            makeScopeMetaWriteEffect(
+        return reduceReverse(
+          concat(
+            makeScopeMetaWriteEffectArray(
+              context,
+              object_variable,
+              visitExpression(node.object, context, ANONYMOUS),
+            ),
+            makeScopeMetaWriteEffectArray(
               context,
               property_variable,
               visitProperty(node.property, context, node),
             ),
-            makeSetExpression(
-              context.strict,
-              makeScopeMetaReadExpression(context, object_variable),
-              makeScopeMetaReadExpression(context, property_variable),
-              makeBinaryExpression(
-                apply(substring, site.operator, [0, site.operator.length - 1]),
-                makeGetExpression(
-                  makeScopeMetaReadExpression(context, object_variable),
-                  makeScopeMetaReadExpression(context, property_variable),
-                ),
-                visitExpression(site.right, context, ANONYMOUS),
+          ),
+          makeSequenceExpression,
+          makeSetExpression(
+            context.strict,
+            makeScopeMetaReadExpression(context, object_variable),
+            makeScopeMetaReadExpression(context, property_variable),
+            makeBinaryExpression(
+              apply(substring, site.operator, [0, site.operator.length - 1]),
+              makeGetExpression(
+                makeScopeMetaReadExpression(context, object_variable),
+                makeScopeMetaReadExpression(context, property_variable),
               ),
+              visitExpression(site.right, context, ANONYMOUS),
             ),
           ),
         );
@@ -260,20 +264,20 @@ export default {
     [DEFAULT_CLAUSE]: (node, context, site) => {
       expectSyntaxEqual(site, "operator", "=");
       const variable = declareScopeMeta(context, "assignment_pattern_right");
-      return makeSequenceExpression(
-        makeScopeMetaWriteEffect(
-          context,
-          variable,
-          visitExpression(site.right, context, ANONYMOUS),
-        ),
-        reduceRight(
+      return reduceReverse(
+        concat(
+          makeScopeMetaWriteEffectArray(
+            context,
+            variable,
+            visitExpression(site.right, context, ANONYMOUS),
+          ),
           visitPattern(node, context, {
             kind: null,
             right: makeScopeMetaReadExpression(context, variable),
           }),
-          flipxx(makeSequenceExpression),
-          makeScopeMetaReadExpression(context, variable),
         ),
+        makeSequenceExpression,
+        makeScopeMetaReadExpression(context, variable),
       );
     },
   },

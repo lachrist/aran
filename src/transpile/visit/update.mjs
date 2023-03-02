@@ -1,4 +1,5 @@
-import { partialx___ } from "../../util/index.mjs";
+import { concat } from "array-lite";
+import { reduceReverse, partialx___ } from "../../util/index.mjs";
 import {
   makeSequenceExpression,
   makeExpressionEffect,
@@ -11,8 +12,8 @@ import {
 } from "../../intrinsic.mjs";
 import {
   declareScopeMeta,
-  makeScopeMetaWriteEffect,
-  makeScopeBaseWriteEffect,
+  makeScopeMetaWriteEffectArray,
+  makeScopeBaseWriteEffectArray,
   makeScopeBaseReadExpression,
   makeScopeMetaReadExpression,
 } from "../scope/index.mjs";
@@ -35,36 +36,38 @@ export default {
         context,
         "UpdateEffectMemberExpressionProperty",
       );
-      return [
-        makeScopeMetaWriteEffect(
+      return concat(
+        makeScopeMetaWriteEffectArray(
           context,
           object_variable,
           visitExpression(node.object, context, ANONYMOUS),
         ),
-        makeScopeMetaWriteEffect(
+        makeScopeMetaWriteEffectArray(
           context,
           property_variable,
           visitProperty(node.property, context, node),
         ),
-        makeExpressionEffect(
-          makeSetExpression(
-            context.strict,
-            makeScopeMetaReadExpression(context, object_variable),
-            makeScopeMetaReadExpression(context, property_variable),
-            makeBinaryExpression(
-              site.operator[0],
-              makeGetExpression(
-                makeScopeMetaReadExpression(context, object_variable),
-                makeScopeMetaReadExpression(context, property_variable),
+        [
+          makeExpressionEffect(
+            makeSetExpression(
+              context.strict,
+              makeScopeMetaReadExpression(context, object_variable),
+              makeScopeMetaReadExpression(context, property_variable),
+              makeBinaryExpression(
+                site.operator[0],
+                makeGetExpression(
+                  makeScopeMetaReadExpression(context, object_variable),
+                  makeScopeMetaReadExpression(context, property_variable),
+                ),
+                makeLiteralExpression(1),
               ),
-              makeLiteralExpression(1),
             ),
           ),
-        ),
-      ];
+        ],
+      );
     },
-    Identifier: (node, context, site) => [
-      makeScopeBaseWriteEffect(
+    Identifier: (node, context, site) =>
+      makeScopeBaseWriteEffectArray(
         context,
         node.name,
         makeBinaryExpression(
@@ -73,7 +76,6 @@ export default {
           makeLiteralExpression(1),
         ),
       ),
-    ],
   },
   UpdateExpression: {
     Identifier: (node, context, site) => {
@@ -82,38 +84,39 @@ export default {
           context,
           "UpdateExpressionIdentifier",
         );
-        return makeSequenceExpression(
-          makeScopeMetaWriteEffect(
-            context,
-            variable,
-            makeBinaryExpression(
-              site.operator[0],
-              makeScopeBaseReadExpression(context, node.name),
-              makeLiteralExpression(1),
+        return reduceReverse(
+          concat(
+            makeScopeMetaWriteEffectArray(
+              context,
+              variable,
+              makeBinaryExpression(
+                site.operator[0],
+                makeScopeBaseReadExpression(context, node.name),
+                makeLiteralExpression(1),
+              ),
             ),
-          ),
-          makeSequenceExpression(
-            makeScopeBaseWriteEffect(
+            makeScopeBaseWriteEffectArray(
               context,
               node.name,
               makeScopeMetaReadExpression(context, variable),
             ),
-            makeScopeMetaReadExpression(context, variable),
           ),
+          makeSequenceExpression,
+          makeScopeMetaReadExpression(context, variable),
         );
       } else {
         const variable = declareScopeMeta(
           context,
           "UpdateExpressionIdentifier",
         );
-        return makeSequenceExpression(
-          makeScopeMetaWriteEffect(
-            context,
-            variable,
-            makeScopeBaseReadExpression(context, node.name),
-          ),
-          makeSequenceExpression(
-            makeScopeBaseWriteEffect(
+        return reduceReverse(
+          concat(
+            makeScopeMetaWriteEffectArray(
+              context,
+              variable,
+              makeScopeBaseReadExpression(context, node.name),
+            ),
+            makeScopeBaseWriteEffectArray(
               context,
               node.name,
               makeBinaryExpression(
@@ -122,8 +125,9 @@ export default {
                 makeLiteralExpression(1),
               ),
             ),
-            makeScopeMetaReadExpression(context, variable),
           ),
+          makeSequenceExpression,
+          makeScopeMetaReadExpression(context, variable),
         );
       }
     },
@@ -138,30 +142,31 @@ export default {
           context,
           "UpdateExpressionMemberExpressionProperty",
         );
-        return makeSequenceExpression(
-          makeScopeMetaWriteEffect(
-            context,
-            object_variable,
-            visitExpression(node.object, context, ANONYMOUS),
-          ),
-          makeSequenceExpression(
-            makeScopeMetaWriteEffect(
+        return reduceReverse(
+          concat(
+            makeScopeMetaWriteEffectArray(
+              context,
+              object_variable,
+              visitExpression(node.object, context, ANONYMOUS),
+            ),
+            makeScopeMetaWriteEffectArray(
               context,
               property_variable,
               visitProperty(node.property, context, ANONYMOUS),
             ),
-            makeSetExpression(
-              context.strict,
-              makeScopeMetaReadExpression(context, object_variable),
-              makeScopeMetaReadExpression(context, property_variable),
-              makeBinaryExpression(
-                site.operator[0],
-                makeGetExpression(
-                  makeScopeMetaReadExpression(context, object_variable),
-                  makeScopeMetaReadExpression(context, property_variable),
-                ),
-                makeLiteralExpression(1),
+          ),
+          makeSequenceExpression,
+          makeSetExpression(
+            context.strict,
+            makeScopeMetaReadExpression(context, object_variable),
+            makeScopeMetaReadExpression(context, property_variable),
+            makeBinaryExpression(
+              site.operator[0],
+              makeGetExpression(
+                makeScopeMetaReadExpression(context, object_variable),
+                makeScopeMetaReadExpression(context, property_variable),
               ),
+              makeLiteralExpression(1),
             ),
           ),
         );
@@ -178,44 +183,43 @@ export default {
           context,
           "UpdateExpressionMemberExpressionValue",
         );
-        return makeSequenceExpression(
-          makeScopeMetaWriteEffect(
-            context,
-            object_variable,
-            visitExpression(node.object, context, ANONYMOUS),
-          ),
-          makeSequenceExpression(
-            makeScopeMetaWriteEffect(
+        return reduceReverse(
+          concat(
+            makeScopeMetaWriteEffectArray(
+              context,
+              object_variable,
+              visitExpression(node.object, context, ANONYMOUS),
+            ),
+            makeScopeMetaWriteEffectArray(
               context,
               property_variable,
               visitProperty(node.property, context, ANONYMOUS),
             ),
-            makeSequenceExpression(
-              makeScopeMetaWriteEffect(
-                context,
-                value_variable,
-                makeGetExpression(
-                  makeScopeMetaReadExpression(context, object_variable),
-                  makeScopeMetaReadExpression(context, property_variable),
-                ),
-              ),
-              makeSequenceExpression(
-                makeExpressionEffect(
-                  makeSetExpression(
-                    context.strict,
-                    makeScopeMetaReadExpression(context, object_variable),
-                    makeScopeMetaReadExpression(context, property_variable),
-                    makeBinaryExpression(
-                      site.operator[0],
-                      makeScopeMetaReadExpression(context, value_variable),
-                      makeLiteralExpression(1),
-                    ),
-                  ),
-                ),
-                makeScopeMetaReadExpression(context, value_variable),
+            makeScopeMetaWriteEffectArray(
+              context,
+              value_variable,
+              makeGetExpression(
+                makeScopeMetaReadExpression(context, object_variable),
+                makeScopeMetaReadExpression(context, property_variable),
               ),
             ),
+            [
+              makeExpressionEffect(
+                makeSetExpression(
+                  context.strict,
+                  makeScopeMetaReadExpression(context, object_variable),
+                  makeScopeMetaReadExpression(context, property_variable),
+                  makeBinaryExpression(
+                    site.operator[0],
+                    makeScopeMetaReadExpression(context, value_variable),
+                    makeLiteralExpression(1),
+                  ),
+                ),
+              ),
+            ],
           ),
+          makeSequenceExpression,
+          makeScopeMetaReadExpression(context, value_variable),
         );
       }
     },

@@ -172,4 +172,6 @@ export const makeFrameDiscardExpression = generateLookup(
   "makeFrameDiscardExpression",
 );
 
-export const makeFrameWriteEffect = generateLookup("makeFrameWriteEffect");
+export const makeFrameWriteEffectArray = generateLookup(
+  "makeFrameWriteEffectArray",
+);

@@ -17,7 +17,7 @@ import { mangleOriginalVariable } from "../variable.mjs";
 
 import {
   makeTypeofReadExpression,
-  makeIncrementWriteEffect,
+  makeIncrementWriteEffectArray,
   harvestEmptyFramePrelude,
   lookupEmptyFrameAll,
 } from "./helper.mjs";
@@ -93,6 +93,6 @@ export const makeFrameDiscardExpression = compileMakeLookupNode(
   constant___(makeLiteralExpression(false)),
 );
 
-export const makeFrameWriteEffect = compileMakeLookupNode(
-  makeIncrementWriteEffect,
+export const makeFrameWriteEffectArray = compileMakeLookupNode(
+  makeIncrementWriteEffectArray,
 );

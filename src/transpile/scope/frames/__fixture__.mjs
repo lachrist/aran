@@ -1,4 +1,4 @@
-import { concat, flatMap } from "array-lite";
+import { map, concat, flatMap } from "array-lite";
 
 import { createCounter, assert, hasOwn } from "../../../util/index.mjs";
 
@@ -82,7 +82,7 @@ const arities = {
   makeFrameReadExpression: 7,
   makeFrameTypeofExpression: 7,
   makeFrameDiscardExpression: 7,
-  makeFrameWriteEffect: 7,
+  makeFrameWriteEffectArray: 7,
 };
 
 const names = ownKeys(arities);
@@ -145,24 +145,23 @@ const generateTest =
         );
         return [];
       } else if (scenario.type === "write") {
-        const { makeFrameWriteEffect } = Frame;
-        body = `${body}\n(${scenario.code});`;
-        return [
-          makeEffectStatement(
-            makeFrameWriteEffect(
-              scenario.next,
-              scenario.strict,
-              frame,
-              scenario.scope,
-              scenario.escaped,
-              scenario.variable,
-              {
-                expression: scenario.right,
-                counter: scenario.counter,
-              },
-            ),
+        const { makeFrameWriteEffectArray } = Frame;
+        body = `${body}\n${scenario.code}`;
+        return map(
+          makeFrameWriteEffectArray(
+            scenario.next,
+            scenario.strict,
+            frame,
+            scenario.scope,
+            scenario.escaped,
+            scenario.variable,
+            {
+              expression: scenario.right,
+              counter: scenario.counter,
+            },
           ),
-        ];
+          makeEffectStatement,
+        );
       } else if (
         scenario.type === "discard" ||
         scenario.type === "typeof" ||

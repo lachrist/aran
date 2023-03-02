@@ -20,8 +20,9 @@ assertSuccess(
       {
         type: "write",
         strict: true,
-        next: (_strict, _frame, _scope, _escaped, _variable, _options) =>
+        next: (_strict, _frame, _scope, _escaped, _variable, _options) => [
           makeExpressionEffect(makeLiteralExpression("next")),
+        ],
         right: makeLiteralExpression("right"),
         variable: "variable",
         code: `(

@@ -113,7 +113,7 @@ export const makeFrameDiscardExpression = (
   );
 };
 
-export const makeFrameWriteEffect = (
+export const makeFrameWriteEffectArray = (
   _next,
   strict,
   _frame,
@@ -130,5 +130,5 @@ export const makeFrameWriteEffect = (
     variable,
   );
   incrementCounter(counter);
-  return makeWriteExternalEffect(variable, expression);
+  return [makeWriteExternalEffect(variable, expression)];
 };

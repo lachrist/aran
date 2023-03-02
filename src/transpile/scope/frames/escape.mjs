@@ -36,4 +36,4 @@ export const makeFrameTypeofExpression = makeLookupNode;
 
 export const makeFrameDiscardExpression = makeLookupNode;
 
-export const makeFrameWriteEffect = makeLookupNode;
+export const makeFrameWriteEffectArray = makeLookupNode;

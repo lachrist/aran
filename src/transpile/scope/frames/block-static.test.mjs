@@ -67,10 +67,10 @@ assertSuccess(
         type: "write",
         variable: "variable",
         right: makeLiteralExpression("right"),
-        code: `(
-          VARIABLE = 'right',
-          specifier << VARIABLE
-        )`,
+        code: `
+          VARIABLE = 'right';
+          specifier << VARIABLE;
+        `,
       },
     ],
   }),

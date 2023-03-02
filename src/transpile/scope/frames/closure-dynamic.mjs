@@ -13,7 +13,6 @@ import {
   makeEffectStatement,
   makeExpressionEffect,
   makeConditionalExpression,
-  makeConditionalEffect,
   makeLiteralExpression,
 } from "../../../ast/index.mjs";
 
@@ -28,7 +27,8 @@ import {
 
 import {
   makeTypeofGetExpression,
-  makeIncrementSetEffect,
+  makeConditionalEffectArray,
+  makeIncrementSetEffectArray,
   harvestEmptyFrameHeader,
   lookupEmptyFrameAll,
 } from "./helper.mjs";
@@ -165,7 +165,7 @@ export const makeFrameDiscardExpression = compileMakeLookupNode(
   drop__x(makeDeleteSloppyExpression),
 );
 
-export const makeFrameWriteEffect = compileMakeLookupNode(
-  makeConditionalEffect,
-  partialx___(makeIncrementSetEffect, true),
+export const makeFrameWriteEffectArray = compileMakeLookupNode(
+  makeConditionalEffectArray,
+  partialx___(makeIncrementSetEffectArray, true),
 );

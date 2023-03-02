@@ -1,4 +1,4 @@
-import { partialx___ } from "../../util/index.mjs";
+import { reduceReverse, partialx___ } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
   makeApplyExpression,
@@ -9,7 +9,7 @@ import {
 import { makeGetExpression, makeBinaryExpression } from "../../intrinsic.mjs";
 import {
   makeScopeMetaReadExpression,
-  makeScopeMetaWriteEffect,
+  makeScopeMetaWriteEffectArray,
   makeScopeSpecReadExpression,
   declareScopeMeta,
 } from "../scope/index.mjs";
@@ -40,12 +40,13 @@ export default {
       } else {
         const variable = declareScopeMeta(context, "callee_this");
         return [
-          makeSequenceExpression(
-            makeScopeMetaWriteEffect(
+          reduceReverse(
+            makeScopeMetaWriteEffectArray(
               context,
               variable,
               visitExpression(node.object, context, ANONYMOUS),
             ),
+            makeSequenceExpression,
             node.optional
               ? makeConditionalExpression(
                   makeConditionalExpression(

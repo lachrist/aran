@@ -1,4 +1,4 @@
-import { concat } from "array-lite";
+import { map, concat } from "array-lite";
 
 import { assertEqual, assertSuccess, assertThrow } from "../../__fixture__.mjs";
 
@@ -26,12 +26,11 @@ import {
   declareScopeMeta,
   declareScopeMetaMacro,
   makeScopeMetaReadExpression,
-  makeScopeMetaInitializeEffect,
-  // makeMetaWriteEffect,
+  makeScopeMetaInitializeEffectArray,
   declareScopeSpecMacro,
   declareScopeSpecIllegal,
   declareScopeSpec,
-  makeScopeSpecInitializeEffect,
+  makeScopeSpecInitializeEffectArray,
   makeScopeSpecReadExpression,
   declareScopeBaseImport,
   declareScopeBase,
@@ -39,8 +38,8 @@ import {
   makeScopeBaseReadExpression,
   makeScopeBaseTypeofExpression,
   makeScopeBaseDiscardExpression,
-  makeScopeBaseMacroWriteEffect,
-  makeScopeBaseWriteEffect,
+  makeScopeBaseMacroWriteEffectArray,
+  makeScopeBaseWriteEffectArray,
   makeScopeNormalStaticBlock,
   makeScopeClosureDynamicBlock,
   makeScopeWithDynamicBlock,
@@ -87,26 +86,29 @@ assertSuccess(
           "variable2",
           makeLiteralExpression("binding"),
         );
-        return [
-          makeEffectStatement(
-            makeScopeMetaInitializeEffect(
+        return concat(
+          map(
+            makeScopeMetaInitializeEffectArray(
               context,
               variable1,
               makeLiteralExpression("right"),
             ),
+            makeEffectStatement,
           ),
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeScopeMetaReadExpression(context, variable1),
+          [
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeMetaReadExpression(context, variable1),
+              ),
             ),
-          ),
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeScopeMetaReadExpression(context, variable2),
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeMetaReadExpression(context, variable2),
+              ),
             ),
-          ),
-          makeReturnStatement(makeLiteralExpression("completion")),
-        ];
+            makeReturnStatement(makeLiteralExpression("completion")),
+          ],
+        );
       },
     ),
     `
@@ -190,15 +192,16 @@ assertSuccess(
               makeScopeBaseTypeofExpression(context, "variable"),
             ),
           ),
-          makeEffectStatement(
-            makeScopeBaseWriteEffect(
-              context,
-              "variable",
-              makeLiteralExpression("right"),
-            ),
-          ),
-          makeReturnStatement(makeLiteralExpression("completion")),
         ],
+        map(
+          makeScopeBaseWriteEffectArray(
+            context,
+            "variable",
+            makeLiteralExpression("right"),
+          ),
+          makeEffectStatement,
+        ),
+        [makeReturnStatement(makeLiteralExpression("completion"))],
       );
     }),
     `
@@ -246,15 +249,16 @@ assertSuccess(
                 makeScopeBaseDiscardExpression(context, "variable"),
               ),
             ),
-            makeEffectStatement(
-              makeScopeBaseWriteEffect(
-                context,
-                "variable",
-                makeLiteralExpression("right"),
-              ),
-            ),
-            makeReturnStatement(makeLiteralExpression("completion")),
           ],
+          map(
+            makeScopeBaseWriteEffectArray(
+              context,
+              "variable",
+              makeLiteralExpression("right"),
+            ),
+            makeEffectStatement,
+          ),
+          [makeReturnStatement(makeLiteralExpression("completion"))],
         );
       },
     ),
@@ -338,26 +342,29 @@ assertSuccess(
           "variable2",
           makeLiteralExpression("binding"),
         );
-        return [
-          makeEffectStatement(
-            makeScopeMetaInitializeEffect(
+        return concat(
+          map(
+            makeScopeMetaInitializeEffectArray(
               context,
               variable1,
               makeLiteralExpression("right"),
             ),
+            makeEffectStatement,
           ),
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeScopeMetaReadExpression(context, variable1),
+          [
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeMetaReadExpression(context, variable1),
+              ),
             ),
-          ),
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeScopeMetaReadExpression(context, variable2),
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeMetaReadExpression(context, variable2),
+              ),
             ),
-          ),
-          makeReturnStatement(makeLiteralExpression("completion")),
-        ];
+            makeReturnStatement(makeLiteralExpression("completion")),
+          ],
+        );
       },
     ),
     `
@@ -395,24 +402,29 @@ assertSuccess(
           message: 'Illegal "new.target"',
         });
         assertEqual(declareScopeSpec(context, "import.meta"), undefined);
-        return [
-          makeEffectStatement(
-            makeScopeSpecInitializeEffect(
+        return concat(
+          map(
+            makeScopeSpecInitializeEffectArray(
               context,
               "import.meta",
               makeLiteralExpression("init"),
             ),
+            makeEffectStatement,
           ),
-          makeEffectStatement(
-            makeExpressionEffect(makeScopeSpecReadExpression(context, "this")),
-          ),
-          makeEffectStatement(
-            makeExpressionEffect(
-              makeScopeSpecReadExpression(context, "import.meta"),
+          [
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeSpecReadExpression(context, "this"),
+              ),
             ),
-          ),
-          makeReturnStatement(makeLiteralExpression("completion")),
-        ];
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeSpecReadExpression(context, "import.meta"),
+              ),
+            ),
+            makeReturnStatement(makeLiteralExpression("completion")),
+          ],
+        );
       },
     ),
     `
@@ -467,13 +479,16 @@ assertSuccess(
                 makeScopeBaseDiscardExpression(context, "variable1"),
               ),
             ),
-            makeEffectStatement(
-              makeScopeBaseWriteEffect(
-                context,
-                "variable1",
-                makeLiteralExpression("right"),
-              ),
+          ],
+          map(
+            makeScopeBaseWriteEffectArray(
+              context,
+              "variable1",
+              makeLiteralExpression("right"),
             ),
+            makeEffectStatement,
+          ),
+          [
             makeEffectStatement(
               makeExpressionEffect(
                 makeScopeBaseReadExpression(context, "variable2"),
@@ -495,10 +510,8 @@ assertSuccess(
         void VARIABLE;
         void intrinsic.aran.unary("typeof", VARIABLE);
         void false;
-        (
-          VARIABLE = "right",
-          exported << VARIABLE
-        );
+        VARIABLE = "right";
+        exported << VARIABLE;
         void ("source" >> imported);
         return "completion";
       }
@@ -890,24 +903,22 @@ assertSuccess(
           undefined,
         );
         return concat(
-          [
-            makeEffectStatement(
-              makeScopeBaseWriteEffect(
-                context,
-                "variable",
-                makeLiteralExpression("right"),
-              ),
+          map(
+            makeScopeBaseWriteEffectArray(
+              context,
+              "variable",
+              makeLiteralExpression("right"),
             ),
-          ],
-          [
-            makeEffectStatement(
-              makeScopeBaseMacroWriteEffect(
-                context,
-                "variable",
-                makeLiteralExpression("right"),
-              ),
+            makeEffectStatement,
+          ),
+          map(
+            makeScopeBaseMacroWriteEffectArray(
+              context,
+              "variable",
+              makeLiteralExpression("right"),
             ),
-          ],
+            makeEffectStatement,
+          ),
           makeScopeBaseInitializeStatementArray(
             context,
             "let",
@@ -922,13 +933,11 @@ assertSuccess(
     "eval";
     {
       let VARIABLE;
-      (
-        void "right",
-        void intrinsic.aran.throw(
-          new intrinsic.ReferenceError(
-            "Cannot access variable \\"variable\\" before initialization",
-          ),
-        )
+      void "right";
+      void intrinsic.aran.throw(
+        new intrinsic.ReferenceError(
+          "Cannot access variable \\"variable\\" before initialization",
+        ),
       );
       void intrinsic.aran.throw(
         new intrinsic.ReferenceError(
@@ -953,22 +962,25 @@ assertSuccess(
             context1,
             [],
             makeLiteralExpression("frame"),
-            (context2) => [
-              makeEffectStatement(
-                makeScopeBaseWriteEffect(
-                  context2,
-                  "variable",
-                  makeLiteralExpression("right"),
+            (context2) =>
+              concat(
+                map(
+                  makeScopeBaseWriteEffectArray(
+                    context2,
+                    "variable",
+                    makeLiteralExpression("right"),
+                  ),
+                  makeEffectStatement,
+                ),
+                map(
+                  makeScopeBaseMacroWriteEffectArray(
+                    context2,
+                    "variable",
+                    makeLiteralExpression("right"),
+                  ),
+                  makeEffectStatement,
                 ),
               ),
-              makeEffectStatement(
-                makeScopeBaseMacroWriteEffect(
-                  context2,
-                  "variable",
-                  makeLiteralExpression("right"),
-                ),
-              ),
-            ],
           ),
         ),
         makeReturnStatement(makeLiteralExpression("completion")),
@@ -979,13 +991,11 @@ assertSuccess(
     {
       {
         let RIGHT;
+        RIGHT = "right";
         (
-          RIGHT = "right",
-          (
-            intrinsic.aran.binary("in", "variable", "frame") ?
-            void intrinsic.aran.setStrict("frame", "variable", RIGHT) :
-            [variable] = RIGHT
-          )
+          intrinsic.aran.binary("in", "variable", "frame") ?
+          void intrinsic.aran.setStrict("frame", "variable", RIGHT) :
+          [variable] = RIGHT
         );
         (
           intrinsic.aran.binary("in", "variable", "frame") ?

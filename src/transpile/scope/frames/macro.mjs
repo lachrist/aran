@@ -14,7 +14,7 @@ import { makeLiteralExpression } from "../../../ast/index.mjs";
 import { makeUnaryExpression } from "../../../intrinsic.mjs";
 
 import {
-  makeThrowConstantEffect,
+  makeThrowConstantEffectArray,
   harvestEmptyFrameHeader,
   harvestEmptyFramePrelude,
   lookupEmptyFrameAll,
@@ -87,6 +87,6 @@ export const makeFrameDiscardExpression = compileMakeLookupNode(
   constant__(makeLiteralExpression(false)),
 );
 
-export const makeFrameWriteEffect = compileMakeLookupNode(
-  drop_x(makeThrowConstantEffect),
+export const makeFrameWriteEffectArray = compileMakeLookupNode(
+  drop_x(makeThrowConstantEffectArray),
 );

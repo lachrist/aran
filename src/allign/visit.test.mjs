@@ -159,18 +159,9 @@ assertEffect("[x] = 123;", "[x] = 123;", true);
 assertEffect("[x] = 123;", "[x] = 321;", false);
 assertEffect("[x] = 123;", "[X] = 123;", false);
 
-assertEffect("(void 123, void 456);", "(void 123, void 456);", true);
-
-assertEffect("(void 123, void 456);", "(void 789, void 456);", false);
-
-assertEffect("(void 123, void 456);", "(void 123, void 789);", false);
-
 assertEffect("123 ? void 456 : void 789;", "123 ? void 456 : void 789;", true);
-
 assertEffect("123 ? void 456 : void 789;", "321 ? void 456 : void 789;", false);
-
 assertEffect("123 ? void 456 : void 789;", "123 ? void 654 : void 789;", false);
-
 assertEffect("123 ? void 456 : void 789;", "123 ? void 456 : void 987;", false);
 
 ///////////////

@@ -23,7 +23,7 @@ const arities = {
   makeFrameReadExpression: 7,
   makeFrameTypeofExpression: 7,
   makeFrameDiscardExpression: 7,
-  makeFrameWriteEffect: 7,
+  makeFrameWriteEffectArray: 7,
 };
 
 const names = apply(sort, ownKeys(arities), []);

@@ -1,7 +1,6 @@
 import { dropx__x } from "../../../util/index.mjs";
 
 import {
-  makeConditionalEffect,
   makeConditionalExpression,
   makeLiteralExpression,
   makeIntrinsicExpression,
@@ -14,8 +13,9 @@ import {
 } from "../../../intrinsic.mjs";
 
 import {
+  makeConditionalEffectArray,
   makeTypeofGetExpression,
-  makeIncrementSetEffect,
+  makeIncrementSetEffectArray,
   harvestEmptyFrameHeader,
   harvestEmptyFramePrelude,
   declareEmptyFrame,
@@ -78,7 +78,7 @@ export const makeFrameDiscardExpression = compileMakeLookupNode(
   dropx__x(makeDeleteSloppyExpression),
 );
 
-export const makeFrameWriteEffect = compileMakeLookupNode(
-  makeConditionalEffect,
-  makeIncrementSetEffect,
+export const makeFrameWriteEffectArray = compileMakeLookupNode(
+  makeConditionalEffectArray,
+  makeIncrementSetEffectArray,
 );

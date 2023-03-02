@@ -14,7 +14,6 @@ import {
 import {
   makeEffectStatement,
   makeExpressionEffect,
-  makeConditionalEffect,
   makeConditionalExpression,
   makeLiteralExpression,
   makeIntrinsicExpression,
@@ -32,9 +31,10 @@ import {
   DUPLICATE_TEMPLATE,
   DuplicateError,
   makeTypeofGetExpression,
-  makeIncrementSetEffect,
+  makeConditionalEffectArray,
+  makeIncrementSetEffectArray,
   makeThrowDeadzoneExpression,
-  makeThrowDeadzoneEffect,
+  makeThrowDeadzoneEffectArray,
   makeThrowDuplicateExpression,
   harvestEmptyFrameHeader,
   lookupEmptyFrameAll,
@@ -257,8 +257,8 @@ export const makeFrameDiscardExpression = compileMakeLookupNode(
   drop__x(makeDeleteSloppyExpression),
 );
 
-export const makeFrameWriteEffect = compileMakeLookupNode(
-  makeConditionalEffect,
-  makeThrowDeadzoneEffect,
-  partialx___(makeIncrementSetEffect, true),
+export const makeFrameWriteEffectArray = compileMakeLookupNode(
+  makeConditionalEffectArray,
+  makeThrowDeadzoneEffectArray,
+  partialx___(makeIncrementSetEffectArray, true),
 );

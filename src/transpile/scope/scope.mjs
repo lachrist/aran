@@ -27,7 +27,7 @@ import {
   makeFrameReadExpression,
   makeFrameTypeofExpression,
   makeFrameDiscardExpression,
-  makeFrameWriteEffect,
+  makeFrameWriteEffectArray,
 } from "./frame.mjs";
 
 const {
@@ -197,7 +197,7 @@ export const makeScopeDiscardExpression = partial__x_x(
   null,
 );
 
-export const makeScopeWriteEffect = partial__x__(
-  compileMakeScopeLookupNode(makeFrameWriteEffect),
+export const makeScopeWriteEffectArray = partial__x__(
+  compileMakeScopeLookupNode(makeFrameWriteEffectArray),
   false,
 );

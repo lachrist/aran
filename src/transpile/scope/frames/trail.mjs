@@ -2,10 +2,7 @@ import {
   harvestEmptyFrameHeader,
   harvestEmptyFramePrelude,
   lookupEmptyFrameAll,
-  makeEmptyFrameReadExpression,
-  makeEmptyFrameTypeofExpression,
-  makeEmptyFrameDiscardExpression,
-  makeEmptyFrameWriteEffect,
+  makeEmptyFrameLookupNode,
 } from "./helper.mjs";
 
 export const createFrame = ({ key }) => ({ key });
@@ -40,10 +37,10 @@ export const makeFrameInitializeStatementArray = (
 
 export const lookupFrameAll = lookupEmptyFrameAll;
 
-export const makeFrameReadExpression = makeEmptyFrameReadExpression;
+export const makeFrameReadExpression = makeEmptyFrameLookupNode;
 
-export const makeFrameTypeofExpression = makeEmptyFrameTypeofExpression;
+export const makeFrameTypeofExpression = makeEmptyFrameLookupNode;
 
-export const makeFrameDiscardExpression = makeEmptyFrameDiscardExpression;
+export const makeFrameDiscardExpression = makeEmptyFrameLookupNode;
 
-export const makeFrameWriteEffect = makeEmptyFrameWriteEffect;
+export const makeFrameWriteEffectArray = makeEmptyFrameLookupNode;

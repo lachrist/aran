@@ -74,7 +74,7 @@ assertSuccess(
       },
       makeFrameTypeofExpression: deadcode_______("makeTypeofExpression"),
       makeFrameDiscardExpression: deadcode_______("makeDiscardExpression"),
-      makeFrameWriteEffect: (
+      makeFrameWriteEffectArray: (
         next,
         strict,
         { tag },
@@ -88,7 +88,7 @@ assertSuccess(
         assertEqual(tag, "frame");
         assertEqual(scope, "scope");
         assertEqual(escaped, true);
-        return makeWriteEffect(variable, expression);
+        return [makeWriteEffect(variable, expression)];
       },
     },
     {
@@ -128,7 +128,7 @@ assertSuccess(
           scope: "scope",
           variable: "variable",
           right: makeLiteralExpression("right"),
-          code: "variable = 'right'",
+          code: "variable = 'right';",
         },
         {
           type: "read",

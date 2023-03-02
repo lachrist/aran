@@ -281,14 +281,6 @@ testIdentity(`
 testIdentity(`
   'module';
   {
-    (void 123, void 456);
-    return 'completion';
-  }
-`);
-
-testIdentity(`
-  'module';
-  {
     123 ? void 456 : void 789;
     return 'completion';
   }

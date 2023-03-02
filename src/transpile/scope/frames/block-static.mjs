@@ -12,11 +12,9 @@ import {
 } from "../../../util/index.mjs";
 
 import {
-  makeConditionalEffect,
   makeConditionalExpression,
   makeEffectStatement,
   makeLiteralExpression,
-  makeExpressionEffect,
   makeReadExpression,
   makeWriteEffect,
 } from "../../../ast/index.mjs";
@@ -29,11 +27,12 @@ import {
 import {
   DuplicateError,
   DUPLICATE_TEMPLATE,
-  makeThrowDeadzoneEffect,
+  makeConditionalEffectArray,
+  makeThrowDeadzoneEffectArray,
   makeTypeofReadExpression,
   makeThrowDeadzoneExpression,
-  makeThrowConstantExpression,
-  makeExportIncrementWriteEffect,
+  makeThrowConstantEffectArray,
+  makeExportIncrementWriteEffectArray,
   makeExportStatement,
 } from "./helper.mjs";
 
@@ -232,16 +231,14 @@ export const makeFrameDiscardExpression = compileMakeLookupNode(
   constant_____(makeLiteralExpression(false)),
 );
 
-export const makeFrameWriteEffect = compileMakeLookupNode(
-  makeConditionalEffect,
-  makeThrowDeadzoneEffect,
+export const makeFrameWriteEffectArray = compileMakeLookupNode(
+  makeConditionalEffectArray,
+  makeThrowDeadzoneEffectArray,
   (variable, original_variable, writable, specifiers, options) => {
     if (writable) {
-      return makeExportIncrementWriteEffect(variable, specifiers, options);
+      return makeExportIncrementWriteEffectArray(variable, specifiers, options);
     } else {
-      return makeExpressionEffect(
-        makeThrowConstantExpression(original_variable),
-      );
+      return makeThrowConstantEffectArray(original_variable);
     }
   },
 );

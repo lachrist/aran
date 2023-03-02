@@ -17,7 +17,7 @@ import {
 
 import {
   makeTypeofImportExpression,
-  makeThrowConstantEffect,
+  makeThrowConstantEffectArray,
   DuplicateError,
   DUPLICATE_TEMPLATE,
   harvestEmptyFrameHeader,
@@ -105,6 +105,6 @@ export const makeFrameDiscardExpression = compileMakeLookupNode(
   constant___(makeLiteralExpression(false)),
 );
 
-export const makeFrameWriteEffect = compileMakeLookupNode(
-  drop_xx(makeThrowConstantEffect),
+export const makeFrameWriteEffectArray = compileMakeLookupNode(
+  drop_xx(makeThrowConstantEffectArray),
 );

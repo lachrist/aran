@@ -1,5 +1,6 @@
 import { concat, reduce, map, reduceRight, flatMap, slice } from "array-lite";
 import {
+  reduceReverse,
   flipxx,
   partialx___,
   partial_xx,
@@ -22,7 +23,7 @@ import {
 } from "../../intrinsic.mjs";
 import {
   declareScopeMeta,
-  makeScopeMetaWriteEffect,
+  makeScopeMetaWriteEffectArray,
   makeScopeMetaReadExpression,
   makeScopeBaseReadExpression,
   makeScopeSpecReadExpression,
@@ -196,12 +197,13 @@ export default {
         "ExpressionLogicalExpressionLeft",
       );
       if (node.operator === "&&") {
-        return makeSequenceExpression(
-          makeScopeMetaWriteEffect(
+        return reduceReverse(
+          makeScopeMetaWriteEffectArray(
             context,
             variable,
             visitExpression(node.left, context, null),
           ),
+          makeSequenceExpression,
           makeConditionalExpression(
             makeScopeMetaReadExpression(context, variable),
             visitExpression(node.right, context, null),
@@ -209,12 +211,13 @@ export default {
           ),
         );
       } else if (node.operator === "||") {
-        return makeSequenceExpression(
-          makeScopeMetaWriteEffect(
+        return reduceReverse(
+          makeScopeMetaWriteEffectArray(
             context,
             variable,
             visitExpression(node.left, context, null),
           ),
+          makeSequenceExpression,
           makeConditionalExpression(
             makeScopeMetaReadExpression(context, variable),
             makeScopeMetaReadExpression(context, variable),
@@ -222,12 +225,13 @@ export default {
           ),
         );
       } else if (node.operator === "??") {
-        return makeSequenceExpression(
-          makeScopeMetaWriteEffect(
+        return reduceReverse(
+          makeScopeMetaWriteEffectArray(
             context,
             variable,
             visitExpression(node.left, context, null),
           ),
+          makeSequenceExpression,
           makeConditionalExpression(
             makeConditionalExpression(
               makeBinaryExpression(

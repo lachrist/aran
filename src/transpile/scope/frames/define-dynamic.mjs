@@ -17,7 +17,7 @@ import {
 
 import {
   makeTypeofGetExpression,
-  makeIncrementSetEffect,
+  makeIncrementSetEffectArray,
   harvestEmptyFrameHeader,
   harvestEmptyFramePrelude,
   lookupEmptyFrameAll,
@@ -100,6 +100,6 @@ export const makeFrameDiscardExpression = compileMakeLookupNode(
   drop__x(makeDeleteSloppyExpression),
 );
 
-export const makeFrameWriteEffect = compileMakeLookupNode(
-  partialx___(makeIncrementSetEffect, true),
+export const makeFrameWriteEffectArray = compileMakeLookupNode(
+  partialx___(makeIncrementSetEffectArray, true),
 );

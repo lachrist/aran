@@ -28,7 +28,7 @@ import {
   DuplicateError,
   DUPLICATE_TEMPLATE,
   makeThrowDeadzoneExpression,
-  makeThrowDeadzoneEffect,
+  makeThrowDeadzoneEffectArray,
   harvestEmptyFrameHeader,
   harvestEmptyFramePrelude,
   lookupEmptyFrameAll,
@@ -114,6 +114,6 @@ export const makeFrameDiscardExpression = compileMakeLookupNode(
   constant_(makeLiteralExpression(false)),
 );
 
-export const makeFrameWriteEffect = compileMakeLookupNode(
-  makeThrowDeadzoneEffect,
+export const makeFrameWriteEffectArray = compileMakeLookupNode(
+  makeThrowDeadzoneEffectArray,
 );
