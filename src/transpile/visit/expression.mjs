@@ -6,6 +6,7 @@ import {
   SyntaxAranError,
 } from "../../util/index.mjs";
 import {
+  makeConditionalExpression,
   makeSequenceExpression,
   makeApplyExpression,
   makeYieldExpression,
@@ -20,10 +21,13 @@ import {
   makeBinaryExpression,
 } from "../../intrinsic.mjs";
 import {
+  declareScopeMeta,
+  makeScopeMetaWriteEffect,
+  makeScopeMetaReadExpression,
   makeScopeBaseReadExpression,
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
-import { expectSyntaxNotEqualDeep } from "./report.mjs";
+import { expectSyntaxNotEqualDeep, makeSyntaxError } from "./report.mjs";
 import { visit, visitMany } from "./context.mjs";
 
 const { Array } = globalThis;
@@ -179,6 +183,66 @@ export default {
           ANONYMOUS,
         ),
       );
+    },
+    LogicalExpression: (node, context, _site) => {
+      const variable = declareScopeMeta(
+        context,
+        "ExpressionLogicalExpressionLeft",
+      );
+      if (node.operator === "&&") {
+        return makeSequenceExpression(
+          makeScopeMetaWriteEffect(
+            context,
+            variable,
+            visitExpression(node.left, context, null),
+          ),
+          makeConditionalExpression(
+            makeScopeMetaReadExpression(context, variable),
+            visitExpression(node.right, context, null),
+            makeScopeMetaReadExpression(context, variable),
+          ),
+        );
+      } else if (node.operator === "||") {
+        return makeSequenceExpression(
+          makeScopeMetaWriteEffect(
+            context,
+            variable,
+            visitExpression(node.left, context, null),
+          ),
+          makeConditionalExpression(
+            makeScopeMetaReadExpression(context, variable),
+            makeScopeMetaReadExpression(context, variable),
+            visitExpression(node.right, context, null),
+          ),
+        );
+      } else if (node.operator === "??") {
+        return makeSequenceExpression(
+          makeScopeMetaWriteEffect(
+            context,
+            variable,
+            visitExpression(node.left, context, null),
+          ),
+          makeConditionalExpression(
+            makeConditionalExpression(
+              makeBinaryExpression(
+                "===",
+                makeScopeMetaReadExpression(context, variable),
+                makeLiteralExpression(null),
+              ),
+              makeLiteralExpression(true),
+              makeBinaryExpression(
+                "===",
+                makeScopeMetaReadExpression(context, variable),
+                makeLiteralExpression({ undefined: null }),
+              ),
+            ),
+            visitExpression(node.right, context, null),
+            makeScopeMetaReadExpression(context, variable),
+          ),
+        );
+      } /* c8 ignore start */ else {
+        throw makeSyntaxError(node, "operator");
+      } /* c8 ignore stop */
     },
   },
 };

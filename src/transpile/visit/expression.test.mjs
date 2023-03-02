@@ -192,3 +192,49 @@ testExpression(
   `"use strict"; return (x = 123, 456);`,
   `{ return ([x] = 123, 456); }`,
 );
+
+// LogicalExpression //
+testExpression(
+  `return 123 && 456;`,
+  `
+    {
+      let left;
+      return (
+        left = 123,
+        (left ? 456 : left)
+      );
+    }
+  `,
+);
+testExpression(
+  `return 123 || 456;`,
+  `
+    {
+      let left;
+      return (
+        left = 123,
+        (left ? left : 456)
+      );
+    }
+  `,
+);
+testExpression(
+  `return 123 ?? 456;`,
+  `
+    {
+      let left;
+      return (
+        left = 123,
+        (
+          (
+            intrinsic.aran.binary("===", left, null) ?
+            true :
+            intrinsic.aran.binary("===", left, undefined)
+          ) ?
+          456 :
+          left
+        )
+      );
+    }
+  `,
+);

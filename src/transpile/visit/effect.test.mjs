@@ -19,9 +19,44 @@ const testEffect = (input, output) => {
 };
 
 testEffect(`123;`, `{ void 123; }`);
+
+// AssignemntExpression //
 testEffect(`"use strict"; x = 123;`, `{ [x] = 123; }`);
+
+// UpdateExpression //
 testEffect(
   `"use strict"; x++;`,
   `{ [x] = intrinsic.aran.binary("+", [x], 1); }`,
 );
+
+// SequenceExpression //
 testEffect(`(123, 456);`, `{ void 123; void 456; }`);
+testEffect(`(123, 456);`, `{ void 123; void 456; }`);
+
+// LogicalExpression //
+testEffect(
+  `123 && (456, 789, 0);`,
+  `{ 123 ? (void 456, (void 789, void 0)) : void undefined; }`,
+);
+testEffect(
+  `123 || (456, 789, 0);`,
+  `{ 123 ? void undefined : (void 456, (void 789, void 0)); }`,
+);
+testEffect(
+  `123 ?? (456, 789, 0);`,
+  `
+    {
+      let left;
+      left = 123;
+      (
+        (
+          intrinsic.aran.binary("===", left, null) ?
+          true :
+          intrinsic.aran.binary("===", left, undefined)
+        ) ?
+        (void 456, (void 789, void 0)) :
+        void undefined
+      );
+    }
+  `,
+);
