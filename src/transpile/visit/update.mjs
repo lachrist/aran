@@ -16,7 +16,7 @@ import {
   makeScopeBaseReadExpression,
   makeScopeMetaReadExpression,
 } from "../scope/index.mjs";
-import { expectSyntaxValue } from "./report.mjs";
+import { expectSyntaxEqual } from "./report.mjs";
 import { visit } from "./context.mjs";
 
 const ANONYMOUS = { name: null };
@@ -26,7 +26,7 @@ const visitExpression = partialx___(visit, "Expression");
 export default {
   UpdateEffect: {
     MemberExpression: (node, context, site) => {
-      expectSyntaxValue(node, "optional", false);
+      expectSyntaxEqual(node, "optional", false);
       const object_variable = declareScopeMeta(
         context,
         "UpdateEffectMemberExpressionObject",
@@ -128,7 +128,7 @@ export default {
       }
     },
     MemberExpression: (node, context, site) => {
-      expectSyntaxValue(node, "optional", false);
+      expectSyntaxEqual(node, "optional", false);
       if (site.prefix) {
         const object_variable = declareScopeMeta(
           context,

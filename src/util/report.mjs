@@ -227,3 +227,44 @@ export const expect5 = (
     ]);
   }
 };
+
+export const expect6 = (
+  check,
+  Constructor,
+  template,
+  toString1,
+  value1,
+  toString2,
+  value2,
+  toString3,
+  value3,
+  toString4,
+  value4,
+  toString5,
+  value5,
+  toString6,
+  value6,
+) => {
+  if (!check) {
+    throw new Constructor(
+      format(template, [
+        toString1(value1),
+        toString2(value2),
+        toString3(value3),
+        toString4(value4),
+        toString5(value5),
+        toString6(value6),
+      ]),
+    );
+  }
+  if (hasOwn(globalThis, "ARAN_DEBUG")) {
+    format(template, [
+      toString1(value1),
+      toString2(value2),
+      toString3(value3),
+      toString4(value4),
+      toString5(value5),
+      toString6(value6),
+    ]);
+  }
+};

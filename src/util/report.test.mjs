@@ -12,6 +12,7 @@ import {
   expect3,
   expect4,
   expect5,
+  expect6,
   // expectSuccess,
   // expectDeadcode,
 } from "./report.mjs";
@@ -87,28 +88,31 @@ assertThrow(
   const toExpectMarker = (_element, _index) => " %x";
   const toExpectResult = (_element, index) =>
     ` val-${String(index)}-${String(index)}`;
-  forEach([expect0, expect1, expect2, expect3, expect4, expect5], (expect) => {
-    const ruler = new Array((expect.length - 3) / 2);
-    const template = `template${join(map(ruler, toExpectMarker), "")}`;
-    assertThrow(
-      () =>
+  forEach(
+    [expect0, expect1, expect2, expect3, expect4, expect5, expect6],
+    (expect) => {
+      const ruler = new Array((expect.length - 3) / 2);
+      const template = `template${join(map(ruler, toExpectMarker), "")}`;
+      assertThrow(
+        () =>
+          apply(
+            expect,
+            undefined,
+            concat([false, Error, template], flatMap(ruler, toExpectEntry)),
+          ),
+        new RegExp(
+          `^Error: template${join(map(ruler, toExpectResult), "")}$`,
+          "u",
+        ),
+      );
+      assertEqual(
         apply(
           expect,
           undefined,
-          concat([false, Error, template], flatMap(ruler, toExpectEntry)),
+          concat([true, Error, template], flatMap(ruler, toExpectEntry)),
         ),
-      new RegExp(
-        `^Error: template${join(map(ruler, toExpectResult), "")}$`,
-        "u",
-      ),
-    );
-    assertEqual(
-      apply(
-        expect,
         undefined,
-        concat([true, Error, template], flatMap(ruler, toExpectEntry)),
-      ),
-      undefined,
-    );
-  });
+      );
+    },
+  );
 }

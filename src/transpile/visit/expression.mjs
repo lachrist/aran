@@ -1,6 +1,12 @@
-import { concat, reduce, map } from "array-lite";
-import { partialx___, partial_xx, SyntaxAranError } from "../../util/index.mjs";
+import { concat, reduce, map, reduceRight, flatMap, slice } from "array-lite";
 import {
+  flipxx,
+  partialx___,
+  partial_xx,
+  SyntaxAranError,
+} from "../../util/index.mjs";
+import {
+  makeSequenceExpression,
   makeApplyExpression,
   makeYieldExpression,
   makeAwaitExpression,
@@ -17,6 +23,7 @@ import {
   makeScopeBaseReadExpression,
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
+import { expectSyntaxNotEqualDeep } from "./report.mjs";
 import { visit, visitMany } from "./context.mjs";
 
 const { Array } = globalThis;
@@ -25,6 +32,7 @@ const ANONYMOUS = { name: null };
 const COOKED = { cooked: true };
 const RAW = { cooked: false };
 
+const visitEffect = partialx___(visitMany, "Effect");
 const visitCallee = partialx___(visitMany, "Callee");
 const visitQuasi = partialx___(visit, "Quasi");
 const visitExpression = partialx___(visit, "Expression");

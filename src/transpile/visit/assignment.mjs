@@ -18,7 +18,7 @@ import {
   makeScopeBaseWriteEffect,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
-import { expectSyntaxValue } from "./report.mjs";
+import { expectSyntaxEqual } from "./report.mjs";
 import { visit, visitMany } from "./context.mjs";
 
 const {
@@ -150,7 +150,7 @@ export default {
       }
     },
     [DEFAULT_CLAUSE]: (node, context, site) => {
-      expectSyntaxValue(site, "operator", "=");
+      expectSyntaxEqual(site, "operator", "=");
       return visitPattern(node, context, {
         kind: null,
         right: visitExpression(site.right, context, ANONYMOUS),
@@ -258,7 +258,7 @@ export default {
       }
     },
     [DEFAULT_CLAUSE]: (node, context, site) => {
-      expectSyntaxValue(site, "operator", "=");
+      expectSyntaxEqual(site, "operator", "=");
       const variable = declareScopeMeta(context, "assignment_pattern_right");
       return makeSequenceExpression(
         makeScopeMetaWriteEffect(

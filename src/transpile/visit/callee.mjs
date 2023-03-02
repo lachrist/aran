@@ -13,7 +13,7 @@ import {
   makeScopeSpecReadExpression,
   declareScopeMeta,
 } from "../scope/index.mjs";
-import { expectSyntaxValue } from "./report.mjs";
+import { expectSyntaxEqual } from "./report.mjs";
 import { visit, visitMany } from "./context.mjs";
 
 const ANONYMOUS = { name: null };
@@ -28,7 +28,7 @@ export default {
       visitMany("Callee", node.expression, context, site),
     MemberExpression: (node, context, _site) => {
       if (node.object.type === "Super") {
-        expectSyntaxValue(node, "optional", false);
+        expectSyntaxEqual(node, "optional", false);
         return [
           makeApplyExpression(
             makeScopeSpecReadExpression(context, "super.get"),
