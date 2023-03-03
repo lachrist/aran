@@ -20,7 +20,7 @@ const ANONYMOUS = { name: null };
 
 const visitExpression = partialx___(visit, "Expression");
 
-const visitProperty = partialx___(visit, "Property");
+const visitKey = partialx___(visit, "Key");
 
 export default {
   Callee: {
@@ -33,7 +33,7 @@ export default {
           makeApplyExpression(
             makeScopeSpecReadExpression(context, "super.get"),
             makeLiteralExpression({ undefined: null }),
-            [visitProperty(node.property, context, node)],
+            [visitKey(node.property, context, node)],
           ),
           makeScopeSpecReadExpression(context, "this"),
         ];
@@ -65,12 +65,12 @@ export default {
                   makeLiteralExpression({ undefined: null }),
                   makeGetExpression(
                     makeScopeMetaReadExpression(context, variable),
-                    visitProperty(node.property, context, node),
+                    visitKey(node.property, context, node),
                   ),
                 )
               : makeGetExpression(
                   makeScopeMetaReadExpression(context, variable),
-                  visitProperty(node.property, context, node),
+                  visitKey(node.property, context, node),
                 ),
           ),
           makeScopeMetaReadExpression(context, variable),

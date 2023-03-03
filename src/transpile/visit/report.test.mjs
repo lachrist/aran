@@ -1,7 +1,7 @@
 import { assertEqual, assertThrow } from "../../__fixture__.mjs";
 import {
   locate,
-  stringifyProperty,
+  stringifyKey,
   makeSyntaxTypeError,
   expectSyntaxType,
   makeSyntaxError,
@@ -27,11 +27,11 @@ assertEqual(
   "source:123:456",
 );
 
-assertEqual(stringifyProperty(123), "[123]");
+assertEqual(stringifyKey(123), "[123]");
 
-assertEqual(stringifyProperty("foo"), ".foo");
+assertEqual(stringifyKey("foo"), ".foo");
 
-assertEqual(stringifyProperty("foo bar"), '["foo bar"]');
+assertEqual(stringifyKey("foo bar"), '["foo bar"]');
 
 //////////
 // Type //

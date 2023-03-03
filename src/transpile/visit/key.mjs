@@ -10,7 +10,7 @@ const visitExpression = partialx___(visit, "Expression");
 const ANONYMOUS = { name: null };
 
 export default {
-  Property: {
+  Key: {
     Identifier: (node, context, { computed }) =>
       computed
         ? makeScopeBaseReadExpression(context, node.name)

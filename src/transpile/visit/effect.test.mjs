@@ -1,5 +1,5 @@
 import TestVisitor, { test } from "./__fixture__.mjs";
-import PropertyVisitor from "./property.mjs";
+import KeyVisitor from "./key.mjs";
 import PatternVisitor from "./pattern.mjs";
 import AssignmentVisitor from "./assignment.mjs";
 import UpdateVisitor from "./update.mjs";
@@ -7,7 +7,7 @@ import EffectVisitor from "./effect.mjs";
 
 const Visitor = {
   ...TestVisitor,
-  ...PropertyVisitor,
+  ...KeyVisitor,
   ...PatternVisitor,
   ...AssignmentVisitor,
   ...UpdateVisitor,

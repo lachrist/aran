@@ -30,7 +30,7 @@ const {
 
 const ANONYMOUS = { name: null };
 
-const visitProperty = partialx___(visit, "Property");
+const visitKey = partialx___(visit, "Key");
 const visitPattern = partialx___(visitMany, "Pattern");
 const visitExpression = partialx___(visit, "Expression");
 
@@ -102,8 +102,8 @@ export default {
             makeSetExpression(
               context.strict,
               visitExpression(node.object, context, ANONYMOUS),
-              visitProperty(node.property, context, node),
-              visitProperty(site.right, context, ANONYMOUS),
+              visitKey(node.property, context, node),
+              visitKey(site.right, context, ANONYMOUS),
             ),
           ),
         ];
@@ -114,7 +114,7 @@ export default {
         );
         const property_variable = declareScopeMeta(
           context,
-          "AssignmentEffectMemberExpressionProperty",
+          "AssignmentEffectMemberExpressionKey",
         );
         return concat(
           makeScopeMetaWriteEffectArray(
@@ -125,7 +125,7 @@ export default {
           makeScopeMetaWriteEffectArray(
             context,
             property_variable,
-            visitProperty(node.property, context, node),
+            visitKey(node.property, context, node),
           ),
           [
             makeExpressionEffect(
@@ -219,8 +219,8 @@ export default {
         return makeSetExpression(
           context.strict,
           visitExpression(node.object, context, ANONYMOUS),
-          visitProperty(node.property, context, node),
-          visitProperty(site.right, context, ANONYMOUS),
+          visitKey(node.property, context, node),
+          visitKey(site.right, context, ANONYMOUS),
         );
       } else {
         const object_variable = declareScopeMeta(
@@ -229,7 +229,7 @@ export default {
         );
         const property_variable = declareScopeMeta(
           context,
-          "AssignmentExpressionMemberExpressionProperty",
+          "AssignmentExpressionMemberExpressionKey",
         );
         return reduceReverse(
           concat(
@@ -241,7 +241,7 @@ export default {
             makeScopeMetaWriteEffectArray(
               context,
               property_variable,
-              visitProperty(node.property, context, node),
+              visitKey(node.property, context, node),
             ),
           ),
           makeSequenceExpression,

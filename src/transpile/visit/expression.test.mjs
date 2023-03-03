@@ -10,7 +10,7 @@ import {
 import { visit } from "./context.mjs";
 import TestVisitor, { test } from "./__fixture__.mjs";
 import QuasiVisitor from "./quasi.mjs";
-import PropertyVisitor from "./property.mjs";
+import KeyVisitor from "./key.mjs";
 import CalleeVisitor from "./callee.mjs";
 import PatternVisitor from "./pattern.mjs";
 import AssignmentVisitor from "./assignment.mjs";
@@ -49,7 +49,7 @@ const visitClosure = (node, _context, site) => {
 const Visitor = {
   ...TestVisitor,
   ...QuasiVisitor,
-  ...PropertyVisitor,
+  ...KeyVisitor,
   ...CalleeVisitor,
   ...PatternVisitor,
   ...AssignmentVisitor,
@@ -86,7 +86,7 @@ testExpression(`x`, `{ void [x]; }`);
 // ThisExpression //
 testExpression(`this;`, `{ void "this"; }`);
 
-// MetaProperty //
+// MetaKey //
 testExpression(`new.target;`, `{ void "new.target"; }`);
 testExpression(`import.meta;`, `{ void "import.meta"; }`);
 

@@ -21,7 +21,7 @@ import { expectSyntaxEqual } from "./report.mjs";
 import { visit } from "./context.mjs";
 
 const ANONYMOUS = { name: null };
-const visitProperty = partialx___(visit, "Property");
+const visitKey = partialx___(visit, "Key");
 const visitExpression = partialx___(visit, "Expression");
 
 export default {
@@ -34,7 +34,7 @@ export default {
       );
       const property_variable = declareScopeMeta(
         context,
-        "UpdateEffectMemberExpressionProperty",
+        "UpdateEffectMemberExpressionKey",
       );
       return concat(
         makeScopeMetaWriteEffectArray(
@@ -45,7 +45,7 @@ export default {
         makeScopeMetaWriteEffectArray(
           context,
           property_variable,
-          visitProperty(node.property, context, node),
+          visitKey(node.property, context, node),
         ),
         [
           makeExpressionEffect(
@@ -140,7 +140,7 @@ export default {
         );
         const property_variable = declareScopeMeta(
           context,
-          "UpdateExpressionMemberExpressionProperty",
+          "UpdateExpressionMemberExpressionKey",
         );
         return reduceReverse(
           concat(
@@ -152,7 +152,7 @@ export default {
             makeScopeMetaWriteEffectArray(
               context,
               property_variable,
-              visitProperty(node.property, context, ANONYMOUS),
+              visitKey(node.property, context, ANONYMOUS),
             ),
           ),
           makeSequenceExpression,
@@ -177,7 +177,7 @@ export default {
         );
         const property_variable = declareScopeMeta(
           context,
-          "UpdateExpressionMemberExpressionProperty",
+          "UpdateExpressionMemberExpressionKey",
         );
         const value_variable = declareScopeMeta(
           context,
@@ -193,7 +193,7 @@ export default {
             makeScopeMetaWriteEffectArray(
               context,
               property_variable,
-              visitProperty(node.property, context, ANONYMOUS),
+              visitKey(node.property, context, ANONYMOUS),
             ),
             makeScopeMetaWriteEffectArray(
               context,

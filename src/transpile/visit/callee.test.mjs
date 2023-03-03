@@ -2,7 +2,7 @@ import { assertEqual } from "../../__fixture__.mjs";
 import { makeApplyExpression } from "../../ast/index.mjs";
 import { visitMany } from "./context.mjs";
 import TestVisitor, { test } from "./__fixture__.mjs";
-import PropertyVisitor from "./property.mjs";
+import KeyVisitor from "./key.mjs";
 import CalleeVisitor from "./callee.mjs";
 
 const Visitor = {
@@ -20,7 +20,7 @@ const Visitor = {
       return makeApplyExpression(expression1, expression2, []);
     },
   },
-  ...PropertyVisitor,
+  ...KeyVisitor,
   ...CalleeVisitor,
 };
 

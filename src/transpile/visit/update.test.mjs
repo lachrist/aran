@@ -2,12 +2,12 @@ import { assertNotEqual } from "../../__fixture__.mjs";
 import { makeReturnStatement } from "../../ast/index.mjs";
 import { visit, visitMany } from "./context.mjs";
 import TestVisitor, { test } from "./__fixture__.mjs";
-import PropertyVisitor from "./property.mjs";
+import KeyVisitor from "./key.mjs";
 import UpdateVisitor from "./update.mjs";
 
 const Visitor = {
   ...TestVisitor,
-  ...PropertyVisitor,
+  ...KeyVisitor,
   ...UpdateVisitor,
   Statement: {
     ...TestVisitor.Statement,

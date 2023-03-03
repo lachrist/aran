@@ -44,7 +44,7 @@ const isRestElement = ({ type }) => type === "RestElement";
 
 const ANONYMOUS = { name: null };
 
-const visitProperty = partialx___(visit, "Property");
+const visitKey = partialx___(visit, "Key");
 const visitExpression = partialx___(visit, "Expression");
 const visitPattern = partialx___(visitMany, "Pattern");
 const visitPatternProperty = partialx___(visitMany, "PatternProperty");
@@ -148,7 +148,7 @@ export default {
             makeSetExpression(
               context.strict,
               visitExpression(node.object, context, ANONYMOUS),
-              visitProperty(node.property, context, node),
+              visitKey(node.property, context, node),
               makeScopeMetaReadExpression(context, variable),
             ),
           ),
@@ -265,14 +265,14 @@ export default {
     // undefined
     // > let thisbar = null;
     // undefined
-    // Reflect.defineProperty(String.prototype, "foo", {
+    // Reflect.defineKey(String.prototype, "foo", {
     //  get: function () {
     //     thisfoo = this;
     //     return "yolo";
     //   }
     // });
     // true
-    // Reflect.defineProperty(String.prototype, "bar", {
+    // Reflect.defineKey(String.prototype, "bar", {
     //   get: function () {
     //     thisbar = this;
     //     return "swag";
@@ -372,7 +372,7 @@ export default {
           kind: site.kind,
           right: makeGetExpression(
             makeScopeMetaReadExpression(context, site.right_variable),
-            visitProperty(node.key, context, node),
+            visitKey(node.key, context, node),
           ),
         });
       } else {
@@ -386,7 +386,7 @@ export default {
               makeScopeMetaWriteEffectArray(
                 context,
                 key_variable,
-                visitProperty(node.key, context, node),
+                visitKey(node.key, context, node),
               ),
               makeSequenceExpression,
               makeScopeMetaReadExpression(context, key_variable),

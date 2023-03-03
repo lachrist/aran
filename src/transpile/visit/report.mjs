@@ -16,7 +16,7 @@ const {
   JSON: { stringify: stringifyJSON },
 } = globalThis;
 
-export const stringifyProperty = (property) => {
+export const stringifyKey = (property) => {
   if (
     typeof property === "string" &&
     apply(testRegExp, /^[a-zA-Z_$][a-zA-Z_$0-9]+$/u, [property])
@@ -75,14 +75,14 @@ export const expectSyntaxType = (node, type1) => {
 
 export const makeSyntaxError = (node, property) =>
   new SyntaxAranError(
-    `illegal ${node.type}${stringifyProperty(property)} at ${locate(
+    `illegal ${node.type}${stringifyKey(property)} at ${locate(
       node,
     )}, got ${stringifyJSON(node[property])}`,
   );
 
 export const makeSyntaxErrorDeep = (node, property1, property2) =>
   new SyntaxAranError(
-    `illegal ${node.type}${stringifyProperty(property1)}${stringifyProperty(
+    `illegal ${node.type}${stringifyKey(property1)}${stringifyKey(
       property2,
     )} at ${locate(node)}, got ${stringifyJSON(node[property1][property2])}`,
   );
@@ -95,7 +95,7 @@ export const expectSyntaxEqual = (node, property, value1) => {
     "illegal %x%x at %x, it should be %x but got %x",
     String,
     node.type,
-    stringifyProperty,
+    stringifyKey,
     property,
     locate,
     node,
@@ -114,9 +114,9 @@ export const expectSyntaxEqualDeep = (node, property1, property2, value1) => {
     "illegal %x%x%x at %x, it should be %x but got %x",
     String,
     node.type,
-    stringifyProperty,
+    stringifyKey,
     property1,
-    stringifyProperty,
+    stringifyKey,
     property2,
     locate,
     node,
@@ -135,7 +135,7 @@ export const expectSyntaxNotEqual = (node, property, value1) => {
     "illegal %x%x at %x, it should not be %x",
     String,
     node.type,
-    stringifyProperty,
+    stringifyKey,
     property,
     locate,
     node,
@@ -157,9 +157,9 @@ export const expectSyntaxNotEqualDeep = (
     "illegal %x%x%x at %x, it should not be %x",
     String,
     node.type,
-    stringifyProperty,
+    stringifyKey,
     property1,
-    stringifyProperty,
+    stringifyKey,
     property2,
     locate,
     node,

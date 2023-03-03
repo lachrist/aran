@@ -2,7 +2,7 @@ report.mjs
 context.mjs
 __fixture__.mjs
 quasi.mjs
-property.mjs
+key.mjs
 callee.mjs
 pattern.mjs
 assignment.mjs
