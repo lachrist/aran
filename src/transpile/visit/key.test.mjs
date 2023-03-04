@@ -9,8 +9,8 @@ const Visitor = {
     ...TestVisitor.Expression,
     MemberExpression: (node, context, _site) =>
       makeGetExpression(
-        visit("Expression", node.object, context, { name: null }),
-        visit("Key", node.property, context, node),
+        visit(node.object, context, { type: "Expression", name: "" }),
+        visit(node.property, context, { type: "Key", computed: node.computed }),
       ),
   },
   ...KeyVisitor,

@@ -6,9 +6,10 @@ import QuasiVisitor from "./quasi.mjs";
 const Visitor = {
   ...TestVisitor,
   Expression: {
+    ...TestVisitor.Expression,
     TemplateLiteral: (node, context, site) => {
       assertEqual(node.quasis.length, 1);
-      return visit("Quasi", node.quasis[0], context, site);
+      return visit(node.quasis[0], context, { ...site, type: "Quasi" });
     },
   },
   ...QuasiVisitor,

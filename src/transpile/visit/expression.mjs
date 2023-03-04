@@ -2,11 +2,11 @@ import { concat, reduce, map, reduceRight, flatMap, slice } from "array-lite";
 import {
   reduceReverse,
   flipxx,
-  partialx___,
   partial_xx,
   SyntaxAranError,
 } from "../../util/index.mjs";
 import {
+  annotateNode,
   makeConditionalExpression,
   makeSequenceExpression,
   makeApplyExpression,
@@ -29,22 +29,15 @@ import {
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
 import { expectSyntaxNotEqualDeep, makeSyntaxError } from "./report.mjs";
-import { visit, visitMany } from "./context.mjs";
+import { visit } from "./context.mjs";
 
 const { Array } = globalThis;
 
-const ANONYMOUS = { name: null };
-const COOKED = { cooked: true };
-const RAW = { cooked: false };
-
-const visitEffect = partialx___(visitMany, "Effect");
-const visitCallee = partialx___(visitMany, "Callee");
-const visitQuasi = partialx___(visit, "Quasi");
-const visitExpression = partialx___(visit, "Expression");
-const visitClosure = partialx___(visit, "Closure");
-const visitClass = partialx___(visit, "Class");
-const visitUpdateExpression = partialx___(visit, "UpdateExpression");
-const visitAssignmentExpression = partialx___(visit, "AssignmentExpression");
+const QUASI_COOKED = { type: "Quasi", cooked: true };
+const QUASI_RAW = { type: "Quasi", cooked: false };
+const EXPRESSION = { type: "Expression", name: "" };
+const EFFECT = { type: "Effect" };
+const CALLEE = { type: "Callee" };
 
 const getMetaPropertyVariable = (node) => {
   if (node.meta.name === "new" && node.property.name === "target") {
@@ -58,6 +51,7 @@ const getMetaPropertyVariable = (node) => {
 
 export default {
   Expression: {
+    __ANNOTATE__: annotateNode,
     // Producer //
     Literal: (node, _context, _site) => makeLiteralExpression(node.value),
     Identifier: (node, context, _site) =>
@@ -67,14 +61,30 @@ export default {
     MetaProperty: (node, context, _site) =>
       makeScopeSpecReadExpression(context, getMetaPropertyVariable(node)),
     ArrowFunctionExpression: (node, context, site) =>
-      visitClosure(node, context, { kind: "arrow", ...site }),
+      visit(node, context, {
+        type: "Closure",
+        kind: "arrow",
+        name: makeLiteralExpression(site.name),
+        super: null,
+      }),
     FunctionExpression: (node, context, site) =>
-      visitClosure(node, context, { kind: "function", ...site }),
-    ClassExpression: (node, context, site) => visitClass(node, context, site),
+      visit(node, context, {
+        type: "Closure",
+        kind: "function",
+        name: makeLiteralExpression(
+          node.id === null ? site.name : node.id.name,
+        ),
+        super: null,
+      }),
+    ClassExpression: (node, context, site) =>
+      visit(node, context, {
+        type: "Class",
+        name: node.id === null ? site.name : node.id.name,
+      }),
     // Combinators //
     TemplateLiteral: (node, context, _site) =>
       node.expressions.length === 0
-        ? visitQuasi(node.quasis[0], context, COOKED)
+        ? visit(node.quasis[0], context, QUASI_COOKED)
         : makeBinaryExpression(
             "+",
             reduce(
@@ -85,32 +95,28 @@ export default {
                   expression,
                   makeBinaryExpression(
                     "+",
-                    visitQuasi(node.quasis[index + 1], context, COOKED),
-                    visitExpression(
-                      node.expressions[index + 1],
-                      context,
-                      ANONYMOUS,
-                    ),
+                    visit(node.quasis[index + 1], context, QUASI_COOKED),
+                    visit(node.expressions[index + 1], context, EXPRESSION),
                   ),
                 ),
               makeBinaryExpression(
                 "+",
-                visitQuasi(node.quasis[0], context, COOKED),
-                visitExpression(node.expressions[0], context, ANONYMOUS),
+                visit(node.quasis[0], context, QUASI_COOKED),
+                visit(node.expressions[0], context, EXPRESSION),
               ),
             ),
-            visitQuasi(node.quasis[node.quasis.length - 1], context, COOKED),
+            visit(node.quasis[node.quasis.length - 1], context, QUASI_COOKED),
           ),
     // Tagged template cannot lead to a direct eval call because it receives an array instead of a string:
     // cf: https://www.ecma-international.org/ecma-262/10.0/index.html#sec-performeval
     TaggedTemplateExpression: (node, context, _site) => {
-      const [closure_expression, this_expression] = visitCallee(
+      const { callee: callee_expression, this: this_expression } = visit(
         node.tag,
         context,
-        null,
+        CALLEE,
       );
       return makeApplyExpression(
-        closure_expression,
+        callee_expression,
         this_expression,
         concat(
           [
@@ -119,7 +125,7 @@ export default {
                 makeArrayExpression(
                   map(
                     node.quasi.quasis,
-                    partial_xx(visitQuasi, context, COOKED),
+                    partial_xx(visit, context, QUASI_COOKED),
                   ),
                 ),
                 makeLiteralExpression("raw"),
@@ -128,7 +134,7 @@ export default {
                     makeArrayExpression(
                       map(
                         node.quasi.quasis,
-                        partial_xx(visitQuasi, context, RAW),
+                        partial_xx(visit, context, QUASI_RAW),
                       ),
                     ),
                   ),
@@ -139,26 +145,32 @@ export default {
               ),
             ),
           ],
-          map(
-            node.quasi.expressions,
-            partial_xx(visitExpression, context, ANONYMOUS),
-          ),
+          map(node.quasi.expressions, partial_xx(visit, context, EXPRESSION)),
         ),
       );
     },
     AwaitExpression: (node, context, _site) =>
-      makeAwaitExpression(visitExpression(node.argument, context, ANONYMOUS)),
+      makeAwaitExpression(visit(node.argument, context, EXPRESSION)),
     YieldExpression: (node, context, _site) =>
       makeYieldExpression(
         node.delegate,
         node.argument === null
           ? makeLiteralExpression({ undefined: null })
-          : visitExpression(node.argument, context, ANONYMOUS),
+          : visit(node.argument, context, EXPRESSION),
       ),
     AssignmentExpression: (node, context, _site) =>
-      visitAssignmentExpression(node.left, context, node),
+      visit(node.left, context, {
+        type: "AssignmentExpression",
+        operator: node.operator,
+        right: node.right,
+      }),
     UpdateExpression: (node, context, _site) =>
-      visitUpdateExpression(node.argument, context, node),
+      visit(node.argument, context, {
+        type: "UpdateExpression",
+        operator: node.operator,
+        prefix: node.prefix,
+        right: node.right,
+      }),
     /////////////
     // Control //
     /////////////
@@ -175,21 +187,21 @@ export default {
       return reduceRight(
         flatMap(
           slice(node.expressions, 0, node.expressions.length - 1),
-          partial_xx(visitEffect, context, null),
+          partial_xx(visit, context, EFFECT),
         ),
         flipxx(makeSequenceExpression),
-        visitExpression(
+        visit(
           node.expressions[node.expressions.length - 1],
           context,
-          ANONYMOUS,
+          EXPRESSION,
         ),
       );
     },
     ConditionalExpression: (node, context, _site) =>
       makeConditionalExpression(
-        visitExpression(node.test, context, ANONYMOUS),
-        visitExpression(node.consequent, context, ANONYMOUS),
-        visitExpression(node.alternate, context, ANONYMOUS),
+        visit(node.test, context, EXPRESSION),
+        visit(node.consequent, context, EXPRESSION),
+        visit(node.alternate, context, EXPRESSION),
       ),
     LogicalExpression: (node, context, _site) => {
       const variable = declareScopeMeta(
@@ -201,12 +213,12 @@ export default {
           makeScopeMetaWriteEffectArray(
             context,
             variable,
-            visitExpression(node.left, context, null),
+            visit(node.left, context, EXPRESSION),
           ),
           makeSequenceExpression,
           makeConditionalExpression(
             makeScopeMetaReadExpression(context, variable),
-            visitExpression(node.right, context, null),
+            visit(node.right, context, EXPRESSION),
             makeScopeMetaReadExpression(context, variable),
           ),
         );
@@ -215,13 +227,13 @@ export default {
           makeScopeMetaWriteEffectArray(
             context,
             variable,
-            visitExpression(node.left, context, null),
+            visit(node.left, context, EXPRESSION),
           ),
           makeSequenceExpression,
           makeConditionalExpression(
             makeScopeMetaReadExpression(context, variable),
             makeScopeMetaReadExpression(context, variable),
-            visitExpression(node.right, context, null),
+            visit(node.right, context, EXPRESSION),
           ),
         );
       } else if (node.operator === "??") {
@@ -229,7 +241,7 @@ export default {
           makeScopeMetaWriteEffectArray(
             context,
             variable,
-            visitExpression(node.left, context, null),
+            visit(node.left, context, EXPRESSION),
           ),
           makeSequenceExpression,
           makeConditionalExpression(
@@ -246,7 +258,7 @@ export default {
                 makeLiteralExpression({ undefined: null }),
               ),
             ),
-            visitExpression(node.right, context, null),
+            visit(node.right, context, EXPRESSION),
             makeScopeMetaReadExpression(context, variable),
           ),
         );

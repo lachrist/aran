@@ -1,6 +1,6 @@
 import { assertNotEqual } from "../../__fixture__.mjs";
 import { makeReturnStatement } from "../../ast/index.mjs";
-import { visit, visitMany } from "./context.mjs";
+import { visit } from "./context.mjs";
 import TestVisitor, { test } from "./__fixture__.mjs";
 import KeyVisitor from "./key.mjs";
 import UpdateVisitor from "./update.mjs";
@@ -15,7 +15,7 @@ const Visitor = {
       assertNotEqual(node.argument, null);
       return [
         makeReturnStatement(
-          visit("Expression", node.argument, context, { name: null }),
+          visit(node.argument, context, { type: "Expression", name: "" }),
         ),
       ];
     },
@@ -23,12 +23,20 @@ const Visitor = {
   Effect: {
     ...TestVisitor.Effect,
     UpdateExpression: (node, context, _site) =>
-      visitMany("UpdateEffect", node.argument, context, node),
+      visit(node.argument, context, {
+        type: "UpdateEffect",
+        prefix: node.prefix,
+        operator: node.operator,
+      }),
   },
   Expression: {
     ...TestVisitor.Expression,
     UpdateExpression: (node, context, _site) =>
-      visit("UpdateExpression", node.argument, context, node),
+      visit(node.argument, context, {
+        type: "UpdateExpression",
+        prefix: node.prefix,
+        operator: node.operator,
+      }),
   },
 };
 

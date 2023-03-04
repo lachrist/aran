@@ -1,6 +1,6 @@
 import { assertEqual } from "../../__fixture__.mjs";
 import { makeApplyExpression } from "../../ast/index.mjs";
-import { visitMany } from "./context.mjs";
+import { visit } from "./context.mjs";
 import TestVisitor, { test } from "./__fixture__.mjs";
 import KeyVisitor from "./key.mjs";
 import CalleeVisitor from "./callee.mjs";
@@ -11,11 +11,12 @@ const Visitor = {
     ...TestVisitor.Expression,
     CallExpression: (node, context, _site) => {
       assertEqual(node.arguments.length, 0);
-      const { 0: expression1, 1: expression2 } = visitMany(
-        "Callee",
+      const { callee: expression1, this: expression2 } = visit(
         node.callee,
         context,
-        null,
+        {
+          type: "Callee",
+        },
       );
       return makeApplyExpression(expression1, expression2, []);
     },

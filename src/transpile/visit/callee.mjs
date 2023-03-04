@@ -1,6 +1,7 @@
-import { reduceReverse, partialx___ } from "../../util/index.mjs";
+import { reduceReverse } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
+  annotateNode,
   makeApplyExpression,
   makeLiteralExpression,
   makeSequenceExpression,
@@ -14,37 +15,42 @@ import {
   declareScopeMeta,
 } from "../scope/index.mjs";
 import { expectSyntaxEqual } from "./report.mjs";
-import { visit, visitMany } from "./context.mjs";
+import { visit } from "./context.mjs";
 
-const ANONYMOUS = { name: null };
-
-const visitExpression = partialx___(visit, "Expression");
-
-const visitKey = partialx___(visit, "Key");
+const KEY = {
+  true: { type: "Key", computed: true },
+  false: { type: "Key", computed: false },
+};
+const CALLEE = { type: "Callee" };
+const EXPRESSION = { type: "Expression", name: "" };
 
 export default {
   Callee: {
-    ChainExpression: (node, context, site) =>
-      visitMany("Callee", node.expression, context, site),
+    __ANNOTATE__: ({ callee: expression1, this: expression2 }, serial) => ({
+      callee: annotateNode(expression1, serial),
+      this: annotateNode(expression2, serial),
+    }),
+    ChainExpression: (node, context, _site) =>
+      visit(node.expression, context, CALLEE),
     MemberExpression: (node, context, _site) => {
       if (node.object.type === "Super") {
         expectSyntaxEqual(node, "optional", false);
-        return [
-          makeApplyExpression(
+        return {
+          callee: makeApplyExpression(
             makeScopeSpecReadExpression(context, "super.get"),
             makeLiteralExpression({ undefined: null }),
-            [visitKey(node.property, context, node)],
+            [visit(node.property, context, KEY[node.computed])],
           ),
-          makeScopeSpecReadExpression(context, "this"),
-        ];
+          this: makeScopeSpecReadExpression(context, "this"),
+        };
       } else {
         const variable = declareScopeMeta(context, "callee_this");
-        return [
-          reduceReverse(
+        return {
+          callee: reduceReverse(
             makeScopeMetaWriteEffectArray(
               context,
               variable,
-              visitExpression(node.object, context, ANONYMOUS),
+              visit(node.object, context, EXPRESSION),
             ),
             makeSequenceExpression,
             node.optional
@@ -65,21 +71,21 @@ export default {
                   makeLiteralExpression({ undefined: null }),
                   makeGetExpression(
                     makeScopeMetaReadExpression(context, variable),
-                    visitKey(node.property, context, node),
+                    visit(node.property, context, KEY[node.computed]),
                   ),
                 )
               : makeGetExpression(
                   makeScopeMetaReadExpression(context, variable),
-                  visitKey(node.property, context, node),
+                  visit(node.property, context, KEY[node.computed]),
                 ),
           ),
-          makeScopeMetaReadExpression(context, variable),
-        ];
+          this: makeScopeMetaReadExpression(context, variable),
+        };
       }
     },
-    [DEFAULT_CLAUSE]: (node, context, _site) => [
-      visitExpression(node, context, ANONYMOUS),
-      makeLiteralExpression({ undefined: null }),
-    ],
+    [DEFAULT_CLAUSE]: (node, context, _site) => ({
+      callee: visit(node, context, EXPRESSION),
+      this: makeLiteralExpression({ undefined: null }),
+    }),
   },
 };

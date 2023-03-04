@@ -6,7 +6,6 @@ import {
   SyntaxAranError,
   partial_xx,
   partialx_,
-  partialx___,
 } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
@@ -36,19 +35,17 @@ import {
   makeScopeMetaWriteEffectArray,
   declareScopeMeta,
 } from "../scope/index.mjs";
-import { visit, visitMany } from "./context.mjs";
+import { visit, annotateNodeArray } from "./context.mjs";
 
 const { Error } = globalThis;
 
 const isRestElement = ({ type }) => type === "RestElement";
 
-const ANONYMOUS = { name: null };
-
-const visitKey = partialx___(visit, "Key");
-const visitExpression = partialx___(visit, "Expression");
-const visitPattern = partialx___(visitMany, "Pattern");
-const visitPatternProperty = partialx___(visitMany, "PatternProperty");
-const visitPatternElement = partialx___(visitMany, "PatternElement");
+const EXPRESSION = { type: "Expression", name: "" };
+const KEY = {
+  true: { type: "Key", computed: true },
+  false: { type: "Key", computed: false },
+};
 
 // Depth first:
 //
@@ -105,6 +102,7 @@ const makeCheckObjectEffectArray = (context, variable) => [
 
 export default {
   Pattern: {
+    __ANNOTATE__: annotateNodeArray,
     Identifier: (node, context, site) => {
       if (site.kind === null) {
         return makeScopeBaseWriteEffectArray(context, node.name, site.right);
@@ -147,8 +145,8 @@ export default {
           makeExpressionEffect(
             makeSetExpression(
               context.strict,
-              visitExpression(node.object, context, ANONYMOUS),
-              visitKey(node.property, context, node),
+              visit(node.object, context, EXPRESSION),
+              visit(node.property, context, KEY[node.computed]),
               makeScopeMetaReadExpression(context, variable),
             ),
           ),
@@ -163,7 +161,8 @@ export default {
           makeScopeMetaWriteEffectArray(context, variable, site.right),
           partialx_(liftEffect, site.kind),
         ),
-        visitPattern(node.left, context, {
+        visit(node.left, context, {
+          type: "Pattern",
           kind: site.kind,
           right: makeConditionalExpression(
             makeBinaryExpression(
@@ -171,7 +170,7 @@ export default {
               makeScopeMetaReadExpression(context, variable),
               makeLiteralExpression({ undefined: null }),
             ),
-            visitExpression(node.right, context, ANONYMOUS),
+            visit(node.right, context, EXPRESSION),
             makeScopeMetaReadExpression(context, variable),
           ),
         }),
@@ -243,7 +242,8 @@ export default {
         ),
         flatMap(
           node.elements,
-          partial_xx(visitPatternElement, context, {
+          partial_xx(visit, context, {
+            type: "PatternElement",
             kind: site.kind,
             iterator_variable,
           }),
@@ -308,7 +308,8 @@ export default {
           ),
           flatMap(
             node.properties,
-            partial_xx(visitPatternProperty, context, {
+            partial_xx(visit, context, {
+              type: "PatternProperty",
               kind: site.kind,
               right_variable,
               key_variable_array,
@@ -334,7 +335,8 @@ export default {
           ),
           flatMap(
             node.properties,
-            partial_xx(visitPatternProperty, context, {
+            partial_xx(visit, context, {
+              type: "PatternProperty",
               kind: site.kind,
               right_variable,
               key_variable_array: null,
@@ -345,15 +347,18 @@ export default {
     },
   },
   PatternElement: {
+    __ANNOTATE__: annotateNodeArray,
     RestElement: (node, context, site) =>
-      visitPattern(node.argument, context, {
+      visit(node.argument, context, {
+        type: "Pattern",
         kind: site.kind,
         right: makeArrayFromExpression(
           makeScopeMetaReadExpression(context, site.iterator_variable),
         ),
       }),
     [DEFAULT_CLAUSE]: (node, context, site) =>
-      visitPattern(node, context, {
+      visit(node, context, {
+        type: "Pattern",
         kind: site.kind,
         right: makeApplyExpression(
           makeGetExpression(
@@ -366,19 +371,22 @@ export default {
       }),
   },
   PatternProperty: {
+    __ANNOTATE__: annotateNodeArray,
     Property: (node, context, site) => {
       if (site.key_variable_array === null) {
-        return visitPattern(node.value, context, {
+        return visit(node.value, context, {
+          type: "Pattern",
           kind: site.kind,
           right: makeGetExpression(
             makeScopeMetaReadExpression(context, site.right_variable),
-            visitKey(node.key, context, node),
+            visit(node.key, context, KEY[node.computed]),
           ),
         });
       } else {
         const key_variable = declareScopeMeta(context, "pattern_object_key");
         push(site.key_variable_array, key_variable);
-        return visitPattern(node.value, context, {
+        return visit(node.value, context, {
+          type: "Pattern",
           kind: site.kind,
           right: makeGetExpression(
             makeScopeMetaReadExpression(context, site.right_variable),
@@ -386,7 +394,7 @@ export default {
               makeScopeMetaWriteEffectArray(
                 context,
                 key_variable,
-                visitKey(node.key, context, node),
+                visit(node.key, context, KEY[node.computed]),
               ),
               makeSequenceExpression,
               makeScopeMetaReadExpression(context, key_variable),
@@ -432,7 +440,8 @@ export default {
           ),
           partialx_(liftEffect, site.kind),
         ),
-        visitPattern(node.argument, context, {
+        visit(node.argument, context, {
+          type: "Pattern",
           kind: site.kind,
           right: makeScopeMetaReadExpression(context, rest_variable),
         }),

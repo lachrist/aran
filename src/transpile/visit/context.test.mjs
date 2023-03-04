@@ -3,18 +3,14 @@ import {
   assertDeepEqual,
   assertSuccess,
 } from "../../__fixture__.mjs";
+import { makeLiteralExpression } from "../../ast/index.mjs";
+import { allignExpression } from "../../allign/index.mjs";
 import {
-  makeLiteralExpression,
-  makeBlock,
-  makeDebuggerStatement,
-} from "../../ast/index.mjs";
-import { allignBlock, allignExpression } from "../../allign/index.mjs";
-import {
+  annotateNodeArray,
   createInitialContext,
   saveContext,
   loadContext,
   visit,
-  visitMany,
 } from "./context.mjs";
 
 const { undefined } = globalThis;
@@ -36,53 +32,24 @@ const { undefined } = globalThis;
 assertSuccess(
   allignExpression(
     visit(
-      "key",
       { type: "type" },
       {
         ...createInitialContext(),
         ...{
           visitors: {
-            key: {
+            site: {
+              __ANNOTATE__: annotateNodeArray,
               type: (node, _context, site) => {
                 assertDeepEqual(node, { type: "type" });
-                assertEqual(site, "site");
-                return makeLiteralExpression("output");
+                assertDeepEqual(site, { type: "site" });
+                return [makeLiteralExpression("output")];
               },
             },
           },
         },
       },
-      "site",
-    ),
+      { type: "site" },
+    )[0],
     `"output"`,
-  ),
-);
-
-assertSuccess(
-  allignBlock(
-    makeBlock(
-      [],
-      [],
-      visitMany(
-        "key",
-        { type: "type" },
-        {
-          ...createInitialContext(),
-          ...{
-            visitors: {
-              key: {
-                type: (node, _context, site) => {
-                  assertDeepEqual(node, { type: "type" });
-                  assertEqual(site, "site");
-                  return [makeDebuggerStatement()];
-                },
-              },
-            },
-          },
-        },
-        "site",
-      ),
-    ),
-    `{ debugger; }`,
   ),
 );

@@ -1,6 +1,7 @@
 import { assert, assertEqual } from "../../__fixture__.mjs";
 import { hasOwn } from "../../util/index.mjs";
 import {
+  annotateNode,
   makeLiteralExpression,
   makeReturnStatement,
   makeBlock,
@@ -60,14 +61,16 @@ const Visitor = {
     ...TestVisitor.Statement,
     ReturnStatement: (node, context, _site) => [
       makeReturnStatement(
-        visit("Expression", node.argument, context, { name: null }),
+        visit(node.argument, context, { type: "Expression", name: "" }),
       ),
     ],
   },
   Class: {
+    __ANNOTATE__: annotateNode,
     ClassExpression: visitClass,
   },
   Closure: {
+    __ANNOTATE__: annotateNode,
     ArrowFunctionExpression: visitClosure,
     FunctionExpression: visitClosure,
   },
@@ -98,10 +101,18 @@ testExpression(
   `(function () {});`,
   `{ void (function () { return undefined; }); }`,
 );
+testExpression(
+  `(function f () {});`,
+  `{ void (function () { return undefined; }); }`,
+);
 
 // ClassExpression //
 testExpression(
   `(class {});`,
+  `{ void (function constructor () { return this; }); }`,
+);
+testExpression(
+  `(class C {});`,
   `{ void (function constructor () { return this; }); }`,
 );
 

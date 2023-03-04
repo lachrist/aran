@@ -1,5 +1,5 @@
 import { assertEqual, assertNotEqual } from "../../__fixture__.mjs";
-import { visit, visitMany } from "./context.mjs";
+import { visit } from "./context.mjs";
 import TestVisitor, { test } from "./__fixture__.mjs";
 import KeyVisitor from "./key.mjs";
 import PatternVisitor from "./pattern.mjs";
@@ -13,9 +13,13 @@ const Visitor = {
     VariableDeclaration: (node, context, _site) => {
       assertEqual(node.declarations.length, 1);
       assertNotEqual(node.declarations[0].init, null);
-      return visitMany("Pattern", node.declarations[0].id, context, {
+      return visit(node.declarations[0].id, context, {
+        type: "Pattern",
         kind: node.kind,
-        right: visit("Expression", node.declarations[0].init, context, null),
+        right: visit(node.declarations[0].init, context, {
+          type: "Expression",
+          name: "",
+        }),
       });
     },
   },
@@ -23,9 +27,10 @@ const Visitor = {
     ...TestVisitor.Effect,
     AssignmentExpression: (node, context, _site) => {
       assertEqual(node.operator, "=");
-      return visitMany("Pattern", node.left, context, {
+      return visit(node.left, context, {
+        type: "Pattern",
         kind: null,
-        right: visit("Expression", node.right, context, { name: null }),
+        right: visit(node.right, context, { type: "Expression", name: "" }),
       });
     },
   },

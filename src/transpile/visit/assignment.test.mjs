@@ -1,6 +1,6 @@
 import { assertNotEqual } from "../../__fixture__.mjs";
 import { makeReturnStatement } from "../../ast/index.mjs";
-import { visit, visitMany } from "./context.mjs";
+import { visit } from "./context.mjs";
 import TestVisitor, { test } from "./__fixture__.mjs";
 import KeyVisitor from "./key.mjs";
 import PatternVisitor from "./pattern.mjs";
@@ -17,7 +17,7 @@ const Visitor = {
       assertNotEqual(node.argument, null);
       return [
         makeReturnStatement(
-          visit("Expression", node.argument, context, { name: null }),
+          visit(node.argument, context, { type: "Expression", name: "" }),
         ),
       ];
     },
@@ -25,12 +25,20 @@ const Visitor = {
   Effect: {
     ...TestVisitor.Effect,
     AssignmentExpression: (node, context, _site) =>
-      visitMany("AssignmentEffect", node.left, context, node),
+      visit(node.left, context, {
+        type: "AssignmentEffect",
+        operator: node.operator,
+        right: node.right,
+      }),
   },
   Expression: {
     ...TestVisitor.Expression,
     AssignmentExpression: (node, context, _site) =>
-      visit("AssignmentExpression", node.left, context, node),
+      visit(node.left, context, {
+        type: "AssignmentExpression",
+        operator: node.operator,
+        right: node.right,
+      }),
   },
 };
 

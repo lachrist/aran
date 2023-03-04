@@ -1,7 +1,8 @@
 import { concat } from "array-lite";
-import { reduceReverse, partialx___ } from "../../util/index.mjs";
+import { reduceReverse } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
+  annotateNode,
   makeSequenceExpression,
   makeExpressionEffect,
 } from "../../ast/index.mjs";
@@ -19,7 +20,7 @@ import {
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
 import { expectSyntaxEqual } from "./report.mjs";
-import { visit, visitMany } from "./context.mjs";
+import { annotateNodeArray, visit } from "./context.mjs";
 
 const {
   Reflect: { apply },
@@ -28,11 +29,11 @@ const {
   },
 } = globalThis;
 
-const ANONYMOUS = { name: null };
-
-const visitKey = partialx___(visit, "Key");
-const visitPattern = partialx___(visitMany, "Pattern");
-const visitExpression = partialx___(visit, "Expression");
+const EXPRESSION = { type: "Expression", name: "" };
+const KEY = {
+  true: { type: "Key", computed: true },
+  false: { type: "Key", computed: false },
+};
 
 // Evaluation order of member assignment:
 // ======================================
@@ -70,12 +71,13 @@ const visitExpression = partialx___(visit, "Expression");
 
 export default {
   AssignmentEffect: {
+    __ANNOTATE__: annotateNodeArray,
     Identifier: (node, context, site) => {
       if (site.operator === "=") {
         return makeScopeBaseWriteEffectArray(
           context,
           node.name,
-          visitExpression(site.right, context, node),
+          visit(site.right, context, { type: "Expression", name: node.name }),
         );
       } else {
         return makeScopeBaseWriteEffectArray(
@@ -90,7 +92,7 @@ export default {
             // undefined
             // > f += function () {}
             // 'foofunction () {}'
-            visitExpression(site.right, context, ANONYMOUS),
+            visit(site.right, context, EXPRESSION),
           ),
         );
       }
@@ -101,9 +103,9 @@ export default {
           makeExpressionEffect(
             makeSetExpression(
               context.strict,
-              visitExpression(node.object, context, ANONYMOUS),
-              visitKey(node.property, context, node),
-              visitKey(site.right, context, ANONYMOUS),
+              visit(node.object, context, EXPRESSION),
+              visit(node.property, context, KEY[node.computed]),
+              visit(site.right, context, EXPRESSION),
             ),
           ),
         ];
@@ -120,12 +122,12 @@ export default {
           makeScopeMetaWriteEffectArray(
             context,
             object_variable,
-            visitExpression(node.object, context, ANONYMOUS),
+            visit(node.object, context, EXPRESSION),
           ),
           makeScopeMetaWriteEffectArray(
             context,
             property_variable,
-            visitKey(node.property, context, node),
+            visit(node.property, context, KEY[node.computed]),
           ),
           [
             makeExpressionEffect(
@@ -142,7 +144,7 @@ export default {
                     makeScopeMetaReadExpression(context, object_variable),
                     makeScopeMetaReadExpression(context, property_variable),
                   ),
-                  visitExpression(site.right, context, ANONYMOUS),
+                  visit(site.right, context, EXPRESSION),
                 ),
               ),
             ),
@@ -152,13 +154,15 @@ export default {
     },
     [DEFAULT_CLAUSE]: (node, context, site) => {
       expectSyntaxEqual(site, "operator", "=");
-      return visitPattern(node, context, {
+      return visit(node, context, {
+        type: "Pattern",
         kind: null,
-        right: visitExpression(site.right, context, ANONYMOUS),
+        right: visit(site.right, context, EXPRESSION),
       });
     },
   },
   AssignmentExpression: {
+    __ANNOTATE__: annotateNode,
     Identifier: (node, context, site) => {
       if (site.operator === "=") {
         const variable = declareScopeMeta(
@@ -170,7 +174,7 @@ export default {
             makeScopeMetaWriteEffectArray(
               context,
               variable,
-              visitExpression(site.right, context, node),
+              visit(site.right, context, EXPRESSION),
             ),
             makeScopeBaseMacroWriteEffectArray(
               context,
@@ -200,7 +204,7 @@ export default {
                 // undefined
                 // > f += function () {}
                 // 'foofunction () {}'
-                visitExpression(site.right, context, ANONYMOUS),
+                visit(site.right, context, EXPRESSION),
               ),
             ),
             makeScopeBaseMacroWriteEffectArray(
@@ -218,9 +222,9 @@ export default {
       if (site.operator === "=") {
         return makeSetExpression(
           context.strict,
-          visitExpression(node.object, context, ANONYMOUS),
-          visitKey(node.property, context, node),
-          visitKey(site.right, context, ANONYMOUS),
+          visit(node.object, context, EXPRESSION),
+          visit(node.property, context, KEY[node.computed]),
+          visit(site.right, context, EXPRESSION),
         );
       } else {
         const object_variable = declareScopeMeta(
@@ -236,12 +240,12 @@ export default {
             makeScopeMetaWriteEffectArray(
               context,
               object_variable,
-              visitExpression(node.object, context, ANONYMOUS),
+              visit(node.object, context, EXPRESSION),
             ),
             makeScopeMetaWriteEffectArray(
               context,
               property_variable,
-              visitKey(node.property, context, node),
+              visit(node.property, context, KEY[node.computed]),
             ),
           ),
           makeSequenceExpression,
@@ -255,7 +259,7 @@ export default {
                 makeScopeMetaReadExpression(context, object_variable),
                 makeScopeMetaReadExpression(context, property_variable),
               ),
-              visitExpression(site.right, context, ANONYMOUS),
+              visit(site.right, context, EXPRESSION),
             ),
           ),
         );
@@ -269,9 +273,10 @@ export default {
           makeScopeMetaWriteEffectArray(
             context,
             variable,
-            visitExpression(site.right, context, ANONYMOUS),
+            visit(site.right, context, EXPRESSION),
           ),
-          visitPattern(node, context, {
+          visit(node, context, {
+            type: "Pattern",
             kind: null,
             right: makeScopeMetaReadExpression(context, variable),
           }),

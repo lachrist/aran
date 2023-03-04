@@ -1,5 +1,5 @@
 import { flatMap, concat } from "array-lite";
-import { partial_xx, partialx___ } from "../../util/index.mjs";
+import { partial_xx } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
   makeExpressionEffect,
@@ -14,45 +14,49 @@ import {
   makeScopeMetaReadExpression,
 } from "../scope/index.mjs";
 import { makeSyntaxError } from "./report.mjs";
-import { visit, visitMany } from "./context.mjs";
+import { annotateNodeArray, visit } from "./context.mjs";
 
-const ANONYMOUS = { name: null };
-
-const visitExpression = partialx___(visit, "Expression");
-const visitEffect = partialx___(visitMany, "Effect");
-const visitUpdateEffect = partialx___(visitMany, "UpdateEffect");
-const visitAssignmentEffect = partialx___(visitMany, "AssignmentEffect");
+const EFFECT = { type: "Effect" };
+const EXPRESSION = { type: "Expression", name: "" };
 
 export default {
   Effect: {
+    __ANNOTATE__: annotateNodeArray,
     AssignmentExpression: (node, context, _site) =>
-      visitAssignmentEffect(node.left, context, node),
+      visit(node.left, context, {
+        type: "AssignmentEffect",
+        operator: node.operator,
+        right: node.right,
+      }),
     UpdateExpression: (node, context, _site) =>
-      visitUpdateEffect(node.argument, context, node),
+      visit(node.argument, context, {
+        type: "UpdateEffect",
+        operator: node.operator,
+      }),
     SequenceExpression: (node, context, _site) =>
-      flatMap(node.expressions, partial_xx(visitEffect, context, null)),
+      flatMap(node.expressions, partial_xx(visit, context, EFFECT)),
     ConditionalExpression: (node, context, _site) => [
       makeConditionalEffect(
-        visitExpression(node.test, context, ANONYMOUS),
-        visitEffect(node.consequent, context, null),
-        visitEffect(node.alternate, context, null),
+        visit(node.test, context, EXPRESSION),
+        visit(node.consequent, context, EFFECT),
+        visit(node.alternate, context, EFFECT),
       ),
     ],
     LogicalExpression: (node, context, _site) => {
       if (node.operator === "&&") {
         return [
           makeConditionalEffect(
-            visitExpression(node.left, context, ANONYMOUS),
-            visitEffect(node.right, context, null),
+            visit(node.left, context, EXPRESSION),
+            visit(node.right, context, EFFECT),
             [],
           ),
         ];
       } else if (node.operator === "||") {
         return [
           makeConditionalEffect(
-            visitExpression(node.left, context, ANONYMOUS),
+            visit(node.left, context, EXPRESSION),
             [],
-            visitEffect(node.right, context, null),
+            visit(node.right, context, EFFECT),
           ),
         ];
       } else if (node.operator === "??") {
@@ -64,7 +68,7 @@ export default {
           makeScopeMetaWriteEffectArray(
             context,
             variable,
-            visitExpression(node.left, context, null),
+            visit(node.left, context, EXPRESSION),
           ),
           [
             makeConditionalEffect(
@@ -81,7 +85,7 @@ export default {
                   makeLiteralExpression({ undefined: null }),
                 ),
               ),
-              visitEffect(node.right, context, null),
+              visit(node.right, context, EFFECT),
               [],
             ),
           ],
@@ -91,7 +95,7 @@ export default {
       } /* c8 ignore stop */
     },
     [DEFAULT_CLAUSE]: (node, context, _site) => [
-      makeExpressionEffect(visitExpression(node, context, ANONYMOUS)),
+      makeExpressionEffect(visit(node, context, EXPRESSION)),
     ],
   },
 };

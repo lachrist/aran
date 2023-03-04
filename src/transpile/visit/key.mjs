@@ -1,16 +1,14 @@
-import { partialx___ } from "../../util/index.mjs";
 import { DEFAULT_CLAUSE } from "../../node.mjs";
-import { makeLiteralExpression } from "../../ast/index.mjs";
+import { annotateNode, makeLiteralExpression } from "../../ast/index.mjs";
 import { makeScopeBaseReadExpression } from "../scope/index.mjs";
 import { expectSyntaxEqual } from "./report.mjs";
 import { visit } from "./context.mjs";
 
-const visitExpression = partialx___(visit, "Expression");
-
-const ANONYMOUS = { name: null };
+const EXPRESSION = { type: "Expression", name: "" };
 
 export default {
   Key: {
+    __ANNOTATE__: annotateNode,
     Identifier: (node, context, { computed }) =>
       computed
         ? makeScopeBaseReadExpression(context, node.name)
@@ -18,7 +16,7 @@ export default {
     Literal: (node, _context, _site) => makeLiteralExpression(node.value),
     [DEFAULT_CLAUSE]: (node, context, site) => {
       expectSyntaxEqual(site, "computed", true);
-      return visitExpression(node, context, ANONYMOUS);
+      return visit(node, context, EXPRESSION);
     },
   },
 };
