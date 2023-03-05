@@ -15,7 +15,7 @@ import {
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
 import { expectSyntaxEqual } from "./report.mjs";
-import { visit } from "./context.mjs";
+import { visit, EXPRESSION, KEY_MAP } from "./context.mjs";
 
 const {
   Reflect: { apply },
@@ -23,12 +23,6 @@ const {
     prototype: { substring },
   },
 } = globalThis;
-
-const EXPRESSION = { type: "Expression", name: "" };
-const KEY = {
-  true: { type: "Key", computed: true },
-  false: { type: "Key", computed: false },
-};
 
 // Evaluation order of member assignment:
 // ======================================
@@ -126,7 +120,7 @@ export default {
       return makeSetExpression(
         context.strict,
         visit(node.object, context, EXPRESSION),
-        visit(node.property, context, KEY[node.computed]),
+        visit(node.property, context, KEY_MAP[node.computed]),
         visit(site.right, context, EXPRESSION),
       );
     } else {
@@ -148,7 +142,7 @@ export default {
           makeScopeMetaWriteEffectArray(
             context,
             property_variable,
-            visit(node.property, context, KEY[node.computed]),
+            visit(node.property, context, KEY_MAP[node.computed]),
           ),
         ),
         makeSequenceExpression,

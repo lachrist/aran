@@ -26,15 +26,15 @@ import {
   makeScopeMetaWriteEffectArray,
   declareScopeMeta,
 } from "../scope/index.mjs";
-import { visit, annotateNodeArray, liftEffect } from "./context.mjs";
+import {
+  visit,
+  annotateNodeArray,
+  liftEffect,
+  EXPRESSION,
+  KEY_MAP,
+} from "./context.mjs";
 
 const isRestElement = ({ type }) => type === "RestElement";
-
-const EXPRESSION = { type: "Expression", name: "" };
-const KEY = {
-  true: { type: "Key", computed: true },
-  false: { type: "Key", computed: false },
-};
 
 // Depth first:
 //
@@ -131,7 +131,7 @@ export default {
           makeSetExpression(
             context.strict,
             visit(node.object, context, EXPRESSION),
-            visit(node.property, context, KEY[node.computed]),
+            visit(node.property, context, KEY_MAP[node.computed]),
             makeScopeMetaReadExpression(context, variable),
           ),
         ),

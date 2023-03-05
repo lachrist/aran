@@ -68,3 +68,13 @@ export const visit = (node, context, site) => {
 export const liftEffect = (kind, effect) =>
   kind === null ? effect : makeEffectStatement(effect);
 
+export const EFFECT = { type: "Effect" };
+export const CALLEE = { type: "Callee" };
+export const EXPRESSION = { type: "Expression", name: "" };
+export const QUASI_COOKED = { type: "Quasi", cooked: true };
+export const QUASI_RAW = { type: "Quasi", cooked: false };
+export const DELETE = { type: "Delete" };
+export const KEY_MAP = {
+  true: { type: "Key", computed: true },
+  false: { type: "Key", computed: false },
+};

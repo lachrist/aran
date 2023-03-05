@@ -29,16 +29,17 @@ import {
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
 import { expectSyntaxNotEqualDeep, makeSyntaxError } from "./report.mjs";
-import { visit } from "./context.mjs";
+import {
+  visit,
+  QUASI_RAW,
+  QUASI_COOKED,
+  EXPRESSION,
+  EFFECT,
+  DELETE,
+  CALLEE,
+} from "./context.mjs";
 
 const { Array } = globalThis;
-
-const QUASI_COOKED = { type: "Quasi", cooked: true };
-const QUASI_RAW = { type: "Quasi", cooked: false };
-const EXPRESSION = { type: "Expression", name: "" };
-const EFFECT = { type: "Effect" };
-const DELETE = { type: "Delete" };
-const CALLEE = { type: "Callee" };
 
 const getMetaPropertyVariable = (node) => {
   if (node.meta.name === "new" && node.property.name === "target") {

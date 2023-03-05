@@ -16,15 +16,7 @@ import {
   makeScopeMetaWriteEffectArray,
   makeScopeMetaReadExpression,
 } from "../scope/index.mjs";
-import { visit } from "./context.mjs";
-
-const DELETE = { type: "Delete" };
-const EFFECT = { type: "Effect" };
-const EXPRESSION = { type: "Expression", name: "" };
-const KEY = {
-  true: { type: "Key", computed: true },
-  false: { type: "Key", computed: false },
-};
+import { visit, DELETE, EFFECT, EXPRESSION, KEY_MAP } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNode,
@@ -63,7 +55,7 @@ export default {
           makeDeleteExpression(
             context.strict,
             makeScopeMetaReadExpression(context, variable),
-            visit(node.property, context, KEY[node.computed]),
+            visit(node.property, context, KEY_MAP[node.computed]),
           ),
         ),
       );
@@ -71,7 +63,7 @@ export default {
       return makeDeleteExpression(
         context.strict,
         visit(node.object, context, EXPRESSION),
-        visit(node.property, context, KEY[node.computed]),
+        visit(node.property, context, KEY_MAP[node.computed]),
       );
     }
   },

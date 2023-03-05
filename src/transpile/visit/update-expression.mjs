@@ -19,13 +19,7 @@ import {
   makeScopeMetaReadExpression,
 } from "../scope/index.mjs";
 import { expectSyntaxEqual } from "./report.mjs";
-import { visit } from "./context.mjs";
-
-const EXPRESSION = { type: "Expression", name: "" };
-const KEY = {
-  true: { type: "Key", computed: true },
-  false: { type: "Key", computed: false },
-};
+import { visit, EXPRESSION, KEY_MAP } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNode,
@@ -97,7 +91,7 @@ export default {
           makeScopeMetaWriteEffectArray(
             context,
             property_variable,
-            visit(node.property, context, KEY[node.computed]),
+            visit(node.property, context, KEY_MAP[node.computed]),
           ),
         ),
         makeSequenceExpression,
@@ -138,7 +132,7 @@ export default {
           makeScopeMetaWriteEffectArray(
             context,
             property_variable,
-            visit(node.property, context, KEY[node.computed]),
+            visit(node.property, context, KEY_MAP[node.computed]),
           ),
           makeScopeMetaWriteEffectArray(
             context,

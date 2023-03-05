@@ -14,10 +14,7 @@ import {
   makeScopeMetaReadExpression,
 } from "../scope/index.mjs";
 import { makeSyntaxError } from "./report.mjs";
-import { annotateNodeArray, visit } from "./context.mjs";
-
-const EFFECT = { type: "Effect" };
-const EXPRESSION = { type: "Expression", name: "" };
+import { annotateNodeArray, visit, EFFECT, EXPRESSION } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNodeArray,

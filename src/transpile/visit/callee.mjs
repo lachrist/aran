@@ -15,14 +15,7 @@ import {
   declareScopeMeta,
 } from "../scope/index.mjs";
 import { expectSyntaxEqual } from "./report.mjs";
-import { visit } from "./context.mjs";
-
-const KEY = {
-  true: { type: "Key", computed: true },
-  false: { type: "Key", computed: false },
-};
-const CALLEE = { type: "Callee" };
-const EXPRESSION = { type: "Expression", name: "" };
+import { visit, CALLEE, EXPRESSION, KEY_MAP } from "./context.mjs";
 
 export default {
   __ANNOTATE__: ({ callee: expression1, this: expression2 }, serial) => ({
@@ -38,7 +31,7 @@ export default {
         callee: makeApplyExpression(
           makeScopeSpecReadExpression(context, "super.get"),
           makeLiteralExpression({ undefined: null }),
-          [visit(node.property, context, KEY[node.computed])],
+          [visit(node.property, context, KEY_MAP[node.computed])],
         ),
         this: makeScopeSpecReadExpression(context, "this"),
       };
@@ -70,12 +63,12 @@ export default {
                 makeLiteralExpression({ undefined: null }),
                 makeGetExpression(
                   makeScopeMetaReadExpression(context, variable),
-                  visit(node.property, context, KEY[node.computed]),
+                  visit(node.property, context, KEY_MAP[node.computed]),
                 ),
               )
             : makeGetExpression(
                 makeScopeMetaReadExpression(context, variable),
-                visit(node.property, context, KEY[node.computed]),
+                visit(node.property, context, KEY_MAP[node.computed]),
               ),
         ),
         this: makeScopeMetaReadExpression(context, variable),

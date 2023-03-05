@@ -2,9 +2,7 @@ import { DEFAULT_CLAUSE } from "../../node.mjs";
 import { annotateNode, makeLiteralExpression } from "../../ast/index.mjs";
 import { makeScopeBaseReadExpression } from "../scope/index.mjs";
 import { expectSyntaxEqual } from "./report.mjs";
-import { visit } from "./context.mjs";
-
-const EXPRESSION = { type: "Expression", name: "" };
+import { visit, EXPRESSION } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNode,
