@@ -46,6 +46,7 @@ export const makeMetaVariable = (name, index) =>
 
 const specials = [
   ["this", "this"],
+  ["import", "import"],
   ["new.target", "new_target"],
   ["import.meta", "import_meta"],
   ["super.get", "super_get"],

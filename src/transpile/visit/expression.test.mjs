@@ -252,3 +252,6 @@ testExpression(
     }
   `,
 );
+
+// ImportExpression //
+testExpression(`import("source");`, `{ void ("import")("source"); }`);

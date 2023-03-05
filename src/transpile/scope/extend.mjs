@@ -318,6 +318,7 @@ export const makeScopeTestBlock = (context, makeStatementArray) =>
       forEach(
         [
           "this",
+          "import",
           "new.target",
           "import.meta",
           "super.get",

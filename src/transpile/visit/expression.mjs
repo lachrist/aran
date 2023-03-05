@@ -266,5 +266,12 @@ export default {
         throw makeSyntaxError(node, "operator");
       } /* c8 ignore stop */
     },
+    // Operation //
+    ImportExpression: (node, context, _site) =>
+      makeApplyExpression(
+        makeScopeSpecReadExpression(context, "import"),
+        makeLiteralExpression({ undefined: null }),
+        [visit(node.source, context, EXPRESSION)],
+      ),
   },
 };
