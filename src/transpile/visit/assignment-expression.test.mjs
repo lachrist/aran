@@ -3,14 +3,18 @@ import { makeReturnStatement } from "../../ast/index.mjs";
 import { visit } from "./context.mjs";
 import TestVisitor, { test } from "./__fixture__.mjs";
 import KeyVisitor from "./key.mjs";
+import PatternElementVisitor from "./pattern-element.mjs";
+import PatternPropertyVisitor from "./pattern-property.mjs";
 import PatternVisitor from "./pattern.mjs";
-import AssignmentVisitor from "./assignment.mjs";
+import AssignmentExpressionVisitor from "./assignment-expression.mjs";
 
 const Visitor = {
   ...TestVisitor,
-  ...KeyVisitor,
-  ...PatternVisitor,
-  ...AssignmentVisitor,
+  Key: KeyVisitor,
+  PatternElement: PatternElementVisitor,
+  PatternProperty: PatternPropertyVisitor,
+  Pattern: PatternVisitor,
+  AssignmentExpression: AssignmentExpressionVisitor,
   Statement: {
     ...TestVisitor.Statement,
     ReturnStatement: (node, context, _site) => {
@@ -21,15 +25,6 @@ const Visitor = {
         ),
       ];
     },
-  },
-  Effect: {
-    ...TestVisitor.Effect,
-    AssignmentExpression: (node, context, _site) =>
-      visit(node.left, context, {
-        type: "AssignmentEffect",
-        operator: node.operator,
-        right: node.right,
-      }),
   },
   Expression: {
     ...TestVisitor.Expression,
@@ -42,63 +37,11 @@ const Visitor = {
   },
 };
 
-const testAssignment = (input, output) => {
+const testAssignmentExpression = (input, output) => {
   test(input, { visitors: Visitor }, null, output);
 };
 
-//////////////////////
-// AssignmentEffect //
-//////////////////////
-
-testAssignment(`"use strict"; x = 123;`, `{ [x] = 123; }`);
-
-testAssignment(
-  `"use strict"; x **= 123;`,
-  `{ [x] = intrinsic.aran.binary("**", [x], 123); }`,
-);
-
-testAssignment(
-  `(123)[456] = 789;`,
-  `{ void intrinsic.aran.setSloppy(123, 456, 789); }`,
-);
-
-testAssignment(
-  `(123)[456] **= 789;`,
-  `
-    {
-      let object, property;
-      object = 123;
-      property = 456;
-      void intrinsic.aran.setSloppy(
-        object,
-        property,
-        intrinsic.aran.binary(
-          "**",
-          intrinsic.aran.get(object, property),
-          789,
-        ),
-      );
-    }
-  `,
-);
-
-testAssignment(
-  `"use strict"; [x] = 123;`,
-  `
-    {
-      let right, iterator;
-      right = 123;
-      iterator = intrinsic.aran.get(right, intrinsic.Symbol.iterator)(!right);
-      [x] = intrinsic.aran.get(iterator, "next")(!iterator);
-    }
-  `,
-);
-
-//////////////////////////
-// AssignmentExpression //
-//////////////////////////
-
-testAssignment(
+testAssignmentExpression(
   `"use strict"; return x = 123;`,
   `
     {
@@ -114,7 +57,7 @@ testAssignment(
   `,
 );
 
-testAssignment(
+testAssignmentExpression(
   `"use strict"; return x **= 123;`,
   `
     {
@@ -130,12 +73,12 @@ testAssignment(
   `,
 );
 
-testAssignment(
+testAssignmentExpression(
   `return (123)[456] = 789;`,
   `{ return intrinsic.aran.setSloppy(123, 456, 789); }`,
 );
 
-testAssignment(
+testAssignmentExpression(
   `return (123)[456] **= 789;`,
   `
     {
@@ -159,7 +102,7 @@ testAssignment(
   `,
 );
 
-testAssignment(
+testAssignmentExpression(
   `"use strict"; return [x] = 123;`,
   `
     {

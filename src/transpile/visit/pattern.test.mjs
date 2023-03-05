@@ -2,12 +2,12 @@ import { assertEqual, assertNotEqual } from "../../__fixture__.mjs";
 import { visit } from "./context.mjs";
 import TestVisitor, { test } from "./__fixture__.mjs";
 import KeyVisitor from "./key.mjs";
+import PatternElementVisitor from "./pattern-element.mjs";
+import PatternPropertyVisitor from "./pattern-property.mjs";
 import PatternVisitor from "./pattern.mjs";
 
 const Visitor = {
   ...TestVisitor,
-  ...KeyVisitor,
-  ...PatternVisitor,
   Statement: {
     ...TestVisitor.Statement,
     VariableDeclaration: (node, context, _site) => {
@@ -34,6 +34,10 @@ const Visitor = {
       });
     },
   },
+  Key: KeyVisitor,
+  Pattern: PatternVisitor,
+  PatternElement: PatternElementVisitor,
+  PatternProperty: PatternPropertyVisitor,
 };
 
 const testPattern = (input, output) => {

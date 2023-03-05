@@ -6,7 +6,7 @@ import DeleteVisitor from "./delete.mjs";
 
 const Visitor = {
   ...TestVisitor,
-  ...DeleteVisitor,
+  Delete: DeleteVisitor,
   Expression: {
     ...TestVisitor.Expression,
     UnaryExpression: (node, context, _site) => {
@@ -14,7 +14,7 @@ const Visitor = {
       return visit(node.argument, context, { type: "Delete" });
     },
   },
-  ...KeyVisitor,
+  Key: KeyVisitor,
 };
 
 const testDelete = (input, output) => {

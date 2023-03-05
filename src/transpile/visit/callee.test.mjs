@@ -21,8 +21,8 @@ const Visitor = {
       return makeApplyExpression(expression1, expression2, []);
     },
   },
-  ...KeyVisitor,
-  ...CalleeVisitor,
+  Key: KeyVisitor,
+  Callee: CalleeVisitor,
 };
 
 const testCallee = (input, output) => {

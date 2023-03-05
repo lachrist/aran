@@ -3,17 +3,39 @@ import {
   assertDeepEqual,
   assertSuccess,
 } from "../../__fixture__.mjs";
-import { makeLiteralExpression } from "../../ast/index.mjs";
-import { allignExpression } from "../../allign/index.mjs";
+import {
+  makeExpressionEffect,
+  makeLiteralExpression,
+} from "../../ast/index.mjs";
+import {
+  allignExpression,
+  allignEffect,
+  allignStatement,
+} from "../../allign/index.mjs";
 import {
   annotateNodeArray,
   createInitialContext,
   saveContext,
   loadContext,
   visit,
+  liftEffect,
 } from "./context.mjs";
 
 const { undefined } = globalThis;
+
+////////////////
+// liftEffect //
+////////////////
+
+allignEffect(
+  liftEffect(null, makeExpressionEffect(makeLiteralExpression(123))),
+  `void 123`,
+);
+
+allignStatement(
+  liftEffect("var", makeExpressionEffect(makeLiteralExpression(123))),
+  `void 123;`,
+);
 
 ///////////
 // Evals //

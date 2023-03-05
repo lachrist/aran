@@ -3,12 +3,12 @@ import { makeReturnStatement } from "../../ast/index.mjs";
 import { visit } from "./context.mjs";
 import TestVisitor, { test } from "./__fixture__.mjs";
 import KeyVisitor from "./key.mjs";
-import UpdateVisitor from "./update.mjs";
+import UpdateExpressionVisitor from "./update-expression.mjs";
 
 const Visitor = {
   ...TestVisitor,
-  ...KeyVisitor,
-  ...UpdateVisitor,
+  Key: KeyVisitor,
+  UpdateExpression: UpdateExpressionVisitor,
   Statement: {
     ...TestVisitor.Statement,
     ReturnStatement: (node, context, _site) => {
@@ -19,15 +19,6 @@ const Visitor = {
         ),
       ];
     },
-  },
-  Effect: {
-    ...TestVisitor.Effect,
-    UpdateExpression: (node, context, _site) =>
-      visit(node.argument, context, {
-        type: "UpdateEffect",
-        prefix: node.prefix,
-        operator: node.operator,
-      }),
   },
   Expression: {
     ...TestVisitor.Expression,
@@ -40,43 +31,11 @@ const Visitor = {
   },
 };
 
-const testUpdate = (input, output) => {
+const testUpdateExpression = (input, output) => {
   test(input, { visitors: Visitor }, null, output);
 };
 
-//////////////////
-// UpdateEffect //
-//////////////////
-
-testUpdate(
-  `"use strict"; x++;`,
-  `{ [x] = intrinsic.aran.binary("+", [x], 1); }`,
-);
-
-testUpdate(
-  `(123)[456]++;`,
-  `{
-      let object, property;
-      object = 123;
-      property = 456;
-      void intrinsic.aran.setSloppy(
-        object,
-        property,
-        intrinsic.aran.binary(
-          "+",
-          intrinsic.aran.get(object, property),
-          1,
-        ),
-      );
-    }
-  `,
-);
-
-//////////////////////
-// UpdateExpression //
-//////////////////////
-
-testUpdate(
+testUpdateExpression(
   `"use strict"; return ++x;`,
   `
     {
@@ -92,7 +51,7 @@ testUpdate(
   `,
 );
 
-testUpdate(
+testUpdateExpression(
   `"use strict"; return x++;`,
   `
     {
@@ -108,7 +67,7 @@ testUpdate(
   `,
 );
 
-testUpdate(
+testUpdateExpression(
   `return ++(123)[456];`,
   `
     {
@@ -132,7 +91,7 @@ testUpdate(
   `,
 );
 
-testUpdate(
+testUpdateExpression(
   `return (123)[456]++;`,
   `
     {

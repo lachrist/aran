@@ -4,9 +4,13 @@ __fixture__.mjs
 quasi.mjs
 key.mjs
 callee.mjs
+pattern-element.mjs
+pattern-property.mjs
 pattern.mjs
-assignment.mjs
-update.mjs
+assignment-effect.mjs
+assignment-expression.mjs
+update-effect.mjs
+update-expression.mjs
 delete.mjs
 effect.mjs
 expression.mjs

@@ -12,7 +12,7 @@ const Visitor = {
       return visit(node.quasis[0], context, { ...site, type: "Quasi" });
     },
   },
-  ...QuasiVisitor,
+  Quasi: QuasiVisitor,
 };
 
 const testQuasi = (site, input, output) => {

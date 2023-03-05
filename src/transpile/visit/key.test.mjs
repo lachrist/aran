@@ -13,7 +13,7 @@ const Visitor = {
         visit(node.property, context, { type: "Key", computed: node.computed }),
       ),
   },
-  ...KeyVisitor,
+  Key: KeyVisitor,
 };
 
 const testKey = (input, output) => {

@@ -7,16 +7,14 @@ import { visit } from "./context.mjs";
 const EXPRESSION = { type: "Expression", name: "" };
 
 export default {
-  Key: {
-    __ANNOTATE__: annotateNode,
-    Identifier: (node, context, { computed }) =>
-      computed
-        ? makeScopeBaseReadExpression(context, node.name)
-        : makeLiteralExpression(node.name),
-    Literal: (node, _context, _site) => makeLiteralExpression(node.value),
-    [DEFAULT_CLAUSE]: (node, context, site) => {
-      expectSyntaxEqual(site, "computed", true);
-      return visit(node, context, EXPRESSION);
-    },
+  __ANNOTATE__: annotateNode,
+  Identifier: (node, context, { computed }) =>
+    computed
+      ? makeScopeBaseReadExpression(context, node.name)
+      : makeLiteralExpression(node.name),
+  Literal: (node, _context, _site) => makeLiteralExpression(node.value),
+  [DEFAULT_CLAUSE]: (node, context, site) => {
+    expectSyntaxEqual(site, "computed", true);
+    return visit(node, context, EXPRESSION);
   },
 };

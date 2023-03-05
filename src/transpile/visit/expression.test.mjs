@@ -13,11 +13,9 @@ import TestVisitor, { test } from "./__fixture__.mjs";
 import QuasiVisitor from "./quasi.mjs";
 import KeyVisitor from "./key.mjs";
 import CalleeVisitor from "./callee.mjs";
-import PatternVisitor from "./pattern.mjs";
-import AssignmentVisitor from "./assignment.mjs";
-import UpdateVisitor from "./update.mjs";
+import AssignmentExpressionVisitor from "./assignment-expression.mjs";
+import UpdateExpressionVisitor from "./update-expression.mjs";
 import DeleteVisitor from "./delete.mjs";
-import EffectVisitor from "./effect.mjs";
 import ExpressionVisitor from "./expression.mjs";
 
 const visitClass = (node, _context, _site) => {
@@ -50,15 +48,13 @@ const visitClosure = (node, _context, site) => {
 
 const Visitor = {
   ...TestVisitor,
-  ...QuasiVisitor,
-  ...KeyVisitor,
-  ...CalleeVisitor,
-  ...PatternVisitor,
-  ...AssignmentVisitor,
-  ...UpdateVisitor,
-  ...DeleteVisitor,
-  ...EffectVisitor,
-  ...ExpressionVisitor,
+  Quasi: QuasiVisitor,
+  Key: KeyVisitor,
+  Callee: CalleeVisitor,
+  AssignmentExpression: AssignmentExpressionVisitor,
+  UpdateExpression: UpdateExpressionVisitor,
+  Delete: DeleteVisitor,
+  Expression: ExpressionVisitor,
   Statement: {
     ...TestVisitor.Statement,
     ReturnStatement: (node, context, _site) => [
@@ -202,8 +198,8 @@ testExpression(
 
 // SequenceExpression //
 testExpression(
-  `"use strict"; return (x = 123, 456);`,
-  `{ return ([x] = 123, 456); }`,
+  `"use strict"; return (123, 456);`,
+  `{ return (void 123, 456); }`,
 );
 
 // ConditionalExpression //

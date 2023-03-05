@@ -1,17 +1,15 @@
 import TestVisitor, { test } from "./__fixture__.mjs";
 import KeyVisitor from "./key.mjs";
-import PatternVisitor from "./pattern.mjs";
-import AssignmentVisitor from "./assignment.mjs";
-import UpdateVisitor from "./update.mjs";
+import AssignmentEffectVisitor from "./assignment-effect.mjs";
+import UpdateEffectVisitor from "./update-effect.mjs";
 import EffectVisitor from "./effect.mjs";
 
 const Visitor = {
   ...TestVisitor,
-  ...KeyVisitor,
-  ...PatternVisitor,
-  ...AssignmentVisitor,
-  ...UpdateVisitor,
-  ...EffectVisitor,
+  Key: KeyVisitor,
+  AssignmentEffect: AssignmentEffectVisitor,
+  UpdateEffect: UpdateEffectVisitor,
+  Effect: EffectVisitor,
 };
 
 const testEffect = (input, output) => {

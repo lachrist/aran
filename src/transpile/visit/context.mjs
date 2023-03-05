@@ -7,7 +7,7 @@ import {
   NULL_DATA_DESCRIPTOR,
 } from "../../util/index.mjs";
 import { dispatchObjectNode2 } from "../../node.mjs";
-import { annotateNode } from "../../ast/index.mjs";
+import { makeEffectStatement, annotateNode } from "../../ast/index.mjs";
 import { ROOT_SCOPE, packScope, unpackScope } from "../scope/index.mjs";
 
 const {
@@ -64,3 +64,7 @@ export const visit = (node, context, site) => {
     serializeContextNode(context, node),
   );
 };
+
+export const liftEffect = (kind, effect) =>
+  kind === null ? effect : makeEffectStatement(effect);
+
