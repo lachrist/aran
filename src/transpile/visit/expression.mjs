@@ -14,6 +14,7 @@ import {
   makeLiteralExpression,
 } from "../../ast/index.mjs";
 import {
+  makeGetExpression,
   makeUnaryExpression,
   makeArrayExpression,
   makeObjectFreezeExpression,
@@ -37,6 +38,7 @@ import {
   EFFECT,
   DELETE,
   CALLEE,
+  KEY_MAP,
 } from "./context.mjs";
 
 const { Array } = globalThis;
@@ -284,6 +286,49 @@ export default {
       visit(node.left, context, EXPRESSION),
       visit(node.right, context, EXPRESSION),
     ),
+  ChainExpression: (node, context, _site) =>
+    visit(node.expression, context, EXPRESSION),
+  MemberExpression: (node, context, _site) => {
+    if (node.optional) {
+      const variable = declareScopeMeta(
+        context,
+        "ExpressionMemberExpressionObject",
+      );
+      return reduceReverse(
+        makeScopeMetaWriteEffectArray(
+          context,
+          variable,
+          visit(node.object, context, EXPRESSION),
+        ),
+        makeSequenceExpression,
+        makeConditionalExpression(
+          makeConditionalExpression(
+            makeBinaryExpression(
+              "===",
+              makeScopeMetaReadExpression(context, variable),
+              makeLiteralExpression(null),
+            ),
+            makeLiteralExpression(true),
+            makeBinaryExpression(
+              "===",
+              makeScopeMetaReadExpression(context, variable),
+              makeLiteralExpression({ undefined: null }),
+            ),
+          ),
+          makeLiteralExpression({ undefined: null }),
+          makeGetExpression(
+            makeScopeMetaReadExpression(context, variable),
+            visit(node.property, context, KEY_MAP[node.computed]),
+          ),
+        ),
+      );
+    } else {
+      return makeGetExpression(
+        visit(node.object, context, EXPRESSION),
+        visit(node.property, context, KEY_MAP[node.computed]),
+      );
+    }
+  },
   ImportExpression: (node, context, _site) =>
     makeApplyExpression(
       makeScopeSpecReadExpression(context, "import"),

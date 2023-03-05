@@ -116,6 +116,7 @@ export default {
     }
   },
   MemberExpression: (node, context, site) => {
+    expectSyntaxEqual(node, "optional", false);
     if (site.operator === "=") {
       return makeSetExpression(
         context.strict,

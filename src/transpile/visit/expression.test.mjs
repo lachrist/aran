@@ -261,3 +261,26 @@ testExpression(`delete 123;`, `{ void (void 123, true); }`);
 
 // BinaryExpression //
 testExpression(`123 + 456;`, `{ void intrinsic.aran.binary("+", 123, 456); }`);
+
+// MemberExpression //
+testExpression(`(123)[456];`, `{ void intrinsic.aran.get(123, 456); }`);
+testExpression(
+  `(123)?.[456];`,
+  `
+    {
+      let object;
+      void (
+        object = 123,
+        (
+          (
+            intrinsic.aran.binary("===", object, null) ?
+            true :
+            intrinsic.aran.binary("===", object, undefined)
+          ) ?
+          undefined :
+          intrinsic.aran.get(object, 456)
+        )
+      );
+    }
+  `,
+);
