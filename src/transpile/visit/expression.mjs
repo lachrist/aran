@@ -278,6 +278,12 @@ export default {
       );
     }
   },
+  BinaryExpression: (node, context, _site) =>
+    makeBinaryExpression(
+      node.operator,
+      visit(node.left, context, EXPRESSION),
+      visit(node.right, context, EXPRESSION),
+    ),
   ImportExpression: (node, context, _site) =>
     makeApplyExpression(
       makeScopeSpecReadExpression(context, "import"),

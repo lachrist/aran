@@ -258,3 +258,6 @@ testExpression(`import("source");`, `{ void ("import")("source"); }`);
 testExpression(`void 123;`, `{ void (void 123, undefined); }`);
 testExpression(`!123;`, `{ void intrinsic.aran.unary("!", 123); }`);
 testExpression(`delete 123;`, `{ void (void 123, true); }`);
+
+// BinaryExpression //
+testExpression(`123 + 456;`, `{ void intrinsic.aran.binary("+", 123, 456); }`);
