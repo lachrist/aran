@@ -7,5 +7,6 @@ callee.mjs
 pattern.mjs
 assignment.mjs
 update.mjs
+delete.mjs
 effect.mjs
 expression.mjs

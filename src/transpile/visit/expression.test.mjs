@@ -16,6 +16,7 @@ import CalleeVisitor from "./callee.mjs";
 import PatternVisitor from "./pattern.mjs";
 import AssignmentVisitor from "./assignment.mjs";
 import UpdateVisitor from "./update.mjs";
+import DeleteVisitor from "./delete.mjs";
 import EffectVisitor from "./effect.mjs";
 import ExpressionVisitor from "./expression.mjs";
 
@@ -55,6 +56,7 @@ const Visitor = {
   ...PatternVisitor,
   ...AssignmentVisitor,
   ...UpdateVisitor,
+  ...DeleteVisitor,
   ...EffectVisitor,
   ...ExpressionVisitor,
   Statement: {
@@ -255,3 +257,8 @@ testExpression(
 
 // ImportExpression //
 testExpression(`import("source");`, `{ void ("import")("source"); }`);
+
+// UnaryExpression //
+testExpression(`void 123;`, `{ void (void 123, undefined); }`);
+testExpression(`!123;`, `{ void intrinsic.aran.unary("!", 123); }`);
+testExpression(`delete 123;`, `{ void (void 123, true); }`);

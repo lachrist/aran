@@ -1,7 +1,6 @@
-import { concat, reduce, map, reduceRight, flatMap, slice } from "array-lite";
+import { concat, reduce, map, flatMap, slice } from "array-lite";
 import {
   reduceReverse,
-  flipxx,
   partial_xx,
   SyntaxAranError,
 } from "../../util/index.mjs";
@@ -15,6 +14,7 @@ import {
   makeLiteralExpression,
 } from "../../ast/index.mjs";
 import {
+  makeUnaryExpression,
   makeArrayExpression,
   makeObjectFreezeExpression,
   makeObjectDefinePropertyExpression,
@@ -37,6 +37,7 @@ const QUASI_COOKED = { type: "Quasi", cooked: true };
 const QUASI_RAW = { type: "Quasi", cooked: false };
 const EXPRESSION = { type: "Expression", name: "" };
 const EFFECT = { type: "Effect" };
+const DELETE = { type: "Delete" };
 const CALLEE = { type: "Callee" };
 
 const getMetaPropertyVariable = (node) => {
@@ -184,12 +185,12 @@ export default {
     // ''
     SequenceExpression: (node, context, _site) => {
       expectSyntaxNotEqualDeep(node, "expressions", "length", 0);
-      return reduceRight(
+      return reduceReverse(
         flatMap(
           slice(node.expressions, 0, node.expressions.length - 1),
           partial_xx(visit, context, EFFECT),
         ),
-        flipxx(makeSequenceExpression),
+        makeSequenceExpression,
         visit(
           node.expressions[node.expressions.length - 1],
           context,
@@ -267,6 +268,22 @@ export default {
       } /* c8 ignore stop */
     },
     // Operation //
+    UnaryExpression: (node, context, _site) => {
+      if (node.operator === "delete") {
+        return visit(node.argument, context, DELETE);
+      } else if (node.operator === "void") {
+        return reduceReverse(
+          visit(node.argument, context, EFFECT),
+          makeSequenceExpression,
+          makeLiteralExpression({ undefined: null }),
+        );
+      } else {
+        return makeUnaryExpression(
+          node.operator,
+          visit(node.argument, context, EXPRESSION),
+        );
+      }
+    },
     ImportExpression: (node, context, _site) =>
       makeApplyExpression(
         makeScopeSpecReadExpression(context, "import"),
