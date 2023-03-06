@@ -10,7 +10,7 @@ const Visitor = {
     MemberExpression: (node, context, _site) =>
       makeGetExpression(
         visit(node.object, context, { type: "Expression", name: "" }),
-        visit(node.property, context, { type: "Key", computed: node.computed }),
+        visit(node.property, context, { type: "Key" }),
       ),
   },
   Key: KeyVisitor,
@@ -20,7 +20,5 @@ const testKey = (input, output) => {
   test(input, { visitors: Visitor }, null, output);
 };
 
-testKey(`(123)[456];`, `{ void intrinsic.aran.get(123, 456); }`);
-testKey(`(123).name;`, `{ void intrinsic.aran.get(123, "name"); }`);
-testKey(`(123)[name];`, `{ void intrinsic.aran.get(123, [name]); }`);
-testKey(`(123)[this];`, `{ void intrinsic.aran.get(123, "ThisExpression"); }`);
+testKey(`("obj")["key"];`, `{ void intrinsic.aran.get("obj", "key"); }`);
+testKey(`("obj").key;`, `{ void intrinsic.aran.get("obj", "key"); }`);

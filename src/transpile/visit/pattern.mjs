@@ -31,7 +31,7 @@ import {
   annotateNodeArray,
   liftEffect,
   EXPRESSION,
-  KEY_MAP,
+  getKeySite,
 } from "./context.mjs";
 
 const isRestElement = ({ type }) => type === "RestElement";
@@ -131,7 +131,7 @@ export default {
           makeSetExpression(
             context.strict,
             visit(node.object, context, EXPRESSION),
-            visit(node.property, context, KEY_MAP[node.computed]),
+            visit(node.property, context, getKeySite(node.computed)),
             makeScopeMetaReadExpression(context, variable),
           ),
         ),

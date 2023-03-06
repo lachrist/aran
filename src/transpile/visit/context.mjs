@@ -74,7 +74,5 @@ export const EXPRESSION = { type: "Expression", name: "" };
 export const QUASI_COOKED = { type: "Quasi", cooked: true };
 export const QUASI_RAW = { type: "Quasi", cooked: false };
 export const DELETE = { type: "Delete" };
-export const KEY_MAP = {
-  true: { type: "Key", computed: true },
-  false: { type: "Key", computed: false },
-};
+export const KEY = { type: "Key" };
+export const getKeySite = (computed) => (computed ? EXPRESSION : KEY);

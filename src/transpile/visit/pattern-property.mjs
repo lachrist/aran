@@ -16,7 +16,12 @@ import {
   makeScopeMetaReadExpression,
   makeScopeMetaWriteEffectArray,
 } from "../scope/index.mjs";
-import { annotateNodeArray, visit, liftEffect, KEY_MAP } from "./context.mjs";
+import {
+  annotateNodeArray,
+  visit,
+  liftEffect,
+  getKeySite,
+} from "./context.mjs";
 
 const { Error } = globalThis;
 
@@ -29,7 +34,7 @@ export default {
         kind: site.kind,
         right: makeGetExpression(
           makeScopeMetaReadExpression(context, site.right_variable),
-          visit(node.key, context, KEY_MAP[node.computed]),
+          visit(node.key, context, getKeySite(node.computed)),
         ),
       });
     } else {
@@ -44,7 +49,7 @@ export default {
             makeScopeMetaWriteEffectArray(
               context,
               key_variable,
-              visit(node.key, context, KEY_MAP[node.computed]),
+              visit(node.key, context, getKeySite(node.computed)),
             ),
             makeSequenceExpression,
             makeScopeMetaReadExpression(context, key_variable),

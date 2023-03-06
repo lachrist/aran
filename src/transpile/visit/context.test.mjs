@@ -19,9 +19,17 @@ import {
   loadContext,
   visit,
   liftEffect,
+  getKeySite,
 } from "./context.mjs";
 
 const { undefined } = globalThis;
+
+////////////////
+// getKeySite //
+////////////////
+
+assertEqual(getKeySite(true).type, "Expression");
+assertEqual(getKeySite(false).type, "Key");
 
 ////////////////
 // liftEffect //

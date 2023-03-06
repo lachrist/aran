@@ -16,7 +16,12 @@ import {
   makeScopeMetaReadExpression,
 } from "../scope/index.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
-import { annotateNodeArray, visit, EXPRESSION, KEY_MAP } from "./context.mjs";
+import {
+  annotateNodeArray,
+  visit,
+  EXPRESSION,
+  getKeySite,
+} from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNodeArray,
@@ -39,7 +44,7 @@ export default {
       makeScopeMetaWriteEffectArray(
         context,
         property_variable,
-        visit(node.property, context, KEY_MAP[node.computed]),
+        visit(node.property, context, getKeySite(node.computed)),
       ),
       [
         makeExpressionEffect(

@@ -41,7 +41,7 @@ import {
   EFFECT,
   DELETE,
   CALLEE,
-  KEY_MAP,
+  getKeySite,
 } from "./context.mjs";
 
 const { Array } = globalThis;
@@ -321,14 +321,14 @@ export default {
           makeLiteralExpression({ undefined: null }),
           makeGetExpression(
             makeScopeMetaReadExpression(context, variable),
-            visit(node.property, context, KEY_MAP[node.computed]),
+            visit(node.property, context, getKeySite(node.computed)),
           ),
         ),
       );
     } else {
       return makeGetExpression(
         visit(node.object, context, EXPRESSION),
-        visit(node.property, context, KEY_MAP[node.computed]),
+        visit(node.property, context, getKeySite(node.computed)),
       );
     }
   },
