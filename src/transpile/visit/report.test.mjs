@@ -2,14 +2,11 @@ import { assertEqual, assertThrow } from "../../__fixture__.mjs";
 import {
   locate,
   stringifyKey,
-  makeSyntaxTypeError,
-  expectSyntaxType,
   makeSyntaxError,
-  makeSyntaxErrorDeep,
-  expectSyntaxEqual,
-  expectSyntaxEqualDeep,
-  expectSyntaxNotEqual,
-  expectSyntaxNotEqualDeep,
+  expectSyntax,
+  makeSyntaxPropertyError,
+  expectSyntaxPropertyEqual,
+  expectSyntaxPropertyNotEqual,
 } from "./report.mjs";
 
 const { String, undefined } = globalThis;
@@ -29,89 +26,54 @@ assertEqual(
 
 assertEqual(stringifyKey(123), "[123]");
 
-assertEqual(stringifyKey("foo"), ".foo");
+assertEqual(stringifyKey("key"), ".key");
 
-assertEqual(stringifyKey("foo bar"), '["foo bar"]');
+assertEqual(stringifyKey("complex key"), '["complex key"]');
 
-//////////
-// Type //
-//////////
+/////////////
+// Generic //
+/////////////
 
 assertEqual(
-  String(makeSyntaxTypeError({ type: "Type" })),
-  "SyntaxAranError: illegal node at ???, got a Type",
+  String(makeSyntaxError({ type: "Type" })),
+  "SyntaxAranError: illegal node Type at ???",
 );
 
-assertEqual(expectSyntaxType({ type: "Type" }, "Type"), undefined);
+assertEqual(expectSyntax(true, { type: "Type" }), undefined);
 
 assertThrow(
-  () => expectSyntaxType({ type: "Actual" }, "Expect"),
-  /^SyntaxAranError: illegal node at \?\?\?, it should be a Expect but got a Actual$/u,
+  () => expectSyntax(false, { type: "Type" }),
+  /^SyntaxAranError: illegal node Type at \?\?\?$/u,
 );
 
-///////////
-// Value //
-///////////
-
-assertEqual(
-  String(makeSyntaxError({ type: "Type", property: "value" }, "property")),
-  'SyntaxAranError: illegal Type.property at ???, got "value"',
-);
+/////////
+// Key //
+/////////
 
 assertEqual(
   String(
-    makeSyntaxErrorDeep(
-      { type: "Type", property1: { property2: "value" } },
-      "property1",
-      "property2",
-    ),
+    makeSyntaxPropertyError({ type: "Type", key1: { key2: "value" } }, [
+      "key1",
+      "key2",
+    ]),
   ),
-  'SyntaxAranError: illegal Type.property1.property2 at ???, got "value"',
+  'SyntaxAranError: illegal Type.key1.key2 at ???, got "value"',
 );
 
 assertEqual(
-  expectSyntaxEqual({ type: "Type", property: "value" }, "property", "value"),
-  undefined,
-);
-
-assertEqual(
-  expectSyntaxEqualDeep(
-    { type: "Type", property1: { property2: "value" } },
-    "property1",
-    "property2",
+  expectSyntaxPropertyEqual(
+    { type: "Type", key1: { key2: "value" } },
+    ["key1", "key2"],
     "value",
   ),
   undefined,
 );
 
 assertEqual(
-  expectSyntaxNotEqual(
-    { type: "Type", property: "actual" },
-    "property",
+  expectSyntaxPropertyNotEqual(
+    { type: "Type", key1: { key2: "actual" } },
+    ["key1", "key2"],
     "expect",
   ),
   undefined,
 );
-
-assertEqual(
-  expectSyntaxNotEqualDeep(
-    { type: "Type", property1: { property2: "actual" } },
-    "property1",
-    "property2",
-    "expect",
-  ),
-  undefined,
-);
-
-// assertThrow(
-//   () =>
-//     expectSyntaxEqual(
-//       {
-//         type: "Type",
-//         property: "actual",
-//       },
-//       "property",
-//       "expect",
-//     ),
-//   /^SyntaxAranError: illegal Type.property at \?\?\?, it should be "expect" but got "actual"$/u,
-// );

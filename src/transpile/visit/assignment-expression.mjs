@@ -14,7 +14,7 @@ import {
   makeScopeBaseMacroWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
-import { expectSyntaxEqual } from "./report.mjs";
+import { expectSyntaxPropertyEqual } from "./report.mjs";
 import { visit, EXPRESSION, KEY_MAP } from "./context.mjs";
 
 const {
@@ -116,7 +116,7 @@ export default {
     }
   },
   MemberExpression: (node, context, site) => {
-    expectSyntaxEqual(node, "optional", false);
+    expectSyntaxPropertyEqual(node, ["optional"], false);
     if (site.operator === "=") {
       return makeSetExpression(
         context.strict,
@@ -164,7 +164,7 @@ export default {
     }
   },
   [DEFAULT_CLAUSE]: (node, context, site) => {
-    expectSyntaxEqual(site, "operator", "=");
+    expectSyntaxPropertyEqual(site, ["operator"], "=");
     const variable = declareScopeMeta(context, "assignment_pattern_right");
     return reduceReverse(
       concat(

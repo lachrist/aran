@@ -15,13 +15,13 @@ import {
   makeScopeBaseReadExpression,
   makeScopeMetaReadExpression,
 } from "../scope/index.mjs";
-import { expectSyntaxEqual } from "./report.mjs";
+import { expectSyntaxPropertyEqual } from "./report.mjs";
 import { annotateNodeArray, visit, EXPRESSION, KEY_MAP } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNodeArray,
   MemberExpression: (node, context, site) => {
-    expectSyntaxEqual(node, "optional", false);
+    expectSyntaxPropertyEqual(node, ["optional"], false);
     const object_variable = declareScopeMeta(
       context,
       "UpdateEffectMemberExpressionObject",

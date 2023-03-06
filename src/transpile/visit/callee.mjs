@@ -14,7 +14,7 @@ import {
   makeScopeSpecReadExpression,
   declareScopeMeta,
 } from "../scope/index.mjs";
-import { expectSyntaxEqual } from "./report.mjs";
+import { expectSyntaxPropertyEqual } from "./report.mjs";
 import { visit, CALLEE, EXPRESSION, KEY_MAP } from "./context.mjs";
 
 export default {
@@ -26,7 +26,7 @@ export default {
     visit(node.expression, context, CALLEE),
   MemberExpression: (node, context, _site) => {
     if (node.object.type === "Super") {
-      expectSyntaxEqual(node, "optional", false);
+      expectSyntaxPropertyEqual(node, ["optional"], false);
       return {
         callee: makeApplyExpression(
           makeScopeSpecReadExpression(context, "super.get"),

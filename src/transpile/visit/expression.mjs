@@ -29,7 +29,10 @@ import {
   makeScopeBaseReadExpression,
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
-import { expectSyntaxNotEqualDeep, makeSyntaxError } from "./report.mjs";
+import {
+  expectSyntaxPropertyNotEqual,
+  makeSyntaxPropertyError,
+} from "./report.mjs";
 import {
   visit,
   QUASI_RAW,
@@ -184,7 +187,7 @@ export default {
   // > o.x.name
   // ''
   SequenceExpression: (node, context, _site) => {
-    expectSyntaxNotEqualDeep(node, "expressions", "length", 0);
+    expectSyntaxPropertyNotEqual(node, ["expressions", "length"], 0);
     return reduceReverse(
       flatMap(
         slice(node.expressions, 0, node.expressions.length - 1),
@@ -260,7 +263,7 @@ export default {
         ),
       );
     } /* c8 ignore start */ else {
-      throw makeSyntaxError(node, "operator");
+      throw makeSyntaxPropertyError(node, ["operator"]);
     } /* c8 ignore stop */
   },
   // Operation //

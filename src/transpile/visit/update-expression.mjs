@@ -18,7 +18,7 @@ import {
   makeScopeBaseReadExpression,
   makeScopeMetaReadExpression,
 } from "../scope/index.mjs";
-import { expectSyntaxEqual } from "./report.mjs";
+import { expectSyntaxPropertyEqual } from "./report.mjs";
 import { visit, EXPRESSION, KEY_MAP } from "./context.mjs";
 
 export default {
@@ -71,7 +71,7 @@ export default {
     }
   },
   MemberExpression: (node, context, site) => {
-    expectSyntaxEqual(node, "optional", false);
+    expectSyntaxPropertyEqual(node, ["optional"], false);
     if (site.prefix) {
       const object_variable = declareScopeMeta(
         context,
