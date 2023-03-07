@@ -1,22 +1,10 @@
-import { map } from "array-lite";
-import { reduceReverse, partial_x } from "../../util/index.mjs";
-import { annotateNode, makeSequenceExpression } from "../../ast/index.mjs";
+import { reduceReverse } from "../../util/index.mjs";
+import { makeSequenceExpression } from "../../ast/index.mjs";
 import {
   declareScopeMeta,
   makeScopeMetaWriteEffectArray,
   makeScopeMetaReadExpression,
 } from "../scope/index.mjs";
-
-export const annotateNodeArray = (nodes, serial) =>
-  map(nodes, partial_x(annotateNode, serial));
-
-export const annotateMacro = (
-  { setup: effects, value: expression },
-  serial,
-) => ({
-  setup: annotateNodeArray(effects, serial),
-  value: annotateNode(expression, serial),
-});
 
 export const makeMacro = (context, info, expression) => {
   const variable = declareScopeMeta(context, info);

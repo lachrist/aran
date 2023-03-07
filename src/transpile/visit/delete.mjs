@@ -1,6 +1,5 @@
 import { reduceReverse } from "../../util/index.mjs";
 import {
-  annotateNode,
   makeConditionalExpression,
   makeLiteralExpression,
   makeSequenceExpression,
@@ -10,6 +9,7 @@ import {
   makeDeleteExpression,
 } from "../../intrinsic.mjs";
 import { makeScopeBaseDiscardExpression } from "../scope/index.mjs";
+import { annotate } from "./annotate.mjs";
 import {
   DELETE,
   EFFECT,
@@ -20,7 +20,7 @@ import {
 import { visit } from "./context.mjs";
 
 export default {
-  __ANNOTATE__: annotateNode,
+  __ANNOTATE__: annotate,
   // TODO: figure out how to make babel parse `delete x` in strict mode.
   /* c8 ignore start */
   Identifier: (node, context, _site) =>

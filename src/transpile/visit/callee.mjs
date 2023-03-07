@@ -1,6 +1,5 @@
 import { reduceReverse } from "../../util/index.mjs";
 import {
-  annotateNode,
   makeApplyExpression,
   makeLiteralExpression,
   makeSequenceExpression,
@@ -8,15 +7,13 @@ import {
 } from "../../ast/index.mjs";
 import { makeGetExpression, makeBinaryExpression } from "../../intrinsic.mjs";
 import { makeScopeSpecReadExpression } from "../scope/index.mjs";
+import { annotateCallee } from "./annotate.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
 import { CALLEE, EXPRESSION, EXPRESSION_MACRO, getKeySite } from "./site.mjs";
 import { visit } from "./context.mjs";
 
 export default {
-  __ANNOTATE__: ({ callee: expression1, this: expression2 }, serial) => ({
-    callee: annotateNode(expression1, serial),
-    this: annotateNode(expression2, serial),
-  }),
+  __ANNOTATE__: annotateCallee,
   ChainExpression: (node, context, _site) =>
     visit(node.expression, context, CALLEE),
   MemberExpression: (node, context, _site) => {

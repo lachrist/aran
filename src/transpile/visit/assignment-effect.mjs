@@ -9,7 +9,7 @@ import {
   makeScopeBaseWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
-import { annotateNodeArray } from "./macro.mjs";
+import { annotateArray } from "./annotate.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
 import {
   EXPRESSION,
@@ -62,7 +62,7 @@ const {
 //     at f (repl:1:52)
 
 export default {
-  __ANNOTATE__: annotateNodeArray,
+  __ANNOTATE__: annotateArray,
   Identifier: (node, context, site) => {
     if (site.operator === "=") {
       return makeScopeBaseWriteEffectArray(

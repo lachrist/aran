@@ -23,7 +23,8 @@ import {
   makeScopeBaseWriteEffectArray,
   makeScopeBaseInitializeStatementArray,
 } from "../scope/index.mjs";
-import { makeMacro, annotateNodeArray } from "./macro.mjs";
+import { annotateArray } from "./annotate.mjs";
+import { makeMacro } from "./macro.mjs";
 import {
   EXPRESSION,
   PATTERN,
@@ -82,7 +83,7 @@ const makeCheckObjectEffectArray = (expression) => [
 ];
 
 export default {
-  __ANNOTATE__: annotateNodeArray,
+  __ANNOTATE__: annotateArray,
   Identifier: (node, context, site) => {
     if (site.kind === null) {
       return makeScopeBaseWriteEffectArray(context, node.name, site.right);

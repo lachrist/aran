@@ -6,12 +6,7 @@ import {
 } from "../../ast/index.mjs";
 import { allignBlock } from "../../allign/index.mjs";
 import { makeScopeTestBlock, ROOT_SCOPE } from "../scope/index.mjs";
-import {
-  makeMacro,
-  makeMacroSelf,
-  toMacroExpression,
-  annotateMacro,
-} from "./macro.mjs";
+import { makeMacro, makeMacroSelf, toMacroExpression } from "./macro.mjs";
 
 allignBlock(
   makeScopeTestBlock(
@@ -20,10 +15,7 @@ allignBlock(
       makeEffectStatement(
         makeExpressionEffect(
           toMacroExpression(
-            annotateMacro(
-              makeMacro(context, "macro", makeLiteralExpression("macro")),
-              "annotation",
-            ),
+            makeMacro(context, "macro", makeLiteralExpression("macro")),
           ),
         ),
       ),
@@ -44,10 +36,7 @@ allignBlock(
       makeEffectStatement(
         makeExpressionEffect(
           toMacroExpression(
-            annotateMacro(
-              makeMacroSelf(context, "macro", (expression) => expression),
-              "annotation",
-            ),
+            makeMacroSelf(context, "macro", (expression) => expression),
           ),
         ),
       ),

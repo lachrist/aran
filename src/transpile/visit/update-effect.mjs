@@ -12,13 +12,13 @@ import {
   makeScopeBaseWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
-import { annotateNodeArray } from "./macro.mjs";
+import { annotateArray } from "./annotate.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
 import { EXPRESSION_MACRO, getKeyMacroSite } from "./site.mjs";
 import { visit } from "./context.mjs";
 
 export default {
-  __ANNOTATE__: annotateNodeArray,
+  __ANNOTATE__: annotateArray,
   MemberExpression: (node, context, site) => {
     expectSyntaxPropertyEqual(node, ["optional"], false);
     const object_macro = visit(node.object, context, {

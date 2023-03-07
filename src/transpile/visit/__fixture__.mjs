@@ -10,7 +10,8 @@ import {
 } from "../../ast/index.mjs";
 import { allignBlock } from "../../allign/index.mjs";
 import { makeScopeTestBlock } from "../scope/index.mjs";
-import { annotateNodeArray, annotateMacro, makeMacro } from "./macro.mjs";
+import { annotateArray, annotateMacro } from "./annotate.mjs";
+import { makeMacro } from "./macro.mjs";
 import { PROGRAM, STATEMENT, EFFECT, EXPRESSION } from "./site.mjs";
 import { createInitialContext, visit } from "./context.mjs";
 
@@ -49,7 +50,7 @@ export const Program = {
 };
 
 export const Statement = {
-  __ANNOTATE__: annotateNodeArray,
+  __ANNOTATE__: annotateArray,
   ExpressionStatement: (node, context, _site) =>
     map(visit(node.expression, context, EFFECT), makeEffectStatement),
   __DEFAULT__: (node, _context, _site) => [
@@ -58,7 +59,7 @@ export const Statement = {
 };
 
 export const Effect = {
-  __ANNOTATE__: annotateNodeArray,
+  __ANNOTATE__: annotateArray,
   __DEFAULT__: (node, context, _site) => [
     makeExpressionEffect(visit(node, context, EXPRESSION)),
   ],

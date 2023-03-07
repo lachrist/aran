@@ -1,5 +1,6 @@
 import { makeLiteralExpression } from "../../ast/index.mjs";
-import { makeMacro, annotateMacro } from "./macro.mjs";
+import { annotateMacro } from "./annotate.mjs";
+import { makeMacro } from "./macro.mjs";
 import { EXPRESSION } from "./site.mjs";
 import { visit } from "./context.mjs";
 

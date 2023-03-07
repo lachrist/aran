@@ -7,7 +7,7 @@ import {
   makeConditionalExpression,
 } from "../../ast/index.mjs";
 import { makeBinaryExpression } from "../../intrinsic.mjs";
-import { annotateNodeArray } from "./macro.mjs";
+import { annotateArray } from "./annotate.mjs";
 import { makeSyntaxError } from "./report.mjs";
 import {
   EFFECT,
@@ -19,7 +19,7 @@ import {
 import { visit } from "./context.mjs";
 
 export default {
-  __ANNOTATE__: annotateNodeArray,
+  __ANNOTATE__: annotateArray,
   AssignmentExpression: (node, context, _site) =>
     visit(node.left, context, {
       ...ASSIGNMENT_EFFECT,

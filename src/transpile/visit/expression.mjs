@@ -5,7 +5,6 @@ import {
   SyntaxAranError,
 } from "../../util/index.mjs";
 import {
-  annotateNode,
   makeConditionalExpression,
   makeSequenceExpression,
   makeApplyExpression,
@@ -26,6 +25,7 @@ import {
   makeScopeBaseReadExpression,
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
+import { annotate } from "./annotate.mjs";
 import {
   expectSyntaxPropertyNotEqual,
   makeSyntaxPropertyError,
@@ -59,7 +59,7 @@ const getMetaPropertyVariable = (node) => {
 };
 
 export default {
-  __ANNOTATE__: annotateNode,
+  __ANNOTATE__: annotate,
   // Producer //
   Literal: (node, _context, _site) => makeLiteralExpression(node.value),
   Identifier: (node, context, _site) =>

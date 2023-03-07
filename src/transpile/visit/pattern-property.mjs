@@ -11,14 +11,15 @@ import {
   makeObjectAssignExpression,
   makeGetExpression,
 } from "../../intrinsic.mjs";
-import { annotateNodeArray, makeMacro } from "./macro.mjs";
+import { annotateArray } from "./annotate.mjs";
+import { makeMacro } from "./macro.mjs";
 import { getKeySite, getKeyMacroSite, PATTERN } from "./site.mjs";
 import { visit, liftEffect } from "./context.mjs";
 
 const { Error } = globalThis;
 
 export default {
-  __ANNOTATE__: annotateNodeArray,
+  __ANNOTATE__: annotateArray,
   Property: (node, context, site) => {
     if (site.keys === null) {
       return visit(node.value, context, {

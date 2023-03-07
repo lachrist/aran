@@ -1,7 +1,6 @@
 import { concat } from "array-lite";
 import { reduceReverse } from "../../util/index.mjs";
 import {
-  annotateNode,
   makeSequenceExpression,
   makeExpressionEffect,
   makeLiteralExpression,
@@ -15,13 +14,14 @@ import {
   makeScopeBaseWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
+import { annotate } from "./annotate.mjs";
 import { makeMacro } from "./macro.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
 import { EXPRESSION_MACRO, getKeyMacroSite } from "./site.mjs";
 import { visit } from "./context.mjs";
 
 export default {
-  __ANNOTATE__: annotateNode,
+  __ANNOTATE__: annotate,
   Identifier: (node, context, site) => {
     if (site.prefix) {
       const macro = makeMacro(

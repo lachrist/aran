@@ -6,12 +6,12 @@ import {
   makeArrayFromExpression,
   makeGetExpression,
 } from "../../intrinsic.mjs";
-import { annotateNodeArray } from "./macro.mjs";
+import { annotateArray } from "./annotate.mjs";
 import { PATTERN } from "./site.mjs";
 import { visit } from "./context.mjs";
 
 export default {
-  __ANNOTATE__: annotateNodeArray,
+  __ANNOTATE__: annotateArray,
   RestElement: (node, context, site) =>
     visit(node.argument, context, {
       ...PATTERN,
