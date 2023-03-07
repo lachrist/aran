@@ -2,7 +2,6 @@ import { map, slice, flatMap } from "array-lite";
 import { assertSuccess } from "../../__fixture__.mjs";
 import { partial_xx } from "../../util/index.mjs";
 import { parseBabel } from "../../babel.mjs";
-import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
   annotateNode,
   makeEffectStatement,

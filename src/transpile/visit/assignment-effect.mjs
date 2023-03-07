@@ -1,5 +1,4 @@
 import { concat } from "array-lite";
-import { DEFAULT_CLAUSE } from "../../node.mjs";
 import { makeExpressionEffect } from "../../ast/index.mjs";
 import {
   makeGetExpression,
@@ -142,7 +141,7 @@ export default {
       );
     }
   },
-  [DEFAULT_CLAUSE]: (node, context, site) => {
+  __DEFAULT__: (node, context, site) => {
     expectSyntaxPropertyEqual(site, ["operator"], "=");
     return visit(node, context, {
       type: "Pattern",

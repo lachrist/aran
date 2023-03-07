@@ -1,3 +1,4 @@
+import { forEach } from "array-lite";
 import {
   assertEqual,
   assertDeepEqual,
@@ -59,27 +60,29 @@ allignStatement(
 // visit //
 ///////////
 
-assertSuccess(
-  allignExpression(
-    visit(
-      { type: "type" },
-      {
-        ...createInitialContext(),
-        ...{
-          visitors: {
-            site: {
-              __ANNOTATE__: annotateNodeArray,
-              type: (node, _context, site) => {
-                assertDeepEqual(node, { type: "type" });
-                assertDeepEqual(site, { type: "site" });
-                return [makeLiteralExpression("output")];
+forEach(["type", "__DEFAULT__"], (key) => {
+  assertSuccess(
+    allignExpression(
+      visit(
+        { type: "type" },
+        {
+          ...createInitialContext(),
+          ...{
+            visitors: {
+              site: {
+                __ANNOTATE__: annotateNodeArray,
+                [key]: (node, _context, site) => {
+                  assertDeepEqual(node, { type: "type" });
+                  assertDeepEqual(site, { type: "site" });
+                  return [makeLiteralExpression("output")];
+                },
               },
             },
           },
         },
-      },
-      { type: "site" },
-    )[0],
-    `"output"`,
-  ),
-);
+        { type: "site" },
+      )[0],
+      `"output"`,
+    ),
+  );
+});

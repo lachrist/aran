@@ -1,5 +1,4 @@
 import { reduceReverse } from "../../util/index.mjs";
-import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
   annotateNode,
   makeApplyExpression,
@@ -75,7 +74,7 @@ export default {
       };
     }
   },
-  [DEFAULT_CLAUSE]: (node, context, _site) => ({
+  __DEFAULT__: (node, context, _site) => ({
     callee: visit(node, context, EXPRESSION),
     this: makeLiteralExpression({ undefined: null }),
   }),

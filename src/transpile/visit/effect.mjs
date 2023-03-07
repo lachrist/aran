@@ -1,6 +1,5 @@
 import { flatMap, concat } from "array-lite";
 import { partial_xx } from "../../util/index.mjs";
-import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
   makeExpressionEffect,
   makeLiteralExpression,
@@ -90,7 +89,7 @@ export default {
       throw makeSyntaxError(node, "operator");
     } /* c8 ignore stop */
   },
-  [DEFAULT_CLAUSE]: (node, context, _site) => [
+  __DEFAULT__: (node, context, _site) => [
     makeExpressionEffect(visit(node, context, EXPRESSION)),
   ],
 };

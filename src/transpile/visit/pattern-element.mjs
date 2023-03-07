@@ -1,4 +1,3 @@
-import { DEFAULT_CLAUSE } from "../../node.mjs";
 import {
   makeLiteralExpression,
   makeApplyExpression,
@@ -20,7 +19,7 @@ export default {
         makeScopeMetaReadExpression(context, site.iterator_variable),
       ),
     }),
-  [DEFAULT_CLAUSE]: (node, context, site) =>
+  __DEFAULT__: (node, context, site) =>
     visit(node, context, {
       type: "Pattern",
       kind: site.kind,

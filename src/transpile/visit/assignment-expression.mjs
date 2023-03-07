@@ -1,6 +1,5 @@
 import { concat } from "array-lite";
 import { reduceReverse } from "../../util/index.mjs";
-import { DEFAULT_CLAUSE } from "../../node.mjs";
 import { annotateNode, makeSequenceExpression } from "../../ast/index.mjs";
 import {
   makeGetExpression,
@@ -163,7 +162,7 @@ export default {
       );
     }
   },
-  [DEFAULT_CLAUSE]: (node, context, site) => {
+  __DEFAULT__: (node, context, site) => {
     expectSyntaxPropertyEqual(site, ["operator"], "=");
     const variable = declareScopeMeta(context, "assignment_pattern_right");
     return reduceReverse(
