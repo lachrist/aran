@@ -1,33 +1,24 @@
-import { assertNotEqual } from "../../__fixture__.mjs";
-import { makeReturnStatement } from "../../ast/index.mjs";
 import { visit } from "./context.mjs";
-import TestVisitor, { test } from "./__fixture__.mjs";
-import KeyVisitor from "./key.mjs";
-import PatternElementVisitor from "./pattern-element.mjs";
-import PatternPropertyVisitor from "./pattern-property.mjs";
-import PatternVisitor from "./pattern.mjs";
-import AssignmentExpressionVisitor from "./assignment-expression.mjs";
+import {
+  Program,
+  Statement,
+  Effect,
+  Expression,
+  compileTest,
+} from "./__fixture__.mjs";
+import PatternElement from "./pattern-element.mjs";
+import Pattern from "./pattern.mjs";
+import AssignmentExpression from "./assignment-expression.mjs";
 
-const Visitor = {
-  ...TestVisitor,
-  Key: KeyVisitor,
-  PatternElement: PatternElementVisitor,
-  PatternProperty: PatternPropertyVisitor,
-  Pattern: PatternVisitor,
-  AssignmentExpression: AssignmentExpressionVisitor,
-  Statement: {
-    ...TestVisitor.Statement,
-    ReturnStatement: (node, context, _site) => {
-      assertNotEqual(node.argument, null);
-      return [
-        makeReturnStatement(
-          visit(node.argument, context, { type: "Expression", name: "" }),
-        ),
-      ];
-    },
-  },
+const { test, done } = compileTest({
+  Program,
+  Statement,
+  Effect,
+  Pattern,
+  PatternElement,
+  AssignmentExpression,
   Expression: {
-    ...TestVisitor.Expression,
+    ...Expression,
     AssignmentExpression: (node, context, _site) =>
       visit(node.left, context, {
         type: "AssignmentExpression",
@@ -35,18 +26,14 @@ const Visitor = {
         right: node.right,
       }),
   },
-};
+});
 
-const testAssignmentExpression = (input, output) => {
-  test(input, { visitors: Visitor }, null, output);
-};
-
-testAssignmentExpression(
-  `"use strict"; return x = 123;`,
+test(
+  `"use strict"; x = 123;`,
   `
     {
       let right;
-      return (
+      void (
         right = 123,
         (
           [x] = right,
@@ -57,12 +44,12 @@ testAssignmentExpression(
   `,
 );
 
-testAssignmentExpression(
-  `"use strict"; return x **= 123;`,
+test(
+  `"use strict"; x **= 123;`,
   `
     {
       let right;
-      return (
+      void (
         right = intrinsic.aran.binary("**", [x], 123),
         (
           [x] = right,
@@ -73,17 +60,14 @@ testAssignmentExpression(
   `,
 );
 
-testAssignmentExpression(
-  `return (123)[456] = 789;`,
-  `{ return intrinsic.aran.setSloppy(123, 456, 789); }`,
-);
+test(`(123)[456] = 789;`, `{ void intrinsic.aran.setSloppy(123, 456, 789); }`);
 
-testAssignmentExpression(
-  `return (123)[456] **= 789;`,
+test(
+  `(123)[456] **= 789;`,
   `
     {
       let object, property;
-      return (
+      void (
         object = 123,
         (
           property = 456,
@@ -102,12 +86,12 @@ testAssignmentExpression(
   `,
 );
 
-testAssignmentExpression(
-  `"use strict"; return [x] = 123;`,
+test(
+  `"use strict"; [x] = 123;`,
   `
     {
       let right, right_pattern, iterator;
-      return (
+      void (
         right = 123,
         (
           right_pattern = right,
@@ -127,8 +111,4 @@ testAssignmentExpression(
   `,
 );
 
-// test(`{ x = 123; }`, `{ [x] = 123; }`);
-//
-// test(`{ x **= 123; }`, `{ [x] = intrinsic.aran.binary("**", [x], 123); }`);
-//
-// test(`{ [x] = 123; }`, `{ void "ArrayPattern"; }`);
+done();

@@ -1,40 +1,34 @@
-import TestVisitor, { test } from "./__fixture__.mjs";
-import KeyVisitor from "./key.mjs";
-import AssignmentEffectVisitor from "./assignment-effect.mjs";
-import UpdateEffectVisitor from "./update-effect.mjs";
-import EffectVisitor from "./effect.mjs";
+import { Program, Statement, Expression, compileTest } from "./__fixture__.mjs";
+import AssignmentEffect from "./assignment-effect.mjs";
+import UpdateEffect from "./update-effect.mjs";
+import Effect from "./effect.mjs";
 
-const Visitor = {
-  ...TestVisitor,
-  Key: KeyVisitor,
-  AssignmentEffect: AssignmentEffectVisitor,
-  UpdateEffect: UpdateEffectVisitor,
-  Effect: EffectVisitor,
-};
+const { test, done } = compileTest({
+  Program,
+  Statement,
+  Effect,
+  Expression,
+  AssignmentEffect,
+  UpdateEffect,
+});
 
-const testEffect = (input, output) => {
-  test(input, { visitors: Visitor }, null, output);
-};
+// __Default__ //
+test(`123;`, `{ void 123; }`);
 
-testEffect(`123;`, `{ void 123; }`);
-
-// AssignemntExpression //
-testEffect(`"use strict"; x = 123;`, `{ [x] = 123; }`);
+// AssignmentExpression //
+test(`"use strict"; x = 123;`, `{ [x] = 123; }`);
 
 // UpdateExpression //
-testEffect(
-  `"use strict"; x++;`,
-  `{ [x] = intrinsic.aran.binary("+", [x], 1); }`,
-);
+test(`"use strict"; x++;`, `{ [x] = intrinsic.aran.binary("+", [x], 1); }`);
 
 // SequenceExpression //
-testEffect(`(123, 456);`, `{ void 123; void 456; }`);
-testEffect(`(123, 456);`, `{ void 123; void 456; }`);
+test(`(123, 456);`, `{ void 123; void 456; }`);
+test(`(123, 456);`, `{ void 123; void 456; }`);
 
 // LogicalExpression //
-testEffect(`123 && 456;`, `{ 123 ? void 456 : undefined; }`);
-testEffect(`123 || 456;`, `{ 123 ? undefined : void 456; }`);
-testEffect(
+test(`123 && 456;`, `{ 123 ? void 456 : undefined; }`);
+test(`123 || 456;`, `{ 123 ? undefined : void 456; }`);
+test(
   `123 ?? 456;`,
   `
     {
@@ -54,4 +48,6 @@ testEffect(
 );
 
 // ConditionalExpression //
-testEffect(`123 ? 456 : 789;`, `{ 123 ? void 456 : void 789; }`);
+test(`123 ? 456 : 789;`, `{ 123 ? void 456 : void 789; }`);
+
+done();

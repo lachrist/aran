@@ -1,33 +1,24 @@
-import { assertNotEqual } from "../../__fixture__.mjs";
-import { makeReturnStatement } from "../../ast/index.mjs";
 import { visit } from "./context.mjs";
-import TestVisitor, { test } from "./__fixture__.mjs";
-import KeyVisitor from "./key.mjs";
-import PatternElementVisitor from "./pattern-element.mjs";
-import PatternPropertyVisitor from "./pattern-property.mjs";
-import PatternVisitor from "./pattern.mjs";
-import AssignmentEffectVisitor from "./assignment-effect.mjs";
+import {
+  Program,
+  Statement,
+  Effect,
+  Expression,
+  compileTest,
+} from "./__fixture__.mjs";
+import PatternElement from "./pattern-element.mjs";
+import Pattern from "./pattern.mjs";
+import AssignmentEffect from "./assignment-effect.mjs";
 
-const Visitor = {
-  ...TestVisitor,
-  Key: KeyVisitor,
-  PatternElement: PatternElementVisitor,
-  PatternProperty: PatternPropertyVisitor,
-  Pattern: PatternVisitor,
-  AssignmentEffect: AssignmentEffectVisitor,
-  Statement: {
-    ...TestVisitor.Statement,
-    ReturnStatement: (node, context, _site) => {
-      assertNotEqual(node.argument, null);
-      return [
-        makeReturnStatement(
-          visit(node.argument, context, { type: "Expression", name: "" }),
-        ),
-      ];
-    },
-  },
+const { test, done } = compileTest({
+  Program,
+  Expression,
+  PatternElement,
+  Pattern,
+  AssignmentEffect,
+  Statement,
   Effect: {
-    ...TestVisitor.Effect,
+    ...Effect,
     AssignmentExpression: (node, context, _site) =>
       visit(node.left, context, {
         type: "AssignmentEffect",
@@ -35,25 +26,18 @@ const Visitor = {
         right: node.right,
       }),
   },
-};
+});
 
-const testAssignmentEffect = (input, output) => {
-  test(input, { visitors: Visitor }, null, output);
-};
+test(`"use strict"; x = 123;`, `{ [x] = 123; }`);
 
-testAssignmentEffect(`"use strict"; x = 123;`, `{ [x] = 123; }`);
-
-testAssignmentEffect(
+test(
   `"use strict"; x **= 123;`,
   `{ [x] = intrinsic.aran.binary("**", [x], 123); }`,
 );
 
-testAssignmentEffect(
-  `(123)[456] = 789;`,
-  `{ void intrinsic.aran.setSloppy(123, 456, 789); }`,
-);
+test(`(123)[456] = 789;`, `{ void intrinsic.aran.setSloppy(123, 456, 789); }`);
 
-testAssignmentEffect(
+test(
   `(123)[456] **= 789;`,
   `
     {
@@ -73,7 +57,7 @@ testAssignmentEffect(
   `,
 );
 
-testAssignmentEffect(
+test(
   `"use strict"; [x] = 123;`,
   `
     {
@@ -84,3 +68,5 @@ testAssignmentEffect(
     }
   `,
 );
+
+done();

@@ -36,7 +36,7 @@ import {
 import {
   visit,
   QUASI_RAW,
-  QUASI_COOKED,
+  QUASI,
   EXPRESSION,
   EFFECT,
   DELETE,
@@ -83,12 +83,12 @@ export default {
   ClassExpression: (node, context, site) =>
     visit(node, context, {
       type: "Class",
-      name: node.id === null ? site.name : node.id.name,
+      name: makeLiteralExpression(node.id === null ? site.name : node.id.name),
     }),
   // Combinators //
   TemplateLiteral: (node, context, _site) =>
     node.expressions.length === 0
-      ? visit(node.quasis[0], context, QUASI_COOKED)
+      ? visit(node.quasis[0], context, QUASI)
       : makeBinaryExpression(
           "+",
           reduce(
@@ -99,17 +99,17 @@ export default {
                 expression,
                 makeBinaryExpression(
                   "+",
-                  visit(node.quasis[index + 1], context, QUASI_COOKED),
+                  visit(node.quasis[index + 1], context, QUASI),
                   visit(node.expressions[index + 1], context, EXPRESSION),
                 ),
               ),
             makeBinaryExpression(
               "+",
-              visit(node.quasis[0], context, QUASI_COOKED),
+              visit(node.quasis[0], context, QUASI),
               visit(node.expressions[0], context, EXPRESSION),
             ),
           ),
-          visit(node.quasis[node.quasis.length - 1], context, QUASI_COOKED),
+          visit(node.quasis[node.quasis.length - 1], context, QUASI),
         ),
   // Tagged template cannot lead to a direct eval call because it receives an array instead of a string:
   // cf: https://www.ecma-international.org/ecma-262/10.0/index.html#sec-performeval
@@ -127,10 +127,7 @@ export default {
           makeObjectFreezeExpression(
             makeObjectDefinePropertyExpression(
               makeArrayExpression(
-                map(
-                  node.quasi.quasis,
-                  partial_xx(visit, context, QUASI_COOKED),
-                ),
+                map(node.quasi.quasis, partial_xx(visit, context, QUASI)),
               ),
               makeLiteralExpression("raw"),
               makeDataDescriptorExpression(

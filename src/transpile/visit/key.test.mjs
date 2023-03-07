@@ -1,24 +1,22 @@
-import { makeGetExpression } from "../../intrinsic.mjs";
+import { annotateNode } from "../../ast/index.mjs";
 import { visit } from "./context.mjs";
-import TestVisitor, { test } from "./__fixture__.mjs";
-import KeyVisitor from "./key.mjs";
+import { Program, Statement, Effect, compileTest } from "./__fixture__.mjs";
+import Key from "./key.mjs";
 
-const Visitor = {
-  ...TestVisitor,
+const { test, done } = compileTest({
+  Program,
+  Statement,
+  Effect,
   Expression: {
-    ...TestVisitor.Expression,
-    MemberExpression: (node, context, _site) =>
-      makeGetExpression(
-        visit(node.object, context, { type: "Expression", name: "" }),
-        visit(node.property, context, { type: "Key" }),
-      ),
+    __ANNOTATE__: annotateNode,
+    __DEFAULT__: (node, context, _site) =>
+      visit(node, context, { type: "Key" }),
   },
-  Key: KeyVisitor,
-};
+  Key,
+});
 
-const testKey = (input, output) => {
-  test(input, { visitors: Visitor }, null, output);
-};
+test(`"key";`, `{ void "key"; }`);
 
-testKey(`("obj")["key"];`, `{ void intrinsic.aran.get("obj", "key"); }`);
-testKey(`("obj").key;`, `{ void intrinsic.aran.get("obj", "key"); }`);
+test(`key;`, `{ void "key"; }`);
+
+done();

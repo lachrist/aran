@@ -8,15 +8,14 @@ import {
   makeParameterExpression,
   makeClosureExpression,
 } from "../../ast/index.mjs";
-import { visit } from "./context.mjs";
-import TestVisitor, { test } from "./__fixture__.mjs";
-import QuasiVisitor from "./quasi.mjs";
-import KeyVisitor from "./key.mjs";
-import CalleeVisitor from "./callee.mjs";
-import AssignmentExpressionVisitor from "./assignment-expression.mjs";
-import UpdateExpressionVisitor from "./update-expression.mjs";
-import DeleteVisitor from "./delete.mjs";
-import ExpressionVisitor from "./expression.mjs";
+import { Program, Statement, Effect, compileTest } from "./__fixture__.mjs";
+import Quasi from "./quasi.mjs";
+import QuasiRaw from "./quasi-raw.mjs";
+import Callee from "./callee.mjs";
+import AssignmentExpression from "./assignment-expression.mjs";
+import UpdateExpression from "./update-expression.mjs";
+import Delete from "./delete.mjs";
+import Expression from "./expression.mjs";
 
 const visitClass = (node, _context, _site) => {
   assertEqual(node.superClass, null);
@@ -46,23 +45,17 @@ const visitClosure = (node, _context, site) => {
   );
 };
 
-const Visitor = {
-  ...TestVisitor,
-  Quasi: QuasiVisitor,
-  Key: KeyVisitor,
-  Callee: CalleeVisitor,
-  AssignmentExpression: AssignmentExpressionVisitor,
-  UpdateExpression: UpdateExpressionVisitor,
-  Delete: DeleteVisitor,
-  Expression: ExpressionVisitor,
-  Statement: {
-    ...TestVisitor.Statement,
-    ReturnStatement: (node, context, _site) => [
-      makeReturnStatement(
-        visit(node.argument, context, { type: "Expression", name: "" }),
-      ),
-    ],
-  },
+const { test, done } = compileTest({
+  Program,
+  Statement,
+  Effect,
+  Quasi,
+  QuasiRaw,
+  Callee,
+  AssignmentExpression,
+  UpdateExpression,
+  Delete,
+  Expression,
   Class: {
     __ANNOTATE__: annotateNode,
     ClassExpression: visitClass,
@@ -72,51 +65,35 @@ const Visitor = {
     ArrowFunctionExpression: visitClosure,
     FunctionExpression: visitClosure,
   },
-};
-
-const testExpression = (input, output) => {
-  test(input, { visitors: Visitor }, { name: null }, output);
-};
+});
 
 // Literal //
-testExpression(`123;`, `{ void 123; }`);
+test(`123;`, `{ void 123; }`);
 
 // Identifier //
-testExpression(`x`, `{ void [x]; }`);
+test(`x`, `{ void [x]; }`);
 
 // ThisExpression //
-testExpression(`this;`, `{ void "this"; }`);
+test(`this;`, `{ void "this"; }`);
 
 // MetaKey //
-testExpression(`new.target;`, `{ void "new.target"; }`);
-testExpression(`import.meta;`, `{ void "import.meta"; }`);
+test(`new.target;`, `{ void "new.target"; }`);
+test(`import.meta;`, `{ void "import.meta"; }`);
 
 // ArrowFunctionExpression //
-testExpression(`(() => {});`, `{ void (() => { return undefined; }); }`);
+test(`(() => {});`, `{ void (() => { return undefined; }); }`);
 
 // FunctionExpression //
-testExpression(
-  `(function () {});`,
-  `{ void (function () { return undefined; }); }`,
-);
-testExpression(
-  `(function f () {});`,
-  `{ void (function () { return undefined; }); }`,
-);
+test(`(function () {});`, `{ void (function () { return undefined; }); }`);
+test(`(function f () {});`, `{ void (function () { return undefined; }); }`);
 
 // ClassExpression //
-testExpression(
-  `(class {});`,
-  `{ void (function constructor () { return this; }); }`,
-);
-testExpression(
-  `(class C {});`,
-  `{ void (function constructor () { return this; }); }`,
-);
+test(`(class {});`, `{ void (function constructor () { return this; }); }`);
+test(`(class C {});`, `{ void (function constructor () { return this; }); }`);
 
 // TemplateLiteral //
-testExpression("`foo`;", `{ void "foo"; }`);
-testExpression(
+test("`foo`;", `{ void "foo"; }`);
+test(
   "`foo${123}bar${456}qux`;",
   `
     {
@@ -134,7 +111,7 @@ testExpression(
 );
 
 // TaggedTemplateExpression //
-testExpression(
+test(
   "123`foo${456}\\n${789}qux`;",
   `
     {
@@ -162,19 +139,19 @@ testExpression(
 );
 
 // AwaitExpression //
-testExpression(`await 123;`, `{ void await 123; }`);
+test(`await 123;`, `{ void await 123; }`);
 
 // YieldExpression //
-testExpression(`yield* 123;`, `{ void (yield* 123); }`);
-testExpression(`yield;`, `{ void (yield undefined); }`);
+test(`yield* 123;`, `{ void (yield* 123); }`);
+test(`yield;`, `{ void (yield undefined); }`);
 
 // AssignmentExpression //
-testExpression(
-  `"use strict"; return x = 123;`,
+test(
+  `"use strict"; x = 123;`,
   `
     {
       let right;
-      return (
+      void (
         right = 123,
         ([x] = right, right)
       );
@@ -183,12 +160,12 @@ testExpression(
 );
 
 // UpdateExpression //
-testExpression(
-  `"use strict"; return ++x;`,
+test(
+  `"use strict"; ++x;`,
   `
     {
       let right;
-      return (
+      void (
         right = intrinsic.aran.binary("+", [x], 1),
         ([x] = right, right)
       );
@@ -197,45 +174,42 @@ testExpression(
 );
 
 // SequenceExpression //
-testExpression(
-  `"use strict"; return (123, 456);`,
-  `{ return (void 123, 456); }`,
-);
+test(`"use strict"; (123, 456);`, `{ void (void 123, 456); }`);
 
 // ConditionalExpression //
-testExpression(`return 123 ? 456 : 789;`, `{ return 123 ? 456 : 789; } `);
+test(`123 ? 456 : 789;`, `{ void (123 ? 456 : 789); } `);
 
 // LogicalExpression //
-testExpression(
-  `return 123 && 456;`,
+test(
+  `123 && 456;`,
   `
     {
       let left;
-      return (
+      void (
         left = 123,
         (left ? 456 : left)
       );
     }
   `,
 );
-testExpression(
-  `return 123 || 456;`,
+test(
+  `123 || 456;`,
   `
     {
       let left;
-      return (
+      void (
         left = 123,
         (left ? left : 456)
       );
     }
   `,
 );
-testExpression(
-  `return 123 ?? 456;`,
+test(
+  `123 ?? 456;`,
   `
     {
       let left;
-      return (
+      void (
         left = 123,
         (
           (
@@ -252,19 +226,19 @@ testExpression(
 );
 
 // ImportExpression //
-testExpression(`import("source");`, `{ void ("import")("source"); }`);
+test(`import("source");`, `{ void ("import")("source"); }`);
 
 // UnaryExpression //
-testExpression(`void 123;`, `{ void (void 123, undefined); }`);
-testExpression(`!123;`, `{ void intrinsic.aran.unary("!", 123); }`);
-testExpression(`delete 123;`, `{ void (void 123, true); }`);
+test(`void 123;`, `{ void (void 123, undefined); }`);
+test(`!123;`, `{ void intrinsic.aran.unary("!", 123); }`);
+test(`delete 123;`, `{ void (void 123, true); }`);
 
 // BinaryExpression //
-testExpression(`123 + 456;`, `{ void intrinsic.aran.binary("+", 123, 456); }`);
+test(`123 + 456;`, `{ void intrinsic.aran.binary("+", 123, 456); }`);
 
 // MemberExpression //
-testExpression(`(123)[456];`, `{ void intrinsic.aran.get(123, 456); }`);
-testExpression(
+test(`(123)[456];`, `{ void intrinsic.aran.get(123, 456); }`);
+test(
   `(123)?.[456];`,
   `
     {
@@ -284,3 +258,5 @@ testExpression(
     }
   `,
 );
+
+done();

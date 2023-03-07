@@ -1,15 +1,20 @@
 import { assertEqual, assertNotEqual } from "../../__fixture__.mjs";
 import { visit } from "./context.mjs";
-import TestVisitor, { test } from "./__fixture__.mjs";
-import KeyVisitor from "./key.mjs";
-import PatternElementVisitor from "./pattern-element.mjs";
-import PatternPropertyVisitor from "./pattern-property.mjs";
-import PatternVisitor from "./pattern.mjs";
+import {
+  Program,
+  Statement,
+  Effect,
+  Expression,
+  compileTest,
+} from "./__fixture__.mjs";
+import PatternElement from "./pattern-element.mjs";
+import PatternProperty from "./pattern-property.mjs";
+import Pattern from "./pattern.mjs";
 
-const Visitor = {
-  ...TestVisitor,
+const { test, done } = compileTest({
+  Program,
   Statement: {
-    ...TestVisitor.Statement,
+    ...Statement,
     VariableDeclaration: (node, context, _site) => {
       assertEqual(node.declarations.length, 1);
       assertNotEqual(node.declarations[0].init, null);
@@ -24,7 +29,7 @@ const Visitor = {
     },
   },
   Effect: {
-    ...TestVisitor.Effect,
+    ...Effect,
     AssignmentExpression: (node, context, _site) => {
       assertEqual(node.operator, "=");
       return visit(node.left, context, {
@@ -34,17 +39,13 @@ const Visitor = {
       });
     },
   },
-  Key: KeyVisitor,
-  Pattern: PatternVisitor,
-  PatternElement: PatternElementVisitor,
-  PatternProperty: PatternPropertyVisitor,
-};
+  Expression,
+  PatternElement,
+  PatternProperty,
+  Pattern,
+});
 
-const testPattern = (input, output) => {
-  test(input, { visitors: Visitor }, null, output);
-};
-
-testPattern(
+test(
   `"use strict"; var [x = 123] = 456;`,
   `
     {
@@ -61,9 +62,9 @@ testPattern(
   `,
 );
 
-testPattern(`"use strict"; x = 123;`, `{ [x] = 123; }`);
+test(`"use strict"; x = 123;`, `{ [x] = 123; }`);
 
-testPattern(
+test(
   `(123)[456] = 789;`,
   `
     {
@@ -74,7 +75,7 @@ testPattern(
   `,
 );
 
-testPattern(
+test(
   `"use strict"; [x1, x2, ...xs] = 123;`,
   `
     {
@@ -88,12 +89,12 @@ testPattern(
   `,
 );
 
-testPattern(
-  `"use strict"; ({foo:x, bar:y} = 123);`,
+test(
+  `"use strict"; ({[123]:x, [456]:y} = 789);`,
   `
     {
       let right;
-      right = 123;
+      right = 789;
       (
         (
           intrinsic.aran.binary("===", right, null) ?
@@ -107,18 +108,18 @@ testPattern(
         ) :
         undefined
       );
-      [x] = intrinsic.aran.get(right, "foo");
-      [y] = intrinsic.aran.get(right, "bar");
+      [x] = intrinsic.aran.get(right, 123);
+      [y] = intrinsic.aran.get(right, 456);
     }
   `,
 );
 
-testPattern(
-  `"use strict"; ({foo:x, bar:y, ...rest} = 123);`,
+test(
+  `"use strict"; ({[123]:x, [456]:y, ...rest} = 789);`,
   `
     {
       let right, key1, key2, rest;
-      right = 123;
+      right = 789;
       (
         (
           intrinsic.aran.binary("===", right, null) ?
@@ -134,11 +135,11 @@ testPattern(
       );
       [x] = intrinsic.aran.get(
         right,
-        (key1 = "foo", key1),
+        (key1 = 123, key1),
       );
       [y] = intrinsic.aran.get(
         right,
-        (key2 = "bar", key2),
+        (key2 = 456, key2),
       );
       rest = intrinsic.Object.assign(
         intrinsic.aran.createObject(intrinsic.Object.prototype),
@@ -150,3 +151,5 @@ testPattern(
     }
   `,
 );
+
+done();

@@ -1,27 +1,20 @@
-import { assertNotEqual } from "../../__fixture__.mjs";
-import { makeReturnStatement } from "../../ast/index.mjs";
 import { visit } from "./context.mjs";
-import TestVisitor, { test } from "./__fixture__.mjs";
-import KeyVisitor from "./key.mjs";
-import UpdateExpressionVisitor from "./update-expression.mjs";
+import {
+  Program,
+  Statement,
+  Effect,
+  Expression,
+  compileTest,
+} from "./__fixture__.mjs";
+import UpdateExpression from "./update-expression.mjs";
 
-const Visitor = {
-  ...TestVisitor,
-  Key: KeyVisitor,
-  UpdateExpression: UpdateExpressionVisitor,
-  Statement: {
-    ...TestVisitor.Statement,
-    ReturnStatement: (node, context, _site) => {
-      assertNotEqual(node.argument, null);
-      return [
-        makeReturnStatement(
-          visit(node.argument, context, { type: "Expression", name: "" }),
-        ),
-      ];
-    },
-  },
+const { test, done } = compileTest({
+  Program,
+  Statement,
+  Effect,
+  UpdateExpression,
   Expression: {
-    ...TestVisitor.Expression,
+    ...Expression,
     UpdateExpression: (node, context, _site) =>
       visit(node.argument, context, {
         type: "UpdateExpression",
@@ -29,18 +22,14 @@ const Visitor = {
         operator: node.operator,
       }),
   },
-};
+});
 
-const testUpdateExpression = (input, output) => {
-  test(input, { visitors: Visitor }, null, output);
-};
-
-testUpdateExpression(
-  `"use strict"; return ++x;`,
+test(
+  `"use strict"; ++x;`,
   `
     {
       let result;
-      return (
+      void (
         result = intrinsic.aran.binary("+", [x], 1),
         (
           [x] = result,
@@ -51,12 +40,12 @@ testUpdateExpression(
   `,
 );
 
-testUpdateExpression(
-  `"use strict"; return x++;`,
+test(
+  `"use strict"; x++;`,
   `
     {
       let result;
-      return (
+      void (
         result = [x],
         (
           [x] = intrinsic.aran.binary("+", result, 1),
@@ -67,12 +56,12 @@ testUpdateExpression(
   `,
 );
 
-testUpdateExpression(
-  `return ++(123)[456];`,
+test(
+  `++(123)[456];`,
   `
     {
       let object, property;
-      return (
+      void (
         object = 123,
         (
           property = 456,
@@ -91,12 +80,12 @@ testUpdateExpression(
   `,
 );
 
-testUpdateExpression(
-  `return (123)[456]++;`,
+test(
+  `(123)[456]++;`,
   `
     {
       let object, property, value;
-      return (
+      void (
         object = 123,
         (
           property = 456,
@@ -116,3 +105,5 @@ testUpdateExpression(
     }
   `,
 );
+
+done();

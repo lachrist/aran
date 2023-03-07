@@ -1,14 +1,21 @@
 import { assertEqual } from "../../__fixture__.mjs";
 import { makeApplyExpression } from "../../ast/index.mjs";
 import { visit } from "./context.mjs";
-import TestVisitor, { test } from "./__fixture__.mjs";
-import KeyVisitor from "./key.mjs";
-import CalleeVisitor from "./callee.mjs";
+import {
+  Program,
+  Statement,
+  Effect,
+  Expression,
+  compileTest,
+} from "./__fixture__.mjs";
+import Callee from "./callee.mjs";
 
-const Visitor = {
-  ...TestVisitor,
+const { test, done } = compileTest({
+  Program,
+  Statement,
+  Effect,
   Expression: {
-    ...TestVisitor.Expression,
+    ...Expression,
     CallExpression: (node, context, _site) => {
       assertEqual(node.arguments.length, 0);
       const { callee: expression1, this: expression2 } = visit(
@@ -21,19 +28,14 @@ const Visitor = {
       return makeApplyExpression(expression1, expression2, []);
     },
   },
-  Key: KeyVisitor,
-  Callee: CalleeVisitor,
-};
+  Callee,
+});
 
-const testCallee = (input, output) => {
-  test(input, { visitors: Visitor }, null, output);
-};
+test(`(123)();`, `{ void (123)(); }`);
 
-testCallee(`(123)();`, `{ void (123)(); }`);
+test(`super[123]();`, `{ void ("super.get")(123)(!"this"); }`);
 
-testCallee(`super.key();`, `{ void ("super.get")("key")(!"this"); }`);
-
-testCallee(
+test(
   `(123)[456]();`,
   `
     {
@@ -46,7 +48,7 @@ testCallee(
   `,
 );
 
-testCallee(
+test(
   `((123)?.[456])();`,
   `
     {
@@ -66,3 +68,5 @@ testCallee(
     }
   `,
 );
+
+done();

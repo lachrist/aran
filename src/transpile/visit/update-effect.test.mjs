@@ -1,27 +1,20 @@
-import { assertNotEqual } from "../../__fixture__.mjs";
-import { makeReturnStatement } from "../../ast/index.mjs";
 import { visit } from "./context.mjs";
-import TestVisitor, { test } from "./__fixture__.mjs";
-import KeyVisitor from "./key.mjs";
-import UpdateEffectVisitor from "./update-effect.mjs";
+import {
+  Program,
+  Statement,
+  Effect,
+  Expression,
+  compileTest,
+} from "./__fixture__.mjs";
+import UpdateEffect from "./update-effect.mjs";
 
-const Visitor = {
-  ...TestVisitor,
-  Key: KeyVisitor,
-  UpdateEffect: UpdateEffectVisitor,
-  Statement: {
-    ...TestVisitor.Statement,
-    ReturnStatement: (node, context, _site) => {
-      assertNotEqual(node.argument, null);
-      return [
-        makeReturnStatement(
-          visit(node.argument, context, { type: "Expression", name: "" }),
-        ),
-      ];
-    },
-  },
+const { test, done } = compileTest({
+  Program,
+  Statement,
+  Expression,
+  UpdateEffect,
   Effect: {
-    ...TestVisitor.Effect,
+    ...Effect,
     UpdateExpression: (node, context, _site) =>
       visit(node.argument, context, {
         type: "UpdateEffect",
@@ -29,18 +22,11 @@ const Visitor = {
         operator: node.operator,
       }),
   },
-};
+});
 
-const testUpdateEffect = (input, output) => {
-  test(input, { visitors: Visitor }, null, output);
-};
+test(`"use strict"; x++;`, `{ [x] = intrinsic.aran.binary("+", [x], 1); }`);
 
-testUpdateEffect(
-  `"use strict"; x++;`,
-  `{ [x] = intrinsic.aran.binary("+", [x], 1); }`,
-);
-
-testUpdateEffect(
+test(
   `(123)[456]++;`,
   `{
       let object, property;
@@ -58,3 +44,5 @@ testUpdateEffect(
     }
   `,
 );
+
+done();
