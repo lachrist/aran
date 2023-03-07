@@ -167,7 +167,6 @@ const predicates = {
     "constructor",
     "method",
   ]),
-
   Intrinsic: partialx_(includes, getIntrinsicArray()),
   Strict: partial_x(isTypeof, "boolean"),
   Asynchronous: partial_x(isTypeof, "boolean"),

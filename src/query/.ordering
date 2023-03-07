@@ -3,4 +3,5 @@ hoisting
 eval.mjs
 strict.mjs
 sort.mjs
+object.mjs
 index.mjs

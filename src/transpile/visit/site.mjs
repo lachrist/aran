@@ -1,5 +1,24 @@
 const { undefined } = globalThis;
 
+export const OBJECT_PROPERTY = {
+  type: "ObjectProperty",
+  self: undefined,
+};
+
+export const OBJECT_PROPERTY_REGULAR = {
+  type: "ObjectPropertyRegular",
+  self: null,
+};
+
+export const OBJECT_PROPERTY_VALUE = {
+  type: "ObjectPropertyValue",
+  self: null,
+  kind: "init",
+  computed: undefined,
+  method: false,
+  key: undefined,
+};
+
 export const CLASS = {
   type: "Class",
   name: undefined,
@@ -8,7 +27,7 @@ export const CLASS = {
 export const CLOSURE = {
   type: "Closure",
   kind: undefined,
-  super: null,
+  self: null,
   name: undefined,
 };
 

@@ -1,10 +1,11 @@
-import { concat, reduce, map, flatMap, slice } from "array-lite";
+import { some, concat, reduce, map, flatMap, slice } from "array-lite";
 import {
   reduceReverse,
   partial_xx,
   SyntaxAranError,
 } from "../../util/index.mjs";
 import {
+  makeIntrinsicExpression,
   makeConditionalExpression,
   makeSequenceExpression,
   makeApplyExpression,
@@ -13,6 +14,7 @@ import {
   makeLiteralExpression,
 } from "../../ast/index.mjs";
 import {
+  makeObjectExpression,
   makeGetExpression,
   makeUnaryExpression,
   makeArrayExpression,
@@ -22,16 +24,21 @@ import {
   makeBinaryExpression,
 } from "../../intrinsic.mjs";
 import {
+  isProtoProperty,
+  isAccessorProperty,
+  isMethodProperty,
+} from "../../query/index.mjs";
+import {
   makeScopeBaseReadExpression,
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
 import { annotate } from "./annotate.mjs";
+import { makeMacro, makeMacroSelf } from "./macro.mjs";
 import {
   expectSyntaxPropertyNotEqual,
   makeSyntaxPropertyError,
 } from "./report.mjs";
 import {
-  visit,
   QUASI_RAW,
   QUASI,
   EXPRESSION,
@@ -41,12 +48,17 @@ import {
   CALLEE,
   CLOSURE,
   CLASS,
+  OBJECT_PROPERTY,
+  OBJECT_PROPERTY_REGULAR,
   ASSIGNMENT_EXPRESSION,
   UPDATE_EXPRESSION,
   getKeySite,
-} from "./context.mjs";
+} from "./site.mjs";
+import { visit } from "./context.mjs";
 
 const { Array } = globalThis;
+
+const isSpreadElement = ({ type }) => type === "SpreadElement";
 
 const getMetaPropertyVariable = (node) => {
   if (node.meta.name === "new" && node.property.name === "target") {
@@ -318,4 +330,54 @@ export default {
       makeLiteralExpression({ undefined: null }),
       [visit(node.source, context, EXPRESSION)],
     ),
+  ObjectExpression: (node, context, _site) => {
+    // TODO: optimize when proto property is first //
+    if (
+      some(node.properties, isProtoProperty) ||
+      some(node.properties, isAccessorProperty) ||
+      some(node.properties, isSpreadElement)
+    ) {
+      const macro = makeMacro(
+        context,
+        "self",
+        makeObjectExpression(makeIntrinsicExpression("Object.prototype"), []),
+      );
+      return reduceReverse(
+        concat(
+          macro.setup,
+          flatMap(
+            node.properties,
+            partial_xx(visit, context, {
+              ...OBJECT_PROPERTY,
+              self: macro.value,
+            }),
+          ),
+        ),
+        makeSequenceExpression,
+        macro.value,
+      );
+    } else if (some(node.properties, isMethodProperty)) {
+      const macro = makeMacroSelf(context, "self", (expression) =>
+        makeObjectExpression(
+          makeIntrinsicExpression("Object.prototype"),
+          map(
+            node.properties,
+            partial_xx(visit, context, {
+              ...OBJECT_PROPERTY_REGULAR,
+              self: expression,
+            }),
+          ),
+        ),
+      );
+      return reduceReverse(macro.setup, makeSequenceExpression, macro.value);
+    } else {
+      return makeObjectExpression(
+        makeIntrinsicExpression("Object.prototype"),
+        map(
+          node.properties,
+          partial_xx(visit, context, OBJECT_PROPERTY_REGULAR),
+        ),
+      );
+    }
+  },
 };

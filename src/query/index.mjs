@@ -3,3 +3,4 @@ export * from "./hoisting/index.mjs";
 export * from "./eval.mjs";
 export * from "./strict.mjs";
 export * from "./sort.mjs";
+export * from "./object.mjs";

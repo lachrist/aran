@@ -47,6 +47,7 @@ const intrinsics = [
   "Reflect.has",
   "Reflect.construct",
   "Reflect.apply",
+  "Reflect.setProtoypeOf",
   "Reflect.getPrototypeOf",
   "Reflect.ownKeys",
   "Reflect.isExtensible",

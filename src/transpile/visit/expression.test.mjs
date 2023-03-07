@@ -21,6 +21,9 @@ import Callee from "./callee.mjs";
 import AssignmentExpression from "./assignment-expression.mjs";
 import UpdateExpression from "./update-expression.mjs";
 import Delete from "./delete.mjs";
+import ObjectPropertyValue from "./object-property-value.mjs";
+import ObjectProperty from "./object-property.mjs";
+import ObjectPropertyRegular from "./object-property-regular.mjs";
 import Expression from "./expression.mjs";
 
 const visitClass = (node, _context, _site) => {
@@ -63,6 +66,9 @@ const { test, done } = compileTest({
   Delete,
   Expression,
   ExpressionMacro,
+  ObjectPropertyValue,
+  ObjectProperty,
+  ObjectPropertyRegular,
   Class: {
     __ANNOTATE__: annotateNode,
     ClassExpression: visitClass,
@@ -262,6 +268,52 @@ test(
           intrinsic.aran.get(object, 456)
         )
       );
+    }
+  `,
+);
+
+// ObjectExpression //
+test(
+  `({[123]:456});`,
+  `
+    {
+      void intrinsic.aran.createObject(
+        intrinsic.Object.prototype,
+        123, 456,
+      );
+    }
+  `,
+);
+test(
+  `({__proto__:123});`,
+  `
+    {
+      let self;
+      void (
+        self = intrinsic.aran.createObject(intrinsic.Object.prototype),
+        (
+          void intrinsic.Reflect.setProtoypeOf(self, 123),
+          self
+        )
+      );
+    }
+  `,
+);
+test(
+  `({ [123] () {} });`,
+  `
+    {
+      let self, key;
+      void (
+        self = intrinsic.aran.createObject(
+          intrinsic.Object.prototype,
+          (key = 123, key),
+          function method () {
+            return undefined
+          },
+        ),
+        self
+      )
     }
   `,
 );

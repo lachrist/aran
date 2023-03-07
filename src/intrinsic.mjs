@@ -145,8 +145,7 @@ export const makeBinaryExpression = partialxf___(
   makeLiteralExpression,
 );
 
-const flatenProperty = ({ 0: name, 1: value }) =>
-  value === null ? [] : [name, value];
+const flatenProperty = ({ key, value }) => (value === null ? [] : [key, value]);
 
 export const makeObjectExpression = (
   prototype,
@@ -202,23 +201,23 @@ export const makeSetExpression = partialxx____(
 
 const makeObjectExpression4 = (
   prototype,
-  name1,
+  key1,
   value1,
-  name2,
+  key2,
   value2,
-  name3,
+  key3,
   value3,
-  name4,
+  key4,
   value4,
   annotation = undefined,
 ) =>
   makeObjectExpression(
     prototype,
     [
-      [name1, value1],
-      [name2, value2],
-      [name3, value3],
-      [name4, value4],
+      { key: key1, value: value1 },
+      { key: key2, value: value2 },
+      { key: key3, value: value3 },
+      { key: key4, value: value4 },
     ],
     annotation,
   );
@@ -286,7 +285,10 @@ export const makeThrowAranErrorExpression = partialx__(
 
 const makeJsonProperty = (object, key) => {
   assert(typeof key === "string", "unexpected symbol property");
-  return [makeLiteralExpression(key), makeJsonExpression(object[key])];
+  return {
+    key: makeLiteralExpression(key),
+    value: makeJsonExpression(object[key]),
+  };
 };
 
 export const makeJsonExpression = (json, annotation = undefined) => {
@@ -312,6 +314,11 @@ export const makeJsonExpression = (json, annotation = undefined) => {
 export const makeReflectDefinePropertyExpression = partialx____(
   makeIntrinsicApplyExpression3,
   "Reflect.defineProperty",
+);
+
+export const makeReflectSetPrototypeOfExpression = partialx____(
+  makeIntrinsicApplyExpression2,
+  "Reflect.setProtoypeOf",
 );
 
 ///////////
