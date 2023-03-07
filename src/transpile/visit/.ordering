@@ -2,6 +2,7 @@ report.mjs
 context.mjs
 __fixture__.mjs
 quasi.mjs
+quasi-raw.mjs
 key.mjs
 callee.mjs
 pattern-element.mjs
