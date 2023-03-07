@@ -1,5 +1,5 @@
 import { assertEqual, assertNotEqual } from "../../__fixture__.mjs";
-import { EXPRESSION, visit } from "./context.mjs";
+import { EXPRESSION, PATTERN, visit } from "./context.mjs";
 import {
   Program,
   Statement,
@@ -19,7 +19,7 @@ const { test, done } = compileTest({
       assertEqual(node.declarations.length, 1);
       assertNotEqual(node.declarations[0].init, null);
       return visit(node.declarations[0].id, context, {
-        type: "Pattern",
+        ...PATTERN,
         kind: node.kind,
         right: visit(node.declarations[0].init, context, EXPRESSION),
       });
@@ -30,8 +30,7 @@ const { test, done } = compileTest({
     AssignmentExpression: (node, context, _site) => {
       assertEqual(node.operator, "=");
       return visit(node.left, context, {
-        type: "Pattern",
-        kind: null,
+        ...PATTERN,
         right: visit(node.right, context, EXPRESSION),
       });
     },

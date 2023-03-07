@@ -13,20 +13,28 @@ import {
   makeScopeMetaReadExpression,
 } from "../scope/index.mjs";
 import { makeSyntaxError } from "./report.mjs";
-import { annotateNodeArray, visit, EFFECT, EXPRESSION } from "./context.mjs";
+import {
+  annotateNodeArray,
+  visit,
+  EFFECT,
+  EXPRESSION,
+  ASSIGNMENT_EFFECT,
+  UPDATE_EFFECT,
+} from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNodeArray,
   AssignmentExpression: (node, context, _site) =>
     visit(node.left, context, {
-      type: "AssignmentEffect",
+      ...ASSIGNMENT_EFFECT,
       operator: node.operator,
       right: node.right,
     }),
   UpdateExpression: (node, context, _site) =>
     visit(node.argument, context, {
-      type: "UpdateEffect",
+      ...UPDATE_EFFECT,
       operator: node.operator,
+      prefix: node.prefix,
     }),
   SequenceExpression: (node, context, _site) =>
     flatMap(node.expressions, partial_xx(visit, context, EFFECT)),

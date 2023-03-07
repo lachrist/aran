@@ -13,7 +13,7 @@ export default {
   __ANNOTATE__: annotateNodeArray,
   RestElement: (node, context, site) =>
     visit(node.argument, context, {
-      type: "Pattern",
+      ...PATTERN,
       kind: site.kind,
       right: makeArrayFromExpression(
         makeScopeMetaReadExpression(context, site.iterator_variable),
@@ -21,7 +21,7 @@ export default {
     }),
   __DEFAULT__: (node, context, site) =>
     visit(node, context, {
-      type: "Pattern",
+      ...PATTERN,
       kind: site.kind,
       right: makeApplyExpression(
         makeGetExpression(

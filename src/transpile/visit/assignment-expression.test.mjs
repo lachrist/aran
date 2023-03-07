@@ -1,4 +1,4 @@
-import { visit } from "./context.mjs";
+import { visit, ASSIGNMENT_EXPRESSION } from "./context.mjs";
 import {
   Program,
   Statement,
@@ -21,7 +21,7 @@ const { test, done } = compileTest({
     ...Expression,
     AssignmentExpression: (node, context, _site) =>
       visit(node.left, context, {
-        type: "AssignmentExpression",
+        ...ASSIGNMENT_EXPRESSION,
         operator: node.operator,
         right: node.right,
       }),

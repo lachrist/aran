@@ -1,5 +1,5 @@
 import { annotateNode } from "../../ast/index.mjs";
-import { visit } from "./context.mjs";
+import { visit, KEY } from "./context.mjs";
 import { Program, Statement, Effect, compileTest } from "./__fixture__.mjs";
 import Key from "./key.mjs";
 
@@ -9,8 +9,7 @@ const { test, done } = compileTest({
   Effect,
   Expression: {
     __ANNOTATE__: annotateNode,
-    __DEFAULT__: (node, context, _site) =>
-      visit(node, context, { type: "Key" }),
+    __DEFAULT__: (node, context, _site) => visit(node, context, KEY),
   },
   Key,
 });

@@ -41,6 +41,10 @@ import {
   EFFECT,
   DELETE,
   CALLEE,
+  CLOSURE,
+  CLASS,
+  ASSIGNMENT_EXPRESSION,
+  UPDATE_EXPRESSION,
   getKeySite,
 } from "./context.mjs";
 
@@ -68,21 +72,19 @@ export default {
     makeScopeSpecReadExpression(context, getMetaPropertyVariable(node)),
   ArrowFunctionExpression: (node, context, site) =>
     visit(node, context, {
-      type: "Closure",
+      ...CLOSURE,
       kind: "arrow",
       name: site.name,
-      super: null,
     }),
   FunctionExpression: (node, context, site) =>
     visit(node, context, {
-      type: "Closure",
+      ...CLOSURE,
       kind: "function",
       name: node.id === null ? site.name : makeLiteralExpression(node.id.name),
-      super: null,
     }),
   ClassExpression: (node, context, site) =>
     visit(node, context, {
-      type: "Class",
+      ...CLASS,
       name: node.id === null ? site.name : makeLiteralExpression(node.id.name),
     }),
   // Combinators //
@@ -161,16 +163,15 @@ export default {
     ),
   AssignmentExpression: (node, context, _site) =>
     visit(node.left, context, {
-      type: "AssignmentExpression",
+      ...ASSIGNMENT_EXPRESSION,
       operator: node.operator,
       right: node.right,
     }),
   UpdateExpression: (node, context, _site) =>
     visit(node.argument, context, {
-      type: "UpdateExpression",
+      ...UPDATE_EXPRESSION,
       operator: node.operator,
       prefix: node.prefix,
-      right: node.right,
     }),
   /////////////
   // Control //

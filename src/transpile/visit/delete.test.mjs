@@ -1,5 +1,5 @@
 import { assertEqual } from "../../__fixture__.mjs";
-import { visit } from "./context.mjs";
+import { visit, DELETE } from "./context.mjs";
 import {
   Program,
   Statement,
@@ -18,7 +18,7 @@ const { test, done } = compileTest({
     ...Expression,
     UnaryExpression: (node, context, _site) => {
       assertEqual(node.operator, "delete");
-      return visit(node.argument, context, { type: "Delete" });
+      return visit(node.argument, context, DELETE);
     },
   },
 });

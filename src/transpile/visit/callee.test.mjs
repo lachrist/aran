@@ -1,6 +1,6 @@
 import { assertEqual } from "../../__fixture__.mjs";
 import { makeApplyExpression } from "../../ast/index.mjs";
-import { visit } from "./context.mjs";
+import { visit, CALLEE } from "./context.mjs";
 import {
   Program,
   Statement,
@@ -21,9 +21,7 @@ const { test, done } = compileTest({
       const { callee: expression1, this: expression2 } = visit(
         node.callee,
         context,
-        {
-          type: "Callee",
-        },
+        CALLEE,
       );
       return makeApplyExpression(expression1, expression2, []);
     },

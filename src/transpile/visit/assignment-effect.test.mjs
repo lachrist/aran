@@ -1,4 +1,4 @@
-import { visit } from "./context.mjs";
+import { visit, ASSIGNMENT_EFFECT } from "./context.mjs";
 import {
   Program,
   Statement,
@@ -21,7 +21,7 @@ const { test, done } = compileTest({
     ...Effect,
     AssignmentExpression: (node, context, _site) =>
       visit(node.left, context, {
-        type: "AssignmentEffect",
+        ...ASSIGNMENT_EFFECT,
         operator: node.operator,
         right: node.right,
       }),

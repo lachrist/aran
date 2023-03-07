@@ -20,6 +20,7 @@ import {
   annotateNodeArray,
   visit,
   EXPRESSION,
+  PATTERN,
   getKeySite,
 } from "./context.mjs";
 
@@ -72,7 +73,7 @@ export default {
         context,
         node.name,
         visit(site.right, context, {
-          type: "Expression",
+          ...EXPRESSION,
           name: makeLiteralExpression(node.name),
         }),
       );
@@ -150,8 +151,7 @@ export default {
   __DEFAULT__: (node, context, site) => {
     expectSyntaxPropertyEqual(site, ["operator"], "=");
     return visit(node, context, {
-      type: "Pattern",
-      kind: null,
+      ...PATTERN,
       right: visit(site.right, context, EXPRESSION),
     });
   },

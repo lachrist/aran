@@ -14,7 +14,13 @@ import {
   declareScopeMeta,
 } from "../scope/index.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
-import { visit, CALLEE, EXPRESSION, getKeySite } from "./context.mjs";
+import {
+  visit,
+  CALLEE,
+  EXPRESSION,
+  EXPRESSION_MACRO,
+  getKeySite,
+} from "./context.mjs";
 
 export default {
   __ANNOTATE__: ({ callee: expression1, this: expression2 }, serial) => ({

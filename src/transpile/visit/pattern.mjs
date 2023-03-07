@@ -31,6 +31,9 @@ import {
   annotateNodeArray,
   liftEffect,
   EXPRESSION,
+  PATTERN,
+  PATTERN_ELEMENT,
+  PATTERN_PROPERTY,
   getKeySite,
 } from "./context.mjs";
 
@@ -147,7 +150,7 @@ export default {
         partialx_(liftEffect, site.kind),
       ),
       visit(node.left, context, {
-        type: "Pattern",
+        ...PATTERN,
         kind: site.kind,
         right: makeConditionalExpression(
           makeBinaryExpression(
@@ -228,7 +231,7 @@ export default {
       flatMap(
         node.elements,
         partial_xx(visit, context, {
-          type: "PatternElement",
+          ...PATTERN_ELEMENT,
           kind: site.kind,
           iterator_variable,
         }),

@@ -1,4 +1,4 @@
-import { visit } from "./context.mjs";
+import { visit, UPDATE_EXPRESSION } from "./context.mjs";
 import {
   Program,
   Statement,
@@ -17,7 +17,7 @@ const { test, done } = compileTest({
     ...Expression,
     UpdateExpression: (node, context, _site) =>
       visit(node.argument, context, {
-        type: "UpdateExpression",
+        ...UPDATE_EXPRESSION,
         prefix: node.prefix,
         operator: node.operator,
       }),

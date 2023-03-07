@@ -21,6 +21,7 @@ import {
   visit,
   liftEffect,
   getKeySite,
+  PATTERN,
 } from "./context.mjs";
 
 const { Error } = globalThis;
@@ -30,7 +31,7 @@ export default {
   Property: (node, context, site) => {
     if (site.key_variable_array === null) {
       return visit(node.value, context, {
-        type: "Pattern",
+        ...PATTERN,
         kind: site.kind,
         right: makeGetExpression(
           makeScopeMetaReadExpression(context, site.right_variable),
@@ -41,7 +42,7 @@ export default {
       const key_variable = declareScopeMeta(context, "pattern_object_key");
       push(site.key_variable_array, key_variable);
       return visit(node.value, context, {
-        type: "Pattern",
+        ...PATTERN,
         kind: site.kind,
         right: makeGetExpression(
           makeScopeMetaReadExpression(context, site.right_variable),
@@ -96,7 +97,7 @@ export default {
         partialx_(liftEffect, site.kind),
       ),
       visit(node.argument, context, {
-        type: "Pattern",
+        ...PATTERN,
         kind: site.kind,
         right: makeScopeMetaReadExpression(context, rest_variable),
       }),

@@ -18,7 +18,7 @@ import {
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
-import { visit, EXPRESSION, getKeySite } from "./context.mjs";
+import { visit, EXPRESSION, PATTERN, getKeySite } from "./context.mjs";
 
 const {
   Reflect: { apply },
@@ -75,7 +75,7 @@ export default {
             context,
             variable,
             visit(site.right, context, {
-              type: "Expression",
+              ...EXPRESSION,
               name: makeLiteralExpression(node.name),
             }),
           ),
@@ -180,8 +180,7 @@ export default {
           visit(site.right, context, EXPRESSION),
         ),
         visit(node, context, {
-          type: "Pattern",
-          kind: null,
+          ...PATTERN,
           right: makeScopeMetaReadExpression(context, variable),
         }),
       ),
