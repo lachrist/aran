@@ -8,11 +8,7 @@ import {
   partial_x,
   NULL_DATA_DESCRIPTOR,
 } from "../../util/index.mjs";
-import {
-  makeLiteralExpression,
-  makeEffectStatement,
-  annotateNode,
-} from "../../ast/index.mjs";
+import { makeEffectStatement, annotateNode } from "../../ast/index.mjs";
 import { ROOT_SCOPE, packScope, unpackScope } from "../scope/index.mjs";
 
 const {
@@ -113,14 +109,14 @@ export const liftEffect = (kind, effect) =>
 
 export const CLASS = {
   type: "Class",
-  name: makeLiteralExpression(""),
+  name: undefined,
 };
 
 export const CLOSURE = {
   type: "Closure",
   kind: undefined,
   super: null,
-  name: makeLiteralExpression(""),
+  name: undefined,
 };
 
 export const UPDATE_EXPRESSION = {
@@ -157,7 +153,7 @@ export const CALLEE = { type: "Callee" };
 
 export const EXPRESSION_MACRO = {
   type: "ExpressionMacro",
-  name: makeLiteralExpression(""),
+  name: "",
   info: "macro",
 };
 
@@ -184,7 +180,7 @@ export const KEY_EXPRESSION_MACRO = { ...EXPRESSION_MACRO, info: "key" };
 
 export const EXPRESSION = {
   type: "Expression",
-  name: makeLiteralExpression(""),
+  name: "",
 };
 
 export const QUASI = { type: "Quasi" };

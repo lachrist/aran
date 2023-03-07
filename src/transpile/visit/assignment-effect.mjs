@@ -1,8 +1,5 @@
 import { concat } from "array-lite";
-import {
-  makeLiteralExpression,
-  makeExpressionEffect,
-} from "../../ast/index.mjs";
+import { makeExpressionEffect } from "../../ast/index.mjs";
 import {
   makeGetExpression,
   makeSetExpression,
@@ -73,7 +70,7 @@ export default {
         node.name,
         visit(site.right, context, {
           ...EXPRESSION,
-          name: makeLiteralExpression(node.name),
+          name: node.name,
         }),
       );
     } else {

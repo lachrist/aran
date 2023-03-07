@@ -1,10 +1,6 @@
 import { concat } from "array-lite";
 import { reduceReverse } from "../../util/index.mjs";
-import {
-  annotateNode,
-  makeLiteralExpression,
-  makeSequenceExpression,
-} from "../../ast/index.mjs";
+import { annotateNode, makeSequenceExpression } from "../../ast/index.mjs";
 import {
   makeGetExpression,
   makeSetExpression,
@@ -73,7 +69,7 @@ export default {
       const macro = visit(site.right, context, {
         ...EXPRESSION_MACRO,
         info: "right",
-        name: makeLiteralExpression(node.name),
+        name: node.name,
       });
       return reduceReverse(
         concat(
