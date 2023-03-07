@@ -14,8 +14,6 @@ import {
   allignStatement,
 } from "../../allign/index.mjs";
 import {
-  annotateNodeArray,
-  annotateMacro,
   createInitialContext,
   saveContext,
   loadContext,
@@ -26,15 +24,6 @@ import {
 } from "./context.mjs";
 
 const { undefined } = globalThis;
-
-///////////////////
-// annotateMacro //
-///////////////////
-
-assertEqual(
-  typeof annotateMacro({ setup: [], value: makeLiteralExpression(123) }),
-  "object",
-);
 
 ////////////////
 // getKeySite //
@@ -88,7 +77,7 @@ forEach(["type", "__DEFAULT__"], (key) => {
           ...{
             visitors: {
               site: {
-                __ANNOTATE__: annotateNodeArray,
+                __ANNOTATE__: (nodes, _serial) => nodes,
                 [key]: (node, _context, site) => {
                   assertDeepEqual(node, { type: "type" });
                   assertDeepEqual(site, { type: "site" });

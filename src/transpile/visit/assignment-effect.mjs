@@ -9,9 +9,9 @@ import {
   makeScopeBaseWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
+import { annotateNodeArray } from "./macro.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
 import {
-  annotateNodeArray,
   visit,
   EXPRESSION,
   EXPRESSION_MACRO,

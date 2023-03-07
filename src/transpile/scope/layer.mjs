@@ -47,18 +47,20 @@ export const makeScopeEvalExpression = ({ strict, scope }, expression) =>
 // meta //
 //////////
 
-export const declareScopeMeta = (
-  { strict, scope, counter },
-  info,
-  expression,
-) => {
+export const declareScopeMeta = ({ strict, scope, counter }, info) => {
   const meta = makeMetaVariable(info, incrementCounter(counter));
   declareScope(strict, scope, "define", meta, null);
-  return {
-    setup: makeOptimisticWriteEffectArray(strict, scope, meta, expression),
-    value: makeScopeReadExpression(strict, scope, meta),
-  };
+  return meta;
 };
+
+export const makeScopeMetaWriteEffectArray = (
+  { strict, scope },
+  meta,
+  expression,
+) => makeOptimisticWriteEffectArray(strict, scope, meta, expression);
+
+export const makeScopeMetaReadExpression = ({ strict, scope }, meta) =>
+  makeScopeReadExpression(strict, scope, meta);
 
 //////////
 // spec //
@@ -140,10 +142,14 @@ export const makeScopeBaseWriteEffectArray = (context, base, expression) => {
   } else if (gaugeCounter(counter) === 1) {
     return effects;
   } else {
-    const macro = declareScopeMeta(context, "right", expression);
+    const variable = declareScopeMeta(context, "right");
     return concat(
-      macro.setup,
-      makeScopeBaseMacroWriteEffectArray(context, base, macro.value),
+      makeScopeMetaWriteEffectArray(context, variable, expression),
+      makeScopeBaseMacroWriteEffectArray(
+        context,
+        base,
+        makeScopeMetaReadExpression(context, variable),
+      ),
     );
   }
 };

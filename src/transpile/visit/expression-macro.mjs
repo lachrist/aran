@@ -1,6 +1,6 @@
 import { makeLiteralExpression } from "../../ast/index.mjs";
-import { declareScopeMeta } from "../scope/index.mjs";
-import { visit, annotateMacro, EXPRESSION } from "./context.mjs";
+import { makeMacro, annotateMacro } from "./macro.mjs";
+import { visit, EXPRESSION } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateMacro,
@@ -9,7 +9,7 @@ export default {
     value: makeLiteralExpression(node.value),
   }),
   __DEFAULT__: (node, context, site) =>
-    declareScopeMeta(
+    makeMacro(
       context,
       site.info,
       visit(node, context, {

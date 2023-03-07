@@ -12,10 +12,10 @@ import {
   makeBinaryExpression,
 } from "../../intrinsic.mjs";
 import {
-  declareScopeMeta,
   makeScopeBaseWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
+import { makeMacro } from "./macro.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
 import { visit, EXPRESSION_MACRO, getKeyMacroSite } from "./context.mjs";
 
@@ -23,7 +23,7 @@ export default {
   __ANNOTATE__: annotateNode,
   Identifier: (node, context, site) => {
     if (site.prefix) {
-      const macro = declareScopeMeta(
+      const macro = makeMacro(
         context,
         "right_new",
         makeBinaryExpression(
@@ -41,7 +41,7 @@ export default {
         macro.value,
       );
     } else {
-      const macro = declareScopeMeta(
+      const macro = makeMacro(
         context,
         "right_old",
         makeScopeBaseReadExpression(context, node.name),
@@ -100,7 +100,7 @@ export default {
         context,
         getKeyMacroSite(node.computed),
       );
-      const right_old_macro = declareScopeMeta(
+      const right_old_macro = makeMacro(
         context,
         "right_old",
         makeGetExpression(object_macro.value, key_macro.value),

@@ -1,5 +1,5 @@
 import { makeLiteralExpression } from "../../ast/index.mjs";
-import { annotateMacro } from "./context.mjs";
+import { annotateMacro } from "./macro.mjs";
 
 export default {
   __ANNOTATE__: annotateMacro,

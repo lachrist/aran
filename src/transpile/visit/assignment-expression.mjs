@@ -7,10 +7,10 @@ import {
   makeBinaryExpression,
 } from "../../intrinsic.mjs";
 import {
-  declareScopeMeta,
   makeScopeBaseMacroWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
+import { makeMacro } from "./macro.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
 import {
   visit,
@@ -86,7 +86,7 @@ export default {
       // undefined
       // > f += function () {}
       // 'foofunction () {}'
-      const macro = declareScopeMeta(
+      const macro = makeMacro(
         context,
         "right",
         makeBinaryExpression(

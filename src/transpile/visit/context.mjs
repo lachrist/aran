@@ -1,14 +1,12 @@
-import { map } from "array-lite";
 import {
   expect2,
   inspect1,
   createCounter,
   hasOwn,
   assert,
-  partial_x,
   NULL_DATA_DESCRIPTOR,
 } from "../../util/index.mjs";
-import { makeEffectStatement, annotateNode } from "../../ast/index.mjs";
+import { makeEffectStatement } from "../../ast/index.mjs";
 import { ROOT_SCOPE, packScope, unpackScope } from "../scope/index.mjs";
 
 const {
@@ -53,17 +51,6 @@ const serializeContextNode = (context, node) => {
   context.nodes[serial] = node;
   return serial;
 };
-
-export const annotateNodeArray = (nodes, serial) =>
-  map(nodes, partial_x(annotateNode, serial));
-
-export const annotateMacro = (
-  { setup: effects, value: expression },
-  serial,
-) => ({
-  setup: annotateNodeArray(effects, serial),
-  value: annotateNode(expression, serial),
-});
 
 export const resolveVisit = (visitor, node) => {
   const { type } = node;

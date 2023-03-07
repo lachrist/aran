@@ -11,9 +11,8 @@ import {
   makeObjectAssignExpression,
   makeGetExpression,
 } from "../../intrinsic.mjs";
-import { declareScopeMeta } from "../scope/index.mjs";
+import { annotateNodeArray, makeMacro } from "./macro.mjs";
 import {
-  annotateNodeArray,
   visit,
   liftEffect,
   getKeySite,
@@ -50,7 +49,7 @@ export default {
   },
   RestElement: (node, context, site) => {
     assert(site.keys !== null, Error, "missing array of key variables");
-    const macro = declareScopeMeta(
+    const macro = makeMacro(
       context,
       "rest",
       makeObjectAssignExpression(

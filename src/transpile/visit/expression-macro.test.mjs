@@ -1,6 +1,6 @@
 import { concat } from "array-lite";
 import { makeExpressionEffect } from "../../ast/index.mjs";
-import { EXPRESSION_MACRO, visit, annotateNodeArray } from "./context.mjs";
+import { EXPRESSION_MACRO, visit } from "./context.mjs";
 import { Program, Statement, Expression, compileTest } from "./__fixture__.mjs";
 import ExpressionMacro from "./expression-macro.mjs";
 
@@ -8,7 +8,7 @@ const { test, done } = compileTest({
   Program,
   Statement,
   Effect: {
-    __ANNOTATE__: annotateNodeArray,
+    __ANNOTATE__: (nodes, _serial) => nodes,
     __DEFAULT__: (node, context, _site) => {
       const macro = visit(node, context, EXPRESSION_MACRO);
       return concat(macro.setup, [makeExpressionEffect(macro.value)]);

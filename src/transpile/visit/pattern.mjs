@@ -22,11 +22,10 @@ import {
 import {
   makeScopeBaseWriteEffectArray,
   makeScopeBaseInitializeStatementArray,
-  declareScopeMeta,
 } from "../scope/index.mjs";
+import { makeMacro, annotateNodeArray } from "./macro.mjs";
 import {
   visit,
-  annotateNodeArray,
   liftEffect,
   EXPRESSION,
   PATTERN,
@@ -121,7 +120,7 @@ export default {
       "illegal optional MemberExpression at %j",
       node.loc.start,
     );
-    const macro = declareScopeMeta(context, "right", site.right);
+    const macro = makeMacro(context, "right", site.right);
     return map(
       concat(macro.setup, [
         makeExpressionEffect(
@@ -137,7 +136,7 @@ export default {
     );
   },
   AssignmentPattern: (node, context, site) => {
-    const macro = declareScopeMeta(context, "right", site.right);
+    const macro = makeMacro(context, "right", site.right);
     return concat(
       map(macro.setup, partialx_(liftEffect, site.kind)),
       visit(node.left, context, {
@@ -195,8 +194,8 @@ export default {
   // > var [x, y, z] = {__proto__:null, [Symbol.iterator]:iterator};
   // undefined
   ArrayPattern: (node, context, site) => {
-    const right_macro = declareScopeMeta(context, "right", site.right);
-    const iterator_macro = declareScopeMeta(
+    const right_macro = makeMacro(context, "right", site.right);
+    const iterator_macro = makeMacro(
       context,
       "iterator",
       makeApplyExpression(
@@ -262,7 +261,7 @@ export default {
   // false
   ObjectPattern: (node, context, site) => {
     if (some(node.properties, isRestElement)) {
-      const macro = declareScopeMeta(context, "right", site.right);
+      const macro = makeMacro(context, "right", site.right);
       return concat(
         map(
           concat(macro.setup, makeCheckObjectEffectArray(macro.value)),
@@ -279,7 +278,7 @@ export default {
         ),
       );
     } else {
-      const macro = declareScopeMeta(context, "right", site.right);
+      const macro = makeMacro(context, "right", site.right);
       return concat(
         map(
           concat(macro.setup, makeCheckObjectEffectArray(macro.value)),

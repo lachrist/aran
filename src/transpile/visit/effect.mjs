@@ -7,9 +7,9 @@ import {
   makeConditionalExpression,
 } from "../../ast/index.mjs";
 import { makeBinaryExpression } from "../../intrinsic.mjs";
+import { annotateNodeArray } from "./macro.mjs";
 import { makeSyntaxError } from "./report.mjs";
 import {
-  annotateNodeArray,
   visit,
   EFFECT,
   EXPRESSION,

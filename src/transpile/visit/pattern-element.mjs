@@ -6,7 +6,8 @@ import {
   makeArrayFromExpression,
   makeGetExpression,
 } from "../../intrinsic.mjs";
-import { annotateNodeArray, visit, PATTERN } from "./context.mjs";
+import { annotateNodeArray } from "./macro.mjs";
+import { visit, PATTERN } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNodeArray,

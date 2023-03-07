@@ -24,6 +24,8 @@ import {
   unpackScope,
   makeScopeEvalExpression,
   declareScopeMeta,
+  makeScopeMetaWriteEffectArray,
+  makeScopeMetaReadExpression,
   declareScopeSpecMacro,
   declareScopeSpecIllegal,
   declareScopeSpec,
@@ -77,15 +79,25 @@ assertSuccess(
       createContext({ strict: true }),
       ENCLAVE,
       (context) => {
-        const macro = declareScopeMeta(
-          context,
-          "variable",
-          makeLiteralExpression("right"),
+        const variable = declareScopeMeta(context, "variable");
+        return concat(
+          map(
+            makeScopeMetaWriteEffectArray(
+              context,
+              variable,
+              makeLiteralExpression("right"),
+            ),
+            makeEffectStatement,
+          ),
+          [
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeMetaReadExpression(context, variable),
+              ),
+            ),
+            makeReturnStatement(makeLiteralExpression("completion")),
+          ],
         );
-        return concat(map(macro.setup, makeEffectStatement), [
-          makeEffectStatement(makeExpressionEffect(macro.value)),
-          makeReturnStatement(makeLiteralExpression("completion")),
-        ]);
       },
     ),
     `
@@ -312,15 +324,25 @@ assertSuccess(
       ENCLAVE,
       [],
       (context) => {
-        const macro = declareScopeMeta(
-          context,
-          "variable1",
-          makeLiteralExpression("right"),
+        const variable = declareScopeMeta(context, "variable");
+        return concat(
+          map(
+            makeScopeMetaWriteEffectArray(
+              context,
+              variable,
+              makeLiteralExpression("right"),
+            ),
+            makeEffectStatement,
+          ),
+          [
+            makeEffectStatement(
+              makeExpressionEffect(
+                makeScopeMetaReadExpression(context, variable),
+              ),
+            ),
+            makeReturnStatement(makeLiteralExpression("completion")),
+          ],
         );
-        return concat(map(macro.setup, makeEffectStatement), [
-          makeEffectStatement(makeExpressionEffect(macro.value)),
-          makeReturnStatement(makeLiteralExpression("completion")),
-        ]);
       },
     ),
     `
