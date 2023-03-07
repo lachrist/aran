@@ -11,16 +11,13 @@ import {
   makeObjectAssignExpression,
   makeGetExpression,
 } from "../../intrinsic.mjs";
-import {
-  declareScopeMeta,
-  makeScopeMetaReadExpression,
-  makeScopeMetaWriteEffectArray,
-} from "../scope/index.mjs";
+import { declareScopeMeta } from "../scope/index.mjs";
 import {
   annotateNodeArray,
   visit,
   liftEffect,
   getKeySite,
+  getKeyMacroSite,
   PATTERN,
 } from "./context.mjs";
 
@@ -29,68 +26,44 @@ const { Error } = globalThis;
 export default {
   __ANNOTATE__: annotateNodeArray,
   Property: (node, context, site) => {
-    if (site.key_variable_array === null) {
+    if (site.keys === null) {
       return visit(node.value, context, {
         ...PATTERN,
         kind: site.kind,
         right: makeGetExpression(
-          makeScopeMetaReadExpression(context, site.right_variable),
+          site.right,
           visit(node.key, context, getKeySite(node.computed)),
         ),
       });
     } else {
-      const key_variable = declareScopeMeta(context, "pattern_object_key");
-      push(site.key_variable_array, key_variable);
+      const macro = visit(node.key, context, getKeyMacroSite(node.computed));
+      push(site.keys, macro.value);
       return visit(node.value, context, {
         ...PATTERN,
         kind: site.kind,
         right: makeGetExpression(
-          makeScopeMetaReadExpression(context, site.right_variable),
-          reduceReverse(
-            makeScopeMetaWriteEffectArray(
-              context,
-              key_variable,
-              visit(node.key, context, getKeySite(node.computed)),
-            ),
-            makeSequenceExpression,
-            makeScopeMetaReadExpression(context, key_variable),
-          ),
+          site.right,
+          reduceReverse(macro.setup, makeSequenceExpression, macro.value),
         ),
       });
     }
   },
   RestElement: (node, context, site) => {
-    assert(
-      site.key_variable_array !== null,
-      Error,
-      "missing array of key variables",
+    assert(site.keys !== null, Error, "missing array of key variables");
+    const macro = declareScopeMeta(
+      context,
+      "rest",
+      makeObjectAssignExpression(
+        makeObjectExpression(makeIntrinsicExpression("Object.prototype"), []),
+        site.right,
+      ),
     );
-    const rest_variable = declareScopeMeta(context, "pattern_object_rest");
     return concat(
       map(
         concat(
-          makeScopeMetaWriteEffectArray(
-            context,
-            rest_variable,
-            makeObjectAssignExpression(
-              makeObjectExpression(
-                makeIntrinsicExpression("Object.prototype"),
-                [],
-              ),
-              makeScopeMetaReadExpression(context, site.right_variable),
-            ),
-          ),
+          macro.setup,
           map(
-            map(
-              map(
-                site.key_variable_array,
-                partialx_(makeScopeMetaReadExpression, context),
-              ),
-              partialx_(
-                makeDeleteStrictExpression,
-                makeScopeMetaReadExpression(context, rest_variable),
-              ),
-            ),
+            map(site.keys, partialx_(makeDeleteStrictExpression, macro.value)),
             makeExpressionEffect,
           ),
         ),
@@ -99,7 +72,7 @@ export default {
       visit(node.argument, context, {
         ...PATTERN,
         kind: site.kind,
-        right: makeScopeMetaReadExpression(context, rest_variable),
+        right: macro.value,
       }),
     );
   },

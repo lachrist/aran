@@ -9,13 +9,15 @@ import {
   makeBinaryExpression,
   makeDeleteExpression,
 } from "../../intrinsic.mjs";
+import { makeScopeBaseDiscardExpression } from "../scope/index.mjs";
 import {
-  makeScopeBaseDiscardExpression,
-  declareScopeMeta,
-  makeScopeMetaWriteEffectArray,
-  makeScopeMetaReadExpression,
-} from "../scope/index.mjs";
-import { visit, DELETE, EFFECT, EXPRESSION, getKeySite } from "./context.mjs";
+  visit,
+  DELETE,
+  EFFECT,
+  EXPRESSION,
+  EXPRESSION_MACRO,
+  getKeySite,
+} from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNode,
@@ -28,32 +30,31 @@ export default {
     visit(node.expression, context, DELETE),
   MemberExpression: (node, context, _site) => {
     if (node.optional) {
-      const variable = declareScopeMeta(context, "DeleteMemberExpression");
+      const macro = visit(node.object, context, {
+        ...EXPRESSION_MACRO,
+        info: "optional_object",
+      });
       return reduceReverse(
-        makeScopeMetaWriteEffectArray(
-          context,
-          variable,
-          visit(node.object, context, EXPRESSION),
-        ),
+        macro.setup,
         makeSequenceExpression,
         makeConditionalExpression(
           makeConditionalExpression(
             makeBinaryExpression(
               "===",
-              makeScopeMetaReadExpression(context, variable),
+              macro.value,
               makeLiteralExpression(null),
             ),
             makeLiteralExpression(true),
             makeBinaryExpression(
               "===",
-              makeScopeMetaReadExpression(context, variable),
+              macro.value,
               makeLiteralExpression({ undefined: null }),
             ),
           ),
           makeLiteralExpression(true),
           makeDeleteExpression(
             context.strict,
-            makeScopeMetaReadExpression(context, variable),
+            macro.value,
             visit(node.property, context, getKeySite(node.computed)),
           ),
         ),

@@ -5,7 +5,6 @@ import {
   createCounter,
   gaugeCounter,
   assert,
-  partial_x_x,
 } from "../../util/index.mjs";
 
 import { makeExpressionEffect } from "../../ast/index.mjs";
@@ -48,38 +47,18 @@ export const makeScopeEvalExpression = ({ strict, scope }, expression) =>
 // meta //
 //////////
 
-const declareScopeMetaGeneric = (
+export const declareScopeMeta = (
   { strict, scope, counter },
-  kind,
   info,
-  options,
+  expression,
 ) => {
   const meta = makeMetaVariable(info, incrementCounter(counter));
-  declareScope(strict, scope, kind, meta, options);
-  return meta;
+  declareScope(strict, scope, "define", meta, null);
+  return {
+    setup: makeOptimisticWriteEffectArray(strict, scope, meta, expression),
+    value: makeScopeReadExpression(strict, scope, meta),
+  };
 };
-
-export const declareScopeMeta = partial_x_x(
-  declareScopeMetaGeneric,
-  "define",
-  null,
-);
-
-export const declareScopeMetaMacro = (context, info, expression) =>
-  declareScopeMetaGeneric(context, "macro", info, {
-    macro: expression,
-  });
-
-export const makeScopeMetaReadExpression = ({ strict, scope }, meta) =>
-  makeScopeReadExpression(strict, scope, meta);
-
-export const makeScopeMetaWriteEffectArray = (
-  { strict, scope },
-  meta,
-  expression,
-) => makeOptimisticWriteEffectArray(strict, scope, meta, expression);
-
-export const makeScopeMetaInitializeEffectArray = makeScopeMetaWriteEffectArray;
 
 //////////
 // spec //
@@ -161,14 +140,10 @@ export const makeScopeBaseWriteEffectArray = (context, base, expression) => {
   } else if (gaugeCounter(counter) === 1) {
     return effects;
   } else {
-    const meta = declareScopeMeta(context, "right");
+    const macro = declareScopeMeta(context, "right", expression);
     return concat(
-      makeScopeMetaWriteEffectArray(context, meta, expression),
-      makeScopeBaseMacroWriteEffectArray(
-        context,
-        base,
-        makeScopeMetaReadExpression(context, meta),
-      ),
+      macro.setup,
+      makeScopeBaseMacroWriteEffectArray(context, base, macro.value),
     );
   }
 };

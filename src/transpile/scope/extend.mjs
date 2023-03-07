@@ -45,16 +45,12 @@ const compileContextCallback = (callback, context) => (scope) =>
 // Blueprint //
 ///////////////
 
-const createMetaFrameArray = () => [
-  createFrame(DEFINE_STATIC, META, {}),
-  createFrame(MACRO, META, {}),
-];
+const createMetaFrameArray = () => [createFrame(DEFINE_STATIC, META, {})];
 
 const createPseudoMetaFrameArray = () => [
   createFrame(DEFINE_DYNAMIC, META, {
     macro: makeIntrinsicExpression("aran.globalCache"),
   }),
-  createFrame(MACRO, META, {}),
 ];
 
 const createSpecFrameArray = () => [

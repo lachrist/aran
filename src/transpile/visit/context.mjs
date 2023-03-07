@@ -61,6 +61,14 @@ const serializeContextNode = (context, node) => {
 export const annotateNodeArray = (nodes, serial) =>
   map(nodes, partial_x(annotateNode, serial));
 
+export const annotateMacro = (
+  { setup: effects, value: expression },
+  serial,
+) => ({
+  setup: annotateNodeArray(effects, serial),
+  value: annotateNode(expression, serial),
+});
+
 export const resolveVisit = (visitor, node) => {
   const { type } = node;
   if (hasOwn(visitor, type)) {
@@ -147,6 +155,12 @@ export const EFFECT = { type: "Effect" };
 
 export const CALLEE = { type: "Callee" };
 
+export const EXPRESSION_MACRO = {
+  type: "ExpressionMacro",
+  name: makeLiteralExpression(""),
+  info: "macro",
+};
+
 export const PATTERN = {
   type: "Pattern",
   kind: null,
@@ -166,6 +180,8 @@ export const PATTERN_PROPERTY = {
   right: undefined,
 };
 
+export const KEY_EXPRESSION_MACRO = { ...EXPRESSION_MACRO, info: "key" };
+
 export const EXPRESSION = {
   type: "Expression",
   name: makeLiteralExpression(""),
@@ -179,4 +195,9 @@ export const DELETE = { type: "Delete" };
 
 export const KEY = { type: "Key" };
 
+export const KEY_MACRO = { type: "KeyMacro" };
+
 export const getKeySite = (computed) => (computed ? EXPRESSION : KEY);
+
+export const getKeyMacroSite = (computed) =>
+  computed ? KEY_EXPRESSION_MACRO : KEY_MACRO;

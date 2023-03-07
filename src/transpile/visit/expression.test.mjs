@@ -8,7 +8,13 @@ import {
   makeParameterExpression,
   makeClosureExpression,
 } from "../../ast/index.mjs";
-import { Program, Statement, Effect, compileTest } from "./__fixture__.mjs";
+import {
+  Program,
+  Statement,
+  Effect,
+  ExpressionMacro,
+  compileTest,
+} from "./__fixture__.mjs";
 import Quasi from "./quasi.mjs";
 import QuasiRaw from "./quasi-raw.mjs";
 import Callee from "./callee.mjs";
@@ -56,6 +62,7 @@ const { test, done } = compileTest({
   UpdateExpression,
   Delete,
   Expression,
+  ExpressionMacro,
   Class: {
     __ANNOTATE__: annotateNode,
     ClassExpression: visitClass,

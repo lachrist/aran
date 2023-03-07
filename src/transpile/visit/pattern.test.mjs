@@ -5,6 +5,7 @@ import {
   Statement,
   Effect,
   Expression,
+  ExpressionMacro,
   compileTest,
 } from "./__fixture__.mjs";
 import PatternElement from "./pattern-element.mjs";
@@ -36,6 +37,7 @@ const { test, done } = compileTest({
     },
   },
   Expression,
+  ExpressionMacro,
   PatternElement,
   PatternProperty,
   Pattern,
@@ -129,14 +131,8 @@ test(
         ) :
         undefined
       );
-      [x] = intrinsic.aran.get(
-        right,
-        (key1 = 123, key1),
-      );
-      [y] = intrinsic.aran.get(
-        right,
-        (key2 = 456, key2),
-      );
+      [x] = intrinsic.aran.get(right, (key1 = 123, key1));
+      [y] = intrinsic.aran.get(right, (key2 = 456, key2));
       rest = intrinsic.Object.assign(
         intrinsic.aran.createObject(intrinsic.Object.prototype),
         right,

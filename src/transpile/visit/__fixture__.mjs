@@ -9,7 +9,7 @@ import {
   makeLiteralExpression,
 } from "../../ast/index.mjs";
 import { allignBlock } from "../../allign/index.mjs";
-import { makeScopeTestBlock } from "../scope/index.mjs";
+import { declareScopeMeta, makeScopeTestBlock } from "../scope/index.mjs";
 import {
   PROGRAM,
   STATEMENT,
@@ -18,6 +18,7 @@ import {
   createInitialContext,
   visit,
   annotateNodeArray,
+  annotateMacro,
 } from "./context.mjs";
 
 const {
@@ -74,6 +75,12 @@ export const Expression = {
   __ANNOTATE__: annotateNode,
   Literal: (node, _context, _site) => makeLiteralExpression(node.value),
   __DEFAULT__: (node, _context, _site) => makeLiteralExpression(node.type),
+};
+
+export const ExpressionMacro = {
+  __ANNOTATE__: annotateMacro,
+  __DEFAULT__: (node, context, site) =>
+    declareScopeMeta(context, site.info, visit(node, context, EXPRESSION)),
 };
 
 export const compileTest = (visitors) => {

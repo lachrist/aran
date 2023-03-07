@@ -4,6 +4,7 @@ import {
   Statement,
   Effect,
   Expression,
+  ExpressionMacro,
   compileTest,
 } from "./__fixture__.mjs";
 import UpdateExpression from "./update-expression.mjs";
@@ -13,6 +14,7 @@ const { test, done } = compileTest({
   Statement,
   Effect,
   UpdateExpression,
+  ExpressionMacro,
   Expression: {
     ...Expression,
     UpdateExpression: (node, context, _site) =>
@@ -28,12 +30,12 @@ test(
   `"use strict"; ++x;`,
   `
     {
-      let result;
+      let right_new;
       void (
-        result = intrinsic.aran.binary("+", [x], 1),
+        right_new = intrinsic.aran.binary("+", [x], 1),
         (
-          [x] = result,
-          result
+          [x] = right_new,
+          right_new
         )
       );
     }
@@ -44,12 +46,12 @@ test(
   `"use strict"; x++;`,
   `
     {
-      let result;
+      let right_old;
       void (
-        result = [x],
+        right_old = [x],
         (
-          [x] = intrinsic.aran.binary("+", result, 1),
-          result
+          [x] = intrinsic.aran.binary("+", right_old, 1),
+          right_old
         )
       );
     }
@@ -60,17 +62,17 @@ test(
   `++(123)[456];`,
   `
     {
-      let object, property;
+      let object, key;
       void (
         object = 123,
         (
-          property = 456,
+          key = 456,
           intrinsic.aran.setSloppy(
             object,
-            property,
+            key,
             intrinsic.aran.binary(
               "+",
-              intrinsic.aran.get(object, property),
+              intrinsic.aran.get(object, key),
               1,
             ),
           )
@@ -84,20 +86,20 @@ test(
   `(123)[456]++;`,
   `
     {
-      let object, property, value;
+      let object, key, right_old;
       void (
         object = 123,
         (
-          property = 456,
+          key = 456,
           (
-            value = intrinsic.aran.get(object, property),
+            right_old = intrinsic.aran.get(object, key),
             (
               void intrinsic.aran.setSloppy(
                 object,
-                property,
-                intrinsic.aran.binary("+", value, 1),
+                key,
+                intrinsic.aran.binary("+", right_old, 1),
               ),
-              value
+              right_old
             )
           )
         )

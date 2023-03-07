@@ -22,8 +22,6 @@ import {
 import {
   makeScopeBaseWriteEffectArray,
   makeScopeBaseInitializeStatementArray,
-  makeScopeMetaReadExpression,
-  makeScopeMetaWriteEffectArray,
   declareScopeMeta,
 } from "../scope/index.mjs";
 import {
@@ -63,18 +61,14 @@ const isRestElement = ({ type }) => type === "RestElement";
 // qux
 // yo 2
 
-const makeCheckObjectEffectArray = (context, variable) => [
+const makeCheckObjectEffectArray = (expression) => [
   makeConditionalEffect(
     makeConditionalExpression(
-      makeBinaryExpression(
-        "===",
-        makeScopeMetaReadExpression(context, variable),
-        makeLiteralExpression(null),
-      ),
+      makeBinaryExpression("===", expression, makeLiteralExpression(null)),
       makeLiteralExpression(true),
       makeBinaryExpression(
         "===",
-        makeScopeMetaReadExpression(context, variable),
+        expression,
         makeLiteralExpression({ undefined: null }),
       ),
     ),
@@ -127,15 +121,15 @@ export default {
       "illegal optional MemberExpression at %j",
       node.loc.start,
     );
-    const variable = declareScopeMeta(context, "pattern_member_right");
+    const macro = declareScopeMeta(context, "right", site.right);
     return map(
-      concat(makeScopeMetaWriteEffectArray(context, variable, site.right), [
+      concat(macro.setup, [
         makeExpressionEffect(
           makeSetExpression(
             context.strict,
             visit(node.object, context, EXPRESSION),
             visit(node.property, context, getKeySite(node.computed)),
-            makeScopeMetaReadExpression(context, variable),
+            macro.value,
           ),
         ),
       ]),
@@ -143,23 +137,20 @@ export default {
     );
   },
   AssignmentPattern: (node, context, site) => {
-    const variable = declareScopeMeta(context, "pattern_assignment_right");
+    const macro = declareScopeMeta(context, "right", site.right);
     return concat(
-      map(
-        makeScopeMetaWriteEffectArray(context, variable, site.right),
-        partialx_(liftEffect, site.kind),
-      ),
+      map(macro.setup, partialx_(liftEffect, site.kind)),
       visit(node.left, context, {
         ...PATTERN,
         kind: site.kind,
         right: makeConditionalExpression(
           makeBinaryExpression(
             "===",
-            makeScopeMetaReadExpression(context, variable),
+            macro.value,
             makeLiteralExpression({ undefined: null }),
           ),
           visit(node.right, context, EXPRESSION),
-          makeScopeMetaReadExpression(context, variable),
+          macro.value,
         ),
       }),
     );
@@ -204,28 +195,22 @@ export default {
   // > var [x, y, z] = {__proto__:null, [Symbol.iterator]:iterator};
   // undefined
   ArrayPattern: (node, context, site) => {
-    const right_variable = declareScopeMeta(context, "pattern_array_right");
-    const iterator_variable = declareScopeMeta(
+    const right_macro = declareScopeMeta(context, "right", site.right);
+    const iterator_macro = declareScopeMeta(
       context,
-      "pattern_array_iterator",
+      "iterator",
+      makeApplyExpression(
+        makeGetExpression(
+          right_macro.value,
+          makeIntrinsicExpression("Symbol.iterator"),
+        ),
+        right_macro.value,
+        [],
+      ),
     );
     return concat(
       map(
-        concat(
-          makeScopeMetaWriteEffectArray(context, right_variable, site.right),
-          makeScopeMetaWriteEffectArray(
-            context,
-            iterator_variable,
-            makeApplyExpression(
-              makeGetExpression(
-                makeScopeMetaReadExpression(context, right_variable),
-                makeIntrinsicExpression("Symbol.iterator"),
-              ),
-              makeScopeMetaReadExpression(context, right_variable),
-              [],
-            ),
-          ),
-        ),
+        concat(right_macro.setup, iterator_macro.setup),
         partialx_(liftEffect, site.kind),
       ),
       flatMap(
@@ -233,7 +218,7 @@ export default {
         partial_xx(visit, context, {
           ...PATTERN_ELEMENT,
           kind: site.kind,
-          iterator_variable,
+          iterator: iterator_macro.value,
         }),
       ),
     );
@@ -277,43 +262,35 @@ export default {
   // false
   ObjectPattern: (node, context, site) => {
     if (some(node.properties, isRestElement)) {
-      const right_variable = declareScopeMeta(context, "pattern_object_right");
-      const key_variable_array = [];
+      const macro = declareScopeMeta(context, "right", site.right);
       return concat(
         map(
-          concat(
-            makeScopeMetaWriteEffectArray(context, right_variable, site.right),
-            makeCheckObjectEffectArray(context, right_variable),
-          ),
+          concat(macro.setup, makeCheckObjectEffectArray(macro.value)),
           partialx_(liftEffect, site.kind),
         ),
         flatMap(
           node.properties,
           partial_xx(visit, context, {
-            type: "PatternProperty",
+            ...PATTERN_PROPERTY,
             kind: site.kind,
-            right_variable,
-            key_variable_array,
+            right: macro.value,
+            keys: [],
           }),
         ),
       );
     } else {
-      const right_variable = declareScopeMeta(context, "pattern_object_right");
+      const macro = declareScopeMeta(context, "right", site.right);
       return concat(
         map(
-          concat(
-            makeScopeMetaWriteEffectArray(context, right_variable, site.right),
-            makeCheckObjectEffectArray(context, right_variable),
-          ),
+          concat(macro.setup, makeCheckObjectEffectArray(macro.value)),
           partialx_(liftEffect, site.kind),
         ),
         flatMap(
           node.properties,
           partial_xx(visit, context, {
-            type: "PatternProperty",
+            ...PATTERN_PROPERTY,
             kind: site.kind,
-            right_variable,
-            key_variable_array: null,
+            right: macro.value,
           }),
         ),
       );

@@ -6,8 +6,7 @@ import {
   makeArrayFromExpression,
   makeGetExpression,
 } from "../../intrinsic.mjs";
-import { makeScopeMetaReadExpression } from "../scope/index.mjs";
-import { annotateNodeArray, visit } from "./context.mjs";
+import { annotateNodeArray, visit, PATTERN } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNodeArray,
@@ -15,20 +14,15 @@ export default {
     visit(node.argument, context, {
       ...PATTERN,
       kind: site.kind,
-      right: makeArrayFromExpression(
-        makeScopeMetaReadExpression(context, site.iterator_variable),
-      ),
+      right: makeArrayFromExpression(site.iterator),
     }),
   __DEFAULT__: (node, context, site) =>
     visit(node, context, {
       ...PATTERN,
       kind: site.kind,
       right: makeApplyExpression(
-        makeGetExpression(
-          makeScopeMetaReadExpression(context, site.iterator_variable),
-          makeLiteralExpression("next"),
-        ),
-        makeScopeMetaReadExpression(context, site.iterator_variable),
+        makeGetExpression(site.iterator, makeLiteralExpression("next")),
+        site.iterator,
         [],
       ),
     }),

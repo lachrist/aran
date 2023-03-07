@@ -15,15 +15,26 @@ import {
 } from "../../allign/index.mjs";
 import {
   annotateNodeArray,
+  annotateMacro,
   createInitialContext,
   saveContext,
   loadContext,
   visit,
   liftEffect,
   getKeySite,
+  getKeyMacroSite,
 } from "./context.mjs";
 
 const { undefined } = globalThis;
+
+///////////////////
+// annotateMacro //
+///////////////////
+
+assertEqual(
+  typeof annotateMacro({ setup: [], value: makeLiteralExpression(123) }),
+  "object",
+);
 
 ////////////////
 // getKeySite //
@@ -31,6 +42,13 @@ const { undefined } = globalThis;
 
 assertEqual(getKeySite(true).type, "Expression");
 assertEqual(getKeySite(false).type, "Key");
+
+/////////////////////
+// getKeyMacroSite //
+/////////////////////
+
+assertEqual(getKeyMacroSite(true).type, "ExpressionMacro");
+assertEqual(getKeyMacroSite(false).type, "KeyMacro");
 
 ////////////////
 // liftEffect //

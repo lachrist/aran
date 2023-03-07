@@ -6,6 +6,7 @@ import {
   Statement,
   Effect,
   Expression,
+  ExpressionMacro,
   compileTest,
 } from "./__fixture__.mjs";
 import Callee from "./callee.mjs";
@@ -14,6 +15,7 @@ const { test, done } = compileTest({
   Program,
   Statement,
   Effect,
+  ExpressionMacro,
   Expression: {
     ...Expression,
     CallExpression: (node, context, _site) => {
@@ -37,11 +39,11 @@ test(
   `(123)[456]();`,
   `
     {
-      let callee_this;
+      let _this;
       void (
-        callee_this = 123,
-        intrinsic.aran.get(callee_this, 456)
-      )(!callee_this);
+        _this = 123,
+        intrinsic.aran.get(_this, 456)
+      )(!_this);
     }
   `,
 );
@@ -50,19 +52,21 @@ test(
   `((123)?.[456])();`,
   `
     {
-      let callee_this;
+      let _this;
       void (
-        callee_this = 123,
         (
+          _this = 123,
           (
-            intrinsic.aran.binary("===", callee_this, null) ?
-            true :
-            intrinsic.aran.binary("===", callee_this, undefined)
-          ) ?
-          undefined :
-          intrinsic.aran.get(callee_this, 456)
-        )
-      )(!callee_this);
+            (
+              intrinsic.aran.binary("===", _this, null) ?
+              true :
+              intrinsic.aran.binary("===", _this, undefined)
+            ) ?
+            undefined :
+            intrinsic.aran.get(_this, 456)
+          )
+        )(!_this)
+      );
     }
   `,
 );

@@ -1,4 +1,10 @@
-import { Program, Statement, Expression, compileTest } from "./__fixture__.mjs";
+import {
+  Program,
+  Statement,
+  Expression,
+  ExpressionMacro,
+  compileTest,
+} from "./__fixture__.mjs";
 import AssignmentEffect from "./assignment-effect.mjs";
 import UpdateEffect from "./update-effect.mjs";
 import Effect from "./effect.mjs";
@@ -8,6 +14,7 @@ const { test, done } = compileTest({
   Statement,
   Effect,
   Expression,
+  ExpressionMacro,
   AssignmentEffect,
   UpdateEffect,
 });

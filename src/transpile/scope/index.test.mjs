@@ -24,9 +24,6 @@ import {
   unpackScope,
   makeScopeEvalExpression,
   declareScopeMeta,
-  declareScopeMetaMacro,
-  makeScopeMetaReadExpression,
-  makeScopeMetaInitializeEffectArray,
   declareScopeSpecMacro,
   declareScopeSpecIllegal,
   declareScopeSpec,
@@ -80,49 +77,28 @@ assertSuccess(
       createContext({ strict: true }),
       ENCLAVE,
       (context) => {
-        const variable1 = declareScopeMeta(context, "variable1");
-        const variable2 = declareScopeMetaMacro(
+        const macro = declareScopeMeta(
           context,
-          "variable2",
-          makeLiteralExpression("binding"),
+          "variable",
+          makeLiteralExpression("right"),
         );
-        return concat(
-          map(
-            makeScopeMetaInitializeEffectArray(
-              context,
-              variable1,
-              makeLiteralExpression("right"),
-            ),
-            makeEffectStatement,
-          ),
-          [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeMetaReadExpression(context, variable1),
-              ),
-            ),
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeMetaReadExpression(context, variable2),
-              ),
-            ),
-            makeReturnStatement(makeLiteralExpression("completion")),
-          ],
-        );
+        return concat(map(macro.setup, makeEffectStatement), [
+          makeEffectStatement(makeExpressionEffect(macro.value)),
+          makeReturnStatement(makeLiteralExpression("completion")),
+        ]);
       },
     ),
     `
       "script";
       void intrinsic.aran.setStrict(
         intrinsic.aran.globalCache,
-        "01_variable1",
+        "01_variable",
         "right",
       );
       void intrinsic.aran.get(
         intrinsic.aran.globalCache,
-        "01_variable1",
+        "01_variable",
       );
-      void "binding";
       return "completion";
     `,
   ),
@@ -336,35 +312,15 @@ assertSuccess(
       ENCLAVE,
       [],
       (context) => {
-        const variable1 = declareScopeMeta(context, "variable1");
-        const variable2 = declareScopeMetaMacro(
+        const macro = declareScopeMeta(
           context,
-          "variable2",
-          makeLiteralExpression("binding"),
+          "variable1",
+          makeLiteralExpression("right"),
         );
-        return concat(
-          map(
-            makeScopeMetaInitializeEffectArray(
-              context,
-              variable1,
-              makeLiteralExpression("right"),
-            ),
-            makeEffectStatement,
-          ),
-          [
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeMetaReadExpression(context, variable1),
-              ),
-            ),
-            makeEffectStatement(
-              makeExpressionEffect(
-                makeScopeMetaReadExpression(context, variable2),
-              ),
-            ),
-            makeReturnStatement(makeLiteralExpression("completion")),
-          ],
-        );
+        return concat(map(macro.setup, makeEffectStatement), [
+          makeEffectStatement(makeExpressionEffect(macro.value)),
+          makeReturnStatement(makeLiteralExpression("completion")),
+        ]);
       },
     ),
     `
@@ -373,7 +329,6 @@ assertSuccess(
         let VARIABLE;
         VARIABLE = "right";
         void VARIABLE;
-        void "binding";
         return "completion";
       }
     `,

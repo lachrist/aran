@@ -12,13 +12,18 @@ import {
 } from "../../intrinsic.mjs";
 import {
   declareScopeMeta,
-  makeScopeMetaWriteEffectArray,
-  makeScopeMetaReadExpression,
   makeScopeBaseMacroWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
-import { visit, EXPRESSION, PATTERN, getKeySite } from "./context.mjs";
+import {
+  visit,
+  EXPRESSION,
+  EXPRESSION_MACRO,
+  PATTERN,
+  getKeySite,
+  getKeyMacroSite,
+} from "./context.mjs";
 
 const {
   Reflect: { apply },
@@ -65,59 +70,48 @@ export default {
   __ANNOTATE__: annotateNode,
   Identifier: (node, context, site) => {
     if (site.operator === "=") {
-      const variable = declareScopeMeta(
-        context,
-        "AssignmentExpressionIdentifierRight",
-      );
+      const macro = visit(site.right, context, {
+        ...EXPRESSION_MACRO,
+        info: "right",
+        name: makeLiteralExpression(node.name),
+      });
       return reduceReverse(
         concat(
-          makeScopeMetaWriteEffectArray(
-            context,
-            variable,
-            visit(site.right, context, {
-              ...EXPRESSION,
-              name: makeLiteralExpression(node.name),
-            }),
-          ),
-          makeScopeBaseMacroWriteEffectArray(
-            context,
-            node.name,
-            makeScopeMetaReadExpression(context, variable),
-          ),
+          macro.setup,
+          makeScopeBaseMacroWriteEffectArray(context, node.name, macro.value),
         ),
         makeSequenceExpression,
-        makeScopeMetaReadExpression(context, variable),
+        macro.value,
       );
     } else {
-      const variable = declareScopeMeta(
+      // Name are not transmitted on update:
+      //
+      // > var f = "foo"
+      // undefined
+      // > f += function () {}
+      // 'foofunction () {}'
+      const macro = declareScopeMeta(
         context,
-        "AssignmentExpressionIdentifierResult",
+        "right",
+        makeBinaryExpression(
+          apply(substring, site.operator, [0, site.operator.length - 1]),
+          makeScopeBaseReadExpression(context, node.name),
+          // Name are not transmitted on update:
+          //
+          // > var f = "foo"
+          // undefined
+          // > f += function () {}
+          // 'foofunction () {}'
+          visit(site.right, context, EXPRESSION),
+        ),
       );
       return reduceReverse(
         concat(
-          makeScopeMetaWriteEffectArray(
-            context,
-            variable,
-            makeBinaryExpression(
-              apply(substring, site.operator, [0, site.operator.length - 1]),
-              makeScopeBaseReadExpression(context, node.name),
-              // Name are not transmitted on update:
-              //
-              // > var f = "foo"
-              // undefined
-              // > f += function () {}
-              // 'foofunction () {}'
-              visit(site.right, context, EXPRESSION),
-            ),
-          ),
-          makeScopeBaseMacroWriteEffectArray(
-            context,
-            node.name,
-            makeScopeMetaReadExpression(context, variable),
-          ),
+          macro.setup,
+          makeScopeBaseMacroWriteEffectArray(context, node.name, macro.value),
         ),
         makeSequenceExpression,
-        makeScopeMetaReadExpression(context, variable),
+        macro.value,
       );
     }
   },
@@ -131,38 +125,25 @@ export default {
         visit(site.right, context, EXPRESSION),
       );
     } else {
-      const object_variable = declareScopeMeta(
+      const object_macro = visit(node.object, context, {
+        ...EXPRESSION_MACRO,
+        info: "object",
+      });
+      const key_macro = visit(
+        node.property,
         context,
-        "AssignmentExpressionMemberExpressionObject",
-      );
-      const property_variable = declareScopeMeta(
-        context,
-        "AssignmentExpressionMemberExpressionKey",
+        getKeyMacroSite(node.computed),
       );
       return reduceReverse(
-        concat(
-          makeScopeMetaWriteEffectArray(
-            context,
-            object_variable,
-            visit(node.object, context, EXPRESSION),
-          ),
-          makeScopeMetaWriteEffectArray(
-            context,
-            property_variable,
-            visit(node.property, context, getKeySite(node.computed)),
-          ),
-        ),
+        concat(object_macro.setup, key_macro.setup),
         makeSequenceExpression,
         makeSetExpression(
           context.strict,
-          makeScopeMetaReadExpression(context, object_variable),
-          makeScopeMetaReadExpression(context, property_variable),
+          object_macro.value,
+          key_macro.value,
           makeBinaryExpression(
             apply(substring, site.operator, [0, site.operator.length - 1]),
-            makeGetExpression(
-              makeScopeMetaReadExpression(context, object_variable),
-              makeScopeMetaReadExpression(context, property_variable),
-            ),
+            makeGetExpression(object_macro.value, key_macro.value),
             visit(site.right, context, EXPRESSION),
           ),
         ),
@@ -171,21 +152,20 @@ export default {
   },
   __DEFAULT__: (node, context, site) => {
     expectSyntaxPropertyEqual(site, ["operator"], "=");
-    const variable = declareScopeMeta(context, "assignment_pattern_right");
+    const macro = visit(site.right, context, {
+      ...EXPRESSION_MACRO,
+      info: "right",
+    });
     return reduceReverse(
       concat(
-        makeScopeMetaWriteEffectArray(
-          context,
-          variable,
-          visit(site.right, context, EXPRESSION),
-        ),
+        macro.setup,
         visit(node, context, {
           ...PATTERN,
-          right: makeScopeMetaReadExpression(context, variable),
+          right: macro.value,
         }),
       ),
       makeSequenceExpression,
-      makeScopeMetaReadExpression(context, variable),
+      macro.value,
     );
   },
 };

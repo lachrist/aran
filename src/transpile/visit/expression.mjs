@@ -23,9 +23,6 @@ import {
   makeBinaryExpression,
 } from "../../intrinsic.mjs";
 import {
-  declareScopeMeta,
-  makeScopeMetaWriteEffectArray,
-  makeScopeMetaReadExpression,
   makeScopeBaseReadExpression,
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
@@ -38,6 +35,7 @@ import {
   QUASI_RAW,
   QUASI,
   EXPRESSION,
+  EXPRESSION_MACRO,
   EFFECT,
   DELETE,
   CALLEE,
@@ -202,62 +200,50 @@ export default {
       visit(node.alternate, context, EXPRESSION),
     ),
   LogicalExpression: (node, context, _site) => {
-    const variable = declareScopeMeta(
-      context,
-      "ExpressionLogicalExpressionLeft",
-    );
+    const macro = visit(node.left, context, {
+      ...EXPRESSION_MACRO,
+      info: "logical",
+    });
     if (node.operator === "&&") {
       return reduceReverse(
-        makeScopeMetaWriteEffectArray(
-          context,
-          variable,
-          visit(node.left, context, EXPRESSION),
-        ),
+        macro.setup,
         makeSequenceExpression,
         makeConditionalExpression(
-          makeScopeMetaReadExpression(context, variable),
+          macro.value,
           visit(node.right, context, EXPRESSION),
-          makeScopeMetaReadExpression(context, variable),
+          macro.value,
         ),
       );
     } else if (node.operator === "||") {
       return reduceReverse(
-        makeScopeMetaWriteEffectArray(
-          context,
-          variable,
-          visit(node.left, context, EXPRESSION),
-        ),
+        macro.setup,
         makeSequenceExpression,
         makeConditionalExpression(
-          makeScopeMetaReadExpression(context, variable),
-          makeScopeMetaReadExpression(context, variable),
+          macro.value,
+          macro.value,
           visit(node.right, context, EXPRESSION),
         ),
       );
     } else if (node.operator === "??") {
       return reduceReverse(
-        makeScopeMetaWriteEffectArray(
-          context,
-          variable,
-          visit(node.left, context, EXPRESSION),
-        ),
+        macro.setup,
         makeSequenceExpression,
         makeConditionalExpression(
           makeConditionalExpression(
             makeBinaryExpression(
               "===",
-              makeScopeMetaReadExpression(context, variable),
+              macro.value,
               makeLiteralExpression(null),
             ),
             makeLiteralExpression(true),
             makeBinaryExpression(
               "===",
-              makeScopeMetaReadExpression(context, variable),
+              macro.value,
               makeLiteralExpression({ undefined: null }),
             ),
           ),
           visit(node.right, context, EXPRESSION),
-          makeScopeMetaReadExpression(context, variable),
+          macro.value,
         ),
       );
     } /* c8 ignore start */ else {
@@ -291,34 +277,30 @@ export default {
     visit(node.expression, context, EXPRESSION),
   MemberExpression: (node, context, _site) => {
     if (node.optional) {
-      const variable = declareScopeMeta(
-        context,
-        "ExpressionMemberExpressionObject",
-      );
+      const macro = visit(node.object, context, {
+        ...EXPRESSION_MACRO,
+        info: "optional",
+      });
       return reduceReverse(
-        makeScopeMetaWriteEffectArray(
-          context,
-          variable,
-          visit(node.object, context, EXPRESSION),
-        ),
+        macro.setup,
         makeSequenceExpression,
         makeConditionalExpression(
           makeConditionalExpression(
             makeBinaryExpression(
               "===",
-              makeScopeMetaReadExpression(context, variable),
+              macro.value,
               makeLiteralExpression(null),
             ),
             makeLiteralExpression(true),
             makeBinaryExpression(
               "===",
-              makeScopeMetaReadExpression(context, variable),
+              macro.value,
               makeLiteralExpression({ undefined: null }),
             ),
           ),
           makeLiteralExpression({ undefined: null }),
           makeGetExpression(
-            makeScopeMetaReadExpression(context, variable),
+            macro.value,
             visit(node.property, context, getKeySite(node.computed)),
           ),
         ),

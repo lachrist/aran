@@ -5,6 +5,7 @@ import {
   Statement,
   Effect,
   Expression,
+  ExpressionMacro,
   compileTest,
 } from "./__fixture__.mjs";
 import Delete from "./delete.mjs";
@@ -21,6 +22,7 @@ const { test, done } = compileTest({
       return visit(node.argument, context, DELETE);
     },
   },
+  ExpressionMacro,
 });
 
 test(`delete 123;`, `{ void (void 123, true); }`);

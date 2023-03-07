@@ -7,17 +7,13 @@ import {
   makeConditionalExpression,
 } from "../../ast/index.mjs";
 import { makeBinaryExpression } from "../../intrinsic.mjs";
-import {
-  declareScopeMeta,
-  makeScopeMetaWriteEffectArray,
-  makeScopeMetaReadExpression,
-} from "../scope/index.mjs";
 import { makeSyntaxError } from "./report.mjs";
 import {
   annotateNodeArray,
   visit,
   EFFECT,
   EXPRESSION,
+  EXPRESSION_MACRO,
   ASSIGNMENT_EFFECT,
   UPDATE_EFFECT,
 } from "./context.mjs";
@@ -63,36 +59,29 @@ export default {
         ),
       ];
     } else if (node.operator === "??") {
-      const variable = declareScopeMeta(
-        context,
-        "EffectSequenceExpressionLeft",
-      );
-      return concat(
-        makeScopeMetaWriteEffectArray(
-          context,
-          variable,
-          visit(node.left, context, EXPRESSION),
-        ),
-        [
-          makeConditionalEffect(
-            makeConditionalExpression(
-              makeBinaryExpression(
-                "===",
-                makeScopeMetaReadExpression(context, variable),
-                makeLiteralExpression(null),
-              ),
-              makeLiteralExpression(true),
-              makeBinaryExpression(
-                "===",
-                makeScopeMetaReadExpression(context, variable),
-                makeLiteralExpression({ undefined: null }),
-              ),
+      const macro = visit(node.left, context, {
+        ...EXPRESSION_MACRO,
+        info: "coalesce",
+      });
+      return concat(macro.setup, [
+        makeConditionalEffect(
+          makeConditionalExpression(
+            makeBinaryExpression(
+              "===",
+              macro.value,
+              makeLiteralExpression(null),
             ),
-            visit(node.right, context, EFFECT),
-            [],
+            makeLiteralExpression(true),
+            makeBinaryExpression(
+              "===",
+              macro.value,
+              makeLiteralExpression({ undefined: null }),
+            ),
           ),
-        ],
-      );
+          visit(node.right, context, EFFECT),
+          [],
+        ),
+      ]);
     } /* c8 ignore start */ else {
       throw makeSyntaxError(node, "operator");
     } /* c8 ignore stop */

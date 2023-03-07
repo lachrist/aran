@@ -1,9 +1,11 @@
 report.mjs
 context.mjs
 __fixture__.mjs
+expression-macro.mjs
 quasi.mjs
 quasi-raw.mjs
 key.mjs
+key-macro.mjs
 callee.mjs
 pattern-element.mjs
 pattern-property.mjs

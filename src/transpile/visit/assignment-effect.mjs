@@ -9,9 +9,6 @@ import {
   makeBinaryExpression,
 } from "../../intrinsic.mjs";
 import {
-  declareScopeMeta,
-  makeScopeMetaWriteEffectArray,
-  makeScopeMetaReadExpression,
   makeScopeBaseWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
@@ -20,8 +17,10 @@ import {
   annotateNodeArray,
   visit,
   EXPRESSION,
+  EXPRESSION_MACRO,
   PATTERN,
   getKeySite,
+  getKeyMacroSite,
 } from "./context.mjs";
 
 const {
@@ -109,43 +108,29 @@ export default {
         ),
       ];
     } else {
-      const object_variable = declareScopeMeta(
+      const object_macro = visit(node.object, context, {
+        ...EXPRESSION_MACRO,
+        info: "object",
+      });
+      const key_macro = visit(
+        node.property,
         context,
-        "AssignmentEffectMemberExpressionObject",
+        getKeyMacroSite(node.computed),
       );
-      const property_variable = declareScopeMeta(
-        context,
-        "AssignmentEffectMemberExpressionKey",
-      );
-      return concat(
-        makeScopeMetaWriteEffectArray(
-          context,
-          object_variable,
-          visit(node.object, context, EXPRESSION),
-        ),
-        makeScopeMetaWriteEffectArray(
-          context,
-          property_variable,
-          visit(node.property, context, getKeySite(node.computed)),
-        ),
-        [
-          makeExpressionEffect(
-            makeSetExpression(
-              context.strict,
-              makeScopeMetaReadExpression(context, object_variable),
-              makeScopeMetaReadExpression(context, property_variable),
-              makeBinaryExpression(
-                apply(substring, site.operator, [0, site.operator.length - 1]),
-                makeGetExpression(
-                  makeScopeMetaReadExpression(context, object_variable),
-                  makeScopeMetaReadExpression(context, property_variable),
-                ),
-                visit(site.right, context, EXPRESSION),
-              ),
+      return concat(object_macro.setup, key_macro.setup, [
+        makeExpressionEffect(
+          makeSetExpression(
+            context.strict,
+            object_macro.value,
+            key_macro.value,
+            makeBinaryExpression(
+              apply(substring, site.operator, [0, site.operator.length - 1]),
+              makeGetExpression(object_macro.value, key_macro.value),
+              visit(site.right, context, EXPRESSION),
             ),
           ),
-        ],
-      );
+        ),
+      ]);
     }
   },
   __DEFAULT__: (node, context, site) => {

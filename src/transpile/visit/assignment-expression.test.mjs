@@ -4,6 +4,7 @@ import {
   Statement,
   Effect,
   Expression,
+  ExpressionMacro,
   compileTest,
 } from "./__fixture__.mjs";
 import PatternElement from "./pattern-element.mjs";
@@ -17,6 +18,7 @@ const { test, done } = compileTest({
   Pattern,
   PatternElement,
   AssignmentExpression,
+  ExpressionMacro,
   Expression: {
     ...Expression,
     AssignmentExpression: (node, context, _site) =>
@@ -66,19 +68,19 @@ test(
   `(123)[456] **= 789;`,
   `
     {
-      let object, property;
+      let object, key;
       void (
         object = 123,
         (
-          property = 456,
+          key = 456,
           intrinsic.aran.setSloppy(
             object,
-            property,
+            key,
             intrinsic.aran.binary(
               "**",
-              intrinsic.aran.get(object, property),
+              intrinsic.aran.get(object, key),
               789,
-            )
+            ),
           )
         )
       );
@@ -90,11 +92,11 @@ test(
   `"use strict"; [x] = 123;`,
   `
     {
-      let right, right_pattern, iterator;
+      let right_assignment, right_pattern, iterator;
       void (
-        right = 123,
+        right_assignment = 123,
         (
-          right_pattern = right,
+          right_pattern = right_assignment,
           (
             iterator = intrinsic.aran.get(
               right_pattern,
@@ -102,7 +104,7 @@ test(
             )(!right_pattern),
             (
               [x] = intrinsic.aran.get(iterator, "next")(!iterator),
-              right
+              right_assignment
             )
           )
         )

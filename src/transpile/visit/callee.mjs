@@ -7,12 +7,7 @@ import {
   makeConditionalExpression,
 } from "../../ast/index.mjs";
 import { makeGetExpression, makeBinaryExpression } from "../../intrinsic.mjs";
-import {
-  makeScopeMetaReadExpression,
-  makeScopeMetaWriteEffectArray,
-  makeScopeSpecReadExpression,
-  declareScopeMeta,
-} from "../scope/index.mjs";
+import { makeScopeSpecReadExpression } from "../scope/index.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
 import {
   visit,
@@ -41,42 +36,41 @@ export default {
         this: makeScopeSpecReadExpression(context, "this"),
       };
     } else {
-      const variable = declareScopeMeta(context, "callee_this");
+      const macro = visit(node.object, context, {
+        ...EXPRESSION_MACRO,
+        info: "this",
+      });
       return {
         callee: reduceReverse(
-          makeScopeMetaWriteEffectArray(
-            context,
-            variable,
-            visit(node.object, context, EXPRESSION),
-          ),
+          macro.setup,
           makeSequenceExpression,
           node.optional
             ? makeConditionalExpression(
                 makeConditionalExpression(
                   makeBinaryExpression(
                     "===",
-                    makeScopeMetaReadExpression(context, variable),
+                    macro.value,
                     makeLiteralExpression(null),
                   ),
                   makeLiteralExpression(true),
                   makeBinaryExpression(
                     "===",
-                    makeScopeMetaReadExpression(context, variable),
+                    macro.value,
                     makeLiteralExpression({ undefined: null }),
                   ),
                 ),
                 makeLiteralExpression({ undefined: null }),
                 makeGetExpression(
-                  makeScopeMetaReadExpression(context, variable),
+                  macro.value,
                   visit(node.property, context, getKeySite(node.computed)),
                 ),
               )
             : makeGetExpression(
-                makeScopeMetaReadExpression(context, variable),
+                macro.value,
                 visit(node.property, context, getKeySite(node.computed)),
               ),
         ),
-        this: makeScopeMetaReadExpression(context, variable),
+        this: macro.value,
       };
     }
   },
