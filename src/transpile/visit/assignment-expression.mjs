@@ -1,6 +1,10 @@
 import { concat } from "array-lite";
 import { reduceReverse } from "../../util/index.mjs";
-import { annotateNode, makeSequenceExpression } from "../../ast/index.mjs";
+import {
+  annotateNode,
+  makeLiteralExpression,
+  makeSequenceExpression,
+} from "../../ast/index.mjs";
 import {
   makeGetExpression,
   makeSetExpression,
@@ -70,7 +74,10 @@ export default {
           makeScopeMetaWriteEffectArray(
             context,
             variable,
-            visit(site.right, context, EXPRESSION),
+            visit(site.right, context, {
+              type: "Expression",
+              name: makeLiteralExpression(node.name),
+            }),
           ),
           makeScopeBaseMacroWriteEffectArray(
             context,

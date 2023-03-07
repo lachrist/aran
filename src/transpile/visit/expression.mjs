@@ -70,20 +70,20 @@ export default {
     visit(node, context, {
       type: "Closure",
       kind: "arrow",
-      name: makeLiteralExpression(site.name),
+      name: site.name,
       super: null,
     }),
   FunctionExpression: (node, context, site) =>
     visit(node, context, {
       type: "Closure",
       kind: "function",
-      name: makeLiteralExpression(node.id === null ? site.name : node.id.name),
+      name: node.id === null ? site.name : makeLiteralExpression(node.id.name),
       super: null,
     }),
   ClassExpression: (node, context, site) =>
     visit(node, context, {
       type: "Class",
-      name: makeLiteralExpression(node.id === null ? site.name : node.id.name),
+      name: node.id === null ? site.name : makeLiteralExpression(node.id.name),
     }),
   // Combinators //
   TemplateLiteral: (node, context, _site) =>

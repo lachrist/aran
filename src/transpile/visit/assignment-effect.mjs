@@ -1,5 +1,8 @@
 import { concat } from "array-lite";
-import { makeExpressionEffect } from "../../ast/index.mjs";
+import {
+  makeLiteralExpression,
+  makeExpressionEffect,
+} from "../../ast/index.mjs";
 import {
   makeGetExpression,
   makeSetExpression,
@@ -68,7 +71,10 @@ export default {
       return makeScopeBaseWriteEffectArray(
         context,
         node.name,
-        visit(site.right, context, { type: "Expression", name: node.name }),
+        visit(site.right, context, {
+          type: "Expression",
+          name: makeLiteralExpression(node.name),
+        }),
       );
     } else {
       return makeScopeBaseWriteEffectArray(

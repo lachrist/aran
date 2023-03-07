@@ -8,7 +8,11 @@ import {
   partial_x,
   NULL_DATA_DESCRIPTOR,
 } from "../../util/index.mjs";
-import { makeEffectStatement, annotateNode } from "../../ast/index.mjs";
+import {
+  makeLiteralExpression,
+  makeEffectStatement,
+  annotateNode,
+} from "../../ast/index.mjs";
 import { ROOT_SCOPE, packScope, unpackScope } from "../scope/index.mjs";
 
 const {
@@ -102,7 +106,10 @@ export const PROGRAM = { type: "Program" };
 export const STATEMENT = { type: "Statement" };
 export const EFFECT = { type: "Effect" };
 export const CALLEE = { type: "Callee" };
-export const EXPRESSION = { type: "Expression", name: "" };
+export const EXPRESSION = {
+  type: "Expression",
+  name: makeLiteralExpression(""),
+};
 export const QUASI = { type: "Quasi" };
 export const QUASI_RAW = { type: "QuasiRaw" };
 export const DELETE = { type: "Delete" };
