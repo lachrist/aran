@@ -11,13 +11,13 @@ import {
 } from "../../intrinsic.mjs";
 import { makeScopeBaseDiscardExpression } from "../scope/index.mjs";
 import {
-  visit,
   DELETE,
   EFFECT,
   EXPRESSION,
   EXPRESSION_MACRO,
   getKeySite,
-} from "./context.mjs";
+} from "./site.mjs";
+import { visit } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNode,

@@ -1,6 +1,7 @@
 import { assertEqual } from "../../__fixture__.mjs";
 import { annotateNode } from "../../ast/index.mjs";
-import { visit, QUASI } from "./context.mjs";
+import { QUASI } from "./site.mjs";
+import { visit } from "./context.mjs";
 import { Program, Statement, Effect, compileTest } from "./__fixture__.mjs";
 import Quasi from "./quasi.mjs";
 

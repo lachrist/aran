@@ -1,6 +1,7 @@
 import { makeLiteralExpression } from "../../ast/index.mjs";
 import { makeMacro, annotateMacro } from "./macro.mjs";
-import { visit, EXPRESSION } from "./context.mjs";
+import { EXPRESSION } from "./site.mjs";
+import { visit } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateMacro,

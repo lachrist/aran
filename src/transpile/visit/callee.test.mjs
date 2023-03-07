@@ -1,6 +1,7 @@
 import { assertEqual } from "../../__fixture__.mjs";
 import { makeApplyExpression } from "../../ast/index.mjs";
-import { visit, CALLEE } from "./context.mjs";
+import { CALLEE } from "./site.mjs";
+import { visit } from "./context.mjs";
 import {
   Program,
   Statement,

@@ -25,14 +25,13 @@ import {
 } from "../scope/index.mjs";
 import { makeMacro, annotateNodeArray } from "./macro.mjs";
 import {
-  visit,
-  liftEffect,
   EXPRESSION,
   PATTERN,
   PATTERN_ELEMENT,
   PATTERN_PROPERTY,
   getKeySite,
-} from "./context.mjs";
+} from "./site.mjs";
+import { visit, liftEffect } from "./context.mjs";
 
 const isRestElement = ({ type }) => type === "RestElement";
 

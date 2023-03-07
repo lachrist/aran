@@ -9,13 +9,8 @@ import {
 import { makeGetExpression, makeBinaryExpression } from "../../intrinsic.mjs";
 import { makeScopeSpecReadExpression } from "../scope/index.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
-import {
-  visit,
-  CALLEE,
-  EXPRESSION,
-  EXPRESSION_MACRO,
-  getKeySite,
-} from "./context.mjs";
+import { CALLEE, EXPRESSION, EXPRESSION_MACRO, getKeySite } from "./site.mjs";
+import { visit } from "./context.mjs";
 
 export default {
   __ANNOTATE__: ({ callee: expression1, this: expression2 }, serial) => ({

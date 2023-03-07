@@ -17,7 +17,8 @@ import {
 } from "../scope/index.mjs";
 import { makeMacro } from "./macro.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
-import { visit, EXPRESSION_MACRO, getKeyMacroSite } from "./context.mjs";
+import { EXPRESSION_MACRO, getKeyMacroSite } from "./site.mjs";
+import { visit } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNode,

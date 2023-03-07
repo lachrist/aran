@@ -1,6 +1,7 @@
 import { concat } from "array-lite";
 import { makeExpressionEffect } from "../../ast/index.mjs";
-import { EXPRESSION_MACRO, visit } from "./context.mjs";
+import { EXPRESSION_MACRO } from "./site.mjs";
+import { visit } from "./context.mjs";
 import { Program, Statement, Expression, compileTest } from "./__fixture__.mjs";
 import ExpressionMacro from "./expression-macro.mjs";
 

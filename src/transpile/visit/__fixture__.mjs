@@ -11,14 +11,8 @@ import {
 import { allignBlock } from "../../allign/index.mjs";
 import { makeScopeTestBlock } from "../scope/index.mjs";
 import { annotateNodeArray, annotateMacro, makeMacro } from "./macro.mjs";
-import {
-  PROGRAM,
-  STATEMENT,
-  EFFECT,
-  EXPRESSION,
-  createInitialContext,
-  visit,
-} from "./context.mjs";
+import { PROGRAM, STATEMENT, EFFECT, EXPRESSION } from "./site.mjs";
+import { createInitialContext, visit } from "./context.mjs";
 
 const {
   Error,

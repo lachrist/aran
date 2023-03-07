@@ -10,13 +10,13 @@ import { makeBinaryExpression } from "../../intrinsic.mjs";
 import { annotateNodeArray } from "./macro.mjs";
 import { makeSyntaxError } from "./report.mjs";
 import {
-  visit,
   EFFECT,
   EXPRESSION,
   EXPRESSION_MACRO,
   ASSIGNMENT_EFFECT,
   UPDATE_EFFECT,
-} from "./context.mjs";
+} from "./site.mjs";
+import { visit } from "./context.mjs";
 
 export default {
   __ANNOTATE__: annotateNodeArray,

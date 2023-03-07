@@ -1,5 +1,6 @@
 import { assertEqual, assertNotEqual } from "../../__fixture__.mjs";
-import { EXPRESSION, PATTERN, visit } from "./context.mjs";
+import { EXPRESSION, PATTERN } from "./site.mjs";
+import { visit } from "./context.mjs";
 import {
   Program,
   Statement,

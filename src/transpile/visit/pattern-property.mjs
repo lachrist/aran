@@ -12,13 +12,8 @@ import {
   makeGetExpression,
 } from "../../intrinsic.mjs";
 import { annotateNodeArray, makeMacro } from "./macro.mjs";
-import {
-  visit,
-  liftEffect,
-  getKeySite,
-  getKeyMacroSite,
-  PATTERN,
-} from "./context.mjs";
+import { getKeySite, getKeyMacroSite, PATTERN } from "./site.mjs";
+import { visit, liftEffect } from "./context.mjs";
 
 const { Error } = globalThis;
 

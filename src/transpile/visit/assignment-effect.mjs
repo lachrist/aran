@@ -12,13 +12,13 @@ import {
 import { annotateNodeArray } from "./macro.mjs";
 import { expectSyntaxPropertyEqual } from "./report.mjs";
 import {
-  visit,
   EXPRESSION,
   EXPRESSION_MACRO,
   PATTERN,
   getKeySite,
   getKeyMacroSite,
-} from "./context.mjs";
+} from "./site.mjs";
+import { visit } from "./context.mjs";
 
 const {
   Reflect: { apply },

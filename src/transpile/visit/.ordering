@@ -1,5 +1,6 @@
 macro.mjs
 report.mjs
+site.mjs
 context.mjs
 __fixture__.mjs
 expression-macro.mjs
