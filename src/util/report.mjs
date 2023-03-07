@@ -3,7 +3,6 @@ import { assert } from "./assert.mjs";
 import { partial_x } from "./closure.mjs";
 
 const {
-  undefined,
   Error,
   String,
   String: {
@@ -11,13 +10,13 @@ const {
   },
   Array: { isArray },
   JSON: { stringify },
-  Reflect: { apply, getOwnPropertyDescriptor },
+  Reflect: { apply },
   Object: {
     entries: toEntries,
-    /* c8 ignore start */
-    hasOwn = (object, property) =>
-      getOwnPropertyDescriptor(object, property) !== undefined,
-    /* c8 ignore stop */
+    // /* c8 ignore start */
+    // hasOwn = (object, property) =>
+    //   getOwnPropertyDescriptor(object, property) !== undefined,
+    // /* c8 ignore stop */
   },
 } = globalThis;
 
@@ -100,18 +99,18 @@ export const expect0 = (check, Constructor, template) => {
   if (!check) {
     throw new Constructor(format(template, []));
   }
-  if (hasOwn(globalThis, "ARAN_DEBUG")) {
-    format(template, []);
-  }
+  // if (hasOwn(globalThis, "ARAN_DEBUG")) {
+  //   format(template, []);
+  // }
 };
 
 export const expect1 = (check, Constructor, template, toString, value) => {
   if (!check) {
     throw new Constructor(format(template, [toString(value)]));
   }
-  if (hasOwn(globalThis, "ARAN_DEBUG")) {
-    format(template, [toString(value)]);
-  }
+  // if (hasOwn(globalThis, "ARAN_DEBUG")) {
+  //   format(template, [toString(value)]);
+  // }
 };
 
 export const expect2 = (
@@ -128,9 +127,9 @@ export const expect2 = (
       format(template, [toString1(value1), toString2(value2)]),
     );
   }
-  if (hasOwn(globalThis, "ARAN_DEBUG")) {
-    format(template, [toString1(value1), toString2(value2)]);
-  }
+  // if (hasOwn(globalThis, "ARAN_DEBUG")) {
+  //   format(template, [toString1(value1), toString2(value2)]);
+  // }
 };
 
 export const expect3 = (
@@ -153,9 +152,9 @@ export const expect3 = (
       ]),
     );
   }
-  if (hasOwn(globalThis, "ARAN_DEBUG")) {
-    format(template, [toString1(value1), toString2(value2), toString3(value3)]);
-  }
+  // if (hasOwn(globalThis, "ARAN_DEBUG")) {
+  //   format(template, [toString1(value1), toString2(value2), toString3(value3)]);
+  // }
 };
 
 export const expect4 = (
@@ -181,14 +180,14 @@ export const expect4 = (
       ]),
     );
   }
-  if (hasOwn(globalThis, "ARAN_DEBUG")) {
-    format(template, [
-      toString1(value1),
-      toString2(value2),
-      toString3(value3),
-      toString4(value4),
-    ]);
-  }
+  // if (hasOwn(globalThis, "ARAN_DEBUG")) {
+  //   format(template, [
+  //     toString1(value1),
+  //     toString2(value2),
+  //     toString3(value3),
+  //     toString4(value4),
+  //   ]);
+  // }
 };
 
 export const expect5 = (
@@ -217,15 +216,15 @@ export const expect5 = (
       ]),
     );
   }
-  if (hasOwn(globalThis, "ARAN_DEBUG")) {
-    format(template, [
-      toString1(value1),
-      toString2(value2),
-      toString3(value3),
-      toString4(value4),
-      toString5(value5),
-    ]);
-  }
+  // if (hasOwn(globalThis, "ARAN_DEBUG")) {
+  //   format(template, [
+  //     toString1(value1),
+  //     toString2(value2),
+  //     toString3(value3),
+  //     toString4(value4),
+  //     toString5(value5),
+  //   ]);
+  // }
 };
 
 export const expect6 = (
@@ -257,14 +256,14 @@ export const expect6 = (
       ]),
     );
   }
-  if (hasOwn(globalThis, "ARAN_DEBUG")) {
-    format(template, [
-      toString1(value1),
-      toString2(value2),
-      toString3(value3),
-      toString4(value4),
-      toString5(value5),
-      toString6(value6),
-    ]);
-  }
+  // if (hasOwn(globalThis, "ARAN_DEBUG")) {
+  //   format(template, [
+  //     toString1(value1),
+  //     toString2(value2),
+  //     toString3(value3),
+  //     toString4(value4),
+  //     toString5(value5),
+  //     toString6(value6),
+  //   ]);
+  // }
 };
