@@ -507,4 +507,23 @@ test(
   `,
 );
 
+// NewExpression //
+test(`new (123)(456, 789);`, `{ void new (123)(456, 789); }`);
+test(
+  `new (123)(456, ...789);`,
+  `
+    {
+      void intrinsic.Reflect.construct(
+        123,
+        intrinsic.Array.prototype.flat(
+          !intrinsic.Array.of(
+            intrinsic.Array.of(456),
+            789,
+          ),
+        ),
+      );
+    }
+  `,
+);
+
 done();

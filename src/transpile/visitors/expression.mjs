@@ -6,6 +6,7 @@ import {
   SyntaxAranError,
 } from "../../util/index.mjs";
 import {
+  makeConstructExpression,
   makeIntrinsicExpression,
   makeConditionalExpression,
   makeSequenceExpression,
@@ -627,6 +628,29 @@ export default {
           );
         }
       }
+    }
+  },
+  NewExpression: (node, context, _site) => {
+    if (some(node.arguments, isSpreadElement)) {
+      return makeApplyExpression(
+        makeIntrinsicExpression("Reflect.construct"),
+        makeLiteralExpression({ undefined: null }),
+        [
+          visit(node.callee, context, EXPRESSION),
+          makeApplyExpression(
+            makeIntrinsicExpression("Array.prototype.flat"),
+            makeArrayExpression(
+              map(node.arguments, partial_xx(visit, context, SPREAD)),
+            ),
+            [],
+          ),
+        ],
+      );
+    } else {
+      return makeConstructExpression(
+        visit(node.callee, context, EXPRESSION),
+        map(node.arguments, partial_xx(visit, context, EXPRESSION)),
+      );
     }
   },
 };
