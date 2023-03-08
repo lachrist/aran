@@ -19,6 +19,7 @@ import {
   ExpressionMacro,
   compileTest,
 } from "./__fixture__.mjs";
+import ObjectPrototype from "./object-prototype.mjs";
 import ObjectValue from "./object-value.mjs";
 import ObjectProperty from "./object-property.mjs";
 
@@ -42,6 +43,7 @@ const { test, done } = compileTest({
   Program,
   Statement,
   Effect,
+  ObjectPrototype,
   ObjectProperty,
   ObjectValue,
   Closure: {
@@ -90,13 +92,13 @@ test(
 );
 
 test(
-  `({__proto__:123});`,
+  `({__proto__:null});`,
   `
     {
       void (
         void intrinsic.Reflect.setProtoypeOf(
           "self",
-          123,
+          null,
         ),
         "self"
       );

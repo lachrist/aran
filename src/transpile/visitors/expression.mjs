@@ -50,6 +50,7 @@ import {
   CLASS,
   OBJECT_PROPERTY,
   OBJECT_PROPERTY_REGULAR,
+  OBJECT_PROPERTY_PROTOTYPE,
   ASSIGNMENT_EXPRESSION,
   UPDATE_EXPRESSION,
   getKeySite,
@@ -59,6 +60,20 @@ import { visit } from "../context.mjs";
 const { Array } = globalThis;
 
 const isSpreadElement = ({ type }) => type === "SpreadElement";
+
+const visitProtoProperty = (properties, context) => {
+  if (properties.length > 0 && isPrototypeProperty(properties[0])) {
+    return {
+      prototype: visit(properties[0], context, OBJECT_PROPERTY_PROTOTYPE),
+      properties: slice(properties, 1, properties.length),
+    };
+  } else {
+    return {
+      prototype: makeIntrinsicExpression("Object.prototype"),
+      properties,
+    };
+  }
+};
 
 const getMetaPropertyVariable = (node) => {
   if (node.meta.name === "new" && node.property.name === "target") {
@@ -331,22 +346,25 @@ export default {
       [visit(node.source, context, EXPRESSION)],
     ),
   ObjectExpression: (node, context, _site) => {
-    // TODO: optimize when proto property is first //
+    const { prototype, properties } = visitProtoProperty(
+      node.properties,
+      context,
+    );
     if (
-      some(node.properties, isProtoProperty) ||
-      some(node.properties, isAccessorProperty) ||
-      some(node.properties, isSpreadElement)
+      some(properties, isPrototypeProperty) ||
+      some(properties, isAccessorProperty) ||
+      some(properties, isSpreadElement)
     ) {
       const macro = makeMacro(
         context,
         "self",
-        makeObjectExpression(makeIntrinsicExpression("Object.prototype"), []),
+        makeObjectExpression(prototype, []),
       );
       return reduceReverse(
         concat(
           macro.setup,
           flatMap(
-            node.properties,
+            properties,
             partial_xx(visit, context, {
               ...OBJECT_PROPERTY,
               self: macro.value,
@@ -356,12 +374,12 @@ export default {
         makeSequenceExpression,
         macro.value,
       );
-    } else if (some(node.properties, isMethodProperty)) {
+    } else if (some(properties, isMethodProperty)) {
       const macro = makeMacroSelf(context, "self", (expression) =>
         makeObjectExpression(
-          makeIntrinsicExpression("Object.prototype"),
+          prototype,
           map(
-            node.properties,
+            properties,
             partial_xx(visit, context, {
               ...OBJECT_PROPERTY_REGULAR,
               self: expression,
@@ -372,11 +390,8 @@ export default {
       return reduceReverse(macro.setup, makeSequenceExpression, macro.value);
     } else {
       return makeObjectExpression(
-        makeIntrinsicExpression("Object.prototype"),
-        map(
-          node.properties,
-          partial_xx(visit, context, OBJECT_PROPERTY_REGULAR),
-        ),
+        prototype,
+        map(properties, partial_xx(visit, context, OBJECT_PROPERTY_REGULAR)),
       );
     }
   },

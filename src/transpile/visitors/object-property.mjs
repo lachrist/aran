@@ -12,7 +12,7 @@ import {
 import { isPrototypeProperty } from "../../query/index.mjs";
 import { annotateArray } from "../annotate.mjs";
 import { makeSyntaxPropertyError } from "../report.mjs";
-import { EXPRESSION, OBJECT_VALUE } from "../site.mjs";
+import { EXPRESSION, OBJECT_VALUE, OBJECT_PROTOTYPE } from "../site.mjs";
 import { visit } from "../context.mjs";
 
 const makeDescriptor = (node, expression) => {
@@ -50,7 +50,7 @@ export default {
         makeExpressionEffect(
           makeReflectSetPrototypeOfExpression(
             site.self,
-            visit(node.value, context, EXPRESSION),
+            visit(node.value, context, OBJECT_PROTOTYPE),
           ),
         ),
       ];

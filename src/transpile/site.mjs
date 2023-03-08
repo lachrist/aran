@@ -1,5 +1,13 @@
 const { undefined } = globalThis;
 
+export const OBJECT_PROTOTYPE = {
+  type: "ObjectPrototype",
+};
+
+export const OBJECT_PROPERTY_PROTOTYPE = {
+  type: "ObjectPropertyPrototype",
+};
+
 export const OBJECT_PROPERTY = {
   type: "ObjectProperty",
   self: undefined,

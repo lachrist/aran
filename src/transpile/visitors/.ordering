@@ -14,6 +14,8 @@ update-effect.mjs
 update-expression.mjs
 delete.mjs
 effect.mjs
+object-prototype.mjs
+object-property-prototype.mjs
 object-value.mjs
 object-property.mjs
 object-property-regular.mjs

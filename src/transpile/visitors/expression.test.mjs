@@ -21,7 +21,9 @@ import Callee from "./callee.mjs";
 import AssignmentExpression from "./assignment-expression.mjs";
 import UpdateExpression from "./update-expression.mjs";
 import Delete from "./delete.mjs";
-import ObjectPropertyValue from "./object-property-value.mjs";
+import ObjectPrototype from "./object-prototype.mjs";
+import ObjectPropertyPrototype from "./object-property-prototype.mjs";
+import ObjectValue from "./object-value.mjs";
 import ObjectProperty from "./object-property.mjs";
 import ObjectPropertyRegular from "./object-property-regular.mjs";
 import Expression from "./expression.mjs";
@@ -66,7 +68,9 @@ const { test, done } = compileTest({
   Delete,
   Expression,
   ExpressionMacro,
-  ObjectPropertyValue,
+  ObjectPrototype,
+  ObjectPropertyPrototype,
+  ObjectValue,
   ObjectProperty,
   ObjectPropertyRegular,
   Class: {
@@ -284,16 +288,30 @@ test(
     }
   `,
 );
+test(`({__proto__:null});`, `{ void intrinsic.aran.createObject(null); }`);
 test(
-  `({__proto__:123});`,
+  `({[123]:456, __proto__:null});`,
   `
     {
       let self;
       void (
         self = intrinsic.aran.createObject(intrinsic.Object.prototype),
         (
-          void intrinsic.Reflect.setProtoypeOf(self, 123),
-          self
+          void intrinsic.Reflect.defineProperty(
+            self,
+            123,
+            intrinsic.aran.createObject(
+              null,
+              "value", 456,
+              "writable", true,
+              "enumerable", true,
+              "configurable", true,
+            ),
+          ),
+          (
+            void intrinsic.Reflect.setProtoypeOf(self, null),
+            self
+          )
         )
       );
     }
