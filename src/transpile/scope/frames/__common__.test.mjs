@@ -31,7 +31,7 @@ import {
   makeIncrementWriteEffectArray,
   makeExportIncrementWriteEffectArray,
   makeEmptyFrameLookupNode,
-} from "./helper.mjs";
+} from "./__common__.mjs";
 
 const takeSingleton = (array) => {
   assertEqual(array.length, 1);

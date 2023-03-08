@@ -8,7 +8,7 @@ import {
   makeEmptyFrameInitializeStatementArray,
   lookupEmptyFrameAll,
   makeEmptyFrameLookupNode,
-} from "./helper.mjs";
+} from "./__common__.mjs";
 
 export const createFrame = createEmptyFrame;
 

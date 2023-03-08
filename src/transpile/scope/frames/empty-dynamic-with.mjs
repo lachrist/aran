@@ -21,7 +21,7 @@ import {
   declareEmptyFrame,
   makeEmptyFrameInitializeStatementArray,
   lookupEmptyFrameAll,
-} from "./helper.mjs";
+} from "./__common__.mjs";
 
 export const KINDS = [];
 

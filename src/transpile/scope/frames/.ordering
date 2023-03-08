@@ -1,6 +1,6 @@
+__common__.mjs
 __fixture__.mjs
 __fixture_new__.mjs
-helper.mjs
 block-dynamic.mjs
 block-static-dead.mjs
 block-static.mjs

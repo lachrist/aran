@@ -21,7 +21,7 @@ import {
   harvestEmptyFrameHeader,
   harvestEmptyFramePrelude,
   lookupEmptyFrameAll,
-} from "./helper.mjs";
+} from "./__common__.mjs";
 
 const {
   Reflect: { defineProperty },

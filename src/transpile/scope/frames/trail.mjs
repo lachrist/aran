@@ -3,7 +3,7 @@ import {
   harvestEmptyFramePrelude,
   lookupEmptyFrameAll,
   makeEmptyFrameLookupNode,
-} from "./helper.mjs";
+} from "./__common__.mjs";
 
 export const createFrame = ({ key }) => ({ key });
 

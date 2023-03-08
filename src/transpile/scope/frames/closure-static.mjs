@@ -25,7 +25,7 @@ import {
   makeTypeofReadExpression,
   makeExportIncrementWriteEffectArray,
   lookupEmptyFrameAll,
-} from "./helper.mjs";
+} from "./__common__.mjs";
 
 const {
   Reflect: { ownKeys, defineProperty },
