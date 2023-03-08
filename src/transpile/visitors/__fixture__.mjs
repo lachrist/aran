@@ -3,14 +3,13 @@ import { assertSuccess } from "../../__fixture__.mjs";
 import { partial_xx } from "../../util/index.mjs";
 import { parseBabel } from "../../babel.mjs";
 import {
-  annotateNode,
   makeEffectStatement,
   makeExpressionEffect,
   makeLiteralExpression,
 } from "../../ast/index.mjs";
 import { allignBlock } from "../../allign/index.mjs";
 import { makeScopeTestBlock } from "../scope/index.mjs";
-import { annotateArray, annotateMemo } from "../annotate.mjs";
+import { annotate, annotateArray, annotateMemo } from "../annotate.mjs";
 import { memoize } from "../memoize.mjs";
 import { PROGRAM, STATEMENT, EFFECT, EXPRESSION } from "../site.mjs";
 import { createInitialContext, visit } from "../context.mjs";
@@ -27,7 +26,7 @@ const {
 } = globalThis;
 
 export const Program = {
-  __ANNOTATE__: annotateNode,
+  __ANNOTATE__: annotate,
   Program: (node, context1, _site) => {
     if (
       node.body.length > 0 &&
@@ -66,7 +65,7 @@ export const Effect = {
 };
 
 export const Expression = {
-  __ANNOTATE__: annotateNode,
+  __ANNOTATE__: annotate,
   Literal: (node, _context, _site) => makeLiteralExpression(node.value),
   __DEFAULT__: (node, _context, _site) => makeLiteralExpression(node.type),
 };

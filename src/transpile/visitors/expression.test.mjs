@@ -1,13 +1,13 @@
 import { assert, assertEqual } from "../../__fixture__.mjs";
 import { hasOwn } from "../../util/index.mjs";
 import {
-  annotateNode,
   makeLiteralExpression,
   makeReturnStatement,
   makeBlock,
   makeParameterExpression,
   makeClosureExpression,
 } from "../../ast/index.mjs";
+import { annotate } from "../annotate.mjs";
 import {
   Program,
   Statement,
@@ -74,11 +74,11 @@ const { test, done } = compileTest({
   ObjectProperty,
   ObjectPropertyRegular,
   Class: {
-    __ANNOTATE__: annotateNode,
+    __ANNOTATE__: annotate,
     ClassExpression: visitClass,
   },
   Closure: {
-    __ANNOTATE__: annotateNode,
+    __ANNOTATE__: annotate,
     ArrowFunctionExpression: visitClosure,
     FunctionExpression: visitClosure,
   },

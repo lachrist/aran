@@ -86,7 +86,7 @@ export const visitBlock = partialxx___(
         dynamic,
         completion === null ? closuring : blocking,
       );
-      return annotateNode(
+      return annotate(
         makeScopeBlock(
           getContextScoping(context),
           labels,
