@@ -12,7 +12,7 @@ import {
 import { isProtoProperty } from "../../query/index.mjs";
 import { annotateArray } from "../annotate.mjs";
 import { makeSyntaxPropertyError } from "../report.mjs";
-import { EXPRESSION, OBJECT_PROPERTY_VALUE } from "../site.mjs";
+import { EXPRESSION, OBJECT_VALUE } from "../site.mjs";
 import { visit } from "../context.mjs";
 
 const makeDescriptor = (node, expression) => {
@@ -56,7 +56,7 @@ export default {
       ];
     } else {
       const property = visit(node.value, context, {
-        ...OBJECT_PROPERTY_VALUE,
+        ...OBJECT_VALUE,
         self: site.self,
         kind: node.kind,
         computed: node.computed,

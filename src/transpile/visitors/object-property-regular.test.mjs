@@ -11,7 +11,7 @@ import {
   Expression,
   compileTest,
 } from "./__fixture__.mjs";
-import ObjectPropertyValue from "./object-property-value.mjs";
+import ObjectValue from "./object-value.mjs";
 import ObjectPropertyRegular from "./object-property-regular.mjs";
 
 const { test, done } = compileTest({
@@ -19,7 +19,7 @@ const { test, done } = compileTest({
   Statement,
   Effect,
   ObjectPropertyRegular,
-  ObjectPropertyValue,
+  ObjectValue,
   Expression: {
     ...Expression,
     ObjectExpression: (node, context, _site) =>

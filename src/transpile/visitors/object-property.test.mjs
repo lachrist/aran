@@ -19,7 +19,7 @@ import {
   ExpressionMacro,
   compileTest,
 } from "./__fixture__.mjs";
-import ObjectPropertyValue from "./object-property-value.mjs";
+import ObjectValue from "./object-value.mjs";
 import ObjectProperty from "./object-property.mjs";
 
 const visitClosure = (_node, _context, site) =>
@@ -43,7 +43,7 @@ const { test, done } = compileTest({
   Statement,
   Effect,
   ObjectProperty,
-  ObjectPropertyValue,
+  ObjectValue,
   Closure: {
     __ANNOTATE__: (node, _serial) => node,
     FunctionExpression: visitClosure,

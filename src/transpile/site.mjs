@@ -10,8 +10,8 @@ export const OBJECT_PROPERTY_REGULAR = {
   self: null,
 };
 
-export const OBJECT_PROPERTY_VALUE = {
-  type: "ObjectPropertyValue",
+export const OBJECT_VALUE = {
+  type: "ObjectValue",
   self: null,
   kind: "init",
   computed: undefined,
