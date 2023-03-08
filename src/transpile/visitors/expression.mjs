@@ -2,6 +2,7 @@ import { some, concat, reduce, map, flatMap, slice } from "array-lite";
 import {
   reduceReverse,
   partial_xx,
+  partial_x,
   SyntaxAranError,
 } from "../../util/index.mjs";
 import {
@@ -39,6 +40,7 @@ import {
   makeSyntaxPropertyError,
 } from "../report.mjs";
 import {
+  SPREAD,
   QUASI_RAW,
   QUASI,
   EXPRESSION,
@@ -59,7 +61,24 @@ import { visit } from "../context.mjs";
 
 const { Array } = globalThis;
 
+const isNull = (any) => any === null;
+
 const isSpreadElement = ({ type }) => type === "SpreadElement";
+
+const visitArraySpreadElement = (element, context) => {
+  if (element === null) {
+    // Array(1) does not work because of Array.prototype and Object.prototype pollution:
+    // Array.prototype[0] = "foo";
+    // Array.prototype[1] = "bar";
+    // console.log([, , , ].indexOf("foo"));
+    // console.log([, , , ].indexOf("bar"));
+    return makeObjectExpression(makeLiteralExpression(null), [
+      { key: makeLiteralExpression("length"), value: makeLiteralExpression(1) },
+    ]);
+  } else {
+    return visit(element, context, SPREAD);
+  }
+};
 
 const visitProtoProperty = (properties, context) => {
   if (properties.length > 0 && isPrototypeProperty(properties[0])) {
@@ -337,6 +356,21 @@ export default {
       makeLiteralExpression({ undefined: null }),
       [visit(node.source, context, EXPRESSION)],
     ),
+  ArrayExpression: (node, context, _site) => {
+    if (some(node.elements, isNull) || some(node.elements, isSpreadElement)) {
+      return makeApplyExpression(
+        makeIntrinsicExpression("Array.prototype.flat"),
+        makeArrayExpression(
+          map(node.elements, partial_x(visitArraySpreadElement, context)),
+        ),
+        [],
+      );
+    } else {
+      return makeArrayExpression(
+        map(node.elements, partial_xx(visit, context, EXPRESSION)),
+      );
+    }
+  },
   ObjectExpression: (node, context, _site) => {
     const { prototype, properties } = visitProtoProperty(
       node.properties,

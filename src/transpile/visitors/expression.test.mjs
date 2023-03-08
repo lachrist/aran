@@ -26,6 +26,7 @@ import ObjectPropertyPrototype from "./object-property-prototype.mjs";
 import ObjectValue from "./object-value.mjs";
 import ObjectProperty from "./object-property.mjs";
 import ObjectPropertyRegular from "./object-property-regular.mjs";
+import Spread from "./spread.mjs";
 import Expression from "./expression.mjs";
 
 const visitClass = (node, _context, _site) => {
@@ -73,6 +74,7 @@ const { test, done } = compileTest({
   ObjectValue,
   ObjectProperty,
   ObjectPropertyRegular,
+  Spread,
   Class: {
     __ANNOTATE__: annotate,
     ClassExpression: visitClass,
@@ -354,6 +356,23 @@ test(
             )
           )
         )
+      );
+    }
+  `,
+);
+
+// ArrayExpression //
+test(`[123, 456, 789];`, `{ void intrinsic.Array.of(123, 456, 789); }`);
+test(
+  `[123,,789];`,
+  `
+    {
+      void intrinsic.Array.prototype.flat(
+        !intrinsic.Array.of(
+          intrinsic.Array.of(123),
+          intrinsic.aran.createObject(null, "length", 1),
+          intrinsic.Array.of(789),
+        ),
       );
     }
   `,

@@ -1,5 +1,9 @@
 const { undefined } = globalThis;
 
+export const SPREAD = {
+  type: "Spread",
+};
+
 export const OBJECT_PROTOTYPE = {
   type: "ObjectPrototype",
 };

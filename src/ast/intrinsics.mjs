@@ -34,6 +34,7 @@ const intrinsics = [
   "String",
   // Object
   "Array.from",
+  "Array.prototype.flat",
   // Construction //
   "Object.create",
   "Array.of",
