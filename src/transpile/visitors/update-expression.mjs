@@ -36,10 +36,10 @@ export default {
       return reduceReverse(
         concat(
           macro.setup,
-          makeScopeBaseWriteEffectArray(context, node.name, macro.value),
+          makeScopeBaseWriteEffectArray(context, node.name, macro.pure),
         ),
         makeSequenceExpression,
-        macro.value,
+        macro.pure,
       );
     } else {
       const macro = makeMacro(
@@ -55,13 +55,13 @@ export default {
             node.name,
             makeBinaryExpression(
               site.operator[0],
-              macro.value,
+              macro.pure,
               makeLiteralExpression(1),
             ),
           ),
         ),
         makeSequenceExpression,
-        macro.value,
+        macro.pure,
       );
     }
   },
@@ -82,11 +82,11 @@ export default {
         makeSequenceExpression,
         makeSetExpression(
           context.strict,
-          object_macro.value,
-          key_macro.value,
+          object_macro.pure,
+          key_macro.pure,
           makeBinaryExpression(
             site.operator[0],
-            makeGetExpression(object_macro.value, key_macro.value),
+            makeGetExpression(object_macro.pure, key_macro.pure),
             makeLiteralExpression(1),
           ),
         ),
@@ -104,25 +104,25 @@ export default {
       const right_old_macro = makeMacro(
         context,
         "right_old",
-        makeGetExpression(object_macro.value, key_macro.value),
+        makeGetExpression(object_macro.pure, key_macro.pure),
       );
       return reduceReverse(
         concat(object_macro.setup, key_macro.setup, right_old_macro.setup, [
           makeExpressionEffect(
             makeSetExpression(
               context.strict,
-              object_macro.value,
-              key_macro.value,
+              object_macro.pure,
+              key_macro.pure,
               makeBinaryExpression(
                 site.operator[0],
-                right_old_macro.value,
+                right_old_macro.pure,
                 makeLiteralExpression(1),
               ),
             ),
           ),
         ]),
         makeSequenceExpression,
-        right_old_macro.value,
+        right_old_macro.pure,
       );
     }
   },

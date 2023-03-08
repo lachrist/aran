@@ -14,7 +14,7 @@ const { test, done } = compileTest({
     __ANNOTATE__: (node, _serial) => node,
     __DEFAULT__: (node, context, _site) => {
       const macro = visit(node, context, KEY_MACRO);
-      return reduceReverse(macro.setup, makeSequenceExpression, macro.value);
+      return reduceReverse(macro.setup, makeSequenceExpression, macro.pure);
     },
   },
 });

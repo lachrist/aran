@@ -34,11 +34,11 @@ export default {
       makeExpressionEffect(
         makeSetExpression(
           context.strict,
-          object_macro.value,
-          key_macro.value,
+          object_macro.pure,
+          key_macro.pure,
           makeBinaryExpression(
             site.operator[0],
-            makeGetExpression(object_macro.value, key_macro.value),
+            makeGetExpression(object_macro.pure, key_macro.pure),
             makeLiteralExpression(1),
           ),
         ),

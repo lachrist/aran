@@ -31,17 +31,17 @@ export default {
         makeConditionalExpression(
           makeBinaryExpression(
             "===",
-            makeUnaryExpression("typeof", macro.value),
+            makeUnaryExpression("typeof", macro.pure),
             makeLiteralExpression("object"),
           ),
           makeLiteralExpression(true),
           makeBinaryExpression(
             "===",
-            makeUnaryExpression("typeof", macro.value),
+            makeUnaryExpression("typeof", macro.pure),
             makeLiteralExpression("function"),
           ),
         ),
-        macro.value,
+        macro.pure,
         makeIntrinsicExpression("Object.prototype"),
       ),
     );

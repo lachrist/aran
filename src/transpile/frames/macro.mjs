@@ -41,11 +41,11 @@ export const declareFrame = (
   options,
 ) => {
   if (includes(KINDS, kind)) {
-    const { macro } = options;
-    assert(!hasOwn(bindings, variable), "duplicate macro variable");
+    const { pure } = options;
+    assert(!hasOwn(bindings, variable), "duplicate pure variable");
     defineProperty(bindings, variable, {
       __proto__: NULL_DATA_DESCRIPTOR,
-      value: macro,
+      value: pure,
     });
     return null;
   } else {
@@ -80,7 +80,7 @@ export const compileMakeLookupNode =
 export const makeFrameReadExpression = compileMakeLookupNode(return_x);
 
 export const makeFrameTypeofExpression = compileMakeLookupNode(
-  (_variable, macro) => makeUnaryExpression("typeof", macro),
+  (_variable, pure) => makeUnaryExpression("typeof", pure),
 );
 
 export const makeFrameDiscardExpression = compileMakeLookupNode(

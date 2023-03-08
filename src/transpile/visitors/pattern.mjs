@@ -128,7 +128,7 @@ export default {
             context.strict,
             visit(node.object, context, EXPRESSION),
             visit(node.property, context, getKeySite(node.computed)),
-            macro.value,
+            macro.pure,
           ),
         ),
       ]),
@@ -145,11 +145,11 @@ export default {
         right: makeConditionalExpression(
           makeBinaryExpression(
             "===",
-            macro.value,
+            macro.pure,
             makeLiteralExpression({ undefined: null }),
           ),
           visit(node.right, context, EXPRESSION),
-          macro.value,
+          macro.pure,
         ),
       }),
     );
@@ -200,10 +200,10 @@ export default {
       "iterator",
       makeApplyExpression(
         makeGetExpression(
-          right_macro.value,
+          right_macro.pure,
           makeIntrinsicExpression("Symbol.iterator"),
         ),
-        right_macro.value,
+        right_macro.pure,
         [],
       ),
     );
@@ -217,7 +217,7 @@ export default {
         partial_xx(visit, context, {
           ...PATTERN_ELEMENT,
           kind: site.kind,
-          iterator: iterator_macro.value,
+          iterator: iterator_macro.pure,
         }),
       ),
     );
@@ -264,7 +264,7 @@ export default {
       const macro = makeMacro(context, "right", site.right);
       return concat(
         map(
-          concat(macro.setup, makeCheckObjectEffectArray(macro.value)),
+          concat(macro.setup, makeCheckObjectEffectArray(macro.pure)),
           partialx_(liftEffect, site.kind),
         ),
         flatMap(
@@ -272,7 +272,7 @@ export default {
           partial_xx(visit, context, {
             ...PATTERN_PROPERTY,
             kind: site.kind,
-            right: macro.value,
+            right: macro.pure,
             keys: [],
           }),
         ),
@@ -281,7 +281,7 @@ export default {
       const macro = makeMacro(context, "right", site.right);
       return concat(
         map(
-          concat(macro.setup, makeCheckObjectEffectArray(macro.value)),
+          concat(macro.setup, makeCheckObjectEffectArray(macro.pure)),
           partialx_(liftEffect, site.kind),
         ),
         flatMap(
@@ -289,7 +289,7 @@ export default {
           partial_xx(visit, context, {
             ...PATTERN_PROPERTY,
             kind: site.kind,
-            right: macro.value,
+            right: macro.pure,
           }),
         ),
       );

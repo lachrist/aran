@@ -39,8 +39,8 @@ const {
 
 export const KINDS = ["var", "function"];
 
-export const createFrame = ({ macro }) => ({
-  dynamic: macro,
+export const createFrame = ({ pure }) => ({
+  dynamic: pure,
   static: {},
 });
 
@@ -128,14 +128,14 @@ const compileMakeLookupNode =
   (
     next,
     strict,
-    { static: bindings, dynamic: macro },
+    { static: bindings, dynamic: pure },
     scope,
     escaped,
     variable,
     options,
   ) => {
     const node = makePresentNode(
-      macro,
+      pure,
       makeLiteralExpression(variable),
       options,
     );
@@ -143,7 +143,7 @@ const compileMakeLookupNode =
       return node;
     } else {
       return makeConditionalNode(
-        makeBinaryExpression("in", makeLiteralExpression(variable), macro),
+        makeBinaryExpression("in", makeLiteralExpression(variable), pure),
         node,
         next(strict, scope, escaped, variable, options),
       );

@@ -16,30 +16,30 @@ export default {
     expectSyntax(site.kind === "init", node);
     const macro = visit(site.key, context, getKeyMacroSite(site.computed));
     return {
-      key: reduceReverse(macro.setup, makeSequenceExpression, macro.value),
+      key: reduceReverse(macro.setup, makeSequenceExpression, macro.pure),
       value: visit(node, context, {
         ...CLOSURE,
         kind: "arrow",
         super: site.super,
-        name: macro.value,
+        name: macro.pure,
       }),
     };
   },
   FunctionExpression: (node, context, site) => {
     const macro = visit(site.key, context, getKeyMacroSite(site.computed));
     return {
-      key: reduceReverse(macro.setup, makeSequenceExpression, macro.value),
+      key: reduceReverse(macro.setup, makeSequenceExpression, macro.pure),
       value: visit(node, context, {
         ...CLOSURE,
         kind: site.method ? "method" : "function",
         super: site.super,
         name:
           site.kind === "init"
-            ? macro.value
+            ? macro.pure
             : makeBinaryExpression(
                 "+",
                 makeLiteralExpression(`${site.kind} `),
-                macro.value,
+                macro.pure,
               ),
       }),
     };

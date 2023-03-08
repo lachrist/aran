@@ -32,13 +32,13 @@ export default {
       });
     } else {
       const macro = visit(node.key, context, getKeyMacroSite(node.computed));
-      push(site.keys, macro.value);
+      push(site.keys, macro.pure);
       return visit(node.value, context, {
         ...PATTERN,
         kind: site.kind,
         right: makeGetExpression(
           site.right,
-          reduceReverse(macro.setup, makeSequenceExpression, macro.value),
+          reduceReverse(macro.setup, makeSequenceExpression, macro.pure),
         ),
       });
     }
@@ -58,7 +58,7 @@ export default {
         concat(
           macro.setup,
           map(
-            map(site.keys, partialx_(makeDeleteStrictExpression, macro.value)),
+            map(site.keys, partialx_(makeDeleteStrictExpression, macro.pure)),
             makeExpressionEffect,
           ),
         ),
@@ -67,7 +67,7 @@ export default {
       visit(node.argument, context, {
         ...PATTERN,
         kind: site.kind,
-        right: macro.value,
+        right: macro.pure,
       }),
     );
   },

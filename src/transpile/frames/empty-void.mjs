@@ -13,8 +13,8 @@ import {
   lookupEmptyFrameAll,
 } from "./__common__.mjs";
 
-export const createFrame = ({ macro }) => ({
-  dynamic: macro,
+export const createFrame = ({ pure }) => ({
+  dynamic: pure,
 });
 
 export const harvestFrameHeader = harvestEmptyFrameHeader;
@@ -41,7 +41,7 @@ export const makeFrameDiscardExpression = constant_______(
 export const makeFrameWriteEffectArray = (
   _next,
   strict,
-  { dynamic: macro },
+  { dynamic: pure },
   _scope,
   _escaped,
   variable,
@@ -52,7 +52,7 @@ export const makeFrameWriteEffectArray = (
   } else {
     return makeIncrementSetEffectArray(
       strict,
-      macro,
+      pure,
       makeLiteralExpression(variable),
       options,
     );

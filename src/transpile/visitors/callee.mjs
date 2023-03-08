@@ -41,28 +41,28 @@ export default {
                 makeConditionalExpression(
                   makeBinaryExpression(
                     "===",
-                    macro.value,
+                    macro.pure,
                     makeLiteralExpression(null),
                   ),
                   makeLiteralExpression(true),
                   makeBinaryExpression(
                     "===",
-                    macro.value,
+                    macro.pure,
                     makeLiteralExpression({ undefined: null }),
                   ),
                 ),
                 makeLiteralExpression({ undefined: null }),
                 makeGetExpression(
-                  macro.value,
+                  macro.pure,
                   visit(node.property, context, getKeySite(node.computed)),
                 ),
               )
             : makeGetExpression(
-                macro.value,
+                macro.pure,
                 visit(node.property, context, getKeySite(node.computed)),
               ),
         ),
-        this: macro.value,
+        this: macro.pure,
       };
     }
   },

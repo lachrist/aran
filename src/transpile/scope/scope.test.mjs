@@ -115,7 +115,7 @@ assertSuccess(
             "macro",
             makeMetaVariable("VARIABLE", 123),
             {
-              macro: makeLiteralExpression(123),
+              pure: makeLiteralExpression(123),
             },
           );
           return [
@@ -179,7 +179,7 @@ assertSuccess(
           "macro",
           makeMetaVariable("variable", 123),
           {
-            macro: makeLiteralExpression("binding"),
+            pure: makeLiteralExpression("binding"),
           },
         );
         return [

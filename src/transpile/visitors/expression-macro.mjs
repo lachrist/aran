@@ -8,7 +8,7 @@ export default {
   __ANNOTATE__: annotateMacro,
   Literal: (node, _context, _site) => ({
     setup: [],
-    value: makeLiteralExpression(node.value),
+    pure: makeLiteralExpression(node.value),
   }),
   __DEFAULT__: (node, context, site) =>
     makeMacro(

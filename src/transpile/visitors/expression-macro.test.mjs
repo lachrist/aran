@@ -12,7 +12,7 @@ const { test, done } = compileTest({
     __ANNOTATE__: (nodes, _serial) => nodes,
     __DEFAULT__: (node, context, _site) => {
       const macro = visit(node, context, EXPRESSION_MACRO);
-      return concat(macro.setup, [makeExpressionEffect(macro.value)]);
+      return concat(macro.setup, [makeExpressionEffect(macro.pure)]);
     },
   },
   Expression,

@@ -33,19 +33,19 @@ assertSuccess(
         kind: "macro",
         variable: "variable",
         options: {
-          macro: makeLiteralExpression("macro"),
+          pure: makeLiteralExpression("pure"),
         },
         declared: true,
       },
       {
         type: "read",
         variable: "variable",
-        code: `"macro"`,
+        code: `"pure"`,
       },
       {
         type: "typeof",
         variable: "variable",
-        code: `intrinsic.aran.unary("typeof", "macro")`,
+        code: `intrinsic.aran.unary("typeof", "pure")`,
       },
       {
         type: "discard",

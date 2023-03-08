@@ -49,7 +49,7 @@ const createMetaFrameArray = () => [createFrame(DEFINE_STATIC, META, {})];
 
 const createPseudoMetaFrameArray = () => [
   createFrame(DEFINE_DYNAMIC, META, {
-    macro: makeIntrinsicExpression("aran.globalCache"),
+    pure: makeIntrinsicExpression("aran.globalCache"),
   }),
 ];
 
@@ -69,14 +69,14 @@ const createRootBaseFrameArray = (enclave, program) =>
     ? [createFrame(ENCLAVE, BASE, { program })]
     : [
         createFrame(EMPTY_VOID, BASE, {
-          macro: makeIntrinsicExpression("aran.globalObject"),
+          pure: makeIntrinsicExpression("aran.globalObject"),
         }),
         createFrame(CLOSURE_DYNAMIC, BASE, {
-          macro: makeIntrinsicExpression("aran.globalObject"),
+          pure: makeIntrinsicExpression("aran.globalObject"),
         }),
         createFrame(OBSERVABLE, BASE, {}),
         createFrame(BLOCK_DYNAMIC, BASE, {
-          macro: makeIntrinsicExpression("aran.globalRecord"),
+          pure: makeIntrinsicExpression("aran.globalRecord"),
         }),
       ];
 
@@ -113,13 +113,13 @@ const createStaticClosureBaseFrameArray = () => [
   createFrame(BLOCK_STATIC, BASE, {}),
 ];
 
-const createDynamicClosureBaseFrameArray = (macro) => [
-  createFrame(CLOSURE_DYNAMIC, BASE, { macro }),
+const createDynamicClosureBaseFrameArray = (pure) => [
+  createFrame(CLOSURE_DYNAMIC, BASE, { pure }),
   createFrame(BLOCK_STATIC, BASE, {}),
 ];
 
-const createWithBaseFrameArray = (macro) => [
-  createFrame(EMPTY_DYNAMIC_WITH, BASE, { macro }),
+const createWithBaseFrameArray = (pure) => [
+  createFrame(EMPTY_DYNAMIC_WITH, BASE, { pure }),
   createFrame(OBSERVABLE, BASE, {}),
   createFrame(BLOCK_STATIC, BASE, {}),
 ];
@@ -278,12 +278,12 @@ export const makeScopeClosureStaticBlock = generateMakeBlueprintBlock(
 /////////////
 
 const generateMakeScopeDynamicBlock =
-  (createBaseFrameArray) => (context, labels, macro, makeStatementArray) =>
+  (createBaseFrameArray) => (context, labels, pure, makeStatementArray) =>
     makeScopeFrameBlock(
       context.strict,
       context.scope,
       labels,
-      concat(createMetaFrameArray(), createBaseFrameArray(macro)),
+      concat(createMetaFrameArray(), createBaseFrameArray(pure)),
       compileContextCallback(makeStatementArray, context),
     );
 
@@ -323,7 +323,7 @@ export const makeScopeTestBlock = (context, makeStatementArray) =>
         ],
         (name) => {
           declareScope(context.strict, scope, "macro", name, {
-            macro: makeLiteralExpression(name),
+            pure: makeLiteralExpression(name),
           });
         },
       );

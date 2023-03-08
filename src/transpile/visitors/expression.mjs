@@ -236,9 +236,9 @@ export default {
         macro.setup,
         makeSequenceExpression,
         makeConditionalExpression(
-          macro.value,
+          macro.pure,
           visit(node.right, context, EXPRESSION),
-          macro.value,
+          macro.pure,
         ),
       );
     } else if (node.operator === "||") {
@@ -246,8 +246,8 @@ export default {
         macro.setup,
         makeSequenceExpression,
         makeConditionalExpression(
-          macro.value,
-          macro.value,
+          macro.pure,
+          macro.pure,
           visit(node.right, context, EXPRESSION),
         ),
       );
@@ -259,18 +259,18 @@ export default {
           makeConditionalExpression(
             makeBinaryExpression(
               "===",
-              macro.value,
+              macro.pure,
               makeLiteralExpression(null),
             ),
             makeLiteralExpression(true),
             makeBinaryExpression(
               "===",
-              macro.value,
+              macro.pure,
               makeLiteralExpression({ undefined: null }),
             ),
           ),
           visit(node.right, context, EXPRESSION),
-          macro.value,
+          macro.pure,
         ),
       );
     } /* c8 ignore start */ else {
@@ -315,19 +315,19 @@ export default {
           makeConditionalExpression(
             makeBinaryExpression(
               "===",
-              macro.value,
+              macro.pure,
               makeLiteralExpression(null),
             ),
             makeLiteralExpression(true),
             makeBinaryExpression(
               "===",
-              macro.value,
+              macro.pure,
               makeLiteralExpression({ undefined: null }),
             ),
           ),
           makeLiteralExpression({ undefined: null }),
           makeGetExpression(
-            macro.value,
+            macro.pure,
             visit(node.property, context, getKeySite(node.computed)),
           ),
         ),
@@ -360,12 +360,12 @@ export default {
         const super_macro = makeMacro(
           context,
           "super",
-          makeObjectExpression(prototype_macro.value, []),
+          makeObjectExpression(prototype_macro.pure, []),
         );
         const self_macro = makeMacro(
           context,
           "self",
-          makeObjectExpression(prototype_macro.value, []),
+          makeObjectExpression(prototype_macro.pure, []),
         );
         return reduceReverse(
           concat(
@@ -376,13 +376,13 @@ export default {
               properties,
               partial_xx(visit, context, {
                 ...OBJECT_PROPERTY,
-                super: super_macro.value,
-                self: self_macro.value,
+                super: super_macro.pure,
+                self: self_macro.pure,
               }),
             ),
           ),
           makeSequenceExpression,
-          self_macro.value,
+          self_macro.pure,
         );
       } else {
         const self_macro = makeMacro(
@@ -397,12 +397,12 @@ export default {
               properties,
               partial_xx(visit, context, {
                 ...OBJECT_PROPERTY,
-                self: self_macro.value,
+                self: self_macro.pure,
               }),
             ),
           ),
           makeSequenceExpression,
-          self_macro.value,
+          self_macro.pure,
         );
       }
     } else {
@@ -411,18 +411,18 @@ export default {
         const super_macro = makeMacro(
           context,
           "super",
-          makeObjectExpression(prototype_macro.value, []),
+          makeObjectExpression(prototype_macro.pure, []),
         );
         return reduceReverse(
           concat(prototype_macro.setup, super_macro.setup),
           makeSequenceExpression,
           makeObjectExpression(
-            prototype_macro.value,
+            prototype_macro.pure,
             map(
               properties,
               partial_xx(visit, context, {
                 ...OBJECT_PROPERTY_REGULAR,
-                super: super_macro.value,
+                super: super_macro.pure,
               }),
             ),
           ),

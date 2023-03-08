@@ -17,11 +17,11 @@ export const annotateCallee = (
 });
 
 export const annotateMacro = (
-  { setup: effects, value: expression },
+  { setup: effects, pure: expression },
   serial,
 ) => ({
   setup: annotateArray(effects, serial),
-  value: annotate(expression, serial),
+  pure: annotate(expression, serial),
 });
 
 export const annotateProperty = (

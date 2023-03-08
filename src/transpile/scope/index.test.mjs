@@ -37,7 +37,7 @@ import {
   makeScopeBaseReadExpression,
   makeScopeBaseTypeofExpression,
   makeScopeBaseDiscardExpression,
-  makeScopeBaseMacroWriteEffectArray,
+  makeScopeBaseLooseWriteEffectArray,
   makeScopeBaseWriteEffectArray,
   makeScopeNormalStaticBlock,
   makeScopeClosureDynamicBlock,
@@ -889,7 +889,7 @@ assertSuccess(
             makeEffectStatement,
           ),
           map(
-            makeScopeBaseMacroWriteEffectArray(
+            makeScopeBaseLooseWriteEffectArray(
               context,
               "variable",
               makeLiteralExpression("right"),
@@ -950,7 +950,7 @@ assertSuccess(
                   makeEffectStatement,
                 ),
                 map(
-                  makeScopeBaseMacroWriteEffectArray(
+                  makeScopeBaseLooseWriteEffectArray(
                     context2,
                     "variable",
                     makeLiteralExpression("right"),

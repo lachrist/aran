@@ -29,10 +29,9 @@ const {
 
 export const KINDS = ["define"];
 
-export const createFrame = ({ macro, observable }) => ({
-  dynamic: macro,
+export const createFrame = ({ pure }) => ({
+  dynamic: pure,
   static: {},
-  observable,
 });
 
 export const harvestFrameHeader = harvestEmptyFrameHeader;
@@ -75,14 +74,14 @@ const compileMakeLookupNode =
   (
     next,
     strict,
-    { static: bindings, dynamic: macro },
+    { static: bindings, dynamic: pure },
     scope,
     escaped,
     variable,
     options,
   ) => {
     if (hasOwn(bindings, variable)) {
-      return makePresentNode(macro, makeLiteralExpression(variable), options);
+      return makePresentNode(pure, makeLiteralExpression(variable), options);
     } else {
       return next(strict, scope, escaped, variable, options);
     }

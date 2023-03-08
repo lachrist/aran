@@ -25,8 +25,8 @@ import {
 
 export const KINDS = [];
 
-export const createFrame = ({ macro }) => ({
-  dynamic: macro,
+export const createFrame = ({ pure }) => ({
+  dynamic: pure,
 });
 
 export const harvestFrameHeader = harvestEmptyFrameHeader;
@@ -42,24 +42,24 @@ export const lookupFrameAll = lookupEmptyFrameAll;
 
 const compileMakeLookupNode =
   (makeConditionalNode, makePresentNode) =>
-  (next, strict, { dynamic: macro }, scope, escaped, variable, options) =>
+  (next, strict, { dynamic: pure }, scope, escaped, variable, options) =>
     makeConditionalNode(
       makeConditionalExpression(
-        makeGetExpression(macro, makeIntrinsicExpression("Symbol.unscopables")),
+        makeGetExpression(pure, makeIntrinsicExpression("Symbol.unscopables")),
         makeConditionalExpression(
           makeGetExpression(
             makeGetExpression(
-              macro,
+              pure,
               makeIntrinsicExpression("Symbol.unscopables"),
             ),
             makeLiteralExpression(variable),
           ),
           makeLiteralExpression(false),
-          makeBinaryExpression("in", makeLiteralExpression(variable), macro),
+          makeBinaryExpression("in", makeLiteralExpression(variable), pure),
         ),
-        makeBinaryExpression("in", makeLiteralExpression(variable), macro),
+        makeBinaryExpression("in", makeLiteralExpression(variable), pure),
       ),
-      makePresentNode(strict, macro, makeLiteralExpression(variable), options),
+      makePresentNode(strict, pure, makeLiteralExpression(variable), options),
       next(strict, scope, escaped, variable, options),
     );
 

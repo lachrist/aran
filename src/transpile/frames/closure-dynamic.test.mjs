@@ -9,7 +9,7 @@ import * as Frame from "./closure-dynamic.mjs";
 assertSuccess(
   testBlock(Frame, {
     options: {
-      macro: makeLiteralExpression("dynamic"),
+      pure: makeLiteralExpression("dynamic"),
     },
     head: `void (
       intrinsic.aran.binary('in', 'variable', 'dynamic') ?

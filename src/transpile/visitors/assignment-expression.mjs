@@ -7,7 +7,7 @@ import {
   makeBinaryExpression,
 } from "../../intrinsic.mjs";
 import {
-  makeScopeBaseMacroWriteEffectArray,
+  makeScopeBaseLooseWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
 import { annotate } from "../annotate.mjs";
@@ -75,10 +75,10 @@ export default {
       return reduceReverse(
         concat(
           macro.setup,
-          makeScopeBaseMacroWriteEffectArray(context, node.name, macro.value),
+          makeScopeBaseLooseWriteEffectArray(context, node.name, macro.pure),
         ),
         makeSequenceExpression,
-        macro.value,
+        macro.pure,
       );
     } else {
       // Name are not transmitted on update:
@@ -105,10 +105,10 @@ export default {
       return reduceReverse(
         concat(
           macro.setup,
-          makeScopeBaseMacroWriteEffectArray(context, node.name, macro.value),
+          makeScopeBaseLooseWriteEffectArray(context, node.name, macro.pure),
         ),
         makeSequenceExpression,
-        macro.value,
+        macro.pure,
       );
     }
   },
@@ -136,11 +136,11 @@ export default {
         makeSequenceExpression,
         makeSetExpression(
           context.strict,
-          object_macro.value,
-          key_macro.value,
+          object_macro.pure,
+          key_macro.pure,
           makeBinaryExpression(
             apply(substring, site.operator, [0, site.operator.length - 1]),
-            makeGetExpression(object_macro.value, key_macro.value),
+            makeGetExpression(object_macro.pure, key_macro.pure),
             visit(site.right, context, EXPRESSION),
           ),
         ),
@@ -158,11 +158,11 @@ export default {
         macro.setup,
         visit(node, context, {
           ...PATTERN,
-          right: macro.value,
+          right: macro.pure,
         }),
       ),
       makeSequenceExpression,
-      macro.value,
+      macro.pure,
     );
   },
 };

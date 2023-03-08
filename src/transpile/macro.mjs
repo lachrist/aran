@@ -10,7 +10,7 @@ export const makeMacro = (context, info, expression) => {
   const variable = declareScopeMeta(context, info);
   return {
     setup: makeScopeMetaWriteEffectArray(context, variable, expression),
-    value: makeScopeMetaReadExpression(context, variable),
+    pure: makeScopeMetaReadExpression(context, variable),
   };
 };
 
@@ -23,9 +23,9 @@ export const makeMacroSelf = (context, info, makeExpression) => {
       variable,
       makeExpression(expression),
     ),
-    value: expression,
+    pure: expression,
   };
 };
 
-export const toMacroExpression = ({ setup: effects, value: expression }) =>
+export const toMacroExpression = ({ setup: effects, pure: expression }) =>
   reduceReverse(effects, makeSequenceExpression, expression);

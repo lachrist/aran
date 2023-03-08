@@ -118,11 +118,11 @@ export default {
         makeExpressionEffect(
           makeSetExpression(
             context.strict,
-            object_macro.value,
-            key_macro.value,
+            object_macro.pure,
+            key_macro.pure,
             makeBinaryExpression(
               apply(substring, site.operator, [0, site.operator.length - 1]),
-              makeGetExpression(object_macro.value, key_macro.value),
+              makeGetExpression(object_macro.pure, key_macro.pure),
               visit(site.right, context, EXPRESSION),
             ),
           ),

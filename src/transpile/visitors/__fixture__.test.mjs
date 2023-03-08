@@ -30,7 +30,7 @@ const { test, done } = compileTest({
       const macro = visit(node.argument, context, EXPRESSION_MACRO);
       return [
         makeReturnStatement(
-          reduceReverse(macro.setup, makeSequenceExpression, macro.value),
+          reduceReverse(macro.setup, makeSequenceExpression, macro.pure),
         ),
       ];
     },

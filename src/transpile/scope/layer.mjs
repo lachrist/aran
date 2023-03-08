@@ -66,8 +66,8 @@ export const makeScopeMetaReadExpression = ({ strict, scope }, meta) =>
 // spec //
 //////////
 
-export const declareScopeSpecMacro = ({ strict, scope }, spec, macro) => {
-  declareScope(strict, scope, "macro", spec, { macro });
+export const declareScopeSpecMacro = ({ strict, scope }, spec, pure) => {
+  declareScope(strict, scope, "macro", spec, { pure });
 };
 
 export const declareScopeSpecIllegal = ({ strict, scope }, spec) => {
@@ -120,13 +120,13 @@ export const makeScopeBaseTypeofExpression = ({ strict, scope }, base) =>
 export const makeScopeBaseDiscardExpression = ({ strict, scope }, base) =>
   makeScopeDiscardExpression(strict, scope, base);
 
-export const makeScopeBaseMacroWriteEffectArray = (
+export const makeScopeBaseLooseWriteEffectArray = (
   { strict, scope },
   base,
-  macro,
+  pure,
 ) =>
   makeScopeWriteEffectArray(strict, scope, base, {
-    expression: macro,
+    expression: pure,
     counter: createCounter(0),
   });
 
@@ -145,7 +145,7 @@ export const makeScopeBaseWriteEffectArray = (context, base, expression) => {
     const variable = declareScopeMeta(context, "right");
     return concat(
       makeScopeMetaWriteEffectArray(context, variable, expression),
-      makeScopeBaseMacroWriteEffectArray(
+      makeScopeBaseLooseWriteEffectArray(
         context,
         base,
         makeScopeMetaReadExpression(context, variable),

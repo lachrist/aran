@@ -51,8 +51,8 @@ const INITIALIZED = true;
 const NOT_INITIALIZED = false;
 const MAYBE_INITIALIZED = null;
 
-export const createFrame = ({ macro }) => ({
-  dynamic: macro,
+export const createFrame = ({ pure }) => ({
+  dynamic: pure,
   conflicts: [],
   static: {},
 });
@@ -129,7 +129,7 @@ export const declareFrame = (
 
 export const makeFrameInitializeStatementArray = (
   _strict,
-  { conflicts, dynamic: macro, static: bindings },
+  { conflicts, dynamic: pure, static: bindings },
   trail,
   kind,
   variable,
@@ -150,7 +150,7 @@ export const makeFrameInitializeStatementArray = (
       makeEffectStatement(
         makeExpressionEffect(
           makeReflectDefinePropertyExpression(
-            macro,
+            pure,
             makeLiteralExpression(variable),
             makeDataDescriptorExpression(
               expression,

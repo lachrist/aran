@@ -68,13 +68,13 @@ export default {
           makeConditionalExpression(
             makeBinaryExpression(
               "===",
-              macro.value,
+              macro.pure,
               makeLiteralExpression(null),
             ),
             makeLiteralExpression(true),
             makeBinaryExpression(
               "===",
-              macro.value,
+              macro.pure,
               makeLiteralExpression({ undefined: null }),
             ),
           ),
