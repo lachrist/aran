@@ -1,6 +1,6 @@
 import { map, join } from "array-lite";
 
-import { hasOwn, shift, assert, partialx_ } from "../../util/index.mjs";
+import { hasOwn, shift, assert, partialx_ } from "../util/index.mjs";
 
 const {
   Error,

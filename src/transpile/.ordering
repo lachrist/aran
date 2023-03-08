@@ -1,3 +1,5 @@
+variable.mjs
+label.mjs
 scope
 annotate.mjs
 macro.mjs
@@ -5,5 +7,4 @@ report.mjs
 site.mjs
 context.mjs
 visitors
-label.mjs
 index.mjs

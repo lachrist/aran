@@ -15,7 +15,7 @@ import {
 
 import { allignBlock } from "../../allign/index.mjs";
 
-import { makeMetaVariable } from "./variable.mjs";
+import { makeMetaVariable } from "../variable.mjs";
 
 import {
   CLOSURE_STATIC,

@@ -22,7 +22,7 @@ import {
 import {
   mangleDeadzoneVariable,
   mangleOriginalVariable,
-} from "../variable.mjs";
+} from "../../variable.mjs";
 
 import {
   DuplicateError,

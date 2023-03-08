@@ -12,7 +12,7 @@ import {
 
 import { allignBlock, allignProgram } from "../../allign/index.mjs";
 
-import { BASE, META, makeMetaVariable } from "./variable.mjs";
+import { BASE, META, makeMetaVariable } from "../variable.mjs";
 
 import {
   createFrame,

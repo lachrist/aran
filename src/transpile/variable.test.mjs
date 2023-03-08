@@ -1,10 +1,6 @@
 import { forEach } from "array-lite";
 
-import {
-  assertThrow,
-  assertEqual,
-  assertDeepEqual,
-} from "../../__fixture__.mjs";
+import { assertThrow, assertEqual, assertDeepEqual } from "../__fixture__.mjs";
 
 import {
   META,

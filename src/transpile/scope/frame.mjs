@@ -1,4 +1,4 @@
-import { getVariableLayer } from "./variable.mjs";
+import { getVariableLayer } from "../variable.mjs";
 
 import * as BlockDynamic from "./frames/block-dynamic.mjs";
 import * as BlockStaticDead from "./frames/block-static-dead.mjs";

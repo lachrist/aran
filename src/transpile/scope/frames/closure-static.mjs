@@ -18,7 +18,7 @@ import {
   makeWriteEffect,
 } from "../../../ast/index.mjs";
 
-import { mangleOriginalVariable } from "../variable.mjs";
+import { mangleOriginalVariable } from "../../variable.mjs";
 
 import {
   makeExportStatement,

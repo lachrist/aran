@@ -1,4 +1,4 @@
-export { unmangleVariable } from "./variable.mjs";
+export { unmangleVariable } from "../variable.mjs";
 
 export { ROOT_SCOPE, packScope, unpackScope } from "./scope.mjs";
 

@@ -10,7 +10,7 @@ import {
   makeIntrinsicExpression,
 } from "../../ast/index.mjs";
 
-import { BASE, SPEC, META } from "./variable.mjs";
+import { BASE, SPEC, META } from "../variable.mjs";
 
 import {
   createFrame,

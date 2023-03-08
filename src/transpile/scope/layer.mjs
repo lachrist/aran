@@ -9,7 +9,7 @@ import {
 
 import { makeExpressionEffect } from "../../ast/index.mjs";
 
-import { makeMetaVariable } from "./variable.mjs";
+import { makeMetaVariable } from "../variable.mjs";
 
 import {
   makeScopeEvalExpression as makeScopeEvalExpression_,
