@@ -4,6 +4,6 @@ macro.mjs
 report.mjs
 site.mjs
 context.mjs
-visit
+visitors
 label.mjs
 index.mjs
