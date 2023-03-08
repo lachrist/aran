@@ -15,6 +15,7 @@ import {
   makeLiteralExpression,
 } from "../../ast/index.mjs";
 import {
+  makeIsNullishExpression,
   makeObjectExpression,
   makeGetExpression,
   makeUnaryExpression,
@@ -25,11 +26,13 @@ import {
   makeBinaryExpression,
 } from "../../intrinsic.mjs";
 import {
+  isDirectEvalCall,
   isPrototypeProperty,
   isAccessorProperty,
   isSuperProperty,
 } from "../../query/index.mjs";
 import {
+  makeScopeEvalExpression,
   makeScopeBaseReadExpression,
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
@@ -60,6 +63,10 @@ import {
 import { visit } from "../context.mjs";
 
 const { Array } = globalThis;
+
+const getPure = ({ pure }) => pure;
+
+const getSetup = ({ setup }) => setup;
 
 const isNull = (any) => any === null;
 
@@ -458,6 +465,167 @@ export default {
           prototype,
           map(properties, partial_xx(visit, context, OBJECT_PROPERTY_REGULAR)),
         );
+      }
+    }
+  },
+  // Super return value is this:
+  //
+  // {
+  //   class C {
+  //     constructor () {
+  //       return {__proto__:null, foo:123};
+  //     }
+  //   }
+  //   class D extends C {
+  //     constructor () {
+  //       console.log(super() === this);
+  //     }
+  //   }
+  //   new D();
+  // }
+  CallExpression: (node, context, _site) => {
+    if (isDirectEvalCall(node)) {
+      if (some(node.arguments, isSpreadElement)) {
+        const callee_memo = visit(node.callee, context, {
+          ...EXPRESSION_MEMO,
+          info: "callee",
+        });
+        const argument_array_memo = memoize(
+          context,
+          "arguments",
+          makeApplyExpression(
+            makeIntrinsicExpression("Array.prototype.flat"),
+            makeArrayExpression(
+              map(node.arguments, partial_xx(visit, context, SPREAD)),
+            ),
+            [],
+          ),
+        );
+        return reduceReverse(
+          concat(callee_memo.setup, argument_array_memo.setup),
+          makeSequenceExpression,
+          makeConditionalExpression(
+            makeBinaryExpression(
+              "===",
+              callee_memo.pure,
+              makeIntrinsicExpression("eval"),
+            ),
+            makeScopeEvalExpression(
+              context,
+              makeGetExpression(
+                argument_array_memo.pure,
+                makeLiteralExpression(0),
+              ),
+            ),
+            makeApplyExpression(
+              makeIntrinsicExpression("Reflect.apply"),
+              makeLiteralExpression({ undefined: null }),
+              [
+                callee_memo.pure,
+                makeLiteralExpression({ undefined: null }),
+                argument_array_memo.pure,
+              ],
+            ),
+          ),
+        );
+      } else {
+        const callee_memo = visit(node.callee, context, {
+          ...EXPRESSION_MEMO,
+          info: "callee",
+        });
+        const argument_memo_array = map(
+          node.arguments,
+          partial_xx(visit, context, { ...EXPRESSION_MEMO, info: "argument" }),
+        );
+        return reduceReverse(
+          concat(callee_memo.setup, flatMap(argument_memo_array, getSetup)),
+          makeSequenceExpression,
+          makeConditionalExpression(
+            makeBinaryExpression(
+              "===",
+              callee_memo.pure,
+              makeIntrinsicExpression("eval"),
+            ),
+            makeScopeEvalExpression(context, argument_memo_array[0].pure),
+            makeApplyExpression(
+              callee_memo.pure,
+              makeLiteralExpression({ undefined: null }),
+              map(argument_memo_array, getPure),
+            ),
+          ),
+        );
+      }
+    } else {
+      if (some(node.arguments, isSpreadElement)) {
+        if (node.optional) {
+          const callee = visit(node.callee, context, CALLEE);
+          const callee_memo = memoize(context, "callee", callee.callee);
+          return reduceReverse(
+            callee_memo.setup,
+            makeSequenceExpression,
+            makeConditionalExpression(
+              makeIsNullishExpression(callee_memo.pure),
+              makeLiteralExpression({ undefined: null }),
+              makeApplyExpression(
+                makeIntrinsicExpression("Reflect.apply"),
+                makeLiteralExpression({ undefined: null }),
+                [
+                  callee_memo.pure,
+                  callee.this,
+                  makeApplyExpression(
+                    makeIntrinsicExpression("Array.prototype.flat"),
+                    makeArrayExpression(
+                      map(node.arguments, partial_xx(visit, context, SPREAD)),
+                    ),
+                    [],
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else {
+          const callee = visit(node.callee, context, CALLEE);
+          return makeApplyExpression(
+            makeIntrinsicExpression("Reflect.apply"),
+            makeLiteralExpression({ undefined: null }),
+            [
+              callee.callee,
+              callee.this,
+              makeApplyExpression(
+                makeIntrinsicExpression("Array.prototype.flat"),
+                makeArrayExpression(
+                  map(node.arguments, partial_xx(visit, context, SPREAD)),
+                ),
+                [],
+              ),
+            ],
+          );
+        }
+      } else {
+        if (node.optional) {
+          const callee = visit(node.callee, context, CALLEE);
+          const callee_memo = memoize(context, "callee", callee.callee);
+          return reduceReverse(
+            callee_memo.setup,
+            makeSequenceExpression,
+            makeConditionalExpression(
+              makeIsNullishExpression(callee_memo.pure),
+              makeLiteralExpression({ undefined: null }),
+              makeApplyExpression(
+                callee_memo.pure,
+                callee.this,
+                map(node.arguments, partial_xx(visit, context, EXPRESSION)),
+              ),
+            ),
+          );
+        } else {
+          const callee = visit(node.callee, context, CALLEE);
+          return makeApplyExpression(
+            callee.callee,
+            callee.this,
+            map(node.arguments, partial_xx(visit, context, EXPRESSION)),
+          );
+        }
       }
     }
   },

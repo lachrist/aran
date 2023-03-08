@@ -15,6 +15,7 @@ import {
   makeDataDescriptorExpression,
   makeThrowSyntaxErrorExpression,
   makeJsonExpression,
+  makeIsNullishExpression,
 } from "./intrinsic.mjs";
 
 const test = (expression, code) => {
@@ -81,4 +82,15 @@ test(
 test(
   makeObjectFreezeExpression(makeLiteralExpression(123)),
   "intrinsic.Object.freeze(123)",
+);
+
+test(
+  makeIsNullishExpression(makeLiteralExpression(123)),
+  `
+    (
+      intrinsic.aran.binary("===", 123, null) ?
+      true :
+      intrinsic.aran.binary("===", 123, undefined)
+    )
+  `,
 );

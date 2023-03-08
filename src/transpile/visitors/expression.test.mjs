@@ -7,7 +7,10 @@ import {
   makeParameterExpression,
   makeClosureExpression,
 } from "../../ast/index.mjs";
+import { makeArrayExpression } from "../../intrinsic.mjs";
 import { annotate } from "../annotate.mjs";
+import { EXPRESSION } from "../site.mjs";
+import { visit } from "../context.mjs";
 import {
   Program,
   Statement,
@@ -26,7 +29,6 @@ import ObjectPropertyPrototype from "./object-property-prototype.mjs";
 import ObjectValue from "./object-value.mjs";
 import ObjectProperty from "./object-property.mjs";
 import ObjectPropertyRegular from "./object-property-regular.mjs";
-import Spread from "./spread.mjs";
 import Expression from "./expression.mjs";
 
 const visitClass = (node, _context, _site) => {
@@ -74,7 +76,15 @@ const { test, done } = compileTest({
   ObjectValue,
   ObjectProperty,
   ObjectPropertyRegular,
-  Spread,
+  // This is not 100% correct.
+  // The actual is normalized code is too verbose.
+  Spread: {
+    __ANNOTATE__: annotate,
+    SpreadElement: (node, context, _site) =>
+      visit(node.argument, context, EXPRESSION),
+    __DEFAULT__: (node, context, _site) =>
+      makeArrayExpression([visit(node, context, EXPRESSION)]),
+  },
   Class: {
     __ANNOTATE__: annotate,
     ClassExpression: visitClass,
@@ -364,15 +374,134 @@ test(
 // ArrayExpression //
 test(`[123, 456, 789];`, `{ void intrinsic.Array.of(123, 456, 789); }`);
 test(
-  `[123,,789];`,
+  `[123,,...789];`,
   `
     {
       void intrinsic.Array.prototype.flat(
         !intrinsic.Array.of(
           intrinsic.Array.of(123),
           intrinsic.aran.createObject(null, "length", 1),
-          intrinsic.Array.of(789),
+          789,
         ),
+      );
+    }
+  `,
+);
+
+// ApplyExpression >> Regular //
+test(`(123)(456, 789);`, `{ void (123)(456, 789); }`);
+test(
+  `(123)?.(456, 789);`,
+  `
+    {
+      let _callee;
+      void (
+        _callee = 123,
+        (
+          intrinsic.aran.binary("===", _callee, null) ?
+          true :
+          intrinsic.aran.binary("===", _callee, undefined)
+        ) ?
+        undefined :
+        _callee(456, 789)
+      );
+    }
+  `,
+);
+
+// ApplyExpression >> Spread //
+test(
+  `(123)(456, ...789);`,
+  `
+    {
+      void intrinsic.Reflect.apply(
+        123,
+        undefined,
+        intrinsic.Array.prototype.flat(
+          !intrinsic.Array.of(
+            intrinsic.Array.of(456),
+            789,
+          ),
+        ),
+      );
+    }
+  `,
+);
+test(
+  `(123)?.(456, ...789);`,
+  `
+    {
+      let _callee;
+      void (
+        _callee = 123,
+        (
+          (
+            intrinsic.aran.binary("===", _callee, null) ?
+            true :
+            intrinsic.aran.binary("===", _callee, undefined)
+          ) ?
+          undefined :
+          intrinsic.Reflect.apply(
+            _callee,
+            undefined,
+            intrinsic.Array.prototype.flat(
+              !intrinsic.Array.of(
+                intrinsic.Array.of(456),
+                789,
+              ),
+            ),
+          )
+        )
+      );
+    }
+  `,
+);
+
+// ApplyExpression >> Eval //
+test(
+  `eval(123, 456);`,
+  `
+    {
+      let _callee, _argument0, _argument1;
+      void (
+        _callee = [eval],
+        (
+          _argument0 = 123,
+          (
+            _argument1 = 456,
+            (
+              intrinsic.aran.binary("===", _callee, intrinsic.eval) ?
+              eval(_argument0) :
+              _callee(_argument0, _argument1)
+            )
+          )
+        )
+      );
+    }
+  `,
+);
+test(
+  `eval(123, ...456);`,
+  `
+    {
+      let _callee, _arguments;
+      void (
+        _callee = [eval],
+        (
+          _arguments = intrinsic.Array.prototype.flat(
+            !intrinsic.Array.of(
+              intrinsic.Array.of(123),
+              456,
+            ),
+          ),
+          (
+            intrinsic.aran.binary("===", _callee, intrinsic.eval) ?
+            eval(
+              intrinsic.aran.get(_arguments, 0),
+            ) :
+            intrinsic.Reflect.apply(_callee, undefined, _arguments)
+          )
+        )
       );
     }
   `,

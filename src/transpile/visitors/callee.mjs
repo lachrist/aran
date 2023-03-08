@@ -16,6 +16,12 @@ export default {
   __ANNOTATE__: annotateCallee,
   ChainExpression: (node, context, _site) =>
     visit(node.expression, context, CALLEE),
+  /* c8 ignore start */
+  Super: (_node, context, _site) => ({
+    callee: makeScopeSpecReadExpression(context, "super.call"),
+    this: makeLiteralExpression({ undefined: null }),
+  }),
+  /* c8 ignore stop */
   MemberExpression: (node, context, _site) => {
     if (node.object.type === "Super") {
       expectSyntaxPropertyEqual(node, ["optional"], false);

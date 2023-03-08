@@ -14,6 +14,7 @@ import {
 } from "./util/index.mjs";
 
 import {
+  makeConditionalExpression,
   makeApplyExpression,
   makeIntrinsicExpression,
   makeLiteralExpression,
@@ -401,6 +402,21 @@ export const makeObjectAssignExpression = partialx___(
 //   makeIntrinsicExpression,
 //   "Symbol.unscopables",
 // );
+
+///////////
+// Macro //
+///////////
+
+export const makeIsNullishExpression = (pure) =>
+  makeConditionalExpression(
+    makeBinaryExpression("===", pure, makeLiteralExpression(null)),
+    makeLiteralExpression(true),
+    makeBinaryExpression(
+      "===",
+      pure,
+      makeLiteralExpression({ undefined: null }),
+    ),
+  );
 
 ////////////
 // Global //

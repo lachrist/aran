@@ -7,6 +7,15 @@ const {
   Reflect: { ownKeys },
 } = globalThis;
 
+// Optional apply is not direct eval call:
+//
+// > (((x) => eval?.("x")) (123))
+// Uncaught ReferenceError: x is not defined
+//
+// Spread apply is not direct eval call:
+//
+// (((x) => eval?.(...["x"])) (123))
+// Uncaught ReferenceError: x is not defined
 export const isDirectEvalCall = (node) =>
   node.type === "CallExpression" &&
   !node.optional &&
