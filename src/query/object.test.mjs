@@ -1,7 +1,7 @@
 import { assertEqual } from "../__fixture__.mjs";
 import { parseScript } from "../__fixture__parser__.mjs";
 import {
-  isProtoProperty,
+  isPrototypeProperty,
   isMethodProperty,
   isAccessorProperty,
 } from "./object.mjs";
@@ -10,16 +10,16 @@ export const parseProperty = (code) =>
   parseScript(`({${code}});`).body[0].expression.properties[0];
 
 /////////////////////
-// isProtoProperty //
+// isPrototypeProperty //
 /////////////////////
 
-assertEqual(isProtoProperty(parseProperty(`__proto__:null`)), true);
+assertEqual(isPrototypeProperty(parseProperty(`__proto__:null`)), true);
 
-assertEqual(isProtoProperty(parseProperty(`"__proto__":null`)), true);
+assertEqual(isPrototypeProperty(parseProperty(`"__proto__":null`)), true);
 
-assertEqual(isProtoProperty(parseProperty(`["__proto__"]:null`)), false);
+assertEqual(isPrototypeProperty(parseProperty(`["__proto__"]:null`)), false);
 
-assertEqual(isProtoProperty(parseProperty(`__proto__ () {}`)), false);
+assertEqual(isPrototypeProperty(parseProperty(`__proto__ () {}`)), false);
 
 /////////////////////
 // isMethodProperty //

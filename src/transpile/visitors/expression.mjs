@@ -24,7 +24,7 @@ import {
   makeBinaryExpression,
 } from "../../intrinsic.mjs";
 import {
-  isProtoProperty,
+  isPrototypeProperty,
   isAccessorProperty,
   isMethodProperty,
 } from "../../query/index.mjs";

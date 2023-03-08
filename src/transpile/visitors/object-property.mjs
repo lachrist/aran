@@ -9,7 +9,7 @@ import {
   makeDataDescriptorExpression,
   makeAccessorDescriptorExpression,
 } from "../../intrinsic.mjs";
-import { isProtoProperty } from "../../query/index.mjs";
+import { isPrototypeProperty } from "../../query/index.mjs";
 import { annotateArray } from "../annotate.mjs";
 import { makeSyntaxPropertyError } from "../report.mjs";
 import { EXPRESSION, OBJECT_VALUE } from "../site.mjs";
@@ -45,7 +45,7 @@ const makeDescriptor = (node, expression) => {
 export default {
   __ANNOTATE__: annotateArray,
   Property: (node, context, site) => {
-    if (isProtoProperty(node)) {
+    if (isPrototypeProperty(node)) {
       return [
         makeExpressionEffect(
           makeReflectSetPrototypeOfExpression(

@@ -8,7 +8,7 @@ export const isProtoKey = (node) => {
   } /* c8 ignore stop */
 };
 
-export const isProtoProperty = (node) =>
+export const isPrototypeProperty = (node) =>
   node.type === "Property" &&
   node.kind === "init" &&
   !node.method &&
