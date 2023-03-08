@@ -10,17 +10,17 @@ import {
   makeScopeBaseMacroWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
-import { annotate } from "./annotate.mjs";
-import { makeMacro } from "./macro.mjs";
-import { expectSyntaxPropertyEqual } from "./report.mjs";
+import { annotate } from "../annotate.mjs";
+import { makeMacro } from "../macro.mjs";
+import { expectSyntaxPropertyEqual } from "../report.mjs";
 import {
   EXPRESSION,
   EXPRESSION_MACRO,
   PATTERN,
   getKeySite,
   getKeyMacroSite,
-} from "./site.mjs";
-import { visit } from "./context.mjs";
+} from "../site.mjs";
+import { visit } from "../context.mjs";
 
 const {
   Reflect: { apply },

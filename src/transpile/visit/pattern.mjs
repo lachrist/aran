@@ -23,16 +23,16 @@ import {
   makeScopeBaseWriteEffectArray,
   makeScopeBaseInitializeStatementArray,
 } from "../scope/index.mjs";
-import { annotateArray } from "./annotate.mjs";
-import { makeMacro } from "./macro.mjs";
+import { annotateArray } from "../annotate.mjs";
+import { makeMacro } from "../macro.mjs";
 import {
   EXPRESSION,
   PATTERN,
   PATTERN_ELEMENT,
   PATTERN_PROPERTY,
   getKeySite,
-} from "./site.mjs";
-import { visit, liftEffect } from "./context.mjs";
+} from "../site.mjs";
+import { visit, liftEffect } from "../context.mjs";
 
 const isRestElement = ({ type }) => type === "RestElement";
 

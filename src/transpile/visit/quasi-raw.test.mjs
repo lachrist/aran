@@ -1,7 +1,7 @@
 import { assertEqual } from "../../__fixture__.mjs";
 import { annotateNode } from "../../ast/index.mjs";
-import { QUASI_RAW } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { QUASI_RAW } from "../site.mjs";
+import { visit } from "../context.mjs";
 import { Program, Statement, Effect, compileTest } from "./__fixture__.mjs";
 import QuasiRaw from "./quasi-raw.mjs";
 

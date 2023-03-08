@@ -10,10 +10,10 @@ import {
   makeAccessorDescriptorExpression,
 } from "../../intrinsic.mjs";
 import { isProtoProperty } from "../../query/index.mjs";
-import { annotateArray } from "./annotate.mjs";
-import { makeSyntaxPropertyError } from "./report.mjs";
-import { EXPRESSION, OBJECT_PROPERTY_VALUE } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { annotateArray } from "../annotate.mjs";
+import { makeSyntaxPropertyError } from "../report.mjs";
+import { EXPRESSION, OBJECT_PROPERTY_VALUE } from "../site.mjs";
+import { visit } from "../context.mjs";
 
 const makeDescriptor = (node, expression) => {
   if (node.kind === "init") {

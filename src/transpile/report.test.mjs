@@ -1,4 +1,4 @@
-import { assertEqual, assertThrow } from "../../__fixture__.mjs";
+import { assertEqual, assertThrow } from "../__fixture__.mjs";
 import {
   locate,
   stringifyKey,

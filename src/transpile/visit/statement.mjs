@@ -10,7 +10,7 @@ import {
 
 import { makeMetaWriteEffect } from "../scope/index.mjs";
 
-import { getContextScoping } from "./context.mjs";
+import { getContextScoping } from "../context.mjs";
 
 import { applyArrayVisitor } from "./visit.mjs";
 

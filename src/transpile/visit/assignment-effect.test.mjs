@@ -1,5 +1,5 @@
-import { ASSIGNMENT_EFFECT } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { ASSIGNMENT_EFFECT } from "../site.mjs";
+import { visit } from "../context.mjs";
 import {
   Program,
   Statement,

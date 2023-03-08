@@ -30,7 +30,7 @@ import {
   makeScopeClosureDynamicBlock,
 } from "../scope/index.mjs";
 
-import { getContextScoping } from "./context.mjs";
+import { getContextScoping } from "../context.mjs";
 
 import { applyVisitor } from "./visit.mjs";
 

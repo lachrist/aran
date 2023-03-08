@@ -7,16 +7,16 @@ import {
   makeConditionalExpression,
 } from "../../ast/index.mjs";
 import { makeBinaryExpression } from "../../intrinsic.mjs";
-import { annotateArray } from "./annotate.mjs";
-import { makeSyntaxError } from "./report.mjs";
+import { annotateArray } from "../annotate.mjs";
+import { makeSyntaxError } from "../report.mjs";
 import {
   EFFECT,
   EXPRESSION,
   EXPRESSION_MACRO,
   ASSIGNMENT_EFFECT,
   UPDATE_EFFECT,
-} from "./site.mjs";
-import { visit } from "./context.mjs";
+} from "../site.mjs";
+import { visit } from "../context.mjs";
 
 export default {
   __ANNOTATE__: annotateArray,

@@ -1,5 +1,5 @@
-import { UPDATE_EFFECT } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { UPDATE_EFFECT } from "../site.mjs";
+import { visit } from "../context.mjs";
 import {
   Program,
   Statement,

@@ -2,8 +2,8 @@ import { map } from "array-lite";
 import { partial_xx } from "../../util/index.mjs";
 import { makeLiteralExpression } from "../../ast/index.mjs";
 import { makeObjectExpression } from "../../intrinsic.mjs";
-import { OBJECT_PROPERTY_REGULAR } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { OBJECT_PROPERTY_REGULAR } from "../site.mjs";
+import { visit } from "../context.mjs";
 import {
   Program,
   Statement,

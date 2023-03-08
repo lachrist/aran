@@ -7,10 +7,10 @@ import {
 } from "../../ast/index.mjs";
 import { makeGetExpression, makeBinaryExpression } from "../../intrinsic.mjs";
 import { makeScopeSpecReadExpression } from "../scope/index.mjs";
-import { annotateCallee } from "./annotate.mjs";
-import { expectSyntaxPropertyEqual } from "./report.mjs";
-import { CALLEE, EXPRESSION, EXPRESSION_MACRO, getKeySite } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { annotateCallee } from "../annotate.mjs";
+import { expectSyntaxPropertyEqual } from "../report.mjs";
+import { CALLEE, EXPRESSION, EXPRESSION_MACRO, getKeySite } from "../site.mjs";
+import { visit } from "../context.mjs";
 
 export default {
   __ANNOTATE__: annotateCallee,

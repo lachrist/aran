@@ -6,9 +6,9 @@ import {
   makeArrayFromExpression,
   makeGetExpression,
 } from "../../intrinsic.mjs";
-import { annotateArray } from "./annotate.mjs";
-import { PATTERN } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { annotateArray } from "../annotate.mjs";
+import { PATTERN } from "../site.mjs";
+import { visit } from "../context.mjs";
 
 export default {
   __ANNOTATE__: annotateArray,

@@ -1,11 +1,11 @@
-import { createCounter } from "../../util/index.mjs";
+import { createCounter } from "../util/index.mjs";
 import {
   makeLiteralExpression,
   makeEffectStatement,
   makeExpressionEffect,
-} from "../../ast/index.mjs";
-import { allignBlock } from "../../allign/index.mjs";
-import { makeScopeTestBlock, ROOT_SCOPE } from "../scope/index.mjs";
+} from "../ast/index.mjs";
+import { allignBlock } from "../allign/index.mjs";
+import { makeScopeTestBlock, ROOT_SCOPE } from "./scope/index.mjs";
 import { makeMacro, makeMacroSelf, toMacroExpression } from "./macro.mjs";
 
 allignBlock(

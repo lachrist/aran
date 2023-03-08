@@ -1,10 +1,10 @@
-import { reduceReverse } from "../../util/index.mjs";
-import { makeSequenceExpression } from "../../ast/index.mjs";
+import { reduceReverse } from "../util/index.mjs";
+import { makeSequenceExpression } from "../ast/index.mjs";
 import {
   declareScopeMeta,
   makeScopeMetaWriteEffectArray,
   makeScopeMetaReadExpression,
-} from "../scope/index.mjs";
+} from "./scope/index.mjs";
 
 export const makeMacro = (context, info, expression) => {
   const variable = declareScopeMeta(context, info);

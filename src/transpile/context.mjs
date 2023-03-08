@@ -5,9 +5,9 @@ import {
   hasOwn,
   assert,
   NULL_DATA_DESCRIPTOR,
-} from "../../util/index.mjs";
-import { makeEffectStatement } from "../../ast/index.mjs";
-import { ROOT_SCOPE, packScope, unpackScope } from "../scope/index.mjs";
+} from "../util/index.mjs";
+import { makeEffectStatement } from "../ast/index.mjs";
+import { ROOT_SCOPE, packScope, unpackScope } from "./scope/index.mjs";
 
 const {
   Error,

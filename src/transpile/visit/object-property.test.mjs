@@ -9,8 +9,8 @@ import {
   makeReturnStatement,
   makeLiteralExpression,
 } from "../../ast/index.mjs";
-import { OBJECT_PROPERTY } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { OBJECT_PROPERTY } from "../site.mjs";
+import { visit } from "../context.mjs";
 import {
   Program,
   Statement,

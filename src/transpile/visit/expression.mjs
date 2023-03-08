@@ -32,12 +32,12 @@ import {
   makeScopeBaseReadExpression,
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
-import { annotate } from "./annotate.mjs";
-import { makeMacro, makeMacroSelf } from "./macro.mjs";
+import { annotate } from "../annotate.mjs";
+import { makeMacro, makeMacroSelf } from "../macro.mjs";
 import {
   expectSyntaxPropertyNotEqual,
   makeSyntaxPropertyError,
-} from "./report.mjs";
+} from "../report.mjs";
 import {
   QUASI_RAW,
   QUASI,
@@ -53,8 +53,8 @@ import {
   ASSIGNMENT_EXPRESSION,
   UPDATE_EXPRESSION,
   getKeySite,
-} from "./site.mjs";
-import { visit } from "./context.mjs";
+} from "../site.mjs";
+import { visit } from "../context.mjs";
 
 const { Array } = globalThis;
 

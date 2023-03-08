@@ -14,11 +14,11 @@ import {
   makeScopeBaseWriteEffectArray,
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
-import { annotate } from "./annotate.mjs";
-import { makeMacro } from "./macro.mjs";
-import { expectSyntaxPropertyEqual } from "./report.mjs";
-import { EXPRESSION_MACRO, getKeyMacroSite } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { annotate } from "../annotate.mjs";
+import { makeMacro } from "../macro.mjs";
+import { expectSyntaxPropertyEqual } from "../report.mjs";
+import { EXPRESSION_MACRO, getKeyMacroSite } from "../site.mjs";
+import { visit } from "../context.mjs";
 
 export default {
   __ANNOTATE__: annotate,

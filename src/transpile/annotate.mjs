@@ -1,7 +1,7 @@
 /* c8 ignore start */
 import { map } from "array-lite";
-import { partial_x } from "../../util/index.mjs";
-import { annotateNode } from "../../ast/index.mjs";
+import { partial_x } from "../util/index.mjs";
+import { annotateNode } from "../ast/index.mjs";
 
 export const annotate = annotateNode;
 

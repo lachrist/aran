@@ -8,8 +8,8 @@ import {
   makeReturnStatement,
   makeSequenceExpression,
 } from "../../ast/index.mjs";
-import { EXPRESSION_MACRO } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { EXPRESSION_MACRO } from "../site.mjs";
+import { visit } from "../context.mjs";
 import {
   Program,
   Statement,

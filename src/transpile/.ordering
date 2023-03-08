@@ -1,4 +1,9 @@
 scope
+annotate.mjs
+macro.mjs
+report.mjs
+site.mjs
+context.mjs
 visit
 label.mjs
 index.mjs

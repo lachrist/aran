@@ -1,6 +1,6 @@
 import { assertEqual } from "../../__fixture__.mjs";
-import { DELETE } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { DELETE } from "../site.mjs";
+import { visit } from "../context.mjs";
 import {
   Program,
   Statement,

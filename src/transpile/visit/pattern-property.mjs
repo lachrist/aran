@@ -11,10 +11,10 @@ import {
   makeObjectAssignExpression,
   makeGetExpression,
 } from "../../intrinsic.mjs";
-import { annotateArray } from "./annotate.mjs";
-import { makeMacro } from "./macro.mjs";
-import { getKeySite, getKeyMacroSite, PATTERN } from "./site.mjs";
-import { visit, liftEffect } from "./context.mjs";
+import { annotateArray } from "../annotate.mjs";
+import { makeMacro } from "../macro.mjs";
+import { getKeySite, getKeyMacroSite, PATTERN } from "../site.mjs";
+import { visit, liftEffect } from "../context.mjs";
 
 const { Error } = globalThis;
 

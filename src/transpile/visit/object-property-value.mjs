@@ -4,10 +4,10 @@ import {
   makeLiteralExpression,
 } from "../../ast/index.mjs";
 import { makeBinaryExpression } from "../../intrinsic.mjs";
-import { annotateProperty } from "./annotate.mjs";
-import { expectSyntax } from "./report.mjs";
-import { CLOSURE, EXPRESSION, getKeySite, getKeyMacroSite } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { annotateProperty } from "../annotate.mjs";
+import { expectSyntax } from "../report.mjs";
+import { CLOSURE, EXPRESSION, getKeySite, getKeyMacroSite } from "../site.mjs";
+import { visit } from "../context.mjs";
 
 export default {
   __ANNOTATE__: annotateProperty,

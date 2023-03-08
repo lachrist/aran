@@ -1,6 +1,6 @@
 import { annotateNode } from "../../ast/index.mjs";
-import { KEY } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { KEY } from "../site.mjs";
+import { visit } from "../context.mjs";
 import { Program, Statement, Effect, compileTest } from "./__fixture__.mjs";
 import Key from "./key.mjs";
 

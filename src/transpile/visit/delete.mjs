@@ -9,15 +9,15 @@ import {
   makeDeleteExpression,
 } from "../../intrinsic.mjs";
 import { makeScopeBaseDiscardExpression } from "../scope/index.mjs";
-import { annotate } from "./annotate.mjs";
+import { annotate } from "../annotate.mjs";
 import {
   DELETE,
   EFFECT,
   EXPRESSION,
   EXPRESSION_MACRO,
   getKeySite,
-} from "./site.mjs";
-import { visit } from "./context.mjs";
+} from "../site.mjs";
+import { visit } from "../context.mjs";
 
 export default {
   __ANNOTATE__: annotate,

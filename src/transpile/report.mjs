@@ -5,7 +5,7 @@ import {
   expect4,
   expect5,
   hasOwn,
-} from "../../util/index.mjs";
+} from "../util/index.mjs";
 
 const {
   String,

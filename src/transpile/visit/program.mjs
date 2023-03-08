@@ -41,7 +41,7 @@ import {
   makeScopeInternalLocalEvalProgram,
 } from "../scope/index.mjs";
 
-import { getContextScoping, setContextScope } from "./context.mjs";
+import { getContextScoping, setContextScope } from "../context.mjs";
 
 import { applyVisitor } from "./visit.mjs";
 

@@ -10,10 +10,10 @@ import {
 } from "../../ast/index.mjs";
 import { allignBlock } from "../../allign/index.mjs";
 import { makeScopeTestBlock } from "../scope/index.mjs";
-import { annotateArray, annotateMacro } from "./annotate.mjs";
-import { makeMacro } from "./macro.mjs";
-import { PROGRAM, STATEMENT, EFFECT, EXPRESSION } from "./site.mjs";
-import { createInitialContext, visit } from "./context.mjs";
+import { annotateArray, annotateMacro } from "../annotate.mjs";
+import { makeMacro } from "../macro.mjs";
+import { PROGRAM, STATEMENT, EFFECT, EXPRESSION } from "../site.mjs";
+import { createInitialContext, visit } from "../context.mjs";
 
 const {
   Error,

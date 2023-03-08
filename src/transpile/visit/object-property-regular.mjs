@@ -1,8 +1,8 @@
 import { assert, deadcode___ } from "../../util/index.mjs";
 import { isProtoProperty } from "../../query/index.mjs";
-import { annotateProperty } from "./annotate.mjs";
-import { OBJECT_PROPERTY_VALUE } from "./site.mjs";
-import { visit } from "./context.mjs";
+import { annotateProperty } from "../annotate.mjs";
+import { OBJECT_PROPERTY_VALUE } from "../site.mjs";
+import { visit } from "../context.mjs";
 
 export default {
   __ANNOTATE__: annotateProperty,

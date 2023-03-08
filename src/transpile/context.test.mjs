@@ -3,16 +3,13 @@ import {
   assertEqual,
   assertDeepEqual,
   assertSuccess,
-} from "../../__fixture__.mjs";
-import {
-  makeExpressionEffect,
-  makeLiteralExpression,
-} from "../../ast/index.mjs";
+} from "../__fixture__.mjs";
+import { makeExpressionEffect, makeLiteralExpression } from "../ast/index.mjs";
 import {
   allignExpression,
   allignEffect,
   allignStatement,
-} from "../../allign/index.mjs";
+} from "../allign/index.mjs";
 import {
   createInitialContext,
   saveContext,
