@@ -10,12 +10,13 @@ export const OBJECT_PROPERTY_PROTOTYPE = {
 
 export const OBJECT_PROPERTY = {
   type: "ObjectProperty",
+  super: null,
   self: undefined,
 };
 
 export const OBJECT_PROPERTY_REGULAR = {
   type: "ObjectPropertyRegular",
-  self: null,
+  super: null,
 };
 
 export const OBJECT_VALUE = {
@@ -35,7 +36,7 @@ export const CLASS = {
 export const CLOSURE = {
   type: "Closure",
   kind: undefined,
-  self: null,
+  super: null,
   name: undefined,
 };
 

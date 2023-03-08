@@ -277,6 +277,7 @@ test(
 );
 
 // ObjectExpression //
+test(`({__proto__:null});`, `{ void intrinsic.aran.createObject(null); }`);
 test(
   `({[123]:456});`,
   `
@@ -288,29 +289,19 @@ test(
     }
   `,
 );
-test(`({__proto__:null});`, `{ void intrinsic.aran.createObject(null); }`);
 test(
-  `({[123]:456, __proto__:null});`,
+  `({[123] () {} });`,
   `
     {
-      let self;
+      let _prototype, _super, _key;
       void (
-        self = intrinsic.aran.createObject(intrinsic.Object.prototype),
+        _prototype = intrinsic.Object.prototype,
         (
-          void intrinsic.Reflect.defineProperty(
-            self,
-            123,
-            intrinsic.aran.createObject(
-              null,
-              "value", 456,
-              "writable", true,
-              "enumerable", true,
-              "configurable", true,
-            ),
-          ),
-          (
-            void intrinsic.Reflect.setProtoypeOf(self, null),
-            self
+          _super = intrinsic.aran.createObject(_prototype),
+          intrinsic.aran.createObject(
+            _prototype,
+            (_key = 123, _key),
+            function method () { return undefined; },
           )
         )
       );
@@ -318,20 +309,52 @@ test(
   `,
 );
 test(
-  `({ [123] () {} });`,
+  `({...123});`,
   `
     {
-      let self, key;
+      let _self;
       void (
-        self = intrinsic.aran.createObject(
-          intrinsic.Object.prototype,
-          (key = 123, key),
-          function method () {
-            return undefined
-          },
-        ),
-        self
-      )
+        _self = intrinsic.aran.createObject(intrinsic.Object.prototype),
+        (
+          void intrinsic.Object.assign(_self, 123),
+          _self
+        )
+      );
+    }
+  `,
+);
+test(
+  `({ get [123] () {} });`,
+  `
+    {
+      let _prototype, _super, _self, _key;
+      void (
+        _prototype = intrinsic.Object.prototype,
+        (
+          _super = intrinsic.aran.createObject(_prototype),
+          (
+            _self = intrinsic.aran.createObject(_prototype),
+            (
+              void intrinsic.Reflect.defineProperty(
+                _self,
+                (_key = 123, _key),
+                intrinsic.aran.createObject(
+                  null,
+                  "get",
+                  function () {
+                    return undefined;
+                  },
+                  "enumerable",
+                  true,
+                  "configurable",
+                  true,
+                ),
+              ),
+              _self
+            )
+          )
+        )
+      );
     }
   `,
 );

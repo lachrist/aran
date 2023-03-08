@@ -26,14 +26,14 @@ import {
 import {
   isPrototypeProperty,
   isAccessorProperty,
-  isMethodProperty,
+  isSuperProperty,
 } from "../../query/index.mjs";
 import {
   makeScopeBaseReadExpression,
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
 import { annotate } from "../annotate.mjs";
-import { makeMacro, makeMacroSelf } from "../macro.mjs";
+import { makeMacro } from "../macro.mjs";
 import {
   expectSyntaxPropertyNotEqual,
   makeSyntaxPropertyError,
@@ -355,44 +355,84 @@ export default {
       some(properties, isAccessorProperty) ||
       some(properties, isSpreadElement)
     ) {
-      const macro = makeMacro(
-        context,
-        "self",
-        makeObjectExpression(prototype, []),
-      );
-      return reduceReverse(
-        concat(
-          macro.setup,
-          flatMap(
-            properties,
-            partial_xx(visit, context, {
-              ...OBJECT_PROPERTY,
-              self: macro.value,
-            }),
+      if (some(properties, isSuperProperty)) {
+        const prototype_macro = makeMacro(context, "prototype", prototype);
+        const super_macro = makeMacro(
+          context,
+          "super",
+          makeObjectExpression(prototype_macro.value, []),
+        );
+        const self_macro = makeMacro(
+          context,
+          "self",
+          makeObjectExpression(prototype_macro.value, []),
+        );
+        return reduceReverse(
+          concat(
+            prototype_macro.setup,
+            super_macro.setup,
+            self_macro.setup,
+            flatMap(
+              properties,
+              partial_xx(visit, context, {
+                ...OBJECT_PROPERTY,
+                super: super_macro.value,
+                self: self_macro.value,
+              }),
+            ),
           ),
-        ),
-        makeSequenceExpression,
-        macro.value,
-      );
-    } else if (some(properties, isMethodProperty)) {
-      const macro = makeMacroSelf(context, "self", (expression) =>
-        makeObjectExpression(
-          prototype,
-          map(
-            properties,
-            partial_xx(visit, context, {
-              ...OBJECT_PROPERTY_REGULAR,
-              self: expression,
-            }),
+          makeSequenceExpression,
+          self_macro.value,
+        );
+      } else {
+        const self_macro = makeMacro(
+          context,
+          "self",
+          makeObjectExpression(prototype, []),
+        );
+        return reduceReverse(
+          concat(
+            self_macro.setup,
+            flatMap(
+              properties,
+              partial_xx(visit, context, {
+                ...OBJECT_PROPERTY,
+                self: self_macro.value,
+              }),
+            ),
           ),
-        ),
-      );
-      return reduceReverse(macro.setup, makeSequenceExpression, macro.value);
+          makeSequenceExpression,
+          self_macro.value,
+        );
+      }
     } else {
-      return makeObjectExpression(
-        prototype,
-        map(properties, partial_xx(visit, context, OBJECT_PROPERTY_REGULAR)),
-      );
+      if (some(properties, isSuperProperty)) {
+        const prototype_macro = makeMacro(context, "prototype", prototype);
+        const super_macro = makeMacro(
+          context,
+          "super",
+          makeObjectExpression(prototype_macro.value, []),
+        );
+        return reduceReverse(
+          concat(prototype_macro.setup, super_macro.setup),
+          makeSequenceExpression,
+          makeObjectExpression(
+            prototype_macro.value,
+            map(
+              properties,
+              partial_xx(visit, context, {
+                ...OBJECT_PROPERTY_REGULAR,
+                super: super_macro.value,
+              }),
+            ),
+          ),
+        );
+      } else {
+        return makeObjectExpression(
+          prototype,
+          map(properties, partial_xx(visit, context, OBJECT_PROPERTY_REGULAR)),
+        );
+      }
     }
   },
 };

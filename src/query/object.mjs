@@ -18,4 +18,8 @@ export const isPrototypeProperty = (node) =>
 export const isMethodProperty = (node) =>
   node.type === "Property" && node.method;
 
-export const isAccessorProperty = (node) => node.kind !== "init";
+export const isAccessorProperty = (node) =>
+  node.type === "Property" && node.kind !== "init";
+
+export const isSuperProperty = (node) =>
+  isMethodProperty(node) || isAccessorProperty(node);

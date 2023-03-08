@@ -4,6 +4,7 @@ import {
   isPrototypeProperty,
   isMethodProperty,
   isAccessorProperty,
+  isSuperProperty,
 } from "./object.mjs";
 
 export const parseProperty = (code) =>
@@ -62,3 +63,18 @@ assertEqual(
 );
 
 assertEqual(isAccessorProperty(parseProperty(`foo: 123`)), false);
+
+/////////////////////
+// isSuperProperty //
+/////////////////////
+
+assertEqual(isSuperProperty(parseProperty(`m () { return super.m(); }`)), true);
+
+assertEqual(
+  isSuperProperty(parseProperty(`get x () { return super.x; }`)),
+  true,
+);
+
+assertEqual(isSuperProperty(parseProperty(`set x (y) { super.x = y; }`)), true);
+
+assertEqual(isSuperProperty(parseProperty(`foo: 123`)), false);

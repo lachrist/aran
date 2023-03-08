@@ -20,7 +20,7 @@ export default {
       value: visit(node, context, {
         ...CLOSURE,
         kind: "arrow",
-        self: site.self,
+        super: site.super,
         name: macro.value,
       }),
     };
@@ -32,7 +32,7 @@ export default {
       value: visit(node, context, {
         ...CLOSURE,
         kind: site.method ? "method" : "function",
-        self: site.self,
+        super: site.super,
         name:
           site.kind === "init"
             ? macro.value

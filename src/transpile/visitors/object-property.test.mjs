@@ -32,7 +32,7 @@ const visitClosure = (_node, _context, site) =>
       [],
       [],
       [
-        makeEffectStatement(makeExpressionEffect(site.self)),
+        makeEffectStatement(makeExpressionEffect(site.super)),
         makeEffectStatement(makeExpressionEffect(site.name)),
         makeReturnStatement(makeLiteralExpression("completion")),
       ],
@@ -61,6 +61,7 @@ const { test, done } = compileTest({
           partial_xx(visit, context, {
             ...OBJECT_PROPERTY,
             self: makeLiteralExpression("self"),
+            super: makeLiteralExpression("super"),
           }),
         ),
         makeSequenceExpression,
@@ -133,7 +134,7 @@ test(
           intrinsic.aran.createObject(
             null,
             "value", () => {
-              void "self";
+              void "super";
               void key;
               return "completion";
             },
@@ -160,7 +161,7 @@ test(
           intrinsic.aran.createObject(
             null,
             "value", function method () {
-              void "self";
+              void "super";
               void key;
               return "completion";
             },
@@ -187,7 +188,7 @@ test(
           intrinsic.aran.createObject(
             null,
             "get", function () {
-              void "self";
+              void "super";
               void intrinsic.aran.binary("+", "get ", key);
               return "completion";
             },
@@ -213,7 +214,7 @@ test(
           intrinsic.aran.createObject(
             null,
             "set", function () {
-              void "self";
+              void "super";
               void intrinsic.aran.binary("+", "set ", key);
               return "completion";
             },

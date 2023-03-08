@@ -57,7 +57,7 @@ export default {
     } else {
       const property = visit(node.value, context, {
         ...OBJECT_VALUE,
-        self: site.self,
+        super: site.super,
         kind: node.kind,
         computed: node.computed,
         method: node.method,
