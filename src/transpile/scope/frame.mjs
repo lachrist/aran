@@ -1,21 +1,21 @@
 import { getVariableLayer } from "../variable.mjs";
 
-import * as BlockDynamic from "./frames/block-dynamic.mjs";
-import * as BlockStaticDead from "./frames/block-static-dead.mjs";
-import * as BlockStatic from "./frames/block-static.mjs";
-import * as ClosureDynamic from "./frames/closure-dynamic.mjs";
-import * as ClosureStatic from "./frames/closure-static.mjs";
-import * as DefineDynamic from "./frames/define-dynamic.mjs";
-import * as DefineStatic from "./frames/define-static.mjs";
-import * as EmptyDynamicWith from "./frames/empty-dynamic-with.mjs";
-import * as EmptyVoid from "./frames/empty-void.mjs";
-import * as Enclave from "./frames/enclave.mjs";
-import * as Escape from "./frames/escape.mjs";
-import * as Illegal from "./frames/illegal.mjs";
-import * as ImportStatic from "./frames/import-static.mjs";
-import * as Macro from "./frames/macro.mjs";
-import * as Observable from "./frames/observable.mjs";
-import * as Trail from "./frames/trail.mjs";
+import * as BlockDynamic from "../frames/block-dynamic.mjs";
+import * as BlockStaticDead from "../frames/block-static-dead.mjs";
+import * as BlockStatic from "../frames/block-static.mjs";
+import * as ClosureDynamic from "../frames/closure-dynamic.mjs";
+import * as ClosureStatic from "../frames/closure-static.mjs";
+import * as DefineDynamic from "../frames/define-dynamic.mjs";
+import * as DefineStatic from "../frames/define-static.mjs";
+import * as EmptyDynamicWith from "../frames/empty-dynamic-with.mjs";
+import * as EmptyVoid from "../frames/empty-void.mjs";
+import * as Enclave from "../frames/enclave.mjs";
+import * as Escape from "../frames/escape.mjs";
+import * as Illegal from "../frames/illegal.mjs";
+import * as ImportStatic from "../frames/import-static.mjs";
+import * as Macro from "../frames/macro.mjs";
+import * as Observable from "../frames/observable.mjs";
+import * as Trail from "../frames/trail.mjs";
 
 export const BLOCK_DYNAMIC = "block-dynamic";
 export const BLOCK_STATIC_DEAD = "block-static-dead";
