@@ -16,10 +16,7 @@ export const annotateCallee = (
   this: annotate(expression2, serial),
 });
 
-export const annotateMacro = (
-  { setup: effects, pure: expression },
-  serial,
-) => ({
+export const annotateMemo = ({ setup: effects, pure: expression }, serial) => ({
   setup: annotateArray(effects, serial),
   pure: annotate(expression, serial),
 });

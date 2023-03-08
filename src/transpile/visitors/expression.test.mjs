@@ -12,7 +12,7 @@ import {
   Program,
   Statement,
   Effect,
-  ExpressionMacro,
+  ExpressionMemo,
   compileTest,
 } from "./__fixture__.mjs";
 import Quasi from "./quasi.mjs";
@@ -67,7 +67,7 @@ const { test, done } = compileTest({
   UpdateExpression,
   Delete,
   Expression,
-  ExpressionMacro,
+  ExpressionMemo,
   ObjectPrototype,
   ObjectPropertyPrototype,
   ObjectValue,

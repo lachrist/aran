@@ -3,7 +3,7 @@ label.mjs
 frames
 scope
 annotate.mjs
-macro.mjs
+memoize.mjs
 report.mjs
 site.mjs
 context.mjs

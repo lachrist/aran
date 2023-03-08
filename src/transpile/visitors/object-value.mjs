@@ -6,7 +6,7 @@ import {
 import { makeBinaryExpression } from "../../intrinsic.mjs";
 import { annotateProperty } from "../annotate.mjs";
 import { expectSyntax } from "../report.mjs";
-import { CLOSURE, EXPRESSION, getKeySite, getKeyMacroSite } from "../site.mjs";
+import { CLOSURE, EXPRESSION, getKeySite, getKeyMemoSite } from "../site.mjs";
 import { visit } from "../context.mjs";
 
 export default {
@@ -14,32 +14,32 @@ export default {
   ArrowFunctionExpression: (node, context, site) => {
     expectSyntax(!site.method, node);
     expectSyntax(site.kind === "init", node);
-    const macro = visit(site.key, context, getKeyMacroSite(site.computed));
+    const memo = visit(site.key, context, getKeyMemoSite(site.computed));
     return {
-      key: reduceReverse(macro.setup, makeSequenceExpression, macro.pure),
+      key: reduceReverse(memo.setup, makeSequenceExpression, memo.pure),
       value: visit(node, context, {
         ...CLOSURE,
         kind: "arrow",
         super: site.super,
-        name: macro.pure,
+        name: memo.pure,
       }),
     };
   },
   FunctionExpression: (node, context, site) => {
-    const macro = visit(site.key, context, getKeyMacroSite(site.computed));
+    const memo = visit(site.key, context, getKeyMemoSite(site.computed));
     return {
-      key: reduceReverse(macro.setup, makeSequenceExpression, macro.pure),
+      key: reduceReverse(memo.setup, makeSequenceExpression, memo.pure),
       value: visit(node, context, {
         ...CLOSURE,
         kind: site.method ? "method" : "function",
         super: site.super,
         name:
           site.kind === "init"
-            ? macro.pure
+            ? memo.pure
             : makeBinaryExpression(
                 "+",
                 makeLiteralExpression(`${site.kind} `),
-                macro.pure,
+                memo.pure,
               ),
       }),
     };

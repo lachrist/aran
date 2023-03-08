@@ -9,7 +9,7 @@ import { makeGetExpression, makeBinaryExpression } from "../../intrinsic.mjs";
 import { makeScopeSpecReadExpression } from "../scope/index.mjs";
 import { annotateCallee } from "../annotate.mjs";
 import { expectSyntaxPropertyEqual } from "../report.mjs";
-import { CALLEE, EXPRESSION, EXPRESSION_MACRO, getKeySite } from "../site.mjs";
+import { CALLEE, EXPRESSION, EXPRESSION_MEMO, getKeySite } from "../site.mjs";
 import { visit } from "../context.mjs";
 
 export default {
@@ -28,41 +28,41 @@ export default {
         this: makeScopeSpecReadExpression(context, "this"),
       };
     } else {
-      const macro = visit(node.object, context, {
-        ...EXPRESSION_MACRO,
+      const memo = visit(node.object, context, {
+        ...EXPRESSION_MEMO,
         info: "this",
       });
       return {
         callee: reduceReverse(
-          macro.setup,
+          memo.setup,
           makeSequenceExpression,
           node.optional
             ? makeConditionalExpression(
                 makeConditionalExpression(
                   makeBinaryExpression(
                     "===",
-                    macro.pure,
+                    memo.pure,
                     makeLiteralExpression(null),
                   ),
                   makeLiteralExpression(true),
                   makeBinaryExpression(
                     "===",
-                    macro.pure,
+                    memo.pure,
                     makeLiteralExpression({ undefined: null }),
                   ),
                 ),
                 makeLiteralExpression({ undefined: null }),
                 makeGetExpression(
-                  macro.pure,
+                  memo.pure,
                   visit(node.property, context, getKeySite(node.computed)),
                 ),
               )
             : makeGetExpression(
-                macro.pure,
+                memo.pure,
                 visit(node.property, context, getKeySite(node.computed)),
               ),
         ),
-        this: macro.pure,
+        this: memo.pure,
       };
     }
   },

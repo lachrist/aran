@@ -1,12 +1,16 @@
-import { createCounter } from "../util/index.mjs";
+import { createCounter, reduceReverse } from "../util/index.mjs";
 import {
+  makeSequenceExpression,
   makeLiteralExpression,
   makeEffectStatement,
   makeExpressionEffect,
 } from "../ast/index.mjs";
 import { allignBlock } from "../allign/index.mjs";
 import { makeScopeTestBlock, ROOT_SCOPE } from "./scope/index.mjs";
-import { makeMacro, makeMacroSelf, toMacroExpression } from "./macro.mjs";
+import { memoize, memoizeSelf } from "./memoize.mjs";
+
+const toMemoExpression = ({ setup: effects, pure: expression }) =>
+  reduceReverse(effects, makeSequenceExpression, expression);
 
 allignBlock(
   makeScopeTestBlock(
@@ -14,8 +18,8 @@ allignBlock(
     (context) => [
       makeEffectStatement(
         makeExpressionEffect(
-          toMacroExpression(
-            makeMacro(context, "macro", makeLiteralExpression("macro")),
+          toMemoExpression(
+            memoize(context, "memo", makeLiteralExpression("value")),
           ),
         ),
       ),
@@ -23,8 +27,8 @@ allignBlock(
   ),
   `
     {
-      let macro;
-      void (macro = "macro", macro);
+      let memo;
+      void (memo = "value", memo);
     }
   `,
 );
@@ -35,17 +39,15 @@ allignBlock(
     (context) => [
       makeEffectStatement(
         makeExpressionEffect(
-          toMacroExpression(
-            makeMacroSelf(context, "macro", (expression) => expression),
-          ),
+          toMemoExpression(memoizeSelf(context, "memo", (pure) => pure)),
         ),
       ),
     ],
   ),
   `
     {
-      let macro;
-      void (macro = macro, macro);
+      let memo;
+      void (memo = memo, memo);
     }
   `,
 );

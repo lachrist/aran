@@ -5,7 +5,7 @@ import {
   Statement,
   Effect,
   Expression,
-  ExpressionMacro,
+  ExpressionMemo,
   compileTest,
 } from "./__fixture__.mjs";
 import PatternElement from "./pattern-element.mjs";
@@ -19,7 +19,7 @@ const { test, done } = compileTest({
   Pattern,
   PatternElement,
   AssignmentExpression,
-  ExpressionMacro,
+  ExpressionMemo,
   Expression: {
     ...Expression,
     AssignmentExpression: (node, context, _site) =>

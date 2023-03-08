@@ -5,7 +5,7 @@ import {
   Statement,
   Effect,
   Expression,
-  ExpressionMacro,
+  ExpressionMemo,
   compileTest,
 } from "./__fixture__.mjs";
 import UpdateExpression from "./update-expression.mjs";
@@ -15,7 +15,7 @@ const { test, done } = compileTest({
   Statement,
   Effect,
   UpdateExpression,
-  ExpressionMacro,
+  ExpressionMemo,
   Expression: {
     ...Expression,
     UpdateExpression: (node, context, _site) =>

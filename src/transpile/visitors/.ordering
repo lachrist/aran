@@ -1,9 +1,9 @@
 __fixture__.mjs
-expression-macro.mjs
+expression-memo.mjs
 quasi.mjs
 quasi-raw.mjs
 key.mjs
-key-macro.mjs
+key-memo.mjs
 callee.mjs
 pattern-element.mjs
 pattern-property.mjs

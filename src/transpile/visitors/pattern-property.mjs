@@ -12,8 +12,8 @@ import {
   makeGetExpression,
 } from "../../intrinsic.mjs";
 import { annotateArray } from "../annotate.mjs";
-import { makeMacro } from "../macro.mjs";
-import { getKeySite, getKeyMacroSite, PATTERN } from "../site.mjs";
+import { memoize } from "../memoize.mjs";
+import { getKeySite, getKeyMemoSite, PATTERN } from "../site.mjs";
 import { visit, liftEffect } from "../context.mjs";
 
 const { Error } = globalThis;
@@ -31,21 +31,21 @@ export default {
         ),
       });
     } else {
-      const macro = visit(node.key, context, getKeyMacroSite(node.computed));
-      push(site.keys, macro.pure);
+      const memo = visit(node.key, context, getKeyMemoSite(node.computed));
+      push(site.keys, memo.pure);
       return visit(node.value, context, {
         ...PATTERN,
         kind: site.kind,
         right: makeGetExpression(
           site.right,
-          reduceReverse(macro.setup, makeSequenceExpression, macro.pure),
+          reduceReverse(memo.setup, makeSequenceExpression, memo.pure),
         ),
       });
     }
   },
   RestElement: (node, context, site) => {
     assert(site.keys !== null, Error, "missing array of key variables");
-    const macro = makeMacro(
+    const memo = memoize(
       context,
       "rest",
       makeObjectAssignExpression(
@@ -56,9 +56,9 @@ export default {
     return concat(
       map(
         concat(
-          macro.setup,
+          memo.setup,
           map(
-            map(site.keys, partialx_(makeDeleteStrictExpression, macro.pure)),
+            map(site.keys, partialx_(makeDeleteStrictExpression, memo.pure)),
             makeExpressionEffect,
           ),
         ),
@@ -67,7 +67,7 @@ export default {
       visit(node.argument, context, {
         ...PATTERN,
         kind: site.kind,
-        right: macro.pure,
+        right: memo.pure,
       }),
     );
   },

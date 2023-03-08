@@ -14,7 +14,7 @@ import {
   DELETE,
   EFFECT,
   EXPRESSION,
-  EXPRESSION_MACRO,
+  EXPRESSION_MEMO,
   getKeySite,
 } from "../site.mjs";
 import { visit } from "../context.mjs";
@@ -30,31 +30,27 @@ export default {
     visit(node.expression, context, DELETE),
   MemberExpression: (node, context, _site) => {
     if (node.optional) {
-      const macro = visit(node.object, context, {
-        ...EXPRESSION_MACRO,
+      const memo = visit(node.object, context, {
+        ...EXPRESSION_MEMO,
         info: "optional_object",
       });
       return reduceReverse(
-        macro.setup,
+        memo.setup,
         makeSequenceExpression,
         makeConditionalExpression(
           makeConditionalExpression(
-            makeBinaryExpression(
-              "===",
-              macro.pure,
-              makeLiteralExpression(null),
-            ),
+            makeBinaryExpression("===", memo.pure, makeLiteralExpression(null)),
             makeLiteralExpression(true),
             makeBinaryExpression(
               "===",
-              macro.pure,
+              memo.pure,
               makeLiteralExpression({ undefined: null }),
             ),
           ),
           makeLiteralExpression(true),
           makeDeleteExpression(
             context.strict,
-            macro.pure,
+            memo.pure,
             visit(node.property, context, getKeySite(node.computed)),
           ),
         ),

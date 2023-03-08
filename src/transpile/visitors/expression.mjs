@@ -33,7 +33,7 @@ import {
   makeScopeSpecReadExpression,
 } from "../scope/index.mjs";
 import { annotate } from "../annotate.mjs";
-import { makeMacro } from "../macro.mjs";
+import { memoize } from "../memoize.mjs";
 import {
   expectSyntaxPropertyNotEqual,
   makeSyntaxPropertyError,
@@ -42,7 +42,7 @@ import {
   QUASI_RAW,
   QUASI,
   EXPRESSION,
-  EXPRESSION_MACRO,
+  EXPRESSION_MEMO,
   EFFECT,
   DELETE,
   CALLEE,
@@ -227,50 +227,46 @@ export default {
       visit(node.alternate, context, EXPRESSION),
     ),
   LogicalExpression: (node, context, _site) => {
-    const macro = visit(node.left, context, {
-      ...EXPRESSION_MACRO,
+    const memo = visit(node.left, context, {
+      ...EXPRESSION_MEMO,
       info: "logical",
     });
     if (node.operator === "&&") {
       return reduceReverse(
-        macro.setup,
+        memo.setup,
         makeSequenceExpression,
         makeConditionalExpression(
-          macro.pure,
+          memo.pure,
           visit(node.right, context, EXPRESSION),
-          macro.pure,
+          memo.pure,
         ),
       );
     } else if (node.operator === "||") {
       return reduceReverse(
-        macro.setup,
+        memo.setup,
         makeSequenceExpression,
         makeConditionalExpression(
-          macro.pure,
-          macro.pure,
+          memo.pure,
+          memo.pure,
           visit(node.right, context, EXPRESSION),
         ),
       );
     } else if (node.operator === "??") {
       return reduceReverse(
-        macro.setup,
+        memo.setup,
         makeSequenceExpression,
         makeConditionalExpression(
           makeConditionalExpression(
-            makeBinaryExpression(
-              "===",
-              macro.pure,
-              makeLiteralExpression(null),
-            ),
+            makeBinaryExpression("===", memo.pure, makeLiteralExpression(null)),
             makeLiteralExpression(true),
             makeBinaryExpression(
               "===",
-              macro.pure,
+              memo.pure,
               makeLiteralExpression({ undefined: null }),
             ),
           ),
           visit(node.right, context, EXPRESSION),
-          macro.pure,
+          memo.pure,
         ),
       );
     } /* c8 ignore start */ else {
@@ -304,30 +300,26 @@ export default {
     visit(node.expression, context, EXPRESSION),
   MemberExpression: (node, context, _site) => {
     if (node.optional) {
-      const macro = visit(node.object, context, {
-        ...EXPRESSION_MACRO,
+      const memo = visit(node.object, context, {
+        ...EXPRESSION_MEMO,
         info: "optional",
       });
       return reduceReverse(
-        macro.setup,
+        memo.setup,
         makeSequenceExpression,
         makeConditionalExpression(
           makeConditionalExpression(
-            makeBinaryExpression(
-              "===",
-              macro.pure,
-              makeLiteralExpression(null),
-            ),
+            makeBinaryExpression("===", memo.pure, makeLiteralExpression(null)),
             makeLiteralExpression(true),
             makeBinaryExpression(
               "===",
-              macro.pure,
+              memo.pure,
               makeLiteralExpression({ undefined: null }),
             ),
           ),
           makeLiteralExpression({ undefined: null }),
           makeGetExpression(
-            macro.pure,
+            memo.pure,
             visit(node.property, context, getKeySite(node.computed)),
           ),
         ),
@@ -356,73 +348,73 @@ export default {
       some(properties, isSpreadElement)
     ) {
       if (some(properties, isSuperProperty)) {
-        const prototype_macro = makeMacro(context, "prototype", prototype);
-        const super_macro = makeMacro(
+        const prototype_memo = memoize(context, "prototype", prototype);
+        const super_memo = memoize(
           context,
           "super",
-          makeObjectExpression(prototype_macro.pure, []),
+          makeObjectExpression(prototype_memo.pure, []),
         );
-        const self_macro = makeMacro(
+        const self_memo = memoize(
           context,
           "self",
-          makeObjectExpression(prototype_macro.pure, []),
+          makeObjectExpression(prototype_memo.pure, []),
         );
         return reduceReverse(
           concat(
-            prototype_macro.setup,
-            super_macro.setup,
-            self_macro.setup,
+            prototype_memo.setup,
+            super_memo.setup,
+            self_memo.setup,
             flatMap(
               properties,
               partial_xx(visit, context, {
                 ...OBJECT_PROPERTY,
-                super: super_macro.pure,
-                self: self_macro.pure,
+                super: super_memo.pure,
+                self: self_memo.pure,
               }),
             ),
           ),
           makeSequenceExpression,
-          self_macro.pure,
+          self_memo.pure,
         );
       } else {
-        const self_macro = makeMacro(
+        const self_memo = memoize(
           context,
           "self",
           makeObjectExpression(prototype, []),
         );
         return reduceReverse(
           concat(
-            self_macro.setup,
+            self_memo.setup,
             flatMap(
               properties,
               partial_xx(visit, context, {
                 ...OBJECT_PROPERTY,
-                self: self_macro.pure,
+                self: self_memo.pure,
               }),
             ),
           ),
           makeSequenceExpression,
-          self_macro.pure,
+          self_memo.pure,
         );
       }
     } else {
       if (some(properties, isSuperProperty)) {
-        const prototype_macro = makeMacro(context, "prototype", prototype);
-        const super_macro = makeMacro(
+        const prototype_memo = memoize(context, "prototype", prototype);
+        const super_memo = memoize(
           context,
           "super",
-          makeObjectExpression(prototype_macro.pure, []),
+          makeObjectExpression(prototype_memo.pure, []),
         );
         return reduceReverse(
-          concat(prototype_macro.setup, super_macro.setup),
+          concat(prototype_memo.setup, super_memo.setup),
           makeSequenceExpression,
           makeObjectExpression(
-            prototype_macro.pure,
+            prototype_memo.pure,
             map(
               properties,
               partial_xx(visit, context, {
                 ...OBJECT_PROPERTY_REGULAR,
-                super: super_macro.pure,
+                super: super_memo.pure,
               }),
             ),
           ),

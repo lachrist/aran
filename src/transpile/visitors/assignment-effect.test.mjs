@@ -5,7 +5,7 @@ import {
   Statement,
   Effect,
   Expression,
-  ExpressionMacro,
+  ExpressionMemo,
   compileTest,
 } from "./__fixture__.mjs";
 import PatternElement from "./pattern-element.mjs";
@@ -14,7 +14,7 @@ import AssignmentEffect from "./assignment-effect.mjs";
 
 const { test, done } = compileTest({
   Program,
-  ExpressionMacro,
+  ExpressionMemo,
   Expression,
   PatternElement,
   Pattern,

@@ -7,7 +7,7 @@ import {
   Statement,
   Effect,
   Expression,
-  ExpressionMacro,
+  ExpressionMemo,
   compileTest,
 } from "./__fixture__.mjs";
 import Callee from "./callee.mjs";
@@ -16,7 +16,7 @@ const { test, done } = compileTest({
   Program,
   Statement,
   Effect,
-  ExpressionMacro,
+  ExpressionMemo,
   Expression: {
     ...Expression,
     CallExpression: (node, context, _site) => {

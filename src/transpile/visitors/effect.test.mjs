@@ -2,7 +2,7 @@ import {
   Program,
   Statement,
   Expression,
-  ExpressionMacro,
+  ExpressionMemo,
   compileTest,
 } from "./__fixture__.mjs";
 import AssignmentEffect from "./assignment-effect.mjs";
@@ -14,7 +14,7 @@ const { test, done } = compileTest({
   Statement,
   Effect,
   Expression,
-  ExpressionMacro,
+  ExpressionMemo,
   AssignmentEffect,
   UpdateEffect,
 });

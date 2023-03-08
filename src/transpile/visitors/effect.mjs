@@ -12,7 +12,7 @@ import { makeSyntaxError } from "../report.mjs";
 import {
   EFFECT,
   EXPRESSION,
-  EXPRESSION_MACRO,
+  EXPRESSION_MEMO,
   ASSIGNMENT_EFFECT,
   UPDATE_EFFECT,
 } from "../site.mjs";
@@ -59,22 +59,18 @@ export default {
         ),
       ];
     } else if (node.operator === "??") {
-      const macro = visit(node.left, context, {
-        ...EXPRESSION_MACRO,
+      const memo = visit(node.left, context, {
+        ...EXPRESSION_MEMO,
         info: "coalesce",
       });
-      return concat(macro.setup, [
+      return concat(memo.setup, [
         makeConditionalEffect(
           makeConditionalExpression(
-            makeBinaryExpression(
-              "===",
-              macro.pure,
-              makeLiteralExpression(null),
-            ),
+            makeBinaryExpression("===", memo.pure, makeLiteralExpression(null)),
             makeLiteralExpression(true),
             makeBinaryExpression(
               "===",
-              macro.pure,
+              memo.pure,
               makeLiteralExpression({ undefined: null }),
             ),
           ),

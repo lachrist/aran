@@ -10,8 +10,8 @@ import {
 } from "../../ast/index.mjs";
 import { allignBlock } from "../../allign/index.mjs";
 import { makeScopeTestBlock } from "../scope/index.mjs";
-import { annotateArray, annotateMacro } from "../annotate.mjs";
-import { makeMacro } from "../macro.mjs";
+import { annotateArray, annotateMemo } from "../annotate.mjs";
+import { memoize } from "../memoize.mjs";
 import { PROGRAM, STATEMENT, EFFECT, EXPRESSION } from "../site.mjs";
 import { createInitialContext, visit } from "../context.mjs";
 
@@ -71,10 +71,10 @@ export const Expression = {
   __DEFAULT__: (node, _context, _site) => makeLiteralExpression(node.type),
 };
 
-export const ExpressionMacro = {
-  __ANNOTATE__: annotateMacro,
+export const ExpressionMemo = {
+  __ANNOTATE__: annotateMemo,
   __DEFAULT__: (node, context, site) =>
-    makeMacro(context, site.info, visit(node, context, EXPRESSION)),
+    memoize(context, site.info, visit(node, context, EXPRESSION)),
 };
 
 export const compileTest = (visitors) => {

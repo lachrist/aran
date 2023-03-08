@@ -16,7 +16,7 @@ import {
   Statement,
   Effect,
   Expression,
-  ExpressionMacro,
+  ExpressionMemo,
   compileTest,
 } from "./__fixture__.mjs";
 import ObjectPrototype from "./object-prototype.mjs";
@@ -51,7 +51,7 @@ const { test, done } = compileTest({
     FunctionExpression: visitClosure,
     ArrowFunctionExpression: visitClosure,
   },
-  ExpressionMacro,
+  ExpressionMemo,
   Expression: {
     ...Expression,
     ObjectExpression: (node, context, _site) =>

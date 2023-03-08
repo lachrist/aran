@@ -1,17 +1,17 @@
 import { makeLiteralExpression } from "../../ast/index.mjs";
-import { annotateMacro } from "../annotate.mjs";
-import { makeMacro } from "../macro.mjs";
+import { annotateMemo } from "../annotate.mjs";
+import { memoize } from "../memoize.mjs";
 import { EXPRESSION } from "../site.mjs";
 import { visit } from "../context.mjs";
 
 export default {
-  __ANNOTATE__: annotateMacro,
+  __ANNOTATE__: annotateMemo,
   Literal: (node, _context, _site) => ({
     setup: [],
     pure: makeLiteralExpression(node.value),
   }),
   __DEFAULT__: (node, context, site) =>
-    makeMacro(
+    memoize(
       context,
       site.info,
       visit(node, context, {

@@ -5,7 +5,7 @@ import {
   Program,
   Statement,
   Expression,
-  ExpressionMacro,
+  ExpressionMemo,
   compileTest,
 } from "./__fixture__.mjs";
 import ObjectPrototype from "./object-prototype.mjs";
@@ -19,7 +19,7 @@ const { test, done } = compileTest({
       makeExpressionEffect(visit(node, context, OBJECT_PROTOTYPE)),
     ],
   },
-  ExpressionMacro,
+  ExpressionMemo,
   ObjectPrototype,
   Expression,
 });

@@ -72,10 +72,10 @@ export const EFFECT = { type: "Effect" };
 
 export const CALLEE = { type: "Callee" };
 
-export const EXPRESSION_MACRO = {
-  type: "ExpressionMacro",
+export const EXPRESSION_MEMO = {
+  type: "ExpressionMemo",
   name: "",
-  info: "macro",
+  info: "memo",
 };
 
 export const PATTERN = {
@@ -97,7 +97,7 @@ export const PATTERN_PROPERTY = {
   right: undefined,
 };
 
-export const KEY_EXPRESSION_MACRO = { ...EXPRESSION_MACRO, info: "key" };
+export const KEY_EXPRESSION_MEMO = { ...EXPRESSION_MEMO, info: "key" };
 
 export const EXPRESSION = {
   type: "Expression",
@@ -112,9 +112,9 @@ export const DELETE = { type: "Delete" };
 
 export const KEY = { type: "Key" };
 
-export const KEY_MACRO = { type: "KeyMacro" };
+export const KEY_MEMO = { type: "KeyMemo" };
 
 export const getKeySite = (computed) => (computed ? EXPRESSION : KEY);
 
-export const getKeyMacroSite = (computed) =>
-  computed ? KEY_EXPRESSION_MACRO : KEY_MACRO;
+export const getKeyMemoSite = (computed) =>
+  computed ? KEY_EXPRESSION_MEMO : KEY_MEMO;

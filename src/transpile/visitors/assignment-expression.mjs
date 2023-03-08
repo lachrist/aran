@@ -11,14 +11,14 @@ import {
   makeScopeBaseReadExpression,
 } from "../scope/index.mjs";
 import { annotate } from "../annotate.mjs";
-import { makeMacro } from "../macro.mjs";
+import { memoize } from "../memoize.mjs";
 import { expectSyntaxPropertyEqual } from "../report.mjs";
 import {
   EXPRESSION,
-  EXPRESSION_MACRO,
+  EXPRESSION_MEMO,
   PATTERN,
   getKeySite,
-  getKeyMacroSite,
+  getKeyMemoSite,
 } from "../site.mjs";
 import { visit } from "../context.mjs";
 
@@ -67,18 +67,18 @@ export default {
   __ANNOTATE__: annotate,
   Identifier: (node, context, site) => {
     if (site.operator === "=") {
-      const macro = visit(site.right, context, {
-        ...EXPRESSION_MACRO,
+      const memo = visit(site.right, context, {
+        ...EXPRESSION_MEMO,
         info: "right",
         name: node.name,
       });
       return reduceReverse(
         concat(
-          macro.setup,
-          makeScopeBaseLooseWriteEffectArray(context, node.name, macro.pure),
+          memo.setup,
+          makeScopeBaseLooseWriteEffectArray(context, node.name, memo.pure),
         ),
         makeSequenceExpression,
-        macro.pure,
+        memo.pure,
       );
     } else {
       // Name are not transmitted on update:
@@ -87,7 +87,7 @@ export default {
       // undefined
       // > f += function () {}
       // 'foofunction () {}'
-      const macro = makeMacro(
+      const memo = memoize(
         context,
         "right",
         makeBinaryExpression(
@@ -104,11 +104,11 @@ export default {
       );
       return reduceReverse(
         concat(
-          macro.setup,
-          makeScopeBaseLooseWriteEffectArray(context, node.name, macro.pure),
+          memo.setup,
+          makeScopeBaseLooseWriteEffectArray(context, node.name, memo.pure),
         ),
         makeSequenceExpression,
-        macro.pure,
+        memo.pure,
       );
     }
   },
@@ -122,25 +122,25 @@ export default {
         visit(site.right, context, EXPRESSION),
       );
     } else {
-      const object_macro = visit(node.object, context, {
-        ...EXPRESSION_MACRO,
+      const object_memo = visit(node.object, context, {
+        ...EXPRESSION_MEMO,
         info: "object",
       });
-      const key_macro = visit(
+      const key_memo = visit(
         node.property,
         context,
-        getKeyMacroSite(node.computed),
+        getKeyMemoSite(node.computed),
       );
       return reduceReverse(
-        concat(object_macro.setup, key_macro.setup),
+        concat(object_memo.setup, key_memo.setup),
         makeSequenceExpression,
         makeSetExpression(
           context.strict,
-          object_macro.pure,
-          key_macro.pure,
+          object_memo.pure,
+          key_memo.pure,
           makeBinaryExpression(
             apply(substring, site.operator, [0, site.operator.length - 1]),
-            makeGetExpression(object_macro.pure, key_macro.pure),
+            makeGetExpression(object_memo.pure, key_memo.pure),
             visit(site.right, context, EXPRESSION),
           ),
         ),
@@ -149,20 +149,20 @@ export default {
   },
   __DEFAULT__: (node, context, site) => {
     expectSyntaxPropertyEqual(site, ["operator"], "=");
-    const macro = visit(site.right, context, {
-      ...EXPRESSION_MACRO,
+    const memo = visit(site.right, context, {
+      ...EXPRESSION_MEMO,
       info: "right",
     });
     return reduceReverse(
       concat(
-        macro.setup,
+        memo.setup,
         visit(node, context, {
           ...PATTERN,
-          right: macro.pure,
+          right: memo.pure,
         }),
       ),
       makeSequenceExpression,
-      macro.pure,
+      memo.pure,
     );
   },
 };

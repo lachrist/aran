@@ -1,5 +1,5 @@
 import { assertEqual } from "../__fixture__.mjs";
-import { getKeySite, getKeyMacroSite } from "./site.mjs";
+import { getKeySite, getKeyMemoSite } from "./site.mjs";
 
 ////////////////
 // getKeySite //
@@ -8,9 +8,9 @@ import { getKeySite, getKeyMacroSite } from "./site.mjs";
 assertEqual(getKeySite(true).type, "Expression");
 assertEqual(getKeySite(false).type, "Key");
 
-/////////////////////
-// getKeyMacroSite //
-/////////////////////
+////////////////////
+// getKeyMemoSite //
+////////////////////
 
-assertEqual(getKeyMacroSite(true).type, "ExpressionMacro");
-assertEqual(getKeyMacroSite(false).type, "KeyMacro");
+assertEqual(getKeyMemoSite(true).type, "ExpressionMemo");
+assertEqual(getKeyMemoSite(false).type, "KeyMemo");

@@ -24,7 +24,7 @@ import {
   makeScopeBaseInitializeStatementArray,
 } from "../scope/index.mjs";
 import { annotateArray } from "../annotate.mjs";
-import { makeMacro } from "../macro.mjs";
+import { memoize } from "../memoize.mjs";
 import {
   EXPRESSION,
   PATTERN,
@@ -120,15 +120,15 @@ export default {
       "illegal optional MemberExpression at %j",
       node.loc.start,
     );
-    const macro = makeMacro(context, "right", site.right);
+    const memo = memoize(context, "right", site.right);
     return map(
-      concat(macro.setup, [
+      concat(memo.setup, [
         makeExpressionEffect(
           makeSetExpression(
             context.strict,
             visit(node.object, context, EXPRESSION),
             visit(node.property, context, getKeySite(node.computed)),
-            macro.pure,
+            memo.pure,
           ),
         ),
       ]),
@@ -136,20 +136,20 @@ export default {
     );
   },
   AssignmentPattern: (node, context, site) => {
-    const macro = makeMacro(context, "right", site.right);
+    const memo = memoize(context, "right", site.right);
     return concat(
-      map(macro.setup, partialx_(liftEffect, site.kind)),
+      map(memo.setup, partialx_(liftEffect, site.kind)),
       visit(node.left, context, {
         ...PATTERN,
         kind: site.kind,
         right: makeConditionalExpression(
           makeBinaryExpression(
             "===",
-            macro.pure,
+            memo.pure,
             makeLiteralExpression({ undefined: null }),
           ),
           visit(node.right, context, EXPRESSION),
-          macro.pure,
+          memo.pure,
         ),
       }),
     );
@@ -194,22 +194,22 @@ export default {
   // > var [x, y, z] = {__proto__:null, [Symbol.iterator]:iterator};
   // undefined
   ArrayPattern: (node, context, site) => {
-    const right_macro = makeMacro(context, "right", site.right);
-    const iterator_macro = makeMacro(
+    const right_memo = memoize(context, "right", site.right);
+    const iterator_memo = memoize(
       context,
       "iterator",
       makeApplyExpression(
         makeGetExpression(
-          right_macro.pure,
+          right_memo.pure,
           makeIntrinsicExpression("Symbol.iterator"),
         ),
-        right_macro.pure,
+        right_memo.pure,
         [],
       ),
     );
     return concat(
       map(
-        concat(right_macro.setup, iterator_macro.setup),
+        concat(right_memo.setup, iterator_memo.setup),
         partialx_(liftEffect, site.kind),
       ),
       flatMap(
@@ -217,7 +217,7 @@ export default {
         partial_xx(visit, context, {
           ...PATTERN_ELEMENT,
           kind: site.kind,
-          iterator: iterator_macro.pure,
+          iterator: iterator_memo.pure,
         }),
       ),
     );
@@ -261,10 +261,10 @@ export default {
   // false
   ObjectPattern: (node, context, site) => {
     if (some(node.properties, isRestElement)) {
-      const macro = makeMacro(context, "right", site.right);
+      const memo = memoize(context, "right", site.right);
       return concat(
         map(
-          concat(macro.setup, makeCheckObjectEffectArray(macro.pure)),
+          concat(memo.setup, makeCheckObjectEffectArray(memo.pure)),
           partialx_(liftEffect, site.kind),
         ),
         flatMap(
@@ -272,16 +272,16 @@ export default {
           partial_xx(visit, context, {
             ...PATTERN_PROPERTY,
             kind: site.kind,
-            right: macro.pure,
+            right: memo.pure,
             keys: [],
           }),
         ),
       );
     } else {
-      const macro = makeMacro(context, "right", site.right);
+      const memo = memoize(context, "right", site.right);
       return concat(
         map(
-          concat(macro.setup, makeCheckObjectEffectArray(macro.pure)),
+          concat(memo.setup, makeCheckObjectEffectArray(memo.pure)),
           partialx_(liftEffect, site.kind),
         ),
         flatMap(
@@ -289,7 +289,7 @@ export default {
           partial_xx(visit, context, {
             ...PATTERN_PROPERTY,
             kind: site.kind,
-            right: macro.pure,
+            right: memo.pure,
           }),
         ),
       );

@@ -13,10 +13,10 @@ import { annotateArray } from "../annotate.mjs";
 import { expectSyntaxPropertyEqual } from "../report.mjs";
 import {
   EXPRESSION,
-  EXPRESSION_MACRO,
+  EXPRESSION_MEMO,
   PATTERN,
   getKeySite,
-  getKeyMacroSite,
+  getKeyMemoSite,
 } from "../site.mjs";
 import { visit } from "../context.mjs";
 
@@ -105,24 +105,24 @@ export default {
         ),
       ];
     } else {
-      const object_macro = visit(node.object, context, {
-        ...EXPRESSION_MACRO,
+      const object_memo = visit(node.object, context, {
+        ...EXPRESSION_MEMO,
         info: "object",
       });
-      const key_macro = visit(
+      const key_memo = visit(
         node.property,
         context,
-        getKeyMacroSite(node.computed),
+        getKeyMemoSite(node.computed),
       );
-      return concat(object_macro.setup, key_macro.setup, [
+      return concat(object_memo.setup, key_memo.setup, [
         makeExpressionEffect(
           makeSetExpression(
             context.strict,
-            object_macro.pure,
-            key_macro.pure,
+            object_memo.pure,
+            key_memo.pure,
             makeBinaryExpression(
               apply(substring, site.operator, [0, site.operator.length - 1]),
-              makeGetExpression(object_macro.pure, key_macro.pure),
+              makeGetExpression(object_memo.pure, key_memo.pure),
               visit(site.right, context, EXPRESSION),
             ),
           ),
