@@ -1,5 +1,6 @@
 import { forEach } from "array-lite";
 import {
+  assertThrow,
   assertEqual,
   assertDeepEqual,
   assertSuccess,
@@ -16,9 +17,70 @@ import {
   loadContext,
   visit,
   liftEffect,
+  serializeLocation,
 } from "./context.mjs";
 
 const { undefined } = globalThis;
+
+///////////////////////
+// serializeLocation //
+///////////////////////
+
+assertThrow(
+  () =>
+    serializeLocation({
+      type: "Type",
+      loc: { start: { line: 123, column: {} } },
+    }),
+  /^SyntaxAranError: loc\.start\.column should be a number in node \{ type:"Type", loc:\{ start:\{ line:123, column:<object> \} \} \}$/u,
+);
+
+assertEqual(
+  serializeLocation({
+    type: "Type",
+  }),
+  null,
+);
+
+assertEqual(
+  serializeLocation({
+    type: "Type",
+    loc: null,
+  }),
+  null,
+);
+
+assertEqual(
+  serializeLocation({
+    type: "Type",
+    loc: {
+      start: { line: 123, column: 456 },
+    },
+  }),
+  "123:456",
+);
+
+assertEqual(
+  serializeLocation({
+    type: "Type",
+    loc: {
+      filename: null,
+      start: { line: 123, column: 456 },
+    },
+  }),
+  "123:456",
+);
+
+assertEqual(
+  serializeLocation({
+    type: "Type",
+    loc: {
+      filename: "filename",
+      start: { line: 123, column: 456 },
+    },
+  }),
+  "filename:123:456",
+);
 
 ////////////////
 // liftEffect //
