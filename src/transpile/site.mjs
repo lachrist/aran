@@ -1,5 +1,17 @@
 const { undefined } = globalThis;
 
+export const BLOCK = {
+  type: "Block",
+  labels: [],
+  completion: null,
+};
+
+export const STATEMENT = {
+  type: "Statement",
+  labels: [],
+  completion: null,
+};
+
 export const SPREAD = {
   type: "Spread",
 };
@@ -69,8 +81,6 @@ export const ASSIGNMENT_EFFECT = {
 };
 
 export const PROGRAM = { type: "Program" };
-
-export const STATEMENT = { type: "Statement" };
 
 export const EFFECT = { type: "Effect" };
 

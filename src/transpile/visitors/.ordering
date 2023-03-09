@@ -21,3 +21,5 @@ object-property.mjs
 object-property-regular.mjs
 spread.mjs
 expression.mjs
+block.mjs
+statement.mjs
