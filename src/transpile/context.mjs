@@ -1,4 +1,5 @@
 import {
+  constant__,
   expect1,
   expect2,
   inspect1,
@@ -95,7 +96,7 @@ export const serializeLocation = (node, _type) => {
 export const createInitialContext = () => ({
   visitors: {},
   counter: createCounter(0),
-  serialize: serializeLocation,
+  serialize: constant__(null),
   evals: {},
   strict: false,
   scope: ROOT_SCOPE,
