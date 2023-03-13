@@ -4,11 +4,29 @@ export const BLOCK = {
   type: "Block",
   labels: [],
   completion: null,
+  break: null,
+  continue: null,
 };
 
 export const STATEMENT = {
   type: "Statement",
   labels: [],
+  completion: null,
+  break: null,
+  continue: null,
+};
+
+export const LOOP = {
+  type: "Loop",
+  labels: [],
+  break: null,
+  completion: null,
+};
+
+export const LOOP_BODY = {
+  type: "LoopBody",
+  labels: [],
+  break: null,
   completion: null,
 };
 

@@ -22,4 +22,6 @@ object-property-regular.mjs
 spread.mjs
 expression.mjs
 block.mjs
+loop-body.mjs
+loop.mjs
 statement.mjs

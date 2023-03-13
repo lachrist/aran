@@ -7,21 +7,21 @@ import { visit } from "../context.mjs";
 
 export default {
   __ANNOTATE__: annotate,
-  LabeledStatement: (node, context, { labels, completion }) =>
+  LabeledStatement: (node, context, { type: _type, labels, ...rest }) =>
     visit(node.body, context, {
       ...BLOCK,
+      ...rest,
       labels: concat(labels, [node.label.name]),
-      completion,
     }),
-  BlockStatement: (node, context1, { labels, completion }) =>
+  BlockStatement: (node, context1, { type: _type, labels, ...rest }) =>
     makeScopeNormalStaticBlock(context1, labels, (context2) =>
       flatMap(
         node.body,
-        partial_xx(visit, context2, { ...STATEMENT, completion }),
+        partial_xx(visit, context2, { ...STATEMENT, ...rest }),
       ),
     ),
-  __DEFAULT__: (node, context1, { labels, completion }) =>
+  __DEFAULT__: (node, context1, { type: _type, labels, ...rest }) =>
     makeScopeNormalStaticBlock(context1, labels, (context2) =>
-      visit(node, context2, { ...STATEMENT, completion }),
+      visit(node, context2, { ...STATEMENT, ...rest }),
     ),
 };
