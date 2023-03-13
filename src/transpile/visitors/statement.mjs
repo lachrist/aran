@@ -1,13 +1,20 @@
 import { map, includes, concat } from "array-lite";
+import { partial__x, constant_ } from "../../util/index.mjs";
 import {
   makeBlockStatement,
   makeDebuggerStatement,
   makeEffectStatement,
+  makeIfStatement,
 } from "../../ast/index.mjs";
-import { makeScopeMetaWriteEffectArray } from "../scope/index.mjs";
+import {
+  makeScopeMetaWriteEffectArray,
+  makeScopeNormalStaticBlock,
+} from "../scope/index.mjs";
 import { annotateArray } from "../annotate.mjs";
 import { BLOCK, STATEMENT, EFFECT, EXPRESSION } from "../site.mjs";
 import { visit } from "../context.mjs";
+
+const makeEmptyBlock = partial__x(makeScopeNormalStaticBlock, constant_([]));
 
 export default {
   __ANNOTATE__: annotateArray,
@@ -19,9 +26,6 @@ export default {
       completion,
       labels: concat(labels, [node.label.name]),
     }),
-  BlockStatement: (node, context, { completion, labels }) => [
-    makeBlockStatement(visit(node, context, { ...BLOCK, completion, labels })),
-  ],
   ExpressionStatement: (node, context, { completion }) => {
     if (completion !== null && includes(completion.nodes, node)) {
       return map(
@@ -36,4 +40,16 @@ export default {
       return map(visit(node.expression, context, EFFECT), makeEffectStatement);
     }
   },
+  BlockStatement: (node, context, { completion, labels }) => [
+    makeBlockStatement(visit(node, context, { ...BLOCK, completion, labels })),
+  ],
+  IfStatement: (node, context, { completion, labels }) => [
+    makeIfStatement(
+      visit(node.test, context, EXPRESSION),
+      visit(node.consequent, context, { ...BLOCK, completion, labels }),
+      node.alternate === null
+        ? makeEmptyBlock(context, labels)
+        : visit(node.alternate, context, { ...BLOCK, completion, labels }),
+    ),
+  ],
 };

@@ -55,7 +55,17 @@ test(`;`, `{}`);
 // ExpressionStatement //
 test(`123; `, `{ void 123; }`);
 
-// LabeledStatement && BlockStatement //
-test(`k: l: {}`, `{ k: l: {} }`);
+// LabeledStatement //
+test(`k: 123;`, `{ void 123; }`);
+
+// BlockStatement //
+test(`k: l: { 123; }`, `{ k: l: { void 123; } }`);
+
+// IfStatement //
+test(
+  `l: if (123) { 456; } else { 789; }`,
+  `{ if (123) l: { void 456; } else l: { void 789; } }`,
+);
+test(`l: if (123) { 456; }`, `{ if (123) l: { void 456; } else l: {} }`);
 
 done();
