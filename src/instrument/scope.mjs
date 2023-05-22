@@ -1,131 +1,73 @@
-import { concat, map, includes } from "array-lite";
-
+import { makeIntrinsicExpression } from "../ast/generated-make.mjs";
+import { makeObjectExpression } from "../intrinsic.mjs";
+import { assert } from "../util/index.mjs";
 import {
-  append,
-  push,
-  hasOwn,
-  partialx_,
-  partialx_x,
-  partial__x,
-  assert,
-} from "../util/index.mjs";
+  makeExternalFrame,
+  makeFrameReadExpression,
+  makeFrameWriteEffect,
+  makeInternalFrame,
+  getFrame,
+  hasFrame,
+} from "./frame.mjs";
+import { collectFreeVariable } from "./query.mjs";
+import { isNewVariable, makeLabVariable, makeVarVariable } from "./variable.mjs";
 
-import {
-  makeDeclareExternalStatement,
-  makeBlock,
-  makeScriptProgram,
-  makeReadExternalExpression,
-  makeWriteExternalEffect,
-  makeWriteEffect,
-  makeLiteralExpression,
-  makeReadExpression,
-} from "../ast/index.mjs";
 
-const {
-  Error,
-  Reflect: { defineProperty },
-} = globalThis;
 
-export const extendScope = (parent) => ({
-  parent,
-  secret: null,
-  bindings: {},
-  used: [],
-});
 
-export const createRootScope = (secret) => ({
+
+const declareVariable = (scope, variable) => {};
+
+
+
+
+
+
+
+
+
+export const ROOT_SCOPE = null;
+
+const makeRootScope = (prefix, entries) => ({
   parent: null,
-  secret,
-  bindings: {},
-  used: [],
+  frame: makeExternalFrame(entries, prefix),
 });
 
-const descriptor = {
-  __proto__: null,
-  value: null,
-  configurable: true,
-  enumerable: true,
-  writable: true,
-};
+const extendScope = (parent, entries) => ({
+  parent,
+  frame: makeInternalFrame(entries),
+});
 
-export const declareScope = ({ bindings }, variable, value) => {
-  assert(!hasOwn(bindings, variable), "duplicate variable");
-  defineProperty(bindings, variable, {
-    __proto__: descriptor,
-    value: { value },
-  });
-};
-
-const getBindingScope = (scope, variable) => {
-  while (scope !== null) {
-    if (hasOwn(scope.bindings, variable)) {
-      return scope;
-    }
-    scope = scope.parent;
-  }
-  throw new Error("missing variable");
-};
-
-const lookup = (scope, variable, key) =>
-  getBindingScope(scope, variable).bindings[variable][key];
-
-export const lookupScope = partial__x(lookup, "value");
-
-export const isScopeUsed = (scope, variable) => {
-  const { used } = getBindingScope(scope, variable);
-  return includes(used, variable);
-};
-
-const pushUnique = (array, element) => {
-  if (!includes(array, element)) {
-    push(array, element);
+const getBindingFrame = ({ parent, frame }, variable) => {
+  if (hasFrame(frame, variable)) {
+    return frame;
+  } else {
+    assert(parent !== null, "missing binding frame");
+    return getBindingFrame(parent, variable);
   }
 };
 
-export const makeScopeReadExpression = (scope, variable) => {
-  const { used, secret, parent } = getBindingScope(scope, variable);
-  pushUnique(used, variable);
-  return parent === null
-    ? makeReadExternalExpression(`${secret}${variable}`)
-    : makeReadExpression(variable);
-};
+const generateLookup = (makeVariable) => (scope, variable) =>
+  getFrame(getBindingFrame(scope, variable), makeVariable(variable));
 
-export const makeScopeWriteEffect = (scope, variable, expression) => {
-  const { used, secret, parent } = getBindingScope(scope, variable);
-  pushUnique(used, variable);
-  return parent === null
-    ? makeWriteExternalEffect(`${secret}${variable}`, expression)
-    : makeWriteEffect(variable, expression);
-};
+export const lookupScopeLab = generateLookup(makeLabVariable);
 
-export const makeScopeBlock = ({ parent, used }, labels, statements) => {
-  assert(parent !== null, "expected body scope");
-  return makeBlock(labels, used, statements);
-};
+export const lookupScopeVar = generateLookup(makeVarVariable);
 
-const makeUndefinedDeclareExternalStatement = partialx_x(
-  makeDeclareExternalStatement,
-  "let",
-  makeLiteralExpression({ undefined: null }),
-);
+export const makeScopeReadExpression = (scope, variable) =>
+  makeFrameReadExpression(getBindingFrame(scope, variable), variable);
 
-export const makeScopeScriptProgram = (
-  { parent, secret, used },
-  statements,
-) => {
-  assert(parent === null, "expected root scope");
-  return makeScriptProgram(
-    concat(
-      map(
-        map(used, partialx_(append, secret)),
-        makeUndefinedDeclareExternalStatement,
-      ),
-      statements,
-    ),
+export const makeScopeWriteEffect = (scope, variable, expression) =>
+  makeFrameWriteEffect(getBindingFrame(scope, variable), variable, expression);
+
+export const makeScopeScriptProgram = () => {};
+
+export const makeScopeBlock = (parent, labels, variables, makeStatementArray) => {
+  const statements = makeStatementsArray(extendScope(parent, variables));
+  const free_variable_array = flatMap(statement, collectFreeVariable);
+  return makeBlock(
+    labels,
+    variables,
+    statements,
   );
-};
-
-export const useScope = (scope, variable) => {
-  const { used } = getBindingScope(scope, variable);
-  pushUnique(used, variable);
 };

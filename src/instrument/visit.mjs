@@ -51,22 +51,18 @@ import {
 import { makeJsonExpression } from "../intrinsic.mjs";
 
 import {
-  makeScopeScriptProgram,
+  makeRootScope,
   extendScope,
-  makeScopeBlock,
+  makeScopeReadExpression,
+  makeScopeWriteEffect,
 } from "./scope.mjs";
 
 import {
-  VAR_SPLIT,
-  LAB_SPLIT,
-  NEW_SPLIT,
-  OLD_SPLIT,
-  declareSplitScope,
-  isSplitScopeUsed,
-  useSplitScope,
-  makeSplitScopeWriteEffect,
-  makeSplitScopeReadExpression,
-} from "./split.mjs";
+  makeVarVariable,
+  makeLabVariable,
+  makeOldVariable,
+  makeNewVariable,
+} from "./variable.mjs";
 
 import { makeTrapExpression, makeTrapStatementArray } from "./trap.mjs";
 

@@ -2,4 +2,5 @@ literal.mjs
 intrinsics.mjs
 syntax.mjs
 validate.mjs
+query.mjs
 index.mjs

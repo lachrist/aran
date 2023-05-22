@@ -11,16 +11,16 @@ import {
   return_x_,
   return__x_,
   return___x_,
+  partialx_,
   partialx__,
   partialxxx__,
   dropx_,
-  partialxx_,
-  partial_x_,
   hasOwn,
 } from "../util/index.mjs";
 
 import {
   fromLiteral,
+  makeReadExternalExpression,
   makeLiteralExpression,
   makeApplyExpression,
   makeConstructExpression,
@@ -34,13 +34,13 @@ import {
   makeJsonExpression,
 } from "../intrinsic.mjs";
 
+import { lookupScope, makeScopeReadExpression } from "./scope.mjs";
+
 import {
-  NEW_SPLIT,
-  LAB_SPLIT,
-  VAR_SPLIT,
-  lookupSplitScope,
-  makeSplitScopeReadExpression,
-} from "./split.mjs";
+  makeVarVariable,
+  makeLabVariable,
+  makeNewVariable,
+} from "./variable.mjs";
 
 import { cut } from "./cut.mjs";
 
@@ -57,12 +57,21 @@ const returnNull = constant(null);
 
 const mapNull = (array) => map(array, returnNull);
 
-const lookupAllScope = (scope, split, variables) =>
-  map(variables, partialxx_(lookupSplitScope, scope, split));
+const lookupSplitScope = (makeVariable, scope, variable) =>
+  lookupScope(scope, makeVariable(variable));
 
-const makeSplitScopeReadArrayExpression = (scope, split, variables) =>
+const makeSplitScopeReadExpression = (makeVariable, scope, variable) =>
+  makeScopeReadExpression(scope, makeVariable(variable));
+
+const lookupAllSplitScope = (makeVariable, scope, variables) =>
+  map(map(variables, makeVariable), partialx_(lookupScope, scope));
+
+const makeSplitScopeReadArrayExpression = (makeVariable, scope, variables) =>
   makeArrayExpression(
-    map(variables, partialxx_(makeSplitScopeReadExpression, scope, split)),
+    map(
+      map(variables, makeVariable),
+      partialx_(makeScopeReadExpression, scope),
+    ),
   );
 
 const testNullStatic = (closure, scope, value) =>
@@ -86,24 +95,24 @@ const primitive_arg = [return_x, dropx_(makeLiteralExpression)];
 const literal_arg = [dropx_(fromLiteral), dropx_(makeLiteralExpression)];
 const json_arg = [return_x, dropx_(makeJsonExpression)];
 const new_arg = [
-  partial_x_(lookupSplitScope, NEW_SPLIT),
-  partial_x_(makeSplitScopeReadExpression, NEW_SPLIT),
+  partialx__(lookupSplitScope, makeNewVariable),
+  partialx__(makeSplitScopeReadExpression, makeNewVariable),
 ];
 const var_arg = [
-  partial_x_(lookupSplitScope, VAR_SPLIT),
-  partial_x_(makeSplitScopeReadExpression, VAR_SPLIT),
+  partialx__(lookupSplitScope, makeVarVariable),
+  partialx__(makeSplitScopeReadExpression, makeVarVariable),
 ];
 const lab_arg = [
-  partial_x_(lookupSplitScope, LAB_SPLIT),
-  partial_x_(makeSplitScopeReadExpression, LAB_SPLIT),
+  partialx__(lookupSplitScope, makeLabVariable),
+  partialx__(makeSplitScopeReadExpression, makeLabVariable),
 ];
 const var_array_arg = [
-  partial_x_(lookupAllScope, VAR_SPLIT),
-  partial_x_(makeSplitScopeReadArrayExpression, VAR_SPLIT),
+  partialx__(lookupAllSplitScope, makeVarVariable),
+  partialx__(makeSplitScopeReadArrayExpression, makeVarVariable),
 ];
 const lab_array_arg = [
-  partial_x_(lookupAllScope, LAB_SPLIT),
-  partial_x_(makeSplitScopeReadArrayExpression, LAB_SPLIT),
+  partialx__(lookupAllSplitScope, makeLabVariable),
+  partialx__(makeSplitScopeReadArrayExpression, makeLabVariable),
 ];
 
 //////////////////////
@@ -236,10 +245,10 @@ const makeTrapMaybeNode = (pointcut, namespace, scope, name, values) => {
   ) {
     return makeApplyExpression(
       makeGetExpression(
-        makeSplitScopeReadExpression(scope, NEW_SPLIT, namespace),
+        makeReadExternalExpression(namespace),
         makeLiteralExpression(name),
       ),
-      makeSplitScopeReadExpression(scope, NEW_SPLIT, namespace),
+      makeReadExternalExpression(namespace),
       map(values, partialxxx__(argumentize, scope, trap, 1)),
     );
   } else {

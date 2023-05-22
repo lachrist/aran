@@ -7,6 +7,7 @@ import {
 } from "../__fixture__.mjs";
 
 import {
+  makeBlock,
   makeEffectStatement,
   makeExpressionEffect,
   makeIntrinsicExpression,
@@ -22,15 +23,13 @@ import {
 
 import { allignBlock } from "../allign/index.mjs";
 
-import { makeScopeBlock, extendScope, createRootScope } from "./scope.mjs";
+import { makeRootScope, extendScope } from "./scope.mjs";
 
 import {
-  VAR_SPLIT,
-  LAB_SPLIT,
-  NEW_SPLIT,
-  makeSplitScopeReadExpression,
-  declareSplitScope,
-} from "./split.mjs";
+  makeVarVariable,
+  makeLabVariable,
+  makeNewVariable,
+} from "./variable.mjs";
 
 import { makeTrapExpression, makeTrapStatementArray } from "./trap.mjs";
 
@@ -40,53 +39,53 @@ const getFirst = (object) => object[0];
 const getSecond = (object) => object[1];
 const getThird = (object) => object[2];
 
-{
-  const scope = extendScope(createRootScope("secret_"));
-  assertSuccess(
-    allignBlock(
-      makeScopeBlock(
-        scope,
-        [],
-        makeTrapStatementArray(false, "namespace", scope, "debugger", 123),
+assertSuccess(
+  allignBlock(
+    makeBlock(
+      [],
+      [],
+      makeTrapStatementArray(
+        false,
+        "namespace",
+        makeRootScope("prefix_", []),
+        "debugger",
+        123,
       ),
-      "{}",
     ),
-  );
-}
+    `{}`,
+  ),
+);
+
+assertSuccess(
+  allignBlock(
+    makeBlock(
+      [],
+      [],
+      makeTrapStatementArray(
+        true,
+        "namespace",
+        makeRootScope("prefix_", []),
+        "debugger",
+        123,
+      ),
+    ),
+    `
+      {
+        void intrinsic.aran.get([namespace], 'debugger')(
+          ![namespace],
+          123,
+        );
+      }
+    `,
+  ),
+);
 
 {
-  const scope = extendScope(createRootScope("secret_"));
-  declareSplitScope(scope, NEW_SPLIT, "namespace", "NAMESPACE");
-  assertSuccess(
-    allignBlock(
-      makeScopeBlock(
-        scope,
-        [],
-        makeTrapStatementArray(true, "namespace", scope, "debugger", 123),
-      ),
-      `
-        {
-          let Namespace;
-          void intrinsic.aran.get(Namespace, 'debugger')(
-            !Namespace,
-            123,
-          );
-        }
-      `,
-    ),
-  );
-}
-
-{
-  const scope = extendScope(createRootScope("secret_"));
-  declareSplitScope(scope, VAR_SPLIT, "variable", "VARIABLE");
-  declareSplitScope(scope, LAB_SPLIT, "label", "LABEL");
-  declareSplitScope(scope, NEW_SPLIT, "callee", "CALLEE");
-  declareSplitScope(scope, NEW_SPLIT, "namespace", "NAMESPACE");
-  makeSplitScopeReadExpression(scope, VAR_SPLIT, "variable");
-  makeSplitScopeReadExpression(scope, LAB_SPLIT, "label");
-  makeSplitScopeReadExpression(scope, NEW_SPLIT, "callee");
-  makeSplitScopeReadExpression(scope, NEW_SPLIT, "namespace");
+  const scope = extendScope(makeRootScope("prefix_", []), [
+    [makeVarVariable("variable"), "VARIABLE"],
+    [makeLabVariable("label"), "LABEL"],
+    [makeNewVariable("callee"), "CALLEE"],
+  ]);
   forEach(
     [
       // Informers //
@@ -154,8 +153,8 @@ const getThird = (object) => object[2];
             "arrow",
             true,
             false,
-            makeScopeBlock(
-              extendScope(scope),
+            makeBlock(
+              [],
               [],
               [makeReturnStatement(makeLiteralExpression("completion"))],
             ),
@@ -278,9 +277,13 @@ const getThird = (object) => object[2];
       let done = false;
       assertSuccess(
         allignBlock(
-          makeScopeBlock(
-            scope,
+          makeBlock(
             [],
+            [
+              makeVarVariable("variable"),
+              makeLabVariable("label"),
+              makeNewVariable("callee"),
+            ],
             [
               makeEffectStatement(
                 makeExpressionEffect(
@@ -303,9 +306,9 @@ const getThird = (object) => object[2];
           ),
           `
             {
-              let Variable, Label, Callee, Namespace;
-              void intrinsic.aran.get(Namespace, '${name1}')(
-                ${join(concat(["!Namespace"], map(specs, getThird)), ", ")}
+              let Variable, Label, Callee;
+              void intrinsic.aran.get([namespace], '${name1}')(
+                ${join(concat(["![namespace]"], map(specs, getThird)), ", ")}
               );
             }
           `,
