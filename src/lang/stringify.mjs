@@ -32,3 +32,17 @@ export const stringifyStatement = generateStringifyStatement(revertStatement);
 export const stringifyLink = generateStringifyStatement(revertLink);
 export const stringifyBlock = generateStringifyStatement(revertBlock);
 export const stringifyProgram = generateStringifyProgram(revertProgram);
+
+export const stringifiers = {
+  program: stringifyProgram,
+  block: stringifyBlock,
+  statement: stringifyStatement,
+  link: stringifyLink,
+  effect: stringifyEffect,
+  expression: stringifyExpression,
+};
+
+export const stringify = (type, node) => {
+  const stringifier = stringifiers[type];
+  return stringifier(node);
+};

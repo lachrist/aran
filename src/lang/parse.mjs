@@ -34,3 +34,17 @@ export const parseBlock = generateParseStatement(convertBlock);
 export const parseStatement = generateParseStatement(convertStatement);
 export const parseExpression = generateParseExpression(convertExpression);
 export const parseEffect = generateParseExpression(convertEffect);
+
+const parsers = {
+  program: parseProgram,
+  link: parseLink,
+  block: parseBlock,
+  statement: parseStatement,
+  effect: parseEffect,
+  expression: parseExpression,
+};
+
+export const parse = (type, code) => {
+  const parser = parsers[type];
+  return parser(code);
+};

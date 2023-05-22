@@ -2,34 +2,23 @@ import { assertEqual, assertThrow } from "../__fixture__.mjs";
 import { parseBabel } from "../babel.mjs";
 import { stringifyPrettier } from "./prettier.mjs";
 
-import {
-  parseExpression,
-  parseEffect,
-  parseStatement,
-  parseBlock,
-  parseLink,
-  parseProgram,
-  stringifyExpression,
-  stringifyEffect,
-  stringifyLink,
-  stringifyBlock,
-  stringifyProgram,
-  stringifyStatement,
-} from "./index.mjs";
+import { parse, stringify } from "./index.mjs";
 
 const generateTest =
-  (parse, stringify) =>
+  (type) =>
   (code1, code2 = code1) => {
-    // console.log("grunt", globalThis.JSON.stringify(parse(code1), null, 2));
-    assertEqual(stringify(parse(code1)), stringifyPrettier(parseBabel(code2)));
+    assertEqual(
+      stringify(type, parse(type, code1)),
+      stringifyPrettier(parseBabel(code2)),
+    );
   };
 
-const testExpression = generateTest(parseExpression, stringifyExpression);
-const testEffect = generateTest(parseEffect, stringifyEffect);
-const testLink = generateTest(parseLink, stringifyLink);
-const testStatement = generateTest(parseStatement, stringifyStatement);
-const testProgram = generateTest(parseProgram, stringifyProgram);
-const testBlock = generateTest(parseBlock, stringifyBlock);
+const testExpression = generateTest("expression");
+const testEffect = generateTest("effect");
+const testLink = generateTest("link");
+const testStatement = generateTest("statement");
+const testProgram = generateTest("program");
+const testBlock = generateTest("block");
 
 ////////////////
 // Expression //

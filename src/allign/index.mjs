@@ -122,6 +122,20 @@ export const allignProgram = generateAllign(
   visitProgram,
 );
 
+const alligners = {
+  program: allignProgram,
+  block: allignBlock,
+  statement: allignStatement,
+  link: allignLink,
+  effect: allignEffect,
+  expression: allignExpression,
+};
+
+export const allign = (type, node, code) => {
+  const alligner = alligners[type];
+  return alligner(node, code);
+};
+
 // Bad idea: does not share variable mappings
 //
 // const isNotNull = (any) => any !== null;
