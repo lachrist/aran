@@ -36,9 +36,9 @@ export const getChildren = partialx_(dispatchArrayNode0, {
   WriteEffect: ({ 2: expression }) => [expression],
   WriteExternalEffect: ({ 2: expression }) => [expression],
   ExportEffect: ({ 2: expression }) => [expression],
+  ExpressionEffect: ({ 1: expression }) => [expression],
   ConditionalEffect: ({ 1: expression, 2: effects1, 3: effects2 }) =>
     concat([expression], effects1, effects2),
-  ExpressionEffect: ({ 1: expression }) => [expression],
   // Expression //
   ParameterExpression: RETURN_EMPTY,
   LiteralExpression: RETURN_EMPTY,

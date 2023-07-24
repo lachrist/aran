@@ -15,7 +15,7 @@
     "build-debug": "node build/generate-make.mjs DEBUG",
     "lint": "npx prettier -c '**/*.mjs' && npx eslint '**/*.mjs'",
     "format": "npx prettier -w '**/*.mjs'",
-    "test": "npx bercow",
+    "test": "node test/unit.mjs",
     "coverage": "/bin/sh shell/coverage.sh"
   },
   "keywords": [
@@ -29,6 +29,7 @@
   ],
   "devDependencies": {
     "@babel/parser": "^7.20.5",
+    "@types/node": "^20.4.4",
     "c8": "^7.10.0",
     "chalk": "^4.1.2",
     "diff": "^5.0.0",
@@ -45,6 +46,8 @@
     "@bercow/order-esm-import": "^0.1.0",
     "@bercow/prettier": "^0.1.0",
     "@bercow/spawn": "^0.2.0",
-    "array-lite": "^0.2.0"
+    "@types/estree": "^1.0.1",
+    "array-lite": "^0.2.0",
+    "typescript": "^5.1.6"
   }
 }

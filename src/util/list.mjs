@@ -1,3 +1,8 @@
+/**
+ * @template X
+ * @template Y
+ * @typedef Cons<X, Y> */
+
 export const cons = (x, y) => ({ car: x, cdr: y });
 
 export const consFlip = (y, x) => ({ car: x, cdr: y });

@@ -23,7 +23,8 @@ globals:
   globalThis: readonly
   console: readonly
 parserOptions:
-  ecmaVersion: 2021
+  # parser: "@babel/eslint-parser"
+  ecmaVersion: 2022
   sourceType: module
 plugins:
   - import
@@ -127,7 +128,7 @@ rules:
   # default-case-last >> SwitchStatement disabled by no-restricted-syntax
   default-param-last: error # TODO: disable default parameters
   # dot-location: [error, object] >> Prettier
-  dot-notation: [error, {allowKeywords: true}]
+  dot-notation: [error, { allowKeywords: true }]
   # eol-last: [error, always] >> Prettier
   # eqeqeq >> BinaryExpression[!=|==] disabled by no-restricted-syntax
   # for-direction >> Heuristic
@@ -165,7 +166,7 @@ rules:
   # max-statements-per-line: [error, {max:1}] >> Prettier
   # multiline-comment-style: [error, separate-lines] >> Not intersted in enforcing comment style
   # multiline-ternary >> Prettier
-  new-cap: [error, {newIsCap: true}]
+  new-cap: [error, { newIsCap: true }]
   new-parens: [error, always]
   # newline-per-chained-call >> Prettier
   # no-alert >> No browser environemnt
@@ -209,12 +210,12 @@ rules:
   # no-extend-native >> No globals
   # no-extra-bind >> Heuristic
   # no-extra-boolean-cast >> Heuristic
-  no-extra-parens:
-    - error
-    - all
-    - enforceForArrowConditionals: false
-      nestedBinaryExpressions: false
-      enforceForSequenceExpressions: false
+  # no-extra-parens:
+  #   - error
+  #   - all
+  #   - enforceForArrowConditionals: false
+  #     nestedBinaryExpressions: false
+  #     enforceForSequenceExpressions: false
   no-extra-semi: error
   # no-extra-strict >> deprecated
   # no-fallthrough >> SwitchStatement disabled by no-restricted-syntax
@@ -240,7 +241,7 @@ rules:
   # no-magic-numbers
   # no-misleading-character-class >> RegExp
   # no-mixed-spaces-and-tabs >> Prettier
-  no-mixed-operators: [error, {allowSamePrecedence: false}]
+  no-mixed-operators: [error, { allowSamePrecedence: false }]
   # no-mixed-requires >> deprecated
   # no-multi-assign: error >> AssignemntExpression disabled in this context by no-restricted-syntax
   # no-multi-spaces: error >> Prettier
@@ -288,7 +289,7 @@ rules:
   # no-throw-literal
   # no-trailing-spaces: error >> Prettier
   # no-undef-init >> I want explicit init
-  no-undef: [error, {typeof: true}]
+  no-undef: [error, { typeof: true }]
   # no-undefined >> I used local undefined variable
   # no-underscore-dangle >> redundant with camel-case
   # no-unexpected-multiline >> Prettier
@@ -328,7 +329,7 @@ rules:
   # padded-blocks >> Prettier
   # padding-line-between-statements >> Prettier
   # prefer-arrow-callback >> Function disabled by no-restricted-syntax
-  prefer-const: [error, {destructuring: any}]
+  prefer-const: [error, { destructuring: any }]
   # prefer-destructuring: error >> not intersted
   # prefer-exponentiation-operator >> heuristic
   # prefer-named-capture-group: error >> RegExp
@@ -367,7 +368,7 @@ rules:
   unicode-bom: [error, never]
   # use-isnan >> Heuristic
   # valid-jsdoc >> Deprecated
-  valid-typeof: [error, {requireStringLiterals: true}]
+  valid-typeof: [error, { requireStringLiterals: true }]
   # vars-on-top >> Variables are disabled by no-restricted-syntax
   # wrap-iife: [error, outside] >> Function disabled by no-restricted-syntax
   wrap-regex: error

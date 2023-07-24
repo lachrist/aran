@@ -12,30 +12,42 @@ class DeadcodeError extends Error {
 }
 /* eslint-enable no-restricted-syntax */
 
+/** @type {(message: string) => () => never} */
 export const deadcode = (message) => () => {
   throw new DeadcodeError(message);
 };
-export const deadcode_ = (message) => (_x1) => {
-  throw new DeadcodeError(message);
-};
-export const deadcode__ = (message) => (_x1, _x2) => {
-  throw new DeadcodeError(message);
-};
-export const deadcode___ = (message) => (_x1, _x2, _x3) => {
-  throw new DeadcodeError(message);
-};
-export const deadcode____ = (message) => (_x1, _x2, _x3, _x4) => {
+
+/** @type {(message: string) => (x0: unknown) => never} */
+export const deadcode_ = (message) => (_x0) => {
   throw new DeadcodeError(message);
 };
 
-export const deadcode_____ = (message) => (_x1, _x2, _x3, _x4, _x5) => {
+/** @type {(message: string) => (x0: unknown, x1: unknown) => never} */
+export const deadcode__ = (message) => (_x0, _x1) => {
   throw new DeadcodeError(message);
 };
 
-export const deadcode______ = (message) => (_x1, _x2, _x3, _x4, _x5, _x6) => {
+/** @type {(message: string) => (x0: unknown, x1: unknown, x2: unknown) => never} */
+export const deadcode___ = (message) => (_x0, _x1, _x2) => {
   throw new DeadcodeError(message);
 };
 
+/** @type {(message: string) => (x0: unknown, x1: unknown, x2: unknown, x3: unknown) => never} */
+export const deadcode____ = (message) => (_x0, _x1, _x2, _x3) => {
+  throw new DeadcodeError(message);
+};
+
+/** @type {(message: string) => (x0: unknown, x1: unknown, x2: unknown, x3: unknown, x4: unknown) => never} */
+export const deadcode_____ = (message) => (_x0, _x1, _x2, _x3, _x4) => {
+  throw new DeadcodeError(message);
+};
+
+/** @type {(message: string) => (x0: unknown, x1: unknown, x2: unknown, x3: unknown, x4: unknown, x5: unknown) => never} */
+export const deadcode______ = (message) => (_x0, _x1, _x2, _x3, _x4, _x5) => {
+  throw new DeadcodeError(message);
+};
+
+/** @type {(message: string) => (arg0: unknown, arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown, arg5: unknown, arg6: unknown) => never} */
 export const deadcode_______ =
   (message) => (_x1, _x2, _x3, _x4, _x5, _x6, _x7) => {
     throw new DeadcodeError(message);
@@ -45,12 +57,18 @@ export const deadcode_______ =
 // noop //
 //////////
 
-export const noop = () => {};
+/** @type {(x: unknown) => void} */
 export const noop_ = (_x) => {};
+
+/** @type {(x0: unknown, ) => void} */
 export const noop__ = (_x1, _x2) => {};
+
 export const noop___ = (_x1, _x2, _x3) => {};
+
 export const noop____ = (_x1, _x2, _x3, _x4) => {};
+
 export const noop_____ = (_x1, _x2, _x3, _x4, _x5) => {};
+
 export const noop______ = (_x1, _x2, _x3, _x4, _x5, _x6) => {};
 
 //////////////
