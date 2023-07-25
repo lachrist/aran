@@ -29,6 +29,13 @@
   ],
   "devDependencies": {
     "@babel/parser": "^7.20.5",
+    "@bercow/core": "^0.2.0",
+    "@bercow/eslint": "^0.1.0",
+    "@bercow/link-adjacent": "^0.1.0",
+    "@bercow/order-esm-import": "^0.1.0",
+    "@bercow/prettier": "^0.1.0",
+    "@bercow/spawn": "^0.2.0",
+    "@types/estree": "^1.0.1",
     "@types/node": "^20.4.4",
     "c8": "^7.10.0",
     "chalk": "^4.1.2",
@@ -37,17 +44,7 @@
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-local": "^1.0.0",
     "pegjs": "^0.10.0",
-    "prettier": "^2.4.1"
-  },
-  "dependencies": {
-    "@bercow/core": "^0.2.0",
-    "@bercow/eslint": "^0.1.0",
-    "@bercow/link-adjacent": "^0.1.0",
-    "@bercow/order-esm-import": "^0.1.0",
-    "@bercow/prettier": "^0.1.0",
-    "@bercow/spawn": "^0.2.0",
-    "@types/estree": "^1.0.1",
-    "array-lite": "^0.2.0",
+    "prettier": "^2.8.8",
     "typescript": "^5.1.6"
   }
 }

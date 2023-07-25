@@ -1,9 +1,30 @@
-declare module "prettier" {
-  type Prettier = {
-    format(source: string, options: any): string;
-  };
-  export default Prettier;
-}
+// declare module "prettier" {
+//   type Foo = {
+//     format(source: string, options: any): string;
+//   };
+//   export default Foo;
+// }
+
+// Estree //
+
+type EstreeBigIntLiteral = import("estree").BigIntLiteral;
+type EstreeSimpleLiteral = import("estree").SimpleLiteral;
+type EstreeSourceLocation = import("estree").SourceLocation;
+type EstreeVariableDeclaration = import("estree").VariableDeclaration;
+type EstreeStatement = import("estree").Statement;
+type EstreeExpression = import("estree").Expression;
+type EstreeProgram = import("estree").Program;
+type EstreeNode = import("estree").Node;
+type EstreeLiteral = import("estree").Literal;
+type EstreePattern = import("estree").Pattern;
+type EstreeVariableDeclarator = import("estree").VariableDeclarator;
+type EstreeModuleDeclaration = import("estree").ModuleDeclaration;
+type EstreeBlockStatement = import("estree").BlockStatement;
+type EstreeDirective = import("estree").Directive;
+type EstreeProgramStatement =
+  | EstreeModuleDeclaration
+  | EstreeStatement
+  | EstreeDirective;
 
 // Aran //
 
@@ -12,7 +33,9 @@ type Specifier = string;
 type Variable = string;
 type Label = string;
 
-type Primitive =
+type Primitive = undefined | null | boolean | number | bigint | string;
+
+type PackPrimitive =
   | { undefined: null }
   | null
   | boolean
@@ -192,7 +215,7 @@ type Effect<T> =
 type Expression<T> =
   // Produce //
   | { type: "ParameterExpression"; parameter: Parameter; tag: T }
-  | { type: "PrimitiveExpression"; primitive: Primitive; tag: T }
+  | { type: "PrimitiveExpression"; primitive: PackPrimitive; tag: T }
   | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag: T }
   | {
       type: "ImportExpression";

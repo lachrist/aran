@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "declaration": true,
-    "checkJs": true,
+    "declaration": false,
     "allowJs": true,
+    "checkJs": true,
     "noEmit": true,
     "strict": true,
     "lib": ["es2022"],
     "target": "es2022",
     "module": "es2022",
-    "typeRoots": ["./node_modules/@types", "lib/type.d.ts"]
+    "typeRoots": ["lib/type.d.ts", "./node_modules/@types"]
   },
-  "exclude": ["node_modules"]
+  "include": ["lib"]
 }

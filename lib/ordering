@@ -1,8 +1,8 @@
 util/array
 util/assert
 util/object
+util/closure
 util/index
-lang/keywords
 lang/babel
 lang/prettier
 lang/convert
