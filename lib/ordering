@@ -3,6 +3,7 @@ util/assert
 util/object
 util/closure
 util/index
+
 lang/babel
 lang/prettier
 lang/convert
@@ -10,3 +11,13 @@ lang/revert
 lang/parse
 lang/stringify
 lang/index
+
+query/hoist
+query/import
+query/export
+query/eval
+query/strict
+query/sort
+query/object
+query/label
+query/index
