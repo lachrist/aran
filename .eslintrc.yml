@@ -63,8 +63,8 @@ rules:
     - ClassDeclaration
     - ClassExpression
     # Disable bitwise binary operators and non-strict comparison operatos
-    - BinaryExpression[operator="=="]
-    - BinaryExpression[operator="!="]
+    - BinaryExpression:matches([operator="=="][right.value!=null]) # null or undefined check
+    - BinaryExpression:matches([operator="!="][right.value!=null]) # null or undefined check
     - BinaryExpression[operator="&"]
     - BinaryExpression[operator="|"]
     - BinaryExpression[operator="^"]

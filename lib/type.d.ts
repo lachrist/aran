@@ -7,6 +7,14 @@
 
 // Estree //
 
+type EstreeAssignmentProperty = import("estree").AssignmentProperty;
+type EstreeRestElement = import("estree").RestElement;
+type EstreeUnionImportSpecifier =
+  | import("estree").ImportSpecifier
+  | import("estree").ImportDefaultSpecifier
+  | import("estree").ImportNamespaceSpecifier;
+type EstreeObjec = import("estree").Object;
+type EstreeFunction = import("estree").Function;
 type EstreeBigIntLiteral = import("estree").BigIntLiteral;
 type EstreeSimpleLiteral = import("estree").SimpleLiteral;
 type EstreeSourceLocation = import("estree").SourceLocation;
