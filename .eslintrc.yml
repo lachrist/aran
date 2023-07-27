@@ -241,7 +241,7 @@ rules:
   # no-magic-numbers
   # no-misleading-character-class >> RegExp
   # no-mixed-spaces-and-tabs >> Prettier
-  no-mixed-operators: [error, { allowSamePrecedence: false }]
+  # no-mixed-operators: [error, { allowSamePrecedence: false }]
   # no-mixed-requires >> deprecated
   # no-multi-assign: error >> AssignemntExpression disabled in this context by no-restricted-syntax
   # no-multi-spaces: error >> Prettier

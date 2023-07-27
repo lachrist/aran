@@ -7,6 +7,8 @@
 
 // Estree //
 
+type EstreeUnaryOperator = import("estree").UnaryOperator;
+type EstreeBinaryOperator = import("estree").BinaryOperator;
 type EstreeExportSpecifier = import("estree").ExportSpecifier;
 type EstreeAssignmentProperty = import("estree").AssignmentProperty;
 type EstreeRestElement = import("estree").RestElement;
@@ -282,3 +284,11 @@ type Expression<T> =
       arguments: Expression<T>[];
       tag: T;
     };
+
+type Node<T> =
+  | Program<T>
+  | Link<T>
+  | Block<T>
+  | Statement<T>
+  | Effect<T>
+  | Expression<T>;
