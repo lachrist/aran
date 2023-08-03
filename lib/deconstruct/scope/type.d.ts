@@ -1,21 +1,3 @@
-////////////
-// Lookup //
-////////////
-
-type ReadLookup = { type: "read" };
-
-type TypeofLookup = { type: "typeof" };
-
-type DiscardLookup = { type: "discard" };
-
-type WriteLookup<T> = {
-  type: "write";
-  right: Expression<T>;
-  optimist: boolean;
-};
-
-type Lookup<T> = ReadLookup | TypeofLookup | DiscardLookup | WriteLookup<T>;
-
 /////////////
 // Binding //
 /////////////
@@ -40,13 +22,14 @@ type ImportBinding = {
 
 type MissingBinding = {
   type: "missing";
+  enclave: boolean;
 };
 
 type RegularBinding = {
   type: "regular";
+  deadzone: boolean;
   writable: boolean;
   exports: string[];
-  switch: boolean;
 };
 
 type Binding =
@@ -80,17 +63,64 @@ type listBindingInitializeStatement<B, T> = (
   expression: Expression<T>,
 ) => Statement<T>[];
 
-type makeBindingLookupNode<B, T> = (
+type makeBindingReadExpression<B, T> = (
   strict: boolean,
   binding: B,
   variable: string,
-  escaped: boolean,
-  lookup: Lookup<T>,
-) => Expression<T> | Effect<T> | null;
+) => Expression<T>;
+
+type makeBindingTypeofExpression<B, T> = (
+  strict: boolean,
+  binding: B,
+  variable: string,
+) => Expression<T>;
+
+type makeBindingDiscardExpression<B, T> = (
+  strict: boolean,
+  binding: B,
+  variable: string,
+) => Expression<T>;
+
+type listBindingWriteEffect<B, T> = (
+  strict: boolean,
+  binding: B,
+  variable: string,
+  pure: Expression<T>,
+) => Effect<T>[];
 
 type BindingModule<B, T> = {
-  listBindingVariable?: listBindingVariable<B, T>;
-  listBindingDeclareStatement?: listBindingDeclareStatement<B, T>;
-  listBindingInitializeStatement?: listBindingInitializeStatement<B, T>;
-  makeBindingLookupNode: makeBindingLookupNode<B, T>;
+  listBindingVariable: listBindingVariable<B, T>;
+  listBindingDeclareStatement: listBindingDeclareStatement<B, T>;
+  listBindingInitializeStatement: listBindingInitializeStatement<B, T>;
+  makeBindingReadExpression: makeBindingReadExpression<B, T>;
+  makeBindingTypeofExpression: makeBindingTypeofExpression<B, T>;
+  makeBindingDiscardExpression: makeBindingDiscardExpression<B, T>;
+  listBindingWriteEffect: listBindingWriteEffect<B, T>;
+};
+
+///////////
+// Frame //
+///////////
+
+type FrameContext<T> =
+  | { type: "script"; enclave: boolean }
+  | {
+      type: "module";
+      enclave: boolean;
+      import: Record<string, { source: string; specifier: string | null }>;
+      export: Record<string, string[]>;
+    }
+  | { type: "eval"; enclave: boolean }
+  | { type: "block"; with: Expression<T> | null };
+
+type Frame<T> = {
+  root: Binding | null;
+  script: boolean;
+  static: Record<string, Binding>;
+  dynamic: Expression<T> | null;
+};
+
+type Scope<T> = {
+  frame: Frame<T>;
+  parent: Scope<T> | null;
 };

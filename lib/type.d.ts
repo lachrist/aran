@@ -5,8 +5,14 @@
 //   export default Foo;
 // }
 
+// General //
+
+type List<X> = { car: X; cdr: List<X> } | null;
+
 // Estree //
 
+type EstreeIdentifier = import("estree").Identifier;
+type EstreeSwitchCase = import("estree").SwitchCase;
 type EstreeUnaryOperator = import("estree").UnaryOperator;
 type EstreeBinaryOperator = import("estree").BinaryOperator;
 type EstreeExportSpecifier = import("estree").ExportSpecifier;
@@ -38,11 +44,6 @@ type EstreeProgramStatement =
 
 // Aran Syntax //
 
-type Source = string;
-type Specifier = string;
-type Variable = string;
-type Label = string;
-
 type Primitive = undefined | null | boolean | number | bigint | string;
 
 type PackPrimitive =
@@ -53,15 +54,24 @@ type PackPrimitive =
   | { bigint: string }
   | string;
 
+type Mapper<T> = {
+  link: (node: Link<T>) => Link<T>;
+  block: (node: Block<T>) => Block<T>;
+  statement: (nodes: Statement<T>) => Statement<T>;
+  effect: (nodes: Effect<T>) => Effect<T>;
+  expression: (node: Expression<T>) => Expression<T>;
+};
+
 type VariableKind = "var" | "let" | "const";
 
 type ClosureKind = "arrow" | "function" | "method" | "constructor";
 
 type Intrinsic =
   // Ad hoc //
-  | "aran.globalCache"
-  | "aran.globalRecord"
-  | "aran.globalObject"
+  | "aran.global.record.variables"
+  | "aran.global.record.values"
+  | "aran.global.object"
+  | "aran.global.cache"
   | "aran.unary"
   | "aran.binary"
   | "aran.throw"
@@ -145,20 +155,20 @@ type Program<T> =
   | { type: "EvalProgram"; body: Block<T>; tag?: T };
 
 type Link<T> =
-  | { type: "ImportLink"; source: Source; import: Specifier | null; tag?: T }
-  | { type: "ExportLink"; export: Specifier; tag?: T }
+  | { type: "ImportLink"; source: string; import: string | null; tag?: T }
+  | { type: "ExportLink"; export: string; tag?: T }
   | {
       type: "AggregateLink";
-      source: Source;
-      import: Specifier | null;
-      export: Specifier | null;
+      source: string;
+      import: string | null;
+      export: string | null;
       tag?: T;
     };
 
 type Block<T> = {
   type: "Block";
-  labels: Label[];
-  variables: Variable[];
+  labels: string[];
+  variables: string[];
   statements: Statement<T>[];
   tag?: T;
 };
@@ -166,7 +176,7 @@ type Block<T> = {
 type Statement<T> =
   | { type: "EffectStatement"; effect: Effect<T>; tag?: T }
   | { type: "ReturnStatement"; value: Expression<T>; tag?: T }
-  | { type: "BreakStatement"; label: Label; tag?: T }
+  | { type: "BreakStatement"; label: string; tag?: T }
   | { type: "DebuggerStatement"; tag?: T }
   | {
       type: "DeclareExternalStatement";
@@ -203,19 +213,19 @@ type Effect<T> =
     }
   | {
       type: "WriteEffect";
-      variable: Variable;
+      variable: string;
       value: Expression<T>;
       tag?: T;
     }
   | {
       type: "WriteExternalEffect";
-      variable: Variable;
+      variable: string;
       value: Expression<T>;
       tag?: T;
     }
   | {
       type: "ExportEffect";
-      export: Specifier;
+      export: string;
       value: Expression<T>;
       tag?: T;
     };
@@ -227,13 +237,13 @@ type Expression<T> =
   | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag?: T }
   | {
       type: "ImportExpression";
-      source: Source;
-      import: Specifier | null;
+      source: string;
+      import: string | null;
       tag?: T;
     }
-  | { type: "ReadExpression"; variable: Variable; tag?: T }
-  | { type: "ReadExternalExpression"; variable: Variable; tag?: T }
-  | { type: "TypeofExternalExpression"; variable: Variable; tag?: T }
+  | { type: "ReadExpression"; variable: string; tag?: T }
+  | { type: "ReadExternalExpression"; variable: string; tag?: T }
+  | { type: "TypeofExternalExpression"; variable: string; tag?: T }
   | {
       type: "ClosureExpression";
       kind: ClosureKind;
