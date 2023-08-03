@@ -36,7 +36,7 @@ type EstreeProgramStatement =
   | EstreeStatement
   | EstreeDirective;
 
-// Aran //
+// Aran Syntax //
 
 type Source = string;
 type Specifier = string;
@@ -53,7 +53,7 @@ type PackPrimitive =
   | { bigint: string }
   | string;
 
-type DeclareKind = "var" | "let" | "const";
+type VariableKind = "var" | "let" | "const";
 
 type ClosureKind = "arrow" | "function" | "method" | "constructor";
 
@@ -67,10 +67,8 @@ type Intrinsic =
   | "aran.throw"
   | "aran.createObject"
   | "aran.get"
-  | "aran.setStrict"
-  | "aran.setSloppy"
-  | "aran.deleteStrict"
-  | "aran.deleteSloppy"
+  | "aran.set"
+  | "aran.delete"
   | "aran.deadzone"
   | "aran.AranError"
   | "aran.asynchronousGeneratorPrototype"
@@ -142,19 +140,19 @@ type Parameter =
   | "super.call";
 
 type Program<T> =
-  | { type: "ScriptProgram"; statements: Statement<T>[]; tag: T }
-  | { type: "ModuleProgram"; links: Link<T>[]; body: Block<T>; tag: T }
-  | { type: "EvalProgram"; body: Block<T>; tag: T };
+  | { type: "ScriptProgram"; statements: Statement<T>[]; tag?: T }
+  | { type: "ModuleProgram"; links: Link<T>[]; body: Block<T>; tag?: T }
+  | { type: "EvalProgram"; body: Block<T>; tag?: T };
 
 type Link<T> =
-  | { type: "ImportLink"; source: Source; import: Specifier | null; tag: T }
-  | { type: "ExportLink"; export: Specifier; tag: T }
+  | { type: "ImportLink"; source: Source; import: Specifier | null; tag?: T }
+  | { type: "ExportLink"; export: Specifier; tag?: T }
   | {
       type: "AggregateLink";
       source: Source;
       import: Specifier | null;
       export: Specifier | null;
-      tag: T;
+      tag?: T;
     };
 
 type Block<T> = {
@@ -162,127 +160,127 @@ type Block<T> = {
   labels: Label[];
   variables: Variable[];
   statements: Statement<T>[];
-  tag: T;
+  tag?: T;
 };
 
 type Statement<T> =
-  | { type: "EffectStatement"; effect: Effect<T>; tag: T }
-  | { type: "ReturnStatement"; value: Expression<T>; tag: T }
-  | { type: "BreakStatement"; label: Label; tag: T }
-  | { type: "DebuggerStatement"; tag: T }
+  | { type: "EffectStatement"; effect: Effect<T>; tag?: T }
+  | { type: "ReturnStatement"; value: Expression<T>; tag?: T }
+  | { type: "BreakStatement"; label: Label; tag?: T }
+  | { type: "DebuggerStatement"; tag?: T }
   | {
       type: "DeclareExternalStatement";
-      kind: DeclareKind;
+      kind: VariableKind;
       variable: string;
       value: Expression<T>;
-      tag: T;
+      tag?: T;
     }
-  | { type: "BlockStatement"; body: Block<T>; tag: T }
+  | { type: "BlockStatement"; body: Block<T>; tag?: T }
   | {
       type: "IfStatement";
       test: Expression<T>;
       then: Block<T>;
       else: Block<T>;
-      tag: T;
+      tag?: T;
     }
-  | { type: "WhileStatement"; test: Expression<T>; body: Block<T>; tag: T }
+  | { type: "WhileStatement"; test: Expression<T>; body: Block<T>; tag?: T }
   | {
       type: "TryStatement";
       body: Block<T>;
       catch: Block<T>;
       finally: Block<T>;
-      tag: T;
+      tag?: T;
     };
 
 type Effect<T> =
-  | { type: "ExpressionEffect"; discard: Expression<T>; tag: T }
+  | { type: "ExpressionEffect"; discard: Expression<T>; tag?: T }
   | {
       type: "ConditionalEffect";
       test: Expression<T>;
       positive: Effect<T>[];
       negative: Effect<T>[];
-      tag: T;
+      tag?: T;
     }
   | {
       type: "WriteEffect";
       variable: Variable;
       value: Expression<T>;
-      tag: T;
+      tag?: T;
     }
   | {
       type: "WriteExternalEffect";
       variable: Variable;
       value: Expression<T>;
-      tag: T;
+      tag?: T;
     }
   | {
       type: "ExportEffect";
       export: Specifier;
       value: Expression<T>;
-      tag: T;
+      tag?: T;
     };
 
 type Expression<T> =
   // Produce //
-  | { type: "ParameterExpression"; parameter: Parameter; tag: T }
-  | { type: "PrimitiveExpression"; primitive: PackPrimitive; tag: T }
-  | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag: T }
+  | { type: "ParameterExpression"; parameter: Parameter; tag?: T }
+  | { type: "PrimitiveExpression"; primitive: PackPrimitive; tag?: T }
+  | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag?: T }
   | {
       type: "ImportExpression";
       source: Source;
       import: Specifier | null;
-      tag: T;
+      tag?: T;
     }
-  | { type: "ReadExpression"; variable: Variable; tag: T }
-  | { type: "ReadExternalExpression"; variable: Variable; tag: T }
-  | { type: "TypeofExternalExpression"; variable: Variable; tag: T }
+  | { type: "ReadExpression"; variable: Variable; tag?: T }
+  | { type: "ReadExternalExpression"; variable: Variable; tag?: T }
+  | { type: "TypeofExternalExpression"; variable: Variable; tag?: T }
   | {
       type: "ClosureExpression";
       kind: ClosureKind;
       asynchronous: boolean;
       generator: boolean;
       body: Block<T>;
-      tag: T;
+      tag?: T;
     }
   // Control //
-  | { type: "AwaitExpression"; value: Expression<T>; tag: T }
+  | { type: "AwaitExpression"; value: Expression<T>; tag?: T }
   | {
       type: "YieldExpression";
       delegate: boolean;
       value: Expression<T>;
-      tag: T;
+      tag?: T;
     }
   | {
       type: "SequenceExpression";
       effect: Effect<T>;
       value: Expression<T>;
-      tag: T;
+      tag?: T;
     }
   | {
       type: "ConditionalExpression";
       test: Expression<T>;
       consequent: Expression<T>;
       alternate: Expression<T>;
-      tag: T;
+      tag?: T;
     }
   // Combine //
   | {
       type: "EvalExpression";
       argument: Expression<T>;
-      tag: T;
+      tag?: T;
     }
   | {
       type: "ApplyExpression";
       callee: Expression<T>;
       this: Expression<T>;
       arguments: Expression<T>[];
-      tag: T;
+      tag?: T;
     }
   | {
       type: "ConstructExpression";
       callee: Expression<T>;
       arguments: Expression<T>[];
-      tag: T;
+      tag?: T;
     };
 
 type Node<T> =
