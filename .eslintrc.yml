@@ -50,7 +50,7 @@ rules:
     # https://estools.github.io/esquery/
     - error
     # Type Wide
-    - ForOfStatement
+    # - ForOfStatement
     - AwaitExpression
     - YieldExpression
     - UpdateExpression
@@ -89,7 +89,7 @@ rules:
     # Variable declaration
     - VariableDeclaration[kind=var]
     - VariableDeclaration[declarations.length>1]
-    - :not(ForInStatement) > VariableDeclaration > VariableDeclarator[init=null]
+    # - :not(ForInStatement) > VariableDeclaration > VariableDeclarator[init=null]
     # Asynchronous closures
     - ArrowFunctionExpression[async=true]
     # Empty ReturnStatement
