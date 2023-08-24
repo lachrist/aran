@@ -7,6 +7,53 @@
 
 // General //
 
+type Context = {
+  enclave: boolean;
+};
+
+// internal-script
+// external-script
+//   - declare
+//   - intrinsics.readGlobal
+//   - intrinsics.writeGlobal
+//   - intrinsics.typeofGlobal
+// internal-module
+// external-module
+//   - intrinsics.readGlobal
+//   - intrinsics.writeGlobal
+//   - intrinsics.typeofGlobal
+// internal-global-eval
+// external-global-eval
+//   - intrinsics.readGlobal
+//   - intrinsics.writeGlobal
+//   - intrinsics.typeofGlobal
+// internal-local-eval
+// external-local-eval
+//   - params.scope.read
+//   - params.scope.write
+//   - params.scope.typeof
+
+// const ProgramType = {
+//   type: "script";
+//   enclave: boolean; -> Declare
+// } | {
+//   type: "module";
+//   enclave: boolean;
+// } | {
+//   type: "internal-global-eval";
+//   enclave: boolean;
+//   ->
+// } | {
+//   type: "external-local-eval";
+//   super.get: boolean;
+//   super.set: boolean;
+//   super.call: boolean;
+//   -> params.scope.read + params.scope.write + params.scope.typeof
+// } | {
+//   type: "internal-local-eval";
+//   scope: Scope;
+// };
+
 type List<X> = { car: X; cdr: List<X> } | null;
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
@@ -56,12 +103,12 @@ type PackPrimitive =
   | { bigint: string }
   | string;
 
-type Mapper<T> = {
-  link: (node: Link<T>) => Link<T>;
-  block: (node: Block<T>) => Block<T>;
-  statement: (nodes: Statement<T>) => Statement<T>;
-  effect: (nodes: Effect<T>) => Effect<T>;
-  expression: (node: Expression<T>) => Expression<T>;
+type Mapper = {
+  link: (node: Link) => Link;
+  block: (node: Block) => Block;
+  statement: (nodes: Statement) => Statement;
+  effect: (nodes: Effect) => Effect;
+  expression: (node: Expression) => Expression;
 };
 
 type VariableKind = "var" | "let" | "const";
@@ -70,10 +117,10 @@ type ClosureKind = "arrow" | "function" | "method" | "constructor";
 
 type Intrinsic =
   // Ad hoc //
-  | "aran.global.record.variables"
-  | "aran.global.record.values"
-  | "aran.global.object"
-  | "aran.global.cache"
+  | "aran.cache"
+  | "aran.record.variables"
+  | "aran.record.values"
+  | "aran.global"
   | "aran.unary"
   | "aran.binary"
   | "aran.throw"
@@ -145,160 +192,155 @@ type Parameter =
   | "arguments"
   | "this"
   | "import"
+  | "callee"
   | "import.meta"
   | "new.target"
   | "super.get"
   | "super.set"
   | "super.call";
 
-type Program<T> =
-  | { type: "ScriptProgram"; statements: Statement<T>[]; tag?: T }
-  | { type: "ModuleProgram"; links: Link<T>[]; body: Block<T>; tag?: T }
-  | { type: "EvalProgram"; body: Block<T>; tag?: T };
+type Program =
+  | { type: "ScriptProgram"; statements: Statement[]; tag?: unknown }
+  | { type: "ModuleProgram"; links: Link[]; body: Block; tag?: unknown }
+  | { type: "EvalProgram"; body: Block; tag?: unknown };
 
-type Link<T> =
-  | { type: "ImportLink"; source: string; import: string | null; tag?: T }
-  | { type: "ExportLink"; export: string; tag?: T }
+type Link =
+  | { type: "ImportLink"; source: string; import: string | null; tag?: unknown }
+  | { type: "ExportLink"; export: string; tag?: unknown }
   | {
       type: "AggregateLink";
       source: string;
       import: string | null;
       export: string | null;
-      tag?: T;
+      tag?: unknown;
     };
 
-type Block<T> = {
+type Block = {
   type: "Block";
   labels: string[];
   variables: string[];
-  statements: Statement<T>[];
-  tag?: T;
+  statements: Statement[];
+  tag?: unknown;
 };
 
-type Statement<T> =
-  | { type: "EffectStatement"; effect: Effect<T>; tag?: T }
-  | { type: "ReturnStatement"; value: Expression<T>; tag?: T }
-  | { type: "BreakStatement"; label: string; tag?: T }
-  | { type: "DebuggerStatement"; tag?: T }
+type Statement =
+  | { type: "EffectStatement"; effect: Effect; tag?: unknown }
+  | { type: "ReturnStatement"; value: Expression; tag?: unknown }
+  | { type: "BreakStatement"; label: string; tag?: unknown }
+  | { type: "DebuggerStatement"; tag?: unknown }
   | {
-      type: "DeclareExternalStatement";
+      type: "DeclareEnclaveStatement";
       kind: VariableKind;
       variable: string;
-      value: Expression<T>;
-      tag?: T;
+      value: Expression;
+      tag?: unknown;
     }
-  | { type: "BlockStatement"; body: Block<T>; tag?: T }
+  | { type: "BlockStatement"; body: Block; tag?: unknown }
   | {
       type: "IfStatement";
-      test: Expression<T>;
-      then: Block<T>;
-      else: Block<T>;
-      tag?: T;
+      test: Expression;
+      then: Block;
+      else: Block;
+      tag?: unknown;
     }
-  | { type: "WhileStatement"; test: Expression<T>; body: Block<T>; tag?: T }
+  | { type: "WhileStatement"; test: Expression; body: Block; tag?: unknown }
   | {
       type: "TryStatement";
-      body: Block<T>;
-      catch: Block<T>;
-      finally: Block<T>;
-      tag?: T;
+      body: Block;
+      catch: Block;
+      finally: Block;
+      tag?: unknown;
     };
 
-type Effect<T> =
-  | { type: "ExpressionEffect"; discard: Expression<T>; tag?: T }
-  | {
-      type: "ConditionalEffect";
-      test: Expression<T>;
-      positive: Effect<T>[];
-      negative: Effect<T>[];
-      tag?: T;
-    }
+type Effect =
+  | { type: "ExpressionEffect"; discard: Expression; tag?: unknown }
+  // | {
+  //     type: "ConditionalEffect";
+  //     test: Expression;
+  //     positive: Effect[];
+  //     negative: Effect[];
+  //     tag?: unknown;
+  //   }
   | {
       type: "WriteEffect";
       variable: string;
-      value: Expression<T>;
-      tag?: T;
+      value: Expression;
+      tag?: unknown;
     }
   | {
-      type: "WriteExternalEffect";
+      type: "WriteEnclaveEffect";
       variable: string;
-      value: Expression<T>;
-      tag?: T;
+      value: Expression;
+      tag?: unknown;
     }
   | {
       type: "ExportEffect";
       export: string;
-      value: Expression<T>;
-      tag?: T;
+      value: Expression;
+      tag?: unknown;
     };
 
-type Expression<T> =
+type Expression =
   // Produce //
-  | { type: "ParameterExpression"; parameter: Parameter; tag?: T }
-  | { type: "PrimitiveExpression"; primitive: PackPrimitive; tag?: T }
-  | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag?: T }
+  | { type: "ParameterExpression"; parameter: Parameter; tag?: unknown }
+  | { type: "PrimitiveExpression"; primitive: PackPrimitive; tag?: unknown }
+  | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag?: unknown }
   | {
       type: "ImportExpression";
       source: string;
       import: string | null;
-      tag?: T;
+      tag?: unknown;
     }
-  | { type: "ReadExpression"; variable: string; tag?: T }
-  | { type: "ReadExternalExpression"; variable: string; tag?: T }
-  | { type: "TypeofExternalExpression"; variable: string; tag?: T }
+  | { type: "ReadExpression"; variable: string; tag?: unknown }
+  | { type: "ReadEnclaveExpression"; variable: string; tag?: unknown }
+  | { type: "TypeofEnclaveExpression"; variable: string; tag?: unknown }
   | {
       type: "ClosureExpression";
       kind: ClosureKind;
       asynchronous: boolean;
       generator: boolean;
-      body: Block<T>;
-      tag?: T;
+      body: Block;
+      tag?: unknown;
     }
   // Control //
-  | { type: "AwaitExpression"; value: Expression<T>; tag?: T }
+  | { type: "AwaitExpression"; value: Expression; tag?: unknown }
   | {
       type: "YieldExpression";
       delegate: boolean;
-      value: Expression<T>;
-      tag?: T;
+      value: Expression;
+      tag?: unknown;
     }
   | {
       type: "SequenceExpression";
-      effect: Effect<T>;
-      value: Expression<T>;
-      tag?: T;
+      effect: Effect;
+      value: Expression;
+      tag?: unknown;
     }
   | {
       type: "ConditionalExpression";
-      test: Expression<T>;
-      consequent: Expression<T>;
-      alternate: Expression<T>;
-      tag?: T;
+      test: Expression;
+      consequent: Expression;
+      alternate: Expression;
+      tag?: unknown;
     }
   // Combine //
   | {
       type: "EvalExpression";
-      argument: Expression<T>;
-      tag?: T;
+      argument: Expression;
+      tag?: unknown;
     }
   | {
       type: "ApplyExpression";
-      callee: Expression<T>;
-      this: Expression<T>;
-      arguments: Expression<T>[];
-      tag?: T;
+      callee: Expression;
+      this: Expression;
+      arguments: Expression[];
+      tag?: unknown;
     }
   | {
       type: "ConstructExpression";
-      callee: Expression<T>;
-      arguments: Expression<T>[];
-      tag?: T;
+      callee: Expression;
+      arguments: Expression[];
+      tag?: unknown;
     };
 
-type Node<T> =
-  | Program<T>
-  | Link<T>
-  | Block<T>
-  | Statement<T>
-  | Effect<T>
-  | Expression<T>;
+type Node = Program | Link | Block | Statement | Effect | Expression;
