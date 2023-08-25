@@ -103,12 +103,12 @@ type PackPrimitive =
   | { bigint: string }
   | string;
 
-type Mapper = {
-  link: (node: Link) => Link;
-  block: (node: Block) => Block;
-  statement: (nodes: Statement) => Statement;
-  effect: (nodes: Effect) => Effect;
-  expression: (node: Expression) => Expression;
+type Mapper<C> = {
+  link: (node: Link, context: C) => Link;
+  block: (node: Block, context: C) => Block;
+  statement: (nodes: Statement, context: C) => Statement;
+  effect: (nodes: Effect, context: C) => Effect;
+  expression: (node: Expression, context: C) => Expression;
 };
 
 type VariableKind = "var" | "let" | "const";
