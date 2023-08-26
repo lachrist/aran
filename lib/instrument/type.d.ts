@@ -72,6 +72,11 @@ type TrapName =
   | "enclave.declare.before"
   | "enclave.declare.after";
 
+type PointSplit = {
+  static: Json;
+  dynamic: Expression;
+};
+
 type Point =
   //////////////
   // Informer //
@@ -80,52 +85,52 @@ type Point =
   | {
       type: "eval.enter";
       parameters: Partial<Record<Parameter, Expression>>;
-      variables: Json[];
-      serial: Json;
+      variables: PointSplit[];
+      serial: PointSplit;
     }
   | {
       type: "eval.success";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "eval.failure";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "eval.leave";
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "module.enter";
       links: LinkData[];
       parameters: Partial<Record<Parameter, Expression>>;
-      variables: Json[];
-      serial: Json;
+      variables: PointSplit[];
+      serial: PointSplit;
     }
   | {
       type: "module.success";
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "module.failure";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "module.leave";
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "script.before";
       parameters: Partial<Record<Parameter, Expression>>;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "script.after";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   // closure //
   | {
@@ -133,65 +138,65 @@ type Point =
       kind: ClosureKind;
       callee: Expression;
       parameters: Partial<Record<Parameter, Expression>>;
-      variables: Json[];
-      serial: Json;
+      variables: PointSplit[];
+      serial: PointSplit;
     }
   | {
       type: "closure.failure";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "closure.success";
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "closure.leave";
-      serial: Json;
+      serial: PointSplit;
     }
   // Block //
   | {
       type: "block.enter";
       kind: BlockKind;
       parameters: Partial<Record<Parameter, Expression>>;
-      labels: Json[];
-      variables: Json[];
-      serial: Json;
+      labels: PointSplit[];
+      variables: PointSplit[];
+      serial: PointSplit;
     }
   | {
       type: "block.failure";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "block.success";
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "block.leave";
-      serial: Json;
+      serial: PointSplit;
     }
   // Debugger //
   | {
       type: "debugger.before";
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "debugger.after";
-      serial: Json;
+      serial: PointSplit;
     }
   // Break //
   | {
       type: "break.before";
-      label: Json;
-      serial: Json;
+      label: PointSplit;
+      serial: PointSplit;
     }
   // If && While
   | {
       type: "test.before";
       kind: TestKind;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   ///////////////////
   // Pure Producer //
@@ -199,26 +204,26 @@ type Point =
   | {
       type: "primitive.after";
       value: Primitive;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "parameter.after";
       name: Parameter;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "intrinsic.after";
       name: Intrinsic;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "import.after";
       source: string;
       specifier: string | null;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "closure.after";
@@ -226,13 +231,13 @@ type Point =
       asynchronous: boolean;
       generator: boolean;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "read.after";
-      variable: Json;
+      variable: PointSplit;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   ////////////////////
   // Pure Consumers //
@@ -240,24 +245,24 @@ type Point =
   | {
       type: "return.before";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "drop.before";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "export.before";
       specifier: string;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "write.before";
-      variable: Json;
+      variable: PointSplit;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   ////////////////////
   // Before - After //
@@ -266,83 +271,83 @@ type Point =
   | {
       type: "conditional.before";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "conditional.after";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   // Eval //
   | {
       type: "eval.before";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "eval.after";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   // Await //
   | {
       type: "await.before";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "await.after";
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   // Yield //
   | {
       type: "yield.before";
       delegate: boolean;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "yield.after";
       delegate: boolean;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   // read-external //
   | {
       type: "enclave.read.before";
       variable: string;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "enclave.read.after";
       variable: string;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   // typeof-external //
   | {
       type: "enclave.typeof.before";
       variable: string;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "enclave.typeof.after";
       variable: string;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   // write-external //
   | {
       type: "enclave.write.before";
       variable: string;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "enclave.write.after";
       variable: string;
-      serial: Json;
+      serial: PointSplit;
     }
   // declare-external //
   | {
@@ -350,13 +355,13 @@ type Point =
       kind: VariableKind;
       variable: string;
       value: Expression;
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "enclave.declare.after";
       kind: VariableKind;
       variable: string;
-      serial: Json;
+      serial: PointSplit;
     }
   //////////////
   // Combiner //
@@ -366,13 +371,13 @@ type Point =
       callee: Expression;
       this: Expression;
       arguments: Expression[];
-      serial: Json;
+      serial: PointSplit;
     }
   | {
       type: "construct";
       callee: Expression;
       arguments: Expression[];
-      serial: Json;
+      serial: PointSplit;
     };
 
 type FunctionPointcut = (point: Point) => boolean;
