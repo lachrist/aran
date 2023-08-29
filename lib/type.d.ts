@@ -5,12 +5,6 @@
 //   export default Foo;
 // }
 
-// General //
-
-type Context = {
-  enclave: boolean;
-};
-
 // internal-script
 // external-script
 //   - declare
@@ -103,17 +97,18 @@ type PackPrimitive =
   | { bigint: string }
   | string;
 
-type Mapper<C> = {
-  link: (node: Link, context: C) => Link;
-  block: (node: Block, context: C) => Block;
-  statement: (nodes: Statement, context: C) => Statement;
-  effect: (nodes: Effect, context: C) => Effect;
-  expression: (node: Expression, context: C) => Expression;
+type Mapper<C, T1, T2> = {
+  block: (node: Block<T1>, context: C) => Block<T2>;
+  statement: (nodes: Statement<T1>, context: C) => Statement<T2>;
+  effect: (nodes: Effect<T1>, context: C) => Effect<T2>;
+  expression: (node: Expression<T1>, context: C) => Expression<T2>;
 };
 
 type VariableKind = "var" | "let" | "const";
 
 type ClosureKind = "arrow" | "function" | "method" | "constructor";
+
+type ProgramKind = "script" | "eval" | "module";
 
 type Intrinsic =
   // Ad hoc //
@@ -192,155 +187,231 @@ type Parameter =
   | "arguments"
   | "this"
   | "import"
-  | "callee"
   | "import.meta"
   | "new.target"
   | "super.get"
   | "super.set"
   | "super.call";
 
-type Program =
-  | { type: "ScriptProgram"; statements: Statement[]; tag?: unknown }
-  | { type: "ModuleProgram"; links: Link[]; body: Block; tag?: unknown }
-  | { type: "EvalProgram"; body: Block; tag?: unknown };
-
 type Link =
-  | { type: "ImportLink"; source: string; import: string | null; tag?: unknown }
-  | { type: "ExportLink"; export: string; tag?: unknown }
+  | { type: "import"; source: string; import: string | null }
+  | { type: "export"; export: string }
   | {
-      type: "AggregateLink";
+      type: "aggregate";
       source: string;
       import: string | null;
       export: string | null;
-      tag?: unknown;
     };
 
-type Block = {
+// Expression => value | promise | item | callee | this | arguments
+// Effect => first | inner
+// Block => naked | then | else | try | catch | finally
+// Statements[] => body
+//
+// ClosureKind => kind
+// ProgramKind => kind
+// VariableKind => kind
+// Specifier => export | import
+// Variable => variable
+// Label => label
+// Link[] => links
+
+type Program<T> =
+  | {
+      type: "Program";
+      kind: "module";
+      links: Link[];
+      variables: string[];
+      body: Statement<T>[];
+      completion: Expression<T>;
+      tag: T;
+    }
+  | {
+      type: "Program";
+      kind: "script";
+      links: [];
+      variables: [];
+      body: Statement<T>[];
+      completion: Expression<T>;
+      tag: T;
+    }
+  | {
+      type: "Program";
+      kind: "eval";
+      links: [];
+      variables: string[];
+      body: Statement<T>[];
+      completion: Expression<T>;
+      tag: T;
+    };
+
+// | {
+//     type: "ScriptProgram";
+//     statements: Statement[];
+//     completion: Expression;
+//     tag: T;
+//   }
+// | {
+//     type: "ModuleProgram";
+//     links: Link[];
+//     variables: string[];
+//     statements: Statement[];
+//     tag: T;
+//   }
+// | {
+//     type: "EvalProgram";
+//     variables: string[];
+//     statements: Statement[];
+//     completion: Expression;
+//     tag: T;
+//   };
+
+type Block<T> = {
   type: "Block";
   labels: string[];
   variables: string[];
-  statements: Statement[];
-  tag?: unknown;
+  body: Statement<T>[];
+  tag: T;
 };
 
-type Statement =
-  | { type: "EffectStatement"; effect: Effect; tag?: unknown }
-  | { type: "ReturnStatement"; value: Expression; tag?: unknown }
-  | { type: "BreakStatement"; label: string; tag?: unknown }
-  | { type: "DebuggerStatement"; tag?: unknown }
+// type VoidBlock = {
+//   type: "Block";
+//   labels: string[];
+//   variables: string[];
+//   body: Statement[];
+//   completion: null;
+// };
+
+// type CompletionBlock = {
+//   type: "Block";
+//   labels: [];
+//   variables: [];
+//   body: Statement[];
+//   completion: Expression;
+// };
+
+// type Block = VoidBlock | CompletionBlock;
+
+type Statement<T> =
+  | { type: "EffectStatement"; inner: Effect<T>; tag: T }
+  | { type: "ReturnStatement"; result: Expression<T>; tag: T }
+  | { type: "BreakStatement"; label: string; tag: T }
+  | { type: "DebuggerStatement"; tag: T }
   | {
       type: "DeclareEnclaveStatement";
       kind: VariableKind;
       variable: string;
-      value: Expression;
-      tag?: unknown;
+      value: Expression<T>;
+      tag: T;
     }
-  | { type: "BlockStatement"; body: Block; tag?: unknown }
+  | { type: "BlockStatement"; naked: Block<T>; tag: T }
   | {
       type: "IfStatement";
-      test: Expression;
-      then: Block;
-      else: Block;
-      tag?: unknown;
+      if: Expression<T>;
+      then: Block<T>;
+      else: Block<T>;
+      tag: T;
     }
-  | { type: "WhileStatement"; test: Expression; body: Block; tag?: unknown }
+  | { type: "WhileStatement"; while: Expression<T>; loop: Block<T>; tag: T }
   | {
       type: "TryStatement";
-      body: Block;
-      catch: Block;
-      finally: Block;
-      tag?: unknown;
+      try: Block<T>;
+      catch: Block<T>;
+      finally: Block<T>;
+      tag: T;
     };
 
-type Effect =
-  | { type: "ExpressionEffect"; discard: Expression; tag?: unknown }
+type Effect<T> =
+  | { type: "ExpressionEffect"; discard: Expression<T>; tag: T }
   // | {
   //     type: "ConditionalEffect";
-  //     test: Expression;
-  //     positive: Effect[];
-  //     negative: Effect[];
-  //     tag?: unknown;
+  //     test: Expression<T>;
+  //     positive: Effect<T>[];
+  //     negative: Effect<T>[];
+  //     tag: T;
   //   }
   | {
       type: "WriteEffect";
       variable: string;
-      value: Expression;
-      tag?: unknown;
+      right: Expression<T>;
+      tag: T;
     }
   | {
       type: "WriteEnclaveEffect";
       variable: string;
-      value: Expression;
-      tag?: unknown;
+      right: Expression<T>;
+      tag: T;
     }
   | {
       type: "ExportEffect";
       export: string;
-      value: Expression;
-      tag?: unknown;
+      right: Expression<T>;
+      tag: T;
     };
 
-type Expression =
+type Expression<T> =
   // Produce //
-  | { type: "ParameterExpression"; parameter: Parameter; tag?: unknown }
-  | { type: "PrimitiveExpression"; primitive: PackPrimitive; tag?: unknown }
-  | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag?: unknown }
+  | { type: "ParameterExpression"; parameter: Parameter; tag: T }
+  | { type: "PrimitiveExpression"; primitive: PackPrimitive; tag: T }
+  | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag: T }
   | {
       type: "ImportExpression";
       source: string;
       import: string | null;
-      tag?: unknown;
+      tag: T;
     }
-  | { type: "ReadExpression"; variable: string; tag?: unknown }
-  | { type: "ReadEnclaveExpression"; variable: string; tag?: unknown }
-  | { type: "TypeofEnclaveExpression"; variable: string; tag?: unknown }
+  | { type: "ReadExpression"; variable: string; tag: T }
+  | { type: "ReadEnclaveExpression"; variable: string; tag: T }
+  | { type: "TypeofEnclaveExpression"; variable: string; tag: T }
   | {
       type: "ClosureExpression";
       kind: ClosureKind;
       asynchronous: boolean;
       generator: boolean;
-      body: Block;
-      tag?: unknown;
+      variables: string[];
+      body: Statement<T>[];
+      completion: Expression<T>;
+      tag: T;
     }
   // Control //
-  | { type: "AwaitExpression"; value: Expression; tag?: unknown }
+  | { type: "AwaitExpression"; promise: Expression<T>; tag: T }
   | {
       type: "YieldExpression";
       delegate: boolean;
-      value: Expression;
-      tag?: unknown;
+      item: Expression<T>;
+      tag: T;
     }
   | {
       type: "SequenceExpression";
-      effect: Effect;
-      value: Expression;
-      tag?: unknown;
+      head: Effect<T>;
+      tail: Expression<T>;
+      tag: T;
     }
   | {
       type: "ConditionalExpression";
-      test: Expression;
-      consequent: Expression;
-      alternate: Expression;
-      tag?: unknown;
+      condition: Expression<T>;
+      consequent: Expression<T>;
+      alternate: Expression<T>;
+      tag: T;
     }
   // Combine //
   | {
       type: "EvalExpression";
-      argument: Expression;
-      tag?: unknown;
+      code: Expression<T>;
+      tag: T;
     }
   | {
       type: "ApplyExpression";
-      callee: Expression;
-      this: Expression;
-      arguments: Expression[];
-      tag?: unknown;
+      callee: Expression<T>;
+      this: Expression<T>;
+      arguments: Expression<T>[];
+      tag: T;
     }
   | {
       type: "ConstructExpression";
-      callee: Expression;
-      arguments: Expression[];
-      tag?: unknown;
+      callee: Expression<T>;
+      arguments: Expression<T>[];
+      tag: T;
     };
 
-type Node = Program | Link | Block | Statement | Effect | Expression;
+type Node<T> = Program<T> | Block<T> | Statement<T> | Effect<T> | Expression<T>;
