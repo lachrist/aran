@@ -67,28 +67,36 @@ type Point<S, L, V> =
   // Program //
   | {
       type: "program.enter";
-      kind: "eval";
-      links: [];
-      parameters: Expression<Usage>;
-      variables: V[];
-      serial: S;
-    }
-  | {
-      type: "program.enter";
-      kind: "module";
+      kind: ProgramKind;
       links: Link[];
       parameters: Expression<Usage>;
       variables: V[];
       serial: S;
     }
-  | {
-      type: "program.enter";
-      kind: "script";
-      links: [];
-      parameters: Expression<Usage>;
-      variables: [];
-      serial: S;
-    }
+  // | {
+  //     type: "program.enter";
+  //     kind: "eval";
+  //     links: [];
+  //     parameters: Expression<Usage>;
+  //     variables: V[];
+  //     serial: S;
+  //   }
+  // | {
+  //     type: "program.enter";
+  //     kind: "module";
+  //     links: Link[];
+  //     parameters: Expression<Usage>;
+  //     variables: V[];
+  //     serial: S;
+  //   }
+  // | {
+  //     type: "program.enter";
+  //     kind: "script";
+  //     links: [];
+  //     parameters: Expression<Usage>;
+  //     variables: [];
+  //     serial: S;
+  //   }
   | {
       type: "program.completion";
       kind: ProgramKind;
@@ -97,19 +105,19 @@ type Point<S, L, V> =
     }
   | {
       type: "program.failure";
-      kind: "eval" | "module";
+      kind: ProgramKind;
       value: Expression<Usage>;
       serial: S;
     }
   | {
       type: "program.leave";
-      kind: "eval" | "module";
+      kind: ProgramKind;
       serial: S;
     }
   // closure //
   | {
       type: "closure.enter";
-      kind: "arrow";
+      kind: ClosureKind;
       callee: Expression<Usage>;
       parameters: Expression<Usage>;
       variables: V[];
@@ -135,7 +143,7 @@ type Point<S, L, V> =
   // Block //
   | {
       type: "block.enter";
-      kind: Exclude<BlockKind, "catch">;
+      kind: BlockKind;
       labels: L[];
       parameters: Expression<Usage>;
       variables: V[];

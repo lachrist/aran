@@ -108,7 +108,7 @@ type VariableKind = "var" | "let" | "const";
 
 type ClosureKind = "arrow" | "function" | "method" | "constructor";
 
-type ProgramKind = "script" | "eval" | "module";
+type ProgramKind = "eval" | "module" | "script";
 
 type Intrinsic =
   // Ad hoc //
@@ -216,81 +216,75 @@ type Link =
 // Label => label
 // Link[] => links
 
-type Program<T> =
-  | {
-      type: "Program";
-      kind: "module";
-      links: Link[];
-      variables: string[];
-      body: Statement<T>[];
-      completion: Expression<T>;
-      tag: T;
-    }
-  | {
-      type: "Program";
-      kind: "script";
-      links: [];
-      variables: [];
-      body: Statement<T>[];
-      completion: Expression<T>;
-      tag: T;
-    }
-  | {
-      type: "Program";
-      kind: "eval";
-      links: [];
-      variables: string[];
-      body: Statement<T>[];
-      completion: Expression<T>;
-      tag: T;
-    };
-
-// | {
-//     type: "ScriptProgram";
-//     statements: Statement[];
-//     completion: Expression;
-//     tag: T;
-//   }
-// | {
-//     type: "ModuleProgram";
-//     links: Link[];
-//     variables: string[];
-//     statements: Statement[];
-//     tag: T;
-//   }
-// | {
-//     type: "EvalProgram";
-//     variables: string[];
-//     statements: Statement[];
-//     completion: Expression;
-//     tag: T;
-//   };
-
-type Block<T> = {
-  type: "Block";
-  labels: string[];
+type ClosureBlock<T> = {
+  type: "ClosureBlock";
   variables: string[];
-  body: Statement<T>[];
+  statements: Statement<T>[];
+  completion: Expression<T>;
   tag: T;
 };
 
-// type VoidBlock = {
-//   type: "Block";
-//   labels: string[];
-//   variables: string[];
-//   body: Statement[];
-//   completion: null;
-// };
+type ControlBlock<T> = {
+  type: "ControlBlock";
+  labels: string[];
+  variables: string[];
+  statements: Statement<T>[];
+  tag: T;
+};
 
-// type CompletionBlock = {
-//   type: "Block";
-//   labels: [];
-//   variables: [];
-//   body: Statement[];
-//   completion: Expression;
-// };
+type PseudoBlock<T> = {
+  type: "PseudoBlock";
+  statements: Statement<T>[];
+  completion: Expression<T>;
+  tag: T;
+};
 
-// type Block = VoidBlock | CompletionBlock;
+type Program<T> =
+  | {
+      type: "ScriptProgram";
+      body: PseudoBlock<T>;
+      tag: T;
+    }
+  | {
+      type: "ModuleProgram";
+      links: Link[];
+      body: ClosureBlock<T>;
+      tag: T;
+    }
+  | {
+      type: "EvalProgram";
+      body: ClosureBlock<T>;
+      tag: T;
+    };
+
+// type Program<T> =
+//   | {
+//       type: "Program";
+//       kind: "eval";
+//       links: [];
+//       variables: string[];
+//       body: Statement<T>[];
+//       completion: Expression<T>;
+//       tag: T;
+//     }
+//   | {
+//       type: "Program";
+//       kind: "module";
+//       links: Link[];
+//       variables: string[];
+//       body: Statement<T>[];
+//       completion: Expression<T>;
+//       tag: T;
+//     }
+//   | {
+//       type: "Program";
+//       kind: "script";
+//       links: [];
+//       variables: [];
+//       body: Statement<T>[];
+//       completion: Expression<T>;
+//       tag: T;
+//     };
 
 type Statement<T> =
   | { type: "EffectStatement"; inner: Effect<T>; tag: T }
@@ -304,20 +298,25 @@ type Statement<T> =
       value: Expression<T>;
       tag: T;
     }
-  | { type: "BlockStatement"; naked: Block<T>; tag: T }
+  | { type: "BlockStatement"; do: ControlBlock<T>; tag: T }
   | {
       type: "IfStatement";
       if: Expression<T>;
-      then: Block<T>;
-      else: Block<T>;
+      then: ControlBlock<T>;
+      else: ControlBlock<T>;
       tag: T;
     }
-  | { type: "WhileStatement"; while: Expression<T>; loop: Block<T>; tag: T }
+  | {
+      type: "WhileStatement";
+      while: Expression<T>;
+      do: ControlBlock<T>;
+      tag: T;
+    }
   | {
       type: "TryStatement";
-      try: Block<T>;
-      catch: Block<T>;
-      finally: Block<T>;
+      try: ControlBlock<T>;
+      catch: ControlBlock<T>;
+      finally: ControlBlock<T>;
       tag: T;
     };
 
@@ -368,9 +367,7 @@ type Expression<T> =
       kind: ClosureKind;
       asynchronous: boolean;
       generator: boolean;
-      variables: string[];
-      body: Statement<T>[];
-      completion: Expression<T>;
+      body: ClosureBlock<T>;
       tag: T;
     }
   // Control //
