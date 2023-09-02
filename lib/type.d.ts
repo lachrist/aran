@@ -48,6 +48,10 @@
 //   scope: Scope;
 // };
 
+declare const __brand: unique symbol;
+
+type Brand<T, B> = T & { [__brand]: B };
+
 type List<X> = { car: X; cdr: List<X> } | null;
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
@@ -80,12 +84,18 @@ type EstreeVariableDeclarator = import("estree").VariableDeclarator;
 type EstreeModuleDeclaration = import("estree").ModuleDeclaration;
 type EstreeBlockStatement = import("estree").BlockStatement;
 type EstreeDirective = import("estree").Directive;
+type EstreeProperty = import("estree").Property;
 type EstreeProgramStatement =
   | EstreeModuleDeclaration
   | EstreeStatement
   | EstreeDirective;
 
 // Aran Syntax //
+
+type Variable = Brand<string, "Variable">;
+type Label = Brand<string, "Label">;
+type Specifier = Brand<string, "Specifier">;
+type Source = Brand<string, "Source">;
 
 type Primitive = undefined | null | boolean | number | bigint | string;
 
@@ -98,7 +108,9 @@ type PackPrimitive =
   | string;
 
 type Mapper<C, T1, T2> = {
-  block: (node: Block<T1>, context: C) => Block<T2>;
+  control: (node: ControlBlock<T1>, context: C) => ControlBlock<T2>;
+  closure: (node: ClosureBlock<T1>, context: C) => ClosureBlock<T2>;
+  pseudo: (node: PseudoBlock<T1>, context: C) => PseudoBlock<T2>;
   statement: (nodes: Statement<T1>, context: C) => Statement<T2>;
   effect: (nodes: Effect<T1>, context: C) => Effect<T2>;
   expression: (node: Expression<T1>, context: C) => Expression<T2>;
@@ -194,31 +206,18 @@ type Parameter =
   | "super.call";
 
 type Link =
-  | { type: "import"; source: string; import: string | null }
-  | { type: "export"; export: string }
+  | { type: "import"; source: Source; import: Specifier | null }
+  | { type: "export"; export: Specifier }
   | {
       type: "aggregate";
-      source: string;
-      import: string | null;
-      export: string | null;
+      source: Source;
+      import: Specifier | null;
+      export: Specifier | null;
     };
-
-// Expression => value | promise | item | callee | this | arguments
-// Effect => first | inner
-// Block => naked | then | else | try | catch | finally
-// Statements[] => body
-//
-// ClosureKind => kind
-// ProgramKind => kind
-// VariableKind => kind
-// Specifier => export | import
-// Variable => variable
-// Label => label
-// Link[] => links
 
 type ClosureBlock<T> = {
   type: "ClosureBlock";
-  variables: string[];
+  variables: Variable[];
   statements: Statement<T>[];
   completion: Expression<T>;
   tag: T;
@@ -226,8 +225,8 @@ type ClosureBlock<T> = {
 
 type ControlBlock<T> = {
   type: "ControlBlock";
-  labels: string[];
-  variables: string[];
+  labels: Label[];
+  variables: Variable[];
   statements: Statement<T>[];
   tag: T;
 };
@@ -257,45 +256,16 @@ type Program<T> =
       tag: T;
     };
 
-// type Program<T> =
-//   | {
-//       type: "Program";
-//       kind: "eval";
-//       links: [];
-//       variables: string[];
-//       body: Statement<T>[];
-//       completion: Expression<T>;
-//       tag: T;
-//     }
-//   | {
-//       type: "Program";
-//       kind: "module";
-//       links: Link[];
-//       variables: string[];
-//       body: Statement<T>[];
-//       completion: Expression<T>;
-//       tag: T;
-//     }
-//   | {
-//       type: "Program";
-//       kind: "script";
-//       links: [];
-//       variables: [];
-//       body: Statement<T>[];
-//       completion: Expression<T>;
-//       tag: T;
-//     };
-
 type Statement<T> =
   | { type: "EffectStatement"; inner: Effect<T>; tag: T }
   | { type: "ReturnStatement"; result: Expression<T>; tag: T }
-  | { type: "BreakStatement"; label: string; tag: T }
+  | { type: "BreakStatement"; label: Label; tag: T }
   | { type: "DebuggerStatement"; tag: T }
   | {
       type: "DeclareEnclaveStatement";
       kind: VariableKind;
-      variable: string;
-      value: Expression<T>;
+      variable: Variable;
+      right: Expression<T>;
       tag: T;
     }
   | { type: "BlockStatement"; do: ControlBlock<T>; tag: T }
@@ -322,28 +292,21 @@ type Statement<T> =
 
 type Effect<T> =
   | { type: "ExpressionEffect"; discard: Expression<T>; tag: T }
-  // | {
-  //     type: "ConditionalEffect";
-  //     test: Expression<T>;
-  //     positive: Effect<T>[];
-  //     negative: Effect<T>[];
-  //     tag: T;
-  //   }
   | {
       type: "WriteEffect";
-      variable: string;
+      variable: Variable;
       right: Expression<T>;
       tag: T;
     }
   | {
       type: "WriteEnclaveEffect";
-      variable: string;
+      variable: Variable;
       right: Expression<T>;
       tag: T;
     }
   | {
       type: "ExportEffect";
-      export: string;
+      export: Specifier;
       right: Expression<T>;
       tag: T;
     };
@@ -355,13 +318,13 @@ type Expression<T> =
   | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag: T }
   | {
       type: "ImportExpression";
-      source: string;
-      import: string | null;
+      source: Source;
+      import: Specifier | null;
       tag: T;
     }
-  | { type: "ReadExpression"; variable: string; tag: T }
-  | { type: "ReadEnclaveExpression"; variable: string; tag: T }
-  | { type: "TypeofEnclaveExpression"; variable: string; tag: T }
+  | { type: "ReadExpression"; variable: Variable; tag: T }
+  | { type: "ReadEnclaveExpression"; variable: Variable; tag: T }
+  | { type: "TypeofEnclaveExpression"; variable: Variable; tag: T }
   | {
       type: "ClosureExpression";
       kind: ClosureKind;
@@ -411,4 +374,11 @@ type Expression<T> =
       tag: T;
     };
 
-type Node<T> = Program<T> | Block<T> | Statement<T> | Effect<T> | Expression<T>;
+type Node<T> =
+  | Program<T>
+  | ControlBlock<T>
+  | ClosureBlock<T>
+  | PseudoBlock<T>
+  | Statement<T>
+  | Effect<T>
+  | Expression<T>;

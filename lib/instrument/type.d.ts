@@ -58,7 +58,7 @@ type TrapName =
 
 type Initial = { value?: Json };
 
-type Usage = Record<string, Initial>;
+type Usage = Record<Variable, Initial>;
 
 type Point<S, L, V> =
   //////////////
