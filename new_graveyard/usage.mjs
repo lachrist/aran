@@ -1,4 +1,4 @@
-import { filter, flatMap, hasOwn, map } from "../util/index.mjs";
+import { filter, flatMap, hasOwn, map } from "../lib/util/index.mjs";
 
 import {
   makeEffectStatement,
@@ -8,15 +8,24 @@ import {
   makeClosureBlock,
   makePseudoBlock,
   makeControlBlock,
-} from "./syntax.mjs";
+} from "../lib/instrument/syntax.mjs";
 
-import { makeJsonExpression } from "./intrinsic.mjs";
+import { makeJsonExpression } from "../lib/instrument/intrinsic.mjs";
 
 import {
   escapeExpression,
   escapeStatement,
   makeEscapeDeclareStatement,
-} from "./escape.mjs";
+} from "../lib/instrument/escape.mjs";
+import {
+  ADVICE_VARIABLE,
+  COMPLETION_VARIABLE,
+  mangleCalleeVariable,
+  mangleLabelVariable,
+  mangleParameterVariable,
+  mangleSerialVariable,
+  mangleShadowVariable,
+} from "../lib/instrument/mangle.mjs";
 
 const {
   undefined,
@@ -28,33 +37,59 @@ const {
   Object: { entries: listEntry, fromEntries: reduceEntry },
 } = globalThis;
 
-const NEW = "n";
+/** @type {<L extends Json>(value: L, stringifyLabel: (value: L) => Label) => Expression<Usage>} */
+export const makeLabelReadExpression = (value, stringifyLabel) =>
+  makeReadExpression(mangleLabelVariable(stringifyLabel(value)), { value });
 
-const OLD = "o";
+/** @type {<V extends Json>(value: V, stringifyLabel: (value: V) => Variable) => Expression<Usage>} */
+export const makeShadowReadExpression = (value, stringifyVariable) =>
+  makeReadExpression(mangleShadowVariable(stringifyVariable(value)), { value });
 
-const VAR = "v";
+/** @type {<S extends Json>(path: string, value: S) => Expression<Usage>} */
+export const makeSerialReadExpression = (path, value) =>
+  makeReadExpression(mangleSerialVariable(path), { value });
 
-const LAB = "l";
+/** @type {(path: string) => Expression<Usage>} */
+export const makeCalleeReadExpression = (path) =>
+  makeReadExpression(mangleCalleeVariable(path), {});
 
-/** @type {<T>(node: {tag: T}) => T} */
-const getTag = ({ tag }) => tag;
+/** @type {(path: string, expression: Expression<Usage>) => Effect<Usage>} */
+export const makeCalleeWriteEffect = (path, expression) =>
+  makeWriteEffect(mangleCalleeVariable(path), expression, {});
 
-/** @type {(variable: Variable) => boolean} */
-const isNewVariable = (variable) => variable[0] === NEW;
+/** @type {(parameter: Parameter | null) => Expression<Usage>} */
+export const makeParameterReadExpression = (parameter) =>
+  makeReadExpression(mangleParameterVariable(parameter), {});
 
-/** @type {(variable: Variable) => Variable} */
-const mangleOldVariable = (variable) =>
-  /** @type {Variable} */ (`${OLD}${variable}`);
+/** @type {(parameter: Parameter | null) => Expression<Usage>} */
+export const makeParameterWriteEffect = (parameter) =>
+  makeReadExpression(mangleParameterVariable(parameter), {});
 
-/** @type {(name: string) => Variable} */
-const mangleNewVariable = (name) => /** @type {Variable} */ (`${OLD}${name}`);
+/** @type {() => Expression<Usage>} */
+export const makeAdviceReadExpression = () =>
+  makeReadExpression(ADVICE_VARIABLE, {});
 
-/** @type {(variable: Variable) => Variable} */
-const mangleVarVariable = (variable) =>
-  /** @type {Variable} */ (`${VAR}${variable}`);
+/** @type {(expression: Expression<Usage>) => Effect<Usage>} */
+export const makeAdviceWriteEffect = (expression) =>
+  makeWriteEffect(ADVICE_VARIABLE, expression, {});
 
-/** @type {(label: Label) => Variable} */
-const mangleLabVariable = (label) => /** @type {Variable} */ (`${LAB}${label}`);
+/** @type {() => Expression<Usage>} */
+export const makeCompletionReadExpression = () =>
+  makeReadExpression(COMPLETION_VARIABLE, {});
+
+/** @type {(expression: Expression<Usage>) => Effect<Usage>} */
+export const makeCompletionWriteEffect = (expression) =>
+  makeWriteEffect(COMPLETION_VARIABLE, expression, {});
+
+export const listPreludeStatement = () => {};
+
+export const listEnclavePreludeStatement = () => {};
+
+//
+//
+//
+//
+//
 
 /** @type {(variable: Variable) => Expression<Usage>} */
 export const makeOldReadExpression = (variable) =>

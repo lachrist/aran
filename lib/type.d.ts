@@ -195,10 +195,10 @@ type Intrinsic =
   | "Array.prototype.push";
 
 type Parameter =
-  | "error"
-  | "arguments"
   | "this"
   | "import"
+  | "catch.error"
+  | "function.arguments" // https://github.com/allenwb/ESideas/blob/HEAD/ES7MetaProps.md
   | "import.meta"
   | "new.target"
   | "super.get"

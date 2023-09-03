@@ -56,11 +56,7 @@ type TrapName =
   | "enclave.declare.before"
   | "enclave.declare.after";
 
-type Initial = { value?: Json };
-
-type Usage = Record<Variable, Initial>;
-
-type Point<S, L, V> =
+type Point<T, S, L, V> =
   //////////////
   // Informer //
   //////////////
@@ -69,44 +65,20 @@ type Point<S, L, V> =
       type: "program.enter";
       kind: ProgramKind;
       links: Link[];
-      parameters: Expression<Usage>;
+      parameters: Expression<T>;
       variables: V[];
       serial: S;
     }
-  // | {
-  //     type: "program.enter";
-  //     kind: "eval";
-  //     links: [];
-  //     parameters: Expression<Usage>;
-  //     variables: V[];
-  //     serial: S;
-  //   }
-  // | {
-  //     type: "program.enter";
-  //     kind: "module";
-  //     links: Link[];
-  //     parameters: Expression<Usage>;
-  //     variables: V[];
-  //     serial: S;
-  //   }
-  // | {
-  //     type: "program.enter";
-  //     kind: "script";
-  //     links: [];
-  //     parameters: Expression<Usage>;
-  //     variables: [];
-  //     serial: S;
-  //   }
   | {
       type: "program.completion";
       kind: ProgramKind;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
       type: "program.failure";
       kind: ProgramKind;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
@@ -118,8 +90,8 @@ type Point<S, L, V> =
   | {
       type: "closure.enter";
       kind: ClosureKind;
-      callee: Expression<Usage>;
-      parameters: Expression<Usage>;
+      callee: Expression<T>;
+      parameters: Expression<T>;
       variables: V[];
       serial: S;
     }
@@ -127,12 +99,12 @@ type Point<S, L, V> =
       type: "closure.completion";
       kind: ClosureKind;
       serial: S;
-      value: Expression<Usage>;
+      value: Expression<T>;
     }
   | {
       type: "closure.failure";
       kind: ClosureKind;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
@@ -145,7 +117,7 @@ type Point<S, L, V> =
       type: "block.enter";
       kind: BlockKind;
       labels: L[];
-      parameters: Expression<Usage>;
+      parameters: Expression<T>;
       variables: V[];
       serial: S;
     }
@@ -157,7 +129,7 @@ type Point<S, L, V> =
   | {
       type: "block.failure";
       kind: BlockKind;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
@@ -184,7 +156,7 @@ type Point<S, L, V> =
   | {
       type: "test.before";
       kind: TestKind;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   ///////////////////
@@ -198,20 +170,20 @@ type Point<S, L, V> =
   | {
       type: "parameter.after";
       name: Parameter;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
       type: "intrinsic.after";
       name: Intrinsic;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
       type: "import.after";
       source: string;
       specifier: string | null;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
@@ -219,13 +191,13 @@ type Point<S, L, V> =
       kind: ClosureKind;
       asynchronous: boolean;
       generator: boolean;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
       type: "read.after";
       variable: V;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   ////////////////////
@@ -233,24 +205,24 @@ type Point<S, L, V> =
   ////////////////////
   | {
       type: "return.before";
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
       type: "drop.before";
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
       type: "export.before";
       specifier: string;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
       type: "write.before";
       variable: V;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   ////////////////////
@@ -259,47 +231,47 @@ type Point<S, L, V> =
   // Conditional //
   | {
       type: "conditional.before";
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
       type: "conditional.after";
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   // Eval //
   | {
       type: "eval.before";
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
       type: "eval.after";
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   // Await //
   | {
       type: "await.before";
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
       type: "await.after";
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   // Yield //
   | {
       type: "yield.before";
       delegate: boolean;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
       type: "yield.after";
       delegate: boolean;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   // read-external //
@@ -311,7 +283,7 @@ type Point<S, L, V> =
   | {
       type: "enclave.read.after";
       variable: string;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   // typeof-external //
@@ -323,14 +295,14 @@ type Point<S, L, V> =
   | {
       type: "enclave.typeof.after";
       variable: string;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   // write-external //
   | {
       type: "enclave.write.before";
       variable: string;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
@@ -343,7 +315,7 @@ type Point<S, L, V> =
       type: "enclave.declare.before";
       kind: VariableKind;
       variable: string;
-      value: Expression<Usage>;
+      value: Expression<T>;
       serial: S;
     }
   | {
@@ -357,19 +329,19 @@ type Point<S, L, V> =
   //////////////
   | {
       type: "apply";
-      callee: Expression<Usage>;
-      this: Expression<Usage>;
-      arguments: Expression<Usage>[];
+      callee: Expression<T>;
+      this: Expression<T>;
+      arguments: Expression<T>[];
       serial: S;
     }
   | {
       type: "construct";
-      callee: Expression<Usage>;
-      arguments: Expression<Usage>[];
+      callee: Expression<T>;
+      arguments: Expression<T>[];
       serial: S;
     };
 
-type FunctionPointcut<S, L, V> = (point: Point<S, L, V>) => boolean;
+type FunctionPointcut<T, S, L, V> = (point: Point<T, S, L, V>) => boolean;
 
 type IterablePointcut = Iterable<TrapName>;
 
@@ -507,8 +479,8 @@ type ObjectPointcut<S, L, V> = {
 
 type ConstantPointcut = boolean;
 
-type Pointcut<S, L, V> =
-  | FunctionPointcut<S, L, V>
+type Pointcut<T, S, L, V> =
+  | FunctionPointcut<T, S, L, V>
   | IterablePointcut
   | ObjectPointcut<S, L, V>
   | ConstantPointcut;
