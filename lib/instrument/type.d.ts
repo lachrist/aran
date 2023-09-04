@@ -341,7 +341,7 @@ type Point<T, S, L, V> =
       serial: S;
     };
 
-type FunctionPointcut<T, S, L, V> = (point: Point<T, S, L, V>) => boolean;
+type FunctionPointcut<S, L, V> = (point: Point<unknown, S, L, V>) => boolean;
 
 type IterablePointcut = Iterable<TrapName>;
 
@@ -479,8 +479,8 @@ type ObjectPointcut<S, L, V> = {
 
 type ConstantPointcut = boolean;
 
-type Pointcut<T, S, L, V> =
-  | FunctionPointcut<T, S, L, V>
+type Pointcut<S, L, V> =
+  | FunctionPointcut<S, L, V>
   | IterablePointcut
   | ObjectPointcut<S, L, V>
   | ConstantPointcut;
