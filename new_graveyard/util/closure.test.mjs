@@ -1,8 +1,14 @@
-import { forEach, map, flatMap, concat_$, concat$$ } from "./array.mjs";
+import {
+  forEach,
+  map,
+  flatMap,
+  concat_$,
+  concat$$,
+} from "../../lib/util/array.mjs";
 import { assertEqual, assertThrow } from "../fixture.mjs";
 
 /* eslint-disable import/no-namespace */
-import * as Library from "./closure.mjs";
+import * as Library from "../../lib/util/closure.mjs";
 /* eslint-enable import/no-namespace */
 
 const {

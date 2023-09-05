@@ -1,4 +1,4 @@
-type TestKind = "conditional" | "if" | "while";
+type BranchKind = "conditional" | "if" | "while";
 
 type BlockKind =
   | "try"
@@ -152,13 +152,6 @@ type Point<T, S, L, V> =
       label: L;
       serial: S;
     }
-  // If && While
-  | {
-      type: "test.before";
-      kind: TestKind;
-      value: Expression<T>;
-      serial: S;
-    }
   ///////////////////
   // Pure Producer //
   ///////////////////
@@ -228,6 +221,18 @@ type Point<T, S, L, V> =
   ////////////////////
   // Before - After //
   ////////////////////
+  // Branch //
+  | {
+      type: "branch.before";
+      kind: BranchKind;
+      value: Expression<T>;
+      serial: S;
+    }
+  | {
+      type: "branch.after";
+      kind: BranchKind;
+      serial: S;
+    }
   // Conditional //
   | {
       type: "conditional.before";
@@ -398,9 +403,10 @@ type ObjectPointcut<S, L, V> = {
   "debugger.before"?: boolean | ((serial: S) => boolean);
   "debugger.after"?: boolean | ((serial: S) => boolean);
   "break.before"?: boolean | ((label: L, serial: S) => boolean);
-  "test.before"?:
+  "branch.before"?:
     | boolean
-    | ((kind: TestKind, value: null, serial: S) => boolean);
+    | ((kind: BranchKind, value: null, serial: S) => boolean);
+  "branch.after"?: boolean | ((kind: BranchKind, serial: S) => boolean);
   "parameter.after"?:
     | boolean
     | ((name: Parameter, value: null, serial: S) => boolean);

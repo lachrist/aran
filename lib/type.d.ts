@@ -293,6 +293,13 @@ type Statement<T> =
 type Effect<T> =
   | { type: "ExpressionEffect"; discard: Expression<T>; tag: T }
   | {
+      type: "ConditionalEffect";
+      condition: Expression<T>;
+      positive: Effect<T>[];
+      negative: Effect<T>[];
+      tag: T;
+    }
+  | {
       type: "WriteEffect";
       variable: Variable;
       right: Expression<T>;

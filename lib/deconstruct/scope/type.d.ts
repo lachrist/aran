@@ -2,7 +2,7 @@
 // Binding //
 /////////////
 
-type ExternalBinding = {
+type EnclaveBinding = {
   type: "external";
   kind: "var" | "let" | "const";
 };
@@ -16,8 +16,8 @@ type HiddenBinding = {
 
 type ImportBinding = {
   type: "import";
-  source: string;
-  specifier: string | null;
+  source: Source;
+  specifier: Specifier | null;
 };
 
 type MissingBinding = {
@@ -29,11 +29,11 @@ type RegularBinding = {
   type: "regular";
   deadzone: boolean;
   writable: boolean;
-  exports: string[];
+  exports: Specifier[];
 };
 
 type Binding =
-  | ExternalBinding
+  | EnclaveBinding
   | GlobalBinding
   | HiddenBinding
   | ImportBinding
@@ -44,52 +44,58 @@ type Binding =
 // Module //
 ////////////
 
-type listBindingVariable<B, T> = (
+type listBindingVariable<B> = (
   strict: boolean,
   binding: B,
-  variable: string,
-) => string[];
+  variable: Variable,
+) => Variable[];
 
 type listBindingDeclareStatement<B, T> = (
   strict: boolean,
   binding: B,
-  variable: string,
+  variable: Variable,
+  tag: T,
 ) => Statement<T>[];
 
 type listBindingInitializeStatement<B, T> = (
   strict: boolean,
   binding: B,
-  variable: string,
+  variable: Variable,
   expression: Expression<T>,
+  tag: T,
 ) => Statement<T>[];
 
 type makeBindingReadExpression<B, T> = (
   strict: boolean,
   binding: B,
-  variable: string,
+  variable: Variable,
+  tag: T,
 ) => Expression<T>;
 
 type makeBindingTypeofExpression<B, T> = (
   strict: boolean,
   binding: B,
-  variable: string,
+  variable: Variable,
+  tag: T,
 ) => Expression<T>;
 
 type makeBindingDiscardExpression<B, T> = (
   strict: boolean,
   binding: B,
-  variable: string,
+  variable: Variable,
+  tag: T,
 ) => Expression<T>;
 
 type listBindingWriteEffect<B, T> = (
   strict: boolean,
   binding: B,
-  variable: string,
+  variable: Variable,
   pure: Expression<T>,
+  tag: T,
 ) => Effect<T>[];
 
 type BindingModule<B, T> = {
-  listBindingVariable: listBindingVariable<B, T>;
+  listBindingVariable: listBindingVariable<B>;
   listBindingDeclareStatement: listBindingDeclareStatement<B, T>;
   listBindingInitializeStatement: listBindingInitializeStatement<B, T>;
   makeBindingReadExpression: makeBindingReadExpression<B, T>;
@@ -107,8 +113,8 @@ type FrameContext<T> =
   | {
       type: "module";
       enclave: boolean;
-      import: Record<string, { source: string; specifier: string | null }>;
-      export: Record<string, string[]>;
+      import: Record<Variable, { source: Source; specifier: Specifier | null }>;
+      export: Record<Variable, Specifier[]>;
     }
   | { type: "eval"; enclave: boolean }
   | { type: "block"; with: Expression<T> | null };
@@ -116,7 +122,7 @@ type FrameContext<T> =
 type Frame<T> = {
   root: Binding | null;
   script: boolean;
-  static: Record<string, Binding>;
+  static: Record<Variable, Binding>;
   dynamic: Expression<T> | null;
 };
 
