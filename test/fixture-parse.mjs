@@ -1,4 +1,3 @@
-// @ts-ignore
 import { parse as parseBabel } from "@babel/parser";
 
 /** @type {(type: "script" | "module") => (code: string) => EstreeProgram} */

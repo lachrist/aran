@@ -1,5 +1,5 @@
-import { assertEqual } from "./fixture.mjs";
-import { packPrimitive, unpackPrimitive } from "./syntax.mjs";
+import { assertEqual } from "../fixture.mjs";
+import { packPrimitive, unpackPrimitive } from "../../lib/syntax.mjs";
 
 const { undefined } = globalThis;
 

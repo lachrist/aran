@@ -1,14 +1,10 @@
-import { forEach } from "array-lite";
+import { assertSuccess } from "../fixture.mjs";
 
-import { assertSuccess } from "./__fixture__.mjs";
-
-import { makeLiteralExpression } from "./ast/index.mjs";
+import { makeLiteralExpression } from "../../lib/syntax.mjs";
 
 import { allignExpression } from "./allign/index.mjs";
 
 import {
-  // makeReadGlobalExpression,
-  // makeDiscardGlobalExpression,
   makeObjectFreezeExpression,
   makeDeleteExpression,
   makeSetExpression,
@@ -16,23 +12,13 @@ import {
   makeThrowSyntaxErrorExpression,
   makeJsonExpression,
   makeIsNullishExpression,
-} from "./intrinsic.mjs";
+} from "../../lib/intrinsic.mjs";
 
 const test = (expression, code) => {
   assertSuccess(allignExpression(expression, code));
 };
 
-// test(
-//   makeReadGlobalExpression("variable"),
-//   "intrinsic.aran.readGlobal('variable')",
-// );
-//
-// test(
-//   makeDiscardGlobalExpression(false, "variable"),
-//   "intrinsic.aran.discardGlobalSloppy('variable')",
-// );
-
-forEach([true, false], (strict) => {
+for (const strict of [true, false]) {
   test(
     makeDeleteExpression(
       strict,
@@ -41,9 +27,9 @@ forEach([true, false], (strict) => {
     ),
     `intrinsic.aran.delete${strict ? "Strict" : "Sloppy"}(123, 456)`,
   );
-});
+}
 
-forEach([true, false], (strict) => {
+for (const strict of [true, false]) {
   test(
     makeSetExpression(
       strict,
@@ -53,7 +39,7 @@ forEach([true, false], (strict) => {
     ),
     `intrinsic.aran.set${strict ? "Strict" : "Sloppy"}(123, 456, 789)`,
   );
-});
+}
 
 test(
   makeDataDescriptorExpression(

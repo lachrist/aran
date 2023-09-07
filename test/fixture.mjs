@@ -2,7 +2,6 @@
 /* eslint-disable import/no-nodejs-modules */
 
 import { AssertionError } from "node:assert";
-import { getOwnPropertyDescriptor } from "./util/object.mjs";
 
 export {
   fail as assertUnreachable,
@@ -13,7 +12,11 @@ export {
   match as assertMatch,
 } from "node:assert/strict";
 
-const { undefined, Error } = globalThis;
+const {
+  undefined,
+  Error,
+  Reflect: { getOwnPropertyDescriptor },
+} = globalThis;
 
 Error.stackTraceLimit = 1 / 0;
 
