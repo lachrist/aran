@@ -1,4 +1,4 @@
-import { assertEqual } from "../fixture.mjs";
+import { assertEqual } from "../../fixture.mjs";
 
 import {
   pairup,
@@ -24,13 +24,7 @@ import {
   pop,
   shift,
   unshift,
-  concat__,
-  concat$$,
-  concat$_,
-  concat_$,
-  concat_$_,
-  concat$$$,
-} from "./array.mjs";
+} from "../../../lib/util/array.mjs";
 
 assertEqual(pairup([1, 2, 3, 4, 5, 6, 7]), [
   [1, 2],
@@ -153,19 +147,3 @@ assertEqual(lastIndexOf([1, 2, 3], 4), -1);
   unshift(xs, 0);
   assertEqual(xs, [0, 1, 2, 3]);
 }
-
-////////////
-// Concat //
-////////////
-
-assertEqual(concat__(1, 2), [1, 2]);
-
-assertEqual(concat$$([1, 2], [3, 4]), [1, 2, 3, 4]);
-
-assertEqual(concat$_([1, 2], 3), [1, 2, 3]);
-
-assertEqual(concat_$(1, [2, 3]), [1, 2, 3]);
-
-assertEqual(concat_$_(1, [2, 3], 4), [1, 2, 3, 4]);
-
-assertEqual(concat$$$([1], [2, 3], [4, 5, 6]), [1, 2, 3, 4, 5, 6]);

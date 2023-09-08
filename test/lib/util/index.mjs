@@ -1,1 +1,1 @@
-import "./index.mjs";
+import "../../../lib/util/index.mjs";

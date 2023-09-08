@@ -1,6 +1,6 @@
-import { stringifyPrettier } from "./prettier.mjs";
+import { formatPrettier } from "../../../lib/language/prettier.mjs";
 
-stringifyPrettier({
+formatPrettier({
   type: "Program",
   sourceType: "script",
   body: [

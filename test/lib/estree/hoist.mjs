@@ -1,15 +1,15 @@
-import { assertEqual, drill } from "../fixture.mjs";
+import { assertEqual, drill } from "../../fixture.mjs";
 
-import { parseScript, parseModule } from "../fixture-parse.mjs";
+import { parseScript, parseModule } from "../../fixture-parse.mjs";
 
-import { map } from "../util/index.mjs";
+import { map } from "../../../lib/util/index.mjs";
 
 import {
   listPatternVariable,
   listDeclaratorVariable,
   hoistClosure,
   hoistBlock,
-} from "./hoist.mjs";
+} from "../../../lib/estree/hoist.mjs";
 
 const {
   Object: { fromEntries: reduceEntry },
@@ -19,7 +19,7 @@ const {
 // listPatternVariable //
 /////////////////////////
 
-/** @type {(code: string, variables: Variable[]) => void} */
+/** @type {(code: string, variables: string[]) => void} */
 const testPattern = (code, variables) => {
   assertEqual(
     listPatternVariable(
@@ -81,7 +81,7 @@ assertEqual(
 
 assertEqual(hoistClosure(parseModule("export default class {};").body), {});
 
-/** @type {(code: string, variables: Variable[]) => void} */
+/** @type {(code: string, variables: string[]) => void} */
 const testClosure = (code, variables) => {
   assertEqual(
     hoistClosure(parseScript(code).body),

@@ -1,23 +1,23 @@
-import { assertEqual, assertThrow } from "../fixture.mjs";
+import { assertEqual, assertThrow } from "../../fixture.mjs";
 
-import { parseBabel } from "./babel.mjs";
+import { parseBabel } from "../../../lib/language/babel.mjs";
 
-import { stringifyPrettier } from "./prettier.mjs";
+import { stringifyPrettier } from "../../../lib/language/prettier.mjs";
 
 import {
   parseProgram,
   parseLink,
-  parseBlock,
+  parsePseudoBlock,
   parseStatement,
   parseEffect,
   parseExpression,
   stringifyProgram,
   stringifyLink,
-  stringifyBlock,
+  stringifyPseudoBlock,
   stringifyStatement,
   stringifyEffect,
   stringifyExpression,
-} from "./index.mjs";
+} from "../../../lib/language/index.mjs";
 
 /** @type {<N>(parse: (code: string) => N, stringify: (node: N) => string) => (code1: string, code2?: string) => void} */
 const compileTest =

@@ -1,18 +1,18 @@
 util/array
 util/object
 util/closure
-util/report
+util/error
 util/index
 
-query/hoist
-query/import
-query/export
-query/eval
-query/strict
-query/sort
-query/object
-query/label
-query/index
+estree/hoist
+estree/import
+estree/export
+estree/eval
+estree/strict
+estree/sort
+estree/object
+estree/label
+estree/index
 
 syntax
 
@@ -24,10 +24,6 @@ lang/parse
 lang/stringify
 lang/index
 
-allign/error.mjs
-allign/mapping.mjs
-allign/result.mjs
-allign/visit.mjs
-allign/index.mjs
+allign
 
 intrinsic

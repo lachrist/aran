@@ -1,6 +1,9 @@
-import { drill, assertEqual } from "../fixture.mjs";
-import { parseScript, parseModule } from "../fixture-parse.mjs";
-import { isProgramStrict, isClosureStrict } from "./strict.mjs";
+import { drill, assertEqual } from "../../fixture.mjs";
+import { parseScript, parseModule } from "../../fixture-parse.mjs";
+import {
+  isProgramStrict,
+  isClosureStrict,
+} from "../../../lib/estree/strict.mjs";
 
 assertEqual(isProgramStrict(parseScript("'foo'; 'use strict';")), true);
 assertEqual(isProgramStrict(parseModule("123;")), true);

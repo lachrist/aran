@@ -1,6 +1,6 @@
-import { drill, assertEqual } from "../fixture.mjs";
-import { parseScript } from "../fixture-parse.mjs";
-import { hasEmptyBreak, hasEmptyContinue } from "./label.mjs";
+import { drill, assertEqual } from "../../fixture.mjs";
+import { parseScript } from "../../fixture-parse.mjs";
+import { hasEmptyBreak, hasEmptyContinue } from "../../../lib/estree/label.mjs";
 
 const LABEL = "label";
 

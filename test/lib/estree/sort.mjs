@@ -1,7 +1,7 @@
-import { assertEqual } from "../fixture.mjs";
-import { parseScript, parseModule } from "../fixture-parse.mjs";
-import { map } from "../util/index.mjs";
-import { sortBody } from "./sort.mjs";
+import { assertEqual } from "../../fixture.mjs";
+import { parseScript, parseModule } from "../../fixture-parse.mjs";
+import { map } from "../../../lib/util/index.mjs";
+import { sortBody } from "../../../lib/estree/sort.mjs";
 
 /** @type {(node: EstreeNode) => string} */
 const getType = ({ type }) => type;

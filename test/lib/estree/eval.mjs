@@ -1,6 +1,6 @@
-import { assertEqual } from "../fixture.mjs";
-import { parseScript } from "../fixture-parse.mjs";
-import { hasDirectEvalCall } from "./eval.mjs";
+import { assertEqual } from "../../fixture.mjs";
+import { parseScript } from "../../fixture-parse.mjs";
+import { hasDirectEvalCall } from "../../../lib/estree/eval.mjs";
 
 assertEqual(hasDirectEvalCall(parseScript("[eval(x)];")), true);
 

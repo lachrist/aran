@@ -9,7 +9,7 @@ const { URL } = globalThis;
 const isNotEmptyString = (string) => string !== "";
 
 export const ordering = (
-  await readFile(new URL("./lib/ordering", import.meta.url), "utf8")
+  await readFile(new URL("./ordering", import.meta.url), "utf8")
 )
   .split("\n")
   .filter(isNotEmptyString);

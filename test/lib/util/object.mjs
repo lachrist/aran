@@ -1,6 +1,6 @@
-import { assertEqual } from "../fixture.mjs";
+import { assertEqual } from "../../fixture.mjs";
 
-import { hasOwn } from "./object.mjs";
+import { hasOwn } from "../../../lib/util/object.mjs";
 
 assertEqual(hasOwn({ key: "value" }, "key"), true);
 

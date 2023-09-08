@@ -1,13 +1,13 @@
-import { drill, assertEqual } from "../fixture.mjs";
+import { drill, assertEqual } from "../../fixture.mjs";
 
-import { parseScript } from "../fixture-parse.mjs";
+import { parseScript } from "../../fixture-parse.mjs";
 
 import {
   isPrototypeProperty,
   isMethodProperty,
   isAccessorProperty,
   isSuperProperty,
-} from "./object.mjs";
+} from "../../../lib/estree/object.mjs";
 
 /** @type {(code: string) => EstreeNode} */
 export const parseProperty = (code) =>

@@ -1,8 +1,8 @@
-import { assertEqual } from "../fixture.mjs";
-import { parseModule } from "../fixture-parse.mjs";
-import { hoistExport } from "./export.mjs";
+import { assertEqual } from "../../fixture.mjs";
+import { parseModule } from "../../fixture-parse.mjs";
+import { hoistExport } from "../../../lib/estree/export.mjs";
 
-/** @type {(code: string, mapping: Record<Variable, Specifier[]>) => void}  */
+/** @type {(code: string, mapping: Record<string, string[]>) => void}  */
 const test = (code, mapping) =>
   assertEqual(hoistExport(parseModule(code).body), mapping);
 

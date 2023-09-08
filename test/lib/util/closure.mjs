@@ -1,8 +1,9 @@
-import { forEach, map, flatMap, concat_$, concat$$ } from "./array.mjs";
-import { assertEqual, assertThrow } from "../fixture.mjs";
+import { forEach, map, flatMap } from "../../../lib/util/array.mjs";
+
+import { assertEqual, assertThrow } from "../../fixture.mjs";
 
 /* eslint-disable import/no-namespace */
-import * as Library from "./closure.mjs";
+import * as Library from "../../../lib/util/closure.mjs";
 /* eslint-enable import/no-namespace */
 
 const {
@@ -26,12 +27,10 @@ const combine = (size, prefixes) => {
   if (size === 0) {
     return [""];
   } else {
-    return flatMap(combine(size - 1, prefixes), (body) =>
-      concat_$(
-        body,
-        map(prefixes, (prefix) => `${prefix}${body}`),
-      ),
-    );
+    return flatMap(combine(size - 1, prefixes), (body) => [
+      body,
+      ...map(prefixes, (prefix) => `${prefix}${body}`),
+    ]);
   }
 };
 
@@ -147,18 +146,21 @@ forEach(["$$", "_$$", "$_$", "$$_"], (description) => {
 // );
 
 forEach(
-  concat$$(combine(6, ["", "_", "$", "f"]), [
-    "$_$___$",
-    "$$_____",
-    "$______",
-    "$$$____",
-    "$_$____",
-    "$$______",
-    "$$$_____",
-    "$$$______",
-    "$$_$_$_$__",
-    "$__$$_$_$_",
-  ]),
+  [
+    ...combine(6, ["", "_", "$", "f"]),
+    ...[
+      "$_$___$",
+      "$$_____",
+      "$______",
+      "$$$____",
+      "$_$____",
+      "$$______",
+      "$$$_____",
+      "$$$______",
+      "$$_$_$_$__",
+      "$__$$_$_$_",
+    ],
+  ],
   (description) => {
     if (
       getOwnPropertyDescriptor(Library, `partial${description}`) !== undefined

@@ -1,1 +1,1 @@
-import "./index.test.mjs";
+import "./index.mjs";

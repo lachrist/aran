@@ -6,17 +6,8 @@ import {
   parseStatement,
   parseLink,
   parseProgram,
-} from "../lang/index.mjs";
-import { makeRootError } from "./error.mjs";
-import { getResultError } from "./result.mjs";
-import {
-  visitExpression,
-  visitEffect,
-  visitBlock,
-  visitStatement,
-  visitLink,
-  visitProgram,
-} from "./visit.mjs";
+} from "./lang/index.mjs";
+import { allign } from "../../lib/allign.mjs";
 
 const generateAssert = (parse, visit) => (code1, code2, success) => {
   const error = getResultError(
