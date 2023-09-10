@@ -1,5 +1,5 @@
 import { assertEqual, drill } from "../../fixture.mjs";
-import { parseBabel } from "../../../lib/language/babel.mjs";
+import { parseBabel } from "../../../lib/syntax/babel.mjs";
 
 assertEqual(
   drill(parseBabel("return 123;"), ["body", 0, "type"]),

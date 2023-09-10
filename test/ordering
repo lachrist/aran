@@ -14,15 +14,15 @@ estree/object
 estree/label
 estree/index
 
-syntax
+node
 
-lang/babel
-lang/prettier
-lang/convert
-lang/revert
-lang/parse
-lang/stringify
-lang/index
+syntax/babel
+syntax/prettier
+syntax/convert
+syntax/revert
+syntax/parse
+syntax/stringify
+syntax/index
 
 allign
 

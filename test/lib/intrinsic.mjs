@@ -1,6 +1,6 @@
 import { assertSuccess } from "../fixture.mjs";
 
-import { makeLiteralExpression } from "../../lib/syntax.mjs";
+import { makeLiteralExpression } from "../../lib/node.mjs";
 
 import { allignExpression } from "./allign/index.mjs";
 
