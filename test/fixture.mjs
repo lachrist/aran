@@ -13,12 +13,13 @@ export {
 } from "node:assert/strict";
 
 const {
+  Infinity,
   undefined,
   Error,
   Reflect: { getOwnPropertyDescriptor },
 } = globalThis;
 
-Error.stackTraceLimit = 1 / 0;
+Error.stackTraceLimit = Infinity;
 
 /** @type {(maybe: string | null) => void} */
 export const assertSuccess = (maybe) => {

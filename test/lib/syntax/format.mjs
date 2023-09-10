@@ -1,6 +1,6 @@
-import { formatPrettier } from "../../../lib/language/prettier.mjs";
+import { formatEstree } from "../../../lib/syntax/format.mjs";
 
-formatPrettier({
+formatEstree({
   type: "Program",
   sourceType: "script",
   body: [

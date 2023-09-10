@@ -16,12 +16,10 @@ estree/index
 
 node
 
-syntax/babel
-syntax/prettier
+syntax/parse
+syntax/format
 syntax/convert
 syntax/revert
-syntax/parse
-syntax/stringify
 syntax/index
 
 allign

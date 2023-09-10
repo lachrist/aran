@@ -155,14 +155,33 @@ type Parameter =
   | "super.set"
   | "super.call";
 
-type Link =
-  | { type: "import"; source: Source; import: Specifier | null }
-  | { type: "export"; export: Specifier }
+type Program<T> =
   | {
-      type: "aggregate";
+      type: "ScriptProgram";
+      body: PseudoBlock<T>;
+      tag: T;
+    }
+  | {
+      type: "ModuleProgram";
+      links: Link<T>[];
+      body: ClosureBlock<T>;
+      tag: T;
+    }
+  | {
+      type: "EvalProgram";
+      body: ClosureBlock<T>;
+      tag: T;
+    };
+
+type Link<T> =
+  | { type: "ImportLink"; source: Source; import: Specifier | null; tag: T }
+  | { type: "ExportLink"; export: Specifier; tag: T }
+  | {
+      type: "AggregateLink";
       source: Source;
       import: Specifier | null;
       export: Specifier | null;
+      tag: T;
     };
 
 type ClosureBlock<T> = {
@@ -187,24 +206,6 @@ type PseudoBlock<T> = {
   completion: Expression<T>;
   tag: T;
 };
-
-type Program<T> =
-  | {
-      type: "ScriptProgram";
-      body: PseudoBlock<T>;
-      tag: T;
-    }
-  | {
-      type: "ModuleProgram";
-      links: Link[];
-      body: ClosureBlock<T>;
-      tag: T;
-    }
-  | {
-      type: "EvalProgram";
-      body: ClosureBlock<T>;
-      tag: T;
-    };
 
 type Statement<T> =
   | { type: "EffectStatement"; inner: Effect<T>; tag: T }
@@ -333,6 +334,7 @@ type Expression<T> =
 
 type Node<T> =
   | Program<T>
+  | Link<T>
   | ControlBlock<T>
   | ClosureBlock<T>
   | PseudoBlock<T>

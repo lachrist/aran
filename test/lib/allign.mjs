@@ -1,338 +1,313 @@
-import { assertEqual, assertNotEqual } from "../__fixture__.mjs";
-import {
-  parseExpression,
-  parseEffect,
-  parseBlock,
-  parseStatement,
-  parseLink,
-  parseProgram,
-} from "./lang/index.mjs";
+import { assertEqual, assertNotEqual } from "../fixture.mjs";
+import { parse } from "../../lib/syntax/index.mjs";
 import { allign } from "../../lib/allign.mjs";
 
-const generateAssert = (parse, visit) => (code1, code2, success) => {
-  const error = getResultError(
-    visit(parse(code1), parse(code2), makeRootError()),
-  );
-  if (success) {
-    assertEqual(error, null);
-  } else {
-    assertNotEqual(error, null);
-  }
+/** @type {(code1: string, code2?: string) => void} */
+const testSuccess = (code1, code2 = code1) => {
+  assertEqual(allign(parse(code1), parse(code2)), null);
 };
 
-const assertExpression = generateAssert(parseExpression, visitExpression);
-const assertEffect = generateAssert(parseEffect, visitEffect);
-const assertLink = generateAssert(parseLink, visitLink);
-const assertBlock = generateAssert(parseBlock, visitBlock);
-const assertStatement = generateAssert(parseStatement, visitStatement);
-const assertProgram = generateAssert(parseProgram, visitProgram);
+/** @type {(code1: string, code2: string) => void} */
+const testFailure = (code1, code2) => {
+  assertNotEqual(allign(parse(code1), parse(code2)), null);
+};
 
-assertExpression("123;", "[x];", false);
+testFailure("'expression'; 123;", "'expression'; [x];");
 
 ////////////////
 // Expression //
 ////////////////
 
-assertExpression("this;", "this;", true);
+testSuccess("'expression'; this;");
 
-assertExpression("this;", "new.target;", false);
+testFailure("'expression'; this;", "'expression'; new.target;");
 
-assertExpression(
-  "intrinsic.ReferenceError;",
-  "intrinsic.ReferenceError;",
-  true,
+testSuccess("'expression'; intrinsic.ReferenceError;");
+
+testFailure(
+  "'expression'; intrinsic.ReferenceError;",
+  "'expression'; intrinsic.SyntaxError;",
 );
 
-assertExpression("intrinsic.ReferenceError;", "intrinsic.SyntaxError;", false);
+testSuccess("'expression'; 123;");
+testFailure("'expression'; 123;", "'expression'; 321;");
 
-assertExpression("123;", "123;", true);
-assertExpression("123;", "321;", false);
+testSuccess("'expression'; 123n;");
+testFailure("'expression'; 123n;", "'expression'; 321n;");
 
-assertExpression("123n;", "123n;", true);
-assertExpression("123n;", "321n;", false);
+testSuccess("'expression'; x;", "'expression'; X;");
 
-assertExpression("x;", "X;", true);
+testSuccess("'expression'; [x];");
+testFailure("'expression'; [x];", "'expression'; [X];");
 
-assertExpression("[x];", "[x];", true);
-assertExpression("[x];", "[X];", false);
+testSuccess("'expression'; typeof [x];");
+testFailure("'expression'; typeof [x];", "'expression'; typeof [X];");
 
-assertExpression("typeof [x];", "typeof [x];", true);
-assertExpression("typeof [x];", "typeof [X];", false);
-
-assertExpression("'source' >> specifier;", "'source' >> specifier;", true);
-
-assertExpression("'source' >> specifier;", "'SOURCE' >> specifier;", false);
-
-assertExpression("'source' >> specifier;", "'source' >> SPECIFIER;", false);
-
-assertExpression("await 123;", "await 123;", true);
-assertExpression("await 123;", "await 321;", false);
-
-assertExpression("yield 123;", "yield 123;", true);
-assertExpression("yield* 123;", "yield* 123;", true);
-assertExpression("yield 123;", "yield* 123;", false);
-assertExpression("yield* 123;", "yield 123;", false);
-assertExpression("yield 123;", "yield 321;", false);
-
-assertExpression("(void 123, 456);", "(void 123, 456);", true);
-assertExpression("(void 123, 456);", "(void 321, 456);", false);
-assertExpression("(void 123, 456);", "(void 123, 654);", false);
-
-assertExpression("123 ? 456 : 789;", "123 ? 456 : 789;", true);
-assertExpression("123 ? 456 : 789;", "321 ? 456 : 789;", false);
-assertExpression("123 ? 456 : 789;", "123 ? 654 : 789;", false);
-assertExpression("123 ? 456 : 789;", "123 ? 456 : 987;", false);
-
-assertExpression("123(!456, 789);", "123(!456, 789);", true);
-assertExpression("123(!456, 789);", "321(!456, 789);", false);
-assertExpression("123(!456, 789);", "123(!654, 789);", false);
-assertExpression("123(!456, 789);", "123(!456, 987);", false);
-
-// assertExpression("123[456](789);", "123[456](789);", true);
-// assertExpression("123[456](789);", "321[456](789);", false);
-// assertExpression("123[456](789);", "123[654](789);", false);
-// assertExpression("123[456](789);", "123[456](987);", false);
-
-assertExpression("new 123(456);", "new 123(456);", true);
-assertExpression("new 123(456);", "new 321(456);", false);
-assertExpression("new 123(456);", "new 123(654);", false);
-
-assertExpression(
-  "(function () { return 123; });",
-  "(function () { return 123; });",
-  true,
+testSuccess("'expression'; 'source' >> specifier;");
+testFailure(
+  "'expression'; 'source' >> specifier;",
+  "'expression'; 'SOURCE' >> specifier;",
+);
+testFailure(
+  "'expression'; 'source' >> specifier;",
+  "'expression'; 'source' >> SPECIFIER;",
 );
 
-assertExpression(
-  "(function () { return 123; });",
-  "(function method () { return 123; });",
-  false,
+testSuccess("'expression'; await 123;");
+testFailure("'expression'; await 123;", "'expression'; await 321;");
+
+testSuccess("'expression'; yield 123;");
+testSuccess("'expression'; yield* 123;");
+testFailure("'expression'; yield 123;", "'expression'; yield* 123;");
+testFailure("'expression'; yield* 123;", "'expression'; yield 123;");
+testFailure("'expression'; yield 123;", "'expression'; yield 321;");
+
+testSuccess("'expression'; (void 123, 456);");
+testFailure("'expression'; (void 123, 456);", "'expression'; (void 321, 456);");
+testFailure("'expression'; (void 123, 456);", "'expression'; (void 123, 654);");
+
+testSuccess("'expression'; 123 ? 456 : 789;");
+testFailure("'expression'; 123 ? 456 : 789;", "'expression'; 321 ? 456 : 789;");
+testFailure("'expression'; 123 ? 456 : 789;", "'expression'; 123 ? 654 : 789;");
+testFailure("'expression'; 123 ? 456 : 789;", "'expression'; 123 ? 456 : 987;");
+
+testSuccess("'expression'; 123(!456, 789);");
+testFailure("'expression'; 123(!456, 789);", "'expression'; 321(!456, 789);");
+testFailure("'expression'; 123(!456, 789);", "'expression'; 123(!654, 789);");
+testFailure("'expression'; 123(!456, 789);", "'expression'; 123(!456, 987);");
+
+testSuccess("'expression'; new 123(456);");
+testFailure("'expression'; new 123(456);", "'expression'; new 321(456);");
+testFailure("'expression'; new 123(456);", "'expression'; new 123(654);");
+
+testSuccess("'expression'; (function () { 123; });");
+testFailure(
+  "'expression'; (function () { 123; });",
+  "'expression'; (function method () { 123; });",
+);
+testFailure(
+  "'expression'; (function () { 123; });",
+  "'expression'; (async function () { 123; });",
+);
+testFailure(
+  "'expression'; (function () { 123; });",
+  "'expression'; (function* () { 123; });",
+);
+testFailure(
+  "'expression'; (function () { 123; });",
+  "'expression'; (function () { 321; });",
 );
 
-assertExpression(
-  "(function () { return 123; });",
-  "(async function () { return 123; });",
-  false,
-);
-
-assertExpression(
-  "(function () { return 123; });",
-  "(function* () { return 123; });",
-  false,
-);
-
-assertExpression(
-  "(function () { return 123; });",
-  "(function () { return 321; });",
-  false,
-);
-
-assertExpression("eval(123);", "eval(123);", true);
-assertExpression("eval(123);", "eval(321);", false);
+testSuccess("'expression'; eval(123);");
+testFailure("'expression'; eval(123);", "'expression'; eval(321);");
 
 ////////////
 // Effect //
 ////////////
 
-assertEffect("void 123;", "void 123;", true);
-assertEffect("void 123;", "void 321;", false);
+testSuccess("'effect'; void 123;");
+testFailure("'effect'; void 123;", "'effect'; void 321;");
 
-assertEffect("specifier << 123;", "specifier << 123;", true);
+testSuccess("'effect'; specifier << 123;");
+testFailure("'effect'; specifier << 123;", "'effect'; SPECIFIER << 123;");
+testFailure("'effect'; specifier << 123;", "'effect'; specifier << 321;");
 
-assertEffect("specifier << 123;", "SPECIFIER << 123;", false);
+testSuccess("'effect'; x = 123;");
+testFailure("'effect'; x = 123;", "'effect'; x = 321;");
 
-assertEffect("specifier << 123;", "specifier << 321;", false);
+testSuccess("'effect'; [x] = 123;");
+testFailure("'effect'; [x] = 123;", "'effect'; [x] = 321;");
+testFailure("'effect'; [x] = 123;", "'effect'; [X] = 123;");
 
-assertEffect("x = 123;", "X = 123;", true);
-assertEffect("x = 123;", "x = 321;", false);
-
-assertEffect("[x] = 123;", "[x] = 123;", true);
-assertEffect("[x] = 123;", "[x] = 321;", false);
-assertEffect("[x] = 123;", "[X] = 123;", false);
-
-assertEffect("123 ? void 456 : void 789;", "123 ? void 456 : void 789;", true);
-assertEffect("123 ? void 456 : void 789;", "321 ? void 456 : void 789;", false);
-assertEffect("123 ? void 456 : void 789;", "123 ? void 654 : void 789;", false);
-assertEffect("123 ? void 456 : void 789;", "123 ? void 456 : void 987;", false);
+testSuccess("'effect'; 123 ? void 456 : void 789;");
+testFailure(
+  "'effect'; 123 ? void 456 : void 789;",
+  "'effect'; 321 ? void 456 : void 789;",
+);
+testFailure(
+  "'effect'; 123 ? void 456 : void 789;",
+  "'effect'; 123 ? void 654 : void 789;",
+);
+testFailure(
+  "'effect'; 123 ? void 456 : void 789;",
+  "'effect'; 123 ? void 456 : void 987;",
+);
 
 ///////////////
 // Statement //
 ///////////////
 
-assertStatement("debugger;", "debugger;", true);
+testSuccess("'statement'; debugger;");
 
-assertStatement("void 123;", "void 123;", true);
-assertStatement("void 123;", "void 321;", false);
+testSuccess("'statement'; void 123;");
+testFailure("'statement'; void 123;", "'statement'; void 321;");
 
-assertStatement("break l;", "break L;", true);
+testSuccess("'statement'; break l;", "'statement'; break L;");
 
-assertStatement("return 123;", "return 123;", true);
-assertStatement("return 123;", "return 321;", false);
+testSuccess("'statement'; return 123;");
+testFailure("'statement'; return 123;", "'statement'; return 321;");
 
-assertStatement("let [x] = 123;", "let [x] = 123;", true);
-assertStatement("let [x] = 123;", "const [x] = 123;", false);
-assertStatement("let [x] = 123;", "let [y] = 123;", false);
-assertStatement("let [x] = 123;", "let [x] = 321;", false);
+testSuccess("'statement'; let [x] = 123;");
+testFailure("'statement'; let [x] = 123;", "'statement'; const [x] = 123;");
+testFailure("'statement'; let [x] = 123;", "'statement'; let [y] = 123;");
+testFailure("'statement'; let [x] = 123;", "'statement'; let [x] = 321;");
 
-assertStatement("{ void 123; }", "{ void 123; }", true);
-assertStatement("{ void 123; }", "{ void 321; }", false);
+testSuccess("'statement'; { void 123; }");
+testFailure("'statement'; { void 123; }", "'statement'; { void 321; }");
 
-assertStatement(
-  "if (123) { void 456; } else { void 789; }",
-  "if (123) { void 456; } else { void 789; }",
-  true,
+testSuccess("'statement'; if (123) { void 456; } else { void 789; }");
+testFailure(
+  "'statement'; if (123) { void 456; } else { void 789; }",
+  "'statement'; if (321) { void 456; } else { void 789; }",
+);
+testFailure(
+  "'statement'; if (123) { void 456; } else { void 789; }",
+  "'statement'; if (123) { void 654; } else { void 789; }",
+);
+testFailure(
+  "'statement'; if (123) { void 456; } else { void 789; }",
+  "'statement'; if (123) { void 456; } else { void 987; }",
 );
 
-assertStatement(
-  "if (123) { void 456; } else { void 789; }",
-  "if (321) { void 456; } else { void 789; }",
-  false,
+testSuccess("'statement'; while (123) { void 456; }");
+testFailure(
+  "'statement'; while (123) { void 456; }",
+  "'statement'; while (321) { void 456; }",
+);
+testFailure(
+  "'statement'; while (123) { void 456; }",
+  "'statement'; while (123) { void 654; }",
 );
 
-assertStatement(
-  "if (123) { void 456; } else { void 789; }",
-  "if (123) { void 654; } else { void 789; }",
-  false,
+testSuccess(
+  "'statement'; try { void 123; } catch { void 456; } finally { void 789; }",
 );
-
-assertStatement(
-  "if (123) { void 456; } else { void 789; }",
-  "if (123) { void 456; } else { void 987; }",
-  false,
+testFailure(
+  "'statement'; try { void 123; } catch { void 456; } finally { void 789; }",
+  "'statement'; try { void 321; } catch { void 456; } finally { void 789; }",
 );
-
-assertStatement("while (123) { void 456; }", "while (123) { void 456; }", true);
-
-assertStatement(
-  "while (123) { void 456; }",
-  "while (321) { void 456; }",
-  false,
+testFailure(
+  "'statement'; try { void 123; } catch { void 456; } finally { void 789; }",
+  "'statement'; try { void 123; } catch { void 654; } finally { void 789; }",
 );
-
-assertStatement(
-  "while (123) { void 456; }",
-  "while (123) { void 654; }",
-  false,
-);
-
-assertStatement(
-  "try { void 123; } catch { void 456; } finally { void 789; }",
-  "try { void 123; } catch { void 456; } finally { void 789; }",
-  true,
-);
-
-assertStatement(
-  "try { void 123; } catch { void 456; } finally { void 789; }",
-  "try { void 321; } catch { void 456; } finally { void 789; }",
-  false,
-);
-
-assertStatement(
-  "try { void 123; } catch { void 456; } finally { void 789; }",
-  "try { void 123; } catch { void 654; } finally { void 789; }",
-  false,
-);
-
-assertStatement(
-  "try { void 123; } catch { void 456; } finally { void 789; }",
-  "try { void 123; } catch { void 456; } finally { void 987; }",
-  false,
+testFailure(
+  "'statement'; try { void 123; } catch { void 456; } finally { void 789; }",
+  "'statement'; try { void 123; } catch { void 456; } finally { void 987; }",
 );
 
 //////////
 // Link //
 //////////
 
-assertLink("export {specifier};", "export {specifier};", true);
-assertLink("export {specifier};", "export {SPECIFIER};", false);
+testSuccess("'link'; export {specifier};");
+testFailure("'link'; export {specifier};", "'link'; export {SPECIFIER};");
 
-assertLink(
-  "import {specifier} from 'source';",
-  "import {specifier} from 'source';",
-  true,
+testSuccess("'link'; import {specifier} from 'source';");
+testFailure(
+  "'link'; import {specifier} from 'source';",
+  "'link'; import {SPECIFIER} from 'source';",
+);
+testFailure(
+  "'link'; import {specifier} from 'source';",
+  "'link'; import {specifier} from 'SOURCE';",
 );
 
-assertLink(
-  "import {specifier} from 'source';",
-  "import {SPECIFIER} from 'source';",
-  false,
+testSuccess("'link'; export {specifier1 as specifier2} from 'source';");
+testFailure(
+  "'link'; export {specifier1 as specifier2} from 'source';",
+  "'link'; export {SPECIFIER1 as specifier2} from 'source';",
 );
-
-assertLink(
-  "import {specifier} from 'source';",
-  "import {specifier} from 'SOURCE';",
-  false,
+testFailure(
+  "'link'; export {specifier1 as specifier2} from 'source';",
+  "'link'; export {specifier1 as SPECIFIER2} from 'source';",
 );
-
-assertLink(
-  "export {specifier1 as specifier2} from 'source';",
-  "export {specifier1 as specifier2} from 'source';",
-  true,
-);
-
-assertLink(
-  "export {specifier1 as specifier2} from 'source';",
-  "export {SPECIFIER1 as specifier2} from 'source';",
-  false,
-);
-
-assertLink(
-  "export {specifier1 as specifier2} from 'source';",
-  "export {specifier1 as SPECIFIER2} from 'source';",
-  false,
-);
-
-assertLink(
-  "export {specifier1 as specifier2} from 'source';",
-  "export {specifier1 as specifier2} from 'SOURCE';",
-  false,
+testFailure(
+  "'link'; export {specifier1 as specifier2} from 'source';",
+  "'link'; export {specifier1 as specifier2} from 'SOURCE';",
 );
 
 ///////////
 // Block //
 ///////////
 
-assertBlock("l: { break l; }", "L: { break L; }", true);
-assertBlock("l: { break l; }", "L: { break l; }", false);
-assertBlock(
-  "{ l: { break l; } l: { break l; } }",
-  "{ l: { break l; } L: { break L; } }",
-  true,
+testSuccess(
+  "'control-block'; l: { break l; }",
+  "'control-block'; L: { break L; }",
+);
+testFailure(
+  "'control-block'; l: { break l; }",
+  "'control-block'; L: { break l; }",
+);
+testSuccess(
+  "'control-block'; { l: { break l; } l: { break l; } }",
+  "'control-block'; { l: { break l; } L: { break L; } }",
+);
+testSuccess(
+  "'control-block'; { let x; x = x; }",
+  "'control-block'; { let y; y = y; }",
+);
+testFailure(
+  "'control-block'; { let x; x = x; }",
+  "'control-block'; { let x; y = y; }",
+);
+testSuccess(
+  "'control-block'; { let x; x = x; { let x; x = x } }",
+  "'control-block'; { let x; x = x; { let X; X = X } }",
 );
 
-assertBlock("{ let x; x = x; }", "{ let y; y = y; }", true);
-assertBlock("{ let x; x = x; }", "{ let x; y = y; }", false);
-assertBlock(
-  "{ let x; x = x; { let x; x = x } }",
-  "{ let x; x = x; { let X; X = X } }",
-  true,
+//////////////////
+// Pseudo-Block //
+//////////////////
+
+testSuccess("'pseudo-block'; void 123; 456;");
+testFailure("'pseudo-block'; void 123; 456;", "'pseudo-block'; void 321; 456;");
+testFailure("'pseudo-block'; void 123; 456;", "'pseudo-block'; void 123; 654;");
+
+///////////////////
+// Closure-Block //
+///////////////////
+
+testSuccess("'closure-block'; { void 123; 456; }");
+testFailure(
+  "'closure-block'; { void 123; 456; }",
+  "'closure-block'; { void 321; 456; }",
+);
+testFailure(
+  "'closure-block'; { void 123; 456; }",
+  "'closure-block'; { void 123; 654; }",
+);
+testSuccess(
+  "'closure-block'; { let x; x = x; 123; }",
+  "'closure-block'; { let y; y = y; 123; }",
+);
+testFailure(
+  "'closure-block'; { let x; x = x; 123; }",
+  "'closure-block'; { let x; y = y; 123; }",
+);
+testSuccess(
+  "'closure-block'; { let x; x = x; { let x; x = x; } 123; }",
+  "'closure-block'; { let x; x = x; { let X; X = X; } 123; }",
 );
 
 /////////////
 // Program //
 /////////////
 
-assertProgram("'script'; return 123;", "'script'; return 123;", true);
-assertProgram("'script'; return 123;", "'script'; return 321;", false);
+testSuccess("'script'; 123;", "'script'; 123;");
+testFailure("'script'; 123;", "'script'; 321;");
 
-assertProgram(
-  "'module'; export {specifier}; { return 123; }",
-  "'module'; export {specifier}; { return 123; }",
-  true,
+testSuccess(
+  "'module'; export {specifier}; { 123; }",
+  "'module'; export {specifier}; { 123; }",
+);
+testFailure(
+  "'module'; export {specifier}; { 123; }",
+  "'module'; export {SPECIFIER}; { 123; }",
+);
+testFailure(
+  "'module'; export {specifier}; { 123; }",
+  "'module'; export {specifier}; { 321; }",
 );
 
-assertProgram(
-  "'module'; export {specifier}; { return 123; }",
-  "'module'; export {SPECIFIER}; { return 123; }",
-  false,
-);
-
-assertProgram(
-  "'module'; export {specifier}; { return 123; }",
-  "'module'; export {specifier}; { return 321; }",
-  false,
-);
-
-assertProgram("'eval'; { return 123; }", "'eval'; { return 123; }", true);
-
-assertProgram("'eval'; { return 123; }", "'eval'; { return 321; }", false);
+testSuccess("'eval'; { 123; }", "'eval'; { 123; }");
+testFailure("'eval'; { 123; }", "'eval'; { 321; }");

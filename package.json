@@ -28,6 +28,7 @@
     "Shadow Execution"
   ],
   "devDependencies": {
+    "@babel/generator": "^7.22.15",
     "@babel/parser": "^7.20.5",
     "@bercow/core": "^0.2.0",
     "@bercow/eslint": "^0.1.0",
@@ -40,6 +41,7 @@
     "c8": "^7.10.0",
     "chalk": "^4.1.2",
     "diff": "^5.0.0",
+    "escodegen": "^2.1.0",
     "eslint": "^8.2.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-local": "^1.0.0",

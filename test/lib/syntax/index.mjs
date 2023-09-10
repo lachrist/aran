@@ -1,98 +1,98 @@
 import { assertEqual, assertThrow } from "../../fixture.mjs";
 
-import { parseBabel } from "../../../lib/syntax/babel.mjs";
+import { parseEstree } from "../../../lib/syntax/parse.mjs";
 
-import { formatPrettier } from "../../../lib/syntax/prettier.mjs";
+import { formatEstree } from "../../../lib/syntax/format.mjs";
 
 import { parse, format } from "../../../lib/syntax/index.mjs";
 
 /** @type {(code1: string, code2?: string) => void} */
 const test = (code1, code2 = code1) => {
-  assertEqual(format(parse(code1)), formatPrettier(parseBabel(code2)));
+  assertEqual(format(parse(code1)), formatEstree(parseEstree(code2)));
 };
 
 ////////////////
 // Expression //
 ////////////////
 
-testExpression("'expression'; new.target;");
-testExpression("'expression'; import.dynamic;");
-testExpression("'expression'; import.meta;");
-assertThrow(() => testExpression("'expression'; import.foo;"));
-testExpression("'expression'; super.get;");
-testExpression("'expression'; super.set;");
-testExpression("'expression'; super.call;");
-assertThrow(() => testExpression("'expression'; super.foo;"));
-testExpression("'expression'; this;");
-testExpression("'expression'; error;");
-testExpression("'expression'; arguments;");
+test("'expression'; new.target;");
+test("'expression'; import.dynamic;");
+test("'expression'; import.meta;");
+assertThrow(() => test("'expression'; import.foo;"));
+test("'expression'; super.get;");
+test("'expression'; super.set;");
+test("'expression'; super.call;");
+assertThrow(() => test("'expression'; super.foo;"));
+test("'expression'; this;");
+test("'expression'; error;");
+test("'expression'; arguments;");
 
-testExpression("'expression'; 123;");
-testExpression("'expression'; 123n;");
-testExpression("'expression'; undefined;");
-testExpression("'expression'; null;");
+test("'expression'; 123;");
+test("'expression'; 123n;");
+test("'expression'; undefined;");
+test("'expression'; null;");
 
-testExpression("'expression'; intrinsic['ReferenceError'];");
-testExpression(
+test("'expression'; intrinsic['ReferenceError'];");
+test(
   "'expression'; intrinsic.Symbol.unscopables;",
   "'expression'; intrinsic['Symbol.unscopables'];",
 );
-assertThrow(() => testExpression("'expression'; [].unscopables;"));
+assertThrow(() => test("'expression'; [].unscopables;"));
 
-assertThrow(() => testExpression("'expression'; 'source' >> [];"));
-testExpression("'expression'; 'source' >> 'specifier';");
-testExpression("'expression'; 'source' >> '*';");
-testExpression(
+assertThrow(() => test("'expression'; 'source' >> [];"));
+test("'expression'; 'source' >> 'specifier';");
+test("'expression'; 'source' >> '*';");
+test(
   "'expression'; 'source' >> specifier;",
-  "'source' >> 'specifier';",
+  "'expression'; 'source' >> 'specifier';",
 );
 
-testExpression("'expression'; variable;");
-testExpression("'expression'; [variable];");
-testExpression("'expression'; typeof [variable];");
+test("'expression'; variable;");
+test("'expression'; [variable];");
+test("'expression'; typeof [variable];");
 
-testExpression("'expression'; (() => { return 123; });");
-testExpression("'expression'; (async () => { return 123; });");
-testExpression("'expression'; (function () { return 123; });");
-testExpression("'expression'; (async function* method () { return 123; });");
+test("'expression'; (() => { 123; });");
+test("'expression'; (async () => { 123; });");
+test("'expression'; (function () { 123; });");
+test("'expression'; (async function* method () { 123; });");
 
-testExpression("'expression'; await 123;");
+test("'expression'; await 123;");
 
-testExpression("'expression'; yield 123;");
-testExpression("'expression'; yield* 123;");
+test("'expression'; yield 123;");
+test("'expression'; yield* 123;");
 
-testExpression("'expression'; (void 123, 456);");
+test("'expression'; (void 123, 456);");
 
-testExpression("'expression'; 123 ? 456 : 789;");
+test("'expression'; 123 ? 456 : 789;");
 
-testExpression("'expression'; eval(123);");
+test("'expression'; eval(123);");
 
-testExpression("'expression'; 123(456, 789);", "123(!undefined, 456, 789)");
-testExpression(
+test("'expression'; 123(456, 789);", "'expression'; 123(!undefined, 456, 789)");
+test(
   "'expression'; intrinsic['ReferenceError'](123, 456);",
   "'expression'; intrinsic['ReferenceError'](!undefined, 123, 456);",
 );
-testExpression(
+test(
   "'expression'; intrinsic.ReferenceError(123, 456);",
   "'expression'; intrinsic['ReferenceError'](!undefined, 123, 456);",
 );
 
-testExpression("'expression'; 123(!456, 789);");
-testExpression(
+test("'expression'; 123(!456, 789);");
+test(
   "'expression'; intrinsic['ReferenceError'](!123, 456, 789);",
   "'expression'; intrinsic['ReferenceError'](!123, 456, 789);",
 );
-testExpression(
+test(
   "'expression'; intrinsic.ReferenceError(!123, 456, 789);",
   "'expression'; intrinsic['ReferenceError'](!123, 456, 789);",
 );
 
-testExpression("'expression'; new 123(456, 789);");
-testExpression(
+test("'expression'; new 123(456, 789);");
+test(
   "'expression'; new intrinsic.ReferenceError(123, 456)",
   "'expression'; new intrinsic['ReferenceError'](123, 456)",
 );
-testExpression("'expression'; new intrinsic['ReferenceError'](123, 456)");
+test("'expression'; new intrinsic['ReferenceError'](123, 456)");
 
 ////////////
 // Effect //
@@ -108,7 +108,7 @@ assertThrow(() => {
 });
 test("'effect'; [variable] = 123;");
 test("'effect'; 'specifier' << 123;");
-test("'effect'; specifier << 123;", "'specifier' << 123;");
+test("'effect'; specifier << 123;", "'effect'; 'specifier' << 123;");
 test("'effect'; 123 ? undefined : undefined;");
 test("'effect'; 123 ? void 456 : void 789;");
 test("'effect'; 1 ? (void 2, void 3, void 4) : (void 4, void 5, void 6);");
@@ -144,23 +144,23 @@ test("'control-block'; {}");
 // Link //
 //////////
 
-testLink("import 'source';");
-testLink("import {specifier as specifier} from 'source';");
-testLink("export {specifier as specifier};");
-testLink("export * as specifier from 'source';");
-testLink("export {specifier as specifier} from 'source';");
-testLink("export {specifier1 as specifier2} from 'source';");
-testLink("export * as specifier from 'source';");
-testLink("export * from 'source';");
+test("'link'; import 'source';");
+test("'link'; import {specifier as specifier} from 'source';");
+test("'link'; export {specifier as specifier};");
+test("'link'; export * as specifier from 'source';");
+test("'link'; export {specifier as specifier} from 'source';");
+test("'link'; export {specifier1 as specifier2} from 'source';");
+test("'link'; export * as specifier from 'source';");
+test("'link'; export * from 'source';");
 
 /////////////
 // Program //
 /////////////
 
 assertThrow(() => {
-  testProgram("'foo';");
+  test("'invalid-directive';");
 });
 
-testProgram("'script'; return 123;");
-testProgram("'module'; import 'source'; { return 123; }");
-testProgram("'eval'; { return 123; }");
+test("'script'; 123;");
+test("'module'; import 'source'; { 123; }");
+test("'eval'; { 123; }");
