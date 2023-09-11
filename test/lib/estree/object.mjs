@@ -21,9 +21,9 @@ export const parseProperty = (code) =>
     ])
   );
 
-/////////////////////
+/////////////////////////
 // isPrototypeProperty //
-/////////////////////
+/////////////////////////
 
 assertEqual(isPrototypeProperty(parseProperty(`__proto__:null`)), true);
 

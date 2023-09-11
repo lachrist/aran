@@ -311,3 +311,21 @@ testFailure(
 
 testSuccess("'eval'; { 123; }", "'eval'; { 123; }");
 testFailure("'eval'; { 123; }", "'eval'; { 321; }");
+
+//////////////
+// Variable //
+//////////////
+
+testFailure(
+  "'control-block'; { void x; void x; }",
+  "'control-block'; { void x; void y; }",
+);
+
+///////////
+// Label //
+///////////
+
+testFailure(
+  "'control-block'; { break l; break l; }",
+  "'control-block'; { break l; break m;}",
+);

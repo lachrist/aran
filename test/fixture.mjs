@@ -21,20 +21,20 @@ const {
 
 Error.stackTraceLimit = Infinity;
 
-/** @type {(maybe: string | null) => void} */
+/** @type {(maybe: unknown) => void} */
 export const assertSuccess = (maybe) => {
-  if (maybe !== null) {
+  if (maybe != null) {
     // Sometimes large message are truncated...
     // Tried stdout.write and writeSync(1, ...)
     // Nothing works...
-    console.log(maybe);
+    console.dir(maybe, { depth: 10 });
     throw new Error("failure");
   }
 };
 
-/** @type {(maybe: string | null) => void} */
+/** @type {(maybe: unknown) => void} */
 export const assertFailure = (maybe) => {
-  if (maybe === null) {
+  if (maybe == null) {
     throw new Error("missing failure");
   }
 };

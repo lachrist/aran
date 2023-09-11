@@ -1,6 +1,8 @@
 import { assertEqual } from "../../fixture.mjs";
 
 import {
+  zip,
+  enumerate,
   pairup,
   join,
   slice,
@@ -16,6 +18,7 @@ import {
   filterOut,
   reduce,
   reduceReverse,
+  removeAll,
   indexOf,
   lastIndexOf,
   forEach,
@@ -25,6 +28,14 @@ import {
   shift,
   unshift,
 } from "../../../lib/util/array.mjs";
+
+assertEqual(zip([1, 2, 3], [4, 5, 6, 7]), [
+  [1, 4],
+  [2, 5],
+  [3, 6],
+]);
+
+assertEqual(enumerate(3), [0, 1, 2]);
 
 assertEqual(pairup([1, 2, 3, 4, 5, 6, 7]), [
   [1, 2],
@@ -41,6 +52,8 @@ assertEqual(join([], ","), "");
 assertEqual(join(["1", "2", "3"], ","), "1,2,3");
 
 assertEqual(slice([1, 2, 3, 4], 1, 3), [2, 3]);
+
+assertEqual(removeAll([1, 2, 2, 3, 4, 5], [2, 3]), [1, 4, 5]);
 
 assertEqual(removeDuplicate([1, 2, 3, 2]), [1, 2, 3]);
 

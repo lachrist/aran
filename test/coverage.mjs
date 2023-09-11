@@ -13,11 +13,12 @@ const testAsync = async (path) => {
     "npx",
     [
       "c8",
+      "--100",
       "--include",
       `lib/${path}.mjs`,
       "--",
       "node",
-      `lib/${path}.test.mjs`,
+      `test/lib/${path}.mjs`,
     ],
     { stdio: "inherit" },
   );

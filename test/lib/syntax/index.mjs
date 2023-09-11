@@ -24,8 +24,8 @@ test("'expression'; super.set;");
 test("'expression'; super.call;");
 assertThrow(() => test("'expression'; super.foo;"));
 test("'expression'; this;");
-test("'expression'; error;");
-test("'expression'; arguments;");
+test("'expression'; catch_error;");
+test("'expression'; function_arguments;");
 
 test("'expression'; 123;");
 test("'expression'; 123n;");
@@ -130,15 +130,26 @@ test("'statement'; while (123) { void 123; }");
 test(
   "'statement'; try { void 123; } catch { void 456; } finally { void 789; }",
 );
+test(
+  `
+    'statement';
+    try { l1: { void 123; } }
+    catch { l2: { void 456; } }
+    finally { l3: { void 789; } }
+  `,
+);
 
 ///////////
 // Block //
 ///////////
 
-test(
-  "'control-block'; label1: label2: { let variable1, variable2; void 123; }",
-);
+test("'control-block'; label1: label2: { let x, y, z; void 123; }");
 test("'control-block'; {}");
+
+test("'closure-block'; { let x, y, z; void 123; 456; }");
+test("'closure-block'; { 123; }");
+
+test("'pseudo-block'; void 123; 456;");
 
 //////////
 // Link //
