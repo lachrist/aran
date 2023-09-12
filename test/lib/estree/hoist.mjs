@@ -23,7 +23,7 @@ const {
 const testPattern = (code, variables) => {
   assertEqual(
     listPatternVariable(
-      /** @type {EstreePattern} */ (
+      /** @type {estree.Pattern} */ (
         drill(parseScript(`([${code}] = 123);`), [
           "body",
           0,
@@ -52,7 +52,7 @@ testPattern("foo.bar", []);
 
 assertEqual(
   listDeclaratorVariable(
-    /** @type {EstreeVariableDeclarator} */ (
+    /** @type {estree.VariableDeclarator} */ (
       drill(parseScript("var foo = 123;"), ["body", 0, "declarations", 0])
     ),
   ),
@@ -158,7 +158,7 @@ assertEqual(hoistBlock(parseScript("let foo;").body), { foo: "let" });
 
 assertEqual(
   hoistBlock(
-    /** @type {EstreeNode[]} */ (
+    /** @type {estree.Node[]} */ (
       drill(
         parseScript(`
           switch (123) {

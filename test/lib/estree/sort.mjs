@@ -3,10 +3,10 @@ import { parseScript, parseModule } from "../../fixture-parse.mjs";
 import { map } from "../../../lib/util/index.mjs";
 import { sortBody } from "../../../lib/estree/sort.mjs";
 
-/** @type {(node: EstreeNode) => string} */
+/** @type {(node: estree.Node) => string} */
 const getType = ({ type }) => type;
 
-/** @type {(node: EstreeProgram, ...types: string[]) => void} */
+/** @type {(node: estree.Program, ...types: string[]) => void} */
 const test = ({ body }, ...types) => {
   assertEqual(map(sortBody(body), getType), types);
 };

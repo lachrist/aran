@@ -1,7 +1,7 @@
 // @ts-ignore
 import { parse as parseBabel } from "@babel/parser";
 
-/** @type {(type: "script" | "module") => (code: string) => EstreeProgram} */
+/** @type {(type: "script" | "module") => (code: string) => estree.Program} */
 const compileParseProgram = (type) => (code) =>
   parseBabel(code, {
     plugins: ["estree"],

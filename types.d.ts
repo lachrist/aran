@@ -8,37 +8,36 @@ type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
 // Estree //
 
-type EstreeIdentifier = import("estree").Identifier;
-type EstreeSwitchCase = import("estree").SwitchCase;
-type EstreeUnaryOperator = import("estree").UnaryOperator;
-type EstreeBinaryOperator = import("estree").BinaryOperator;
-type EstreeExportSpecifier = import("estree").ExportSpecifier;
-type EstreeAssignmentProperty = import("estree").AssignmentProperty;
-type EstreeRestElement = import("estree").RestElement;
-type EstreeUnionImportSpecifier =
-  | import("estree").ImportSpecifier
-  | import("estree").ImportDefaultSpecifier
-  | import("estree").ImportNamespaceSpecifier;
-type EstreeFunction = import("estree").Function;
-type EstreeBigIntLiteral = import("estree").BigIntLiteral;
-type EstreeSimpleLiteral = import("estree").SimpleLiteral;
-type EstreeSourceLocation = import("estree").SourceLocation;
-type EstreeVariableDeclaration = import("estree").VariableDeclaration;
-type EstreeStatement = import("estree").Statement;
-type EstreeExpression = import("estree").Expression;
-type EstreeProgram = import("estree").Program;
-type EstreeNode = import("estree").Node;
-type EstreeLiteral = import("estree").Literal;
-type EstreePattern = import("estree").Pattern;
-type EstreeVariableDeclarator = import("estree").VariableDeclarator;
-type EstreeModuleDeclaration = import("estree").ModuleDeclaration;
-type EstreeBlockStatement = import("estree").BlockStatement;
-type EstreeDirective = import("estree").Directive;
-type EstreeProperty = import("estree").Property;
-type EstreeProgramStatement =
-  | EstreeModuleDeclaration
-  | EstreeStatement
-  | EstreeDirective;
+declare namespace estree {
+  type Identifier = import("estree").Identifier;
+  type SwitchCase = import("estree").SwitchCase;
+  type UnaryOperator = import("estree").UnaryOperator;
+  type BinaryOperator = import("estree").BinaryOperator;
+  type ExportSpecifier = import("estree").ExportSpecifier;
+  type AssignmentProperty = import("estree").AssignmentProperty;
+  type RestElement = import("estree").RestElement;
+  type UnionImportSpecifier =
+    | import("estree").ImportSpecifier
+    | import("estree").ImportDefaultSpecifier
+    | import("estree").ImportNamespaceSpecifier;
+  type Function = import("estree").Function;
+  type BigIntLiteral = import("estree").BigIntLiteral;
+  type SimpleLiteral = import("estree").SimpleLiteral;
+  type SourceLocation = import("estree").SourceLocation;
+  type VariableDeclaration = import("estree").VariableDeclaration;
+  type Statement = import("estree").Statement;
+  type Expression = import("estree").Expression;
+  type Program = import("estree").Program;
+  type Node = import("estree").Node;
+  type Literal = import("estree").Literal;
+  type Pattern = import("estree").Pattern;
+  type VariableDeclarator = import("estree").VariableDeclarator;
+  type ModuleDeclaration = import("estree").ModuleDeclaration;
+  type BlockStatement = import("estree").BlockStatement;
+  type Directive = import("estree").Directive;
+  type Property = import("estree").Property;
+  type ProgramStatement = ModuleDeclaration | Statement | Directive;
+}
 
 // Aran Syntax //
 

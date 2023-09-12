@@ -4,11 +4,11 @@ import { hasEmptyBreak, hasEmptyContinue } from "../../../lib/estree/label.mjs";
 
 const LABEL = "label";
 
-/** @type {(query: (node: EstreeNode) => boolean) => (code: string, result: boolean) => void} */
+/** @type {(query: (node: estree.Node) => boolean) => (code: string, result: boolean) => void} */
 const compileTest = (query) => (code, result) => {
   assertEqual(
     query(
-      /** @type {EstreeNode} */ (
+      /** @type {estree.Node} */ (
         drill(parseScript(`${LABEL}: while (true) ${code}`), [
           "body",
           0,

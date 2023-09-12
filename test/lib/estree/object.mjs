@@ -9,9 +9,9 @@ import {
   isSuperProperty,
 } from "../../../lib/estree/object.mjs";
 
-/** @type {(code: string) => EstreeNode} */
+/** @type {(code: string) => estree.Node} */
 export const parseProperty = (code) =>
-  /** @type {EstreeNode} */ (
+  /** @type {estree.Node} */ (
     drill(parseScript(`({${code}});`), [
       "body",
       0,

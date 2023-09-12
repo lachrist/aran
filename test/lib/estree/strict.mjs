@@ -11,7 +11,7 @@ assertEqual(isProgramStrict(parseScript("123; 'use strict';")), false);
 
 assertEqual(
   isClosureStrict(
-    /** @type {EstreeFunction} */ (
+    /** @type {estree.Function} */ (
       drill(parseScript("(() => 123);"), ["body", 0, "expression"])
     ),
   ),
@@ -20,7 +20,7 @@ assertEqual(
 
 assertEqual(
   isClosureStrict(
-    /** @type {EstreeFunction} */ (
+    /** @type {estree.Function} */ (
       drill(parseScript("(() => { 'foo'; 'use strict'; });"), [
         "body",
         0,
@@ -32,7 +32,7 @@ assertEqual(
 );
 assertEqual(
   isClosureStrict(
-    /** @type {EstreeFunction} */ (
+    /** @type {estree.Function} */ (
       drill(parseScript("(() => { 123; 'use strict'; });"), [
         "body",
         0,
