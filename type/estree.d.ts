@@ -1,6 +1,9 @@
 declare namespace estree {
+  type Super = import("../node_modules/@types/estree/index.d.ts").Super;
   type Identifier =
     import("../node_modules/@types/estree/index.d.ts").Identifier;
+  type PrivateIdentifier =
+    import("../node_modules/@types/estree/index.d.ts").PrivateIdentifier;
   type SwitchCase =
     import("../node_modules/@types/estree/index.d.ts").SwitchCase;
   type UnaryOperator =

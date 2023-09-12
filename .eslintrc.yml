@@ -95,7 +95,7 @@ rules:
     # Empty ReturnStatement
     - ReturnStatement[argument=null]
     # CallExpression
-    - :not(CallExpression[callee.type="MemberExpression"][callee.object.type="Identifier"][callee.object.name="console"])CallExpression[callee.type="MemberExpression"]
+    # - :not(CallExpression[callee.type="MemberExpression"][callee.object.type="Identifier"][callee.object.name="console"])CallExpression[callee.type="MemberExpression"]
     # Literal Computation
     # - BinaryExpression[left.type="Literal"][right.type="Literal"]
     # - UnaryExpression[argument.type="Literal"]
