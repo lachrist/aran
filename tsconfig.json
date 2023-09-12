@@ -10,5 +10,5 @@
     "module": "es2022",
     "typeRoots": ["./node_modules/@types"]
   },
-  "include": ["lib", "test", "types.d.ts"]
+  "include": ["./type", "./lib", "./test"]
 }
