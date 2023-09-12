@@ -1,5 +1,3 @@
 .DS_Store
-/src/**/generated-*
 /node_modules/
 /coverage/
-/tmp

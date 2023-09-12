@@ -8,7 +8,7 @@
     "lib": ["es2022"],
     "target": "es2022",
     "module": "es2022",
-    "typeRoots": ["lib/type.d.ts", "./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types"]
   },
-  "include": ["lib", "test"]
+  "include": ["lib", "test", "types.d.ts"]
 }

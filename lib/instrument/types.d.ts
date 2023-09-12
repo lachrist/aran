@@ -56,6 +56,23 @@ type TrapName =
   | "enclave.declare.before"
   | "enclave.declare.after";
 
+type LinkData =
+  | {
+      type: "import";
+      source: Source;
+      specifier: Specifier | null;
+    }
+  | {
+      type: "export";
+      export: Specifier;
+    }
+  | {
+      type: "aggregate";
+      source: Source;
+      import: Specifier | null;
+      export: Specifier | null;
+    };
+
 type Point<T, S, L, V> =
   //////////////
   // Informer //
@@ -64,7 +81,7 @@ type Point<T, S, L, V> =
   | {
       type: "program.enter";
       kind: ProgramKind;
-      links: Link[];
+      links: LinkData[];
       parameters: Expression<T>;
       variables: V[];
       serial: S;
@@ -356,7 +373,7 @@ type ObjectPointcut<S, L, V> = {
     | boolean
     | ((
         kind: ProgramKind,
-        links: Link[],
+        links: LinkData[],
         parameters: null,
         variables: V[],
         serial: S,
