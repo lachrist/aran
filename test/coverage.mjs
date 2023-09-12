@@ -18,7 +18,7 @@ const testAsync = async (path) => {
       `lib/${path}.mjs`,
       "--",
       "node",
-      `test/lib/${path}.mjs`,
+      `lib/${path}.test.mjs`,
     ],
     { stdio: "inherit" },
   );
