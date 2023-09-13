@@ -177,7 +177,7 @@ rules:
   # no-buffer-constructor >> No node environment
   # no-bitwise >> Bitwise binary operator disabled by no-restricted-syntax
   # no-caller >> disabled prefer-rest-params
-  # no-case-declarations >> SwitchStatement disabled by no-restricted-syntax
+  no-case-declarations >> SwitchStatement disabled by no-restricted-syntax
   # no-catch-shadow >> deprecated
   # no-class-assign >> ClassDeclaration disabled by no-restricted-syntax
   # no-comma-dangle >> deprecated
