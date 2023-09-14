@@ -95,7 +95,7 @@ rules:
     # Empty ReturnStatement
     - ReturnStatement[argument=null]
     # CallExpression
-    # - :not(CallExpression[callee.type="MemberExpression"][callee.object.type="Identifier"][callee.object.name="console"])CallExpression[callee.type="MemberExpression"]
+    - :not(CallExpression[callee.type="MemberExpression"][callee.object.type="Identifier"][callee.object.name="console"])CallExpression[callee.type="MemberExpression"]
     # Literal Computation
     # - BinaryExpression[left.type="Literal"][right.type="Literal"]
     # - UnaryExpression[argument.type="Literal"]
@@ -177,7 +177,7 @@ rules:
   # no-buffer-constructor >> No node environment
   # no-bitwise >> Bitwise binary operator disabled by no-restricted-syntax
   # no-caller >> disabled prefer-rest-params
-  no-case-declarations >> SwitchStatement disabled by no-restricted-syntax
+  no-case-declarations: error
   # no-catch-shadow >> deprecated
   # no-class-assign >> ClassDeclaration disabled by no-restricted-syntax
   # no-comma-dangle >> deprecated

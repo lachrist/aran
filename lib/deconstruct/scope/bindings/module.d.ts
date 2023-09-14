@@ -1,8 +1,10 @@
+import { BaseVariable } from "../../layer/index.mjs";
+
 export type listBindingVariable<B> = (
   strict: boolean,
   binding: B,
   variable: Variable,
-) => Variable[];
+) => BaseVariable[];
 
 export type listBindingDeclareStatement<B, T> = (
   strict: boolean,
