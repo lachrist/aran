@@ -18,6 +18,7 @@ node
 
 syntax/parse
 syntax/format
+syntax/identifier
 syntax/convert
 syntax/revert
 syntax/index

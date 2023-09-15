@@ -1,54 +1,52 @@
-import { BaseVariable } from "../../layer/index.mjs";
-
 export type listBindingVariable<B> = (
   strict: boolean,
   binding: B,
-  variable: Variable,
-) => BaseVariable[];
+  variable: estree.Variable,
+) => unbuild.Variable[];
 
 export type listBindingDeclareStatement<B, T> = (
   strict: boolean,
   binding: B,
-  variable: Variable,
+  variable: estree.Variable,
   tag: T,
-) => Statement<T>[];
+) => unbuild.Statement<T>[];
 
 export type listBindingInitializeStatement<B, T> = (
   strict: boolean,
   binding: B,
-  variable: Variable,
-  expression: Expression<T>,
+  variable: estree.Variable,
+  expression: unbuild.Expression<T>,
   tag: T,
-) => Statement<T>[];
+) => unbuild.Statement<T>[];
 
 export type makeBindingReadExpression<B, T> = (
   strict: boolean,
   binding: B,
-  variable: Variable,
+  variable: estree.Variable,
   tag: T,
-) => Expression<T>;
+) => unbuild.Expression<T>;
 
 export type makeBindingTypeofExpression<B, T> = (
   strict: boolean,
   binding: B,
-  variable: Variable,
+  variable: estree.Variable,
   tag: T,
-) => Expression<T>;
+) => unbuild.Expression<T>;
 
 export type makeBindingDiscardExpression<B, T> = (
   strict: boolean,
   binding: B,
-  variable: Variable,
+  variable: estree.Variable,
   tag: T,
-) => Expression<T>;
+) => unbuild.Expression<T>;
 
 export type listBindingWriteEffect<B, T> = (
   strict: boolean,
   binding: B,
-  variable: Variable,
-  pure: Expression<T>,
+  variable: estree.Variable,
+  pure: unbuild.Expression<T>,
   tag: T,
-) => Effect<T>[];
+) => unbuild.Effect<T>[];
 
 export type BindingModule<B, T> = {
   listBindingVariable: listBindingVariable<B>;
