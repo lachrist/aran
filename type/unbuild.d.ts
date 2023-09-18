@@ -1,6 +1,7 @@
 declare namespace unbuild {
   type Variable = Brand<string, "unbuild.Variable">;
   type Label = Brand<string, "unbuild.Label">;
+  type Hash = Brand<string, "unbuild.Hash">;
   type Atom<T> = {
     Label: Label;
     Source: estree.Source;

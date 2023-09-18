@@ -15,7 +15,7 @@ export type listBindingInitializeStatement<B, T> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
-  expression: aran.Expression<unbuild.Atom<T>>,
+  right: aran.Expression<unbuild.Atom<T>>,
   tag: T,
 ) => aran.Statement<unbuild.Atom<T>>[];
 
@@ -44,7 +44,7 @@ export type listBindingWriteEffect<B, T> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
-  pure: aran.Expression<unbuild.Atom<T>>,
+  right: unbuild.Variable,
   tag: T,
 ) => aran.Effect<unbuild.Atom<T>>[];
 

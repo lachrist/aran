@@ -10,6 +10,5 @@
     "module": "es2022",
     "typeRoots": ["./node_modules/@types"]
   },
-  "include": ["./type", "./lib", "./test"],
-  "exclude": ["./lib/optimize/", "./lib/deconstruct/visit/"]
+  "include": ["./type", "./lib", "./test"]
 }
