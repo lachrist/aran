@@ -1,12 +1,21 @@
 declare namespace weave {
-  type Variable = Brand<string, "weave.Variable">;
-  type Node = aran.Node<Variable, Variable[]>;
-  type Program = aran.Program<Variable, Variable[]>;
-  type Link = aran.Link<Variable[]>;
-  type ClosureBlock = aran.ClosureBlock<Variable, Variable[]>;
-  type ControlBlock = aran.ControlBlock<Variable, Variable[]>;
-  type PseudoBlock = aran.PseudoBlock<Variable, Variable[]>;
-  type Statement = aran.Statement<Variable, Variable[]>;
-  type Effect = aran.Effect<Variable, Variable[]>;
-  type Expression = aran.Expression<Variable, Variable[]>;
+  type ArgVariable = Brand<string, "weave.ArgVariable">;
+  type ResVariable = Brand<string, "weave.ResVariable">;
+  type Label = Brand<string, "weave.ArgLabel">;
+  type ArgAtom<T> = {
+    Label: Label;
+    Source: estree.Source;
+    Specifier: estree.Specifier;
+    Variable: ArgVariable;
+    EnclaveVariable: estree.Variable;
+    Tag: T;
+  };
+  type ResAtom = {
+    Label: Label;
+    Source: estree.Source;
+    Specifier: estree.Specifier;
+    Variable: ResVariable;
+    EnclaveVariable: estree.Variable;
+    Tag: ResVariable[];
+  };
 }

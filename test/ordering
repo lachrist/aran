@@ -2,6 +2,7 @@ util/array
 util/object
 util/closure
 util/error
+util/string
 util/index
 
 estree/hoist

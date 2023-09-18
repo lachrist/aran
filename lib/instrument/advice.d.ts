@@ -82,20 +82,22 @@ export type Point<S> =
       kind: aran.ProgramKind;
       links: LinkData[];
       frame: {
-        [key in aran.Parameter | unbuild.Variable]: weave.Expression;
+        [key in
+          | aran.Parameter
+          | weave.ArgVariable]: aran.Expression<weave.ResAtom>;
       };
       serial: S;
     }
   | {
       type: "program.completion";
       kind: aran.ProgramKind;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
       type: "program.failure";
       kind: aran.ProgramKind;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
@@ -107,20 +109,24 @@ export type Point<S> =
   | {
       type: "closure.enter";
       kind: aran.ClosureKind;
-      callee: weave.Expression;
-      frame: { [key in aran.Parameter | unbuild.Variable]: weave.Expression };
+      callee: aran.Expression<weave.ResAtom>;
+      frame: {
+        [key in
+          | aran.Parameter
+          | weave.ArgVariable]: aran.Expression<weave.ResAtom>;
+      };
       serial: S;
     }
   | {
       type: "closure.completion";
       kind: aran.ClosureKind;
       serial: S;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
     }
   | {
       type: "closure.failure";
       kind: aran.ClosureKind;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
@@ -132,8 +138,12 @@ export type Point<S> =
   | {
       type: "block.enter";
       kind: BlockKind;
-      labels: aran.Label[];
-      frame: { [key in aran.Parameter | unbuild.Variable]: weave.Expression };
+      labels: weave.Label[];
+      frame: {
+        [key in
+          | aran.Parameter
+          | weave.ArgVariable]: aran.Expression<weave.ResAtom>;
+      };
       serial: S;
     }
   | {
@@ -144,7 +154,7 @@ export type Point<S> =
   | {
       type: "block.failure";
       kind: BlockKind;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
@@ -164,7 +174,7 @@ export type Point<S> =
   // Break //
   | {
       type: "break.before";
-      label: aran.Label;
+      label: weave.Label;
       serial: S;
     }
   ///////////////////
@@ -177,21 +187,21 @@ export type Point<S> =
     }
   | {
       type: "read.after";
-      variable: aran.Parameter | unbuild.Variable;
-      value: weave.Expression;
+      variable: aran.Parameter | weave.ArgVariable;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
       type: "intrinsic.after";
       name: aran.Intrinsic;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
       type: "import.after";
       source: string;
       specifier: string | null;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
@@ -199,7 +209,7 @@ export type Point<S> =
       kind: aran.ClosureKind;
       asynchronous: boolean;
       generator: boolean;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   ////////////////////
@@ -207,24 +217,24 @@ export type Point<S> =
   ////////////////////
   | {
       type: "return.before";
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
       type: "drop.before";
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
       type: "export.before";
       specifier: string;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
       type: "write.before";
-      variable: aran.Parameter | unbuild.Variable;
-      value: weave.Expression;
+      variable: aran.Parameter | weave.ArgVariable;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   ////////////////////
@@ -234,7 +244,7 @@ export type Point<S> =
   | {
       type: "branch.before";
       kind: BranchKind;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
@@ -245,47 +255,47 @@ export type Point<S> =
   // Conditional //
   | {
       type: "conditional.before";
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
       type: "conditional.after";
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   // Eval //
   | {
       type: "eval.before";
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
       type: "eval.after";
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   // Await //
   | {
       type: "await.before";
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
       type: "await.after";
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   // Yield //
   | {
       type: "yield.before";
       delegate: boolean;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
       type: "yield.after";
       delegate: boolean;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   // read-external //
@@ -297,7 +307,7 @@ export type Point<S> =
   | {
       type: "enclave.read.after";
       variable: estree.Variable;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   // typeof-external //
@@ -309,14 +319,14 @@ export type Point<S> =
   | {
       type: "enclave.typeof.after";
       variable: estree.Variable;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   // write-external //
   | {
       type: "enclave.write.before";
       variable: estree.Variable;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
@@ -329,7 +339,7 @@ export type Point<S> =
       type: "enclave.declare.before";
       kind: aran.VariableKind;
       variable: estree.Variable;
-      value: weave.Expression;
+      value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
@@ -343,15 +353,15 @@ export type Point<S> =
   //////////////
   | {
       type: "apply";
-      callee: weave.Expression;
-      this: weave.Expression;
-      arguments: weave.Expression[];
+      callee: aran.Expression<weave.ResAtom>;
+      this: aran.Expression<weave.ResAtom>;
+      arguments: aran.Expression<weave.ResAtom>[];
       serial: S;
     }
   | {
       type: "construct";
-      callee: weave.Expression;
-      arguments: weave.Expression[];
+      callee: aran.Expression<weave.ResAtom>;
+      arguments: aran.Expression<weave.ResAtom>[];
       serial: S;
     };
 
@@ -366,7 +376,7 @@ export type ObjectPointcut<S> = {
     | ((
         kind: aran.ProgramKind,
         links: LinkData[],
-        frame: { [key in unbuild.Variable]?: null },
+        frame: { [key in weave.ArgVariable]?: null },
         serial: S,
       ) => boolean);
   "program.completion"?:
@@ -382,7 +392,7 @@ export type ObjectPointcut<S> = {
     | ((
         kind: aran.ClosureKind,
         callee: null,
-        frame: { [key in unbuild.Variable]?: null },
+        frame: { [key in weave.ArgVariable]?: null },
         serial: S,
       ) => boolean);
   "closure.completion":
@@ -397,8 +407,8 @@ export type ObjectPointcut<S> = {
     | boolean
     | ((
         kind: BlockKind,
-        labels: aran.Label[],
-        frame: { [key in unbuild.Variable]?: null },
+        labels: weave.Label[],
+        frame: { [key in weave.ArgVariable]?: null },
         serial: S,
       ) => boolean);
   "block.completion": boolean | ((kind: BlockKind, serial: S) => boolean);
@@ -408,7 +418,7 @@ export type ObjectPointcut<S> = {
   "block.leave"?: boolean | ((kind: BlockKind, serial: S) => boolean);
   "debugger.before"?: boolean | ((serial: S) => boolean);
   "debugger.after"?: boolean | ((serial: S) => boolean);
-  "break.before"?: boolean | ((label: aran.Label, serial: S) => boolean);
+  "break.before"?: boolean | ((label: weave.Label, serial: S) => boolean);
   "branch.before"?:
     | boolean
     | ((kind: BranchKind, value: null, serial: S) => boolean);
@@ -437,7 +447,7 @@ export type ObjectPointcut<S> = {
   "read.after"?:
     | boolean
     | ((
-        variable: aran.Parameter | unbuild.Variable,
+        variable: aran.Parameter | weave.ArgVariable,
         value: null,
         serial: S,
       ) => boolean);
@@ -460,7 +470,7 @@ export type ObjectPointcut<S> = {
   "write.before"?:
     | boolean
     | ((
-        variable: aran.Parameter | unbuild.Variable,
+        variable: aran.Parameter | weave.ArgVariable,
         value: null,
         serial: S,
       ) => boolean);

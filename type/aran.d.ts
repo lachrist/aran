@@ -1,7 +1,12 @@
 declare namespace aran {
-  type Label = Brand<string, "aran.Label">;
-
-  type Variable = Brand<string, "aran.Variable">;
+  type Atom = {
+    Label: string;
+    Variable: string;
+    EnclaveVariable: string;
+    Source: string;
+    Specifier: string;
+    Tag: unknown;
+  };
 
   type Primitive =
     | { undefined: null }
@@ -100,194 +105,206 @@ declare namespace aran {
     | "super.set"
     | "super.call";
 
-  type Program<V, T> =
+  type Program<A extends Atom> =
     | {
         type: "ScriptProgram";
-        body: PseudoBlock<V, T>;
-        tag: T;
+        body: PseudoBlock<A>;
+        tag: A["Tag"];
       }
     | {
         type: "ModuleProgram";
-        links: Link<T>[];
-        body: ClosureBlock<V, T>;
-        tag: T;
+        links: Link<A>[];
+        body: ClosureBlock<A>;
+        tag: A["Tag"];
       }
     | {
         type: "EvalProgram";
-        body: ClosureBlock<V, T>;
-        tag: T;
+        body: ClosureBlock<A>;
+        tag: A["Tag"];
       };
 
-  type Link<T> =
+  type Link<A extends Atom> =
     | {
         type: "ImportLink";
-        source: estree.Source;
-        import: estree.Specifier | null;
-        tag: T;
+        source: A["Source"];
+        import: A["Specifier"] | null;
+        tag: A["Tag"];
       }
-    | { type: "ExportLink"; export: estree.Specifier; tag: T }
+    | { type: "ExportLink"; export: A["Specifier"]; tag: A["Tag"] }
     | {
         type: "AggregateLink";
-        source: estree.Source;
-        import: estree.Specifier | null;
-        export: estree.Specifier | null;
-        tag: T;
+        source: A["Source"];
+        import: A["Specifier"] | null;
+        export: A["Specifier"] | null;
+        tag: A["Tag"];
       };
 
-  type ClosureBlock<V, T> = {
+  type ClosureBlock<A extends Atom> = {
     type: "ClosureBlock";
-    variables: V[];
-    statements: Statement<V, T>[];
-    completion: Expression<V, T>;
-    tag: T;
+    variables: A["Variable"][];
+    statements: Statement<A>[];
+    completion: Expression<A>;
+    tag: A["Tag"];
   };
 
-  type ControlBlock<V, T> = {
+  type ControlBlock<A extends Atom> = {
     type: "ControlBlock";
-    labels: Label[];
-    variables: V[];
-    statements: Statement<V, T>[];
-    tag: T;
+    labels: A["Label"][];
+    variables: A["Variable"][];
+    statements: Statement<A>[];
+    tag: A["Tag"];
   };
 
-  type PseudoBlock<V, T> = {
+  type PseudoBlock<A extends Atom> = {
     type: "PseudoBlock";
-    statements: Statement<V, T>[];
-    completion: Expression<V, T>;
-    tag: T;
+    statements: Statement<A>[];
+    completion: Expression<A>;
+    tag: A["Tag"];
   };
 
-  type Statement<V, T> =
-    | { type: "EffectStatement"; inner: Effect<V, T>; tag: T }
-    | { type: "ReturnStatement"; result: Expression<V, T>; tag: T }
-    | { type: "BreakStatement"; label: Label; tag: T }
-    | { type: "DebuggerStatement"; tag: T }
+  type Statement<A extends Atom> =
+    | { type: "EffectStatement"; inner: Effect<A>; tag: A["Tag"] }
+    | { type: "ReturnStatement"; result: Expression<A>; tag: A["Tag"] }
+    | { type: "BreakStatement"; label: A["Label"]; tag: A["Tag"] }
+    | { type: "DebuggerStatement"; tag: A["Tag"] }
     | {
         type: "DeclareEnclaveStatement";
         kind: VariableKind;
-        variable: estree.Variable;
-        right: Expression<V, T>;
-        tag: T;
+        variable: A["EnclaveVariable"];
+        right: Expression<A>;
+        tag: A["Tag"];
       }
-    | { type: "BlockStatement"; do: ControlBlock<V, T>; tag: T }
+    | { type: "BlockStatement"; do: ControlBlock<A>; tag: A["Tag"] }
     | {
         type: "IfStatement";
-        if: Expression<V, T>;
-        then: ControlBlock<V, T>;
-        else: ControlBlock<V, T>;
-        tag: T;
+        if: Expression<A>;
+        then: ControlBlock<A>;
+        else: ControlBlock<A>;
+        tag: A["Tag"];
       }
     | {
         type: "WhileStatement";
-        while: Expression<V, T>;
-        do: ControlBlock<V, T>;
-        tag: T;
+        while: Expression<A>;
+        do: ControlBlock<A>;
+        tag: A["Tag"];
       }
     | {
         type: "TryStatement";
-        try: ControlBlock<V, T>;
-        catch: ControlBlock<V, T>;
-        finally: ControlBlock<V, T>;
-        tag: T;
+        try: ControlBlock<A>;
+        catch: ControlBlock<A>;
+        finally: ControlBlock<A>;
+        tag: A["Tag"];
       };
 
-  type Effect<V, T> =
-    | { type: "ExpressionEffect"; discard: Expression<V, T>; tag: T }
+  type Effect<A extends Atom> =
+    | { type: "ExpressionEffect"; discard: Expression<A>; tag: A["Tag"] }
     | {
         type: "ConditionalEffect";
-        condition: Expression<V, T>;
-        positive: Effect<V, T>[];
-        negative: Effect<V, T>[];
-        tag: T;
+        condition: Expression<A>;
+        positive: Effect<A>[];
+        negative: Effect<A>[];
+        tag: A["Tag"];
       }
     | {
         type: "WriteEffect";
-        variable: Parameter | V;
-        right: Expression<V, T>;
-        tag: T;
+        variable: Parameter | A["Variable"];
+        right: Expression<A>;
+        tag: A["Tag"];
       }
     | {
         type: "WriteEnclaveEffect";
-        variable: estree.Variable;
-        right: Expression<V, T>;
-        tag: T;
+        variable: A["EnclaveVariable"];
+        right: Expression<A>;
+        tag: A["Tag"];
       }
     | {
         type: "ExportEffect";
-        export: estree.Specifier;
-        right: Expression<V, T>;
-        tag: T;
+        export: A["Specifier"];
+        right: Expression<A>;
+        tag: A["Tag"];
       };
 
-  type Expression<V, T> =
+  type Expression<A extends Atom> =
     // Produce //
-    | { type: "PrimitiveExpression"; primitive: aran.Primitive; tag: T }
-    | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag: T }
+    | { type: "PrimitiveExpression"; primitive: aran.Primitive; tag: A["Tag"] }
+    | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag: A["Tag"] }
     | {
         type: "ImportExpression";
-        source: estree.Source;
-        import: estree.Specifier | null;
-        tag: T;
+        source: A["Source"];
+        import: A["Specifier"] | null;
+        tag: A["Tag"];
       }
-    | { type: "ReadExpression"; variable: Parameter | V; tag: T }
-    | { type: "ReadEnclaveExpression"; variable: estree.Variable; tag: T }
-    | { type: "TypeofEnclaveExpression"; variable: estree.Variable; tag: T }
+    | {
+        type: "ReadExpression";
+        variable: Parameter | A["Variable"];
+        tag: A["Tag"];
+      }
+    | {
+        type: "ReadEnclaveExpression";
+        variable: A["EnclaveVariable"];
+        tag: A["Tag"];
+      }
+    | {
+        type: "TypeofEnclaveExpression";
+        variable: A["EnclaveVariable"];
+        tag: A["Tag"];
+      }
     | {
         type: "ClosureExpression";
         kind: ClosureKind;
         asynchronous: boolean;
         generator: boolean;
-        body: ClosureBlock<V, T>;
-        tag: T;
+        body: ClosureBlock<A>;
+        tag: A["Tag"];
       }
     // Control //
-    | { type: "AwaitExpression"; promise: Expression<V, T>; tag: T }
+    | { type: "AwaitExpression"; promise: Expression<A>; tag: A["Tag"] }
     | {
         type: "YieldExpression";
         delegate: boolean;
-        item: Expression<V, T>;
-        tag: T;
+        item: Expression<A>;
+        tag: A["Tag"];
       }
     | {
         type: "SequenceExpression";
-        head: Effect<V, T>;
-        tail: Expression<V, T>;
-        tag: T;
+        head: Effect<A>;
+        tail: Expression<A>;
+        tag: A["Tag"];
       }
     | {
         type: "ConditionalExpression";
-        condition: Expression<V, T>;
-        consequent: Expression<V, T>;
-        alternate: Expression<V, T>;
-        tag: T;
+        condition: Expression<A>;
+        consequent: Expression<A>;
+        alternate: Expression<A>;
+        tag: A["Tag"];
       }
     // Combine //
     | {
         type: "EvalExpression";
-        code: Expression<V, T>;
-        tag: T;
+        code: Expression<A>;
+        tag: A["Tag"];
       }
     | {
         type: "ApplyExpression";
-        callee: Expression<V, T>;
-        this: Expression<V, T>;
-        arguments: Expression<V, T>[];
-        tag: T;
+        callee: Expression<A>;
+        this: Expression<A>;
+        arguments: Expression<A>[];
+        tag: A["Tag"];
       }
     | {
         type: "ConstructExpression";
-        callee: Expression<V, T>;
-        arguments: Expression<V, T>[];
-        tag: T;
+        callee: Expression<A>;
+        arguments: Expression<A>[];
+        tag: A["Tag"];
       };
 
-  type Node<V, T> =
-    | Program<V, T>
-    | Link<T>
-    | ControlBlock<V, T>
-    | ClosureBlock<V, T>
-    | PseudoBlock<V, T>
-    | Statement<V, T>
-    | Effect<V, T>
-    | Expression<V, T>;
+  type Node<A extends Atom> =
+    | Program<A>
+    | Link<A>
+    | ControlBlock<A>
+    | ClosureBlock<A>
+    | PseudoBlock<A>
+    | Statement<A>
+    | Effect<A>
+    | Expression<A>;
 }

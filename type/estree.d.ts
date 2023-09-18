@@ -1,3 +1,7 @@
+// Not doing the below because it turns the current file into a module
+// And makes it not available as an ambient namespace.
+// import type * as Estree from "../node_modules/@types/estree/index.d.ts";
+
 declare namespace estree {
   type Variable = Brand<string, "estree.Variable">;
   type Label = Brand<string, "estree.Label">;

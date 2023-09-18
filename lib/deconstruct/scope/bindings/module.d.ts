@@ -9,44 +9,44 @@ export type listBindingDeclareStatement<B, T> = (
   binding: B,
   variable: estree.Variable,
   tag: T,
-) => unbuild.Statement<T>[];
+) => aran.Statement<unbuild.Atom<T>>[];
 
 export type listBindingInitializeStatement<B, T> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
-  expression: unbuild.Expression<T>,
+  expression: aran.Expression<unbuild.Atom<T>>,
   tag: T,
-) => unbuild.Statement<T>[];
+) => aran.Statement<unbuild.Atom<T>>[];
 
 export type makeBindingReadExpression<B, T> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
   tag: T,
-) => unbuild.Expression<T>;
+) => aran.Expression<unbuild.Atom<T>>;
 
 export type makeBindingTypeofExpression<B, T> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
   tag: T,
-) => unbuild.Expression<T>;
+) => aran.Expression<unbuild.Atom<T>>;
 
 export type makeBindingDiscardExpression<B, T> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
   tag: T,
-) => unbuild.Expression<T>;
+) => aran.Expression<unbuild.Atom<T>>;
 
 export type listBindingWriteEffect<B, T> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
-  pure: unbuild.Expression<T>,
+  pure: aran.Expression<unbuild.Atom<T>>,
   tag: T,
-) => unbuild.Effect<T>[];
+) => aran.Effect<unbuild.Atom<T>>[];
 
 export type BindingModule<B, T> = {
   listBindingVariable: listBindingVariable<B>;
