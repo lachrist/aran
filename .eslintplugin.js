@@ -1,83 +1,79 @@
 "use strict";
 
+const isUniqueComment = (comment) =>
+  comment.type === "Block" && /^\*\s+@unique\s*$/gu.test(comment.value);
+
+const isBasenameComment = (comment) =>
+  comment.type === "Block" && /^\*\s+@basename\s*$/gu.test(comment.value);
+
 module.exports = {
   rules: {
-    // "prefer-else-return": {
-    //   meta: {
-    //     type: "suggestion",
-    //     docs: {
-    //       description:
-    //         "Opposite of no-else-return -- cf: https://youtu.be/SFv8Wm2HdNM?t=1871",
-    //       recommended: false,
-    //     },
-    //   },
-    //   create: (context) => {
-    //     const getSingletonBody = ({body}) => [body];
-    //     const getBody = ({body}) => body;
-    //     const getConsequent = ({consequent}) => consequent;
-    //     const getCases = ({cases}) => cases;
-    //     const getIfChildren = (node) => [
-    //       node.consequent,
-    //       node.alternate === null ? [] : [node.alternate],
-    //     ];
-    //     const getTryChildren = (node) => [
-    //       node.block,
-    //       ... node.handler === null ? [] : [node.handler],
-    //       ... node.finalizer === null ? [] : [node.finalizer],
-    //     ];
-    //     const return_set = new WeakSet();
-    //     const throw_set = new WeakSet();
-    //     const sets = [return_set];
-    //     const generateRegisterCompletion = (set) => (node) => {
-    //       set.add(node);
-    //     };
-    //     const generateRegisterCompound = (getChildren) => (node) => {
-    //       for (const child of getChildren(node)) {
-    //         if (return_set.has(child)) {
-    //           return_set.add(node);
-    //         }
-    //         if (throw_set.has(child)) {
-    //           throw_set.add(node);
-    //         }
-    //       }
-    //     };
-    //     const registerTry = generateRegisterCompound(getTryChildren);
-    //     const registerIf = generateRegisterCompound(getIfChildren);
-    //     const checkBranch = (node, child1, child2) => {
-    //       if (child1 !== null && return_set.has(child1)) {
-    //         if (child2 === null || (!return_set.has(child2) && !throw_set.has(child2))) {
-    //           context.report({
-    //             node,
-    //             message:
-    //               "If/Try statement has a return statement in one of its branch but no return/throw statement in the other",
-    //           });
-    //         }
-    //       }
-    //     };
-    //     return {
-    //       "ReturnStatement:exit": generateRegisterCompletion(return_set),
-    //       "ThrowStatement:exit": generateRegisterCompletion(throw_set),
-    //       "BlockStatement:exit": generateRegisterCompound(getBody),
-    //       "SwitchCase": generateRegisterCompound(getConsequent),
-    //       "SwitchStatement": generateRegisterCompound(getCases),
-    //       "IfStatement:exit": (node) => {
-    //         registerIf(node);
-    //         checkBranch(node, node.consequent, node.alternate);
-    //         checkBranch(node, node.alternate, node.consequent);
-    //       },
-    //       "TryStatement:exit": (node) => {
-    //         registerTry(node);
-    //         checkBranch(node, node.block, node.handler);
-    //         checkBranch(node, node.handler, node.block);
-    //       },
-    //       "CatchClause:exit": generateRegisterCompound(getSingletonBody),
-    //       "LabeledStatement:exit": generateRegisterCompound(getSingletonBody),
-    //       "WhileStatement:exit": generateRegisterCompound(getSingletonBody),
-    //       "ForInStatement:exit": generateRegisterCompound(getSingletonBody),
-    //       "ForOfStatement:exit": generateRegisterCompound(getSingletonBody),
-    //     };
-    //   },
-    // },
+    "unique-literal": {
+      meta: {
+        type: "problem",
+        docs: {
+          description: "disallow duplicate literals within a single file",
+          recommended: false,
+        },
+        schema: {
+          type: "array",
+          items: { type: "string" },
+        },
+      },
+      create: (context) => {
+        const literals = new Set();
+        return {
+          Literal(node) {
+            if (context.getCommentsBefore(node).some(isUniqueComment)) {
+              if (node.value instanceof RegExp) {
+                context.report({
+                  node,
+                  message: "RegExp literal cannot be marked as unique",
+                });
+              } else if (literals.has(node.value)) {
+                context.report({
+                  node,
+                  message: `Duplicate literal ${JSON.stringify(node.value)}`,
+                });
+              } else {
+                literals.add(node.value);
+              }
+            }
+          },
+        };
+      },
+    },
+    "basename-literal": {
+      meta: {
+        type: "problem",
+        docs: {
+          description: "ensure a string literal match the current basename",
+          recommended: false,
+        },
+        schema: {
+          type: "array",
+          items: { type: "string" },
+        },
+      },
+      create: (context) => {
+        const segments = context.getFilename().split("/").pop().split(".");
+        const basename = segments.slice(0, -1).join(".");
+        return {
+          Literal(node) {
+            if (context.getCommentsBefore(node).some(isBasenameComment)) {
+              if (node.value !== basename) {
+                context.report({
+                  node,
+                  message: `Expected basename string literal ${JSON.stringify(
+                    node.value,
+                  )} to be ${JSON.stringify(basename)}`,
+                });
+              }
+            }
+          },
+        };
+      },
+    },
     "no-globals": {
       meta: {
         type: "suggestion",
