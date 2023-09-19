@@ -3,6 +3,9 @@
 // import type * as Estree from "../node_modules/@types/estree/index.d.ts";
 
 declare namespace estree {
+  type BlockVariableKind = "let" | "const" | "class";
+  type ClosureVariableKind = "var" | "function";
+  type VariableKind = BlockVariableKind | ClosureVariableKind;
   type Variable = Brand<string, "estree.Variable">;
   type Label = Brand<string, "estree.Label">;
   type Specifier = Brand<string, "estree.Specifier">;

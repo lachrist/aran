@@ -15,7 +15,7 @@ estree/object
 estree/label
 estree/index
 
-node
+lang
 
 syntax/parse
 syntax/format
@@ -26,4 +26,5 @@ syntax/index
 
 allign
 
-intrinsic
+unbuild/node
+unbuild/intrinsic
