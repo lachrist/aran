@@ -44,7 +44,7 @@ export type listBindingWriteEffect<B, T> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
-  right: unbuild.Variable,
+  right: aran.Parameter | unbuild.Variable,
   tag: T,
 ) => aran.Effect<unbuild.Atom<T>>[];
 

@@ -55,5 +55,7 @@ declare namespace estree {
     import("../node_modules/@types/estree/index.d.ts").BlockStatement;
   type Directive = import("../node_modules/@types/estree/index.d.ts").Directive;
   type Property = import("../node_modules/@types/estree/index.d.ts").Property;
+  type CatchClause =
+    import("../node_modules/@types/estree/index.d.ts").CatchClause;
   type ProgramStatement = ModuleDeclaration | Statement | Directive;
 }
