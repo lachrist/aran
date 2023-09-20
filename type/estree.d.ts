@@ -11,6 +11,8 @@ declare namespace estree {
   type Specifier = Brand<string, "estree.Specifier">;
   type Source = Brand<string, "estree.Source">;
   type Super = import("../node_modules/@types/estree/index.d.ts").Super;
+  type RegExpLiteral =
+    import("../node_modules/@types/estree/index.d.ts").RegExpLiteral;
   type Identifier =
     import("../node_modules/@types/estree/index.d.ts").Identifier;
   type PrivateIdentifier =

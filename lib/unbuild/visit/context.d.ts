@@ -1,11 +1,12 @@
+import { Scope } from "../scope/inner/index.mjs";
+
 export type Context<S> = {
+  escape: estree.Variable;
   strict: boolean;
-  super: unbuild.Variable | null;
-  super_constructor: unbuild.Variable | null;
+  record: { [key in "super" | "super.constructor"]: unbuild.Variable };
   break: unbuild.Label | null;
   continue: unbuild.Label | null;
-  scope: import("../scope/index.mjs").Scope<S>;
-  free_meta_variable_array: unbuild.Variable[];
+  scope: Scope<S>;
   serialize: (node: estree.Node) => S;
   digest: (node: estree.Node) => unbuild.Hash;
 };

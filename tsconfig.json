@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "exactOptionalPropertyTypes": true,
     "declaration": false,
     "allowJs": true,
     "checkJs": true,
