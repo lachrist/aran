@@ -25,6 +25,12 @@ declare namespace estree {
     import("../node_modules/@types/estree/index.d.ts").BinaryOperator;
   type ExportSpecifier =
     import("../node_modules/@types/estree/index.d.ts").ExportSpecifier;
+  type ImportSpecifier =
+    import("../node_modules/@types/estree/index.d.ts").ImportSpecifier;
+  type ImportDefaultSpecifier =
+    import("../node_modules/@types/estree/index.d.ts").ImportDefaultSpecifier;
+  type ImportNamespaceSpecifier =
+    import("../node_modules/@types/estree/index.d.ts").ImportNamespaceSpecifier;
   type AssignmentProperty =
     import("../node_modules/@types/estree/index.d.ts").AssignmentProperty;
   type RestElement =
@@ -42,6 +48,10 @@ declare namespace estree {
     import("../node_modules/@types/estree/index.d.ts").SourceLocation;
   type VariableDeclaration =
     import("../node_modules/@types/estree/index.d.ts").VariableDeclaration;
+  type FunctionDeclaration =
+    import("../node_modules/@types/estree/index.d.ts").FunctionDeclaration;
+  type ClassDeclaration =
+    import("../node_modules/@types/estree/index.d.ts").ClassDeclaration;
   type Statement = import("../node_modules/@types/estree/index.d.ts").Statement;
   type Expression =
     import("../node_modules/@types/estree/index.d.ts").Expression;
