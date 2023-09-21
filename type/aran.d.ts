@@ -86,6 +86,8 @@ declare namespace aran {
     // "Reflect.defineProperty",
     | "Reflect.getOwnPropertyDescriptor"
     | "Reflect.preventExtensions"
+    | "Object.fromEntries"
+    | "Object.entries"
     | "Object.assign"
     | "Object.freeze"
     | "Object.defineProperty"
