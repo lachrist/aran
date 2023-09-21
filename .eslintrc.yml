@@ -123,7 +123,7 @@ rules:
   # complexity
   # computed-property-spacing: [error, never] >> Prettier
   consistent-return: error
-  consistent-this: [error, self]
+  # consistent-this: [error]
   # constructor-super: error >> Class are disabled by no-restricted-syntax
   curly: [error, all]
   # default-case >> SwitchStatement disabled by no-restricted-syntax
