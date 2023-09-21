@@ -18,10 +18,10 @@ type TrapName =
   | "program.completion"
   | "program.failure"
   | "program.leave"
-  | "closure.enter"
-  | "closure.completion"
-  | "closure.failure"
-  | "closure.leave"
+  | "function.enter"
+  | "function.completion"
+  | "function.failure"
+  | "function.leave"
   | "block.enter"
   | "block.completion"
   | "block.failure"
@@ -32,7 +32,7 @@ type TrapName =
   | "intrinsic.after"
   | "primitive.after"
   | "import.after"
-  | "closure.after"
+  | "function.after"
   | "read.after"
   | "eval.before"
   | "eval.after"
@@ -105,10 +105,10 @@ export type Point<S> =
       kind: aran.ProgramKind;
       serial: S;
     }
-  // closure //
+  // function //
   | {
-      type: "closure.enter";
-      kind: aran.ClosureKind;
+      type: "function.enter";
+      kind: aran.FunctionKind;
       callee: aran.Expression<weave.ResAtom>;
       frame: {
         [key in
@@ -118,20 +118,20 @@ export type Point<S> =
       serial: S;
     }
   | {
-      type: "closure.completion";
-      kind: aran.ClosureKind;
+      type: "function.completion";
+      kind: aran.FunctionKind;
       serial: S;
       value: aran.Expression<weave.ResAtom>;
     }
   | {
-      type: "closure.failure";
-      kind: aran.ClosureKind;
+      type: "function.failure";
+      kind: aran.FunctionKind;
       value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
-      type: "closure.leave";
-      kind: aran.ClosureKind;
+      type: "function.leave";
+      kind: aran.FunctionKind;
       serial: S;
     }
   // Block //
@@ -205,8 +205,8 @@ export type Point<S> =
       serial: S;
     }
   | {
-      type: "closure.after";
-      kind: aran.ClosureKind;
+      type: "function.after";
+      kind: aran.FunctionKind;
       asynchronous: boolean;
       generator: boolean;
       value: aran.Expression<weave.ResAtom>;
@@ -386,22 +386,24 @@ export type ObjectPointcut<S> = {
     | boolean
     | ((kind: aran.ProgramKind, error: null, serial: S) => boolean);
   "program.leave"?: boolean | ((kind: aran.ProgramKind, serial: S) => boolean);
-  // Closure //
-  "closure.enter"?:
+  // Function //
+  "function.enter"?:
     | boolean
     | ((
-        kind: aran.ClosureKind,
+        kind: aran.FunctionKind,
         callee: null,
         frame: { [key in weave.ArgVariable]?: null },
         serial: S,
       ) => boolean);
-  "closure.completion":
+  "function.completion":
     | boolean
-    | ((kind: aran.ClosureKind, value: null, serial: S) => boolean);
-  "closure.failure":
+    | ((kind: aran.FunctionKind, value: null, serial: S) => boolean);
+  "function.failure":
     | boolean
-    | ((kind: aran.ClosureKind, error: null, serial: S) => boolean);
-  "closure.leave"?: boolean | ((kind: aran.ClosureKind, serial: S) => boolean);
+    | ((kind: aran.FunctionKind, error: null, serial: S) => boolean);
+  "function.leave"?:
+    | boolean
+    | ((kind: aran.FunctionKind, serial: S) => boolean);
   // Block //
   "block.enter"?:
     | boolean
@@ -435,10 +437,10 @@ export type ObjectPointcut<S> = {
         value: null,
         serial: S,
       ) => boolean);
-  "closure.after"?:
+  "function.after"?:
     | boolean
     | ((
-        kind: aran.ClosureKind,
+        kind: aran.FunctionKind,
         asynchronous: boolean,
         generator: boolean,
         value: null,

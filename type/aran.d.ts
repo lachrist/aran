@@ -18,7 +18,7 @@ declare namespace aran {
 
   type VariableKind = "var" | "let" | "const";
 
-  type ClosureKind = "arrow" | "function" | "method" | "constructor";
+  type FunctionKind = "arrow" | "function" | "method" | "constructor";
 
   type ProgramKind = "eval" | "module" | "script";
 
@@ -250,8 +250,8 @@ declare namespace aran {
         tag: A["Tag"];
       }
     | {
-        type: "ClosureExpression";
-        kind: ClosureKind;
+        type: "FunctionExpression";
+        kind: FunctionKind;
         asynchronous: boolean;
         generator: boolean;
         body: ClosureBlock<A>;
