@@ -58,8 +58,8 @@ rules:
     - UpdateExpression
     - ChainExpression
     - LabeledStatement
-    - BreakStatement
-    - ContinueStatement
+    # - BreakStatement
+    # - ContinueStatement
     - FunctionExpression
     - FunctionDeclaration
     - ClassDeclaration
