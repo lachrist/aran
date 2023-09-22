@@ -1,9 +1,15 @@
 import { Scope } from "../scope/inner/index.mjs";
 
+export type ContextRecord = {
+  "self": unbuild.Variable | null;
+  "super": unbuild.Variable | null;
+  "super.constructor": unbuild.Variable | null;
+};
+
 export type Context<S> = {
   escape: estree.Variable;
   strict: boolean;
-  record: { [key in "super" | "super.constructor"]?: unbuild.Variable };
+  record: ContextRecord;
   break: unbuild.Label | null;
   continue: unbuild.Label | null;
   scope: Scope<S>;

@@ -74,4 +74,19 @@ declare namespace estree {
   type CatchClause =
     import("../node_modules/@types/estree/index.d.ts").CatchClause;
   type ProgramStatement = ModuleDeclaration | Statement | Directive;
+  type ProtoProperty = Property & {
+    kind: "init";
+    method: false;
+    computed: false;
+    key:
+      | {
+          type: "Identifier";
+          name: "__proto__";
+        }
+      | {
+          type: "Literal";
+          value: "__proto__";
+        };
+  };
+  type InitProperty = Property & { kind: "init" };
 }
