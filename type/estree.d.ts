@@ -54,6 +54,10 @@ declare namespace estree {
     import("../node_modules/@types/estree/index.d.ts").VariableDeclaration;
   type FunctionDeclaration =
     import("../node_modules/@types/estree/index.d.ts").FunctionDeclaration;
+  type FunctionExpression =
+    import("../node_modules/@types/estree/index.d.ts").FunctionExpression;
+  type ArrowFunctionExpression =
+    import("../node_modules/@types/estree/index.d.ts").ArrowFunctionExpression;
   type ClassDeclaration =
     import("../node_modules/@types/estree/index.d.ts").ClassDeclaration;
   type Statement = import("../node_modules/@types/estree/index.d.ts").Statement;
