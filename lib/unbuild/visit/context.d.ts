@@ -11,8 +11,13 @@ export type Context<S> = {
   digest: (node: estree.Node) => unbuild.Hash;
   private: Private;
   record: {
-    "this": aran.Parameter | unbuild.Variable;
-    "import.meta": aran.Parameter | unbuild.Variable;
+    "this":
+      | ".illegal"
+      | ".undefined"
+      | ".global"
+      | aran.Parameter
+      | unbuild.Variable;
+    "import.meta": ".illegal" | aran.Parameter | unbuild.Variable;
     "new.target": ".illegal" | aran.Parameter | unbuild.Variable;
     "super.constructor":
       | ".illegal"

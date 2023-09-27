@@ -1,8 +1,10 @@
 // // const x = 123;
+// "use strict";
+console.log(this);
 
-export default function f() {}
+// export default function f() {}
 
-f();
+// f();
 
 // class C {
 //   [(console.log("foo-key"), "foo")] = console.log("foo-value", x);
