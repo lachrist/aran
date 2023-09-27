@@ -1,6 +1,5 @@
 import { Scope } from "../scope/inner/index.mjs";
-import { Super } from "../super.mjs";
-import { Private } from "../private_oudated.mjs";
+import { Private } from "../private.mjs";
 
 export type Context<S> = {
   escape: estree.Variable;
@@ -10,6 +9,22 @@ export type Context<S> = {
   scope: Scope<S>;
   serialize: (node: estree.Node) => S;
   digest: (node: estree.Node) => unbuild.Hash;
-  super: Super;
   private: Private;
+  record: {
+    "this": aran.Parameter | unbuild.Variable;
+    "import.meta": aran.Parameter | unbuild.Variable;
+    "new.target": ".illegal" | aran.Parameter | unbuild.Variable;
+    "super.constructor":
+      | ".illegal"
+      | ".enclave"
+      | ".default"
+      | aran.Parameter
+      | unbuild.Variable;
+    "super.post": ".none" | aran.Parameter | unbuild.Variable;
+    "super.prototype":
+      | ".illegal"
+      | ".enclave"
+      | aran.Parameter
+      | unbuild.Variable;
+  };
 };
