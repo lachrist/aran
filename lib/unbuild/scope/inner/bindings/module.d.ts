@@ -4,56 +4,56 @@ export type listBindingVariable<B> = (
   variable: estree.Variable,
 ) => unbuild.Variable[];
 
-export type listBindingDeclareStatement<B, T> = (
+export type listBindingDeclareStatement<B, S> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
-  tag: T,
-) => aran.Statement<unbuild.Atom<T>>[];
+  serial: S,
+) => aran.Statement<unbuild.Atom<S>>[];
 
-export type listBindingInitializeStatement<B, T> = (
+export type listBindingInitializeStatement<B, S> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
-  right: aran.Expression<unbuild.Atom<T>>,
-  tag: T,
-) => aran.Statement<unbuild.Atom<T>>[];
+  right: aran.Expression<unbuild.Atom<S>>,
+  serial: S,
+) => aran.Statement<unbuild.Atom<S>>[];
 
-export type makeBindingReadExpression<B, T> = (
+export type makeBindingReadExpression<B, S> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
-  tag: T,
-) => aran.Expression<unbuild.Atom<T>>;
+  serial: S,
+) => aran.Expression<unbuild.Atom<S>>;
 
-export type makeBindingTypeofExpression<B, T> = (
+export type makeBindingTypeofExpression<B, S> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
-  tag: T,
-) => aran.Expression<unbuild.Atom<T>>;
+  serial: S,
+) => aran.Expression<unbuild.Atom<S>>;
 
-export type makeBindingDiscardExpression<B, T> = (
+export type makeBindingDiscardExpression<B, S> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
-  tag: T,
-) => aran.Expression<unbuild.Atom<T>>;
+  serial: S,
+) => aran.Expression<unbuild.Atom<S>>;
 
-export type listBindingWriteEffect<B, T> = (
+export type listBindingWriteEffect<B, S> = (
   strict: boolean,
   binding: B,
   variable: estree.Variable,
   right: aran.Parameter | unbuild.Variable,
-  tag: T,
-) => aran.Effect<unbuild.Atom<T>>[];
+  serial: S,
+) => aran.Effect<unbuild.Atom<S>>[];
 
-export type BindingModule<B, T> = {
+export type BindingModule<B, S> = {
   listBindingVariable: listBindingVariable<B>;
-  listBindingDeclareStatement: listBindingDeclareStatement<B, T>;
-  listBindingInitializeStatement: listBindingInitializeStatement<B, T>;
-  makeBindingReadExpression: makeBindingReadExpression<B, T>;
-  makeBindingTypeofExpression: makeBindingTypeofExpression<B, T>;
-  makeBindingDiscardExpression: makeBindingDiscardExpression<B, T>;
-  listBindingWriteEffect: listBindingWriteEffect<B, T>;
+  listBindingDeclareStatement: listBindingDeclareStatement<B, S>;
+  listBindingInitializeStatement: listBindingInitializeStatement<B, S>;
+  makeBindingReadExpression: makeBindingReadExpression<B, S>;
+  makeBindingTypeofExpression: makeBindingTypeofExpression<B, S>;
+  makeBindingDiscardExpression: makeBindingDiscardExpression<B, S>;
+  listBindingWriteEffect: listBindingWriteEffect<B, S>;
 };
