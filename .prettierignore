@@ -1,1 +1,4 @@
-node_modules
+/coverage/
+/graveyard/
+/img/
+/node_modules/
