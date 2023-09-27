@@ -1,5 +1,9 @@
 // // const x = 123;
 
+export default function f() {}
+
+f();
+
 // class C {
 //   [(console.log("foo-key"), "foo")] = console.log("foo-value", x);
 //   #foo = console.log("private-foo");
@@ -26,17 +30,17 @@
 
 /* eslint-disable */
 
-class C {
-  get #foo() {}
-  m(x) {
-    console.log(Reflect.setPrototypeOf(x, null));
-    console.log(x);
-    return x.#foo.name;
-  }
-}
+// class C {
+//   get #foo() {}
+//   m(x) {
+//     console.log(Reflect.setPrototypeOf(x, null));
+//     console.log(x);
+//     return x.#foo.name;
+//   }
+// }
 
-var c = new C();
-console.log(c.m(c));
+// var c = new C();
+// console.log(c.m(c));
 
 // class CC {
 //   #foo () {};
