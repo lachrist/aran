@@ -1,5 +1,5 @@
-import { Scope } from "../scope/index.mjs";
-import { Private } from "../private.mjs";
+import { Scope } from "./scope/index.mjs";
+import { Private } from "./private.mjs";
 
 export type Context<S> = {
   completion: unbuild.Variable | null;
