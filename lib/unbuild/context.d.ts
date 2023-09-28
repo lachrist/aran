@@ -2,8 +2,6 @@ import { Scope } from "./scope/index.mjs";
 import { Private } from "./private.mjs";
 
 export type Context<S> = {
-  completion: unbuild.Variable | null;
-  escape: estree.Variable;
   strict: boolean;
   break: unbuild.Label | null;
   continue: unbuild.Label | null;
