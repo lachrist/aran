@@ -20,31 +20,4 @@ export type Key = Brand<string, "estree.Key">;
 
 export type PrivateKey = Brand<string, "estree.PrivateKey">;
 
-export type UnionImportSpecifier =
-  | Estree.ImportSpecifier
-  | Estree.ImportDefaultSpecifier
-  | Estree.ImportNamespaceSpecifier;
-
-export type ProgramStatement =
-  | Estree.ModuleDeclaration
-  | Estree.Statement
-  | Estree.Directive;
-
-export type ProtoProperty = Estree.Property & {
-  kind: "init";
-  method: false;
-  computed: false;
-  key:
-    | {
-        type: "Identifier";
-        name: "__proto__";
-      }
-    | {
-        type: "Literal";
-        value: "__proto__";
-      };
-};
-
-export type InitProperty = Estree.Property & { kind: "init" };
-
 export as namespace estree;
