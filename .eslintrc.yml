@@ -281,7 +281,7 @@ rules:
   no-self-compare: error
   # no-sequences >> I have plenty of those
   # no-setter-return >> Accessors disabled by no-restricted-syntax
-  no-shadow: error
+  # no-shadow: error
   # no-shadow-restricted-names >> Shadowing is disabled
   no-sparse-arrays: error
   # no-tabs: error # Style
