@@ -3,8 +3,6 @@ import { Private } from "./private.mjs";
 
 export type Context<S> = {
   strict: boolean;
-  break: unbuild.Label | null;
-  continue: unbuild.Label | null;
   scope: Scope;
   serialize: (node: estree.Node) => S;
   digest: (node: estree.Node) => unbuild.Hash;
