@@ -39,6 +39,9 @@ export type Intrinsic =
   | "aran.asynchronousGeneratorPrototype"
   | "aran.generatorPrototype"
   | "aran.private"
+  | "aran.readGlobal"
+  | "aran.typeofGlobal"
+  | "aran.writeGlobal"
   // Symbol //
   | "Symbol"
   | "Symbol.unscopables"
@@ -111,7 +114,10 @@ export type Parameter =
   | "super.set"
   | "super.call"
   | "private.get"
-  | "private.set";
+  | "private.set"
+  | "scope.read"
+  | "scope.write"
+  | "scope.typeof";
 
 export type Program<A extends Atom> =
   | {
