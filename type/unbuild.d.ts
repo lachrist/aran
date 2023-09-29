@@ -1,3 +1,5 @@
+import { PackContext } from "../lib/unbuild/context";
+
 export {};
 
 export type Variable = Brand<string, "unbuild.Variable">;
@@ -15,6 +17,7 @@ export type Atom<S> = {
   Tag: {
     serial: S;
     initialization: Variable | null;
+    context: PackContext | null;
   };
 };
 

@@ -1,16 +1,18 @@
+import { PackContext } from "../lib/unbuild/context";
+
 export type ArgVariable = Brand<string, "weave.ArgVariable">;
 
 export type ResVariable = Brand<string, "weave.ResVariable">;
 
 export type Label = Brand<string, "weave.ArgLabel">;
 
-export type ArgAtom<T> = {
+export type ArgAtom<S> = {
   Label: Label;
   Source: estree.Source;
   Specifier: estree.Specifier;
   Variable: ArgVariable;
   EnclaveVariable: estree.Variable;
-  Tag: T;
+  Tag: { serial: S; context: PackContext | null };
 };
 
 export type ResAtom = {
