@@ -108,7 +108,8 @@ export type Parameter =
   | "this"
   | "import"
   | "catch.error"
-  | "function.arguments" // https://github.com/allenwb/ESideas/blob/HEAD/ES7MetaProps.md
+  // https://github.com/allenwb/ESideas/blob/HEAD/ES7MetaProps.md
+  | "function.arguments"
   | "import.meta"
   | "new.target"
   | "super.get"
