@@ -41,5 +41,5 @@ export type PresentBinding =
   | {
       type: "enclave";
       kind: "let" | "const" | "var";
-      site: "local" | "global";
+      site: "global";
     };

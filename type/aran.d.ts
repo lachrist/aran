@@ -183,7 +183,7 @@ export type Statement<A extends Atom> =
   | { type: "BreakStatement"; label: A["Label"]; tag: A["Tag"] }
   | { type: "DebuggerStatement"; tag: A["Tag"] }
   | {
-      type: "DeclareEnclaveStatement";
+      type: "DeclareGlobalStatement";
       kind: VariableKind;
       variable: A["EnclaveVariable"];
       right: Expression<A>;
@@ -227,7 +227,7 @@ export type Effect<A extends Atom> =
       tag: A["Tag"];
     }
   | {
-      type: "WriteEnclaveEffect";
+      type: "WriteGlobalEffect";
       variable: A["EnclaveVariable"];
       right: Expression<A>;
       tag: A["Tag"];
@@ -259,12 +259,12 @@ export type Expression<A extends Atom> =
       tag: A["Tag"];
     }
   | {
-      type: "ReadEnclaveExpression";
+      type: "ReadGlobalExpression";
       variable: A["EnclaveVariable"];
       tag: A["Tag"];
     }
   | {
-      type: "TypeofEnclaveExpression";
+      type: "TypeofGlobalExpression";
       variable: A["EnclaveVariable"];
       tag: A["Tag"];
     }

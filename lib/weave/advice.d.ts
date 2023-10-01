@@ -15,48 +15,6 @@ type BlockKind =
 // Pointcut //
 //////////////
 
-type TrapName =
-  | "program.enter"
-  | "program.completion"
-  | "program.failure"
-  | "program.leave"
-  | "function.enter"
-  | "function.completion"
-  | "function.failure"
-  | "function.leave"
-  | "block.enter"
-  | "block.completion"
-  | "block.failure"
-  | "block.leave"
-  | "debugger.before"
-  | "debugger.after"
-  | "break.before"
-  | "intrinsic.after"
-  | "primitive.after"
-  | "import.after"
-  | "function.after"
-  | "read.after"
-  | "eval.before"
-  | "eval.after"
-  | "await.before"
-  | "await.after"
-  | "yield.before"
-  | "yield.after"
-  | "drop.before"
-  | "export.before"
-  | "write.before"
-  | "return.before"
-  | "apply"
-  | "construct"
-  | "enclave.read.before"
-  | "enclave.read.after"
-  | "enclave.typeof.before"
-  | "enclave.typeof.after"
-  | "enclave.write.before"
-  | "enclave.write.after"
-  | "enclave.declare.before"
-  | "enclave.declare.after";
-
 type LinkData =
   | {
       type: "import";
@@ -303,50 +261,50 @@ export type Point<S> =
     }
   // read-external //
   | {
-      type: "enclave.read.before";
+      type: "global.read.before";
       variable: estree.Variable;
       serial: S;
     }
   | {
-      type: "enclave.read.after";
+      type: "global.read.after";
       variable: estree.Variable;
       value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   // typeof-external //
   | {
-      type: "enclave.typeof.before";
+      type: "global.typeof.before";
       variable: estree.Variable;
       serial: S;
     }
   | {
-      type: "enclave.typeof.after";
+      type: "global.typeof.after";
       variable: estree.Variable;
       value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   // write-external //
   | {
-      type: "enclave.write.before";
+      type: "global.write.before";
       variable: estree.Variable;
       value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
-      type: "enclave.write.after";
+      type: "global.write.after";
       variable: estree.Variable;
       serial: S;
     }
   // declare-external //
   | {
-      type: "enclave.declare.before";
+      type: "global.declare.before";
       kind: aran.VariableKind;
       variable: estree.Variable;
       value: aran.Expression<weave.ResAtom>;
       serial: S;
     }
   | {
-      type: "enclave.declare.after";
+      type: "global.declare.after";
       kind: aran.VariableKind;
       variable: estree.Variable;
       serial: S;
@@ -488,25 +446,25 @@ export type ObjectPointcut<S> = {
   "construct"?:
     | boolean
     | ((callee: null, arguments_: null[], serial: S) => boolean);
-  "enclave.read.before"?:
+  "global.read.before"?:
     | boolean
     | ((variable: estree.Variable, serial: S) => boolean);
-  "enclave.read.after"?:
+  "global.read.after"?:
     | boolean
     | ((variable: estree.Variable, value: null, serial: S) => boolean);
-  "enclave.typeof.before"?:
+  "global.typeof.before"?:
     | boolean
     | ((variable: estree.Variable, serial: S) => boolean);
-  "enclave.typeof.after"?:
+  "global.typeof.after"?:
     | boolean
     | ((variable: estree.Variable, value: null, serial: S) => boolean);
-  "enclave.write.before"?:
+  "global.write.before"?:
     | boolean
     | ((variable: estree.Variable, value: null, serial: S) => boolean);
-  "enclave.write.after"?:
+  "global.write.after"?:
     | boolean
     | ((variable: estree.Variable, serial: S) => boolean);
-  "enclave.declare.before"?:
+  "global.declare.before"?:
     | boolean
     | ((
         kind: aran.VariableKind,
@@ -514,7 +472,7 @@ export type ObjectPointcut<S> = {
         value: null,
         serial: S,
       ) => boolean);
-  "enclave.declare.after"?:
+  "global.declare.after"?:
     | boolean
     | ((
         kind: aran.VariableKind,
@@ -522,6 +480,8 @@ export type ObjectPointcut<S> = {
         serial: S,
       ) => boolean);
 };
+
+export type TrapName = keyof ObjectPointcut<any>;
 
 type ConstantPointcut = boolean;
 
