@@ -1,4 +1,4 @@
-import { PackContext } from "../unbuild/context";
+import { EvalContext } from "../unbuild/context";
 
 type BranchKind = "conditional" | "if" | "while";
 
@@ -269,7 +269,7 @@ export type Point<S> =
   | {
       type: "eval.before";
       value: aran.Expression<weave.ResAtom>;
-      context: PackContext;
+      context: EvalContext;
       serial: S;
     }
   | {
@@ -460,7 +460,7 @@ export type ObjectPointcut<S> = {
   "conditional.after"?: boolean | ((value: null, serial: S) => boolean);
   "eval.before"?:
     | boolean
-    | ((value: null, context: PackContext, serial: S) => boolean);
+    | ((value: null, context: EvalContext, serial: S) => boolean);
   "eval.after"?: boolean | ((value: null, serial: S) => boolean);
   "await.before"?: boolean | ((value: null, serial: S) => boolean);
   "await.after"?: boolean | ((value: null, serial: S) => boolean);

@@ -16,12 +16,12 @@ export type Binding =
   | {
       type: "enclave";
       kind: "let" | "const" | "var" | "missing";
-      spot: "local" | "global";
+      site: "local" | "global";
     };
 
 export type MissingBinding =
   | { type: "global"; kind: "missing" }
-  | { type: "enclave"; kind: "missing"; spot: "local" | "global" };
+  | { type: "enclave"; kind: "missing"; site: "local" | "global" };
 
 export type PresentBinding =
   | {
@@ -41,5 +41,5 @@ export type PresentBinding =
   | {
       type: "enclave";
       kind: "let" | "const" | "var";
-      spot: "local" | "global";
+      site: "local" | "global";
     };

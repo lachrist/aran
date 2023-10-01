@@ -1,6 +1,18 @@
 import { Scope } from "./scope/index.mjs";
 import { Private } from "./private.mjs";
 
+type Serialize<S> = (
+  node: estree.Node,
+  root: unbuild.Root,
+  path: unbuild.Path,
+) => S;
+
+type Digest = (
+  node: estree.Node,
+  root: unbuild.Root,
+  path: unbuild.Path,
+) => unbuild.Hash;
+
 type Record = {
   "this":
     | ".illegal"
@@ -16,7 +28,7 @@ type Record = {
     | ".default"
     | aran.Parameter
     | unbuild.Variable;
-  "super.post": ".none" | aran.Parameter | unbuild.Variable;
+  "super.field": ".illegal" | ".none" | aran.Parameter | unbuild.Variable;
   "super.prototype":
     | ".illegal"
     | ".enclave"
@@ -26,16 +38,19 @@ type Record = {
 
 export type Context<S> = {
   strict: boolean;
+  root: unbuild.Root;
   scope: Scope;
-  serialize: (node: estree.Node) => S;
-  digest: (node: estree.Node) => unbuild.Hash;
   private: Private;
   record: Record;
+  serialize: Serialize<S>;
+  digest: Digest;
 };
 
-export type PackContext = {
+export type EvalContext = {
   strict: boolean;
+  root: unbuild.Root;
   scope: Scope;
   private: Private;
   record: Record;
+  path: unbuild.Path;
 };

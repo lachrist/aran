@@ -1,4 +1,4 @@
-import { PackContext } from "../lib/unbuild/context";
+import { EvalContext } from "../lib/unbuild/context";
 
 export type ArgVariable = Brand<string, "weave.ArgVariable">;
 
@@ -12,7 +12,7 @@ export type ArgAtom<S> = {
   Specifier: estree.Specifier;
   Variable: ArgVariable;
   EnclaveVariable: estree.Variable;
-  Tag: { serial: S; context: PackContext | null };
+  Tag: { serial: S; context: EvalContext | null };
 };
 
 export type ResAtom = {

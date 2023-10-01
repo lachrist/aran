@@ -42,6 +42,7 @@ export type Intrinsic =
   | "aran.readGlobal"
   | "aran.typeofGlobal"
   | "aran.writeGlobal"
+  | "aran.hidden.cache"
   // Symbol //
   | "Symbol"
   | "Symbol.unscopables"
