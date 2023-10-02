@@ -1,17 +1,9 @@
 import { Scope } from "./scope/index.mjs";
 import { Private } from "./private.mjs";
 
-type Serialize<S> = (
-  node: estree.Node,
-  root: unbuild.Root,
-  path: unbuild.Path,
-) => S;
+type Serialize<S> = (node: estree.Node, path: unbuild.Path) => S;
 
-type Digest = (
-  node: estree.Node,
-  root: unbuild.Root,
-  path: unbuild.Path,
-) => unbuild.Hash;
+type Digest = (node: estree.Node, path: unbuild.Path) => unbuild.Hash;
 
 type Record = {
   "this":

@@ -1,18 +1,19 @@
 import type { Digest, EvalContext, Serialize } from "./unbuild/context.d.ts";
 import type { Pointcut } from "./weave/advice.d.ts";
 
-type CommonOptions<S> = {
-  serialize: Serialize<S>;
+type CommonOptions<L> = {
+  serialize: Serialize<unbuild.Path>;
   digest: Digest;
-  pointcut: Pointcut<S>;
+  locate: (root: unbuild.Root, origin: unbuild.Path, target: weave.Path) => L;
+  pointcut: Pointcut<L>;
   advice: estree.Variable;
   intrinsic: estree.Variable;
   prefix: estree.Variable;
   annotation: "copy" | "in-place";
-  serial: "inline" | "extract";
+  location: "inline" | "extract";
 };
 
-type GlobalOptions<S> = CommonOptions<S> & {
+type GlobalOptions<L> = CommonOptions<L> & {
   kind: "module" | "script" | "eval";
   site: "global";
   enclave: boolean;
@@ -21,7 +22,7 @@ type GlobalOptions<S> = CommonOptions<S> & {
   context: null;
 };
 
-type ExternalLocalOptions<S> = CommonOptions<S> & {
+type ExternalLocalOptions<L> = CommonOptions<L> & {
   kind: "eval";
   site: "local";
   enclave: true;
@@ -30,7 +31,7 @@ type ExternalLocalOptions<S> = CommonOptions<S> & {
   context: null;
 };
 
-type InternalLocalOptions<S> = CommonOptions<S> & {
+type InternalLocalOptions<L> = CommonOptions<L> & {
   kind: "eval";
   site: "local";
   enclave: false;
@@ -39,45 +40,7 @@ type InternalLocalOptions<S> = CommonOptions<S> & {
   context: EvalContext;
 };
 
-export type Options<S> =
-  | GlobalOptions<S>
-  | ExternalLocalOptions<S>
-  | InternalLocalOptions<S>;
-
-// * @type {<S>(
-//   *   program: estree.Program,
-//   *   options: {
-//   *     kind: "module" | "script",
-//   *     enclave: boolean,
-//   *     strict: false,
-//   *     root: unbuild.Root,
-//   *     context: null,
-//   *     serialize: import("./unbuild/context.d.ts").Serialize<S>,
-//   *     digest: import("./unbuild/context.d.ts").Digest,
-//   *     pointcut: import("./weave/advice.d.ts").Pointcut<S>,
-//   *     advice: estree.Variable,
-//   *     intrinsic: estree.Variable,
-//   *   } | {
-//   *     kind: "eval",
-//   *     enclave: true,
-//   *     strict: false,
-//   *     root: unbuild.Root,
-//   *     context: null,
-//   *     serialize: import("./unbuild/context.d.ts").Serialize<S>,
-//   *     digest: import("./unbuild/context.d.ts").Digest,
-//   *     pointcut: import("./weave/advice.d.ts").Pointcut<S>,
-//   *     advice: estree.Variable,
-//   *     intrinsic: estree.Variable,
-//   *   } | {
-//   *     kind: "eval",
-//   *     enclave: true,
-//   *     strict: null,
-//   *     root: null,
-//   *     context: import("./unbuild/context.d.ts").EvalContext,
-//   *     serialize: import("./unbuild/context.d.ts").Serialize<S>,
-//   *     digest: import("./unbuild/context.d.ts").Digest,
-//   *     pointcut: import("./weave/advice.d.ts").Pointcut<S>,
-//   *     advice: estree.Variable,
-//   *     intrinsic: estree.Variable,
-//   *   },
-//   * ) => estree.Program}
+export type Options<L> =
+  | GlobalOptions<L>
+  | ExternalLocalOptions<L>
+  | InternalLocalOptions<L>;

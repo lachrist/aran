@@ -6,6 +6,8 @@ export type ResVariable = Brand<string, "weave.ResVariable">;
 
 export type Label = Brand<string, "weave.ArgLabel">;
 
+export type Path = Brand<string, "weave.Path">;
+
 export type ArgAtom<S> = {
   Label: Label;
   Source: estree.Source;
