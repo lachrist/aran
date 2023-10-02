@@ -331,7 +331,7 @@ type FunctionPointcut<S> = (point: Point<S>) => boolean;
 type IterablePointcut = Iterable<TrapName>;
 
 export type ObjectPointcut<S> = {
-  // Program //
+  // program //
   "program.enter"?:
     | boolean
     | ((
@@ -347,7 +347,7 @@ export type ObjectPointcut<S> = {
     | boolean
     | ((kind: aran.ProgramKind, error: null, serial: S) => boolean);
   "program.leave"?: boolean | ((kind: aran.ProgramKind, serial: S) => boolean);
-  // Function //
+  // function //
   "function.enter"?:
     | boolean
     | ((
@@ -365,7 +365,7 @@ export type ObjectPointcut<S> = {
   "function.leave"?:
     | boolean
     | ((kind: aran.FunctionKind, serial: S) => boolean);
-  // Block //
+  // block //
   "block.enter"?:
     | boolean
     | ((
@@ -379,13 +379,17 @@ export type ObjectPointcut<S> = {
     | boolean
     | ((kind: BlockKind, error: null, serial: S) => boolean);
   "block.leave"?: boolean | ((kind: BlockKind, serial: S) => boolean);
+  // debugger //
   "debugger.before"?: boolean | ((serial: S) => boolean);
   "debugger.after"?: boolean | ((serial: S) => boolean);
+  // break //
   "break.before"?: boolean | ((label: weave.Label, serial: S) => boolean);
+  // branch //
   "branch.before"?:
     | boolean
     | ((kind: BranchKind, value: null, serial: S) => boolean);
   "branch.after"?: boolean | ((kind: BranchKind, serial: S) => boolean);
+  // producer //
   "intrinsic.after"?:
     | boolean
     | ((name: aran.Intrinsic, value: null, serial: S) => boolean);
@@ -414,20 +418,25 @@ export type ObjectPointcut<S> = {
         value: null,
         serial: S,
       ) => boolean);
+  // conditional //
   "conditional.before"?: boolean | ((value: null, serial: S) => boolean);
   "conditional.after"?: boolean | ((value: null, serial: S) => boolean);
+  // eval //
   "eval.before"?:
     | boolean
     | ((value: null, context: EvalContext, serial: S) => boolean);
   "eval.after"?: boolean | ((value: null, serial: S) => boolean);
+  // await //
   "await.before"?: boolean | ((value: null, serial: S) => boolean);
   "await.after"?: boolean | ((value: null, serial: S) => boolean);
+  // yield //
   "yield.before"?:
     | boolean
     | ((delegate: boolean, value: null, serial: S) => boolean);
   "yield.after"?:
     | boolean
     | ((delegate: boolean, value: null, serial: S) => boolean);
+  // consumer //
   "drop.before"?: boolean | ((value: null, serial: S) => boolean);
   "export.before"?:
     | boolean
@@ -440,12 +449,15 @@ export type ObjectPointcut<S> = {
         serial: S,
       ) => boolean);
   "return.before"?: boolean | ((value: null, serial: S) => boolean);
+  // apply //
   "apply"?:
     | boolean
     | ((callee: null, this_: null, arguments_: null[], serial: S) => boolean);
+  // construct //
   "construct"?:
     | boolean
     | ((callee: null, arguments_: null[], serial: S) => boolean);
+  // global //
   "global.read.before"?:
     | boolean
     | ((variable: estree.Variable, serial: S) => boolean);
