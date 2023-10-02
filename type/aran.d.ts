@@ -21,12 +21,10 @@ export type FunctionKind = "arrow" | "function" | "method" | "constructor";
 
 export type ProgramKind = "eval" | "module" | "script";
 
-export type Intrinsic =
-  // Aran //
+export type AranIntrinsic =
   | "aran.cache"
   | "aran.record.variables"
   | "aran.record.values"
-  | "aran.global"
   | "aran.unary"
   | "aran.binary"
   | "aran.throw"
@@ -39,11 +37,12 @@ export type Intrinsic =
   | "aran.asynchronousGeneratorPrototype"
   | "aran.generatorPrototype"
   | "aran.private"
-  | "aran.readGlobal"
-  | "aran.typeofGlobal"
-  | "aran.writeGlobal"
   | "aran.hidden.weave"
-  | "aran.hidden.rebuild"
+  | "aran.hidden.rebuild";
+
+export type Intrinsic =
+  // Aran //
+  | AranIntrinsic
   // Symbol //
   | "Symbol"
   | "Symbol.unscopables"
