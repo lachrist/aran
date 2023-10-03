@@ -34,9 +34,9 @@ export type Expression = aran.Expression<weave.ResAtom>;
 
 export type Label = weave.Label;
 
-////////////////////
-// Generic Advice //
-////////////////////
+///////////////////////////
+// Generic Object Advice //
+///////////////////////////
 
 type Generic = {
   Value: unknown;
@@ -344,11 +344,11 @@ type GenericAdvice<S, G extends Generic> = {
   "global.declare.after"?: S | GenericGlobalDeclareAfterAdvice<G>;
 };
 
-export type TrapName = keyof GenericAdvice<never, never>;
+export type AdviceName = keyof GenericAdvice<never, never>;
 
-////////////
-// Advice //
-////////////
+///////////////////
+// Object Advice //
+///////////////////
 
 type AdviceGeneric<V, L> = {
   Value: V;
@@ -526,13 +526,24 @@ export type GlobalDeclareAfterAdvice<V, L> = GenericGlobalDeclareAfterAdvice<
   AdviceGeneric<V, L>
 >;
 
-export type Advice<V, L> = GenericAdvice<never, AdviceGeneric<V, L>>;
+export type ObjectAdvice<V, L> = GenericAdvice<never, AdviceGeneric<V, L>>;
 
-//////////////
-// Pointcut //
-//////////////
+export type ObjectPointcut<L> = GenericAdvice<
+  boolean,
+  {
+    Value: null;
+    Location: L;
+    ValueResult: boolean;
+    RecordResult: boolean;
+    VoidResult: boolean;
+  }
+>;
 
-export type Point<L> =
+/////////////////////////////
+// Generic Function Advice //
+/////////////////////////////
+
+type Point<V, L> =
   //////////////
   // Informer //
   //////////////
@@ -542,20 +553,20 @@ export type Point<L> =
       kind: aran.ProgramKind;
       links: LinkData[];
       record: {
-        [key in Variable]: Expression;
+        [key in Variable]: V;
       };
       location: L;
     }
   | {
       type: "program.completion";
       kind: aran.ProgramKind;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
       type: "program.failure";
       kind: aran.ProgramKind;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
@@ -567,9 +578,9 @@ export type Point<L> =
   | {
       type: "function.enter";
       kind: aran.FunctionKind;
-      callee: Expression;
+      callee: V;
       record: {
-        [key in Variable]: Expression;
+        [key in Variable]: V;
       };
       location: L;
     }
@@ -577,12 +588,12 @@ export type Point<L> =
       type: "function.completion";
       kind: aran.FunctionKind;
       location: L;
-      value: Expression;
+      value: V;
     }
   | {
       type: "function.failure";
       kind: aran.FunctionKind;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
@@ -596,7 +607,7 @@ export type Point<L> =
       kind: BlockKind;
       labels: Label[];
       record: {
-        [key in Variable]: Expression;
+        [key in Variable]: V;
       };
       location: L;
     }
@@ -608,7 +619,7 @@ export type Point<L> =
   | {
       type: "block.failure";
       kind: BlockKind;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
@@ -642,20 +653,20 @@ export type Point<L> =
   | {
       type: "read.after";
       variable: Variable;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
       type: "intrinsic.after";
       name: aran.Intrinsic;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
       type: "import.after";
       source: string;
       specifier: string | null;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
@@ -663,7 +674,7 @@ export type Point<L> =
       kind: aran.FunctionKind;
       asynchronous: boolean;
       generator: boolean;
-      value: Expression;
+      value: V;
       location: L;
     }
   ////////////////////
@@ -671,24 +682,24 @@ export type Point<L> =
   ////////////////////
   | {
       type: "return.before";
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
       type: "drop.before";
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
       type: "export.before";
       specifier: string;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
       type: "write.before";
       variable: Variable;
-      value: Expression;
+      value: V;
       location: L;
     }
   ////////////////////
@@ -698,7 +709,7 @@ export type Point<L> =
   | {
       type: "branch.before";
       kind: BranchKind;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
@@ -709,48 +720,48 @@ export type Point<L> =
   // Conditional //
   | {
       type: "conditional.before";
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
       type: "conditional.after";
-      value: Expression;
+      value: V;
       location: L;
     }
   // Eval //
   | {
       type: "eval.before";
-      value: Expression;
+      value: V;
       context: EvalContext;
       location: L;
     }
   | {
       type: "eval.after";
-      value: Expression;
+      value: V;
       location: L;
     }
   // Await //
   | {
       type: "await.before";
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
       type: "await.after";
-      value: Expression;
+      value: V;
       location: L;
     }
   // Yield //
   | {
       type: "yield.before";
       delegate: boolean;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
       type: "yield.after";
       delegate: boolean;
-      value: Expression;
+      value: V;
       location: L;
     }
   // read-external //
@@ -762,7 +773,7 @@ export type Point<L> =
   | {
       type: "global.read.after";
       variable: estree.Variable;
-      value: Expression;
+      value: V;
       location: L;
     }
   // typeof-external //
@@ -774,14 +785,14 @@ export type Point<L> =
   | {
       type: "global.typeof.after";
       variable: estree.Variable;
-      value: Expression;
+      value: V;
       location: L;
     }
   // write-external //
   | {
       type: "global.write.before";
       variable: estree.Variable;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
@@ -794,7 +805,7 @@ export type Point<L> =
       type: "global.declare.before";
       kind: aran.VariableKind;
       variable: estree.Variable;
-      value: Expression;
+      value: V;
       location: L;
     }
   | {
@@ -808,34 +819,52 @@ export type Point<L> =
   //////////////
   | {
       type: "apply";
-      callee: Expression;
-      this: Expression;
-      arguments: Expression[];
+      callee: V;
+      this: V;
+      arguments: V[];
       location: L;
     }
   | {
       type: "construct";
-      callee: Expression;
-      arguments: Expression[];
+      callee: V;
+      arguments: V[];
       location: L;
     };
 
-type FunctionPointcut<L> = (point: Point<L>) => boolean;
+type RecordAdviceName = ["program.enter", "function.enter", "block.enter"];
 
-type IterablePointcut = Iterable<TrapName>;
+type VoidAdviceName = [
+  "program.leave",
+  "function.leave",
+  "block.completion",
+  "block.leave",
+  "debugger.before",
+  "debugger.after",
+  "break.before",
+  "branch.after",
+  "global.read.before",
+  "global.typeof.before",
+  "global.write.after",
+  "global.declare.after",
+];
 
-export type ObjectPointcut<L> = GenericAdvice<
-  boolean,
-  {
-    Value: null;
-    Location: L;
-    ValueResult: boolean;
-    RecordResult: boolean;
-    VoidResult: boolean;
-  }
->;
+type ValueAdviceName = Exclude<AdviceName, RecordAdviceName | VoidAdviceName>;
+
+export type FunctionAdvice<V, L> = (
+  point: Point<V, L>,
+) => { [key in Variable]?: V } | V | void;
+
+type FunctionPointcut<L> = (point: Point<Expression, L>) => boolean;
+
+///////////
+// Union //
+///////////
+
+type IterablePointcut = Iterable<AdviceName>;
 
 type ConstantPointcut = boolean;
+
+export type Advice<V, L> = ObjectAdvice<V, L> | FunctionAdvice<V, L>;
 
 export type Pointcut<L> =
   | FunctionPointcut<L>
