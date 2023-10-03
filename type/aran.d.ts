@@ -33,9 +33,6 @@ export type AranIntrinsic =
   | "aran.set"
   | "aran.delete"
   | "aran.deadzone"
-  | "aran.AranError"
-  | "aran.asynchronousGeneratorPrototype"
-  | "aran.generatorPrototype"
   | "aran.private"
   | "aran.hidden.weave"
   | "aran.hidden.rebuild";
