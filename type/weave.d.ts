@@ -13,7 +13,7 @@ export type ArgAtom<S> = {
   Source: estree.Source;
   Specifier: estree.Specifier;
   Variable: ArgVariable;
-  EnclaveVariable: estree.Variable;
+  GlobalVariable: estree.Variable;
   Tag: { serial: S; context: EvalContext | null };
 };
 
@@ -22,7 +22,7 @@ export type ResAtom = {
   Source: estree.Source;
   Specifier: estree.Specifier;
   Variable: ResVariable;
-  EnclaveVariable: estree.Variable;
+  GlobalVariable: estree.Variable;
   Tag: ResVariable[];
 };
 

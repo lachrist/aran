@@ -1,7 +1,7 @@
 export type Atom = {
   Label: string;
   Variable: string;
-  EnclaveVariable: string;
+  GlobalVariable: string;
   Source: string;
   Specifier: string;
   Tag: unknown;
@@ -183,7 +183,7 @@ export type Statement<A extends Atom> =
   | {
       type: "DeclareGlobalStatement";
       kind: VariableKind;
-      variable: A["EnclaveVariable"];
+      variable: A["GlobalVariable"];
       right: Expression<A>;
       tag: A["Tag"];
     }
@@ -226,7 +226,7 @@ export type Effect<A extends Atom> =
     }
   | {
       type: "WriteGlobalEffect";
-      variable: A["EnclaveVariable"];
+      variable: A["GlobalVariable"];
       right: Expression<A>;
       tag: A["Tag"];
     }
@@ -258,12 +258,12 @@ export type Expression<A extends Atom> =
     }
   | {
       type: "ReadGlobalExpression";
-      variable: A["EnclaveVariable"];
+      variable: A["GlobalVariable"];
       tag: A["Tag"];
     }
   | {
       type: "TypeofGlobalExpression";
-      variable: A["EnclaveVariable"];
+      variable: A["GlobalVariable"];
       tag: A["Tag"];
     }
   | {

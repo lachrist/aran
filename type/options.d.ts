@@ -1,5 +1,5 @@
-import type { Digest, EvalContext, Serialize } from "./unbuild/context.d.ts";
-import type { Pointcut } from "./weave/advice.d.ts";
+import type { Digest, EvalContext, Serialize } from "../lib/unbuild/context.js";
+import type { Pointcut } from "./advice.js";
 
 type CommonOptions<L> = {
   serialize: Serialize<unbuild.Path>;

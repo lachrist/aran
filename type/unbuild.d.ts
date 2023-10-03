@@ -17,7 +17,7 @@ export type Atom<S> = {
   Source: estree.Source;
   Specifier: estree.Specifier;
   Variable: Variable;
-  EnclaveVariable: estree.Variable;
+  GlobalVariable: estree.Variable;
   Tag: {
     serial: S;
     initialization: Variable | null;

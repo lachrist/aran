@@ -1,5 +1,3 @@
-import type * as Estree from "../node_modules/@types/estree/index.d.ts";
-
 export type * from "../node_modules/@types/estree/index.d.ts";
 
 export type BlockVariableKind = "let" | "const" | "class";

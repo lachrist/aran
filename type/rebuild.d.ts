@@ -7,7 +7,7 @@ export type Atom = {
   Source: estree.Source;
   Specifier: estree.Specifier;
   Variable: Variable;
-  EnclaveVariable: estree.Variable;
+  GlobalVariable: estree.Variable;
   Tag: unknown;
 };
 
