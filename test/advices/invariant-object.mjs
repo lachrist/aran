@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 /**
  * @typedef {Brand<unknown, "value">} Value
  */
