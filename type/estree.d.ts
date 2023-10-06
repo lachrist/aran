@@ -1,5 +1,3 @@
-export type * from "../node_modules/@types/estree/index.d.ts";
-
 export type BlockVariableKind = "let" | "const" | "class";
 
 export type ClosureVariableKind = "var" | "function";
@@ -17,5 +15,7 @@ export type Source = Brand<string, "estree.Source">;
 export type Key = Brand<string, "estree.Key">;
 
 export type PrivateKey = Brand<string, "estree.PrivateKey">;
+
+export type * from "../node_modules/@types/estree/index.d.ts";
 
 export as namespace estree;

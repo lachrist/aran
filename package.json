@@ -7,6 +7,7 @@
     "email": "lachrist@vub.ac.be"
   },
   "main": "lib/main.js",
+  "type": "module",
   "repository": "lachrist/aran",
   "homepage": "http://github.com/lachrist/aran",
   "license": "MIT",
@@ -34,17 +35,22 @@
     "@bercow/order-esm-import": "^0.1.0",
     "@bercow/prettier": "^0.1.0",
     "@bercow/spawn": "^0.2.0",
+    "@types/eslint": "^8.44.3",
     "@types/estree": "^1.0.1",
     "@types/node": "^20.4.4",
+    "@typescript-eslint/parser": "^6.7.4",
+    "acorn": "^8.10.0",
     "c8": "^7.10.0",
     "chalk": "^4.1.2",
     "diff": "^5.0.0",
     "escodegen": "^2.1.0",
-    "eslint": "^8.2.0",
+    "eslint": "^8.50.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-local": "^1.0.0",
     "pegjs": "^0.10.0",
     "prettier": "^3.0.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "yaml": "^2.3.2"
   }
 }

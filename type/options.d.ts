@@ -9,7 +9,6 @@ type CommonOptions<L> = {
   advice: estree.Variable;
   intrinsic: estree.Variable;
   prefix: estree.Variable;
-  annotation: "copy" | "in-place";
   location: "inline" | "extract";
 };
 
