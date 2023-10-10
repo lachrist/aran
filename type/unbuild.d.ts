@@ -1,25 +1,19 @@
-import { EvalContext } from "../lib/unbuild/context";
-
-export {};
+import type { EvalContext } from "../lib/unbuild/context.d.ts";
 
 export type Variable = Brand<string, "unbuild.Variable">;
 
 export type Label = Brand<string, "unbuild.Label">;
 
-export type Root = Brand<string, "unbuild.Root">;
-
 export type Path = Brand<string, "unbuild.Path">;
 
-export type Hash = Brand<string, "unbuild.Hash">;
-
-export type Atom<S> = {
+export type Atom = {
   Label: Label;
   Source: estree.Source;
   Specifier: estree.Specifier;
   Variable: Variable;
   GlobalVariable: estree.Variable;
   Tag: {
-    serial: S;
+    origin: unbuild.Path | null;
     initialization: Variable | null;
     context: EvalContext | null;
   };

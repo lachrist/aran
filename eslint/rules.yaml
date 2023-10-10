@@ -2,9 +2,8 @@
 # Custom #
 ##########
 local/no-globals: [error, globalThis, console]
-local/unique-literal: [error]
-local/basename-literal: [error]
-# local/node-path: [error]
+local/literal-unique: [error]
+local/literal-basename: [error]
 ################
 # Core Complex #
 ################

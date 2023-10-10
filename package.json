@@ -44,7 +44,7 @@
     "chalk": "^4.1.2",
     "diff": "^5.0.0",
     "escodegen": "^2.1.0",
-    "eslint": "^8.50.0",
+    "eslint": "^8.51.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-local": "^1.0.0",

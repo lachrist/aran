@@ -1,10 +1,6 @@
 import { Scope } from "./scope/index.mjs";
 import { Private } from "./private.mjs";
 
-type Serialize<S> = (node: estree.Node, path: unbuild.Path) => S;
-
-type Digest = (node: estree.Node, path: unbuild.Path) => unbuild.Hash;
-
 type Record = {
   "this":
     | ".illegal"
@@ -28,21 +24,12 @@ type Record = {
     | unbuild.Variable;
 };
 
-export type Context<S> = {
+export type Context = {
   strict: boolean;
-  root: unbuild.Root;
+  root: import("../../type/options.d.ts").Root;
   scope: Scope;
   private: Private;
   record: Record;
-  serialize: Serialize<S>;
-  digest: Digest;
 };
 
-export type EvalContext = {
-  strict: boolean;
-  root: unbuild.Root;
-  scope: Scope;
-  private: Private;
-  record: Record;
-  path: unbuild.Path;
-};
+export type EvalContext = Context & { path: unbuild.Path };

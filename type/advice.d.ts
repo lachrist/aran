@@ -1,4 +1,4 @@
-import { EvalContext } from "../lib/unbuild/context";
+import type { EvalContext } from "../lib/unbuild/context.d.ts";
 
 type BranchKind = "conditional" | "if" | "while";
 

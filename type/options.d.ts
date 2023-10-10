@@ -1,10 +1,16 @@
-import type { Digest, EvalContext, Serialize } from "../lib/unbuild/context.js";
+import type { EvalContext } from "../lib/unbuild/context.d.ts";
 import type { Pointcut } from "./advice.js";
 
+export type Root = Brand<string, "unbuild.Root">;
+
+export type Locate<L> = (
+  root: Root,
+  origin: weave.OriginPath,
+  target: weave.TargetPath,
+) => L;
+
 type CommonOptions<L> = {
-  serialize: Serialize<unbuild.Path>;
-  digest: Digest;
-  locate: (root: unbuild.Root, origin: unbuild.Path, target: weave.Path) => L;
+  locate: Locate<L>;
   pointcut: Pointcut<L>;
   advice: estree.Variable;
   intrinsic: estree.Variable;
@@ -17,7 +23,7 @@ type GlobalOptions<L> = CommonOptions<L> & {
   site: "global";
   enclave: boolean;
   strict: false;
-  root: unbuild.Root;
+  root: Root;
   context: null;
 };
 
@@ -26,7 +32,7 @@ type ExternalLocalOptions<L> = CommonOptions<L> & {
   site: "local";
   enclave: true;
   strict: boolean;
-  root: unbuild.Root;
+  root: Root;
   context: null;
 };
 

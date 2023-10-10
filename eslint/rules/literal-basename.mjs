@@ -1,8 +1,11 @@
+import { listCommentBefore, parseSimpleTypeAnnotation } from "../comment.mjs";
+
 /**
  * @type {(comment: estree.Comment) => boolean}
  */
 const isBasenameComment = (comment) =>
-  comment.type === "Block" && /^\*\s+@basename\s*$/gu.test(comment.value);
+  comment.type === "Block" &&
+  parseSimpleTypeAnnotation(comment.value) === "__basename";
 
 /**
  * @type {import("eslint").Rule.RuleModule}
@@ -26,7 +29,9 @@ export default {
     const basename = segments.slice(0, -1).join(".");
     return {
       Literal(node) {
-        if ((node.trailingComments ?? []).some(isBasenameComment)) {
+        if (
+          listCommentBefore(node, context.sourceCode).some(isBasenameComment)
+        ) {
           if (node.value !== basename) {
             context.report({
               node,

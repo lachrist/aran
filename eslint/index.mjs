@@ -1,8 +1,7 @@
 import rules from "./rules.mjs";
-import BasenameLiteral from "./rules/basename-literal.mjs";
 import NoGlobals from "./rules/no-globals.mjs";
-import UniqueLiteral from "./rules/unique-literal.mjs";
-import NodePath from "./rules/node-path.mjs";
+import LiteralBasename from "./rules/literal-basename.mjs";
+import LiteralUnique from "./rules/literal-unique.mjs";
 import ImportPlugin from "eslint-plugin-import";
 
 /**
@@ -22,10 +21,9 @@ export default [
     plugins: {
       local: {
         rules: {
-          "basename-literal": BasenameLiteral,
+          "literal-basename": LiteralBasename,
+          "literal-unique": LiteralUnique,
           "no-globals": NoGlobals,
-          "unique-literal": UniqueLiteral,
-          "node-path": NodePath,
         },
       },
       import: ImportPlugin,
