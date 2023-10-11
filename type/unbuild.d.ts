@@ -13,7 +13,7 @@ export type Atom = {
   Variable: Variable;
   GlobalVariable: estree.Variable;
   Tag: {
-    origin: Path;
+    path: Path;
     initialization: Variable | null;
     context: EvalContext | null;
   };
