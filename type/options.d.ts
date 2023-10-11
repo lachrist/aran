@@ -10,11 +10,11 @@ export type Advice = {
   variable: estree.Variable;
 };
 
-export type Locate<L> = (
-  root: Root,
-  origin: weave.OriginPath,
-  target: weave.TargetPath,
-) => L;
+export type Locate<L> = (origin: weave.OriginPath, root: Root) => L;
+
+//////////////////////
+// Internal Options //
+//////////////////////
 
 type CommonOptions<L> = {
   locate: Locate<L>;
@@ -55,3 +55,47 @@ export type Options<L> =
   | GlobalOptions<L>
   | ExternalLocalOptions<L>
   | InternalLocalOptions<L>;
+
+//////////////////////
+// External Options //
+//////////////////////
+
+type CommonUserOptions<L> = {
+  locate?: Locate<L>;
+  pointcut?: Pointcut<L>;
+  advice?: Advice;
+  intrinsic?: estree.Variable;
+  prefix?: estree.Variable;
+};
+
+type GlobalUserOptions<L> = CommonUserOptions<L> & {
+  kind?: "module" | "script" | "eval";
+  site?: "global";
+  enclave?: boolean;
+  strict?: false;
+  root?: Root;
+  context?: null;
+};
+
+type ExternalLocalUserOptions<L> = CommonUserOptions<L> & {
+  kind?: "eval";
+  site?: "local";
+  enclave?: true;
+  strict?: boolean;
+  root?: Root;
+  context?: null;
+};
+
+type InternalLocalUserOptions<L> = CommonUserOptions<L> & {
+  kind?: "eval";
+  site?: "local";
+  enclave?: false;
+  strict?: null;
+  root?: null;
+  context?: EvalContext;
+};
+
+export type UserOptions<L> =
+  | GlobalUserOptions<L>
+  | ExternalLocalUserOptions<L>
+  | InternalLocalUserOptions<L>;
