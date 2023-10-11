@@ -22,7 +22,6 @@ type CommonOptions<L> = {
   advice: Advice;
   intrinsic: estree.Variable;
   prefix: estree.Variable;
-  location: "inline" | "extract";
 };
 
 type GlobalOptions<L> = CommonOptions<L> & {

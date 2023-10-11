@@ -22,13 +22,36 @@ export type ArgAtom = {
   };
 };
 
+type Binding =
+  | {
+      type: "original";
+      name: ArgVariable;
+    }
+  | {
+      type: "callee";
+      path: TargetPath;
+    }
+  | {
+      type: "frame";
+    }
+  | {
+      type: "completion";
+    }
+  | {
+      type: "location";
+      init: Json;
+      path: TargetPath;
+    };
+
+type Free = { [key in ResVariable]: Binding };
+
 export type ResAtom = {
   Label: Label;
   Source: estree.Source;
   Specifier: estree.Specifier;
   Variable: ResVariable;
   GlobalVariable: estree.Variable;
-  Tag: ResVariable[];
+  Tag: Free;
 };
 
 export as namespace weave;
