@@ -3,6 +3,13 @@ import type { Pointcut } from "./advice.js";
 
 export type Root = Brand<string, "unbuild.Root">;
 
+export type AdviceKind = "function" | "object";
+
+export type Advice = {
+  kind: AdviceKind;
+  variable: estree.Variable;
+};
+
 export type Locate<L> = (
   root: Root,
   origin: weave.OriginPath,
@@ -12,7 +19,7 @@ export type Locate<L> = (
 type CommonOptions<L> = {
   locate: Locate<L>;
   pointcut: Pointcut<L>;
-  advice: estree.Variable;
+  advice: Advice;
   intrinsic: estree.Variable;
   prefix: estree.Variable;
   location: "inline" | "extract";
