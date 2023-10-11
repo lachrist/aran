@@ -17,7 +17,7 @@ export type ArgAtom = {
   Variable: ArgVariable;
   GlobalVariable: estree.Variable;
   Tag: {
-    origin: OriginPath | null;
+    path: OriginPath;
     context: EvalContext | null;
   };
 };
