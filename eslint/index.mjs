@@ -38,8 +38,21 @@ export default [
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
+      globals: {
+        globalThis: false,
+        console: false,
+      },
+    },
+    plugins: {
+      local: {
+        rules: {
+          "no-globals": NoGlobals,
+        },
+      },
     },
     rules: {
+      "local/no-globals": ["error", "globalThis", "console"],
+      "no-undef": ["error"],
       "no-console": "warn",
       "no-unused-vars": [
         "error",

@@ -1,6 +1,8 @@
-import { runTest } from "./test.mjs";
+import { runTest } from "../test.mjs";
 import { cwd, argv } from "node:process";
 import { pathToFileURL } from "node:url";
+
+const { URL } = globalThis;
 
 const url = new URL(argv[2], pathToFileURL(`${cwd()}/`));
 
@@ -11,4 +13,4 @@ while (!root.href.endsWith("test262/")) {
 }
 
 // eslint-disable-next-line no-console
-console.dir(await runTest(url, root, (_feature) => false));
+console.dir(await runTest(url, root));

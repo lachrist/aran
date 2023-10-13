@@ -1,5 +1,7 @@
 import { readdir, stat } from "node:fs/promises";
 
+const { URL } = globalThis;
+
 /**
  * @type {(directory: URL) => AsyncIterable<URL>}
  */

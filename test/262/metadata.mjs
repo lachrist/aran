@@ -5,13 +5,12 @@ const BEGIN = "/*---";
 const END = "---*/";
 
 /**
- * @type {(content: string) => {
- *   type: "success",
- *   value: import("./types").Metadata,
- * } | {
- *   type: "failure",
- *   message: string,
- * }}
+ * @type {(
+ *   content: string,
+ * ) => import("./types").Outcome<
+ *   import("./types").Metadata,
+ *   import("./types").TestError
+ * >}
  */
 export const parseMetadata = (content) => {
   const begin = content.indexOf(BEGIN);
@@ -19,7 +18,10 @@ export const parseMetadata = (content) => {
   if (begin === -1 || end === -1) {
     return {
       type: "failure",
-      message: "missing metadata header",
+      error: {
+        type: "metadata",
+        message: "missing metadata header",
+      },
     };
   } else {
     const header = content.slice(begin + BEGIN.length, end);
@@ -29,7 +31,10 @@ export const parseMetadata = (content) => {
     } catch (error) {
       return {
         type: "failure",
-        message: /** @type {Error} */ (error).message,
+        error: {
+          type: "metadata",
+          message: /** @type {Error} */ (error).message,
+        },
       };
     }
     return {

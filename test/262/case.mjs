@@ -1,60 +1,10 @@
-import {
-  createContext,
-  runInContext,
-  Script,
-  SourceTextModule,
-  SyntheticModule,
-} from "node:vm";
-import { readFile } from "node:fs/promises";
+import { Script, SourceTextModule } from "node:vm";
+import { runHarness } from "./harness.mjs";
+import { createRealm } from "./realm.mjs";
+import { inspectError, inspectMessage } from "./inspect.mjs";
+import { compileLinker } from "./linker.mjs";
 
-/**
- * @type {(
- *   context: object,
- *   print: (message: string) => void,
- *   RealmError: new (feature: import("./types").RealmFeature) => Error,
- * ) => import("./types").$262}
- */
-export const createRealm = (context, print, RealmError) => {
-  createContext(context);
-  Reflect.defineProperty(context, "print", {
-    configurable: true,
-    enumerable: false,
-    writable: true,
-    value: print,
-  });
-  /** @type {import("./types.js").$262} */
-  const $262 = {
-    // @ts-ignore
-    __proto__: null,
-    createRealm: () => createRealm({ __proto__: null }, print, Error),
-    detachArrayBuffer: () => {
-      throw new RealmError("detachArrayBuffer");
-    },
-    evalScript: (code) => runInContext(code, context),
-    gc: () => {
-      if (typeof gc === "function") {
-        return gc();
-      } else {
-        throw new RealmError("gc");
-      }
-    },
-    global: runInContext("this;", context),
-    get isHTMLDDA() {
-      throw new RealmError("isHTMLDDA");
-    },
-    /** @type {any} */
-    get agent() {
-      throw new RealmError("agent");
-    },
-  };
-  Reflect.defineProperty(context, "$262", {
-    configurable: true,
-    enumerable: false,
-    writable: true,
-    value: $262,
-  });
-  return $262;
-};
+const { Promise, Error } = globalThis;
 
 /**
  * @type {() => {
@@ -70,7 +20,8 @@ const makeAsynchronousTermination = () => {
       resolve = resolve_;
     }),
     print: (message) => {
-      if (typeof message === "string") {
+      const outcome = inspectMessage(message);
+      if (outcome.type === "success") {
         // console.log(message);
         if (message === "Test262:AsyncTestComplete") {
           resolve([]);
@@ -83,13 +34,9 @@ const makeAsynchronousTermination = () => {
             },
           ]);
         }
-      } else {
-        resolve([
-          {
-            type: "inspect",
-            message: "message is not a string",
-          },
-        ]);
+      }
+      if (outcome.type === "failure") {
+        resolve([outcome.error]);
       }
     },
   };
@@ -107,7 +54,8 @@ const makeSynchronousTermination = () => {
   return {
     done: Promise.resolve(errors),
     print: (message) => {
-      if (typeof message === "string") {
+      const outcome = inspectMessage(message);
+      if (outcome.type === "success") {
         // console.log(message);
         if (message.startsWith("Test262:AsyncTestFailure:")) {
           errors.push({
@@ -115,56 +63,12 @@ const makeSynchronousTermination = () => {
             message,
           });
         }
-      } else {
-        errors.push({
-          type: "inspect",
-          message: "message is not a string",
-        });
+      }
+      if (outcome.type === "failure") {
+        errors.push(outcome.error);
       }
     },
   };
-};
-
-/** @type {Map<string, string>} */
-const cache = new Map();
-
-/** @type {(url: URL) => Promise<string>} */
-const readFileCache = async (url) => {
-  const cached = cache.get(url.href);
-  if (cached === undefined) {
-    const content = await readFile(url, "utf8");
-    cache.set(url.href, content);
-    return content;
-  } else {
-    return cached;
-  }
-};
-
-/**
- * @type {(
- *   type: "harness" | "parse" | "resolution" | "runtime",
- *   error: unknown,
- * ) => import("./types").TestError}
- */
-const parseError = (type, error) => {
-  try {
-    return {
-      type,
-      error: {
-        name: String(/** @type {any} */ (error).constructor.name),
-        message: String(/** @type {any} */ (error).message),
-        stack:
-          /** @type {any} */ (error).stack == null
-            ? null
-            : String(/** @type {any} */ (error).stack),
-      },
-    };
-  } catch {
-    return {
-      type: "inspect",
-      message: "failed to parse error",
-    };
-  }
 };
 
 /**
@@ -185,10 +89,11 @@ export const runTestCase = async ({
     ? makeAsynchronousTermination()
     : makeSynchronousTermination();
   const context = { __proto__: null };
-  createRealm(
+  createRealm({
     context,
+    origin: url,
     print,
-    class RealmError extends Error {
+    RealmError: class RealmError extends Error {
       /** @param {import("./types").RealmFeature} feature */
       constructor(feature) {
         super(`$262.${feature} is not implemented`);
@@ -199,95 +104,50 @@ export const runTestCase = async ({
         });
       }
     },
-  );
+  });
   for (const url of includes) {
-    try {
-      runInContext(await readFileCache(url), context);
-    } catch (error) {
-      errors.push(parseError("harness", error));
+    const outcome = await runHarness(url, context);
+    if (outcome.type === "failure") {
+      return [outcome.error];
     }
   }
-  if (errors.length === 0) {
-    /**
-     * @type {WeakMap<
-     *   import("node:vm").Module | import("node:vm").Script,
-     *   URL
-     * >}
-     */
-    const urls = new WeakMap();
-    /** @type {Map<string, import("node:vm").Module>} */
-    const cache = new Map();
-    /**
-     * @type {(
-     *   specifier: string,
-     *   parent: import("node:vm").Module | import("node:vm").Script,
-     *   _assertions: object,
-     * ) => Promise<import("node:vm").Module>}
-     */
-    const linker = async (specifier, parent, _assertions) => {
-      const url = new URL(specifier, /** @type {URL} */ (urls.get(parent)));
-      let module = cache.get(url.href);
-      if (module === undefined) {
-        const content = await readFile(url, "utf8");
-        if (url.href.endsWith(".json")) {
-          module = new SyntheticModule(
-            ["default"],
-            () => {
-              /** @type {import("node:vm").SyntheticModule} */ (
-                module
-              ).setExport("default", JSON.parse(content));
-            },
-            { context },
-          );
-        } else {
-          module = new SourceTextModule(content, {
-            context,
-            importModuleDynamically: /** @type {any} */ (linker),
-          });
-          await module.link(linker);
-        }
-        await module.evaluate();
-        urls.set(module, url);
-        cache.set(url.href, module);
-      }
-      return module;
-    };
-    if (module) {
+  const { link, register } = compileLinker({ context, origin: url });
+  if (module) {
+    try {
+      /** @type {import("node:vm").Module} */
+      const module = new SourceTextModule(content, {
+        identifier: url.href,
+        context,
+        importModuleDynamically: /** @type {any} */ (link),
+      });
+      await register(module, url);
       try {
-        /** @type {import("node:vm").Module} */
-        const module = new SourceTextModule(content, {
-          context,
-          importModuleDynamically: /** @type {any} */ (linker),
-        });
-        cache.set(url.href, module);
-        urls.set(module, url);
+        await module.link(link);
         try {
-          await module.link(linker);
-          try {
-            await module.evaluate();
-          } catch (error) {
-            errors.push(parseError("runtime", error));
-          }
+          await module.evaluate();
         } catch (error) {
-          errors.push(parseError("resolution", error));
+          errors.push(inspectError("runtime", error));
         }
       } catch (error) {
-        errors.push(parseError("parse", error));
+        errors.push(inspectError("resolution", error));
       }
-    } else {
+    } catch (error) {
+      errors.push(inspectError("parse", error));
+    }
+  } else {
+    try {
+      const script = new Script(content, {
+        filename: url.href,
+        importModuleDynamically: /** @type {any} */ (link),
+      });
+      await register(script, url);
       try {
-        const script = new Script(content, {
-          importModuleDynamically: /** @type {any} */ (linker),
-        });
-        urls.set(script, url);
-        try {
-          script.runInContext(context);
-        } catch (error) {
-          errors.push(parseError("runtime", error));
-        }
+        script.runInContext(context);
       } catch (error) {
-        errors.push(parseError("parse", error));
+        errors.push(inspectError("runtime", error));
       }
+    } catch (error) {
+      errors.push(inspectError("parse", error));
     }
   }
   if (errors.length === 0) {

@@ -1,3 +1,13 @@
+export type Outcome<V, E> =
+  | {
+      type: "success";
+      value: V;
+    }
+  | {
+      type: "failure";
+      error: E;
+    };
+
 export type Flag =
   | "onlyStrict"
   | "noStrict"
@@ -67,14 +77,7 @@ export type TestError =
       type: "negative";
     }
   | {
-      type: "exclusion";
-      feature: string;
-    }
-  | {
       type: "harness" | "runtime" | "parse" | "resolution";
-      error: {
-        name: string;
-        message: string;
-        stack: string | null;
-      };
+      name: string;
+      message: string;
     };
