@@ -23,13 +23,14 @@ const { Error, undefined, URL, Map, JSON } = globalThis;
  *   options: {
  *     context: object,
  *     origin: URL,
+ *     instrument: (code: string, kind: "script" | "module") => string,
  *   },
  * ) => {
  *   link: Link,
  *   register: Register,
  * }}
  */
-export const compileLinker = ({ context, origin }) => {
+export const compileLinker = ({ context, origin, instrument }) => {
   /** @type {Map<import("node:vm").Module | import("node:vm").Script, URL>} */
   const urls = new Map();
   /** @type {Map<string, import("node:vm").Module>} */
@@ -57,7 +58,7 @@ export const compileLinker = ({ context, origin }) => {
           { identifier, context },
         );
       } else {
-        module = new SourceTextModule(content, {
+        module = new SourceTextModule(instrument(content, "module"), {
           identifier,
           context,
           importModuleDynamically: /** @type {any} */ (link),

@@ -9,10 +9,17 @@ const { gc, Reflect } = globalThis;
  *     origin: URL,
  *     print: (message: string) => void,
  *     RealmError: new (feature: import("./types").RealmFeature) => Error,
+ *     instrument: (code: string, kind: "script" | "module") => string,
  *   },
  * ) => import("./types").$262}
  */
-export const createRealm = ({ context, origin, print, RealmError }) => {
+export const createRealm = ({
+  context,
+  origin,
+  print,
+  RealmError,
+  instrument,
+}) => {
   createContext(context);
   /** @type {import("./types.js").$262} */
   const $262 = {
@@ -24,6 +31,7 @@ export const createRealm = ({ context, origin, print, RealmError }) => {
         origin,
         print,
         RealmError,
+        instrument,
       }),
     detachArrayBuffer: () => {
       throw new RealmError("detachArrayBuffer");
@@ -32,7 +40,9 @@ export const createRealm = ({ context, origin, print, RealmError }) => {
     // so we do not have to register this script to the
     // linker because dynamic import is pointless.
     evalScript: (code) =>
-      runInContext(code, context, { filename: `${origin.href} >> evalScript` }),
+      runInContext(instrument(code, "script"), context, {
+        filename: `${origin.href} >> evalScript`,
+      }),
     gc: () => {
       if (typeof gc === "function") {
         return gc();

@@ -74,15 +74,13 @@ const makeSynchronousTermination = () => {
 /**
  * @type {(
  *   options: import("./types").TestCase,
+ *   instrument: (code: string, kind: "script" | "module") => string,
  * ) => Promise<import("./types").TestError[]>}
  */
-export const runTestCase = async ({
-  url,
-  content,
-  asynchronous,
-  includes,
-  module,
-}) => {
+export const runTestCase = async (
+  { url, content, asynchronous, includes, module },
+  instrument,
+) => {
   /** @type {import("./types").TestError[]} */
   const errors = [];
   const { done, print } = asynchronous
@@ -104,6 +102,7 @@ export const runTestCase = async ({
         });
       }
     },
+    instrument,
   });
   for (const url of includes) {
     const outcome = await runHarness(url, context);
@@ -111,11 +110,15 @@ export const runTestCase = async ({
       return [outcome.error];
     }
   }
-  const { link, register } = compileLinker({ context, origin: url });
+  const { link, register } = compileLinker({
+    context,
+    origin: url,
+    instrument,
+  });
   if (module) {
     try {
       /** @type {import("node:vm").Module} */
-      const module = new SourceTextModule(content, {
+      const module = new SourceTextModule(instrument(content, "module"), {
         identifier: url.href,
         context,
         importModuleDynamically: /** @type {any} */ (link),
@@ -136,7 +139,7 @@ export const runTestCase = async ({
     }
   } else {
     try {
-      const script = new Script(content, {
+      const script = new Script(instrument(content, "script"), {
         filename: url.href,
         importModuleDynamically: /** @type {any} */ (link),
       });

@@ -17,8 +17,7 @@
     "test": "node test/test.mjs",
     "coverage": "node test/coverage.mjs",
     "load-test262": "git clone --filter=tree:0 https://github.com/tc39/test262",
-    "test262-all": "node --experimental-vm-modules --expose-gc test/262/baseline/all.mjs test262",
-    "test262-one": "node --experimental-vm-modules --expose-gc test/262/baseline/one.mjs $1"
+    "baseline": "node --experimental-vm-modules --expose-gc test/262/identity/run.mjs"
   },
   "keywords": [
     "JavaScript",
