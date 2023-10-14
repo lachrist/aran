@@ -12,6 +12,10 @@ console.dir(
   await runTest({
     relative,
     test262,
-    instrument: (code, _kind) => code,
+    instrumenter: {
+      setup: "",
+      globals: [],
+      instrument: (code, _kind) => code,
+    },
   }),
 );

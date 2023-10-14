@@ -1,12 +1,8 @@
+import { stringifyResult } from "./result.mjs";
 import { scrape } from "./scrape.mjs";
 import { runTest } from "./test.mjs";
 
-const { process, JSON, URL } = globalThis;
-
-process.on("uncaughtException", (error, origin) => {
-  // eslint-disable-next-line no-console
-  console.dir({ origin, error });
-});
+const { URL } = globalThis;
 
 /**
  * @type {(
@@ -14,11 +10,16 @@ process.on("uncaughtException", (error, origin) => {
  *     test262: URL,
  *     isExcluded: (relative: string) => boolean,
  *     writable: import("node:stream").Writable,
- *     instrument: (code: string, kind: "script" | "module") => string,
+ *     instrumenter: test262.Instrumenter,
  *   },
  * ) => Promise<void>}
  */
-export const batch = async ({ test262, isExcluded, writable, instrument }) => {
+export const batch = async ({
+  test262,
+  isExcluded,
+  writable,
+  instrumenter,
+}) => {
   let index = 0;
   for await (const url of scrape(new URL("test/", test262))) {
     index += 1;
@@ -28,13 +29,13 @@ export const batch = async ({ test262, isExcluded, writable, instrument }) => {
     }
     const relative = url.href.substring(test262.href.length);
     if (!relative.includes("_FIXTURE") && !isExcluded(relative)) {
-      const { features, errors } = await runTest({
+      const result = await runTest({
         relative,
         test262,
-        instrument,
+        instrumenter,
       });
-      if (errors.length > 0) {
-        writable.write(JSON.stringify([relative, features, errors]));
+      if (result.errors.length > 0) {
+        writable.write(stringifyResult(result));
         writable.write("\n");
       }
     }

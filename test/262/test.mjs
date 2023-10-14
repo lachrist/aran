@@ -9,10 +9,10 @@ const { URL } = globalThis;
  *   options: {
  *     relative: string,
  *     content: string,
- *     metadata: import("./types").Metadata,
+ *     metadata: test262.Metadata,
  *     test262: URL,
  *   },
- * ) => import("./types").TestCase[]}
+ * ) => test262.Case[]}
  */
 const listTestCase = ({ relative, content, metadata, test262 }) => {
   const asynchronous = metadata.flags.includes("async");
@@ -22,7 +22,7 @@ const listTestCase = ({ relative, content, metadata, test262 }) => {
     ...metadata.includes,
   ].map((name) => new URL(`harness/${name}`, test262));
   const module = metadata.flags.includes("module");
-  /** @type {import("./types").TestCase[]} */
+  /** @type {test262.Case[]} */
   const tests = [];
   if (
     !metadata.flags.includes("raw") &&
@@ -54,22 +54,19 @@ const listTestCase = ({ relative, content, metadata, test262 }) => {
  *   options: {
  *     relative: string,
  *     test262: URL,
- *     instrument: (code: string, kind: "script" | "module") => string,
+ *     instrumenter: test262.Instrumenter,
  *   },
- * ) => Promise<{
- *   features: string[],
- *   errors: import("./types").TestError[],
- * }>}
+ * ) => Promise<test262.Result>}
  */
-export const runTest = async ({ relative, test262, instrument }) => {
+export const runTest = async ({ relative, test262, instrumenter }) => {
   const content = await readFile(new URL(relative, test262), "utf8");
   const either = parseMetadata(content);
   switch (either.type) {
     case "failure":
-      return { features: [], errors: [either.error] };
+      return { relative, features: [], errors: [either.error] };
     case "success": {
       const metadata = either.value;
-      /** @type {import("./types").TestError[]} */
+      /** @type {test262.Error[]} */
       const errors = [];
       for (const test of listTestCase({
         relative,
@@ -77,22 +74,23 @@ export const runTest = async ({ relative, test262, instrument }) => {
         metadata,
         test262,
       })) {
+        const exceptions = await runTestCase(test, instrumenter);
         if (metadata.negative === null) {
-          errors.push(...(await runTestCase(test, instrument)));
+          errors.push(...exceptions);
         } else {
-          const failures = await runTestCase(test, instrument);
-          if (failures.length === 0) {
+          if (exceptions.length === 0) {
             errors.push({ type: "negative" });
           } else if (
-            failures.length !== 1 ||
-            failures[0].type !== metadata.negative.phase ||
-            failures[0].name !== metadata.negative.type
+            exceptions.length !== 1 ||
+            exceptions[0].type !== metadata.negative.phase ||
+            exceptions[0].name !== metadata.negative.type
           ) {
-            errors.push(...failures);
+            errors.push(...exceptions);
           }
         }
       }
       return {
+        relative,
         features: metadata.features,
         errors: errors,
       };

@@ -46,7 +46,7 @@ export type $262 = {
   };
 };
 
-export type TestCase = {
+export type Case = {
   url: URL;
   content: string;
   asynchronous: boolean;
@@ -56,7 +56,7 @@ export type TestCase = {
 
 export type RealmFeature = "gc" | "agent" | "isHTMLDDA" | "detachArrayBuffer";
 
-export type TestError =
+export type Error =
   | {
       type: "metadata";
       message: string;
@@ -82,8 +82,30 @@ export type TestError =
       message: string;
     };
 
+export type Result = {
+  relative: string;
+  features: string[];
+  errors: Error[];
+};
+
 export type Failure = {
   relative: string;
   features: string[];
-  errors: TestError[];
+  errors: [Error, ...Error[]];
 };
+
+export type Instrumenter = {
+  globals: [string, unknown][];
+  setup: string;
+  instrument: (code: string, kind: "script" | "module") => string;
+};
+
+export type Filtering = [string, (result: Result) => boolean][];
+
+export type Stage = {
+  requirements: string[];
+  instrumenter: Instrumenter;
+  filtering: Filtering;
+};
+
+export as namespace test262;

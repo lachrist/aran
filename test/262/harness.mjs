@@ -8,10 +8,9 @@ const { Map, Error, undefined } = globalThis;
 const cache = new Map();
 
 /**
- * @type {(url: URL) => Promise<import("./types").Outcome<
- *   string,
- *   import("./types").TestError
- * >>}
+ * @type {(
+ *   url: URL,
+ * ) => Promise<test262.Outcome<string,test262.Error>>}
  */
 const readFileCache = async (url) => {
   let content = cache.get(url.href);
@@ -37,9 +36,10 @@ const readFileCache = async (url) => {
 };
 
 /**
- * @type {(url: URL, context: object) => Promise<
- *   import("./types").Outcome<null, import("./types").TestError>
- * >}
+ * @type {(
+ *   url: URL,
+ *   context: object,
+ * ) => Promise<test262.Outcome<null, test262.Error>>}
  */
 export const runHarness = async (url, context) => {
   const outcome = await readFileCache(url);

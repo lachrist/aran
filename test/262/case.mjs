@@ -8,12 +8,12 @@ const { Promise, Error } = globalThis;
 
 /**
  * @type {() => {
- *   done: Promise<import("./types").TestError[]>,
+ *   done: Promise<test262.Error[]>,
  *   print: (message: string) => void,
  * }}
  */
 const makeAsynchronousTermination = () => {
-  /** @type {(errors: import("./types").TestError[]) => void} */
+  /** @type {(errors: test262.Error[]) => void} */
   let resolve;
   return {
     done: new Promise((resolve_) => {
@@ -44,12 +44,12 @@ const makeAsynchronousTermination = () => {
 
 /**
  * @type {() => {
- *   done: Promise<import("./types").TestError[]>,
+ *   done: Promise<test262.Error[]>,
  *   print: (message: string) => void,
  * }}
  */
 const makeSynchronousTermination = () => {
-  /** @type {import("./types").TestError[]} */
+  /** @type {test262.Error[]} */
   const errors = [];
   return {
     done: Promise.resolve(errors),
@@ -73,26 +73,27 @@ const makeSynchronousTermination = () => {
 
 /**
  * @type {(
- *   options: import("./types").TestCase,
- *   instrument: (code: string, kind: "script" | "module") => string,
- * ) => Promise<import("./types").TestError[]>}
+ *   options: test262.Case,
+ *   instrumenter: test262.Instrumenter,
+ * ) => Promise<test262.Error[]>}
  */
 export const runTestCase = async (
   { url, content, asynchronous, includes, module },
-  instrument,
+  instrumenter,
 ) => {
-  /** @type {import("./types").TestError[]} */
+  /** @type {test262.Error[]} */
   const errors = [];
   const { done, print } = asynchronous
     ? makeAsynchronousTermination()
     : makeSynchronousTermination();
   const context = { __proto__: null };
+  const { instrument } = instrumenter;
   createRealm({
     context,
     origin: url,
     print,
     RealmError: class RealmError extends Error {
-      /** @param {import("./types").RealmFeature} feature */
+      /** @param {test262.RealmFeature} feature */
       constructor(feature) {
         super(`$262.${feature} is not implemented`);
         this.name = "RealmError";
@@ -102,7 +103,7 @@ export const runTestCase = async (
         });
       }
     },
-    instrument,
+    instrumenter,
   });
   for (const url of includes) {
     const outcome = await runHarness(url, context);

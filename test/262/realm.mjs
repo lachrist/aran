@@ -8,19 +8,31 @@ const { gc, Reflect } = globalThis;
  *     context: object,
  *     origin: URL,
  *     print: (message: string) => void,
- *     RealmError: new (feature: import("./types").RealmFeature) => Error,
- *     instrument: (code: string, kind: "script" | "module") => string,
+ *     RealmError: new (feature: test262.RealmFeature) => Error,
+ *     instrumenter: test262.Instrumenter,
  *   },
- * ) => import("./types").$262}
+ * ) => test262.$262}
  */
 export const createRealm = ({
   context,
   origin,
   print,
   RealmError,
-  instrument,
+  instrumenter,
 }) => {
+  const { instrument, setup, globals } = instrumenter;
   createContext(context);
+  for (const [name, value] of globals) {
+    Reflect.defineProperty(context, name, {
+      // @ts-ignore
+      __proto__: null,
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value,
+    });
+  }
+  runInContext(setup, context);
   /** @type {import("./types.js").$262} */
   const $262 = {
     // @ts-ignore
@@ -31,7 +43,7 @@ export const createRealm = ({
         origin,
         print,
         RealmError,
-        instrument,
+        instrumenter,
       }),
     detachArrayBuffer: () => {
       throw new RealmError("detachArrayBuffer");
@@ -60,12 +72,16 @@ export const createRealm = ({
     },
   };
   Reflect.defineProperty(context, "$262", {
+    // @ts-ignore
+    __proto__: null,
     configurable: true,
     enumerable: false,
     writable: true,
     value: $262,
   });
   Reflect.defineProperty(context, "print", {
+    // @ts-ignore
+    __proto__: null,
     configurable: true,
     enumerable: false,
     writable: true,

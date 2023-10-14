@@ -4,7 +4,7 @@ const { undefined } = globalThis;
  * @type {(
  *   type: "harness" | "parse" | "resolution" | "runtime",
  *   error: unknown,
- * ) => import("./types").TestError}
+ * ) => test262.Error}
  */
 export const inspectError = (type, error) => {
   if (typeof error !== "object" || error === null) {
@@ -44,7 +44,7 @@ export const inspectError = (type, error) => {
 /**
  * @type {(
  *   message: unknown,
- * ) => import("./types").Outcome<string, import("./types").TestError>}
+ * ) => test262.Outcome<string, test262.Error>}
  */
 export const inspectMessage = (message) => {
   if (typeof message === "string") {

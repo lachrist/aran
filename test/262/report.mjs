@@ -1,15 +1,8 @@
-const { JSON, Map, Array } = globalThis;
+import { listFeature, parseResultDump } from "./result.mjs";
 
-/** @type {(line: string) => import("./types").Failure} */
-const parseFailure = (line) => {
-  const [relative, features, errors] = JSON.parse(line);
-  return { relative, features, errors };
-};
+const { Map, Array } = globalThis;
 
-/** @type {(line: string) => boolean} */
-const isNotEmpty = (line) => line !== "";
-
-/** @type {(error: import("./types").TestError) => string} */
+/** @type {(error: test262.Error) => string} */
 const printError = (error) => {
   let print = `  ${error.type}`;
   if ("feature" in error) {
@@ -28,8 +21,8 @@ const printError = (error) => {
 const printFeatureArray = (features) =>
   features.length === 0 ? "" : `  ${features.join(", ")}\n`;
 
-/** @type {(failure: import("./types").Failure) => string} */
-const printFailure = ({ relative, features, errors }) =>
+/** @type {(result: test262.Result) => string} */
+const printResult = ({ relative, features, errors }) =>
   `${relative}\n${printFeatureArray(features)}${errors
     .map(printError)
     .join("")}`;
@@ -43,35 +36,32 @@ const printEntry = ([key, val]) => `${key}: ${val}`;
 
 /**
  * @type {(
- *   content: string,
- *   filters: [string, (failure: import("./types").Failure) => boolean][],
+ *   dump: string,
+ *   filters: [string, (result: test262.Result) => boolean][],
  * ) => string}
  */
-export const report = (content, filters) => {
-  let failures = content.split("\n").filter(isNotEmpty).map(parseFailure);
+export const report = (dump, filters) => {
+  let results = parseResultDump(dump);
   /** @type {[string, number][]} */
-  const totals = [["Total", failures.length]];
+  const totals = [["Total", results.length]];
   for (const [name, predicate] of filters) {
-    failures = failures.filter(predicate);
-    totals.push([name, failures.length]);
+    results = results.filter(predicate);
+    totals.push([name, results.length]);
   }
   /** @type {Map<string, number>} */
-  const counters = new Map();
-  for (const { features } of failures) {
-    for (const feature of features) {
-      counters.set(feature, (counters.get(feature) ?? 0) + 1);
-    }
+  const features = new Map();
+  for (const feature of results.flatMap(listFeature)) {
+    features.set(feature, (features.get(feature) ?? 0) + 1);
   }
   return [
-    "Failures:",
-    failures.map(printFailure).join("\n"),
-    "",
-    "Features:",
-    Array.from(counters.entries())
+    "\n=== Filtering ===\n",
+    results.map(printResult).join("\n"),
+    "\n=== Features ===\n",
+    Array.from(features.entries())
       .sort(sortFeatureEntry)
       .map(printEntry)
       .join("\n"),
-    "",
+    "\n=== Totals ===\n",
     totals.map(printEntry).join("\n"),
   ].join("\n");
 };
