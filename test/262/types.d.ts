@@ -81,3 +81,9 @@ export type TestError =
       name: string;
       message: string;
     };
+
+export type Failure = {
+  relative: string;
+  features: string[];
+  errors: TestError[];
+};

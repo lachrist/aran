@@ -28,9 +28,13 @@ export const batch = async ({ test262, isExcluded, writable, instrument }) => {
     }
     const relative = url.href.substring(test262.href.length);
     if (!relative.includes("_FIXTURE") && !isExcluded(relative)) {
-      const errors = await runTest({ relative, test262, instrument });
+      const { features, errors } = await runTest({
+        relative,
+        test262,
+        instrument,
+      });
       if (errors.length > 0) {
-        writable.write(JSON.stringify([relative, errors]));
+        writable.write(JSON.stringify([relative, features, errors]));
         writable.write("\n");
       }
     }

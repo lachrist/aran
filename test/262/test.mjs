@@ -56,14 +56,17 @@ const listTestCase = ({ relative, content, metadata, test262 }) => {
  *     test262: URL,
  *     instrument: (code: string, kind: "script" | "module") => string,
  *   },
- * ) => Promise<import("./types").TestError[]>}
+ * ) => Promise<{
+ *   features: string[],
+ *   errors: import("./types").TestError[],
+ * }>}
  */
 export const runTest = async ({ relative, test262, instrument }) => {
   const content = await readFile(new URL(relative, test262), "utf8");
   const either = parseMetadata(content);
   switch (either.type) {
     case "failure":
-      return [either.error];
+      return { features: [], errors: [either.error] };
     case "success": {
       const metadata = either.value;
       /** @type {import("./types").TestError[]} */
@@ -89,7 +92,10 @@ export const runTest = async ({ relative, test262, instrument }) => {
           }
         }
       }
-      return errors;
+      return {
+        features: metadata.features,
+        errors: errors,
+      };
     }
   }
 };

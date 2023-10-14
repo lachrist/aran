@@ -1,4 +1,4 @@
-import { runTest } from "../test.mjs";
+import { runTest } from "./test.mjs";
 import { argv } from "node:process";
 
 const { URL } = globalThis;
