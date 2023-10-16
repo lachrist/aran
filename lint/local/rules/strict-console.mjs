@@ -36,7 +36,7 @@ export default {
         }
         if (
           node.parent.type === "PropertyDefinition" &&
-          node.parent.left === node
+          node.parent.key === node
         ) {
           return undefined;
         }
