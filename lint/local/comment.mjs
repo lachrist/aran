@@ -14,9 +14,7 @@ export const listCommentBefore = (node, source) => {
 const regexp = /^\*\s*@type\s*\{\s*([^}]*)\s*\}\s*$/gu;
 
 /**
- * @type {(
- *   comment: string,
- * ) => string | null}
+ * @type {(comment: string) => string | null}
  */
 export const parseSimpleTypeAnnotation = (comment) => {
   const parts = regexp.exec(comment);

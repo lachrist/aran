@@ -39,16 +39,22 @@ const readFileCache = async (url) => {
  * @type {(
  *   url: URL,
  *   context: object,
+ *   instrument: test262.Instrument,
  * ) => Promise<test262.Outcome<null, test262.Error>>}
  */
-export const runHarness = async (url, context) => {
+export const runHarness = async (url, context, instrument) => {
   const outcome = await readFileCache(url);
   switch (outcome.type) {
-    case "failure":
+    case "failure": {
       return outcome;
-    case "success":
+    }
+    case "success": {
       try {
-        runInContext(outcome.value, context, { filename: url.href });
+        runInContext(
+          instrument(outcome.value, { kind: "script", specifier: url }),
+          context,
+          { filename: url.href },
+        );
       } catch (error) {
         return {
           type: "failure",
@@ -56,7 +62,9 @@ export const runHarness = async (url, context) => {
         };
       }
       return { type: "success", value: null };
-    default:
+    }
+    default: {
       throw new Error("invalid outcome");
+    }
   }
 };

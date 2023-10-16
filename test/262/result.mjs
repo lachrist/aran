@@ -1,15 +1,5 @@
 const { Object, JSON } = globalThis;
 
-/**
- * @type {(result: test262.Result) => string}
- */
-export const stringifyResult = (result) =>
-  JSON.stringify([
-    result.target,
-    result.features,
-    result.errors.map(removeStack),
-  ]);
-
 /** @type {(error: test262.Error) => test262.Error} */
 export const removeStack = (error) => {
   if (Object.hasOwn(error, "stack")) {
@@ -19,6 +9,16 @@ export const removeStack = (error) => {
     return error;
   }
 };
+
+/**
+ * @type {(result: test262.Result) => string}
+ */
+export const stringifyResult = (result) =>
+  JSON.stringify([
+    result.target,
+    result.features,
+    result.errors.map(removeStack),
+  ]);
 
 /**
  * @type {(line: string) => test262.Result}

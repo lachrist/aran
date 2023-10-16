@@ -15,7 +15,7 @@ const { Error, undefined, URL, Map, JSON } = globalThis;
  * @typedef {(
  *   main: import("node:vm").Module | import("node:vm").Script,
  *   url: URL,
- * ) => Promise<void>} Register
+ * ) => void} Register
  */
 
 /**
@@ -81,7 +81,7 @@ export const compileLinker = ({ context, origin, instrument }) => {
   };
   return {
     link,
-    register: async (main, url) => {
+    register: (main, url) => {
       urls.set(main, url);
       if (!(main instanceof Script)) {
         modules.set(url.href, main);

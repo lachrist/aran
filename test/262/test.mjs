@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { parseMetadata } from "./metadata.mjs";
 import { runTestCase } from "./case.mjs";
+import { StaticError } from "./error.mjs";
 
 const { URL } = globalThis;
 
@@ -60,20 +61,21 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
  */
 export const runTest = async ({ target, test262, instrumenter }) => {
   const content = await readFile(new URL(target, test262), "utf8");
-  const either = parseMetadata(content);
-  switch (either.type) {
-    case "failure":
-      return { target, features: [], errors: [either.error] };
+  const outcome = parseMetadata(content);
+  switch (outcome.type) {
+    case "failure": {
+      return { target, features: [], errors: [outcome.error] };
+    }
     case "success": {
-      const metadata = either.value;
-      /** @type {test262.Error[]} */
-      const errors = [];
+      const metadata = outcome.value;
       for (const test of listTestCase({
         target,
         content,
         metadata,
         test262,
       })) {
+        /** @type {test262.Error[]} */
+        const errors = [];
         const exceptions = await runTestCase(test, instrumenter);
         if (metadata.negative === null) {
           errors.push(...exceptions);
@@ -88,12 +90,22 @@ export const runTest = async ({ target, test262, instrumenter }) => {
             errors.push(...exceptions);
           }
         }
+        if (errors.length > 0) {
+          return {
+            target,
+            features: metadata.features,
+            errors,
+          };
+        }
       }
       return {
         target,
         features: metadata.features,
-        errors: errors,
+        errors: [],
       };
+    }
+    default: {
+      throw new StaticError("invalid outcome", outcome);
     }
   }
 };

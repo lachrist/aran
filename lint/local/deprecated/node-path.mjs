@@ -1,4 +1,7 @@
-class RuleError extends Error {}
+const { Error, String } = globalThis;
+
+// eslint-disable-next-line local/no-class
+const RuleError = class extends Error {};
 
 /**
  * @type {(node: estree.MemberExpression) => string}
@@ -35,17 +38,18 @@ const extractRootName = (node) => {
  * @type {(node: estree.Node) => { root: estree.Node, tail: string }}
  */
 const parseNode = (node) => {
+  let current = node;
   /** @type {string} */
   let tail = "";
-  while (node.type === "MemberExpression") {
-    if (node.optional) {
+  while (current.type === "MemberExpression") {
+    if (current.optional) {
       throw new RuleError("optional chaining");
     }
-    tail = `.${extracStatictKey(node)}${tail}`;
-    node = node.object;
+    tail = `.${extracStatictKey(current)}${tail}`;
+    current = current.object;
   }
   return {
-    root: node,
+    root: current,
     tail,
   };
 };

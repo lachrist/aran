@@ -92,21 +92,17 @@ export const runTestCase = async (
     context,
     origin: url,
     print,
-    RealmError: class RealmError extends Error {
-      /** @param {test262.RealmFeature} feature */
-      constructor(feature) {
-        super(`$262.${feature} is not implemented`);
-        this.name = "RealmError";
-        errors.push({
-          type: "realm",
-          feature,
-        });
-      }
+    makeRealmError: (feature) => {
+      errors.push({
+        type: "realm",
+        feature,
+      });
+      return new Error(`$262.${feature} is not implemented`);
     },
     instrumenter,
   });
   for (const url of includes) {
-    const outcome = await runHarness(url, context);
+    const outcome = await runHarness(url, context, instrument);
     if (outcome.type === "failure") {
       return [outcome.error];
     }
@@ -127,7 +123,7 @@ export const runTestCase = async (
           importModuleDynamically: /** @type {any} */ (link),
         },
       );
-      await register(module, url);
+      register(module, url);
       try {
         await module.link(link);
         try {
@@ -150,7 +146,7 @@ export const runTestCase = async (
           importModuleDynamically: /** @type {any} */ (link),
         },
       );
-      await register(script, url);
+      register(script, url);
       try {
         script.runInContext(context);
       } catch (error) {

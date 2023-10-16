@@ -13,5 +13,5 @@
     "noUnusedParameters": true,
     "moduleResolution": "node"
   },
-  "include": ["./type", "./lib", "./test", "./eslint"]
+  "include": ["./type", "./lib", "./test", "./lint"]
 }

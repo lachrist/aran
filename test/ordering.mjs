@@ -1,6 +1,3 @@
-/* eslint-disable import/no-nodejs-modules */
-/* eslint-disable no-restricted-syntax */
-
 import { readFile } from "node:fs/promises";
 
 const { URL } = globalThis;

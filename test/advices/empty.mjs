@@ -9,8 +9,6 @@ const { eval: evalGlobal } = globalThis;
  */
 globalThis.advice = {};
 
-console.log(generate(setup()));
-
 evalGlobal(generate(setup()));
 
 /**

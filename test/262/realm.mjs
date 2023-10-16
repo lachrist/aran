@@ -8,7 +8,7 @@ const { gc, Reflect } = globalThis;
  *     context: object,
  *     origin: URL,
  *     print: (message: string) => void,
- *     RealmError: new (feature: test262.RealmFeature) => Error,
+ *     makeRealmError: (feature: test262.RealmFeature) => Error,
  *     instrumenter: test262.Instrumenter,
  *   },
  * ) => test262.$262}
@@ -17,7 +17,7 @@ export const createRealm = ({
   context,
   origin,
   print,
-  RealmError,
+  makeRealmError,
   instrumenter,
 }) => {
   const { instrument, setup, globals } = instrumenter;
@@ -43,37 +43,41 @@ export const createRealm = ({
         context: { __proto__: null },
         origin,
         print,
-        RealmError,
+        makeRealmError,
         instrumenter,
       }),
     detachArrayBuffer: () => {
-      throw new RealmError("detachArrayBuffer");
+      throw makeRealmError("detachArrayBuffer");
     },
     // we have no information on the location of this.
     // so we do not have to register this script to the
     // linker because dynamic import is pointless.
-    evalScript: (code) =>
-      runInContext(
-        instrument(code, { kind: "script", specifier: (counter += 1) }),
+    evalScript: (code) => {
+      counter += 1;
+      return runInContext(
+        instrument(code, { kind: "script", specifier: counter }),
         context,
         {
-          filename: `${origin.href} >> evalScript`,
+          filename: `${origin.href} >> evalScript#${counter}`,
         },
-      ),
+      );
+    },
     gc: () => {
       if (typeof gc === "function") {
         return gc();
       } else {
-        throw new RealmError("gc");
+        throw makeRealmError("gc");
       }
     },
     global: runInContext("this;", context),
+    // eslint-disable-next-line local/no-function
     get isHTMLDDA() {
-      throw new RealmError("isHTMLDDA");
+      throw makeRealmError("isHTMLDDA");
     },
     /** @type {any} */
+    // eslint-disable-next-line local/no-function
     get agent() {
-      throw new RealmError("agent");
+      throw makeRealmError("agent");
     },
   };
   Reflect.defineProperty(context, "$262", {

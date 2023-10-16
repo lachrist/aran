@@ -1,12 +1,11 @@
-/* eslint-disable no-console */
-
 import { spawn } from "node:child_process";
+import { stdin } from "node:process";
 import { fileURLToPath } from "node:url";
 
 const { process, URL, Promise, Error, undefined } = globalThis;
 
 for (const stage of process.argv.slice(2)) {
-  console.log(`\n\n\n====== ${stage} ======\n\n\n`);
+  stdin.write(`\n\n\n====== ${stage} ======\n\n\n\n`, "utf8");
   await new Promise((resolve, reject) => {
     const child = spawn(
       "node",

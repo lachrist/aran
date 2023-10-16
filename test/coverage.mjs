@@ -1,14 +1,11 @@
-/* eslint-disable import/no-nodejs-modules */
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable no-console */
-
 import { spawn } from "node:child_process";
+import { stdout } from "node:process";
 import { ordering } from "./ordering.mjs";
 
 const { Error, Promise } = globalThis;
 
 /** @type {(path: string) => Promise<{signal: string | null, status: number | null}>} */
-const testAsync = async (path) => {
+const testAsync = (path) => {
   const child = spawn(
     "npx",
     [
@@ -31,7 +28,7 @@ const testAsync = async (path) => {
 };
 
 for (const path of ordering) {
-  console.log(`${path}...`);
+  stdout.write(`${path}...\n`, "utf8");
   const { signal, status } = await testAsync(path);
   if (signal !== null) {
     throw new Error(`Signal ${signal}`);

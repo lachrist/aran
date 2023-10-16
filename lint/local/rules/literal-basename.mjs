@@ -1,5 +1,7 @@
 import { listCommentBefore, parseSimpleTypeAnnotation } from "../comment.mjs";
 
+const { JSON } = globalThis;
+
 /**
  * @type {(comment: estree.Comment) => boolean}
  */
@@ -19,7 +21,7 @@ export default {
     },
     schema: {
       type: "array",
-      items: { type: "string" },
+      items: [],
     },
   },
   create: (context) => {
@@ -28,7 +30,7 @@ export default {
     ).split(".");
     const basename = segments.slice(0, -1).join(".");
     return {
-      Literal(node) {
+      Literal: (node) => {
         if (
           listCommentBefore(node, context.sourceCode).some(isBasenameComment)
         ) {

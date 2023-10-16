@@ -1,8 +1,8 @@
-/* eslint-disable no-console */
-
+import { inspect } from "node:util";
+import { stdout } from "node:process";
 import { runTest } from "./test.mjs";
 
-const { Error, process, URL } = globalThis;
+const { Error, process, URL, Infinity } = globalThis;
 
 if (!process.execArgv.includes("--experimental-vm-modules")) {
   throw new Error("missing --experimental-vm-modules flag");
@@ -22,10 +22,17 @@ const {
   await import(`./stages/${stage}.mjs`)
 );
 
-console.dir(
-  await runTest({
-    target,
-    test262,
-    instrumenter,
-  }),
+stdout.write(
+  inspect(
+    await runTest({
+      target,
+      test262,
+      instrumenter,
+    }),
+    {
+      depth: Infinity,
+      colors: true,
+    },
+  ),
+  "utf8",
 );

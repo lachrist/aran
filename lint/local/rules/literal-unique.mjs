@@ -1,5 +1,7 @@
 import { listCommentBefore, parseSimpleTypeAnnotation } from "../comment.mjs";
 
+const { JSON, RegExp, Map, Set } = globalThis;
+
 /**
  * @type {(comment: estree.Comment) => boolean}
  */
@@ -14,18 +16,18 @@ export default {
   meta: {
     type: "problem",
     docs: {
-      description: "disallow duplicate literals within a single file",
+      description: "ensure a literal is unique in the current file",
       recommended: false,
     },
     schema: {
       type: "array",
-      items: { type: "string" },
+      items: [],
     },
   },
   create: (context) => {
     const literals = new Map();
     return {
-      "Literal"(node) {
+      "Literal": (node) => {
         if (listCommentBefore(node, context.sourceCode).some(isUniqueComment)) {
           if (node.value instanceof RegExp) {
             context.report({
@@ -40,7 +42,7 @@ export default {
           }
         }
       },
-      "Program:exit"(_node) {
+      "Program:exit": (_node) => {
         for (const nodes of literals.values()) {
           if (nodes.size > 1) {
             for (const node of nodes) {

@@ -23,13 +23,19 @@ export default {
             if (!allowed.includes(identifier.name)) {
               context.report({
                 node: identifier,
-                message: `Forbidden global variable: ${identifier.name}`,
+                message: `global variable are forbidden: ${identifier.name}`,
               });
             }
           }
         }
-        // Duplicate with no-undef
-        // through.forEach(reportReference);
+        for (const { identifier } of through) {
+          if (!allowed.includes(identifier.name)) {
+            context.report({
+              node: identifier,
+              message: `undefined global variable: ${identifier.name}`,
+            });
+          }
+        }
       },
     };
   },

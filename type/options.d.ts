@@ -1,7 +1,7 @@
 import type { EvalContext } from "../lib/unbuild/context.d.ts";
 import type { Pointcut } from "./advice.js";
 
-export type Root = Brand<string, "unbuild.Root">;
+export type Root = Brand<string, "options.Root">;
 
 export type AdviceKind = "function" | "object";
 

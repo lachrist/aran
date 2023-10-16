@@ -60,16 +60,19 @@ const {
 // Error //
 ///////////
 
-class InvariantError extends Error {
+// eslint-disable-next-line local/no-class
+const InvariantError = class InvariantError extends Error {
   /**
    * @param {string} message
    * @param {object} data
    */
+  // eslint-disable-next-line local/no-function
   constructor(message, data) {
     super(message);
+    this.name = "InvariantError";
     this.data = data;
   }
-}
+};
 
 ///////////
 // Stack //
@@ -383,7 +386,7 @@ const restoreAdvice = (stack, point) => {
         type === "function.enter" ||
         type === "block.enter"
       ) {
-        break;
+        return undefined;
       }
       stack.length -= 1;
     }
@@ -434,12 +437,15 @@ const endAdvice = (stack, point) => {
  */
 const findJumpIndex = (type, stack) => {
   switch (type) {
-    case "yield.before":
+    case "yield.before": {
       return findRootIndex(stack);
-    case "await.before":
+    }
+    case "await.before": {
       return 0;
-    default:
+    }
+    default: {
       throw new InvariantError("invalid before jump point type", { type });
+    }
   }
 };
 
