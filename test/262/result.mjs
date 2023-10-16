@@ -1,23 +1,37 @@
-const { JSON } = globalThis;
+const { Object, JSON } = globalThis;
 
 /**
  * @type {(result: test262.Result) => string}
  */
 export const stringifyResult = (result) =>
-  JSON.stringify([result.relative, result.features, result.errors]);
+  JSON.stringify([
+    result.target,
+    result.features,
+    result.errors.map(removeStack),
+  ]);
+
+/** @type {(error: test262.Error) => test262.Error} */
+export const removeStack = (error) => {
+  if (Object.hasOwn(error, "stack")) {
+    const { stack: _stack, ...rest } = /** @type {any} */ (error);
+    return rest;
+  } else {
+    return error;
+  }
+};
 
 /**
  * @type {(line: string) => test262.Result}
  */
 export const parseResult = (line) => {
-  const [relative, features, errors] = JSON.parse(line);
-  return { relative, features, errors };
+  const [target, features, errors] = JSON.parse(line);
+  return { target, features, errors };
 };
 
 /**
  * @type {(result: test262.Result) => string}
  */
-export const getRelative = ({ relative }) => relative;
+export const getTarget = ({ target }) => target;
 
 /**
  * @type {(result: test262.Result) => string[]}

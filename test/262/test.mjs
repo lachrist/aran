@@ -7,14 +7,14 @@ const { URL } = globalThis;
 /**
  * @type {(
  *   options: {
- *     relative: string,
+ *     target: string,
  *     content: string,
  *     metadata: test262.Metadata,
  *     test262: URL,
  *   },
  * ) => test262.Case[]}
  */
-const listTestCase = ({ relative, content, metadata, test262 }) => {
+const listTestCase = ({ target, content, metadata, test262 }) => {
   const asynchronous = metadata.flags.includes("async");
   const includes = [
     ...(metadata.flags.includes("raw") ? [] : ["assert.js", "sta.js"]),
@@ -30,7 +30,7 @@ const listTestCase = ({ relative, content, metadata, test262 }) => {
     !metadata.flags.includes("noStrict")
   ) {
     tests.push({
-      url: new URL(relative, test262),
+      url: new URL(target, test262),
       content: `"use strict";\n${content}`,
       asynchronous,
       includes,
@@ -39,7 +39,7 @@ const listTestCase = ({ relative, content, metadata, test262 }) => {
   }
   if (!metadata.flags.includes("onlyStrict")) {
     tests.push({
-      url: new URL(relative, test262),
+      url: new URL(target, test262),
       content,
       asynchronous,
       includes,
@@ -52,24 +52,24 @@ const listTestCase = ({ relative, content, metadata, test262 }) => {
 /**
  * @type {(
  *   options: {
- *     relative: string,
+ *     target: string,
  *     test262: URL,
  *     instrumenter: test262.Instrumenter,
  *   },
  * ) => Promise<test262.Result>}
  */
-export const runTest = async ({ relative, test262, instrumenter }) => {
-  const content = await readFile(new URL(relative, test262), "utf8");
+export const runTest = async ({ target, test262, instrumenter }) => {
+  const content = await readFile(new URL(target, test262), "utf8");
   const either = parseMetadata(content);
   switch (either.type) {
     case "failure":
-      return { relative, features: [], errors: [either.error] };
+      return { target, features: [], errors: [either.error] };
     case "success": {
       const metadata = either.value;
       /** @type {test262.Error[]} */
       const errors = [];
       for (const test of listTestCase({
-        relative,
+        target,
         content,
         metadata,
         test262,
@@ -90,7 +90,7 @@ export const runTest = async ({ relative, test262, instrumenter }) => {
         }
       }
       return {
-        relative,
+        target,
         features: metadata.features,
         errors: errors,
       };

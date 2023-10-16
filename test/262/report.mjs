@@ -22,10 +22,8 @@ const printFeatureArray = (features) =>
   features.length === 0 ? "" : `  ${features.join(", ")}\n`;
 
 /** @type {(result: test262.Result) => string} */
-const printResult = ({ relative, features, errors }) =>
-  `${relative}\n${printFeatureArray(features)}${errors
-    .map(printError)
-    .join("")}`;
+const printResult = ({ target, features, errors }) =>
+  `${target}\n${printFeatureArray(features)}${errors.map(printError).join("")}`;
 
 /** @type {(entry1: [string, number], entry2: [string, number]) => number} */
 const sortFeatureEntry = ([_feature1, count1], [_feature2, count2]) =>

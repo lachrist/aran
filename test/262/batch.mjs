@@ -8,7 +8,7 @@ const { URL } = globalThis;
  * @type {(
  *   options: {
  *     test262: URL,
- *     isExcluded: (relative: string) => boolean,
+ *     isExcluded: (target: string) => boolean,
  *     writable: import("node:stream").Writable,
  *     instrumenter: test262.Instrumenter,
  *   },
@@ -27,10 +27,10 @@ export const batch = async ({
       // eslint-disable-next-line no-console
       console.dir(index);
     }
-    const relative = url.href.substring(test262.href.length);
-    if (!relative.includes("_FIXTURE") && !isExcluded(relative)) {
+    const target = url.href.substring(test262.href.length);
+    if (!target.includes("_FIXTURE") && !isExcluded(target)) {
       const result = await runTest({
-        relative,
+        target,
         test262,
         instrumenter,
       });

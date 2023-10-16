@@ -17,9 +17,12 @@ export const inspectError = (type, error) => {
   let name = undefined;
   /** @type {unknown} */
   let message = undefined;
+  /** @type {unknown} */
+  let stack = undefined;
   try {
     name = /** @type {Error} */ (error).constructor.name;
     message = /** @type {Error} */ (error).message;
+    stack = /** @type {Error} */ (error).stack;
   } catch {
     return {
       type: "inspect",
@@ -38,7 +41,11 @@ export const inspectError = (type, error) => {
       message: `invalid error.message type: ${typeof message}`,
     };
   }
-  return { type, name, message };
+  if (typeof stack !== "string") {
+    return { type, name, message };
+  } else {
+    return { type, name, message, stack };
+  }
 };
 
 /**

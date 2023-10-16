@@ -4,9 +4,19 @@ import { createWriteStream } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { batch } from "./batch.mjs";
 import { report } from "./report.mjs";
-import { getRelative, isFailure, parseResultDump } from "./result.mjs";
+import { getTarget, isFailure, parseResultDump } from "./result.mjs";
 
-const { process, URL, Set, Promise } = globalThis;
+const { Error, process, URL, Set, Promise } = globalThis;
+
+if (!process.execArgv.includes("--experimental-vm-modules")) {
+  throw new Error("missing --experimental-vm-modules flag");
+}
+
+if (process.argv.length !== 3) {
+  throw new Error("usage: node test/262/main.mjs <stage>");
+}
+
+const [_exec, _main, stage] = process.argv;
 
 process.on("uncaughtException", (error, origin) => {
   console.dir({ origin, error });
@@ -14,27 +24,28 @@ process.on("uncaughtException", (error, origin) => {
 
 const test262 = new URL("../../test262/", import.meta.url);
 
-const name = process.argv[2];
-
 const {
   default: { requirements, instrumenter, filtering },
 } = /** @type {{default: test262.Stage}} */ (
-  await import(`./stages/${name}.mjs`)
+  await import(`./stages/${stage}.mjs`)
 );
 
-/** @type {(name: string) => Promise<string[]>} => */
-const listPreviousFailure = async (name) =>
+/** @type {(stage: string) => Promise<string[]>} => */
+const listPreviousFailure = async (stage) =>
   parseResultDump(
-    await readFile(new URL(`stages/${name}.jsonlist`, import.meta.url), "utf8"),
+    await readFile(
+      new URL(`stages/${stage}.jsonlist`, import.meta.url),
+      "utf8",
+    ),
   )
     .filter(isFailure)
-    .map(getRelative);
+    .map(getTarget);
 
 const exclusion = new Set(
   (await Promise.all(requirements.map(listPreviousFailure))).flat(),
 );
 
-const dump = new URL(`stages/${name}.jsonlist`, import.meta.url);
+const dump = new URL(`stages/${stage}.jsonlist`, import.meta.url);
 
 const writable = createWriteStream(dump);
 

@@ -80,16 +80,17 @@ export type Error =
       type: "harness" | "runtime" | "parse" | "resolution";
       name: string;
       message: string;
+      stack?: string;
     };
 
 export type Result = {
-  relative: string;
+  target: string;
   features: string[];
   errors: Error[];
 };
 
 export type Failure = {
-  relative: string;
+  target: string;
   features: string[];
   errors: [Error, ...Error[]];
 };
