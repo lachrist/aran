@@ -32,6 +32,7 @@ export const createRealm = ({
       value,
     });
   }
+  let counter = 0;
   runInContext(setup, context);
   /** @type {import("./types.js").$262} */
   const $262 = {
@@ -52,9 +53,13 @@ export const createRealm = ({
     // so we do not have to register this script to the
     // linker because dynamic import is pointless.
     evalScript: (code) =>
-      runInContext(instrument(code, "script"), context, {
-        filename: `${origin.href} >> evalScript`,
-      }),
+      runInContext(
+        instrument(code, { kind: "script", specifier: (counter += 1) }),
+        context,
+        {
+          filename: `${origin.href} >> evalScript`,
+        },
+      ),
     gc: () => {
       if (typeof gc === "function") {
         return gc();

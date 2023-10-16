@@ -119,11 +119,14 @@ export const runTestCase = async (
   if (module) {
     try {
       /** @type {import("node:vm").Module} */
-      const module = new SourceTextModule(instrument(content, "module"), {
-        identifier: url.href,
-        context,
-        importModuleDynamically: /** @type {any} */ (link),
-      });
+      const module = new SourceTextModule(
+        instrument(content, { kind: "module", specifier: url }),
+        {
+          identifier: url.href,
+          context,
+          importModuleDynamically: /** @type {any} */ (link),
+        },
+      );
       await register(module, url);
       try {
         await module.link(link);
@@ -140,10 +143,13 @@ export const runTestCase = async (
     }
   } else {
     try {
-      const script = new Script(instrument(content, "script"), {
-        filename: url.href,
-        importModuleDynamically: /** @type {any} */ (link),
-      });
+      const script = new Script(
+        instrument(content, { kind: "script", specifier: url }),
+        {
+          filename: url.href,
+          importModuleDynamically: /** @type {any} */ (link),
+        },
+      );
       await register(script, url);
       try {
         script.runInContext(context);

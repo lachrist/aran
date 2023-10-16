@@ -35,7 +35,7 @@ export default {
   instrumenter: {
     setup: "",
     globals: [],
-    instrument: (code, _kind) => code,
+    instrument: (code, _options) => code,
   },
   filtering: [
     ["Not relateed to realm", isNotRealmFailure],

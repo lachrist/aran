@@ -95,10 +95,18 @@ export type Failure = {
   errors: [Error, ...Error[]];
 };
 
+export type Instrument = (
+  code: string,
+  options: {
+    kind: "script" | "module";
+    specifier: URL | number;
+  },
+) => string;
+
 export type Instrumenter = {
   globals: [string, unknown][];
   setup: string;
-  instrument: (code: string, kind: "script" | "module") => string;
+  instrument: Instrument;
 };
 
 export type Filtering = [string, (result: Result) => boolean][];

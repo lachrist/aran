@@ -7,7 +7,7 @@ export default {
   instrumenter: {
     setup: "",
     globals: [],
-    instrument: (code, kind) =>
+    instrument: (code, { kind }) =>
       generate(parse(code, { ecmaVersion: "latest", sourceType: kind })),
   },
   filtering: [],

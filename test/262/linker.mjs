@@ -23,7 +23,7 @@ const { Error, undefined, URL, Map, JSON } = globalThis;
  *   options: {
  *     context: object,
  *     origin: URL,
- *     instrument: (code: string, kind: "script" | "module") => string,
+ *     instrument: test262.Instrument,
  *   },
  * ) => {
  *   link: Link,
@@ -58,11 +58,14 @@ export const compileLinker = ({ context, origin, instrument }) => {
           { identifier, context },
         );
       } else {
-        module = new SourceTextModule(instrument(content, "module"), {
-          identifier,
-          context,
-          importModuleDynamically: /** @type {any} */ (link),
-        });
+        module = new SourceTextModule(
+          instrument(content, { kind: "module", specifier: url }),
+          {
+            identifier,
+            context,
+            importModuleDynamically: /** @type {any} */ (link),
+          },
+        );
       }
       const race_module = modules.get(url.href);
       if (race_module !== undefined) {
