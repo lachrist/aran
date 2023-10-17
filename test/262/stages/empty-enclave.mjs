@@ -31,7 +31,7 @@ export default {
           parse(code1, { ecmaVersion: "latest", sourceType: kind })
         )
       );
-      const program2 = instrumentRaw(program1, {
+      const { root: program2, logs } = instrumentRaw(program1, {
         kind,
         strict: false,
         context: null,
@@ -41,7 +41,7 @@ export default {
           variable: /** @type {estree.Variable} */ ("__DUMMY__"),
         },
         intrinsic: INTRINSIC,
-        prefix: /** @type {estree.Variable} */ ("__ARAN_PREFIX__"),
+        escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
         locate: (path, root) => `${root}.${path}`,
         site: "global",
         enclave: true,

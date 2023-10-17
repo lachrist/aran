@@ -1,10 +1,22 @@
-import type { EvalContext } from "../lib/unbuild/context.d.ts";
+import type { Context } from "../lib/unbuild/context.d.ts";
 
 export type Variable = Brand<string, "unbuild.Variable">;
 
 export type Label = Brand<string, "unbuild.Label">;
 
 export type Path = Brand<string, "unbuild.Path">;
+
+export type Log =
+  | {
+      severity: "error";
+      name: "SyntaxError";
+      message: string;
+    }
+  | {
+      severity: "warning";
+      name: "EnclaveLimitation";
+      message: string;
+    };
 
 export type Atom = {
   Label: Label;
@@ -15,7 +27,8 @@ export type Atom = {
   Tag: {
     path: Path;
     initialization: Variable | null;
-    context: EvalContext | null;
+    context: Context | null;
+    logs: Log[];
   };
 };
 

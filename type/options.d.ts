@@ -1,4 +1,4 @@
-import type { EvalContext } from "../lib/unbuild/context.d.ts";
+import type { Context } from "../lib/unbuild/context.d.ts";
 import type { Pointcut } from "./advice.js";
 
 export type Root = Brand<string, "options.Root">;
@@ -21,7 +21,7 @@ type CommonOptions<L> = {
   pointcut: Pointcut<L>;
   advice: Advice;
   intrinsic: estree.Variable;
-  prefix: estree.Variable;
+  escape: estree.Variable;
 };
 
 type GlobalOptions<L> = CommonOptions<L> & {
@@ -48,7 +48,7 @@ type InternalLocalOptions<L> = CommonOptions<L> & {
   enclave: false;
   strict: null;
   root: null;
-  context: EvalContext;
+  context: Context & { path: weave.OriginPath };
 };
 
 export type Options<L> =
@@ -65,7 +65,7 @@ type CommonUserOptions<L> = {
   pointcut?: Pointcut<L>;
   advice?: Advice;
   intrinsic?: estree.Variable;
-  prefix?: estree.Variable;
+  escape?: estree.Variable;
 };
 
 type GlobalUserOptions<L> = CommonUserOptions<L> & {
@@ -92,7 +92,7 @@ type InternalLocalUserOptions<L> = CommonUserOptions<L> & {
   enclave?: false;
   strict?: null;
   root?: null;
-  context?: EvalContext;
+  context?: Context & { path: weave.OriginPath };
 };
 
 export type UserOptions<L> =

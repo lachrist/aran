@@ -16,7 +16,7 @@ type Record = {
     | ".default"
     | aran.Parameter
     | unbuild.Variable;
-  "super.field": ".illegal" | ".none" | aran.Parameter | unbuild.Variable;
+  "class.field": ".illegal" | ".none" | aran.Parameter | unbuild.Variable;
   "super.prototype":
     | ".illegal"
     | ".enclave"
@@ -31,5 +31,3 @@ export type Context = {
   private: Private;
   record: Record;
 };
-
-export type EvalContext = Context & { path: unbuild.Path };

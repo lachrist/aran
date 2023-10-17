@@ -1,4 +1,4 @@
-import type { EvalContext } from "../lib/unbuild/context.d.ts";
+import type { Context } from "../lib/unbuild/context.d.ts";
 
 type BranchKind = "conditional" | "if" | "while";
 
@@ -185,7 +185,7 @@ type GenericConditionalAfterAdvice<G extends Generic> = (
 
 type GenericEvalBeforeAdvice<G extends Generic> = (
   value: G["Value"],
-  context: EvalContext,
+  context: Context & { path: weave.OriginPath },
   location: G["Location"],
 ) => G["ValueResult"];
 
@@ -732,7 +732,7 @@ type Point<V, L> =
   | {
       type: "eval.before";
       value: V;
-      context: EvalContext;
+      context: Context & { path: weave.OriginPath };
       location: L;
     }
   | {

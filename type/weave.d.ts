@@ -1,4 +1,4 @@
-import type { EvalContext } from "../lib/unbuild/context.d.ts";
+import type { Context } from "../lib/unbuild/context.d.ts";
 
 export type ArgVariable = Brand<string, "weave.ArgVariable">;
 
@@ -18,7 +18,7 @@ export type ArgAtom = {
   GlobalVariable: estree.Variable;
   Tag: {
     path: OriginPath;
-    context: EvalContext | null;
+    context: Context | null;
   };
 };
 

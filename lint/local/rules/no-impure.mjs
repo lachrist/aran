@@ -39,8 +39,6 @@ export default {
           reportImpure(node);
         }
       },
-      ForInStatement: reportImpure,
-      ForOfStatement: reportImpure,
       ForStatement: reportImpure,
       WhileStatement: reportImpure,
       DoWhileStatement: reportImpure,

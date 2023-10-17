@@ -1,45 +1,35 @@
-export type Binding =
-  | {
-      type: "import";
-      source: estree.Source;
-      specifier: estree.Specifier | null;
-    }
-  | {
-      type: "regular";
-      kind: "let" | "const" | "var";
-      exports: estree.Specifier[];
-    }
-  | {
-      type: "global";
-      kind: "let" | "const" | "var" | "missing";
-    }
-  | {
-      type: "enclave";
-      kind: "let" | "const" | "var" | "missing";
-      site: "local" | "global";
-    };
+type ImportBinding = {
+  type: "import";
+  source: estree.Source;
+  specifier: estree.Specifier | null;
+};
+
+type RegularBinding = {
+  type: "regular";
+  kind: "let" | "const" | "var";
+  internalized: boolean;
+  exports: estree.Specifier[];
+};
+
+type GlobalBinding = {
+  type: "global";
+  kind: "let" | "const" | "var" | "missing";
+};
+
+type EnclaveBinding = {
+  type: "enclave";
+  kind: "let" | "const" | "var" | "missing";
+  site: "local" | "global";
+};
+
+type Binding = ImportBinding | RegularBinding | GlobalBinding | EnclaveBinding;
 
 export type MissingBinding =
-  | { type: "global"; kind: "missing" }
-  | { type: "enclave"; kind: "missing"; site: "local" | "global" };
+  | (GlobalBinding & { kind: "missing" })
+  | (EnclaveBinding & { kind: "missing" });
 
 export type PresentBinding =
-  | {
-      type: "import";
-      source: estree.Source;
-      specifier: estree.Specifier | null;
-    }
-  | {
-      type: "regular";
-      kind: "let" | "const" | "var";
-      exports: estree.Specifier[];
-    }
-  | {
-      type: "global";
-      kind: "let" | "const" | "var";
-    }
-  | {
-      type: "enclave";
-      kind: "let" | "const" | "var";
-      site: "global";
-    };
+  | ImportBinding
+  | RegularBinding
+  | (GlobalBinding & { kind: "let" | "const" | "var" })
+  | (EnclaveBinding & { kind: "let" | "const" | "var"; site: "global" });
