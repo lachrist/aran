@@ -77,7 +77,7 @@ export type Error =
       type: "negative";
     }
   | {
-      type: "harness" | "runtime" | "parse" | "resolution";
+      type: "harness" | "runtime" | "parse" | "resolution" | "instrumentation";
       name: string;
       message: string;
       stack?: string;
@@ -113,8 +113,8 @@ export type Filtering = [string, (result: Result) => boolean][];
 
 export type Stage = {
   requirements: string[];
-  instrumenter: Instrumenter;
   filtering: Filtering;
+  makeInstrumenter: (errors: Error[]) => Instrumenter;
 };
 
 export as namespace test262;

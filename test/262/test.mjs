@@ -55,11 +55,11 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
  *   options: {
  *     target: string,
  *     test262: URL,
- *     instrumenter: test262.Instrumenter,
+ *     makeInstrumenter: (error: test262.Error[]) => test262.Instrumenter,
  *   },
  * ) => Promise<test262.Result>}
  */
-export const runTest = async ({ target, test262, instrumenter }) => {
+export const runTest = async ({ target, test262, makeInstrumenter }) => {
   const content = await readFile(new URL(target, test262), "utf8");
   const outcome = parseMetadata(content);
   switch (outcome.type) {
@@ -76,7 +76,7 @@ export const runTest = async ({ target, test262, instrumenter }) => {
       })) {
         /** @type {test262.Error[]} */
         const errors = [];
-        const exceptions = await runTestCase(test, instrumenter);
+        const exceptions = await runTestCase(test, makeInstrumenter(errors));
         if (metadata.negative === null) {
           errors.push(...exceptions);
         } else {

@@ -3,14 +3,15 @@ import { generate } from "astring";
 import { format } from "../format.mjs";
 import { instrumentRaw, setupRaw } from "../../../lib/index.mjs";
 
-const { Error } = globalThis;
+const { Error, SyntaxError } = globalThis;
 
 const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
 
 /** @type {test262.Stage} */
 export default {
   requirements: ["identity", "parsing"],
-  instrumenter: {
+  filtering: [],
+  makeInstrumenter: (errors) => ({
     setup: generate(
       setupRaw({
         intrinsic: INTRINSIC,
@@ -51,13 +52,19 @@ export default {
             : specifier.href
         ),
       });
+      for (const log of logs) {
+        if (log.name === "SyntaxError") {
+          throw new SyntaxError(log.message);
+        }
+        errors.push({
+          type: "instrumentation",
+          name: log.name,
+          message: log.message,
+        });
+      }
       const code2 = generate(program2);
-      // console.dir(program2, { depth: null });
       const code3 = format(code2);
-      console.log(code1);
-      console.log(code3);
       return code3;
     },
-  },
-  filtering: [],
+  }),
 };

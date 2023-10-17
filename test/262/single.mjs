@@ -17,7 +17,7 @@ const [_exec, _main, stage, target] = process.argv;
 const test262 = new URL("../../test262/", import.meta.url);
 
 const {
-  default: { instrumenter },
+  default: { makeInstrumenter },
 } = /** @type {{default: test262.Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
@@ -27,7 +27,7 @@ stdout.write(
     await runTest({
       target,
       test262,
-      instrumenter,
+      makeInstrumenter,
     }),
     {
       depth: Infinity,

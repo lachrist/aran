@@ -25,7 +25,7 @@ process.on("uncaughtException", (error, origin) => {
 const test262 = new URL("../../test262/", import.meta.url);
 
 const {
-  default: { requirements, instrumenter, filtering },
+  default: { requirements, filtering, makeInstrumenter },
 } = /** @type {{default: test262.Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
@@ -53,7 +53,7 @@ await batch({
   test262,
   isExcluded: (relative) => exclusion.has(relative),
   writable,
-  instrumenter,
+  makeInstrumenter,
 });
 
 await new Promise((resolve) => {

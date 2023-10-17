@@ -10,7 +10,7 @@ const { URL } = globalThis;
  *     test262: URL,
  *     isExcluded: (target: string) => boolean,
  *     writable: import("node:stream").Writable,
- *     instrumenter: test262.Instrumenter,
+ *     makeInstrumenter: (errors: test262.Error[]) => test262.Instrumenter,
  *   },
  * ) => Promise<void>}
  */
@@ -18,7 +18,7 @@ export const batch = async ({
   test262,
   isExcluded,
   writable,
-  instrumenter,
+  makeInstrumenter,
 }) => {
   let index = 0;
   for await (const url of scrape(new URL("test/", test262))) {
@@ -32,7 +32,7 @@ export const batch = async ({
       const result = await runTest({
         target,
         test262,
-        instrumenter,
+        makeInstrumenter,
       });
       if (result.errors.length > 0) {
         writable.write(stringifyResult(result));

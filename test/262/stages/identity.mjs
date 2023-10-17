@@ -32,13 +32,13 @@ const isNotRealmFailure = ({ errors }) => !errors.some(isRealmError);
 /** @type {test262.Stage} */
 export default {
   requirements: [],
-  instrumenter: {
-    setup: "",
-    globals: [],
-    instrument: (code, _options) => code,
-  },
   filtering: [
     ["Not relateed to realm", isNotRealmFailure],
     ["Not excluded by feature", isFailureNotExcluded],
   ],
+  makeInstrumenter: (_errors) => ({
+    setup: "",
+    globals: [],
+    instrument: (code, _options) => code,
+  }),
 };
