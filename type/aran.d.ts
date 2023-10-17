@@ -147,8 +147,15 @@ export type Link<A extends Atom> =
   | {
       type: "AggregateLink";
       source: A["Source"];
-      import: A["Specifier"] | null;
-      export: A["Specifier"] | null;
+      import: null | A["Specifier"];
+      export: A["Specifier"];
+      tag: A["Tag"];
+    }
+  | {
+      type: "AggregateLink";
+      source: A["Source"];
+      import: null;
+      export: null;
       tag: A["Tag"];
     };
 
@@ -268,7 +275,23 @@ export type Expression<A extends Atom> =
     }
   | {
       type: "FunctionExpression";
-      kind: FunctionKind;
+      kind: "arrow";
+      asynchronous: boolean;
+      generator: false;
+      body: ClosureBlock<A>;
+      tag: A["Tag"];
+    }
+  | {
+      type: "FunctionExpression";
+      kind: "constructor";
+      asynchronous: false;
+      generator: false;
+      body: ClosureBlock<A>;
+      tag: A["Tag"];
+    }
+  | {
+      type: "FunctionExpression";
+      kind: "function" | "method";
       asynchronous: boolean;
       generator: boolean;
       body: ClosureBlock<A>;
