@@ -84,7 +84,7 @@ export type Error =
     }
   | {
       type: "instrumentation";
-      severity: "warning" | "error";
+      severity: "suppress" | "warning" | "error";
       name: string;
       message: string;
     };

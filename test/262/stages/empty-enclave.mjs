@@ -21,6 +21,12 @@ export default {
       [
         "eval",
         () => {
+          errors.push({
+            type: "instrumentation",
+            severity: "suppress",
+            name: "EvalLimitation",
+            message: "eval is not supported",
+          });
           throw new Error("eval is not supported");
         },
       ],

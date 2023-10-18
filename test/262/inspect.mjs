@@ -36,8 +36,6 @@ export const inspectError = (type, error) => {
     };
   }
   if (typeof message !== "string") {
-    console.dir(new Error("YOO"));
-    console.dir(error);
     return {
       type: "inspect",
       message: `invalid error.message type: ${typeof message}`,
