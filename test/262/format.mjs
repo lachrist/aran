@@ -5,22 +5,23 @@ const { Error, URL } = globalThis;
 
 /** @type {(code: string) => string} */
 export const format = (code) => {
-  const { signal, stdout, stderr, error, status } = spawnSync(
+  const { error, signal, status, stdout } = spawnSync(
     "node",
     [fileURLToPath(new URL("./prettier.mjs", import.meta.url))],
     {
       input: code,
       encoding: "utf8",
+      stdio: ["pipe", "pipe", "inherit"],
     },
   );
   if (error) {
     throw error;
   }
   if (signal !== null) {
-    throw new Error(`format signal: ${signal} >> ${stderr}`);
+    throw new Error(`format signal: ${signal}`);
   }
   if (status !== 0) {
-    throw new Error(`format exit code: ${status} >> ${stderr}`);
+    return code;
   }
   return stdout;
 };

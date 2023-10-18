@@ -1,6 +1,5 @@
 import { parse } from "acorn";
 import { generate } from "astring";
-import { format } from "../format.mjs";
 import { instrumentRaw, setupRaw } from "../../../lib/index.mjs";
 
 const { Error, SyntaxError } = globalThis;
@@ -32,6 +31,9 @@ export default {
           parse(code1, { ecmaVersion: "latest", sourceType: kind })
         )
       );
+      const root = /** @type {import("../../../type/options").Root} */ (
+        typeof specifier === "number" ? `dynamic#${specifier}` : specifier.href
+      );
       const { root: program2, logs } = instrumentRaw(program1, {
         kind,
         strict: false,
@@ -39,18 +41,14 @@ export default {
         pointcut: [],
         advice: {
           kind: "object",
-          variable: /** @type {estree.Variable} */ ("__DUMMY__"),
+          variable: /** @type {estree.Variable} */ ("__ARAN_ADVICE__"),
         },
         intrinsic: INTRINSIC,
         escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
         locate: (path, root) => `${root}.${path}`,
         site: "global",
         enclave: true,
-        root: /** @type {import("../../../type/options").Root} */ (
-          typeof specifier === "number"
-            ? `dynamic#${specifier}`
-            : specifier.href
-        ),
+        root,
       });
       for (const log of logs) {
         if (log.name === "SyntaxError") {
@@ -63,8 +61,7 @@ export default {
         });
       }
       const code2 = generate(program2);
-      const code3 = format(code2);
-      return code3;
+      return code2;
     },
   }),
 };

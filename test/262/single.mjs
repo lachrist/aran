@@ -1,6 +1,7 @@
 import { inspect } from "node:util";
 import { stdout } from "node:process";
 import { runTest } from "./test.mjs";
+import { recordInstrumentation } from "./record.mjs";
 
 const { Error, process, URL, Infinity } = globalThis;
 
@@ -27,7 +28,20 @@ stdout.write(
     await runTest({
       target,
       test262,
-      makeInstrumenter,
+      makeInstrumenter: (errors) => {
+        const { setup, globals, instrument } = makeInstrumenter(errors);
+        return {
+          setup,
+          globals,
+          instrument: (code, { kind, specifier }) =>
+            recordInstrumentation({
+              original: code,
+              instrumented: instrument(code, { kind, specifier }),
+              kind,
+              specifier,
+            }),
+        };
+      },
     }),
     {
       depth: Infinity,

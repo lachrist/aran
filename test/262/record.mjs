@@ -1,7 +1,14 @@
 import { writeFileSync } from "node:fs";
+import { readdir, unlink } from "node:fs/promises";
 import { format } from "./format.mjs";
 
 const { URL } = globalThis;
+
+for (const filename of await readdir(new URL("codebase/", import.meta.url))) {
+  if (filename !== ".gitignore") {
+    await unlink(new URL(`codebase/${filename}`, import.meta.url));
+  }
+}
 
 /**
  * @type {(
@@ -9,7 +16,7 @@ const { URL } = globalThis;
  *     original: string,
  *     instrumented: string,
  *     kind: "script" | "module",
- *     root: string,
+ *     specifier: URL | number,
  *   },
  * ) => string}
  */
@@ -17,13 +24,20 @@ export const recordInstrumentation = ({
   original,
   instrumented,
   kind,
-  root,
+  specifier,
 }) => {
-  const basename = /** @type {string} */ (root.split("/").pop()).split(".")[0];
+  const basename =
+    typeof specifier === "number"
+      ? `dynamic#${specifier}`
+      : /** @type {string} */ (specifier.href.split("/").pop()).split(".")[0];
   const extension = kind === "module" ? "mjs" : "js";
   writeFileSync(
     new URL(`codebase/${basename}.${extension}`, import.meta.url),
-    ["// eslint-disable\n", "// @ts-nocheck\n", original].join("\n"),
+    [
+      "// eslint-disable\n",
+      "// @ts-nocheck\n",
+      original.replace(/\/\/ @ts-check/gu, "// @TS_CHECK"),
+    ].join("\n"),
     "utf8",
   );
   const formatted = [
