@@ -77,10 +77,16 @@ export type Error =
       type: "negative";
     }
   | {
-      type: "harness" | "runtime" | "parse" | "resolution" | "instrumentation";
+      type: "harness" | "runtime" | "parse" | "resolution";
       name: string;
       message: string;
       stack?: string;
+    }
+  | {
+      type: "instrumentation";
+      severity: "warning" | "error";
+      name: string;
+      message: string;
     };
 
 export type Result = {

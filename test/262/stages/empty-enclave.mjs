@@ -56,6 +56,7 @@ export default {
         }
         errors.push({
           type: "instrumentation",
+          severity: log.name === "EnclaveLimitation" ? "warning" : "error",
           name: log.name,
           message: log.message,
         });

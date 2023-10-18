@@ -50,6 +50,10 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
   return tests;
 };
 
+/** @type {(error: test262.Error) => boolean} */
+const isBenign = (error) =>
+  error.type === "instrumentation" && error.severity === "warning";
+
 /**
  * @type {(
  *   options: {
@@ -90,7 +94,7 @@ export const runTest = async ({ target, test262, makeInstrumenter }) => {
             errors.push(...exceptions);
           }
         }
-        if (errors.length > 0) {
+        if (!errors.every(isBenign)) {
           return {
             target,
             features: metadata.features,
