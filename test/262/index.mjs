@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { stdin } from "node:process";
 import { fileURLToPath } from "node:url";
 
-const { process, URL, Promise, Error, undefined } = globalThis;
+const { Object, process, URL, Promise, Error, undefined } = globalThis;
 
 for (const stage of process.argv.slice(2)) {
   stdin.write(`\n\n\n====== ${stage} ======\n\n\n\n`, "utf8");
@@ -10,6 +10,7 @@ for (const stage of process.argv.slice(2)) {
     const child = spawn(
       "node",
       [
+        ...(Object.hasOwn(process.env, "ARAN_DEBUG") ? ["--inspect-brk"] : []),
         "--experimental-vm-modules",
         "--expose-gc",
         fileURLToPath(new URL("./main.mjs", import.meta.url)),
