@@ -4,9 +4,8 @@ import { createWriteStream } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { batch } from "./batch.mjs";
 import { report } from "./report.mjs";
-import { getTarget, isFailure, parseResultDump } from "./result.mjs";
 
-const { Error, process, URL, Set, Promise } = globalThis;
+const { Set, Error, process, URL, Promise } = globalThis;
 
 if (!process.execArgv.includes("--experimental-vm-modules")) {
   throw new Error("missing --experimental-vm-modules flag");
@@ -25,25 +24,12 @@ process.on("uncaughtException", (error, origin) => {
 const test262 = new URL("../../test262/", import.meta.url);
 
 const {
-  default: { requirements, filtering, makeInstrumenter },
+  default: { exclusion, filtering, makeInstrumenter },
 } = /** @type {{default: test262.Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
 
-/** @type {(stage: string) => Promise<string[]>} => */
-const listPreviousFailure = async (stage) =>
-  parseResultDump(
-    await readFile(
-      new URL(`stages/${stage}.jsonlist`, import.meta.url),
-      "utf8",
-    ),
-  )
-    .filter(isFailure)
-    .map(getTarget);
-
-const exclusion = new Set(
-  (await Promise.all(requirements.map(listPreviousFailure))).flat(),
-);
+const excluded = new Set(exclusion);
 
 const dump = new URL(`stages/${stage}.jsonlist`, import.meta.url);
 
@@ -51,7 +37,7 @@ const writable = createWriteStream(dump);
 
 await batch({
   test262,
-  isExcluded: (relative) => exclusion.has(relative),
+  isExcluded: (relative) => excluded.has(relative),
   writable,
   makeInstrumenter,
 });

@@ -1,18 +1,33 @@
 import { parse } from "acorn";
 import { generate } from "astring";
 import { instrumentRaw, setupRaw } from "../../../lib/index.mjs";
+import { listStageFailure } from "../dump.mjs";
+import { readFile } from "node:fs/promises";
 
-const { Map, Error, SyntaxError } = globalThis;
+const { Set, URL, JSON, Error, SyntaxError } = globalThis;
 
 const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
 
-const exclusion = new Map([]);
+const function_shenanigan = new Set(
+  JSON.parse(
+    await readFile(
+      new URL("empty-enclave-function-shenanigan.json", import.meta.url),
+      "utf8",
+    ),
+  ),
+);
 
 /** @type {test262.Stage} */
 export default {
-  requirements: ["identity", "parsing"],
+  exclusion: [
+    ...(await listStageFailure("identity")),
+    ...(await listStageFailure("parsing")),
+  ],
   filtering: [
-    ["Not excluded by name", (result) => !exclusion.has(result.target)],
+    [
+      "Not function shenanigan",
+      ({ target }) => !function_shenanigan.has(target),
+    ],
   ],
   makeInstrumenter: (errors) => ({
     setup: generate(

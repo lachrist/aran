@@ -23,7 +23,9 @@ const printFeatureArray = (features) =>
 
 /** @type {(result: test262.Result) => string} */
 const printResult = ({ target, features, errors }) =>
-  `${target}\n${printFeatureArray(features)}${errors.map(printError).join("")}`;
+  `test262/${target}\n${printFeatureArray(features)}${errors
+    .map(printError)
+    .join("")}`;
 
 /** @type {(entry1: [string, number], entry2: [string, number]) => number} */
 const sortFeatureEntry = ([_feature1, count1], [_feature2, count2]) =>

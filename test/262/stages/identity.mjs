@@ -31,7 +31,7 @@ const isNotRealmFailure = ({ errors }) => !errors.some(isRealmError);
 
 /** @type {test262.Stage} */
 export default {
-  requirements: [],
+  exclusion: [],
   filtering: [
     ["Not related to realm", isNotRealmFailure],
     ["Not excluded by feature", isFailureNotExcluded],

@@ -118,7 +118,7 @@ export type Instrumenter = {
 export type Filtering = [string, (result: Result) => boolean][];
 
 export type Stage = {
-  requirements: string[];
+  exclusion: string[];
   filtering: Filtering;
   makeInstrumenter: (errors: Error[]) => Instrumenter;
 };
