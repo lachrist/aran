@@ -17,8 +17,8 @@
     "test": "node test/test.mjs",
     "coverage": "node test/coverage.mjs",
     "load-test262": "git clone --filter=tree:0 https://github.com/tc39/test262",
-    "x": "node test/262/index.mjs",
-    "xx": "node --experimental-vm-modules --expose-gc test/262/single.mjs"
+    "x": "node test/262/index.mjs empty-enclave",
+    "xx": "node --experimental-vm-modules --expose-gc test/262/single.mjs empty-enclave"
   },
   "keywords": [
     "JavaScript",

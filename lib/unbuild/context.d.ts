@@ -9,7 +9,7 @@ type Record = {
     | aran.Parameter
     | unbuild.Variable;
   "import.meta": ".illegal" | aran.Parameter | unbuild.Variable;
-  "new.target": ".illegal" | aran.Parameter | unbuild.Variable;
+  "new.target": ".illegal" | ".undefined" | aran.Parameter | unbuild.Variable;
   "super.constructor":
     | ".illegal"
     | ".enclave"
