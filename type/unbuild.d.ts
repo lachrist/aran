@@ -8,12 +8,10 @@ export type Path = Brand<string, "unbuild.Path">;
 
 export type Log =
   | {
-      severity: "error";
       name: "SyntaxError";
       message: string;
     }
   | {
-      severity: "warning";
       name: "EnclaveLimitation";
       message: string;
     };
