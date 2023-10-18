@@ -2,7 +2,7 @@ import { stringifyResult } from "./result.mjs";
 import { scrape } from "./scrape.mjs";
 import { runTest } from "./test.mjs";
 
-const { URL } = globalThis;
+const { process, URL } = globalThis;
 
 /**
  * @type {(
@@ -12,7 +12,7 @@ const { URL } = globalThis;
  *     writable: import("node:stream").Writable,
  *     makeInstrumenter: (errors: test262.Error[]) => test262.Instrumenter,
  *   },
- * ) => Promise<void>}
+ * ) => Promise<boolean>}
  */
 export const batch = async ({
   test262,
@@ -20,8 +20,17 @@ export const batch = async ({
   writable,
   makeInstrumenter,
 }) => {
+  let interrupted = false;
+  const interrupt = () => {
+    interrupted = true;
+  };
+  process.addListener("SIGINT", interrupt);
   let index = 0;
   for await (const url of scrape(new URL("test/", test262))) {
+    if (interrupted) {
+      process.removeListener("SIGINT", interrupt);
+      return false;
+    }
     index += 1;
     if (index % 100 === 0) {
       // eslint-disable-next-line no-console
@@ -40,4 +49,6 @@ export const batch = async ({
       }
     }
   }
+  process.removeListener("SIGINT", interrupt);
+  return true;
 };

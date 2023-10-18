@@ -33,7 +33,7 @@ const isNotRealmFailure = ({ errors }) => !errors.some(isRealmError);
 export default {
   requirements: [],
   filtering: [
-    ["Not relateed to realm", isNotRealmFailure],
+    ["Not related to realm", isNotRealmFailure],
     ["Not excluded by feature", isFailureNotExcluded],
   ],
   makeInstrumenter: (_errors) => ({

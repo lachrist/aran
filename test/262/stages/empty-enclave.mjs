@@ -2,14 +2,18 @@ import { parse } from "acorn";
 import { generate } from "astring";
 import { instrumentRaw, setupRaw } from "../../../lib/index.mjs";
 
-const { Error, SyntaxError } = globalThis;
+const { Map, Error, SyntaxError } = globalThis;
 
 const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
+
+const exclusion = new Map([]);
 
 /** @type {test262.Stage} */
 export default {
   requirements: ["identity", "parsing"],
-  filtering: [],
+  filtering: [
+    ["Not excluded by name", (result) => !exclusion.has(result.target)],
+  ],
   makeInstrumenter: (errors) => ({
     setup: generate(
       setupRaw({
