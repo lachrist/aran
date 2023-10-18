@@ -47,3 +47,7 @@ const isNotEmpty = (line) => line !== "";
 /** @type {(dump: string) => test262.Result[]} */
 export const parseResultDump = (dump) =>
   dump.split("\n").filter(isNotEmpty).map(parseResult);
+
+/** @type {(dump: string) => string[]} */
+export const listDumpFailure = (dump) =>
+  parseResultDump(dump).filter(isFailure).map(getTarget);

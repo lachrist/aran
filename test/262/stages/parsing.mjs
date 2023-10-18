@@ -1,10 +1,15 @@
 import { parse } from "acorn";
 import { generate } from "astring";
-import { listStageFailure } from "../dump.mjs";
+import { listDumpFailure } from "../result.mjs";
+import { readFile } from "node:fs/promises";
+
+const { URL } = globalThis;
 
 /** @type {test262.Stage} */
 export default {
-  exclusion: await listStageFailure("identity"),
+  exclusion: listDumpFailure(
+    await readFile(new URL("identity.jsonlist", import.meta.url), "utf8"),
+  ),
   filtering: [],
   makeInstrumenter: (_errors) => ({
     setup: "",

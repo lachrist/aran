@@ -1,17 +1,17 @@
 import { parse } from "acorn";
 import { generate } from "astring";
 import { instrumentRaw, setupRaw } from "../../../lib/index.mjs";
-import { listStageFailure } from "../dump.mjs";
 import { readFile } from "node:fs/promises";
+import { listDumpFailure } from "../result.mjs";
 
-const { Set, URL, JSON, Error, SyntaxError } = globalThis;
+const { Set, URL, Error, SyntaxError } = globalThis;
 
 const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
 
 const function_shenanigan = new Set(
-  JSON.parse(
+  listDumpFailure(
     await readFile(
-      new URL("empty-enclave-function-shenanigan.json", import.meta.url),
+      new URL("empty-enclave-function-shenanigan.jsonlist", import.meta.url),
       "utf8",
     ),
   ),
@@ -20,8 +20,12 @@ const function_shenanigan = new Set(
 /** @type {test262.Stage} */
 export default {
   exclusion: [
-    ...(await listStageFailure("identity")),
-    ...(await listStageFailure("parsing")),
+    ...listDumpFailure(
+      await readFile(new URL("identity.jsonlist", import.meta.url), "utf8"),
+    ),
+    ...listDumpFailure(
+      await readFile(new URL("parsing.jsonlist", import.meta.url), "utf8"),
+    ),
   ],
   filtering: [
     [
