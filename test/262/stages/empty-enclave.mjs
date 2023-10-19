@@ -53,6 +53,7 @@ export default {
           throw new Error("eval is not supported");
         },
       ],
+      ["ARAN", console],
     ],
     instrument: (code1, { kind, specifier }) => {
       const program1 = /** @type {estree.Program} */ (
