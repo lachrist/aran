@@ -86,7 +86,11 @@ export default {
         }
         errors.push({
           type: "instrumentation",
-          severity: log.name === "EnclaveLimitation" ? "warning" : "error",
+          severity:
+            log.name === "EnclaveLimitation" ||
+            log.name === "BlockFunctionDeclaration"
+              ? "warning"
+              : "error",
           name: log.name,
           message: log.message,
         });
