@@ -17,10 +17,6 @@ export type Primitive =
 
 export type VariableKind = "var" | "let" | "const";
 
-export type FunctionKind = "arrow" | "function" | "method" | "constructor";
-
-export type ProgramKind = "eval" | "module" | "script";
-
 export type AranIntrinsic =
   | "aran.cache"
   | "aran.record.variables"
@@ -275,25 +271,14 @@ export type Expression<A extends Atom> =
     }
   | {
       type: "FunctionExpression";
-      kind: "arrow";
-      asynchronous: boolean;
-      generator: false;
-      body: ClosureBlock<A>;
-      tag: A["Tag"];
-    }
-  | {
-      type: "FunctionExpression";
-      kind: "constructor";
-      asynchronous: false;
-      generator: false;
-      body: ClosureBlock<A>;
-      tag: A["Tag"];
-    }
-  | {
-      type: "FunctionExpression";
-      kind: "function" | "method";
       asynchronous: boolean;
       generator: boolean;
+      body: ClosureBlock<A>;
+      tag: A["Tag"];
+    }
+  | {
+      type: "ArrowExpression";
+      asynchronous: boolean;
       body: ClosureBlock<A>;
       tag: A["Tag"];
     }

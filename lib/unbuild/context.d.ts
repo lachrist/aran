@@ -2,47 +2,28 @@ import { Scope } from "./scope/index.mjs";
 import { Private } from "./private.mjs";
 import type { Root } from "../../type/options.d.ts";
 
-type ImportMetaRecord = ".illegal" | aran.Parameter | unbuild.Variable;
-
-type ThisRecord =
-  | ".illegal"
-  | ".undefined"
-  | ".global"
-  | ".derived"
-  | aran.Parameter
-  | unbuild.Variable;
-
-type NewTargetRecord =
-  | ".illegal"
-  | ".undefined"
-  | aran.Parameter
-  | unbuild.Variable;
-
-type SuperConstructorRecord =
-  | ".illegal"
-  | ".enclave"
-  | aran.Parameter
-  | unbuild.Variable;
-
-type ClassFieldRecord =
-  | ".illegal"
-  | ".none"
-  | aran.Parameter
-  | unbuild.Variable;
-
-type SuperPrototypeRecord =
-  | ".illegal"
-  | ".enclave"
-  | aran.Parameter
-  | unbuild.Variable;
-
 type Record = {
-  "import.meta": ImportMetaRecord;
-  "this": ThisRecord;
-  "new.target": NewTargetRecord;
-  "super.constructor": SuperConstructorRecord;
-  "class.field": ClassFieldRecord;
-  "super.prototype": SuperPrototypeRecord;
+  "import.meta": ".illegal" | aran.Parameter | unbuild.Variable;
+  "this":
+    | ".illegal"
+    | ".undefined"
+    | ".global"
+    | ".derived"
+    | aran.Parameter
+    | unbuild.Variable;
+  "new.target": ".illegal" | aran.Parameter | unbuild.Variable;
+  "super.constructor":
+    | ".illegal"
+    | ".enclave"
+    | aran.Parameter
+    | unbuild.Variable;
+  "class.field": ".illegal" | ".none" | aran.Parameter | unbuild.Variable;
+  "super.prototype":
+    | ".illegal"
+    | ".enclave"
+    | aran.Parameter
+    | unbuild.Variable;
+  "function.arguments": ".illegal" | aran.Parameter | unbuild.Variable;
 };
 
 export type Context = {

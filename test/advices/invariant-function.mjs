@@ -141,7 +141,7 @@ const lookup = (point, stack, closures) => {
     if (stack_point.type === "program.enter") {
       throw new InvariantError("missing variable", { point, stack });
     }
-    if (stack_point.type === "function.enter") {
+    if (stack_point.type === "closure.enter") {
       const { callee } = stack_point;
       if (!apply(hasWeakMap, closures, [callee])) {
         throw new InvariantError("missing closure", { callee });
@@ -158,7 +158,7 @@ const lookup = (point, stack, closures) => {
 const findRootIndex = (stack) => {
   for (let index = stack.length - 1; index >= 0; index -= 1) {
     const { type } = stack[index];
-    if (type === "program.enter" || type === "function.enter") {
+    if (type === "program.enter" || type === "closure.enter") {
       return index;
     }
   }
@@ -206,7 +206,7 @@ const lookupAdvice = (point, stack, closures) => {
  */
 const registerAdvice = (point, stack, closures) => {
   const { type } = point;
-  if (type === "function.after") {
+  if (type === "function.after" || type === "arrow.after") {
     const callee = point.value;
     if (apply(hasWeakMap, closures, [callee])) {
       throw new InvariantError("duplicate closure declaration", {
@@ -273,7 +273,7 @@ const consumeAdvice = (stack, point) => {
     type === "global.write.before" ||
     type === "global.declare.before" ||
     type === "eval.before" ||
-    type === "function.completion" ||
+    type === "closure.completion" ||
     type === "program.completion" ||
     type === "await.before"
   ) {
@@ -322,9 +322,9 @@ const MATCH = {
   "program.completion": "program.enter",
   "program.failure": "program.enter",
   "program.leave": "program.enter",
-  "function.completion": "function.enter",
-  "function.failure": "function.enter",
-  "function.leave": "function.enter",
+  "closure.completion": "closure.enter",
+  "closure.failure": "closure.enter",
+  "closure.leave": "closure.enter",
   "block.completion": "block.enter",
   "block.failure": "block.enter",
   "block.leave": "block.enter",
@@ -362,7 +362,7 @@ const beginAdvice = (stack, point) => {
     type === "await.before" ||
     // enter //
     type === "program.enter" ||
-    type === "function.enter" ||
+    type === "closure.enter" ||
     type === "block.enter"
   ) {
     push(stack, point);
@@ -376,14 +376,14 @@ const restoreAdvice = (stack, point) => {
   const { type } = point;
   if (
     type === "program.failure" ||
-    type === "function.failure" ||
+    type === "closure.failure" ||
     type === "block.failure"
   ) {
     while (stack.length > 0) {
       const { type } = stack[stack.length - 1];
       if (
         type === "program.enter" ||
-        type === "function.enter" ||
+        type === "closure.enter" ||
         type === "block.enter"
       ) {
         return undefined;
@@ -400,10 +400,10 @@ const endAdvice = (stack, point) => {
   const { type } = point;
   if (
     type === "program.completion" ||
-    type === "function.completion" ||
+    type === "closure.completion" ||
     type === "block.completion" ||
     type === "program.failure" ||
-    type === "function.failure" ||
+    type === "closure.failure" ||
     type === "block.failure"
   ) {
     match(peek(stack), point);
@@ -418,7 +418,7 @@ const endAdvice = (stack, point) => {
     type === "global.write.after" ||
     type === "await.after" ||
     type === "program.leave" ||
-    type === "function.leave" ||
+    type === "closure.leave" ||
     type === "block.leave"
   ) {
     match(pop(stack), point);

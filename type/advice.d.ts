@@ -2,6 +2,10 @@ import type { Context } from "../lib/unbuild/context.d.ts";
 
 type BranchKind = "conditional" | "if" | "while";
 
+type ProgramKind = "module" | "eval" | "script";
+
+type ClosureKind = "arrow" | "function";
+
 type BlockKind =
   | "try"
   | "catch"
@@ -47,50 +51,50 @@ type Generic = {
 };
 
 type GenericProgramEnterAdvice<G extends Generic> = (
-  kind: aran.ProgramKind,
+  kind: ProgramKind,
   links: LinkData[],
   record: { [key in Variable]?: G["Value"] },
   location: G["Location"],
 ) => G["RecordResult"];
 
 type GenericProgramCompletionAdvice<G extends Generic> = (
-  kind: aran.ProgramKind,
+  kind: ProgramKind,
   value: G["Value"],
   location: G["Location"],
 ) => G["ValueResult"];
 
 type GenericProgramFailureAdvice<G extends Generic> = (
-  kind: aran.ProgramKind,
+  kind: ProgramKind,
   error: G["Value"],
   location: G["Location"],
 ) => G["ValueResult"];
 
 type GenericProgramLeaveAdvice<G extends Generic> = (
-  kind: aran.ProgramKind,
+  kind: ProgramKind,
   location: G["Location"],
 ) => G["VoidResult"];
 
 type GenericFunctionEnterAdvice<G extends Generic> = (
-  kind: aran.FunctionKind,
+  kind: ClosureKind,
   callee: G["Value"],
   record: { [key in Variable]?: G["Value"] },
   location: G["Location"],
 ) => G["RecordResult"];
 
 type GenericFunctionCompletionAdvice<G extends Generic> = (
-  kind: aran.FunctionKind,
+  kind: ClosureKind,
   value: G["Value"],
   location: G["Location"],
 ) => G["ValueResult"];
 
 type GenericFunctionFailureAdvice<G extends Generic> = (
-  kind: aran.FunctionKind,
+  kind: ClosureKind,
   error: G["Value"],
   location: G["Location"],
 ) => G["ValueResult"];
 
 type GenericFunctionLeaveAdvice<G extends Generic> = (
-  kind: aran.FunctionKind,
+  kind: ClosureKind,
   location: G["Location"],
 ) => G["VoidResult"];
 
@@ -160,9 +164,14 @@ type GenericImportAfterAdvice<G extends Generic> = (
 ) => G["ValueResult"];
 
 type GenericFunctionAfterAdvice<G extends Generic> = (
-  kind: aran.FunctionKind,
   asynchronous: boolean,
   generator: boolean,
+  value: G["Value"],
+  location: G["Location"],
+) => G["ValueResult"];
+
+type GenericArrowAfterAdvice<G extends Generic> = (
+  asynchronous: boolean,
   value: G["Value"],
   location: G["Location"],
 ) => G["ValueResult"];
@@ -302,10 +311,10 @@ type GenericAdvice<S, G extends Generic> = {
   "program.completion"?: S | GenericProgramCompletionAdvice<G>;
   "program.failure"?: S | GenericProgramFailureAdvice<G>;
   "program.leave"?: S | GenericProgramLeaveAdvice<G>;
-  "function.enter"?: S | GenericFunctionEnterAdvice<G>;
-  "function.completion"?: S | GenericFunctionCompletionAdvice<G>;
-  "function.failure"?: S | GenericFunctionFailureAdvice<G>;
-  "function.leave"?: S | GenericFunctionLeaveAdvice<G>;
+  "closure.enter"?: S | GenericFunctionEnterAdvice<G>;
+  "closure.completion"?: S | GenericFunctionCompletionAdvice<G>;
+  "closure.failure"?: S | GenericFunctionFailureAdvice<G>;
+  "closure.leave"?: S | GenericFunctionLeaveAdvice<G>;
   "block.enter"?: S | GenericBlockEnterAdvice<G>;
   "block.completion"?: S | GenericBlockCompletionAdvice<G>;
   "block.failure"?: S | GenericBlockFailureAdvice<G>;
@@ -319,6 +328,7 @@ type GenericAdvice<S, G extends Generic> = {
   "primitive.after"?: S | GenericPrimitiveAfterAdvice<G>;
   "import.after"?: S | GenericImportAfterAdvice<G>;
   "function.after"?: S | GenericFunctionAfterAdvice<G>;
+  "arrow.after"?: S | GenericArrowAfterAdvice<G>;
   "read.after"?: S | GenericReadAfterAdvice<G>;
   "conditional.before"?: S | GenericConditionalBeforeAdvice<G>;
   "conditional.after"?: S | GenericConditionalAfterAdvice<G>;
@@ -442,6 +452,10 @@ export type FunctionAfterAdvice<V, L> = GenericFunctionAfterAdvice<
   AdviceGeneric<V, L>
 >;
 
+export type ArrowAfterAdvice<V, L> = GenericArrowAfterAdvice<
+  AdviceGeneric<V, L>
+>;
+
 export type ReadAfterAdvice<V, L> = GenericReadAfterAdvice<AdviceGeneric<V, L>>;
 
 export type ConditionalBeforeAdvice<V, L> = GenericConditionalBeforeAdvice<
@@ -550,7 +564,7 @@ type Point<V, L> =
   // Program //
   | {
       type: "program.enter";
-      kind: aran.ProgramKind;
+      kind: ProgramKind;
       links: LinkData[];
       record: {
         [key in Variable]: V;
@@ -559,25 +573,25 @@ type Point<V, L> =
     }
   | {
       type: "program.completion";
-      kind: aran.ProgramKind;
+      kind: ProgramKind;
       value: V;
       location: L;
     }
   | {
       type: "program.failure";
-      kind: aran.ProgramKind;
+      kind: ProgramKind;
       value: V;
       location: L;
     }
   | {
       type: "program.leave";
-      kind: aran.ProgramKind;
+      kind: ProgramKind;
       location: L;
     }
-  // function //
+  // closure //
   | {
-      type: "function.enter";
-      kind: aran.FunctionKind;
+      type: "closure.enter";
+      kind: ClosureKind;
       callee: V;
       record: {
         [key in Variable]: V;
@@ -585,20 +599,20 @@ type Point<V, L> =
       location: L;
     }
   | {
-      type: "function.completion";
-      kind: aran.FunctionKind;
+      type: "closure.completion";
+      kind: ClosureKind;
       location: L;
       value: V;
     }
   | {
-      type: "function.failure";
-      kind: aran.FunctionKind;
+      type: "closure.failure";
+      kind: ClosureKind;
       value: V;
       location: L;
     }
   | {
-      type: "function.leave";
-      kind: aran.FunctionKind;
+      type: "closure.leave";
+      kind: ClosureKind;
       location: L;
     }
   // Block //
@@ -671,9 +685,14 @@ type Point<V, L> =
     }
   | {
       type: "function.after";
-      kind: aran.FunctionKind;
       asynchronous: boolean;
       generator: boolean;
+      value: V;
+      location: L;
+    }
+  | {
+      type: "arrow.after";
+      asynchronous: boolean;
       value: V;
       location: L;
     }
@@ -831,11 +850,11 @@ type Point<V, L> =
       location: L;
     };
 
-type RecordAdviceName = ["program.enter", "function.enter", "block.enter"];
+type RecordAdviceName = ["program.enter", "closure.enter", "block.enter"];
 
 type VoidAdviceName = [
   "program.leave",
-  "function.leave",
+  "closure.leave",
   "block.completion",
   "block.leave",
   "debugger.before",

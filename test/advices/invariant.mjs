@@ -44,7 +44,7 @@
  *   point: Point & {
  *     type:
  *       | "program.enter"
- *       | "function.enter"
+ *       | "closure.enter"
  *       | "block.enter",
  *   },
  * } | {
@@ -63,6 +63,7 @@
  *       | "primitive.after"
  *       | "intrinsic.after"
  *       | "function.after"
+ *       | "arrow.after"
  *       | "eval.after"
  *       | "conditional.after"
  *       | "global.read.after"
@@ -190,11 +191,11 @@ const MATCH = {
     "program.failure": null,
     "program.leave": null,
   },
-  "function.enter": {
+  "closure.enter": {
     "__proto__": null,
-    "function.failure": null,
-    "function.completion": null,
-    "function.leave": null,
+    "closure.failure": null,
+    "closure.completion": null,
+    "closure.leave": null,
   },
   "block.enter": {
     "__proto__": null,
@@ -371,7 +372,7 @@ export default (point) => {
   // push callstack //
   if (type === "program.enter") {
     push(state.callstack, []);
-  } else if (type === "function.enter") {
+  } else if (type === "closure.enter") {
     if (!apply(hasWeakMap, state.closures, [point.callee])) {
       throw makeInvariantError("missing closure stack", {
         state,
@@ -393,7 +394,7 @@ export default (point) => {
   // push stack //
   if (
     type === "program.enter" ||
-    type === "function.enter" ||
+    type === "closure.enter" ||
     type === "block.enter"
   ) {
     push(stack, {
@@ -402,7 +403,7 @@ export default (point) => {
     });
   }
 
-  if (type === "function.after") {
+  if (type === "function.after" || type === "arrow.after") {
     // register closure //
     if (apply(hasWeakMap, state.closures, [point.value])) {
       throw makeInvariantError("duplicate closure declaration", {
@@ -426,7 +427,7 @@ export default (point) => {
   // consume //
   if (
     type === "return.before" ||
-    type === "function.completion" ||
+    type === "closure.completion" ||
     type === "program.completion" ||
     type === "drop.before" ||
     type === "write.before" ||
@@ -477,6 +478,7 @@ export default (point) => {
     type === "read.after" ||
     type === "primitive.after" ||
     type === "function.after" ||
+    type === "arrow.after" ||
     type === "intrinsic.after" ||
     type === "eval.after" ||
     type === "conditional.after"
@@ -490,7 +492,7 @@ export default (point) => {
   // completion
   if (
     type === "program.completion" ||
-    type === "function.completion" ||
+    type === "closure.completion" ||
     type === "block.completion"
   ) {
     match(peek(stack), state, point);
@@ -499,7 +501,7 @@ export default (point) => {
   // failure //
   if (
     type === "program.failure" ||
-    type === "function.failure" ||
+    type === "closure.failure" ||
     type === "block.failure"
   ) {
     let last = peek(stack);
@@ -513,7 +515,7 @@ export default (point) => {
   // leave //
   if (
     type === "program.leave" ||
-    type === "function.leave" ||
+    type === "closure.leave" ||
     type === "block.leave"
   ) {
     match(pop(stack), state, point);
