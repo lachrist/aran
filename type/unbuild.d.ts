@@ -14,6 +14,10 @@ export type Log =
   | {
       name: "EnclaveLimitation";
       message: string;
+    }
+  | {
+      name: "BlockFunctionDeclaration";
+      message: string;
     };
 
 export type Atom = {
