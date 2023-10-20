@@ -1,54 +1,64 @@
+/* eslint-disable local/strict-console */
+
 import { stringifyResult } from "./result.mjs";
 import { scrape } from "./scrape.mjs";
 import { runTest } from "./test.mjs";
 
-const { process, URL } = globalThis;
+const { console, process, URL } = globalThis;
 
 /**
  * @type {(
  *   options: {
+ *     initial: number,
  *     test262: URL,
  *     isExcluded: (target: string) => boolean,
  *     writable: import("node:stream").Writable,
  *     makeInstrumenter: (errors: test262.Error[]) => test262.Instrumenter,
  *   },
- * ) => Promise<boolean>}
+ * ) => Promise<number | null>}
  */
 export const batch = async ({
+  initial,
   test262,
   isExcluded,
   writable,
   makeInstrumenter,
 }) => {
+  let index = 0;
   let interrupted = false;
   const interrupt = () => {
-    interrupted = true;
+    if (interrupted) {
+      console.log(`force exit at test#${index}`);
+      process.exit(1);
+    } else {
+      interrupted = true;
+    }
   };
   process.addListener("SIGINT", interrupt);
-  let index = 0;
   for await (const url of scrape(new URL("test/", test262))) {
     if (interrupted) {
-      process.removeListener("SIGINT", interrupt);
-      return false;
+      // eslint-disable-next-line local/no-label
+      break;
     }
-    index += 1;
     if (index % 100 === 0) {
-      // eslint-disable-next-line no-console
       console.dir(index);
     }
-    const target = url.href.substring(test262.href.length);
-    if (!target.includes("_FIXTURE") && !isExcluded(target)) {
-      const result = await runTest({
-        target,
-        test262,
-        makeInstrumenter,
-      });
-      if (result.errors.length > 0) {
-        writable.write(stringifyResult(result));
-        writable.write("\n");
+    if (index >= initial) {
+      const target = url.href.substring(test262.href.length);
+      if (!target.includes("_FIXTURE") && !isExcluded(target)) {
+        const result = await runTest({
+          target,
+          test262,
+          makeInstrumenter,
+        });
+        if (result.errors.length > 0) {
+          writable.write(stringifyResult(result));
+          writable.write("\n");
+        }
       }
     }
+    index += 1;
   }
   process.removeListener("SIGINT", interrupt);
-  return true;
+  return index;
 };

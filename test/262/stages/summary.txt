@@ -1,90 +1,15 @@
-test262/test/built-ins/Array/prototype/flatMap/this-value-ctor-object-species-bad-throws.js
-  Array.prototype.flatMap, Symbol, Symbol.species
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "actual"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "mapperFn"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "arr"
-  runtime >> TypeError >> Cannot convert a Symbol value to a string
 
-test262/test/built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor-poisoned-throws.js
-  Array.prototype.flatMap, Symbol, Symbol.species
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "ctorCalled"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "ctor"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "ctorCalled"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "mapperFn"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "arr"
-  runtime >> TypeError >> Cannot convert a Symbol value to a string
+=== Remaining ===
 
-test262/test/built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js
-  Array.prototype.flatMap, Symbol, Symbol.species
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "ctorCalled"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "actual"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "ctor"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "ctorCalled"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "mapperFn"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "arr"
-  runtime >> TypeError >> Cannot convert a Symbol value to a string
-
-test262/test/built-ins/Array/prototype/flatMap/this-value-ctor-object-species.js
-  Array.prototype.flatMap, Symbol, Symbol.species
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "actual"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "actual"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable assignment "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "called"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "actual"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "mapperFn"
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "arr"
-  runtime >> TypeError >> Cannot convert a Symbol value to a string
-
-test262/test/built-ins/Array/prototype/indexOf/15.4.4.14-10-1.js
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "a"
-  runtime >> Test262Error >> a.indexOf(null) Expected SameValue(«5», «-1») to be true
-
-test262/test/built-ins/Array/prototype/lastIndexOf/15.4.4.15-9-1.js
-  instrumentation >> EnclaveLimitation >> turning strict sloppy variable declaration "a"
-  runtime >> Test262Error >> a.lastIndexOf(null) Expected SameValue(«5», «-1») to be true
 
 
 === Features ===
 
-Array.prototype.flatMap: 4
-Symbol: 4
-Symbol.species: 4
+
 
 === Accounting ===
 
-Failures: 152
+Failures: 146
 Block-level function declaration: 144
 Array.prototype.push vulnerability to Array.prototype[0] poisoning: 2
-Remaining: 6
+Remaining: 0
