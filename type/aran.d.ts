@@ -12,6 +12,9 @@ export type Primitive =
   | null
   | boolean
   | number
+  | { nan: null }
+  | { zero: "+" | "-" }
+  | { infinity: "+" | "-" }
   | { bigint: string }
   | string;
 
