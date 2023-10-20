@@ -17,7 +17,8 @@
     "test": "node test/test.mjs",
     "coverage": "node test/coverage.mjs",
     "load-test262": "git clone --filter=tree:0 https://github.com/tc39/test262",
-    "x": "node --experimental-vm-modules --expose-gc test/262/main.mjs empty-enclave",
+    "test262-batch": "node --experimental-vm-modules --expose-gc test/262/batch-bin.mjs",
+    "x": "node --experimental-vm-modules --expose-gc test/262/progress-bin.mjs empty-enclave",
     "xx": "node --experimental-vm-modules --expose-gc test/262/single.mjs empty-enclave"
   },
   "keywords": [

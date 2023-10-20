@@ -1,71 +1,57 @@
-const { undefined } = globalThis;
+/* eslint-disable no-empty */
+
+const { String } = globalThis;
+
+/** @type {(value: unknown) => string} */
+export const show = (value) => {
+  if (typeof value === "object" && value !== null) {
+    return "[object]";
+  } else if (typeof value === "function") {
+    return "[function]";
+  } else {
+    return String(value);
+  }
+};
 
 /**
- * @type {(
- *   type: "harness" | "parse" | "resolution" | "runtime",
- *   error: unknown,
- * ) => test262.Error}
+ * @type {(error: unknown) => string}
  */
-export const inspectError = (type, error) => {
-  if (typeof error !== "object" || error === null) {
-    return {
-      type: "inspect",
-      message: `invalid error type: ${typeof error}`,
-    };
-  }
-  /** @type {unknown} */
-  let name = undefined;
-  /** @type {unknown} */
-  let message = undefined;
-  /** @type {unknown} */
-  let stack = undefined;
+export const inspectErrorName = (error) => {
   try {
-    name = /** @type {Error} */ (error).constructor.name;
-    message = /** @type {Error} */ (error).message;
-    stack = /** @type {Error} */ (error).stack;
+    return show(/** @type {Error} */ (error).constructor.name);
   } catch {
-    return {
-      type: "inspect",
-      message: "failed to read error.name or error.message",
-    };
-  }
-  if (typeof name !== "string") {
-    return {
-      type: "inspect",
-      message: `invalid error.name type: ${typeof name}`,
-    };
-  }
-  if (typeof message !== "string") {
-    return {
-      type: "inspect",
-      message: `invalid error.message type: ${typeof message}`,
-    };
-  }
-  if (typeof stack !== "string") {
-    return { type, name, message };
-  } else {
-    return { type, name, message, stack };
+    return "[missing]";
   }
 };
 
 /**
- * @type {(
- *   message: unknown,
- * ) => test262.Outcome<string, test262.Error>}
+ * @type {(error: unknown) => string}
  */
-export const inspectMessage = (message) => {
-  if (typeof message === "string") {
-    return {
-      type: "success",
-      value: message,
-    };
-  } else {
-    return {
-      type: "failure",
-      error: {
-        type: "inspect",
-        message: `invalid message type: ${typeof message}`,
-      },
-    };
+export const inspectErrorMessage = (error) => {
+  try {
+    return show(/** @type {Error} */ (error).message);
+  } catch {
+    return "[missing]";
   }
 };
+
+/**
+ * @type {(error: unknown) => { stack: string} | {}}
+ */
+export const inspectErrorStack = (error) => {
+  try {
+    const { stack } = /** @type {Error} */ (error);
+    return stack == null ? {} : { stack: show(stack) };
+  } catch {
+    return {};
+  }
+};
+
+/**
+ * @type {(error: unknown) => test262.ErrorSerial}
+ */
+export const inspectError = (error) => ({
+  name: inspectErrorName(error),
+  message: inspectErrorMessage(error),
+  ...inspectErrorStack(error),
+});

@@ -1,71 +1,37 @@
-import { Script, SourceTextModule } from "node:vm";
-import { runHarness } from "./harness.mjs";
+import { Script, SourceTextModule, runInContext } from "node:vm";
+import { readFileCache } from "./cache.mjs";
 import { createRealm } from "./realm.mjs";
-import { inspectError, inspectMessage } from "./inspect.mjs";
+import { inspectErrorName, show } from "./inspect.mjs";
 import { compileLinker } from "./linker.mjs";
 
 const { Promise, Error } = globalThis;
 
 /**
- * @type {() => {
- *   done: Promise<test262.Error[]>,
- *   print: (message: string) => void,
+ * @type {(
+ *   trace: test262.Log[],
+ * ) => {
+ *   done: Promise<null | string>,
+ *   print: (message: unknown) => void,
  * }}
  */
-const makeAsynchronousTermination = () => {
-  /** @type {(errors: test262.Error[]) => void} */
+const makeAsynchronousTermination = (trace) => {
+  /** @type {(error: null | string) => void} */
   let resolve;
   return {
     done: new Promise((resolve_) => {
       resolve = resolve_;
     }),
-    print: (message) => {
-      const outcome = inspectMessage(message);
-      if (outcome.type === "success") {
-        // console.log(message);
-        if (message === "Test262:AsyncTestComplete") {
-          resolve([]);
-        }
-        if (message.startsWith("Test262:AsyncTestFailure:")) {
-          resolve([
-            {
-              type: "async",
-              message,
-            },
-          ]);
-        }
+    print: (raw) => {
+      const message = show(raw);
+      trace.push({
+        name: "Print",
+        message,
+      });
+      if (message === "Test262:AsyncTestComplete") {
+        resolve(null);
       }
-      if (outcome.type === "failure") {
-        resolve([outcome.error]);
-      }
-    },
-  };
-};
-
-/**
- * @type {() => {
- *   done: Promise<test262.Error[]>,
- *   print: (message: string) => void,
- * }}
- */
-const makeSynchronousTermination = () => {
-  /** @type {test262.Error[]} */
-  const errors = [];
-  return {
-    done: Promise.resolve(errors),
-    print: (message) => {
-      const outcome = inspectMessage(message);
-      if (outcome.type === "success") {
-        // console.log(message);
-        if (message.startsWith("Test262:AsyncTestFailure:")) {
-          errors.push({
-            type: "async",
-            message,
-          });
-        }
-      }
-      if (outcome.type === "failure") {
-        errors.push(outcome.error);
+      if (message.startsWith("Test262:AsyncTestFailure:")) {
+        resolve(message);
       }
     },
   };
@@ -73,39 +39,80 @@ const makeSynchronousTermination = () => {
 
 /**
  * @type {(
+ *   trace: test262.Log[],
+ * ) => {
+ *   done: Promise<null>,
+ *   print: (message: string) => void,
+ * }}
+ */
+const makeSynchronousTermination = (trace) => ({
+  done: Promise.resolve(null),
+  print: (raw) => {
+    trace.push({
+      name: "Print",
+      message: show(raw),
+    });
+  },
+});
+
+/**
+ * @type {(
+ *   error: unknown,
+ *   phase: test262.Phase,
+ * ) => void}
+ */
+const throwError = (error, _phase) => {
+  throw error;
+};
+
+/**
+ * @type {(
  *   options: test262.Case,
+ *   trace: test262.Log[],
  *   instrumenter: test262.Instrumenter,
- * ) => Promise<test262.Error[]>}
+ * ) => Promise<void>}
  */
 export const runTestCase = async (
-  { url, content, asynchronous, includes, module },
+  { url, content, negative, asynchronous, includes, module },
+  trace,
   instrumenter,
 ) => {
-  /** @type {test262.Error[]} */
-  const errors = [];
   const { done, print } = asynchronous
-    ? makeAsynchronousTermination()
-    : makeSynchronousTermination();
+    ? makeAsynchronousTermination(trace)
+    : makeSynchronousTermination(trace);
   const context = { __proto__: null };
   const { instrument } = instrumenter;
   createRealm({
     context,
     origin: url,
+    trace,
     print,
-    makeRealmError: (feature) => {
-      errors.push({
-        type: "realm",
-        feature,
-      });
-      return new Error(`$262.${feature} is not implemented`);
-    },
     instrumenter,
   });
+  let caught = false;
+  /**
+   * @type {(
+   *   error: unknown,
+   *   phase: test262.Phase,
+   * ) => void}
+   */
+  const catchNegative =
+    negative === null
+      ? throwError
+      : (error, phase) => {
+          if (
+            negative.phase !== phase ||
+            negative.name !== inspectErrorName(error)
+          ) {
+            throw error;
+          } else {
+            caught = true;
+          }
+        };
   for (const url of includes) {
-    const outcome = await runHarness(url, context, instrument);
-    if (outcome.type === "failure") {
-      return [outcome.error];
-    }
+    runInContext(await readFileCache(url), context, {
+      filename: url.href,
+    });
   }
   const { link, register } = compileLinker({
     context,
@@ -129,13 +136,13 @@ export const runTestCase = async (
         try {
           await module.evaluate();
         } catch (error) {
-          errors.push(inspectError("runtime", error));
+          catchNegative(error, "runtime");
         }
       } catch (error) {
-        errors.push(inspectError("resolution", error));
+        catchNegative(error, "resolution");
       }
     } catch (error) {
-      errors.push(inspectError("parse", error));
+      catchNegative(error, "parse");
     }
   } else {
     try {
@@ -150,14 +157,14 @@ export const runTestCase = async (
       try {
         script.runInContext(context);
       } catch (error) {
-        errors.push(inspectError("runtime", error));
+        catchNegative(error, "runtime");
       }
     } catch (error) {
-      errors.push(inspectError("parse", error));
+      catchNegative(error, "parse");
     }
   }
-  if (errors.length === 0) {
-    errors.push(...(await done));
+  await done;
+  if (negative !== null && !caught) {
+    throw new Error("Missing negative error");
   }
-  return errors;
 };

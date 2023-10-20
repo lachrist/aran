@@ -1,49 +1,26 @@
 import { parse as parseYaml } from "yaml";
 
+const { Error } = globalThis;
+
 const BEGIN = "/*---";
 
 const END = "---*/";
 
 /**
- * @type {(
- *   content: string,
- * ) => test262.Outcome<test262.Metadata, test262.Error>}
+ * @type {(content: string) => test262.Metadata}
  */
 export const parseMetadata = (content) => {
   const begin = content.indexOf(BEGIN);
   const end = content.indexOf(END);
   if (begin === -1 || end === -1) {
-    return {
-      type: "failure",
-      error: {
-        type: "metadata",
-        message: "missing metadata header",
-      },
-    };
-  } else {
-    const header = content.slice(begin + BEGIN.length, end);
-    let metadata = {};
-    try {
-      metadata = parseYaml(header);
-    } catch (error) {
-      return {
-        type: "failure",
-        error: {
-          type: "metadata",
-          message: /** @type {Error} */ (error).message,
-        },
-      };
-    }
-    return {
-      type: "success",
-      value: {
-        negative: null,
-        includes: [],
-        flags: [],
-        locale: ["en"],
-        features: [],
-        ...metadata,
-      },
-    };
+    throw new Error("Missing metadata header");
   }
+  return {
+    negative: null,
+    includes: [],
+    flags: [],
+    locale: [],
+    features: [],
+    ...parseYaml(content.slice(begin + BEGIN.length, end)),
+  };
 };

@@ -19,11 +19,15 @@ export type Flag =
   | "CanBlockIsTrue"
   | "non-deterministic";
 
+type Phase = "async" | "harness" | "parse" | "resolution" | "runtime";
+
+type Negative = {
+  phase: Phase;
+  name: string;
+};
+
 export type Metadata = {
-  negative: null | {
-    phase: "parse" | "resolution" | "runtime";
-    type: string;
-  };
+  negative: null | Negative;
   includes: string[];
   flags: Flag[];
   locale: string[];
@@ -49,57 +53,44 @@ export type $262 = {
 export type Case = {
   url: URL;
   content: string;
+  negative: null | Negative;
   asynchronous: boolean;
   includes: URL[];
   module: boolean;
 };
 
-export type RealmFeature = "gc" | "agent" | "isHTMLDDA" | "detachArrayBuffer";
-
-export type Error =
-  | {
-      type: "metadata";
-      message: string;
-    }
-  | {
-      type: "async";
-      message: string;
-    }
-  | {
-      type: "realm";
-      feature: RealmFeature;
-    }
-  | {
-      type: "inspect";
-      message: string;
-    }
-  | {
-      type: "negative";
-    }
-  | {
-      type: "harness" | "runtime" | "parse" | "resolution";
-      name: string;
-      message: string;
-      stack?: string;
-    }
-  | {
-      type: "instrumentation";
-      severity: "suppress" | "warning" | "error";
-      name: string;
-      message: string;
-    };
+type ErrorSerial = {
+  name: string;
+  message: string;
+  stack?: string;
+};
 
 export type Result = {
   target: string;
   features: string[];
-  errors: Error[];
+  trace: Log[];
+  error: null | ErrorSerial;
 };
 
-export type Failure = {
-  target: string;
-  features: string[];
-  errors: [Error, ...Error[]];
-};
+export type Failure = Result & { error: ErrorSerial };
+
+export type Log =
+  | {
+      name: "Print";
+      message: string;
+    }
+  | {
+      name: "RealmLimitation";
+      message: string;
+    }
+  | {
+      name: "InstrumenterLimitation";
+      message: string;
+    }
+  | {
+      name: "InstrumenterWarning";
+      message: string;
+    };
 
 export type Instrument = (
   code: string,
@@ -115,12 +106,9 @@ export type Instrumenter = {
   instrument: Instrument;
 };
 
-export type Filtering = [string, (result: Result) => boolean][];
-
 export type Stage = {
-  exclusion: string[];
-  filtering: Filtering;
-  makeInstrumenter: (errors: Error[]) => Instrumenter;
+  makeInstrumenter: (trace: test262.Log[]) => Instrumenter;
+  tagResult: (result: Result) => string[];
 };
 
 export as namespace test262;

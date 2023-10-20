@@ -1,87 +1,44 @@
-import { isFailure, listFeature, parseResultDump } from "./result.mjs";
+import { isFailure, parseResultDump, printResult } from "./result.mjs";
 
 const { Map, Array } = globalThis;
 
-/** @type {(error: test262.Error) => string} */
-const printError = (error) => {
-  let print = `  ${error.type}`;
-  if ("feature" in error) {
-    print += ` >> ${error.feature}`;
-  }
-  if ("name" in error) {
-    print += ` >> ${error.name}`;
-  }
-  if ("message" in error) {
-    print += ` >> ${error.message}`;
-  }
-  return `${print}\n`;
-};
-
-/** @type {(feature: string[]) => string} */
-const printFeatureArray = (features) =>
-  features.length === 0 ? "" : `  ${features.join(", ")}\n`;
-
-/** @type {(result: test262.Result) => string} */
-const printResult = ({ target, features, errors }) =>
-  `test262/${target}\n${printFeatureArray(features)}${errors
-    .map(printError)
-    .join("")}`;
-
 /** @type {(entry1: [string, number], entry2: [string, number]) => number} */
-const sortFeatureEntry = ([_feature1, count1], [_feature2, count2]) =>
-  count2 - count1;
+const sortNumberEntry = ([_key1, val1], [_key2, val2]) => val2 - val1;
 
 /** @type {<X, Y>(entry: [X, Y]) => string} */
 const printEntry = ([key, val]) => `${key}: ${val}`;
 
 /**
- * @type {<X>(
- *   array: X[],
- *   predicate: (item: X) => boolean,
- * ) => number}
- */
-const count = (array, predicate) => {
-  let counter = 0;
-  for (const item of array) {
-    if (predicate(item)) {
-      counter += 1;
-    }
-  }
-  return counter;
-};
-
-/**
  * @type {(
  *   dump: string,
- *   filters: [string, (result: test262.Result) => boolean][],
+ *   tagResult: (result: test262.Result) => string[],
  * ) => string}
  */
-export const report = (dump, filters) => {
+export const report = (dump, tagResult) => {
   const failures = parseResultDump(dump).filter(isFailure);
-  const remaining = failures.filter(
-    (result) => !filters.some(([, predicate]) => predicate(result)),
-  );
   /** @type {Map<string, number>} */
-  const features = new Map();
-  for (const feature of failures.flatMap(listFeature)) {
-    features.set(feature, (features.get(feature) ?? 0) + 1);
+  const tagging = new Map();
+  /** @type {test262.Result[]} */
+  const remainder = [];
+  for (const failure of failures) {
+    const tags = tagResult(failure);
+    if (tags.length === 0) {
+      remainder.push(failure);
+    }
+    for (const tag of tags) {
+      tagging.set(tag, (tagging.get(tag) ?? 0) + 1);
+    }
   }
   return [
-    "\n=== Remaining ===\n",
-    remaining.map(printResult).join("\n"),
-    "\n=== Features ===\n",
-    Array.from(features.entries())
-      .sort(sortFeatureEntry)
+    remainder.map(printResult).join("\n"),
+    "",
+    `Total failures count: ${failures.length}`,
+    "",
+    Array.from(tagging.entries())
+      .sort(sortNumberEntry)
       .map(printEntry)
       .join("\n"),
-    "\n=== Accounting ===\n",
-    /** @type {[string, number][]} */
-    ([
-      ["Failures", failures.length],
-      ...filters.map(([name, predicate]) => [name, count(failures, predicate)]),
-      ["Remaining", remaining.length],
-    ])
-      .map(printEntry)
-      .join("\n"),
+    "",
+    `Remaining: ${remainder.length}`,
   ].join("\n");
 };

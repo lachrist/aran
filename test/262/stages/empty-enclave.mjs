@@ -3,10 +3,48 @@ import { generate } from "astring";
 import { instrumentRaw, setupRaw } from "../../../lib/index.mjs";
 import { readFile } from "node:fs/promises";
 import { listDumpFailure } from "../result.mjs";
+import { AranError } from "../error.mjs";
 
-const { Object, JSON, Set, URL, Error, SyntaxError } = globalThis;
+// eslint-disable-next-line local/strict-console
+const { console, Error, Object, JSON, Set, URL, SyntaxError } = globalThis;
 
 const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
+
+// eslint-disable-next-line local/no-class, local/standard-declaration
+class AranEvalError extends Error {}
+
+/** @type {(entry: [string, string[]]) => [string, Set<string>]} */
+const compileExclusion = ([name, targets]) => [name, new Set(targets)];
+
+/** @type {(target: string, exclusion: [string, Set<string>]) => string[]} */
+const listTag = (target, [name, selection]) =>
+  selection.has(target) ? [name] : [];
+
+/** @type {[string, Set<string>][]} */
+const exclusions = [
+  /** @type {[string, string[]]} */ ([
+    "identity",
+    listDumpFailure(
+      await readFile(new URL("identity.jsonlist", import.meta.url), "utf8"),
+    ),
+  ]),
+  /** @type {[string, string[]]} */ ([
+    "parsing",
+    listDumpFailure(
+      await readFile(new URL("parsing.jsonlist", import.meta.url), "utf8"),
+    ),
+  ]),
+  .../** @type {[string, string[]][]} */ (
+    Object.entries(
+      JSON.parse(
+        await readFile(
+          new URL("./empty-enclave-tagging.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    )
+  ),
+].map(compileExclusion);
 
 // console.log(
 //   JSON.stringify(
@@ -21,28 +59,13 @@ const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
 
 /** @type {test262.Stage} */
 export default {
-  exclusion: [
-    ...listDumpFailure(
-      await readFile(new URL("identity.jsonlist", import.meta.url), "utf8"),
-    ),
-    ...listDumpFailure(
-      await readFile(new URL("parsing.jsonlist", import.meta.url), "utf8"),
-    ),
+  tagResult: ({ target, error }) => [
+    ...(error !== null && error.name === "AranEvalError"
+      ? ["AranEvalError"]
+      : []),
+    ...exclusions.flatMap((exclusion) => listTag(target, exclusion)),
   ],
-  filtering: /** @type {[string, string[]][]} */ (
-    Object.entries(
-      JSON.parse(
-        await readFile(
-          new URL("./empty-enclave-filtering.json", import.meta.url),
-          "utf8",
-        ),
-      ),
-    )
-  ).map(([name, targets]) => {
-    const selection = new Set(targets);
-    return [name, ({ target }) => selection.has(target)];
-  }),
-  makeInstrumenter: (errors) => ({
+  makeInstrumenter: (trace) => ({
     setup: generate(
       setupRaw({
         intrinsic: INTRINSIC,
@@ -53,16 +76,10 @@ export default {
       [
         "eval",
         () => {
-          errors.push({
-            type: "instrumentation",
-            severity: "suppress",
-            name: "EvalLimitation",
-            message: "eval is not supported",
-          });
-          throw new Error("eval is not supported");
+          throw new AranEvalError("eval is not supported");
         },
       ],
-      ["ARAN", (/** @type {unknown}| */ value) => console.dir(value)],
+      ["ARAN", (/** @type {unknown} */ value) => console.dir(value)],
     ],
     instrument: (code1, { kind, specifier }) => {
       const program1 = /** @type {estree.Program} */ (
@@ -92,17 +109,14 @@ export default {
       for (const log of logs) {
         if (log.name === "SyntaxError") {
           throw new SyntaxError(log.message);
+        } else if (log.name === "ClashError") {
+          throw new AranError(log.message);
+        } else {
+          trace.push({
+            name: "InstrumenterWarning",
+            message: log.name,
+          });
         }
-        errors.push({
-          type: "instrumentation",
-          severity:
-            log.name === "EnclaveLimitation" ||
-            log.name === "BlockFunctionDeclaration"
-              ? "warning"
-              : "error",
-          name: log.name,
-          message: log.message,
-        });
       }
       const code2 = generate(program2);
       return code2;

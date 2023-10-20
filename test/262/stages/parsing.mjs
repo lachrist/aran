@@ -3,14 +3,17 @@ import { generate } from "astring";
 import { listDumpFailure } from "../result.mjs";
 import { readFile } from "node:fs/promises";
 
-const { URL } = globalThis;
+const { URL, Set } = globalThis;
+
+const exclusion = new Set(
+  listDumpFailure(
+    await readFile(new URL("identity.jsonlist", import.meta.url), "utf8"),
+  ),
+);
 
 /** @type {test262.Stage} */
 export default {
-  exclusion: listDumpFailure(
-    await readFile(new URL("identity.jsonlist", import.meta.url), "utf8"),
-  ),
-  filtering: [],
+  tagResult: ({ target }) => (exclusion.has(target) ? ["excluded"] : []),
   makeInstrumenter: (_errors) => ({
     setup: "",
     globals: [],

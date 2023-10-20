@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { parseMetadata } from "./metadata.mjs";
 import { runTestCase } from "./case.mjs";
-import { StaticError } from "./error.mjs";
+import { inspectError } from "./inspect.mjs";
 
 const { URL } = globalThis;
 
@@ -17,6 +17,7 @@ const { URL } = globalThis;
  */
 const listTestCase = ({ target, content, metadata, test262 }) => {
   const asynchronous = metadata.flags.includes("async");
+  const negative = metadata.negative;
   const includes = [
     ...(metadata.flags.includes("raw") ? [] : ["assert.js", "sta.js"]),
     ...(metadata.flags.includes("async") ? ["doneprintHandle.js"] : []),
@@ -33,6 +34,7 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
     tests.push({
       url: new URL(target, test262),
       content: `"use strict";\n${content}`,
+      negative,
       asynchronous,
       includes,
       module,
@@ -42,6 +44,7 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
     tests.push({
       url: new URL(target, test262),
       content,
+      negative,
       asynchronous,
       includes,
       module,
@@ -50,70 +53,52 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
   return tests;
 };
 
-/** @type {(error: test262.Error) => boolean} */
-const isBenign = (error) =>
-  error.type === "instrumentation" && error.severity === "warning";
-
-/** @type {(error: test262.Error) => boolean} */
-const isSuppress = (error) =>
-  error.type === "instrumentation" && error.severity === "suppress";
-
 /**
  * @type {(
  *   options: {
  *     target: string,
  *     test262: URL,
- *     makeInstrumenter: (error: test262.Error[]) => test262.Instrumenter,
+ *     makeInstrumenter: (trace: test262.Log[]) => test262.Instrumenter,
  *   },
  * ) => Promise<test262.Result>}
  */
 export const runTest = async ({ target, test262, makeInstrumenter }) => {
   const content = await readFile(new URL(target, test262), "utf8");
-  const outcome = parseMetadata(content);
-  switch (outcome.type) {
-    case "failure": {
-      return { target, features: [], errors: [outcome.error] };
-    }
-    case "success": {
-      const metadata = outcome.value;
-      for (const test of listTestCase({
-        target,
-        content,
-        metadata,
-        test262,
-      })) {
-        /** @type {test262.Error[]} */
-        const errors = [];
-        const exceptions = await runTestCase(test, makeInstrumenter(errors));
-        if (metadata.negative === null) {
-          errors.push(...exceptions);
-        } else {
-          if (exceptions.length === 0) {
-            errors.push({ type: "negative" });
-          } else if (
-            exceptions.length !== 1 ||
-            exceptions[0].type !== metadata.negative.phase ||
-            exceptions[0].name !== metadata.negative.type
-          ) {
-            errors.push(...exceptions);
-          }
-        }
-        if (!errors.some(isSuppress) && !errors.every(isBenign)) {
-          return {
-            target,
-            features: metadata.features,
-            errors,
-          };
-        }
-      }
+  /** @type {test262.Metadata} */
+  let metadata;
+  try {
+    metadata = parseMetadata(content);
+  } catch (error) {
+    return {
+      target,
+      features: [],
+      trace: [],
+      error: inspectError(error),
+    };
+  }
+  for (const test of listTestCase({
+    target,
+    content,
+    metadata,
+    test262,
+  })) {
+    /** @type {test262.Log[]} */
+    const trace = [];
+    try {
+      await runTestCase(test, trace, makeInstrumenter(trace));
+    } catch (error) {
       return {
         target,
         features: metadata.features,
-        errors: [],
+        trace,
+        error: inspectError(error),
       };
     }
-    default: {
-      throw new StaticError("invalid outcome", outcome);
-    }
   }
+  return {
+    target,
+    features: metadata.features,
+    trace: [],
+    error: null,
+  };
 };

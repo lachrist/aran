@@ -1,6 +1,6 @@
 const { Set } = globalThis;
 
-const exclusion = new Set([
+const features = new Set([
   "IsHTMLDDA",
   "Temporal",
   "Atomics",
@@ -17,24 +17,16 @@ const exclusion = new Set([
 ]);
 
 /** @type {(feature: string) => boolean} */
-const isFeatureExcluded = (feature) => exclusion.has(feature);
+const isFeatureExcluded = (feature) => features.has(feature);
 
-/** @type {(failure: test262.Result) => boolean} */
-const isFailureNotExcluded = ({ features }) =>
-  !features.some(isFeatureExcluded);
-
-/** @type {(error: test262.Error) => boolean} */
-const isRealmError = ({ type }) => type === "realm";
-
-/** @type {(failure: test262.Result) => boolean} */
-const isNotRealmFailure = ({ errors }) => !errors.some(isRealmError);
+/** @type {(log: test262.Log) => boolean} */
+const isRealmLimitation = ({ name }) => name === "RealmLimitation";
 
 /** @type {test262.Stage} */
 export default {
-  exclusion: [],
-  filtering: [
-    ["Not related to realm", isNotRealmFailure],
-    ["Not excluded by feature", isFailureNotExcluded],
+  tagResult: (result) => [
+    ...result.features.filter(isFeatureExcluded),
+    ...(result.trace.some(isRealmLimitation) ? ["RealmLimitation"] : []),
   ],
   makeInstrumenter: (_errors) => ({
     setup: "",
