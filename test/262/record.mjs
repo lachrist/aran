@@ -29,7 +29,10 @@ export const recordInstrumentation = ({
   const basename =
     typeof specifier === "number"
       ? `dynamic#${specifier}`
-      : /** @type {string} */ (specifier.href.split("/").pop()).split(".")[0];
+      : /** @type {string} */ (specifier.href.split("/").pop())
+          .split(".")
+          .slice(0, -1)
+          .join(".");
   const extension = kind === "module" ? "mjs" : "js";
   writeFileSync(
     new URL(`codebase/${basename}.${extension}`, import.meta.url),

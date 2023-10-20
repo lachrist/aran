@@ -4,7 +4,7 @@ import { instrumentRaw, setupRaw } from "../../../lib/index.mjs";
 import { readFile } from "node:fs/promises";
 import { listDumpFailure } from "../result.mjs";
 
-const { Set, URL, Error, SyntaxError } = globalThis;
+const { JSON, Set, URL, Error, SyntaxError } = globalThis;
 
 const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
 
@@ -14,6 +14,13 @@ const function_shenanigan = new Set(
       new URL("empty-enclave-function-shenanigan.jsonlist", import.meta.url),
       "utf8",
     ),
+  ),
+);
+
+const specials = JSON.parse(
+  await readFile(
+    new URL("./empty-enclave-specific.json", import.meta.url),
+    "utf8",
   ),
 );
 
@@ -32,6 +39,7 @@ export default {
       "Not function shenanigan",
       ({ target }) => !function_shenanigan.has(target),
     ],
+    ["Not excluded by name", ({ target }) => !(target in specials)],
   ],
   makeInstrumenter: (errors) => ({
     setup: generate(
