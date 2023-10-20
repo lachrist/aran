@@ -149,9 +149,5 @@
     "test/built-ins/Array/prototype/concat/15.4.4.4-5-b-iii-3-b-1.js",
     "test262/test/built-ins/Array/prototype/concat/15.4.4.4-5-c-i-1.js",
     "test/built-ins/Array/prototype/concat/15.4.4.4-5-c-i-1.js"
-  ],
-  "Object.prototype.toString.call(arguments) !== '[object Arguments]'": [
-    "test/built-ins/Array/prototype/every/15.4.4.16-1-15.js",
-    "test/built-ins/Array/prototype/filter/15.4.4.20-1-15.js"
   ]
 }

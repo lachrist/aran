@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import { createWriteStream } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { batch } from "./batch.mjs";
 import { report } from "./report.mjs";
 
@@ -46,4 +46,12 @@ await new Promise((resolve) => {
   writable.end(resolve);
 });
 
-console.log(report(await readFile(dump, "utf8"), filtering));
+const summary = report(await readFile(dump, "utf8"), filtering);
+
+console.log(summary);
+
+await writeFile(
+  new URL(`stages/summary.txt`, import.meta.url),
+  summary,
+  "utf8",
+);
