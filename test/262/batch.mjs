@@ -25,18 +25,18 @@ export const batch = async ({
   makeInstrumenter,
 }) => {
   let index = 0;
-  let interrupted = false;
+  let sigint = 0;
   const interrupt = () => {
-    if (interrupted) {
+    sigint += 1;
+    // SIGINT emit twice for some reasons...
+    if (sigint > 2) {
       console.log(`force exit at test#${index}`);
       process.exit(1);
-    } else {
-      interrupted = true;
     }
   };
   process.addListener("SIGINT", interrupt);
   for await (const url of scrape(new URL("test/", test262))) {
-    if (interrupted) {
+    if (sigint > 0) {
       // eslint-disable-next-line local/no-label
       break;
     }
