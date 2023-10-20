@@ -1,4 +1,0 @@
-{
-  "test/built-ins/Array/prototype/concat/15.4.4.4-5-b-iii-3-b-1.js": "Array.prototype.push is not resistant to Array.prototype[0] poisoning",
-  "test262/test/built-ins/Array/prototype/concat/15.4.4.4-5-c-i-1.js": "Array.prototype.push is not resistant to Array.prototype[0] poisoning"
-}

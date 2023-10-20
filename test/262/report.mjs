@@ -1,4 +1,4 @@
-import { listFeature, parseResultDump } from "./result.mjs";
+import { isFailure, listFeature, parseResultDump } from "./result.mjs";
 
 const { Map, Array } = globalThis;
 
@@ -35,33 +35,53 @@ const sortFeatureEntry = ([_feature1, count1], [_feature2, count2]) =>
 const printEntry = ([key, val]) => `${key}: ${val}`;
 
 /**
+ * @type {<X>(
+ *   array: X[],
+ *   predicate: (item: X) => boolean,
+ * ) => number}
+ */
+const count = (array, predicate) => {
+  let counter = 0;
+  for (const item of array) {
+    if (predicate(item)) {
+      counter += 1;
+    }
+  }
+  return counter;
+};
+
+/**
  * @type {(
  *   dump: string,
  *   filters: [string, (result: test262.Result) => boolean][],
  * ) => string}
  */
 export const report = (dump, filters) => {
-  let results = parseResultDump(dump);
-  /** @type {[string, number][]} */
-  const totals = [["Total", results.length]];
-  for (const [name, predicate] of filters) {
-    results = results.filter(predicate);
-    totals.push([name, results.length]);
-  }
+  const failures = parseResultDump(dump).filter(isFailure);
+  const remaining = failures.filter(
+    (result) => !filters.some(([, predicate]) => predicate(result)),
+  );
   /** @type {Map<string, number>} */
   const features = new Map();
-  for (const feature of results.flatMap(listFeature)) {
+  for (const feature of failures.flatMap(listFeature)) {
     features.set(feature, (features.get(feature) ?? 0) + 1);
   }
   return [
-    "\n=== Filtering ===\n",
-    results.map(printResult).join("\n"),
+    "\n=== Remaining ===\n",
+    remaining.map(printResult).join("\n"),
     "\n=== Features ===\n",
     Array.from(features.entries())
       .sort(sortFeatureEntry)
       .map(printEntry)
       .join("\n"),
-    "\n=== Totals ===\n",
-    totals.map(printEntry).join("\n"),
+    "\n=== Accounting ===\n",
+    /** @type {[string, number][]} */
+    ([
+      ["Failures", failures.length],
+      ...filters.map(([name, predicate]) => [name, count(failures, predicate)]),
+      ["Remaining", remaining.length],
+    ])
+      .map(printEntry)
+      .join("\n"),
   ].join("\n");
 };

@@ -4,25 +4,20 @@ import { instrumentRaw, setupRaw } from "../../../lib/index.mjs";
 import { readFile } from "node:fs/promises";
 import { listDumpFailure } from "../result.mjs";
 
-const { JSON, Set, URL, Error, SyntaxError } = globalThis;
+const { Object, JSON, Set, URL, Error, SyntaxError } = globalThis;
 
 const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
 
-const function_shenanigan = new Set(
-  listDumpFailure(
-    await readFile(
-      new URL("empty-enclave-function-shenanigan.jsonlist", import.meta.url),
-      "utf8",
-    ),
-  ),
-);
-
-const specials = JSON.parse(
-  await readFile(
-    new URL("./empty-enclave-specific.json", import.meta.url),
-    "utf8",
-  ),
-);
+// console.log(
+//   JSON.stringify(
+//     listDumpFailure(
+//       await readFile(
+//         new URL("empty-enclave.jsonlist", import.meta.url),
+//         "utf8",
+//       ),
+//     ),
+//   ),
+// );
 
 /** @type {test262.Stage} */
 export default {
@@ -34,13 +29,19 @@ export default {
       await readFile(new URL("parsing.jsonlist", import.meta.url), "utf8"),
     ),
   ],
-  filtering: [
-    [
-      "Not function shenanigan",
-      ({ target }) => !function_shenanigan.has(target),
-    ],
-    ["Not excluded by name", ({ target }) => !(target in specials)],
-  ],
+  filtering: /** @type {[string, string[]][]} */ (
+    Object.entries(
+      JSON.parse(
+        await readFile(
+          new URL("./empty-enclave-filtering.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    )
+  ).map(([name, targets]) => {
+    const selection = new Set(targets);
+    return [name, ({ target }) => selection.has(target)];
+  }),
   makeInstrumenter: (errors) => ({
     setup: generate(
       setupRaw({
@@ -61,7 +62,7 @@ export default {
           throw new Error("eval is not supported");
         },
       ],
-      ["ARAN", console],
+      ["ARAN", (/** @type {unknown}| */ value) => console.dir(value)],
     ],
     instrument: (code1, { kind, specifier }) => {
       const program1 = /** @type {estree.Program} */ (
