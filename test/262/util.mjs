@@ -1,6 +1,4 @@
-/* eslint-disable no-empty */
-
-const { String } = globalThis;
+const { String, Map, undefined } = globalThis;
 
 /** @type {(value: unknown) => string} */
 export const show = (value) => {
@@ -55,3 +53,25 @@ export const inspectError = (error) => ({
   message: inspectErrorMessage(error),
   ...inspectErrorStack(error),
 });
+
+/**
+ * @template X
+ * @template Y
+ * @param {Map<X, Y[]>} map
+ * @return {Map<Y, X[]>}
+ */
+export const inverse = (map) => {
+  /** @type {Map<Y, X[]>} */
+  const inverse = new Map();
+  for (const [key, values] of map.entries()) {
+    for (const value of values) {
+      const keys = inverse.get(value);
+      if (keys === undefined) {
+        inverse.set(value, [key]);
+      } else {
+        keys.push(key);
+      }
+    }
+  }
+  return inverse;
+};

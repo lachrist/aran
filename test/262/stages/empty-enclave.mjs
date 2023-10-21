@@ -1,71 +1,42 @@
 import { parse } from "acorn";
 import { generate } from "astring";
 import { instrumentRaw, setupRaw } from "../../../lib/index.mjs";
+import { inverse } from "../util.mjs";
 import { readFile } from "node:fs/promises";
-import { listDumpFailure } from "../result.mjs";
-import { AranError } from "../error.mjs";
 
 // eslint-disable-next-line local/strict-console
-const { console, Error, Object, JSON, Set, URL, SyntaxError } = globalThis;
+const { Map, Object, JSON, URL, console, Error, SyntaxError } = globalThis;
+
+/** @type {Map<string, string[]>} */
+const tagging = inverse(
+  new Map(
+    Object.entries(
+      JSON.parse(
+        await readFile(
+          new URL("empty-enclave.manual.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    ),
+  ),
+);
 
 const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
 
 // eslint-disable-next-line local/no-class, local/standard-declaration
-class AranEvalError extends Error {}
+class EvalAranError extends Error {}
 
-/** @type {(entry: [string, string[]]) => [string, Set<string>]} */
-const compileExclusion = ([name, targets]) => [name, new Set(targets)];
-
-/** @type {(target: string, exclusion: [string, Set<string>]) => string[]} */
-const listTag = (target, [name, selection]) =>
-  selection.has(target) ? [name] : [];
-
-/** @type {[string, Set<string>][]} */
-const exclusions = [
-  /** @type {[string, string[]]} */ ([
-    "identity",
-    listDumpFailure(
-      await readFile(new URL("identity.jsonlist", import.meta.url), "utf8"),
-    ),
-  ]),
-  /** @type {[string, string[]]} */ ([
-    "parsing",
-    listDumpFailure(
-      await readFile(new URL("parsing.jsonlist", import.meta.url), "utf8"),
-    ),
-  ]),
-  .../** @type {[string, string[]][]} */ (
-    Object.entries(
-      JSON.parse(
-        await readFile(
-          new URL("./empty-enclave-tagging.json", import.meta.url),
-          "utf8",
-        ),
-      ),
-    )
-  ),
-].map(compileExclusion);
-
-// console.log(
-//   JSON.stringify(
-//     listDumpFailure(
-//       await readFile(
-//         new URL("empty-enclave.jsonlist", import.meta.url),
-//         "utf8",
-//       ),
-//     ),
-//   ),
-// );
+// eslint-disable-next-line local/no-class, local/standard-declaration
+class ClashAranError extends Error {}
 
 /** @type {test262.Stage} */
 export default {
-  tagResult: ({ target, error }) => [
-    ...(error !== null && error.name === "AranEvalError"
-      ? ["AranEvalError"]
-      : []),
-    ...exclusions.flatMap((exclusion) => listTag(target, exclusion)),
+  requirement: ["identity", "parsing"],
+  tagFailure: ({ target, error }) => [
+    ...(error.name === "EvalAranError" ? ["eval-limitation"] : []),
+    ...(tagging.get(target) ?? []),
   ],
-  makeInstrumenter: (trace) => ({
+  instrumenter: {
     setup: generate(
       setupRaw({
         intrinsic: INTRINSIC,
@@ -76,7 +47,7 @@ export default {
       [
         "eval",
         () => {
-          throw new AranEvalError("eval is not supported");
+          throw new EvalAranError("eval is not supported");
         },
       ],
       ["ARAN", (/** @type {unknown} */ value) => console.dir(value)],
@@ -110,16 +81,11 @@ export default {
         if (log.name === "SyntaxError") {
           throw new SyntaxError(log.message);
         } else if (log.name === "ClashError") {
-          throw new AranError(log.message);
-        } else {
-          trace.push({
-            name: "InstrumenterWarning",
-            message: log.name,
-          });
+          throw new ClashAranError(log.message);
         }
       }
       const code2 = generate(program2);
       return code2;
     },
-  }),
+  },
 };

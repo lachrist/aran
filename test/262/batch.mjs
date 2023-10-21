@@ -1,54 +1,82 @@
 /* eslint-disable local/strict-console */
 
-import { stringifyResult } from "./result.mjs";
+import { readFile, writeFile } from "node:fs/promises";
 import { scrape } from "./scrape.mjs";
+import { argv } from "node:process";
 import { runTest } from "./test.mjs";
+import { inspectError } from "./util.mjs";
+import { isFailure } from "./result.mjs";
 
-const { console, process, URL } = globalThis;
+const {
+  Error,
+  Promise,
+  Map,
+  Object,
+  Reflect,
+  console,
+  process,
+  URL,
+  Set,
+  JSON,
+} = globalThis;
 
-/**
- * @type {(
- *   options: {
- *     test262: URL,
- *     writable: import("node:stream").Writable,
- *     makeInstrumenter: (trace: test262.Log[]) => test262.Instrumenter,
- *   },
- * ) => Promise<boolean>}
- */
-export const batch = async ({ test262, writable, makeInstrumenter }) => {
-  let index = 0;
-  let sigint = 0;
-  const interrupt = () => {
-    sigint += 1;
-    // SIGINT emit twice for some reasons...
-    if (sigint > 2) {
-      console.log(`force exit at test#${index}`);
-      process.exit(1);
-    }
-  };
-  process.addListener("SIGINT", interrupt);
-  for await (const url of scrape(new URL("test/", test262))) {
-    if (sigint > 0) {
-      // eslint-disable-next-line local/no-label
-      break;
-    }
-    if (index % 100 === 0) {
-      console.dir(index);
-    }
-    const target = url.href.substring(test262.href.length);
-    if (!target.includes("_FIXTURE")) {
-      const result = await runTest({
-        target,
-        test262,
-        makeInstrumenter,
-      });
-      if (result.error !== null) {
-        writable.write(stringifyResult(result));
-        writable.write("\n");
-      }
-    }
-    index += 1;
+if (process.argv.length !== 3) {
+  throw new Error("usage: node test/262/batch.mjs <stage>");
+}
+
+const stage = argv[2];
+
+const {
+  default: { instrumenter, tagFailure, requirement },
+} = /** @type {{default: test262.Stage}} */ (
+  await import(`./stages/${stage}.mjs`)
+);
+
+process.on("uncaughtException", (error, _origin) => {
+  const { name, message } = inspectError(error);
+  console.log(`${name}: ${message}`);
+});
+
+const test262 = new URL("../../test262/", import.meta.url);
+
+/** @type {Set<string>} */
+const exclusion = new Set(
+  (
+    await Promise.all(
+      requirement.map((stage) =>
+        readFile(new URL(`stages/${stage}.json`, import.meta.url), "utf8"),
+      ),
+    )
+  ).flatMap(
+    (content) => /** @type {string[]} */ (Reflect.ownKeys(JSON.parse(content))),
+  ),
+);
+
+/** @type {Map<string, string[]>} */
+const failures = new Map();
+
+let index = 0;
+
+for await (const url of scrape(new URL("test/", test262))) {
+  if (index % 100 === 0) {
+    console.dir(index);
   }
-  process.removeListener("SIGINT", interrupt);
-  return sigint === 0;
-};
+  const target = url.href.substring(test262.href.length);
+  if (!target.includes("_FIXTURE") && !exclusion.has(target)) {
+    const result = await runTest({
+      target,
+      test262,
+      instrumenter,
+    });
+    if (isFailure(result)) {
+      failures.set(target, tagFailure(result));
+    }
+  }
+  index += 1;
+}
+
+await writeFile(
+  new URL(`stages/${stage}.json`, import.meta.url),
+  JSON.stringify(Object.fromEntries(failures.entries()), null, 2),
+  "utf8",
+);

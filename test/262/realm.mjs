@@ -1,25 +1,21 @@
 import { createContext, runInContext } from "node:vm";
 
-const { gc, Reflect } = globalThis;
+const { gc, Error, Reflect } = globalThis;
+
+// eslint-disable-next-line local/no-class, local/standard-declaration
+class RealmAranError extends Error {}
 
 /**
  * @type {(
  *   options: {
  *     context: object,
  *     origin: URL,
- *     trace: test262.Log[],
  *     print: (message: string) => void,
  *     instrumenter: test262.Instrumenter,
  *   },
  * ) => test262.$262}
  */
-export const createRealm = ({
-  context,
-  origin,
-  trace,
-  print,
-  instrumenter,
-}) => {
+export const createRealm = ({ context, origin, print, instrumenter }) => {
   const { instrument, setup, globals } = instrumenter;
   createContext(context);
   for (const [name, value] of globals) {
@@ -34,7 +30,7 @@ export const createRealm = ({
   }
   let counter = 0;
   runInContext(setup, context);
-  /** @type {import("./types.js").$262} */
+  /** @type {test262.$262} */
   const $262 = {
     // @ts-ignore
     __proto__: null,
@@ -42,16 +38,10 @@ export const createRealm = ({
       createRealm({
         context: { __proto__: null },
         origin,
-        trace,
         print,
         instrumenter,
       }),
-    detachArrayBuffer: () => {
-      trace.push({
-        name: "RealmLimitation",
-        message: "detachArrayBuffer",
-      });
-    },
+    detachArrayBuffer: () => {},
     // we have no information on the location of this.
     // so we do not have to register this script to the
     // linker because dynamic import is pointless.
@@ -69,28 +59,18 @@ export const createRealm = ({
       if (typeof gc === "function") {
         return gc();
       } else {
-        trace.push({
-          name: "RealmLimitation",
-          message: "gc",
-        });
+        throw new RealmAranError("gc");
       }
     },
     global: runInContext("this;", context),
     // eslint-disable-next-line local/no-function
     get isHTMLDDA() {
-      trace.push({
-        name: "RealmLimitation",
-        message: "isHTMLDDA",
-      });
-      return {};
+      throw new RealmAranError("isHTMLDDA");
     },
+    /** @type {test262.Agent} */
     // eslint-disable-next-line local/no-function
     get agent() {
-      trace.push({
-        name: "RealmLimitation",
-        message: "argent",
-      });
-      return /** @type {any} */ ({});
+      throw new RealmAranError("agent");
     },
   };
   Reflect.defineProperty(context, "$262", {

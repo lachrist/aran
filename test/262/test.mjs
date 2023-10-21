@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { parseMetadata } from "./metadata.mjs";
 import { runTestCase } from "./case.mjs";
-import { inspectError } from "./inspect.mjs";
+import { inspectError } from "./util.mjs";
 
 const { URL } = globalThis;
 
@@ -53,52 +53,56 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
   return tests;
 };
 
+/** @type {test262.Metadata} */
+const DEFAULT_METADATA = {
+  includes: [],
+  flags: [],
+  negative: null,
+  locale: [],
+  features: [],
+};
+
 /**
  * @type {(
  *   options: {
  *     target: string,
  *     test262: URL,
- *     makeInstrumenter: (trace: test262.Log[]) => test262.Instrumenter,
+ *     instrumenter: test262.Instrumenter,
  *   },
  * ) => Promise<test262.Result>}
  */
-export const runTest = async ({ target, test262, makeInstrumenter }) => {
+export const runTest = async ({ target, test262, instrumenter }) => {
   const content = await readFile(new URL(target, test262), "utf8");
   /** @type {test262.Metadata} */
-  let metadata;
+  let metadata = DEFAULT_METADATA;
   try {
     metadata = parseMetadata(content);
   } catch (error) {
     return {
       target,
-      features: [],
-      trace: [],
+      metadata,
       error: inspectError(error),
     };
   }
-  for (const test of listTestCase({
+  for (const case_ of listTestCase({
     target,
     content,
     metadata,
     test262,
   })) {
-    /** @type {test262.Log[]} */
-    const trace = [];
     try {
-      await runTestCase(test, trace, makeInstrumenter(trace));
+      await runTestCase(case_, instrumenter);
     } catch (error) {
       return {
         target,
-        features: metadata.features,
-        trace,
+        metadata,
         error: inspectError(error),
       };
     }
   }
   return {
     target,
-    features: metadata.features,
-    trace: [],
+    metadata,
     error: null,
   };
 };

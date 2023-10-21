@@ -1,1 +1,2 @@
-*.jsonlist
+*.json
+!*.manual.json

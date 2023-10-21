@@ -19,18 +19,16 @@ const features = new Set([
 /** @type {(feature: string) => boolean} */
 const isFeatureExcluded = (feature) => features.has(feature);
 
-/** @type {(log: test262.Log) => boolean} */
-const isRealmLimitation = ({ name }) => name === "RealmLimitation";
-
 /** @type {test262.Stage} */
 export default {
-  tagResult: (result) => [
-    ...result.features.filter(isFeatureExcluded),
-    ...(result.trace.some(isRealmLimitation) ? ["RealmLimitation"] : []),
+  requirement: [],
+  tagFailure: ({ metadata, error }) => [
+    ...(error.name === "AranRealmLimitation" ? ["aran-realm-limitation"] : []),
+    ...metadata.features.filter(isFeatureExcluded),
   ],
-  makeInstrumenter: (_errors) => ({
+  instrumenter: {
     setup: "",
     globals: [],
     instrument: (code, _options) => code,
-  }),
+  },
 };

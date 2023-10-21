@@ -1,13 +1,3 @@
-export type Outcome<V, E> =
-  | {
-      type: "success";
-      value: V;
-    }
-  | {
-      type: "failure";
-      error: E;
-    };
-
 export type Flag =
   | "onlyStrict"
   | "noStrict"
@@ -34,6 +24,14 @@ export type Metadata = {
   features: string[];
 };
 
+export type Agent = {
+  start: () => void;
+  broadcast: (buffer: SharedArrayBuffer, number: number | BigInt) => {};
+  getReport: (name: string) => null | string;
+  sleep: (ms: number) => void;
+  monotonicNow: () => number;
+};
+
 export type $262 = {
   createRealm: () => $262;
   detachArrayBuffer: (arrayBuffer: ArrayBuffer) => void;
@@ -41,13 +39,7 @@ export type $262 = {
   gc: () => void;
   global: object;
   IsHTMLDDA: object;
-  agent: {
-    start: () => void;
-    broadcast: (buffer: SharedArrayBuffer, number: number | BigInt) => {};
-    getReport: (name: string) => null | string;
-    sleep: (ms: number) => void;
-    monotonicNow: () => number;
-  };
+  agent: Agent;
 };
 
 export type Case = {
@@ -67,30 +59,11 @@ type ErrorSerial = {
 
 export type Result = {
   target: string;
-  features: string[];
-  trace: Log[];
+  metadata: Metadata;
   error: null | ErrorSerial;
 };
 
 export type Failure = Result & { error: ErrorSerial };
-
-export type Log =
-  | {
-      name: "Print";
-      message: string;
-    }
-  | {
-      name: "RealmLimitation";
-      message: string;
-    }
-  | {
-      name: "InstrumenterLimitation";
-      message: string;
-    }
-  | {
-      name: "InstrumenterWarning";
-      message: string;
-    };
 
 export type Instrument = (
   code: string,
@@ -106,9 +79,12 @@ export type Instrumenter = {
   instrument: Instrument;
 };
 
+export type StageName = "identity" | "parsing" | "empty-enclave";
+
 export type Stage = {
-  makeInstrumenter: (trace: test262.Log[]) => Instrumenter;
-  tagResult: (result: Result) => string[];
+  instrumenter: Instrumenter;
+  tagFailure: (failure: Failure) => string[];
+  requirement: StageName[];
 };
 
 export as namespace test262;

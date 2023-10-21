@@ -1,52 +1,45 @@
-import { inspect } from "node:util";
-import { stdout } from "node:process";
+/* eslint-disable local/strict-console */
+
 import { runTest } from "./test.mjs";
-import { recordInstrumentation } from "./record.mjs";
+import { cleanup, recordInstrumentation } from "./record.mjs";
 
-const { Error, process, URL, Infinity } = globalThis;
-
-if (!process.execArgv.includes("--experimental-vm-modules")) {
-  throw new Error("missing --experimental-vm-modules flag");
-}
+const { console, Error, process, URL } = globalThis;
 
 if (process.argv.length !== 4) {
-  throw new Error("usage: node test/262/main.mjs <stage> <target>");
+  throw new Error("usage: node test/262/single.mjs <stage> <target>");
 }
 
 const [_exec, _main, stage, target] = process.argv;
 
 const test262 = new URL("../../test262/", import.meta.url);
 
+const codebase = new URL("codebase", import.meta.url);
+
 const {
-  default: { makeInstrumenter },
+  default: {
+    instrumenter: { setup, instrument, globals },
+  },
 } = /** @type {{default: test262.Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
 
-stdout.write(
-  inspect(
-    await runTest({
-      target,
-      test262,
-      makeInstrumenter: (errors) => {
-        const { setup, globals, instrument } = makeInstrumenter(errors);
-        return {
-          setup,
-          globals,
-          instrument: (code, { kind, specifier }) =>
-            recordInstrumentation({
-              original: code,
-              instrumented: instrument(code, { kind, specifier }),
-              kind,
-              specifier,
-            }),
-        };
-      },
-    }),
-    {
-      depth: Infinity,
-      colors: true,
+await cleanup(codebase);
+
+console.dir(
+  await runTest({
+    target,
+    test262,
+    instrumenter: {
+      setup,
+      globals,
+      instrument: (code, { kind, specifier }) =>
+        recordInstrumentation({
+          directory: codebase,
+          original: code,
+          instrumented: instrument(code, { kind, specifier }),
+          kind,
+          specifier,
+        }),
     },
-  ),
-  "utf8",
+  }),
 );

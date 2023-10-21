@@ -1,18 +1,24 @@
 import { writeFileSync } from "node:fs";
-import { readdir, unlink } from "node:fs/promises";
 import { format } from "./format.mjs";
+import { readdir, unlink } from "node:fs/promises";
 
 const { URL } = globalThis;
 
-for (const filename of await readdir(new URL("codebase/", import.meta.url))) {
-  if (filename !== ".gitignore") {
-    await unlink(new URL(`codebase/${filename}`, import.meta.url));
+/**
+ * @type {(directory: URL) => Promise<void>}
+ */
+export const cleanup = async (directory) => {
+  for (const filename of await readdir(directory)) {
+    if (filename !== ".gitignore") {
+      await unlink(new URL(filename, directory));
+    }
   }
-}
+};
 
 /**
  * @type {(
  *   options: {
+ *     directory: URL,
  *     original: string,
  *     instrumented: string,
  *     kind: "script" | "module",
@@ -21,6 +27,7 @@ for (const filename of await readdir(new URL("codebase/", import.meta.url))) {
  * ) => string}
  */
 export const recordInstrumentation = ({
+  directory,
   original,
   instrumented,
   kind,
@@ -35,7 +42,7 @@ export const recordInstrumentation = ({
           .join(".");
   const extension = kind === "module" ? "mjs" : "js";
   writeFileSync(
-    new URL(`codebase/${basename}.${extension}`, import.meta.url),
+    new URL(`${basename}.${extension}`, directory),
     [
       "// eslint-disable\n",
       "// @ts-nocheck\n",
@@ -49,7 +56,7 @@ export const recordInstrumentation = ({
     format(instrumented),
   ].join("\n");
   writeFileSync(
-    new URL(`codebase/${basename}*.${extension}`, import.meta.url),
+    new URL(`${basename}*.${extension}`, directory),
     formatted,
     "utf8",
   );
