@@ -15,14 +15,11 @@ type Record = {
   "super.constructor":
     | ".illegal"
     | ".enclave"
+    | ".default"
     | aran.Parameter
     | unbuild.Variable;
+  "super.self": ".illegal" | ".enclave" | aran.Parameter | unbuild.Variable;
   "class.field": ".illegal" | ".none" | aran.Parameter | unbuild.Variable;
-  "super.prototype":
-    | ".illegal"
-    | ".enclave"
-    | aran.Parameter
-    | unbuild.Variable;
   "function.arguments": ".illegal" | aran.Parameter | unbuild.Variable;
 };
 
