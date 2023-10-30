@@ -12,7 +12,7 @@
   "homepage": "http://github.com/lachrist/aran",
   "license": "MIT",
   "scripts": {
-    "lint": "npx prettier -c '**/*.mjs' && npx eslint 'lint/**/*.mjs' 'test/**/*.mjs' 'lib/**/*.mjs' && npx tsc",
+    "lint": "npx tsc && npx prettier -c '**/*.mjs' && npx eslint 'lint/**/*.mjs' 'test/**/*.mjs' 'lib/**/*.mjs'",
     "format": "npx prettier -w '**/*.mjs'",
     "test": "node test/test.mjs",
     "coverage": "node test/coverage.mjs",
