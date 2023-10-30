@@ -1,6 +1,6 @@
 import { createContext, runInContext } from "node:vm";
 
-const { gc, Error, Reflect } = globalThis;
+const { gc, Error, Reflect, URL } = globalThis;
 
 // eslint-disable-next-line local/no-class, local/standard-declaration
 class RealmAranError extends Error {}
@@ -9,13 +9,13 @@ class RealmAranError extends Error {}
  * @type {(
  *   options: {
  *     context: object,
- *     origin: URL,
+ *     counter: { value: number },
  *     print: (message: string) => void,
  *     instrumenter: test262.Instrumenter,
  *   },
  * ) => test262.$262}
  */
-export const createRealm = ({ context, origin, print, instrumenter }) => {
+export const createRealm = ({ context, counter, print, instrumenter }) => {
   const { instrument, setup, globals } = instrumenter;
   createContext(context);
   for (const [name, value] of globals) {
@@ -28,7 +28,6 @@ export const createRealm = ({ context, origin, print, instrumenter }) => {
       value,
     });
   }
-  let counter = 0;
   runInContext(setup, context);
   /** @type {test262.$262} */
   const $262 = {
@@ -37,7 +36,7 @@ export const createRealm = ({ context, origin, print, instrumenter }) => {
     createRealm: () =>
       createRealm({
         context: { __proto__: null },
-        origin,
+        counter,
         print,
         instrumenter,
       }),
@@ -46,14 +45,13 @@ export const createRealm = ({ context, origin, print, instrumenter }) => {
     // so we do not have to register this script to the
     // linker because dynamic import is pointless.
     evalScript: (code) => {
-      counter += 1;
-      return runInContext(
-        instrument(code, { kind: "script", specifier: counter }),
-        context,
-        {
-          filename: `${origin.href} >> evalScript#${counter}`,
-        },
-      );
+      counter.value += 1;
+      const { url, content } = instrument({
+        kind: "script",
+        url: new URL(`script:///${counter}`),
+        content: code,
+      });
+      return runInContext(content, context, { filename: url.href });
     },
     gc: () => {
       if (typeof gc === "function") {

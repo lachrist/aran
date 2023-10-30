@@ -52,14 +52,17 @@ export default {
       ],
       ["ARAN", (/** @type {unknown} */ value) => console.dir(value)],
     ],
-    instrument: (code1, { kind, specifier }) => {
+    instrument: ({ kind, url, content: content1 }) => {
       const program1 = /** @type {estree.Program} */ (
         /** @type {unknown} */ (
-          parse(code1, { ecmaVersion: "latest", sourceType: kind })
+          parse(content1, {
+            ecmaVersion: "latest",
+            sourceType: kind,
+          })
         )
       );
       const root = /** @type {import("../../../type/options").Root} */ (
-        typeof specifier === "number" ? `dynamic#${specifier}` : specifier.href
+        url.href
       );
       const { root: program2, logs } = instrumentRaw(program1, {
         kind,
@@ -84,8 +87,12 @@ export default {
           throw new ClashAranError(log.message);
         }
       }
-      const code2 = generate(program2);
-      return code2;
+      const content2 = generate(program2);
+      return {
+        kind,
+        url,
+        content: content2,
+      };
     },
   },
 };

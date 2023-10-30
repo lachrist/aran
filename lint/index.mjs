@@ -105,6 +105,7 @@ export default [
       "test/**/*.mjs",
       "lint/**/*.mjs",
     ],
+    ignores: ["test/262/codebase/**/*"],
     rules: {
       ...config.rules,
       "local/literal-basename": "off",

@@ -2,7 +2,7 @@
 
 import { readFile } from "node:fs/promises";
 import { argv } from "node:process";
-import { cleanup, recordInstrumentation } from "./record.mjs";
+import { cleanup, record } from "./record.mjs";
 import { scrape } from "./scrape.mjs";
 import { runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
@@ -21,7 +21,7 @@ const initial = parseInt(argv[3]);
 
 const test262 = new URL("../../test262/", import.meta.url);
 
-const codebase = new URL("codebase", import.meta.url);
+const codebase = new URL("codebase/", import.meta.url);
 
 const {
   default: { instrumenter, tagFailure, requirement },
@@ -70,14 +70,7 @@ for await (const url of scrape(new URL("test/", test262))) {
             instrumenter: {
               setup,
               globals,
-              instrument: (code, { kind, specifier }) =>
-                recordInstrumentation({
-                  directory: codebase,
-                  original: code,
-                  instrumented: instrument(code, { kind, specifier }),
-                  kind,
-                  specifier,
-                }),
+              instrument: (source) => record(instrument(source)),
             },
           }),
         );

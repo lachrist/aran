@@ -1,7 +1,7 @@
 /* eslint-disable local/strict-console */
 
 import { runTest } from "./test.mjs";
-import { cleanup, recordInstrumentation } from "./record.mjs";
+import { cleanup, record } from "./record.mjs";
 
 const { console, Error, process, URL } = globalThis;
 
@@ -32,14 +32,7 @@ console.dir(
     instrumenter: {
       setup,
       globals,
-      instrument: (code, { kind, specifier }) =>
-        recordInstrumentation({
-          directory: codebase,
-          original: code,
-          instrumented: instrument(code, { kind, specifier }),
-          kind,
-          specifier,
-        }),
+      instrument: (source) => record(instrument(source)),
     },
   }),
 );

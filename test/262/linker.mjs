@@ -22,7 +22,6 @@ const { Error, undefined, URL, Map, JSON } = globalThis;
  * @type {(
  *   options: {
  *     context: object,
- *     origin: URL,
  *     instrument: test262.Instrument,
  *   },
  * ) => {
@@ -30,7 +29,7 @@ const { Error, undefined, URL, Map, JSON } = globalThis;
  *   register: Register,
  * }}
  */
-export const compileLinker = ({ context, origin, instrument }) => {
+export const compileLinker = ({ context, instrument }) => {
   /** @type {Map<import("node:vm").Module | import("node:vm").Script, URL>} */
   const urls = new Map();
   /** @type {Map<string, import("node:vm").Module>} */
@@ -41,38 +40,39 @@ export const compileLinker = ({ context, origin, instrument }) => {
     if (parent_url === undefined) {
       throw new Error("missing parent url");
     }
-    const url = new URL(specifier, parent_url);
-    const identifier = `${origin.href} >> ${url.href}`;
-    let module = modules.get(url.href);
+    const url1 = new URL(specifier, parent_url);
+    let module = modules.get(url1.href);
     if (module === undefined) {
-      const content = await readFile(url, "utf8");
-      if (url.href.endsWith(".json")) {
+      const content1 = await readFile(url1, "utf8");
+      if (url1.href.endsWith(".json")) {
         module = new SyntheticModule(
           ["default"],
           () => {
             /** @type {import("node:vm").SyntheticModule} */ (module).setExport(
               "default",
-              JSON.parse(content),
+              JSON.parse(content1),
             );
           },
-          { identifier, context },
+          { identifier: url1.href, context },
         );
       } else {
-        module = new SourceTextModule(
-          instrument(content, { kind: "module", specifier: url }),
-          {
-            identifier,
-            context,
-            importModuleDynamically: /** @type {any} */ (link),
-          },
-        );
+        const { url: url2, content: content2 } = instrument({
+          kind: "module",
+          url: url1,
+          content: content1,
+        });
+        module = new SourceTextModule(content2, {
+          identifier: url2.href,
+          context,
+          importModuleDynamically: /** @type {any} */ (link),
+        });
       }
-      const race_module = modules.get(url.href);
+      const race_module = modules.get(url1.href);
       if (race_module !== undefined) {
         module = race_module;
       } else {
-        urls.set(module, url);
-        modules.set(url.href, module);
+        urls.set(module, url1);
+        modules.set(url1.href, module);
         await module.link(link);
         await module.evaluate();
       }

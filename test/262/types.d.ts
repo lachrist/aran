@@ -42,13 +42,17 @@ export type $262 = {
   agent: Agent;
 };
 
-export type Case = {
+export type Source = {
+  kind: "script" | "module";
   url: URL;
   content: string;
+};
+
+export type Case = {
+  source: Source;
   negative: null | Negative;
   asynchronous: boolean;
   includes: URL[];
-  module: boolean;
 };
 
 type ErrorSerial = {
@@ -65,13 +69,7 @@ export type Result = {
 
 export type Failure = Result & { error: ErrorSerial };
 
-export type Instrument = (
-  code: string,
-  options: {
-    kind: "script" | "module";
-    specifier: URL | number;
-  },
-) => string;
+export type Instrument = (source: Source) => Source;
 
 export type Instrumenter = {
   globals: [string, unknown][];

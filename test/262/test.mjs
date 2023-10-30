@@ -26,28 +26,33 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
   const module = metadata.flags.includes("module");
   /** @type {test262.Case[]} */
   const tests = [];
+  const kind = module ? "module" : "script";
   if (
     !metadata.flags.includes("raw") &&
     !metadata.flags.includes("module") &&
     !metadata.flags.includes("noStrict")
   ) {
     tests.push({
-      url: new URL(target, test262),
-      content: `"use strict";\n${content}`,
+      source: {
+        kind,
+        url: new URL(target, test262),
+        content: `"use strict";\n${content}`,
+      },
       negative,
       asynchronous,
       includes,
-      module,
     });
   }
   if (!metadata.flags.includes("onlyStrict")) {
     tests.push({
-      url: new URL(target, test262),
-      content,
+      source: {
+        kind,
+        url: new URL(target, test262),
+        content,
+      },
       negative,
       asynchronous,
       includes,
-      module,
     });
   }
   return tests;

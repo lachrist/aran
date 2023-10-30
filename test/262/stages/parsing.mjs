@@ -8,7 +8,12 @@ export default {
   instrumenter: {
     setup: "",
     globals: [],
-    instrument: (code, { kind }) =>
-      generate(parse(code, { ecmaVersion: "latest", sourceType: kind })),
+    instrument: ({ kind, url, content }) => ({
+      kind,
+      url,
+      content: generate(
+        parse(content, { ecmaVersion: "latest", sourceType: kind }),
+      ),
+    }),
   },
 };

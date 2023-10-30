@@ -3,6 +3,7 @@ import { readFileCache } from "./cache.mjs";
 import { createRealm } from "./realm.mjs";
 import { inspectErrorName, show } from "./util.mjs";
 import { compileLinker } from "./linker.mjs";
+import { AranTypeError } from "./error.mjs";
 
 const { Promise, Error } = globalThis;
 
@@ -61,7 +62,7 @@ const throwError = (error, _phase) => {
  * ) => Promise<void>}
  */
 export const runTestCase = async (
-  { url, content, negative, asynchronous, includes, module },
+  { source: source1, negative, asynchronous, includes },
   instrumenter,
 ) => {
   const { done, print } = asynchronous
@@ -71,7 +72,7 @@ export const runTestCase = async (
   const { instrument } = instrumenter;
   createRealm({
     context,
-    origin: url,
+    counter: { value: 0 },
     print,
     instrumenter,
   });
@@ -102,21 +103,23 @@ export const runTestCase = async (
   }
   const { link, register } = compileLinker({
     context,
-    origin: url,
     instrument,
   });
-  if (module) {
+  let source2 = source1;
+  try {
+    source2 = instrument(source1);
+  } catch (error) {
+    catchNegative(error, "parse");
+  }
+  if (source2.kind === "module") {
     try {
       /** @type {import("node:vm").Module} */
-      const module = new SourceTextModule(
-        instrument(content, { kind: "module", specifier: url }),
-        {
-          identifier: url.href,
-          context,
-          importModuleDynamically: /** @type {any} */ (link),
-        },
-      );
-      register(module, url);
+      const module = new SourceTextModule(source2.content, {
+        identifier: source2.url.href,
+        context,
+        importModuleDynamically: /** @type {any} */ (link),
+      });
+      register(module, source1.url);
       try {
         await module.link(link);
         try {
@@ -130,16 +133,13 @@ export const runTestCase = async (
     } catch (error) {
       catchNegative(error, "parse");
     }
-  } else {
+  } else if (source2.kind === "script") {
     try {
-      const script = new Script(
-        instrument(content, { kind: "script", specifier: url }),
-        {
-          filename: url.href,
-          importModuleDynamically: /** @type {any} */ (link),
-        },
-      );
-      register(script, url);
+      const script = new Script(source2.content, {
+        filename: source2.url.href,
+        importModuleDynamically: /** @type {any} */ (link),
+      });
+      register(script, source1.url);
       try {
         script.runInContext(context);
       } catch (error) {
@@ -148,6 +148,8 @@ export const runTestCase = async (
     } catch (error) {
       catchNegative(error, "parse");
     }
+  } else {
+    throw new AranTypeError("invalid source kind", source2.kind);
   }
   await done;
   if (negative !== null && !caught) {
