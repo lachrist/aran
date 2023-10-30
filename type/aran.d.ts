@@ -46,6 +46,8 @@ export type Intrinsic =
   | "Symbol.iterator"
   | "Symbol.isConcatSpreadable"
   | "Symbol.toStringTag"
+  // String //
+  | "String.prototype.concat"
   // Object //
   | "Object"
   | "Object.create"
