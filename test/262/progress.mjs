@@ -8,8 +8,18 @@ import { runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
 import { isFailure } from "./result.mjs";
 
-const { Reflect, JSON, Set, Promise, parseInt, Error, console, process, URL } =
-  globalThis;
+const {
+  Object,
+  Reflect,
+  JSON,
+  Set,
+  Promise,
+  parseInt,
+  Error,
+  console,
+  process,
+  URL,
+} = globalThis;
 
 if (process.argv.length !== 4) {
   throw new Error("usage: node test/262/batch.mjs <stage> <initial>");
@@ -42,6 +52,12 @@ const exclusion = new Set(
   ),
 );
 
+/** @type {(error: test262.ErrorSerial) => string} */
+const printError = (error) =>
+  Object.hasOwn(error, "stack")
+    ? /** @type {string} */ (error.stack)
+    : `${error.name}: ${error.message}`;
+
 process.on("uncaughtException", (error, _origin) => {
   const { name, message } = inspectError(error);
   console.log(`${name}: ${message}`);
@@ -60,20 +76,25 @@ for await (const url of scrape(new URL("test/", test262))) {
         instrumenter,
       });
       if (isFailure(result) && tagFailure(result).length === 0) {
-        await cleanup(codebase);
-        console.dir(`test262/${target}`);
         const { setup, globals, instrument } = instrumenter;
-        console.dir(
-          await runTest({
-            target,
-            test262,
-            instrumenter: {
-              setup,
-              globals,
-              instrument: (source) => record(instrument(source)),
-            },
-          }),
-        );
+        await cleanup(codebase);
+        const { metadata, error } = await runTest({
+          target,
+          test262,
+          instrumenter: {
+            setup,
+            globals,
+            instrument: (source) => record(instrument(source)),
+          },
+        });
+        console.dir(`test262/${target}`);
+        console.dir(metadata);
+        if (error === null) {
+          console.log("** Error Disappeared **");
+          console.log(printError(result.error));
+        } else {
+          console.log(printError(error));
+        }
         // eslint-disable-next-line local/no-label
         break;
       }
