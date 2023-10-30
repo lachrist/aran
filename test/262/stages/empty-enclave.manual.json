@@ -148,5 +148,10 @@
   "Array.prototype.push vulnerability to Array.prototype[0] poisoning": [
     "test/built-ins/Array/prototype/concat/15.4.4.4-5-b-iii-3-b-1.js",
     "test/built-ins/Array/prototype/concat/15.4.4.4-5-c-i-1.js"
+  ],
+  "failure to detect eval restriction because of assert.throws": [
+    "test/built-ins/Function/15.3.5.4_2-11gs.js",
+    "test/built-ins/Function/15.3.5.4_2-13gs.js",
+    "test/built-ins/Function/15.3.5.4_2-57gs.js"
   ]
 }
