@@ -1,33 +1,29 @@
 /* eslint-disable local/strict-console */
 
-import { readFile } from "node:fs/promises";
-import { argv } from "node:process";
+import { readFile, writeFile } from "node:fs/promises";
 import { cleanup, record } from "./record.mjs";
 import { scrape } from "./scrape.mjs";
 import { runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
 import { isFailure } from "./result.mjs";
 
-const {
-  Object,
-  Reflect,
-  JSON,
-  Set,
-  Promise,
-  parseInt,
-  Error,
-  console,
-  process,
-  URL,
-} = globalThis;
+const { Object, Reflect, JSON, Set, Promise, console, process, URL } =
+  globalThis;
 
-if (process.argv.length !== 4) {
-  throw new Error("usage: node test/262/batch.mjs <stage> <initial>");
-}
+const persistent = new URL("progress.json", import.meta.url);
 
-const stage = argv[2];
+/** @type {(url: URL) => Promise<string | null>} */
+const readFileMaybe = async (url) => {
+  try {
+    return await readFile(url, "utf8");
+  } catch {
+    return null;
+  }
+};
 
-const initial = parseInt(argv[3]);
+const { stage, initial } = JSON.parse(
+  (await readFileMaybe(persistent)) ?? '{"stage": "identity", "initial": 0}',
+);
 
 const test262 = new URL("../../test262/", import.meta.url);
 
@@ -102,3 +98,9 @@ for await (const url of scrape(new URL("test/", test262))) {
   }
   index += 1;
 }
+
+await writeFile(
+  persistent,
+  JSON.stringify({ stage, initial: index }, null, 2),
+  "utf8",
+);
