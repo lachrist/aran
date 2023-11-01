@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js",
-  "initial": 6658
+  "target": "test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js",
+  "initial": 12415
 }

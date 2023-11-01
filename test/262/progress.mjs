@@ -90,7 +90,8 @@ for await (const url of scrape(new URL("test/", test262))) {
             instrument: (source) => record(instrument(source)),
           },
         });
-        console.dir(`test262/${target}`);
+        console.log(JSON.stringify(target));
+        console.log(`test262/${target}`);
         console.dir(metadata);
         if (error === null) {
           console.log("** Error Disappeared **");
