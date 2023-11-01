@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/arguments-object/10.5-1-s.js",
-  "initial": 26784
+  "target": "test/language/arguments-object/cls-decl-async-private-gen-meth-args-trailing-comma-multiple.js",
+  "initial": 26853
 }
