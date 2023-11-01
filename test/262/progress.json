@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call-fn.js",
-  "initial": 15505
+  "target": "test/built-ins/ThrowTypeError/unique-per-realm-non-simple.js",
+  "initial": 22572
 }
