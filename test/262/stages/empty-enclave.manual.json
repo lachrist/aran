@@ -152,7 +152,8 @@
   "undetected eval restriction because of assert.throws": [
     "test/built-ins/Function/15.3.5.4_2-11gs.js",
     "test/built-ins/Function/15.3.5.4_2-13gs.js",
-    "test/built-ins/Function/15.3.5.4_2-57gs.js"
+    "test/built-ins/Function/15.3.5.4_2-57gs.js",
+    "test/built-ins/RegExp/S15.10.4.1_A5_T3.js"
   ],
   "undetected eval restriction because not applied": [
     "test/built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-4.js"

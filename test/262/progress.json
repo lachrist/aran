@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js",
-  "initial": 12617
+  "target": "test/built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call-fn.js",
+  "initial": 15505
 }
