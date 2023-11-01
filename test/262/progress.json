@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/built-ins/ThrowTypeError/unique-per-realm-non-simple.js",
-  "initial": 22572
+  "target": "test/language/arguments-object/10.5-1-s.js",
+  "initial": 26784
 }

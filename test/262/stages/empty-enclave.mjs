@@ -5,7 +5,8 @@ import { inverse } from "../util.mjs";
 import { readFile } from "node:fs/promises";
 
 // eslint-disable-next-line local/strict-console
-const { Map, Object, JSON, URL, console, Error, SyntaxError } = globalThis;
+const { Proxy, Reflect, Map, Object, JSON, URL, console, Error, SyntaxError } =
+  globalThis;
 
 /** @type {Map<string, string[]>} */
 const tagging = inverse(
@@ -29,6 +30,42 @@ class EvalAranError extends Error {}
 // eslint-disable-next-line local/no-class, local/standard-declaration
 class ClashAranError extends Error {}
 
+const evalTarget = () => {
+  throw new EvalAranError("eval is not supported");
+};
+
+Reflect.defineProperty(evalTarget, "length", {
+  // @ts-ignore
+  __proto__: null,
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
+
+Reflect.defineProperty(evalTarget, "name", {
+  // @ts-ignore
+  __proto__: null,
+  value: "eval",
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
+
+const throwImmutableEval = () => {
+  throw new EvalAranError("eval is immutable");
+};
+
+const evalProxy = new Proxy(evalTarget, {
+  // @ts-ignore
+  __proto__: null,
+  set: throwImmutableEval,
+  defineProperty: throwImmutableEval,
+  deleteProperty: throwImmutableEval,
+  preventExtensions: throwImmutableEval,
+  setPrototypeOf: throwImmutableEval,
+});
+
 /** @type {test262.Stage} */
 export default {
   requirement: ["identity", "parsing"],
@@ -44,12 +81,7 @@ export default {
       }),
     ),
     globals: [
-      [
-        "eval",
-        () => {
-          throw new EvalAranError("eval is not supported");
-        },
-      ],
+      ["eval", evalProxy],
       ["ARAN", (/** @type {unknown} */ value) => console.dir(value)],
     ],
     instrument: ({ kind, url, content: content1 }) => {
