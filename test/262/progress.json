@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js",
-  "initial": 12415
+  "target": "test/built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js",
+  "initial": 12617
 }

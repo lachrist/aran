@@ -26,6 +26,8 @@ const {
 
 await cleanup(codebase);
 
+console.log(`test262/${target}`);
+
 console.dir(
   await runTest({
     target,

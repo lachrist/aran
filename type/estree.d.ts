@@ -1,4 +1,4 @@
-export type BlockVariableKind = "let" | "const" | "class";
+export type BlockVariableKind = "let" | "const" | "class" | "import";
 
 export type ClosureVariableKind = "var" | "function";
 

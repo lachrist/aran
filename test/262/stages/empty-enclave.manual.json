@@ -165,8 +165,9 @@
     "test/built-ins/Infinity/S15.1.1.2_A2_T2.js",
     "test/built-ins/NaN/S15.1.1.1_A2_T2.js"
   ],
-  "ambient intrinsic do not consider relam": [
-    "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js"
+  "ambient intrinsic do not consider realm": [
+    "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js",
+    "test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js"
   ],
   "arguments is not a two-way binding with parameters": [
     "test/built-ins/Object/defineProperty/15.2.3.6-4-292-1.js",
