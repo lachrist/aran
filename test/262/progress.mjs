@@ -1,6 +1,8 @@
 /* eslint-disable local/strict-console */
 
 import { readFile, writeFile } from "node:fs/promises";
+import { pathToFileURL } from "node:url";
+import { argv } from "node:process";
 import { cleanup, record } from "./record.mjs";
 import { scrape } from "./scrape.mjs";
 import { runTest } from "./test.mjs";
@@ -10,7 +12,7 @@ import { isFailure } from "./result.mjs";
 const { Object, Reflect, JSON, Set, Promise, console, process, URL } =
   globalThis;
 
-const persistent = new URL("progress.json", import.meta.url);
+const persistent = pathToFileURL(argv[2]);
 
 /** @type {(url: URL) => Promise<string | null>} */
 const readFileMaybe = async (url) => {
@@ -72,6 +74,11 @@ for await (const url of scrape(new URL("test/", test262))) {
         instrumenter,
       });
       if (isFailure(result) && tagFailure(result).length === 0) {
+        await writeFile(
+          persistent,
+          JSON.stringify({ stage, target, initial: index }, null, 2),
+          "utf8",
+        );
         const { setup, globals, instrument } = instrumenter;
         await cleanup(codebase);
         const { metadata, error } = await runTest({
@@ -98,9 +105,3 @@ for await (const url of scrape(new URL("test/", test262))) {
   }
   index += 1;
 }
-
-await writeFile(
-  persistent,
-  JSON.stringify({ stage, initial: index }, null, 2),
-  "utf8",
-);

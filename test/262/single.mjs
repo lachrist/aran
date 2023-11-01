@@ -2,14 +2,15 @@
 
 import { runTest } from "./test.mjs";
 import { cleanup, record } from "./record.mjs";
+import { pathToFileURL } from "node:url";
+import { argv } from "node:process";
+import { readFile } from "node:fs/promises";
 
-const { console, Error, process, URL } = globalThis;
+const { JSON, console, URL } = globalThis;
 
-if (process.argv.length !== 4) {
-  throw new Error("usage: node test/262/single.mjs <stage> <target>");
-}
-
-const [_exec, _main, stage, target] = process.argv;
+const { stage, target } = JSON.parse(
+  await readFile(pathToFileURL(argv[2]), "utf8"),
+);
 
 const test262 = new URL("../../test262/", import.meta.url);
 

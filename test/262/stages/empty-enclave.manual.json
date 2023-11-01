@@ -153,5 +153,11 @@
     "test/built-ins/Function/15.3.5.4_2-11gs.js",
     "test/built-ins/Function/15.3.5.4_2-13gs.js",
     "test/built-ins/Function/15.3.5.4_2-57gs.js"
+  ],
+  "methods have a non-configurable prototype property": [
+    "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js"
+  ],
+  "write to enclave variable becomes strict": [
+    "test/built-ins/Function/prototype/apply/S15.3.4.3_A5_T4.js"
   ]
 }
