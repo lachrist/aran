@@ -68,10 +68,8 @@ export const runTestCase = async (
   const { done, print } = asynchronous
     ? makeAsynchronousTermination()
     : termination;
-  const context = { __proto__: null };
   const { instrument } = instrumenter;
-  createRealm({
-    context,
+  const context = createRealm({
     counter: { value: 0 },
     print,
     instrumenter,

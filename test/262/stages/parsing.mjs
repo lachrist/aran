@@ -7,7 +7,7 @@ export default {
   tagFailure: (_failure) => ["acorn"],
   instrumenter: {
     setup: "",
-    globals: [],
+    listGlobal: () => ({}),
     instrument: ({ kind, url, content }) => ({
       kind,
       url,

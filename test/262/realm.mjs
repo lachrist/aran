@@ -1,6 +1,6 @@
 import { createContext, runInContext } from "node:vm";
 
-const { gc, Error, Reflect, URL } = globalThis;
+const { gc, Object, Error, Reflect, URL } = globalThis;
 
 // eslint-disable-next-line local/no-class, local/standard-declaration
 class RealmAranError extends Error {}
@@ -8,38 +8,28 @@ class RealmAranError extends Error {}
 /**
  * @type {(
  *   options: {
- *     context: object,
  *     counter: { value: number },
  *     print: (message: string) => void,
  *     instrumenter: test262.Instrumenter,
  *   },
- * ) => test262.$262}
+ * ) => import("node:vm").Context & { $262: test262.$262 }}
  */
-export const createRealm = ({ context, counter, print, instrumenter }) => {
-  const { instrument, setup, globals } = instrumenter;
-  createContext(context);
-  for (const [name, value] of globals) {
-    Reflect.defineProperty(context, name, {
-      // @ts-ignore
-      __proto__: null,
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value,
-    });
+export const createRealm = ({ counter, print, instrumenter }) => {
+  const { instrument, setup, listGlobal } = instrumenter;
+  const context = createContext({ __proto__: null });
+  for (const [name, descriptor] of Object.entries(listGlobal())) {
+    Reflect.defineProperty(context, name, descriptor);
   }
-  runInContext(setup, context);
   /** @type {test262.$262} */
   const $262 = {
     // @ts-ignore
     __proto__: null,
     createRealm: () =>
       createRealm({
-        context: { __proto__: null },
         counter,
         print,
         instrumenter,
-      }),
+      }).$262,
     detachArrayBuffer: () => {},
     // we have no information on the location of this.
     // so we do not have to register this script to the
@@ -87,5 +77,6 @@ export const createRealm = ({ context, counter, print, instrumenter }) => {
     writable: true,
     value: print,
   });
-  return $262;
+  runInContext(setup, context);
+  return /** @type {any} */ (context);
 };

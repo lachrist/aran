@@ -28,7 +28,7 @@ export default {
   ],
   instrumenter: {
     setup: "",
-    globals: [],
+    listGlobal: () => ({}),
     instrument: (source) => source,
   },
 };

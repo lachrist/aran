@@ -79,14 +79,14 @@ for await (const url of scrape(new URL("test/", test262))) {
           JSON.stringify({ stage, target, initial: index }, null, 2),
           "utf8",
         );
-        const { setup, globals, instrument } = instrumenter;
+        const { setup, listGlobal, instrument } = instrumenter;
         await cleanup(codebase);
         const { metadata, error } = await runTest({
           target,
           test262,
           instrumenter: {
             setup,
-            globals,
+            listGlobal,
             instrument: (source) => record(instrument(source)),
           },
         });

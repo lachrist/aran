@@ -158,12 +158,6 @@
     "test/language/arguments-object/10.5-1-s.js",
     "test/language/arguments-object/10.5-7-b-1-s.js"
   ],
-  "undetected eval restriction because not applied": [
-    "test/built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-4.js",
-    "test/built-ins/eval/name.js",
-    "test/built-ins/eval/length-non-writable.js",
-    "test/built-ins/eval/prop-desc.js"
-  ],
   "methods have a non-configurable prototype property": [
     "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js"
   ],
@@ -178,7 +172,7 @@
     "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js",
     "test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js"
   ],
-  "arguments is not a two-way binding with parameters": [
+  "sloppy arguments is not a two-way binding with parameters": [
     "test/built-ins/Object/defineProperty/15.2.3.6-4-292-1.js",
     "test/built-ins/Object/defineProperty/15.2.3.6-4-293-2.js",
     "test/built-ins/Object/defineProperty/15.2.3.6-4-293-3.js",
@@ -188,7 +182,7 @@
     "test/language/arguments-object/10.6-10-c-ii-1.js",
     "test/language/arguments-object/10.6-10-c-ii-2.js"
   ],
-  "callee/caller properties of sloppy function remain null": [
+  "arguments/caller properties of sloppy function remain null": [
     "test/language/arguments-object/10.6-13-a-2.js",
     "test/language/arguments-object/10.6-13-a-3.js"
   ]

@@ -72,7 +72,7 @@ export type Failure = Result & { error: ErrorSerial };
 export type Instrument = (source: Source) => Source;
 
 export type Instrumenter = {
-  globals: [string, unknown][];
+  listGlobal: () => { [key in string]: PropertyDescriptor };
   setup: string;
   instrument: Instrument;
 };

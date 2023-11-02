@@ -18,7 +18,7 @@ const codebase = new URL("codebase", import.meta.url);
 
 const {
   default: {
-    instrumenter: { setup, instrument, globals },
+    instrumenter: { setup, instrument, listGlobal },
   },
 } = /** @type {{default: test262.Stage}} */ (
   await import(`./stages/${stage}.mjs`)
@@ -34,7 +34,7 @@ console.dir(
     test262,
     instrumenter: {
       setup,
-      globals,
+      listGlobal,
       instrument: (source) => record(instrument(source)),
     },
   }),

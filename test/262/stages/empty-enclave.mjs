@@ -5,7 +5,7 @@ import { inverse } from "../util.mjs";
 import { readFile } from "node:fs/promises";
 
 // eslint-disable-next-line local/strict-console
-const { Proxy, Reflect, Map, Object, JSON, URL, console, Error, SyntaxError } =
+const { Reflect, Map, Object, JSON, URL, console, Error, SyntaxError } =
   globalThis;
 
 /** @type {Map<string, string[]>} */
@@ -30,41 +30,29 @@ class EvalAranError extends Error {}
 // eslint-disable-next-line local/no-class, local/standard-declaration
 class ClashAranError extends Error {}
 
-const evalTarget = () => {
-  throw new EvalAranError("eval is not supported");
+const makeEvalPlaceholder = () => {
+  const evalPlaceholder = () => {
+    console.log("eval is not supported");
+    throw new EvalAranError("eval is not supported");
+  };
+  Reflect.defineProperty(evalPlaceholder, "length", {
+    // @ts-ignore
+    __proto__: null,
+    value: 1,
+    writable: false,
+    enumerable: false,
+    configurable: true,
+  });
+  Reflect.defineProperty(evalPlaceholder, "name", {
+    // @ts-ignore
+    __proto__: null,
+    value: "eval",
+    writable: false,
+    enumerable: false,
+    configurable: true,
+  });
+  return evalPlaceholder;
 };
-
-Reflect.defineProperty(evalTarget, "length", {
-  // @ts-ignore
-  __proto__: null,
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
-
-Reflect.defineProperty(evalTarget, "name", {
-  // @ts-ignore
-  __proto__: null,
-  value: "eval",
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
-
-const throwImmutableEval = () => {
-  throw new EvalAranError("eval is immutable");
-};
-
-const evalProxy = new Proxy(evalTarget, {
-  // @ts-ignore
-  __proto__: null,
-  set: throwImmutableEval,
-  defineProperty: throwImmutableEval,
-  deleteProperty: throwImmutableEval,
-  preventExtensions: throwImmutableEval,
-  setPrototypeOf: throwImmutableEval,
-});
 
 /** @type {test262.Stage} */
 export default {
@@ -80,10 +68,23 @@ export default {
         global: /** @type {estree.Variable} */ ("globalThis"),
       }),
     ),
-    globals: [
-      ["eval", evalProxy],
-      ["ARAN", (/** @type {unknown} */ value) => console.dir(value)],
-    ],
+    listGlobal: () => ({
+      eval: {
+        // @ts-ignore
+        __proto__: null,
+        value: makeEvalPlaceholder(),
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      ARAN: {
+        __proto__: null,
+        value: (/** @type {unknown} */ value) => console.dir(value),
+        writable: false,
+        enumerable: false,
+        configurable: false,
+      },
+    }),
     instrument: ({ kind, url, content: content1 }) => {
       const program1 = /** @type {estree.Program} */ (
         /** @type {unknown} */ (
