@@ -21,6 +21,7 @@ export type Primitive =
 export type VariableKind = "var" | "let" | "const";
 
 export type AranIntrinsic =
+  | "aran.global"
   | "aran.cache"
   | "aran.record.variables"
   | "aran.record.values"
