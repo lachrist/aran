@@ -12,6 +12,6 @@ declare global {
     | Json[]
     | { [key: string]: Json };
   type Brand<T, B> = T & { [__brand]: B };
-  type __basename = Brand<string, "__basename">;
+  type __location = Brand<string, "__location">;
   type __unique = Brand<string, "__unique">;
 }

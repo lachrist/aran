@@ -1,5 +1,5 @@
 import Curly from "./rules/curly.mjs";
-import LiteralBasename from "./rules/literal-basename.mjs";
+import LiteralLocation from "./rules/literal-location.mjs";
 import LiteralUnique from "./rules/literal-unique.mjs";
 import NoAssignmentExpression from "./rules/no-assignment-expression.mjs";
 import NoAsync from "./rules/no-async.mjs";
@@ -20,7 +20,7 @@ import StrictConsole from "./rules/strict-console.mjs";
 
 export default {
   "curly": Curly,
-  "literal-basename": LiteralBasename,
+  "literal-location": LiteralLocation,
   "literal-unique": LiteralUnique,
   "no-assignment-expression": NoAssignmentExpression,
   "no-async": NoAsync,

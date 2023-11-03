@@ -1,3 +1,4 @@
+import { relative } from "node:path";
 import { listCommentBefore, parseSimpleTypeAnnotation } from "../comment.mjs";
 
 const { JSON } = globalThis;
@@ -5,9 +6,9 @@ const { JSON } = globalThis;
 /**
  * @type {(comment: estree.Comment) => boolean}
  */
-const isBasenameComment = (comment) =>
+const isLocationComment = (comment) =>
   comment.type === "Block" &&
-  parseSimpleTypeAnnotation(comment.value) === "__basename";
+  parseSimpleTypeAnnotation(comment.value) === "__location";
 
 /**
  * @type {import("eslint").Rule.RuleModule}
@@ -16,7 +17,7 @@ export default {
   meta: {
     type: "problem",
     docs: {
-      description: "ensure a string literal match the current basename",
+      description: "ensure a string literal match the current location",
       recommended: false,
     },
     schema: {
@@ -25,21 +26,18 @@ export default {
     },
   },
   create: (context) => {
-    const segments = /** @type {string} */ (
-      context.filename.split("/").pop()
-    ).split(".");
-    const basename = segments.slice(0, -1).join(".");
+    const location = relative(context.cwd, context.filename);
     return {
       Literal: (node) => {
         if (
-          listCommentBefore(node, context.sourceCode).some(isBasenameComment)
+          listCommentBefore(node, context.sourceCode).some(isLocationComment)
         ) {
-          if (node.value !== basename) {
+          if (node.value !== location) {
             context.report({
               node,
               message: `Expected basename string literal ${JSON.stringify(
                 node.value,
-              )} to be ${JSON.stringify(basename)}`,
+              )} to be ${JSON.stringify(location)}`,
             });
           }
         }

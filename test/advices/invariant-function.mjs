@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-syntax */
+/* eslint-disable local/strict-console */
 
 /**
  * @typedef {Brand<unknown, "value">} Value
@@ -53,6 +53,7 @@ const {
     prototype: { splice },
   },
   Reflect: { apply, construct },
+  console,
   console: { dir },
 } = globalThis;
 

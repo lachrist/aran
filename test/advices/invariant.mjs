@@ -1,3 +1,5 @@
+/* eslint-disable local/strict-console */
+
 /**
  * @typedef {Brand<unknown, "value">} Value
  */
@@ -116,6 +118,7 @@ const {
   },
   Object: { hasOwn },
   Reflect: { apply, construct },
+  console,
   console: { dir },
 } = globalThis;
 

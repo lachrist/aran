@@ -89,7 +89,7 @@ export default [
     ignores: ["lib/**/*.test.mjs", "lib/**/*.fixture.mjs"],
     rules: {
       ...config.rules,
-      "local/literal-basename": "error",
+      "local/literal-location": "error",
       "local/literal-unique": "error",
       "local/no-async": "error",
       "local/no-dependency": "error",
@@ -108,7 +108,7 @@ export default [
     ignores: ["test/262/codebase/**/*"],
     rules: {
       ...config.rules,
-      "local/literal-basename": "off",
+      "local/literal-location": "off",
       "local/literal-unique": "off",
       "local/no-async": "off",
       "local/no-dependency": "off",
