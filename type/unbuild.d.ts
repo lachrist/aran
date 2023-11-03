@@ -6,6 +6,8 @@ export type Label = Brand<string, "unbuild.Label">;
 
 export type Path = Brand<string, "unbuild.Path">;
 
+export type Fragment = Brand<string, "unbuild.Fragment">;
+
 export type Log =
   | {
       name: "SyntaxError";
