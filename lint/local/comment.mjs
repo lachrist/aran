@@ -11,7 +11,7 @@ export const listCommentBefore = (node, source) => {
   );
 };
 
-const regexp = /^\*\s*@type\s*\{\s*([^}]*)\s*\}\s*$/gu;
+const regexp = /^\*\s*@type\s*\{\s*([^}]*)\s*\}\s*$/u;
 
 /**
  * @type {(comment: string) => string | null}
