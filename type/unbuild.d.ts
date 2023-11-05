@@ -1,12 +1,28 @@
 import type { Context } from "../lib/unbuild/context.d.ts";
 
-export type Variable = Brand<string, "unbuild.Variable">;
+export type DeadzoneBaseVariable = Brand<
+  string,
+  "unbuild.DeadzoneBaseVariable"
+>;
+
+export type OriginalBaseVariable = Brand<
+  string,
+  "unbuild.OriginalBaseVariable"
+>;
+
+export type MetaVariable = Brand<string, "unbuild.MetaVariable">;
+
+export type BaseVariable = DeadzoneBaseVariable | OriginalBaseVariable;
+
+export type Variable = BaseVariable | MetaVariable;
 
 export type Label = Brand<string, "unbuild.Label">;
 
 export type Path = Brand<string, "unbuild.Path">;
 
-export type Fragment = Brand<string, "unbuild.Fragment">;
+export type Meta = Brand<bigint, "unbuild.Meta">;
+
+export type RootMeta = Brand<bigint, "unbuild.RootMeta">;
 
 export type Log =
   | {

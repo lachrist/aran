@@ -13,6 +13,6 @@
     "noUnusedParameters": true,
     "moduleResolution": "node"
   },
-  "include": ["./type/", "./lib/", "./test/", "./lint/"],
+  "include": ["./type/", "./build/", "./lib/", "./test/", "./lint/"],
   "exclude": ["./test/262/codebase/"]
 }
