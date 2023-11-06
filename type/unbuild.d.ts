@@ -22,8 +22,6 @@ export type Path = Brand<string, "unbuild.Path">;
 
 export type Meta = Brand<bigint, "unbuild.Meta">;
 
-export type RootMeta = Brand<bigint, "unbuild.RootMeta">;
-
 export type Log =
   | {
       name: "SyntaxError";
@@ -47,7 +45,7 @@ export type Atom = {
   Tag: {
     path: Path;
     initialization: Variable | null;
-    context: Context | null;
+    context: (Context & { meta: string }) | null;
     logs: Log[];
   };
 };

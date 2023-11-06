@@ -48,7 +48,7 @@ type InternalLocalOptions<L> = CommonOptions<L> & {
   enclave: false;
   strict: null;
   root: null;
-  context: Context & { path: weave.OriginPath };
+  context: Context & { meta: "string" };
 };
 
 export type Options<L> =

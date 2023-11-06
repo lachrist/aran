@@ -194,7 +194,7 @@ type GenericConditionalAfterAdvice<G extends Generic> = (
 
 type GenericEvalBeforeAdvice<G extends Generic> = (
   value: G["Value"],
-  context: Context & { path: weave.OriginPath },
+  context: Context & { meta: string },
   location: G["Location"],
 ) => G["ValueResult"];
 
@@ -751,7 +751,7 @@ type Point<V, L> =
   | {
       type: "eval.before";
       value: V;
-      context: Context & { path: weave.OriginPath };
+      context: Context & { meta: string };
       location: L;
     }
   | {
