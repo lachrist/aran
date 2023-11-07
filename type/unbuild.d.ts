@@ -10,7 +10,17 @@ export type OriginalBaseVariable = Brand<
   "unbuild.OriginalBaseVariable"
 >;
 
-export type MetaVariable = Brand<string, "unbuild.MetaVariable">;
+export type ConstantMetaVariable = Brand<
+  string,
+  "unbuild.ConstantMetaVariable"
+>;
+
+export type WritableMetaVariable = Brand<
+  string,
+  "unbuild.WritableMetaVariable"
+>;
+
+export type MetaVariable = ConstantMetaVariable | WritableMetaVariable;
 
 export type BaseVariable = DeadzoneBaseVariable | OriginalBaseVariable;
 
