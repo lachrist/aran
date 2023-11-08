@@ -1,17 +1,17 @@
 {
   "compilerOptions": {
-    "exactOptionalPropertyTypes": true,
     "declaration": false,
     "allowJs": true,
     "checkJs": true,
     "noEmit": true,
     "strict": true,
+    "moduleResolution": "node",
     "lib": ["es2022"],
     "target": "es2022",
     "module": "es2022",
     "typeRoots": ["./node_modules/@types"],
     "noUnusedParameters": true,
-    "moduleResolution": "node"
+    "exactOptionalPropertyTypes": true
   },
   "include": ["./type/", "./build/", "./lib/", "./test/", "./lint/"],
   "exclude": ["./test/262/codebase/"]
