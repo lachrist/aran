@@ -54,7 +54,7 @@ export type Atom = {
   GlobalVariable: estree.Variable;
   Tag: {
     path: Path;
-    initialization: Variable | null;
+    initialization: boolean | null;
     context: (Context & { meta: string }) | null;
     logs: Log[];
   };
