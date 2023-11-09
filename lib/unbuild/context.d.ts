@@ -4,9 +4,10 @@ import type { Root } from "../../type/options.d.ts";
 import { Param } from "./param.mjs";
 
 export type Context = {
-  strict: boolean;
-  root: Root;
-  scope: Scope;
-  private: Private;
-  params: Param[];
+  "strict": boolean;
+  "root": Root;
+  "scope": Scope;
+  "private": Private;
+  "params": Param[];
+  "catch.error": boolean;
 };
