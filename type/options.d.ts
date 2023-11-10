@@ -1,7 +1,7 @@
 import type { Context } from "../lib/unbuild/context.d.ts";
 import type { Pointcut } from "./advice.js";
 
-export type Root = Brand<string, "options.Root">;
+export type Base = Brand<string, "options.Base">;
 
 export type AdviceKind = "function" | "object";
 
@@ -10,7 +10,7 @@ export type Advice = {
   variable: estree.Variable;
 };
 
-export type Locate<L> = (origin: weave.OriginPath, root: Root) => L;
+export type Locate<L> = (path: weave.OriginPath, base: Base) => L;
 
 //////////////////////
 // Internal Options //
@@ -27,27 +27,27 @@ type CommonOptions<L> = {
 type GlobalOptions<L> = CommonOptions<L> & {
   kind: "module" | "script" | "eval";
   situ: "global";
-  enclave: boolean;
+  plug: "reify" | "alien";
   mode: "sloppy";
-  root: Root;
+  base: Base;
   context: null;
 };
 
 type ExternalLocalOptions<L> = CommonOptions<L> & {
   kind: "eval";
   situ: "local";
-  enclave: true;
+  plug: "alien";
   mode: "strict" | "sloppy";
-  root: Root;
+  base: Base;
   context: null;
 };
 
 type InternalLocalOptions<L> = CommonOptions<L> & {
   kind: "eval";
   situ: "local";
-  enclave: false;
+  plug: "reify";
   mode: null;
-  root: null;
+  base: null;
   context: Context & { meta: "string" };
 };
 
@@ -71,27 +71,27 @@ type CommonUserOptions<L> = {
 type GlobalUserOptions<L> = CommonUserOptions<L> & {
   kind?: "module" | "script" | "eval";
   situ?: "global";
-  enclave?: boolean;
+  plug?: "reify" | "alien";
   mode?: "sloppy";
-  root?: Root;
+  base?: Base;
   context?: null;
 };
 
 type ExternalLocalUserOptions<L> = CommonUserOptions<L> & {
   kind?: "eval";
   situ?: "local";
-  enclave?: true;
+  plug?: "alien";
   mode?: "strict" | "sloppy";
-  root?: Root;
+  base?: Base;
   context?: null;
 };
 
 type InternalLocalUserOptions<L> = CommonUserOptions<L> & {
   kind?: "eval";
   situ?: "local";
-  enclave?: false;
+  plug?: "reify";
   mode?: null;
-  root?: null;
+  base?: null;
   context?: Context & { path: weave.OriginPath };
 };
 

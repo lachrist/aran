@@ -94,7 +94,7 @@ export default {
           })
         )
       );
-      const root = /** @type {import("../../../type/options").Root} */ (
+      const base = /** @type {import("../../../type/options").Base} */ (
         url.href
       );
       const { root: program2, logs } = instrumentRaw(program1, {
@@ -110,8 +110,8 @@ export default {
         escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
         locate: (path, root) => `${root}.${path}`,
         situ: "global",
-        enclave: true,
-        root,
+        plug: "alien",
+        base,
       });
       for (const log of logs) {
         if (log.name === "SyntaxError") {
