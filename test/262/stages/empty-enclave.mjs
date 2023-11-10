@@ -109,7 +109,7 @@ export default {
         intrinsic: INTRINSIC,
         escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
         locate: (path, root) => `${root}.${path}`,
-        site: "global",
+        situ: "global",
         enclave: true,
         root,
       });

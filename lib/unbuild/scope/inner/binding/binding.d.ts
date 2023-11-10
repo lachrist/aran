@@ -19,7 +19,7 @@ type GlobalBinding = {
 type EnclaveBinding = {
   type: "enclave";
   kind: "let" | "const" | "var" | "missing";
-  site: "local" | "global";
+  situ: "local" | "global";
 };
 
 type Binding = ImportBinding | RegularBinding | GlobalBinding | EnclaveBinding;
@@ -32,4 +32,4 @@ export type PresentBinding =
   | ImportBinding
   | RegularBinding
   | (GlobalBinding & { kind: "let" | "const" | "var" })
-  | (EnclaveBinding & { kind: "let" | "const" | "var"; site: "global" });
+  | (EnclaveBinding & { kind: "let" | "const" | "var"; situ: "global" });

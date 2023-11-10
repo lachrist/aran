@@ -26,7 +26,7 @@ type CommonOptions<L> = {
 
 type GlobalOptions<L> = CommonOptions<L> & {
   kind: "module" | "script" | "eval";
-  site: "global";
+  situ: "global";
   enclave: boolean;
   strict: false;
   root: Root;
@@ -35,7 +35,7 @@ type GlobalOptions<L> = CommonOptions<L> & {
 
 type ExternalLocalOptions<L> = CommonOptions<L> & {
   kind: "eval";
-  site: "local";
+  situ: "local";
   enclave: true;
   strict: boolean;
   root: Root;
@@ -44,7 +44,7 @@ type ExternalLocalOptions<L> = CommonOptions<L> & {
 
 type InternalLocalOptions<L> = CommonOptions<L> & {
   kind: "eval";
-  site: "local";
+  situ: "local";
   enclave: false;
   strict: null;
   root: null;
@@ -70,7 +70,7 @@ type CommonUserOptions<L> = {
 
 type GlobalUserOptions<L> = CommonUserOptions<L> & {
   kind?: "module" | "script" | "eval";
-  site?: "global";
+  situ?: "global";
   enclave?: boolean;
   strict?: false;
   root?: Root;
@@ -79,7 +79,7 @@ type GlobalUserOptions<L> = CommonUserOptions<L> & {
 
 type ExternalLocalUserOptions<L> = CommonUserOptions<L> & {
   kind?: "eval";
-  site?: "local";
+  situ?: "local";
   enclave?: true;
   strict?: boolean;
   root?: Root;
@@ -88,7 +88,7 @@ type ExternalLocalUserOptions<L> = CommonUserOptions<L> & {
 
 type InternalLocalUserOptions<L> = CommonUserOptions<L> & {
   kind?: "eval";
-  site?: "local";
+  situ?: "local";
   enclave?: false;
   strict?: null;
   root?: null;
