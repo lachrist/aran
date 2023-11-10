@@ -19,7 +19,6 @@ type GlobalBinding = {
 type EnclaveBinding = {
   type: "enclave";
   kind: "let" | "const" | "var" | "missing";
-  situ: "local" | "global";
 };
 
 type Binding = ImportBinding | RegularBinding | GlobalBinding | EnclaveBinding;
