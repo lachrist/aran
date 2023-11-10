@@ -31,4 +31,4 @@ export type PresentBinding =
   | ImportBinding
   | RegularBinding
   | (GlobalBinding & { kind: "let" | "const" | "var" })
-  | (EnclaveBinding & { kind: "let" | "const" | "var"; situ: "global" });
+  | (EnclaveBinding & { kind: "let" | "const" | "var" });
