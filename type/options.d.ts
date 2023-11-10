@@ -28,7 +28,7 @@ type GlobalOptions<L> = CommonOptions<L> & {
   kind: "module" | "script" | "eval";
   situ: "global";
   enclave: boolean;
-  strict: false;
+  mode: "sloppy";
   root: Root;
   context: null;
 };
@@ -37,7 +37,7 @@ type ExternalLocalOptions<L> = CommonOptions<L> & {
   kind: "eval";
   situ: "local";
   enclave: true;
-  strict: boolean;
+  mode: "strict" | "sloppy";
   root: Root;
   context: null;
 };
@@ -46,7 +46,7 @@ type InternalLocalOptions<L> = CommonOptions<L> & {
   kind: "eval";
   situ: "local";
   enclave: false;
-  strict: null;
+  mode: null;
   root: null;
   context: Context & { meta: "string" };
 };
@@ -72,7 +72,7 @@ type GlobalUserOptions<L> = CommonUserOptions<L> & {
   kind?: "module" | "script" | "eval";
   situ?: "global";
   enclave?: boolean;
-  strict?: false;
+  mode?: "sloppy";
   root?: Root;
   context?: null;
 };
@@ -81,7 +81,7 @@ type ExternalLocalUserOptions<L> = CommonUserOptions<L> & {
   kind?: "eval";
   situ?: "local";
   enclave?: true;
-  strict?: boolean;
+  mode?: "strict" | "sloppy";
   root?: Root;
   context?: null;
 };
@@ -90,7 +90,7 @@ type InternalLocalUserOptions<L> = CommonUserOptions<L> & {
   kind?: "eval";
   situ?: "local";
   enclave?: false;
-  strict?: null;
+  mode?: null;
   root?: null;
   context?: Context & { path: weave.OriginPath };
 };

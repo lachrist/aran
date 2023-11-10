@@ -99,7 +99,7 @@ export default {
       );
       const { root: program2, logs } = instrumentRaw(program1, {
         kind,
-        strict: false,
+        mode: "sloppy",
         context: null,
         pointcut: [],
         advice: {
