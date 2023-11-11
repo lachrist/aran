@@ -11,24 +11,16 @@ type RegularBinding = {
   exports: estree.Specifier[];
 };
 
-type GlobalBinding = {
-  type: "global";
+type RootBinding = {
+  type: "root";
   kind: "let" | "const" | "var" | "missing";
 };
 
-type EnclaveBinding = {
-  type: "enclave";
-  kind: "let" | "const" | "var" | "missing";
-};
+type Binding = ImportBinding | RegularBinding | RootBinding;
 
-type Binding = ImportBinding | RegularBinding | GlobalBinding | EnclaveBinding;
-
-export type MissingBinding =
-  | (GlobalBinding & { kind: "missing" })
-  | (EnclaveBinding & { kind: "missing" });
+export type MissingBinding = RootBinding & { kind: "missing" };
 
 export type PresentBinding =
   | ImportBinding
   | RegularBinding
-  | (GlobalBinding & { kind: "let" | "const" | "var" })
-  | (EnclaveBinding & { kind: "let" | "const" | "var" });
+  | (RootBinding & { kind: "let" | "const" | "var" });
