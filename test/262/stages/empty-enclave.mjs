@@ -104,10 +104,7 @@ export default {
         mode: "sloppy",
         context: null,
         pointcut: [],
-        advice: {
-          kind: "object",
-          variable: /** @type {estree.Variable} */ ("__ARAN_ADVICE__"),
-        },
+        advice: /** @type {estree.Variable} */ ("__ARAN_ADVICE__"),
         intrinsic: INTRINSIC,
         escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
         locate: (path, base) => `${base}#${path}`,
