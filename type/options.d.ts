@@ -3,7 +3,7 @@ import type {
   AlienLocalProgram,
   GlobalProgram,
   ReifyLocalProgram,
-} from "../lib/program.js";
+} from "../lib/unbuild/program.js";
 import type { Pointcut } from "./advice.js";
 
 export type Base = Brand<string, "options.Base">;
@@ -30,24 +30,23 @@ type CommonOptions<L> = {
   base: Base;
 };
 
-type GlobalOptions<L> = CommonOptions<L> & {
-  program: GlobalProgram;
-  context: {
+type GlobalOptions<L> = CommonOptions<L> &
+  GlobalProgram & {
     mode: "sloppy";
+    context: null;
   };
-};
 
-type AlienLocalOptions<L> = CommonOptions<L> & {
-  program: AlienLocalProgram;
-  context: {
+type AlienLocalOptions<L> = CommonOptions<L> &
+  AlienLocalProgram & {
     mode: "strict" | "sloppy";
+    context: null;
   };
-};
 
-type ReifyLocalOptions<L> = CommonOptions<L> & {
-  program: ReifyLocalProgram;
-  context: EvalContext;
-};
+type ReifyLocalOptions<L> = CommonOptions<L> &
+  ReifyLocalProgram & {
+    mode: null;
+    context: EvalContext;
+  };
 
 export type RootOptions<L> = GlobalOptions<L> | AlienLocalOptions<L>;
 

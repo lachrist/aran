@@ -98,12 +98,11 @@ export default {
         url.href
       );
       const { root: program2, logs } = instrumentRaw(program1, {
-        program: {
-          kind,
-          situ: "global",
-          plug: "alien",
-        },
-        context: { mode: "sloppy" },
+        kind,
+        situ: "global",
+        plug: "alien",
+        mode: "sloppy",
+        context: null,
         pointcut: [],
         advice: {
           kind: "object",
@@ -111,7 +110,7 @@ export default {
         },
         intrinsic: INTRINSIC,
         escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
-        locate: (path, root) => `${root}.${path}`,
+        locate: (path, base) => `${base}#${path}`,
         base,
       });
       for (const log of logs) {
