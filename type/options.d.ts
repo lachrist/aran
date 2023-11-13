@@ -1,4 +1,9 @@
-import type { Context } from "../lib/unbuild/context.d.ts";
+import type { EvalContext } from "../lib/unbuild/context.d.ts";
+import type {
+  AlienLocalProgram,
+  GlobalProgram,
+  ReifyLocalProgram,
+} from "../lib/program.js";
 import type { Pointcut } from "./advice.js";
 
 export type Base = Brand<string, "options.Base">;
@@ -22,39 +27,33 @@ type CommonOptions<L> = {
   advice: Advice;
   intrinsic: estree.Variable;
   escape: estree.Variable;
+  base: Base;
 };
 
 type GlobalOptions<L> = CommonOptions<L> & {
-  kind: "module" | "script" | "eval";
-  situ: "global";
-  plug: "reify" | "alien";
-  mode: "sloppy";
-  base: Base;
-  context: null;
+  program: GlobalProgram;
+  context: {
+    mode: "sloppy";
+  };
 };
 
-type ExternalLocalOptions<L> = CommonOptions<L> & {
-  kind: "eval";
-  situ: "local";
-  plug: "alien";
-  mode: "strict" | "sloppy";
-  base: Base;
-  context: null;
+type AlienLocalOptions<L> = CommonOptions<L> & {
+  program: AlienLocalProgram;
+  context: {
+    mode: "strict" | "sloppy";
+  };
 };
 
-type InternalLocalOptions<L> = CommonOptions<L> & {
-  kind: "eval";
-  situ: "local";
-  plug: "reify";
-  mode: null;
-  base: null;
-  context: Context & { meta: "string" };
+type ReifyLocalOptions<L> = CommonOptions<L> & {
+  program: ReifyLocalProgram;
+  context: EvalContext;
 };
 
-export type Options<L> =
-  | GlobalOptions<L>
-  | ExternalLocalOptions<L>
-  | InternalLocalOptions<L>;
+export type RootOptions<L> = GlobalOptions<L> | AlienLocalOptions<L>;
+
+export type NodeOptions<L> = ReifyLocalOptions<L>;
+
+export type Options<L> = RootOptions<L> | NodeOptions<L>;
 
 //////////////////////
 // External Options //
@@ -66,6 +65,7 @@ type CommonUserOptions<L> = {
   advice?: Advice;
   intrinsic?: estree.Variable;
   escape?: estree.Variable;
+  base?: Base;
 };
 
 type GlobalUserOptions<L> = CommonUserOptions<L> & {
@@ -73,29 +73,27 @@ type GlobalUserOptions<L> = CommonUserOptions<L> & {
   situ?: "global";
   plug?: "reify" | "alien";
   mode?: "sloppy";
-  base?: Base;
   context?: null;
 };
 
-type ExternalLocalUserOptions<L> = CommonUserOptions<L> & {
+type AlienLocalUserOptions<L> = CommonUserOptions<L> & {
   kind?: "eval";
   situ?: "local";
   plug?: "alien";
   mode?: "strict" | "sloppy";
-  base?: Base;
   context?: null;
 };
 
-type InternalLocalUserOptions<L> = CommonUserOptions<L> & {
+type ReifyLocalUserOptions<L> = CommonUserOptions<L> & {
   kind?: "eval";
   situ?: "local";
   plug?: "reify";
   mode?: null;
-  base?: null;
-  context?: Context & { path: weave.OriginPath };
+  context: EvalContext;
 };
 
-export type UserOptions<L> =
-  | GlobalUserOptions<L>
-  | ExternalLocalUserOptions<L>
-  | InternalLocalUserOptions<L>;
+type RootUserOptions<L> = GlobalUserOptions<L> | AlienLocalUserOptions<L>;
+
+type NodeUserOptions<L> = ReifyLocalUserOptions<L>;
+
+export type UserOptions<L> = RootUserOptions<L> | NodeUserOptions<L>;
