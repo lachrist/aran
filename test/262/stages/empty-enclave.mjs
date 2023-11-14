@@ -3,6 +3,9 @@ import { generate } from "astring";
 import { instrument, setup } from "../../../lib/index.mjs";
 import { inverse } from "../util.mjs";
 import { readFile } from "node:fs/promises";
+import { cwd } from "node:process";
+import { fileURLToPath } from "node:url";
+import { relative } from "node:path";
 
 // eslint-disable-next-line local/strict-console
 const { Reflect, Map, Object, JSON, URL, console, Error } = globalThis;
@@ -91,7 +94,7 @@ export default {
         )
       );
       const base = /** @type {import("../../../type/options").Base} */ (
-        url.href
+        relative(cwd(), fileURLToPath(url))
       );
       const program2 = instrument(
         program1,
