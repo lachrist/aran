@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/annexB/built-ins/Date/prototype/getYear/nan.js",
-  "initial": 4
+  "target": "test/annexB/built-ins/Date/prototype/getYear/this-not-date.js",
+  "initial": 7
 }
