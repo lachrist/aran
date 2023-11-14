@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/annexB/built-ins/Date/prototype/getYear/this-not-date.js",
-  "initial": 7
+  "target": "test/built-ins/Array/from/calling-from-valid-1-noStrict.js",
+  "initial": 1123
 }
