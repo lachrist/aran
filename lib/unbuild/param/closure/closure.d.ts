@@ -20,5 +20,5 @@ export type Closure =
       arrow: Arrow;
       self: Cache;
       super: Cache | null;
-      field: Cache | null;
+      field: Cache;
     };

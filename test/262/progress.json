@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/built-ins/ArrayBuffer/isView/arg-is-dataview-subclass-instance.js",
-  "initial": 4089
+  "target": "test/built-ins/Function/internals/Construct/derived-return-val.js",
+  "initial": 6465
 }
