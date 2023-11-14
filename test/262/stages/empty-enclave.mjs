@@ -1,12 +1,11 @@
 import { parse } from "acorn";
 import { generate } from "astring";
-import { instrumentRaw, setupRaw } from "../../../lib/index.mjs";
+import { instrument, setup } from "../../../lib/index.mjs";
 import { inverse } from "../util.mjs";
 import { readFile } from "node:fs/promises";
 
 // eslint-disable-next-line local/strict-console
-const { Reflect, Map, Object, JSON, URL, console, Error, SyntaxError } =
-  globalThis;
+const { Reflect, Map, Object, JSON, URL, console, Error } = globalThis;
 
 /** @type {Map<string, string[]>} */
 const tagging = inverse(
@@ -26,9 +25,6 @@ const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
 
 // eslint-disable-next-line local/no-class, local/standard-declaration
 class EvalAranError extends Error {}
-
-// eslint-disable-next-line local/no-class, local/standard-declaration
-class ClashAranError extends Error {}
 
 const makeEvalPlaceholder = () => {
   const evalPlaceholder = () => {
@@ -63,7 +59,7 @@ export default {
   ],
   instrumenter: {
     setup: generate(
-      setupRaw({
+      setup({
         intrinsic: INTRINSIC,
         global: /** @type {estree.Variable} */ ("globalThis"),
       }),
@@ -97,26 +93,25 @@ export default {
       const base = /** @type {import("../../../type/options").Base} */ (
         url.href
       );
-      const { root: program2, logs } = instrumentRaw(program1, {
-        kind,
-        situ: "global",
-        plug: "alien",
-        mode: "sloppy",
-        context: null,
-        pointcut: [],
-        advice: /** @type {estree.Variable} */ ("__ARAN_ADVICE__"),
-        intrinsic: INTRINSIC,
-        escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
-        locate: (path, base) => `${base}#${path}`,
-        base,
-      });
-      for (const log of logs) {
-        if (log.name === "SyntaxError") {
-          throw new SyntaxError(log.message);
-        } else if (log.name === "ClashError") {
-          throw new ClashAranError(log.message);
-        }
-      }
+      const program2 = instrument(
+        program1,
+        // make sure we defined all options
+        /** @type {import("../../../type/options.d.ts").Options<string>} */ ({
+          kind,
+          situ: "global",
+          plug: "alien",
+          mode: "sloppy",
+          context: null,
+          pointcut: [],
+          advice: /** @type {estree.Variable} */ ("__ARAN_ADVICE__"),
+          intrinsic: INTRINSIC,
+          escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
+          locate: (path, base) => `${base}#${path}`,
+          base,
+          error: "throw",
+          warning: "silent",
+        }),
+      );
       const content2 = generate(program2);
       return {
         kind,

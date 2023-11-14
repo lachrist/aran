@@ -21,6 +21,8 @@ type CommonOptions<L> = {
   intrinsic: estree.Variable;
   escape: estree.Variable;
   base: Base;
+  warning: "console" | "silent";
+  error: "throw" | "embed";
 };
 
 type GlobalOptions<L> = CommonOptions<L> &
