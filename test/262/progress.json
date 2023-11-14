@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/arguments-object/cls-decl-async-private-gen-meth-args-trailing-comma-multiple.js",
-  "initial": 26853
+  "target": "test/annexB/built-ins/Date/prototype/getYear/nan.js",
+  "initial": 4
 }
