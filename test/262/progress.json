@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/built-ins/Function/internals/Construct/derived-return-val.js",
-  "initial": 6465
+  "target": "test/built-ins/Promise/prototype/finally/subclass-species-constructor-reject-count.js",
+  "initial": 12111
 }
