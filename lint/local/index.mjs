@@ -1,10 +1,13 @@
+/* eslint-disable local/no-deep-import */
+
 import Curly from "./rules/curly.mjs";
 import LiteralLocation from "./rules/literal-location.mjs";
 import LiteralUnique from "./rules/literal-unique.mjs";
 import NoAssignmentExpression from "./rules/no-assignment-expression.mjs";
 import NoAsync from "./rules/no-async.mjs";
 import NoClass from "./rules/no-class.mjs";
-import NoDependency from "./rules/no-dependency.mjs";
+import NoDeepImport from "./rules/no-deep-import.mjs";
+import NoDynamicImport from "./rules/no-dynamic-import.mjs";
 import NoEmptyReturn from "./rules/no-empty-return.mjs";
 import NoFunction from "./rules/no-function.mjs";
 import NoGlobal from "./rules/no-global.mjs";
@@ -15,6 +18,7 @@ import NoOptionalChaining from "./rules/no-optional-chaining.mjs";
 import NoOptionalParameter from "./rules/no-optional-parameter.mjs";
 import NoPureStatement from "./rules/no-pure-statement.mjs";
 import NoRestParameter from "./rules/no-rest-parameter.mjs";
+import NoStaticDependency from "./rules/no-static-dependency.mjs";
 import StandardDeclaration from "./rules/standard-declaration.mjs";
 import StrictConsole from "./rules/strict-console.mjs";
 
@@ -25,7 +29,8 @@ export default {
   "no-assignment-expression": NoAssignmentExpression,
   "no-async": NoAsync,
   "no-class": NoClass,
-  "no-dependency": NoDependency,
+  "no-deep-import": NoDeepImport,
+  "no-dynamic-import": NoDynamicImport,
   "no-empty-return": NoEmptyReturn,
   "no-function": NoFunction,
   "no-global": NoGlobal,
@@ -36,6 +41,7 @@ export default {
   "no-optional-parameter": NoOptionalParameter,
   "no-pure-statement": NoPureStatement,
   "no-rest-parameter": NoRestParameter,
+  "no-static-dependency": NoStaticDependency,
   "standard-declaration": StandardDeclaration,
   "strict-console": StrictConsole,
 };
