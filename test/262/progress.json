@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-2.js",
-  "initial": 26996
+  "target": "test/language/comments/S7.4_A5.js",
+  "initial": 27306
 }
