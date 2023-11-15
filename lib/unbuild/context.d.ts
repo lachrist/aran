@@ -11,7 +11,7 @@ export type Context = {
   catch: boolean;
   closure: Closure;
   scope: Scope;
-  privates: { [key in estree.PrivateKey]: Cache };
+  privates: { [key in estree.PrivateKey]?: Cache };
 };
 
 export type EvalContext = Omit<Context, "base"> & {
