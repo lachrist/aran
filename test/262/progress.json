@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/destructuring/binding/initialization-requires-object-coercible-null.js",
-  "initial": 27394
+  "target": "test/language/directive-prologue/10.1.1-11-s.js",
+  "initial": 27413
 }
