@@ -5,9 +5,9 @@ import { generate } from "astring";
 export default {
   requirement: ["identity"],
   tagFailure: (_failure) => ["acorn"],
-  instrumenter: {
+  createInstrumenter: (_reject) => ({
     setup: "",
-    listGlobal: () => ({}),
+    globals: {},
     instrument: ({ kind, url, content }) => ({
       kind,
       url,
@@ -15,5 +15,5 @@ export default {
         parse(content, { ecmaVersion: "latest", sourceType: kind }),
       ),
     }),
-  },
+  }),
 };

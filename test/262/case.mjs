@@ -47,33 +47,26 @@ const termination = {
 
 /**
  * @type {(
- *   error: unknown,
- *   phase: test262.Phase,
- * ) => void}
- */
-const throwError = (error, _phase) => {
-  throw error;
-};
-
-/**
- * @type {(
  *   options: test262.Case,
- *   instrumenter: test262.Instrumenter,
+ *   createInstrumenter: test262.Stage["createInstrumenter"],
+ *   reject: (error: Error) => void,
  * ) => Promise<void>}
  */
-export const runTestCase = async (
+export const runTestCaseInner = async (
   { source: source1, negative, asynchronous, includes },
-  instrumenter,
+  createInstrumenter,
+  reject,
 ) => {
   const { done, print } = asynchronous
     ? makeAsynchronousTermination()
     : termination;
-  const { instrument } = instrumenter;
   const context = createRealm({
     counter: { value: 0 },
+    reject,
     print,
-    instrumenter,
+    createInstrumenter,
   });
+  const { instrument } = context.$262;
   let caught = false;
   /**
    * @type {(
@@ -83,7 +76,9 @@ export const runTestCase = async (
    */
   const catchNegative =
     negative === null
-      ? throwError
+      ? (error, _phase) => {
+          throw error;
+        }
       : (error, phase) => {
           if (
             negative.phase !== phase ||
@@ -152,5 +147,28 @@ export const runTestCase = async (
   await done;
   if (negative !== null && !caught) {
     throw new NegativeAranError("Missing negative error");
+  }
+};
+
+/**
+ * @type {(
+ *   options: test262.Case,
+ *   createInstrumenter: test262.Stage["createInstrumenter"],
+ * ) => Promise<void>}
+ */
+export const runTestCase = async (test_case, createInstrumenter) => {
+  /** @type {Error | null} */
+  let meta_error = null;
+  try {
+    await runTestCaseInner(test_case, createInstrumenter, (error) => {
+      if (meta_error === null) {
+        meta_error = error;
+      }
+    });
+  } catch (error) {
+    throw meta_error ?? error;
+  }
+  if (meta_error !== null) {
+    throw meta_error;
   }
 };

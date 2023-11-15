@@ -9,26 +9,33 @@ class RealmAranError extends Error {}
  * @type {(
  *   options: {
  *     counter: { value: number },
+ *     reject: (error: Error) => void,
  *     print: (message: string) => void,
- *     instrumenter: test262.Instrumenter,
+ *     createInstrumenter: test262.Stage["createInstrumenter"],
  *   },
- * ) => import("node:vm").Context & { $262: test262.$262 }}
+ * ) => import("node:vm").Context & {
+ *   $262: test262.$262 & {
+ *     instrument: test262.Instrument,
+ *   },
+ * }}
  */
-export const createRealm = ({ counter, print, instrumenter }) => {
-  const { instrument, setup, listGlobal } = instrumenter;
+export const createRealm = ({ counter, reject, print, createInstrumenter }) => {
+  const { instrument, setup, globals } = createInstrumenter(reject);
   const context = createContext({ __proto__: null });
-  for (const [name, descriptor] of Object.entries(listGlobal())) {
+  for (const [name, descriptor] of Object.entries(globals)) {
     Reflect.defineProperty(context, name, descriptor);
   }
   /** @type {test262.$262} */
   const $262 = {
     // @ts-ignore
     __proto__: null,
+    instrument,
     createRealm: () =>
       createRealm({
         counter,
+        reject,
         print,
-        instrumenter,
+        createInstrumenter,
       }).$262,
     detachArrayBuffer: () => {},
     // we have no information on the location of this.
@@ -38,7 +45,7 @@ export const createRealm = ({ counter, print, instrumenter }) => {
       counter.value += 1;
       const { url, content } = instrument({
         kind: "script",
-        url: new URL(`script:///${counter}`),
+        url: new URL(`script:///${counter.value}`),
         content: code,
       });
       return runInContext(content, context, { filename: url.href });
@@ -47,18 +54,24 @@ export const createRealm = ({ counter, print, instrumenter }) => {
       if (typeof gc === "function") {
         return gc();
       } else {
-        throw new RealmAranError("gc");
+        const error = new RealmAranError("gc");
+        reject(error);
+        throw error;
       }
     },
     global: runInContext("this;", context),
     // eslint-disable-next-line local/no-function
     get isHTMLDDA() {
-      throw new RealmAranError("isHTMLDDA");
+      const error = new RealmAranError("isHTMLDDA");
+      reject(error);
+      throw error;
     },
     /** @type {test262.Agent} */
     // eslint-disable-next-line local/no-function
     get agent() {
-      throw new RealmAranError("agent");
+      const error = new RealmAranError("agent");
+      reject(error);
+      throw error;
     },
   };
   Reflect.defineProperty(context, "$262", {

@@ -29,10 +29,16 @@ const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
 // eslint-disable-next-line local/no-class, local/standard-declaration
 class EvalAranError extends Error {}
 
-const makeEvalPlaceholder = () => {
+/**
+ * @type {(
+ *   reject: (error: Error) => void,
+ * ) => function}
+ */
+const makeEvalPlaceholder = (reject) => {
   const evalPlaceholder = () => {
-    console.log("eval is not supported");
-    throw new EvalAranError("eval is not supported");
+    const error = new EvalAranError("eval is not supported");
+    reject(error);
+    throw error;
   };
   Reflect.defineProperty(evalPlaceholder, "length", {
     // @ts-ignore
@@ -60,18 +66,18 @@ export default {
     ...(error.name === "EvalAranError" ? ["eval-limitation"] : []),
     ...(tagging.get(target) ?? []),
   ],
-  instrumenter: {
+  createInstrumenter: (reject) => ({
     setup: generate(
       setup({
         intrinsic: INTRINSIC,
         global: /** @type {estree.Variable} */ ("globalThis"),
       }),
     ),
-    listGlobal: () => ({
+    globals: {
       eval: {
         // @ts-ignore
         __proto__: null,
-        value: makeEvalPlaceholder(),
+        value: makeEvalPlaceholder(reject),
         writable: true,
         enumerable: false,
         configurable: true,
@@ -83,7 +89,7 @@ export default {
         enumerable: false,
         configurable: false,
       },
-    }),
+    },
     instrument: ({ kind, url, content: content1 }) => {
       const program1 = /** @type {estree.Program} */ (
         /** @type {unknown} */ (
@@ -94,7 +100,9 @@ export default {
         )
       );
       const base = /** @type {import("../../../type/options").Base} */ (
-        relative(cwd(), fileURLToPath(url))
+        url.protocol === "file:"
+          ? relative(cwd(), fileURLToPath(url))
+          : url.href
       );
       const program2 = instrument(
         program1,
@@ -122,5 +130,5 @@ export default {
         content: content2,
       };
     },
-  },
+  }),
 };

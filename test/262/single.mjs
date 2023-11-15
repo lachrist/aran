@@ -17,9 +17,7 @@ const test262 = new URL("../../test262/", import.meta.url);
 const codebase = new URL("codebase", import.meta.url);
 
 const {
-  default: {
-    instrumenter: { setup, instrument, listGlobal },
-  },
+  default: { createInstrumenter },
 } = /** @type {{default: test262.Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
@@ -32,10 +30,13 @@ console.dir(
   await runTest({
     target,
     test262,
-    instrumenter: {
-      setup,
-      listGlobal,
-      instrument: (source) => record(instrument(source)),
+    createInstrumenter: (reject) => {
+      const { setup, globals, instrument } = createInstrumenter(reject);
+      return {
+        setup,
+        globals,
+        instrument: (source) => record(instrument(source)),
+      };
     },
   }),
 );

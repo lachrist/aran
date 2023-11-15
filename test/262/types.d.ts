@@ -72,7 +72,7 @@ export type Failure = Result & { error: ErrorSerial };
 export type Instrument = (source: Source) => Source;
 
 export type Instrumenter = {
-  listGlobal: () => { [key in string]: PropertyDescriptor };
+  globals: { [key in string]: PropertyDescriptor };
   setup: string;
   instrument: Instrument;
 };
@@ -80,7 +80,7 @@ export type Instrumenter = {
 export type StageName = "identity" | "parsing" | "empty-enclave";
 
 export type Stage = {
-  instrumenter: Instrumenter;
+  createInstrumenter: (reject: (error: Error) => void) => Instrumenter;
   tagFailure: (failure: Failure) => string[];
   requirement: StageName[];
 };

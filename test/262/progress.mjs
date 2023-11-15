@@ -32,7 +32,7 @@ const test262 = new URL("../../test262/", import.meta.url);
 const codebase = new URL("codebase/", import.meta.url);
 
 const {
-  default: { instrumenter, tagFailure, requirement },
+  default: { createInstrumenter, tagFailure, requirement },
 } = /** @type {{default: test262.Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
@@ -71,7 +71,7 @@ for await (const url of scrape(new URL("test/", test262))) {
       const result = await runTest({
         target,
         test262,
-        instrumenter,
+        createInstrumenter,
       });
       if (isFailure(result) && tagFailure(result).length === 0) {
         await writeFile(
@@ -79,15 +79,17 @@ for await (const url of scrape(new URL("test/", test262))) {
           JSON.stringify({ stage, target, initial: index }, null, 2),
           "utf8",
         );
-        const { setup, listGlobal, instrument } = instrumenter;
         await cleanup(codebase);
         const { metadata, error } = await runTest({
           target,
           test262,
-          instrumenter: {
-            setup,
-            listGlobal,
-            instrument: (source) => record(instrument(source)),
+          createInstrumenter: (reject) => {
+            const { setup, globals, instrument } = createInstrumenter(reject);
+            return {
+              setup,
+              globals,
+              instrument: (source) => record(instrument(source)),
+            };
           },
         });
         console.log(JSON.stringify(target));

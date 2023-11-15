@@ -1,5 +1,4 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/comments/S7.4_A5.js",
-  "initial": 27306
+  "initial": 25796
 }

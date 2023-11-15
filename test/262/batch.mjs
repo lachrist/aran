@@ -27,7 +27,7 @@ if (process.argv.length !== 3) {
 const stage = argv[2];
 
 const {
-  default: { instrumenter, tagFailure, requirement },
+  default: { createInstrumenter, tagFailure, requirement },
 } = /** @type {{default: test262.Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
@@ -66,7 +66,7 @@ for await (const url of scrape(new URL("test/", test262))) {
     const result = await runTest({
       target,
       test262,
-      instrumenter,
+      createInstrumenter,
     });
     if (isFailure(result)) {
       failures.set(target, tagFailure(result));
