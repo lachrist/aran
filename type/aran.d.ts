@@ -37,7 +37,8 @@ export type AranIntrinsic =
   | "aran.deadzone"
   | "aran.private"
   | "aran.hidden.weave"
-  | "aran.hidden.rebuild";
+  | "aran.hidden.rebuild"
+  | "aran.toPropertyKey";
 
 export type Intrinsic =
   // Aran //

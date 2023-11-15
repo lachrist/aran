@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/computed-property-names/to-name-side-effects/class.js",
-  "initial": 27390
+  "target": "test/language/destructuring/binding/initialization-requires-object-coercible-null.js",
+  "initial": 27394
 }
