@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/computed-property-names/class/static/generator-prototype.js",
-  "initial": 27365
+  "target": "test/language/computed-property-names/to-name-side-effects/class.js",
+  "initial": 27390
 }
