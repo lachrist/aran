@@ -66,6 +66,7 @@ for await (const url of scrape(new URL("test/", test262))) {
     const result = await runTest({
       target,
       test262,
+      warning: "silent",
       createInstrumenter,
     });
     if (isFailure(result)) {

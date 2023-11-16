@@ -71,6 +71,7 @@ for await (const url of scrape(new URL("test/", test262))) {
       const result = await runTest({
         target,
         test262,
+        warning: "silent",
         createInstrumenter,
       });
       if (isFailure(result) && tagFailure(result).length === 0) {
@@ -83,6 +84,7 @@ for await (const url of scrape(new URL("test/", test262))) {
         const { metadata, error } = await runTest({
           target,
           test262,
+          warning: "console",
           createInstrumenter: (reject) => {
             const { setup, globals, instrument } = createInstrumenter(reject);
             return {

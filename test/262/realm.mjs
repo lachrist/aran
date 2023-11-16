@@ -10,6 +10,7 @@ class RealmAranError extends Error {}
  *   options: {
  *     counter: { value: number },
  *     reject: (error: Error) => void,
+ *     warning: "silent" | "console",
  *     print: (message: string) => void,
  *     createInstrumenter: test262.Stage["createInstrumenter"],
  *   },
@@ -19,8 +20,17 @@ class RealmAranError extends Error {}
  *   },
  * }}
  */
-export const createRealm = ({ counter, reject, print, createInstrumenter }) => {
-  const { instrument, setup, globals } = createInstrumenter(reject);
+export const createRealm = ({
+  counter,
+  reject,
+  warning,
+  print,
+  createInstrumenter,
+}) => {
+  const { instrument, setup, globals } = createInstrumenter({
+    reject,
+    warning,
+  });
   const context = createContext({ __proto__: null });
   for (const [name, descriptor] of Object.entries(globals)) {
     Reflect.defineProperty(context, name, descriptor);
@@ -34,6 +44,7 @@ export const createRealm = ({ counter, reject, print, createInstrumenter }) => {
       createRealm({
         counter,
         reject,
+        warning,
         print,
         createInstrumenter,
       }).$262,

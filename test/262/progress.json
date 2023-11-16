@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/directive-prologue/func-decl-final-runtime.js",
-  "initial": 27451
+  "target": "test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments.js",
+  "initial": 27522
 }

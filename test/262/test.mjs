@@ -73,10 +73,16 @@ const DEFAULT_METADATA = {
  *     target: string,
  *     test262: URL,
  *     createInstrumenter: test262.Stage["createInstrumenter"],
+ *     warning: "silent" | "console",
  *   },
  * ) => Promise<test262.Result>}
  */
-export const runTest = async ({ target, test262, createInstrumenter }) => {
+export const runTest = async ({
+  target,
+  test262,
+  warning,
+  createInstrumenter,
+}) => {
   const content = await readFile(new URL(target, test262), "utf8");
   /** @type {test262.Metadata} */
   let metadata = DEFAULT_METADATA;
@@ -96,7 +102,7 @@ export const runTest = async ({ target, test262, createInstrumenter }) => {
     test262,
   })) {
     try {
-      await runTestCase(case_, createInstrumenter);
+      await runTestCase({ case: case_, createInstrumenter, warning });
     } catch (error) {
       return {
         target,

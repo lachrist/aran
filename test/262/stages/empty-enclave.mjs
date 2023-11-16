@@ -66,7 +66,7 @@ export default {
     ...(error.name === "EvalAranError" ? ["eval-limitation"] : []),
     ...(tagging.get(target) ?? []),
   ],
-  createInstrumenter: (reject) => ({
+  createInstrumenter: ({ reject, warning }) => ({
     setup: generate(
       setup({
         intrinsic: INTRINSIC,
@@ -120,7 +120,7 @@ export default {
           locate: (path, base) => `${base}#${path}`,
           base,
           error: "throw",
-          warning: "silent",
+          warning,
         }),
       );
       const content2 = generate(program2);

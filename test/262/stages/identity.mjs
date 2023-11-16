@@ -26,7 +26,7 @@ export default {
     ...(error.name === "AranRealmLimitation" ? ["aran-realm-limitation"] : []),
     ...metadata.features.filter(isFeatureExcluded),
   ],
-  createInstrumenter: (_reject) => ({
+  createInstrumenter: (_options) => ({
     setup: "",
     globals: {},
     instrument: (source) => source,

@@ -1,5 +1,5 @@
 {
-  "block-level function declaration": [
+  "SloppyBlockFunctionDeclaration": [
     "test/annexB/language/function-code/block-decl-func-no-skip-try.js",
     "test/annexB/language/function-code/block-decl-func-skip-dft-param.js",
     "test/annexB/language/function-code/block-decl-func-skip-early-err-block.js",
@@ -145,19 +145,24 @@
     "test/annexB/language/global-code/switch-dflt-global-skip-early-err-try.js",
     "test/annexB/language/global-code/switch-dflt-global-skip-early-err.js"
   ],
+  "SloppyExternalVariableWrite": [
+    "test/built-ins/Function/prototype/apply/S15.3.4.3_A5_T4.js",
+    "test/built-ins/Infinity/S15.1.1.2_A2_T2.js",
+    "test/built-ins/NaN/S15.1.1.1_A2_T2.js",
+    "test/built-ins/undefined/15.1.1.3-1.js",
+    "test/built-ins/undefined/15.1.1.3-3.js",
+    "test/language/directive-prologue/func-decl-final-runtime.js",
+    "test/language/directive-prologue/func-decl-not-first-runtime.js",
+    "test/language/directive-prologue/func-expr-final-runtime.js",
+    "test/language/directive-prologue/func-expr-not-first-runtime.js",
+    "test/language/directive-prologue/get-accsr-not-first-runtime.js"
+  ],
   "Array.prototype.push vulnerability to Array.prototype[0] poisoning": [
     "test/built-ins/Array/prototype/concat/15.4.4.4-5-b-iii-3-b-1.js",
     "test/built-ins/Array/prototype/concat/15.4.4.4-5-c-i-1.js"
   ],
   "methods have a non-configurable prototype property": [
     "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js"
-  ],
-  "write to enclave variable becomes strict": [
-    "test/built-ins/Function/prototype/apply/S15.3.4.3_A5_T4.js",
-    "test/built-ins/Infinity/S15.1.1.2_A2_T2.js",
-    "test/built-ins/NaN/S15.1.1.1_A2_T2.js",
-    "test/built-ins/undefined/15.1.1.3-1.js",
-    "test/built-ins/undefined/15.1.1.3-3.js"
   ],
   "ambient intrinsic do not consider realm": [
     "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js",

@@ -30,6 +30,7 @@ console.dir(
   await runTest({
     target,
     test262,
+    warning: "console",
     createInstrumenter: (reject) => {
       const { setup, globals, instrument } = createInstrumenter(reject);
       return {

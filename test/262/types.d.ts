@@ -80,7 +80,10 @@ export type Instrumenter = {
 export type StageName = "identity" | "parsing" | "empty-enclave";
 
 export type Stage = {
-  createInstrumenter: (reject: (error: Error) => void) => Instrumenter;
+  createInstrumenter: (options: {
+    reject: (error: Error) => void;
+    warning: "console" | "silent";
+  }) => Instrumenter;
   tagFailure: (failure: Failure) => string[];
   requirement: StageName[];
 };

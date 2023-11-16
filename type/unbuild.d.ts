@@ -32,19 +32,26 @@ export type Path = Brand<string, "unbuild.Path">;
 
 export type Meta = Brand<bigint, "unbuild.Meta">;
 
-export type Log =
-  | {
-      name: "SyntaxError";
-      message: string;
-    }
-  | {
-      name: "EnclaveLimitation";
-      message: string;
-    }
-  | {
-      name: "BlockFunctionDeclaration";
-      message: string;
-    };
+export type Error = {
+  name: "SyntaxError";
+  message: string;
+  path: unbuild.Path;
+};
+
+export type Warning = {
+  name:
+    | "SloppyBlockFunctionDeclaration"
+    | "SloppyExternalVariableWrite"
+    | "ExternalVariableDelete"
+    | "StrictKeywordExternalVariable"
+    | "ExternalVariableClash"
+    | "GeneratorParameterPattern"
+    | "DirectEvalExternalVariableDeclaration";
+  message: string;
+  path: unbuild.Path;
+};
+
+export type Log = Error | Warning;
 
 export type Atom = {
   Label: Label;
@@ -56,7 +63,7 @@ export type Atom = {
     path: Path;
     initialization: boolean | null;
     context: (Context & { meta: string }) | null;
-    logs: Log[];
+    logs: Omit<Log, "path">[];
   };
 };
 

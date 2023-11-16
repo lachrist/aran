@@ -47,22 +47,27 @@ const termination = {
 
 /**
  * @type {(
- *   options: test262.Case,
- *   createInstrumenter: test262.Stage["createInstrumenter"],
- *   reject: (error: Error) => void,
+ *   options: {
+ *     case: test262.Case,
+ *     createInstrumenter: test262.Stage["createInstrumenter"],
+ *     warning: "silent" | "console",
+ *     reject: (error: Error) => void,
+ *   },
  * ) => Promise<void>}
  */
-export const runTestCaseInner = async (
-  { source: source1, negative, asynchronous, includes },
+export const runTestCaseInner = async ({
+  case: { source: source1, negative, asynchronous, includes },
   createInstrumenter,
+  warning,
   reject,
-) => {
+}) => {
   const { done, print } = asynchronous
     ? makeAsynchronousTermination()
     : termination;
   const context = createRealm({
     counter: { value: 0 },
     reject,
+    warning,
     print,
     createInstrumenter,
   });
@@ -152,18 +157,24 @@ export const runTestCaseInner = async (
 
 /**
  * @type {(
- *   options: test262.Case,
- *   createInstrumenter: test262.Stage["createInstrumenter"],
+ *   options: {
+ *     case: test262.Case,
+ *     warning: "silent" | "console",
+ *     createInstrumenter: test262.Stage["createInstrumenter"],
+ *   },
  * ) => Promise<void>}
  */
-export const runTestCase = async (test_case, createInstrumenter) => {
+export const runTestCase = async (options) => {
   /** @type {Error | null} */
   let meta_error = null;
   try {
-    await runTestCaseInner(test_case, createInstrumenter, (error) => {
-      if (meta_error === null) {
-        meta_error = error;
-      }
+    await runTestCaseInner({
+      ...options,
+      reject: (error) => {
+        if (meta_error === null) {
+          meta_error = error;
+        }
+      },
     });
   } catch (error) {
     throw meta_error ?? error;
