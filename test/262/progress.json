@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments.js",
-  "initial": 27522
+  "target": "test/language/expressions/arrow-function/ArrowFunction_restricted-properties.js",
+  "initial": 27923
 }

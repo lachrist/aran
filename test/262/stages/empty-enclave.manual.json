@@ -155,7 +155,42 @@
     "test/language/directive-prologue/func-decl-not-first-runtime.js",
     "test/language/directive-prologue/func-expr-final-runtime.js",
     "test/language/directive-prologue/func-expr-not-first-runtime.js",
-    "test/language/directive-prologue/get-accsr-not-first-runtime.js"
+    "test/language/directive-prologue/get-accsr-not-first-runtime.js",
+    "test/language/expressions/addition/S11.6.1_A2.4_T4.js"
+  ],
+  "GeneratorParameterPattern": [
+    "test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/async-gen-func-decl-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/async-gen-func-decl-a-preceding-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/async-gen-func-expr-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/async-gen-func-expr-a-following-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/async-gen-func-expr-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/async-gen-func-expr-a-preceding-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/async-gen-meth-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/async-gen-meth-a-following-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/async-gen-meth-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/async-gen-meth-a-preceding-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/async-gen-named-func-expr-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/async-gen-named-func-expr-a-following-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/async-gen-named-func-expr-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/async-gen-named-func-expr-a-preceding-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/gen-func-decl-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/gen-func-decl-a-preceding-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/gen-func-expr-named-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/gen-func-expr-named-a-following-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/gen-func-expr-named-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/gen-func-expr-named-a-preceding-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/gen-func-expr-nameless-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/gen-func-expr-nameless-a-following-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/gen-func-expr-nameless-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/gen-func-expr-nameless-a-preceding-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/gen-meth-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/gen-meth-a-following-parameter-is-named-arguments-declare-arguments.js",
+    "test/language/eval-code/direct/gen-meth-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js",
+    "test/language/eval-code/direct/gen-meth-a-preceding-parameter-is-named-arguments-declare-arguments.js"
   ],
   "Array.prototype.push vulnerability to Array.prototype[0] poisoning": [
     "test/built-ins/Array/prototype/concat/15.4.4.4-5-b-iii-3-b-1.js",
@@ -202,5 +237,9 @@
   "arguments/caller properties of sloppy function remain null": [
     "test/language/arguments-object/10.6-13-a-2.js",
     "test/language/arguments-object/10.6-13-a-3.js"
-  ]
+  ],
+  "Function.prototype.toString": [
+    "test/language/expressions/addition/S11.6.1_A3.2_T1.2.js"
+  ],
+  "Accessing Symbol.iterator twice in spread syntax": []
 }
