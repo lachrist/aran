@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/arrow-function/dflt-params-trailing-comma.js",
-  "initial": 27941
+  "target": "test/language/expressions/arrow-function/dstr/ary-init-iter-close.js",
+  "initial": 27942
 }
