@@ -187,7 +187,30 @@
     "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-if-escaped.js",
     "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-implements-escaped.js",
     "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-import-escaped.js",
-    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-in-escaped.js"
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-in-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-instanceof-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-interface-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-let-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-new-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-package-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-private-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-protected-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-public-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-return-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-static-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-super-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-switch-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-this-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-throw-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-try-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-typeof-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-var-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-void-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-while-escaped.js",
+    "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-with-escaped.js",
+    "test/language/expressions/assignment/dstr/obj-id-put-unresolvable-no-strict.js",
+    "test/language/expressions/assignment/dstr/obj-prop-put-unresolvable-no-strict.js",
+    "test/language/expressions/assignment/dstr/obj-rest-computed-property-no-strict.js"
   ],
   "GeneratorParameterPattern": [
     "test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
@@ -222,6 +245,10 @@
     "test/language/eval-code/direct/gen-meth-a-following-parameter-is-named-arguments-declare-arguments.js",
     "test/language/eval-code/direct/gen-meth-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js",
     "test/language/eval-code/direct/gen-meth-a-preceding-parameter-is-named-arguments-declare-arguments.js"
+  ],
+  "StrictReadonlyExternalVariableWrite": [
+    "test/language/expressions/assignment/dstr/obj-id-init-simple-no-strict.js",
+    "test/language/expressions/assignment/dstr/obj-id-simple-no-strict.js"
   ],
   "Array.prototype.push vulnerability to Array.prototype[0] poisoning": [
     "test/built-ins/Array/prototype/concat/15.4.4.4-5-b-iii-3-b-1.js",
