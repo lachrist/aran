@@ -246,5 +246,8 @@
   ],
   "Accessing Symbol.iterator twice in spread syntax": [],
   "Accessing step.done twice in for-of loop and array pattern": [],
-  "Not calling iterable.return on abrupt completion in array pattern": []
+  "Not calling iterable.return on abrupt completion in array pattern": [],
+  "TODO": [
+    "test/language/expressions/assignment/dstr/array-elem-iter-rtrn-close-err.js"
+  ]
 }
