@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/arrow-function/dstr/ary-ptrn-elem-ary-rest-init.js",
-  "initial": 27953
+  "target": "test/language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js",
+  "initial": 27957
 }
