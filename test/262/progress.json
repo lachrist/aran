@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/arrow-function/lexical-super-call-from-within-constructor.js",
-  "initial": 28187
+  "target": "test/language/expressions/arrow-function/non-strict.js",
+  "initial": 28194
 }
