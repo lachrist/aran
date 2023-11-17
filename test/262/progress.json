@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/async-generator/dflt-params-abrupt.js",
-  "initial": 29217
+  "target": "test/language/expressions/class/elements/after-same-line-gen-grammar-privatename-identifier-semantics-stringvalue.js",
+  "initial": 32424
 }

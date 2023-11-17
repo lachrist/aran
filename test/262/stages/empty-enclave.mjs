@@ -1,25 +1,105 @@
 import { parse } from "acorn";
 import { generate } from "astring";
 import { instrument, setup } from "../../../lib/index.mjs";
-import { inverse } from "../util.mjs";
 import { readFile } from "node:fs/promises";
 import { cwd } from "node:process";
 import { fileURLToPath } from "node:url";
 import { relative } from "node:path";
+import { AranTypeError } from "../error.mjs";
 
 // eslint-disable-next-line local/strict-console
-const { Reflect, Map, Object, JSON, URL, console, Error } = globalThis;
+const { Reflect, Set, RegExp, Object, JSON, URL, console, Error } = globalThis;
 
-/** @type {Map<string, string[]>} */
-const tagging = inverse(
-  new Map(
-    Object.entries(
-      JSON.parse(
-        await readFile(
-          new URL("empty-enclave.manual.json", import.meta.url),
-          "utf8",
-        ),
-      ),
+/**
+ * @typedef {string | { pattern: string}} MatcherItem
+ */
+
+/**
+ * @typedef {MatcherItem[]} Matcher
+ */
+
+/**
+ * @typedef {[string, Matcher]} MatcherEntry
+ */
+
+/**
+ * @type {(
+ *   item: unknown,
+ * ) => item is MatcherItem & {}}
+ */
+const isPatternMatcherItem = (item) =>
+  typeof item === "object" &&
+  item !== null &&
+  "pattern" in item &&
+  Object.hasOwn(item, "pattern") &&
+  typeof item.pattern === "string";
+
+/**
+ * @type {(
+ *   matchers: Matcher,
+ * ) => (
+ *   target: string
+ * ) => boolean}
+ */
+const compileMatcher = (items) => {
+  /** @type {Set<string>} */
+  const singletons = new Set();
+  /** @type {RegExp[]} */
+  const groups = [];
+  for (const item of items) {
+    if (typeof item === "string") {
+      singletons.add(item);
+    } else if (isPatternMatcherItem(item)) {
+      groups.push(new RegExp(item.pattern, "u"));
+    } else {
+      throw new AranTypeError("invalid item", item);
+    }
+  }
+  return (target) => {
+    if (singletons.has(target)) {
+      return true;
+    }
+    for (const group of groups) {
+      if (group.test(target)) {
+        return true;
+      }
+    }
+    return false;
+  };
+};
+
+/**
+ * @type {(
+ *   entry: [string, Matcher],
+ * ) => [string, (target: string) => boolean]}
+ */
+const compileMatcherEntry = ([tag, items]) => [tag, compileMatcher(items)];
+
+/**
+ * @type {(
+ *   category: { [key in string]: MatcherItem[] },
+ * ) => (
+ *   target: string,
+ * ) => string[]}
+ */
+const compileTagging = (category) => {
+  const matchers = Object.entries(category).map(compileMatcherEntry);
+  return (target) => {
+    const tags = [];
+    for (const [tag, matcher] of matchers) {
+      if (matcher(target)) {
+        tags.push(tag);
+      }
+    }
+    return tags;
+  };
+};
+
+const tagging = compileTagging(
+  JSON.parse(
+    await readFile(
+      new URL("empty-enclave.manual.json", import.meta.url),
+      "utf8",
     ),
   ),
 );
@@ -62,9 +142,10 @@ const makeEvalPlaceholder = (reject) => {
 /** @type {test262.Stage} */
 export default {
   requirement: ["identity", "parsing"],
+  exclusion: [],
   tagFailure: ({ target, error }) => [
     ...(error.name === "EvalAranError" ? ["eval-limitation"] : []),
-    ...(tagging.get(target) ?? []),
+    ...tagging(target),
   ],
   createInstrumenter: ({ reject, warning }) => ({
     setup: generate(

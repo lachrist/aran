@@ -1,19 +1,17 @@
-// import { runInThisContext } from "node:vm";
-// runInThisContext(``);
+// import { runInThisContext } from "vm";
 
-let {} = 123;
+// runInThisContext(
+//   `
+//     with ({
+//       method: function () {
+//         "use strict";
+//         console.log(this);
+//       },
+//     }) {
+//       const f = method;
+//       f();
+//     }
+// `,
+// );
 
-var count = 0;
-class C {
-  static m() {
-    super[0] = count += 1;
-  }
-}
-
-Object.setPrototypeOf(C, null);
-
-assert.throws(TypeError, function () {
-  C.m();
-});
-
-assert.sameValue(count, 1);
+new RegExp("^test/language/expressions/class/dstr/");

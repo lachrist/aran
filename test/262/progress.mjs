@@ -32,14 +32,20 @@ const test262 = new URL("../../test262/", import.meta.url);
 const codebase = new URL("codebase/", import.meta.url);
 
 const {
-  default: { createInstrumenter, tagFailure, requirement },
+  default: {
+    createInstrumenter,
+    tagFailure,
+    requirement,
+    exclusion: manual_exclusion,
+  },
 } = /** @type {{default: test262.Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
 
 /** @type {Set<string>} */
-const exclusion = new Set(
-  (
+const exclusion = new Set([
+  ...manual_exclusion,
+  ...(
     await Promise.all(
       requirement.map((stage) =>
         readFile(new URL(`stages/${stage}.json`, import.meta.url), "utf8"),
@@ -48,7 +54,7 @@ const exclusion = new Set(
   ).flatMap(
     (content) => /** @type {string[]} */ (Reflect.ownKeys(JSON.parse(content))),
   ),
-);
+]);
 
 /** @type {(error: test262.ErrorSerial) => string} */
 const printError = (error) =>
@@ -58,7 +64,7 @@ const printError = (error) =>
 
 process.on("uncaughtException", (error, _origin) => {
   const { name, message } = inspectError(error);
-  console.log(`${name}: ${message}`);
+  console.log(`Uncaught >> ${name}: ${message}`);
 });
 
 let index = 0;
@@ -74,6 +80,9 @@ for await (const url of scrape(new URL("test/", test262))) {
         warning: "silent",
         createInstrumenter,
       });
+      if (isFailure(result)) {
+        console.log(target, ">>", tagFailure(result));
+      }
       if (isFailure(result) && tagFailure(result).length === 0) {
         await writeFile(
           persistent,

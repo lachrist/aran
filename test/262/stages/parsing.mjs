@@ -4,6 +4,7 @@ import { generate } from "astring";
 /** @type {test262.Stage} */
 export default {
   requirement: ["identity"],
+  exclusion: [],
   tagFailure: (_failure) => ["acorn"],
   createInstrumenter: (_options) => ({
     setup: "",

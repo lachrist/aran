@@ -27,7 +27,12 @@ if (process.argv.length !== 3) {
 const stage = argv[2];
 
 const {
-  default: { createInstrumenter, tagFailure, requirement },
+  default: {
+    createInstrumenter,
+    tagFailure,
+    requirement,
+    exclusion: manual_exclusion,
+  },
 } = /** @type {{default: test262.Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
@@ -40,8 +45,9 @@ process.on("uncaughtException", (error, _origin) => {
 const test262 = new URL("../../test262/", import.meta.url);
 
 /** @type {Set<string>} */
-const exclusion = new Set(
-  (
+const exclusion = new Set([
+  ...manual_exclusion,
+  ...(
     await Promise.all(
       requirement.map((stage) =>
         readFile(new URL(`stages/${stage}.json`, import.meta.url), "utf8"),
@@ -50,7 +56,7 @@ const exclusion = new Set(
   ).flatMap(
     (content) => /** @type {string[]} */ (Reflect.ownKeys(JSON.parse(content))),
   ),
-);
+]);
 
 /** @type {Map<string, string[]>} */
 const failures = new Map();

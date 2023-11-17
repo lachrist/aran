@@ -86,6 +86,7 @@ export type Stage = {
   }) => Instrumenter;
   tagFailure: (failure: Failure) => string[];
   requirement: StageName[];
+  exclusion: string[];
 };
 
 export as namespace test262;
