@@ -1,16 +1,20 @@
-const g = {
-  [Symbol.iterator]: () => ({
-    next: (...args) => {
-      console.log("next", args);
-      return { value: undefined, done: false };
-    },
-    return: (...args) => {
-      console.log("return", args);
-      return {};
-    },
-  }),
+var { ...r } = {
+  __proto__: { x: 123 },
+  get y() {
+    return 456;
+  },
+  z: 789,
 };
 
-var [x = console.log("foo"), y = console.log("bar"), z = console.log("qux")] =
-  g;
-console.log({ x, y, z });
+console.log({ r });
+
+console.log(
+  Object.assign(
+    { __proto__: Object.prototype },
+    {
+      get x() {
+        return 123;
+      },
+    },
+  ),
+);

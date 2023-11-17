@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/arrow-function/dstr/dflt-obj-ptrn-rest-getter.js",
-  "initial": 28092
+  "target": "test/language/expressions/arrow-function/lexical-super-call-from-within-constructor.js",
+  "initial": 28187
 }
