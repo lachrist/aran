@@ -210,7 +210,10 @@
     "test/language/expressions/assignment/dstr/ident-name-prop-name-literal-with-escaped.js",
     "test/language/expressions/assignment/dstr/obj-id-put-unresolvable-no-strict.js",
     "test/language/expressions/assignment/dstr/obj-prop-put-unresolvable-no-strict.js",
-    "test/language/expressions/assignment/dstr/obj-rest-computed-property-no-strict.js"
+    "test/language/expressions/assignment/dstr/obj-rest-computed-property-no-strict.js",
+    "test/language/expressions/assignmenttargettype/simple-basic-identifierreference-arguments.js",
+    "test/language/expressions/assignmenttargettype/simple-basic-identifierreference-eval.js",
+    "test/language/expressions/assignmenttargettype/simple-basic-identifierreference-yield.js"
   ],
   "GeneratorParameterPattern": [
     "test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
