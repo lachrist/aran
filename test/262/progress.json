@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/assignment/target-member-identifier-reference-null.js",
-  "initial": 28736
+  "target": "test/language/expressions/assignment/target-super-computed-reference-null.js",
+  "initial": 28742
 }
