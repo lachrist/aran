@@ -10,4 +10,4 @@ const g = {
   }),
 };
 
-var [x, y = eval("throw 'boum'"), z] = g;
+var [x, y, z] = g;

@@ -241,5 +241,7 @@
   "Function.prototype.toString": [
     "test/language/expressions/addition/S11.6.1_A3.2_T1.2.js"
   ],
-  "Accessing Symbol.iterator twice in spread syntax": []
+  "Accessing Symbol.iterator twice in spread syntax": [],
+  "Accessing step.done twice in for-of loop and array pattern": [],
+  "Not calling iterable.return on abrupt completion in array pattern": []
 }
