@@ -157,7 +157,9 @@
     "test/language/directive-prologue/func-expr-not-first-runtime.js",
     "test/language/directive-prologue/get-accsr-not-first-runtime.js",
     "test/language/expressions/addition/S11.6.1_A2.4_T4.js",
-    "test/language/expressions/arrow-function/non-strict.js"
+    "test/language/expressions/arrow-function/non-strict.js",
+    "test/language/expressions/assignment/11.13.1-4-1.js",
+    "test/language/expressions/assignment/dstr/array-elem-init-simple-no-strict.js"
   ],
   "GeneratorParameterPattern": [
     "test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",

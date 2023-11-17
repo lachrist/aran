@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/assignment/11.13.1-4-1.js",
-  "initial": 28270
+  "target": "test/language/expressions/assignment/dstr/array-elem-iter-nrml-close-skip.js",
+  "initial": 28321
 }
