@@ -44,6 +44,7 @@ export type Warning = {
     | "SloppyExternalVariableWrite"
     | "ExternalVariableDelete"
     | "StrictKeywordExternalVariable"
+    | "StrictReadonlyExternalVariableWrite"
     | "ExternalVariableClash"
     | "GeneratorParameterPattern"
     | "DirectEvalExternalVariableDeclaration";

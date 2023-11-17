@@ -1,26 +1,23 @@
-var returnCount = 0;
-var unreachable = 0;
-var iterable = {};
-var iterator = {
-  return: function () {
-    returnCount += 1;
-    throw "BOUM";
-  },
-};
-var iter;
-iterable[Symbol.iterator] = function () {
-  return iterator;
-};
+import { runInThisContext } from "node:vm";
 
-function* g() {
-  var result;
-  var vals = iterable;
+runInThisContext(`
 
-  result = [{}[yield]] = vals;
+{
 
-  unreachable += 1;
+var result;
+var vals = [];
+
+result = [ unresolvable ] = vals;
+
+
+
+console.log(result, vals);
+
 }
 
-iter = g();
-iter.next();
-iter.return();
+console.log(unresolvable, undefined);
+
+
+`);
+
+var eval = 123;
