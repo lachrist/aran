@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/class/elements/after-same-line-gen-grammar-privatename-identifier-semantics-stringvalue.js",
-  "initial": 32424
+  "target": "test/language/expressions/class/elements/private-field-after-optional-chain.js",
+  "initial": 33248
 }

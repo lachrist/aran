@@ -165,7 +165,8 @@ export default {
       },
       ARAN: {
         __proto__: null,
-        value: (/** @type {unknown} */ value) => console.dir(value),
+        value: (/** @type {unknown} */ value) =>
+          console.dir(value, { showHidden: true }),
         writable: false,
         enumerable: false,
         configurable: false,
