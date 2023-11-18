@@ -17,18 +17,14 @@
 import { parse } from "acorn";
 
 console.dir(
-  parse("foo?.bar.qux;", { ecmaVersion: 2022, sourceType: "module" }),
-  {
-    depth: null,
+  parse(`
+
+const o = {
+  m() {
+    foo?.bar?.();
   },
+};
+
+`),
+  { depth: null },
 );
-
-// f?(123)?(456);
-
-let foo;
-
-foo = null;
-console.log(foo?.bar.qux);
-
-foo = { bar: null };
-console.log(foo?.bar.qux);
