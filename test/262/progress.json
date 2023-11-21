@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/class/gen-method/dflt-params-abrupt.js",
-  "initial": 33851
+  "target": "test/language/expressions/class/gen-method-static/dflt-params-abrupt.js",
+  "initial": 33884
 }
