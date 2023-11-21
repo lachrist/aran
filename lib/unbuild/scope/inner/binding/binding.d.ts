@@ -7,7 +7,7 @@ type ImportBinding = {
 
 type RegularBinding = {
   type: "regular";
-  kind: "let" | "const" | "var";
+  kind: "let" | "const" | "var" | "callee";
   exports: estree.Specifier[];
   variable: estree.Variable;
 };

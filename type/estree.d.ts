@@ -1,6 +1,6 @@
 export type BlockVariableKind = "let" | "const" | "class" | "import";
 
-export type ClosureVariableKind = "var" | "function";
+export type ClosureVariableKind = "var" | "function" | "callee";
 
 export type VariableKind = BlockVariableKind | ClosureVariableKind;
 

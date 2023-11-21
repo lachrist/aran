@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/equals/S11.9.1_A2.4_T4.js",
-  "initial": 35397
+  "target": "test/language/expressions/generators/dflt-params-abrupt.js",
+  "initial": 35749
 }
