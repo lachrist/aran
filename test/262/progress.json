@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/class/elements/super-access-from-arrow-func-on-field.js",
-  "initial": 33555
+  "target": "test/language/expressions/class/gen-method/dflt-params-abrupt.js",
+  "initial": 33851
 }
