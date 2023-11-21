@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/dynamic-import/catch/nested-arrow-import-catch-eval-rqstd-abrupt-typeerror.js",
-  "initial": 34813
+  "target": "test/language/expressions/equals/S11.9.1_A2.4_T4.js",
+  "initial": 35397
 }
