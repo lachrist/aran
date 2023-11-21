@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/compound-assignment/S11.13.2_A7.10_T1.js",
-  "initial": 34436
+  "target": "test/language/expressions/compound-assignment/left-hand-side-private-reference-accessor-property-add.js",
+  "initial": 34516
 }
