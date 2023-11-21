@@ -14,10 +14,25 @@
 // `,
 // );
 
-class c {
-  static [(console.log("foo"), "foo")]() {}
-  static ["prototype"]() {}
-  static [(console.log("bar"), "bar")]() {}
+// class c {
+//   static [(console.log("foo"), "foo")]() {}
+//   static ["prototype"]() {}
+//   static [(console.log("bar"), "bar")]() {}
+// }
+
+class C {
+  static [{
+    toString() {
+      console.log("foo-key");
+      return "foo";
+    },
+  }] = console.log("foo-val");
+  static [{
+    toString() {
+      console.log("bar-key");
+      return "bar";
+    },
+  }] = console.log("bar-val");
 }
 
 // class C {
