@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/class/elements/private-getter-access-on-inner-arrow-function.js",
-  "initial": 33256
+  "target": "test/language/expressions/class/elements/private-methods/prod-private-method-initialize-order.js",
+  "initial": 33283
 }
