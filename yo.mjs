@@ -15,13 +15,13 @@
 
 // // // console.log(CC.foo.name);
 
-console.log(
-  {
-    [{
-      toString: () => {
-        console.log("convert");
-        return "foo";
-      },
-    }]: () => {},
-  }.foo.name,
-);
+// const x = new WeakMap();
+// console.log(x.set({}, 123));
+
+class C {
+  #k = 123;
+  m(x) {
+    x.#k = console.log("val");
+  }
+}
+new C().m({});
