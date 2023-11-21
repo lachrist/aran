@@ -1,7 +1,7 @@
 import type { Base } from "../../type/options.d.ts";
 import { Scope } from "./scope/index.mjs";
 import type { Closure } from "./param/closure/closure.d.ts";
-import { Cache } from "./cache.mjs";
+import type { Private } from "./param/private.d.ts";
 import type { RootProgram } from "./program.js";
 
 export type Context = {
@@ -11,7 +11,7 @@ export type Context = {
   catch: boolean;
   closure: Closure;
   scope: Scope;
-  privates: { [key in estree.PrivateKey]?: Cache };
+  private: Private;
 };
 
 export type EvalContext = Omit<Context, "base"> & {

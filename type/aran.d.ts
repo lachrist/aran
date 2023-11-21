@@ -35,7 +35,6 @@ export type AranIntrinsic =
   | "aran.delete.strict"
   | "aran.delete.sloppy"
   | "aran.deadzone"
-  | "aran.private"
   | "aran.hidden.weave"
   | "aran.hidden.rebuild"
   | "aran.toPropertyKey";
@@ -52,6 +51,7 @@ export type Intrinsic =
   | "Symbol.toStringTag"
   // String //
   | "String.prototype.concat"
+  | "String.prototype.slice"
   // Object //
   | "Object"
   | "Object.create"
@@ -82,6 +82,10 @@ export type Intrinsic =
   | "WeakMap.prototype.has"
   | "WeakMap.prototype.get"
   | "WeakMap.prototype.set"
+  // WeakSet //
+  | "WeakSet"
+  | "WeakSet.prototype.has"
+  | "WeakSet.prototype.add"
   // Reflect //
   | "Reflect.get"
   | "Reflect.has"

@@ -14,17 +14,45 @@
 // `,
 // );
 
-import { parse } from "acorn";
+class c {
+  static [(console.log("foo"), "foo")]() {}
+  static ["prototype"]() {}
+  static [(console.log("bar"), "bar")]() {}
+}
 
-console.dir(
-  parse(`
+// class C {
+//   static [(console.log("yoo", this), "foo")] = this;
+// static #foo = "foo";
+// static [(console.log(
+//   "foo-key",
+//   setTimeout(() => {
+//     console.log("grunt", C.#foo);
+//   }),
+// ),
+// "foo")] = console.log("foo-val");
+// static {
+//   console.log("bar");
+// }
+// static [(console.log("qux-key"), "qux")] = console.log("qux-val");
+// static #foo = 123;
+// #foo() {456 };
+// #m1() {
+//   this.#m2();
+// }
+// #m2() {
+//   this.#m1();
+// }
+// m() {
+//   console.log(this.#m1());
+// }
+// }
 
-const o = {
-  m() {
-    foo?.bar?.();
-  },
-};
+// console.log(C.foo);
 
-`),
-  { depth: null },
-);
+// const c = new C();
+//
+// console.log(C.foo);
+
+// console.log(c.m());
+
+// console.log("foo");
