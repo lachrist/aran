@@ -18,14 +18,13 @@
 // const x = new WeakMap();
 // console.log(x.set({}, 123));
 
-import { runInThisContext } from "vm";
-runInThisContext(`
-const g = function f () {
-  function h () {
-    "use strict";
-    f = 123;
+// import { runInThisContext } from "vm";
+// runInThisContext(`
+class c {
+  static #foo = 123;
+  static m(x) {
+    console.log(#foo in x);
   }
-  h();
 }
-g();
-`);
+c.m({});
+// `);

@@ -123,6 +123,7 @@ export type Parameter =
   | "super.set"
   | "super.call"
   | "private.get"
+  | "private.has"
   | "private.set"
   | "scope.read"
   | "scope.write"

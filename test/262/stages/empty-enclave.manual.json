@@ -222,7 +222,9 @@
     "test/language/expressions/delete/S11.4.1_A3.3_T5.js",
     "test/language/expressions/division/S11.5.2_A2.4_T4.js",
     "test/language/expressions/does-not-equals/S11.9.2_A2.4_T4.js",
-    "test/language/expressions/equals/S11.9.1_A2.4_T4.js"
+    "test/language/expressions/equals/S11.9.1_A2.4_T4.js",
+    "test/language/expressions/greater-than/S11.8.2_A2.4_T4.js",
+    "test/language/expressions/greater-than-or-equal/S11.8.4_A2.4_T4.js"
   ],
   "GeneratorParameterPattern": [
     "test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
@@ -383,7 +385,12 @@
     "test/language/expressions/class/gen-method/dflt-params-ref-self.js",
     "test/language/expressions/class/gen-method-static/dflt-params-abrupt.js",
     "test/language/expressions/class/gen-method-static/dflt-params-ref-later.js",
-    "test/language/expressions/class/gen-method-static/dflt-params-ref-self.js"
+    "test/language/expressions/class/gen-method-static/dflt-params-ref-self.js",
+    "test/language/expressions/generators/dflt-params-abrupt.js",
+    "test/language/expressions/generators/dflt-params-ref-later.js",
+    "test/language/expressions/generators/dflt-params-ref-self.js",
+    { "pattern": "^test/language/expressions/generators/dstr/" },
+    "test/language/expressions/generators/eval-var-scope-syntax-err.js"
   ],
   "ExternalVariableDelete": [
     "test/language/expressions/delete/11.4.1-4.a-13.js",
@@ -446,7 +453,9 @@
     "test/language/arguments-object/10.6-13-a-3.js"
   ],
   "Function.prototype.toString": [
-    "test/language/expressions/addition/S11.6.1_A3.2_T1.2.js"
+    "test/language/expressions/addition/S11.6.1_A3.2_T1.2.js",
+    "test/language/expressions/greater-than/S11.8.2_A3.2_T1.2.js",
+    "test/language/expressions/greater-than-or-equal/S11.8.4_A3.2_T1.2.js"
   ],
   "Accessing Symbol.iterator twice in spread syntax": [],
   "Accessing step.done twice in for-of loop and array pattern": [],
