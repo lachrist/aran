@@ -376,7 +376,10 @@
     { "pattern": "^test/language/expressions/class/dstr/" },
     "test/language/expressions/class/gen-method/dflt-params-abrupt.js",
     "test/language/expressions/class/gen-method/dflt-params-ref-later.js",
-    "test/language/expressions/class/gen-method/dflt-params-ref-self.js"
+    "test/language/expressions/class/gen-method/dflt-params-ref-self.js",
+    "test/language/expressions/class/gen-method-static/dflt-params-abrupt.js",
+    "test/language/expressions/class/gen-method-static/dflt-params-ref-later.js",
+    "test/language/expressions/class/gen-method-static/dflt-params-ref-self.js"
   ],
   "StrictReadonlyExternalVariableWrite": [
     "test/language/expressions/assignment/dstr/obj-id-init-simple-no-strict.js",
