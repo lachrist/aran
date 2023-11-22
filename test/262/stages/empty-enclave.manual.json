@@ -406,7 +406,15 @@
     "test/language/expressions/generators/dflt-params-ref-self.js",
     { "pattern": "^test/language/expressions/generators/dstr/" },
     "test/language/expressions/generators/eval-var-scope-syntax-err.js",
-    { "pattern": "^test/language/expressions/object/dstr/" }
+    { "pattern": "^test/language/expressions/object/dstr/" },
+    "test/language/expressions/object/method-definition/async-gen-meth-dflt-params-abrupt.js",
+    "test/language/expressions/object/method-definition/async-gen-meth-dflt-params-ref-later.js",
+    "test/language/expressions/object/method-definition/async-gen-meth-dflt-params-ref-self.js",
+    "test/language/expressions/object/method-definition/async-gen-meth-eval-var-scope-syntax-err.js",
+    "test/language/expressions/object/method-definition/gen-meth-dflt-params-abrupt.js",
+    "test/language/expressions/object/method-definition/gen-meth-dflt-params-ref-later.js",
+    "test/language/expressions/object/method-definition/gen-meth-dflt-params-ref-self.js",
+    "test/language/expressions/object/method-definition/gen-meth-eval-var-scope-syntax-err.js"
   ],
   "ExternalVariableDelete": [
     "test/language/expressions/delete/11.4.1-3-1.js",
@@ -426,7 +434,8 @@
     "test/built-ins/Array/prototype/concat/15.4.4.4-5-c-i-1.js"
   ],
   "methods have a non-configurable prototype property": [
-    "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js"
+    "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js",
+    "test/language/expressions/object/method-definition/name-prototype-prop.js"
   ],
   "ambient intrinsic do not consider realm": [
     "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js",

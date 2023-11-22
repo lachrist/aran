@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/object/method-definition/async-gen-meth-dflt-params-abrupt.js",
-  "initial": 37490
+  "target": "test/language/expressions/optional-chaining/call-expression.js",
+  "initial": 37831
 }
