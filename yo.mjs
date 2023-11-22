@@ -13,7 +13,7 @@
 // console.log(Object.getOwnPropertyDescriptors(Symbol.prototype));
 
 {
-  let o = { valueOf: () => 1 };
-  let x = o--;
+  let x = "1";
+  x += 1;
   console.log(x);
 }

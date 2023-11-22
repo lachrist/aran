@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/postfix-decrement/eval-nostrict.js",
-  "initial": 37891
+  "target": "test/language/expressions/postfix-increment/eval-nostrict.js",
+  "initial": 37929
 }
