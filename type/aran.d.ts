@@ -44,6 +44,7 @@ export type Intrinsic =
   | AranIntrinsic
   // Symbol //
   | "Symbol"
+  | "Symbol.prototype.description@get"
   | "Symbol.unscopables"
   | "Symbol.asyncIterator"
   | "Symbol.iterator"
@@ -51,7 +52,6 @@ export type Intrinsic =
   | "Symbol.toStringTag"
   // String //
   | "String.prototype.concat"
-  | "String.prototype.slice"
   // Object //
   | "Object"
   | "Object.create"
