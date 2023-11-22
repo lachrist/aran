@@ -10,7 +10,8 @@
 //   o.x &&= 123;
 // }
 
-{
-  let x = false;
-  console.log((x ||= 123));
-}
+let foo = null;
+
+foo &&= () => {};
+
+console.log(foo.name);

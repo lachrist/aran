@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-arrow-function.js",
-  "initial": 36417
+  "target": "test/language/expressions/logical-or/S11.11.2_A2.4_T3.js",
+  "initial": 36497
 }
