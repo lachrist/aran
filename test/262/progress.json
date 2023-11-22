@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/postfix-decrement/bigint.js",
-  "initial": 37890
+  "target": "test/language/expressions/postfix-decrement/eval-nostrict.js",
+  "initial": 37891
 }
