@@ -19,6 +19,7 @@ export type PrivateKey = Brand<string, "estree.PrivateKey">;
 export type ProtoProperty = estree.Property & {
   computed: false;
   method: false;
+  shorthand: false;
   value: estree.Expression;
 } & (
     | {

@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/logical-or/S11.11.2_A2.4_T3.js",
-  "initial": 36497
+  "target": "test/language/expressions/object/__proto__-permitted-dup-shorthand.js",
+  "initial": 36686
 }

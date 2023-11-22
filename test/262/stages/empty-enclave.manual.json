@@ -236,7 +236,10 @@
     "test/language/expressions/left-shift/S11.7.1_A2.4_T4.js",
     "test/language/expressions/less-than/S11.8.1_A2.4_T4.js",
     "test/language/expressions/less-than-or-equal/S11.8.3_A2.4_T4.js",
-    "test/language/expressions/logical-and/S11.11.1_A2.4_T3.js"
+    "test/language/expressions/logical-and/S11.11.1_A2.4_T3.js",
+    "test/language/expressions/logical-or/S11.11.2_A2.4_T3.js",
+    "test/language/expressions/modulus/S11.5.3_A2.4_T4.js",
+    "test/language/expressions/multiplication/S11.5.1_A2.4_T4.js"
   ],
   "GeneratorParameterPattern": [
     "test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",

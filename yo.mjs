@@ -10,8 +10,8 @@
 //   o.x &&= 123;
 // }
 
-let foo = null;
+const __proto__ = 123;
 
-foo &&= () => {};
+const object = { __proto__: 456 };
 
-console.log(foo.name);
+console.log(Reflect.getPrototypeOf(object) === Object.prototype);
