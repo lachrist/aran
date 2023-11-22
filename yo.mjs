@@ -1,29 +1,16 @@
-// let yo = null;
-
-// const CC = class C extends ((yo = () => C), null) {};
-
-// const CC = (() => {
-//   let C;
-
-// } ());
-
-// console.log(yo());
-
-// // const c = new CC();
-
-// // console.log(Object.getOwnPropertyDescriptors(c));
-
-// // // console.log(CC.foo.name);
-
-// const x = new WeakMap();
-// console.log(x.set({}, 123));
-
-import { runInThisContext } from "vm";
-runInThisContext(`
+// {
+//   let o = {
+//     get x() {
+//       return false;
+//     },
+//     set x(y) {
+//       ARAN("FOOBAR");
+//     },
+//   };
+//   o.x &&= 123;
+// }
 
 {
-  function f () {}
-  f = 123;
+  let x = false;
+  console.log((x ||= 123));
 }
-f();
-`);

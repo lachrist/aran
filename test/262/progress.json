@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/logical-assignment/left-hand-side-private-reference-accessor-property-short-circuit-and.js",
-  "initial": 36396
+  "target": "test/language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-arrow-function.js",
+  "initial": 36417
 }
