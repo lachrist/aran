@@ -54,6 +54,7 @@ export type Intrinsic =
   | "String.prototype.concat"
   // Object //
   | "Object"
+  | "Object.hasOwn"
   | "Object.create"
   | "Object.prototype"
   | "Object.fromEntries"

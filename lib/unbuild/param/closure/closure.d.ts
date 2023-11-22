@@ -17,8 +17,8 @@ export type Closure =
     }
   | {
       type: "constructor";
+      derived: boolean;
       arrow: Arrow;
       self: Cache;
-      super: Cache | null;
       field: Cache;
     };

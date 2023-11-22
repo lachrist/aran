@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/postfix-increment/eval-nostrict.js",
-  "initial": 37929
+  "target": "test/language/expressions/super/prop-dot-cls-null-proto.js",
+  "initial": 38216
 }
