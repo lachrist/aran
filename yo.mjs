@@ -12,15 +12,11 @@
 
 // console.log(Object.getOwnPropertyDescriptors(Symbol.prototype));
 
-import { runInThisContext } from "vm";
-
-runInThisContext(
-  `
-
-class C extends null {
-  [(delete x)] = 123;
-
+class C extends Object {
+  constructor() {
+    super(console.log("foo"));
+    super(console.log("bar"));
+  }
 }
 
-`,
-);
+new C();

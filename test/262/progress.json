@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/super/prop-dot-cls-this-uninit.js",
-  "initial": 38219
+  "target": "test/language/expressions/super/realm.js",
+  "initial": 38251
 }

@@ -429,6 +429,15 @@
     "test/language/expressions/grouping/S11.1.6_A2_T2.js",
     "test/language/expressions/grouping/S11.1.6_A3_T6.js"
   ],
+  "StrictKeywordExternalVariable": [
+    "test/language/expressions/class/static-init-await-reference.js",
+    "test/language/expressions/function/static-init-await-reference.js",
+    "test/language/expressions/generators/static-init-await-reference.js",
+    "test/language/expressions/in/private-field-rhs-await-absent.js",
+    "test/language/expressions/object/method-definition/static-init-await-reference-accessor.js",
+    "test/language/expressions/object/method-definition/static-init-await-reference-generator.js",
+    "test/language/expressions/object/method-definition/static-init-await-reference-normal.js"
+  ],
   "StrictReadonlyExternalVariableWrite": [
     "test/language/expressions/assignment/dstr/obj-id-init-simple-no-strict.js",
     "test/language/expressions/assignment/dstr/obj-id-simple-no-strict.js",
@@ -486,6 +495,10 @@
   ],
   "Function.prototype.toString": [
     "test/language/expressions/addition/S11.6.1_A3.2_T1.2.js",
+    "test/language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-function-expression.js",
+    "test/language/expressions/class/cpn-class-expr-computed-property-name-from-function-expression.js",
+    "test/language/expressions/class/cpn-class-expr-fields-computed-property-name-from-function-expression.js",
+    "test/language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-function-expression.js",
     "test/language/expressions/greater-than/S11.8.2_A3.2_T1.2.js",
     "test/language/expressions/greater-than-or-equal/S11.8.4_A3.2_T1.2.js",
     "test/language/expressions/less-than/S11.8.1_A3.2_T1.2.js",
