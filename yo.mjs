@@ -12,8 +12,15 @@
 
 // console.log(Object.getOwnPropertyDescriptors(Symbol.prototype));
 
-class C extends null {}
+import { runInThisContext } from "vm";
 
-// function f() {}
+runInThisContext(
+  `
 
-console.log(Object.getOwnPropertyDescriptors(C));
+class C extends null {
+  [(delete x)] = 123;
+
+}
+
+`,
+);
