@@ -102,6 +102,7 @@ export type Intrinsic =
   | "Reflect.preventExtensions"
   | "Reflect.defineProperty"
   // Others //
+  | "Number"
   | "globalThis"
   | "eval"
   | "Proxy"

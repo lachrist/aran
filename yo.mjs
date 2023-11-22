@@ -12,6 +12,8 @@
 
 // console.log(Object.getOwnPropertyDescriptors(Symbol.prototype));
 
-import { parse } from "acorn";
-
-console.log(parse("o?.m();", { ecmaVersion: 2023 }).body[0].expression);
+{
+  let o = { valueOf: () => 1 };
+  let x = o--;
+  console.log(x);
+}

@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/postfix-decrement/S11.3.2_A2.2_T1.js",
-  "initial": 37871
+  "target": "test/language/expressions/postfix-decrement/bigint.js",
+  "initial": 37890
 }
