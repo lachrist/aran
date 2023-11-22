@@ -12,8 +12,8 @@
 
 // console.log(Object.getOwnPropertyDescriptors(Symbol.prototype));
 
-{
-  let x = "1";
-  x += 1;
-  console.log(x);
-}
+class C extends null {}
+
+// function f() {}
+
+console.log(Object.getOwnPropertyDescriptors(C));

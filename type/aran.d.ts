@@ -76,6 +76,7 @@ export type Intrinsic =
   | "Array.prototype.fill"
   | "Array.prototype.push"
   // Function //
+  | "Function.prototype"
   | "Function.prototype.arguments@get"
   | "Function.prototype.arguments@set"
   // WeakMap //
