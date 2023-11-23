@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/function-code/S10.2.1_A4_T2.js",
-  "initial": 38713
+  "target": "test/language/function-code/S10.2.1_A5.2_T1.js",
+  "initial": 38716
 }
