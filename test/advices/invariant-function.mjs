@@ -272,7 +272,6 @@ const consumeAdvice = (stack, point) => {
     type === "conditional.before" ||
     type === "conditional.after" ||
     type === "global.write.before" ||
-    type === "global.declare.before" ||
     type === "eval.before" ||
     type === "closure.completion" ||
     type === "program.completion" ||

@@ -436,7 +436,6 @@ export default (point) => {
     type === "write.before" ||
     type === "branch.before" ||
     type === "global.write.before" ||
-    type === "global.declare.before" ||
     type === "eval.before" ||
     type === "conditional.before" ||
     type === "eval.after" ||

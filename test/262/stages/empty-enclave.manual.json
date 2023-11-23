@@ -426,6 +426,7 @@
     "test/language/expressions/delete/11.4.1-4.a-8.js",
     "test/language/expressions/delete/S11.4.1_A2.2_T1.js",
     "test/language/expressions/delete/S11.4.1_A3.2_T1.js",
+    "test/language/expressions/delete/S11.4.1_A3.3_T1.js",
     "test/language/expressions/delete/S11.4.1_A3.3_T6.js",
     "test/language/expressions/grouping/S11.1.6_A2_T2.js",
     "test/language/expressions/grouping/S11.1.6_A3_T6.js"
@@ -538,6 +539,8 @@
   "this argument is undefined when directly invoking functions of with frame": [
     "test/language/expressions/call/with-base-obj.js"
   ],
+  "When using enclave, from other programs, hidden variables are declared at the beginning": [],
+  "When using enclave, from other programs, const hidden variables are writable": [],
   "TODO": [
     "test/language/expressions/dynamic-import/catch/nested-async-function-await-instn-iee-err-ambiguous-import.js"
   ]

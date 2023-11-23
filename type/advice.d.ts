@@ -294,14 +294,13 @@ type GenericGlobalWriteAfterAdvice<G extends Generic> = (
 ) => G["VoidResult"];
 
 type GenericGlobalDeclareBeforeAdvice<G extends Generic> = (
-  kind: aran.VariableKind,
+  kind: aran.GlobalVariableKind,
   variable: estree.Variable,
-  value: G["Value"],
   location: G["Location"],
-) => G["ValueResult"];
+) => G["VoidResult"];
 
 type GenericGlobalDeclareAfterAdvice<G extends Generic> = (
-  kind: aran.VariableKind,
+  kind: aran.GlobalVariableKind,
   variable: estree.Variable,
   location: G["Location"],
 ) => G["VoidResult"];
@@ -822,14 +821,13 @@ type Point<V, L> =
   // declare-external //
   | {
       type: "global.declare.before";
-      kind: aran.VariableKind;
+      kind: aran.GlobalVariableKind;
       variable: estree.Variable;
-      value: V;
       location: L;
     }
   | {
       type: "global.declare.after";
-      kind: aran.VariableKind;
+      kind: aran.GlobalVariableKind;
       variable: estree.Variable;
       location: L;
     }

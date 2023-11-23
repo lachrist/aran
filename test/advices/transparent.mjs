@@ -74,6 +74,6 @@ export default {
   "global.typeof.after": (_variable, value, _location) => value,
   "global.write.before": (_variable, value, _location) => value,
   "global.write.after": (_variable, _location) => {},
-  "global.declare.before": (_kind, _variable, value, _location) => value,
+  "global.declare.before": (_kind, _variable, _location) => {},
   "global.declare.after": (_kind, _variable, _location) => {},
 };

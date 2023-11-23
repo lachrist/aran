@@ -18,7 +18,7 @@ export type Primitive =
   | { bigint: string }
   | string;
 
-export type VariableKind = "var" | "let" | "const";
+export type GlobalVariableKind = "var" | "let";
 
 export type AranIntrinsic =
   | "aran.global"
@@ -38,7 +38,9 @@ export type AranIntrinsic =
   | "aran.deadzone"
   | "aran.hidden.weave"
   | "aran.hidden.rebuild"
-  | "aran.toPropertyKey";
+  | "aran.toPropertyKey"
+  | "aran.AsyncGeneratorFunction.prototype.prototype"
+  | "aran.GeneratorFunction.prototype.prototype";
 
 export type Intrinsic =
   // Aran //
@@ -204,9 +206,8 @@ export type Statement<A extends Atom> =
   | { type: "DebuggerStatement"; tag: A["Tag"] }
   | {
       type: "DeclareGlobalStatement";
-      kind: VariableKind;
+      kind: GlobalVariableKind;
       variable: A["GlobalVariable"];
-      right: Expression<A>;
       tag: A["Tag"];
     }
   | { type: "BlockStatement"; do: ControlBlock<A>; tag: A["Tag"] }
