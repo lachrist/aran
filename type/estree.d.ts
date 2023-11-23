@@ -1,8 +1,11 @@
-export type BlockVariableKind = "let" | "const" | "class" | "import";
-
-export type ClosureVariableKind = "var" | "function" | "callee";
-
-export type VariableKind = BlockVariableKind | ClosureVariableKind;
+export type VariableKind =
+  | "var"
+  | "function"
+  | "callee"
+  | "let"
+  | "const"
+  | "class"
+  | "import";
 
 export type Variable = Brand<string, "estree.Variable">;
 

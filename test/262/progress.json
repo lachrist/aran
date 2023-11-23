@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/function-code/block-decl-onlystrict.js",
-  "initial": 38720
+  "target": "test/language/identifiers/start-unicode-10.0.0-class-escaped.js",
+  "initial": 38900
 }
