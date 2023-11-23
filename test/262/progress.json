@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/module-code/eval-gtbndng-indirect-update-as.js",
-  "initial": 39679
+  "target": "test/language/module-code/eval-this.js",
+  "initial": 39706
 }
