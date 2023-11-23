@@ -12,11 +12,18 @@
 
 // console.log(Object.getOwnPropertyDescriptors(Symbol.prototype));
 
-class C extends Object {
+function f() {}
+f.prototype = null;
+
+class C {
   constructor() {
-    super(console.log("foo"));
-    super(console.log("bar"));
+    // console.log(new.target);
+    // console.log(this);
+    console.log(Reflect.getPrototypeOf(this) === new.target.prototype);
+    console.log(Reflect.getPrototypeOf(this) === C.prototype);
   }
 }
 
-new C();
+Reflect.construct(C, [], f);
+
+// console.log(Reflect.getPrototypeOf(b) === Object.prototype);

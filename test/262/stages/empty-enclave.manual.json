@@ -456,7 +456,8 @@
   ],
   "ambient intrinsic do not consider realm": [
     "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js",
-    "test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js"
+    "test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js",
+    "test/language/expressions/super/realm.js"
   ],
   "sloppy arguments is not a two-way binding with parameters": [
     "test/built-ins/Object/defineProperty/15.2.3.6-4-292-1.js",
