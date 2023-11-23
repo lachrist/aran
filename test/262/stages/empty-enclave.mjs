@@ -8,7 +8,8 @@ import { relative } from "node:path";
 import { AranTypeError } from "../error.mjs";
 
 // eslint-disable-next-line local/strict-console
-const { Reflect, Set, RegExp, Object, JSON, URL, console, Error } = globalThis;
+const { Reflect, Set, RegExp, Object, JSON, URL, console, Error, setTimeout } =
+  globalThis;
 
 /**
  * @typedef {string | { pattern: string}} MatcherItem
@@ -167,6 +168,13 @@ export default {
         __proto__: null,
         value: (/** @type {unknown} */ value) =>
           console.dir(value, { showHidden: true }),
+        writable: false,
+        enumerable: false,
+        configurable: false,
+      },
+      ARAN_SET_TIMEOUT: {
+        __proto__: null,
+        value: setTimeout,
         writable: false,
         enumerable: false,
         configurable: false,

@@ -1,10 +1,13 @@
-import { runInThisContext } from "vm";
+let x;
 
-runInThisContext(`
-const g = function f(x, y = x) {
-  var x;
-  return {x, y};
+export { x as default };
+
+import { default as xx } from "./yo.mjs";
+
+console.log("foo", { x, xx });
+
+{
+  x = function f() {};
 }
 
-console.log(g(123));
-`);
+console.log("bar", { x, xx });
