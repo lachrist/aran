@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/tagged-template/cache-different-functions-same-site.js",
-  "initial": 38253
+  "target": "test/language/expressions/unsigned-right-shift/S11.7.3_A2.4_T4.js",
+  "initial": 38400
 }

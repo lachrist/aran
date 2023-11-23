@@ -23,6 +23,7 @@ export type VariableKind = "var" | "let" | "const";
 export type AranIntrinsic =
   | "aran.global"
   | "aran.cache"
+  | "aran.templates"
   | "aran.record.variables"
   | "aran.record.values"
   | "aran.unary"
