@@ -461,6 +461,9 @@
     "test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js",
     "test/language/expressions/super/realm.js"
   ],
+  "Duplicate global accessor triggering": [
+    "test/language/expressions/typeof/get-value.js"
+  ],
   "sloppy arguments is not a two-way binding with parameters": [
     "test/built-ins/Object/defineProperty/15.2.3.6-4-292-1.js",
     "test/built-ins/Object/defineProperty/15.2.3.6-4-293-2.js",
