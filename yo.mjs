@@ -1,7 +1,10 @@
-const ARAN = (x) => console.dir(x);
+import { runInThisContext } from "vm";
 
-class c {
-  foo() {}
+runInThisContext(`
+const g = function f(x = f) {
+  // var f;
+  return f;
 }
 
-ARAN(Object.getOwnPropertyDescriptors(c.prototype));
+console.log(g());
+`);
