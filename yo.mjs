@@ -1,13 +1,9 @@
-let x;
+import { parse } from "acorn";
 
-export { x as default };
-
-import { default as xx } from "./yo.mjs";
-
-console.log("foo", { x, xx });
-
-{
-  x = function f() {};
-}
-
-console.log("bar", { x, xx });
+console.dir(
+  parse("var foo; export { foo as 123 };", {
+    sourceType: "module",
+    ecmaVersion: 2024,
+  }),
+  { depth: null },
+);
