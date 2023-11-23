@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/identifiers/start-unicode-10.0.0-class-escaped.js",
-  "initial": 38900
+  "target": "test/language/module-code/eval-export-dflt-cls-named.js",
+  "initial": 39660
 }

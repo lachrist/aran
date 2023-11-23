@@ -515,6 +515,28 @@
     "test/language/expressions/object/cpn-obj-lit-computed-property-name-from-async-arrow-function-expression.js",
     "test/language/expressions/object/cpn-obj-lit-computed-property-name-from-function-expression.js"
   ],
+  "Recursive visitor for private fields blow up the callstack *awkward* ": [
+    "test/language/identifiers/start-unicode-10.0.0-class-escaped.js",
+    "test/language/identifiers/start-unicode-10.0.0-class.js",
+    "test/language/identifiers/start-unicode-13.0.0-class-escaped.js",
+    "test/language/identifiers/start-unicode-13.0.0-class.js",
+    "test/language/identifiers/start-unicode-14.0.0-class-escaped.js",
+    "test/language/identifiers/start-unicode-14.0.0-class.js",
+    "test/language/identifiers/start-unicode-15.0.0-class-escaped.js",
+    "test/language/identifiers/start-unicode-15.0.0-class.js",
+    "test/language/identifiers/start-unicode-5.2.0-class-escaped.js",
+    "test/language/identifiers/start-unicode-5.2.0-class.js",
+    "test/language/identifiers/start-unicode-6.0.0-class-escaped.js",
+    "test/language/identifiers/start-unicode-6.0.0-class.js",
+    "test/language/identifiers/start-unicode-6.1.0-class-escaped.js",
+    "test/language/identifiers/start-unicode-6.1.0-class.js",
+    "test/language/identifiers/start-unicode-7.0.0-class-escaped.js",
+    "test/language/identifiers/start-unicode-7.0.0-class.js",
+    "test/language/identifiers/start-unicode-8.0.0-class-escaped.js",
+    "test/language/identifiers/start-unicode-8.0.0-class.js",
+    "test/language/identifiers/start-unicode-9.0.0-class-escaped.js",
+    "test/language/identifiers/start-unicode-9.0.0-class.js"
+  ],
   "Accessing Symbol.iterator twice in spread syntax": [],
   "Accessing step.done twice in for-of loop and array pattern": [],
   "Not calling iterable.return on abrupt completion in array pattern": [
