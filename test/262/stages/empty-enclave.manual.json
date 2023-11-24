@@ -419,7 +419,12 @@
     "test/language/expressions/object/method-definition/gen-meth-dflt-params-abrupt.js",
     "test/language/expressions/object/method-definition/gen-meth-dflt-params-ref-later.js",
     "test/language/expressions/object/method-definition/gen-meth-dflt-params-ref-self.js",
-    "test/language/expressions/object/method-definition/gen-meth-eval-var-scope-syntax-err.js"
+    "test/language/expressions/object/method-definition/gen-meth-eval-var-scope-syntax-err.js",
+    "test/language/statements/async-generator/dflt-params-abrupt.js",
+    "test/language/statements/async-generator/dflt-params-ref-later.js",
+    "test/language/statements/async-generator/dflt-params-ref-self.js",
+    { "pattern": "^test/language/statements/async-generator/dstr" },
+    "test/language/statements/async-generator/eval-var-scope-syntax-err.js"
   ],
   "ExternalVariableDelete": [
     "test/language/expressions/delete/11.4.1-3-1.js",

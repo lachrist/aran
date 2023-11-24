@@ -1,9 +1,7 @@
 async function* f() {
-  const x = class C extends (await (yield* (async function* () {
-    await 123;
-    return yield 123, Object;
-  })())) {
+  const x = class C {
     constructor() {}
+    [yield 123] = 456;
   };
   yield x;
 }

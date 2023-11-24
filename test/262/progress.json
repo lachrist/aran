@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/async-generator/dflt-params-abrupt.js",
-  "initial": 40523
+  "target": "test/language/statements/class/accessor-name-inst-computed-yield-expr.js",
+  "initial": 40879
 }
