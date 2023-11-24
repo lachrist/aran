@@ -1,9 +1,11 @@
-import { parse } from "acorn";
+import { x as xx } from "./yo.mjs";
 
-console.dir(
-  parse("import './foo.js';", {
-    ecmaVersion: 2024,
-    sourceType: "module",
-  }),
-  { depth: null },
-);
+try {
+  console.log(xx);
+} catch (e) {
+  console.log(e);
+}
+
+export const x = 123;
+
+console.log(xx);

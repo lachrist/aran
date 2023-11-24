@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/module-code/instn-star-props-dflt-keep-indirect.js",
-  "initial": 39872
+  "target": "test/language/module-code/top-level-await/syntax/export-class-decl-await-expr-array-literal.js",
+  "initial": 40113
 }

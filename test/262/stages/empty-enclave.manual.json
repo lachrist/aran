@@ -515,7 +515,7 @@
     "test/language/expressions/object/cpn-obj-lit-computed-property-name-from-async-arrow-function-expression.js",
     "test/language/expressions/object/cpn-obj-lit-computed-property-name-from-function-expression.js"
   ],
-  "Moving links at the top of the file is not the same in presence of cycles": [
+  "Deadzone is not enforced from outside the module (only relevant in presence of cycle)": [
     "test/language/module-code/instn-named-bndng-cls.js",
     "test/language/module-code/instn-named-bndng-const.js",
     "test/language/module-code/instn-named-bndng-dflt-cls.js",
@@ -523,7 +523,15 @@
     "test/language/module-code/instn-named-bndng-dflt-gen-anon.js",
     "test/language/module-code/instn-named-bndng-dflt-named.js",
     "test/language/module-code/instn-named-bndng-dflt-star.js",
-    "test/language/module-code/instn-named-bndng-let.js"
+    "test/language/module-code/instn-named-bndng-let.js",
+    "test/language/module-code/namespace/internals/delete-exported-uninit.js",
+    "test/language/module-code/namespace/internals/enumerate-binding-uninit.js",
+    "test/language/module-code/namespace/internals/get-own-property-str-found-uninit.js",
+    "test/language/module-code/namespace/internals/get-str-found-uninit.js",
+    "test/language/module-code/namespace/internals/object-hasOwnProperty-binding-uninit.js",
+    "test/language/module-code/namespace/internals/object-keys-binding-uninit.js",
+    "test/language/module-code/namespace/internals/object-propertyIsEnumerable-binding-uninit.js",
+    "test/language/module-code/top-level-await/module-self-import-async-resolution-ticks.js"
   ],
   "Recursive visitor for private fields blow up the callstack *awkward* ": [
     "test/language/identifiers/start-unicode-10.0.0-class-escaped.js",
