@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/module-code/instn-named-bndng-cls.js",
-  "initial": 39800
+  "target": "test/language/module-code/instn-star-props-dflt-keep-indirect.js",
+  "initial": 39872
 }
