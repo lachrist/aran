@@ -430,7 +430,8 @@
     "test/language/statements/class/async-gen-method/dflt-params-ref-self.js",
     "test/language/statements/class/async-gen-method-static/dflt-params-abrupt.js",
     "test/language/statements/class/async-gen-method-static/dflt-params-ref-later.js",
-    "test/language/statements/class/async-gen-method-static/dflt-params-ref-self.js"
+    "test/language/statements/class/async-gen-method-static/dflt-params-ref-self.js",
+    { "pattern": "^test/language/statements/class/dstr/" }
   ],
   "ExternalVariableDelete": [
     "test/language/expressions/delete/11.4.1-3-1.js",
@@ -466,7 +467,11 @@
   "methods have a non-configurable prototype property": [
     "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js",
     "test/language/expressions/object/method-definition/name-prototype-prop.js",
-    "test/language/statements/class/definition/accessors.js"
+    "test/language/statements/class/definition/accessors.js",
+    "test/language/statements/class/definition/getters-prop-desc.js",
+    "test/language/statements/class/definition/methods.js",
+    "test/language/statements/class/definition/numeric-property-names.js",
+    "test/language/statements/class/definition/setters-prop-desc.js"
   ],
   "ambient intrinsic do not consider realm": [
     "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js",
@@ -575,8 +580,6 @@
     "test/language/identifiers/start-unicode-9.0.0-class-escaped.js",
     "test/language/identifiers/start-unicode-9.0.0-class.js"
   ],
-  "Accessing Symbol.iterator twice in spread syntax": [],
-  "Accessing step.done twice in for-of loop and array pattern": [],
   "Not calling iterable.return on abrupt completion in array pattern": [
     "test/language/expressions/assignment/dstr/array-elem-iter-rtrn-close-err.js",
     "test/language/expressions/assignment/dstr/array-elem-iter-rtrn-close-null.js",
@@ -603,9 +606,14 @@
   "this argument is undefined when directly invoking functions of with frame": [
     "test/language/expressions/call/with-base-obj.js"
   ],
-  "When using enclave, from other programs, hidden variables are declared at the beginning": [],
-  "When using enclave, from other programs, const hidden variables are writable": [],
   "TODO": [
     "test/language/expressions/dynamic-import/catch/nested-async-function-await-instn-iee-err-ambiguous-import.js"
-  ]
+  ],
+  "Access super.prototype twice when creating a derived class": [
+    "test/language/statements/class/definition/prototype-getter.js"
+  ],
+  "When using enclave, from other programs, hidden variables are declared at the beginning": [],
+  "When using enclave, from other programs, const hidden variables are writable": [],
+  "Accessing Symbol.iterator twice in spread syntax": [],
+  "Accessing step.done twice in for-of loop and array pattern": []
 }
