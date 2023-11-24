@@ -424,7 +424,13 @@
     "test/language/statements/async-generator/dflt-params-ref-later.js",
     "test/language/statements/async-generator/dflt-params-ref-self.js",
     { "pattern": "^test/language/statements/async-generator/dstr" },
-    "test/language/statements/async-generator/eval-var-scope-syntax-err.js"
+    "test/language/statements/async-generator/eval-var-scope-syntax-err.js",
+    "test/language/statements/class/async-gen-method/dflt-params-abrupt.js",
+    "test/language/statements/class/async-gen-method/dflt-params-ref-later.js",
+    "test/language/statements/class/async-gen-method/dflt-params-ref-self.js",
+    "test/language/statements/class/async-gen-method-static/dflt-params-abrupt.js",
+    "test/language/statements/class/async-gen-method-static/dflt-params-ref-later.js",
+    "test/language/statements/class/async-gen-method-static/dflt-params-ref-self.js"
   ],
   "ExternalVariableDelete": [
     "test/language/expressions/delete/11.4.1-3-1.js",
@@ -459,7 +465,8 @@
   ],
   "methods have a non-configurable prototype property": [
     "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js",
-    "test/language/expressions/object/method-definition/name-prototype-prop.js"
+    "test/language/expressions/object/method-definition/name-prototype-prop.js",
+    "test/language/statements/class/definition/accessors.js"
   ],
   "ambient intrinsic do not consider realm": [
     "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js",
@@ -518,7 +525,15 @@
     "test/language/expressions/less-than-or-equal/S11.8.3_A3.2_T1.2.js",
     "test/language/expressions/object/cpn-obj-lit-computed-property-name-from-arrow-function-expression.js",
     "test/language/expressions/object/cpn-obj-lit-computed-property-name-from-async-arrow-function-expression.js",
-    "test/language/expressions/object/cpn-obj-lit-computed-property-name-from-function-expression.js"
+    "test/language/expressions/object/cpn-obj-lit-computed-property-name-from-function-expression.js",
+    "test/language/statements/class/cpn-class-decl-accessors-computed-property-name-from-arrow-function-expression.js",
+    "test/language/statements/class/cpn-class-decl-accessors-computed-property-name-from-async-arrow-function-expression.js",
+    "test/language/statements/class/cpn-class-decl-accessors-computed-property-name-from-function-expression.js",
+    "test/language/statements/class/cpn-class-decl-computed-property-name-from-arrow-function-expression.js",
+    "test/language/statements/class/cpn-class-decl-computed-property-name-from-async-arrow-function-expression.js",
+    "test/language/statements/class/cpn-class-decl-computed-property-name-from-function-expression.js",
+    "test/language/statements/class/cpn-class-decl-fields-computed-property-name-from-function-expression.js",
+    "test/language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-function-expression.js"
   ],
   "Deadzone is not enforced from outside the module (only relevant in presence of cycle)": [
     "test/language/module-code/instn-named-bndng-cls.js",

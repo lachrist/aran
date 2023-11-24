@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/class/accessor-name-inst-computed-yield-expr.js",
-  "initial": 40879
+  "target": "test/language/statements/class/definition/getters-prop-desc.js",
+  "initial": 41342
 }

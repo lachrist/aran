@@ -1,11 +1,3 @@
-async function* f() {
-  const x = class C {
-    constructor() {}
-    [yield 123] = 456;
-  };
-  yield x;
-}
+class C {}
 
-for await (const x of f()) {
-  console.log(x);
-}
+console.log(Reflect.getPrototypeOf(C) === Function.prototype);
