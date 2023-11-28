@@ -439,6 +439,11 @@
     "test/language/statements/class/gen-method-static/dflt-params-ref-later.js",
     "test/language/statements/class/gen-method-static/dflt-params-ref-self.js"
   ],
+  "Checking constructor result is done at return site and becomes catchable": [
+    "test/language/statements/class/subclass/derived-class-return-override-catch-super-arrow.js",
+    "test/language/statements/class/subclass/derived-class-return-override-catch-super.js",
+    "test/language/statements/class/subclass/derived-class-return-override-catch.js"
+  ],
   "ExternalVariableDelete": [
     "test/language/expressions/delete/11.4.1-3-1.js",
     "test/language/expressions/delete/11.4.1-4.a-8.js",
@@ -457,6 +462,12 @@
     "test/language/expressions/object/method-definition/static-init-await-reference-accessor.js",
     "test/language/expressions/object/method-definition/static-init-await-reference-generator.js",
     "test/language/expressions/object/method-definition/static-init-await-reference-normal.js"
+  ],
+  "Check for super class to be constructor is a heuristic based on the presence of prototype": [
+    "test/language/statements/class/subclass/superclass-arrow-function.js",
+    "test/language/statements/class/subclass/superclass-async-function.js",
+    "test/language/statements/class/subclass/superclass-async-generator-function.js",
+    "test/language/statements/class/subclass/superclass-generator-function.js"
   ],
   "StrictReadonlyExternalVariableWrite": [
     "test/language/expressions/assignment/dstr/obj-id-init-simple-no-strict.js",

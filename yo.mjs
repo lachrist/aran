@@ -1,8 +1,17 @@
-class C {
+class D {
   constructor() {
-    console.log(this.#foo);
+    return { __proto__: null };
   }
-  #foo = 123;
+  foo() {
+    console.log("foo");
+  }
+}
+
+class C extends D {
+  constructor() {
+    super();
+    super.foo();
+  }
 }
 
 new C();
