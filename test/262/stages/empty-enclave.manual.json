@@ -558,7 +558,7 @@
     "test/language/module-code/namespace/internals/object-propertyIsEnumerable-binding-uninit.js",
     "test/language/module-code/top-level-await/module-self-import-async-resolution-ticks.js"
   ],
-  "Recursive visitor for private fields blow up the callstack *awkward* ": [
+  "Transformation of linear structure into recursive SequenceExpression blows up the callstack": [
     "test/language/identifiers/start-unicode-10.0.0-class-escaped.js",
     "test/language/identifiers/start-unicode-10.0.0-class.js",
     "test/language/identifiers/start-unicode-13.0.0-class-escaped.js",

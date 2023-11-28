@@ -1,3 +1,8 @@
-class C {}
+class C {
+  constructor() {
+    console.log(this.#foo);
+  }
+  #foo = 123;
+}
 
-console.log(Reflect.getPrototypeOf(C) === Function.prototype);
+new C();
