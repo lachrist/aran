@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/class/elements/private-accessor-is-visible-in-computed-properties.js",
-  "initial": 44096
+  "target": "test/language/statements/class/gen-method/dflt-params-abrupt.js",
+  "initial": 44834
 }
