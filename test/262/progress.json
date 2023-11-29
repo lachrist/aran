@@ -1,5 +1,4 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/for-in/12.6.4-2.js",
-  "initial": 47043
+  "initial": 45372
 }
