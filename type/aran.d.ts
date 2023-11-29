@@ -312,7 +312,7 @@ export type Expression<A extends Atom> =
     }
   | {
       type: "SequenceExpression";
-      head: Effect<A>;
+      head: Effect<A>[];
       tail: Expression<A>;
       tag: A["Tag"];
     }

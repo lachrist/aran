@@ -43,7 +43,7 @@ type Binding =
       path: TargetPath;
     };
 
-type Free = { [key in ResVariable]: Binding };
+type Free = Record<ResVariable, Binding>;
 
 export type ResAtom = {
   Label: Label;
