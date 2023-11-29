@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/for/scope-body-lex-boundary.js",
-  "initial": 45800
+  "target": "test/language/statements/for-in/12.6.4-2.js",
+  "initial": 47043
 }
