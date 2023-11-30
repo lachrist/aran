@@ -1,4 +1,11 @@
-export type StaticFrame = {
+export type GlobalStaticFrame = {
+  situ: "global";
+  link: null;
+  kinds: Record<estree.Variable, estree.VariableKind>;
+};
+
+export type LocalStaticFrame = {
+  situ: "local";
   link: null | {
     import: Record<
       estree.Variable,
@@ -11,3 +18,5 @@ export type StaticFrame = {
   };
   kinds: Record<estree.Variable, estree.VariableKind>;
 };
+
+export type StaticFrame = GlobalStaticFrame | LocalStaticFrame;

@@ -1,5 +1,4 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/class/static-init-super-property.js",
   "initial": 0
 }
