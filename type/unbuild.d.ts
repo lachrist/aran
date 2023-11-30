@@ -1,14 +1,6 @@
 import type { Context } from "../lib/unbuild/context.d.ts";
 
-export type DeadzoneBaseVariable = Brand<
-  string,
-  "unbuild.DeadzoneBaseVariable"
->;
-
-export type OriginalBaseVariable = Brand<
-  string,
-  "unbuild.OriginalBaseVariable"
->;
+export type BaseVariable = Brand<string, "unbuild.BaseVariable">;
 
 export type ConstantMetaVariable = Brand<
   string,
@@ -21,8 +13,6 @@ export type WritableMetaVariable = Brand<
 >;
 
 export type MetaVariable = ConstantMetaVariable | WritableMetaVariable;
-
-export type BaseVariable = DeadzoneBaseVariable | OriginalBaseVariable;
 
 export type Variable = BaseVariable | MetaVariable;
 
