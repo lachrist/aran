@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/annexB/language/statements/for-in/nonstrict-initializer.js",
-  "initial": 1061
+  "target": "test/language/expressions/optional-chaining/optional-call-preserves-this.js",
+  "initial": 37852
 }
