@@ -1,5 +1,4 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/expressions/optional-chaining/optional-call-preserves-this.js",
-  "initial": 37852
+  "initial": 0
 }

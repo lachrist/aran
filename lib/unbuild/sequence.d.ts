@@ -8,3 +8,16 @@ export type BlockSequence<X> = Sequence<
   unbuild.Variable | aran.Statement<unbuild.Atom>,
   X
 >;
+
+export type Condition =
+  | {
+      type: "effect";
+      node: aran.Effect<unbuild.Atom>;
+    }
+  | {
+      type: "condition";
+      test: aran.Expression<unbuild.Atom>;
+      exit: aran.Expression<unbuild.Atom>;
+    };
+
+export type ConditionSequence<X> = Sequence<Condition, X>;
