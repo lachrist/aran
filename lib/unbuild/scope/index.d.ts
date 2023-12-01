@@ -1,6 +1,6 @@
-import type { DynamicFrame } from "./dynamic.d.ts";
-import type { FakeFrame } from "./fake.d.ts";
-import type { StaticFrame } from "./static/index.d.ts";
+import type { DynamicFrame } from "./dynamic.js";
+import type { FakeFrame } from "./fake.js";
+import type { StaticFrame } from "./static/index.js";
 
 export type Scope =
   | { type: "root" }
