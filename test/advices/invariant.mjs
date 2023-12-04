@@ -1,113 +1,5 @@
 /* eslint-disable local/strict-console */
 
-/**
- * @typedef {Brand<unknown, "value">} Value
- */
-
-/**
- * @typedef {Brand<string, "location">} Location
- */
-
-/**
- * @typedef {Brand<string, "hash">} Hash
- */
-
-/**
- * @typedef {import("../../lib/index.mjs").Point<Value, Location>} Point
- */
-
-/**
- * @typedef {import("../../lib/index.mjs").Advice<Value, Location>} Advice
- */
-
-/**
- * @typedef {import("../../lib/index.mjs").Label} Label
- */
-
-/**
- * @typedef {import("../../lib/index.mjs").Link} Link
- */
-
-/**
- * @typedef {import("../../lib/index.mjs").Variable} Variable
- */
-
-/**
- * @typedef {{ [key in Variable]?: Value }} Record
- */
-
-/**
- * @typedef {import("../../lib/index.mjs").EstreeVariable} EstreeVariable
- */
-
-/**
- * @typedef {{
- *   type: "frame",
- *   point: Point & {
- *     type:
- *       | "program.enter"
- *       | "closure.enter"
- *       | "block.enter",
- *   },
- * } | {
- *   type: "value",
- *   point: {
- *     type: "apply.after",
- *     value: Value,
- *     location: Location,
- *   } | {
- *     type: "construct.after",
- *     value: Value,
- *     location: Location,
- *   } | (Point & {
- *     type:
- *       | "read.after"
- *       | "primitive.after"
- *       | "intrinsic.after"
- *       | "function.after"
- *       | "arrow.after"
- *       | "eval.after"
- *       | "conditional.after"
- *       | "global.read.after"
- *       | "global.typeof.after",
- *   }),
- * } | {
- *   type: "match",
- *   point: {
- *     type: "apply.before",
- *     callee: Value,
- *     this: Value,
- *     arguments: Value[],
- *     location: Location,
- *   } | {
- *     type: "construct.before",
- *     callee: Value,
- *     arguments: Value[],
- *     location: Location,
- *   } | (Point & {
- *     type:
- *       | "apply.before"
- *       | "construct.before"
- *       | "eval.before"
- *       | "conditional.before"
- *       | "debugger.before"
- *       | "branch.before"
- *       | "global.read.before"
- *       | "global.typeof.before"
- *       | "global.write.before"
- *       | "global.declare.before",
- *   }),
- * }} Item
- */
-
-/**
- * @typedef {{
- *   callstack: Item[][],
- *   jumps: WeakMap<Location, Item[][]>,
- *   closures: WeakMap<Function, Item[]>,
- * }} State
- */
-
 const {
   undefined,
   Object: { is: same },
@@ -123,7 +15,10 @@ const {
 } = globalThis;
 
 /**
- * @type {<D extends {state: State, point: Point}>(
+ * @type {<D extends {
+ *   state: import("./invariant").State,
+ *   point: import("./invariant").Point,
+ * }>(
  *   message: string,
  *   data: D,
  *) => Error}
@@ -167,10 +62,10 @@ const pop = (array) => {
 
 /**
  * @type {(
- *   item: Item | null,
- *   value: Value,
- *   state: State,
- *   point: Point,
+ *   item: import("./invariant").Item | null,
+ *   value: import("./invariant").Value,
+ *   state: import("./invariant").State,
+ *   point: import("./invariant").Point,
  * ) => void}
  */
 const consume = (item, value, state, point) => {
@@ -220,9 +115,9 @@ const MATCH = {
 
 /**
  * @type {(
- *   item: Item | null,
- *   sate: State,
- *   point: Point,
+ *   item: import("./invariant").Item | null,
+ *   sate: import("./invariant").State,
+ *   point: import("./invariant").Point,
  * ) => void}
  */
 const match = (item, state, point) => {
@@ -243,9 +138,9 @@ const match = (item, state, point) => {
 
 /**
  * @type {(
- *   stack: Item[],
- *   state: State,
- *   point: Point & { type: "read.after" },
+ *   stack: import("./invariant").Item[],
+ *   state: import("./invariant").State,
+ *   point: import("./invariant").Point & { type: "read.after" },
  * ) => void}
  */
 const read = (stack, state, point) => {
@@ -267,9 +162,9 @@ const read = (stack, state, point) => {
 
 /**
  * @type {(
- *   stack: Item[],
- *   state: State,
- *   point: Point & { type: "write.before"},
+ *   stack: import("./invariant").Item[],
+ *   state: import("./invariant").State,
+ *   point: import("./invariant").Point & { type: "write.before"},
  * ) => void}
  */
 const write = (stack, state, point) => {
@@ -289,10 +184,10 @@ const write = (stack, state, point) => {
 
 /**
  * @type {(
- *   stack: Item[],
- *   state: State,
- *   point: Point & { type: "apply" },
- * ) => Value}
+ *   stack: import("./invariant").Item[],
+ *   state: import("./invariant").State,
+ *   point: import("./invariant").Point & { type: "apply" },
+ * ) => import("./invariant").Value}
  */
 const applyAdvice = (stack, state, point) => {
   for (let index = point.arguments.length - 1; index >= 0; index -= 1) {
@@ -326,10 +221,10 @@ const applyAdvice = (stack, state, point) => {
 
 /**
  * @type {(
- *   stack: Item[],
- *   state: State,
- *   point: Point & { type: "construct" },
- * ) => Value}
+ *   stack: import("./invariant").Item[],
+ *   state: import("./invariant").State,
+ *   point: import("./invariant").Point & { type: "construct" },
+ * ) => import("./invariant").Value}
  */
 const constructAdvice = (stack, state, point) => {
   for (let index = point.arguments.length - 1; index >= 0; index -= 1) {
@@ -360,7 +255,7 @@ const constructAdvice = (stack, state, point) => {
 };
 
 /**
- * @type {State}
+ * @type {import("./invariant").State}
  */
 const state = {
   callstack: [],
@@ -368,7 +263,7 @@ const state = {
   jumps: new WeakMap(),
 };
 
-/** @type {Advice} */
+/** @type {import("./invariant").Advice} */
 export default (point) => {
   const { type } = point;
 
@@ -529,7 +424,9 @@ export default (point) => {
   } else if (point.type === "construct") {
     return constructAdvice(stack, state, point);
   } else if (point.type === "primitive.after") {
-    return /** @type {Value} */ (/** @type {unknown} */ (point.value));
+    return /** @type {import("./invariant").Value} */ (
+      /** @type {unknown} */ (point.value)
+    );
   } else if ("record" in point) {
     return point.record;
   } else if ("value" in point) {

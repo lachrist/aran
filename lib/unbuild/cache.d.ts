@@ -20,8 +20,3 @@ export type ConstantCache =
     };
 
 export type Cache = WritableCache | ConstantCache;
-
-export type Setup<V> = {
-  setup: aran.Effect<unbuild.Atom>[];
-  value: V;
-};

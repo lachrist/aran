@@ -1,18 +1,13 @@
-/**
- * @typedef {Brand<unknown, "value">} Value
- */
-
-/**
- * @typedef {Brand<string, "location">} Location
- */
-
 const {
   Error,
   Reflect: { apply, construct },
 } = globalThis;
 
 /**
- * @type {import("../../lib/index.mjs").Advice<Value, Location>}
+ * @type {import("../../type/advice").Advice<
+ *   import("./transparent").Value,
+ *   import("./transparent").Location
+ * >}
  */
 export default {
   "program.enter": (_kind, _links, frame, _location) => frame,
@@ -34,7 +29,9 @@ export default {
   "branch.after": (_kind, _location) => {},
   "intrinsic.after": (_name, value, _location) => value,
   "primitive.after": (primitive, _location) =>
-    /** @type {Value} */ (/** @type {unknown} */ (primitive)),
+    /** @type {import("./transparent").Value} */ (
+      /** @type {unknown} */ (primitive)
+    ),
   "import.after": (_source, _specifier, value, _location) => value,
   "function.after": (_asynchronous, _generator, value, _location) => value,
   "arrow.after": (_asynchronous, value, _location) => value,
@@ -54,7 +51,7 @@ export default {
   "write.before": (_variable, value, _location) => value,
   "return.before": (value, _location) => value,
   "apply": (callee, this_, arguments_, _location) =>
-    /** @type {Value} */ (
+    /** @type {import("./transparent").Value} */ (
       apply(
         /** @type {Function} */ (/** @type {unknown} */ (callee)),
         this_,
@@ -62,7 +59,7 @@ export default {
       )
     ),
   "construct": (callee, arguments_, _location) =>
-    /** @type {Value} */ (
+    /** @type {import("./transparent").Value} */ (
       construct(
         /** @type {Function} */ (/** @type {unknown} */ (callee)),
         arguments_,

@@ -12,6 +12,7 @@ import NoEmptyReturn from "./rules/no-empty-return.mjs";
 import NoFunction from "./rules/no-function.mjs";
 import NoGlobal from "./rules/no-global.mjs";
 import NoImpure from "./rules/no-impure.mjs";
+import NoJsdocTypedef from "./rules/no-jsdoc-typedef.mjs";
 import NoLabel from "./rules/no-label.mjs";
 import NoMethodCall from "./rules/no-method-call.mjs";
 import NoOptionalChaining from "./rules/no-optional-chaining.mjs";
@@ -35,6 +36,7 @@ export default {
   "no-function": NoFunction,
   "no-global": NoGlobal,
   "no-impure": NoImpure,
+  "no-jsdoc-typedef": NoJsdocTypedef,
   "no-label": NoLabel,
   "no-method-call": NoMethodCall,
   "no-optional-chaining": NoOptionalChaining,

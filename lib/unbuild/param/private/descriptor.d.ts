@@ -1,4 +1,4 @@
-import { WritableCache } from "../../cache.mjs";
+import type { WritableCache } from "../../cache.d.ts";
 
 export type PrivateDescriptor =
   | {

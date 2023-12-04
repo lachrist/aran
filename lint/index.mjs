@@ -69,6 +69,7 @@ const config = {
     "local/no-deep-import": "error",
     "local/no-function": "error",
     "local/no-global": ["error", "globalThis", "console"],
+    "local/no-jsdoc-typedef": "error",
     "local/no-label": "error",
     "local/no-assignment-expression": "error",
     "local/no-optional-chaining": "error",

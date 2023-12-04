@@ -11,14 +11,7 @@ const { Promise, Error } = globalThis;
 class NegativeAranError extends Error {}
 
 /**
- * @typedef {{
- *   done: Promise<null | string>,
- *   print: (message: unknown) => void,
- * }} Termination
- */
-
-/**
- * @type {() => Termination}
+ * @type {() => import("./case.d.ts").Termination}
  */
 const makeAsynchronousTermination = () => {
   /** @type {(error: null | string) => void} */
@@ -39,7 +32,7 @@ const makeAsynchronousTermination = () => {
   };
 };
 
-/** @type {Termination} */
+/** @type {import("./case.d.ts").Termination} */
 const termination = {
   done: Promise.resolve(null),
   print: (_unknown) => {},

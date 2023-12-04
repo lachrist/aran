@@ -1,5 +1,5 @@
 import type { Base } from "../../type/options.d.ts";
-import { Scope } from "./scope/index.mjs";
+import type { Scope } from "./scope/index.d.ts";
 import type { Closure } from "./param/closure/closure.d.ts";
 import type { Private } from "./param/private/index.d.ts";
 import type { RootProgram } from "./program.js";

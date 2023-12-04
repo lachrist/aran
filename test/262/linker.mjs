@@ -4,29 +4,14 @@ import { Script, SourceTextModule, SyntheticModule } from "node:vm";
 const { Error, undefined, URL, Map, JSON } = globalThis;
 
 /**
- * @typedef {(
- *   specifier: string,
- *   parent: import("node:vm").Module | import("node:vm").Script,
- *   _assertions: object,
- * ) => Promise<import("node:vm").Module>} Link
- */
-
-/**
- * @typedef {(
- *   main: import("node:vm").Module | import("node:vm").Script,
- *   url: URL,
- * ) => void} Register
- */
-
-/**
  * @type {(
  *   options: {
  *     context: object,
  *     instrument: test262.Instrument,
  *   },
  * ) => {
- *   link: Link,
- *   register: Register,
+ *   link: import("./linker.d.ts").Link,
+ *   register: import("./linker.d.ts").Register,
  * }}
  */
 export const compileLinker = ({ context, instrument }) => {
@@ -34,7 +19,7 @@ export const compileLinker = ({ context, instrument }) => {
   const urls = new Map();
   /** @type {Map<string, import("node:vm").Module>} */
   const modules = new Map();
-  /** @type {Link} */
+  /** @type {import("./linker.d.ts").Link} */
   const link = async (specifier, parent, _assertions) => {
     const parent_url = urls.get(parent);
     if (parent_url === undefined) {

@@ -1,4 +1,4 @@
-import { WritableCache } from "./index.mjs";
+import type { WritableCache } from "../cache.d.ts";
 
 export type RawFakeFrame = Record<estree.Variable, "var" | "let" | "const">;
 

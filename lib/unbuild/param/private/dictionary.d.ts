@@ -1,4 +1,4 @@
-import { Cache, WritableCache } from "../../cache.mjs";
+import type { Cache, WritableCache } from "../../cache.d.ts";
 
 export type PrivateCommon = {
   singleton: WritableCache;
@@ -48,3 +48,44 @@ export type PrivateDictionarySetup<D> = {
 };
 
 export type Private<D> = { [k in estree.PrivateKey]: PrivateDictionary<D> };
+
+export type ListSetPrivateDescriptorEffect<D, C extends {}> = (
+  site: {
+    path: unbuild.Path;
+  },
+  context: {},
+  options: {
+    target: Cache;
+    key: estree.PrivateKey;
+    descriptor: D;
+    value: Cache;
+  },
+) => aran.Effect<unbuild.Atom>[];
+
+export type MakeGetPrivateDescriptorExpression<D, C extends {}> = (
+  site: {
+    path: unbuild.Path;
+  },
+  context: C,
+  options: {
+    target: Cache;
+    key: estree.PrivateKey;
+    descriptor: D;
+  },
+) => aran.Expression<unbuild.Atom>;
+
+/**
+ * @template D
+ * @template {{}} C
+ * @typedef {(
+ *   site: {
+ *     path: unbuild.Path,
+ *   },
+ *   context: C,
+ *   options: {
+ *     target: Cache,
+ *     key: estree.PrivateKey,
+ *     descriptor: D,
+ *   },
+ * ) => aran.Expression<unbuild.Atom>} MakeGetPrivateDescriptorExpression
+ */

@@ -1,5 +1,6 @@
 type Arrow = "arrow" | "none" | "eval";
-import { Cache } from "../../cache.mjs";
+
+import { Cache } from "../../cache";
 
 export type Closure =
   | {

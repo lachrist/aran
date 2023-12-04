@@ -10,6 +10,10 @@ export type Base = Brand<string, "options.Base">;
 
 export type Locate<L> = (path: weave.OriginPath, base: Base) => L;
 
+export type Log = unbuild.Log | rebuild.Log;
+
+export type Warning = Exclude<Log, { name: "ClashError" | "SyntaxError" }>;
+
 //////////////////////
 // Internal Options //
 //////////////////////
@@ -48,3 +52,10 @@ export type RootOptions<L> = GlobalOptions<L> | AlienLocalOptions<L>;
 export type NodeOptions<L> = ReifyLocalOptions<L>;
 
 export type Options<L> = RootOptions<L> | NodeOptions<L>;
+
+export type UserOptions<L> =
+  | null
+  | undefined
+  | {
+      [k in keyof Options<L>]?: Options<L>[k];
+    };

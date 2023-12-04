@@ -1,41 +1,5 @@
 /* eslint-disable local/strict-console */
 
-/**
- * @typedef {Brand<unknown, "value">} Value
- * @typedef {Brand<string, "location">} Location
- * @typedef {Brand<string, "hash">} Hash
- * @typedef {import("../../lib/index.mjs").Advice<Value, Location>} Advice
- * @typedef {import("../../lib/index.mjs").Label} Label
- * @typedef {import("../../lib/index.mjs").Link} Link
- * @typedef {import("../../lib/index.mjs").Variable} Variable
- * @typedef {import("../../lib/index.mjs").EstreeVariable} EstreeVariable
- * @typedef {{ [key in Variable]?: Value }} Record
- */
-
-/**
- * @typedef {(import("../../lib/index.mjs").Point<Value, Location> | {
- *   type: "apply.before",
- *   callee: Value,
- *   this: Value,
- *   arguments: Value[],
- *   location: Location,
- * } | {
- *   type: "apply.after",
- *   value: Value,
- *   location: Location,
- * } | {
- *   type: "construct.before",
- *   callee: Value,
- *   arguments: Value[],
- *   location: Location,
- * } | {
- *   type: "construct.after",
- *   value: Value,
- *   location: Location,
- * }
- * )} Point
- */
-
 const {
   undefined,
   Object: { is: same },
@@ -114,9 +78,14 @@ const pop = (array) => {
 
 /**
  * @type {(
- *   point: Point & { type: "read.after" | "write.before" },
- *   stack: Point[],
- *   closures: WeakMap<Value, Point[]>,
+ *   point: import("./invariant-function").Point & {
+ *     type: "read.after" | "write.before",
+ *   },
+ *   stack: import("./invariant-function").Point[],
+ *   closures: WeakMap<
+ *     import("./invariant-function").Value,
+ *     import("./invariant-function").Point[]
+ *   >,
  * ) => void}
  */
 const lookup = (point, stack, closures) => {
@@ -154,7 +123,9 @@ const lookup = (point, stack, closures) => {
 };
 
 /**
- * @type {(stack: Point[]) => number}
+ * @type {(
+ *   stack: import("./invariant-function").Point[],
+ * ) => number}
  */
 const findRootIndex = (stack) => {
   for (let index = stack.length - 1; index >= 0; index -= 1) {
@@ -167,12 +138,14 @@ const findRootIndex = (stack) => {
 };
 
 /**
- * @type {(points: Point[]) => Point[]}
+ * @type {(
+ *   points: import("./invariant-function").Point[],
+ * ) => import("./invariant-function").Point[]}
  */
 const trimScopeStack = (stack) => {
   const { length } = stack;
   let index = findRootIndex(stack);
-  /** @type {Point[]} */
+  /** @type {import("./invariant-function").Point[]} */
   const trim = [stack[index]];
   while (index < length) {
     const point = stack[index];
@@ -186,9 +159,12 @@ const trimScopeStack = (stack) => {
 
 /**
  * @type {(
- *   point: Point,
- *   stack: Point[],
- *   closures: WeakMap<Value, Point[]>,
+ *   point: import("./invariant-function").Point,
+ *   stack: import("./invariant-function").Point[],
+ *   closures: WeakMap<
+ *     import("./invariant-function").Value,
+ *     import("./invariant-function").Point[]
+ *   >,
  * ) => void}
  */
 const lookupAdvice = (point, stack, closures) => {
@@ -200,9 +176,12 @@ const lookupAdvice = (point, stack, closures) => {
 
 /**
  * @type {(
- *   point: Point,
- *   stack: Point[],
- *   closures: WeakMap<Value, Point[]>,
+ *   point: import("./invariant-function").Point,
+ *   stack: import("./invariant-function").Point[],
+ *   closures: WeakMap<
+ *     import("./invariant-function").Value,
+ *     import("./invariant-function").Point[]
+ *   >,
  * ) => void}
  */
 const registerAdvice = (point, stack, closures) => {
@@ -225,8 +204,8 @@ const registerAdvice = (point, stack, closures) => {
 
 /**
  * @type {(
- *   point: Point,
- *   value: Value,
+ *   point: import("./invariant-function").Point,
+ *   value: import("./invariant-function").Value,
  * ) => void}
  */
 const consume = (point, value) => {
@@ -251,7 +230,10 @@ const consume = (point, value) => {
 };
 
 /**
- * @type {(stack: Point[], point: Point) => void}
+ * @type {(
+ *   stack: import("./invariant-function").Point[],
+ *   point: import("./invariant-function").Point,
+ * ) => void}
  */
 const consumeAdvice = (stack, point) => {
   const { type } = point;
@@ -282,7 +264,10 @@ const consumeAdvice = (stack, point) => {
 };
 
 /**
- * @type {(stack: Point[], point: Point) => void}
+ * @type {(
+ *   stack: import("./invariant-function").Point[],
+ *   point: import("./invariant-function").Point,
+ * ) => void}
  */
 const produceAdvice = (stack, point) => {
   const { type } = point;
@@ -332,8 +317,10 @@ const MATCH = {
 
 /**
  * @type {(
- *   point1: Point,
- *   point2: Point & { type: keyof typeof MATCH },
+ *   point1: import("./invariant-function").Point,
+ *   point2: import("./invariant-function").Point & {
+ *     type: keyof typeof MATCH,
+ *   },
  * ) => void}
  */
 const match = (point1, point2) => {
@@ -346,7 +333,10 @@ const match = (point1, point2) => {
 };
 
 /**
- * @type {(stack: Point[], point: Point) => void}
+ * @type {(
+ *   stack: import("./invariant-function").Point[],
+ *   point: import("./invariant-function").Point,
+ * ) => void}
  */
 const beginAdvice = (stack, point) => {
   const { type } = point;
@@ -370,7 +360,10 @@ const beginAdvice = (stack, point) => {
 };
 
 /**
- * @type {(stack: Point[], point: Point) => void}
+ * @type {(
+ *   stack: import("./invariant-function").Point[],
+ *   point: import("./invariant-function").Point,
+ * ) => void}
  */
 const restoreAdvice = (stack, point) => {
   const { type } = point;
@@ -394,7 +387,10 @@ const restoreAdvice = (stack, point) => {
 };
 
 /**
- * @type {(stack: Point[], point: Point) => void}
+ * @type {(
+ *   stack: import("./invariant-function").Point[],
+ *   point: import("./invariant-function").Point,
+ * ) => void}
  */
 const endAdvice = (stack, point) => {
   const { type } = point;
@@ -432,7 +428,7 @@ const endAdvice = (stack, point) => {
 /**
  * @type {(
  *   type: "yield.before" | "await.before",
- *   stack: Point[],
+ *   stack: import("./invariant-function").Point[],
  * ) => number}
  */
 const findJumpIndex = (type, stack) => {
@@ -451,9 +447,12 @@ const findJumpIndex = (type, stack) => {
 
 /**
  * @type {(
- *   point: Point,
- *   stack: Point[],
- *   jumps: WeakMap<Location, Point[]>,
+ *   point: import("./invariant-function").Point,
+ *   stack: import("./invariant-function").Point[],
+ *   jumps: WeakMap<
+ *     import("./invariant-function").Location,
+ *     import("./invariant-function").Point[]
+ *   >,
  * ) => void}
  */
 const jumpAdvice = (point, stack, jumps) => {
@@ -486,11 +485,17 @@ const jumpAdvice = (point, stack, jumps) => {
 
 /**
  * @type {(
- *   point: Point,
+ *   point: import("./invariant-function").Point,
  *   state: {
- *     stack: Point[],
- *     closures: WeakMap<Value, Point[]>,
- *     jumps: WeakMap<Location, Point[]>,
+ *     stack: import("./invariant-function").Point[],
+ *     closures: WeakMap<
+ *       import("./invariant-function").Value,
+ *       import("./invariant-function").Point[]
+ *     >,
+ *     jumps: WeakMap<
+ *       import("./invariant-function").Location,
+ *       import("./invariant-function").Point[]
+ *     >,
  *   },
  * ) => void}
  */
@@ -506,11 +511,19 @@ const adviceUpdate = (point, { stack, closures, jumps }) => {
 };
 
 /**
- * @type {(point: Point) => Value | undefined | Record}
+ * @type {(
+ *   point: import("./invariant-function").Point,
+ * ) => (
+ *   | undefined
+ *   | import("./invariant-function").Value
+ *   | import("./invariant-function").Environment
+ * )}
  */
 const adviceResult = (point) => {
   if (point.type === "primitive.after") {
-    return /** @type {Value} */ (/** @type {unknown} */ (point.value));
+    return /** @type {import("./invariant-function").Value} */ (
+      /** @type {unknown} */ (point.value)
+    );
   } else if ("value" in point) {
     return point.value;
   } else if ("record" in point) {
@@ -528,7 +541,13 @@ const state = {
 };
 
 /**
- * @type {(point: Point) => Value | undefined | Record}
+ * @type {(
+ *   point: import("./invariant-function").Point,
+ * ) => (
+ *   | undefined
+ *   | import("./invariant-function").Value
+ *   | import("./invariant-function").Environment
+ * )}
  */
 const advice = (point) => {
   try {
@@ -550,7 +569,7 @@ const advice = (point) => {
   }
 };
 
-/** @type {Advice} */
+/** @type {import("./invariant-function").Advice} */
 export default (point) => {
   if (point.type === "apply") {
     advice({

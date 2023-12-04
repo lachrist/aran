@@ -12,21 +12,9 @@ const { Reflect, Set, RegExp, Object, JSON, URL, console, Error, setTimeout } =
   globalThis;
 
 /**
- * @typedef {string | { pattern: string}} MatcherItem
- */
-
-/**
- * @typedef {MatcherItem[]} Matcher
- */
-
-/**
- * @typedef {[string, Matcher]} MatcherEntry
- */
-
-/**
  * @type {(
  *   item: unknown,
- * ) => item is MatcherItem & {}}
+ * ) => item is import("./empty-enclave.d.ts").MatcherItem & {}}
  */
 const isPatternMatcherItem = (item) =>
   typeof item === "object" &&
@@ -37,7 +25,7 @@ const isPatternMatcherItem = (item) =>
 
 /**
  * @type {(
- *   matchers: Matcher,
+ *   matchers: import("./empty-enclave.d.ts").Matcher,
  * ) => (
  *   target: string
  * ) => boolean}
@@ -71,14 +59,19 @@ const compileMatcher = (items) => {
 
 /**
  * @type {(
- *   entry: [string, Matcher],
+ *   entry: [
+ *     string,
+ *     import("./empty-enclave.d.ts").Matcher,
+ *   ],
  * ) => [string, (target: string) => boolean]}
  */
 const compileMatcherEntry = ([tag, items]) => [tag, compileMatcher(items)];
 
 /**
  * @type {(
- *   category: { [key in string]: MatcherItem[] },
+ *   category: {
+ *     [key in string]: import("./empty-enclave.d.ts").MatcherItem[]
+ *   },
  * ) => (
  *   target: string,
  * ) => string[]}

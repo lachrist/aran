@@ -1,4 +1,4 @@
-import type { Cache } from "./cache.mjs";
+import type { Cache } from "./cache";
 
 export type Key =
   | {
