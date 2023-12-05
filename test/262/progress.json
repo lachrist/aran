@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/for-of/continue-from-catch.js",
-  "initial": 47182
+  "target": "test/language/statements/for-of/dstr/array-elem-init-simple-no-strict.js",
+  "initial": 47213
 }
