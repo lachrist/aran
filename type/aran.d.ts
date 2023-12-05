@@ -38,6 +38,7 @@ export type AranIntrinsic =
   | "aran.deadzone"
   | "aran.hidden.weave"
   | "aran.hidden.rebuild"
+  // https://262.ecma-international.org/14.0#sec-topropertykey
   | "aran.toPropertyKey"
   | "aran.listForInKey"
   | "aran.AsyncGeneratorFunction.prototype.prototype"
