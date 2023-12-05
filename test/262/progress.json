@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/for-in/head-var-bound-names-dup.js",
-  "initial": 47126
+  "target": "test/language/statements/for-of/arguments-mapped-aliasing.js",
+  "initial": 47159
 }

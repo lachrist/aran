@@ -1,7 +1,3 @@
-const o = { __proto__: { qux: 789 }, foo: 123, bar: 456 };
-
-for (const k in o) {
-  console.log({ k });
-  Reflect.defineProperty(o, "bar", { enumerable: false });
-  console.log(Reflect.getOwnPropertyDescriptor(o, "bar"));
+for (var [x1, x2 = console.log("foo")] in { __proto__: null, a: 123 }) {
+  console.log({ x1, x2 });
 }
