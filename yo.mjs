@@ -1,16 +1,19 @@
-let index = 0;
 const iterable = {
   [Symbol.iterator]: () => ({
-    get next() {
-      console.log("get next");
-      return () => ({
-        done: index > 10,
-        value: (index += 1),
-      });
-    },
+    next: () => ({}),
   }),
 };
 
 for (const x of iterable) {
+  console.log(x);
+}
+
+for (const x of iterable) {
+  console.log(x);
+}
+
+let step = undefined;
+while (((step = iterator.next()), !step.done)) {
+  x = step.value;
   console.log(x);
 }
