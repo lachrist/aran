@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/for-of/array.js",
-  "initial": 47170
+  "target": "test/annexB/language/statements/for-in/nonstrict-initializer.js",
+  "initial": 1061
 }
