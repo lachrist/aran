@@ -475,7 +475,11 @@
     "test/language/expressions/postfix-decrement/eval-nostrict.js",
     "test/language/expressions/postfix-increment/eval-nostrict.js",
     "test/language/expressions/prefix-decrement/eval-nostrict.js",
-    "test/language/expressions/prefix-increment/eval-nostrict.js"
+    "test/language/expressions/prefix-increment/eval-nostrict.js",
+    "test/language/statements/for-of/dstr/array-elem-init-simple-no-strict.js",
+    "test/language/statements/for-of/dstr/array-elem-target-simple-no-strict.js",
+    "test/language/statements/for-of/dstr/obj-id-init-simple-no-strict.js",
+    "test/language/statements/for-of/dstr/obj-id-simple-no-strict.js"
   ],
   "Array.prototype.push vulnerability to Array.prototype[0] poisoning": [
     "test/built-ins/Array/prototype/concat/15.4.4.4-5-b-iii-3-b-1.js",
@@ -597,7 +601,28 @@
     "test/language/expressions/assignment/dstr/array-rest-iter-rtrn-close.js",
     "test/language/expressions/assignment/dstr/array-rest-iter-thrw-close-err.js",
     "test/language/expressions/assignment/dstr/array-rest-iter-thrw-close.js",
-    "test/language/expressions/assignment/dstr/array-rest-lref-err.js"
+    "test/language/expressions/assignment/dstr/array-rest-lref-err.js",
+    "test/language/statements/for-of/dstr/array-elem-iter-rtrn-close-err.js",
+    "test/language/statements/for-of/dstr/array-elem-iter-rtrn-close-null.js",
+    "test/language/statements/for-of/dstr/array-elem-iter-rtrn-close.js",
+    "test/language/statements/for-of/dstr/array-elem-iter-thrw-close-err.js",
+    "test/language/statements/for-of/dstr/array-elem-iter-thrw-close.js",
+    "test/language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close-err.js",
+    "test/language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close-null.js",
+    "test/language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close.js",
+    "test/language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-err.js",
+    "test/language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close.js",
+    "test/language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close-err.js",
+    "test/language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close-null.js",
+    "test/language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close.js",
+    "test/language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-err.js",
+    "test/language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close.js",
+    "test/language/statements/for-of/dstr/array-rest-iter-rtrn-close-err.js",
+    "test/language/statements/for-of/dstr/array-rest-iter-rtrn-close-null.js",
+    "test/language/statements/for-of/dstr/array-rest-iter-rtrn-close.js",
+    "test/language/statements/for-of/dstr/array-rest-iter-thrw-close-err.js",
+    "test/language/statements/for-of/dstr/array-rest-iter-thrw-close.js",
+    "test/language/statements/for-of/dstr/array-rest-lref-err.js"
   ],
   "this argument is undefined when directly invoking functions of with frame": [
     "test/language/expressions/call/with-base-obj.js"
