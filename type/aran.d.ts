@@ -39,6 +39,7 @@ export type AranIntrinsic =
   | "aran.hidden.weave"
   | "aran.hidden.rebuild"
   | "aran.toPropertyKey"
+  | "aran.listForInKey"
   | "aran.AsyncGeneratorFunction.prototype.prototype"
   | "aran.GeneratorFunction.prototype.prototype";
 
