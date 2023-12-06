@@ -24,3 +24,13 @@
 // };
 
 // f(123);
+
+const f = function g(probe = () => g) {
+  console.log({ g, probe: probe() });
+  var g;
+  console.log({ g, probe: probe() });
+  g = 123;
+  console.log({ g, probe: probe() });
+};
+
+f();

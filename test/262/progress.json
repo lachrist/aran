@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/generators/dflt-params-abrupt.js",
-  "initial": 0
+  "target": "test/language/expressions/call/scope-var-open.js",
+  "initial": 30001
 }

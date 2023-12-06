@@ -437,7 +437,8 @@
     "test/language/statements/class/gen-method/dflt-params-ref-self.js",
     "test/language/statements/class/gen-method-static/dflt-params-abrupt.js",
     "test/language/statements/class/gen-method-static/dflt-params-ref-later.js",
-    "test/language/statements/class/gen-method-static/dflt-params-ref-self.js"
+    "test/language/statements/class/gen-method-static/dflt-params-ref-self.js",
+    "test/language/statements/generators/dflt-params-abrupt.js"
   ],
   "Checking constructor result is done at return site and becomes catchable": [
     "test/language/statements/class/subclass/derived-class-return-override-catch-super-arrow.js",
