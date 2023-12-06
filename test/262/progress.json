@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/with/unscopables-get-err.js",
-  "initial": 49570
+  "target": "test/language/types/number/S8.5_A10_T2.js",
+  "initial": 49589
 }
