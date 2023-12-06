@@ -438,7 +438,11 @@
     "test/language/statements/class/gen-method-static/dflt-params-abrupt.js",
     "test/language/statements/class/gen-method-static/dflt-params-ref-later.js",
     "test/language/statements/class/gen-method-static/dflt-params-ref-self.js",
-    "test/language/statements/generators/dflt-params-abrupt.js"
+    "test/language/statements/generators/dflt-params-abrupt.js",
+    "test/language/statements/generators/dflt-params-ref-later.js",
+    "test/language/statements/generators/dflt-params-ref-self.js",
+    { "pattern": "^test/language/statements/generators/dstr/" },
+    "test/language/statements/generators/eval-var-scope-syntax-err.js"
   ],
   "Checking constructor result is done at return site and becomes catchable": [
     "test/language/statements/class/subclass/derived-class-return-override-catch-super-arrow.js",
@@ -463,7 +467,8 @@
     "test/language/expressions/in/private-field-rhs-await-absent.js",
     "test/language/expressions/object/method-definition/static-init-await-reference-accessor.js",
     "test/language/expressions/object/method-definition/static-init-await-reference-generator.js",
-    "test/language/expressions/object/method-definition/static-init-await-reference-normal.js"
+    "test/language/expressions/object/method-definition/static-init-await-reference-normal.js",
+    "test/language/statements/let/syntax/escaped-let.js"
   ],
   "Check for super class to be constructor is a heuristic based on the presence of prototype": [
     "test/language/statements/class/subclass/superclass-arrow-function.js",
