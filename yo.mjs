@@ -1,36 +1,30 @@
-// import { runInThisContext } from "vm";
+function SwitchTest(value) {
+  var result = 0;
 
-// runInThisContext(`
-//   function f () {
-//     var arguments;
-//     console.log(arguments);
-//   }
-//   f();
-// `);
+  switch (value) {
+    case 0:
+      console.log("case 0");
+      result += 2;
+    case 1:
+      console.log("case 1");
+      result += 4;
+      break;
+    case 2:
+      console.log("case 2");
+      result += 8;
+    case 3:
+      console.log("case 3");
+      result += 16;
+    default:
+      console.log("default");
+      result += 32;
+      break;
+    case 4:
+      console.log("case 4");
+      result += 64;
+  }
 
-// function f(x, y = () => x) {
-//   // return x;
-//   let x;
-//   return { x1: x, x2: y() };
-//   // var x = 456;
-// }
+  return result;
+}
 
-// console.log(f(123));
-
-// const f = (x, probe = () => x) => {
-//   console.log({ x, probe: probe() });
-//   var x = 456;
-//   console.log({ x, probe: probe() });
-// };
-
-// f(123);
-
-const f = function g(probe = () => g) {
-  console.log({ g, probe: probe() });
-  var g;
-  console.log({ g, probe: probe() });
-  g = 123;
-  console.log({ g, probe: probe() });
-};
-
-f();
+console.log(SwitchTest(4));
