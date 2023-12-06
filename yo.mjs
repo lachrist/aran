@@ -1,19 +1,26 @@
-const iterable = {
-  [Symbol.iterator]: () => ({
-    next: () => ({}),
-  }),
-};
+// import { runInThisContext } from "vm";
 
-for (const x of iterable) {
-  console.log(x);
-}
+// runInThisContext(`
+//   function f () {
+//     var arguments;
+//     console.log(arguments);
+//   }
+//   f();
+// `);
 
-for (const x of iterable) {
-  console.log(x);
-}
+// function f(x, y = () => x) {
+//   // return x;
+//   let x;
+//   return { x1: x, x2: y() };
+//   // var x = 456;
+// }
 
-let step = undefined;
-while (((step = iterator.next()), !step.done)) {
-  x = step.value;
-  console.log(x);
-}
+// console.log(f(123));
+
+// const f = (x, probe = () => x) => {
+//   console.log({ x, probe: probe() });
+//   var x = 456;
+//   console.log({ x, probe: probe() });
+// };
+
+// f(123);
