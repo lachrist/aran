@@ -1,30 +1,43 @@
-function SwitchTest(value) {
-  var result = 0;
-
-  switch (value) {
-    case 0:
-      console.log("case 0");
-      result += 2;
-    case 1:
-      console.log("case 1");
-      result += 4;
-      break;
-    case 2:
-      console.log("case 2");
-      result += 8;
-    case 3:
-      console.log("case 3");
-      result += 16;
-    default:
-      console.log("default");
-      result += 32;
-      break;
-    case 4:
-      console.log("case 4");
-      result += 64;
-  }
-
-  return result;
+switch (1) {
+  case 1:
+    case1();
+  case 2:
+    case2();
+  default:
+    caseDefault();
+  case 3:
+    case3();
+  case 4:
+    case4();
 }
 
-console.log(SwitchTest(4));
+switch (1) {
+  case 1:
+    case1();
+  case 2:
+    case2();
+  case 3:
+    case3();
+  case 4:
+    case4();
+    break;
+  default:
+    caseDefault();
+    case3();
+    case4();
+}
+
+switch (456) {
+  case (console.log("head case 123"), 123):
+    console.log("body case 123");
+  default:
+    console.log("default");
+  case (console.log("head case 456"), 456):
+    console.log("body case 456");
+  case (console.log("head case 789"), 789):
+    console.log("body case 789");
+}
+
+// switch () {
+//   case 1:
+// }

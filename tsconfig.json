@@ -13,6 +13,6 @@
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": ["./type/", "./build/", "./lib/", "./test/", "./lint/", "yo.mjs"],
+  "include": ["./type/", "./build/", "./lib/", "./test/", "./lint/"],
   "exclude": ["./test/262/codebase/"]
 }
