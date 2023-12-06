@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/statements/switch/S12.11_A1_T1.js",
-  "initial": 48863
+  "target": "test/language/statements/switch/scope-lex-open-case.js",
+  "initial": 48903
 }
