@@ -8,49 +8,75 @@ import { relative } from "node:path";
 import { AranTypeError } from "../error.mjs";
 
 // eslint-disable-next-line local/strict-console
-const { Reflect, Set, RegExp, Object, JSON, URL, console, Error, setTimeout } =
+const { Reflect, Map, RegExp, Object, JSON, URL, console, Error, setTimeout } =
   globalThis;
 
 /**
  * @type {(
  *   item: unknown,
- * ) => item is import("./empty-enclave.d.ts").MatcherItem & {}}
+ * ) => item is {
+ *   pattern: string,
+ *   flaky: boolean,
+ * }}
  */
 const isPatternMatcherItem = (item) =>
   typeof item === "object" &&
   item !== null &&
   "pattern" in item &&
   Object.hasOwn(item, "pattern") &&
-  typeof item.pattern === "string";
+  typeof item.pattern === "string" &&
+  "flaky" in item &&
+  Object.hasOwn(item, "flaky") &&
+  typeof item.flaky === "boolean";
+
+/**
+ * @type {(
+ *   item: unknown,
+ * ) => item is {
+ *   exact: string,
+ *   flaky: boolean,
+ * }}
+ */
+const isExactMatcherItem = (item) =>
+  typeof item === "object" &&
+  item !== null &&
+  "exact" in item &&
+  Object.hasOwn(item, "exact") &&
+  typeof item.exact === "string" &&
+  "flaky" in item &&
+  Object.hasOwn(item, "flaky") &&
+  typeof item.flaky === "boolean";
 
 /**
  * @type {(
  *   matchers: import("./empty-enclave.d.ts").Matcher,
  * ) => (
- *   target: string
+ *   result: import("../types.js").Result,
  * ) => boolean}
  */
 const compileMatcher = (items) => {
-  /** @type {Set<string>} */
-  const singletons = new Set();
-  /** @type {RegExp[]} */
+  /** @type {Map<string, boolean>} */
+  const singletons = new Map();
+  /** @type {[RegExp, boolean][]} */
   const groups = [];
   for (const item of items) {
     if (typeof item === "string") {
-      singletons.add(item);
+      singletons.set(item, false);
+    } else if (isExactMatcherItem(item)) {
+      singletons.set(item.exact, item.flaky);
     } else if (isPatternMatcherItem(item)) {
-      groups.push(new RegExp(item.pattern, "u"));
+      groups.push([new RegExp(item.pattern, "u"), item.flaky]);
     } else {
       throw new AranTypeError("invalid item", item);
     }
   }
-  return (target) => {
+  return ({ target, error }) => {
     if (singletons.has(target)) {
-      return true;
+      return singletons.get(target) ? error !== null : true;
     }
-    for (const group of groups) {
+    for (const [group, flaky] of groups) {
       if (group.test(target)) {
-        return true;
+        return flaky ? error !== null : true;
       }
     }
     return false;
@@ -63,7 +89,10 @@ const compileMatcher = (items) => {
  *     string,
  *     import("./empty-enclave.d.ts").Matcher,
  *   ],
- * ) => [string, (target: string) => boolean]}
+ * ) => [
+ *   string,
+ *   (result: import("../types.js").Result) => boolean,
+ * ]}
  */
 const compileMatcherEntry = ([tag, items]) => [tag, compileMatcher(items)];
 
@@ -73,15 +102,15 @@ const compileMatcherEntry = ([tag, items]) => [tag, compileMatcher(items)];
  *     [key in string]: import("./empty-enclave.d.ts").MatcherItem[]
  *   },
  * ) => (
- *   target: string,
+ *   result: import("../types.js").Result,
  * ) => string[]}
  */
 const compileTagging = (category) => {
   const matchers = Object.entries(category).map(compileMatcherEntry);
-  return (target) => {
+  return (result) => {
     const tags = [];
     for (const [tag, matcher] of matchers) {
-      if (matcher(target)) {
+      if (matcher(result)) {
         tags.push(tag);
       }
     }
@@ -137,11 +166,11 @@ const makeEvalPlaceholder = (reject) => {
 export default {
   requirement: ["identity", "parsing"],
   exclusion: [],
-  expect: ({ target, error }) => [
-    ...(error !== null && error.name === "EvalAranError"
+  expect: (result) => [
+    ...(result.error !== null && result.error.name === "EvalAranError"
       ? ["eval-limitation"]
       : []),
-    ...tagging(target),
+    ...tagging(result),
   ],
   createInstrumenter: ({ reject, warning }) => ({
     setup: generate(

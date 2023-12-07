@@ -1,4 +1,7 @@
-export type MatcherItem = string | { pattern: string };
+export type MatcherItem =
+  | string
+  | { exact: string; flaky: boolean }
+  | { pattern: string; flaky: boolean };
 
 export type Matcher = MatcherItem[];
 

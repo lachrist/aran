@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/built-ins/Function/prototype/apply/S15.3.4.3_A5_T4.js",
-  "initial": 6531
+  "target": "test/language/statements/class/cpn-class-decl-computed-property-name-from-arrow-function-expression.js",
+  "initial": 41212
 }
