@@ -7,7 +7,6 @@ import { cleanup, record } from "./record.mjs";
 import { scrape } from "./scrape.mjs";
 import { runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
-import { isFailure } from "./result.mjs";
 
 const { Object, Reflect, JSON, Set, Promise, console, process, URL } =
   globalThis;
@@ -34,7 +33,7 @@ const codebase = new URL("codebase/", import.meta.url);
 const {
   default: {
     createInstrumenter,
-    tagFailure,
+    expect,
     requirement,
     exclusion: manual_exclusion,
   },
@@ -80,37 +79,43 @@ for await (const url of scrape(new URL("test/", test262))) {
         warning: "silent",
         createInstrumenter,
       });
-      if (isFailure(result)) {
-        console.log(target, ">>", tagFailure(result));
+      const reasons = expect(result);
+      if (result.error !== null) {
+        console.log(target, ">>", reasons);
       }
-      if (isFailure(result) && tagFailure(result).length === 0) {
+      if ((result.error === null) !== (reasons.length === 0)) {
         await writeFile(
           persistent,
           JSON.stringify({ stage, target, initial: index }, null, 2),
           "utf8",
         );
-        await cleanup(codebase);
-        const { metadata, error } = await runTest({
-          target,
-          test262,
-          warning: "console",
-          createInstrumenter: (reject) => {
-            const { setup, globals, instrument } = createInstrumenter(reject);
-            return {
-              setup,
-              globals,
-              instrument: (source) => record(instrument(source)),
-            };
-          },
-        });
         console.log(JSON.stringify(target));
         console.log(`test262/${target}`);
-        console.dir(metadata);
-        if (error === null) {
-          console.log("** Error Disappeared **");
-          console.log(printError(result.error));
+        console.dir(result.metadata);
+        if (result.error) {
+          await cleanup(codebase);
+          const { error } = await runTest({
+            target,
+            test262,
+            warning: "console",
+            createInstrumenter: (reject) => {
+              const { setup, globals, instrument } = createInstrumenter(reject);
+              return {
+                setup,
+                globals,
+                instrument: (source) => record(instrument(source)),
+              };
+            },
+          });
+          if (error === null) {
+            console.log("** Error Disappeared **");
+            console.log(printError(result.error));
+          } else {
+            console.log(printError(error));
+          }
         } else {
-          console.log(printError(error));
+          console.log("Expected failure but got success");
+          console.dir(reasons);
         }
         // eslint-disable-next-line local/no-label
         break;

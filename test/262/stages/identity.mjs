@@ -23,10 +23,15 @@ const isFeatureExcluded = (feature) => features.has(feature);
 export default {
   requirement: [],
   exclusion: [],
-  tagFailure: ({ metadata, error }) => [
-    ...(error.name === "AranRealmLimitation" ? ["aran-realm-limitation"] : []),
-    ...metadata.features.filter(isFeatureExcluded),
-  ],
+  expect: ({ metadata, error }) =>
+    error === null
+      ? []
+      : [
+          ...(error.name === "AranRealmLimitation"
+            ? ["aran-realm-limitation"]
+            : []),
+          ...metadata.features.filter(isFeatureExcluded),
+        ],
   createInstrumenter: (_options) => ({
     setup: "",
     globals: {},

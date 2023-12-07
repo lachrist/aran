@@ -84,7 +84,7 @@ export type Stage = {
     reject: (error: Error) => void;
     warning: "console" | "silent";
   }) => Instrumenter;
-  tagFailure: (failure: Failure) => string[];
+  expect: (result: Result) => string[];
   requirement: StageName[];
   exclusion: string[];
 };

@@ -492,10 +492,6 @@
     "test/language/statements/for-of/dstr/obj-id-init-simple-no-strict.js",
     "test/language/statements/for-of/dstr/obj-id-simple-no-strict.js"
   ],
-  "Array.prototype.push vulnerability to Array.prototype[0] poisoning": [
-    "test/built-ins/Array/prototype/concat/15.4.4.4-5-b-iii-3-b-1.js",
-    "test/built-ins/Array/prototype/concat/15.4.4.4-5-c-i-1.js"
-  ],
   "methods have a non-configurable prototype property": [
     "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js",
     "test/language/expressions/object/method-definition/name-prototype-prop.js",

@@ -137,8 +137,10 @@ const makeEvalPlaceholder = (reject) => {
 export default {
   requirement: ["identity", "parsing"],
   exclusion: [],
-  tagFailure: ({ target, error }) => [
-    ...(error.name === "EvalAranError" ? ["eval-limitation"] : []),
+  expect: ({ target, error }) => [
+    ...(error !== null && error.name === "EvalAranError"
+      ? ["eval-limitation"]
+      : []),
     ...tagging(target),
   ],
   createInstrumenter: ({ reject, warning }) => ({

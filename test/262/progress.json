@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "target": "test/language/types/undefined/S8.1_A3_T2.js",
-  "initial": 49684
+  "target": "test/built-ins/Function/prototype/apply/S15.3.4.3_A5_T4.js",
+  "initial": 6531
 }

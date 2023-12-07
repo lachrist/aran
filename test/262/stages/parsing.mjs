@@ -5,7 +5,7 @@ import { generate } from "astring";
 export default {
   requirement: ["identity"],
   exclusion: [],
-  tagFailure: (_failure) => ["acorn"],
+  expect: ({ error }) => (error === null ? [] : ["acorn"]),
   createInstrumenter: (_options) => ({
     setup: "",
     globals: {},

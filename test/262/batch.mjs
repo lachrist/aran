@@ -5,7 +5,6 @@ import { scrape } from "./scrape.mjs";
 import { argv } from "node:process";
 import { runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
-import { isFailure } from "./result.mjs";
 
 const {
   Error,
@@ -29,7 +28,7 @@ const stage = argv[2];
 const {
   default: {
     createInstrumenter,
-    tagFailure,
+    expect,
     requirement,
     exclusion: manual_exclusion,
   },
@@ -75,8 +74,8 @@ for await (const url of scrape(new URL("test/", test262))) {
       warning: "silent",
       createInstrumenter,
     });
-    if (isFailure(result)) {
-      failures.set(target, tagFailure(result));
+    if (result.error !== null) {
+      failures.set(target, expect(result));
     }
   }
   index += 1;
