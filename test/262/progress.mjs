@@ -1,6 +1,6 @@
 /* eslint-disable local/strict-console */
 
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile, readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { argv } from "node:process";
 import { cleanup, record } from "./record.mjs";
@@ -8,8 +8,17 @@ import { scrape } from "./scrape.mjs";
 import { runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
 
-const { Object, Reflect, JSON, Set, Promise, console, process, URL } =
-  globalThis;
+const {
+  Object,
+  Reflect,
+  JSON,
+  Set,
+  TypeError,
+  Promise,
+  console,
+  process,
+  URL,
+} = globalThis;
 
 const persistent = pathToFileURL(argv[2]);
 
@@ -22,8 +31,39 @@ const readFileMaybe = async (url) => {
   }
 };
 
-const { stage, initial } = JSON.parse(
-  (await readFileMaybe(persistent)) ?? '{"stage": "identity", "initial": 0}',
+/**
+ * @type {(
+ *   data: unknown
+ * ) => data is import("./progress").Progress}
+ */
+const isProgress = (data) =>
+  typeof data === "object" &&
+  data !== null &&
+  "stage" in data &&
+  Object.hasOwn(data, "stage") &&
+  typeof data.stage === "string" &&
+  "target" in data &&
+  Object.hasOwn(data, "target") &&
+  (typeof data.target === "string" || data.target === null) &&
+  "index" in data &&
+  Object.hasOwn(data, "index") &&
+  typeof data.index === "number";
+
+/**
+ * @type {(content: string) => import("./progress").Progress}
+ */
+const parseProgress = (content) => {
+  const data = JSON.parse(content);
+  if (isProgress(data)) {
+    return data;
+  } else {
+    throw new TypeError("Invalid progress file");
+  }
+};
+
+const progress = parseProgress(
+  (await readFileMaybe(persistent)) ??
+    '{"stage": "identity", "index": 0, "target": null}',
 );
 
 const test262 = new URL("../../test262/", import.meta.url);
@@ -38,7 +78,7 @@ const {
     exclusion: manual_exclusion,
   },
 } = /** @type {{default: test262.Stage}} */ (
-  await import(`./stages/${stage}.mjs`)
+  await import(`./stages/${progress.stage}.mjs`)
 );
 
 /** @type {Set<string>} */
@@ -66,61 +106,65 @@ process.on("uncaughtException", (error, _origin) => {
   console.log(`Uncaught >> ${name}: ${message}`);
 });
 
-let index = 0;
+const initial = progress.index;
 
-for await (const url of scrape(new URL("test/", test262))) {
-  if (index >= initial) {
-    console.dir(index);
+progress.index = -1;
+progress.target = null;
+
+try {
+  for await (const url of scrape(new URL("test/", test262))) {
     const target = url.href.substring(test262.href.length);
-    if (!target.includes("_FIXTURE") && !exclusion.has(target)) {
-      const result = await runTest({
-        target,
-        test262,
-        warning: "silent",
-        createInstrumenter,
-      });
-      const reasons = expect(result);
-      if (result.error !== null) {
-        console.log(target, ">>", reasons);
-      }
-      if ((result.error === null) !== (reasons.length === 0)) {
-        await writeFile(
-          persistent,
-          JSON.stringify({ stage, target, initial: index }, null, 2),
-          "utf8",
-        );
-        console.log(JSON.stringify(target));
-        console.log(`test262/${target}`);
-        console.dir(result.metadata);
-        if (result.error) {
-          await cleanup(codebase);
-          const { error } = await runTest({
-            target,
-            test262,
-            warning: "console",
-            createInstrumenter: (reject) => {
-              const { setup, globals, instrument } = createInstrumenter(reject);
-              return {
-                setup,
-                globals,
-                instrument: (source) => record(instrument(source)),
-              };
-            },
-          });
-          if (error === null) {
-            console.log("** Error Disappeared **");
-            console.log(printError(result.error));
-          } else {
-            console.log(printError(error));
-          }
-        } else {
-          console.log("Expected failure but got success");
-          console.dir(reasons);
+    progress.index += 1;
+    console.log(progress.index);
+    progress.target = target;
+    if (progress.index >= initial) {
+      if (!target.includes("_FIXTURE") && !exclusion.has(target)) {
+        const result = await runTest({
+          target,
+          test262,
+          warning: "silent",
+          createInstrumenter,
+        });
+        const reasons = expect(result);
+        if (result.error !== null) {
+          console.log(target, ">>", reasons);
         }
-        // eslint-disable-next-line local/no-label
-        break;
+        if ((result.error === null) !== (reasons.length === 0)) {
+          console.log(JSON.stringify(target));
+          console.log(`test262/${target}`);
+          console.dir(result.metadata);
+          if (result.error) {
+            await cleanup(codebase);
+            const { error } = await runTest({
+              target,
+              test262,
+              warning: "console",
+              createInstrumenter: (reject) => {
+                const { setup, globals, instrument } =
+                  createInstrumenter(reject);
+                return {
+                  setup,
+                  globals,
+                  instrument: (source) => record(instrument(source)),
+                };
+              },
+            });
+            if (error === null) {
+              console.log("** Error Disappeared **");
+              console.log(printError(result.error));
+            } else {
+              console.log(printError(error));
+            }
+          } else {
+            console.log("Expected failure but got success");
+            console.dir(reasons);
+          }
+          // eslint-disable-next-line local/no-label
+          break;
+        }
       }
     }
   }
-  index += 1;
+} finally {
+  await writeFile(persistent, JSON.stringify(progress, null, 2), "utf8");
 }
