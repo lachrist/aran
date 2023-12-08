@@ -7,9 +7,10 @@ import { fileURLToPath } from "node:url";
 import { relative } from "node:path";
 import { AranTypeError } from "../error.mjs";
 
-// eslint-disable-next-line local/strict-console
-const { Reflect, Map, RegExp, Object, JSON, URL, console, Error, setTimeout } =
+/* eslint-disable local/strict-console */
+const { String, Map, RegExp, Object, JSON, URL, console, setTimeout } =
   globalThis;
+/* eslint-enable local/strict-console */
 
 /**
  * @type {(
@@ -129,37 +130,21 @@ const tagging = compileTagging(
 
 const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
 
-// eslint-disable-next-line local/no-class, local/standard-declaration
-class EvalAranError extends Error {}
-
 /**
- * @type {(
- *   reject: (error: Error) => void,
- * ) => function}
+ * @type {Omit<
+ *   import("../../../type/options.d.ts").Options<string>,
+ *   "base" | "kind" | "warning" | "situ" | "plug" | "mode"
+ * >}
  */
-const makeEvalPlaceholder = (reject) => {
-  const evalPlaceholder = () => {
-    const error = new EvalAranError("eval is not supported");
-    reject(error);
-    throw error;
-  };
-  Reflect.defineProperty(evalPlaceholder, "length", {
-    // @ts-ignore
-    __proto__: null,
-    value: 1,
-    writable: false,
-    enumerable: false,
-    configurable: true,
-  });
-  Reflect.defineProperty(evalPlaceholder, "name", {
-    // @ts-ignore
-    __proto__: null,
-    value: "eval",
-    writable: false,
-    enumerable: false,
-    configurable: true,
-  });
-  return evalPlaceholder;
+const options = {
+  context: null,
+  pointcut: ["eval.before"],
+  advice: /** @type {estree.Variable} */ ("__ARAN_ADVICE__"),
+  intrinsic: INTRINSIC,
+  escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
+  exec: /** @type {estree.Variable} */ ("__ARAN_EXEC__"),
+  locate: (path, base) => `${base}#${path}`,
+  error: "throw",
 };
 
 /** @type {test262.Stage} */
@@ -172,22 +157,17 @@ export default {
       : []),
     ...tagging(result),
   ],
-  createInstrumenter: ({ reject, warning }) => ({
-    setup: generate(
-      setup({
-        intrinsic: INTRINSIC,
-        global: /** @type {estree.Variable} */ ("globalThis"),
-      }),
-    ),
+  createInstrumenter: ({ warning }) => ({
+    setup: [
+      generate(
+        setup({
+          intrinsic: INTRINSIC,
+          global: /** @type {estree.Variable} */ ("globalThis"),
+        }),
+      ),
+      "var __ARAN_EXEC__ = $262.runScript;",
+    ],
     globals: {
-      eval: {
-        // @ts-ignore
-        __proto__: null,
-        value: makeEvalPlaceholder(reject),
-        writable: true,
-        enumerable: false,
-        configurable: true,
-      },
       ARAN: {
         __proto__: null,
         value: (/** @type {unknown} */ value) =>
@@ -199,6 +179,41 @@ export default {
       ARAN_SET_TIMEOUT: {
         __proto__: null,
         value: setTimeout,
+        writable: false,
+        enumerable: false,
+        configurable: false,
+      },
+      __ARAN_ADVICE__: {
+        __proto__: null,
+        value: /** @type {import("./empty-enclave").Advice} */ ({
+          "__proto__": null,
+          "eval.before": (content1, context, location) => {
+            const program1 = /** @type {estree.Program} */ (
+              /** @type {unknown} */ (
+                parse(String(content1), {
+                  ecmaVersion: "latest",
+                  sourceType: "script",
+                })
+              )
+            );
+            const program2 = instrument(program1, {
+              ...options,
+              mode: null,
+              situ: "local",
+              plug: "reify",
+              kind: "eval",
+              base: /** @type {import("../../../type/options").Base} */ (
+                location
+              ),
+              warning,
+              context,
+            });
+            const content2 = generate(program2);
+            console.log(content2);
+            console.log(location);
+            return content2;
+          },
+        }),
         writable: false,
         enumerable: false,
         configurable: false,
@@ -218,25 +233,14 @@ export default {
           ? relative(cwd(), fileURLToPath(url))
           : url.href
       );
-      const program2 = instrument(
-        program1,
-        // make sure we defined all options
-        /** @type {import("../../../type/options.d.ts").Options<string>} */ ({
-          kind,
-          situ: "global",
-          plug: "alien",
-          mode: "sloppy",
-          context: null,
-          pointcut: [],
-          advice: /** @type {estree.Variable} */ ("__ARAN_ADVICE__"),
-          intrinsic: INTRINSIC,
-          escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
-          locate: (path, base) => `${base}#${path}`,
-          base,
-          error: "throw",
-          warning,
-        }),
-      );
+      const program2 = instrument(program1, {
+        ...options,
+        mode: "sloppy",
+        situ: "global",
+        plug: "alien",
+        base,
+        warning,
+      });
       const content2 = generate(program2);
       return {
         kind,
