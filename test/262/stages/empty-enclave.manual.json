@@ -160,17 +160,6 @@
     "test/annexB/language/global-code/switch-dflt-global-skip-early-err-try.js",
     "test/annexB/language/global-code/switch-dflt-global-skip-early-err.js"
   ],
-  "SloppyExternalVariableWrite": [
-    "test/built-ins/Infinity/S15.1.1.2_A2_T2.js",
-    "test/built-ins/NaN/S15.1.1.1_A2_T2.js",
-    "test/built-ins/undefined/15.1.1.3-1.js",
-    "test/built-ins/undefined/15.1.1.3-3.js",
-    "test/language/expressions/assignment/dstr/array-elem-init-simple-no-strict.js",
-    "test/language/expressions/assignment/dstr/array-elem-target-simple-no-strict.js",
-    "test/language/types/number/S8.5_A10_T2.js",
-    "test/language/types/number/S8.5_A4_T2.js",
-    "test/language/types/undefined/S8.1_A3_T2.js"
-  ],
   "GeneratorParameterPattern": [
     "test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js",
     "test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments.js",

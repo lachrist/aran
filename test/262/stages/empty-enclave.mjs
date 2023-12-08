@@ -128,23 +128,21 @@ const tagging = compileTagging(
   ),
 );
 
-const INTRINSIC = /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__");
-
-/**
- * @type {Omit<
- *   import("../../../type/options.d.ts").Options<string>,
- *   "base" | "kind" | "warning" | "situ" | "plug" | "mode"
- * >}
- */
-const options = {
-  context: null,
-  pointcut: ["eval.before"],
+const common = {
+  pointcut: /**
+   * @type {import("../../../type/advice.js").Pointcut<
+   *   import("./empty-enclave.d.ts").Location
+   * >}
+   */ (["eval.before"]),
   advice: /** @type {estree.Variable} */ ("__ARAN_ADVICE__"),
-  intrinsic: INTRINSIC,
+  intrinsic: /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__"),
   escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
   exec: /** @type {estree.Variable} */ ("__ARAN_EXEC__"),
-  locate: (path, base) => `${base}#${path}`,
-  error: "throw",
+  locate: /**
+   * @type {import("../../../type/options.d.ts").Locate<
+   *   import("./empty-enclave.d.ts").Location
+   * >}
+   */ ((path, base) => `${base}#${path}`),
 };
 
 /** @type {test262.Stage} */
@@ -161,8 +159,10 @@ export default {
     setup: [
       generate(
         setup({
-          intrinsic: INTRINSIC,
           global: /** @type {estree.Variable} */ ("globalThis"),
+          intrinsic: common.intrinsic,
+          escape: common.escape,
+          exec: common.exec,
         }),
       ),
       "var __ARAN_EXEC__ = $262.runScript;",
@@ -193,11 +193,16 @@ export default {
                 parse(String(content1), {
                   ecmaVersion: "latest",
                   sourceType: "script",
+                  checkPrivateFields: false,
                 })
               )
             );
-            const program2 = instrument(program1, {
-              ...options,
+            /**
+             * @type {import("../../../type/options.d.ts").Options<
+             *   import("./empty-enclave.d.ts").Location
+             * >}
+             */
+            const options = {
               mode: null,
               situ: "local",
               plug: "reify",
@@ -207,7 +212,10 @@ export default {
               ),
               warning,
               context,
-            });
+              error: "embed",
+              ...common,
+            };
+            const program2 = instrument(program1, options);
             const content2 = generate(program2);
             return content2;
           },
@@ -231,14 +239,23 @@ export default {
           ? relative(cwd(), fileURLToPath(url))
           : url.href
       );
-      const program2 = instrument(program1, {
-        ...options,
+      /**
+       * @type {import("../../../type/options.d.ts").Options<
+       *   import("./empty-enclave.d.ts").Location
+       * >}
+       */
+      const options = {
+        kind,
+        context: null,
         mode: "sloppy",
         situ: "global",
         plug: "alien",
         base,
         warning,
-      });
+        error: "throw",
+        ...common,
+      };
+      const program2 = instrument(program1, options);
       const content2 = generate(program2);
       return {
         kind,
