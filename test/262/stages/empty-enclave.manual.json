@@ -1,4 +1,11 @@
 {
+  "DirectEvalExternalVariableDeclaration": [],
+  "annexB": [
+    {
+      "pattern": "^test/annexB/",
+      "flaky": true
+    }
+  ],
   "SloppyBlockFunctionDeclaration": [
     "test/annexB/language/function-code/block-decl-func-no-skip-try.js",
     "test/annexB/language/function-code/block-decl-func-skip-dft-param.js",

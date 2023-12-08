@@ -209,8 +209,6 @@ export default {
               context,
             });
             const content2 = generate(program2);
-            console.log(content2);
-            console.log(location);
             return content2;
           },
         }),

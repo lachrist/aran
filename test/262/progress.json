@@ -1,5 +1,5 @@
 {
   "stage": "empty-enclave",
-  "index": 252,
-  "target": "test/annexB/language/eval-code/direct/func-block-decl-eval-func-init.js"
+  "index": 6531,
+  "target": "test/built-ins/Function/prototype/apply/S15.3.4.3_A5_T4.js"
 }

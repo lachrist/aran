@@ -115,9 +115,9 @@ try {
   for await (const url of scrape(new URL("test/", test262))) {
     const target = url.href.substring(test262.href.length);
     progress.index += 1;
-    console.log(progress.index);
     progress.target = target;
     if (progress.index >= initial) {
+      console.log(progress.index);
       if (!target.includes("_FIXTURE") && !exclusion.has(target)) {
         const result = await runTest({
           target,
