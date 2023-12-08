@@ -7,7 +7,7 @@ export default {
   exclusion: [],
   expect: ({ error }) => (error === null ? [] : ["acorn"]),
   createInstrumenter: (_options) => ({
-    setup: "",
+    setup: [],
     globals: {},
     instrument: ({ kind, url, content }) => ({
       kind,

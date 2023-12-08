@@ -101,6 +101,8 @@ export const createRealm = ({
     writable: true,
     value: print,
   });
-  runInContext(setup, context);
+  for (const code of setup) {
+    runInContext(code, context);
+  }
   return /** @type {any} */ (context);
 };

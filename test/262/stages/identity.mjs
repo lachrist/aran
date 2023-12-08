@@ -33,7 +33,7 @@ export default {
           ...metadata.features.filter(isFeatureExcluded),
         ],
   createInstrumenter: (_options) => ({
-    setup: "",
+    setup: [],
     globals: {},
     instrument: (source) => source,
   }),

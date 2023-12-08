@@ -73,7 +73,7 @@ export type Instrument = (source: Source) => Source;
 
 export type Instrumenter = {
   globals: { [key in string]: PropertyDescriptor };
-  setup: string;
+  setup: string[];
   instrument: Instrument;
 };
 
