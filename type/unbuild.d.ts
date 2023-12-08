@@ -31,13 +31,16 @@ export type Error = {
 export type Warning = {
   name:
     | "SloppyBlockFunctionDeclaration"
-    | "SloppyExternalVariableWrite"
-    | "ExternalVariableDelete"
     | "StrictKeywordExternalVariable"
     | "StrictReadonlyExternalVariableWrite"
     | "ExternalVariableClash"
     | "GeneratorParameterPattern"
-    | "DirectEvalExternalVariableDeclaration";
+    | "DirectEvalExternalVariableDeclaration"
+    | "KeywordLocalExternalRead"
+    | "KeywordLocalExternalTypeof"
+    | "SloppyLocalExternalDiscard"
+    | "SloppyLocalExternalWrite"
+    | "KeywordLocalExternalWrite";
   message: string;
   path: unbuild.Path;
 };

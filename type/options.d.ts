@@ -24,6 +24,7 @@ type CommonOptions<L> = {
   advice: estree.Variable;
   intrinsic: estree.Variable;
   escape: estree.Variable;
+  exec: estree.Variable | null;
   base: Base;
   warning: "console" | "silent";
   error: "throw" | "embed";

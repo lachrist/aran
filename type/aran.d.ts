@@ -42,7 +42,12 @@ export type AranIntrinsic =
   | "aran.toPropertyKey"
   | "aran.listForInKey"
   | "aran.AsyncGeneratorFunction.prototype.prototype"
-  | "aran.GeneratorFunction.prototype.prototype";
+  | "aran.GeneratorFunction.prototype.prototype"
+  | "aran.declareGlobal"
+  | "aran.readGlobal"
+  | "aran.typeofGlobal"
+  | "aran.discardGlobal"
+  | "aran.writeGlobal";
 
 export type Intrinsic =
   // Aran //
