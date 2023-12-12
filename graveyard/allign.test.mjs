@@ -1,6 +1,6 @@
-import { assertEqual, assertNotEqual } from "./test.fixture.mjs";
+import { assertEqual, assertNotEqual } from "../lib/test.fixture.mjs";
 import { parse } from "./syntax/index.mjs";
-import { allign } from "./allign.mjs";
+import { allign } from "../graveyard/allign.mjs/index.js";
 
 /** @type {(code1: string, code2?: string) => void} */
 const testSuccess = (code1, code2 = code1) => {

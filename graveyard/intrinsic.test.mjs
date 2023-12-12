@@ -1,10 +1,10 @@
-import { assertSuccess } from "../test.fixture.mjs";
+import { assertSuccess } from "../lib/test.fixture.mjs";
 
-import { makePrimitiveExpression } from "./node.mjs";
+import { makePrimitiveExpression } from "../lib/unbuild/node.mjs";
 
 import { parse } from "../syntax/index.mjs";
 
-import { allign } from "../allign.mjs";
+import { allign } from "../../graveyard/allign.mjs/index.js";
 
 import {
   makeArrayExpression,
@@ -18,7 +18,7 @@ import {
   makeThrowErrorExpression,
   makeDataDescriptorExpression,
   makeAccessorDescriptorExpression,
-} from "./intrinsic.mjs";
+} from "../lib/unbuild/intrinsic.mjs";
 
 const ORIGIN = /** @type {unbuild.Path}*/ ("$");
 

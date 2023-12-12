@@ -1,6 +1,6 @@
-import { enumerate, filter, flatMap, includes, zip } from "./util/index.mjs";
+import { enumerate, filter, flatMap, includes, zip } from "../lib/util/index.mjs";
 
-import { isParameter, unpackPrimitive } from "./lang.mjs";
+import { isParameter, unpackPrimitive } from "../lib/lang.mjs";
 
 const {
   Math: { min },
@@ -280,23 +280,6 @@ const allignNode = (pair, path) => {
         path,
         pair,
       ),
-    ];
-  } else if (node1.type === "PseudoBlock" && node2.type === "PseudoBlock") {
-    return [
-      allignPrimitive(
-        [node1.statements.length, node2.statements.length],
-        `${path}.statements.length`,
-        pair,
-      ),
-      ...flatMap(
-        enumerate(min(node1.statements.length, node2.statements.length)),
-        (index) =>
-          allignNode(
-            [node1.statements[index], node2.statements[index]],
-            `${path}.statements[${index}]`,
-          ),
-      ),
-      ...allignNode([node1.completion, node2.completion], `${path}.completion`),
     ];
     // Statement //
   } else if (

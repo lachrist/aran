@@ -6,6 +6,8 @@ import type {
   Pointcut,
   LinkData,
 } from "../../type/advice.d.ts";
+import { Situ } from "../situ.js";
+import { Header } from "../header.js";
 
 export type Options<L> = {
   base: Base;
@@ -21,7 +23,7 @@ export type Parent =
   | {
       type: "program";
       kind: ProgramKind;
-      links: LinkData[];
+      head: Header[];
     }
   | {
       type: "closure";

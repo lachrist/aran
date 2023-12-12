@@ -1,3 +1,7 @@
+import { type } from "os";
+import { Situ } from "../lib/situ";
+import { Header } from "../lib/header";
+
 export type Atom = {
   Label: string;
   Variable: string;
@@ -42,12 +46,7 @@ export type AranIntrinsic =
   | "aran.toPropertyKey"
   | "aran.listForInKey"
   | "aran.AsyncGeneratorFunction.prototype.prototype"
-  | "aran.GeneratorFunction.prototype.prototype"
-  | "aran.declareGlobal"
-  | "aran.readGlobal"
-  | "aran.typeofGlobal"
-  | "aran.discardGlobal"
-  | "aran.writeGlobal";
+  | "aran.GeneratorFunction.prototype.prototype";
 
 export type Intrinsic =
   // Aran //
@@ -138,50 +137,358 @@ export type Parameter =
   | "private.get"
   | "private.has"
   | "private.set"
-  | "scope.read"
-  | "scope.write"
-  | "scope.typeof";
+  | "read.strict"
+  | "write.strict"
+  | "typeof.strict"
+  | "discard.strict"
+  | "read.sloppy"
+  | "write.sloppy"
+  | "typeof.sloppy"
+  | "discard.sloppy";
 
-export type Program<A extends Atom> =
-  | {
-      type: "ScriptProgram";
-      body: PseudoBlock<A>;
-      tag: A["Tag"];
-    }
-  | {
-      type: "ModuleProgram";
-      links: Link<A>[];
-      body: ClosureBlock<A>;
-      tag: A["Tag"];
-    }
-  | {
-      type: "EvalProgram";
-      body: ClosureBlock<A>;
-      tag: A["Tag"];
-    };
+// ////////////
+// // Module //
+// ////////////
 
-export type Link<A extends Atom> =
-  | {
-      type: "ImportLink";
-      source: A["Source"];
-      import: A["Specifier"] | null;
-      tag: A["Tag"];
-    }
-  | { type: "ExportLink"; export: A["Specifier"]; tag: A["Tag"] }
-  | {
-      type: "AggregateLink";
-      source: A["Source"];
-      import: null | A["Specifier"];
-      export: A["Specifier"];
-      tag: A["Tag"];
-    }
-  | {
-      type: "AggregateLink";
-      source: A["Source"];
-      import: null;
-      export: null;
-      tag: A["Tag"];
-    };
+// export type ModuleProgram<A extends Atom> = {
+//   links: null;
+//   head: {
+//     "this": true;
+//     "import": true;
+//     "import.meta": true;
+//     "new.target": false;
+//     "super.get": false;
+//     "super.set": false;
+//     "super.call": false;
+//     "private": null;
+//     "let.strict": null;
+//     "let.sloppy": null;
+//     "var.strict": null;
+//     "var.sloppy": null;
+//     "lookup.strict": estree.Variable[] | null;
+//     "lookup.sloppy": null;
+//   };
+//   body: ClosureBlock<A>;
+// };
+
+// ////////////
+// // Script //
+// ////////////
+
+// export type StrictScriptProgram<A extends Atom> = {
+//   links: null;
+//   head: {
+//     "this": true;
+//     "import": true;
+//     "import.meta": false;
+//     "new.target": false;
+//     "super.get": false;
+//     "super.set": false;
+//     "super.call": false;
+//     "private": null;
+//     "let.strict": estree.Variable[] | null;
+//     "let.sloppy": null;
+//     "var.strict": estree.Variable[] | null;
+//     "var.sloppy": null;
+//     "lookup.strict": estree.Variable[] | null;
+//     "lookup.sloppy": null;
+//   };
+//   body: ClosureBlock<A>;
+// };
+
+// export type SloppyScriptProgram<A extends Atom> = {
+//   links: null;
+//   head: {
+//     "this": true;
+//     "import": true;
+//     "import.meta": false;
+//     "new.target": false;
+//     "super.get": false;
+//     "super.set": false;
+//     "super.call": false;
+//     "private": null;
+//     "let.strict": null;
+//     "let.sloppy": estree.Variable[] | null;
+//     "var.strict": null;
+//     "var.sloppy": estree.Variable[] | null;
+//     "lookup.strict": estree.Variable[] | null;
+//     "lookup.sloppy": estree.Variable[] | null;
+//   };
+//   body: ClosureBlock<A>;
+// };
+
+// /////////////////
+// // Global Eval //
+// /////////////////
+
+// export type StrictGlobalEvalProgram<A extends Atom> = {
+//   links: null;
+//   head: {
+//     "this": true;
+//     "import": true;
+//     "import.meta": false;
+//     "new.target": false;
+//     "super.get": false;
+//     "super.set": false;
+//     "super.call": false;
+//     "private": null;
+//     "let.strict": null;
+//     "let.sloppy": null;
+//     "var.strict": null;
+//     "var.sloppy": null;
+//     "lookup.strict": estree.Variable[] | null;
+//     "lookup.sloppy": null;
+//   };
+//   body: ClosureBlock<A>;
+// };
+
+// export type SloppyGlobalEvalProgram<A extends Atom> = {
+//   links: null;
+//   head: {
+//     "this": true;
+//     "import": true;
+//     "import.meta": false;
+//     "new.target": false;
+//     "super.get": false;
+//     "super.set": false;
+//     "super.call": false;
+//     "private": null;
+//     "let.strict": null;
+//     "let.sloppy": null;
+//     "var.strict": null;
+//     "var.sloppy": estree.Variable[] | null;
+//     "lookup.strict": estree.Variable[] | null;
+//     "lookup.sloppy": estree.Variable[] | null;
+//   };
+//   body: ClosureBlock<A>;
+// };
+
+// /////////////////////////
+// // Internal Local Eval //
+// /////////////////////////
+
+// export type StrictInternalLocalEvalProgram<A extends Atom> = {
+//   links: null;
+//   head: {
+//     "this": false;
+//     "import": false;
+//     "import.meta": false;
+//     "new.target": false;
+//     "super.get": false;
+//     "super.set": false;
+//     "super.call": false;
+//     "private": estree.PrivateKey[] | null;
+//     "let.strict": null;
+//     "let.sloppy": null;
+//     "var.strict": null;
+//     "var.sloppy": null;
+//     "lookup.strict": estree.Variable[] | null;
+//     "lookup.sloppy": null;
+//   };
+//   body: ClosureBlock<A>;
+// };
+
+// /////////////////////////
+// // External Local Eval //
+// /////////////////////////
+
+// type ProgramClosure = {
+//   "new.target": false;
+//   "super.get": false;
+//   "super.set": false;
+//   "super.call": false;
+// };
+
+// type FunctionClosure = {
+//   "new.target": true;
+//   "super.get": false;
+//   "super.set": false;
+//   "super.call": false;
+// };
+
+// type MethodClosure = {
+//   "new.target": true;
+//   "super.get": true;
+//   "super.set": true;
+//   "super.call": false;
+// };
+
+// type ConstructorClosure = {
+//   "new.target": true;
+//   "super.get": true;
+//   "super.set": true;
+//   "super.call": true;
+// };
+
+// export type StrictExternalLocalEvalProgram<A extends Atom> = {
+//   links: null;
+//   head: {
+//     "this": true;
+//     "import": true;
+//     "import.meta": boolean;
+//     "private": estree.PrivateKey[] | null;
+//     "let.strict": null;
+//     "let.sloppy": null;
+//     "var.strict": null;
+//     "var.sloppy": null;
+//     "lookup.strict": estree.Variable[] | null;
+//     "lookup.sloppy": null;
+//   } & (ProgramClosure | FunctionClosure | MethodClosure | ConstructorClosure);
+//   body: ClosureBlock<A>;
+// };
+
+// export type SloppyExternalLocalEvalProgram<A extends Atom> = {
+//   links: null;
+//   head: {
+//     "this": true;
+//     "import": true;
+//     "import.meta": boolean;
+//     "private": estree.PrivateKey[] | null;
+//     "let.strict": null;
+//     "let.sloppy": null;
+//     "var.strict": null;
+//     "var.sloppy": estree.Variable[] | null;
+//     "lookup.strict": estree.Variable[] | null;
+//     "lookup.sloppy": estree.Variable[] | null;
+//   } & (ProgramClosure | FunctionClosure | MethodClosure | ConstructorClosure);
+//   body: ClosureBlock<A>;
+// };
+
+// export type ScriptProgram<A extends Atom> =
+//   | StrictScriptProgram<A>
+//   | SloppyScriptProgram<A>;
+
+// export type GlobalEvalProgram<A extends Atom> =
+//   | StrictGlobalEvalProgram<A>
+//   | SloppyGlobalEvalProgram<A>;
+
+// export type ExternalLocalEvalProgram<A extends Atom> =
+//   | StrictExternalLocalEvalProgram<A>
+//   | SloppyExternalLocalEvalProgram<A>;
+
+// export type InternalLocalEvalProgram<A extends Atom> =
+//   StrictInternalLocalEvalProgram<A>;
+
+// export type LocalEvalProgram<A extends Atom> =
+//   | ExternalLocalEvalProgram<A>
+//   | InternalLocalEvalProgram<A>;
+
+// export type EvalProgram<A extends Atom> =
+//   | GlobalEvalProgram<A>
+//   | LocalEvalProgram<A>;
+
+// export type ValidProgram<A extends Atom> =
+//   | ModuleProgram<A>
+//   | ScriptProgram<A>
+//   | EvalProgram<A>;
+
+// export type Header =
+//   | {
+//       type: "regular";
+//       name:
+//         | "this"
+//         | "import"
+//         | "import.meta"
+//         | "new.target"
+//         | "super.get"
+//         | "super.set"
+//         | "super.call";
+//     }
+//   | {
+//       type: "private";
+//       name: estree.PrivateKey;
+//     }
+//   | {
+//       type: "declare";
+//       kind: "let" | "var";
+//       mode: "strict" | "sloppy";
+//       name: estree.Variable;
+//     }
+//   | {
+//       type: "lookup";
+//       mode: "strict" | "sloppy";
+//       name: estree.Variable;
+//     };
+
+// export type Header =
+//   | {
+//       type: "regular";
+//       name:
+//         | "this"
+//         | "import"
+//         | "import.meta"
+//         | "new.target"
+//         | "super.get"
+//         | "super.set"
+//         | "super.call";
+//     }
+//   | {
+//       type: "private";
+//       name: estree.PrivateKey;
+//     }
+//   | {
+//       type: "declare";
+//       kind: "let" | "var";
+//       mode: "strict" | "sloppy";
+//       name: estree.Variable;
+//     }
+//   | {
+//       type: "lookup";
+//       mode: "strict" | "sloppy";
+//       name: estree.Variable;
+//     };
+
+// export type ProgramHead = {
+//   "this": boolean;
+//   "import": boolean;
+//   "import.meta": boolean;
+//   "new.target": boolean;
+//   "super.get": boolean;
+//   "super.set": boolean;
+//   "super.call": boolean;
+//   "private": estree.PrivateKey[] | null;
+//   "let.strict": estree.Variable[] | null;
+//   "let.sloppy": estree.Variable[] | null;
+//   "var.strict": estree.Variable[] | null;
+//   "var.sloppy": estree.Variable[] | null;
+//   "lookup.strict": estree.Variable[] | null;
+//   "lookup.sloppy": estree.Variable[] | null;
+// };
+
+export type Program<A extends Atom> = {
+  type: "Program";
+  // source: "module" | "script";
+  head: Header[];
+  // links: Link<A>[] | null;
+  // private: estree.PrivateKey[] | null;
+  // scope: Scope[];
+  // head: ProgramHead;
+  body: ClosureBlock<A>;
+  tag: A["Tag"];
+};
+
+// export type Link<A extends Atom> =
+//   | {
+//       type: "ImportLink";
+//       source: A["Source"];
+//       import: A["Specifier"] | null;
+//       tag: A["Tag"];
+//     }
+//   | { type: "ExportLink"; export: A["Specifier"]; tag: A["Tag"] }
+//   | {
+//       type: "AggregateLink";
+//       source: A["Source"];
+//       import: null | A["Specifier"];
+//       export: A["Specifier"];
+//       tag: A["Tag"];
+//     }
+//   | {
+//       type: "AggregateLink";
+//       source: A["Source"];
+//       import: null;
+//       export: null;
+//       tag: A["Tag"];
+//     };
 
 export type ClosureBlock<A extends Atom> = {
   type: "ClosureBlock";
@@ -199,24 +506,11 @@ export type ControlBlock<A extends Atom> = {
   tag: A["Tag"];
 };
 
-export type PseudoBlock<A extends Atom> = {
-  type: "PseudoBlock";
-  statements: Statement<A>[];
-  completion: Expression<A>;
-  tag: A["Tag"];
-};
-
 export type Statement<A extends Atom> =
   | { type: "EffectStatement"; inner: Effect<A>; tag: A["Tag"] }
   | { type: "ReturnStatement"; result: Expression<A>; tag: A["Tag"] }
   | { type: "BreakStatement"; label: A["Label"]; tag: A["Tag"] }
   | { type: "DebuggerStatement"; tag: A["Tag"] }
-  | {
-      type: "DeclareGlobalStatement";
-      kind: GlobalVariableKind;
-      variable: A["GlobalVariable"];
-      tag: A["Tag"];
-    }
   | { type: "BlockStatement"; do: ControlBlock<A>; tag: A["Tag"] }
   | {
       type: "IfStatement";
@@ -255,12 +549,6 @@ export type Effect<A extends Atom> =
       tag: A["Tag"];
     }
   | {
-      type: "WriteGlobalEffect";
-      variable: A["GlobalVariable"];
-      right: Expression<A>;
-      tag: A["Tag"];
-    }
-  | {
       type: "ExportEffect";
       export: A["Specifier"];
       right: Expression<A>;
@@ -284,16 +572,6 @@ export type Expression<A extends Atom> =
   | {
       type: "ReadExpression";
       variable: Parameter | A["Variable"];
-      tag: A["Tag"];
-    }
-  | {
-      type: "ReadGlobalExpression";
-      variable: A["GlobalVariable"];
-      tag: A["Tag"];
-    }
-  | {
-      type: "TypeofGlobalExpression";
-      variable: A["GlobalVariable"];
       tag: A["Tag"];
     }
   | {
@@ -352,10 +630,8 @@ export type Expression<A extends Atom> =
 
 export type Node<A extends Atom> =
   | Program<A>
-  | Link<A>
   | ControlBlock<A>
   | ClosureBlock<A>
-  | PseudoBlock<A>
   | Statement<A>
   | Effect<A>
   | Expression<A>;

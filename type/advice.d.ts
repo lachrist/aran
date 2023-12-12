@@ -1,12 +1,14 @@
+import { Header } from "../lib/header.js";
+import { SituKind } from "../lib/situ.js";
 import type { EvalContext } from "../lib/unbuild/context.d.ts";
 
-type BranchKind = "conditional" | "if" | "while";
+export type ProgramKind = SituKind;
 
-type ProgramKind = "module" | "eval" | "script";
+export type BranchKind = "conditional" | "if" | "while";
 
-type ClosureKind = "arrow" | "function";
+export type ClosureKind = "arrow" | "function";
 
-type BlockKind =
+export type BlockKind =
   | "try"
   | "catch"
   | "finally"
@@ -52,7 +54,7 @@ type Generic = {
 
 type GenericProgramEnterAdvice<G extends Generic> = (
   kind: ProgramKind,
-  links: LinkData[],
+  head: Header[],
   record: { [key in Variable]?: G["Value"] },
   location: G["Location"],
 ) => G["RecordResult"];
@@ -564,7 +566,7 @@ type Point<V, L> =
   | {
       type: "program.enter";
       kind: ProgramKind;
-      links: LinkData[];
+      head: Header[];
       record: {
         [key in Variable]: V;
       };
