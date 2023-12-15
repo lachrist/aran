@@ -26,10 +26,11 @@ export type GlobalVariableKind = "var" | "let";
 
 export type AranIntrinsic =
   | "aran.global"
+  | "aran.record"
   | "aran.cache"
   | "aran.templates"
-  | "aran.record.variables"
-  | "aran.record.values"
+  // | "aran.record.variables"
+  // | "aran.record.values"
   | "aran.unary"
   | "aran.binary"
   | "aran.throw"

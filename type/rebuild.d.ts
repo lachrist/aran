@@ -13,9 +13,7 @@ export type Atom = {
   Specifier: estree.Specifier;
   Variable: Variable;
   GlobalVariable: estree.Variable;
-  Tag: {
-    private: estree.PrivateKey | null;
-  };
+  Tag: null;
 };
 
 export as namespace rebuild;

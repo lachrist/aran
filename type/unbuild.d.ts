@@ -1,4 +1,6 @@
-import type { Context } from "../lib/unbuild/context.d.ts";
+import { Header } from "../lib/header.js";
+import type { Context, EvalContext } from "../lib/unbuild/context.d.ts";
+import { Tell } from "../lib/unbuild/tell.js";
 
 export type BaseVariable = Brand<string, "unbuild.BaseVariable">;
 
@@ -30,6 +32,8 @@ export type Error = {
 
 export type Warning = {
   name:
+    | "ExternalConst"
+    | "ExternalLet"
     | "SloppyBlockFunctionDeclaration"
     | "StrictKeywordExternalVariable"
     | "StrictReadonlyExternalVariableWrite"
@@ -55,9 +59,7 @@ export type Atom = {
   GlobalVariable: estree.Variable;
   Tag: {
     path: Path;
-    initialization: boolean | null;
-    context: (Context & { meta: string }) | null;
-    logs: Omit<Log, "path">[];
+    tells: Tell[];
   };
 };
 

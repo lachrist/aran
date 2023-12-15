@@ -1,21 +1,14 @@
-import type { Base } from "../../type/options.d.ts";
 import type { Scope } from "./scope/index.d.ts";
-import type { Closure } from "./param/closure/closure.d.ts";
-import type { Private } from "./param/private/index.d.ts";
-import type { RootProgram } from "./program.js";
-import { RootSitu } from "../situ.js";
+import type { RootSitu } from "../situ.d.ts";
+import type { Param } from "./param/param.d.ts";
 
 export type Context = {
   situ: RootSitu;
-  mode: "strict" | "sloppy";
-  root: RootProgram;
-  base: Base;
-  catch: boolean;
-  closure: Closure;
+  mode: "sloppy" | "strict";
   scope: Scope;
-  private: Private;
+  param: Param;
 };
 
-export type EvalContext = Omit<Context, "base"> & {
+export type EvalContext = Context & {
   meta: "string";
 };
