@@ -1,14 +1,12 @@
-import type { Scope } from "./scope/index.d.ts";
-import type { RootSitu } from "../situ.d.ts";
-import type { Param } from "./param/param.d.ts";
+import type { Scope } from "./scope";
 
 export type Context = {
-  situ: RootSitu;
   mode: "sloppy" | "strict";
   scope: Scope;
-  param: Param;
 };
 
-export type EvalContext = Context & {
+export type EvalContext = {
+  mode: "sloppy" | "strict";
+  scope: Scope;
   meta: "string";
 };

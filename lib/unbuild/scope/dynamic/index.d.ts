@@ -1,18 +1,18 @@
 import { Cache } from "../../cache";
 
 export type GlobalObjectFrame = {
-  type: "global-object";
-  cache: Cache;
+  type: "dynamic-global-object";
+  record: Cache;
 };
 
 export type GlobalRecordFrame = {
-  type: "global-record";
-  cache: Cache;
+  type: "dynamic-global-record";
+  record: Cache;
 };
 
 export type WithFrame = {
-  type: "with";
-  cache: Cache;
+  type: "dynamic-with";
+  record: Cache;
 };
 
 export type DynamicFrame = GlobalObjectFrame | GlobalRecordFrame | WithFrame;

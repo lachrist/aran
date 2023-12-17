@@ -32,8 +32,8 @@ export type Error = {
 
 export type Warning = {
   name:
-    | "ExternalConst"
-    | "ExternalLet"
+    | "ExternalConstant"
+    | "ExternalDeadzone"
     | "SloppyBlockFunctionDeclaration"
     | "StrictKeywordExternalVariable"
     | "StrictReadonlyExternalVariableWrite"

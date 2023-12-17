@@ -1,1 +1,3 @@
-export type PrivateFrame = {};
+export type PrivateFrame = {
+  type: "private";
+};

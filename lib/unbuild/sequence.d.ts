@@ -1,4 +1,4 @@
-import { Frame } from "./scope/scope";
+import { Prelude } from "./prelude";
 
 export type Sequence<W, X> = { head: W[]; tail: X };
 
@@ -6,7 +6,7 @@ export type EffectSequence<X> = Sequence<aran.Effect<unbuild.Atom>, X>;
 
 export type StatementSequence<X> = Sequence<aran.Statement<unbuild.Atom>, X>;
 
-export type BlockSequence<X> = Sequence<Frame, X>;
+export type PreludeSequence<X> = Sequence<Prelude, X>;
 
 export type Condition =
   | {
