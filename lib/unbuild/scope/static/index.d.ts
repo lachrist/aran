@@ -1,9 +1,42 @@
-import { ExternalBinding } from "./external";
-import { FakeBinding } from "./fake";
-import { GlobalObjectBinding } from "./global-object";
-import { GlobalRecordBinding } from "./global-record";
-import { ImportBinding } from "./import";
-import { RegularBinding } from "./regular";
+import { ExternalBinding, ExternalKind } from "./external";
+import { FakeBinding, FakeKind } from "./fake";
+import { GlobalObjectBinding, GlobalObjectKind } from "./global-object";
+import { GlobalRecordBinding, GlobalRecordKind } from "./global-record";
+import { ImportBinding, ImportKind } from "./import";
+import { RegularBinding, RegularKind } from "./regular";
+
+// export type RawExternalFrame = {
+//   type: "static-external";
+//   record: Record<string, ExternalKind>;
+// };
+
+// export type RawGlobalObjectFrame = {
+//   type: "static-global-object";
+//   record: Record<string, GlobalObjectKind>;
+// };
+
+// export type RawGlobalRecordFrame = {
+//   type: "static-global-record";
+//   record: Record<string, GlobalRecordKind>;
+// };
+
+// export type RawImportFrame = {
+//   type: "static-import";
+//   record: Record<string, ImportKind>;
+// };
+
+// export type RawRegularFrame = {
+//   type: "static-regular";
+//   record: Record<string, RegularKind>;
+//   exports: Record<estree.Variable, estree.Specifier[]>;
+// };
+
+// export type RawStaticFrame =
+//   | RawExternalFrame
+//   | RawGlobalObjectFrame
+//   | RawGlobalRecordFrame
+//   | RawImportFrame
+//   | RawRegularFrame;
 
 export type ExternalFrame = {
   type: "static-external";
