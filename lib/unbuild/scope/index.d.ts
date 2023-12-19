@@ -5,6 +5,7 @@ import { RootFrame } from "./root";
 import { StaticFrame } from "./static";
 import { ModeFrame } from "./mode";
 import { Cache } from "../cache";
+import { Init } from "v8";
 
 type Mode = "strict" | "sloppy";
 
@@ -66,6 +67,8 @@ export type Scope =
 // Operation //
 ///////////////
 
+// Regular //
+
 export type ReadOperation = {
   type: "read";
   mode: Mode;
@@ -98,6 +101,8 @@ export type InitializeOperation = {
   right: Cache | null;
 };
 
+// Parameter //
+
 export type ReadThisOperation = {
   type: "read-this";
   mode: Mode;
@@ -128,6 +133,8 @@ export type ReadImportMetaOperation = {
   mode: Mode;
 };
 
+// Super //
+
 export type GetSuperOperation = {
   type: "get-super";
   mode: Mode;
@@ -153,29 +160,55 @@ export type WrapResultOperation = {
   result: Cache;
 };
 
+// Private //
+
+export type DefinePrivateOperation = {
+  type: "define-private";
+  mode: Mode;
+  target: Cache;
+  key: estree.PrivateKey;
+  value: Cache;
+};
+
+export type InitializePrivateOperation = {
+  type: "initialize-private";
+  mode: Mode;
+  kind: "method" | "getter" | "setter";
+  key: estree.PrivateKey;
+  value: Cache;
+};
+
+export type RegisterPrivateOperation = {
+  type: "register-private";
+  mode: Mode;
+  target: Cache;
+};
+
+export type HasPrivateOperation = {
+  type: "has-private";
+  mode: Mode;
+  target: Cache;
+  key: estree.PrivateKey;
+};
+
 export type GetPrivateOperation = {
   type: "get-private";
   mode: Mode;
-  object: Cache;
+  target: Cache;
   key: estree.PrivateKey;
 };
 
 export type SetPrivateOperation = {
   type: "set-private";
   mode: Mode;
-  object: Cache;
+  target: Cache;
   key: estree.PrivateKey;
   value: Cache;
 };
 
-export type HasPrivateOperation = {
-  type: "has-private";
-  mode: Mode;
-  object: Cache;
-  key: estree.PrivateKey;
-};
+// export //
 
-export type ExpressionOperation =
+export type LoadOperation =
   | ReadOperation
   | TypeofOperation
   | ReadErrorOperation
@@ -187,14 +220,17 @@ export type ExpressionOperation =
   | ReadImportMetaOperation
   | GetSuperOperation
   | WrapResultOperation
-  | GetPrivateOperation
-  | HasPrivateOperation;
+  | HasPrivateOperation
+  | GetPrivateOperation;
 
-export type EffectOperation =
+export type SaveOperation =
   | WriteOperation
   | InitializeOperation
   | SetSuperOperation
   | CallSuperOperation
+  | DefinePrivateOperation
+  | InitializePrivateOperation
+  | RegisterPrivateOperation
   | SetPrivateOperation;
 
-export type Operation = ExpressionOperation | EffectOperation;
+export type Operation = LoadOperation | SaveOperation;
