@@ -1,6 +1,6 @@
 import { Log, MetaVariable } from "../../type/unbuild";
 import { Header } from "../header";
-import { EvalContext } from "./context";
+import { Context } from "./context";
 
 export type LogTell = {
   type: "log";
@@ -14,7 +14,7 @@ export type DeclarationTell = {
 
 export type ContextTell = {
   type: "context";
-  context: EvalContext;
+  context: Context;
 };
 
 export type HeaderTell = {

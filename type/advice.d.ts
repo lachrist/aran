@@ -1,6 +1,6 @@
 import { Header } from "../lib/header.js";
 import { SituKind } from "../lib/situ.js";
-import type { EvalContext } from "../lib/unbuild/context.d.ts";
+import type { EvalContext } from "../lib/unbuild/context.js";
 
 export type ProgramKind = SituKind;
 

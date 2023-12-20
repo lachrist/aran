@@ -1,4 +1,4 @@
-import type { Context, EvalContext } from "../lib/unbuild/context.d.ts";
+import type { Context, EvalContext } from "../lib/unbuild/context.js";
 
 export type ArgVariable = Brand<string, "weave.ArgVariable">;
 

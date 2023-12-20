@@ -31,7 +31,7 @@ export type InternalLocalEvalSitu = {
   scope: "local";
   ambient: "internal";
   closure: "irrelevant";
-  root: "module" | "script" | "global-eval";
+  root: "module" | "script" | "global-eval" | "external-local-eval";
 };
 
 export type ExternalLocalEvalSitu = {

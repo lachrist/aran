@@ -1,5 +1,5 @@
 import { Header } from "../lib/header.js";
-import type { Context, EvalContext } from "../lib/unbuild/context.d.ts";
+import type { Context, EvalContext } from "../lib/unbuild/context.js";
 import { Tell } from "../lib/unbuild/tell.js";
 
 export type BaseVariable = Brand<string, "unbuild.BaseVariable">;
