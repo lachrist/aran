@@ -1,133 +1,99 @@
 import type { Cache, WritableCache } from "../../cache.js";
 
-export type PrivateKind = "method" | "getter" | "setter" | "property";
+export type SingletonPrivateKind =
+  | "singleton-method"
+  | "singleton-getter"
+  | "singleton-setter"
+  | "singleton-property";
+
+export type CollectionPrivateKind =
+  | "collection-method"
+  | "collection-getter"
+  | "collection-setter"
+  | "collection-property";
+
+export type PrivateKind = SingletonPrivateKind | CollectionPrivateKind;
 
 export type RawPrivateFrame = [estree.PrivateKey, PrivateKind][];
 
-export type PrivateBinding =
-  | {
-      type: "method";
-      weakset: Cache;
-      method: WritableCache;
-    }
-  | {
-      type: "accessor";
-      weakset: Cache;
-      getter: WritableCache | null;
-      setter: WritableCache | null;
-    }
-  | {
-      type: "property";
-      weakmap: Cache;
-    };
+export type PrivateBinding = SingletonPrivateBinding | CollectionPrivateBinding;
 
-export type PackPrivateBinding =
-  | {
-      type: "method";
-      method: WritableCache;
-    }
-  | {
-      type: "accessor";
-      getter: WritableCache | null;
-      setter: WritableCache | null;
-    }
-  | {
-      type: "property";
-      weakmap: Cache;
-    };
+export type DryPrivateBinding =
+  | DrySingletonPrivateBinding
+  | DryCollectionPrivateBinding;
 
 export type PrivateFrame = {
   type: "private";
-  weakset: Cache;
-  record: Record<estree.PrivateKey, PackPrivateBinding>;
+  singleton: WritableCache;
+  collection: Cache;
+  record: Record<estree.PrivateKey, DryPrivateBinding>;
 };
 
-// export type ManyPrivateFrame = {};
+// Singleton //
 
-// export type PrivateBinding =
-//   | {
-//       type: "method";
-//       weakset: Cache;
-//     }
-//   | {
-//       type: "property";
-//       weakmap: Cache;
-//     };
+export type SingletonPrivateBinding =
+  | {
+      type: "singleton-method";
+      target: WritableCache;
+      method: WritableCache;
+    }
+  | {
+      type: "singleton-accessor";
+      target: WritableCache;
+      getter: WritableCache | null;
+      setter: WritableCache | null;
+    }
+  | {
+      type: "singleton-property";
+      target: WritableCache;
+      value: WritableCache;
+    };
 
-// export type RawPrivateDescriptor =
-//   | {
-//       type: "method";
-//       method: WritableCache;
-//     }
-//   | {
-//       type: "accessor";
-//       get: WritableCache | null;
-//       set: WritableCache | null;
-//     }
-//   | {
-//       type: "property";
-//     };
+export type DrySingletonPrivateBinding =
+  | {
+      type: "singleton-method";
+      method: WritableCache;
+    }
+  | {
+      type: "singleton-accessor";
+      getter: WritableCache | null;
+      setter: WritableCache | null;
+    }
+  | {
+      type: "singleton-property";
+      value: WritableCache;
+    };
 
-// export type PrivateFrame = {};
+// Collection //
 
-// export type PrivateCommon = {
-//   singleton: WritableCache;
-//   many: Cache;
-// };
+export type CollectionPrivateBinding =
+  | {
+      type: "collection-method";
+      weakset: Cache;
+      method: WritableCache;
+    }
+  | {
+      type: "collection-accessor";
+      weakset: Cache;
+      getter: WritableCache | null;
+      setter: WritableCache | null;
+    }
+  | {
+      type: "collection-property";
+      weakmap: Cache;
+    };
 
-// export type PrivateDescriptor =
-//   | {
-//       type: "method";
-//       method: WritableCache;
-//     }
-//   | {
-//       type: "accessor";
-//       get: WritableCache | null;
-//       set: WritableCache | null;
-//     };
-
-// export type RawPrivateDictionary =
-//   | {
-//       type: "constant-singleton";
-//       descriptor: PrivateDescriptor;
-//     }
-//   | {
-//       type: "variable-singleton";
-//     }
-//   | {
-//       type: "constant-many";
-//       descriptor: PrivateDescriptor;
-//     }
-//   | {
-//       type: "variable-many";
-//     };
-
-// export type PrivateDictionary =
-//   | {
-//       type: "constant-singleton";
-//       target: WritableCache;
-//       descriptor: PrivateDescriptor;
-//     }
-//   | {
-//       type: "variable-singleton";
-//       target: WritableCache;
-//       value: WritableCache;
-//     }
-//   | {
-//       type: "constant-many";
-//       weakset: Cache;
-//       descriptor: PrivateDescriptor;
-//     }
-//   | {
-//       type: "variable-many";
-//       weakmap: Cache;
-//     };
-
-// export type RawPrivateFrame = [estree.PrivateKey, RawPrivateDictionary][];
-
-// export type PrivateFrame = {
-//   type: "private";
-//   singleton: WritableCache;
-//   many: Cache;
-//   record: Record<estree.PrivateKey, PrivateDictionary>;
-// };
+export type DryCollectionPrivateBinding =
+  | {
+      type: "collection-method";
+      method: WritableCache;
+    }
+  | {
+      type: "collection-accessor";
+      getter: WritableCache | null;
+      setter: WritableCache | null;
+    }
+  | {
+      type: "collection-property";
+      weakmap: Cache;
+    };

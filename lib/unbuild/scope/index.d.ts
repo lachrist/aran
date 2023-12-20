@@ -178,8 +178,14 @@ export type InitializePrivateOperation = {
   value: Cache;
 };
 
-export type RegisterPrivateOperation = {
-  type: "register-private";
+export type RegisterPrivateSingletonOperation = {
+  type: "register-private-singleton";
+  mode: Mode;
+  target: Cache;
+};
+
+export type RegisterPrivateCollectionOperation = {
+  type: "register-private-collection";
   mode: Mode;
   target: Cache;
 };
@@ -230,7 +236,8 @@ export type SaveOperation =
   | CallSuperOperation
   | DefinePrivateOperation
   | InitializePrivateOperation
-  | RegisterPrivateOperation
+  | RegisterPrivateSingletonOperation
+  | RegisterPrivateCollectionOperation
   | SetPrivateOperation;
 
 export type Operation = LoadOperation | SaveOperation;
