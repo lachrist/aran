@@ -1,5 +1,3 @@
-import { Header } from "../lib/header.js";
-import type { Context, EvalContext } from "../lib/unbuild/context.js";
 import { Tell } from "../lib/unbuild/tell.js";
 
 export type BaseVariable = Brand<string, "unbuild.BaseVariable">;
@@ -22,7 +20,7 @@ export type Label = Brand<string, "unbuild.Label">;
 
 export type Path = Brand<string, "unbuild.Path">;
 
-export type Meta = Brand<bigint, "unbuild.Meta">;
+// export type Meta = Brand<bigint, "unbuild.Meta">;
 
 export type Error = {
   name: "SyntaxError";

@@ -18,12 +18,12 @@ export type VariablePrelude = {
 
 export type HeadPrelude = {
   type: "head";
-  data: aran.Statement<unbuild.Atom>;
+  data: aran.Effect<unbuild.Atom>;
 };
 
 export type BodyPrelude = {
   type: "body";
-  data: aran.Statement<unbuild.Atom>;
+  data: aran.Effect<unbuild.Atom>;
 };
 
 export type Prelude =

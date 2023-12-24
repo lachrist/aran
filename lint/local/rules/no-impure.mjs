@@ -1,3 +1,5 @@
+import { isNextMetaAssignment } from "../site.mjs";
+
 /** @type {(node: estree.ExpressionStatement) => boolean} */
 const isConsoleStatement = (node) =>
   node.expression.type === "CallExpression" &&
@@ -29,7 +31,11 @@ export default {
       });
     };
     return {
-      AssignmentExpression: reportImpure,
+      AssignmentExpression: (node) => {
+        if (!isNextMetaAssignment(node)) {
+          reportImpure(node);
+        }
+      },
       ExpressionStatement: (node) => {
         if (
           !isConsoleStatement(node) &&

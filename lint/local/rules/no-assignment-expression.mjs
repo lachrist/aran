@@ -1,5 +1,7 @@
+import { isNextMetaAssignment } from "../site.mjs";
+
 /** @type {(node: estree.Node & { parent: estree.Node}) => boolean} */
-const isAllowed = (node) =>
+const isUpdateAssignment = (node) =>
   node.parent.type === "ExpressionStatement" ||
   (node.parent.type === "ForStatement" && node.parent.update === node);
 
@@ -20,7 +22,7 @@ export default {
   },
   create: (context) => ({
     AssignmentExpression: (node) => {
-      if (!isAllowed(node)) {
+      if (!isUpdateAssignment(node) && !isNextMetaAssignment(node)) {
         context.report({
           node,
           message: "assignment expression is forbidden here",

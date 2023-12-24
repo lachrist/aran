@@ -1,4 +1,3 @@
-import { Scope } from "../lib/unbuild/scope/index.js";
 import type { Pointcut } from "./advice.js";
 
 export type Base = Brand<string, "options.Base">;

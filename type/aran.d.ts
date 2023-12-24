@@ -27,25 +27,17 @@ export type GlobalVariableKind = "var" | "let";
 export type AranIntrinsic =
   | "aran.global"
   | "aran.record"
-  | "aran.cache"
   | "aran.templates"
-  // | "aran.record.variables"
-  // | "aran.record.values"
   | "aran.unary"
   | "aran.binary"
   | "aran.throw"
   | "aran.createObject"
   | "aran.get"
-  | "aran.set.strict"
-  | "aran.set.sloppy"
-  | "aran.delete.strict"
-  | "aran.delete.sloppy"
   | "aran.deadzone"
-  | "aran.hidden.weave"
-  | "aran.hidden.rebuild"
   // https://262.ecma-international.org/14.0#sec-topropertykey
   | "aran.toPropertyKey"
   | "aran.listForInKey"
+  | "aran.iterateRest"
   | "aran.AsyncGeneratorFunction.prototype.prototype"
   | "aran.GeneratorFunction.prototype.prototype";
 

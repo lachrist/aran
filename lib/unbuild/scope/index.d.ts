@@ -6,6 +6,7 @@ import { StaticFrame } from "./static";
 import { ModeFrame } from "./mode";
 import { Cache } from "../cache";
 import { Init } from "v8";
+import { Node } from "yaml";
 
 type Mode = "strict" | "sloppy";
 
@@ -13,20 +14,21 @@ type Mode = "strict" | "sloppy";
 // Frame //
 ///////////
 
-export type Frame =
-  | RootFrame
+export type NodeFrame =
   | StaticFrame
   | DynamicFrame
   | ClosureFrame
   | PrivateFrame
   | ModeFrame;
 
+export type Frame = RootFrame | NodeFrame;
+
 ///////////
 // Scope //
 ///////////
 
-export type ModeScope = {
-  frame: ModeFrame;
+export type NodeScope = {
+  frame: NodeFrame;
   parent: Scope;
 };
 
@@ -35,33 +37,7 @@ export type RootScope = {
   parent: null;
 };
 
-export type StaticScope = {
-  frame: StaticFrame;
-  parent: Scope;
-};
-
-export type DynamicScope = {
-  frame: DynamicFrame;
-  parent: Scope;
-};
-
-export type ParamScope = {
-  frame: ClosureFrame;
-  parent: Scope;
-};
-
-export type PrivateScope = {
-  frame: PrivateFrame;
-  parent: Scope;
-};
-
-export type Scope =
-  | ModeScope
-  | RootScope
-  | StaticScope
-  | DynamicScope
-  | ParamScope
-  | PrivateScope;
+export type Scope = NodeScope | RootScope;
 
 ///////////////
 // Operation //

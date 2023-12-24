@@ -1,11 +1,4 @@
-export type VariableKind =
-  | "var"
-  | "function"
-  | "callee"
-  | "let"
-  | "const"
-  | "class"
-  | "import";
+export type VariableKind = "var" | "function" | "let" | "const" | "class";
 
 export type Variable = Brand<string, "estree.Variable">;
 
