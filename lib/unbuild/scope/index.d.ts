@@ -133,7 +133,7 @@ export type CallSuperOperation = {
 export type WrapResultOperation = {
   type: "wrap-result";
   mode: Mode;
-  result: Cache;
+  result: Cache | null;
 };
 
 // Private //

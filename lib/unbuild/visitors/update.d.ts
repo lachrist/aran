@@ -1,4 +1,5 @@
-import { MemberKey, MemberObject } from "../member";
+import type { Key } from "./key.d.ts";
+import type { Object } from "./object.d.ts";
 
 export type VariableUpdate = {
   type: "variable";
@@ -7,8 +8,8 @@ export type VariableUpdate = {
 
 export type MemberUpdate = {
   type: "member";
-  object: MemberObject;
-  key: MemberKey;
+  object: Object;
+  key: Key;
 };
 
 export type EmptyUpdate = {
