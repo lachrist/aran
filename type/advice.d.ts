@@ -1,6 +1,6 @@
 import { Header } from "../lib/header.js";
 import { SituKind } from "../lib/situ.js";
-import type { EvalContext } from "../lib/unbuild/context.js";
+import type { Context } from "../lib/unbuild/context.js";
 
 export type ProgramKind = SituKind;
 
@@ -196,7 +196,7 @@ type GenericConditionalAfterAdvice<G extends Generic> = (
 
 type GenericEvalBeforeAdvice<G extends Generic> = (
   value: G["Value"],
-  context: EvalContext,
+  context: Context,
   location: G["Location"],
 ) => G["ValueResult"];
 
@@ -752,7 +752,7 @@ type Point<V, L> =
   | {
       type: "eval.before";
       value: V;
-      context: EvalContext;
+      context: Context;
       location: L;
     }
   | {

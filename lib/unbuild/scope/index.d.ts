@@ -138,6 +138,7 @@ export type WrapResultOperation = {
 
 // Private //
 
+// Property //
 export type DefinePrivateOperation = {
   type: "define-private";
   mode: Mode;
@@ -146,6 +147,7 @@ export type DefinePrivateOperation = {
   value: Cache;
 };
 
+// Method //
 export type InitializePrivateOperation = {
   type: "initialize-private";
   mode: Mode;

@@ -1,16 +1,14 @@
 import type { Base } from "../../type/options.d.ts";
-import { RootSitu } from "../situ.js";
+import type { NodeSitu, RootSitu } from "../situ.d.ts";
 import type { Context } from "./context.d.ts";
 
 export type RootOptions = {
   situ: RootSitu;
-  base: Base;
   context: null;
 };
 
 export type NodeOptions = {
-  situ: null;
-  base: Base;
+  situ: NodeSitu;
   context: Context;
 };
 
