@@ -7,6 +7,7 @@ import { ModeFrame } from "./mode";
 import { Cache } from "../cache";
 import { Init } from "v8";
 import { Node } from "yaml";
+import { Path } from "../../../type/unbuild";
 
 type Mode = "strict" | "sloppy";
 
@@ -109,6 +110,27 @@ export type ReadImportMetaOperation = {
   mode: Mode;
 };
 
+// Template //
+
+export type HasTemplateOperation = {
+  type: "has-template";
+  mode: Mode;
+  path: Path;
+};
+
+export type GetTemplateOperation = {
+  type: "get-template";
+  mode: Mode;
+  path: Path;
+};
+
+export type SetTemplateOperation = {
+  type: "set-template";
+  mode: Mode;
+  path: Path;
+  template: Cache;
+};
+
 // Super //
 
 export type GetSuperOperation = {
@@ -199,6 +221,8 @@ export type LoadOperation =
   | DiscardOperation
   | ReadThisOperation
   | ReadNewTargetOperation
+  | HasTemplateOperation
+  | GetTemplateOperation
   | ReadInputOperation
   | ReadImportOperation
   | ReadImportMetaOperation
@@ -211,6 +235,7 @@ export type SaveOperation =
   | WriteOperation
   | InitializeOperation
   | SetSuperOperation
+  | SetTemplateOperation
   | CallSuperOperation
   | DefinePrivateOperation
   | InitializePrivateOperation

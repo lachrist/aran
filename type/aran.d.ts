@@ -86,6 +86,11 @@ export type Intrinsic =
   | "WeakMap.prototype.has"
   | "WeakMap.prototype.get"
   | "WeakMap.prototype.set"
+  // Map //
+  | "Map"
+  | "Map.prototype.has"
+  | "Map.prototype.get"
+  | "Map.prototype.set"
   // WeakSet //
   | "WeakSet"
   | "WeakSet.prototype.has"
