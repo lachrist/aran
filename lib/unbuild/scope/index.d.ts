@@ -5,8 +5,6 @@ import { RootFrame } from "./root";
 import { StaticFrame } from "./static";
 import { ModeFrame } from "./mode";
 import { Cache } from "../cache";
-import { Init } from "v8";
-import { Node } from "yaml";
 import { Path } from "../../../type/unbuild";
 
 type Mode = "strict" | "sloppy";
@@ -44,7 +42,21 @@ export type Scope = NodeScope | RootScope;
 // Operation //
 ///////////////
 
-// Regular //
+// Variable //
+
+export type InitializeOperation = {
+  type: "initialize";
+  mode: Mode;
+  variable: estree.Variable;
+  right: Cache | null;
+};
+
+export type WriteOperation = {
+  type: "write";
+  mode: Mode;
+  variable: estree.Variable;
+  right: Cache;
+};
 
 export type ReadOperation = {
   type: "read";
@@ -62,20 +74,6 @@ export type DiscardOperation = {
   type: "discard";
   mode: Mode;
   variable: estree.Variable;
-};
-
-export type WriteOperation = {
-  type: "write";
-  mode: Mode;
-  variable: estree.Variable;
-  right: Cache;
-};
-
-export type InitializeOperation = {
-  type: "initialize";
-  mode: Mode;
-  variable: estree.Variable;
-  right: Cache | null;
 };
 
 // Parameter //
@@ -232,8 +230,8 @@ export type LoadOperation =
   | GetPrivateOperation;
 
 export type SaveOperation =
-  | WriteOperation
   | InitializeOperation
+  | WriteOperation
   | SetSuperOperation
   | SetTemplateOperation
   | CallSuperOperation

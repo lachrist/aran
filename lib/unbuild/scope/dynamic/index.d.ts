@@ -1,18 +1,38 @@
-import { Cache } from "../../cache";
+import { Cache, WritableCache } from "../../cache";
+
+export type ClosureKind = "var";
+
+export type ClosureBinding = {
+  kind: ClosureKind;
+};
+
+export type BlockKind = "let" | "const";
+
+export type BlockBinding = {
+  kind: BlockKind;
+};
 
 export type GlobalObjectFrame = {
   type: "dynamic-global-object";
-  record: Cache;
+  dynamic: Cache;
+  static: Record<estree.Variable, ClosureBinding>;
 };
 
 export type GlobalRecordFrame = {
   type: "dynamic-global-record";
-  record: Cache;
+  dynamic: Cache;
+  static: Record<estree.Variable, BlockBinding>;
+};
+
+export type EvalFrame = {
+  type: "dynamic-eval";
+  dynamic: Cache;
+  static: Record<estree.Variable, ClosureBinding>;
 };
 
 export type WithFrame = {
   type: "dynamic-with";
-  record: Cache;
+  dynamic: Cache;
 };
 
 export type DynamicFrame = GlobalObjectFrame | GlobalRecordFrame | WithFrame;

@@ -20,35 +20,6 @@ export type Label = Brand<string, "unbuild.Label">;
 
 export type Path = Brand<string, "unbuild.Path">;
 
-// export type Meta = Brand<bigint, "unbuild.Meta">;
-
-export type Error = {
-  name: "SyntaxError";
-  message: string;
-  path: unbuild.Path;
-};
-
-export type Warning = {
-  name:
-    | "ExternalConstant"
-    | "ExternalDeadzone"
-    | "SloppyBlockFunctionDeclaration"
-    | "StrictKeywordExternalVariable"
-    | "StrictReadonlyExternalVariableWrite"
-    | "ExternalVariableClash"
-    | "GeneratorParameterPattern"
-    | "DirectEvalExternalVariableDeclaration"
-    | "KeywordLocalExternalRead"
-    | "KeywordLocalExternalTypeof"
-    | "SloppyLocalExternalDiscard"
-    | "SloppyLocalExternalWrite"
-    | "KeywordLocalExternalWrite";
-  message: string;
-  path: unbuild.Path;
-};
-
-export type Log = Error | Warning;
-
 export type Atom = {
   Label: Label;
   Source: estree.Source;

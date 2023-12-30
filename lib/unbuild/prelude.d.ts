@@ -1,9 +1,15 @@
-import { Log } from "../../type/unbuild";
+import { Log } from "./log";
 import { Header } from "../header";
+import { EarlyError } from "./early-error";
 
 export type LogPrelude = {
   type: "log";
   data: Log;
+};
+
+export type EarlyErrorPrelude = {
+  type: "early-error";
+  data: EarlyError;
 };
 
 export type HeaderPrelude = {
@@ -11,24 +17,19 @@ export type HeaderPrelude = {
   data: Header;
 };
 
-export type VariablePrelude = {
-  type: "variable";
+export type DeclarationPrelude = {
+  type: "declaration";
   data: unbuild.Variable;
 };
 
-export type HeadPrelude = {
-  type: "head";
-  data: aran.Effect<unbuild.Atom>;
-};
-
-export type BodyPrelude = {
-  type: "body";
+export type EffectPrelude = {
+  type: "effect";
   data: aran.Effect<unbuild.Atom>;
 };
 
 export type Prelude =
+  | EarlyErrorPrelude
   | LogPrelude
   | HeaderPrelude
-  | VariablePrelude
-  | HeadPrelude
-  | BodyPrelude;
+  | DeclarationPrelude
+  | EffectPrelude;

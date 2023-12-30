@@ -1,25 +1,37 @@
-import { Log, MetaVariable } from "../../type/unbuild";
+import { Variable } from "../../type/unbuild";
 import { Header } from "../header";
 import { Context } from "./context";
+import { EarlyError } from "./early-error";
+import { Log } from "./log";
 
 export type LogTell = {
   type: "log";
-  log: Log;
+  data: Log;
+};
+
+export type EarlyErrorTell = {
+  type: "error";
+  data: EarlyError;
 };
 
 export type DeclarationTell = {
   type: "declaration";
-  variable: MetaVariable;
+  data: Variable;
 };
 
 export type ContextTell = {
   type: "context";
-  context: Context;
+  data: Context;
 };
 
 export type HeaderTell = {
   type: "header";
-  header: Header;
+  data: Header;
 };
 
-export type Tell = LogTell | DeclarationTell | ContextTell | HeaderTell;
+export type Tell =
+  | LogTell
+  | EarlyErrorTell
+  | DeclarationTell
+  | ContextTell
+  | HeaderTell;
