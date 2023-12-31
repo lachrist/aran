@@ -1,4 +1,4 @@
-import { WritableCache } from "../../../cache";
+import { WritableCache } from "../../cache";
 
 export type HoistingExternalKind = "function" | "var";
 
@@ -17,3 +17,8 @@ export type DeadzoneExternalBinding = {
 };
 
 export type ExternalBinding = HoistingExternalBinding | DeadzoneExternalBinding;
+
+export type ExternalFrame = {
+  type: "external";
+  record: Record<estree.Variable, ExternalBinding>;
+};

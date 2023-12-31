@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "declaration": false,
     "allowJs": true,
     "checkJs": true,
@@ -10,7 +12,6 @@
     "target": "es2022",
     "module": "es2022",
     "typeRoots": ["./node_modules/@types"],
-    "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true
   },
   "include": ["./type/", "./build/", "./lib/", "./test/", "./lint/"],

@@ -1,11 +1,17 @@
-import { DynamicFrame } from "./dynamic";
+import { Path } from "../../../type/unbuild";
+import { Cache } from "../cache";
+import { BlockFrame } from "./block";
 import { ClosureFrame } from "./closure";
+import { EvalFrame } from "./eval";
+import { ExternalFrame } from "./external";
+import { FakeFrame } from "./fake";
+import { GlobalObjectFrame } from "./global-object";
+import { GlobalRecordFrame } from "./global-record";
+import { ModeFrame } from "./mode";
 import { PrivateFrame } from "./private";
 import { RootFrame } from "./root";
-import { StaticFrame } from "./static";
-import { ModeFrame } from "./mode";
-import { Cache } from "../cache";
-import { Path } from "../../../type/unbuild";
+import { TemplateFrame } from "./template";
+import { WithFrame } from "./with";
 
 type Mode = "strict" | "sloppy";
 
@@ -14,11 +20,17 @@ type Mode = "strict" | "sloppy";
 ///////////
 
 export type NodeFrame =
-  | StaticFrame
-  | DynamicFrame
+  | BlockFrame
   | ClosureFrame
+  | EvalFrame
+  | ExternalFrame
+  | FakeFrame
+  | GlobalObjectFrame
+  | GlobalRecordFrame
+  | ModeFrame
   | PrivateFrame
-  | ModeFrame;
+  | TemplateFrame
+  | WithFrame;
 
 export type Frame = RootFrame | NodeFrame;
 
@@ -47,6 +59,7 @@ export type Scope = NodeScope | RootScope;
 export type InitializeOperation = {
   type: "initialize";
   mode: Mode;
+  kind: "let" | "const" | "var";
   variable: estree.Variable;
   right: Cache | null;
 };
