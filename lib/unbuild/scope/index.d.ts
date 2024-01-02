@@ -96,6 +96,18 @@ export type VariableLoadOperation =
 
 export type VariableSaveOperation = InitializeOperation | WriteOperation;
 
+// Root //
+
+export type ReadImportOperation = {
+  type: "read-import";
+  mode: Mode;
+};
+
+export type ReadImportMetaOperation = {
+  type: "read-import-meta";
+  mode: Mode;
+};
+
 // Closure //
 
 export type ReadThisOperation = {
@@ -115,16 +127,6 @@ export type ReadNewTargetOperation = {
 
 export type ReadInputOperation = {
   type: "read-input";
-  mode: Mode;
-};
-
-export type ReadImportOperation = {
-  type: "read-import";
-  mode: Mode;
-};
-
-export type ReadImportMetaOperation = {
-  type: "read-import-meta";
   mode: Mode;
 };
 
@@ -255,7 +257,9 @@ export type LoadOperation =
   | VariableLoadOperation
   | ClosureLoadOperation
   | TemplateLoadOperation
-  | PrivateLoadOperation;
+  | PrivateLoadOperation
+  | ReadImportOperation
+  | ReadImportMetaOperation;
 
 export type SaveOperation =
   | VariableSaveOperation
