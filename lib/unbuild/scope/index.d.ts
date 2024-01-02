@@ -89,7 +89,14 @@ export type DiscardOperation = {
   variable: estree.Variable;
 };
 
-// Parameter //
+export type VariableLoadOperation =
+  | ReadOperation
+  | TypeofOperation
+  | DiscardOperation;
+
+export type VariableSaveOperation = InitializeOperation | WriteOperation;
+
+// Closure //
 
 export type ReadThisOperation = {
   type: "read-this";
@@ -121,29 +128,6 @@ export type ReadImportMetaOperation = {
   mode: Mode;
 };
 
-// Template //
-
-export type HasTemplateOperation = {
-  type: "has-template";
-  mode: Mode;
-  path: Path;
-};
-
-export type GetTemplateOperation = {
-  type: "get-template";
-  mode: Mode;
-  path: Path;
-};
-
-export type SetTemplateOperation = {
-  type: "set-template";
-  mode: Mode;
-  path: Path;
-  template: Cache;
-};
-
-// Super //
-
 export type GetSuperOperation = {
   type: "get-super";
   mode: Mode;
@@ -169,9 +153,43 @@ export type WrapResultOperation = {
   result: Cache | null;
 };
 
+export type ClosureLoadOperation =
+  | ReadThisOperation
+  | ReadNewTargetOperation
+  | ReadInputOperation
+  | ReadErrorOperation
+  | GetSuperOperation
+  | WrapResultOperation;
+
+export type ClosureSaveOperation = SetSuperOperation | CallSuperOperation;
+
+// Template //
+
+export type HasTemplateOperation = {
+  type: "has-template";
+  mode: Mode;
+  path: Path;
+};
+
+export type GetTemplateOperation = {
+  type: "get-template";
+  mode: Mode;
+  path: Path;
+};
+
+export type SetTemplateOperation = {
+  type: "set-template";
+  mode: Mode;
+  path: Path;
+  template: Cache;
+};
+
+export type TemplateLoadOperation = HasTemplateOperation | GetTemplateOperation;
+
+export type TemplateSaveOperation = SetTemplateOperation;
+
 // Private //
 
-// Property //
 export type DefinePrivateOperation = {
   type: "define-private";
   mode: Mode;
@@ -180,7 +198,6 @@ export type DefinePrivateOperation = {
   value: Cache;
 };
 
-// Method //
 export type InitializePrivateOperation = {
   type: "initialize-private";
   mode: Mode;
@@ -223,35 +240,27 @@ export type SetPrivateOperation = {
   value: Cache;
 };
 
-// export //
+export type PrivateLoadOperation = HasPrivateOperation | GetPrivateOperation;
 
-export type LoadOperation =
-  | ReadOperation
-  | TypeofOperation
-  | ReadErrorOperation
-  | DiscardOperation
-  | ReadThisOperation
-  | ReadNewTargetOperation
-  | HasTemplateOperation
-  | GetTemplateOperation
-  | ReadInputOperation
-  | ReadImportOperation
-  | ReadImportMetaOperation
-  | GetSuperOperation
-  | WrapResultOperation
-  | HasPrivateOperation
-  | GetPrivateOperation;
-
-export type SaveOperation =
-  | InitializeOperation
-  | WriteOperation
-  | SetSuperOperation
-  | SetTemplateOperation
-  | CallSuperOperation
+export type PrivateSaveOperation =
   | DefinePrivateOperation
   | InitializePrivateOperation
   | RegisterPrivateSingletonOperation
   | RegisterPrivateCollectionOperation
   | SetPrivateOperation;
+
+// union //
+
+export type LoadOperation =
+  | VariableLoadOperation
+  | ClosureLoadOperation
+  | TemplateLoadOperation
+  | PrivateLoadOperation;
+
+export type SaveOperation =
+  | VariableSaveOperation
+  | ClosureSaveOperation
+  | TemplateSaveOperation
+  | PrivateSaveOperation;
 
 export type Operation = LoadOperation | SaveOperation;

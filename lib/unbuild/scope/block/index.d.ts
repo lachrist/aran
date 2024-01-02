@@ -1,5 +1,3 @@
-import { Import } from "../../../../lint/local/deprecated/jsdoc-comment";
-
 export type ImportKind = "import";
 
 export type DeadzoneKind = "let" | "const";

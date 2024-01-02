@@ -1,8 +1,8 @@
 import { WritableCache } from "../../cache";
 
-export type HoistingExternalKind = "function" | "var";
+export type HoistingExternalKind = "var";
 
-export type DeadzoneExternalKind = "let" | "const" | "class";
+export type DeadzoneExternalKind = "let" | "const";
 
 export type ExternalKind = HoistingExternalKind | DeadzoneExternalKind;
 
