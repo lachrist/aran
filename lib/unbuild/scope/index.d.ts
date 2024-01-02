@@ -1,6 +1,6 @@
 import { Path } from "../../../type/unbuild";
 import { Cache } from "../cache";
-import { StaticFrame } from "./variable-static";
+import { RegularFrame } from "./variable-regular";
 import { ClosureFrame } from "./closure";
 import { EvalFrame } from "./variable-eval";
 import { ExternalFrame } from "./variable-external";
@@ -21,7 +21,7 @@ type Mode = "strict" | "sloppy";
 ///////////
 
 export type NodeFrame =
-  | StaticFrame
+  | RegularFrame
   | ClosureFrame
   | BlockFrame
   | EvalFrame
@@ -61,7 +61,7 @@ export type Scope = NodeScope | RootScope;
 export type InitializeOperation = {
   type: "initialize";
   mode: Mode;
-  kind: "let" | "const" | "var";
+  kind: "let" | "const" | "var" | "val";
   variable: estree.Variable;
   right: Cache | null;
 };

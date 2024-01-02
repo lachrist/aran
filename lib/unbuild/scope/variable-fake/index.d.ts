@@ -1,6 +1,8 @@
 import { WritableCache } from "../../cache";
 
-export type FakeKind = "const";
+export type FakeKind = "let" | "const" | "var" | "val";
+
+export type FakeEntry = [estree.Variable, FakeKind];
 
 export type FakeBinding = {
   kind: FakeKind;

@@ -12,7 +12,7 @@ export type DeadzoneEntry = [estree.Variable, DeadzoneKind];
 
 export type HoistingEntry = [estree.Variable, HoistingKind];
 
-export type StaticEntry = ImportEntry | DeadzoneEntry | HoistingEntry;
+export type RegularEntry = ImportEntry | DeadzoneEntry | HoistingEntry;
 
 export type HoistingBinding = {
   kind: HoistingKind;
@@ -30,9 +30,9 @@ export type ImportBinding = {
   specifier: estree.Specifier | null;
 };
 
-export type StaticBinding = ImportBinding | HoistingBinding | DeadzoneBinding;
+export type RegularBinding = ImportBinding | HoistingBinding | DeadzoneBinding;
 
-export type StaticFrame = {
-  type: "static";
-  record: Record<estree.Variable, StaticBinding>;
+export type RegularFrame = {
+  type: "regular";
+  record: Record<estree.Variable, RegularBinding>;
 };
