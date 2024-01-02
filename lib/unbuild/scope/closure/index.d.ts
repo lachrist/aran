@@ -1,16 +1,7 @@
 import { Cache } from "../../cache";
 
-export type BlockFrame = {
-  type: "closure-block";
-  kind:
-    | "eval"
-    | "try"
-    | "catch"
-    | "finally"
-    | "then"
-    | "else"
-    | "while"
-    | "naked";
+export type EvalFrame = {
+  type: "closure-eval";
 };
 
 export type ArrowFrame = {
@@ -34,7 +25,7 @@ export type ConstructorFrame = {
 };
 
 export type ClosureFrame =
-  | BlockFrame
+  | EvalFrame
   | ArrowFrame
   | FunctionFrame
   | MethodFrame

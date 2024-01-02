@@ -1,17 +1,18 @@
 import { Path } from "../../../type/unbuild";
 import { Cache } from "../cache";
-import { BlockFrame } from "./block";
+import { StaticFrame } from "./variable-static";
 import { ClosureFrame } from "./closure";
-import { EvalFrame } from "./eval";
-import { ExternalFrame } from "./external";
-import { FakeFrame } from "./fake";
-import { GlobalObjectFrame } from "./global-object";
-import { GlobalRecordFrame } from "./global-record";
+import { EvalFrame } from "./variable-eval";
+import { ExternalFrame } from "./variable-external";
+import { FakeFrame } from "./variable-fake";
+import { GlobalObjectFrame } from "./variable-global-object";
+import { GlobalRecordFrame } from "./variable-global-record";
 import { ModeFrame } from "./mode";
 import { PrivateFrame } from "./private";
 import { RootFrame } from "./root";
 import { TemplateFrame } from "./template";
-import { WithFrame } from "./with";
+import { WithFrame } from "./variable-with";
+import { BlockFrame } from "./block";
 
 type Mode = "strict" | "sloppy";
 
@@ -20,8 +21,9 @@ type Mode = "strict" | "sloppy";
 ///////////
 
 export type NodeFrame =
-  | BlockFrame
+  | StaticFrame
   | ClosureFrame
+  | BlockFrame
   | EvalFrame
   | ExternalFrame
   | FakeFrame
@@ -108,15 +110,19 @@ export type ReadImportMetaOperation = {
   mode: Mode;
 };
 
+// Block //
+
+export type ReadErrorOperation = {
+  type: "read-error";
+  mode: Mode;
+};
+
+export type BlockLoadOperation = ReadErrorOperation;
+
 // Closure //
 
 export type ReadThisOperation = {
   type: "read-this";
-  mode: Mode;
-};
-
-export type ReadErrorOperation = {
-  type: "read-error";
   mode: Mode;
 };
 
@@ -159,7 +165,6 @@ export type ClosureLoadOperation =
   | ReadThisOperation
   | ReadNewTargetOperation
   | ReadInputOperation
-  | ReadErrorOperation
   | GetSuperOperation
   | WrapResultOperation;
 
@@ -256,6 +261,7 @@ export type PrivateSaveOperation =
 export type LoadOperation =
   | VariableLoadOperation
   | ClosureLoadOperation
+  | BlockLoadOperation
   | TemplateLoadOperation
   | PrivateLoadOperation
   | ReadImportOperation
