@@ -2,6 +2,7 @@ import { PackMeta } from "./meta";
 import { Scope } from "./scope";
 
 export type Context = {
-  scope: Scope;
+  path: unbuild.Path;
   meta: PackMeta;
+  scope: Scope;
 };

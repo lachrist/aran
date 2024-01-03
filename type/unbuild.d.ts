@@ -26,10 +26,7 @@ export type Atom = {
   Specifier: estree.Specifier;
   Variable: Variable;
   GlobalVariable: estree.Variable;
-  Tag: {
-    path: Path;
-    tells: Tell[];
-  };
+  Tag: Path;
 };
 
 export as namespace unbuild;
