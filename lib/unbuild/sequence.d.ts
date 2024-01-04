@@ -28,6 +28,13 @@ export type StatementSequence = Sequence<
   aran.Statement<unbuild.Atom>[]
 >;
 
+export type Completion = {
+  body: aran.Statement<unbuild.Atom>[];
+  completion: aran.Expression<unbuild.Atom>;
+};
+
+export type CompletionSequence = Sequence<NodePrelude, Completion>;
+
 export type EffectSequence = Sequence<NodePrelude, aran.Effect<unbuild.Atom>[]>;
 
 export type ExpressionSequence = Sequence<
