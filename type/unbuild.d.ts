@@ -1,5 +1,3 @@
-import { Tell } from "../lib/unbuild/tell.js";
-
 export type BaseVariable = Brand<string, "unbuild.BaseVariable">;
 
 export type ConstantMetaVariable = Brand<
