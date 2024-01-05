@@ -1,17 +1,22 @@
+import { ClosureBody, ControlBody } from "./body";
 import {
   BlockPrelude,
+  BodyPrelude,
   ChainPrelude,
   NodePrelude,
   ProgramPrelude,
-  SetupPrelude,
 } from "./prelude";
 
 export type Sequence<W, X> = { head: W[]; tail: X };
+
+// Program //
 
 export type ProgramSequence = Sequence<
   ProgramPrelude,
   aran.Program<unbuild.Atom>
 >;
+
+// Block //
 
 export type ControlBlockSequence = Sequence<
   BlockPrelude,
@@ -23,25 +28,36 @@ export type ClosureBlockSequence = Sequence<
   aran.ClosureBlock<unbuild.Atom>
 >;
 
+// Body //
+
+export type ControlBodySequence = Sequence<
+  BodyPrelude,
+  ControlBody<unbuild.Atom>
+>;
+
+export type ClosureBodySequence = Sequence<
+  BodyPrelude,
+  ClosureBody<unbuild.Atom>
+>;
+
+// Statement //
+
 export type StatementSequence = Sequence<
   NodePrelude,
   aran.Statement<unbuild.Atom>[]
 >;
 
-export type Completion = {
-  body: aran.Statement<unbuild.Atom>[];
-  completion: aran.Expression<unbuild.Atom>;
-};
-
-export type CompletionSequence = Sequence<NodePrelude, Completion>;
+// Effect //
 
 export type EffectSequence = Sequence<NodePrelude, aran.Effect<unbuild.Atom>[]>;
+
+// Expression //
 
 export type ExpressionSequence = Sequence<
   NodePrelude,
   aran.Expression<unbuild.Atom>
 >;
 
-export type SetupSequence<X> = Sequence<SetupPrelude, X>;
+// Chain //
 
 export type ChainSequence<X> = Sequence<ChainPrelude, X>;

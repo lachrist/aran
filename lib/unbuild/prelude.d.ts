@@ -4,6 +4,8 @@ import { EarlyError } from "./early-error";
 import { Condition } from "./condition";
 import { Context } from "./context";
 import { EffectSequence } from "./sequence";
+import { Meta } from "./meta";
+import { Effect } from "../../type/aran";
 
 export type LogPrelude = {
   type: "log";
@@ -15,8 +17,6 @@ export type ContextPrelude = {
   data: Context;
 };
 
-type ProgramPrelude = LogPrelude | ContextPrelude;
-
 export type HeaderPrelude = {
   type: "header";
   data: Header;
@@ -27,28 +27,28 @@ export type EarlyErrorPrelude = {
   data: EarlyError;
 };
 
-type BlockPrelude = ProgramPrelude | HeaderPrelude | EarlyErrorPrelude;
-
 export type DeclarationPrelude = {
   type: "declaration";
   data: unbuild.Variable;
 };
 
-type NodePrelude = BlockPrelude | DeclarationPrelude;
+export type BaseDeclarationPrelude = DeclarationPrelude & {
+  data: unbuild.BaseVariable;
+};
+
+export type MetaDeclarationPrelude = DeclarationPrelude & {
+  data: unbuild.MetaVariable;
+};
 
 export type EffectPrelude = {
   type: "effect";
   data: aran.Effect<unbuild.Atom>;
 };
 
-type SetupPrelude = NodePrelude | EffectPrelude;
-
 export type ConditionPrelude = {
   type: "condition";
   data: Condition;
 };
-
-type ChainPrelude = SetupPrelude | ConditionPrelude;
 
 export type Prelude =
   | LogPrelude
@@ -56,5 +56,38 @@ export type Prelude =
   | HeaderPrelude
   | EarlyErrorPrelude
   | DeclarationPrelude
+  | EffectPrelude
+  | ConditionPrelude;
+
+type ProgramPrelude = LogPrelude | ContextPrelude;
+
+type BlockPrelude =
+  | LogPrelude
+  | ContextPrelude
+  | HeaderPrelude
+  | EarlyErrorPrelude;
+
+type BodyPrelude =
+  | LogPrelude
+  | ContextPrelude
+  | HeaderPrelude
+  | EarlyErrorPrelude
+  | DeclarationPrelude
+  | EffectPrelude;
+
+type NodePrelude =
+  | LogPrelude
+  | ContextPrelude
+  | HeaderPrelude
+  | EarlyErrorPrelude
+  | MetaDeclarationPrelude
+  | EffectPrelude;
+
+type ChainPrelude =
+  | LogPrelude
+  | ContextPrelude
+  | HeaderPrelude
+  | EarlyErrorPrelude
+  | MetaDeclarationPrelude
   | EffectPrelude
   | ConditionPrelude;
