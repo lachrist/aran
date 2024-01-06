@@ -69,6 +69,17 @@ export type ObjectDesign = aran.Expression<rebuild.Atom> & {
   ];
 };
 
+export type EmptyObjectDesign = aran.Expression<rebuild.Atom> & {
+  callee: aran.Expression<rebuild.Atom> & {
+    type: "IntrinsicExpression";
+    intrinsic: "Object.create";
+  };
+  this: aran.Expression<rebuild.Atom> & {
+    type: "PrimitiveExpression";
+  };
+  arguments: [aran.Expression<rebuild.Atom>];
+};
+
 export type UnaryDesign = aran.Expression<rebuild.Atom> & {
   callee: aran.Expression<rebuild.Atom> & {
     type: "IntrinsicExpression";
