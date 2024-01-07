@@ -3,9 +3,7 @@ import { Header } from "../header";
 import { EarlyError } from "./early-error";
 import { Condition } from "./condition";
 import { Context } from "./context";
-import { EffectSequence } from "./sequence";
-import { Meta } from "./meta";
-import { Effect } from "../../type/aran";
+import { Variable, BaseVariable, MetaVariable } from "./variable";
 
 export type LogPrelude = {
   type: "log";
@@ -29,15 +27,15 @@ export type EarlyErrorPrelude = {
 
 export type DeclarationPrelude = {
   type: "declaration";
-  data: unbuild.Variable;
+  data: Variable;
 };
 
 export type BaseDeclarationPrelude = DeclarationPrelude & {
-  data: unbuild.BaseVariable;
+  data: BaseVariable;
 };
 
 export type MetaDeclarationPrelude = DeclarationPrelude & {
-  data: unbuild.MetaVariable;
+  data: MetaVariable;
 };
 
 export type EffectPrelude = {

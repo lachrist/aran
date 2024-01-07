@@ -1,4 +1,4 @@
-import { ConstantMetaVariable, WritableMetaVariable } from "../../type/unbuild";
+import { ConstantMetaVariable, WritableMetaVariable } from "./variable";
 
 export type WritableCache = {
   type: "writable";
