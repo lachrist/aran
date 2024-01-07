@@ -1,1 +1,1 @@
-console.log(global.eval("this"));
+export default const x = 123;

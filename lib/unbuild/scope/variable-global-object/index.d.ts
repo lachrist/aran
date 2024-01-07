@@ -1,9 +1,5 @@
 import { Cache } from "../../cache";
 
-export type GlobalObjectKind = "var";
-
-export type GlobalObjectEntry = [estree.Variable, GlobalObjectKind];
-
 export type GlobalObjectBinding = {
   kind: "var";
 };

@@ -5,7 +5,8 @@ const isImpure = (node) =>
   node.type === "UpdateExpression" ||
   node.type === "ImportExpression" ||
   node.type === "AwaitExpression" ||
-  node.type === "YieldExpression";
+  node.type === "YieldExpression" ||
+  (node.type === "UnaryExpression" && node.operator === "delete");
 
 /**
  * @type {import("eslint").Rule.RuleModule}

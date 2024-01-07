@@ -2,7 +2,10 @@ import { WritableCache } from "../../cache";
 
 export type FakeKind = "let" | "const" | "var" | "val";
 
-export type FakeEntry = [estree.Variable, FakeKind];
+export type FakeHoist = {
+  kind: FakeKind;
+  variable: estree.Variable;
+};
 
 export type FakeBinding = {
   kind: FakeKind;

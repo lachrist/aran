@@ -1,11 +1,7 @@
 import { Cache } from "../../cache";
 
-export type GlobalRecordKind = "let" | "const";
-
-export type GlobalRecordEntry = [estree.Variable, GlobalRecordKind];
-
 export type GlobalRecordBinding = {
-  kind: GlobalRecordKind;
+  kind: "let" | "const";
 };
 
 export type GlobalRecordFrame = {

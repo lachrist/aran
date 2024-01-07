@@ -1,31 +1,15 @@
-export type ImportKind = "import";
-
-export type DeadzoneKind = "let" | "const";
-
-export type HoistingKind = "var";
-
-export type Kind = ImportKind | DeadzoneKind | HoistingKind;
-
-export type ImportEntry = [estree.Variable, ImportKind];
-
-export type DeadzoneEntry = [estree.Variable, DeadzoneKind];
-
-export type HoistingEntry = [estree.Variable, HoistingKind];
-
-export type RegularEntry = ImportEntry | DeadzoneEntry | HoistingEntry;
-
 export type HoistingBinding = {
-  kind: HoistingKind;
+  kind: "var";
   export: estree.Specifier[];
 };
 
 export type DeadzoneBinding = {
-  kind: DeadzoneKind;
+  kind: "let" | "const";
   export: estree.Specifier[];
 };
 
 export type ImportBinding = {
-  kind: ImportKind;
+  kind: "import";
   source: estree.Source;
   specifier: estree.Specifier | null;
 };
