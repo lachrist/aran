@@ -198,21 +198,19 @@ export default {
               )
             );
             /**
-             * @type {import("../../../type/options.d.ts").Options<
+             * @type {import("../../../type/options").NodeOptions<
              *   import("./empty-enclave.d.ts").Location
              * >}
              */
             const options = {
-              mode: null,
-              situ: "local",
-              plug: "reify",
+              context,
               kind: "eval",
+              scope: "local",
+              ambient: "internal",
+              mode: null,
               base: /** @type {import("../../../type/options").Base} */ (
                 location
               ),
-              warning,
-              context,
-              error: "embed",
               ...common,
             };
             const program2 = instrument(program1, options);
@@ -240,19 +238,17 @@ export default {
           : url.href
       );
       /**
-       * @type {import("../../../type/options.d.ts").Options<
+       * @type {import("../../../type/options.d.ts").RootOptions<
        *   import("./empty-enclave.d.ts").Location
        * >}
        */
       const options = {
-        kind,
         context: null,
-        mode: "sloppy",
-        situ: "global",
-        plug: "alien",
+        kind,
+        scope: "global",
+        ambient: "external",
+        mode: kind === "module" ? "strict" : "sloppy",
         base,
-        warning,
-        error: "throw",
         ...common,
       };
       const program2 = instrument(program1, options);

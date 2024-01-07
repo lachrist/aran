@@ -5,7 +5,6 @@ import { Header } from "../lib/header";
 export type Atom = {
   Label: string;
   Variable: string;
-  GlobalVariable: string;
   Source: string;
   Specifier: string;
   Tag: unknown;

@@ -9,7 +9,6 @@ export type Atom = {
   Source: estree.Source;
   Specifier: estree.Specifier;
   Variable: Variable;
-  GlobalVariable: estree.Variable;
   Tag: Path;
 };
 

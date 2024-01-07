@@ -1,4 +1,3 @@
-import type { Base } from "../../type/options.d.ts";
 import type { NodeSitu, RootSitu } from "../situ.d.ts";
 import type { Context } from "./context.d.ts";
 
