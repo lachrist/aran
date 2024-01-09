@@ -50,7 +50,7 @@ const isExactMatcherItem = (item) =>
 
 /**
  * @type {(
- *   matchers: import("./empty-enclave").Matcher,
+ *   matchers: import("./empty-alien").Matcher,
  * ) => (
  *   result: import("../types").Result,
  * ) => boolean}
@@ -88,7 +88,7 @@ const compileMatcher = (items) => {
  * @type {(
  *   entry: [
  *     string,
- *     import("./empty-enclave").Matcher,
+ *     import("./empty-alien").Matcher,
  *   ],
  * ) => [
  *   string,
@@ -100,7 +100,7 @@ const compileMatcherEntry = ([tag, items]) => [tag, compileMatcher(items)];
 /**
  * @type {(
  *   category: {
- *     [key in string]: import("./empty-enclave").MatcherItem[]
+ *     [key in string]: import("./empty-alien").MatcherItem[]
  *   },
  * ) => (
  *   result: import("../types").Result,
@@ -121,14 +121,14 @@ const compileTagging = (category) => {
 
 const tagging = compileTagging(
   JSON.parse(
-    await readFile(new URL("empty-enclave.manualon", import.meta.url), "utf8"),
+    await readFile(new URL("empty-alien.manual.json", import.meta.url), "utf8"),
   ),
 );
 
 /**
  * @type {import("../../../lib/config").Config<
- *   import("./empty-enclave").Base,
- *   import("./empty-enclave").Location
+ *   import("./empty-alien").Base,
+ *   import("./empty-alien").Location
  * >}
  */
 const config = {
@@ -137,7 +137,7 @@ const config = {
   intrinsic: /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__"),
   escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
   locate: (path, base) =>
-    /** @type {import("./empty-enclave").Location} */ (`${base}#${path}`),
+    /** @type {import("./empty-alien").Location} */ (`${base}#${path}`),
 };
 
 /**
@@ -195,7 +195,7 @@ export default {
       },
       __ARAN_ADVICE__: {
         __proto__: null,
-        value: /** @type {import("./empty-enclave").Advice} */ ({
+        value: /** @type {import("./empty-alien").Advice} */ ({
           "__proto__": null,
           "eval.before": (content1, context, location) =>
             generate(
@@ -212,7 +212,7 @@ export default {
                         })
                       )
                     ),
-                    base: /** @type {import("./empty-enclave").Base} */ (
+                    base: /** @type {import("./empty-alien").Base} */ (
                       /** @type {string} */ (location)
                     ),
                   },
@@ -243,7 +243,7 @@ export default {
                   })
                 )
               ),
-              base: /** @type {import("./empty-enclave").Base} */ (
+              base: /** @type {import("./empty-alien").Base} */ (
                 url.protocol === "file:"
                   ? relative(cwd(), fileURLToPath(url))
                   : url.href
