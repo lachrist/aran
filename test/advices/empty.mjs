@@ -17,11 +17,19 @@ evalGlobal(generate(setup()));
 export default (code, kind) =>
   generate(
     instrument(
-      /** @type {estree.Program} */ (
-        /** @type {unknown} */ (
-          parse(code, { ecmaVersion: 2023, sourceType: kind })
-        )
-      ),
+      {
+        root: /** @type {estree.Program} */ (
+          /** @type {unknown} */ (
+            parse(code, { ecmaVersion: 2023, sourceType: kind })
+          )
+        ),
+        base: "main",
+      },
+      {
+        source: kind,
+        mode: "sloppy",
+        scope: "alien",
+      },
       { pointcut: false },
     ),
   );

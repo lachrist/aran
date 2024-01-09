@@ -1,18 +1,18 @@
-import { Log } from "./log";
+import { Warning } from "./warning";
 import { Header } from "../header";
 import { EarlyError } from "./early-error";
 import { Condition } from "./condition";
-import { Context } from "./context";
+import { InternalLocalEvalContext } from "../context";
 import { Variable, BaseVariable, MetaVariable } from "./variable";
 
-export type LogPrelude = {
-  type: "log";
-  data: Log;
+export type WarningPrelude = {
+  type: "warning";
+  data: Warning;
 };
 
 export type ContextPrelude = {
   type: "context";
-  data: Context;
+  data: [unbuild.Path, InternalLocalEvalContext];
 };
 
 export type HeaderPrelude = {
@@ -49,7 +49,7 @@ export type ConditionPrelude = {
 };
 
 export type Prelude =
-  | LogPrelude
+  | WarningPrelude
   | ContextPrelude
   | HeaderPrelude
   | EarlyErrorPrelude
@@ -57,16 +57,16 @@ export type Prelude =
   | EffectPrelude
   | ConditionPrelude;
 
-type ProgramPrelude = LogPrelude | ContextPrelude;
+type ProgramPrelude = WarningPrelude | ContextPrelude;
 
 type BlockPrelude =
-  | LogPrelude
+  | WarningPrelude
   | ContextPrelude
   | HeaderPrelude
   | EarlyErrorPrelude;
 
 type BodyPrelude =
-  | LogPrelude
+  | WarningPrelude
   | ContextPrelude
   | HeaderPrelude
   | EarlyErrorPrelude
@@ -74,7 +74,7 @@ type BodyPrelude =
   | EffectPrelude;
 
 type NodePrelude =
-  | LogPrelude
+  | WarningPrelude
   | ContextPrelude
   | HeaderPrelude
   | EarlyErrorPrelude
@@ -82,7 +82,7 @@ type NodePrelude =
   | EffectPrelude;
 
 type ChainPrelude =
-  | LogPrelude
+  | WarningPrelude
   | ContextPrelude
   | HeaderPrelude
   | EarlyErrorPrelude

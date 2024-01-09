@@ -1,4 +1,4 @@
-export type LogName =
+export type WarningName =
   | "ExternalConstant"
   | "ExternalDeadzone"
   | "SloppyBlockFunctionDeclaration"
@@ -13,8 +13,8 @@ export type LogName =
   | "SloppyLocalExternalWrite"
   | "KeywordLocalExternalWrite";
 
-export type Log = {
-  name: LogName;
+export type Warning = {
+  name: WarningName;
   message: string;
   path: unbuild.Path;
 };

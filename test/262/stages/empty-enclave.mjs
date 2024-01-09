@@ -50,9 +50,9 @@ const isExactMatcherItem = (item) =>
 
 /**
  * @type {(
- *   matchers: import("./empty-enclave.d.ts").Matcher,
+ *   matchers: import("./empty-enclave").Matcher,
  * ) => (
- *   result: import("../types.js").Result,
+ *   result: import("../types").Result,
  * ) => boolean}
  */
 const compileMatcher = (items) => {
@@ -88,11 +88,11 @@ const compileMatcher = (items) => {
  * @type {(
  *   entry: [
  *     string,
- *     import("./empty-enclave.d.ts").Matcher,
+ *     import("./empty-enclave").Matcher,
  *   ],
  * ) => [
  *   string,
- *   (result: import("../types.js").Result) => boolean,
+ *   (result: import("../types").Result) => boolean,
  * ]}
  */
 const compileMatcherEntry = ([tag, items]) => [tag, compileMatcher(items)];
@@ -100,10 +100,10 @@ const compileMatcherEntry = ([tag, items]) => [tag, compileMatcher(items)];
 /**
  * @type {(
  *   category: {
- *     [key in string]: import("./empty-enclave.d.ts").MatcherItem[]
+ *     [key in string]: import("./empty-enclave").MatcherItem[]
  *   },
  * ) => (
- *   result: import("../types.js").Result,
+ *   result: import("../types").Result,
  * ) => string[]}
  */
 const compileTagging = (category) => {
@@ -121,28 +121,40 @@ const compileTagging = (category) => {
 
 const tagging = compileTagging(
   JSON.parse(
-    await readFile(
-      new URL("empty-enclave.manual.json", import.meta.url),
-      "utf8",
-    ),
+    await readFile(new URL("empty-enclave.manualon", import.meta.url), "utf8"),
   ),
 );
 
-const common = {
-  pointcut: /**
-   * @type {import("../../../type/advice.js").Pointcut<
-   *   import("./empty-enclave.d.ts").Location
-   * >}
-   */ (["eval.before"]),
+/**
+ * @type {import("../../../lib/config").Config<
+ *   import("./empty-enclave").Base,
+ *   import("./empty-enclave").Location
+ * >}
+ */
+const config = {
+  pointcut: ["eval.before"],
   advice: /** @type {estree.Variable} */ ("__ARAN_ADVICE__"),
   intrinsic: /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__"),
   escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
-  exec: /** @type {estree.Variable} */ ("__ARAN_EXEC__"),
-  locate: /**
-   * @type {import("../../../type/options.d.ts").Locate<
-   *   import("./empty-enclave.d.ts").Location
-   * >}
-   */ ((path, base) => `${base}#${path}`),
+  locate: (path, base) =>
+    /** @type {import("./empty-enclave").Location} */ (`${base}#${path}`),
+};
+
+/**
+ * @type {(
+ *   guard: boolean,
+ *   root: estree.Program & {
+ *     warnings: import("../../../lib/unbuild/warning").Warning[],
+ *   },
+ * ) => estree.Program}
+ */
+const warn = (guard, root) => {
+  if (guard) {
+    for (const warning of root.warnings) {
+      console.warn(warning);
+    }
+  }
+  return root;
 };
 
 /** @type {test262.Stage} */
@@ -160,9 +172,7 @@ export default {
       generate(
         setup({
           global: /** @type {estree.Variable} */ ("globalThis"),
-          intrinsic: common.intrinsic,
-          escape: common.escape,
-          exec: common.exec,
+          intrinsic: config.intrinsic,
         }),
       ),
       "var __ARAN_EXEC__ = $262.runScript;",
@@ -187,77 +197,63 @@ export default {
         __proto__: null,
         value: /** @type {import("./empty-enclave").Advice} */ ({
           "__proto__": null,
-          "eval.before": (content1, context, location) => {
-            const program1 = /** @type {estree.Program} */ (
-              /** @type {unknown} */ (
-                parse(String(content1), {
-                  ecmaVersion: "latest",
-                  sourceType: "script",
-                  checkPrivateFields: false,
-                })
-              )
-            );
-            /**
-             * @type {import("../../../type/options").NodeOptions<
-             *   import("./empty-enclave.d.ts").Location
-             * >}
-             */
-            const options = {
-              context,
-              kind: "eval",
-              scope: "local",
-              ambient: "internal",
-              mode: null,
-              base: /** @type {import("../../../type/options").Base} */ (
-                location
+          "eval.before": (content1, context, location) =>
+            generate(
+              warn(
+                warning === "console",
+                instrument(
+                  {
+                    root: /** @type {estree.Program} */ (
+                      /** @type {unknown} */ (
+                        parse(String(content1), {
+                          ecmaVersion: "latest",
+                          sourceType: "script",
+                          checkPrivateFields: false,
+                        })
+                      )
+                    ),
+                    base: /** @type {import("./empty-enclave").Base} */ (
+                      /** @type {string} */ (location)
+                    ),
+                  },
+                  context,
+                  config,
+                ),
               ),
-              ...common,
-            };
-            const program2 = instrument(program1, options);
-            const content2 = generate(program2);
-            return content2;
-          },
+            ),
         }),
         writable: false,
         enumerable: false,
         configurable: false,
       },
     },
-    instrument: ({ kind, url, content: content1 }) => {
-      const program1 = /** @type {estree.Program} */ (
-        /** @type {unknown} */ (
-          parse(content1, {
-            ecmaVersion: "latest",
-            sourceType: kind,
-          })
-        )
-      );
-      const base = /** @type {import("../../../type/options").Base} */ (
-        url.protocol === "file:"
-          ? relative(cwd(), fileURLToPath(url))
-          : url.href
-      );
-      /**
-       * @type {import("../../../type/options.d.ts").RootOptions<
-       *   import("./empty-enclave.d.ts").Location
-       * >}
-       */
-      const options = {
-        context: null,
-        kind,
-        scope: "global",
-        ambient: "external",
-        mode: kind === "module" ? "strict" : "sloppy",
-        base,
-        ...common,
-      };
-      const program2 = instrument(program1, options);
-      const content2 = generate(program2);
-      return {
-        kind,
-        url,
-        content: content2,
-      };
-    },
+    instrument: ({ kind, url, content: content1 }) => ({
+      kind,
+      url,
+      content: generate(
+        warn(
+          warning === "console",
+          instrument(
+            {
+              root: /** @type {estree.Program} */ (
+                /** @type {unknown} */ (
+                  parse(content1, {
+                    ecmaVersion: "latest",
+                    sourceType: kind,
+                  })
+                )
+              ),
+              base: /** @type {import("./empty-enclave").Base} */ (
+                url.protocol === "file:"
+                  ? relative(cwd(), fileURLToPath(url))
+                  : url.href
+              ),
+            },
+            { source: kind, mode: "sloppy", scope: "alien" },
+            config,
+          ),
+        ),
+      ),
+    }),
   }),
 };

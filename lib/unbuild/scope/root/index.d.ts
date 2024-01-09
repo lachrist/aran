@@ -1,6 +1,6 @@
-import { RootSitu } from "../../../situ";
+import { RootContext } from "../../../context";
 
 export type RootFrame = {
   type: "root";
-  situ: RootSitu;
+  context: RootContext;
 };

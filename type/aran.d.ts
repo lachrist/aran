@@ -1,5 +1,3 @@
-import { type } from "os";
-import { Situ } from "../lib/situ";
 import { Header } from "../lib/header";
 
 export type Atom = {
@@ -120,13 +118,13 @@ export type Intrinsic =
   | "SyntaxError";
 
 export type Parameter =
+  | "import.dynamic"
+  | "import.meta"
   | "this"
-  | "import"
-  | "catch.error"
+  | "new.target"
   // https://github.com/allenwb/ESideas/blob/HEAD/ES7MetaProps.md
   | "function.arguments"
-  | "import.meta"
-  | "new.target"
+  | "catch.error"
   | "super.get"
   | "super.set"
   | "super.call"

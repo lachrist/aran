@@ -101,7 +101,7 @@ export type VariableSaveOperation = InitializeOperation | WriteOperation;
 // Root //
 
 export type ReadImportOperation = {
-  type: "read-import";
+  type: "read-import-dynamic";
   mode: Mode;
 };
 

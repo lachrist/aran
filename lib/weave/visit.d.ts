@@ -1,4 +1,4 @@
-import type { Base, Locate } from "../../type/options.d.ts";
+import type { Locate } from "../config.d.ts";
 import type {
   ClosureKind,
   ProgramKind,
@@ -6,13 +6,15 @@ import type {
   Pointcut,
   LinkData,
 } from "../../type/advice.d.ts";
-import { Situ } from "../situ.js";
+import { OriginPath } from "../../type/weave.js";
+import { Context, InternalLocalEvalContext } from "../context.js";
 import { Header } from "../header.js";
 
-export type Options<L> = {
-  base: Base;
+export type Options<B, L> = {
+  evals: Record<OriginPath, InternalLocalEvalContext>;
+  base: B;
   pointcut: Pointcut<L>;
-  locate: Locate<L>;
+  locate: Locate<B, L>;
   advice: {
     kind: "object" | "function";
     variable: estree.Variable;
@@ -22,7 +24,7 @@ export type Options<L> = {
 export type Parent =
   | {
       type: "program";
-      kind: ProgramKind;
+      kind: Context["source"];
       head: Header[];
     }
   | {
