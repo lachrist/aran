@@ -1,11 +1,5 @@
 import type { Locate } from "../config.d.ts";
-import type {
-  ClosureKind,
-  ProgramKind,
-  BlockKind,
-  Pointcut,
-  LinkData,
-} from "../../type/advice.d.ts";
+import type { ClosureKind, BlockKind, Pointcut } from "../../type/advice.d.ts";
 import { OriginPath } from "../../type/weave.js";
 import { Context, InternalLocalEvalContext } from "../context.js";
 import { Header } from "../header.js";
