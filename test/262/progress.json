@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 1180,
-  "target": "test/built-ins/Array/fromAsync/asyncitems-asynciterator-not-callable.js"
+  "index": 1246,
+  "target": "test/built-ins/Array/fromAsync/this-constructor-with-bad-length-setter.js"
 }
