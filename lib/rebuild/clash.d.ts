@@ -1,18 +1,13 @@
-export type ImportClash = {
-  type: "import";
-  variable: estree.Variable;
-  escape: estree.Variable;
-};
-
-export type ExportClash = {
-  type: "export";
-  variable: estree.Variable;
-  escape: estree.Variable;
-};
-
 export type IntrinsicClash = {
   type: "intrinsic";
   variable: estree.Variable;
 };
 
-export type Clash = ImportClash | ExportClash | IntrinsicClash;
+export type EscapeClash = {
+  type: "escape";
+  prefix: string;
+  escape: estree.Variable;
+  variable: estree.Variable;
+};
+
+export type Clash = IntrinsicClash | EscapeClash;
