@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 1246,
-  "target": "test/built-ins/Array/fromAsync/this-constructor-with-bad-length-setter.js"
+  "index": 1570,
+  "target": "test/built-ins/Array/prototype/every/15.4.4.16-5-7.js"
 }
