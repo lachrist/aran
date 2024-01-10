@@ -1,5 +1,11 @@
-export type EscapeClash = {
-  type: "escape";
+export type ImportClash = {
+  type: "import";
+  variable: estree.Variable;
+  escape: estree.Variable;
+};
+
+export type ExportClash = {
+  type: "export";
   variable: estree.Variable;
   escape: estree.Variable;
 };
@@ -9,4 +15,4 @@ export type IntrinsicClash = {
   variable: estree.Variable;
 };
 
-export type Clash = EscapeClash | IntrinsicClash;
+export type Clash = ImportClash | ExportClash | IntrinsicClash;
