@@ -133,9 +133,9 @@ const tagging = compileTagging(
  */
 const config = {
   pointcut: ["eval.before"],
-  advice: /** @type {estree.Variable} */ ("__ARAN_ADVICE__"),
-  intrinsic: /** @type {estree.Variable} */ ("__ARAN_INTRINSIC__"),
-  escape: /** @type {estree.Variable} */ ("__ARAN_ESCAPE__"),
+  advice: /** @type {estree.Variable} */ ("_ARAN_ADVICE_"),
+  intrinsic: /** @type {estree.Variable} */ ("_ARAN_INTRINSIC_"),
+  escape: /** @type {estree.Variable} */ ("_ARAN_ESCAPE_"),
   locate: (path, base) =>
     /** @type {import("./empty-alien").Location} */ (`${base}#${path}`),
 };
