@@ -12,7 +12,7 @@ import { PrivateFrame } from "./private";
 import { RootFrame } from "./root";
 import { TemplateFrame } from "./template";
 import { WithFrame } from "./variable-with";
-import { BlockFrame } from "./block";
+import { CatchFrame } from "./catch";
 
 type Mode = "strict" | "sloppy";
 
@@ -23,7 +23,7 @@ type Mode = "strict" | "sloppy";
 export type NodeFrame =
   | RegularFrame
   | ClosureFrame
-  | BlockFrame
+  | CatchFrame
   | EvalFrame
   | ExternalFrame
   | FakeFrame
@@ -110,14 +110,14 @@ export type ReadImportMetaOperation = {
   mode: Mode;
 };
 
-// Block //
+// Catch //
 
 export type ReadErrorOperation = {
   type: "read-error";
   mode: Mode;
 };
 
-export type BlockLoadOperation = ReadErrorOperation;
+export type CatchLoadOperation = ReadErrorOperation;
 
 // Closure //
 
@@ -261,7 +261,7 @@ export type PrivateSaveOperation =
 export type LoadOperation =
   | VariableLoadOperation
   | ClosureLoadOperation
-  | BlockLoadOperation
+  | CatchLoadOperation
   | TemplateLoadOperation
   | PrivateLoadOperation
   | ReadImportOperation
