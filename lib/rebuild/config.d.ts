@@ -1,4 +1,5 @@
 export type Config = {
-  intrinsic: estree.Variable;
+  global: estree.Variable;
+  intrinsic: estree.Variable | null;
   escape: estree.Variable;
 };

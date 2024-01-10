@@ -125,6 +125,10 @@ const tagging = compileTagging(
   ),
 );
 
+const GLOBAL = /** @type {estree.Variable} */ ("globalThis");
+
+const INTRINSIC = /** @type {estree.Variable} */ ("_ARAN_INTRINSIC_");
+
 /**
  * @type {import("../../../lib/config").Config<
  *   import("./empty-alien").Base,
@@ -132,9 +136,10 @@ const tagging = compileTagging(
  * >}
  */
 const config = {
+  global: GLOBAL,
   pointcut: ["eval.before"],
   advice: /** @type {estree.Variable} */ ("_ARAN_ADVICE_"),
-  intrinsic: /** @type {estree.Variable} */ ("_ARAN_INTRINSIC_"),
+  intrinsic: INTRINSIC,
   escape: /** @type {estree.Variable} */ ("_ARAN_ESCAPE_"),
   locate: (path, base) =>
     /** @type {import("./empty-alien").Location} */ (`${base}#${path}`),
@@ -171,8 +176,8 @@ export default {
     setup: [
       generate(
         setup({
-          global: /** @type {estree.Variable} */ ("globalThis"),
-          intrinsic: config.intrinsic,
+          global: GLOBAL,
+          intrinsic: INTRINSIC,
         }),
       ),
       "var __ARAN_EXEC__ = $262.runScript;",
