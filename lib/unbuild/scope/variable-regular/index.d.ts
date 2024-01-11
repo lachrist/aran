@@ -1,10 +1,10 @@
 export type HoistingBinding = {
-  kind: "var";
+  kind: "var" | "function";
   export: estree.Specifier[];
 };
 
 export type DeadzoneBinding = {
-  kind: "let" | "const";
+  kind: "let" | "const" | "class";
   export: estree.Specifier[];
 };
 

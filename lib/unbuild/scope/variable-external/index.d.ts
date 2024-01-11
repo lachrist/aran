@@ -1,16 +1,16 @@
 import { WritableCache } from "../../cache";
 
-export type HoistingExternalBinding = {
-  kind: "var";
+export type LifespanExternalBinding = {
+  kind: "var" | "function";
   deadzone: null;
 };
 
 export type DeadzoneExternalBinding = {
-  kind: "let" | "const";
+  kind: "let" | "const" | "class";
   deadzone: WritableCache;
 };
 
-export type ExternalBinding = HoistingExternalBinding | DeadzoneExternalBinding;
+export type ExternalBinding = LifespanExternalBinding | DeadzoneExternalBinding;
 
 export type ExternalFrame = {
   type: "external";

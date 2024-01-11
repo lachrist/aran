@@ -1,13 +1,15 @@
-export type BlockHoist = {
-  type: "block";
-  kind: "let" | "const";
+export type RegularHoist = {
+  type: "regular";
+  kind: "let" | "const" | "class" | "var" | "function";
   variable: estree.Variable;
 };
 
-export type ClosureHoist = {
-  type: "closure";
-  kind: "var";
-  variable: estree.Variable;
+export type DeadzoneHoist = RegularHoist & {
+  kind: "let" | "const" | "class";
+};
+
+export type LifespanHoist = RegularHoist & {
+  kind: "var" | "function";
 };
 
 export type ImportHoist = {
@@ -23,4 +25,4 @@ export type ExportHoist = {
   specifier: estree.Specifier;
 };
 
-export type Hoist = BlockHoist | ClosureHoist | ImportHoist | ExportHoist;
+export type Hoist = RegularHoist | ImportHoist | ExportHoist;

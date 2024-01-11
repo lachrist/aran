@@ -1,7 +1,7 @@
 import { Cache } from "../../cache";
 
 export type GlobalObjectBinding = {
-  kind: "var";
+  kind: "var" | "function";
 };
 
 export type GlobalObjectFrame = {
