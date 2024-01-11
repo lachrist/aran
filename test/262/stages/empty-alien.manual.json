@@ -619,9 +619,5 @@
   "When using enclave, from other programs, hidden variables are declared at the beginning": [],
   "When using enclave, from other programs, const hidden variables are writable": [],
   "Accessing Symbol.iterator twice in spread syntax": [],
-  "Accessing step.done twice in for-of loop and array pattern": [],
-  "TODO: check that ArrayBuffer.isView breaks normalization of class to function": [
-    "test/built-ins/ArrayBuffer/isView/arg-is-dataview-subclass-instance.js",
-    "test/built-ins/ArrayBuffer/isView/arg-is-typedarray-subclass-instance.js"
-  ]
+  "Accessing step.done twice in for-of loop and array pattern": []
 }
