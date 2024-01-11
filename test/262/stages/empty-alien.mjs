@@ -106,7 +106,7 @@ const compileMatcherEntry = ([tag, items]) => [tag, compileMatcher(items)];
  *   result: import("../types").Result,
  * ) => string[]}
  */
-const compileTagging = (category) => {
+const compileExpect = (category) => {
   const matchers = Object.entries(category).map(compileMatcherEntry);
   return (result) => {
     const tags = [];
@@ -118,12 +118,6 @@ const compileTagging = (category) => {
     return tags;
   };
 };
-
-const tagging = compileTagging(
-  JSON.parse(
-    await readFile(new URL("empty-alien.manual.json", import.meta.url), "utf8"),
-  ),
-);
 
 const GLOBAL = /** @type {estree.Variable} */ ("globalThis");
 
@@ -166,12 +160,14 @@ const warn = (guard, root) => {
 export default {
   requirement: ["identity", "parsing"],
   exclusion: [],
-  expect: (result) => [
-    ...(result.error !== null && result.error.name === "EvalAranError"
-      ? ["eval-limitation"]
-      : []),
-    ...tagging(result),
-  ],
+  expect: compileExpect(
+    JSON.parse(
+      await readFile(
+        new URL("empty-alien.manual.json", import.meta.url),
+        "utf8",
+      ),
+    ),
+  ),
   createInstrumenter: ({ warning }) => ({
     setup: [
       generate(

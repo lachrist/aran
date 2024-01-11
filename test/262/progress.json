@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 1570,
-  "target": "test/built-ins/Array/prototype/every/15.4.4.16-5-7.js"
+  "index": 3944,
+  "target": "test/built-ins/Array/prototype/toLocaleString/invoke-element-tolocalestring.js"
 }
