@@ -2,78 +2,78 @@
 // ParameterHeader //
 /////////////////////
 
+// Parameter //
+
 export type StraightParameter =
+  | "super.get"
+  | "super.set"
+  | "super.call"
   | "this"
   | "new.target"
   | "import.meta"
-  | "import.dynamic"
-  | "super.get"
-  | "super.set"
-  | "super.call";
+  | "import.dynamic";
 
-export type PrivateParameter = "private";
+export type LookupParameter =
+  | "read.strict"
+  | "read.sloppy"
+  | "write.strict"
+  | "write.sloppy"
+  | "typeof.strict"
+  | "typeof.sloppy"
+  | "discard.sloppy";
 
-export type LookupParameter = "lookup.strict" | "lookup.sloppy";
+export type PrivateParameter = "private.has" | "private.get" | "private.set";
+
+// Header //
 
 export type HeaderParameter =
   | StraightParameter
-  | PrivateParameter
-  | LookupParameter;
+  | LookupParameter
+  | PrivateParameter;
 
-export type ParameterHeader = {
-  type: "parameter";
-  parameter: HeaderParameter;
+export type StraightHeader = {
+  type: StraightParameter;
+};
+
+export type LookupHeader = {
+  type: LookupParameter;
+  variable: estree.Variable | null;
+};
+
+export type PrivateHeader = {
+  type: PrivateParameter;
+  key: estree.PrivateKey | null;
+};
+
+export type ParameterHeader = StraightHeader | LookupHeader | PrivateHeader;
+
+// Static | Dynamic //
+
+export type StaticLookupHeader = LookupHeader & {
+  variable: estree.Variable;
+};
+
+export type DynamicLookupHeader = LookupHeader & {
+  variable: null;
+};
+
+export type StaticPrivateHeader = PrivateHeader & {
+  key: estree.PrivateKey;
+};
+
+export type DynamicPrivateHeader = PrivateHeader & {
+  key: null;
 };
 
 ///////////////////
 // DeclareHeader //
 ///////////////////
 
-export type LetDeclareHeader = {
-  type: "declare.let";
-  mode: "strict" | "sloppy";
+export type DeclareHeader = {
+  type: "declare.strict" | "declare.sloppy";
+  kind: "let" | "var";
   variable: estree.Variable;
 };
-
-export type VarDeclareHeader = {
-  type: "declare.var";
-  mode: "strict" | "sloppy";
-  variable: estree.Variable;
-};
-
-export type DeclareHeader = LetDeclareHeader | VarDeclareHeader;
-
-//////////////////
-// LookupHeader //
-//////////////////
-
-export type StaticLookupHeader = {
-  type: "lookup.static";
-  mode: "strict" | "sloppy";
-  variable: estree.Variable;
-};
-
-export type DynamicLookupHeader = {
-  type: "lookup.dynamic";
-  mode: "strict" | "sloppy";
-};
-
-export type LookupHeader = StaticLookupHeader | DynamicLookupHeader;
-
-///////////////////
-// PrivateHeader //
-///////////////////
-
-export type StaticPrivateHeader = {
-  type: "private.static";
-  key: estree.PrivateKey;
-};
-
-export type DynamicPrivateHeader = {
-  type: "private.dynamic";
-};
-
-export type PrivateHeader = StaticPrivateHeader | DynamicPrivateHeader;
 
 //////////////////
 // ModuleHeader //
@@ -116,17 +116,3 @@ export type Header =
   | ParameterHeader
   | LookupHeader
   | PrivateHeader;
-
-//////////
-// Mode //
-//////////
-
-export type StrictHeader =
-  | (DeclareHeader & { mode: "strict" })
-  | (LookupHeader & { mode: "strict" })
-  | PrivateHeader
-  | ModuleHeader;
-
-export type SloppyHeader =
-  | (DeclareHeader & { mode: "sloppy" })
-  | (LookupHeader & { mode: "sloppy" });

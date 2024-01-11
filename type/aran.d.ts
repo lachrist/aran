@@ -134,7 +134,6 @@ export type Parameter =
   | "read.strict"
   | "write.strict"
   | "typeof.strict"
-  | "discard.strict"
   | "read.sloppy"
   | "write.sloppy"
   | "typeof.sloppy"

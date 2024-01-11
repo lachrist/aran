@@ -13,6 +13,7 @@ import { RootFrame } from "./root";
 import { TemplateFrame } from "./template";
 import { WithFrame } from "./variable-with";
 import { CatchFrame } from "./catch";
+import { RootContext } from "../../context";
 
 type Mode = "strict" | "sloppy";
 
@@ -51,6 +52,11 @@ export type RootScope = {
 };
 
 export type Scope = NodeScope | RootScope;
+
+export type PackScope = {
+  context: RootContext;
+  frames: NodeFrame[];
+};
 
 ///////////////
 // Operation //
@@ -256,6 +262,14 @@ export type PrivateSaveOperation =
   | RegisterPrivateCollectionOperation
   | SetPrivateOperation;
 
+// eval //
+
+export type EvalOperation = {
+  type: "eval";
+  mode: Mode;
+  code: Cache;
+};
+
 // union //
 
 export type LoadOperation =
@@ -265,7 +279,8 @@ export type LoadOperation =
   | TemplateLoadOperation
   | PrivateLoadOperation
   | ReadImportOperation
-  | ReadImportMetaOperation;
+  | ReadImportMetaOperation
+  | EvalOperation;
 
 export type SaveOperation =
   | VariableSaveOperation

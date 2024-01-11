@@ -1,5 +1,5 @@
 import { PackMeta } from "./unbuild/meta";
-import { Scope } from "./unbuild/scope";
+import { PackScope } from "./unbuild/scope";
 
 export type ScriptContext = {
   source: "script";
@@ -36,7 +36,7 @@ export type InternalLocalEvalContext = {
   source: "aran-eval";
   mode: "strict" | "sloppy";
   meta: PackMeta;
-  scope: Scope;
+  scope: PackScope;
 };
 
 export type LocalEvalContext =
