@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 4089,
-  "target": "test/built-ins/ArrayBuffer/isView/arg-is-dataview-subclass-instance.js"
+  "index": 4259,
+  "target": "test/built-ins/ArrayBuffer/prototype-from-newtarget.js"
 }
