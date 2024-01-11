@@ -1,4 +1,4 @@
-export type HoistingBinding = {
+export type LifespanBinding = {
   kind: "var" | "function";
   export: estree.Specifier[];
 };
@@ -14,7 +14,7 @@ export type ImportBinding = {
   specifier: estree.Specifier | null;
 };
 
-export type RegularBinding = ImportBinding | HoistingBinding | DeadzoneBinding;
+export type RegularBinding = ImportBinding | LifespanBinding | DeadzoneBinding;
 
 export type RegularFrame = {
   type: "regular";

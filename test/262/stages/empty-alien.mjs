@@ -194,7 +194,7 @@ export default {
         enumerable: false,
         configurable: false,
       },
-      __ARAN_ADVICE__: {
+      _ARAN_ADVICE_: {
         __proto__: null,
         value: /** @type {import("./empty-alien").Advice} */ ({
           "__proto__": null,
