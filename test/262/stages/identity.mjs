@@ -32,9 +32,9 @@ export default {
             : []),
           ...metadata.features.filter(isFeatureExcluded),
         ],
-  createInstrumenter: (_options) => ({
+  createInstrumenter: ({ record }) => ({
     setup: [],
     globals: {},
-    instrument: (source) => source,
+    instrument: record,
   }),
 };

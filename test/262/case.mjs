@@ -45,6 +45,7 @@ const termination = {
  *     createInstrumenter: test262.Stage["createInstrumenter"],
  *     warning: "silent" | "console",
  *     reject: (error: Error) => void,
+ *     record: import("./types").Instrument,
  *   },
  * ) => Promise<void>}
  */
@@ -53,6 +54,7 @@ export const runTestCaseInner = async ({
   createInstrumenter,
   warning,
   reject,
+  record,
 }) => {
   const { done, print } = asynchronous
     ? makeAsynchronousTermination()
@@ -60,6 +62,7 @@ export const runTestCaseInner = async ({
   const context = createRealm({
     counter: { value: 0 },
     reject,
+    record,
     warning,
     print,
     createInstrumenter,
@@ -153,6 +156,7 @@ export const runTestCaseInner = async ({
  *   options: {
  *     case: test262.Case,
  *     warning: "silent" | "console",
+ *     record: import("./types").Instrument,
  *     createInstrumenter: test262.Stage["createInstrumenter"],
  *   },
  * ) => Promise<void>}

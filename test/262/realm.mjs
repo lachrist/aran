@@ -10,6 +10,7 @@ class RealmAranError extends Error {}
  *   options: {
  *     counter: { value: number },
  *     reject: (error: Error) => void,
+ *     record: import("./types").Instrument,
  *     warning: "silent" | "console",
  *     print: (message: string) => void,
  *     createInstrumenter: test262.Stage["createInstrumenter"],
@@ -23,12 +24,14 @@ class RealmAranError extends Error {}
 export const createRealm = ({
   counter,
   reject,
+  record,
   warning,
   print,
   createInstrumenter,
 }) => {
   const { instrument, setup, globals } = createInstrumenter({
     reject,
+    record,
     warning,
   });
   const context = createContext({ __proto__: null });
@@ -44,6 +47,7 @@ export const createRealm = ({
       createRealm({
         counter,
         reject,
+        record,
         warning,
         print,
         createInstrumenter,

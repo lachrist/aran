@@ -71,6 +71,7 @@ for await (const url of scrape(new URL("test/", test262))) {
     const result = await runTest({
       target,
       test262,
+      record: (source) => source,
       warning: "silent",
       createInstrumenter,
     });

@@ -74,6 +74,7 @@ const DEFAULT_METADATA = {
  *     test262: URL,
  *     createInstrumenter: test262.Stage["createInstrumenter"],
  *     warning: "silent" | "console",
+ *     record: import("./types").Instrument,
  *   },
  * ) => Promise<test262.Result>}
  */
@@ -81,6 +82,7 @@ export const runTest = async ({
   target,
   test262,
   warning,
+  record,
   createInstrumenter,
 }) => {
   const content = await readFile(new URL(target, test262), "utf8");
@@ -102,7 +104,7 @@ export const runTest = async ({
     test262,
   })) {
     try {
-      await runTestCase({ case: case_, createInstrumenter, warning });
+      await runTestCase({ case: case_, createInstrumenter, warning, record });
     } catch (error) {
       return {
         target,

@@ -168,7 +168,7 @@ export default {
       ),
     ),
   ),
-  createInstrumenter: ({ warning }) => ({
+  createInstrumenter: ({ record, warning }) => ({
     setup: [
       generate(
         setup({
@@ -199,62 +199,67 @@ export default {
         value: /** @type {import("./empty-alien").Advice} */ ({
           "__proto__": null,
           "eval.before": (content1, context, location) =>
-            generate(
-              warn(
-                warning === "console",
-                instrument(
-                  {
-                    root: /** @type {estree.Program} */ (
-                      /** @type {unknown} */ (
-                        parse(String(content1), {
-                          ecmaVersion: "latest",
-                          sourceType: "script",
-                          checkPrivateFields: false,
-                        })
-                      )
-                    ),
-                    base: /** @type {import("./empty-alien").Base} */ (
-                      /** @type {string} */ (location)
-                    ),
-                  },
-                  context,
-                  config,
+            record({
+              kind: "script",
+              url: new URL(`eval:///${location}`),
+              content: generate(
+                warn(
+                  warning === "console",
+                  instrument(
+                    {
+                      root: /** @type {estree.Program} */ (
+                        /** @type {unknown} */ (
+                          parse(String(content1), {
+                            ecmaVersion: "latest",
+                            sourceType: "script",
+                            checkPrivateFields: false,
+                          })
+                        )
+                      ),
+                      base: /** @type {import("./empty-alien").Base} */ (
+                        /** @type {string} */ (location)
+                      ),
+                    },
+                    context,
+                    config,
+                  ),
                 ),
               ),
-            ),
+            }).content,
         }),
         writable: false,
         enumerable: false,
         configurable: false,
       },
     },
-    instrument: ({ kind, url, content: content1 }) => ({
-      kind,
-      url,
-      content: generate(
-        warn(
-          warning === "console",
-          instrument(
-            {
-              root: /** @type {estree.Program} */ (
-                /** @type {unknown} */ (
-                  parse(content1, {
-                    ecmaVersion: "latest",
-                    sourceType: kind,
-                  })
-                )
-              ),
-              base: /** @type {import("./empty-alien").Base} */ (
-                url.protocol === "file:"
-                  ? relative(cwd(), fileURLToPath(url))
-                  : url.href
-              ),
-            },
-            { source: kind, mode: "sloppy", scope: "alien" },
-            config,
+    instrument: ({ kind, url, content: content1 }) =>
+      record({
+        kind,
+        url,
+        content: generate(
+          warn(
+            warning === "console",
+            instrument(
+              {
+                root: /** @type {estree.Program} */ (
+                  /** @type {unknown} */ (
+                    parse(content1, {
+                      ecmaVersion: "latest",
+                      sourceType: kind,
+                    })
+                  )
+                ),
+                base: /** @type {import("./empty-alien").Base} */ (
+                  url.protocol === "file:"
+                    ? relative(cwd(), fileURLToPath(url))
+                    : url.href
+                ),
+              },
+              { source: kind, mode: "sloppy", scope: "alien" },
+              config,
+            ),
           ),
         ),
-      ),
-    }),
+      }),
   }),
 };

@@ -123,6 +123,7 @@ try {
           target,
           test262,
           warning: "silent",
+          record: (source) => source,
           createInstrumenter,
         });
         const reasons = expect(result);
@@ -139,15 +140,8 @@ try {
               target,
               test262,
               warning: "console",
-              createInstrumenter: (reject) => {
-                const { setup, globals, instrument } =
-                  createInstrumenter(reject);
-                return {
-                  setup,
-                  globals,
-                  instrument: (source) => record(instrument(source)),
-                };
-              },
+              record,
+              createInstrumenter,
             });
             if (error === null) {
               console.log("** Error Disappeared **");

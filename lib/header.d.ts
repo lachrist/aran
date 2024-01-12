@@ -69,11 +69,31 @@ export type DynamicPrivateHeader = PrivateHeader & {
 // DeclareHeader //
 ///////////////////
 
-export type DeclareHeader = {
+export type ShallowDeclareHeader = {
   type: "declare.strict" | "declare.sloppy";
   kind: "let" | "var";
+  deep: false;
   variable: estree.Variable;
 };
+
+export type DeepDeclareHeader = {
+  type: "declare.sloppy";
+  kind: "var";
+  deep: true;
+  variable: estree.Variable;
+};
+
+export type PrepareDeepDeclareHeader = {
+  type: "declare.sloppy";
+  kind: "var";
+  deep: false;
+  variable: null;
+};
+
+export type DeclareHeader =
+  | ShallowDeclareHeader
+  | DeepDeclareHeader
+  | PrepareDeepDeclareHeader;
 
 //////////////////
 // ModuleHeader //

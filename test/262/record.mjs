@@ -33,14 +33,28 @@ const getExtension = (kind) => {
   }
 };
 
+/**
+ * @type {(
+ *   character: string,
+ * ) => string}
+ */
+const escapeCharacter = (character) =>
+  `$${character.charCodeAt(0).toString(16)}`;
+
+/**
+ * @type {(
+ *   input: string,
+ * ) => string}
+ */
+const escapeBasename = (input) =>
+  input.replace(/[^_a-zA-Z0-9]/gu, escapeCharacter);
+
 /** @type {test262.Instrument} */
 export const record = ({ kind, url: url1, content: content1 }) => {
-  const basename = /** @type {string} */ (url1.href.split("/").pop())
-    .split(".")
-    .slice(0, -1)
-    .join(".");
+  const basename = escapeBasename(url1.href);
   const extension = getExtension(kind);
   const url2 = new URL(`${basename}.${extension}`, directory);
+  console.log({ url1, url2 });
   const content2 = `// ${url1.href}\n${format(content1)}`;
   writeFileSync(url2, content2, "utf8");
   return { kind, url: url2, content: content2 };

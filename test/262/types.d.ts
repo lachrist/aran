@@ -81,6 +81,7 @@ export type StageName = "identity" | "parsing" | "empty-enclave";
 
 export type Stage = {
   createInstrumenter: (options: {
+    record: Instrument;
     reject: (error: Error) => void;
     warning: "console" | "silent";
   }) => Instrumenter;

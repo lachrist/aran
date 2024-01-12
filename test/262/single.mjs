@@ -31,13 +31,7 @@ console.dir(
     target,
     test262,
     warning: "console",
-    createInstrumenter: (reject) => {
-      const { setup, globals, instrument } = createInstrumenter(reject);
-      return {
-        setup,
-        globals,
-        instrument: (source) => record(instrument(source)),
-      };
-    },
+    record,
+    createInstrumenter,
   }),
 );
