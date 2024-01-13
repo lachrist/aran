@@ -54,7 +54,6 @@ export const record = ({ kind, url: url1, content: content1 }) => {
   const basename = escapeBasename(url1.href);
   const extension = getExtension(kind);
   const url2 = new URL(`${basename}.${extension}`, directory);
-  console.log({ url1, url2 });
   const content2 = `// ${url1.href}\n${format(content1)}`;
   writeFileSync(url2, content2, "utf8");
   return { kind, url: url2, content: content2 };
