@@ -104,6 +104,8 @@ export type VariableLoadOperation =
 
 export type VariableSaveOperation = InitializeOperation | WriteOperation;
 
+export type VariableOperation = VariableLoadOperation | VariableSaveOperation;
+
 // Root //
 
 export type ReadImportOperation = {
