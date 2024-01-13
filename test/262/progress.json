@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 25017,
-  "target": "test/built-ins/global/S10.2.3_A2.3_T1.js"
+  "index": 26101,
+  "target": "test/intl402/NumberFormat/prototype/format/signDisplay-de-DE.js"
 }
