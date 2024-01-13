@@ -39,7 +39,7 @@ const getExtension = (kind) => {
  * ) => string}
  */
 const escapeCharacter = (character) =>
-  `$${character.charCodeAt(0).toString(16)}`;
+  `$${character.charCodeAt(0).toString(16).padStart(4, "0")}`;
 
 /**
  * @type {(
