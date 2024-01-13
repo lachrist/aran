@@ -10,7 +10,7 @@ const {
  * >}
  */
 export default {
-  "program.enter": (_kind, _links, frame, _location) => frame,
+  "program.enter": (_kind, _mode, _links, frame, _location) => frame,
   "program.completion": (_kind, value, _location) => value,
   "program.failure": (_kind, value, _location) => value,
   "program.leave": (_kind, _location) => {},

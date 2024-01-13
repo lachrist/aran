@@ -8,6 +8,8 @@ export type BranchKind = "conditional" | "if" | "while";
 
 export type ClosureKind = "arrow" | "function";
 
+export type Mode = "strict" | "sloppy";
+
 export type BlockKind =
   | "try"
   | "catch"
@@ -54,6 +56,7 @@ type Generic = {
 
 type GenericProgramEnterAdvice<G extends Generic> = (
   kind: ProgramKind,
+  mode: Mode,
   head: Header[],
   record: { [key in Variable]?: G["Value"] },
   location: G["Location"],
@@ -566,6 +569,7 @@ type Point<V, L> =
   | {
       type: "program.enter";
       kind: ProgramKind;
+      mode: Mode;
       head: Header[];
       record: {
         [key in Variable]: V;

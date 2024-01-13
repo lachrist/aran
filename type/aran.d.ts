@@ -143,7 +143,7 @@ export type Parameter =
 
 export type Program<A extends Atom> = {
   type: "Program";
-  kind: "script" | "module";
+  kind: "script" | "module" | "global-eval" | "local-eval" | "aran-eval";
   mode: "strict" | "sloppy";
   head: Header[];
   body: ClosureBlock<A>;

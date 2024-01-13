@@ -1,8 +1,9 @@
 import type { Locate } from "../config.d.ts";
 import type { ClosureKind, BlockKind, Pointcut } from "../../type/advice.d.ts";
 import { OriginPath } from "../../type/weave.js";
-import { Context, InternalLocalEvalContext } from "../context.js";
+import { InternalLocalEvalContext } from "../context.js";
 import { Header } from "../header.js";
+import { Program } from "../../type/aran.js";
 
 export type Options<B, L> = {
   evals: Record<OriginPath, InternalLocalEvalContext>;
@@ -18,7 +19,8 @@ export type Options<B, L> = {
 export type Parent =
   | {
       type: "program";
-      kind: Context["source"];
+      kind: Program<weave.ArgAtom>["kind"];
+      mode: Program<weave.ArgAtom>["mode"];
       head: Header[];
     }
   | {

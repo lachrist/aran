@@ -51,21 +51,11 @@ export type ParameterHeader = StraightHeader | LookupHeader | PrivateHeader;
 // DeclareHeader //
 ///////////////////
 
-export type ShallowDeclareHeader = {
+export type DeclareHeader = {
   type: "declare.strict" | "declare.sloppy";
   kind: "let" | "var";
-  deep: false;
   variable: estree.Variable;
 };
-
-export type DeepDeclareHeader = {
-  type: "declare.sloppy";
-  kind: "var";
-  deep: true;
-  variable: estree.Variable;
-};
-
-export type DeclareHeader = ShallowDeclareHeader | DeepDeclareHeader;
 
 ////////////////
 // EvalHeader //
