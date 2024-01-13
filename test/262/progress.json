@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 16091,
-  "target": "test/built-ins/String/raw/return-the-string-value-from-template.js"
+  "index": 16119,
+  "target": "test/built-ins/Symbol/auto-boxing-strict.js"
 }
