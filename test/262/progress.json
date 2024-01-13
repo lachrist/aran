@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 4870,
-  "target": "test/built-ins/Boolean/S9.2_A1_T1.js"
+  "index": 16091,
+  "target": "test/built-ins/String/raw/return-the-string-value-from-template.js"
 }
