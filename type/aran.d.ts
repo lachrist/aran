@@ -21,28 +21,9 @@ export type Primitive =
 
 export type GlobalVariableKind = "var" | "let";
 
-export type AranIntrinsic =
-  | "aran.global"
-  | "aran.record"
-  | "aran.templates"
-  | "aran.unary"
-  | "aran.binary"
-  | "aran.throw"
-  | "aran.get"
-  | "aran.deadzone"
-  // https://262.ecma-international.org/14.0#sec-topropertykey
-  | "aran.toPropertyKey"
-  | "aran.listForInKey"
-  | "aran.listRest"
-  | "aran.AsyncGeneratorFunction.prototype.prototype"
-  | "aran.GeneratorFunction.prototype.prototype";
-
-export type Intrinsic =
-  // Aran //
-  | AranIntrinsic
+export type RegularIntrinsic =
   // Symbol //
   | "Symbol"
-  | "Symbol.prototype.description@get"
   | "Symbol.unscopables"
   | "Symbol.asyncIterator"
   | "Symbol.iterator"
@@ -75,8 +56,6 @@ export type Intrinsic =
   | "Array.prototype.push"
   // Function //
   | "Function.prototype"
-  | "Function.prototype.arguments@get"
-  | "Function.prototype.arguments@set"
   // WeakMap //
   | "WeakMap"
   | "WeakMap.prototype.has"
@@ -117,6 +96,29 @@ export type Intrinsic =
   | "ReferenceError"
   | "SyntaxError";
 
+export type AccessorIntrinsic =
+  | "Symbol.prototype.description@get"
+  | "Function.prototype.arguments@get"
+  | "Function.prototype.arguments@set";
+
+export type AranIntrinsic =
+  | "aran.global"
+  | "aran.record"
+  | "aran.templates"
+  | "aran.unary"
+  | "aran.binary"
+  | "aran.throw"
+  | "aran.get"
+  | "aran.deadzone"
+  // https://262.ecma-international.org/14.0#sec-topropertykey
+  | "aran.toPropertyKey"
+  | "aran.listForInKey"
+  | "aran.listRest"
+  | "aran.AsyncGeneratorFunction.prototype.prototype"
+  | "aran.GeneratorFunction.prototype.prototype";
+
+export type Intrinsic = RegularIntrinsic | AccessorIntrinsic | AranIntrinsic;
+
 export type Parameter =
   | "import.dynamic"
   | "import.meta"
@@ -141,6 +143,8 @@ export type Parameter =
 
 export type Program<A extends Atom> = {
   type: "Program";
+  kind: "script" | "module";
+  mode: "strict" | "sloppy";
   head: Header[];
   body: ClosureBlock<A>;
   tag: A["Tag"];

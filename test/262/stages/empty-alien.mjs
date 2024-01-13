@@ -168,98 +168,104 @@ export default {
       ),
     ),
   ),
-  createInstrumenter: ({ record, warning }) => ({
-    setup: [
-      generate(
-        setup({
-          global: GLOBAL,
-          intrinsic: INTRINSIC,
-        }),
-      ),
-      "var __ARAN_EXEC__ = $262.runScript;",
-    ],
-    globals: {
-      ARAN: {
-        __proto__: null,
-        value: (/** @type {unknown} */ value) =>
-          console.dir(value, { showHidden: true }),
-        writable: false,
-        enumerable: false,
-        configurable: false,
-      },
-      ARAN_SET_TIMEOUT: {
-        __proto__: null,
-        value: setTimeout,
-        writable: false,
-        enumerable: false,
-        configurable: false,
-      },
-      _ARAN_ADVICE_: {
-        __proto__: null,
-        value: /** @type {import("./empty-alien").Advice} */ ({
-          "__proto__": null,
-          "eval.before": (content1, context, location) =>
-            record({
-              kind: "script",
-              url: new URL(`eval:///${location}`),
-              content: generate(
-                warn(
-                  warning === "console",
-                  instrument(
-                    {
-                      root: /** @type {estree.Program} */ (
-                        /** @type {unknown} */ (
-                          parse(String(content1), {
-                            ecmaVersion: "latest",
-                            sourceType: "script",
-                            checkPrivateFields: false,
-                          })
-                        )
-                      ),
-                      base: /** @type {import("./empty-alien").Base} */ (
-                        /** @type {string} */ (location)
-                      ),
-                    },
-                    context,
-                    config,
+  createInstrumenter: ({ record, warning }) => {
+    let counter = 0;
+    return {
+      setup: [
+        generate(
+          setup({
+            global: GLOBAL,
+            intrinsic: INTRINSIC,
+          }),
+        ),
+        "var __ARAN_EXEC__ = $262.runScript;",
+      ],
+      globals: {
+        ARAN: {
+          __proto__: null,
+          value: (/** @type {unknown} */ value) =>
+            console.dir(value, { showHidden: true }),
+          writable: false,
+          enumerable: false,
+          configurable: false,
+        },
+        ARAN_SET_TIMEOUT: {
+          __proto__: null,
+          value: setTimeout,
+          writable: false,
+          enumerable: false,
+          configurable: false,
+        },
+        _ARAN_ADVICE_: {
+          __proto__: null,
+          value: /** @type {import("./empty-alien").Advice} */ ({
+            "__proto__": null,
+            "eval.before": (content1, context, location) => {
+              counter += 1;
+              const { content } = record({
+                kind: "script",
+                url: new URL(`eval:///${counter}`),
+                content: generate(
+                  warn(
+                    warning === "console",
+                    instrument(
+                      {
+                        root: /** @type {estree.Program} */ (
+                          /** @type {unknown} */ (
+                            parse(String(content1), {
+                              ecmaVersion: "latest",
+                              sourceType: "script",
+                              checkPrivateFields: false,
+                            })
+                          )
+                        ),
+                        base: /** @type {import("./empty-alien").Base} */ (
+                          /** @type {string} */ (location)
+                        ),
+                      },
+                      context,
+                      config,
+                    ),
                   ),
                 ),
-              ),
-            }).content,
-        }),
-        writable: false,
-        enumerable: false,
-        configurable: false,
+              });
+              return content;
+            },
+          }),
+          writable: false,
+          enumerable: false,
+          configurable: false,
+        },
       },
-    },
-    instrument: ({ kind, url, content: content1 }) =>
-      record({
-        kind,
-        url,
-        content: generate(
-          warn(
-            warning === "console",
-            instrument(
-              {
-                root: /** @type {estree.Program} */ (
-                  /** @type {unknown} */ (
-                    parse(content1, {
-                      ecmaVersion: "latest",
-                      sourceType: kind,
-                    })
-                  )
-                ),
-                base: /** @type {import("./empty-alien").Base} */ (
-                  url.protocol === "file:"
-                    ? relative(cwd(), fileURLToPath(url))
-                    : url.href
-                ),
-              },
-              { source: kind, mode: "sloppy", scope: "alien" },
-              config,
+      instrument: ({ kind, url, content: content1 }) =>
+        record({
+          kind,
+          url,
+          content: generate(
+            warn(
+              warning === "console",
+              instrument(
+                {
+                  root: /** @type {estree.Program} */ (
+                    /** @type {unknown} */ (
+                      parse(content1, {
+                        ecmaVersion: "latest",
+                        sourceType: kind,
+                      })
+                    )
+                  ),
+                  base: /** @type {import("./empty-alien").Base} */ (
+                    url.protocol === "file:"
+                      ? relative(cwd(), fileURLToPath(url))
+                      : url.href
+                  ),
+                },
+                { source: kind, mode: "sloppy", scope: "alien" },
+                config,
+              ),
             ),
           ),
-        ),
-      }),
-  }),
+        }),
+    };
+  },
 };

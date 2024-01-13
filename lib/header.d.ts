@@ -37,33 +37,15 @@ export type StraightHeader = {
 
 export type LookupHeader = {
   type: LookupParameter;
-  variable: estree.Variable | null;
+  variable: estree.Variable;
 };
 
 export type PrivateHeader = {
   type: PrivateParameter;
-  key: estree.PrivateKey | null;
-};
-
-export type ParameterHeader = StraightHeader | LookupHeader | PrivateHeader;
-
-// Static | Dynamic //
-
-export type StaticLookupHeader = LookupHeader & {
-  variable: estree.Variable;
-};
-
-export type DynamicLookupHeader = LookupHeader & {
-  variable: null;
-};
-
-export type StaticPrivateHeader = PrivateHeader & {
   key: estree.PrivateKey;
 };
 
-export type DynamicPrivateHeader = PrivateHeader & {
-  key: null;
-};
+export type ParameterHeader = StraightHeader | LookupHeader | PrivateHeader;
 
 ///////////////////
 // DeclareHeader //
@@ -83,17 +65,16 @@ export type DeepDeclareHeader = {
   variable: estree.Variable;
 };
 
-export type PrepareDeepDeclareHeader = {
-  type: "declare.sloppy";
-  kind: "var";
-  deep: false;
-  variable: null;
-};
+export type DeclareHeader = ShallowDeclareHeader | DeepDeclareHeader;
 
-export type DeclareHeader =
-  | ShallowDeclareHeader
-  | DeepDeclareHeader
-  | PrepareDeepDeclareHeader;
+////////////////
+// EvalHeader //
+////////////////
+
+export type EvalHeader = {
+  type: "eval";
+  mode: "strict" | "sloppy";
+};
 
 //////////////////
 // ModuleHeader //
@@ -131,8 +112,7 @@ export type ModuleHeader = ImportHeader | ExportHeader | AggregateHeader;
 ////////////
 
 export type Header =
+  | EvalHeader
   | DeclareHeader
   | ModuleHeader
-  | ParameterHeader
-  | LookupHeader
-  | PrivateHeader;
+  | ParameterHeader;
