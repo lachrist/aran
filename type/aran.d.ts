@@ -1,5 +1,12 @@
 import { Header } from "../lib/header";
 
+export type ProgramKind =
+  | "script"
+  | "module"
+  | "global-eval"
+  | "local-eval"
+  | "aran-eval";
+
 export type Atom = {
   Label: string;
   Variable: string;
@@ -143,7 +150,7 @@ export type Parameter =
 
 export type Program<A extends Atom> = {
   type: "Program";
-  kind: "script" | "module" | "global-eval" | "local-eval" | "aran-eval";
+  kind: ProgramKind;
   mode: "strict" | "sloppy";
   head: Header[];
   body: ClosureBlock<A>;

@@ -1,8 +1,6 @@
-import { Header } from "../lib/header.js";
-import { Context } from "../lib/context";
+import type { Header } from "../lib/header.d.ts";
 import type { InternalLocalEvalContext } from "../lib/context.js";
-
-export type ProgramKind = Context["source"];
+import type { ProgramKind } from "./aran.d.ts";
 
 export type BranchKind = "conditional" | "if" | "while";
 
