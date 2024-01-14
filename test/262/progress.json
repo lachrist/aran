@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 26767,
-  "target": "test/intl402/fallback-locales-are-supported.js"
+  "index": 27387,
+  "target": "test/language/computed-property-names/object/method/super.js"
 }
