@@ -6,13 +6,12 @@ const { console, Error } = globalThis;
 
 export const AranTypeError = class AranTypeError extends Error {
   /**
-   * @param {string} message
    * @param {never} data
    */
-  constructor(message, data) {
-    console.log(`AranTypeError >> ${message}`);
+  constructor(/** @type {never} */ data) {
+    console.log("AranTypeError");
     console.dir(data);
-    super(message);
+    super("aran-type-error");
   }
 };
 

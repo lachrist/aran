@@ -143,7 +143,7 @@ export const runTestCaseInner = async ({
       catchNegative(error, "parse");
     }
   } else {
-    throw new AranTypeError("invalid source kind", source2.kind);
+    throw new AranTypeError(source2.kind);
   }
   await done;
   if (negative !== null && !caught) {

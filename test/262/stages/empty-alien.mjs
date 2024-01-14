@@ -1,4 +1,4 @@
-import { parse } from "acorn";
+import { parse as parseAcorn } from "acorn";
 import { generate } from "astring";
 import { instrument, setup } from "../../../lib/index.mjs";
 import { readFile } from "node:fs/promises";
@@ -6,10 +6,20 @@ import { cwd } from "node:process";
 import { fileURLToPath } from "node:url";
 import { relative } from "node:path";
 import { AranTypeError } from "../error.mjs";
+import { fromOutcome } from "../outcome.mjs";
 
 /* eslint-disable local/strict-console */
-const { String, Map, RegExp, Object, JSON, URL, console, setTimeout } =
-  globalThis;
+const {
+  String,
+  Map,
+  RegExp,
+  Object,
+  JSON,
+  URL,
+  console,
+  setTimeout,
+  SyntaxError,
+} = globalThis;
 /* eslint-enable local/strict-console */
 
 /**
@@ -68,7 +78,7 @@ const compileMatcher = (items) => {
     } else if (isPatternMatcherItem(item)) {
       groups.push([new RegExp(item.pattern, "u"), item.flaky]);
     } else {
-      throw new AranTypeError("invalid item", item);
+      throw new AranTypeError(item);
     }
   }
   return ({ target, error }) => {
@@ -156,6 +166,42 @@ const warn = (guard, root) => {
   return root;
 };
 
+/**
+ * @type {(
+ *   code: string,
+ *   kind: "script" | "module",
+ * ) => import("../outcome").Outcome<estree.Program, string>}
+ */
+export const parse = (code, kind) => {
+  try {
+    return {
+      type: "success",
+      data: /** @type {estree.Program} */ (
+        parseAcorn(code, {
+          ecmaVersion: "latest",
+          sourceType: kind,
+          checkPrivateFields: false,
+        })
+      ),
+    };
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "message" in error &&
+      typeof error.message === "string" &&
+      error instanceof SyntaxError
+    ) {
+      return {
+        type: "failure",
+        data: error.message,
+      };
+    } else {
+      throw error;
+    }
+  }
+};
+
 /** @type {test262.Stage} */
 export default {
   requirement: ["identity", "parsing"],
@@ -200,72 +246,72 @@ export default {
           __proto__: null,
           value: /** @type {import("./empty-alien").Advice} */ ({
             "__proto__": null,
-            "eval.before": (content1, context, location) => {
-              counter += 1;
-              const { content } = record({
-                kind: "script",
-                url: new URL(`eval:///${counter}`),
-                content: generate(
-                  warn(
-                    warning === "console",
-                    instrument(
-                      {
-                        root: /** @type {estree.Program} */ (
-                          /** @type {unknown} */ (
-                            parse(String(content1), {
-                              ecmaVersion: "latest",
-                              sourceType: "script",
-                              checkPrivateFields: false,
-                            })
-                          )
+            "eval.before": (content, context, location) =>
+              fromOutcome(
+                parse(String(content), "script"),
+                (root) => {
+                  counter += 1;
+                  const { content } = record({
+                    kind: "script",
+                    url: new URL(`eval:///${counter}`),
+                    content: generate(
+                      warn(
+                        warning === "console",
+                        instrument(
+                          {
+                            root,
+                            base: /** @type {import("./empty-alien").Base} */ (
+                              /** @type {string} */ (location)
+                            ),
+                          },
+                          context,
+                          config,
                         ),
-                        base: /** @type {import("./empty-alien").Base} */ (
-                          /** @type {string} */ (location)
-                        ),
-                      },
-                      context,
-                      config,
+                      ),
                     ),
-                  ),
-                ),
-              });
-              return content;
-            },
+                  });
+                  return content;
+                },
+                (message) =>
+                  `throw new globalThis.SyntaxError(${JSON.stringify(
+                    message,
+                  )})`,
+              ),
           }),
           writable: false,
           enumerable: false,
           configurable: false,
         },
       },
-      instrument: ({ kind, url, content: content1 }) =>
-        record({
-          kind,
-          url,
-          content: generate(
-            warn(
-              warning === "console",
-              instrument(
-                {
-                  root: /** @type {estree.Program} */ (
-                    /** @type {unknown} */ (
-                      parse(content1, {
-                        ecmaVersion: "latest",
-                        sourceType: kind,
-                      })
-                    )
+      instrument: ({ kind, url, content }) =>
+        fromOutcome(
+          parse(content, kind),
+          (root) =>
+            record({
+              kind,
+              url,
+              content: generate(
+                warn(
+                  warning === "console",
+                  instrument(
+                    {
+                      root,
+                      base: /** @type {import("./empty-alien").Base} */ (
+                        url.protocol === "file:"
+                          ? relative(cwd(), fileURLToPath(url))
+                          : url.href
+                      ),
+                    },
+                    { source: kind, mode: "sloppy", scope: "alien" },
+                    config,
                   ),
-                  base: /** @type {import("./empty-alien").Base} */ (
-                    url.protocol === "file:"
-                      ? relative(cwd(), fileURLToPath(url))
-                      : url.href
-                  ),
-                },
-                { source: kind, mode: "sloppy", scope: "alien" },
-                config,
+                ),
               ),
-            ),
-          ),
-        }),
+            }),
+          (message) => {
+            throw SyntaxError(message);
+          },
+        ),
     };
   },
 };

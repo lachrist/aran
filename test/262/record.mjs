@@ -28,7 +28,7 @@ const getExtension = (kind) => {
       return "js";
     }
     default: {
-      throw new AranTypeError("invalid kind", kind);
+      throw new AranTypeError(kind);
     }
   }
 };
