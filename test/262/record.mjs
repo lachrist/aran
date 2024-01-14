@@ -3,7 +3,7 @@ import { format } from "./format.mjs";
 import { readdir, unlink } from "node:fs/promises";
 import { AranTypeError } from "./error.mjs";
 
-const { URL } = globalThis;
+const { URL, performance, Math } = globalThis;
 
 const directory = new URL("codebase/", import.meta.url);
 
@@ -34,24 +34,16 @@ const getExtension = (kind) => {
 };
 
 /**
- * @type {(
- *   character: string,
- * ) => string}
+ * @type {() => string}
  */
-const escapeCharacter = (character) =>
-  `$${character.charCodeAt(0).toString(16).padStart(4, "0")}`;
-
-/**
- * @type {(
- *   input: string,
- * ) => string}
- */
-const escapeBasename = (input) =>
-  input.replace(/[^_a-zA-Z0-9]/gu, escapeCharacter);
+const generateUniqueIdentifier = () =>
+  `${performance.now().toString(32)}.${Math.random()
+    .toString(32)
+    .substring(2)}`;
 
 /** @type {test262.Instrument} */
 export const record = ({ kind, url: url1, content: content1 }) => {
-  const basename = escapeBasename(url1.href);
+  const basename = generateUniqueIdentifier();
   const extension = getExtension(kind);
   const url2 = new URL(`${basename}.${extension}`, directory);
   const content2 = `// ${url1.href}\n${format(content1)}`;
