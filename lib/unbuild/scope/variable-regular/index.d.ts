@@ -1,5 +1,21 @@
+import { Hoist } from "../../query/hoist";
+
+export type ArgumentsHoist = {
+  type: "regular";
+  kind: "arguments";
+  variable: estree.Variable;
+};
+
+export type CalleeHoist = {
+  type: "regular";
+  kind: "callee";
+  variable: estree.Variable;
+};
+
+export type PseudoHoist = ArgumentsHoist | CalleeHoist;
+
 export type LifespanBinding = {
-  kind: "var" | "function";
+  kind: "var" | "function" | "arguments" | "callee";
   export: estree.Specifier[];
 };
 

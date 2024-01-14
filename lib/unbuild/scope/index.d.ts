@@ -67,7 +67,7 @@ export type PackScope = {
 export type InitializeOperation = {
   type: "initialize";
   mode: Mode;
-  kind: "let" | "const" | "function" | "class" | "var" | "val";
+  kind: "let" | "const" | "function" | "arguments" | "class" | "var" | "callee";
   variable: estree.Variable;
   right: Cache | null;
 };

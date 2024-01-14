@@ -133,7 +133,7 @@ const config = {
   global: GLOBAL,
   pointcut: ["eval.before"],
   advice: /** @type {estree.Variable} */ ("_ARAN_ADVICE_"),
-  intrinsic: null,
+  intrinsic: INTRINSIC,
   escape: /** @type {estree.Variable} */ ("_ARAN_ESCAPE_"),
   locate: (path, base) =>
     /** @type {import("./empty-alien").Location} */ (`${base}#${path}`),
