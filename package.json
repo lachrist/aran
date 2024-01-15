@@ -32,7 +32,8 @@
   ],
   "devDependencies": {
     "@babel/generator": "^7.22.15",
-    "@babel/parser": "^7.20.5",
+    "@babel/parser": "^7.23.6",
+    "@babel/types": "^7.23.6",
     "@bercow/core": "^0.2.0",
     "@bercow/eslint": "^0.1.0",
     "@bercow/link-adjacent": "^0.1.0",

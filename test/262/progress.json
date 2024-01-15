@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 27694,
-  "target": "test/language/eval-code/direct/new.target-fn.js"
+  "index": 27701,
+  "target": "test/language/eval-code/direct/non-string-object.js"
 }

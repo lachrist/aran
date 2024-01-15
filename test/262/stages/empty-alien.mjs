@@ -1,4 +1,5 @@
 import { parse as parseAcorn } from "acorn";
+import { parse as parseBabel } from "@babel/parser";
 import { generate } from "astring";
 import { instrument, setup } from "../../../lib/index.mjs";
 import { readFile } from "node:fs/promises";
@@ -169,35 +170,81 @@ const warn = (guard, root) => {
 /**
  * @type {(
  *   code: string,
- *   kind: "script" | "module",
+ *   kind: "script" | "module" | "local-eval",
  * ) => import("../outcome").Outcome<estree.Program, string>}
  */
 export const parse = (code, kind) => {
-  try {
-    return {
-      type: "success",
-      data: /** @type {estree.Program} */ (
-        parseAcorn(code, {
-          ecmaVersion: "latest",
-          sourceType: kind,
-          checkPrivateFields: false,
-        })
-      ),
-    };
-  } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "message" in error &&
-      typeof error.message === "string" &&
-      error instanceof SyntaxError
-    ) {
+  if (kind === "local-eval") {
+    try {
       return {
-        type: "failure",
-        data: error.message,
+        type: "success",
+        data: /** @type {estree.Program} */ (
+          /** @type {unknown} */ (
+            parseBabel(code, {
+              allowImportExportEverywhere: false,
+              allowAwaitOutsideFunction: false,
+              // @ts-ignore
+              allowNewTargetOutsideFunction: true,
+              allowReturnOutsideFunction: false,
+              allowSuperOutsideMethod: true,
+              allowUndeclaredExports: false,
+              attachComment: false,
+              annexb: true,
+              createImportExpressions: false,
+              createParenthesizedExpressions: false,
+              errorRecovery: false,
+              plugins: ["estree"],
+              sourceType: "script",
+              strictMode: false,
+              ranges: false,
+              tokens: false,
+            }).program
+          )
+        ),
       };
-    } else {
-      throw error;
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof error.message === "string" &&
+        error instanceof SyntaxError
+      ) {
+        return {
+          type: "failure",
+          data: error.message,
+        };
+      } else {
+        throw error;
+      }
+    }
+  } else {
+    try {
+      return {
+        type: "success",
+        data: /** @type {estree.Program} */ (
+          parseAcorn(code, {
+            ecmaVersion: "latest",
+            sourceType: kind,
+            checkPrivateFields: false,
+          })
+        ),
+      };
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof error.message === "string" &&
+        error instanceof SyntaxError
+      ) {
+        return {
+          type: "failure",
+          data: error.message,
+        };
+      } else {
+        throw error;
+      }
     }
   }
 };
@@ -248,7 +295,7 @@ export default {
             "__proto__": null,
             "eval.before": (content, context, location) =>
               fromOutcome(
-                parse(String(content), "script"),
+                parse(String(content), "local-eval"),
                 (root) => {
                   counter += 1;
                   const { content } = record({
