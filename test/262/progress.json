@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 27581,
-  "target": "test/language/eval-code/direct/block-decl-eval-source-is-strict-nostrict.js"
+  "index": 766,
+  "target": "test/annexB/language/function-code/if-decl-else-decl-a-func-skip-dft-param.js"
 }
