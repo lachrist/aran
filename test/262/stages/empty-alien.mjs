@@ -294,36 +294,38 @@ export default {
           value: /** @type {import("./empty-alien").Advice} */ ({
             "__proto__": null,
             "eval.before": (content, context, location) =>
-              fromOutcome(
-                parse(String(content), "local-eval"),
-                (root) => {
-                  counter += 1;
-                  const { content } = record({
-                    kind: "script",
-                    url: new URL(`eval:///${counter}`),
-                    content: generate(
-                      warn(
-                        warning === "console",
-                        instrument(
-                          {
-                            root,
-                            base: /** @type {import("./empty-alien").Base} */ (
-                              /** @type {string} */ (location)
+              typeof content === "string"
+                ? fromOutcome(
+                    parse(String(content), "local-eval"),
+                    (root) => {
+                      counter += 1;
+                      const { content } = record({
+                        kind: "script",
+                        url: new URL(`eval:///${counter}`),
+                        content: generate(
+                          warn(
+                            warning === "console",
+                            instrument(
+                              {
+                                root,
+                                base: /** @type {import("./empty-alien").Base} */ (
+                                  /** @type {string} */ (location)
+                                ),
+                              },
+                              context,
+                              config,
                             ),
-                          },
-                          context,
-                          config,
+                          ),
                         ),
-                      ),
-                    ),
-                  });
-                  return content;
-                },
-                (message) =>
-                  `throw new globalThis.SyntaxError(${JSON.stringify(
-                    message,
-                  )})`,
-              ),
+                      });
+                      return content;
+                    },
+                    (message) =>
+                      `throw new globalThis.SyntaxError(${JSON.stringify(
+                        message,
+                      )})`,
+                  )
+                : content,
           }),
           writable: false,
           enumerable: false,
