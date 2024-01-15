@@ -10,6 +10,6 @@ declare global {
     | number
     | string
     | Json[]
-    | { [key: string]: Json };
+    | { [key in string]?: Json };
   type Brand<T, B> = T & { [__brand]: B };
 }

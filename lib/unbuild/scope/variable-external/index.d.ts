@@ -14,5 +14,5 @@ export type ExternalBinding = LifespanExternalBinding | DeadzoneExternalBinding;
 
 export type ExternalFrame = {
   type: "external";
-  record: Record<estree.Variable, ExternalBinding>;
+  record: { [k in estree.Variable]?: ExternalBinding };
 };

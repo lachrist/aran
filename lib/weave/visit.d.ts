@@ -6,7 +6,7 @@ import { Header } from "../header.js";
 import { Program } from "../../type/aran.js";
 
 export type Options<B, L> = {
-  evals: Record<OriginPath, InternalLocalEvalContext>;
+  evals: { [k in OriginPath]?: InternalLocalEvalContext };
   base: B;
   pointcut: Pointcut<L>;
   locate: Locate<B, L>;

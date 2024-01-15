@@ -34,5 +34,5 @@ export type RegularBinding = ImportBinding | LifespanBinding | DeadzoneBinding;
 
 export type RegularFrame = {
   type: "regular";
-  record: Record<estree.Variable, RegularBinding>;
+  record: { [k in estree.Variable]?: RegularBinding };
 };

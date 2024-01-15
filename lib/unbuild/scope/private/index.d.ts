@@ -26,7 +26,7 @@ export type PrivateFrame = {
   type: "private";
   singleton: WritableCache;
   collection: Cache;
-  record: Record<estree.PrivateKey, DryPrivateBinding>;
+  record: { [k in estree.PrivateKey]?: DryPrivateBinding };
 };
 
 // Singleton //

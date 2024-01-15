@@ -14,5 +14,5 @@ export type FakeBinding = {
 
 export type FakeFrame = {
   type: "fake";
-  record: Record<estree.Variable, FakeBinding>;
+  record: { [k in estree.Variable]?: FakeBinding };
 };

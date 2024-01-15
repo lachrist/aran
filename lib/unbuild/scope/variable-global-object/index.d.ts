@@ -7,5 +7,5 @@ export type GlobalObjectBinding = {
 export type GlobalObjectFrame = {
   type: "global-object";
   dynamic: Cache;
-  static: Record<estree.Variable, GlobalObjectBinding>;
+  static: { [k in estree.Variable]?: GlobalObjectBinding };
 };

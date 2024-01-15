@@ -8,6 +8,6 @@ export type EvalFrame = {
   type: "eval";
   record: {
     dynamic: Cache;
-    static: Record<estree.Variable, EvalBinding>;
+    static: { [k in estree.Variable]?: EvalBinding };
   };
 };
