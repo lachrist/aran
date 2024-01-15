@@ -1,6 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { format } from "./format.mjs";
 import { readdir, unlink } from "node:fs/promises";
+import { stdout } from "node:process";
 import { AranTypeError } from "./error.mjs";
 
 const { URL, performance, Math } = globalThis;
@@ -46,6 +47,7 @@ export const record = ({ kind, url: url1, content: content1 }) => {
   const basename = generateUniqueIdentifier();
   const extension = getExtension(kind);
   const url2 = new URL(`${basename}.${extension}`, directory);
+  stdout.write(`RECORD >> ${url2.href}\n`);
   const content2 = `// ${url1.href}\n${format(content1)}`;
   writeFileSync(url2, content2, "utf8");
   return { kind, url: url2, content: content2 };
