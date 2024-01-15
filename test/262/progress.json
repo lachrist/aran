@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 766,
-  "target": "test/annexB/language/function-code/if-decl-else-decl-a-func-skip-dft-param.js"
+  "index": 27477,
+  "target": "test/language/eval-code/direct/arrow-fn-body-cntns-arguments-func-decl-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js"
 }
