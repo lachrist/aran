@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 10622,
-  "target": "test/built-ins/Object/fromEntries/uses-keys-not-iterator.js"
+  "index": 27477,
+  "target": "test/language/eval-code/direct/arrow-fn-body-cntns-arguments-func-decl-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js"
 }
