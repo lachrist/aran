@@ -1,13 +1,10 @@
 import { Cache } from "../../cache";
 
-export type EvalBinding = {
-  kind: "var" | "function";
-};
+// It would be tempting to add a static record here to improve performance.
+// The problem is that variables defined in sloppy direct eval code can deleted.
+// eval("delete x; var x = 123;") >> true
 
 export type EvalFrame = {
   type: "eval";
-  record: {
-    dynamic: Cache;
-    static: { [k in estree.Variable]?: EvalBinding };
-  };
+  record: Cache;
 };

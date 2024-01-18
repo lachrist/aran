@@ -13,58 +13,115 @@ export type StraightParameter =
   | "import.meta"
   | "import.dynamic";
 
+export type PrivateParameter = "private.has" | "private.get" | "private.set";
+
 export type LookupParameter =
   | "read.strict"
-  | "read.sloppy"
   | "write.strict"
-  | "write.sloppy"
   | "typeof.strict"
+  | "read.sloppy"
+  | "write.sloppy"
   | "typeof.sloppy"
   | "discard.sloppy";
 
-export type PrivateParameter = "private.has" | "private.get" | "private.set";
-
-// Header //
-
 export type HeaderParameter =
   | StraightParameter
-  | LookupParameter
-  | PrivateParameter;
+  | PrivateParameter
+  | LookupParameter;
 
 export type StraightHeader = {
   type: StraightParameter;
+  mode: null;
 };
 
-export type LookupHeader = {
-  type: LookupParameter;
-  variable: estree.Variable;
-};
-
-export type PrivateHeader = {
+export type StaticPrivateHeader = {
   type: PrivateParameter;
+  mode: "strict";
   key: estree.PrivateKey;
 };
 
-export type ParameterHeader = StraightHeader | LookupHeader | PrivateHeader;
+export type DynamicPrivateHeader = {
+  type: PrivateParameter;
+  mode: "strict";
+  key: null;
+};
 
-///////////////////
-// DeclareHeader //
-///////////////////
+export type PrivateHeader = StaticPrivateHeader | DynamicPrivateHeader;
 
-export type DeclareHeader = {
-  type: "declare.strict" | "declare.sloppy";
+export type StaticLookupHeader =
+  | {
+      type: "read";
+      mode: "strict" | "sloppy";
+      variable: estree.Variable;
+    }
+  | {
+      type: "write";
+      mode: "strict" | "sloppy";
+      variable: estree.Variable;
+    }
+  | {
+      type: "typeof";
+      mode: "strict" | "sloppy";
+      variable: estree.Variable;
+    }
+  | {
+      type: "discard";
+      mode: "sloppy";
+      variable: estree.Variable;
+    };
+
+export type DynamicLookupHeader =
+  | {
+      type: "read";
+      mode: "strict" | "sloppy";
+      variable: null;
+    }
+  | {
+      type: "write";
+      mode: "strict" | "sloppy";
+      variable: null;
+    }
+  | {
+      type: "typeof";
+      mode: "strict" | "sloppy";
+      variable: null;
+    }
+  | {
+      type: "discard";
+      mode: "sloppy";
+      variable: null;
+    };
+
+export type LookupHeader = StaticLookupHeader | DynamicLookupHeader;
+
+export type EarlyStaticDeclareHeader = {
+  type: "declare";
+  mode: "strict" | "sloppy";
   kind: "let" | "var";
   variable: estree.Variable;
 };
 
-////////////////
-// EvalHeader //
-////////////////
-
-export type EvalHeader = {
-  type: "eval";
-  mode: "strict" | "sloppy";
+export type LateStaticDeclareHeader = {
+  type: "declare";
+  mode: "sloppy";
+  kind: "eval";
+  variable: estree.Variable;
 };
+
+export type StaticDeclareHeader =
+  | EarlyStaticDeclareHeader
+  | LateStaticDeclareHeader;
+
+export type DynamicDeclareHeader = {
+  type: "declare";
+  mode: "sloppy";
+  kind: "eval";
+  variable: null;
+};
+
+export type DeclareHeader = StaticDeclareHeader | DynamicDeclareHeader;
+
+export type ScopeHeader = DeclareHeader | LookupHeader;
 
 //////////////////
 // ModuleHeader //
@@ -72,24 +129,28 @@ export type EvalHeader = {
 
 export type ImportHeader = {
   type: "import";
+  mode: "strict";
   source: estree.Source;
   import: estree.Specifier | null;
 };
 
 export type ExportHeader = {
   type: "export";
+  mode: "strict";
   export: estree.Specifier;
 };
 
 export type AggregateHeader =
   | {
       type: "aggregate";
+      mode: "strict";
       source: estree.Source;
       import: estree.Specifier | null;
       export: estree.Specifier;
     }
   | {
       type: "aggregate";
+      mode: "strict";
       source: estree.Source;
       import: null;
       export: null;
@@ -102,7 +163,7 @@ export type ModuleHeader = ImportHeader | ExportHeader | AggregateHeader;
 ////////////
 
 export type Header =
-  | EvalHeader
-  | DeclareHeader
   | ModuleHeader
-  | ParameterHeader;
+  | PrivateHeader
+  | ScopeHeader
+  | StraightHeader;

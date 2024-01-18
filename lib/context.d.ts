@@ -58,3 +58,15 @@ export type GlobalContext = ScriptContext | ModuleContext | GlobalEvalContext;
 export type RootContext = ExternalLocalEvalContext | GlobalContext;
 
 export type NodeContext = InternalLocalEvalContext;
+
+//  External | Internal //
+
+export type ExternalRootContext =
+  | ExternalLocalEvalContext
+  | (GlobalContext & {
+      scope: "alien";
+    });
+
+export type InternalRootContext = GlobalContext & {
+  scope: "reify";
+};

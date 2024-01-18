@@ -189,7 +189,7 @@ export const parse = (code, kind) => {
               allowSuperOutsideMethod: true,
               allowUndeclaredExports: false,
               attachComment: false,
-              annexb: true,
+              annexB: true,
               createImportExpressions: false,
               createParenthesizedExpressions: false,
               errorRecovery: false,

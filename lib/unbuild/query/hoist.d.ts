@@ -1,15 +1,15 @@
 export type RegularHoist = {
   type: "regular";
-  kind: "let" | "const" | "class" | "var" | "function";
+  kind: "let" | "const" | "var";
   variable: estree.Variable;
 };
 
 export type DeadzoneHoist = RegularHoist & {
-  kind: "let" | "const" | "class";
+  kind: "let" | "const";
 };
 
 export type LifespanHoist = RegularHoist & {
-  kind: "var" | "function";
+  kind: "var";
 };
 
 export type ImportHoist = {

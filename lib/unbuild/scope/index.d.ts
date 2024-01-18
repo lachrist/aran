@@ -3,17 +3,15 @@ import { Cache } from "../cache";
 import { RegularFrame } from "./variable-regular";
 import { ClosureFrame } from "./closure";
 import { EvalFrame } from "./variable-eval";
-import { ExternalFrame } from "./variable-external";
 import { FakeFrame } from "./variable-fake";
-import { GlobalObjectFrame } from "./variable-global-object";
-import { GlobalRecordFrame } from "./variable-global-record";
 import { ModeFrame } from "./mode";
 import { PrivateFrame } from "./private";
 import { RootFrame } from "./root";
 import { TemplateFrame } from "./template";
 import { WithFrame } from "./variable-with";
 import { CatchFrame } from "./catch";
-import { RootContext } from "../../context";
+
+export { RootFrame } from "./root";
 
 type Mode = "strict" | "sloppy";
 
@@ -26,10 +24,7 @@ export type NodeFrame =
   | ClosureFrame
   | CatchFrame
   | EvalFrame
-  | ExternalFrame
   | FakeFrame
-  | GlobalObjectFrame
-  | GlobalRecordFrame
   | ModeFrame
   | PrivateFrame
   | TemplateFrame
@@ -53,16 +48,20 @@ export type RootScope = {
 
 export type Scope = NodeScope | RootScope;
 
-export type PackScope = {
-  context: RootContext;
-  frames: NodeFrame[];
-};
+export type PackScope = [RootFrame, ...NodeFrame[]];
 
 ///////////////
 // Operation //
 ///////////////
 
 // Variable //
+
+export type DeclareOperation = {
+  type: "declare";
+  mode: Mode;
+  kind: "eval";
+  variable: estree.Variable;
+};
 
 export type InitializeOperation = {
   type: "initialize";
@@ -102,7 +101,10 @@ export type VariableLoadOperation =
   | TypeofOperation
   | DiscardOperation;
 
-export type VariableSaveOperation = InitializeOperation | WriteOperation;
+export type VariableSaveOperation =
+  | InitializeOperation
+  | WriteOperation
+  | DeclareOperation;
 
 export type VariableOperation = VariableLoadOperation | VariableSaveOperation;
 
