@@ -2,7 +2,7 @@ import { Warning } from "./warning";
 import { Header } from "../header";
 import { EarlyError } from "./early-error";
 import { Condition } from "./condition";
-import { InternalLocalEvalContext } from "../context";
+import { Context } from "../context";
 import { Variable, BaseVariable, MetaVariable } from "./variable";
 
 export type WarningPrelude = {
@@ -12,7 +12,7 @@ export type WarningPrelude = {
 
 export type ContextPrelude = {
   type: "context";
-  data: [unbuild.Path, InternalLocalEvalContext];
+  data: [unbuild.Path, Context];
 };
 
 export type HeaderPrelude = {

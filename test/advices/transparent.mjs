@@ -10,10 +10,10 @@ const {
  * >}
  */
 export default {
-  "program.enter": (_kind, _mode, _links, frame, _location) => frame,
-  "program.completion": (_kind, value, _location) => value,
-  "program.failure": (_kind, value, _location) => value,
-  "program.leave": (_kind, _location) => {},
+  "program.enter": (_sort, _head, frame, _location) => frame,
+  "program.completion": (_sort, value, _location) => value,
+  "program.failure": (_sort, value, _location) => value,
+  "program.leave": (_sort, _location) => {},
   "closure.enter": (_kind, _links, frame, _location) => frame,
   "closure.failure": (_kind, value, _location) => value,
   "closure.completion": (_kind, value, _location) => value,

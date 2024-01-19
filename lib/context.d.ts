@@ -1,72 +1,29 @@
+import { Ancestry } from "./ancestery";
 import { PackMeta } from "./unbuild/meta";
 import { PackScope } from "./unbuild/scope";
 
-export type ScriptContext = {
-  source: "script";
-  mode: "strict" | "sloppy";
-  scope: "reify" | "alien";
+export type GlobalContext = {
+  type: "global";
 };
 
-export type ModuleContext = {
-  source: "module";
-  mode: "strict" | "sloppy";
-  scope: "reify" | "alien";
-};
-
-export type GlobalEvalContext = {
-  source: "global-eval";
-  mode: "strict" | "sloppy";
-  scope: "reify" | "alien";
-};
-
-export type ExternalLocalEvalParameter =
-  | "new.target"
-  | "import.meta"
-  | "super.call"
-  | "super.get"
-  | "super.set";
-
-export type ExternalLocalEvalContext = {
-  source: "local-eval";
-  mode: "strict" | "sloppy";
-  scope: ExternalLocalEvalParameter[];
-};
-
-export type InternalLocalEvalContext = {
-  source: "aran-eval";
-  mode: "strict" | "sloppy";
+export type InternalLocalContext = {
+  type: "internal-local";
   meta: PackMeta;
   scope: PackScope;
 };
 
-export type LocalEvalContext =
-  | ExternalLocalEvalContext
-  | InternalLocalEvalContext;
-
-export type EvalContext = GlobalEvalContext | LocalEvalContext;
-
-type Context = ScriptContext | ModuleContext | EvalContext;
-
-// Global | Local //
-
-export type LocalContext = InternalLocalEvalContext | ExternalLocalEvalContext;
-
-export type GlobalContext = ScriptContext | ModuleContext | GlobalEvalContext;
-
-// Root | Node //
-
-export type RootContext = ExternalLocalEvalContext | GlobalContext;
-
-export type NodeContext = InternalLocalEvalContext;
-
-//  External | Internal //
-
-export type ExternalRootContext =
-  | ExternalLocalEvalContext
-  | (GlobalContext & {
-      scope: "alien";
-    });
-
-export type InternalRootContext = GlobalContext & {
-  scope: "reify";
+export type ExternalLocalContext = {
+  type: "external-local";
+  mode: "strict" | "sloppy";
+  program: "module" | "script";
+  closure:
+    | "none"
+    | "function"
+    | "method"
+    | "constructor"
+    | "derived-constructor";
 };
+
+export type LocalContext = InternalLocalContext | ExternalLocalContext;
+
+export type Context = GlobalContext | LocalContext;

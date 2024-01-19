@@ -18,18 +18,17 @@ export default (code, kind) =>
   generate(
     instrument(
       {
+        kind,
         root: /** @type {estree.Program} */ (
           /** @type {unknown} */ (
             parse(code, { ecmaVersion: 2023, sourceType: kind })
           )
         ),
         base: "main",
+        context: {
+          type: "global",
+        },
       },
-      {
-        source: kind,
-        mode: "sloppy",
-        scope: "alien",
-      },
-      { pointcut: false },
+      { pointcut: false, reify_global: false },
     ),
   );

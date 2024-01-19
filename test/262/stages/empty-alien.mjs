@@ -141,13 +141,14 @@ const INTRINSIC = /** @type {estree.Variable} */ ("_ARAN_INTRINSIC_");
  * >}
  */
 const config = {
-  global: GLOBAL,
   pointcut: ["eval.before"],
-  advice: /** @type {estree.Variable} */ ("_ARAN_ADVICE_"),
-  intrinsic: INTRINSIC,
-  escape: /** @type {estree.Variable} */ ("_ARAN_ESCAPE_"),
   locate: (path, base) =>
     /** @type {import("./empty-alien").Location} */ (`${base}#${path}`),
+  global_variable: GLOBAL,
+  advice_variable: /** @type {estree.Variable} */ ("_ARAN_ADVICE_"),
+  intrinsic_variable: INTRINSIC,
+  escape_prefix: /** @type {estree.Variable} */ ("_ARAN_ESCAPE_"),
+  reify_global: false,
 };
 
 /**
@@ -267,8 +268,8 @@ export default {
       setup: [
         generate(
           setup({
-            global: GLOBAL,
-            intrinsic: INTRINSIC,
+            global_variable: GLOBAL,
+            intrinsic_variable: INTRINSIC,
           }),
         ),
         "var __ARAN_EXEC__ = $262.runScript;",
@@ -307,12 +308,13 @@ export default {
                             warning === "console",
                             instrument(
                               {
+                                kind: "eval",
                                 root,
                                 base: /** @type {import("./empty-alien").Base} */ (
                                   /** @type {string} */ (location)
                                 ),
+                                context,
                               },
-                              context,
                               config,
                             ),
                           ),
@@ -344,14 +346,17 @@ export default {
                   warning === "console",
                   instrument(
                     {
+                      kind,
                       root,
                       base: /** @type {import("./empty-alien").Base} */ (
                         url.protocol === "file:"
                           ? relative(cwd(), fileURLToPath(url))
                           : url.href
                       ),
+                      context: {
+                        type: "global",
+                      },
                     },
-                    { source: kind, mode: "sloppy", scope: "alien" },
                     config,
                   ),
                 ),

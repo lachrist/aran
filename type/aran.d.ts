@@ -1,4 +1,5 @@
 import { Header } from "../lib/header";
+import { Sort } from "../lib/sort";
 
 export type ProgramKind =
   | "script"
@@ -150,8 +151,7 @@ export type Parameter =
 
 export type Program<A extends Atom> = {
   type: "Program";
-  kind: ProgramKind;
-  mode: "strict" | "sloppy";
+  sort: Sort;
   head: Header[];
   body: ClosureBlock<A>;
   tag: A["Tag"];

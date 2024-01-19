@@ -1,6 +1,6 @@
 import type { Header } from "../lib/header.d.ts";
-import type { InternalLocalEvalContext } from "../lib/context.js";
-import type { ProgramKind } from "./aran.d.ts";
+import type { InternalLocalContext } from "../lib/context.d.js";
+import { Sort } from "../lib/sort.js";
 
 export type BranchKind = "conditional" | "if" | "while";
 
@@ -53,27 +53,26 @@ type Generic = {
 };
 
 type GenericProgramEnterAdvice<G extends Generic> = (
-  kind: ProgramKind,
-  mode: Mode,
+  sort: Sort,
   head: Header[],
   record: { [key in Variable]?: G["Value"] },
   location: G["Location"],
 ) => G["RecordResult"];
 
 type GenericProgramCompletionAdvice<G extends Generic> = (
-  kind: ProgramKind,
+  sort: Sort,
   value: G["Value"],
   location: G["Location"],
 ) => G["ValueResult"];
 
 type GenericProgramFailureAdvice<G extends Generic> = (
-  kind: ProgramKind,
+  sort: Sort,
   error: G["Value"],
   location: G["Location"],
 ) => G["ValueResult"];
 
 type GenericProgramLeaveAdvice<G extends Generic> = (
-  kind: ProgramKind,
+  sort: Sort,
   location: G["Location"],
 ) => G["VoidResult"];
 
@@ -197,7 +196,7 @@ type GenericConditionalAfterAdvice<G extends Generic> = (
 
 type GenericEvalBeforeAdvice<G extends Generic> = (
   value: G["Value"],
-  context: InternalLocalEvalContext,
+  context: InternalLocalContext,
   location: G["Location"],
 ) => G["ValueResult"];
 
@@ -566,8 +565,7 @@ type Point<V, L> =
   // Program //
   | {
       type: "program.enter";
-      kind: ProgramKind;
-      mode: Mode;
+      sort: Sort;
       head: Header[];
       record: {
         [key in Variable]: V;
@@ -576,19 +574,19 @@ type Point<V, L> =
     }
   | {
       type: "program.completion";
-      kind: ProgramKind;
+      sort: Sort;
       value: V;
       location: L;
     }
   | {
       type: "program.failure";
-      kind: ProgramKind;
+      sort: Sort;
       value: V;
       location: L;
     }
   | {
       type: "program.leave";
-      kind: ProgramKind;
+      sort: Sort;
       location: L;
     }
   // closure //
@@ -754,7 +752,7 @@ type Point<V, L> =
   | {
       type: "eval.before";
       value: V;
-      context: InternalLocalEvalContext;
+      context: InternalLocalContext;
       location: L;
     }
   | {

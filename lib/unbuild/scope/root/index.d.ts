@@ -1,4 +1,4 @@
-import { ExternalRootContext, InternalRootContext } from "../../../context";
+import { ExternalLocalEvalSort, GlobalSort, RootSort } from "../../../sort";
 import { WritableCache } from "../../cache";
 
 export type Declare = {
@@ -46,7 +46,7 @@ export type AlienBinding = LifespanBinding | DeadzoneBinding<WritableCache>;
 
 export type ReifyRootFrame = {
   type: "root-reify";
-  context: InternalRootContext;
+  sort: GlobalSort;
   record: {
     [k in estree.Variable]?: ReifyBinding;
   };
@@ -54,7 +54,7 @@ export type ReifyRootFrame = {
 
 export type AlienRootFrame = {
   type: "root-alien";
-  context: ExternalRootContext;
+  sort: RootSort;
   record: {
     [k in estree.Variable]?: AlienBinding;
   };
