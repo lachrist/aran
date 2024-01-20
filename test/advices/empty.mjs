@@ -19,10 +19,8 @@ export default (code, kind) =>
     instrument(
       {
         kind,
-        root: /** @type {estree.Program} */ (
-          /** @type {unknown} */ (
-            parse(code, { ecmaVersion: 2023, sourceType: kind })
-          )
+        root: /** @type {any} */ (
+          parse(code, { ecmaVersion: 2023, sourceType: kind })
         ),
         base: "main",
         context: {

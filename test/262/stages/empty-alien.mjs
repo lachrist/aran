@@ -1,5 +1,3 @@
-import { parse as parseAcorn } from "acorn";
-import { parse as parseBabel } from "@babel/parser";
 import { generate } from "astring";
 import { instrument, setup } from "../../../lib/index.mjs";
 import { readFile } from "node:fs/promises";
@@ -8,19 +6,11 @@ import { fileURLToPath } from "node:url";
 import { relative } from "node:path";
 import { AranTypeError } from "../error.mjs";
 import { fromOutcome } from "../outcome.mjs";
+import { parseGlobal, parseLocal } from "../parse.mjs";
 
 /* eslint-disable local/strict-console */
-const {
-  String,
-  Map,
-  RegExp,
-  Object,
-  JSON,
-  URL,
-  console,
-  setTimeout,
-  SyntaxError,
-} = globalThis;
+const { Map, RegExp, Object, JSON, URL, console, setTimeout, SyntaxError } =
+  globalThis;
 /* eslint-enable local/strict-console */
 
 /**
@@ -168,88 +158,6 @@ const warn = (guard, root) => {
   return root;
 };
 
-/**
- * @type {(
- *   code: string,
- *   kind: "script" | "module" | "local-eval",
- * ) => import("../outcome").Outcome<estree.Program, string>}
- */
-export const parse = (code, kind) => {
-  if (kind === "local-eval") {
-    try {
-      return {
-        type: "success",
-        data: /** @type {estree.Program} */ (
-          /** @type {unknown} */ (
-            parseBabel(code, {
-              allowImportExportEverywhere: false,
-              allowAwaitOutsideFunction: false,
-              // @ts-ignore
-              allowNewTargetOutsideFunction: true,
-              allowReturnOutsideFunction: false,
-              allowSuperOutsideMethod: true,
-              allowUndeclaredExports: false,
-              attachComment: false,
-              annexB: true,
-              createImportExpressions: false,
-              createParenthesizedExpressions: false,
-              errorRecovery: false,
-              plugins: ["estree"],
-              sourceType: "script",
-              strictMode: false,
-              ranges: false,
-              tokens: false,
-            }).program
-          )
-        ),
-      };
-    } catch (error) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "message" in error &&
-        typeof error.message === "string" &&
-        error instanceof SyntaxError
-      ) {
-        return {
-          type: "failure",
-          data: error.message,
-        };
-      } else {
-        throw error;
-      }
-    }
-  } else {
-    try {
-      return {
-        type: "success",
-        data: /** @type {estree.Program} */ (
-          parseAcorn(code, {
-            ecmaVersion: "latest",
-            sourceType: kind,
-            checkPrivateFields: false,
-          })
-        ),
-      };
-    } catch (error) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "message" in error &&
-        typeof error.message === "string" &&
-        error instanceof SyntaxError
-      ) {
-        return {
-          type: "failure",
-          data: error.message,
-        };
-      } else {
-        throw error;
-      }
-    }
-  }
-};
-
 /** @type {test262.Stage} */
 export default {
   requirement: ["identity", "parsing"],
@@ -297,8 +205,14 @@ export default {
             "eval.before": (content, context, location) =>
               typeof content === "string"
                 ? fromOutcome(
-                    parse(String(content), "local-eval"),
-                    (root) => {
+                    parseLocal(
+                      content,
+                      /** @type {import("./empty-alien").Base} */ (
+                        /** @type {string} */ (location)
+                      ),
+                      context,
+                    ),
+                    (program) => {
                       counter += 1;
                       const { content } = record({
                         kind: "script",
@@ -306,17 +220,7 @@ export default {
                         content: generate(
                           warn(
                             warning === "console",
-                            instrument(
-                              {
-                                kind: "eval",
-                                root,
-                                base: /** @type {import("./empty-alien").Base} */ (
-                                  /** @type {string} */ (location)
-                                ),
-                                context,
-                              },
-                              config,
-                            ),
+                            instrument(program, config),
                           ),
                         ),
                       });
@@ -336,30 +240,21 @@ export default {
       },
       instrument: ({ kind, url, content }) =>
         fromOutcome(
-          parse(content, kind),
-          (root) =>
+          parseGlobal(
+            content,
+            /** @type {import("./empty-alien").Base} */ (
+              url.protocol === "file:"
+                ? relative(cwd(), fileURLToPath(url))
+                : url.href
+            ),
+            kind,
+          ),
+          (program) =>
             record({
               kind,
               url,
               content: generate(
-                warn(
-                  warning === "console",
-                  instrument(
-                    {
-                      kind,
-                      root,
-                      base: /** @type {import("./empty-alien").Base} */ (
-                        url.protocol === "file:"
-                          ? relative(cwd(), fileURLToPath(url))
-                          : url.href
-                      ),
-                      context: {
-                        type: "global",
-                      },
-                    },
-                    config,
-                  ),
-                ),
+                warn(warning === "console", instrument(program, config)),
               ),
             }),
           (message) => {

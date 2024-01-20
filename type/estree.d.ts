@@ -2,6 +2,14 @@ export type VariableKind = "var" | "function" | "let" | "const" | "class";
 
 export type Variable = Brand<string, "estree.Variable">;
 
+export type ModuleProgram = estree.Program & {
+  sourceType: "module";
+};
+
+export type ScriptProgram = estree.Program & {
+  sourceType: "script";
+};
+
 export type Label = Brand<string, "estree.Label">;
 
 export type Specifier = Brand<string, "estree.Specifier">;

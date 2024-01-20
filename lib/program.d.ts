@@ -7,35 +7,35 @@ import {
 
 export type ModuleProgram<B> = {
   kind: "module";
-  root: estree.Program;
+  root: estree.ModuleProgram;
   base: B;
   context: GlobalContext;
 };
 
 export type ScriptProgram<B> = {
   kind: "script";
-  root: estree.Program;
+  root: estree.ScriptProgram;
   base: B;
   context: GlobalContext;
 };
 
 export type GlobalEvalProgram<B> = {
   kind: "eval";
-  root: estree.Program;
+  root: estree.ScriptProgram;
   base: B;
   context: GlobalContext;
 };
 
 export type InternalLocalEvalProgram<B> = {
   kind: "eval";
-  root: estree.Program;
+  root: estree.ScriptProgram;
   base: B;
   context: InternalLocalContext;
 };
 
 export type ExternalLocalEvalProgram<B> = {
   kind: "eval";
-  root: estree.Program;
+  root: estree.ScriptProgram;
   base: B;
   context: ExternalLocalContext;
 };
