@@ -1,48 +1,24 @@
 import { ExternalLocalEvalSort, GlobalSort, RootSort } from "../../../sort";
 import { WritableCache } from "../../cache";
 
+export type ReifyBinding = {
+  type: "reify";
+  record: "aran.global" | "aran.record";
+  writable: boolean;
+};
+
+export type AlienBinding = {
+  type: "alien";
+  deadzone: null | WritableCache;
+  writable: boolean;
+};
+
 export type Declare = {
   type: "declare";
   mode: "strict" | "sloppy";
   kind: "var" | "let" | "const";
   variable: estree.Variable;
 };
-
-export type VarBinding = {
-  kind: "var";
-  deadzone: null;
-};
-
-export type FunctionBinding = {
-  kind: "function";
-  deadzone: null;
-};
-
-export type LifespanBinding = VarBinding | FunctionBinding;
-
-export type LetBinding<Z> = {
-  kind: "let";
-  deadzone: Z;
-};
-
-export type ConstBinding<Z> = {
-  kind: "const";
-  deadzone: Z;
-};
-
-export type ClassBinding<Z> = {
-  kind: "class";
-  deadzone: Z;
-};
-
-export type DeadzoneBinding<Z> =
-  | LetBinding<Z>
-  | ConstBinding<Z>
-  | ClassBinding<Z>;
-
-export type ReifyBinding = LifespanBinding | DeadzoneBinding<null>;
-
-export type AlienBinding = LifespanBinding | DeadzoneBinding<WritableCache>;
 
 export type ReifyRootFrame = {
   type: "root-reify";

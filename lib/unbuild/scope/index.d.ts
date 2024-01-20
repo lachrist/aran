@@ -59,14 +59,16 @@ export type PackScope = [RootFrame, ...NodeFrame[]];
 export type DeclareOperation = {
   type: "declare";
   mode: Mode;
-  kind: "eval";
+  kind: "var";
   variable: estree.Variable;
+  configurable: true;
 };
 
 export type InitializeOperation = {
   type: "initialize";
   mode: Mode;
-  kind: "let" | "const" | "function" | "arguments" | "class" | "var" | "callee";
+  kind: "let" | "const" | "var" | "val";
+  manufactured: boolean;
   variable: estree.Variable;
   right: Cache | null;
 };

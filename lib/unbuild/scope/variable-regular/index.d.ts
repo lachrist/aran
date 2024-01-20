@@ -1,31 +1,19 @@
 import { Hoist } from "../../query/hoist";
 
-export type ArgumentsHoist = {
-  type: "regular";
-  kind: "arguments";
-  variable: estree.Variable;
-};
-
-export type CalleeHoist = {
-  type: "regular";
-  kind: "callee";
-  variable: estree.Variable;
-};
-
-export type PseudoHoist = ArgumentsHoist | CalleeHoist;
-
 export type LifespanBinding = {
-  kind: "var" | "function" | "arguments" | "callee";
+  type: "lifespan";
   export: estree.Specifier[];
+  writable: boolean;
 };
 
 export type DeadzoneBinding = {
-  kind: "let" | "const" | "class";
+  type: "deadzone";
   export: estree.Specifier[];
+  writable: boolean;
 };
 
 export type ImportBinding = {
-  kind: "import";
+  type: "import";
   source: estree.Source;
   specifier: estree.Specifier | null;
 };

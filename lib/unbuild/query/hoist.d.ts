@@ -1,15 +1,18 @@
-export type RegularHoist = {
-  type: "regular";
-  kind: "let" | "const" | "var";
+// 'val' kind is actually only used for callee and not hoisted here.
+// It is however used as a hoist in scope.
+
+export type DeclareHoist = {
+  type: "declare";
+  kind: "let" | "const" | "var" | "val";
   variable: estree.Variable;
 };
 
-export type DeadzoneHoist = RegularHoist & {
+export type DeadzoneHoist = DeclareHoist & {
   kind: "let" | "const";
 };
 
-export type LifespanHoist = RegularHoist & {
-  kind: "var";
+export type LifespanHoist = DeclareHoist & {
+  kind: "var" | "val";
 };
 
 export type ImportHoist = {
@@ -25,4 +28,4 @@ export type ExportHoist = {
   specifier: estree.Specifier;
 };
 
-export type Hoist = RegularHoist | ImportHoist | ExportHoist;
+export type Hoist = DeclareHoist | ImportHoist | ExportHoist;
