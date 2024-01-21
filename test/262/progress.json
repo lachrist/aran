@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 28381,
-  "target": "test/language/expressions/assignment/dstr/array-elem-trlg-iter-rest-nrml-close-skip.js"
+  "index": 28536,
+  "target": "test/language/expressions/assignment/dstr/obj-id-init-simple-no-strict.js"
 }
