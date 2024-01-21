@@ -622,6 +622,8 @@
   "Accessing step.done twice in for-of loop and array pattern": [],
   "Object.fromEntries is vulnerable to Array.prototype[Symbol.iterator] pollution": [
     "test/built-ins/Object/fromEntries/uses-keys-not-iterator.js",
-    "test/built-ins/RegExp/prototype/Symbol.replace/poisoned-stdlib.js"
+    "test/built-ins/RegExp/prototype/Symbol.replace/poisoned-stdlib.js",
+    "test/language/expressions/arrow-function/dstr/ary-ptrn-elem-id-iter-val-array-prototype.js",
+    "test/language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-iter-val-array-prototype.js"
   ]
 }
