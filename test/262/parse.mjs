@@ -81,8 +81,9 @@ export const parseLocal = (code, base, context) => {
               allowSuperOutsideMethod: true,
               allowUndeclaredExports: false,
               attachComment: false,
-              annexB: true,
-              createImportExpressions: false,
+              // Error: The `annexB` option can only be set to `false`.
+              annexB: false,
+              createImportExpressions: true,
               createParenthesizedExpressions: false,
               errorRecovery: false,
               plugins: ["estree"],

@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 27735,
-  "target": "test/language/eval-code/direct/var-env-func-init-local-new-delete.js"
+  "index": 27414,
+  "target": "test/language/directive-prologue/10.1.1-12-s.js"
 }
