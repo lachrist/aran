@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 27669,
-  "target": "test/language/eval-code/direct/global-env-rec-eval.js"
+  "index": 27958,
+  "target": "test/language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-class.js"
 }
