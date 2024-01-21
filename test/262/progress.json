@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 28187,
-  "target": "test/language/expressions/arrow-function/lexical-super-call-from-within-constructor.js"
+  "index": 28198,
+  "target": "test/language/expressions/arrow-function/param-dflt-yield-id-non-strict.js"
 }
