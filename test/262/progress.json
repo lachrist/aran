@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 27414,
-  "target": "test/language/directive-prologue/10.1.1-12-s.js"
+  "index": 27477,
+  "target": "test/language/eval-code/direct/arrow-fn-body-cntns-arguments-func-decl-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js"
 }
