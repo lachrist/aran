@@ -7,7 +7,6 @@ import { FakeFrame } from "./variable-fake";
 import { ModeFrame } from "./mode";
 import { PrivateFrame } from "./private";
 import { RootFrame } from "./root";
-import { TemplateFrame } from "./template";
 import { WithFrame } from "./variable-with";
 import { CatchFrame } from "./catch";
 
@@ -27,7 +26,6 @@ export type NodeFrame =
   | FakeFrame
   | ModeFrame
   | PrivateFrame
-  | TemplateFrame
   | WithFrame;
 
 export type Frame = RootFrame | NodeFrame;
@@ -182,31 +180,6 @@ export type ClosureLoadOperation =
 
 export type ClosureSaveOperation = SetSuperOperation | CallSuperOperation;
 
-// Template //
-
-export type HasTemplateOperation = {
-  type: "has-template";
-  mode: Mode;
-  path: Path;
-};
-
-export type GetTemplateOperation = {
-  type: "get-template";
-  mode: Mode;
-  path: Path;
-};
-
-export type SetTemplateOperation = {
-  type: "set-template";
-  mode: Mode;
-  path: Path;
-  template: Cache;
-};
-
-export type TemplateLoadOperation = HasTemplateOperation | GetTemplateOperation;
-
-export type TemplateSaveOperation = SetTemplateOperation;
-
 // Private //
 
 export type DefinePrivateOperation = {
@@ -282,7 +255,6 @@ export type LoadOperation =
   | VariableLoadOperation
   | ClosureLoadOperation
   | CatchLoadOperation
-  | TemplateLoadOperation
   | PrivateLoadOperation
   | ReadImportOperation
   | ReadImportMetaOperation
@@ -291,7 +263,6 @@ export type LoadOperation =
 export type SaveOperation =
   | VariableSaveOperation
   | ClosureSaveOperation
-  | TemplateSaveOperation
   | PrivateSaveOperation;
 
 export type Operation = LoadOperation | SaveOperation;

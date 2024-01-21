@@ -4,6 +4,7 @@ import { EarlyError } from "./early-error";
 import { Condition } from "./condition";
 import { Context } from "../context";
 import { Variable, BaseVariable, MetaVariable } from "./variable";
+import { Site } from "./site";
 
 export type WarningPrelude = {
   type: "warning";
@@ -23,6 +24,14 @@ export type HeaderPrelude = {
 export type EarlyErrorPrelude = {
   type: "early-error";
   data: EarlyError;
+};
+
+export type TemplatePrelude = {
+  type: "template";
+  data: {
+    variable: MetaVariable;
+    value: Site<estree.TaggedTemplateExpression>;
+  };
 };
 
 export type DeclarationPrelude = {
@@ -55,19 +64,22 @@ export type Prelude =
   | EarlyErrorPrelude
   | DeclarationPrelude
   | EffectPrelude
-  | ConditionPrelude;
+  | ConditionPrelude
+  | TemplatePrelude;
 
 type ProgramPrelude = WarningPrelude | ContextPrelude;
 
 type BlockPrelude =
   | WarningPrelude
   | ContextPrelude
+  | TemplatePrelude
   | HeaderPrelude
   | EarlyErrorPrelude;
 
 type BodyPrelude =
   | WarningPrelude
   | ContextPrelude
+  | TemplatePrelude
   | HeaderPrelude
   | EarlyErrorPrelude
   | DeclarationPrelude
@@ -76,6 +88,7 @@ type BodyPrelude =
 type NodePrelude =
   | WarningPrelude
   | ContextPrelude
+  | TemplatePrelude
   | HeaderPrelude
   | EarlyErrorPrelude
   | MetaDeclarationPrelude
@@ -84,6 +97,7 @@ type NodePrelude =
 type ChainPrelude =
   | WarningPrelude
   | ContextPrelude
+  | TemplatePrelude
   | HeaderPrelude
   | EarlyErrorPrelude
   | MetaDeclarationPrelude
