@@ -1,4 +1,4 @@
-import type { Key } from "./key.d.ts";
+import type { Key } from "../key.js";
 import type { Object } from "./object.d.ts";
 
 export type VariableUpdate = {

@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 28536,
-  "target": "test/language/expressions/assignment/dstr/obj-id-init-simple-no-strict.js"
+  "index": 29050,
+  "target": "test/language/expressions/assignmenttargettype/simple-basic-identifierreference-await.js"
 }

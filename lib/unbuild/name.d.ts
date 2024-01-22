@@ -1,4 +1,4 @@
-import type { Key } from "./visitors/key.d.ts";
+import type { Key } from "./key.js";
 
 export type PropertyName = {
   type: "property";

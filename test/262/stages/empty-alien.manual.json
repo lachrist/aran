@@ -396,8 +396,6 @@
   ],
   "StrictReadonlyExternalVariableWrite": [
     "test/language/expressions/assignmenttargettype/simple-basic-identifierreference-eval.js",
-    "test/language/expressions/assignment/dstr/obj-id-init-simple-no-strict.js",
-    "test/language/expressions/assignment/dstr/obj-id-simple-no-strict.js",
     "test/language/expressions/postfix-decrement/eval-nostrict.js",
     "test/language/expressions/postfix-increment/eval-nostrict.js",
     "test/language/expressions/prefix-decrement/eval-nostrict.js",
