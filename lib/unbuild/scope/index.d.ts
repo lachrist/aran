@@ -10,6 +10,7 @@ import { RootFrame } from "./root";
 import { WithFrame } from "./variable-with";
 import { CatchFrame } from "./catch";
 import { InternalLocalContext } from "../../context";
+import { IllegalFrame } from "./variable-illegal";
 
 export { RootFrame } from "./root";
 
@@ -25,6 +26,7 @@ export type NodeFrame =
   | CatchFrame
   | EvalFrame
   | FakeFrame
+  | IllegalFrame
   | ModeFrame
   | PrivateFrame
   | WithFrame;

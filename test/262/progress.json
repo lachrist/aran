@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 32672,
-  "target": "test/language/expressions/class/elements/arrow-body-direct-eval-err-contains-arguments.js"
+  "index": 34015,
+  "target": "test/language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-eval.js"
 }
