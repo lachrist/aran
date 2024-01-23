@@ -9,6 +9,7 @@ import { PrivateFrame } from "./private";
 import { RootFrame } from "./root";
 import { WithFrame } from "./variable-with";
 import { CatchFrame } from "./catch";
+import { InternalLocalContext } from "../../context";
 
 export { RootFrame } from "./root";
 
@@ -247,6 +248,7 @@ export type EvalOperation = {
   type: "eval";
   mode: Mode;
   code: Cache;
+  context: InternalLocalContext;
 };
 
 // union //
