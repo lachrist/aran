@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 29992,
-  "target": "test/language/expressions/call/eval-spread-empty-leading.js"
+  "index": 30379,
+  "target": "test/language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-await-expression.js"
 }
