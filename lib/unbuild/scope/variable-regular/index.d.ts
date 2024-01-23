@@ -22,5 +22,6 @@ export type RegularBinding = ImportBinding | LifespanBinding | DeadzoneBinding;
 
 export type RegularFrame = {
   type: "regular";
+  module: boolean;
   record: { [k in estree.Variable]?: RegularBinding };
 };

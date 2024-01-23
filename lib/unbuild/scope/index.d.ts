@@ -11,6 +11,7 @@ import { WithFrame } from "./variable-with";
 import { CatchFrame } from "./catch";
 import { InternalLocalContext } from "../../context";
 import { IllegalFrame } from "./variable-illegal";
+import { ModuleHeader } from "../../header";
 
 export { RootFrame } from "./root";
 
@@ -183,6 +184,13 @@ export type ClosureLoadOperation =
 
 export type ClosureSaveOperation = SetSuperOperation | CallSuperOperation;
 
+// Module //
+
+export type ModuleOperation = {
+  type: "module";
+  header: ModuleHeader;
+};
+
 // Private //
 
 export type DefinePrivateOperation = {
@@ -267,6 +275,7 @@ export type LoadOperation =
 export type SaveOperation =
   | VariableSaveOperation
   | ClosureSaveOperation
-  | PrivateSaveOperation;
+  | PrivateSaveOperation
+  | ModuleOperation;
 
 export type Operation = LoadOperation | SaveOperation;
