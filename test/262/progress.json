@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 29050,
-  "target": "test/language/expressions/assignmenttargettype/simple-basic-identifierreference-await.js"
+  "index": 29992,
+  "target": "test/language/expressions/call/eval-spread-empty-leading.js"
 }
