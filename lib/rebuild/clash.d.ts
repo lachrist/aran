@@ -5,7 +5,6 @@ export type IntrinsicClash = {
 
 export type EscapeClash = {
   type: "escape";
-  prefix: string;
   escape: estree.Variable;
   variable: estree.Variable;
 };
