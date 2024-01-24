@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 34623,
-  "target": "test/language/expressions/delete/11.4.1-3-1.js"
+  "index": 35061,
+  "target": "test/language/expressions/dynamic-import/reuse-namespace-object-from-import.js"
 }
