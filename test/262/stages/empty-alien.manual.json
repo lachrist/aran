@@ -277,7 +277,6 @@
     "test/language/types/reference/S8.7_A5_T2.js"
   ],
   "StrictKeywordExternalVariable": [
-    "test/language/expressions/class/static-init-await-reference.js",
     "test/language/expressions/function/static-init-await-reference.js",
     "test/language/expressions/generators/static-init-await-reference.js",
     "test/language/expressions/in/private-field-rhs-await-absent.js",
