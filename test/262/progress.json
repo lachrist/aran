@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 35061,
-  "target": "test/language/expressions/dynamic-import/reuse-namespace-object-from-import.js"
+  "index": 35166,
+  "target": "test/language/expressions/dynamic-import/syntax/valid/callexpression-templateliteral.js"
 }
