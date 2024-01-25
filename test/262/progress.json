@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 35166,
-  "target": "test/language/expressions/dynamic-import/syntax/valid/callexpression-templateliteral.js"
+  "index": 35522,
+  "target": "test/language/expressions/function/dstr/ary-ptrn-elem-id-iter-val-array-prototype.js"
 }

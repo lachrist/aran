@@ -62,25 +62,26 @@ export type Prelude =
   | ContextPrelude
   | HeaderPrelude
   | EarlyErrorPrelude
+  | TemplatePrelude
   | DeclarationPrelude
   | EffectPrelude
-  | ConditionPrelude
-  | TemplatePrelude;
+  | ConditionPrelude;
 
 type ProgramPrelude = WarningPrelude | ContextPrelude;
 
 type BlockPrelude =
   | WarningPrelude
   | ContextPrelude
-  | TemplatePrelude
   | HeaderPrelude
-  | EarlyErrorPrelude;
+  | EarlyErrorPrelude
+  | TemplatePrelude;
 
 type BodyPrelude =
   | WarningPrelude
   | ContextPrelude
-  | TemplatePrelude
   | HeaderPrelude
+  | EarlyErrorPrelude
+  | TemplatePrelude
   | EarlyErrorPrelude
   | DeclarationPrelude
   | EffectPrelude;
@@ -88,18 +89,18 @@ type BodyPrelude =
 type NodePrelude =
   | WarningPrelude
   | ContextPrelude
-  | TemplatePrelude
   | HeaderPrelude
   | EarlyErrorPrelude
+  | TemplatePrelude
   | MetaDeclarationPrelude
   | EffectPrelude;
 
 type ChainPrelude =
   | WarningPrelude
   | ContextPrelude
-  | TemplatePrelude
   | HeaderPrelude
   | EarlyErrorPrelude
+  | TemplatePrelude
   | MetaDeclarationPrelude
   | EffectPrelude
   | ConditionPrelude;
