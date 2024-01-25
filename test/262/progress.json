@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 35741,
-  "target": "test/language/expressions/function/static-init-await-reference.js"
+  "index": 36186,
+  "target": "test/language/expressions/in/private-field-rhs-await-absent.js"
 }

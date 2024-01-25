@@ -1,4 +1,3 @@
-import { Ancestry } from "./ancestery";
 import { PackMeta } from "./unbuild/meta";
 import { PackScope } from "./unbuild/scope";
 
@@ -7,17 +6,16 @@ export type GlobalContext = {
 };
 
 export type InternalLocalContext = {
-  type: "internal-local";
+  type: "aran";
   meta: PackMeta;
   scope: PackScope;
 };
 
 export type ExternalLocalContext = {
-  type: "external-local";
+  type: "local";
   mode: "strict" | "sloppy";
-  program: "module" | "script";
-  closure:
-    | "none"
+  situ:
+    | "program"
     | "function"
     | "method"
     | "constructor"

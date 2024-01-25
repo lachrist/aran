@@ -265,14 +265,8 @@
     "test/language/statements/class/subclass/derived-class-return-override-catch.js",
     "test/language/statements/class/subclass/derived-class-return-override-for-of.js"
   ],
-  "ExternalVariableDelete": [
-    "test/language/expressions/grouping/S11.1.6_A2_T2.js",
-    "test/language/expressions/grouping/S11.1.6_A3_T6.js",
-    "test/language/types/reference/S8.7_A5_T2.js"
-  ],
+  "ExternalVariableDelete": ["test/language/types/reference/S8.7_A5_T2.js"],
   "StrictKeywordExternalVariable": [
-    "test/language/expressions/function/static-init-await-reference.js",
-    "test/language/expressions/generators/static-init-await-reference.js",
     "test/language/expressions/in/private-field-rhs-await-absent.js",
     "test/language/expressions/object/method-definition/static-init-await-reference-accessor.js",
     "test/language/expressions/object/method-definition/static-init-await-reference-generator.js",

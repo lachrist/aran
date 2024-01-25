@@ -1,1 +1,1 @@
-console.log(global.eval("this"));
+console.log(eval("import.meta"));

@@ -1,38 +1,36 @@
-import { Ancestry } from "./ancestery";
-
 export type ModuleSort = {
   kind: "module";
   mode: "strict";
   situ: "global";
-  ancestry: null;
 };
 
 export type ScriptSort = {
   kind: "script";
   mode: "strict" | "sloppy";
   situ: "global";
-  ancestry: null;
 };
 
 export type GlobalEvalSort = {
   kind: "eval";
   mode: "strict" | "sloppy";
   situ: "global";
-  ancestry: null;
 };
 
 export type ExternalLocalEvalSort = {
   kind: "eval";
   mode: "strict" | "sloppy";
-  situ: "local";
-  ancestry: Ancestry;
+  situ:
+    | "program"
+    | "function"
+    | "method"
+    | "constructor"
+    | "derived-constructor";
 };
 
 export type InternalLocalEvalSort = {
   kind: "eval";
   mode: "strict" | "sloppy";
   situ: "local";
-  ancestry: null;
 };
 
 export type LocalEvalSort = InternalLocalEvalSort | ExternalLocalEvalSort;
