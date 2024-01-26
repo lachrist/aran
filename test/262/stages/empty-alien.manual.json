@@ -267,7 +267,6 @@
   ],
   "ExternalVariableDelete": ["test/language/types/reference/S8.7_A5_T2.js"],
   "StrictKeywordExternalVariable": [
-    "test/language/expressions/in/private-field-rhs-await-absent.js",
     "test/language/expressions/object/method-definition/static-init-await-reference-accessor.js",
     "test/language/expressions/object/method-definition/static-init-await-reference-generator.js",
     "test/language/expressions/object/method-definition/static-init-await-reference-normal.js",

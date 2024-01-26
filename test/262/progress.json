@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 36186,
-  "target": "test/language/expressions/in/private-field-rhs-await-absent.js"
+  "index": 36416,
+  "target": "test/language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js"
 }
