@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 37634,
-  "target": "test/language/expressions/object/method-definition/forbidden-ext/b1/meth-forbidden-ext-direct-access-prop-arguments.js"
+  "index": 37760,
+  "target": "test/language/expressions/object/method-definition/static-init-await-reference-accessor.js"
 }
