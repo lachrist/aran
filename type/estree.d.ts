@@ -20,7 +20,13 @@ export type Key = Brand<string, "estree.Key">;
 
 export type PrivateKey = Brand<string, "estree.PrivateKey">;
 
+export type InitProperty = estree.Property & {
+  kind: "init";
+  method: false;
+};
+
 export type ProtoProperty = estree.Property & {
+  kind: "init";
   computed: false;
   method: false;
   shorthand: false;
