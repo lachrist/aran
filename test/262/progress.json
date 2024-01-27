@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 38350,
-  "target": "test/language/expressions/typeof/get-value.js"
+  "index": 39672,
+  "target": "test/language/module-code/eval-export-dflt-fun-named-semi.js"
 }
