@@ -276,10 +276,6 @@
     "test/language/statements/class/subclass/superclass-generator-function.js"
   ],
   "StrictReadonlyExternalVariableWrite": [
-    "test/language/expressions/postfix-decrement/eval-nostrict.js",
-    "test/language/expressions/postfix-increment/eval-nostrict.js",
-    "test/language/expressions/prefix-decrement/eval-nostrict.js",
-    "test/language/expressions/prefix-increment/eval-nostrict.js",
     "test/language/statements/for-of/dstr/array-elem-init-simple-no-strict.js",
     "test/language/statements/for-of/dstr/array-elem-target-simple-no-strict.js",
     "test/language/statements/for-of/dstr/obj-id-init-simple-no-strict.js",
@@ -298,9 +294,6 @@
     "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js",
     "test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js",
     "test/language/expressions/super/realm.js"
-  ],
-  "Duplicate global accessor triggering": [
-    "test/language/expressions/typeof/get-value.js"
   ],
   "sloppy arguments is not a two-way binding with parameters": [
     "test/built-ins/Object/defineProperty/15.2.3.6-4-292-1.js",

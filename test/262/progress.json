@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 37891,
-  "target": "test/language/expressions/postfix-decrement/eval-nostrict.js"
+  "index": 38350,
+  "target": "test/language/expressions/typeof/get-value.js"
 }
