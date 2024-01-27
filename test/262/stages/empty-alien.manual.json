@@ -267,9 +267,6 @@
   ],
   "ExternalVariableDelete": ["test/language/types/reference/S8.7_A5_T2.js"],
   "StrictKeywordExternalVariable": [
-    "test/language/expressions/object/method-definition/static-init-await-reference-accessor.js",
-    "test/language/expressions/object/method-definition/static-init-await-reference-generator.js",
-    "test/language/expressions/object/method-definition/static-init-await-reference-normal.js",
     "test/language/statements/let/syntax/escaped-let.js"
   ],
   "Check for super class to be constructor is a heuristic based on the presence of prototype": [
