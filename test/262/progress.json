@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 39723,
-  "target": "test/language/module-code/export-expname-from-string-binding.js"
+  "index": 39732,
+  "target": "test/language/module-code/export-star-as-dflt.js"
 }
