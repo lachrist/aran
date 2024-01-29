@@ -486,6 +486,9 @@
   "Access super.prototype twice when creating a derived class": [
     "test/language/statements/class/definition/prototype-getter.js"
   ],
+  "Right value are consistently evaluated first in pattern": [
+    "test/language/statements/class/elements/privatefieldset-evaluation-order-1.js"
+  ],
   "Classes access ambient 'this' at initialization which might throw inside derived classes *EDIT*: this might actually be the intended behavior >> new (class extends class {} { constructor() { new (class { foo = 123; })(); } })();": [],
   "When using enclave, from other programs, hidden variables are declared at the beginning": [],
   "When using enclave, from other programs, const hidden variables are writable": [],

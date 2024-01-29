@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 39732,
-  "target": "test/language/module-code/export-star-as-dflt.js"
+  "index": 45201,
+  "target": "test/language/statements/class/super/in-constructor-superproperty-evaluation.js"
 }
