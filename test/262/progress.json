@@ -1,5 +1,0 @@
-{
-  "stage": "empty-alien",
-  "index": 0,
-  "target": "test/built-ins/ArrayBuffer/prototype/slice/number-conversion.js"
-}
