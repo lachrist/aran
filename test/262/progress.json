@@ -1,5 +1,5 @@
 {
   "stage": "empty-alien",
-  "index": 45201,
-  "target": "test/language/statements/class/super/in-constructor-superproperty-evaluation.js"
+  "index": 4194,
+  "target": "test/built-ins/ArrayBuffer/prototype/slice/number-conversion.js"
 }
