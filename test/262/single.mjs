@@ -6,8 +6,9 @@ import { pathToFileURL } from "node:url";
 import { argv, stdout, exit } from "node:process";
 import { loadCursor } from "./cursor.mjs";
 import { scrape } from "./scrape.mjs";
+import { inspectError } from "./util.mjs";
 
-const { console, URL, Error } = globalThis;
+const { console, process, URL, Error } = globalThis;
 
 const {
   stage,
@@ -30,6 +31,12 @@ const {
   await import(`./stages/${stage}.mjs`)
 );
 
+process.on("uncaughtException", (error, _origin) => {
+  const { name, message } = inspectError(error);
+  console.log(`Uncaught >> ${name}: ${message}`);
+  console.log(error);
+});
+
 await cleanup(codebase);
 
 /**
@@ -50,7 +57,8 @@ const findTarget = async (index) => {
 
 const target = maybe_target ?? (await findTarget(index));
 
-console.log(target);
+console.log(`\n===== ${stage} =====\n`);
+console.log(`\ntest262/${target}\n`);
 console.dir(
   await runTest({
     target,

@@ -10,4 +10,5 @@ export type Config<B, L> = {
   advice_variable: estree.Variable;
   intrinsic_variable: estree.Variable | null;
   escape_prefix: estree.Variable;
+  debug_alias: boolean;
 };

@@ -139,6 +139,7 @@ const config = {
   intrinsic_variable: INTRINSIC,
   escape_prefix: /** @type {estree.Variable} */ ("_ARAN_ESCAPE_"),
   reify_global: false,
+  debug_alias: true,
 };
 
 /**
