@@ -45,7 +45,7 @@ await cleanup(codebase);
  * ) => Promise<string>}
  */
 const findTarget = async (index) => {
-  let current = 0;
+  let current = -1;
   for await (const url of scrape(new URL("test/", test262))) {
     current += 1;
     if (index === current) {

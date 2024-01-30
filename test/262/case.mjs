@@ -21,7 +21,6 @@ const makeAsynchronousTermination = () => {
       resolve = resolve_;
     }),
     print: (unknown) => {
-      console.dir(unknown);
       const message = show(unknown);
       if (message === "Test262:AsyncTestComplete") {
         resolve(null);
