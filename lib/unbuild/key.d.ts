@@ -1,24 +1,25 @@
 import { Cache } from "./cache";
+import { ExpressionSequence } from "./sequence";
 
 export type PublicKey =
   | {
       computed: true;
       access: "public";
-      cooked: boolean;
-      value: Cache;
+      converted: boolean;
+      data: ExpressionSequence;
     }
   | {
       computed: false;
       access: "public";
-      cooked: true;
-      value: estree.Key;
+      converted: true;
+      data: estree.Key;
     };
 
 export type PrivateKey = {
   computed: false;
   access: "private";
-  cooked: true;
-  value: estree.PrivateKey;
+  converted: true;
+  data: estree.PrivateKey;
 };
 
 export type Key = PublicKey | PrivateKey;

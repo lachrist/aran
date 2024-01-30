@@ -1,4 +1,5 @@
-import type { Cache } from "../cache.d.ts";
+import { ChainPrelude } from "./prelude.js";
+import { ExpressionSequence, Sequence } from "./sequence.js";
 
 export type SuperObject = {
   type: "super";
@@ -6,7 +7,7 @@ export type SuperObject = {
 
 export type RegularObject = {
   type: "regular";
-  data: Cache;
+  data: ExpressionSequence;
 };
 
 export type Object = SuperObject | RegularObject;
