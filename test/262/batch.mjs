@@ -20,7 +20,9 @@ const {
 } = globalThis;
 
 if (process.argv.length !== 3) {
-  throw new Error("usage: node test/262/batch.mjs <stage>");
+  throw new Error(
+    "usage: node --experimental-vm-modules --expose-gc test/262/batch.mjs <stage>",
+  );
 }
 
 const stage = argv[2];

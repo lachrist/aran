@@ -21,6 +21,7 @@ const makeAsynchronousTermination = () => {
       resolve = resolve_;
     }),
     print: (unknown) => {
+      // console.dir(unknown, { depth: null });
       const message = show(unknown);
       if (message === "Test262:AsyncTestComplete") {
         resolve(null);
@@ -35,7 +36,9 @@ const makeAsynchronousTermination = () => {
 /** @type {import("./case.d.ts").Termination} */
 const termination = {
   done: Promise.resolve(null),
-  print: (_unknown) => {},
+  print: (_unknown) => {
+    // console.dir(_unknown, { depth: null });
+  },
 };
 
 /**

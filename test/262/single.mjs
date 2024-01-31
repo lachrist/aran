@@ -31,10 +31,13 @@ const {
   await import(`./stages/${stage}.mjs`)
 );
 
+// It is unfortunate but uncaught exception do not necessarily indicate test failure.
+// test262/test/language/expressions/dynamic-import/syntax/valid/nested-if-nested-imports.js
+// Uncaught >> Error: ENOENT: no such file or directory, open
+//   'test262/test/language/expressions/dynamic-import/syntax/valid/[object Promise]'
 process.on("uncaughtException", (error, _origin) => {
   const { name, message } = inspectError(error);
   console.log(`Uncaught >> ${name}: ${message}`);
-  console.log(error);
 });
 
 await cleanup(codebase);
@@ -57,7 +60,7 @@ const findTarget = async (index) => {
 
 const target = maybe_target ?? (await findTarget(index));
 
-console.log(`\n===== ${stage} =====\n`);
+console.log(`===== ${stage} =====`);
 console.log(`\ntest262/${target}\n`);
 console.dir(
   await runTest({
