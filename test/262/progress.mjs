@@ -76,14 +76,19 @@ try {
           createInstrumenter,
         });
         const reasons = expect(result);
-        if (result.error !== null) {
-          console.log(target, ">>", reasons);
-        }
-        if ((result.error === null) !== (reasons.length === 0)) {
-          console.log(JSON.stringify(target));
-          console.log(`test262/${target}`);
-          console.dir(result.metadata);
-          if (result.error) {
+        if (result.error === null) {
+          if (reasons.length > 0) {
+            console.log(target, ">>", reasons);
+            console.log("Expected failure but got success, yay... (I guess)");
+            // eslint-disable-next-line local/no-label
+            break;
+          }
+        } else {
+          if (reasons.length > 0) {
+            console.log(target, ">>", reasons);
+          } else {
+            console.log("\nTarget >>", JSON.stringify(target));
+            console.log("\nLink >>", `test262/${target}`, "\n");
             await cleanup(codebase);
             const { error } = await runTest({
               target,
@@ -98,12 +103,9 @@ try {
             } else {
               console.log(printError(error));
             }
-          } else {
-            console.log("Expected failure but got success");
-            console.dir(reasons);
+            // eslint-disable-next-line local/no-label
+            break;
           }
-          // eslint-disable-next-line local/no-label
-          break;
         }
       }
     }
