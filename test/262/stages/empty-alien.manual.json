@@ -266,9 +266,6 @@
     "test/language/statements/class/subclass/derived-class-return-override-for-of.js"
   ],
   "ExternalVariableDelete": ["test/language/types/reference/S8.7_A5_T2.js"],
-  "StrictKeywordExternalVariable": [
-    "test/language/statements/let/syntax/escaped-let.js"
-  ],
   "Check for super class to be constructor is a heuristic based on the presence of prototype": [
     "test/language/statements/class/subclass/superclass-arrow-function.js",
     "test/language/statements/class/subclass/superclass-async-function.js",
@@ -501,6 +498,9 @@
     "test/language/statements/for/dstr/var-ary-ptrn-elem-id-iter-val-array-prototype.js",
     "test/language/statements/for-of/dstr/const-ary-ptrn-elem-id-iter-val-array-prototype.js",
     "test/language/statements/for-of/dstr/let-ary-ptrn-elem-id-iter-val-array-prototype.js",
-    "test/language/statements/for-of/dstr/var-ary-ptrn-elem-id-iter-val-array-prototype.js"
+    "test/language/statements/for-of/dstr/var-ary-ptrn-elem-id-iter-val-array-prototype.js",
+    "test/language/statements/function/dstr/ary-ptrn-elem-id-iter-val-array-prototype.js",
+    "test/language/statements/function/dstr/dflt-ary-ptrn-elem-id-iter-val-array-prototype.js",
+    "test/language/statements/let/dstr/ary-ptrn-elem-id-iter-val-array-prototype.js"
   ]
 }
