@@ -78,17 +78,21 @@ try {
         const reasons = expect(result);
         if (result.error === null) {
           if (reasons.length > 0) {
-            console.log(target, ">>", reasons);
-            console.log("Expected failure but got success, yay... (I guess)");
+            console.log("");
+            console.log(`Link >> test262/${target}\n`);
+            console.log(`Target >> ${JSON.stringify(target)}\n`);
+            console.log(`Reasons >> ${reasons}\n`);
+            console.log("Expected failure but got success, yay... (I guess)\n");
             // eslint-disable-next-line local/no-label
             break;
           }
         } else {
           if (reasons.length > 0) {
-            console.log(target, ">>", reasons);
+            console.log(`${target} >> ${reasons}`);
           } else {
-            console.log("\nLink >>", `test262/${target}`);
-            console.log("\nTarget >>", JSON.stringify(target), "\n");
+            console.log("");
+            console.log(`Link >> test262/${target}\n`);
+            console.log(`Target >> ${JSON.stringify(target)}\n`);
             await cleanup(codebase);
             const { error } = await runTest({
               target,
@@ -98,7 +102,7 @@ try {
               createInstrumenter,
             });
             if (error === null) {
-              console.log("** Error Disappeared **");
+              console.log("** Error Disappeared **\n");
               console.log(printError(result.error));
             } else {
               console.log(printError(error));

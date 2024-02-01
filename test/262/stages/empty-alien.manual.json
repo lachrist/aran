@@ -275,12 +275,6 @@
     "test/language/statements/class/subclass/superclass-async-generator-function.js",
     "test/language/statements/class/subclass/superclass-generator-function.js"
   ],
-  "StrictReadonlyExternalVariableWrite": [
-    "test/language/statements/for-of/dstr/array-elem-init-simple-no-strict.js",
-    "test/language/statements/for-of/dstr/array-elem-target-simple-no-strict.js",
-    "test/language/statements/for-of/dstr/obj-id-init-simple-no-strict.js",
-    "test/language/statements/for-of/dstr/obj-id-simple-no-strict.js"
-  ],
   "methods have a non-configurable prototype property": [
     "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js",
     "test/language/expressions/object/method-definition/name-prototype-prop.js",
@@ -504,6 +498,9 @@
     "test/language/statements/const/dstr/ary-ptrn-elem-id-iter-val-array-prototype.js",
     "test/language/statements/for/dstr/const-ary-ptrn-elem-id-iter-val-array-prototype.js",
     "test/language/statements/for/dstr/let-ary-ptrn-elem-id-iter-val-array-prototype.js",
-    "test/language/statements/for/dstr/var-ary-ptrn-elem-id-iter-val-array-prototype.js"
+    "test/language/statements/for/dstr/var-ary-ptrn-elem-id-iter-val-array-prototype.js",
+    "test/language/statements/for-of/dstr/const-ary-ptrn-elem-id-iter-val-array-prototype.js",
+    "test/language/statements/for-of/dstr/let-ary-ptrn-elem-id-iter-val-array-prototype.js",
+    "test/language/statements/for-of/dstr/var-ary-ptrn-elem-id-iter-val-array-prototype.js"
   ]
 }
