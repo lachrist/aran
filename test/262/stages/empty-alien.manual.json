@@ -500,6 +500,10 @@
     "test/language/expressions/arrow-function/dstr/ary-ptrn-elem-id-iter-val-array-prototype.js",
     "test/language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-iter-val-array-prototype.js",
     "test/language/expressions/function/dstr/ary-ptrn-elem-id-iter-val-array-prototype.js",
-    "test/language/expressions/function/dstr/dflt-ary-ptrn-elem-id-iter-val-array-prototype.js"
+    "test/language/expressions/function/dstr/dflt-ary-ptrn-elem-id-iter-val-array-prototype.js",
+    "test/language/statements/const/dstr/ary-ptrn-elem-id-iter-val-array-prototype.js",
+    "test/language/statements/for/dstr/const-ary-ptrn-elem-id-iter-val-array-prototype.js",
+    "test/language/statements/for/dstr/let-ary-ptrn-elem-id-iter-val-array-prototype.js",
+    "test/language/statements/for/dstr/var-ary-ptrn-elem-id-iter-val-array-prototype.js"
   ]
 }

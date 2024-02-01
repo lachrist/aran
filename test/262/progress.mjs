@@ -87,8 +87,8 @@ try {
           if (reasons.length > 0) {
             console.log(target, ">>", reasons);
           } else {
-            console.log("\nTarget >>", JSON.stringify(target));
-            console.log("\nLink >>", `test262/${target}`, "\n");
+            console.log("\nLink >>", `test262/${target}`);
+            console.log("\nTarget >>", JSON.stringify(target), "\n");
             await cleanup(codebase);
             const { error } = await runTest({
               target,
