@@ -12,7 +12,7 @@ type Mode = "strict" | "sloppy";
 export type DeclareOperation = {
   type: "declare";
   mode: Mode;
-  kind: "var";
+  kind: "eval";
   variable: estree.Variable;
   configurable: true;
 };
