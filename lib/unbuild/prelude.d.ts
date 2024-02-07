@@ -82,7 +82,6 @@ type BodyPrelude =
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude
-  | EarlyErrorPrelude
   | DeclarationPrelude
   | EffectPrelude;
 
