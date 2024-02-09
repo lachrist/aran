@@ -3,8 +3,10 @@ import {
   BlockPrelude,
   BodyPrelude,
   ChainPrelude,
-  NodePrelude,
+  EffectPrelude,
+  ExpressionPrelude,
   ProgramPrelude,
+  StatementPrelude,
 } from "./prelude";
 
 export type Sequence<W, X> = { head: W[]; tail: X };
@@ -43,18 +45,21 @@ export type ClosureBodySequence = Sequence<
 // Statement //
 
 export type StatementSequence = Sequence<
-  NodePrelude,
+  StatementPrelude,
   aran.Statement<unbuild.Atom>[]
 >;
 
 // Effect //
 
-export type EffectSequence = Sequence<NodePrelude, aran.Effect<unbuild.Atom>[]>;
+export type EffectSequence = Sequence<
+  EffectPrelude,
+  aran.Effect<unbuild.Atom>[]
+>;
 
 // Expression //
 
 export type ExpressionSequence = Sequence<
-  NodePrelude,
+  ExpressionPrelude,
   aran.Expression<unbuild.Atom>
 >;
 

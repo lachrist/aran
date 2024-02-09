@@ -34,21 +34,22 @@ export type TemplatePrelude = {
   };
 };
 
-export type DeclarationPrelude = {
-  type: "declaration";
-  data: Variable;
-};
-
-export type BaseDeclarationPrelude = DeclarationPrelude & {
-  data: BaseVariable;
-};
-
-export type MetaDeclarationPrelude = DeclarationPrelude & {
+export type MetaDeclarationPrelude = {
+  type: "meta-declaration";
   data: MetaVariable;
 };
 
-export type EffectPrelude = {
-  type: "effect";
+export type BaseDeclarationPrelude = {
+  type: "base-declaration";
+  data: BaseVariable;
+};
+
+export type DeclarationPrelude =
+  | MetaDeclarationPrelude
+  | BaseDeclarationPrelude;
+
+export type PrefixPrelude = {
+  type: "prefix";
   data: aran.Effect<unbuild.Atom>;
 };
 
@@ -63,8 +64,9 @@ export type Prelude =
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude
-  | DeclarationPrelude
-  | EffectPrelude
+  | BaseDeclarationPrelude
+  | MetaDeclarationPrelude
+  | PrefixPrelude
   | ConditionPrelude;
 
 type ProgramPrelude = WarningPrelude | ContextPrelude;
@@ -82,17 +84,51 @@ type BodyPrelude =
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude
-  | DeclarationPrelude
-  | EffectPrelude;
+  | BaseDeclarationPrelude
+  | MetaDeclarationPrelude;
 
-type NodePrelude =
+type FramePrelude =
+  | WarningPrelude
+  | ContextPrelude
+  | HeaderPrelude
+  | EarlyErrorPrelude
+  | TemplatePrelude
+  | BaseDeclarationPrelude
+  | MetaDeclarationPrelude
+  | PrefixPrelude;
+
+type CachePrelude =
   | WarningPrelude
   | ContextPrelude
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude
   | MetaDeclarationPrelude
-  | EffectPrelude;
+  | PrefixPrelude;
+
+type StatementPrelude =
+  | WarningPrelude
+  | ContextPrelude
+  | HeaderPrelude
+  | EarlyErrorPrelude
+  | TemplatePrelude
+  | MetaDeclarationPrelude;
+
+type EffectPrelude =
+  | WarningPrelude
+  | ContextPrelude
+  | HeaderPrelude
+  | EarlyErrorPrelude
+  | TemplatePrelude
+  | MetaDeclarationPrelude;
+
+type ExpressionPrelude =
+  | WarningPrelude
+  | ContextPrelude
+  | HeaderPrelude
+  | EarlyErrorPrelude
+  | TemplatePrelude
+  | MetaDeclarationPrelude;
 
 type ChainPrelude =
   | WarningPrelude
@@ -101,5 +137,5 @@ type ChainPrelude =
   | EarlyErrorPrelude
   | TemplatePrelude
   | MetaDeclarationPrelude
-  | EffectPrelude
+  | PrefixPrelude
   | ConditionPrelude;
