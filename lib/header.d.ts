@@ -94,32 +94,12 @@ export type DynamicLookupHeader =
 
 export type LookupHeader = StaticLookupHeader | DynamicLookupHeader;
 
-export type EarlyStaticDeclareHeader = {
+export type DeclareHeader = {
   type: "declare";
   mode: "strict" | "sloppy";
   kind: "let" | "var";
   variable: estree.Variable;
 };
-
-export type LateStaticDeclareHeader = {
-  type: "declare";
-  mode: "sloppy";
-  kind: "eval";
-  variable: estree.Variable;
-};
-
-export type StaticDeclareHeader =
-  | EarlyStaticDeclareHeader
-  | LateStaticDeclareHeader;
-
-export type DynamicDeclareHeader = {
-  type: "declare";
-  mode: "sloppy";
-  kind: "eval";
-  variable: null;
-};
-
-export type DeclareHeader = StaticDeclareHeader | DynamicDeclareHeader;
 
 export type ScopeHeader = DeclareHeader | LookupHeader;
 
