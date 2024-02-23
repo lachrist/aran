@@ -169,7 +169,7 @@ export type ControlBlock<A extends Atom> = {
   type: "ControlBlock";
   labels: A["Label"][];
   variables: A["Variable"][];
-  statements: Statement<A>[];
+  body: Statement<A>[];
   tag: A["Tag"];
 };
 
