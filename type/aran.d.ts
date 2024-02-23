@@ -160,7 +160,7 @@ export type Program<A extends Atom> = {
 export type ClosureBlock<A extends Atom> = {
   type: "ClosureBlock";
   variables: A["Variable"][];
-  statements: Statement<A>[];
+  body: Statement<A>[];
   completion: Expression<A>;
   tag: A["Tag"];
 };
