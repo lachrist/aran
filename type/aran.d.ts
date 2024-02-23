@@ -178,7 +178,7 @@ export type Statement<A extends Atom> =
   | { type: "ReturnStatement"; result: Expression<A>; tag: A["Tag"] }
   | { type: "BreakStatement"; label: A["Label"]; tag: A["Tag"] }
   | { type: "DebuggerStatement"; tag: A["Tag"] }
-  | { type: "BlockStatement"; do: ControlBlock<A>; tag: A["Tag"] }
+  | { type: "BlockStatement"; body: ControlBlock<A>; tag: A["Tag"] }
   | {
       type: "IfStatement";
       if: Expression<A>;
@@ -189,7 +189,7 @@ export type Statement<A extends Atom> =
   | {
       type: "WhileStatement";
       while: Expression<A>;
-      do: ControlBlock<A>;
+      body: ControlBlock<A>;
       tag: A["Tag"];
     }
   | {
