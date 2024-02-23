@@ -212,13 +212,13 @@ export type Effect<A extends Atom> =
   | {
       type: "WriteEffect";
       variable: Parameter | A["Variable"];
-      right: Expression<A>;
+      value: Expression<A>;
       tag: A["Tag"];
     }
   | {
       type: "ExportEffect";
       export: A["Specifier"];
-      right: Expression<A>;
+      value: Expression<A>;
       tag: A["Tag"];
     };
 
