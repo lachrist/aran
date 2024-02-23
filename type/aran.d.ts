@@ -181,14 +181,14 @@ export type Statement<A extends Atom> =
   | { type: "BlockStatement"; body: ControlBlock<A>; tag: A["Tag"] }
   | {
       type: "IfStatement";
-      if: Expression<A>;
+      test: Expression<A>;
       then: ControlBlock<A>;
       else: ControlBlock<A>;
       tag: A["Tag"];
     }
   | {
       type: "WhileStatement";
-      while: Expression<A>;
+      test: Expression<A>;
       body: ControlBlock<A>;
       tag: A["Tag"];
     }
@@ -204,7 +204,7 @@ export type Effect<A extends Atom> =
   | { type: "ExpressionEffect"; discard: Expression<A>; tag: A["Tag"] }
   | {
       type: "ConditionalEffect";
-      condition: Expression<A>;
+      test: Expression<A>;
       positive: Effect<A>[];
       negative: Effect<A>[];
       tag: A["Tag"];
@@ -270,7 +270,7 @@ export type Expression<A extends Atom> =
     }
   | {
       type: "ConditionalExpression";
-      condition: Expression<A>;
+      test: Expression<A>;
       consequent: Expression<A>;
       alternate: Expression<A>;
       tag: A["Tag"];
