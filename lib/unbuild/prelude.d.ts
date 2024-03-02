@@ -5,6 +5,7 @@ import { Condition } from "./condition";
 import { Context } from "../context";
 import { Variable, BaseVariable, MetaVariable } from "./variable";
 import { Site } from "./site";
+import { Isolate } from "../../type/aran";
 
 export type WarningPrelude = {
   type: "warning";
@@ -36,12 +37,12 @@ export type TemplatePrelude = {
 
 export type MetaDeclarationPrelude = {
   type: "meta-declaration";
-  data: MetaVariable;
+  data: [MetaVariable, Isolate];
 };
 
 export type BaseDeclarationPrelude = {
   type: "base-declaration";
-  data: BaseVariable;
+  data: [BaseVariable, Isolate];
 };
 
 export type DeclarationPrelude =

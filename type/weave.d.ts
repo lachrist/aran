@@ -1,3 +1,5 @@
+import { Isolate } from "./aran";
+
 export type ArgVariable = Brand<string, "weave.ArgVariable">;
 
 export type ResVariable = Brand<string, "weave.ResVariable">;
@@ -17,28 +19,7 @@ export type ArgAtom = {
   Tag: OriginPath;
 };
 
-type Binding =
-  | {
-      type: "original";
-      name: ArgVariable;
-    }
-  | {
-      type: "callee";
-      path: TargetPath;
-    }
-  | {
-      type: "frame";
-    }
-  | {
-      type: "completion";
-    }
-  | {
-      type: "location";
-      init: Json;
-      path: TargetPath;
-    };
-
-type Free = { [k in ResVariable]?: Binding };
+type Frame = [ResVariable, Isolate][];
 
 export type ResAtom = {
   Label: Label;
@@ -46,7 +27,7 @@ export type ResAtom = {
   Specifier: estree.Specifier;
   Variable: ResVariable;
   GlobalVariable: estree.Variable;
-  Tag: Free;
+  Tag: Frame;
 };
 
 export as namespace weave;

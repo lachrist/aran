@@ -26,7 +26,7 @@ export type Parent =
   | {
       type: "closure";
       kind: ClosureKind;
-      callee: weave.TargetPath;
+      callee: weave.ResVariable;
     }
   | {
       type: "block";
