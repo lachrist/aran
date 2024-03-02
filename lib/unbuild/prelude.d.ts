@@ -6,6 +6,7 @@ import { Context } from "../context";
 import { Variable, BaseVariable, MetaVariable } from "./variable";
 import { Site } from "./site";
 import { Isolate } from "../../type/aran";
+import { Sequence } from "./sequence";
 
 export type WarningPrelude = {
   type: "warning";
@@ -54,6 +55,11 @@ export type PrefixPrelude = {
   data: aran.Effect<unbuild.Atom>;
 };
 
+export type EarlyPrefixPrelude = {
+  type: "early-prefix";
+  data: aran.Effect<unbuild.Atom>;
+};
+
 export type ConditionPrelude = {
   type: "condition";
   data: Condition;
@@ -68,6 +74,7 @@ export type Prelude =
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude
   | PrefixPrelude
+  | EarlyPrefixPrelude
   | ConditionPrelude;
 
 type ProgramPrelude = WarningPrelude | ContextPrelude;
@@ -96,7 +103,8 @@ type FramePrelude =
   | TemplatePrelude
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude
-  | PrefixPrelude;
+  | PrefixPrelude
+  | EarlyPrefixPrelude;
 
 type CachePrelude =
   | WarningPrelude
