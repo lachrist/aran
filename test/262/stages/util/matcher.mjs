@@ -1,4 +1,4 @@
-import { AranTypeError } from "./error.mjs";
+import { AranTypeError } from "../../error.mjs";
 
 const { RegExp, Object, Map } = globalThis;
 
@@ -42,7 +42,7 @@ const isExactMatcherItem = (item) =>
  * @type {(
  *   matchers: import("./matcher").Matcher,
  * ) => (
- *   result: import("./types").Result,
+ *   result: import("../../types").Result,
  * ) => boolean}
  */
 const compileMatcher = (items) => {
@@ -82,7 +82,7 @@ const compileMatcher = (items) => {
  *   ],
  * ) => [
  *   string,
- *   (result: import("./types").Result) => boolean,
+ *   (result: import("../../types").Result) => boolean,
  * ]}
  */
 const compileMatcherEntry = ([tag, items]) => [tag, compileMatcher(items)];
@@ -93,7 +93,7 @@ const compileMatcherEntry = ([tag, items]) => [tag, compileMatcher(items)];
  *     [key in string]: import("./matcher").MatcherItem[]
  *   },
  * ) => (
- *   result: import("./types").Result,
+ *   result: import("../../types").Result,
  * ) => string[]}
  */
 export const compileExpect = (category) => {

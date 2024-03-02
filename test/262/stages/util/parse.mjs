@@ -13,11 +13,11 @@ const {
  *   code: string,
  *   base: B,
  *   kind: "script" | "module" | "eval",
- * ) => import("./outcome").Outcome<
+ * ) => import("../../outcome").Outcome<
  *   (
- *     | import("../../lib/program").ScriptProgram<B>
- *     | import("../../lib/program").ModuleProgram<B>
- *     | import("../../lib/program").GlobalEvalProgram<B>
+ *     | import("../../../../lib/program").ScriptProgram<B>
+ *     | import("../../../../lib/program").ModuleProgram<B>
+ *     | import("../../../../lib/program").GlobalEvalProgram<B>
  *   ),
  *   string
  * >}
@@ -63,9 +63,9 @@ export const parseGlobal = (code, base, kind) => {
  * @type {<B>(
  *   code: string,
  *   base: B,
- *   context: import("../../lib/context").InternalLocalContext,
- * ) => import("./outcome").Outcome<
- *   import("../../lib/program").InternalLocalEvalProgram<B>,
+ *   context: import("../../../../lib/context").InternalLocalContext,
+ * ) => import("../../outcome").Outcome<
+ *   import("../../../../lib/program").InternalLocalEvalProgram<B>,
  *   string
  * >}
  */
@@ -154,9 +154,9 @@ const sanitizeBabel = (root) => {
  * @type {<B>(
  *   code: string,
  *   base: B,
- *   context: import("../../lib/context").InternalLocalContext,
- * ) => import("./outcome").Outcome<
- *   import("../../lib/program").InternalLocalEvalProgram<B>,
+ *   context: import("../../../../lib/context").InternalLocalContext,
+ * ) => import("../../outcome").Outcome<
+ *   import("../../../../lib/program").InternalLocalEvalProgram<B>,
  *   string
  * >}
  */
@@ -214,9 +214,9 @@ export const parseBabelLocal = (code, base, context) => {
  * @type {<B>(
  *   code: string,
  *   base: B,
- *   context: import("../../lib/context").InternalLocalContext,
- * ) => import("./outcome").Outcome<
- *   import("../../lib/program").InternalLocalEvalProgram<B>,
+ *   context: import("../../../../lib/context").InternalLocalContext,
+ * ) => import("../../outcome").Outcome<
+ *   import("../../../../lib/program").InternalLocalEvalProgram<B>,
  *   string
  * >}
  */
