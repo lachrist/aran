@@ -13,32 +13,26 @@ const {
  *   code: string,
  *   base: B,
  *   kind: "script" | "module" | "eval",
- * ) => import("../../outcome").Outcome<
- *   (
- *     | import("../../../../lib/program").ScriptProgram<B>
- *     | import("../../../../lib/program").ModuleProgram<B>
- *     | import("../../../../lib/program").GlobalEvalProgram<B>
- *   ),
- *   string
- * >}
+ * ) => (
+ *   | import("../../../../lib/program").ScriptProgram<B>
+ *   | import("../../../../lib/program").ModuleProgram<B>
+ *   | import("../../../../lib/program").GlobalEvalProgram<B>
+ * )}
  */
 export const parseGlobal = (code, base, kind) => {
   try {
     return {
-      type: "success",
-      data: {
-        kind,
-        root: /** @type {any} */ (
-          parseAcorn(code, {
-            ecmaVersion: "latest",
-            sourceType: kind === "module" ? "module" : "script",
-            checkPrivateFields: false,
-          })
-        ),
-        base,
-        context: {
-          type: "global",
-        },
+      kind,
+      root: /** @type {any} */ (
+        parseAcorn(code, {
+          ecmaVersion: "latest",
+          sourceType: kind === "module" ? "module" : "script",
+          checkPrivateFields: false,
+        })
+      ),
+      base,
+      context: {
+        type: "global",
       },
     };
   } catch (error) {
@@ -50,8 +44,15 @@ export const parseGlobal = (code, base, kind) => {
       error instanceof SyntaxError
     ) {
       return {
-        type: "failure",
-        data: error.message,
+        kind,
+        root: {
+          type: "EarlySyntaxError",
+          message: error.message,
+        },
+        base,
+        context: {
+          type: "global",
+        },
       };
     } else {
       throw error;
@@ -64,34 +65,28 @@ export const parseGlobal = (code, base, kind) => {
  *   code: string,
  *   base: B,
  *   context: import("../../../../lib/context").InternalLocalContext,
- * ) => import("../../outcome").Outcome<
- *   import("../../../../lib/program").InternalLocalEvalProgram<B>,
- *   string
- * >}
+ * ) => import("../../../../lib/program").InternalLocalEvalProgram<B>}
  */
 export const parseAcornLocal = (code, base, context) => {
   try {
     return {
-      type: "success",
-      data: {
-        kind: "eval",
-        root: /** @type {any} */ (
-          parseAcorn(code, {
-            ecmaVersion: "latest",
-            sourceType: "script",
-            onInsertedSemicolon: /** @type {any} */ (undefined),
-            onTrailingComma: /** @type {any} */ (undefined),
-            allowReturnOutsideFunction: false,
-            allowImportExportEverywhere: true,
-            allowAwaitOutsideFunction: true,
-            allowSuperOutsideMethod: true,
-            allowHashBang: true,
-            checkPrivateFields: false,
-          })
-        ),
-        base,
-        context,
-      },
+      kind: "eval",
+      root: /** @type {any} */ (
+        parseAcorn(code, {
+          ecmaVersion: "latest",
+          sourceType: "script",
+          onInsertedSemicolon: /** @type {any} */ (undefined),
+          onTrailingComma: /** @type {any} */ (undefined),
+          allowReturnOutsideFunction: false,
+          allowImportExportEverywhere: true,
+          allowAwaitOutsideFunction: true,
+          allowSuperOutsideMethod: true,
+          allowHashBang: true,
+          checkPrivateFields: false,
+        })
+      ),
+      base,
+      context,
     };
   } catch (error) {
     if (
@@ -102,8 +97,13 @@ export const parseAcornLocal = (code, base, context) => {
       error instanceof SyntaxError
     ) {
       return {
-        type: "failure",
-        data: error.message,
+        kind: "eval",
+        root: {
+          type: "EarlySyntaxError",
+          message: error.message,
+        },
+        base,
+        context,
       };
     } else {
       throw error;
@@ -155,42 +155,36 @@ const sanitizeBabel = (root) => {
  *   code: string,
  *   base: B,
  *   context: import("../../../../lib/context").InternalLocalContext,
- * ) => import("../../outcome").Outcome<
- *   import("../../../../lib/program").InternalLocalEvalProgram<B>,
- *   string
- * >}
+ * ) => import("../../../../lib/program").InternalLocalEvalProgram<B>}
  */
 export const parseBabelLocal = (code, base, context) => {
   try {
     return {
-      type: "success",
-      data: {
-        kind: "eval",
-        root: sanitizeBabel(
-          parseBabel(code, {
-            allowImportExportEverywhere: false,
-            allowAwaitOutsideFunction: false,
-            // @ts-ignore
-            allowNewTargetOutsideFunction: true,
-            allowReturnOutsideFunction: false,
-            allowSuperOutsideMethod: true,
-            allowUndeclaredExports: false,
-            attachComment: false,
-            // Error: The `annexB` option can only be set to `false`.
-            annexB: false,
-            createImportExpressions: true,
-            createParenthesizedExpressions: false,
-            errorRecovery: false,
-            plugins: ["estree"],
-            sourceType: "script",
-            strictMode: false,
-            ranges: false,
-            tokens: false,
-          }).program,
-        ),
-        base,
-        context,
-      },
+      kind: "eval",
+      root: sanitizeBabel(
+        parseBabel(code, {
+          allowImportExportEverywhere: false,
+          allowAwaitOutsideFunction: false,
+          // @ts-ignore
+          allowNewTargetOutsideFunction: true,
+          allowReturnOutsideFunction: false,
+          allowSuperOutsideMethod: true,
+          allowUndeclaredExports: false,
+          attachComment: false,
+          // Error: The `annexB` option can only be set to `false`.
+          annexB: false,
+          createImportExpressions: true,
+          createParenthesizedExpressions: false,
+          errorRecovery: false,
+          plugins: ["estree"],
+          sourceType: "script",
+          strictMode: false,
+          ranges: false,
+          tokens: false,
+        }).program,
+      ),
+      base,
+      context,
     };
   } catch (error) {
     if (
@@ -201,8 +195,13 @@ export const parseBabelLocal = (code, base, context) => {
       error instanceof SyntaxError
     ) {
       return {
-        type: "failure",
-        data: error.message,
+        kind: "eval",
+        root: {
+          type: "EarlySyntaxError",
+          message: error.message,
+        },
+        base,
+        context,
       };
     } else {
       throw error;
@@ -215,17 +214,17 @@ export const parseBabelLocal = (code, base, context) => {
  *   code: string,
  *   base: B,
  *   context: import("../../../../lib/context").InternalLocalContext,
- * ) => import("../../outcome").Outcome<
- *   import("../../../../lib/program").InternalLocalEvalProgram<B>,
- *   string
- * >}
+ * ) => import("../../../../lib/program").InternalLocalEvalProgram<B>}
  */
 export const parseLocal = (code, base, context) => {
   const acorn = parseAcornLocal(code, base, context);
   // We prefer acorn over babel because it is faster respect the estree format.
   // The estree babel plugin is supposed to make babel produce valid estree
   //   but the private identifiers and field are still in the babel format.
-  if (acorn.type === "failure" && acorn.data.startsWith("'new.target'")) {
+  if (
+    acorn.root.type === "EarlySyntaxError" &&
+    acorn.root.message.startsWith("'new.target'")
+  ) {
     return parseBabelLocal(code, base, context);
   } else {
     return acorn;

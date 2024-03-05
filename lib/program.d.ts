@@ -5,37 +5,42 @@ import {
   InternalLocalContext,
 } from "./context";
 
+export type EarlySyntaxError = {
+  type: "EarlySyntaxError";
+  message: string;
+};
+
 export type ModuleProgram<B> = {
   kind: "module";
-  root: estree.ModuleProgram;
+  root: estree.ModuleProgram | EarlySyntaxError;
   base: B;
   context: GlobalContext;
 };
 
 export type ScriptProgram<B> = {
   kind: "script";
-  root: estree.ScriptProgram;
+  root: estree.ScriptProgram | EarlySyntaxError;
   base: B;
   context: GlobalContext;
 };
 
 export type GlobalEvalProgram<B> = {
   kind: "eval";
-  root: estree.ScriptProgram;
+  root: estree.ScriptProgram | EarlySyntaxError;
   base: B;
   context: GlobalContext;
 };
 
 export type InternalLocalEvalProgram<B> = {
   kind: "eval";
-  root: estree.ScriptProgram;
+  root: estree.ScriptProgram | EarlySyntaxError;
   base: B;
   context: InternalLocalContext;
 };
 
 export type ExternalLocalEvalProgram<B> = {
   kind: "eval";
-  root: estree.ScriptProgram;
+  root: estree.ScriptProgram | EarlySyntaxError;
   base: B;
   context: ExternalLocalContext;
 };

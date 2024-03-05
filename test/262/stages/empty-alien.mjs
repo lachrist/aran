@@ -4,7 +4,6 @@ import { readFile } from "node:fs/promises";
 import { cwd } from "node:process";
 import { fileURLToPath } from "node:url";
 import { relative } from "node:path";
-import { fromOutcome } from "../outcome.mjs";
 import {
   HIDDEN,
   compileExpect,
@@ -12,7 +11,7 @@ import {
   parseLocal,
 } from "./util/index.mjs";
 
-const { JSON, URL, SyntaxError } = globalThis;
+const { JSON, URL } = globalThis;
 
 const GLOBAL = /** @type {estree.Variable} */ ("globalThis");
 
@@ -68,37 +67,33 @@ export default {
           __proto__: null,
           value: /** @type {import("./util/aran").Advice} */ ({
             "__proto__": null,
-            "eval.before": (content, context, location) =>
-              typeof content === "string"
-                ? fromOutcome(
-                    parseLocal(
-                      content,
-                      /** @type {import("./util/aran").Base} */ (
-                        /** @type {string} */ (location)
-                      ),
-                      context,
-                    ),
-                    (program) => {
-                      counter += 1;
-                      const { content } = record({
-                        kind: "script",
-                        url: new URL(`eval:///${counter}`),
-                        content: generate(
-                          instrument(program, {
-                            ...config,
-                            warning,
-                            early_syntax_error: "embed",
-                          }),
+            "eval.before": (content, context, location) => {
+              if (typeof content === "string") {
+                counter += 1;
+                return record({
+                  kind: "script",
+                  url: new URL(`eval:///${counter}`),
+                  content: generate(
+                    instrument(
+                      parseLocal(
+                        content,
+                        /** @type {import("./util/aran").Base} */ (
+                          /** @type {string} */ (location)
                         ),
-                      });
-                      return content;
-                    },
-                    (message) =>
-                      `throw new globalThis.SyntaxError(${JSON.stringify(
-                        message,
-                      )})`,
-                  )
-                : content,
+                        context,
+                      ),
+                      {
+                        ...config,
+                        warning,
+                        early_syntax_error: "embed",
+                      },
+                    ),
+                  ),
+                }).content;
+              } else {
+                return content;
+              }
+            },
           }),
           writable: false,
           enumerable: false,
@@ -106,32 +101,28 @@ export default {
         },
       },
       instrument: ({ kind, url, content }) =>
-        fromOutcome(
-          parseGlobal(
-            content,
-            /** @type {import("./util/aran").Base} */ (
-              url.protocol === "file:"
-                ? relative(cwd(), fileURLToPath(url))
-                : url.href
-            ),
-            kind,
-          ),
-          (program) =>
-            record({
-              kind,
-              url,
-              content: generate(
-                instrument(program, {
-                  ...config,
-                  warning,
-                  early_syntax_error: "throw",
-                }),
+        record({
+          kind,
+          url,
+          content: generate(
+            instrument(
+              parseGlobal(
+                content,
+                /** @type {import("./util/aran").Base} */ (
+                  url.protocol === "file:"
+                    ? relative(cwd(), fileURLToPath(url))
+                    : url.href
+                ),
+                kind,
               ),
-            }),
-          (message) => {
-            throw SyntaxError(message);
-          },
-        ),
+              {
+                ...config,
+                warning,
+                early_syntax_error: "throw",
+              },
+            ),
+          ),
+        }),
     };
   },
 };
