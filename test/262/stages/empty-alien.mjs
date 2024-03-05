@@ -10,7 +10,6 @@ import {
   compileExpect,
   parseGlobal,
   parseLocal,
-  warn,
 } from "./util/index.mjs";
 
 const { JSON, URL, SyntaxError } = globalThis;
@@ -26,6 +25,7 @@ const INTRINSIC = /** @type {estree.Variable} */ ("_ARAN_INTRINSIC_");
  * >}
  */
 const config = {
+  mode: "default",
   pointcut: ["eval.before"],
   locate: (path, base) =>
     /** @type {import("./util/aran").Location} */ (`${base}#${path}`),
@@ -33,8 +33,9 @@ const config = {
   advice_variable: /** @type {estree.Variable} */ ("_ARAN_ADVICE_"),
   intrinsic_variable: INTRINSIC,
   escape_prefix: /** @type {estree.Variable} */ ("_ARAN_ESCAPE_"),
-  reify_global: false,
-  debug_alias: true,
+  global_declarative_record: "native",
+  warning: "ignore",
+  early_syntax_error: "embed",
 };
 
 /** @type {test262.Stage} */
@@ -83,10 +84,11 @@ export default {
                         kind: "script",
                         url: new URL(`eval:///${counter}`),
                         content: generate(
-                          warn(
-                            warning === "console",
-                            instrument(program, config),
-                          ),
+                          instrument(program, {
+                            ...config,
+                            warning,
+                            early_syntax_error: "embed",
+                          }),
                         ),
                       });
                       return content;
@@ -119,7 +121,11 @@ export default {
               kind,
               url,
               content: generate(
-                warn(warning === "console", instrument(program, config)),
+                instrument(program, {
+                  ...config,
+                  warning,
+                  early_syntax_error: "throw",
+                }),
               ),
             }),
           (message) => {

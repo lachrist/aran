@@ -71,7 +71,7 @@ try {
         const result = await runTest({
           target,
           test262,
-          warning: "silent",
+          warning: "ignore",
           record: (source) => source,
           createInstrumenter,
         });

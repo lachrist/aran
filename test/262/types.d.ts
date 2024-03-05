@@ -83,7 +83,7 @@ export type Stage = {
   createInstrumenter: (options: {
     record: Instrument;
     reject: (error: Error) => void;
-    warning: "console" | "silent";
+    warning: "console" | "ignore";
   }) => Instrumenter;
   expect: (result: Result) => string[];
   requirement: StageName[];

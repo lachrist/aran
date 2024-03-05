@@ -27,6 +27,6 @@ export default (code, kind) =>
           type: "global",
         },
       },
-      { pointcut: false, reify_global: false },
+      { pointcut: false, global_declarative_record: "native" },
     ),
   );

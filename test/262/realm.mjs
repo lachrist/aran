@@ -11,7 +11,7 @@ class RealmAranError extends Error {}
  *     counter: { value: number },
  *     reject: (error: Error) => void,
  *     record: import("./types").Instrument,
- *     warning: "silent" | "console",
+ *     warning: "ignore" | "console",
  *     print: (message: string) => void,
  *     createInstrumenter: test262.Stage["createInstrumenter"],
  *   },

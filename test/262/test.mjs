@@ -73,7 +73,7 @@ const DEFAULT_METADATA = {
  *     target: string,
  *     test262: URL,
  *     createInstrumenter: test262.Stage["createInstrumenter"],
- *     warning: "silent" | "console",
+ *     warning: "ignore" | "console",
  *     record: import("./types").Instrument,
  *   },
  * ) => Promise<test262.Result>}

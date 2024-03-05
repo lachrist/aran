@@ -46,7 +46,7 @@ const termination = {
  *   options: {
  *     case: test262.Case,
  *     createInstrumenter: test262.Stage["createInstrumenter"],
- *     warning: "silent" | "console",
+ *     warning: "ignore" | "console",
  *     reject: (error: Error) => void,
  *     record: import("./types").Instrument,
  *   },
@@ -158,7 +158,7 @@ export const runTestCaseInner = async ({
  * @type {(
  *   options: {
  *     case: test262.Case,
- *     warning: "silent" | "console",
+ *     warning: "ignore" | "console",
  *     record: import("./types").Instrument,
  *     createInstrumenter: test262.Stage["createInstrumenter"],
  *   },

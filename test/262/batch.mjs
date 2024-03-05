@@ -74,7 +74,7 @@ for await (const url of scrape(new URL("test/", test262))) {
       target,
       test262,
       record: (source) => source,
-      warning: "silent",
+      warning: "ignore",
       createInstrumenter,
     });
     if (result.error !== null) {
