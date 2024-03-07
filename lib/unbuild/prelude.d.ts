@@ -50,7 +50,7 @@ export type DeclarationPrelude =
   | MetaDeclarationPrelude
   | BaseDeclarationPrelude;
 
-export type PrefixPrelude = {
+export type RegularPrefixPrelude = {
   type: "prefix";
   data: aran.Effect<unbuild.Atom>;
 };
@@ -59,6 +59,8 @@ export type EarlyPrefixPrelude = {
   type: "early-prefix";
   data: aran.Effect<unbuild.Atom>;
 };
+
+export type PrefixPrelude = RegularPrefixPrelude | EarlyPrefixPrelude;
 
 export type ConditionPrelude = {
   type: "condition";
@@ -73,7 +75,7 @@ export type Prelude =
   | TemplatePrelude
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude
-  | PrefixPrelude
+  | RegularPrefixPrelude
   | EarlyPrefixPrelude
   | ConditionPrelude;
 
@@ -103,7 +105,7 @@ type FramePrelude =
   | TemplatePrelude
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude
-  | PrefixPrelude
+  | RegularPrefixPrelude
   | EarlyPrefixPrelude;
 
 type CachePrelude =
@@ -113,7 +115,7 @@ type CachePrelude =
   | EarlyErrorPrelude
   | TemplatePrelude
   | MetaDeclarationPrelude
-  | PrefixPrelude;
+  | RegularPrefixPrelude;
 
 type StatementPrelude =
   | WarningPrelude
@@ -146,5 +148,5 @@ type ChainPrelude =
   | EarlyErrorPrelude
   | TemplatePrelude
   | MetaDeclarationPrelude
-  | PrefixPrelude
+  | RegularPrefixPrelude
   | ConditionPrelude;

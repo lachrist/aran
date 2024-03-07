@@ -1,10 +1,12 @@
 import { ClosureBody, ControlBody } from "./body";
 import {
+  BaseDeclarationPrelude,
   BlockPrelude,
   BodyPrelude,
   ChainPrelude,
   EffectPrelude,
   ExpressionPrelude,
+  Prelude,
   ProgramPrelude,
   StatementPrelude,
 } from "./prelude";
