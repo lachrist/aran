@@ -108,6 +108,14 @@ type FramePrelude =
   | RegularPrefixPrelude
   | EarlyPrefixPrelude;
 
+export type NodePrelude =
+  | WarningPrelude
+  | ContextPrelude
+  | HeaderPrelude
+  | EarlyErrorPrelude
+  | TemplatePrelude
+  | MetaDeclarationPrelude;
+
 type CachePrelude =
   | WarningPrelude
   | ContextPrelude
