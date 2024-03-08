@@ -114,40 +114,13 @@ export type NodePrelude =
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude
-  | MetaDeclarationPrelude;
+  | DeclarationPrelude;
 
-type CachePrelude =
-  | WarningPrelude
-  | ContextPrelude
-  | HeaderPrelude
-  | EarlyErrorPrelude
-  | TemplatePrelude
-  | MetaDeclarationPrelude
-  | RegularPrefixPrelude;
+type StatementPrelude = NodePrelude;
 
-type StatementPrelude =
-  | WarningPrelude
-  | ContextPrelude
-  | HeaderPrelude
-  | EarlyErrorPrelude
-  | TemplatePrelude
-  | MetaDeclarationPrelude;
+type EffectPrelude = NodePrelude;
 
-type EffectPrelude =
-  | WarningPrelude
-  | ContextPrelude
-  | HeaderPrelude
-  | EarlyErrorPrelude
-  | TemplatePrelude
-  | MetaDeclarationPrelude;
-
-type ExpressionPrelude =
-  | WarningPrelude
-  | ContextPrelude
-  | HeaderPrelude
-  | EarlyErrorPrelude
-  | TemplatePrelude
-  | MetaDeclarationPrelude;
+type ExpressionPrelude = NodePrelude;
 
 type ChainPrelude =
   | WarningPrelude
