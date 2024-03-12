@@ -1,11 +1,9 @@
-import { ExpressionSequence } from "../sequence";
-
 export type ArgumentList =
   | {
       type: "spread";
-      values: ExpressionSequence[];
+      values: aran.Expression<unbuild.Atom>[];
     }
   | {
       type: "concat";
-      value: ExpressionSequence;
+      value: aran.Expression<unbuild.Atom>;
     };

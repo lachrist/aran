@@ -1,7 +1,6 @@
 import { Cache } from "../cache";
 import { InternalLocalContext } from "../../context";
 import { ModuleHeader } from "../../header";
-import { ExpressionSequence } from "../sequence";
 
 export { RootFrame } from "./root";
 
@@ -23,14 +22,14 @@ export type InitializeOperation = {
   kind: "let" | "const" | "var" | "val";
   manufactured: boolean;
   variable: estree.Variable;
-  right: ExpressionSequence | null;
+  right: aran.Expression<unbuild.Atom> | null;
 };
 
 export type WriteOperation = {
   type: "write";
   mode: Mode;
   variable: estree.Variable;
-  right: ExpressionSequence;
+  right: aran.Expression<unbuild.Atom>;
 };
 
 export type ReadOperation = {
@@ -104,26 +103,26 @@ export type ReadInputOperation = {
 export type GetSuperOperation = {
   type: "get-super";
   mode: Mode;
-  key: ExpressionSequence;
+  key: aran.Expression<unbuild.Atom>;
 };
 
 export type SetSuperOperation = {
   type: "set-super";
   mode: Mode;
-  key: ExpressionSequence;
-  value: ExpressionSequence;
+  key: aran.Expression<unbuild.Atom>;
+  value: aran.Expression<unbuild.Atom>;
 };
 
 export type CallSuperOperation = {
   type: "call-super";
   mode: Mode;
-  input: ExpressionSequence;
+  input: aran.Expression<unbuild.Atom>;
 };
 
 export type WrapResultOperation = {
   type: "wrap-result";
   mode: Mode;
-  result: ExpressionSequence | null;
+  result: aran.Expression<unbuild.Atom> | null;
 };
 
 export type ClosureLoadOperation =
@@ -147,9 +146,9 @@ export type ModuleOperation = {
 export type DefinePrivateOperation = {
   type: "define-private";
   mode: Mode;
-  target: ExpressionSequence;
+  target: aran.Expression<unbuild.Atom>;
   key: estree.PrivateKey;
-  value: ExpressionSequence;
+  value: aran.Expression<unbuild.Atom>;
 };
 
 export type InitializePrivateOperation = {
@@ -157,41 +156,41 @@ export type InitializePrivateOperation = {
   mode: Mode;
   kind: "method" | "getter" | "setter";
   key: estree.PrivateKey;
-  value: ExpressionSequence;
+  value: aran.Expression<unbuild.Atom>;
 };
 
 export type RegisterPrivateSingletonOperation = {
   type: "register-private-singleton";
   mode: Mode;
-  target: ExpressionSequence;
+  target: aran.Expression<unbuild.Atom>;
 };
 
 export type RegisterPrivateCollectionOperation = {
   type: "register-private-collection";
   mode: Mode;
-  target: ExpressionSequence;
+  target: aran.Expression<unbuild.Atom>;
 };
 
 export type HasPrivateOperation = {
   type: "has-private";
   mode: Mode;
-  target: ExpressionSequence;
+  target: aran.Expression<unbuild.Atom>;
   key: estree.PrivateKey;
 };
 
 export type GetPrivateOperation = {
   type: "get-private";
   mode: Mode;
-  target: ExpressionSequence;
+  target: aran.Expression<unbuild.Atom>;
   key: estree.PrivateKey;
 };
 
 export type SetPrivateOperation = {
   type: "set-private";
   mode: Mode;
-  target: ExpressionSequence;
+  target: aran.Expression<unbuild.Atom>;
   key: estree.PrivateKey;
-  value: ExpressionSequence;
+  value: aran.Expression<unbuild.Atom>;
 };
 
 export type PrivateLoadOperation = HasPrivateOperation | GetPrivateOperation;

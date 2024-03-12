@@ -1,5 +1,3 @@
-import { ExpressionSequence } from "../sequence";
-
 export type Callee =
   | {
       type: "super";
@@ -9,6 +7,6 @@ export type Callee =
     }
   | {
       type: "regular";
-      function: ExpressionSequence;
-      this: ExpressionSequence;
+      function: aran.Expression<unbuild.Atom>;
+      this: aran.Expression<unbuild.Atom>;
     };

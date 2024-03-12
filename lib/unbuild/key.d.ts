@@ -1,12 +1,9 @@
-import { Cache } from "./cache";
-import { ExpressionSequence } from "./sequence";
-
 export type PublicKey =
   | {
       computed: true;
       access: "public";
       converted: boolean;
-      data: ExpressionSequence;
+      data: aran.Expression<unbuild.Atom>;
     }
   | {
       computed: false;

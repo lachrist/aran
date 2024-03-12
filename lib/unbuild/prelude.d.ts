@@ -3,7 +3,7 @@ import { Header } from "../header";
 import { EarlyError } from "./early-error";
 import { Condition } from "./condition";
 import { Context } from "../context";
-import { Variable, BaseVariable, MetaVariable } from "./variable";
+import { BaseVariable, MetaVariable } from "./variable";
 import { Site } from "./site";
 import { Isolate } from "../../type/aran";
 import { Sequence } from "./sequence";
@@ -33,6 +33,16 @@ export type TemplatePrelude = {
   data: {
     variable: MetaVariable;
     value: Site<estree.TaggedTemplateExpression>;
+    path: unbuild.Path;
+  };
+};
+
+export type DuplicatePrelude = {
+  type: "duplicate";
+  data: {
+    frame: "aran.global" | "aran.record";
+    variable: BaseVariable;
+    path: unbuild.Path;
   };
 };
 
@@ -50,17 +60,10 @@ export type DeclarationPrelude =
   | MetaDeclarationPrelude
   | BaseDeclarationPrelude;
 
-export type RegularPrefixPrelude = {
+export type PrefixPrelude = {
   type: "prefix";
   data: aran.Effect<unbuild.Atom>;
 };
-
-export type EarlyPrefixPrelude = {
-  type: "early-prefix";
-  data: aran.Effect<unbuild.Atom>;
-};
-
-export type PrefixPrelude = RegularPrefixPrelude | EarlyPrefixPrelude;
 
 export type ConditionPrelude = {
   type: "condition";
@@ -73,40 +76,36 @@ export type Prelude =
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude
+  | DuplicatePrelude
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude
-  | RegularPrefixPrelude
-  | EarlyPrefixPrelude
+  | PrefixPrelude
   | ConditionPrelude;
 
 type ProgramPrelude = WarningPrelude | ContextPrelude;
+
+export type ProgramSequence = Sequence<
+  ProgramPrelude,
+  aran.Program<unbuild.Atom>
+>;
 
 type BlockPrelude =
   | WarningPrelude
   | ContextPrelude
   | HeaderPrelude
   | EarlyErrorPrelude
-  | TemplatePrelude;
-
-type BodyPrelude =
-  | WarningPrelude
-  | ContextPrelude
-  | HeaderPrelude
-  | EarlyErrorPrelude
   | TemplatePrelude
-  | BaseDeclarationPrelude
-  | MetaDeclarationPrelude;
+  | DuplicatePrelude;
 
-type FramePrelude =
-  | WarningPrelude
-  | ContextPrelude
-  | HeaderPrelude
-  | EarlyErrorPrelude
-  | TemplatePrelude
-  | BaseDeclarationPrelude
-  | MetaDeclarationPrelude
-  | RegularPrefixPrelude
-  | EarlyPrefixPrelude;
+export type ClosureBlockSequence = Sequence<
+  BlockPrelude,
+  aran.ClosureBlock<unbuild.Atom>
+>;
+
+export type ControlBlockSequence = Sequence<
+  BlockPrelude,
+  aran.ControlBlock<unbuild.Atom>
+>;
 
 export type NodePrelude =
   | WarningPrelude
@@ -114,13 +113,21 @@ export type NodePrelude =
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude
-  | DeclarationPrelude;
+  | DuplicatePrelude
+  | BaseDeclarationPrelude
+  | MetaDeclarationPrelude;
 
-type StatementPrelude = NodePrelude;
+export type StatementSequence = Sequence<
+  NodePrelude,
+  aran.Statement<unbuild.Atom>[]
+>;
 
-type EffectPrelude = NodePrelude;
+export type EffectSequence = Sequence<NodePrelude, aran.Effect<unbuild.Atom>[]>;
 
-type ExpressionPrelude = NodePrelude;
+export type ExpressionSequence = Sequence<
+  NodePrelude,
+  aran.Expression<unbuild.Atom>
+>;
 
 type ChainPrelude =
   | WarningPrelude
@@ -128,6 +135,7 @@ type ChainPrelude =
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude
+  | DuplicatePrelude
   | MetaDeclarationPrelude
-  | RegularPrefixPrelude
+  | PrefixPrelude
   | ConditionPrelude;
