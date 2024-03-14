@@ -41,7 +41,7 @@ export type DuplicatePrelude = {
   type: "duplicate";
   data: {
     frame: "aran.global" | "aran.record";
-    variable: BaseVariable;
+    variable: estree.Variable;
     path: unbuild.Path;
   };
 };
