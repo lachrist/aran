@@ -84,10 +84,10 @@ export type Prelude =
 
 type ProgramPrelude = WarningPrelude | ContextPrelude;
 
-export type ProgramSequence = Sequence<
-  ProgramPrelude,
-  aran.Program<unbuild.Atom>
->;
+// export type ProgramSequence = Sequence<
+//   ProgramPrelude,
+//   aran.Program<unbuild.Atom>
+// >;
 
 type BlockPrelude =
   | WarningPrelude
@@ -97,17 +97,17 @@ type BlockPrelude =
   | TemplatePrelude
   | DuplicatePrelude;
 
-export type ClosureBlockSequence = Sequence<
-  BlockPrelude,
-  aran.ClosureBlock<unbuild.Atom>
->;
+// export type ClosureBlockSequence = Sequence<
+//   BlockPrelude,
+//   aran.ClosureBlock<unbuild.Atom>
+// >;
 
-export type ControlBlockSequence = Sequence<
-  BlockPrelude,
-  aran.ControlBlock<unbuild.Atom>
->;
+// export type ControlBlockSequence = Sequence<
+//   BlockPrelude,
+//   aran.ControlBlock<unbuild.Atom>
+// >;
 
-export type NodePrelude =
+export type BodyPrelude =
   | WarningPrelude
   | ContextPrelude
   | HeaderPrelude
@@ -117,25 +117,25 @@ export type NodePrelude =
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude;
 
-export type StatementSequence = Sequence<
-  NodePrelude,
-  aran.Statement<unbuild.Atom>[]
->;
+// export type StatementSequence = Sequence<
+//   NodePrelude,
+//   aran.Statement<unbuild.Atom>[]
+// >;
 
-export type EffectSequence = Sequence<NodePrelude, aran.Effect<unbuild.Atom>[]>;
+// export type EffectSequence = Sequence<NodePrelude, aran.Effect<unbuild.Atom>[]>;
 
-export type ExpressionSequence = Sequence<
-  NodePrelude,
-  aran.Expression<unbuild.Atom>
->;
+// export type ExpressionSequence = Sequence<
+//   NodePrelude,
+//   aran.Expression<unbuild.Atom>
+// >;
 
-type ChainPrelude =
-  | WarningPrelude
-  | ContextPrelude
-  | HeaderPrelude
-  | EarlyErrorPrelude
-  | TemplatePrelude
-  | DuplicatePrelude
-  | MetaDeclarationPrelude
-  | PrefixPrelude
-  | ConditionPrelude;
+// export type ChainPrelude =
+//   | WarningPrelude
+//   | ContextPrelude
+//   | HeaderPrelude
+//   | EarlyErrorPrelude
+//   | TemplatePrelude
+//   | DuplicatePrelude
+//   | MetaDeclarationPrelude
+//   | PrefixPrelude
+//   | ConditionPrelude;
