@@ -1,5 +1,5 @@
-import type { Object } from "../object.d.ts";
-import type { Key } from "../key.d.ts";
+import type { Object } from "./object.js";
+import type { Key } from "./key.js";
 
 export type Update =
   | {
