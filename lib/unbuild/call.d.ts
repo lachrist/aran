@@ -1,4 +1,4 @@
-import { ArgumentList } from "./visitors/argument";
+import { ArgumentList } from "./argument";
 import { Callee } from "./callee";
 
 export type Call = {

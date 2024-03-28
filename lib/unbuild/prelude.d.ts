@@ -33,7 +33,6 @@ export type TemplatePrelude = {
   data: {
     variable: MetaVariable;
     value: Site<estree.TaggedTemplateExpression>;
-    path: unbuild.Path;
   };
 };
 
@@ -84,11 +83,6 @@ export type Prelude =
 
 type ProgramPrelude = WarningPrelude | ContextPrelude;
 
-// export type ProgramSequence = Sequence<
-//   ProgramPrelude,
-//   aran.Program<unbuild.Atom>
-// >;
-
 type BlockPrelude =
   | WarningPrelude
   | ContextPrelude
@@ -96,16 +90,6 @@ type BlockPrelude =
   | EarlyErrorPrelude
   | TemplatePrelude
   | DuplicatePrelude;
-
-// export type ClosureBlockSequence = Sequence<
-//   BlockPrelude,
-//   aran.ClosureBlock<unbuild.Atom>
-// >;
-
-// export type ControlBlockSequence = Sequence<
-//   BlockPrelude,
-//   aran.ControlBlock<unbuild.Atom>
-// >;
 
 export type BodyPrelude =
   | WarningPrelude
@@ -116,26 +100,3 @@ export type BodyPrelude =
   | DuplicatePrelude
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude;
-
-// export type StatementSequence = Sequence<
-//   NodePrelude,
-//   aran.Statement<unbuild.Atom>[]
-// >;
-
-// export type EffectSequence = Sequence<NodePrelude, aran.Effect<unbuild.Atom>[]>;
-
-// export type ExpressionSequence = Sequence<
-//   NodePrelude,
-//   aran.Expression<unbuild.Atom>
-// >;
-
-// export type ChainPrelude =
-//   | WarningPrelude
-//   | ContextPrelude
-//   | HeaderPrelude
-//   | EarlyErrorPrelude
-//   | TemplatePrelude
-//   | DuplicatePrelude
-//   | MetaDeclarationPrelude
-//   | PrefixPrelude
-//   | ConditionPrelude;

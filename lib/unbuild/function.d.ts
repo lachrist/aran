@@ -1,4 +1,4 @@
-import type { Cache } from "../cache.d.ts";
+import type { Cache } from "./cache.js";
 
 export type ArrowParamn = { type: "arrow" };
 
