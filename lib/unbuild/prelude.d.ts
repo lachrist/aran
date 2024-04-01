@@ -7,6 +7,7 @@ import { BaseVariable, MetaVariable } from "./variable";
 import { Site } from "./site";
 import { Isolate } from "../../type/aran";
 import { Sequence } from "./sequence";
+import { Template } from "./template";
 
 export type WarningPrelude = {
   type: "warning";
@@ -30,19 +31,7 @@ export type EarlyErrorPrelude = {
 
 export type TemplatePrelude = {
   type: "template";
-  data: {
-    variable: MetaVariable;
-    value: Site<estree.TaggedTemplateExpression>;
-  };
-};
-
-export type DuplicatePrelude = {
-  type: "duplicate";
-  data: {
-    frame: "aran.global" | "aran.record";
-    variable: estree.Variable;
-    path: unbuild.Path;
-  };
+  data: Template;
 };
 
 export type MetaDeclarationPrelude = {
@@ -75,7 +64,6 @@ export type Prelude =
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude
-  | DuplicatePrelude
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude
   | PrefixPrelude
@@ -88,8 +76,7 @@ type BlockPrelude =
   | ContextPrelude
   | HeaderPrelude
   | EarlyErrorPrelude
-  | TemplatePrelude
-  | DuplicatePrelude;
+  | TemplatePrelude;
 
 export type BodyPrelude =
   | WarningPrelude
@@ -97,6 +84,5 @@ export type BodyPrelude =
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude
-  | DuplicatePrelude
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude;
