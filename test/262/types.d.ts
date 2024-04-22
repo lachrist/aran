@@ -13,7 +13,7 @@ type Phase = "async" | "harness" | "parse" | "resolution" | "runtime";
 
 type Negative = {
   phase: Phase;
-  name: string;
+  type: string;
 };
 
 export type Metadata = {

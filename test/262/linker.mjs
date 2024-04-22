@@ -10,8 +10,8 @@ const { Error, undefined, URL, Map, JSON } = globalThis;
  *     instrument: test262.Instrument,
  *   },
  * ) => {
- *   link: import("./linker.d.ts").Link,
- *   register: import("./linker.d.ts").Register,
+ *   link: import("./linker").Link,
+ *   register: import("./linker").Register,
  * }}
  */
 export const compileLinker = ({ context, instrument }) => {
@@ -19,7 +19,7 @@ export const compileLinker = ({ context, instrument }) => {
   const urls = new Map();
   /** @type {Map<string, import("node:vm").Module>} */
   const modules = new Map();
-  /** @type {import("./linker.d.ts").Link} */
+  /** @type {import("./linker").Link} */
   const link = async (specifier, parent, _assertions) => {
     const parent_url = urls.get(parent);
     if (parent_url === undefined) {
@@ -58,8 +58,6 @@ export const compileLinker = ({ context, instrument }) => {
       } else {
         urls.set(module, url1);
         modules.set(url1.href, module);
-        await module.link(link);
-        await module.evaluate();
       }
     }
     return module;

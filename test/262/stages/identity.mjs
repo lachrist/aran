@@ -1,6 +1,16 @@
-const { Set } = globalThis;
+import { readFile } from "node:fs/promises";
+import { HIDDEN, compileExpect } from "./util/index.mjs";
+
+const { JSON, URL, Set } = globalThis;
 
 const features = new Set([
+  "legacy-regexp",
+  "regexp-duplicate-named-groups",
+  "promise-with-resolvers",
+  "Symbol.match",
+  "Symbol.replace",
+  "FinalizationRegistry.prototype.cleanupSome",
+  "import-assertions",
   "IsHTMLDDA",
   "Temporal",
   "Atomics",
@@ -19,22 +29,33 @@ const features = new Set([
 /** @type {(feature: string) => boolean} */
 const isFeatureExcluded = (feature) => features.has(feature);
 
+const expect = compileExpect(
+  JSON.parse(
+    await readFile(new URL("identity.manual.json", import.meta.url), "utf8"),
+  ),
+);
+
+/** @type {[]} */
+const EMPTY = [];
+
+const ARAN_REALM_LIMITATION = ["aran-realm-limitation"];
+
 /** @type {test262.Stage} */
 export default {
   requirement: [],
   exclusion: [],
-  expect: ({ metadata, error }) =>
-    error === null
-      ? []
-      : [
-          ...(error.name === "AranRealmLimitation"
-            ? ["aran-realm-limitation"]
-            : []),
-          ...metadata.features.filter(isFeatureExcluded),
-        ],
+  expect: (result) => [
+    ...(result.error !== null && result.error.name === "RealmAranError"
+      ? ARAN_REALM_LIMITATION
+      : EMPTY),
+    ...(result.error === null
+      ? EMPTY
+      : result.metadata.features.filter(isFeatureExcluded)),
+    ...expect(result),
+  ],
   createInstrumenter: ({ record }) => ({
     setup: [],
-    globals: {},
+    globals: HIDDEN,
     instrument: record,
   }),
 };

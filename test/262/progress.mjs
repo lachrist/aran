@@ -59,12 +59,11 @@ process.on("uncaughtException", (error, _origin) => {
 
 const initial = cursor.index;
 
-cursor.index = -1;
+cursor.index = 0;
 
 try {
   for await (const url of scrape(new URL("test/", test262))) {
     const target = url.href.substring(test262.href.length);
-    cursor.index += 1;
     if (cursor.index >= initial) {
       console.log(cursor.index);
       if (!target.includes("_FIXTURE") && !exclusion.has(target)) {
@@ -113,6 +112,7 @@ try {
         }
       }
     }
+    cursor.index += 1;
   }
 } finally {
   await saveCursor(persistent, cursor);

@@ -1,6 +1,7 @@
 /** @type {(node: estree.Node) => boolean} */
 const isImpure = (node) =>
   node.type === "CallExpression" ||
+  node.type === "NewExpression" ||
   node.type === "AssignmentExpression" ||
   node.type === "UpdateExpression" ||
   node.type === "ImportExpression" ||

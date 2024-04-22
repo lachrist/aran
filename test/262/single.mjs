@@ -36,6 +36,7 @@ const {
 // Uncaught >> Error: ENOENT: no such file or directory, open
 //   'test262/test/language/expressions/dynamic-import/syntax/valid/[object Promise]'
 process.on("uncaughtException", (error, _origin) => {
+  console.log(error);
   const { name, message } = inspectError(error);
   console.log(`Uncaught >> ${name}: ${message}`);
 });

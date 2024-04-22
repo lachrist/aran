@@ -52,7 +52,11 @@ export const createRealm = ({
         print,
         createInstrumenter,
       }).$262,
-    detachArrayBuffer: () => {},
+    detachArrayBuffer: () => {
+      const error = new RealmAranError("detachArrayBuffer");
+      reject(error);
+      throw error;
+    },
     // we have no information on the location of this.
     // so we do not have to register this script to the
     // linker because dynamic import is pointless.

@@ -43,6 +43,50 @@ const termination = {
 
 /**
  * @type {(
+ *   name: string,
+ *   runAsync: () => void,
+ * ) => void}
+ */
+const runNegative = (name, run) => {
+  let caught = false;
+  try {
+    run();
+  } catch (error) {
+    if (inspectErrorName(error) === name) {
+      caught = true;
+    } else {
+      throw error;
+    }
+  }
+  if (!caught) {
+    throw new NegativeAranError(`Missing ${name} error`);
+  }
+};
+
+/**
+ * @type {(
+ *   name: string,
+ *   runAsync: () => Promise<void>,
+ * ) => Promise<void>}
+ */
+const runNegativeAsync = async (name, runAsync) => {
+  let caught = false;
+  try {
+    await runAsync();
+  } catch (error) {
+    if (inspectErrorName(error) === name) {
+      caught = true;
+    } else {
+      throw error;
+    }
+  }
+  if (!caught) {
+    throw new NegativeAranError(`Missing ${name} error`);
+  }
+};
+
+/**
+ * @type {(
  *   options: {
  *     case: test262.Case,
  *     createInstrumenter: test262.Stage["createInstrumenter"],
@@ -71,28 +115,6 @@ export const runTestCaseInner = async ({
     createInstrumenter,
   });
   const { instrument } = context.$262;
-  let caught = false;
-  /**
-   * @type {(
-   *   error: unknown,
-   *   phase: test262.Phase,
-   * ) => void}
-   */
-  const catchNegative =
-    negative === null
-      ? (error, _phase) => {
-          throw error;
-        }
-      : (error, phase) => {
-          if (
-            negative.phase !== phase ||
-            negative.name !== inspectErrorName(error)
-          ) {
-            throw error;
-          } else {
-            caught = true;
-          }
-        };
   for (const url of includes) {
     runInContext(await readFileCache(url), context, {
       filename: url.href,
@@ -103,55 +125,70 @@ export const runTestCaseInner = async ({
     instrument,
   });
   let source2 = source1;
-  try {
+  if (negative !== null && negative.phase === "parse") {
+    try {
+      source2 = instrument(source1);
+    } catch {
+      source2 = source1;
+    }
+  } else {
     source2 = instrument(source1);
-  } catch (error) {
-    catchNegative(error, "parse");
   }
   if (source2.kind === "module") {
-    try {
-      /** @type {import("node:vm").Module} */
+    if (negative !== null && negative.phase === "parse") {
+      runNegative(
+        negative.type,
+        () =>
+          new SourceTextModule(source2.content, {
+            identifier: source2.url.href,
+            context,
+            importModuleDynamically: /** @type {any} */ (link),
+          }),
+      );
+    } else {
       const module = new SourceTextModule(source2.content, {
         identifier: source2.url.href,
         context,
         importModuleDynamically: /** @type {any} */ (link),
       });
       register(module, source1.url);
-      try {
+      if (negative !== null && negative.phase === "resolution") {
+        runNegativeAsync(negative.type, () => module.link(link));
+      } else {
         await module.link(link);
-        try {
+        if (negative !== null && negative.phase === "runtime") {
+          runNegativeAsync(negative.type, () => module.evaluate());
+        } else {
           await module.evaluate();
-        } catch (error) {
-          catchNegative(error, "runtime");
         }
-      } catch (error) {
-        catchNegative(error, "resolution");
       }
-    } catch (error) {
-      catchNegative(error, "parse");
     }
   } else if (source2.kind === "script") {
-    try {
+    if (negative !== null && negative.phase === "parse") {
+      runNegative(
+        negative.type,
+        () =>
+          new Script(source2.content, {
+            filename: source2.url.href,
+            importModuleDynamically: /** @type {any} */ (link),
+          }),
+      );
+    } else {
       const script = new Script(source2.content, {
         filename: source2.url.href,
         importModuleDynamically: /** @type {any} */ (link),
       });
       register(script, source1.url);
-      try {
+      if (negative !== null && negative.phase === "runtime") {
+        runNegative(negative.type, () => script.runInContext(context));
+      } else {
         script.runInContext(context);
-      } catch (error) {
-        catchNegative(error, "runtime");
       }
-    } catch (error) {
-      catchNegative(error, "parse");
     }
   } else {
     throw new AranTypeError(source2.kind);
   }
   await done;
-  if (negative !== null && !caught) {
-    throw new NegativeAranError("Missing negative error");
-  }
 };
 
 /**
