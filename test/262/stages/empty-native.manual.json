@@ -1,6 +1,7 @@
 {
   "DirectEvalExternalVariableDeclaration": [
-    "test/language/statements/variable/S12.2_A5.js"
+    "test/language/statements/variable/S12.2_A5.js",
+    "test/language/eval-code/direct/var-env-global-lex-non-strict.js"
   ],
   "annexB": [
     {
