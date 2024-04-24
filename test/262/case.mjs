@@ -43,11 +43,12 @@ const termination = {
 
 /**
  * @type {(
+ *   phase: "parse" | "resolution" | "runtime",
  *   name: string,
  *   runAsync: () => void,
  * ) => void}
  */
-const runNegative = (name, run) => {
+const runNegative = (phase, name, run) => {
   let caught = false;
   try {
     run();
@@ -59,17 +60,20 @@ const runNegative = (name, run) => {
     }
   }
   if (!caught) {
-    throw new NegativeAranError(`Missing ${name} error`);
+    throw new NegativeAranError(
+      `Missing synchronous ${name} error during ${phase} phase`,
+    );
   }
 };
 
 /**
  * @type {(
+ *   phase: "parse" | "resolution" | "runtime",
  *   name: string,
  *   runAsync: () => Promise<void>,
  * ) => Promise<void>}
  */
-const runNegativeAsync = async (name, runAsync) => {
+const runNegativeAsync = async (phase, name, runAsync) => {
   let caught = false;
   try {
     await runAsync();
@@ -81,7 +85,9 @@ const runNegativeAsync = async (name, runAsync) => {
     }
   }
   if (!caught) {
-    throw new NegativeAranError(`Missing ${name} error`);
+    throw new NegativeAranError(
+      `Missing asynchronous ${name} error during ${phase} phase`,
+    );
   }
 };
 
@@ -137,6 +143,7 @@ export const runTestCaseInner = async ({
   if (source2.kind === "module") {
     if (negative !== null && negative.phase === "parse") {
       runNegative(
+        "parse",
         negative.type,
         () =>
           new SourceTextModule(source2.content, {
@@ -153,11 +160,11 @@ export const runTestCaseInner = async ({
       });
       register(module, source1.url);
       if (negative !== null && negative.phase === "resolution") {
-        runNegativeAsync(negative.type, () => module.link(link));
+        runNegativeAsync("resolution", negative.type, () => module.link(link));
       } else {
         await module.link(link);
         if (negative !== null && negative.phase === "runtime") {
-          runNegativeAsync(negative.type, () => module.evaluate());
+          runNegativeAsync("runtime", negative.type, () => module.evaluate());
         } else {
           await module.evaluate();
         }
@@ -166,6 +173,7 @@ export const runTestCaseInner = async ({
   } else if (source2.kind === "script") {
     if (negative !== null && negative.phase === "parse") {
       runNegative(
+        "parse",
         negative.type,
         () =>
           new Script(source2.content, {
@@ -180,7 +188,9 @@ export const runTestCaseInner = async ({
       });
       register(script, source1.url);
       if (negative !== null && negative.phase === "runtime") {
-        runNegative(negative.type, () => script.runInContext(context));
+        runNegative("runtime", negative.type, () =>
+          script.runInContext(context),
+        );
       } else {
         script.runInContext(context);
       }
