@@ -24,6 +24,7 @@ const features = new Set([
   "Intl.Locale-info",
   "resizable-arraybuffer",
   "arraybuffer-transfer",
+  "regexp-unicode-property-escapes",
 ]);
 
 /** @type {(feature: string) => boolean} */
