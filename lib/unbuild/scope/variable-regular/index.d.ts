@@ -1,27 +1,25 @@
-import { Hoist } from "../../query/hoist";
-
-export type LifespanBinding = {
-  type: "lifespan";
+export type ExternalBinding = {
+  kind: "external";
+  deadzone: null;
+  writable: false;
   export: estree.Specifier[];
-  writable: boolean;
+  import: {
+    source: estree.Source;
+    specifier: estree.Specifier | null;
+  };
 };
 
-export type DeadzoneBinding = {
-  type: "deadzone";
+export type InternalBinding = {
+  kind: "internal";
+  deadzone: boolean;
+  writable: boolean;
   export: estree.Specifier[];
-  writable: boolean;
+  import: null;
 };
 
-export type ImportBinding = {
-  type: "import";
-  source: estree.Source;
-  specifier: estree.Specifier | null;
-};
-
-export type RegularBinding = ImportBinding | LifespanBinding | DeadzoneBinding;
+export type RegularBinding = ExternalBinding | InternalBinding;
 
 export type RegularFrame = {
   type: "regular";
-  module: boolean;
   record: { [k in estree.Variable]?: RegularBinding };
 };

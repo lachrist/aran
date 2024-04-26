@@ -1,3 +1,1 @@
-Array["from"]({
-  ["length"]: 0,
-});
+export {} from "./yoyo.mjs";

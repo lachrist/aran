@@ -134,13 +134,6 @@ export type ClosureLoadOperation =
 
 export type ClosureSaveOperation = SetSuperOperation | CallSuperOperation;
 
-// Module //
-
-export type ModuleOperation = {
-  type: "module";
-  header: ModuleHeader;
-};
-
 // Private //
 
 export type DefinePrivateOperation = {
@@ -225,7 +218,6 @@ export type LoadOperation =
 export type SaveOperation =
   | VariableSaveOperation
   | ClosureSaveOperation
-  | PrivateSaveOperation
-  | ModuleOperation;
+  | PrivateSaveOperation;
 
 export type Operation = LoadOperation | SaveOperation;

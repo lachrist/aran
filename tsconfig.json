@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    // These options only works on .ts files not .d.ts files
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true,
     "declaration": false,
     "allowJs": true,
     "checkJs": true,

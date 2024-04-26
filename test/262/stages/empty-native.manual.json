@@ -412,6 +412,9 @@
     }
   ],
   "Deadzone is not enforced from outside the module (only relevant in presence of cycle)": [
+    "test/language/module-code/instn-iee-bndng-cls.js",
+    "test/language/module-code/instn-iee-bndng-const.js",
+    "test/language/module-code/instn-iee-bndng-let.js",
     "test/language/module-code/instn-named-bndng-cls.js",
     "test/language/module-code/instn-named-bndng-const.js",
     "test/language/module-code/instn-named-bndng-dflt-cls.js",
