@@ -432,6 +432,9 @@
     "test/language/module-code/namespace/internals/object-propertyIsEnumerable-binding-uninit.js",
     "test/language/module-code/top-level-await/module-self-import-async-resolution-ticks.js"
   ],
+  "Deadzone is is lifted too late in presence of module cycle": [
+    "test/language/module-code/verify-dfs.js"
+  ],
   "Not calling iterable.return on abrupt completion in array pattern": [
     "test/language/expressions/assignment/dstr/array-elem-iter-rtrn-close-err.js",
     "test/language/expressions/assignment/dstr/array-elem-iter-rtrn-close-null.js",
