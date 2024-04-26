@@ -1,1 +1,3 @@
-export {} from "./yoyo.mjs";
+const x = 123;
+
+export { x as default };

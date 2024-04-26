@@ -15,17 +15,46 @@ export type LifespanHoist = DeclareHoist & {
   kind: "var" | "val";
 };
 
-export type ImportHoist = {
-  type: "import";
-  variable: estree.Variable;
-  source: estree.Source;
-  specifier: estree.Specifier | null;
-};
+export type ImportHoist =
+  | {
+      type: "import";
+      variable: estree.Variable;
+      source: estree.Source;
+      import: estree.Specifier | null;
+    }
+  | {
+      type: "import";
+      variable: null;
+      source: estree.Source;
+      import: null;
+    };
 
-export type ExportHoist = {
-  type: "export";
-  variable: estree.Variable;
-  specifier: estree.Specifier;
-};
+export type ExportHoist =
+  | {
+      type: "export";
+      variable: estree.Variable;
+      export: estree.Specifier;
+    }
+  | {
+      type: "export";
+      variable: null;
+      export: estree.Specifier & "default";
+    };
 
-export type Hoist = DeclareHoist | ImportHoist | ExportHoist;
+export type AggregateHoist =
+  | {
+      type: "aggregate";
+      source: estree.Source;
+      import: estree.Specifier | null;
+      export: estree.Specifier;
+    }
+  | {
+      type: "aggregate";
+      source: estree.Source;
+      import: null;
+      export: null;
+    };
+
+export type ModuleHoist = ImportHoist | ExportHoist | AggregateHoist;
+
+export type Hoist = DeclareHoist | ModuleHoist;
