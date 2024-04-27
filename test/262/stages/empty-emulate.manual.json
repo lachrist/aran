@@ -351,11 +351,5 @@
     "test/language/statements/let/dstr/ary-ptrn-elem-id-iter-val-array-prototype.js",
     "test/language/statements/try/dstr/ary-ptrn-elem-id-iter-val-array-prototype.js",
     "test/language/statements/variable/dstr/ary-ptrn-elem-id-iter-val-array-prototype.js"
-  ],
-  "https://github.com/nodejs/node/issues/52720": [
-    "test/built-ins/Array/prototype/methods-called-as-functions.js",
-    "test/built-ins/BigInt/prototype/toString/thisbigintvalue-not-valid-throws.js",
-    "test/built-ins/BigInt/prototype/valueOf/return.js",
-    "test/built-ins/BigInt/prototype/valueOf/this-value-invalid-object-throws.js"
   ]
 }

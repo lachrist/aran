@@ -4,8 +4,8 @@ console.log(
     `
       "use strict";
       ({
-        hasOwn: Object.hasOwn(globalThis, "toLocaleString"),
-        descriptor: Reflect.getOwnPropertyDescriptor(globalThis, "toLocaleString"),
+        hasOwn: Object.prototype.hasOwnProperty.call(globalThis, "toString"),
+        descriptor: Reflect.getOwnPropertyDescriptor(globalThis, "toString"),
       });
     `,
     createContext(),

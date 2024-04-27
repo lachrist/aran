@@ -14,8 +14,6 @@ import {
 
 const { JSON, URL } = globalThis;
 
-console.log(generate(setup(SETUP_CONFIG)));
-
 /** @type {test262.Stage} */
 export default {
   requirement: ["identity", "parsing"],
