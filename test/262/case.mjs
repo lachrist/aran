@@ -1,9 +1,9 @@
 import { Script, SourceTextModule, runInContext } from "node:vm";
-import { readFileCache } from "./cache.mjs";
 import { createRealm } from "./realm.mjs";
 import { inspectErrorName, show } from "./util.mjs";
 import { compileLinker } from "./linker.mjs";
 import { AranTypeError } from "./error.mjs";
+import { fetchHarness } from "./harness.mjs";
 
 const { Promise, Error } = globalThis;
 
@@ -122,8 +122,9 @@ export const runTestCaseInner = async ({
   });
   const { instrument } = context.$262;
   for (const url of includes) {
-    runInContext(await readFileCache(url), context, {
-      filename: url.href,
+    const source = await fetchHarness(instrument, url);
+    runInContext(source.content, context, {
+      filename: source.url.href,
     });
   }
   const { link, register } = compileLinker({

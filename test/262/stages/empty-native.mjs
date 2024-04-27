@@ -64,19 +64,24 @@ export default {
           configurable: false,
         },
       },
-      instrument: ({ kind, url, content }) =>
-        record({
-          kind,
-          url,
-          content: generate(
-            instrument(parseGlobal(content, makeRootBase(url), kind), {
-              ...CONFIG,
-              global_declarative_record: "native",
-              warning,
-              early_syntax_error: "throw",
-            }),
-          ),
-        }),
+      instrument: ({ kind, url, content }) => {
+        if (url.href.includes("/test262/harness/")) {
+          return { kind, url, content };
+        } else {
+          return record({
+            kind,
+            url,
+            content: generate(
+              instrument(parseGlobal(content, makeRootBase(url), kind), {
+                ...CONFIG,
+                global_declarative_record: "native",
+                warning,
+                early_syntax_error: "throw",
+              }),
+            ),
+          });
+        }
+      },
     };
   },
 };
