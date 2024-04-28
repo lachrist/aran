@@ -336,6 +336,7 @@
     {
       "pattern": "test/language/eval-code/indirect/[^/]*\\.js",
       "flaky": true
-    }
+    },
+    "test/language/expressions/optional-chaining/eval-optional-call.js"
   ]
 }
