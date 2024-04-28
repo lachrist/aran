@@ -331,5 +331,11 @@
   "When using enclave, from other programs, hidden variables are declared at the beginning": [],
   "When using enclave, from other programs, const hidden variables are writable": [],
   "Accessing Symbol.iterator twice in spread syntax": [],
-  "Accessing step.done twice in for-of loop and array pattern": []
+  "Accessing step.done twice in for-of loop and array pattern": [],
+  "not instrumenting the argument of indirect eval call": [
+    {
+      "pattern": "test/language/eval-code/indirect/[^/]*\\.js",
+      "flaky": true
+    }
+  ]
 }
