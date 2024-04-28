@@ -338,5 +338,8 @@
       "flaky": true
     },
     "test/language/expressions/optional-chaining/eval-optional-call.js"
+  ],
+  "Reflect.has triggers getters on global object contextified by vm -- https://github.com/nodejs/node/issues/52737": [
+    "test/language/expressions/typeof/get-value.js"
   ]
 }
