@@ -1,7 +1,6 @@
-const {
-  Error,
-  Reflect: { apply, construct },
-} = globalThis;
+// @ts-nocheck
+
+const { Error } = globalThis;
 
 /**
  * @type {import("../../type/advice").Advice<
@@ -65,12 +64,4 @@ export default {
         arguments_,
       )
     ),
-  "global.read.before": (_variable, _location) => {},
-  "global.read.after": (_variable, value, _location) => value,
-  "global.typeof.before": (_variable, _location) => {},
-  "global.typeof.after": (_variable, value, _location) => value,
-  "global.write.before": (_variable, value, _location) => value,
-  "global.write.after": (_variable, _location) => {},
-  "global.declare.before": (_kind, _variable, _location) => {},
-  "global.declare.after": (_kind, _variable, _location) => {},
 };

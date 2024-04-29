@@ -262,51 +262,6 @@ type GenericConstructAdvice<G extends Generic> = (
   location: G["Location"],
 ) => G["ValueResult"];
 
-type GenericGlobalReadBeforeAdvice<G extends Generic> = (
-  variable: estree.Variable,
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericGlobalReadAfterAdvice<G extends Generic> = (
-  variable: estree.Variable,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericGlobalTypeofBeforeAdvice<G extends Generic> = (
-  variable: estree.Variable,
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericGlobalTypeofAfterAdvice<G extends Generic> = (
-  variable: estree.Variable,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericGlobalWriteBeforeAdvice<G extends Generic> = (
-  variable: estree.Variable,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericGlobalWriteAfterAdvice<G extends Generic> = (
-  variable: estree.Variable,
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericGlobalDeclareBeforeAdvice<G extends Generic> = (
-  kind: aran.GlobalVariableKind,
-  variable: estree.Variable,
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericGlobalDeclareAfterAdvice<G extends Generic> = (
-  kind: aran.GlobalVariableKind,
-  variable: estree.Variable,
-  location: G["Location"],
-) => G["VoidResult"];
-
 type GenericAdvice<S, G extends Generic> = {
   "program.enter"?: S | GenericProgramEnterAdvice<G>;
   "program.completion"?: S | GenericProgramCompletionAdvice<G>;
@@ -345,14 +300,6 @@ type GenericAdvice<S, G extends Generic> = {
   "return.before"?: S | GenericReturnBeforeAdvice<G>;
   "apply"?: S | GenericApplyAdvice<G>;
   "construct"?: S | GenericConstructAdvice<G>;
-  "global.read.before"?: S | GenericGlobalReadBeforeAdvice<G>;
-  "global.read.after"?: S | GenericGlobalReadAfterAdvice<G>;
-  "global.typeof.before"?: S | GenericGlobalTypeofBeforeAdvice<G>;
-  "global.typeof.after"?: S | GenericGlobalTypeofAfterAdvice<G>;
-  "global.write.before"?: S | GenericGlobalWriteBeforeAdvice<G>;
-  "global.write.after"?: S | GenericGlobalWriteAfterAdvice<G>;
-  "global.declare.before"?: S | GenericGlobalDeclareBeforeAdvice<G>;
-  "global.declare.after"?: S | GenericGlobalDeclareAfterAdvice<G>;
 };
 
 export type AdviceName = keyof GenericAdvice<never, never>;
@@ -508,38 +455,6 @@ export type ReturnBeforeAdvice<V, L> = GenericReturnBeforeAdvice<
 export type ApplyAdvice<V, L> = GenericApplyAdvice<AdviceGeneric<V, L>>;
 
 export type ConstructAdvice<V, L> = GenericConstructAdvice<AdviceGeneric<V, L>>;
-
-export type GlobalReadBeforeAdvice<V, L> = GenericGlobalReadBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type GlobalReadAfterAdvice<V, L> = GenericGlobalReadAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type GlobalTypeofBeforeAdvice<V, L> = GenericGlobalTypeofBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type GlobalTypeofAfterAdvice<V, L> = GenericGlobalTypeofAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type GlobalWriteBeforeAdvice<V, L> = GenericGlobalWriteBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type GlobalWriteAfterAdvice<V, L> = GenericGlobalWriteAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type GlobalDeclareBeforeAdvice<V, L> = GenericGlobalDeclareBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type GlobalDeclareAfterAdvice<V, L> = GenericGlobalDeclareAfterAdvice<
-  AdviceGeneric<V, L>
->;
 
 export type ObjectAdvice<V, L> = GenericAdvice<never, AdviceGeneric<V, L>>;
 
@@ -784,55 +699,6 @@ type Point<V, L> =
       value: V;
       location: L;
     }
-  // read-external //
-  | {
-      type: "global.read.before";
-      variable: estree.Variable;
-      location: L;
-    }
-  | {
-      type: "global.read.after";
-      variable: estree.Variable;
-      value: V;
-      location: L;
-    }
-  // typeof-external //
-  | {
-      type: "global.typeof.before";
-      variable: estree.Variable;
-      location: L;
-    }
-  | {
-      type: "global.typeof.after";
-      variable: estree.Variable;
-      value: V;
-      location: L;
-    }
-  // write-external //
-  | {
-      type: "global.write.before";
-      variable: estree.Variable;
-      value: V;
-      location: L;
-    }
-  | {
-      type: "global.write.after";
-      variable: estree.Variable;
-      location: L;
-    }
-  // declare-external //
-  | {
-      type: "global.declare.before";
-      kind: aran.GlobalVariableKind;
-      variable: estree.Variable;
-      location: L;
-    }
-  | {
-      type: "global.declare.after";
-      kind: aran.GlobalVariableKind;
-      variable: estree.Variable;
-      location: L;
-    }
   //////////////
   // Combiner //
   //////////////
@@ -861,10 +727,6 @@ type VoidAdviceName = [
   "debugger.after",
   "break.before",
   "branch.after",
-  "global.read.before",
-  "global.typeof.before",
-  "global.write.after",
-  "global.declare.after",
 ];
 
 type ValueAdviceName = Exclude<AdviceName, RecordAdviceName | VoidAdviceName>;

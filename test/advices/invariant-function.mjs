@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* eslint-disable local/strict-console */
 
 const {
