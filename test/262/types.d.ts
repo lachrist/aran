@@ -1,3 +1,5 @@
+import { Context } from "node:vm";
+
 export type Flag =
   | "onlyStrict"
   | "noStrict"
@@ -84,6 +86,7 @@ export type Stage = {
     record: Instrument;
     reject: (error: Error) => void;
     warning: "console" | "ignore";
+    context: Context;
   }) => Instrumenter;
   expect: (result: Result) => string[];
   requirement: StageName[];

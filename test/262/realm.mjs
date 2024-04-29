@@ -29,12 +29,13 @@ export const createRealm = ({
   print,
   createInstrumenter,
 }) => {
+  const context = createContext({ __proto__: null });
   const { instrument, setup, globals } = createInstrumenter({
     reject,
     record,
     warning,
+    context,
   });
-  const context = createContext({ __proto__: null });
   for (const [name, descriptor] of Object.entries(globals)) {
     Reflect.defineProperty(context, name, descriptor);
   }

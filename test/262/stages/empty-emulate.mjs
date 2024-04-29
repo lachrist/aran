@@ -12,7 +12,25 @@ import {
   makeRootBase,
 } from "./util/index.mjs";
 
-const { JSON, URL } = globalThis;
+const { JSON, URL, Reflect } = globalThis;
+
+/** @type {import("./util/aran").Pointcut} */
+const pointcut = ["eval.before", "apply", "construct"];
+
+/**
+ * @type {(
+ *   args: import("./util/aran").Value[],
+ * ) => string}
+ */
+const compileFunctionCode = (args) => {
+  if (args.length === 0) {
+    return "(function anonymous(\n) {\n\n});";
+  } else {
+    return `(function anonymous(\n${args.slice(0, -1).join(",")}\n) {\n${
+      args[args.length - 1]
+    }\n});`;
+  }
+};
 
 /** @type {test262.Stage} */
 export default {
@@ -26,8 +44,32 @@ export default {
       ),
     ),
   ),
-  createInstrumenter: ({ record, warning }) => {
+  createInstrumenter: ({ record, warning, context }) => {
     let counter = 0;
+    /**
+     * @type {(
+     *   code: string,
+     * ) => import("./util/aran").Value}
+     */
+    const evaluate = (code) => {
+      counter += 1;
+      const url = new URL(`eval:///global/${counter}`);
+      return context[CONFIG.intrinsic_variable].eval(
+        record({
+          kind: "script",
+          url,
+          content: generate(
+            instrument(parseGlobal(code, makeRootBase(url), "eval"), {
+              ...CONFIG,
+              pointcut,
+              global_declarative_record: "emulate",
+              warning,
+              early_syntax_error: "embed",
+            }),
+          ),
+        }).content,
+      );
+    };
     return {
       setup: [generate(setup(SETUP_CONFIG))],
       globals: {
@@ -41,12 +83,13 @@ export default {
                 counter += 1;
                 return record({
                   kind: "script",
-                  url: new URL(`eval:///${counter}`),
+                  url: new URL(`eval:///local/${counter}`),
                   content: generate(
                     instrument(
                       parseLocal(content, makeNodeBase(location), context),
                       {
                         ...CONFIG,
+                        pointcut,
                         global_declarative_record: "emulate",
                         warning,
                         early_syntax_error: "embed",
@@ -56,6 +99,39 @@ export default {
                 }).content;
               } else {
                 return content;
+              }
+            },
+            "apply": (function_, this_, arguments_, _location) => {
+              if (function_ === context[CONFIG.intrinsic_variable].eval) {
+                if (arguments_.length === 0) {
+                  return context[CONFIG.intrinsic_variable].undefined;
+                } else if (typeof arguments_[0] === "string") {
+                  return evaluate(arguments_[0]);
+                } else {
+                  return arguments_[0];
+                }
+              } else if (
+                function_ === context[CONFIG.intrinsic_variable].Function
+              ) {
+                return evaluate(compileFunctionCode(arguments_));
+              } else {
+                return Reflect.apply(
+                  /** @type {function} */ (function_),
+                  this_,
+                  arguments_,
+                );
+              }
+            },
+            "construct": (constructor_, arguments_, _location) => {
+              if (
+                constructor_ === context[CONFIG.intrinsic_variable].Function
+              ) {
+                return evaluate(compileFunctionCode(arguments_));
+              } else {
+                return Reflect.construct(
+                  /** @type {function} */ (constructor_),
+                  arguments_,
+                );
               }
             },
           }),
@@ -71,6 +147,7 @@ export default {
           content: generate(
             instrument(parseGlobal(content, makeRootBase(url), kind), {
               ...CONFIG,
+              pointcut,
               global_declarative_record: "emulate",
               warning,
               early_syntax_error: "throw",

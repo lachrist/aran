@@ -94,6 +94,7 @@ export type RegularIntrinsic =
   | "Reflect.preventExtensions"
   | "Reflect.defineProperty"
   // Others //
+  | "undefined"
   | "Number"
   | "globalThis"
   | "eval"

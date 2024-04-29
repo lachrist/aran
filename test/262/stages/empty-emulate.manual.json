@@ -335,15 +335,12 @@
   "When using enclave, from other programs, const hidden variables are writable": [],
   "Accessing Symbol.iterator twice in spread syntax": [],
   "Accessing step.done twice in for-of loop and array pattern": [],
-  "not instrumenting the argument of indirect eval call": [
-    {
-      "pattern": "test/language/eval-code/indirect/[^/]*\\.js",
-      "flaky": true
-    },
-    "test/language/expressions/optional-chaining/eval-optional-call.js"
-  ],
   "Reflect.has triggers getters on global object contextified by vm -- https://github.com/nodejs/node/issues/52737": [
     "test/language/expressions/typeof/get-value.js",
     "test/language/module-code/import-assertions/eval-gtbndng-indirect-faux-assertion.js"
+  ],
+  "ENOBUF": [
+    "test/built-ins/Array/from/not-a-constructor.js",
+    "test/built-ins/Array/isArray/not-a-constructor.js"
   ]
 }
