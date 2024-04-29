@@ -168,6 +168,7 @@
     "test/language/arguments-object/10.6-13-a-3.js"
   ],
   "Function.prototype.toString": [
+    "test/built-ins/Function/prototype/toString/Function.js",
     {
       "exact": "test/built-ins/RegExp/prototype/exec/S15.10.6.2_A1_T9.js",
       "flaky": true
