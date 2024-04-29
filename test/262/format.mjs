@@ -1,15 +1,29 @@
 import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const {
+  Math: { random },
+  Date: { now },
+} = globalThis;
 
 const { Error, URL } = globalThis;
 
+const TMP_DIR_URL = pathToFileURL(join(tmpdir(), "dummy"));
+
 /** @type {(code: string) => string} */
 export const format = (code) => {
-  const { error, signal, status, stdout } = spawnSync(
+  const url = new URL(
+    `${now()}_${random().toString(36).substring(2)}`,
+    TMP_DIR_URL,
+  );
+  writeFileSync(url, code, "utf8");
+  const { error, signal, status } = spawnSync(
     "node",
-    [fileURLToPath(new URL("./prettier.mjs", import.meta.url))],
+    [fileURLToPath(new URL("./prettier.mjs", import.meta.url)), url.href],
     {
-      input: code,
       encoding: "utf8",
       stdio: ["pipe", "pipe", "inherit"],
     },
@@ -23,5 +37,9 @@ export const format = (code) => {
   if (status !== 0) {
     return code;
   }
-  return stdout;
+  try {
+    return readFileSync(url, "utf8");
+  } finally {
+    unlinkSync(url);
+  }
 };

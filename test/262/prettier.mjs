@@ -1,26 +1,15 @@
+import { argv } from "node:process";
+import { readFile, writeFile } from "node:fs/promises";
 import { format } from "prettier";
-import { stdin, stdout, stderr } from "node:process";
 
-const { process } = globalThis;
+const { URL } = globalThis;
 
-stdin.setEncoding("utf8");
+const url = new URL(argv[2]);
 
-let input = "";
-
-stdin.on("data", (chunk) => {
-  input += chunk;
-});
-
-stdin.on("end", () => {
-  format(input, {
+await writeFile(
+  url,
+  await format(await readFile(url, "utf8"), {
     parser: "acorn",
-  }).then(
-    (output) => {
-      stdout.write(output, "utf8");
-    },
-    (error) => {
-      stderr.write(error.message, "utf8");
-      process.exitCode = 1;
-    },
-  );
-});
+  }),
+  "utf8",
+);
