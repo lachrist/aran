@@ -12,7 +12,7 @@ import {
   makeRootBase,
 } from "./util/index.mjs";
 
-const { JSON, URL, Reflect } = globalThis;
+const { JSON, URL } = globalThis;
 
 /** @type {import("./util/aran").Pointcut} */
 const pointcut = ["eval.before", "apply", "construct"];
@@ -115,7 +115,9 @@ export default {
               ) {
                 return evaluate(compileFunctionCode(arguments_));
               } else {
-                return Reflect.apply(
+                // Use Reflect.apply from test case's realm
+                // Else, it might throw a type error from this realm.
+                return context[CONFIG.intrinsic_variable]["Reflect.apply"](
                   /** @type {function} */ (function_),
                   this_,
                   arguments_,
@@ -128,7 +130,9 @@ export default {
               ) {
                 return evaluate(compileFunctionCode(arguments_));
               } else {
-                return Reflect.construct(
+                // Use Reflect.construct from test case's realm
+                // Else, it might throw a type error from this realm.
+                return context[CONFIG.intrinsic_variable]["Reflect.construct"](
                   /** @type {function} */ (constructor_),
                   arguments_,
                 );
