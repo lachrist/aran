@@ -189,11 +189,30 @@ export type ControlBlock<A extends Atom> = {
 };
 
 export type Statement<A extends Atom> =
-  | { type: "EffectStatement"; inner: Effect<A>; tag: A["Tag"] }
-  | { type: "ReturnStatement"; result: Expression<A>; tag: A["Tag"] }
-  | { type: "BreakStatement"; label: A["Label"]; tag: A["Tag"] }
-  | { type: "DebuggerStatement"; tag: A["Tag"] }
-  | { type: "BlockStatement"; body: ControlBlock<A>; tag: A["Tag"] }
+  | {
+      type: "EffectStatement";
+      inner: Effect<A>;
+      tag: A["Tag"];
+    }
+  | {
+      type: "ReturnStatement";
+      result: Expression<A>;
+      tag: A["Tag"];
+    }
+  | {
+      type: "BreakStatement";
+      label: A["Label"];
+      tag: A["Tag"];
+    }
+  | {
+      type: "DebuggerStatement";
+      tag: A["Tag"];
+    }
+  | {
+      type: "BlockStatement";
+      body: ControlBlock<A>;
+      tag: A["Tag"];
+    }
   | {
       type: "IfStatement";
       test: Expression<A>;
@@ -216,7 +235,11 @@ export type Statement<A extends Atom> =
     };
 
 export type Effect<A extends Atom> =
-  | { type: "ExpressionEffect"; discard: Expression<A>; tag: A["Tag"] }
+  | {
+      type: "ExpressionEffect";
+      discard: Expression<A>;
+      tag: A["Tag"];
+    }
   | {
       type: "ConditionalEffect";
       test: Expression<A>;
@@ -244,7 +267,11 @@ export type Expression<A extends Atom> =
       primitive: aran.Primitive;
       tag: A["Tag"];
     }
-  | { type: "IntrinsicExpression"; intrinsic: Intrinsic; tag: A["Tag"] }
+  | {
+      type: "IntrinsicExpression";
+      intrinsic: Intrinsic;
+      tag: A["Tag"];
+    }
   | {
       type: "ImportExpression";
       source: A["Source"];
@@ -270,7 +297,11 @@ export type Expression<A extends Atom> =
       tag: A["Tag"];
     }
   // Control //
-  | { type: "AwaitExpression"; promise: Expression<A>; tag: A["Tag"] }
+  | {
+      type: "AwaitExpression";
+      promise: Expression<A>;
+      tag: A["Tag"];
+    }
   | {
       type: "YieldExpression";
       delegate: boolean;
@@ -317,5 +348,9 @@ export type Node<A extends Atom> =
   | Statement<A>
   | Effect<A>
   | Expression<A>;
+
+type KeyOfUnion<T> = T extends T ? keyof T : never;
+
+export type NodeKey = KeyOfUnion<Node<Atom>>;
 
 export as namespace aran;
