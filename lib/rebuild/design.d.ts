@@ -50,34 +50,15 @@ export type PairDesign<X, Y> = aran.Expression<rebuild.Atom> & {
 export type ObjectDesign = aran.Expression<rebuild.Atom> & {
   callee: aran.Expression<rebuild.Atom> & {
     type: "IntrinsicExpression";
-    intrinsic: "Object.fromEntries";
+    intrinsic: "aran.createObject";
   };
   this: aran.Expression<rebuild.Atom> & {
     type: "PrimitiveExpression";
   };
   arguments: [
-    ListDesign<
-      PairDesign<
-        aran.Expression<rebuild.Atom> & {
-          type: "PrimitiveExpression";
-        },
-        aran.Expression<rebuild.Atom> & {
-          type: "PrimitiveExpression";
-        }
-      >
-    >,
+    aran.Expression<rebuild.Atom>,
+    ...aran.Expression<rebuild.Atom>[],
   ];
-};
-
-export type EmptyObjectDesign = aran.Expression<rebuild.Atom> & {
-  callee: aran.Expression<rebuild.Atom> & {
-    type: "IntrinsicExpression";
-    intrinsic: "Object.create";
-  };
-  this: aran.Expression<rebuild.Atom> & {
-    type: "PrimitiveExpression";
-  };
-  arguments: [aran.Expression<rebuild.Atom>];
 };
 
 export type UnaryDesign = aran.Expression<rebuild.Atom> & {

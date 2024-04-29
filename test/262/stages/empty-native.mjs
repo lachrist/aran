@@ -14,6 +14,8 @@ import {
 
 const { JSON, URL } = globalThis;
 
+const SETUP = [generate(setup(SETUP_CONFIG))];
+
 /** @type {test262.Stage} */
 export default {
   requirement: ["identity", "parsing"],
@@ -29,7 +31,7 @@ export default {
   createInstrumenter: ({ record, warning }) => {
     let counter = 0;
     return {
-      setup: [generate(setup(SETUP_CONFIG))],
+      setup: SETUP,
       globals: {
         ...HIDDEN,
         [CONFIG.advice_variable]: {

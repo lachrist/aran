@@ -44,8 +44,6 @@ export type RegularIntrinsic =
   | "Object.hasOwn"
   | "Object.create"
   | "Object.prototype"
-  | "Object.fromEntries"
-  | "Object.entries"
   | "Object.assign"
   | "Object.keys"
   | "Object.freeze"
@@ -123,6 +121,7 @@ export type AranIntrinsic =
   | "aran.toPropertyKey"
   | "aran.listForInKey"
   | "aran.listRest"
+  | "aran.createObject"
   | "aran.AsyncGeneratorFunction.prototype.prototype"
   | "aran.GeneratorFunction.prototype.prototype";
 

@@ -32,6 +32,8 @@ const compileFunctionCode = (args) => {
   }
 };
 
+const SETUP = [generate(setup(SETUP_CONFIG))];
+
 /** @type {test262.Stage} */
 export default {
   requirement: ["identity", "parsing"],
@@ -71,7 +73,7 @@ export default {
       );
     };
     return {
-      setup: [generate(setup(SETUP_CONFIG))],
+      setup: SETUP,
       globals: {
         ...HIDDEN,
         [CONFIG.advice_variable]: {
