@@ -33,7 +33,6 @@ export const makeRootBase = (url) =>
  * >}
  */
 export const CONFIG = {
-  mode: "default",
   pointcut: ["eval.before"],
   locate: (path, base) =>
     /** @type {import("./aran").Location} */ (`${base}#${path}`),
