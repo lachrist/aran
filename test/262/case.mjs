@@ -95,7 +95,7 @@ const runNegativeAsync = async (phase, name, runAsync) => {
  * @type {(
  *   options: {
  *     case: test262.Case,
- *     createInstrumenter: test262.Stage["createInstrumenter"],
+ *     compileInstrument: test262.CompileInstrument,
  *     warning: "ignore" | "console",
  *     reject: (error: Error) => void,
  *     record: import("./types").Instrument,
@@ -104,7 +104,7 @@ const runNegativeAsync = async (phase, name, runAsync) => {
  */
 export const runTestCaseInner = async ({
   case: { source: source1, negative, asynchronous, includes },
-  createInstrumenter,
+  compileInstrument,
   warning,
   reject,
   record,
@@ -118,7 +118,7 @@ export const runTestCaseInner = async ({
     record,
     warning,
     print,
-    createInstrumenter,
+    compileInstrument,
   });
   const { instrument } = context.$262;
   for (const url of includes) {
@@ -208,7 +208,7 @@ export const runTestCaseInner = async ({
  *     case: test262.Case,
  *     warning: "ignore" | "console",
  *     record: import("./types").Instrument,
- *     createInstrumenter: test262.Stage["createInstrumenter"],
+ *     compileInstrument: test262.CompileInstrument,
  *   },
  * ) => Promise<void>}
  */

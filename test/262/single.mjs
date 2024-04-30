@@ -26,7 +26,7 @@ const test262 = new URL("../../test262/", import.meta.url);
 const codebase = new URL("codebase", import.meta.url);
 
 const {
-  default: { createInstrumenter },
+  default: { compileInstrument },
 } = /** @type {{default: test262.Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
@@ -69,6 +69,6 @@ console.dir(
     test262,
     warning: "console",
     record,
-    createInstrumenter,
+    compileInstrument,
   }),
 );

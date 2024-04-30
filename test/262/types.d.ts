@@ -73,21 +73,21 @@ export type Failure = Result & { error: ErrorSerial };
 
 export type Instrument = (source: Source) => Source;
 
-export type Instrumenter = {
-  globals: { [key in string]: PropertyDescriptor };
-  setup: string[];
-  instrument: Instrument;
-};
+export type StageName =
+  | "identity"
+  | "parsing"
+  | "empty-native"
+  | "empty-emulate";
 
-export type StageName = "identity" | "parsing" | "empty-enclave";
+export type CompileInstrument = (options: {
+  record: Instrument;
+  reject: (error: Error) => void;
+  warning: "console" | "ignore";
+  context: Context;
+}) => Instrument;
 
 export type Stage = {
-  createInstrumenter: (options: {
-    record: Instrument;
-    reject: (error: Error) => void;
-    warning: "console" | "ignore";
-    context: Context;
-  }) => Instrumenter;
+  compileInstrument: CompileInstrument;
   expect: (result: Result) => string[];
   requirement: StageName[];
   exclusion: string[];

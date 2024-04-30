@@ -19,7 +19,7 @@ const {
  *   | import("../../../../lib/program").GlobalEvalProgram<B>
  * )}
  */
-export const parseGlobal = (code, base, kind) => {
+const parseGlobal = (code, base, kind) => {
   try {
     return {
       kind,
@@ -216,7 +216,7 @@ export const parseBabelLocal = (code, base, context) => {
  *   context: import("../../../../lib/context").InternalLocalContext,
  * ) => import("../../../../lib/program").InternalLocalEvalProgram<B>}
  */
-export const parseLocal = (code, base, context) => {
+const parseLocal = (code, base, context) => {
   const acorn = parseAcornLocal(code, base, context);
   // We prefer acorn over babel because it is faster respect the estree format.
   // The estree babel plugin is supposed to make babel produce valid estree
@@ -228,5 +228,20 @@ export const parseLocal = (code, base, context) => {
     return parseBabelLocal(code, base, context);
   } else {
     return acorn;
+  }
+};
+
+/**
+ * @type {<B>(
+ *   code: string,
+ *   base: B,
+ *   situ: import("./situ").Situ,
+ * ) => import("../../../../lib/program").Program<B>}
+ */
+export const parse = (code, base, situ) => {
+  if (situ.context === null) {
+    return parseGlobal(code, base, situ.kind);
+  } else {
+    return parseLocal(code, base, situ.context);
   }
 };

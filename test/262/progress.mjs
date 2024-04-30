@@ -22,7 +22,7 @@ const codebase = new URL("codebase/", import.meta.url);
 
 const {
   default: {
-    createInstrumenter,
+    compileInstrument,
     expect,
     requirement,
     exclusion: manual_exclusion,
@@ -72,7 +72,7 @@ try {
           test262,
           warning: "ignore",
           record: (source) => source,
-          createInstrumenter,
+          compileInstrument,
         });
         const reasons = expect(result);
         if (result.error === null) {
@@ -98,7 +98,7 @@ try {
               test262,
               warning: "console",
               record,
-              createInstrumenter,
+              compileInstrument,
             });
             if (error === null) {
               console.log("** Error Disappeared **\n");

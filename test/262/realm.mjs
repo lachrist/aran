@@ -1,6 +1,6 @@
 import { createContext, runInContext } from "node:vm";
 
-const { gc, Object, Error, Reflect, URL } = globalThis;
+const { gc, Error, Reflect, URL } = globalThis;
 
 // eslint-disable-next-line local/no-class, local/standard-declaration
 class RealmAranError extends Error {}
@@ -13,7 +13,7 @@ class RealmAranError extends Error {}
  *     record: import("./types").Instrument,
  *     warning: "ignore" | "console",
  *     print: (message: string) => void,
- *     createInstrumenter: test262.Stage["createInstrumenter"],
+ *     compileInstrument: test262.CompileInstrument,
  *   },
  * ) => import("node:vm").Context & {
  *   $262: test262.$262 & {
@@ -27,18 +27,15 @@ export const createRealm = ({
   record,
   warning,
   print,
-  createInstrumenter,
+  compileInstrument,
 }) => {
   const context = createContext({ __proto__: null });
-  const { instrument, setup, globals } = createInstrumenter({
+  const instrument = compileInstrument({
     reject,
     record,
     warning,
     context,
   });
-  for (const [name, descriptor] of Object.entries(globals)) {
-    Reflect.defineProperty(context, name, descriptor);
-  }
   /** @type {test262.$262} */
   const $262 = {
     // @ts-ignore
@@ -51,7 +48,7 @@ export const createRealm = ({
         record,
         warning,
         print,
-        createInstrumenter,
+        compileInstrument,
       }).$262,
     detachArrayBuffer: () => {
       const error = new RealmAranError("detachArrayBuffer");
@@ -110,8 +107,5 @@ export const createRealm = ({
     writable: true,
     value: print,
   });
-  for (const code of setup) {
-    runInContext(code, context);
-  }
   return /** @type {any} */ (context);
 };

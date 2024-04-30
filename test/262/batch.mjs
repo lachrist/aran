@@ -29,7 +29,7 @@ const stage = argv[2];
 
 const {
   default: {
-    createInstrumenter,
+    compileInstrument,
     expect,
     requirement,
     exclusion: manual_exclusion,
@@ -75,7 +75,7 @@ for await (const url of scrape(new URL("test/", test262))) {
       test262,
       record: (source) => source,
       warning: "ignore",
-      createInstrumenter,
+      compileInstrument,
     });
     if (result.error !== null) {
       failures.set(target, expect(result));

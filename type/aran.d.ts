@@ -1,3 +1,4 @@
+import { UnaryOperator } from "estree";
 import { Header } from "../lib/header";
 import { Sort } from "../lib/sort";
 
@@ -29,104 +30,117 @@ export type Primitive =
 
 export type GlobalVariableKind = "var" | "let";
 
-export type RegularIntrinsic =
+export type RegularIntrinsicRcord = {
   // Symbol //
-  | "Symbol"
-  | "Symbol.unscopables"
-  | "Symbol.asyncIterator"
-  | "Symbol.iterator"
-  | "Symbol.isConcatSpreadable"
-  | "Symbol.toStringTag"
+  "Symbol": typeof Symbol;
+  "Symbol.unscopables": typeof Symbol.unscopables;
+  "Symbol.asyncIterator": typeof Symbol.asyncIterator;
+  "Symbol.iterator": typeof Symbol.iterator;
+  "Symbol.isConcatSpreadable": typeof Symbol.isConcatSpreadable;
+  "Symbol.toStringTag": typeof Symbol.toStringTag;
   // String //
-  | "String.prototype.concat"
+  "String.prototype.concat": typeof String.prototype.concat;
   // Object //
-  | "Object"
-  | "Object.hasOwn"
-  | "Object.create"
-  | "Object.prototype"
-  | "Object.assign"
-  | "Object.keys"
-  | "Object.freeze"
-  | "Object.defineProperty"
-  | "Object.setPrototypeOf"
-  | "Object.preventExtensions"
+  "Object": typeof Object;
+  "Object.hasOwn": typeof Object.prototype.hasOwnProperty;
+  "Object.create": typeof Object.create;
+  "Object.prototype": typeof Object.prototype;
+  "Object.assign": typeof Object.assign;
+  "Object.keys": typeof Object.keys;
+  "Object.freeze": typeof Object.freeze;
+  "Object.defineProperty": typeof Object.defineProperty;
+  "Object.setPrototypeOf": typeof Object.setPrototypeOf;
+  "Object.preventExtensions": typeof Object.preventExtensions;
   // Array //
-  | "Array.from"
-  | "Array.of"
-  | "Array.prototype.flat"
-  | "Array.prototype.values"
-  | "Array.prototype.concat"
-  | "Array.prototype.includes"
-  | "Array.prototype.slice"
-  | "Array.prototype.fill"
-  | "Array.prototype.push"
+  "Array.from": typeof Array.from;
+  "Array.of": typeof Array.of;
+  "Array.prototype.flat": typeof Array.prototype.flat;
+  "Array.prototype.values": typeof Array.prototype.values;
+  "Array.prototype.concat": typeof Array.prototype.concat;
+  "Array.prototype.includes": typeof Array.prototype.includes;
+  "Array.prototype.slice": typeof Array.prototype.slice;
+  "Array.prototype.fill": typeof Array.prototype.fill;
+  "Array.prototype.push": typeof Array.prototype.push;
   // Function //
-  | "Function.prototype"
+  "Function.prototype": typeof Function.prototype;
   // WeakMap //
-  | "WeakMap"
-  | "WeakMap.prototype.has"
-  | "WeakMap.prototype.get"
-  | "WeakMap.prototype.set"
+  "WeakMap": typeof WeakMap;
+  "WeakMap.prototype.has": typeof WeakMap.prototype.has;
+  "WeakMap.prototype.get": typeof WeakMap.prototype.get;
+  "WeakMap.prototype.set": typeof WeakMap.prototype.set;
   // Map //
-  | "Map"
-  | "Map.prototype.has"
-  | "Map.prototype.get"
-  | "Map.prototype.set"
+  "Map": typeof Map;
+  "Map.prototype.has": typeof Map.prototype.has;
+  "Map.prototype.get": typeof Map.prototype.get;
+  "Map.prototype.set": typeof Map.prototype.set;
   // WeakSet //
-  | "WeakSet"
-  | "WeakSet.prototype.has"
-  | "WeakSet.prototype.add"
+  "WeakSet": typeof WeakSet;
+  "WeakSet.prototype.has": typeof WeakSet.prototype.has;
+  "WeakSet.prototype.add": typeof WeakSet.prototype.add;
   // Reflect //
-  | "Reflect.get"
-  | "Reflect.has"
-  | "Reflect.construct"
-  | "Reflect.apply"
-  | "Reflect.setProtoypeOf"
-  | "Reflect.getPrototypeOf"
-  | "Reflect.ownKeys"
-  | "Reflect.isExtensible"
-  | "Reflect.set"
-  | "Reflect.deleteProperty"
-  | "Reflect.setPrototypeOf"
-  | "Reflect.getOwnPropertyDescriptor"
-  | "Reflect.preventExtensions"
-  | "Reflect.defineProperty"
+  "Reflect.get": typeof Reflect.get;
+  "Reflect.has": typeof Reflect.has;
+  "Reflect.construct": typeof Reflect.construct;
+  "Reflect.apply": typeof Reflect.apply;
+  "Reflect.setProtoypeOf": typeof Reflect.setPrototypeOf;
+  "Reflect.getPrototypeOf": typeof Reflect.getPrototypeOf;
+  "Reflect.ownKeys": typeof Reflect.ownKeys;
+  "Reflect.isExtensible": typeof Reflect.isExtensible;
+  "Reflect.set": typeof Reflect.set;
+  "Reflect.deleteProperty": typeof Reflect.deleteProperty;
+  "Reflect.setPrototypeOf": typeof Reflect.setPrototypeOf;
+  "Reflect.getOwnPropertyDescriptor": typeof Reflect.getOwnPropertyDescriptor;
+  "Reflect.preventExtensions": typeof Reflect.preventExtensions;
+  "Reflect.defineProperty": typeof Reflect.defineProperty;
   // Others //
-  | "Function"
-  | "undefined"
-  | "Number"
-  | "globalThis"
-  | "eval"
-  | "Proxy"
-  | "String"
-  | "RegExp"
-  | "TypeError"
-  | "ReferenceError"
-  | "SyntaxError";
+  "Function": typeof Function;
+  "undefined": typeof undefined;
+  "Number": typeof Number;
+  "globalThis": typeof globalThis;
+  "eval": typeof eval;
+  "Proxy": typeof Proxy;
+  "String": typeof String;
+  "RegExp": typeof RegExp;
+  "TypeError": typeof TypeError;
+  "ReferenceError": typeof ReferenceError;
+  "SyntaxError": typeof SyntaxError;
+};
 
-export type AccessorIntrinsic =
-  | "Symbol.prototype.description@get"
-  | "Function.prototype.arguments@get"
-  | "Function.prototype.arguments@set";
+export type RegularIntrinsic = keyof RegularIntrinsicRcord;
 
-export type AranIntrinsic =
-  | "aran.global"
-  | "aran.record"
-  | "aran.templates"
-  | "aran.unary"
-  | "aran.binary"
-  | "aran.throw"
-  | "aran.get"
-  | "aran.deadzone"
+export type AccessorIntrinsicRecord = {
+  "Symbol.prototype.description@get": (this: symbol) => string | undefined;
+  "Function.prototype.arguments@get": (this: Function) => void;
+  "Function.prototype.arguments@set": (this: Function, value: unknown) => void;
+};
+
+export type AccessorIntrinsic = keyof AccessorIntrinsicRecord;
+
+export type AranIntrinsicRecord = {
+  "aran.global": typeof globalThis;
+  "aran.record": Record<string, unknown>;
+  "aran.templates": Record<string, string>;
+  "aran.unary": (operator: UnaryOperator, argument: unknown) => unknown;
+  "aran.binary": (operator: string, left: unknown, right: unknown) => unknown;
+  "aran.throw": (value: unknown) => never;
+  "aran.get": (object: unknown, key: unknown) => unknown;
+  "aran.deadzone": symbol;
   // https://262.ecma-international.org/14.0#sec-topropertykey
-  | "aran.toPropertyKey"
-  | "aran.listForInKey"
-  | "aran.listRest"
-  | "aran.createObject"
-  | "aran.AsyncGeneratorFunction.prototype.prototype"
-  | "aran.GeneratorFunction.prototype.prototype";
+  "aran.toPropertyKey": (value: unknown) => string | symbol;
+  "aran.listForInKey": (object: unknown) => string[];
+  "aran.listRest": <X>(iterator: Iterator<X>, result: IteratorResult<X>) => X[];
+  "aran.createObject": (prototype: object, ...entries: unknown[]) => unknown;
+  "aran.AsyncGeneratorFunction.prototype.prototype": AsyncGeneratorFunction["prototype"];
+  "aran.GeneratorFunction.prototype.prototype": GeneratorFunction["prototype"];
+};
+
+export type AranIntrinsic = keyof AranIntrinsicRecord;
 
 export type Intrinsic = RegularIntrinsic | AccessorIntrinsic | AranIntrinsic;
+
+export type IntrinsicRecord = RegularIntrinsicRcord &
+  AccessorIntrinsicRecord &
+  AranIntrinsicRecord;
 
 export type Parameter =
   | "import.dynamic"

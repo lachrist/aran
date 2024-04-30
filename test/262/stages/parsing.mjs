@@ -6,10 +6,9 @@ export default {
   requirement: ["identity"],
   exclusion: [],
   expect: ({ error }) => (error === null ? [] : ["acorn"]),
-  createInstrumenter: ({ record }) => ({
-    setup: [],
-    globals: {},
-    instrument: ({ kind, url, content }) =>
+  compileInstrument:
+    ({ record }) =>
+    ({ kind, url, content }) =>
       record({
         kind,
         url,
@@ -17,5 +16,4 @@ export default {
           parse(content, { ecmaVersion: "latest", sourceType: kind }),
         ),
       }),
-  }),
 };

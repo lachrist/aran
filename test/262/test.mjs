@@ -72,7 +72,7 @@ const DEFAULT_METADATA = {
  *   options: {
  *     target: string,
  *     test262: URL,
- *     createInstrumenter: test262.Stage["createInstrumenter"],
+ *     compileInstrument: test262.CompileInstrument,
  *     warning: "ignore" | "console",
  *     record: import("./types").Instrument,
  *   },
@@ -83,7 +83,7 @@ export const runTest = async ({
   test262,
   warning,
   record,
-  createInstrumenter,
+  compileInstrument,
 }) => {
   const content = await readFile(new URL(target, test262), "utf8");
   /** @type {test262.Metadata} */
@@ -104,7 +104,7 @@ export const runTest = async ({
     test262,
   })) {
     try {
-      await runTestCase({ case: case_, createInstrumenter, warning, record });
+      await runTestCase({ case: case_, compileInstrument, warning, record });
     } catch (error) {
       return {
         target,

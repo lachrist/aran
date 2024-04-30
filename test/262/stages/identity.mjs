@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { HIDDEN, compileExpect } from "./util/index.mjs";
+import { compileExpect } from "./util/index.mjs";
 
 const { JSON, URL, Set } = globalThis;
 
@@ -54,9 +54,5 @@ export default {
       : result.metadata.features.filter(isFeatureExcluded)),
     ...expect(result),
   ],
-  createInstrumenter: ({ record }) => ({
-    setup: [],
-    globals: HIDDEN,
-    instrument: record,
-  }),
+  compileInstrument: ({ record }) => record,
 };
