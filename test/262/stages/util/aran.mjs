@@ -120,7 +120,10 @@ export const compileCompileAranInstrument =
       configurable: false,
     });
     return ({ kind, url, content }) => {
-      if (url.href.includes("/test262/harness/")) {
+      if (
+        global_declarative_record === "native" &&
+        url.href.includes("/test262/harness/")
+      ) {
         return { kind, url, content };
       } else {
         return record({
