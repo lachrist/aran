@@ -40,438 +40,224 @@ export type Expression = aran.Expression<weave.ResAtom>;
 
 export type Label = weave.Label;
 
-///////////////////////////
-// Generic Object Advice //
-///////////////////////////
+export type AdviceName =
+  | "program.enter"
+  | "program.completion"
+  | "program.failure"
+  | "program.leave"
+  | "closure.enter"
+  | "closure.completion"
+  | "closure.failure"
+  | "closure.leave"
+  | "block.enter"
+  | "block.completion"
+  | "block.failure"
+  | "block.leave"
+  | "debugger.before"
+  | "debugger.after"
+  | "break.before"
+  | "branch.before"
+  | "branch.after"
+  | "intrinsic.after"
+  | "primitive.after"
+  | "import.after"
+  | "function.after"
+  | "arrow.after"
+  | "read.after"
+  | "conditional.before"
+  | "conditional.after"
+  | "eval.before"
+  | "eval.after"
+  | "await.before"
+  | "await.after"
+  | "yield.before"
+  | "yield.after"
+  | "drop.before"
+  | "export.before"
+  | "write.before"
+  | "return.before"
+  | "apply"
+  | "construct";
 
-type Generic = {
-  Value: unknown;
-  Location: unknown;
-  ValueResult: unknown;
-  RecordResult: unknown;
-  VoidResult: unknown;
+/////////////////////
+// Function Format //
+/////////////////////
+
+export type ObjectPointcut<L> = {
+  "program.enter"?:
+    | boolean
+    | ((
+        sort: Sort,
+        head: Header[],
+        frame: { [key in Variable]?: null },
+        location: L,
+      ) => boolean);
+  "program.completion"?:
+    | boolean
+    | ((sort: Sort, value: null, location: L) => boolean);
+  "program.failure"?:
+    | boolean
+    | ((sort: Sort, value: null, location: L) => boolean);
+  "program.leave"?: boolean | ((sort: Sort, location: L) => boolean);
+  "closure.enter"?:
+    | boolean
+    | ((
+        kind: ClosureKind,
+        callee: null,
+        frame: { [key in Variable]?: null },
+        location: L,
+      ) => boolean);
+  "closure.completion"?:
+    | boolean
+    | ((kind: ClosureKind, value: null, location: L) => boolean);
+  "closure.failure"?:
+    | boolean
+    | ((kind: ClosureKind, value: null, location: L) => boolean);
+  "closure.leave"?: boolean | ((kind: ClosureKind, location: L) => boolean);
+  "block.enter"?:
+    | boolean
+    | ((
+        kind: BlockKind,
+        labels: Label[],
+        frame: { [key in Variable]?: null },
+        location: L,
+      ) => boolean);
+  "block.completion"?: boolean | ((kind: BlockKind, location: L) => boolean);
+  "block.failure"?:
+    | boolean
+    | ((kind: BlockKind, value: null, location: L) => boolean);
+  "block.leave"?: boolean | ((kind: BlockKind, location: L) => boolean);
+  "debugger.before"?: boolean | ((location: L) => boolean);
+  "debugger.after"?: boolean | ((location: L) => boolean);
+  "break.before"?: boolean | ((label: Label, location: L) => boolean);
+  "branch.before"?:
+    | boolean
+    | ((kind: BranchKind, value: null, location: L) => boolean);
+  "branch.after"?: boolean | ((kind: BranchKind, location: L) => boolean);
+  "intrinsic.after"?:
+    | boolean
+    | ((name: aran.Intrinsic, value: null, location: L) => boolean);
+  "primitive.after"?: boolean | ((value: Primitive, location: L) => boolean);
+  "import.after"?:
+    | boolean
+    | ((
+        source: string,
+        specifier: string | null,
+        value: null,
+        location: L,
+      ) => boolean);
+  "function.after"?:
+    | boolean
+    | ((
+        asynchronous: boolean,
+        generator: boolean,
+        value: null,
+        location: L,
+      ) => boolean);
+  "arrow.after"?:
+    | boolean
+    | ((asynchronous: boolean, value: null, location: L) => boolean);
+  "read.after"?:
+    | boolean
+    | ((variable: Variable, value: null, location: L) => boolean);
+  "conditional.before"?: boolean | ((value: null, location: L) => boolean);
+  "conditional.after"?: boolean | ((value: null, location: L) => boolean);
+  "eval.before"?:
+    | boolean
+    | ((value: null, context: InternalLocalContext, location: L) => boolean);
+  "eval.after"?: boolean | ((value: null, location: L) => boolean);
+  "await.before"?: boolean | ((value: null, location: L) => boolean);
+  "await.after"?: boolean | ((value: null, location: L) => boolean);
+  "yield.before"?:
+    | boolean
+    | ((delegate: boolean, value: null, location: L) => boolean);
+  "yield.after"?:
+    | boolean
+    | ((delegate: boolean, value: null, location: L) => boolean);
+  "drop.before"?: boolean | ((value: null, location: L) => boolean);
+  "export.before"?:
+    | boolean
+    | ((specifier: string, value: null, location: L) => boolean);
+  "write.before"?:
+    | boolean
+    | ((variable: Variable, value: null, location: L) => boolean);
+  "return.before"?: boolean | ((value: null, location: L) => boolean);
+  "apply"?:
+    | boolean
+    | ((callee: null, this_: null, arguments_: null[], location: L) => boolean);
+  "construct"?:
+    | boolean
+    | ((callee: null, arguments_: null[], location: L) => boolean);
 };
 
-type GenericProgramEnterAdvice<G extends Generic> = (
-  sort: Sort,
-  head: Header[],
-  record: { [key in Variable]?: G["Value"] },
-  location: G["Location"],
-) => G["RecordResult"];
-
-type GenericProgramCompletionAdvice<G extends Generic> = (
-  sort: Sort,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericProgramFailureAdvice<G extends Generic> = (
-  sort: Sort,
-  error: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericProgramLeaveAdvice<G extends Generic> = (
-  sort: Sort,
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericFunctionEnterAdvice<G extends Generic> = (
-  kind: ClosureKind,
-  callee: G["Value"],
-  record: { [key in Variable]?: G["Value"] },
-  location: G["Location"],
-) => G["RecordResult"];
-
-type GenericFunctionCompletionAdvice<G extends Generic> = (
-  kind: ClosureKind,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericFunctionFailureAdvice<G extends Generic> = (
-  kind: ClosureKind,
-  error: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericFunctionLeaveAdvice<G extends Generic> = (
-  kind: ClosureKind,
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericBlockEnterAdvice<G extends Generic> = (
-  kind: BlockKind,
-  labels: Label[],
-  record: { [key in Variable]?: G["Value"] },
-  location: G["Location"],
-) => G["RecordResult"];
-
-type GenericBlockCompletionAdvice<G extends Generic> = (
-  kind: BlockKind,
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericBlockFailureAdvice<G extends Generic> = (
-  kind: BlockKind,
-  error: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericBlockLeaveAdvice<G extends Generic> = (
-  kind: BlockKind,
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericDebuggerBeforeAdvice<G extends Generic> = (
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericDebuggerAfterAdvice<G extends Generic> = (
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericBreakBeforeAdvice<G extends Generic> = (
-  label: Label,
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericBranchBeforeAdvice<G extends Generic> = (
-  kind: BranchKind,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericBranchAfterAdvice<G extends Generic> = (
-  kind: BranchKind,
-  location: G["Location"],
-) => G["VoidResult"];
-
-type GenericIntrinsicAfterAdvice<G extends Generic> = (
-  name: aran.Intrinsic,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericPrimitiveAfterAdvice<G extends Generic> = (
-  value: Primitive,
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericImportAfterAdvice<G extends Generic> = (
-  source: string,
-  specifier: string | null,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericFunctionAfterAdvice<G extends Generic> = (
-  asynchronous: boolean,
-  generator: boolean,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericArrowAfterAdvice<G extends Generic> = (
-  asynchronous: boolean,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericReadAfterAdvice<G extends Generic> = (
-  variable: Variable,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericConditionalBeforeAdvice<G extends Generic> = (
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericConditionalAfterAdvice<G extends Generic> = (
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericEvalBeforeAdvice<G extends Generic> = (
-  value: G["Value"],
-  context: InternalLocalContext,
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericEvalAfterAdvice<G extends Generic> = (
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericAwaitBeforeAdvice<G extends Generic> = (
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericAwaitAfterAdvice<G extends Generic> = (
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericYieldBeforeAdvice<G extends Generic> = (
-  delegate: boolean,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericYieldAfterAdvice<G extends Generic> = (
-  delegate: boolean,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericDropBeforeAdvice<G extends Generic> = (
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericExportBeforeAdvice<G extends Generic> = (
-  specifier: string,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericWriteBeforeAdvice<G extends Generic> = (
-  variable: Variable,
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericReturnBeforeAdvice<G extends Generic> = (
-  value: G["Value"],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericApplyAdvice<G extends Generic> = (
-  callee: G["Value"],
-  this_: G["Value"],
-  arguments_: G["Value"][],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericConstructAdvice<G extends Generic> = (
-  callee: G["Value"],
-  arguments_: G["Value"][],
-  location: G["Location"],
-) => G["ValueResult"];
-
-type GenericAdvice<S, G extends Generic> = {
-  "program.enter"?: S | GenericProgramEnterAdvice<G>;
-  "program.completion"?: S | GenericProgramCompletionAdvice<G>;
-  "program.failure"?: S | GenericProgramFailureAdvice<G>;
-  "program.leave"?: S | GenericProgramLeaveAdvice<G>;
-  "closure.enter"?: S | GenericFunctionEnterAdvice<G>;
-  "closure.completion"?: S | GenericFunctionCompletionAdvice<G>;
-  "closure.failure"?: S | GenericFunctionFailureAdvice<G>;
-  "closure.leave"?: S | GenericFunctionLeaveAdvice<G>;
-  "block.enter"?: S | GenericBlockEnterAdvice<G>;
-  "block.completion"?: S | GenericBlockCompletionAdvice<G>;
-  "block.failure"?: S | GenericBlockFailureAdvice<G>;
-  "block.leave"?: S | GenericBlockLeaveAdvice<G>;
-  "debugger.before"?: S | GenericDebuggerBeforeAdvice<G>;
-  "debugger.after"?: S | GenericDebuggerAfterAdvice<G>;
-  "break.before"?: S | GenericBreakBeforeAdvice<G>;
-  "branch.before"?: S | GenericBranchBeforeAdvice<G>;
-  "branch.after"?: S | GenericBranchAfterAdvice<G>;
-  "intrinsic.after"?: S | GenericIntrinsicAfterAdvice<G>;
-  "primitive.after"?: S | GenericPrimitiveAfterAdvice<G>;
-  "import.after"?: S | GenericImportAfterAdvice<G>;
-  "function.after"?: S | GenericFunctionAfterAdvice<G>;
-  "arrow.after"?: S | GenericArrowAfterAdvice<G>;
-  "read.after"?: S | GenericReadAfterAdvice<G>;
-  "conditional.before"?: S | GenericConditionalBeforeAdvice<G>;
-  "conditional.after"?: S | GenericConditionalAfterAdvice<G>;
-  "eval.before"?: S | GenericEvalBeforeAdvice<G>;
-  "eval.after"?: S | GenericEvalAfterAdvice<G>;
-  "await.before"?: S | GenericAwaitBeforeAdvice<G>;
-  "await.after"?: S | GenericAwaitAfterAdvice<G>;
-  "yield.before"?: S | GenericYieldBeforeAdvice<G>;
-  "yield.after"?: S | GenericYieldAfterAdvice<G>;
-  "drop.before"?: S | GenericDropBeforeAdvice<G>;
-  "export.before"?: S | GenericExportBeforeAdvice<G>;
-  "write.before"?: S | GenericWriteBeforeAdvice<G>;
-  "return.before"?: S | GenericReturnBeforeAdvice<G>;
-  "apply"?: S | GenericApplyAdvice<G>;
-  "construct"?: S | GenericConstructAdvice<G>;
+export type ObjectAdvice<V, L> = {
+  "program.enter"?: (
+    sort: Sort,
+    head: Header[],
+    frame: { [key in Variable]?: V },
+    location: L,
+  ) => { [key in Variable]?: V };
+  "program.completion"?: (sort: Sort, value: V, location: L) => V;
+  "program.failure"?: (sort: Sort, value: V, location: L) => V;
+  "program.leave"?: (sort: Sort, location: L) => void;
+  "closure.enter"?: (
+    kind: ClosureKind,
+    callee: V,
+    frame: { [key in Variable]?: V },
+    location: L,
+  ) => { [key in Variable]?: V };
+  "closure.completion"?: (kind: ClosureKind, location: L, value: V) => V;
+  "closure.failure"?: (kind: ClosureKind, value: V, location: L) => V;
+  "closure.leave"?: (kind: ClosureKind, location: L) => void;
+  "block.enter"?: (
+    kind: BlockKind,
+    labels: Label[],
+    frame: { [key in Variable]?: V },
+    location: L,
+  ) => { [key in Variable]?: V };
+  "block.completion"?: (kind: BlockKind, location: L) => void;
+  "block.failure"?: (kind: BlockKind, value: V, location: L) => V;
+  "block.leave"?: (kind: BlockKind, location: L) => void;
+  "debugger.before"?: (location: L) => void;
+  "debugger.after"?: (location: L) => void;
+  "break.before"?: (label: Label, location: L) => void;
+  "branch.before"?: (kind: BranchKind, value: V, location: L) => V;
+  "branch.after"?: (kind: BranchKind, location: L) => void;
+  "intrinsic.after"?: (name: aran.Intrinsic, value: V, location: L) => V;
+  "primitive.after"?: (value: Primitive, location: L) => V;
+  "import.after"?: (
+    source: string,
+    specifier: string | null,
+    value: V,
+    location: L,
+  ) => V;
+  "function.after"?: (
+    asynchronous: boolean,
+    generator: boolean,
+    value: V,
+    location: L,
+  ) => V;
+  "arrow.after"?: (asynchronous: boolean, value: V, location: L) => V;
+  "read.after"?: (variable: Variable, value: V, location: L) => V;
+  "conditional.before"?: (value: V, location: L) => V;
+  "conditional.after"?: (value: V, location: L) => V;
+  "eval.before"?: (value: V, context: InternalLocalContext, location: L) => V;
+  "eval.after"?: (value: V, location: L) => V;
+  "await.before"?: (value: V, location: L) => V;
+  "await.after"?: (value: V, location: L) => V;
+  "yield.before"?: (delegate: boolean, value: V, location: L) => V;
+  "yield.after"?: (delegate: boolean, value: V, location: L) => V;
+  "drop.before"?: (value: V, location: L) => V;
+  "export.before"?: (specifier: string, value: V, location: L) => V;
+  "write.before"?: (variable: Variable, value: V, location: L) => V;
+  "return.before"?: (value: V, location: L) => V;
+  "apply"?: (callee: V, this_: V, arguments_: V[], location: L) => V;
+  "construct"?: (callee: V, arguments_: V[], location: L) => V;
 };
 
-export type AdviceName = keyof GenericAdvice<never, never>;
-
-///////////////////
-// Object Advice //
-///////////////////
-
-type AdviceGeneric<V, L> = {
-  Value: V;
-  Location: L;
-  ValueResult: V;
-  RecordResult: { [key in Variable]?: V };
-  VoidResult: void;
-};
-
-export type ProgramEnterAdvice<V, L> = GenericProgramEnterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type ProgramCompletionAdvice<V, L> = GenericProgramCompletionAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type ProgramFailureAdvice<V, L> = GenericProgramFailureAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type ProgramLeaveAdvice<V, L> = GenericProgramLeaveAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type FunctionEnterAdvice<V, L> = GenericFunctionEnterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type FunctionCompletionAdvice<V, L> = GenericFunctionCompletionAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type FunctionFailureAdvice<V, L> = GenericFunctionFailureAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type FunctionLeaveAdvice<V, L> = GenericFunctionLeaveAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type BlockEnterAdvice<V, L> = GenericBlockEnterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type BlockCompletionAdvice<V, L> = GenericBlockCompletionAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type BlockFailureAdvice<V, L> = GenericBlockFailureAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type BlockLeaveAdvice<V, L> = GenericBlockLeaveAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type DebuggerBeforeAdvice<V, L> = GenericDebuggerBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type DebuggerAfterAdvice<V, L> = GenericDebuggerAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type BreakBeforeAdvice<V, L> = GenericBreakBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type BranchBeforeAdvice<V, L> = GenericBranchBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type BranchAfterAdvice<V, L> = GenericBranchAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type IntrinsicAfterAdvice<V, L> = GenericIntrinsicAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type PrimitiveAfterAdvice<V, L> = GenericPrimitiveAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type ImportAfterAdvice<V, L> = GenericImportAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type FunctionAfterAdvice<V, L> = GenericFunctionAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type ArrowAfterAdvice<V, L> = GenericArrowAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type ReadAfterAdvice<V, L> = GenericReadAfterAdvice<AdviceGeneric<V, L>>;
-
-export type ConditionalBeforeAdvice<V, L> = GenericConditionalBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type ConditionalAfterAdvice<V, L> = GenericConditionalAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type EvalBeforeAdvice<V, L> = GenericEvalBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type EvalAfterAdvice<V, L> = GenericEvalAfterAdvice<AdviceGeneric<V, L>>;
-
-export type AwaitBeforeAdvice<V, L> = GenericAwaitBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type AwaitAfterAdvice<V, L> = GenericAwaitAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type YieldBeforeAdvice<V, L> = GenericYieldBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type YieldAfterAdvice<V, L> = GenericYieldAfterAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type DropBeforeAdvice<V, L> = GenericDropBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type ExportBeforeAdvice<V, L> = GenericExportBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type WriteBeforeAdvice<V, L> = GenericWriteBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type ReturnBeforeAdvice<V, L> = GenericReturnBeforeAdvice<
-  AdviceGeneric<V, L>
->;
-
-export type ApplyAdvice<V, L> = GenericApplyAdvice<AdviceGeneric<V, L>>;
-
-export type ConstructAdvice<V, L> = GenericConstructAdvice<AdviceGeneric<V, L>>;
-
-export type ObjectAdvice<V, L> = GenericAdvice<never, AdviceGeneric<V, L>>;
-
-export type ObjectPointcut<L> = GenericAdvice<
-  boolean,
-  {
-    Value: null;
-    Location: L;
-    ValueResult: boolean;
-    RecordResult: boolean;
-    VoidResult: boolean;
-  }
->;
-
-/////////////////////////////
-// Generic Function Advice //
-/////////////////////////////
+/////////////////////
+// Function Format //
+/////////////////////
 
 type Point<V, L> =
   //////////////
@@ -482,9 +268,7 @@ type Point<V, L> =
       type: "program.enter";
       sort: Sort;
       head: Header[];
-      record: {
-        [key in Variable]: V;
-      };
+      frame: { [key in Variable]: V };
       location: L;
     }
   | {
@@ -509,9 +293,7 @@ type Point<V, L> =
       type: "closure.enter";
       kind: ClosureKind;
       callee: V;
-      record: {
-        [key in Variable]: V;
-      };
+      frame: { [key in Variable]: V };
       location: L;
     }
   | {
@@ -536,9 +318,7 @@ type Point<V, L> =
       type: "block.enter";
       kind: BlockKind;
       labels: Label[];
-      record: {
-        [key in Variable]: V;
-      };
+      frame: { [key in Variable]: V };
       location: L;
     }
   | {
@@ -716,20 +496,20 @@ type Point<V, L> =
       location: L;
     };
 
-type RecordAdviceName = ["program.enter", "closure.enter", "block.enter"];
+// type RecordAdviceName = ["program.enter", "closure.enter", "block.enter"];
 
-type VoidAdviceName = [
-  "program.leave",
-  "closure.leave",
-  "block.completion",
-  "block.leave",
-  "debugger.before",
-  "debugger.after",
-  "break.before",
-  "branch.after",
-];
+// type VoidAdviceName = [
+//   "program.leave",
+//   "closure.leave",
+//   "block.completion",
+//   "block.leave",
+//   "debugger.before",
+//   "debugger.after",
+//   "break.before",
+//   "branch.after",
+// ];
 
-type ValueAdviceName = Exclude<AdviceName, RecordAdviceName | VoidAdviceName>;
+// type ValueAdviceName = Exclude<AdviceName, RecordAdviceName | VoidAdviceName>;
 
 export type FunctionAdvice<V, L> = (
   point: Point<V, L>,
@@ -752,3 +532,16 @@ export type Pointcut<L> =
   | IterablePointcut
   | ObjectPointcut<L>
   | ConstantPointcut;
+
+///////////
+// Check //
+///////////
+
+type Valid = [
+  AdviceName extends keyof ObjectAdvice<any, any> ? true : false,
+  keyof ObjectAdvice<any, any> extends AdviceName ? true : false,
+  AdviceName extends keyof ObjectPointcut<any> ? true : false,
+  keyof ObjectPointcut<any> extends AdviceName ? true : false,
+  AdviceName extends Point<any, any>["type"] ? true : false,
+  Point<any, any>["type"] extends AdviceName ? true : false,
+];
