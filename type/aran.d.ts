@@ -17,15 +17,7 @@ export type Atom = {
   Tag: unknown;
 };
 
-export type Primitive =
-  | null
-  | boolean
-  | number
-  | { nan: null }
-  | { zero: "+" | "-" }
-  | { infinity: "+" | "-" }
-  | { bigint: string }
-  | string;
+export type Primitive = null | boolean | number | string | { bigint: string };
 
 export type GlobalVariableKind = "var" | "let";
 
@@ -91,10 +83,13 @@ export type RegularIntrinsicRcord = {
   "Reflect.getOwnPropertyDescriptor": typeof Reflect.getOwnPropertyDescriptor;
   "Reflect.preventExtensions": typeof Reflect.preventExtensions;
   "Reflect.defineProperty": typeof Reflect.defineProperty;
+  // Number //
+  "Number": typeof Number;
+  "Number.NEGATIVE_INFINITY": typeof Number.NEGATIVE_INFINITY;
+  "Number.POSITIVE_INFINITY": typeof Number.POSITIVE_INFINITY;
   // Others //
   "Function": typeof Function;
   "undefined": typeof undefined;
-  "Number": typeof Number;
   "globalThis": typeof globalThis;
   "eval": typeof eval;
   "Proxy": typeof Proxy;
