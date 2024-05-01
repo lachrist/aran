@@ -1,4 +1,4 @@
-import { Isolate } from "./aran";
+import { Intrinsic } from "./aran";
 
 export type ArgVariable = Brand<string, "weave.ArgVariable">;
 
@@ -19,7 +19,19 @@ export type ArgAtom = {
   Tag: OriginPath;
 };
 
-type Frame = [ResVariable, Isolate][];
+type IntrinsicIsolate = {
+  type: "intrinsic";
+  name: Intrinsic;
+};
+
+type JsonIsolate = {
+  type: "json";
+  data: Json;
+};
+
+export type Isolate = IntrinsicIsolate | JsonIsolate;
+
+export type Frame = [ResVariable, Isolate][];
 
 export type ResAtom = {
   Label: Label;

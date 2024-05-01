@@ -158,20 +158,6 @@ export type Parameter =
   | "typeof.sloppy"
   | "discard.sloppy";
 
-export type Isolate =
-  | {
-      type: "primitive";
-      primitive: Primitive;
-    }
-  | {
-      type: "intrinsic";
-      intrinsic: Intrinsic;
-    }
-  | {
-      type: "json";
-      json: Json;
-    };
-
 export type Program<A extends Atom> = {
   type: "Program";
   sort: Sort;
@@ -182,7 +168,7 @@ export type Program<A extends Atom> = {
 
 export type ClosureBlock<A extends Atom> = {
   type: "ClosureBlock";
-  frame: [A["Variable"], Isolate][];
+  frame: [A["Variable"], Intrinsic][];
   body: Statement<A>[];
   completion: Expression<A>;
   tag: A["Tag"];
@@ -191,7 +177,7 @@ export type ClosureBlock<A extends Atom> = {
 export type ControlBlock<A extends Atom> = {
   type: "ControlBlock";
   labels: A["Label"][];
-  frame: [A["Variable"], Isolate][];
+  frame: [A["Variable"], Intrinsic][];
   body: Statement<A>[];
   tag: A["Tag"];
 };

@@ -4,10 +4,8 @@ import { EarlyError } from "./early-error";
 import { Condition } from "./condition";
 import { Context } from "../context";
 import { BaseVariable, MetaVariable } from "./variable";
-import { Site } from "./site";
-import { Isolate } from "../../type/aran";
-import { Sequence } from "./sequence";
 import { Template } from "./template";
+import { Intrinsic } from "../../type/aran";
 
 export type WarningPrelude = {
   type: "warning";
@@ -36,12 +34,12 @@ export type TemplatePrelude = {
 
 export type MetaDeclarationPrelude = {
   type: "meta-declaration";
-  data: [MetaVariable, Isolate];
+  data: [MetaVariable, Intrinsic];
 };
 
 export type BaseDeclarationPrelude = {
   type: "base-declaration";
-  data: [BaseVariable, Isolate];
+  data: [BaseVariable, Intrinsic];
 };
 
 export type DeclarationPrelude =
