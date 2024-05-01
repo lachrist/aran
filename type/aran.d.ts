@@ -18,7 +18,6 @@ export type Atom = {
 };
 
 export type Primitive =
-  | { undefined: null }
   | null
   | boolean
   | number

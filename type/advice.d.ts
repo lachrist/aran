@@ -388,7 +388,7 @@ type Point<V, L> =
   ///////////////////
   | {
       type: "primitive.after";
-      value: Primitive;
+      value: null | boolean | number | string | bigint;
       location: L;
     }
   | {
