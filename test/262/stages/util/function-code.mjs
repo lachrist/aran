@@ -2,7 +2,7 @@ const { String } = globalThis;
 
 /**
  * @type {(
- *   args: import("./aran").Value[],
+ *   args: unknown[],
  * ) => string}
  */
 export const compileFunctionCode = (args) => {

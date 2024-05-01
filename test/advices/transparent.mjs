@@ -1,6 +1,9 @@
 // @ts-nocheck
 
-const { Error } = globalThis;
+const {
+  Error,
+  Reflect: { apply, construct },
+} = globalThis;
 
 /**
  * @type {import("../../type/advice").Advice<

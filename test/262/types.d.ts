@@ -77,7 +77,9 @@ export type StageName =
   | "identity"
   | "parsing"
   | "empty-native"
-  | "empty-emulate";
+  | "empty-emulate"
+  | "transparent-native"
+  | "transparent-emulate";
 
 export type CompileInstrument = (options: {
   record: Instrument;

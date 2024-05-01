@@ -137,7 +137,9 @@ export type ObjectPointcut<L> = {
   "intrinsic.after"?:
     | boolean
     | ((name: aran.Intrinsic, value: null, location: L) => boolean);
-  "primitive.after"?: boolean | ((value: Primitive, location: L) => boolean);
+  "primitive.after"?:
+    | boolean
+    | ((primitive: Primitive, location: L) => boolean);
   "import.after"?:
     | boolean
     | ((
@@ -151,12 +153,12 @@ export type ObjectPointcut<L> = {
     | ((
         asynchronous: boolean,
         generator: boolean,
-        value: null,
+        closure: null,
         location: L,
       ) => boolean);
   "arrow.after"?:
     | boolean
-    | ((asynchronous: boolean, value: null, location: L) => boolean);
+    | ((asynchronous: boolean, closure: null, location: L) => boolean);
   "read.after"?:
     | boolean
     | ((variable: Variable, value: null, location: L) => boolean);
@@ -190,69 +192,98 @@ export type ObjectPointcut<L> = {
     | ((callee: null, arguments_: null[], location: L) => boolean);
 };
 
-export type ObjectAdvice<V, L> = {
+export type ObjectAdvice<L> = {
   "program.enter"?: (
     sort: Sort,
     head: Header[],
-    frame: { [key in Variable]?: V },
+    frame: { [key in Variable]?: unknown },
     location: L,
-  ) => { [key in Variable]?: V };
-  "program.completion"?: (sort: Sort, value: V, location: L) => V;
-  "program.failure"?: (sort: Sort, value: V, location: L) => V;
+  ) => { [key in Variable]?: unknown };
+  "program.completion"?: (sort: Sort, value: unknown, location: L) => unknown;
+  "program.failure"?: (sort: Sort, value: unknown, location: L) => unknown;
   "program.leave"?: (sort: Sort, location: L) => void;
   "closure.enter"?: (
     kind: ClosureKind,
-    callee: V,
-    frame: { [key in Variable]?: V },
+    callee: unknown,
+    frame: { [key in Variable]?: unknown },
     location: L,
-  ) => { [key in Variable]?: V };
-  "closure.completion"?: (kind: ClosureKind, location: L, value: V) => V;
-  "closure.failure"?: (kind: ClosureKind, value: V, location: L) => V;
+  ) => { [key in Variable]?: unknown };
+  "closure.completion"?: (
+    kind: ClosureKind,
+    location: L,
+    value: unknown,
+  ) => unknown;
+  "closure.failure"?: (
+    kind: ClosureKind,
+    value: unknown,
+    location: L,
+  ) => unknown;
   "closure.leave"?: (kind: ClosureKind, location: L) => void;
   "block.enter"?: (
     kind: BlockKind,
     labels: Label[],
-    frame: { [key in Variable]?: V },
+    frame: { [key in Variable]?: unknown },
     location: L,
-  ) => { [key in Variable]?: V };
+  ) => { [key in Variable]?: unknown };
   "block.completion"?: (kind: BlockKind, location: L) => void;
-  "block.failure"?: (kind: BlockKind, value: V, location: L) => V;
+  "block.failure"?: (kind: BlockKind, value: unknown, location: L) => unknown;
   "block.leave"?: (kind: BlockKind, location: L) => void;
   "debugger.before"?: (location: L) => void;
   "debugger.after"?: (location: L) => void;
   "break.before"?: (label: Label, location: L) => void;
-  "branch.before"?: (kind: BranchKind, value: V, location: L) => V;
+  "branch.before"?: (kind: BranchKind, value: unknown, location: L) => unknown;
   "branch.after"?: (kind: BranchKind, location: L) => void;
-  "intrinsic.after"?: (name: aran.Intrinsic, value: V, location: L) => V;
-  "primitive.after"?: (value: Primitive, location: L) => V;
+  "intrinsic.after"?: (
+    name: aran.Intrinsic,
+    intrinsic: unknown,
+    location: L,
+  ) => unknown;
+  "primitive.after"?: (primitive: Primitive, location: L) => unknown;
   "import.after"?: (
     source: string,
     specifier: string | null,
-    value: V,
+    value: unknown,
     location: L,
-  ) => V;
+  ) => unknown;
   "function.after"?: (
     asynchronous: boolean,
     generator: boolean,
-    value: V,
+    closure: Function,
     location: L,
-  ) => V;
-  "arrow.after"?: (asynchronous: boolean, value: V, location: L) => V;
-  "read.after"?: (variable: Variable, value: V, location: L) => V;
-  "conditional.before"?: (value: V, location: L) => V;
-  "conditional.after"?: (value: V, location: L) => V;
-  "eval.before"?: (value: V, context: InternalLocalContext, location: L) => V;
-  "eval.after"?: (value: V, location: L) => V;
-  "await.before"?: (value: V, location: L) => V;
-  "await.after"?: (value: V, location: L) => V;
-  "yield.before"?: (delegate: boolean, value: V, location: L) => V;
-  "yield.after"?: (delegate: boolean, value: V, location: L) => V;
-  "drop.before"?: (value: V, location: L) => V;
-  "export.before"?: (specifier: string, value: V, location: L) => V;
-  "write.before"?: (variable: Variable, value: V, location: L) => V;
-  "return.before"?: (value: V, location: L) => V;
-  "apply"?: (callee: V, this_: V, arguments_: V[], location: L) => V;
-  "construct"?: (callee: V, arguments_: V[], location: L) => V;
+  ) => unknown;
+  "arrow.after"?: (
+    asynchronous: boolean,
+    closure: Function,
+    location: L,
+  ) => unknown;
+  "read.after"?: (variable: Variable, value: unknown, location: L) => unknown;
+  "conditional.before"?: (value: unknown, location: L) => unknown;
+  "conditional.after"?: (value: unknown, location: L) => unknown;
+  "eval.before"?: (
+    value: unknown,
+    context: InternalLocalContext,
+    location: L,
+  ) => unknown;
+  "eval.after"?: (value: unknown, location: L) => unknown;
+  "await.before"?: (value: unknown, location: L) => unknown;
+  "await.after"?: (value: unknown, location: L) => unknown;
+  "yield.before"?: (delegate: boolean, value: unknown, location: L) => unknown;
+  "yield.after"?: (delegate: boolean, value: unknown, location: L) => unknown;
+  "drop.before"?: (value: unknown, location: L) => unknown;
+  "export.before"?: (specifier: string, value: unknown, location: L) => unknown;
+  "write.before"?: (variable: Variable, value: unknown, location: L) => unknown;
+  "return.before"?: (value: unknown, location: L) => unknown;
+  "apply"?: (
+    callee: unknown,
+    this_: unknown,
+    arguments_: unknown[],
+    location: L,
+  ) => unknown;
+  "construct"?: (
+    callee: unknown,
+    arguments_: unknown[],
+    location: L,
+  ) => unknown;
 };
 
 /////////////////////
@@ -496,24 +527,9 @@ type Point<V, L> =
       location: L;
     };
 
-// type RecordAdviceName = ["program.enter", "closure.enter", "block.enter"];
-
-// type VoidAdviceName = [
-//   "program.leave",
-//   "closure.leave",
-//   "block.completion",
-//   "block.leave",
-//   "debugger.before",
-//   "debugger.after",
-//   "break.before",
-//   "branch.after",
-// ];
-
-// type ValueAdviceName = Exclude<AdviceName, RecordAdviceName | VoidAdviceName>;
-
-export type FunctionAdvice<V, L> = (
-  point: Point<V, L>,
-) => { [key in Variable]?: V } | V | void;
+export type FunctionAdvice<L> = (
+  point: Point<unknown, L>,
+) => { [key in Variable]?: unknown } | unknown | void;
 
 type FunctionPointcut<L> = (point: Point<Expression, L>) => boolean;
 
@@ -525,7 +541,7 @@ type IterablePointcut = Iterable<AdviceName>;
 
 type ConstantPointcut = boolean;
 
-export type Advice<V, L> = ObjectAdvice<V, L> | FunctionAdvice<V, L>;
+export type Advice<L> = ObjectAdvice<L> | FunctionAdvice<L>;
 
 export type Pointcut<L> =
   | FunctionPointcut<L>
@@ -538,8 +554,8 @@ export type Pointcut<L> =
 ///////////
 
 type Valid = [
-  AdviceName extends keyof ObjectAdvice<any, any> ? true : false,
-  keyof ObjectAdvice<any, any> extends AdviceName ? true : false,
+  AdviceName extends keyof ObjectAdvice<any> ? true : false,
+  keyof ObjectAdvice<any> extends AdviceName ? true : false,
   AdviceName extends keyof ObjectPointcut<any> ? true : false,
   keyof ObjectPointcut<any> extends AdviceName ? true : false,
   AdviceName extends Point<any, any>["type"] ? true : false,

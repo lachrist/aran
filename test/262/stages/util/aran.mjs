@@ -46,14 +46,15 @@ const setup = generate(compileSetup({ global_variable, intrinsic_variable }));
 
 /**
  * @type {(
- *   makeAdvice: (
+ *   makeAdvice: (options: {
+ *     reject: (error: Error) => void,
  *     intrinsic: import("../../../../type/aran").IntrinsicRecord,
  *     instrument: (
  *       code: string,
  *       situ: import("./situ").Situ,
  *       location: null | import("./aran").Location,
  *     ) => string,
- *   ) => import("./aran").Advice,
+ *   }) => import("./aran").Advice,
  *   options: {
  *     global_declarative_record: "emulate" | "native",
  *   },
@@ -61,32 +62,36 @@ const setup = generate(compileSetup({ global_variable, intrinsic_variable }));
  */
 export const compileCompileAranInstrument =
   (makeAdvice, { global_declarative_record }) =>
-  ({ record, warning, context }) => {
+  ({ reject, record, warning, context }) => {
     let counter = 0;
     const intrinsic =
       /** @type {import("../../../../type/aran").IntrinsicRecord} */ (
         runInContext(setup, context)
       );
     /** @type {import("./aran").Advice} */
-    const advice = makeAdvice(intrinsic, (code, situ, location) => {
-      counter += 1;
-      const url = new URL(
-        `dynamic:///${situ.kind}/${counter}${
-          location === null ? "" : `#${encodeURIComponent(location)}`
-        }`,
-      );
-      const { content } = record({
-        kind: "script",
-        url,
-        content: generate(
-          instrument(
-            parse(code, makeBase(url), situ),
-            // eslint-disable-next-line no-use-before-define
-            embed_config,
+    const advice = makeAdvice({
+      reject,
+      intrinsic,
+      instrument: (code, situ, location) => {
+        counter += 1;
+        const url = new URL(
+          `dynamic:///${situ.kind}/${counter}${
+            location === null ? "" : `#${encodeURIComponent(location)}`
+          }`,
+        );
+        const { content } = record({
+          kind: "script",
+          url,
+          content: generate(
+            instrument(
+              parse(code, makeBase(url), situ),
+              // eslint-disable-next-line no-use-before-define
+              embed_config,
+            ),
           ),
-        ),
-      });
-      return content;
+        });
+        return content;
+      },
     });
     const pointcut = listKey(advice);
     const config = {

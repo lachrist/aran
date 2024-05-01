@@ -5,7 +5,7 @@ import { generate } from "astring";
 const { eval: evalGlobal } = globalThis;
 
 /**
- * @type {import("../../type/advice").Advice<unknown, string>}
+ * @type {import("../../type/advice").Advice<string>}
  */
 globalThis.advice = {};
 

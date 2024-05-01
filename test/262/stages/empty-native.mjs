@@ -16,7 +16,7 @@ export default {
     ),
   ),
   compileInstrument: compileCompileAranInstrument(
-    (_intrinsic, instrument) => ({
+    ({ instrument }) => ({
       "__proto__": null,
       "eval.before": (code, context, location) => {
         if (typeof code === "string") {
