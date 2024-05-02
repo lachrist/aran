@@ -278,15 +278,10 @@ export type Expression<A extends Atom> =
       tag: A["Tag"];
     }
   | {
-      type: "FunctionExpression";
+      type: "ClosureExpression";
+      kind: "function" | "arrow";
       asynchronous: boolean;
       generator: boolean;
-      body: ClosureBlock<A>;
-      tag: A["Tag"];
-    }
-  | {
-      type: "ArrowExpression";
-      asynchronous: boolean;
       body: ClosureBlock<A>;
       tag: A["Tag"];
     }

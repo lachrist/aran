@@ -31,7 +31,7 @@ export default {
   ),
   compileInstrument: compileCompileAranInstrument(
     ({ reject, intrinsic, instrument }) => {
-      /** @type {import("./util/aran").Scope[]} */
+      /** @type {import("./invariant-native").Scope[]} */
       let callstack = [];
 
       /** @type {object} */
@@ -40,7 +40,7 @@ export default {
         __proto__: null,
       };
 
-      /** @type {import("./util/aran").Value[]} */
+      /** @type {unknown[]} */
       let stack = [];
 
       /**
@@ -74,9 +74,9 @@ export default {
 
       /**
        * @type {(
-       *   value: import("./util/aran").Value,
+       *   value: V,
        *   location: import("./util/aran").Location,
-       * ) => import("./util/aran").Value}
+       * ) => V}
        */
       const consume = (value, location) => {
         if (stack.length === 0) {

@@ -61,8 +61,7 @@ export type AdviceName =
   | "intrinsic.after"
   | "primitive.after"
   | "import.after"
-  | "function.after"
-  | "arrow.after"
+  | "closure.after"
   | "read.after"
   | "conditional.before"
   | "conditional.after"
@@ -148,17 +147,15 @@ export type ObjectPointcut<L> = {
         value: null,
         location: L,
       ) => boolean);
-  "function.after"?:
+  "closure.after"?:
     | boolean
     | ((
+        kind: "arrow" | "function",
         asynchronous: boolean,
         generator: boolean,
         closure: null,
         location: L,
       ) => boolean);
-  "arrow.after"?:
-    | boolean
-    | ((asynchronous: boolean, closure: null, location: L) => boolean);
   "read.after"?:
     | boolean
     | ((variable: Variable, value: null, location: L) => boolean);
@@ -245,14 +242,10 @@ export type ObjectAdvice<L> = {
     value: unknown,
     location: L,
   ) => unknown;
-  "function.after"?: (
+  "closure.after"?: (
+    kind: "arrow" | "function",
     asynchronous: boolean,
     generator: boolean,
-    closure: Function,
-    location: L,
-  ) => unknown;
-  "arrow.after"?: (
-    asynchronous: boolean,
     closure: Function,
     location: L,
   ) => unknown;
@@ -411,15 +404,10 @@ type Point<V, L> =
       location: L;
     }
   | {
-      type: "function.after";
+      type: "closure.after";
+      kind: "arrow" | "function";
       asynchronous: boolean;
       generator: boolean;
-      value: V;
-      location: L;
-    }
-  | {
-      type: "arrow.after";
-      asynchronous: boolean;
       value: V;
       location: L;
     }

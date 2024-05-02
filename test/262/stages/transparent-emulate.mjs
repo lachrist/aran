@@ -45,9 +45,8 @@ export default {
         "intrinsic.after": (_name, value, _location) => value,
         "primitive.after": (primitive, _location) => primitive,
         "import.after": (_source, _specifier, value, _location) => value,
-        "function.after": (_asynchronous, _generator, value, _location) =>
+        "closure.after": (_kind, _asynchronous, _generator, value, _location) =>
           value,
-        "arrow.after": (_asynchronous, value, _location) => value,
         "read.after": (_variable, value, _location) => value,
         "conditional.before": (value, _location) => value,
         "conditional.after": (value, _location) => value,
