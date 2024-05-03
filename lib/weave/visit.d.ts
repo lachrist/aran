@@ -1,10 +1,9 @@
 import type { Locate } from "../config.d.ts";
 import type { ClosureKind, BlockKind, Pointcut } from "../../type/advice.d.ts";
-import { OriginPath } from "../../type/weave.js";
-import type { InternalLocalContext } from "../context.d.js";
-import { Header } from "../header.js";
-import { Program } from "../../type/aran.js";
-import { Sort } from "../sort.js";
+import type { OriginPath } from "../../type/weave.d.ts";
+import type { InternalLocalContext } from "../context.d.ts";
+import type { Header } from "../header.d.ts";
+import type { Sort } from "../sort.d.ts";
 
 export type Options<B, L> = {
   evals: { [k in OriginPath]?: InternalLocalContext };
@@ -26,7 +25,6 @@ export type Parent =
   | {
       type: "closure";
       kind: ClosureKind;
-      callee: weave.ResVariable;
     }
   | {
       type: "block";

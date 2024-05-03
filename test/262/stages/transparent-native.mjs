@@ -25,7 +25,7 @@ export default {
         "program.completion": (_sort, value, _location) => value,
         "program.failure": (_sort, value, _location) => value,
         "program.leave": (_sort, _location) => {},
-        "closure.enter": (_kind, _links, frame, _location) => frame,
+        "closure.enter": (_kind, frame, _location) => frame,
         "closure.failure": (_kind, value, _location) => value,
         "closure.completion": (_kind, value, _location) => value,
         "closure.leave": (_kind, _location) => {},

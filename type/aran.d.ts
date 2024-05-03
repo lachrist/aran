@@ -143,6 +143,7 @@ export type Parameter =
   | "new.target"
   // https://github.com/allenwb/ESideas/blob/HEAD/ES7MetaProps.md
   | "function.arguments"
+  | "function.callee"
   | "catch.error"
   | "super.get"
   | "super.set"

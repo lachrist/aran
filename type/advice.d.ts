@@ -1,4 +1,4 @@
-import type { Header } from "../lib/header.d.ts";
+import type { Header, ModuleHeader } from "../lib/header.d.ts";
 import type { InternalLocalContext } from "../lib/context.d.js";
 import { Sort } from "../lib/sort.js";
 
@@ -78,9 +78,9 @@ export type AdviceName =
   | "apply"
   | "construct";
 
-/////////////////////
-// Function Format //
-/////////////////////
+///////////////////
+// Object Format //
+///////////////////
 
 export type ObjectPointcut<L> = {
   "program.enter"?:
@@ -102,7 +102,6 @@ export type ObjectPointcut<L> = {
     | boolean
     | ((
         kind: ClosureKind,
-        callee: null,
         frame: { [key in Variable]?: null },
         location: L,
       ) => boolean);
@@ -201,7 +200,6 @@ export type ObjectAdvice<L> = {
   "program.leave"?: (sort: Sort, location: L) => void;
   "closure.enter"?: (
     kind: ClosureKind,
-    callee: unknown,
     frame: { [key in Variable]?: unknown },
     location: L,
   ) => { [key in Variable]?: unknown };
@@ -279,6 +277,392 @@ export type ObjectAdvice<L> = {
   ) => unknown;
 };
 
+type AdviceParametrization = {
+  Variable: string;
+  ExternalValue: unknown;
+  UnknownRawValue: unknown;
+  ResultValue: unknown;
+  FunctionRawValue: Function;
+  PrimitiveRawValue: null | boolean | number | string | bigint;
+  IntrinsicValue: unknown;
+  ErrorValue: unknown;
+  StackValue: unknown;
+  ScopeValue: unknown;
+  ModuleValue: unknown;
+  PromiseValue: unknown;
+  Location: unknown;
+  undefined: undefined;
+  globalThis: object;
+};
+
+export type Parameter =
+  | "import.dynamic"
+  | "import.meta"
+  | "this"
+  | "new.target"
+  // https://github.com/allenwb/ESideas/blob/HEAD/ES7MetaProps.md
+  | "function.arguments"
+  | "catch.error"
+  | "super.get"
+  | "super.set"
+  | "super.call"
+  | "private.get"
+  | "private.has"
+  | "private.set"
+  | "read.strict"
+  | "write.strict"
+  | "typeof.strict"
+  | "read.sloppy"
+  | "write.sloppy"
+  | "typeof.sloppy"
+  | "discard.sloppy";
+
+// type StrictScopeAccess<P extends AdviceParametrization> = {
+//   "read.strict": (variable: P["Variable"]) => P["ExternalValue"];
+//   "write.strict": (variable: P["Variable"], value: P["ExternalValue"]) => void;
+//   "typeof.strict": (variable: P["ExternalValue"]) => string;
+// };
+
+// type Head<P extends Advice> =
+//   | {
+//       type: "module.global";
+//       link: ModuleHeader[];
+//       frame: {
+//         "this"?: P["undefined"];
+//         "import.dynamic"?: (
+//           source: P["UnknownRawValue"],
+//         ) => Promise<P["ModuleValue"]>;
+//         "import.meta"?: string;
+//       } & {
+//         [key in Variable]: P["IntrinsicValue"];
+//       };
+//     }
+//   | {
+//       type: "script.global";
+//       frame: {
+//         "this": P["globalThis"];
+//         "import.dynamic"?: (
+//           source: P["UnknownRawValue"],
+//         ) => Promise<P["ModuleValue"]>;
+//         [key in Variable]: P["IntrinsicValue"];
+//       };
+//     }
+//   | {
+//       type: "eval.global";
+//       frame: {
+//         "this": P["globalThis"];
+//         "import.dynamic"?: (
+//           source: P["UnknownRawValue"],
+//         ) => Promise<P["ModuleValue"]>;
+//         [key in Variable]: P["IntrinsicValue"];
+//       };
+//     }
+//   | {};
+
+type ProgramHead<P extends AdviceParametrization> =
+  | {
+      type: "program";
+      kind: "module";
+      // mode: "strict";
+      situ: "global";
+      link: ModuleHeader[];
+      frame: {
+        "this"?: P["undefined"];
+        "import.dynamic"?: (
+          source: P["UnknownRawValue"],
+        ) => Promise<P["ModuleValue"]>;
+        "import.meta"?: string;
+      } & {
+        [key in Variable]: P["IntrinsicValue"];
+      };
+    }
+  | {
+      type: "program";
+      kind: "script";
+      // mode: "strict" | "sloppy";
+      situ: "global";
+      link: null;
+      frame: {
+        "this": P["globalThis"];
+        "import.dynamic"?: (
+          source: P["UnknownRawValue"],
+        ) => Promise<P["ModuleValue"]>;
+      } & {
+        [key in Variable]: P["IntrinsicValue"];
+      };
+    }
+  | {
+      type: "program";
+      kind: "eval";
+      // mode: "strict" | "sloppy";
+      situ: "global";
+      link: null;
+      frame: {
+        "this": P["globalThis"];
+        "import.dynamic"?: (
+          source: P["UnknownRawValue"],
+        ) => Promise<P["ModuleValue"]>;
+      } & {
+        [key in Variable]: P["IntrinsicValue"];
+      };
+    }
+  | {
+      type: "program";
+      kind: "eval";
+      // mode: "strict" | "sloppy";
+      situ: "local.internal";
+      link: null;
+      frame: {
+        [key in Variable]: P["IntrinsicValue"];
+      };
+    }
+  | {
+      type: "program";
+      kind: "eval";
+      // mode: "strict" | "sloppy";
+      situ: "local.external";
+      frame: {
+        "read.strict": (variable: Variable) => P["ExternalValue"];
+        "write.strict": (variable: Variable, value: P["ExternalValue"]) => void;
+        "typeof.strict": (variable: Variable) => string;
+        "read.sloppy": (variable: Variable) => P["IntrinsicValue"];
+        "write.sloppy": (
+          variable: Variable,
+          value: P["IntrinsicValue"],
+        ) => void;
+        "typeof.sloppy": (variable: Variable) => string;
+        "discard.sloppy": (variable: Variable) => void;
+      } & {
+        [key in Variable]: P["IntrinsicValue"];
+      };
+    };
+
+type ClosureHead<P extends AdviceParametrization> =
+  | {
+      type: "closure";
+      kind: "arrow";
+      asynchronous: boolean;
+      generator: false;
+      frame: {
+        "function.callee": Function;
+        "function.arguments": (P["StackValue"] | unknown)[];
+      } & {
+        [key in Variable]?: P["IntrinsicValue"];
+      };
+    }
+  | {
+      type: "closure";
+      kind: "function";
+      asynchronous: boolean;
+      generator: boolean;
+      frame: (
+        | {
+            "function.callee": Function;
+            "new.target": Function;
+            "this": null;
+            "function.arguments": (P["StackValue"] | unknown)[];
+          }
+        | {
+            "function.callee": Function;
+            "new.target": null;
+            "this": P["StackValue"] | unknown;
+            "function.arguments": (P["StackValue"] | unknown)[];
+          }
+      ) & {
+        [key in Variable]?: P["IntrinsicValue"];
+      };
+    };
+
+type ControlHead<P extends AdviceParametrization> =
+  | {
+      type: "block";
+      kind: "catch";
+      labels: Label[];
+      frame: {
+        "catch.error": P["StackValue"] | unknown;
+      } & {
+        [key in P["Variable"]]?: P["IntrinsicValue"];
+      };
+    }
+  | {
+      type: "block";
+      kind: "try" | "finally" | "then" | "else" | "loop" | "naked";
+      labels: Label[];
+      frame: {
+        [key in P["Variable"]]?: P["IntrinsicValue"];
+      };
+    };
+
+type Head<P extends AdviceParametrization> =
+  | ProgramHead<P>
+  | ClosureHead<P>
+  | ControlHead<P>;
+
+// type FunctionFrame<P extends AdviceParametrization> = {
+//   "function.callee": Function;
+//   "new.target": null;
+//   "this": P["StackValue"] | unknown;
+//   "function.arguments": (P["StackValue"] | unknown)[];
+// };
+
+// type CatchFrame<P extends AdviceParametrization> = {
+//   "catch.error": unknown;
+// };
+
+// type EmptyFrame<P> = {};
+
+type TODO = unknown;
+
+type NextAdvice<P extends AdviceParametrization> = {
+  // "block.enter": (sort: Sort<P>, location: P["Location"]) => void;
+  // "block.completion": (sort: Sort<P>, location: P["Location"]) => void;
+  // ".leave": (sort: Sort<P>, location: P["Location"]) => void;
+  // "program.enter"?: (
+  //   sort: Sort,
+  //   head: Header[],
+  //   frame: { [key in P["Variable"]]?: P["UnknownRawValue"] },
+  //   location: P["Location"],
+  // ) => { [key in P["Variable"]]?: P["ScopeValue"] };
+  // "program.completion"?: (
+  //   sort: Sort,
+  //   value: P["StackValue"],
+  //   location: P["Location"],
+  // ) => P["UnknownRawValue"] | P["StackValue"];
+  // "program.failure"?: (
+  //   sort: Sort,
+  //   value: P["UnknownRawValue"] | P["ErrorValue"],
+  //   location: P["Location"],
+  // ) => P["UnknownRawValue"] | P["ErrorValue"];
+  // "program.leave"?: (sort: Sort, location: P["Location"]) => void;
+  // "closure.enter"?: (
+  //   kind: ClosureKind,
+  //   callee: P["StackValue"],
+  //   frame: { [key in P["Variable"]]?: P["UnknownRawValue"] },
+  //   location: P["Location"],
+  // ) => { [key in P["Variable"]]?: P["ScopeValue"] };
+  // "closure.completion"?: (
+  //   kind: ClosureKind,
+  //   location: P["Location"],
+  //   value: P["StackValue"],
+  // ) => P["UnknownRawValue"] | P["StackValue"];
+  // "closure.failure"?: (
+  //   kind: ClosureKind,
+  //   value: P["UnknownRawValue"] | P["ErrorValue"],
+  //   location: P["Location"],
+  // ) => P["UnknownRawValue"] | P["ErrorValue"];
+  // "closure.leave"?: (kind: ClosureKind, location: P["Location"]) => void;
+  "block.enter"?: <H extends Head<P>>(
+    head: Omit<H, "frame">,
+    frame: H["frame"],
+    location: P["Location"],
+  ) => { [key in keyof H["frame"]]?: P["ScopeValue"] };
+  "block.completion"?: <H extends Head<P>>(
+    head: Omit<H, "frame">,
+    completion: H extends ControlHead<P> ? null : P["StackValue"],
+    location: P["Location"],
+  ) => H extends ControlHead<P> ? void : P["ResultValue"];
+  "block.failure"?: (
+    head: Omit<Head<P>, "frame">,
+    value: P["ErrorValue"] | P["UnknownRawValue"],
+    location: P["Location"],
+  ) => P["ErrorValue"];
+  "block.leave"?: (
+    head: Omit<Head<P>, "frame">,
+    location: P["Location"],
+  ) => void;
+  "debugger.before"?: (location: P["Location"]) => void;
+  "debugger.after"?: (location: P["Location"]) => void;
+  "break.before"?: (label: Label, location: P["Location"]) => void;
+  "branch.before"?: (
+    kind: BranchKind,
+    value: P["StackValue"],
+    location: P["Location"],
+  ) => boolean;
+  "branch.after"?: (kind: BranchKind, location: P["Location"]) => void;
+  "intrinsic.after"?: (
+    name: aran.Intrinsic,
+    intrinsic: P["UnknownRawValue"],
+    location: P["Location"],
+  ) => P["StackValue"];
+  "primitive.after"?: (
+    primitive: null | boolean | number | string | bigint,
+    location: P["Location"],
+  ) => P["StackValue"];
+  "import.after"?: (
+    source: string,
+    specifier: string | null,
+    value: P["ModuleValue"],
+    location: P["Location"],
+  ) => P["StackValue"];
+  "closure.after"?: (
+    kind: "arrow" | "function",
+    asynchronous: boolean,
+    generator: boolean,
+    closure: Function,
+    location: P["Location"],
+  ) => P["StackValue"];
+  "read.after"?: (
+    variable: P["Variable"],
+    value: P["ScopeValue"],
+    location: P["Location"],
+  ) => P["ScopeValue"];
+  "conditional.before"?: (
+    value: P["StackValue"],
+    location: P["Location"],
+  ) => boolean;
+  "conditional.after"?: (
+    value: P["StackValue"],
+    location: P["Location"],
+  ) => P["StackValue"];
+  "eval.before"?: (
+    value: P["StackValue"],
+    context: InternalLocalContext,
+    location: P["Location"],
+  ) => string | null;
+  "eval.after"?: (value: TODO, location: P["Location"]) => P["StackValue"];
+  "await.before"?: (
+    value: P["StackValue"],
+    location: P["Location"],
+  ) => Promise<P["PromiseValue"]>;
+  "await.after"?: (
+    value: P["PromiseValue"],
+    location: P["Location"],
+  ) => P["StackValue"];
+  "yield.before"?: (
+    delegate: boolean,
+    value: P["StackValue"],
+    location: P["Location"],
+  ) => TODO;
+  "yield.after"?: (
+    delegate: boolean,
+    value: TODO,
+    location: P["Location"],
+  ) => P["StackValue"];
+  "drop.before"?: (value: P["StackValue"], location: P["Location"]) => void;
+  "export.before"?: (
+    specifier: string,
+    value: P["StackValue"],
+    location: P["Location"],
+  ) => P["ModuleValue"];
+  "write.before"?: (
+    variable: P["Variable"],
+    value: P["StackValue"],
+    location: P["Location"],
+  ) => P["ScopeValue"];
+  "return.before"?: (value: P["StackValue"], location: P["Location"]) => TODO;
+  "apply"?: (
+    callee: P["StackValue"],
+    this_: P["StackValue"],
+    arguments_: P["StackValue"][],
+    location: P["Location"],
+  ) => P["StackValue"];
+  "construct"?: (
+    callee: P["StackValue"],
+    arguments_: P["StackValue"][],
+    location: P["Location"],
+  ) => P["StackValue"];
+};
+
 /////////////////////
 // Function Format //
 /////////////////////
@@ -316,7 +700,6 @@ type Point<V, L> =
   | {
       type: "closure.enter";
       kind: ClosureKind;
-      callee: V;
       frame: { [key in Variable]: V };
       location: L;
     }
