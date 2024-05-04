@@ -1,27 +1,14 @@
-console.log(this);
+let getSuperInner = null;
 
-/**
- * @type {import("./yo").Foo}
- */
-const x = {
-  foo: "asoidoiasd",
-};
-
-if (x.foo === "aa") {
-  if (x.bar === "BB") {
-    const y = x.qux;
-  }
-}
-
-/**
- * @type {import("./yo").yo}
- */
-const f = (x, y) => {
-  /** @type {import("./yo").Foo} */
-  const yoyo = { ...x, qux: y };
-  if (yoyo.foo === "aa") {
-    if (yoyo.bar === "BB") {
-      const _ = yoyo.qux;
-    }
+let getSuper = (key) => {
+  if (getSuperInner === null) {
+    throw new Error("getSuperInner is null");
+  } else {
+    return getSuperInner(key);
   }
 };
+getSuperInner = getSuperInner ?? ((key) => super[key]);
+
+// const newTarget = (key) => {};
+
+// function readStrict(variable) {}

@@ -1,13 +1,9 @@
-import { UnaryOperator } from "estree";
-import { Header } from "../lib/header";
-import { Sort } from "../lib/sort";
-
-export type ProgramKind =
-  | "script"
-  | "module"
-  | "global-eval"
-  | "local-eval"
-  | "aran-eval";
+import {
+  DeclareHeader,
+  ModuleHeader,
+  PrivateHeader,
+  LookupHeader,
+} from "../lib/header";
 
 export type Atom = {
   Label: string;
@@ -18,8 +14,6 @@ export type Atom = {
 };
 
 export type Primitive = null | boolean | number | string | { bigint: string };
-
-export type GlobalVariableKind = "var" | "let";
 
 export type RegularIntrinsicRcord = {
   // Symbol //
@@ -114,7 +108,7 @@ export type AranIntrinsicRecord = {
   "aran.global": typeof globalThis;
   "aran.record": Record<string, unknown>;
   "aran.templates": Record<string, string>;
-  "aran.unary": (operator: UnaryOperator, argument: unknown) => unknown;
+  "aran.unary": (operator: string, argument: unknown) => unknown;
   "aran.binary": (operator: string, left: unknown, right: unknown) => unknown;
   "aran.throw": (value: unknown) => never;
   "aran.get": (object: unknown, key: unknown) => unknown;
@@ -151,21 +145,52 @@ export type Parameter =
   | "private.get"
   | "private.has"
   | "private.set"
-  | "read.strict"
-  | "write.strict"
-  | "typeof.strict"
-  | "read.sloppy"
-  | "write.sloppy"
-  | "typeof.sloppy"
-  | "discard.sloppy";
+  | "scope.read"
+  | "scope.write"
+  | "scope.typeof"
+  | "scope.discard";
 
-export type Program<A extends Atom> = {
-  type: "Program";
-  sort: Sort;
-  head: Header[];
-  body: ClosureBlock<A>;
-  tag: A["Tag"];
-};
+export type Program<A extends Atom> =
+  | {
+      type: "Program";
+      kind: "module";
+      situ: "global";
+      head: (ModuleHeader | LookupHeader)[];
+      body: ClosureBlock<A>;
+      tag: A["Tag"];
+    }
+  | {
+      type: "Program";
+      kind: "script";
+      situ: "global";
+      head: (DeclareHeader | LookupHeader)[];
+      body: ClosureBlock<A>;
+      tag: A["Tag"];
+    }
+  | {
+      type: "Program";
+      kind: "eval";
+      situ: "global";
+      head: (DeclareHeader | LookupHeader)[];
+      body: ClosureBlock<A>;
+      tag: A["Tag"];
+    }
+  | {
+      type: "Program";
+      kind: "eval";
+      situ: "local.root";
+      head: (DeclareHeader | LookupHeader | PrivateHeader)[];
+      body: ClosureBlock<A>;
+      tag: A["Tag"];
+    }
+  | {
+      type: "Program";
+      kind: "eval";
+      situ: "local.deep";
+      head: (LookupHeader | PrivateHeader)[];
+      body: ClosureBlock<A>;
+      tag: A["Tag"];
+    };
 
 export type ClosureBlock<A extends Atom> = {
   type: "ClosureBlock";
@@ -280,9 +305,17 @@ export type Expression<A extends Atom> =
     }
   | {
       type: "ClosureExpression";
-      kind: "function" | "arrow";
+      kind: "function";
       asynchronous: boolean;
       generator: boolean;
+      body: ClosureBlock<A>;
+      tag: A["Tag"];
+    }
+  | {
+      type: "ClosureExpression";
+      kind: "arrow";
+      asynchronous: boolean;
+      generator: false;
       body: ClosureBlock<A>;
       tag: A["Tag"];
     }

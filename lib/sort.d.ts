@@ -19,18 +19,13 @@ export type GlobalEvalSort = {
 export type ExternalLocalEvalSort = {
   kind: "eval";
   mode: "strict" | "sloppy";
-  situ:
-    | "program"
-    | "function"
-    | "method"
-    | "constructor"
-    | "derived-constructor";
+  situ: "local.external";
 };
 
 export type InternalLocalEvalSort = {
   kind: "eval";
   mode: "strict" | "sloppy";
-  situ: "local";
+  situ: "local.internal";
 };
 
 export type LocalEvalSort = InternalLocalEvalSort | ExternalLocalEvalSort;
