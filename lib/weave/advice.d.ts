@@ -4,14 +4,22 @@ import { Frame } from "./frame";
 import { BranchKind, Point } from "./point";
 
 export type ObjectAdvice<L> = {
-  "block.enter"?: <F extends Frame>(
-    block: Omit<F, "frame">,
+  "block.enter"?: <F extends Frame<unknown>>(
+    block: Omit<F, "record">,
     frame: F["record"],
     location: L,
   ) => F["record"];
-  "block.completion"?: (frame: Frame, value: unknown, location: L) => void;
-  "block.failure"?: (block: Frame, value: unknown, location: L) => unknown;
-  "block.leave"?: (block: Frame, location: L) => void;
+  "block.completion"?: (
+    frame: Omit<Frame<never>, "record">,
+    value: unknown,
+    location: L,
+  ) => void;
+  "block.failure"?: (
+    frame: Omit<Frame<never>, "record">,
+    value: unknown,
+    location: L,
+  ) => unknown;
+  "block.leave"?: (frame: Omit<Frame<never>, "record">, location: L) => void;
   "debugger.before"?: (location: L) => void;
   "debugger.after"?: (location: L) => void;
   "break.before"?: (label: Label, location: L) => void;

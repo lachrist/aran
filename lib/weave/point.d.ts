@@ -32,25 +32,25 @@ type Point<V, L> =
   // Frame //
   | {
       type: "block.enter";
-      frame: Omit<Frame, "record">;
+      frame: Omit<Frame<never>, "record">;
       record: { [key in ArgVariable | aran.Parameter]: V };
       location: L;
     }
   | {
       type: "block.completion";
-      frame: Omit<Frame, "record">;
+      frame: Omit<Frame<never>, "record">;
       value: V;
       location: L;
     }
   | {
       type: "block.failure";
-      frame: Omit<Frame, "record">;
+      frame: Omit<Frame<never>, "record">;
       value: V;
       location: L;
     }
   | {
       type: "block.leave";
-      frame: Omit<Frame, "record">;
+      frame: Omit<Frame<never>, "record">;
       location: L;
     }
   // Debugger //

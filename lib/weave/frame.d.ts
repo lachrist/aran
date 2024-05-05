@@ -1,95 +1,102 @@
 import {
   DeclareHeader,
+  Header,
   LookupHeader,
   ModuleHeader,
   PrivateHeader,
 } from "../header";
 import { Label, ResVariable } from "./atom";
+import { ControlKind } from "./point";
 
 export type Mode = "strict" | "sloppy";
 
-type ScopeParameterFrame = {
-  "scope.read": (mode: Mode, variable: ResVariable) => unknown;
-  "scope.write": (mode: Mode, variable: ResVariable, value: unknown) => void;
-  "scope.typeof": (mode: Mode, variable: ResVariable) => string;
-  "scope.discard": (mode: Mode, variable: ResVariable) => void;
+type VariableFrame<V> = {
+  [key in ResVariable]: V;
 };
 
-type VariableFrame = {
-  [key in ResVariable]: unknown;
-};
-
-export type ProgramFrame =
+export type ProgramFrame<V> =
   | {
       type: "program";
       kind: "module";
       situ: "global";
       head: (ModuleHeader | LookupHeader)[];
-      record: VariableFrame &
-        ScopeParameterFrame & {
-          "this": undefined;
-          "import.dynamic": (source: unknown) => Promise<unknown>;
-          "import.meta": string;
-        };
+      record: VariableFrame<V> & {
+        "this": V;
+        "import.dynamic": V;
+        "import.meta": V;
+        "scope.read": V;
+        "scope.write": V;
+        "scope.typeof": V;
+        "scope.discard": V;
+      };
     }
   | {
       type: "program";
       kind: "script";
       situ: "global";
       head: (DeclareHeader | LookupHeader)[];
-      record: VariableFrame &
-        ScopeParameterFrame & {
-          "this": typeof globalThis;
-          "import.dynamic": (source: unknown) => Promise<unknown>;
-        };
+      record: VariableFrame<V> & {
+        "this": V;
+        "import.dynamic": V;
+        "scope.read": V;
+        "scope.write": V;
+        "scope.typeof": V;
+        "scope.discard": V;
+      };
     }
   | {
       type: "program";
       kind: "eval";
       situ: "global";
       head: (DeclareHeader | LookupHeader)[];
-      record: VariableFrame &
-        ScopeParameterFrame & {
-          "this": typeof globalThis;
-          "import.dynamic": (source: unknown) => Promise<unknown>;
-        };
+      record: VariableFrame<V> & {
+        "this": V;
+        "import.dynamic": V;
+        "scope.read": V;
+        "scope.write": V;
+        "scope.typeof": V;
+        "scope.discard": V;
+      };
     }
   | {
       type: "program";
       kind: "eval";
       situ: "local.root";
       head: (DeclareHeader | LookupHeader | PrivateHeader)[];
-      record: VariableFrame &
-        ScopeParameterFrame & {
-          "this": unknown;
-          "new.target": unknown;
-          "import.meta": unknown;
-          "import.dynamic": (source: unknown) => Promise<unknown>;
-          "private.get": (obj: unknown, key: string) => unknown;
-          "private.has": (obj: unknown, key: string) => boolean;
-          "private.set": (obj: unknown, key: string, value: unknown) => void;
-          "super.get": (key: string) => unknown;
-          "super.set": (key: string, value: unknown) => void;
-          "super.call": (key: string, args: unknown[]) => unknown;
-        };
+      record: VariableFrame<V> & {
+        "this": V;
+        "new.target": V;
+        "import.meta": V;
+        "import.dynamic": V;
+        "scope.read": V;
+        "scope.write": V;
+        "scope.typeof": V;
+        "scope.discard": V;
+        "private.get": V;
+        "private.has": V;
+        "private.set": V;
+        "super.get": V;
+        "super.set": V;
+        "super.call": V;
+      };
     }
   | {
       type: "program";
       kind: "eval";
       situ: "local.deep";
       head: (LookupHeader | PrivateHeader)[];
-      record: VariableFrame;
+      record: VariableFrame<V>;
     };
 
-export type ClosureFrame =
+export type ClosureFrame<V> =
   | {
       type: "closure";
       kind: "arrow";
       asynchronous: boolean;
       generator: false;
-      record: VariableFrame & {
-        "function.callee": Function;
-        "function.arguments": unknown[];
+      record: VariableFrame<V> & {
+        "function.callee": V;
+        "function.arguments": V;
       };
     }
   | {
@@ -97,28 +104,28 @@ export type ClosureFrame =
       kind: "function";
       asynchronous: boolean;
       generator: boolean;
-      record: VariableFrame & {
-        "function.callee": Function;
-        "new.target": Function | undefined;
-        "this": unknown;
-        "function.arguments": unknown[];
+      record: VariableFrame<V> & {
+        "function.callee": V;
+        "new.target": V;
+        "this": V;
+        "function.arguments": V;
       };
     };
 
-export type ControlFrame =
+export type ControlFrame<V> =
   | {
       type: "control";
       kind: "catch";
       labels: Label[];
-      record: VariableFrame & {
-        "catch.error": unknown;
+      record: VariableFrame<V> & {
+        "catch.error": V;
       };
     }
   | {
       type: "control";
-      kind: "try" | "finally" | "then" | "else" | "loop" | "naked";
+      kind: Exclude<ControlKind, "catch">;
       labels: Label[];
-      record: VariableFrame;
+      record: VariableFrame<V>;
     };
 
-export type Frame = ProgramFrame | ClosureFrame | ControlFrame;
+export type Frame<V> = ProgramFrame<V> | ClosureFrame<V> | ControlFrame<V>;

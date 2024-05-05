@@ -8,20 +8,28 @@ type Variable = ArgVariable | aran.Parameter;
 export type ObjectPointcut<L> = {
   "block.enter"?:
     | boolean
-    | (<B extends Frame>(
-        block: Omit<B, "frame">,
-        frame: { [key in keyof B["record"]]: null },
+    | (<B extends Frame<null>>(
+        frame: Omit<B, "record">,
+        record: { [key in keyof B["record"]]: null },
         location: L,
       ) => boolean);
   "block.completion"?:
     | boolean
-    | ((block: Omit<Frame, "frame">, value: null, location: L) => boolean);
+    | ((
+        frame: Omit<Frame<never>, "record">,
+        value: null,
+        location: L,
+      ) => boolean);
   "block.failure"?:
     | boolean
-    | ((block: Omit<Frame, "frame">, value: null, location: L) => boolean);
+    | ((
+        frame: Omit<Frame<never>, "record">,
+        value: null,
+        location: L,
+      ) => boolean);
   "block.leave"?:
     | boolean
-    | ((block: Omit<Frame, "frame">, location: L) => boolean);
+    | ((frame: Omit<Frame<never>, "record">, location: L) => boolean);
   "debugger.before"?: boolean | ((location: L) => boolean);
   "debugger.after"?: boolean | ((location: L) => boolean);
   "break.before"?: boolean | ((label: Label, location: L) => boolean);
