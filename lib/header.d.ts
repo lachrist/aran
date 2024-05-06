@@ -1,40 +1,83 @@
-export type EagerHeader =
+/////////////////////
+// ParameterHeader //
+/////////////////////
+
+export type PrivateParameterHeader = {
+  type: "parameter";
+  mode: "strict";
+  parameter: "private.get" | "private.set" | "private.has";
+  payload: estree.PrivateKey;
+};
+
+export type ScopeParameterHeader =
   | {
-      type: "eager";
-      mode: "strict";
-      parameter: "private.get" | "private.set" | "private.has";
-      payload: estree.PrivateKey;
-    }
-  | {
-      type: "eager";
-      mode: "sloppy";
-      parameter: "scope.discard";
-      payload: estree.Variable;
-    }
-  | {
-      type: "eager";
+      type: "parameter";
       mode: "strict" | "sloppy";
       parameter: "scope.read" | "scope.write" | "scope.typeof";
       payload: estree.Variable;
+    }
+  | {
+      type: "parameter";
+      mode: "sloppy";
+      parameter: "scope.discard";
+      payload: estree.Variable;
     };
 
-export type PrivateHeader = EagerHeader & {
-  parameter: "private.get" | "private.set" | "private.has";
+export type SuperParameterHeader = {
+  type: "parameter";
+  mode: "strict" | "sloppy";
+  parameter: "super.get" | "super.set" | "super.call";
+  payload: null;
 };
 
-export type LookupHeader = EagerHeader & {
-  parameter: "scope.read" | "scope.write" | "scope.typeof" | "scope.discard";
-};
-
-export type SloppyLookupHeader = EagerHeader & {
-  mode: "sloppy";
-  parameter: "scope.read" | "scope.write" | "scope.typeof" | "scope.discard";
-};
-
-export type StrictLookupHeader = EagerHeader & {
+export type ImportMetaParameterHeader = {
+  type: "parameter";
   mode: "strict";
-  parameter: "scope.read" | "scope.write" | "scope.typeof";
+  parameter: "import.meta";
+  payload: null;
 };
+
+export type ImportDynamicParameterHeader = {
+  type: "parameter";
+  mode: "strict";
+  parameter: "import.dynamic";
+  payload: estree.Source;
+};
+
+export type NewTargetParameterHeader = {
+  type: "parameter";
+  mode: "strict";
+  parameter: "new.target";
+  payload: null;
+};
+
+export type ThisParameterHeader = {
+  type: "parameter";
+  mode: "strict" | "sloppy";
+  parameter: "this";
+  payload: null;
+};
+
+export type ParameterHeader =
+  | PrivateParameterHeader
+  | ScopeParameterHeader
+  | SuperParameterHeader
+  | ImportMetaParameterHeader
+  | ImportDynamicParameterHeader
+  | NewTargetParameterHeader
+  | ThisParameterHeader;
+
+export type PrivateParameter = PrivateParameterHeader["parameter"];
+
+export type ScopeParameter = ScopeParameterHeader["parameter"];
+
+export type SuperParameter = SuperParameterHeader["parameter"];
+
+export type HeaderParameter = ParameterHeader["parameter"];
+
+///////////////////
+// DeclareHeader //
+///////////////////
 
 export type DeclareHeader = {
   type: "declare";
@@ -42,6 +85,10 @@ export type DeclareHeader = {
   kind: "let" | "var";
   variable: estree.Variable;
 };
+
+//////////////////
+// ModuleHeader //
+//////////////////
 
 export type ImportHeader = {
   type: "import";
@@ -78,4 +125,4 @@ export type ModuleHeader = ImportHeader | ExportHeader | AggregateHeader;
 // Header //
 ////////////
 
-export type Header = ModuleHeader | EagerHeader | DeclareHeader;
+export type Header = ModuleHeader | ParameterHeader | DeclareHeader;

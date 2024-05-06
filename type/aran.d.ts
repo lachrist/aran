@@ -1,8 +1,8 @@
 import {
   DeclareHeader,
   ModuleHeader,
-  PrivateHeader,
-  LookupHeader,
+  ParameterHeader,
+  ScopeParameterHeader,
 } from "../lib/header";
 
 export type Atom = {
@@ -155,7 +155,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "module";
       situ: "global";
-      head: (ModuleHeader | LookupHeader)[];
+      head: (ModuleHeader | ScopeParameterHeader)[];
       body: ClosureBlock<A>;
       tag: A["Tag"];
     }
@@ -163,7 +163,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "script";
       situ: "global";
-      head: (DeclareHeader | LookupHeader)[];
+      head: (DeclareHeader | ScopeParameterHeader)[];
       body: ClosureBlock<A>;
       tag: A["Tag"];
     }
@@ -171,7 +171,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "eval";
       situ: "global";
-      head: (DeclareHeader | LookupHeader)[];
+      head: (DeclareHeader | ScopeParameterHeader)[];
       body: ClosureBlock<A>;
       tag: A["Tag"];
     }
@@ -179,7 +179,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "eval";
       situ: "local.root";
-      head: (DeclareHeader | LookupHeader | PrivateHeader)[];
+      head: (DeclareHeader | ParameterHeader)[];
       body: ClosureBlock<A>;
       tag: A["Tag"];
     }
@@ -187,7 +187,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "eval";
       situ: "local.deep";
-      head: (LookupHeader | PrivateHeader)[];
+      head: ParameterHeader[];
       body: ClosureBlock<A>;
       tag: A["Tag"];
     };

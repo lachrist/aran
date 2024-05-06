@@ -1,9 +1,10 @@
 import {
   DeclareHeader,
   Header,
-  LookupHeader,
+  ScopeParameterHeader,
   ModuleHeader,
-  PrivateHeader,
+  PrivateParameterHeader,
+  ParameterHeader,
 } from "../header";
 import { Label, ResVariable } from "./atom";
 import { ControlKind } from "./point";
@@ -19,7 +20,7 @@ export type ProgramFrame<V> =
       type: "program";
       kind: "module";
       situ: "global";
-      head: (ModuleHeader | LookupHeader)[];
+      head: (ModuleHeader | ScopeParameterHeader)[];
       record: VariableFrame<V> & {
         "this": V;
         "import.dynamic": V;
@@ -34,7 +35,7 @@ export type ProgramFrame<V> =
       type: "program";
       kind: "script";
       situ: "global";
-      head: (DeclareHeader | LookupHeader)[];
+      head: (DeclareHeader | ScopeParameterHeader)[];
       record: VariableFrame<V> & {
         "this": V;
         "import.dynamic": V;
@@ -48,7 +49,7 @@ export type ProgramFrame<V> =
       type: "program";
       kind: "eval";
       situ: "global";
-      head: (DeclareHeader | LookupHeader)[];
+      head: (DeclareHeader | ScopeParameterHeader)[];
       record: VariableFrame<V> & {
         "this": V;
         "import.dynamic": V;
@@ -62,7 +63,7 @@ export type ProgramFrame<V> =
       type: "program";
       kind: "eval";
       situ: "local.root";
-      head: (DeclareHeader | LookupHeader | PrivateHeader)[];
+      head: (DeclareHeader | ParameterHeader)[];
       record: VariableFrame<V> & {
         "this": V;
         "new.target": V;
@@ -84,7 +85,7 @@ export type ProgramFrame<V> =
       type: "program";
       kind: "eval";
       situ: "local.deep";
-      head: (LookupHeader | PrivateHeader)[];
+      head: ParameterHeader[];
       record: VariableFrame<V>;
     };
 
