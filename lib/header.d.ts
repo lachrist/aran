@@ -1,23 +1,40 @@
-export type PrivateHeader = {
-  type: "private";
-  mode: "strict";
-  operation: "has" | "get" | "set";
-  key: estree.PrivateKey;
-};
-
-export type LookupHeader =
+export type EagerHeader =
   | {
-      type: "lookup";
-      mode: "strict" | "sloppy";
-      operation: "read" | "write" | "typeof";
-      variable: estree.Variable;
+      type: "eager";
+      mode: "strict";
+      parameter: "private.get" | "private.set" | "private.has";
+      payload: estree.PrivateKey;
     }
   | {
-      type: "lookup";
+      type: "eager";
       mode: "sloppy";
-      operation: "discard";
-      variable: estree.Variable;
+      parameter: "scope.discard";
+      payload: estree.Variable;
+    }
+  | {
+      type: "eager";
+      mode: "strict" | "sloppy";
+      parameter: "scope.read" | "scope.write" | "scope.typeof";
+      payload: estree.Variable;
     };
+
+export type PrivateHeader = EagerHeader & {
+  parameter: "private.get" | "private.set" | "private.has";
+};
+
+export type LookupHeader = EagerHeader & {
+  parameter: "scope.read" | "scope.write" | "scope.typeof" | "scope.discard";
+};
+
+export type SloppyLookupHeader = EagerHeader & {
+  mode: "sloppy";
+  parameter: "scope.read" | "scope.write" | "scope.typeof" | "scope.discard";
+};
+
+export type StrictLookupHeader = EagerHeader & {
+  mode: "strict";
+  parameter: "scope.read" | "scope.write" | "scope.typeof";
+};
 
 export type DeclareHeader = {
   type: "declare";
@@ -61,8 +78,4 @@ export type ModuleHeader = ImportHeader | ExportHeader | AggregateHeader;
 // Header //
 ////////////
 
-export type Header =
-  | ModuleHeader
-  | PrivateHeader
-  | LookupHeader
-  | DeclareHeader;
+export type Header = ModuleHeader | EagerHeader | DeclareHeader;

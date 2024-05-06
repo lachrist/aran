@@ -1,6 +1,7 @@
-import type { Pointcut } from "../type/advice.js";
+import { OriginPath } from "./weave/atom";
+import { Pointcut } from "./weave/pointcut";
 
-export type Locate<B, L> = (path: weave.OriginPath, base: B) => L;
+export type Locate<B, L> = (path: OriginPath, base: B) => L;
 
 export type Config<B, L> = {
   locate: Locate<B, L>;
