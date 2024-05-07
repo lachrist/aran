@@ -1,4 +1,3 @@
-import { ExternalLocalEvalSort, GlobalSort, RootSort } from "../../../sort";
 import { WritableCache } from "../../cache";
 
 export type ReifyBinding = {
@@ -20,19 +19,23 @@ export type Declare = {
   variable: estree.Variable;
 };
 
-export type ReifyRootFrame = {
-  type: "root-reify";
-  sort: GlobalSort;
+export type AlienRootFrame = {
+  type: "root";
+  kind: "alien";
+  mode: "strict" | "sloppy";
+  sort: "script" | "module" | "eval.global" | "eval.local.root";
   record: {
-    [k in estree.Variable]?: ReifyBinding;
+    [k in estree.Variable]?: AlienBinding;
   };
 };
 
-export type AlienRootFrame = {
-  type: "root-alien";
-  sort: RootSort;
+export type ReifyRootFrame = {
+  type: "root";
+  kind: "reify";
+  mode: "strict" | "sloppy";
+  sort: "script" | "module" | "eval.global";
   record: {
-    [k in estree.Variable]?: AlienBinding;
+    [k in estree.Variable]?: ReifyBinding;
   };
 };
 

@@ -65,7 +65,7 @@ const parseGlobal = (code, base, kind) => {
  *   code: string,
  *   base: B,
  *   context: import("../../../../lib/context").InternalLocalContext,
- * ) => import("../../../../lib/program").InternalLocalEvalProgram<B>}
+ * ) => import("../../../../lib/program").DeepLocalEvalProgram<B>}
  */
 export const parseAcornLocal = (code, base, context) => {
   try {
@@ -155,7 +155,7 @@ const sanitizeBabel = (root) => {
  *   code: string,
  *   base: B,
  *   context: import("../../../../lib/context").InternalLocalContext,
- * ) => import("../../../../lib/program").InternalLocalEvalProgram<B>}
+ * ) => import("../../../../lib/program").DeepLocalEvalProgram<B>}
  */
 export const parseBabelLocal = (code, base, context) => {
   try {
@@ -214,7 +214,7 @@ export const parseBabelLocal = (code, base, context) => {
  *   code: string,
  *   base: B,
  *   context: import("../../../../lib/context").InternalLocalContext,
- * ) => import("../../../../lib/program").InternalLocalEvalProgram<B>}
+ * ) => import("../../../../lib/program").DeepLocalEvalProgram<B>}
  */
 const parseLocal = (code, base, context) => {
   const acorn = parseAcornLocal(code, base, context);

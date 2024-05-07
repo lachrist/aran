@@ -2,7 +2,7 @@ import { Warning } from "./warning";
 import { Header } from "../header";
 import { EarlyError } from "./early-error";
 import { Condition } from "./condition";
-import { Context } from "../context";
+import { DeepLocalContext } from "../program";
 import { BaseVariable, MetaVariable } from "./variable";
 import { Template } from "./template";
 import { Intrinsic } from "../../type/aran";
@@ -14,7 +14,7 @@ export type WarningPrelude = {
 
 export type ContextPrelude = {
   type: "context";
-  data: [unbuild.Path, Context];
+  data: [unbuild.Path, DeepLocalContext];
 };
 
 export type HeaderPrelude = {

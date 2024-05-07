@@ -1,5 +1,4 @@
 import { Cache } from "../cache";
-import { InternalLocalContext } from "../../context";
 import { ModuleHeader } from "../../header";
 
 export { RootFrame } from "./root";
@@ -195,15 +194,6 @@ export type PrivateSaveOperation =
   | RegisterPrivateCollectionOperation
   | SetPrivateOperation;
 
-// eval //
-
-export type EvalOperation = {
-  type: "eval";
-  mode: Mode;
-  code: Cache;
-  context: InternalLocalContext;
-};
-
 // union //
 
 export type LoadOperation =
@@ -212,8 +202,7 @@ export type LoadOperation =
   | CatchLoadOperation
   | PrivateLoadOperation
   | ReadImportOperation
-  | ReadImportMetaOperation
-  | EvalOperation;
+  | ReadImportMetaOperation;
 
 export type SaveOperation =
   | VariableSaveOperation

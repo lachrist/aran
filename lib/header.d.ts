@@ -2,14 +2,13 @@
 // ParameterHeader //
 /////////////////////
 
-export type PrivateParameterHeader = {
-  type: "parameter";
-  mode: "strict";
-  parameter: "private.get" | "private.set" | "private.has";
-  payload: estree.PrivateKey;
-};
-
-export type ScopeParameterHeader =
+export type ParameterHeader =
+  | {
+      type: "parameter";
+      mode: "strict";
+      parameter: "private.get" | "private.set" | "private.has";
+      payload: estree.PrivateKey;
+    }
   | {
       type: "parameter";
       mode: "strict" | "sloppy";
@@ -21,59 +20,60 @@ export type ScopeParameterHeader =
       mode: "sloppy";
       parameter: "scope.discard";
       payload: estree.Variable;
+    }
+  | {
+      type: "parameter";
+      mode: "strict" | "sloppy";
+      parameter:
+        | "this"
+        | "import.meta"
+        | "import.dynamic"
+        | "new.target"
+        | "super.get"
+        | "super.set"
+        | "super.call";
+      payload: null;
     };
 
-export type SuperParameterHeader = {
-  type: "parameter";
-  mode: "strict" | "sloppy";
-  parameter: "super.get" | "super.set" | "super.call";
-  payload: null;
-};
-
-export type ImportMetaParameterHeader = {
-  type: "parameter";
-  mode: "strict";
-  parameter: "import.meta";
-  payload: null;
-};
-
-export type ImportDynamicParameterHeader = {
-  type: "parameter";
-  mode: "strict";
-  parameter: "import.dynamic";
-  payload: estree.Source;
-};
-
-export type NewTargetParameterHeader = {
-  type: "parameter";
-  mode: "strict";
-  parameter: "new.target";
-  payload: null;
-};
-
-export type ThisParameterHeader = {
-  type: "parameter";
-  mode: "strict" | "sloppy";
-  parameter: "this";
-  payload: null;
-};
-
-export type ParameterHeader =
-  | PrivateParameterHeader
-  | ScopeParameterHeader
-  | SuperParameterHeader
-  | ImportMetaParameterHeader
-  | ImportDynamicParameterHeader
-  | NewTargetParameterHeader
-  | ThisParameterHeader;
-
-export type PrivateParameter = PrivateParameterHeader["parameter"];
-
-export type ScopeParameter = ScopeParameterHeader["parameter"];
-
-export type SuperParameter = SuperParameterHeader["parameter"];
-
 export type HeaderParameter = ParameterHeader["parameter"];
+
+export type PrivateParameter = "private.get" | "private.set" | "private.has";
+
+export type PrivateParameterHeader = ParameterHeader & {
+  parameter: PrivateParameter;
+};
+
+export type ScopeParameter =
+  | "scope.read"
+  | "scope.write"
+  | "scope.typeof"
+  | "scope.discard";
+
+export type ScopeParameterHeader = ParameterHeader & {
+  parameter: ScopeParameter;
+};
+
+export type SuperParameter = "super.get" | "super.set" | "super.call";
+
+export type SuperParameterHeader = ParameterHeader & {
+  parameter: SuperParameter;
+};
+
+export type ImportMetaParameterHeader = ParameterHeader & {
+  parameter: "import.meta";
+};
+
+export type ImportDynamicParameterHeader = ParameterHeader & {
+  parameter: "import.dynamic";
+};
+
+export type NewTargetParameterHeader = ParameterHeader & {
+  parameter: "new.target";
+};
+
+export type ThisParameterHeader = ParameterHeader & {
+  parameter: "this";
+};
 
 ///////////////////
 // DeclareHeader //

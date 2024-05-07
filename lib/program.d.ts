@@ -1,4 +1,18 @@
-import { Context } from "./context";
+import { PackMeta } from "./unbuild/meta";
+import { PackScope } from "./unbuild/scope";
+
+export type GlobalContext = {};
+
+export type RootLocalContext = {
+  mode: "strict" | "sloppy";
+};
+
+export type DeepLocalContext = {
+  meta: PackMeta;
+  scope: PackScope;
+};
+
+export type Context = GlobalContext | RootLocalContext | DeepLocalContext;
 
 export type EarlySyntaxError = {
   type: "EarlySyntaxError";
@@ -10,7 +24,7 @@ export type ModuleProgram<B> = {
   situ: "global";
   root: estree.ModuleProgram | EarlySyntaxError;
   base: B;
-  context: null;
+  context: GlobalContext;
 };
 
 export type ScriptProgram<B> = {
@@ -18,7 +32,7 @@ export type ScriptProgram<B> = {
   situ: "global";
   root: estree.ScriptProgram | EarlySyntaxError;
   base: B;
-  context: null;
+  context: GlobalContext;
 };
 
 export type GlobalEvalProgram<B> = {
@@ -26,30 +40,28 @@ export type GlobalEvalProgram<B> = {
   situ: "global";
   root: estree.ScriptProgram | EarlySyntaxError;
   base: B;
-  context: null;
+  context: GlobalContext;
 };
 
-export type InternalLocalEvalProgram<B> = {
+export type DeepLocalEvalProgram<B> = {
   kind: "eval";
   situ: "local.deep";
   root: estree.ScriptProgram | EarlySyntaxError;
   base: B;
-  context: Context;
+  context: DeepLocalContext;
 };
 
-export type ExternalLocalEvalProgram<B> = {
+export type RootLocalEvalProgram<B> = {
   kind: "eval";
   situ: "local.root";
   root: estree.ScriptProgram | EarlySyntaxError;
   base: B;
-  context: {
-    mode: "strict" | "sloppy";
-  };
+  context: RootLocalContext;
 };
 
 export type LocalEvalProgram<B> =
-  | InternalLocalEvalProgram<B>
-  | ExternalLocalEvalProgram<B>;
+  | DeepLocalEvalProgram<B>
+  | RootLocalEvalProgram<B>;
 
 export type EvalProgram<B> = GlobalEvalProgram<B> | LocalEvalProgram<B>;
 
@@ -59,6 +71,6 @@ export type RootProgram<B> =
   | ModuleProgram<B>
   | ScriptProgram<B>
   | GlobalEvalProgram<B>
-  | ExternalLocalEvalProgram<B>;
+  | RootLocalEvalProgram<B>;
 
-export type NodeProgram<B> = InternalLocalEvalProgram<B>;
+export type NodeProgram<B> = DeepLocalEvalProgram<B>;
