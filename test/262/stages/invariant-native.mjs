@@ -1,4 +1,5 @@
 // @ts-nocheck
+/* eslint-disable */
 
 import { readFile } from "node:fs/promises";
 import { compileExpect, compileCompileAranInstrument } from "./util/index.mjs";
@@ -56,7 +57,6 @@ export default {
        */
       const closures = new WeakMap();
 
-      /* eslint-disable */
       class InvariantError extends Error {
         constructor(
           /** @type {string} */ message,
@@ -72,7 +72,6 @@ export default {
           reject(this);
         }
       }
-      /* eslint-enable */
 
       /**
        * @type {(
