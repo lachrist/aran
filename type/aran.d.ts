@@ -107,7 +107,6 @@ export type AccessorIntrinsic = keyof AccessorIntrinsicRecord;
 export type AranIntrinsicRecord = {
   "aran.global": typeof globalThis;
   "aran.record": Record<string, unknown>;
-  "aran.templates": Record<string, string>;
   "aran.unary": (operator: string, argument: unknown) => unknown;
   "aran.binary": (operator: string, left: unknown, right: unknown) => unknown;
   "aran.throw": (value: unknown) => never;
