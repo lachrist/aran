@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { setup, instrument } from "../../lib/index.mjs";
 import { parse } from "acorn";
 import { generate } from "astring";

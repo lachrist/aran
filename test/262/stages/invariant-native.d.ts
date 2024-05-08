@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { BlockKind, Variable } from "../../../type/advice";
 import { Location } from "./util/aran";
 
