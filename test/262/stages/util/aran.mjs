@@ -100,6 +100,7 @@ export const compileCompileAranInstrument =
     });
     const pointcut = listKey(advice);
     const config = {
+      mode: /** @type {"normal"} */ ("normal"),
       pointcut,
       locate,
       global_variable,

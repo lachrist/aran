@@ -4,6 +4,7 @@ import { Pointcut } from "./weave/pointcut";
 export type Locate<B, L> = (path: OriginPath, base: B) => L;
 
 export type Config<B, L> = {
+  mode: "normal" | "standalone";
   locate: Locate<B, L>;
   pointcut: Pointcut<L>;
   global_declarative_record: "native" | "emulate";
