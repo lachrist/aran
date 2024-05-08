@@ -5,6 +5,9 @@ import {
   ModuleHeader,
   PrivateParameterHeader,
   ParameterHeader,
+  ThisParameterHeader,
+  ImportMetaParameterHeader,
+  ImportDynamicParameterHeader,
 } from "../header";
 import { Label, ResVariable } from "./atom";
 import { ControlKind } from "./point";
@@ -20,7 +23,13 @@ export type ProgramFrame<V> =
       type: "program";
       kind: "module";
       situ: "global";
-      head: (ModuleHeader | ScopeParameterHeader)[];
+      head: (
+        | ModuleHeader
+        | ScopeParameterHeader
+        | ThisParameterHeader
+        | ImportMetaParameterHeader
+        | ImportDynamicParameterHeader
+      )[];
       record: VariableFrame<V> & {
         "this": V;
         "import.dynamic": V;
@@ -35,7 +44,12 @@ export type ProgramFrame<V> =
       type: "program";
       kind: "script";
       situ: "global";
-      head: (DeclareHeader | ScopeParameterHeader)[];
+      head: (
+        | DeclareHeader
+        | ScopeParameterHeader
+        | ThisParameterHeader
+        | ImportDynamicParameterHeader
+      )[];
       record: VariableFrame<V> & {
         "this": V;
         "import.dynamic": V;
@@ -49,7 +63,12 @@ export type ProgramFrame<V> =
       type: "program";
       kind: "eval";
       situ: "global";
-      head: (DeclareHeader | ScopeParameterHeader)[];
+      head: (
+        | DeclareHeader
+        | ScopeParameterHeader
+        | ThisParameterHeader
+        | ImportDynamicParameterHeader
+      )[];
       record: VariableFrame<V> & {
         "this": V;
         "import.dynamic": V;

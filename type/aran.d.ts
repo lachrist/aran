@@ -1,8 +1,11 @@
 import {
   DeclareHeader,
+  ImportDynamicParameterHeader,
+  ImportMetaParameterHeader,
   ModuleHeader,
   ParameterHeader,
   ScopeParameterHeader,
+  ThisParameterHeader,
 } from "../lib/header";
 
 export type Atom = {
@@ -154,7 +157,13 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "module";
       situ: "global";
-      head: (ModuleHeader | ScopeParameterHeader)[];
+      head: (
+        | ModuleHeader
+        | ScopeParameterHeader
+        | ThisParameterHeader
+        | ImportDynamicParameterHeader
+        | ImportMetaParameterHeader
+      )[];
       body: ClosureBlock<A>;
       tag: A["Tag"];
     }
@@ -162,7 +171,12 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "script";
       situ: "global";
-      head: (DeclareHeader | ScopeParameterHeader)[];
+      head: (
+        | DeclareHeader
+        | ScopeParameterHeader
+        | ThisParameterHeader
+        | ImportDynamicParameterHeader
+      )[];
       body: ClosureBlock<A>;
       tag: A["Tag"];
     }
@@ -170,7 +184,12 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "eval";
       situ: "global";
-      head: (DeclareHeader | ScopeParameterHeader)[];
+      head: (
+        | DeclareHeader
+        | ScopeParameterHeader
+        | ThisParameterHeader
+        | ImportDynamicParameterHeader
+      )[];
       body: ClosureBlock<A>;
       tag: A["Tag"];
     }

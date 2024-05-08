@@ -13,7 +13,7 @@ evalGlobal(
         context: {},
         base: "playground",
         root: /** @type {any} */ (
-          parse("(function (...args) { console.log(args); })`foo${123}bar`;", {
+          parse("123;", {
             sourceType: "script",
             ecmaVersion: "latest",
           })
