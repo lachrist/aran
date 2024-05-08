@@ -1,4 +1,4 @@
-import { Context } from "../context";
+import { DeepLocalContext } from "../program";
 import { Label, ArgVariable, ResExpression as Expression } from "./atom";
 import { Frame } from "./frame";
 import { BranchKind, Point, PointName } from "./point";
@@ -67,7 +67,7 @@ export type ObjectPointcut<L> = {
     | ((variable: Variable, value: null, location: L) => boolean);
   "eval.before"?:
     | boolean
-    | ((value: null, context: Context, location: L) => boolean);
+    | ((value: null, context: DeepLocalContext, location: L) => boolean);
   "eval.after"?: boolean | ((value: null, location: L) => boolean);
   "await.before"?: boolean | ((value: null, location: L) => boolean);
   "await.after"?: boolean | ((value: null, location: L) => boolean);

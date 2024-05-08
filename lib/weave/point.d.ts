@@ -1,4 +1,4 @@
-import { Context } from "../context";
+import { DeepLocalContext } from "../program";
 import { Label, ArgVariable } from "./atom";
 import { Frame } from "./frame";
 
@@ -148,7 +148,7 @@ type Point<V, L> =
   | {
       type: "eval.before";
       value: V;
-      context: Context;
+      context: DeepLocalContext;
       location: L;
     }
   | {

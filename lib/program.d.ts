@@ -19,58 +19,79 @@ export type EarlySyntaxError = {
   message: string;
 };
 
-export type ModuleProgram<B> = {
+export type Program<B> =
+  | {
+      kind: "module";
+      situ: "global";
+      root: estree.ModuleProgram | EarlySyntaxError;
+      base: B;
+      context: GlobalContext;
+    }
+  | {
+      kind: "script";
+      situ: "global";
+      root: estree.ScriptProgram | EarlySyntaxError;
+      base: B;
+      context: GlobalContext;
+    }
+  | {
+      kind: "eval";
+      situ: "global";
+      root: estree.ScriptProgram | EarlySyntaxError;
+      base: B;
+      context: GlobalContext;
+    }
+  | {
+      kind: "eval";
+      situ: "local.deep";
+      root: estree.ScriptProgram | EarlySyntaxError;
+      base: B;
+      context: DeepLocalContext;
+    }
+  | {
+      kind: "eval";
+      situ: "local.root";
+      root: estree.ScriptProgram | EarlySyntaxError;
+      base: B;
+      context: RootLocalContext;
+    };
+
+export type ModuleProgram<B> = Program<B> & {
   kind: "module";
-  situ: "global";
-  root: estree.ModuleProgram | EarlySyntaxError;
-  base: B;
-  context: GlobalContext;
 };
 
-export type ScriptProgram<B> = {
+export type ScriptProgram<B> = Program<B> & {
   kind: "script";
-  situ: "global";
-  root: estree.ScriptProgram | EarlySyntaxError;
-  base: B;
-  context: GlobalContext;
 };
 
-export type GlobalEvalProgram<B> = {
+export type EvalProgram<B> = Program<B> & {
+  kind: "eval";
+};
+
+export type GlobalEvalProgram<B> = Program<B> & {
   kind: "eval";
   situ: "global";
-  root: estree.ScriptProgram | EarlySyntaxError;
-  base: B;
-  context: GlobalContext;
 };
 
-export type DeepLocalEvalProgram<B> = {
+export type DeepLocalEvalProgram<B> = Program<B> & {
   kind: "eval";
   situ: "local.deep";
-  root: estree.ScriptProgram | EarlySyntaxError;
-  base: B;
-  context: DeepLocalContext;
 };
 
-export type RootLocalEvalProgram<B> = {
+export type RootLocalEvalProgram<B> = Program<B> & {
   kind: "eval";
   situ: "local.root";
-  root: estree.ScriptProgram | EarlySyntaxError;
-  base: B;
-  context: RootLocalContext;
 };
 
-export type LocalEvalProgram<B> =
-  | DeepLocalEvalProgram<B>
-  | RootLocalEvalProgram<B>;
+export type LocalEvalProgram<B> = Program<B> & {
+  kind: "eval";
+  situ: "local.deep" | "local.root";
+};
 
-export type EvalProgram<B> = GlobalEvalProgram<B> | LocalEvalProgram<B>;
+export type RootProgram<B> = Program<B> & {
+  situ: "global" | "local.root";
+};
 
-export type Program<B> = ModuleProgram<B> | ScriptProgram<B> | EvalProgram<B>;
-
-export type RootProgram<B> =
-  | ModuleProgram<B>
-  | ScriptProgram<B>
-  | GlobalEvalProgram<B>
-  | RootLocalEvalProgram<B>;
-
-export type NodeProgram<B> = DeepLocalEvalProgram<B>;
+export type DeepProgram<B> = Program<B> & {
+  situ: "local.deep";
+};

@@ -51,7 +51,7 @@ const setup = generate(compileSetup({ global_variable, intrinsic_variable }));
  *     intrinsic: import("../../../../type/aran").IntrinsicRecord,
  *     instrument: (
  *       code: string,
- *       situ: import("./situ").Situ,
+ *       context: null |  import("../../../../lib/program").DeepLocalContext,
  *       location: null | import("./aran").Location,
  *     ) => string,
  *   }) => import("./aran").Advice,
@@ -72,19 +72,24 @@ export const compileCompileAranInstrument =
     const advice = makeAdvice({
       reject,
       intrinsic,
-      instrument: (code, situ, location) => {
+      instrument: (code, context, location) => {
         counter += 1;
         const url = new URL(
-          `dynamic:///${situ.kind}/${counter}${
+          `dynamic:///eval/${counter}${
             location === null ? "" : `#${encodeURIComponent(location)}`
           }`,
         );
+        const base = makeBase(url);
         const { content } = record({
           kind: "script",
           url,
           content: generate(
             instrument(
-              parse(code, makeBase(url), situ),
+              parse(
+                context === null
+                  ? { kind: "eval", situ: "global", code, base, context: {} }
+                  : { kind: "eval", situ: "local.deep", code, base, context },
+              ),
               // eslint-disable-next-line no-use-before-define
               embed_config,
             ),
@@ -136,7 +141,13 @@ export const compileCompileAranInstrument =
           url,
           content: generate(
             instrument(
-              parse(content, makeBase(url), { kind, context: null }),
+              parse({
+                kind,
+                situ: "global",
+                code: content,
+                base: makeBase(url),
+                context: {},
+              }),
               throw_config,
             ),
           ),

@@ -1,5 +1,5 @@
 import { Label, ResVariable as Variable } from "./atom";
-import { Context } from "../context";
+import { DeepLocalContext } from "../program";
 import { Frame } from "./frame";
 import { BranchKind, Point } from "./point";
 
@@ -45,7 +45,11 @@ export type ObjectAdvice<L> = {
     location: L,
   ) => unknown;
   "read.after"?: (variable: Variable, value: unknown, location: L) => unknown;
-  "eval.before"?: (value: unknown, context: Context, location: L) => unknown;
+  "eval.before"?: (
+    value: unknown,
+    context: DeepLocalContext,
+    location: L,
+  ) => unknown;
   "eval.after"?: (value: unknown, location: L) => unknown;
   "await.before"?: (value: unknown, location: L) => unknown;
   "await.after"?: (value: unknown, location: L) => unknown;

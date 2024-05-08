@@ -20,7 +20,7 @@ export default {
       "__proto__": null,
       "eval.before": (code, context, location) => {
         if (typeof code === "string") {
-          return instrument(code, { kind: "eval", context }, location);
+          return instrument(code, context, location);
         } else {
           return code;
         }

@@ -25,16 +25,8 @@ export default {
       const advice = {
         // @ts-ignore
         "__proto__": null,
-        "program.enter": (_sort, _head, frame, _location) => frame,
-        "program.completion": (_sort, value, _location) => value,
-        "program.failure": (_sort, value, _location) => value,
-        "program.leave": (_sort, _location) => {},
-        "closure.enter": (_kind, frame, _location) => frame,
-        "closure.failure": (_kind, value, _location) => value,
-        "closure.completion": (_kind, value, _location) => value,
-        "closure.leave": (_kind, _location) => {},
-        "block.enter": (_kind, _labels, frame, _location) => frame,
-        "block.completion": (_kind, _location) => {},
+        "block.enter": (_frame, record, _location) => record,
+        "block.completion": (_kind, value, _location) => value,
         "block.failure": (_kind, value, _location) => value,
         "block.leave": (_kind, _location) => {},
         "debugger.before": (_location) => {},
@@ -48,11 +40,9 @@ export default {
         "closure.after": (_kind, _asynchronous, _generator, value, _location) =>
           value,
         "read.after": (_variable, value, _location) => value,
-        "conditional.before": (value, _location) => value,
-        "conditional.after": (value, _location) => value,
         "eval.before": (code, context, location) => {
           if (typeof code === "string") {
-            return instrument(code, { kind: "eval", context }, location);
+            return instrument(code, context, location);
           } else {
             return code;
           }
@@ -73,20 +63,14 @@ export default {
             } else {
               const code = arguments_[0];
               if (typeof code === "string") {
-                return intrinsic.eval(
-                  instrument(code, { kind: "eval", context: null }, location),
-                );
+                return intrinsic.eval(instrument(code, null, location));
               } else {
                 return code;
               }
             }
           } else if (function_ === intrinsic.Function) {
             return intrinsic.eval(
-              instrument(
-                compileFunctionCode(arguments_),
-                { kind: "eval", context: null },
-                location,
-              ),
+              instrument(compileFunctionCode(arguments_), null, location),
             );
           } else {
             return intrinsic["Reflect.apply"](
@@ -99,11 +83,7 @@ export default {
         "construct": (constructor_, arguments_, location) => {
           if (constructor_ === intrinsic.Function) {
             return intrinsic.eval(
-              instrument(
-                compileFunctionCode(arguments_),
-                { kind: "eval", context: null },
-                location,
-              ),
+              instrument(compileFunctionCode(arguments_), null, location),
             );
           } else {
             return intrinsic["Reflect.construct"](
