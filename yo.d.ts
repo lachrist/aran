@@ -1,35 +1,29 @@
-export type Foo1 = {
-  foo: "a";
-  bar: "b";
-  qux: "c";
-};
-export type Foo2 = {
-  foo: "aa";
-  bar: "bb";
-  qux: "cc";
-};
-export type Foo3 = {
-  foo: "aa";
-  bar: "BB";
-  qux: "CC";
-};
-export type Foo = Foo1 | Foo2 | Foo3;
-
-export type yo = <F extends Foo>(x: Omit<F, "qux">, y: F["qux"]) => void;
-
-// export type Foo =
+// type Foo =
 //   | {
-//       foo: "a";
-//       bar: "b";
-//       qux: "c";
+//       type: "tag1";
+//       data: string;
 //     }
 //   | {
-//       foo: "aa";
-//       bar: "bb";
-//       qux: "cc";
+//       type: "tag2";
+//       data: number;
 //     }
 //   | {
-//       foo: "aa";
-//       bar: "BB";
-//       qux: "CC";
+//       type: "tag3";
+//       data: boolean;
 //     };
+
+// type Bar =
+//   | {
+//       type: "tag1";
+//       DATA: string;
+//     }
+//   | {
+//       type: "tag2";
+//       DATA: number;
+//     }
+//   | {
+//       type: "tag3";
+//       DATA: boolean;
+//     };
+
+// type convertFooBar = <F extends Foo>(foo: F) => Bar & { type: F["type"] };

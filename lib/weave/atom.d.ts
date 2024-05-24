@@ -1,6 +1,6 @@
 import {
   Program,
-  ClosureBlock,
+  RoutineBlock,
   ControlBlock,
   Statement,
   Effect,
@@ -39,9 +39,9 @@ export type ArgProgram = Program<ArgAtom>;
 
 export type ResProgram = Program<ResAtom>;
 
-export type ArgClosureBlock = ClosureBlock<ArgAtom>;
+export type ArgClosureBlock = RoutineBlock<ArgAtom>;
 
-export type ResClosureBlock = ClosureBlock<ResAtom>;
+export type ResClosureBlock = RoutineBlock<ResAtom>;
 
 export type ArgControlBlock = ControlBlock<ArgAtom>;
 

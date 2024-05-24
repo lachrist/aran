@@ -8,6 +8,10 @@ import {
   ThisParameterHeader,
 } from "../lib/header";
 
+//////////
+// Atom //
+//////////
+
 export type Atom = {
   Label: string;
   Variable: string;
@@ -15,6 +19,26 @@ export type Atom = {
   Specifier: string;
   Tag: unknown;
 };
+
+export type Variable = Brand<string, "Variable">;
+
+export type Label = Brand<string, "Label">;
+
+export type Source = Brand<string, "Source">;
+
+export type Specifier = Brand<string, "Specifier">;
+
+export type BrandAtom<T> = {
+  Label: Label;
+  Variable: Variable;
+  Source: Source;
+  Specifier: Specifier;
+  Tag: T;
+};
+
+///////////////
+// Component //
+///////////////
 
 export type Primitive = null | boolean | number | string | { bigint: string };
 
@@ -152,6 +176,10 @@ export type Parameter =
   | "scope.typeof"
   | "scope.discard";
 
+//////////
+// Node //
+//////////
+
 export type Program<A extends Atom> =
   | {
       type: "Program";
@@ -164,7 +192,7 @@ export type Program<A extends Atom> =
         | ImportDynamicParameterHeader
         | ImportMetaParameterHeader
       )[];
-      body: ClosureBlock<A>;
+      body: RoutineBlock<A>;
       tag: A["Tag"];
     }
   | {
@@ -177,7 +205,7 @@ export type Program<A extends Atom> =
         | ThisParameterHeader
         | ImportDynamicParameterHeader
       )[];
-      body: ClosureBlock<A>;
+      body: RoutineBlock<A>;
       tag: A["Tag"];
     }
   | {
@@ -190,7 +218,7 @@ export type Program<A extends Atom> =
         | ThisParameterHeader
         | ImportDynamicParameterHeader
       )[];
-      body: ClosureBlock<A>;
+      body: RoutineBlock<A>;
       tag: A["Tag"];
     }
   | {
@@ -198,7 +226,7 @@ export type Program<A extends Atom> =
       kind: "eval";
       situ: "local.root";
       head: (DeclareHeader | ParameterHeader)[];
-      body: ClosureBlock<A>;
+      body: RoutineBlock<A>;
       tag: A["Tag"];
     }
   | {
@@ -206,12 +234,12 @@ export type Program<A extends Atom> =
       kind: "eval";
       situ: "local.deep";
       head: ParameterHeader[];
-      body: ClosureBlock<A>;
+      body: RoutineBlock<A>;
       tag: A["Tag"];
     };
 
-export type ClosureBlock<A extends Atom> = {
-  type: "ClosureBlock";
+export type RoutineBlock<A extends Atom> = {
+  type: "RoutineBlock";
   frame: [A["Variable"], Intrinsic][];
   body: Statement<A>[];
   completion: Expression<A>;
@@ -326,7 +354,7 @@ export type Expression<A extends Atom> =
       kind: "function";
       asynchronous: boolean;
       generator: boolean;
-      body: ClosureBlock<A>;
+      body: RoutineBlock<A>;
       tag: A["Tag"];
     }
   | {
@@ -334,7 +362,7 @@ export type Expression<A extends Atom> =
       kind: "arrow";
       asynchronous: boolean;
       generator: false;
-      body: ClosureBlock<A>;
+      body: RoutineBlock<A>;
       tag: A["Tag"];
     }
   // Control //
@@ -385,7 +413,7 @@ export type Expression<A extends Atom> =
 export type Node<A extends Atom> =
   | Program<A>
   | ControlBlock<A>
-  | ClosureBlock<A>
+  | RoutineBlock<A>
   | Statement<A>
   | Effect<A>
   | Expression<A>;

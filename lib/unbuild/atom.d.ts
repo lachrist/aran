@@ -3,7 +3,7 @@ import type { Path } from "./path.d.ts";
 import {
   Program as ProgramGeneric,
   ControlBlock as ControlBlockGeneric,
-  ClosureBlock as ClosureBlockGeneric,
+  RoutineBlock as ClosureBlockGeneric,
   Statement as StatementGeneric,
   Effect as EffectGeneric,
   Expression as ExpressionGeneric,

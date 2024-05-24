@@ -1,24 +1,148 @@
-// @ts-nocheck
-/* eslint-disable */
-
 import { readFile } from "node:fs/promises";
 import { compileExpect, compileCompileAranInstrument } from "./util/index.mjs";
+import * as path from "node:path";
+import { reduce } from "../../../lib/util/array.mjs";
 
 const {
+  undefined,
   JSON,
   URL,
   console: { dir },
   WeakMap,
   Reflect: { getPrototypeOf },
-  Object: { hasOwn, is: isIdentical },
+  Object: { hasOwn, is },
 } = globalThis;
 
-const hasOwnNarrow = /**
- * @type {<K extends string>(
- *   object: object,
- *   key: K,
- * ) => object is object & {[key in K]: unknown}}
- */ (hasOwn);
+/**
+ * @type {(
+ *   value: import("./invariant-native").Value,
+ *   other: (
+ *     | import("./invariant-native").Value
+ *     | import("./invariant-native").TargetPath
+ *   ),
+ * ) => boolean}
+ */
+const isSameValue = is;
+
+/**
+ * @type {<S extends string>(
+ *   node: unknown,
+ *   path: S,
+ *   root: unknown,
+ * ) => { point: [path: S], cut: boolean }}
+ */
+const pointcutDefault = (_node, path, _root) => ({ point: [path], cut: true });
+
+/**
+ * @type {(
+ *   path: import("./invariant-native").TargetPath,
+ *   root: aran.Program<import("./invariant-native").Atom>,
+ * ) => aran.Node<import("./invariant-native").Atom>}
+ */
+const getParent = (_path, _root) => TODO;
+
+/**
+ * @type {import("./invariant-native").Pointcut}
+ */
+const pointcut = {
+  // Block //
+  RoutineBlock: (_node, path, root) => {
+    /** @type {aran.Node<aran.Atom>} */
+    const parent = getParent(path, root);
+    if (parent.type === "ClosureExpression") {
+      return { point: [path, "closure"], cut: true };
+    } else if (parent.type === "Program") {
+      if (parent.kind === "module" || parent.kind === "script") {
+        return {
+          point: [path, `${parent.kind}.${parent.situ}`],
+          cut: true,
+        };
+      } else if (parent.kind === "eval") {
+        return {
+          point: [path, `${parent.kind}.${parent.situ}`],
+          cut: true,
+        };
+      } else {
+        throw new Error("Unexpected parent");
+      }
+    } else {
+      throw new Error("Unexpected parent");
+    }
+  },
+  ControlBlock: ({ labels }, path, _root) => ({
+    point: [path, labels],
+    cut: true,
+  }),
+  // Statement //
+  BreakStatement: ({ label }, path, _root) => ({
+    point: [path, label],
+    cut: true,
+  }),
+  IfStatement: pointcutDefault,
+  DebuggerStatement: pointcutDefault,
+  BlockStatement: pointcutDefault,
+  WhileStatement: pointcutDefault,
+  TryStatement: pointcutDefault,
+  ReturnStatement: pointcutDefault,
+  EffectStatement: pointcutDefault,
+  // Effect //
+  WriteEffect: ({ variable }, path, _root) => ({
+    point: [path, variable],
+    cut: true,
+  }),
+  ExportEffect: pointcutDefault,
+  ExpressionEffect: pointcutDefault,
+  ConditionalEffect: pointcutDefault,
+  // Expression //
+  ImportExpression: pointcutDefault,
+  IntrinsicExpression: ({ intrinsic }, path, _root) => ({
+    point: [path, intrinsic],
+    cut: true,
+  }),
+  EvalExpression: pointcutDefault,
+  AwaitExpression: (_node, path, _root) => ({
+    point: [path, {}],
+    cut: true,
+  }),
+  YieldExpression: (_node, path, _root) => ({
+    point: [path, {}],
+    cut: true,
+  }),
+  ConditionalExpression: pointcutDefault,
+  SequenceExpression: pointcutDefault,
+  PrimitiveExpression: ({ primitive }, path, _root) => ({
+    point: [path, primitive],
+    cut: true,
+  }),
+  ReadExpression: ({ variable }, path, _root) => ({
+    point: [path, variable],
+    cut: true,
+  }),
+  ClosureExpression: pointcutDefault,
+  ApplyExpression: pointcutDefault,
+  ConstructExpression: pointcutDefault,
+};
+
+/** @type {import("./invariant-native").Status} */
+const INITIAL_STATUS = { type: "initial" };
+
+/** @type {import("./invariant-native").Status} */
+const COMPLETION_STATUS = { type: "completion" };
+
+/** @type {import("./invariant-native").Status} */
+const RETURN_STATUS = { type: "return" };
+
+/** @type {import("./invariant-native").Status} */
+const FAILURE_STATUS = { type: "failure" };
+
+/** @type {import("./invariant-native").Status} */
+const ROOT_STATUS = { type: "root" };
+
+/** @type {import("./invariant-native").Scope} */
+const ROOT_SCOPE = {
+  "invariant.status": ROOT_STATUS,
+  "invariant.stack": 0,
+};
 
 /** @type {test262.Stage} */
 export default {
@@ -34,445 +158,440 @@ export default {
   ),
   compileInstrument: compileCompileAranInstrument(
     ({ reject, intrinsic, instrument }) => {
-      /** @type {import("./invariant-native").Scope[]} */
-      let callstack = [];
-
-      /** @type {object} */
-      let scope = {
-        // @ts-ignore
-        __proto__: null,
-      };
-
-      /** @type {unknown[]} */
-      let stack = [];
-
-      /**
-       * @type {WeakMap<Function, {
-       *   scope: object,
-       *   kind: "arrow" | "function",
-       *   asynchronous: boolean,
-       *   generator: boolean,
-       *   location: import("./util/aran").Location,
-       * }>}
-       */
-      const closures = new WeakMap();
-
+      /* eslint-disable */
       class InvariantError extends Error {
-        constructor(
-          /** @type {string} */ message,
-          /** @type {unknown} */ data,
-        ) {
+        constructor(/** @type {string} */ message) {
           super(message);
           this.name = "InvariantError";
-          dir(data, { depth: 5, showHidden: true });
           dir(
-            { callstack, scope, stack, closures },
+            { callstack, scope, stack, scopes },
             { depth: 5, showHidden: true },
           );
           reject(this);
         }
       }
+      /* eslint-enable */
 
       /**
        * @type {(
-       *   value: V,
-       *   location: import("./util/aran").Location,
-       * ) => V}
+       *   parent: import("./invariant-native").Scope | null,
+       *   invariant: {
+       *     "invariant.status": import("./invariant-native").Status,
+       *     "invariant.stack": number,
+       *   },
+       *   frame: { [K in string] ?: import("./invariant-native").Value},
+       * ) => import("./invariant-native").Scope}
        */
-      const consume = (value, location) => {
-        if (stack.length === 0) {
-          throw new InvariantError("Cannot consume value on empty stack", {
-            value,
-            location,
-          });
-        } else {
-          const other = stack.pop();
-          if (isIdentical(value, other)) {
-            return value;
-          } else {
-            throw new InvariantError("Stack value mistmatch", {
-              value,
-              other,
-              location,
-            });
-          }
-        }
-      };
+      const extendScope = (parent, record, invariant) =>
+        /** @type {any} */ ({
+          __proto__: parent,
+          ...record,
+          ...invariant,
+        });
 
       /**
        * @type {(
-       *   value: import("./util/aran").Value,
-       *   location: import("./util/aran").Location,
-       * ) => import("./util/aran").Value}
+       *   scope: import("./invariant-native").Scope,
+       * ) =>  import("./invariant-native").Scope}
        */
-      const peek = (value, location) => {
-        if (stack.length === 0) {
-          throw new InvariantError("Cannot consume value on empty stack", {
-            value,
-            location,
-          });
-        } else {
-          const other = stack[stack.length - 1];
-          if (isIdentical(value, other)) {
-            return value;
-          } else {
-            throw new InvariantError("Stack value mistmatch", {
-              value,
-              other,
-              location,
-            });
-          }
-        }
-      };
-
-      /**
-       * @type {(
-       *   value: import("./util/aran").Value,
-       *   _location: import("./util/aran").Location,
-       * ) => import("./util/aran").Value}
-       */
-      const produce = (value, _location) => {
-        stack.push(value);
-        return value;
-      };
-
-      /**
-       * @type {(
-       *   kind: "arrow" | "function",
-       *   asynchronous: boolean,
-       *   generator: boolean,
-       *   value: import("./util/aran").Value,
-       *   location: import("./util/aran").Location,
-       * ) => import("./util/aran").Value}
-       */
-      const registerClosure = (
-        kind,
-        asynchronous,
-        generator,
-        value,
-        location,
-      ) => {
-        if (typeof value === "function") {
-          if (closures.has(value)) {
-            throw new InvariantError("Duplicate closure", {
-              kind,
-              asynchronous,
-              generator,
-              value,
-              location,
-            });
-          } else {
-            closures.set(value, {
-              scope,
-              kind,
-              asynchronous,
-              generator,
-              location,
-            });
-            return produce(value, location);
-          }
-        } else {
-          throw new InvariantError("Expected a closure", {
-            kind,
-            asynchronous,
-            generator,
-            value,
-            location,
-          });
-        }
-      };
-
-      /**
-       * @type {<V>(
-       *   value: V,
-       *   other: V,
-       *   message: string,
-       *   location: import("./util/aran").Location,
-       * ) => V}
-       */
-      const assertEqual = (value, other, message, location) => {
-        if (isIdentical(value, other)) {
-          return value;
-        } else {
-          throw new InvariantError(message, { value, other, location });
-        }
-      };
-
-      /**
-       * @type {(
-       *   object: object,
-       *   key: string,
-       *   message: string,
-       *   location: import("./util/aran").Location,
-       * ) => unknown}
-       */
-      const assertPresent = (object, key, message, location) => {
-        if (hasOwnNarrow(object, key)) {
-          return object[key];
-        } else {
-          throw new InvariantError(message, { object, key, location });
-        }
-      };
-
-      /**
-       * @type {(
-       *   kind: (
-       *     | import("../../../type/aran").ProgramKind
-       *     | import("../../../type/advice").BlockKind
-       *     | import("../../../type/advice").ClosureKind
-       *   ),
-       *   frame: Record<string, unknown>,
-       *   location: import("./util/aran").Location,
-       * ) => Record<string, unknown>}
-       */
-      const enter = (kind, frame, location) => {
-        scope = {
-          // @ts-ignore
-          "__proto__": scope,
-          "invariant.kind": kind,
-          "invariant.location": location,
-          "invarient.restore": stack.length,
-          ...frame,
-        };
-        return frame;
-      };
-
-      const failure = (kind, location) => {
-        const length = assertPresent(
-          scope,
-          "invariant.restore",
-          "missing",
-          location,
-        );
-        if (typeof length !== "number") {
-          throw new InvariantError("expected invariant.restore to be a number");
-        }
-      };
-
-      /**
-       * @type {(
-       *   kind: (
-       *     | import("../../../type/aran").ProgramKind
-       *     | import("../../../type/advice").BlockKind
-       *     | import("../../../type/advice").ClosureKind
-       *   ),
-       *   location: import("./util/aran").Location,
-       * ) => void}
-       */
-      const leave = (kind, location) => {
-        assertEqual(
-          kind,
-          assertPresent(scope, "invariant.kind", "missing", location),
-          "mismatch",
-          location,
-        );
-        assertEqual(
-          location,
-          assertPresent(scope, "invariant.location", "missing", location),
-          "mismatch",
-          location,
-        );
-        assertEqual(
-          stack.length,
-          assertPresent(scope, "invariant.restore", "missing", location),
-          "mistmach",
-          location,
-        );
+      const reduceScope = (scope) => {
         const parent = getPrototypeOf(scope);
         if (parent === null) {
-          throw new InvariantError("missing root scope", {
-            kind,
-            location,
-          });
+          throw new InvariantError("Cannot remove root scope");
+        } else {
+          return /** @type {import("./invariant-native").Scope} */ (parent);
         }
-        scope = parent;
       };
 
-      /** @type {Required<import("./util/aran").ObjectAdvice>} */
+      /**
+       * @type {(
+       *   test: boolean,
+       * ) => void}
+       */
+      const assert = (test) => {
+        if (!test) {
+          throw new InvariantError("Assertion failure");
+        }
+      };
+
+      /**
+       * @type {(data: never) => Error}
+       */
+      const unreachable = (_data) => new InvariantError("unreachable error");
+
+      /**
+       * @type {<X>(
+       *   array: X[],
+       * ) => X}
+       */
+      const pop = (array) => {
+        if (array.length === 0) {
+          throw new InvariantError("Cannot pop value from empty array");
+        } else {
+          return /** @type {any} */ (array.pop());
+        }
+      };
+
+      /**
+       * @type {<X>(
+       *   array: X[],
+       *   item: X,
+       * ) => void}
+       */
+      const push = (array, item) => {
+        array.push(item);
+      };
+
+      /**
+       * @type {<X>(
+       *   array: X[],
+       * ) => X}
+       */
+      const peek = (array) => {
+        if (array.length === 0) {
+          throw new InvariantError("Cannot peek value on empty array");
+        } else {
+          return array[array.length - 1];
+        }
+      };
+
+      /** @type {import("./invariant-native").Scope[]} */
+      let callstack = [];
+
+      /** @type {import("./invariant-native").Scope} */
+      let scope = ROOT_SCOPE;
+
+      /**
+       * @type {(
+       *   | import("./invariant-native").TargetPath
+       *   | import("./invariant-native").Value
+       * )[]}
+       */
+      let stack = [];
+
+      /**
+       * @type {WeakMap<Function, import("./invariant-native").Scope>}
+       */
+      const scopes = new WeakMap();
+
+      /**
+       * @type {(
+       *   kind: "try" | "catch" | "finally" | "other",
+       *   labels: import("./invariant-native").Label[],
+       *   status: import("./invariant-native").Status,
+       *   parent_status: import("./invariant-native").Status,
+       * ) => import("./invariant-native").Status}
+       */
+      const updateParentStatus = (kind, labels, status, parent_status) => {
+        if (kind === "finally") {
+          assert(
+            parent_status.type === "initial" ||
+              parent_status.type === "failure",
+          );
+        } else if (kind === "try" || kind === "catch" || kind === "other") {
+          assert(parent_status.type === "initial");
+        } else {
+          throw unreachable(kind);
+        }
+        if (status.type === "break") {
+          return labels.includes(status.label) ? parent_status : status;
+        } else if (status.type === "return") {
+          return status;
+        } else if (status.type === "failure") {
+          if (kind === "try") {
+            return parent_status;
+          } else if (
+            kind === "catch" ||
+            kind === "finally" ||
+            kind === "other"
+          ) {
+            return status;
+          } else {
+            throw unreachable(kind);
+          }
+        } else if (status.type === "completion") {
+          return parent_status;
+        } else if (status.type === "initial" || status.type === "root") {
+          throw new InvariantError("unexpected initial|root status");
+        } else {
+          throw unreachable(status);
+        }
+      };
+
+      /** @type {import("./invariant-native").Advice} */
       const advice = {
-        // @ts-ignore
-        "__proto__": null,
-        "program.enter": (_sort, _head, frame, _location) => frame,
-        "program.completion": (_sort, value, _location) => value,
-        "program.failure": (_sort, value, _location) => value,
-        "program.leave": (_sort, _location) => {},
-        "closure.enter": (_kind, _links, frame, _location) => frame,
-        "closure.failure": (_kind, value, _location) => value,
-        "closure.completion": (_kind, value, _location) => value,
-        "closure.leave": (_kind, _location) => {},
-        "block.enter": (kind, labels, frame, location) => {
-          scope = {
-            // @ts-ignore
-            "__proto__": scope,
-            "invariant.kind": kind,
-            "invariant.location": location,
-            "invarient.restore": stack.length,
-            ...frame,
-          };
+        // Block //
+        "ControlBlock.before": (frame, path, _kind, _labels) => {
+          push(stack, path);
+          assert(scope["invariant.status"].type === "initial");
+          scope = extendScope(
+            scope,
+            {
+              "invariant.status": { type: "initial" },
+              "invariant.stack": stack.length,
+            },
+            frame,
+          );
           return frame;
         },
-        "block.completion": (kind, location) => {},
-        "block.failure": (kind, value, location) => {
-          const length = scope["invariant.restore"];
-          if (stack.length < length) {
-            throw new InvariantError(
-              "Stack cannot be restored because it is too short",
-              {
-                kind,
-                value,
-                scope,
-              },
+        "ControlBlock.after": (path, _kind, _labels) => {
+          assert(path === peek(stack));
+          assert(scope["invariant.stack"] === stack.length);
+          assert(scope["invariant.status"].type === "initial");
+          scope["invariant.status"] = { type: "completion" };
+        },
+        "ControlBlock.catch": (error, path, _kind, _labels) => {
+          assert(scope["invariant.status"].type === "initial");
+          assert(scope["invariant.stack"] <= stack.length);
+          scope["invariant.status"] = { type: "failure" };
+          stack.length = scope["invariant.stack"];
+          assert(path === peek(stack));
+          return error;
+        },
+        "ControlBlock.finally": (path, kind, labels) => {
+          assert(scope["invariant.stack"] === stack.length);
+          assert(path === pop(stack));
+          const status = scope["invariant.status"];
+          scope = reduceScope(scope);
+          scope["invariant.status"] = updateParentStatus(
+            kind,
+            labels,
+            status,
+            scope["invariant.status"],
+          );
+        },
+        "RoutineBlock.before": (frame, path, kind) => {
+          push(stack, path);
+          if (kind === "eval.local.deep") {
+            assert(scope["invariant.status"].type === "initial");
+          } else if (
+            kind === "script.global" ||
+            kind === "module.global" ||
+            kind === "eval.global" ||
+            kind === "eval.local.root"
+          ) {
+            assert(scope["invariant.status"].type === "root");
+          } else if (kind === "closure") {
+            assert(scope["invariant.status"].type === "root");
+            const callee = frame["function.callee"];
+            if (typeof callee !== "function") {
+              throw new InvariantError("missing function.callee");
+            }
+            const closure_scope = scopes.get(callee);
+            if (closure_scope === undefined) {
+              throw new InvariantError("missing closure scope");
+            }
+            scope = closure_scope;
+          } else {
+            throw unreachable(kind);
+          }
+          scope = extendScope(
+            scope,
+            {
+              "invariant.status": { type: "initial" },
+              "invariant.stack": stack.length,
+            },
+            frame,
+          );
+          return frame;
+        },
+        "RoutineBlock.after": (path, _kind) => {
+          assert(path === peek(stack));
+          assert(scope["invariant.stack"] === stack.length);
+          assert(scope["invariant.status"].type === "initial");
+          scope["invariant.status"] = { type: "completion" };
+        },
+        "RoutineBlock.catch": (error, path, _kind) => {
+          assert(scope["invariant.status"].type === "initial");
+          assert(scope["invariant.stack"] <= stack.length);
+          scope["invariant.status"] = { type: "failure" };
+          stack.length = scope["invariant.stack"];
+          assert(path === peek(stack));
+          return error;
+        },
+        "RoutineBlock.finally": (path, kind) => {
+          assert(scope["invariant.stack"] === stack.length);
+          assert(path === pop(stack));
+          const status = scope["invariant.status"];
+          if (kind === "closure") {
+            assert(
+              status.type === "completion" ||
+                status.type === "failure" ||
+                status.type === "return",
             );
-          }
-          stack.length = length;
-        },
-        "block.leave": (kind, location) => {
-          if (hasOwn(scope, "invariant.location")) {
-            const other = scope["invariant.location"];
-            if (isIdentical()) {
-            }
-            throw new InvariantError("Missing invariant.location in scope", {
-              kind,
-              labels,
-            });
+            scope = ROOT_SCOPE;
+          } else if (kind === "eval.local.deep") {
+            assert(status.type === "completion" || status.type === "failure");
+            scope = reduceScope(scope);
+          } else if (
+            kind === "script.global" ||
+            kind === "module.global" ||
+            kind === "eval.global" ||
+            kind === "eval.local.root"
+          ) {
+            assert(status.type === "completion" || status.type === "failure");
+            scope = ROOT_SCOPE;
           } else {
-          }
-          scope = getPrototypeOf(scope);
-        },
-        "debugger.before": (_location) => {},
-        "debugger.after": (_location) => {},
-        "break.before": (_label, _location) => {},
-        "branch.before": (_kind, value, _location) => value,
-        "branch.after": (_kind, _location) => {},
-        "intrinsic.after": (name, value, location) => {
-          if (hasOwn(intrinsic, name)) {
-            const other = intrinsic[name];
-            if (isIdentical(value, other)) {
-              return produce(value, location);
-            } else {
-              throw new InvariantError("Intrinsic mismatch", {
-                name,
-                value,
-                other,
-                location,
-                intrinsic,
-              });
-            }
-          } else {
-            throw new InvariantError("Missing intrinsic", {
-              name,
-              value,
-              location,
-              intrinsic,
-            });
+            throw unreachable(kind);
           }
         },
-        "primitive.after": produce,
+        // Statement //
+        "DebuggerStatement.before": (path) => {
+          push(stack, path);
+        },
+        "DebuggerStatement.after": (path) => {
+          assert(path === pop(stack));
+        },
+        "BreakStatement.before": (_path, label) => {
+          assert(scope["invariant.status"].type === "initial");
+          scope["invariant.status"] = { type: "break", label };
+        },
+        "IfStatement.before": (test, path) => {
+          assert(isSameValue(test, pop(stack)));
+          push(stack, path);
+          return !!test;
+        },
+        "IfStatement.after": (path) => {
+          assert(path === pop(stack));
+        },
+        "ReturnStatement.before": (completion, path) => {
+          assert(isSameValue(completion, pop(stack)));
+          assert(scope["invariant.status"].type === "initial");
+          scope["invariant.status"] = RETURN_STATUS;
+          return completion;
+        },
+        "EffectStatement.before": (path) => {
+          push(stack, path);
+        },
+        "EffectStatement.after": (drop, path) => {},
+
+        "intrinsic.after": (name, value, _location) => {
+          assert(hasOwn(intrinsic, name));
+          assert(isSameValue(value, intrinsic[name]));
+          push(stack, value);
+          return /** @type {import("./invariant-native").Value} */ (value);
+        },
+        "primitive.after": (value, location) => {
+          push(stack, value);
+          return /** @type {import("./invariant-native").Value} */ (value);
+        },
         "import.after": (_source, _specifier, value, _location) => value,
-        "function.after": (_asynchronous, _generator, value, _location) =>
-          value,
-        "arrow.after": (asynchronous, value, location) =>
-          registerClosure("arrow", asynchronous, false, value, location),
+        "closure.after": (kind, asynchronous, generator, value, location) => {
+          if (scope === null) {
+            throw new InvariantError("null scope");
+          }
+          assert(!scopes.has(value));
+          scopes.set(value, scope);
+          push(stack, value);
+          return value;
+        },
         "read.after": (variable, value, location) => {
-          if (variable in scope) {
-            const other = scope[variable];
-            if (isIdentical(value, other)) {
-              return produce(value, location);
-            } else {
-              throw new InvariantError("Scope value mismatch", {
-                variable,
-                value,
-                other,
-                location,
-              });
-            }
+          if (!(variable in scope)) {
+            throw new InvariantError("missing variable in scope");
+          }
+          assert(isIdentical(value, scope[variable]));
+          push(stack, value);
+          return value;
+        },
+        "eval.before": (value, context, location) => {
+          assert(isIdentical(value, pop(stack)));
+          push(stack, location);
+          if (typeof value === "string") {
+            return instrument(value, context, location);
           } else {
-            throw new InvariantError("Missing variable in scope", {
-              variable,
-              value,
-              location,
-            });
+            return intrinsic.undefined;
           }
         },
-        "conditional.before": consume,
-        "conditional.after": peek,
-        "eval.before": (code, context, location) => {
-          if (typeof code === "string") {
-            return instrument(code, { kind: "eval", context }, location);
-          } else {
-            return code;
-          }
+        "eval.after": (value, location) => {
+          assert(isIdentical(location, pop(stack)));
+          push(stack, value);
         },
-        "eval.after": peek,
-        "await.before": (value, _location) => value,
-        "await.after": (value, _location) => value,
-        "yield.before": (_delegate, value, _location) => value,
-        "yield.after": (_delegate, value, _location) => value,
-        "drop.before": consume,
-        "export.before": (_specifier, value, location) =>
-          consume(value, location),
-        "write.before": (variable, value, location) => {
-          consume(value, location);
-          if (variable in scope) {
-            scope[variable] = value;
-            return value;
-          } else {
-            throw new InvariantError("Missing variable in scope", {
-              variable,
-              value,
-              location,
-            });
-          }
+        "await.before": (value, _location) => TODO,
+        "await.after": (value, _location) => TODO,
+        "yield.before": (_delegate, value, _location) => TODO,
+        "yield.after": (_delegate, value, _location) => TODO,
+        "drop.before": (value, _location) => {
+          assert(isIdentical(value, pop(stack)));
         },
-        "return.before": (value, _location) => value,
-        "apply": (function_, this_, arguments_, location) => {
-          if (typeof function_ === "function" && closures.has(function_)) {
-            return intrinsic["Reflect.apply"](
-              /** @type {Function} */ (function_),
-              this_,
-              arguments_,
-            );
-          } else {
-            for (let index = arguments_.length; index >= 0; index -= 1) {
-              consume(arguments_[index], location);
-            }
-            consume(this_, location);
-            consume(function_, location);
-            return produce(
+        "export.before": (_specifier, value, _location) => {
+          assert(isIdentical(value, pop(stack)));
+          return value;
+        },
+        "write.before": (variable, value, _location) => {
+          if (scope === null) {
+            throw new InvariantError("null scope");
+          }
+          assert(isIdentical(value, pop(stack)));
+          assert(variable in scope);
+          scope[variable] = value;
+          return value;
+        },
+        "return.before": (value, _location) => {
+          assert(isIdentical(value, pop(stack)));
+          if (scope === null) {
+            throw new InvariantError("null scope");
+          }
+          assert(scope["invariant.status"].type === "initial");
+          scope["invariant.status"] = { type: "return" };
+          return value;
+        },
+        "apply": (function_, this_, arguments_, _location) => {
+          for (let index = arguments_.length; index >= 0; index -= 1) {
+            assert(isIdentical(arguments_[index], pop(stack)));
+          }
+          assert(isIdentical(this_, pop(stack)));
+          assert(isIdentical(function_, pop(stack)));
+          push(callstack, scope);
+          scope = null;
+          try {
+            push(
+              stack,
               intrinsic["Reflect.apply"](
-                /** @type {Function} */ (function_),
+                /** @type {Function} */ (/** @type {unknown} */ (function_)),
                 this_,
                 arguments_,
               ),
-              location,
             );
+            return peek(stack);
+          } catch (error) {
+            if (scope === null) {
+              throw new InvariantError("null scope");
+            }
+            assert(scope["invariant.status"].type === "initial");
+            scope["invariant.status"] = { type: "failure", error };
+            throw error;
+          } finally {
+            scope = pop(callstack);
           }
         },
-        "construct": (constructor_, arguments_, location) => {
-          if (
-            typeof constructor_ === "function" &&
-            closures.has(constructor_)
-          ) {
-            return intrinsic["Reflect.construct"](
-              /** @type {Function} */ (constructor_),
-              arguments_,
-            );
-          } else {
-            for (let index = arguments_.length; index >= 0; index -= 1) {
-              consume(arguments_[index], location);
-            }
-            consume(constructor_, location);
-            return produce(
+        "construct": (constructor_, arguments_, _location) => {
+          for (let index = arguments_.length; index >= 0; index -= 1) {
+            assert(isIdentical(arguments_[index], pop(stack)));
+          }
+          assert(isIdentical(constructor_, pop(stack)));
+          push(callstack, scope);
+          scope = null;
+          try {
+            push(
+              stack,
               intrinsic["Reflect.construct"](
-                /** @type {Function} */ (constructor_),
+                /** @type {Function} */ (/** @type {unknown} */ (constructor_)),
                 arguments_,
               ),
-              location,
             );
+            return peek(stack);
+          } catch (error) {
+            if (scope === null) {
+              throw new InvariantError("null scope");
+            }
+            assert(scope["invariant.status"].type === "initial");
+            scope["invariant.status"] = { type: "failure", error };
+            throw error;
+          } finally {
+            scope = pop(callstack);
           }
         },
       };
-
       return advice;
     },
     { global_declarative_record: "native" },

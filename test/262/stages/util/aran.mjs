@@ -54,7 +54,14 @@ const setup = generate(compileSetup({ global_variable, intrinsic_variable }));
  *       context: null |  import("../../../../lib/program").DeepLocalContext,
  *       location: null | import("./aran").Location,
  *     ) => string,
- *   }) => import("./aran").Advice,
+ *   }) => (
+ *     | import("./aran").FunctionAdvice<unknown>
+ *     | import("./aran").ObjectAdvice<{
+ *       StackValue: unknown,
+ *       ScopeValue: unknown,
+ *       FrontierValue: unknown,
+ *     }>
+ *   ),
  *   options: {
  *     global_declarative_record: "emulate" | "native",
  *   },
@@ -68,7 +75,6 @@ export const compileCompileAranInstrument =
       /** @type {import("../../../../type/aran").IntrinsicRecord} */ (
         runInContext(setup, context)
       );
-    /** @type {import("./aran").Advice} */
     const advice = makeAdvice({
       reject,
       intrinsic,

@@ -119,10 +119,32 @@ export type AggregateHeader =
       export: null;
     };
 
-export type ModuleHeader = ImportHeader | ExportHeader | AggregateHeader;
+export type LinkHeader = ImportHeader | ExportHeader | AggregateHeader;
 
 ////////////
 // Header //
 ////////////
 
-export type Header = ModuleHeader | ParameterHeader | DeclareHeader;
+export type Header = LinkHeader | ParameterHeader | DeclareHeader;
+
+export type ModuleHeader =
+  | ThisParameterHeader
+  | ImportDynamicParameterHeader
+  | ImportMetaParameterHeader
+  | ImportHeader
+  | ExportHeader
+  | AggregateHeader;
+
+export type ScriptHeader =
+  | DeclareHeader
+  | ThisParameterHeader
+  | ImportDynamicParameterHeader;
+
+export type GlobalEvalHeader =
+  | DeclareHeader
+  | ThisParameterHeader
+  | ImportDynamicParameterHeader;
+
+export type RootLocalEvalHeader = DeclareHeader | ParameterHeader;
+
+export type DeepLocalEvalHeader = ParameterHeader;

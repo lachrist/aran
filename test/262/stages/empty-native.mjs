@@ -16,13 +16,13 @@ export default {
     ),
   ),
   compileInstrument: compileCompileAranInstrument(
-    ({ instrument }) => ({
+    ({ intrinsic, instrument }) => ({
       "__proto__": null,
       "eval.before": (code, context, location) => {
         if (typeof code === "string") {
           return instrument(code, context, location);
         } else {
-          return code;
+          return intrinsic.undefined;
         }
       },
     }),

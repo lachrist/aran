@@ -26,7 +26,7 @@ export default {
         if (typeof code === "string") {
           return instrument(code, context, location);
         } else {
-          return code;
+          return intrinsic.undefined;
         }
       },
       "apply": (function_, this_, arguments_, location) => {
