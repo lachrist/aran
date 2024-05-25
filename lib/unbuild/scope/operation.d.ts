@@ -1,5 +1,5 @@
 import { Cache } from "../cache";
-import { ModuleHeader } from "../../header";
+import { ModuleProgramHeader } from "../../header";
 
 export { RootFrame } from "./root";
 

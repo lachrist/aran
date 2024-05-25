@@ -1,5 +1,5 @@
 import type { Label, Variable } from "../../../type/aran.d.ts";
-import type { Advice as GenericAdvice } from "../../../type/yo2.d.ts";
+import type { Advice as GenericAdvice } from "../../../type/advice.js";
 
 export type { Parameter, Label, Variable } from "../../../type/aran.d.ts";
 

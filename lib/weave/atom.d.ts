@@ -39,9 +39,9 @@ export type ArgProgram = Program<ArgAtom>;
 
 export type ResProgram = Program<ResAtom>;
 
-export type ArgClosureBlock = RoutineBlock<ArgAtom>;
+export type ArgRoutineBlock = RoutineBlock<ArgAtom>;
 
-export type ResClosureBlock = RoutineBlock<ResAtom>;
+export type ResRoutineBlock = RoutineBlock<ResAtom>;
 
 export type ArgControlBlock = ControlBlock<ArgAtom>;
 

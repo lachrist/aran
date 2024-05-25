@@ -3,7 +3,7 @@ import type { Path } from "./path.d.ts";
 import {
   Program as ProgramGeneric,
   ControlBlock as ControlBlockGeneric,
-  RoutineBlock as ClosureBlockGeneric,
+  RoutineBlock as RoutineBlockGeneric,
   Statement as StatementGeneric,
   Effect as EffectGeneric,
   Expression as ExpressionGeneric,
@@ -25,7 +25,7 @@ export type Program = ProgramGeneric<Atom>;
 
 export type ControlBlock = ControlBlockGeneric<Atom>;
 
-export type ClosureBlock = ClosureBlockGeneric<Atom>;
+export type RoutineBlock = RoutineBlockGeneric<Atom>;
 
 export type Statement = StatementGeneric<Atom>;
 

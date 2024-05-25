@@ -119,15 +119,15 @@ export type AggregateHeader =
       export: null;
     };
 
-export type LinkHeader = ImportHeader | ExportHeader | AggregateHeader;
+export type ModuleHeader = ImportHeader | ExportHeader | AggregateHeader;
 
 ////////////
 // Header //
 ////////////
 
-export type Header = LinkHeader | ParameterHeader | DeclareHeader;
+export type Header = ModuleHeader | ParameterHeader | DeclareHeader;
 
-export type ModuleHeader =
+export type ModuleProgramHeader =
   | ThisParameterHeader
   | ImportDynamicParameterHeader
   | ImportMetaParameterHeader
@@ -135,16 +135,16 @@ export type ModuleHeader =
   | ExportHeader
   | AggregateHeader;
 
-export type ScriptHeader =
+export type ScriptProgramHeader =
   | DeclareHeader
   | ThisParameterHeader
   | ImportDynamicParameterHeader;
 
-export type GlobalEvalHeader =
+export type GlobalEvalProgramHeader =
   | DeclareHeader
   | ThisParameterHeader
   | ImportDynamicParameterHeader;
 
-export type RootLocalEvalHeader = DeclareHeader | ParameterHeader;
+export type RootLocalEvalProgramHeader = DeclareHeader | ParameterHeader;
 
-export type DeepLocalEvalHeader = ParameterHeader;
+export type DeepLocalEvalProgramHeader = ParameterHeader;

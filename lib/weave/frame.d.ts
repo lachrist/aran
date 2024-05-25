@@ -2,7 +2,7 @@ import {
   DeclareHeader,
   Header,
   ScopeParameterHeader,
-  ModuleHeader,
+  ModuleProgramHeader,
   PrivateParameterHeader,
   ParameterHeader,
   ThisParameterHeader,
@@ -24,7 +24,7 @@ export type ProgramFrame<V> =
       kind: "module";
       situ: "global";
       head: (
-        | ModuleHeader
+        | ModuleProgramHeader
         | ScopeParameterHeader
         | ThisParameterHeader
         | ImportMetaParameterHeader

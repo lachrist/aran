@@ -2,7 +2,7 @@ import {
   DeclareHeader,
   ImportDynamicParameterHeader,
   ImportMetaParameterHeader,
-  ModuleHeader,
+  ModuleProgramHeader,
   ParameterHeader,
   ScopeParameterHeader,
   ThisParameterHeader,
@@ -186,7 +186,7 @@ export type Program<A extends Atom> =
       kind: "module";
       situ: "global";
       head: (
-        | ModuleHeader
+        | ModuleProgramHeader
         | ScopeParameterHeader
         | ThisParameterHeader
         | ImportDynamicParameterHeader
