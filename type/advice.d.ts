@@ -1,4 +1,5 @@
 import { DeepLocalContext } from "../lib/program";
+import { ArgAtom } from "../lib/weave2/atom";
 import {
   ControlBlock as GenericControlBlock,
   RoutineBlock as GenericRoutineBlock,
@@ -11,11 +12,13 @@ import {
   BrandAtom,
 } from "./aran";
 
-export type OriginPath = Brand<string, "OriginPath">;
+export type Path = Brand<string, "Path">;
 
-export type TargetPath = Brand<string, "TargetPath">;
+// TODO: figure out which atom to use
 
-export type Atom = BrandAtom<OriginPath>;
+// export type Atom = BrandAtom<Path>;
+
+export type Atom = ArgAtom;
 
 export type Node = GenericNode<Atom>;
 
@@ -32,11 +35,10 @@ export type Effect = GenericEffect<Atom>;
 export type Expression = GenericExpression<Atom>;
 
 export type Pointcut<P extends Json[], N extends Node> = (
-  path: TargetPath,
   node: N,
   parent: Node,
   root: Program,
-) => null | P;
+) => undefined | null | P;
 
 export type Advice<V, X, P extends Json[]> =
   | {
@@ -51,15 +53,24 @@ export type Advice<V, X, P extends Json[]> =
         state: X,
         frame: { [K in Atom["Variable"] | Parameter]: V },
         ...point: P
-      ) => undefined | null | { [K in Atom["Variable"] | Parameter]: V };
+      ) => void;
     }
   | {
-      kind: "block@before" | "block@after" | "block@finally";
+      kind: "block@overframe";
+      pointcut: Pointcut<P, ControlBlock | RoutineBlock>;
+      behavior: (
+        state: X,
+        frame: { [K in Atom["Variable"] | Parameter]: V },
+        ...point: P
+      ) => { [K in Atom["Variable"] | Parameter]: V };
+    }
+  | {
+      kind: "block@before" | "block@after" | "block@teardown";
       pointcut: Pointcut<P, ControlBlock | RoutineBlock>;
       behavior: (state: X, ...point: P) => void;
     }
   | {
-      kind: "block@catch";
+      kind: "block@failure";
       pointcut: Pointcut<P, ControlBlock | RoutineBlock>;
       behavior: (state: X, error: V, ...point: P) => V;
     }
@@ -113,12 +124,13 @@ export type Advice<V, X, P extends Json[]> =
 export type EmptyAdvice =
   | {
       kind:
-        | "block@initialize"
+        | "block@setup"
         | "block@frame"
+        | "block@overframe"
         | "block@before"
         | "block@after"
-        | "block@catch"
-        | "block@finally";
+        | "block@failure"
+        | "block@teardown";
       pointcut: Pointcut<Json[], ControlBlock | RoutineBlock>;
     }
   | {
