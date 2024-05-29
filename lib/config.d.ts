@@ -1,11 +1,11 @@
 import { OriginPath } from "./weave/atom";
 import { Pointcut } from "./weave/pointcut";
 
-export type Locate<B, L> = (path: OriginPath, base: B) => L;
+export type Locate<L> = (path: OriginPath) => L;
 
-export type Config<B, L> = {
+export type Config<L> = {
   mode: "normal" | "standalone";
-  locate: Locate<B, L>;
+  locate: Locate<L>;
   pointcut: Pointcut<L>;
   global_declarative_record: "native" | "emulate";
   global_variable: estree.Variable;

@@ -1,5 +1,5 @@
 import type { Variable } from "./variable.d.ts";
-import type { Path } from "./path.d.ts";
+import type { Path } from "../path.js";
 import {
   Program as ProgramGeneric,
   ControlBlock as ControlBlockGeneric,
@@ -11,7 +11,7 @@ import {
 
 export type Label = Brand<string, "unbuild.Label">;
 
-export type { Path } from "./path.d.ts";
+export type { Path } from "../path.js";
 
 export type Atom = {
   Label: Label;

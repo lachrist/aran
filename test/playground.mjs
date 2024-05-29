@@ -1,4 +1,4 @@
-import { instrument } from "../lib/index.mjs";
+import { instrument, ROOT_PATH } from "../lib/index.mjs";
 import { parse } from "acorn";
 import { generate } from "astring";
 
@@ -11,7 +11,7 @@ evalGlobal(
         kind: "eval",
         situ: "global",
         context: {},
-        base: "playground",
+        path: ROOT_PATH,
         root: /** @type {any} */ (
           parse("123;", {
             sourceType: "script",

@@ -1,3 +1,4 @@
+import { Path } from "./path";
 import { PackMeta } from "./unbuild/meta";
 import { PackScope } from "./unbuild/scope";
 
@@ -19,79 +20,79 @@ export type EarlySyntaxError = {
   message: string;
 };
 
-export type Program<B> =
+export type Program =
   | {
       kind: "module";
       situ: "global";
+      path: Path;
       root: estree.ModuleProgram | EarlySyntaxError;
-      base: B;
       context: GlobalContext;
     }
   | {
       kind: "script";
       situ: "global";
+      path: Path;
       root: estree.ScriptProgram | EarlySyntaxError;
-      base: B;
       context: GlobalContext;
     }
   | {
       kind: "eval";
       situ: "global";
+      path: Path;
       root: estree.ScriptProgram | EarlySyntaxError;
-      base: B;
       context: GlobalContext;
     }
   | {
       kind: "eval";
       situ: "local.deep";
+      path: Path;
       root: estree.ScriptProgram | EarlySyntaxError;
-      base: B;
       context: DeepLocalContext;
     }
   | {
       kind: "eval";
       situ: "local.root";
+      path: Path;
       root: estree.ScriptProgram | EarlySyntaxError;
-      base: B;
       context: RootLocalContext;
     };
 
-export type ModuleProgram<B> = Program<B> & {
+export type ModuleProgram = Program & {
   kind: "module";
 };
 
-export type ScriptProgram<B> = Program<B> & {
+export type ScriptProgram = Program & {
   kind: "script";
 };
 
-export type EvalProgram<B> = Program<B> & {
+export type EvalProgram = Program & {
   kind: "eval";
 };
 
-export type GlobalEvalProgram<B> = Program<B> & {
+export type GlobalEvalProgram = Program & {
   kind: "eval";
   situ: "global";
 };
 
-export type DeepLocalEvalProgram<B> = Program<B> & {
+export type DeepLocalEvalProgram = Program & {
   kind: "eval";
   situ: "local.deep";
 };
 
-export type RootLocalEvalProgram<B> = Program<B> & {
+export type RootLocalEvalProgram = Program & {
   kind: "eval";
   situ: "local.root";
 };
 
-export type LocalEvalProgram<B> = Program<B> & {
+export type LocalEvalProgram = Program & {
   kind: "eval";
   situ: "local.deep" | "local.root";
 };
 
-export type RootProgram<B> = Program<B> & {
+export type RootProgram = Program & {
   situ: "global" | "local.root";
 };
 
-export type DeepProgram<B> = Program<B> & {
+export type DeepProgram = Program & {
   situ: "local.deep";
 };

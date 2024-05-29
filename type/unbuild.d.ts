@@ -1,9 +1,9 @@
 import type { Variable } from "../lib/unbuild/variable.d.ts";
-import type { Path } from "../lib/unbuild/path.d.ts";
+import type { Path } from "../lib/path.js";
 
 export type Label = Brand<string, "unbuild.Label">;
 
-export type { Path } from "../lib/unbuild/path.d.ts";
+export type { Path } from "../lib/path.js";
 
 export type Atom = {
   Label: Label;
