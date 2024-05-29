@@ -1,4 +1,4 @@
-import { Pointcut } from "../../type/advice";
+import { Pointcut } from "../../../type/advice";
 import {
   ArgControlBlock,
   ArgEffect,

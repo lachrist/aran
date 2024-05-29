@@ -1,4 +1,4 @@
-import type { DeepLocalContext } from "../program.d.ts";
+import type { DeepLocalContext } from "../../program.js";
 import type { ArgProgram, Path } from "./atom.d.ts";
 import type { Depth } from "./depth.d.ts";
 import { AspectPointcut } from "./pointcut.js";

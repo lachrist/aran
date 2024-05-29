@@ -1,5 +1,4 @@
-import type { DeepLocalContext } from "../program.d.ts";
-import { Header } from "../header.js";
+import type { DeepLocalContext } from "../../program.d.ts";
 import { OriginPath } from "./atom.js";
 import { Pointcut } from "./pointcut.js";
 

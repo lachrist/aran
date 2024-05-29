@@ -1,4 +1,4 @@
-import { DeepLocalContext } from "../program";
+import { DeepLocalContext } from "../../program";
 import { Label, ArgVariable, ResExpression as Expression } from "./atom";
 import { Frame } from "./frame";
 import { BranchKind, Point, PointName } from "./point";

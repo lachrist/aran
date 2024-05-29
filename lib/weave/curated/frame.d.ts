@@ -8,7 +8,7 @@ import {
   ThisParameterHeader,
   ImportMetaParameterHeader,
   ImportDynamicParameterHeader,
-} from "../header";
+} from "../../header";
 import { Label, ResVariable } from "./atom";
 import { ControlKind } from "./point";
 

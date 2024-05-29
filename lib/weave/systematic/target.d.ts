@@ -1,4 +1,4 @@
-import { DeepLocalContext } from "../program";
+import { DeepLocalContext } from "../../program";
 
 import {
   ArgControlBlock,
