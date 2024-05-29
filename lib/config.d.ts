@@ -1,4 +1,4 @@
-import { OriginPath } from "./weave/curated/atom";
+import { OriginPath } from "./weave/atom";
 import { Pointcut } from "./weave/curated/pointcut";
 
 export type Locate<L> = (path: OriginPath) => L;

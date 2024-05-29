@@ -1,5 +1,5 @@
 import type { DeepLocalContext } from "../../program.d.ts";
-import { OriginPath } from "./atom.js";
+import { OriginPath } from "../atom.js";
 import { Pointcut } from "./pointcut.js";
 
 export type Options<L> = {

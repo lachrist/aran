@@ -1,5 +1,5 @@
 import { DeepLocalContext } from "../../program";
-import { Label, ArgVariable } from "./atom";
+import { Label, ArgVariable } from "../atom";
 import { Frame } from "./frame";
 
 export type Situ = "global" | "local.root" | "local.deep";

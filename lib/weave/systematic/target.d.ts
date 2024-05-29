@@ -8,7 +8,7 @@ import {
   ArgRoutineBlock,
   ArgStatement,
   ResExpression,
-} from "./atom";
+} from "../atom";
 
 export type RoutineBlockTarget = {
   origin: ArgRoutineBlock;

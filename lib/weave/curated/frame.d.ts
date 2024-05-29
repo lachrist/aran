@@ -9,7 +9,7 @@ import {
   ImportMetaParameterHeader,
   ImportDynamicParameterHeader,
 } from "../../header";
-import { Label, ResVariable } from "./atom";
+import { Label, ResVariable } from "../atom";
 import { ControlKind } from "./point";
 
 export type Mode = "strict" | "sloppy";

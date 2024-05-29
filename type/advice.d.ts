@@ -1,5 +1,5 @@
 import { DeepLocalContext } from "../lib/program";
-import { ArgAtom } from "../lib/weave/systematic/atom";
+import { ArgAtom } from "../lib/weave/atom";
 import {
   ControlBlock as GenericControlBlock,
   RoutineBlock as GenericRoutineBlock,

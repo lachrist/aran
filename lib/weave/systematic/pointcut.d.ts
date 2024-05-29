@@ -5,7 +5,7 @@ import {
   ArgExpression,
   ArgRoutineBlock,
   ArgStatement,
-} from "./atom";
+} from "../atom";
 
 export type BlockPointcut = Pointcut<Json[], ArgControlBlock | ArgRoutineBlock>;
 
