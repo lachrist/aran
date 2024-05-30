@@ -12,8 +12,8 @@
   "homepage": "http://github.com/lachrist/aran",
   "license": "MIT",
   "scripts": {
-    "lint": "npx tsc && npx prettier -c '**/*.mjs' && npx eslint 'lint/**/*.mjs' 'test/**/*.mjs' 'lib/**/*.mjs'",
-    "format": "npx prettier -w '**/*.mjs'",
+    "lint": "npx tsc && npx prettier -c '**/*.(mjs|d.ts)' && npx eslint 'lint/**/*.mjs' 'test/**/*.mjs' 'lib/**/*.mjs'",
+    "format": "npx prettier -w '**/*.(mjs|d.ts)'",
     "test": "node test/test.mjs",
     "coverage": "node test/coverage.mjs",
     "load-test262": "git clone --filter=tree:0 https://github.com/tc39/test262",
