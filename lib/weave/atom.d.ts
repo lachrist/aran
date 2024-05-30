@@ -16,8 +16,6 @@ export type Label = Brand<string, "weave.ArgLabel">;
 
 export type OriginPath = Brand<string, "weave.OriginPath">;
 
-export type TargetPath = Brand<string, "weave.TargetPath">;
-
 export type ArgAtom = {
   Label: Label;
   Source: estree.Source;
