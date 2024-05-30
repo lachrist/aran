@@ -1,97 +1,95 @@
 import { BinaryOperator, UnaryOperator } from "estree";
+import { Atom } from "./atom";
 
-export type MemberDesign = aran.Expression<rebuild.Atom> & {
+export type MemberDesign = aran.Expression<Atom> & {
   type: "ApplyExpression";
-  callee: aran.Expression<rebuild.Atom> & {
+  callee: aran.Expression<Atom> & {
     type: "IntrinsicExpression";
     intrinsic: "aran.get";
   };
-  this: aran.Expression<rebuild.Atom> & {
+  this: aran.Expression<Atom> & {
     type: "PrimitiveExpression";
   };
-  arguments: [aran.Expression<rebuild.Atom>, aran.Expression<rebuild.Atom>];
+  arguments: [aran.Expression<Atom>, aran.Expression<Atom>];
 };
 
-export type ArrayDesign = aran.Expression<rebuild.Atom> & {
+export type ArrayDesign = aran.Expression<Atom> & {
   type: "ApplyExpression";
-  callee: aran.Expression<rebuild.Atom> & {
+  callee: aran.Expression<Atom> & {
     type: "IntrinsicExpression";
     intrinsic: "Array.of";
   };
-  this: aran.Expression<rebuild.Atom> & {
+  this: aran.Expression<Atom> & {
     type: "PrimitiveExpression";
   };
 };
 
-export type ListDesign<X> = aran.Expression<rebuild.Atom> & {
+export type ListDesign<X> = aran.Expression<Atom> & {
   type: "ApplyExpression";
-  callee: aran.Expression<rebuild.Atom> & {
+  callee: aran.Expression<Atom> & {
     type: "IntrinsicExpression";
     intrinsic: "Array.of";
   };
-  this: aran.Expression<rebuild.Atom> & {
+  this: aran.Expression<Atom> & {
     type: "PrimitiveExpression";
   };
   arguments: X[];
 };
 
-export type PairDesign<X, Y> = aran.Expression<rebuild.Atom> & {
+export type PairDesign<X, Y> = aran.Expression<Atom> & {
   type: "ApplyExpression";
-  callee: aran.Expression<rebuild.Atom> & {
+  callee: aran.Expression<Atom> & {
     type: "IntrinsicExpression";
     intrinsic: "Array.of";
   };
-  this: aran.Expression<rebuild.Atom> & {
+  this: aran.Expression<Atom> & {
     type: "PrimitiveExpression";
   };
   arguments: [X, Y];
 };
 
-export type ObjectDesign = aran.Expression<rebuild.Atom> & {
-  callee: aran.Expression<rebuild.Atom> & {
+export type ObjectDesign = aran.Expression<Atom> & {
+  callee: aran.Expression<Atom> & {
     type: "IntrinsicExpression";
     intrinsic: "aran.createObject";
   };
-  this: aran.Expression<rebuild.Atom> & {
+  this: aran.Expression<Atom> & {
     type: "PrimitiveExpression";
   };
-  arguments: [
-    aran.Expression<rebuild.Atom>,
-    ...aran.Expression<rebuild.Atom>[],
-  ];
+  arguments: [aran.Expression<Atom>, ...aran.Expression<Atom>[]];
 };
 
-export type UnaryDesign = aran.Expression<rebuild.Atom> & {
-  callee: aran.Expression<rebuild.Atom> & {
+export type UnaryDesign = aran.Expression<Atom> & {
+  callee: aran.Expression<Atom> & {
     type: "IntrinsicExpression";
     intrinsic: "aran.unary";
   };
-  this: aran.Expression<rebuild.Atom> & {
+  this: aran.Expression<Atom> & {
     type: "PrimitiveExpression";
   };
   arguments: [
-    aran.Expression<rebuild.Atom> & {
+    aran.Expression<Atom> & {
       type: "PrimitiveExpression";
       primitive: UnaryOperator;
     },
-    aran.Expression<rebuild.Atom>,
+    aran.Expression<Atom>,
   ];
 };
 
-export type BinaryDesign = aran.Expression<rebuild.Atom> & {
-  callee: aran.Expression<rebuild.Atom> & {
+export type BinaryDesign = aran.Expression<Atom> & {
+  callee: aran.Expression<Atom> & {
     type: "IntrinsicExpression";
     intrinsic: "aran.unary";
   };
-  this: aran.Expression<rebuild.Atom> & {
+  this: aran.Expression<Atom> & {
     type: "PrimitiveExpression";
   };
   arguments: [
-    aran.Expression<rebuild.Atom> & {
+    aran.Expression<Atom> & {
       type: "PrimitiveExpression";
       primitive: BinaryOperator;
     },
-    aran.Expression<rebuild.Atom>,
-    aran.Expression<rebuild.Atom>,
+    aran.Expression<Atom>,
+    aran.Expression<Atom>,
   ];
 };

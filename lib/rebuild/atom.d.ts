@@ -9,5 +9,3 @@ export type Atom = {
   Variable: Variable;
   Tag: null;
 };
-
-export as namespace rebuild;
