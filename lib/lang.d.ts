@@ -26,6 +26,8 @@ export type Atom = {
 
 export type Primitive = null | boolean | number | string | { bigint: string };
 
+export type RuntimePrimitive = null | boolean | number | string | bigint;
+
 export type RegularIntrinsicRcord = {
   // Symbol //
   "Symbol": typeof Symbol;

@@ -1,4 +1,4 @@
-import { Intrinsic, Parameter } from "../../lang";
+import { Intrinsic, Parameter, RuntimePrimitive } from "../../lang";
 import { DeepLocalContext } from "../../program";
 import { Label, ArgVariable, ResExpression as Expression } from "../atom";
 import { Frame } from "./frame";
@@ -45,7 +45,7 @@ export type ObjectPointcut<L> = {
     | ((name: Intrinsic, value: null, location: L) => boolean);
   "primitive.after"?:
     | boolean
-    | ((primitive: Primitive, location: L) => boolean);
+    | ((primitive: RuntimePrimitive, location: L) => boolean);
   "import.after"?:
     | boolean
     | ((
