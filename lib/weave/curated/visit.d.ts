@@ -1,7 +1,7 @@
 import type { DeepLocalContext } from "../../program.d.ts";
-import { Path } from "../../path.js";
-import { Pointcut } from "./pointcut.js";
-import { Variable } from "../../estree.js";
+import type { Path } from "../../path.js";
+import type { Pointcut } from "./pointcut.js";
+import type { Variable } from "../../estree.js";
 
 export type Options<L> = {
   evals: { [k in Path]?: DeepLocalContext };

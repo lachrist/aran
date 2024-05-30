@@ -1,5 +1,5 @@
-import { BinaryOperator, UnaryOperator } from "estree";
-import { Expression } from "./atom";
+import type { BinaryOperator, UnaryOperator } from "estree";
+import type { Expression } from "./atom";
 
 export type MemberDesign = Expression & {
   type: "ApplyExpression";

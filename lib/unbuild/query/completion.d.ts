@@ -1,11 +1,11 @@
-import {
+import type {
   CatchClause,
   Directive,
   ModuleDeclaration,
   Statement,
   SwitchCase,
 } from "estree";
-import { Path } from "../../path";
+import type { Path } from "../../path";
 
 export type CompletionNode =
   | Statement

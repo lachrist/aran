@@ -1,13 +1,13 @@
-import { RegularFrame } from "./variable-regular";
-import { ClosureFrame } from "./closure";
-import { EvalFrame } from "./variable-eval";
-import { FakeFrame } from "./variable-fake";
-import { ModeFrame } from "./mode";
-import { PrivateFrame } from "./private";
-import { RootFrame } from "./root";
-import { WithFrame } from "./variable-with";
-import { CatchFrame } from "./catch";
-import { IllegalFrame } from "./variable-illegal";
+import type { RegularFrame } from "./variable-regular";
+import type { ClosureFrame } from "./closure";
+import type { EvalFrame } from "./variable-eval";
+import type { FakeFrame } from "./variable-fake";
+import type { ModeFrame } from "./mode";
+import type { PrivateFrame } from "./private";
+import type { RootFrame } from "./root";
+import type { WithFrame } from "./variable-with";
+import type { CatchFrame } from "./catch";
+import type { IllegalFrame } from "./variable-illegal";
 
 export { RootFrame } from "./root";
 

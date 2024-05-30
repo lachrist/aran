@@ -1,6 +1,6 @@
 import type { Variable } from "./variable.d.ts";
 import type { Path } from "../path.js";
-import {
+import type {
   Program as GenericProgram,
   ControlBlock as GenericControlBlock,
   RoutineBlock as GenericRoutineBlock,
@@ -8,8 +8,8 @@ import {
   Effect as GenericEffect,
   Expression as GenericExpression,
 } from "../lang.js";
-import { Source, Specifier } from "../estree.js";
-import { Brand } from "../brand.js";
+import type { Source, Specifier } from "../estree.js";
+import type { Brand } from "../brand.js";
 
 export type Label = Brand<string, "unbuild.Label">;
 

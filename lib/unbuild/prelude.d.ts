@@ -1,13 +1,13 @@
-import { Warning } from "./warning";
-import { Header } from "../header";
-import { EarlyError } from "./early-error";
-import { Condition } from "./condition";
-import { DeepLocalContext } from "../program";
-import { BaseVariable, MetaVariable } from "./variable";
-import { Template } from "./template";
-import { Intrinsic } from "../lang";
-import { Path } from "../path";
-import { Effect } from "./atom";
+import type { Warning } from "./warning";
+import type { Header } from "../header";
+import type { EarlyError } from "./early-error";
+import type { Condition } from "./condition";
+import type { DeepLocalContext } from "../program";
+import type { BaseVariable, MetaVariable } from "./variable";
+import type { Template } from "./template";
+import type { Intrinsic } from "../lang";
+import type { Path } from "../path";
+import type { Effect } from "./atom";
 
 export type WarningPrelude = {
   type: "warning";

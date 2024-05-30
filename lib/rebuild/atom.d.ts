@@ -1,6 +1,6 @@
-import { Brand } from "../brand";
-import { Source, Specifier } from "../estree";
-import {
+import type { Brand } from "../brand";
+import type { Source, Specifier } from "../estree";
+import type {
   Node as GenericNode,
   Program as GenericProgram,
   ControlBlock as GenericControlBlock,

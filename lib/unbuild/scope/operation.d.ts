@@ -1,5 +1,5 @@
-import { PrivateKey, Variable } from "../../estree";
-import { Expression } from "../atom";
+import type { PrivateKey, Variable } from "../../estree";
+import type { Expression } from "../atom";
 
 export { RootFrame } from "./root";
 

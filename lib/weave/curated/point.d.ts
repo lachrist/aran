@@ -1,7 +1,7 @@
-import { Intrinsic, Parameter } from "../../lang";
-import { DeepLocalContext } from "../../program";
-import { Label, ArgVariable } from "../atom";
-import { Frame } from "./frame";
+import type { Intrinsic, Parameter } from "../../lang";
+import type { DeepLocalContext } from "../../program";
+import type { Label, ArgVariable } from "../atom";
+import type { Frame } from "./frame";
 
 export type Situ = "global" | "local.root" | "local.deep";
 

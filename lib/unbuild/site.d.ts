@@ -1,5 +1,5 @@
-import { Path } from "../path";
-import { Meta } from "./meta";
+import type { Path } from "../path";
+import type { Meta } from "./meta";
 
 export type Site<N> = {
   node: N;

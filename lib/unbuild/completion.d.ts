@@ -1,7 +1,7 @@
-import { Expression, Program } from "estree";
-import { Path } from "../path.js";
+import type { Expression, Program } from "estree";
+import type { Path } from "../path.js";
 import type { WritableCache } from "./cache.js";
-import { Site } from "./site.js";
+import type { Site } from "./site.js";
 
 export type VoidCompletion = {
   type: "void";

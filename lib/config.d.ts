@@ -1,6 +1,6 @@
-import { Variable } from "./estree";
-import { Path } from "./path";
-import { Pointcut } from "./weave/curated/pointcut";
+import type { Variable } from "./estree";
+import type { Path } from "./path";
+import type { Pointcut } from "./weave/curated/pointcut";
 
 export type Locate<L> = (path: Path) => L;
 

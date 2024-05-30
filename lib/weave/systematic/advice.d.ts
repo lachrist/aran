@@ -1,5 +1,5 @@
-import { DeepLocalContext } from "../../program";
-import { Variable as EstreeVariable } from "../../estree";
+import type { DeepLocalContext } from "../../program";
+import type { Variable as EstreeVariable } from "../../estree";
 import {
   ArgVariable as Variable,
   ArgNode as Node,
@@ -10,8 +10,8 @@ import {
   ArgEffect as Effect,
   ArgExpression as Expression,
 } from "../atom";
-import { Parameter } from "../../lang";
-import { Json } from "../../json";
+import type { Parameter } from "../../lang";
+import type { Json } from "../../json";
 
 export {
   Variable,

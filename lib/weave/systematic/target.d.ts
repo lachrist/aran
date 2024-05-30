@@ -1,6 +1,6 @@
-import { DeepLocalContext } from "../../program";
+import type { DeepLocalContext } from "../../program";
 
-import {
+import type {
   ArgControlBlock,
   ArgEffect,
   ArgExpression,

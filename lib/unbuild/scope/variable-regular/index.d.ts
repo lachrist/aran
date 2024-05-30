@@ -1,4 +1,4 @@
-import { Source, Specifier, Variable } from "../../../estree";
+import type { Source, Specifier, Variable } from "../../../estree";
 
 export type ExternalBinding = {
   kind: "external";

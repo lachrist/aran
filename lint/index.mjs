@@ -129,7 +129,7 @@ export default [
     languageOptions: {
       parser: /** @type {any} */ (tseslint.parser),
       parserOptions: {
-        project: true,
+        project: "./tsconfig.json",
       },
     },
     rules: {
@@ -143,6 +143,14 @@ export default [
           destructuredArrayIgnorePattern: "^_",
           varsIgnorePattern: "^_",
           ignoreRestSiblings: true,
+        },
+      ],
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        {
+          prefer: "type-imports",
+          disallowTypeAnnotations: true,
+          fixStyle: "separate-type-imports",
         },
       ],
     },

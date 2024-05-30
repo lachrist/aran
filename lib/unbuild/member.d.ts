@@ -1,6 +1,6 @@
 import type { Object } from "./object.d.ts";
 import type { Key } from "./key.d.ts";
-import { Expression } from "./atom.js";
+import type { Expression } from "./atom.js";
 
 export type GetMember = {
   object: Object;

@@ -1,4 +1,4 @@
-import { Expression } from "./atom";
+import type { Expression } from "./atom";
 
 export type EvalCallee = {
   type: "eval";

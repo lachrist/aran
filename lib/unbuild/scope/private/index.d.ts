@@ -1,4 +1,4 @@
-import { PrivateKey } from "../../../estree.js";
+import type { PrivateKey } from "../../../estree.js";
 import type { Cache, WritableCache } from "../../cache.js";
 
 export type SingletonPrivateKind =

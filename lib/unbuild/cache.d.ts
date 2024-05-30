@@ -1,5 +1,5 @@
-import { Intrinsic, Primitive } from "../lang";
-import { ConstantMetaVariable, WritableMetaVariable } from "./variable";
+import type { Intrinsic, Primitive } from "../lang";
+import type { ConstantMetaVariable, WritableMetaVariable } from "./variable";
 
 export type WritableCache = {
   type: "writable";

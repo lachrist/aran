@@ -1,5 +1,5 @@
-import { ArgumentList } from "./argument";
-import { Callee } from "./callee";
+import type { ArgumentList } from "./argument";
+import type { Callee } from "./callee";
 
 export type Call = {
   callee: Callee;

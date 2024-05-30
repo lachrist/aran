@@ -1,6 +1,6 @@
-import { Brand } from "../brand";
-import { Source, Specifier } from "../estree";
-import {
+import type { Brand } from "../brand";
+import type { Source, Specifier } from "../estree";
+import type {
   Node,
   Program,
   RoutineBlock,
@@ -9,7 +9,7 @@ import {
   Effect,
   Expression,
 } from "../lang";
-import { Path } from "../path";
+import type { Path } from "../path";
 
 export type ArgVariable = Brand<string, "weave.ArgVariable">;
 

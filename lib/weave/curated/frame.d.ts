@@ -1,4 +1,4 @@
-import {
+import type {
   DeclareHeader,
   ScopeParameterHeader,
   ModuleProgramHeader,
@@ -7,8 +7,8 @@ import {
   ImportMetaParameterHeader,
   ImportDynamicParameterHeader,
 } from "../../header";
-import { Label, ResVariable } from "../atom";
-import { ControlKind } from "./point";
+import type { Label, ResVariable } from "../atom";
+import type { ControlKind } from "./point";
 
 export type Mode = "strict" | "sloppy";
 

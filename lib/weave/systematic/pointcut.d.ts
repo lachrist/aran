@@ -1,13 +1,13 @@
-import { Pointcut } from "./advice";
-import {
+import type { Pointcut } from "./advice";
+import type {
   ArgControlBlock,
   ArgEffect,
   ArgExpression,
   ArgRoutineBlock,
   ArgStatement,
 } from "../atom";
-import { Variable } from "../../estree";
-import { Json } from "../../json";
+import type { Variable } from "../../estree";
+import type { Json } from "../../json";
 
 export type BlockPointcut = Pointcut<Json[], ArgControlBlock | ArgRoutineBlock>;
 

@@ -1,5 +1,5 @@
-import { Key as EstreeKey, PrivateKey as EstreePrivateKey } from "../estree";
-import { Expression } from "./atom";
+import type { Key as EstreeKey, PrivateKey as EstreePrivateKey } from "../estree";
+import type { Expression } from "./atom";
 
 export type PublicKey =
   | {

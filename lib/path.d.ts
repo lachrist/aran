@@ -1,4 +1,4 @@
-import { Brand } from "./brand";
+import type { Brand } from "./brand";
 
 export type Path = Brand<string, "Path">;
 

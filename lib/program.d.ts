@@ -1,10 +1,10 @@
-import { Path } from "./path";
-import {
+import type { Path } from "./path";
+import type {
   ModuleProgram as EstreeModuleProgram,
   ScriptProgram as EstreeScriptProgram,
 } from "./estree";
-import { PackMeta } from "./unbuild/meta";
-import { PackScope } from "./unbuild/scope";
+import type { PackMeta } from "./unbuild/meta";
+import type { PackScope } from "./unbuild/scope";
 
 export type GlobalContext = {};
 

@@ -1,7 +1,7 @@
 // 'val' kind is actually only used for callee and not hoisted here.
 // It is however used as a hoist in scope.
 
-import { Source, Specifier, Variable } from "../../estree";
+import type { Source, Specifier, Variable } from "../../estree";
 
 export type DeclareHoist = {
   type: "declare";

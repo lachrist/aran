@@ -1,4 +1,4 @@
-import { Variable } from "../estree.js";
+import type { Variable } from "../estree.js";
 import type { Key } from "./key.js";
 
 export type PropertyName = {

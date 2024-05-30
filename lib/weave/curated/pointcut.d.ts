@@ -1,8 +1,8 @@
-import { Intrinsic, Parameter, RuntimePrimitive } from "../../lang";
-import { DeepLocalContext } from "../../program";
-import { Label, ArgVariable, ResExpression as Expression } from "../atom";
-import { Frame } from "./frame";
-import { BranchKind, Point, PointName } from "./point";
+import type { Intrinsic, Parameter, RuntimePrimitive } from "../../lang";
+import type { DeepLocalContext } from "../../program";
+import type { Label, ArgVariable, ResExpression as Expression } from "../atom";
+import type { Frame } from "./frame";
+import type { BranchKind, Point, PointName } from "./point";
 
 type Variable = ArgVariable | Parameter;
 

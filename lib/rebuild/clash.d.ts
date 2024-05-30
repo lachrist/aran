@@ -1,4 +1,4 @@
-import { Variable } from "../estree";
+import type { Variable } from "../estree";
 
 export type IntrinsicClash = {
   type: "intrinsic";

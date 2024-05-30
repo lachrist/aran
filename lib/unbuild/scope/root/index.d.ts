@@ -1,5 +1,5 @@
-import { Variable } from "../../../estree";
-import { WritableCache } from "../../cache";
+import type { Variable } from "../../../estree";
+import type { WritableCache } from "../../cache";
 
 export type ReifyBinding = {
   type: "reify";

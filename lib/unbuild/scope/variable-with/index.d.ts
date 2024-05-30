@@ -1,4 +1,4 @@
-import { Cache } from "../../cache";
+import type { Cache } from "../../cache";
 
 export type WithFrame = {
   type: "with";

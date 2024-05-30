@@ -2,7 +2,7 @@
 // ParameterHeader //
 /////////////////////
 
-import { PrivateKey, Source, Specifier, Variable } from "./estree";
+import type { PrivateKey, Source, Specifier, Variable } from "./estree";
 
 export type ParameterHeader =
   | {
