@@ -1,4 +1,4 @@
-import { Atom } from "./atom";
+import { Expression } from "./atom";
 
 export type EvalCallee = {
   type: "eval";
@@ -10,8 +10,8 @@ export type SuperCallee = {
 
 export type RegularCallee = {
   type: "regular";
-  function: aran.Expression<Atom>;
-  this: aran.Expression<Atom>;
+  function: Expression;
+  this: Expression;
 };
 
 export type Callee = EvalCallee | SuperCallee | RegularCallee;

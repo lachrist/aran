@@ -1,3 +1,4 @@
+import { Intrinsic, Parameter } from "../../lang";
 import { DeepLocalContext } from "../../program";
 import { Label, ArgVariable } from "../atom";
 import { Frame } from "./frame";
@@ -33,7 +34,7 @@ type Point<V, L> =
   | {
       type: "block.enter";
       frame: Omit<Frame<never>, "record">;
-      record: { [key in ArgVariable | aran.Parameter]: V };
+      record: { [key in ArgVariable | Parameter]: V };
       location: L;
     }
   | {
@@ -78,13 +79,13 @@ type Point<V, L> =
     }
   | {
       type: "read.after";
-      variable: ArgVariable | aran.Parameter;
+      variable: ArgVariable | Parameter;
       value: V;
       location: L;
     }
   | {
       type: "intrinsic.after";
-      name: aran.Intrinsic;
+      name: Intrinsic;
       value: V;
       location: L;
     }
@@ -124,7 +125,7 @@ type Point<V, L> =
     }
   | {
       type: "write.before";
-      variable: ArgVariable | aran.Parameter;
+      variable: ArgVariable | Parameter;
       value: V;
       location: L;
     }

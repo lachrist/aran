@@ -1,4 +1,4 @@
-import { Atom } from "./atom";
+import { Expression } from "./atom";
 
 export type SuperObject = {
   type: "super";
@@ -6,7 +6,7 @@ export type SuperObject = {
 
 export type RegularObject = {
   type: "regular";
-  data: aran.Expression<Atom>;
+  data: Expression;
 };
 
 export type Object = SuperObject | RegularObject;

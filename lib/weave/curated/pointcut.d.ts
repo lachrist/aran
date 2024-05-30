@@ -1,9 +1,10 @@
+import { Intrinsic, Parameter } from "../../lang";
 import { DeepLocalContext } from "../../program";
 import { Label, ArgVariable, ResExpression as Expression } from "../atom";
 import { Frame } from "./frame";
 import { BranchKind, Point, PointName } from "./point";
 
-type Variable = ArgVariable | aran.Parameter;
+type Variable = ArgVariable | Parameter;
 
 export type ObjectPointcut<L> = {
   "block.enter"?:
@@ -41,7 +42,7 @@ export type ObjectPointcut<L> = {
     | ((kind: BranchKind, value: null, location: L) => boolean);
   "intrinsic.after"?:
     | boolean
-    | ((name: aran.Intrinsic, value: null, location: L) => boolean);
+    | ((name: Intrinsic, value: null, location: L) => boolean);
   "primitive.after"?:
     | boolean
     | ((primitive: Primitive, location: L) => boolean);

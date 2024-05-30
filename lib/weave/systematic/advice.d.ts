@@ -9,7 +9,7 @@ import {
   ArgEffect as Effect,
   ArgExpression as Expression,
 } from "../atom";
-import { Parameter } from "../../../type/aran";
+import { Parameter } from "../../lang";
 
 export {
   Variable,

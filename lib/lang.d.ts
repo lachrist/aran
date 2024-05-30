@@ -6,7 +6,7 @@ import {
   ParameterHeader,
   ScopeParameterHeader,
   ThisParameterHeader,
-} from "../lib/header";
+} from "./header";
 
 //////////
 // Atom //
@@ -314,7 +314,7 @@ export type Expression<A extends Atom> =
   // Produce //
   | {
       type: "PrimitiveExpression";
-      primitive: aran.Primitive;
+      primitive: Primitive;
       tag: A["Tag"];
     }
   | {
@@ -405,5 +405,3 @@ export type Node<A extends Atom> =
 type KeyOfUnion<T> = T extends T ? keyof T : never;
 
 export type NodeKey = KeyOfUnion<Node<Atom>>;
-
-export as namespace aran;

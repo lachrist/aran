@@ -6,7 +6,7 @@ import {
   Statement,
   Effect,
   Expression,
-} from "../../type/aran";
+} from "../lang";
 import { Path } from "../path";
 
 export type ArgVariable = Brand<string, "weave.ArgVariable">;

@@ -1,11 +1,11 @@
-import { Atom } from "./atom";
+import { Expression } from "./atom";
 
 export type ArgumentList =
   | {
       type: "spread";
-      values: aran.Expression<Atom>[];
+      values: Expression[];
     }
   | {
       type: "concat";
-      value: aran.Expression<Atom>;
+      value: Expression;
     };

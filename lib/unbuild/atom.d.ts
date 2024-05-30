@@ -1,13 +1,13 @@
 import type { Variable } from "./variable.d.ts";
 import type { Path } from "../path.js";
 import {
-  Program as ProgramGeneric,
-  ControlBlock as ControlBlockGeneric,
-  RoutineBlock as ClosureBlockGeneric,
-  Statement as StatementGeneric,
-  Effect as EffectGeneric,
-  Expression as ExpressionGeneric,
-} from "../../type/aran.js";
+  Program as GenericProgram,
+  ControlBlock as GenericControlBlock,
+  RoutineBlock as GenericRoutineBlock,
+  Statement as GenericStatement,
+  Effect as GenericEffect,
+  Expression as GenericExpression,
+} from "../lang.js";
 
 export type Label = Brand<string, "unbuild.Label">;
 
@@ -19,14 +19,14 @@ export type Atom = {
   Tag: Path;
 };
 
-export type Program = ProgramGeneric<Atom>;
+export type Program = GenericProgram<Atom>;
 
-export type ControlBlock = ControlBlockGeneric<Atom>;
+export type ControlBlock = GenericControlBlock<Atom>;
 
-export type ClosureBlock = ClosureBlockGeneric<Atom>;
+export type RoutineBlock = GenericRoutineBlock<Atom>;
 
-export type Statement = StatementGeneric<Atom>;
+export type Statement = GenericStatement<Atom>;
 
-export type Effect = EffectGeneric<Atom>;
+export type Effect = GenericEffect<Atom>;
 
-export type Expression = ExpressionGeneric<Atom>;
+export type Expression = GenericExpression<Atom>;

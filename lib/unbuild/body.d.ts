@@ -1,10 +1,10 @@
-import { Atom } from "./atom";
+// import { Expression, Statement } from "./atom";
 
-export type ClosureBody<A extends Atom> = {
-  content: aran.Statement<A>[];
-  completion: aran.Expression<A>;
-};
+// export type ClosureBody = {
+//   content: Statement[];
+//   completion: Expression;
+// };
 
-export type ControlBody<A extends Atom> = {
-  content: aran.Statement<A>[];
-};
+// export type ControlBody = {
+//   content: Statement[];
+// };

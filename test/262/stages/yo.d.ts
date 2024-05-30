@@ -1,7 +1,7 @@
-import type { Label, Variable } from "../../../type/aran.d.ts";
+import type { Label, Variable } from "../../../lib/lang.js";
 import type { Advice as GenericAdvice } from "../../../lib/weave/systematic/advice.js";
 
-export type { Parameter, Label, Variable } from "../../../type/aran.d.ts";
+export type { Parameter, Label, Variable } from "../../../lib/lang.js";
 
 export type Value = Brand<unknown, "Value">;
 

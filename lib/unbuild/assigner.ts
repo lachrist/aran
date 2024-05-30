@@ -1,9 +1,9 @@
-import { Atom } from "./atom";
+import { Expression } from "./atom";
 
 export type Assigner = {
   result: "old" | "new" | "discard";
   operator: estree.BinaryOperator | estree.LogicalOperator;
-  increment: aran.Expression<Atom> | null;
+  increment: Expression | null;
 };
 
 export type ExpressionAssigner = Assigner & { result: "old" | "new" };

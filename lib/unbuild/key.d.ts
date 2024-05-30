@@ -1,11 +1,11 @@
-import { Atom } from "./atom";
+import { Expression } from "./atom";
 
 export type PublicKey =
   | {
       computed: true;
       access: "public";
       converted: boolean;
-      data: aran.Expression<Atom>;
+      data: Expression;
     }
   | {
       computed: false;

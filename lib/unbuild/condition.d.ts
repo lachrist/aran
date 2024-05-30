@@ -1,6 +1,6 @@
-import { Atom } from "./atom";
+import { Expression } from "./atom";
 
 export type Condition = {
-  test: aran.Expression<Atom>;
-  exit: aran.Expression<Atom>;
+  test: Expression;
+  exit: Expression;
 };

@@ -1,4 +1,4 @@
-import { Intrinsic } from "../../../type/aran";
+import { Intrinsic } from "../../../lib/lang";
 import {
   ObjectPointcut as GenericPointcut,
   ObjectAdvice as GenericAdvice,

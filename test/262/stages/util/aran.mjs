@@ -48,7 +48,7 @@ const setup = generate(compileSetup({ global_variable, intrinsic_variable }));
  * @type {(
  *   makeAdvice: (options: {
  *     reject: (error: Error) => void,
- *     intrinsic: import("../../../../type/aran").IntrinsicRecord,
+ *     intrinsic: import("../../../../lib/lang").IntrinsicRecord,
  *     instrument: (
  *       code: string,
  *       context: null |  import("../../../../lib/program").DeepLocalContext,
@@ -72,7 +72,7 @@ export const compileCompileAranInstrument =
   ({ reject, record, warning, context }) => {
     let counter = 0;
     const intrinsic =
-      /** @type {import("../../../../type/aran").IntrinsicRecord} */ (
+      /** @type {import("../../../../lib/lang").IntrinsicRecord} */ (
         runInContext(setup, context)
       );
     const advice = makeAdvice({

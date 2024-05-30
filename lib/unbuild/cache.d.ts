@@ -1,3 +1,4 @@
+import { Intrinsic, Primitive } from "../lang";
 import { ConstantMetaVariable, WritableMetaVariable } from "./variable";
 
 export type WritableCache = {
@@ -12,11 +13,11 @@ export type ConstantCache =
     }
   | {
       type: "primitive";
-      primitive: aran.Primitive;
+      primitive: Primitive;
     }
   | {
       type: "intrinsic";
-      intrinsic: aran.Intrinsic;
+      intrinsic: Intrinsic;
     };
 
 export type Cache = WritableCache | ConstantCache;
