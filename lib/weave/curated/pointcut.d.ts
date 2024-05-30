@@ -7,46 +7,46 @@ import type { BranchKind, Point, PointName } from "./point";
 type Variable = ArgVariable | Parameter;
 
 export type ObjectPointcut<L> = {
-  "block.enter"?:
+  "block@enter"?:
     | boolean
     | (<B extends Frame<null>>(
         frame: Omit<B, "record">,
         record: { [key in keyof B["record"]]: null },
         location: L,
       ) => boolean);
-  "block.completion"?:
+  "block@completion"?:
     | boolean
     | ((
         frame: Omit<Frame<never>, "record">,
         value: null,
         location: L,
       ) => boolean);
-  "block.failure"?:
+  "block@failure"?:
     | boolean
     | ((
         frame: Omit<Frame<never>, "record">,
         value: null,
         location: L,
       ) => boolean);
-  "block.leave"?:
+  "block@leave"?:
     | boolean
     | ((frame: Omit<Frame<never>, "record">, location: L) => boolean);
-  "debugger.before"?: boolean | ((location: L) => boolean);
-  "debugger.after"?: boolean | ((location: L) => boolean);
-  "break.before"?: boolean | ((label: Label, location: L) => boolean);
-  "branch.before"?:
+  "debugger@before"?: boolean | ((location: L) => boolean);
+  "debugger@after"?: boolean | ((location: L) => boolean);
+  "break@before"?: boolean | ((label: Label, location: L) => boolean);
+  "branch@before"?:
     | boolean
     | ((kind: BranchKind, value: null, location: L) => boolean);
-  "branch.after"?:
+  "branch@after"?:
     | boolean
     | ((kind: BranchKind, value: null, location: L) => boolean);
-  "intrinsic.after"?:
+  "intrinsic@after"?:
     | boolean
     | ((name: Intrinsic, value: null, location: L) => boolean);
-  "primitive.after"?:
+  "primitive@after"?:
     | boolean
     | ((primitive: RuntimePrimitive, location: L) => boolean);
-  "import.after"?:
+  "import@after"?:
     | boolean
     | ((
         source: string,
@@ -54,7 +54,7 @@ export type ObjectPointcut<L> = {
         value: null,
         location: L,
       ) => boolean);
-  "closure.after"?:
+  "closure@after"?:
     | boolean
     | ((
         kind: "arrow" | "function",
@@ -63,33 +63,33 @@ export type ObjectPointcut<L> = {
         closure: null,
         location: L,
       ) => boolean);
-  "read.after"?:
+  "read@after"?:
     | boolean
     | ((variable: Variable, value: null, location: L) => boolean);
-  "eval.before"?:
+  "eval@before"?:
     | boolean
     | ((value: null, context: DeepLocalContext, location: L) => boolean);
-  "eval.after"?: boolean | ((value: null, location: L) => boolean);
-  "await.before"?: boolean | ((value: null, location: L) => boolean);
-  "await.after"?: boolean | ((value: null, location: L) => boolean);
-  "yield.before"?:
+  "eval@after"?: boolean | ((value: null, location: L) => boolean);
+  "await@before"?: boolean | ((value: null, location: L) => boolean);
+  "await@after"?: boolean | ((value: null, location: L) => boolean);
+  "yield@before"?:
     | boolean
     | ((delegate: boolean, value: null, location: L) => boolean);
-  "yield.after"?:
+  "yield@after"?:
     | boolean
     | ((delegate: boolean, value: null, location: L) => boolean);
-  "drop.before"?: boolean | ((value: null, location: L) => boolean);
-  "export.before"?:
+  "drop@before"?: boolean | ((value: null, location: L) => boolean);
+  "export@before"?:
     | boolean
     | ((specifier: string, value: null, location: L) => boolean);
-  "write.before"?:
+  "write@before"?:
     | boolean
     | ((variable: Variable, value: null, location: L) => boolean);
-  "return.before"?: boolean | ((value: null, location: L) => boolean);
-  "apply"?:
+  "return@before"?: boolean | ((value: null, location: L) => boolean);
+  "apply@around"?:
     | boolean
     | ((callee: null, this_: null, arguments_: null[], location: L) => boolean);
-  "construct"?:
+  "construct@around"?:
     | boolean
     | ((callee: null, arguments_: null[], location: L) => boolean);
 };

@@ -32,40 +32,40 @@ type Point<V, L> =
   //////////////
   // Frame //
   | {
-      type: "block.enter";
+      type: "block@enter";
       frame: Omit<Frame<never>, "record">;
       record: { [key in ArgVariable | Parameter]: V };
       location: L;
     }
   | {
-      type: "block.completion";
+      type: "block@completion";
       frame: Omit<Frame<never>, "record">;
       value: V;
       location: L;
     }
   | {
-      type: "block.failure";
+      type: "block@failure";
       frame: Omit<Frame<never>, "record">;
       value: V;
       location: L;
     }
   | {
-      type: "block.leave";
+      type: "block@leave";
       frame: Omit<Frame<never>, "record">;
       location: L;
     }
   // Debugger //
   | {
-      type: "debugger.before";
+      type: "debugger@before";
       location: L;
     }
   | {
-      type: "debugger.after";
+      type: "debugger@after";
       location: L;
     }
   // Break //
   | {
-      type: "break.before";
+      type: "break@before";
       label: Label;
       location: L;
     }
@@ -73,31 +73,31 @@ type Point<V, L> =
   // Pure Producer //
   ///////////////////
   | {
-      type: "primitive.after";
+      type: "primitive@after";
       value: null | boolean | number | string | bigint;
       location: L;
     }
   | {
-      type: "read.after";
+      type: "read@after";
       variable: ArgVariable | Parameter;
       value: V;
       location: L;
     }
   | {
-      type: "intrinsic.after";
+      type: "intrinsic@after";
       name: Intrinsic;
       value: V;
       location: L;
     }
   | {
-      type: "import.after";
+      type: "import@after";
       source: string;
       specifier: string | null;
       value: V;
       location: L;
     }
   | {
-      type: "closure.after";
+      type: "closure@after";
       kind: "arrow" | "function";
       asynchronous: boolean;
       generator: boolean;
@@ -108,23 +108,23 @@ type Point<V, L> =
   // Pure Consumers //
   ////////////////////
   | {
-      type: "return.before";
+      type: "return@before";
       value: V;
       location: L;
     }
   | {
-      type: "drop.before";
+      type: "drop@before";
       value: V;
       location: L;
     }
   | {
-      type: "export.before";
+      type: "export@before";
       specifier: string;
       value: V;
       location: L;
     }
   | {
-      type: "write.before";
+      type: "write@before";
       variable: ArgVariable | Parameter;
       value: V;
       location: L;
@@ -134,49 +134,49 @@ type Point<V, L> =
   ////////////////////
   // Branch //
   | {
-      type: "branch.before";
+      type: "branch@before";
       kind: BranchKind;
       value: V;
       location: L;
     }
   | {
-      type: "branch.after";
+      type: "branch@after";
       kind: BranchKind;
       value: V;
       location: L;
     }
   // Eval //
   | {
-      type: "eval.before";
+      type: "eval@before";
       value: V;
       context: DeepLocalContext;
       location: L;
     }
   | {
-      type: "eval.after";
+      type: "eval@after";
       value: V;
       location: L;
     }
   // Await //
   | {
-      type: "await.before";
+      type: "await@before";
       value: V;
       location: L;
     }
   | {
-      type: "await.after";
+      type: "await@after";
       value: V;
       location: L;
     }
   // Yield //
   | {
-      type: "yield.before";
+      type: "yield@before";
       delegate: boolean;
       value: V;
       location: L;
     }
   | {
-      type: "yield.after";
+      type: "yield@after";
       delegate: boolean;
       value: V;
       location: L;
@@ -185,14 +185,14 @@ type Point<V, L> =
   // Combiner //
   //////////////
   | {
-      type: "apply";
+      type: "apply@around";
       callee: V;
       this: V;
       arguments: V[];
       location: L;
     }
   | {
-      type: "construct";
+      type: "construct@around";
       callee: V;
       arguments: V[];
       location: L;
