@@ -1,4 +1,5 @@
 import type * as estree from "../node_modules/@types/estree/index.d.ts";
+import { Brand } from "./brand.js";
 
 export type VariableKind = "var" | "function" | "let" | "const" | "class";
 

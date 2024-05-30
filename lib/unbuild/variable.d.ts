@@ -1,3 +1,5 @@
+import { Brand } from "../brand";
+
 export type BaseVariable = Brand<string, "unbuild.BaseVariable">;
 
 export type ConstantMetaVariable = Brand<

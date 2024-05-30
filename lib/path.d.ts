@@ -1,3 +1,5 @@
+import { Brand } from "./brand";
+
 export type Path = Brand<string, "Path">;
 
 export type Segment =

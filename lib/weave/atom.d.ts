@@ -1,3 +1,4 @@
+import { Brand } from "../brand";
 import { Source, Specifier } from "../estree";
 import {
   Node,
