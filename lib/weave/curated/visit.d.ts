@@ -1,11 +1,11 @@
 import type { DeepLocalContext } from "../../program.d.ts";
-import { OriginPath } from "../atom.js";
+import { Path } from "../../path.js";
 import { Pointcut } from "./pointcut.js";
 
 export type Options<L> = {
-  evals: { [k in OriginPath]?: DeepLocalContext };
+  evals: { [k in Path]?: DeepLocalContext };
   pointcut: Pointcut<L>;
-  locate: (path: OriginPath) => L;
+  locate: (path: Path) => L;
   advice: {
     kind: "object" | "function";
     variable: estree.Variable;

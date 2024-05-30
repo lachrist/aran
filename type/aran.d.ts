@@ -20,22 +20,6 @@ export type Atom = {
   Tag: unknown;
 };
 
-export type Variable = Brand<string, "Variable">;
-
-export type Label = Brand<string, "Label">;
-
-export type Source = Brand<string, "Source">;
-
-export type Specifier = Brand<string, "Specifier">;
-
-export type BrandAtom<T> = {
-  Label: Label;
-  Variable: Variable;
-  Source: Source;
-  Specifier: Specifier;
-  Tag: T;
-};
-
 ///////////////
 // Component //
 ///////////////

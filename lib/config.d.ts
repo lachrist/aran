@@ -1,7 +1,7 @@
-import { OriginPath } from "./weave/atom";
+import { Path } from "./path";
 import { Pointcut } from "./weave/curated/pointcut";
 
-export type Locate<L> = (path: OriginPath) => L;
+export type Locate<L> = (path: Path) => L;
 
 export type Config<L> = {
   mode: "normal" | "standalone";

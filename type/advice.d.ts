@@ -9,7 +9,6 @@ import {
   Program as GenericProgram,
   Statement as GenericStatement,
   Parameter,
-  BrandAtom,
 } from "./aran";
 
 export type Path = Brand<string, "Path">;

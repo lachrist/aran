@@ -7,6 +7,7 @@ import {
   Effect,
   Expression,
 } from "../../type/aran";
+import { Path } from "../path";
 
 export type ArgVariable = Brand<string, "weave.ArgVariable">;
 
@@ -14,15 +15,12 @@ export type ResVariable = Brand<string, "weave.ResVariable">;
 
 export type Label = Brand<string, "weave.ArgLabel">;
 
-export type OriginPath = Brand<string, "weave.OriginPath">;
-
 export type ArgAtom = {
   Label: Label;
   Source: estree.Source;
   Specifier: estree.Specifier;
   Variable: ArgVariable;
-  GlobalVariable: estree.Variable;
-  Tag: OriginPath;
+  Tag: Path;
 };
 
 export type ResAtom = {
@@ -30,7 +28,6 @@ export type ResAtom = {
   Source: estree.Source;
   Specifier: estree.Specifier;
   Variable: ResVariable;
-  GlobalVariable: estree.Variable;
   Tag: null;
 };
 
