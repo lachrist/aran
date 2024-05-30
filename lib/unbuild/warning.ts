@@ -1,3 +1,5 @@
+import { Path } from "../path";
+
 export type WarningName =
   | "ExternalConstant"
   | "ExternalDeadzone"
@@ -16,5 +18,5 @@ export type WarningName =
 export type Warning = {
   name: WarningName;
   message: string;
-  path: unbuild.Path;
+  path: Path;
 };

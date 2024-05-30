@@ -11,8 +11,6 @@ import {
 
 export type Label = Brand<string, "unbuild.Label">;
 
-export type { Path } from "../path.js";
-
 export type Atom = {
   Label: Label;
   Source: estree.Source;

@@ -1,4 +1,4 @@
-import { Atom } from "../../type/unbuild";
+import { Atom } from "./atom";
 
 export type ClosureBody<A extends Atom> = {
   content: aran.Statement<A>[];

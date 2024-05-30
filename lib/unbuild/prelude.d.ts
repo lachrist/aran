@@ -6,6 +6,8 @@ import { DeepLocalContext } from "../program";
 import { BaseVariable, MetaVariable } from "./variable";
 import { Template } from "./template";
 import { Intrinsic } from "../../type/aran";
+import { Path } from "../path";
+import { Atom } from "./atom";
 
 export type WarningPrelude = {
   type: "warning";
@@ -14,7 +16,7 @@ export type WarningPrelude = {
 
 export type ContextPrelude = {
   type: "context";
-  data: [unbuild.Path, DeepLocalContext];
+  data: [Path, DeepLocalContext];
 };
 
 export type HeaderPrelude = {
@@ -48,7 +50,7 @@ export type DeclarationPrelude =
 
 export type PrefixPrelude = {
   type: "prefix";
-  data: aran.Effect<unbuild.Atom>;
+  data: aran.Effect<Atom>;
 };
 
 export type ConditionPrelude = {
