@@ -1,5 +1,5 @@
 import { PrivateKey, Variable } from "../../estree";
-import { Atom, Expression } from "../atom";
+import { Expression } from "../atom";
 
 export { RootFrame } from "./root";
 

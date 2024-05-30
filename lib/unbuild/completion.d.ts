@@ -1,12 +1,4 @@
-import {
-  SwitchCase,
-  CatchClause,
-  Directive,
-  Expression,
-  ModuleDeclaration,
-  Statement,
-  Program,
-} from "estree";
+import { Expression, Program } from "estree";
 import { Path } from "../path.js";
 import type { WritableCache } from "./cache.js";
 import { Site } from "./site.js";

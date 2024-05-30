@@ -7,7 +7,7 @@ import { BaseVariable, MetaVariable } from "./variable";
 import { Template } from "./template";
 import { Intrinsic } from "../lang";
 import { Path } from "../path";
-import { Atom, Effect } from "./atom";
+import { Effect } from "./atom";
 
 export type WarningPrelude = {
   type: "warning";

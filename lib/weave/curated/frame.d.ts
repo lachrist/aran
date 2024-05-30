@@ -1,9 +1,7 @@
 import {
   DeclareHeader,
-  Header,
   ScopeParameterHeader,
   ModuleProgramHeader,
-  PrivateParameterHeader,
   ParameterHeader,
   ThisParameterHeader,
   ImportMetaParameterHeader,

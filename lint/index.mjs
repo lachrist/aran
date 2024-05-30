@@ -1,4 +1,5 @@
 import Local from "./local/index.mjs";
+import tseslint from "typescript-eslint";
 
 /** @type {import("eslint").Linter.FlatConfig} */
 const config = {
@@ -118,6 +119,32 @@ export default [
       "local/no-static-dependency": "off",
       "local/no-impure": "off",
       "local/no-method-call": "off",
+    },
+  },
+  {
+    files: ["lib/**/*.d.ts"],
+    plugins: {
+      "@typescript-eslint": /** @type {any} */ (tseslint.plugin),
+    },
+    languageOptions: {
+      parser: /** @type {any} */ (tseslint.parser),
+      parserOptions: {
+        project: true,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          args: "all",
+          argsIgnorePattern: "^_",
+          caughtErrors: "all",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
     },
   },
 ];

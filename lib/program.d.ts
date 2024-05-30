@@ -2,7 +2,6 @@ import { Path } from "./path";
 import {
   ModuleProgram as EstreeModuleProgram,
   ScriptProgram as EstreeScriptProgram,
-  Program as EstreeProgram,
 } from "./estree";
 import { PackMeta } from "./unbuild/meta";
 import { PackScope } from "./unbuild/scope";
