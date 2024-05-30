@@ -11,6 +11,7 @@ import {
   ArgExpression as Expression,
 } from "../atom";
 import { Parameter } from "../../lang";
+import { Json } from "../../json";
 
 export {
   Variable,

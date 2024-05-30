@@ -7,6 +7,7 @@ import {
   ArgStatement,
 } from "../atom";
 import { Variable } from "../../estree";
+import { Json } from "../../json";
 
 export type BlockPointcut = Pointcut<Json[], ArgControlBlock | ArgRoutineBlock>;
 
