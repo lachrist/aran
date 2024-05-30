@@ -11,18 +11,6 @@ import { Path } from "../path.js";
 import type { WritableCache } from "./cache.js";
 import { Site } from "./site.js";
 
-export type CompletionNode =
-  | Statement
-  | Directive
-  | ModuleDeclaration
-  | CatchClause
-  | SwitchCase;
-
-export type CompletionResult = {
-  last: boolean;
-  paths: Path[];
-};
-
 export type VoidCompletion = {
   type: "void";
 };
