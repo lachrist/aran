@@ -1,4 +1,9 @@
 import { Path } from "./path";
+import {
+  ModuleProgram as EstreeModuleProgram,
+  ScriptProgram as EstreeScriptProgram,
+  Program as EstreeProgram,
+} from "./estree";
 import { PackMeta } from "./unbuild/meta";
 import { PackScope } from "./unbuild/scope";
 
@@ -25,35 +30,35 @@ export type Program =
       kind: "module";
       situ: "global";
       path: Path;
-      root: estree.ModuleProgram | EarlySyntaxError;
+      root: EstreeModuleProgram | EarlySyntaxError;
       context: GlobalContext;
     }
   | {
       kind: "script";
       situ: "global";
       path: Path;
-      root: estree.ScriptProgram | EarlySyntaxError;
+      root: EstreeScriptProgram | EarlySyntaxError;
       context: GlobalContext;
     }
   | {
       kind: "eval";
       situ: "global";
       path: Path;
-      root: estree.ScriptProgram | EarlySyntaxError;
+      root: EstreeScriptProgram | EarlySyntaxError;
       context: GlobalContext;
     }
   | {
       kind: "eval";
       situ: "local.deep";
       path: Path;
-      root: estree.ScriptProgram | EarlySyntaxError;
+      root: EstreeScriptProgram | EarlySyntaxError;
       context: DeepLocalContext;
     }
   | {
       kind: "eval";
       situ: "local.root";
       path: Path;
-      root: estree.ScriptProgram | EarlySyntaxError;
+      root: EstreeScriptProgram | EarlySyntaxError;
       context: RootLocalContext;
     };
 

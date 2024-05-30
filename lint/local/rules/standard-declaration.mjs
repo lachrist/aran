@@ -1,7 +1,7 @@
-/** @type {(declarator: estree.VariableDeclarator) => boolean} */
+/** @type {(declarator: import("estree").VariableDeclarator) => boolean} */
 const hasInit = ({ init }) => init != null;
 
-/** @type {(declarator: estree.VariableDeclarator) => boolean} */
+/** @type {(declarator: import("estree").VariableDeclarator) => boolean} */
 const doesNotHaveInit = ({ init }) => init == null;
 
 /**

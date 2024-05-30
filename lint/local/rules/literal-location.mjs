@@ -4,7 +4,7 @@ import { listCommentBefore, parseSimpleTypeAnnotation } from "../comment.mjs";
 const { JSON } = globalThis;
 
 /**
- * @type {(comment: estree.Comment) => boolean}
+ * @type {(comment: import("estree").Comment) => boolean}
  */
 const isLocationComment = (comment) =>
   comment.type === "Block" &&

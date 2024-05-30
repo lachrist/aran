@@ -6,6 +6,7 @@ import {
   ArgRoutineBlock,
   ArgStatement,
 } from "../atom";
+import { Variable } from "../../estree";
 
 export type BlockPointcut = Pointcut<Json[], ArgControlBlock | ArgRoutineBlock>;
 
@@ -31,20 +32,20 @@ export type ConstructExpressionPointcut = Pointcut<
 >;
 
 export type AspectPointcut = {
-  "block@setup": [estree.Variable, BlockPointcut][];
-  "block@frame": [estree.Variable, BlockPointcut][];
-  "block@overframe": [estree.Variable, BlockPointcut][];
-  "block@before": [estree.Variable, BlockPointcut][];
-  "block@after": [estree.Variable, BlockPointcut][];
-  "block@failure": [estree.Variable, BlockPointcut][];
-  "block@teardown": [estree.Variable, BlockPointcut][];
-  "statement@before": [estree.Variable, StatementPointcut][];
-  "statement@after": [estree.Variable, StatementPointcut][];
-  "effect@before": [estree.Variable, EffectPointcut][];
-  "effect@after": [estree.Variable, EffectPointcut][];
-  "expression@before": [estree.Variable, ExpressionPointcut][];
-  "expression@after": [estree.Variable, ExpressionPointcut][];
-  "eval@before": [estree.Variable, EvalExpressionPointcut][];
-  "apply@around": [estree.Variable, ApplyExpressionPointcut][];
-  "construct@around": [estree.Variable, ConstructExpressionPointcut][];
+  "block@setup": [Variable, BlockPointcut][];
+  "block@frame": [Variable, BlockPointcut][];
+  "block@overframe": [Variable, BlockPointcut][];
+  "block@before": [Variable, BlockPointcut][];
+  "block@after": [Variable, BlockPointcut][];
+  "block@failure": [Variable, BlockPointcut][];
+  "block@teardown": [Variable, BlockPointcut][];
+  "statement@before": [Variable, StatementPointcut][];
+  "statement@after": [Variable, StatementPointcut][];
+  "effect@before": [Variable, EffectPointcut][];
+  "effect@after": [Variable, EffectPointcut][];
+  "expression@before": [Variable, ExpressionPointcut][];
+  "expression@after": [Variable, ExpressionPointcut][];
+  "eval@before": [Variable, EvalExpressionPointcut][];
+  "apply@around": [Variable, ApplyExpressionPointcut][];
+  "construct@around": [Variable, ConstructExpressionPointcut][];
 };

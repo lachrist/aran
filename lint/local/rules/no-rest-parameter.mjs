@@ -1,4 +1,4 @@
-/** @type {(node: estree.Pattern) => boolean} */
+/** @type {(node: import("estree").Pattern) => boolean} */
 const isRestParameter = ({ type }) => type === "RestElement";
 
 /**
@@ -17,7 +17,7 @@ export default {
     },
   },
   create: (context) => {
-    /** @type {(node: estree.Function) => void} */
+    /** @type {(node: import("estree").Function) => void} */
     const reportRestParameter = (node) => {
       if (node.params.some(isRestParameter)) {
         context.report({

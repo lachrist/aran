@@ -1,6 +1,6 @@
 import { isNextMetaAssignment } from "../site.mjs";
 
-/** @type {(node: estree.ExpressionStatement) => boolean} */
+/** @type {(node: import("estree").ExpressionStatement) => boolean} */
 const isConsoleStatement = (node) =>
   node.expression.type === "CallExpression" &&
   node.expression.callee.type === "MemberExpression" &&
@@ -23,7 +23,7 @@ export default {
     },
   },
   create: (context) => {
-    /** @type {(node: estree.Node) => void} */
+    /** @type {(node: import("estree").Node) => void} */
     const reportImpure = (node) => {
       context.report({
         node,

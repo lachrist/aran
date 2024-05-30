@@ -1,6 +1,6 @@
 /**
  * @type {(
- *   node: estree.AssignmentExpression,
+ *   node: import("estree").AssignmentExpression,
  * ) => boolean}
  */
 export const isNextMetaAssignment = (node) =>

@@ -1,11 +1,13 @@
+import { Source, Specifier, Variable } from "../../../estree";
+
 export type ExternalBinding = {
   kind: "external";
   deadzone: null;
   writable: false;
-  export: estree.Specifier[];
+  export: Specifier[];
   import: {
-    source: estree.Source;
-    specifier: estree.Specifier | null;
+    source: Source;
+    specifier: Specifier | null;
   };
 };
 
@@ -13,7 +15,7 @@ export type InternalBinding = {
   kind: "internal";
   deadzone: boolean;
   writable: boolean;
-  export: estree.Specifier[];
+  export: Specifier[];
   import: null;
 };
 
@@ -21,5 +23,5 @@ export type RegularBinding = ExternalBinding | InternalBinding;
 
 export type RegularFrame = {
   type: "regular";
-  record: { [k in estree.Variable]?: RegularBinding };
+  record: { [k in Variable]?: RegularBinding };
 };

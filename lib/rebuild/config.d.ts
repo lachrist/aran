@@ -1,6 +1,8 @@
+import { Variable } from "../estree";
+
 export type Config = {
   mode: "normal" | "standalone";
-  global_variable: estree.Variable;
-  intrinsic_variable: estree.Variable;
-  escape_prefix: estree.Variable;
+  global_variable: Variable;
+  intrinsic_variable: Variable;
+  escape_prefix: Variable;
 };

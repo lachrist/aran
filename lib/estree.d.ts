@@ -1,3 +1,5 @@
+import type * as estree from "../node_modules/@types/estree/index.d.ts";
+
 export type VariableKind = "var" | "function" | "let" | "const" | "class";
 
 export type Variable = Brand<string, "estree.Variable">;
@@ -39,5 +41,3 @@ export type ProtoProperty = estree.Property & {
   );
 
 export type * from "../node_modules/@types/estree/index.d.ts";
-
-export as namespace estree;

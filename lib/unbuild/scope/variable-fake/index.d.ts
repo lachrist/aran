@@ -1,10 +1,11 @@
+import { Variable } from "../../../estree";
 import { WritableCache } from "../../cache";
 
 export type FakeKind = "let" | "const" | "var" | "val";
 
 export type FakeHoist = {
   kind: FakeKind;
-  variable: estree.Variable;
+  variable: Variable;
 };
 
 export type FakeBinding = {
@@ -14,5 +15,5 @@ export type FakeBinding = {
 
 export type FakeFrame = {
   type: "fake";
-  record: { [k in estree.Variable]?: FakeBinding };
+  record: { [k in Variable]?: FakeBinding };
 };

@@ -8,13 +8,14 @@ import {
   Effect as GenericEffect,
   Expression as GenericExpression,
 } from "../lang.js";
+import { Source, Specifier } from "../estree.js";
 
 export type Label = Brand<string, "unbuild.Label">;
 
 export type Atom = {
   Label: Label;
-  Source: estree.Source;
-  Specifier: estree.Specifier;
+  Source: Source;
+  Specifier: Specifier;
   Variable: Variable;
   Tag: Path;
 };

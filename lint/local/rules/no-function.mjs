@@ -14,7 +14,7 @@ export default {
     },
   },
   create: (context) => {
-    /** @type {(node: estree.Function) => void} */
+    /** @type {(node: import("estree").Function) => void} */
     const reportFunction = (node) => {
       context.report({ node, message: "functions are forbidden" });
     };

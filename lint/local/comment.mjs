@@ -2,7 +2,7 @@
  * @type {(
  *   node: import("eslint").Rule.Node,
  *   source: import("eslint").SourceCode,
- * ) => estree.Comment[]}
+ * ) => import("estree").Comment[]}
  */
 export const listCommentBefore = (node, source) => {
   const token = source.getTokenBefore(node);

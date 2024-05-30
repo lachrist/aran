@@ -3,7 +3,7 @@ const { Error } = globalThis;
 /**
  * @type {(
  *   context: import("eslint").Rule.RuleContext,
- *   source: estree.Literal,
+ *   source: import("estree").Literal,
  * ) => void}
  */
 const checkSource = (context, node) => {

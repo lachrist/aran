@@ -2,24 +2,26 @@
 // ParameterHeader //
 /////////////////////
 
+import { PrivateKey, Source, Specifier, Variable } from "./estree";
+
 export type ParameterHeader =
   | {
       type: "parameter";
       mode: "strict";
       parameter: "private.get" | "private.set" | "private.has";
-      payload: estree.PrivateKey;
+      payload: PrivateKey;
     }
   | {
       type: "parameter";
       mode: "strict" | "sloppy";
       parameter: "scope.read" | "scope.write" | "scope.typeof";
-      payload: estree.Variable;
+      payload: Variable;
     }
   | {
       type: "parameter";
       mode: "sloppy";
       parameter: "scope.discard";
-      payload: estree.Variable;
+      payload: Variable;
     }
   | {
       type: "parameter";
@@ -83,7 +85,7 @@ export type DeclareHeader = {
   type: "declare";
   mode: "strict" | "sloppy";
   kind: "let" | "var";
-  variable: estree.Variable;
+  variable: Variable;
 };
 
 //////////////////
@@ -93,28 +95,28 @@ export type DeclareHeader = {
 export type ImportHeader = {
   type: "import";
   mode: "strict";
-  source: estree.Source;
-  import: estree.Specifier | null;
+  source: Source;
+  import: Specifier | null;
 };
 
 export type ExportHeader = {
   type: "export";
   mode: "strict";
-  export: estree.Specifier;
+  export: Specifier;
 };
 
 export type AggregateHeader =
   | {
       type: "aggregate";
       mode: "strict";
-      source: estree.Source;
-      import: estree.Specifier | null;
-      export: estree.Specifier;
+      source: Source;
+      import: Specifier | null;
+      export: Specifier;
     }
   | {
       type: "aggregate";
       mode: "strict";
-      source: estree.Source;
+      source: Source;
       import: null;
       export: null;
     };

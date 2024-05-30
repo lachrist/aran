@@ -3,7 +3,7 @@ import { listCommentBefore, parseSimpleTypeAnnotation } from "../comment.mjs";
 const { RegExp, JSON, Error } = globalThis;
 
 /**
- * @type {(comment: estree.Comment) => boolean}
+ * @type {(comment: import("estree").Comment) => boolean}
  */
 const isNameComment = (comment) =>
   comment.type === "Block" &&

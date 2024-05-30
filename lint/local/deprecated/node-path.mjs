@@ -4,7 +4,7 @@ const { Error, String } = globalThis;
 const RuleError = class extends Error {};
 
 /**
- * @type {(node: estree.MemberExpression) => string}
+ * @type {(node: import("estree").MemberExpression) => string}
  */
 const extracStatictKey = (node) => {
   if (node.computed) {
@@ -24,7 +24,7 @@ const extracStatictKey = (node) => {
 };
 
 /**
- * @type {(node: estree.Node) => string}
+ * @type {(node: import("estree").Node) => string}
  */
 const extractRootName = (node) => {
   if (node.type === "Identifier") {
@@ -35,7 +35,7 @@ const extractRootName = (node) => {
 };
 
 /**
- * @type {(node: estree.Node) => { root: estree.Node, tail: string }}
+ * @type {(node: import("estree").Node) => { root: import("estree").Node, tail: string }}
  */
 const parseNode = (node) => {
   let current = node;
@@ -55,7 +55,7 @@ const parseNode = (node) => {
 };
 
 /**
- * @type {(node: estree.Node) => { root: estree.Node, tail: string }}
+ * @type {(node: import("estree").Node) => { root: import("estree").Node, tail: string }}
  */
 const parsePath = (node) => {
   if (node.type === "TemplateLiteral") {

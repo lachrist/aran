@@ -1,3 +1,4 @@
+import { Key as EstreeKey, PrivateKey as EstreePrivateKey } from "../estree";
 import { Expression } from "./atom";
 
 export type PublicKey =
@@ -11,14 +12,14 @@ export type PublicKey =
       computed: false;
       access: "public";
       converted: true;
-      data: estree.Key;
+      data: EstreeKey;
     };
 
 export type PrivateKey = {
   computed: false;
   access: "private";
   converted: true;
-  data: estree.PrivateKey;
+  data: EstreePrivateKey;
 };
 
 export type Key = PublicKey | PrivateKey;

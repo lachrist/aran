@@ -1,4 +1,4 @@
-/** @type {(node: estree.Pattern) => boolean} */
+/** @type {(node: import("estree").Pattern) => boolean} */
 const isOptionalParameter = ({ type }) => type === "AssignmentPattern";
 
 /**
@@ -17,7 +17,7 @@ export default {
     },
   },
   create: (context) => {
-    /** @type {(node: estree.Function) => void} */
+    /** @type {(node: import("estree").Function) => void} */
     const reportOptionalParameter = (node) => {
       if (node.params.some(isOptionalParameter)) {
         context.report({

@@ -1,8 +1,9 @@
+import { BinaryOperator, LogicalOperator } from "../estree";
 import { Expression } from "./atom";
 
 export type Assigner = {
   result: "old" | "new" | "discard";
-  operator: estree.BinaryOperator | estree.LogicalOperator;
+  operator: BinaryOperator | LogicalOperator;
   increment: Expression | null;
 };
 

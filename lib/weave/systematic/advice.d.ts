@@ -1,4 +1,5 @@
 import { DeepLocalContext } from "../../program";
+import { Variable as EstreeVariable } from "../../estree";
 import {
   ArgVariable as Variable,
   ArgNode as Node,
@@ -146,4 +147,4 @@ export type EmptyAdvice =
       pointcut: Pointcut<Json[], Expression & { type: "ConstructExpression" }>;
     };
 
-export type EmptyAspect = [estree.Variable, EmptyAdvice][];
+export type EmptyAspect = [EstreeVariable, EmptyAdvice][];

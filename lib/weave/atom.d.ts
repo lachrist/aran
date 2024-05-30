@@ -1,3 +1,4 @@
+import { Source, Specifier } from "../estree";
 import {
   Node,
   Program,
@@ -17,16 +18,16 @@ export type Label = Brand<string, "weave.ArgLabel">;
 
 export type ArgAtom = {
   Label: Label;
-  Source: estree.Source;
-  Specifier: estree.Specifier;
+  Source: Source;
+  Specifier: Specifier;
   Variable: ArgVariable;
   Tag: Path;
 };
 
 export type ResAtom = {
   Label: Label;
-  Source: estree.Source;
-  Specifier: estree.Specifier;
+  Source: Source;
+  Specifier: Specifier;
   Variable: ResVariable;
   Tag: null;
 };

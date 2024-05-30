@@ -1,3 +1,4 @@
+import { Variable } from "../estree";
 import { Path } from "../path";
 
 export type RegularEarlyError = {
@@ -9,7 +10,7 @@ export type RegularEarlyError = {
 export type DuplicateEarlyError = {
   type: "duplicate";
   frame: "aran.global" | "aran.record";
-  variable: estree.Variable;
+  variable: Variable;
   path: Path;
 };
 

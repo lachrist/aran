@@ -1,3 +1,4 @@
+import { Variable } from "../estree.js";
 import type { Key } from "./key.js";
 
 export type PropertyName = {
@@ -8,7 +9,7 @@ export type PropertyName = {
 
 export type AssignmentName = {
   type: "assignment";
-  variable: estree.Variable;
+  variable: Variable;
 };
 
 export type AnonymousName = {
@@ -20,51 +21,3 @@ export type DefaultName = {
 };
 
 export type Name = PropertyName | AssignmentName | AnonymousName | DefaultName;
-
-// export type Name =
-//   | {
-//       kind: "init" | "get" | "set";
-//       computed: true;
-//       access: "public";
-//       value: Cache;
-//     }
-//   | {
-//       kind: "init" | "get" | "set";
-//       computed: false;
-//       access: "public";
-//       value: estree.Key;
-//     }
-//   | {
-//       kind: "init" | "get" | "set";
-//       computed: false;
-//       access: "private";
-//       value: estree.PrivateKey;
-//     }
-//   | {
-//       kind: "env";
-//       computed: false;
-//       access: "public";
-//       value: estree.Variable;
-//     };
-
-// export type PropertyKey =
-//   | {
-//       access: "public";
-//       computed: true;
-//       value: Cache;
-//     }
-//   | {
-//       access: "public";
-//       computed: false;
-//       value: estree.Key;
-//     }
-//   | {
-//       access: "private";
-//       computed: false;
-//       value: estree.PrivateKey;
-//     };
-
-// export type PropertyName = {
-//   kind: "init" | "get" | "set";
-//   key: PropertyKey;
-// };

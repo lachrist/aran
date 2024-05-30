@@ -1,3 +1,4 @@
+import { Variable } from "../../../estree";
 import { WritableCache } from "../../cache";
 
 export type ReifyBinding = {
@@ -16,7 +17,7 @@ export type Declare = {
   type: "declare";
   mode: "strict" | "sloppy";
   kind: "var" | "let" | "const";
-  variable: estree.Variable;
+  variable: Variable;
 };
 
 export type AlienRootFrame = {
@@ -25,7 +26,7 @@ export type AlienRootFrame = {
   mode: "strict" | "sloppy";
   sort: "script" | "module" | "eval.global" | "eval.local.root";
   record: {
-    [k in estree.Variable]?: AlienBinding;
+    [k in Variable]?: AlienBinding;
   };
 };
 
@@ -35,7 +36,7 @@ export type ReifyRootFrame = {
   mode: "strict" | "sloppy";
   sort: "script" | "module" | "eval.global";
   record: {
-    [k in estree.Variable]?: ReifyBinding;
+    [k in Variable]?: ReifyBinding;
   };
 };
 

@@ -15,7 +15,7 @@ export default {
     },
   },
   create: (context) => {
-    /** @type {(node: estree.Function) => void} */
+    /** @type {(node: import("estree").Function) => void} */
     const reportAsync = (node) => {
       if (node.async) {
         context.report({ node, message: "async functions are forbidden" });

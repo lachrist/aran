@@ -20,14 +20,14 @@ export default {
     /**
      * @type {(
      *   fixer: import("eslint").Rule.RuleFixer,
-     *   node: estree.Node,
+     *   node: import("estree").Node,
      * ) => import("eslint").Rule.Fix[]}
      */
     const wrap = (fixer, node) => [
       fixer.insertTextBefore(node, "{"),
       fixer.insertTextAfter(node, "}"),
     ];
-    /** @type {(node: estree.Node & { body: estree.Node }) => void} */
+    /** @type {(node: import("estree").Node & { body: import("estree").Node }) => void} */
     const checkBody = (node) => {
       if (node.body.type !== "BlockStatement") {
         context.report({
@@ -61,7 +61,10 @@ export default {
             node,
             message: "alternate should be wrapped in a block statement",
             fix: (fixer) =>
-              wrap(fixer, /** @type {estree.Statement} */ (node.alternate)),
+              wrap(
+                fixer,
+                /** @type {import("estree").Statement} */ (node.alternate),
+              ),
           });
         }
       },

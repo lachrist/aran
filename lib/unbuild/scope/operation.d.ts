@@ -1,3 +1,4 @@
+import { PrivateKey, Variable } from "../../estree";
 import { Atom, Expression } from "../atom";
 
 export { RootFrame } from "./root";
@@ -10,7 +11,7 @@ export type DeclareOperation = {
   type: "declare";
   mode: Mode;
   kind: "eval";
-  variable: estree.Variable;
+  variable: Variable;
   configurable: true;
 };
 
@@ -19,33 +20,33 @@ export type InitializeOperation = {
   mode: Mode;
   kind: "let" | "const" | "var" | "val";
   manufactured: boolean;
-  variable: estree.Variable;
+  variable: Variable;
   right: Expression | null;
 };
 
 export type WriteOperation = {
   type: "write";
   mode: Mode;
-  variable: estree.Variable;
+  variable: Variable;
   right: Expression;
 };
 
 export type ReadOperation = {
   type: "read";
   mode: Mode;
-  variable: estree.Variable;
+  variable: Variable;
 };
 
 export type TypeofOperation = {
   type: "typeof";
   mode: Mode;
-  variable: estree.Variable;
+  variable: Variable;
 };
 
 export type DiscardOperation = {
   type: "discard";
   mode: Mode;
-  variable: estree.Variable;
+  variable: Variable;
 };
 
 export type VariableLoadOperation =
@@ -138,7 +139,7 @@ export type DefinePrivateOperation = {
   type: "define-private";
   mode: Mode;
   target: Expression;
-  key: estree.PrivateKey;
+  key: PrivateKey;
   value: Expression;
 };
 
@@ -146,7 +147,7 @@ export type InitializePrivateOperation = {
   type: "initialize-private";
   mode: Mode;
   kind: "method" | "getter" | "setter";
-  key: estree.PrivateKey;
+  key: PrivateKey;
   value: Expression;
 };
 
@@ -166,21 +167,21 @@ export type HasPrivateOperation = {
   type: "has-private";
   mode: Mode;
   target: Expression;
-  key: estree.PrivateKey;
+  key: PrivateKey;
 };
 
 export type GetPrivateOperation = {
   type: "get-private";
   mode: Mode;
   target: Expression;
-  key: estree.PrivateKey;
+  key: PrivateKey;
 };
 
 export type SetPrivateOperation = {
   type: "set-private";
   mode: Mode;
   target: Expression;
-  key: estree.PrivateKey;
+  key: PrivateKey;
   value: Expression;
 };
 

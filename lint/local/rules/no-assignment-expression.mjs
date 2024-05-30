@@ -1,6 +1,6 @@
 import { isNextMetaAssignment } from "../site.mjs";
 
-/** @type {(node: estree.Node & { parent: estree.Node}) => boolean} */
+/** @type {(node: import("estree").Node & { parent: import("estree").Node}) => boolean} */
 const isUpdateAssignment = (node) =>
   node.parent.type === "ExpressionStatement" ||
   (node.parent.type === "ForStatement" && node.parent.update === node);

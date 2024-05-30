@@ -1,4 +1,4 @@
-/** @type {(node: estree.Node) => boolean} */
+/** @type {(node: import("estree").Node) => boolean} */
 const isImpure = (node) =>
   node.type === "CallExpression" ||
   node.type === "NewExpression" ||

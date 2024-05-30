@@ -1,12 +1,14 @@
+import { Variable } from "../estree";
+
 export type IntrinsicClash = {
   type: "intrinsic";
-  variable: estree.Variable;
+  variable: Variable;
 };
 
 export type EscapeClash = {
   type: "escape";
-  escape: estree.Variable;
-  variable: estree.Variable;
+  escape: Variable;
+  variable: Variable;
 };
 
 export type Clash = IntrinsicClash | EscapeClash;

@@ -14,7 +14,7 @@ export default {
     },
   },
   create: (context) => {
-    /** @type {(node: estree.Class) => void} */
+    /** @type {(node: import("estree").Class) => void} */
     const reportClass = (node) => {
       context.report({ node, message: "classes are forbidden" });
     };

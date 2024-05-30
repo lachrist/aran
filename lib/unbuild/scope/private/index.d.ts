@@ -1,3 +1,4 @@
+import { PrivateKey } from "../../../estree.js";
 import type { Cache, WritableCache } from "../../cache.js";
 
 export type SingletonPrivateKind =
@@ -14,7 +15,7 @@ export type CollectionPrivateKind =
 
 export type PrivateKind = SingletonPrivateKind | CollectionPrivateKind;
 
-export type RawPrivateFrame = [estree.PrivateKey, PrivateKind][];
+export type RawPrivateFrame = [PrivateKey, PrivateKind][];
 
 export type PrivateBinding = SingletonPrivateBinding | CollectionPrivateBinding;
 
@@ -26,7 +27,7 @@ export type PrivateFrame = {
   type: "private";
   singleton: WritableCache;
   collection: Cache;
-  record: { [k in estree.PrivateKey]?: DryPrivateBinding };
+  record: { [k in PrivateKey]?: DryPrivateBinding };
 };
 
 // Singleton //

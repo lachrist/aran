@@ -1,3 +1,4 @@
+import { Source, Specifier } from "../estree";
 import {
   Node as GenericNode,
   Program as GenericProgram,
@@ -14,8 +15,8 @@ export type Variable = Brand<string, "rebuild.Variable">;
 
 export type Atom = {
   Label: Label;
-  Source: estree.Source;
-  Specifier: estree.Specifier;
+  Source: Source;
+  Specifier: Specifier;
   Variable: Variable;
   Tag: null;
 };
