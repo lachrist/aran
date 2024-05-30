@@ -1,37 +1,26 @@
-import { DeepLocalContext } from "../lib/program";
-import { ArgAtom } from "../lib/weave/atom";
+import { DeepLocalContext } from "../../program";
 import {
-  ControlBlock as GenericControlBlock,
-  RoutineBlock as GenericRoutineBlock,
-  Effect as GenericEffect,
-  Expression as GenericExpression,
-  Node as GenericNode,
-  Program as GenericProgram,
-  Statement as GenericStatement,
-  Parameter,
-} from "./aran";
+  ArgVariable as Variable,
+  ArgNode as Node,
+  ArgProgram as Program,
+  ArgControlBlock as ControlBlock,
+  ArgRoutineBlock as RoutineBlock,
+  ArgStatement as Statement,
+  ArgEffect as Effect,
+  ArgExpression as Expression,
+} from "../atom";
+import { Parameter } from "../../../type/aran";
 
-export type Path = Brand<string, "Path">;
-
-// TODO: figure out which atom to use
-
-// export type Atom = BrandAtom<Path>;
-
-export type Atom = ArgAtom;
-
-export type Node = GenericNode<Atom>;
-
-export type Program = GenericProgram<Atom>;
-
-export type ControlBlock = GenericControlBlock<Atom>;
-
-export type RoutineBlock = GenericRoutineBlock<Atom>;
-
-export type Statement = GenericStatement<Atom>;
-
-export type Effect = GenericEffect<Atom>;
-
-export type Expression = GenericExpression<Atom>;
+export {
+  Variable,
+  Node,
+  Program,
+  ControlBlock,
+  RoutineBlock,
+  Statement,
+  Effect,
+  Expression,
+};
 
 export type Pointcut<P extends Json[], N extends Node> = (
   node: N,
@@ -50,7 +39,7 @@ export type Advice<V, X, P extends Json[]> =
       pointcut: Pointcut<P, ControlBlock | RoutineBlock>;
       behavior: (
         state: X,
-        frame: { [K in Atom["Variable"] | Parameter]: V },
+        frame: { [K in Variable | Parameter]: V },
         ...point: P
       ) => void;
     }
@@ -59,9 +48,9 @@ export type Advice<V, X, P extends Json[]> =
       pointcut: Pointcut<P, ControlBlock | RoutineBlock>;
       behavior: (
         state: X,
-        frame: { [K in Atom["Variable"] | Parameter]: V },
+        frame: { [K in Variable | Parameter]: V },
         ...point: P
-      ) => { [K in Atom["Variable"] | Parameter]: V };
+      ) => { [K in Variable | Parameter]: V };
     }
   | {
       kind: "block@before" | "block@after" | "block@teardown";

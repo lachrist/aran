@@ -24,7 +24,7 @@ export type ObjectAdvice<
     StackValue: unknown;
     FrontierValue: unknown;
   },
-> = import("../../../../type/advice").ObjectAdvice<{
+> = import("../../../../lib/weave/systematic/advice").ObjectAdvice<{
   Label: Label;
   Location: Location;
   Variable: Variable;
@@ -37,7 +37,7 @@ export type ObjectAdvice<
 }>;
 
 export type FunctionAdvice<V> =
-  import("../../../../type/advice").FunctionAdvice<V, Location>;
+  import("../../../../lib/weave/systematic/advice").FunctionAdvice<V, Location>;
 
 export type Frame<
   P extends {
@@ -45,7 +45,7 @@ export type Frame<
     StackValue: unknown;
     FrontierValue: unknown;
   },
-> = import("../../../../type/advice").Frame<{
+> = import("../../../../lib/weave/systematic/advice").Frame<{
   Label: Label;
   Location: Location;
   Variable: Variable;

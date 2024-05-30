@@ -6,7 +6,7 @@ const {
 } = globalThis;
 
 /**
- * @type {import("../../type/advice").Advice<
+ * @type {import("../../lib/weave/systematic/advice").Advice<
  *   import("./transparent").Value,
  *   import("./transparent").Location
  * >}

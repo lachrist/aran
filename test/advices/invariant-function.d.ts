@@ -6,13 +6,16 @@ export type Location = Brand<string, "location">;
 
 export type Hash = Brand<string, "hash">;
 
-export type Advice = import("../../type/advice").Advice<Value, Location>;
+export type Advice = import("../../lib/weave/systematic/advice").Advice<
+  Value,
+  Location
+>;
 
-export type Label = import("../../type/advice").Label;
+export type Label = import("../../lib/weave/systematic/advice").Label;
 
-export type Link = import("../../type/advice").LinkData;
+export type Link = import("../../lib/weave/systematic/advice").LinkData;
 
-export type Variable = import("../../type/advice").Variable;
+export type Variable = import("../../lib/weave/systematic/advice").Variable;
 
 export type EstreeVariable = import("../../type/estree").Variable;
 
@@ -21,7 +24,7 @@ export type Environment = {
 };
 
 export type Point =
-  | import("../../type/advice").Point<Value, Location>
+  | import("../../lib/weave/systematic/advice").Point<Value, Location>
   | {
       type: "apply.before";
       callee: Value;

@@ -7,7 +7,7 @@ import { generate } from "astring";
 const { eval: evalGlobal } = globalThis;
 
 /**
- * @type {import("../../type/advice").Advice<string>}
+ * @type {import("../../lib/weave/systematic/advice").Advice<string>}
  */
 globalThis.advice = {};
 
