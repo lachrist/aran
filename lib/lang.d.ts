@@ -1,11 +1,9 @@
 import type {
-  DeclareHeader,
-  ImportDynamicParameterHeader,
-  ImportMetaParameterHeader,
+  DeepLocalEvalProgramHeader,
+  GlobalEvalProgramHeader,
   ModuleProgramHeader,
-  ParameterHeader,
-  ScopeParameterHeader,
-  ThisParameterHeader,
+  RootLocalEvalProgramHeader,
+  ScriptProgramHeader,
 } from "./header";
 
 //////////
@@ -171,13 +169,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "module";
       situ: "global";
-      head: (
-        | ModuleProgramHeader
-        | ScopeParameterHeader
-        | ThisParameterHeader
-        | ImportDynamicParameterHeader
-        | ImportMetaParameterHeader
-      )[];
+      head: ModuleProgramHeader[];
       body: RoutineBlock<A>;
       tag: A["Tag"];
     }
@@ -185,12 +177,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "script";
       situ: "global";
-      head: (
-        | DeclareHeader
-        | ScopeParameterHeader
-        | ThisParameterHeader
-        | ImportDynamicParameterHeader
-      )[];
+      head: ScriptProgramHeader[];
       body: RoutineBlock<A>;
       tag: A["Tag"];
     }
@@ -198,12 +185,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "eval";
       situ: "global";
-      head: (
-        | DeclareHeader
-        | ScopeParameterHeader
-        | ThisParameterHeader
-        | ImportDynamicParameterHeader
-      )[];
+      head: GlobalEvalProgramHeader[];
       body: RoutineBlock<A>;
       tag: A["Tag"];
     }
@@ -211,7 +193,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "eval";
       situ: "local.root";
-      head: (DeclareHeader | ParameterHeader)[];
+      head: RootLocalEvalProgramHeader[];
       body: RoutineBlock<A>;
       tag: A["Tag"];
     }
@@ -219,7 +201,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "eval";
       situ: "local.deep";
-      head: ParameterHeader[];
+      head: DeepLocalEvalProgramHeader[];
       body: RoutineBlock<A>;
       tag: A["Tag"];
     };

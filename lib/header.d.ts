@@ -133,6 +133,7 @@ export type ModuleProgramHeader =
   | ThisParameterHeader
   | ImportDynamicParameterHeader
   | ImportMetaParameterHeader
+  | ScopeParameterHeader
   | ImportHeader
   | ExportHeader
   | AggregateHeader;
@@ -140,12 +141,14 @@ export type ModuleProgramHeader =
 export type ScriptProgramHeader =
   | DeclareHeader
   | ThisParameterHeader
-  | ImportDynamicParameterHeader;
+  | ImportDynamicParameterHeader
+  | ScopeParameterHeader;
 
 export type GlobalEvalProgramHeader =
   | DeclareHeader
   | ThisParameterHeader
-  | ImportDynamicParameterHeader;
+  | ImportDynamicParameterHeader
+  | ScopeParameterHeader;
 
 export type RootLocalEvalProgramHeader = DeclareHeader | ParameterHeader;
 
