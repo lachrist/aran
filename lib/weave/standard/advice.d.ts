@@ -8,7 +8,7 @@ import type { Intrinsic, Parameter, RuntimePrimitive } from "../../lang";
 import type { Path } from "../../path";
 import type { DeepLocalContext, GlobalEvalProgram } from "../../program";
 import type { Label, ArgVariable as Variable } from "../atom";
-import type { Parametrization } from "./parametrization";
+import type { Parametrization } from "../parametrization";
 import type { TestKind, BlockKind, RoutineKind, ControlKind } from "./pointcut";
 
 export type VariableFrame<V> = { [key in Variable]: V };

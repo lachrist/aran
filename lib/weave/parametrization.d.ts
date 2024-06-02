@@ -1,6 +1,3 @@
-import type { ArgVariable } from "../atom";
-import type { BlockKind } from "./pointcut";
-
 export type Parametrization = {
   "module":
     | "this"
