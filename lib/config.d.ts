@@ -13,3 +13,7 @@ export type CommonConfig = {
 export type Config =
   | (StandardWeaveConfig & CommonConfig)
   | (FlexibleWeaveConfig & CommonConfig);
+
+export type PartialConfig =
+  | Partial<StandardWeaveConfig & CommonConfig>
+  | (Partial<FlexibleWeaveConfig & CommonConfig> & { weave: "flexible" });

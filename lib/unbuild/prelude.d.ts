@@ -2,21 +2,21 @@ import type { Warning } from "./warning";
 import type { Header } from "../header";
 import type { EarlyError } from "./early-error";
 import type { Condition } from "./condition";
-import type { DeepLocalContext } from "../program";
 import type { BaseVariable, MetaVariable } from "./variable";
 import type { Template } from "./template";
 import type { Intrinsic } from "../lang";
 import type { Path } from "../path";
 import type { Effect } from "./atom";
+import type { Reboot } from "../reboot";
 
 export type WarningPrelude = {
   type: "warning";
   data: Warning;
 };
 
-export type ContextPrelude = {
-  type: "context";
-  data: [Path, DeepLocalContext];
+export type RebootPrelude = {
+  type: "reboot";
+  data: [Path, Reboot];
 };
 
 export type HeaderPrelude = {
@@ -60,7 +60,7 @@ export type ConditionPrelude = {
 
 export type Prelude =
   | WarningPrelude
-  | ContextPrelude
+  | RebootPrelude
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude
@@ -69,18 +69,18 @@ export type Prelude =
   | PrefixPrelude
   | ConditionPrelude;
 
-type ProgramPrelude = WarningPrelude | ContextPrelude;
+type ProgramPrelude = WarningPrelude | RebootPrelude;
 
 type BlockPrelude =
   | WarningPrelude
-  | ContextPrelude
+  | RebootPrelude
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude;
 
 export type BodyPrelude =
   | WarningPrelude
-  | ContextPrelude
+  | RebootPrelude
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude

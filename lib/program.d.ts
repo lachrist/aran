@@ -3,8 +3,8 @@ import type {
   ModuleProgram as EstreeModuleProgram,
   ScriptProgram as EstreeScriptProgram,
 } from "./estree";
-import type { PackMeta } from "./unbuild/meta";
-import type { PackScope } from "./unbuild/scope";
+import type { Depth } from "./weave/depth";
+import type { Reboot } from "./reboot";
 
 export type GlobalContext = {};
 
@@ -12,9 +12,8 @@ export type RootLocalContext = {
   mode: "strict" | "sloppy";
 };
 
-export type DeepLocalContext = {
-  meta: PackMeta;
-  scope: PackScope;
+export type DeepLocalContext = Reboot & {
+  depth: Depth;
 };
 
 export type Context = GlobalContext | RootLocalContext | DeepLocalContext;
