@@ -1,7 +1,7 @@
-import type { Path } from "../../path.js";
-import type { DeepLocalContext } from "../../program.js";
-import type { Depth } from "../depth.js";
-import type { NormalPointcut } from "./pointcut.js";
+import type { Path } from "../../path";
+import type { DeepLocalContext } from "../../program";
+import type { Depth } from "../depth";
+import type { NormalPointcut } from "./aspect";
 
 export type EvalRecord = { [k in Path]?: DeepLocalContext };
 

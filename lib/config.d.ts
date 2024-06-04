@@ -1,18 +1,15 @@
-import type { Variable } from "./estree";
-import type { Path } from "./path";
-import type { Pointcut } from "./weave/graveyard/pointcut";
+import type { Config as UnbuildConfig } from "./unbuild/config";
+import type {
+  StandardConfig as StandardWeaveConfig,
+  FlexibleConfig as FlexibleWeaveConfig,
+} from "./weave/config";
+import type { Config as RebuildConfig } from "./rebuild/config";
 
-export type Locate<L> = (path: Path) => L;
-
-export type Config<L> = {
-  mode: "normal" | "standalone";
-  locate: Locate<L>;
-  pointcut: Pointcut<L>;
-  global_declarative_record: "native" | "emulate";
-  global_variable: Variable;
-  advice_variable: Variable;
-  intrinsic_variable: Variable;
-  escape_prefix: Variable;
+export type CommonConfig = {
   warning: "embed" | "console" | "ignore" | "throw";
-  early_syntax_error: "embed" | "throw";
-};
+} & UnbuildConfig &
+  RebuildConfig;
+
+export type Config =
+  | (StandardWeaveConfig & CommonConfig)
+  | (FlexibleWeaveConfig & CommonConfig);

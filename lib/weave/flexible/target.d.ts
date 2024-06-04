@@ -5,10 +5,16 @@ import type {
   ArgEffect,
   ArgExpression,
   ArgNode,
+  ArgProgram,
   ArgRoutineBlock,
   ArgStatement,
   ResExpression,
 } from "../atom";
+
+export type ProgramTarget = {
+  origin: ArgProgram;
+  parent: null;
+};
 
 export type RoutineBlockTarget = {
   origin: ArgRoutineBlock;
