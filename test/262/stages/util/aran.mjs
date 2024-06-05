@@ -10,15 +10,22 @@ const {
   Reflect: { ownKeys, defineProperty },
 } = globalThis;
 
-const global_variable = /** @type {estree.Variable} */ ("globalThis");
+const global_variable =
+  /** @type {import("../../../../lib").EstreeVariable} */ ("globalThis");
 
-const intrinsic_variable = /** @type {estree.Variable} */ ("_ARAN_INTRINSIC_");
+const intrinsic_variable =
+  /** @type {import("../../../../lib").EstreeVariable} */ ("_ARAN_INTRINSIC_");
 
-const advice_variable = /** @type {estree.Variable} */ ("_ARAN_ADVICE_");
+const advice_variable =
+  /** @type {import("../../../../lib").EstreeVariable} */ ("_ARAN_ADVICE_");
 
-const log_variable = /** @type {estree.Variable} */ ("_ARAN_LOG_");
+const log_variable = /** @type {import("../../../../lib").EstreeVariable} */ (
+  "_ARAN_LOG_"
+);
 
-const escape_prefix = /** @type {estree.Variable} */ ("_ARAN_ESCAPE_");
+const escape_prefix = /** @type {import("../../../../lib").EstreeVariable} */ (
+  "_ARAN_ESCAPE_"
+);
 
 /**
  * @type {(
@@ -31,12 +38,6 @@ const listKey = /** @type {<O extends object>(record: O) => (keyof O)[]} */ (
   ownKeys
 );
 
-/**
- * @type {import("./aran").Locate}
- */
-const locate = (path, base) =>
-  /** @type {import("./aran").Location} */ (`${base}#${path}`);
-
 /** @type {(value: unknown) => void} */
 const log = (value) => {
   dir(value, { showHidden: true });
@@ -46,36 +47,31 @@ const setup = generate(compileSetup({ global_variable, intrinsic_variable }));
 
 /**
  * @type {(
- *   makeAdvice: (options: {
- *     reject: (error: Error) => void,
- *     intrinsic: import("../../../../lib/lang").IntrinsicRecord,
- *     instrument: (
- *       code: string,
- *       context: null |  import("../../../../lib/program").DeepLocalContext,
- *       location: null | import("./aran").Location,
- *     ) => string,
- *   }) => (
- *     | import("./aran").FunctionAdvice<unknown>
- *     | import("./aran").ObjectAdvice<{
- *       StackValue: unknown,
- *       ScopeValue: unknown,
- *       FrontierValue: unknown,
- *     }>
- *   ),
+ *   makeAspect: (
+ *     options: {
+ *       reject: (error: Error) => void,
+ *       intrinsic: import("../../../../lib/lang").IntrinsicRecord,
+ *       instrument: (
+ *         code: string,
+ *         context: null |  import("../../../../lib/program").DeepLocalContext,
+ *         location: null | import("./aran").Location,
+ *       ) => string,
+ *     },
+ *   ) => import("./aspect").Aspect,
  *   options: {
  *     global_declarative_record: "emulate" | "native",
  *   },
  * ) => test262.CompileInstrument}
  */
 export const compileCompileAranInstrument =
-  (makeAdvice, { global_declarative_record }) =>
+  (makeAspect, { global_declarative_record }) =>
   ({ reject, record, warning, context }) => {
     let counter = 0;
     const intrinsic =
       /** @type {import("../../../../lib/lang").IntrinsicRecord} */ (
         runInContext(setup, context)
       );
-    const advice = makeAdvice({
+    const aspect = makeAspect({
       reject,
       intrinsic,
       instrument: (code, context, location) => {
@@ -104,7 +100,6 @@ export const compileCompileAranInstrument =
         return content;
       },
     });
-    const pointcut = listKey(advice);
     const config = {
       mode: /** @type {"normal"} */ ("normal"),
       pointcut,

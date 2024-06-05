@@ -172,15 +172,24 @@ export type OptimalPointcutEntry<kind extends AspectKind> = [
   AspectTyping<never, never, Json[]>[kind]["pointcut"],
 ];
 
-export type HomogeneousAspect<state, value, point extends Json[]> = {
-  [advice in EstreeVariable]: AspectElement<state, value, point>;
+export type HomogeneousAspect<
+  subset extends EstreeVariable,
+  state,
+  value,
+  point extends Json[],
+> = {
+  [variable in subset]: AspectElement<state, value, point>;
 };
 
 export type HeterogeneousAspect<
-  advice extends EstreeVariable,
+  subset extends EstreeVariable,
   state,
   value,
-  point extends { [key in advice]: Json[] },
+  point extends { [key in subset]: Json[] },
 > = {
-  [key in advice]: AspectElement<state, value, point[key]>;
+  [key in subset]: AspectElement<state, value, point[key]>;
+};
+
+export type UnknownAspect = {
+  [variable in EstreeVariable]?: AspectElement<unknown, unknown, Json[]>;
 };

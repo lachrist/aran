@@ -125,7 +125,7 @@ export type SuccessInput<X, V> =
   | [state: X, kind: ControlKind, value: undefined, path: Path]
   | [state: X, kind: RoutineKind, value: V, path: Path];
 
-export type Aspect<X, V extends Value> = {
+export type AspectTyping<X, V extends Value> = {
   "block@setup": {
     pointcut: (kind: BlockKind, path: Path) => boolean;
     advice: (...input: SetupInput<X>) => X;
@@ -317,21 +317,30 @@ export type Aspect<X, V extends Value> = {
   };
 };
 
-export type AspectKind = keyof Aspect<never, never>;
+export type Aspect<X, V extends Value> = {
+  [key in AspectKind]?: {
+    pointcut: boolean | AspectTyping<X, V>[key]["pointcut"];
+    advice: AspectTyping<X, V>[key]["advice"];
+  };
+};
+
+export type UnknownAspect = Aspect<unknown, Value>;
+
+export type AspectKind = keyof AspectTyping<never, never>;
 
 export type Advice<X, V extends Value> = {
-  [key in AspectKind]?: Aspect<X, V>[key]["advice"];
+  [key in AspectKind]?: AspectTyping<X, V>[key]["advice"];
 };
 
 export type NormalPointcut = {
-  [key in AspectKind]: Aspect<never, never>[key]["pointcut"];
+  [key in AspectKind]: AspectTyping<never, never>[key]["pointcut"];
 };
 
 export type ObjectPointcut = {
   [key in AspectKind]:
     | boolean
     | undefined
-    | Aspect<never, never>[key]["pointcut"];
+    | AspectTyping<never, never>[key]["pointcut"];
 };
 
 export type ConstantPointcut = boolean;
