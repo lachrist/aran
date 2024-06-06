@@ -17,13 +17,15 @@ export default {
   ),
   compileInstrument: compileCompileAranInstrument(
     ({ intrinsic, instrument }) => ({
-      "__proto__": null,
-      "eval.before": (code, context, location) => {
-        if (typeof code === "string") {
-          return instrument(code, context, location);
-        } else {
-          return intrinsic.undefined;
-        }
+      type: "standard",
+      data: {
+        "eval@before": (_state, code, context, path) => {
+          if (typeof code === "string") {
+            return instrument(code, context, path);
+          } else {
+            return intrinsic.undefined;
+          }
+        },
       },
     }),
     { global_declarative_record: "native" },

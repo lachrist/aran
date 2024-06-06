@@ -1,42 +1,43 @@
 import {
+  Path,
   DeepLocalContext,
   GlobalContext,
   RootLocalContext,
-} from "../../../../lib/source";
+} from "../../../../lib";
 
-export type RawProgram<B> =
+export type RawProgram =
   | {
       kind: "module";
       situ: "global";
-      base: B;
+      path: Path;
       code: string;
       context: GlobalContext;
     }
   | {
       kind: "script";
       situ: "global";
-      base: B;
+      path: Path;
       code: string;
       context: GlobalContext;
     }
   | {
       kind: "eval";
       situ: "global";
-      base: B;
+      path: Path;
       code: string;
       context: GlobalContext;
     }
   | {
       kind: "eval";
       situ: "local.deep";
-      base: B;
+      path: Path;
       code: string;
       context: DeepLocalContext;
     }
   | {
       kind: "eval";
       situ: "local.root";
-      base: B;
+      path: Path;
       code: string;
       context: RootLocalContext;
     };

@@ -317,16 +317,18 @@ export type AspectTyping<X, V extends Value> = {
   };
 };
 
+export type AspectKind = keyof AspectTyping<never, never>;
+
 export type Aspect<X, V extends Value> = {
-  [key in AspectKind]?: {
-    pointcut: boolean | AspectTyping<X, V>[key]["pointcut"];
-    advice: AspectTyping<X, V>[key]["advice"];
-  };
+  [key in AspectKind]?:
+    | AspectTyping<X, V>[key]["advice"]
+    | {
+        pointcut: boolean | AspectTyping<X, V>[key]["pointcut"];
+        advice: AspectTyping<X, V>[key]["advice"];
+      };
 };
 
 export type UnknownAspect = Aspect<unknown, Value>;
-
-export type AspectKind = keyof AspectTyping<never, never>;
 
 export type Advice<X, V extends Value> = {
   [key in AspectKind]?: AspectTyping<X, V>[key]["advice"];

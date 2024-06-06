@@ -12,7 +12,14 @@ export type {
 
 export type { Path } from "./path.d.ts";
 
-export type { EarlySyntaxError } from "./source.js";
+export type {
+  EarlySyntaxError,
+  Source,
+  Context,
+  GlobalContext,
+  DeepLocalContext,
+  RootLocalContext,
+} from "./source.js";
 
 export type {
   Intrinsic,

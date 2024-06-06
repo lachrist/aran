@@ -205,9 +205,9 @@ const parseLocal = (kind, code) => {
 };
 
 /**
- * @type {<B>(
- *   program: import("./parse").RawProgram<B>,
- * ) => import("../../../../lib/source").Source<B>}
+ * @type {(
+ *   program: import("./parse").RawProgram,
+ * ) => import("../../../../lib").Source}
  */
 export const parse = ({ code, ...program }) => {
   if (program.situ === "global") {

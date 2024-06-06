@@ -6,6 +6,7 @@ import {
   extractFlexiblePointcut,
   extractStandardAdvice,
   extractFlexibleAdvice,
+  ROOT_PATH,
 } from "../../../../lib/index.mjs";
 import { parse } from "./parse.mjs";
 import { runInContext } from "node:vm";
@@ -34,13 +35,6 @@ const log_variable = /** @type {import("../../../../lib").EstreeVariable} */ (
 const escape_prefix = /** @type {import("../../../../lib").EstreeVariable} */ (
   "_ARAN_ESCAPE_"
 );
-
-/**
- * @type {(
- *   url: URL,
- * ) => import("./aran").Base}
- */
-const makeBase = (url) => /** @type {import("./aran").Base} */ (url.href);
 
 /** @type {(value: unknown) => void} */
 const log = (value) => {
@@ -110,8 +104,8 @@ const prepare = (aspect, { warning, global_declarative_record }) => {
  *       intrinsic: import("../../../../lib/lang").IntrinsicRecord,
  *       instrument: (
  *         code: string,
- *         context: null |  import("../../../../lib/source").DeepLocalContext,
- *         location: null | import("./aran").Location,
+ *         context: null | import("../../../../lib/source").DeepLocalContext,
+ *         path: null | import("../../../../lib").Path,
  *       ) => string,
  *     },
  *   ) => import("./aspect").Aspect,
@@ -132,14 +126,13 @@ export const compileCompileAranInstrument =
       makeAspect({
         reject,
         intrinsic,
-        instrument: (code, context, location) => {
+        instrument: (code, context, path) => {
           counter += 1;
           const url = new URL(
             `dynamic:///eval/${counter}${
-              location === null ? "" : `#${encodeURIComponent(location)}`
+              path === null ? "" : `#${encodeURIComponent(path)}`
             }`,
           );
-          const base = makeBase(url);
           const { content } = record({
             kind: "script",
             url,
@@ -147,8 +140,20 @@ export const compileCompileAranInstrument =
               instrument(
                 parse(
                   context === null
-                    ? { kind: "eval", situ: "global", code, base, context: {} }
-                    : { kind: "eval", situ: "local.deep", code, base, context },
+                    ? {
+                        kind: "eval",
+                        situ: "global",
+                        code,
+                        path: path ?? ROOT_PATH,
+                        context: {},
+                      }
+                    : {
+                        kind: "eval",
+                        situ: "local.deep",
+                        code,
+                        path: path ?? ROOT_PATH,
+                        context,
+                      },
                 ),
                 // eslint-disable-next-line no-use-before-define
                 embed_config,
@@ -201,7 +206,7 @@ export const compileCompileAranInstrument =
                 kind,
                 situ: "global",
                 code: content,
-                base: makeBase(url),
+                path: /** @type {import("../../../../lib").Path} */ (url.href),
                 context: {},
               }),
               throw_config,
