@@ -1,5 +1,10 @@
+/* eslint-disable no-use-before-define */
+
 import { readFile } from "node:fs/promises";
-import { compileExpect, compileCompileAranInstrument } from "./util/index.mjs";
+import {
+  compileExpect,
+  compileStandardInstrumentation,
+} from "./util/index.mjs";
 
 const { JSON, URL } = globalThis;
 
@@ -15,19 +20,29 @@ export default {
       ),
     ),
   ),
-  compileInstrument: compileCompileAranInstrument(
-    ({ intrinsic, instrument }) => ({
-      type: "standard",
-      data: {
-        "eval@before": (_state, code, context, path) => {
-          if (typeof code === "string") {
-            return instrument(code, context, path);
-          } else {
-            return intrinsic.undefined;
-          }
-        },
+  compileInstrument: ({ record, warning, context }) => {
+    /**
+     * @type {import("../../../lib").StandardAspect<
+     *   null,
+     *   import("../../../lib").StandardValue,
+     * >}
+     */
+    const aspect = {
+      "eval@before": (_state, context, code, path) => {
+        if (typeof code === "string") {
+          return instrumentDeep(code, context, path);
+        } else {
+          return intrinsic.undefined;
+        }
       },
-    }),
-    { global_declarative_record: "native" },
-  ),
+    };
+    const { intrinsic, instrumentDeep, instrumentRoot } =
+      compileStandardInstrumentation(aspect, {
+        record,
+        warning,
+        context,
+        global_declarative_record: "native",
+      });
+    return instrumentRoot;
+  },
 };

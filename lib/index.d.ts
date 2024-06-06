@@ -42,6 +42,7 @@ export type {
 } from "./weave/atom.d.ts";
 
 export type {
+  Value as StandardValue,
   UnknownAspect as UnknownStandardAspect,
   Aspect as StandardAspect,
   Advice as StandardAdvice,

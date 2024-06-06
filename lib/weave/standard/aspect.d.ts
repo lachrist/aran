@@ -188,13 +188,17 @@ export type AspectTyping<X, V extends Value> = {
     advice: (
       state: X,
       name: Intrinsic,
-      value: unknown,
+      value: V["Other"],
       path: Path,
     ) => V["Stack"];
   };
   "primitive@after": {
     pointcut: (primitive: RuntimePrimitive, path: Path) => boolean;
-    advice: (state: X, value: RuntimePrimitive, path: Path) => V["Stack"];
+    advice: (
+      state: X,
+      value: V["Other"] & RuntimePrimitive,
+      path: Path,
+    ) => V["Stack"];
   };
   "import@after": {
     pointcut: (source: string, specifier: string | null, path: Path) => boolean;
@@ -218,7 +222,7 @@ export type AspectTyping<X, V extends Value> = {
       kind: "arrow" | "function",
       asynchronous: boolean,
       generator: boolean,
-      closure: Function,
+      closure: V["Other"] & Function,
       path: Path,
     ) => V["Stack"];
   };
@@ -235,8 +239,8 @@ export type AspectTyping<X, V extends Value> = {
     pointcut: (path: Path) => boolean;
     advice: (
       state: X,
-      value: V["Stack"],
       context: DeepLocalContext,
+      value: V["Stack"],
       path: Path,
     ) => string | undefined;
   };
