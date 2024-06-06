@@ -110,7 +110,7 @@ const prepare = (aspect, { warning, global_declarative_record }) => {
  *       intrinsic: import("../../../../lib/lang").IntrinsicRecord,
  *       instrument: (
  *         code: string,
- *         context: null |  import("../../../../lib/program").DeepLocalContext,
+ *         context: null |  import("../../../../lib/source").DeepLocalContext,
  *         location: null | import("./aran").Location,
  *       ) => string,
  *     },

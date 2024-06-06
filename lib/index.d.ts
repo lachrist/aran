@@ -12,7 +12,7 @@ export type {
 
 export type { Path } from "./path.d.ts";
 
-export type { EarlySyntaxError } from "./program.d.ts";
+export type { EarlySyntaxError } from "./source.js";
 
 export type {
   Intrinsic,

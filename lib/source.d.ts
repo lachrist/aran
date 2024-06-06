@@ -23,7 +23,7 @@ export type EarlySyntaxError = {
   message: string;
 };
 
-export type Program =
+export type Source =
   | {
       kind: "module";
       situ: "global";
@@ -60,42 +60,42 @@ export type Program =
       context: RootLocalContext;
     };
 
-export type ModuleProgram = Program & {
+export type ModuleSource = Source & {
   kind: "module";
 };
 
-export type ScriptProgram = Program & {
+export type ScriptSource = Source & {
   kind: "script";
 };
 
-export type EvalProgram = Program & {
+export type EvalSource = Source & {
   kind: "eval";
 };
 
-export type GlobalEvalProgram = Program & {
+export type GlobalEvalSource = Source & {
   kind: "eval";
   situ: "global";
 };
 
-export type DeepLocalEvalProgram = Program & {
+export type DeepLocalEvalSource = Source & {
   kind: "eval";
   situ: "local.deep";
 };
 
-export type RootLocalEvalProgram = Program & {
+export type RootLocalEvalSource = Source & {
   kind: "eval";
   situ: "local.root";
 };
 
-export type LocalEvalProgram = Program & {
+export type LocalEvalSource = Source & {
   kind: "eval";
   situ: "local.deep" | "local.root";
 };
 
-export type RootProgram = Program & {
+export type RootSource = Source & {
   situ: "global" | "local.root";
 };
 
-export type DeepProgram = Program & {
+export type DeepSource = Source & {
   situ: "local.deep";
 };

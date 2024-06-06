@@ -6,7 +6,7 @@ import type {
 } from "../../header";
 import type { Intrinsic, Parameter, RuntimePrimitive } from "../../lang";
 import type { Path } from "../../path";
-import type { DeepLocalContext, GlobalEvalProgram } from "../../program";
+import type { DeepLocalContext, GlobalEvalSource } from "../../source";
 import type { ArgVariable, Label } from "../atom";
 import type { Parametrization } from "../parametrization";
 
@@ -60,7 +60,7 @@ export type Frame<K extends BlockKind, V> = VariableFrame<V> &
 export type SetupInput<X> =
   | [parent: X, kind: "module", head: ModuleProgramHeader[], path: Path]
   | [parent: X, kind: "script", head: ScriptProgramHeader[], path: Path]
-  | [parent: X, kind: "eval.global", head: GlobalEvalProgram[], path: Path]
+  | [parent: X, kind: "eval.global", head: GlobalEvalSource[], path: Path]
   | [
       parent: X,
       kind: "eval.local.root",

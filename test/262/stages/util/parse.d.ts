@@ -2,7 +2,7 @@ import {
   DeepLocalContext,
   GlobalContext,
   RootLocalContext,
-} from "../../../../lib/program";
+} from "../../../../lib/source";
 
 export type RawProgram<B> =
   | {

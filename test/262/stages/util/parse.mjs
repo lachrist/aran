@@ -17,7 +17,7 @@ const {
  *   | (import("../../../../lib").EstreeProgram & {
  *     sourceType: K extends "module" ? "module" : "script"
  *   })
- *   | import("../../../../lib/program").EarlySyntaxError
+ *   | import("../../../../lib/source").EarlySyntaxError
  * )}
  */
 const parseGlobal = (kind, code) => {
@@ -53,7 +53,7 @@ const parseGlobal = (kind, code) => {
  *   code: string,
  * ) => (
  *   | (import("../../../../lib").EstreeScriptProgram)
- *   | import("../../../../lib/program").EarlySyntaxError
+ *   | import("../../../../lib/source").EarlySyntaxError
  * )}
  */
 export const parseAcornLocal = (_kind, code) => {
@@ -135,7 +135,7 @@ const sanitizeBabel = (root) => {
  *   code: string,
  * ) => (
  *   | import("../../../../lib").EstreeScriptProgram
- *   | import("../../../../lib/program").EarlySyntaxError
+ *   | import("../../../../lib/source").EarlySyntaxError
  * )}
  */
 export const parseBabelLocal = (_kind, code) => {
@@ -186,7 +186,7 @@ export const parseBabelLocal = (_kind, code) => {
  *   code: string,
  * ) => (
  *   | import("../../../../lib").EstreeScriptProgram
- *   | import("../../../../lib/program").EarlySyntaxError
+ *   | import("../../../../lib/source").EarlySyntaxError
  * )}
  */
 const parseLocal = (kind, code) => {
@@ -207,7 +207,7 @@ const parseLocal = (kind, code) => {
 /**
  * @type {<B>(
  *   program: import("./parse").RawProgram<B>,
- * ) => import("../../../../lib/program").Program<B>}
+ * ) => import("../../../../lib/source").Source<B>}
  */
 export const parse = ({ code, ...program }) => {
   if (program.situ === "global") {
