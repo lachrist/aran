@@ -1,22 +1,11 @@
-import {
-  HomogeneousAspectFlexibleAspect,
-  Json,
-  StandardAspect,
-} from "../../../../lib";
+import { UnknownFlexibleAspect, UnknownStandardAspect } from "../../../../lib";
 
 export type Aspect =
   | {
       type: "standard";
-      data: StandardAspect<
-        unknown,
-        {
-          Stack: unknown;
-          Scope: unknown;
-          Other: unknown;
-        }
-      >;
+      data: UnknownStandardAspect;
     }
   | {
       type: "flexible";
-      data: HomogeneousAspectFlexibleAspect<unknown, unknown, Json[]>;
+      data: UnknownFlexibleAspect;
     };

@@ -1,13 +1,21 @@
 import { generate } from "astring";
-import { instrument, setup as compileSetup } from "../../../../lib/index.mjs";
+import {
+  instrument,
+  setup as compileSetup,
+  extractStandardPointcut,
+  extractFlexiblePointcut,
+  extractStandardAdvice,
+  extractFlexibleAdvice,
+} from "../../../../lib/index.mjs";
 import { parse } from "./parse.mjs";
 import { runInContext } from "node:vm";
+import { AranTypeError } from "../../error.mjs";
 
 const {
   encodeURIComponent,
   URL,
   console: { dir },
-  Reflect: { ownKeys, defineProperty },
+  Reflect: { defineProperty },
 } = globalThis;
 
 const global_variable =
@@ -34,16 +42,65 @@ const escape_prefix = /** @type {import("../../../../lib").EstreeVariable} */ (
  */
 const makeBase = (url) => /** @type {import("./aran").Base} */ (url.href);
 
-const listKey = /** @type {<O extends object>(record: O) => (keyof O)[]} */ (
-  ownKeys
-);
-
 /** @type {(value: unknown) => void} */
 const log = (value) => {
   dir(value, { showHidden: true });
 };
 
 const setup = generate(compileSetup({ global_variable, intrinsic_variable }));
+
+/**
+ * @type {(
+ *   aspect: import("./aspect").Aspect,
+ *   options: {
+ *     warning: "console" | "ignore",
+ *     global_declarative_record: "emulate" | "native",
+ *   },
+ * ) => {
+ *   config: import("../../../../lib").Config
+ *   advice: [import("../../../../lib").EstreeVariable, unknown][],
+ * }}
+ */
+const prepare = (aspect, { warning, global_declarative_record }) => {
+  switch (aspect.type) {
+    case "standard": {
+      return {
+        config: {
+          mode: "normal",
+          weave: "standard",
+          pointcut: extractStandardPointcut(aspect.data),
+          early_syntax_error: "embed",
+          global_variable,
+          advice_variable,
+          intrinsic_variable,
+          escape_prefix,
+          global_declarative_record,
+          warning,
+        },
+        advice: [[advice_variable, extractStandardAdvice(aspect.data)]],
+      };
+    }
+    case "flexible": {
+      return {
+        config: {
+          mode: "normal",
+          weave: "flexible",
+          pointcut: extractFlexiblePointcut(aspect.data),
+          early_syntax_error: "embed",
+          global_variable,
+          intrinsic_variable,
+          escape_prefix,
+          global_declarative_record,
+          warning,
+        },
+        advice: extractFlexibleAdvice(aspect.data),
+      };
+    }
+    default: {
+      throw new AranTypeError(aspect);
+    }
+  }
+};
 
 /**
  * @type {(
@@ -71,49 +128,44 @@ export const compileCompileAranInstrument =
       /** @type {import("../../../../lib/lang").IntrinsicRecord} */ (
         runInContext(setup, context)
       );
-    const aspect = makeAspect({
-      reject,
-      intrinsic,
-      instrument: (code, context, location) => {
-        counter += 1;
-        const url = new URL(
-          `dynamic:///eval/${counter}${
-            location === null ? "" : `#${encodeURIComponent(location)}`
-          }`,
-        );
-        const base = makeBase(url);
-        const { content } = record({
-          kind: "script",
-          url,
-          content: generate(
-            instrument(
-              parse(
-                context === null
-                  ? { kind: "eval", situ: "global", code, base, context: {} }
-                  : { kind: "eval", situ: "local.deep", code, base, context },
+    const { config, advice } = prepare(
+      makeAspect({
+        reject,
+        intrinsic,
+        instrument: (code, context, location) => {
+          counter += 1;
+          const url = new URL(
+            `dynamic:///eval/${counter}${
+              location === null ? "" : `#${encodeURIComponent(location)}`
+            }`,
+          );
+          const base = makeBase(url);
+          const { content } = record({
+            kind: "script",
+            url,
+            content: generate(
+              instrument(
+                parse(
+                  context === null
+                    ? { kind: "eval", situ: "global", code, base, context: {} }
+                    : { kind: "eval", situ: "local.deep", code, base, context },
+                ),
+                // eslint-disable-next-line no-use-before-define
+                embed_config,
               ),
-              // eslint-disable-next-line no-use-before-define
-              embed_config,
             ),
-          ),
-        });
-        return content;
+          });
+          return content;
+        },
+      }),
+      {
+        warning,
+        global_declarative_record,
       },
-    });
-    const config = {
-      mode: /** @type {"normal"} */ ("normal"),
-      pointcut,
-      locate,
-      global_variable,
-      advice_variable,
-      intrinsic_variable,
-      escape_prefix,
-      global_declarative_record,
-      warning,
-    };
-    /** @type {import("./aran").Config} */
+    );
+    /** @type {import("../../../../lib").Config} */
     const embed_config = { ...config, early_syntax_error: "embed" };
-    /** @type {import("./aran").Config} */
+    /** @type {import("../../../../lib").Config} */
     const throw_config = { ...config, early_syntax_error: "throw" };
     defineProperty(intrinsic["aran.global"], log_variable, {
       // @ts-ignore
@@ -123,14 +175,16 @@ export const compileCompileAranInstrument =
       enumerable: false,
       configurable: false,
     });
-    defineProperty(intrinsic["aran.global"], advice_variable, {
-      // @ts-ignore
-      __proto__: null,
-      value: advice,
-      writable: false,
-      enumerable: false,
-      configurable: false,
-    });
+    for (const [key, val] of advice) {
+      defineProperty(intrinsic["aran.global"], key, {
+        // @ts-ignore
+        __proto__: null,
+        value: val,
+        writable: false,
+        enumerable: false,
+        configurable: false,
+      });
+    }
     return ({ kind, url, content }) => {
       if (
         global_declarative_record === "native" &&

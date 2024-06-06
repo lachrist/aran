@@ -14,7 +14,7 @@ const {
  *   kind: K,
  *   code: string
  * ) => (
- *   | (estree.Program & {
+ *   | (import("../../../../lib").EstreeProgram & {
  *     sourceType: K extends "module" ? "module" : "script"
  *   })
  *   | import("../../../../lib/program").EarlySyntaxError
@@ -52,7 +52,7 @@ const parseGlobal = (kind, code) => {
  *   kind: "eval",
  *   code: string,
  * ) => (
- *   | (estree.Program & { sourceType: "script" })
+ *   | (import("../../../../lib").EstreeScriptProgram)
  *   | import("../../../../lib/program").EarlySyntaxError
  * )}
  */
@@ -93,7 +93,7 @@ export const parseAcornLocal = (_kind, code) => {
 /**
  * @type {(
  *   node: unknown,
- * ) => estree.Program & { sourceType: "script" }}
+ * ) => import("../../../../lib").EstreeScriptProgram}
  */
 const sanitizeBabel = (root) => {
   const todo = [root];
@@ -126,7 +126,7 @@ const sanitizeBabel = (root) => {
       // noop
     }
   }
-  return /** @type {estree.ScriptProgram} */ (root);
+  return /** @type {import("../../../../lib").EstreeScriptProgram} */ (root);
 };
 
 /**
@@ -134,7 +134,7 @@ const sanitizeBabel = (root) => {
  *   kind: "eval",
  *   code: string,
  * ) => (
- *   | (estree.Program & { sourceType: "script" })
+ *   | import("../../../../lib").EstreeScriptProgram
  *   | import("../../../../lib/program").EarlySyntaxError
  * )}
  */
@@ -185,7 +185,7 @@ export const parseBabelLocal = (_kind, code) => {
  *   kind: "eval",
  *   code: string,
  * ) => (
- *   | (estree.Program & { sourceType: "script" })
+ *   | import("../../../../lib").EstreeScriptProgram
  *   | import("../../../../lib/program").EarlySyntaxError
  * )}
  */

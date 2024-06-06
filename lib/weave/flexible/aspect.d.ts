@@ -151,6 +151,12 @@ export type AdviceElement<state, value, point extends Json[]> = ValueOf<{
   };
 }>;
 
+export type HomogeneousAdvice<
+  state,
+  value,
+  point extends Json[],
+> = AdviceElement<state, value, point>[];
+
 export type Pointcut = {
   [advice in EstreeVariable]: ValueOf<{
     [kind in AspectKind]: {
