@@ -29,11 +29,11 @@ export default {
      * >}
      */
     const aspect = {
-      "eval@before": (_state, context, code, path) => {
-        if (typeof code === "string") {
-          return instrumentDeep(code, context, path);
+      "eval@before": (_state, context, value, path) => {
+        if (typeof value === "string") {
+          return instrumentDeep(value, context, path);
         } else {
-          return intrinsic.undefined;
+          return value;
         }
       },
       "apply@around": (_state, function_, this_, arguments_, path) => {

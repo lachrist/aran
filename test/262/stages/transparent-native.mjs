@@ -56,9 +56,11 @@ export default {
       "read@after": (_state, _variable, value, _path) => value,
       "eval@before": (_state, context, value, path) => {
         if (typeof value === "string") {
-          return instrumentDeep(value, context, path);
+          return /** @type {string & {__brand: "Value"}} */ (
+            instrumentDeep(value, context, path)
+          );
         } else {
-          return intrinsic.undefined;
+          return value;
         }
       },
       "eval@after": (_state, value, _path) => value,

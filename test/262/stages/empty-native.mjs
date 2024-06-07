@@ -28,21 +28,23 @@ export default {
      * >}
      */
     const aspect = {
-      "eval@before": (_state, context, code, path) => {
-        if (typeof code === "string") {
-          return instrumentDeep(code, context, path);
+      "eval@before": (_state, context, value, path) => {
+        if (typeof value === "string") {
+          return instrumentDeep(value, context, path);
         } else {
-          return intrinsic.undefined;
+          return value;
         }
       },
     };
-    const { intrinsic, instrumentDeep, instrumentRoot } =
-      compileStandardInstrumentation(aspect, {
+    const { instrumentDeep, instrumentRoot } = compileStandardInstrumentation(
+      aspect,
+      {
         record,
         warning,
         context,
         global_declarative_record: "native",
-      });
+      },
+    );
     return instrumentRoot;
   },
 };
