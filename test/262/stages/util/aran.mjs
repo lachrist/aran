@@ -166,6 +166,7 @@ export const compileStandardInstrumentation = (
       config: {
         mode: "normal",
         weave: "standard",
+        initial: null,
         pointcut: extractStandardPointcut(aspect),
         early_syntax_error: "embed",
         global_variable,
