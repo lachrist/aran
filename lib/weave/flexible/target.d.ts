@@ -50,15 +50,15 @@ export type EvalExpressionTarget = {
 
 export type ApplyExpressionTarget = {
   callee: ResExpression;
-  this: ResExpression;
-  arguments: ResExpression[];
+  self: ResExpression;
+  input: ResExpression[];
   origin: ArgExpression & { type: "ApplyExpression" };
   parent: ArgNode;
 };
 
 export type ConstructExpressionTarget = {
   callee: ResExpression;
-  arguments: ResExpression[];
+  input: ResExpression[];
   origin: ArgExpression & { type: "ConstructExpression" };
   parent: ArgNode;
 };

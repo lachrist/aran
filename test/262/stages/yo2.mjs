@@ -154,6 +154,13 @@ const suspended = new WeakSet();
 // Block Aspect //
 //////////////////
 
+/**
+ * @type {import("../../../lib").StandardAspect<
+ *
+ * >}
+ */
+const aspect = {};
+
 /** @type {import("./yo").Advice<[]>} */
 const _aran_state_ = {
   kind: "block@initialize",

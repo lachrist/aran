@@ -1,18 +1,12 @@
-import type { Pointcut as StandardPointcut } from "./standard/aspect";
-import type { Pointcut as FlexiblePointcut } from "./flexible/aspect";
-import type { Variable as EstreeVariable } from "../estree";
-
-export { StandardPointcut, FlexiblePointcut };
+import type { Config as StandardConfigInner } from "./standard/config.d.ts";
+import type { Config as FlexibleConfigInner } from "./flexible/config.d.ts";
 
 export type StandardConfig = {
   weave: "standard";
-  advice_variable: EstreeVariable;
-  pointcut: StandardPointcut;
-};
+} & StandardConfigInner;
 
 export type FlexibleConfig = {
   weave: "flexible";
-  pointcut: FlexiblePointcut;
-};
+} & FlexibleConfigInner;
 
 export type Config = StandardConfig | FlexibleConfig;

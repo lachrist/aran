@@ -22,6 +22,7 @@ export type {
 } from "./source.js";
 
 export type {
+  Parameter,
   Intrinsic,
   IntrinsicRecord,
   Primitive,
