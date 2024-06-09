@@ -98,7 +98,7 @@ export const common = ({ config, advice }, { record, context }) => {
                 kind,
                 situ: "global",
                 code: content,
-                path: /** @type {import("../../../../lib").Path} */ (url.href),
+                path: ROOT_PATH,
                 context: {},
               }),
               throw_config,
