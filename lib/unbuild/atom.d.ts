@@ -9,7 +9,7 @@ import type {
   Expression as GenericExpression,
 } from "../lang.js";
 import type { Source, Specifier } from "../estree.js";
-import type { Brand } from "../brand.js";
+import type { Brand } from "../util.js";
 
 export type Label = Brand<string, "unbuild.Label">;
 

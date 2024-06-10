@@ -1,4 +1,4 @@
-import type { Brand } from "../brand";
+import type { Brand } from "../util";
 
 export type BaseVariable = Brand<string, "unbuild.BaseVariable">;
 

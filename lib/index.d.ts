@@ -43,12 +43,21 @@ export type {
 } from "./weave/atom.d.ts";
 
 export type {
-  Value as StandardValue,
+  Valuation,
+  Frame,
+  TaggedFrame,
   UnknownAspect as UnknownStandardAspect,
   Aspect as StandardAspect,
   Advice as StandardAdvice,
   Pointcut as StandardPointcut,
 } from "./weave/standard/aspect.d.ts";
+
+export type {
+  ProgramKind,
+  ClosureKind,
+  ControlKind,
+  BlockKind,
+} from "./weave/parametrization.d.ts";
 
 export type {
   AdviceElement as FlexibleAdviceElement,

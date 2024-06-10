@@ -1,3 +1,29 @@
+export type ProgramKind =
+  | "module"
+  | "script"
+  | "eval.global"
+  | "eval.local.root"
+  | "eval.local.deep";
+
+export type ClosureKind =
+  | "arrow"
+  | "arrow.async"
+  | "function"
+  | "function.async"
+  | "function.generator"
+  | "function.async.generator";
+
+export type ControlKind =
+  | "try"
+  | "catch"
+  | "finally"
+  | "then"
+  | "else"
+  | "while"
+  | "bare";
+
+export type BlockKind = ProgramKind | ClosureKind | ControlKind;
+
 export type Parametrization = {
   "module":
     | "this"

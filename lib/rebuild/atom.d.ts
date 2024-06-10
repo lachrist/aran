@@ -1,4 +1,4 @@
-import type { Brand } from "../brand";
+import type { Brand } from "../util";
 import type { Source, Specifier } from "../estree";
 import type {
   Node as GenericNode,
