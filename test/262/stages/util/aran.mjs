@@ -41,7 +41,7 @@ const log = (value) => {
 const setup = generate(compileSetup({ global_variable, intrinsic_variable }));
 
 /**
- * @type {<X, V extends import("../../../../lib").StandardValue>(
+ * @type {<X, V extends import("../../../../lib").Valuation>(
  *  aspect: {
  *    config: import("../../../../lib").Config,
  *    advice: [import("../../../../lib").EstreeVariable, unknown][],
@@ -147,7 +147,7 @@ export const common = ({ config, advice }, { record, context }) => {
 };
 
 /**
- * @type {<X, V extends import("../../../../lib").StandardValue>(
+ * @type {<X, V extends import("../../../../lib").Valuation>(
  *   aspect: import("../../../../lib").StandardAspect<X, V>,
  *   options: {
  *     record: import("../../types").Instrument,

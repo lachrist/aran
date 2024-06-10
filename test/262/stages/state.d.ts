@@ -1,12 +1,12 @@
-import type {
-  Variable,
+import type { Label, Frame as GenericFrame } from "../../../lib";
+
+export type {
   Parameter,
-  BlockKind,
-  Path,
   Label,
-  Frame as GenericFrame,
-  TaggedFrame as GenericTaggedFrame,
-} from "../../../lib/index";
+  Variable,
+  ClosureKind,
+  StandardAspect as Aspect,
+} from "../../../lib";
 
 export type Value = { __brand: "Value" };
 
@@ -16,46 +16,68 @@ export type Valuation = {
   Other: Value;
 };
 
-export type Frame = GenericFrame<Valuation>;
+export type ArrayValue = Value & Value[];
 
-export type TaggedFrame = GenericTaggedFrame<Valuation>;
+export type ClosureValue = Value & ((...input: Value[]) => Value);
 
-export type Call =
+export type ConstructorValue = Value & (new (...input: Value[]) => Value);
+
+export type Arrival =
   | {
-      type: "external";
+      type: "arrow";
+      callee: ClosureValue;
+      input: Value[];
     }
   | {
-      type: "apply";
-      callee: Value;
+      type: "function";
+      callee: ClosureValue;
+      target: Value;
       self: Value;
       input: Value[];
+    };
+
+export type Marker =
+  | { type: "setup"; labels: Label[] }
+  | {
+      type: "normal";
+    };
+
+export type Frame = {
+  labels: Label[];
+  record: GenericFrame<Value>;
+};
+
+export type Scope = Frame[];
+
+export type Termination =
+  | {
+      type: "none";
     }
   | {
-      type: "construct";
-      callee: Value;
-      target: Value;
-      input: Value[];
+      type: "completion";
     }
   | {
-      type: "ongoing";
-      stack: Value[];
+      type: "break";
+      label: Label;
     }
   | {
-      type: "success";
+      type: "return";
       result: Value;
     }
   | {
-      type: "failure";
+      type: "throw";
       error: Value;
     };
 
-export type Callstack = Call[];
-
-export type Scope = {
-  kind: BlockKind;
-  parent: Scope | null;
-  path: Path;
-  labels: Label[];
-  frame: Frame;
-  suspended: boolean;
+export type InternalCall = {
+  type: "internal";
+  termination: Termination;
+  scope: Scope;
+  stack: Value[];
 };
+
+export type ExternalCall = {
+  type: "external";
+};
+
+export type Call = InternalCall | ExternalCall;

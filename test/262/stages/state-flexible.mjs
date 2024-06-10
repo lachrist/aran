@@ -11,8 +11,8 @@ const {
 
 /**
  * @type {(
- *   value: import("./yo").Value,
- *   other: import("./yo").Value,
+ *   value: import("./state").Value,
+ *   other: import("./state").Value,
  * ) => boolean}
  */
 const isIdentical = is;
@@ -54,8 +54,8 @@ const assert = (test) => {
 
 /**
  * @type {(
- *   call: import("./yo").Call,
- * ) => asserts call is import("./yo").Call & { type: "internal"} }
+ *   call: import("./state").Call,
+ * ) => asserts call is import("./state").Call & { type: "internal"} }
  */
 const assertInternalCall = (call) => {
   assert(call.type === "internal");
@@ -64,7 +64,7 @@ const assertInternalCall = (call) => {
 /**
  * @type {(
  *   target: unknown,
- * ) => asserts target is import("./yo").Value[]}
+ * ) => asserts target is import("./state").Value[]}
  */
 const assertValueArray = (target) => {
   assert(isArray(target));
@@ -90,8 +90,8 @@ const assertFunction = (target) => {
 
 /**
  * @type {(
- *   target: import("./yo").Abrupt,
- * ) => asserts target is import("./yo").Abrupt & { type: "throw" }}
+ *   target: import("./state").Abrupt,
+ * ) => asserts target is import("./state").Abrupt & { type: "throw" }}
  */
 const assertErrorAbrupt = (abrupt) => {
   assert(abrupt.type === "throw");
@@ -99,8 +99,8 @@ const assertErrorAbrupt = (abrupt) => {
 
 /**
  * @type {(
- *   target: import("./yo").Abrupt,
- * ) => asserts target is import("./yo").Abrupt & { type: "return" | "throw" }}
+ *   target: import("./state").Abrupt,
+ * ) => asserts target is import("./state").Abrupt & { type: "return" | "throw" }}
  */
 const assertExitAbrupt = (abrupt) => {
   assert(abrupt.type === "return" || abrupt.type === "throw");
@@ -137,16 +137,16 @@ const peek = (array) => {
 // State //
 ///////////
 
-/** @type {import("./yo").Callstack} */
+/** @type {import("./state").Callstack} */
 const callstack = [];
 
 /**
- * @type {WeakMap<Function, import("./yo").Closure>}
+ * @type {WeakMap<Function, import("./state").Closure>}
  */
 const closures = new WeakMap();
 
 /**
- * @type {WeakSet<import("./yo").Call>}
+ * @type {WeakSet<import("./state").Call>}
  */
 const suspended = new WeakSet();
 
@@ -154,7 +154,7 @@ const suspended = new WeakSet();
 // Block Aspect //
 //////////////////
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_state_ = {
   kind: "block@initialize",
   pointcut: (_path, node, _parent, _root) =>
@@ -167,7 +167,7 @@ const _aran_state_ = {
   }),
 };
 
-/** @type {import("./yo").Advice<["arrow" | "function"]>} */
+/** @type {import("./state").Advice<["arrow" | "function"]>} */
 const _aran_setup_closure_ = {
   kind: "block@frame",
   pointcut: (_path, _node, parent, _root) =>
@@ -208,7 +208,7 @@ const _aran_setup_closure_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_setup_catch_ = {
   kind: "block@frame",
   pointcut: (_path, node, parent, _root) =>
@@ -222,7 +222,7 @@ const _aran_setup_catch_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_setup_ = {
   kind: "block@frame",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -234,7 +234,7 @@ const _aran_setup_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_restore_catch_ = {
   kind: "block@catch",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -248,7 +248,7 @@ const _aran_restore_catch_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_restore_finally_ = {
   kind: "block@finally",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -259,7 +259,7 @@ const _aran_restore_finally_ = {
       // Return value of generators are not used
       call.abrupt = {
         type: "return",
-        result: /** @type {import("./yo").Value} */ (
+        result: /** @type {import("./state").Value} */ (
           /** @type {unknown} */ ("dummy")
         ),
       };
@@ -267,7 +267,7 @@ const _aran_restore_finally_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_teardown_ = {
   kind: "block@finally",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -277,7 +277,7 @@ const _aran_teardown_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[import("./yo").Label[]]>} */
+/** @type {import("./state").Advice<[import("./state").Label[]]>} */
 const _aran_teardown_label_ = {
   kind: "block@finally",
   pointcut: (_path, node, _parent, _root) =>
@@ -296,7 +296,7 @@ const _aran_teardown_label_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[boolean, boolean]>} */
+/** @type {import("./state").Advice<[boolean, boolean]>} */
 const _aran_teardown_closure_ = {
   kind: "block@finally",
   pointcut: (_path, _node, parent, _root) =>
@@ -324,7 +324,7 @@ const _aran_teardown_closure_ = {
 // Abrupt Aspect //
 ///////////////////
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_return_ = {
   kind: "expression@after",
   pointcut: (_path, _node, parent, _root) =>
@@ -338,7 +338,7 @@ const _aran_return_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[import("./yo").Label]>} */
+/** @type {import("./state").Advice<[import("./state").Label]>} */
 const _aran_break_ = {
   kind: "statement@before",
   pointcut: (_path, node, _parent, _root) =>
@@ -354,8 +354,8 @@ const _aran_break_ = {
 //////////////////
 
 /**
- * @type {import("./yo").Advice<[
- *   import("./yo").Parameter | import("./yo").Variable,
+ * @type {import("./state").Advice<[
+ *   import("./state").Parameter | import("./state").Variable,
  * ]>}
  */
 const _aran_write_ = {
@@ -377,8 +377,8 @@ const _aran_write_ = {
 };
 
 /**
- * @type {import("./yo").Advice<[
- *   import("./yo").Parameter | import("./yo").Variable,
+ * @type {import("./state").Advice<[
+ *   import("./state").Parameter | import("./state").Variable,
  * ]>}
  */
 const _aran_read_ = {
@@ -403,7 +403,7 @@ const _aran_read_ = {
 // Stack Aspect //
 //////////////////
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_produce_ = {
   kind: "expression@after",
   pointcut: (_path, node, _parent, _root) =>
@@ -423,7 +423,7 @@ const _aran_produce_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_consume_ = {
   kind: "expression@after",
   pointcut: (_path, node, parent, _root) =>
@@ -447,7 +447,7 @@ const _aran_consume_ = {
 // Other Aspect //
 //////////////////
 
-/** @type {import("./yo").Advice<["arrow" | "function", boolean, boolean]>} */
+/** @type {import("./state").Advice<["arrow" | "function", boolean, boolean]>} */
 const _aran_register_ = {
   kind: "expression@after",
   pointcut: (_path, node, _parent, _root) =>
@@ -468,7 +468,7 @@ const _aran_register_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_apply_ = {
   kind: "apply@around",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -496,7 +496,7 @@ const _aran_apply_ = {
           call.abrupt = {
             type: "throw",
             // eslint-disable-next-line object-shorthand
-            error: /** @type {import("./yo").Value} */ (error),
+            error: /** @type {import("./state").Value} */ (error),
           };
           throw error;
         } finally {
@@ -518,7 +518,7 @@ const _aran_apply_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_construct_ = {
   kind: "construct@around",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -545,7 +545,7 @@ const _aran_construct_ = {
           call.abrupt = {
             type: "throw",
             // eslint-disable-next-line object-shorthand
-            error: /** @type {import("./yo").Value} */ (error),
+            error: /** @type {import("./state").Value} */ (error),
           };
           throw error;
         }
@@ -570,14 +570,14 @@ const _aran_construct_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_await_ = {
   kind: "expression@after",
   pointcut: (_path, _node, parent, _root) =>
     parent.type === "AwaitExpression" ? [] : null,
   behavior: (call, value) => {
     assert(call === peek(callstack));
-    return /** @type {import("./yo").Value} */ (
+    return /** @type {import("./state").Value} */ (
       /** @type {unknown} */ (
         (async () => {
           try {
@@ -588,7 +588,7 @@ const _aran_await_ = {
             call.abrupt = {
               type: "throw",
               // eslint-disable-next-line object-shorthand
-              error: /** @type {import("./yo").Value} */ (error),
+              error: /** @type {import("./state").Value} */ (error),
             };
             throw error;
           } finally {
@@ -600,7 +600,7 @@ const _aran_await_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_before_yield_ = {
   kind: "expression@after",
   pointcut: (_path, _node, parent, _root) =>
@@ -613,7 +613,7 @@ const _aran_before_yield_ = {
   },
 };
 
-/** @type {import("./yo").Advice<[]>} */
+/** @type {import("./state").Advice<[]>} */
 const _aran_yield_ = {
   kind: "expression@after",
   pointcut: (_path, node, _parent, _root) =>

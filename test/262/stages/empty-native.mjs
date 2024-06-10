@@ -24,7 +24,7 @@ export default {
     /**
      * @type {import("../../../lib").StandardAspect<
      *   null,
-     *   import("../../../lib").StandardValue,
+     *   import("../../../lib").Valuation,
      * >}
      */
     const aspect = {

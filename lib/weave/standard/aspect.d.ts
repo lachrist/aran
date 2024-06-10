@@ -207,7 +207,7 @@ export type AspectTyping<X, V extends Valuation> = {
       context: DeepLocalContext,
       value: V["Stack"],
       path: Path,
-    ) => V["Other"];
+    ) => string | V["Other"];
   };
   "eval@after": {
     pointcut: (path: Path) => boolean;
