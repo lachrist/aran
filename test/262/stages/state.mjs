@@ -1,12 +1,11 @@
+/* eslint-disable no-use-before-define */
+
 const {
   Array: { isArray },
   undefined,
   Reflect: { apply, construct },
   Error,
-  WeakMap,
-  WeakSet,
   Object: { is },
-  console: { dir },
 } = globalThis;
 
 /**
@@ -17,149 +16,269 @@ const {
  */
 const isIdentical = is;
 
-///////////
-// Error //
-///////////
+import { readFile } from "node:fs/promises";
+import {
+  compileExpect,
+  compileStandardInstrumentation,
+} from "./util/index.mjs";
+import {
+  isClosureKind,
+  isControlKind,
+  isProgramKind,
+} from "../../../lib/index.mjs";
+import { AranTypeError } from "../error.mjs";
 
-/* eslint-disable */
-class AssertionError extends Error {
-  constructor(/** @type {string} */ message) {
-    super(message);
-    this.name = "AssertionError";
-    dir({ callstack, closures }, { depth: 5, showHidden: true });
-  }
-}
-/* eslint-enable */
+const { JSON, URL } = globalThis;
 
-/* eslint-disable */
-class UnreachableError extends Error {
-  constructor(/** @type {never} */ data) {
-    super("this should never happen");
-    this.name = "UnreachableError";
-    dir({ callstack, closures }, { depth: 5, showHidden: true });
-  }
-}
-/* eslint-enable */
+/** @type {import("./state").Call} */
+const EXTERNAL_CALL = { type: "external" };
 
-/**
- * @type {(
- *   test: boolean,
- * ) => asserts test is true}
- */
-const assert = (test) => {
-  if (!test) {
-    throw new AssertionError("Assertion failure");
-  }
+/** @type {test262.Stage} */
+export default {
+  requirement: ["identity", "parsing"],
+  exclusion: [],
+  expect: compileExpect(
+    JSON.parse(
+      await readFile(
+        new URL("empty-native.manual.json", import.meta.url),
+        "utf8",
+      ),
+    ),
+  ),
+  compileInstrument: ({ reject, record, warning, context }) => {
+    ///////////
+    // Error //
+    ///////////
+
+    /* eslint-disable */
+    class AssertionError extends Error {
+      constructor(/** @type {string} */ message) {
+        super(message);
+        this.name = "AssertionError";
+        reject(this);
+      }
+    }
+    /* eslint-enable */
+
+    /* eslint-disable */
+    class UnreachableError extends Error {
+      constructor(/** @type {never} */ data) {
+        super("this should never happen");
+        this.name = "UnreachableError";
+        reject(this);
+      }
+    }
+    /* eslint-enable */
+
+    /**
+     * @type {(
+     *   test: boolean,
+     * ) => asserts test is true}
+     */
+    const assert = (test) => {
+      if (!test) {
+        throw new AssertionError("Assertion failure");
+      }
+    };
+
+    /**
+     * @type {(
+     *   call: import("./yo").Call,
+     * ) => asserts call is import("./yo").Call & { type: "internal"} }
+     */
+    const assertInternalCall = (call) => {
+      assert(call.type === "internal");
+    };
+
+    /**
+     * @type {(
+     *   target: unknown,
+     * ) => asserts target is import("./yo").Value[]}
+     */
+    const assertValueArray = (target) => {
+      assert(isArray(target));
+    };
+
+    /**
+     * @type {<X>(
+     *   target: undefined | X,
+     * ) => asserts target is X}
+     */
+    const assertDefined = (target) => {
+      assert(target !== undefined);
+    };
+
+    /**
+     * @type {(
+     *   target: unknown,
+     * ) => asserts target is function}
+     */
+    const assertFunction = (target) => {
+      assert(typeof target === "function");
+    };
+
+    /**
+     * @type {(
+     *   status: import("./state").Status,
+     * ) => asserts status is import("./state").Status & { type: "throw" }}
+     */
+    const assertThrowStatus = (status) => {
+      assert(status.type === "throw");
+    };
+
+    /**
+     * @type {(
+     *   target: import("./yo").Abrupt,
+     * ) => asserts target is import("./yo").Abrupt & { type: "return" | "throw" }}
+     */
+    const assertExitAbrupt = (abrupt) => {
+      assert(abrupt.type === "return" || abrupt.type === "throw");
+    };
+
+    ///////////
+    // Stack //
+    ///////////
+
+    /**
+     * @type {<X>(
+     *   array: X[],
+     * ) => X}
+     */
+    const pop = (array) => {
+      assert(array.length > 0);
+      return /** @type {any} */ (array.pop());
+    };
+
+    /**
+     * @type {<X>(
+     *   array: X[],
+     * ) => X}
+     */
+    const peek = (array) => {
+      if (array.length === 0) {
+        throw new AssertionError("Cannot peek value on empty array");
+      } else {
+        return array[array.length - 1];
+      }
+    };
+
+    ////////////
+    // Aspect //
+    ////////////
+
+    /** @type {import("./state").Call[]} */
+    const callstack = [];
+
+    /**
+     * @type {import("../../../lib").StandardAspect<
+     *   import("./state").Scope,
+     *   import("./state").Valuation,
+     * >}
+     */
+    const aspect = {
+      "block@setup": (parent, kind, head, path) => ({
+        kind,
+        path,
+        parent,
+        labels: isControlKind(kind)
+          ? /** @type {import("../../../lib").Label[]} */ (head)
+          : [],
+        frame: {},
+        suspended: false,
+      }),
+      "block@frame": (state, kind, frame, path) => {
+        assert(kind === state.kind);
+        assert(path === state.path);
+        assert(state.suspended === false);
+        if (isProgramKind(kind) || isClosureKind(kind)) {
+          const call = pop(callstack);
+          if (call.type === "external") {
+            callstack.push(call, {
+              type: "ongoing",
+              stack: [],
+            });
+          } else if (call.type === "apply") {
+            assert(isClosureKind(kind));
+            assert(
+              "function.callee" in frame &&
+                isIdentical(frame["function.callee"], call.callee),
+            );
+            assert(
+              !("new.target" in frame) ||
+                isIdentical(frame["new.target"], intrinsic.undefined),
+            );
+            assert(!("this" in frame) || isIdentical(frame.this, call.self));
+            const input1 = call.input;
+            const input2 = frame["function.arguments"];
+            assert(input1.length === input2.length);
+            const { length } = input1;
+            for (const index = 0; index < length; index += 1) {
+              assert(isIdentical(input1[index], input2[index]));
+            }
+          }
+        } else if (!isControlKind(kind)) {
+          throw new AranTypeError(kind);
+        }
+        state.frame = frame;
+      },
+      "block@success": (state, kind, value, path) => {
+        assert(kind === state.kind);
+        assert(path === state.path);
+        assert(state.suspended === false);
+        assert(state.status.type === "ongoing");
+        state.status = { type: "completion" };
+        return /** @type {any} */ (value);
+      },
+      "block@failure": (state, kind, value, path) => {
+        assert(kind === state.kind);
+        assert(path === state.path);
+        if (state.suspended) {
+          state.suspended = false;
+          assert(state.status.type === "ongoing");
+          state.status = { type: "throw", error: value };
+        } else {
+          assertThrowStatus(state.status);
+          assert(state.status.error === value);
+        }
+        return value;
+      },
+      "block@teardown": (state, kind, path) => {
+        assert(kind === state.kind);
+        assert(path === state.path);
+        assert(state.suspended === false);
+        if (state.status.type === "setup" || state.status.type === "ongoing") {
+          throw new AssertionError("missing termination");
+        } else if (state.status.type === "throw") {
+          assertThrowStatus(state.status);
+        } else {
+        }
+
+        if (isProgramKind(kind)) {
+        } else if (isClosureKind(kind)) {
+          if (state.status.type === "ongoing")
+            if (state.status.type === "throw") {
+            }
+        } else if (isControlKind(kind)) {
+        } else {
+          throw new AranTypeError(kind);
+        }
+      },
+    };
+
+    ////////////
+    // Return //
+    ////////////
+
+    const { intrinsic, instrumentDeep, instrumentRoot } =
+      compileStandardInstrumentation(aspect, {
+        record,
+        warning,
+        context,
+        global_declarative_record: "native",
+      });
+    return instrumentRoot;
+  },
 };
-
-/**
- * @type {(
- *   call: import("./yo").Call,
- * ) => asserts call is import("./yo").Call & { type: "internal"} }
- */
-const assertInternalCall = (call) => {
-  assert(call.type === "internal");
-};
-
-/**
- * @type {(
- *   target: unknown,
- * ) => asserts target is import("./yo").Value[]}
- */
-const assertValueArray = (target) => {
-  assert(isArray(target));
-};
-
-/**
- * @type {<X>(
- *   target: undefined | X,
- * ) => asserts target is X}
- */
-const assertDefined = (target) => {
-  assert(target !== undefined);
-};
-
-/**
- * @type {(
- *   target: unknown,
- * ) => asserts target is function}
- */
-const assertFunction = (target) => {
-  assert(typeof target === "function");
-};
-
-/**
- * @type {(
- *   target: import("./yo").Abrupt,
- * ) => asserts target is import("./yo").Abrupt & { type: "throw" }}
- */
-const assertErrorAbrupt = (abrupt) => {
-  assert(abrupt.type === "throw");
-};
-
-/**
- * @type {(
- *   target: import("./yo").Abrupt,
- * ) => asserts target is import("./yo").Abrupt & { type: "return" | "throw" }}
- */
-const assertExitAbrupt = (abrupt) => {
-  assert(abrupt.type === "return" || abrupt.type === "throw");
-};
-
-///////////
-// Stack //
-///////////
-
-/**
- * @type {<X>(
- *   array: X[],
- * ) => X}
- */
-const pop = (array) => {
-  assert(array.length > 0);
-  return /** @type {any} */ (array.pop());
-};
-
-/**
- * @type {<X>(
- *   array: X[],
- * ) => X}
- */
-const peek = (array) => {
-  if (array.length === 0) {
-    throw new AssertionError("Cannot peek value on empty array");
-  } else {
-    return array[array.length - 1];
-  }
-};
-
-///////////
-// State //
-///////////
-
-/** @type {import("./yo").Callstack} */
-const callstack = [];
-
-/**
- * @type {WeakMap<Function, import("./yo").Closure>}
- */
-const closures = new WeakMap();
-
-/**
- * @type {WeakSet<import("./yo").Call>}
- */
-const suspended = new WeakSet();
-
-//////////////////
-// Block Aspect //
-//////////////////
-
-/**
- * @type {import("../../../lib").StandardAspect<
- *
- * >}
- */
-const aspect = {};
 
 /** @type {import("./yo").Advice<[]>} */
 const _aran_state_ = {
