@@ -1,9 +1,10 @@
 import type { DeepLocalContext } from "../../source";
 import type { Variable as EstreeVariable } from "../../estree";
-import {
+import type {
   ArgVariable as Variable,
   ArgNode as Node,
   ArgProgram as Program,
+  ArgPreludeBlock as PreludeBlock,
   ArgControlBlock as ControlBlock,
   ArgRoutineBlock as RoutineBlock,
   ArgStatement as Statement,
@@ -24,6 +25,8 @@ export {
   Expression,
 };
 
+export type Block = ControlBlock | RoutineBlock | PreludeBlock;
+
 type ValueOf<record> = record[keyof record];
 
 export type GenericPointcut<point extends Json[], node extends Node> = (
@@ -33,42 +36,48 @@ export type GenericPointcut<point extends Json[], node extends Node> = (
 ) => undefined | null | point;
 
 export type AspectTyping<value, state, point extends Json[]> = {
+  // block //
   "block@setup": {
-    pointcut: GenericPointcut<point, ControlBlock | RoutineBlock>;
+    pointcut: GenericPointcut<point, Block>;
     advice: (parent: state, ...point: point) => state;
   };
-  "block@frame": {
-    pointcut: GenericPointcut<point, ControlBlock | RoutineBlock>;
+  "block@before": {
+    pointcut: GenericPointcut<point, Block>;
+    advice: (state: state, ...point: point) => void;
+  };
+  "block@declaration": {
+    pointcut: GenericPointcut<point, Block>;
     advice: (
       state: state,
       frame: { [variable in Variable | Parameter]: value },
       ...point: point
     ) => void;
   };
-  "block@overframe": {
-    pointcut: GenericPointcut<point, ControlBlock | RoutineBlock>;
+  "block@declaration-overwrite": {
+    pointcut: GenericPointcut<point, Block>;
     advice: (
       state: state,
       frame: { [K in Variable | Parameter]: value },
       ...point: point
     ) => { [K in Variable | Parameter]: value };
   };
-  "block@before": {
-    pointcut: GenericPointcut<point, ControlBlock | RoutineBlock>;
+  "control-block@after": {
+    pointcut: GenericPointcut<point, ControlBlock>;
     advice: (state: state, ...point: point) => void;
   };
-  "block@after": {
-    pointcut: GenericPointcut<point, ControlBlock | RoutineBlock>;
-    advice: (state: state, ...point: point) => void;
+  "routine-block@after": {
+    pointcut: GenericPointcut<point, RoutineBlock | PreludeBlock>;
+    advice: (state: state, value: value, ...point: point) => value;
   };
-  "block@failure": {
-    pointcut: GenericPointcut<point, ControlBlock | RoutineBlock>;
+  "block@throwing": {
+    pointcut: GenericPointcut<point, Block>;
     advice: (state: state, error: value, ...point: point) => value;
   };
   "block@teardown": {
-    pointcut: GenericPointcut<point, ControlBlock | RoutineBlock>;
+    pointcut: GenericPointcut<point, Block>;
     advice: (state: state, ...point: point) => void;
   };
+  // statement //
   "statement@before": {
     pointcut: GenericPointcut<point, Statement>;
     advice: (state: state, ...point: point) => void;
@@ -77,6 +86,7 @@ export type AspectTyping<value, state, point extends Json[]> = {
     pointcut: GenericPointcut<point, Statement>;
     advice: (state: state, ...point: point) => void;
   };
+  // effect //
   "effect@before": {
     pointcut: GenericPointcut<point, Effect>;
     advice: (state: state, ...point: point) => void;
@@ -85,6 +95,7 @@ export type AspectTyping<value, state, point extends Json[]> = {
     pointcut: GenericPointcut<point, Effect>;
     advice: (state: state, ...point: point) => void;
   };
+  // expression //
   "expression@before": {
     pointcut: GenericPointcut<point, Expression>;
     advice: (state: state, ...point: point) => void;
@@ -93,6 +104,7 @@ export type AspectTyping<value, state, point extends Json[]> = {
     pointcut: GenericPointcut<point, Expression>;
     advice: (state: state, result: value, ...point: point) => value;
   };
+  // eval //
   "eval@before": {
     pointcut: GenericPointcut<point, Expression & { type: "EvalExpression" }>;
     advice: (
@@ -102,6 +114,7 @@ export type AspectTyping<value, state, point extends Json[]> = {
       ...point: point
     ) => value;
   };
+  // apply - construct //
   "apply@around": {
     pointcut: GenericPointcut<point, Expression & { type: "ApplyExpression" }>;
     advice: (

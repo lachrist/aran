@@ -1,21 +1,17 @@
-import type {
-  DeepLocalEvalProgramHeader,
-  Header,
-  ModuleProgramHeader,
-  RootLocalEvalProgramHeader,
-  ScriptProgramHeader,
-} from "../../header";
+import type { DeclareHeader, ModuleHeader } from "../../header";
 import type { Intrinsic, Parameter, RuntimePrimitive } from "../../lang";
 import type { Path } from "../../path";
-import type { DeepLocalContext, GlobalEvalSource } from "../../source";
+import type { DeepLocalContext } from "../../source";
 import type { ValueOf } from "../../util";
 import type { ArgVariable, Label } from "../atom";
 import type {
   BlockKind,
   ClosureKind,
   ControlKind,
+  GeneratorKind,
   Parametrization,
   ProgramKind,
+  RoutineKind,
 } from "../parametrization";
 
 export type Variable = ArgVariable | Parameter;
@@ -28,12 +24,16 @@ type Valuation = {
   Other: unknown;
 };
 
-export type Frame<V> = { [key in Variable | Parameter]?: V };
+export type Frame<K extends BlockKind, V> = {
+  [key in Variable]: V;
+} & {
+  [key in Parametrization[K]]: V;
+};
 
 export type TaggedFrame<V> = ValueOf<{
   [K in BlockKind]: {
-    kind: K;
-    frame: {
+    type: K;
+    data: {
       [key in Variable | Parameter]?: V;
     } & {
       [key in Parametrization[K]]: V;
@@ -41,100 +41,88 @@ export type TaggedFrame<V> = ValueOf<{
   };
 }>;
 
-export type KindHead =
-  | {
-      kind: "module";
-      head: ModuleProgramHeader[];
-    }
-  | {
-      kind: "script";
-      head: ScriptProgramHeader[];
-    }
-  | {
-      kind: "eval.global";
-      head: GlobalEvalSource[];
-    }
-  | {
-      kind: "eval.local.root";
-      head: RootLocalEvalProgramHeader[];
-    }
-  | {
-      kind: "eval.local.deep";
-      head: DeepLocalEvalProgramHeader[];
-    }
-  | {
-      kind: ClosureKind;
-      head: [];
-    }
-  | {
-      kind: ControlKind;
-      head: [Label];
-    };
+export type Header<K extends ProgramKind> = K extends "module"
+  ? ModuleHeader[]
+  : K extends "script" | "eval.global" | "eval.glocal.root"
+  ? DeclareHeader[]
+  : K extends "eval.local.deep"
+  ? []
+  : never;
+
+export type TaggedHead = ValueOf<{
+  [K in ProgramKind]: {
+    type: K;
+    data: Header<K>[];
+  };
+}>;
 
 export type AspectTyping<X, V extends Valuation> = {
+  // block //
   "block@setup": {
     pointcut: (kind: BlockKind, path: Path) => boolean;
-    advice: <K extends BlockKind>(
+    advice: (state: X, kind: BlockKind, path: Path) => X;
+  };
+  "program-block@definition": {
+    pointcut: (kind: ProgramKind, path: Path) => boolean;
+    advice: <K extends ProgramKind>(
       state: X,
       kind: K,
-      head: K extends ProgramKind
-        ? Header[]
-        : K extends ClosureKind
-        ? []
-        : K extends ControlKind
-        ? [Label]
-        : never,
-      path: Path,
-    ) => X;
-  };
-  "block@frame": {
-    pointcut: (kind: BlockKind, path: Path) => boolean;
-    advice: (
-      state: X,
-      kind: BlockKind,
-      frame: Frame<V["Other"]>,
+      head: Header<K>[],
       path: Path,
     ) => void;
   };
-  "block@overframe": {
-    pointcut: (kind: BlockKind, path: Path) => boolean;
-    advice: (
-      state: X,
-      kind: BlockKind,
-      frame: Frame<V["Other"]>,
-      path: Path,
-    ) => Frame<V["Scope"]>;
+  "control-block@labeling": {
+    pointcut: (kind: ControlKind, path: Path) => boolean;
+    advice: (state: X, kind: ControlKind, labels: Label[], path: Path) => void;
   };
-  "block@success": {
+  "block@declaration": {
     pointcut: (kind: BlockKind, path: Path) => boolean;
     advice: <K extends BlockKind>(
       state: X,
       kind: K,
-      value: K extends ProgramKind | ClosureKind
-        ? V["Stack"]
-        : K extends ControlKind
-        ? undefined
-        : never,
+      frame: Frame<K, V["Scope"]>,
       path: Path,
-    ) => K extends ProgramKind | ClosureKind
-      ? V["Other"]
-      : K extends ControlKind
-      ? void
-      : never;
+    ) => void;
   };
-  "block@failure": {
+  "block@declaration-overwrite": {
     pointcut: (kind: BlockKind, path: Path) => boolean;
+    advice: <K extends BlockKind>(
+      state: X,
+      kind: K,
+      frame: Frame<K, V["Scope"]>,
+      path: Path,
+    ) => Frame<K, V["Scope"]>;
+  };
+  "generator-block@suspension": {
+    pointcut: (kind: GeneratorKind, path: Path) => boolean;
+    advice: (state: X, kind: GeneratorKind, path: Path) => void;
+  };
+  "generator-block@resumption": {
+    pointcut: (kind: GeneratorKind, path: Path) => boolean;
+    advice: (state: X, kind: GeneratorKind, path: Path) => void;
+  };
+  "control-block@completion": {
+    pointcut: (kind: ControlKind, path: Path) => boolean;
+    advice: (state: X, kind: ControlKind, path: Path) => void;
+  };
+  "routine-block@completion": {
+    pointcut: (kind: RoutineKind, path: Path) => boolean;
     advice: (
       state: X,
-      kind: BlockKind,
-      value: V["Other"],
+      kind: RoutineKind,
+      value: V["Stack"],
       path: Path,
     ) => V["Other"];
+  };
+  "block@throwing": {
+    pointcut: (kind: BlockKind, path: Path) => boolean;
+    advice: (state: X, kind: BlockKind, value: V["Other"], path: Path) => void;
   };
   "block@teardown": {
     pointcut: (kind: BlockKind, path: Path) => boolean;
     advice: (state: X, kind: BlockKind, path: Path) => void;
   };
+  // other //
   "break@before": {
     pointcut: (label: Label, path: Path) => boolean;
     advice: (state: X, label: Label, path: Path) => void;
@@ -176,17 +164,10 @@ export type AspectTyping<X, V extends Valuation> = {
     ) => V["Stack"];
   };
   "closure@after": {
-    pointcut: (
-      kind: "arrow" | "function",
-      asynchronous: boolean,
-      generator: boolean,
-      path: Path,
-    ) => boolean;
+    pointcut: (kind: ClosureKind, path: Path) => boolean;
     advice: (
       state: X,
-      kind: "arrow" | "function",
-      asynchronous: boolean,
-      generator: boolean,
+      kind: ClosureKind,
       closure: V["Other"] & Function,
       path: Path,
     ) => V["Stack"];

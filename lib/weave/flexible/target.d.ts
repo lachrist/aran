@@ -1,14 +1,12 @@
-import type { DeepLocalContext } from "../../source";
-
 import type {
   ArgControlBlock,
   ArgEffect,
   ArgExpression,
   ArgNode,
+  ArgPreludeBlock,
   ArgProgram,
   ArgRoutineBlock,
   ArgStatement,
-  ResExpression,
 } from "../atom";
 
 export type ProgramTarget = {
@@ -16,49 +14,36 @@ export type ProgramTarget = {
   parent: null;
 };
 
-export type RoutineBlockTarget = {
-  origin: ArgRoutineBlock;
+export type Target<O extends ArgNode> = {
+  origin: O;
   parent: ArgNode;
 };
 
-export type ControlBlockTarget = {
-  origin: ArgControlBlock;
-  parent: ArgNode;
-};
+export type RoutineBlockTarget = Target<ArgRoutineBlock>;
 
-export type StatementTarget = {
-  origin: ArgStatement;
-  parent: ArgNode;
-};
+export type ControlBlockTarget = Target<ArgControlBlock>;
 
-export type EffectTarget = {
-  origin: ArgEffect;
-  parent: ArgNode;
-};
+export type PreludeBlockTarget = Target<ArgPreludeBlock>;
 
-export type ExpressionTarget = {
-  origin: ArgExpression;
-  parent: ArgNode;
-};
+export type BlockTarget =
+  | RoutineBlockTarget
+  | ControlBlockTarget
+  | PreludeBlockTarget;
 
-export type EvalExpressionTarget = {
-  code: ResExpression;
-  context: DeepLocalContext;
-  origin: ArgExpression & { type: "EvalExpression" };
-  parent: ArgNode;
-};
+export type StatementTarget = Target<ArgStatement>;
 
-export type ApplyExpressionTarget = {
-  callee: ResExpression;
-  self: ResExpression;
-  input: ResExpression[];
-  origin: ArgExpression & { type: "ApplyExpression" };
-  parent: ArgNode;
-};
+export type EffectTarget = Target<ArgEffect>;
 
-export type ConstructExpressionTarget = {
-  callee: ResExpression;
-  input: ResExpression[];
-  origin: ArgExpression & { type: "ConstructExpression" };
-  parent: ArgNode;
-};
+export type ExpressionTarget = Target<ArgExpression>;
+
+export type EvalExpressionTarget = Target<
+  ArgExpression & { type: "EvalExpression" }
+>;
+
+export type ApplyExpressionTarget = Target<
+  ArgExpression & { type: "ApplyExpression" }
+>;
+
+export type ConstructExpressionTarget = Target<
+  ArgExpression & { type: "ConstructExpression" }
+>;

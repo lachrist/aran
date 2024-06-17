@@ -1,17 +1,19 @@
 export type ProgramKind =
   | "module"
   | "script"
-  | "eval.global"
-  | "eval.local.root"
-  | "eval.local.deep";
+  | "global-eval"
+  | "root-local-eval"
+  | "deep-local-eval";
 
-export type ClosureKind =
-  | "arrow"
-  | "arrow.async"
-  | "function"
-  | "function.async"
-  | "function.generator"
-  | "function.async.generator";
+export type ArrowKind = "arrow" | "async-arrow";
+
+export type FunctionKind = "function" | "async-function";
+
+export type GeneratorKind = "generator" | "async-generator";
+
+export type ClosureKind = ArrowKind | FunctionKind | GeneratorKind;
+
+export type RoutineKind = ProgramKind | ClosureKind;
 
 export type ControlKind =
   | "try"
@@ -22,7 +24,7 @@ export type ControlKind =
   | "while"
   | "bare";
 
-export type BlockKind = ProgramKind | ClosureKind | ControlKind;
+export type BlockKind = RoutineKind | ControlKind;
 
 export type Parametrization = {
   "module":
@@ -40,14 +42,14 @@ export type Parametrization = {
     | "scope.write"
     | "scope.typeof"
     | "scope.discard";
-  "eval.global":
+  "global-eval":
     | "this"
     | "import.dynamic"
     | "scope.read"
     | "scope.write"
     | "scope.typeof"
     | "scope.discard";
-  "eval.local.root":
+  "root-local-eval":
     | "this"
     | "new.target"
     | "import.dynamic"
@@ -62,25 +64,21 @@ export type Parametrization = {
     | "super.call"
     | "super.get"
     | "super.set";
-  "eval.local.deep": never;
+  "deep-local-eval": never;
   "function": "function.callee" | "new.target" | "this" | "function.arguments";
-  "function.async":
+  "async-function":
     | "function.callee"
     | "new.target"
     | "this"
     | "function.arguments";
-  "function.generator":
-    | "function.callee"
-    | "new.target"
-    | "this"
-    | "function.arguments";
-  "function.async.generator":
+  "generator": "function.callee" | "new.target" | "this" | "function.arguments";
+  "async-generator":
     | "function.callee"
     | "new.target"
     | "this"
     | "function.arguments";
   "arrow": "function.callee" | "function.arguments";
-  "arrow.async": "function.callee" | "function.arguments";
+  "async-arrow": "function.callee" | "function.arguments";
   "catch": "catch.error";
   "try": never;
   "finally": never;

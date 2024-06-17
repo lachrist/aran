@@ -3,11 +3,12 @@ import type { Source, Specifier } from "../estree";
 import type {
   Node,
   Program,
-  RoutineBlock,
-  ControlBlock,
   Statement,
   Effect,
   Expression,
+  ControlBlock,
+  RoutineBlock,
+  PreludeBlock,
 } from "../lang";
 import type { Path } from "../path";
 
@@ -41,13 +42,17 @@ export type ArgProgram = Program<ArgAtom>;
 
 export type ResProgram = Program<ResAtom>;
 
+export type ArgControlBlock = ControlBlock<ArgAtom>;
+
+export type ResControlBlock = ControlBlock<ResAtom>;
+
 export type ArgRoutineBlock = RoutineBlock<ArgAtom>;
 
 export type ResRoutineBlock = RoutineBlock<ResAtom>;
 
-export type ArgControlBlock = ControlBlock<ArgAtom>;
+export type ArgPreludeBlock = PreludeBlock<ArgAtom>;
 
-export type ResControlBlock = ControlBlock<ResAtom>;
+export type ResPreludeBlock = PreludeBlock<ResAtom>;
 
 export type ArgStatement = Statement<ArgAtom>;
 

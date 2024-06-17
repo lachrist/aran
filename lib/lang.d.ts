@@ -206,19 +206,32 @@ export type Program<A extends Atom> =
       tag: A["Tag"];
     };
 
-export type RoutineBlock<A extends Atom> = {
-  type: "RoutineBlock";
-  frame: [A["Variable"], Intrinsic][];
-  body: Statement<A>[];
-  completion: Expression<A>;
-  tag: A["Tag"];
-};
+///////////
+// Block //
+///////////
 
 export type ControlBlock<A extends Atom> = {
   type: "ControlBlock";
   labels: A["Label"][];
-  frame: [A["Variable"], Intrinsic][];
+  bindings: [A["Variable"], Intrinsic][];
   body: Statement<A>[];
+  tag: A["Tag"];
+};
+
+export type RoutineBlock<A extends Atom> = {
+  type: "RoutineBlock";
+  bindings: [A["Variable"], Intrinsic][];
+  body: Statement<A>[];
+  tail: Expression<A>;
+  tag: A["Tag"];
+};
+
+export type PreludeBlock<A extends Atom> = {
+  type: "PreludeBlock";
+  bindings: [A["Variable"], Intrinsic][];
+  head: Effect<A>[];
+  body: Statement<A>[];
+  tail: Expression<A>;
   tag: A["Tag"];
 };
 
@@ -319,18 +332,16 @@ export type Expression<A extends Atom> =
     }
   | {
       type: "ClosureExpression";
-      kind: "function";
+      kind: "arrow" | "function";
       asynchronous: boolean;
-      generator: boolean;
       body: RoutineBlock<A>;
       tag: A["Tag"];
     }
   | {
       type: "ClosureExpression";
-      kind: "arrow";
+      kind: "generator";
       asynchronous: boolean;
-      generator: false;
-      body: RoutineBlock<A>;
+      body: PreludeBlock<A>;
       tag: A["Tag"];
     }
   // Control //
@@ -382,6 +393,7 @@ export type Node<A extends Atom> =
   | Program<A>
   | ControlBlock<A>
   | RoutineBlock<A>
+  | PreludeBlock<A>
   | Statement<A>
   | Effect<A>
   | Expression<A>;
