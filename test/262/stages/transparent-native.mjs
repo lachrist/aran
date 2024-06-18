@@ -34,25 +34,21 @@ export default {
      * >}
      */
     const advice = {
-      "block@setup": (state, _kind, _head, _path) => state,
-      "block@overframe": (_state, _kind, frame, _path) => frame,
-      "block@frame": (_state, _kind, _frame, _path) => {},
-      "block@success": (_state, _kind, value, _path) => value,
-      "block@failure": (_state, _kind, value, _path) => value,
+      "block@setup": (state, _kind, _path) => state,
+      "program-block@definition": (_state, _kind, _head, _path) => {},
+      "control-block@labeling": (_state, _kind, _labels, _path) => {},
+      "block@declaration-overwrite": (_state, _kind, frame, _path) => frame,
+      "block@declaration": (_state, _kind, _frame, _path) => {},
+      "routine-block@completion": (_state, _kind, value, _path) => value,
+      "control-block@completion": (_state, _kind, _path) => {},
+      "block@throwing": (_state, _kind, value, _path) => value,
       "block@teardown": (_state, _kind, _path) => {},
       "break@before": (_state, _label, _path) => {},
       "test@before": (_state, _kind, value, _path) => !!value,
       "intrinsic@after": (_state, _name, value, _path) => value,
       "primitive@after": (_state, value, _path) => value,
       "import@after": (_state, _source, _specifier, value, _path) => value,
-      "closure@after": (
-        _state,
-        _kind,
-        _asynchronous,
-        _generator,
-        value,
-        _path,
-      ) => value,
+      "closure@after": (_state, _kind, value, _path) => value,
       "read@after": (_state, _variable, value, _path) => value,
       "eval@before": (_state, context, value, path) => {
         if (typeof value === "string") {
