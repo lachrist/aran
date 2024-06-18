@@ -7,7 +7,6 @@ export type WarningName =
   | "StrictKeywordExternalVariable"
   | "StrictReadonlyExternalVariableWrite"
   | "ExternalVariableClash"
-  | "GeneratorParameterPattern"
   | "DirectEvalExternalVariableDeclaration"
   | "KeywordLocalExternalRead"
   | "KeywordLocalExternalTypeof"
