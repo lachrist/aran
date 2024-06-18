@@ -396,6 +396,5 @@
   "When using enclave, from other programs, hidden variables are declared at the beginning": [],
   "When using enclave, from other programs, const hidden variables are writable": [],
   "Accessing Symbol.iterator twice in spread syntax": [],
-  "Accessing step.done twice in for-of loop and array pattern": [],
-  "Accessing object values twice in object pattern with rest": []
+  "Accessing step.done twice in for-of loop and array pattern": []
 }
