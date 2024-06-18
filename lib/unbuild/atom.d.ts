@@ -3,6 +3,7 @@ import type { Path } from "../path.js";
 import type {
   Program as GenericProgram,
   ControlBlock as GenericControlBlock,
+  PreludeBlock as GenericPreludeBlock,
   RoutineBlock as GenericRoutineBlock,
   Statement as GenericStatement,
   Effect as GenericEffect,
@@ -26,6 +27,8 @@ export type Program = GenericProgram<Atom>;
 export type ControlBlock = GenericControlBlock<Atom>;
 
 export type RoutineBlock = GenericRoutineBlock<Atom>;
+
+export type PreludeBlock = GenericPreludeBlock<Atom>;
 
 export type Statement = GenericStatement<Atom>;
 

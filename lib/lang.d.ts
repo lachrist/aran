@@ -125,6 +125,10 @@ export type AranIntrinsicRecord = {
   "aran.deadzone": symbol;
   // https://262.ecma-international.org/14.0#sec-topropertykey
   "aran.toPropertyKey": (value: unknown) => string | symbol;
+  "aran.toArgumentList": (
+    array: unknown[],
+    callee: Function | null,
+  ) => ArrayLike<unknown>;
   "aran.listForInKey": (object: unknown) => string[];
   "aran.listRest": <X>(iterator: Iterator<X>, result: IteratorResult<X>) => X[];
   "aran.createObject": (prototype: object, ...entries: unknown[]) => unknown;
