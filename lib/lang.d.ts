@@ -129,6 +129,10 @@ export type AranIntrinsicRecord = {
     array: unknown[],
     callee: Function | null,
   ) => ArrayLike<unknown>;
+  "aran.sliceObject": (
+    object: unknown,
+    exclusion: { [key in PropertyKey]: null },
+  ) => object;
   "aran.listForInKey": (object: unknown) => string[];
   "aran.listRest": <X>(iterator: Iterator<X>, result: IteratorResult<X>) => X[];
   "aran.createObject": (prototype: object, ...entries: unknown[]) => unknown;

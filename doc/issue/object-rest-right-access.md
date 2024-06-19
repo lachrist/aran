@@ -1,28 +1,30 @@
-Excluded properties are accessed twice.
+In object pattern with rest element, each property is accessed exactly by
+listing the object own keys. Instead, Aran does not list the object own keys and
+accessed the matched one twice. This is not a hard technical challenge to
+overcome but it will require to list
 
 ```js
-const _ARAN_LOG_ = console.log;
-
 const { foo, ...rest } = new Proxy(
   { foo: 123, bar: 456, qux: 789 },
   {
     get: (target, key, receiver) => {
-      _ARAN_LOG_(`get >> ${key}`);
+      console.log(`get >> ${key}`);
       return Reflect.get(target, key, receiver);
     },
     getOwnPropertyDescriptor: (target, key) => {
-      _ARAN_LOG_(`getOwnPropertyDescriptor >> ${key}`);
+      console.log(`getOwnPropertyDescriptor >> ${key}`);
       return Reflect.getOwnPropertyDescriptor(target, key);
     },
     ownKeys: (target) => {
-      console.log("ownKeys");
+      console.log.log("ownKeys");
       return Reflect.ownKeys(target);
     },
   },
 );
-
-_ARAN_LOG_({ foo, rest });
+console.log({ foo, rest });
 ```
+
+Normal:
 
 ```
 get >> foo
@@ -33,6 +35,8 @@ getOwnPropertyDescriptor >> qux
 get >> qux
 { foo: 123, rest: { bar: 456, qux: 789 } }
 ```
+
+Aran:
 
 ```
 'get >> foo'
