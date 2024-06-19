@@ -130,7 +130,7 @@ export type AranIntrinsicRecord = {
     callee: Function | null,
   ) => ArrayLike<unknown>;
   "aran.sliceObject": (
-    object: unknown,
+    object: object,
     exclusion: { [key in PropertyKey]: null },
   ) => object;
   "aran.listForInKey": (object: unknown) => string[];

@@ -16,7 +16,7 @@ const { foo, ...rest } = new Proxy(
       return Reflect.getOwnPropertyDescriptor(target, key);
     },
     ownKeys: (target) => {
-      console.log.log("ownKeys");
+      console.log("ownKeys");
       return Reflect.ownKeys(target);
     },
   },
