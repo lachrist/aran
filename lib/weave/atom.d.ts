@@ -8,7 +8,6 @@ import type {
   Expression,
   ControlBlock,
   RoutineBlock,
-  PreludeBlock,
 } from "../lang";
 import type { Path } from "../path";
 
@@ -49,10 +48,6 @@ export type ResControlBlock = ControlBlock<ResAtom>;
 export type ArgRoutineBlock = RoutineBlock<ArgAtom>;
 
 export type ResRoutineBlock = RoutineBlock<ResAtom>;
-
-export type ArgPreludeBlock = PreludeBlock<ArgAtom>;
-
-export type ResPreludeBlock = PreludeBlock<ResAtom>;
 
 export type ArgStatement = Statement<ArgAtom>;
 

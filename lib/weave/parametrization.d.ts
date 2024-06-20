@@ -11,7 +11,9 @@ export type FunctionKind = "function" | "async-function";
 
 export type GeneratorKind = "generator" | "async-generator";
 
-export type ClosureKind = ArrowKind | FunctionKind | GeneratorKind;
+export type MethodKind = "method" | "async-method";
+
+export type ClosureKind = ArrowKind | FunctionKind | GeneratorKind | MethodKind;
 
 export type RoutineKind = ProgramKind | ClosureKind;
 
@@ -79,6 +81,12 @@ export type Parametrization = {
     | "function.arguments";
   "arrow": "function.callee" | "function.arguments";
   "async-arrow": "function.callee" | "function.arguments";
+  "method": "function.callee" | "new.target" | "this" | "function.arguments";
+  "async-method":
+    | "function.callee"
+    | "new.target"
+    | "this"
+    | "function.arguments";
   "catch": "catch.error";
   "try": never;
   "finally": never;

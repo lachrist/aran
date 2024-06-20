@@ -169,15 +169,6 @@
     "test/language/statements/class/subclass/derived-class-return-override-catch.js",
     "test/language/statements/class/subclass/derived-class-return-override-for-of.js"
   ],
-  "methods have a non-configurable prototype property": [
-    "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js",
-    "test/language/expressions/object/method-definition/name-prototype-prop.js",
-    "test/language/statements/class/definition/accessors.js",
-    "test/language/statements/class/definition/getters-prop-desc.js",
-    "test/language/statements/class/definition/methods.js",
-    "test/language/statements/class/definition/numeric-property-names.js",
-    "test/language/statements/class/definition/setters-prop-desc.js"
-  ],
   "ambient intrinsic do not consider realm": [
     "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js",
     "test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js",

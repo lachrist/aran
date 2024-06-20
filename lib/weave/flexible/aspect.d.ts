@@ -4,7 +4,6 @@ import type {
   ArgVariable as Variable,
   ArgNode as Node,
   ArgProgram as Program,
-  ArgPreludeBlock as PreludeBlock,
   ArgControlBlock as ControlBlock,
   ArgRoutineBlock as RoutineBlock,
   ArgStatement as Statement,
@@ -25,7 +24,7 @@ export {
   Expression,
 };
 
-export type Block = ControlBlock | RoutineBlock | PreludeBlock;
+export type Block = ControlBlock | RoutineBlock;
 
 type ValueOf<record> = record[keyof record];
 
@@ -66,7 +65,7 @@ export type AspectTyping<value, state, point extends Json[]> = {
     advice: (state: state, ...point: point) => void;
   };
   "routine-block@after": {
-    pointcut: GenericPointcut<point, RoutineBlock | PreludeBlock>;
+    pointcut: GenericPointcut<point, RoutineBlock>;
     advice: (state: state, value: value, ...point: point) => value;
   };
   "block@throwing": {

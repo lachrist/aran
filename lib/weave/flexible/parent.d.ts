@@ -1,12 +1,5 @@
 import type { Variable as EstreeVariable } from "../../estree";
-import type {
-  ArrowKind,
-  FunctionKind,
-  ClosureKind,
-  ControlKind,
-  ProgramKind,
-  GeneratorKind,
-} from "../parametrization";
+import type { ClosureKind, ControlKind, ProgramKind } from "../parametrization";
 import type { Json } from "../../json";
 
 export type ProgramParent = {
@@ -26,10 +19,6 @@ export type ControlParent = {
   kind: ControlKind;
 };
 
-export type Parent = ProgramParent | ClosureParent | ControlParent;
+export type RoutineParent = ProgramParent | ClosureParent;
 
-export type RoutineParent =
-  | ProgramParent
-  | (ClosureParent & { kind: ArrowKind | FunctionKind });
-
-export type PreludeParent = ClosureParent & { kind: GeneratorKind };
+export type Parent = RoutineParent | ControlParent;

@@ -3,7 +3,6 @@ import type {
   ArgEffect,
   ArgExpression,
   ArgNode,
-  ArgPreludeBlock,
   ArgProgram,
   ArgRoutineBlock,
   ArgStatement,
@@ -23,12 +22,7 @@ export type RoutineBlockTarget = Target<ArgRoutineBlock>;
 
 export type ControlBlockTarget = Target<ArgControlBlock>;
 
-export type PreludeBlockTarget = Target<ArgPreludeBlock>;
-
-export type BlockTarget =
-  | RoutineBlockTarget
-  | ControlBlockTarget
-  | PreludeBlockTarget;
+export type BlockTarget = RoutineBlockTarget | ControlBlockTarget;
 
 export type StatementTarget = Target<ArgStatement>;
 

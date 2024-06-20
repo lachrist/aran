@@ -11,15 +11,6 @@
     "test/language/statements/class/subclass/derived-class-return-override-catch.js",
     "test/language/statements/class/subclass/derived-class-return-override-for-of.js"
   ],
-  "methods have a non-configurable prototype property": [
-    "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js",
-    "test/language/expressions/object/method-definition/name-prototype-prop.js",
-    "test/language/statements/class/definition/accessors.js",
-    "test/language/statements/class/definition/getters-prop-desc.js",
-    "test/language/statements/class/definition/methods.js",
-    "test/language/statements/class/definition/numeric-property-names.js",
-    "test/language/statements/class/definition/setters-prop-desc.js"
-  ],
   "ambient intrinsic do not consider realm": [
     "test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js",
     "test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js",
@@ -57,97 +48,6 @@
     "test/language/arguments-object/mapped/writable-enumerable-configurable-descriptor.js",
     "test/language/expressions/yield/formal-parameters-after-reassignment-non-strict.js",
     "test/language/statements/for-of/arguments-mapped-aliasing.js"
-  ],
-  "arguments/caller properties of sloppy function remain null": [
-    "test/language/arguments-object/10.6-13-a-2.js",
-    "test/language/arguments-object/10.6-13-a-3.js"
-  ],
-  "Function.prototype.toString": [
-    "test/built-ins/Function/prototype/toString/Function.js",
-    {
-      "exact": "test/built-ins/RegExp/prototype/exec/S15.10.6.2_A1_T9.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/addition/S11.6.1_A3.2_T1.2.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/class/cpn-class-expr-computed-property-name-from-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/class/cpn-class-expr-fields-computed-property-name-from-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/greater-than/S11.8.2_A3.2_T1.2.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/greater-than-or-equal/S11.8.4_A3.2_T1.2.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/less-than/S11.8.1_A3.2_T1.2.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/less-than-or-equal/S11.8.3_A3.2_T1.2.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/object/cpn-obj-lit-computed-property-name-from-arrow-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/object/cpn-obj-lit-computed-property-name-from-async-arrow-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/expressions/object/cpn-obj-lit-computed-property-name-from-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/statements/class/cpn-class-decl-accessors-computed-property-name-from-arrow-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/statements/class/cpn-class-decl-accessors-computed-property-name-from-async-arrow-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/statements/class/cpn-class-decl-accessors-computed-property-name-from-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/statements/class/cpn-class-decl-computed-property-name-from-arrow-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/statements/class/cpn-class-decl-computed-property-name-from-async-arrow-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/statements/class/cpn-class-decl-computed-property-name-from-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/statements/class/cpn-class-decl-fields-computed-property-name-from-function-expression.js",
-      "flaky": true
-    },
-    {
-      "exact": "test/language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-function-expression.js",
-      "flaky": true
-    }
   ],
   "Deadzone is not enforced from outside the module (only relevant in presence of cycle)": [
     "test/language/module-code/instn-iee-bndng-cls.js",

@@ -1,0 +1,2 @@
+test/language/arguments-object/10.6-13-a-2.js
+test/language/arguments-object/10.6-13-a-3.js

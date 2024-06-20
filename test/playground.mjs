@@ -4,7 +4,11 @@ import { generate } from "astring";
 
 const { eval: evalGlobal } = globalThis;
 
-evalGlobal(
+const code = `
+({m () {}})
+`;
+
+console.log(
   generate(
     instrument(
       {
@@ -13,7 +17,7 @@ evalGlobal(
         context: {},
         path: ROOT_PATH,
         root: /** @type {any} */ (
-          parse("123;", {
+          parse(code, {
             sourceType: "script",
             ecmaVersion: "latest",
           })

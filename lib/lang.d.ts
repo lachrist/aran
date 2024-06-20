@@ -141,6 +141,12 @@ export type AranIntrinsicRecord = {
   "aran.GeneratorFunction.prototype.prototype": GeneratorFunction["prototype"];
 };
 
+export type HeadlessClosureKind = "arrow" | "function" | "method";
+
+export type HeadfulClosureKind = "generator";
+
+export type ClosureKind = HeadlessClosureKind | HeadfulClosureKind;
+
 export type AranIntrinsic = keyof AranIntrinsicRecord;
 
 export type Intrinsic = RegularIntrinsic | AccessorIntrinsic | AranIntrinsic;
@@ -179,7 +185,7 @@ export type Program<A extends Atom> =
       kind: "module";
       situ: "global";
       head: ModuleProgramHeader[];
-      body: RoutineBlock<A>;
+      body: HeadlessRoutineBlock<A>;
       tag: A["Tag"];
     }
   | {
@@ -187,7 +193,7 @@ export type Program<A extends Atom> =
       kind: "script";
       situ: "global";
       head: ScriptProgramHeader[];
-      body: RoutineBlock<A>;
+      body: HeadlessRoutineBlock<A>;
       tag: A["Tag"];
     }
   | {
@@ -195,7 +201,7 @@ export type Program<A extends Atom> =
       kind: "eval";
       situ: "global";
       head: GlobalEvalProgramHeader[];
-      body: RoutineBlock<A>;
+      body: HeadlessRoutineBlock<A>;
       tag: A["Tag"];
     }
   | {
@@ -203,7 +209,7 @@ export type Program<A extends Atom> =
       kind: "eval";
       situ: "local.root";
       head: RootLocalEvalProgramHeader[];
-      body: RoutineBlock<A>;
+      body: HeadlessRoutineBlock<A>;
       tag: A["Tag"];
     }
   | {
@@ -211,7 +217,7 @@ export type Program<A extends Atom> =
       kind: "eval";
       situ: "local.deep";
       head: DeepLocalEvalProgramHeader[];
-      body: RoutineBlock<A>;
+      body: HeadlessRoutineBlock<A>;
       tag: A["Tag"];
     };
 
@@ -230,18 +236,18 @@ export type ControlBlock<A extends Atom> = {
 export type RoutineBlock<A extends Atom> = {
   type: "RoutineBlock";
   bindings: [A["Variable"], Intrinsic][];
+  head: Effect<A>[] | null;
   body: Statement<A>[];
   tail: Expression<A>;
   tag: A["Tag"];
 };
 
-export type PreludeBlock<A extends Atom> = {
-  type: "PreludeBlock";
-  bindings: [A["Variable"], Intrinsic][];
+export type HeadlessRoutineBlock<A extends Atom> = RoutineBlock<A> & {
+  head: null;
+};
+
+export type HeadfulRoutineBlock<A extends Atom> = RoutineBlock<A> & {
   head: Effect<A>[];
-  body: Statement<A>[];
-  tail: Expression<A>;
-  tag: A["Tag"];
 };
 
 export type Statement<A extends Atom> =
@@ -341,16 +347,16 @@ export type Expression<A extends Atom> =
     }
   | {
       type: "ClosureExpression";
-      kind: "arrow" | "function";
+      kind: HeadlessClosureKind;
       asynchronous: boolean;
-      body: RoutineBlock<A>;
+      body: HeadlessRoutineBlock<A>;
       tag: A["Tag"];
     }
   | {
       type: "ClosureExpression";
-      kind: "generator";
+      kind: HeadfulClosureKind;
       asynchronous: boolean;
-      body: PreludeBlock<A>;
+      body: HeadfulRoutineBlock<A>;
       tag: A["Tag"];
     }
   // Control //
@@ -402,7 +408,6 @@ export type Node<A extends Atom> =
   | Program<A>
   | ControlBlock<A>
   | RoutineBlock<A>
-  | PreludeBlock<A>
   | Statement<A>
   | Effect<A>
   | Expression<A>;
