@@ -11,12 +11,6 @@
     "test/language/statements/class/subclass/derived-class-return-override-catch.js",
     "test/language/statements/class/subclass/derived-class-return-override-for-of.js"
   ],
-  "Check for super class to be constructor is a heuristic based on the presence of prototype": [
-    "test/language/statements/class/subclass/superclass-arrow-function.js",
-    "test/language/statements/class/subclass/superclass-async-function.js",
-    "test/language/statements/class/subclass/superclass-async-generator-function.js",
-    "test/language/statements/class/subclass/superclass-generator-function.js"
-  ],
   "methods have a non-configurable prototype property": [
     "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js",
     "test/language/expressions/object/method-definition/name-prototype-prop.js",
@@ -176,7 +170,7 @@
     "test/language/module-code/namespace/internals/object-propertyIsEnumerable-binding-uninit.js",
     "test/language/module-code/top-level-await/module-self-import-async-resolution-ticks.js"
   ],
-  "Deadzone is is lifted too late in presence of module cycle": [
+  "Deadzone is lifted too late in presence of module cycle": [
     "test/language/module-code/verify-dfs.js"
   ],
   "Not calling iterable.return on abrupt completion in array pattern": [
@@ -240,8 +234,5 @@
   "Reflect.has triggers getters on global object contextified by vm -- https://github.com/nodejs/node/issues/52737": [
     "test/language/expressions/typeof/get-value.js",
     "test/language/module-code/import-assertions/eval-gtbndng-indirect-faux-assertion.js"
-  ],
-  "duplicate-property-access-on-object-rest-element": [
-    "test/language/expressions/object/dstr/object-rest-proxy-gopd-not-called-on-excluded-keys.js"
   ]
 }

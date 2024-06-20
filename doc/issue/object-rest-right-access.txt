@@ -1,1 +1,0 @@
-test/language/expressions/object/dstr/object-rest-proxy-gopd-not-called-on-excluded-keys.js

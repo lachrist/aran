@@ -125,6 +125,7 @@ export type AranIntrinsicRecord = {
   "aran.deadzone": symbol;
   // https://262.ecma-international.org/14.0#sec-topropertykey
   "aran.toPropertyKey": (value: unknown) => string | symbol;
+  "aran.isConstructor": (value: unknown) => boolean;
   "aran.toArgumentList": (
     array: unknown[],
     callee: Function | null,

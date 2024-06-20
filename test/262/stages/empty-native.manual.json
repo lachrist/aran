@@ -169,12 +169,6 @@
     "test/language/statements/class/subclass/derived-class-return-override-catch.js",
     "test/language/statements/class/subclass/derived-class-return-override-for-of.js"
   ],
-  "Check for super class to be constructor is a heuristic based on the presence of prototype": [
-    "test/language/statements/class/subclass/superclass-arrow-function.js",
-    "test/language/statements/class/subclass/superclass-async-function.js",
-    "test/language/statements/class/subclass/superclass-async-generator-function.js",
-    "test/language/statements/class/subclass/superclass-generator-function.js"
-  ],
   "methods have a non-configurable prototype property": [
     "test/built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js",
     "test/language/expressions/object/method-definition/name-prototype-prop.js",
@@ -333,7 +327,7 @@
     "test/language/module-code/namespace/internals/object-propertyIsEnumerable-binding-uninit.js",
     "test/language/module-code/top-level-await/module-self-import-async-resolution-ticks.js"
   ],
-  "Deadzone is is lifted too late in presence of module cycle": [
+  "Deadzone is lifted too late in presence of module cycle": [
     "test/language/module-code/verify-dfs.js"
   ],
   "Not calling iterable.return on abrupt completion in array pattern": [
@@ -388,9 +382,6 @@
   ],
   "Right value are consistently evaluated first in pattern": [
     "test/language/statements/class/elements/privatefieldset-evaluation-order-1.js"
-  ],
-  "duplicate-property-access-on-object-rest-element": [
-    "test/language/expressions/object/dstr/object-rest-proxy-gopd-not-called-on-excluded-keys.js"
   ],
   "Classes access ambient 'this' at initialization which might throw inside derived classes *EDIT*: this might actually be the intended behavior >> new (class extends class {} { constructor() { new (class { foo = 123; })(); } })();": [],
   "When using enclave, from other programs, hidden variables are declared at the beginning": [],
