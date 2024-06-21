@@ -1,4 +1,5 @@
 import { Context } from "node:vm";
+import { Status } from "./negative";
 
 export type Flag =
   | "onlyStrict"
@@ -69,7 +70,7 @@ export type Result = {
   error: null | ErrorSerial;
 };
 
-export type Failure = Result & { error: ErrorSerial };
+export type FailureResult = Result & { error: ErrorSerial };
 
 export type Instrument = (source: Source) => Source;
 
@@ -90,9 +91,7 @@ export type CompileInstrument = (options: {
 
 export type Stage = {
   compileInstrument: CompileInstrument;
-  expect: (result: Result) => string[];
-  requirement: StageName[];
-  exclusion: string[];
+  isExcluded: (target: string) => boolean;
+  predictStatus: (target: string) => Status;
+  listCause: (result: FailureResult) => string[];
 };
-
-export as namespace test262;

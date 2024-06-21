@@ -1,11 +1,24 @@
 import { parse } from "acorn";
 import { generate } from "astring";
+import { readFile } from "node:fs/promises";
+import { parseFailure } from "../failure.mjs";
 
-/** @type {test262.Stage} */
+const { Set } = globalThis;
+
+/**
+ * @type {Set<string>}
+ */
+const exclusion = new Set(
+  parseFailure(await readFile("./identity.failure.json", "utf8")).map(
+    ([target]) => target,
+  ),
+);
+
+/** @type {import("../types").Stage} */
 export default {
-  requirement: ["identity"],
-  exclusion: [],
-  expect: ({ error }) => (error === null ? [] : ["acorn"]),
+  isExcluded: (target) => exclusion.has(target),
+  predictStatus: (_target) => "flaky",
+  listCause: (_result) => [],
   compileInstrument:
     ({ record }) =>
     ({ kind, url, content }) =>

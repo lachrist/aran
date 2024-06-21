@@ -16,39 +16,6 @@
     "test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js",
     "test/language/expressions/super/realm.js"
   ],
-  "sloppy arguments is not a two-way binding with parameters": [
-    "test/built-ins/Object/defineProperty/15.2.3.6-4-292-1.js",
-    "test/built-ins/Object/defineProperty/15.2.3.6-4-293-2.js",
-    "test/built-ins/Object/defineProperty/15.2.3.6-4-293-3.js",
-    "test/built-ins/Object/defineProperty/15.2.3.6-4-294-1.js",
-    "test/built-ins/Object/defineProperty/15.2.3.6-4-295-1.js",
-    "test/built-ins/Object/defineProperty/15.2.3.6-4-296-1.js",
-    "test/language/arguments-object/10.6-10-c-ii-1.js",
-    "test/language/arguments-object/10.6-10-c-ii-2.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-2.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-3.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-4.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-2.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-3.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-4.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-nonwritable-3.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-nonwritable-4.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-nonwritable-5.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-2.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-3.js",
-    "test/language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-4.js",
-    "test/language/arguments-object/mapped/nonconfigurable-descriptors-define-failure.js",
-    "test/language/arguments-object/mapped/nonconfigurable-descriptors-set-value-by-arguments.js",
-    "test/language/arguments-object/mapped/nonconfigurable-descriptors-set-value-with-define-property.js",
-    "test/language/arguments-object/mapped/nonconfigurable-descriptors-with-param-assign.js",
-    "test/language/arguments-object/mapped/nonconfigurable-nonenumerable-nonwritable-descriptors-set-by-arguments.js",
-    "test/language/arguments-object/mapped/nonconfigurable-nonenumerable-nonwritable-descriptors-set-by-param.js",
-    "test/language/arguments-object/mapped/nonconfigurable-nonwritable-descriptors-set-by-arguments.js",
-    "test/language/arguments-object/mapped/nonconfigurable-nonwritable-descriptors-set-by-param.js",
-    "test/language/arguments-object/mapped/writable-enumerable-configurable-descriptor.js",
-    "test/language/expressions/yield/formal-parameters-after-reassignment-non-strict.js",
-    "test/language/statements/for-of/arguments-mapped-aliasing.js"
-  ],
   "Deadzone is not enforced from outside the module (only relevant in presence of cycle)": [
     "test/language/module-code/instn-iee-bndng-cls.js",
     "test/language/module-code/instn-iee-bndng-const.js",
@@ -126,11 +93,6 @@
   "Right value are consistently evaluated first in pattern": [
     "test/language/statements/class/elements/privatefieldset-evaluation-order-1.js"
   ],
-  "Classes access ambient 'this' at initialization which might throw inside derived classes *EDIT*: this might actually be the intended behavior >> new (class extends class {} { constructor() { new (class { foo = 123; })(); } })();": [],
-  "When using enclave, from other programs, hidden variables are declared at the beginning": [],
-  "When using enclave, from other programs, const hidden variables are writable": [],
-  "Accessing Symbol.iterator twice in spread syntax": [],
-  "Accessing step.done twice in for-of loop and array pattern": [],
   "Reflect.has triggers getters on global object contextified by vm -- https://github.com/nodejs/node/issues/52737": [
     "test/language/expressions/typeof/get-value.js",
     "test/language/module-code/import-assertions/eval-gtbndng-indirect-faux-assertion.js"

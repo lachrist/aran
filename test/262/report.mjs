@@ -18,7 +18,7 @@ const getArrayEntryFirst = ([first, _values]) => first;
 /**
  * @type {(
  *   failures: Map<string, string[]>,
- *   tagResult: (result: test262.Result) => string[],
+ *   tagResult: (result: import("./types").Result) => string[],
  * ) => string}
  */
 export const report = (failures) => {

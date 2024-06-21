@@ -13,11 +13,11 @@ class RealmAranError extends Error {}
  *     record: import("./types").Instrument,
  *     warning: "ignore" | "console",
  *     print: (message: string) => void,
- *     compileInstrument: test262.CompileInstrument,
+ *     compileInstrument: import("./types").CompileInstrument,
  *   },
  * ) => import("node:vm").Context & {
- *   $262: test262.$262 & {
- *     instrument: test262.Instrument,
+ *   $262: import("./types").$262 & {
+ *     instrument: import("./types").Instrument,
  *   },
  * }}
  */
@@ -36,7 +36,7 @@ export const createRealm = ({
     warning,
     context,
   });
-  /** @type {test262.$262} */
+  /** @type {import("./types").$262} */
   const $262 = {
     // @ts-ignore
     __proto__: null,
@@ -83,7 +83,7 @@ export const createRealm = ({
       reject(error);
       throw error;
     },
-    /** @type {test262.Agent} */
+    /** @type {import("./types").Agent} */
     // eslint-disable-next-line local/no-function
     get agent() {
       const error = new RealmAranError("agent");

@@ -7,7 +7,7 @@ const { Error, undefined, URL, Map, JSON } = globalThis;
  * @type {(
  *   options: {
  *     context: object,
- *     instrument: test262.Instrument,
+ *     instrument: import("./types").Instrument,
  *   },
  * ) => {
  *   link: import("./linker").Link,

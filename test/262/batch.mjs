@@ -1,23 +1,13 @@
 /* eslint-disable local/strict-console */
 
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { scrape } from "./scrape.mjs";
 import { argv } from "node:process";
 import { runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
+import { isFailureResult } from "./result.mjs";
 
-const {
-  Error,
-  Promise,
-  Map,
-  Object,
-  Reflect,
-  console,
-  process,
-  URL,
-  Set,
-  JSON,
-} = globalThis;
+const { Error, console, process, URL, JSON } = globalThis;
 
 if (process.argv.length !== 3) {
   throw new Error(
@@ -28,13 +18,8 @@ if (process.argv.length !== 3) {
 const stage = argv[2];
 
 const {
-  default: {
-    compileInstrument,
-    expect,
-    requirement,
-    exclusion: manual_exclusion,
-  },
-} = /** @type {{default: test262.Stage}} */ (
+  default: { compileInstrument, predictStatus, isExcluded, listCause },
+} = /** @type {{default: import("./types").Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
 
@@ -45,22 +30,8 @@ process.on("uncaughtException", (error, _origin) => {
 
 const test262 = new URL("../../test262/", import.meta.url);
 
-/** @type {Set<string>} */
-const exclusion = new Set([
-  ...manual_exclusion,
-  ...(
-    await Promise.all(
-      requirement.map((stage) =>
-        readFile(new URL(`stages/${stage}.json`, import.meta.url), "utf8"),
-      ),
-    )
-  ).flatMap(
-    (content) => /** @type {string[]} */ (Reflect.ownKeys(JSON.parse(content))),
-  ),
-]);
-
-/** @type {Map<string, string[]>} */
-const failures = new Map();
+/** @type {[string, string[]][]} */
+const failures = [];
 
 let index = 0;
 
@@ -69,7 +40,7 @@ for await (const url of scrape(new URL("test/", test262))) {
     console.dir(index);
   }
   const target = url.href.substring(test262.href.length);
-  if (!target.includes("_FIXTURE") && !exclusion.has(target)) {
+  if (!target.includes("_FIXTURE") && !isExcluded(target)) {
     const result = await runTest({
       target,
       test262,
@@ -77,15 +48,18 @@ for await (const url of scrape(new URL("test/", test262))) {
       warning: "ignore",
       compileInstrument,
     });
-    if (result.error !== null) {
-      failures.set(target, expect(result));
+    const status = predictStatus(target);
+    if (isFailureResult(result)) {
+      failures.push([target, listCause(result)]);
+    } else if (status === "negative") {
+      failures.push([target, ["expected negative but got positive instead"]]);
     }
   }
   index += 1;
 }
 
 await writeFile(
-  new URL(`stages/${stage}.json`, import.meta.url),
-  JSON.stringify(Object.fromEntries(failures.entries()), null, 2),
+  new URL(`stages/${stage}.failure.json`, import.meta.url),
+  JSON.stringify(failures, null, 2),
   "utf8",
 );

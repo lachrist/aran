@@ -46,7 +46,7 @@ export const inspectErrorStack = (error) => {
 };
 
 /**
- * @type {(error: unknown) => test262.ErrorSerial}
+ * @type {(error: unknown) => import("./types").ErrorSerial}
  */
 export const inspectError = (error) => ({
   name: inspectErrorName(error),

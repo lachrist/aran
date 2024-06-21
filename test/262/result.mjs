@@ -1,7 +1,9 @@
 /**
- * @type {(result: test262.Result) => result is test262.Failure}
+ * @type {(
+ *   result: import("./types").Result,
+ * ) => result is import("./types").FailureResult}
  */
-export const isFailure = (result) => result.error !== null;
+export const isFailureResult = (result) => result.error !== null;
 
 // const { JSON, Map, Array } = globalThis;
 

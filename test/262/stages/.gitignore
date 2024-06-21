@@ -1,2 +1,2 @@
-*.json
-!*.manual.json
+*.failure.json
+

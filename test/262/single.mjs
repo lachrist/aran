@@ -27,7 +27,7 @@ const codebase = new URL("codebase", import.meta.url);
 
 const {
   default: { compileInstrument },
-} = /** @type {{default: test262.Stage}} */ (
+} = /** @type {{default: import("./types").Stage}} */ (
   await import(`./stages/${stage}.mjs`)
 );
 

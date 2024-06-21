@@ -2,25 +2,22 @@
 
 import { readFile } from "node:fs/promises";
 import {
-  compileExpect,
   compileFunctionCode,
   compileStandardInstrumentation,
 } from "./util/index.mjs";
+import { matchNegativeRecord, parseNegativeRecord } from "../negative.mjs";
 
-const { JSON, URL } = globalThis;
+const { URL } = globalThis;
+
+const negative = parseNegativeRecord(
+  await readFile(new URL("aran.outcome.json", import.meta.url), "utf8"),
+);
 
 /** @type {test262.Stage} */
 export default {
   requirement: ["identity", "parsing"],
   exclusion: [],
-  expect: compileExpect(
-    JSON.parse(
-      await readFile(
-        new URL("empty-emulate.manual.json", import.meta.url),
-        "utf8",
-      ),
-    ),
-  ),
+  expect: (target) => matchNegativeRecord(negative, target),
   compileInstrument: ({ warning, record, context }) => {
     /**
      * @type {import("../../../lib").StandardAspect<

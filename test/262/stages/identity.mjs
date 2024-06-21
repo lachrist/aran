@@ -1,7 +1,11 @@
 import { readFile } from "node:fs/promises";
-import { compileExpect } from "./util/index.mjs";
+import {
+  getNegativeStatus,
+  listNegativeCause,
+  parseNegative,
+} from "../negative.mjs";
 
-const { JSON, URL, Set } = globalThis;
+const { URL, Set } = globalThis;
 
 const features = new Set([
   "legacy-regexp",
@@ -30,10 +34,8 @@ const features = new Set([
 /** @type {(feature: string) => boolean} */
 const isFeatureExcluded = (feature) => features.has(feature);
 
-const expect = compileExpect(
-  JSON.parse(
-    await readFile(new URL("identity.manual.json", import.meta.url), "utf8"),
-  ),
+const negative = parseNegative(
+  await readFile(new URL("identity.negative.txt", import.meta.url), "utf8"),
 );
 
 /** @type {[]} */
@@ -41,18 +43,14 @@ const EMPTY = [];
 
 const ARAN_REALM_LIMITATION = ["aran-realm-limitation"];
 
-/** @type {test262.Stage} */
+/** @type {import("../types").Stage} */
 export default {
-  requirement: [],
-  exclusion: [],
-  expect: (result) => [
-    ...(result.error !== null && result.error.name === "RealmAranError"
-      ? ARAN_REALM_LIMITATION
-      : EMPTY),
-    ...(result.error === null
-      ? EMPTY
-      : result.metadata.features.filter(isFeatureExcluded)),
-    ...expect(result),
+  isExcluded: (_target) => false,
+  predictStatus: (target) => getNegativeStatus(negative, target),
+  listCause: (result) => [
+    ...(result.error.name === "RealmAranError" ? ARAN_REALM_LIMITATION : EMPTY),
+    ...result.metadata.features.filter(isFeatureExcluded),
+    ...listNegativeCause(negative, result.target),
   ],
   compileInstrument: ({ record }) => record,
 };

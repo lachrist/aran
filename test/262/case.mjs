@@ -94,8 +94,8 @@ const runNegativeAsync = async (phase, name, runAsync) => {
 /**
  * @type {(
  *   options: {
- *     case: test262.Case,
- *     compileInstrument: test262.CompileInstrument,
+ *     case: import("./types").Case,
+ *     compileInstrument: import("./types").CompileInstrument,
  *     warning: "ignore" | "console",
  *     reject: (error: Error) => void,
  *     record: import("./types").Instrument,
@@ -205,10 +205,10 @@ export const runTestCaseInner = async ({
 /**
  * @type {(
  *   options: {
- *     case: test262.Case,
+ *     case: import("./types").Case,
  *     warning: "ignore" | "console",
  *     record: import("./types").Instrument,
- *     compileInstrument: test262.CompileInstrument,
+ *     compileInstrument: import("./types").CompileInstrument,
  *   },
  * ) => Promise<void>}
  */

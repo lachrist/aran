@@ -42,7 +42,7 @@ const generateUniqueIdentifier = () =>
     .toString(32)
     .substring(2)}`;
 
-/** @type {test262.Instrument} */
+/** @type {import("./types").Instrument} */
 export const record = ({ kind, url: url1, content: content1 }) => {
   const basename = generateUniqueIdentifier();
   const extension = getExtension(kind);

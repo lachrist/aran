@@ -10,10 +10,10 @@ const { URL } = globalThis;
  *   options: {
  *     target: string,
  *     content: string,
- *     metadata: test262.Metadata,
+ *     metadata: import("./types").Metadata,
  *     test262: URL,
  *   },
- * ) => test262.Case[]}
+ * ) => import("./types").Case[]}
  */
 const listTestCase = ({ target, content, metadata, test262 }) => {
   const asynchronous = metadata.flags.includes("async");
@@ -24,7 +24,7 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
     ...metadata.includes,
   ].map((name) => new URL(`harness/${name}`, test262));
   const module = metadata.flags.includes("module");
-  /** @type {test262.Case[]} */
+  /** @type {import("./types").Case[]} */
   const tests = [];
   const kind = module ? "module" : "script";
   if (
@@ -58,7 +58,7 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
   return tests;
 };
 
-/** @type {test262.Metadata} */
+/** @type {import("./types").Metadata} */
 const DEFAULT_METADATA = {
   includes: [],
   flags: [],
@@ -72,11 +72,11 @@ const DEFAULT_METADATA = {
  *   options: {
  *     target: string,
  *     test262: URL,
- *     compileInstrument: test262.CompileInstrument,
+ *     compileInstrument: import("./types").CompileInstrument,
  *     warning: "ignore" | "console",
  *     record: import("./types").Instrument,
  *   },
- * ) => Promise<test262.Result>}
+ * ) => Promise<import("./types").Result>}
  */
 export const runTest = async ({
   target,
@@ -86,7 +86,7 @@ export const runTest = async ({
   compileInstrument,
 }) => {
   const content = await readFile(new URL(target, test262), "utf8");
-  /** @type {test262.Metadata} */
+  /** @type {import("./types").Metadata} */
   let metadata = DEFAULT_METADATA;
   try {
     metadata = parseMetadata(content);

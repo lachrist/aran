@@ -1,6 +1,5 @@
 /* eslint-disable local/strict-console */
 
-import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { argv } from "node:process";
 import { cleanup, record } from "./record.mjs";
@@ -8,9 +7,9 @@ import { scrape } from "./scrape.mjs";
 import { runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
 import { loadCursor, saveCursor } from "./cursor.mjs";
+import { isFailureResult } from "./result.mjs";
 
-const { Object, Reflect, JSON, Set, Promise, console, process, URL } =
-  globalThis;
+const { Object, console, process, URL } = globalThis;
 
 const persistent = pathToFileURL(argv[2]);
 
@@ -21,31 +20,12 @@ const test262 = new URL("../../test262/", import.meta.url);
 const codebase = new URL("codebase/", import.meta.url);
 
 const {
-  default: {
-    compileInstrument,
-    expect,
-    requirement,
-    exclusion: manual_exclusion,
-  },
-} = /** @type {{default: test262.Stage}} */ (
+  default: { compileInstrument, predictStatus, isExcluded, listCause },
+} = /** @type {{default: import("./types").Stage}} */ (
   await import(`./stages/${cursor.stage}.mjs`)
 );
 
-/** @type {Set<string>} */
-const exclusion = new Set([
-  ...manual_exclusion,
-  ...(
-    await Promise.all(
-      requirement.map((stage) =>
-        readFile(new URL(`stages/${stage}.json`, import.meta.url), "utf8"),
-      ),
-    )
-  ).flatMap(
-    (content) => /** @type {string[]} */ (Reflect.ownKeys(JSON.parse(content))),
-  ),
-]);
-
-/** @type {(error: test262.ErrorSerial) => string} */
+/** @type {(error: import("./types").ErrorSerial) => string} */
 const printError = (error) =>
   Object.hasOwn(error, "stack")
     ? /** @type {string} */ (error.stack)
@@ -66,7 +46,7 @@ try {
     const target = url.href.substring(test262.href.length);
     if (cursor.index >= initial) {
       console.log(cursor.index);
-      if (!target.includes("_FIXTURE") && !exclusion.has(target)) {
+      if (!target.includes("_FIXTURE") && !isExcluded(target)) {
         const result = await runTest({
           target,
           test262,
@@ -74,24 +54,16 @@ try {
           record: (source) => source,
           compileInstrument,
         });
-        const reasons = expect(result);
-        if (result.error === null) {
-          if (reasons.length > 0) {
-            console.log("");
-            console.log(`Link >> test262/${target}\n`);
-            console.log(`Target >> ${JSON.stringify(target)}\n`);
-            console.log(`Reasons >> ${reasons}\n`);
-            console.log("Expected failure but got success, yay... (I guess)\n");
-            // eslint-disable-next-line local/no-label
-            break;
+        const status = predictStatus(target);
+        if (status === "positive" && isFailureResult(result)) {
+          const causes = listCause(result);
+          for (const cause of causes) {
+            console.log(cause);
           }
-        } else {
-          if (reasons.length > 0) {
-            console.log(`${target} >> ${reasons}`);
-          } else {
+          if (causes.length === 0) {
             console.log("");
             console.log(`Link >> test262/${target}\n`);
-            console.log(`Target >> ${JSON.stringify(target)}\n`);
+            console.log(`Target >> ${target}\n`);
             await cleanup(codebase);
             const { error } = await runTest({
               target,
@@ -109,6 +81,14 @@ try {
             // eslint-disable-next-line local/no-label
             break;
           }
+        }
+        if (status === "negative" && result.error === null) {
+          console.log("");
+          console.log(`Link >> test262/${target}\n`);
+          console.log(`Target >> ${target}\n`);
+          console.log("Expected failure but got success, yay... (I guess)\n");
+          // eslint-disable-next-line local/no-label
+          break;
         }
       }
     }
