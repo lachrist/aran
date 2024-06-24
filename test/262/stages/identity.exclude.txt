@@ -1,0 +1,29 @@
+// when $DONE is called with a module objec, it cause an error because it cannot
+// be stringified (null prototype). That cause the test suite to stop because
+// the await of the test case is never resolved.
+test/language/expressions/dynamic-import/catch/nested-arrow-import-catch-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-arrow-import-catch-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/nested-async-function-await-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-async-function-await-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/nested-async-function-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-async-function-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/nested-async-function-return-await-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-async-function-return-await-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/nested-block-import-catch-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-block-import-catch-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/nested-block-labeled-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-block-labeled-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/nested-do-while-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-do-while-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/nested-else-import-catch-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-else-import-catch-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/nested-function-import-catch-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-function-import-catch-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/nested-if-import-catch-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-if-import-catch-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/nested-while-import-catch-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/nested-while-import-catch-eval-rqstd-abrupt-urierror.js
+test/language/expressions/dynamic-import/catch/top-level-import-catch-eval-rqstd-abrupt-typeerror.js
+test/language/expressions/dynamic-import/catch/top-level-import-catch-eval-rqstd-abrupt-urierror.js

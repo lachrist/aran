@@ -119,3 +119,11 @@ export const runTest = async ({
     error: null,
   };
 };
+
+/**
+ * @type {(
+ *   target: string,
+ * ) => boolean}
+ */
+export const isTestCase = (target) =>
+  !target.includes("_FIXTURE") && !target.endsWith(".md");

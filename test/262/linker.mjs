@@ -20,12 +20,13 @@ export const compileLinker = ({ context, instrument }) => {
   /** @type {Map<string, import("node:vm").Module>} */
   const modules = new Map();
   /** @type {import("./linker").Link} */
-  const link = async (specifier, parent, _assertions) => {
-    const parent_url = urls.get(parent);
-    if (parent_url === undefined) {
-      throw new Error("missing parent url");
+  const link = async (specifier, referrer, _assertions) => {
+    const referrer_url = urls.get(referrer);
+    if (referrer_url === undefined) {
+      throw new Error("missing referrer url");
     }
-    const url1 = new URL(specifier, parent_url);
+    // import("") will import self
+    const url1 = new URL(specifier, referrer_url);
     let module = modules.get(url1.href);
     if (module === undefined) {
       const content1 = await readFile(url1, "utf8");
@@ -63,7 +64,13 @@ export const compileLinker = ({ context, instrument }) => {
     return module;
   };
   return {
-    link,
+    link: async (specifier, referrer, assertions) => {
+      const module = await link(specifier, referrer, assertions);
+      if (module.status === "unlinked") {
+        await module.link(link);
+      }
+      return module;
+    },
     register: (main, url) => {
       urls.set(main, url);
       if (!(main instanceof Script)) {

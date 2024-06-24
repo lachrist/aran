@@ -3,7 +3,7 @@
 import { writeFile } from "node:fs/promises";
 import { scrape } from "./scrape.mjs";
 import { argv } from "node:process";
-import { runTest } from "./test.mjs";
+import { isTestCase, runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
 import { isFailureResult } from "./result.mjs";
 
@@ -40,7 +40,7 @@ for await (const url of scrape(new URL("test/", test262))) {
     console.dir(index);
   }
   const target = url.href.substring(test262.href.length);
-  if (!target.includes("_FIXTURE") && !isExcluded(target)) {
+  if (isTestCase(target) && !isExcluded(target)) {
     const result = await runTest({
       target,
       test262,

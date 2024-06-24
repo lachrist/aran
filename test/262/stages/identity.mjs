@@ -4,32 +4,21 @@ import {
   listNegativeCause,
   parseNegative,
 } from "../negative.mjs";
+import { parseList } from "../list.mjs";
 
 const { URL, Set } = globalThis;
 
-const features = new Set([
-  "legacy-regexp",
-  "regexp-duplicate-named-groups",
-  "promise-with-resolvers",
-  "Symbol.match",
-  "Symbol.replace",
-  "FinalizationRegistry.prototype.cleanupSome",
-  "import-assertions",
-  "IsHTMLDDA",
-  "Temporal",
-  "Atomics",
-  "tail-call-optimization",
-  "Array.fromAsync",
-  "iterator-helpers",
-  "array-grouping",
-  "Intl.DurationFormat",
-  "ShadowRealm",
-  "decorators",
-  "Intl.Locale-info",
-  "resizable-arraybuffer",
-  "arraybuffer-transfer",
-  "regexp-unicode-property-escapes",
-]);
+const features = new Set(
+  parseList(
+    await readFile(new URL("identity.feature.txt", import.meta.url), "utf8"),
+  ),
+);
+
+const exclusion = new Set(
+  parseList(
+    await readFile(new URL("identity.exclude.txt", import.meta.url), "utf8"),
+  ),
+);
 
 /** @type {(feature: string) => boolean} */
 const isFeatureExcluded = (feature) => features.has(feature);
@@ -45,7 +34,7 @@ const ARAN_REALM_LIMITATION = ["aran-realm-limitation"];
 
 /** @type {import("../types").Stage} */
 export default {
-  isExcluded: (_target) => false,
+  isExcluded: (target) => exclusion.has(target),
   predictStatus: (target) => getNegativeStatus(negative, target),
   listCause: (result) => [
     ...(result.error.name === "RealmAranError" ? ARAN_REALM_LIMITATION : EMPTY),

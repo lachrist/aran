@@ -1,4 +1,5 @@
 import { AranError } from "./error.mjs";
+import { parseList } from "./list.mjs";
 
 const { RegExp, Map, undefined } = globalThis;
 
@@ -120,7 +121,7 @@ export const getNegativeStatus = (negative, target) => {
  * ) => import("./negative").Negative}
  */
 export const parseNegative = (content) => {
-  const lines = content.split("\n");
+  const lines = parseList(content);
   /**
    * @type {import("./negative").Negative}
    */
@@ -131,35 +132,33 @@ export const parseNegative = (content) => {
   if (lines.length > 0) {
     let cause = fromNullable(parseTitleLine(lines[0]));
     for (let index = 1; index < lines.length; index += 1) {
-      const line = lines[index].trim();
-      if (line.length !== 0) {
-        const maybe_cause = parseTitleLine(line);
-        if (maybe_cause !== null) {
-          cause = maybe_cause;
-        } else {
-          const match = parseMatchLine(line);
-          if (match !== null) {
-            if (match.body.length > 0 && match.body[0] === "^") {
-              negative.group.push([
-                new RegExp(match.body, "u"),
-                { flaky: match.head, cause },
-              ]);
-            } else {
-              const entry = negative.exact.get(match.body);
-              if (entry === undefined) {
-                negative.exact.set(match.body, {
-                  flaky: match.head,
-                  causes: [cause],
-                });
-              } else if (entry.flaky !== match.head) {
-                throw new AranError("flaky mismatch");
-              } else {
-                entry.causes.push(cause);
-              }
-            }
+      const line = lines[index];
+      const maybe_cause = parseTitleLine(line);
+      if (maybe_cause !== null) {
+        cause = maybe_cause;
+      } else {
+        const match = parseMatchLine(line);
+        if (match !== null) {
+          if (match.body.length > 0 && match.body[0] === "^") {
+            negative.group.push([
+              new RegExp(match.body, "u"),
+              { flaky: match.head, cause },
+            ]);
           } else {
-            throw new AranError("unexpected line");
+            const entry = negative.exact.get(match.body);
+            if (entry === undefined) {
+              negative.exact.set(match.body, {
+                flaky: match.head,
+                causes: [cause],
+              });
+            } else if (entry.flaky !== match.head) {
+              throw new AranError("flaky mismatch");
+            } else {
+              entry.causes.push(cause);
+            }
           }
+        } else {
+          throw new AranError("unexpected line");
         }
       }
     }

@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 import { argv } from "node:process";
 import { cleanup, record } from "./record.mjs";
 import { scrape } from "./scrape.mjs";
-import { runTest } from "./test.mjs";
+import { isTestCase, runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
 import { loadCursor, saveCursor } from "./cursor.mjs";
 import { isFailureResult } from "./result.mjs";
@@ -45,8 +45,8 @@ try {
   for await (const url of scrape(new URL("test/", test262))) {
     const target = url.href.substring(test262.href.length);
     if (cursor.index >= initial) {
-      console.log(cursor.index);
-      if (!target.includes("_FIXTURE") && !isExcluded(target)) {
+      console.log(cursor.index, `test262/${target}`);
+      if (isTestCase(target) && !isExcluded(target)) {
         const result = await runTest({
           target,
           test262,
@@ -62,8 +62,6 @@ try {
           }
           if (causes.length === 0) {
             console.log("");
-            console.log(`Link >> test262/${target}\n`);
-            console.log(`Target >> ${target}\n`);
             await cleanup(codebase);
             const { error } = await runTest({
               target,
