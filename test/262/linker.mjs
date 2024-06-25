@@ -17,13 +17,13 @@ const { Error, undefined, URL, Map, JSON } = globalThis;
  *   options: {
  *     instrument: import("./types").Instrument,
  *     context: import("node:vm").Context,
- *     link: import("./linker").Link,
+ *     importModuleDynamically: any,
  *   },
  * ) => import("node:vm").Module}
  */
 const makeModule = (
   { url: url1, content: content1 },
-  { instrument, context, link },
+  { instrument, context, importModuleDynamically },
 ) => {
   if (url1.href.endsWith(".json")) {
     const module = new SyntheticModule(
@@ -46,7 +46,7 @@ const makeModule = (
     return new SourceTextModule(content2, {
       identifier: url2.href,
       context,
-      importModuleDynamically: /** @type {any} */ (link),
+      importModuleDynamically,
     });
   }
 };
@@ -92,7 +92,8 @@ export const compileLinker = ({ context, instrument }) => {
                 } else {
                   const module = makeModule(
                     { url, content },
-                    { instrument, context, link },
+                    // eslint-disable-next-line no-use-before-define
+                    { instrument, context, importModuleDynamically },
                   );
                   const race_module = modules.get(url.href);
                   if (race_module !== undefined) {
@@ -114,6 +115,34 @@ export const compileLinker = ({ context, instrument }) => {
       } catch (error) {
         reject(error);
       }
+    });
+  // https://github.com/nodejs/node/issues/33216#issuecomment-623039235
+  /** @type {import("./linker").Link} */
+  const importModuleDynamically = (specifier, referrer, assertions) =>
+    new Promise((resolve, reject) => {
+      link(specifier, referrer, assertions).then((module) => {
+        if (module.status === "unlinked") {
+          module.link(link).then(() => {
+            if (module.status === "linked") {
+              try {
+                module.evaluate().then(() => {
+                  resolve(module);
+                }, reject);
+              } catch (error) {
+                console.log("WESH", error);
+              }
+            } else {
+              resolve(module);
+            }
+          }, reject);
+        } else if (module.status === "linked") {
+          module.evaluate().then(() => {
+            resolve(module);
+          }, reject);
+        } else {
+          resolve(module);
+        }
+      }, reject);
     });
   return {
     link,

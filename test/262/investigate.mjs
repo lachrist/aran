@@ -4,17 +4,16 @@ import { runTest } from "./test.mjs";
 import { cleanup, record } from "./record.mjs";
 import { pathToFileURL } from "node:url";
 import { argv, stdout, exit } from "node:process";
-import { loadCursor } from "./cursor.mjs";
+import { parseCursor } from "./cursor.mjs";
 import { scrape } from "./scrape.mjs";
 import { inspectError } from "./util.mjs";
+import { readFile } from "node:fs/promises";
 
 const { console, process, URL, Error } = globalThis;
 
-const {
-  stage,
-  index,
-  target: maybe_target,
-} = await loadCursor(pathToFileURL(argv[2]));
+const { stage, index } = parseCursor(
+  await readFile(pathToFileURL(argv[2]), "utf8"),
+);
 
 if (index === 0) {
   stdout.write("Nothing to investigate.\n");
@@ -59,7 +58,7 @@ const findTarget = async (index) => {
   throw new Error(`Index ${index} not found`);
 };
 
-const target = maybe_target ?? (await findTarget(index));
+const target = await findTarget(index);
 
 console.log(`===== ${stage} =====`);
 console.log(`\ntest262/${target}\n`);

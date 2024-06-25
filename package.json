@@ -16,10 +16,10 @@
     "format": "npx prettier -w '**/*.(mjs|d.ts)'",
     "test": "node test/test.mjs",
     "coverage": "node test/coverage.mjs",
-    "download-test262": "git clone --filter=tree:0 https://github.com/tc39/test262",
-    "test262-batch": "node --experimental-vm-modules --expose-gc test/262/batch.mjs",
-    "x": "node --experimental-vm-modules --expose-gc test/262/progress.mjs test/262/cursor.txt",
-    "xx": "node --experimental-vm-modules --expose-gc test/262/single.mjs test/262/cursor.txt"
+    "download262": "git clone --filter=tree:0 https://github.com/tc39/test262",
+    "batch262": "node --experimental-vm-modules --expose-gc test/262/batch.mjs",
+    "progress262": "node --experimental-vm-modules --expose-gc test/262/progress.mjs test/262/cursor.txt",
+    "investigate262": "node --experimental-vm-modules --expose-gc test/262/investigate.mjs test/262/cursor.txt"
   },
   "keywords": [
     "JavaScript",
