@@ -45,8 +45,8 @@ try {
   for await (const url of scrape(new URL("test/", test262))) {
     const target = url.href.substring(test262.href.length);
     if (cursor.index >= initial) {
-      console.log(cursor.index, `test262/${target}`);
       if (isTestCase(target) && !isExcluded(target)) {
+        console.log(cursor.index, `test262/${target}`);
         const result = await runTest({
           target,
           test262,
@@ -57,9 +57,6 @@ try {
         const status = predictStatus(target);
         if (status === "positive" && isFailureResult(result)) {
           const causes = listCause(result);
-          for (const cause of causes) {
-            console.log(cause);
-          }
           if (causes.length === 0) {
             console.log("");
             await cleanup(codebase);
@@ -78,12 +75,14 @@ try {
             }
             // eslint-disable-next-line local/no-label
             break;
+          } else {
+            for (const cause of causes) {
+              console.log(`  >> ${cause}`);
+            }
           }
         }
         if (status === "negative" && result.error === null) {
           console.log("");
-          console.log(`Link >> test262/${target}\n`);
-          console.log(`Target >> ${target}\n`);
           console.log("Expected failure but got success, yay... (I guess)\n");
           // eslint-disable-next-line local/no-label
           break;

@@ -110,13 +110,51 @@
 - ^test/language/eval-code/direct/.*arguments-and-assign\.js
 - ^test/language/eval-code/direct/.*arguments\.js
 
+// https://github.com/nodejs/node/issues/53575
 # dynamic import returns a promise from the main realm
+- test/language/expressions/dynamic-import/always-create-new-promise.js
 - test/language/expressions/dynamic-import/returns-promise.js
 - test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-empty-str-is-valid-assign-expr.js
 - test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-import-attributes-trailing-comma-first.js
 - test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-import-attributes-trailing-comma-second.js
 - test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-nested-imports.js
-- test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-nested-imports.js
+- test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-script-code-valid.js
+- test/language/expressions/dynamic-import/usage-from-eval.js
+
+# cannot call preventExtension on vm context
+- test/language/global-code/decl-func.js
+- test/language/global-code/decl-var.js
+- test/language/global-code/script-decl-func-err-non-configurable.js
+- test/language/global-code/script-decl-func-err-non-extensible.js
+- test/language/global-code/script-decl-func.js
+- test/language/global-code/script-decl-lex-var-declared-via-eval-sloppy.js
+- test/language/global-code/script-decl-lex.js
+- test/language/global-code/script-decl-var-collision.js
+- test/language/global-code/script-decl-var-err.js
+- test/language/global-code/script-decl-var.js
+
+# update inside with
+- test/language/expressions/postfix-decrement/S11.3.2_A5_T1.js
+- test/language/expressions/postfix-decrement/S11.3.2_A5_T2.js
+- test/language/expressions/postfix-decrement/S11.3.2_A5_T3.js
+- test/language/expressions/postfix-decrement/S11.3.2_A6_T3.js
+- test/language/expressions/postfix-decrement/operator-x-postfix-decrement-calls-putvalue-lhs-newvalue--1.js
+- test/language/expressions/postfix-increment/S11.3.1_A5_T1.js
+- test/language/expressions/postfix-increment/S11.3.1_A5_T2.js
+- test/language/expressions/postfix-increment/S11.3.1_A5_T3.js
+- test/language/expressions/postfix-increment/S11.3.1_A6_T3.js
+- test/language/expressions/postfix-increment/operator-x-postfix-increment-calls-putvalue-lhs-newvalue--1.js
+- test/language/expressions/prefix-decrement/S11.4.5_A5_T1.js
+- test/language/expressions/prefix-decrement/S11.4.5_A5_T2.js
+- test/language/expressions/prefix-decrement/S11.4.5_A5_T3.js
+- test/language/expressions/prefix-decrement/S11.4.5_A6_T3.js
+- test/language/expressions/prefix-decrement/operator-prefix-decrement-x-calls-putvalue-lhs-newvalue--1.js
+- test/language/expressions/prefix-increment/S11.4.4_A5_T1.js
+- test/language/expressions/prefix-increment/S11.4.4_A5_T2.js
+- test/language/expressions/prefix-increment/S11.4.4_A5_T3.js
+- test/language/expressions/prefix-increment/S11.4.4_A6_T3.js
+- test/language/expressions/prefix-increment/operator-prefix-increment-x-calls-putvalue-lhs-newvalue--1.js
+
 
 # unknown
 - test/built-ins/Array/prototype/concat/arg-length-near-integer-limit.js
@@ -158,4 +196,11 @@
 - test/language/expressions/call/eval-spread.js
 - ^test/language/expressions/compound-assignment/S11\.13\.2_A.*\.js$
 - ^test/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--[0-9]+\.js$
-- test/language/expressions/dynamic-import/always-create-new-promise.js
+- test/language/expressions/generators/generator-created-after-decl-inst.js
+- test/language/identifier-resolution/assign-to-global-undefined.js
+- test/language/module-code/top-level-await/await-dynamic-import-resolution.js
+- test/language/statements/async-generator/generator-created-after-decl-inst.js
+- test/language/statements/generators/generator-created-after-decl-inst.js
+- test/language/statements/variable/binding-resolution.js
+- test/language/statements/with/unscopables-inc-dec.js
+- test/staging/top-level-await/tla-hang-entry.js

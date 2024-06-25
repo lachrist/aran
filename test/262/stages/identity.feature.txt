@@ -13,3 +13,5 @@ Intl.Locale-info
 tail-call-optimization
 decorators
 import-assertions
+import-attributes
+explicit-resource-management
