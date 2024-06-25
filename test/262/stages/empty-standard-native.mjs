@@ -2,19 +2,33 @@
 
 import { readFile } from "node:fs/promises";
 import { compileStandardInstrumentation } from "./util/index.mjs";
-import { matchNegativeRecord, parseNegativeRecord } from "../negative.mjs";
+import {
+  getNegativeStatus,
+  listNegativeCause,
+  parseNegative,
+} from "../negative.mjs";
+import { getFailureTarget, parseFailureArray } from "../failure.mjs";
 
-const { URL } = globalThis;
+const { Set, URL } = globalThis;
 
-const negative = parseNegativeRecord(
-  await readFile(new URL("aran.outcome.json", import.meta.url), "utf8"),
+const exclusion = new Set(
+  parseFailureArray(
+    [
+      await readFile(new URL("identity.failure.txt", import.meta.url), "utf8"),
+      await readFile(new URL("parsing.failure.txt", import.meta.url), "utf8"),
+    ].join("\n"),
+  ).map(getFailureTarget),
 );
 
-/** @type {test262.Stage} */
+const negative = parseNegative(
+  await readFile(new URL("aran.negative.txt", import.meta.url), "utf8"),
+);
+
+/** @type {import("../types").Stage} */
 export default {
-  requirement: ["identity", "parsing"],
-  exclusion: [],
-  expect: (target) => matchNegativeRecord(negative, target),
+  isExcluded: (target) => exclusion.has(target),
+  predictStatus: (target) => getNegativeStatus(negative, target),
+  listCause: (result) => listNegativeCause(negative, result.target),
   compileInstrument: ({ record, warning, context }) => {
     /**
      * @type {import("../../../lib").StandardAspect<

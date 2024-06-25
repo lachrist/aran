@@ -1,0 +1,12 @@
+# test too large (either too slow or astring >> RangeError: Invalid string length)
+test/language/identifiers/start-unicode-10.0.0-class-escaped.js
+test/language/identifiers/start-unicode-10.0.0-class.js
+test/language/identifiers/start-unicode-13.0.0-class-escaped.js
+test/language/identifiers/start-unicode-13.0.0-class.js
+test/language/identifiers/start-unicode-5.2.0-class-escaped.js
+test/language/identifiers/start-unicode-5.2.0-class.js
+test/language/identifiers/start-unicode-8.0.0-class-escaped.js
+test/language/identifiers/start-unicode-8.0.0-class.js
+test/language/identifiers/start-unicode-9.0.0-class-escaped.js
+test/language/identifiers/start-unicode-9.0.0-class.js
+test/language/statements/function/S13.2.1_A1_T1.j

@@ -1,25 +1,42 @@
 /* eslint-disable no-use-before-define */
 
 import { readFile } from "node:fs/promises";
+import { compileStandardInstrumentation } from "./util/index.mjs";
 import {
-  compileExpect,
-  compileStandardInstrumentation,
-} from "./util/index.mjs";
+  getNegativeStatus,
+  listNegativeCause,
+  parseNegative,
+} from "../negative.mjs";
+import { getFailureTarget, parseFailureArray } from "../failure.mjs";
+import { parseList } from "../list.mjs";
 
-const { JSON, URL } = globalThis;
+const { Set, URL } = globalThis;
 
-/** @type {test262.Stage} */
-export default {
-  requirement: ["identity", "parsing", "empty-native"],
-  exclusion: [],
-  expect: compileExpect(
-    JSON.parse(
+const exclusion = new Set([
+  ...parseFailureArray(
+    [
+      await readFile(new URL("identity.failure.txt", import.meta.url), "utf8"),
+      await readFile(new URL("parsing.failure.txt", import.meta.url), "utf8"),
       await readFile(
-        new URL("transparent-native.manual.json", import.meta.url),
+        new URL("empty-standard-native.failure.txt", import.meta.url),
         "utf8",
       ),
-    ),
+    ].join("\n"),
+  ).map(getFailureTarget),
+  ...parseList(
+    await readFile(new URL("transparent.exclude.txt", import.meta.url), "utf8"),
   ),
+]);
+
+const negative = parseNegative(
+  await readFile(new URL("transparent.negative.txt", import.meta.url), "utf8"),
+);
+
+/** @type {import("../types").Stage} */
+export default {
+  isExcluded: (target) => exclusion.has(target),
+  predictStatus: (target) => getNegativeStatus(negative, target),
+  listCause: (result) => listNegativeCause(negative, result.target),
   compileInstrument: ({ warning, record, context }) => {
     // If we define this aspect type in a separate declaration file, ts shoke
     // on instantiating the type variables of compileStandardInstrumentation.

@@ -1,4 +1,4 @@
-import { readFile } from "node:fs";
+import { readFile } from "node:fs/promises";
 import {
   runInContext,
   Script,
@@ -16,14 +16,14 @@ const { Error, undefined, URL, Map, JSON } = globalThis;
  *   },
  *   options: {
  *     instrument: import("./types").Instrument,
+ *     importModuleDynamically: import("./linker").Load,
  *     context: import("node:vm").Context,
- *     importModuleDynamically: any,
  *   },
  * ) => import("node:vm").Module}
  */
 const makeModule = (
   { url: url1, content: content1 },
-  { instrument, context, importModuleDynamically },
+  { instrument, importModuleDynamically, context },
 ) => {
   if (url1.href.endsWith(".json")) {
     const module = new SyntheticModule(
@@ -46,7 +46,8 @@ const makeModule = (
     return new SourceTextModule(content2, {
       identifier: url2.href,
       context,
-      importModuleDynamically,
+      // eslint-disable-next-line object-shorthand
+      importModuleDynamically: /** @type {any} */ (importModuleDynamically),
     });
   }
 };
@@ -57,10 +58,7 @@ const makeModule = (
  *     context: object,
  *     instrument: import("./types").Instrument,
  *   },
- * ) => {
- *   link: import("./linker").Link,
- *   register: import("./linker").Register,
- * }}
+ * ) => import("./linker").Linker}
  */
 export const compileLinker = ({ context, instrument }) => {
   // Use promise of the module realm and not the main realm.
@@ -73,79 +71,55 @@ export const compileLinker = ({ context, instrument }) => {
   const urls = new Map();
   /** @type {Map<string, import("node:vm").Module>} */
   const modules = new Map();
-  /** @type {import("./linker").Link} */
-  const link = (specifier, referrer, _assertions) =>
-    new Promise((resolve, reject) => {
-      try {
-        const referrer_url = urls.get(referrer);
-        if (referrer_url === undefined) {
-          throw new Error("missing referrer url");
+  /** @type {import("./linker").Load} */
+  const link = async (specifier, referrer, _assertions) => {
+    const referrer_url = urls.get(referrer);
+    if (referrer_url === undefined) {
+      throw new Error("missing referrer url");
+    } else {
+      // import("") will import self
+      const url = new URL(specifier, referrer_url);
+      const module = modules.get(url.href);
+      if (module === undefined) {
+        const content = await readFile(url, "utf8");
+        const module = makeModule(
+          { url, content },
+          // eslint-disable-next-line no-use-before-define
+          { instrument, importModuleDynamically, context },
+        );
+        const race_module = modules.get(url.href);
+        if (race_module !== undefined) {
+          return race_module;
         } else {
-          // import("") will import self
-          const url = new URL(specifier, referrer_url);
-          const module = modules.get(url.href);
-          if (module === undefined) {
-            readFile(url, "utf8", (error, content) => {
-              try {
-                if (error) {
-                  throw error;
-                } else {
-                  const module = makeModule(
-                    { url, content },
-                    // eslint-disable-next-line no-use-before-define
-                    { instrument, context, importModuleDynamically },
-                  );
-                  const race_module = modules.get(url.href);
-                  if (race_module !== undefined) {
-                    resolve(race_module);
-                  } else {
-                    urls.set(module, url);
-                    modules.set(url.href, module);
-                    resolve(module);
-                  }
-                }
-              } catch (error) {
-                reject(error);
-              }
-            });
-          } else {
-            resolve(module);
-          }
+          urls.set(module, url);
+          modules.set(url.href, module);
+          return module;
         }
-      } catch (error) {
-        reject(error);
+      } else {
+        return module;
       }
-    });
+    }
+  };
   // https://github.com/nodejs/node/issues/33216#issuecomment-623039235
-  /** @type {import("./linker").Link} */
+  /** @type {import("./linker").Load} */
+  const evaluate = async (specifier, referrer, assertions) => {
+    const module = await link(specifier, referrer, assertions);
+    if (module.status === "unlinked") {
+      await module.link(link);
+    }
+    if (module.status === "linked") {
+      await module.evaluate();
+    }
+    return module;
+  };
+  /** @type {import("./linker").Load} */
   const importModuleDynamically = (specifier, referrer, assertions) =>
     new Promise((resolve, reject) => {
-      link(specifier, referrer, assertions).then((module) => {
-        if (module.status === "unlinked") {
-          module.link(link).then(() => {
-            if (module.status === "linked") {
-              try {
-                module.evaluate().then(() => {
-                  resolve(module);
-                }, reject);
-              } catch (error) {
-                console.log("WESH", error);
-              }
-            } else {
-              resolve(module);
-            }
-          }, reject);
-        } else if (module.status === "linked") {
-          module.evaluate().then(() => {
-            resolve(module);
-          }, reject);
-        } else {
-          resolve(module);
-        }
-      }, reject);
+      evaluate(specifier, referrer, assertions).then(resolve, reject);
     });
   return {
     link,
+    importModuleDynamically,
     register: (main, url) => {
       urls.set(main, url);
       if (!(main instanceof Script)) {

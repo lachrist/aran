@@ -127,7 +127,7 @@ export const runTestCaseInner = async ({
       filename: source.url.href,
     });
   }
-  const { link, register } = compileLinker({
+  const { link, importModuleDynamically, register } = compileLinker({
     context,
     instrument,
   });
@@ -150,14 +150,18 @@ export const runTestCaseInner = async ({
           new SourceTextModule(source2.content, {
             identifier: source2.url.href,
             context,
-            importModuleDynamically: /** @type {any} */ (link),
+            // eslint-disable-next-line object-shorthand
+            importModuleDynamically: /** @type {any} */ (
+              importModuleDynamically
+            ),
           }),
       );
     } else {
       const module = new SourceTextModule(source2.content, {
         identifier: source2.url.href,
         context,
-        importModuleDynamically: /** @type {any} */ (link),
+        // eslint-disable-next-line object-shorthand
+        importModuleDynamically: /** @type {any} */ (importModuleDynamically),
       });
       register(module, source1.url);
       if (negative !== null && negative.phase === "resolution") {
@@ -179,13 +183,17 @@ export const runTestCaseInner = async ({
         () =>
           new Script(source2.content, {
             filename: source2.url.href,
-            importModuleDynamically: /** @type {any} */ (link),
+            // eslint-disable-next-line object-shorthand
+            importModuleDynamically: /** @type {any} */ (
+              importModuleDynamically
+            ),
           }),
       );
     } else {
       const script = new Script(source2.content, {
         filename: source2.url.href,
-        importModuleDynamically: /** @type {any} */ (link),
+        // eslint-disable-next-line object-shorthand
+        importModuleDynamically: /** @type {any} */ (importModuleDynamically),
       });
       register(script, source1.url);
       if (negative !== null && negative.phase === "runtime") {

@@ -1,9 +1,15 @@
 import { Module, Script } from "node:vm";
 
-export type Link = (
+export type Load = (
   specifier: string,
   parent: Module | Script,
-  _assertions: object,
+  assertions: object,
 ) => Promise<Module>;
 
 export type Register = (main: Module | Script, url: URL) => void;
+
+export type Linker = {
+  link: Load;
+  importModuleDynamically: Load;
+  register: Register;
+};

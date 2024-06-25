@@ -3,6 +3,20 @@ import { fromNullable } from "./util.mjs";
 
 /**
  * @type {(
+ *   failure: import("./types").Failure,
+ * ) => string}
+ */
+export const getFailureTarget = ({ target }) => target;
+
+/**
+ * @type {(
+ *   failure: import("./types").Failure,
+ * ) => string[]}
+ */
+export const listFailureCause = ({ causes }) => causes;
+
+/**
+ * @type {(
  *   cause: string
  * ) => string}
  */
