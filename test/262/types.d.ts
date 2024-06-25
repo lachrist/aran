@@ -72,6 +72,11 @@ export type Result = {
 
 export type FailureResult = Result & { error: ErrorSerial };
 
+export type Failure = {
+  target: string;
+  causes: string[];
+};
+
 export type Instrument = (source: Source) => Source;
 
 export type StageName =

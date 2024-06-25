@@ -1,4 +1,4 @@
-const { String, Map, undefined } = globalThis;
+const { Error, String, Map, undefined } = globalThis;
 
 /** @type {(value: unknown) => string} */
 export const show = (value) => {
@@ -53,6 +53,19 @@ export const inspectError = (error) => ({
   message: inspectErrorMessage(error),
   ...inspectErrorStack(error),
 });
+
+/**
+ * @type {<X>(
+ *   value: X | null
+ * ) => X}
+ */
+export const fromNullable = (value) => {
+  if (value === null) {
+    throw new Error("unexpected null");
+  } else {
+    return value;
+  }
+};
 
 /**
  * @template X

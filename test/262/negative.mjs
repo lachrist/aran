@@ -1,20 +1,8 @@
 import { AranError } from "./error.mjs";
 import { parseList } from "./list.mjs";
+import { fromNullable } from "./util.mjs";
 
 const { RegExp, Map, undefined } = globalThis;
-
-/**
- * @type {<X>(
- *   value: X | null
- * ) => X}
- */
-const fromNullable = (value) => {
-  if (value === null) {
-    throw new AranError("unexpected null");
-  } else {
-    return value;
-  }
-};
 
 /**
  * @type {(

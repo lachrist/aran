@@ -1,5 +1,6 @@
+export type Stage = "identity" | "parsing";
+
 export type Cursor = {
-  stage: "identity" | "parsing" | "empty-enclave";
+  stage: Stage;
   index: number;
-  target: string | null;
 };

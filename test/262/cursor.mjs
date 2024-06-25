@@ -1,63 +1,74 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { parseList } from "./list.mjs";
 
-const { Object, JSON, TypeError } = globalThis;
+const {
+  isNaN,
+  parseInt,
+  Error,
+  Object: { hasOwn },
+} = globalThis;
 
-/** @type {(url: URL) => Promise<string | null>} */
-const readFileMaybe = async (url) => {
-  try {
-    return await readFile(url, "utf8");
-  } catch {
-    return null;
+/**
+ * @type {{ [key in import("./cursor").Stage]: null }}
+ */
+const STAGES = {
+  identity: null,
+  parsing: null,
+};
+
+/**
+ * @type {(
+ *   candidate: string
+ * ) => candidate is import("./cursor").Stage}
+ */
+const isStage = (candidate) => hasOwn(STAGES, candidate);
+
+/**
+ * @type {(
+ *   line: string
+ * ) => import("./cursor").Stage}
+ */
+const parseStage = (line) => {
+  if (isStage(line)) {
+    return line;
+  } else {
+    throw new Error("Invalid stage");
   }
 };
 
 /**
  * @type {(
- *   data: unknown
- * ) => data is import("./cursor").Cursor}
+ *   line: string
+ * ) => number}
  */
-const isProgress = (data) =>
-  typeof data === "object" &&
-  data !== null &&
-  "stage" in data &&
-  Object.hasOwn(data, "stage") &&
-  typeof data.stage === "string" &&
-  "target" in data &&
-  Object.hasOwn(data, "target") &&
-  (typeof data.target === "string" || data.target === null) &&
-  "index" in data &&
-  Object.hasOwn(data, "index") &&
-  typeof data.index === "number";
+const parseIndex = (line) => {
+  const index = parseInt(line);
+  if (isNaN(index)) {
+    throw new Error("Invalid index");
+  } else {
+    return index;
+  }
+};
 
 /**
- * @type {(content: string) => import("./cursor").Cursor}
+ * @type {(
+ *   content: string,
+ * ) => import("./cursor").Cursor}
  */
 export const parseCursor = (content) => {
-  const data = JSON.parse(content);
-  if (isProgress(data)) {
-    return data;
+  const lines = parseList(content);
+  if (lines.length !== 2) {
+    throw new Error("Cursor file should have exactly two lines");
   } else {
-    throw new TypeError("Invalid progress file");
+    return {
+      stage: parseStage(lines[0]),
+      index: parseIndex(lines[1]),
+    };
   }
 };
 
 /**
  * @type {(
- *   url: URL,
- * ) => Promise<import("./cursor").Cursor>}
- */
-export const loadCursor = async (url) =>
-  parseCursor(
-    (await readFileMaybe(url)) ??
-      '{"stage": "identity", "index": 0, "target": null}',
-  );
-
-/**
- * @type {(
- *   url: URL,
  *   cursor: import("./cursor").Cursor,
- * ) => Promise<void>}
+ * ) => string}
  */
-export const saveCursor = async (url, cursor) => {
-  await writeFile(url, JSON.stringify(cursor));
-};
+export const stringifyCursor = (cursor) => `${cursor.stage}\n${cursor.index}\n`;

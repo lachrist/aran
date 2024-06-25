@@ -6,8 +6,9 @@ import { argv } from "node:process";
 import { isTestCase, runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
 import { isFailureResult } from "./result.mjs";
+import { stringifyFailureArray } from "./failure.mjs";
 
-const { Error, console, process, URL, JSON } = globalThis;
+const { Error, console, process, URL } = globalThis;
 
 if (process.argv.length !== 3) {
   throw new Error(
@@ -30,7 +31,7 @@ process.on("uncaughtException", (error, _origin) => {
 
 const test262 = new URL("../../test262/", import.meta.url);
 
-/** @type {[string, string[]][]} */
+/** @type {import("./types").Failure[]} */
 const failures = [];
 
 let index = 0;
@@ -50,16 +51,19 @@ for await (const url of scrape(new URL("test/", test262))) {
     });
     const status = predictStatus(target);
     if (isFailureResult(result)) {
-      failures.push([target, listCause(result)]);
+      failures.push({ target, causes: listCause(result) });
     } else if (status === "negative") {
-      failures.push([target, ["expected negative but got positive instead"]]);
+      failures.push({
+        target,
+        causes: ["expected negative but got positive instead"],
+      });
     }
   }
   index += 1;
 }
 
 await writeFile(
-  new URL(`stages/${stage}.failure.json`, import.meta.url),
-  JSON.stringify(failures, null, 2),
+  new URL(`stages/${stage}.failure.txt`, import.meta.url),
+  stringifyFailureArray(failures),
   "utf8",
 );

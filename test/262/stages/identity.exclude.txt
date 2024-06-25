@@ -1,6 +1,6 @@
 // when $DONE is called with a module objec, it cause an error because it cannot
-// be stringified (null prototype). That cause the test suite to stop because
-// the await of the test case is never resolved.
+// be stringified (null prototype). That causes the test suite to halt because
+// the top-level await of the test case is never resolved.
 test/language/expressions/dynamic-import/catch/nested-arrow-import-catch-eval-rqstd-abrupt-typeerror.js
 test/language/expressions/dynamic-import/catch/nested-arrow-import-catch-eval-rqstd-abrupt-urierror.js
 test/language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-eval-rqstd-abrupt-typeerror.js

@@ -1,49 +1,94 @@
-const {
-  Error,
-  JSON,
-  Array: { isArray },
-} = globalThis;
+import { parseList } from "./list.mjs";
+import { fromNullable } from "./util.mjs";
 
 /**
  * @type {(
- *   data: unknown
- * ) => data is string}
+ *   cause: string
+ * ) => string}
  */
-const isString = (data) => typeof data === "string";
-
-/**
- * @type {<X>(
- *   data: unknown,
- *   predicate: (data: unknown) => data is X,
- * ) => data is X[]}
- */
-const isArrayOf = (data, predicate) => isArray(data) && data.every(predicate);
+const stringifyCause = (cause) => `  - ${cause}\n`;
 
 /**
  * @type {(
- *   data: unknown
- * ) => data is [string, string[]]}
+ *   cause: string
+ * ) => string}
  */
-const isFailure = (data) =>
-  isArray(data) &&
-  data.length === 2 &&
-  isString(data[0]) &&
-  isArray(data[1]) &&
-  data[1].every(isString);
+const stringifyTarget = (target) => `# ${target}\n`;
+
+/**
+ * @type {(
+ *   failures: import("./types").Failure,
+ * ) => string}
+ */
+export const stringifyFailure = (failure) =>
+  `${stringifyTarget(failure.target)}${failure.causes
+    .map(stringifyCause)
+    .join("")}`;
+
+/**
+ * @type {(
+ *   failures: import("./types").Failure[],
+ * ) => string}
+ */
+export const stringifyFailureArray = (failures) =>
+  failures.map(stringifyFailure).join("");
+
+/**
+ * @type {(
+ *   line: string
+ * ) => string | null}
+ */
+const parseTarget = (line) => {
+  if (line.startsWith("#")) {
+    return line.substring(1).trimStart();
+  } else {
+    return null;
+  }
+};
+
+/**
+ * @type {(
+ *   line: string
+ * ) => string | null}
+ */
+const parseCause = (line) => {
+  if (line.startsWith("-")) {
+    return line.substring(1).trimStart();
+  } else {
+    return null;
+  }
+};
 
 /**
  * @type {(
  *   content: string,
- * ) => [
- *   string,
- *   string[],
- * ][]}
+ * ) => import("./types").Failure[]}
  */
-export const parseFailure = (content) => {
-  const data = JSON.parse(content);
-  if (isArrayOf(data, isFailure)) {
-    return data;
+export const parseFailureArray = (content) => {
+  const lines = parseList(content);
+  const { length } = lines;
+  if (length === 0) {
+    return [];
   } else {
-    throw new Error("Invalid failure format");
+    /** @type {import("./types").Failure[]} */
+    const failures = [];
+    /** @type {import("./types").Failure} */
+    let failure = {
+      target: fromNullable(parseTarget(lines[0])),
+      causes: [],
+    };
+    for (let index = 1; index < length; index += 1) {
+      const maybe_target = parseTarget(lines[index]);
+      if (maybe_target === null) {
+        failure.causes.push(fromNullable(parseCause(lines[index])));
+      } else {
+        failures.push(failure);
+        failure = {
+          target: maybe_target,
+          causes: [],
+        };
+      }
+    }
+    return failures;
   }
 };

@@ -18,8 +18,8 @@
     "coverage": "node test/coverage.mjs",
     "download-test262": "git clone --filter=tree:0 https://github.com/tc39/test262",
     "test262-batch": "node --experimental-vm-modules --expose-gc test/262/batch.mjs",
-    "x": "node --experimental-vm-modules --expose-gc test/262/progress.mjs test/262/cursor.json",
-    "xx": "node --experimental-vm-modules --expose-gc test/262/single.mjs test/262/cursor.json"
+    "x": "node --experimental-vm-modules --expose-gc test/262/progress.mjs test/262/cursor.txt",
+    "xx": "node --experimental-vm-modules --expose-gc test/262/single.mjs test/262/cursor.txt"
   },
   "keywords": [
     "JavaScript",
