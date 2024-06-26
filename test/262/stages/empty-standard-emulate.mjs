@@ -24,7 +24,7 @@ const exclusion = new Set(
 );
 
 const negative = parseNegative(
-  await readFile(new URL("aran.negative.txt", import.meta.url), "utf8"),
+  await readFile(new URL("empty.negative.txt", import.meta.url), "utf8"),
 );
 
 /** @type {import("../types").Stage} */
