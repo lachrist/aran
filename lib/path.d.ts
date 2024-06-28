@@ -26,6 +26,7 @@ export type Segment =
   | "consequent"
   | "alternate"
   | "declaration"
+  | "specifiers"
   | "superClass"
   | "object"
   | "tag"

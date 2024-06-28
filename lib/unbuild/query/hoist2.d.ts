@@ -1,4 +1,4 @@
-import type { Variable } from "../../estree";
+import type { Source, Specifier, Variable } from "../../estree";
 import type { Path } from "../../path";
 
 ///////////
@@ -10,6 +10,7 @@ export type Scoping = {
 };
 
 export type Kind =
+  | "import"
   | "var"
   | "let"
   | "const"
@@ -56,15 +57,25 @@ export type ReportHoist = Hoist & { status: ReportStatus };
 // Outer //
 ///////////
 
-export type Writable = "yes" | "no-report" | "no-silent";
+export type Write = "perform" | "report" | "ignore";
 
 export type Baseline = "deadzone" | "undefined";
 
-export type Binding = {
+export type InternalBinding = {
+  type: "internal";
   variable: Variable;
   baseline: Baseline;
-  writable: Writable;
+  write: Write;
 };
+
+export type ExternalBinding = {
+  type: "external";
+  variable: Variable;
+  source: Source;
+  specifier: Specifier | null;
+};
+
+export type Binding = InternalBinding | ExternalBinding;
 
 export type Duplicate = {
   variable: Variable;

@@ -1,22 +1,20 @@
 import type { Source, Specifier, Variable } from "../../../estree";
 
+export type Baseline = "deadzone" | "undefined";
+
+export type Write = "perform" | "report" | "ignore";
+
 export type ExternalBinding = {
-  kind: "external";
-  deadzone: null;
-  writable: false;
-  export: Specifier[];
-  import: {
-    source: Source;
-    specifier: Specifier | null;
-  };
+  type: "external";
+  source: Source;
+  specifier: Specifier | null;
 };
 
 export type InternalBinding = {
-  kind: "internal";
-  deadzone: boolean;
-  writable: boolean;
+  type: "internal";
+  baseline: Baseline;
+  write: Write;
   export: Specifier[];
-  import: null;
 };
 
 export type RegularBinding = ExternalBinding | InternalBinding;

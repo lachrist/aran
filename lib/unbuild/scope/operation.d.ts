@@ -18,8 +18,6 @@ export type DeclareOperation = {
 export type InitializeOperation = {
   type: "initialize";
   mode: Mode;
-  kind: "let" | "const" | "var" | "val";
-  manufactured: boolean;
   variable: Variable;
   right: Expression | null;
 };
