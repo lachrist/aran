@@ -1,27 +1,40 @@
-console.log(
-  ((f) => {
-    const record = {};
-    record.outer_before = f;
-    {
-      record.inner_before = f;
-      function f() {}
-      record.inner_after = f;
-    }
-    record.outer_after = f;
-    return record;
-  })(123),
-);
+try {
+  throw null;
+} catch (f) {
+  // var f = 123;
+  function f() {
+    return 123;
+  }
+}
 
-console.log(
-  (() => {
-    const record = {};
-    record.outer_before = f;
-    {
-      record.inner_before = f;
-      function f() {}
-      record.inner_after = f;
-    }
-    record.outer_after = f;
-    return record;
-  })(),
-);
+((f) => {
+  console.log("before outer", f);
+  {
+    console.log("before inner", f);
+    function f() {}
+    console.log("after inner", f);
+  }
+  console.log("after outer", f);
+})(123);
+
+(() => {
+  var f = 123;
+  console.log("before outer", f);
+  {
+    console.log("before inner", f);
+    function f() {}
+    console.log("after inner", f);
+  }
+  console.log("after outer", f);
+})();
+
+(() => {
+  let f = 123;
+  console.log("before outer", f);
+  {
+    console.log("before inner", f);
+    function f() {}
+    console.log("after inner", f);
+  }
+  console.log("after outer", f);
+})();
