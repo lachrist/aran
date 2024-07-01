@@ -1,3 +1,2 @@
-import yo from "./yo.mjs";
-
-console.log({ yo });
+console.log({ foo });
+import { foo } from "./yo.mjs";

@@ -7,12 +7,11 @@ type Mode = "strict" | "sloppy";
 
 // Variable //
 
-export type DeclareOperation = {
-  type: "declare";
-  mode: Mode;
-  kind: "eval";
+export type LateDeclareOperation = {
+  type: "late-declare";
+  mode: "sloppy";
   variable: Variable;
-  configurable: true;
+  write: "perform";
 };
 
 export type InitializeOperation = {
@@ -55,7 +54,7 @@ export type VariableLoadOperation =
 export type VariableSaveOperation =
   | InitializeOperation
   | WriteOperation
-  | DeclareOperation;
+  | LateDeclareOperation;
 
 export type VariableOperation = VariableLoadOperation | VariableSaveOperation;
 

@@ -1,3 +1,1 @@
-export default function f() {}
-
-f = 123;
+export const foo = 123;

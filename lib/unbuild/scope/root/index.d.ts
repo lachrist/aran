@@ -1,16 +1,15 @@
 import type { Variable } from "../../../estree";
 import type { WritableCache } from "../../cache";
+import type { Write } from "../../query/hoist-public";
 
 export type ReifyBinding = {
-  type: "reify";
-  record: "aran.global" | "aran.record";
-  writable: boolean;
+  frame: "record" | "global";
+  write: Exclude<Write, "ignore">;
 };
 
 export type AlienBinding = {
-  type: "alien";
   deadzone: null | WritableCache;
-  writable: boolean;
+  write: Exclude<Write, "ignore">;
 };
 
 export type Declare = {

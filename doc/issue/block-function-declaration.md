@@ -1,3 +1,6 @@
+_EDIT_ Sloppy direct eval call with escaping function declaration: always
+considered closure-scoped.
+
 In sloppy mode, function declarations in blocks have a convoluted semantic:
 sometimes they are closure-scoped and sometimes they are block-scoped. Whereas,
 in strict mode, function declaration are always block-scoped. In fact, sloppy
