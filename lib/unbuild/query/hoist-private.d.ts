@@ -14,9 +14,10 @@ export type Kind =
   | "var"
   | "let"
   | "const"
+  | "class"
   | "function-strict"
   | "function-sloppy"
-  | "class"
+  | "error"
   | "param"
   | "param-legacy";
 

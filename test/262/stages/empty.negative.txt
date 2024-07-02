@@ -1,6 +1,9 @@
 
-# SloppyBlockFunctionDeclaration
-- test/annexB/language/eval-code/direct/func-block-decl-eval-func-no-skip-param.js
+# EvalFunctionDeclaration
+~ ^test/annexB/language/eval-code/direct/
+
+# CatchBlockFunctionDeclaration
+- test/annexB/language/function-code/block-decl-func-no-skip-try.js
 
 # DirectEvalExternalVariableDeclaration
 - test/language/statements/variable/S12.2_A5.js
