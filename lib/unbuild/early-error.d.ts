@@ -4,14 +4,22 @@ import type { Path } from "../path";
 export type RegularEarlyError = {
   type: "regular";
   message: string;
-  path: Path;
+  origin: Path;
 };
 
 export type DuplicateEarlyError = {
   type: "duplicate";
-  frame: "aran.global" | "aran.record";
+  frame: "aran.global" | "aran.record" | "static";
   variable: Variable;
-  path: Path;
+  origin: Path;
 };
 
 export type EarlyError = RegularEarlyError | DuplicateEarlyError;
+
+export type DynamicEarlyError = DuplicateEarlyError & {
+  frame: "aran.global" | "aran.record";
+};
+
+export type StaticEarlyError =
+  | RegularEarlyError
+  | (DuplicateEarlyError & { frame: "static" });
