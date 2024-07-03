@@ -2,6 +2,16 @@
 # EvalFunctionDeclaration
 ~ ^test/annexB/language/eval-code/direct/
 
+# CatchFunctionDeclaration
+- test/annexB/language/function-code/block-decl-func-no-skip-try.js
+- test/annexB/language/function-code/if-decl-else-decl-a-func-no-skip-try.js
+- test/annexB/language/function-code/if-decl-else-decl-b-func-no-skip-try.js
+- test/annexB/language/function-code/if-decl-else-stmt-func-no-skip-try.js
+- test/annexB/language/function-code/if-decl-no-else-func-no-skip-try.js
+- test/annexB/language/function-code/if-stmt-else-decl-func-no-skip-try.js
+- test/annexB/language/function-code/switch-case-func-no-skip-try.js
+- test/annexB/language/function-code/switch-dflt-func-no-skip-try.js
+
 # DirectEvalExternalVariableDeclaration
 - test/language/statements/variable/S12.2_A5.js
 - test/language/eval-code/direct/var-env-global-lex-non-strict.js
