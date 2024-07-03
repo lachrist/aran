@@ -1,10 +1,6 @@
 import type { Variable } from "../../estree";
 import type { Path } from "../../path";
 
-///////////
-// Inner //
-///////////
-
 export type Scoping = {
   [key in Kind]?: boolean;
 };
@@ -20,6 +16,15 @@ export type Kind =
   | "error"
   | "param"
   | "param-legacy";
+
+export type Clash = "ignore" | "report" | "backup" | "backup-from-deep";
+
+export type DuplicateAccumulation = {
+  index: number;
+  binding: Binding;
+  bindings: UnboundBinding[];
+  current: Path;
+};
 
 export type UnboundStatus = {
   type: "unbound";
@@ -39,17 +44,31 @@ export type Status = UnboundStatus | BoundStatus | ReportStatus;
 
 export type Mode = "strict" | "sloppy";
 
-export type Binding = {
+export type BoundBinding = {
+  type: "bound";
   kind: Kind;
   variable: Variable;
   origin: Path;
-  status: Status;
+  bind: Path;
+  backup: null;
 };
 
-export type UnboundBinding = Binding & {
-  status: UnboundStatus;
+export type UnboundBinding = {
+  type: "unbound";
+  kind: Kind;
+  variable: Variable;
+  origin: Path;
+  bind: null;
+  backup: null | Path;
 };
 
-export type BoundBinding = Binding & { status: BoundStatus };
+export type ReportBinding = {
+  type: "report";
+  kind: Kind;
+  variable: Variable;
+  origin: Path;
+  bind: null;
+  backup: null;
+};
 
-export type ReportBinding = Binding & { status: ReportStatus };
+export type Binding = BoundBinding | UnboundBinding | ReportBinding;
