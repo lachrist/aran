@@ -11,6 +11,14 @@
 - test/annexB/language/function-code/if-stmt-else-decl-func-no-skip-try.js
 - test/annexB/language/function-code/switch-case-func-no-skip-try.js
 - test/annexB/language/function-code/switch-dflt-func-no-skip-try.js
+- test/annexB/language/global-code/block-decl-global-no-skip-try.js
+- test/annexB/language/global-code/if-decl-else-decl-a-global-no-skip-try.js
+- test/annexB/language/global-code/if-decl-else-decl-b-global-no-skip-try.js
+- test/annexB/language/global-code/if-decl-else-stmt-global-no-skip-try.js
+- test/annexB/language/global-code/if-decl-no-else-global-no-skip-try.js
+- test/annexB/language/global-code/if-stmt-else-decl-global-no-skip-try.js
+- test/annexB/language/global-code/switch-case-global-no-skip-try.js
+- test/annexB/language/global-code/switch-dflt-global-no-skip-try.js
 
 # DirectEvalExternalVariableDeclaration
 - test/language/statements/variable/S12.2_A5.js
