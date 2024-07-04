@@ -1,14 +1,20 @@
-import type { Specifier, Variable } from "../../../estree";
-import type {
-  ImportBinding as ImportBindingInner,
-  RegularBinding as RegularBindingInner,
-} from "../../query/hoist-public";
+import type { Source, Specifier, Variable } from "../../../estree";
+import type { Write } from "../../query/hoist-public";
 
-export type ImportBinding = Omit<ImportBindingInner, "variable"> & {
+export type ImportBinding = {
+  baseline: "import";
+  write: Write;
+  import: {
+    source: Source;
+    specifier: Specifier | null;
+  };
   export: null;
 };
 
-export type RegularBinding = Omit<RegularBindingInner, "variable"> & {
+export type RegularBinding = {
+  baseline: "undefined" | "deadzone";
+  write: Write;
+  import: null;
   export: Specifier[];
 };
 

@@ -1,1 +1,2 @@
-40202 test262/test/language/module-code/instn-iee-bndng-cls.js
+[source, iterator, iterator-step, iterator-done, target, target-key, target-key-tostring, set, iterator-done]
+[source, iterator, target, target-key, iterator-step, iterator-done, target-key-tostring, set]

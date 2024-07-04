@@ -1,28 +1,15 @@
-import type { Source, Specifier, Variable } from "../../estree";
+import type { Variable } from "../../estree";
 import type { Path } from "../../path";
 
 export type Write = "perform" | "report" | "ignore";
 
 export type Baseline = "deadzone" | "undefined" | "import";
 
-export type ImportBinding = {
+export type Binding = {
   variable: Variable;
-  baseline: "import";
-  write: "report";
-  import: {
-    source: Source;
-    specifier: Specifier | null;
-  };
-};
-
-export type RegularBinding = {
-  variable: Variable;
-  baseline: "deadzone" | "undefined";
+  baseline: "import" | "deadzone" | "undefined";
   write: Write;
-  import: null;
 };
-
-export type Binding = ImportBinding | RegularBinding;
 
 export type Duplicate = {
   variable: Variable;
