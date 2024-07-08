@@ -1,15 +1,15 @@
 import type { Variable } from "../../../estree";
-import type { WritableCache } from "../../cache";
-import type { Write } from "../../query/hoist-public";
+import type { ConstantMetaVariable } from "../../variable";
 
 export type ReifyBinding = {
   frame: "record" | "global";
-  write: Exclude<Write, "ignore">;
+  write: "perform" | "report";
+  sloppy_function_self: null | ConstantMetaVariable;
 };
 
 export type AlienBinding = {
-  deadzone: null | WritableCache;
-  write: Exclude<Write, "ignore">;
+  deadzone: null | ConstantMetaVariable;
+  write: "perform" | "report";
 };
 
 export type Declare = {

@@ -1,24 +1,22 @@
 import type { Source, Specifier, Variable } from "../../../estree";
-import type { Write } from "../../query/hoist-public";
+import type { ConstantMetaVariable } from "../../variable";
 
 export type ImportBinding = {
-  baseline: "import";
-  write: Write;
-  import: {
-    source: Source;
-    specifier: Specifier | null;
-  };
-  export: null;
+  type: "import";
+  source: Source;
+  specifier: Specifier | null;
 };
 
 export type RegularBinding = {
-  baseline: "undefined" | "deadzone";
-  write: Write;
-  import: null;
+  type: "regular";
+  baseline: "live" | "dead";
+  write: "perform" | "ignore" | "report";
   export: Specifier[];
+  sloppy_function_self: null | ConstantMetaVariable;
+  sloppy_function_write: null | ConstantMetaVariable;
 };
 
-export type Binding = RegularBinding | ImportBinding;
+export type Binding = ImportBinding | RegularBinding;
 
 export type RegularFrame = {
   type: "regular";

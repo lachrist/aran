@@ -1,8 +1,9 @@
-import { Path } from "../path";
+import type { Path } from "./path";
 
 export type WarningName =
   | "ExternalConstant"
   | "ExternalDeadzone"
+  | "ExternalSloppyFunction"
   | "SloppyBlockFunctionDeclaration"
   | "StrictKeywordExternalVariable"
   | "StrictReadonlyExternalVariableWrite"
@@ -16,6 +17,5 @@ export type WarningName =
 
 export type Warning = {
   name: WarningName;
-  message: string;
   path: Path;
 };

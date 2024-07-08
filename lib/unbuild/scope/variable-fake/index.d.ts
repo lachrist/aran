@@ -6,11 +6,10 @@
 
 import type { Variable } from "../../../estree";
 import type { WritableCache } from "../../cache";
-import type { Write } from "../../query/hoist-public";
 
 export type Binding = {
-  baseline: "undefined" | "deadzone";
-  write: Write;
+  baseline: "live" | "dead";
+  write: "report" | "perform" | "ignore";
   proxy: WritableCache;
 };
 

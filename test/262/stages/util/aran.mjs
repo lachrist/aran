@@ -52,7 +52,7 @@ const setup = generate(compileSetup({ global_variable, intrinsic_variable }));
  *   },
  * ) => import("./aran").Instrumentation}
  */
-export const common = ({ config, advice }, { record, context }) => {
+const common = ({ config, advice }, { record, context }) => {
   let counter = 0;
   const intrinsic =
     /** @type {import("../../../../lib/lang").IntrinsicRecord} */ (

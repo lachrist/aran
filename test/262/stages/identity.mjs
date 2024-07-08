@@ -5,6 +5,7 @@ import {
   parseNegative,
 } from "../negative.mjs";
 import { parseList } from "../list.mjs";
+import { runInContext } from "node:vm";
 
 const { URL, Set } = globalThis;
 
@@ -41,5 +42,19 @@ export default {
     ...result.metadata.features.filter(isFeatureExcluded),
     ...listNegativeCause(negative, result.target),
   ],
-  compileInstrument: ({ record }) => record,
+  // compileInstrument({record}) => record,
+  compileInstrument: ({ record, context }) => {
+    globalThis.Reflect.defineProperty(
+      runInContext("(globalThis);", context),
+      "_ARAN_LOG_",
+      /** @type {any} */ ({
+        __proto__: null,
+        value: console.log,
+        writable: false,
+        enumerable: false,
+        configurable: false,
+      }),
+    );
+    return record;
+  },
 };

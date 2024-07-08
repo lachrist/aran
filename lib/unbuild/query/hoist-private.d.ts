@@ -12,63 +12,53 @@ export type Kind =
   | "const"
   | "class"
   | "function-strict"
-  | "function-sloppy"
+  | "function-sloppy-block"
+  | "function-sloppy-closure"
   | "error"
   | "param"
   | "param-legacy";
 
-export type Clash = "ignore" | "report" | "backup" | "backup-from-deep";
+export type Clash = "ignore" | "report" | "remove";
 
 export type DuplicateAccumulation = {
   index: number;
   binding: Binding;
-  bindings: UnboundBinding[];
+  bindings: FreeBinding[];
   current: Path;
 };
 
-export type UnboundStatus = {
-  type: "unbound";
-  backup: null | Path;
-};
-
-export type BoundStatus = {
-  type: "bound";
-  path: Path;
-};
-
-export type ReportStatus = {
-  type: "report";
-};
-
-export type Status = UnboundStatus | BoundStatus | ReportStatus;
-
 export type Mode = "strict" | "sloppy";
 
-export type BoundBinding = {
-  type: "bound";
+export type FreeBinding = {
+  type: "free";
+  kind: Kind;
+  variable: Variable;
+  origin: Path;
+  bind: null;
+};
+
+export type LockBinding = {
+  type: "lock";
   kind: Kind;
   variable: Variable;
   origin: Path;
   bind: Path;
-  backup: null;
 };
 
-export type UnboundBinding = {
-  type: "unbound";
+export type FlagBinding = {
+  type: "flag";
   kind: Kind;
   variable: Variable;
   origin: Path;
   bind: null;
-  backup: null | Path;
 };
 
-export type ReportBinding = {
-  type: "report";
+export type VoidBinding = {
+  type: "void";
   kind: Kind;
   variable: Variable;
   origin: Path;
   bind: null;
-  backup: null;
 };
 
-export type Binding = BoundBinding | UnboundBinding | ReportBinding;
+export type Binding = FreeBinding | LockBinding | FlagBinding | VoidBinding;

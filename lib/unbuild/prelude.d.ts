@@ -1,4 +1,4 @@
-import type { Warning } from "./warning";
+import type { Warning } from "../warning";
 import type { Header } from "../header";
 import type { EarlyError } from "./early-error";
 import type { Condition } from "./condition";

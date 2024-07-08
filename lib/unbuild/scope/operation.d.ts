@@ -1,5 +1,6 @@
 import type { PrivateKey, Variable } from "../../estree";
 import type { Expression } from "../atom";
+import type { ConstantMetaVariable } from "../variable";
 
 export { RootFrame } from "./root";
 
@@ -12,6 +13,7 @@ export type LateDeclareOperation = {
   mode: "sloppy";
   variable: Variable;
   write: "perform";
+  sloppy_function: "nope" | "distant";
 };
 
 export type InitializeOperation = {
@@ -26,6 +28,13 @@ export type WriteOperation = {
   mode: Mode;
   variable: Variable;
   right: Expression;
+};
+
+export type WriteSloppyFunctionOperation = {
+  type: "write-sloppy-function";
+  mode: Mode;
+  variable: Variable;
+  right: null | ConstantMetaVariable;
 };
 
 export type ReadOperation = {
@@ -54,7 +63,8 @@ export type VariableLoadOperation =
 export type VariableSaveOperation =
   | InitializeOperation
   | WriteOperation
-  | LateDeclareOperation;
+  | LateDeclareOperation
+  | WriteSloppyFunctionOperation;
 
 export type VariableOperation = VariableLoadOperation | VariableSaveOperation;
 
