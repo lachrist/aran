@@ -12,8 +12,8 @@ export type Kind =
   | "const"
   | "class"
   | "function-strict"
-  | "function-sloppy-block"
-  | "function-sloppy-closure"
+  | "function-sloppy-near"
+  | "function-sloppy-away"
   | "error"
   | "param"
   | "param-legacy";
