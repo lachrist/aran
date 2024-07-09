@@ -13,7 +13,6 @@ export type LateDeclareOperation = {
   mode: "sloppy";
   variable: Variable;
   write: "perform";
-  sloppy_function: "nope" | "distant";
 };
 
 export type InitializeOperation = {
@@ -32,7 +31,7 @@ export type WriteOperation = {
 
 export type WriteSloppyFunctionOperation = {
   type: "write-sloppy-function";
-  mode: Mode;
+  mode: "sloppy";
   variable: Variable;
   right: null | ConstantMetaVariable;
 };

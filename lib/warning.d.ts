@@ -4,7 +4,7 @@ export type WarningName =
   | "ExternalConstant"
   | "ExternalDeadzone"
   | "ExternalSloppyFunction"
-  | "SloppyBlockFunctionDeclaration"
+  | "LateExternalVariable"
   | "StrictKeywordExternalVariable"
   | "StrictReadonlyExternalVariableWrite"
   | "ExternalVariableClash"

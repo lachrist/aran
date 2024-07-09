@@ -4,7 +4,6 @@ import type { ConstantMetaVariable } from "../../variable";
 export type ReifyBinding = {
   frame: "record" | "global";
   write: "perform" | "report";
-  sloppy_function_self: null | ConstantMetaVariable;
 };
 
 export type AlienBinding = {

@@ -1,35 +1,14 @@
 import type { Variable } from "../../estree";
 import type { Path } from "../../path";
 
-// export type ImportBinding = {
-//   type: "import";
-//   variable: Variable;
-// };
-
-// export type RegularBinding = {
-//   type: "regular";
-//   variable: Variable;
-//   baseline: "live" | "dead";
-//   write: "perform" | "report" | "ignore";
-// };
-
-// export type SloppyFunctionBinding =
-//   | {
-//       type: "function-sloppy-block";
-//       variable: Variable;
-//     }
-//   | {
-//       type: "function-sloppy-closure";
-//       variable: Variable;
-//     };
-
-export type SloppyFunctionProperty = "nope" | "nearby" | "distant" | "both";
+export type SloppyFunctionProperty = "nope" | "nearby" | "distant";
 
 export type Binding = {
   variable: Variable;
   baseline: "live" | "dead";
   write: "perform" | "report" | "ignore";
-  sloppy_function: SloppyFunctionProperty;
+  sloppy_function_near_counter: number;
+  sloppy_function_away_counter: number;
 };
 
 export type Duplicate = {

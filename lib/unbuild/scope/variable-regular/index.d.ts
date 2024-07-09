@@ -7,13 +7,28 @@ export type ImportBinding = {
   specifier: Specifier | null;
 };
 
+export type SloppyFunction =
+  | {
+      type: "nope";
+    }
+  | {
+      type: "both";
+    }
+  | {
+      type: "near";
+      self: ConstantMetaVariable;
+    }
+  | {
+      type: "away";
+      save: ConstantMetaVariable;
+    };
+
 export type RegularBinding = {
   type: "regular";
   baseline: "live" | "dead";
   write: "perform" | "ignore" | "report";
   export: Specifier[];
-  sloppy_function_self: null | ConstantMetaVariable;
-  sloppy_function_write: null | ConstantMetaVariable;
+  sloppy_function: SloppyFunction;
 };
 
 export type Binding = ImportBinding | RegularBinding;
