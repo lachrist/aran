@@ -1,14 +1,16 @@
 import type { Variable } from "../../estree";
 import type { Path } from "../../path";
 
-export type SloppyFunctionProperty = "nope" | "nearby" | "distant";
+export type SloppyFunction = null | {
+  near: number;
+  away: number;
+};
 
 export type Binding = {
   variable: Variable;
   baseline: "live" | "dead";
   write: "perform" | "report" | "ignore";
-  sloppy_function_near_counter: number;
-  sloppy_function_away_counter: number;
+  sloppy_function: SloppyFunction;
 };
 
 export type Duplicate = {

@@ -9,10 +9,10 @@ export type ImportBinding = {
 
 export type SloppyFunction =
   | {
-      type: "nope";
+      type: "pass";
     }
   | {
-      type: "both";
+      type: "skip";
     }
   | {
       type: "near";
