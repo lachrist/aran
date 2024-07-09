@@ -15,6 +15,7 @@ export type Kind =
   | "function-sloppy-near"
   | "function-sloppy-away"
   | "error"
+  | "error-legacy"
   | "param"
   | "param-legacy";
 
