@@ -10,15 +10,16 @@
 
 import { runInThisContext } from "vm";
 runInThisContext(`
-((() => {
+
+  ((() => {
   try {
     throw null;
   } catch (f) {
-    {
+    if (true)
       function f() { return 123; }
-    }
   }
-  console.log(f());
+  f();
 })());
+
 
 `);

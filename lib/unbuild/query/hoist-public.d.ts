@@ -1,10 +1,7 @@
 import type { Variable } from "../../estree";
 import type { Path } from "../../path";
 
-export type SloppyFunction = null | {
-  near: number;
-  away: number;
-};
+export type SloppyFunction = "nope" | "near" | "away" | "both";
 
 export type Binding = {
   variable: Variable;

@@ -7,21 +7,10 @@ export type ImportBinding = {
   specifier: Specifier | null;
 };
 
-export type SloppyFunction =
-  | {
-      type: "pass";
-    }
-  | {
-      type: "skip";
-    }
-  | {
-      type: "near";
-      self: ConstantMetaVariable;
-    }
-  | {
-      type: "away";
-      save: ConstantMetaVariable;
-    };
+export type SloppyFunction = null | {
+  self: ConstantMetaVariable | null;
+  save: ConstantMetaVariable | null;
+};
 
 export type RegularBinding = {
   type: "regular";
