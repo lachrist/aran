@@ -51,7 +51,7 @@ export type FlagBinding = {
   kind: Kind;
   variable: Variable;
   origin: Path;
-  bind: null;
+  bind: "duplicate" | "keyword";
 };
 
 export type VoidBinding = {
