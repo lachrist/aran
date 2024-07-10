@@ -13,6 +13,7 @@ export type LateDeclareOperation = {
   mode: "sloppy";
   variable: Variable;
   write: "perform";
+  conflict: "report" | "ignore";
 };
 
 export type InitializeOperation = {

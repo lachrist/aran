@@ -1,16 +1,37 @@
-_EDIT_ Sloppy direct eval call with escaping function declaration: always
-considered closure-scoped.
+In sloppy mode, a function declaration inside a direct eval call introduces a
+binding in the surrounding scope if it does not clash with other variables. Aran
+skip this check and always introduces such binding. This check requires
+knowledge of the surrounding scope during the hoisting phase which the current
+architecture does not provide.
 
-In sloppy mode, function declarations in blocks have a convoluted semantic:
-sometimes they are closure-scoped and sometimes they are block-scoped. Whereas,
-in strict mode, function declaration are always block-scoped. In fact, sloppy
-function declaration in blocks are not really part of the ECMAScript
-specification. It was added in Appendix B for compatibility purpose. Making Aran
-conform to this semantic is tedious. Currently, Aran provide a simpler semantic:
-sloppy function declaration are always closure-scoped but their initialization
-is hoisted at the beginning of the block.
+```js
+(function (f, g = () => f) {
+  var before, after;
+  eval("before = f; { function f() {} } after = f;");
+  console.log({ before, after, body: f, head: g() });
+})(123);
+```
 
-Sloppy block-scoped function declaration:
+Normal:
+
+```
+{ before: undefined, after: [Function: f], head: 123 }
+```
+
+Aran:
+
+```
+{ before: undefined, after: [Function: f] }
+```
+
+```js
+(function (f) {
+  var before, after;
+  eval("before = f; { function f() {} } after = f;");
+  // { before: 123, after: [Function: f] }
+  console.log({ before, after });
+})(123);
+```
 
 ```js
 console.log(
