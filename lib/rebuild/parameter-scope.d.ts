@@ -1,5 +1,6 @@
 export type ScopeParameter =
   | "scope.read"
-  | "scope.write"
+  | "scope.writeStrict"
+  | "scope.writeSloppy"
   | "scope.typeof"
   | "scope.discard";

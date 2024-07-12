@@ -115,7 +115,8 @@ export type AranIntrinsicRecord = {
   "aran.readGlobal": (name: string) => unknown;
   "aran.typeofGlobal": (name: string) => string;
   "aran.discardGlobal": (name: string) => boolean;
-  "aran.writeGlobal": (name: string, value: unknown) => boolean;
+  "aran.writeGlobalStrict": (name: string, value: unknown) => boolean;
+  "aran.writeGlobalSloppy": (name: string, value: unknown) => boolean;
   "aran.record": Record<string, unknown>;
   "aran.unary": (operator: string, argument: unknown) => unknown;
   "aran.binary": (operator: string, left: unknown, right: unknown) => unknown;
@@ -171,7 +172,8 @@ export type Parameter =
   | "private.has"
   | "private.set"
   | "scope.read"
-  | "scope.write"
+  | "scope.writeStrict"
+  | "scope.writeSloppy"
   | "scope.typeof"
   | "scope.discard";
 
