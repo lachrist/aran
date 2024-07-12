@@ -29,32 +29,13 @@ export type ControlKind =
 export type BlockKind = RoutineKind | ControlKind;
 
 export type Parametrization = {
-  "module":
-    | "this"
-    | "import.meta"
-    | "import.dynamic"
-    | "scope.read"
-    | "scope.write"
-    | "scope.typeof"
-    | "scope.discard";
-  "script":
-    | "this"
-    | "import.dynamic"
-    | "scope.read"
-    | "scope.write"
-    | "scope.typeof"
-    | "scope.discard";
-  "global-eval":
-    | "this"
-    | "import.dynamic"
-    | "scope.read"
-    | "scope.write"
-    | "scope.typeof"
-    | "scope.discard";
+  "module": "this" | "import" | "import.meta";
+  "script": "this" | "import";
+  "global-eval": "this" | "import";
   "root-local-eval":
     | "this"
     | "new.target"
-    | "import.dynamic"
+    | "import"
     | "import.meta"
     | "scope.read"
     | "scope.write"

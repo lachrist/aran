@@ -1,6 +1,8 @@
 import type { Variable } from "../../../estree";
 import type { ConstantMetaVariable } from "../../variable";
 
+export type Sort = "script" | "module" | "eval.global" | "eval.local.root";
+
 export type ReifyBinding = {
   frame: "record" | "global";
   write: "perform" | "report";
@@ -22,7 +24,7 @@ export type AlienRootFrame = {
   type: "root";
   kind: "alien";
   mode: "strict" | "sloppy";
-  sort: "script" | "module" | "eval.global" | "eval.local.root";
+  sort: Sort;
   record: {
     [k in Variable]?: AlienBinding;
   };

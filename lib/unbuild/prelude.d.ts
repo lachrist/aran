@@ -8,6 +8,7 @@ import type { Intrinsic } from "../lang";
 import type { Path } from "../path";
 import type { Effect } from "./atom";
 import type { Reboot } from "../reboot";
+import type { PrivateKey } from "../estree";
 
 export type WarningPrelude = {
   type: "warning";
@@ -22,6 +23,11 @@ export type RebootPrelude = {
 export type HeaderPrelude = {
   type: "header";
   data: Header;
+};
+
+export type PrivatePrelude = {
+  type: "private";
+  data: PrivateKey;
 };
 
 export type EarlyErrorPrelude = {
@@ -63,6 +69,7 @@ export type Prelude =
   | RebootPrelude
   | HeaderPrelude
   | EarlyErrorPrelude
+  | PrivatePrelude
   | TemplatePrelude
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude
@@ -75,12 +82,15 @@ type BlockPrelude =
   | WarningPrelude
   | RebootPrelude
   | HeaderPrelude
+  | PrivatePrelude
   | EarlyErrorPrelude
   | TemplatePrelude;
 
 export type BodyPrelude =
   | WarningPrelude
   | RebootPrelude
+  | HeaderPrelude
+  | PrivatePrelude
   | HeaderPrelude
   | EarlyErrorPrelude
   | TemplatePrelude

@@ -1,10 +1,4 @@
-import type {
-  DeepLocalEvalProgramHeader,
-  GlobalEvalProgramHeader,
-  ModuleProgramHeader,
-  RootLocalEvalProgramHeader,
-  ScriptProgramHeader,
-} from "./header";
+import type { DeclareHeader, ModuleHeader } from "./header";
 
 //////////
 // Atom //
@@ -117,6 +111,11 @@ export type AccessorIntrinsic = keyof AccessorIntrinsicRecord;
 
 export type AranIntrinsicRecord = {
   "aran.global": typeof globalThis;
+  "aran.declareGlobal": (name: string) => void;
+  "aran.readGlobal": (name: string) => unknown;
+  "aran.typeofGlobal": (name: string) => string;
+  "aran.discardGlobal": (name: string) => boolean;
+  "aran.writeGlobal": (name: string, value: unknown) => boolean;
   "aran.record": Record<string, unknown>;
   "aran.unary": (operator: string, argument: unknown) => unknown;
   "aran.binary": (operator: string, left: unknown, right: unknown) => unknown;
@@ -156,7 +155,7 @@ export type IntrinsicRecord = RegularIntrinsicRcord &
   AranIntrinsicRecord;
 
 export type Parameter =
-  | "import.dynamic"
+  | "import"
   | "import.meta"
   | "this"
   | "new.target"
@@ -167,6 +166,7 @@ export type Parameter =
   | "super.get"
   | "super.set"
   | "super.call"
+  | "private.check"
   | "private.get"
   | "private.has"
   | "private.set"
@@ -184,7 +184,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "module";
       situ: "global";
-      head: ModuleProgramHeader[];
+      head: ModuleHeader[];
       body: HeadlessRoutineBlock<A>;
       tag: A["Tag"];
     }
@@ -192,7 +192,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "script";
       situ: "global";
-      head: ScriptProgramHeader[];
+      head: DeclareHeader[];
       body: HeadlessRoutineBlock<A>;
       tag: A["Tag"];
     }
@@ -200,7 +200,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "eval";
       situ: "global";
-      head: GlobalEvalProgramHeader[];
+      head: DeclareHeader[];
       body: HeadlessRoutineBlock<A>;
       tag: A["Tag"];
     }
@@ -208,7 +208,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "eval";
       situ: "local.root";
-      head: RootLocalEvalProgramHeader[];
+      head: DeclareHeader[];
       body: HeadlessRoutineBlock<A>;
       tag: A["Tag"];
     }
@@ -216,7 +216,7 @@ export type Program<A extends Atom> =
       type: "Program";
       kind: "eval";
       situ: "local.deep";
-      head: DeepLocalEvalProgramHeader[];
+      head: [];
       body: HeadlessRoutineBlock<A>;
       tag: A["Tag"];
     };
