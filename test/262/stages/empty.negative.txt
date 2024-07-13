@@ -1,6 +1,6 @@
 
 # EvalFunctionDeclaration
-- test/annexB/language/eval-code/direct/global-block-decl-eval-global-existing-block-fn-no-init.js
+// - test/annexB/language/eval-code/direct/global-block-decl-eval-global-existing-block-fn-no-init.js
 - test/annexB/language/eval-code/direct/global-block-decl-eval-global-no-skip-try.js
 - test/annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-block-fn-no-init.js
 - test/annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-no-skip-try.js

@@ -1,14 +1,14 @@
-import type { Warning } from "../warning";
-import type { Header } from "../header";
+import type { Warning } from "../../warning";
+import type { Header } from "../../header";
 import type { EarlyError } from "./early-error";
 import type { Condition } from "./condition";
-import type { BaseVariable, MetaVariable } from "./variable";
+import type { BaseVariable, MetaVariable } from "../variable";
 import type { Template } from "./template";
-import type { Intrinsic } from "../lang";
-import type { Path } from "../path";
-import type { Effect } from "./atom";
-import type { Reboot } from "../reboot";
-import type { PrivateKey } from "../estree";
+import type { Intrinsic } from "../../lang";
+import type { Path } from "../../path";
+import type { Effect } from "../atom";
+import type { Reboot } from "../../reboot";
+import type { PrivateKey } from "../../estree";
 
 export type WarningPrelude = {
   type: "warning";

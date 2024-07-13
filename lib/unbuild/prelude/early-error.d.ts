@@ -1,5 +1,5 @@
-import type { Variable } from "../estree";
-import type { Path } from "../path";
+import type { Variable } from "../../estree";
+import type { Path } from "../../path";
 
 export type RegularEarlyError = {
   type: "regular";

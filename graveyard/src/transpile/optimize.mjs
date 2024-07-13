@@ -1,5 +1,5 @@
 import { includes, some } from "array-lite";
-import { partialx_, partialx__ } from "../util/index.js";
+import { partialx_, partialx__ } from "../util";
 import { DEFAULT_CLAUSE } from "../node.mjs";
 import { getChildren } from "../query.mjs";
 

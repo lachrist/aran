@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { Intrinsic } from "../../../lib/lang";
 import {
   ObjectPointcut as GenericPointcut,

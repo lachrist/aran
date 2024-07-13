@@ -4,7 +4,7 @@ import { makePrimitiveExpression } from "../lib/unbuild/node.mjs";
 
 import { parse } from "../syntax/index.mjs";
 
-import { allign } from "../../graveyard/allign.mjs/index.js";
+import { allign } from "../../graveyard/allign.mjs";
 
 import {
   makeArrayExpression,

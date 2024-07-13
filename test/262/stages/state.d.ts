@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import type { Label, Frame as GenericFrame } from "../../../lib";
 
 export type {

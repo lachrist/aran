@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 const {
   Array: { isArray },
   undefined,

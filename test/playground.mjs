@@ -2,7 +2,7 @@ import { instrument, ROOT_PATH } from "../lib/index.mjs";
 import { parse } from "acorn";
 import { generate } from "astring";
 
-const { eval: evalGlobal } = globalThis;
+// const { eval: evalGlobal } = globalThis;
 
 const code = `
 ({m () {}})
