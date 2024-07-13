@@ -1,25 +1,6 @@
 
-# EvalFunctionDeclaration
-- test/annexB/language/eval-code/direct/global-block-decl-eval-global-existing-block-fn-no-init.js
-- test/annexB/language/eval-code/direct/global-block-decl-eval-global-no-skip-try.js
-- test/annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-block-fn-no-init.js
-- test/annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-no-skip-try.js
-- test/annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-block-fn-no-init.js
-- test/annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-no-skip-try.js
-- test/annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-block-fn-no-init.js
-- test/annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-no-skip-try.js
-- test/annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-block-fn-no-init.js
-- test/annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-no-skip-try.js
-- test/annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-block-fn-no-init.js
-- test/annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-no-skip-try.js
-- test/annexB/language/eval-code/direct/global-switch-case-eval-global-existing-block-fn-no-init.js
-- test/annexB/language/eval-code/direct/global-switch-case-eval-global-no-skip-try.js
-- test/annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-block-fn-no-init.js
-- test/annexB/language/eval-code/direct/global-switch-dflt-eval-global-no-skip-try.js
-
 # DirectEvalExternalVariableDeclaration
 - test/language/statements/variable/S12.2_A5.js
-- test/language/eval-code/direct/var-env-global-lex-non-strict.js
 
 # Checking constructor result is done at return site and becomes catchable
 - test/language/statements/class/subclass/derived-class-return-override-catch-finally-arrow.js

@@ -9,7 +9,28 @@ import type { Path } from "../../path";
 import type { Effect } from "../atom";
 import type { Reboot } from "../../reboot";
 import type { PrivateKey } from "../../estree";
-import type { Duplicate } from "./duplicate";
+import type { ReifyExternal } from "./external";
+import type { Variable } from "../../estree";
+
+export type NativeExternalPrelude = {
+  type: "external-native";
+  data: Variable;
+};
+
+export type ReifyExternalPrelude = {
+  type: "external-reify";
+  data: ReifyExternal;
+};
+
+export type UnboundPrivatePrelude = {
+  type: "private-unbound";
+  data: PrivateKey;
+};
+
+export type TemplatePrelude = {
+  type: "template";
+  data: Template;
+};
 
 export type WarningPrelude = {
   type: "warning";
@@ -21,29 +42,14 @@ export type RebootPrelude = {
   data: [Path, Reboot];
 };
 
-export type DuplicatePrelude = {
-  type: "duplicate";
-  data: Duplicate;
-};
-
 export type HeaderPrelude = {
   type: "header";
   data: Header;
 };
 
-export type PrivatePrelude = {
-  type: "private";
-  data: PrivateKey;
-};
-
 export type ErrorPrelude = {
   type: "error";
   data: Error;
-};
-
-export type TemplatePrelude = {
-  type: "template";
-  data: Template;
 };
 
 export type MetaDeclarationPrelude = {
@@ -75,8 +81,9 @@ export type Prelude =
   | RebootPrelude
   | HeaderPrelude
   | ErrorPrelude
-  | DuplicatePrelude
-  | PrivatePrelude
+  | ReifyExternalPrelude
+  | NativeExternalPrelude
+  | UnboundPrivatePrelude
   | TemplatePrelude
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude
@@ -89,17 +96,19 @@ type BlockPrelude =
   | WarningPrelude
   | RebootPrelude
   | HeaderPrelude
-  | PrivatePrelude
+  | UnboundPrivatePrelude
+  | ReifyExternalPrelude
+  | NativeExternalPrelude
   | ErrorPrelude
-  | DuplicatePrelude
   | TemplatePrelude;
 
 export type BodyPrelude =
   | WarningPrelude
   | RebootPrelude
   | HeaderPrelude
-  | PrivatePrelude
-  | DuplicatePrelude
+  | ReifyExternalPrelude
+  | NativeExternalPrelude
+  | UnboundPrivatePrelude
   | HeaderPrelude
   | ErrorPrelude
   | TemplatePrelude
