@@ -10,16 +10,15 @@ export type Binding = {
   sloppy_function: SloppyFunction;
 };
 
-export type EarlyError = {
-  cause: "duplicate" | "keyword";
-  variable: Variable;
+export type Error = {
+  message: string;
   origin: Path;
 };
 
 export type Hoisting = { [key in Path]?: Binding[] };
 
 export type Result = {
-  report: EarlyError[];
+  report: Error[];
   unbound: Binding[];
   hoisting: Hoisting;
 };

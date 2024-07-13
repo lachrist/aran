@@ -1,6 +1,6 @@
 import type { Warning } from "../../warning";
 import type { Header } from "../../header";
-import type { EarlyError } from "./early-error";
+import type { Error } from "./error";
 import type { Condition } from "./condition";
 import type { BaseVariable, MetaVariable } from "../variable";
 import type { Template } from "./template";
@@ -9,6 +9,7 @@ import type { Path } from "../../path";
 import type { Effect } from "../atom";
 import type { Reboot } from "../../reboot";
 import type { PrivateKey } from "../../estree";
+import type { Duplicate } from "./duplicate";
 
 export type WarningPrelude = {
   type: "warning";
@@ -18,6 +19,11 @@ export type WarningPrelude = {
 export type RebootPrelude = {
   type: "reboot";
   data: [Path, Reboot];
+};
+
+export type DuplicatePrelude = {
+  type: "duplicate";
+  data: Duplicate;
 };
 
 export type HeaderPrelude = {
@@ -30,9 +36,9 @@ export type PrivatePrelude = {
   data: PrivateKey;
 };
 
-export type EarlyErrorPrelude = {
-  type: "early-error";
-  data: EarlyError;
+export type ErrorPrelude = {
+  type: "error";
+  data: Error;
 };
 
 export type TemplatePrelude = {
@@ -68,7 +74,8 @@ export type Prelude =
   | WarningPrelude
   | RebootPrelude
   | HeaderPrelude
-  | EarlyErrorPrelude
+  | ErrorPrelude
+  | DuplicatePrelude
   | PrivatePrelude
   | TemplatePrelude
   | BaseDeclarationPrelude
@@ -83,7 +90,8 @@ type BlockPrelude =
   | RebootPrelude
   | HeaderPrelude
   | PrivatePrelude
-  | EarlyErrorPrelude
+  | ErrorPrelude
+  | DuplicatePrelude
   | TemplatePrelude;
 
 export type BodyPrelude =
@@ -91,8 +99,9 @@ export type BodyPrelude =
   | RebootPrelude
   | HeaderPrelude
   | PrivatePrelude
+  | DuplicatePrelude
   | HeaderPrelude
-  | EarlyErrorPrelude
+  | ErrorPrelude
   | TemplatePrelude
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude;
