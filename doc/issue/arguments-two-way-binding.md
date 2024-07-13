@@ -1,6 +1,6 @@
-In sloppy mode, function with simple parameter list have their parameters
+In sloppy mode, functions with simple parameter list have their parameters
 two-way bound with the `arguments` object. This means that changes to the
-arguments object are reflected in the parameter values and vice versa. Aran does
+arguments object are reflected by the parameter values and vice versa. Aran does
 not preserve this (crazy) behavior. If this becomes a real issue, it could be
 possible to implement it with the `Proxy` API.
 
