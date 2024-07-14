@@ -242,10 +242,6 @@ export type AspectTyping<X, V extends Valuation> = {
       path: Path,
     ) => V["Scope"];
   };
-  "return@before": {
-    pointcut: (path: Path) => boolean;
-    advice: (state: X, value: V["Stack"], path: Path) => V["Other"];
-  };
   "apply@around": {
     pointcut: (path: Path) => boolean;
     advice: (

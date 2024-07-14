@@ -259,11 +259,6 @@ export type Statement<A extends Atom> =
       tag: A["Tag"];
     }
   | {
-      type: "ReturnStatement";
-      result: Expression<A>;
-      tag: A["Tag"];
-    }
-  | {
       type: "BreakStatement";
       label: A["Label"];
       tag: A["Tag"];

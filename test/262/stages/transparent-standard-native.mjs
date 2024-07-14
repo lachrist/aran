@@ -84,7 +84,6 @@ export default {
       "drop@before": (_state, value, _path) => value,
       "export@before": (_state, _specifier, value, _path) => value,
       "write@before": (_state, _variable, value, _path) => value,
-      "return@before": (_state, value, _path) => value,
       "apply@around": (_state, callee, self, input, _location) =>
         intrinsic["Reflect.apply"](
           /** @type {Function} */ (/** @type {unknown} */ (callee)),

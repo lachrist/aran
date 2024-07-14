@@ -1,5 +1,5 @@
 import type { RegularFrame } from "./variable-regular";
-import type { ClosureFrame } from "./closure";
+import type { RoutineFrame } from "./routine";
 import type { EvalFrame } from "./variable-eval";
 import type { ModeFrame } from "./mode";
 import type { PrivateFrame } from "./private";
@@ -17,7 +17,7 @@ export { RootFrame } from "./root";
 
 export type NodeFrame =
   | RegularFrame
-  | ClosureFrame
+  | RoutineFrame
   | CatchFrame
   | EvalFrame
   | IllegalFrame

@@ -1,31 +1,31 @@
 import type { Cache, WritableCache } from "../../cache";
 
 export type EvalFrame = {
-  type: "closure-eval";
+  type: "routine-eval";
 };
 
 export type ArrowFrame = {
-  type: "closure-arrow";
+  type: "routine-arrow";
 };
 
 export type FunctionFrame = {
-  type: "closure-function";
+  type: "routine-function";
 };
 
 export type MethodFrame = {
-  type: "closure-method";
+  type: "routine-method";
   proto: Cache;
 };
 
 export type ConstructorFrame = {
-  type: "closure-constructor";
+  type: "routine-constructor";
   derived: boolean;
   self: Cache;
   field: Cache;
   delay_return: null | WritableCache;
 };
 
-export type ClosureFrame =
+export type RoutineFrame =
   | EvalFrame
   | ArrowFrame
   | FunctionFrame

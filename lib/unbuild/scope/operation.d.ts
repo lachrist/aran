@@ -89,7 +89,7 @@ export type ReadErrorOperation = {
 
 export type CatchLoadOperation = ReadErrorOperation;
 
-// Closure //
+// Routine //
 
 export type ReadThisOperation = {
   type: "read-this";
@@ -132,14 +132,14 @@ export type WrapResultOperation = {
   position: "body" | "tail";
 };
 
-export type ClosureLoadOperation =
+export type RoutineLoadOperation =
   | ReadThisOperation
   | ReadNewTargetOperation
   | ReadInputOperation
   | GetSuperOperation
   | WrapResultOperation;
 
-export type ClosureSaveOperation = SetSuperOperation | CallSuperOperation;
+export type RoutineSaveOperation = SetSuperOperation | CallSuperOperation;
 
 // Private //
 
@@ -206,7 +206,7 @@ export type PrivateSaveOperation =
 
 export type LoadOperation =
   | VariableLoadOperation
-  | ClosureLoadOperation
+  | RoutineLoadOperation
   | CatchLoadOperation
   | PrivateLoadOperation
   | ReadImportOperation
@@ -214,7 +214,7 @@ export type LoadOperation =
 
 export type SaveOperation =
   | VariableSaveOperation
-  | ClosureSaveOperation
+  | RoutineSaveOperation
   | PrivateSaveOperation;
 
 export type Operation = LoadOperation | SaveOperation;
