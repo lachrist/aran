@@ -1,4 +1,4 @@
-import type { Cache } from "../../cache";
+import type { Cache, WritableCache } from "../../cache";
 
 export type EvalFrame = {
   type: "closure-eval";
@@ -22,6 +22,7 @@ export type ConstructorFrame = {
   derived: boolean;
   self: Cache;
   field: Cache;
+  delay_return: null | WritableCache;
 };
 
 export type ClosureFrame =

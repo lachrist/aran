@@ -104,14 +104,7 @@
 - test/language/statements/for-of/dstr/array-rest-lref-err.js
 
 # TODO >> Checking constructor result is done at return site and becomes catchable
-- test/language/statements/class/subclass/derived-class-return-override-catch-finally-arrow.js
-- test/language/statements/class/subclass/derived-class-return-override-catch-finally.js
-- test/language/statements/class/subclass/derived-class-return-override-catch-super-arrow.js
-- test/language/statements/class/subclass/derived-class-return-override-finally-super-arrow.js
-- test/language/statements/class/subclass/derived-class-return-override-finally-super.js
 - test/language/statements/class/subclass/derived-class-return-override-for-of-arrow.js
-- test/language/statements/class/subclass/derived-class-return-override-catch-super.js
-- test/language/statements/class/subclass/derived-class-return-override-catch.js
 - test/language/statements/class/subclass/derived-class-return-override-for-of.js
 
 # TODO >> ambient intrinsic do not consider realm

@@ -129,6 +129,7 @@ export type WrapResultOperation = {
   type: "wrap-result";
   mode: Mode;
   result: Expression | null;
+  position: "body" | "tail";
 };
 
 export type ClosureLoadOperation =
