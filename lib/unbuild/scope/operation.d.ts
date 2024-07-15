@@ -125,11 +125,16 @@ export type CallSuperOperation = {
   input: Expression;
 };
 
-export type WrapResultOperation = {
-  type: "wrap-result";
+export type UpdateResultOperation = {
+  type: "update-result";
   mode: Mode;
   result: Expression | null;
-  position: "body" | "tail";
+};
+
+export type FinalizeResultOperation = {
+  type: "finalize-result";
+  mode: Mode;
+  result: Expression | null;
 };
 
 export type RoutineLoadOperation =
@@ -137,9 +142,12 @@ export type RoutineLoadOperation =
   | ReadNewTargetOperation
   | ReadInputOperation
   | GetSuperOperation
-  | WrapResultOperation;
+  | FinalizeResultOperation;
 
-export type RoutineSaveOperation = SetSuperOperation | CallSuperOperation;
+export type RoutineSaveOperation =
+  | SetSuperOperation
+  | CallSuperOperation
+  | UpdateResultOperation;
 
 // Private //
 
