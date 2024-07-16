@@ -1,5 +1,4 @@
 import type {
-  CatchClause,
   Directive,
   ModuleDeclaration,
   Statement,
@@ -11,7 +10,6 @@ export type CompletionNode =
   | Statement
   | Directive
   | ModuleDeclaration
-  | CatchClause
   | SwitchCase;
 
 export type CompletionResult = {
