@@ -103,10 +103,6 @@
 - test/language/statements/for-of/dstr/array-rest-iter-thrw-close.js
 - test/language/statements/for-of/dstr/array-rest-lref-err.js
 
-# TODO >> Checking constructor result is done at return site and becomes catchable
-- test/language/statements/class/subclass/derived-class-return-override-for-of-arrow.js
-- test/language/statements/class/subclass/derived-class-return-override-for-of.js
-
 # TODO >> ambient intrinsic do not consider realm
 - test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js
 - test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js

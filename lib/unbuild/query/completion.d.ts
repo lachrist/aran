@@ -15,6 +15,6 @@ export type CompletionNode =
   | SwitchCase;
 
 export type CompletionResult = {
-  last: boolean;
+  previous_maybe_last: boolean;
   paths: Path[];
 };

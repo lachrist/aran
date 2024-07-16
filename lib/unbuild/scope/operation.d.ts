@@ -131,6 +131,11 @@ export type UpdateResultOperation = {
   result: Expression | null;
 };
 
+export type BackupResultOperation = {
+  type: "backup-result";
+  mode: Mode;
+};
+
 export type FinalizeResultOperation = {
   type: "finalize-result";
   mode: Mode;
@@ -142,7 +147,8 @@ export type RoutineLoadOperation =
   | ReadNewTargetOperation
   | ReadInputOperation
   | GetSuperOperation
-  | FinalizeResultOperation;
+  | FinalizeResultOperation
+  | BackupResultOperation;
 
 export type RoutineSaveOperation =
   | SetSuperOperation
