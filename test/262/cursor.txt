@@ -1,2 +1,2 @@
-identity
-test/language/expressions/call/with-base-obj.js
+empty-standard-native
+test/language/module-code/instn-iee-bndng-let.js
