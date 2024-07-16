@@ -3,44 +3,15 @@
 import { runTest } from "./test.mjs";
 import { cleanup, record } from "./record.mjs";
 import { pathToFileURL } from "node:url";
-import { argv, stdout, exit } from "node:process";
+import { argv } from "node:process";
 import { parseCursor } from "./cursor.mjs";
 import { scrape } from "./scrape.mjs";
 import { inspectError } from "./util.mjs";
 import { readFile } from "node:fs/promises";
 
-const { console, process, URL, Error } = globalThis;
-
-const { stage, index } = parseCursor(
-  await readFile(pathToFileURL(argv[2]), "utf8"),
-);
-
-if (index === 0) {
-  stdout.write("Nothing to investigate.\n");
-  exit(0);
-}
+const { console, process, URL, Error, JSON } = globalThis;
 
 const test262 = new URL("../../test262/", import.meta.url);
-
-const codebase = new URL("codebase", import.meta.url);
-
-const {
-  default: { compileInstrument },
-} = /** @type {{default: import("./types").Stage}} */ (
-  await import(`./stages/${stage}.mjs`)
-);
-
-// It is unfortunate but uncaught exception do not necessarily indicate test failure.
-// test262/test/language/expressions/dynamic-import/syntax/valid/nested-if-nested-imports.js
-// Uncaught >> Error: ENOENT: no such file or directory, open
-//   'test262/test/language/expressions/dynamic-import/syntax/valid/[object Promise]'
-process.on("uncaughtException", (error, _origin) => {
-  console.log(error);
-  const { name, message } = inspectError(error);
-  console.log(`Uncaught >> ${name}: ${message}`);
-});
-
-await cleanup(codebase);
 
 /**
  * @type {(
@@ -58,9 +29,50 @@ const findTarget = async (index) => {
   throw new Error(`Index ${index} not found`);
 };
 
-const target = await findTarget(index);
+/**
+ * @type {(
+ *   cursor: import("./cursor").Cursor,
+ * ) => Promise<string>}
+ */
+const fetchTarget = async (cursor) => {
+  if (cursor.target === null) {
+    if (cursor.index === null) {
+      throw new Error(
+        `Nothing to investigate from cursor: ${JSON.stringify(cursor)}`,
+      );
+    } else {
+      return await findTarget(cursor.index);
+    }
+  } else {
+    return cursor.target;
+  }
+};
 
-console.log(`===== ${stage} =====`);
+const cursor = parseCursor(await readFile(pathToFileURL(argv[2]), "utf8"));
+
+const codebase = new URL("codebase", import.meta.url);
+
+const {
+  default: { compileInstrument },
+} = /** @type {{default: import("./types").Stage}} */ (
+  await import(`./stages/${cursor.stage}.mjs`)
+);
+
+// It is unfortunate but uncaught exception do not necessarily indicate test failure.
+// test262/test/language/expressions/dynamic-import/syntax/valid/nested-if-nested-imports.js
+// Uncaught >> Error: ENOENT: no such file or directory, open
+//   'test262/test/language/expressions/dynamic-import/syntax/valid/[object Promise]'
+process.on("uncaughtException", (error, _origin) => {
+  console.log(error);
+  const { name, message } = inspectError(error);
+  console.log(`Uncaught >> ${name}: ${message}`);
+});
+
+await cleanup(codebase);
+
+const target = await fetchTarget(cursor);
+
+console.log(`===== ${cursor.stage} =====`);
 console.log(`\ntest262/${target}\n`);
 console.dir(
   await runTest({

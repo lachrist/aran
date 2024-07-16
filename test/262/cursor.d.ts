@@ -8,5 +8,6 @@ export type Stage =
 
 export type Cursor = {
   stage: Stage;
-  index: number;
+  index: number | null;
+  target: string | null;
 };

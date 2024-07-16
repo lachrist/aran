@@ -60,13 +60,39 @@ const parseIndex = (line) => {
  */
 export const parseCursor = (content) => {
   const lines = parseList(content);
-  if (lines.length !== 2) {
-    throw new Error("Cursor file should have exactly two lines");
+  if (lines.length === 0) {
+    throw new Error("Empty cursor file");
   } else {
-    return {
-      stage: parseStage(lines[0]),
-      index: parseIndex(lines[1]),
-    };
+    const stage = parseStage(lines[0]);
+    if (lines.length === 1) {
+      return {
+        stage,
+        index: 0,
+        target: null,
+      };
+    } else if (lines.length === 2) {
+      try {
+        return {
+          stage,
+          index: parseIndex(lines[1]),
+          target: null,
+        };
+      } catch {
+        return {
+          stage,
+          index: null,
+          target: lines[1],
+        };
+      }
+    } else if (lines.length === 3) {
+      return {
+        stage,
+        index: parseIndex(lines[1]),
+        target: lines[2],
+      };
+    } else {
+      throw new Error("Cursor file should have at most three lines");
+    }
   }
 };
 
@@ -75,4 +101,7 @@ export const parseCursor = (content) => {
  *   cursor: import("./cursor").Cursor,
  * ) => string}
  */
-export const stringifyCursor = (cursor) => `${cursor.stage}\n${cursor.index}\n`;
+export const stringifyCursor = (cursor) =>
+  `${cursor.stage}\n${cursor.index === null ? "" : `${cursor.index}\n`}${
+    cursor.target === null ? "" : `${cursor.target}\n`
+  }`;

@@ -14,16 +14,14 @@ const { Object, console, process, URL } = globalThis;
 
 const persistent = pathToFileURL(argv[2]);
 
-const { stage, index: initial } = parseCursor(
-  await readFile(persistent, "utf8"),
-);
+const cursor = parseCursor(await readFile(persistent, "utf8"));
 
 const test262 = new URL("../../test262/", import.meta.url);
 
 const {
   default: { compileInstrument, predictStatus, isExcluded, listCause },
 } = /** @type {{default: import("./types").Stage}} */ (
-  await import(`./stages/${stage}.mjs`)
+  await import(`./stages/${cursor.stage}.mjs`)
 );
 
 /** @type {(error: import("./types").ErrorSerial) => string} */
@@ -34,6 +32,11 @@ const printError = (error) =>
 
 let index = 0;
 
+/** @type {string | null} */
+let target = null;
+
+let start = false;
+
 process.on("uncaughtException", (error, _origin) => {
   console.log(error);
   const { name, message } = inspectError(error);
@@ -41,8 +44,12 @@ process.on("uncaughtException", (error, _origin) => {
 });
 
 const saveProgress = () => {
-  if (index > initial) {
-    writeFileSync(persistent, stringifyCursor({ stage, index }), "utf8");
+  if (start) {
+    writeFileSync(
+      persistent,
+      stringifyCursor({ stage: cursor.stage, index, target }),
+      "utf8",
+    );
   }
 };
 
@@ -53,8 +60,11 @@ process.on("SIGINT", () => {
 process.on("exit", saveProgress);
 
 for await (const url of scrape(new URL("test/", test262))) {
-  const target = url.href.substring(test262.href.length);
-  if (index >= initial) {
+  target = url.href.substring(test262.href.length);
+  if ((!start && target === cursor.target) || index === cursor.index) {
+    start = true;
+  }
+  if (start) {
     if (isTestCase(target) && !isExcluded(target)) {
       console.log(index, `test262/${target}`);
       const result = await runTest({
