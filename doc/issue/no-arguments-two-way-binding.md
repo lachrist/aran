@@ -6,27 +6,27 @@ possible to implement it with the `Proxy` API.
 
 ```js
 function f(x) {
-  console.log({ x, arg0: arguments[0] });
+  console.log(1, { x, arg0: arguments[0] });
   arguments[0] = "bar";
-  console.log({ x, arg0: arguments[0] });
+  console.log(2, { x, arg0: arguments[0] });
   x = "qux";
-  console.log({ x, arg0: arguments[0] });
+  console.log(3, { x, arg0: arguments[0] });
 }
 f("foo");
 ```
 
-Normal:
+Normal output:
 
 ```
-{ x: 'foo', arg0: 'foo' }
-{ x: 'bar', arg0: 'bar' }
-{ x: 'qux', arg0: 'qux' }
+1 { x: 'foo', arg0: 'foo' }
+2 { x: 'bar', arg0: 'bar' }
+3 { x: 'qux', arg0: 'qux' }
 ```
 
-Aran:
+Aran output:
 
 ```
-{ x: 'foo', arg0: 'foo' }
-{ x: 'foo', arg0: 'bar' }
-{ x: 'qux', arg0: 'bar' }
+1 { x: 'foo', arg0: 'foo' }
+2 { x: 'foo', arg0: 'bar' }
+3 { x: 'qux', arg0: 'bar' }
 ```

@@ -1,12 +1,12 @@
 Sloppy functions have two own properties: `caller` and `arguments` which provide
 information about the last call of the function. This (crazy) behavior has been
-deprecated as it prevent optimizations but it is still part of the
+deprecated as it prevents optimizations but it is still part of the
 specification. Aran simply assigns these properties to null and never touches
 them again.
 
 ```js
 function f() {
-  console.log({
+  console.log(2, {
     arguments: f.arguments,
     caller: f.caller,
   });
@@ -14,29 +14,29 @@ function f() {
 function g() {
   f();
 }
-console.log({
+console.log(1, {
   arguments: f.arguments,
   caller: f.caller,
 });
 g();
-console.log({
+console.log(3, {
   arguments: f.arguments,
   caller: f.caller,
 });
 ```
 
-Normal:
+Normal output:
 
 ```
-{ arguments: null, caller: null }
-{ arguments: [Arguments] {}, caller: [Function: g] }
-{ arguments: null, caller: null }
+1 { arguments: null, caller: null }
+2 { arguments: [Arguments] {}, caller: [Function: g] }
+3 { arguments: null, caller: null }
 ```
 
-Aran:
+Aran output:
 
 ```
-{ arguments: null, caller: null }
-{ arguments: null, caller: null }
-{ arguments: null, caller: null }
+1 { arguments: null, caller: null }
+2 { arguments: null, caller: null }
+3 { arguments: null, caller: null }
 ```

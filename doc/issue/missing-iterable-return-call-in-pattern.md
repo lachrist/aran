@@ -22,14 +22,14 @@ const [
 };
 ```
 
-Normal
+Normal output:
 
 ```
 cleanup
 Uncaught 'boum'
 ```
 
-Aran
+Aran output:
 
 ```
 Uncaught 'boum'
