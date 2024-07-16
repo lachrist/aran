@@ -103,12 +103,15 @@
 - test/language/statements/for-of/dstr/array-rest-iter-thrw-close.js
 - test/language/statements/for-of/dstr/array-rest-lref-err.js
 
-# TODO >> ambient intrinsic do not consider realm
+# duplicate-super-prototype-access
+- test/language/statements/class/definition/prototype-getter.js
+
+# wrong-default-prototype-realm
 - test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js
 - test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js
 - test/language/expressions/super/realm.js
 
-# TODO >> Deadzone is not enforced from outside the module (only relevant in presence of cycle)
+# hoisted-module-declaration
 - test/language/module-code/instn-iee-bndng-cls.js
 - test/language/module-code/instn-iee-bndng-const.js
 - test/language/module-code/instn-iee-bndng-let.js
@@ -128,15 +131,7 @@
 - test/language/module-code/namespace/internals/object-keys-binding-uninit.js
 - test/language/module-code/namespace/internals/object-propertyIsEnumerable-binding-uninit.js
 - test/language/module-code/top-level-await/module-self-import-async-resolution-ticks.js
-
-# TODO >> Deadzone is lifted too late in presence of module cycle
 - test/language/module-code/verify-dfs.js
-
-# TODO >> this argument is undefined when directly invoking functions of with frame
-- test/language/expressions/call/with-base-obj.js
-
-# TODO >> Access super.prototype twice when creating a derived class
-- test/language/statements/class/definition/prototype-getter.js
 
 # TODO >> Right value are consistently evaluated first in pattern
 - test/language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js

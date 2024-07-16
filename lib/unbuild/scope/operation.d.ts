@@ -55,10 +55,17 @@ export type DiscardOperation = {
   variable: Variable;
 };
 
+export type ReadAmbientThisOperation = {
+  type: "read-ambient-this";
+  mode: Mode;
+  variable: Variable;
+};
+
 export type VariableLoadOperation =
   | ReadOperation
   | TypeofOperation
-  | DiscardOperation;
+  | DiscardOperation
+  | ReadAmbientThisOperation;
 
 export type VariableSaveOperation =
   | InitializeOperation
