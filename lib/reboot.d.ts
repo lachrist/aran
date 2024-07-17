@@ -1,9 +1,9 @@
 import type { Path } from "./path";
-import type { PackMeta } from "./unbuild/meta";
+import type { Meta } from "./unbuild/meta";
 import type { PackScope } from "./unbuild/scope";
 
 export type Reboot = {
-  meta: PackMeta;
+  meta: Meta;
   scope: PackScope;
 };
 
