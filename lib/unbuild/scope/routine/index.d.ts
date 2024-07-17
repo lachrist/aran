@@ -2,7 +2,8 @@ import type { Path } from "../../../path";
 import type { Cache, WritableCache } from "../../cache";
 
 export type ProgramFrame = {
-  type: "routine-program";
+  type: "routine";
+  kind: "program";
   sort:
     | "script"
     | "module"
@@ -14,23 +15,27 @@ export type ProgramFrame = {
 };
 
 export type ArrowFrame = {
-  type: "routine-arrow";
+  type: "routine";
+  kind: "arrow";
   result: WritableCache | null;
 };
 
 export type FunctionFrame = {
-  type: "routine-function";
+  type: "routine";
+  kind: "function";
   result: WritableCache | null;
 };
 
 export type MethodFrame = {
-  type: "routine-method";
+  type: "routine";
+  kind: "method";
   result: WritableCache | null;
   proto: Cache;
 };
 
 export type ConstructorFrame = {
-  type: "routine-constructor";
+  type: "routine";
+  kind: "constructor";
   result: WritableCache | null;
   derived: boolean;
   self: Cache;

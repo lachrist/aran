@@ -12,6 +12,7 @@ import type {
 } from "../atom";
 import type { Parameter } from "../../lang";
 import type { Json } from "../../json";
+import type { ValueOf } from "../../util";
 
 export {
   Variable,
@@ -25,8 +26,6 @@ export {
 };
 
 export type Block = ControlBlock | RoutineBlock;
-
-type ValueOf<record> = record[keyof record];
 
 export type GenericPointcut<point extends Json[], node extends Node> = (
   node: node,

@@ -60,7 +60,7 @@ const config = {
     "no-plusplus": "error",
     "no-warning-comments": ["warn", { terms: ["todo"] }],
     "object-shorthand": ["error"],
-    "prefer-const": "error",
+    "prefer-const": ["error", { destructuring: "all" }],
     "require-await": "error",
     "require-yield": "error",
     // local //

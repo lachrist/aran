@@ -9,12 +9,6 @@ import type { WithFrame } from "./variable-with";
 import type { CatchFrame } from "./catch";
 import type { IllegalFrame } from "./variable-illegal";
 
-export { RootFrame } from "./root";
-
-///////////
-// Frame //
-///////////
-
 export type NodeFrame =
   | RegularFrame
   | RoutineFrame
@@ -29,19 +23,23 @@ export type NodeFrame =
 export type Frame = RootFrame | NodeFrame;
 
 ///////////
+// Frame //
+///////////
+
+export type PackScope = [RootFrame, ...NodeFrame[]];
+
+///////////
 // Scope //
 ///////////
 
-export type NodeScope = {
-  frame: NodeFrame;
-  parent: Scope;
+export type RootScope = {
+  here: RootFrame;
+  next: null;
 };
 
-export type RootScope = {
-  frame: RootFrame;
-  parent: null;
+export type NodeScope = {
+  here: NodeFrame;
+  next: Scope;
 };
 
 export type Scope = NodeScope | RootScope;
-
-export type PackScope = [RootFrame, ...NodeFrame[]];

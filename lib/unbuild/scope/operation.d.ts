@@ -1,5 +1,8 @@
 import type { PrivateKey, Variable } from "../../estree";
-import type { Expression } from "../atom";
+import type { Sequence } from "../../sequence";
+import type { Effect, Expression } from "../atom";
+import type { BodyPrelude } from "../prelude";
+import type { LeafSite } from "../site";
 import type { ConstantMetaVariable } from "../variable";
 
 export { RootFrame } from "./root";
@@ -78,7 +81,7 @@ export type VariableOperation = VariableLoadOperation | VariableSaveOperation;
 // Root //
 
 export type ReadImportOperation = {
-  type: "read-import-dynamic";
+  type: "read-import";
   mode: Mode;
 };
 
@@ -239,3 +242,33 @@ export type SaveOperation =
   | PrivateSaveOperation;
 
 export type Operation = LoadOperation | SaveOperation;
+
+// method //
+
+export type ListScopeEffect<S> = (
+  site: LeafSite,
+  scope: S,
+  operation: SaveOperation,
+) => Sequence<BodyPrelude, Effect[]>;
+
+export type ListFrameEffect<F> = <S>(
+  site: LeafSite,
+  frame: F,
+  operation: SaveOperation,
+  listAlternateEffect: ListScopeEffect<S>,
+  scope: S,
+) => Sequence<BodyPrelude, Effect[]>;
+
+export type makeScopeExpression<S> = (
+  site: LeafSite,
+  scope: S,
+  operation: LoadOperation,
+) => Sequence<BodyPrelude, Expression>;
+
+export type MakeFrameExpression<F> = <S>(
+  site: LeafSite,
+  frame: F,
+  operation: LoadOperation,
+  makeAlternateExpression: makeScopeExpression<S>,
+  scope: S,
+) => Sequence<BodyPrelude, Expression>;
