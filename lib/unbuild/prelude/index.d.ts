@@ -12,6 +12,12 @@ import type { PrivateKey } from "../../estree";
 import type { ReifyExternal } from "./external";
 import type { Variable } from "../../estree";
 
+export type ReturnIteratorPrelude = {
+  type: "iterator-return";
+  iterator: MetaVariable;
+  done: MetaVariable;
+};
+
 export type NativeExternalPrelude = {
   type: "external-native";
   data: Variable;
