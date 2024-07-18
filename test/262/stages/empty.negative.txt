@@ -134,6 +134,5 @@
 - test/language/module-code/verify-dfs.js
 
 # reorder-member-assign-evaluation
-- test/language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js
 - test/language/statements/class/elements/privatefieldset-evaluation-order-2.js
 - test/language/statements/class/elements/privatefieldset-evaluation-order-3.js
