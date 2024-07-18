@@ -1,13 +1,17 @@
 {
+  let counter = 0;
   const iterable = {
     [Symbol.iterator]: () => ({
       next: () => {
-        return { done: false, value: null };
+        counter++;
+        return { done: counter > 10, value: counter };
       },
-      return: () => null,
+      return: () => {
+        console.log("return called");
+      },
     }),
   };
   for (var x of iterable) {
-    break;
+    console.log(x);
   }
 }
