@@ -132,7 +132,3 @@
 - test/language/module-code/namespace/internals/object-propertyIsEnumerable-binding-uninit.js
 - test/language/module-code/top-level-await/module-self-import-async-resolution-ticks.js
 - test/language/module-code/verify-dfs.js
-
-# reorder-member-assign-evaluation
-- test/language/statements/class/elements/privatefieldset-evaluation-order-2.js
-- test/language/statements/class/elements/privatefieldset-evaluation-order-3.js
