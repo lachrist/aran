@@ -1,3 +1,3 @@
 empty-standard-native
-28552
-test/language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js
+0
+test/staging/ArrayBuffer/resizable/entries-keys-values-grow-mid-iteration.js

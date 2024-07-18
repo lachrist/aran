@@ -5,7 +5,9 @@ import { generate } from "astring";
 // const { eval: evalGlobal } = globalThis;
 
 const code = `
-({m () {}})
+  for (const x of [123]) {
+    throw x;
+  }
 `;
 
 console.log(
@@ -24,7 +26,7 @@ console.log(
         ),
       },
       {
-        mode: "standalone",
+        mode: "normal",
       },
     ),
   ),
