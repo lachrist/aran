@@ -6,15 +6,16 @@ import { AranTypeError } from "./error.mjs";
 
 const { URL, performance, Math } = globalThis;
 
-const directory = new URL("codebase/", import.meta.url);
+const root = new URL("../../", import.meta.url);
+const base = new URL("test/262/codebase/", root);
 
 /**
  * @type {(directory: URL) => Promise<void>}
  */
 export const cleanup = async () => {
-  for (const filename of await readdir(directory)) {
+  for (const filename of await readdir(base)) {
     if (filename !== ".gitignore") {
-      await unlink(new URL(filename, directory));
+      await unlink(new URL(filename, base));
     }
   }
 };
@@ -46,8 +47,8 @@ const generateUniqueIdentifier = () =>
 export const record = ({ kind, url: url1, content: content1 }) => {
   const basename = generateUniqueIdentifier();
   const extension = getExtension(kind);
-  const url2 = new URL(`${basename}.${extension}`, directory);
-  stdout.write(`RECORD >> ${url2.href}\n`);
+  const url2 = new URL(`${basename}.${extension}`, base);
+  stdout.write(`RECORD >> ${url2.href.substring(root.href.length)}\n`);
   const content2 = `// ${url1.href}\n${format(content1)}`;
   writeFileSync(url2, content2, "utf8");
   return { kind, url: url2, content: content2 };
