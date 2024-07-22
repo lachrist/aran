@@ -9,14 +9,13 @@ import { parseCursor, stringifyCursor } from "./cursor.mjs";
 import { isFailureResult } from "./result.mjs";
 import { readFile } from "node:fs/promises";
 import { writeFileSync } from "node:fs";
+import { home, toRelative, toTarget } from "./home.mjs";
 
 const { Object, console, process, URL } = globalThis;
 
 const persistent = pathToFileURL(argv[2]);
 
 const cursor = parseCursor(await readFile(persistent, "utf8"));
-
-const test262 = new URL("test262/", import.meta.url);
 
 const {
   default: { compileInstrument, predictStatus, isExcluded, listCause },
@@ -59,17 +58,17 @@ process.on("SIGINT", () => {
 
 process.on("exit", saveProgress);
 
-for await (const url of scrape(new URL("test/", test262))) {
-  target = url.href.substring(test262.href.length);
+for await (const url of scrape(new URL("test/", home))) {
+  target = toTarget(url);
   if ((!start && target === cursor.target) || index === cursor.index) {
     start = true;
   }
   if (start) {
     if (isTestCase(target) && !isExcluded(target)) {
-      console.log(index, `test262/${target}`);
+      console.log(index, toRelative(target));
       const result = await runTest({
         target,
-        test262,
+        home,
         warning: "ignore",
         record: (source) => source,
         compileInstrument,

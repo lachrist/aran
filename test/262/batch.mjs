@@ -7,6 +7,7 @@ import { isTestCase, runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
 import { isFailureResult } from "./result.mjs";
 import { stringifyFailureArray } from "./failure.mjs";
+import { home, toTarget } from "./home.mjs";
 
 const { Error, console, process, URL } = globalThis;
 
@@ -29,22 +30,20 @@ process.on("uncaughtException", (error, _origin) => {
   console.log(`${name}: ${message}`);
 });
 
-const test262 = new URL("test262/", import.meta.url);
-
 /** @type {import("./types").Failure[]} */
 const failures = [];
 
 let index = 0;
 
-for await (const url of scrape(new URL("test/", test262))) {
+for await (const url of scrape(new URL("test/", home))) {
   if (index % 100 === 0) {
     console.dir(index);
   }
-  const target = url.href.substring(test262.href.length);
+  const target = toTarget(url);
   if (isTestCase(target) && !isExcluded(target)) {
     const result = await runTest({
       target,
-      test262,
+      home,
       record: (source) => source,
       warning: "ignore",
       compileInstrument,

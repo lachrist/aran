@@ -8,10 +8,9 @@ import { parseCursor } from "./cursor.mjs";
 import { scrape } from "./scrape.mjs";
 import { inspectError } from "./util.mjs";
 import { readFile } from "node:fs/promises";
+import { home, toRelative, toTarget } from "./home.mjs";
 
 const { console, process, URL, Error, JSON } = globalThis;
-
-const test262 = new URL("test262/", import.meta.url);
 
 /**
  * @type {(
@@ -20,10 +19,10 @@ const test262 = new URL("test262/", import.meta.url);
  */
 const findTarget = async (index) => {
   let current = -1;
-  for await (const url of scrape(new URL("test/", test262))) {
+  for await (const url of scrape(new URL("test/", home))) {
     current += 1;
     if (index === current) {
-      return url.href.substring(test262.href.length);
+      return toTarget(url);
     }
   }
   throw new Error(`Index ${index} not found`);
@@ -73,11 +72,11 @@ await cleanup(codebase);
 const target = await fetchTarget(cursor);
 
 console.log(`===== ${cursor.stage} =====`);
-console.log(`\ntest262/${target}\n`);
+console.log(`\n${toRelative(target)}\n`);
 console.dir(
   await runTest({
     target,
-    test262,
+    home,
     warning: "console",
     record,
     compileInstrument,

@@ -11,18 +11,18 @@ const { URL } = globalThis;
  *     target: string,
  *     content: string,
  *     metadata: import("./types").Metadata,
- *     test262: URL,
+ *     home: URL,
  *   },
  * ) => import("./types").Case[]}
  */
-const listTestCase = ({ target, content, metadata, test262 }) => {
+const listTestCase = ({ target, content, metadata, home }) => {
   const asynchronous = metadata.flags.includes("async");
   const negative = metadata.negative;
   const includes = [
     ...(metadata.flags.includes("raw") ? [] : ["assert.js", "sta.js"]),
     ...(metadata.flags.includes("async") ? ["doneprintHandle.js"] : []),
     ...metadata.includes,
-  ].map((name) => new URL(`harness/${name}`, test262));
+  ].map((name) => new URL(`harness/${name}`, home));
   const module = metadata.flags.includes("module");
   /** @type {import("./types").Case[]} */
   const tests = [];
@@ -35,7 +35,7 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
     tests.push({
       source: {
         kind,
-        url: new URL(target, test262),
+        url: new URL(target, home),
         content: `"use strict";\n${content}`,
       },
       negative,
@@ -47,7 +47,7 @@ const listTestCase = ({ target, content, metadata, test262 }) => {
     tests.push({
       source: {
         kind,
-        url: new URL(target, test262),
+        url: new URL(target, home),
         content,
       },
       negative,
@@ -71,7 +71,7 @@ const DEFAULT_METADATA = {
  * @type {(
  *   options: {
  *     target: string,
- *     test262: URL,
+ *     home: URL,
  *     compileInstrument: import("./types").CompileInstrument,
  *     warning: "ignore" | "console",
  *     record: import("./types").Instrument,
@@ -80,12 +80,12 @@ const DEFAULT_METADATA = {
  */
 export const runTest = async ({
   target,
-  test262,
+  home,
   warning,
   record,
   compileInstrument,
 }) => {
-  const content = await readFile(new URL(target, test262), "utf8");
+  const content = await readFile(new URL(target, home), "utf8");
   /** @type {import("./types").Metadata} */
   let metadata = DEFAULT_METADATA;
   try {
@@ -101,7 +101,7 @@ export const runTest = async ({
     target,
     content,
     metadata,
-    test262,
+    home,
   })) {
     try {
       await runTestCase({ case: case_, compileInstrument, warning, record });
