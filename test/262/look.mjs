@@ -11,7 +11,7 @@ import { readFile } from "node:fs/promises";
 
 const { console, process, URL, Error, JSON } = globalThis;
 
-const test262 = new URL("../../test262/", import.meta.url);
+const test262 = new URL("test262/", import.meta.url);
 
 /**
  * @type {(

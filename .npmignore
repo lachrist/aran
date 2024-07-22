@@ -1,4 +1,13 @@
-.DS_Store
-/test/
-/test262/
+/doc/
+/graveyard/
 /img/
+/lib/*.test.mjs
+/lib/*.fixture.mjs
+/lint/
+/test/
+.editorconfig
+.gitignore
+.npmignore
+.prettierignore
+.prettierrc.yml
+eslint.config.js

@@ -16,7 +16,7 @@ const persistent = pathToFileURL(argv[2]);
 
 const cursor = parseCursor(await readFile(persistent, "utf8"));
 
-const test262 = new URL("../../test262/", import.meta.url);
+const test262 = new URL("test262/", import.meta.url);
 
 const {
   default: { compileInstrument, predictStatus, isExcluded, listCause },

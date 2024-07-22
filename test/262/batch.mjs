@@ -29,7 +29,7 @@ process.on("uncaughtException", (error, _origin) => {
   console.log(`${name}: ${message}`);
 });
 
-const test262 = new URL("../../test262/", import.meta.url);
+const test262 = new URL("test262/", import.meta.url);
 
 /** @type {import("./types").Failure[]} */
 const failures = [];

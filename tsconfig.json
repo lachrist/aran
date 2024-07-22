@@ -15,6 +15,6 @@
     "typeRoots": ["./node_modules/@types"],
     "exactOptionalPropertyTypes": true
   },
-  "include": ["./build/", "./lib/", "./test/", "./lint/"],
-  "exclude": ["./test/262/codebase/"]
+  "include": ["./lib/", "./lint/", "./test/"],
+  "exclude": ["./test/262/codebase/", "./test/262/test262/"]
 }
