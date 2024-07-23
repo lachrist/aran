@@ -63,7 +63,7 @@ export type {
   AdviceElement as FlexibleAdviceElement,
   Pointcut as FlexiblePointcut,
   UnknownAspect as UnknownFlexibleAspect,
-  HomogeneousAspect as HomogeneousAspectFlexibleAspect,
+  HomogeneousAspect as HomogeneousFlexibleAspect,
   HeterogeneousAspect as HeterogeneousFlexibleAspect,
 } from "./weave/flexible/aspect.d.ts";
 

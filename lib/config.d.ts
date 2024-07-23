@@ -16,4 +16,4 @@ export type Config =
 
 export type PartialConfig =
   | Partial<StandardWeaveConfig & CommonConfig>
-  | (Partial<FlexibleWeaveConfig & CommonConfig> & { weave: "flexible" });
+  | (Partial<FlexibleWeaveConfig & CommonConfig> & { weaving: "flexible" });
