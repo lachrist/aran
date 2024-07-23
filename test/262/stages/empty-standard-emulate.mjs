@@ -11,8 +11,27 @@ import {
   parseNegative,
 } from "../negative.mjs";
 import { getFailureTarget, parseFailureArray } from "../failure.mjs";
+import { ROOT_PATH } from "../../../lib/index.mjs";
 
-const { Set, URL } = globalThis;
+const {
+  Set,
+  URL,
+  Array: { from: toArray },
+  Reflect: { defineProperty, setPrototypeOf },
+} = globalThis;
+
+bare - main - standard - native;
+bare - main - flexible - native;
+
+bare - full - weave - standard - builtin;
+bare - full - weave - flexible - builtin;
+bare - full - weave - flexible - emulate;
+bare - full - weave - standard - emulate;
+
+bare - full - patch - standard - builtin;
+bare - full - patch - flexible - builtin;
+bare - full - patch - flexible - emulate;
+bare - full - patch - standard - emulate;
 
 const exclusion = new Set(
   parseFailureArray(
@@ -42,59 +61,98 @@ export default {
     const aspect = {
       "eval@before": (_state, context, value, path) => {
         if (typeof value === "string") {
-          return instrumentDeep(value, context, path);
+          return instrumentNext({
+            kind: "eval",
+            situ: "local.deep",
+            code: value,
+            context,
+            path,
+          });
         } else {
           return value;
         }
       },
-      "apply@around": (_state, function_, this_, arguments_, path) => {
-        if (function_ === intrinsic.eval) {
-          if (arguments_.length === 0) {
-            return intrinsic.undefined;
-          } else {
-            const code = arguments_[0];
-            if (typeof code === "string") {
-              return intrinsic.eval(instrumentDeep(code, null, path));
-            } else {
-              return code;
-            }
-          }
-        } else if (function_ === intrinsic.Function) {
-          return intrinsic.eval(
-            instrumentDeep(compileFunctionCode(arguments_), null, path),
-          );
-        } else {
-          // Use Reflect.apply from test case's realm.
-          // Else, it might throw a type error from this realm.
-          return intrinsic["Reflect.apply"](
-            /** @type {function} */ (function_),
-            this_,
-            arguments_,
-          );
-        }
-      },
-      "construct@around": (_state, constructor_, arguments_, path) => {
-        if (constructor_ === intrinsic.Function) {
-          return intrinsic.eval(
-            instrumentDeep(compileFunctionCode(arguments_), null, path),
-          );
-        } else {
-          // Use Reflect.construct from test case's realm
-          // Else, it might throw a type error from this realm.
-          return intrinsic["Reflect.construct"](
-            /** @type {function} */ (constructor_),
-            arguments_,
-          );
-        }
-      },
     };
-    const { intrinsic, instrumentRoot, instrumentDeep } =
+    const { intrinsic, instrumentRoot, instrumentNext } =
       compileStandardInstrumentation(aspect, {
         global_declarative_record: "emulate",
         warning,
         record,
         context,
       });
+    /** @type {import("../types").$262} */
+    const $262 = /** @type {any} */ (intrinsic["aran.global"]).$262;
+    const { evalScript } = $262;
+    evalScript("const eval = globalThis.eval");
+    $262.evalScript = (value) =>
+      evalScript(
+        instrumentNext({
+          kind: "script",
+          situ: "global",
+          code: value,
+          context: {},
+          path: ROOT_PATH,
+        }),
+      );
+    const {
+      Function: { prototype: function_prototype },
+      eval: evalGlobal,
+    } = intrinsic["aran.global"];
+    intrinsic["aran.global"].eval = (/** @type {unknown} */ code) => {
+      if (typeof code === "string") {
+        return evalGlobal(
+          instrumentNext({
+            kind: "eval",
+            situ: "global",
+            code,
+            context: {},
+            path: ROOT_PATH,
+          }),
+        );
+      } else {
+        return code;
+      }
+    };
+    setPrototypeOf(intrinsic["aran.global"].eval, function_prototype);
+    defineProperty(intrinsic["aran.global"].eval, "name", {
+      // @ts-ignore
+      __proto__: null,
+      value: "eval",
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    });
+    intrinsic["aran.global"].Function = /** @type {FunctionConstructor} */ (
+      // eslint-disable-next-line local/no-function, local/no-rest-parameter
+      function Function(...input) {
+        return evalGlobal(
+          instrumentNext({
+            kind: "eval",
+            situ: "global",
+            code: compileFunctionCode(toArray(input)),
+            context: {},
+            path: ROOT_PATH,
+          }),
+        );
+      }
+    );
+    setPrototypeOf(intrinsic["aran.global"].Function, function_prototype);
+    defineProperty(intrinsic["aran.global"].Function, "prototype", {
+      // @ts-ignore
+      __proto__: null,
+      value: function_prototype,
+      writable: false,
+      enumerable: false,
+      configurable: false,
+    });
+    defineProperty(intrinsic["aran.global"].Function, "length", {
+      // @ts-ignore
+      __proto__: null,
+      value: 1,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    });
     return instrumentRoot;
   },
 };

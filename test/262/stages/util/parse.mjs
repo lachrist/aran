@@ -1,6 +1,5 @@
 import { parse as parseAcorn } from "acorn";
 import { parse as parseBabel } from "@babel/parser";
-import { AranTypeError } from "../../error.mjs";
 
 const {
   undefined,
@@ -20,7 +19,7 @@ const {
  *   | import("../../../../lib/source").EarlySyntaxError
  * )}
  */
-const parseGlobal = (kind, code) => {
+export const parseGlobal = (kind, code) => {
   try {
     return /** @type {any} */ (
       parseAcorn(code, {
@@ -52,7 +51,7 @@ const parseGlobal = (kind, code) => {
  *   kind: "eval",
  *   code: string,
  * ) => (
- *   | (import("../../../../lib").EstreeScriptProgram)
+ *   | import("../../../../lib").EstreeScriptProgram
  *   | import("../../../../lib/source").EarlySyntaxError
  * )}
  */
@@ -189,7 +188,7 @@ export const parseBabelLocal = (_kind, code) => {
  *   | import("../../../../lib/source").EarlySyntaxError
  * )}
  */
-const parseLocal = (kind, code) => {
+export const parseLocal = (kind, code) => {
   const root = parseAcornLocal(kind, code);
   // We prefer acorn over babel because it is faster respect the estree format.
   // The estree babel plugin is supposed to make babel produce valid estree
@@ -201,35 +200,5 @@ const parseLocal = (kind, code) => {
     return parseBabelLocal(kind, code);
   } else {
     return root;
-  }
-};
-
-/**
- * @type {(
- *   program: import("./parse").RawProgram,
- * ) => import("../../../../lib").Source}
- */
-export const parse = ({ code, ...program }) => {
-  if (program.situ === "global") {
-    if (program.kind === "module") {
-      return {
-        ...program,
-        root: parseGlobal(program.kind, code),
-      };
-    } else if (program.kind === "script" || program.kind === "eval") {
-      return {
-        ...program,
-        root: parseGlobal(program.kind, code),
-      };
-    } else {
-      throw new AranTypeError(program);
-    }
-  } else if (program.situ === "local.deep" || program.situ === "local.root") {
-    return {
-      ...program,
-      root: parseLocal(program.kind, code),
-    };
-  } else {
-    throw new AranTypeError(program);
   }
 };
