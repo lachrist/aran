@@ -3,6 +3,8 @@ import {
   instrument,
   setup as generateSetup,
   ROOT_PATH,
+  extractStandardAdvice,
+  extractStandardPointcut,
 } from "../../../../lib/index.mjs";
 import { parseGlobal, parseLocal } from "./parse.mjs";
 import { hash32 } from "./hash.mjs";
@@ -13,8 +15,16 @@ const {
   undefined,
   String,
   URL,
+  Object: { entries: listEntryInner },
   Reflect: { apply, construct, defineProperty, getPrototypeOf, setPrototypeOf },
 } = globalThis;
+
+/**
+ * @type {<K extends PropertyKey, V>(
+ *   record: { [k in K]?: V },
+ * ) => [K, V][]}
+ */
+const listEntry = listEntryInner;
 
 const GLOBAL_VARIABLE =
   /** @type {import("../../../../lib").EstreeVariable} */ ("globalThis");
@@ -53,8 +63,22 @@ const completeConfig = (
       escape_prefix: ESCAPE_PREFIX,
       advice_variable: ADVICE_VARIABLE,
     };
+  } else if (pointcut.type === "flexible") {
+    return {
+      mode: "normal",
+      weaving: "flexible",
+      pointcut: pointcut.data,
+      initial,
+      warning,
+      early_syntax_error,
+      global_declarative_record,
+      global_variable: GLOBAL_VARIABLE,
+      intrinsic_variable: INTRINSIC_VARIABLE,
+      escape_prefix: ESCAPE_PREFIX,
+      advice_variable: ADVICE_VARIABLE,
+    };
   } else {
-    throw new AranTypeError(pointcut.type);
+    throw new AranTypeError(pointcut);
   }
 };
 
@@ -350,21 +374,40 @@ const constructMembrane = (
  * ) => import(".").Pointcut}
  */
 const setupAspect = (global, aspect) => {
-  if (aspect.type === "standard") {
-    defineProperty(global, ADVICE_VARIABLE, {
-      // @ts-ignore
-      __proto__: null,
-      value: aspect.advice,
-      writable: false,
-      enumerable: false,
-      configurable: false,
-    });
-    return {
-      type: "standard",
-      data: aspect.pointcut,
-    };
-  } else {
-    throw new AranTypeError(aspect.type);
+  switch (aspect.type) {
+    case "standard": {
+      defineProperty(global, ADVICE_VARIABLE, {
+        // @ts-ignore
+        __proto__: null,
+        value: extractStandardAdvice(aspect.data),
+        writable: false,
+        enumerable: false,
+        configurable: false,
+      });
+      return {
+        type: "standard",
+        data: extractStandardPointcut(aspect.data),
+      };
+    }
+    case "flexible": {
+      for (const [key, { advice }] of listEntry(aspect.data)) {
+        defineProperty(global, key, {
+          // @ts-ignore
+          __proto__: null,
+          value: advice,
+          writable: false,
+          enumerable: false,
+          configurable: false,
+        });
+      }
+      return {
+        type: "flexible",
+        data: aspect,
+      };
+    }
+    default: {
+      throw new AranTypeError(aspect);
+    }
   }
 };
 

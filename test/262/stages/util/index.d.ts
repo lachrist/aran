@@ -1,9 +1,12 @@
 import type { Context } from "node:vm";
 import type {
   DeepLocalContext,
+  FlexibleAspect,
+  FlexiblePointcut,
   Json,
   Path,
   StandardAdvice,
+  StandardAspect,
   StandardPointcut,
   Valuation,
 } from "../../../../lib";
@@ -17,16 +20,32 @@ export type InstrumentDeep = (source: {
   context: DeepLocalContext;
 }) => string | unknown;
 
-export type Aspect<S extends Json> = {
-  type: "standard";
-  pointcut: StandardPointcut;
-  advice: StandardAdvice<S, Valuation>;
-};
+export type Aspect<state extends Json> =
+  | {
+      type: "standard";
+      data: StandardAspect<
+        state,
+        {
+          Scope: unknown;
+          Stack: unknown;
+          Other: unknown;
+        }
+      >;
+    }
+  | {
+      type: "flexible";
+      data: FlexibleAspect<state, unknown>;
+    };
 
-export type Pointcut = {
-  type: "standard";
-  data: StandardPointcut;
-};
+export type Pointcut =
+  | {
+      type: "standard";
+      data: StandardPointcut;
+    }
+  | {
+      type: "flexible";
+      data: FlexiblePointcut;
+    };
 
 export type SetupConfig<S extends Json> = {
   context: Context;

@@ -33,7 +33,7 @@ export type GenericPointcut<point extends Json[], node extends Node> = (
   root: Program,
 ) => undefined | null | point;
 
-export type AspectTyping<value, state, point extends Json[]> = {
+export type AspectTyping<state, value, point extends Json[]> = {
   // block //
   "block@setup": {
     pointcut: GenericPointcut<point, Block>;
@@ -139,11 +139,11 @@ export type AspectTyping<value, state, point extends Json[]> = {
 
 export type AspectKind = keyof AspectTyping<never, never, never>;
 
-export type AspectElement<value, state, point extends Json[]> = ValueOf<{
+export type AspectElement<state, value, point extends Json[]> = ValueOf<{
   [key in AspectKind]: {
     kind: key;
-    pointcut: AspectTyping<value, state, point>[key]["pointcut"];
-    advice: AspectTyping<value, state, point>[key]["advice"];
+    pointcut: AspectTyping<state, value, point>[key]["pointcut"];
+    advice: AspectTyping<state, value, point>[key]["advice"];
   };
 }>;
 
@@ -169,7 +169,7 @@ export type HomogeneousAdvice<
 > = AdviceElement<state, value, point>[];
 
 export type Pointcut = {
-  [advice in EstreeVariable]: ValueOf<{
+  [advice in EstreeVariable]?: ValueOf<{
     [kind in AspectKind]: {
       kind: kind;
       pointcut: AspectTyping<never, never, Json[]>[kind]["pointcut"];
@@ -189,24 +189,19 @@ export type OptimalPointcutEntry<kind extends AspectKind> = [
   AspectTyping<never, never, Json[]>[kind]["pointcut"],
 ];
 
-export type HomogeneousAspect<
-  subset extends EstreeVariable,
-  state,
-  value,
-  point extends Json[],
-> = {
-  [variable in subset]: AspectElement<state, value, point>;
+export type HomogeneousAspect<state, value, point extends Json[]> = {
+  [variable in EstreeVariable]: AspectElement<state, value, point>;
 };
 
 export type HeterogeneousAspect<
-  subset extends EstreeVariable,
+  range extends EstreeVariable,
   state,
   value,
-  point extends { [key in subset]: Json[] },
+  point extends { [key in range]: Json[] },
 > = {
-  [key in subset]: AspectElement<state, value, point[key]>;
+  [key in range]: AspectElement<state, value, point[key]>;
 };
 
-export type UnknownAspect = {
-  [variable in EstreeVariable]?: AspectElement<unknown, unknown, Json[]>;
+export type Aspect<state, value> = {
+  [variable in EstreeVariable]?: AspectElement<state, value, Json[]>;
 };
