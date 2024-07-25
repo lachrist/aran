@@ -104,7 +104,6 @@
 - test/intl402/Locale/prototype/firstDayOfWeek/valid-options.js
 - test/intl402/Locale/prototype/minimize/removing-likely-subtags-first-adds-likely-subtags.js
 - test/intl402/NumberFormat/currency-digits.js
-- test/intl402/NumberFormat/prototype/format/useGrouping-extended-en-IN.js
 
 # eval arguments declaration
 - ^test/language/eval-code/direct/.*arguments-and-assign\.js
@@ -120,6 +119,9 @@
 - test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-nested-imports.js
 - test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-script-code-valid.js
 - test/language/expressions/dynamic-import/usage-from-eval.js
+
+# offset-timezone-no-unicode-minus-sign
+- test/intl402/DateTimeFormat/offset-timezone-no-unicode-minus-sign.js
 
 # cannot call preventExtension on vm context
 - test/language/global-code/decl-func.js
@@ -197,9 +199,7 @@
 - ^test/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--[0-9]+\.js$
 - test/language/expressions/generators/generator-created-after-decl-inst.js
 - test/language/identifier-resolution/assign-to-global-undefined.js
-- test/language/module-code/top-level-await/await-dynamic-import-resolution.js
 - test/language/statements/async-generator/generator-created-after-decl-inst.js
 - test/language/statements/generators/generator-created-after-decl-inst.js
 - test/language/statements/variable/binding-resolution.js
 - test/language/statements/with/unscopables-inc-dec.js
-- test/staging/top-level-await/tla-hang-entry.js

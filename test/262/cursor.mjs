@@ -2,6 +2,7 @@ import { AranExecError } from "./error.mjs";
 import { parseList } from "./list.mjs";
 
 const {
+  String,
   parseInt,
   Object: { hasOwn },
 } = globalThis;
@@ -49,18 +50,18 @@ const parseStageLine = (line) => {
  * @type {(
  *   line: string
  * ) => {
- *   index: number,
- *   target: string,
+ *   index: number | null,
+ *   target: string | null,
  * }}
  */
 const parseTargetLine = (line) => {
-  const match = line.match(/^(\d+)(.*)$/u);
+  const match = line.match(/^\s*(\d*)\s*(.*)\s*$/u);
   if (match === null) {
     throw new AranExecError("Invalid target line", { line });
   } else {
     return {
-      index: parseInt(match[1]),
-      target: match[2].trim(),
+      index: match[1] === "" ? null : parseInt(match[1]),
+      target: match[2] === "" ? null : match[2],
     };
   }
 };
@@ -97,6 +98,7 @@ export const parseCursor = (content) => {
  * ) => string}
  */
 export const stringifyCursor = (cursor) =>
-  `${cursor.stage}\n${cursor.index === null ? "" : `${cursor.index}\n`}${
-    cursor.target === null ? "" : `${cursor.target}\n`
-  }`;
+  `${[cursor.stage, ...cursor.argv].join(" ")}\n${[
+    ...(cursor.index === null ? [] : [String(cursor.index)]),
+    ...(cursor.target === null ? [] : [cursor.target]),
+  ].join(" ")}`;

@@ -15,3 +15,8 @@ decorators
 import-assertions
 import-attributes
 explicit-resource-management
+Atomics.pause
+Math.sumPrecise
+RegExp.escape
+uint8array-base64
+source-phase-imports

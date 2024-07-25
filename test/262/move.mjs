@@ -32,7 +32,7 @@ let index = 0;
 /** @type {string | null} */
 let target = null;
 
-let start = false;
+let ongoing = false;
 
 process.on("uncaughtException", (error, _origin) => {
   console.log(error);
@@ -41,7 +41,7 @@ process.on("uncaughtException", (error, _origin) => {
 });
 
 const saveProgress = () => {
-  if (start) {
+  if (ongoing) {
     writeFileSync(
       persistent,
       stringifyCursor({
@@ -63,44 +63,59 @@ process.on("exit", saveProgress);
 
 for await (const url of scrape(new URL("test/", home))) {
   target = toTarget(url);
-  if ((!start && target === cursor.target) || index === cursor.index) {
-    start = true;
-  }
-  if (start) {
-    if (isTestCase(target) && !isExcluded(target)) {
-      console.log(index, toRelative(target));
-      const { metadata, outcome } = await runTest({
-        target,
-        home,
-        warning: "ignore",
-        record: (source) => source,
-        compileInstrument,
-      });
-      const status = predictStatus(target);
-      if (outcome.type === "success") {
-        if (status === "negative") {
-          console.log("");
-          console.log("Expected failure but got success, yay... (I guess)\n");
-          process.exit(0);
-        }
-      } else if (outcome.type === "failure-meta") {
-        for (const reason of outcome.data) {
-          console.log(`  >> ${reason}`);
-        }
-      } else if (outcome.type === "failure-base") {
-        if (status === "positive") {
-          const causes = listCause({ target, metadata, outcome });
-          if (causes.length === 0) {
-            console.log(printError(outcome.data));
+  if (isTestCase(target)) {
+    if ((!ongoing && target === cursor.target) || index === cursor.index) {
+      ongoing = true;
+    }
+    if (ongoing) {
+      if (!isExcluded(target)) {
+        console.log(index, toRelative(target));
+        const { metadata, outcome } = await runTest({
+          target,
+          home,
+          warning: "ignore",
+          record: (source) => source,
+          compileInstrument,
+        });
+        const status = predictStatus(target);
+        if (outcome.type === "success") {
+          if (status === "negative") {
+            console.log("");
+            console.log("Expected failure but got success, yay... (I guess)\n");
             process.exit(0);
-          } else {
-            for (const cause of causes) {
-              console.log(`  >> ${cause}`);
+          }
+        } else if (outcome.type === "failure-meta") {
+          for (const reason of outcome.data) {
+            console.log(`  >> ${reason}`);
+          }
+        } else if (outcome.type === "failure-base") {
+          if (status === "positive") {
+            const causes = listCause({ target, metadata, outcome });
+            if (causes.length === 0) {
+              console.log(printError(outcome.data));
+              process.exit(0);
+            } else {
+              for (const cause of causes) {
+                console.log(`  >> ${cause}`);
+              }
             }
           }
         }
       }
     }
+    index += 1;
   }
-  index += 1;
 }
+
+writeFileSync(
+  persistent,
+  stringifyCursor({
+    stage: cursor.stage,
+    argv: cursor.argv,
+    index: null,
+    target: null,
+  }),
+  "utf8",
+);
+
+ongoing = false;

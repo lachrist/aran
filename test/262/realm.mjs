@@ -86,6 +86,11 @@ export const createRealm = ({
       reject("agent");
       throw new RealmAranError("agent");
     },
+    // eslint-disable-next-line local/no-function
+    get AbstractModuleSource() {
+      reject("AbstractModuleSource");
+      throw new RealmAranError("AbstractModuleSource");
+    },
   };
   Reflect.defineProperty(context, "$262", {
     // @ts-ignore

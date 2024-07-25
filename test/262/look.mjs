@@ -1,6 +1,6 @@
 /* eslint-disable local/strict-console */
 
-import { runTest } from "./test.mjs";
+import { isTestCase, runTest } from "./test.mjs";
 import { cleanup, record } from "./record.mjs";
 import { pathToFileURL } from "node:url";
 import { argv } from "node:process";
@@ -20,9 +20,11 @@ const { console, process, URL, Error, JSON } = globalThis;
 const findTarget = async (index) => {
   let current = -1;
   for await (const url of scrape(new URL("test/", home))) {
-    current += 1;
-    if (index === current) {
-      return toTarget(url);
+    if (isTestCase(toTarget(url))) {
+      current += 1;
+      if (index === current) {
+        return toTarget(url);
+      }
     }
   }
   throw new Error(`Index ${index} not found`);
