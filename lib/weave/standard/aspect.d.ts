@@ -263,10 +263,12 @@ export type AspectTyping<X, V extends Valuation> = {
   };
 };
 
-export type AspectKind = keyof AspectTyping<never, never>;
+export type Kind = keyof AspectTyping<never, never>;
 
 export type Aspect<X, V extends Valuation> = {
-  [key in AspectKind]?:
+  [key in Kind]?:
+    | null
+    | undefined
     | AspectTyping<X, V>[key]["advice"]
     | {
         pointcut: boolean | AspectTyping<X, V>[key]["pointcut"];
@@ -277,22 +279,25 @@ export type Aspect<X, V extends Valuation> = {
 export type UnknownAspect = Aspect<unknown, Valuation>;
 
 export type Advice<X, V extends Valuation> = {
-  [key in AspectKind]?: AspectTyping<X, V>[key]["advice"];
+  [key in Kind]?: null | undefined | AspectTyping<X, V>[key]["advice"];
 };
 
+export type UnknownAdvice = Advice<unknown, Valuation>;
+
 export type NormalPointcut = {
-  [key in AspectKind]: AspectTyping<never, never>[key]["pointcut"];
+  [key in Kind]: AspectTyping<never, never>[key]["pointcut"];
 };
 
 export type ObjectPointcut = {
-  [key in AspectKind]:
-    | boolean
+  [key in Kind]?:
+    | null
     | undefined
+    | boolean
     | AspectTyping<never, never>[key]["pointcut"];
 };
 
 export type ConstantPointcut = boolean;
 
-export type IterablePointcut = Iterable<AspectKind>;
+export type IterablePointcut = Iterable<Kind>;
 
 export type Pointcut = ObjectPointcut | IterablePointcut | ConstantPointcut;

@@ -1,4 +1,4 @@
-import { AranError } from "./error.mjs";
+import { AranExecError } from "./error.mjs";
 import { parseList } from "./list.mjs";
 import { fromNullable } from "./util.mjs";
 
@@ -59,7 +59,7 @@ const combineStatus = (status1, status2) => {
   } else if (status1 === "negative" && status2 === "negative") {
     return "negative";
   } else {
-    throw new AranError("status mismatch");
+    throw new AranExecError("status mismatch", { status1, status2 });
   }
 };
 
@@ -140,13 +140,13 @@ export const parseNegative = (content) => {
                 causes: [cause],
               });
             } else if (entry.flaky !== match.head) {
-              throw new AranError("flaky mismatch");
+              throw new AranExecError("flaky mismatch", { entry, match });
             } else {
               entry.causes.push(cause);
             }
           }
         } else {
-          throw new AranError("unexpected line");
+          throw new AranExecError("illegal line", { line, match });
         }
       }
     }

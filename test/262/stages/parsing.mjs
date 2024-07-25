@@ -12,7 +12,7 @@ const exclusion = new Set(
 );
 
 /** @type {import("../types").Stage} */
-export default {
+export default (_argv) => ({
   isExcluded: (target) => exclusion.has(target),
   predictStatus: (_target) => "flaky",
   listCause: (_result) => ["acorn-astring"],
@@ -26,4 +26,4 @@ export default {
           parse(content, { ecmaVersion: "latest", sourceType: kind }),
         ),
       }),
-};
+});

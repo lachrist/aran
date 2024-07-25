@@ -51,11 +51,10 @@ const cursor = parseCursor(await readFile(pathToFileURL(argv[2]), "utf8"));
 
 const codebase = new URL("codebase", import.meta.url);
 
-const {
-  default: { compileInstrument },
-} = /** @type {{default: import("./types").Stage}} */ (
-  await import(`./stages/${cursor.stage}.mjs`)
-);
+const { compileInstrument } =
+  /** @type {{default: import("./types").Stage}} */ (
+    await import(`./stages/${cursor.stage}.mjs`)
+  ).default(cursor.argv);
 
 // It is unfortunate but uncaught exception do not necessarily indicate test failure.
 // test262/test/language/expressions/dynamic-import/syntax/valid/nested-if-nested-imports.js

@@ -3,22 +3,21 @@ import type {
   DeepLocalContext,
   FlexibleAspect,
   FlexiblePointcut,
+  IntrinsicRecord,
   Json,
   Path,
-  StandardAdvice,
   StandardAspect,
   StandardPointcut,
-  Valuation,
 } from "../../../../lib";
 import type { Instrument } from "../../types";
 
 export type InstrumentRoot = Instrument;
 
-export type InstrumentDeep = (source: {
-  code: unknown;
-  path: Path;
-  context: DeepLocalContext;
-}) => string | unknown;
+export type InstrumentDeep = (
+  code: unknown,
+  path: Path,
+  context: DeepLocalContext,
+) => string | unknown;
 
 export type Aspect<state extends Json> =
   | {
@@ -47,14 +46,30 @@ export type Pointcut =
       data: FlexiblePointcut;
     };
 
+export type MakeAspect<S extends Json> = (
+  intrinsics: IntrinsicRecord,
+  membrane: {
+    instrument: InstrumentDeep;
+    apply:
+      | null
+      | ((callee: unknown, self: unknown, input: unknown[]) => unknown);
+    construct: null | ((callee: unknown, input: unknown[]) => unknown);
+  },
+) => Aspect<S>;
+
 export type SetupConfig<S extends Json> = {
   context: Context;
   record: Instrument;
+  reject: (reason: string) => void;
   warning: "console" | "ignore";
   global_declarative_record: "emulate" | "builtin";
   initial: S;
-  aspect: Aspect<S>;
 };
+
+export type SetupAran = <S extends Json>(
+  makeAspect: MakeAspect<S>,
+  config: SetupConfig<S>,
+) => InstrumentRoot;
 
 export type PartialAranConfig = {
   pointcut: Pointcut;
@@ -81,24 +96,3 @@ export type PatchConfig = Config<{
   evalScript: (code: string) => unknown;
   evalGlobal: (code: string) => unknown;
 }>;
-
-export type BasicMembrane = {
-  instrumentRoot: InstrumentRoot;
-  instrumentDeep: InstrumentDeep;
-};
-
-export type WeaveMembrane = {
-  instrumentRoot: InstrumentRoot;
-  instrumentDeep: InstrumentDeep;
-  apply: (call: {
-    callee: unknown;
-    self: unknown;
-    input: unknown[];
-  }) => unknown;
-  construct: (call: { callee: unknown; input: unknown[] }) => unknown;
-};
-
-export type PatchMembrane = {
-  instrumentRoot: InstrumentRoot;
-  instrumentDeep: InstrumentDeep;
-};

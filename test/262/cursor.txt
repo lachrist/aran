@@ -1,3 +1,2 @@
 empty-standard-emulate
-1008
-test/annexB/language/global-code/script-decl-lex-collision.js
+1008 test/annexB/language/global-code/script-decl-lex-collision.js

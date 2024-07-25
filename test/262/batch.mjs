@@ -5,25 +5,24 @@ import { scrape } from "./scrape.mjs";
 import { argv } from "node:process";
 import { isTestCase, runTest } from "./test.mjs";
 import { inspectError } from "./util.mjs";
-import { isFailureResult } from "./result.mjs";
 import { stringifyFailureArray } from "./failure.mjs";
 import { home, toTarget } from "./home.mjs";
+import { AranTypeError } from "./error.mjs";
 
 const { Error, console, process, URL } = globalThis;
 
-if (process.argv.length !== 3) {
+if (process.argv.length < 3) {
   throw new Error(
-    "usage: node --experimental-vm-modules --expose-gc test/262/batch.mjs <stage>",
+    "usage: node --experimental-vm-modules --expose-gc test/262/batch.mjs <stage> [...argv]",
   );
 }
 
-const stage = argv[2];
+const [_node, _main, stage, ...argv2] = argv;
 
-const {
-  default: { compileInstrument, predictStatus, isExcluded, listCause },
-} = /** @type {{default: import("./types").Stage}} */ (
-  await import(`./stages/${stage}.mjs`)
-);
+const { compileInstrument, predictStatus, isExcluded, listCause } =
+  /** @type {{default: import("./types").Stage}} */ (
+    await import(`./stages/${stage}.mjs`)
+  ).default(argv2);
 
 process.on("uncaughtException", (error, _origin) => {
   const { name, message } = inspectError(error);
@@ -41,7 +40,7 @@ for await (const url of scrape(new URL("test/", home))) {
   }
   const target = toTarget(url);
   if (isTestCase(target) && !isExcluded(target)) {
-    const result = await runTest({
+    const { metadata, outcome } = await runTest({
       target,
       home,
       record: (source) => source,
@@ -49,13 +48,22 @@ for await (const url of scrape(new URL("test/", home))) {
       compileInstrument,
     });
     const status = predictStatus(target);
-    if (isFailureResult(result)) {
-      failures.push({ target, causes: listCause(result) });
-    } else if (status === "negative") {
+    if (outcome.type === "success") {
+      if (status === "negative") {
+        failures.push({
+          target,
+          causes: ["expected negative but got positive instead"],
+        });
+      }
+    } else if (outcome.type === "failure-meta") {
+      failures.push({ target, causes: outcome.data });
+    } else if (outcome.type === "failure-base") {
       failures.push({
         target,
-        causes: ["expected negative but got positive instead"],
+        causes: listCause({ target, metadata, outcome }),
       });
+    } else {
+      throw new AranTypeError(outcome);
     }
   }
   index += 1;

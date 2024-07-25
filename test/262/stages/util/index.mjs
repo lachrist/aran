@@ -3,13 +3,11 @@ import {
   instrument,
   setup as generateSetup,
   ROOT_PATH,
-  extractStandardAdvice,
-  extractStandardPointcut,
 } from "../../../../lib/index.mjs";
 import { parseGlobal, parseLocal } from "./parse.mjs";
 import { hash32 } from "./hash.mjs";
 import { runInContext } from "node:vm";
-import { AranTypeError } from "../../error.mjs";
+import { AranTestError, AranTypeError } from "../../error.mjs";
 
 const {
   undefined,
@@ -376,33 +374,73 @@ const constructMembrane = (
 const setupAspect = (global, aspect) => {
   switch (aspect.type) {
     case "standard": {
+      /**
+       * @type {{
+       *   [key in import("../../../../lib").StandardKind]?: Function
+       * }}
+       */
+      const advice = {
+        // @ts-ignore
+        __proto__: null,
+      };
+      /**
+       * @type {{
+       *   [key in import("../../../../lib").StandardKind]?: (
+       *     | boolean
+       *     | Function
+       *   )
+       * }}
+       */
+      const pointcut = {
+        // @ts-ignore
+        __proto__: null,
+      };
+      for (const [key, val] of listEntry(aspect.data)) {
+        if (val != null) {
+          if (typeof val === "function") {
+            pointcut[key] = /** @type {any} */ (true);
+            advice[key] = val;
+          } else {
+            pointcut[key] = val.pointcut;
+            advice[key] = val.advice;
+          }
+        }
+      }
       defineProperty(global, ADVICE_VARIABLE, {
         // @ts-ignore
         __proto__: null,
-        value: extractStandardAdvice(aspect.data),
+        value: advice,
         writable: false,
         enumerable: false,
         configurable: false,
       });
       return {
         type: "standard",
-        data: extractStandardPointcut(aspect.data),
+        data: /** @type {import("../../../../lib").StandardPointcut} */ (
+          pointcut
+        ),
       };
     }
     case "flexible": {
-      for (const [key, { advice }] of listEntry(aspect.data)) {
-        defineProperty(global, key, {
-          // @ts-ignore
-          __proto__: null,
-          value: advice,
-          writable: false,
-          enumerable: false,
-          configurable: false,
-        });
+      /** @type {import("../../../../lib").FlexiblePointcut} */
+      const pointcut = {};
+      for (const [key, val] of listEntry(aspect.data)) {
+        if (val != null) {
+          const { advice, ...item } = val;
+          defineProperty(global, key, {
+            // @ts-ignore
+            __proto__: null,
+            value: advice,
+            writable: false,
+            enumerable: false,
+            configurable: false,
+          });
+          pointcut[key] = item;
+        }
       }
       return {
         type: "flexible",
-        data: aspect,
+        data: pointcut,
       };
     }
     default: {
@@ -412,24 +450,24 @@ const setupAspect = (global, aspect) => {
 };
 
 /**
- * @type {<S extends import("../../../../lib").Json>(
- *   config: import(".").SetupConfig<S>,
- * ) => {
- *   intrinsics: import("../../../../lib").IntrinsicRecord,
- *   instrumentRoot: import(".").InstrumentRoot,
- *   instrumentDeep: import(".").InstrumentDeep,
- * }}
+ * @type {import(".").SetupAran}
  */
-export const setupBasicMembrane = ({
-  context,
-  record,
-  warning,
-  global_declarative_record,
-  initial,
-  aspect,
-}) => {
+export const setupAranBasic = (
+  makeAspect,
+  { context, record, warning, global_declarative_record, initial },
+) => {
   const intrinsics = runInContext(SETUP, context);
-  const pointcut = setupAspect(intrinsics["aran.global"], aspect);
+  /* eslint-disable no-use-before-define */
+  const pointcut = setupAspect(
+    intrinsics["aran.global"],
+    makeAspect(intrinsics, {
+      instrument: (code, path, context) =>
+        instrumentDeep({ code, path, context }, config),
+      apply: null,
+      construct: null,
+    }),
+  );
+  /* eslint-enable no-use-before-define */
   /** @type {import(".").BasicConfig} */
   const config = {
     record,
@@ -441,31 +479,30 @@ export const setupBasicMembrane = ({
     },
     globals: {},
   };
-  return {
-    instrumentRoot: (source) => instrumentRoot(source, config),
-    instrumentDeep: (source) => instrumentDeep(source, config),
-    intrinsics,
-  };
+  return (source) => instrumentRoot(source, config);
 };
 
 /**
- * @type {<S extends import("../../../../lib").Json>(
- *   config: import(".").SetupConfig<S>,
- * ) => {
- *   intrinsics: import("../../../../lib").IntrinsicRecord,
- *   membrane: import(".").WeaveMembrane,
- * }}
+ * @type {import(".").SetupAran}
  */
-export const setupWeaveMembrane = ({
-  context,
-  record,
-  warning,
-  global_declarative_record,
-  initial,
-  aspect,
-}) => {
+export const setupAranWeave = (
+  makeAspect,
+  { context, record, warning, global_declarative_record, initial },
+) => {
   const intrinsics = runInContext(SETUP, context);
-  const pointcut = setupAspect(intrinsics["aran.global"], aspect);
+  /* eslint-disable no-use-before-define */
+  const pointcut = setupAspect(
+    intrinsics["aran.global"],
+    makeAspect(intrinsics, {
+      instrument: (code, path, context) =>
+        instrumentDeep({ code, path, context }, config),
+      apply: (callee, self, input) =>
+        applyMembrane({ callee, self, input }, config),
+      construct: (callee, input) =>
+        constructMembrane({ callee, input }, config),
+    }),
+  );
+  /* eslint-enable no-use-before-define */
   /** @type {import(".").WeaveConfig} */
   const config = {
     record,
@@ -481,35 +518,32 @@ export const setupWeaveMembrane = ({
       Function: intrinsics["aran.global"].Function,
     },
   };
-  return {
-    intrinsics,
-    membrane: {
-      instrumentRoot: (source) => instrumentRoot(source, config),
-      instrumentDeep: (source) => instrumentDeep(source, config),
-      apply: (call) => applyMembrane(call, config),
-      construct: (call) => constructMembrane(call, config),
-    },
-  };
+  return (source) => instrumentRoot(source, config);
 };
 
 /**
- * @type {<S extends import("../../../../lib").Json>(
- *   config: import(".").SetupConfig<S>,
- * ) => {
- *   intrinsics: import("../../../../lib").IntrinsicRecord,
- *   membrane: import(".").PatchMembrane,
- * }}
+ * @type {import(".").SetupAran}
  */
-export const setupPatchMembrane = ({
-  context,
-  record,
-  warning,
-  global_declarative_record,
-  initial,
-  aspect,
-}) => {
+export const setupAranPatch = (
+  makeAspect,
+  { context, reject, record, warning, global_declarative_record, initial },
+) => {
   const intrinsics = runInContext(SETUP, context);
-  const pointcut = setupAspect(intrinsics["aran.global"], aspect);
+  /* eslint-disable no-use-before-define */
+  const pointcut = setupAspect(
+    intrinsics["aran.global"],
+    makeAspect(intrinsics, {
+      instrument: (_code, _path, _context) => {
+        reject("local-eval-in-patch-membrane");
+        throw new AranTestError(
+          "Patch membrane does not support local eval call",
+        );
+      },
+      apply: null,
+      construct: null,
+    }),
+  );
+  /* eslint-enable no-use-before-define */
   const function_prototype = intrinsics["aran.global"].Function.prototype;
   /** @type {import(".").PatchConfig} */
   const config = {
@@ -586,11 +620,29 @@ export const setupPatchMembrane = ({
     intrinsics["aran.global"].Function = FunctionPatch;
   }
   // return //
-  return {
-    intrinsics,
-    membrane: {
-      instrumentRoot: (source) => instrumentRoot(source, config),
-      instrumentDeep: (source) => instrumentDeep(source, config),
-    },
-  };
+  return (source) => instrumentRoot(source, config);
+};
+
+/**
+ * @type {<S extends import("../../../../lib").Json>(
+ *   type: "basic" | "weave" | "patch",
+ *   makeAspect: import(".").MakeAspect<S>,
+ *   config: import(".").SetupConfig<S>,
+ * ) => import(".").InstrumentRoot}
+ */
+export const setupAran = (type, makeAspect, config) => {
+  switch (type) {
+    case "basic": {
+      return setupAranBasic(makeAspect, config);
+    }
+    case "weave": {
+      return setupAranWeave(makeAspect, config);
+    }
+    case "patch": {
+      return setupAranPatch(makeAspect, config);
+    }
+    default: {
+      throw new AranTypeError(type);
+    }
+  }
 };

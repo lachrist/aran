@@ -8,6 +8,7 @@ export type Stage =
 
 export type Cursor = {
   stage: Stage;
+  argv: string[];
   index: number | null;
   target: string | null;
 };

@@ -27,19 +27,13 @@ const negative = parseNegative(
   await readFile(new URL("identity.negative.txt", import.meta.url), "utf8"),
 );
 
-/** @type {[]} */
-const EMPTY = [];
-
-const ARAN_REALM_LIMITATION = ["aran-realm-limitation"];
-
 /** @type {import("../types").Stage} */
-export default {
+export default (_argv) => ({
   isExcluded: (target) => exclusion.has(target),
   predictStatus: (target) => getNegativeStatus(negative, target),
   listCause: (result) => [
-    ...(result.error.name === "RealmAranError" ? ARAN_REALM_LIMITATION : EMPTY),
     ...result.metadata.features.filter(isFeatureExcluded),
     ...listNegativeCause(negative, result.target),
   ],
   compileInstrument: ({ record }) => record,
-};
+});

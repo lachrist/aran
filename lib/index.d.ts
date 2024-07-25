@@ -43,13 +43,15 @@ export type {
 } from "./weave/atom.d.ts";
 
 export type {
-  Valuation,
-  Frame,
-  TaggedFrame,
-  UnknownAspect as UnknownStandardAspect,
+  Valuation as StandardValuation,
+  Frame as StandardFrame,
+  TaggedFrame as StandardTaggedFrame,
+  Kind as StandardKind,
   Aspect as StandardAspect,
   Advice as StandardAdvice,
   Pointcut as StandardPointcut,
+  ObjectPointcut as StandardObjectPointcut,
+  IterablePointcut as StandardIterablePointcut,
 } from "./weave/standard/aspect.d.ts";
 
 export type {

@@ -64,13 +64,29 @@ type ErrorSerial = {
   stack?: string;
 };
 
+export type SuccessOutcome = { type: "success"; data: null };
+
+export type BaseFailureOutcome = {
+  type: "failure-base";
+  data: ErrorSerial;
+};
+
+export type MetaFailureOutcome = {
+  type: "failure-meta";
+  data: string[];
+};
+
+export type FailureOutcome = BaseFailureOutcome | MetaFailureOutcome;
+
+export type Outcome = SuccessOutcome | FailureOutcome;
+
 export type Result = {
   target: string;
   metadata: Metadata;
-  error: null | ErrorSerial;
+  outcome: Outcome;
 };
 
-export type FailureResult = Result & { error: ErrorSerial };
+export type BaseFailureResult = Result & { outcome: BaseFailureOutcome };
 
 export type Failure = {
   target: string;
@@ -89,14 +105,14 @@ export type StageName =
 
 export type CompileInstrument = (options: {
   record: Instrument;
-  reject: (error: Error) => void;
+  reject: (reason: string) => void;
   warning: "console" | "ignore";
   context: Context;
 }) => Instrument;
 
-export type Stage = {
+export type Stage = (argv: string[]) => {
   compileInstrument: CompileInstrument;
   isExcluded: (target: string) => boolean;
   predictStatus: (target: string) => Status;
-  listCause: (result: FailureResult) => string[];
+  listCause: (result: BaseFailureResult) => string[];
 };

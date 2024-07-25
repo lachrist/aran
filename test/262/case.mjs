@@ -1,6 +1,6 @@
 import { Script, SourceTextModule, runInContext } from "node:vm";
 import { createRealm } from "./realm.mjs";
-import { inspectErrorName, show } from "./util.mjs";
+import { inspectError, inspectErrorName, show } from "./util.mjs";
 import { compileLinker } from "./linker.mjs";
 import { AranTypeError } from "./error.mjs";
 import { fetchHarness } from "./harness.mjs";
@@ -8,7 +8,7 @@ import { fetchHarness } from "./harness.mjs";
 const { Promise, Error } = globalThis;
 
 // eslint-disable-next-line local/no-class, local/standard-declaration
-class NegativeAranError extends Error {}
+class NegativeError extends Error {}
 
 /**
  * @type {() => import("./case.d.ts").Termination}
@@ -60,7 +60,7 @@ const runNegative = (phase, name, run) => {
     }
   }
   if (!caught) {
-    throw new NegativeAranError(
+    throw new NegativeError(
       `Missing synchronous ${name} error during ${phase} phase`,
     );
   }
@@ -85,7 +85,7 @@ const runNegativeAsync = async (phase, name, runAsync) => {
     }
   }
   if (!caught) {
-    throw new NegativeAranError(
+    throw new NegativeError(
       `Missing asynchronous ${name} error during ${phase} phase`,
     );
   }
@@ -97,7 +97,7 @@ const runNegativeAsync = async (phase, name, runAsync) => {
  *     case: import("./types").Case,
  *     compileInstrument: import("./types").CompileInstrument,
  *     warning: "ignore" | "console",
- *     reject: (error: Error) => void,
+ *     reject: (reason: string) => void,
  *     record: import("./types").Instrument,
  *   },
  * ) => Promise<void>}
@@ -218,24 +218,28 @@ export const runTestCaseInner = async ({
  *     record: import("./types").Instrument,
  *     compileInstrument: import("./types").CompileInstrument,
  *   },
- * ) => Promise<void>}
+ * ) => Promise<import("./types").Outcome>}
  */
 export const runTestCase = async (options) => {
-  /** @type {Error | null} */
-  let meta_error = null;
+  /** @type {string[]} */
+  const reasons = [];
   try {
     await runTestCaseInner({
       ...options,
-      reject: (error) => {
-        if (meta_error === null) {
-          meta_error = error;
-        }
+      reject: (reason) => {
+        reasons[reasons.length] = reason;
       },
     });
   } catch (error) {
-    throw meta_error ?? error;
+    if (reasons.length > 0) {
+      return { type: "failure-meta", data: reasons };
+    } else {
+      return { type: "failure-base", data: inspectError(error) };
+    }
   }
-  if (meta_error !== null) {
-    throw meta_error;
+  if (reasons.length > 0) {
+    return { type: "failure-meta", data: reasons };
+  } else {
+    return { type: "success", data: null };
   }
 };

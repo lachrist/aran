@@ -5,22 +5,25 @@
 const { console, Error } = globalThis;
 
 export const AranTypeError = class AranTypeError extends Error {
-  /**
-   * @param {never} data
-   */
   constructor(/** @type {never} */ data) {
     console.log("AranTypeError");
     console.dir(data);
-    super("aran-type-error");
+    super("aran typeerror");
+    this.name = "AranTestError";
   }
 };
 
-export const AranError = class AranError extends Error {
-  /**
-   * @param {string} message
-   */
-  constructor(message) {
-    console.log(`AranError >> ${message}`);
+export const AranTestError = class AranTestError extends Error {
+  constructor(/** @type {string} */ message) {
+    super(message);
+    this.name = "AranTestError";
+  }
+};
+
+export const AranExecError = class AranError extends Error {
+  constructor(/** @type {string} */ message, /** @type {unknown} */ data) {
+    console.log(`AranExecError >> ${message}`);
+    console.dir(data);
     super(message);
   }
 };

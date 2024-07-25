@@ -1,9 +1,8 @@
+import { AranExecError } from "./error.mjs";
 import { parseList } from "./list.mjs";
 
 const {
-  isNaN,
   parseInt,
-  Error,
   Object: { hasOwn },
 } = globalThis;
 
@@ -29,27 +28,40 @@ const isStage = (candidate) => hasOwn(STAGES, candidate);
 /**
  * @type {(
  *   line: string
- * ) => import("./cursor").Stage}
+ * ) => {
+ *   stage: import("./cursor").Stage,
+ *   argv: string[],
+ * }}
  */
-const parseStage = (line) => {
-  if (isStage(line)) {
-    return line;
+const parseStageLine = (line) => {
+  const [stage, ...argv] = line.split(/\s+/u);
+  if (isStage(stage)) {
+    return {
+      stage,
+      argv,
+    };
   } else {
-    throw new Error("Invalid stage");
+    throw new AranExecError("Invalid stage line", { line });
   }
 };
 
 /**
  * @type {(
  *   line: string
- * ) => number}
+ * ) => {
+ *   index: number,
+ *   target: string,
+ * }}
  */
-const parseIndex = (line) => {
-  const index = parseInt(line);
-  if (isNaN(index)) {
-    throw new Error("Invalid index");
+const parseTargetLine = (line) => {
+  const match = line.match(/^(\d+)(.*)$/u);
+  if (match === null) {
+    throw new AranExecError("Invalid target line", { line });
   } else {
-    return index;
+    return {
+      index: parseInt(match[1]),
+      target: match[2].trim(),
+    };
   }
 };
 
@@ -61,38 +73,21 @@ const parseIndex = (line) => {
 export const parseCursor = (content) => {
   const lines = parseList(content);
   if (lines.length === 0) {
-    throw new Error("Empty cursor file");
+    throw new AranExecError("Empty cursor file", { content });
+  } else if (lines.length === 1) {
+    return {
+      ...parseStageLine(lines[0]),
+      ...{ index: 0, target: null },
+    };
+  } else if (lines.length === 2) {
+    return {
+      ...parseStageLine(lines[0]),
+      ...parseTargetLine(lines[1]),
+    };
   } else {
-    const stage = parseStage(lines[0]);
-    if (lines.length === 1) {
-      return {
-        stage,
-        index: 0,
-        target: null,
-      };
-    } else if (lines.length === 2) {
-      try {
-        return {
-          stage,
-          index: parseIndex(lines[1]),
-          target: null,
-        };
-      } catch {
-        return {
-          stage,
-          index: null,
-          target: lines[1],
-        };
-      }
-    } else if (lines.length === 3) {
-      return {
-        stage,
-        index: parseIndex(lines[1]),
-        target: lines[2],
-      };
-    } else {
-      throw new Error("Cursor file should have at most three lines");
-    }
+    throw new AranExecError("Cursor file should have at most two lines", {
+      content,
+    });
   }
 };
 

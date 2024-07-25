@@ -9,7 +9,7 @@ class RealmAranError extends Error {}
  * @type {(
  *   options: {
  *     counter: { value: number },
- *     reject: (error: Error) => void,
+ *     reject: (reason: string) => void,
  *     record: import("./types").Instrument,
  *     warning: "ignore" | "console",
  *     print: (message: string) => void,
@@ -51,9 +51,8 @@ export const createRealm = ({
         compileInstrument,
       }).$262,
     detachArrayBuffer: () => {
-      const error = new RealmAranError("detachArrayBuffer");
-      reject(error);
-      throw error;
+      reject("detach-array-buffer");
+      throw new RealmAranError("detachArrayBuffer");
     },
     // we have no information on the location of this.
     // so we do not have to register this script to the
@@ -71,24 +70,21 @@ export const createRealm = ({
       if (typeof gc === "function") {
         return gc();
       } else {
-        const error = new RealmAranError("gc");
-        reject(error);
-        throw error;
+        reject("gc");
+        throw new RealmAranError("gc");
       }
     },
     global: runInContext("this;", context),
     // eslint-disable-next-line local/no-function
     get isHTMLDDA() {
-      const error = new RealmAranError("isHTMLDDA");
-      reject(error);
-      throw error;
+      reject("isHTMLDDA");
+      throw new RealmAranError("isHTMLDDA");
     },
     /** @type {import("./types").Agent} */
     // eslint-disable-next-line local/no-function
     get agent() {
-      const error = new RealmAranError("agent");
-      reject(error);
-      throw error;
+      reject("agent");
+      throw new RealmAranError("agent");
     },
   };
   Reflect.defineProperty(context, "$262", {

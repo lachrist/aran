@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { parseMetadata } from "./metadata.mjs";
 import { runTestCase } from "./case.mjs";
 import { inspectError } from "./util.mjs";
+import { AranTypeError } from "./error.mjs";
 
 const { URL } = globalThis;
 
@@ -76,7 +77,10 @@ const DEFAULT_METADATA = {
  *     warning: "ignore" | "console",
  *     record: import("./types").Instrument,
  *   },
- * ) => Promise<import("./types").Result>}
+ * ) => Promise<{
+ *   metadata: import("./types").Metadata,
+ *   outcome: import("./types").Outcome,
+ * }>}
  */
 export const runTest = async ({
   target,
@@ -92,9 +96,11 @@ export const runTest = async ({
     metadata = parseMetadata(content);
   } catch (error) {
     return {
-      target,
       metadata,
-      error: inspectError(error),
+      outcome: {
+        type: "failure-base",
+        data: inspectError(error),
+      },
     };
   }
   for (const case_ of listTestCase({
@@ -103,20 +109,29 @@ export const runTest = async ({
     metadata,
     home,
   })) {
-    try {
-      await runTestCase({ case: case_, compileInstrument, warning, record });
-    } catch (error) {
+    const outcome = await runTestCase({
+      case: case_,
+      compileInstrument,
+      warning,
+      record,
+    });
+    if (outcome.type === "success") {
+      // noop
+    } else if (
+      outcome.type === "failure-meta" ||
+      outcome.type === "failure-base"
+    ) {
       return {
-        target,
         metadata,
-        error: inspectError(error),
+        outcome,
       };
+    } else {
+      throw new AranTypeError(outcome);
     }
   }
   return {
-    target,
     metadata,
-    error: null,
+    outcome: { type: "success", data: null },
   };
 };
 

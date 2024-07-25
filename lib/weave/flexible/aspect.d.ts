@@ -169,12 +169,15 @@ export type HomogeneousAdvice<
 > = AdviceElement<state, value, point>[];
 
 export type Pointcut = {
-  [advice in EstreeVariable]?: ValueOf<{
-    [kind in AspectKind]: {
-      kind: kind;
-      pointcut: AspectTyping<never, never, Json[]>[kind]["pointcut"];
-    };
-  }>;
+  [advice in string]?:
+    | null
+    | undefined
+    | ValueOf<{
+        [kind in AspectKind]: {
+          kind: kind;
+          pointcut: AspectTyping<never, never, Json[]>[kind]["pointcut"];
+        };
+      }>;
 };
 
 export type OptimalPointcut = {
@@ -190,18 +193,20 @@ export type OptimalPointcutEntry<kind extends AspectKind> = [
 ];
 
 export type HomogeneousAspect<state, value, point extends Json[]> = {
-  [variable in EstreeVariable]: AspectElement<state, value, point>;
+  [variable in string]?: null | undefined | AspectElement<state, value, point>;
 };
 
 export type HeterogeneousAspect<
-  range extends EstreeVariable,
   state,
   value,
-  point extends { [key in range]: Json[] },
+  point extends { [key in string]: Json[] },
 > = {
-  [key in range]: AspectElement<state, value, point[key]>;
+  [key in keyof point]?:
+    | null
+    | undefined
+    | AspectElement<state, value, point[key]>;
 };
 
 export type Aspect<state, value> = {
-  [variable in EstreeVariable]?: AspectElement<state, value, Json[]>;
+  [variable in string]?: null | undefined | AspectElement<state, value, any>;
 };
