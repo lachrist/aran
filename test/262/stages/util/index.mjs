@@ -171,7 +171,7 @@ export const instrumentDeep = ({ code, path, context }, { record, config }) => {
     return getContent(
       record({
         kind: "script",
-        url: new URL(``),
+        url: new URL(`dynamic:///eval-local/${hash32(code).toString(32)}`),
         content: generate(
           instrument(
             {
@@ -181,7 +181,7 @@ export const instrumentDeep = ({ code, path, context }, { record, config }) => {
               root: parseLocal("eval", code),
               context,
             },
-            completeConfig(config, "throw"),
+            completeConfig(config, "embed"),
           ),
         ),
       }),
@@ -285,7 +285,7 @@ const interceptEvalGlobal = (
       getContent(
         record({
           kind: "script",
-          url: new URL(`dynamic:///eval/${hash32(code).toString(32)}`),
+          url: new URL(`dynamic:///eval-global/${hash32(code).toString(32)}`),
           content: generate(
             instrument(
               {

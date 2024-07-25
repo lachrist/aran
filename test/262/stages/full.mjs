@@ -9,6 +9,7 @@ import {
 import { getFailureTarget, parseFailureArray } from "../failure.mjs";
 import { setupAran } from "./util/index.mjs";
 import { AranExecError, AranTypeError } from "../error.mjs";
+import { parseList } from "../list.mjs";
 
 const { Set, URL } = globalThis;
 
@@ -143,19 +144,26 @@ const compileMakeAspect =
  * @type {import("../types").Stage}
  */
 export default async (argv) => {
-  const exclusion = new Set(
-    parseFailureArray(
+  const exclusion = new Set([
+    ...parseFailureArray(
       [
         await readFile(
           new URL("identity.failure.txt", import.meta.url),
           "utf8",
         ),
         await readFile(new URL("parsing.failure.txt", import.meta.url), "utf8"),
+        await readFile(
+          new URL(`bare-${argv.join("-")}.failure.txt`, import.meta.url),
+          "utf8",
+        ),
       ].join("\n"),
     ).map(getFailureTarget),
-  );
+    ...parseList(
+      await readFile(new URL("full.exclude.txt", import.meta.url), "utf8"),
+    ),
+  ]);
   const negative = parseNegative(
-    await readFile(new URL("bare.negative.txt", import.meta.url), "utf8"),
+    await readFile(new URL("full.negative.txt", import.meta.url), "utf8"),
   );
   return {
     isExcluded: (target) => exclusion.has(target),

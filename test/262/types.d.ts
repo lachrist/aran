@@ -110,9 +110,9 @@ export type CompileInstrument = (options: {
   context: Context;
 }) => Instrument;
 
-export type Stage = (argv: string[]) => {
+export type Stage = (argv: string[]) => Promise<{
   compileInstrument: CompileInstrument;
   isExcluded: (target: string) => boolean;
   predictStatus: (target: string) => Status;
   listCause: (result: BaseFailureResult) => string[];
-};
+}>;

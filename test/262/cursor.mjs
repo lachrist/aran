@@ -11,12 +11,10 @@ const {
  * @type {{ [key in import("./cursor").Stage]: null }}
  */
 const STAGES = {
-  "identity": null,
-  "parsing": null,
-  "empty-standard-native": null,
-  "empty-standard-emulate": null,
-  "transparent-standard-emulate": null,
-  "transparent-standard-native": null,
+  identity: null,
+  parsing: null,
+  bare: null,
+  full: null,
 };
 
 /**

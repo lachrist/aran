@@ -11,18 +11,18 @@ import { AranTypeError } from "./error.mjs";
 
 const { Error, console, process, URL } = globalThis;
 
-if (process.argv.length < 3) {
+if (argv.length < 3) {
   throw new Error(
     "usage: node --experimental-vm-modules --expose-gc test/262/batch.mjs <stage> [...argv]",
   );
 }
 
-const [_node, _main, stage, ...argv2] = argv;
+const [_node, _main, stage, ...stage_argv] = argv;
 
 const { compileInstrument, predictStatus, isExcluded, listCause } =
-  /** @type {{default: import("./types").Stage}} */ (
+  await /** @type {{default: import("./types").Stage}} */ (
     await import(`./stages/${stage}.mjs`)
-  ).default(argv2);
+  ).default(stage_argv);
 
 process.on("uncaughtException", (error, _origin) => {
   const { name, message } = inspectError(error);
@@ -70,7 +70,10 @@ for await (const url of scrape(new URL("test/", home))) {
 }
 
 await writeFile(
-  new URL(`stages/${stage}.failure.txt`, import.meta.url),
+  new URL(
+    `stages/${[stage, ...stage_argv].join("-")}.failure.txt`,
+    import.meta.url,
+  ),
   stringifyFailureArray(failures),
   "utf8",
 );

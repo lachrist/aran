@@ -17,7 +17,7 @@ const persistent = pathToFileURL(argv[2]);
 const cursor = parseCursor(await readFile(persistent, "utf8"));
 
 const { compileInstrument, predictStatus, isExcluded, listCause } =
-  /** @type {{default: import("./types").Stage}} */ (
+  await /** @type {{default: import("./types").Stage}} */ (
     await import(`./stages/${cursor.stage}.mjs`)
   ).default(cursor.argv);
 
