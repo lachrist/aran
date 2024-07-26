@@ -1,9 +1,7 @@
 import { createContext, runInContext } from "node:vm";
+import { AranTestError } from "./error.mjs";
 
-const { gc, Error, Reflect, URL } = globalThis;
-
-// eslint-disable-next-line local/no-class, local/standard-declaration
-class RealmAranError extends Error {}
+const { gc, Reflect, URL } = globalThis;
 
 /**
  * @type {(
@@ -52,7 +50,7 @@ export const createRealm = ({
       }).$262,
     detachArrayBuffer: () => {
       reject("detach-array-buffer");
-      throw new RealmAranError("detachArrayBuffer");
+      throw new AranTestError("detachArrayBuffer");
     },
     // we have no information on the location of this.
     // so we do not have to register this script to the
@@ -71,25 +69,25 @@ export const createRealm = ({
         return gc();
       } else {
         reject("gc");
-        throw new RealmAranError("gc");
+        throw new AranTestError("gc");
       }
     },
     global: runInContext("this;", context),
     // eslint-disable-next-line local/no-function
     get isHTMLDDA() {
       reject("isHTMLDDA");
-      throw new RealmAranError("isHTMLDDA");
+      throw new AranTestError("isHTMLDDA");
     },
     /** @type {import("./types").Agent} */
     // eslint-disable-next-line local/no-function
     get agent() {
       reject("agent");
-      throw new RealmAranError("agent");
+      throw new AranTestError("agent");
     },
     // eslint-disable-next-line local/no-function
     get AbstractModuleSource() {
       reject("AbstractModuleSource");
-      throw new RealmAranError("AbstractModuleSource");
+      throw new AranTestError("AbstractModuleSource");
     },
   };
   Reflect.defineProperty(context, "$262", {

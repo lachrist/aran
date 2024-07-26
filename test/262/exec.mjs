@@ -52,7 +52,7 @@ for await (const url of scrape(new URL("test/", home))) {
       if (status === "negative") {
         failures.push({
           target,
-          causes: ["expected negative but got positive instead"],
+          causes: ["false-negative"],
         });
       }
     } else if (outcome.type === "failure-meta") {
