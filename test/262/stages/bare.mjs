@@ -7,7 +7,7 @@ import {
   parseNegative,
 } from "../negative.mjs";
 import { getFailureTarget, parseFailureArray } from "../failure.mjs";
-import { setupAran } from "./util/index.mjs";
+import { setupAran } from "../aran/index.mjs";
 import { AranExecError, AranTypeError } from "../error.mjs";
 
 const { Set, URL } = globalThis;
@@ -62,7 +62,7 @@ const parseArgv = (argv) => {
 /**
  * @type {(
  *   type: "standard" | "flexible",
- * ) => import("./util").MakeAspect<null>}
+ * ) => import("../aran").MakeAspect<null>}
  */
 const compileMakeAspect =
   (type) =>

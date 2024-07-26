@@ -8,8 +8,8 @@ import type {
   Path,
   StandardAspect,
   StandardPointcut,
-} from "../../../../lib";
-import type { Instrument } from "../../types";
+} from "../../../lib";
+import type { Instrument } from "../types";
 
 export type InstrumentRoot = Instrument;
 

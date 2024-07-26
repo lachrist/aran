@@ -3,11 +3,11 @@ import {
   instrument,
   setup as generateSetup,
   ROOT_PATH,
-} from "../../../../lib/index.mjs";
+} from "../../../lib/index.mjs";
 import { parseGlobal, parseLocal } from "./parse.mjs";
 import { hash32 } from "./hash.mjs";
 import { runInContext } from "node:vm";
-import { AranTestError, AranTypeError } from "../../error.mjs";
+import { AranTestError, AranTypeError } from "../error.mjs";
 
 const {
   undefined,
@@ -24,16 +24,17 @@ const {
  */
 const listEntry = listEntryInner;
 
-const GLOBAL_VARIABLE =
-  /** @type {import("../../../../lib").EstreeVariable} */ ("globalThis");
+const GLOBAL_VARIABLE = /** @type {import("../../../lib").EstreeVariable} */ (
+  "globalThis"
+);
 
 const INTRINSIC_VARIABLE =
-  /** @type {import("../../../../lib").EstreeVariable} */ ("_ARAN_INTRINSIC_");
+  /** @type {import("../../../lib").EstreeVariable} */ ("_ARAN_INTRINSIC_");
 
 export const ADVICE_VARIABLE =
-  /** @type {import("../../../../lib").EstreeVariable} */ ("_ARAN_ADVICE_");
+  /** @type {import("../../../lib").EstreeVariable} */ ("_ARAN_ADVICE_");
 
-const ESCAPE_PREFIX = /** @type {import("../../../../lib").EstreeVariable} */ (
+const ESCAPE_PREFIX = /** @type {import("../../../lib").EstreeVariable} */ (
   "_ARAN_ESCAPE_"
 );
 
@@ -41,7 +42,7 @@ const ESCAPE_PREFIX = /** @type {import("../../../../lib").EstreeVariable} */ (
  * @type {(
  *   config: import(".").PartialAranConfig,
  *   early_syntax_error: "throw" | "embed",
- * ) => import("../../../../lib").Config}
+ * ) => import("../../../lib").Config}
  */
 const completeConfig = (
   { pointcut, warning, initial, global_declarative_record },
@@ -160,8 +161,8 @@ export const instrumentRoot = ({ kind, url, content }, { record, config }) =>
  * @type {(
  *   call: {
  *     code: unknown,
- *     path: import("../../../../lib").Path,
- *     context: import("../../../../lib").DeepLocalContext,
+ *     path: import("../../../lib").Path,
+ *     context: import("../../../lib").DeepLocalContext,
  *   },
  *   config: import(".").Config<{}>,
  * ) => unknown}
@@ -366,7 +367,7 @@ const constructMembrane = (
 };
 
 /**
- * @type {<S extends import("../../../../lib").Json>(
+ * @type {<S extends import("../../../lib").Json>(
  *   global: object,
  *   aspect: import(".").Aspect<S>,
  * ) => import(".").Pointcut}
@@ -376,7 +377,7 @@ const setupAspect = (global, aspect) => {
     case "standard": {
       /**
        * @type {{
-       *   [key in import("../../../../lib").StandardKind]?: Function
+       *   [key in import("../../../lib").StandardKind]?: Function
        * }}
        */
       const advice = {
@@ -385,7 +386,7 @@ const setupAspect = (global, aspect) => {
       };
       /**
        * @type {{
-       *   [key in import("../../../../lib").StandardKind]?: (
+       *   [key in import("../../../lib").StandardKind]?: (
        *     | boolean
        *     | Function
        *   )
@@ -416,13 +417,11 @@ const setupAspect = (global, aspect) => {
       });
       return {
         type: "standard",
-        data: /** @type {import("../../../../lib").StandardPointcut} */ (
-          pointcut
-        ),
+        data: /** @type {import("../../../lib").StandardPointcut} */ (pointcut),
       };
     }
     case "flexible": {
-      /** @type {import("../../../../lib").FlexiblePointcut} */
+      /** @type {import("../../../lib").FlexiblePointcut} */
       const pointcut = {};
       for (const [key, val] of listEntry(aspect.data)) {
         if (val != null) {
@@ -624,7 +623,7 @@ export const setupAranPatch = (
 };
 
 /**
- * @type {<S extends import("../../../../lib").Json>(
+ * @type {<S extends import("../../../lib").Json>(
  *   type: "basic" | "weave" | "patch",
  *   makeAspect: import(".").MakeAspect<S>,
  *   config: import(".").SetupConfig<S>,

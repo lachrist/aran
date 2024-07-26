@@ -13,10 +13,10 @@ const {
  *   kind: K,
  *   code: string
  * ) => (
- *   | (import("../../../../lib").EstreeProgram & {
+ *   | (import("../../../lib").EstreeProgram & {
  *     sourceType: K extends "module" ? "module" : "script"
  *   })
- *   | import("../../../../lib/source").EarlySyntaxError
+ *   | import("../../../lib").EarlySyntaxError
  * )}
  */
 export const parseGlobal = (kind, code) => {
@@ -51,8 +51,8 @@ export const parseGlobal = (kind, code) => {
  *   kind: "eval",
  *   code: string,
  * ) => (
- *   | import("../../../../lib").EstreeScriptProgram
- *   | import("../../../../lib/source").EarlySyntaxError
+ *   | import("../../../lib").EstreeScriptProgram
+ *   | import("../../../lib").EarlySyntaxError
  * )}
  */
 export const parseAcornLocal = (_kind, code) => {
@@ -92,7 +92,7 @@ export const parseAcornLocal = (_kind, code) => {
 /**
  * @type {(
  *   node: unknown,
- * ) => import("../../../../lib").EstreeScriptProgram}
+ * ) => import("../../../lib").EstreeScriptProgram}
  */
 const sanitizeBabel = (root) => {
   const todo = [root];
@@ -125,7 +125,7 @@ const sanitizeBabel = (root) => {
       // noop
     }
   }
-  return /** @type {import("../../../../lib").EstreeScriptProgram} */ (root);
+  return /** @type {import("../../../lib").EstreeScriptProgram} */ (root);
 };
 
 /**
@@ -133,8 +133,8 @@ const sanitizeBabel = (root) => {
  *   kind: "eval",
  *   code: string,
  * ) => (
- *   | import("../../../../lib").EstreeScriptProgram
- *   | import("../../../../lib/source").EarlySyntaxError
+ *   | import("../../../lib").EstreeScriptProgram
+ *   | import("../../../lib").EarlySyntaxError
  * )}
  */
 export const parseBabelLocal = (_kind, code) => {
@@ -184,8 +184,8 @@ export const parseBabelLocal = (_kind, code) => {
  *   kind: "eval",
  *   code: string,
  * ) => (
- *   | import("../../../../lib").EstreeScriptProgram
- *   | import("../../../../lib/source").EarlySyntaxError
+ *   | import("../../../lib").EstreeScriptProgram
+ *   | import("../../../lib").EarlySyntaxError
  * )}
  */
 export const parseLocal = (kind, code) => {
