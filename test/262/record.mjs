@@ -39,9 +39,9 @@ const getExtension = (kind) => {
  * @type {() => string}
  */
 const generateUniqueIdentifier = () =>
-  `${performance.now().toString(32)}.${Math.random()
-    .toString(32)
-    .substring(2)}`;
+  `${Math.floor(1e3 * performance.now()).toString(32)}-${Math.floor(
+    1e9 * Math.random(),
+  ).toString(32)}`;
 
 /** @type {import("./types").Instrument} */
 export const record = ({ kind, url: url1, content: content1 }) => {

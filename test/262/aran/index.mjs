@@ -127,6 +127,26 @@ const getArgumentCode = (args) => {
 
 /**
  * @type {(
+ *   url: URL,
+ *   global_declarative_record: "builtin" | "emulate",
+ * ) => boolean}
+ */
+const shouldInstrument = (url, global_declarative_record) => {
+  switch (global_declarative_record) {
+    case "builtin": {
+      return !url.href.includes("/test262/harness/");
+    }
+    case "emulate": {
+      return true;
+    }
+    default: {
+      throw new AranTypeError(global_declarative_record);
+    }
+  }
+};
+
+/**
+ * @type {(
  *   file: {
  *     kind: "script" | "module",
  *     url: URL,
@@ -139,23 +159,28 @@ const getArgumentCode = (args) => {
  *   content: string,
  * }}
  */
-export const instrumentRoot = ({ kind, url, content }, { record, config }) =>
-  record({
-    kind,
-    url,
-    content: generate(
-      instrument(
-        {
-          kind,
-          situ: "global",
-          path: ROOT_PATH,
-          root: /** @type {any} */ (parseGlobal(kind, content)),
-          context: {},
-        },
-        completeConfig(config, "throw"),
+export const instrumentRoot = ({ kind, url, content }, { record, config }) => {
+  if (shouldInstrument(url, config.global_declarative_record)) {
+    return record({
+      kind,
+      url,
+      content: generate(
+        instrument(
+          {
+            kind,
+            situ: "global",
+            path: ROOT_PATH,
+            root: /** @type {any} */ (parseGlobal(kind, content)),
+            context: {},
+          },
+          completeConfig(config, "throw"),
+        ),
       ),
-    ),
-  });
+    });
+  } else {
+    return { kind, url, content };
+  }
+};
 
 /**
  * @type {(
