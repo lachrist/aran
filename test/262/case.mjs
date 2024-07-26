@@ -98,6 +98,7 @@ const runNegativeAsync = async (phase, name, runAsync) => {
  *     compileInstrument: import("./types").CompileInstrument,
  *     warning: "ignore" | "console",
  *     reject: (reason: string) => void,
+ *     report: (error: Error) => void,
  *     record: import("./types").Instrument,
  *   },
  * ) => Promise<void>}
@@ -107,6 +108,7 @@ export const runTestCaseInner = async ({
   compileInstrument,
   warning,
   reject,
+  report,
   record,
 }) => {
   const { done, print } = asynchronous
@@ -115,6 +117,7 @@ export const runTestCaseInner = async ({
   const context = createRealm({
     counter: { value: 0 },
     reject,
+    report,
     record,
     warning,
     print,
@@ -223,22 +226,27 @@ export const runTestCaseInner = async ({
 export const runTestCase = async (options) => {
   /** @type {string[]} */
   const reasons = [];
+  /** @type {import("./types").ErrorSerial | null} */
+  let serial = null;
   try {
     await runTestCaseInner({
       ...options,
+      report: (error) => {
+        if (serial === null) {
+          serial = inspectError(error);
+        }
+      },
       reject: (reason) => {
         reasons[reasons.length] = reason;
       },
     });
   } catch (error) {
-    if (reasons.length > 0) {
-      return { type: "failure-meta", data: reasons };
-    } else {
-      return { type: "failure-base", data: inspectError(error) };
-    }
+    serial = inspectError(error);
   }
   if (reasons.length > 0) {
     return { type: "failure-meta", data: reasons };
+  } else if (serial !== null) {
+    return { type: "failure-base", data: serial };
   } else {
     return { type: "success", data: null };
   }

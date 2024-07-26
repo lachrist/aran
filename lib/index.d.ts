@@ -45,7 +45,7 @@ export type {
 export type {
   Valuation as StandardValuation,
   Frame as StandardFrame,
-  TaggedFrame as StandardTaggedFrame,
+  PreciseFrame as StandardPreciseFrame,
   Kind as StandardKind,
   Aspect as StandardAspect,
   Advice as StandardAdvice,

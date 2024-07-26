@@ -62,7 +62,7 @@ const parseArgv = (argv) => {
 /**
  * @type {(
  *   type: "standard" | "flexible",
- * ) => import("../aran").MakeAspect<null>}
+ * ) => import("../aran").MakeAspect<null, unknown>}
  */
 const compileMakeAspect =
   (type) =>
@@ -85,7 +85,7 @@ const compileMakeAspect =
             kind: "eval@before",
             pointcut: ({ tag: path }) => [path],
             advice: (_state, code, context, path) =>
-              instrument(code, path, context),
+              typeof code === "string" ? instrument(code, path, context) : code,
           },
           _ARAN_APPLY_AROUND_:
             apply === null
@@ -120,7 +120,7 @@ const compileMakeAspect =
          */
         const aspect = {
           "eval@before": (_state, context, code, path) =>
-            instrument(code, path, context),
+            typeof code === "string" ? instrument(code, path, context) : code,
           "apply@around":
             apply === null
               ? null

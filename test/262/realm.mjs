@@ -8,6 +8,7 @@ const { gc, Reflect, URL } = globalThis;
  *   options: {
  *     counter: { value: number },
  *     reject: (reason: string) => void,
+ *     report: (error: Error) => void,
  *     record: import("./types").Instrument,
  *     warning: "ignore" | "console",
  *     print: (message: string) => void,
@@ -22,6 +23,7 @@ const { gc, Reflect, URL } = globalThis;
 export const createRealm = ({
   counter,
   reject,
+  report,
   record,
   warning,
   print,
@@ -31,6 +33,7 @@ export const createRealm = ({
   const instrument = compileInstrument({
     reject,
     record,
+    report,
     warning,
     context,
   });
@@ -43,6 +46,7 @@ export const createRealm = ({
       createRealm({
         counter,
         reject,
+        report,
         record,
         warning,
         print,

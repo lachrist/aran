@@ -106,6 +106,7 @@ export type StageName =
 export type CompileInstrument = (options: {
   record: Instrument;
   reject: (reason: string) => void;
+  report: (error: Error) => void;
   warning: "console" | "ignore";
   context: Context;
 }) => Instrument;

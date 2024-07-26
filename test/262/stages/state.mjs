@@ -1,25 +1,27 @@
-// @ts-nocheck
-
 import { readFile } from "node:fs/promises";
+import { setupAran } from "../aran/index.mjs";
+import {
+  getNegativeStatus,
+  listNegativeCause,
+  parseNegative,
+} from "../negative.mjs";
+import { getFailureTarget, parseFailureArray } from "../failure.mjs";
 import {
   isClosureKind,
   isControlKind,
   isProgramKind,
+  ROOT_PATH,
 } from "../../../lib/index.mjs";
-import {
-  compileExpect,
-  compileStandardInstrumentation,
-} from "./util/index.mjs";
 
 const {
+  Set,
   URL,
-  JSON: { parse },
   Array: { isArray },
-  undefined,
   Error,
   WeakMap,
-  Object: { is, hasOwn },
-  console: { dir },
+  Reflect: { defineProperty },
+  Object: { is },
+  console: { log, dir },
 } = globalThis;
 
 /**
@@ -32,182 +34,72 @@ const isIdentical = is;
 
 /**
  * @type {(
- *   value: import("./invariant-native").Value
- * ) => value is import("./state").ClosureValue}
- */
-const isClosureValue = (value) => typeof value === "function";
-
-/**
- * @type {(
- *   value: import("./invariant-native").Value
+ *   value: import("./state").Value
  * ) => value is import("./state").ArrayValue}
  */
 const isArrayValue = /** @type {any} */ (isArray);
 
+/* eslint-disable */
 /**
  * @type {(
- *   value: import("./invariant-native").Value
- * ) => value is import("./state").ConstructorValue}
+ *   report: (error: Error) => void,
+ * ) => new (context: object) => Error}
  */
-const isConstructorValue = (value) =>
-  typeof value === "function" && hasOwn(value, "prototype");
-
-/** @type {test262.Stage} */
-export default {
-  requirement: ["identity", "parsing"],
-  exclusion: [],
-  expect: compileExpect(
-    parse(
-      await readFile(
-        new URL("empty-native.manual.json", import.meta.url),
-        "utf8",
-      ),
-    ),
-  ),
-  compileInstrument: ({ reject, record, warning, context }) => {
-    ///////////
-    // Error //
-    ///////////
-
-    /* eslint-disable */
-    class AssertionError extends Error {
-      constructor(/** @type {string} */ message) {
-        super(message);
-        this.name = "AssertionError";
-        dir(
-          { callstack, closures, suspension },
-          { depth: 5, showHidden: true },
-        );
-        reject(this);
-      }
+const compileAssertionError = (report) =>
+  class AssertionError extends Error {
+    constructor(/** @type {object} */ context) {
+      super();
+      this.name = "AranAssertionError";
+      log("AranAssertionError");
+      dir(context, { depth: 5, showHidden: true });
+      report(this);
     }
-    /* eslint-enable */
+  };
+/* eslint-enable */
 
-    /* eslint-disable */
-    class UnreachableError extends Error {
-      constructor(/** @type {never} */ data) {
-        super("this should never happen");
-        this.name = "UnreachableError";
-        dir(
-          { callstack, closures, suspension },
-          { depth: 5, showHidden: true },
-        );
-        reject(this);
-      }
+/* eslint-disable */
+/**
+ * @type {(
+ *   report: (error: Error) => void,
+ * ) => new (data: never) => Error}
+ */
+const compileUnreachableError = (report) =>
+  class UnreachableError extends Error {
+    constructor(/** @type {never} */ data) {
+      super();
+      this.name = "AranUnreachableError";
+      log("AranUnreachableError");
+      dir(data, { depth: 5, showHidden: true });
+      report(this);
     }
-    /* eslint-enable */
+  };
+/* eslint-enable */
 
+/**
+ * @type {(
+ *   report: {
+ *     AssertionError: new (context: object) => Error,
+ *     UnreachableError: new (data: never) => Error,
+ *   },
+ * ) => import("../aran").MakeAspect<
+ *   import("./state").State,
+ *   import("./state").Value,
+ * >}
+ */
+const compileMakeAspect =
+  ({ AssertionError, UnreachableError }) =>
+  (intrinsics, { instrument }) => {
     /**
      * @type {(
      *   test: boolean,
-     * ) => asserts test is true}
-     */
-    const assert = (test) => {
-      if (!test) {
-        throw new AssertionError("Assertion failure");
-      }
-    };
-
-    /**
-     * @type {(
-     *   call: import("./state").Call,
-     * ) => asserts call is import("./state").Call & { type: "internal"} }
-     */
-    const assertInternalCall = (call) => {
-      assert(call.type === "internal");
-    };
-
-    /**
-     * @type {<X>(
-     *   target: undefined | X,
-     * ) => asserts target is X}
-     */
-    const assertDefined = (target) => {
-      assert(target !== undefined);
-    };
-
-    /**
-     * @type {(
-     *   target: import("./state").Value,
-     * ) => asserts target is import("./state").ClosureValue}
-     */
-    const assertClosureValue = (target) => {
-      assert(isClosureValue(target));
-    };
-
-    /**
-     * @type {(
-     *   target: import("./state").Value,
-     * ) => asserts target is import("./state").ArrayValue}
-     */
-    const assertArrayValue = (target) => {
-      assert(isArrayValue(target));
-    };
-
-    /**
-     * @type {(
-     *   marker: import("./state").Marker,
-     * ) => asserts marker is import("./state").Marker & { type: "setup" }}
-     */
-    const assertSetupMarker = (marker) => {
-      assert(marker.type === "setup");
-    };
-
-    /**
-     * @type {(
-     *   marker: import("./state").Marker & { type: "setup" },
+     *   data: object,
      * ) => void}
      */
-    const normalizeMarker = (marker) => {
-      marker.type = /** @type {any} */ ("normal");
-    };
-
-    /**
-     * @type {(
-     *   kind: import("./state").ClosureKind,
-     *   record: { [_ in string]?: import("./state").Value },
-     * ) => import("./state").Arrival}
-     */
-    const extractArrival = (kind, frame) => {
-      assert("function.callee" in frame);
-      assert("function.arguments" in frame);
-      const callee = /** @type {import("./state").Value} */ (
-        frame["function.callee"]
-      );
-      assertClosureValue(callee);
-      const input = /** @type {import("./state").Value} */ (
-        frame["function.arguments"]
-      );
-      assertArrayValue(input);
-      if (kind === "arrow" || kind === "arrow.async") {
-        return {
-          type: "arrow",
-          callee,
-          input,
-        };
-      } else if (
-        kind === "function" ||
-        kind === "function.async" ||
-        kind === "function.generator" ||
-        kind === "function.async.generator"
-      ) {
-        assert("this" in frame);
-        assert("new.target" in frame);
-        return {
-          type: "function",
-          callee,
-          self: /** @type {import("./state").Value} */ (frame.this),
-          target: /** @type {import("./state").Value} */ (frame["new.target"]),
-          input,
-        };
-      } else {
-        throw new UnreachableError(kind);
+    const assert = (test, data) => {
+      if (!test) {
+        throw new AssertionError(data);
       }
     };
-
-    ///////////
-    // Stack //
-    ///////////
 
     /**
      * @type {<X>(
@@ -215,446 +107,534 @@ export default {
      * ) => X}
      */
     const pop = (array) => {
-      assert(array.length > 0);
+      assert(array.length > 0, array);
       return /** @type {any} */ (array.pop());
     };
 
     /**
-     * @type {<X>(
-     *   array: X[],
-     * ) => X}
+     * @type {(
+     *   kind: import("../../../lib").BlockKind,
+     *   type: import("./state").Transit["type"],
+     * ) => boolean}
      */
-    const peek = (array) => {
-      if (array.length === 0) {
-        throw new AssertionError("Cannot peek value on empty array");
+    const isTransitValid = (kind, type) => {
+      if (isControlKind(kind)) {
+        return (
+          type === "regular" ||
+          (type === "throw" && kind === "catch") ||
+          (type === "throw" && kind === "finally") ||
+          (type === "break" && kind === "finally")
+        );
+      } else if (isClosureKind(kind)) {
+        return type === "apply" || type === "construct" || type === "external";
+      } else if (isProgramKind(kind)) {
+        return type === "external";
       } else {
-        return array[array.length - 1];
+        throw new UnreachableError(kind);
       }
     };
 
-    ///////////
-    // State //
-    ///////////
-
-    /** @type {import("./state").Call[]} */
-    const callstack = [];
-
     /**
-     * @type {WeakMap<Function, import("./state").Scope>}
+     * @type {WeakMap<Function, import("../../../lib").ClosureKind>}
      */
     const closures = new WeakMap();
 
     /**
-     * @type {WeakMap<import("./state").Marker, import("./state").InternalCall>}
+     * @type {import("./state").Transit}
      */
-    const suspension = new WeakMap();
-
-    //////////////////
-    // Block Aspect //
-    //////////////////
+    let transit = { type: "external" };
 
     /* eslint-disable no-use-before-define */
     /**
-     * @type {import("./state").Aspect<
-     *   import("./state").Marker,
+     * @type {import("../../../lib").StandardAspect<
+     *   import("./state").State,
      *   import("./state").Valuation,
      * >}
      */
     const aspect = {
       // Block //
-      "block@setup": (_parent, kind, head, _path) => ({
-        type: "setup",
-        labels: isControlKind(kind)
-          ? /** @type {import("./state").Label[]} */ (head)
-          : [],
-      }),
-      "block@frame": (marker, kind, frame, _path) => {
-        const call = peek(callstack);
-        assertSetupMarker(marker);
-        const { labels } = marker;
-        normalizeMarker(marker);
-        if (isProgramKind(kind)) {
+      "block@setup": (state, kind, path) => {
+        const context = { transit, state, kind, path };
+        assert(isTransitValid(kind, transit.type), context);
+        const origin = transit;
+        transit = { type: "regular" };
+        return {
+          kind,
+          path,
+          suspension: "none",
+          scope: {
+            __proto__: state.scope,
+          },
+          stack: [],
+          labels: [],
+          origin,
+        };
+      },
+      "control-block@labeling": (state, kind, labels, path) => {
+        const context = { transit, state, kind, labels, path };
+        assert(state.kind === kind, context);
+        assert(state.path === path, context);
+        state.labels.push(...labels);
+      },
+      "block@declaration": (state, kind, frame, path) => {
+        const context = { transit, state, kind, frame, path };
+        assert(state.kind === kind, context);
+        assert(state.path === path, context);
+        if ("catch.error" in frame) {
+          if (state.origin.type === "throw") {
+            assert(
+              isIdentical(frame["catch.error"], state.origin.error),
+              context,
+            );
+          }
+        }
+        if ("function.callee" in frame) {
           if (
-            kind === "module" ||
-            kind === "script" ||
-            kind === "eval.global" ||
-            kind === "eval.local.root"
+            state.origin.type === "apply" ||
+            state.origin.type === "construct"
           ) {
-            assert(call.type === "external");
-          } else if (kind === "eval.local.deep") {
-            assert(call.type === "internal");
-          } else {
-            throw new UnreachableError(kind);
+            assert(
+              isIdentical(frame["function.callee"], state.origin.callee),
+              context,
+            );
           }
-          callstack.push({
-            type: "internal",
-            termination: { type: "none" },
-            scope: [
-              {
-                record: frame,
-                labels,
-              },
-            ],
-            stack: [],
-          });
-        } else if (isClosureKind(kind)) {
-          const arrival = extractArrival(kind, frame);
-          if (call.type === "internal") {
-            const { stack } = call;
-            for (let index = arrival.input.length - 1; index >= 0; index -= 1) {
-              assert(isIdentical(arrival.input[index], pop(stack)));
-            }
-            if (arrival.type === "arrow") {
-              pop(stack);
-            } else if (arrival.type === "function") {
-              assert(isIdentical(arrival.self, pop(stack)));
-            } else {
-              throw new UnreachableError(arrival);
-            }
-            assert(isIdentical(arrival.callee, pop(stack)));
-          } else if (call.type !== "external") {
-            throw new UnreachableError(call);
+        }
+        if ("new.target" in frame) {
+          if (state.origin.type === "construct") {
+            assert(
+              isIdentical(frame["new.target"], state.origin.callee),
+              context,
+            );
           }
-          const scope = closures.get(arrival.callee);
-          assertDefined(scope);
-          callstack.push({
-            type: "internal",
-            termination: { type: "none" },
-            scope: [
-              ...scope,
-              {
-                labels,
-                record: frame,
-              },
-            ],
-            stack: [],
-          });
-        } else if (isControlKind(kind)) {
-          assertInternalCall(call);
-          call.scope.push({
-            labels,
-            record: frame,
-          });
+        }
+        if ("this" in frame) {
+          if (state.origin.type === "apply") {
+            assert(isIdentical(frame.this, state.origin.this), context);
+          }
+        }
+        if ("function.arguments" in frame) {
+          if (
+            state.origin.type === "apply" ||
+            state.origin.type === "construct"
+          ) {
+            const input1 = frame["function.arguments"];
+            if (
+              !isArrayValue(/** @type {import("./state").Value} */ (input1))
+            ) {
+              throw new AssertionError(input1);
+            }
+            const input2 = state.origin.arguments;
+            assert(input1.length === input2.length, context);
+            const length = input1.length;
+            for (let index = 0; index < length; index += 1) {
+              assert(isIdentical(input1[index], input2[index]), context);
+            }
+          }
+        }
+        const descriptor = {
+          __proto__: null,
+          value: /** @type {any} */ (null),
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        };
+        for (const variable in frame) {
+          descriptor.value = frame[/** @type {any} */ (variable)];
+          defineProperty(state.scope, variable, descriptor);
         }
       },
-      "block@success": (_marker, kind, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        assert(call.termination.type === "none");
-        if (isClosureKind(kind) || isProgramKind(kind)) {
-          call.termination = {
-            type: "return",
-            result: /** @type {import("./state").Value} */ (value),
-          };
-        } else if (isControlKind(kind)) {
-          call.termination = {
-            type: "completion",
-          };
+      "generator-block@suspension": (state, kind, path) => {
+        const context = { transit, state, kind, path };
+        assert(state.kind === kind, context);
+        assert(state.path === path, context);
+        assert(transit.type === "regular", context);
+        if (
+          state.origin.type === "apply" ||
+          state.origin.type === "construct"
+        ) {
+          state.origin = { type: "external" };
+          transit = { type: "yield" };
+        } else if (state.origin.type === "external") {
+          transit = { type: "external" };
+        } else if (
+          state.origin.type === "await" ||
+          state.origin.type === "yield" ||
+          state.origin.type === "throw" ||
+          state.origin.type === "break" ||
+          state.origin.type === "regular" ||
+          state.origin.type === "completion" ||
+          state.origin.type === "return"
+        ) {
+          throw new AssertionError(context);
         } else {
-          throw new UnreachableError(kind);
+          throw new UnreachableError(state.origin);
         }
+      },
+      "generator-block@resumption": (state, kind, path) => {
+        const context = { transit, state, kind, path };
+        assert(transit.type === "external", context);
+        transit = { type: "regular" };
+      },
+      "control-block@completion": (state, kind, path) => {
+        const context = { transit, state, kind, path };
+        assert(state.kind === kind, context);
+        assert(state.path === path, context);
+        assert(state.stack.length === 0, context);
+        assert(transit.type === "regular", context);
+        transit = { type: "completion" };
+      },
+      "routine-block@completion": (state, kind, value, path) => {
+        const context = { transit, state, kind, value, path };
+        assert(state.kind === kind, context);
+        assert(state.path === path, context);
+        assert(transit.type === "regular", context);
+        transit = { type: "return", result: value };
         return value;
       },
-      "block@failure": (marker, _kind, error, _path) => {
-        const call = suspension.get(marker);
-        if (call !== undefined) {
-          suspension.delete(marker);
-          call.termination = {
-            type: "throw",
-            error,
-          };
-          call.stack.length = 0;
-          callstack.push(call);
+      "block@throwing": (state, kind, value, path) => {
+        const context = { transit, state, kind, value, path };
+        assert(state.kind === kind, context);
+        assert(state.path === path, context);
+        if (state.suspension === "none") {
+          assert(
+            transit.type === "throw" && isIdentical(transit.error, value),
+            context,
+          );
+        } else if (
+          state.suspension === "eval" ||
+          state.suspension === "await" ||
+          state.suspension === "yield"
+        ) {
+          assert(transit.type === "external", context);
+          transit = { type: "throw", error: value };
+          state.suspension = "none";
+        } else {
+          throw new UnreachableError(state.suspension);
         }
-        return error;
+        state.stack.length = 0;
+        return value;
       },
-      "block@teardown": (_marker, kind, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        assert(call.stack.length === 0);
-        pop(call.scope);
-        if (isProgramKind(kind) || isClosureKind(kind)) {
-          pop(callstack);
-          if (
-            call.termination.type === "none" ||
-            call.termination.type === "completion" ||
-            call.termination.type === "break"
-          ) {
-            throw new AssertionError("invalid routine termination");
-          } else if (call.termination.type === "return") {
-            const parent = peek(callstack);
-            if (parent.type === "internal") {
-              parent.stack.push(call.termination.result);
-            } else if (parent.type !== "external") {
-              throw new UnreachableError(parent);
-            }
-          } else if (call.termination.type === "throw") {
-            const parent = peek(callstack);
-            if (parent.type === "internal") {
-              assert(parent.termination.type === "none");
-              parent.termination = call.termination;
-            } else if (parent.type !== "external") {
-              throw new UnreachableError(parent);
-            }
-          } else {
-            throw new UnreachableError(call.termination);
+      "block@teardown": (state, kind, path) => {
+        const context = { transit, state, kind, path };
+        assert(state.kind === kind, context);
+        assert(state.path === path, context);
+        assert(state.stack.length === 0, context);
+        if (transit.type === "break") {
+          if (state.labels.includes(transit.label)) {
+            transit = { type: "regular" };
           }
-        } else if (isControlKind(kind)) {
-          if (call.termination.type === "none") {
-            throw new AssertionError("invalid control termination");
-          } else if (call.termination.type === "completion") {
-            call.termination = { type: "none" };
-          } else if (call.termination.type === "break") {
-            if (peek(call.scope).labels.includes(call.termination.label)) {
-              call.termination = { type: "none" };
-            }
-          } else if (
-            call.termination.type !== "return" &&
-            call.termination.type !== "throw"
-          ) {
-            throw new UnreachableError(call.termination);
+        } else if (transit.type === "return") {
+          if (state.origin.type === "external") {
+            transit = { type: "external" };
           }
+        } else if (transit.type === "completion") {
+          transit = { type: "regular" };
+        } else if (transit.type === "throw") {
+          // noop //
+        } else if (
+          transit.type === "await" ||
+          transit.type === "yield" ||
+          transit.type === "regular" ||
+          transit.type === "external" ||
+          transit.type === "apply" ||
+          transit.type === "construct"
+        ) {
+          throw new AssertionError(context);
+        } else {
+          throw new UnreachableError(transit);
         }
       },
       // Call //
-      "apply@around": (_marker, callee, self, input, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        if (isClosureValue(callee)) {
-          if (closures.has(callee)) {
-            return intrinsic["Reflect.apply"](callee, self, input);
-          } else {
-            try {
-              for (let index = input.length - 1; index >= 0; index -= 1) {
-                assert(isIdentical(input[index], pop(call.stack)));
-              }
-              assert(isIdentical(self, pop(call.stack)));
-              assert(isIdentical(callee, pop(call.stack)));
-              const result = intrinsic["Reflect.apply"](callee, self, input);
-              call.stack.push(result);
-              return result;
-            } catch (error) {
-              assert(call.termination.type === "none");
-              call.termination = {
-                type: "throw",
-                // eslint-disable-next-line object-shorthand
-                error: /** @type {import("./state").Value} */ (error),
-              };
-              throw error;
-            }
-          }
-        } else {
-          assert(call.termination.type === "none");
-          /** @type {import("./state").Value} */
-          const error = /** @type {any} */ (
-            new intrinsic.TypeError("Not a function or an arrow")
+      "apply@around": (state, callee, this_, arguments_, path) => {
+        const context = { transit, state, callee, this_, arguments_, path };
+        for (let index = arguments_.length - 1; index >= 0; index -= 1) {
+          assert(isIdentical(arguments_[index], pop(state.stack)), context);
+        }
+        assert(isIdentical(this_, pop(state.stack)), context);
+        assert(isIdentical(callee, pop(state.stack)), context);
+        if (closures.has(/** @type {any} */ (callee))) {
+          const kind = /** @type {import("../../../lib").ClosureKind} */ (
+            closures.get(/** @type {any} */ (callee))
           );
-          call.termination = {
-            type: "throw",
-            error,
-          };
-          throw error;
+          assert(transit.type === "regular", state);
+          transit = /** @type {import("./state").Transit} */ ({
+            type: "apply",
+            callee,
+            this: this_,
+            arguments: arguments_,
+          });
+          const result = intrinsics["Reflect.apply"](
+            /** @type {any} */ (callee),
+            this_,
+            arguments_,
+          );
+          if (kind === "function" || kind === "arrow" || kind === "method") {
+            assert(
+              transit.type === "return" && isIdentical(transit.result, result),
+              context,
+            );
+          } else if (
+            kind === "async-function" ||
+            kind === "async-arrow" ||
+            kind === "async-method"
+          ) {
+            assert(
+              transit.type === "await" || transit.type === "return",
+              context,
+            );
+          } else if (kind === "generator" || kind === "async-generator") {
+            assert(transit.type === "yield", context);
+          } else {
+            throw new UnreachableError(kind);
+          }
+          transit = { type: "regular" };
+          return result;
+        } else {
+          assert(transit.type === "regular", context);
+          transit = { type: "external" };
+          try {
+            const result = intrinsics["Reflect.apply"](
+              /** @type {any} */ (callee),
+              this_,
+              arguments_,
+            );
+            assert(transit.type === "external", context);
+            transit = { type: "regular" };
+            state.stack.push(result);
+            return result;
+          } catch (error) {
+            assert(transit.type === "external", context);
+            transit = {
+              type: "throw",
+              // eslint-disable-next-line object-shorthand
+              error: /** @type {import("./state").Value} */ (error),
+            };
+            throw error;
+          }
         }
       },
-      "construct@around": (_marker, callee, input, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        if (isConstructorValue(callee)) {
-          if (closures.has(callee)) {
-            return intrinsic["Reflect.construct"](callee, input);
-          } else {
-            try {
-              for (let index = input.length - 1; index >= 0; index -= 1) {
-                assert(isIdentical(input[index], pop(call.stack)));
-              }
-              assert(isIdentical(callee, pop(call.stack)));
-              const result = intrinsic["Reflect.construct"](callee, input);
-              call.stack.push(result);
-              return result;
-            } catch (error) {
-              assert(call.termination.type === "none");
-              call.termination = {
-                type: "throw",
-                // eslint-disable-next-line object-shorthand
-                error: /** @type {import("./state").Value} */ (error),
-              };
-              throw error;
-            }
-          }
-        } else {
-          assert(call.termination.type === "none");
-          /** @type {import("./state").Value} */
-          const error = /** @type {any} */ (
-            new intrinsic.TypeError("Not a constructor")
+      "construct@around": (state, callee, arguments_, path) => {
+        const context = { transit, state, callee, arguments_, path };
+        for (let index = arguments_.length - 1; index >= 0; index -= 1) {
+          assert(isIdentical(arguments_[index], pop(state.stack)), context);
+        }
+        assert(isIdentical(callee, pop(state.stack)), { callee, state });
+        if (closures.has(/** @type {any} */ (callee))) {
+          assert(transit.type === "regular", state);
+          transit = /** @type {import("./state").Transit} */ ({
+            type: "construct",
+            callee,
+            arguments: arguments_,
+          });
+          const result = intrinsics["Reflect.construct"](
+            /** @type {any} */ (callee),
+            arguments_,
           );
-          call.termination = {
-            type: "throw",
-            error,
-          };
-          throw error;
+          assert(
+            transit.type === "return" && transit.result === result,
+            context,
+          );
+          return result;
+        } else {
+          try {
+            const result = intrinsics["Reflect.construct"](
+              /** @type {any} */ (callee),
+              arguments_,
+            );
+            assert(transit.type === "external", context);
+            transit = { type: "regular" };
+            state.stack.push(result);
+            return result;
+          } catch (error) {
+            assert(transit.type === "external", context);
+            transit = {
+              type: "throw",
+              // eslint-disable-next-line object-shorthand
+              error: /** @type {import("./state").Value} */ (error),
+            };
+            throw error;
+          }
         }
       },
       // Abrupt //
-      "break@before": (_marker, label, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        call.termination = {
+      "break@before": (state, label, path) => {
+        const context = { transit, state, label, path };
+        assert(transit.type === "regular", context);
+        transit = {
           type: "break",
           label,
         };
       },
-      "return@before": (_marker, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        call.termination = {
-          type: "return",
-          result: value,
-        };
-        return value;
-      },
       // Produce //
-      "primitive@after": (_marker, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        call.stack.push(value);
+      "primitive@after": (state, value, _path) => {
+        state.stack.push(value);
         return value;
       },
-      "intrinsic@after": (_marker, name, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        call.stack.push(value);
+      "intrinsic@after": (state, name, value, path) => {
+        const context = { transit, state, name, value, path };
         assert(
-          isIdentical(
-            /** @type {import("./state").Value} */ (intrinsic[name]),
-            value,
-          ),
+          name in intrinsics &&
+            isIdentical(
+              /** @type {import("./state").Value} */ (intrinsics[name]),
+              value,
+            ),
+          context,
         );
+        state.stack.push(value);
         return value;
       },
-      "import@after": (_marker, _specifier, _source, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        call.stack.push(value);
+      "import@after": (state, _specifier, _source, value, _path) => {
+        state.stack.push(value);
         return value;
       },
-      "read@after": (_marker, variable, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        const { scope } = call;
-        for (let index = scope.length - 1; index >= 0; index -= 1) {
-          const { record } = scope[index];
-          if (variable in record) {
-            assert(
-              isIdentical(
-                /** @type {import("./state").Value} */ (record[variable]),
-                value,
-              ),
-            );
-            return value;
-          }
-        }
-        throw new AssertionError("Missing variable");
+      "read@after": (state, variable, value, path) => {
+        const context = { transit, state, variable, value, path };
+        assert(
+          variable in state.scope &&
+            isIdentical(/** @type {any} */ (state.scope)[variable], value),
+          context,
+        );
+        state.stack.push(value);
+        return value;
       },
-      "closure@after": (
-        _marker,
-        _kind,
-        _asynchronous,
-        _generator,
-        value,
-        _path,
-      ) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        assert(!closures.has(value));
-        closures.set(value, call.scope.slice());
+      "closure@after": (state, kind, value, path) => {
+        const context = { transit, state, kind, value, path };
+        assert(!closures.has(value), context);
+        closures.set(value, kind);
+        state.stack.push(value);
         return value;
       },
       // Consume //
-      "test@before": (_marker, _kind, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        assert(isIdentical(value, pop(call.stack)));
+      "test@before": (state, kind, value, path) => {
+        const context = { transit, state, kind, value, path };
+        assert(isIdentical(pop(state.stack), value), context);
         return !!value;
       },
-      "eval@before": (_marker, context, value, path) => {
+      "write@before": (state, variable, value, path) => {
+        const context = { transit, state, variable, value, path };
+        assert(isIdentical(pop(state.stack), value), context);
+        assert(variable in state.scope, context);
+        /** @type {any} */ (state.scope)[variable] = value;
+        return value;
+      },
+      "export@before": (state, specifier, value, path) => {
+        const context = { transit, state, specifier, value, path };
+        assert(isIdentical(pop(state.stack), value), context);
+        return value;
+      },
+      "drop@before": (state, value, path) => {
+        const context = { transit, state, value, path };
+        assert(isIdentical(pop(state.stack), value), context);
+        return value;
+      },
+      // Jump //
+      "eval@before": (state, reboot, value, path) => {
+        const context = { transit, state, reboot, value, path };
+        assert(isIdentical(pop(state.stack), value), context);
+        assert(state.suspension === "none", context);
+        state.suspension = "eval";
         if (typeof value === "string") {
-          const call = peek(callstack);
-          assertInternalCall(call);
-          assert(isIdentical(value, pop(call.stack)));
-          return instrumentDeep(value, context, path);
+          assert(transit.type === "regular", context);
+          transit = { type: "external" };
+          return instrument(value, path, reboot);
         } else {
           return value;
         }
       },
-      "write@before": (_marker, variable, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        const { scope } = call;
-        for (let index = scope.length - 1; index >= 0; index -= 1) {
-          const { record } = scope[index];
-          if (variable in record) {
-            record[variable] = value;
-            return value;
-          }
+      "eval@after": (state, value, path) => {
+        const context = { transit, state, value, path };
+        assert(transit.type === "external", context);
+        transit = { type: "regular" };
+        assert(state.suspension === "eval", context);
+        state.suspension = "none";
+        return value;
+      },
+      "await@before": (state, value, path) => {
+        const context = { transit, state, value, path };
+        assert(transit.type === "regular", context);
+        if (state.origin.type === "external") {
+          transit = { type: "external" };
+        } else {
+          transit = { type: "await" };
+          state.origin = { type: "external" };
         }
-        throw new AssertionError("Missing variable");
-      },
-      "export@before": (_marker, _specifier, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        assert(isIdentical(value, pop(call.stack)));
+        assert(state.suspension === "none", context);
+        state.suspension = "await";
         return value;
       },
-      "drop@before": (_marker, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        assert(isIdentical(value, pop(call.stack)));
+      "await@after": (state, value, path) => {
+        const context = { transit, state, value, path };
+        assert(transit.type === "external", context);
+        transit = { type: "regular" };
+        assert(state.suspension === "await", context);
+        state.suspension = "none";
         return value;
       },
-      // Jump //
-      "await@before": (marker, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        assert(isIdentical(value, pop(call.stack)));
-        assert(!suspension.has(marker));
-        suspension.set(marker, call);
+      "yield@before": (state, delegate, value, path) => {
+        const context = { transit, state, delegate, value, path };
+        assert(transit.type === "regular", context);
+        transit = { type: "external" };
+        assert(state.suspension === "none", context);
+        state.suspension = "yield";
         return value;
       },
-      "await@after": (marker, value, _path) => {
-        const call = suspension.get(marker);
-        assertDefined(call);
-        suspension.delete(marker);
-        callstack.push(call);
-        call.stack.push(value);
-        return value;
-      },
-      "yield@before": (marker, _delegate, value, _path) => {
-        const call = peek(callstack);
-        assertInternalCall(call);
-        assert(isIdentical(value, pop(call.stack)));
-        assert(!suspension.has(marker));
-        suspension.set(marker, call);
-        return value;
-      },
-      "yield@after": (marker, _delegate, value, _path) => {
-        const call = suspension.get(marker);
-        assertDefined(call);
-        suspension.delete(marker);
-
-        callstack.push(call);
-        call.stack.push(value);
+      "yield@after": (state, delegate, value, path) => {
+        const context = { transit, state, delegate, value, path };
+        assert(transit.type === "external", context);
+        transit = { type: "regular" };
+        assert(state.suspension === "yield", context);
+        state.suspension = "none";
         return value;
       },
     };
     /* eslint-enable no-use-before-define */
 
-    const { intrinsic, instrumentDeep, instrumentRoot } =
-      compileStandardInstrumentation(aspect, {
-        record,
-        warning,
-        context,
-        global_declarative_record: "native",
-      });
-    return instrumentRoot;
-  },
+    return { type: "standard", data: aspect };
+  };
+
+/** @type {import("../types").Stage} */
+export default async (_argv) => {
+  const exclusion = new Set(
+    parseFailureArray(
+      [
+        await readFile(
+          new URL("identity.failure.txt", import.meta.url),
+          "utf8",
+        ),
+        await readFile(new URL("parsing.failure.txt", import.meta.url), "utf8"),
+      ].join("\n"),
+    ).map(getFailureTarget),
+  );
+  const negative = parseNegative(
+    await readFile(new URL("bare.negative.txt", import.meta.url), "utf8"),
+  );
+  return {
+    isExcluded: (target) => exclusion.has(target),
+    predictStatus: (target) => getNegativeStatus(negative, target),
+    listCause: (result) => listNegativeCause(negative, result.target),
+    compileInstrument: ({ report, reject, record, warning, context }) =>
+      setupAran(
+        "basic",
+        compileMakeAspect({
+          AssertionError: compileAssertionError(report),
+          UnreachableError: compileUnreachableError(report),
+        }),
+        {
+          global_declarative_record: "builtin",
+          initial: {
+            kind: "root",
+            suspension: "none",
+            origin: { type: "external" },
+            path: ROOT_PATH,
+            scope: /** @type {any} */ (null),
+            labels: [],
+            stack: [],
+          },
+          record,
+          reject,
+          context,
+          warning,
+        },
+      ),
+  };
 };

@@ -25,12 +25,12 @@ type Valuation = {
 };
 
 export type Frame<K extends BlockKind, V> = {
-  [key in Variable]: V;
+  [key in Variable]?: V;
 } & {
   [key in Parametrization[K]]: V;
 };
 
-export type TaggedFrame<V> = ValueOf<{
+export type PreciseFrame<V> = ValueOf<{
   [K in BlockKind]: {
     type: K;
     data: {

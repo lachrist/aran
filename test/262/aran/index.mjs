@@ -185,37 +185,32 @@ export const instrumentRoot = ({ kind, url, content }, { record, config }) => {
 /**
  * @type {(
  *   call: {
- *     code: unknown,
+ *     code: string,
  *     path: import("../../../lib").Path,
  *     context: import("../../../lib").DeepLocalContext,
  *   },
  *   config: import(".").Config<{}>,
- * ) => unknown}
+ * ) => string}
  */
-export const instrumentDeep = ({ code, path, context }, { record, config }) => {
-  if (typeof code === "string") {
-    return getContent(
-      record({
-        kind: "script",
-        url: new URL(`dynamic:///eval-local/${hash32(code).toString(32)}`),
-        content: generate(
-          instrument(
-            {
-              kind: "eval",
-              situ: "local.deep",
-              path,
-              root: parseLocal("eval", code),
-              context,
-            },
-            completeConfig(config, "embed"),
-          ),
+export const instrumentDeep = ({ code, path, context }, { record, config }) =>
+  getContent(
+    record({
+      kind: "script",
+      url: new URL(`dynamic:///eval-local/${hash32(code).toString(32)}`),
+      content: generate(
+        instrument(
+          {
+            kind: "eval",
+            situ: "local.deep",
+            path,
+            root: parseLocal("eval", code),
+            context,
+          },
+          completeConfig(config, "embed"),
         ),
-      }),
-    );
-  } else {
-    return code;
-  }
-};
+      ),
+    }),
+  );
 
 /**
  * @type {(
@@ -392,9 +387,9 @@ const constructMembrane = (
 };
 
 /**
- * @type {<S extends import("../../../lib").Json>(
+ * @type {<S extends import("../../../lib").Json, V>(
  *   global: object,
- *   aspect: import(".").Aspect<S>,
+ *   aspect: import(".").Aspect<S, V>,
  * ) => import(".").Pointcut}
  */
 const setupAspect = (global, aspect) => {
@@ -648,9 +643,9 @@ export const setupAranPatch = (
 };
 
 /**
- * @type {<S extends import("../../../lib").Json>(
+ * @type {<S extends import("../../../lib").Json, V>(
  *   type: "basic" | "weave" | "patch",
- *   makeAspect: import(".").MakeAspect<S>,
+ *   makeAspect: import(".").MakeAspect<S, V>,
  *   config: import(".").SetupConfig<S>,
  * ) => import(".").InstrumentRoot}
  */

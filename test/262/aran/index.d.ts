@@ -14,26 +14,26 @@ import type { Instrument } from "../types";
 export type InstrumentRoot = Instrument;
 
 export type InstrumentDeep = (
-  code: unknown,
+  code: string,
   path: Path,
   context: DeepLocalContext,
-) => string | unknown;
+) => string;
 
-export type Aspect<state extends Json> =
+export type Aspect<state extends Json, V> =
   | {
       type: "standard";
       data: StandardAspect<
         state,
         {
-          Scope: unknown;
-          Stack: unknown;
-          Other: unknown;
+          Scope: V;
+          Stack: V;
+          Other: V;
         }
       >;
     }
   | {
       type: "flexible";
-      data: FlexibleAspect<state, unknown>;
+      data: FlexibleAspect<state, V>;
     };
 
 export type Pointcut =
@@ -46,7 +46,7 @@ export type Pointcut =
       data: FlexiblePointcut;
     };
 
-export type MakeAspect<S extends Json> = (
+export type MakeAspect<S extends Json, V> = (
   intrinsics: IntrinsicRecord,
   membrane: {
     instrument: InstrumentDeep;
@@ -55,7 +55,7 @@ export type MakeAspect<S extends Json> = (
       | ((callee: unknown, self: unknown, input: unknown[]) => unknown);
     construct: null | ((callee: unknown, input: unknown[]) => unknown);
   },
-) => Aspect<S>;
+) => Aspect<S, V>;
 
 export type SetupConfig<S extends Json> = {
   context: Context;
@@ -66,8 +66,8 @@ export type SetupConfig<S extends Json> = {
   initial: S;
 };
 
-export type SetupAran = <S extends Json>(
-  makeAspect: MakeAspect<S>,
+export type SetupAran = <S extends Json, V>(
+  makeAspect: MakeAspect<S, V>,
   config: SetupConfig<S>,
 ) => InstrumentRoot;
 
