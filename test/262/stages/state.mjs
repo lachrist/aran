@@ -570,6 +570,7 @@ const compileMakeAspect =
       },
       "await@before": (state, value, path) => {
         const context = { transit, state, value, path };
+        assert(isIdentical(pop(state.stack), value), context);
         assert(transit.type === "regular", context);
         if (state.origin.type === "external") {
           transit = { type: "external" };
@@ -592,6 +593,7 @@ const compileMakeAspect =
       },
       "yield@before": (state, delegate, value, path) => {
         const context = { transit, state, delegate, value, path };
+        assert(isIdentical(pop(state.stack), value), context);
         assert(transit.type === "regular", context);
         transit = { type: "external" };
         assert(state.suspension === "none", context);
