@@ -11,6 +11,7 @@ const {
  * @type {{ [key in import("./cursor").Stage]: null }}
  */
 const STAGES = {
+  state: null,
   identity: null,
   parsing: null,
   bare: null,

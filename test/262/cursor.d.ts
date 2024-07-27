@@ -1,4 +1,4 @@
-export type Stage = "identity" | "parsing" | "bare" | "full";
+export type Stage = "identity" | "parsing" | "bare" | "full" | "state";
 
 export type Cursor = {
   stage: Stage;

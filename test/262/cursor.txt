@@ -1,1 +1,2 @@
-bare basic builtin standard
+state
+1 test/annexB/built-ins/Date/prototype/getYear/B.2.4.js
