@@ -43,15 +43,19 @@ const isArrayValue = /** @type {any} */ (isArray);
 /**
  * @type {(
  *   report: (error: Error) => void,
+ *   logged: boolean,
  * ) => new (context: object) => Error}
  */
-const compileAssertionError = (report) =>
+const compileAssertionError = (report, logged) =>
   class AssertionError extends Error {
     constructor(/** @type {object} */ context) {
       super();
       this.name = "AranAssertionError";
-      // log("AranAssertionError");
-      // dir(context, { depth: 3, showHidden: true });
+      if (!logged) {
+        logged = true;
+        log(this.name);
+        dir(context);
+      }
       report(this);
     }
   };
@@ -68,8 +72,8 @@ const compileUnreachableError = (report) =>
     constructor(/** @type {never} */ data) {
       super();
       this.name = "AranUnreachableError";
-      // log("AranUnreachableError");
-      // dir(data, { depth: 3, showHidden: true });
+      log(this.name);
+      dir(data, { depth: 3, showHidden: true });
       report(this);
     }
   };
@@ -295,7 +299,6 @@ const compileMakeAspect =
         const context = { transit, state, kind, value, path };
         assert(state.kind === kind, context);
         assert(state.path === path, context);
-        console.log("BEFORE-FOOBAR", context);
         if (state.suspension === "none") {
           assert(
             transit.type === "throw" && isIdentical(transit.error, value),
@@ -313,7 +316,6 @@ const compileMakeAspect =
           throw new UnreachableError(state.suspension);
         }
         state.stack.length = 0;
-        console.log("AFTER-FOOBAR", state);
         return value;
       },
       "block@teardown": (state, kind, path) => {
@@ -332,7 +334,9 @@ const compileMakeAspect =
         } else if (transit.type === "completion") {
           transit = { type: "regular" };
         } else if (transit.type === "throw") {
-          // noop //
+          if (state.origin.type === "external") {
+            transit = { type: "external" };
+          }
         } else if (
           transit.type === "await" ||
           transit.type === "yield" ||
@@ -620,7 +624,7 @@ export default async (_argv) => {
       setupAran(
         "basic",
         compileMakeAspect({
-          AssertionError: compileAssertionError(report),
+          AssertionError: compileAssertionError(report, false),
           UnreachableError: compileUnreachableError(report),
         }),
         {
