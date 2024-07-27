@@ -565,6 +565,7 @@ const compileMakeAspect =
         transit = { type: "regular" };
         assert(state.suspension === "eval", context);
         state.suspension = "none";
+        state.stack.push(value);
         return value;
       },
       "await@before": (state, value, path) => {
@@ -586,6 +587,7 @@ const compileMakeAspect =
         transit = { type: "regular" };
         assert(state.suspension === "await", context);
         state.suspension = "none";
+        state.stack.push(value);
         return value;
       },
       "yield@before": (state, delegate, value, path) => {
@@ -602,6 +604,7 @@ const compileMakeAspect =
         transit = { type: "regular" };
         assert(state.suspension === "yield", context);
         state.suspension = "none";
+        state.stack.push(value);
         return value;
       },
     };
