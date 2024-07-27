@@ -394,6 +394,7 @@ const compileMakeAspect =
             throw new UnreachableError(kind);
           }
           transit = { type: "regular" };
+          state.stack.push(result);
           return result;
         } else {
           assert(transit.type === "regular", context);
