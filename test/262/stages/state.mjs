@@ -19,8 +19,8 @@ const {
   Array: { isArray },
   Error,
   WeakMap,
-  Reflect: { defineProperty },
-  Object: { is },
+  Reflect: { getPrototypeOf, defineProperty },
+  Object: { is, hasOwn },
   console: { log, dir },
 } = globalThis;
 
@@ -522,8 +522,17 @@ const compileMakeAspect =
       "write@before": (state, variable, value, path) => {
         const context = { transit, state, variable, value, path };
         assert(isIdentical(pop(state.stack), value), context);
-        assert(variable in state.scope, context);
-        /** @type {any} */ (state.scope)[variable] = value;
+        let scope = state.scope;
+        while (!hasOwn(scope, variable)) {
+          const parent = /** @type {import("./state").Scope | null} */ (
+            getPrototypeOf(scope)
+          );
+          if (parent === null) {
+            throw new AssertionError(context);
+          }
+          scope = parent;
+        }
+        /** @type {any} */ (scope)[variable] = value;
         return value;
       },
       "export@before": (state, specifier, value, path) => {
