@@ -1,2 +1,2 @@
 state
-7 test/annexB/built-ins/Date/prototype/getYear/this-not-date.js
+30 test/annexB/built-ins/RegExp/RegExp-control-escape-russian-letter.js
