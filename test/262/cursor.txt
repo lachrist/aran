@@ -1,2 +1,2 @@
 state
-1 test/annexB/built-ins/Date/prototype/getYear/B.2.4.js
+4 test/annexB/built-ins/Date/prototype/getYear/nan.js

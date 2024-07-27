@@ -50,8 +50,8 @@ const compileAssertionError = (report) =>
     constructor(/** @type {object} */ context) {
       super();
       this.name = "AranAssertionError";
-      log("AranAssertionError");
-      dir(context, { depth: 5, showHidden: true });
+      // log("AranAssertionError");
+      // dir(context, { depth: 3, showHidden: true });
       report(this);
     }
   };
@@ -68,8 +68,8 @@ const compileUnreachableError = (report) =>
     constructor(/** @type {never} */ data) {
       super();
       this.name = "AranUnreachableError";
-      log("AranUnreachableError");
-      dir(data, { depth: 5, showHidden: true });
+      // log("AranUnreachableError");
+      // dir(data, { depth: 3, showHidden: true });
       report(this);
     }
   };
@@ -295,6 +295,7 @@ const compileMakeAspect =
         const context = { transit, state, kind, value, path };
         assert(state.kind === kind, context);
         assert(state.path === path, context);
+        console.log("BEFORE-FOOBAR", context);
         if (state.suspension === "none") {
           assert(
             transit.type === "throw" && isIdentical(transit.error, value),
@@ -312,6 +313,7 @@ const compileMakeAspect =
           throw new UnreachableError(state.suspension);
         }
         state.stack.length = 0;
+        console.log("AFTER-FOOBAR", state);
         return value;
       },
       "block@teardown": (state, kind, path) => {
@@ -437,6 +439,8 @@ const compileMakeAspect =
           return result;
         } else {
           try {
+            assert(transit.type === "regular", context);
+            transit = { type: "external" };
             const result = intrinsics["Reflect.construct"](
               /** @type {any} */ (callee),
               arguments_,

@@ -241,7 +241,9 @@ export const runTestCase = async (options) => {
       },
     });
   } catch (error) {
-    serial = inspectError(error);
+    if (serial === null) {
+      serial = inspectError(error);
+    }
   }
   if (reasons.length > 0) {
     return { type: "failure-meta", data: reasons };
