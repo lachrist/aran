@@ -4,16 +4,7 @@ export type WarningName =
   | "ExternalConstant"
   | "ExternalDeadzone"
   | "ExternalSloppyFunction"
-  | "LateExternalVariable"
-  | "StrictKeywordExternalVariable"
-  | "StrictReadonlyExternalVariableWrite"
-  | "ExternalVariableClash"
-  | "DirectEvalExternalVariableDeclaration"
-  | "KeywordLocalExternalRead"
-  | "KeywordLocalExternalTypeof"
-  | "SloppyLocalExternalDiscard"
-  | "SloppyLocalExternalWrite"
-  | "KeywordLocalExternalWrite";
+  | "ExternalLateDeclaration";
 
 export type Warning = {
   name: WarningName;

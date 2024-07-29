@@ -1,2 +1,2 @@
 state
-4460 test/built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-try-finally-return.js
+12775 test/built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js
