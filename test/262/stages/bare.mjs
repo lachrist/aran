@@ -161,13 +161,13 @@ export default async (argv) => {
     isExcluded: (target) => exclusion.has(target),
     predictStatus: (target) => getNegativeStatus(negative, target),
     listCause: (result) => listNegativeCause(negative, result.target),
-    compileInstrument: ({ reject, record, warning, context }) => {
+    compileInstrument: ({ report, record, warning, context }) => {
       const { membrane, global_declarative_record, weaving } = parseArgv(argv);
       return setupAran(membrane, compileMakeAspect(weaving), {
         global_declarative_record,
         initial: null,
+        report,
         record,
-        reject,
         context,
         warning,
       });

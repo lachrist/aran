@@ -7,7 +7,7 @@ import {
 import { parseGlobal, parseLocal } from "./parse.mjs";
 import { hash32 } from "./hash.mjs";
 import { runInContext } from "node:vm";
-import { AranTestError, AranTypeError } from "../error.mjs";
+import { AranTypeError } from "../error.mjs";
 
 const {
   undefined,
@@ -540,12 +540,21 @@ export const setupAranWeave = (
   return (source) => instrumentRoot(source, config);
 };
 
+/* eslint-disable */
+const AranPatchError = class extends Error {
+  constructor(/** @type {string} */ message) {
+    super(message);
+    this.name = "AranPatchError";
+  }
+};
+/* eslint-enable */
+
 /**
  * @type {import(".").SetupAran}
  */
 export const setupAranPatch = (
   makeAspect,
-  { context, reject, record, warning, global_declarative_record, initial },
+  { context, report, record, warning, global_declarative_record, initial },
 ) => {
   const intrinsics = runInContext(SETUP, context);
   /* eslint-disable no-use-before-define */
@@ -553,10 +562,11 @@ export const setupAranPatch = (
     intrinsics["aran.global"],
     makeAspect(intrinsics, {
       instrument: (_code, _path, _context) => {
-        reject("local-eval-in-patch-membrane");
-        throw new AranTestError(
+        const error = new AranPatchError(
           "Patch membrane does not support local eval call",
         );
+        report(error);
+        throw error;
       },
       apply: null,
       construct: null,

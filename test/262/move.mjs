@@ -84,11 +84,10 @@ for await (const url of scrape(new URL("test/", home))) {
             console.log("Expected failure but got success, yay... (I guess)\n");
             process.exit(0);
           }
-        } else if (outcome.type === "failure-meta") {
-          for (const reason of outcome.data) {
-            console.log(`  >> ${reason}`);
-          }
-        } else if (outcome.type === "failure-base") {
+        } else if (
+          outcome.type === "failure-meta" ||
+          outcome.type === "failure-base"
+        ) {
           if (status === "positive") {
             const causes = listCause({ target, metadata, outcome });
             if (causes.length === 0) {

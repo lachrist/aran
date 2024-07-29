@@ -60,7 +60,7 @@ export type MakeAspect<S extends Json, V> = (
 export type SetupConfig<S extends Json> = {
   context: Context;
   record: Instrument;
-  reject: (reason: string) => void;
+  report: (error: Error) => void;
   warning: "console" | "ignore";
   global_declarative_record: "emulate" | "builtin";
   initial: S;

@@ -1,13 +1,20 @@
 import { createContext, runInContext } from "node:vm";
-import { AranTestError } from "./error.mjs";
 
 const { gc, Reflect, URL } = globalThis;
+
+/* eslint-disable */
+export const AranRealmError = class AranRealmError extends Error {
+  constructor(/** @type {string} */ message) {
+    super(message);
+    this.name = "AranRealmError";
+  }
+};
+/* eslint-enable */
 
 /**
  * @type {(
  *   options: {
  *     counter: { value: number },
- *     reject: (reason: string) => void,
  *     report: (error: Error) => void,
  *     record: import("./types").Instrument,
  *     warning: "ignore" | "console",
@@ -22,7 +29,6 @@ const { gc, Reflect, URL } = globalThis;
  */
 export const createRealm = ({
   counter,
-  reject,
   report,
   record,
   warning,
@@ -31,7 +37,6 @@ export const createRealm = ({
 }) => {
   const context = createContext({ __proto__: null });
   const instrument = compileInstrument({
-    reject,
     record,
     report,
     warning,
@@ -45,7 +50,6 @@ export const createRealm = ({
     createRealm: () =>
       createRealm({
         counter,
-        reject,
         report,
         record,
         warning,
@@ -53,8 +57,9 @@ export const createRealm = ({
         compileInstrument,
       }).$262,
     detachArrayBuffer: () => {
-      reject("detach-array-buffer");
-      throw new AranTestError("detachArrayBuffer");
+      const error = new AranRealmError("detachArrayBuffer");
+      report(error);
+      throw error;
     },
     // we have no information on the location of this.
     // so we do not have to register this script to the
@@ -72,27 +77,31 @@ export const createRealm = ({
       if (typeof gc === "function") {
         return gc();
       } else {
-        reject("gc");
-        throw new AranTestError("gc");
+        const error = new AranRealmError("gc");
+        report(error);
+        throw error;
       }
     },
     global: runInContext("this;", context),
     /** @returns {object} */
     // eslint-disable-next-line local/no-function
     get IsHTMLDDA() {
-      reject("IsHTMLDDA");
-      throw new AranTestError("IsHTMLDDA");
+      const error = new AranRealmError("IsHTMLDDA");
+      report(error);
+      throw error;
     },
     /** @type {import("./types").Agent} */
     // eslint-disable-next-line local/no-function
     get agent() {
-      reject("agent");
-      throw new AranTestError("agent");
+      const error = new AranRealmError("agent");
+      report(error);
+      throw error;
     },
     // eslint-disable-next-line local/no-function
     get AbstractModuleSource() {
-      reject("AbstractModuleSource");
-      throw new AranTestError("AbstractModuleSource");
+      const error = new AranRealmError("AbstractModuleSource");
+      report(error);
+      throw error;
     },
   };
   Reflect.defineProperty(context, "$262", {

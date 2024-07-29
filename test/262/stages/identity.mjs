@@ -29,6 +29,10 @@ export default async (_argv) => {
     isExcluded: (target) => exclusion.has(target),
     predictStatus: (target) => getNegativeStatus(negative, target),
     listCause: (result) => [
+      ...(result.outcome.type === "failure-meta" &&
+      result.outcome.data.name === "AranRealmError"
+        ? [result.outcome.data.message]
+        : []),
       ...result.metadata.features.filter(isFeatureExcluded),
       ...listNegativeCause(negative, result.target),
     ],

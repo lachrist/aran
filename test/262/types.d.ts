@@ -73,7 +73,7 @@ export type BaseFailureOutcome = {
 
 export type MetaFailureOutcome = {
   type: "failure-meta";
-  data: string[];
+  data: ErrorSerial;
 };
 
 export type FailureOutcome = BaseFailureOutcome | MetaFailureOutcome;
@@ -86,7 +86,7 @@ export type Result = {
   outcome: Outcome;
 };
 
-export type BaseFailureResult = Result & { outcome: BaseFailureOutcome };
+export type FailureResult = Result & { outcome: FailureOutcome };
 
 export type Failure = {
   target: string;
@@ -105,7 +105,6 @@ export type StageName =
 
 export type CompileInstrument = (options: {
   record: Instrument;
-  reject: (reason: string) => void;
   report: (error: Error) => void;
   warning: "console" | "ignore";
   context: Context;
@@ -115,5 +114,5 @@ export type Stage = (argv: string[]) => Promise<{
   compileInstrument: CompileInstrument;
   isExcluded: (target: string) => boolean;
   predictStatus: (target: string) => Status;
-  listCause: (result: BaseFailureResult) => string[];
+  listCause: (result: FailureResult) => string[];
 }>;

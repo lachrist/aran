@@ -1,2 +1,2 @@
 state
-12775 test/built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js
+25648 test/language/eval-code/direct/async-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js

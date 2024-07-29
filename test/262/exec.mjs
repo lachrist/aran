@@ -55,9 +55,10 @@ for await (const url of scrape(new URL("test/", home))) {
           causes: ["false-negative"],
         });
       }
-    } else if (outcome.type === "failure-meta") {
-      failures.push({ target, causes: outcome.data });
-    } else if (outcome.type === "failure-base") {
+    } else if (
+      outcome.type === "failure-meta" ||
+      outcome.type === "failure-base"
+    ) {
       failures.push({
         target,
         causes: listCause({ target, metadata, outcome }),

@@ -11,6 +11,7 @@ import {
   isControlKind,
   isProgramKind,
 } from "../../../lib/index.mjs";
+import { parseList } from "../list.mjs";
 
 const {
   Set,
@@ -469,6 +470,7 @@ const compileMakeAspect =
             state,
             result,
           };
+          // console.dir(context);
           if (kind === "function" || kind === "arrow" || kind === "method") {
             assert(
               transit.type === "return" && isIdentical(transit.result, result),
@@ -490,7 +492,6 @@ const compileMakeAspect =
           }
           transit = { type: "regular" };
           state.stack.push(result);
-          // console.dir(context);
           return result;
         } else {
           assert(transit.type === "regular", context);
@@ -910,8 +911,8 @@ const compileMakeAspect =
 
 /** @type {import("../types").Stage} */
 export default async (_argv) => {
-  const exclusion = new Set(
-    parseFailureArray(
+  const exclusion = new Set([
+    ...parseFailureArray(
       [
         await readFile(
           new URL("identity.failure.txt", import.meta.url),
@@ -920,7 +921,8 @@ export default async (_argv) => {
         await readFile(new URL("parsing.failure.txt", import.meta.url), "utf8"),
       ].join("\n"),
     ).map(getFailureTarget),
-  );
+    ...parseList(await readFile(new URL("slow.txt", import.meta.url), "utf8")),
+  ]);
   const negative = parseNegative(
     await readFile(new URL("bare.negative.txt", import.meta.url), "utf8"),
   );
@@ -928,7 +930,7 @@ export default async (_argv) => {
     isExcluded: (target) => exclusion.has(target),
     predictStatus: (target) => getNegativeStatus(negative, target),
     listCause: (result) => listNegativeCause(negative, result.target),
-    compileInstrument: ({ report, reject, record, warning, context }) =>
+    compileInstrument: ({ report, record, warning, context }) =>
       setupAran(
         "basic",
         compileMakeAspect({
@@ -939,7 +941,7 @@ export default async (_argv) => {
           global_declarative_record: "builtin",
           initial: null,
           record,
-          reject,
+          report,
           context,
           warning,
         },
