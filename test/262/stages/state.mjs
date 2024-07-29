@@ -550,30 +550,54 @@ const compileMakeAspect =
           state,
         });
         if (closures.has(/** @type {any} */ (callee))) {
-          assert(transit.type === "regular", state);
-          transit = /** @type {import("./state").Transit} */ ({
-            type: "construct",
-            callee,
-            arguments: arguments_,
-          });
-          const result = intrinsics["Reflect.construct"](
-            /** @type {any} */ (callee),
-            arguments_,
+          const kind = /** @type {import("../../../lib").ClosureKind} */ (
+            closures.get(/** @type {any} */ (callee))
           );
-          const context = {
-            type: "construct@after-success",
-            transit,
-            state,
-            result,
-          };
-          // console.dir(context);
-          assert(
-            transit.type === "return" && transit.result === result,
-            context,
-          );
-          transit = { type: "regular" };
-          state.stack.push(result);
-          return result;
+          if (kind === "function") {
+            assert(transit.type === "regular", state);
+            transit = /** @type {import("./state").Transit} */ ({
+              type: "construct",
+              callee,
+              arguments: arguments_,
+            });
+            const result = intrinsics["Reflect.construct"](
+              /** @type {any} */ (callee),
+              arguments_,
+            );
+            const context = {
+              type: "construct@after-success",
+              transit,
+              state,
+              result,
+            };
+            // console.dir(context);
+            assert(
+              transit.type === "return" && transit.result === result,
+              context,
+            );
+            transit = { type: "regular" };
+            state.stack.push(result);
+            return result;
+          } else if (
+            kind === "async-function" ||
+            kind === "arrow" ||
+            kind === "async-arrow" ||
+            kind === "method" ||
+            kind === "async-method" ||
+            kind === "generator" ||
+            kind === "async-generator"
+          ) {
+            const error = /** @type {import("./state").Value} */ (
+              /** @type {unknown} */ (
+                new intrinsics.TypeError("Not a constructor")
+              )
+            );
+            assert(transit.type === "regular", context);
+            transit = { type: "throw", error };
+            throw error;
+          } else {
+            throw new UnreachableError(kind);
+          }
         } else {
           assert(transit.type === "regular", context);
           transit = { type: "external" };

@@ -1,2 +1,2 @@
 state
-4371 test/built-ins/AsyncFromSyncIteratorPrototype/return/iterator-result-unwrap-promise.js
+4404 test/built-ins/AsyncFunction/instance-construct-throws.js
