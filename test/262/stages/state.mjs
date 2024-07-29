@@ -388,7 +388,11 @@ const compileMakeAspect =
         assert(state.path === path, context);
         assert(state.stack.length === 0, context);
         if (transit.type === "completion") {
-          transit = { type: "regular" };
+          if (kind === "finally") {
+            transit = state.origin;
+          } else {
+            transit = { type: "regular" };
+          }
         } else if (transit.type === "break") {
           if (state.labeling.includes(transit.label)) {
             transit = { type: "regular" };
