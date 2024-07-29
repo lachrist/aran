@@ -71,6 +71,9 @@ export type Transit =
       result: Value;
     }
   | {
+      type: "return-unknown";
+    }
+  | {
       type: "break";
       label: Label;
     }

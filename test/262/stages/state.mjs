@@ -279,6 +279,7 @@ const compileMakeAspect =
         assert(state.kind === kind, context);
         assert(state.path === path, context);
         assert(transit.type === "regular", context);
+        state.suspension = "yield";
         if (
           state.origin.type === "apply" ||
           state.origin.type === "construct"
@@ -289,6 +290,7 @@ const compileMakeAspect =
           transit = { type: "external" };
         } else if (
           state.origin.type === "return" ||
+          state.origin.type === "return-unknown" ||
           state.origin.type === "completion" ||
           state.origin.type === "throw" ||
           state.origin.type === "break" ||
@@ -311,6 +313,8 @@ const compileMakeAspect =
         };
         // console.dir(context);
         assertNotNull(state, context);
+        assert(state.suspension === "yield", context);
+        state.suspension = "none";
         assert(transit.type === "external", context);
         transit = { type: "regular" };
       },
@@ -397,15 +401,22 @@ const compileMakeAspect =
           if (state.labeling.includes(transit.label)) {
             transit = { type: "regular" };
           }
-        } else if (transit.type === "return" || transit.type === "throw") {
+        } else if (
+          transit.type === "return" ||
+          transit.type === "throw" ||
+          transit.type === "return-unknown"
+        ) {
           if (state.origin.type === "external") {
             transit = { type: "external" };
           }
+        } else if (transit.type === "external") {
+          assert(state.suspension === "yield", context);
+          state.suspension = "none";
+          transit = { type: "return-unknown" };
         } else if (
           transit.type === "await" ||
           transit.type === "yield" ||
           transit.type === "regular" ||
-          transit.type === "external" ||
           transit.type === "apply" ||
           transit.type === "construct"
         ) {
