@@ -116,10 +116,11 @@ const compileMakeAspect =
     /**
      * @type {<X>(
      *   array: X[],
+     *   context: object,
      * ) => X}
      */
-    const pop = (array) => {
-      assert(array.length > 0, array);
+    const pop = (array, context) => {
+      assert(array.length > 0, context);
       return /** @type {any} */ (array.pop());
     };
 
@@ -143,7 +144,8 @@ const compileMakeAspect =
     const aspect = {
       // Block //
       "block@setup": (state, kind, path) => {
-        const context = { transit, state, kind, path };
+        const context = { type: "block@setup", transit, state, kind, path };
+        // console.dir(context);
         if (isClosureKind(kind)) {
           assert(
             transit.type === "apply" ||
@@ -178,7 +180,15 @@ const compileMakeAspect =
         };
       },
       "control-block@labeling": (state, kind, labels, path) => {
-        const context = { transit, state, kind, labels, path };
+        const context = {
+          type: "control-block@labeling",
+          transit,
+          state,
+          kind,
+          labels,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(state.kind === kind, context);
         assert(state.path === path, context);
@@ -191,7 +201,15 @@ const compileMakeAspect =
         }
       },
       "block@declaration": (state, kind, frame, path) => {
-        const context = { transit, state, kind, frame, path };
+        const context = {
+          type: "block@declaration",
+          transit,
+          state,
+          kind,
+          frame,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(state.kind === kind, context);
         assert(state.path === path, context);
@@ -249,7 +267,14 @@ const compileMakeAspect =
         assign(state.scope, frame);
       },
       "generator-block@suspension": (state, kind, path) => {
-        const context = { transit, state, kind, path };
+        const context = {
+          type: "generator-block@suspension",
+          transit,
+          state,
+          kind,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(state.kind === kind, context);
         assert(state.path === path, context);
@@ -277,13 +302,27 @@ const compileMakeAspect =
         }
       },
       "generator-block@resumption": (state, kind, path) => {
-        const context = { transit, state, kind, path };
+        const context = {
+          type: "generator-block@resumption",
+          transit,
+          state,
+          kind,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(transit.type === "external", context);
         transit = { type: "regular" };
       },
       "control-block@completion": (state, kind, path) => {
-        const context = { transit, state, kind, path };
+        const context = {
+          type: "control-block@completion",
+          transit,
+          state,
+          kind,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(state.kind === kind, context);
         assert(state.path === path, context);
@@ -292,9 +331,17 @@ const compileMakeAspect =
         transit = { type: "completion" };
       },
       "routine-block@completion": (state, kind, value, path) => {
-        const context = { transit, state, kind, value, path };
+        const context = {
+          type: "routine-block@completion",
+          transit,
+          state,
+          kind,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
-        assert(isIdentical(pop(state.stack), value), context);
+        assert(isIdentical(pop(state.stack, context), value), context);
         assert(state.kind === kind, context);
         assert(state.path === path, context);
         assert(transit.type === "regular", context);
@@ -302,7 +349,15 @@ const compileMakeAspect =
         return value;
       },
       "block@throwing": (state, kind, value, path) => {
-        const context = { transit, state, kind, value, path };
+        const context = {
+          type: "block@throwing",
+          transit,
+          state,
+          kind,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(state.kind === kind, context);
         assert(state.path === path, context);
@@ -326,7 +381,8 @@ const compileMakeAspect =
         return value;
       },
       "block@teardown": (state, kind, path) => {
-        const context = { transit, state, kind, path };
+        const context = { type: "block@teardown", transit, state, kind, path };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(state.kind === kind, context);
         assert(state.path === path, context);
@@ -356,13 +412,25 @@ const compileMakeAspect =
       },
       // Call //
       "apply@around": (state, callee, this_, arguments_, path) => {
-        const context = { transit, state, callee, this_, arguments_, path };
+        const context = {
+          type: "apply@around",
+          transit,
+          state,
+          callee,
+          this_,
+          arguments_,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         for (let index = arguments_.length - 1; index >= 0; index -= 1) {
-          assert(isIdentical(arguments_[index], pop(state.stack)), context);
+          assert(
+            isIdentical(arguments_[index], pop(state.stack, context)),
+            context,
+          );
         }
-        assert(isIdentical(this_, pop(state.stack)), context);
-        assert(isIdentical(callee, pop(state.stack)), context);
+        assert(isIdentical(this_, pop(state.stack, context)), context);
+        assert(isIdentical(callee, pop(state.stack, context)), context);
         if (closures.has(/** @type {any} */ (callee))) {
           const kind = /** @type {import("../../../lib").ClosureKind} */ (
             closures.get(/** @type {any} */ (callee))
@@ -400,6 +468,7 @@ const compileMakeAspect =
           }
           transit = { type: "regular" };
           state.stack.push(result);
+          // console.dir(context);
           return result;
         } else {
           assert(transit.type === "regular", context);
@@ -415,6 +484,7 @@ const compileMakeAspect =
             state.stack.push(result);
             return result;
           } catch (error) {
+            // console.dir(context);
             assert(transit.type === "external", context);
             transit = {
               type: "throw",
@@ -426,12 +496,26 @@ const compileMakeAspect =
         }
       },
       "construct@around": (state, callee, arguments_, path) => {
-        const context = { transit, state, callee, arguments_, path };
+        const context = {
+          type: "construct@around",
+          transit,
+          state,
+          callee,
+          arguments_,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         for (let index = arguments_.length - 1; index >= 0; index -= 1) {
-          assert(isIdentical(arguments_[index], pop(state.stack)), context);
+          assert(
+            isIdentical(arguments_[index], pop(state.stack, context)),
+            context,
+          );
         }
-        assert(isIdentical(callee, pop(state.stack)), { callee, state });
+        assert(isIdentical(callee, pop(state.stack, context)), {
+          callee,
+          state,
+        });
         if (closures.has(/** @type {any} */ (callee))) {
           assert(transit.type === "regular", state);
           transit = /** @type {import("./state").Transit} */ ({
@@ -447,6 +531,7 @@ const compileMakeAspect =
             transit.type === "return" && transit.result === result,
             context,
           );
+          // console.dir(context);
           return result;
         } else {
           try {
@@ -459,6 +544,7 @@ const compileMakeAspect =
             assert(transit.type === "external", context);
             transit = { type: "regular" };
             state.stack.push(result);
+            // console.dir(context);
             return result;
           } catch (error) {
             assert(transit.type === "external", context);
@@ -467,13 +553,15 @@ const compileMakeAspect =
               // eslint-disable-next-line object-shorthand
               error: /** @type {import("./state").Value} */ (error),
             };
+            // console.dir(context);
             throw error;
           }
         }
       },
       // Abrupt //
       "break@before": (state, label, path) => {
-        const context = { transit, state, label, path };
+        const context = { type: "break@before", transit, state, label, path };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(transit.type === "regular", context);
         transit = {
@@ -483,13 +571,28 @@ const compileMakeAspect =
       },
       // Produce //
       "primitive@after": (state, value, path) => {
-        const context = { transit, state, value, path };
+        const context = {
+          type: "primitive@after",
+          transit,
+          state,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         state.stack.push(value);
         return value;
       },
       "intrinsic@after": (state, name, value, path) => {
-        const context = { transit, state, name, value, path };
+        const context = {
+          type: "intrinsic@after",
+          transit,
+          state,
+          name,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(
           name in intrinsics &&
@@ -503,13 +606,30 @@ const compileMakeAspect =
         return value;
       },
       "import@after": (state, specifier, source, value, path) => {
-        const context = { transit, state, specifier, source, value, path };
+        const context = {
+          type: "import@after",
+          transit,
+          state,
+          specifier,
+          source,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         state.stack.push(value);
         return value;
       },
       "read@after": (state, variable, value, path) => {
-        const context = { transit, state, variable, value, path };
+        const context = {
+          type: "read@after",
+          transit,
+          state,
+          variable,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         /** @type {import("./state").State | null} */
         let current = state;
@@ -527,7 +647,15 @@ const compileMakeAspect =
         throw new AssertionError(context);
       },
       "closure@after": (state, kind, value, path) => {
-        const context = { transit, state, kind, value, path };
+        const context = {
+          type: "closure@after",
+          transit,
+          state,
+          kind,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(!closures.has(value), context);
         closures.set(value, kind);
@@ -536,15 +664,31 @@ const compileMakeAspect =
       },
       // Consume //
       "test@before": (state, kind, value, path) => {
-        const context = { transit, state, kind, value, path };
+        const context = {
+          type: "test@before",
+          transit,
+          state,
+          kind,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
-        assert(isIdentical(pop(state.stack), value), context);
+        assert(isIdentical(pop(state.stack, context), value), context);
         return !!value;
       },
       "write@before": (state, variable, value, path) => {
-        const context = { transit, state, variable, value, path };
+        const context = {
+          type: "write@before",
+          transit,
+          state,
+          variable,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
-        assert(isIdentical(pop(state.stack), value), context);
+        assert(isIdentical(pop(state.stack, context), value), context);
         /** @type {import("./state").State | null} */
         let current = state;
         while (current !== null) {
@@ -557,22 +701,39 @@ const compileMakeAspect =
         throw new AssertionError(context);
       },
       "export@before": (state, specifier, value, path) => {
-        const context = { transit, state, specifier, value, path };
+        const context = {
+          type: "export@before",
+          transit,
+          state,
+          specifier,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
-        assert(isIdentical(pop(state.stack), value), context);
+        assert(isIdentical(pop(state.stack, context), value), context);
         return value;
       },
       "drop@before": (state, value, path) => {
-        const context = { transit, state, value, path };
+        const context = { type: "drop@before", transit, state, value, path };
+        // console.dir(context);
         assertNotNull(state, context);
-        assert(isIdentical(pop(state.stack), value), context);
+        assert(isIdentical(pop(state.stack, context), value), context);
         return value;
       },
       // Jump //
       "eval@before": (state, reboot, value, path) => {
-        const context = { transit, state, reboot, value, path };
+        const context = {
+          type: "eval@before",
+          transit,
+          state,
+          reboot,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
-        assert(isIdentical(pop(state.stack), value), context);
+        assert(isIdentical(pop(state.stack, context), value), context);
         assert(state.suspension === "none", context);
         state.suspension = "eval";
         if (typeof value === "string") {
@@ -584,7 +745,8 @@ const compileMakeAspect =
         }
       },
       "eval@after": (state, value, path) => {
-        const context = { transit, state, value, path };
+        const context = { type: "eval@after", transit, state, value, path };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(transit.type === "external", context);
         transit = { type: "regular" };
@@ -594,9 +756,10 @@ const compileMakeAspect =
         return value;
       },
       "await@before": (state, value, path) => {
-        const context = { transit, state, value, path };
+        const context = { type: "await@before", transit, state, value, path };
+        // console.dir(context);
         assertNotNull(state, context);
-        assert(isIdentical(pop(state.stack), value), context);
+        assert(isIdentical(pop(state.stack, context), value), context);
         assert(transit.type === "regular", context);
         let current = state;
         while (isControlKind(current.kind)) {
@@ -615,7 +778,8 @@ const compileMakeAspect =
         return value;
       },
       "await@after": (state, value, path) => {
-        const context = { transit, state, value, path };
+        const context = { type: "await@after", transit, state, value, path };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(transit.type === "external", context);
         transit = { type: "regular" };
@@ -625,9 +789,17 @@ const compileMakeAspect =
         return value;
       },
       "yield@before": (state, delegate, value, path) => {
-        const context = { transit, state, delegate, value, path };
+        const context = {
+          type: "yield@before",
+          transit,
+          state,
+          delegate,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
-        assert(isIdentical(pop(state.stack), value), context);
+        assert(isIdentical(pop(state.stack, context), value), context);
         assert(transit.type === "regular", context);
         transit = { type: "external" };
         assert(state.suspension === "none", context);
@@ -635,7 +807,15 @@ const compileMakeAspect =
         return value;
       },
       "yield@after": (state, delegate, value, path) => {
-        const context = { transit, state, delegate, value, path };
+        const context = {
+          type: "yield@after",
+          transit,
+          state,
+          delegate,
+          value,
+          path,
+        };
+        // console.dir(context);
         assertNotNull(state, context);
         assert(transit.type === "external", context);
         transit = { type: "regular" };
