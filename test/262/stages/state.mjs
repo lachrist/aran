@@ -487,8 +487,13 @@ const compileMakeAspect =
                 transit.type === "throw",
               context,
             );
-          } else if (kind === "generator" || kind === "async-generator") {
+          } else if (kind === "generator") {
             assert(transit.type === "yield", context);
+          } else if (kind === "async-generator") {
+            assert(
+              transit.type === "yield" || transit.type === "throw",
+              context,
+            );
           } else {
             throw new UnreachableError(kind);
           }
