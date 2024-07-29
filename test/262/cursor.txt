@@ -1,2 +1,2 @@
 state
-67 test/annexB/built-ins/RegExp/prototype/Symbol.split/toint32-limit-recompiles-source.js
+1059 test/annexB/language/statements/for-await-of/iterator-close-return-emulates-undefined-throws-when-called.js
