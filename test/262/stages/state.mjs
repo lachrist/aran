@@ -447,6 +447,12 @@ const compileMakeAspect =
             this_,
             arguments_,
           );
+          const context = {
+            type: "apply@after-success",
+            transit,
+            state,
+            result,
+          };
           if (kind === "function" || kind === "arrow" || kind === "method") {
             assert(
               transit.type === "return" && isIdentical(transit.result, result),
@@ -479,11 +485,23 @@ const compileMakeAspect =
               this_,
               arguments_,
             );
+            const context = {
+              type: "apply@after-success",
+              transit,
+              state,
+              result,
+            };
             assert(transit.type === "external", context);
             transit = { type: "regular" };
             state.stack.push(result);
             return result;
           } catch (error) {
+            const context = {
+              type: "apply@after-failure",
+              transit,
+              state,
+              error,
+            };
             // console.dir(context);
             assert(transit.type === "external", context);
             transit = {
@@ -497,7 +515,7 @@ const compileMakeAspect =
       },
       "construct@around": (state, callee, arguments_, path) => {
         const context = {
-          type: "construct@around",
+          type: "construct@before",
           transit,
           state,
           callee,
@@ -527,33 +545,51 @@ const compileMakeAspect =
             /** @type {any} */ (callee),
             arguments_,
           );
+          const context = {
+            type: "construct@after-success",
+            transit,
+            state,
+            result,
+          };
+          // console.dir(context);
           assert(
             transit.type === "return" && transit.result === result,
             context,
           );
-          // console.dir(context);
           return result;
         } else {
+          assert(transit.type === "regular", context);
+          transit = { type: "external" };
           try {
-            assert(transit.type === "regular", context);
-            transit = { type: "external" };
             const result = intrinsics["Reflect.construct"](
               /** @type {any} */ (callee),
               arguments_,
             );
+            const context = {
+              type: "construct@after-success",
+              transit,
+              state,
+              result,
+            };
+            // console.dir(context);
             assert(transit.type === "external", context);
             transit = { type: "regular" };
             state.stack.push(result);
-            // console.dir(context);
             return result;
           } catch (error) {
+            const context = {
+              type: "construct@after-failure",
+              transit,
+              state,
+              error,
+            };
+            // console.dir(context);
             assert(transit.type === "external", context);
             transit = {
               type: "throw",
               // eslint-disable-next-line object-shorthand
               error: /** @type {import("./state").Value} */ (error),
             };
-            // console.dir(context);
             throw error;
           }
         }
