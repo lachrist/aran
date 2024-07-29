@@ -77,10 +77,11 @@ export const createRealm = ({
       }
     },
     global: runInContext("this;", context),
+    /** @returns {object} */
     // eslint-disable-next-line local/no-function
-    get isHTMLDDA() {
-      reject("isHTMLDDA");
-      throw new AranTestError("isHTMLDDA");
+    get IsHTMLDDA() {
+      reject("IsHTMLDDA");
+      throw new AranTestError("IsHTMLDDA");
     },
     /** @type {import("./types").Agent} */
     // eslint-disable-next-line local/no-function

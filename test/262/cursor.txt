@@ -1,2 +1,2 @@
 state
-1059 test/annexB/language/statements/for-await-of/iterator-close-return-emulates-undefined-throws-when-called.js
+1175 test/built-ins/Array/fromAsync/async-iterable-async-mapped-awaits-once.js
