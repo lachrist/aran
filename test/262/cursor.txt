@@ -1,2 +1,2 @@
 state
-30 test/annexB/built-ins/RegExp/RegExp-control-escape-russian-letter.js
+35 test/annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js
