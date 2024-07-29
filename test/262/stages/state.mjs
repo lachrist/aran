@@ -289,6 +289,7 @@ const compileMakeAspect =
       },
       "routine-block@completion": (state, kind, value, path) => {
         const context = { transit, state, kind, value, path };
+        assert(isIdentical(pop(state.stack), value), context);
         assert(state.kind === kind, context);
         assert(state.path === path, context);
         assert(transit.type === "regular", context);
