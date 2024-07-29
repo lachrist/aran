@@ -182,7 +182,13 @@ const compileMakeAspect =
         assertNotNull(state, context);
         assert(state.kind === kind, context);
         assert(state.path === path, context);
-        state.labeling.push(...labels);
+        // Labels comes from the target realm.
+        // So it is subject to prototype polluation.
+        // So `state.labeling.push(...labels)` is unsafe
+        const { length } = labels;
+        for (let index = 0; index < length; index += 1) {
+          state.labeling.push(labels[index]);
+        }
       },
       "block@declaration": (state, kind, frame, path) => {
         const context = { transit, state, kind, frame, path };
