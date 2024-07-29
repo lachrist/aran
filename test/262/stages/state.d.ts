@@ -48,7 +48,7 @@ export type Frame = {
   record: GenericFrame<Value>;
 };
 
-export type Scope = { [key in Variable]: Value };
+export type Scope = { [key in Variable | Parameter]?: Value };
 
 export type Transit =
   | {
@@ -92,14 +92,13 @@ export type Transit =
 
 export type Suspension = "none" | "eval" | "yield" | "await";
 
-export type Caller = "internal" | "external";
-
-export type State = {
-  kind: BlockKind | "root";
+export type State = null | {
+  parent: State;
+  kind: BlockKind;
   path: Path;
-  labels: Label[];
-  stack: Value[];
-  scope: Scope;
   origin: Transit;
+  labeling: Label[];
+  scope: Scope;
+  stack: Value[];
   suspension: Suspension;
 };
