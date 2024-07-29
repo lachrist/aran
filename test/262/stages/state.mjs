@@ -556,6 +556,8 @@ const compileMakeAspect =
             transit.type === "return" && transit.result === result,
             context,
           );
+          transit = { type: "regular" };
+          state.stack.push(result);
           return result;
         } else {
           assert(transit.type === "regular", context);
