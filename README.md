@@ -6,6 +6,9 @@ Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting
 JavaScript code. Aran was designed as a generic infra-structure for building
 various development-time dynamic program analyses such as: objects and functions
 profiling, debugging, control-flow tracing, taint analysis and concolic testing.
+Aran is a JavaScript library without any dependencies that only export pure
+instrumentation functions. As such, additional work is required to actually
+conduct program analyses.
 
 **Disclaimer** Aran started as an academic research project, and is used at
 [SOFT lab](http://soft.vub.ac.be/soft/) to support publications and run
@@ -24,8 +27,8 @@ as any other npm module with: `npm install aran`.
 Beside performance overhead, Aran has some known issues that may cause
 instrumented programs to no behave as their pre-instrumented version.
 
-- [Corrupt error stack]("./doc/issues/corrupt-error-stack.md")
-- [Corrupt function string representation]("./doc/issues/corrupt-function-string-representation.md")
+- [Corrupt error stack](./doc/issues/corrupt-error-stack.md)
+- [Corrupt function string representation](./doc/issues/corrupt-function-string-representation.md)
 - [Duplicate super prototype access](./doc/issues/duplicate-super-prototype-access.md)
 - [Early module declaration](./doc/issues/early-module-declaration.md)
 - [Early script declaration](./doc/issues/early-script-declaration.md)
@@ -37,6 +40,11 @@ instrumented programs to no behave as their pre-instrumented version.
 - [Weave membrane miss deep eval](./doc/issues/weave-membrane-miss-deep-eval.md)
 - [Wrong realm for default prototype](./doc/issues/wrong-realm-for-default-prototype.md)
 - [Wrong this parameter in with in eval](./doc/issues/wrong-this-parameter-in-with-in-eval.md)
+
+The issue that is most susceptible to cause a program to behave differentially
+in practice is
+[early script declaration](./doc/issues/early-script-declaration.md). Other
+issues require fairly convoluted code to be triggered.
 
 ## Demonstrator
 
