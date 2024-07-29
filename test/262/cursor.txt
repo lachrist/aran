@@ -1,2 +1,2 @@
 state
-25684 test/language/eval-code/direct/async-gen-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js
+25864 test/language/eval-code/direct/non-string-object.js

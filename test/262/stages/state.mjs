@@ -298,7 +298,8 @@ const compileMakeAspect =
           state.origin.type === "break" ||
           state.origin.type === "regular" ||
           state.origin.type === "await" ||
-          state.origin.type === "yield"
+          state.origin.type === "yield" ||
+          state.origin.type === "eval"
         ) {
           throw new AssertionError(context);
         } else {
@@ -420,7 +421,8 @@ const compileMakeAspect =
           transit.type === "yield" ||
           transit.type === "regular" ||
           transit.type === "apply" ||
-          transit.type === "construct"
+          transit.type === "construct" ||
+          transit.type === "eval"
         ) {
           throw new AssertionError(context);
         } else {
@@ -820,13 +822,14 @@ const compileMakeAspect =
         // console.dir(context);
         assertNotNull(state, context);
         assert(isIdentical(pop(state.stack, context), value), context);
-        assert(state.suspension === "none", context);
-        state.suspension = "eval";
         if (typeof value === "string") {
+          assert(state.suspension === "none", context);
+          state.suspension = "eval";
           assert(transit.type === "regular", context);
           transit = { type: "external" };
           return instrument(value, path, reboot);
         } else {
+          transit = { type: "eval" };
           return value;
         }
       },
@@ -834,10 +837,15 @@ const compileMakeAspect =
         const context = { type: "eval@after", transit, state, value, path };
         // console.dir(context);
         assertNotNull(state, context);
-        assert(transit.type === "external", context);
+        if (transit.type === "external") {
+          assert(state.suspension === "eval", context);
+          state.suspension = "none";
+        } else if (transit.type === "eval") {
+          // noop //
+        } else {
+          throw new AssertionError(context);
+        }
         transit = { type: "regular" };
-        assert(state.suspension === "eval", context);
-        state.suspension = "none";
         state.stack.push(value);
         return value;
       },

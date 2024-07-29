@@ -58,6 +58,9 @@ export type Transit =
       type: "external";
     }
   | {
+      type: "eval";
+    }
+  | {
       type: "completion";
     }
   | {
