@@ -482,7 +482,9 @@ const compileMakeAspect =
             kind === "async-method"
           ) {
             assert(
-              transit.type === "await" || transit.type === "return",
+              transit.type === "await" ||
+                transit.type === "return" ||
+                transit.type === "throw",
               context,
             );
           } else if (kind === "generator" || kind === "async-generator") {
