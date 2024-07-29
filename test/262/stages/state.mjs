@@ -156,9 +156,10 @@ const compileMakeAspect =
         } else if (isControlKind(kind)) {
           assert(
             transit.type === "regular" ||
-              (transit.type === "throw" &&
-                (kind === "catch" || kind === "finally")) ||
-              (transit.type === "break" && kind === "finally"),
+              (transit.type === "throw" && kind === "catch") ||
+              (transit.type === "throw" && kind === "finally") ||
+              (transit.type === "break" && kind === "finally") ||
+              (transit.type === "return-unknown" && kind === "finally"),
             context,
           );
         } else if (isProgramKind(kind)) {

@@ -1,2 +1,2 @@
 state
-4404 test/built-ins/AsyncFunction/instance-construct-throws.js
+4460 test/built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-try-finally-return.js
