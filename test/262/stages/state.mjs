@@ -513,7 +513,7 @@ const compileMakeAspect =
               isIdentical(/** @type {any} */ (current.scope)[variable], value),
               context,
             );
-            current.stack.push(value);
+            state.stack.push(value);
             return value;
           }
           current = current.parent;

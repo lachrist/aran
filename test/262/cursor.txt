@@ -1,2 +1,2 @@
 state
-1175 test/built-ins/Array/fromAsync/async-iterable-async-mapped-awaits-once.js
+5 test/annexB/built-ins/Date/prototype/getYear/not-a-constructor.js
