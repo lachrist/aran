@@ -1,2 +1,2 @@
-bare weave builtin standard
-552 test/annexB/language/eval-code/direct/script-decl-lex-no-collision.js
+bare basic builtin standard
+0
