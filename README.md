@@ -1,14 +1,14 @@
 # Aran <img src="img/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
 
-**Version in the range 4.0.x should be considered early access**
+**Versions in the range 4.0.x should be considered in early access**
 
 Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting
 JavaScript code. Aran was designed as a generic infra-structure for building
 various development-time dynamic program analyses such as: objects and functions
 profiling, debugging, control-flow tracing, taint analysis and concolic testing.
-Aran is a JavaScript library without any dependencies that only export pure code
-generation functions. As such, additional work is required to actually conduct
-program analyses.
+Aran is a JavaScript library without any dependencies that only export functions
+that manipulates [estree](https://github.com/estree/estree). Hence, additional
+work is required to actually conduct program analyses.
 
 **Disclaimer** Aran started as an academic research project, and is used at
 [SOFT lab](http://soft.vub.ac.be/soft/) to support publications and run
@@ -20,7 +20,20 @@ even the increase size of the instrumented code may cause issues.
 ## Getting Started
 
 Aran is a [npm module](https://www.npmjs.com/package/aran) that can be installed
-as any other npm module with: `npm install aran`.
+as any other npm module with: `npm install aran`. It exports two main functions:
+
+- `generateSetup`: generates an [estree](https://github.com/estree/estree) that
+  should be executed before any instrumented code.
+- `instrument`: instruments an [estree](https://github.com/estree/estree) and
+  expects the advice to be defined as a global variable.
+
+## API
+
+[typedoc](https://lachrist.github.io/aran/page/typedoc/index.html)
+
+## Live Demo
+
+[live-demo](https://lachrist.github.io/aran/page/demo/index.html)
 
 ## Known Issues
 
@@ -41,14 +54,10 @@ instrumented programs to no behave as their pre-instrumented version.
 - [Wrong realm for default prototype](./doc/issues/wrong-realm-for-default-prototype.md)
 - [Wrong this parameter in with in eval](./doc/issues/wrong-this-parameter-in-with-in-eval.md)
 
-The issue that is most susceptible to cause a program to behave differentially
-in practice is
+In practice, the issue that is most susceptible to cause a program to behave
+differentially is
 [early script declaration](./doc/issues/early-script-declaration.md). Other
 issues require fairly convoluted code to be triggered.
-
-## Demonstrator
-
-[https://lachrist.github.io/aran.html](https://lachrist.github.io/aran.html)
 
 ## Acknowledgments
 
