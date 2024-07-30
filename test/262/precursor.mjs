@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { AranExecError } from "./error.mjs";
 import { getResultPath, isResultArray } from "./result.mjs";
+import { unwrapSettleArray } from "./util.mjs";
 
 const { JSON, Set, URL, Promise } = globalThis;
 
@@ -25,8 +26,8 @@ const loadPrecursorEntry = async (stage) => {
  *   stages: string[]
  * ) => Promise<[Set<string>, string][]>}
  */
-export const loadPrecursor = (stages) =>
-  Promise.all(stages.map(loadPrecursorEntry));
+export const loadPrecursor = async (stages) =>
+  unwrapSettleArray(await Promise.allSettled(stages.map(loadPrecursorEntry)));
 
 /**
  * @type {(

@@ -1,2 +1,2 @@
-identity
-36 test/annexB/built-ins/RegExp/RegExp-leading-escape.js
+bare weave builtin standard
+1 test/annexB/built-ins/Date/prototype/getYear/B.2.4.js

@@ -1,21 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { matchSelection, parseSelection } from "./selection.mjs";
+import { unwrapSettleArray } from "./util.mjs";
 
 const { URL, Promise } = globalThis;
-
-/**
- * @type {(
- *   entry: [string, string],
- * ) => import("./tagging").TaggingEntry}
- */
-const parseTaggingEntry = ([tag, content]) => [parseSelection(content), tag];
-
-/**
- * @type {(
- *   entries: [string, string][],
- * ) => import("./tagging").Tagging}
- */
-export const parseTagging = (entries) => entries.map(parseTaggingEntry);
 
 /**
  * @type {(
@@ -35,18 +22,20 @@ export const listTag = (tagging, target) => {
 
 /**
  * @type {(
+ *   tag: string,
+ * ) => Promise<import("./tagging").TaggingEntry>}
+ */
+const loadTaggingEntry = async (tag) => [
+  parseSelection(
+    await readFile(new URL(`./tagging/${tag}.txt`, import.meta.url), "utf8"),
+  ),
+  tag,
+];
+
+/**
+ * @type {(
  *   tags: string[],
  * ) => Promise<import("./tagging").Tagging>}
  */
 export const loadTagging = async (tags) =>
-  parseTagging(
-    await Promise.all(
-      tags.map(async (tag) => [
-        tag,
-        await readFile(
-          new URL(`./tagging/${tag}.txt`, import.meta.url),
-          "utf8",
-        ),
-      ]),
-    ),
-  );
+  unwrapSettleArray(await Promise.allSettled(tags.map(loadTaggingEntry)));

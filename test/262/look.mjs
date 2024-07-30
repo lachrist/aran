@@ -6,9 +6,9 @@ import { pathToFileURL } from "node:url";
 import { argv } from "node:process";
 import { parseCursor } from "./cursor.mjs";
 import { scrape } from "./scrape.mjs";
-import { inspectError } from "./util.mjs";
 import { readFile } from "node:fs/promises";
 import { home, toRelative, toTarget } from "./home.mjs";
+import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
 
 const { console, process, URL, Error, JSON } = globalThis;
 
@@ -64,8 +64,9 @@ const { compileInstrument } =
 //   'test262/test/language/expressions/dynamic-import/syntax/valid/[object Promise]'
 process.on("uncaughtException", (error, _origin) => {
   console.log(error);
-  const { name, message } = inspectError(error);
-  console.log(`Uncaught >> ${name}: ${message}`);
+  console.log(
+    `Uncaught >> ${inspectErrorName(error)}: ${inspectErrorMessage(error)}`,
+  );
 });
 
 await cleanup(codebase);

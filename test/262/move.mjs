@@ -22,8 +22,6 @@ const stage = await /** @type {{default: import("./stage").Stage}} */ (
   await import(`./stages/${cursor.stage}.mjs`)
 ).default(cursor.argv);
 
-readFile(new URL(`./stages/`, import.meta.url), "utf8");
-
 const precursor = await loadPrecursor(stage.precursor);
 
 const negative = await loadTagging(stage.negative);

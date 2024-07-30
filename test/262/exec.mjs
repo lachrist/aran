@@ -91,7 +91,10 @@ for await (const url of scrape(new URL("test/", home))) {
 }
 
 await writeFile(
-  new URL(`stages/${[stage, ...stage_argv].join("-")}.json`, import.meta.url),
+  new URL(
+    `stages/${[stage_name, ...stage_argv].join("-")}.json`,
+    import.meta.url,
+  ),
   JSON.stringify(results, null, 2),
   "utf8",
 );

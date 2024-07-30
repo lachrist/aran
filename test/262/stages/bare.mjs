@@ -141,7 +141,7 @@ export default (argv) =>
     negative: [
       "arguments-two-way-binding",
       "function-dynamic-property",
-      "negative-bare-duplocate-super-prototype-access",
+      "negative-bare-duplicate-super-prototype-access",
       "negative-bare-early-module-declaration",
       "negative-bare-missing-iterable-return-in-pattern",
       "negative-bare-wrong-realm-for-default-prototype",

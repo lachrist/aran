@@ -1,3 +1,5 @@
+import { AranTypeError } from "./error.mjs";
+
 const { Error, String, Map, undefined } = globalThis;
 
 /** @type {(value: unknown) => string} */
@@ -10,6 +12,33 @@ export const show = (value) => {
     return String(value);
   }
 };
+
+/**
+ * @type {<X>(
+ *   results: PromiseSettledResult<X>[],
+ * ) => X[]}
+ */
+export const unwrapSettleArray = (results) => {
+  const values = [];
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      values.push(result.value);
+    } else if (result.status === "rejected") {
+      throw result.reason;
+    } else {
+      throw new AranTypeError(result);
+    }
+  }
+  return values;
+};
+
+/**
+ * @type {<X, Y>(
+ *   x: X,
+ *   y: Y,
+ * ) => [X, Y]}
+ */
+export const pairup = (x, y) => [x, y];
 
 /**
  * @type {<X>(
