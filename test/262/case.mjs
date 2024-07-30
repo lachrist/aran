@@ -113,7 +113,7 @@ export const runTestCaseInner = async ({
   const { done, print } = asynchronous
     ? makeAsynchronousTermination()
     : termination;
-  const context = createRealm({
+  const { context, instrument } = createRealm({
     counter: { value: 0 },
     report,
     record,
@@ -121,7 +121,6 @@ export const runTestCaseInner = async ({
     print,
     compileInstrument,
   });
-  const { instrument } = context.$262;
   for (const url of includes) {
     const source = await fetchHarness(instrument, url);
     runInContext(source.content, context, {

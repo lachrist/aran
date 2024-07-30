@@ -22,6 +22,12 @@ even the increase size of the instrumented code may cause issues.
 Aran is a [npm module](https://www.npmjs.com/package/aran) that can be installed
 as any other npm module with: `npm install aran`.
 
+## API
+
+### `aran.generateSetup([config])`
+
+### `aran.instrument(estree, [config])`
+
 ## Known Issues
 
 Beside performance overhead, Aran has some known issues that may cause

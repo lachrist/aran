@@ -1,2 +1,2 @@
-bare weave builtin standard
-1 test/annexB/built-ins/Date/prototype/getYear/B.2.4.js
+bare patch builtin standard
+255 test/annexB/language/eval-code/direct/func-block-decl-eval-func-init.js

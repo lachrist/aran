@@ -21,10 +21,9 @@ export const AranRealmError = class AranRealmError extends Error {
  *     print: (message: string) => void,
  *     compileInstrument: import("./stage").CompileInstrument,
  *   },
- * ) => import("node:vm").Context & {
- *   $262: import("./stage").$262 & {
- *     instrument: import("./stage").Instrument,
- *   },
+ * ) => {
+ *   context: import("node:vm").Context,
+ *   instrument: import("./stage").Instrument,
  * }}
  */
 export const createRealm = ({
@@ -36,17 +35,10 @@ export const createRealm = ({
   compileInstrument,
 }) => {
   const context = createContext({ __proto__: null });
-  const instrument = compileInstrument({
-    record,
-    report,
-    warning,
-    context,
-  });
   /** @type {import("./stage").$262} */
   const $262 = {
     // @ts-ignore
     __proto__: null,
-    instrument,
     createRealm: () =>
       createRealm({
         counter,
@@ -55,7 +47,7 @@ export const createRealm = ({
         warning,
         print,
         compileInstrument,
-      }).$262,
+      }).context.$262,
     detachArrayBuffer: () => {
       const error = new AranRealmError("detachArrayBuffer");
       report(error);
@@ -66,6 +58,7 @@ export const createRealm = ({
     // linker because dynamic import is pointless.
     evalScript: (code) => {
       counter.value += 1;
+      // eslint-disable-next-line no-use-before-define
       const { url, content } = instrument({
         kind: "script",
         url: new URL(`script:///${counter.value}`),
@@ -120,5 +113,11 @@ export const createRealm = ({
     writable: true,
     value: print,
   });
-  return /** @type {any} */ (context);
+  const instrument = compileInstrument({
+    record,
+    report,
+    warning,
+    context,
+  });
+  return { context, instrument };
 };
