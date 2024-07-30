@@ -1,16 +1,9 @@
 /* eslint-disable no-use-before-define */
 
-import { readFile } from "node:fs/promises";
-import {
-  getNegativeStatus,
-  listNegativeCause,
-  parseNegative,
-} from "../negative.mjs";
-import { getFailureTarget, parseFailureArray } from "../failure.mjs";
 import { setupAran } from "../aran/index.mjs";
 import { AranExecError, AranTypeError } from "../error.mjs";
 
-const { Set, URL } = globalThis;
+const { Promise } = globalThis;
 
 /** @type {["basic", "weave", "patch"]} */
 const MEMBRANE = ["basic", "weave", "patch"];
@@ -140,27 +133,21 @@ const compileMakeAspect =
   };
 
 /**
- * @type {import("../types").Stage}
+ * @type {import("../stage").Stage}
  */
-export default async (argv) => {
-  const exclusion = new Set(
-    parseFailureArray(
-      [
-        await readFile(
-          new URL("identity.failure.txt", import.meta.url),
-          "utf8",
-        ),
-        await readFile(new URL("parsing.failure.txt", import.meta.url), "utf8"),
-      ].join("\n"),
-    ).map(getFailureTarget),
-  );
-  const negative = parseNegative(
-    await readFile(new URL("bare.negative.txt", import.meta.url), "utf8"),
-  );
-  return {
-    isExcluded: (target) => exclusion.has(target),
-    predictStatus: (target) => getNegativeStatus(negative, target),
-    listCause: (result) => listNegativeCause(negative, result.target),
+export default (argv) =>
+  Promise.resolve({
+    precursor: ["identity", "parsing"],
+    negative: [
+      "arguments-two-way-binding",
+      "function-dynamic-property",
+      "negative-bare-duplocate-super-prototype-access",
+      "negative-bare-early-module-declaration",
+      "negative-bare-missing-iterable-return-in-pattern",
+      "negative-bare-wrong-realm-for-default-prototype",
+    ],
+    exclude: ["function-string-representation"],
+    listLateNegative: (_target, _metadata, _error) => [],
     compileInstrument: ({ report, record, warning, context }) => {
       const { membrane, global_declarative_record, weaving } = parseArgv(argv);
       return setupAran(membrane, compileMakeAspect(weaving), {
@@ -172,5 +159,4 @@ export default async (argv) => {
         warning,
       });
     },
-  };
-};
+  });

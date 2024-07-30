@@ -4,12 +4,12 @@ import { writeFile } from "node:fs/promises";
 import { scrape } from "./scrape.mjs";
 import { argv } from "node:process";
 import { isTestCase, runTest } from "./test.mjs";
-import { inspectError } from "./util.mjs";
-import { stringifyFailureArray } from "./failure.mjs";
 import { home, toTarget } from "./home.mjs";
-import { AranTypeError } from "./error.mjs";
+import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
+import { listTag, loadTagging } from "./tagging.mjs";
+import { listPrecursor, loadPrecursor } from "./precursor.mjs";
 
-const { Error, console, process, URL } = globalThis;
+const { Error, console, process, URL, JSON } = globalThis;
 
 if (argv.length < 3) {
   throw new Error(
@@ -17,20 +17,24 @@ if (argv.length < 3) {
   );
 }
 
-const [_node, _main, stage, ...stage_argv] = argv;
+const [_node, _main, stage_name, ...stage_argv] = argv;
 
-const { compileInstrument, predictStatus, isExcluded, listCause } =
-  await /** @type {{default: import("./types").Stage}} */ (
-    await import(`./stages/${stage}.mjs`)
-  ).default(stage_argv);
+const stage = await /** @type {{default: import("./stage").Stage}} */ (
+  await import(`./stages/${stage_name}.mjs`)
+).default(stage_argv);
 
 process.on("uncaughtException", (error, _origin) => {
-  const { name, message } = inspectError(error);
-  console.log(`${name}: ${message}`);
+  console.log(`${inspectErrorName(error)}: ${inspectErrorMessage(error)}`);
 });
 
-/** @type {import("./types").Failure[]} */
-const failures = [];
+const precursor = await loadPrecursor(stage.precursor);
+
+const exclude = await loadTagging(stage.exclude);
+
+const negative = await loadTagging(stage.negative);
+
+/** @type {import("./result").Result[]} */
+const results = [];
 
 let index = 0;
 
@@ -39,42 +43,55 @@ for await (const url of scrape(new URL("test/", home))) {
     console.dir(index);
   }
   const target = toTarget(url);
-  if (isTestCase(target) && !isExcluded(target)) {
-    const { metadata, outcome } = await runTest({
-      target,
-      home,
-      record: (source) => source,
-      warning: "ignore",
-      compileInstrument,
-    });
-    const status = predictStatus(target);
-    if (outcome.type === "success") {
-      if (status === "negative") {
-        failures.push({
+  if (isTestCase(target)) {
+    if (listPrecursor(precursor, target).length === 0) {
+      const tags = listTag(exclude, target);
+      if (tags.length === 0) {
+        const { metadata, error } = await runTest({
           target,
-          causes: ["false-negative"],
+          home,
+          record: (source) => source,
+          warning: "ignore",
+          compileInstrument: stage.compileInstrument,
+        });
+        const tags = [
+          ...listTag(negative, target),
+          ...(error === null
+            ? []
+            : stage.listLateNegative(target, metadata, error)),
+        ];
+        if (error !== null) {
+          results.push({
+            type: "include",
+            path: target,
+            expect: tags,
+            actual: {
+              ...error,
+              stack: null,
+            },
+          });
+        } else if (tags.length > 0) {
+          results.push({
+            type: "include",
+            path: target,
+            expect: tags,
+            actual: null,
+          });
+        }
+      } else {
+        results.push({
+          type: "exclude",
+          path: target,
+          tags,
         });
       }
-    } else if (
-      outcome.type === "failure-meta" ||
-      outcome.type === "failure-base"
-    ) {
-      failures.push({
-        target,
-        causes: listCause({ target, metadata, outcome }),
-      });
-    } else {
-      throw new AranTypeError(outcome);
     }
   }
   index += 1;
 }
 
 await writeFile(
-  new URL(
-    `stages/${[stage, ...stage_argv].join("-")}.failure.txt`,
-    import.meta.url,
-  ),
-  stringifyFailureArray(failures),
+  new URL(`stages/${[stage, ...stage_argv].join("-")}.json`, import.meta.url),
+  JSON.stringify(results, null, 2),
   "utf8",
 );

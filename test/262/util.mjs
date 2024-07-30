@@ -12,53 +12,6 @@ export const show = (value) => {
 };
 
 /**
- * @type {(error: unknown) => string}
- */
-export const inspectErrorName = (error) => {
-  try {
-    return show(/** @type {Error} */ (error).constructor.name);
-  } catch {
-    return "[missing]";
-  }
-};
-
-/**
- * @type {(error: unknown) => string}
- */
-export const inspectErrorMessage = (error) => {
-  try {
-    return show(/** @type {Error} */ (error).message);
-  } catch {
-    return "[missing]";
-  }
-};
-
-/**
- * @type {(error: unknown) => { stack: string} | {}}
- */
-export const inspectErrorStack = (error) => {
-  try {
-    const { stack } = /** @type {Error} */ (error);
-    return stack == null ? {} : { stack: show(stack) };
-  } catch {
-    return {};
-  }
-};
-
-/**
- * @type {(error: unknown) => {
- *   name: string,
- *   message: string,
- *   stack?: string,
- * }}
- */
-export const inspectError = (error) => ({
-  name: inspectErrorName(error),
-  message: inspectErrorMessage(error),
-  ...inspectErrorStack(error),
-});
-
-/**
  * @type {<X>(
  *   value: X | null
  * ) => X}

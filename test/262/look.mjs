@@ -54,7 +54,7 @@ const cursor = parseCursor(await readFile(pathToFileURL(argv[2]), "utf8"));
 const codebase = new URL("codebase", import.meta.url);
 
 const { compileInstrument } =
-  await /** @type {{default: import("./types").Stage}} */ (
+  await /** @type {{default: import("./stage").Stage}} */ (
     await import(`./stages/${cursor.stage}.mjs`)
   ).default(cursor.argv);
 

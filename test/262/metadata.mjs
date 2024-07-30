@@ -7,7 +7,7 @@ const BEGIN = "/*---";
 const END = "---*/";
 
 /**
- * @type {(content: string) => import("./types").Metadata}
+ * @type {(content: string) => import("./stage").Metadata}
  */
 export const parseMetadata = (content) => {
   const begin = content.indexOf(BEGIN);

@@ -1,0 +1,8 @@
+test/built-ins/Date/prototype/setHours/arg-coercion-order.js
+test/built-ins/Date/prototype/setMinutes/arg-coercion-order.js
+test/built-ins/Date/prototype/setMonth/arg-coercion-order.js
+test/built-ins/Date/prototype/setSeconds/arg-coercion-order.js
+test/built-ins/Date/prototype/setUTCHours/arg-coercion-order.js
+test/built-ins/Date/prototype/setUTCMinutes/arg-coercion-order.js
+test/built-ins/Date/prototype/setUTCMonth/arg-coercion-order.js
+test/built-ins/Date/prototype/setUTCSeconds/arg-coercion-order.js

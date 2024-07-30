@@ -9,7 +9,7 @@ import type {
   StandardAspect,
   StandardPointcut,
 } from "../../../lib";
-import type { Instrument } from "../types";
+import type { Instrument } from "../stage";
 
 export type InstrumentRoot = Instrument;
 

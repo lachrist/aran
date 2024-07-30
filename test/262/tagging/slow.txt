@@ -1,4 +1,3 @@
-# test too large (either too slow or astring >> RangeError: Invalid string length)
 test/language/identifiers/start-unicode-10.0.0-class-escaped.js
 test/language/identifiers/start-unicode-10.0.0-class.js
 test/language/identifiers/start-unicode-13.0.0-class-escaped.js

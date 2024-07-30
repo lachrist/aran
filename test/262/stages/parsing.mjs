@@ -1,24 +1,15 @@
 import { parse } from "acorn";
 import { generate } from "astring";
-import { readFile } from "node:fs/promises";
-import { getFailureTarget, parseFailureArray } from "../failure.mjs";
 
-const { Set, URL } = globalThis;
+const { Promise } = globalThis;
 
-/** @type {import("../types").Stage} */
-export default async (_argv) => {
-  const exclusion = new Set(
-    parseFailureArray(
-      await readFile(
-        new URL("./identity.failure.txt", import.meta.url),
-        "utf8",
-      ),
-    ).map(getFailureTarget),
-  );
-  return {
-    isExcluded: (target) => exclusion.has(target),
-    predictStatus: (_target) => "flaky",
-    listCause: (_result) => ["acorn-astring"],
+/** @type {import("../stage").Stage} */
+export default (_argv) =>
+  Promise.resolve({
+    precursor: ["identity"],
+    negative: [],
+    exclude: [],
+    listLateNegative: (_target, _metadata, _error) => [],
     compileInstrument:
       ({ record }) =>
       ({ kind, url, content }) =>
@@ -29,5 +20,4 @@ export default async (_argv) => {
             parse(content, { ecmaVersion: "latest", sourceType: kind }),
           ),
         }),
-  };
-};
+  });

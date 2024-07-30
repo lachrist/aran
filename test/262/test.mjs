@@ -1,8 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { parseMetadata } from "./metadata.mjs";
 import { runTestCase } from "./case.mjs";
-import { inspectError } from "./util.mjs";
-import { AranTypeError } from "./error.mjs";
+import { serializeError } from "./error-serial.mjs";
 
 const { URL } = globalThis;
 
@@ -11,10 +10,10 @@ const { URL } = globalThis;
  *   options: {
  *     target: string,
  *     content: string,
- *     metadata: import("./types").Metadata,
+ *     metadata: import("./stage").Metadata,
  *     home: URL,
  *   },
- * ) => import("./types").Case[]}
+ * ) => import("./stage").Case[]}
  */
 const listTestCase = ({ target, content, metadata, home }) => {
   const asynchronous = metadata.flags.includes("async");
@@ -25,7 +24,7 @@ const listTestCase = ({ target, content, metadata, home }) => {
     ...metadata.includes,
   ].map((name) => new URL(`harness/${name}`, home));
   const module = metadata.flags.includes("module");
-  /** @type {import("./types").Case[]} */
+  /** @type {import("./stage").Case[]} */
   const tests = [];
   const kind = module ? "module" : "script";
   if (
@@ -59,7 +58,7 @@ const listTestCase = ({ target, content, metadata, home }) => {
   return tests;
 };
 
-/** @type {import("./types").Metadata} */
+/** @type {import("./stage").Metadata} */
 const DEFAULT_METADATA = {
   includes: [],
   flags: [],
@@ -73,13 +72,13 @@ const DEFAULT_METADATA = {
  *   options: {
  *     target: string,
  *     home: URL,
- *     compileInstrument: import("./types").CompileInstrument,
+ *     compileInstrument: import("./stage").CompileInstrument,
  *     warning: "ignore" | "console",
- *     record: import("./types").Instrument,
+ *     record: import("./stage").Instrument,
  *   },
  * ) => Promise<{
- *   metadata: import("./types").Metadata,
- *   outcome: import("./types").Outcome,
+ *   metadata: import("./stage").Metadata,
+ *   error: null | import("./error-serial").ErrorSerial,
  * }>}
  */
 export const runTest = async ({
@@ -90,17 +89,14 @@ export const runTest = async ({
   compileInstrument,
 }) => {
   const content = await readFile(new URL(target, home), "utf8");
-  /** @type {import("./types").Metadata} */
+  /** @type {import("./stage").Metadata} */
   let metadata = DEFAULT_METADATA;
   try {
     metadata = parseMetadata(content);
   } catch (error) {
     return {
       metadata,
-      outcome: {
-        type: "failure-base",
-        data: inspectError(error),
-      },
+      error: serializeError("base", error),
     };
   }
   for (const case_ of listTestCase({
@@ -109,29 +105,22 @@ export const runTest = async ({
     metadata,
     home,
   })) {
-    const outcome = await runTestCase({
+    const error = await runTestCase({
       case: case_,
       compileInstrument,
       warning,
       record,
     });
-    if (outcome.type === "success") {
-      // noop
-    } else if (
-      outcome.type === "failure-meta" ||
-      outcome.type === "failure-base"
-    ) {
+    if (error !== null) {
       return {
         metadata,
-        outcome,
+        error,
       };
-    } else {
-      throw new AranTypeError(outcome);
     }
   }
   return {
     metadata,
-    outcome: { type: "success", data: null },
+    error: null,
   };
 };
 

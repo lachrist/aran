@@ -15,7 +15,7 @@ const { Error, undefined, URL, Map, JSON } = globalThis;
  *     content: string,
  *   },
  *   options: {
- *     instrument: import("./types").Instrument,
+ *     instrument: import("./stage").Instrument,
  *     importModuleDynamically: import("./linker").Load,
  *     context: import("node:vm").Context,
  *   },
@@ -56,7 +56,7 @@ const makeModule = (
  * @type {(
  *   options: {
  *     context: object,
- *     instrument: import("./types").Instrument,
+ *     instrument: import("./stage").Instrument,
  *   },
  * ) => import("./linker").Linker}
  */

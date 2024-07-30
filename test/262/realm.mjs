@@ -16,14 +16,14 @@ export const AranRealmError = class AranRealmError extends Error {
  *   options: {
  *     counter: { value: number },
  *     report: (error: Error) => void,
- *     record: import("./types").Instrument,
+ *     record: import("./stage").Instrument,
  *     warning: "ignore" | "console",
  *     print: (message: string) => void,
- *     compileInstrument: import("./types").CompileInstrument,
+ *     compileInstrument: import("./stage").CompileInstrument,
  *   },
  * ) => import("node:vm").Context & {
- *   $262: import("./types").$262 & {
- *     instrument: import("./types").Instrument,
+ *   $262: import("./stage").$262 & {
+ *     instrument: import("./stage").Instrument,
  *   },
  * }}
  */
@@ -42,7 +42,7 @@ export const createRealm = ({
     warning,
     context,
   });
-  /** @type {import("./types").$262} */
+  /** @type {import("./stage").$262} */
   const $262 = {
     // @ts-ignore
     __proto__: null,
@@ -90,7 +90,7 @@ export const createRealm = ({
       report(error);
       throw error;
     },
-    /** @type {import("./types").Agent} */
+    /** @type {import("./stage").Agent} */
     // eslint-disable-next-line local/no-function
     get agent() {
       const error = new AranRealmError("agent");

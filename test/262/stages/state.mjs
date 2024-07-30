@@ -1,21 +1,12 @@
-import { readFile } from "node:fs/promises";
 import { setupAran } from "../aran/index.mjs";
-import {
-  getNegativeStatus,
-  listNegativeCause,
-  parseNegative,
-} from "../negative.mjs";
-import { getFailureTarget, parseFailureArray } from "../failure.mjs";
 import {
   isClosureKind,
   isControlKind,
   isProgramKind,
 } from "../../../lib/index.mjs";
-import { parseList } from "../list.mjs";
 
 const {
-  Set,
-  URL,
+  Promise,
   Array: { isArray },
   Error,
   WeakMap,
@@ -924,27 +915,13 @@ const compileMakeAspect =
     return { type: "standard", data: aspect };
   };
 
-/** @type {import("../types").Stage} */
-export default async (_argv) => {
-  const exclusion = new Set([
-    ...parseFailureArray(
-      [
-        await readFile(
-          new URL("identity.failure.txt", import.meta.url),
-          "utf8",
-        ),
-        await readFile(new URL("parsing.failure.txt", import.meta.url), "utf8"),
-      ].join("\n"),
-    ).map(getFailureTarget),
-    ...parseList(await readFile(new URL("slow.txt", import.meta.url), "utf8")),
-  ]);
-  const negative = parseNegative(
-    await readFile(new URL("bare.negative.txt", import.meta.url), "utf8"),
-  );
-  return {
-    isExcluded: (target) => exclusion.has(target),
-    predictStatus: (target) => getNegativeStatus(negative, target),
-    listCause: (result) => listNegativeCause(negative, result.target),
+/** @type {import("../stage").Stage} */
+export default (_argv) =>
+  Promise.resolve({
+    precursor: ["identity", "parsing", "bare-weave-builtin-standard"],
+    negative: [],
+    exclude: ["slow"],
+    listLateNegative: (_target, _metadata, _error) => [],
     compileInstrument: ({ report, record, warning, context }) =>
       setupAran(
         "basic",
@@ -961,5 +938,4 @@ export default async (_argv) => {
           warning,
         },
       ),
-  };
-};
+  });

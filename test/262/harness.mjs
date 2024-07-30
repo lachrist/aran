@@ -4,18 +4,18 @@ const { WeakMap, Map, undefined } = globalThis;
 
 /**
  * @type {WeakMap<
- *   import("./types").Instrument,
- *   Map<string, import("./types").Source>
+ *   import("./stage").Instrument,
+ *   Map<string, import("./stage").Source>
  * >}
  */
 const cache = new WeakMap();
 
 /**
  * @type {(
- *   instrument: import("./types").Instrument,
- *   map: Map<string, import("./types").Source>,
+ *   instrument: import("./stage").Instrument,
+ *   map: Map<string, import("./stage").Source>,
  *   url: URL,
- * ) => Promise<import("./types").Source>}
+ * ) => Promise<import("./stage").Source>}
  */
 const fetchHarnessInner = async (instrument, map, url) => {
   const harness = map.get(url.href);
@@ -34,9 +34,9 @@ const fetchHarnessInner = async (instrument, map, url) => {
 
 /**
  * @type {(
- *   instrument: import("./types").Instrument,
+ *   instrument: import("./stage").Instrument,
  *   url: URL,
- * ) => Promise<import("./types").Source>}
+ * ) => Promise<import("./stage").Source>}
  */
 export const fetchHarness = (instrument, url) => {
   const map = cache.get(instrument);

@@ -43,7 +43,7 @@ const generateUniqueIdentifier = () =>
     1e9 * Math.random(),
   ).toString(32)}`;
 
-/** @type {import("./types").Instrument} */
+/** @type {import("./stage").Instrument} */
 export const record = ({ kind, url: url1, content: content1 }) => {
   const basename = generateUniqueIdentifier();
   const extension = getExtension(kind);

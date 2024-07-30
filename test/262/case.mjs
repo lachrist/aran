@@ -1,9 +1,10 @@
 import { Script, SourceTextModule, runInContext } from "node:vm";
 import { createRealm } from "./realm.mjs";
-import { inspectError, inspectErrorName, show } from "./util.mjs";
+import { show } from "./util.mjs";
 import { compileLinker } from "./linker.mjs";
 import { AranTypeError } from "./error.mjs";
 import { fetchHarness } from "./harness.mjs";
+import { inspectErrorName, serializeError } from "./error-serial.mjs";
 
 const { Promise, Error } = globalThis;
 
@@ -94,11 +95,11 @@ const runNegativeAsync = async (phase, name, runAsync) => {
 /**
  * @type {(
  *   options: {
- *     case: import("./types").Case,
- *     compileInstrument: import("./types").CompileInstrument,
+ *     case: import("./stage").Case,
+ *     compileInstrument: import("./stage").CompileInstrument,
  *     warning: "ignore" | "console",
  *     report: (error: Error) => void,
- *     record: import("./types").Instrument,
+ *     record: import("./stage").Instrument,
  *   },
  * ) => Promise<void>}
  */
@@ -213,35 +214,29 @@ export const runTestCaseInner = async ({
 /**
  * @type {(
  *   options: {
- *     case: import("./types").Case,
+ *     case: import("./stage").Case,
  *     warning: "ignore" | "console",
- *     record: import("./types").Instrument,
- *     compileInstrument: import("./types").CompileInstrument,
+ *     record: import("./stage").Instrument,
+ *     compileInstrument: import("./stage").CompileInstrument,
  *   },
- * ) => Promise<import("./types").Outcome>}
+ * ) => Promise<null | import("./error-serial").ErrorSerial>}
  */
 export const runTestCase = async (options) => {
-  /** @type {import("./types").ErrorSerial | null} */
-  let base = null;
-  /** @type {import("./types").ErrorSerial | null} */
-  let meta = null;
+  /** @type {null | import("./error-serial").ErrorSerial} */
+  let serial = null;
   try {
     await runTestCaseInner({
       ...options,
       report: (error) => {
-        if (meta === null) {
-          meta = inspectError(error);
+        if (serial === null) {
+          serial = serializeError("meta", error);
         }
       },
     });
   } catch (error) {
-    base = inspectError(error);
+    if (serial === null) {
+      serial = serializeError("base", error);
+    }
   }
-  if (meta !== null) {
-    return { type: "failure-meta", data: meta };
-  } else if (base !== null) {
-    return { type: "failure-base", data: base };
-  } else {
-    return { type: "success", data: null };
-  }
+  return serial;
 };

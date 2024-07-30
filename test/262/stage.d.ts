@@ -1,5 +1,5 @@
-import { Context } from "node:vm";
-import { Status } from "./negative";
+import type { Context } from "node:vm";
+import type { ErrorSerial } from "./error-serial";
 
 export type Flag =
   | "onlyStrict"
@@ -58,41 +58,6 @@ export type Case = {
   includes: URL[];
 };
 
-type ErrorSerial = {
-  name: string;
-  message: string;
-  stack?: string;
-};
-
-export type SuccessOutcome = { type: "success"; data: null };
-
-export type BaseFailureOutcome = {
-  type: "failure-base";
-  data: ErrorSerial;
-};
-
-export type MetaFailureOutcome = {
-  type: "failure-meta";
-  data: ErrorSerial;
-};
-
-export type FailureOutcome = BaseFailureOutcome | MetaFailureOutcome;
-
-export type Outcome = SuccessOutcome | FailureOutcome;
-
-export type Result = {
-  target: string;
-  metadata: Metadata;
-  outcome: Outcome;
-};
-
-export type FailureResult = Result & { outcome: FailureOutcome };
-
-export type Failure = {
-  target: string;
-  causes: string[];
-};
-
 export type Instrument = (source: Source) => Source;
 
 export type StageName =
@@ -112,7 +77,12 @@ export type CompileInstrument = (options: {
 
 export type Stage = (argv: string[]) => Promise<{
   compileInstrument: CompileInstrument;
-  isExcluded: (target: string) => boolean;
-  predictStatus: (target: string) => Status;
-  listCause: (result: FailureResult) => string[];
+  exclude: string[];
+  negative: string[];
+  precursor: string[];
+  listLateNegative: (
+    target: string,
+    metadata: Metadata,
+    error: ErrorSerial,
+  ) => string[];
 }>;

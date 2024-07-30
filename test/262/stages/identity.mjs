@@ -1,41 +1,59 @@
-import { readFile } from "node:fs/promises";
-import {
-  getNegativeStatus,
-  listNegativeCause,
-  parseNegative,
-} from "../negative.mjs";
-import { parseList } from "../list.mjs";
+const { Set, Promise } = globalThis;
 
-const { URL, Set } = globalThis;
+const features = new Set([
+  "IsHTMLDDA",
+  "legacy-regexp",
+  "regexp-duplicate-named-groups",
+  "resizable-arraybuffer",
+  "Float16Array",
+  "FinalizationRegistry.prototype.cleanupSome",
+  "promise-try",
+  "regexp-modifiers",
+  "ShadowRealm",
+  "Temporal",
+  "Intl.DurationFormat",
+  "Intl.Locale-info",
+  "tail-call-optimization",
+  "decorators",
+  "import-assertions",
+  "import-attributes",
+  "explicit-resource-management",
+  "Atomics.pause",
+  "Math.sumPrecise",
+  "RegExp.escape",
+  "uint8array-base64",
+  "source-phase-imports",
+]);
 
-/** @type {import("../types").Stage} */
-export default async (_argv) => {
-  const features = new Set(
-    parseList(
-      await readFile(new URL("identity.feature.txt", import.meta.url), "utf8"),
-    ),
-  );
-  const exclusion = new Set(
-    parseList(
-      await readFile(new URL("identity.exclude.txt", import.meta.url), "utf8"),
-    ),
-  );
-  /** @type {(feature: string) => boolean} */
-  const isFeatureExcluded = (feature) => features.has(feature);
-  const negative = parseNegative(
-    await readFile(new URL("identity.negative.txt", import.meta.url), "utf8"),
-  );
-  return {
-    isExcluded: (target) => exclusion.has(target),
-    predictStatus: (target) => getNegativeStatus(negative, target),
-    listCause: (result) => [
-      ...(result.outcome.type === "failure-meta" &&
-      result.outcome.data.name === "AranRealmError"
-        ? [result.outcome.data.message]
+/** @type {(feature: string) => boolean} */
+const isFeatureExcluded = (feature) => features.has(feature);
+
+/** @type {import("../stage").Stage} */
+export default (_argv) =>
+  Promise.resolve({
+    precursor: [],
+    exclude: ["call-async-done-with-module", "invalid-metadata-header"],
+    negative: [
+      "negative-identity-annex-b",
+      "negative-identity-atomic-wait-work",
+      "negative-identity-compound-assignment",
+      "negative-identity-date-coercion-order",
+      "negative-identity-eval-arguments-declaration",
+      "negative-identity-flaky-symbol-match",
+      "negative-identity-flaky-symbol-replace",
+      "negative-identity-html-comment",
+      "negative-identity-intl402",
+      "negative-identity-non-enumerable-global-function",
+      "negative-identity-prevent-extension-vm-context",
+      "negative-identity-unknown",
+      "negative-identity-update-inside-with",
+      "negative-identity-wrong-realm-for-dynamic-import",
+    ],
+    listLateNegative: (_target, metadata, error) => [
+      ...(error.layer === "meta" && error.name === "AranRealmError"
+        ? [error.message]
         : []),
-      ...result.metadata.features.filter(isFeatureExcluded),
-      ...listNegativeCause(negative, result.target),
+      ...metadata.features.filter(isFeatureExcluded),
     ],
     compileInstrument: ({ record }) => record,
-  };
-};
+  });
