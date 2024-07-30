@@ -1,0 +1,9 @@
+{
+  "entryPoints": ["lib/index.mjs", "lib/index.d.ts"],
+  "readme": "none",
+  "out": "docs",
+  "name": "aran",
+  "tsconfig": "tsconfig.json",
+  "visibilityFilters": {},
+  "plugin": ["typedoc-plugin-merge-modules"]
+}
