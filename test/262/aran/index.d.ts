@@ -90,6 +90,8 @@ export type WeaveConfig = Config<{
   evalScript: (code: string) => unknown;
   evalGlobal: (code: string) => unknown;
   Function: FunctionConstructor;
+  apply: (callee: unknown, self: unknown, input: unknown[]) => unknown;
+  construct: (callee: unknown, input: unknown[]) => unknown;
 }>;
 
 export type PatchConfig = Config<{

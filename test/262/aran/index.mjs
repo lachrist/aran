@@ -10,7 +10,7 @@ const {
   String,
   URL,
   Object: { entries: listEntryInner },
-  Reflect: { apply, construct, defineProperty, getPrototypeOf, setPrototypeOf },
+  Reflect: { defineProperty, getPrototypeOf, setPrototypeOf },
 } = globalThis;
 
 /**
@@ -333,7 +333,7 @@ const interceptEvalGlobal = (
  */
 const applyMembrane = (
   call,
-  { record, config, globals: { evalScript, evalGlobal, Function } },
+  { record, config, globals: { evalScript, evalGlobal, Function, apply } },
 ) => {
   if (call.callee === evalScript) {
     return interceptEvalScript(call.input, {
@@ -369,7 +369,7 @@ const applyMembrane = (
  */
 const constructMembrane = (
   call,
-  { record, config, globals: { Function, evalGlobal } },
+  { record, config, globals: { Function, evalGlobal, construct } },
 ) => {
   if (call.callee === Function) {
     return interceptFunction(call.input, {
@@ -504,11 +504,11 @@ export const setupAranWeave = (
   makeAspect,
   { context, record, warning, global_declarative_record, initial },
 ) => {
-  const intrinsics = runInContext(SETUP, context);
+  const global = runInContext("this;", context);
   /* eslint-disable no-use-before-define */
   const pointcut = setupAspect(
-    intrinsics["aran.global"],
-    makeAspect(intrinsics, {
+    global,
+    makeAspect(runInContext(SETUP, context), {
       instrument: (code, path, context) =>
         instrumentDeep({ code, path, context }, config),
       apply: (callee, self, input) =>
@@ -528,9 +528,11 @@ export const setupAranWeave = (
       initial,
     },
     globals: {
-      evalScript: intrinsics["aran.global"].$262.evalScript,
-      evalGlobal: intrinsics["aran.global"].eval,
-      Function: intrinsics["aran.global"].Function,
+      evalScript: global.$262.evalScript,
+      evalGlobal: global.eval,
+      Function: global.Function,
+      apply: global.Reflect.apply,
+      construct: global.Reflect.construct,
     },
   };
   return (source) => instrumentRoot(source, config);

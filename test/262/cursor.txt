@@ -1,2 +1,2 @@
-bare patch builtin standard
-900 test/annexB/language/global-code/block-decl-global-existing-non-enumerable-global-init.js
+bare weave builtin standard
+552 test/annexB/language/eval-code/direct/script-decl-lex-no-collision.js
