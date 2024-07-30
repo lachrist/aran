@@ -14,9 +14,8 @@
   "scripts": {
     "lint": "npx tsc && npx prettier -c '**/*.(mjs|d.ts)' && npx eslint 'lint/**/*.mjs' 'test/**/*.mjs' 'lib/**/*.mjs'",
     "format": "npx prettier -w '**/*.(mjs|d.ts)'",
-    "test": "node test/test.mjs",
-    "coverage": "node test/coverage.mjs",
-    "download262": "git clone --filter=tree:0 https://github.com/tc39/test262 test/262/test262",
+    "document": "npx typedoc",
+    "load262": "git clone --filter=tree:0 https://github.com/tc39/test262 test/262/test262",
     "exec262": "node --experimental-vm-modules --expose-gc test/262/exec.mjs",
     "move262": "node --experimental-vm-modules --expose-gc test/262/move.mjs test/262/cursor.txt",
     "look262": "node --experimental-vm-modules --expose-gc test/262/look.mjs test/262/cursor.txt"
@@ -46,7 +45,7 @@
     "eslint-plugin-local": "^1.0.0",
     "prettier": "^3.0.0",
     "typedoc": "^0.26.5",
-    "typedoc-plugin-merge-modules": "^6.0.0",
+    "typedoc-plugin-missing-exports": "^3.0.0",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.11.0",
     "yaml": "^2.3.2"
