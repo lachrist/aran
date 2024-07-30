@@ -1,2 +1,2 @@
 bare patch builtin standard
-255 test/annexB/language/eval-code/direct/func-block-decl-eval-func-init.js
+900 test/annexB/language/global-code/block-decl-global-existing-non-enumerable-global-init.js

@@ -552,43 +552,23 @@ export const setupAranPatch = (
   makeAspect,
   { context, report, record, warning, global_declarative_record, initial },
 ) => {
-  const intrinsics = runInContext(SETUP, context);
-  /* eslint-disable no-use-before-define */
-  const pointcut = setupAspect(
-    intrinsics["aran.global"],
-    makeAspect(intrinsics, {
-      instrument: (_code, _path, _context) => {
-        const error = new AranPatchError(
-          "Patch membrane does not support local eval call",
-        );
-        report(error);
-        throw error;
-      },
-      apply: null,
-      construct: null,
-    }),
-  );
-  /* eslint-enable no-use-before-define */
-  const function_prototype = intrinsics["aran.global"].Function.prototype;
-  /** @type {import(".").PatchConfig} */
-  const config = {
-    record,
-    config: {
-      pointcut,
-      warning,
-      global_declarative_record,
-      initial,
-    },
-    globals: {
-      evalScript: intrinsics["aran.global"].$262.evalScript,
-      evalGlobal: intrinsics["aran.global"].eval,
-    },
-  };
+  const global = runInContext("this;", context);
+  // Setup must be ran before patching because
+  // it relies on eval to be the actual eval
+  // intrinsic value.
+  const intrinsic = runInContext(SETUP, context);
+  const evalScript = global.$262.evalScript;
+  const evalGlobal = global.eval;
+  const prototype = global.Function.prototype;
   // evalGlobal //
   {
     /** @type {(...args: unknown[]) => unknown} */
-    const evalGlobalPatch = (...args) => interceptEvalGlobal(args, config);
-    setPrototypeOf(evalGlobalPatch, function_prototype);
+    const evalGlobalPatch = (...args) =>
+      interceptEvalGlobal(
+        args,
+        /* eslint-disable no-use-before-define */ config /* eslint-enable no-use-before-define */,
+      );
+    setPrototypeOf(evalGlobalPatch, prototype);
     defineProperty(evalGlobalPatch, "length", {
       // @ts-ignore
       __proto__: null,
@@ -605,18 +585,27 @@ export const setupAranPatch = (
       enumerable: false,
       configurable: true,
     });
-    intrinsics["aran.global"].eval = evalGlobalPatch;
+    global.eval = evalGlobalPatch;
+    intrinsic.eval = evalGlobalPatch;
   }
   // evalScript //
   /** @type {(...args: unknown[]) => unknown} */
-  intrinsics["aran.global"].$262.evalScript = (...args) =>
-    interceptEvalScript(args, config);
+  global.$262.evalScript = (...args) =>
+    interceptEvalScript(
+      args,
+      /* eslint-disable no-use-before-define */ config /* eslint-enable no-use-before-define */,
+    );
   // Function //
   {
     /** @type {(...args: unknown[]) => unknown} */
     // eslint-disable-next-line local/no-function, local/no-rest-parameter
     const FunctionPatch = function Function(...args) {
-      const result = /** @type {Function} */ (interceptFunction(args, config));
+      const result = /** @type {Function} */ (
+        interceptFunction(
+          args,
+          /* eslint-disable no-use-before-define */ config /* eslint-enable no-use-before-define */,
+        )
+      );
       if (
         new.target !== undefined &&
         getPrototypeOf(result) !== new.target.prototype
@@ -628,7 +617,7 @@ export const setupAranPatch = (
     defineProperty(FunctionPatch, "prototype", {
       // @ts-ignore
       __proto__: null,
-      value: function_prototype,
+      value: prototype,
       writable: false,
       enumerable: false,
       configurable: false,
@@ -641,10 +630,39 @@ export const setupAranPatch = (
       enumerable: false,
       configurable: false,
     });
-    setPrototypeOf(FunctionPatch, function_prototype);
-    intrinsics["aran.global"].Function = FunctionPatch;
+    setPrototypeOf(FunctionPatch, prototype);
+    global.Function = FunctionPatch;
+    intrinsic.Function = FunctionPatch;
   }
   // return //
+  const pointcut = setupAspect(
+    global,
+    makeAspect(intrinsic, {
+      instrument: (_code, _path, _context) => {
+        const error = new AranPatchError(
+          "Patch membrane does not support local eval call",
+        );
+        report(error);
+        throw error;
+      },
+      apply: null,
+      construct: null,
+    }),
+  );
+  /** @type {import(".").PatchConfig} */
+  const config = {
+    record,
+    config: {
+      pointcut,
+      warning,
+      global_declarative_record,
+      initial,
+    },
+    globals: {
+      evalScript,
+      evalGlobal,
+    },
+  };
   return (source) => instrumentRoot(source, config);
 };
 

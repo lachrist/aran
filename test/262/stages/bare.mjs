@@ -147,7 +147,10 @@ export default (argv) =>
       "negative-bare-wrong-realm-for-default-prototype",
     ],
     exclude: ["function-string-representation"],
-    listLateNegative: (_target, _metadata, _error) => [],
+    listLateNegative: (_target, _metadata, error) =>
+      error.layer === "meta" && error.name === "AranPatchError"
+        ? ["patch-membrane"]
+        : [],
     compileInstrument: ({ report, record, warning, context }) => {
       const { membrane, global_declarative_record, weaving } = parseArgv(argv);
       return setupAran(membrane, compileMakeAspect(weaving), {
