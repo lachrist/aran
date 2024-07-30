@@ -1,9 +1,5 @@
 import { generate } from "astring";
-import {
-  instrument,
-  setup as generateSetup,
-  ROOT_PATH,
-} from "../../../lib/index.mjs";
+import { instrument, generateSetup, ROOT_PATH } from "../../../lib/index.mjs";
 import { parseGlobal, parseLocal } from "./parse.mjs";
 import { hash32 } from "./hash.mjs";
 import { runInContext } from "node:vm";
