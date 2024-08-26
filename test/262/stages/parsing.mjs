@@ -4,7 +4,7 @@ import { generate } from "astring";
 const { Promise } = globalThis;
 
 /** @type {import("../stage").Stage} */
-export default (_argv) =>
+export default (_options) =>
   Promise.resolve({
     precursor: ["identity"],
     negative: [],

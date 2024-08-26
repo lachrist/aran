@@ -916,7 +916,7 @@ const compileMakeAspect =
   };
 
 /** @type {import("../stage").Stage} */
-export default (_argv) =>
+export default (_options) =>
   Promise.resolve({
     precursor: ["identity", "parsing", "bare-basic-builtin-standard"],
     negative: [],

@@ -1,1 +1,1 @@
-bare basic builtin standard
+bare --membrane basic --global-declarative-record builtin --advice standard

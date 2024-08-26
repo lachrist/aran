@@ -11,6 +11,7 @@ import { home, toRelative, toTarget } from "./home.mjs";
 import { listTag, loadTagging } from "./tagging.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
 import { listPrecursor, loadPrecursor } from "./precursor.mjs";
+import { parseArgv } from "./argv.mjs";
 
 const { console, process, URL } = globalThis;
 
@@ -20,7 +21,7 @@ const cursor = parseCursor(await readFile(persistent, "utf8"));
 
 const stage = await /** @type {{default: import("./stage").Stage}} */ (
   await import(`./stages/${cursor.stage}.mjs`)
-).default(cursor.argv);
+).default(parseArgv(cursor.argv));
 
 const precursor = await loadPrecursor(stage.precursor);
 

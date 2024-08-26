@@ -75,7 +75,7 @@ export type CompileInstrument = (options: {
   context: Context;
 }) => Instrument;
 
-export type Stage = (argv: string[]) => Promise<{
+export type Stage = (options: { [key in string]?: string }) => Promise<{
   compileInstrument: CompileInstrument;
   exclude: string[];
   negative: string[];

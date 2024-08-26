@@ -29,7 +29,7 @@ const features = new Set([
 const isFeatureExcluded = (feature) => features.has(feature);
 
 /** @type {import("../stage").Stage} */
-export default (_argv) =>
+export default (_options) =>
   Promise.resolve({
     precursor: [],
     exclude: ["call-async-done-with-module", "invalid-metadata-header"],

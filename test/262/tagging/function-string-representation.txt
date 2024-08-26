@@ -1,4 +1,5 @@
 test/built-ins/RegExp/prototype/exec/S15.10.6.2_A1_T9.js
+
 test/language/expressions/addition/S11.6.1_A3.2_T1.2.js
 test/language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-arrow-function-expression.js
 test/language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-function-expression.js

@@ -1,56 +1,10 @@
 /* eslint-disable no-use-before-define */
 
 import { setupAran } from "../aran/index.mjs";
-import { AranExecError, AranTypeError } from "../error.mjs";
+import { sanitizeMember } from "../argv.mjs";
+import { AranTypeError } from "../error.mjs";
 
 const { Promise } = globalThis;
-
-/** @type {["basic", "weave", "patch"]} */
-const MEMBRANE = ["basic", "weave", "patch"];
-
-/** @type {["builtin", "emulate"]} */
-const GLOBAL_DECLARATIVE_RECORD = ["builtin", "emulate"];
-
-/** @type {["standard", "flexible"]} */
-const WEAVING = ["standard", "flexible"];
-
-/**
- * @type {<X extends string>(
- *   candidate: string,
- *   enumeration: X[],
- * ) => X}
- */
-export const parseEnumeration = (candidate, enumeration) => {
-  for (const item of enumeration) {
-    if (item === candidate) {
-      return item;
-    }
-  }
-  throw new AranExecError("invalid enumeration candidate");
-};
-
-/**
- * @type {(
- *   argv: string[]
- * ) => {
- *   membrane: "basic" | "weave" | "patch",
- *   global_declarative_record: "builtin" | "emulate",
- *   weaving: "standard" | "flexible",
- * }}
- */
-const parseArgv = (argv) => {
-  if (argv.length !== 3) {
-    throw new AranExecError("Expected 3 arguments");
-  }
-  return {
-    membrane: parseEnumeration(argv[0], MEMBRANE),
-    global_declarative_record: parseEnumeration(
-      argv[1],
-      GLOBAL_DECLARATIVE_RECORD,
-    ),
-    weaving: parseEnumeration(argv[2], WEAVING),
-  };
-};
 
 /**
  * @type {(
@@ -135,7 +89,7 @@ const compileMakeAspect =
 /**
  * @type {import("../stage").Stage}
  */
-export default (argv) =>
+export default (options) =>
   Promise.resolve({
     precursor: ["identity", "parsing"],
     negative: [
@@ -151,15 +105,23 @@ export default (argv) =>
       error.layer === "meta" && error.name === "AranPatchError"
         ? ["patch-membrane"]
         : [],
-    compileInstrument: ({ report, record, warning, context }) => {
-      const { membrane, global_declarative_record, weaving } = parseArgv(argv);
-      return setupAran(membrane, compileMakeAspect(weaving), {
-        global_declarative_record,
-        initial: null,
-        report,
-        record,
-        context,
-        warning,
-      });
-    },
+    compileInstrument: ({ report, record, warning, context }) =>
+      setupAran(
+        sanitizeMember(options, "membrane", ["basic", "weave", "patch"]),
+        compileMakeAspect(
+          sanitizeMember(options, "weaving", ["standard", "flexible"]),
+        ),
+        {
+          global_declarative_record: sanitizeMember(
+            options,
+            "global-declarative-record",
+            ["builtin", "emulate"],
+          ),
+          initial: null,
+          report,
+          record,
+          context,
+          warning,
+        },
+      ),
   });
