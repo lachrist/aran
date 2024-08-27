@@ -3,7 +3,7 @@ import type {
   ModuleDeclaration,
   Statement,
   SwitchCase,
-} from "estree";
+} from "../../estree";
 import type { Path } from "../../path";
 
 export type CompletionNode =
