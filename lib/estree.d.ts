@@ -82,11 +82,19 @@ export type PublicKeyIdentifier = {
   name: PublicKey;
 };
 
-export type PublicKeyLiteral = {
-  type: "Literal";
-  loc?: SourceLocation | null | undefined;
-  value: PublicKey;
-};
+export type PublicKeyLiteral =
+  | {
+      type: "Literal";
+      loc?: SourceLocation | null | undefined;
+      value: PublicKey | number | null | boolean;
+      bigint?: null | undefined;
+    }
+  | {
+      type: "Literal";
+      loc?: SourceLocation | null | undefined;
+      value: bigint;
+      bigint: string;
+    };
 
 export type PrivateKey = Brand<string, "estree.PrivateKey">;
 

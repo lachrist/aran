@@ -1,1 +1,2 @@
-bare --membrane basic --global-declarative-record builtin --advice standard
+bare --membrane basic --global-declarative-record builtin --weaving standard
+35901 test/language/expressions/object/literal-property-name-bigint.js
