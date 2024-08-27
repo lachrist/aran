@@ -29,7 +29,7 @@ as any other npm module with: `npm install aran`. It exports two main functions:
 
 ## API
 
-[typedoc](https://lachrist.github.io/aran/page/typedoc/index.html)
+[typedoc](https://lachrist.github.io/aran/page/typedoc/modules/index.html)
 
 ## Live Demo
 
