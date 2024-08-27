@@ -39,13 +39,16 @@ const printEntry = ([key, val]) => `--${key}=${val}`;
 
 /**
  * @type {(
+ *   stage: string,
  *   options: { [key in string]?: string },
  * ) => string}
  */
-export const toBasename = (options) =>
-  /** @type {[string, string][]} */ (listEntry(options))
-    .map(printEntry)
-    .join("");
+export const toBasename = (stage, options) =>
+  `${stage}${
+    /** @type {[string, string][]} */ (listEntry(options))
+      .map(printEntry)
+      .join("")
+  }`;
 
 /**
  * @type {<X extends string>(

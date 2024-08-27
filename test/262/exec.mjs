@@ -14,7 +14,7 @@ const { Error, console, process, URL, JSON } = globalThis;
 
 if (argv.length < 3) {
   throw new Error(
-    "usage: node --experimental-vm-modules --expose-gc test/262/batch.mjs <stage> [...argv]",
+    "usage: node --experimental-vm-modules --expose-gc test/262/exec.mjs <stage> [...argv]",
   );
 }
 
@@ -94,7 +94,7 @@ for await (const url of scrape(new URL("test/", home))) {
 }
 
 await writeFile(
-  new URL(`stages/${stage_name}${toBasename(options)}.json`, import.meta.url),
+  new URL(`stages/${toBasename(stage_name, options)}.json`, import.meta.url),
   JSON.stringify(results, null, 2),
   "utf8",
 );

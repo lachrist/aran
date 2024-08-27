@@ -23,7 +23,8 @@
     "load262": "git clone --filter=tree:0 https://github.com/tc39/test262 test/262/test262",
     "exec262": "node --experimental-vm-modules --expose-gc test/262/exec.mjs",
     "move262": "node --experimental-vm-modules --expose-gc test/262/move.mjs test/262/cursor.txt",
-    "look262": "node --experimental-vm-modules --expose-gc test/262/look.mjs test/262/cursor.txt"
+    "look262": "node --experimental-vm-modules --expose-gc test/262/look.mjs test/262/cursor.txt",
+    "test262": "node test/262/main.mjs"
   },
   "keywords": [
     "JavaScript",
