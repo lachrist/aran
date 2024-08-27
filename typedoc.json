@@ -1,12 +1,12 @@
 {
-  "entryPoints": ["lib/index.mjs"],
+  "entryPoints": ["lib/index.mjs", "lib/**/*.d.ts"],
+  "githubPages": true,
   "readme": "none",
   "out": "page/typedoc",
   "name": "aran",
   "tsconfig": "tsconfig.json",
   "visibilityFilters": {},
   "entryPointStrategy": "resolve",
-  "plugin": ["typedoc-plugin-missing-exports"],
   "excludeExternals": true,
   "externalPattern": ["**/node_modules/**"]
 }

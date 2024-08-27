@@ -7,7 +7,7 @@ import type { ConstantMetaVariable } from "../variable";
 
 export { RootFrame } from "./root";
 
-type Mode = "strict" | "sloppy";
+export type Mode = "strict" | "sloppy";
 
 // Variable //
 
