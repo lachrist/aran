@@ -31,6 +31,10 @@ as any other npm module with: `npm install aran`. It exports two main functions:
 
 [typedoc](https://lachrist.github.io/aran/page/typedoc/modules/index.html)
 
+Of particular interest are:
+
+- [config](https://lachrist.github.io/aran/page/typedoc/types/config.Config.html)
+
 ## Live Demo
 
 [live-demo](https://lachrist.github.io/aran/page/demo/index.html)
