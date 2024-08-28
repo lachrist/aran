@@ -17,42 +17,63 @@ const compileMakeAspect =
     switch (type) {
       case "flexible": {
         /**
-         * @type {import("../../../lib").HeterogeneousFlexibleAspect<
+         * @type {import("../../../lib").HomogeneousFlexibleAspect<
          *   null,
          *   unknown,
-         *   {
-         *     _ARAN_EVAL_BEFORE_: [import("../../../lib").Path],
-         *     _ARAN_APPLY_AROUND_: [],
-         *     _ARAN_CONSTRUCT_AROUND_: [],
-         *   },
+         *   [import("../../../lib").Path],
          * >}
          */
-        const aspect = {
+        const aspect1 = {
           _ARAN_EVAL_BEFORE_: {
             kind: "eval@before",
             pointcut: ({ tag: path }) => [path],
             advice: (_state, code, context, path) =>
               typeof code === "string" ? instrument(code, path, context) : code,
           },
-          _ARAN_APPLY_AROUND_:
-            apply === null
-              ? null
-              : {
+        };
+        /**
+         * @type {null | import("../../../lib").HomogeneousFlexibleAspect<
+         *   null,
+         *   unknown,
+         *   [],
+         * >}
+         */
+        const aspect2 =
+          apply === null
+            ? null
+            : {
+                _ARAN_APPLY_AROUND_: {
                   kind: "apply@around",
                   pointcut: (_node) => [],
                   advice: (_state, callee, self, input) =>
                     apply(callee, self, input),
                 },
-          _ARAN_CONSTRUCT_AROUND_:
-            construct === null
-              ? null
-              : {
+              };
+        /**
+         * @type {null | import("../../../lib").HomogeneousFlexibleAspect<
+         *   null,
+         *   unknown,
+         *   [],
+         * >}
+         */
+        const aspect3 =
+          construct === null
+            ? null
+            : {
+                _ARAN_APPLY_AROUND_: {
                   kind: "construct@around",
                   pointcut: (_node) => [],
                   advice: (_state, callee, input) => construct(callee, input),
                 },
+              };
+        return {
+          type,
+          data: {
+            ...aspect1,
+            ...aspect2,
+            ...aspect3,
+          },
         };
-        return { type, data: aspect };
       }
       case "standard": {
         /**
@@ -117,7 +138,7 @@ export default (options) =>
             "global-declarative-record",
             ["builtin", "emulate"],
           ),
-          initial: null,
+          initial_state: null,
           report,
           record,
           context,

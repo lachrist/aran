@@ -36,16 +36,6 @@ export type Aspect<state extends Json, V> =
       data: FlexibleAspect<state, V>;
     };
 
-export type Pointcut =
-  | {
-      type: "standard";
-      data: StandardPointcut;
-    }
-  | {
-      type: "flexible";
-      data: FlexiblePointcut;
-    };
-
 export type MakeAspect<S extends Json, V> = (
   intrinsics: IntrinsicRecord,
   membrane: {
@@ -63,8 +53,16 @@ export type SetupConfig<S extends Json> = {
   report: (error: Error) => void;
   warning: "console" | "ignore";
   global_declarative_record: "emulate" | "builtin";
-  initial: S;
+  initial_state: S;
 };
+
+export type Pointcut =
+  | {
+      standard_pointcut: StandardPointcut;
+    }
+  | {
+      flexible_pointcut: FlexiblePointcut;
+    };
 
 export type SetupAran = <S extends Json, V>(
   makeAspect: MakeAspect<S, V>,
@@ -72,10 +70,11 @@ export type SetupAran = <S extends Json, V>(
 ) => InstrumentRoot;
 
 export type PartialAranConfig = {
-  pointcut: Pointcut;
+  standard_pointcut: StandardPointcut | null;
+  flexible_pointcut: FlexiblePointcut | null;
   warning: "console" | "ignore";
   global_declarative_record: "emulate" | "builtin";
-  initial: Json;
+  initial_state: Json;
 };
 
 export type Config<G> = {

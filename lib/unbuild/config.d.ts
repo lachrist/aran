@@ -1,4 +1,7 @@
+import type { Config as EntireConfig } from "../config";
+
 export type Config = {
-  global_declarative_record: "builtin" | "emulate";
-  early_syntax_error: "embed" | "throw";
+  [key in
+    | "global_declarative_record"
+    | "early_syntax_error"]: EntireConfig[key];
 };

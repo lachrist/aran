@@ -931,7 +931,7 @@ export default (_options) =>
         }),
         {
           global_declarative_record: "builtin",
-          initial: null,
+          initial_state: null,
           record,
           report,
           context,

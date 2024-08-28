@@ -298,6 +298,6 @@ export type ObjectPointcut = {
 
 export type ConstantPointcut = boolean;
 
-export type IterablePointcut = Iterable<Kind>;
+export type ArrayPointcut = Kind[];
 
-export type Pointcut = ObjectPointcut | IterablePointcut | ConstantPointcut;
+export type Pointcut = ObjectPointcut | ArrayPointcut | ConstantPointcut;

@@ -41,41 +41,27 @@ const ESCAPE_PREFIX = /** @type {import("../../../lib").EstreeVariable} */ (
  * ) => import("../../../lib").Config}
  */
 const completeConfig = (
-  { pointcut, warning, initial, global_declarative_record },
+  {
+    standard_pointcut,
+    flexible_pointcut,
+    warning,
+    initial_state,
+    global_declarative_record,
+  },
   early_syntax_error,
-) => {
-  if (pointcut.type === "standard") {
-    return {
-      mode: "normal",
-      weaving: "standard",
-      pointcut: pointcut.data,
-      initial,
-      warning,
-      early_syntax_error,
-      global_declarative_record,
-      global_variable: GLOBAL_VARIABLE,
-      intrinsic_variable: INTRINSIC_VARIABLE,
-      escape_prefix: ESCAPE_PREFIX,
-      advice_variable: ADVICE_VARIABLE,
-    };
-  } else if (pointcut.type === "flexible") {
-    return {
-      mode: "normal",
-      weaving: "flexible",
-      pointcut: pointcut.data,
-      initial,
-      warning,
-      early_syntax_error,
-      global_declarative_record,
-      global_variable: GLOBAL_VARIABLE,
-      intrinsic_variable: INTRINSIC_VARIABLE,
-      escape_prefix: ESCAPE_PREFIX,
-      advice_variable: ADVICE_VARIABLE,
-    };
-  } else {
-    throw new AranTypeError(pointcut);
-  }
-};
+) => ({
+  mode: "normal",
+  standard_pointcut,
+  flexible_pointcut,
+  initial_state,
+  warning,
+  early_syntax_error,
+  global_declarative_record,
+  global_variable: GLOBAL_VARIABLE,
+  intrinsic_variable: INTRINSIC_VARIABLE,
+  escape_prefix: ESCAPE_PREFIX,
+  advice_variable: ADVICE_VARIABLE,
+});
 
 const SETUP = generate(
   generateSetup({
@@ -432,8 +418,8 @@ const setupAspect = (global, aspect) => {
         configurable: false,
       });
       return {
-        type: "standard",
-        data: /** @type {import("../../../lib").StandardPointcut} */ (pointcut),
+        standard_pointcut:
+          /** @type {import("../../../lib").StandardPointcut} */ (pointcut),
       };
     }
     case "flexible": {
@@ -453,10 +439,7 @@ const setupAspect = (global, aspect) => {
           pointcut[key] = item;
         }
       }
-      return {
-        type: "flexible",
-        data: pointcut,
-      };
+      return { flexible_pointcut: pointcut };
     }
     default: {
       throw new AranTypeError(aspect);
@@ -469,7 +452,7 @@ const setupAspect = (global, aspect) => {
  */
 export const setupAranBasic = (
   makeAspect,
-  { context, record, warning, global_declarative_record, initial },
+  { context, record, warning, global_declarative_record, initial_state },
 ) => {
   const intrinsics = runInContext(SETUP, context);
   /* eslint-disable no-use-before-define */
@@ -487,10 +470,12 @@ export const setupAranBasic = (
   const config = {
     record,
     config: {
-      pointcut,
       warning,
       global_declarative_record,
-      initial,
+      initial_state,
+      flexible_pointcut: null,
+      standard_pointcut: null,
+      ...pointcut,
     },
     globals: {},
   };
@@ -502,7 +487,7 @@ export const setupAranBasic = (
  */
 export const setupAranWeave = (
   makeAspect,
-  { context, record, warning, global_declarative_record, initial },
+  { context, record, warning, global_declarative_record, initial_state },
 ) => {
   const global = runInContext("this;", context);
   /* eslint-disable no-use-before-define */
@@ -522,10 +507,12 @@ export const setupAranWeave = (
   const config = {
     record,
     config: {
-      pointcut,
       warning,
       global_declarative_record,
-      initial,
+      initial_state,
+      flexible_pointcut: null,
+      standard_pointcut: null,
+      ...pointcut,
     },
     globals: {
       evalScript: global.$262.evalScript,
@@ -552,7 +539,14 @@ const AranPatchError = class extends Error {
  */
 export const setupAranPatch = (
   makeAspect,
-  { context, report, record, warning, global_declarative_record, initial },
+  {
+    context,
+    report,
+    record,
+    warning,
+    global_declarative_record,
+    initial_state,
+  },
 ) => {
   const global = runInContext("this;", context);
   // Setup must be ran before patching because
@@ -655,10 +649,12 @@ export const setupAranPatch = (
   const config = {
     record,
     config: {
-      pointcut,
       warning,
       global_declarative_record,
-      initial,
+      initial_state,
+      flexible_pointcut: null,
+      standard_pointcut: null,
+      ...pointcut,
     },
     globals: {
       evalScript,

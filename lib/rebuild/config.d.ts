@@ -1,8 +1,9 @@
-import type { Variable } from "../estree";
+import type { Config as EntireConfig } from "../config";
 
 export type Config = {
-  mode: "normal" | "standalone";
-  global_variable: Variable;
-  intrinsic_variable: Variable;
-  escape_prefix: Variable;
+  [key in
+    | "mode"
+    | "global_variable"
+    | "intrinsic_variable"
+    | "escape_prefix"]: EntireConfig[key];
 };

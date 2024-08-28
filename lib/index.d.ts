@@ -51,7 +51,7 @@ export type {
   Advice as StandardAdvice,
   Pointcut as StandardPointcut,
   ObjectPointcut as StandardObjectPointcut,
-  IterablePointcut as StandardIterablePointcut,
+  ArrayPointcut as StandardIterablePointcut,
 } from "./weave/standard/aspect.d.ts";
 
 export type {

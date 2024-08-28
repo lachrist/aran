@@ -25,6 +25,8 @@ export {
   Expression,
 };
 
+export type GlobalAdviceVariable = string;
+
 export type Block = ControlBlock | RoutineBlock;
 
 export type GenericPointcut<point extends Json[], node extends Node> = (
@@ -169,15 +171,12 @@ export type HomogeneousAdvice<
 > = AdviceElement<state, value, point>[];
 
 export type Pointcut = {
-  [advice in string]?:
-    | null
-    | undefined
-    | ValueOf<{
-        [kind in AspectKind]: {
-          kind: kind;
-          pointcut: AspectTyping<never, never, Json[]>[kind]["pointcut"];
-        };
-      }>;
+  [variable: GlobalAdviceVariable]: ValueOf<{
+    [kind in AspectKind]: {
+      kind: kind;
+      pointcut: AspectTyping<never, never, Json[]>[kind]["pointcut"];
+    };
+  }>;
 };
 
 export type OptimalPointcut = {
@@ -193,20 +192,17 @@ export type OptimalPointcutEntry<kind extends AspectKind> = [
 ];
 
 export type HomogeneousAspect<state, value, point extends Json[]> = {
-  [variable in string]?: null | undefined | AspectElement<state, value, point>;
+  [variable: GlobalAdviceVariable]: AspectElement<state, value, point>;
 };
 
 export type HeterogeneousAspect<
   state,
   value,
-  point extends { [key in string]: Json[] },
+  point extends { [variable: GlobalAdviceVariable]: Json[] },
 > = {
-  [key in keyof point]?:
-    | null
-    | undefined
-    | AspectElement<state, value, point[key]>;
+  [variable in keyof point]: AspectElement<state, value, point[variable]>;
 };
 
 export type Aspect<state, value> = {
-  [variable in string]?: null | undefined | AspectElement<state, value, any>;
+  [variable: GlobalAdviceVariable]: AspectElement<state, value, any>;
 };
