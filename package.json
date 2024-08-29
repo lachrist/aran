@@ -18,8 +18,7 @@
   "scripts": {
     "lint": "npx tsc && npx prettier -c '**/*.(mjs|d.ts)' && npx eslint 'lint/**/*.mjs' 'test/**/*.mjs' 'lib/**/*.mjs'",
     "format": "npx prettier -w '**/*.(mjs|d.ts)'",
-    "document": "npx typedoc",
-    "setup-demo": "npx rollup -c demo/rollup.config.js ; cp demo/index.html page/demo",
+    "page": "sh page.sh",
     "load262": "git clone --filter=tree:0 https://github.com/tc39/test262 test/262/test262",
     "exec262": "node --experimental-vm-modules --expose-gc test/262/exec.mjs",
     "move262": "node --experimental-vm-modules --expose-gc test/262/move.mjs test/262/cursor.txt",
