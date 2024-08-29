@@ -1,2 +1,2 @@
-bare --membrane basic --global-declarative-record builtin --weaving standard
-3921 test/built-ins/Array/prototype/splice/15.4.4.12-9-a-1.js
+bare --membrane basic --global-declarative-record builtin --weaving flexible
+1 test/annexB/built-ins/Date/prototype/getYear/B.2.4.js
