@@ -1,34 +1,28 @@
-const { eval: evalGlobal, JSON } = globalThis;
-const { log, aran, astring, acorn, target } = context;
+const { show, log, aran, astring, acorn, target } = context;
+
 let depth = 0;
-const show = (value) => {
-  if (typeof value === "function") {
-    return value.name ?? "<anonymous>";
-  }
-  if (typeof value === "object") {
-    return value === null ? "null" : "<object>";
-  }
-  if (typeof value === "string") {
-    return JSON.stringify(value);
-  }
-  return String(value);
-};
+
 globalThis.ADVICE = {
-  "apply@around": (_state, callee, this_, arguments_) => {
+  "apply@around": (_state, callee, this_, arguments_, _path) => {
     depth += 1;
-    log(
-      `${"..".repeat(depth)} > ${show(callee)}(${arguments_
-        .map(show)
-        .join(", ")})\n`,
-    );
-    const result = Reflect.apply(callee, this_, arguments_);
-    log(`${"..".repeat(depth)} < ${show(result)}\n`);
-    depth -= 1;
-    return result;
+    const indent = "..".repeat(depth);
+    try {
+      const args = arguments_.map(show).join(", ");
+      log(`${indent} > ${show(callee)}[${show(this_)}](${args})\n`);
+      const result = Reflect.apply(callee, this_, arguments_);
+      log(`${indent} < ${show(result)}\n`);
+      return result;
+    } catch (error) {
+      log(`${indent} ! ${show(error)}\n`);
+    } finally {
+      depth -= 1;
+    }
   },
 };
-evalGlobal(astring.generate(aran.generateSetup()));
-evalGlobal(
+
+globalThis.eval(astring.generate(aran.generateSetup()));
+
+globalThis.eval(
   astring.generate(
     aran.instrument(
       {
