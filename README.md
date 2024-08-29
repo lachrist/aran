@@ -27,13 +27,47 @@ as any other npm module with: `npm install aran`. It exports two main functions:
 - `instrument`: instruments an [estree](https://github.com/estree/estree) and
   expects the advice to be defined as a global variable.
 
+```sh
+npm install aran acorn astring
+```
+
+```js
+import { generate } from "astring";
+import { parse } from "acorn";
+import { instrument, generateSetup } from "aran";
+
+globalThis._ARAN_ADVICE_ = {
+  "apply@around": (_state, callee, this_, arguments_, path) => {
+    console.dir({ callee, this: this_, arguments: arguments_, path });
+    return Reflect.apply(callee, this_, arguments_);
+  },
+};
+
+globalThis.eval(generate(generateSetup()));
+
+globalThis.eval(
+  generate(
+    instrument(
+      {
+        kind: "eval",
+        root: parse("console.log('Hello!');", { ecmaVersion: 2024 }),
+      },
+      {
+        advice_variable: "_ARAN_ADVICE_",
+        standard_pointcut: ["apply@around"],
+      },
+    ),
+  ),
+);
+```
+
 ## API
 
 [typedoc](https://lachrist.github.io/aran/page/typedoc/modules/index.html)
 
 Of particular interest are:
 
-- [config](https://lachrist.github.io/aran/page/typedoc/types/config.Config.html)
+- [instrumentation configuration](https://lachrist.github.io/aran/page/typedoc/types/config.Config.html)
 
 ## Live Demo
 
