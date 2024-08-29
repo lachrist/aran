@@ -67,7 +67,10 @@ globalThis.eval(
 
 Of particular interest are:
 
+- [instrumentation source input](https://lachrist.github.io/aran/page/typedoc/types/source.PartialSource.html)
 - [instrumentation configuration](https://lachrist.github.io/aran/page/typedoc/types/config.Config.html)
+- [standard aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_standard_aspect.AspectTyping.html)
+- [flexible aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_flexible_aspect.AspectTyping.html)
 
 ## Live Demo
 
@@ -95,7 +98,7 @@ instrumented programs to no behave as their pre-instrumented version.
 In practice, the issue that is most susceptible to cause a program to behave
 differentially is
 [early script declaration](./doc/issues/early-script-declaration.md). Other
-issues require fairly convoluted code to be triggered.
+issues require fairly convoluted code to arise.
 
 ## Acknowledgments
 
