@@ -1,6 +1,6 @@
 import type { Context } from "node:vm";
 import type {
-  DeepLocalContext,
+  DeepLocalSitu,
   FlexibleAspect,
   FlexiblePointcut,
   IntrinsicRecord,
@@ -16,7 +16,7 @@ export type InstrumentRoot = Instrument;
 export type InstrumentDeep = (
   code: string,
   path: Path,
-  context: DeepLocalContext,
+  situ: DeepLocalSitu,
 ) => string;
 
 export type Aspect<state extends Json, V> =

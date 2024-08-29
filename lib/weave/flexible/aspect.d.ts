@@ -1,4 +1,4 @@
-import type { DeepLocalContext } from "../../source";
+import type { DeepLocalSitu } from "../../source";
 import type { Variable as EstreeVariable } from "../../estree";
 import type {
   ArgVariable as Variable,
@@ -110,7 +110,7 @@ export type AspectTyping<state, value, point extends Json[]> = {
     advice: (
       state: state,
       code: value,
-      context: DeepLocalContext,
+      situ: DeepLocalSitu,
       ...point: point
     ) => value;
   };

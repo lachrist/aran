@@ -1,4 +1,4 @@
-import { instrument, ROOT_PATH } from "../lib/index.mjs";
+import { instrument } from "../lib/index.mjs";
 import { parse } from "acorn";
 import { generate } from "astring";
 
@@ -15,9 +15,8 @@ console.log(
     instrument(
       {
         kind: "eval",
-        situ: "global",
-        context: {},
-        path: ROOT_PATH,
+        situ: { type: "global" },
+        path: /** @type {import("../lib").Path} */ ("$"),
         root: /** @type {any} */ (
           parse(code, {
             sourceType: "script",

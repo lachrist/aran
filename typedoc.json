@@ -1,5 +1,6 @@
 {
   "entryPoints": ["lib/index.mjs", "lib/**/*.d.ts"],
+  "sort": ["source-order"],
   "githubPages": true,
   "readme": "none",
   "out": "page/typedoc",

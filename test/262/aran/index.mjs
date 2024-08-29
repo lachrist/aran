@@ -1,5 +1,5 @@
 import { generate } from "astring";
-import { instrument, generateSetup, ROOT_PATH } from "../../../lib/index.mjs";
+import { instrument, generateSetup } from "../../../lib/index.mjs";
 import { parseGlobal, parseLocal } from "./parse.mjs";
 import { hash32 } from "./hash.mjs";
 import { runInContext } from "node:vm";
@@ -19,6 +19,8 @@ const {
  * ) => [K, V][]}
  */
 const listEntry = listEntryInner;
+
+const ROOT_PATH = /** @type {import("../../../lib").Path} */ ("$");
 
 const GLOBAL_VARIABLE = /** @type {import("../../../lib").EstreeVariable} */ (
   "globalThis"
@@ -150,10 +152,9 @@ export const instrumentRoot = ({ kind, url, content }, { record, config }) => {
         instrument(
           {
             kind,
-            situ: "global",
+            situ: { type: "global" },
             path: ROOT_PATH,
             root: /** @type {any} */ (parseGlobal(kind, content)),
-            context: {},
           },
           completeConfig(config, "throw"),
         ),
@@ -169,12 +170,12 @@ export const instrumentRoot = ({ kind, url, content }, { record, config }) => {
  *   call: {
  *     code: string,
  *     path: import("../../../lib").Path,
- *     context: import("../../../lib").DeepLocalContext,
+ *     situ: import("../../../lib").DeepLocalSitu,
  *   },
  *   config: import(".").Config<{}>,
  * ) => string}
  */
-export const instrumentDeep = ({ code, path, context }, { record, config }) =>
+export const instrumentDeep = ({ code, path, situ }, { record, config }) =>
   getContent(
     record({
       kind: "script",
@@ -183,10 +184,9 @@ export const instrumentDeep = ({ code, path, context }, { record, config }) =>
         instrument(
           {
             kind: "eval",
-            situ: "local.deep",
+            situ,
             path,
             root: parseLocal("eval", code),
-            context,
           },
           completeConfig(config, "embed"),
         ),
@@ -216,8 +216,7 @@ const interceptFunction = (
           instrument(
             {
               kind: "eval",
-              situ: "global",
-              context: {},
+              situ: { type: "global" },
               path: ROOT_PATH,
               root: parseGlobal("eval", code),
             },
@@ -254,8 +253,7 @@ const interceptEvalScript = (
             instrument(
               {
                 kind: "script",
-                situ: "global",
-                context: {},
+                situ: { type: "global" },
                 path: ROOT_PATH,
                 root: parseGlobal("script", code),
               },
@@ -293,8 +291,7 @@ const interceptEvalGlobal = (
             instrument(
               {
                 kind: "eval",
-                situ: "global",
-                context: {},
+                situ: { type: "global" },
                 path: ROOT_PATH,
                 root: parseGlobal("eval", code),
               },
@@ -459,8 +456,8 @@ export const setupAranBasic = (
   const pointcut = setupAspect(
     intrinsics["aran.global"],
     makeAspect(intrinsics, {
-      instrument: (code, path, context) =>
-        instrumentDeep({ code, path, context }, config),
+      instrument: (code, path, situ) =>
+        instrumentDeep({ code, path, situ }, config),
       apply: null,
       construct: null,
     }),
@@ -494,8 +491,8 @@ export const setupAranWeave = (
   const pointcut = setupAspect(
     global,
     makeAspect(runInContext(SETUP, context), {
-      instrument: (code, path, context) =>
-        instrumentDeep({ code, path, context }, config),
+      instrument: (code, path, situ) =>
+        instrumentDeep({ code, path, situ }, config),
       apply: (callee, self, input) =>
         applyMembrane({ callee, self, input }, config),
       construct: (callee, input) =>

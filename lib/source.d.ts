@@ -2,62 +2,90 @@ import type { Path } from "./path";
 import type {
   ModuleProgram as EstreeModuleProgram,
   ScriptProgram as EstreeScriptProgram,
+  Program as EstreeProgram,
 } from "./estree";
 import type { Depth } from "./weave/depth";
 import type { Reboot } from "./reboot";
 
-export type GlobalContext = {};
+export type GlobalSitu = {
+  type: "global";
+};
 
-export type RootLocalContext = {
+export type RootLocalSitu = {
+  type: "local";
   mode: "strict" | "sloppy";
 };
 
-export type DeepLocalContext = Reboot & {
+export type DeepLocalSitu = Reboot & {
+  type: "aran";
   depth: Depth;
 };
 
-export type Context = GlobalContext | RootLocalContext | DeepLocalContext;
+export type Situ = GlobalSitu | RootLocalSitu | DeepLocalSitu;
 
 export type EarlySyntaxError = {
   type: "EarlySyntaxError";
   message: string;
 };
 
+export type PartialSource = {
+  /**
+   * The actual `estree.Program` to instrument. It is also possible to provide
+   * an `EarlySyntaxError` to indicate that the source is not valid JavaScript.
+   * This is useful to make sure parsing error are handled similarly to other
+   * early syntax error -- eg: duplicate global variable declaration.
+   */
+  root: EstreeProgram | EarlySyntaxError;
+  /**
+   * Indicates how the source will be executed.
+   *
+   * Default: either `"script"` or `"module"` based on `source.root.sourceType`.
+   */
+  kind?: "module" | "script" | "eval";
+  /**
+   * Further precises the context in which the source will be executed. Only
+   * relevant when `source.kind` is `"eval"`.
+   *
+   * - `GlobalSitu`: The source will be executed in the global context. It is
+   * the only valid option when `source.kind` is `"module"` or `"script"`.
+   * - `RootLocalSitu`: The source will be executed in a local context that is
+   * not controlled by Aran -- ie: a direct eval call within non-instrumented
+   * code.
+   * - `DeepLocalSitu`: The source will be executed in a local context that is
+   * controlled by Aran -- ie: direct eval call within instrumented code. This
+   * data structure is provided by Aran as argument to the `eval@before` aspect.
+   *
+   * Default: `{ type: "global" }`.
+   */
+  situ?: Situ;
+  /**
+   * Aspect functions will receive the location of the current node as a JSON
+   * path. This value will be used as the root segment for all the path of all
+   * nodes residing in `source.root`.
+   *
+   * Default: `"$"`.
+   */
+  path?: Path;
+};
+
 export type Source =
   | {
       kind: "module";
-      situ: "global";
+      situ: GlobalSitu;
       path: Path;
       root: EstreeModuleProgram | EarlySyntaxError;
-      context: GlobalContext;
     }
   | {
       kind: "script";
-      situ: "global";
+      situ: GlobalSitu;
       path: Path;
       root: EstreeScriptProgram | EarlySyntaxError;
-      context: GlobalContext;
     }
   | {
       kind: "eval";
-      situ: "global";
+      situ: Situ;
       path: Path;
       root: EstreeScriptProgram | EarlySyntaxError;
-      context: GlobalContext;
-    }
-  | {
-      kind: "eval";
-      situ: "local.deep";
-      path: Path;
-      root: EstreeScriptProgram | EarlySyntaxError;
-      context: DeepLocalContext;
-    }
-  | {
-      kind: "eval";
-      situ: "local.root";
-      path: Path;
-      root: EstreeScriptProgram | EarlySyntaxError;
-      context: RootLocalContext;
     };
 
 export type ModuleSource = Source & {
@@ -74,28 +102,28 @@ export type EvalSource = Source & {
 
 export type GlobalEvalSource = Source & {
   kind: "eval";
-  situ: "global";
+  situ: { type: "global" };
 };
 
 export type DeepLocalEvalSource = Source & {
   kind: "eval";
-  situ: "local.deep";
+  situ: { type: "local" };
 };
 
 export type RootLocalEvalSource = Source & {
   kind: "eval";
-  situ: "local.root";
+  situ: { type: "aran" };
 };
 
 export type LocalEvalSource = Source & {
   kind: "eval";
-  situ: "local.deep" | "local.root";
+  situ: { type: "local" | "aran" };
 };
 
 export type RootSource = Source & {
-  situ: "global" | "local.root";
+  situ: { type: "global" | "local" };
 };
 
 export type DeepSource = Source & {
-  situ: "local.deep";
+  situ: { type: "aran" };
 };

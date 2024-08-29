@@ -15,10 +15,9 @@ export type { Path } from "./path.d.ts";
 export type {
   EarlySyntaxError,
   Source,
-  Context,
-  GlobalContext,
-  DeepLocalContext,
-  RootLocalContext,
+  GlobalSitu,
+  DeepLocalSitu,
+  RootLocalSitu,
 } from "./source.js";
 
 export type {

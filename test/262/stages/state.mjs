@@ -1,9 +1,11 @@
 import { setupAran } from "../aran/index.mjs";
+/* eslint-disable local/no-deep-import */
 import {
   isClosureKind,
   isControlKind,
   isProgramKind,
-} from "../../../lib/index.mjs";
+} from "../../../lib/weave/index.mjs";
+/* eslint-enable local/no-deep-import */
 
 const {
   Promise,

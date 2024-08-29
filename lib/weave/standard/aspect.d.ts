@@ -1,7 +1,7 @@
 import type { DeclareHeader, ModuleHeader } from "../../header";
 import type { Intrinsic, Parameter, RuntimePrimitive } from "../../lang";
 import type { Path } from "../../path";
-import type { DeepLocalContext } from "../../source";
+import type { DeepLocalSitu } from "../../source";
 import type { ValueOf } from "../../util";
 import type { ArgVariable, Label } from "../atom";
 import type {
@@ -185,7 +185,7 @@ export type AspectTyping<X, V extends Valuation> = {
     pointcut: (path: Path) => boolean;
     advice: (
       state: X,
-      context: DeepLocalContext,
+      situ: DeepLocalSitu,
       value: V["Stack"],
       path: Path,
     ) => string | V["Other"];
