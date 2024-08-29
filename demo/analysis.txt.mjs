@@ -33,14 +33,13 @@ evalGlobal(
     aran.instrument(
       {
         kind: "script",
-        situ: "global",
-        path: aran.ROOT_PATH,
+        situ: { type: "global" },
+        path: "$",
         root: acorn.parse(target, { ecmaVersion: 2024, sourceType: "script" }),
-        context: {},
       },
       {
         advice_variable: "ADVICE",
-        pointcut: ["apply@around"],
+        standard_pointcut: ["apply@around"],
       },
     ),
   ),
