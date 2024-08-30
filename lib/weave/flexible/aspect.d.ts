@@ -35,6 +35,15 @@ export type GenericPointcut<point extends Json[], node extends Node> = (
   root: Program,
 ) => undefined | null | point;
 
+/**
+ * The flexible weaving API expects each advice function to be a global value.
+ * It is more complex to use than the standard weaving API but let the user
+ * define the static information provided to the advice functions. Unlike the
+ * standard weaving API, each join point can be cut multiple times. NB: the join
+ * points `eval@before`, `apply@around` and `construct@around` can only be cut
+ * once. The join points of the flexible weaving API are very similar to the
+ * join points of the standard API.
+ */
 export type AspectTyping<state, value, point extends Json[]> = {
   // block //
   "block@setup": {

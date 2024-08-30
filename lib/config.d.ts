@@ -11,12 +11,12 @@ export type Config = {
    * by Aran.
    *
    * - `"normal"`: Do not bundle the setup code with the instrumented code.
-   * Setup code is expected to have been executed once before any instrumented
-   * code. This is the mode you should use for real-world use cases.
+   *   Setup code is expected to have been executed once before any instrumented
+   *   code. This is the mode you should use for real-world use cases.
    * - `"standalone"`: Bundle the setup code with the instrumented code. It does
-   * no longer require prior execution of the setup code but multiple
-   * instrumented code will interact well. This is the mode you should use to
-   * investigate and share standalone instrumented snippets.
+   *   no longer require prior execution of the setup code but multiple
+   *   instrumented code will interact well. This is the mode you should use to
+   *   investigate and share standalone instrumented snippets.
    *
    * Default: `"normal"`.
    */
@@ -52,13 +52,13 @@ export type Config = {
    * options:
    *
    * - `"builtin"`: The builtin global declarative record is used, access to
-   * global variables will happen via parameter functions such as: `scope.read`,
-   * `scope.writeSloppy`, etc... Tracking values through these calls requires
-   * additional logic.
+   *   global variables will happen via parameter functions such as:
+   *   `scope.read`, `scope.writeSloppy`, etc... Tracking values through these
+   *   calls requires additional logic.
    * - `"emulate"`: A plain object is used to emulate the global declarative
-   * record. That means that instrumented code will never access the builtin
-   * global declarative record. Hence, every single bit of code should be
-   * instrumented which might be a hard requirement to meet.
+   *   record. That means that instrumented code will never access the builtin
+   *   global declarative record. Hence, every single bit of code should be
+   *   instrumented which might be a hard requirement to meet.
    *
    * Default: `"builtin"`.
    */
@@ -78,11 +78,13 @@ export type Config = {
    * Defines the behavior of early syntax errors:
    *
    * - `"embed"`: The instrumentation will succeed but executing the instrumented
-   * code will cause the first syntax error to be thrown. The error is reported
-   * after parsing but it will originate from the realm targeted by the code.
+   *   code will cause the first syntax error to be thrown. The error is
+   *   reported after parsing but it will originate from the realm targeted by
+   *   the code.
    * - `"throw"`: The instrumentation throw the first early syntax error as an
-   * `AranSyntaxError` with extends `SyntaxError`. The error is reported early
-   * and it will originate from the current realm and not necessarily the realm
+   *   `AranSyntaxError` with extends `SyntaxError`. The error is reported early
+   *   and it will originate from the current realm and not necessarily the
+   *   realm.
    * targeted by the code.
    *
    * Default: `"embed"`.
@@ -90,7 +92,7 @@ export type Config = {
   early_syntax_error: "embed" | "throw";
   /**
    * The global variable that refer to the global object. This is only used when
-   * `mode` is `"standalone"`. Change this value only of `globalThis` do not
+   * `mode` is `"standalone"`. Change this value only if `globalThis` do not
    * refer to the global object for some reason.
    *
    * Default: `globalThis`.
@@ -111,7 +113,7 @@ export type Config = {
    */
   advice_variable: Variable;
   /**
-   * Internal variables are prefixed with this string to avoid clashes with
+   * Internal variables are prefixed with this string to avoid clashing with
    * external variables.
    *
    * Default: `"_aran_"`.

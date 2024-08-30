@@ -72,6 +72,7 @@ Of particular interest are:
 - [standard aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_standard_aspect.AspectTyping.html)
 - [flexible aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_flexible_aspect.AspectTyping.html)
 - [reporting system](https://lachrist.github.io/aran/page/typedoc/types/report.html)
+- [aran language](https://lachrist.github.io/aran/page/typedoc/types/lang.html)
 
 ## Live Demo
 
