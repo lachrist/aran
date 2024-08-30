@@ -71,6 +71,7 @@ Of particular interest are:
 - [instrumentation configuration](https://lachrist.github.io/aran/page/typedoc/types/config.Config.html)
 - [standard aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_standard_aspect.AspectTyping.html)
 - [flexible aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_flexible_aspect.AspectTyping.html)
+- [reporting system](https://lachrist.github.io/aran/page/typedoc/types/report.html)
 
 ## Live Demo
 

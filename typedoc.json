@@ -4,7 +4,7 @@
   "githubPages": true,
   "readme": "none",
   "out": "page/typedoc",
-  "name": "aran",
+  "name": "Aran",
   "tsconfig": "tsconfig.json",
   "visibilityFilters": {},
   "entryPointStrategy": "resolve",

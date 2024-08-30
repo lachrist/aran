@@ -1,4 +1,4 @@
-import type { Warning } from "../../warning";
+import type { Warning } from "../../report";
 import type { Header } from "../../header";
 import type { Error } from "./error";
 import type { Condition } from "./condition";
