@@ -128,7 +128,6 @@ const compileMakeAspect =
      */
     let transit = { type: "external" };
 
-    /* eslint-disable no-use-before-define */
     /**
      * @type {import("../../../lib").StandardAspect<
      *   import("./state").State,
@@ -912,7 +911,6 @@ const compileMakeAspect =
         return value;
       },
     };
-    /* eslint-enable no-use-before-define */
 
     return { type: "standard", data: aspect };
   };

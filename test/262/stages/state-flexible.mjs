@@ -19,6 +19,8 @@ const {
  */
 const isIdentical = is;
 
+const intrinsic = "DUMMY";
+
 ///////////
 // Error //
 ///////////

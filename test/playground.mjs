@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import { instrument } from "../lib/index.mjs";
 import { parse } from "acorn";
 import { generate } from "astring";

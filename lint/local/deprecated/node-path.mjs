@@ -93,10 +93,10 @@ export default {
       description: "make sure node path is correct",
       recommended: false,
     },
-  },
-  schema: {
-    type: "array",
-    items: { type: "string" },
+    schema: {
+      type: "array",
+      items: { type: "string" },
+    },
   },
   create: (context) => ({
     ObjectExpression: (node) => {

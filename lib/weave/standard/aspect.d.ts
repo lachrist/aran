@@ -44,10 +44,10 @@ export type PreciseFrame<V> = ValueOf<{
 export type Header<K extends ProgramKind> = K extends "module"
   ? ModuleHeader[]
   : K extends "script" | "eval.global" | "eval.glocal.root"
-  ? DeclareHeader[]
-  : K extends "eval.local.deep"
-  ? []
-  : never;
+    ? DeclareHeader[]
+    : K extends "eval.local.deep"
+      ? []
+      : never;
 
 export type TaggedHead = ValueOf<{
   [K in ProgramKind]: {

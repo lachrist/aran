@@ -16,8 +16,8 @@ export default {
   create: (context) => {
     const { options: allowed } = context;
     return {
-      Program: () => {
-        const { variables, through } = context.getScope();
+      Program: (node) => {
+        const { variables, through } = context.sourceCode.getScope(node);
         for (const { references } of variables) {
           for (const { identifier } of references) {
             if (!allowed.includes(identifier.name)) {

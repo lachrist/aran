@@ -1,5 +1,3 @@
-/* eslint-disable no-use-before-define */
-
 import { setupAran } from "../aran/index.mjs";
 import { sanitizeMember } from "../argv.mjs";
 import { AranTypeError } from "../error.mjs";
