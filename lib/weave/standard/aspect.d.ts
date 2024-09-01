@@ -423,4 +423,10 @@ export type ConstantPointcut = boolean;
 
 export type ArrayPointcut = Kind[];
 
-export type Pointcut = ObjectPointcut | ArrayPointcut | ConstantPointcut;
+export type ArrowPointcut = (kind: Kind, path: Path) => boolean;
+
+export type Pointcut =
+  | ObjectPointcut
+  | ArrayPointcut
+  | ConstantPointcut
+  | ArrowPointcut;
