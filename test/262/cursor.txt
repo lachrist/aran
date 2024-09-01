@@ -1,2 +1,2 @@
 bare --membrane basic --global-declarative-record builtin --weaving flexible
-1 test/annexB/built-ins/Date/prototype/getYear/B.2.4.js
+41028 test/language/statements/class/dstr/meth-static-ary-ptrn-elem-id-iter-step-err.js

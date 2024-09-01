@@ -9,7 +9,6 @@ import { scrape } from "./scrape.mjs";
 import { readFile } from "node:fs/promises";
 import { home, toRelative, toTarget } from "./home.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
-import { parseArgv } from "./argv.mjs";
 
 const { console, process, URL, Error, JSON } = globalThis;
 
@@ -55,9 +54,9 @@ const cursor = parseCursor(await readFile(pathToFileURL(argv[2]), "utf8"));
 const codebase = new URL("codebase", import.meta.url);
 
 const { compileInstrument } =
-  await /** @type {{default: import("./stage").Stage}} */ (
+  /** @type {{default: import("./stage").Stage}} */ (
     await import(`./stages/${cursor.stage}.mjs`)
-  ).default(parseArgv(cursor.argv));
+  ).default;
 
 // It is unfortunate but uncaught exception do not necessarily indicate test failure.
 // test262/test/language/expressions/dynamic-import/syntax/valid/nested-if-nested-imports.js

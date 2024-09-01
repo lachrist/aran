@@ -1,4 +1,4 @@
-const { Set, Promise } = globalThis;
+const { Set } = globalThis;
 
 const features = new Set([
   "IsHTMLDDA",
@@ -29,31 +29,30 @@ const features = new Set([
 const isFeatureExcluded = (feature) => features.has(feature);
 
 /** @type {import("../stage").Stage} */
-export default (_options) =>
-  Promise.resolve({
-    precursor: [],
-    exclude: ["call-async-done-with-module", "invalid-metadata-header"],
-    negative: [
-      "negative-identity-annex-b",
-      "negative-identity-atomic-wait-work",
-      "negative-identity-compound-assignment",
-      "negative-identity-date-coercion-order",
-      "negative-identity-eval-arguments-declaration",
-      "negative-identity-flaky-symbol-match",
-      "negative-identity-flaky-symbol-replace",
-      "negative-identity-html-comment",
-      "negative-identity-intl402",
-      "negative-identity-non-enumerable-global-function",
-      "negative-identity-prevent-extension-vm-context",
-      "negative-identity-unknown",
-      "negative-identity-update-inside-with",
-      "negative-identity-wrong-realm-for-dynamic-import",
-    ],
-    listLateNegative: (_target, metadata, error) => [
-      ...(error.layer === "meta" && error.name === "AranRealmError"
-        ? [error.message]
-        : []),
-      ...metadata.features.filter(isFeatureExcluded),
-    ],
-    compileInstrument: ({ record }) => record,
-  });
+export default {
+  precursor: [],
+  exclude: ["call-async-done-with-module", "invalid-metadata-header"],
+  negative: [
+    "negative-identity-annex-b",
+    "negative-identity-atomic-wait-work",
+    "negative-identity-compound-assignment",
+    "negative-identity-date-coercion-order",
+    "negative-identity-eval-arguments-declaration",
+    "negative-identity-flaky-symbol-match",
+    "negative-identity-flaky-symbol-replace",
+    "negative-identity-html-comment",
+    "negative-identity-intl402",
+    "negative-identity-non-enumerable-global-function",
+    "negative-identity-prevent-extension-vm-context",
+    "negative-identity-unknown",
+    "negative-identity-update-inside-with",
+    "negative-identity-wrong-realm-for-dynamic-import",
+  ],
+  listLateNegative: (_target, metadata, error) => [
+    ...(error.layer === "meta" && error.name === "AranRealmError"
+      ? [error.message]
+      : []),
+    ...metadata.features.filter(isFeatureExcluded),
+  ],
+  compileInstrument: ({ record }) => record,
+};

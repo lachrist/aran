@@ -1,13 +1,10 @@
 import type { Context } from "node:vm";
 import type {
   DeepLocalSitu,
-  FlexibleAspect,
-  FlexiblePointcut,
-  IntrinsicRecord,
   Json,
   Path,
-  StandardAspect,
   StandardPointcut,
+  FlexiblePointcut,
 } from "../../../lib";
 import type { Instrument } from "../stage";
 
@@ -19,55 +16,16 @@ export type InstrumentDeep = (
   situ: DeepLocalSitu,
 ) => string;
 
-export type Aspect<state extends Json, V> =
-  | {
-      type: "standard";
-      data: StandardAspect<
-        state,
-        {
-          Scope: V;
-          Stack: V;
-          Other: V;
-        }
-      >;
-    }
-  | {
-      type: "flexible";
-      data: FlexibleAspect<state, V>;
-    };
-
-export type MakeAspect<S extends Json, V> = (
-  intrinsics: IntrinsicRecord,
-  membrane: {
-    instrument: InstrumentDeep;
-    apply:
-      | null
-      | ((callee: unknown, self: unknown, input: unknown[]) => unknown);
-    construct: null | ((callee: unknown, input: unknown[]) => unknown);
-  },
-) => Aspect<S, V>;
-
-export type SetupConfig<S extends Json> = {
-  context: Context;
+export type SetupConfig = {
   record: Instrument;
   report: (error: Error) => void;
+  context: Context;
+  flexible_pointcut: FlexiblePointcut | null;
+  standard_pointcut: StandardPointcut | null;
   warning: "console" | "ignore";
   global_declarative_record: "emulate" | "builtin";
-  initial_state: S;
+  initial_state: Json;
 };
-
-export type Pointcut =
-  | {
-      standard_pointcut: StandardPointcut;
-    }
-  | {
-      flexible_pointcut: FlexiblePointcut;
-    };
-
-export type SetupAran = <S extends Json, V>(
-  makeAspect: MakeAspect<S, V>,
-  config: SetupConfig<S>,
-) => InstrumentRoot;
 
 export type PartialAranConfig = {
   standard_pointcut: StandardPointcut | null;

@@ -8,7 +8,6 @@ import { home, toTarget } from "./home.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
 import { listTag, loadTagging } from "./tagging.mjs";
 import { listPrecursor, loadPrecursor } from "./precursor.mjs";
-import { parseArgv, toBasename } from "./argv.mjs";
 
 const { Error, console, process, URL, JSON } = globalThis;
 
@@ -18,13 +17,11 @@ if (argv.length < 3) {
   );
 }
 
-const [_node, _main, stage_name, ...stage_argv] = argv;
+const [_node, _main, stage_name] = argv;
 
-const options = parseArgv(stage_argv);
-
-const stage = await /** @type {{default: import("./stage").Stage}} */ (
+const stage = /** @type {{default: import("./stage").Stage}} */ (
   await import(`./stages/${stage_name}.mjs`)
-).default(options);
+).default;
 
 process.on("uncaughtException", (error, _origin) => {
   console.log(`${inspectErrorName(error)}: ${inspectErrorMessage(error)}`);
@@ -94,7 +91,7 @@ for await (const url of scrape(new URL("test/", home))) {
 }
 
 await writeFile(
-  new URL(`stages/${toBasename(stage_name, options)}.json`, import.meta.url),
+  new URL(`stages/${stage_name}.json`, import.meta.url),
   JSON.stringify(results, null, 2),
   "utf8",
 );

@@ -75,14 +75,14 @@ export type CompileInstrument = (options: {
   context: Context;
 }) => Instrument;
 
-export type Stage = (options: { [key in string]?: string }) => Promise<{
-  compileInstrument: CompileInstrument;
+export type Stage = {
   exclude: string[];
   negative: string[];
   precursor: string[];
+  compileInstrument: CompileInstrument;
   listLateNegative: (
     target: string,
     metadata: Metadata,
     error: ErrorSerial,
   ) => string[];
-}>;
+};
