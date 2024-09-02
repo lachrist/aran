@@ -51,6 +51,7 @@
     "acorn": "^8.12.1",
     "astring": "^1.8.6",
     "eslint": "^9.9.1",
+    "eslint-import-resolver-typescript": "^3.6.3",
     "prettier": "^3.0.0",
     "rollup": "^4.19.1",
     "rollup-plugin-string": "^3.0.0",
@@ -58,8 +59,5 @@
     "typescript": "^5.4.5",
     "typescript-eslint": "^8.3.0",
     "yaml": "^2.3.2"
-  },
-  "dependencies": {
-    "eslint-import-resolver-typescript": "^3.6.3"
   }
 }

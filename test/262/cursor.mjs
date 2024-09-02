@@ -1,5 +1,6 @@
 import { AranExecError } from "./error.mjs";
 import { parseList } from "./list.mjs";
+import { STAGE_ENUM } from "./stage.mjs";
 
 const {
   String,
@@ -8,30 +9,16 @@ const {
 } = globalThis;
 
 /**
- * @type {{ [key in import("./cursor").Stage]: null }}
- */
-const STAGES = {
-  "identity": null,
-  "bare-basic-standard": null,
-  "bare-basic-flexible": null,
-  "bare-patch-flexible": null,
-  "bare-patch-standard": null,
-  "bare-weave-flexible": null,
-  "bare-weave-standard": null,
-  "state-basic-standard": null,
-};
-
-/**
  * @type {(
  *   candidate: string
- * ) => candidate is import("./cursor").Stage}
+ * ) => candidate is import("./stage").StageName}
  */
-const isStage = (candidate) => hasOwn(STAGES, candidate);
+const isStage = (candidate) => hasOwn(STAGE_ENUM, candidate);
 
 /**
  * @type {(
  *   line: string
- * ) => import("./cursor").Stage}
+ * ) => import("./stage").StageName}
  */
 const parseStageLine = (line) => {
   if (isStage(line)) {

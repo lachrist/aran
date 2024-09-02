@@ -1,6 +1,12 @@
 import { spawn } from "node:child_process";
+import { STAGE_ENUM } from "./stage.mjs";
 
-const { undefined, Promise, Error } = globalThis;
+const {
+  undefined,
+  Promise,
+  Error,
+  Reflect: { ownKeys: listKey },
+} = globalThis;
 
 /**
  * @type {(
@@ -30,23 +36,8 @@ const exec = (stage) =>
     });
   });
 
-/**
- * @type {import("./stage").StageName[]}
- */
-const stages = [
-  "identity",
-  "parsing",
-  "bare-basic-flexible",
-  "bare-basic-standard",
-  "bare-patch-flexible",
-  "bare-patch-standard",
-  "bare-weave-flexible",
-  "bare-weave-standard",
-  "full-basic-flexible",
-  "full-basic-standard",
-  "state-basic-standard",
-];
-
-for (const stage of stages) {
+for (const stage of /** @type {import("./stage").StageName[]} */ (
+  listKey(STAGE_ENUM)
+)) {
   await exec(stage);
 }
