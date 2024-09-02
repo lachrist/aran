@@ -177,7 +177,7 @@ const makeAdvice = (
         suspension: "none",
       };
     },
-    "control-block@labeling": (state, kind, labels, path) => {
+    "control-block@before": (state, kind, labels, path) => {
       const context = {
         type: "control-block@labeling",
         transit,
@@ -312,7 +312,7 @@ const makeAdvice = (
       assert(transit.type === "external", context);
       transit = { type: "regular" };
     },
-    "control-block@completion": (state, kind, path) => {
+    "control-block@after": (state, kind, path) => {
       const context = {
         type: "control-block@completion",
         transit,
@@ -328,9 +328,27 @@ const makeAdvice = (
       assert(transit.type === "regular", context);
       transit = { type: "completion" };
     },
-    "routine-block@completion": (state, kind, value, path) => {
+    "program-block@after": (state, kind, value, path) => {
       const context = {
-        type: "routine-block@completion",
+        type: "program-block@completion",
+        transit,
+        state,
+        kind,
+        value,
+        path,
+      };
+      // console.dir(context);
+      assertNotNull(state, context);
+      assert(isIdentical(pop(state.stack, context), value), context);
+      assert(state.kind === kind, context);
+      assert(state.path === path, context);
+      assert(transit.type === "regular", context);
+      transit = { type: "return", result: value };
+      return value;
+    },
+    "closure-block@after": (state, kind, value, path) => {
+      const context = {
+        type: "closure-block@completion",
         transit,
         state,
         kind,

@@ -6,12 +6,11 @@ import type { ValueOf } from "../../util";
 import type { ArgVariable, Label } from "../atom";
 import type {
   BlockKind,
+  ProgramKind,
   ClosureKind,
   ControlKind,
   GeneratorKind,
   Parametrization,
-  ProgramKind,
-  RoutineKind,
 } from "../parametrization";
 
 export type Variable = ArgVariable | Parameter;
@@ -75,9 +74,9 @@ export type AspectTyping<X, V extends Valuation> = {
     advice: (state: X, kind: BlockKind, path: Path) => X;
   };
   /**
-   * Called before entering a program block. with the headers of the program.
+   * Called before entering a program block with the headers of the program.
    */
-  "program-block@definition": {
+  "program-block@before": {
     pointcut: (kind: ProgramKind, path: Path) => boolean;
     advice: <K extends ProgramKind>(
       state: X,
@@ -87,10 +86,17 @@ export type AspectTyping<X, V extends Valuation> = {
     ) => void;
   };
   /**
+   * Called before entering a closure block.
+   */
+  "closure-block@before": {
+    pointcut: (kind: ClosureKind, path: Path) => boolean;
+    advice: <K extends ProgramKind>(state: X, kind: K, path: Path) => void;
+  };
+  /**
    * Called before entering a control block with the labels of the current
    * block.
    */
-  "control-block@labeling": {
+  "control-block@before": {
     pointcut: (kind: ControlKind, path: Path) => boolean;
     advice: (state: X, kind: ControlKind, labels: Label[], path: Path) => void;
   };
@@ -144,25 +150,38 @@ export type AspectTyping<X, V extends Valuation> = {
     advice: (state: X, kind: GeneratorKind, path: Path) => void;
   };
   /**
-   * Called before leaving a control block. If an error was thrown or if a label
-   * was broken onto, this advice will not be called.
+   * Called before leaving a program block with its return value. If an error
+   * was thrown, this advice will not be called.
    */
-  "control-block@completion": {
-    pointcut: (kind: ControlKind, path: Path) => boolean;
-    advice: (state: X, kind: ControlKind, path: Path) => void;
-  };
-  /**
-   * Called before leaving a program or a closure block with the final value. If
-   * an error was thrown, this advice will not be called.
-   */
-  "routine-block@completion": {
-    pointcut: (kind: RoutineKind, path: Path) => boolean;
+  "program-block@after": {
+    pointcut: (kind: ProgramKind, path: Path) => boolean;
     advice: (
       state: X,
-      kind: RoutineKind,
+      kind: ProgramKind,
       value: V["Stack"],
       path: Path,
     ) => V["Other"];
+  };
+  /**
+   * Called before leaving a closure block with its completion value. If an
+   * error was thrown, this advice will not be called.
+   */
+  "closure-block@after": {
+    pointcut: (kind: ClosureKind, path: Path) => boolean;
+    advice: (
+      state: X,
+      kind: ClosureKind,
+      value: V["Stack"],
+      path: Path,
+    ) => V["Other"];
+  };
+  /**
+   * Called before leaving a control block. If an error was thrown or if a label
+   * was broken onto, this advice will not be called.
+   */
+  "control-block@after": {
+    pointcut: (kind: ControlKind, path: Path) => boolean;
+    advice: (state: X, kind: ControlKind, path: Path) => void;
   };
   /**
    * Called before leaving any block only if an error was thrown.

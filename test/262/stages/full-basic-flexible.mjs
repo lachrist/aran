@@ -46,15 +46,20 @@ export default {
         pointcut,
         advice: (_state, frame, _path) => frame,
       },
+      _ARAN_PROGRAM_BLOCK_AFTER_: {
+        kind: "program-block@after",
+        pointcut,
+        advice: (_state, value, _path) => value,
+      },
+      _ARAN_CLOSURE_BLOCK_AFTER_: {
+        kind: "closure-block@after",
+        pointcut,
+        advice: (_state, value, _path) => value,
+      },
       _ARAN_CONTROL_BLOCK_AFTER_: {
         kind: "control-block@after",
         pointcut,
         advice: (_state, _path) => undefined,
-      },
-      _ARAN_ROUTINE_BLOCK_AFTER_: {
-        kind: "routine-block@after",
-        pointcut,
-        advice: (_state, value, _path) => value,
       },
       _ARAN_BLOCK_THROWING_: {
         kind: "block@throwing",
