@@ -1,8 +1,4 @@
-import {
-  setupAranBasic,
-  setupStandardAdvice,
-  toStandardPointcut,
-} from "../aran/index.mjs";
+import { setupAranBasic, setupStandardAdvice } from "../aran/index.mjs";
 import bare from "./bare.mjs";
 
 /**
@@ -12,20 +8,8 @@ export default {
   ...bare,
   listLateNegative: (_target, _metadata, _error) => [],
   compileInstrument: ({ report, record, warning, context }) => {
-    /**
-     * @type {import("../../../lib").StandardAdvice<
-     *   null,
-     *   { Stack: unknown, Scope: unknown, Other: unknown },
-     * >}
-     */
-    const advice = {
-      "eval@before": (_state, context, code, path) =>
-        // eslint-disable-next-line no-use-before-define
-        typeof code === "string" ? instrumentDeep(code, path, context) : code,
-    };
-    setupStandardAdvice(context, advice);
     const { instrumentRoot, instrumentDeep } = setupAranBasic({
-      standard_pointcut: toStandardPointcut(advice),
+      standard_pointcut: ["eval@before"],
       flexible_pointcut: null,
       global_declarative_record: "builtin",
       initial_state: null,
@@ -34,6 +18,17 @@ export default {
       context,
       warning,
     });
+    /**
+     * @type {import("../../../lib").StandardAdvice<
+     *   null,
+     *   { Stack: unknown, Scope: unknown, Other: unknown },
+     * >}
+     */
+    const advice = {
+      "eval@before": (_state, situ, code, path) =>
+        typeof code === "string" ? instrumentDeep(code, path, situ) : code,
+    };
+    setupStandardAdvice(context, advice);
     return instrumentRoot;
   },
 };

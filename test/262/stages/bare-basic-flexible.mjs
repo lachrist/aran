@@ -19,12 +19,11 @@ export default {
       _ARAN_EVAL_BEFORE_: {
         kind: "eval@before",
         pointcut: ({ tag: path }) => [path],
-        advice: (_state, code, context, path) =>
+        advice: (_state, code, situ, path) =>
           // eslint-disable-next-line no-use-before-define
-          typeof code === "string" ? instrumentDeep(code, path, context) : code,
+          typeof code === "string" ? instrumentDeep(code, path, situ) : code,
       },
     };
-    setupFlexibleAspect(context, aspect);
     const { instrumentRoot, instrumentDeep } = setupAranBasic({
       global_declarative_record: "builtin",
       initial_state: null,
@@ -35,6 +34,7 @@ export default {
       flexible_pointcut: aspect,
       standard_pointcut: null,
     });
+    setupFlexibleAspect(context, aspect);
     return instrumentRoot;
   },
 };

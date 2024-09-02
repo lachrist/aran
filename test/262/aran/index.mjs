@@ -13,16 +13,6 @@ const {
   Reflect: { defineProperty, getPrototypeOf, setPrototypeOf, ownKeys: listKey },
 } = globalThis;
 
-/**
- * @type {<
- *   S extends import("../../../lib").Json,
- *   V extends import("../../../lib").StandardValuation,
- * >(
- *   advice: import("../../../lib").StandardAdvice<S, V>,
- * ) => import("../../../lib").StandardPointcut}
- */
-export const toStandardPointcut = /** @type {any} */ (listKey);
-
 const ROOT_PATH = /** @type {import("../../../lib").Path} */ ("$");
 
 const GLOBAL_VARIABLE = /** @type {import("../../../lib").EstreeVariable} */ (

@@ -11,7 +11,6 @@ export default {
       ? ["direct-eval-call"]
       : [],
   compileInstrument: ({ report, record, warning, context }) => {
-    setupStandardAdvice(context, {});
     const { instrumentRoot } = setupAranPatch({
       global_declarative_record: "emulate",
       initial_state: null,
@@ -22,6 +21,7 @@ export default {
       flexible_pointcut: null,
       standard_pointcut: [],
     });
+    setupStandardAdvice(context, {});
     return instrumentRoot;
   },
 };

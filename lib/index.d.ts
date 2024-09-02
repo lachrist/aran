@@ -45,6 +45,7 @@ export type {
   ArgVariable as Variable,
   Label as Label,
   ArgProgram as Program,
+  ArgNode as Node,
   ArgControlBlock as ControlBlock,
   ArgRoutineBlock as RoutineBlock,
   ArgStatement as Statement,

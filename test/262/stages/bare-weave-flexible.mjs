@@ -23,9 +23,9 @@ export default {
       _ARAN_EVAL_BEFORE_: {
         kind: "eval@before",
         pointcut: ({ tag: path }) => [path],
-        advice: (_state, code, context, path) =>
+        advice: (_state, code, situ, path) =>
           // eslint-disable-next-line no-use-before-define
-          typeof code === "string" ? instrumentDeep(code, path, context) : code,
+          typeof code === "string" ? instrumentDeep(code, path, situ) : code,
       },
       _ARAN_APPLY_AROUND_: {
         kind: "apply@around",
