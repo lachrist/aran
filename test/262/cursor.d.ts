@@ -1,15 +1,7 @@
-export type Stage =
-  | "identity"
-  | "bare-basic-standard"
-  | "bare-basic-flexible"
-  | "bare-patch-flexible"
-  | "bare-patch-standard"
-  | "bare-weave-flexible"
-  | "bare-weave-standard"
-  | "state-basic-standard";
+import type { StageName } from "./stage";
 
 export type Cursor = {
-  stage: Stage;
+  stage: StageName;
   index: number | null;
   target: string | null;
 };

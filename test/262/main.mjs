@@ -1,30 +1,19 @@
 import { spawn } from "node:child_process";
-import { stdout, stderr } from "node:process";
-import { cpus } from "node:os";
 
-const {
-  Math: { floor },
-  undefined,
-  Promise,
-  Error,
-} = globalThis;
+const { undefined, Promise, Error } = globalThis;
 
 /**
- * @type {(argv: string[]) => Promise<void>}
+ * @type {(
+ *   stage: import("./stage").StageName,
+ * ) => Promise<void>}
  */
-const exec = (argv) =>
+const exec = (stage) =>
   new Promise((resolve, reject) => {
-    const name = argv.join(" ");
     const child = spawn(
       "node",
-      [
-        "--experimental-vm-modules",
-        "--expose-gc",
-        "test/262/exec.mjs",
-        ...argv,
-      ],
+      ["--experimental-vm-modules", "--expose-gc", "test/262/exec.mjs", stage],
       {
-        stdio: ["ignore", "pipe", "pipe"],
+        stdio: ["ignore", "inherit", "inherit"],
       },
     );
     child.on("error", reject);
@@ -33,82 +22,31 @@ const exec = (argv) =>
         if (code === 0) {
           resolve(undefined);
         } else {
-          reject(new Error(`code: ${code}`));
+          reject(new Error(`${stage} failure code: ${code}`));
         }
       } else {
-        reject(new Error(`signal: ${signal}`));
+        reject(new Error(`${stage} kill signal: ${signal}`));
       }
     });
-    child.stdout.on("data", (data) => stdout.write(`${name} >> ${data}`));
-    child.stderr.on("data", (data) => stderr.write(`${name} >> ${data}`));
   });
 
 /**
- * @type {(
- *   stage: "bare" | "forward",
- *   membrane: "basic" | "weave" | "patch",
- * ) => string[][]}
+ * @type {import("./stage").StageName[]}
  */
-const split = (stage, membrane) => {
-  const base = [
-    stage,
-    "--membrane",
-    membrane,
-    "--global-declarative-record",
-    membrane === "basic" ? "builtin" : "emulate",
-  ];
-  return [
-    [...base, "--weaving", "flexible"],
-    [...base, "--weaving", "standard"],
-  ];
-};
-
-/**
- * @type {string[][][]}
- */
-const suite = [
-  [["identity"]],
-  [["parsing"]],
-  [
-    ...split("bare", "basic"),
-    ...split("bare", "weave"),
-    ...split("bare", "patch"),
-  ],
-  [
-    ...split("forward", "basic"),
-    ...split("forward", "weave"),
-    ...split("forward", "patch"),
-  ],
+const stages = [
+  "identity",
+  "parsing",
+  "bare-basic-flexible",
+  "bare-basic-standard",
+  "bare-patch-flexible",
+  "bare-patch-standard",
+  "bare-weave-flexible",
+  "bare-weave-standard",
+  "full-basic-flexible",
+  "full-basic-standard",
+  "state-basic-standard",
 ];
 
-const CONCURRENCY = floor(cpus().length / 2);
-
-/**
- * @type {(inputs: string[][]) => Promise<void>}
- */
-const execute = (inputs) =>
-  new Promise((resolve, reject) => {
-    let concurrent = 0;
-    let index = 0;
-    const kick = () => {
-      if (index < inputs.length - 1) {
-        const argv = inputs[index];
-        index += 1;
-        if (concurrent < CONCURRENCY) {
-          concurrent += 1;
-          exec(argv).then(() => {
-            concurrent -= 1;
-            kick();
-          }, reject);
-          kick();
-        }
-      } else {
-        resolve(undefined);
-      }
-    };
-    kick();
-  });
-
-for (const inputs of suite) {
-  await execute(inputs);
+for (const stage of stages) {
+  await exec(stage);
 }

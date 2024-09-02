@@ -1,11 +1,12 @@
 import { setupAranBasic, setupStandardAdvice } from "../aran/index.mjs";
-import bare from "./bare.mjs";
 
 /**
  * @type {import("../stage").Stage}
  */
 export default {
-  ...bare,
+  precursor: ["identity", "parsing", "bare-basic-flexible"],
+  negative: [],
+  exclude: [],
   listLateNegative: (_target, _metadata, _error) => [],
   compileInstrument: ({ report, record, warning, context }) => {
     const {

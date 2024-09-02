@@ -63,10 +63,15 @@ export type Instrument = (source: Source) => Source;
 export type StageName =
   | "identity"
   | "parsing"
-  | "empty-native"
-  | "empty-emulate"
-  | "transparent-native"
-  | "transparent-emulate";
+  | "bare-basic-standard"
+  | "bare-basic-flexible"
+  | "bare-patch-flexible"
+  | "bare-patch-standard"
+  | "bare-weave-flexible"
+  | "bare-weave-standard"
+  | "full-basic-standard"
+  | "full-basic-flexible"
+  | "state-basic-standard";
 
 export type CompileInstrument = (options: {
   record: Instrument;
