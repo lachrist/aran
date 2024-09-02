@@ -36,6 +36,7 @@ export type PartialAranConfig = {
 };
 
 export type Config<G> = {
+  report: (error: Error) => void;
   record: Instrument;
   config: PartialAranConfig;
   globals: G;

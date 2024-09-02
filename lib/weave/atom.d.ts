@@ -10,6 +10,7 @@ import type {
   RoutineBlock,
 } from "../lang";
 import type { Path } from "../path";
+import type { Warning } from "./warning";
 
 export type ArgVariable = Brand<string, "weave.ArgVariable">;
 
@@ -30,7 +31,7 @@ export type ResAtom = {
   Source: Source;
   Specifier: Specifier;
   Variable: ResVariable;
-  Tag: null;
+  Tag: Warning[];
 };
 
 export type ArgNode = Node<ArgAtom>;

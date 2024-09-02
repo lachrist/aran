@@ -16,6 +16,8 @@
 
 import type { Node, Variable } from "./estree";
 import type { Path } from "./path";
+import type { Warning as UnbuildWarning } from "./unbuild/prelude/warning";
+import type { Warning as WeaveWarning } from "./weave/warning";
 
 ///////////////////
 // AranExecError //
@@ -95,16 +97,7 @@ export class AranIllegalInputError extends Error {
 // AranWarningError //
 //////////////////////
 
-export type WarningName =
-  | "ExternalConstant"
-  | "ExternalDeadzone"
-  | "ExternalSloppyFunction"
-  | "ExternalLateDeclaration";
-
-export type Warning = {
-  name: WarningName;
-  path: Path;
-};
+export type Warning = UnbuildWarning | WeaveWarning;
 
 /**
  * Signals a warning when `config.warning` is `"throw"`.

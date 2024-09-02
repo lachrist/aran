@@ -1,4 +1,3 @@
-import type { Warning } from "../../report";
 import type { Header } from "../../header";
 import type { Error } from "./error";
 import type { Condition } from "./condition";
@@ -11,6 +10,7 @@ import type { Reboot } from "../../reboot";
 import type { PrivateKey } from "../../estree";
 import type { ReifyExternal } from "./external";
 import type { Variable } from "../../estree";
+import type { Warning } from "./warning";
 
 export type ReturnIteratorPrelude = {
   type: "iterator-return";

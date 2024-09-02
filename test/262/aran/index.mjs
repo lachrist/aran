@@ -9,6 +9,7 @@ const {
   undefined,
   String,
   URL,
+  Object: { hasOwn },
   Reflect: { defineProperty, getPrototypeOf, setPrototypeOf, ownKeys: listKey },
 } = globalThis;
 
@@ -132,6 +133,38 @@ const shouldInstrument = (url, global_declarative_record) => {
   }
 };
 
+/* eslint-disable */
+const AranEvalError = class extends Error {
+  constructor(/** @type {string} */ message) {
+    super(message);
+    this.name = "AranEvalError";
+  }
+};
+/* eslint-enable */
+
+/**
+ * @type {(
+ *   root: import("../../../lib").EstreeProgram & {
+ *     _aran_warning_array?: import("../../../lib").Warning[],
+ *   },
+ *   report: (error: Error) => void,
+ * ) => import("../../../lib").EstreeProgram}
+ */
+const processWarning = (root, report) => {
+  for (const warning of hasOwn(root, "_aran_warning_array")
+    ? (root._aran_warning_array ?? [])
+    : []) {
+    if (warning.name === "MissingEvalAdvice") {
+      report(
+        new AranEvalError(
+          "eval@before is required to support direct eval call",
+        ),
+      );
+    }
+  }
+  return root;
+};
+
 /**
  * @type {(
  *   file: {
@@ -146,20 +179,23 @@ const shouldInstrument = (url, global_declarative_record) => {
  *   content: string,
  * }}
  */
-const instrumentRoot = ({ kind, url, content }, { record, config }) => {
+const instrumentRoot = ({ kind, url, content }, { record, report, config }) => {
   if (shouldInstrument(url, config.global_declarative_record)) {
     return record({
       kind,
       url,
       content: generate(
-        instrument(
-          {
-            kind,
-            situ: { type: "global" },
-            path: ROOT_PATH,
-            root: /** @type {any} */ (parseGlobal(kind, content)),
-          },
-          completeConfig(config, "throw"),
+        processWarning(
+          instrument(
+            {
+              kind,
+              situ: { type: "global" },
+              path: ROOT_PATH,
+              root: /** @type {any} */ (parseGlobal(kind, content)),
+            },
+            completeConfig(config, "throw"),
+          ),
+          report,
         ),
       ),
     });
@@ -178,20 +214,23 @@ const instrumentRoot = ({ kind, url, content }, { record, config }) => {
  *   config: import(".").Config<{}>,
  * ) => string}
  */
-const instrumentDeep = ({ code, path, situ }, { record, config }) =>
+const instrumentDeep = ({ code, path, situ }, { record, report, config }) =>
   getContent(
     record({
       kind: "script",
       url: new URL(`dynamic:///eval-local/${hash32(code).toString(32)}`),
       content: generate(
-        instrument(
-          {
-            kind: "eval",
-            situ,
-            path,
-            root: parseLocal("eval", code),
-          },
-          completeConfig(config, "embed"),
+        processWarning(
+          instrument(
+            {
+              kind: "eval",
+              situ,
+              path,
+              root: parseLocal("eval", code),
+            },
+            completeConfig(config, "embed"),
+          ),
+          report,
         ),
       ),
     }),
@@ -207,7 +246,7 @@ const instrumentDeep = ({ code, path, situ }, { record, config }) =>
  */
 const interceptFunction = (
   input,
-  { record, config, globals: { evalGlobal } },
+  { record, report, config, globals: { evalGlobal } },
 ) => {
   const code = compileFunctionCode(input);
   return evalGlobal(
@@ -216,14 +255,17 @@ const interceptFunction = (
         kind: "script",
         url: new URL(`dynamic:///function/${hash32(code).toString(32)}`),
         content: generate(
-          instrument(
-            {
-              kind: "eval",
-              situ: { type: "global" },
-              path: ROOT_PATH,
-              root: parseGlobal("eval", code),
-            },
-            completeConfig(config, "embed"),
+          processWarning(
+            instrument(
+              {
+                kind: "eval",
+                situ: { type: "global" },
+                path: ROOT_PATH,
+                root: parseGlobal("eval", code),
+              },
+              completeConfig(config, "embed"),
+            ),
+            report,
           ),
         ),
       }),
@@ -241,7 +283,7 @@ const interceptFunction = (
  */
 const interceptEvalScript = (
   input,
-  { record, config, globals: { evalScript } },
+  { record, report, config, globals: { evalScript } },
 ) => {
   const code = getArgumentCode(input);
   if (code === null) {
@@ -253,14 +295,17 @@ const interceptEvalScript = (
           kind: "script",
           url: new URL(`dynamic:///script/${hash32(code).toString(32)}`),
           content: generate(
-            instrument(
-              {
-                kind: "script",
-                situ: { type: "global" },
-                path: ROOT_PATH,
-                root: parseGlobal("script", code),
-              },
-              completeConfig(config, "embed"),
+            processWarning(
+              instrument(
+                {
+                  kind: "script",
+                  situ: { type: "global" },
+                  path: ROOT_PATH,
+                  root: parseGlobal("script", code),
+                },
+                completeConfig(config, "embed"),
+              ),
+              report,
             ),
           ),
         }),
@@ -279,7 +324,7 @@ const interceptEvalScript = (
  */
 const interceptEvalGlobal = (
   input,
-  { config, record, globals: { evalGlobal } },
+  { config, report, record, globals: { evalGlobal } },
 ) => {
   const code = getArgumentCode(input);
   if (code === null) {
@@ -291,14 +336,17 @@ const interceptEvalGlobal = (
           kind: "script",
           url: new URL(`dynamic:///eval-global/${hash32(code).toString(32)}`),
           content: generate(
-            instrument(
-              {
-                kind: "eval",
-                situ: { type: "global" },
-                path: ROOT_PATH,
-                root: parseGlobal("eval", code),
-              },
-              completeConfig(config, "embed"),
+            processWarning(
+              instrument(
+                {
+                  kind: "eval",
+                  situ: { type: "global" },
+                  path: ROOT_PATH,
+                  root: parseGlobal("eval", code),
+                },
+                completeConfig(config, "embed"),
+              ),
+              report,
             ),
           ),
         }),
@@ -319,23 +367,31 @@ const interceptEvalGlobal = (
  */
 const applyMembrane = (
   call,
-  { record, config, globals: { evalScript, evalGlobal, Function, apply } },
+  {
+    record,
+    report,
+    config,
+    globals: { evalScript, evalGlobal, Function, apply },
+  },
 ) => {
   if (call.callee === evalScript) {
     return interceptEvalScript(call.input, {
       record,
+      report,
       config,
       globals: { evalScript },
     });
   } else if (call.callee === evalGlobal) {
     return interceptEvalGlobal(call.input, {
       record,
+      report,
       config,
       globals: { evalGlobal },
     });
   } else if (call.callee === Function) {
     return interceptFunction(call.input, {
       record,
+      report,
       config,
       globals: { evalGlobal },
     });
@@ -355,11 +411,12 @@ const applyMembrane = (
  */
 const constructMembrane = (
   call,
-  { record, config, globals: { Function, evalGlobal, construct } },
+  { record, report, config, globals: { Function, evalGlobal, construct } },
 ) => {
   if (call.callee === Function) {
     return interceptFunction(call.input, {
       record,
+      report,
       config,
       globals: { evalGlobal },
     });
@@ -409,16 +466,12 @@ export const setupFlexibleAspect = (context, aspect) => {
  *  instrumentRoot: import(".").InstrumentRoot,
  * }}
  */
-export const setupAranBasic = ({
-  context,
-  record,
-  report: _report,
-  ...aran_config
-}) => {
+export const setupAranBasic = ({ context, record, report, ...aran_config }) => {
   const intrinsics = runInContext(SETUP, context);
   /** @type {import(".").BasicConfig} */
   const config = {
     record,
+    report,
     config: aran_config,
     globals: {},
   };
@@ -441,17 +494,13 @@ export const setupAranBasic = ({
  *   construct: (callee: unknown, input: unknown[]) => unknown,
  * }}
  */
-export const setupAranWeave = ({
-  context,
-  record,
-  report: _report,
-  ...aran_config
-}) => {
+export const setupAranWeave = ({ context, record, report, ...aran_config }) => {
   const global = runInContext("this;", context);
   const intrinsics = runInContext(SETUP, context);
   /** @type {import(".").WeaveConfig} */
   const config = {
     record,
+    report,
     config: aran_config,
     globals: {
       evalScript: global.$262.evalScript,
@@ -472,22 +521,12 @@ export const setupAranWeave = ({
   };
 };
 
-/* eslint-disable */
-const AranPatchError = class extends Error {
-  constructor(/** @type {string} */ message) {
-    super(message);
-    this.name = "AranPatchError";
-  }
-};
-/* eslint-enable */
-
 /**
  * @type {(
  *   config: import(".").SetupConfig,
  * ) => {
  *   intrinsics: import("../../../lib").IntrinsicRecord,
  *   instrumentRoot: import(".").InstrumentRoot,
- *   instrumentDeep: import(".").InstrumentDeep,
  * }}
  */
 export const setupAranPatch = ({ context, report, record, ...aran_config }) => {
@@ -501,6 +540,7 @@ export const setupAranPatch = ({ context, report, record, ...aran_config }) => {
   /** @type {import(".").PatchConfig} */
   const config = {
     record,
+    report,
     config: aran_config,
     globals: {
       evalScript,
@@ -573,12 +613,5 @@ export const setupAranPatch = ({ context, report, record, ...aran_config }) => {
   return {
     intrinsics,
     instrumentRoot: (source) => instrumentRoot(source, config),
-    instrumentDeep: (_code, _path, _context) => {
-      const error = new AranPatchError(
-        "Patch membrane does not support local eval call",
-      );
-      report(error);
-      throw error;
-    },
   };
 };

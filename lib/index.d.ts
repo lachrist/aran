@@ -31,6 +31,17 @@ export type {
 export type { Json } from "./json.d.ts";
 
 export type {
+  Warning,
+  AranDuplicateCutError,
+  AranExecError,
+  AranIllegalInputError,
+  AranIllegalSyntaxError,
+  AranTypeError,
+  AranVariableClashError,
+  AranWarningError,
+} from "./report.d.ts";
+
+export type {
   ArgVariable as Variable,
   Label as Label,
   ArgProgram as Program,
