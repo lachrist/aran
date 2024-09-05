@@ -1,3 +1,4 @@
+import type { Source, Specifier } from "../../estree";
 import type { DeclareHeader, ModuleHeader } from "../../header";
 import type { Intrinsic, Parameter, RuntimePrimitive } from "../../lang";
 import type { Path } from "../../path";
@@ -90,7 +91,7 @@ export type AspectTyping<X, V extends Valuation> = {
    */
   "closure-block@before": {
     pointcut: (kind: ClosureKind, path: Path) => boolean;
-    advice: <K extends ProgramKind>(state: X, kind: K, path: Path) => void;
+    advice: <K extends ClosureKind>(state: X, kind: K, path: Path) => void;
   };
   /**
    * Called before entering a control block with the labels of the current
@@ -243,11 +244,15 @@ export type AspectTyping<X, V extends Valuation> = {
    * Called right after a value was imported from another module.
    */
   "import@after": {
-    pointcut: (source: string, specifier: string | null, path: Path) => boolean;
+    pointcut: (
+      source: Source,
+      specifier: Specifier | null,
+      path: Path,
+    ) => boolean;
     advice: (
       state: X,
-      source: string,
-      specifier: string | null,
+      source: Source,
+      specifier: Specifier | null,
       value: V["Other"],
       path: Path,
     ) => V["Stack"];
@@ -290,7 +295,7 @@ export type AspectTyping<X, V extends Valuation> = {
       situ: DeepLocalSitu,
       value: V["Stack"],
       path: Path,
-    ) => string | V["Other"];
+    ) => string | V["Stack"];
   };
   /**
    * Called right after returning from a direct eval call.
@@ -355,10 +360,10 @@ export type AspectTyping<X, V extends Valuation> = {
    * Called right before a value will be exported from the current module.
    */
   "export@before": {
-    pointcut: (specifier: string, path: Path) => boolean;
+    pointcut: (specifier: Specifier, path: Path) => boolean;
     advice: (
       state: X,
-      specifier: string,
+      specifier: Specifier,
       value: V["Stack"],
       path: Path,
     ) => V["Other"];
