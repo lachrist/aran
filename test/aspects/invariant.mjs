@@ -1,74 +1,30 @@
-import { setupAranBasic, setupStandardAdvice } from "../aran/index.mjs";
 /* eslint-disable local/no-deep-import */
 import {
   isClosureKind,
   isControlKind,
   isProgramKind,
-} from "../../../lib/weave/index.mjs";
-/* eslint-enable local/no-deep-import */
+} from "../../lib/weave/index.mjs";
 
 const {
   Array: { isArray },
-  Error,
   WeakMap,
   Object: { is, hasOwn, assign },
-  console: { log, dir },
 } = globalThis;
 
 /**
  * @type {(
- *   value: import("./state").Value,
- *   other: import("./state").Value,
+ *   value: import("./invariant").Value,
+ *   other: import("./invariant").Value,
  * ) => boolean}
  */
 const isIdentical = is;
 
 /**
  * @type {(
- *   value: import("./state").Value
- * ) => value is import("./state").ArrayValue}
+ *   value: import("./invariant").Value
+ * ) => value is import("./invariant").ArrayValue}
  */
 const isArrayValue = /** @type {any} */ (isArray);
-
-/* eslint-disable */
-/**
- * @type {(
- *   report: (error: Error) => void,
- *   logged: boolean,
- * ) => new (context: object) => Error}
- */
-const compileAssertionError = (report, logged) =>
-  class AssertionError extends Error {
-    constructor(/** @type {object} */ context) {
-      super();
-      this.name = "AranAssertionError";
-      if (!logged) {
-        logged = true;
-        log(this.name);
-        dir(context);
-      }
-      report(this);
-    }
-  };
-/* eslint-enable */
-
-/* eslint-disable */
-/**
- * @type {(
- *   report: (error: Error) => void,
- * ) => new (data: never) => Error}
- */
-const compileUnreachableError = (report) =>
-  class UnreachableError extends Error {
-    constructor(/** @type {never} */ data) {
-      super();
-      this.name = "AranUnreachableError";
-      log(this.name);
-      dir(data, { depth: 3, showHidden: true });
-      report(this);
-    }
-  };
-/* eslint-enable */
 
 /**
  * @type {(
@@ -77,15 +33,15 @@ const compileUnreachableError = (report) =>
  *     UnreachableError: new (data: never) => Error,
  *   },
  *   membrane: {
- *     intrinsics: import("../../../lib").IntrinsicRecord,
- *     instrumentDeep: import("../aran").InstrumentDeep,
+ *     intrinsics: import("../../lib").IntrinsicRecord,
+ *     instrumentDeep: import("../262/aran").InstrumentDeep,
  *   },
- * ) => import("../../../lib").StandardAdvice<
- *   import("./state").State,
- *   import("./state").Valuation,
+ * ) => import("../../lib").StandardAdvice<
+ *   import("./invariant").State,
+ *   import("./invariant").Valuation,
  * >}
  */
-const makeAdvice = (
+export const makeInvariantAdvice = (
   { AssertionError, UnreachableError },
   { intrinsics, instrumentDeep },
 ) => {
@@ -123,19 +79,19 @@ const makeAdvice = (
   };
 
   /**
-   * @type {WeakMap<Function, import("../../../lib").ClosureKind>}
+   * @type {WeakMap<Function, import("../../lib").ClosureKind>}
    */
   const closures = new WeakMap();
 
   /**
-   * @type {import("./state").Transit}
+   * @type {import("./invariant").Transit}
    */
   let transit = { type: "external" };
 
   /**
-   * @type {import("../../../lib").StandardAdvice<
-   *   import("./state").State,
-   *   import("./state").Valuation,
+   * @type {import("../../lib").StandardAdvice<
+   *   import("./invariant").State,
+   *   import("./invariant").Valuation,
    * >}
    */
   const aspect = {
@@ -249,7 +205,9 @@ const makeAdvice = (
           state.origin.type === "construct"
         ) {
           const input1 = frame["function.arguments"];
-          if (!isArrayValue(/** @type {import("./state").Value} */ (input1))) {
+          if (
+            !isArrayValue(/** @type {import("./invariant").Value} */ (input1))
+          ) {
             throw new AssertionError(input1);
           }
           const input2 = state.origin.arguments;
@@ -460,11 +418,11 @@ const makeAdvice = (
       assert(isIdentical(this_, pop(state.stack, context)), context);
       assert(isIdentical(callee, pop(state.stack, context)), context);
       if (closures.has(/** @type {any} */ (callee))) {
-        const kind = /** @type {import("../../../lib").ClosureKind} */ (
+        const kind = /** @type {import("../../lib").ClosureKind} */ (
           closures.get(/** @type {any} */ (callee))
         );
         assert(transit.type === "regular", state);
-        transit = /** @type {import("./state").Transit} */ ({
+        transit = /** @type {import("./invariant").Transit} */ ({
           type: "apply",
           callee,
           this: this_,
@@ -539,7 +497,7 @@ const makeAdvice = (
           transit = {
             type: "throw",
             // eslint-disable-next-line object-shorthand
-            error: /** @type {import("./state").Value} */ (error),
+            error: /** @type {import("./invariant").Value} */ (error),
           };
           throw error;
         }
@@ -567,12 +525,12 @@ const makeAdvice = (
         state,
       });
       if (closures.has(/** @type {any} */ (callee))) {
-        const kind = /** @type {import("../../../lib").ClosureKind} */ (
+        const kind = /** @type {import("../../lib").ClosureKind} */ (
           closures.get(/** @type {any} */ (callee))
         );
         if (kind === "function") {
           assert(transit.type === "regular", state);
-          transit = /** @type {import("./state").Transit} */ ({
+          transit = /** @type {import("./invariant").Transit} */ ({
             type: "construct",
             callee,
             arguments: arguments_,
@@ -604,7 +562,7 @@ const makeAdvice = (
           kind === "generator" ||
           kind === "async-generator"
         ) {
-          const error = /** @type {import("./state").Value} */ (
+          const error = /** @type {import("./invariant").Value} */ (
             /** @type {unknown} */ (
               new intrinsics.TypeError("Not a constructor")
             )
@@ -646,7 +604,7 @@ const makeAdvice = (
           transit = {
             type: "throw",
             // eslint-disable-next-line object-shorthand
-            error: /** @type {import("./state").Value} */ (error),
+            error: /** @type {import("./invariant").Value} */ (error),
           };
           throw error;
         }
@@ -691,7 +649,7 @@ const makeAdvice = (
       assert(
         name in intrinsics &&
           isIdentical(
-            /** @type {import("./state").Value} */ (intrinsics[name]),
+            /** @type {import("./invariant").Value} */ (intrinsics[name]),
             value,
           ),
         context,
@@ -725,7 +683,7 @@ const makeAdvice = (
       };
       // console.dir(context);
       assertNotNull(state, context);
-      /** @type {import("./state").State | null} */
+      /** @type {import("./invariant").State | null} */
       let current = state;
       while (current !== null) {
         if (hasOwn(current.scope, variable)) {
@@ -783,7 +741,7 @@ const makeAdvice = (
       // console.dir(context);
       assertNotNull(state, context);
       assert(isIdentical(pop(state.stack, context), value), context);
-      /** @type {import("./state").State | null} */
+      /** @type {import("./invariant").State | null} */
       let current = state;
       while (current !== null) {
         if (hasOwn(current.scope, variable)) {
@@ -927,34 +885,4 @@ const makeAdvice = (
   };
 
   return aspect;
-};
-
-/** @type {import("../stage").Stage} */
-export default {
-  precursor: ["identity", "parsing", "bare-basic-builtin-standard"],
-  negative: [],
-  exclude: ["slow"],
-  listLateNegative: (_target, _metadata, _error) => [],
-  compileInstrument: ({ report, record, warning, context }) => {
-    const { instrumentRoot, instrumentDeep, intrinsics } = setupAranBasic({
-      global_declarative_record: "builtin",
-      initial_state: null,
-      record,
-      report,
-      context,
-      warning,
-      // eslint-disable-next-line no-use-before-define
-      standard_pointcut: (kind, _path) => hasOwn(advice, kind),
-      flexible_pointcut: null,
-    });
-    const advice = makeAdvice(
-      {
-        AssertionError: compileAssertionError(report, false),
-        UnreachableError: compileUnreachableError(report),
-      },
-      { intrinsics, instrumentDeep: (...args) => instrumentDeep(...args) },
-    );
-    setupStandardAdvice(context, advice);
-    return instrumentRoot;
-  },
 };

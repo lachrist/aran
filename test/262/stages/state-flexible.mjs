@@ -13,8 +13,8 @@ const {
 
 /**
  * @type {(
- *   value: import("./state").Value,
- *   other: import("./state").Value,
+ *   value: import("../../aspects/invariant").Value,
+ *   other: import("../../aspects/invariant").Value,
  * ) => boolean}
  */
 const isIdentical = is;
@@ -58,8 +58,8 @@ const assert = (test) => {
 
 /**
  * @type {(
- *   call: import("./state").Call,
- * ) => asserts call is import("./state").Call & { type: "internal"} }
+ *   call: import("../../aspects/invariant").Call,
+ * ) => asserts call is import("../../aspects/invariant").Call & { type: "internal"} }
  */
 const assertInternalCall = (call) => {
   assert(call.type === "internal");
@@ -68,7 +68,7 @@ const assertInternalCall = (call) => {
 /**
  * @type {(
  *   target: unknown,
- * ) => asserts target is import("./state").Value[]}
+ * ) => asserts target is import("../../aspects/invariant").Value[]}
  */
 const assertValueArray = (target) => {
   assert(isArray(target));
@@ -94,8 +94,8 @@ const assertFunction = (target) => {
 
 /**
  * @type {(
- *   target: import("./state").Abrupt,
- * ) => asserts target is import("./state").Abrupt & { type: "throw" }}
+ *   target: import("../../aspects/invariant").Abrupt,
+ * ) => asserts target is import("../../aspects/invariant").Abrupt & { type: "throw" }}
  */
 const assertErrorAbrupt = (abrupt) => {
   assert(abrupt.type === "throw");
@@ -103,8 +103,8 @@ const assertErrorAbrupt = (abrupt) => {
 
 /**
  * @type {(
- *   target: import("./state").Abrupt,
- * ) => asserts target is import("./state").Abrupt & { type: "return" | "throw" }}
+ *   target: import("../../aspects/invariant").Abrupt,
+ * ) => asserts target is import("../../aspects/invariant").Abrupt & { type: "return" | "throw" }}
  */
 const assertExitAbrupt = (abrupt) => {
   assert(abrupt.type === "return" || abrupt.type === "throw");
@@ -141,16 +141,16 @@ const peek = (array) => {
 // State //
 ///////////
 
-/** @type {import("./state").Callstack} */
+/** @type {import("../../aspects/invariant").Callstack} */
 const callstack = [];
 
 /**
- * @type {WeakMap<Function, import("./state").Closure>}
+ * @type {WeakMap<Function, import("../../aspects/invariant").Closure>}
  */
 const closures = new WeakMap();
 
 /**
- * @type {WeakSet<import("./state").Call>}
+ * @type {WeakSet<import("../../aspects/invariant").Call>}
  */
 const suspended = new WeakSet();
 
@@ -158,7 +158,7 @@ const suspended = new WeakSet();
 // Block Aspect //
 //////////////////
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_state_ = {
   kind: "block@initialize",
   pointcut: (_path, node, _parent, _root) =>
@@ -171,7 +171,7 @@ const _aran_state_ = {
   }),
 };
 
-/** @type {import("./state").Advice<["arrow" | "function"]>} */
+/** @type {import("../../aspects/invariant").Advice<["arrow" | "function"]>} */
 const _aran_setup_closure_ = {
   kind: "block@frame",
   pointcut: (_path, _node, parent, _root) =>
@@ -212,7 +212,7 @@ const _aran_setup_closure_ = {
   },
 };
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_setup_catch_ = {
   kind: "block@frame",
   pointcut: (_path, node, parent, _root) =>
@@ -226,7 +226,7 @@ const _aran_setup_catch_ = {
   },
 };
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_setup_ = {
   kind: "block@frame",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -238,7 +238,7 @@ const _aran_setup_ = {
   },
 };
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_restore_catch_ = {
   kind: "block@catch",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -252,7 +252,7 @@ const _aran_restore_catch_ = {
   },
 };
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_restore_finally_ = {
   kind: "block@finally",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -263,7 +263,7 @@ const _aran_restore_finally_ = {
       // Return value of generators are not used
       call.abrupt = {
         type: "return",
-        result: /** @type {import("./state").Value} */ (
+        result: /** @type {import("../../aspects/invariant").Value} */ (
           /** @type {unknown} */ ("dummy")
         ),
       };
@@ -271,7 +271,7 @@ const _aran_restore_finally_ = {
   },
 };
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_teardown_ = {
   kind: "block@finally",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -281,7 +281,7 @@ const _aran_teardown_ = {
   },
 };
 
-/** @type {import("./state").Advice<[import("./state").Label[]]>} */
+/** @type {import("../../aspects/invariant").Advice<[import("../../aspects/invariant").Label[]]>} */
 const _aran_teardown_label_ = {
   kind: "block@finally",
   pointcut: (_path, node, _parent, _root) =>
@@ -300,7 +300,7 @@ const _aran_teardown_label_ = {
   },
 };
 
-/** @type {import("./state").Advice<[boolean, boolean]>} */
+/** @type {import("../../aspects/invariant").Advice<[boolean, boolean]>} */
 const _aran_teardown_closure_ = {
   kind: "block@finally",
   pointcut: (_path, _node, parent, _root) =>
@@ -328,7 +328,7 @@ const _aran_teardown_closure_ = {
 // Abrupt Aspect //
 ///////////////////
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_return_ = {
   kind: "expression@after",
   pointcut: (_path, _node, parent, _root) =>
@@ -342,7 +342,7 @@ const _aran_return_ = {
   },
 };
 
-/** @type {import("./state").Advice<[import("./state").Label]>} */
+/** @type {import("../../aspects/invariant").Advice<[import("../../aspects/invariant").Label]>} */
 const _aran_break_ = {
   kind: "statement@before",
   pointcut: (_path, node, _parent, _root) =>
@@ -358,8 +358,8 @@ const _aran_break_ = {
 //////////////////
 
 /**
- * @type {import("./state").Advice<[
- *   import("./state").Parameter | import("./state").Variable,
+ * @type {import("../../aspects/invariant").Advice<[
+ *   import("../../aspects/invariant").Parameter | import("../../aspects/invariant").Variable,
  * ]>}
  */
 const _aran_write_ = {
@@ -381,8 +381,8 @@ const _aran_write_ = {
 };
 
 /**
- * @type {import("./state").Advice<[
- *   import("./state").Parameter | import("./state").Variable,
+ * @type {import("../../aspects/invariant").Advice<[
+ *   import("../../aspects/invariant").Parameter | import("../../aspects/invariant").Variable,
  * ]>}
  */
 const _aran_read_ = {
@@ -407,7 +407,7 @@ const _aran_read_ = {
 // Stack Aspect //
 //////////////////
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_produce_ = {
   kind: "expression@after",
   pointcut: (_path, node, _parent, _root) =>
@@ -427,7 +427,7 @@ const _aran_produce_ = {
   },
 };
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_consume_ = {
   kind: "expression@after",
   pointcut: (_path, node, parent, _root) =>
@@ -451,7 +451,7 @@ const _aran_consume_ = {
 // Other Aspect //
 //////////////////
 
-/** @type {import("./state").Advice<["arrow" | "function", boolean, boolean]>} */
+/** @type {import("../../aspects/invariant").Advice<["arrow" | "function", boolean, boolean]>} */
 const _aran_register_ = {
   kind: "expression@after",
   pointcut: (_path, node, _parent, _root) =>
@@ -472,7 +472,7 @@ const _aran_register_ = {
   },
 };
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_apply_ = {
   kind: "apply@around",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -500,7 +500,9 @@ const _aran_apply_ = {
           call.abrupt = {
             type: "throw",
             // eslint-disable-next-line object-shorthand
-            error: /** @type {import("./state").Value} */ (error),
+            error: /** @type {import("../../aspects/invariant").Value} */ (
+              error
+            ),
           };
           throw error;
         } finally {
@@ -522,7 +524,7 @@ const _aran_apply_ = {
   },
 };
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_construct_ = {
   kind: "construct@around",
   pointcut: (_path, _node, _parent, _root) => [],
@@ -549,7 +551,9 @@ const _aran_construct_ = {
           call.abrupt = {
             type: "throw",
             // eslint-disable-next-line object-shorthand
-            error: /** @type {import("./state").Value} */ (error),
+            error: /** @type {import("../../aspects/invariant").Value} */ (
+              error
+            ),
           };
           throw error;
         }
@@ -574,14 +578,14 @@ const _aran_construct_ = {
   },
 };
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_await_ = {
   kind: "expression@after",
   pointcut: (_path, _node, parent, _root) =>
     parent.type === "AwaitExpression" ? [] : null,
   behavior: (call, value) => {
     assert(call === peek(callstack));
-    return /** @type {import("./state").Value} */ (
+    return /** @type {import("../../aspects/invariant").Value} */ (
       /** @type {unknown} */ (
         (async () => {
           try {
@@ -592,7 +596,9 @@ const _aran_await_ = {
             call.abrupt = {
               type: "throw",
               // eslint-disable-next-line object-shorthand
-              error: /** @type {import("./state").Value} */ (error),
+              error: /** @type {import("../../aspects/invariant").Value} */ (
+                error
+              ),
             };
             throw error;
           } finally {
@@ -604,7 +610,7 @@ const _aran_await_ = {
   },
 };
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_before_yield_ = {
   kind: "expression@after",
   pointcut: (_path, _node, parent, _root) =>
@@ -617,7 +623,7 @@ const _aran_before_yield_ = {
   },
 };
 
-/** @type {import("./state").Advice<[]>} */
+/** @type {import("../../aspects/invariant").Advice<[]>} */
 const _aran_yield_ = {
   kind: "expression@after",
   pointcut: (_path, node, _parent, _root) =>

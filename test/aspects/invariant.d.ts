@@ -7,7 +7,7 @@ import type {
   BlockKind,
   Path,
   ProgramKind,
-} from "../../../lib";
+} from "../../lib";
 
 export type Value = { __brand: "Value" };
 
