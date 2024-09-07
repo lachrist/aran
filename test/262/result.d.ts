@@ -3,12 +3,16 @@ import type { StacklessErrorSerial } from "./error-serial";
 export type ExcludeResult = {
   type: "exclude";
   path: string;
-  tags: string[];
+  reasons: string[];
 };
 
 export type IncludeResult = {
   type: "include";
   path: string;
+  time: {
+    user: number;
+    system: number;
+  };
   expect: null | string[];
   actual: null | StacklessErrorSerial;
 };

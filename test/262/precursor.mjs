@@ -8,7 +8,7 @@ const { JSON, Set, URL, Promise } = globalThis;
 /**
  * @type {(
  *   stage: string,
- * ) => Promise<[Set<string>, string]>}
+ * ) => Promise<import("./precursor").PrecursorEntry>}
  */
 const loadPrecursorEntry = async (stage) => {
   const data = JSON.parse(
@@ -24,14 +24,14 @@ const loadPrecursorEntry = async (stage) => {
 /**
  * @type {(
  *   stages: string[]
- * ) => Promise<[Set<string>, string][]>}
+ * ) => Promise<import("./precursor").Precursor>}
  */
 export const loadPrecursor = async (stages) =>
   unwrapSettleArray(await Promise.allSettled(stages.map(loadPrecursorEntry)));
 
 /**
  * @type {(
- *   precursor: [Set<string>, string][],
+ *   precursor: import("./precursor").Precursor,
  *   target: string,
  * ) => string[]}
  */
