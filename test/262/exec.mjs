@@ -92,6 +92,11 @@ const main = async (argv) => {
     sigint = true;
   };
   process.addListener("SIGINT", onSigint);
+  /**
+   * @type {(
+   *   error: Error,
+   * ) => void}
+   */
   const onUncaughtException = (error) => {
     console.log(`${inspectErrorName(error)}: ${inspectErrorMessage(error)}`);
   };
