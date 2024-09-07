@@ -11,10 +11,6 @@ import { listPrecursor, loadPrecursor } from "./precursor.mjs";
 
 const { Error, console, process, URL, JSON } = globalThis;
 
-process.on("uncaughtException", (error, _origin) => {
-  console.log(`${inspectErrorName(error)}: ${inspectErrorMessage(error)}`);
-});
-
 /**
  * @type {(
  *   target: string,
@@ -91,6 +87,15 @@ const main = async (argv) => {
     exclude: await loadTagging(stage.exclude),
     negative: await loadTagging(stage.negative),
   };
+  let sigint = false;
+  const onSigint = () => {
+    sigint = true;
+  };
+  process.addListener("SIGINT", onSigint);
+  const onUncaughtException = (error) => {
+    console.log(`${inspectErrorName(error)}: ${inspectErrorMessage(error)}`);
+  };
+  process.addListener("uncaughtException", onUncaughtException);
   let index = 0;
   const handle = await open(
     new URL(`stages/${stage_name}.jsonl`, import.meta.url),
@@ -100,6 +105,10 @@ const main = async (argv) => {
     encoding: "utf8",
   });
   for await (const url of scrape(new URL("test/", home))) {
+    if (sigint) {
+      // eslint-disable-next-line local/no-label
+      break;
+    }
     if (index % 100 === 0) {
       console.dir(index);
     }
@@ -109,6 +118,8 @@ const main = async (argv) => {
     }
     index += 1;
   }
+  process.removeListener("SIGINT", onSigint);
+  process.removeListener("uncaughtException", onUncaughtException);
   await handle.close();
 };
 
