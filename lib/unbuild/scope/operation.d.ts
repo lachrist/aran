@@ -9,6 +9,8 @@ export { RootFrame } from "./root";
 
 export type Mode = "strict" | "sloppy";
 
+export type Status = "dead" | "live" | "unknown";
+
 // Variable //
 
 export type LateDeclareOperation = {
@@ -30,6 +32,7 @@ export type WriteOperation = {
   type: "write";
   mode: Mode;
   variable: Variable;
+  status: Status;
   right: Expression;
 };
 
@@ -37,6 +40,7 @@ export type WriteSloppyFunctionOperation = {
   type: "write-sloppy-function";
   mode: "sloppy";
   variable: Variable;
+  status: Status;
   right: null | ConstantMetaVariable;
 };
 
@@ -44,12 +48,14 @@ export type ReadOperation = {
   type: "read";
   mode: Mode;
   variable: Variable;
+  status: Status;
 };
 
 export type TypeofOperation = {
   type: "typeof";
   mode: Mode;
   variable: Variable;
+  status: Status;
 };
 
 export type DiscardOperation = {

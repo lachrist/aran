@@ -1,7 +1,7 @@
 import Local from "./local/index.mjs";
 import tseslint from "typescript-eslint";
 
-/** @type {import("eslint").Linter.FlatConfig} */
+/** @type {import("eslint").Linter.Config} */
 const config = {
   files: [],
   languageOptions: {
@@ -57,7 +57,7 @@ const config = {
     "no-eval": "error",
     "no-lone-blocks": "error",
     // "no-param-reassign": "error",
-    "no-plusplus": "error",
+    // "no-plusplus": "error",
     "no-warning-comments": ["warn", { terms: ["todo"] }],
     "object-shorthand": ["error"],
     "prefer-const": ["error", { destructuring: "all" }],

@@ -1,0 +1,6 @@
+{
+  {
+    function f() {}
+  }
+  let f;
+}
