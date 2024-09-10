@@ -5,6 +5,7 @@ import type {
   SwitchCase,
 } from "../../estree";
 import type { Hash } from "../../hash";
+import type { Tree } from "../../util/tree";
 
 export type CompletionNode =
   | Statement
@@ -14,5 +15,5 @@ export type CompletionNode =
 
 export type CompletionResult = {
   previous_maybe_last: boolean;
-  hashes: Hash[];
+  hashes: Tree<Hash>;
 };

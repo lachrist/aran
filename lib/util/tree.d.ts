@@ -1,43 +1,28 @@
+export type TreeType = "x" | "X" | "t" | "T";
+
+export type TreeNode<X> = X | X[] | Tree<X> | Tree<X>[];
+
 export type Tree<X> =
-  | { type: "void" }
-  | {
-      type: "binary-node";
-      branch1: Tree<X>;
-      branch2: Tree<X>;
-    }
-  | {
-      type: "ternary-node";
-      branch1: Tree<X>;
-      branch2: Tree<X>;
-      branch3: Tree<X>;
-    }
-  | {
-      type: "quaternary-node";
-      branch1: Tree<X>;
-      branch2: Tree<X>;
-      branch3: Tree<X>;
-      branch4: Tree<X>;
-    }
-  | {
-      type: "multi-node";
-      branches: Tree<X>[];
-    }
-  | {
-      type: "unary-leaf";
-      leaf: X;
-    }
-  | {
-      type: "binary-leaf";
-      leaf1: X;
-      leaf2: X;
-    }
-  | {
-      type: "ternary-leaf";
-      leaf1: X;
-      leaf2: X;
-      leaf3: X;
-    }
-  | {
-      type: "multi-leaf";
-      leafs: X[];
-    };
+  // 0 //
+  | [""]
+  // 1 //
+  | ["x", X]
+  | ["X", X[]]
+  | ["t", Tree<X>]
+  | ["T", Tree<X>[]]
+  // 2 //
+  | ["XT", X[], Tree<X>[]]
+  | ["Xt", X[], Tree<X>]
+  | ["TT", Tree<X>[], Tree<X>[]]
+  | ["Tt", Tree<X>[], Tree<X>]
+  | ["tt", Tree<X>, Tree<X>]
+  | ["tT", Tree<X>, Tree<X>[]]
+  // 3 //
+  | ["ttt", Tree<X>, Tree<X>, Tree<X>]
+  | ["tTT", Tree<X>, Tree<X>[], Tree<X>[]]
+  | ["tTt", Tree<X>, Tree<X>[], Tree<X>]
+  | ["Xtt", X[], Tree<X>, Tree<X>]
+  // 4 //
+  | ["tttt", Tree<X>, Tree<X>, Tree<X>, Tree<X>]
+  // 6 //
+  | ["XXXttt", X[], X[], X[], Tree<X>, Tree<X>, Tree<X>];

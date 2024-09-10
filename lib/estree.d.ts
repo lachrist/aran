@@ -166,11 +166,13 @@ export type ConstructorIdentifier = {
 // Program //
 /////////////
 
+export type ProgramStatement = Directive | Statement | ModuleDeclaration;
+
 export type Program = {
   type: "Program";
   loc?: SourceLocation | null | undefined;
   sourceType: "script" | "module";
-  body: Array<Directive | Statement | ModuleDeclaration>;
+  body: Array<ProgramStatement>;
 };
 
 export type ModuleProgram = Program & {
