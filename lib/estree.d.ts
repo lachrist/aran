@@ -543,19 +543,27 @@ export type BinaryExpression =
   | PrivateBinaryExpression
   | RegularBinaryExpression;
 
-export type AssignmentExpression = {
-  type: "AssignmentExpression";
-  loc?: SourceLocation | null | undefined;
-  operator: AssignmentOperator;
-  left: Pattern;
-  right: Expression;
-};
+export type AssignmentExpression =
+  | {
+      type: "AssignmentExpression";
+      loc?: SourceLocation | null | undefined;
+      operator: Exclude<AssignmentOperator, "=">;
+      left: VariableIdentifier | MemberExpression;
+      right: Expression;
+    }
+  | {
+      type: "AssignmentExpression";
+      loc?: SourceLocation | null | undefined;
+      operator: "=";
+      left: Pattern;
+      right: Expression;
+    };
 
 export type UpdateExpression = {
   type: "UpdateExpression";
   loc?: SourceLocation | null | undefined;
   operator: UpdateOperator;
-  argument: Expression;
+  argument: VariableIdentifier | MemberExpression;
   prefix: boolean;
 };
 
@@ -974,15 +982,17 @@ export type ExportSpecifier = {
   local: VariableIdentifier;
 };
 
+export type DefaultExport =
+  | AnonymousDefaultExportedFunctionDeclaration
+  | FunctionDeclaration
+  | AnonymousDefaultExportedClassDeclaration
+  | ClassDeclaration
+  | Expression;
+
 export type ExportDefaultDeclaration = {
   type: "ExportDefaultDeclaration";
   loc?: SourceLocation | null | undefined;
-  declaration:
-    | AnonymousDefaultExportedFunctionDeclaration
-    | FunctionDeclaration
-    | AnonymousDefaultExportedClassDeclaration
-    | ClassDeclaration
-    | Expression;
+  declaration: DefaultExport;
 };
 
 export type ExportAllDeclaration = {

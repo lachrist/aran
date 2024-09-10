@@ -1,6 +1,6 @@
-import type { Brand } from "./util";
+import type { StringHash } from "./hash";
 
-export type Path = Brand<string, "Path">;
+export type Path = StringHash;
 
 export type Segment =
   | number

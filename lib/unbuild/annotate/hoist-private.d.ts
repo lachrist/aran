@@ -1,5 +1,5 @@
 import type { Variable } from "../../estree";
-import type { Path } from "../../path";
+import type { Hash } from "../../hash";
 
 export type Scoping = {
   [key in Kind]?: boolean;
@@ -25,7 +25,7 @@ export type DuplicateAccumulation = {
   index: number;
   binding: Binding;
   bindings: FreeBinding[];
-  current: Path;
+  current: Hash;
 };
 
 export type Mode = "strict" | "sloppy";
@@ -34,7 +34,7 @@ export type FreeBinding = {
   type: "free";
   kind: Kind;
   variable: Variable;
-  origin: Path;
+  origin: Hash;
   bind: null;
 };
 
@@ -42,15 +42,15 @@ export type LockBinding = {
   type: "lock";
   kind: Kind;
   variable: Variable;
-  origin: Path;
-  bind: Path;
+  origin: Hash;
+  bind: Hash;
 };
 
 export type FlagBinding = {
   type: "flag";
   kind: Kind;
   variable: Variable;
-  origin: Path;
+  origin: Hash;
   bind: "duplicate" | "keyword";
 };
 
@@ -58,7 +58,7 @@ export type VoidBinding = {
   type: "void";
   kind: Kind;
   variable: Variable;
-  origin: Path;
+  origin: Hash;
   bind: null;
 };
 

@@ -1,6 +1,3 @@
-{
-  {
-    function f() {}
-  }
-  let f;
-}
+export default function f() {}
+
+f();

@@ -4,7 +4,7 @@ import type {
   Statement,
   SwitchCase,
 } from "../../estree";
-import type { Path } from "../../path";
+import type { Hash } from "../../hash";
 
 export type CompletionNode =
   | Statement
@@ -14,5 +14,5 @@ export type CompletionNode =
 
 export type CompletionResult = {
   previous_maybe_last: boolean;
-  paths: Path[];
+  hashes: Hash[];
 };

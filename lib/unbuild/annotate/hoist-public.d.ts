@@ -1,5 +1,5 @@
 import type { Variable } from "../../estree";
-import type { Path } from "../../path";
+import type { Hash } from "../../hash";
 
 export type SloppyFunction = "nope" | "near" | "away" | "both";
 
@@ -12,10 +12,10 @@ export type Binding = {
 
 export type Error = {
   message: string;
-  origin: Path;
+  origin: Hash;
 };
 
-export type Hoisting = { [key in Path]?: Binding[] };
+export type Hoisting = { [key in Hash]?: Binding[] };
 
 export type Result = {
   report: Error[];
