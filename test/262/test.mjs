@@ -1,42 +1,36 @@
-import { readFile } from "node:fs/promises";
 import { parseMetadata } from "./metadata.mjs";
-import { runTestCase } from "./case.mjs";
-import { serializeError } from "./error-serial.mjs";
-
-const { URL } = globalThis;
+import { runTestCase } from "./test-case.mjs";
 
 /**
  * @type {(
- *   options: {
- *     target: string,
- *     content: string,
- *     metadata: import("./stage").Metadata,
- *     home: URL,
- *   },
- * ) => import("./stage").Case[]}
+ *   path: import("./fetch").TargetPath,
+ *   content: string,
+ *   metadata: import("./test262").Metadata,
+ * ) => import("./test-case").TestCase[]}
  */
-const listTestCase = ({ target, content, metadata, home }) => {
+const listTestCase = (path, content, metadata) => {
   const asynchronous = metadata.flags.includes("async");
   const negative = metadata.negative;
-  const includes = [
+  const includes = /** @type {import("./fetch").HarnessName[]} */ ([
     ...(metadata.flags.includes("raw") ? [] : ["assert.js", "sta.js"]),
     ...(metadata.flags.includes("async") ? ["doneprintHandle.js"] : []),
     ...metadata.includes,
-  ].map((name) => new URL(`harness/${name}`, home));
+  ]);
   const module = metadata.flags.includes("module");
-  /** @type {import("./stage").Case[]} */
-  const tests = [];
+  /** @type {import("./test-case").TestCase[]} */
+  const test_case_array = [];
   const kind = module ? "module" : "script";
   if (
     !metadata.flags.includes("raw") &&
     !metadata.flags.includes("module") &&
     !metadata.flags.includes("noStrict")
   ) {
-    tests.push({
+    test_case_array.push({
       source: {
         kind,
-        url: new URL(target, home),
+        path,
         content: `"use strict";\n${content}`,
+        context: null,
       },
       negative,
       asynchronous,
@@ -44,21 +38,22 @@ const listTestCase = ({ target, content, metadata, home }) => {
     });
   }
   if (!metadata.flags.includes("onlyStrict")) {
-    tests.push({
+    test_case_array.push({
       source: {
         kind,
-        url: new URL(target, home),
+        path,
         content,
+        context: null,
       },
       negative,
       asynchronous,
       includes,
     });
   }
-  return tests;
+  return test_case_array;
 };
 
-/** @type {import("./stage").Metadata} */
+/** @type {import("./test262").Metadata} */
 const DEFAULT_METADATA = {
   includes: [],
   flags: [],
@@ -69,65 +64,49 @@ const DEFAULT_METADATA = {
 
 /**
  * @type {(
- *   options: {
- *     target: string,
- *     home: URL,
- *     compileInstrument: import("./stage").CompileInstrument,
- *     warning: "ignore" | "console",
- *     record: import("./stage").Instrument,
+ *   path: import("./fetch").TargetPath,
+ *   dependencies: {
+ *     fetchHarness: import("./fetch").FetchHarness,
+ *     resolveTarget: import("./fetch").ResolveTarget,
+ *     fetchTarget: import("./fetch").FetchTarget,
+ *     setup: (context: import("node:vm").Context) => void,
+ *     instrument: import("./stage").Instrument,
  *   },
  * ) => Promise<{
- *   metadata: import("./stage").Metadata,
- *   error: null | import("./error-serial").ErrorSerial,
+ *   metadata: import("./test262").Metadata,
+ *   outcome: import("./test-case").TestCaseOutcome,
  * }>}
  */
-export const runTest = async ({
-  target,
-  home,
-  warning,
-  record,
-  compileInstrument,
-}) => {
-  const content = await readFile(new URL(target, home), "utf8");
-  /** @type {import("./stage").Metadata} */
-  let metadata = DEFAULT_METADATA;
-  try {
-    metadata = parseMetadata(content);
-  } catch (error) {
+export const runTest = async (
+  path,
+  { fetchTarget, resolveTarget, fetchHarness, setup, instrument },
+) => {
+  const content = await fetchTarget(path);
+  const metadata_outcome = parseMetadata(content);
+  if (metadata_outcome.type === "failure") {
     return {
-      metadata,
-      error: serializeError("base", error),
+      metadata: DEFAULT_METADATA,
+      outcome: metadata_outcome,
     };
   }
-  for (const case_ of listTestCase({
-    target,
-    content,
-    metadata,
-    home,
-  })) {
-    const error = await runTestCase({
-      case: case_,
-      compileInstrument,
-      warning,
-      record,
+  const metadata = metadata_outcome.data;
+  for (const test_case of listTestCase(path, content, metadata)) {
+    const test_case_outcome = await runTestCase(test_case, {
+      resolveTarget,
+      fetchTarget,
+      fetchHarness,
+      setup,
+      instrument,
     });
-    if (error !== null) {
+    if (test_case_outcome.type === "failure") {
       return {
         metadata,
-        error,
+        outcome: test_case_outcome,
       };
     }
   }
   return {
     metadata,
-    error: null,
+    outcome: { type: "success", data: null },
   };
 };
-
-/**
- * @type {(
- *   target: string,
- * ) => boolean}
- */
-export const isTestCase = (target) =>
-  !target.includes("_FIXTURE") && !target.endsWith(".md");

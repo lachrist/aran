@@ -1,6 +1,11 @@
 import { createContext, runInContext } from "node:vm";
+import { AranTypeError } from "./error.mjs";
 
-const { gc, Reflect, URL } = globalThis;
+const {
+  gc,
+  Reflect,
+  console: { log, dir },
+} = globalThis;
 
 /* eslint-disable */
 export const AranRealmError = class AranRealmError extends Error {
@@ -13,88 +18,96 @@ export const AranRealmError = class AranRealmError extends Error {
 
 /**
  * @type {(
- *   options: {
- *     counter: { value: number },
- *     report: (error: Error) => void,
- *     record: import("./stage").Instrument,
- *     warning: "ignore" | "console",
+ *   dependencies: {
  *     print: (message: string) => void,
- *     compileInstrument: import("./stage").CompileInstrument,
+ *     report: (error: Error) => Error,
+ *     setup: (context: import("node:vm").Context) => void,
+ *     instrument: import("./stage").Instrument,
  *   },
- * ) => {
- *   context: import("node:vm").Context,
- *   instrument: import("./stage").Instrument,
- * }}
+ * ) => import("node:vm").Context}
  */
-export const createRealm = ({
-  counter,
-  report,
-  record,
-  warning,
-  print,
-  compileInstrument,
-}) => {
+export const createRealm = ({ setup, print, report, instrument }) => {
   const context = createContext({ __proto__: null });
-  /** @type {import("./stage").$262} */
+  const global = runInContext("this;", context);
+  const { SyntaxError } = global;
+  /** @type {import("./test262").$262} */
   const $262 = {
     // @ts-ignore
     __proto__: null,
     createRealm: () =>
-      createRealm({
-        counter,
-        report,
-        record,
-        warning,
-        print,
-        compileInstrument,
-      }).context.$262,
+      createRealm({ setup, print, report, instrument }).context.$262,
     detachArrayBuffer: () => {
-      const error = new AranRealmError("detachArrayBuffer");
-      report(error);
-      throw error;
+      throw report(new AranRealmError("detachArrayBuffer"));
     },
     // we have no information on the location of this.
     // so we do not have to register this script to the
     // linker because dynamic import is pointless.
     evalScript: (code) => {
-      counter.value += 1;
-      // eslint-disable-next-line no-use-before-define
-      const { url, content } = instrument({
+      const outcome = instrument({
         kind: "script",
-        url: new URL(`script:///${counter.value}`),
+        path: null,
         content: code,
+        context: null,
       });
-      return runInContext(content, context, { filename: url.href });
+      switch (outcome.type) {
+        case "success": {
+          return runInContext(outcome.data.content, context, {
+            filename: outcome.data.location ?? "[evalScript]",
+          });
+        }
+        case "failure": {
+          throw new SyntaxError(outcome.data);
+        }
+        default: {
+          throw new AranTypeError(outcome);
+        }
+      }
     },
     gc: () => {
       if (typeof gc === "function") {
         return gc();
       } else {
-        const error = new AranRealmError("gc");
-        report(error);
-        throw error;
+        throw report(new AranRealmError("gc"));
       }
     },
-    global: runInContext("this;", context),
+    global,
     /** @returns {object} */
     // eslint-disable-next-line local/no-function
     get IsHTMLDDA() {
-      const error = new AranRealmError("IsHTMLDDA");
-      report(error);
-      throw error;
+      throw report(new AranRealmError("IsHTMLDDA"));
     },
-    /** @type {import("./stage").Agent} */
+    /** @type {import("./test262").Agent} */
     // eslint-disable-next-line local/no-function
     get agent() {
-      const error = new AranRealmError("agent");
-      report(error);
-      throw error;
+      throw report(new AranRealmError("agent"));
     },
     // eslint-disable-next-line local/no-function
     get AbstractModuleSource() {
-      const error = new AranRealmError("AbstractModuleSource");
-      report(error);
-      throw error;
+      throw report(new AranRealmError("AbstractModuleSource"));
+    },
+    aran: {
+      log,
+      dir,
+      report,
+      instrumentEvalCode: (code, context) => {
+        const outcome = instrument({
+          kind: "eval",
+          path: null,
+          content: code,
+          context,
+        });
+        switch (outcome.type) {
+          case "success": {
+            return outcome.data.content;
+          }
+          case "failure": {
+            throw new SyntaxError(outcome.data);
+          }
+          default: {
+            throw new AranTypeError(outcome);
+          }
+        }
+      },
     },
   };
   Reflect.defineProperty(context, "$262", {
@@ -113,11 +126,6 @@ export const createRealm = ({
     writable: true,
     value: print,
   });
-  const instrument = compileInstrument({
-    record,
-    report,
-    warning,
-    context,
-  });
-  return { context, instrument };
+  setup(context);
+  return context;
 };

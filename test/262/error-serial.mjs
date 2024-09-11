@@ -2,7 +2,6 @@ import { hasOwnJson } from "./json.mjs";
 import { show } from "./util.mjs";
 
 const {
-  Object: { hasOwn },
   Array: { isArray },
 } = globalThis;
 
@@ -42,15 +41,12 @@ export const inspectErrorStack = (error) => {
 
 /**
  * @type {(
- *   layer: "base" | "meta",
  *   error: unknown,
  * ) => import("./error-serial").ErrorSerial}
  */
-export const serializeError = (layer, error) => ({
-  layer,
+export const serializeError = (error) => ({
   name: inspectErrorName(error),
   message: inspectErrorMessage(error),
-  stack: inspectErrorStack(error),
 });
 
 /**
@@ -62,17 +58,10 @@ export const isErrorSerial = (data) =>
   typeof data === "object" &&
   data !== null &&
   !isArray(data) &&
-  hasOwnJson(data, "layer") &&
-  typeof data.layer === "string" &&
   hasOwnJson(data, "name") &&
   typeof data.name === "string" &&
   hasOwnJson(data, "message") &&
-  typeof data.message === "string" &&
-  hasOwnJson(data, "stack") &&
-  (data.stack === null || typeof data.stack === "string");
+  typeof data.message === "string";
 
 /** @type {(error: import("./error-serial").ErrorSerial) => string} */
-export const showErrorSerial = (error) =>
-  hasOwn(error, "stack")
-    ? /** @type {string} */ (error.stack)
-    : `${error.name}: ${error.message}`;
+export const showErrorSerial = (error) => `${error.name}: ${error.message}`;

@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import {
   runInContext,
   Script,
@@ -6,15 +5,16 @@ import {
   SyntheticModule,
 } from "node:vm";
 
-const { Error, undefined, URL, Map, JSON } = globalThis;
+const { Error, undefined, Map, JSON } = globalThis;
 
 /**
  * @type {(
- *   source: {
- *     url: URL,
+ *   target: {
+ *     path: import("./fetch").TargetPath,
  *     content: string,
  *   },
  *   options: {
+ *     SyntaxError: SyntaxErrorConstructor,
  *     instrument: import("./stage").Instrument,
  *     importModuleDynamically: import("./linker").Load,
  *     context: import("node:vm").Context,
@@ -22,77 +22,98 @@ const { Error, undefined, URL, Map, JSON } = globalThis;
  * ) => import("node:vm").Module}
  */
 const makeModule = (
-  { url: url1, content: content1 },
-  { instrument, importModuleDynamically, context },
+  { path, content },
+  { SyntaxError, instrument, importModuleDynamically, context },
 ) => {
-  if (url1.href.endsWith(".json")) {
+  if (path.endsWith(".json")) {
     const module = new SyntheticModule(
       ["default"],
       () => {
         /** @type {import("node:vm").SyntheticModule} */ (module).setExport(
           "default",
-          JSON.parse(content1),
+          JSON.parse(content),
         );
       },
-      { identifier: url1.href, context },
+      { identifier: path, context },
     );
     return module;
   } else {
-    const { url: url2, content: content2 } = instrument({
+    const outcome = instrument({
       kind: "module",
-      url: url1,
-      content: content1,
+      path,
+      content,
+      context: null,
     });
-    return new SourceTextModule(content2, {
-      identifier: url2.href,
-      context,
-      // eslint-disable-next-line object-shorthand
-      importModuleDynamically: /** @type {any} */ (importModuleDynamically),
-    });
+    if (outcome.type === "failure") {
+      throw new SyntaxError(outcome.data.message);
+    } else {
+      return new SourceTextModule(outcome.data.content, {
+        identifier: outcome.data.location ?? path,
+        context,
+        // eslint-disable-next-line object-shorthand
+        importModuleDynamically: /** @type {any} */ (importModuleDynamically),
+      });
+    }
   }
 };
 
 /**
  * @type {(
- *   options: {
- *     context: object,
+ *   context: import("node:vm").Context,
+ *   dependencies: {
+ *     resolveTarget: import("./fetch").ResolveTarget,
  *     instrument: import("./stage").Instrument,
+ *     fetchTarget: import("./fetch").FetchTarget,
  *   },
  * ) => import("./linker").Linker}
  */
-export const compileLinker = ({ context, instrument }) => {
+export const compileLinker = (
+  context,
+  { resolveTarget, instrument, fetchTarget },
+) => {
   // Use promise of the module realm and not the main realm.
   // Still not working because node is changing the promise.
   //   https://github.com/nodejs/node/issues/53575
-  const Promise = /** @type {PromiseConstructor} */ (
-    runInContext("Promise;", context)
-  );
-  /** @type {Map<import("node:vm").Module | import("node:vm").Script, URL>} */
-  const urls = new Map();
-  /** @type {Map<string, import("node:vm").Module>} */
-  const modules = new Map();
+  const { SyntaxError, Promise } = /**
+   * @type {{
+   *   SyntaxError: SyntaxErrorConstructor,
+   *   Promise: PromiseConstructor,
+   * }}
+   */ (runInContext("({ Promise, SyntaxError });", context));
+  /** @type {Map<import("./fetch").TargetPath, import("node:vm").Module>} */
+  const module_cache = new Map();
+  /**
+   * @type {Map<
+   *   import("node:vm").Module | import("node:vm").Script,
+   *   import("./fetch").TargetPath
+   * >}
+   */
+  const reverse_module_cache = new Map();
   /** @type {import("./linker").Load} */
   const link = async (specifier, referrer, _assertions) => {
-    const referrer_url = urls.get(referrer);
-    if (referrer_url === undefined) {
+    const base_path = reverse_module_cache.get(referrer);
+    if (base_path === undefined) {
       throw new Error("missing referrer url");
     } else {
       // import("") will import self
-      const url = new URL(specifier, referrer_url);
-      const module = modules.get(url.href);
+      const path = resolveTarget(
+        /** @type {import("./fetch").TargetName} */ (specifier),
+        base_path,
+      );
+      const module = module_cache.get(path);
       if (module === undefined) {
-        const content = await readFile(url, "utf8");
+        const content = await fetchTarget(path);
         const module = makeModule(
-          { url, content },
+          { path, content },
           // eslint-disable-next-line no-use-before-define
-          { instrument, importModuleDynamically, context },
+          { SyntaxError, instrument, importModuleDynamically, context },
         );
-        const race_module = modules.get(url.href);
+        const race_module = module_cache.get(path);
         if (race_module !== undefined) {
           return race_module;
         } else {
-          urls.set(module, url);
-          modules.set(url.href, module);
+          module_cache.set(path, module);
+          reverse_module_cache.set(module, path);
           return module;
         }
       } else {
@@ -120,10 +141,10 @@ export const compileLinker = ({ context, instrument }) => {
   return {
     link,
     importModuleDynamically,
-    register: (main, url) => {
-      urls.set(main, url);
+    register: (main, path) => {
+      reverse_module_cache.set(main, path);
       if (!(main instanceof Script)) {
-        modules.set(url.href, main);
+        module_cache.set(path, main);
       }
     },
   };

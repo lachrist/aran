@@ -7,6 +7,7 @@ import { AranTypeError } from "./error.mjs";
 const { URL, performance, Math } = globalThis;
 
 const root = new URL("../../", import.meta.url);
+
 const base = new URL("test/262/codebase/", root);
 
 /**
@@ -20,13 +21,23 @@ export const cleanup = async () => {
   }
 };
 
-/** @type {(kind: "script" | "module") => string} */
+/**
+ * @type {(
+ *   kind: "script" | "module" | "eval" | "harness",
+ * ) => string}
+ */
 const getExtension = (kind) => {
   switch (kind) {
     case "module": {
       return "mjs";
     }
     case "script": {
+      return "js";
+    }
+    case "eval": {
+      return "js";
+    }
+    case "harness": {
       return "js";
     }
     default: {
@@ -43,13 +54,26 @@ const generateUniqueIdentifier = () =>
     1e9 * Math.random(),
   ).toString(32)}`;
 
-/** @type {import("./stage").Instrument} */
-export const record = ({ kind, url: url1, content: content1 }) => {
-  const basename = generateUniqueIdentifier();
-  const extension = getExtension(kind);
-  const url2 = new URL(`${basename}.${extension}`, base);
-  stdout.write(`RECORD >> ${url2.href.substring(root.href.length)}\n`);
-  const content2 = `// ${url1.href}\n${format(content1)}`;
-  writeFileSync(url2, content2, "utf8");
-  return { kind, url: url2, content: content2 };
+/**
+ * @type {(
+ *   kind: "script" | "module" | "eval" | "harness",
+ *   path: string | null,
+ *   content: string,
+ * ) => {
+ *   location: string,
+ *   content: string,
+ * }}
+ */
+export const record = (kind, path, content1) => {
+  const url = new URL(
+    `${generateUniqueIdentifier()}.${getExtension(kind)}`,
+    base,
+  );
+  stdout.write(`RECORD >> ${url.href.substring(root.href.length)}\n`);
+  const content2 = `// ${kind} >> ${path ?? "???"}\n${format(content1)}`;
+  writeFileSync(url, content2, "utf8");
+  return {
+    location: url.href,
+    content: content2,
+  };
 };

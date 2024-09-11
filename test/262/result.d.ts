@@ -1,4 +1,4 @@
-import type { StacklessErrorSerial } from "./error-serial";
+import { ErrorSerial } from "./error-serial";
 
 export type ExcludeResult = {
   type: "exclude";
@@ -14,7 +14,7 @@ export type IncludeResult = {
     system: number;
   };
   expect: null | string[];
-  actual: null | StacklessErrorSerial;
+  actual: null | ErrorSerial;
 };
 
 export type Result = ExcludeResult | IncludeResult;
@@ -26,7 +26,7 @@ export type TruePositiveResult = IncludeResult & {
 
 export type FalsePositive = IncludeResult & {
   expect: null;
-  actual: StacklessErrorSerial;
+  actual: ErrorSerial;
 };
 
 export type FalseNegative = IncludeResult & {
@@ -36,5 +36,5 @@ export type FalseNegative = IncludeResult & {
 
 export type TrueNegative = IncludeResult & {
   expect: string[];
-  actual: StacklessErrorSerial;
+  actual: ErrorSerial;
 };

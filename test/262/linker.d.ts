@@ -1,4 +1,5 @@
 import { Module, Script } from "node:vm";
+import { TargetPath } from "./fetch";
 
 export type Load = (
   specifier: string,
@@ -6,7 +7,7 @@ export type Load = (
   assertions: object,
 ) => Promise<Module>;
 
-export type Register = (main: Module | Script, url: URL) => void;
+export type Register = (main: Module | Script, path: TargetPath) => void;
 
 export type Linker = {
   link: Load;

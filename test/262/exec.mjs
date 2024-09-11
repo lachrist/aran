@@ -1,31 +1,34 @@
 /* eslint-disable local/strict-console */
 
-import { open } from "node:fs/promises";
+import { open, readdir } from "node:fs/promises";
 import { scrape } from "./scrape.mjs";
 import { argv, cpuUsage } from "node:process";
-import { isTestCase, runTest } from "./test.mjs";
-import { home, toTarget } from "./home.mjs";
+import { runTest } from "./test.mjs";
+import { home } from "./home.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
-import { listTag, loadTagging } from "./tagging.mjs";
-import { listPrecursor, loadPrecursor } from "./precursor.mjs";
+import { listTag } from "./tagging.mjs";
+import { listPrecursor } from "./precursor.mjs";
+import { isStageName, loadStage } from "./stage.mjs";
+import {
+  compileFetchHarness,
+  compileFetchTarget,
+  resolveTarget,
+  toTargetPath,
+} from "./fetch.mjs";
 
-const { Error, console, process, URL, JSON } = globalThis;
+const { Error, console, process, URL, JSON, Map, undefined } = globalThis;
 
 /**
  * @type {(
- *   target: string,
- *   options: {
- *     listLateNegative: import("./stage").Stage["listLateNegative"],
- *     compileInstrument: import("./stage").Stage["compileInstrument"],
- *     precursor: import("./precursor").Precursor,
- *     exclude: import("./tagging").Tagging,
- *     negative: import("./tagging").Tagging,
- *   },
+ *   target: import("./fetch").TargetPath,
+ *   stage: import("./stage").ReadyStage,
+ *   fetch: import("./fetch").Fetch,
  * ) => Promise<import("./result").Result>}
  */
 const test = async (
   target,
-  { listLateNegative, compileInstrument, precursor, exclude, negative },
+  { listLateNegative, instrument, setup, precursor, exclude, negative },
+  { resolveTarget, fetchHarness, fetchTarget },
 ) => {
   const reasons = [
     ...listPrecursor(precursor, target),
@@ -33,12 +36,12 @@ const test = async (
   ];
   if (reasons.length === 0) {
     const timer = cpuUsage();
-    const { metadata, error } = await runTest({
-      target,
-      home,
-      record: (source) => source,
-      warning: "ignore",
-      compileInstrument,
+    const { metadata, outcome } = await runTest(target, {
+      setup,
+      instrument,
+      fetchTarget,
+      fetchHarness,
+      resolveTarget,
     });
     return {
       type: "include",
@@ -46,15 +49,11 @@ const test = async (
       time: cpuUsage(timer),
       expect: [
         ...listTag(negative, target),
-        ...(error === null ? [] : listLateNegative(target, metadata, error)),
+        ...(outcome.type === "failure"
+          ? listLateNegative(target, metadata, outcome.data)
+          : []),
       ],
-      actual:
-        error === null
-          ? null
-          : {
-              ...error,
-              stack: null,
-            },
+      actual: outcome.type === "failure" ? outcome.data : null,
     };
   } else {
     return {
@@ -67,37 +66,56 @@ const test = async (
 
 /**
  * @type {(
+ *   instrument: import("./stage").Instrument,
+ * ) => import("./stage").Instrument}
+ */
+const wrapInstrument = (instrument) => {
+  /**
+   * @type {Map<
+   *   import("./fetch").HarnessName,
+   *   import("./stage").InstrumentOutcome
+   * >}
+   */
+  const cache = new Map();
+  return (source) => {
+    if (source.kind === "harness") {
+      const outcome = cache.get(source.path);
+      if (outcome !== undefined) {
+        return outcome;
+      } else {
+        const outcome = instrument(source);
+        cache.set(source.path, outcome);
+        return outcome;
+      }
+    } else {
+      return instrument(source);
+    }
+  };
+};
+
+/**
+ * @type {(
  *   argv: string[],
  * ) => Promise<void>}
  */
 const main = async (argv) => {
   if (argv.length < 3) {
     throw new Error(
-      "usage: node --experimental-vm-modules --expose-gc test/262/exec.mjs <stage> [...argv]",
+      "usage: node --experimental-vm-modules --expose-gc test/262/exec.mjs <stage>",
     );
   }
   const [_node, _main, stage_name] = argv;
-  const stage = /** @type {{default: import("./stage").Stage}} */ (
-    await import(`./stages/${stage_name}.mjs`)
-  ).default;
-  const options = {
-    listLateNegative: stage.listLateNegative,
-    compileInstrument: stage.compileInstrument,
-    precursor: await loadPrecursor(stage.precursor),
-    exclude: await loadTagging(stage.exclude),
-    negative: await loadTagging(stage.negative),
-  };
+  if (!isStageName(stage_name)) {
+    throw new Error(`invalid stage: ${stage_name}`);
+  }
+  const stage = await loadStage(stage_name);
+  stage.instrument = wrapInstrument(stage.instrument);
   let sigint = false;
   const onSigint = () => {
     sigint = true;
   };
   process.addListener("SIGINT", onSigint);
-  /**
-   * @type {(
-   *   error: Error,
-   * ) => void}
-   */
-  const onUncaughtException = (error) => {
+  const onUncaughtException = (/** @type {unknown} */ error) => {
     console.log(`${inspectErrorName(error)}: ${inspectErrorMessage(error)}`);
   };
   process.addListener("uncaughtException", onUncaughtException);
@@ -109,6 +127,22 @@ const main = async (argv) => {
   const stream = handle.createWriteStream({
     encoding: "utf8",
   });
+  const fetch = {
+    resolveTarget,
+    fetchHarness: compileFetchHarness(home),
+    fetchTarget: compileFetchTarget(home),
+  };
+  // Fetch all harnesses to cache them and improve timer accuracy
+  for (const name of /** @type {import("./fetch").HarnessName[]} */ (
+    await readdir(new URL("harness/", home))
+  )) {
+    stage.instrument({
+      kind: "harness",
+      path: name,
+      content: await fetch.fetchHarness(name),
+      context: null,
+    });
+  }
   for await (const url of scrape(new URL("test/", home))) {
     if (sigint) {
       // eslint-disable-next-line local/no-label
@@ -117,11 +151,11 @@ const main = async (argv) => {
     if (index % 100 === 0) {
       console.dir(index);
     }
-    const target = toTarget(url);
-    if (isTestCase(target)) {
-      stream.write(JSON.stringify(await test(target, options)) + "\n");
+    const path = toTargetPath(url, home);
+    if (path !== null) {
+      stream.write(JSON.stringify(await test(path, stage, fetch)) + "\n");
+      index += 1;
     }
-    index += 1;
   }
   process.removeListener("SIGINT", onSigint);
   process.removeListener("uncaughtException", onUncaughtException);

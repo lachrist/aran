@@ -1,29 +1,37 @@
 /* eslint-disable local/strict-console */
 
-import { isTestCase, runTest } from "./test.mjs";
+import { runTest } from "./test.mjs";
 import { cleanup, record } from "./record.mjs";
 import { pathToFileURL } from "node:url";
 import { argv } from "node:process";
 import { parseCursor } from "./cursor.mjs";
 import { scrape } from "./scrape.mjs";
 import { readFile } from "node:fs/promises";
-import { home, toRelative, toTarget } from "./home.mjs";
+import { home } from "./home.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
+import {
+  compileFetchHarness,
+  compileFetchTarget,
+  resolveTarget,
+  toTargetPath,
+} from "./fetch.mjs";
+import { AranTypeError } from "./error.mjs";
 
 const { console, process, URL, Error, JSON } = globalThis;
 
 /**
  * @type {(
  *   index: number
- * ) => Promise<string>}
+ * ) => Promise<import("./fetch").TargetPath>}
  */
 const findTarget = async (index) => {
   let current = -1;
   for await (const url of scrape(new URL("test/", home))) {
-    if (isTestCase(toTarget(url))) {
+    const path = toTargetPath(url, home);
+    if (path !== null) {
       current += 1;
       if (index === current) {
-        return toTarget(url);
+        return path;
       }
     }
   }
@@ -33,10 +41,10 @@ const findTarget = async (index) => {
 /**
  * @type {(
  *   cursor: import("./cursor").Cursor,
- * ) => Promise<string>}
+ * ) => Promise<import("./fetch").TargetPath>}
  */
 const fetchTarget = async (cursor) => {
-  if (cursor.target === null) {
+  if (cursor.path === null) {
     if (cursor.index === null) {
       throw new Error(
         `Nothing to investigate from cursor: ${JSON.stringify(cursor)}`,
@@ -45,7 +53,7 @@ const fetchTarget = async (cursor) => {
       return await findTarget(cursor.index);
     }
   } else {
-    return cursor.target;
+    return cursor.path;
   }
 };
 
@@ -53,7 +61,7 @@ const cursor = parseCursor(await readFile(pathToFileURL(argv[2]), "utf8"));
 
 const codebase = new URL("codebase", import.meta.url);
 
-const { compileInstrument } =
+const { setup, instrument } =
   /** @type {{default: import("./stage").Stage}} */ (
     await import(`./stages/${cursor.stage}.mjs`)
   ).default;
@@ -71,16 +79,28 @@ process.on("uncaughtException", (error, _origin) => {
 
 await cleanup(codebase);
 
-const target = await fetchTarget(cursor);
+const path = await fetchTarget(cursor);
 
 console.log(`===== ${cursor.stage} =====`);
-console.log(`\n${toRelative(target)}\n`);
+console.log(`\n${path}\n`);
 console.dir(
-  await runTest({
-    target,
-    home,
-    warning: "console",
-    record,
-    compileInstrument,
+  await runTest(path, {
+    setup,
+    instrument: (source) => {
+      const outcome = instrument(source);
+      if (outcome.type === "failure") {
+        return outcome;
+      } else if (outcome.type === "success") {
+        return {
+          type: "success",
+          data: record(source.kind, source.path, outcome.data.content),
+        };
+      } else {
+        throw new AranTypeError(outcome);
+      }
+    },
+    resolveTarget,
+    fetchHarness: compileFetchHarness(home),
+    fetchTarget: compileFetchTarget(home),
   }),
 );

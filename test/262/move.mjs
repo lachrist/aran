@@ -3,14 +3,21 @@
 import { pathToFileURL } from "node:url";
 import { argv } from "node:process";
 import { scrape } from "./scrape.mjs";
-import { isTestCase, runTest } from "./test.mjs";
+import { runTest } from "./test.mjs";
 import { parseCursor, stringifyCursor } from "./cursor.mjs";
 import { readFile } from "node:fs/promises";
 import { writeFileSync } from "node:fs";
-import { home, toRelative, toTarget } from "./home.mjs";
-import { listTag, loadTagging } from "./tagging.mjs";
+import { home } from "./home.mjs";
+import { listTag } from "./tagging.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
-import { listPrecursor, loadPrecursor } from "./precursor.mjs";
+import { listPrecursor } from "./precursor.mjs";
+import {
+  compileFetchHarness,
+  compileFetchTarget,
+  resolveTarget,
+  toTargetPath,
+} from "./fetch.mjs";
+import { loadStage } from "./stage.mjs";
 
 const { console, process, URL } = globalThis;
 
@@ -18,20 +25,12 @@ const persistent = pathToFileURL(argv[2]);
 
 const cursor = parseCursor(await readFile(persistent, "utf8"));
 
-const stage = await /** @type {{default: import("./stage").Stage}} */ (
-  await import(`./stages/${cursor.stage}.mjs`)
-).default;
-
-const precursor = await loadPrecursor(stage.precursor);
-
-const negative = await loadTagging(stage.negative);
-
-const exclude = await loadTagging(stage.exclude);
+const stage = await loadStage(cursor.stage);
 
 let index = 0;
 
-/** @type {string | null} */
-let target = null;
+/** @type {import("./fetch").TargetPath | null} */
+let path = null;
 
 let ongoing = false;
 
@@ -53,43 +52,44 @@ process.on("exit", () => {
       stringifyCursor({
         stage: cursor.stage,
         index,
-        target,
+        path,
       }),
       "utf8",
     );
   }
 });
 
+const fetchHarness = compileFetchHarness(home);
+
+const fetchTarget = compileFetchTarget(home);
+
 for await (const url of scrape(new URL("test/", home))) {
-  target = toTarget(url);
-  if (isTestCase(target)) {
-    if ((!ongoing && target === cursor.target) || index === cursor.index) {
+  path = toTargetPath(url, home);
+  if (path !== null) {
+    if ((!ongoing && path === cursor.path) || index === cursor.index) {
       ongoing = true;
     }
     if (ongoing) {
       if (
-        listTag(exclude, target).length === 0 &&
-        listPrecursor(precursor, target).length === 0
+        listTag(stage.exclude, path).length === 0 &&
+        listPrecursor(stage.precursor, path).length === 0
       ) {
-        console.log(index, toRelative(target));
-        const { metadata, error } = await runTest({
-          target,
-          home,
-          warning: "ignore",
-          record: (source) => source,
-          compileInstrument: stage.compileInstrument,
+        console.log(index, path);
+        const { metadata, outcome } = await runTest(path, {
+          resolveTarget,
+          fetchTarget,
+          fetchHarness,
+          instrument: stage.instrument,
+          setup: stage.setup,
         });
         const tags = [
-          ...listTag(negative, target),
-          ...(error === null
-            ? []
-            : stage.listLateNegative(target, metadata, error)),
+          ...listTag(stage.negative, path),
+          ...(outcome.type === "failure"
+            ? stage.listLateNegative(path, metadata, outcome.data)
+            : []),
         ];
-        if ((tags.length === 0) !== (error === null)) {
-          console.log({
-            tags,
-            error,
-          });
+        if ((tags.length === 0) !== (outcome.type === "success")) {
+          console.log({ tags, outcome });
           process.exit(1);
         }
       }
@@ -103,7 +103,7 @@ writeFileSync(
   stringifyCursor({
     stage: cursor.stage,
     index: null,
-    target: null,
+    path: null,
   }),
   "utf8",
 );
