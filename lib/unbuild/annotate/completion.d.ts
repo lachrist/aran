@@ -13,6 +13,10 @@ export type CompletionNode =
   | ModuleDeclaration
   | SwitchCase;
 
+export type Completion = {
+  [key in Hash]?: null;
+};
+
 export type CompletionResult = {
   previous_maybe_last: boolean;
   hashes: Tree<Hash>;

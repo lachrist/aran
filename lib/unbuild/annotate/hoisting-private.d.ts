@@ -1,5 +1,6 @@
 import type { Variable } from "../../estree";
 import type { Hash } from "../../hash";
+import type { Tree } from "../../util/tree";
 
 export type Scoping = {
   [key in Kind]?: boolean;
@@ -63,3 +64,5 @@ export type VoidBinding = {
 };
 
 export type Binding = FreeBinding | LockBinding | FlagBinding | VoidBinding;
+
+export type BindingTree = Tree<Binding>;
