@@ -13,8 +13,13 @@ import {
   resolveDependency,
   toMainPath,
 } from "./fetch.mjs";
+import { packResult } from "./result.mjs";
 
 const { Error, console, process, URL, JSON, Map, undefined } = globalThis;
+
+let instrument_user_time = 0;
+
+let instrument_system_time = 0;
 
 /**
  * @type {(
@@ -30,7 +35,9 @@ const test = async (
 ) => {
   const exclusion_tag_array = listExclusionReason(path);
   if (exclusion_tag_array.length === 0) {
-    const timer = cpuUsage();
+    instrument_user_time = 0;
+    instrument_system_time = 0;
+    const start = cpuUsage();
     const { metadata, outcome } = await runTest(path, {
       setup,
       instrument,
@@ -38,10 +45,21 @@ const test = async (
       fetchHarness,
       resolveDependency,
     });
+    const stop = cpuUsage(start);
     return {
       type: "include",
       path,
-      time: cpuUsage(timer),
+      time: {
+        total: {
+          user: stop.user,
+          system: stop.system,
+        },
+        instrument: {
+          user: instrument_user_time,
+          system: instrument_system_time,
+        },
+      },
+      exclusion: [],
       expect: [
         ...listNegative(path),
         ...(outcome.type === "failure"
@@ -54,7 +72,10 @@ const test = async (
     return {
       type: "exclude",
       path,
-      reasons: exclusion_tag_array,
+      exclusion: /** @type {[string, ...string[]]} */ (exclusion_tag_array),
+      actual: null,
+      expect: null,
+      time: null,
     };
   }
 };
@@ -83,7 +104,12 @@ const wrapInstrument = (instrument) => {
         return outcome;
       }
     } else {
-      return instrument(source);
+      const start = cpuUsage();
+      const outcome = instrument(source);
+      const stop = cpuUsage(start);
+      instrument_user_time += stop.user;
+      instrument_system_time += stop.system;
+      return outcome;
     }
   };
 };
@@ -149,7 +175,9 @@ const main = async (argv) => {
     }
     const path = toMainPath(url, home);
     if (path !== null) {
-      stream.write(JSON.stringify(await test(path, stage, fetch)) + "\n");
+      stream.write(
+        JSON.stringify(packResult(await test(path, stage, fetch))) + "\n",
+      );
       index += 1;
     }
   }

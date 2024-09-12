@@ -1,5 +1,4 @@
-import { isErrorSerial } from "./error-serial.mjs";
-import { hasOwnJson } from "./json.mjs";
+import { AranTypeError } from "./error.mjs";
 
 const {
   Array: { isArray },
@@ -8,67 +7,77 @@ const {
 /**
  * @type {(
  *   data: import("./json").Json,
- * ) => data is string[]}
+ * ) => data is import("./result").CompactResult}
  */
-const isStringArray = (data) => {
-  if (isArray(data)) {
-    for (const value of data) {
-      if (typeof value !== "string") {
-        return false;
-      }
-    }
-    return true;
-  } else {
-    return false;
-  }
-};
+export const isCompactResult = (data) =>
+  isArray(data) && data.length === 5 && typeof data[0] === "string";
 
 /**
  * @type {(
  *   result: import("./result").Result,
- * ) => string}
+ * ) => import("./result").CompactResult}
  */
-export const getResultPath = ({ path }) => path;
-
-/**
- * @type {(
- *   data: import("./json").Json,
- * ) => data is import("./result").Result}
- */
-export const isResult = (data) => {
-  if (
-    typeof data === "object" &&
-    data !== null &&
-    !isArray(data) &&
-    hasOwnJson(data, "type")
-  ) {
-    if (data.type === "exclude") {
-      return (
-        hasOwnJson(data, "path") &&
-        typeof data.path === "string" &&
-        hasOwnJson(data, "tags") &&
-        isStringArray(data.tags)
-      );
-    } else if (data.type === "include") {
-      return (
-        hasOwnJson(data, "path") &&
-        typeof data.path === "string" &&
-        hasOwnJson(data, "expect") &&
-        isStringArray(data.expect) &&
-        hasOwnJson(data, "actual") &&
-        (data.actual === null || isErrorSerial(data.actual))
-      );
-    } else {
-      return false;
-    }
+export const packResult = (result) => {
+  if (result.type === "include") {
+    return [
+      result.path,
+      [],
+      result.expect,
+      result.actual === null
+        ? null
+        : [result.actual.name, result.actual.message],
+      [
+        result.time.total.user,
+        result.time.total.system,
+        result.time.instrument.user,
+        result.time.instrument.system,
+      ],
+    ];
+  } else if (result.type === "exclude") {
+    return [result.path, result.exclusion, null, null, null];
   } else {
-    return false;
+    throw new AranTypeError(result);
   }
 };
 
 /**
  * @type {(
- *   data: import("./json").Json,
- * ) => data is import("./result").Result[]}
+ *   result: import("./result").CompactResult,
+ * ) => import("./result").Result}
  */
-export const isResultArray = (data) => isArray(data) && data.every(isResult);
+export const unpackResult = (result) => {
+  if (result[4] !== null) {
+    return {
+      type: "include",
+      path: result[0],
+      exclusion: [],
+      expect: result[2],
+      actual:
+        result[3] === null
+          ? null
+          : {
+              name: result[3][0],
+              message: result[3][1],
+            },
+      time: {
+        total: {
+          user: result[4][0],
+          system: result[4][1],
+        },
+        instrument: {
+          user: result[4][2],
+          system: result[4][3],
+        },
+      },
+    };
+  } else {
+    return {
+      type: "exclude",
+      path: result[0],
+      exclusion: result[1],
+      expect: null,
+      actual: null,
+      time: null,
+    };
+  }
+};

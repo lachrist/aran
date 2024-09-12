@@ -4,19 +4,39 @@ import type { MainPath } from "./fetch";
 export type ExcludeResult = {
   type: "exclude";
   path: MainPath;
-  reasons: string[];
+  exclusion: [string, ...string[]];
+  expect: null;
+  actual: null;
+  time: null;
 };
 
 export type IncludeResult = {
   type: "include";
   path: MainPath;
-  time: {
-    user: number;
-    system: number;
-  };
-  expect: null | string[];
+  exclusion: [];
+  expect: string[];
   actual: null | ErrorSerial;
+  time: {
+    total: {
+      user: number;
+      system: number;
+    };
+    instrument: {
+      user: number;
+      system: number;
+    };
+  };
 };
+
+export type CompactResult =
+  | [MainPath, [string, ...string[]], null, null, null]
+  | [
+      MainPath,
+      [],
+      string[],
+      null | [string, string],
+      [number, number, number, number],
+    ];
 
 export type Result = ExcludeResult | IncludeResult;
 

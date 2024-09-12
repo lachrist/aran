@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { matchSelection, parseSelection } from "./selection.mjs";
 import { createInterface } from "node:readline";
 import { createReadStream } from "node:fs";
-import { isResult } from "./result.mjs";
+import { isCompactResult, unpackResult } from "./result.mjs";
 import { AranExecError, AranTypeError } from "./error.mjs";
 
 const { JSON, Set, URL, Infinity } = globalThis;
@@ -57,19 +57,20 @@ const loadPrecursorExclusion = async (stage) => {
     ),
     crlfDelay: Infinity,
   })) {
-    const result = JSON.parse(line);
-    if (isResult(result)) {
+    const compact_result = JSON.parse(line);
+    if (isCompactResult(compact_result)) {
+      const result = unpackResult(compact_result);
       if (result.type === "exclude") {
         paths.add(result.path);
       } else if (result.type === "include") {
-        if (result.actual !== null || result.expect !== null) {
+        if (result.actual !== null || result.expect.length !== 0) {
           paths.add(result.path);
         }
       } else {
-        throw new AranTypeError(result.type);
+        throw new AranTypeError(result);
       }
     } else {
-      throw new AranExecError("invalid result", result);
+      throw new AranExecError("invalid compact result", compact_result);
     }
   }
   return [{ exact: paths, group: [] }, stage];
