@@ -7,12 +7,13 @@ import { runTest } from "./test.mjs";
 import { parseCursor, stringifyCursor } from "./cursor.mjs";
 import { readFile } from "node:fs/promises";
 import { writeFileSync } from "node:fs";
-import { home } from "./home.mjs";
+import { home, root } from "./home.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
 import {
   compileFetchHarness,
   compileFetchTarget,
   resolveDependency,
+  showTargetPath,
   toMainPath,
 } from "./fetch.mjs";
 import { loadStage } from "./stage.mjs";
@@ -75,7 +76,7 @@ for await (const url of scrape(new URL("test/", home))) {
     }
     if (ongoing) {
       if (listExclusionReason(path).length === 0) {
-        console.log(index, path);
+        console.log(index, showTargetPath(path, home, root));
         const { metadata, outcome } = await runTest(path, {
           resolveDependency,
           fetchTarget,

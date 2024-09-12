@@ -7,12 +7,13 @@ import { argv } from "node:process";
 import { parseCursor } from "./cursor.mjs";
 import { scrape } from "./scrape.mjs";
 import { readFile } from "node:fs/promises";
-import { home } from "./home.mjs";
+import { home, root } from "./home.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
 import {
   compileFetchHarness,
   compileFetchTarget,
   resolveDependency,
+  showTargetPath,
   toMainPath,
 } from "./fetch.mjs";
 import { AranTypeError } from "./error.mjs";
@@ -82,7 +83,7 @@ await cleanup(codebase);
 const path = await fetchMainPath(cursor);
 
 console.log(`===== ${cursor.stage} =====`);
-console.log(`\n${path}\n`);
+console.log(`\n${showTargetPath(path, home, root)}\n`);
 console.dir(
   await runTest(path, {
     setup,

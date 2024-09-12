@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { AranExecError } from "./error.mjs";
 
 const { Map, URL } = globalThis;
 
@@ -35,7 +36,7 @@ export const compileFetchHarness = (home) => {
  * ) => import("./fetch").FetchTarget}
  */
 export const compileFetchTarget = (home) => (path) =>
-  readFile(new URL(path, home), "utf8");
+  readFile(new URL(`test/${path}`, home), "utf8");
 
 /**
  * @type {(
@@ -44,10 +45,38 @@ export const compileFetchTarget = (home) => (path) =>
  * ) => null | import("./fetch").MainPath}
  */
 export const toMainPath = (url, home) => {
-  const path = url.pathname.slice(home.pathname.length + 1);
-  if (path.includes("_FIXTURE") || path.endsWith(".md")) {
-    return null;
+  const base = new URL("test/", home);
+  if (url.href.startsWith(base.href)) {
+    const path = url.pathname.slice(base.pathname.length);
+    if (path.includes("_FIXTURE") || path.endsWith(".md")) {
+      return null;
+    } else {
+      return /** @type {import("./fetch").MainPath} */ (path);
+    }
   } else {
-    return /** @type {import("./fetch").MainPath} */ (path);
+    throw new AranExecError("Not relative url from home", {
+      url: url.href,
+      home: home.href,
+    });
+  }
+};
+
+/**
+ * @type {(
+ *   path: import("./fetch").TargetPath,
+ *   home: URL,
+ *   root: URL,
+ * ) => string}
+ */
+export const showTargetPath = (path, home, root) => {
+  const url = new URL(`test/${path}`, home);
+  if (url.href.startsWith(root.href)) {
+    return url.href.slice(root.href.length);
+  } else {
+    throw new AranExecError("Not relative url from root", {
+      path,
+      home: home.href,
+      root: root.href,
+    });
   }
 };
