@@ -1,2 +1,2 @@
 identity
-4356 built-ins/AsyncFromSyncIteratorPrototype/next/for-await-iterator-next-rejected-promise-close.js
+12775 built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js
