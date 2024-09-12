@@ -15,7 +15,7 @@ const {
  *     setup: (context: import("node:vm").Context) => void,
  *     instrument: import("./stage").Instrument,
  *   },
- * ) => import("node:vm").Context}
+ * ) => import("./test262").$262}
  */
 export const createRealm = ({ setup, print, report, instrument }) => {
   const context = createContext({ __proto__: null });
@@ -25,8 +25,7 @@ export const createRealm = ({ setup, print, report, instrument }) => {
   const $262 = {
     // @ts-ignore
     __proto__: null,
-    createRealm: () =>
-      createRealm({ setup, print, report, instrument }).context.$262,
+    createRealm: () => createRealm({ setup, print, report, instrument }),
     detachArrayBuffer: () => {
       throw report("AranRealmError", "detachArrayBuffer");
     },
@@ -85,6 +84,7 @@ export const createRealm = ({ setup, print, report, instrument }) => {
       throw report("AranRealmError", "AbstractModuleSource");
     },
     aran: {
+      context,
       log,
       dir,
       report,
@@ -146,5 +146,5 @@ export const createRealm = ({ setup, print, report, instrument }) => {
     value: print,
   });
   setup(context);
-  return context;
+  return $262;
 };

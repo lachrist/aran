@@ -153,12 +153,12 @@ export const runTestCaseInner = async (
   const { done, print } = asynchronous
     ? makeAsynchronousTermination()
     : termination;
-  const context = createRealm({
+  const { context } = createRealm({
     setup,
     print,
     report,
     instrument,
-  });
+  }).aran;
   for (const name of includes) {
     const harness_outcome = instrument({
       type: "harness",

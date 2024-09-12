@@ -1,3 +1,4 @@
+import { Context } from "node:vm";
 import { Report } from "./report";
 
 export type Flag =
@@ -43,6 +44,7 @@ export type $262 = {
   IsHTMLDDA: object;
   agent: Agent;
   aran: {
+    context: Context;
     log: Console["log"];
     dir: Console["dir"];
     report: Report;
