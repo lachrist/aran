@@ -3,9 +3,9 @@ import type { ErrorSerial } from "./error-serial";
 import type { Outcome } from "./outcome";
 import type { Source } from "./source";
 import type { Metadata } from "./test262";
-import type { Tagging } from "./tagging";
-import type { Precursor } from "./precursor";
 import type { MainPath } from "./fetch";
+import type { Selection } from "./selection";
+import type { Tag } from "./tag";
 
 export type StageName =
   | "identity"
@@ -37,16 +37,23 @@ export type Stage = {
   setup: (context: Context) => void;
   instrument: Instrument;
   listLateNegative: ListLateNegative;
-  exclude: string[];
-  negative: string[];
-  precursor: string[];
+  precursor: StageName[];
+  exclude: Tag[];
+  negative: Tag[];
 };
+
+export type RecordingEntry<X> = [Selection, X];
+
+export type Recording<X> = RecordingEntry<X>[];
+
+export type Exclusion = Recording<Tag | StageName>;
+
+export type Negation = Recording<Tag>;
 
 export type ReadyStage = {
   setup: (context: Context) => void;
   instrument: Instrument;
   listLateNegative: ListLateNegative;
-  exclude: Tagging;
-  negative: Tagging;
-  precursor: Precursor;
+  listExclusionReason: (path: MainPath) => (Tag | StageName)[];
+  listNegative: (path: MainPath) => Tag[];
 };

@@ -1,14 +1,15 @@
-import { ErrorSerial } from "./error-serial";
+import type { ErrorSerial } from "./error-serial";
+import type { MainPath } from "./fetch";
 
 export type ExcludeResult = {
   type: "exclude";
-  path: string;
+  path: MainPath;
   reasons: string[];
 };
 
 export type IncludeResult = {
   type: "include";
-  path: string;
+  path: MainPath;
   time: {
     user: number;
     system: number;

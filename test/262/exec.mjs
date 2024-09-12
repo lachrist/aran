@@ -6,8 +6,6 @@ import { argv, cpuUsage } from "node:process";
 import { runTest } from "./test.mjs";
 import { home } from "./home.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
-import { listTag } from "./tagging.mjs";
-import { listPrecursor } from "./precursor.mjs";
 import { isStageName, loadStage } from "./stage.mjs";
 import {
   compileFetchHarness,
@@ -27,14 +25,11 @@ const { Error, console, process, URL, JSON, Map, undefined } = globalThis;
  */
 const test = async (
   path,
-  { listLateNegative, instrument, setup, precursor, exclude, negative },
+  { listLateNegative, instrument, setup, listExclusionReason, listNegative },
   { resolveDependency, fetchHarness, fetchTarget },
 ) => {
-  const reasons = [
-    ...listPrecursor(precursor, path),
-    ...listTag(exclude, path),
-  ];
-  if (reasons.length === 0) {
+  const exclusion_tag_array = listExclusionReason(path);
+  if (exclusion_tag_array.length === 0) {
     const timer = cpuUsage();
     const { metadata, outcome } = await runTest(path, {
       setup,
@@ -48,7 +43,7 @@ const test = async (
       path,
       time: cpuUsage(timer),
       expect: [
-        ...listTag(negative, path),
+        ...listNegative(path),
         ...(outcome.type === "failure"
           ? listLateNegative(path, metadata, outcome.data)
           : []),
@@ -59,7 +54,7 @@ const test = async (
     return {
       type: "exclude",
       path,
-      reasons,
+      reasons: exclusion_tag_array,
     };
   }
 };

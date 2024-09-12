@@ -35,7 +35,7 @@ export const getResultPath = ({ path }) => path;
  *   data: import("./json").Json,
  * ) => data is import("./result").Result}
  */
-const isResult = (data) => {
+export const isResult = (data) => {
   if (
     typeof data === "object" &&
     data !== null &&

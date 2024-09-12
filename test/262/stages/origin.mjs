@@ -31,7 +31,7 @@ const config = {
 
 /** @type {import("../stage").Stage} */
 export default {
-  precursor: ["identity", "parsing", "bare-basic-builtin-standard"],
+  precursor: ["identity", "parsing", "bare-basic-standard"],
   negative: [],
   exclude: [],
   listLateNegative: (_target, _metadata, _error) => [],

@@ -1,3 +1,10 @@
+/**
+ * @type {{
+ *   precursor: import("../stage").StageName[],
+ *   negative: import("../tag").Tag[],
+ *   exclude: import("../tag").Tag[],
+ * }}
+ */
 export default {
   precursor: ["identity", "parsing"],
   negative: [

@@ -8,9 +8,7 @@ import { parseCursor, stringifyCursor } from "./cursor.mjs";
 import { readFile } from "node:fs/promises";
 import { writeFileSync } from "node:fs";
 import { home } from "./home.mjs";
-import { listTag } from "./tagging.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
-import { listPrecursor } from "./precursor.mjs";
 import {
   compileFetchHarness,
   compileFetchTarget,
@@ -25,7 +23,13 @@ const persistent = pathToFileURL(argv[2]);
 
 const cursor = parseCursor(await readFile(persistent, "utf8"));
 
-const stage = await loadStage(cursor.stage);
+const {
+  setup,
+  instrument,
+  listExclusionReason,
+  listLateNegative,
+  listNegative,
+} = await loadStage(cursor.stage);
 
 let index = 0;
 
@@ -70,22 +74,19 @@ for await (const url of scrape(new URL("test/", home))) {
       ongoing = true;
     }
     if (ongoing) {
-      if (
-        listTag(stage.exclude, path).length === 0 &&
-        listPrecursor(stage.precursor, path).length === 0
-      ) {
+      if (listExclusionReason(path).length === 0) {
         console.log(index, path);
         const { metadata, outcome } = await runTest(path, {
           resolveDependency,
           fetchTarget,
           fetchHarness,
-          instrument: stage.instrument,
-          setup: stage.setup,
+          instrument,
+          setup,
         });
         const tags = [
-          ...listTag(stage.negative, path),
+          ...listNegative(path),
           ...(outcome.type === "failure"
-            ? stage.listLateNegative(path, metadata, outcome.data)
+            ? listLateNegative(path, metadata, outcome.data)
             : []),
         ];
         if ((tags.length === 0) !== (outcome.type === "success")) {
