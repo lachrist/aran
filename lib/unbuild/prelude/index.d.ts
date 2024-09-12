@@ -1,5 +1,5 @@
 import type { Header } from "../../header";
-import type { Error } from "./error";
+import type { SyntaxError } from "./syntax-error";
 import type { Condition } from "./condition";
 import type { BaseVariable, MetaVariable } from "../variable";
 import type { Template } from "./template";
@@ -53,9 +53,9 @@ export type HeaderPrelude = {
   data: Header;
 };
 
-export type ErrorPrelude = {
-  type: "error";
-  data: Error;
+export type SyntaxErrorPrelude = {
+  type: "syntax-error";
+  data: SyntaxError;
 };
 
 export type MetaDeclarationPrelude = {
@@ -86,7 +86,7 @@ export type Prelude =
   | WarningPrelude
   | RebootPrelude
   | HeaderPrelude
-  | ErrorPrelude
+  | SyntaxErrorPrelude
   | ReifyExternalPrelude
   | NativeExternalPrelude
   | UnboundPrivatePrelude
@@ -96,7 +96,7 @@ export type Prelude =
   | PrefixPrelude
   | ConditionPrelude;
 
-type ProgramPrelude = WarningPrelude | RebootPrelude;
+type ProgramPrelude = SyntaxErrorPrelude | WarningPrelude | RebootPrelude;
 
 type BlockPrelude =
   | WarningPrelude
@@ -105,7 +105,7 @@ type BlockPrelude =
   | UnboundPrivatePrelude
   | ReifyExternalPrelude
   | NativeExternalPrelude
-  | ErrorPrelude
+  | SyntaxErrorPrelude
   | TemplatePrelude;
 
 export type BodyPrelude =
@@ -116,7 +116,7 @@ export type BodyPrelude =
   | NativeExternalPrelude
   | UnboundPrivatePrelude
   | HeaderPrelude
-  | ErrorPrelude
+  | SyntaxErrorPrelude
   | TemplatePrelude
   | BaseDeclarationPrelude
   | MetaDeclarationPrelude;

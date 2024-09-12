@@ -64,33 +64,6 @@ export type Config = {
    */
   global_declarative_record: "builtin" | "emulate";
   /**
-   * Defines the behavior of warnings:
-   *
-   * - `"embed"`: Warnings are stored in `_aran_warning_array_`
-   * - `"console"`: Warnings are reported with `console.warn`
-   * - `"ignore"`: Warnings are ignored
-   * - `"throw"`: If present, the first warning is thrown as an error
-   *
-   * Default: `"embed"`.
-   */
-  warning: "embed" | "console" | "ignore" | "throw";
-  /**
-   * Defines the behavior of early syntax errors:
-   *
-   * - `"embed"`: The instrumentation will succeed but executing the instrumented
-   *   code will cause the first syntax error to be thrown. The error is
-   *   reported after parsing but it will originate from the realm targeted by
-   *   the code.
-   * - `"throw"`: The instrumentation throw the first early syntax error as an
-   *   `AranSyntaxError` with extends `SyntaxError`. The error is reported early
-   *   and it will originate from the current realm and not necessarily the
-   *   realm.
-   * targeted by the code.
-   *
-   * Default: `"embed"`.
-   */
-  early_syntax_error: "embed" | "throw";
-  /**
    * The global variable that refer to the global object. This is only used when
    * `mode` is `"standalone"`. Change this value only if `globalThis` do not
    * refer to the global object for some reason.

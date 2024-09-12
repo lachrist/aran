@@ -23,19 +23,11 @@ export type DeepLocalSitu = Reboot & {
 
 export type Situ = GlobalSitu | RootLocalSitu | DeepLocalSitu;
 
-export type EarlySyntaxError = {
-  type: "EarlySyntaxError";
-  message: string;
-};
-
 export type PartialSource = {
   /**
-   * The actual `estree.Program` to instrument. It is also possible to provide
-   * an `EarlySyntaxError` to indicate that the source is not valid JavaScript.
-   * This is useful to make sure parsing error are handled similarly to other
-   * early syntax error -- eg: duplicate global variable declaration.
+   * The actual `estree.Program` node to instrument.
    */
-  root: EstreeProgram | EarlySyntaxError;
+  root: EstreeProgram;
   /**
    * Indicates how the source will be executed.
    *
@@ -73,19 +65,19 @@ export type Source =
       kind: "module";
       situ: GlobalSitu;
       path: Path;
-      root: EstreeModuleProgram | EarlySyntaxError;
+      root: EstreeModuleProgram;
     }
   | {
       kind: "script";
       situ: GlobalSitu;
       path: Path;
-      root: EstreeScriptProgram | EarlySyntaxError;
+      root: EstreeScriptProgram;
     }
   | {
       kind: "eval";
       situ: Situ;
       path: Path;
-      root: EstreeScriptProgram | EarlySyntaxError;
+      root: EstreeScriptProgram;
     };
 
 export type ModuleSource = Source & {

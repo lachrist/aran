@@ -6,18 +6,14 @@
  *   - `AranTypeError`
  *   - Any non-Aran error.
  * - Definitely *not* a bug in Aran:
- *     - `AranIllegalSyntaxError`
- *     - `AranIllegalInputError`
- *     - `AranVariableClashError`
- *     - `AranDuplicateCutError`
+ *   - `AranIllegalInputError`
+ *   - `AranVariableClashError`
+ *   - `AranDuplicateCutError`
  *
  * @module
  */
 
-import type { Node, Variable } from "./estree";
-import type { Path } from "./path";
-import type { Warning as UnbuildWarning } from "./unbuild/prelude/warning";
-import type { Warning as WeaveWarning } from "./weave/warning";
+import type { Variable } from "./estree";
 
 ///////////////////
 // AranExecError //
@@ -46,25 +42,6 @@ export class AranTypeError extends TypeError {
   cause: never;
 }
 
-////////////////////////////
-// AranIllegalSyntaxError //
-////////////////////////////
-
-export type IllegalSyntax = {
-  message: string;
-  path: Path;
-  node: Node;
-};
-
-/**
- * Signals an early syntax error when `config.early_syntax_error` is `"throw"`.
- */
-export class AranIllegalSyntaxError extends SyntaxError {
-  constructor(cause: IllegalSyntax);
-  message: string;
-  cause: IllegalSyntax;
-}
-
 ///////////////////////////
 // AranIllegalInputError //
 ///////////////////////////
@@ -91,21 +68,6 @@ export class AranIllegalInputError extends Error {
   constructor(cause: IllegalInput);
   message: string;
   cause: IllegalInput;
-}
-
-//////////////////////
-// AranWarningError //
-//////////////////////
-
-export type Warning = UnbuildWarning | WeaveWarning;
-
-/**
- * Signals a warning when `config.warning` is `"throw"`.
- */
-export class AranWarningError extends Error {
-  constructor(cause: Warning);
-  message: string;
-  cause: Warning;
 }
 
 ////////////////////////////

@@ -1,6 +1,6 @@
 import type { Path } from "../../path";
 
-export type Error = {
+export type SyntaxError = {
   message: string;
   origin: Path;
 };
