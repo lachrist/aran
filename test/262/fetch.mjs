@@ -7,7 +7,9 @@ const { Map, URL } = globalThis;
  * @type {import("./fetch").ResolveDependency}
  */
 export const resolveDependency = (name, base) =>
-  /** @type {import("./fetch").DependencyPath} */ (`${base}/${name}`);
+  /** @type {import("./fetch").DependencyPath} */ (
+    new URL(name, new URL(base, "dummy:///")).pathname.slice(1)
+  );
 
 /**
  * @type {(
