@@ -1,4 +1,4 @@
-export type Tag = 
+export type Tag =
   | "arguments-two-way-binding"
   | "call-async-done-with-module"
   | "function-dynamic-property"

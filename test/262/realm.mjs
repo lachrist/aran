@@ -19,6 +19,7 @@ const {
  */
 export const createRealm = ({ setup, print, report, instrument }) => {
   const context = createContext({ __proto__: null });
+  /** @type {globalThis} */
   const global = runInContext("this;", context);
   const { SyntaxError } = global;
   /** @type {import("./test262").$262} */
@@ -48,7 +49,7 @@ export const createRealm = ({ setup, print, report, instrument }) => {
         }
         case "failure": {
           if (outcome.data.name === "SyntaxError") {
-            throw new SyntaxError(outcome.data);
+            throw new SyntaxError(outcome.data.message);
           } else {
             throw report(
               /** @type {import("./report").ReportName} */ (outcome.data.name),
@@ -112,7 +113,7 @@ export const createRealm = ({ setup, print, report, instrument }) => {
           }
           case "failure": {
             if (outcome.data.name === "SyntaxError") {
-              throw new SyntaxError(outcome.data);
+              throw new SyntaxError(outcome.data.message);
             } else {
               throw report(
                 /** @type {import("./report").ReportName} */ (
