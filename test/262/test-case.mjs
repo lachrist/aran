@@ -171,7 +171,14 @@ export const runTestCaseInner = async (
       return harness_outcome;
     }
     const { location, content } = harness_outcome.data;
-    runInContext(content, context, { filename: location ?? name });
+    try {
+      runInContext(content, context, { filename: location ?? name });
+    } catch (error) {
+      return {
+        type: "failure",
+        data: serializeError(error),
+      };
+    }
   }
   const { link, importModuleDynamically, registerMain } = compileLinker(
     context,
