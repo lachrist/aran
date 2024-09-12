@@ -78,7 +78,7 @@ const wrapInstrument = (instrument) => {
    */
   const cache = new Map();
   return (source) => {
-    if (source.kind === "harness") {
+    if (source.type === "harness") {
       const outcome = cache.get(source.path);
       if (outcome !== undefined) {
         return outcome;
@@ -137,7 +137,8 @@ const main = async (argv) => {
     await readdir(new URL("harness/", home))
   )) {
     stage.instrument({
-      kind: "harness",
+      type: "harness",
+      kind: "script",
       path: name,
       content: await fetch.fetchHarness(name),
       context: null,

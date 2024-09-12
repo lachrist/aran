@@ -1,6 +1,11 @@
 /* eslint-disable local/no-deep-import */
 
-import { setupAranBasic, setupStandardAdvice } from "../aran/index.mjs";
+import {
+  DUMMY_BASIC_MEMBRANE,
+  instrument,
+  setupAranBasic,
+  setupStandardAdvice,
+} from "../aran/index.mjs";
 import { makeInvariantAdvice } from "../../aspects/invariant.mjs";
 
 const {
@@ -11,42 +16,60 @@ const {
 /* eslint-disable */
 /**
  * @type {(
- *   report: (error: Error) => void,
- *   logged: boolean,
+ *   report: import("../report").Report,
  * ) => new (context: object) => Error}
  */
-const compileAssertionError = (report, logged) =>
-  class AssertionError extends Error {
-    constructor(/** @type {object} */ context) {
-      super();
-      this.name = "AranAssertionError";
+const compileAssertionError = (report) => {
+  let logged = false;
+  return /** @type {any} */ (
+    function (/** @type {unknown} */ context) {
       if (!logged) {
         logged = true;
-        log(this.name);
+        log("AranAssertionError");
         dir(context);
       }
-      report(this);
+      return report("AranAssertionError", "assertion failure");
     }
-  };
+  );
+};
 /* eslint-enable */
 
 /* eslint-disable */
 /**
  * @type {(
- *   report: (error: Error) => void,
+ *   report: import("../report").Report,
  * ) => new (data: never) => Error}
  */
 const compileUnreachableError = (report) =>
-  class UnreachableError extends Error {
-    constructor(/** @type {never} */ data) {
-      super();
-      this.name = "AranUnreachableError";
-      log(this.name);
+  /** @type {any} */ (
+    function (/** @type {unknown} */ data) {
+      log("AranUnreachableError");
       dir(data, { depth: 3, showHidden: true });
-      report(this);
+      return report("AranUnreachableError", "this should never happen");
     }
-  };
+  );
 /* eslint-enable */
+
+/* eslint-disable local/no-function */
+const DUMMY_ADVICE = makeInvariantAdvice(
+  /** @type {any} */ ({
+    AssertionError() {},
+    UnreachableError() {},
+  }),
+  DUMMY_BASIC_MEMBRANE,
+);
+/* eslint-enable local/no-function */
+
+/**
+ * @type {import("../aran/config").Config}
+ */
+const config = {
+  selection: "main",
+  global_declarative_record: "builtin",
+  initial_state: null,
+  standard_pointcut: (kind) => hasOwn(DUMMY_ADVICE, kind),
+  flexible_pointcut: null,
+};
 
 /** @type {import("../stage").Stage} */
 export default {
@@ -54,26 +77,17 @@ export default {
   negative: [],
   exclude: ["slow"],
   listLateNegative: (_target, _metadata, _error) => [],
-  compileInstrument: ({ report, record, warning, context }) => {
-    const { instrumentRoot, instrumentDeep, intrinsics } = setupAranBasic({
-      global_declarative_record: "builtin",
-      initial_state: null,
-      record,
-      report,
+  setup: (context) => {
+    setupStandardAdvice(
       context,
-      warning,
-      // eslint-disable-next-line no-use-before-define
-      standard_pointcut: (kind, _path) => hasOwn(advice, kind),
-      flexible_pointcut: null,
-    });
-    const advice = makeInvariantAdvice(
-      {
-        AssertionError: compileAssertionError(report, false),
-        UnreachableError: compileUnreachableError(report),
-      },
-      { intrinsics, instrumentDeep: (...args) => instrumentDeep(...args) },
+      makeInvariantAdvice(
+        {
+          AssertionError: compileAssertionError(context.report),
+          UnreachableError: compileUnreachableError(context.report),
+        },
+        setupAranBasic(context),
+      ),
     );
-    setupStandardAdvice(context, advice);
-    return instrumentRoot;
   },
+  instrument: (source) => instrument(source, config),
 };

@@ -22,10 +22,7 @@ export type StageName =
 
 export type InstrumentOutcome = Outcome<
   { location: string | null; content: string },
-  {
-    name: "SyntaxError";
-    message: string;
-  }
+  { name: string; message: string }
 >;
 
 export type Instrument = (source: Source) => InstrumentOutcome;

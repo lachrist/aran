@@ -135,7 +135,7 @@ const applyNegative = (phase, outcome, negative) => {
  *   test_case: import("./test-case").TestCase,
  *   dependencies: {
  *     setup: (context: import("node:vm").Context) => void,
- *     report: (error: Error) => Error,
+ *     report: import("./report").Report,
  *     instrument: import("./stage").Instrument,
  *     resolveTarget: import("./fetch").ResolveTarget,
  *     fetchHarness: import("./fetch").FetchHarness,
@@ -158,18 +158,20 @@ export const runTestCaseInner = async (
   });
   for (const name of includes) {
     const harness_outcome = instrument({
-      kind: "harness",
+      type: "harness",
+      kind: "script",
       path: name,
       content: await fetchHarness(name),
       context: null,
     });
     if (harness_outcome.type === "failure") {
-      throw new Error("failed to instrument harness");
+      return harness_outcome;
     }
     const { location, content } = harness_outcome.data;
     runInContext(content, context, { filename: location ?? name });
   }
   const { link, importModuleDynamically, register } = compileLinker(context, {
+    report,
     resolveTarget,
     instrument,
     fetchTarget,
@@ -290,10 +292,12 @@ export const runTestCase = async (test_case, dependencies) => {
   let serial = null;
   const outcome = await runTestCaseInner(test_case, {
     ...dependencies,
-    report: (error) => {
+    report: (name, message) => {
       if (serial === null) {
-        serial = serializeError(error);
+        serial = { name, message };
       }
+      const error = new Error(message);
+      error.name = name;
       return error;
     },
   });

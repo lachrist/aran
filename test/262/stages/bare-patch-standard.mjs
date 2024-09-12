@@ -1,5 +1,16 @@
-import { setupAranPatch, setupStandardAdvice } from "../aran/index.mjs";
+import { instrument, setupAranPatch } from "../aran/index.mjs";
 import bare from "./bare.mjs";
+
+/**
+ * @type {import("../aran/config").Config}
+ */
+const config = {
+  selection: "*",
+  global_declarative_record: "emulate",
+  initial_state: null,
+  flexible_pointcut: null,
+  standard_pointcut: [],
+};
 
 /**
  * @type {import("../stage").Stage}
@@ -7,21 +18,9 @@ import bare from "./bare.mjs";
 export default {
   ...bare,
   listLateNegative: (_target, _metadata, error) =>
-    error.layer === "meta" && error.name === "AranEvalError"
-      ? ["direct-eval-call"]
-      : [],
-  compileInstrument: ({ report, record, warning, context }) => {
-    const { instrumentRoot } = setupAranPatch({
-      global_declarative_record: "emulate",
-      initial_state: null,
-      report,
-      record,
-      context,
-      warning,
-      flexible_pointcut: null,
-      standard_pointcut: [],
-    });
-    setupStandardAdvice(context, {});
-    return instrumentRoot;
+    error.name === "AranEvalError" ? ["direct-eval-call"] : [],
+  setup: (context) => {
+    setupAranPatch(context);
   },
+  instrument: (source) => instrument(source, config),
 };

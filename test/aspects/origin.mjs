@@ -57,16 +57,13 @@ const push = (array, item) => {
 
 /**
  * @type {(
- *   membrane: {
- *     intrinsics: import("../../lib").IntrinsicRecord,
- *     instrumentDeep: import("../262/aran").InstrumentDeep,
- *   },
+ *   membrane: import("../262/aran/membrane").BasicMembrane,
  * ) => import("../../lib").StandardAdvice<
  *   import("./origin").ShadowState,
  *   import("./origin").Valuation,
  * >}
  */
-export const makeOriginAdvice = ({ intrinsics, instrumentDeep }) => {
+export const makeOriginAdvice = ({ intrinsics, instrumentLocalEvalCode }) => {
   /** @type {import("./origin").Transit} */
   let transit = VOID_TRANSIT;
   /** @type {WeakSet<Function>} */
@@ -303,7 +300,7 @@ export const makeOriginAdvice = ({ intrinsics, instrumentDeep }) => {
     "eval@before": (state, reboot, value, path) => {
       if (typeof value === "string") {
         pop(state.stack);
-        return instrumentDeep(value, path, reboot);
+        return instrumentLocalEvalCode(value, path, reboot);
       } else {
         transit = { type: "return", result: pop(state.stack) };
         return value;

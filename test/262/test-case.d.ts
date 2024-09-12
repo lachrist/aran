@@ -1,13 +1,13 @@
 import type { ErrorSerial } from "./error-serial";
 import type { HarnessName } from "./fetch";
 import type { Outcome } from "./outcome";
-import type { RootSource } from "./source";
+import type { MainSource } from "./source";
 import type { Negative } from "./test262";
 
 export type TestCaseOutcome = Outcome<null, ErrorSerial>;
 
 export type TestCase = {
-  source: RootSource;
+  source: MainSource;
   negative: null | Negative;
   asynchronous: boolean;
   includes: HarnessName[];

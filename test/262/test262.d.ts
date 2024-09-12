@@ -1,3 +1,5 @@
+import { Report } from "./report";
+
 export type Flag =
   | "onlyStrict"
   | "noStrict"
@@ -43,7 +45,7 @@ export type $262 = {
   aran: {
     log: Console["log"];
     dir: Console["dir"];
-    report: (error: Error) => Error;
+    report: Report;
     instrumentEvalCode: (code: string, context: object | null) => string;
   };
 };

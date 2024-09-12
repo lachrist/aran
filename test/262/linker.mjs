@@ -15,6 +15,7 @@ const { Error, undefined, Map, JSON } = globalThis;
  *   },
  *   options: {
  *     SyntaxError: SyntaxErrorConstructor,
+ *     report: import("./report").Report,
  *     instrument: import("./stage").Instrument,
  *     importModuleDynamically: import("./linker").Load,
  *     context: import("node:vm").Context,
@@ -23,7 +24,7 @@ const { Error, undefined, Map, JSON } = globalThis;
  */
 const makeModule = (
   { path, content },
-  { SyntaxError, instrument, importModuleDynamically, context },
+  { report, SyntaxError, instrument, importModuleDynamically, context },
 ) => {
   if (path.endsWith(".json")) {
     const module = new SyntheticModule(
@@ -39,13 +40,21 @@ const makeModule = (
     return module;
   } else {
     const outcome = instrument({
+      type: "dependency",
       kind: "module",
       path,
       content,
       context: null,
     });
     if (outcome.type === "failure") {
-      throw new SyntaxError(outcome.data.message);
+      if (outcome.data.name === "SyntaxError") {
+        throw new SyntaxError(outcome.data.message);
+      } else {
+        throw report(
+          /** @type {import("./report").ReportName} */ (outcome.data.name),
+          outcome.data.message,
+        );
+      }
     } else {
       return new SourceTextModule(outcome.data.content, {
         identifier: outcome.data.location ?? path,
@@ -61,6 +70,7 @@ const makeModule = (
  * @type {(
  *   context: import("node:vm").Context,
  *   dependencies: {
+ *     report: import("./report").Report,
  *     resolveTarget: import("./fetch").ResolveTarget,
  *     instrument: import("./stage").Instrument,
  *     fetchTarget: import("./fetch").FetchTarget,
@@ -69,7 +79,7 @@ const makeModule = (
  */
 export const compileLinker = (
   context,
-  { resolveTarget, instrument, fetchTarget },
+  { report, resolveTarget, instrument, fetchTarget },
 ) => {
   // Use promise of the module realm and not the main realm.
   // Still not working because node is changing the promise.
@@ -106,7 +116,7 @@ export const compileLinker = (
         const module = makeModule(
           { path, content },
           // eslint-disable-next-line no-use-before-define
-          { SyntaxError, instrument, importModuleDynamically, context },
+          { report, SyntaxError, instrument, importModuleDynamically, context },
         );
         const race_module = module_cache.get(path);
         if (race_module !== undefined) {

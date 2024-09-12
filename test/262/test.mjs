@@ -27,6 +27,7 @@ const listTestCase = (path, content, metadata) => {
   ) {
     test_case_array.push({
       source: {
+        type: "main",
         kind,
         path,
         content: `"use strict";\n${content}`,
@@ -40,6 +41,7 @@ const listTestCase = (path, content, metadata) => {
   if (!metadata.flags.includes("onlyStrict")) {
     test_case_array.push({
       source: {
+        type: "main",
         kind,
         path,
         content,

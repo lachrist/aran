@@ -1,44 +1,41 @@
 import { parse as parseAcorn } from "acorn";
 import { parse as parseBabel } from "@babel/parser";
+import { inspectErrorMessage, inspectErrorName } from "../error-serial.mjs";
 
 const {
   undefined,
   Object: { hasOwn, values: listValue },
   Array: { isArray },
-  SyntaxError,
 } = globalThis;
 
 /**
- * @type {<K extends "script" | "module" | "eval">(
- *   kind: K,
+ * @type {(
+ *   kind: "script" | "module" | "eval",
  *   code: string
- * ) => (
- *   | (import("../../../lib").EstreeProgram & {
- *     sourceType: K extends "module" ? "module" : "script"
- *   })
- *   | import("../../../lib").EarlySyntaxError
- * )}
+ * ) => import("../outcome").Outcome<
+ *   import("../../../lib").EstreeProgram,
+ *   import("../error-serial").ErrorSerial
+ * >}
  */
 export const parseGlobal = (kind, code) => {
   try {
-    return /** @type {any} */ (
-      parseAcorn(code, {
-        ecmaVersion: "latest",
-        sourceType: kind === "eval" ? "script" : kind,
-        checkPrivateFields: false,
-      })
-    );
+    return {
+      type: "success",
+      data: /** @type {any} */ (
+        parseAcorn(code, {
+          ecmaVersion: "latest",
+          sourceType: kind === "eval" ? "script" : kind,
+          checkPrivateFields: false,
+        })
+      ),
+    };
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "message" in error &&
-      typeof error.message === "string" &&
-      error instanceof SyntaxError
-    ) {
+    const name = inspectErrorName(error);
+    const message = inspectErrorMessage(error);
+    if (name === "SyntaxError") {
       return {
-        type: "EarlySyntaxError",
-        message: error.message,
+        type: "failure",
+        data: { name, message },
       };
     } else {
       throw error;
@@ -50,38 +47,37 @@ export const parseGlobal = (kind, code) => {
  * @type {(
  *   kind: "eval",
  *   code: string,
- * ) => (
- *   | import("../../../lib").EstreeScriptProgram
- *   | import("../../../lib").EarlySyntaxError
- * )}
+ * ) => import("../outcome").Outcome<
+ *   import("../../../lib").EstreeProgram,
+ *   import("../error-serial").ErrorSerial
+ * >}
  */
-export const parseAcornLocal = (_kind, code) => {
+const parseAcornLocal = (_kind, code) => {
   try {
-    return /** @type {any} */ (
-      parseAcorn(code, {
-        ecmaVersion: "latest",
-        sourceType: "script",
-        onInsertedSemicolon: /** @type {any} */ (undefined),
-        onTrailingComma: /** @type {any} */ (undefined),
-        allowReturnOutsideFunction: false,
-        allowImportExportEverywhere: true,
-        allowAwaitOutsideFunction: true,
-        allowSuperOutsideMethod: true,
-        allowHashBang: true,
-        checkPrivateFields: false,
-      })
-    );
+    return {
+      type: "success",
+      data: /** @type {any} */ (
+        parseAcorn(code, {
+          ecmaVersion: "latest",
+          sourceType: "script",
+          onInsertedSemicolon: /** @type {any} */ (undefined),
+          onTrailingComma: /** @type {any} */ (undefined),
+          allowReturnOutsideFunction: false,
+          allowImportExportEverywhere: true,
+          allowAwaitOutsideFunction: true,
+          allowSuperOutsideMethod: true,
+          allowHashBang: true,
+          checkPrivateFields: false,
+        })
+      ),
+    };
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "message" in error &&
-      typeof error.message === "string" &&
-      error instanceof SyntaxError
-    ) {
+    const name = inspectErrorName(error);
+    const message = inspectErrorMessage(error);
+    if (name === "SyntaxError") {
       return {
-        type: "EarlySyntaxError",
-        message: error.message,
+        type: "failure",
+        data: { name, message },
       };
     } else {
       throw error;
@@ -92,7 +88,7 @@ export const parseAcornLocal = (_kind, code) => {
 /**
  * @type {(
  *   node: unknown,
- * ) => import("../../../lib").EstreeScriptProgram}
+ * ) => import("../../../lib").EstreeProgram}
  */
 const sanitizeBabel = (root) => {
   const todo = [root];
@@ -125,53 +121,52 @@ const sanitizeBabel = (root) => {
       // noop
     }
   }
-  return /** @type {import("../../../lib").EstreeScriptProgram} */ (root);
+  return /** @type {import("../../../lib").EstreeProgram} */ (root);
 };
 
 /**
  * @type {(
  *   kind: "eval",
  *   code: string,
- * ) => (
- *   | import("../../../lib").EstreeScriptProgram
- *   | import("../../../lib").EarlySyntaxError
- * )}
+ * ) => import("../outcome").Outcome<
+ *   import("../../../lib").EstreeProgram,
+ *   import("../error-serial").ErrorSerial
+ * >}
  */
-export const parseBabelLocal = (_kind, code) => {
+const parseBabelLocal = (_kind, code) => {
   try {
-    return sanitizeBabel(
-      parseBabel(code, {
-        allowImportExportEverywhere: false,
-        allowAwaitOutsideFunction: false,
-        // @ts-ignore
-        allowNewTargetOutsideFunction: true,
-        allowReturnOutsideFunction: false,
-        allowSuperOutsideMethod: true,
-        allowUndeclaredExports: false,
-        attachComment: false,
-        // Error: The `annexB` option can only be set to `false`.
-        annexB: false,
-        createImportExpressions: true,
-        createParenthesizedExpressions: false,
-        errorRecovery: false,
-        plugins: ["estree"],
-        sourceType: "script",
-        strictMode: false,
-        ranges: false,
-        tokens: false,
-      }).program,
-    );
+    return {
+      type: "success",
+      data: sanitizeBabel(
+        parseBabel(code, {
+          allowImportExportEverywhere: false,
+          allowAwaitOutsideFunction: false,
+          // @ts-ignore
+          allowNewTargetOutsideFunction: true,
+          allowReturnOutsideFunction: false,
+          allowSuperOutsideMethod: true,
+          allowUndeclaredExports: false,
+          attachComment: false,
+          // Error: The `annexB` option can only be set to `false`.
+          annexB: false,
+          createImportExpressions: true,
+          createParenthesizedExpressions: false,
+          errorRecovery: false,
+          plugins: ["estree"],
+          sourceType: "script",
+          strictMode: false,
+          ranges: false,
+          tokens: false,
+        }).program,
+      ),
+    };
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "message" in error &&
-      typeof error.message === "string" &&
-      error instanceof SyntaxError
-    ) {
+    const name = inspectErrorName(error);
+    const message = inspectErrorMessage(error);
+    if (name === "SyntaxError") {
       return {
-        type: "EarlySyntaxError",
-        message: error.message,
+        type: "failure",
+        data: { name, message },
       };
     } else {
       throw error;
@@ -183,22 +178,22 @@ export const parseBabelLocal = (_kind, code) => {
  * @type {(
  *   kind: "eval",
  *   code: string,
- * ) => (
- *   | import("../../../lib").EstreeScriptProgram
- *   | import("../../../lib").EarlySyntaxError
- * )}
+ * ) => import("../outcome").Outcome<
+ *   import("../../../lib").EstreeProgram,
+ *   import("../error-serial").ErrorSerial
+ * >}
  */
 export const parseLocal = (kind, code) => {
-  const root = parseAcornLocal(kind, code);
+  const outcome = parseAcornLocal(kind, code);
   // We prefer acorn over babel because it is faster respect the estree format.
   // The estree babel plugin is supposed to make babel produce valid estree
   //   but the private identifiers and field are still in the babel format.
   if (
-    root.type === "EarlySyntaxError" &&
-    root.message.startsWith("'new.target'")
+    outcome.type === "failure" &&
+    outcome.data.message.startsWith("'new.target'")
   ) {
     return parseBabelLocal(kind, code);
   } else {
-    return root;
+    return outcome;
   }
 };

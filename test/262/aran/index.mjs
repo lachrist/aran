@@ -1,17 +1,45 @@
 import { generate } from "astring";
-import { instrument, generateSetup } from "../../../lib/index.mjs";
+import {
+  instrument as instrumentAran,
+  generateSetup as generateAranSetup,
+} from "../../../lib/index.mjs";
 import { parseGlobal, parseLocal } from "./parse.mjs";
-import { hash32 } from "./hash.mjs";
 import { runInContext } from "node:vm";
-import { AranTypeError } from "../error.mjs";
 
 const {
+  Error,
   undefined,
   String,
-  URL,
-  Object: { hasOwn },
   Reflect: { defineProperty, getPrototypeOf, setPrototypeOf, ownKeys: listKey },
 } = globalThis;
+
+/**
+ * @type {import("./membrane").BasicMembrane}
+ */
+export const DUMMY_BASIC_MEMBRANE = {
+  intrinsics: /** @type {any} */ ({}),
+  report: (_name, message) => new Error(message),
+  instrumentLocalEvalCode: (code, _path, _situ) => code,
+};
+
+/**
+ * @type {import("./membrane").WeaveMembrane}
+ */
+export const DUMMY_WEAVE_MEMBRANE = {
+  intrinsics: /** @type {any} */ ({}),
+  report: (_name, message) => new Error(message),
+  instrumentLocalEvalCode: (code, _path, _situ) => code,
+  apply: () => undefined,
+  construct: () => undefined,
+};
+
+/**
+ * @type {import("./membrane").PatchMembrane}
+ */
+export const DUMMY_PATCH_MEMBRANE = {
+  intrinsics: /** @type {any} */ ({}),
+  report: (_name, message) => new Error(message),
+};
 
 const ROOT_PATH = /** @type {import("../../../lib").Path} */ ("$");
 
@@ -30,37 +58,8 @@ const ESCAPE_PREFIX = /** @type {import("../../../lib").EstreeVariable} */ (
   "_ARAN_ESCAPE_"
 );
 
-/**
- * @type {(
- *   config: import(".").PartialAranConfig,
- *   early_syntax_error: "throw" | "embed",
- * ) => import("../../../lib").Config}
- */
-const completeConfig = (
-  {
-    standard_pointcut,
-    flexible_pointcut,
-    warning,
-    initial_state,
-    global_declarative_record,
-  },
-  early_syntax_error,
-) => ({
-  mode: "normal",
-  standard_pointcut,
-  flexible_pointcut,
-  initial_state,
-  warning,
-  early_syntax_error,
-  global_declarative_record,
-  global_variable: GLOBAL_VARIABLE,
-  intrinsic_variable: INTRINSIC_VARIABLE,
-  escape_prefix: ESCAPE_PREFIX,
-  advice_variable: ADVICE_VARIABLE,
-});
-
 const SETUP = generate(
-  generateSetup({
+  generateAranSetup({
     global_variable: GLOBAL_VARIABLE,
     intrinsic_variable: INTRINSIC_VARIABLE,
   }),
@@ -75,345 +74,6 @@ const compileFunctionCode = (args) =>
   `(function anonymous(${args.slice(0, -1).map(String).join(",")}\n) {\n${
     args[args.length - 1]
   }\n});`;
-
-/**
- * @type {<X>(
- *   data: {
- *     content: X,
- *   },
- * ) => X}
- */
-const getContent = ({ content }) => content;
-
-/**
- * @type {(
- *   args: unknown[],
- * ) => string | null}
- */
-const getArgumentCode = (args) => {
-  if (args.length === 0) {
-    return null;
-  } else {
-    const arg0 = args[0];
-    if (typeof arg0 === "string") {
-      return arg0;
-    } else {
-      return null;
-    }
-  }
-};
-
-/**
- * @type {(
- *   url: URL,
- *   global_declarative_record: "builtin" | "emulate",
- * ) => boolean}
- */
-const shouldInstrument = (url, global_declarative_record) => {
-  switch (global_declarative_record) {
-    case "builtin": {
-      return !url.href.includes("/test262/harness/");
-    }
-    case "emulate": {
-      return true;
-    }
-    default: {
-      throw new AranTypeError(global_declarative_record);
-    }
-  }
-};
-
-/* eslint-disable */
-const AranEvalError = class extends Error {
-  constructor(/** @type {string} */ message) {
-    super(message);
-    this.name = "AranEvalError";
-  }
-};
-/* eslint-enable */
-
-/**
- * @type {(
- *   root: import("../../../lib").EstreeProgram & {
- *     _aran_warning_array?: import("../../../lib").Warning[],
- *   },
- *   report: (error: Error) => void,
- * ) => import("../../../lib").EstreeProgram}
- */
-const processWarning = (root, report) => {
-  for (const warning of hasOwn(root, "_aran_warning_array")
-    ? (root._aran_warning_array ?? [])
-    : []) {
-    if (warning.name === "MissingEvalAdvice") {
-      report(
-        new AranEvalError(
-          "eval@before is required to support direct eval call",
-        ),
-      );
-    }
-  }
-  return root;
-};
-
-/**
- * @type {(
- *   file: {
- *     kind: "script" | "module",
- *     url: URL,
- *     content: string,
- *   },
- *   config: import(".").Config<{}>,
- * ) => {
- *   kind: "script" | "module",
- *   url: URL,
- *   content: string,
- * }}
- */
-const instrumentRoot = ({ kind, url, content }, { record, report, config }) => {
-  if (shouldInstrument(url, config.global_declarative_record)) {
-    return record({
-      kind,
-      url,
-      content: generate(
-        processWarning(
-          instrument(
-            {
-              kind,
-              situ: { type: "global" },
-              path: ROOT_PATH,
-              root: /** @type {any} */ (parseGlobal(kind, content)),
-            },
-            completeConfig(config, "throw"),
-          ),
-          report,
-        ),
-      ),
-    });
-  } else {
-    return { kind, url, content };
-  }
-};
-
-/**
- * @type {(
- *   call: {
- *     code: string,
- *     path: import("../../../lib").Path,
- *     situ: import("../../../lib").DeepLocalSitu,
- *   },
- *   config: import(".").Config<{}>,
- * ) => string}
- */
-const instrumentDeep = ({ code, path, situ }, { record, report, config }) =>
-  getContent(
-    record({
-      kind: "script",
-      url: new URL(`dynamic:///eval-local/${hash32(code).toString(32)}`),
-      content: generate(
-        processWarning(
-          instrument(
-            {
-              kind: "eval",
-              situ,
-              path,
-              root: parseLocal("eval", code),
-            },
-            completeConfig(config, "embed"),
-          ),
-          report,
-        ),
-      ),
-    }),
-  );
-
-/**
- * @type {(
- *   input: unknown[],
- *   config: import(".").Config<{
- *     evalGlobal: (code: string) => unknown,
- *   }>,
- * ) => unknown}
- */
-const interceptFunction = (
-  input,
-  { record, report, config, globals: { evalGlobal } },
-) => {
-  const code = compileFunctionCode(input);
-  return evalGlobal(
-    getContent(
-      record({
-        kind: "script",
-        url: new URL(`dynamic:///function/${hash32(code).toString(32)}`),
-        content: generate(
-          processWarning(
-            instrument(
-              {
-                kind: "eval",
-                situ: { type: "global" },
-                path: ROOT_PATH,
-                root: parseGlobal("eval", code),
-              },
-              completeConfig(config, "embed"),
-            ),
-            report,
-          ),
-        ),
-      }),
-    ),
-  );
-};
-
-/**
- * @type {(
- *   input: unknown[],
- *   config: import(".").Config<{
- *     evalScript: (code: string) => unknown,
- *   }>,
- * ) => unknown}
- */
-const interceptEvalScript = (
-  input,
-  { record, report, config, globals: { evalScript } },
-) => {
-  const code = getArgumentCode(input);
-  if (code === null) {
-    return null;
-  } else {
-    return evalScript(
-      getContent(
-        record({
-          kind: "script",
-          url: new URL(`dynamic:///script/${hash32(code).toString(32)}`),
-          content: generate(
-            processWarning(
-              instrument(
-                {
-                  kind: "script",
-                  situ: { type: "global" },
-                  path: ROOT_PATH,
-                  root: parseGlobal("script", code),
-                },
-                completeConfig(config, "embed"),
-              ),
-              report,
-            ),
-          ),
-        }),
-      ),
-    );
-  }
-};
-
-/**
- * @type {(
- *   input: unknown[],
- *   config: import(".").Config<{
- *     evalGlobal: (code: string) => unknown,
- *   }>,
- * ) => unknown}
- */
-const interceptEvalGlobal = (
-  input,
-  { config, report, record, globals: { evalGlobal } },
-) => {
-  const code = getArgumentCode(input);
-  if (code === null) {
-    return input.length > 0 ? input[0] : undefined;
-  } else {
-    return evalGlobal(
-      getContent(
-        record({
-          kind: "script",
-          url: new URL(`dynamic:///eval-global/${hash32(code).toString(32)}`),
-          content: generate(
-            processWarning(
-              instrument(
-                {
-                  kind: "eval",
-                  situ: { type: "global" },
-                  path: ROOT_PATH,
-                  root: parseGlobal("eval", code),
-                },
-                completeConfig(config, "embed"),
-              ),
-              report,
-            ),
-          ),
-        }),
-      ),
-    );
-  }
-};
-
-/**
- * @type {(
- *   call: {
- *     callee: unknown,
- *     self: unknown,
- *     input: unknown[],
- *   },
- *   config: import(".").WeaveConfig,
- * ) => unknown}
- */
-const applyMembrane = (
-  call,
-  {
-    record,
-    report,
-    config,
-    globals: { evalScript, evalGlobal, Function, apply },
-  },
-) => {
-  if (call.callee === evalScript) {
-    return interceptEvalScript(call.input, {
-      record,
-      report,
-      config,
-      globals: { evalScript },
-    });
-  } else if (call.callee === evalGlobal) {
-    return interceptEvalGlobal(call.input, {
-      record,
-      report,
-      config,
-      globals: { evalGlobal },
-    });
-  } else if (call.callee === Function) {
-    return interceptFunction(call.input, {
-      record,
-      report,
-      config,
-      globals: { evalGlobal },
-    });
-  } else {
-    return apply(/** @type {Function} */ (call.callee), call.self, call.input);
-  }
-};
-
-/**
- * @type {(
- *   call: {
- *     callee: unknown,
- *     input: unknown[],
- *   },
- *   config: import(".").WeaveConfig,
- * ) => unknown}
- */
-const constructMembrane = (
-  call,
-  { record, report, config, globals: { Function, evalGlobal, construct } },
-) => {
-  if (call.callee === Function) {
-    return interceptFunction(call.input, {
-      record,
-      report,
-      config,
-      globals: { evalGlobal },
-    });
-  } else {
-    return construct(/** @type {Function} */ (call.callee), call.input);
-  }
-};
 
 /**
  * @type {<
@@ -449,99 +109,90 @@ export const setupFlexibleAspect = (context, aspect) => {
 
 /**
  * @type {(
- *   config: import(".").SetupConfig,
- * ) => {
- *  intrinsics: import("../../../lib").IntrinsicRecord,
- *  instrumentDeep: import(".").InstrumentDeep,
- *  instrumentRoot: import(".").InstrumentRoot,
- * }}
+ *   context: import("node:vm").Context,
+ * ) => import("./membrane").WeaveMembrane}
  */
-export const setupAranBasic = ({ context, record, report, ...aran_config }) => {
+export const setupAranWeave = (context) => {
   const intrinsics = runInContext(SETUP, context);
-  /** @type {import(".").BasicConfig} */
-  const config = {
-    record,
-    report,
-    config: aran_config,
-    globals: {},
-  };
+  const global = intrinsics["aran.global"];
+  const { eval: evalGlobal, Function, apply, construct } = global;
+  const $262 = /** /** @type {{$262: import("../test262").$262}} */ (
+    /** @type {unknown} */ (global)
+  ).$262;
+  const { instrumentEvalCode } = $262.aran;
   return {
     intrinsics,
-    instrumentDeep: (code, path, situ) =>
-      instrumentDeep({ code, path, situ }, config),
-    instrumentRoot: (source) => instrumentRoot(source, config),
-  };
-};
-
-/**
- * @type {(
- *   config: import(".").SetupConfig,
- * ) => {
- *   intrinsics: import("../../../lib").IntrinsicRecord,
- *   instrumentDeep: import(".").InstrumentDeep,
- *   instrumentRoot: import(".").InstrumentRoot,
- *   apply: (callee: unknown, self: unknown, input: unknown[]) => unknown,
- *   construct: (callee: unknown, input: unknown[]) => unknown,
- * }}
- */
-export const setupAranWeave = ({ context, record, report, ...aran_config }) => {
-  const global = runInContext("this;", context);
-  const intrinsics = runInContext(SETUP, context);
-  /** @type {import(".").WeaveConfig} */
-  const config = {
-    record,
-    report,
-    config: aran_config,
-    globals: {
-      evalScript: global.$262.evalScript,
-      evalGlobal: global.eval,
-      Function: global.Function,
-      apply: global.Reflect.apply,
-      construct: global.Reflect.construct,
+    report: $262.aran.report,
+    instrumentLocalEvalCode: (code, path, situ) =>
+      instrumentEvalCode(code, { path, situ }),
+    apply: (callee, self, input) => {
+      if (callee === evalGlobal) {
+        if (input.length === 0) {
+          return undefined;
+        } else {
+          const arg0 = input[0];
+          if (typeof arg0 !== "string") {
+            return arg0;
+          } else {
+            return evalGlobal(instrumentEvalCode(arg0, null));
+          }
+        }
+      } else if (callee === Function) {
+        return evalGlobal(instrumentEvalCode(compileFunctionCode(input), null));
+      } else {
+        return apply(/** @type {Function} */ (callee), self, input);
+      }
+    },
+    construct: (callee, input) => {
+      if (callee === Function) {
+        evalGlobal(instrumentEvalCode(compileFunctionCode(input), null));
+      } else {
+        return construct(/** @type {Function} */ (callee), input);
+      }
     },
   };
-  return {
-    intrinsics,
-    instrumentRoot: (source) => instrumentRoot(source, config),
-    instrumentDeep: (code, path, situ) =>
-      instrumentDeep({ code, path, situ }, config),
-    apply: (callee, self, input) =>
-      applyMembrane({ callee, self, input }, config),
-    construct: (callee, input) => constructMembrane({ callee, input }, config),
-  };
 };
 
 /**
  * @type {(
- *   config: import(".").SetupConfig,
- * ) => {
- *   intrinsics: import("../../../lib").IntrinsicRecord,
- *   instrumentRoot: import(".").InstrumentRoot,
- * }}
+ *   context: import("node:vm").Context,
+ * ) => import("./membrane").BasicMembrane}
  */
-export const setupAranPatch = ({ context, report, record, ...aran_config }) => {
-  const global = runInContext("this;", context);
+export const setupAranBasic = setupAranWeave;
+
+/**
+ * @type {(
+ *   context: import("node:vm").Context,
+ * ) => import("./membrane").PatchMembrane}
+ */
+export const setupAranPatch = (context) => {
   // Setup must be ran before patching because
   // it relies on eval to be the actual eval
   // intrinsic value.
+  /** @type {import("../../../lib").IntrinsicRecord} */
   const intrinsics = runInContext(SETUP, context);
-  const evalScript = global.$262.evalScript;
+  const global = intrinsics["aran.global"];
+  const $262 = /** /** @type {{$262: import("../test262").$262}} */ (
+    /** @type {unknown} */ (global)
+  ).$262;
   const evalGlobal = global.eval;
-  /** @type {import(".").PatchConfig} */
-  const config = {
-    record,
-    report,
-    config: aran_config,
-    globals: {
-      evalScript,
-      evalGlobal,
-    },
-  };
+  const { instrumentEvalCode } = $262.aran;
   const prototype = global.Function.prototype;
   // evalGlobal //
   {
     /** @type {(...args: unknown[]) => unknown} */
-    const evalGlobalPatch = (...args) => interceptEvalGlobal(args, config);
+    const evalGlobalPatch = (...args) => {
+      if (args.length === 0) {
+        return undefined;
+      } else {
+        const arg0 = args[0];
+        if (typeof arg0 !== "string") {
+          return arg0;
+        } else {
+          return evalGlobal(instrumentEvalCode(arg0, null));
+        }
+      }
+    };
     setPrototypeOf(evalGlobalPatch, prototype);
     defineProperty(evalGlobalPatch, "length", {
       // @ts-ignore
@@ -562,23 +213,24 @@ export const setupAranPatch = ({ context, report, record, ...aran_config }) => {
     global.eval = evalGlobalPatch;
     intrinsics.eval = evalGlobalPatch;
   }
-  // evalScript //
-  /** @type {(...args: unknown[]) => unknown} */
-  global.$262.evalScript = (...args) => interceptEvalScript(args, config);
   // Function //
   {
-    /** @type {(...args: unknown[]) => unknown} */
-    // eslint-disable-next-line local/no-function, local/no-rest-parameter
-    const FunctionPatch = function Function(...args) {
-      const result = /** @type {Function} */ (interceptFunction(args, config));
-      if (
-        new.target !== undefined &&
-        getPrototypeOf(result) !== new.target.prototype
-      ) {
-        setPrototypeOf(result, new.target.prototype);
+    /* eslint-disable local/no-function, local/no-rest-parameter */
+    const FunctionPatch = /** @type {FunctionConstructor} */ (
+      function Function(...args) {
+        const result = /** @type {Function} */ (
+          evalGlobal(instrumentEvalCode(compileFunctionCode(args), null))
+        );
+        if (
+          new.target !== undefined &&
+          getPrototypeOf(result) !== new.target.prototype
+        ) {
+          setPrototypeOf(result, new.target.prototype);
+        }
+        return result;
       }
-      return result;
-    };
+    );
+    /* eslint-enable local/no-function, local/no-rest-parameter */
     defineProperty(FunctionPatch, "prototype", {
       // @ts-ignore
       __proto__: null,
@@ -600,8 +252,98 @@ export const setupAranPatch = ({ context, report, record, ...aran_config }) => {
     intrinsics.Function = FunctionPatch;
   }
   // return //
-  return {
-    intrinsics,
-    instrumentRoot: (source) => instrumentRoot(source, config),
-  };
+  return { report: $262.aran.report, intrinsics };
+};
+
+/**
+ * @type {(
+ *   source: import("../source").Source,
+ *   config: import("./config").Config,
+ * ) => import("../stage").InstrumentOutcome}
+ */
+export const instrument = (
+  source,
+  {
+    selection,
+    standard_pointcut,
+    flexible_pointcut,
+    global_declarative_record,
+    initial_state,
+  },
+) => {
+  if (selection === "*" || selection === source.type) {
+    const outcome =
+      source.context === null
+        ? parseGlobal(source.kind, source.content)
+        : parseLocal(source.kind, source.content);
+    if (outcome.type === "failure") {
+      return outcome;
+    }
+    /** @type {import("../../../lib").Config} */
+    const complete_config = {
+      mode: "normal",
+      standard_pointcut,
+      flexible_pointcut,
+      global_declarative_record,
+      initial_state,
+      global_variable: GLOBAL_VARIABLE,
+      intrinsic_variable: INTRINSIC_VARIABLE,
+      escape_prefix: ESCAPE_PREFIX,
+      advice_variable: ADVICE_VARIABLE,
+    };
+    const program = instrumentAran(
+      {
+        kind: source.kind,
+        situ:
+          source.context === null
+            ? { type: "global" }
+            : /** @type {{situ: import("../../../lib").DeepLocalSitu}} */ (
+                source.context
+              ).situ,
+        path:
+          source.context === null
+            ? ROOT_PATH
+            : /** @type {{path: import("../../../lib/path").Path}} */ (
+                source.context
+              ).path,
+        root: outcome.data,
+      },
+      complete_config,
+    );
+    if (program._aran_syntax_error_array.length > 0) {
+      return {
+        type: "failure",
+        data: {
+          name: "SyntaxError",
+          message: program._aran_syntax_error_array[0],
+        },
+      };
+    }
+    for (const warning of program._aran_warning_array) {
+      if (warning.name === "MissingEvalAdvice") {
+        return {
+          type: "failure",
+          data: {
+            name: "AranEvalError",
+            message: "eval@before is required to support direct eval call",
+          },
+        };
+      }
+    }
+    return {
+      type: "success",
+      data: {
+        location: null,
+        content: generate(program),
+      },
+    };
+  } else {
+    return {
+      type: "success",
+      data: {
+        location: null,
+        content: source.content,
+      },
+    };
+  }
 };

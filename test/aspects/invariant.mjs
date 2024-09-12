@@ -32,10 +32,7 @@ const isArrayValue = /** @type {any} */ (isArray);
  *     AssertionError: new (context: object) => Error,
  *     UnreachableError: new (data: never) => Error,
  *   },
- *   membrane: {
- *     intrinsics: import("../../lib").IntrinsicRecord,
- *     instrumentDeep: import("../262/aran").InstrumentDeep,
- *   },
+ *   membrane: import("../262/aran/membrane").BasicMembrane,
  * ) => import("../../lib").StandardAdvice<
  *   import("./invariant").State,
  *   import("./invariant").Valuation,
@@ -43,7 +40,7 @@ const isArrayValue = /** @type {any} */ (isArray);
  */
 export const makeInvariantAdvice = (
   { AssertionError, UnreachableError },
-  { intrinsics, instrumentDeep },
+  { intrinsics, instrumentLocalEvalCode },
 ) => {
   /**
    * @type {(
@@ -791,7 +788,7 @@ export const makeInvariantAdvice = (
         state.suspension = "eval";
         assert(transit.type === "regular", context);
         transit = { type: "external" };
-        return instrumentDeep(value, path, reboot);
+        return instrumentLocalEvalCode(value, path, reboot);
       } else {
         transit = { type: "eval" };
         return value;
