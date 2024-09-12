@@ -28,7 +28,7 @@ const makeAspect = ({ instrumentLocalEvalCode }) => ({
 
 /** @type {import("../aran/config").Config} */
 const config = {
-  selection: "main",
+  selection: ["main", "local"],
   global_declarative_record: "builtin",
   initial_state: null,
   flexible_pointcut: makeAspect(DUMMY_BASIC_MEMBRANE),

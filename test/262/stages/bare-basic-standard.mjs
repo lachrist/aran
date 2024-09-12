@@ -22,7 +22,7 @@ const makeAdvice = ({ instrumentLocalEvalCode }) => ({
  * @type {import("../aran/config").Config}
  */
 const config = {
-  selection: "main",
+  selection: ["main", "local"],
   global_declarative_record: "builtin",
   initial_state: null,
   standard_pointcut: ["eval@before"],

@@ -18,7 +18,7 @@ const DUMMY_ADVICE = makeOriginAdvice(DUMMY_BASIC_MEMBRANE);
  * @type {import("../aran/config").Config}
  */
 const config = {
-  selection: "main",
+  selection: ["main", "local"],
   global_declarative_record: "builtin",
   initial_state: {
     parent: null,

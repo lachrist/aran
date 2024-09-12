@@ -271,7 +271,7 @@ export const instrument = (
     initial_state,
   },
 ) => {
-  if (selection === "*" || selection === source.type) {
+  if (selection === "*" || selection.includes(source.type)) {
     const outcome =
       source.context === null
         ? parseGlobal(source.kind, source.content)

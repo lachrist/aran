@@ -1,2 +1,2 @@
-identity
-7459 built-ins/JSON/parse/reviver-object-non-configurable-prop-create.js
+bare-basic-standard
+790 annexB/language/function-code/if-decl-else-decl-b-func-skip-early-err-for-in.js
