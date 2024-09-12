@@ -1,2 +1,2 @@
-test/built-ins/Atomics/wait/bigint/cannot-suspend-throws.js
-test/built-ins/Atomics/wait/cannot-suspend-throws.js
+built-ins/Atomics/wait/bigint/cannot-suspend-throws.js
+built-ins/Atomics/wait/cannot-suspend-throws.js

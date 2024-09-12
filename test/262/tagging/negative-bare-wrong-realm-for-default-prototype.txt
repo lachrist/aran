@@ -1,3 +1,3 @@
-test/built-ins/Function/prototype/bind/proto-from-ctor-realm.js
-test/built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js
-test/language/expressions/super/realm.js
+built-ins/Function/prototype/bind/proto-from-ctor-realm.js
+built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js
+language/expressions/super/realm.js

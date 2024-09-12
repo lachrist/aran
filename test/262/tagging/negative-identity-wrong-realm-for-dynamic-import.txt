@@ -1,10 +1,10 @@
 // https://github.com/nodejs/node/issues/53575
 
-test/language/expressions/dynamic-import/always-create-new-promise.js
-test/language/expressions/dynamic-import/returns-promise.js
-test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-empty-str-is-valid-assign-expr.js
-test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-import-attributes-trailing-comma-first.js
-test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-import-attributes-trailing-comma-second.js
-test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-nested-imports.js
-test/language/expressions/dynamic-import/syntax/valid/nested-with-expression-script-code-valid.js
-test/language/expressions/dynamic-import/usage-from-eval.js
+language/expressions/dynamic-import/always-create-new-promise.js
+language/expressions/dynamic-import/returns-promise.js
+language/expressions/dynamic-import/syntax/valid/nested-with-expression-empty-str-is-valid-assign-expr.js
+language/expressions/dynamic-import/syntax/valid/nested-with-expression-import-attributes-trailing-comma-first.js
+language/expressions/dynamic-import/syntax/valid/nested-with-expression-import-attributes-trailing-comma-second.js
+language/expressions/dynamic-import/syntax/valid/nested-with-expression-nested-imports.js
+language/expressions/dynamic-import/syntax/valid/nested-with-expression-script-code-valid.js
+language/expressions/dynamic-import/usage-from-eval.js

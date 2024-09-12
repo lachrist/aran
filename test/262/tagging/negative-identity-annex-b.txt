@@ -1,4 +1,4 @@
-test/annexB/language/function-code/block-decl-func-skip-arguments.js
-test/annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js
-test/annexB/language/global-code/block-decl-global-existing-global-init.js
-test/annexB/language/global-code/block-decl-global-init.js
+annexB/language/function-code/block-decl-func-skip-arguments.js
+annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js
+annexB/language/global-code/block-decl-global-existing-global-init.js
+annexB/language/global-code/block-decl-global-init.js

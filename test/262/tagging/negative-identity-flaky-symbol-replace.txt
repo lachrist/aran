@@ -1,4 +1,4 @@
-test/built-ins/RegExp/prototype/Symbol.replace/flags-tostring-error.js
-test/built-ins/RegExp/prototype/Symbol.replace/fn-invoke-args-empty-result.js
-test/built-ins/RegExp/prototype/Symbol.replace/get-flags-err.js
-test/built-ins/RegExp/prototype/Symbol.replace/get-unicode-error.js
+built-ins/RegExp/prototype/Symbol.replace/flags-tostring-error.js
+built-ins/RegExp/prototype/Symbol.replace/fn-invoke-args-empty-result.js
+built-ins/RegExp/prototype/Symbol.replace/get-flags-err.js
+built-ins/RegExp/prototype/Symbol.replace/get-unicode-error.js
