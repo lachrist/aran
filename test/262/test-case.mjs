@@ -91,7 +91,7 @@ export const wrapOutcomeAsync = async (callback) => {
 
 /**
  * @type {<X>(
- *   phase: "parse" | "resolution" | "runtime",
+ *   phase: "instrument" | "parse" | "resolution" | "runtime",
  *   outcome: import("./outcome").Outcome<
  *     X,
  *     import("./error-serial").ErrorSerial,
@@ -110,7 +110,7 @@ const applyNegative = (phase, outcome, negative) => {
           type: "failure",
           data: {
             name: "NegativeTest262Error",
-            message: `missing an error ${negative.type} during ${phase}`,
+            message: `missing an error named ${negative.type} during ${phase} phase`,
           },
         };
       } else {
@@ -118,7 +118,10 @@ const applyNegative = (phase, outcome, negative) => {
       }
     }
     case "failure": {
-      if (negative !== null && negative.phase === phase) {
+      if (
+        negative !== null &&
+        negative.phase === (phase === "instrument" ? "parse" : phase)
+      ) {
         return "negative-success";
       } else {
         return outcome;
@@ -180,7 +183,7 @@ export const runTestCaseInner = async (
     },
   );
   const instrument_outcome = applyNegative(
-    "parse",
+    "instrument",
     instrument(source),
     negative,
   );
