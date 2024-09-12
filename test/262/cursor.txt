@@ -1,2 +1,2 @@
 identity
-12775 built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js
+7459 built-ins/JSON/parse/reviver-object-non-configurable-prop-create.js

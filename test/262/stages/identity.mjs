@@ -31,13 +31,10 @@ const isFeatureExcluded = (feature) => features.has(feature);
 /** @type {import("../stage").Stage} */
 export default {
   precursor: [],
-  exclude: [
-    "call-async-done-with-module",
-    "invalid-metadata-header",
-    /** @type {any} */ ("exclude-sandbox"),
-  ],
+  exclude: ["call-async-done-with-module", "invalid-metadata-header"],
   negative: [
     "negative-identity-annex-b",
+    "negative-identity-async-iterator-bypass-finally",
     "negative-identity-atomic-wait-work",
     "negative-identity-compound-assignment",
     "negative-identity-date-coercion-order",

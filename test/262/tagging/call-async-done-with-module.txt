@@ -1,6 +1,7 @@
 // when $DONE is called with a module object, it causes an error because it
 // cannot be stringified (null prototype). That causes the test suite to halt
 // because the top-level await of the test case is never resolved.
+
 test/language/expressions/dynamic-import/catch/nested-arrow-import-catch-eval-rqstd-abrupt-typeerror.js
 test/language/expressions/dynamic-import/catch/nested-arrow-import-catch-eval-rqstd-abrupt-urierror.js
 test/language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-eval-rqstd-abrupt-typeerror.js

@@ -2,6 +2,7 @@
 
 language/expressions/dynamic-import/always-create-new-promise.js
 language/expressions/dynamic-import/returns-promise.js
+language/expressions/dynamic-import/indirect-resolution.js
 language/expressions/dynamic-import/syntax/valid/nested-with-expression-empty-str-is-valid-assign-expr.js
 language/expressions/dynamic-import/syntax/valid/nested-with-expression-import-attributes-trailing-comma-first.js
 language/expressions/dynamic-import/syntax/valid/nested-with-expression-import-attributes-trailing-comma-second.js

@@ -1,0 +1,14 @@
+built-ins/AsyncFromSyncIteratorPrototype/next/for-await-iterator-next-rejected-promise-close.js
+built-ins/AsyncFromSyncIteratorPrototype/next/for-await-next-rejected-promise-close.js
+built-ins/AsyncFromSyncIteratorPrototype/next/iterator-result-poisoned-wrapper.js
+built-ins/AsyncFromSyncIteratorPrototype/next/next-result-poisoned-wrapper.js
+built-ins/AsyncFromSyncIteratorPrototype/next/yield-iterator-next-rejected-promise-close.js
+built-ins/AsyncFromSyncIteratorPrototype/next/yield-next-rejected-promise-close.js
+built-ins/AsyncFromSyncIteratorPrototype/throw/iterator-result-rejected-promise-close.js
+built-ins/AsyncFromSyncIteratorPrototype/throw/throw-null.js
+built-ins/AsyncFromSyncIteratorPrototype/throw/throw-result-poisoned-wrapper.js
+built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-get-return-undefined.js
+built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.js
+built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-return-not-object.js
+built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-return-object.js
+built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined.js

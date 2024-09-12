@@ -1,4 +1,4 @@
-export type Tag =
+export type Tag = 
   | "arguments-two-way-binding"
   | "call-async-done-with-module"
   | "function-dynamic-property"
@@ -9,6 +9,7 @@ export type Tag =
   | "negative-bare-missing-iterable-return-in-pattern"
   | "negative-bare-wrong-realm-for-default-prototype"
   | "negative-identity-annex-b"
+  | "negative-identity-async-iterator-bypass-finally"
   | "negative-identity-atomic-wait-work"
   | "negative-identity-compound-assignment"
   | "negative-identity-date-coercion-order"
