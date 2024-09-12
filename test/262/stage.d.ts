@@ -5,7 +5,7 @@ import type { Source } from "./source";
 import type { Metadata } from "./test262";
 import type { Tagging } from "./tagging";
 import type { Precursor } from "./precursor";
-import { TargetPath } from "./fetch";
+import type { MainPath } from "./fetch";
 
 export type StageName =
   | "identity"
@@ -28,7 +28,7 @@ export type InstrumentOutcome = Outcome<
 export type Instrument = (source: Source) => InstrumentOutcome;
 
 export type ListLateNegative = (
-  path: TargetPath,
+  path: MainPath,
   metadata: Metadata,
   error: ErrorSerial,
 ) => string[];

@@ -12,8 +12,8 @@ import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
 import {
   compileFetchHarness,
   compileFetchTarget,
-  resolveTarget,
-  toTargetPath,
+  resolveDependency,
+  toMainPath,
 } from "./fetch.mjs";
 import { AranTypeError } from "./error.mjs";
 
@@ -22,12 +22,12 @@ const { console, process, URL, Error, JSON } = globalThis;
 /**
  * @type {(
  *   index: number
- * ) => Promise<import("./fetch").TargetPath>}
+ * ) => Promise<import("./fetch").MainPath>}
  */
-const findTarget = async (index) => {
+const findMainPath = async (index) => {
   let current = -1;
   for await (const url of scrape(new URL("test/", home))) {
-    const path = toTargetPath(url, home);
+    const path = toMainPath(url, home);
     if (path !== null) {
       current += 1;
       if (index === current) {
@@ -41,16 +41,16 @@ const findTarget = async (index) => {
 /**
  * @type {(
  *   cursor: import("./cursor").Cursor,
- * ) => Promise<import("./fetch").TargetPath>}
+ * ) => Promise<import("./fetch").MainPath>}
  */
-const fetchTarget = async (cursor) => {
+const fetchMainPath = async (cursor) => {
   if (cursor.path === null) {
     if (cursor.index === null) {
       throw new Error(
         `Nothing to investigate from cursor: ${JSON.stringify(cursor)}`,
       );
     } else {
-      return await findTarget(cursor.index);
+      return await findMainPath(cursor.index);
     }
   } else {
     return cursor.path;
@@ -79,7 +79,7 @@ process.on("uncaughtException", (error, _origin) => {
 
 await cleanup(codebase);
 
-const path = await fetchTarget(cursor);
+const path = await fetchMainPath(cursor);
 
 console.log(`===== ${cursor.stage} =====`);
 console.log(`\n${path}\n`);
@@ -99,7 +99,7 @@ console.dir(
         throw new AranTypeError(outcome);
       }
     },
-    resolveTarget,
+    resolveDependency,
     fetchHarness: compileFetchHarness(home),
     fetchTarget: compileFetchTarget(home),
   }),

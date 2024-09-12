@@ -33,7 +33,7 @@ const parseStageLine = (line) => {
  *   line: string
  * ) => {
  *   index: number | null,
- *   path: import("./fetch").TargetPath | null,
+ *   path: import("./fetch").MainPath | null,
  * }}
  */
 const parseTargetLine = (line) => {
@@ -46,7 +46,7 @@ const parseTargetLine = (line) => {
       path:
         match[2] === ""
           ? null
-          : /** @type {import("./fetch").TargetPath} */ (match[2]),
+          : /** @type {import("./fetch").MainPath} */ (match[2]),
     };
   }
 };
@@ -86,4 +86,4 @@ export const stringifyCursor = (cursor) =>
   `${cursor.stage}\n${[
     ...(cursor.index === null ? [] : [String(cursor.index)]),
     ...(cursor.path === null ? [] : [cursor.path]),
-  ].join(" ")}`;
+  ].join(" ")}\n`;

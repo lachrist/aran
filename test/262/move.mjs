@@ -14,8 +14,8 @@ import { listPrecursor } from "./precursor.mjs";
 import {
   compileFetchHarness,
   compileFetchTarget,
-  resolveTarget,
-  toTargetPath,
+  resolveDependency,
+  toMainPath,
 } from "./fetch.mjs";
 import { loadStage } from "./stage.mjs";
 
@@ -29,7 +29,7 @@ const stage = await loadStage(cursor.stage);
 
 let index = 0;
 
-/** @type {import("./fetch").TargetPath | null} */
+/** @type {import("./fetch").MainPath | null} */
 let path = null;
 
 let ongoing = false;
@@ -64,7 +64,7 @@ const fetchHarness = compileFetchHarness(home);
 const fetchTarget = compileFetchTarget(home);
 
 for await (const url of scrape(new URL("test/", home))) {
-  path = toTargetPath(url, home);
+  path = toMainPath(url, home);
   if (path !== null) {
     if ((!ongoing && path === cursor.path) || index === cursor.index) {
       ongoing = true;
@@ -76,7 +76,7 @@ for await (const url of scrape(new URL("test/", home))) {
       ) {
         console.log(index, path);
         const { metadata, outcome } = await runTest(path, {
-          resolveTarget,
+          resolveDependency,
           fetchTarget,
           fetchHarness,
           instrument: stage.instrument,

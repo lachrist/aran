@@ -12,45 +12,45 @@ import { isStageName, loadStage } from "./stage.mjs";
 import {
   compileFetchHarness,
   compileFetchTarget,
-  resolveTarget,
-  toTargetPath,
+  resolveDependency,
+  toMainPath,
 } from "./fetch.mjs";
 
 const { Error, console, process, URL, JSON, Map, undefined } = globalThis;
 
 /**
  * @type {(
- *   target: import("./fetch").TargetPath,
+ *   path: import("./fetch").MainPath,
  *   stage: import("./stage").ReadyStage,
  *   fetch: import("./fetch").Fetch,
  * ) => Promise<import("./result").Result>}
  */
 const test = async (
-  target,
+  path,
   { listLateNegative, instrument, setup, precursor, exclude, negative },
-  { resolveTarget, fetchHarness, fetchTarget },
+  { resolveDependency, fetchHarness, fetchTarget },
 ) => {
   const reasons = [
-    ...listPrecursor(precursor, target),
-    ...listTag(exclude, target),
+    ...listPrecursor(precursor, path),
+    ...listTag(exclude, path),
   ];
   if (reasons.length === 0) {
     const timer = cpuUsage();
-    const { metadata, outcome } = await runTest(target, {
+    const { metadata, outcome } = await runTest(path, {
       setup,
       instrument,
       fetchTarget,
       fetchHarness,
-      resolveTarget,
+      resolveDependency,
     });
     return {
       type: "include",
-      path: target,
+      path,
       time: cpuUsage(timer),
       expect: [
-        ...listTag(negative, target),
+        ...listTag(negative, path),
         ...(outcome.type === "failure"
-          ? listLateNegative(target, metadata, outcome.data)
+          ? listLateNegative(path, metadata, outcome.data)
           : []),
       ],
       actual: outcome.type === "failure" ? outcome.data : null,
@@ -58,7 +58,7 @@ const test = async (
   } else {
     return {
       type: "exclude",
-      path: target,
+      path,
       reasons,
     };
   }
@@ -128,7 +128,7 @@ const main = async (argv) => {
     encoding: "utf8",
   });
   const fetch = {
-    resolveTarget,
+    resolveDependency,
     fetchHarness: compileFetchHarness(home),
     fetchTarget: compileFetchTarget(home),
   };
@@ -152,7 +152,7 @@ const main = async (argv) => {
     if (index % 100 === 0) {
       console.dir(index);
     }
-    const path = toTargetPath(url, home);
+    const path = toMainPath(url, home);
     if (path !== null) {
       stream.write(JSON.stringify(await test(path, stage, fetch)) + "\n");
       index += 1;

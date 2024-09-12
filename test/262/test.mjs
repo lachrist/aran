@@ -3,7 +3,7 @@ import { runTestCase } from "./test-case.mjs";
 
 /**
  * @type {(
- *   path: import("./fetch").TargetPath,
+ *   path: import("./fetch").MainPath,
  *   content: string,
  *   metadata: import("./test262").Metadata,
  * ) => import("./test-case").TestCase[]}
@@ -66,10 +66,10 @@ const DEFAULT_METADATA = {
 
 /**
  * @type {(
- *   path: import("./fetch").TargetPath,
+ *   path: import("./fetch").MainPath,
  *   dependencies: {
  *     fetchHarness: import("./fetch").FetchHarness,
- *     resolveTarget: import("./fetch").ResolveTarget,
+ *     resolveDependency: import("./fetch").ResolveDependency,
  *     fetchTarget: import("./fetch").FetchTarget,
  *     setup: (context: import("node:vm").Context) => void,
  *     instrument: import("./stage").Instrument,
@@ -81,7 +81,7 @@ const DEFAULT_METADATA = {
  */
 export const runTest = async (
   path,
-  { fetchTarget, resolveTarget, fetchHarness, setup, instrument },
+  { fetchTarget, resolveDependency, fetchHarness, setup, instrument },
 ) => {
   const content = await fetchTarget(path);
   const metadata_outcome = parseMetadata(content);
@@ -94,7 +94,7 @@ export const runTest = async (
   const metadata = metadata_outcome.data;
   for (const test_case of listTestCase(path, content, metadata)) {
     const test_case_outcome = await runTestCase(test_case, {
-      resolveTarget,
+      resolveDependency,
       fetchTarget,
       fetchHarness,
       setup,

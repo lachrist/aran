@@ -9,8 +9,8 @@ const { Error, undefined, Map, JSON } = globalThis;
 
 /**
  * @type {(
- *   target: {
- *     path: import("./fetch").TargetPath,
+ *   dependency: {
+ *     path: import("./fetch").DependencyPath,
  *     content: string,
  *   },
  *   options: {
@@ -71,7 +71,7 @@ const makeModule = (
  *   context: import("node:vm").Context,
  *   dependencies: {
  *     report: import("./report").Report,
- *     resolveTarget: import("./fetch").ResolveTarget,
+ *     resolveDependency: import("./fetch").ResolveDependency,
  *     instrument: import("./stage").Instrument,
  *     fetchTarget: import("./fetch").FetchTarget,
  *   },
@@ -79,7 +79,7 @@ const makeModule = (
  */
 export const compileLinker = (
   context,
-  { report, resolveTarget, instrument, fetchTarget },
+  { report, resolveDependency, instrument, fetchTarget },
 ) => {
   // Use promise of the module realm and not the main realm.
   // Still not working because node is changing the promise.
@@ -106,8 +106,8 @@ export const compileLinker = (
       throw new Error("missing referrer url");
     } else {
       // import("") will import self
-      const path = resolveTarget(
-        /** @type {import("./fetch").TargetName} */ (specifier),
+      const path = resolveDependency(
+        /** @type {import("./fetch").DependencyName} */ (specifier),
         base_path,
       );
       const module = module_cache.get(path);
@@ -151,7 +151,7 @@ export const compileLinker = (
   return {
     link,
     importModuleDynamically,
-    register: (main, path) => {
+    registerMain: (main, path) => {
       reverse_module_cache.set(main, path);
       if (!(main instanceof Script)) {
         module_cache.set(path, main);

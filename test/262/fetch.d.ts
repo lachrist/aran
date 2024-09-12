@@ -1,17 +1,24 @@
 export type HarnessName = string & { __brand: "HarnessName" };
 
-export type TargetPath = string & { __brand: "TargetPath" };
+export type MainPath = string & { __brand: "MainPath" };
 
-export type TargetName = string & { __brand: "TargetName" };
+export type DependencyPath = string & { __brand: "DependencyPath" };
+
+export type DependencyName = string & { __brand: "TargetName" };
 
 export type FetchHarness = (name: HarnessName) => Promise<string>;
 
-export type FetchTarget = (base: TargetPath) => Promise<string>;
+export type TargetPath = MainPath | DependencyPath;
 
-export type ResolveTarget = (name: TargetName, base: TargetPath) => TargetPath;
+export type FetchTarget = (path: TargetPath) => Promise<string>;
+
+export type ResolveDependency = (
+  name: DependencyName,
+  base: TargetPath,
+) => DependencyPath;
 
 export type Fetch = {
-  resolveTarget: ResolveTarget;
+  resolveDependency: ResolveDependency;
   fetchHarness: FetchHarness;
   fetchTarget: FetchTarget;
 };

@@ -137,7 +137,7 @@ const applyNegative = (phase, outcome, negative) => {
  *     setup: (context: import("node:vm").Context) => void,
  *     report: import("./report").Report,
  *     instrument: import("./stage").Instrument,
- *     resolveTarget: import("./fetch").ResolveTarget,
+ *     resolveDependency: import("./fetch").ResolveDependency,
  *     fetchHarness: import("./fetch").FetchHarness,
  *     fetchTarget: import("./fetch").FetchTarget,
  *   },
@@ -145,7 +145,7 @@ const applyNegative = (phase, outcome, negative) => {
  */
 export const runTestCaseInner = async (
   { source, negative, asynchronous, includes },
-  { setup, report, instrument, resolveTarget, fetchHarness, fetchTarget },
+  { setup, report, instrument, resolveDependency, fetchHarness, fetchTarget },
 ) => {
   const { done, print } = asynchronous
     ? makeAsynchronousTermination()
@@ -170,12 +170,15 @@ export const runTestCaseInner = async (
     const { location, content } = harness_outcome.data;
     runInContext(content, context, { filename: location ?? name });
   }
-  const { link, importModuleDynamically, register } = compileLinker(context, {
-    report,
-    resolveTarget,
-    instrument,
-    fetchTarget,
-  });
+  const { link, importModuleDynamically, registerMain } = compileLinker(
+    context,
+    {
+      report,
+      resolveDependency,
+      instrument,
+      fetchTarget,
+    },
+  );
   const instrument_outcome = applyNegative(
     "parse",
     instrument(source),
@@ -211,7 +214,7 @@ export const runTestCaseInner = async (
       return create_outcome;
     }
     const module = create_outcome.data;
-    register(module, source.path);
+    registerMain(module, source.path);
     const link_outcome = applyNegative(
       "resolution",
       await wrapOutcomeAsync(() => module.link(link)),
@@ -257,7 +260,7 @@ export const runTestCaseInner = async (
       return create_outcome;
     }
     const script = create_outcome.data;
-    register(script, source.path);
+    registerMain(script, source.path);
     const evaluate_outcome = applyNegative(
       "runtime",
       wrapOutcome(() => script.runInContext(context)),
@@ -279,7 +282,7 @@ export const runTestCaseInner = async (
  * @type {(
  *   test_case: import("./test-case").TestCase,
  *   dependencies: {
- *     resolveTarget: import("./fetch").ResolveTarget,
+ *     resolveDependency: import("./fetch").ResolveDependency,
  *     fetchHarness: import("./fetch").FetchHarness,
  *     fetchTarget: import("./fetch").FetchTarget,
  *     setup: (context: import("node:vm").Context) => void,

@@ -3,13 +3,10 @@ import { readFile } from "node:fs/promises";
 const { Map, URL } = globalThis;
 
 /**
- * @type {(
- *   name: import("./fetch").TargetName,
- *   base: import("./fetch").TargetPath,
- * ) => import("./fetch").TargetPath}
+ * @type {import("./fetch").ResolveDependency}
  */
-export const resolveTarget = (name, base) =>
-  /** @type {import("./fetch").TargetPath} */ (`${base}/${name}`);
+export const resolveDependency = (name, base) =>
+  /** @type {import("./fetch").DependencyPath} */ (`${base}/${name}`);
 
 /**
  * @type {(
@@ -44,13 +41,13 @@ export const compileFetchTarget = (home) => (path) =>
  * @type {(
  *   url: URL,
  *   home: URL,
- * ) => null | import("./fetch").TargetPath}
+ * ) => null | import("./fetch").MainPath}
  */
-export const toTargetPath = (url, home) => {
+export const toMainPath = (url, home) => {
   const path = url.pathname.slice(home.pathname.length + 1);
   if (path.includes("_FIXTURE") || path.endsWith(".md")) {
     return null;
   } else {
-    return /** @type {import("./fetch").TargetPath} */ (path);
+    return /** @type {import("./fetch").MainPath} */ (path);
   }
 };

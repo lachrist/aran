@@ -12,7 +12,7 @@ const { JSON, Set, URL, Promise } = globalThis;
  */
 const loadPrecursorEntry = async (stage) => {
   const data = JSON.parse(
-    await readFile(new URL(`./stages/${stage}.json`, import.meta.url), "utf8"),
+    await readFile(new URL(`./stages/${stage}.jsonl`, import.meta.url), "utf8"),
   );
   if (isResultArray(data)) {
     return [new Set(data.map(getResultPath)), stage];
