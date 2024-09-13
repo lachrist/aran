@@ -47,6 +47,7 @@ export const inspectErrorStack = (error) => {
 export const serializeError = (error) => ({
   name: inspectErrorName(error),
   message: inspectErrorMessage(error),
+  stack: inspectErrorStack(error),
 });
 
 /**
@@ -61,7 +62,6 @@ export const isErrorSerial = (data) =>
   hasOwnJson(data, "name") &&
   typeof data.name === "string" &&
   hasOwnJson(data, "message") &&
-  typeof data.message === "string";
-
-/** @type {(error: import("./error-serial").ErrorSerial) => string} */
-export const showErrorSerial = (error) => `${error.name}: ${error.message}`;
+  typeof data.message === "string" &&
+  hasOwnJson(data, "stack") &&
+  (data.stack === null || typeof data.stack === "string");

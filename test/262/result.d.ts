@@ -1,4 +1,3 @@
-import type { ErrorSerial } from "./error-serial";
 import type { MainPath } from "./fetch";
 
 export type ExcludeResult = {
@@ -15,7 +14,7 @@ export type IncludeResult = {
   path: MainPath;
   exclusion: [];
   expect: string[];
-  actual: null | ErrorSerial;
+  actual: null | string;
   time: {
     total: {
       user: number;
@@ -30,13 +29,7 @@ export type IncludeResult = {
 
 export type CompactResult =
   | [MainPath, [string, ...string[]], null, null, null]
-  | [
-      MainPath,
-      [],
-      string[],
-      null | [string, string],
-      [number, number, number, number],
-    ];
+  | [MainPath, [], string[], null | string, [number, number, number, number]];
 
 export type Result = ExcludeResult | IncludeResult;
 
@@ -47,15 +40,15 @@ export type TruePositiveResult = IncludeResult & {
 
 export type FalsePositive = IncludeResult & {
   expect: null;
-  actual: ErrorSerial;
+  actual: string;
 };
 
 export type FalseNegative = IncludeResult & {
-  expect: string[];
+  expect: [string, ...string[]];
   actual: null;
 };
 
 export type TrueNegative = IncludeResult & {
-  expect: string[];
-  actual: ErrorSerial;
+  expect: [string, ...string[]];
+  actual: string;
 };

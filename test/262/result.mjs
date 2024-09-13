@@ -23,9 +23,7 @@ export const packResult = (result) => {
       result.path,
       [],
       result.expect,
-      result.actual === null
-        ? null
-        : [result.actual.name, result.actual.message],
+      result.actual,
       [
         result.time.total.user,
         result.time.total.system,
@@ -52,13 +50,7 @@ export const unpackResult = (result) => {
       path: result[0],
       exclusion: [],
       expect: result[2],
-      actual:
-        result[3] === null
-          ? null
-          : {
-              name: result[3][0],
-              message: result[3][1],
-            },
+      actual: result[3],
       time: {
         total: {
           user: result[4][0],

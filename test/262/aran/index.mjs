@@ -5,7 +5,11 @@ import {
 } from "../../../lib/index.mjs";
 import { parseGlobal, parseLocal } from "./parse.mjs";
 import { runInContext } from "node:vm";
-import { inspectErrorMessage, inspectErrorName } from "../error-serial.mjs";
+import {
+  inspectErrorMessage,
+  inspectErrorName,
+  inspectErrorStack,
+} from "../error-serial.mjs";
 
 const {
   Error,
@@ -279,6 +283,7 @@ const wrap = (callee) => {
         data: {
           name: "SyntaxError",
           message: inspectErrorMessage(error),
+          stack: inspectErrorStack(error),
         },
       };
     } else {
@@ -354,6 +359,7 @@ export const instrument = (
           data: {
             name: "AranEvalError",
             message: "eval@before is required to support direct eval call",
+            stack: null,
           },
         };
       }

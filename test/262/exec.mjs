@@ -66,7 +66,7 @@ const test = async (
           ? listLateNegative(path, metadata, outcome.data)
           : []),
       ],
-      actual: outcome.type === "failure" ? outcome.data : null,
+      actual: outcome.type === "failure" ? outcome.data.name : null,
     };
   } else {
     return {

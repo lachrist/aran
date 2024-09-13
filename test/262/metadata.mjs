@@ -1,5 +1,5 @@
 import { parse as parseYaml } from "yaml";
-import { inspectErrorMessage } from "./error-serial.mjs";
+import { inspectErrorMessage, inspectErrorStack } from "./error-serial.mjs";
 
 const BEGIN = "/*---";
 
@@ -20,6 +20,7 @@ export const parseMetadata = (content) => {
       data: {
         name: "MetadataTest262Error",
         message: "Missing metadata header",
+        stack: null,
       },
     };
   } else {
@@ -41,6 +42,7 @@ export const parseMetadata = (content) => {
         data: {
           name: "MetadataTest262Error",
           message: inspectErrorMessage(error),
+          stack: inspectErrorStack(error),
         },
       };
     }

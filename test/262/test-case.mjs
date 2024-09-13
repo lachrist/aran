@@ -34,6 +34,7 @@ const makeAsynchronousTermination = () => {
           data: {
             name: "AsyncTest262Error",
             message: message.slice("Test262:AsyncTestFailure:".length),
+            stack: null,
           },
         });
       }
@@ -111,6 +112,7 @@ const applyNegative = (phase, outcome, negative) => {
           data: {
             name: "NegativeTest262Error",
             message: `missing an error named ${negative.type} during ${phase} phase`,
+            stack: null,
           },
         };
       } else {
@@ -306,11 +308,11 @@ export const runTestCase = async (test_case, dependencies) => {
   const outcome = await runTestCaseInner(test_case, {
     ...dependencies,
     report: (name, message) => {
-      if (serial === null) {
-        serial = { name, message };
-      }
       const error = new Error(message);
       error.name = name;
+      if (serial === null) {
+        serial = serializeError(error);
+      }
       return error;
     },
   });

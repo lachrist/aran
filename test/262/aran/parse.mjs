@@ -1,6 +1,6 @@
 import { parse as parseAcorn } from "acorn";
 import { parse as parseBabel } from "@babel/parser";
-import { inspectErrorMessage, inspectErrorName } from "../error-serial.mjs";
+import { inspectErrorName, serializeError } from "../error-serial.mjs";
 
 const {
   undefined,
@@ -30,12 +30,10 @@ export const parseGlobal = (kind, code) => {
       ),
     };
   } catch (error) {
-    const name = inspectErrorName(error);
-    const message = inspectErrorMessage(error);
-    if (name === "SyntaxError") {
+    if (inspectErrorName(error) === "SyntaxError") {
       return {
         type: "failure",
-        data: { name, message },
+        data: serializeError(error),
       };
     } else {
       throw error;
@@ -72,12 +70,10 @@ const parseAcornLocal = (_kind, code) => {
       ),
     };
   } catch (error) {
-    const name = inspectErrorName(error);
-    const message = inspectErrorMessage(error);
-    if (name === "SyntaxError") {
+    if (inspectErrorName(error) === "SyntaxError") {
       return {
         type: "failure",
-        data: { name, message },
+        data: serializeError(error),
       };
     } else {
       throw error;
@@ -161,12 +157,10 @@ const parseBabelLocal = (_kind, code) => {
       ),
     };
   } catch (error) {
-    const name = inspectErrorName(error);
-    const message = inspectErrorMessage(error);
-    if (name === "SyntaxError") {
+    if (inspectErrorName(error) === "SyntaxError") {
       return {
         type: "failure",
-        data: { name, message },
+        data: serializeError(error),
       };
     } else {
       throw error;

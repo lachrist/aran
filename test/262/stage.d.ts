@@ -22,7 +22,7 @@ export type StageName =
 
 export type InstrumentOutcome = Outcome<
   { location: string | null; content: string },
-  { name: string; message: string }
+  ErrorSerial
 >;
 
 export type Instrument = (source: Source) => InstrumentOutcome;
