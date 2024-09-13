@@ -2,6 +2,8 @@ import { fileURLToPath } from "url";
 import { AranExecError } from "../error.mjs";
 import { loadResultArray } from "./load.mjs";
 import { spawn } from "child_process";
+import { argv, stdout } from "process";
+import { isStageName } from "../stage.mjs";
 
 const { Promise, URL, JSON } = globalThis;
 
@@ -124,34 +126,49 @@ const loadStageResult = async (name) => ({
 
 /**
  * @type {(
- *   base_stage: import("../stage").StageName,
- *   other_stage_array: import("../stage").StageName[],
+ *   argv: string[],
  * ) => Promise<void>}
  */
-const main = async (base_stage, other_stage_array) => {
-  const base = await loadStageResult(base_stage);
-  const others = [];
-  for (const other_stage of other_stage_array) {
-    others.push(await loadStageResult(other_stage));
-  }
-  const plots = [prepareSlowdownPlot(base, others), prepareRatioPlot(others)];
-  /** @type {{code: number | null , signal: NodeJS.Signals | null }} */
-  const { code, signal } = await new Promise((resolve, reject) => {
-    const child = spawn(
-      "python3",
-      [fileURLToPath(new URL("plot.py", import.meta.url))],
-      { stdio: ["pipe", "inherit", "inherit"] },
-    );
-    child.on("error", reject);
-    child.on("exit", (code, signal) => {
-      resolve({ code, signal });
-    });
-    child.stdin.write(JSON.stringify(plots), "utf8");
-    child.stdin.end();
-  });
-  if (code !== 0 || signal !== null) {
-    throw new AranExecError("plot.py failed", { code, signal });
+const main = async (argv) => {
+  if (argv.length < 2) {
+    stdout.write("usage: node test/262/query/plot.mjs <base> <other>...\n");
+  } else {
+    if (argv.every(isStageName)) {
+      const [base_stage, ...other_stage_array] = argv;
+      const base = await loadStageResult(base_stage);
+      const others = [];
+      for (const other_stage of other_stage_array) {
+        others.push(await loadStageResult(other_stage));
+      }
+      const plots = [
+        prepareSlowdownPlot(base, others),
+        prepareRatioPlot(others),
+      ];
+      /** @type {{code: number | null , signal: NodeJS.Signals | null }} */
+      const { code, signal } = await new Promise((resolve, reject) => {
+        const child = spawn(
+          "python3",
+          [fileURLToPath(new URL("plot.py", import.meta.url))],
+          { stdio: ["pipe", "inherit", "inherit"] },
+        );
+        child.on("error", reject);
+        child.on("exit", (code, signal) => {
+          resolve({ code, signal });
+        });
+        child.stdin.write(JSON.stringify(plots), "utf8");
+        child.stdin.end();
+      });
+      if (code !== 0 || signal !== null) {
+        throw new AranExecError("plot.py failed", { code, signal });
+      }
+    } else {
+      for (const arg of argv) {
+        if (!isStageName(arg)) {
+          stdout.write(`invalid stage name: ${arg}\n`);
+        }
+      }
+    }
   }
 };
 
-await main("identity", ["parsing", "bare-basic-standard"]);
+await main(argv.slice(2));

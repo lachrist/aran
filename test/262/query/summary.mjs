@@ -1,9 +1,11 @@
 /* eslint-disable no-plusplus */
 
+import { argv, stdout } from "node:process";
 import { AranTypeError } from "../error.mjs";
+import { isStageName } from "../stage.mjs";
 import { loadResultArray } from "./load.mjs";
 
-const { Object, Math } = globalThis;
+const { undefined, Object, Math } = globalThis;
 
 /**
  * @type {(
@@ -148,4 +150,24 @@ const showSummary = (summary) =>
       .map(compileShowEntry(summary.inclusion.true_negative.count, "    ")),
   ].join("\n");
 
-console.log(showSummary(summarize(await loadResultArray("identity"))));
+/**
+ * @type {(
+ *   argv: string[],
+ * ) => Promise<void>}
+ */
+const main = async (argv) => {
+  if (argv.length === 1) {
+    const stage = argv[0];
+    if (isStageName(stage)) {
+      stdout.write(showSummary(summarize(await loadResultArray(stage))));
+      stdout.write("\n");
+    } else {
+      stdout.write(`invalid stage: ${stage}\n`);
+    }
+  } else {
+    stdout.write("usage: node test/262/query/summary.mjs <stage>\n");
+    return undefined;
+  }
+};
+
+await main(argv.slice(2));

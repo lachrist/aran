@@ -94,7 +94,7 @@ export const STAGE_ENUM = {
   "bare-weave-standard": null,
   "full-basic-standard": null,
   "full-basic-flexible": null,
-  "state-basic-standard": null,
+  "track-origin": null,
 };
 
 /**

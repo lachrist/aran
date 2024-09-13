@@ -6,7 +6,7 @@
  * }}
  */
 export default {
-  precursor: ["identity", "parsing"],
+  precursor: ["parsing"],
   negative: [
     "literal-module-specifier",
     "async-iterator-async-value",

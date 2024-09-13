@@ -2,7 +2,7 @@
 
 import { open, readdir } from "node:fs/promises";
 import { scrape } from "./scrape.mjs";
-import { argv, cpuUsage } from "node:process";
+import { argv, cpuUsage, stdout } from "node:process";
 import { runTest } from "./test.mjs";
 import { home } from "./home.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
@@ -15,7 +15,7 @@ import {
 } from "./fetch.mjs";
 import { packResult } from "./result.mjs";
 
-const { Error, console, process, URL, JSON, Map, undefined } = globalThis;
+const { Date, console, process, URL, JSON, Map, undefined } = globalThis;
 
 let instrument_user_time = 0;
 
@@ -120,70 +120,78 @@ const wrapInstrument = (instrument) => {
  * ) => Promise<void>}
  */
 const main = async (argv) => {
-  if (argv.length < 3) {
-    throw new Error(
-      "usage: node --experimental-vm-modules --expose-gc test/262/exec.mjs <stage>",
+  if (argv.length !== 1) {
+    stdout.write(
+      "usage: node --experimental-vm-modules --expose-gc test/262/exec.mjs <stage>\n",
     );
-  }
-  const [_node, _main, stage_name] = argv;
-  if (!isStageName(stage_name)) {
-    throw new Error(`invalid stage: ${stage_name}`);
-  }
-  const stage = await loadStage(stage_name);
-  stage.instrument = wrapInstrument(stage.instrument);
-  let sigint = false;
-  const onSigint = () => {
-    sigint = true;
-  };
-  process.addListener("SIGINT", onSigint);
-  const onUncaughtException = (/** @type {unknown} */ error) => {
-    console.log(`${inspectErrorName(error)}: ${inspectErrorMessage(error)}`);
-  };
-  process.addListener("uncaughtException", onUncaughtException);
-  let index = 0;
-  const handle = await open(
-    new URL(`stages/${stage_name}.jsonl`, import.meta.url),
-    "w",
-  );
-  const stream = handle.createWriteStream({
-    encoding: "utf8",
-  });
-  const fetch = {
-    resolveDependency,
-    fetchHarness: compileFetchHarness(home),
-    fetchTarget: compileFetchTarget(home),
-  };
-  // Fetch all harnesses to cache them and improve timer accuracy
-  for (const name of /** @type {import("./fetch").HarnessName[]} */ (
-    await readdir(new URL("harness/", home))
-  )) {
-    stage.instrument({
-      type: "harness",
-      kind: "script",
-      path: name,
-      content: await fetch.fetchHarness(name),
-      context: null,
-    });
-  }
-  for await (const url of scrape(new URL("test/", home))) {
-    if (sigint) {
-      // eslint-disable-next-line local/no-label
-      break;
+  } else {
+    const stage_name = argv[0];
+    if (!isStageName(stage_name)) {
+      stdout.write(`invalid stage: ${stage_name}\n`);
+    } else {
+      if (isStageName(stage_name)) {
+        const start = Date.now();
+        const stage = await loadStage(stage_name);
+        stage.instrument = wrapInstrument(stage.instrument);
+        let sigint = false;
+        const onSigint = () => {
+          sigint = true;
+        };
+        process.addListener("SIGINT", onSigint);
+        const onUncaughtException = (/** @type {unknown} */ error) => {
+          console.log(
+            `${inspectErrorName(error)}: ${inspectErrorMessage(error)}`,
+          );
+        };
+        process.addListener("uncaughtException", onUncaughtException);
+        let index = 0;
+        const handle = await open(
+          new URL(`stages/${stage_name}.jsonl`, import.meta.url),
+          "w",
+        );
+        const stream = handle.createWriteStream({
+          encoding: "utf8",
+        });
+        const fetch = {
+          resolveDependency,
+          fetchHarness: compileFetchHarness(home),
+          fetchTarget: compileFetchTarget(home),
+        };
+        // Fetch all harnesses to cache them and improve timer accuracy
+        for (const name of /** @type {import("./fetch").HarnessName[]} */ (
+          await readdir(new URL("harness/", home))
+        )) {
+          stage.instrument({
+            type: "harness",
+            kind: "script",
+            path: name,
+            content: await fetch.fetchHarness(name),
+            context: null,
+          });
+        }
+        for await (const url of scrape(new URL("test/", home))) {
+          if (sigint) {
+            // eslint-disable-next-line local/no-label
+            break;
+          }
+          if (index % 100 === 0) {
+            console.dir(index);
+          }
+          const path = toMainPath(url, home);
+          if (path !== null) {
+            stream.write(
+              JSON.stringify(packResult(await test(path, stage, fetch))) + "\n",
+            );
+            index += 1;
+          }
+        }
+        process.removeListener("SIGINT", onSigint);
+        process.removeListener("uncaughtException", onUncaughtException);
+        await handle.close();
+        stdout.write(`Total time: ${Date.now() - start}ms\n`);
+      }
     }
-    if (index % 100 === 0) {
-      console.dir(index);
-    }
-    const path = toMainPath(url, home);
-    if (path !== null) {
-      stream.write(
-        JSON.stringify(packResult(await test(path, stage, fetch))) + "\n",
-      );
-      index += 1;
-    }
   }
-  process.removeListener("SIGINT", onSigint);
-  process.removeListener("uncaughtException", onUncaughtException);
-  await handle.close();
 };
 
-await main(argv);
+await main(argv.slice(2));
