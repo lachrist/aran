@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { isStageName } from "./stage.mjs";
 import { argv, stdout } from "node:process";
 
-const { Date, Promise, Error } = globalThis;
+const { Date, Promise, Error, setTimeout } = globalThis;
 
 /**
  * @type {(
@@ -46,6 +46,11 @@ const main = async (argv) => {
       /** @type {[import("./stage").StageName, number][]} */
       const times = [];
       for (const stage of argv) {
+        stdout.write(`executing ${stage}...\n`);
+        // Let the system do some cleanup.
+        await new Promise((resolve) => {
+          setTimeout(resolve, 5000);
+        });
         times.push([stage, await exec(stage)]);
       }
       for (const [stage, time] of times) {
