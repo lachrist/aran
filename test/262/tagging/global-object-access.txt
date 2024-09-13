@@ -1,0 +1,2 @@
+language/expressions/typeof/get-value.js
+language/module-code/import-assertions/eval-gtbndng-indirect-faux-assertion.js

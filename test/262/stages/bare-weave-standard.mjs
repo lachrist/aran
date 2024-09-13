@@ -60,6 +60,11 @@ const config = {
  */
 export default {
   ...bare,
+  negative: [
+    ...bare.negative,
+    "dynamic-function-string-representation",
+    "global-object-access",
+  ],
   listLateNegative: (_target, _metadata, _error) => [],
   setup: (context) => {
     setupStandardAdvice(context, makeAdvice(setupAranWeave(context)));
