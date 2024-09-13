@@ -6,13 +6,13 @@ import {
   setupAranBasic,
   setupStandardAdvice,
 } from "../aran/index.mjs";
-import { makeOriginAdvice } from "../../aspects/origin.mjs";
+import { makeTrackOriginAdvice } from "../../aspects/track-origin.mjs";
 
 const {
   Object: { hasOwn },
 } = globalThis;
 
-const DUMMY_ADVICE = makeOriginAdvice(DUMMY_BASIC_MEMBRANE);
+const DUMMY_ADVICE = makeTrackOriginAdvice(DUMMY_BASIC_MEMBRANE);
 
 /**
  * @type {import("../aran/config").Config}
@@ -31,12 +31,15 @@ const config = {
 
 /** @type {import("../stage").Stage} */
 export default {
-  precursor: ["identity", "parsing", "bare-basic-standard"],
+  precursor: ["bare-basic-standard"],
   negative: [],
   exclude: [],
   listLateNegative: (_target, _metadata, _error) => [],
   setup: (context) => {
-    setupStandardAdvice(context, makeOriginAdvice(setupAranBasic(context)));
+    setupStandardAdvice(
+      context,
+      makeTrackOriginAdvice(setupAranBasic(context)),
+    );
   },
   instrument: (source) => instrument(source, config),
 };

@@ -18,7 +18,7 @@ export type StageName =
   | "bare-weave-standard"
   | "full-basic-standard"
   | "full-basic-flexible"
-  | "state-basic-standard";
+  | "track-origin";
 
 export type InstrumentOutcome = Outcome<
   { location: string | null; content: string },

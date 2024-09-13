@@ -1,15 +1,15 @@
 const {
-  WeakSet,
-  WeakSet: {
-    prototype: { has: hasWeakSet, add: addWeakSet },
-  },
-  Reflect: { apply },
   String,
-  Object: { hasOwn },
+  Object: { hasOwn, is },
 } = globalThis;
 
-/** @type {import("./origin").Transit} */
-const VOID_TRANSIT = { type: "void" };
+/**
+ * @type {(
+ *   value1: import("./track-origin").Value,
+ *   value2: import("./track-origin").Value,
+ * ) => boolean}
+ */
+const isSame = is;
 
 /* eslint-disable */
 class AranExecError extends Error {
@@ -59,169 +59,138 @@ const push = (array, item) => {
  * @type {(
  *   membrane: import("../262/aran/membrane").BasicMembrane,
  * ) => import("../../lib").StandardAdvice<
- *   import("./origin").ShadowState,
- *   import("./origin").Valuation,
+ *   import("./track-origin").ShadowState,
+ *   import("./track-origin").Valuation,
  * >}
  */
-export const makeOriginAdvice = ({ intrinsics, instrumentLocalEvalCode }) => {
-  /** @type {import("./origin").Transit} */
-  let transit = VOID_TRANSIT;
-  /** @type {WeakSet<Function>} */
-  const closures = new WeakSet();
+export const makeTrackOriginAdvice = ({
+  intrinsics,
+  instrumentLocalEvalCode,
+}) => {
+  /** @type {import("./track-origin").Transit} */
+  let transit = { type: "void" };
   /**
    * @type {import("../../lib").StandardAdvice<
-   *   import("./origin").ShadowState,
-   *   import("./origin").Valuation,
+   *   import("./track-origin").ShadowState,
+   *   import("./track-origin").Valuation,
    * >}
    */
   return {
-    "block@setup": (state, _kind, _path) => {
-      const copy = transit;
-      transit = VOID_TRANSIT;
-      return {
-        parent: state,
-        transit: copy,
-        frame: { __proto__: null },
-        stack: [],
-      };
-    },
+    "block@setup": (state, _kind, _path) => ({
+      parent: state,
+      frame: { __proto__: null },
+      stack: [],
+    }),
     "block@declaration": (state, _kind, frame, path) => {
       for (const key in frame) {
-        state.frame[/** @type {import("./origin").Key} */ (key)] = {
+        state.frame[/** @type {import("./track-origin").Key} */ (key)] = {
           type: "initial",
-          variable: /** @type {import("./origin").Key} */ (key),
+          variable: /** @type {import("./track-origin").Key} */ (key),
           path,
         };
       }
       if (
-        state.transit.type === "apply" ||
-        state.transit.type === "construct"
+        (transit.type === "apply" || transit.type === "construct") &&
+        isSame(
+          transit.source.function,
+          /** @type {import("./track-origin").Value} */ (
+            frame["function.callee"]
+          ),
+        )
       ) {
-        state.frame["function.callee"] = state.transit.callee;
-        if (state.transit.type === "apply") {
-          state.frame.this = state.transit.this;
+        state.frame["function.callee"] = transit.shadow.function;
+        if (transit.type === "apply") {
+          state.frame.this = transit.shadow.this;
         }
         state.frame["function.arguments"] = {
           type: "arguments",
-          values: state.transit.arguments,
+          values: transit.shadow.arguments,
           path,
         };
       }
       return frame;
     },
     "program-block@after": (state, _kind, value, _path) => {
-      if (state.transit.type === "eval") {
-        transit = { type: "return", result: pop(state.stack) };
-      } else if (state.transit.type === "void") {
-        pop(state.stack);
-      } else if (
-        state.transit.type === "return" ||
-        state.transit.type === "apply" ||
-        state.transit.type === "construct"
-      ) {
-        throw new AranExecError("unexpected transit");
-      } else {
-        throw new AranTypeError(state.transit);
-      }
+      transit = { type: "return", source: value, shadow: pop(state.stack) };
       return value;
     },
-    "closure-block@after": (state, kind, value, _path) => {
-      if (
-        state.transit.type === "apply" ||
-        state.transit.type === "construct"
-      ) {
-        if (
-          kind === "generator" ||
-          kind === "async-generator" ||
-          kind === "async-method" ||
-          kind === "async-function"
-        ) {
-          pop(state.stack);
-        } else {
-          transit = { type: "return", result: pop(state.stack) };
-        }
-      } else if (state.transit.type === "void") {
-        pop(state.stack);
-      } else if (
-        state.transit.type === "return" ||
-        state.transit.type === "eval"
-      ) {
-        throw new AranExecError("unexpected transit");
-      } else {
-        throw new AranTypeError(state.transit);
-      }
+    "closure-block@after": (state, _kind, value, _path) => {
+      transit = { type: "return", source: value, shadow: pop(state.stack) };
       return value;
     },
     // Call //
-    "apply@around": (state, callee, this_, arguments_, path) => {
+    "apply@around": (state, function_, this_, arguments_, path) => {
       const shadow_argument_array = [];
       for (let index = arguments_.length - 1; index >= 0; index -= 1) {
         shadow_argument_array[index] = pop(state.stack);
       }
       const shadow_this = pop(state.stack);
-      const shadow_callee = pop(state.stack);
-      /** @type {import("./origin").ShadowValue} */
-      const shadow_result = {
+      const shadow_function = pop(state.stack);
+      transit = /** @type {import("./track-origin").Transit} */ ({
         type: "apply",
-        callee: shadow_callee,
-        this: shadow_this,
-        arguments: shadow_argument_array,
-        path,
-      };
-      if (apply(hasWeakSet, closures, [callee])) {
-        if (transit.type === "void") {
-          transit = shadow_result;
-        } else {
-          throw new AranExecError("expected no transit");
-        }
-      }
-      const result = /** @type {import("./origin").Value} */ (
+        source: {
+          function: function_,
+          this: this_,
+          arguments: arguments_,
+        },
+        shadow: {
+          function: shadow_function,
+          this: shadow_this,
+          arguments: shadow_argument_array,
+        },
+      });
+      const result = /** @type {import("./track-origin").Value} */ (
         intrinsics["Reflect.apply"](
-          /** @type {any} */ (callee),
+          /** @type {any} */ (function_),
           this_,
           arguments_,
         )
       );
-      if (transit.type === "return") {
-        push(state.stack, transit.result);
-        transit = VOID_TRANSIT;
-      } else if (transit.type === "void") {
-        push(state.stack, shadow_result);
+      if (transit.type === "return" && isSame(transit.source, result)) {
+        push(state.stack, transit.shadow);
       } else {
-        throw new AranExecError("expected return transit");
+        push(state.stack, {
+          type: "apply",
+          function: shadow_function,
+          this: shadow_this,
+          arguments: shadow_argument_array,
+          path,
+        });
       }
       return result;
     },
-    "construct@around": (state, callee, arguments_, path) => {
+    "construct@around": (state, function_, arguments_, path) => {
       const shadow_argument_array = [];
       for (let index = arguments_.length - 1; index >= 0; index -= 1) {
         shadow_argument_array[index] = pop(state.stack);
       }
-      const shadow_callee = pop(state.stack);
-      /** @type {import("./origin").ShadowValue} */
-      const shadow_result = {
+      const shadow_function = pop(state.stack);
+      transit = /** @type {import("./track-origin").Transit} */ ({
         type: "construct",
-        callee: shadow_callee,
-        arguments: shadow_argument_array,
-        path,
-      };
-      if (apply(hasWeakSet, closures, [callee])) {
-        if (transit.type === "void") {
-          transit = shadow_result;
-        } else {
-          throw new AranExecError("expected no transit");
-        }
-      }
-      const result = /** @type {import("./origin").Value} */ (
-        intrinsics["Reflect.construct"](/** @type {any} */ (callee), arguments_)
+        source: {
+          function: function_,
+          arguments: arguments_,
+        },
+        shadow: {
+          function: shadow_function,
+          arguments: shadow_argument_array,
+        },
+      });
+      const result = /** @type {import("./track-origin").Value} */ (
+        intrinsics["Reflect.construct"](
+          /** @type {any} */ (function_),
+          arguments_,
+        )
       );
-      if (transit.type === "return") {
-        push(state.stack, transit.result);
-        transit = VOID_TRANSIT;
-      } else if (transit.type === "void") {
-        push(state.stack, shadow_result);
+      if (transit.type === "return" && isSame(transit.source, result)) {
+        push(state.stack, transit.shadow);
       } else {
-        throw new AranExecError("expected return transit");
+        push(state.stack, {
+          type: "construct",
+          function: shadow_function,
+          arguments: shadow_argument_array,
+          path,
+        });
       }
       return result;
     },
@@ -251,7 +220,7 @@ export const makeOriginAdvice = ({ intrinsics, instrumentLocalEvalCode }) => {
       return value;
     },
     "read@after": (state, variable, value, _path) => {
-      /** @type {import("./origin").ShadowState | null} */
+      /** @type {import("./track-origin").ShadowState | null} */
       let current = state;
       while (current !== null) {
         if (hasOwn(current.frame, variable)) {
@@ -263,7 +232,6 @@ export const makeOriginAdvice = ({ intrinsics, instrumentLocalEvalCode }) => {
       throw new AranExecError("missing variable");
     },
     "closure@after": (state, kind, value, path) => {
-      apply(addWeakSet, closures, [value]);
       push(state.stack, {
         type: "closure",
         kind,
@@ -277,7 +245,7 @@ export const makeOriginAdvice = ({ intrinsics, instrumentLocalEvalCode }) => {
       return !!value;
     },
     "write@before": (state, variable, value, _path) => {
-      /** @type {import("./origin").ShadowState | null} */
+      /** @type {import("./track-origin").ShadowState | null} */
       let current = state;
       while (current !== null) {
         if (hasOwn(current.frame, variable)) {
@@ -302,18 +270,17 @@ export const makeOriginAdvice = ({ intrinsics, instrumentLocalEvalCode }) => {
         pop(state.stack);
         return instrumentLocalEvalCode(value, path, reboot);
       } else {
-        transit = { type: "return", result: pop(state.stack) };
+        transit = { type: "return", source: value, shadow: pop(state.stack) };
         return value;
       }
     },
     "eval@after": (state, value, _path) => {
-      if (transit.type === "return") {
-        push(state.stack, transit.result);
-        transit = VOID_TRANSIT;
-        return value;
+      if (transit.type === "return" && isSame(value, transit.source)) {
+        push(state.stack, transit.shadow);
       } else {
-        throw new AranExecError("expected return transit");
+        throw new AranExecError("expected return transit after eval");
       }
+      return value;
     },
     "await@before": (state, value, _path) => {
       pop(state.stack);

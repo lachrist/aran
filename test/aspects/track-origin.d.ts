@@ -12,26 +12,35 @@ export type { Kind } from "../../lib/weave/standard/aspect";
 export type Key = Variable | Parameter;
 
 export type Transit =
-  | {
-      type: "void";
-    }
-  | {
-      type: "eval";
-    }
+  | { type: "void" }
   | {
       type: "apply";
-      callee: ShadowValue;
-      this: ShadowValue;
-      arguments: ShadowValue[];
+      source: {
+        function: Value;
+        this: Value;
+        arguments: Value[];
+      };
+      shadow: {
+        function: ShadowValue;
+        this: ShadowValue;
+        arguments: ShadowValue[];
+      };
     }
   | {
       type: "construct";
-      callee: ShadowValue;
-      arguments: ShadowValue[];
+      source: {
+        function: Value;
+        arguments: Value[];
+      };
+      shadow: {
+        function: ShadowValue;
+        arguments: ShadowValue[];
+      };
     }
   | {
       type: "return";
-      result: ShadowValue;
+      source: Value;
+      shadow: ShadowValue;
     };
 
 export type ShadowValue =
@@ -68,14 +77,14 @@ export type ShadowValue =
     }
   | {
       type: "apply";
-      callee: ShadowValue;
+      function: ShadowValue;
       this: ShadowValue;
       arguments: ShadowValue[];
       path: Path;
     }
   | {
       type: "construct";
-      callee: ShadowValue;
+      function: ShadowValue;
       arguments: ShadowValue[];
       path: Path;
     }
@@ -102,7 +111,6 @@ export type ShadowFrame = {
 
 export type ShadowState = {
   parent: ShadowState | null;
-  transit: Transit;
   frame: ShadowFrame;
   stack: ShadowValue[];
 };
