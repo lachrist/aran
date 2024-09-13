@@ -1,2 +1,2 @@
 bare-basic-standard
-28016 language/expressions/await/for-await-of-interleaved.js
+38217 language/module-code/export-expname-from-string-binding.js

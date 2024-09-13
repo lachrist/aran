@@ -8,6 +8,7 @@
 export default {
   precursor: ["identity", "parsing"],
   negative: [
+    "async-iterator-async-value",
     "arguments-two-way-binding",
     "function-dynamic-property",
     "negative-bare-duplicate-super-prototype-access",

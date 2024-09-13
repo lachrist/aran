@@ -1,0 +1,9 @@
+// In a async for...of loop, if the IteratorResult.value of the async iterator
+// is a promise-like object, it will be awaited before actually being yielded.
+// Currently, we simply insert an additional await expression. But this
+// introduces additional tick which can be observed. The alternative would be
+// to query the IteratorResult.value but that could also be observed.
+// Example of test that require the additional await:
+//   language/expressions/dynamic-import/for-await-resolution-and-error-agen.js
+
+language/expressions/await/for-await-of-interleaved.js
