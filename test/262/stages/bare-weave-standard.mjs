@@ -20,6 +20,28 @@ const makeAdvice = ({ instrumentLocalEvalCode, apply, construct }) => ({
     apply(callee, self, input),
   "construct@around": (_state, callee, input, _path) =>
     construct(callee, input),
+  // "apply@around": (_state, callee, self, input, _path) => {
+  //   console.log("apply", { callee, self, input });
+  //   try {
+  //     const result = apply(callee, self, input);
+  //     console.log("result", { callee, self, input, result });
+  //     return result;
+  //   } catch (error) {
+  //     console.log("error", { callee, self, input, error });
+  //     throw error;
+  //   }
+  // },
+  // "construct@around": (_state, callee, input, _path) => {
+  //   console.log("apply", { callee, input });
+  //   try {
+  //     const result = construct(callee, input);
+  //     console.log("result", { callee, input, result });
+  //     return result;
+  //   } catch (error) {
+  //     console.log("error", { callee, input, error });
+  //     throw error;
+  //   }
+  // },
 });
 
 /**

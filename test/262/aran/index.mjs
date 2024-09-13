@@ -155,7 +155,7 @@ export const setupAranWeave = (context) => {
     },
     construct: (callee, input) => {
       if (callee === Function) {
-        evalGlobal(instrumentEvalCode(compileFunctionCode(input), null));
+        return evalGlobal(instrumentEvalCode(compileFunctionCode(input), null));
       } else {
         return construct(/** @type {Function} */ (callee), input);
       }
