@@ -1,2 +1,2 @@
 bare-basic-standard
-12775 built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js
+28016 language/expressions/await/for-await-of-interleaved.js
