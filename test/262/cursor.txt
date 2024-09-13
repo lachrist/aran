@@ -1,2 +1,1 @@
 bare-basic-standard
-38217 language/module-code/export-expname-from-string-binding.js

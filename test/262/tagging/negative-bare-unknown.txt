@@ -1,0 +1,6 @@
+language/statements/async-generator/return-undefined-implicit-and-explicit.js
+language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js
+language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-rtrn-close-null.js
+language/statements/for-await-of/ticks-with-async-iter-resolved-promise-and-constructor-lookup-two.js
+language/statements/for-await-of/ticks-with-async-iter-resolved-promise-and-constructor-lookup.js
+language/statements/for-await-of/ticks-with-sync-iter-resolved-promise-and-constructor-lookup.js

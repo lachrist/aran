@@ -9,6 +9,7 @@ export type Tag =
   | "negative-bare-duplicate-super-prototype-access"
   | "negative-bare-early-module-declaration"
   | "negative-bare-missing-iterable-return-in-pattern"
+  | "negative-bare-unknown"
   | "negative-bare-wrong-realm-for-default-prototype"
   | "negative-identity-annex-b"
   | "negative-identity-async-iterator-bypass-finally"

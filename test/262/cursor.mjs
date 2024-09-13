@@ -3,7 +3,6 @@ import { parseList } from "./list.mjs";
 import { STAGE_ENUM } from "./stage.mjs";
 
 const {
-  String,
   parseInt,
   Object: { hasOwn },
 } = globalThis;
@@ -82,8 +81,12 @@ export const parseCursor = (content) => {
  *   cursor: import("./cursor").Cursor,
  * ) => string}
  */
-export const stringifyCursor = (cursor) =>
-  `${cursor.stage}\n${[
-    ...(cursor.index === null ? [] : [String(cursor.index)]),
-    ...(cursor.path === null ? [] : [cursor.path]),
-  ].join(" ")}\n`;
+export const stringifyCursor = (cursor) => {
+  if (cursor.index === null && cursor.path === null) {
+    return `${cursor.stage}\n`;
+  } else {
+    return `${cursor.stage}\n${
+      cursor.index === null ? "" : `${cursor.index} `
+    }${cursor.path === null ? "" : cursor.path}\n`;
+  }
+};
