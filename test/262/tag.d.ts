@@ -5,6 +5,7 @@ export type Tag =
   | "function-dynamic-property"
   | "function-string-representation"
   | "invalid-metadata-header"
+  | "literal-module-specifier"
   | "negative-bare-duplicate-super-prototype-access"
   | "negative-bare-early-module-declaration"
   | "negative-bare-missing-iterable-return-in-pattern"

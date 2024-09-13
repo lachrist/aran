@@ -5,7 +5,7 @@ import { serializeError } from "../error-serial.mjs";
 /** @type {import("../stage").Stage} */
 export default {
   precursor: ["identity"],
-  negative: [],
+  negative: ["literal-module-specifier"],
   exclude: [],
   listLateNegative: (_target, _metadata, _error) => [],
   setup: (_context) => {},
