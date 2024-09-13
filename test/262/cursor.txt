@@ -1,1 +1,2 @@
-bare-basic-standard
+bare-patch-standard
+1214 built-ins/Array/fromAsync/mapfn-async-throws-close-async-iterator.js
