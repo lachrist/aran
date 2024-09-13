@@ -42,13 +42,13 @@ export class AranTypeError extends TypeError {
   cause: never;
 }
 
-///////////////////////////
-// AranIllegalInputError //
-///////////////////////////
+/////////////////////
+// AranConfigError //
+/////////////////////
 
-export type IllegalInput = {
+export type ConfigErrorCause = {
   /**
-   * A description of the input location -- eg: `"config.advice_variable"`.
+   * A description of the config location -- eg: `"config.advice_variable"`.
    */
   target: string;
   /**
@@ -62,12 +62,45 @@ export type IllegalInput = {
 };
 
 /**
- * Signals an early syntax error when `config.early_syntax_error` is `"throw"`.
+ * Signals a problem with the configuration of Aran.
  */
-export class AranIllegalInputError extends Error {
-  constructor(cause: IllegalInput);
+export class AranConfigError extends Error {
+  constructor(cause: ConfigErrorCause);
   message: string;
-  cause: IllegalInput;
+  cause: ConfigErrorCause;
+}
+
+/////////////////////
+// AranSyntaxError //
+/////////////////////
+
+export type SyntaxErrorCause = {
+  /**
+   * The node that caused the syntax error.
+   */
+  node: unknown;
+  /**
+   * The JSON path of the node that caused the syntax error.
+   */
+  path: string;
+  /**
+   * The explanation of the syntax error.
+   */
+  message: string;
+};
+
+/**
+ * Signals an early syntax error in the program to be instrumented -- eg: the
+ * root node is not actually an `estree.Program` or presence of `WithStatement`
+ * in strict code. In general, popular parsers like acorn should not produce
+ * data that would trigger this error. However, when parsing local code (ie code
+ * to be fed to a direct eval call), one may have to use more lenient parsing
+ * which could trigger this error.
+ */
+export class AranSyntaxError extends SyntaxError {
+  constructor(cause: SyntaxErrorCause);
+  message: string;
+  cause: SyntaxErrorCause;
 }
 
 ////////////////////////////

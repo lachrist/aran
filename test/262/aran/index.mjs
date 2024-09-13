@@ -5,6 +5,7 @@ import {
 } from "../../../lib/index.mjs";
 import { parseGlobal, parseLocal } from "./parse.mjs";
 import { runInContext } from "node:vm";
+import { inspectErrorMessage, inspectErrorName } from "../error-serial.mjs";
 
 const {
   Error,
@@ -256,6 +257,32 @@ export const setupAranPatch = (context) => {
 };
 
 /**
+ * @type {<X>(
+ *   callee: () => X,
+ * ) => import("../outcome").Outcome<
+ *   X,
+ *   import("../error-serial").ErrorSerial
+ * >}
+ */
+const wrap = (callee) => {
+  try {
+    return { type: "success", data: callee() };
+  } catch (error) {
+    if (inspectErrorName(error) === "AranSyntaxError") {
+      return {
+        type: "failure",
+        data: {
+          name: "SyntaxError",
+          message: inspectErrorMessage(error),
+        },
+      };
+    } else {
+      throw error;
+    }
+  }
+};
+
+/**
  * @type {(
  *   source: import("../source").Source,
  *   config: import("./config").Config,
@@ -272,12 +299,12 @@ export const instrument = (
   },
 ) => {
   if (selection === "*" || selection.includes(source.type)) {
-    const outcome =
+    const parse_outcome =
       source.context === null
         ? parseGlobal(source.kind, source.content)
         : parseLocal(source.kind, source.content);
-    if (outcome.type === "failure") {
-      return outcome;
+    if (parse_outcome.type === "failure") {
+      return parse_outcome;
     }
     /** @type {import("../../../lib").Config} */
     const complete_config = {
@@ -291,35 +318,31 @@ export const instrument = (
       escape_prefix: ESCAPE_PREFIX,
       advice_variable: ADVICE_VARIABLE,
     };
-    const program = instrumentAran(
-      {
-        kind: source.kind,
-        situ:
-          source.context === null
-            ? { type: "global" }
-            : /** @type {{situ: import("../../../lib").DeepLocalSitu}} */ (
-                source.context
-              ).situ,
-        path:
-          source.context === null
-            ? ROOT_PATH
-            : /** @type {{path: import("../../../lib/path").Path}} */ (
-                source.context
-              ).path,
-        root: outcome.data,
-      },
-      complete_config,
-    );
-    if (program._aran_syntax_error_array.length > 0) {
-      return {
-        type: "failure",
-        data: {
-          name: "SyntaxError",
-          message: program._aran_syntax_error_array[0],
+    const instrument_outcome = wrap(() =>
+      instrumentAran(
+        {
+          kind: source.kind,
+          situ:
+            source.context === null
+              ? { type: "global" }
+              : /** @type {{situ: import("../../../lib").DeepLocalSitu}} */ (
+                  source.context
+                ).situ,
+          path:
+            source.context === null
+              ? ROOT_PATH
+              : /** @type {{path: import("../../../lib/path").Path}} */ (
+                  source.context
+                ).path,
+          root: parse_outcome.data,
         },
-      };
+        complete_config,
+      ),
+    );
+    if (instrument_outcome.type === "failure") {
+      return instrument_outcome;
     }
-    for (const warning of program._aran_warning_array) {
+    for (const warning of instrument_outcome.data._aran_warning_array) {
       if (warning.name === "MissingEvalAdvice") {
         return {
           type: "failure",
@@ -334,7 +357,7 @@ export const instrument = (
       type: "success",
       data: {
         location: null,
-        content: generate(program),
+        content: generate(instrument_outcome.data),
       },
     };
   } else {

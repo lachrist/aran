@@ -34,7 +34,7 @@ export type { Json } from "./json.d.ts";
 export type {
   AranDuplicateCutError,
   AranExecError,
-  AranIllegalInputError,
+  AranConfigError as AranIllegalInputError,
   AranTypeError,
   AranVariableClashError,
 } from "./report.d.ts";
