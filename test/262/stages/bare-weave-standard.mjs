@@ -30,7 +30,7 @@ const config = {
   global_declarative_record: "emulate",
   initial_state: null,
   flexible_pointcut: null,
-  standard_pointcut: [],
+  standard_pointcut: ["eval@before", "apply@around", "construct@around"],
 };
 
 /**

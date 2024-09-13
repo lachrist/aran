@@ -114,9 +114,14 @@ export const setupFlexibleAspect = (context, aspect) => {
  * ) => import("./membrane").WeaveMembrane}
  */
 export const setupAranWeave = (context) => {
+  /** @type {import("../../../lib").IntrinsicRecord} */
   const intrinsics = runInContext(SETUP, context);
   const global = intrinsics["aran.global"];
-  const { eval: evalGlobal, Function, apply, construct } = global;
+  const {
+    eval: evalGlobal,
+    Function,
+    Reflect: { apply, construct },
+  } = global;
   const $262 = /** /** @type {{$262: import("../test262").$262}} */ (
     /** @type {unknown} */ (global)
   ).$262;
