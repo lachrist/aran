@@ -57,7 +57,7 @@ const config = {
     "no-eval": "error",
     "no-lone-blocks": "error",
     // "no-param-reassign": "error",
-    "no-plusplus": "error",
+    // "no-plusplus": "error",
     "no-warning-comments": ["warn", { terms: ["todo"] }],
     "object-shorthand": ["error"],
     "prefer-const": ["error", { destructuring: "all" }],
