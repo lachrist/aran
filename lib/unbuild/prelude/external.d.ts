@@ -1,8 +1,8 @@
 import type { Variable } from "../../estree";
-import type { Path } from "../../path";
+import type { Hash } from "../../hash";
 
 export type ReifyExternal = {
   frame: "aran.global" | "aran.record";
   variable: Variable;
-  origin: Path;
+  origin: Hash;
 };

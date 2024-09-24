@@ -364,6 +364,9 @@ export type Node =
   | Program
   | Statement
   | Expression
+  | ClassBody
+  | ConstructorIdentifier
+  | ProtoIdentifier
   | VariableIdentifier
   | PublicKeyIdentifier
   | PrivateKeyIdentifier
@@ -543,19 +546,27 @@ export type BinaryExpression =
   | PrivateBinaryExpression
   | RegularBinaryExpression;
 
-export type AssignmentExpression = {
-  type: "AssignmentExpression";
-  loc?: SourceLocation | null | undefined;
-  operator: AssignmentOperator;
-  left: Pattern;
-  right: Expression;
-};
+export type AssignmentExpression =
+  | {
+      type: "AssignmentExpression";
+      loc?: SourceLocation | null | undefined;
+      operator: "=";
+      left: Pattern | CallExpression;
+      right: Expression;
+    }
+  | {
+      type: "AssignmentExpression";
+      loc?: SourceLocation | null | undefined;
+      operator: "=";
+      left: MemberExpression | VariableIdentifier | CallExpression;
+      right: Expression;
+    };
 
 export type UpdateExpression = {
   type: "UpdateExpression";
   loc?: SourceLocation | null | undefined;
   operator: UpdateOperator;
-  argument: Expression;
+  argument: MemberExpression | VariableIdentifier;
   prefix: boolean;
 };
 

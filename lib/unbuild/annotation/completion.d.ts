@@ -17,3 +17,7 @@ export type CompletionResult = {
   previous_maybe_last: boolean;
   hashes: Tree<Hash>;
 };
+
+export type Completion = {
+  [key in Hash]?: null;
+};

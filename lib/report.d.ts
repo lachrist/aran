@@ -13,7 +13,8 @@
  * @module
  */
 
-import type { Variable } from "./estree";
+import type { Hash } from "./hash";
+import type { Node, Variable } from "./estree";
 
 ///////////////////
 // AranExecError //
@@ -78,11 +79,11 @@ export type SyntaxErrorCause = {
   /**
    * The node that caused the syntax error.
    */
-  node: unknown;
+  node: Node | null;
   /**
-   * The JSON path of the node that caused the syntax error.
+   * The hash of the node that caused the syntax error.
    */
-  path: string;
+  hash: Hash;
   /**
    * The explanation of the syntax error.
    */

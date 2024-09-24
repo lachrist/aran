@@ -1,5 +1,5 @@
 import type { Variable } from "./variable.d.ts";
-import type { Path } from "../path.js";
+import type { Hash } from "../hash.d.ts";
 import type {
   Program as GenericProgram,
   ControlBlock as GenericControlBlock,
@@ -18,7 +18,7 @@ export type Atom = {
   Source: Source;
   Specifier: Specifier;
   Variable: Variable;
-  Tag: Path;
+  Tag: Hash;
 };
 
 export type Program = GenericProgram<Atom>;

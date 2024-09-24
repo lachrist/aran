@@ -1,8 +1,13 @@
 import type { TaggedTemplateExpression } from "../../estree";
-import type { Site } from "../site";
+import type { Hash } from "../../hash";
+import type { Meta } from "../meta";
 import type { MetaVariable } from "../variable";
 
 export type Template = {
   variable: MetaVariable;
-  value: Site<TaggedTemplateExpression>;
+  value: {
+    node: TaggedTemplateExpression;
+    hash: Hash;
+    meta: Meta;
+  };
 };

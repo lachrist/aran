@@ -1,7 +1,8 @@
-import type { Variable } from "./estree";
+import type { Node, Variable } from "./estree";
 import type { Json } from "./json";
 import type { Pointcut as StandardPointcut } from "./weave/standard/aspect";
 import type { Pointcut as FlexiblePointcut } from "./weave/flexible/aspect";
+import type { Hash } from "./hash";
 
 export type Config = {
   /**
@@ -92,4 +93,11 @@ export type Config = {
    * Default: `"_aran_"`.
    */
   escape_prefix: Variable;
+  /**
+   * A function that generates a hash for a node which is either a string or a
+   * number. It should be fast and unique for the nodes in a `estree.Program`.
+   *
+   * Default: use the JSON path of the node -- eg: "body.0.expression".
+   */
+  digest: (node: Node) => Hash;
 };

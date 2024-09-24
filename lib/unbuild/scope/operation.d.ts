@@ -1,8 +1,9 @@
 import type { PrivateKey, Variable } from "../../estree";
+import type { Hash } from "../../hash";
 import type { Sequence } from "../../sequence";
 import type { Effect, Expression } from "../atom";
+import type { Meta } from "../meta";
 import type { BodyPrelude } from "../prelude";
-import type { LeafSite } from "../site";
 import type { ConstantMetaVariable } from "../variable";
 
 export { RootFrame } from "./root";
@@ -246,13 +247,15 @@ export type Operation = LoadOperation | SaveOperation;
 // method //
 
 export type ListScopeEffect<S> = (
-  site: LeafSite,
+  hash: Hash,
+  meta: Meta,
   scope: S,
   operation: SaveOperation,
 ) => Sequence<BodyPrelude, Effect[]>;
 
 export type ListFrameEffect<F> = <S>(
-  site: LeafSite,
+  hash: Hash,
+  meta: Meta,
   frame: F,
   operation: SaveOperation,
   listAlternateEffect: ListScopeEffect<S>,
@@ -260,13 +263,15 @@ export type ListFrameEffect<F> = <S>(
 ) => Sequence<BodyPrelude, Effect[]>;
 
 export type makeScopeExpression<S> = (
-  site: LeafSite,
+  hash: Hash,
+  meta: Meta,
   scope: S,
   operation: LoadOperation,
 ) => Sequence<BodyPrelude, Expression>;
 
 export type MakeFrameExpression<F> = <S>(
-  site: LeafSite,
+  hash: Hash,
+  meta: Meta,
   frame: F,
   operation: LoadOperation,
   makeAlternateExpression: makeScopeExpression<S>,

@@ -1,4 +1,4 @@
-import type { Path } from "../../path";
+import type { Hash } from "../../hash";
 
 export type WarningName =
   | "ExternalConstant"
@@ -8,5 +8,5 @@ export type WarningName =
 
 export type Warning = {
   name: WarningName;
-  path: Path;
+  hash: Hash;
 };

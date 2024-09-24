@@ -4,7 +4,7 @@ import type { Condition } from "./condition";
 import type { BaseVariable, MetaVariable } from "../variable";
 import type { Template } from "./template";
 import type { Intrinsic } from "../../lang";
-import type { Path } from "../../path";
+import type { Hash } from "../../hash";
 import type { Effect } from "../atom";
 import type { Reboot } from "../../reboot";
 import type { PrivateKey } from "../../estree";
@@ -45,7 +45,7 @@ export type WarningPrelude = {
 
 export type RebootPrelude = {
   type: "reboot";
-  data: [Path, Reboot];
+  data: [Hash, Reboot];
 };
 
 export type HeaderPrelude = {

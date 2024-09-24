@@ -1,4 +1,3 @@
-import type { Path } from "../../../path";
 import type { Cache, WritableCache } from "../../cache";
 
 export type ProgramFrame = {
@@ -10,7 +9,6 @@ export type ProgramFrame = {
     | "eval.global"
     | "eval.local.root"
     | "eval.local.deep";
-  completion: { [key in Path]?: null };
   result: WritableCache | null;
 };
 

@@ -1,6 +1,6 @@
-import type { Path } from "../../path";
+import type { Hash } from "../../hash";
 
 export type SyntaxError = {
   message: string;
-  origin: Path;
+  origin: Hash;
 };
