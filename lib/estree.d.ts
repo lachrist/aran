@@ -557,7 +557,7 @@ export type AssignmentExpression =
   | {
       type: "AssignmentExpression";
       loc?: SourceLocation | null | undefined;
-      operator: "=";
+      operator: Exclude<AssignmentOperator, "=">;
       left: MemberExpression | VariableIdentifier | CallExpression;
       right: Expression;
     };

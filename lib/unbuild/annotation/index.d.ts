@@ -1,8 +1,7 @@
-import type { Digest, Hash } from "../../hash";
-import type { Hoisting } from "./hoisting-public";
+import type { Hash } from "../../hash";
+import type { Binding } from "./hoisting-public";
 
 export type Annotation = {
-  digest: Digest;
   completion: { [key in Hash]?: null };
-  hoisting: Hoisting;
+  hoisting: { [key in Hash]?: Binding[] };
 };

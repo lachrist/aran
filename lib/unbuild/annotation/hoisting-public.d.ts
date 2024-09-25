@@ -15,10 +15,4 @@ export type Error = {
   origin: Hash;
 };
 
-export type Hoisting = { [key in Hash]?: Binding[] };
-
-export type Result = {
-  report: Error[];
-  unbound: Binding[];
-  hoisting: Hoisting;
-};
+type foo = Record<string, Binding>;
