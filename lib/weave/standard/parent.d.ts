@@ -1,5 +1,5 @@
 import type { ModuleHeader, DeclareHeader } from "../../header";
-import type { Variable as EstreeVariable } from "../../estree";
+import type { VariableName } from "estree-sentry";
 import type { ClosureKind, ControlKind, ProgramKind } from "../parametrization";
 import type { Json } from "../../json";
 
@@ -8,7 +8,7 @@ export type ProgramParent = {
   kind: ProgramKind;
   head: (ModuleHeader | DeclareHeader)[];
   initial: Json;
-  advice: EstreeVariable;
+  advice: VariableName;
 };
 
 export type ClosureParent = {

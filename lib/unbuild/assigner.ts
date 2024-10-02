@@ -1,4 +1,4 @@
-import { BinaryOperator, LogicalOperator } from "../estree";
+import { BinaryOperator, LogicalOperator } from "estree-sentry";
 import { Expression } from "./atom";
 
 export type Assigner = {

@@ -1,11 +1,7 @@
-import type { Path } from "./path";
-import type {
-  ModuleProgram as EstreeModuleProgram,
-  ScriptProgram as EstreeScriptProgram,
-  Program as EstreeProgram,
-} from "./estree";
 import type { Depth } from "./weave/depth";
 import type { Reboot } from "./reboot";
+import type { ModuleProgram, Path, ScriptProgram } from "estree-sentry";
+import type { HashProp } from "./hash";
 
 export type GlobalSitu = {
   type: "global";
@@ -23,11 +19,17 @@ export type DeepLocalSitu = Reboot & {
 
 export type Situ = GlobalSitu | RootLocalSitu | DeepLocalSitu;
 
-export type PartialSource = {
+export type RawProgram = {
+  type: "Program";
+  sourceType: "module" | "script";
+  body: unknown[];
+};
+
+export type RawSource = {
   /**
    * The actual `estree.Program` node to instrument.
    */
-  root: EstreeProgram;
+  root: RawProgram;
   /**
    * Indicates how the source will be executed.
    *
@@ -60,62 +62,46 @@ export type PartialSource = {
   path?: Path;
 };
 
-export type Source =
-  | {
-      kind: "module";
-      situ: GlobalSitu;
-      path: Path;
-      root: EstreeModuleProgram;
-    }
-  | {
-      kind: "script";
-      situ: GlobalSitu;
-      path: Path;
-      root: EstreeScriptProgram;
-    }
-  | {
-      kind: "eval";
-      situ: Situ;
-      path: Path;
-      root: EstreeScriptProgram;
-    };
-
-export type ModuleSource = Source & {
+export type ModuleSource = {
   kind: "module";
+  situ: GlobalSitu;
+  root: ModuleProgram<HashProp>;
 };
 
-export type ScriptSource = Source & {
+export type ScriptSource = {
   kind: "script";
+  situ: Situ;
+  root: ScriptProgram<HashProp>;
 };
 
-export type EvalSource = Source & {
+export type EvalSource = {
   kind: "eval";
+  situ: Situ;
+  root: ScriptProgram<HashProp>;
 };
 
-export type GlobalEvalSource = Source & {
-  kind: "eval";
+export type Source = ModuleSource | ScriptSource | EvalSource;
+
+export type GlobalEvalSource = EvalSource & {
   situ: { type: "global" };
 };
 
-export type DeepLocalEvalSource = Source & {
-  kind: "eval";
+export type DeepLocalEvalSource = EvalSource & {
   situ: { type: "local" };
 };
 
-export type RootLocalEvalSource = Source & {
-  kind: "eval";
+export type RootLocalEvalSource = EvalSource & {
   situ: { type: "aran" };
 };
 
-export type LocalEvalSource = Source & {
-  kind: "eval";
+export type LocalEvalSource = EvalSource & {
   situ: { type: "local" | "aran" };
 };
 
-export type RootSource = Source & {
-  situ: { type: "global" | "local" };
-};
+export type RootSource =
+  | ModuleSource
+  | ScriptSource
+  | GlobalEvalSource
+  | RootLocalEvalSource;
 
-export type DeepSource = Source & {
-  situ: { type: "aran" };
-};
+export type DeepSource = DeepLocalEvalSource;

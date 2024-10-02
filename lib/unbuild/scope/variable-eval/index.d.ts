@@ -1,4 +1,4 @@
-import type { Variable } from "../../../estree";
+import type { VariableName } from "estree-sentry";
 import type { Cache } from "../../cache";
 
 export type Binding = {
@@ -9,5 +9,5 @@ export type Binding = {
 export type EvalFrame = {
   type: "eval";
   dynamic: Cache;
-  static: { [key in Variable]?: Binding };
+  static: { [key in VariableName]?: Binding };
 };

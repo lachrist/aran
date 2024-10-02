@@ -1,7 +1,7 @@
 import Local from "./local/index.mjs";
 import tseslint from "typescript-eslint";
 
-/** @type {import("eslint").Linter.FlatConfig} */
+/** @type {import("eslint").Linter.Config} */
 const config = {
   files: [],
   languageOptions: {
@@ -96,7 +96,7 @@ export default [
       "local/literal-location": "error",
       "local/literal-unique": "error",
       "local/no-async": "error",
-      "local/no-static-dependency": "error",
+      "local/no-static-dependency": ["error", "estree-sentry"],
       "local/no-impure": "error",
       "local/no-method-call": "error",
     },

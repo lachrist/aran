@@ -7,9 +7,8 @@ import type { Intrinsic } from "../../lang";
 import type { Hash } from "../../hash";
 import type { Effect } from "../atom";
 import type { Reboot } from "../../reboot";
-import type { PrivateKey } from "../../estree";
+import type { PrivateKeyName, VariableName } from "estree-sentry";
 import type { ReifyExternal } from "./external";
-import type { Variable } from "../../estree";
 import type { Warning } from "./warning";
 
 export type ReturnIteratorPrelude = {
@@ -20,7 +19,7 @@ export type ReturnIteratorPrelude = {
 
 export type NativeExternalPrelude = {
   type: "external-native";
-  data: Variable;
+  data: VariableName;
 };
 
 export type ReifyExternalPrelude = {
@@ -30,7 +29,7 @@ export type ReifyExternalPrelude = {
 
 export type UnboundPrivatePrelude = {
   type: "private-unbound";
-  data: PrivateKey;
+  data: PrivateKeyName;
 };
 
 export type TemplatePrelude = {

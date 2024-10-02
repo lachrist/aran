@@ -8,15 +8,15 @@ import type {
   Effect as GenericEffect,
   Expression as GenericExpression,
 } from "../lang.js";
-import type { Source, Specifier } from "../estree.js";
+import type { SourceValue, SpecifierName } from "estree-sentry";
 import type { Brand } from "../util.js";
 
 export type Label = Brand<string, "unbuild.Label">;
 
 export type Atom = {
   Label: Label;
-  Source: Source;
-  Specifier: Specifier;
+  Source: SourceValue;
+  Specifier: SourceValue | SpecifierName;
   Variable: Variable;
   Tag: Hash;
 };

@@ -1,10 +1,10 @@
-import type { Variable } from "../../estree";
+import type { VariableName } from "estree-sentry";
 import type { Hash } from "../../hash";
 
 export type SloppyFunction = "nope" | "near" | "away" | "both";
 
 export type Binding = {
-  variable: Variable;
+  variable: VariableName;
   baseline: "live" | "dead";
   write: "perform" | "report" | "ignore";
   sloppy_function: SloppyFunction;

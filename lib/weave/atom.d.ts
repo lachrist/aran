@@ -1,5 +1,5 @@
 import type { Brand } from "../util";
-import type { Source, Specifier } from "../estree";
+import type { SourceValue, SpecifierValue, SpecifierName } from "estree-sentry";
 import type {
   Node,
   Program,
@@ -9,8 +9,8 @@ import type {
   ControlBlock,
   RoutineBlock,
 } from "../lang";
-import type { Path } from "../path";
 import type { Warning } from "./warning";
+import type { Hash } from "../hash";
 
 export type ArgVariable = Brand<string, "weave.ArgVariable">;
 
@@ -20,16 +20,16 @@ export type Label = Brand<string, "weave.ArgLabel">;
 
 export type ArgAtom = {
   Label: Label;
-  Source: Source;
-  Specifier: Specifier;
+  Source: SourceValue;
+  Specifier: SpecifierValue | SpecifierName;
   Variable: ArgVariable;
-  Tag: Path;
+  Tag: Hash;
 };
 
 export type ResAtom = {
   Label: Label;
-  Source: Source;
-  Specifier: Specifier;
+  Source: SourceValue;
+  Specifier: SpecifierValue | SpecifierName;
   Variable: ResVariable;
   Tag: Warning[];
 };

@@ -13,8 +13,8 @@
  * @module
  */
 
+import type { VariableName } from "estree-sentry";
 import type { Hash } from "./hash";
-import type { Node, Variable } from "./estree";
 
 ///////////////////
 // AranExecError //
@@ -79,7 +79,7 @@ export type SyntaxErrorCause = {
   /**
    * The node that caused the syntax error.
    */
-  node: Node | null;
+  node: object | null;
   /**
    * The hash of the node that caused the syntax error.
    */
@@ -110,8 +110,8 @@ export class AranSyntaxError extends SyntaxError {
 
 export type VariableClash = {
   name: "intrinsic_variable" | "advice_variable" | "escape_prefix";
-  base: Variable;
-  meta: Variable;
+  base: VariableName;
+  meta: VariableName;
 };
 
 /**
@@ -129,7 +129,7 @@ export class AranVariableClashError extends Error {
 
 export type DuplicateCut = {
   advice: "eval@before" | "apply@around" | "construct@around";
-  conflict: Variable[];
+  conflict: VariableName[];
 };
 
 /**

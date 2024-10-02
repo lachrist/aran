@@ -11,7 +11,9 @@ const checkSource = (context, node) => {
     throw new Error("expected source to be a string");
   }
   if (!node.value.startsWith("./") && !node.value.startsWith("../")) {
-    context.report({ node, message: "dependencies are forbidden" });
+    if (!context.options.includes(node.value)) {
+      context.report({ node, message: "dependencies are forbidden" });
+    }
   }
 };
 

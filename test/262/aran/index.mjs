@@ -341,7 +341,7 @@ export const instrument = (
           path:
             source.context === null
               ? ROOT_PATH
-              : /** @type {{path: import("../../../lib/path").Path}} */ (
+              : /** @type {{path: import("../../../lib/guard/syntax/path").Path}} */ (
                   source.context
                 ).path,
           root: parse_outcome.data,

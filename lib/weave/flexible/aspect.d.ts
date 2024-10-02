@@ -1,5 +1,5 @@
 import type { DeepLocalSitu } from "../../source";
-import type { Variable as EstreeVariable } from "../../estree";
+import type { VariableName } from "estree-sentry";
 import type {
   ArgVariable as Variable,
   ArgNode as Node,
@@ -163,7 +163,7 @@ export type AspectElement<state, value, point extends Json[]> = ValueOf<{
 }>;
 
 export type PointcutEntry<kind extends AspectKind> = [
-  EstreeVariable,
+  VariableName,
   {
     kind: kind;
     pointcut: AspectTyping<never, never, Json[]>[kind]["pointcut"];
@@ -194,13 +194,13 @@ export type Pointcut = {
 
 export type OptimalPointcut = {
   [kind in AspectKind]: [
-    EstreeVariable,
+    VariableName,
     AspectTyping<never, never, Json[]>[kind]["pointcut"],
   ][];
 };
 
 export type OptimalPointcutEntry<kind extends AspectKind> = [
-  EstreeVariable,
+  VariableName,
   AspectTyping<never, never, Json[]>[kind]["pointcut"],
 ];
 

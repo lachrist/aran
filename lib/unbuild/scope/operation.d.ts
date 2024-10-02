@@ -1,4 +1,4 @@
-import type { PrivateKey, Variable } from "../../estree";
+import type { PrivateKeyName, VariableName } from "estree-sentry";
 import type { Hash } from "../../hash";
 import type { Sequence } from "../../sequence";
 import type { Effect, Expression } from "../atom";
@@ -15,7 +15,7 @@ export type Mode = "strict" | "sloppy";
 export type LateDeclareOperation = {
   type: "late-declare";
   mode: "sloppy";
-  variable: Variable;
+  variable: VariableName;
   write: "perform";
   conflict: "report" | "ignore";
 };
@@ -23,46 +23,46 @@ export type LateDeclareOperation = {
 export type InitializeOperation = {
   type: "initialize";
   mode: Mode;
-  variable: Variable;
+  variable: VariableName;
   right: Expression | null;
 };
 
 export type WriteOperation = {
   type: "write";
   mode: Mode;
-  variable: Variable;
+  variable: VariableName;
   right: Expression;
 };
 
 export type WriteSloppyFunctionOperation = {
   type: "write-sloppy-function";
   mode: "sloppy";
-  variable: Variable;
+  variable: VariableName;
   right: null | ConstantMetaVariable;
 };
 
 export type ReadOperation = {
   type: "read";
   mode: Mode;
-  variable: Variable;
+  variable: VariableName;
 };
 
 export type TypeofOperation = {
   type: "typeof";
   mode: Mode;
-  variable: Variable;
+  variable: VariableName;
 };
 
 export type DiscardOperation = {
   type: "discard";
   mode: Mode;
-  variable: Variable;
+  variable: VariableName;
 };
 
 export type ReadAmbientThisOperation = {
   type: "read-ambient-this";
   mode: Mode;
-  variable: Variable;
+  variable: VariableName;
 };
 
 export type VariableLoadOperation =
@@ -172,7 +172,7 @@ export type DefinePrivateOperation = {
   type: "define-private";
   mode: Mode;
   target: Expression;
-  key: PrivateKey;
+  key: PrivateKeyName;
   value: Expression;
 };
 
@@ -180,7 +180,7 @@ export type InitializePrivateOperation = {
   type: "initialize-private";
   mode: Mode;
   kind: "method" | "getter" | "setter";
-  key: PrivateKey;
+  key: PrivateKeyName;
   value: Expression;
 };
 
@@ -200,21 +200,21 @@ export type HasPrivateOperation = {
   type: "has-private";
   mode: Mode;
   target: Expression;
-  key: PrivateKey;
+  key: PrivateKeyName;
 };
 
 export type GetPrivateOperation = {
   type: "get-private";
   mode: Mode;
   target: Expression;
-  key: PrivateKey;
+  key: PrivateKeyName;
 };
 
 export type SetPrivateOperation = {
   type: "set-private";
   mode: Mode;
   target: Expression;
-  key: PrivateKey;
+  key: PrivateKeyName;
   value: Expression;
 };
 

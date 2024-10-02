@@ -1,10 +1,8 @@
-import type { Digest } from "../hash";
 import type { Annotation } from "./annotation";
 import type { Expression, Label } from "./atom";
 import type { Scope } from "./scope";
 
 export type Context = {
-  digest: Digest;
   scope: Scope;
   annotation: Annotation;
 };

@@ -1,4 +1,9 @@
-import type { Source, Specifier, Variable } from "./estree";
+import type {
+  SourceValue,
+  SpecifierName,
+  SpecifierValue,
+  VariableName,
+} from "estree-sentry";
 
 ///////////////////
 // DeclareHeader //
@@ -7,7 +12,7 @@ import type { Source, Specifier, Variable } from "./estree";
 export type DeclareHeader = {
   type: "declare";
   kind: "let" | "var";
-  variable: Variable;
+  variable: VariableName;
 };
 
 //////////////////
@@ -16,25 +21,25 @@ export type DeclareHeader = {
 
 export type ImportHeader = {
   type: "import";
-  source: Source;
-  import: Specifier | null;
+  source: SourceValue;
+  import: SpecifierName | SpecifierValue | null;
 };
 
 export type ExportHeader = {
   type: "export";
-  export: Specifier;
+  export: SpecifierValue | SpecifierName;
 };
 
 export type AggregateHeader =
   | {
       type: "aggregate";
-      source: Source;
-      import: Specifier | null;
-      export: Specifier;
+      source: SourceValue;
+      import: SpecifierValue | SpecifierName | null;
+      export: SpecifierValue | SpecifierName;
     }
   | {
       type: "aggregate";
-      source: Source;
+      source: SourceValue;
       import: null;
       export: null;
     };

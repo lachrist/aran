@@ -1,6 +1,6 @@
-import type { Variable } from "../../../estree";
+import type { VariableName } from "estree-sentry";
 
 export type IllegalFrame = {
   type: "illegal";
-  record: { [k in Variable]?: string };
+  record: { [k in VariableName]?: string };
 };

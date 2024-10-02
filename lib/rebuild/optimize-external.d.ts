@@ -1,4 +1,4 @@
-import type { Statement, Variable } from "../estree";
+import type { Statement, VariableName } from "estree-sentry";
 
 export type Target =
   | "scope.read"
@@ -14,11 +14,11 @@ export type Target =
 
 export type External = {
   target: Target;
-  variable: Variable;
+  variable: VariableName;
 };
 
 export type Optimization = {
-  strict: Statement[];
-  sloppy: Statement[];
-  either: Statement[];
+  strict: Statement<{}>[];
+  sloppy: Statement<{}>[];
+  either: Statement<{}>[];
 };

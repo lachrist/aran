@@ -1,10 +1,15 @@
-import type { Source, Specifier, Variable } from "../../../estree";
+import type {
+  SourceValue,
+  SpecifierValue,
+  SpecifierName,
+  VariableName,
+} from "estree-sentry";
 import type { ConstantMetaVariable } from "../../variable";
 
 export type ImportBinding = {
   type: "import";
-  source: Source;
-  specifier: Specifier | null;
+  source: SourceValue;
+  specifier: SpecifierName | SpecifierValue | null;
 };
 
 export type SloppyFunction = null | {
@@ -16,7 +21,7 @@ export type RegularBinding = {
   type: "regular";
   baseline: "live" | "dead";
   write: "perform" | "ignore" | "report";
-  export: Specifier[];
+  export: (SpecifierName | SpecifierValue)[];
   sloppy_function: SloppyFunction;
 };
 
@@ -24,5 +29,5 @@ export type Binding = ImportBinding | RegularBinding;
 
 export type RegularFrame = {
   type: "regular";
-  record: { [k in Variable]?: Binding };
+  record: { [k in VariableName]?: Binding };
 };

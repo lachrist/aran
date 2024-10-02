@@ -1,41 +1,46 @@
-import type { Source, Specifier, Variable } from "../../estree";
+import type {
+  SourceValue,
+  SpecifierName,
+  SpecifierValue,
+  VariableName,
+} from "estree-sentry";
 
 export type ImportLink =
   | {
       type: "import";
-      variable: Variable;
-      source: Source;
-      import: Specifier | null;
+      variable: VariableName;
+      source: SourceValue;
+      import: SpecifierName | SpecifierValue | null;
     }
   | {
       type: "import";
       variable: null;
-      source: Source;
+      source: SourceValue;
       import: null;
     };
 
 export type ExportLink =
   | {
       type: "export";
-      variable: Variable;
-      export: Specifier;
+      variable: VariableName;
+      export: SpecifierName | SpecifierValue;
     }
   | {
       type: "export";
       variable: null;
-      export: Specifier & "default";
+      export: SpecifierName & "default";
     };
 
 export type AggregateLink =
   | {
       type: "aggregate";
-      source: Source;
-      import: Specifier | null;
-      export: Specifier;
+      source: SourceValue;
+      import: SpecifierName | SpecifierValue | null;
+      export: SpecifierName | SpecifierValue;
     }
   | {
       type: "aggregate";
-      source: Source;
+      source: SourceValue;
       import: null;
       export: null;
     };

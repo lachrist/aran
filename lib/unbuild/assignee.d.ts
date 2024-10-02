@@ -1,11 +1,11 @@
 import type { Object } from "./object.js";
 import type { Key } from "./key.js";
-import type { Variable } from "../estree.js";
+import type { VariableName } from "estree-sentry";
 
 export type Assignee =
   | {
       type: "variable";
-      variable: Variable;
+      variable: VariableName;
     }
   | {
       type: "member";

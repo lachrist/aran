@@ -1,6 +1,6 @@
-import type { Path } from "../path";
+import type { Hash } from "../hash";
 
 export type Warning = {
   name: "MissingEvalAdvice";
-  path: Path;
+  hash: Hash;
 };

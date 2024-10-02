@@ -1,4 +1,4 @@
-import type { Variable } from "../../estree";
+import type { VariableName } from "estree-sentry";
 import type { Hash } from "../../hash";
 import type { Tree } from "../../util/tree";
 
@@ -34,7 +34,7 @@ export type Mode = "strict" | "sloppy";
 export type FreeBinding = {
   type: "free";
   kind: Kind;
-  variable: Variable;
+  variable: VariableName;
   origin: Hash;
   bind: null;
 };
@@ -42,7 +42,7 @@ export type FreeBinding = {
 export type LockBinding = {
   type: "lock";
   kind: Kind;
-  variable: Variable;
+  variable: VariableName;
   origin: Hash;
   bind: Hash;
 };
@@ -50,7 +50,7 @@ export type LockBinding = {
 export type FlagBinding = {
   type: "flag";
   kind: Kind;
-  variable: Variable;
+  variable: VariableName;
   origin: Hash;
   bind: "duplicate" | "keyword";
 };
@@ -58,7 +58,7 @@ export type FlagBinding = {
 export type VoidBinding = {
   type: "void";
   kind: Kind;
-  variable: Variable;
+  variable: VariableName;
   origin: Hash;
   bind: null;
 };

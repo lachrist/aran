@@ -1,5 +1,5 @@
-import type { Variable } from "../estree.js";
-import type { Key } from "./key.js";
+import type { VariableName } from "estree-sentry";
+import type { Key } from "./key";
 
 export type PropertyName = {
   type: "property";
@@ -9,7 +9,7 @@ export type PropertyName = {
 
 export type AssignmentName = {
   type: "assignment";
-  variable: Variable;
+  variable: VariableName;
 };
 
 export type AnonymousName = {

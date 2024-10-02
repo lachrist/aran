@@ -1,8 +1,7 @@
-import type { Node, Variable } from "./estree";
 import type { Json } from "./json";
 import type { Pointcut as StandardPointcut } from "./weave/standard/aspect";
 import type { Pointcut as FlexiblePointcut } from "./weave/flexible/aspect";
-import type { Hash } from "./hash";
+import type { VariableName } from "estree-sentry";
 
 export type Config = {
   /**
@@ -71,33 +70,26 @@ export type Config = {
    *
    * Default: `globalThis`.
    */
-  global_variable: Variable;
+  global_variable: VariableName;
   /**
    * The global variable that refers to the intrinsic object defined by the setup
    * code. Make sure it does not clash with other global variables.
    *
    * Default: `"_ARAN_INTRINSIC_"`.
    */
-  intrinsic_variable: Variable;
+  intrinsic_variable: VariableName;
   /**
    * The global variable that refers to the advice object for standard weaving.
    * Make sure it does not clash with other global variables.
    *
    * Default: `"_ARAN_ADVICE_"`.
    */
-  advice_variable: Variable;
+  advice_variable: VariableName;
   /**
    * Internal variables are prefixed with this string to avoid clashing with
    * external variables.
    *
    * Default: `"_aran_"`.
    */
-  escape_prefix: Variable;
-  /**
-   * A function that generates a hash for a node which is either a string or a
-   * number. It should be fast and unique for the nodes in a `estree.Program`.
-   *
-   * Default: use the JSON path of the node -- eg: "body.0.expression".
-   */
-  digest: (node: Node) => Hash;
+  escape_prefix: VariableName;
 };

@@ -1,11 +1,11 @@
-import type { Variable as EstreeVariable } from "../../estree";
+import type { VariableName } from "estree-sentry";
 import type { ClosureKind, ControlKind, ProgramKind } from "../parametrization";
 import type { Json } from "../../json";
 
 export type ProgramParent = {
   type: "program";
   kind: ProgramKind;
-  advice: EstreeVariable[];
+  advice: VariableName[];
   initial: Json;
 };
 

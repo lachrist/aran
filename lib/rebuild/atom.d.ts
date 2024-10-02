@@ -1,5 +1,4 @@
 import type { Brand } from "../util";
-import type { Source, Specifier } from "../estree";
 import type {
   Node as GenericNode,
   Program as GenericProgram,
@@ -9,6 +8,7 @@ import type {
   Effect as GenericEffect,
   Expression as GenericExpression,
 } from "../lang";
+import type { SourceValue, SpecifierName, SpecifierValue } from "estree-sentry";
 
 export type Label = Brand<string, "rebuild.Label">;
 
@@ -16,8 +16,8 @@ export type Variable = Brand<string, "rebuild.Variable">;
 
 export type Atom = {
   Label: Label;
-  Source: Source;
-  Specifier: Specifier;
+  Source: SourceValue;
+  Specifier: SpecifierName | SpecifierValue;
   Variable: Variable;
   Tag: null;
 };

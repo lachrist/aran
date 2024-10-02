@@ -4,7 +4,7 @@
 // On the other hand, having a fake frame makes sense and could
 // be useful in the future.
 
-import type { Variable } from "../../../estree";
+import type { VariableName } from "estree-sentry";
 import type { WritableCache } from "../../cache";
 
 export type Binding = {
@@ -15,5 +15,5 @@ export type Binding = {
 
 export type FakeFrame = {
   type: "fake";
-  record: { [k in Variable]?: Binding };
+  record: { [k in VariableName]?: Binding };
 };

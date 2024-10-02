@@ -1,17 +1,3 @@
-export type {
-  Variable as EstreeVariable,
-  Label as EstreeLabel,
-  Specifier as EstreeSpecifier,
-  Source as EstreeSource,
-  Program as EstreeProgram,
-  ScriptProgram as EstreeScriptProgram,
-  ModuleProgram as EstreeModuleProgram,
-  Statement as EstreeStatement,
-  Expression as EstreeExpression,
-} from "./estree.d.ts";
-
-export type { Path } from "./path.d.ts";
-
 export type { Warning } from "./warning.d.ts";
 
 export type {
