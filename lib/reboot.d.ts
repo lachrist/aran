@@ -4,6 +4,7 @@ import type { PackScope } from "./unbuild/scope";
 
 export type Reboot = {
   meta: Meta;
+  mode: "strict" | "sloppy";
   scope: PackScope;
 };
 

@@ -1,7 +1,6 @@
 import type { RegularFrame } from "./variable-regular";
 import type { RoutineFrame } from "./routine";
 import type { EvalFrame } from "./variable-eval";
-import type { ModeFrame } from "./mode";
 import type { PrivateFrame } from "./private";
 import type { RootFrame } from "./root";
 import type { FakeFrame } from "./variable-fake";
@@ -16,7 +15,6 @@ export type NodeFrame =
   | EvalFrame
   | IllegalFrame
   | FakeFrame
-  | ModeFrame
   | PrivateFrame
   | WithFrame;
 

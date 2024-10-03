@@ -1,6 +1,6 @@
 import type { Cache } from "./cache.js";
 
-export type ArrowParamn = { type: "arrow" };
+export type ArrowParam = { type: "arrow" };
 
 export type FunctionParam = { type: "function" };
 
@@ -12,8 +12,4 @@ export type ConstructorParam = {
   field: Cache;
 };
 
-export type ClosureParam =
-  | ArrowParamn
-  | FunctionParam
-  | MethodParam
-  | ConstructorParam;
+export type Param = ArrowParam | FunctionParam | MethodParam | ConstructorParam;
