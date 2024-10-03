@@ -1,3 +1,4 @@
+import type { ForStatement, VariableDeclaration } from "estree-sentry";
 import type {
   ObjectProperty,
   PropertyDefinition,
@@ -25,4 +26,10 @@ export type StaticPrelude<X> = StaticBlock<X> | ClassPropertyDefinition<X>;
 
 export type InstancePropertyDefinition<X> = PropertyDefinition<X> & {
   static: false;
+};
+
+export type LexicalForStatement<X> = ForStatement<X> & {
+  init: VariableDeclaration<X> & {
+    kind: "let" | "const";
+  };
 };
