@@ -18,39 +18,8 @@ import type {
   VariableName,
   SyntaxErrorCause as EstreeSentrySyntaxErrorCause,
 } from "estree-sentry";
+
 import type { Hash } from "./hash";
-
-///////////////////
-// AranExecError //
-///////////////////
-
-/**
- * Signals a probable bug in Aran.
- */
-export class AranExecError extends Error {
-  constructor(message: string, cause: unknown);
-  message: string;
-  cause: unknown;
-}
-
-///////////////////
-// AranTypeError //
-///////////////////
-
-/**
- * Signals a loophole in typescript annotations. Unless, `source.root` is not a
- * valid `estree.Program`, this probably signals a bug in Aran.
- */
-export class AranTypeError extends TypeError {
-  constructor(cause: never);
-  name: "AranTypeError";
-  message: string;
-  cause: unknown;
-}
-
-/////////////////////
-// AranConfigError //
-/////////////////////
 
 export type InputErrorCause = {
   conditions: {
@@ -70,20 +39,6 @@ export type InputErrorCause = {
    */
   actual: unknown;
 };
-
-/**
- * Signals a problem with the configuration of Aran.
- */
-export class AranInputError extends Error {
-  constructor(cause: InputErrorCause);
-  name: "AranConfigError";
-  message: string;
-  cause: InputErrorCause;
-}
-
-/////////////////////
-// AranSyntaxError //
-/////////////////////
 
 /**
  * Signals a syntax error in `file.root` that is type-related -- eg: a property
@@ -108,44 +63,11 @@ export type ComplexSyntaxErrorCause = {
 
 export type SyntaxErrorCause = SimpleSyntaxErrorCause | ComplexSyntaxErrorCause;
 
-/**
- * Signals an early syntax error in the program to be instrumented -- eg: the
- * root node is not actually an `estree.Program` or presence of `WithStatement`
- * in strict code. In general, popular parsers like acorn should not produce
- * data that would trigger this error. However, when parsing local code (ie code
- * to be fed to a direct eval call), one may have to use more lenient parsing
- * which could trigger this error.
- */
-export class AranSyntaxError extends SyntaxError {
-  constructor(message: string, cause: SyntaxErrorCause);
-  name: "AranSyntaxError";
-  message: string;
-  cause: SyntaxErrorCause;
-}
-
-////////////////////
-// AranClashError //
-////////////////////
-
 export type ClashErrorCause = {
   name: "intrinsic_variable" | "advice_variable" | "escape_prefix";
   base: VariableName;
   meta: VariableName;
 };
-
-/**
- * Signals a clash between Aran variables and the variables of the target code.
- */
-export class AranClashError extends Error {
-  constructor(cause: ClashErrorCause);
-  name: "AranClashError";
-  message: string;
-  cause: ClashErrorCause;
-}
-
-///////////////////////
-// AranPointcutError //
-///////////////////////
 
 /**
  * Signals that a join point has been cut multiple times when it was illegal.
@@ -171,13 +93,3 @@ export type MissingPointcutErrorCause = {
 export type PointcutErrorCause =
   | DuplicatePointcutErrorCause
   | MissingPointcutErrorCause;
-
-/**
- * Signals a problem with the provided pointcut.
- */
-export class AranPointcutError extends Error {
-  constructor(cause: PointcutErrorCause);
-  name: "AranPointcutError";
-  message: string;
-  cause: PointcutErrorCause;
-}

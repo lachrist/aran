@@ -83,7 +83,7 @@ export type AspectTyping<hash, state, value, point extends Json[]> = {
     pointcut: GenericPointcut<hash, point, RoutineBlock<hash>>;
     advice: (state: state, value: value, ...point: point) => value;
   };
-  "control-block@after": {
+  "segment-block@after": {
     pointcut: GenericPointcut<hash, point, ControlBlock<hash>>;
     advice: (state: state, ...point: point) => void;
   };

@@ -58,7 +58,7 @@ const makeAspect = ({ intrinsics, instrumentLocalEvalCode }) => {
       advice: (_state, value) => value,
     },
     _ARAN_CONTROL_BLOCK_AFTER_: {
-      kind: "control-block@after",
+      kind: "segment-block@after",
       pointcut,
       advice: (_state) => undefined,
     },

@@ -58,7 +58,7 @@ const push = (array, item) => {
 /**
  * @type {(
  *   membrane: import("../262/aran/membrane").BasicMembrane,
- * ) => import("../../lib").StandardAdvice<
+ * ) => import("../../").StandardAdvice<
  *   import("../262/aran/config").NodeHash,
  *   import("./track-origin").ShadowState,
  *   import("./track-origin").Valuation,
@@ -71,7 +71,7 @@ export const makeTrackOriginAdvice = ({
   /** @type {import("./track-origin").Transit} */
   let transit = { type: "void" };
   /**
-   * @type {import("../../lib").StandardAdvice<
+   * @type {import("../../").StandardAdvice<
    *   import("../262/aran/config").NodeHash,
    *   import("./track-origin").ShadowState,
    *   import("./track-origin").Valuation,

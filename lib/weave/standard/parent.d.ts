@@ -1,6 +1,6 @@
 import type { ModuleHeader, DeclareHeader } from "../../header";
 import type { VariableName } from "estree-sentry";
-import type { ClosureKind, ControlKind, ProgramKind } from "../parametrization";
+import type { ClosureKind, SegmentKind, ProgramKind } from "../parametrization";
 import type { Json } from "../../json";
 
 export type ProgramParent = {
@@ -16,11 +16,11 @@ export type ClosureParent = {
   kind: ClosureKind;
 };
 
-export type ControlParent = {
-  type: "control";
-  kind: ControlKind;
+export type SegmentParent = {
+  type: "segment";
+  kind: SegmentKind;
 };
 
 export type RoutineParent = ProgramParent | ClosureParent;
 
-export type Parent = RoutineParent | ControlParent;
+export type Parent = RoutineParent | SegmentParent;

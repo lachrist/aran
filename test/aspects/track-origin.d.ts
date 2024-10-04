@@ -4,7 +4,7 @@ import type {
   AranIntrinsicName,
   AranSource,
   AranSpecifier,
-  ClosureKind,
+  AranClosureKind,
 } from "../../";
 import type { NodeHash } from "../262/aran/config";
 
@@ -55,7 +55,7 @@ export type ShadowValue =
     }
   | {
       type: "closure";
-      kind: ClosureKind;
+      kind: AranClosureKind;
       hash: NodeHash;
     }
   | {

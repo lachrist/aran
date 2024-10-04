@@ -2,10 +2,8 @@ import type {
   AranLabel,
   AranVariable,
   AranParameter,
-  ControlKind,
-  ProgramKind,
-} from "../../lib";
-import { RoutineKind } from "../../lib/weave/parametrization";
+  AranControlKind,
+} from "../..";
 import { NodeHash } from "../262/aran/config";
 
 export type Value = { __brand: "Value" };
@@ -101,7 +99,7 @@ export type Suspension = "none" | "eval" | "yield" | "await";
 
 export type State = null | {
   parent: State;
-  kind: ProgramKind | RoutineKind | ControlKind;
+  kind: AranControlKind;
   hash: NodeHash;
   origin: Transit;
   labeling: AranLabel[];

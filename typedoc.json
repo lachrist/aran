@@ -1,6 +1,6 @@
 {
   "entryPoints": ["lib/**/*.d.ts"],
-  "sort": ["source-order"],
+  "kindSortOrder": ["Class", "Function", "Variable", "TypeAlias"],
   "githubPages": true,
   "readme": "none",
   "out": "page/typedoc",

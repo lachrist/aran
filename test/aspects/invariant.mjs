@@ -1,9 +1,8 @@
-/* eslint-disable local/no-deep-import */
 import {
   isClosureKind,
-  isControlKind,
+  isSegmentKind,
   isProgramKind,
-} from "../../lib/weave/index.mjs";
+} from "../../lib/index.mjs";
 
 const {
   Array: { isArray },
@@ -33,7 +32,7 @@ const isArrayValue = /** @type {any} */ (isArray);
  *     UnreachableError: new (data: never) => Error,
  *   },
  *   membrane: import("../262/aran/membrane").BasicMembrane,
- * ) => import("../../lib").StandardAdvice<
+ * ) => import("../../").StandardAdvice<
  *   import("../262/aran/config").NodeHash,
  *   import("./invariant").State,
  *   import("./invariant").Valuation,
@@ -77,7 +76,7 @@ export const makeInvariantAdvice = (
   };
 
   /**
-   * @type {WeakMap<Function, import("../../lib").ClosureKind>}
+   * @type {WeakMap<Function, import("../../").AranClosureKind>}
    */
   const closures = new WeakMap();
 
@@ -87,7 +86,7 @@ export const makeInvariantAdvice = (
   let transit = { type: "external" };
 
   /**
-   * @type {import("../../lib").StandardAdvice<
+   * @type {import("../../").StandardAdvice<
    *   import("../262/aran/config").NodeHash,
    *   import("./invariant").State,
    *   import("./invariant").Valuation,
@@ -105,7 +104,7 @@ export const makeInvariantAdvice = (
             transit.type === "external",
           context,
         );
-      } else if (isControlKind(kind)) {
+      } else if (isSegmentKind(kind)) {
         assert(
           transit.type === "regular" ||
             (transit.type === "throw" && kind === "catch") ||
@@ -132,7 +131,7 @@ export const makeInvariantAdvice = (
         suspension: "none",
       };
     },
-    "control-block@before": (state, kind, labels, hash) => {
+    "segment-block@before": (state, kind, labels, hash) => {
       const context = {
         type: "control-block@labeling",
         transit,
@@ -269,7 +268,7 @@ export const makeInvariantAdvice = (
       assert(transit.type === "external", context);
       transit = { type: "regular" };
     },
-    "control-block@after": (state, kind, hash) => {
+    "segment-block@after": (state, kind, hash) => {
       const context = {
         type: "control-block@completion",
         transit,
@@ -417,7 +416,7 @@ export const makeInvariantAdvice = (
       assert(isIdentical(this_, pop(state.stack, context)), context);
       assert(isIdentical(callee, pop(state.stack, context)), context);
       if (closures.has(/** @type {any} */ (callee))) {
-        const kind = /** @type {import("../../lib").ClosureKind} */ (
+        const kind = /** @type {import("../../").AranClosureKind} */ (
           closures.get(/** @type {any} */ (callee))
         );
         assert(transit.type === "regular", state);
@@ -524,7 +523,7 @@ export const makeInvariantAdvice = (
         state,
       });
       if (closures.has(/** @type {any} */ (callee))) {
-        const kind = /** @type {import("../../lib").ClosureKind} */ (
+        const kind = /** @type {import("../../").AranClosureKind} */ (
           closures.get(/** @type {any} */ (callee))
         );
         if (kind === "function") {
@@ -819,7 +818,7 @@ export const makeInvariantAdvice = (
       assert(isIdentical(pop(state.stack, context), value), context);
       assert(transit.type === "regular", context);
       let current = state;
-      while (isControlKind(current.kind)) {
+      while (isSegmentKind(current.kind)) {
         const next = current.parent;
         assertNotNull(next, context);
         current = next;

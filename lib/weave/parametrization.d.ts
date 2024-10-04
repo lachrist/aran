@@ -17,7 +17,7 @@ export type ClosureKind = ArrowKind | FunctionKind | GeneratorKind | MethodKind;
 
 export type RoutineKind = ProgramKind | ClosureKind;
 
-export type ControlKind =
+export type SegmentKind =
   | "try"
   | "catch"
   | "finally"
@@ -26,7 +26,7 @@ export type ControlKind =
   | "while"
   | "bare";
 
-export type BlockKind = RoutineKind | ControlKind;
+export type ControlKind = RoutineKind | SegmentKind;
 
 export type Parametrization = {
   "module": "this" | "import" | "import.meta";

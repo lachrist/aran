@@ -5,10 +5,10 @@ import type { DeepLocalSitu } from "../../source";
 import type { ValueOf } from "../../util";
 import type { ArgVariable, Label } from "../atom";
 import type {
-  BlockKind,
+  ControlKind,
   ProgramKind,
   ClosureKind,
-  ControlKind,
+  SegmentKind,
   GeneratorKind,
   Parametrization,
 } from "../parametrization";
@@ -24,14 +24,14 @@ type Valuation = {
   Other: unknown;
 };
 
-export type Frame<K extends BlockKind, V> = {
+export type Frame<K extends ControlKind, V> = {
   [key in Variable]?: V;
 } & {
   [key in Parametrization[K]]: V;
 };
 
 export type PreciseFrame<V> = ValueOf<{
-  [K in BlockKind]: {
+  [K in ControlKind]: {
     type: K;
     data: {
       [key in Variable | Parameter]?: V;
@@ -71,8 +71,8 @@ export type AspectTyping<H, X, V extends Valuation> = {
    * -- ie a program block -- it will receive a clone of `config.initial_state`.
    */
   "block@setup": {
-    pointcut: (kind: BlockKind, hash: H) => boolean;
-    advice: (state: X, kind: BlockKind, hash: H) => X;
+    pointcut: (kind: ControlKind, hash: H) => boolean;
+    advice: (state: X, kind: ControlKind, hash: H) => X;
   };
   /**
    * Called before entering a program block with the headers of the program.
@@ -94,12 +94,12 @@ export type AspectTyping<H, X, V extends Valuation> = {
     advice: <K extends ClosureKind>(state: X, kind: K, hash: H) => void;
   };
   /**
-   * Called before entering a control block with the labels of the current
+   * Called before entering a segment block with the labels of the current
    * block.
    */
-  "control-block@before": {
-    pointcut: (kind: ControlKind, hash: H) => boolean;
-    advice: (state: X, kind: ControlKind, labels: Label[], hash: H) => void;
+  "segment-block@before": {
+    pointcut: (kind: SegmentKind, hash: H) => boolean;
+    advice: (state: X, kind: SegmentKind, labels: Label[], hash: H) => void;
   };
   /**
    * Called before entering any block. It provides the initial values of the
@@ -108,8 +108,8 @@ export type AspectTyping<H, X, V extends Valuation> = {
    * `undefined` or the intrinsic symbol `aran.deadzone`.
    */
   "block@declaration": {
-    pointcut: (kind: BlockKind, hash: H) => boolean;
-    advice: <K extends BlockKind>(
+    pointcut: (kind: ControlKind, hash: H) => boolean;
+    advice: <K extends ControlKind>(
       state: X,
       kind: K,
       frame: Frame<K, V["Scope"]>,
@@ -123,8 +123,8 @@ export type AspectTyping<H, X, V extends Valuation> = {
    * reasons.
    */
   "block@declaration-overwrite": {
-    pointcut: (kind: BlockKind, hash: H) => boolean;
-    advice: <K extends BlockKind>(
+    pointcut: (kind: ControlKind, hash: H) => boolean;
+    advice: <K extends ControlKind>(
       state: X,
       kind: K,
       frame: Frame<K, V["Scope"]>,
@@ -180,23 +180,23 @@ export type AspectTyping<H, X, V extends Valuation> = {
    * Called before leaving a control block. If an error was thrown or if a label
    * was broken onto, this advice will not be called.
    */
-  "control-block@after": {
-    pointcut: (kind: ControlKind, hash: H) => boolean;
-    advice: (state: X, kind: ControlKind, hash: H) => void;
+  "segment-block@after": {
+    pointcut: (kind: SegmentKind, hash: H) => boolean;
+    advice: (state: X, kind: SegmentKind, hash: H) => void;
   };
   /**
    * Called before leaving any block only if an error was thrown.
    */
   "block@throwing": {
-    pointcut: (kind: BlockKind, hash: H) => boolean;
-    advice: (state: X, kind: BlockKind, value: V["Other"], hash: H) => void;
+    pointcut: (kind: ControlKind, hash: H) => boolean;
+    advice: (state: X, kind: ControlKind, value: V["Other"], hash: H) => void;
   };
   /**
    * Called right before leaving any block regardless of how it terminated.
    */
   "block@teardown": {
-    pointcut: (kind: BlockKind, hash: H) => boolean;
-    advice: (state: X, kind: BlockKind, hash: H) => void;
+    pointcut: (kind: ControlKind, hash: H) => boolean;
+    advice: (state: X, kind: ControlKind, hash: H) => void;
   };
   /**
    * Called right before evaluating a break statement.

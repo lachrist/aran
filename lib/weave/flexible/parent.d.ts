@@ -1,5 +1,5 @@
 import type { VariableName } from "estree-sentry";
-import type { ClosureKind, ControlKind, ProgramKind } from "../parametrization";
+import type { ClosureKind, SegmentKind, ProgramKind } from "../parametrization";
 import type { Json } from "../../json";
 
 export type ProgramParent = {
@@ -14,11 +14,11 @@ export type ClosureParent = {
   kind: ClosureKind;
 };
 
-export type ControlParent = {
+export type SegmentParent = {
   type: "control";
-  kind: ControlKind;
+  kind: SegmentKind;
 };
 
 export type RoutineParent = ProgramParent | ClosureParent;
 
-export type Parent = RoutineParent | ControlParent;
+export type Parent = RoutineParent | SegmentParent;
