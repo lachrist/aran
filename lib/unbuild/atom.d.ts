@@ -1,5 +1,5 @@
-import type { Variable } from "./variable.d.ts";
-import type { Hash } from "../hash.d.ts";
+import type { Variable } from "./variable";
+import type { Hash } from "../hash";
 import type {
   Program as GenericProgram,
   ControlBlock as GenericControlBlock,
@@ -7,9 +7,9 @@ import type {
   Statement as GenericStatement,
   Effect as GenericEffect,
   Expression as GenericExpression,
-} from "../lang.js";
+} from "../lang";
 import type { SourceValue, SpecifierName } from "estree-sentry";
-import type { Brand } from "../util.js";
+import type { Brand } from "../util";
 
 export type Label = Brand<string, "unbuild.Label">;
 

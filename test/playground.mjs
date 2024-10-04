@@ -18,13 +18,11 @@ console.log(
       {
         kind: "eval",
         situ: { type: "global" },
-        path: /** @type {import("../lib").Path} */ ("$"),
-        root: /** @type {any} */ (
-          parse(code, {
-            sourceType: "script",
-            ecmaVersion: "latest",
-          })
-        ),
+        path: "main",
+        root: parse(code, {
+          sourceType: "script",
+          ecmaVersion: "latest",
+        }),
       },
       {
         mode: "normal",

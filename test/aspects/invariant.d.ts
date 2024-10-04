@@ -1,13 +1,12 @@
-// @ts-nocheck
-
 import type {
-  Label,
-  Frame as GenericFrame,
-  Variable,
-  BlockKind,
-  Path,
+  AranLabel,
+  AranVariable,
+  AranParameter,
+  ControlKind,
   ProgramKind,
 } from "../../lib";
+import { RoutineKind } from "../../lib/weave/parametrization";
+import { NodeHash } from "../262/aran/config";
 
 export type Value = { __brand: "Value" };
 
@@ -44,11 +43,13 @@ export type Arrival =
     };
 
 export type Frame = {
-  labels: Label[];
-  record: GenericFrame<Value>;
+  labels: AranLabel[];
+  record: {
+    [key in AranVariable | AranParameter]: Value;
+  };
 };
 
-export type Scope = { [key in Variable | Parameter]?: Value };
+export type Scope = { [key in AranVariable | AranParameter]?: Value };
 
 export type Transit =
   | {
@@ -78,7 +79,7 @@ export type Transit =
     }
   | {
       type: "break";
-      label: Label;
+      label: AranLabel;
     }
   | {
       type: "apply";
@@ -100,10 +101,10 @@ export type Suspension = "none" | "eval" | "yield" | "await";
 
 export type State = null | {
   parent: State;
-  kind: BlockKind;
-  path: Path;
+  kind: ProgramKind | RoutineKind | ControlKind;
+  hash: NodeHash;
   origin: Transit;
-  labeling: Label[];
+  labeling: AranLabel[];
   scope: Scope;
   stack: Value[];
   suspension: Suspension;

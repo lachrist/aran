@@ -1,20 +1,16 @@
-import type { DeepLocalSitu, IntrinsicRecord, Path } from "../../../lib";
-import { Report } from "../report";
+import type { Situ, AranIntrinsicRecord } from "../../../";
+import type { Report } from "../report";
 
-export type InstrumentLocalEvalCode = (
-  code: string,
-  path: Path,
-  situ: DeepLocalSitu,
-) => string;
+export type InstrumentLocalEvalCode = (code: string, situ: Situ) => string;
 
 export type BasicMembrane = {
-  intrinsics: IntrinsicRecord;
+  intrinsics: AranIntrinsicRecord;
   report: Report;
   instrumentLocalEvalCode: InstrumentLocalEvalCode;
 };
 
 export type WeaveMembrane = {
-  intrinsics: IntrinsicRecord;
+  intrinsics: AranIntrinsicRecord;
   report: Report;
   instrumentLocalEvalCode: InstrumentLocalEvalCode;
   apply: (function_: unknown, this_: unknown, arguments_: unknown[]) => unknown;
@@ -22,6 +18,6 @@ export type WeaveMembrane = {
 };
 
 export type PatchMembrane = {
-  intrinsics: IntrinsicRecord;
+  intrinsics: AranIntrinsicRecord;
   report: Report;
 };

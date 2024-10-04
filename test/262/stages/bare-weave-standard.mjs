@@ -8,40 +8,19 @@ import bare from "./bare.mjs";
 /**
  * @type {(
  *   membrane: import("../aran/membrane").WeaveMembrane,
- * ) => import("../../../lib").StandardAdvice<
+ * ) => import("../../../").StandardAdvice<
+ *   import("../aran/config").NodeHash,
  *   null,
  *   { Stack: unknown, Scope: unknown, Other: unknown },
  * >}
  */
 const makeAdvice = ({ instrumentLocalEvalCode, apply, construct }) => ({
-  "eval@before": (_state, situ, code, path) =>
-    typeof code === "string" ? instrumentLocalEvalCode(code, path, situ) : code,
+  "eval@before": (_state, situ, code, _path) =>
+    typeof code === "string" ? instrumentLocalEvalCode(code, situ) : code,
   "apply@around": (_state, callee, self, input, _path) =>
     apply(callee, self, input),
   "construct@around": (_state, callee, input, _path) =>
     construct(callee, input),
-  // "apply@around": (_state, callee, self, input, _path) => {
-  //   console.log("apply", { callee, self, input });
-  //   try {
-  //     const result = apply(callee, self, input);
-  //     console.log("result", { callee, self, input, result });
-  //     return result;
-  //   } catch (error) {
-  //     console.log("error", { callee, self, input, error });
-  //     throw error;
-  //   }
-  // },
-  // "construct@around": (_state, callee, input, _path) => {
-  //   console.log("apply", { callee, input });
-  //   try {
-  //     const result = construct(callee, input);
-  //     console.log("result", { callee, input, result });
-  //     return result;
-  //   } catch (error) {
-  //     console.log("error", { callee, input, error });
-  //     throw error;
-  //   }
-  // },
 });
 
 /**

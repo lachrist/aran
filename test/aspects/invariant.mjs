@@ -34,6 +34,7 @@ const isArrayValue = /** @type {any} */ (isArray);
  *   },
  *   membrane: import("../262/aran/membrane").BasicMembrane,
  * ) => import("../../lib").StandardAdvice<
+ *   import("../262/aran/config").NodeHash,
  *   import("./invariant").State,
  *   import("./invariant").Valuation,
  * >}
@@ -87,14 +88,15 @@ export const makeInvariantAdvice = (
 
   /**
    * @type {import("../../lib").StandardAdvice<
+   *   import("../262/aran/config").NodeHash,
    *   import("./invariant").State,
    *   import("./invariant").Valuation,
    * >}
    */
   const aspect = {
     // Block //
-    "block@setup": (state, kind, path) => {
-      const context = { type: "block@setup", transit, state, kind, path };
+    "block@setup": (state, kind, hash) => {
+      const context = { type: "block@setup", transit, state, kind, hash };
       // console.dir(context);
       if (isClosureKind(kind)) {
         assert(
@@ -122,7 +124,7 @@ export const makeInvariantAdvice = (
       return {
         parent: state,
         kind,
-        path,
+        hash,
         origin,
         scope: {},
         stack: [],
@@ -130,19 +132,19 @@ export const makeInvariantAdvice = (
         suspension: "none",
       };
     },
-    "control-block@before": (state, kind, labels, path) => {
+    "control-block@before": (state, kind, labels, hash) => {
       const context = {
         type: "control-block@labeling",
         transit,
         state,
         kind,
         labels,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       assert(state.kind === kind, context);
-      assert(state.path === path, context);
+      assert(state.hash === hash, context);
       // Labels comes from the target realm.
       // So it is subject to prototype polluation.
       // So `state.labeling.push(...labels)` is unsafe
@@ -151,19 +153,19 @@ export const makeInvariantAdvice = (
         state.labeling.push(labels[index]);
       }
     },
-    "block@declaration": (state, kind, frame, path) => {
+    "block@declaration": (state, kind, frame, hash) => {
       const context = {
         type: "block@declaration",
         transit,
         state,
         kind,
         frame,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       assert(state.kind === kind, context);
-      assert(state.path === path, context);
+      assert(state.hash === hash, context);
       if ("catch.error" in frame) {
         if (state.origin.type === "throw") {
           assert(
@@ -217,18 +219,18 @@ export const makeInvariantAdvice = (
       }
       assign(state.scope, frame);
     },
-    "generator-block@suspension": (state, kind, path) => {
+    "generator-block@suspension": (state, kind, hash) => {
       const context = {
         type: "generator-block@suspension",
         transit,
         state,
         kind,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       assert(state.kind === kind, context);
-      assert(state.path === path, context);
+      assert(state.hash === hash, context);
       assert(transit.type === "regular", context);
       state.suspension = "yield";
       if (state.origin.type === "apply" || state.origin.type === "construct") {
@@ -252,13 +254,13 @@ export const makeInvariantAdvice = (
         throw new UnreachableError(state.origin);
       }
     },
-    "generator-block@resumption": (state, kind, path) => {
+    "generator-block@resumption": (state, kind, hash) => {
       const context = {
         type: "generator-block@resumption",
         transit,
         state,
         kind,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
@@ -267,71 +269,71 @@ export const makeInvariantAdvice = (
       assert(transit.type === "external", context);
       transit = { type: "regular" };
     },
-    "control-block@after": (state, kind, path) => {
+    "control-block@after": (state, kind, hash) => {
       const context = {
         type: "control-block@completion",
         transit,
         state,
         kind,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       assert(state.kind === kind, context);
-      assert(state.path === path, context);
+      assert(state.hash === hash, context);
       assert(state.stack.length === 0, context);
       assert(transit.type === "regular", context);
       transit = { type: "completion" };
     },
-    "program-block@after": (state, kind, value, path) => {
+    "program-block@after": (state, kind, value, hash) => {
       const context = {
         type: "program-block@completion",
         transit,
         state,
         kind,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       assert(isIdentical(pop(state.stack, context), value), context);
       assert(state.kind === kind, context);
-      assert(state.path === path, context);
+      assert(state.hash === hash, context);
       assert(transit.type === "regular", context);
       transit = { type: "return", result: value };
       return value;
     },
-    "closure-block@after": (state, kind, value, path) => {
+    "closure-block@after": (state, kind, value, hash) => {
       const context = {
         type: "closure-block@completion",
         transit,
         state,
         kind,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       assert(isIdentical(pop(state.stack, context), value), context);
       assert(state.kind === kind, context);
-      assert(state.path === path, context);
+      assert(state.hash === hash, context);
       assert(transit.type === "regular", context);
       transit = { type: "return", result: value };
       return value;
     },
-    "block@throwing": (state, kind, value, path) => {
+    "block@throwing": (state, kind, value, hash) => {
       const context = {
         type: "block@throwing",
         transit,
         state,
         kind,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       assert(state.kind === kind, context);
-      assert(state.path === path, context);
+      assert(state.hash === hash, context);
       if (state.suspension === "none") {
         assert(
           transit.type === "throw" && isIdentical(transit.error, value),
@@ -351,12 +353,12 @@ export const makeInvariantAdvice = (
       state.stack.length = 0;
       return value;
     },
-    "block@teardown": (state, kind, path) => {
-      const context = { type: "block@teardown", transit, state, kind, path };
+    "block@teardown": (state, kind, hash) => {
+      const context = { type: "block@teardown", transit, state, kind, hash };
       // console.dir(context);
       assertNotNull(state, context);
       assert(state.kind === kind, context);
-      assert(state.path === path, context);
+      assert(state.hash === hash, context);
       assert(state.stack.length === 0, context);
       if (transit.type === "completion") {
         if (kind === "finally") {
@@ -394,7 +396,7 @@ export const makeInvariantAdvice = (
       }
     },
     // Call //
-    "apply@around": (state, callee, this_, arguments_, path) => {
+    "apply@around": (state, callee, this_, arguments_, hash) => {
       const context = {
         type: "apply@around",
         transit,
@@ -402,7 +404,7 @@ export const makeInvariantAdvice = (
         callee,
         this_,
         arguments_,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
@@ -500,14 +502,14 @@ export const makeInvariantAdvice = (
         }
       }
     },
-    "construct@around": (state, callee, arguments_, path) => {
+    "construct@around": (state, callee, arguments_, hash) => {
       const context = {
         type: "construct@before",
         transit,
         state,
         callee,
         arguments_,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
@@ -608,8 +610,8 @@ export const makeInvariantAdvice = (
       }
     },
     // Abrupt //
-    "break@before": (state, label, path) => {
-      const context = { type: "break@before", transit, state, label, path };
+    "break@before": (state, label, hash) => {
+      const context = { type: "break@before", transit, state, label, hash };
       // console.dir(context);
       assertNotNull(state, context);
       assert(transit.type === "regular", context);
@@ -619,27 +621,27 @@ export const makeInvariantAdvice = (
       };
     },
     // Produce //
-    "primitive@after": (state, value, path) => {
+    "primitive@after": (state, value, hash) => {
       const context = {
         type: "primitive@after",
         transit,
         state,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       state.stack.push(value);
       return value;
     },
-    "intrinsic@after": (state, name, value, path) => {
+    "intrinsic@after": (state, name, value, hash) => {
       const context = {
         type: "intrinsic@after",
         transit,
         state,
         name,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
@@ -654,7 +656,7 @@ export const makeInvariantAdvice = (
       state.stack.push(value);
       return value;
     },
-    "import@after": (state, specifier, source, value, path) => {
+    "import@after": (state, specifier, source, value, hash) => {
       const context = {
         type: "import@after",
         transit,
@@ -662,21 +664,21 @@ export const makeInvariantAdvice = (
         specifier,
         source,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       state.stack.push(value);
       return value;
     },
-    "read@after": (state, variable, value, path) => {
+    "read@after": (state, variable, value, hash) => {
       const context = {
         type: "read@after",
         transit,
         state,
         variable,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
@@ -695,14 +697,14 @@ export const makeInvariantAdvice = (
       }
       throw new AssertionError(context);
     },
-    "closure@after": (state, kind, value, path) => {
+    "closure@after": (state, kind, value, hash) => {
       const context = {
         type: "closure@after",
         transit,
         state,
         kind,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
@@ -712,28 +714,28 @@ export const makeInvariantAdvice = (
       return value;
     },
     // Consume //
-    "test@before": (state, kind, value, path) => {
+    "test@before": (state, kind, value, hash) => {
       const context = {
         type: "test@before",
         transit,
         state,
         kind,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       assert(isIdentical(pop(state.stack, context), value), context);
       return !!value;
     },
-    "write@before": (state, variable, value, path) => {
+    "write@before": (state, variable, value, hash) => {
       const context = {
         type: "write@before",
         transit,
         state,
         variable,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
@@ -749,36 +751,36 @@ export const makeInvariantAdvice = (
       }
       throw new AssertionError(context);
     },
-    "export@before": (state, specifier, value, path) => {
+    "export@before": (state, specifier, value, hash) => {
       const context = {
         type: "export@before",
         transit,
         state,
         specifier,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       assert(isIdentical(pop(state.stack, context), value), context);
       return value;
     },
-    "drop@before": (state, value, path) => {
-      const context = { type: "drop@before", transit, state, value, path };
+    "drop@before": (state, value, hash) => {
+      const context = { type: "drop@before", transit, state, value, hash };
       // console.dir(context);
       assertNotNull(state, context);
       assert(isIdentical(pop(state.stack, context), value), context);
       return value;
     },
     // Jump //
-    "eval@before": (state, reboot, value, path) => {
+    "eval@before": (state, reboot, value, hash) => {
       const context = {
         type: "eval@before",
         transit,
         state,
         reboot,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
@@ -788,14 +790,14 @@ export const makeInvariantAdvice = (
         state.suspension = "eval";
         assert(transit.type === "regular", context);
         transit = { type: "external" };
-        return instrumentLocalEvalCode(value, path, reboot);
+        return instrumentLocalEvalCode(value, reboot);
       } else {
         transit = { type: "eval" };
         return value;
       }
     },
-    "eval@after": (state, value, path) => {
-      const context = { type: "eval@after", transit, state, value, path };
+    "eval@after": (state, value, hash) => {
+      const context = { type: "eval@after", transit, state, value, hash };
       // console.dir(context);
       assertNotNull(state, context);
       if (transit.type === "external") {
@@ -810,8 +812,8 @@ export const makeInvariantAdvice = (
       state.stack.push(value);
       return value;
     },
-    "await@before": (state, value, path) => {
-      const context = { type: "await@before", transit, state, value, path };
+    "await@before": (state, value, hash) => {
+      const context = { type: "await@before", transit, state, value, hash };
       // console.dir(context);
       assertNotNull(state, context);
       assert(isIdentical(pop(state.stack, context), value), context);
@@ -832,8 +834,8 @@ export const makeInvariantAdvice = (
       state.suspension = "await";
       return value;
     },
-    "await@after": (state, value, path) => {
-      const context = { type: "await@after", transit, state, value, path };
+    "await@after": (state, value, hash) => {
+      const context = { type: "await@after", transit, state, value, hash };
       // console.dir(context);
       assertNotNull(state, context);
       assert(transit.type === "external", context);
@@ -843,14 +845,14 @@ export const makeInvariantAdvice = (
       state.stack.push(value);
       return value;
     },
-    "yield@before": (state, delegate, value, path) => {
+    "yield@before": (state, delegate, value, hash) => {
       const context = {
         type: "yield@before",
         transit,
         state,
         delegate,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
@@ -861,14 +863,14 @@ export const makeInvariantAdvice = (
       state.suspension = "yield";
       return value;
     },
-    "yield@after": (state, delegate, value, path) => {
+    "yield@after": (state, delegate, value, hash) => {
       const context = {
         type: "yield@after",
         transit,
         state,
         delegate,
         value,
-        path,
+        hash,
       };
       // console.dir(context);
       assertNotNull(state, context);

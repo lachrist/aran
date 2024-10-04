@@ -59,6 +59,7 @@ const push = (array, item) => {
  * @type {(
  *   membrane: import("../262/aran/membrane").BasicMembrane,
  * ) => import("../../lib").StandardAdvice<
+ *   import("../262/aran/config").NodeHash,
  *   import("./track-origin").ShadowState,
  *   import("./track-origin").Valuation,
  * >}
@@ -71,22 +72,23 @@ export const makeTrackOriginAdvice = ({
   let transit = { type: "void" };
   /**
    * @type {import("../../lib").StandardAdvice<
+   *   import("../262/aran/config").NodeHash,
    *   import("./track-origin").ShadowState,
    *   import("./track-origin").Valuation,
    * >}
    */
   return {
-    "block@setup": (state, _kind, _path) => ({
+    "block@setup": (state, _kind, _hash) => ({
       parent: state,
       frame: { __proto__: null },
       stack: [],
     }),
-    "block@declaration": (state, _kind, frame, path) => {
+    "block@declaration": (state, _kind, frame, hash) => {
       for (const key in frame) {
         state.frame[/** @type {import("./track-origin").Key} */ (key)] = {
           type: "initial",
           variable: /** @type {import("./track-origin").Key} */ (key),
-          path,
+          hash,
         };
       }
       if (
@@ -105,21 +107,21 @@ export const makeTrackOriginAdvice = ({
         state.frame["function.arguments"] = {
           type: "arguments",
           values: transit.shadow.arguments,
-          path,
+          hash,
         };
       }
       return frame;
     },
-    "program-block@after": (state, _kind, value, _path) => {
+    "program-block@after": (state, _kind, value, _hash) => {
       transit = { type: "return", source: value, shadow: pop(state.stack) };
       return value;
     },
-    "closure-block@after": (state, _kind, value, _path) => {
+    "closure-block@after": (state, _kind, value, _hash) => {
       transit = { type: "return", source: value, shadow: pop(state.stack) };
       return value;
     },
     // Call //
-    "apply@around": (state, function_, this_, arguments_, path) => {
+    "apply@around": (state, function_, this_, arguments_, hash) => {
       const shadow_argument_array = [];
       for (let index = arguments_.length - 1; index >= 0; index -= 1) {
         shadow_argument_array[index] = pop(state.stack);
@@ -154,12 +156,12 @@ export const makeTrackOriginAdvice = ({
           function: shadow_function,
           this: shadow_this,
           arguments: shadow_argument_array,
-          path,
+          hash,
         });
       }
       return result;
     },
-    "construct@around": (state, function_, arguments_, path) => {
+    "construct@around": (state, function_, arguments_, hash) => {
       const shadow_argument_array = [];
       for (let index = arguments_.length - 1; index >= 0; index -= 1) {
         shadow_argument_array[index] = pop(state.stack);
@@ -189,37 +191,37 @@ export const makeTrackOriginAdvice = ({
           type: "construct",
           function: shadow_function,
           arguments: shadow_argument_array,
-          path,
+          hash,
         });
       }
       return result;
     },
-    "primitive@after": (state, value, path) => {
+    "primitive@after": (state, value, hash) => {
       push(state.stack, {
         type: "primitive",
         value: typeof value === "bigint" ? { bigint: String(value) } : value,
-        path,
+        hash,
       });
       return value;
     },
-    "intrinsic@after": (state, name, value, path) => {
+    "intrinsic@after": (state, name, value, hash) => {
       push(state.stack, {
         type: "intrinsic",
         name,
-        path,
+        hash,
       });
       return value;
     },
-    "import@after": (state, source, specifier, value, path) => {
+    "import@after": (state, source, specifier, value, hash) => {
       push(state.stack, {
         type: "import",
         source,
         specifier,
-        path,
+        hash,
       });
       return value;
     },
-    "read@after": (state, variable, value, _path) => {
+    "read@after": (state, variable, value, _hash) => {
       /** @type {import("./track-origin").ShadowState | null} */
       let current = state;
       while (current !== null) {
@@ -231,20 +233,20 @@ export const makeTrackOriginAdvice = ({
       }
       throw new AranExecError("missing variable");
     },
-    "closure@after": (state, kind, value, path) => {
+    "closure@after": (state, kind, value, hash) => {
       push(state.stack, {
         type: "closure",
         kind,
-        path,
+        hash,
       });
       return value;
     },
     // Consume //
-    "test@before": (state, _kind, value, _path) => {
+    "test@before": (state, _kind, value, _hash) => {
       pop(state.stack);
       return !!value;
     },
-    "write@before": (state, variable, value, _path) => {
+    "write@before": (state, variable, value, _hash) => {
       /** @type {import("./track-origin").ShadowState | null} */
       let current = state;
       while (current !== null) {
@@ -256,25 +258,25 @@ export const makeTrackOriginAdvice = ({
       }
       throw new AranExecError("missing variable");
     },
-    "export@before": (state, _specifier, value, _path) => {
+    "export@before": (state, _specifier, value, _hash) => {
       pop(state.stack);
       return value;
     },
-    "drop@before": (state, value, _path) => {
+    "drop@before": (state, value, _hash) => {
       pop(state.stack);
       return value;
     },
     // Jump //
-    "eval@before": (state, reboot, value, path) => {
+    "eval@before": (state, reboot, value, _hash) => {
       if (typeof value === "string") {
         pop(state.stack);
-        return instrumentLocalEvalCode(value, path, reboot);
+        return instrumentLocalEvalCode(value, reboot);
       } else {
         transit = { type: "return", source: value, shadow: pop(state.stack) };
         return value;
       }
     },
-    "eval@after": (state, value, _path) => {
+    "eval@after": (state, value, _hash) => {
       if (transit.type === "return" && isSame(value, transit.source)) {
         push(state.stack, transit.shadow);
       } else {
@@ -282,25 +284,25 @@ export const makeTrackOriginAdvice = ({
       }
       return value;
     },
-    "await@before": (state, value, _path) => {
+    "await@before": (state, value, _hash) => {
       pop(state.stack);
       return value;
     },
-    "await@after": (state, value, path) => {
+    "await@after": (state, value, hash) => {
       push(state.stack, {
         type: "resolve",
-        path,
+        hash,
       });
       return value;
     },
-    "yield@before": (state, _delegate, value, _path) => {
+    "yield@before": (state, _delegate, value, _hash) => {
       pop(state.stack);
       return value;
     },
-    "yield@after": (state, _delegate, value, path) => {
+    "yield@after": (state, _delegate, value, hash) => {
       push(state.stack, {
         type: "resume",
-        path,
+        hash,
       });
       return value;
     },

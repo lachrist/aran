@@ -4,6 +4,8 @@ import { inspectErrorName, serializeError } from "../error-serial.mjs";
 
 const {
   undefined,
+  String,
+  Reflect: { defineProperty },
   Object: { hasOwn, values: listValue },
   Array: { isArray },
 } = globalThis;
@@ -13,7 +15,7 @@ const {
  *   kind: "script" | "module" | "eval",
  *   code: string
  * ) => import("../outcome").Outcome<
- *   import("../../../lib").EstreeProgram,
+ *   import("../../../").Program,
  *   import("../error-serial").ErrorSerial
  * >}
  */
@@ -21,13 +23,11 @@ export const parseGlobal = (kind, code) => {
   try {
     return {
       type: "success",
-      data: /** @type {any} */ (
-        parseAcorn(code, {
-          ecmaVersion: "latest",
-          sourceType: kind === "eval" ? "script" : kind,
-          checkPrivateFields: false,
-        })
-      ),
+      data: parseAcorn(code, {
+        ecmaVersion: "latest",
+        sourceType: kind === "eval" ? "script" : kind,
+        checkPrivateFields: false,
+      }),
     };
   } catch (error) {
     if (inspectErrorName(error) === "SyntaxError") {
@@ -46,7 +46,7 @@ export const parseGlobal = (kind, code) => {
  *   kind: "eval",
  *   code: string,
  * ) => import("../outcome").Outcome<
- *   import("../../../lib").EstreeProgram,
+ *   import("../../../").Program,
  *   import("../error-serial").ErrorSerial
  * >}
  */
@@ -54,20 +54,18 @@ const parseAcornLocal = (_kind, code) => {
   try {
     return {
       type: "success",
-      data: /** @type {any} */ (
-        parseAcorn(code, {
-          ecmaVersion: "latest",
-          sourceType: "script",
-          onInsertedSemicolon: /** @type {any} */ (undefined),
-          onTrailingComma: /** @type {any} */ (undefined),
-          allowReturnOutsideFunction: false,
-          allowImportExportEverywhere: true,
-          allowAwaitOutsideFunction: true,
-          allowSuperOutsideMethod: true,
-          allowHashBang: true,
-          checkPrivateFields: false,
-        })
-      ),
+      data: parseAcorn(code, {
+        ecmaVersion: "latest",
+        sourceType: "script",
+        onInsertedSemicolon: /** @type {any} */ (undefined),
+        onTrailingComma: /** @type {any} */ (undefined),
+        allowReturnOutsideFunction: false,
+        allowImportExportEverywhere: true,
+        allowAwaitOutsideFunction: true,
+        allowSuperOutsideMethod: true,
+        allowHashBang: true,
+        checkPrivateFields: false,
+      }),
     };
   } catch (error) {
     if (inspectErrorName(error) === "SyntaxError") {
@@ -83,41 +81,47 @@ const parseAcornLocal = (_kind, code) => {
 
 /**
  * @type {(
- *   node: unknown,
- * ) => import("../../../lib").EstreeProgram}
+ *   root: import("../../../").Program,
+ * ) => import("../../../").Program}
  */
 const sanitizeBabel = (root) => {
+  /** @type {object[]} */
   const todo = [root];
   let length = 1;
   while (length > 0) {
     length -= 1;
     const node = todo[length];
-    if (typeof node === "object" && node !== null && hasOwn(node, "type")) {
-      const cast = /**
-       * @type {{
-       *   type: string,
-       *   name: string,
-       *   id: string
-       * }}
-       */ (node);
-      if (cast.type === "PrivateName") {
-        cast.type = "PrivateIdentifier";
-        cast.name = cast.id;
-      }
-      for (const child of listValue(node)) {
-        todo[length] = child;
-        length += 1;
-      }
-    } else if (isArray(node)) {
+    if (isArray(node)) {
       for (const child of node) {
         todo[length] = child;
         length += 1;
       }
     } else {
-      // noop
+      if (
+        hasOwn(node, "type") &&
+        "type" in node &&
+        node.type === "PrivateName" &&
+        "id" in node
+      ) {
+        node.type = "PrivateIdentifier";
+        defineProperty(node, "name", {
+          // @ts-ignore
+          __proto__: null,
+          value: String(node.id),
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
+      }
+      for (const child of listValue(node)) {
+        if (child != null && typeof child === "object") {
+          todo[length] = child;
+          length += 1;
+        }
+      }
     }
   }
-  return /** @type {import("../../../lib").EstreeProgram} */ (root);
+  return root;
 };
 
 /**
@@ -125,7 +129,7 @@ const sanitizeBabel = (root) => {
  *   kind: "eval",
  *   code: string,
  * ) => import("../outcome").Outcome<
- *   import("../../../lib").EstreeProgram,
+ *   import("../../../").Program,
  *   import("../error-serial").ErrorSerial
  * >}
  */
@@ -173,7 +177,7 @@ const parseBabelLocal = (_kind, code) => {
  *   kind: "eval",
  *   code: string,
  * ) => import("../outcome").Outcome<
- *   import("../../../lib").EstreeProgram,
+ *   import("../../../").Program,
  *   import("../error-serial").ErrorSerial
  * >}
  */

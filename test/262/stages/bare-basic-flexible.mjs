@@ -9,20 +9,19 @@ import bare from "./bare.mjs";
 /**
  * @type {(
  *   membrane: import("../aran/membrane").BasicMembrane,
- * ) => import("../../../lib").HomogeneousFlexibleAspect<
+ * ) => import("../../../").HomogeneousFlexibleAspect<
+ *   import("../aran/config").NodeHash,
  *   null,
  *   unknown,
- *   [import("../../../lib").Path],
+ *   [],
  * >}
  */
 const makeAspect = ({ instrumentLocalEvalCode }) => ({
   _ARAN_EVAL_BEFORE_: {
     kind: "eval@before",
-    pointcut: ({ tag: path }) => [path],
-    advice: (_state, code, situ, path) =>
-      typeof code === "string"
-        ? instrumentLocalEvalCode(code, path, situ)
-        : code,
+    pointcut: (_node, _parent, _root) => [],
+    advice: (_state, code, situ) =>
+      typeof code === "string" ? instrumentLocalEvalCode(code, situ) : code,
   },
 });
 

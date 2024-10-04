@@ -8,14 +8,15 @@ import bare from "./bare.mjs";
 /**
  * @type {(
  *   membrane: import("../aran/membrane").BasicMembrane,
- * ) => import("../../../lib").StandardAdvice<
+ * ) => import("../../../").StandardAdvice<
+ *   import("../aran/config").NodeHash,
  *   null,
  *   { Stack: unknown, Scope: unknown, Other: unknown },
  * >}
  */
 const makeAdvice = ({ instrumentLocalEvalCode }) => ({
-  "eval@before": (_state, situ, code, path) =>
-    typeof code === "string" ? instrumentLocalEvalCode(code, path, situ) : code,
+  "eval@before": (_state, situ, code, _hash) =>
+    typeof code === "string" ? instrumentLocalEvalCode(code, situ) : code,
 });
 
 /**

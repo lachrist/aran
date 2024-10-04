@@ -1,15 +1,14 @@
 import type {
-  Variable,
-  Parameter,
-  Path,
-  Intrinsic,
-  EstreeSpecifier,
-  EstreeSource,
+  AranVariable,
+  AranParameter,
+  AranIntrinsicName,
+  AranSource,
+  AranSpecifier,
   ClosureKind,
-} from "../../lib";
-export type { Kind } from "../../lib/weave/standard/aspect";
+} from "../../";
+import type { NodeHash } from "../262/aran/config";
 
-export type Key = Variable | Parameter;
+export type Key = AranVariable | AranParameter;
 
 export type Transit =
   | { type: "void" }
@@ -47,54 +46,54 @@ export type ShadowValue =
   | {
       type: "arguments";
       values: ShadowValue[];
-      path: Path;
+      hash: NodeHash;
     }
   | {
       type: "primitive";
       value: number | string | boolean | null | { bigint: string };
-      path: Path;
+      hash: NodeHash;
     }
   | {
       type: "closure";
       kind: ClosureKind;
-      path: Path;
+      hash: NodeHash;
     }
   | {
       type: "intrinsic";
-      name: Intrinsic;
-      path: Path;
+      name: AranIntrinsicName;
+      hash: NodeHash;
     }
   | {
       type: "initial";
       variable: Key;
-      path: Path;
+      hash: NodeHash;
     }
   | {
       type: "import";
-      source: EstreeSource;
-      specifier: EstreeSpecifier | null;
-      path: Path;
+      source: AranSource;
+      specifier: AranSpecifier | null;
+      hash: NodeHash;
     }
   | {
       type: "apply";
       function: ShadowValue;
       this: ShadowValue;
       arguments: ShadowValue[];
-      path: Path;
+      hash: NodeHash;
     }
   | {
       type: "construct";
       function: ShadowValue;
       arguments: ShadowValue[];
-      path: Path;
+      hash: NodeHash;
     }
   | {
       type: "resolve";
-      path: Path;
+      hash: NodeHash;
     }
   | {
       type: "resume";
-      path: Path;
+      hash: NodeHash;
     };
 
 export type Value = unknown & { __brand: "Value" };
@@ -106,7 +105,7 @@ export type Valuation = {
 };
 
 export type ShadowFrame = {
-  [key in Variable | Parameter]?: ShadowValue;
+  [key in Key]?: ShadowValue;
 };
 
 export type ShadowState = {

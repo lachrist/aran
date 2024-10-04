@@ -11,6 +11,7 @@
     "/lib/**/*.d.ts"
   ],
   "main": "lib/index.mjs",
+  "types": "lib/index.d.ts",
   "type": "module",
   "repository": "lachrist/aran",
   "homepage": "http://github.com/lachrist/aran",
@@ -18,7 +19,7 @@
   "scripts": {
     "lint": "npx tsc && npx prettier -c '**/*.(mjs|d.ts)' && npx eslint 'lint/**/*.mjs' 'test/**/*.mjs' 'lib/**/*.mjs'",
     "format": "npx prettier -w '**/*.(mjs|d.ts)'",
-    "document": "npx typedoc ; open page/typedoc/index.html",
+    "document": "npx typedoc && open page/typedoc/index.html",
     "page": "sh page.sh",
     "load262": "git clone --filter=tree:0 https://github.com/tc39/test262 test/262/test262",
     "exec262": "node --experimental-vm-modules --expose-gc test/262/exec.mjs",

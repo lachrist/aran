@@ -9,7 +9,8 @@ const { undefined } = globalThis;
 /**
  * @type {(
  *   membrane: import("../aran/membrane").BasicMembrane,
- * ) => import("../../../lib").StandardAdvice<
+ * ) => import("../../../").StandardAdvice<
+ *   import("../aran/config").NodeHash,
  *   null,
  *   { Stack: unknown, Scope: unknown, Other: unknown },
  * >}
@@ -35,8 +36,8 @@ const makeAdvice = ({ intrinsics, instrumentLocalEvalCode }) => ({
   "import@after": (_state, _source, _specifier, value, _path) => value,
   "closure@after": (_state, _kind, value, _path) => value,
   "read@after": (_state, _variable, value, _path) => value,
-  "eval@before": (_state, situ, code, path) =>
-    typeof code === "string" ? instrumentLocalEvalCode(code, path, situ) : code,
+  "eval@before": (_state, situ, code, _path) =>
+    typeof code === "string" ? instrumentLocalEvalCode(code, situ) : code,
   "eval@after": (_state, value, _path) => value,
   "await@before": (_state, value, _path) => value,
   "await@after": (_state, value, _path) => value,

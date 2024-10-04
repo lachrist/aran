@@ -10,8 +10,10 @@ import {
   inspectErrorName,
   inspectErrorStack,
 } from "../error-serial.mjs";
+import { sign } from "./sign.mjs";
 
 const {
+  JSON: { stringify },
   Error,
   undefined,
   String,
@@ -24,7 +26,7 @@ const {
 export const DUMMY_BASIC_MEMBRANE = {
   intrinsics: /** @type {any} */ ({}),
   report: (_name, message) => new Error(message),
-  instrumentLocalEvalCode: (code, _path, _situ) => code,
+  instrumentLocalEvalCode: (code, _situ) => code,
 };
 
 /**
@@ -33,7 +35,7 @@ export const DUMMY_BASIC_MEMBRANE = {
 export const DUMMY_WEAVE_MEMBRANE = {
   intrinsics: /** @type {any} */ ({}),
   report: (_name, message) => new Error(message),
-  instrumentLocalEvalCode: (code, _path, _situ) => code,
+  instrumentLocalEvalCode: (code, _situ) => code,
   apply: () => undefined,
   construct: () => undefined,
 };
@@ -46,22 +48,13 @@ export const DUMMY_PATCH_MEMBRANE = {
   report: (_name, message) => new Error(message),
 };
 
-const ROOT_PATH = /** @type {import("../../../lib").Path} */ ("$");
+const GLOBAL_VARIABLE = "globalThis";
 
-const GLOBAL_VARIABLE = /** @type {import("../../../lib").EstreeVariable} */ (
-  "globalThis"
-);
+const ADVICE_VARIABLE = "_ARAN_ADVICE_";
 
-const ADVICE_VARIABLE = /** @type {import("../../../lib").EstreeVariable} */ (
-  "_ARAN_ADVICE_"
-);
+const INTRINSIC_VARIABLE = "_ARAN_INTRINSIC_";
 
-const INTRINSIC_VARIABLE =
-  /** @type {import("../../../lib").EstreeVariable} */ ("_ARAN_INTRINSIC_");
-
-const ESCAPE_PREFIX = /** @type {import("../../../lib").EstreeVariable} */ (
-  "_ARAN_ESCAPE_"
-);
+const ESCAPE_PREFIX = "_ARAN_ESCAPE_";
 
 const SETUP = generate(
   generateAranSetup({
@@ -82,11 +75,16 @@ const compileFunctionCode = (args) =>
 
 /**
  * @type {<
- *   S extends import("../../../lib").Json,
- *   V extends import("../../../lib").StandardValuation,
+ *   S extends import("../../../").Json,
+ *   V extends {
+ *     Scope: unknown,
+ *     Stack: unknown,
+ *     Other: unknown,
+ *   },
  * >(
  *   context: import("node:vm").Context,
- *   advice: import("../../../lib").StandardAdvice<
+ *   advice: import("../../../").StandardAdvice<
+ *     import("./config").NodeHash,
  *     S,
  *     V,
  *   >,
@@ -97,9 +95,10 @@ export const setupStandardAdvice = (context, advice) => {
 };
 
 /**
- * @type {<S extends import("../../../lib").Json, V>(
+ * @type {<S extends import("../../../").Json, V>(
  *   context: import("node:vm").Context,
- *   advice: import("../../../lib").FlexibleAspect<
+ *   advice: import("../../../").FlexibleAspect<
+ *     import("./config").NodeHash,
  *     S,
  *     V,
  *   >,
@@ -118,7 +117,7 @@ export const setupFlexibleAspect = (context, aspect) => {
  * ) => import("./membrane").WeaveMembrane}
  */
 export const setupAranWeave = (context) => {
-  /** @type {import("../../../lib").IntrinsicRecord} */
+  /** @type {import("../../../").AranIntrinsicRecord} */
   const intrinsics = runInContext(SETUP, context);
   const global = intrinsics["aran.global"];
   const {
@@ -133,8 +132,7 @@ export const setupAranWeave = (context) => {
   return {
     intrinsics,
     report: $262.aran.report,
-    instrumentLocalEvalCode: (code, path, situ) =>
-      instrumentEvalCode(code, { path, situ }),
+    instrumentLocalEvalCode: instrumentEvalCode,
     apply: (callee, self, input) => {
       if (callee === evalGlobal) {
         if (input.length === 0) {
@@ -179,7 +177,7 @@ export const setupAranPatch = (context) => {
   // Setup must be ran before patching because
   // it relies on eval to be the actual eval
   // intrinsic value.
-  /** @type {import("../../../lib").IntrinsicRecord} */
+  /** @type {import("../../../").AranIntrinsicRecord} */
   const intrinsics = runInContext(SETUP, context);
   const global = intrinsics["aran.global"];
   const $262 = /** /** @type {{$262: import("../test262").$262}} */ (
@@ -293,6 +291,15 @@ const wrap = (callee) => {
 };
 
 /**
+ * @type {import("../../../").Digest<
+ *   import("./config").FilePath,
+ *   import("./config").NodeHash,
+ * >}
+ */
+export const digest = (_node, node_path, file_path, _kind) =>
+  /** @type {import("./config").NodeHash} */ (`${file_path}:${node_path}`);
+
+/**
  * @type {(
  *   source: import("../source").Source,
  *   config: import("./config").Config,
@@ -316,8 +323,13 @@ export const instrument = (
     if (parse_outcome.type === "failure") {
       return parse_outcome;
     }
-    /** @type {import("../../../lib").Config} */
-    const complete_config = {
+    /**
+     * @type {import("../../../").Conf<
+     *   import("./config").FilePath,
+     *   import("./config").NodeHash,
+     * >}
+     */
+    const conf = {
       mode: "normal",
       standard_pointcut,
       flexible_pointcut,
@@ -327,42 +339,27 @@ export const instrument = (
       intrinsic_variable: INTRINSIC_VARIABLE,
       escape_prefix: ESCAPE_PREFIX,
       advice_variable: ADVICE_VARIABLE,
+      digest,
     };
-    const instrument_outcome = wrap(() =>
-      instrumentAran(
-        {
-          kind: source.kind,
-          situ:
-            source.context === null
-              ? { type: "global" }
-              : /** @type {{situ: import("../../../lib").DeepLocalSitu}} */ (
-                  source.context
-                ).situ,
-          path:
-            source.context === null
-              ? ROOT_PATH
-              : /** @type {{path: import("../../../lib/guard/syntax/path").Path}} */ (
-                  source.context
-                ).path,
-          root: parse_outcome.data,
-        },
-        complete_config,
+    /**
+     * @type {import("../../../").File<
+     *   import("./config").FilePath,
+     * >}
+     */
+    const file = {
+      kind: source.kind,
+      situ:
+        source.context === null
+          ? { type: "global" }
+          : /** @type {import("../../../").Situ} */ (source.context),
+      path: /** @type {import("./config").FilePath} */ (
+        source.path === null ? String(sign(stringify(source))) : source.path
       ),
-    );
+      root: parse_outcome.data,
+    };
+    const instrument_outcome = wrap(() => instrumentAran(file, conf));
     if (instrument_outcome.type === "failure") {
       return instrument_outcome;
-    }
-    for (const warning of instrument_outcome.data._aran_warning_array) {
-      if (warning.name === "MissingEvalAdvice") {
-        return {
-          type: "failure",
-          data: {
-            name: "AranEvalError",
-            message: "eval@before is required to support direct eval call",
-            stack: null,
-          },
-        };
-      }
     }
     return {
       type: "success",

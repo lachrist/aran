@@ -1,5 +1,5 @@
 {
-  "entryPoints": ["lib/index.mjs", "lib/**/*.d.ts"],
+  "entryPoints": ["lib/**/*.d.ts"],
   "sort": ["source-order"],
   "githubPages": true,
   "readme": "none",
