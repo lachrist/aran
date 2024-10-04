@@ -216,6 +216,8 @@ export type File<P> = {
 };
 
 /**
+ * Hashing function for estree nodes.
+ * @template P The type of `file.path`.
  * @template H
  * The type of the hash. Either a string or a number. Can be branded -- eg:
  * `string & { __brand: "hash" }`.
@@ -321,6 +323,10 @@ export type Conf<P, H extends string | number> = {
    * @defaultValue `"_aran_"`
    */
   escape_prefix: string;
+  /**
+   * Hashing functions for nodes in `file.root`.
+   * @defaultValue `(node, node_path, file_path, node_kind) => file_path + "#" + node_path`
+   */
   digest: Digest<P, H>;
 };
 
