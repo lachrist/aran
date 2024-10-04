@@ -2,7 +2,7 @@ import type { Variable } from "./variable";
 import type { Hash } from "../hash";
 import type {
   Program as GenericProgram,
-  ControlBlock as GenericControlBlock,
+  SegmentBlock as GenericSegmentBlock,
   RoutineBlock as GenericRoutineBlock,
   Statement as GenericStatement,
   Effect as GenericEffect,
@@ -23,7 +23,7 @@ export type Atom = {
 
 export type Program = GenericProgram<Atom>;
 
-export type ControlBlock = GenericControlBlock<Atom>;
+export type SegmentBlock = GenericSegmentBlock<Atom>;
 
 export type RoutineBlock = GenericRoutineBlock<Atom>;
 

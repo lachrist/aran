@@ -227,8 +227,8 @@ export type Program<A extends Atom> =
 // Block //
 ///////////
 
-export type ControlBlock<A extends Atom> = {
-  type: "ControlBlock";
+export type SegmentBlock<A extends Atom> = {
+  type: "SegmentBlock";
   labels: A["Label"][];
   bindings: [A["Variable"], Intrinsic][];
   body: Statement<A>[];
@@ -269,27 +269,27 @@ export type Statement<A extends Atom> =
     }
   | {
       type: "BlockStatement";
-      body: ControlBlock<A>;
+      body: SegmentBlock<A>;
       tag: A["Tag"];
     }
   | {
       type: "IfStatement";
       test: Expression<A>;
-      then: ControlBlock<A>;
-      else: ControlBlock<A>;
+      then: SegmentBlock<A>;
+      else: SegmentBlock<A>;
       tag: A["Tag"];
     }
   | {
       type: "WhileStatement";
       test: Expression<A>;
-      body: ControlBlock<A>;
+      body: SegmentBlock<A>;
       tag: A["Tag"];
     }
   | {
       type: "TryStatement";
-      try: ControlBlock<A>;
-      catch: ControlBlock<A>;
-      finally: ControlBlock<A>;
+      try: SegmentBlock<A>;
+      catch: SegmentBlock<A>;
+      finally: SegmentBlock<A>;
       tag: A["Tag"];
     };
 
@@ -403,7 +403,7 @@ export type Expression<A extends Atom> =
 
 export type Node<A extends Atom> =
   | Program<A>
-  | ControlBlock<A>
+  | SegmentBlock<A>
   | RoutineBlock<A>
   | Statement<A>
   | Effect<A>

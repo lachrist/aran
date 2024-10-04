@@ -2,7 +2,7 @@ import type { Brand } from "../util";
 import type {
   Node as GenericNode,
   Program as GenericProgram,
-  ControlBlock as GenericControlBlock,
+  SegmentBlock as GenericSegmentBlock,
   RoutineBlock as GenericRoutineBlock,
   Statement as GenericStatement,
   Effect as GenericEffect,
@@ -28,7 +28,7 @@ export type Program = GenericProgram<Atom>;
 
 export type RoutineBlock = GenericRoutineBlock<Atom>;
 
-export type ControlBlock = GenericControlBlock<Atom>;
+export type SegmentBlock = GenericSegmentBlock<Atom>;
 
 export type Statement = GenericStatement<Atom>;
 

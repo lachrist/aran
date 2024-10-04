@@ -4,7 +4,7 @@ import type {
   ArgVariable as Variable,
   GenNode as Node,
   GenProgram as Program,
-  GenControlBlock as ControlBlock,
+  GenSegmentBlock as SegmentBlock,
   GenRoutineBlock as RoutineBlock,
   GenStatement as Statement,
   GenEffect as Effect,
@@ -19,7 +19,7 @@ export {
   Variable,
   Node,
   Program,
-  ControlBlock,
+  SegmentBlock,
   RoutineBlock,
   Statement,
   Effect,
@@ -28,7 +28,7 @@ export {
 
 export type GlobalAdviceVariable = string;
 
-export type Block<hash> = ControlBlock<hash> | RoutineBlock<hash>;
+export type Block<hash> = SegmentBlock<hash> | RoutineBlock<hash>;
 
 export type GenericPointcut<
   hash,
@@ -84,7 +84,7 @@ export type AspectTyping<hash, state, value, point extends Json[]> = {
     advice: (state: state, value: value, ...point: point) => value;
   };
   "segment-block@after": {
-    pointcut: GenericPointcut<hash, point, ControlBlock<hash>>;
+    pointcut: GenericPointcut<hash, point, SegmentBlock<hash>>;
     advice: (state: state, ...point: point) => void;
   };
   "block@throwing": {

@@ -6,7 +6,7 @@ import type {
   Statement,
   Effect,
   Expression,
-  ControlBlock,
+  SegmentBlock,
   RoutineBlock,
 } from "../lang";
 import type { Hash } from "../hash";
@@ -45,9 +45,9 @@ export type ArgProgram = Program<ArgAtom<Hash>>;
 export type ResProgram = Program<ResAtom>;
 export type GenProgram<H> = Program<ArgAtom<H>>;
 
-export type ArgControlBlock = ControlBlock<ArgAtom<Hash>>;
-export type ResControlBlock = ControlBlock<ResAtom>;
-export type GenControlBlock<H> = ControlBlock<ArgAtom<H>>;
+export type ArgSegmentBlock = SegmentBlock<ArgAtom<Hash>>;
+export type ResSegmentBlock = SegmentBlock<ResAtom>;
+export type GenSegmentBlock<H> = SegmentBlock<ArgAtom<H>>;
 
 export type ArgRoutineBlock = RoutineBlock<ArgAtom<Hash>>;
 export type ResRoutineBlock = RoutineBlock<ResAtom>;

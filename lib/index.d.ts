@@ -54,7 +54,7 @@ export type {
   Label as AranLabel,
   GenNode as AranNode,
   GenProgram as AranProgram,
-  GenControlBlock as AranControlBlock,
+  GenSegmentBlock as AranSegmentBlock,
   GenRoutineBlock as AranRoutineBlock,
   GenStatement as AranStatement,
   GenEffect as AranEffect,

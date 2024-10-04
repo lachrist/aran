@@ -15,7 +15,7 @@ export type ClosureParent = {
 };
 
 export type SegmentParent = {
-  type: "control";
+  type: "segment";
   kind: SegmentKind;
 };
 

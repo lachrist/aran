@@ -1,5 +1,5 @@
 import type {
-  ArgControlBlock,
+  ArgSegmentBlock,
   ArgEffect,
   ArgExpression,
   ArgNode,
@@ -20,9 +20,9 @@ export type Target<O extends ArgNode> = {
 
 export type RoutineBlockTarget = Target<ArgRoutineBlock>;
 
-export type ControlBlockTarget = Target<ArgControlBlock>;
+export type SegmentBlockTarget = Target<ArgSegmentBlock>;
 
-export type BlockTarget = RoutineBlockTarget | ControlBlockTarget;
+export type BlockTarget = RoutineBlockTarget | SegmentBlockTarget;
 
 export type StatementTarget = Target<ArgStatement>;
 
