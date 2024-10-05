@@ -63,6 +63,6 @@
     "yaml": "^2.3.2"
   },
   "dependencies": {
-    "estree-sentry": "^0.3.0"
+    "estree-sentry": "^0.4.1"
   }
 }
