@@ -1,13 +1,39 @@
+import type {
+  AnonymousFunctionDeclaration,
+  ExportDefaultDeclaration,
+  ExportNamedDeclaration,
+  FunctionDeclaration,
+} from "estree-sentry";
 import type { Hash } from "../../hash";
-import type { Tree } from "../../util/tree";
+import type { ArrayTree } from "../../util/tree";
 import type { VariableName } from "estree-sentry";
 
-type Frame = { [key in VariableName]: "live" | "dead" };
+export type BroadFunctionDeclaration<X> =
+  | FunctionDeclaration<X>
+  | AnonymousFunctionDeclaration<X>
+  | (ExportDefaultDeclaration<X> & { declaration: FunctionDeclaration<X> })
+  | (ExportNamedDeclaration<X> & { declaration: FunctionDeclaration<X> });
 
-type Bound = "declaration" | "expression";
+export type Zone = "live" | "dead" | "schrodinger";
 
-type Scope = (Frame | Bound)[];
+type ScopeBinding =
+  | "closure"
+  | {
+      variable: VariableName;
+      baseline: Zone;
+    };
 
-type Status = "live" | "dead" | "schrodinger";
+export type Closure = "none" | "function-declaration" | "function-expression";
 
-type Deadzone = Tree<[Hash, Status]>;
+export type Scope = ArrayTree<ScopeBinding>;
+
+export type DeadzoneBinding = {
+  hash: Hash;
+  status: "live" | "dead" | "schrodinger";
+};
+
+export type RawDeadzone = ArrayTree<DeadzoneBinding>;
+
+export type Deadzone = {
+  [key in Hash]?: Zone;
+};

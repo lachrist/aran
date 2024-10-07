@@ -1,2 +1,1 @@
 bare-basic-standard
-36256 language/expressions/optional-chaining/call-expression.js

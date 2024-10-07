@@ -1,3 +1,5 @@
+export type ArrayTree<X> = X | ArrayTree<X>[];
+
 export type TreeType = "x" | "X" | "t" | "T";
 
 export type TreeNode<X> = X | X[] | Tree<X> | Tree<X>[];
@@ -17,6 +19,7 @@ export type Tree<X> =
   | ["Tt", Tree<X>[], Tree<X>]
   | ["tt", Tree<X>, Tree<X>]
   | ["tT", Tree<X>, Tree<X>[]]
+  | ["xt", X, Tree<X>]
   // 3 //
   | ["ttt", Tree<X>, Tree<X>, Tree<X>]
   | ["tTT", Tree<X>, Tree<X>[], Tree<X>[]]

@@ -1,7 +1,9 @@
-import type { Hash } from "../../hash";
-import type { Binding } from "./hoisting-public";
+import type { Completion } from "./completion";
+import type { Deadzone } from "./deadzone";
+import type { Hoisting } from "./hoisting-public";
 
 export type Annotation = {
-  completion: { [key in Hash]?: null };
-  hoisting: { [key in Hash]?: Binding[] };
+  hoisting: Hoisting;
+  deadzone: Deadzone;
+  completion: Completion;
 };
