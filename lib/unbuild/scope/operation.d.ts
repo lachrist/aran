@@ -5,6 +5,7 @@ import type { Effect, Expression } from "../atom";
 import type { Meta } from "../meta";
 import type { BodyPrelude } from "../prelude";
 import type { ConstantMetaVariable } from "../variable";
+// import type { Zone } from "../annotation/deadzone";
 
 export { RootFrame } from "./root";
 
@@ -32,6 +33,7 @@ export type WriteOperation = {
   mode: Mode;
   variable: VariableName;
   right: Expression;
+  // deadzone: Zone;
 };
 
 export type WriteSloppyFunctionOperation = {
@@ -39,18 +41,21 @@ export type WriteSloppyFunctionOperation = {
   mode: "sloppy";
   variable: VariableName;
   right: null | ConstantMetaVariable;
+  // deadzone: Zone;
 };
 
 export type ReadOperation = {
   type: "read";
   mode: Mode;
   variable: VariableName;
+  // deadzone: Zone;
 };
 
 export type TypeofOperation = {
   type: "typeof";
   mode: Mode;
   variable: VariableName;
+  // deadzone: Zone;
 };
 
 export type DiscardOperation = {

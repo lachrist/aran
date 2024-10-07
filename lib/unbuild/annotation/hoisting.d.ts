@@ -3,10 +3,14 @@ import type { Hash } from "../../hash";
 
 export type SloppyFunction = "nope" | "near" | "away" | "both";
 
+export type Write = "perform" | "report" | "ignore";
+
+export type Baseline = "live" | "dead" | "none";
+
 export type Binding = {
   variable: VariableName;
-  baseline: "live" | "dead";
-  write: "perform" | "report" | "ignore";
+  baseline: Baseline;
+  write: Write;
   sloppy_function: SloppyFunction;
 };
 

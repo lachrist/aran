@@ -1,8 +1,8 @@
-// This frame is only used to create the self binding of a class.
-// And this use case does not use the setupFrame function.
-// This seems like a lot of code to support seach a small feature.
-// On the other hand, having a fake frame makes sense and could
-// be useful in the future.
+// This frame is only used to create the self binding of expression class.
+// We cannot use regular frames because it is in an expression context:
+// `(class c extends console.log(c) {})`
+// This seems like a lot of code to support such a small feature.
+// But, having a fake frame makes sense and could be useful in the future.
 
 import type { VariableName } from "estree-sentry";
 import type { WritableCache } from "../../cache";

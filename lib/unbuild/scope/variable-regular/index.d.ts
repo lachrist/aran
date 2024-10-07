@@ -5,6 +5,7 @@ import type {
   VariableName,
 } from "estree-sentry";
 import type { ConstantMetaVariable } from "../../variable";
+import type { Write } from "../../annotation/hoisting";
 
 export type ImportBinding = {
   type: "import";
@@ -19,8 +20,8 @@ export type SloppyFunction = null | {
 
 export type RegularBinding = {
   type: "regular";
-  baseline: "live" | "dead";
-  write: "perform" | "ignore" | "report";
+  baseline: "dead" | "live";
+  write: Write;
   export: (SpecifierName | SpecifierValue)[];
   sloppy_function: SloppyFunction;
 };

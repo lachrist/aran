@@ -20,7 +20,7 @@ type ScopeBinding =
   | "closure"
   | {
       variable: VariableName;
-      baseline: Zone;
+      zone: Zone;
     };
 
 export type Closure = "none" | "function-declaration" | "function-expression";
@@ -29,7 +29,7 @@ export type Scope = Tree<ScopeBinding>;
 
 export type DeadzoneBinding = {
   hash: Hash;
-  status: "live" | "dead" | "schrodinger";
+  zone: Zone;
 };
 
 export type RawDeadzone = Tree<DeadzoneBinding>;
