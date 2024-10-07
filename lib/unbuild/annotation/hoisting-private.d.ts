@@ -65,4 +65,4 @@ export type VoidBinding = {
 
 export type Binding = FreeBinding | LockBinding | FlagBinding | VoidBinding;
 
-export type BindingTree = Tree<Binding>;
+export type Hoisting = Tree<Binding>;

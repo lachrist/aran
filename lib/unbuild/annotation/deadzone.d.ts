@@ -5,7 +5,7 @@ import type {
   FunctionDeclaration,
 } from "estree-sentry";
 import type { Hash } from "../../hash";
-import type { ArrayTree } from "../../util/tree";
+import type { Tree } from "../../util/tree";
 import type { VariableName } from "estree-sentry";
 
 export type BroadFunctionDeclaration<X> =
@@ -25,15 +25,17 @@ type ScopeBinding =
 
 export type Closure = "none" | "function-declaration" | "function-expression";
 
-export type Scope = ArrayTree<ScopeBinding>;
+export type Scope = Tree<ScopeBinding>;
 
 export type DeadzoneBinding = {
   hash: Hash;
   status: "live" | "dead" | "schrodinger";
 };
 
-export type RawDeadzone = ArrayTree<DeadzoneBinding>;
+export type RawDeadzone = Tree<DeadzoneBinding>;
 
 export type Deadzone = {
   [key in Hash]?: Zone;
 };
+
+export type Foo = Tree<number[]>;
