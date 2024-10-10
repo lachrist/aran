@@ -1,1 +1,1 @@
-export type Tree<X> = X | Tree<X>[];
+export type Tree<X> = null | X | Tree<X>[];

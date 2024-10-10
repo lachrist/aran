@@ -19,13 +19,16 @@
 // const x = new TestIterator();
 // x.drop(0).next();
 
-import c from "./yo.mjs";
-
-new c();
-let x = 123;
-
-export default class {
-  constructor() {
-    x;
-  }
-}
+var obj = { foo: 123 };
+({
+  foo: (console.log("obj"), obj)[(console.log("key"), "foo")] = (console.log(
+    "val",
+  ),
+  456),
+} = {
+  get foo() {
+    console.log("get-foo");
+    return undefined;
+  },
+});
+console.log(obj);

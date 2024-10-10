@@ -1,5 +1,66 @@
 import type { PrivateKeyName } from "estree-sentry";
-import type { Cache, WritableCache } from "../../cache.js";
+import type { Cache, WritableCache } from "../../cache";
+import type { Tree } from "../../../util/tree";
+import type { Mode } from "../../mode";
+import type { Expression } from "../../atom";
+import type { RootSort } from "../../sort";
+
+// Operation //
+
+export type DefinePrivateOperation = {
+  type: "define-private";
+  target: Expression;
+  key: PrivateKeyName;
+  value: Expression;
+};
+
+export type InitializePrivateOperation = {
+  type: "initialize-private";
+  kind: "method" | "getter" | "setter";
+  key: PrivateKeyName;
+  value: Expression;
+};
+
+export type RegisterPrivateSingletonOperation = {
+  type: "register-private-singleton";
+  target: Expression;
+};
+
+export type RegisterPrivateCollectionOperation = {
+  type: "register-private-collection";
+  mode: Mode;
+  root: RootSort;
+  target: Expression;
+};
+
+export type HasPrivateOperation = {
+  type: "has-private";
+  target: Expression;
+  key: PrivateKeyName;
+};
+
+export type GetPrivateOperation = {
+  type: "get-private";
+  target: Expression;
+  key: PrivateKeyName;
+};
+
+export type SetPrivateOperation = {
+  type: "set-private";
+  target: Expression;
+  key: PrivateKeyName;
+  value: Expression;
+};
+
+// Scope //
+
+export type PrivateScope = {
+  root: RootSort;
+  mode: Mode;
+  private: Tree<PrivateFrame>;
+};
+
+// Frame //
 
 export type SingletonPrivateKind =
   | "singleton-method"
@@ -17,14 +78,13 @@ export type PrivateKind = SingletonPrivateKind | CollectionPrivateKind;
 
 export type RawPrivateFrame = [PrivateKeyName, PrivateKind][];
 
-export type PrivateBinding = SingletonPrivateBinding | CollectionPrivateBinding;
-
 export type DryPrivateBinding =
   | DrySingletonPrivateBinding
   | DryCollectionPrivateBinding;
 
+export type PrivateBinding = SingletonPrivateBinding | CollectionPrivateBinding;
+
 export type PrivateFrame = {
-  type: "private";
   singleton: WritableCache;
   collection: Cache;
   record: { [k in PrivateKeyName]?: DryPrivateBinding };

@@ -1,9 +1,9 @@
-export type Outcome<V, E> =
+export type Outcome<S, F> =
   | {
       type: "success";
-      value: V;
+      data: S;
     }
   | {
       type: "failure";
-      error: E;
+      data: F;
     };

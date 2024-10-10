@@ -5,10 +5,10 @@
 // But, having a fake frame makes sense and could be useful in the future.
 
 import type { VariableName } from "estree-sentry";
-import type { WritableCache } from "../../cache";
+import type { WritableCache } from "../../../cache";
 
 export type Binding = {
-  baseline: "live" | "dead";
+  initialization: "yes" | "no";
   write: "report" | "perform" | "ignore";
   proxy: WritableCache;
 };
