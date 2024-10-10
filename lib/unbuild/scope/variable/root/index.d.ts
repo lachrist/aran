@@ -12,11 +12,11 @@ import type { Mode } from "../../../mode";
 
 export type Write = "perform" | "report";
 
-export type Initialization = "yes" | "no";
+export type Status = "live" | "dead" | "schrodinger";
 
 export type ReifyBinding = {
   variable: VariableName;
-  initialization: Initialization;
+  status: Status;
   write: Write;
 };
 
@@ -28,7 +28,7 @@ export type ReifyBind = {
 export type AlienBinding = {
   variable: VariableName;
   deadzone: WritableMetaVariable;
-  initialization: Initialization;
+  status: Status;
   write: Write;
 };
 
@@ -64,6 +64,7 @@ export type DryReifyRootFrame = {
 
 export type ReifyRootFrame = DryReifyRootFrame & {
   mode: Mode;
+  root: RootSort;
 };
 
 export type DryRootFrame = DryReifyRootFrame | DryAlienRootFrame;

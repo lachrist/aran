@@ -1,1 +1,1 @@
-export type List<X> = { head: X; tail: List<X> } | null;
+export type List<X> = [X, List<X>] | null;

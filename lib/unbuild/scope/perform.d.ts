@@ -22,41 +22,27 @@ export type Setup<O, W, X> = (
 
 // Perform //
 
-export type Perform<B, O, X> = (
+export type Perform<B, O, W, X> = (
   hash: Hash,
   meta: Meta,
   bind: B,
   operation: O,
-) => X;
+) => Sequence<W, X>;
 
-export type PerformEffect<B, O, W> = Perform<B, O, Sequence<W, Effect[]>>;
-
-export type PerformMaybeEffect<B, O, W> = Perform<
-  B,
-  O,
-  null | Sequence<W, Effect[]>
->;
-
-export type PerformExpression<B, O, W> = Perform<B, O, Sequence<W, Expression>>;
-
-export type PerformMaybeExpression<B, O, W> = Perform<
-  B,
-  O,
-  null | Sequence<W, Expression>
->;
-
-// Update //
-
-export type Update<B, O, W, X> = (
+export type PerformMaybe<B, O, W, X> = (
   hash: Hash,
   meta: Meta,
   bind: B,
   operation: O,
-) => Sequence<W, [X, B]>;
+) => null | Sequence<W, X>;
 
-export type UpdateExpression<B, O, W> = Update<B, O, W, Expression>;
+export type PerformEffect<B, O, W> = Perform<B, O, W, Effect[]>;
 
-export type UpdateEffect<B, O, W> = Update<B, O, W, Effect[]>;
+export type PerformMaybeEffect<B, O, W> = PerformMaybe<B, O, W, Effect[]>;
+
+export type PerformExpression<B, O, W> = Perform<B, O, W, Expression>;
+
+export type PerformMaybeExpression<B, O, W> = PerformMaybe<B, O, W, Expression>;
 
 // Intercept //
 

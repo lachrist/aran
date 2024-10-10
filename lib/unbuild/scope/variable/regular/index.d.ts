@@ -6,7 +6,7 @@ import type {
 } from "estree-sentry";
 import type { ConstantMetaVariable } from "../../../variable";
 import type { Write } from "../../../annotation/hoisting";
-import type { List } from "../../../../util/list";
+import type { Tree } from "../../../../util/tree";
 
 export type ImportBinding = {
   type: "import";
@@ -15,7 +15,7 @@ export type ImportBinding = {
   specifier: SpecifierName | SpecifierValue | null;
 };
 
-export type Initialization = "yes" | "no" | "maybe";
+export type Status = "live" | "dead" | "schrodinger";
 
 export type SloppyFunction = {
   self: ConstantMetaVariable | null;
@@ -26,7 +26,7 @@ export type RegularBinding = {
   type: "regular";
   variable: VariableName;
   duplicable: boolean;
-  initialization: Initialization;
+  status: Status;
   write: Write;
   export: (SpecifierName | SpecifierValue)[];
   sloppy_function: null | SloppyFunction;
@@ -36,5 +36,5 @@ export type Binding = ImportBinding | RegularBinding;
 
 export type RegularFrame = {
   type: "regular";
-  bindings: List<Binding>;
+  bindings: Tree<Binding>;
 };

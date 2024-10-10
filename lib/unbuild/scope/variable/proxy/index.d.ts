@@ -7,13 +7,18 @@
 import type { VariableName } from "estree-sentry";
 import type { WritableCache } from "../../../cache";
 
+export type Write = "report" | "ignore" | "perform";
+
+export type Status = "live" | "dead" | "schrodinger";
+
 export type Binding = {
-  initialization: "yes" | "no";
-  write: "report" | "perform" | "ignore";
+  status: Status;
+  duplicable: boolean;
+  write: Write;
   proxy: WritableCache;
 };
 
-export type FakeFrame = {
-  type: "fake";
+export type ProxyFrame = {
+  type: "proxy";
   record: { [k in VariableName]?: Binding };
 };

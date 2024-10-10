@@ -1,90 +1,101 @@
 import type { VariableName } from "estree-sentry";
 import type { Expression } from "../../atom";
 import type { ConstantMetaVariable } from "../../variable";
-import type { Tree } from "../../../util/tree";
 import type { Mode } from "../../mode";
 import type { RootSort } from "../../sort";
 import type { EvalFrame } from "./eval";
-import type { FakeFrame } from "./fake";
+import type { ProxyFrame } from "./proxy";
 import type { IllegalFrame } from "./illegal";
 import type { RegularFrame } from "./regular";
-import type { RootFrame } from "./root";
-import type { WithFrame } from "./with";
+import type { DryRootFrame, RootFrame } from "./root";
+import type { DryWithFrame, WithFrame } from "./with";
+import type { List } from "../../../util/list";
+import type { Intercept, Perform, PerformMaybe } from "../perform";
+import type { Meta } from "../../meta";
+import type { Sequence } from "../../../sequence";
+import type { Hash } from "../../../hash";
 
 export type ClosureFrame = {
   type: "closure";
 };
+
+export type Closure = "internal" | "external";
+
+export type Conflict = "ignore" | "report";
 
 export type VariableFrame =
   | ClosureFrame
   | RegularFrame
   | EvalFrame
   | IllegalFrame
-  | FakeFrame
-  | RootFrame
-  | WithFrame;
+  | ProxyFrame
+  | DryRootFrame
+  | DryWithFrame;
 
 export type VariableScope = {
   mode: Mode;
   root: RootSort;
-  variable: Tree<VariableFrame>;
+  variable: List<VariableFrame>;
 };
 
-export type LoadVariableOperation = {
-  variable: VariableName;
-  closure: boolean;
+export type NormalPerform<O, W1, W2, W3, W4, W5, W6, X> = {
+  performEval: Intercept<EvalFrame, O, W1, X>;
+  performIllegal: PerformMaybe<IllegalFrame, O, W2, X>;
+  performProxy: PerformMaybe<ProxyFrame, O, W3, X>;
+  performRegular: PerformMaybe<RegularFrame, O, W4, X>;
+  performRoot: Perform<RootFrame, O, W5, X>;
+  performWith: Intercept<WithFrame, O, W6, X>;
 };
 
-export type SaveVariableOperation = {
-  variable: VariableName;
-  closure: boolean;
-  right: Expression;
-};
+export type DuplicateOperation<W, O> = (
+  hash: Hash,
+  meta: Meta,
+  operation: O,
+) => Sequence<W, [O, O]>;
 
 // Operation //
 
 export type LateDeclareVariableOperation = {
   variable: VariableName;
-  closure: boolean;
-  write: "perform";
-  conflict: "report" | "ignore";
+  closure: Closure;
+  conflict: Conflict;
 };
 
 export type InitializeVariableOperation = {
   variable: VariableName;
-  closure: boolean;
+  closure: Closure;
   right: Expression;
-  distant: boolean;
+  status: "live" | "schrodinger";
 };
 
 export type WriteVariableOperation = {
   variable: VariableName;
-  closure: boolean;
+  closure: Closure;
   right: Expression;
 };
 
 export type WriteSloppyFunctionVariableOperation = {
   variable: VariableName;
-  closure: boolean;
+  closure: Closure;
   right: null | ConstantMetaVariable;
 };
 
 export type ReadVariableOperation = {
   variable: VariableName;
-  closure: boolean;
+  closure: Closure;
 };
 
 export type TypeofVariableOperation = {
   variable: VariableName;
-  closure: boolean;
+  closure: Closure;
 };
 
 export type DiscardVariableOperation = {
   variable: VariableName;
-  closure: boolean;
+  closure: Closure;
 };
 
 export type ReadAmbientThisVariableOperation = {
   variable: VariableName;
-  closure: boolean;
+  closure: Closure;
 };
