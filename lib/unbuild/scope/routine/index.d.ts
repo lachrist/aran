@@ -5,45 +5,32 @@ import type { RootSort } from "../../sort";
 
 // Operation //
 
-export type ReadThisOperation = {
-  type: "read-this";
-};
+export type ReadThisOperation = {};
 
-export type ReadNewTargetOperation = {
-  type: "read-new-target";
-};
+export type ReadNewTargetOperation = {};
 
-export type ReadInputOperation = {
-  type: "read-input";
-};
+export type ReadInputOperation = {};
 
 export type GetSuperOperation = {
-  type: "get-super";
   key: Expression;
 };
 
 export type SetSuperOperation = {
-  type: "set-super";
   key: Expression;
   value: Expression;
 };
 
 export type CallSuperOperation = {
-  type: "call-super";
   input: Expression;
 };
 
 export type UpdateResultOperation = {
-  type: "update-result";
   result: Expression | null;
 };
 
-export type ReadResultOperation = {
-  type: "read-result";
-};
+export type ReadResultOperation = {};
 
 export type FinalizeResultOperation = {
-  type: "finalize-result";
   result: Expression | null;
 };
 

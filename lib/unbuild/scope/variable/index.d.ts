@@ -7,10 +7,10 @@ import type { EvalFrame } from "./eval";
 import type { ProxyFrame } from "./proxy";
 import type { IllegalFrame } from "./illegal";
 import type { RegularFrame } from "./regular";
-import type { DryRootFrame, RootFrame } from "./root";
-import type { DryWithFrame, WithFrame } from "./with";
+import type { RootBind, RootFrame } from "./root";
+import type { WithFrame } from "./with";
 import type { List } from "../../../util/list";
-import type { Intercept, Perform, PerformMaybe } from "../perform";
+import type { Intercept, Perform, PerformMaybe } from "../api";
 import type { Meta } from "../../meta";
 import type { Sequence } from "../../../sequence";
 import type { Hash } from "../../../hash";
@@ -29,8 +29,8 @@ export type VariableFrame =
   | EvalFrame
   | IllegalFrame
   | ProxyFrame
-  | DryRootFrame
-  | DryWithFrame;
+  | RootFrame
+  | WithFrame;
 
 export type VariableScope = {
   mode: Mode;
@@ -43,9 +43,11 @@ export type PerformStandard<O, W1, W2, W3, W4, W5, W6, X> = {
   performIllegal: PerformMaybe<IllegalFrame, O, W2, X>;
   performProxy: PerformMaybe<ProxyFrame, O, W3, X>;
   performRegular: PerformMaybe<RegularFrame, O, W4, X>;
-  performRoot: Perform<RootFrame, O, W5, X>;
+  performRoot: Perform<RootBind, O, W5, X>;
   performWith: Intercept<WithFrame, O, W6, X>;
 };
+
+export type InitializeOperation<R, O> = (raw_operation: R, mode: Mode) => O;
 
 export type DuplicateOperation<W, O> = (
   hash: Hash,
@@ -53,48 +55,25 @@ export type DuplicateOperation<W, O> = (
   operation: O,
 ) => Sequence<W, [O, O]>;
 
-// Operation //
-
-export type LateDeclareVariableOperation = {
+export type VariableOperation = {
   variable: VariableName;
   closure: Closure;
-  conflict: Conflict;
+  mode: Mode;
 };
 
-export type InitializeVariableOperation = {
-  variable: VariableName;
+export type LateDeclareVariableOperation = VariableOperation & {
+  conflict: "ignore" | "report";
+};
+
+export type InitializeVariableOperation = VariableOperation & {
   right: Expression;
   status: "live" | "schrodinger";
 };
 
-export type WriteVariableOperation = {
-  variable: VariableName;
-  closure: Closure;
+export type WriteVariableOperation = VariableOperation & {
   right: Expression;
 };
 
-export type WriteSloppyFunctionVariableOperation = {
-  variable: VariableName;
-  closure: Closure;
+export type WriteSloppyFunctionVariableOperation = VariableOperation & {
   right: null | ConstantMetaVariable;
-};
-
-export type ReadVariableOperation = {
-  variable: VariableName;
-  closure: Closure;
-};
-
-export type TypeofVariableOperation = {
-  variable: VariableName;
-  closure: Closure;
-};
-
-export type DiscardVariableOperation = {
-  variable: VariableName;
-  closure: Closure;
-};
-
-export type ReadAmbientThisVariableOperation = {
-  variable: VariableName;
-  closure: Closure;
 };

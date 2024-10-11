@@ -1,52 +1,44 @@
 import type { PrivateKeyName } from "estree-sentry";
 import type { Cache, WritableCache } from "../../cache";
 import type { Tree } from "../../../util/tree";
-import type { Mode } from "../../mode";
 import type { Expression } from "../../atom";
 import type { RootSort } from "../../sort";
+import type { Mode } from "../../mode";
 
 // Operation //
 
 export type DefinePrivateOperation = {
-  type: "define-private";
   target: Expression;
   key: PrivateKeyName;
   value: Expression;
 };
 
 export type InitializePrivateOperation = {
-  type: "initialize-private";
   kind: "method" | "getter" | "setter";
   key: PrivateKeyName;
   value: Expression;
 };
 
 export type RegisterPrivateSingletonOperation = {
-  type: "register-private-singleton";
   target: Expression;
 };
 
 export type RegisterPrivateCollectionOperation = {
-  type: "register-private-collection";
-  mode: Mode;
   root: RootSort;
   target: Expression;
 };
 
 export type HasPrivateOperation = {
-  type: "has-private";
   target: Expression;
   key: PrivateKeyName;
 };
 
 export type GetPrivateOperation = {
-  type: "get-private";
   target: Expression;
   key: PrivateKeyName;
 };
 
 export type SetPrivateOperation = {
-  type: "set-private";
   target: Expression;
   key: PrivateKeyName;
   value: Expression;

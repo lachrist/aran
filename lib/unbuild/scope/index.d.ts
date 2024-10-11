@@ -4,8 +4,8 @@ import type { ProgramScope } from "./program";
 import type { RoutineScope } from "./routine";
 import type { VariableScope } from "./variable";
 
-export type Scope = ProgramScope &
-  VariableScope &
+export type Scope = CatchScope &
+  PrivateScope &
+  ProgramScope &
   RoutineScope &
-  CatchScope &
-  PrivateScope;
+  VariableScope;

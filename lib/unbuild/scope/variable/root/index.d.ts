@@ -1,8 +1,11 @@
 // We can't assume binding remained in the global object:
+//
 // > global.x = 123;
 // > var x = 456;
 // > delete x; >> true
 // > "x" in global >> false
+//
+// So only bindings in the global declarative record are represented.
 
 import type { VariableName } from "estree-sentry";
 import type { WritableMetaVariable } from "../../../variable";
@@ -14,15 +17,17 @@ export type Write = "perform" | "report";
 
 export type Status = "live" | "dead" | "schrodinger";
 
+export type Declare = {
+  type: "declare";
+  mode: Mode;
+  kind: "var" | "let" | "const";
+  variable: VariableName;
+};
+
 export type ReifyBinding = {
   variable: VariableName;
   status: Status;
   write: Write;
-};
-
-export type ReifyBind = {
-  binding: null | Omit<ReifyBinding, "variable">;
-  mode: Mode;
 };
 
 export type AlienBinding = {
@@ -32,41 +37,40 @@ export type AlienBinding = {
   write: Write;
 };
 
-export type AlienBind = {
-  binding: null | Omit<AlienBinding, "variable">;
-  mode: Mode;
+export type ReifyMatch = {
+  binding: null | Omit<ReifyBinding, "variable">;
   root: RootSort;
 };
 
-export type Declare = {
-  type: "declare";
-  mode: Mode;
-  kind: "var" | "let" | "const";
-  variable: VariableName;
+export type AlienMatch = {
+  binding: null | Omit<AlienBinding, "variable">;
+  root: RootSort;
 };
 
-export type DryAlienRootFrame = {
+export type AlienFrame = {
   type: "root";
   kind: "alien";
   bindings: Tree<AlienBinding>;
 };
 
-export type AlienRootFrame = DryAlienRootFrame & {
-  mode: Mode;
-  root: RootSort;
-};
-
-export type DryReifyRootFrame = {
+export type ReifyFrame = {
   type: "root";
   kind: "reify";
   bindings: Tree<ReifyBinding>;
 };
 
-export type ReifyRootFrame = DryReifyRootFrame & {
-  mode: Mode;
+export type RootFrame = ReifyFrame | AlienFrame;
+
+export type AlienBind = {
   root: RootSort;
+  kind: "alien";
+  bindings: Tree<AlienBinding>;
 };
 
-export type DryRootFrame = DryReifyRootFrame | DryAlienRootFrame;
+export type ReifyBind = {
+  root: RootSort;
+  kind: "reify";
+  bindings: Tree<ReifyBinding>;
+};
 
-export type RootFrame = ReifyRootFrame | AlienRootFrame;
+export type RootBind = AlienBind | ReifyBind;

@@ -2,13 +2,9 @@ import type { RootSort } from "../../sort";
 
 export type ProgramScope = {
   root: RootSort;
-  eval: boolean;
+  program: "root" | "deep";
 };
 
-export type ReadImportOperation = {
-  type: "read-import";
-};
+export type ReadImportOperation = {};
 
-export type ReadImportMetaOperation = {
-  type: "read-import-meta";
-};
+export type ReadImportMetaOperation = {};
