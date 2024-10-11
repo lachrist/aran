@@ -19,12 +19,11 @@ export type InitializePrivateOperation = {
   value: Expression;
 };
 
-export type RegisterPrivateSingletonOperation = {
+export type RegisterSingletonPrivateOperation = {
   target: Expression;
 };
 
-export type RegisterPrivateCollectionOperation = {
-  root: RootSort;
+export type RegisterCollectionPrivateOperation = {
   target: Expression;
 };
 

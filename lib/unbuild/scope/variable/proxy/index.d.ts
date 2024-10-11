@@ -25,5 +25,5 @@ export type ProxyFrame = {
 };
 
 export type RawProxyFrame = {
-  bindings: RawBinding[];
+  bindings: { proxy: WritableCache; binding: RawBinding }[];
 };

@@ -8,8 +8,8 @@ import type { Sequence } from "../../sequence";
 export type Extend<O, W, X> = <Y extends X>(
   hash: Hash,
   meta: Meta,
-  parent: Y,
   options: O,
+  parent: Y,
 ) => Sequence<W, Y>;
 
 // Setup //

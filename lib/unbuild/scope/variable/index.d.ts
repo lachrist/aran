@@ -14,6 +14,7 @@ import type { Intercept, Perform, PerformMaybe } from "../api";
 import type { Meta } from "../../meta";
 import type { Sequence } from "../../../sequence";
 import type { Hash } from "../../../hash";
+import type { MetaDeclarationPrelude, PrefixPrelude } from "../../prelude";
 
 export type ClosureFrame = {
   type: "closure";
@@ -57,11 +58,16 @@ export type PerformStandard<O, W1, W2, W3, W4, W5, W6, X> = {
 
 export type InitializeOperation<R, O> = (raw_operation: R, mode: Mode) => O;
 
-export type DuplicateOperation<W, O> = (
+export type DuplicateOperation<O> = (
   hash: Hash,
   meta: Meta,
   operation: O,
-) => Sequence<W, [O, O]>;
+) => Sequence<MetaDeclarationPrelude | PrefixPrelude, [O, O]>;
+
+export type Incorporate<X> = <W>(
+  sequence: Sequence<W, X>,
+  hash: Hash,
+) => Sequence<Exclude<W, PrefixPrelude>, X>;
 
 export type VariableOperation = {
   variable: VariableName;

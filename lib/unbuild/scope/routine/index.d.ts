@@ -26,7 +26,7 @@ export type CallSuperOperation = {
 };
 
 export type UpdateResultOperation = {
-  origin: "ReturnStatement" | "ExpressionStatement";
+  origin: "program" | "closure";
   result: Expression | null;
 };
 
