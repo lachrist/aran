@@ -38,7 +38,7 @@ export type VariableScope = {
   variable: List<VariableFrame>;
 };
 
-export type NormalPerform<O, W1, W2, W3, W4, W5, W6, X> = {
+export type PerformStandard<O, W1, W2, W3, W4, W5, W6, X> = {
   performEval: Intercept<EvalFrame, O, W1, X>;
   performIllegal: PerformMaybe<IllegalFrame, O, W2, X>;
   performProxy: PerformMaybe<ProxyFrame, O, W3, X>;
@@ -63,7 +63,6 @@ export type LateDeclareVariableOperation = {
 
 export type InitializeVariableOperation = {
   variable: VariableName;
-  closure: Closure;
   right: Expression;
   status: "live" | "schrodinger";
 };
