@@ -5,7 +5,7 @@ import type { Sequence } from "../../sequence";
 
 // Extend //
 
-export type Extend<X, O, W> = <Y extends X>(
+export type Extend<O, W, X> = <Y extends X>(
   hash: Hash,
   meta: Meta,
   parent: Y,

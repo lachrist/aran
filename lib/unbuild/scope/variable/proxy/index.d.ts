@@ -6,6 +6,7 @@
 
 import type { VariableName } from "estree-sentry";
 import type { WritableCache } from "../../../cache";
+import type { Binding as RawBinding } from "../../../annotation/hoisting";
 
 export type Write = "report" | "ignore" | "perform";
 
@@ -21,4 +22,8 @@ export type Binding = {
 export type ProxyFrame = {
   type: "proxy";
   record: { [k in VariableName]?: Binding };
+};
+
+export type RawProxyFrame = {
+  bindings: RawBinding[];
 };

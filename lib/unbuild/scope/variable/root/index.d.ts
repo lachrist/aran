@@ -12,6 +12,7 @@ import type { WritableMetaVariable } from "../../../variable";
 import type { Tree } from "../../../../util/tree";
 import type { RootSort } from "../../../sort";
 import type { Mode } from "../../../mode";
+import type { Binding as RawBinding } from "../../../annotation/hoisting";
 
 export type Write = "perform" | "report";
 
@@ -74,3 +75,8 @@ export type ReifyBind = {
 };
 
 export type RootBind = AlienBind | ReifyBind;
+
+export type RawRootFrame = {
+  global_declarative_record: "builtin" | "emulate";
+  bindings: RawBinding[];
+};

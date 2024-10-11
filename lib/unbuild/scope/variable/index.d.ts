@@ -3,12 +3,12 @@ import type { Expression } from "../../atom";
 import type { ConstantMetaVariable } from "../../variable";
 import type { Mode } from "../../mode";
 import type { RootSort } from "../../sort";
-import type { EvalFrame } from "./eval";
-import type { ProxyFrame } from "./proxy";
-import type { IllegalFrame } from "./illegal";
-import type { RegularFrame } from "./regular";
-import type { RootBind, RootFrame } from "./root";
-import type { WithFrame } from "./with";
+import type { EvalFrame, RawEvalFrame } from "./eval";
+import type { ProxyFrame, RawProxyFrame } from "./proxy";
+import type { IllegalFrame, RawIllegalFrame } from "./illegal";
+import type { RawRegularFrame, RegularFrame } from "./regular";
+import type { RawRootFrame, RootBind, RootFrame } from "./root";
+import type { RawWithFrame, WithFrame } from "./with";
 import type { List } from "../../../util/list";
 import type { Intercept, Perform, PerformMaybe } from "../api";
 import type { Meta } from "../../meta";
@@ -31,6 +31,14 @@ export type VariableFrame =
   | ProxyFrame
   | RootFrame
   | WithFrame;
+
+export type RawVariableFrame =
+  | RawRegularFrame
+  | RawEvalFrame
+  | RawIllegalFrame
+  | RawProxyFrame
+  | RawRootFrame
+  | RawWithFrame;
 
 export type VariableScope = {
   mode: Mode;

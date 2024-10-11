@@ -1,3 +1,4 @@
+import type { Annotation } from "../annotation";
 import type { CatchScope } from "./catch";
 import type { PrivateScope } from "./private";
 import type { ProgramScope } from "./program";
@@ -8,4 +9,6 @@ export type Scope = CatchScope &
   PrivateScope &
   ProgramScope &
   RoutineScope &
-  VariableScope;
+  VariableScope & {
+    annotation: Annotation;
+  };

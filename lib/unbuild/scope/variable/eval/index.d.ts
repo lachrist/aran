@@ -4,3 +4,5 @@ export type EvalFrame = {
   type: "eval";
   record: Cache;
 };
+
+export type RawEvalFrame = {};

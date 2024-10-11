@@ -7,6 +7,8 @@ import type {
 import type { ConstantMetaVariable } from "../../../variable";
 import type { Write } from "../../../annotation/hoisting";
 import type { Tree } from "../../../../util/tree";
+import type { Binding as RawBinding } from "../../../annotation/hoisting";
+import type { Link } from "../../../query/link";
 
 export type ImportBinding = {
   type: "import";
@@ -45,4 +47,9 @@ export type Binding = ImportBinding | RegularBinding;
 export type RegularFrame = {
   type: "regular";
   bindings: Tree<Binding>;
+};
+
+export type RawRegularFrame = {
+  bindings: RawBinding[];
+  links: Link[];
 };

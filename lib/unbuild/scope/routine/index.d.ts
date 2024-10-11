@@ -1,3 +1,4 @@
+import type { List } from "../../../util/list";
 import type { Expression } from "../../atom";
 import type { Cache, WritableCache } from "../../cache";
 import type { Mode } from "../../mode";
@@ -25,6 +26,7 @@ export type CallSuperOperation = {
 };
 
 export type UpdateResultOperation = {
+  origin: "ReturnStatement" | "ExpressionStatement";
   result: Expression | null;
 };
 
@@ -36,30 +38,30 @@ export type FinalizeResultOperation = {
 
 // Scope //
 
-export type Intermediary = "none" | "eval.local.deep" | "arrow";
+export type Intermediary = "eval.local.deep" | "arrow" | "static-block";
 
 export type RootRoutine = {
   type: "root";
-  intermediary: Intermediary;
+  intermediaries: List<Intermediary>;
   result: WritableCache | null;
 };
 
 export type FunctionRoutine = {
   type: "function";
-  intermediary: Intermediary;
+  intermediaries: List<Intermediary>;
   result: WritableCache | null;
 };
 
 export type MethodRoutine = {
   type: "method";
-  intermediary: Intermediary;
+  intermediaries: List<Intermediary>;
   result: WritableCache | null;
   proto: Cache;
 };
 
 export type ConstructorRoutine = {
   type: "constructor";
-  intermediary: Intermediary;
+  intermediaries: List<Intermediary>;
   result: WritableCache | null;
   derived: boolean;
   self: Cache;
