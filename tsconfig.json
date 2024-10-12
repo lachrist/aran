@@ -15,6 +15,12 @@
     "typeRoots": ["./node_modules/@types"],
     "exactOptionalPropertyTypes": true
   },
-  "include": ["./lib/", "./lint/", "./test/"],
+  "include": [
+    "./lib/",
+    "./lint/",
+    "./test/",
+    "doc/design/state-write.ts",
+    "doc/design/state-write.mjs"
+  ],
   "exclude": ["./test/262/codebase/", "./test/262/test262/"]
 }

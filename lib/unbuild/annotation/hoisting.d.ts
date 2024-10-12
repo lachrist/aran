@@ -7,10 +7,18 @@ export type Write = "perform" | "report" | "ignore";
 
 export type Baseline = "live" | "dead";
 
+export type Initial =
+  | "undefined"
+  | "deadzone"
+  | "import"
+  | "self-function"
+  | "self-class"
+  | "arguments";
+
 export type Binding = {
   variable: VariableName;
   duplicable: boolean;
-  baseline: Baseline;
+  initial: Initial;
   write: Write;
   sloppy_function: SloppyFunction;
 };
