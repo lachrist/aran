@@ -81,7 +81,6 @@ export type LateDeclareVariableOperation = VariableOperation & {
 
 export type InitializeVariableOperation = VariableOperation & {
   right: Expression;
-  status: "live" | "schrodinger";
 };
 
 export type WriteVariableOperation = VariableOperation & {

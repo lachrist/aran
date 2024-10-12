@@ -36,7 +36,7 @@ export type RegularBinding = {
   type: "regular";
   variable: VariableName;
   duplicable: boolean;
-  status: Status;
+  status: "live" | "dead" | "schrodinger";
   write: Write;
   export: (SpecifierName | SpecifierValue)[];
   sloppy_function: null | SloppyFunction;
@@ -46,10 +46,12 @@ export type Binding = ImportBinding | RegularBinding;
 
 export type RegularFrame = {
   type: "regular";
+  schrodinger: boolean;
   bindings: Tree<Binding>;
 };
 
 export type RawRegularFrame = {
   bindings: RawBinding[];
+  schrodinger: boolean;
   links: Link[];
 };
