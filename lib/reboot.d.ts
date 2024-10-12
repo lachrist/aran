@@ -4,7 +4,6 @@ import type { Scope } from "./unbuild/scope";
 
 export type Reboot = {
   meta: Meta;
-  mode: "strict" | "sloppy";
   scope: Scope;
 };
 
