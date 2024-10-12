@@ -1,4 +1,3 @@
-import type { Expression } from "../../../atom";
 import type { Cache } from "../../../cache";
 
 export type WithFrame = {
@@ -7,5 +6,5 @@ export type WithFrame = {
 };
 
 export type RawWithFrame = {
-  record: Expression;
+  record: Cache;
 };
