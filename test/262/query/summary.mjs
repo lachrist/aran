@@ -1,5 +1,3 @@
-/* eslint-disable no-plusplus */
-
 import { argv, stdout } from "node:process";
 import { AranTypeError } from "../error.mjs";
 import { isStageName } from "../stage.mjs";

@@ -97,6 +97,8 @@ export type Prelude =
 
 type ProgramPrelude = SyntaxErrorPrelude | WarningPrelude | RebootPrelude;
 
+type NotBlockPrelude = Exclude<Prelude, BlockPrelude>;
+
 type BlockPrelude =
   | WarningPrelude
   | RebootPrelude

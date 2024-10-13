@@ -2,6 +2,7 @@ import type { Effect, Expression } from "../atom";
 import type { Hash } from "../../hash";
 import type { Meta } from "../meta";
 import type { Sequence } from "../../sequence";
+import type { Tree } from "../../util/tree";
 
 // Extend //
 
@@ -36,9 +37,9 @@ export type PerformMaybe<B, O, W, X> = (
   operation: O,
 ) => null | Sequence<W, X>;
 
-export type PerformEffect<B, O, W> = Perform<B, O, W, Effect[]>;
+export type PerformEffect<B, O, W> = Perform<B, O, W, Tree<Effect>>;
 
-export type PerformMaybeEffect<B, O, W> = PerformMaybe<B, O, W, Effect[]>;
+export type PerformMaybeEffect<B, O, W> = PerformMaybe<B, O, W, Tree<Effect>>;
 
 export type PerformExpression<B, O, W> = Perform<B, O, W, Expression>;
 
@@ -54,6 +55,6 @@ export type Intercept<B, O, W, X> = (
   alternate: X,
 ) => Sequence<W, X>;
 
-export type InterceptEffect<B, O, W> = Intercept<B, O, W, Effect[]>;
+export type InterceptEffect<B, O, W> = Intercept<B, O, W, Tree<Effect>>;
 
 export type InterceptExpression<B, O, W> = Intercept<B, O, W, Expression>;

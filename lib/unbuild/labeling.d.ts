@@ -1,8 +1,9 @@
 import type { LabelName } from "estree-sentry";
 import type { Label } from "./atom";
+import type { Tree } from "../util/tree";
 
 export type StatementLabeling = {
-  labels: LabelName[];
+  labels: Tree<LabelName>;
   loop: {
     break: null | Label;
     continue: null | Label;
@@ -10,7 +11,7 @@ export type StatementLabeling = {
 };
 
 export type BodyLabeling = {
-  labels: Label[];
+  labels: Tree<Label>;
   loop: {
     break: null | Label;
     continue: null | Label;
