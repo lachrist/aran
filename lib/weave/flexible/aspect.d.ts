@@ -11,7 +11,7 @@ import type {
   GenExpression as Expression,
 } from "../atom";
 import type { Parameter } from "../../lang";
-import type { Json } from "../../json";
+import type { Json } from "../../util";
 import type { ValueOf } from "../../util";
 import type { Hash } from "../../hash";
 

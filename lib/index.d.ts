@@ -9,7 +9,7 @@ import type { Situ } from "./source";
 import type { Warning } from "./unbuild/prelude/warning";
 import type { Pointcut as StandardPointcut } from "./weave/standard/aspect";
 import type { Pointcut as FlexiblePointcut } from "./weave/flexible/aspect";
-import type { Json } from "./json";
+import type { Json } from "./util";
 import type {
   ClashErrorCause,
   InputErrorCause,
@@ -240,7 +240,7 @@ export type Digest<P, H extends string | number> = (
   node_kind: EstreeNodeKind,
 ) => H;
 
-export type { Json } from "./json";
+export type { Json } from "./util";
 
 /**
  * Configuration object for the `instrument` function.

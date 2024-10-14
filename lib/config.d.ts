@@ -1,4 +1,4 @@
-import type { Json } from "./json";
+import type { Json } from "./util";
 import type { Pointcut as GenericStandardPointcut } from "./weave/standard/aspect";
 import type { Pointcut as GenericFlexiblePointcut } from "./weave/flexible/aspect";
 import type { VariableName } from "estree-sentry";
