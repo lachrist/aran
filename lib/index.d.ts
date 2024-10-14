@@ -14,7 +14,7 @@ import type {
   ClashErrorCause,
   InputErrorCause,
   PointcutErrorCause,
-} from "./report";
+} from "./error";
 import type { Parameter } from "./lang/syntax";
 import type {
   ControlKind,
