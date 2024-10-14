@@ -6,7 +6,7 @@ import type {
   SyntaxErrorCause,
 } from "estree-sentry";
 import type { Situ } from "./source";
-import type { Warning } from "./unbuild/prelude/warning";
+import type { RawWarning } from "./unbuild/prelude/warning";
 import type { Pointcut as StandardPointcut } from "./weave/standard/aspect";
 import type { Pointcut as FlexiblePointcut } from "./weave/flexible/aspect";
 import type { Json } from "./util/util";
@@ -354,7 +354,7 @@ export const instrument: <P, H extends number | string>(
   file: Partial<File<P>>,
   conf?: null | undefined | Partial<Conf<P, H>>,
 ) => EstreeProgram<{}> & {
-  _aran_warning_array: Warning[];
+  _aran_warning_array: RawWarning[];
 };
 
 ////////////

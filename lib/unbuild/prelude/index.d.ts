@@ -9,7 +9,7 @@ import type { Effect } from "../atom";
 import type { Reboot } from "../../reboot";
 import type { PrivateKeyName, VariableName } from "estree-sentry";
 import type { ReifyExternal } from "./external";
-import type { Warning } from "./warning";
+import type { RawWarning } from "./warning";
 
 export type ReturnIteratorPrelude = {
   type: "iterator-return";
@@ -39,7 +39,7 @@ export type TemplatePrelude = {
 
 export type WarningPrelude = {
   type: "warning";
-  data: Warning;
+  data: RawWarning;
 };
 
 export type RebootPrelude = {
