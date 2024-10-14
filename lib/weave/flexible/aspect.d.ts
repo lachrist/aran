@@ -10,9 +10,9 @@ import type {
   GenEffect as Effect,
   GenExpression as Expression,
 } from "../atom";
-import type { Parameter } from "../../lang";
-import type { Json } from "../../util";
-import type { ValueOf } from "../../util";
+import type { Parameter } from "../../lang/syntax";
+import type { Json } from "../../util/util";
+import type { ValueOf } from "../../util/util";
 import type { Hash } from "../../hash";
 
 export {

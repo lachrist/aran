@@ -1,8 +1,8 @@
 import type { SourceValue, SpecifierValue, SpecifierName } from "estree-sentry";
-import type { DeclareHeader, ModuleHeader } from "../../header";
-import type { Intrinsic, Parameter, RuntimePrimitive } from "../../lang";
+import type { DeclareHeader, ModuleHeader } from "../../lang/header";
+import type { Intrinsic, Parameter, RuntimePrimitive } from "../../lang/syntax";
 import type { DeepLocalSitu } from "../../source";
-import type { ValueOf } from "../../util";
+import type { ValueOf } from "../../util/util";
 import type { ArgVariable, Label } from "../atom";
 import type {
   ControlKind,

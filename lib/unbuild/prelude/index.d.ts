@@ -1,9 +1,9 @@
-import type { Header } from "../../header";
+import type { Header } from "../../lang/header";
 import type { SyntaxError } from "./syntax-error";
 import type { Condition } from "./condition";
 import type { BaseVariable, MetaVariable } from "../variable";
 import type { Template } from "./template";
-import type { Intrinsic } from "../../lang";
+import type { Intrinsic } from "../../lang/syntax";
 import type { Hash } from "../../hash";
 import type { Effect } from "../atom";
 import type { Reboot } from "../../reboot";

@@ -9,13 +9,13 @@ import type { Situ } from "./source";
 import type { Warning } from "./unbuild/prelude/warning";
 import type { Pointcut as StandardPointcut } from "./weave/standard/aspect";
 import type { Pointcut as FlexiblePointcut } from "./weave/flexible/aspect";
-import type { Json } from "./util";
+import type { Json } from "./util/util";
 import type {
   ClashErrorCause,
   InputErrorCause,
   PointcutErrorCause,
 } from "./report";
-import type { Parameter } from "./lang";
+import type { Parameter } from "./lang/syntax";
 import type {
   ControlKind,
   ClosureKind,
@@ -38,7 +38,7 @@ export type {
   IntrinsicRecord as AranIntrinsicRecord,
   Intrinsic as AranIntrinsicName,
   Parameter as AranParameter,
-} from "./lang";
+} from "./lang/syntax";
 
 export {
   ProgramKind as AranProgramKind,
@@ -240,7 +240,7 @@ export type Digest<P, H extends string | number> = (
   node_kind: EstreeNodeKind,
 ) => H;
 
-export type { Json } from "./util";
+export type { Json } from "./util/util";
 
 /**
  * Configuration object for the `instrument` function.

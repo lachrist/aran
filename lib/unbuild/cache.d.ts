@@ -1,4 +1,4 @@
-import type { Intrinsic, Primitive } from "../lang";
+import type { Intrinsic, Primitive } from "../lang/syntax";
 import type { ConstantMetaVariable, WritableMetaVariable } from "./variable";
 
 export type WritableCache = {

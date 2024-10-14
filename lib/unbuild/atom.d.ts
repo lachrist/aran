@@ -8,9 +8,9 @@ import type {
   Effect as GenericEffect,
   Expression as GenericExpression,
   Intrinsic,
-} from "../lang";
+} from "../lang/syntax";
 import type { SourceValue, SpecifierName } from "estree-sentry";
-import type { Brand } from "../util";
+import type { Brand } from "../util/util";
 import type { Tree } from "../util/tree";
 
 export type Label = Brand<string, "unbuild.Label">;

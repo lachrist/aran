@@ -1,4 +1,4 @@
-import type { Brand } from "../util";
+import type { Brand } from "../util/util";
 import type { SourceValue, SpecifierValue, SpecifierName } from "estree-sentry";
 import type {
   Node,
@@ -8,7 +8,7 @@ import type {
   Expression,
   SegmentBlock,
   RoutineBlock,
-} from "../lang";
+} from "../lang/syntax";
 import type { Hash } from "../hash";
 
 export type ArgVariable = Brand<string, "weave.ArgVariable">;
