@@ -19,19 +19,6 @@ export type ImportBinding = {
 
 export type Status = "live" | "dead" | "schrodinger";
 
-export type SloppyFunction = {
-  /**
-   * The protected value of the sloppy function declaration.
-   * That is that changing its variable will not change this value.
-   */
-  self: ConstantMetaVariable | null;
-  /**
-   * An arrow to initialize the closure-scoped variable of the sloppy function.
-   * This is necessary to prevent mutating its block-scoped variable.
-   */
-  save: ConstantMetaVariable | null;
-};
-
 export type RegularBinding = {
   type: "regular";
   variable: VariableName;
@@ -39,7 +26,11 @@ export type RegularBinding = {
   status: "live" | "dead" | "schrodinger";
   write: Write;
   export: (SpecifierName | SpecifierValue)[];
-  sloppy_function: null | SloppyFunction;
+  /**
+   * An arrow to initialize the closure-scoped variable of the sloppy function.
+   * This is necessary because the its block-scoped variable shadows it.
+   */
+  save_sloppy_function: null | ConstantMetaVariable;
 };
 
 export type Binding = ImportBinding | RegularBinding;

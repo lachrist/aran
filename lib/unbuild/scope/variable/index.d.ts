@@ -1,6 +1,5 @@
 import type { VariableName } from "estree-sentry";
 import type { Expression } from "../../atom";
-import type { ConstantMetaVariable } from "../../variable";
 import type { Mode } from "../../mode";
 import type { RootSort } from "../../sort";
 import type { EvalFrame, RawEvalFrame } from "./eval";
@@ -79,14 +78,12 @@ export type LateDeclareVariableOperation = VariableOperation & {
   conflict: "ignore" | "report";
 };
 
-export type InitializeVariableOperation = VariableOperation & {
+export type AssignVariableOperation = VariableOperation & {
   right: Expression;
 };
 
-export type WriteVariableOperation = VariableOperation & {
-  right: Expression;
-};
+export type InitializeVariableOperation = AssignVariableOperation;
 
-export type WriteSloppyFunctionVariableOperation = VariableOperation & {
-  right: null | ConstantMetaVariable;
-};
+export type WriteVariableOperation = AssignVariableOperation;
+
+export type WriteSloppyFunctionVariableOperation = AssignVariableOperation;

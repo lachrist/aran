@@ -20,7 +20,8 @@ export type Binding = {
   duplicable: boolean;
   initial: Initial;
   write: Write;
-  sloppy_function: SloppyFunction;
+  sloppy_function_near: number;
+  sloppy_function_away: number;
 };
 
 export type Error = {

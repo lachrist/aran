@@ -33,8 +33,6 @@ export type DuplicateAccumulation = {
   current: Hash;
 };
 
-export type Mode = "strict" | "sloppy";
-
 export type FreeBinding = {
   type: "free";
   kind: Kind;
