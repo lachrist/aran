@@ -1,10 +1,10 @@
 import type { Hash } from "./hash";
 import type { Meta } from "./unbuild/meta";
-import type { Scope } from "./unbuild/scope";
+import type { PackScope } from "./unbuild/scope";
 
 export type Reboot = {
   meta: Meta;
-  scope: Scope;
+  scope: PackScope;
 };
 
 export type RebootRecord = {

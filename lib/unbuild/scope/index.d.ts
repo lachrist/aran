@@ -12,3 +12,7 @@ export type Scope = CatchScope &
   VariableScope & {
     annotation: Annotation;
   };
+
+export type PackScope = {
+  [key in keyof Scope]: key extends "annotation" ? null : Scope[key];
+};
