@@ -47,7 +47,15 @@ export type VariableScope = {
 };
 
 export type PerformStandard<O, W1, W2, W3, W4, W5, W6, X> = {
-  performEval: Intercept<EvalFrame, O, W1, X>;
+  performEval:
+    | {
+        type: "perform";
+        data: Perform<EvalFrame, O, W1, X>;
+      }
+    | {
+        type: "intercept";
+        data: Intercept<EvalFrame, O, W1, X>;
+      };
   performIllegal: PerformMaybe<IllegalFrame, O, W2, X>;
   performProxy: PerformMaybe<ProxyFrame, O, W3, X>;
   performRegular: PerformMaybe<RegularFrame, O, W4, X>;

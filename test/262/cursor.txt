@@ -1,2 +1,2 @@
 bare-basic-standard
-247 annexB/language/eval-code/direct/block-decl-nostrict.js
+255 annexB/language/eval-code/direct/func-block-decl-eval-func-init.js
