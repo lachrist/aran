@@ -1,2 +1,2 @@
 bare-basic-standard
-183 annexB/built-ins/String/prototype/substr/start-and-length-as-numbers.js
+247 annexB/language/eval-code/direct/block-decl-nostrict.js
