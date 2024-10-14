@@ -1,2 +1,2 @@
 bare-basic-standard
-7 annexB/built-ins/Date/prototype/getYear/this-not-date.js
+34 annexB/built-ins/RegExp/RegExp-invalid-control-escape-character-class.js
