@@ -1,2 +1,2 @@
 bare-basic-standard
-25636 language/eval-code/direct/arrow-fn-a-following-parameter-is-named-arguments-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js
+25744 language/eval-code/direct/block-decl-eval-source-is-strict-nostrict.js

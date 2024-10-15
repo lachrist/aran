@@ -20,7 +20,7 @@ export type SloppyFunction = {
    * An arrow to initialize the closure-scoped variable of the sloppy function.
    * This is necessary because its block-scoped variable shadows it.
    */
-  save: ConstantMetaVariable;
+  save: null | ConstantMetaVariable;
 };
 
 export type OuterBinding = {
