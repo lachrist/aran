@@ -15,6 +15,14 @@ export type Import = {
   specifier: SpecifierName | SpecifierValue | null;
 };
 
+export type SloppyFunction = {
+  /**
+   * An arrow to initialize the closure-scoped variable of the sloppy function.
+   * This is necessary because its block-scoped variable shadows it.
+   */
+  save: ConstantMetaVariable;
+};
+
 export type OuterBinding = {
   variable: VariableName;
   duplicable: false;
@@ -22,7 +30,7 @@ export type OuterBinding = {
   write: "report";
   export: [];
   import: Import;
-  save_sloppy_function: null;
+  sloppy_function: null;
 };
 
 export type InnerBinding = {
@@ -32,11 +40,7 @@ export type InnerBinding = {
   write: Write;
   export: (SpecifierName | SpecifierValue)[];
   import: null;
-  /**
-   * An arrow to initialize the closure-scoped variable of the sloppy function.
-   * This is necessary because its block-scoped variable shadows it.
-   */
-  save_sloppy_function: null | ConstantMetaVariable;
+  sloppy_function: null | SloppyFunction;
 };
 
 export type Status = "live" | "dead" | "schrodinger";

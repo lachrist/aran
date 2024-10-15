@@ -1,2 +1,2 @@
 bare-basic-standard
-258 annexB/language/eval-code/direct/func-block-decl-eval-func-skip-early-err-block.js
+1063 annexB/language/statements/for-in/nonstrict-initializer.js
