@@ -10,30 +10,38 @@ import type { Tree } from "../../../../util/tree";
 import type { Binding as RawBinding } from "../../../annotation/hoisting";
 import type { Link } from "../../../query/link";
 
-export type ImportBinding = {
-  type: "import";
-  variable: VariableName;
+export type Import = {
   source: SourceValue;
   specifier: SpecifierName | SpecifierValue | null;
 };
 
-export type Status = "live" | "dead" | "schrodinger";
+export type OuterBinding = {
+  variable: VariableName;
+  duplicable: false;
+  status: "live";
+  write: "report";
+  export: [];
+  import: Import;
+  save_sloppy_function: null;
+};
 
-export type RegularBinding = {
-  type: "regular";
+export type InnerBinding = {
   variable: VariableName;
   duplicable: boolean;
-  status: "live" | "dead" | "schrodinger";
+  status: Status;
   write: Write;
   export: (SpecifierName | SpecifierValue)[];
+  import: null;
   /**
    * An arrow to initialize the closure-scoped variable of the sloppy function.
-   * This is necessary because the its block-scoped variable shadows it.
+   * This is necessary because its block-scoped variable shadows it.
    */
   save_sloppy_function: null | ConstantMetaVariable;
 };
 
-export type Binding = ImportBinding | RegularBinding;
+export type Status = "live" | "dead" | "schrodinger";
+
+export type Binding = InnerBinding | OuterBinding;
 
 export type RegularFrame = {
   type: "regular";
