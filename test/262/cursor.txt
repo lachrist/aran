@@ -1,2 +1,2 @@
 bare-basic-standard
-25744 language/eval-code/direct/block-decl-eval-source-is-strict-nostrict.js
+25898 language/eval-code/direct/var-env-func-init-local-new-delete.js
