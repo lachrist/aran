@@ -1,2 +1,2 @@
 bare-basic-standard
-1063 annexB/language/statements/for-in/nonstrict-initializer.js
+1171 built-ins/Array/from/source-object-length.js
