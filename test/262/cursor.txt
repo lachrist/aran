@@ -1,2 +1,2 @@
 bare-basic-standard
-255 annexB/language/eval-code/direct/func-block-decl-eval-func-init.js
+248 annexB/language/eval-code/direct/func-block-decl-eval-func-block-scoping.js
