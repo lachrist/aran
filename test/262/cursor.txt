@@ -1,2 +1,2 @@
 bare-basic-standard
-34562 language/expressions/import.meta/import-meta-is-an-ordinary-object.js
+37141 language/function-code/S10.2.1_A5.2_T1.js
