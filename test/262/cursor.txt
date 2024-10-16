@@ -1,2 +1,2 @@
 bare-basic-standard
-27409 language/expressions/async-generator/dstr/ary-ptrn-elem-id-init-fn-name-class.js
+33133 language/expressions/dynamic-import/eval-export-dflt-cls-named.js
