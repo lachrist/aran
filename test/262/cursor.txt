@@ -1,2 +1,2 @@
 bare-basic-standard
-46495 language/statements/function/arguments-with-arguments-fn.js
+47321 language/statements/switch/scope-lex-close-dflt.js
