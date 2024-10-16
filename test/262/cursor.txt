@@ -1,2 +1,2 @@
 bare-basic-standard
-36000
+43408 language/statements/class/name-binding/const.js
