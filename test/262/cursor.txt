@@ -1,2 +1,2 @@
 bare-basic-standard
-25898 language/eval-code/direct/var-env-func-init-local-new-delete.js
+27301 language/expressions/async-function/forbidden-ext/b1/async-func-expr-named-forbidden-ext-direct-access-prop-arguments.js
