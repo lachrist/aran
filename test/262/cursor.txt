@@ -1,2 +1,1 @@
 bare-basic-standard
-47480 language/statements/try/catch-parameter-boundnames-restriction-arguments-eval-throws.js
