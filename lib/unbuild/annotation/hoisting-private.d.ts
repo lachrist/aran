@@ -67,4 +67,13 @@ export type VoidBinding = {
 
 export type Binding = FreeBinding | LockBinding | FlagBinding | VoidBinding;
 
-export type Hoisting = Tree<Binding>;
+export type TodoBinding = FreeBinding;
+
+export type DoneBinding = LockBinding | FlagBinding | VoidBinding;
+
+export type HoistingItem = {
+  todo: Tree<TodoBinding>;
+  done: Tree<DoneBinding>;
+};
+
+export type Hoisting = Tree<HoistingItem>;

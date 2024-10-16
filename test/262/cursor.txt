@@ -1,2 +1,1 @@
 bare-basic-standard
-28166 language/expressions/call/scope-lex-open.js
