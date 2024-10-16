@@ -1,2 +1,2 @@
 bare-basic-standard
-43814 language/statements/do-while/S12.6.1_A3.js
+46495 language/statements/function/arguments-with-arguments-fn.js
