@@ -1,2 +1,2 @@
 bare-basic-standard
-47321 language/statements/switch/scope-lex-close-dflt.js
+47480 language/statements/try/catch-parameter-boundnames-restriction-arguments-eval-throws.js

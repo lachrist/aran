@@ -49,9 +49,12 @@ export type Binding = InnerBinding | OuterBinding;
 
 export type RegularFrame = {
   type: "regular";
-  schrodinger: boolean;
   bindings: Tree<Binding>;
 };
+
+// We could initialize bindings with deadzone and remember that the frame is
+// schrodinger. That way, would be able to statically detect some deadzone.
+// But that does not work because we initialize bindings twice in switches.
 
 export type RawRegularFrame = {
   bindings: RawBinding[];
