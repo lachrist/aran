@@ -1,2 +1,2 @@
 bare-basic-standard
-33133 language/expressions/dynamic-import/eval-export-dflt-cls-named.js
+34562 language/expressions/import.meta/import-meta-is-an-ordinary-object.js
