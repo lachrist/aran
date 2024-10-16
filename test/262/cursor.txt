@@ -1,2 +1,2 @@
 bare-basic-standard
-27301 language/expressions/async-function/forbidden-ext/b1/async-func-expr-named-forbidden-ext-direct-access-prop-arguments.js
+27409 language/expressions/async-generator/dstr/ary-ptrn-elem-id-init-fn-name-class.js
