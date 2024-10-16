@@ -1,2 +1,2 @@
 bare-basic-standard
-43408 language/statements/class/name-binding/const.js
+43814 language/statements/do-while/S12.6.1_A3.js
