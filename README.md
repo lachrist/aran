@@ -1,20 +1,18 @@
 # Aran <img src="img/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
 
-**Versions in the range 4.0.x should be considered in early access**
-
 Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting
 JavaScript code. Aran was designed as a generic infra-structure for building
 various development-time dynamic program analyses such as: objects and functions
 profiling, debugging, control-flow tracing, taint analysis and concolic testing.
 Aran is a JavaScript library without any dependencies that only export functions
-that manipulates [estree](https://github.com/estree/estree). Hence, additional
-work is required to actually conduct program analyses.
+for manipulating [estree](https://github.com/estree/estree). Hence, additional
+work is required to actually conduct program analysis.
 
 **Disclaimer** Aran started as an academic research project, and is used at
 [SOFT lab](http://soft.vub.ac.be/soft/) to support publications and run
 experiments. Although Aran supports almost entirely ECMAScript2024 and is
 well-tested against [test262](https://github.com/tc39/test262), it has been
-seldomly used to instrument large-scale programs. The performance overhead and
+rarely used to instrument large-scale programs. The performance overhead and
 even the increase size of the instrumented code may cause issues.
 
 ## Getting Started

@@ -1,7 +1,7 @@
 {
   "name": "aran",
   "description": "Aran is a JavaScript instrumenter for building dynamic analysis tools",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "author": {
     "name": "Laurent Christophe",
     "email": "lachrist@vub.ac.be"
@@ -21,6 +21,7 @@
     "format": "npx prettier -w '**/*.(mjs|d.ts)'",
     "document": "npx typedoc && open page/typedoc/index.html",
     "page": "sh page.sh",
+    "demo": "npx rollup --config demo/rollup.config.mjs && cp demo/index.html page/demo && open demo/index.html",
     "load262": "git clone --filter=tree:0 https://github.com/tc39/test262 test/262/test262",
     "exec262": "node --experimental-vm-modules --expose-gc test/262/exec.mjs",
     "move262": "node --experimental-vm-modules --expose-gc test/262/move.mjs test/262/cursor.txt",
