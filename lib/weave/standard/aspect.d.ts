@@ -418,13 +418,9 @@ export type Aspect<H, X, V extends Valuation> = {
       };
 };
 
-export type UnknownAspect<H> = Aspect<H, unknown, Valuation>;
-
 export type Advice<H, X, V extends Valuation> = {
   [key in Kind]?: null | undefined | AspectTyping<H, X, V>[key]["advice"];
 };
-
-export type UnknownAdvice<H> = Advice<H, unknown, Valuation>;
 
 export type NormalPointcut = {
   [key in Kind]: AspectTyping<Hash, never, never>[key]["pointcut"];
