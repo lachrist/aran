@@ -8,12 +8,12 @@ globalThis.ADVICE = {
     const indent = "..".repeat(depth);
     try {
       const args = arguments_.map(show).join(", ");
-      log(`${indent} > ${show(callee)}[${show(this_)}](${args})\n`);
+      log(`${indent} > ${show(callee)}[${show(this_)}](${args})`);
       const result = Reflect.apply(callee, this_, arguments_);
-      log(`${indent} < ${show(result)}\n`);
+      log(`${indent} < ${show(result)}`);
       return result;
     } catch (error) {
-      log(`${indent} ! ${show(error)}\n`);
+      log(`${indent} ! ${show(error)}`);
     } finally {
       depth -= 1;
     }
@@ -28,7 +28,7 @@ globalThis.eval(
       {
         kind: "script",
         situ: { type: "global" },
-        path: "$",
+        path: "main",
         root: acorn.parse(target, { ecmaVersion: 2024, sourceType: "script" }),
       },
       {

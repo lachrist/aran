@@ -1,7 +1,29 @@
-/* eslint-disable local/no-jsdoc-typedef */
-/* eslint-disable no-console */
+// @ts-ignore
+const ts_aware_context = context;
 
-const { WeakMap, String, JSON, Object, undefined } = globalThis;
+const { log, aran, astring, acorn, target } = /**
+ * @type {{
+ *   log: (message: string) => void,
+ *   aran: import(".."),
+ *   astring: {
+ *     generate: (node: object) => string,
+ *   },
+ *   acorn: {
+ *     parse: (
+ *       code: string,
+ *       options: {
+ *         ecmaVersion: number,
+ *         sourceType: "script" | "module",
+ *       },
+ *     ) => {
+ *       type: "Program",
+ *       sourceType: "script" | "module",
+ *       body: object[],
+ *     },
+ *   },
+ *   target: string,
+ * }}
+ */ (ts_aware_context);
 
 /**
  * @typedef {string & {__brand: "NodeHash"}} NodeHash
@@ -38,6 +60,8 @@ const { WeakMap, String, JSON, Object, undefined } = globalThis;
  * )} TrapName
  */
 
+const ADVICE_VARIABLE = "__ADVICE__";
+
 const MAX_STRING_LENGTH = 20;
 
 const NAME_PADDING = 10;
@@ -49,12 +73,12 @@ const TAIL_PADDING = 20;
 let current_tag = 1;
 
 /**
- * @type {import("../../").Digest<
+ * @type {import("..").Digest<
  *   FilePath,
  *   NodeHash,
  * >}
  */
-const _digest = (_node, node_path, file_path, _kind) =>
+const digest = (_node, node_path, file_path, _kind) =>
   /** @type {NodeHash} */ (`${file_path}#${node_path}`);
 
 /**
@@ -132,7 +156,7 @@ const padMain = (body, tail) => {
  * ) => void}
  */
 const compileLog = (kind) => (indent, name, body, tail, hash) => {
-  console.log(
+  log(
     `${indent}${name.padEnd(NAME_PADDING)} ${kind} ${padMain(body, tail)} @ ${hash}`,
   );
 };
@@ -143,24 +167,24 @@ const logConsume = compileLog("<<");
 
 const logNeutral = compileLog("--");
 
-export const INITIAL_INDENT = /** @type {Indent} */ ("");
+const INITIAL_INDENT = /** @type {Indent} */ ("");
 
 let global_indent = INITIAL_INDENT;
 
+const intrinsics = globalThis.eval(astring.generate(aran.generateSetup({})));
+
 /**
- * @type {(
- *   membrane: import("../262/aran/membrane").BasicMembrane,
- * ) => import("../../").StandardAdvice<
+ * @type {import("..").StandardAdvice<
  *   NodeHash,
  *   Indent,
  *   {
  *     Stack: Value,
  *     Scope: Value,
  *     Other: Value,
- *   },
+ *   }
  * >}
  */
-export const makeTraceAdvice = ({ intrinsics, instrumentLocalEvalCode }) => ({
+const advice = {
   "block@setup": (indent, kind, hash) => {
     if (
       kind === "deep-local-eval" ||
@@ -277,7 +301,25 @@ export const makeTraceAdvice = ({ intrinsics, instrumentLocalEvalCode }) => ({
   "eval@before": (indent, situ, code, hash) => {
     logConsume(indent, "eval", show(code), null, hash);
     if (typeof code === "string") {
-      return instrumentLocalEvalCode(code, situ);
+      return astring.generate(
+        aran.instrument(
+          {
+            kind: "eval",
+            situ,
+            path: /** @type {FilePath} */ ("dynamic"),
+            root: acorn.parse(code, {
+              ecmaVersion: 2024,
+              sourceType: "script",
+            }),
+          },
+          {
+            initial_state: INITIAL_INDENT,
+            advice_variable: ADVICE_VARIABLE,
+            standard_pointcut: true,
+            digest,
+          },
+        ),
+      );
     } else {
       return code;
     }
@@ -340,4 +382,25 @@ export const makeTraceAdvice = ({ intrinsics, instrumentLocalEvalCode }) => ({
     logProduce(indent, "closure", show(value), kind, hash);
     return value;
   },
-});
+};
+
+/** @type {any} */ (globalThis)[ADVICE_VARIABLE] = advice;
+
+globalThis.eval(
+  astring.generate(
+    aran.instrument(
+      {
+        kind: "script",
+        situ: { type: "global" },
+        path: /** @type {FilePath} */ ("main"),
+        root: acorn.parse(target, { ecmaVersion: 2024, sourceType: "script" }),
+      },
+      {
+        initial_state: INITIAL_INDENT,
+        advice_variable: ADVICE_VARIABLE,
+        standard_pointcut: true,
+        digest,
+      },
+    ),
+  ),
+);

@@ -19,6 +19,7 @@
     "./lib/",
     "./lint/",
     "./test/",
+    "./demo/analysis-trace.txt.mjs",
     "doc/design/state-write.d.ts",
     "doc/design/state-write.mjs"
   ],
