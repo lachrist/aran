@@ -10,10 +10,10 @@ work is required to actually conduct program analysis.
 
 **Disclaimer** Aran started as an academic research project, and is used at
 [SOFT lab](http://soft.vub.ac.be/soft/) to support publications and run
-experiments. Although Aran supports almost entirely ECMAScript2024 and is
-well-tested against [test262](https://github.com/tc39/test262), it has been
-rarely used to instrument large-scale programs. The performance overhead and
-even the increase size of the instrumented code may cause issues.
+experiments. Aran extensively supports ECMAScript2024 and has a 99.7% success
+rate against [test262](https://github.com/tc39/test262). However, it has rarely
+been used to instrument large-scale programs. The performance overhead and even
+the increased size of the instrumented code may cause issues.
 
 ## Getting Started
 
@@ -65,12 +65,11 @@ globalThis.eval(
 
 Of particular interest are:
 
-- [instrumentation source input](https://lachrist.github.io/aran/page/typedoc/types/source.PartialSource.html)
-- [instrumentation configuration](https://lachrist.github.io/aran/page/typedoc/types/config.Config.html)
+- [instrumentation file input](https://lachrist.github.io/aran/page/typedoc/types/index.File.html)
+- [instrumentation configuration](https://lachrist.github.io/aran/page/typedoc/types/index.Conf.html)
 - [standard aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_standard_aspect.AspectTyping.html)
 - [flexible aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_flexible_aspect.AspectTyping.html)
-- [reporting system](https://lachrist.github.io/aran/page/typedoc/modules/report.html)
-- [aran language](https://lachrist.github.io/aran/page/typedoc/modules/lang.html)
+- [aran intermediary language](https://lachrist.github.io/aran/page/typedoc/modules/lang_syntax.html)
 
 ## Live Demo
 
