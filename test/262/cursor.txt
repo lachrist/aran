@@ -1,1 +1,1 @@
-bare-weave-standard
+bare-basic-standard
