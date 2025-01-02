@@ -135,7 +135,10 @@ export type AranIntrinsicRecord = {
     exclusion: { [key in PropertyKey]: null },
   ) => object;
   "aran.listForInKey": (object: unknown) => string[];
-  "aran.listRest": <X>(iterator: Iterator<X>, result: IteratorResult<X>) => X[];
+  "aran.listRest": <X>(
+    iterator: Iterator<X>,
+    next: (result: unknown) => IteratorResult<X>,
+  ) => X[];
   "aran.createObject": (prototype: object, ...entries: unknown[]) => unknown;
   "aran.AsyncGeneratorFunction.prototype.prototype": AsyncGeneratorFunction["prototype"];
   "aran.GeneratorFunction.prototype.prototype": GeneratorFunction["prototype"];
