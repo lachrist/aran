@@ -4,6 +4,42 @@ import type { Cache, WritableCache } from "../../cache";
 import type { Mode } from "../../mode";
 import type { RootSort } from "../../sort";
 
+// Closure //
+
+export type ArrowClosure = {
+  type: "arrow";
+  asynchronous: boolean;
+  generator: false;
+};
+
+export type FunctionClosure = {
+  type: "function";
+  asynchronous: boolean;
+  generator: boolean;
+};
+
+export type MethodClosure = {
+  type: "method";
+  asynchronous: boolean;
+  generator: boolean;
+  proto: Cache;
+};
+
+export type ConstructorClosure = {
+  type: "constructor";
+  asynchronous: false;
+  generator: false;
+  self: Cache;
+  derived: boolean;
+  field: Cache;
+};
+
+export type Closure =
+  | ArrowClosure
+  | FunctionClosure
+  | MethodClosure
+  | ConstructorClosure;
+
 // Operation //
 
 export type ReadThisOperation = {};
@@ -40,39 +76,25 @@ export type FinalizeResultOperation = {
 
 export type Intermediary = "eval.local.deep" | "arrow" | "static-block";
 
-export type RootRoutine = {
-  type: "root";
+export type RoutineCommon = {
   intermediaries: List<Intermediary>;
   result: WritableCache | null;
 };
 
-export type FunctionRoutine = {
-  type: "function";
-  intermediaries: List<Intermediary>;
-  result: WritableCache | null;
-};
+export type RootRoutine = { type: "root" } & RoutineCommon;
 
-export type MethodRoutine = {
-  type: "method";
-  intermediaries: List<Intermediary>;
-  result: WritableCache | null;
-  proto: Cache;
-};
+export type FunctionRoutine = FunctionClosure & RoutineCommon;
 
-export type ConstructorRoutine = {
-  type: "constructor";
-  intermediaries: List<Intermediary>;
-  result: WritableCache | null;
-  derived: boolean;
-  self: Cache;
-  field: Cache;
-};
+export type MethodRoutine = MethodClosure & RoutineCommon;
 
-export type Routine =
-  | RootRoutine
+export type ConstructorRoutine = ConstructorClosure & RoutineCommon;
+
+export type ClosureRoutine =
   | FunctionRoutine
   | MethodRoutine
   | ConstructorRoutine;
+
+export type Routine = RootRoutine | ClosureRoutine;
 
 export type RoutineScope = {
   root: RootSort;

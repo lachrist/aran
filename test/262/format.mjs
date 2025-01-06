@@ -7,9 +7,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const {
   Math: { random },
   Date: { now },
+  Error,
+  URL,
 } = globalThis;
-
-const { Error, URL } = globalThis;
 
 const TMP_DIR_URL = pathToFileURL(join(tmpdir(), "dummy"));
 
