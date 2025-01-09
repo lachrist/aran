@@ -1,7 +1,6 @@
 import type { SourceValue, SpecifierValue, SpecifierName } from "estree-sentry";
 import type { DeclareHeader, ModuleHeader } from "../../lang/header";
 import type { Intrinsic, Parameter, RuntimePrimitive } from "../../lang/syntax";
-import type { DeepLocalSitu } from "../../source";
 import type { ValueOf } from "../../util/util";
 import type { ArgVariable, Label } from "../atom";
 import type {
@@ -285,12 +284,7 @@ export type AspectTyping<H, X, V extends Valuation> = {
    */
   "eval@before": {
     pointcut: (hash: H) => boolean;
-    advice: (
-      state: X,
-      situ: DeepLocalSitu,
-      value: V["Stack"],
-      hash: H,
-    ) => string | V["Stack"];
+    advice: (state: X, value: V["Stack"], hash: H) => string | V["Stack"];
   };
   /**
    * Called right after returning from a direct eval call.

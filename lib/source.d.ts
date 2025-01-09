@@ -1,7 +1,7 @@
-import type { Depth } from "./weave/depth";
-import type { Reboot } from "./reboot";
 import type { ModuleProgram, ScriptProgram } from "estree-sentry";
 import type { HashProp } from "./hash";
+import type { Meta } from "./unbuild/meta";
+import type { PackScope } from "./unbuild/scope";
 
 export type GlobalSitu = {
   type: "global";
@@ -12,9 +12,10 @@ export type RootLocalSitu = {
   mode: "strict" | "sloppy";
 };
 
-export type DeepLocalSitu = Reboot & {
+export type DeepLocalSitu = {
   type: "aran";
-  depth: Depth;
+  meta: Meta;
+  scope: PackScope;
 };
 
 export type Situ = GlobalSitu | RootLocalSitu | DeepLocalSitu;
@@ -27,7 +28,7 @@ export type ModuleSource = {
 
 export type ScriptSource = {
   kind: "script";
-  situ: Situ;
+  situ: GlobalSitu;
   root: ScriptProgram<HashProp>;
 };
 

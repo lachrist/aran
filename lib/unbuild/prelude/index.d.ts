@@ -4,9 +4,7 @@ import type { Condition } from "./condition";
 import type { BaseVariable, MetaVariable } from "../variable";
 import type { Template } from "./template";
 import type { Intrinsic } from "../../lang/syntax";
-import type { Hash } from "../../hash";
 import type { Effect } from "../atom";
-import type { Reboot } from "../../reboot";
 import type { PrivateKeyName, VariableName } from "estree-sentry";
 import type { ReifyExternal } from "./external";
 import type { RawWarning } from "./warning";
@@ -40,11 +38,6 @@ export type TemplatePrelude = {
 export type WarningPrelude = {
   type: "warning";
   data: RawWarning;
-};
-
-export type RebootPrelude = {
-  type: "reboot";
-  data: [Hash, Reboot];
 };
 
 export type HeaderPrelude = {
@@ -83,7 +76,6 @@ export type ConditionPrelude = {
 
 export type Prelude =
   | WarningPrelude
-  | RebootPrelude
   | HeaderPrelude
   | SyntaxErrorPrelude
   | ReifyExternalPrelude
@@ -95,13 +87,12 @@ export type Prelude =
   | PrefixPrelude
   | ConditionPrelude;
 
-type ProgramPrelude = SyntaxErrorPrelude | WarningPrelude | RebootPrelude;
+type ProgramPrelude = SyntaxErrorPrelude | WarningPrelude;
 
 type NotBlockPrelude = Exclude<Prelude, BlockPrelude>;
 
 type BlockPrelude =
   | WarningPrelude
-  | RebootPrelude
   | HeaderPrelude
   | UnboundPrivatePrelude
   | ReifyExternalPrelude
@@ -111,7 +102,6 @@ type BlockPrelude =
 
 export type BodyPrelude =
   | WarningPrelude
-  | RebootPrelude
   | HeaderPrelude
   | ReifyExternalPrelude
   | NativeExternalPrelude
