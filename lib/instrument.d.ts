@@ -1,11 +1,11 @@
 import type { Json } from "./util/util";
 import type { VariableName } from "estree-sentry";
-import type { Config as TransConfig } from "./unbuild/config";
-import type { Config as RetroConfig } from "./rebuild/config";
+import type { Config as TransConfig } from "./trans/config";
+import type { Config as RetroConfig } from "./retro/config";
 import type { Pointcut as StandardPointcut } from "./weave/standard/aspect";
 import type { Pointcut as FlexiblePointcut } from "./weave/flexible/aspect";
 import type { Atom } from "./lang/syntax";
-import type { FilePath, Hash } from "./unbuild/hash";
+import type { FilePath, Hash } from "./trans/hash";
 import type { ArgAtom, Tag } from "./weave/atom";
 
 export type Config<

@@ -3,7 +3,7 @@ import type {
   ScriptProgram as EstreeScriptProgram,
   SyntaxErrorCause,
 } from "estree-sentry";
-import type { RawWarning } from "./unbuild/prelude/warning";
+import type { RawWarning } from "./trans/prelude/warning";
 import type { Json } from "./util/util";
 import type {
   ClashErrorCause,
@@ -18,11 +18,8 @@ import type {
   ProgramKind,
 } from "./weave/parametrization";
 import type { ExternalConfig as SetupConfig } from "./setup";
-import type { ExternalConfig as RetroConfig } from "./rebuild/config";
-import type {
-  File as TransFile,
-  Config as TransConfig,
-} from "./unbuild/config";
+import type { ExternalConfig as RetroConfig } from "./retro/config";
+import type { File as TransFile, Config as TransConfig } from "./trans/config";
 import type { ExternalConfig as StandardWeaveConfig } from "./weave/standard/config";
 import type { Config as FlexibleWeaveConfig } from "./weave/flexible/config";
 import type { ExternalConfig as InstrumentConfig } from "./instrument";
@@ -34,7 +31,7 @@ export type {
   GlobalSitu,
   RootLocalSitu as LocalSitu,
   DeepLocalSitu as AranSitu,
-} from "./unbuild/source";
+} from "./trans/source";
 
 export type {
   Program as Program,

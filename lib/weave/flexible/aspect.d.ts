@@ -1,4 +1,4 @@
-import type { DeepLocalSitu } from "../../unbuild/source";
+import type { DeepLocalSitu } from "../../trans/source";
 import type { VariableName } from "estree-sentry";
 import type {
   Atom,

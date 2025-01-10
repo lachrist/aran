@@ -19,7 +19,7 @@ import type {
   SyntaxErrorCause as EstreeSentrySyntaxErrorCause,
 } from "estree-sentry";
 
-import type { Hash } from "./unbuild/hash";
+import type { Hash } from "./trans/hash";
 import type { Json } from "./util/util";
 
 export type InputErrorCause = {
