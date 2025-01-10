@@ -1,7 +1,7 @@
 import type { ModuleProgram, ScriptProgram } from "estree-sentry";
 import type { HashProp } from "./hash";
-import type { Meta } from "./unbuild/meta";
-import type { PackScope } from "./unbuild/scope";
+import type { Meta } from "./meta";
+import type { PackScope } from "./scope";
 
 export type GlobalSitu = {
   type: "global";

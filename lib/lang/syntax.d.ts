@@ -109,7 +109,7 @@ export type AccessorIntrinsicRecord = {
 
 export type AccessorIntrinsic = keyof AccessorIntrinsicRecord;
 
-export type AranIntrinsicRecord = {
+export type ExtraIntrinsicRecord = {
   "aran.global": typeof globalThis;
   "aran.unbuild": (code: string, situ: string) => Program<Atom>;
   "aran.rebuild": (aran: Program<Atom>) => string;
@@ -152,13 +152,13 @@ export type HeadfulClosureKind = "generator";
 
 export type ClosureKind = HeadlessClosureKind | HeadfulClosureKind;
 
-export type AranIntrinsic = keyof AranIntrinsicRecord;
+export type AranIntrinsic = keyof ExtraIntrinsicRecord;
 
 export type Intrinsic = RegularIntrinsic | AccessorIntrinsic | AranIntrinsic;
 
 export type IntrinsicRecord = RegularIntrinsicRcord &
   AccessorIntrinsicRecord &
-  AranIntrinsicRecord;
+  ExtraIntrinsicRecord;
 
 export type Parameter =
   | "import"

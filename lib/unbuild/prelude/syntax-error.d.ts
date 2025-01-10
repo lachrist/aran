@@ -1,4 +1,4 @@
-import type { Hash } from "../../hash";
+import type { Hash } from "../hash";
 
 export type SyntaxError = {
   message: string;

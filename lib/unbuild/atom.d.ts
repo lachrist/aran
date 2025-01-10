@@ -1,5 +1,5 @@
 import type { Variable } from "./variable";
-import type { Hash } from "../hash";
+import type { Hash } from "./hash";
 import type {
   Program as GenericProgram,
   SegmentBlock as GenericSegmentBlock,

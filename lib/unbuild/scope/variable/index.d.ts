@@ -12,7 +12,7 @@ import type { List } from "../../../util/list";
 import type { Intercept, Perform, PerformMaybe } from "../api";
 import type { Meta } from "../../meta";
 import type { Sequence } from "../../../util/sequence";
-import type { Hash } from "../../../hash";
+import type { Hash } from "../../hash";
 import type { MetaDeclarationPrelude, PrefixPrelude } from "../../prelude";
 
 export type ClosureFrame = {

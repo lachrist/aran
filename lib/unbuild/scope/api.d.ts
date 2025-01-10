@@ -1,5 +1,5 @@
 import type { Effect, Expression } from "../atom";
-import type { Hash } from "../../hash";
+import type { Hash } from "../hash";
 import type { Meta } from "../meta";
 import type { Sequence } from "../../util/sequence";
 import type { Tree } from "../../util/tree";

@@ -1,5 +1,5 @@
 import type { ModuleDeclaration, Statement, SwitchCase } from "estree-sentry";
-import type { Hash } from "../../hash";
+import type { Hash } from "../hash";
 import type { Tree } from "../../util/tree";
 
 export type CompletionNode<X> =

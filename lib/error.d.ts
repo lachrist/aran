@@ -19,7 +19,8 @@ import type {
   SyntaxErrorCause as EstreeSentrySyntaxErrorCause,
 } from "estree-sentry";
 
-import type { Hash } from "./hash";
+import type { Hash } from "./unbuild/hash";
+import type { Json } from "./util/util";
 
 export type InputErrorCause = {
   conditions: {
@@ -77,7 +78,7 @@ export type DuplicatePointcutErrorCause = {
   type: "DuplicateCut";
   point: "eval@before" | "apply@around" | "construct@around";
   conflict: VariableName[];
-  hash: Hash;
+  tag: Json;
 };
 
 /**
@@ -87,7 +88,7 @@ export type DuplicatePointcutErrorCause = {
 export type MissingPointcutErrorCause = {
   type: "MissingCut";
   point: "eval@before";
-  hash: Hash;
+  tag: Json;
 };
 
 export type PointcutErrorCause =

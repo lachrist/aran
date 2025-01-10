@@ -1,4 +1,4 @@
-import type { Brand } from "./util/util";
+import type { Brand } from "../util/util";
 
 export type FilePath = Brand<unknown, "FilePath">;
 

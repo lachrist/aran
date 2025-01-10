@@ -13,6 +13,7 @@ import type { Tree } from "../../../../util/tree";
 import type { RootSort } from "../../../sort";
 import type { Mode } from "../../../mode";
 import type { Binding as RawBinding } from "../../../annotation/hoisting";
+import type { GlobalDeclarativeRecord } from "../../../config";
 
 export type Write = "perform" | "report";
 
@@ -77,6 +78,6 @@ export type ReifyBind = {
 export type RootBind = AlienBind | ReifyBind;
 
 export type RawRootFrame = {
-  global_declarative_record: "builtin" | "emulate";
+  global_declarative_record: GlobalDeclarativeRecord;
   bindings: RawBinding[];
 };

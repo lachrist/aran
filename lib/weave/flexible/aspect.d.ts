@@ -1,43 +1,32 @@
-import type { DeepLocalSitu } from "../../source";
+import type { DeepLocalSitu } from "../../unbuild/source";
 import type { VariableName } from "estree-sentry";
 import type {
-  ArgVariable as Variable,
-  GenNode as Node,
-  GenProgram as Program,
-  GenSegmentBlock as SegmentBlock,
-  GenRoutineBlock as RoutineBlock,
-  GenStatement as Statement,
-  GenEffect as Effect,
-  GenExpression as Expression,
-} from "../atom";
-import type { Parameter } from "../../lang/syntax";
-import type { Json } from "../../util/util";
-import type { ValueOf } from "../../util/util";
-import type { Hash } from "../../hash";
-
-export {
-  Variable,
+  Atom,
   Node,
+  Parameter,
   Program,
-  SegmentBlock,
   RoutineBlock,
+  SegmentBlock,
   Statement,
   Effect,
   Expression,
-};
+} from "../../lang/syntax";
+import type { Json } from "../../util/util";
+import type { ValueOf } from "../../util/util";
+import type { ArgAtom } from "../atom";
 
 export type GlobalAdviceVariable = string;
 
-export type Block<hash> = SegmentBlock<hash> | RoutineBlock<hash>;
+export type Block<A extends Atom> = SegmentBlock<A> | RoutineBlock<A>;
 
 export type GenericPointcut<
-  hash,
+  atom extends Atom,
   point extends Json[],
-  node extends Node<hash>,
+  node extends Node<atom>,
 > = (
   node: node,
-  parent: Node<hash>,
-  root: Program<hash>,
+  parent: Node<atom>,
+  root: Program<atom>,
 ) => undefined | null | point;
 
 /**
@@ -49,85 +38,90 @@ export type GenericPointcut<
  * once. The join points of the flexible weaving API are very similar to the
  * join points of the standard API.
  */
-export type AspectTyping<hash, state, value, point extends Json[]> = {
+export type AspectTyping<
+  atom extends Atom,
+  state,
+  value,
+  point extends Json[],
+> = {
   // block //
   "block@setup": {
-    pointcut: GenericPointcut<hash, point, Block<hash>>;
+    pointcut: GenericPointcut<atom, point, Block<atom>>;
     advice: (parent: state, ...point: point) => state;
   };
   "block@before": {
-    pointcut: GenericPointcut<hash, point, Block<hash>>;
+    pointcut: GenericPointcut<atom, point, Block<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   "block@declaration": {
-    pointcut: GenericPointcut<hash, point, Block<hash>>;
+    pointcut: GenericPointcut<atom, point, Block<atom>>;
     advice: (
       state: state,
-      frame: { [variable in Variable | Parameter]: value },
+      frame: { [variable in atom["Variable"] | Parameter]: value },
       ...point: point
     ) => void;
   };
   "block@declaration-overwrite": {
-    pointcut: GenericPointcut<hash, point, Block<hash>>;
+    pointcut: GenericPointcut<atom, point, Block<atom>>;
     advice: (
       state: state,
-      frame: { [K in Variable | Parameter]: value },
+      frame: { [K in atom["Variable"] | Parameter]: value },
       ...point: point
-    ) => { [K in Variable | Parameter]: value };
+    ) => { [K in atom["Variable"] | Parameter]: value };
   };
   "program-block@after": {
-    pointcut: GenericPointcut<hash, point, RoutineBlock<hash>>;
+    pointcut: GenericPointcut<atom, point, RoutineBlock<atom>>;
     advice: (state: state, value: value, ...point: point) => value;
   };
   "closure-block@after": {
-    pointcut: GenericPointcut<hash, point, RoutineBlock<hash>>;
+    pointcut: GenericPointcut<atom, point, RoutineBlock<atom>>;
     advice: (state: state, value: value, ...point: point) => value;
   };
   "segment-block@after": {
-    pointcut: GenericPointcut<hash, point, SegmentBlock<hash>>;
+    pointcut: GenericPointcut<atom, point, SegmentBlock<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   "block@throwing": {
-    pointcut: GenericPointcut<hash, point, Block<hash>>;
+    pointcut: GenericPointcut<atom, point, Block<atom>>;
     advice: (state: state, error: value, ...point: point) => value;
   };
   "block@teardown": {
-    pointcut: GenericPointcut<hash, point, Block<hash>>;
+    pointcut: GenericPointcut<atom, point, Block<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   // statement //
   "statement@before": {
-    pointcut: GenericPointcut<hash, point, Statement<hash>>;
+    pointcut: GenericPointcut<atom, point, Statement<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   "statement@after": {
-    pointcut: GenericPointcut<hash, point, Statement<hash>>;
+    pointcut: GenericPointcut<atom, point, Statement<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   // effect //
   "effect@before": {
-    pointcut: GenericPointcut<hash, point, Effect<hash>>;
+    pointcut: GenericPointcut<atom, point, Effect<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   "effect@after": {
-    pointcut: GenericPointcut<hash, point, Effect<hash>>;
+    pointcut: GenericPointcut<atom, point, Effect<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   // expression //
   "expression@before": {
-    pointcut: GenericPointcut<hash, point, Expression<hash>>;
+    pointcut: GenericPointcut<atom, point, Expression<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   "expression@after": {
-    pointcut: GenericPointcut<hash, point, Expression<hash>>;
+    pointcut: GenericPointcut<atom, point, Expression<atom>>;
     advice: (state: state, result: value, ...point: point) => value;
   };
   // eval //
   "eval@before": {
     pointcut: GenericPointcut<
-      hash,
+      atom,
       point,
-      Expression<hash> & { type: "EvalExpression" }
+      Expression<atom> & { type: "EvalExpression" }
     >;
     advice: (
       state: state,
@@ -139,9 +133,9 @@ export type AspectTyping<hash, state, value, point extends Json[]> = {
   // apply - construct //
   "apply@around": {
     pointcut: GenericPointcut<
-      hash,
+      atom,
       point,
-      Expression<hash> & { type: "ApplyExpression" }
+      Expression<atom> & { type: "ApplyExpression" }
     >;
     advice: (
       state: state,
@@ -153,9 +147,9 @@ export type AspectTyping<hash, state, value, point extends Json[]> = {
   };
   "construct@around": {
     pointcut: GenericPointcut<
-      hash,
+      atom,
       point,
-      Expression<hash> & { type: "ConstructExpression" }
+      Expression<atom> & { type: "ConstructExpression" }
     >;
     advice: (
       state: state,
@@ -168,70 +162,89 @@ export type AspectTyping<hash, state, value, point extends Json[]> = {
 
 export type AspectKind = keyof AspectTyping<never, never, never, never>;
 
-export type AspectElement<hash, state, value, point extends Json[]> = ValueOf<{
+export type AspectElement<
+  atom extends Atom,
+  state,
+  value,
+  point extends Json[],
+> = ValueOf<{
   [key in AspectKind]: {
     kind: key;
-    pointcut: AspectTyping<hash, state, value, point>[key]["pointcut"];
-    advice: AspectTyping<hash, state, value, point>[key]["advice"];
+    pointcut: AspectTyping<atom, state, value, point>[key]["pointcut"];
+    advice: AspectTyping<atom, state, value, point>[key]["advice"];
   };
 }>;
 
-export type PointcutEntry<hash, kind extends AspectKind> = [
+export type PointcutEntry<atom extends Atom, kind extends AspectKind> = [
   VariableName,
   {
     kind: kind;
-    pointcut: AspectTyping<hash, never, never, Json[]>[kind]["pointcut"];
+    pointcut: AspectTyping<atom, never, never, Json[]>[kind]["pointcut"];
   },
 ];
 
-export type AdviceElement<hash, state, value, point extends Json[]> = ValueOf<{
+export type InternalPointcutEntry = PointcutEntry<ArgAtom, AspectKind>;
+
+export type AdviceElement<
+  atom extends Atom,
+  state,
+  value,
+  point extends Json[],
+> = ValueOf<{
   [kind in AspectKind]: {
     kind: kind;
-    advice: AspectTyping<hash, state, value, point>[kind]["advice"];
+    advice: AspectTyping<atom, state, value, point>[kind]["advice"];
   };
 }>;
 
 export type HomogeneousAdvice<
-  hash,
+  atom extends Atom,
   state,
   value,
   point extends Json[],
-> = AdviceElement<hash, state, value, point>[];
+> = AdviceElement<atom, state, value, point>[];
 
-export type Pointcut<hash> = {
+export type Pointcut<atom extends Atom> = {
   [variable: GlobalAdviceVariable]: ValueOf<{
     [kind in AspectKind]: {
       kind: kind;
-      pointcut: AspectTyping<hash, never, never, Json[]>[kind]["pointcut"];
+      pointcut: AspectTyping<atom, never, never, Json[]>[kind]["pointcut"];
     };
   }>;
 };
 
+export type InternalPointcut = Pointcut<ArgAtom>;
+
 export type OptimalPointcut = {
   [kind in AspectKind]: [
     VariableName,
-    AspectTyping<Hash, never, never, Json[]>[kind]["pointcut"],
+    AspectTyping<ArgAtom, never, never, Json[]>[kind]["pointcut"],
   ][];
 };
 
 export type OptimalPointcutEntry<kind extends AspectKind> = [
   VariableName,
-  AspectTyping<Hash, never, never, Json[]>[kind]["pointcut"],
+  AspectTyping<ArgAtom, never, never, Json[]>[kind]["pointcut"],
 ];
 
-export type HomogeneousAspect<hash, state, value, point extends Json[]> = {
-  [variable: GlobalAdviceVariable]: AspectElement<hash, state, value, point>;
+export type HomogeneousAspect<
+  atom extends Atom,
+  state,
+  value,
+  point extends Json[],
+> = {
+  [variable: GlobalAdviceVariable]: AspectElement<atom, state, value, point>;
 };
 
 export type HeterogeneousAspect<
-  hash,
+  atom extends Atom,
   state,
   value,
   point extends { [variable: GlobalAdviceVariable]: Json[] },
 > = {
-  [variable in keyof point]: AspectElement<hash, state, value, point[variable]>;
+  [variable in keyof point]: AspectElement<atom, state, value, point[variable]>;
 };
 
-export type Aspect<hash, state, value> = {
-  [variable: GlobalAdviceVariable]: AspectElement<hash, state, value, any>;
+export type Aspect<atom extends Atom, state, value> = {
+  [variable: GlobalAdviceVariable]: AspectElement<atom, state, value, any>;
 };

@@ -1,5 +1,5 @@
 import type { VariableName } from "estree-sentry";
-import type { Hash } from "../../hash";
+import type { Hash } from "../hash";
 
 export type SloppyFunction = "nope" | "near" | "away" | "both";
 
