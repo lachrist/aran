@@ -10,9 +10,9 @@ import type {
 } from "../lang/syntax";
 import type { SourceValue, SpecifierName, SpecifierValue } from "estree-sentry";
 
-export type Label = Brand<string, "rebuild.Label">;
+export type Label = Brand<string, "retro.Label">;
 
-export type Variable = Brand<string, "rebuild.Variable">;
+export type Variable = Brand<string, "retro.Variable">;
 
 export type Atom = {
   Label: Label;

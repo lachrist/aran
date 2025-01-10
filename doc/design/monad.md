@@ -1,10 +1,10 @@
-Currently, `unbuild` is using the writer monad extensively. This enables
-automated handling of prelude. But scope still need to be passed around
-manually. Most of the time, a reader monad would be sufficient. The only
-(contagious) case that would require the state monad is
-`listInitializeScopeEffect`. This function updates the deadzone of variables to
-remove many runtime checks. We could have a monad that handles all these cases
-and use characters to type the arguments of monadic functions. For instance:
+Currently, `trans` is using the writer monad extensively. This enables automated
+handling of prelude. But scope still need to be passed around manually. Most of
+the time, a reader monad would be sufficient. The only (contagious) case that
+would require the state monad is `listInitializeScopeEffect`. This function
+updates the deadzone of variables to remove many runtime checks. We could have a
+monad that handles all these cases and use characters to type the arguments of
+monadic functions. For instance:
 
 - `X`: pure `X`
 - `R`: reader + writer `(state: S) => [W, X]`

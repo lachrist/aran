@@ -13,7 +13,7 @@ import type { SourceValue, SpecifierName } from "estree-sentry";
 import type { Brand } from "../util/util";
 import type { Tree } from "../util/tree";
 
-export type Label = Brand<string, "unbuild.Label">;
+export type Label = Brand<string, "trans.Label">;
 
 export type Atom = {
   Label: Label;
