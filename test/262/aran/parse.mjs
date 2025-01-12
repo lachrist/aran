@@ -15,7 +15,7 @@ const {
  *   kind: "script" | "module" | "eval",
  *   code: string
  * ) => import("../outcome").Outcome<
- *   import("../../../").Program,
+ *   import("../../../").LooseEstreeProgram,
  *   import("../error-serial").ErrorSerial
  * >}
  */
@@ -46,7 +46,7 @@ export const parseGlobal = (kind, code) => {
  *   kind: "eval",
  *   code: string,
  * ) => import("../outcome").Outcome<
- *   import("../../../").Program,
+ *   import("../../../").LooseEstreeProgram,
  *   import("../error-serial").ErrorSerial
  * >}
  */
@@ -81,8 +81,8 @@ const parseAcornLocal = (_kind, code) => {
 
 /**
  * @type {(
- *   root: import("../../../").Program,
- * ) => import("../../../").Program}
+ *   root: import("../../../").LooseEstreeProgram,
+ * ) => import("../../../").LooseEstreeProgram}
  */
 const sanitizeBabel = (root) => {
   /** @type {object[]} */
@@ -129,7 +129,7 @@ const sanitizeBabel = (root) => {
  *   kind: "eval",
  *   code: string,
  * ) => import("../outcome").Outcome<
- *   import("../../../").Program,
+ *   import("../../../").LooseEstreeProgram,
  *   import("../error-serial").ErrorSerial
  * >}
  */
@@ -177,7 +177,7 @@ const parseBabelLocal = (_kind, code) => {
  *   kind: "eval",
  *   code: string,
  * ) => import("../outcome").Outcome<
- *   import("../../../").Program,
+ *   import("../../../").LooseEstreeProgram,
  *   import("../error-serial").ErrorSerial
  * >}
  */

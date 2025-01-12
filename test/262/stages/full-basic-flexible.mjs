@@ -11,18 +11,18 @@ const { undefined } = globalThis;
  * @type {(
  *   membrane: import("../aran/membrane").BasicMembrane,
  * ) => import("../../../").HomogeneousFlexibleAspect<
- *   import("../aran/config").NodeHash,
+ *   import("../aran/config").Atom,
  *   null,
  *   unknown,
  *   [],
  * >}
  */
-const makeAspect = ({ intrinsics, instrumentLocalEvalCode }) => {
+const makeAspect = ({ intrinsics, weaveLocalEval }) => {
   /**
    * @type {(
-   *   node: import("../../../").AranNode<import("../aran/config").NodeHash>,
-   *   parent: import("../../../").AranNode<import("../aran/config").NodeHash>,
-   *   root: import("../../../").AranNode<import("../aran/config").NodeHash>,
+   *   node: import("../../../").AranNode<import("../aran/config").Atom>,
+   *   parent: import("../../../").AranNode<import("../aran/config").Atom>,
+   *   root: import("../../../").AranNode<import("../aran/config").Atom>,
    * ) => []}
    */
   const pointcut = (_node, _parent, _root) => [];
@@ -105,8 +105,7 @@ const makeAspect = ({ intrinsics, instrumentLocalEvalCode }) => {
     _ARAN_EVAL_BEFORE_: {
       kind: "eval@before",
       pointcut,
-      advice: (_state, code, situ) =>
-        typeof code === "string" ? instrumentLocalEvalCode(code, situ) : code,
+      advice: (_state, root) => weaveLocalEval(/** @type {any} */ (root)),
     },
     _ARAN_APPLY_AROUND_: {
       kind: "apply@around",

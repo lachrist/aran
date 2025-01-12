@@ -19,10 +19,12 @@ import type {
 } from "./weave/parametrization";
 import type { ExternalConfig as SetupConfig } from "./setup";
 import type { ExternalConfig as RetroConfig } from "./retro/config";
-import type { File as TransFile, Config as TransConfig } from "./trans/config";
+import type { File, Config as TransConfig } from "./trans/config";
 import type { ExternalConfig as StandardWeaveConfig } from "./weave/standard/config";
 import type { Config as FlexibleWeaveConfig } from "./weave/flexible/config";
 import type { ExternalConfig as InstrumentConfig } from "./instrument";
+
+export type { Digest, LooseEstreeProgram } from "./trans/config";
 
 export type { Kind as NodeKind, Path as NodePath } from "estree-sentry";
 
@@ -34,7 +36,8 @@ export type {
 } from "./trans/source";
 
 export type {
-  Program as Program,
+  Node as AranNode,
+  Program as AranProgram,
   RoutineBlock as AranRoutineBlock,
   SegmentBlock as AranSegmentBlock,
   Statement as AranStatement,
@@ -71,6 +74,17 @@ export type {
 } from "./weave/flexible/aspect.d.ts";
 
 export type { Json } from "./util/util";
+
+export {
+  Atom,
+  File,
+  InstrumentConfig,
+  SetupConfig,
+  TransConfig,
+  RetroConfig,
+  StandardWeaveConfig,
+  FlexibleWeaveConfig,
+};
 
 ///////////
 // Error //
@@ -172,7 +186,7 @@ export const transpile: <
   H extends number | string,
   A extends Atom & { Tag: H },
 >(
-  file: Partial<TransFile<P>>,
+  file: Partial<File<P>>,
   conf?: null | undefined | Partial<TransConfig<P, H>>,
 ) => Program<A> & { _aran_warning_array: RawWarning[] };
 
@@ -277,7 +291,7 @@ export const instrument: <
   H extends number | string,
   A extends Atom & { Tag: H },
 >(
-  file: Partial<TransFile<P>>,
+  file: Partial<File<P>>,
   conf?: null | undefined | Partial<InstrumentConfig<P, H, A>>,
 ) => EstreeProgram<{}> & {
   _aran_warning_array: RawWarning[];

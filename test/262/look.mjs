@@ -16,7 +16,6 @@ import {
   showTargetPath,
   toMainPath,
 } from "./fetch.mjs";
-import { AranTypeError } from "./error.mjs";
 
 const { console, process, URL, Error, JSON } = globalThis;
 
@@ -87,19 +86,7 @@ console.log(`\n${showTargetPath(path, home, root)}\n`);
 console.dir(
   await runTest(path, {
     setup,
-    instrument: (source) => {
-      const outcome = instrument(source);
-      if (outcome.type === "failure") {
-        return outcome;
-      } else if (outcome.type === "success") {
-        return {
-          type: "success",
-          data: record(source.kind, source.path, outcome.data.content),
-        };
-      } else {
-        throw new AranTypeError(outcome);
-      }
-    },
+    instrument: (source) => record(instrument(source)),
     resolveDependency,
     fetchHarness: compileFetchHarness(home),
     fetchTarget: compileFetchTarget(home),

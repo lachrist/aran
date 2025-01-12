@@ -5,7 +5,6 @@ export type HarnessSource = {
   kind: "script";
   path: HarnessName;
   content: string;
-  context: null;
 };
 
 export type MainSource = {
@@ -13,7 +12,6 @@ export type MainSource = {
   kind: "module" | "script";
   path: MainPath;
   content: string;
-  context: null;
 };
 
 export type DependencySource = {
@@ -21,28 +19,15 @@ export type DependencySource = {
   kind: "module";
   path: DependencyPath;
   content: string;
-  context: null;
 };
 
-export type GlobalSource = {
-  type: "global";
-  kind: "script" | "eval";
-  path: null;
+export type StaticSource = HarnessSource | MainSource | DependencySource;
+
+export type DynamicSource = {
+  type: "dynamic";
+  kind: "script";
+  path: "dynamic://script";
   content: string;
-  context: null;
 };
 
-export type LocalSource = {
-  type: "local";
-  kind: "eval";
-  path: null;
-  content: string;
-  context: object;
-};
-
-export type Source =
-  | HarnessSource
-  | MainSource
-  | DependencySource
-  | GlobalSource
-  | LocalSource;
+export type Source = StaticSource | DynamicSource;

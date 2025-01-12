@@ -15,7 +15,7 @@ import {
 } from "./fetch.mjs";
 import { packResult } from "./result.mjs";
 
-const { Date, console, process, URL, JSON, Map, undefined } = globalThis;
+const { Date, console, process, URL, JSON, Map } = globalThis;
 
 let instrument_user_time = 0;
 
@@ -89,14 +89,14 @@ const wrapInstrument = (instrument) => {
   /**
    * @type {Map<
    *   import("./fetch").HarnessName,
-   *   import("./stage").InstrumentOutcome
+   *   import("./stage").File
    * >}
    */
   const cache = new Map();
   return (source) => {
     if (source.type === "harness") {
       const outcome = cache.get(source.path);
-      if (outcome !== undefined) {
+      if (outcome) {
         return outcome;
       } else {
         const outcome = instrument(source);
@@ -166,7 +166,6 @@ const main = async (argv) => {
             kind: "script",
             path: name,
             content: await fetch.fetchHarness(name),
-            context: null,
           });
         }
         for await (const url of scrape(new URL("test/", home))) {

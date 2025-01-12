@@ -1,4 +1,3 @@
-import type { DeepLocalSitu } from "../../trans/source";
 import type { VariableName } from "estree-sentry";
 import type {
   Atom,
@@ -123,12 +122,7 @@ export type AspectTyping<
       point,
       Expression<atom> & { type: "EvalExpression" }
     >;
-    advice: (
-      state: state,
-      code: value,
-      situ: DeepLocalSitu,
-      ...point: point
-    ) => value;
+    advice: (state: state, code: value, ...point: point) => value;
   };
   // apply - construct //
   "apply@around": {

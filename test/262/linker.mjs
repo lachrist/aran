@@ -4,6 +4,7 @@ import {
   SourceTextModule,
   SyntheticModule,
 } from "node:vm";
+import { harmonizeSyntaxError } from "./syntax-error.mjs";
 
 const { Error, undefined, Map, JSON } = globalThis;
 
@@ -23,45 +24,37 @@ const { Error, undefined, Map, JSON } = globalThis;
  * ) => import("node:vm").Module}
  */
 const makeModule = (
-  { path, content },
-  { report, SyntaxError, instrument, importModuleDynamically, context },
+  { path: path1, content: content1 },
+  { SyntaxError, instrument, importModuleDynamically, context },
 ) => {
-  if (path.endsWith(".json")) {
+  if (path1.endsWith(".json")) {
     const module = new SyntheticModule(
       ["default"],
       () => {
         /** @type {import("node:vm").SyntheticModule} */ (module).setExport(
           "default",
-          JSON.parse(content),
+          JSON.parse(content1),
         );
       },
-      { identifier: path, context },
+      { identifier: path1, context },
     );
     return module;
   } else {
-    const outcome = instrument({
-      type: "dependency",
-      kind: "module",
-      path,
-      content,
-      context: null,
-    });
-    if (outcome.type === "failure") {
-      if (outcome.data.name === "SyntaxError") {
-        throw new SyntaxError(outcome.data.message);
-      } else {
-        throw report(
-          /** @type {import("./report").ReportName} */ (outcome.data.name),
-          outcome.data.message,
-        );
-      }
-    } else {
-      return new SourceTextModule(outcome.data.content, {
-        identifier: outcome.data.location ?? path,
+    try {
+      const { content: content2, path: path2 } = instrument({
+        type: "dependency",
+        kind: "module",
+        path: path1,
+        content: content1,
+      });
+      return new SourceTextModule(content2, {
+        identifier: path2,
         context,
         // eslint-disable-next-line object-shorthand
         importModuleDynamically: /** @type {any} */ (importModuleDynamically),
       });
+    } catch (error) {
+      throw harmonizeSyntaxError(error, SyntaxError);
     }
   }
 };

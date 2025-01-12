@@ -86,6 +86,7 @@ const {
 export const STAGE_ENUM = {
   "identity": null,
   "parsing": null,
+  "bare-min": null,
   "bare-basic-standard": null,
   "bare-basic-flexible": null,
   "bare-patch-flexible": null,

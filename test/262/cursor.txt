@@ -1,1 +1,2 @@
-bare-basic-standard
+bare-min
+23139 built-ins/eval/private-identifiers-not-empty.js

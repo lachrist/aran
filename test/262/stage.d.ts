@@ -10,6 +10,7 @@ import type { Tag } from "./tag";
 export type StageName =
   | "identity"
   | "parsing"
+  | "bare-min"
   | "bare-basic-standard"
   | "bare-basic-flexible"
   | "bare-patch-flexible"
@@ -20,12 +21,12 @@ export type StageName =
   | "full-basic-flexible"
   | "track-origin";
 
-export type InstrumentOutcome = Outcome<
-  { location: string | null; content: string },
-  ErrorSerial
->;
+export type File = {
+  path: string;
+  content: string;
+};
 
-export type Instrument = (source: Source) => InstrumentOutcome;
+export type Instrument = (source: Source) => File;
 
 export type ListLateNegative = (
   path: MainPath,

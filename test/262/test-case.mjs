@@ -162,19 +162,14 @@ export const runTestCaseInner = async (
     instrument,
   }).aran;
   for (const name of includes) {
-    const harness_outcome = instrument({
-      type: "harness",
-      kind: "script",
-      path: name,
-      content: await fetchHarness(name),
-      context: null,
-    });
-    if (harness_outcome.type === "failure") {
-      return harness_outcome;
-    }
-    const { location, content } = harness_outcome.data;
     try {
-      runInContext(content, context, { filename: location ?? name });
+      const { path, content } = instrument({
+        type: "harness",
+        kind: "script",
+        path: name,
+        content: await fetchHarness(name),
+      });
+      runInContext(content, context, { filename: path });
     } catch (error) {
       return {
         type: "failure",
@@ -193,7 +188,7 @@ export const runTestCaseInner = async (
   );
   const instrument_outcome = applyNegative(
     "instrument",
-    instrument(source),
+    wrapOutcome(() => instrument(source)),
     negative,
   );
   if (instrument_outcome === "negative-success") {
@@ -202,14 +197,14 @@ export const runTestCaseInner = async (
   if (instrument_outcome.type === "failure") {
     return instrument_outcome;
   }
-  const { location, content } = instrument_outcome.data;
+  const { path, content } = instrument_outcome.data;
   if (source.kind === "module") {
     const create_outcome = applyNegative(
       "parse",
       wrapOutcome(
         () =>
           new SourceTextModule(content, {
-            identifier: location ?? source.path,
+            identifier: path,
             context,
             // eslint-disable-next-line object-shorthand
             importModuleDynamically: /** @type {any} */ (
@@ -256,7 +251,7 @@ export const runTestCaseInner = async (
       wrapOutcome(
         () =>
           new Script(content, {
-            filename: location ?? source.path,
+            filename: path,
             // eslint-disable-next-line object-shorthand
             importModuleDynamically: /** @type {any} */ (
               importModuleDynamically

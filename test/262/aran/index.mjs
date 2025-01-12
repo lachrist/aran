@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { generate } from "astring";
 import {
   instrument as instrumentAran,
@@ -26,7 +27,7 @@ const {
 export const DUMMY_BASIC_MEMBRANE = {
   intrinsics: /** @type {any} */ ({}),
   report: (_name, message) => new Error(message),
-  instrumentLocalEvalCode: (code, _situ) => code,
+  instrumentLocalEvalCode: (root) => root,
 };
 
 /**
@@ -35,7 +36,7 @@ export const DUMMY_BASIC_MEMBRANE = {
 export const DUMMY_WEAVE_MEMBRANE = {
   intrinsics: /** @type {any} */ ({}),
   report: (_name, message) => new Error(message),
-  instrumentLocalEvalCode: (code, _situ) => code,
+  instrumentLocalEvalCode: (root) => root,
   apply: () => undefined,
   construct: () => undefined,
 };
@@ -98,7 +99,7 @@ export const setupStandardAdvice = (context, advice) => {
  * @type {<S extends import("../../../").Json, V>(
  *   context: import("node:vm").Context,
  *   advice: import("../../../").FlexibleAspect<
- *     import("./config").NodeHash,
+ *     import("./config").Atom,
  *     S,
  *     V,
  *   >,
@@ -324,9 +325,10 @@ export const instrument = (
       return parse_outcome;
     }
     /**
-     * @type {import("../../../").Conf<
+     * @type {import("../../../").InstrumentConfig<
      *   import("./config").FilePath,
      *   import("./config").NodeHash,
+     *   import("./config").Atom,
      * >}
      */
     const conf = {

@@ -2,7 +2,6 @@ import { writeFileSync } from "node:fs";
 import { format } from "./format.mjs";
 import { readdir, unlink } from "node:fs/promises";
 import { stdout } from "node:process";
-import { AranTypeError } from "./error.mjs";
 
 const { URL, performance, Math } = globalThis;
 
@@ -22,31 +21,6 @@ export const cleanup = async () => {
 };
 
 /**
- * @type {(
- *   kind: "script" | "module" | "eval" | "harness",
- * ) => string}
- */
-const getExtension = (kind) => {
-  switch (kind) {
-    case "module": {
-      return "mjs";
-    }
-    case "script": {
-      return "js";
-    }
-    case "eval": {
-      return "js";
-    }
-    case "harness": {
-      return "js";
-    }
-    default: {
-      throw new AranTypeError(kind);
-    }
-  }
-};
-
-/**
  * @type {() => string}
  */
 const generateUniqueIdentifier = () =>
@@ -56,24 +30,16 @@ const generateUniqueIdentifier = () =>
 
 /**
  * @type {(
- *   kind: "script" | "module" | "eval" | "harness",
- *   path: string | null,
- *   content: string,
- * ) => {
- *   location: string,
- *   content: string,
- * }}
+ *   file: import("./stage").File,
+ * ) => import("./stage").File}
  */
-export const record = (kind, path, content1) => {
-  const url = new URL(
-    `${generateUniqueIdentifier()}.${getExtension(kind)}`,
-    base,
-  );
+export const record = ({ path, content: content1 }) => {
+  const url = new URL(`${generateUniqueIdentifier()}.js`, base);
   stdout.write(`RECORD >> ${url.href.substring(root.href.length)}\n`);
-  const content2 = `// ${kind} >> ${path ?? "???"}\n${format(content1)}`;
+  const content2 = `// ${path}\n${format(content1)}`;
   writeFileSync(url, content2, "utf8");
   return {
-    location: url.href,
+    path: url.href,
     content: content2,
   };
 };

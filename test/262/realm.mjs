@@ -1,5 +1,5 @@
 import { createContext, runInContext } from "node:vm";
-import { AranTypeError } from "./error.mjs";
+import { harmonizeSyntaxError } from "./syntax-error.mjs";
 
 const {
   gc,
@@ -33,33 +33,19 @@ export const createRealm = ({ setup, print, report, instrument }) => {
     // We have no information on the location of this.
     // so we do not have to register this script to the
     // linker because dynamic import is pointless.
-    evalScript: (code) => {
-      const outcome = instrument({
-        type: "global",
-        kind: "script",
-        path: null,
-        content: code,
-        context: null,
-      });
-      switch (outcome.type) {
-        case "success": {
-          return runInContext(outcome.data.content, context, {
-            filename: outcome.data.location ?? "[evalScript]",
-          });
-        }
-        case "failure": {
-          if (outcome.data.name === "SyntaxError") {
-            throw new SyntaxError(outcome.data.message);
-          } else {
-            throw report(
-              /** @type {import("./report").ReportName} */ (outcome.data.name),
-              outcome.data.message,
-            );
-          }
-        }
-        default: {
-          throw new AranTypeError(outcome);
-        }
+    evalScript: (content1) => {
+      try {
+        const { path: path2, content: content2 } = instrument({
+          type: "dynamic",
+          kind: "script",
+          path: "dynamic://script",
+          content: content1,
+        });
+        return runInContext(content2, context, {
+          filename: path2,
+        });
+      } catch (error) {
+        throw harmonizeSyntaxError(error, SyntaxError);
       }
     },
     gc: () => {
@@ -84,51 +70,7 @@ export const createRealm = ({ setup, print, report, instrument }) => {
     get AbstractModuleSource() {
       throw report("AranRealmError", "AbstractModuleSource");
     },
-    aran: {
-      context,
-      log,
-      dir,
-      report,
-      instrumentEvalCode: (content, context) => {
-        const outcome = instrument(
-          context === null
-            ? {
-                type: "global",
-                kind: "eval",
-                path: null,
-                content,
-                context,
-              }
-            : {
-                type: "local",
-                kind: "eval",
-                path: null,
-                content,
-                context,
-              },
-        );
-        switch (outcome.type) {
-          case "success": {
-            return outcome.data.content;
-          }
-          case "failure": {
-            if (outcome.data.name === "SyntaxError") {
-              throw new SyntaxError(outcome.data.message);
-            } else {
-              throw report(
-                /** @type {import("./report").ReportName} */ (
-                  outcome.data.name
-                ),
-                outcome.data.message,
-              );
-            }
-          }
-          default: {
-            throw new AranTypeError(outcome);
-          }
-        }
-      },
-    },
+    aran: { context, log, dir, report },
   };
   Reflect.defineProperty(context, "$262", {
     // @ts-ignore

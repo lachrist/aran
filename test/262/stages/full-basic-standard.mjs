@@ -15,7 +15,7 @@ const { undefined } = globalThis;
  *   { Stack: unknown, Scope: unknown, Other: unknown },
  * >}
  */
-const makeAdvice = ({ intrinsics, instrumentLocalEvalCode }) => ({
+const makeAdvice = ({ intrinsics, weaveLocalEval }) => ({
   "block@setup": (state, _kind, _path) => state,
   "program-block@before": (_state, _kind, _head, _path) => undefined,
   "closure-block@before": (_state, _kind, _path) => undefined,
@@ -36,8 +36,8 @@ const makeAdvice = ({ intrinsics, instrumentLocalEvalCode }) => ({
   "import@after": (_state, _source, _specifier, value, _path) => value,
   "closure@after": (_state, _kind, value, _path) => value,
   "read@after": (_state, _variable, value, _path) => value,
-  "eval@before": (_state, situ, code, _path) =>
-    typeof code === "string" ? instrumentLocalEvalCode(code, situ) : code,
+  "eval@before": (_state, root, _path) =>
+    weaveLocalEval(/** @type {any} */ (root)),
   "eval@after": (_state, value, _path) => value,
   "await@before": (_state, value, _path) => value,
   "await@after": (_state, value, _path) => value,

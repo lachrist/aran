@@ -54,11 +54,5 @@ export default {
     ...metadata.features.filter(isFeatureExcluded),
   ],
   setup: (_context) => {},
-  instrument: (source) => ({
-    type: "success",
-    data: {
-      location: null,
-      content: source.content,
-    },
-  }),
+  instrument: (source) => source,
 };

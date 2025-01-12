@@ -48,6 +48,5 @@ export type $262 = {
     log: Console["log"];
     dir: Console["dir"];
     report: Report;
-    instrumentEvalCode: (code: string, context: object | null) => string;
   };
 };

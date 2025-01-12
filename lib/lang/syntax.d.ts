@@ -111,8 +111,12 @@ export type AccessorIntrinsic = keyof AccessorIntrinsicRecord;
 
 export type ExtraIntrinsicRecord = {
   "aran.global": typeof globalThis;
-  "aran.transpile": (code: string, situ: string) => Program<Atom>;
-  "aran.retropile": (aran: Program<Atom>) => string;
+  "aran.transpileEval": (
+    code: string,
+    situ: string,
+    hash: string | number,
+  ) => Program<Atom>;
+  "aran.retropileEval": (aran: Program<Atom>) => string;
   "aran.declareGlobal": (name: string) => void;
   "aran.readGlobal": (name: string) => unknown;
   "aran.typeofGlobal": (name: string) => string;

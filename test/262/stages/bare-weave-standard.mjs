@@ -14,9 +14,9 @@ import bare from "./bare.mjs";
  *   { Stack: unknown, Scope: unknown, Other: unknown },
  * >}
  */
-const makeAdvice = ({ instrumentLocalEvalCode, apply, construct }) => ({
-  "eval@before": (_state, situ, code, _path) =>
-    typeof code === "string" ? instrumentLocalEvalCode(code, situ) : code,
+const makeAdvice = ({ weaveLocalEval, apply, construct }) => ({
+  "eval@before": (_state, root, _path) =>
+    weaveLocalEval(/** @type {any} */ (root)),
   "apply@around": (_state, callee, self, input, _path) =>
     apply(callee, self, input),
   "construct@around": (_state, callee, input, _path) =>
@@ -46,7 +46,9 @@ export default {
   ],
   listLateNegative: (_target, _metadata, _error) => [],
   setup: (context) => {
-    setupStandardAdvice(context, makeAdvice(setupAranWeave(context)));
+    const membrane = setupAranWeave(context);
+    const advice = makeAdvice(membrane);
+    setupStandardAdvice(context, advice);
   },
   instrument: (source) => instrument(source, config),
 };
