@@ -1,2 +1,2 @@
 bare-min
-23139 built-ins/eval/private-identifiers-not-empty.js
+25864 language/eval-code/direct/non-string-object.js
