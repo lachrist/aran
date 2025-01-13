@@ -60,7 +60,7 @@ export type TaggedHead = ValueOf<{
  * to use than the flexible weaving API but it does let the user define the
  * static information provided to the advice functions.
  */
-export type AspectTyping<T, X, V extends Valuation> = {
+export type AspectTyping<T, X, V extends Valuation = Valuation> = {
   /**
    * The first advice called upon entering any block. It provides an oportunity
    * to overwrite the state that other advices will receive. That is that it
@@ -400,7 +400,7 @@ export type AspectTyping<T, X, V extends Valuation> = {
 
 export type Kind = keyof AspectTyping<never, never, never>;
 
-export type Aspect<T, X, V extends Valuation> = {
+export type Aspect<T, X, V extends Valuation = Valuation> = {
   [key in Kind]?:
     | null
     | undefined
@@ -411,7 +411,7 @@ export type Aspect<T, X, V extends Valuation> = {
       };
 };
 
-export type Advice<T, X, V extends Valuation> = {
+export type Advice<T, X, V extends Valuation = Valuation> = {
   [key in Kind]?: null | undefined | AspectTyping<T, X, V>[key]["advice"];
 };
 

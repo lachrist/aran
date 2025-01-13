@@ -1,1 +1,2 @@
-bare-min
+parsing
+383 annexB/language/eval-code/direct/func-switch-dflt-eval-func-no-skip-try.js

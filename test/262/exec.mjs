@@ -161,12 +161,14 @@ const main = async (argv) => {
         for (const name of /** @type {import("./fetch").HarnessName[]} */ (
           await readdir(new URL("harness/", home))
         )) {
-          stage.instrument({
-            type: "harness",
-            kind: "script",
-            path: name,
-            content: await fetch.fetchHarness(name),
-          });
+          if (name.endsWith(".js")) {
+            stage.instrument({
+              type: "harness",
+              kind: "script",
+              path: name,
+              content: await fetch.fetchHarness(name),
+            });
+          }
         }
         for await (const url of scrape(new URL("test/", home))) {
           if (sigint) {
