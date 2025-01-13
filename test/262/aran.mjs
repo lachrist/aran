@@ -15,6 +15,8 @@ const {
   Array: { isArray },
 } = globalThis;
 
+export { generate };
+
 /**
  * @type {(
  *   data: string,
@@ -28,7 +30,7 @@ const parseSitu = parseJson;
  *   code: string
  * ) => import("../../lib").LooseEstreeProgram}
  */
-const parseGlobal = (kind, code) =>
+export const parseGlobal = (kind, code) =>
   parseAcorn(code, {
     ecmaVersion: "latest",
     sourceType: kind === "eval" ? "script" : kind,
@@ -136,7 +138,7 @@ const parseBabelLocal = (_kind, code) =>
  *   code: string,
  * ) => import("../../lib").LooseEstreeProgram}
  */
-const parseLocal = (kind, code) => {
+export const parseLocal = (kind, code) => {
   // We prefer acorn over babel because it is faster respect the estree format.
   // The estree babel plugin is supposed to make babel produce valid estree
   //   but the private identifiers and field are still in the babel format.

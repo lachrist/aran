@@ -190,7 +190,7 @@ export type Parameter =
 // Node //
 //////////
 
-export type Program<A extends Atom> =
+export type Program<A extends Atom = Atom> =
   | {
       type: "Program";
       kind: "module";
@@ -236,7 +236,7 @@ export type Program<A extends Atom> =
 // Block //
 ///////////
 
-export type SegmentBlock<A extends Atom> = {
+export type SegmentBlock<A extends Atom = Atom> = {
   type: "SegmentBlock";
   labels: A["Label"][];
   bindings: [A["Variable"], Intrinsic][];
@@ -244,7 +244,7 @@ export type SegmentBlock<A extends Atom> = {
   tag: A["Tag"];
 };
 
-export type RoutineBlock<A extends Atom> = {
+export type RoutineBlock<A extends Atom = Atom> = {
   type: "RoutineBlock";
   bindings: [A["Variable"], Intrinsic][];
   head: Effect<A>[] | null;
@@ -253,15 +253,15 @@ export type RoutineBlock<A extends Atom> = {
   tag: A["Tag"];
 };
 
-export type HeadlessRoutineBlock<A extends Atom> = RoutineBlock<A> & {
+export type HeadlessRoutineBlock<A extends Atom = Atom> = RoutineBlock<A> & {
   head: null;
 };
 
-export type HeadfulRoutineBlock<A extends Atom> = RoutineBlock<A> & {
+export type HeadfulRoutineBlock<A extends Atom = Atom> = RoutineBlock<A> & {
   head: Effect<A>[];
 };
 
-export type Statement<A extends Atom> =
+export type Statement<A extends Atom = Atom> =
   | {
       type: "EffectStatement";
       inner: Effect<A>;
@@ -302,7 +302,7 @@ export type Statement<A extends Atom> =
       tag: A["Tag"];
     };
 
-export type Effect<A extends Atom> =
+export type Effect<A extends Atom = Atom> =
   | {
       type: "ExpressionEffect";
       discard: Expression<A>;
@@ -328,7 +328,7 @@ export type Effect<A extends Atom> =
       tag: A["Tag"];
     };
 
-export type Expression<A extends Atom> =
+export type Expression<A extends Atom = Atom> =
   // Produce //
   | {
       type: "PrimitiveExpression";
@@ -410,7 +410,7 @@ export type Expression<A extends Atom> =
       tag: A["Tag"];
     };
 
-export type Node<A extends Atom> =
+export type Node<A extends Atom = Atom> =
   | Program<A>
   | SegmentBlock<A>
   | RoutineBlock<A>

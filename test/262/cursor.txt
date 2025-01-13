@@ -1,2 +1,1 @@
 bare-min
-25864 language/eval-code/direct/non-string-object.js

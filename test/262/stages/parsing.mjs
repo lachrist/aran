@@ -1,5 +1,4 @@
-import { parse } from "acorn";
-import { generate } from "astring";
+import { generate, parseGlobal } from "../aran.mjs";
 
 /** @type {import("../stage").Stage} */
 export default {
@@ -10,11 +9,6 @@ export default {
   setup: (_context) => {},
   instrument: ({ path, content, kind }) => ({
     path,
-    content: generate(
-      parse(content, {
-        ecmaVersion: 2024,
-        sourceType: kind,
-      }),
-    ),
+    content: generate(parseGlobal(kind, content)),
   }),
 };
