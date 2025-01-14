@@ -2,21 +2,17 @@ import { Script, SourceTextModule, runInContext } from "node:vm";
 import { createRealm } from "./realm.mjs";
 import { show } from "./util.mjs";
 import { compileLinker } from "./linker.mjs";
-import { AranTypeError } from "./error.mjs";
+import { AranNegativeError, AranTypeError } from "./error.mjs";
 import { serializeError } from "./error-serial.mjs";
+import { cpuUsage } from "node:process";
 
-const { Promise, Error } = globalThis;
-
-/**
- * @type {import("./test-case").TestCaseOutcome}
- */
-const SUCCESS = { type: "success", data: null };
+const { Promise } = globalThis;
 
 /**
  * @type {() => import("./test-case").Termination}
  */
 const makeAsynchronousTermination = () => {
-  /** @type {(outcome: import("./test-case").TestCaseOutcome) => void} */
+  /** @type {(error: null | import("./error-serial").ErrorSerial) => void} */
   let resolve;
   return {
     done: new Promise((resolve_) => {
@@ -26,16 +22,13 @@ const makeAsynchronousTermination = () => {
       // console.dir(unknown, { depth: null });
       const message = show(unknown);
       if (message === "Test262:AsyncTestComplete") {
-        resolve(SUCCESS);
+        resolve(null);
       }
       if (message.startsWith("Test262:AsyncTestFailure:")) {
         resolve({
-          type: "failure",
-          data: {
-            name: "AsyncTest262Error",
-            message: message.slice("Test262:AsyncTestFailure:".length),
-            stack: null,
-          },
+          name: "AsyncTest262Error",
+          message: message.slice("Test262:AsyncTestFailure:".length),
+          stack: null,
         });
       }
     },
@@ -44,7 +37,7 @@ const makeAsynchronousTermination = () => {
 
 /** @type {import("./test-case").Termination} */
 const termination = {
-  done: Promise.resolve(SUCCESS),
+  done: Promise.resolve(null),
   print: (_unknown) => {
     // console.dir(_unknown, { depth: null });
   },
@@ -140,27 +133,29 @@ const applyNegative = (phase, outcome, negative) => {
  *   test_case: import("./test-case").TestCase,
  *   dependencies: {
  *     setup: (context: import("node:vm").Context) => void,
- *     report: import("./report").Report,
+ *     signalNegative: (cause: string) => Error,
  *     instrument: import("./stage").Instrument,
  *     resolveDependency: import("./fetch").ResolveDependency,
  *     fetchHarness: import("./fetch").FetchHarness,
  *     fetchTarget: import("./fetch").FetchTarget,
  *   },
- * ) => Promise<import("./test-case").TestCaseOutcome>}
+ * ) => Promise<null | import("./error-serial").ErrorSerial>}
  */
 export const runTestCaseInner = async (
   { source, negative, asynchronous, includes },
-  { setup, report, instrument, resolveDependency, fetchHarness, fetchTarget },
+  {
+    setup,
+    signalNegative,
+    instrument,
+    resolveDependency,
+    fetchHarness,
+    fetchTarget,
+  },
 ) => {
   const { done, print } = asynchronous
     ? makeAsynchronousTermination()
     : termination;
-  const { context } = createRealm({
-    setup,
-    print,
-    report,
-    instrument,
-  }).aran;
+  const { context } = createRealm({ setup, print, signalNegative }).aran;
   for (const name of includes) {
     try {
       const { path, content } = instrument({
@@ -171,20 +166,12 @@ export const runTestCaseInner = async (
       });
       runInContext(content, context, { filename: path });
     } catch (error) {
-      return {
-        type: "failure",
-        data: serializeError(error),
-      };
+      return serializeError(error);
     }
   }
   const { link, importModuleDynamically, registerMain } = compileLinker(
     context,
-    {
-      report,
-      resolveDependency,
-      instrument,
-      fetchTarget,
-    },
+    { resolveDependency, instrument, fetchTarget },
   );
   const instrument_outcome = applyNegative(
     "instrument",
@@ -192,10 +179,10 @@ export const runTestCaseInner = async (
     negative,
   );
   if (instrument_outcome === "negative-success") {
-    return { type: "success", data: null };
+    return null;
   }
   if (instrument_outcome.type === "failure") {
-    return instrument_outcome;
+    return instrument_outcome.data;
   }
   const { path, content } = instrument_outcome.data;
   if (source.kind === "module") {
@@ -215,10 +202,10 @@ export const runTestCaseInner = async (
       negative,
     );
     if (create_outcome === "negative-success") {
-      return { type: "success", data: null };
+      return null;
     }
     if (create_outcome.type === "failure") {
-      return create_outcome;
+      return create_outcome.data;
     }
     const module = create_outcome.data;
     registerMain(module, source.path);
@@ -228,10 +215,10 @@ export const runTestCaseInner = async (
       negative,
     );
     if (link_outcome === "negative-success") {
-      return { type: "success", data: null };
+      return null;
     }
     if (link_outcome.type === "failure") {
-      return link_outcome;
+      return link_outcome.data;
     }
     const evaluate_outcome = applyNegative(
       "runtime",
@@ -239,10 +226,10 @@ export const runTestCaseInner = async (
       negative,
     );
     if (evaluate_outcome === "negative-success") {
-      return { type: "success", data: null };
+      return null;
     }
     if (evaluate_outcome.type === "failure") {
-      return evaluate_outcome;
+      return evaluate_outcome.data;
     }
     return await done;
   } else if (source.kind === "script") {
@@ -261,10 +248,10 @@ export const runTestCaseInner = async (
       negative,
     );
     if (create_outcome === "negative-success") {
-      return { type: "success", data: null };
+      return null;
     }
     if (create_outcome.type === "failure") {
-      return create_outcome;
+      return create_outcome.data;
     }
     const script = create_outcome.data;
     registerMain(script, source.path);
@@ -274,10 +261,10 @@ export const runTestCaseInner = async (
       negative,
     );
     if (evaluate_outcome === "negative-success") {
-      return { type: "success", data: null };
+      return null;
     }
     if (evaluate_outcome.type === "failure") {
-      return evaluate_outcome;
+      return evaluate_outcome.data;
     }
     return await done;
   } else {
@@ -295,25 +282,22 @@ export const runTestCaseInner = async (
  *     setup: (context: import("node:vm").Context) => void,
  *     instrument: import("./stage").Instrument,
  *   },
- * ) => Promise<import("./test-case").TestCaseOutcome>}
+ * ) => Promise<{
+ *   expect: string[],
+ *   actual: null | import("./error-serial").ErrorSerial,
+ *   time: { user: number, system: number },
+ * }>}
  */
 export const runTestCase = async (test_case, dependencies) => {
-  /** @type {null | import("./error-serial").ErrorSerial} */
-  let serial = null;
-  const outcome = await runTestCaseInner(test_case, {
+  /** @type {string[]} */
+  const expect = [];
+  const time = cpuUsage();
+  const error = await runTestCaseInner(test_case, {
     ...dependencies,
-    report: (name, message) => {
-      const error = new Error(message);
-      error.name = name;
-      if (serial === null) {
-        serial = serializeError(error);
-      }
-      return error;
+    signalNegative: (cause) => {
+      expect.push(cause);
+      return new AranNegativeError(cause);
     },
   });
-  if (serial === null) {
-    return outcome;
-  } else {
-    return { type: "failure", data: serial };
-  }
+  return { expect, actual: error, time: cpuUsage(time) };
 };

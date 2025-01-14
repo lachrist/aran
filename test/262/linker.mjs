@@ -16,7 +16,6 @@ const { Error, undefined, Map, JSON } = globalThis;
  *   },
  *   options: {
  *     SyntaxError: SyntaxErrorConstructor,
- *     report: import("./report").Report,
  *     instrument: import("./stage").Instrument,
  *     importModuleDynamically: import("./linker").Load,
  *     context: import("node:vm").Context,
@@ -27,20 +26,20 @@ const makeModule = (
   { path: path1, content: content1 },
   { SyntaxError, instrument, importModuleDynamically, context },
 ) => {
-  if (path1.endsWith(".json")) {
-    const module = new SyntheticModule(
-      ["default"],
-      () => {
-        /** @type {import("node:vm").SyntheticModule} */ (module).setExport(
-          "default",
-          JSON.parse(content1),
-        );
-      },
-      { identifier: path1, context },
-    );
-    return module;
-  } else {
-    try {
+  try {
+    if (path1.endsWith(".json")) {
+      const module = new SyntheticModule(
+        ["default"],
+        () => {
+          /** @type {import("node:vm").SyntheticModule} */ (module).setExport(
+            "default",
+            JSON.parse(content1),
+          );
+        },
+        { identifier: path1, context },
+      );
+      return module;
+    } else {
       const { content: content2, path: path2 } = instrument({
         type: "dependency",
         kind: "module",
@@ -53,9 +52,9 @@ const makeModule = (
         // eslint-disable-next-line object-shorthand
         importModuleDynamically: /** @type {any} */ (importModuleDynamically),
       });
-    } catch (error) {
-      throw harmonizeSyntaxError(error, SyntaxError);
     }
+  } catch (error) {
+    throw harmonizeSyntaxError(error, SyntaxError);
   }
 };
 
@@ -63,7 +62,6 @@ const makeModule = (
  * @type {(
  *   context: import("node:vm").Context,
  *   dependencies: {
- *     report: import("./report").Report,
  *     resolveDependency: import("./fetch").ResolveDependency,
  *     instrument: import("./stage").Instrument,
  *     fetchTarget: import("./fetch").FetchTarget,
@@ -72,7 +70,7 @@ const makeModule = (
  */
 export const compileLinker = (
   context,
-  { report, resolveDependency, instrument, fetchTarget },
+  { resolveDependency, instrument, fetchTarget },
 ) => {
   // Use promise of the module realm and not the main realm.
   // Still not working because node is changing the promise.
@@ -109,7 +107,7 @@ export const compileLinker = (
         const module = makeModule(
           { path, content },
           // eslint-disable-next-line no-use-before-define
-          { report, SyntaxError, instrument, importModuleDynamically, context },
+          { SyntaxError, instrument, importModuleDynamically, context },
         );
         const race_module = module_cache.get(path);
         if (race_module !== undefined) {

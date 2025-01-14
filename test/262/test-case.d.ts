@@ -1,12 +1,10 @@
 import type { ErrorSerial } from "./error-serial";
 import type { HarnessName } from "./fetch";
-import type { Outcome } from "./outcome";
 import type { MainSource } from "./source";
 import type { Negative } from "./test262";
 
-export type TestCaseOutcome = Outcome<null, ErrorSerial>;
-
 export type TestCase = {
+  directive: "none" | "use-strict";
   source: MainSource;
   negative: null | Negative;
   asynchronous: boolean;
@@ -26,6 +24,6 @@ export type FetchModule = (
 };
 
 export type Termination = {
-  done: Promise<TestCaseOutcome>;
+  done: Promise<null | ErrorSerial>;
   print: (message: unknown) => void;
 };

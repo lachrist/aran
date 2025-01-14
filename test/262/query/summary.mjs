@@ -7,19 +7,20 @@ const { undefined, Object, Math } = globalThis;
 
 /**
  * @type {(
- *   results: import("../result").Result[],
+ *   results: import("../result").ResultEntry[],
  * ) => import("./summary").Summary}
  */
-const summarize = (results) => {
+const summarize = (entries) => {
   /** @type {import("./summary").Summary} */
   const summary = {
-    count: results.length,
+    count: entries.length,
     exclusion: {
       count: 0,
       repartition: /** @type {any} */ ({ __proto__: null }),
     },
     inclusion: {
       count: 0,
+      total: 0,
       true_negative: {
         count: 0,
         repartition: /** @type {any} */ ({ __proto__: null }),
@@ -36,29 +37,32 @@ const summarize = (results) => {
       },
     },
   };
-  for (const result of results) {
+  for (const [_, result] of entries) {
     if (result.type === "exclude") {
       summary.exclusion.count++;
-      for (const tag of result.exclusion) {
+      for (const tag of result.data) {
         summary.exclusion.repartition[tag] =
           (summary.exclusion.repartition[tag] ?? 0) + 1;
       }
     } else if (result.type === "include") {
       summary.inclusion.count++;
-      if (result.expect.length > 0) {
-        const negative =
-          result.actual === null
-            ? summary.inclusion.false_negative
-            : summary.inclusion.true_negative;
-        negative.count += 1;
-        for (const tag of result.expect) {
-          negative.repartition[tag] = (negative.repartition[tag] ?? 0) + 1;
-        }
-      } else {
-        if (result.actual === null) {
-          summary.inclusion.true_positive.count++;
+      summary.inclusion.total += result.data.length;
+      for (const { actual, expect } of result.data) {
+        if (expect.length > 0) {
+          const negative =
+            actual === null
+              ? summary.inclusion.false_negative
+              : summary.inclusion.true_negative;
+          negative.count += 1;
+          for (const tag of expect) {
+            negative.repartition[tag] = (negative.repartition[tag] ?? 0) + 1;
+          }
         } else {
-          summary.inclusion.false_positive.count++;
+          if (actual === null) {
+            summary.inclusion.true_positive.count++;
+          } else {
+            summary.inclusion.false_positive.count++;
+          }
         }
       }
     } else {
@@ -123,17 +127,17 @@ const showSummary = (summary) =>
     showEntry(
       "  true-positive",
       summary.inclusion.true_positive.count,
-      summary.inclusion.count,
+      summary.inclusion.total,
     ),
     showEntry(
       "  false-positive",
       summary.inclusion.false_positive.count,
-      summary.inclusion.count,
+      summary.inclusion.total,
     ),
     showEntry(
       "  false-negative",
       summary.inclusion.false_negative.count,
-      summary.inclusion.count,
+      summary.inclusion.total,
     ),
     ...Object.entries(summary.inclusion.false_negative.repartition)
       .sort(sortEntry)
@@ -141,7 +145,7 @@ const showSummary = (summary) =>
     showEntry(
       "  true-negative",
       summary.inclusion.true_negative.count,
-      summary.inclusion.count,
+      summary.inclusion.total,
     ),
     ...Object.entries(summary.inclusion.true_negative.repartition)
       .sort(sortEntry)

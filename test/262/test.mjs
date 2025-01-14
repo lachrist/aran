@@ -26,6 +26,7 @@ const listTestCase = (path, content, metadata) => {
     !metadata.flags.includes("noStrict")
   ) {
     test_case_array.push({
+      directive: "use-strict",
       source: {
         type: "main",
         kind,
@@ -39,6 +40,7 @@ const listTestCase = (path, content, metadata) => {
   }
   if (!metadata.flags.includes("onlyStrict")) {
     test_case_array.push({
+      directive: "none",
       source: {
         type: "main",
         kind,
@@ -74,10 +76,10 @@ const DEFAULT_METADATA = {
  *   },
  * ) => Promise<{
  *   metadata: import("./test262").Metadata,
- *   outcome: import("./test-case").TestCaseOutcome,
+ *   result: import("./result").Result,
  * }>}
  */
-export const runTest = async (
+export const execTest = async (
   path,
   { fetchTarget, resolveDependency, fetchHarness, setup, instrument },
 ) => {
@@ -86,27 +88,28 @@ export const runTest = async (
   if (metadata_outcome.type === "failure") {
     return {
       metadata: DEFAULT_METADATA,
-      outcome: metadata_outcome,
+      result: { type: "exclude", data: ["metadata"] },
     };
   }
   const metadata = metadata_outcome.data;
+  /**
+   * @type {import("./result").Execution[]}
+   */
+  const executions = [];
   for (const test_case of listTestCase(path, content, metadata)) {
-    const test_case_outcome = await runTestCase(test_case, {
+    const { expect, actual, time } = await runTestCase(test_case, {
       resolveDependency,
       fetchTarget,
       fetchHarness,
       setup,
       instrument,
     });
-    if (test_case_outcome.type === "failure") {
-      return {
-        metadata,
-        outcome: test_case_outcome,
-      };
-    }
+    executions.push({
+      directive: test_case.directive,
+      expect,
+      actual,
+      time,
+    });
   }
-  return {
-    metadata,
-    outcome: { type: "success", data: null },
-  };
+  return { metadata, result: { type: "include", data: executions } };
 };

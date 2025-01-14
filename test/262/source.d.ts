@@ -21,13 +21,4 @@ export type DependencySource = {
   content: string;
 };
 
-export type StaticSource = HarnessSource | MainSource | DependencySource;
-
-export type DynamicSource = {
-  type: "dynamic";
-  kind: "script";
-  path: "dynamic://script";
-  content: string;
-};
-
-export type Source = StaticSource | DynamicSource;
+export type Source = HarnessSource | MainSource | DependencySource;

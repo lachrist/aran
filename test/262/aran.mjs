@@ -3,8 +3,9 @@ import { generate } from "astring";
 import { generateSetup, retropile, transpile } from "../../lib/index.mjs";
 import { parse as parseAcorn } from "acorn";
 import { parse as parseBabel } from "@babel/parser";
-import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
+import { inspectErrorMessage } from "./error-serial.mjs";
 import { harmonizeSyntaxError } from "./syntax-error.mjs";
+import { AranTestError } from "./error.mjs";
 
 const {
   JSON: { parse: parseJson },
@@ -192,9 +193,6 @@ export const compileAran = (config, toEvalPath) => {
       /** @type {import("./test262").$262} */
       const $262 = /** @type {any} */ (intrinsics["aran.global"]).$262;
       const { SyntaxError } = intrinsics["aran.global"];
-      const {
-        aran: { report },
-      } = $262;
       intrinsics["aran.transpileEval"] = (code, situ, hash) => {
         try {
           return transpile(
@@ -214,12 +212,7 @@ export const compileAran = (config, toEvalPath) => {
         try {
           return generate(retropile(root, config));
         } catch (error) {
-          throw report(
-            /** @type {import("./report").ReportName} */ (
-              inspectErrorName(error)
-            ),
-            inspectErrorMessage(error),
-          );
+          throw new AranTestError(error);
         }
       };
       return { intrinsics, $262 };

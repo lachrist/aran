@@ -1,113 +1,106 @@
-/* eslint-disable local/strict-console */
-
 import { pathToFileURL } from "node:url";
-import { argv } from "node:process";
+import { argv, stderr, stdout } from "node:process";
 import { scrape } from "./scrape.mjs";
-import { runTest } from "./test.mjs";
 import { parseCursor, stringifyCursor } from "./cursor.mjs";
-import { readFile } from "node:fs/promises";
-import { writeFileSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import { home, root } from "./home.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
-import {
-  compileFetchHarness,
-  compileFetchTarget,
-  resolveDependency,
-  showTargetPath,
-  toMainPath,
-} from "./fetch.mjs";
-import { loadStage } from "./stage.mjs";
-
-const { console, process, URL } = globalThis;
-
-const persistent = pathToFileURL(argv[2]);
-
-const cursor = parseCursor(await readFile(persistent, "utf8"));
+import { showTargetPath, toMainPath } from "./fetch.mjs";
+import { compileStage } from "./stage.mjs";
 
 const {
-  setup,
-  instrument,
-  listExclusionReason,
-  listLateNegative,
-  listNegative,
-} = await loadStage(cursor.stage);
+  process,
+  URL,
+  JSON: { stringify },
+} = globalThis;
 
-let index = 0;
-
-/** @type {import("./fetch").MainPath | null} */
-let path = null;
-
-let ongoing = false;
-
-process.on("uncaughtException", (error, _origin) => {
-  console.log(error);
-  console.log(
-    `Uncaught >> ${inspectErrorName(error)}: ${inspectErrorMessage(error)}`,
-  );
-});
-
-process.on("SIGINT", () => {
-  process.exit(0);
-});
-
-process.on("exit", () => {
-  if (ongoing) {
-    writeFileSync(
-      persistent,
-      stringifyCursor({
-        stage: cursor.stage,
-        index,
-        path,
-      }),
-      "utf8",
+/**
+ * @type {(
+ *   argv: string[],
+ * ) => Promise<0 | 1>}
+ */
+const main = async (argv) => {
+  if (argv.length !== 1) {
+    stderr.write(
+      "usage: node --experimental-vm-modules --expose-gc test/262/move.mjs <cursor>\n",
     );
-  }
-});
-
-const fetchHarness = compileFetchHarness(home);
-
-const fetchTarget = compileFetchTarget(home);
-
-for await (const url of scrape(new URL("test/", home))) {
-  path = toMainPath(url, home);
-  if (path !== null) {
-    if ((!ongoing && path === cursor.path) || index === cursor.index) {
-      ongoing = true;
+    return 1;
+  } else {
+    const persistent = pathToFileURL(argv[2]);
+    /** @type {import("./cursor").Cursor} */
+    let cursor;
+    try {
+      cursor = parseCursor(await readFile(persistent, "utf8"));
+    } catch (error) {
+      stderr.write(
+        `could not read cursor file at ${persistent} >> ${inspectErrorMessage(error)}\n`,
+      );
+      return 1;
     }
-    if (ongoing) {
-      if (listExclusionReason(path).length === 0) {
-        console.log(index, showTargetPath(path, home, root));
-        const { metadata, outcome } = await runTest(path, {
-          resolveDependency,
-          fetchTarget,
-          fetchHarness,
-          instrument,
-          setup,
-        });
-        const tags = [
-          ...listNegative(path),
-          ...(outcome.type === "failure"
-            ? listLateNegative(path, metadata, outcome.data)
-            : []),
-        ];
-        if ((tags.length === 0) !== (outcome.type === "success")) {
-          console.log({ tags, outcome });
-          process.exit(1);
+    const exec = await compileStage(cursor.stage, {
+      memoization: "lazy",
+      recording: false,
+    });
+    let index = 0;
+    /** @type {import("./fetch").MainPath | null} */
+    let path = null;
+    let done = false;
+    let ongoing = false;
+    const onUncaughtException = (/** @type {unknown} */ error) => {
+      stdout.write(
+        `uncaught >> ${inspectErrorName(error)} >> ${inspectErrorMessage(error)}\n`,
+      );
+    };
+    process.addListener("uncaughtException", onUncaughtException);
+    let sigint = false;
+    const onSigint = () => {
+      sigint = true;
+    };
+    process.addListener("SIGINT", onSigint);
+    try {
+      for await (const url of scrape(new URL("test/", home))) {
+        if (sigint) {
+          return 1;
+        }
+        path = toMainPath(url, home);
+        if (path !== null) {
+          if ((!ongoing && path === cursor.path) || index === cursor.index) {
+            ongoing = true;
+          }
+          if (ongoing) {
+            stdout.write(`${index} ${showTargetPath(path, home, root)}\n`);
+            const result = await exec(path);
+            if (result.type === "include") {
+              for (const { directive, actual, expect } of result.data) {
+                if ((actual === null) !== (expect.length === 0)) {
+                  stderr.write(
+                    stringify({ directive, actual, expect }, null, 2),
+                  );
+                  stderr.write("\n");
+                  return 1;
+                }
+              }
+            }
+          }
+          index += 1;
         }
       }
+      done = true;
+      return 0;
+    } finally {
+      process.removeListener("uncaughtException", onUncaughtException);
+      process.removeListener("SIGINT", onSigint);
+      await writeFile(
+        persistent,
+        stringifyCursor({
+          stage: cursor.stage,
+          index: done ? null : index,
+          path: done ? null : path,
+        }),
+        "utf8",
+      );
     }
-    index += 1;
   }
-}
+};
 
-writeFileSync(
-  persistent,
-  stringifyCursor({
-    stage: cursor.stage,
-    index: null,
-    path: null,
-  }),
-  "utf8",
-);
-
-ongoing = false;
+process.exitCode = await main(argv.slice(2));

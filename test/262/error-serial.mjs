@@ -16,6 +16,8 @@ export const inspectErrorName = (error) => {
   }
 };
 
+export const MISSING_ERROR_MESSAGE = "[missing]";
+
 /**
  * @type {(error: unknown) => string}
  */
@@ -23,7 +25,7 @@ export const inspectErrorMessage = (error) => {
   try {
     return show(/** @type {Error} */ (error).message);
   } catch {
-    return "[missing]";
+    return MISSING_ERROR_MESSAGE;
   }
 };
 

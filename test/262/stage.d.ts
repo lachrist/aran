@@ -36,7 +36,7 @@ export type ListLateNegative = (
 
 export type Stage = {
   setup: (context: Context) => void;
-  instrument: Instrument;
+  instrument: (source: Source) => File;
   listLateNegative: ListLateNegative;
   precursor: StageName[];
   exclude: Tag[];

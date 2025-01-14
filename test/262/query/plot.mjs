@@ -13,7 +13,7 @@ const { Promise, URL, JSON } = globalThis;
 
 /**
  * @type {(
- *   result: import("../result").Result,
+ *   result: import("../result").ResultEntry,
  * ) => number | null}
  */
 const computeRatio = (result) => {
@@ -53,8 +53,8 @@ const prepareRatioPlot = (others) => ({
 
 /**
  * @type {(
- *   result1: import("../result").Result,
- *   result2: import("../result").Result,
+ *   result1: import("../result").ResultEntry,
+ *   result2: import("../result").ResultEntry,
  * ) => number | null}
  */
 const computeSlowdown = (result1, result2) => {
@@ -83,8 +83,8 @@ const computeSlowdown = (result1, result2) => {
 
 /**
  * @type {(
- *   base: import("../result").Result[],
- *   other: import("../result").Result[],
+ *   base: import("../result").ResultEntry[],
+ *   other: import("../result").ResultEntry[],
  * ) => number[]}
  */
 const crunchSlowdown = (base, other) => {

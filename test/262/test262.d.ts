@@ -1,5 +1,4 @@
 import { Context } from "node:vm";
-import { Report } from "./report";
 
 export type Flag =
   | "onlyStrict"
@@ -47,6 +46,6 @@ export type $262 = {
     context: Context;
     log: Console["log"];
     dir: Console["dir"];
-    report: Report;
+    signalNegative: (cause: string) => Error;
   };
 };

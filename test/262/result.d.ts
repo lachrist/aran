@@ -1,54 +1,42 @@
+import { ErrorSerial } from "./error-serial";
 import type { MainPath } from "./fetch";
+
+export type ResultEntry = [MainPath, Result];
+
+export type Result = ExcludeResult | IncludeResult;
 
 export type ExcludeResult = {
   type: "exclude";
-  path: MainPath;
-  exclusion: [string, ...string[]];
-  expect: null;
-  actual: null;
-  time: null;
+  data: string[];
 };
 
 export type IncludeResult = {
   type: "include";
-  path: MainPath;
-  exclusion: [];
+  data: Execution[];
+};
+
+export type Execution = {
+  directive: "none" | "use-strict";
+  actual: null | ErrorSerial;
   expect: string[];
-  actual: null | string;
-  time: {
-    total: {
-      user: number;
-      system: number;
-    };
-    instrument: {
-      user: number;
-      system: number;
-    };
-  };
+  time: Time;
 };
 
-export type CompactResult =
-  | [MainPath, [string, ...string[]], null, null, null]
-  | [MainPath, [], string[], null | string, [number, number, number, number]];
-
-export type Result = ExcludeResult | IncludeResult;
-
-export type TruePositiveResult = IncludeResult & {
-  expect: null;
-  actual: null;
+export type Time = {
+  user: number;
+  system: number;
 };
 
-export type FalsePositive = IncludeResult & {
-  expect: null;
-  actual: string;
-};
+export type CompactExecution = [
+  "none" | "use-strict",
+  null | string,
+  number,
+  number,
+  ...string[],
+];
 
-export type FalseNegative = IncludeResult & {
-  expect: [string, ...string[]];
-  actual: null;
-};
+export type IncludeCompactResult = [MainPath, "in", ...CompactExecution[]];
 
-export type TrueNegative = IncludeResult & {
-  expect: [string, ...string[]];
-  actual: string;
-};
+export type ExcludeCompactResult = [MainPath, "ex", ...string[]];
+
+export type CompactResultEntry = IncludeCompactResult | ExcludeCompactResult;

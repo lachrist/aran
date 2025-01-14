@@ -11,13 +11,12 @@ const {
  * @type {(
  *   dependencies: {
  *     print: (message: string) => void,
- *     report: import("./report").Report,
  *     setup: (context: import("node:vm").Context) => void,
- *     instrument: import("./stage").Instrument,
+ *     signalNegative: (message: string) => Error,
  *   },
  * ) => import("./test262").$262}
  */
-export const createRealm = ({ setup, print, report, instrument }) => {
+export const createRealm = ({ setup, print, signalNegative }) => {
   const context = createContext({ __proto__: null });
   /** @type {globalThis} */
   const global = runInContext("this;", context);
@@ -26,23 +25,17 @@ export const createRealm = ({ setup, print, report, instrument }) => {
   const $262 = {
     // @ts-ignore
     __proto__: null,
-    createRealm: () => createRealm({ setup, print, report, instrument }),
+    createRealm: () => createRealm({ setup, print, signalNegative }),
     detachArrayBuffer: () => {
-      throw report("AranRealmError", "detachArrayBuffer");
+      throw signalNegative("detachArrayBuffer");
     },
     // We have no information on the location of this.
     // so we do not have to register this script to the
     // linker because dynamic import is pointless.
-    evalScript: (content1) => {
+    evalScript: (code) => {
       try {
-        const { path: path2, content: content2 } = instrument({
-          type: "dynamic",
-          kind: "script",
-          path: "dynamic://script",
-          content: content1,
-        });
-        return runInContext(content2, context, {
-          filename: path2,
+        return runInContext(code, context, {
+          filename: "dynamic://script",
         });
       } catch (error) {
         throw harmonizeSyntaxError(error, SyntaxError);
@@ -52,25 +45,25 @@ export const createRealm = ({ setup, print, report, instrument }) => {
       if (typeof gc === "function") {
         return gc();
       } else {
-        throw report("AranRealmError", "gc");
+        throw signalNegative("gc");
       }
     },
     global,
     /** @returns {object} */
     // eslint-disable-next-line local/no-function
     get IsHTMLDDA() {
-      throw report("AranRealmError", "IsHTMLDDA");
+      throw signalNegative("IsHTMLDDA");
     },
     /** @type {import("./test262").Agent} */
     // eslint-disable-next-line local/no-function
     get agent() {
-      throw report("AranRealmError", "agent");
+      throw signalNegative("agent");
     },
     // eslint-disable-next-line local/no-function
     get AbstractModuleSource() {
-      throw report("AranRealmError", "AbstractModuleSource");
+      throw signalNegative("AbstractModuleSource");
     },
-    aran: { context, log, dir, report },
+    aran: { context, log, dir, signalNegative },
   };
   Reflect.defineProperty(context, "$262", {
     // @ts-ignore

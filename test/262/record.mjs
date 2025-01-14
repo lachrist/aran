@@ -10,7 +10,7 @@ const root = new URL("../../", import.meta.url);
 const base = new URL("test/262/codebase/", root);
 
 /**
- * @type {(directory: URL) => Promise<void>}
+ * @type {() => Promise<void>}
  */
 export const cleanup = async () => {
   for (const filename of await readdir(base)) {

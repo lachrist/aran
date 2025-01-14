@@ -1,4 +1,5 @@
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
+import { AranTestError } from "./error.mjs";
 
 /**
  * @type {(
@@ -17,4 +18,4 @@ const isSyntaxErrorName = (name) =>
 export const harmonizeSyntaxError = (error, SyntaxError) =>
   isSyntaxErrorName(inspectErrorName(error))
     ? new SyntaxError(inspectErrorMessage(error))
-    : error;
+    : new AranTestError(error);

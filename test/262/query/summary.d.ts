@@ -8,6 +8,7 @@ export type Summary = {
   };
   inclusion: {
     count: number;
+    total: number;
     true_positive: {
       count: number;
     };

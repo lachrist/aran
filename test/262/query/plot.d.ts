@@ -1,4 +1,4 @@
-import { Result } from "../result";
+import { ResultEntry } from "../result";
 import { StageName } from "../stage";
 
 export type Plot = {
@@ -10,5 +10,5 @@ export type Plot = {
 
 export type StageResult = {
   name: StageName;
-  results: Result[];
+  results: ResultEntry[];
 };
