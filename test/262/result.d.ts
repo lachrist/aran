@@ -1,22 +1,14 @@
 import { ErrorSerial } from "./error-serial";
-import type { MainPath } from "./fetch";
 
-export type ResultEntry = [MainPath, Result];
+export type TestSpecifier = string & { __brand: "TestSpecifier" };
+
+export type ResultEntry = [TestSpecifier, Result];
 
 export type Result = ExcludeResult | IncludeResult;
 
-export type ExcludeResult = {
-  type: "exclude";
-  data: string[];
-};
+export type ExcludeResult = [string, ...string[]];
 
 export type IncludeResult = {
-  type: "include";
-  data: Execution[];
-};
-
-export type Execution = {
-  directive: "none" | "use-strict";
   actual: null | ErrorSerial;
   expect: string[];
   time: Time;
@@ -27,16 +19,15 @@ export type Time = {
   system: number;
 };
 
-export type CompactExecution = [
-  "none" | "use-strict",
+export type IncludeCompactResult = [
+  TestSpecifier,
+  "in",
   null | string,
   number,
   number,
   ...string[],
 ];
 
-export type IncludeCompactResult = [MainPath, "in", ...CompactExecution[]];
-
-export type ExcludeCompactResult = [MainPath, "ex", ...string[]];
+export type ExcludeCompactResult = [TestSpecifier, "ex", string, ...string[]];
 
 export type CompactResultEntry = IncludeCompactResult | ExcludeCompactResult;

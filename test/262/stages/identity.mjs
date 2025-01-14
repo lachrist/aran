@@ -49,10 +49,8 @@ export default {
     "negative-identity-update-inside-with",
     "negative-identity-wrong-realm-for-dynamic-import",
   ],
-  listLateNegative: (_target, metadata, error) => [
-    ...(error.name === "AranRealmError" ? [error.message] : []),
-    ...metadata.features.filter(isFeatureExcluded),
-  ],
+  listLateNegative: (_specifier, metadata, _error) =>
+    metadata.features.filter(isFeatureExcluded),
   setup: (_context) => {},
   instrument: (source) => source,
 };

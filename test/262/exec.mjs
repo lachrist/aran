@@ -60,9 +60,9 @@ const main = async (argv) => {
           }
           const path = toMainPath(url, home);
           if (path !== null) {
-            stream.write(
-              JSON.stringify(packResultEntry([path, await exec(path)])) + "\n",
-            );
+            for (const entry of await exec(path)) {
+              stream.write(JSON.stringify(packResultEntry(entry)) + "\n");
+            }
             index += 1;
           }
         }

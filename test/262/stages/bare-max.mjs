@@ -568,7 +568,7 @@ const { setup, trans, retro } = compileAran(
  */
 export default {
   ...bare,
-  listLateNegative: (_target, _metadata, _error) => [],
+  listLateNegative: (_specifier, _metadata, _error) => [],
   setup: (context) => {
     const { intrinsics } = setup(context);
     const advice = compileAdvice(intrinsics);

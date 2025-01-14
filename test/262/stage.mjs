@@ -1,9 +1,13 @@
 import { readdir, readFile } from "node:fs/promises";
-import { matchSelection, parseSelection } from "./selection.mjs";
+import { listRecordingValue, parseSelection } from "./selection.mjs";
 import { createInterface } from "node:readline";
 import { createReadStream } from "node:fs";
-import { isCompactResult, unpackResultEntry } from "./result.mjs";
-import { AranExecError, AranTypeError } from "./error.mjs";
+import {
+  isExcludeResult,
+  isFailureCompactResultEntry,
+  parseCompactResultEntry,
+  toTestSpecifier,
+} from "./result.mjs";
 import {
   compileFetchHarness,
   compileFetchTarget,
@@ -14,7 +18,6 @@ import { execTest } from "./test.mjs";
 import { record } from "./record.mjs";
 
 const {
-  JSON,
   Set,
   URL,
   Infinity,
@@ -23,27 +26,30 @@ const {
 } = globalThis;
 
 /**
- * @template X
- * @param {import("./stage").Recording<X>} recording
- * @param {import("./fetch").MainPath} path
- * @returns {X[]}
+ * @type {(
+ *   line: string
+ * ) => import("./result").TestSpecifier[]}
  */
-export const listRecordingValue = (recording, path) => {
-  /** @type {X[]} */
-  const values = [];
-  for (const [selection, value] of recording) {
-    if (matchSelection(selection, path)) {
-      values.push(value);
-    }
-  }
-  return values;
-};
+const listTestSpecifier = (line) =>
+  line.includes("@")
+    ? [/** @type {import("./result").TestSpecifier} */ (line)]
+    : [
+        toTestSpecifier(
+          /** @type {import("./fetch").MainPath} */ (line),
+          "none",
+        ),
+        toTestSpecifier(
+          /** @type {import("./fetch").MainPath} */ (line),
+          "use-strict",
+        ),
+      ];
 
 /**
  * @type {(
  *   tag: import("./tag").Tag,
  * ) => Promise<
- *   import("./stage").RecordingEntry<
+ *   import("./selection").SelectionEntry<
+ *     import("./result").TestSpecifier,
  *     import("./tag").Tag
  *   >
  * >}
@@ -51,51 +57,36 @@ export const listRecordingValue = (recording, path) => {
 const loadRecordingEntry = async (tag) => [
   parseSelection(
     await readFile(new URL(`./tagging/${tag}.txt`, import.meta.url), "utf8"),
+    listTestSpecifier,
   ),
   tag,
 ];
 
 /**
  * @type {(
- *   object: { actual: unknown },
- * ) => boolean}
- */
-const isActualNull = ({ actual }) => actual === null;
-
-/**
- * @type {(
  *   name: import("./stage").StageName,
  * ) => Promise<
- *   import("./stage").RecordingEntry<
+ *   import("./selection").SelectionEntry<
+ *     import("./result").TestSpecifier,
  *     import("./stage").StageName
  *   >
  * >}
  */
 const loadPrecursorExclusion = async (stage) => {
-  const paths = new Set();
+  /** @type {Set<import("./result").TestSpecifier>} */
+  const specifiers = new Set();
   for await (const line of createInterface({
     input: createReadStream(
       new URL(`./stages/${stage}.jsonl`, import.meta.url),
     ),
     crlfDelay: Infinity,
   })) {
-    const compact_result = JSON.parse(line);
-    if (isCompactResult(compact_result)) {
-      const [key, val] = unpackResultEntry(compact_result);
-      if (val.type === "exclude") {
-        paths.add(key);
-      } else if (val.type === "include") {
-        if (val.data.some(isActualNull)) {
-          paths.add(key);
-        }
-      } else {
-        throw new AranTypeError(val);
-      }
-    } else {
-      throw new AranExecError("invalid compact result", compact_result);
+    const compact_result = parseCompactResultEntry(line);
+    if (isFailureCompactResultEntry(compact_result)) {
+      specifiers.add(compact_result[0]);
     }
   }
-  return [{ exact: paths, group: [] }, stage];
+  return [{ exact: specifiers, group: [] }, stage];
 };
 
 /**
@@ -128,11 +119,16 @@ export const isStageName = (value) => hasOwn(STAGE_ENUM, value);
  *   precursors: import("./stage").StageName[],
  *   exclude: import("./tag").Tag[],
  * ) => Promise<(
- *   path: import("./fetch").MainPath,
+ *   specifier: import("./result").TestSpecifier,
  * ) => (import("./tag").Tag | import("./stage").StageName)[]>}
  */
 const compileListExclusionReason = async (precursors, exclude) => {
-  /** @type {import("./stage").Exclusion} */
+  /**
+   * @type {import("./selection").SelectionEntry<
+   *   import("./result").TestSpecifier,
+   *   import("./tag").Tag | import("./stage").StageName
+   * >[]}
+   */
   const exclusion = [];
   for (const precursor of precursors) {
     exclusion.push(await loadPrecursorExclusion(precursor));
@@ -140,23 +136,28 @@ const compileListExclusionReason = async (precursors, exclude) => {
   for (const tag of exclude) {
     exclusion.push(await loadRecordingEntry(tag));
   }
-  return (path) => listRecordingValue(exclusion, path);
+  return (specifier) => listRecordingValue(exclusion, specifier);
 };
 
 /**
  * @type {(
  *   negatives: import("./tag").Tag[],
  * ) => Promise<(
- *   path: import("./fetch").MainPath,
+ *   specifier: import("./result").TestSpecifier,
  * ) => import("./tag").Tag[]>}
  */
 const compileListNegative = async (negatives) => {
-  /** @type {import("./stage").Negation} */
+  /**
+   * @type {import("./selection").SelectionEntry<
+   *   import("./result").TestSpecifier,
+   *   import("./tag").Tag,
+   * >[]}
+   */
   const negation = [];
   for (const tag of negatives) {
     negation.push(await loadRecordingEntry(tag));
   }
-  return (path) => listRecordingValue(negation, path);
+  return (specifier) => listRecordingValue(negation, specifier);
 };
 
 /**
@@ -189,44 +190,41 @@ const loadStage = async (name) => {
  *   path: import("./fetch").MainPath,
  *   stage: import("./stage").ReadyStage,
  *   fetch: import("./fetch").Fetch,
- * ) => Promise<import("./result").Result>}
+ * ) => Promise<import("./result").ResultEntry[]>}
  */
 const execStage = async (
   path,
   { listLateNegative, instrument, setup, listExclusionReason, listNegative },
   { resolveDependency, fetchHarness, fetchTarget },
 ) => {
-  const exclusion_tag_array = listExclusionReason(path);
-  if (exclusion_tag_array.length === 0) {
-    const { metadata, result } = await execTest(path, {
-      setup,
-      instrument,
-      fetchTarget,
-      fetchHarness,
-      resolveDependency,
-    });
-    if (result.type === "exclude") {
-      return result;
-    } else if (result.type === "include") {
-      return {
-        type: "include",
-        data: result.data.map((execution) => ({
-          ...execution,
-          expect: [
-            ...execution.expect,
-            ...listNegative(path),
-            ...(execution.actual === null
-              ? []
-              : listLateNegative(path, metadata, execution.actual)),
-          ],
-        })),
-      };
+  const { metadata, entries } = await execTest(path, listExclusionReason, {
+    setup,
+    instrument,
+    fetchTarget,
+    fetchHarness,
+    resolveDependency,
+  });
+  return entries.map(([specifier, result]) => {
+    if (isExcludeResult(result)) {
+      return [specifier, result];
     } else {
-      throw new AranTypeError(result);
+      const { actual, expect, time } = result;
+      return [
+        specifier,
+        {
+          actual,
+          expect: [
+            ...expect,
+            ...listNegative(specifier),
+            ...(actual === null
+              ? []
+              : listLateNegative(specifier, metadata, actual)),
+          ],
+          time,
+        },
+      ];
     }
-  } else {
-    return { type: "exclude", data: exclusion_tag_array };
-  }
+  });
 };
 
 /**
@@ -267,7 +265,7 @@ const memoizeInstrument = (instrument) => {
  *   },
  * ) => Promise<(
  *   path: import("./fetch").MainPath,
- * ) => Promise<import("./result").Result>>}
+ * ) => Promise<import("./result").ResultEntry[]>>}
  */
 export const compileStage = async (name, { memoization, recording }) => {
   const fetch = {

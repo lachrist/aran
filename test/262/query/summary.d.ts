@@ -6,22 +6,18 @@ export type Summary = {
     count: number;
     repartition: Repartition;
   };
-  inclusion: {
+  true_positive: {
     count: number;
-    total: number;
-    true_positive: {
-      count: number;
-    };
-    false_positive: {
-      count: number;
-    };
-    true_negative: {
-      count: number;
-      repartition: Repartition;
-    };
-    false_negative: {
-      count: number;
-      repartition: Repartition;
-    };
+  };
+  false_positive: {
+    count: number;
+  };
+  true_negative: {
+    count: number;
+    repartition: Repartition;
+  };
+  false_negative: {
+    count: number;
+    repartition: Repartition;
   };
 };

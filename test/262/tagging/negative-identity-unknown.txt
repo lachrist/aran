@@ -4,8 +4,8 @@ built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js
 built-ins/Function/prototype/toString/built-in-function-object.js
 built-ins/Object/defineProperties/15.2.3.7-2-18.js
 built-ins/Object/defineProperties/15.2.3.7-6-a-24.js
-built-ins/Object/internals/DefineOwnProperty/consistent-value-function-arguments.js
-built-ins/Object/internals/DefineOwnProperty/consistent-value-function-caller.js
+built-ins/Object/internals/DefineOwnProperty/consistent-value-function-arguments.js@none
+built-ins/Object/internals/DefineOwnProperty/consistent-value-function-caller.js@none
 language/eval-code/direct/non-definable-function-with-function.js
 language/eval-code/direct/non-definable-function-with-variable.js
 language/eval-code/direct/non-definable-global-function.js

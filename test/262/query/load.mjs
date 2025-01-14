@@ -1,5 +1,5 @@
 import { createInterface } from "node:readline";
-import { isCompactResult, unpackResultEntry } from "../result.mjs";
+import { isCompactResultEntry, unpackResultEntry } from "../result.mjs";
 import { createReadStream } from "node:fs";
 import { AranExecError } from "../error.mjs";
 
@@ -19,7 +19,7 @@ export const loadResultArray = async (stage) => {
     crlfDelay: Infinity,
   })) {
     const compact_result = JSON.parse(line);
-    if (isCompactResult(compact_result)) {
+    if (isCompactResultEntry(compact_result)) {
       results.push(unpackResultEntry(compact_result));
     } else {
       throw new AranExecError("invalid compact result", compact_result);

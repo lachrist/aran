@@ -1,7 +1,7 @@
 // https://github.com/nodejs/node/issues/53575
 
 language/expressions/dynamic-import/always-create-new-promise.js
-language/expressions/dynamic-import/assignment-expression/import-meta.js
+language/expressions/dynamic-import/assignment-expression/import-meta.js@use-strict
 language/expressions/dynamic-import/returns-promise.js
 language/expressions/dynamic-import/indirect-resolution.js
 language/expressions/dynamic-import/syntax/valid/nested-with-expression-empty-str-is-valid-assign-expr.js

@@ -1,4 +1,5 @@
 import { parseMetadata } from "./metadata.mjs";
+import { toTestSpecifier } from "./result.mjs";
 import { runTestCase } from "./test-case.mjs";
 
 /**
@@ -55,18 +56,19 @@ const listTestCase = (path, content, metadata) => {
   return test_case_array;
 };
 
-/** @type {import("./test262").Metadata} */
-const DEFAULT_METADATA = {
-  includes: [],
-  flags: [],
-  negative: null,
-  locale: [],
-  features: [],
-};
+/**
+ * @type {<X>(
+ *   array: X[]
+ * ) => array is [X, ...X[]]}
+ */
+const isNotEmptyArray = (array) => array.length > 0;
 
 /**
  * @type {(
  *   path: import("./fetch").MainPath,
+ *   exclude: (
+ *     specifier: import("./result").TestSpecifier,
+ *   ) => string[],
  *   dependencies: {
  *     fetchHarness: import("./fetch").FetchHarness,
  *     resolveDependency: import("./fetch").ResolveDependency,
@@ -76,40 +78,35 @@ const DEFAULT_METADATA = {
  *   },
  * ) => Promise<{
  *   metadata: import("./test262").Metadata,
- *   result: import("./result").Result,
+ *   entries: import("./result").ResultEntry[],
  * }>}
  */
 export const execTest = async (
   path,
+  exclude,
   { fetchTarget, resolveDependency, fetchHarness, setup, instrument },
 ) => {
   const content = await fetchTarget(path);
-  const metadata_outcome = parseMetadata(content);
-  if (metadata_outcome.type === "failure") {
-    return {
-      metadata: DEFAULT_METADATA,
-      result: { type: "exclude", data: ["metadata"] },
-    };
-  }
-  const metadata = metadata_outcome.data;
+  const metadata = parseMetadata(content);
   /**
-   * @type {import("./result").Execution[]}
+   * @type {import("./result").ResultEntry[]}
    */
-  const executions = [];
+  const entries = [];
   for (const test_case of listTestCase(path, content, metadata)) {
-    const { expect, actual, time } = await runTestCase(test_case, {
-      resolveDependency,
-      fetchTarget,
-      fetchHarness,
-      setup,
-      instrument,
-    });
-    executions.push({
-      directive: test_case.directive,
-      expect,
-      actual,
-      time,
-    });
+    const specifier = toTestSpecifier(path, test_case.directive);
+    const exclusion = exclude(specifier);
+    entries.push([
+      specifier,
+      isNotEmptyArray(exclusion)
+        ? exclusion
+        : await runTestCase(test_case, {
+            resolveDependency,
+            fetchTarget,
+            fetchHarness,
+            setup,
+            instrument,
+          }),
+    ]);
   }
-  return { metadata, result: { type: "include", data: executions } };
+  return { metadata, entries };
 };

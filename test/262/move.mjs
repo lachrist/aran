@@ -7,6 +7,7 @@ import { home, root } from "./home.mjs";
 import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
 import { showTargetPath, toMainPath } from "./fetch.mjs";
 import { compileStage } from "./stage.mjs";
+import { isExcludeResult } from "./result.mjs";
 
 const {
   process,
@@ -26,7 +27,7 @@ const main = async (argv) => {
     );
     return 1;
   } else {
-    const persistent = pathToFileURL(argv[2]);
+    const persistent = pathToFileURL(argv[0]);
     /** @type {import("./cursor").Cursor} */
     let cursor;
     try {
@@ -69,12 +70,12 @@ const main = async (argv) => {
           }
           if (ongoing) {
             stdout.write(`${index} ${showTargetPath(path, home, root)}\n`);
-            const result = await exec(path);
-            if (result.type === "include") {
-              for (const { directive, actual, expect } of result.data) {
+            for (const [specifier, result] of await exec(path)) {
+              if (!isExcludeResult(result)) {
+                const { actual, expect } = result;
                 if ((actual === null) !== (expect.length === 0)) {
                   stderr.write(
-                    stringify({ directive, actual, expect }, null, 2),
+                    stringify({ specifier, actual, expect }, null, 2),
                   );
                   stderr.write("\n");
                   return 1;

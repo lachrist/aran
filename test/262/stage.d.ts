@@ -1,11 +1,11 @@
 import type { Context } from "node:vm";
 import type { ErrorSerial } from "./error-serial";
-import type { Outcome } from "./outcome";
 import type { Source } from "./source";
 import type { Metadata } from "./test262";
-import type { MainPath } from "./fetch";
-import type { Selection } from "./selection";
 import type { Tag } from "./tag";
+import type { MainPath } from "./fetch";
+import type { Directive } from "./test-case";
+import { TestSpecifier } from "./result";
 
 export type StageName =
   | "identity"
@@ -29,7 +29,7 @@ export type File = {
 export type Instrument = (source: Source) => File;
 
 export type ListLateNegative = (
-  path: MainPath,
+  specifier: TestSpecifier,
   metadata: Metadata,
   error: ErrorSerial,
 ) => string[];
@@ -43,18 +43,10 @@ export type Stage = {
   negative: Tag[];
 };
 
-export type RecordingEntry<X> = [Selection, X];
-
-export type Recording<X> = RecordingEntry<X>[];
-
-export type Exclusion = Recording<Tag | StageName>;
-
-export type Negation = Recording<Tag>;
-
 export type ReadyStage = {
   setup: (context: Context) => void;
   instrument: Instrument;
   listLateNegative: ListLateNegative;
-  listExclusionReason: (path: MainPath) => (Tag | StageName)[];
-  listNegative: (path: MainPath) => Tag[];
+  listExclusionReason: (specifier: TestSpecifier) => (Tag | StageName)[];
+  listNegative: (specifier: TestSpecifier) => Tag[];
 };

@@ -1,7 +1,7 @@
 import { argv, stdout } from "node:process";
-import { AranTypeError } from "../error.mjs";
 import { isStageName } from "../stage.mjs";
 import { loadResultArray } from "./load.mjs";
+import { isExcludeResult } from "../result.mjs";
 
 const { undefined, Object, Math } = globalThis;
 
@@ -18,55 +18,44 @@ const summarize = (entries) => {
       count: 0,
       repartition: /** @type {any} */ ({ __proto__: null }),
     },
-    inclusion: {
+    true_negative: {
       count: 0,
-      total: 0,
-      true_negative: {
-        count: 0,
-        repartition: /** @type {any} */ ({ __proto__: null }),
-      },
-      false_negative: {
-        count: 0,
-        repartition: /** @type {any} */ ({ __proto__: null }),
-      },
-      false_positive: {
-        count: 0,
-      },
-      true_positive: {
-        count: 0,
-      },
+      repartition: /** @type {any} */ ({ __proto__: null }),
+    },
+    false_negative: {
+      count: 0,
+      repartition: /** @type {any} */ ({ __proto__: null }),
+    },
+    false_positive: {
+      count: 0,
+    },
+    true_positive: {
+      count: 0,
     },
   };
   for (const [_, result] of entries) {
-    if (result.type === "exclude") {
+    if (isExcludeResult(result)) {
       summary.exclusion.count++;
-      for (const tag of result.data) {
+      for (const tag of result) {
         summary.exclusion.repartition[tag] =
           (summary.exclusion.repartition[tag] ?? 0) + 1;
       }
-    } else if (result.type === "include") {
-      summary.inclusion.count++;
-      summary.inclusion.total += result.data.length;
-      for (const { actual, expect } of result.data) {
-        if (expect.length > 0) {
-          const negative =
-            actual === null
-              ? summary.inclusion.false_negative
-              : summary.inclusion.true_negative;
-          negative.count += 1;
-          for (const tag of expect) {
-            negative.repartition[tag] = (negative.repartition[tag] ?? 0) + 1;
-          }
+    } else {
+      const { actual, expect } = result;
+      if (expect.length > 0) {
+        const negative =
+          actual === null ? summary.false_negative : summary.true_negative;
+        negative.count += 1;
+        for (const tag of expect) {
+          negative.repartition[tag] = (negative.repartition[tag] ?? 0) + 1;
+        }
+      } else {
+        if (actual === null) {
+          summary.true_positive.count++;
         } else {
-          if (actual === null) {
-            summary.inclusion.true_positive.count++;
-          } else {
-            summary.inclusion.false_positive.count++;
-          }
+          summary.false_positive.count++;
         }
       }
-    } else {
-      throw new AranTypeError(result);
     }
   }
   return summary;
@@ -123,33 +112,17 @@ const showSummary = (summary) =>
     ...Object.entries(summary.exclusion.repartition)
       .sort(sortEntry)
       .map(compileShowEntry(summary.exclusion.count, "  ")),
-    showEntry("inclusion", summary.inclusion.count, summary.count),
-    showEntry(
-      "  true-positive",
-      summary.inclusion.true_positive.count,
-      summary.inclusion.total,
-    ),
-    showEntry(
-      "  false-positive",
-      summary.inclusion.false_positive.count,
-      summary.inclusion.total,
-    ),
-    showEntry(
-      "  false-negative",
-      summary.inclusion.false_negative.count,
-      summary.inclusion.total,
-    ),
-    ...Object.entries(summary.inclusion.false_negative.repartition)
+    showEntry("inclusion", summary.count, summary.count),
+    showEntry("  true-positive", summary.true_positive.count, summary.count),
+    showEntry("  false-positive", summary.false_positive.count, summary.count),
+    showEntry("  false-negative", summary.false_negative.count, summary.count),
+    ...Object.entries(summary.false_negative.repartition)
       .sort(sortEntry)
-      .map(compileShowEntry(summary.inclusion.false_negative.count, "    ")),
-    showEntry(
-      "  true-negative",
-      summary.inclusion.true_negative.count,
-      summary.inclusion.total,
-    ),
-    ...Object.entries(summary.inclusion.true_negative.repartition)
+      .map(compileShowEntry(summary.false_negative.count, "    ")),
+    showEntry("  true-negative", summary.true_negative.count, summary.count),
+    ...Object.entries(summary.true_negative.repartition)
       .sort(sortEntry)
-      .map(compileShowEntry(summary.inclusion.true_negative.count, "    ")),
+      .map(compileShowEntry(summary.true_negative.count, "    ")),
   ].join("\n");
 
 /**

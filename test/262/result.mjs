@@ -1,60 +1,78 @@
 import { MISSING_ERROR_MESSAGE } from "./error-serial.mjs";
-import { AranTypeError } from "./error.mjs";
+import { AranExecError, AranTypeError } from "./error.mjs";
 
 const {
+  JSON,
   Array: { isArray },
 } = globalThis;
 
 /**
  * @type {(
- *   data: import("./json").Json,
+ *   line: string,
+ * ) => import("./result").CompactResultEntry}
+ */
+export const parseCompactResultEntry = (line) => {
+  const data = JSON.parse(line);
+  if (
+    !isArray(data) ||
+    data.length < 2 ||
+    (data[1] !== "in" && data[1] !== "ex")
+  ) {
+    throw new AranExecError("invalid compact result entry", { line, data });
+  }
+  return /** @type {any} */ (data);
+};
+
+/**
+ * @type {(
+ *   path: import("./fetch").MainPath,
+ *   directive: import("./test-case").Directive
+ * ) => import("./result").TestSpecifier}
+ */
+export const toTestSpecifier = (path, directive) =>
+  /** @type {import("./result").TestSpecifier} */ (`${path}@${directive}`);
+
+/**
+ * @type {(
+ *   data: unknown,
  * ) => data is import("./result").CompactResultEntry}
  */
-export const isCompactResult = (data) =>
-  isArray(data) &&
-  data.length > 1 &&
-  (data[1] === "include" || data[1] === "exclude");
+export const isCompactResultEntry = (data) =>
+  isArray(data) && data.length > 1 && (data[1] === "in" || data[1] === "ex");
 
 /**
  * @type {(
- *   execution: import("./result").Execution,
- * ) => import("./result").CompactExecution}
+ *   result: import("./result").Result,
+ * ) => result is import("./result").ExcludeResult}
  */
-const packExecution = ({ directive, actual, expect, time }) => [
-  directive,
-  actual === null ? null : actual.name,
-  time.user,
-  time.system,
-  ...expect,
-];
+export const isExcludeResult = /** @type {any} */ (isArray);
 
 /**
  * @type {(
- *   execution: import("./result").CompactExecution,
- * ) => import("./result").Execution}
+ *   data: import("./result").CompactResultEntry,
+ * ) => boolean}
  */
-const unpackExecution = ([directive, actual, time1, time2, ...expect]) => ({
-  directive,
-  actual:
-    actual === null
-      ? null
-      : { name: actual, message: MISSING_ERROR_MESSAGE, stack: null },
-  expect,
-  time: { user: time1, system: time2 },
-});
+export const isFailureCompactResultEntry = (result) =>
+  result[1] === "ex" || result[2] !== null;
 
 /**
  * @type {(
  *   result: import("./result").ResultEntry,
  * ) => import("./result").CompactResultEntry}
  */
-export const packResultEntry = ([key, val]) => {
-  if (val.type === "include") {
-    return [key, "in", ...val.data.map(packExecution)];
-  } else if (val.type === "exclude") {
-    return [key, "ex", ...val.data];
+export const packResultEntry = ([specifier, result]) => {
+  if (isExcludeResult(result)) {
+    return [specifier, "ex", ...result];
   } else {
-    throw new AranTypeError(val);
+    const { actual, expect, time } = result;
+    return [
+      specifier,
+      "in",
+      actual === null ? null : actual.name,
+      time.user,
+      time.system,
+      ...expect,
+    ];
   }
 };
 
@@ -65,11 +83,21 @@ export const packResultEntry = ([key, val]) => {
  */
 export const unpackResultEntry = (res) => {
   if (res[1] === "ex") {
-    const [path, _type, ...data] = res;
-    return [path, { type: "exclude", data }];
+    const [specifier, _type, ...exclusion] = res;
+    return [specifier, exclusion];
   } else if (res[1] === "in") {
-    const [path, _type, ...data] = res;
-    return [path, { type: "include", data: data.map(unpackExecution) }];
+    const [specifier, _type, actual, time1, time2, ...expect] = res;
+    return [
+      specifier,
+      {
+        actual:
+          actual === null
+            ? null
+            : { name: actual, message: MISSING_ERROR_MESSAGE, stack: null },
+        time: { user: time1, system: time2 },
+        expect,
+      },
+    ];
   } else {
     throw new AranTypeError(res[1]);
   }
