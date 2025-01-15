@@ -16,7 +16,7 @@ import { compileStage } from "../staging/index.mjs";
 
 const { console, process, URL, Error, JSON } = globalThis;
 
-const directory = new URL("test/262/record/data/", root);
+const directory = new URL("record/", import.meta.url);
 
 /**
  * @type {(
