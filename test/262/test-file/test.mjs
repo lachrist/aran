@@ -6,8 +6,8 @@ import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
  * @type {(
  *   path: import("../fetch").TestPath,
  *   content: string,
- *   metadata: import("./metadata").Metadata,
- * ) => import("../test-case/test-case").TestCase[]}
+ *   metadata: import("../metadata").Metadata,
+ * ) => import("../test-case").TestCase[]}
  */
 const listTestCase = (path, content, metadata) => {
   const asynchronous = metadata.flags.includes("async");
@@ -18,7 +18,7 @@ const listTestCase = (path, content, metadata) => {
     ...metadata.includes,
   ]);
   const module = metadata.flags.includes("module");
-  /** @type {import("../test-case/test-case").TestCase[]} */
+  /** @type {import("../test-case").TestCase[]} */
   const test_case_array = [];
   const kind = module ? "module" : "script";
   if (
@@ -27,14 +27,11 @@ const listTestCase = (path, content, metadata) => {
     !metadata.flags.includes("noStrict")
   ) {
     test_case_array.push({
-      metadata,
+      features: metadata.features,
       directive: "use-strict",
-      source: {
-        type: "main",
-        kind,
-        path,
-        content: `"use strict";\n${content}`,
-      },
+      kind,
+      path,
+      content: `"use strict";\n${content}`,
       negative,
       asynchronous,
       includes,
@@ -42,14 +39,11 @@ const listTestCase = (path, content, metadata) => {
   }
   if (!metadata.flags.includes("onlyStrict")) {
     test_case_array.push({
-      metadata,
+      features: metadata.features,
       directive: "none",
-      source: {
-        type: "main",
-        kind,
-        path,
-        content,
-      },
+      kind,
+      path,
+      content,
       negative,
       asynchronous,
       includes,
@@ -64,7 +58,7 @@ const listTestCase = (path, content, metadata) => {
  *     path: import("../fetch").TestPath,
  *     content: string,
  *   },
- * ) => import("../test-case/test-case").TestCase[]}
+ * ) => import("../test-case").TestCase[]}
  */
 export const parseTestFile = ({ path, content }) => {
   let metadata;

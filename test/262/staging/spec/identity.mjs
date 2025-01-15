@@ -49,8 +49,8 @@ export default {
     "negative-identity-update-inside-with",
     "negative-identity-wrong-realm-for-dynamic-import",
   ],
-  listLateNegative: (_specifier, metadata, _error) =>
-    metadata.features.filter(isFeatureExcluded),
+  listLateNegative: ({ features }, _error) =>
+    features.filter(isFeatureExcluded),
   setup: (_context) => {},
   instrument: (source) => source,
 };

@@ -1,11 +1,11 @@
-import { generate, parseGlobal } from "../aran.mjs";
+import { generate, parseGlobal } from "../estree.mjs";
 
 /** @type {import("../stage").Stage} */
 export default {
   precursor: ["identity"],
   negative: ["parsing-function-string-representation"],
   exclude: [],
-  listLateNegative: (_specifier, _metadata, _error) => ["parsing"],
+  listLateNegative: (_test_case, _error) => [],
   setup: (_context) => {},
   instrument: ({ path, content, kind }) => ({
     path,

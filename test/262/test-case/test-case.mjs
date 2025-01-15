@@ -8,7 +8,7 @@ import { cpuUsage } from "node:process";
 const { Promise } = globalThis;
 
 /**
- * @type {() => import("./test-case").Termination}
+ * @type {() => import("./termination").Termination}
  */
 const makeAsynchronousTermination = () => {
   /** @type {(error: null | import("../util/error-serial").ErrorSerial) => void} */
@@ -34,7 +34,7 @@ const makeAsynchronousTermination = () => {
   };
 };
 
-/** @type {import("./test-case").Termination} */
+/** @type {import("./termination").Termination} */
 const termination = {
   done: Promise.resolve(null),
   print: (_unknown) => {
@@ -89,7 +89,7 @@ export const wrapOutcomeAsync = async (callback) => {
  *     X,
  *     import("../util/error-serial").ErrorSerial,
  *   >,
- *   negative: null | import("../test-file/metadata").Negative,
+ *   negative: null | import("../metadata").Negative,
  * ) => "negative-success" | import("../util/outcome").Outcome<
  *   X,
  *   import("../util/error-serial").ErrorSerial,
@@ -129,7 +129,7 @@ const applyNegative = (phase, outcome, negative) => {
 
 /**
  * @type {(
- *   test_case: import("./test-case").TestCase,
+ *   test_case: import("../test-case").TestCase,
  *   dependencies: {
  *     setup: (context: import("node:vm").Context) => void,
  *     signalNegative: (cause: string) => Error,
@@ -141,7 +141,7 @@ const applyNegative = (phase, outcome, negative) => {
  * ) => Promise<null | import("../util/error-serial").ErrorSerial>}
  */
 export const execTestCaseInner = async (
-  { source, negative, asynchronous, includes },
+  { kind, path: path1, content: content1, negative, asynchronous, includes },
   {
     setup,
     signalNegative,
@@ -174,7 +174,14 @@ export const execTestCaseInner = async (
   );
   const instrument_outcome = applyNegative(
     "instrument",
-    wrapOutcome(() => instrument(source)),
+    wrapOutcome(() =>
+      instrument({
+        type: "main",
+        kind,
+        path: path1,
+        content: content1,
+      }),
+    ),
     negative,
   );
   if (instrument_outcome === "negative-success") {
@@ -183,14 +190,14 @@ export const execTestCaseInner = async (
   if (instrument_outcome.type === "failure") {
     return instrument_outcome.data;
   }
-  const { path, content } = instrument_outcome.data;
-  if (source.kind === "module") {
+  const { path: path2, content: content2 } = instrument_outcome.data;
+  if (kind === "module") {
     const create_outcome = applyNegative(
       "parse",
       wrapOutcome(
         () =>
-          new SourceTextModule(content, {
-            identifier: path,
+          new SourceTextModule(content2, {
+            identifier: path2,
             context,
             // eslint-disable-next-line object-shorthand
             importModuleDynamically: /** @type {any} */ (
@@ -207,7 +214,7 @@ export const execTestCaseInner = async (
       return create_outcome.data;
     }
     const module = create_outcome.data;
-    registerMain(module, source.path);
+    registerMain(module, path1);
     const link_outcome = applyNegative(
       "resolution",
       await wrapOutcomeAsync(() => module.link(link)),
@@ -231,13 +238,13 @@ export const execTestCaseInner = async (
       return evaluate_outcome.data;
     }
     return await done;
-  } else if (source.kind === "script") {
+  } else if (kind === "script") {
     const create_outcome = applyNegative(
       "parse",
       wrapOutcome(
         () =>
-          new Script(content, {
-            filename: path,
+          new Script(content2, {
+            filename: path2,
             // eslint-disable-next-line object-shorthand
             importModuleDynamically: /** @type {any} */ (
               importModuleDynamically
@@ -253,7 +260,7 @@ export const execTestCaseInner = async (
       return create_outcome.data;
     }
     const script = create_outcome.data;
-    registerMain(script, source.path);
+    registerMain(script, path1);
     const evaluate_outcome = applyNegative(
       "runtime",
       wrapOutcome(() => script.runInContext(context)),
@@ -267,13 +274,13 @@ export const execTestCaseInner = async (
     }
     return await done;
   } else {
-    throw new AranTypeError(source.kind);
+    throw new AranTypeError(kind);
   }
 };
 
 /**
  * @type {(
- *   test_case: import("./test-case").TestCase,
+ *   test_case: import("../test-case").TestCase,
  *   dependencies: {
  *     resolveDependency: import("../fetch").ResolveDependency,
  *     fetchHarness: import("../fetch").FetchHarness,

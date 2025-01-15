@@ -17,7 +17,7 @@ const { Error, undefined, Map, JSON } = globalThis;
  *   options: {
  *     SyntaxError: new (message: string) => unknown,
  *     instrument: import("../staging/stage").Instrument,
- *     importModuleDynamically: import("./linker").Load,
+ *     importModuleDynamically: import("./load").Load,
  *     context: import("node:vm").Context,
  *   },
  * ) => import("node:vm").Module}
@@ -69,7 +69,14 @@ const makeModule = (
  *     instrument: import("../staging/stage").Instrument,
  *     fetchTarget: import("../fetch").FetchTarget,
  *   },
- * ) => import("./linker").Linker}
+ * ) => {
+ *   link: import("./load").Load,
+ *   importModuleDynamically: import("./load").Load,
+ *   registerMain: (
+ *     main: import("node:vm").Module | import("node:vm").Script,
+ *     path: import("../fetch").TestPath,
+ *   ) => void,
+ * }}
  */
 export const compileLinker = (
   context,
@@ -93,7 +100,7 @@ export const compileLinker = (
    * >}
    */
   const reverse_module_cache = new Map();
-  /** @type {import("./linker").Load} */
+  /** @type {import("./load").Load} */
   const link = async (specifier, referrer, _assertions) => {
     const base_path = reverse_module_cache.get(referrer);
     if (base_path === undefined) {
@@ -126,7 +133,7 @@ export const compileLinker = (
     }
   };
   // https://github.com/nodejs/node/issues/33216#issuecomment-623039235
-  /** @type {import("./linker").Load} */
+  /** @type {import("./load").Load} */
   const evaluate = async (specifier, referrer, assertions) => {
     const module = await link(specifier, referrer, assertions);
     if (module.status === "unlinked") {
@@ -137,7 +144,7 @@ export const compileLinker = (
     }
     return module;
   };
-  /** @type {import("./linker").Load} */
+  /** @type {import("./load").Load} */
   const importModuleDynamically = (specifier, referrer, assertions) =>
     new Promise((resolve, reject) => {
       evaluate(specifier, referrer, assertions).then(resolve, reject);

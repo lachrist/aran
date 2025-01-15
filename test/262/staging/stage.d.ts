@@ -1,10 +1,10 @@
 import type { Context } from "node:vm";
 import type { ErrorSerial } from "../util/error-serial";
 import type { Source } from "../source";
-import type { Metadata } from "../test-file/metadata";
 import type { Tag } from "../tagging/tag";
 import type { TestSpecifier } from "../result";
 import { StageName } from "./stage-name";
+import { TestCase } from "../test-case";
 
 export type File = {
   path: string;
@@ -14,8 +14,7 @@ export type File = {
 export type Instrument = (source: Source) => File;
 
 export type ListLateNegative = (
-  specifier: TestSpecifier,
-  metadata: Metadata,
+  test_case: TestCase,
   error: ErrorSerial,
 ) => string[];
 

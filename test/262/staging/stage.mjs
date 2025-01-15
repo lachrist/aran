@@ -122,10 +122,7 @@ const execStage = async (
   /** @type {import("../result").ResultEntry[]} */
   const entries = [];
   for (const test_case of test_case_array) {
-    const specifier = toTestSpecifier(
-      test_case.source.path,
-      test_case.directive,
-    );
+    const specifier = toTestSpecifier(test_case.path, test_case.directive);
     const exclusion = listExclusionReason(specifier);
     if (isNotEmptyArray(exclusion)) {
       entries.push([specifier, exclusion]);
@@ -138,15 +135,13 @@ const execStage = async (
         instrument,
       });
       entries.push([
-        toTestSpecifier(test_case.source.path, test_case.directive),
+        toTestSpecifier(test_case.path, test_case.directive),
         {
           actual,
           expect: [
             ...expect,
             ...listNegative(specifier),
-            ...(actual === null
-              ? []
-              : listLateNegative(specifier, test_case.metadata, actual)),
+            ...(actual === null ? [] : listLateNegative(test_case, actual)),
           ],
           time,
         },
