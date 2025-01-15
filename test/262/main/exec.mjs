@@ -10,7 +10,7 @@ import {
 import { isExcludeResult, packResult, toTestSpecifier } from "../result.mjs";
 import { enumTestCase } from "../catalog/index.mjs";
 
-const { Date, process, URL, JSON } = globalThis;
+const { Date, process, JSON } = globalThis;
 
 /**
  * @type {(
@@ -45,12 +45,16 @@ const main = async (argv) => {
         );
       };
       process.addListener("uncaughtException", onUncaughtException);
-      let index = 0;
       const prod_handle = await open(locateStageProd(stage_name), "w");
       const fail_handle = await open(locateStageFail(stage_name), "w");
-      const prod_stream = prod_handle.createWriteStream({ encoding: "utf-8" });
-      const fail_stream = fail_handle.createWriteStream({ encoding: "utf-8" });
       try {
+        let index = 0;
+        const prod_stream = prod_handle.createWriteStream({
+          encoding: "utf-8",
+        });
+        const fail_stream = fail_handle.createWriteStream({
+          encoding: "utf-8",
+        });
         for await (const test of enumTestCase()) {
           if (sigint) {
             return 1;
@@ -71,7 +75,7 @@ const main = async (argv) => {
         return 0;
       } finally {
         await prod_handle.close();
-        await fail_stream.close();
+        await fail_handle.close();
         process.removeListener("SIGINT", onSigint);
         process.removeListener("uncaughtException", onUncaughtException);
       }
