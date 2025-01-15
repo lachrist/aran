@@ -2,7 +2,7 @@ import { writeFileSync } from "node:fs";
 import { format } from "./format.mjs";
 import { readdir, unlink } from "node:fs/promises";
 import { stdout } from "node:process";
-import { root } from "../layout.mjs";
+import { ROOT } from "../layout.mjs";
 
 const { URL, performance, Math } = globalThis;
 
@@ -35,7 +35,7 @@ const generateUniqueIdentifier = () =>
  */
 export const record = ({ path, content: content1 }, directory) => {
   const url = new URL(`${generateUniqueIdentifier()}.js`, directory);
-  stdout.write(`RECORD >> ${url.href.substring(root.href.length)}\n`);
+  stdout.write(`RECORD >> ${url.href.substring(ROOT.href.length)}\n`);
   const content2 = `// ${path}\n${format(content1)}`;
   writeFileSync(url, content2, "utf-8");
   return {

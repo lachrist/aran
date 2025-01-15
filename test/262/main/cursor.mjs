@@ -1,55 +1,42 @@
+import { readFile, writeFile } from "node:fs/promises";
 import { AranExecError } from "../error.mjs";
-import { isStageName } from "../staging/index.mjs";
-import { isNotEmptyString, trimString } from "../util/index.mjs";
+import { CURSOR } from "./layout.mjs";
 
 const { parseInt } = globalThis;
 
 /**
- * @type {(
- *   line: string
- * ) => import("../staging/stage-name").StageName}
+ * @type {() => Promise<number>}
  */
-const parseStageLine = (line) => {
-  if (isStageName(line)) {
-    return line;
+export const loadCursor = async () => {
+  let content;
+  try {
+    content = (await readFile(CURSOR, "utf-8")).trim();
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      return 0;
+    } else {
+      throw error;
+    }
+  }
+  if (content === "") {
+    return 0;
+  } else if (/^\d+$/.test(content)) {
+    return parseInt(content);
   } else {
-    throw new AranExecError("Invalid stage line", { line });
+    throw new AranExecError("Invalid cursor content", { content });
   }
 };
 
 /**
  * @type {(
- *   line: string
- * ) => number}
+ *   cursor: number,
+ * ) => Promise<void>}
  */
-const parseIndexLine = (line) => {
-  if (/^\d+$/.test(line)) {
-    return parseInt(line);
-  } else {
-    throw new AranExecError("Invalid index line", { line });
-  }
+export const saveCursor = async (cursor) => {
+  await writeFile(CURSOR, `${cursor}\n`, "utf-8");
 };
-
-/**
- * @type {(
- *   content: string,
- * ) => import("./cursor").Cursor}
- */
-export const parseCursor = (content) => {
-  const lines = content.split("\n").map(trimString).filter(isNotEmptyString);
-  if (lines.length === 2) {
-    return {
-      stage: parseStageLine(lines[0]),
-      index: parseIndexLine(lines[1]),
-    };
-  } else {
-    throw new AranExecError("Cursor file should have two lines", { content });
-  }
-};
-
-/**
- * @type {(
- *   cursor: import("./cursor").Cursor,
- * ) => string}
- */
-export const stringifyCursor = ({ stage, index }) => `${stage}\n${index}\n`;

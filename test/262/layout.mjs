@@ -1,10 +1,10 @@
 const { URL } = globalThis;
 
-export const root = new URL("../../", import.meta.url);
+export const ROOT = new URL("../../", import.meta.url);
 
-export const home = new URL("test/262/test262/", root);
+export const TEST262 = new URL("test/262/test262/", ROOT);
 
-export const HARNESS = new URL("harness/", home);
+export const HARNESS = new URL("harness/", TEST262);
 
 /**
  * @type {(

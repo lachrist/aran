@@ -11,7 +11,7 @@ import {
   compileFetchTarget,
   resolveDependency,
 } from "../fetch.mjs";
-import { HARNESS, home } from "../layout.mjs";
+import { HARNESS, TEST262 } from "../layout.mjs";
 import { execTestCase } from "../test-case/index.mjs";
 import { loadTaggingList } from "../tagging/index.mjs";
 import { STAGE_ENUM } from "./stage-name.mjs";
@@ -174,8 +174,8 @@ const memoizeInstrument = (instrument) => {
 export const compileStage = async (name, { memoization, record }) => {
   const fetch = {
     resolveDependency,
-    fetchHarness: compileFetchHarness(home),
-    fetchTarget: compileFetchTarget(home),
+    fetchHarness: compileFetchHarness(TEST262),
+    fetchTarget: compileFetchTarget(TEST262),
   };
   const stage = await loadStage(name);
   if (memoization !== "none") {

@@ -1,17 +1,14 @@
-/* eslint-disable local/strict-console */
-
 import { cleanup, record } from "../record/index.mjs";
-import { pathToFileURL } from "node:url";
 import { stdout, stderr, argv } from "node:process";
-import { parseCursor } from "./cursor.mjs";
+import { loadCursor } from "./cursor.mjs";
 import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
-import { readFile } from "node:fs/promises";
-import { home, root } from "../layout.mjs";
+import { TEST262, ROOT } from "../layout.mjs";
 import { showTargetPath } from "../fetch.mjs";
-import { compileStage } from "../staging/index.mjs";
+import { compileStage, isStageName } from "../staging/index.mjs";
 import { grabTestCase } from "../catalog/index.mjs";
 import { inspect } from "node:util";
 import { RECORD } from "./layout.mjs";
+import { getStageName } from "./argv.mjs";
 
 const { process } = globalThis;
 
@@ -21,8 +18,19 @@ const { process } = globalThis;
  * ) => Promise<number>}
  */
 const main = async (argv) => {
-  const cursor = parseCursor(await readFile(pathToFileURL(argv[0]), "utf-8"));
-  const exec = await compileStage(cursor.stage, {
+  const stage = getStageName(argv);
+  if (stage === null) {
+    stderr.write(
+      "usage: node --experimental-vm-modules --expose-gc test/262/look.mjs <stage>\n",
+    );
+    return 1;
+  }
+  if (!isStageName(stage)) {
+    stderr.write(`invalid stage: ${stage}\n`);
+    return 1;
+  }
+  const cursor = await loadCursor();
+  const exec = await compileStage(stage, {
     memoization: "none",
     record: (file) => record(file, RECORD),
   });
@@ -39,10 +47,10 @@ const main = async (argv) => {
     );
   });
   await cleanup(RECORD);
-  const test = await grabTestCase(cursor.index);
-  stdout.write(`STAGE >> ${cursor.stage}\n`);
-  stdout.write(`INDEX >> ${cursor.index}\n`);
-  stdout.write(`PATH  >> ${showTargetPath(test.path, home, root)}\n`);
+  const test = await grabTestCase(cursor);
+  stdout.write(`STAGE >> ${stage}\n`);
+  stdout.write(`INDEX >> ${cursor}\n`);
+  stdout.write(`PATH  >> ${showTargetPath(test.path, TEST262, ROOT)}\n`);
   stdout.write(
     inspect({ test, result: await exec(test) }, { depth: null, colors: true }),
   );
