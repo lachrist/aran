@@ -2,7 +2,7 @@ import { readdir, writeFile } from "node:fs/promises";
 
 const { URL, JSON } = globalThis;
 
-const tags = (await readdir(new URL("tagging", import.meta.url))).map(
+const tags = (await readdir(new URL("data", import.meta.url))).map(
   (name) => `\n  | ${JSON.stringify(name.split(".")[0])}`,
 );
 

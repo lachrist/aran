@@ -1,11 +1,7 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir } from "node:fs/promises";
 import { createInterface } from "node:readline";
 import { createReadStream } from "node:fs";
-import {
-  listSelectionValue,
-  parseSelection,
-  isNotEmptyArray,
-} from "./util/index.mjs";
+import { isNotEmptyArray, getFirst } from "./util/index.mjs";
 import {
   isFailureCompactResultEntry,
   parseCompactResultEntry,
@@ -17,8 +13,9 @@ import {
   resolveDependency,
 } from "./fetch.mjs";
 import { home } from "./home.mjs";
-import { parseTest } from "./test/index.mjs";
+import { parseTestFile } from "./test-file/index.mjs";
 import { execTestCase } from "./test-case/index.mjs";
+import { loadTaggingList } from "./tagging/index.mjs";
 
 const {
   Set,
@@ -30,52 +27,10 @@ const {
 
 /**
  * @type {(
- *   line: string
- * ) => import("./result").TestSpecifier[]}
- */
-const listTestSpecifier = (line) =>
-  line.includes("@")
-    ? [/** @type {import("./result").TestSpecifier} */ (line)]
-    : [
-        toTestSpecifier(
-          /** @type {import("./fetch").TestPath} */ (line),
-          "none",
-        ),
-        toTestSpecifier(
-          /** @type {import("./fetch").TestPath} */ (line),
-          "use-strict",
-        ),
-      ];
-
-/**
- * @type {(
- *   tag: import("./tag").Tag,
- * ) => Promise<
- *   import("./util/selection").SelectionEntry<
- *     import("./result").TestSpecifier,
- *     import("./tag").Tag
- *   >
- * >}
- */
-const loadRecordingEntry = async (tag) => [
-  parseSelection(
-    await readFile(new URL(`./tagging/${tag}.txt`, import.meta.url), "utf8"),
-    listTestSpecifier,
-  ),
-  tag,
-];
-
-/**
- * @type {(
  *   name: import("./stage").StageName,
- * ) => Promise<
- *   import("./util/selection").SelectionEntry<
- *     import("./result").TestSpecifier,
- *     import("./stage").StageName
- *   >
- * >}
+ * ) => Promise<Set<import("./result").TestSpecifier>>}
  */
-const loadPrecursorExclusion = async (stage) => {
+const loadPrecursorFailure = async (stage) => {
   /** @type {Set<import("./result").TestSpecifier>} */
   const specifiers = new Set();
   for await (const line of createInterface({
@@ -89,7 +44,7 @@ const loadPrecursorExclusion = async (stage) => {
       specifiers.add(compact_result[0]);
     }
   }
-  return [{ exact: specifiers, group: [] }, stage];
+  return specifiers;
 };
 
 /**
@@ -120,47 +75,29 @@ export const isStageName = (value) => hasOwn(STAGE_ENUM, value);
 /**
  * @type {(
  *   precursors: import("./stage").StageName[],
- *   exclude: import("./tag").Tag[],
+ *   exclude: import("./tagging/tag").Tag[],
  * ) => Promise<(
  *   specifier: import("./result").TestSpecifier,
- * ) => (import("./tag").Tag | import("./stage").StageName)[]>}
+ * ) => (import("./tagging/tag").Tag | import("./stage").StageName)[]>}
  */
 const compileListExclusionReason = async (precursors, exclude) => {
   /**
-   * @type {import("./util/selection").SelectionEntry<
-   *   import("./result").TestSpecifier,
-   *   import("./tag").Tag | import("./stage").StageName
-   * >[]}
+   * @type {[
+   *   import("./stage").StageName,
+   *   Set<import("./result").TestSpecifier>,
+   * ][]}
    */
-  const exclusion = [];
+  const entries = [];
   for (const precursor of precursors) {
-    exclusion.push(await loadPrecursorExclusion(precursor));
+    entries.push([precursor, await loadPrecursorFailure(precursor)]);
   }
-  for (const tag of exclude) {
-    exclusion.push(await loadRecordingEntry(tag));
-  }
-  return (specifier) => listSelectionValue(exclusion, specifier);
-};
-
-/**
- * @type {(
- *   negatives: import("./tag").Tag[],
- * ) => Promise<(
- *   specifier: import("./result").TestSpecifier,
- * ) => import("./tag").Tag[]>}
- */
-const compileListNegative = async (negatives) => {
-  /**
-   * @type {import("./util/selection").SelectionEntry<
-   *   import("./result").TestSpecifier,
-   *   import("./tag").Tag,
-   * >[]}
-   */
-  const negation = [];
-  for (const tag of negatives) {
-    negation.push(await loadRecordingEntry(tag));
-  }
-  return (specifier) => listSelectionValue(negation, specifier);
+  const tagging = await loadTaggingList(exclude);
+  return (specifier) => [
+    ...entries
+      .filter(([_precursor, specifiers]) => specifiers.has(specifier))
+      .map(getFirst),
+    ...tagging(specifier),
+  ];
 };
 
 /**
@@ -179,7 +116,7 @@ const loadStage = async (name) => {
     instrument,
     listLateNegative,
     listExclusionReason: await compileListExclusionReason(precursor, exclude),
-    listNegative: await compileListNegative(negative),
+    listNegative: await loadTaggingList(negative),
   };
 };
 
@@ -195,7 +132,7 @@ const execStage = async (
   { listLateNegative, instrument, setup, listExclusionReason, listNegative },
   { resolveDependency, fetchHarness, fetchTarget },
 ) => {
-  const test_case_array = parseTest({
+  const test_case_array = parseTestFile({
     path,
     content: await fetchTarget(path),
   });

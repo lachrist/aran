@@ -1,4 +1,4 @@
-const { Error, String, Map, undefined } = globalThis;
+const { String } = globalThis;
 
 /** @type {(value: unknown) => string} */
 export const show = (value) => {
@@ -19,44 +19,22 @@ export const show = (value) => {
 export const isNotEmptyArray = (array) => array.length > 0;
 
 /**
- * @type {<X, Y>(
- *   x: X,
- *   y: Y,
- * ) => [X, Y]}
+ * @type {(
+ *   string: string,
+ * ) => string}
  */
-export const pairup = (x, y) => [x, y];
+export const trimString = (string) => string.trim();
 
 /**
- * @type {<X>(
- *   value: X | null
+ * @type {<X, Y>(
+ *  pair: [X, Y]
  * ) => X}
  */
-export const fromNullable = (value) => {
-  if (value === null) {
-    throw new Error("unexpected null");
-  } else {
-    return value;
-  }
-};
+export const getFirst = ([x, _y]) => x;
 
 /**
- * @template X
- * @template Y
- * @param {Map<X, Y[]>} map
- * @return {Map<Y, X[]>}
+ * @type {(
+ *   string: string,
+ * ) => boolean}
  */
-export const inverse = (map) => {
-  /** @type {Map<Y, X[]>} */
-  const inverse = new Map();
-  for (const [key, values] of map.entries()) {
-    for (const value of values) {
-      const keys = inverse.get(value);
-      if (keys === undefined) {
-        inverse.set(value, [key]);
-      } else {
-        keys.push(key);
-      }
-    }
-  }
-  return inverse;
-};
+export const isNotEmptyString = (string) => string.length > 0;

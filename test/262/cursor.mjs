@@ -1,6 +1,6 @@
 import { AranExecError } from "./error.mjs";
-import { parseList } from "./util/index.mjs";
 import { STAGE_ENUM } from "./stage.mjs";
+import { isNotEmptyString, trimString } from "./util/index.mjs";
 
 const {
   parseInt,
@@ -56,7 +56,7 @@ const parseTargetLine = (line) => {
  * ) => import("./cursor").Cursor}
  */
 export const parseCursor = (content) => {
-  const lines = parseList(content);
+  const lines = content.split("\n").map(trimString).filter(isNotEmptyString);
   if (lines.length === 0) {
     throw new AranExecError("Empty cursor file", { content });
   } else if (lines.length === 1) {
