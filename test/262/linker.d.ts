@@ -1,5 +1,5 @@
 import { Module, Script } from "node:vm";
-import { MainPath } from "./fetch";
+import { TestPath } from "./fetch";
 
 export type Load = (
   specifier: string,
@@ -7,7 +7,7 @@ export type Load = (
   assertions: object,
 ) => Promise<Module>;
 
-export type RegisterMain = (main: Module | Script, path: MainPath) => void;
+export type RegisterMain = (main: Module | Script, path: TestPath) => void;
 
 export type Linker = {
   link: Load;

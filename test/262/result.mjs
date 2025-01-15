@@ -25,12 +25,11 @@ export const parseCompactResultEntry = (line) => {
 
 /**
  * @type {(
- *   path: import("./fetch").MainPath,
+ *   path: import("./fetch").TestPath,
  *   directive: import("./test-case").Directive
  * ) => import("./result").TestSpecifier}
  */
-export const toTestSpecifier = (path, directive) =>
-  /** @type {import("./result").TestSpecifier} */ (`${path}@${directive}`);
+export const toTestSpecifier = (path, directive) => `${path}@${directive}`;
 
 /**
  * @type {(

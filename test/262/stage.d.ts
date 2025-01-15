@@ -3,7 +3,7 @@ import type { ErrorSerial } from "./error-serial";
 import type { Source } from "./source";
 import type { Metadata } from "./test262";
 import type { Tag } from "./tag";
-import type { MainPath } from "./fetch";
+import type { TestPath } from "./fetch";
 import type { Directive } from "./test-case";
 import { TestSpecifier } from "./result";
 

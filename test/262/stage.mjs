@@ -3,7 +3,6 @@ import { listRecordingValue, parseSelection } from "./selection.mjs";
 import { createInterface } from "node:readline";
 import { createReadStream } from "node:fs";
 import {
-  isExcludeResult,
   isFailureCompactResultEntry,
   parseCompactResultEntry,
   toTestSpecifier,
@@ -14,8 +13,10 @@ import {
   resolveDependency,
 } from "./fetch.mjs";
 import { home } from "./home.mjs";
-import { execTest } from "./test.mjs";
+import { parseTest } from "./test.mjs";
 import { record } from "./record.mjs";
+import { execTestCase } from "./test-case.mjs";
+import { isNotEmptyArray } from "./util.mjs";
 
 const {
   Set,
@@ -35,11 +36,11 @@ const listTestSpecifier = (line) =>
     ? [/** @type {import("./result").TestSpecifier} */ (line)]
     : [
         toTestSpecifier(
-          /** @type {import("./fetch").MainPath} */ (line),
+          /** @type {import("./fetch").TestPath} */ (line),
           "none",
         ),
         toTestSpecifier(
-          /** @type {import("./fetch").MainPath} */ (line),
+          /** @type {import("./fetch").TestPath} */ (line),
           "use-strict",
         ),
       ];
@@ -182,12 +183,7 @@ const loadStage = async (name) => {
 
 /**
  * @type {(
- *   stage: import("./stage").ReadyStage,
- * ) => (path: import("./fetch").MainPath) => Promise<import("./result").Result>}
- */
-/**
- * @type {(
- *   path: import("./fetch").MainPath,
+ *   path: import("./fetch").TestPath,
  *   stage: import("./stage").ReadyStage,
  *   fetch: import("./fetch").Fetch,
  * ) => Promise<import("./result").ResultEntry[]>}
@@ -197,20 +193,30 @@ const execStage = async (
   { listLateNegative, instrument, setup, listExclusionReason, listNegative },
   { resolveDependency, fetchHarness, fetchTarget },
 ) => {
-  const { metadata, entries } = await execTest(path, listExclusionReason, {
-    setup,
-    instrument,
-    fetchTarget,
-    fetchHarness,
-    resolveDependency,
+  const test_case_array = parseTest({
+    path,
+    content: await fetchTarget(path),
   });
-  return entries.map(([specifier, result]) => {
-    if (isExcludeResult(result)) {
-      return [specifier, result];
+  /** @type {import("./result").ResultEntry[]} */
+  const entries = [];
+  for (const test_case of test_case_array) {
+    const specifier = toTestSpecifier(
+      test_case.source.path,
+      test_case.directive,
+    );
+    const exclusion = listExclusionReason(specifier);
+    if (isNotEmptyArray(exclusion)) {
+      entries.push([specifier, exclusion]);
     } else {
-      const { actual, expect, time } = result;
-      return [
-        specifier,
+      const { actual, expect, time } = await execTestCase(test_case, {
+        resolveDependency,
+        fetchHarness,
+        fetchTarget,
+        setup,
+        instrument,
+      });
+      entries.push([
+        toTestSpecifier(test_case.source.path, test_case.directive),
         {
           actual,
           expect: [
@@ -218,13 +224,14 @@ const execStage = async (
             ...listNegative(specifier),
             ...(actual === null
               ? []
-              : listLateNegative(specifier, metadata, actual)),
+              : listLateNegative(specifier, test_case.metadata, actual)),
           ],
           time,
         },
-      ];
+      ]);
     }
-  });
+  }
+  return entries;
 };
 
 /**
@@ -264,7 +271,7 @@ const memoizeInstrument = (instrument) => {
  *     recording: boolean,
  *   },
  * ) => Promise<(
- *   path: import("./fetch").MainPath,
+ *   path: import("./fetch").TestPath,
  * ) => Promise<import("./result").ResultEntry[]>>}
  */
 export const compileStage = async (name, { memoization, recording }) => {

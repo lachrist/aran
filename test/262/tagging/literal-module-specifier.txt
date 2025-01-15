@@ -1,3 +1,0 @@
-// https://github.com/davidbonnet/astring/issues/713
-language/module-code/export-expname-from-string-binding.js
-language/module-code/export-expname-import-string-binding.js

@@ -1,4 +1,4 @@
-export type Tag =
+export type Tag = 
   | "arguments-two-way-binding"
   | "async-iterator-async-value"
   | "call-async-done-with-module"
@@ -28,4 +28,5 @@ export type Tag =
   | "negative-identity-unknown"
   | "negative-identity-update-inside-with"
   | "negative-identity-wrong-realm-for-dynamic-import"
+  | "parsing-function-string-representation"
   | "slow";

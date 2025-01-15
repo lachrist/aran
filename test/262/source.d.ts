@@ -1,4 +1,4 @@
-import type { DependencyPath, HarnessName, MainPath } from "./fetch";
+import type { DependencyPath, HarnessName, TestPath } from "./fetch";
 
 export type HarnessSource = {
   type: "harness";
@@ -10,7 +10,7 @@ export type HarnessSource = {
 export type MainSource = {
   type: "main";
   kind: "module" | "script";
-  path: MainPath;
+  path: TestPath;
   content: string;
 };
 

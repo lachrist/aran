@@ -141,7 +141,7 @@ const applyNegative = (phase, outcome, negative) => {
  *   },
  * ) => Promise<null | import("./error-serial").ErrorSerial>}
  */
-export const runTestCaseInner = async (
+export const execTestCaseInner = async (
   { source, negative, asynchronous, includes },
   {
     setup,
@@ -288,11 +288,11 @@ export const runTestCaseInner = async (
  *   time: { user: number, system: number },
  * }>}
  */
-export const runTestCase = async (test_case, dependencies) => {
+export const execTestCase = async (test_case, dependencies) => {
   /** @type {string[]} */
   const expect = [];
   const time = cpuUsage();
-  const error = await runTestCaseInner(test_case, {
+  const error = await execTestCaseInner(test_case, {
     ...dependencies,
     signalNegative: (cause) => {
       expect.push(cause);

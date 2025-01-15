@@ -12,6 +12,13 @@ export const show = (value) => {
 };
 
 /**
+ * @type {<X>(
+ *   array: X[],
+ * ) => array is [X, ...X[]]}
+ */
+export const isNotEmptyArray = (array) => array.length > 0;
+
+/**
  * @type {<X, Y>(
  *   x: X,
  *   y: Y,

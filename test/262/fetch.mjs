@@ -44,7 +44,7 @@ export const compileFetchTarget = (home) => (path) =>
  * @type {(
  *   url: URL,
  *   home: URL,
- * ) => null | import("./fetch").MainPath}
+ * ) => null | import("./fetch").TestPath}
  */
 export const toMainPath = (url, home) => {
   const base = new URL("test/", home);
@@ -53,7 +53,7 @@ export const toMainPath = (url, home) => {
     if (path.includes("_FIXTURE") || path.endsWith(".md")) {
       return null;
     } else {
-      return /** @type {import("./fetch").MainPath} */ (path);
+      return /** @type {import("./fetch").TestPath} */ (path);
     }
   } else {
     throw new AranExecError("Not relative url from home", {

@@ -1,10 +1,10 @@
 import { parseMetadata } from "./metadata.mjs";
-import { toTestSpecifier } from "./result.mjs";
-import { runTestCase } from "./test-case.mjs";
+import { stderr } from "node:process";
+import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
 
 /**
  * @type {(
- *   path: import("./fetch").MainPath,
+ *   path: import("./fetch").TestPath,
  *   content: string,
  *   metadata: import("./test262").Metadata,
  * ) => import("./test-case").TestCase[]}
@@ -27,6 +27,7 @@ const listTestCase = (path, content, metadata) => {
     !metadata.flags.includes("noStrict")
   ) {
     test_case_array.push({
+      metadata,
       directive: "use-strict",
       source: {
         type: "main",
@@ -41,6 +42,7 @@ const listTestCase = (path, content, metadata) => {
   }
   if (!metadata.flags.includes("onlyStrict")) {
     test_case_array.push({
+      metadata,
       directive: "none",
       source: {
         type: "main",
@@ -57,56 +59,22 @@ const listTestCase = (path, content, metadata) => {
 };
 
 /**
- * @type {<X>(
- *   array: X[]
- * ) => array is [X, ...X[]]}
- */
-const isNotEmptyArray = (array) => array.length > 0;
-
-/**
  * @type {(
- *   path: import("./fetch").MainPath,
- *   exclude: (
- *     specifier: import("./result").TestSpecifier,
- *   ) => string[],
- *   dependencies: {
- *     fetchHarness: import("./fetch").FetchHarness,
- *     resolveDependency: import("./fetch").ResolveDependency,
- *     fetchTarget: import("./fetch").FetchTarget,
- *     setup: (context: import("node:vm").Context) => void,
- *     instrument: import("./stage").Instrument,
+ *   file: {
+ *     path: import("./fetch").TestPath,
+ *     content: string,
  *   },
- * ) => Promise<{
- *   metadata: import("./test262").Metadata,
- *   entries: import("./result").ResultEntry[],
- * }>}
+ * ) => import("./test-case").TestCase[]}
  */
-export const execTest = async (
-  path,
-  exclude,
-  { fetchTarget, resolveDependency, fetchHarness, setup, instrument },
-) => {
-  const content = await fetchTarget(path);
-  const metadata = parseMetadata(content);
-  /**
-   * @type {import("./result").ResultEntry[]}
-   */
-  const entries = [];
-  for (const test_case of listTestCase(path, content, metadata)) {
-    const specifier = toTestSpecifier(path, test_case.directive);
-    const exclusion = exclude(specifier);
-    entries.push([
-      specifier,
-      isNotEmptyArray(exclusion)
-        ? exclusion
-        : await runTestCase(test_case, {
-            resolveDependency,
-            fetchTarget,
-            fetchHarness,
-            setup,
-            instrument,
-          }),
-    ]);
+export const parseTest = ({ path, content }) => {
+  let metadata;
+  try {
+    metadata = parseMetadata(content);
+  } catch (error) {
+    stderr.write(
+      `cannot parse metadata of ${path} >> ${inspectErrorName(error)} >> ${inspectErrorMessage(error)}\n`,
+    );
+    return [];
   }
-  return { metadata, entries };
+  return listTestCase(path, content, metadata);
 };

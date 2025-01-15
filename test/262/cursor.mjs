@@ -32,7 +32,7 @@ const parseStageLine = (line) => {
  *   line: string
  * ) => {
  *   index: number | null,
- *   path: import("./fetch").MainPath | null,
+ *   path: import("./fetch").TestPath | null,
  * }}
  */
 const parseTargetLine = (line) => {
@@ -45,7 +45,7 @@ const parseTargetLine = (line) => {
       path:
         match[2] === ""
           ? null
-          : /** @type {import("./fetch").MainPath} */ (match[2]),
+          : /** @type {import("./fetch").TestPath} */ (match[2]),
     };
   }
 };

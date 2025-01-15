@@ -43,7 +43,7 @@ const main = async (argv) => {
       recording: false,
     });
     let index = 0;
-    /** @type {import("./fetch").MainPath | null} */
+    /** @type {import("./fetch").TestPath | null} */
     let path = null;
     let done = false;
     let ongoing = false;

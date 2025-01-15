@@ -16,7 +16,7 @@ const { console, process, URL, Error, JSON } = globalThis;
 /**
  * @type {(
  *   index: number
- * ) => Promise<import("./fetch").MainPath>}
+ * ) => Promise<import("./fetch").TestPath>}
  */
 const findMainPath = async (index) => {
   let current = -1;
@@ -35,7 +35,7 @@ const findMainPath = async (index) => {
 /**
  * @type {(
  *   cursor: import("./cursor").Cursor,
- * ) => Promise<import("./fetch").MainPath>}
+ * ) => Promise<import("./fetch").TestPath>}
  */
 const fetchMainPath = async (cursor) => {
   if (cursor.path === null) {
