@@ -11,11 +11,10 @@ const ASYNC_HARNESS_NAME_ARRAY = ["doneprintHandle.js"];
 /**
  * @type {(
  *   path: import("../fetch").TestPath,
- *   content: string,
  *   metadata: import("../metadata").Metadata,
  * ) => import("../test-case").TestCase[]}
  */
-const listTestCase = (path, content, metadata) => {
+const listTestCase = (path, metadata) => {
   const asynchronous = metadata.flags.includes("async");
   const negative = metadata.negative;
   /** @type {import("../fetch").HarnessName[]} */
@@ -38,7 +37,6 @@ const listTestCase = (path, content, metadata) => {
       directive: "use-strict",
       kind,
       path,
-      content: `"use strict";\n${content}`,
       negative,
       asynchronous,
       includes,
@@ -50,7 +48,6 @@ const listTestCase = (path, content, metadata) => {
       directive: "none",
       kind,
       path,
-      content,
       negative,
       asynchronous,
       includes,
@@ -77,5 +74,43 @@ export const parseTestFile = ({ path, content }) => {
     );
     return [];
   }
-  return listTestCase(path, content, metadata);
+  return listTestCase(path, metadata);
 };
+
+/**
+ * @type {(
+ *   test_case: import("../test-case").TestCase,
+ * ) => import("../test-case").CompactTestCase}
+ */
+export const packTestCase = ({
+  kind,
+  path,
+  directive,
+  negative,
+  asynchronous,
+  includes,
+  features,
+}) => [kind, path, directive, negative, asynchronous, includes, features];
+
+/**
+ * @type {(
+ *   test_case: import("../test-case").CompactTestCase,
+ * ) => import("../test-case").TestCase}
+ */
+export const unpackTestCase = ([
+  kind,
+  path,
+  directive,
+  negative,
+  asynchronous,
+  includes,
+  features,
+]) => ({
+  kind,
+  path,
+  directive,
+  negative,
+  asynchronous,
+  includes,
+  features,
+});

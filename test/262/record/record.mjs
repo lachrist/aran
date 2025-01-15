@@ -2,7 +2,7 @@ import { writeFileSync } from "node:fs";
 import { format } from "./format.mjs";
 import { readdir, unlink } from "node:fs/promises";
 import { stdout } from "node:process";
-import { root } from "../home.mjs";
+import { root } from "../layout.mjs";
 
 const { URL, performance, Math } = globalThis;
 

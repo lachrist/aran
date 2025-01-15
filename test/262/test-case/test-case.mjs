@@ -129,6 +129,26 @@ const applyNegative = (phase, outcome, negative) => {
 
 /**
  * @type {(
+ *   content: string,
+ *   directive: import("../test-case").Directive,
+ * ) => string}
+ */
+const applyDirective = (content, directive) => {
+  switch (directive) {
+    case "none": {
+      return content;
+    }
+    case "use-strict": {
+      return `"use strict";\n${content}`;
+    }
+    default: {
+      throw new AranTypeError(directive);
+    }
+  }
+};
+
+/**
+ * @type {(
  *   test_case: import("../test-case").TestCase,
  *   dependencies: {
  *     setup: (context: import("node:vm").Context) => void,
@@ -141,7 +161,7 @@ const applyNegative = (phase, outcome, negative) => {
  * ) => Promise<null | import("../util/error-serial").ErrorSerial>}
  */
 export const execTestCaseInner = async (
-  { kind, path: path1, content: content1, negative, asynchronous, includes },
+  { kind, directive, path: path1, negative, asynchronous, includes },
   {
     setup,
     signalNegative,
@@ -151,6 +171,7 @@ export const execTestCaseInner = async (
     fetchTarget,
   },
 ) => {
+  const content1 = applyDirective(await fetchTarget(path1), directive);
   const { done, print } = asynchronous
     ? makeAsynchronousTermination()
     : termination;

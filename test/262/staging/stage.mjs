@@ -1,27 +1,24 @@
-import { readdir } from "node:fs/promises";
-import { createInterface } from "node:readline";
-import { createReadStream } from "node:fs";
-import { isNotEmptyArray, getFirst } from "../util/index.mjs";
+import { readdir, readFile } from "node:fs/promises";
 import {
-  isFailureCompactResultEntry,
-  parseCompactResultEntry,
-  toTestSpecifier,
-} from "../result.mjs";
+  isNotEmptyArray,
+  getFirst,
+  trimString,
+  isNotEmptyString,
+} from "../util/index.mjs";
+import { toTestSpecifier } from "../result.mjs";
 import {
   compileFetchHarness,
   compileFetchTarget,
   resolveDependency,
 } from "../fetch.mjs";
-import { home } from "../home.mjs";
-import { parseTestFile } from "../test-file/index.mjs";
+import { HARNESS, home } from "../layout.mjs";
 import { execTestCase } from "../test-case/index.mjs";
 import { loadTaggingList } from "../tagging/index.mjs";
 import { STAGE_ENUM } from "./stage-name.mjs";
+import { toFail } from "./layout.mjs";
 
 const {
   Set,
-  URL,
-  Infinity,
   Object: { hasOwn },
   Map,
 } = globalThis;
@@ -31,22 +28,15 @@ const {
  *   name: import("./stage-name").StageName,
  * ) => Promise<Set<import("../result").TestSpecifier>>}
  */
-const loadPrecursorFailure = async (stage) => {
-  /** @type {Set<import("../result").TestSpecifier>} */
-  const specifiers = new Set();
-  for await (const line of createInterface({
-    input: createReadStream(
-      new URL(`./stages/${stage}.jsonl`, import.meta.url),
+const loadPrecursorFailure = async (stage) =>
+  new Set(
+    /** @type {import("../result").TestSpecifier[]} */ (
+      (await readFile(toFail(stage)), "utf-8")
+        .split("\n")
+        .map(trimString)
+        .filter(isNotEmptyString)
     ),
-    crlfDelay: Infinity,
-  })) {
-    const compact_result = parseCompactResultEntry(line);
-    if (isFailureCompactResultEntry(compact_result)) {
-      specifiers.add(compact_result[0]);
-    }
-  }
-  return specifiers;
-};
+  );
 
 /**
  * @type {(
@@ -105,50 +95,38 @@ const loadStage = async (name) => {
 
 /**
  * @type {(
- *   path: import("../fetch").TestPath,
+ *   test: import("../test-case").TestCase,
  *   stage: import("./stage").ReadyStage,
  *   fetch: import("../fetch").Fetch,
- * ) => Promise<import("../result").ResultEntry[]>}
+ * ) => Promise<import("../result").Result>}
  */
 const execStage = async (
-  path,
+  test,
   { listLateNegative, instrument, setup, listExclusionReason, listNegative },
   { resolveDependency, fetchHarness, fetchTarget },
 ) => {
-  const test_case_array = parseTestFile({
-    path,
-    content: await fetchTarget(path),
-  });
-  /** @type {import("../result").ResultEntry[]} */
-  const entries = [];
-  for (const test_case of test_case_array) {
-    const specifier = toTestSpecifier(test_case.path, test_case.directive);
-    const exclusion = listExclusionReason(specifier);
-    if (isNotEmptyArray(exclusion)) {
-      entries.push([specifier, exclusion]);
-    } else {
-      const { actual, expect, time } = await execTestCase(test_case, {
-        resolveDependency,
-        fetchHarness,
-        fetchTarget,
-        setup,
-        instrument,
-      });
-      entries.push([
-        toTestSpecifier(test_case.path, test_case.directive),
-        {
-          actual,
-          expect: [
-            ...expect,
-            ...listNegative(specifier),
-            ...(actual === null ? [] : listLateNegative(test_case, actual)),
-          ],
-          time,
-        },
-      ]);
-    }
+  const specifier = toTestSpecifier(test.path, test.directive);
+  const exclusion = listExclusionReason(specifier);
+  if (isNotEmptyArray(exclusion)) {
+    return exclusion;
+  } else {
+    const { actual, expect, time } = await execTestCase(test, {
+      resolveDependency,
+      fetchHarness,
+      fetchTarget,
+      setup,
+      instrument,
+    });
+    return {
+      actual,
+      expect: [
+        ...expect,
+        ...listNegative(specifier),
+        ...(actual === null ? [] : listLateNegative(test, actual)),
+      ],
+      time,
+    };
   }
-  return entries;
 };
 
 /**
@@ -190,8 +168,8 @@ const memoizeInstrument = (instrument) => {
  *     ) => import("../util/file").File),
  *   },
  * ) => Promise<(
- *   path: import("../fetch").TestPath,
- * ) => Promise<import("../result").ResultEntry[]>>}
+ *   test: import("../test-case").TestCase,
+ * ) => Promise<import("../result").Result>>}
  */
 export const compileStage = async (name, { memoization, record }) => {
   const fetch = {
@@ -205,7 +183,7 @@ export const compileStage = async (name, { memoization, record }) => {
     if (memoization === "eager") {
       // Fetch all harnesses to cache them and improve timer accuracy
       for (const name of /** @type {import("../fetch").HarnessName[]} */ (
-        await readdir(new URL("harness/", home))
+        await readdir(HARNESS)
       )) {
         if (name.endsWith(".js")) {
           stage.instrument({
@@ -222,5 +200,5 @@ export const compileStage = async (name, { memoization, record }) => {
     const { instrument } = stage;
     stage.instrument = (source) => record(instrument(source));
   }
-  return (path) => execStage(path, stage, fetch);
+  return (test) => execStage(test, stage, fetch);
 };

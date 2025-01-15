@@ -1,5 +1,7 @@
 import { HarnessName } from "./fetch";
 
+export type Feature = string & { __brand: "Feature" };
+
 export type Flag =
   | "onlyStrict"
   | "noStrict"
@@ -23,5 +25,5 @@ export type Metadata = {
   includes: HarnessName[];
   flags: Flag[];
   locale: string[];
-  features: string[];
+  features: Feature[];
 };

@@ -4,8 +4,6 @@ import { Directive } from "./test-case";
 
 export type TestSpecifier = `${TestPath}@${Directive}`;
 
-export type ResultEntry = [TestSpecifier, Result];
-
 export type Result = ExcludeResult | IncludeResult;
 
 export type ExcludeResult = [string, ...string[]];
@@ -22,7 +20,6 @@ export type Time = {
 };
 
 export type IncludeCompactResult = [
-  TestSpecifier,
   "in",
   null | string,
   number,
@@ -30,6 +27,6 @@ export type IncludeCompactResult = [
   ...string[],
 ];
 
-export type ExcludeCompactResult = [TestSpecifier, "ex", string, ...string[]];
+export type ExcludeCompactResult = ["ex", string, ...string[]];
 
-export type CompactResultEntry = IncludeCompactResult | ExcludeCompactResult;
+export type CompactResult = IncludeCompactResult | ExcludeCompactResult;

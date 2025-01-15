@@ -1,14 +1,9 @@
 import { open } from "node:fs/promises";
-import {
-  scrape,
-  inspectErrorMessage,
-  inspectErrorName,
-} from "../util/index.mjs";
+import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
 import { argv, stdout, stderr } from "node:process";
-import { home } from "../home.mjs";
 import { compileStage, isStageName } from "../staging/index.mjs";
-import { toTestPath } from "../fetch.mjs";
-import { packResultEntry } from "../result.mjs";
+import { isExcludeResult, packResult, toTestSpecifier } from "../result.mjs";
+import { enumTestCase } from "../catalog/index.mjs";
 
 const { Date, process, URL, JSON } = globalThis;
 
@@ -46,35 +41,40 @@ const main = async (argv) => {
       };
       process.addListener("uncaughtException", onUncaughtException);
       let index = 0;
-      const handle = await open(
-        new URL(`stages/${stage_name}.jsonl`, import.meta.url),
+      const prod_handle = await open(
+        new URL(`../staging/prod/${stage_name}.jsonl`, import.meta.url),
         "w",
       );
-      const stream = handle.createWriteStream({
-        encoding: "utf8",
-      });
+      const fail_handle = await open(
+        new URL(`../staging/fail/${stage_name}.jsonl`, import.meta.url),
+        "w",
+      );
+      const prod_stream = prod_handle.createWriteStream({ encoding: "utf8" });
+      const fail_stream = fail_handle.createWriteStream({ encoding: "utf8" });
       try {
-        for await (const url of scrape(new URL("test/", home))) {
+        for await (const test of enumTestCase()) {
           if (sigint) {
             return 1;
           }
           if (index % 100 === 0) {
             stdout.write(`${index}\n`);
           }
-          const path = toTestPath(url, home);
-          if (path !== null) {
-            for (const entry of await exec(path)) {
-              stream.write(JSON.stringify(packResultEntry(entry)) + "\n");
-            }
-            index += 1;
+          const result = await exec(test);
+          prod_stream.write(JSON.stringify(packResult(result)) + "\n");
+          if (isExcludeResult(result) || result.actual !== null) {
+            fail_stream.write(
+              toTestSpecifier(test.path, test.directive) + "\n",
+            );
           }
+          index += 1;
         }
         stdout.write(`Total time: ${Date.now() - start}ms\n`);
         return 0;
       } finally {
         process.removeListener("SIGINT", onSigint);
         process.removeListener("uncaughtException", onUncaughtException);
-        await handle.close();
+        await prod_handle.close();
+        await fail_stream.close();
       }
     }
   }

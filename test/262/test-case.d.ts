@@ -1,15 +1,28 @@
 import type { HarnessName, TestPath } from "./fetch";
-import type { Negative } from "./metadata";
+import type { Feature, Negative } from "./metadata";
 
 export type Directive = "none" | "use-strict";
 
+type Kind = "module" | "script";
+
+type Asynchronous = boolean;
+
 export type TestCase = {
-  kind: "module" | "script";
+  kind: Kind;
   path: TestPath;
-  content: string;
   directive: Directive;
   negative: null | Negative;
-  asynchronous: boolean;
+  asynchronous: Asynchronous;
   includes: HarnessName[];
-  features: string[];
+  features: Feature[];
 };
+
+export type CompactTestCase = [
+  Kind,
+  TestPath,
+  Directive,
+  null | Negative,
+  Asynchronous,
+  HarnessName[],
+  Feature[],
+];

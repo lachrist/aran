@@ -1,20 +1,16 @@
 import { pathToFileURL } from "node:url";
 import { argv, stderr, stdout } from "node:process";
-import {
-  scrape,
-  inspectErrorMessage,
-  inspectErrorName,
-} from "../util/index.mjs";
+import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
 import { parseCursor, stringifyCursor } from "./cursor.mjs";
 import { readFile, writeFile } from "node:fs/promises";
-import { home, root } from "../home.mjs";
-import { showTargetPath, toTestPath } from "../fetch.mjs";
+import { home, root } from "../layout.mjs";
+import { showTargetPath } from "../fetch.mjs";
 import { compileStage } from "../staging/index.mjs";
 import { isExcludeResult } from "../result.mjs";
+import { enumTestCase } from "../catalog/index.mjs";
 
 const {
   process,
-  URL,
   JSON: { stringify },
 } = globalThis;
 
@@ -46,10 +42,6 @@ const main = async (argv) => {
       record: null,
     });
     let index = 0;
-    /** @type {import("../fetch").TestPath | null} */
-    let path = null;
-    let done = false;
-    let ongoing = false;
     const onUncaughtException = (/** @type {unknown} */ error) => {
       stdout.write(
         `uncaught >> ${inspectErrorName(error)} >> ${inspectErrorMessage(error)}\n`,
@@ -62,34 +54,25 @@ const main = async (argv) => {
     };
     process.addListener("SIGINT", onSigint);
     try {
-      for await (const url of scrape(new URL("test/", home))) {
+      for await (const test of enumTestCase()) {
         if (sigint) {
           return 1;
         }
-        path = toTestPath(url, home);
-        if (path !== null) {
-          if ((!ongoing && path === cursor.path) || index === cursor.index) {
-            ongoing = true;
-          }
-          if (ongoing) {
-            stdout.write(`${index} ${showTargetPath(path, home, root)}\n`);
-            for (const [specifier, result] of await exec(path)) {
-              if (!isExcludeResult(result)) {
-                const { actual, expect } = result;
-                if ((actual === null) !== (expect.length === 0)) {
-                  stderr.write(
-                    stringify({ specifier, actual, expect }, null, 2),
-                  );
-                  stderr.write("\n");
-                  return 1;
-                }
-              }
+        if (index >= cursor.index) {
+          stdout.write(`${index} ${showTargetPath(test.path, home, root)}\n`);
+          const result = await exec(test);
+          if (!isExcludeResult(result)) {
+            const { actual, expect } = result;
+            if ((actual === null) !== (expect.length === 0)) {
+              stderr.write(stringify({ test, result }, null, 2));
+              stderr.write("\n");
+              return 1;
             }
           }
-          index += 1;
         }
+        index += 1;
       }
-      done = true;
+      index = 0;
       return 0;
     } finally {
       process.removeListener("uncaughtException", onUncaughtException);
@@ -98,8 +81,7 @@ const main = async (argv) => {
         persistent,
         stringifyCursor({
           stage: cursor.stage,
-          index: done ? null : index,
-          path: done ? null : path,
+          index,
         }),
         "utf8",
       );

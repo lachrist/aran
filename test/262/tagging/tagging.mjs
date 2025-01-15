@@ -1,7 +1,8 @@
 import { readFile } from "fs/promises";
 import { getFirst, trimString } from "../util/index.mjs";
+import { locateTag } from "./layout.mjs";
 
-const { Set, URL } = globalThis;
+const { Set } = globalThis;
 
 /**
  * @type {(
@@ -33,9 +34,7 @@ const compileTagging = (content) => {
  * ) => boolean>}
  */
 export const loadTagging = async (tag) =>
-  compileTagging(
-    await readFile(new URL(`data/${tag}.txt`, import.meta.url), "utf8"),
-  );
+  compileTagging(await readFile(locateTag(tag), "utf8"));
 
 /**
  * @template {import("./tag").Tag} T

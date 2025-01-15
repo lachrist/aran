@@ -1,1 +1,1 @@
-export { parseTestFile } from "./test.mjs";
+export { parseTestFile, packTestCase, unpackTestCase } from "./test.mjs";
