@@ -1,7 +1,12 @@
 import { open } from "node:fs/promises";
 import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
 import { argv, stdout, stderr } from "node:process";
-import { compileStage, isStageName } from "../staging/index.mjs";
+import {
+  compileStage,
+  isStageName,
+  locateStageFail,
+  locateStageProd,
+} from "../staging/index.mjs";
 import { isExcludeResult, packResult, toTestSpecifier } from "../result.mjs";
 import { enumTestCase } from "../catalog/index.mjs";
 
@@ -41,16 +46,10 @@ const main = async (argv) => {
       };
       process.addListener("uncaughtException", onUncaughtException);
       let index = 0;
-      const prod_handle = await open(
-        new URL(`../staging/prod/${stage_name}.jsonl`, import.meta.url),
-        "w",
-      );
-      const fail_handle = await open(
-        new URL(`../staging/fail/${stage_name}.jsonl`, import.meta.url),
-        "w",
-      );
-      const prod_stream = prod_handle.createWriteStream({ encoding: "utf8" });
-      const fail_stream = fail_handle.createWriteStream({ encoding: "utf8" });
+      const prod_handle = await open(locateStageProd(stage_name), "w");
+      const fail_handle = await open(locateStageFail(stage_name), "w");
+      const prod_stream = prod_handle.createWriteStream({ encoding: "utf-8" });
+      const fail_stream = fail_handle.createWriteStream({ encoding: "utf-8" });
       try {
         for await (const test of enumTestCase()) {
           if (sigint) {

@@ -19,12 +19,12 @@ export const format = (code) => {
     `${now()}_${random().toString(36).substring(2)}`,
     TMP_DIR_URL,
   );
-  writeFileSync(url, code, "utf8");
+  writeFileSync(url, code, "utf-8");
   const { error, signal, status } = spawnSync(
     "node",
     [fileURLToPath(new URL("./prettier.mjs", import.meta.url)), url.href],
     {
-      encoding: "utf8",
+      encoding: "utf-8",
       stdio: ["pipe", "pipe", "inherit"],
     },
   );
@@ -38,7 +38,7 @@ export const format = (code) => {
     return code;
   }
   try {
-    return readFileSync(url, "utf8");
+    return readFileSync(url, "utf-8");
   } finally {
     unlinkSync(url);
   }

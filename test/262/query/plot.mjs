@@ -155,7 +155,7 @@ const main = async (argv) => {
         child.on("exit", (code, signal) => {
           resolve({ code, signal });
         });
-        child.stdin.write(JSON.stringify(plots), "utf8");
+        child.stdin.write(JSON.stringify(plots), "utf-8");
         child.stdin.end();
       });
       if (code !== 0 || signal !== null) {

@@ -25,7 +25,7 @@ export const compileFetchHarness = (home) => {
     if (cache.has(name)) {
       return /** @type {string} */ (cache.get(name));
     } else {
-      const content = await readFile(new URL(`harness/${name}`, home), "utf8");
+      const content = await readFile(new URL(`harness/${name}`, home), "utf-8");
       cache.set(name, content);
       return content;
     }
@@ -38,7 +38,7 @@ export const compileFetchHarness = (home) => {
  * ) => import("./fetch").FetchTarget}
  */
 export const compileFetchTarget = (home) => (path) =>
-  readFile(new URL(`test/${path}`, home), "utf8");
+  readFile(new URL(`test/${path}`, home), "utf-8");
 
 /**
  * @type {(

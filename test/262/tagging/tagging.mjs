@@ -34,7 +34,7 @@ const compileTagging = (content) => {
  * ) => boolean>}
  */
 export const loadTagging = async (tag) =>
-  compileTagging(await readFile(locateTag(tag), "utf8"));
+  compileTagging(await readFile(locateTag(tag), "utf-8"));
 
 /**
  * @template {import("./tag").Tag} T

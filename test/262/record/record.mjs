@@ -37,7 +37,7 @@ export const record = ({ path, content: content1 }, directory) => {
   const url = new URL(`${generateUniqueIdentifier()}.js`, directory);
   stdout.write(`RECORD >> ${url.href.substring(root.href.length)}\n`);
   const content2 = `// ${path}\n${format(content1)}`;
-  writeFileSync(url, content2, "utf8");
+  writeFileSync(url, content2, "utf-8");
   return {
     path: url.href,
     content: content2,

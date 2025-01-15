@@ -28,7 +28,7 @@ const main = async (argv) => {
     /** @type {import("./cursor").Cursor} */
     let cursor;
     try {
-      cursor = parseCursor(await readFile(persistent, "utf8"));
+      cursor = parseCursor(await readFile(persistent, "utf-8"));
     } catch (error) {
       stderr.write(
         `could not read cursor file at ${persistent} >> ${inspectErrorMessage(error)}\n`,
@@ -80,7 +80,7 @@ const main = async (argv) => {
           stage: cursor.stage,
           index,
         }),
-        "utf8",
+        "utf-8",
       );
       process.removeListener("uncaughtException", onUncaughtException);
       process.removeListener("SIGINT", onSigint);

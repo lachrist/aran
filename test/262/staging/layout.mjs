@@ -11,8 +11,8 @@ const { URL } = globalThis;
 const compile = (base, ext) => (name) =>
   new URL(`${base}/${name}.${ext}`, import.meta.url);
 
-export const toProd = compile("prod", "jsonl");
+export const locateStageProd = compile("prod", "jsonl");
 
-export const toSpec = compile("spec", "mjs");
+export const locateStageSpec = compile("spec", "mjs");
 
-export const toFail = compile("fail", "txt");
+export const locateStageFail = compile("fail", "txt");

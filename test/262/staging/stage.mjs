@@ -15,7 +15,7 @@ import { HARNESS, home } from "../layout.mjs";
 import { execTestCase } from "../test-case/index.mjs";
 import { loadTaggingList } from "../tagging/index.mjs";
 import { STAGE_ENUM } from "./stage-name.mjs";
-import { toFail } from "./layout.mjs";
+import { locateStageFail } from "./layout.mjs";
 
 const {
   Set,
@@ -31,7 +31,7 @@ const {
 const loadPrecursorFailure = async (stage) =>
   new Set(
     /** @type {import("../result").TestSpecifier[]} */ (
-      (await readFile(toFail(stage), "utf-8"))
+      (await readFile(locateStageFail(stage), "utf-8"))
         .split("\n")
         .map(trimString)
         .filter(isNotEmptyString)

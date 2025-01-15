@@ -8,8 +8,8 @@ const url = new URL(argv[2]);
 
 await writeFile(
   url,
-  await format(await readFile(url, "utf8"), {
+  await format(await readFile(url, "utf-8"), {
     parser: "acorn",
   }),
-  "utf8",
+  "utf-8",
 );

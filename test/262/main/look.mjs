@@ -16,7 +16,7 @@ const { process, URL } = globalThis;
 
 const directory = new URL("record/", import.meta.url);
 
-const cursor = parseCursor(await readFile(pathToFileURL(argv[2]), "utf8"));
+const cursor = parseCursor(await readFile(pathToFileURL(argv[2]), "utf-8"));
 
 const exec = await compileStage(cursor.stage, {
   memoization: "none",
