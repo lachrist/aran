@@ -3,8 +3,6 @@ import { argv, stderr, stdout } from "node:process";
 import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
 import { parseCursor, stringifyCursor } from "./cursor.mjs";
 import { readFile, writeFile } from "node:fs/promises";
-import { home, root } from "../layout.mjs";
-import { showTargetPath } from "../fetch.mjs";
 import { compileStage } from "../staging/index.mjs";
 import { isExcludeResult } from "../result.mjs";
 import { enumTestCase } from "../catalog/index.mjs";
@@ -58,8 +56,10 @@ const main = async (argv) => {
         if (sigint) {
           return 1;
         }
+        if (index % 100 === 0) {
+          stdout.write(`${index}\n`);
+        }
         if (index >= cursor.index) {
-          stdout.write(`${index} ${showTargetPath(test.path, home, root)}\n`);
           const result = await exec(test);
           if (!isExcludeResult(result)) {
             const { actual, expect } = result;

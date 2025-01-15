@@ -3,14 +3,16 @@ const { URL } = globalThis;
 /**
  * @type {(
  *   base: "spec" | "fail" | "prod",
+ *   ext: "mjs" | "jsonl" | "txt",
  * ) => (
  *   name: import("./stage-name").StageName,
  * ) => URL}
  */
-const compile = (base) => (name) => new URL(`${base}/${name}.jsonl`, base);
+const compile = (base, ext) => (name) =>
+  new URL(`${base}/${name}.${ext}`, import.meta.url);
 
-export const toProd = compile("prod");
+export const toProd = compile("prod", "jsonl");
 
-export const toSpec = compile("spec");
+export const toSpec = compile("spec", "mjs");
 
-export const toFail = compile("fail");
+export const toFail = compile("fail", "txt");

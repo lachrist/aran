@@ -31,7 +31,7 @@ const {
 const loadPrecursorFailure = async (stage) =>
   new Set(
     /** @type {import("../result").TestSpecifier[]} */ (
-      (await readFile(toFail(stage)), "utf-8")
+      (await readFile(toFail(stage), "utf-8"))
         .split("\n")
         .map(trimString)
         .filter(isNotEmptyString)

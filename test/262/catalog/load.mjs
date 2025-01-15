@@ -27,24 +27,6 @@ export const enumTestCase = async function* () {
 };
 
 /**
- * @type {() => AsyncIterable<import("../test-case").TestCase>}
- */
-export const enumTestSpecifier = async function* () {
-  const stream = createReadStream(CATALOG);
-  try {
-    const iterator = createInterface({
-      input: stream,
-      crlfDelay: Infinity,
-    });
-    for await (const line of iterator) {
-      yield unpackTestCase(JSON.parse(line));
-    }
-  } finally {
-    stream.close();
-  }
-};
-
-/**
  * @type {(
  *   index: number,
  * ) => Promise<import("../test-case").TestCase>}
