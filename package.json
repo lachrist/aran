@@ -28,7 +28,8 @@
     "look262": "node --experimental-vm-modules --expose-gc test/262/look.mjs test/262/cursor.txt",
     "summary262": "node test/262/query/summary.mjs",
     "plot262": "node test/262/query/plot.mjs",
-    "batch262": "node test/262/batch.mjs"
+    "batch262": "node test/262/batch.mjs",
+    "build262": "node test/262/tagging/main-generate.mjs && node test/262/stagging/main-generate.mjs"
   },
   "keywords": [
     "JavaScript",

@@ -133,7 +133,7 @@ const applyNegative = (phase, outcome, negative) => {
  *   dependencies: {
  *     setup: (context: import("node:vm").Context) => void,
  *     signalNegative: (cause: string) => Error,
- *     instrument: import("../stage").Instrument,
+ *     instrument: import("../stagging/stage").Instrument,
  *     resolveDependency: import("../fetch").ResolveDependency,
  *     fetchHarness: import("../fetch").FetchHarness,
  *     fetchTarget: import("../fetch").FetchTarget,
@@ -279,7 +279,7 @@ export const execTestCaseInner = async (
  *     fetchHarness: import("../fetch").FetchHarness,
  *     fetchTarget: import("../fetch").FetchTarget,
  *     setup: (context: import("node:vm").Context) => void,
- *     instrument: import("../stage").Instrument,
+ *     instrument: import("../stagging/stage").Instrument,
  *   },
  * ) => Promise<{
  *   expect: string[],

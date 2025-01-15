@@ -6,7 +6,7 @@ import {
   setupAranBasic,
   setupStandardAdvice,
 } from "../aran/index.mjs";
-import { makeTrackOriginAdvice } from "../../aspects/track-origin.mjs";
+import { makeTrackOriginAdvice } from "../../../aspects/track-origin.mjs";
 
 const {
   Object: { hasOwn },

@@ -9,7 +9,7 @@ import { parseCursor, stringifyCursor } from "./cursor.mjs";
 import { readFile, writeFile } from "node:fs/promises";
 import { home, root } from "./home.mjs";
 import { showTargetPath, toTestPath } from "./fetch.mjs";
-import { compileStage } from "./stage.mjs";
+import { compileStage } from "./stagging/index.mjs";
 import { isExcludeResult } from "./result.mjs";
 
 const {

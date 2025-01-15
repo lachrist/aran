@@ -1,5 +1,5 @@
 // eslint-disable-next-line local/no-deep-import
-import { makeTraceAdvice, INITIAL_INDENT } from "../../aspects/trace.mjs";
+import { makeTraceAdvice, INITIAL_INDENT } from "../../../aspects/trace.mjs";
 import {
   setupStandardAdvice,
   instrument,

@@ -1,4 +1,4 @@
-export type Tag =
+export type Tag = 
   | "arguments-two-way-binding"
   | "async-iterator-async-value"
   | "call-async-done-with-module"
@@ -7,7 +7,6 @@ export type Tag =
   | "function-string-representation"
   | "global-object-access"
   | "invalid-metadata-header"
-  | "literal-module-specifier"
   | "negative-bare-duplicate-super-prototype-access"
   | "negative-bare-early-module-declaration"
   | "negative-bare-missing-iterable-return-in-pattern"

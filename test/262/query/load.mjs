@@ -7,7 +7,7 @@ const { URL, JSON, Infinity } = globalThis;
 
 /**
  * @type {(
- *   stage: import("../stage").StageName,
+ *   stage: import("../stagging/stage-name").StageName,
  * ) => Promise<import("../result").ResultEntry[]>}
  */
 export const loadResultArray = async (stage) => {

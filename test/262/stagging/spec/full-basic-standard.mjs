@@ -9,7 +9,7 @@ const { undefined } = globalThis;
 /**
  * @type {(
  *   membrane: import("../aran/membrane").BasicMembrane,
- * ) => import("../../../").StandardAdvice<
+ * ) => import("../../../../lib").StandardAdvice<
  *   import("../aran/config").NodeHash,
  *   null,
  *   { Stack: unknown, Scope: unknown, Other: unknown },

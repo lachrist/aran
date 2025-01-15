@@ -1,0 +1,22 @@
+/** @type {{[key in import("./stage-name").StageName]: null}} */
+export const STAGE_ENUM = {
+  "bare-basic-flexible": null,
+  "bare-basic-standard": null,
+  "bare-max": null,
+  "bare-min": null,
+  "bare-patch-flexible": null,
+  "bare-patch-standard": null,
+  "bare-weave-flexible": null,
+  "bare-weave-standard": null,
+  "bare": null,
+  "full-basic-flexible": null,
+  "full-basic-standard": null,
+  "identity": null,
+  "invariant": null,
+  "parsing": null,
+  "standard-full": null,
+  "standard-void": null,
+  "state-flexible": null,
+  "trace": null,
+  "track-origin": null,
+};

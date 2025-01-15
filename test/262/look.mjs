@@ -12,11 +12,11 @@ import {
 import { readFile } from "node:fs/promises";
 import { home, root } from "./home.mjs";
 import { showTargetPath, toTestPath } from "./fetch.mjs";
-import { compileStage } from "./stage.mjs";
+import { compileStage } from "./stagging/index.mjs";
 
 const { console, process, URL, Error, JSON } = globalThis;
 
-const codebase = new URL("test/262/codebase/", root);
+const directory = new URL("test/262/record/data/", root);
 
 /**
  * @type {(
@@ -60,7 +60,7 @@ const cursor = parseCursor(await readFile(pathToFileURL(argv[2]), "utf8"));
 
 const exec = await compileStage(cursor.stage, {
   memoization: "none",
-  record: (file) => record(file, codebase),
+  record: (file) => record(file, directory),
 });
 
 // It is unfortunate but uncaught exception do not necessarily indicate test failure.
@@ -74,7 +74,7 @@ process.on("uncaughtException", (error, _origin) => {
   console.dir(error);
 });
 
-await cleanup(codebase);
+await cleanup(directory);
 
 const path = await fetchTestPath(cursor);
 

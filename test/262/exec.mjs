@@ -6,7 +6,7 @@ import {
 } from "./util/index.mjs";
 import { argv, stdout, stderr } from "node:process";
 import { home } from "./home.mjs";
-import { compileStage, isStageName } from "./stage.mjs";
+import { compileStage, isStageName } from "./stagging/index.mjs";
 import { toTestPath } from "./fetch.mjs";
 import { packResultEntry } from "./result.mjs";
 

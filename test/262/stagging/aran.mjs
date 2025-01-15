@@ -1,11 +1,11 @@
 import { runInContext } from "node:vm";
 import { generate } from "astring";
-import { generateSetup, retropile, transpile } from "../../lib/index.mjs";
+import { generateSetup, retropile, transpile } from "../../../lib/index.mjs";
 import { parse as parseAcorn } from "acorn";
 import { parse as parseBabel } from "@babel/parser";
-import { inspectErrorMessage } from "./util/index.mjs";
-import { harmonizeSyntaxError } from "./syntax-error.mjs";
-import { AranTestError } from "./error.mjs";
+import { inspectErrorMessage } from "../util/index.mjs";
+import { harmonizeSyntaxError } from "../syntax-error.mjs";
+import { AranTestError } from "../error.mjs";
 
 const {
   JSON: { parse: parseJson },
@@ -21,7 +21,7 @@ export { generate };
 /**
  * @type {(
  *   data: string,
- * ) => import("../../lib/trans/source").DeepLocalSitu}
+ * ) => import("../../../lib/trans/source").DeepLocalSitu}
  */
 const parseSitu = parseJson;
 
@@ -29,7 +29,7 @@ const parseSitu = parseJson;
  * @type {(
  *   kind: "script" | "module" | "eval",
  *   code: string
- * ) => import("../../lib").LooseEstreeProgram}
+ * ) => import("../../../lib").LooseEstreeProgram}
  */
 export const parseGlobal = (kind, code) =>
   parseAcorn(code, {
@@ -42,7 +42,7 @@ export const parseGlobal = (kind, code) =>
  * @type {(
  *   kind: "eval",
  *   code: string,
- * ) => import("../../lib").LooseEstreeProgram}
+ * ) => import("../../../lib").LooseEstreeProgram}
  */
 const parseAcornLocal = (_kind, code) =>
   parseAcorn(code, {
@@ -60,8 +60,8 @@ const parseAcornLocal = (_kind, code) =>
 
 /**
  * @type {(
- *   root: import("../../lib").LooseEstreeProgram,
- * ) => import("../../lib").LooseEstreeProgram}
+ *   root: import("../../../lib").LooseEstreeProgram,
+ * ) => import("../../../lib").LooseEstreeProgram}
  */
 const sanitizeBabel = (root) => {
   /** @type {object[]} */
@@ -107,7 +107,7 @@ const sanitizeBabel = (root) => {
  * @type {(
  *   kind: "eval",
  *   code: string,
- * ) => import("../../lib").LooseEstreeProgram}
+ * ) => import("../../../lib").LooseEstreeProgram}
  */
 const parseBabelLocal = (_kind, code) =>
   sanitizeBabel(
@@ -137,7 +137,7 @@ const parseBabelLocal = (_kind, code) =>
  * @type {(
  *   kind: "eval",
  *   code: string,
- * ) => import("../../lib").LooseEstreeProgram}
+ * ) => import("../../../lib").LooseEstreeProgram}
  */
 export const parseLocal = (kind, code) => {
   // We prefer acorn over babel because it is faster respect the estree format.
@@ -158,28 +158,28 @@ export const parseLocal = (kind, code) => {
  * @type {<
  *   P extends string,
  *   H extends number | string,
- *   A extends import("../../lib").Atom & { Tag: H },
+ *   A extends import("../../../lib").Atom & { Tag: H },
  * >(
  *   config: (
- *     & import("../../lib").TransConfig<P, H>
- *     & import("../../lib").RetroConfig
+ *     & import("../../../lib").TransConfig<P, H>
+ *     & import("../../../lib").RetroConfig
  *   ),
  *   toEvalPath: (hash: H) => P,
  * ) => {
  *   setup: (
  *     context: import("node:vm").Context,
  *   ) => {
- *     intrinsics: import("../../lib").AranIntrinsicRecord,
- *     $262: import("./test262").$262,
+ *     intrinsics: import("../../../lib").AranIntrinsicRecord,
+ *     $262: import("../test262").$262,
  *   },
  *   trans: (
  *     path: P,
  *     kind: "script" | "module" | "eval",
  *     code: string,
- *   ) => import("../../lib").AranProgram<A>,
+ *   ) => import("../../../lib").AranProgram<A>,
  *   retro: (
- *     root: import("../../lib").AranProgram<
- *       import("../../lib").Atom,
+ *     root: import("../../../lib").AranProgram<
+ *       import("../../../lib").Atom,
  *     >,
  *   ) => string,
  * }}
@@ -188,9 +188,9 @@ export const compileAran = (config, toEvalPath) => {
   const SETUP = generate(generateSetup(config));
   return {
     setup: (context) => {
-      /** @type {import("../../lib").AranIntrinsicRecord} */
+      /** @type {import("../../../lib").AranIntrinsicRecord} */
       const intrinsics = /** @type {any} */ (runInContext(SETUP, context));
-      /** @type {import("./test262").$262} */
+      /** @type {import("../test262").$262} */
       const $262 = /** @type {any} */ (intrinsics["aran.global"]).$262;
       const { SyntaxError } = intrinsics["aran.global"];
       intrinsics["aran.transpileEval"] = (code, situ, hash) => {

@@ -1,6 +1,6 @@
 import bare from "./bare.mjs";
 import { compileAran } from "../aran.mjs";
-import { weaveStandard } from "../../../lib";
+import { weaveStandard } from "../../../../lib";
 
 const {
   Reflect: { defineProperty },
@@ -9,7 +9,7 @@ const {
 const ADVICE_VARIABLE = "_aran_advice_";
 
 /**
- * @type {import("../../../lib").Digest<string, string>}
+ * @type {import("../../../../lib").Digest<string, string>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
   /** @type {string} */ (`${file_path}:${node_path}`);
@@ -32,7 +32,7 @@ const { setup, trans, retro } = compileAran(
 );
 
 /**
- * @type {import("../../../lib").StandardWeaveConfig<string>}
+ * @type {import("../../../../lib").StandardWeaveConfig<string>}
  */
 const conf = {
   advice_variable: ADVICE_VARIABLE,
@@ -41,7 +41,7 @@ const conf = {
 };
 
 /**
- * @type {import("../../../lib").StandardAdvice<string, null>}
+ * @type {import("../../../../lib").StandardAdvice<string, null>}
  */
 const advice = {};
 

@@ -9,7 +9,7 @@ import bare from "./bare.mjs";
 /**
  * @type {(
  *   membrane: import("../aran/membrane").WeaveMembrane,
- * ) => import("../../../").HomogeneousFlexibleAspect<
+ * ) => import("../../../../lib").HomogeneousFlexibleAspect<
  *   import("../aran/config").Atom,
  *   null,
  *   unknown,

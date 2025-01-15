@@ -8,7 +8,7 @@ import bare from "./bare.mjs";
 /**
  * @type {(
  *   membrane: import("../aran/membrane").WeaveMembrane,
- * ) => import("../../../").StandardAdvice<
+ * ) => import("../../../../lib").StandardAdvice<
  *   import("../aran/config").NodeHash,
  *   null,
  *   { Stack: unknown, Scope: unknown, Other: unknown },

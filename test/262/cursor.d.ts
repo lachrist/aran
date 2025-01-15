@@ -1,5 +1,5 @@
 import type { TestPath } from "./fetch";
-import type { StageName } from "./stage";
+import type { StageName } from "./stagging/stage-name";
 
 export type Cursor = {
   stage: StageName;

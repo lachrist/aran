@@ -1,5 +1,5 @@
 import { ResultEntry } from "../result";
-import { StageName } from "../stage";
+import { StageName } from "../stagging/stage-name";
 
 export type Plot = {
   output: string;

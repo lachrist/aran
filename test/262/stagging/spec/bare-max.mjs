@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 import bare from "./bare.mjs";
 import { compileAran } from "../aran.mjs";
-import { AranTypeError } from "../error.mjs";
+import { AranTypeError } from "../../error.mjs";
 
 const {
   Array: {
@@ -83,7 +83,7 @@ const toAdviceEntry = (name) => [toAdviceVariable(name), "undefined"];
  * @type {(
  *   name: "eval" | "apply" | "construct",
  *   tag: unknown,
- * ) => import("../../../lib").AranStatement}
+ * ) => import("../../../../lib").AranStatement}
  */
 const toAdviceInit = (name, tag) => ({
   type: "EffectStatement",
@@ -139,11 +139,11 @@ const compileFunctionCode = (input) => {
 
 /**
  * @type {(
- *   intrinsic: import("../../../lib").AranIntrinsicRecord,
+ *   intrinsic: import("../../../../lib").AranIntrinsicRecord,
  * ) => {
  *   eval: (
- *     root: import("../../../lib").AranProgram,
- *   ) => import("../../../lib").AranProgram,
+ *     root: import("../../../../lib").AranProgram,
+ *   ) => import("../../../../lib").AranProgram,
  *   apply: (
  *     callee: Function,
  *     that: unknown,
@@ -194,11 +194,11 @@ const compileAdvice = (intrinsics) => ({
 
 /**
  * @type {(
- *   node: import("../../../lib").AranProgram,
- * ) => import("../../../lib").AranProgram}
+ *   node: import("../../../../lib").AranProgram,
+ * ) => import("../../../../lib").AranProgram}
  */
 const visitProgram = (node) =>
-  /** @type {import("../../../lib").AranProgram} */ ({
+  /** @type {import("../../../../lib").AranProgram} */ ({
     type: "Program",
     kind: node.kind,
     situ: node.situ,
@@ -209,8 +209,8 @@ const visitProgram = (node) =>
 
 /**
  * @type {(
- *   node: import("../../../lib").AranRoutineBlock & { head: null },
- * ) => import("../../../lib").AranRoutineBlock & { head: null }}
+ *   node: import("../../../../lib").AranRoutineBlock & { head: null },
+ * ) => import("../../../../lib").AranRoutineBlock & { head: null }}
  */
 const visitProgramBlock = (node) => ({
   type: "RoutineBlock",
@@ -226,8 +226,8 @@ const visitProgramBlock = (node) => ({
 
 /**
  * @type {(
- *   node: import("../../../lib").AranRoutineBlock,
- * ) => import("../../../lib").AranRoutineBlock & { head: any }}
+ *   node: import("../../../../lib").AranRoutineBlock,
+ * ) => import("../../../../lib").AranRoutineBlock & { head: any }}
  */
 const visitClosureBlock = (node) => ({
   type: "RoutineBlock",
@@ -240,8 +240,8 @@ const visitClosureBlock = (node) => ({
 
 /**
  * @type {(
- *   node: import("../../../lib").AranSegmentBlock,
- * ) => import("../../../lib").AranSegmentBlock}
+ *   node: import("../../../../lib").AranSegmentBlock,
+ * ) => import("../../../../lib").AranSegmentBlock}
  */
 const visitSegmentBlock = (node) => ({
   type: "SegmentBlock",
@@ -253,8 +253,8 @@ const visitSegmentBlock = (node) => ({
 
 /**
  * @type {(
- *   node: import("../../../lib").AranStatement,
- * ) => import("../../../lib").AranStatement}
+ *   node: import("../../../../lib").AranStatement,
+ * ) => import("../../../../lib").AranStatement}
  */
 export const visitStatement = (node) => {
   const { tag } = node;
@@ -313,8 +313,8 @@ export const visitStatement = (node) => {
 
 /**
  * @type {(
- *   node: import("../../../lib").AranEffect,
- * ) => import("../../../lib").AranEffect}
+ *   node: import("../../../../lib").AranEffect,
+ * ) => import("../../../../lib").AranEffect}
  */
 export const visitEffect = (node) => {
   const { tag } = node;
@@ -359,8 +359,8 @@ export const visitEffect = (node) => {
 
 /**
  * @type {(
- *   node: import("../../../lib").AranExpression,
- * ) => import("../../../lib").AranExpression}
+ *   node: import("../../../../lib").AranExpression,
+ * ) => import("../../../../lib").AranExpression}
  */
 export const visitExpression = (node) => {
   const { tag } = node;
@@ -541,7 +541,7 @@ export const visitExpression = (node) => {
 const weave = visitProgram;
 
 /**
- * @type {import("../../../lib").Digest<string, string>}
+ * @type {import("../../../../lib").Digest<string, string>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
   /** @type {string} */ (`${file_path}:${node_path}`);

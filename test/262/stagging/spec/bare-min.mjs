@@ -2,7 +2,7 @@ import bare from "./bare.mjs";
 import { compileAran } from "../aran.mjs";
 
 /**
- * @type {import("../../../lib").Digest<string, string>}
+ * @type {import("../../../../lib").Digest<string, string>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
   /** @type {string} */ (`${file_path}:${node_path}`);

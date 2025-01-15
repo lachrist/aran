@@ -6,7 +6,7 @@ import {
   setupAranBasic,
   setupStandardAdvice,
 } from "../aran/index.mjs";
-import { makeInvariantAdvice } from "../../aspects/invariant.mjs";
+import { makeInvariantAdvice } from "../../../aspects/invariant.mjs";
 
 const {
   Object: { hasOwn },

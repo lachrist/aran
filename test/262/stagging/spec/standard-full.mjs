@@ -1,6 +1,6 @@
 import bare from "./bare.mjs";
 import { compileAran } from "../aran.mjs";
-import { weaveStandard } from "../../../lib";
+import { weaveStandard } from "../../../../lib";
 
 const {
   Reflect: { defineProperty },
@@ -42,7 +42,7 @@ const isObjectArray = (arg) => {
 };
 
 /**
- * @type {import("../../../lib").Digest<string, string>}
+ * @type {import("../../../../lib").Digest<string, string>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
   /** @type {string} */ (`tag:${file_path}:${node_path}`);
@@ -65,7 +65,7 @@ const { setup, trans, retro } = compileAran(
 );
 
 /**
- * @type {import("../../../lib").StandardWeaveConfig<string>}
+ * @type {import("../../../../lib").StandardWeaveConfig<string>}
  */
 const conf = {
   advice_variable: ADVICE_VARIABLE,
@@ -75,7 +75,7 @@ const conf = {
 
 /**
  * @type {{
- *   [key in keyof import("../../../lib").StandardAdvice<unknown, unknown>]:
+ *   [key in keyof import("../../../../lib").StandardAdvice<unknown, unknown>]:
  *     ((arg: unknown) => boolean)[]
  * }}
  */
@@ -85,7 +85,7 @@ const advice = {
 };
 
 /**
- * @type {import("../../../lib").StandardAdvice<string, null>}
+ * @type {import("../../../../lib").StandardAdvice<string, null>}
  */
 const advice = {
   "block@setup": (_state, _kind, _tag) => {},

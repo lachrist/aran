@@ -1,26 +1,16 @@
 import { AranExecError } from "./error.mjs";
-import { STAGE_ENUM } from "./stage.mjs";
+import { isStageName } from "./stagging/index.mjs";
 import { isNotEmptyString, trimString } from "./util/index.mjs";
 
-const {
-  parseInt,
-  Object: { hasOwn },
-} = globalThis;
-
-/**
- * @type {(
- *   candidate: string
- * ) => candidate is import("./stage").StageName}
- */
-const isStage = (candidate) => hasOwn(STAGE_ENUM, candidate);
+const { parseInt } = globalThis;
 
 /**
  * @type {(
  *   line: string
- * ) => import("./stage").StageName}
+ * ) => import("./stagging/stage-name").StageName}
  */
 const parseStageLine = (line) => {
-  if (isStage(line)) {
+  if (isStageName(line)) {
     return line;
   } else {
     throw new AranExecError("Invalid stage line", { line });

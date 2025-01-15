@@ -1,21 +1,22 @@
 import { readdir } from "node:fs/promises";
 import { createInterface } from "node:readline";
 import { createReadStream } from "node:fs";
-import { isNotEmptyArray, getFirst } from "./util/index.mjs";
+import { isNotEmptyArray, getFirst } from "../util/index.mjs";
 import {
   isFailureCompactResultEntry,
   parseCompactResultEntry,
   toTestSpecifier,
-} from "./result.mjs";
+} from "../result.mjs";
 import {
   compileFetchHarness,
   compileFetchTarget,
   resolveDependency,
-} from "./fetch.mjs";
-import { home } from "./home.mjs";
-import { parseTestFile } from "./test-file/index.mjs";
-import { execTestCase } from "./test-case/index.mjs";
-import { loadTaggingList } from "./tagging/index.mjs";
+} from "../fetch.mjs";
+import { home } from "../home.mjs";
+import { parseTestFile } from "../test-file/index.mjs";
+import { execTestCase } from "../test-case/index.mjs";
+import { loadTaggingList } from "../tagging/index.mjs";
+import { STAGE_ENUM } from "./stage-name.mjs";
 
 const {
   Set,
@@ -27,11 +28,11 @@ const {
 
 /**
  * @type {(
- *   name: import("./stage").StageName,
- * ) => Promise<Set<import("./result").TestSpecifier>>}
+ *   name: import("./stage-name").StageName,
+ * ) => Promise<Set<import("../result").TestSpecifier>>}
  */
 const loadPrecursorFailure = async (stage) => {
-  /** @type {Set<import("./result").TestSpecifier>} */
+  /** @type {Set<import("../result").TestSpecifier>} */
   const specifiers = new Set();
   for await (const line of createInterface({
     input: createReadStream(
@@ -48,43 +49,25 @@ const loadPrecursorFailure = async (stage) => {
 };
 
 /**
- * @type {{ [key in import("./stage").StageName]: null }}
- */
-export const STAGE_ENUM = {
-  "identity": null,
-  "parsing": null,
-  "bare-min": null,
-  "bare-basic-standard": null,
-  "bare-basic-flexible": null,
-  "bare-patch-flexible": null,
-  "bare-patch-standard": null,
-  "bare-weave-flexible": null,
-  "bare-weave-standard": null,
-  "full-basic-standard": null,
-  "full-basic-flexible": null,
-  "track-origin": null,
-};
-
-/**
  * @type {(
  *   value: string,
- * ) => value is import("./stage").StageName}
+ * ) => value is import("./stage-name").StageName}
  */
 export const isStageName = (value) => hasOwn(STAGE_ENUM, value);
 
 /**
  * @type {(
- *   precursors: import("./stage").StageName[],
- *   exclude: import("./tagging/tag").Tag[],
+ *   precursors: import("./stage-name").StageName[],
+ *   exclude: import("../tagging/tag").Tag[],
  * ) => Promise<(
- *   specifier: import("./result").TestSpecifier,
- * ) => (import("./tagging/tag").Tag | import("./stage").StageName)[]>}
+ *   specifier: import("../result").TestSpecifier,
+ * ) => (import("../tagging/tag").Tag | import("./stage-name").StageName)[]>}
  */
 const compileListExclusionReason = async (precursors, exclude) => {
   /**
    * @type {[
-   *   import("./stage").StageName,
-   *   Set<import("./result").TestSpecifier>,
+   *   import("./stage-name").StageName,
+   *   Set<import("../result").TestSpecifier>,
    * ][]}
    */
   const entries = [];
@@ -102,7 +85,7 @@ const compileListExclusionReason = async (precursors, exclude) => {
 
 /**
  * @type {(
- *   name: import("./stage").StageName,
+ *   name: import("./stage-name").StageName,
  * ) => Promise<import("./stage").ReadyStage>}
  */
 const loadStage = async (name) => {
@@ -122,10 +105,10 @@ const loadStage = async (name) => {
 
 /**
  * @type {(
- *   path: import("./fetch").TestPath,
+ *   path: import("../fetch").TestPath,
  *   stage: import("./stage").ReadyStage,
- *   fetch: import("./fetch").Fetch,
- * ) => Promise<import("./result").ResultEntry[]>}
+ *   fetch: import("../fetch").Fetch,
+ * ) => Promise<import("../result").ResultEntry[]>}
  */
 const execStage = async (
   path,
@@ -136,7 +119,7 @@ const execStage = async (
     path,
     content: await fetchTarget(path),
   });
-  /** @type {import("./result").ResultEntry[]} */
+  /** @type {import("../result").ResultEntry[]} */
   const entries = [];
   for (const test_case of test_case_array) {
     const specifier = toTestSpecifier(
@@ -181,7 +164,7 @@ const execStage = async (
 const memoizeInstrument = (instrument) => {
   /**
    * @type {Map<
-   *   import("./fetch").HarnessName,
+   *   import("../fetch").HarnessName,
    *   import("./stage").File
    * >}
    */
@@ -204,7 +187,7 @@ const memoizeInstrument = (instrument) => {
 
 /**
  * @type {(
- *   name: import("./stage").StageName,
+ *   name: import("./stage-name").StageName,
  *   options: {
  *     memoization: "none" | "lazy" | "eager",
  *     record: null | ((
@@ -212,8 +195,8 @@ const memoizeInstrument = (instrument) => {
  *     ) => import("./stage").File),
  *   },
  * ) => Promise<(
- *   path: import("./fetch").TestPath,
- * ) => Promise<import("./result").ResultEntry[]>>}
+ *   path: import("../fetch").TestPath,
+ * ) => Promise<import("../result").ResultEntry[]>>}
  */
 export const compileStage = async (name, { memoization, record }) => {
   const fetch = {
@@ -226,7 +209,7 @@ export const compileStage = async (name, { memoization, record }) => {
     stage.instrument = memoizeInstrument(stage.instrument);
     if (memoization === "eager") {
       // Fetch all harnesses to cache them and improve timer accuracy
-      for (const name of /** @type {import("./fetch").HarnessName[]} */ (
+      for (const name of /** @type {import("../fetch").HarnessName[]} */ (
         await readdir(new URL("harness/", home))
       )) {
         if (name.endsWith(".js")) {
