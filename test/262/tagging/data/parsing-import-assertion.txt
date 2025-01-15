@@ -1,0 +1,17 @@
+
+language/expressions/dynamic-import/import-assertions/2nd-param-evaluation-abrupt-return.js
+language/expressions/dynamic-import/import-assertions/2nd-param-evaluation-abrupt-throw.js
+language/expressions/dynamic-import/import-assertions/2nd-param-evaluation-sequence.js
+language/expressions/dynamic-import/import-assertions/2nd-param-non-object.js
+language/expressions/dynamic-import/import-assertions/2nd-param-yield-expr.js
+language/expressions/dynamic-import/import-attributes/2nd-param-evaluation-abrupt-return.js
+language/expressions/dynamic-import/import-attributes/2nd-param-evaluation-abrupt-throw.js
+language/expressions/dynamic-import/import-attributes/2nd-param-evaluation-sequence.js
+language/expressions/dynamic-import/import-attributes/2nd-param-get-with-error.js
+language/expressions/dynamic-import/import-attributes/2nd-param-non-object.js
+language/expressions/dynamic-import/import-attributes/2nd-param-with-enumeration-abrupt.js
+language/expressions/dynamic-import/import-attributes/2nd-param-with-enumeration-enumerable.js
+language/expressions/dynamic-import/import-attributes/2nd-param-with-non-object.js
+language/expressions/dynamic-import/import-attributes/2nd-param-with-value-abrupt.js
+language/expressions/dynamic-import/import-attributes/2nd-param-with-value-non-string.js
+language/expressions/dynamic-import/import-attributes/2nd-param-yield-expr.js

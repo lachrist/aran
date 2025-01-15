@@ -6,6 +6,7 @@ export default {
   negative: [
     "parsing-function-string-representation",
     "parsing-cover-parenthesis",
+    "parsing-import-assertion",
     "parsing-unknown",
   ],
   exclude: [],

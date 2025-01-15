@@ -29,5 +29,6 @@ export type Tag =
   | "negative-identity-wrong-realm-for-dynamic-import"
   | "parsing-cover-parenthesis"
   | "parsing-function-string-representation"
+  | "parsing-import-assertion"
   | "parsing-unknown"
   | "slow";

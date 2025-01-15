@@ -1,2 +1,11 @@
-
-language/expressions/dynamic-import/import-assertions/2nd-param-evaluation-abrupt-return.js
+language/expressions/dynamic-import/syntax/valid/new-covered-expression-is-valid.js
+language/module-code/export-expname-binding-index.js
+language/module-code/export-expname-binding-string.js
+language/module-code/export-expname-from-binding-string.js
+language/module-code/export-expname-from-star-string.js
+language/module-code/export-expname-from-star.js
+language/module-code/export-expname-from-string-string.js
+language/module-code/export-expname-from-string.js
+language/module-code/instn-named-bndng-dflt-expr.js
+language/statements/for-of/head-lhs-async-escaped.js
+language/statements/for-of/head-lhs-async-parens.js
