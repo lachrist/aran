@@ -7,7 +7,7 @@ import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
  *   path: import("../fetch").TestPath,
  *   content: string,
  *   metadata: import("../test262").Metadata,
- * ) => import("../case/test-case").TestCase[]}
+ * ) => import("../test-case/test-case").TestCase[]}
  */
 const listTestCase = (path, content, metadata) => {
   const asynchronous = metadata.flags.includes("async");
@@ -18,7 +18,7 @@ const listTestCase = (path, content, metadata) => {
     ...metadata.includes,
   ]);
   const module = metadata.flags.includes("module");
-  /** @type {import("../case/test-case").TestCase[]} */
+  /** @type {import("../test-case/test-case").TestCase[]} */
   const test_case_array = [];
   const kind = module ? "module" : "script";
   if (
@@ -64,9 +64,9 @@ const listTestCase = (path, content, metadata) => {
  *     path: import("../fetch").TestPath,
  *     content: string,
  *   },
- * ) => import("../case/test-case").TestCase[]}
+ * ) => import("../test-case/test-case").TestCase[]}
  */
-export const parseTest = ({ path, content }) => {
+export const parseTestFile = ({ path, content }) => {
   let metadata;
   try {
     metadata = parseMetadata(content);

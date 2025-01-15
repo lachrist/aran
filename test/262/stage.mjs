@@ -18,7 +18,7 @@ import {
 } from "./fetch.mjs";
 import { home } from "./home.mjs";
 import { parseTest } from "./test/index.mjs";
-import { execTestCase } from "./case/index.mjs";
+import { execTestCase } from "./test-case/index.mjs";
 
 const {
   Set,

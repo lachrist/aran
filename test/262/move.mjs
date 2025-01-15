@@ -8,7 +8,7 @@ import {
 import { parseCursor, stringifyCursor } from "./cursor.mjs";
 import { readFile, writeFile } from "node:fs/promises";
 import { home, root } from "./home.mjs";
-import { showTargetPath, toMainPath } from "./fetch.mjs";
+import { showTargetPath, toTestPath } from "./fetch.mjs";
 import { compileStage } from "./stage.mjs";
 import { isExcludeResult } from "./result.mjs";
 
@@ -66,7 +66,7 @@ const main = async (argv) => {
         if (sigint) {
           return 1;
         }
-        path = toMainPath(url, home);
+        path = toTestPath(url, home);
         if (path !== null) {
           if ((!ongoing && path === cursor.path) || index === cursor.index) {
             ongoing = true;

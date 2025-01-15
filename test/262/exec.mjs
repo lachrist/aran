@@ -7,7 +7,7 @@ import {
 import { argv, stdout, stderr } from "node:process";
 import { home } from "./home.mjs";
 import { compileStage, isStageName } from "./stage.mjs";
-import { toMainPath } from "./fetch.mjs";
+import { toTestPath } from "./fetch.mjs";
 import { packResultEntry } from "./result.mjs";
 
 const { Date, process, URL, JSON } = globalThis;
@@ -61,7 +61,7 @@ const main = async (argv) => {
           if (index % 100 === 0) {
             stdout.write(`${index}\n`);
           }
-          const path = toMainPath(url, home);
+          const path = toTestPath(url, home);
           if (path !== null) {
             for (const entry of await exec(path)) {
               stream.write(JSON.stringify(packResultEntry(entry)) + "\n");

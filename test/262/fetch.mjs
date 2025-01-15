@@ -46,7 +46,7 @@ export const compileFetchTarget = (home) => (path) =>
  *   home: URL,
  * ) => null | import("./fetch").TestPath}
  */
-export const toMainPath = (url, home) => {
+export const toTestPath = (url, home) => {
   const base = new URL("test/", home);
   if (url.href.startsWith(base.href)) {
     const path = url.pathname.slice(base.pathname.length);

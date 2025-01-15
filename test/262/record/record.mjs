@@ -6,15 +6,15 @@ import { root } from "../home.mjs";
 
 const { URL, performance, Math } = globalThis;
 
-const base = new URL("test/262/codebase/", root);
-
 /**
- * @type {() => Promise<void>}
+ * @type {(
+ *   directory: URL,
+ * ) => Promise<void>}
  */
-export const cleanup = async () => {
-  for (const filename of await readdir(base)) {
+export const cleanup = async (directory) => {
+  for (const filename of await readdir(directory)) {
     if (filename !== ".gitignore") {
-      await unlink(new URL(filename, base));
+      await unlink(new URL(filename, directory));
     }
   }
 };
@@ -30,10 +30,11 @@ const generateUniqueIdentifier = () =>
 /**
  * @type {(
  *   file: import("../stage").File,
+ *   directory: URL,
  * ) => import("../stage").File}
  */
-export const record = ({ path, content: content1 }) => {
-  const url = new URL(`${generateUniqueIdentifier()}.js`, base);
+export const record = ({ path, content: content1 }, directory) => {
+  const url = new URL(`${generateUniqueIdentifier()}.js`, directory);
   stdout.write(`RECORD >> ${url.href.substring(root.href.length)}\n`);
   const content2 = `// ${path}\n${format(content1)}`;
   writeFileSync(url, content2, "utf8");

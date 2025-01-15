@@ -1,6 +1,6 @@
 export type HarnessName = string & { __brand: "HarnessName" };
 
-export type TestPath = string & { __brand: "MainPath" };
+export type TestPath = string & { __brand: "TestPath" };
 
 export type DependencyPath = string & { __brand: "DependencyPath" };
 
