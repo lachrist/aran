@@ -2,10 +2,9 @@ import { writeFileSync } from "node:fs";
 import { format } from "./format.mjs";
 import { readdir, unlink } from "node:fs/promises";
 import { stdout } from "node:process";
+import { root } from "../home.mjs";
 
 const { URL, performance, Math } = globalThis;
-
-const root = new URL("../../", import.meta.url);
 
 const base = new URL("test/262/codebase/", root);
 
@@ -30,8 +29,8 @@ const generateUniqueIdentifier = () =>
 
 /**
  * @type {(
- *   file: import("./stage").File,
- * ) => import("./stage").File}
+ *   file: import("../stage").File,
+ * ) => import("../stage").File}
  */
 export const record = ({ path, content: content1 }) => {
   const url = new URL(`${generateUniqueIdentifier()}.js`, base);

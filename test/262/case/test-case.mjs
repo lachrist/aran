@@ -1,9 +1,8 @@
 import { Script, SourceTextModule, runInContext } from "node:vm";
 import { createRealm } from "./realm.mjs";
-import { show } from "./util.mjs";
+import { show, serializeError } from "../util/index.mjs";
 import { compileLinker } from "./linker.mjs";
-import { AranNegativeError, AranTypeError } from "./error.mjs";
-import { serializeError } from "./error-serial.mjs";
+import { AranNegativeError, AranTypeError } from "../error.mjs";
 import { cpuUsage } from "node:process";
 
 const { Promise } = globalThis;
@@ -12,7 +11,7 @@ const { Promise } = globalThis;
  * @type {() => import("./test-case").Termination}
  */
 const makeAsynchronousTermination = () => {
-  /** @type {(error: null | import("./error-serial").ErrorSerial) => void} */
+  /** @type {(error: null | import("../util/error-serial").ErrorSerial) => void} */
   let resolve;
   return {
     done: new Promise((resolve_) => {
@@ -46,9 +45,9 @@ const termination = {
 /**
  * @type {<X>(
  *   callback: () => X
- * ) => import("./outcome").Outcome<
+ * ) => import("../util/outcome").Outcome<
  *   X,
- *   import("./error-serial").ErrorSerial,
+ *   import("../util/error-serial").ErrorSerial,
  * >}
  */
 export const wrapOutcome = (callback) => {
@@ -66,9 +65,9 @@ export const wrapOutcome = (callback) => {
  * @type {<X>(
  *   callback: () => X
  * ) => Promise<
- *   import("./outcome").Outcome<
+ *   import("../util/outcome").Outcome<
  *     X,
- *     import("./error-serial").ErrorSerial,
+ *     import("../util/error-serial").ErrorSerial,
  *   >
  * >}
  */
@@ -86,14 +85,14 @@ export const wrapOutcomeAsync = async (callback) => {
 /**
  * @type {<X>(
  *   phase: "instrument" | "parse" | "resolution" | "runtime",
- *   outcome: import("./outcome").Outcome<
+ *   outcome: import("../util/outcome").Outcome<
  *     X,
- *     import("./error-serial").ErrorSerial,
+ *     import("../util/error-serial").ErrorSerial,
  *   >,
- *   negative: null | import("./test262").Negative,
- * ) => "negative-success" | import("./outcome").Outcome<
+ *   negative: null | import("../test262").Negative,
+ * ) => "negative-success" | import("../util/outcome").Outcome<
  *   X,
- *   import("./error-serial").ErrorSerial,
+ *   import("../util/error-serial").ErrorSerial,
  * >}
  */
 const applyNegative = (phase, outcome, negative) => {
@@ -134,12 +133,12 @@ const applyNegative = (phase, outcome, negative) => {
  *   dependencies: {
  *     setup: (context: import("node:vm").Context) => void,
  *     signalNegative: (cause: string) => Error,
- *     instrument: import("./stage").Instrument,
- *     resolveDependency: import("./fetch").ResolveDependency,
- *     fetchHarness: import("./fetch").FetchHarness,
- *     fetchTarget: import("./fetch").FetchTarget,
+ *     instrument: import("../stage").Instrument,
+ *     resolveDependency: import("../fetch").ResolveDependency,
+ *     fetchHarness: import("../fetch").FetchHarness,
+ *     fetchTarget: import("../fetch").FetchTarget,
  *   },
- * ) => Promise<null | import("./error-serial").ErrorSerial>}
+ * ) => Promise<null | import("../util/error-serial").ErrorSerial>}
  */
 export const execTestCaseInner = async (
   { source, negative, asynchronous, includes },
@@ -276,15 +275,15 @@ export const execTestCaseInner = async (
  * @type {(
  *   test_case: import("./test-case").TestCase,
  *   dependencies: {
- *     resolveDependency: import("./fetch").ResolveDependency,
- *     fetchHarness: import("./fetch").FetchHarness,
- *     fetchTarget: import("./fetch").FetchTarget,
+ *     resolveDependency: import("../fetch").ResolveDependency,
+ *     fetchHarness: import("../fetch").FetchHarness,
+ *     fetchTarget: import("../fetch").FetchTarget,
  *     setup: (context: import("node:vm").Context) => void,
- *     instrument: import("./stage").Instrument,
+ *     instrument: import("../stage").Instrument,
  *   },
  * ) => Promise<{
  *   expect: string[],
- *   actual: null | import("./error-serial").ErrorSerial,
+ *   actual: null | import("../util/error-serial").ErrorSerial,
  *   time: { user: number, system: number },
  * }>}
  */

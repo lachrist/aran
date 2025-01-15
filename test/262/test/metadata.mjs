@@ -1,5 +1,5 @@
 import { parse as parseYaml } from "yaml";
-import { AranExecError } from "./error.mjs";
+import { AranExecError } from "../error.mjs";
 
 const BEGIN = "/*---";
 
@@ -8,7 +8,7 @@ const END = "---*/";
 /**
  * @type {(
  *   content: string,
- * ) => import("./test262").Metadata}
+ * ) => import("../test262").Metadata}
  */
 export const parseMetadata = (content) => {
   const begin = content.indexOf(BEGIN);

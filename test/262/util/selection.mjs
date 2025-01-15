@@ -51,7 +51,7 @@ export const matchSelection = ({ exact, group }, specifier) => {
  * @param {K} specifier
  * @returns {V[]}
  */
-export const listRecordingValue = (recording, specifier) => {
+export const listSelectionValue = (recording, specifier) => {
   /** @type {V[]} */
   const values = [];
   for (const [selection, value] of recording) {

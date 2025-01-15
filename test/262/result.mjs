@@ -1,4 +1,4 @@
-import { MISSING_ERROR_MESSAGE } from "./error-serial.mjs";
+import { MISSING_ERROR_MESSAGE } from "./util/index.mjs";
 import { AranExecError, AranTypeError } from "./error.mjs";
 
 const {
@@ -26,7 +26,7 @@ export const parseCompactResultEntry = (line) => {
 /**
  * @type {(
  *   path: import("./fetch").TestPath,
- *   directive: import("./test-case").Directive
+ *   directive: import("./case/test-case").Directive
  * ) => import("./result").TestSpecifier}
  */
 export const toTestSpecifier = (path, directive) => `${path}@${directive}`;

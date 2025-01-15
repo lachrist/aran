@@ -23,5 +23,10 @@
     "doc/design/state-write.d.ts",
     "doc/design/state-write.mjs"
   ],
-  "exclude": ["./test/262/codebase/", "./test/262/test262/"]
+  "exclude": [
+    "./test/262/codebase/",
+    "./test/262/test262/",
+    "./test/262/stages/",
+    "./test/aspects/"
+  ]
 }

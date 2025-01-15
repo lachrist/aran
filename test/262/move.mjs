@@ -1,10 +1,13 @@
 import { pathToFileURL } from "node:url";
 import { argv, stderr, stdout } from "node:process";
-import { scrape } from "./scrape.mjs";
+import {
+  scrape,
+  inspectErrorMessage,
+  inspectErrorName,
+} from "./util/index.mjs";
 import { parseCursor, stringifyCursor } from "./cursor.mjs";
 import { readFile, writeFile } from "node:fs/promises";
 import { home, root } from "./home.mjs";
-import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
 import { showTargetPath, toMainPath } from "./fetch.mjs";
 import { compileStage } from "./stage.mjs";
 import { isExcludeResult } from "./result.mjs";
@@ -40,7 +43,7 @@ const main = async (argv) => {
     }
     const exec = await compileStage(cursor.stage, {
       memoization: "lazy",
-      recording: false,
+      record: null,
     });
     let index = 0;
     /** @type {import("./fetch").TestPath | null} */

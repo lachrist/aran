@@ -1,7 +1,11 @@
 import { readdir, readFile } from "node:fs/promises";
-import { listRecordingValue, parseSelection } from "./selection.mjs";
 import { createInterface } from "node:readline";
 import { createReadStream } from "node:fs";
+import {
+  listSelectionValue,
+  parseSelection,
+  isNotEmptyArray,
+} from "./util/index.mjs";
 import {
   isFailureCompactResultEntry,
   parseCompactResultEntry,
@@ -13,10 +17,8 @@ import {
   resolveDependency,
 } from "./fetch.mjs";
 import { home } from "./home.mjs";
-import { parseTest } from "./test.mjs";
-import { record } from "./record.mjs";
-import { execTestCase } from "./test-case.mjs";
-import { isNotEmptyArray } from "./util.mjs";
+import { parseTest } from "./test/index.mjs";
+import { execTestCase } from "./case/index.mjs";
 
 const {
   Set,
@@ -49,7 +51,7 @@ const listTestSpecifier = (line) =>
  * @type {(
  *   tag: import("./tag").Tag,
  * ) => Promise<
- *   import("./selection").SelectionEntry<
+ *   import("./util/selection").SelectionEntry<
  *     import("./result").TestSpecifier,
  *     import("./tag").Tag
  *   >
@@ -67,7 +69,7 @@ const loadRecordingEntry = async (tag) => [
  * @type {(
  *   name: import("./stage").StageName,
  * ) => Promise<
- *   import("./selection").SelectionEntry<
+ *   import("./util/selection").SelectionEntry<
  *     import("./result").TestSpecifier,
  *     import("./stage").StageName
  *   >
@@ -125,7 +127,7 @@ export const isStageName = (value) => hasOwn(STAGE_ENUM, value);
  */
 const compileListExclusionReason = async (precursors, exclude) => {
   /**
-   * @type {import("./selection").SelectionEntry<
+   * @type {import("./util/selection").SelectionEntry<
    *   import("./result").TestSpecifier,
    *   import("./tag").Tag | import("./stage").StageName
    * >[]}
@@ -137,7 +139,7 @@ const compileListExclusionReason = async (precursors, exclude) => {
   for (const tag of exclude) {
     exclusion.push(await loadRecordingEntry(tag));
   }
-  return (specifier) => listRecordingValue(exclusion, specifier);
+  return (specifier) => listSelectionValue(exclusion, specifier);
 };
 
 /**
@@ -149,7 +151,7 @@ const compileListExclusionReason = async (precursors, exclude) => {
  */
 const compileListNegative = async (negatives) => {
   /**
-   * @type {import("./selection").SelectionEntry<
+   * @type {import("./util/selection").SelectionEntry<
    *   import("./result").TestSpecifier,
    *   import("./tag").Tag,
    * >[]}
@@ -158,7 +160,7 @@ const compileListNegative = async (negatives) => {
   for (const tag of negatives) {
     negation.push(await loadRecordingEntry(tag));
   }
-  return (specifier) => listRecordingValue(negation, specifier);
+  return (specifier) => listSelectionValue(negation, specifier);
 };
 
 /**
@@ -268,13 +270,15 @@ const memoizeInstrument = (instrument) => {
  *   name: import("./stage").StageName,
  *   options: {
  *     memoization: "none" | "lazy" | "eager",
- *     recording: boolean,
+ *     record: null | ((
+ *       file: import("./stage").File,
+ *     ) => import("./stage").File),
  *   },
  * ) => Promise<(
  *   path: import("./fetch").TestPath,
  * ) => Promise<import("./result").ResultEntry[]>>}
  */
-export const compileStage = async (name, { memoization, recording }) => {
+export const compileStage = async (name, { memoization, record }) => {
   const fetch = {
     resolveDependency,
     fetchHarness: compileFetchHarness(home),
@@ -299,7 +303,7 @@ export const compileStage = async (name, { memoization, recording }) => {
       }
     }
   }
-  if (recording) {
+  if (record) {
     const { instrument } = stage;
     stage.instrument = (source) => record(instrument(source));
   }

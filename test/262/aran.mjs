@@ -3,7 +3,7 @@ import { generate } from "astring";
 import { generateSetup, retropile, transpile } from "../../lib/index.mjs";
 import { parse as parseAcorn } from "acorn";
 import { parse as parseBabel } from "@babel/parser";
-import { inspectErrorMessage } from "./error-serial.mjs";
+import { inspectErrorMessage } from "./util/index.mjs";
 import { harmonizeSyntaxError } from "./syntax-error.mjs";
 import { AranTestError } from "./error.mjs";
 

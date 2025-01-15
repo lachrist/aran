@@ -2,7 +2,7 @@
 /* eslint-disable local/no-function */
 /* eslint-disable local/no-class */
 
-import { inspectErrorMessage } from "./error-serial.mjs";
+import { inspectErrorMessage } from "./util/index.mjs";
 
 const { console, Error } = globalThis;
 

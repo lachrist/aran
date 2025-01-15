@@ -1,9 +1,4 @@
-import { hasOwnJson } from "./json.mjs";
-import { show } from "./util.mjs";
-
-const {
-  Array: { isArray },
-} = globalThis;
+import { show } from "./pure.mjs";
 
 /**
  * @type {(error: unknown) => string}
@@ -51,19 +46,3 @@ export const serializeError = (error) => ({
   message: inspectErrorMessage(error),
   stack: inspectErrorStack(error),
 });
-
-/**
- * @type {(
- *   data: import("./json").Json,
- * ) => data is import("./error-serial").ErrorSerial}
- */
-export const isErrorSerial = (data) =>
-  typeof data === "object" &&
-  data !== null &&
-  !isArray(data) &&
-  hasOwnJson(data, "name") &&
-  typeof data.name === "string" &&
-  hasOwnJson(data, "message") &&
-  typeof data.message === "string" &&
-  hasOwnJson(data, "stack") &&
-  (data.stack === null || typeof data.stack === "string");

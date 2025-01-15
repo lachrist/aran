@@ -1,5 +1,5 @@
 import { Module, Script } from "node:vm";
-import { TestPath } from "./fetch";
+import { TestPath } from "../fetch";
 
 export type Load = (
   specifier: string,

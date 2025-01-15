@@ -1,4 +1,4 @@
-import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
+import { inspectErrorMessage, inspectErrorName } from "./util/index.mjs";
 import { AranTestError } from "./error.mjs";
 
 /**

@@ -4,19 +4,19 @@ import {
   SourceTextModule,
   SyntheticModule,
 } from "node:vm";
-import { harmonizeSyntaxError } from "./syntax-error.mjs";
+import { harmonizeSyntaxError } from "../syntax-error.mjs";
 
 const { Error, undefined, Map, JSON } = globalThis;
 
 /**
  * @type {(
  *   dependency: {
- *     path: import("./fetch").DependencyPath,
+ *     path: import("../fetch").DependencyPath,
  *     content: string,
  *   },
  *   options: {
  *     SyntaxError: SyntaxErrorConstructor,
- *     instrument: import("./stage").Instrument,
+ *     instrument: import("../stage").Instrument,
  *     importModuleDynamically: import("./linker").Load,
  *     context: import("node:vm").Context,
  *   },
@@ -62,9 +62,9 @@ const makeModule = (
  * @type {(
  *   context: import("node:vm").Context,
  *   dependencies: {
- *     resolveDependency: import("./fetch").ResolveDependency,
- *     instrument: import("./stage").Instrument,
- *     fetchTarget: import("./fetch").FetchTarget,
+ *     resolveDependency: import("../fetch").ResolveDependency,
+ *     instrument: import("../stage").Instrument,
+ *     fetchTarget: import("../fetch").FetchTarget,
  *   },
  * ) => import("./linker").Linker}
  */
@@ -81,12 +81,12 @@ export const compileLinker = (
    *   Promise: PromiseConstructor,
    * }}
    */ (runInContext("({ Promise, SyntaxError });", context));
-  /** @type {Map<import("./fetch").TargetPath, import("node:vm").Module>} */
+  /** @type {Map<import("../fetch").TargetPath, import("node:vm").Module>} */
   const module_cache = new Map();
   /**
    * @type {Map<
    *   import("node:vm").Module | import("node:vm").Script,
-   *   import("./fetch").TargetPath
+   *   import("../fetch").TargetPath
    * >}
    */
   const reverse_module_cache = new Map();
@@ -98,7 +98,7 @@ export const compileLinker = (
     } else {
       // import("") will import self
       const path = resolveDependency(
-        /** @type {import("./fetch").DependencyName} */ (specifier),
+        /** @type {import("../fetch").DependencyName} */ (specifier),
         base_path,
       );
       const module = module_cache.get(path);

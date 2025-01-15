@@ -1,5 +1,5 @@
 import { createContext, runInContext } from "node:vm";
-import { harmonizeSyntaxError } from "./syntax-error.mjs";
+import { harmonizeSyntaxError } from "../syntax-error.mjs";
 
 const {
   gc,
@@ -14,14 +14,14 @@ const {
  *     setup: (context: import("node:vm").Context) => void,
  *     signalNegative: (message: string) => Error,
  *   },
- * ) => import("./test262").$262}
+ * ) => import("../test262").$262}
  */
 export const createRealm = ({ setup, print, signalNegative }) => {
   const context = createContext({ __proto__: null });
   /** @type {globalThis} */
   const global = runInContext("this;", context);
   const { SyntaxError } = global;
-  /** @type {import("./test262").$262} */
+  /** @type {import("../test262").$262} */
   const $262 = {
     // @ts-ignore
     __proto__: null,
@@ -54,7 +54,7 @@ export const createRealm = ({ setup, print, signalNegative }) => {
     get IsHTMLDDA() {
       throw signalNegative("IsHTMLDDA");
     },
-    /** @type {import("./test262").Agent} */
+    /** @type {import("../test262").Agent} */
     // eslint-disable-next-line local/no-function
     get agent() {
       throw signalNegative("agent");

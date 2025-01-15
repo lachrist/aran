@@ -1,13 +1,16 @@
 /* eslint-disable local/strict-console */
 
-import { cleanup } from "./record.mjs";
+import { cleanup, record } from "./record/index.mjs";
 import { pathToFileURL } from "node:url";
 import { argv } from "node:process";
 import { parseCursor } from "./cursor.mjs";
-import { scrape } from "./scrape.mjs";
+import {
+  scrape,
+  inspectErrorMessage,
+  inspectErrorName,
+} from "./util/index.mjs";
 import { readFile } from "node:fs/promises";
 import { home, root } from "./home.mjs";
-import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
 import { showTargetPath, toMainPath } from "./fetch.mjs";
 import { compileStage } from "./stage.mjs";
 
@@ -55,7 +58,7 @@ const cursor = parseCursor(await readFile(pathToFileURL(argv[2]), "utf8"));
 
 const exec = await compileStage(cursor.stage, {
   memoization: "none",
-  recording: true,
+  record,
 });
 
 // It is unfortunate but uncaught exception do not necessarily indicate test failure.

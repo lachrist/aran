@@ -1,8 +1,11 @@
 import { open } from "node:fs/promises";
-import { scrape } from "./scrape.mjs";
+import {
+  scrape,
+  inspectErrorMessage,
+  inspectErrorName,
+} from "./util/index.mjs";
 import { argv, stdout, stderr } from "node:process";
 import { home } from "./home.mjs";
-import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
 import { compileStage, isStageName } from "./stage.mjs";
 import { toMainPath } from "./fetch.mjs";
 import { packResultEntry } from "./result.mjs";
@@ -29,7 +32,7 @@ const main = async (argv) => {
       const start = Date.now();
       const exec = await compileStage(stage_name, {
         memoization: "eager",
-        recording: false,
+        record: null,
       });
       let sigint = false;
       const onSigint = () => {

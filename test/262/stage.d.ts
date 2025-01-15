@@ -1,10 +1,10 @@
 import type { Context } from "node:vm";
-import type { ErrorSerial } from "./error-serial";
+import type { ErrorSerial } from "./util/error-serial";
 import type { Source } from "./source";
 import type { Metadata } from "./test262";
 import type { Tag } from "./tag";
 import type { TestPath } from "./fetch";
-import type { Directive } from "./test-case";
+import type { Directive } from "./case/test-case";
 import { TestSpecifier } from "./result";
 
 export type StageName =

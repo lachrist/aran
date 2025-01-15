@@ -1,9 +1,8 @@
-import { ErrorSerial } from "./error-serial";
+import { ErrorSerial } from "./util/error-serial";
 import { TestPath } from "./fetch";
-import { Directive } from "./test-case";
+import { Directive } from "./case/test-case";
 
 export type TestSpecifier = `${TestPath}@${Directive}`;
-// export type TestSpecifier = string & { __brand: "TestSpecifier" };
 
 export type ResultEntry = [TestSpecifier, Result];
 

@@ -1,24 +1,24 @@
 import { parseMetadata } from "./metadata.mjs";
 import { stderr } from "node:process";
-import { inspectErrorMessage, inspectErrorName } from "./error-serial.mjs";
+import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
 
 /**
  * @type {(
- *   path: import("./fetch").TestPath,
+ *   path: import("../fetch").TestPath,
  *   content: string,
- *   metadata: import("./test262").Metadata,
- * ) => import("./test-case").TestCase[]}
+ *   metadata: import("../test262").Metadata,
+ * ) => import("../case/test-case").TestCase[]}
  */
 const listTestCase = (path, content, metadata) => {
   const asynchronous = metadata.flags.includes("async");
   const negative = metadata.negative;
-  const includes = /** @type {import("./fetch").HarnessName[]} */ ([
+  const includes = /** @type {import("../fetch").HarnessName[]} */ ([
     ...(metadata.flags.includes("raw") ? [] : ["assert.js", "sta.js"]),
     ...(metadata.flags.includes("async") ? ["doneprintHandle.js"] : []),
     ...metadata.includes,
   ]);
   const module = metadata.flags.includes("module");
-  /** @type {import("./test-case").TestCase[]} */
+  /** @type {import("../case/test-case").TestCase[]} */
   const test_case_array = [];
   const kind = module ? "module" : "script";
   if (
@@ -61,10 +61,10 @@ const listTestCase = (path, content, metadata) => {
 /**
  * @type {(
  *   file: {
- *     path: import("./fetch").TestPath,
+ *     path: import("../fetch").TestPath,
  *     content: string,
  *   },
- * ) => import("./test-case").TestCase[]}
+ * ) => import("../case/test-case").TestCase[]}
  */
 export const parseTest = ({ path, content }) => {
   let metadata;

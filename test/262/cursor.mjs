@@ -1,5 +1,5 @@
 import { AranExecError } from "./error.mjs";
-import { parseList } from "./list.mjs";
+import { parseList } from "./util/index.mjs";
 import { STAGE_ENUM } from "./stage.mjs";
 
 const {
