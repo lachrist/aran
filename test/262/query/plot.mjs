@@ -3,7 +3,7 @@ import { AranExecError } from "../error.mjs";
 import { loadResultArray } from "./load.mjs";
 import { spawn } from "child_process";
 import { argv, stdout } from "process";
-import { isStageName } from "../staging/stage.mjs";
+import { isStageName } from "../staging/index.mjs";
 
 const { Promise, URL, JSON } = globalThis;
 

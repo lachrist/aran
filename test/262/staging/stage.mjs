@@ -160,7 +160,7 @@ const memoizeInstrument = (instrument) => {
   /**
    * @type {Map<
    *   import("../fetch").HarnessName,
-   *   import("./stage").File
+   *   import("../util/file").File
    * >}
    */
   const cache = new Map();
@@ -186,8 +186,8 @@ const memoizeInstrument = (instrument) => {
  *   options: {
  *     memoization: "none" | "lazy" | "eager",
  *     record: null | ((
- *       file: import("./stage").File,
- *     ) => import("./stage").File),
+ *       file: import("../util/file").File,
+ *     ) => import("../util/file").File),
  *   },
  * ) => Promise<(
  *   path: import("../fetch").TestPath,

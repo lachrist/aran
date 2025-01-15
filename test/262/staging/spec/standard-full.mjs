@@ -74,17 +74,6 @@ const conf = {
 };
 
 /**
- * @type {{
- *   [key in keyof import("../../../../lib").StandardAdvice<unknown, unknown>]:
- *     ((arg: unknown) => boolean)[]
- * }}
- */
-const advice = {
-  "block@setup": [isState, isBlockKind, isTag],
-  "program-block@before": [isState, is],
-};
-
-/**
  * @type {import("../../../../lib").StandardAdvice<string, null>}
  */
 const advice = {

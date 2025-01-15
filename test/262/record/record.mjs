@@ -29,9 +29,9 @@ const generateUniqueIdentifier = () =>
 
 /**
  * @type {(
- *   file: import("../staging/stage").File,
+ *   file: import("../util/file").File,
  *   directory: URL,
- * ) => import("../staging/stage").File}
+ * ) => import("../util/file").File}
  */
 export const record = ({ path, content: content1 }, directory) => {
   const url = new URL(`${generateUniqueIdentifier()}.js`, directory);

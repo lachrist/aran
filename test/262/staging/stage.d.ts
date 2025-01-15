@@ -3,13 +3,9 @@ import type { ErrorSerial } from "../util/error-serial";
 import type { Source } from "../source";
 import type { Tag } from "../tagging/tag";
 import type { TestSpecifier } from "../result";
-import { StageName } from "./stage-name";
-import { TestCase } from "../test-case";
-
-export type File = {
-  path: string;
-  content: string;
-};
+import type { StageName } from "./stage-name";
+import type { TestCase } from "../test-case";
+import type { File } from "../util/file";
 
 export type Instrument = (source: Source) => File;
 
