@@ -23,13 +23,13 @@
     "page": "sh page.sh",
     "demo": "npx rollup --config demo/rollup.config.mjs && cp demo/index.html page/demo && open demo/index.html",
     "load262": "git clone --filter=tree:0 https://github.com/tc39/test262 test/262/test262",
-    "exec262": "node --experimental-vm-modules --expose-gc test/262/exec.mjs",
-    "move262": "node --experimental-vm-modules --expose-gc test/262/move.mjs test/262/cursor.txt",
-    "look262": "node --experimental-vm-modules --expose-gc test/262/look.mjs test/262/cursor.txt",
+    "build262": "node test/262/tagging/main-generate.mjs && node test/262/stagging/main-generate.mjs",
+    "move262": "node --experimental-vm-modules --expose-gc test/262/main/move.mjs test/262/main/cursor.txt",
+    "look262": "node --experimental-vm-modules --expose-gc test/262/main/look.mjs test/262/main/cursor.txt",
+    "exec262": "node --experimental-vm-modules --expose-gc test/262/main/exec.mjs",
+    "batch262": "node test/262/main/batch.mjs",
     "summary262": "node test/262/query/summary.mjs",
-    "plot262": "node test/262/query/plot.mjs",
-    "batch262": "node test/262/batch.mjs",
-    "build262": "node test/262/tagging/main-generate.mjs && node test/262/stagging/main-generate.mjs"
+    "plot262": "node test/262/query/plot.mjs"
   },
   "keywords": [
     "JavaScript",

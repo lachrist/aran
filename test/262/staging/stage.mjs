@@ -90,7 +90,7 @@ const compileListExclusionReason = async (precursors, exclude) => {
  */
 const loadStage = async (name) => {
   const stage = /** @type {{default: import("./stage").Stage}} */ (
-    await import(`./stages/${name}.mjs`)
+    await import(`./spec/${name}.mjs`)
   ).default;
   const { setup, instrument, listLateNegative, precursor, negative, exclude } =
     stage;
