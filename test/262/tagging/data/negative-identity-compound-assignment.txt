@@ -1,4 +1,5 @@
-// ^language/expressions/compound-assignment/S11\.13\.2_A.*\.js$
+# ^language/expressions/compound-assignment/S11\.13\.2_A.*\.js$
+
 language/expressions/compound-assignment/S11.13.2_A5.10_T1.js
 language/expressions/compound-assignment/S11.13.2_A5.10_T2.js
 language/expressions/compound-assignment/S11.13.2_A5.10_T3.js
@@ -55,7 +56,8 @@ language/expressions/compound-assignment/S11.13.2_A7.7_T4.js
 language/expressions/compound-assignment/S11.13.2_A7.8_T4.js
 language/expressions/compound-assignment/S11.13.2_A7.9_T4.js
 
-// ^language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--[0-9]+\.js$
+# ^language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--[0-9]+\.js$
+
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--1.js
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--11.js
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--13.js

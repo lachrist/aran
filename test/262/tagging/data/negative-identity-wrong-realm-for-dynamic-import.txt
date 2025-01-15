@@ -1,4 +1,4 @@
-// https://github.com/nodejs/node/issues/53575
+# https://github.com/nodejs/node/issues/53575
 
 language/expressions/dynamic-import/always-create-new-promise.js
 language/expressions/dynamic-import/assignment-expression/import-meta.js@use-strict

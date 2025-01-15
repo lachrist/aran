@@ -1,3 +1,5 @@
+# ^built-ins/Function/prototype/toString/\.*\.js$
+
 built-ins/Function/prototype/toString/AsyncFunction.js
 built-ins/Function/prototype/toString/AsyncGenerator.js
 built-ins/Function/prototype/toString/Function.js
