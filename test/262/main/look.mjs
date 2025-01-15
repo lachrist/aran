@@ -1,6 +1,6 @@
 /* eslint-disable local/strict-console */
 
-import { cleanup, record } from "./record/index.mjs";
+import { cleanup, record } from "../record/index.mjs";
 import { pathToFileURL } from "node:url";
 import { argv } from "node:process";
 import { parseCursor } from "./cursor.mjs";
@@ -8,11 +8,11 @@ import {
   scrape,
   inspectErrorMessage,
   inspectErrorName,
-} from "./util/index.mjs";
+} from "../util/index.mjs";
 import { readFile } from "node:fs/promises";
-import { home, root } from "./home.mjs";
-import { showTargetPath, toTestPath } from "./fetch.mjs";
-import { compileStage } from "./staging/index.mjs";
+import { home, root } from "../home.mjs";
+import { showTargetPath, toTestPath } from "../fetch.mjs";
+import { compileStage } from "../staging/index.mjs";
 
 const { console, process, URL, Error, JSON } = globalThis;
 
@@ -21,7 +21,7 @@ const directory = new URL("test/262/record/data/", root);
 /**
  * @type {(
  *   index: number
- * ) => Promise<import("./fetch").TestPath>}
+ * ) => Promise<import("../fetch").TestPath>}
  */
 const findTestPath = async (index) => {
   let current = -1;
@@ -40,7 +40,7 @@ const findTestPath = async (index) => {
 /**
  * @type {(
  *   cursor: import("./cursor").Cursor,
- * ) => Promise<import("./fetch").TestPath>}
+ * ) => Promise<import("../fetch").TestPath>}
  */
 const fetchTestPath = async (cursor) => {
   if (cursor.path === null) {

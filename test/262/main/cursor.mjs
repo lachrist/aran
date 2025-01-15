@@ -1,13 +1,13 @@
-import { AranExecError } from "./error.mjs";
-import { isStageName } from "./staging/index.mjs";
-import { isNotEmptyString, trimString } from "./util/index.mjs";
+import { AranExecError } from "../error.mjs";
+import { isStageName } from "../staging/index.mjs";
+import { isNotEmptyString, trimString } from "../util/index.mjs";
 
 const { parseInt } = globalThis;
 
 /**
  * @type {(
  *   line: string
- * ) => import("./staging/stage-name").StageName}
+ * ) => import("../staging/stage-name").StageName}
  */
 const parseStageLine = (line) => {
   if (isStageName(line)) {
@@ -22,7 +22,7 @@ const parseStageLine = (line) => {
  *   line: string
  * ) => {
  *   index: number | null,
- *   path: import("./fetch").TestPath | null,
+ *   path: import("../fetch").TestPath | null,
  * }}
  */
 const parseTargetLine = (line) => {
@@ -35,7 +35,7 @@ const parseTargetLine = (line) => {
       path:
         match[2] === ""
           ? null
-          : /** @type {import("./fetch").TestPath} */ (match[2]),
+          : /** @type {import("../fetch").TestPath} */ (match[2]),
     };
   }
 };

@@ -3,12 +3,12 @@ import {
   scrape,
   inspectErrorMessage,
   inspectErrorName,
-} from "./util/index.mjs";
+} from "../util/index.mjs";
 import { argv, stdout, stderr } from "node:process";
-import { home } from "./home.mjs";
-import { compileStage, isStageName } from "./staging/index.mjs";
-import { toTestPath } from "./fetch.mjs";
-import { packResultEntry } from "./result.mjs";
+import { home } from "../home.mjs";
+import { compileStage, isStageName } from "../staging/index.mjs";
+import { toTestPath } from "../fetch.mjs";
+import { packResultEntry } from "../result.mjs";
 
 const { Date, process, URL, JSON } = globalThis;
 

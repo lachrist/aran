@@ -1,7 +1,7 @@
 import type { Context } from "node:vm";
 import type { ErrorSerial } from "../util/error-serial";
 import type { Source } from "../source";
-import type { Metadata } from "../test262";
+import type { Metadata } from "../test-file/metadata";
 import type { Tag } from "../tagging/tag";
 import type { TestSpecifier } from "../result";
 import { StageName } from "./stage-name";

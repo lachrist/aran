@@ -1,7 +1,7 @@
 import type { ErrorSerial } from "../util/error-serial";
 import type { HarnessName } from "../fetch";
 import type { MainSource } from "../source";
-import type { Metadata, Negative } from "../test262";
+import type { Metadata, Negative } from "../test-file/metadata";
 
 export type Directive = "none" | "use-strict";
 

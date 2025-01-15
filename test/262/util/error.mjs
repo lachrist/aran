@@ -1,5 +1,13 @@
 import { show } from "./pure.mjs";
 
+const {
+  Object: { hasOwn },
+} = globalThis;
+
+export const MISSING_ERROR_MESSAGE = "[missing]";
+
+export const MISSING_ERROR_NAME = "[missing]";
+
 /**
  * @type {(error: unknown) => string}
  */
@@ -7,11 +15,9 @@ export const inspectErrorName = (error) => {
   try {
     return show(/** @type {Error} */ (error).constructor.name);
   } catch {
-    return "[missing]";
+    return MISSING_ERROR_NAME;
   }
 };
-
-export const MISSING_ERROR_MESSAGE = "[missing]";
 
 /**
  * @type {(error: unknown) => string}
@@ -46,3 +52,16 @@ export const serializeError = (error) => ({
   message: inspectErrorMessage(error),
   stack: inspectErrorStack(error),
 });
+
+/**
+ * @type {(
+ *   error: unknown,
+ *   mapping: { [key in String]: new (message: string) => unknown },
+ * ) => unknown}
+ */
+export const recreateError = (error, mapping) => {
+  const name = inspectErrorName(error);
+  return hasOwn(mapping, name)
+    ? new mapping[name](inspectErrorMessage(error))
+    : error;
+};

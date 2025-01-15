@@ -4,7 +4,7 @@ import {
   SourceTextModule,
   SyntheticModule,
 } from "node:vm";
-import { harmonizeSyntaxError } from "../syntax-error.mjs";
+import { recreateError } from "../util/index.mjs";
 
 const { Error, undefined, Map, JSON } = globalThis;
 
@@ -15,7 +15,7 @@ const { Error, undefined, Map, JSON } = globalThis;
  *     content: string,
  *   },
  *   options: {
- *     SyntaxError: SyntaxErrorConstructor,
+ *     SyntaxError: new (message: string) => unknown,
  *     instrument: import("../staging/stage").Instrument,
  *     importModuleDynamically: import("./linker").Load,
  *     context: import("node:vm").Context,
@@ -54,7 +54,10 @@ const makeModule = (
       });
     }
   } catch (error) {
-    throw harmonizeSyntaxError(error, SyntaxError);
+    throw recreateError(error, {
+      SyntaxError,
+      AranSyntaxError: SyntaxError,
+    });
   }
 };
 

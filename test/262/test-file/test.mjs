@@ -6,7 +6,7 @@ import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
  * @type {(
  *   path: import("../fetch").TestPath,
  *   content: string,
- *   metadata: import("../test262").Metadata,
+ *   metadata: import("./metadata").Metadata,
  * ) => import("../test-case/test-case").TestCase[]}
  */
 const listTestCase = (path, content, metadata) => {

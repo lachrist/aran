@@ -4,13 +4,13 @@ import {
   scrape,
   inspectErrorMessage,
   inspectErrorName,
-} from "./util/index.mjs";
+} from "../util/index.mjs";
 import { parseCursor, stringifyCursor } from "./cursor.mjs";
 import { readFile, writeFile } from "node:fs/promises";
-import { home, root } from "./home.mjs";
-import { showTargetPath, toTestPath } from "./fetch.mjs";
-import { compileStage } from "./staging/index.mjs";
-import { isExcludeResult } from "./result.mjs";
+import { home, root } from "../home.mjs";
+import { showTargetPath, toTestPath } from "../fetch.mjs";
+import { compileStage } from "../staging/index.mjs";
+import { isExcludeResult } from "../result.mjs";
 
 const {
   process,
@@ -46,7 +46,7 @@ const main = async (argv) => {
       record: null,
     });
     let index = 0;
-    /** @type {import("./fetch").TestPath | null} */
+    /** @type {import("../fetch").TestPath | null} */
     let path = null;
     let done = false;
     let ongoing = false;

@@ -3,8 +3,7 @@ import { generate } from "astring";
 import { generateSetup, retropile, transpile } from "../../../lib/index.mjs";
 import { parse as parseAcorn } from "acorn";
 import { parse as parseBabel } from "@babel/parser";
-import { inspectErrorMessage } from "../util/index.mjs";
-import { harmonizeSyntaxError } from "../syntax-error.mjs";
+import { inspectErrorMessage, recreateError } from "../util/index.mjs";
 import { AranTestError } from "../error.mjs";
 
 const {
@@ -170,7 +169,7 @@ export const parseLocal = (kind, code) => {
  *     context: import("node:vm").Context,
  *   ) => {
  *     intrinsics: import("../../../lib").AranIntrinsicRecord,
- *     $262: import("../test262").$262,
+ *     $262: import("../$262").$262,
  *   },
  *   trans: (
  *     path: P,
@@ -190,7 +189,7 @@ export const compileAran = (config, toEvalPath) => {
     setup: (context) => {
       /** @type {import("../../../lib").AranIntrinsicRecord} */
       const intrinsics = /** @type {any} */ (runInContext(SETUP, context));
-      /** @type {import("../test262").$262} */
+      /** @type {import("../$262").$262} */
       const $262 = /** @type {any} */ (intrinsics["aran.global"]).$262;
       const { SyntaxError } = intrinsics["aran.global"];
       intrinsics["aran.transpileEval"] = (code, situ, hash) => {
@@ -205,7 +204,10 @@ export const compileAran = (config, toEvalPath) => {
             config,
           );
         } catch (error) {
-          throw harmonizeSyntaxError(error, SyntaxError);
+          throw recreateError(error, {
+            SyntaxError,
+            AranSyntaxError: SyntaxError,
+          });
         }
       };
       intrinsics["aran.retropileEval"] = (root) => {

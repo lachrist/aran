@@ -8,7 +8,7 @@ const END = "---*/";
 /**
  * @type {(
  *   content: string,
- * ) => import("../test262").Metadata}
+ * ) => import("./metadata").Metadata}
  */
 export const parseMetadata = (content) => {
   const begin = content.indexOf(BEGIN);

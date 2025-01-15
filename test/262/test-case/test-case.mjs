@@ -89,7 +89,7 @@ export const wrapOutcomeAsync = async (callback) => {
  *     X,
  *     import("../util/error-serial").ErrorSerial,
  *   >,
- *   negative: null | import("../test262").Negative,
+ *   negative: null | import("../test-file/metadata").Negative,
  * ) => "negative-success" | import("../util/outcome").Outcome<
  *   X,
  *   import("../util/error-serial").ErrorSerial,
