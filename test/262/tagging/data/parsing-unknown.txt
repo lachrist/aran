@@ -1,0 +1,2 @@
+
+language/expressions/dynamic-import/import-assertions/2nd-param-evaluation-abrupt-return.js

@@ -71,10 +71,10 @@ const main = async (argv) => {
         stdout.write(`Total time: ${Date.now() - start}ms\n`);
         return 0;
       } finally {
-        process.removeListener("SIGINT", onSigint);
-        process.removeListener("uncaughtException", onUncaughtException);
         await prod_handle.close();
         await fail_stream.close();
+        process.removeListener("SIGINT", onSigint);
+        process.removeListener("uncaughtException", onUncaughtException);
       }
     }
   }

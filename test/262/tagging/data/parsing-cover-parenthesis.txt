@@ -1,0 +1,4 @@
+
+# (fn) = function () {} >> fn.name should be ""
+
+language/expressions/assignment/fn-name-lhs-cover.js

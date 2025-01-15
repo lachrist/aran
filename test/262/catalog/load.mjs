@@ -1,10 +1,10 @@
 /* eslint-disable local/no-function */
 
 import { createInterface } from "node:readline";
-import { createReadStream } from "node:fs";
 import { unpackTestCase } from "../test-file/index.mjs";
 import { CATALOG } from "./layout.mjs";
 import { AranExecError } from "../error.mjs";
+import { open } from "node:fs/promises";
 
 const { Infinity, JSON } = globalThis;
 
@@ -12,17 +12,17 @@ const { Infinity, JSON } = globalThis;
  * @type {() => AsyncIterable<import("../test-case").TestCase>}
  */
 export const enumTestCase = async function* () {
-  const stream = createReadStream(CATALOG);
+  const handle = await open(CATALOG, "r");
   try {
     const iterator = createInterface({
-      input: stream,
+      input: handle.createReadStream(),
       crlfDelay: Infinity,
     });
     for await (const line of iterator) {
       yield unpackTestCase(JSON.parse(line));
     }
   } finally {
-    stream.close();
+    await handle.close();
   }
 };
 
@@ -32,11 +32,11 @@ export const enumTestCase = async function* () {
  * ) => Promise<import("../test-case").TestCase>}
  */
 export const grabTestCase = async (index) => {
-  const stream = createReadStream(CATALOG);
+  const handle = await open(CATALOG, "r");
   try {
     let current = 0;
     const iterator = createInterface({
-      input: stream,
+      input: handle.createReadStream(),
       crlfDelay: Infinity,
     });
     for await (const line of iterator) {
@@ -47,6 +47,6 @@ export const grabTestCase = async (index) => {
     }
     throw new AranExecError("index out of range", { index, current });
   } finally {
-    stream.close();
+    await handle.close();
   }
 };

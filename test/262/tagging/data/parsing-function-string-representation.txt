@@ -1,18 +1,5 @@
 # ^built-ins/Function/prototype/toString/\.*\.js$
 
-built-ins/Function/prototype/toString/AsyncFunction.js
-built-ins/Function/prototype/toString/AsyncGenerator.js
-built-ins/Function/prototype/toString/Function.js
-built-ins/Function/prototype/toString/GeneratorFunction.js
-built-ins/Function/prototype/toString/S15.3.4.2_A10.js
-built-ins/Function/prototype/toString/S15.3.4.2_A11.js
-built-ins/Function/prototype/toString/S15.3.4.2_A12.js
-built-ins/Function/prototype/toString/S15.3.4.2_A13.js
-built-ins/Function/prototype/toString/S15.3.4.2_A14.js
-built-ins/Function/prototype/toString/S15.3.4.2_A16.js
-built-ins/Function/prototype/toString/S15.3.4.2_A6.js
-built-ins/Function/prototype/toString/S15.3.4.2_A8.js
-built-ins/Function/prototype/toString/S15.3.4.2_A9.js
 built-ins/Function/prototype/toString/arrow-function.js
 built-ins/Function/prototype/toString/async-arrow-function.js
 built-ins/Function/prototype/toString/async-function-declaration.js
@@ -29,8 +16,6 @@ built-ins/Function/prototype/toString/async-method-class-expression.js
 built-ins/Function/prototype/toString/async-method-class-statement-static.js
 built-ins/Function/prototype/toString/async-method-class-statement.js
 built-ins/Function/prototype/toString/async-method-object.js
-built-ins/Function/prototype/toString/bound-function.js
-built-ins/Function/prototype/toString/built-in-function-object.js
 built-ins/Function/prototype/toString/class-declaration-complex-heritage.js
 built-ins/Function/prototype/toString/class-declaration-explicit-ctor.js
 built-ins/Function/prototype/toString/class-declaration-implicit-ctor.js
@@ -48,7 +33,6 @@ built-ins/Function/prototype/toString/getter-class-statement-static.js
 built-ins/Function/prototype/toString/getter-class-statement.js
 built-ins/Function/prototype/toString/getter-object.js
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR-LF.js
-built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js
 built-ins/Function/prototype/toString/line-terminator-normalisation-LF.js
 built-ins/Function/prototype/toString/method-class-expression-static.js
 built-ins/Function/prototype/toString/method-class-expression.js
@@ -56,27 +40,13 @@ built-ins/Function/prototype/toString/method-class-statement-static.js
 built-ins/Function/prototype/toString/method-class-statement.js
 built-ins/Function/prototype/toString/method-computed-property-name.js
 built-ins/Function/prototype/toString/method-object.js
-built-ins/Function/prototype/toString/name.js
-built-ins/Function/prototype/toString/not-a-constructor.js
 built-ins/Function/prototype/toString/private-method-class-expression.js
 built-ins/Function/prototype/toString/private-method-class-statement.js
 built-ins/Function/prototype/toString/private-static-method-class-expression.js
 built-ins/Function/prototype/toString/private-static-method-class-statement.js
-built-ins/Function/prototype/toString/proxy-arrow-function.js
-built-ins/Function/prototype/toString/proxy-async-function.js
-built-ins/Function/prototype/toString/proxy-async-generator-function.js
-built-ins/Function/prototype/toString/proxy-async-generator-method-definition.js
-built-ins/Function/prototype/toString/proxy-async-method-definition.js
-built-ins/Function/prototype/toString/proxy-bound-function.js
-built-ins/Function/prototype/toString/proxy-class.js
-built-ins/Function/prototype/toString/proxy-function-expression.js
-built-ins/Function/prototype/toString/proxy-generator-function.js
-built-ins/Function/prototype/toString/proxy-method-definition.js
-built-ins/Function/prototype/toString/proxy-non-callable-throws.js
 built-ins/Function/prototype/toString/setter-class-expression-static.js
 built-ins/Function/prototype/toString/setter-class-expression.js
 built-ins/Function/prototype/toString/setter-class-statement-static.js
 built-ins/Function/prototype/toString/setter-class-statement.js
 built-ins/Function/prototype/toString/setter-object.js
-built-ins/Function/prototype/toString/symbol-named-builtins.js
 built-ins/Function/prototype/toString/unicode.js

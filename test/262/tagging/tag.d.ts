@@ -27,5 +27,7 @@ export type Tag =
   | "negative-identity-unknown"
   | "negative-identity-update-inside-with"
   | "negative-identity-wrong-realm-for-dynamic-import"
+  | "parsing-cover-parenthesis"
   | "parsing-function-string-representation"
+  | "parsing-unknown"
   | "slow";

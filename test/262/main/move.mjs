@@ -64,8 +64,7 @@ const main = async (argv) => {
           if (!isExcludeResult(result)) {
             const { actual, expect } = result;
             if ((actual === null) !== (expect.length === 0)) {
-              stderr.write(stringify({ test, result }, null, 2));
-              stderr.write("\n");
+              stderr.write(`${stringify({ test, result }, null, 2)}\n`);
               return 1;
             }
           }
@@ -75,8 +74,6 @@ const main = async (argv) => {
       index = 0;
       return 0;
     } finally {
-      process.removeListener("uncaughtException", onUncaughtException);
-      process.removeListener("SIGINT", onSigint);
       await writeFile(
         persistent,
         stringifyCursor({
@@ -85,6 +82,8 @@ const main = async (argv) => {
         }),
         "utf8",
       );
+      process.removeListener("uncaughtException", onUncaughtException);
+      process.removeListener("SIGINT", onSigint);
     }
   }
 };
