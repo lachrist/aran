@@ -16,7 +16,7 @@ const { Error, undefined, Map, JSON } = globalThis;
  *   },
  *   options: {
  *     SyntaxError: SyntaxErrorConstructor,
- *     instrument: import("../stagging/stage").Instrument,
+ *     instrument: import("../staging/stage").Instrument,
  *     importModuleDynamically: import("./linker").Load,
  *     context: import("node:vm").Context,
  *   },
@@ -63,7 +63,7 @@ const makeModule = (
  *   context: import("node:vm").Context,
  *   dependencies: {
  *     resolveDependency: import("../fetch").ResolveDependency,
- *     instrument: import("../stagging/stage").Instrument,
+ *     instrument: import("../staging/stage").Instrument,
  *     fetchTarget: import("../fetch").FetchTarget,
  *   },
  * ) => import("./linker").Linker}

@@ -1,5 +1,5 @@
 import { AranExecError } from "./error.mjs";
-import { isStageName } from "./stagging/index.mjs";
+import { isStageName } from "./staging/index.mjs";
 import { isNotEmptyString, trimString } from "./util/index.mjs";
 
 const { parseInt } = globalThis;
@@ -7,7 +7,7 @@ const { parseInt } = globalThis;
 /**
  * @type {(
  *   line: string
- * ) => import("./stagging/stage-name").StageName}
+ * ) => import("./staging/stage-name").StageName}
  */
 const parseStageLine = (line) => {
   if (isStageName(line)) {

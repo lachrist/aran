@@ -1,12 +1,12 @@
 import { spawn } from "node:child_process";
-import { isStageName } from "./stagging/index.mjs";
+import { isStageName } from "./staging/index.mjs";
 import { argv, stdout } from "node:process";
 
 const { Date, Promise, Error, setTimeout } = globalThis;
 
 /**
  * @type {(
- *   stage: import("./stagging/stage-name").StageName,
+ *   stage: import("./staging/stage-name").StageName,
  * ) => Promise<number>}
  */
 const exec = (stage) =>
@@ -43,7 +43,7 @@ const main = async (argv) => {
     stdout.write("usage: node test/262/batch.mjs <stage>...\n");
   } else {
     if (argv.every(isStageName)) {
-      /** @type {[import("./stagging/stage-name").StageName, number][]} */
+      /** @type {[import("./staging/stage-name").StageName, number][]} */
       const times = [];
       for (const stage of argv) {
         stdout.write(`executing ${stage}...\n`);

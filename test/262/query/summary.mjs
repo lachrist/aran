@@ -1,5 +1,5 @@
 import { argv, stdout } from "node:process";
-import { isStageName } from "../stagging/index.mjs";
+import { isStageName } from "../staging/index.mjs";
 import { loadResultArray } from "./load.mjs";
 import { isExcludeResult } from "../result.mjs";
 

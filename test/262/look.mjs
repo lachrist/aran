@@ -12,7 +12,7 @@ import {
 import { readFile } from "node:fs/promises";
 import { home, root } from "./home.mjs";
 import { showTargetPath, toTestPath } from "./fetch.mjs";
-import { compileStage } from "./stagging/index.mjs";
+import { compileStage } from "./staging/index.mjs";
 
 const { console, process, URL, Error, JSON } = globalThis;
 

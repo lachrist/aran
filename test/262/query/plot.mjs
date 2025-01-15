@@ -3,7 +3,7 @@ import { AranExecError } from "../error.mjs";
 import { loadResultArray } from "./load.mjs";
 import { spawn } from "child_process";
 import { argv, stdout } from "process";
-import { isStageName } from "../stagging/stage.mjs";
+import { isStageName } from "../staging/stage.mjs";
 
 const { Promise, URL, JSON } = globalThis;
 
@@ -116,7 +116,7 @@ const prepareSlowdownPlot = (base, others) => ({
 
 /**
  * @type {(
- *   name: import("../stagging/stage").StageName,
+ *   name: import("../staging/stage").StageName,
  * ) => Promise<import("./plot").StageResult>}
  */
 const loadStageResult = async (name) => ({
