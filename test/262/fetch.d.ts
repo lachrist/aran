@@ -1,4 +1,8 @@
-export type HarnessName = string & { __brand: "HarnessName" };
+export type HarnessName =
+  | "assert.js"
+  | "sta.js"
+  | "doneprintHandle.js"
+  | (string & { __brand: "HarnessName" });
 
 export type TestPath = string & { __brand: "TestPath" };
 

@@ -2,6 +2,12 @@ import { parseMetadata } from "./metadata.mjs";
 import { stderr } from "node:process";
 import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
 
+/** @type {import("../fetch").HarnessName[]} */
+const NOT_RAW_HARNESS_NAME_ARRAY = ["assert.js", "sta.js"];
+
+/** @type {import("../fetch").HarnessName[]} */
+const ASYNC_HARNESS_NAME_ARRAY = ["doneprintHandle.js"];
+
 /**
  * @type {(
  *   path: import("../fetch").TestPath,
@@ -12,11 +18,12 @@ import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
 const listTestCase = (path, content, metadata) => {
   const asynchronous = metadata.flags.includes("async");
   const negative = metadata.negative;
-  const includes = /** @type {import("../fetch").HarnessName[]} */ ([
-    ...(metadata.flags.includes("raw") ? [] : ["assert.js", "sta.js"]),
-    ...(metadata.flags.includes("async") ? ["doneprintHandle.js"] : []),
+  /** @type {import("../fetch").HarnessName[]} */
+  const includes = [
+    ...(metadata.flags.includes("raw") ? [] : NOT_RAW_HARNESS_NAME_ARRAY),
+    ...(metadata.flags.includes("async") ? ASYNC_HARNESS_NAME_ARRAY : []),
     ...metadata.includes,
-  ]);
+  ];
   const module = metadata.flags.includes("module");
   /** @type {import("../test-case").TestCase[]} */
   const test_case_array = [];

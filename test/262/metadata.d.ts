@@ -1,3 +1,5 @@
+import { HarnessName } from "./fetch";
+
 export type Flag =
   | "onlyStrict"
   | "noStrict"
@@ -18,7 +20,7 @@ type Negative = {
 
 export type Metadata = {
   negative: null | Negative;
-  includes: string[];
+  includes: HarnessName[];
   flags: Flag[];
   locale: string[];
   features: string[];
