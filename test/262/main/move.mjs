@@ -8,8 +8,11 @@ import { isExcludeResult } from "../result.mjs";
 import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
+import { inspect } from "node:util";
+import { showTargetPath } from "../fetch.mjs";
+import { ROOT, TEST262 } from "../layout.mjs";
 
-const { process, JSON } = globalThis;
+const { process, Infinity } = globalThis;
 
 /**
  * @type {(
@@ -18,7 +21,10 @@ const { process, JSON } = globalThis;
  *   sigint: import("../util/signal").Signal<boolean>,
  * ) => Promise<{
  *   cursor: number,
- *   result: null | import("../result").Result,
+ *   failure: null | {
+ *     test: import("../test-case").TestCase,
+ *     result: import("../result").Result,
+ *   },
  * }>}
  */
 const move = async (stage, cursor, sigint) => {
@@ -32,26 +38,34 @@ const move = async (stage, cursor, sigint) => {
       stdout.write(`${index}\n`);
     }
     if (sigint.get()) {
-      return { cursor: index, result: null };
+      return { cursor: index, failure: null };
     }
     if (index >= cursor) {
       const result = await exec(test);
       if (!isExcludeResult(result)) {
         const { actual, expect } = result;
         if ((actual === null) !== (expect.length === 0)) {
-          return { cursor: index, result };
+          return { cursor: index, failure: { test, result } };
         }
       }
     }
     index++;
   }
-  return { cursor: 0, result: null };
+  return { cursor: 0, failure: null };
 };
 
 /**
  * @type {(
  *   argv: string[],
- * ) => Promise<"usage" | "done" | "sigint" | import("../result").Result>}
+ * ) => Promise<(
+ *   | "usage"
+ *   | "done"
+ *   | "sigint"
+ *   | {
+ *     test: import("../test-case").TestCase,
+ *     result: import("../result").Result,
+ *   }
+ * )>}
  */
 const main = async (argv) => {
   const stage = getStageName(argv);
@@ -65,9 +79,9 @@ const main = async (argv) => {
     process.addListener("SIGINT", onSigint);
     process.addListener("uncaughtException", onUncaughtException);
     try {
-      const { cursor, result } = await move(stage, await loadCursor(), sigint);
+      const { cursor, failure } = await move(stage, await loadCursor(), sigint);
       await saveCursor(cursor);
-      return sigint.value ? "sigint" : result === null ? "done" : result;
+      return sigint.value ? "sigint" : failure === null ? "done" : failure;
     } finally {
       process.removeListener("SIGINT", onSigint);
       process.removeListener("uncaughtException", onUncaughtException);
@@ -90,6 +104,7 @@ const main = async (argv) => {
     stdout.write("SUCCESS\n");
   } else {
     stdout.write("FAILURE\n");
-    stdout.write(JSON.stringify(status, null, 2));
+    stdout.write(showTargetPath(status.test.path, TEST262, ROOT) + "\n");
+    stdout.write(inspect(status, { depth: Infinity, colors: true }) + "\n");
   }
 }

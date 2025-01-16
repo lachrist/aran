@@ -1,13 +1,18 @@
 /* eslint-disable logical-assignment-operators */
-import { record } from "../record/index.mjs";
+import { cleanup, record } from "../record/index.mjs";
 import { stdout, stderr, argv } from "node:process";
 import { loadCursor } from "./cursor.mjs";
 import { compileStage } from "../staging/index.mjs";
 import { grabTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
+import { inspect } from "node:util";
+import { showTargetPath } from "../fetch.mjs";
+import { ROOT, TEST262 } from "../layout.mjs";
 
-const { JSON, URL, process } = globalThis;
+const { Error, Infinity, URL, process } = globalThis;
+
+Error.stackTraceLimit = Infinity;
 
 const RECORD = new URL("record/", import.meta.url);
 
@@ -21,6 +26,7 @@ const RECORD = new URL("record/", import.meta.url);
  * }>}
  */
 const look = async (stage) => {
+  await cleanup(RECORD);
   const cursor = await loadCursor();
   const exec = await compileStage(stage, {
     memoization: "none",
@@ -66,6 +72,9 @@ const main = async (argv) => {
     );
     process.exitCode ||= 1;
   } else {
-    stdout.write(JSON.stringify(await main(argv.slice(2))) + "\n");
+    stdout.write("\n");
+    stdout.write(showTargetPath(status.test.path, TEST262, ROOT) + "\n");
+    stdout.write("\n");
+    stdout.write(inspect(status, { depth: Infinity, colors: true }) + "\n");
   }
 }
