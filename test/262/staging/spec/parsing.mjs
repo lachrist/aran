@@ -10,7 +10,7 @@ export default {
     "parsing-unknown",
   ],
   exclude: [],
-  listLateNegative: (_test_case, _error) => [],
+  listLateNegative: (_test, _error) => [],
   setup: (_context) => {},
   instrument: ({ path, content, kind }) => ({
     path,

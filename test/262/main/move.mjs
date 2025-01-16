@@ -5,7 +5,7 @@ import { createSignal } from "../util/index.mjs";
 import { loadCursor, saveCursor } from "./cursor.mjs";
 import { compileStage } from "../staging/index.mjs";
 import { isExcludeResult } from "../result.mjs";
-import { loadTestCaseFilter } from "../catalog/index.mjs";
+import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
 
@@ -27,15 +27,20 @@ const move = async (stage, cursor, sigint) => {
     record: null,
   });
   let index = 0;
-  for await (const test of loadTestCaseFilter((current) => current >= cursor)) {
+  for await (const test of loadTestCase()) {
+    if (index % 100 === 0) {
+      stdout.write(`${index}\n`);
+    }
     if (sigint.get()) {
       return { cursor: index, result: null };
     }
-    const result = await exec(test);
-    if (!isExcludeResult(result)) {
-      const { actual, expect } = result;
-      if ((actual === null) !== (expect.length === 0)) {
-        return { cursor: index, result };
+    if (index >= cursor) {
+      const result = await exec(test);
+      if (!isExcludeResult(result)) {
+        const { actual, expect } = result;
+        if ((actual === null) !== (expect.length === 0)) {
+          return { cursor: index, result };
+        }
       }
     }
     index++;

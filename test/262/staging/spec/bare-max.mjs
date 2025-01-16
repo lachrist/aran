@@ -1,5 +1,5 @@
 /* eslint-disable no-use-before-define */
-import bare from "./bare.mjs";
+
 import { compileAran } from "../aran.mjs";
 import { AranTypeError } from "../../error.mjs";
 
@@ -567,8 +567,19 @@ const { setup, trans, retro } = compileAran(
  * @type {import("../stage").Stage}
  */
 export default {
-  ...bare,
-  listLateNegative: (_specifier, _metadata, _error) => [],
+  precursor: ["parsing"],
+  negative: [
+    "async-iterator-async-value",
+    "arguments-two-way-binding",
+    "function-dynamic-property",
+    "negative-bare-unknown",
+    "negative-bare-duplicate-super-prototype-access",
+    "negative-bare-early-module-declaration",
+    "negative-bare-missing-iterable-return-in-pattern",
+    "negative-bare-wrong-realm-for-default-prototype",
+  ],
+  exclude: ["function-string-representation"],
+  listLateNegative: (_test, _error) => [],
   setup: (context) => {
     const { intrinsics } = setup(context);
     const advice = compileAdvice(intrinsics);

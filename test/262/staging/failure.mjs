@@ -10,7 +10,8 @@ const { URL, Infinity } = globalThis;
  *   name: import("./stage-name").StageName,
  * ) => URL}
  */
-const locateFail = (stage) => new URL(`fail/${stage}.txt`, import.meta.url);
+const locateFailure = (stage) =>
+  new URL(`failure/${stage}.txt`, import.meta.url);
 
 /**
  * @type {(
@@ -18,7 +19,7 @@ const locateFail = (stage) => new URL(`fail/${stage}.txt`, import.meta.url);
  * ) => AsyncGenerator<import("../result").TestSpecifier>}
  */
 export const loadStageFailure = async function* (stage) {
-  const handle = await open(locateFail(stage), "r");
+  const handle = await open(locateFailure(stage), "r");
   try {
     const iterable = createInterface({
       input: handle.createReadStream({ encoding: "utf-8" }),
@@ -41,7 +42,7 @@ export const loadStageFailure = async function* (stage) {
  * ) => Promise<void>}
  */
 export const saveStageFailure = async (stage, fails) => {
-  const handle = await open(locateFail(stage), "w");
+  const handle = await open(locateFailure(stage), "w");
   try {
     const stream = handle.createWriteStream({ encoding: "utf-8" });
     for await (const fail of fails) {

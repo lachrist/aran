@@ -1,1 +1,1 @@
-export { loadTestCase, grabTestCase, loadTestCaseFilter } from "./catalog.mjs";
+export { loadTestCase, grabTestCase } from "./catalog.mjs";

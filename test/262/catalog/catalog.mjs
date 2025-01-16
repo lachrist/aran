@@ -7,7 +7,7 @@ import { AranExecError } from "../error.mjs";
 
 const { URL, Infinity, JSON } = globalThis;
 
-const CATALOG = new URL("catalog.txt", import.meta.url);
+const CATALOG = new URL("catalog.jsonl", import.meta.url);
 
 /**
  * @type {(
@@ -38,30 +38,6 @@ export const loadTestCase = async function* () {
     });
     for await (const line of iterator) {
       yield unpackTestCase(JSON.parse(line));
-    }
-  } finally {
-    await handle.close();
-  }
-};
-
-/**
- * @type {(
- *   filter: (index: number) => boolean,
- * ) => AsyncGenerator<import("../test-case").TestCase>}
- */
-export const loadTestCaseFilter = async function* (filter) {
-  const handle = await open(CATALOG, "r");
-  try {
-    const iterator = createInterface({
-      input: handle.createReadStream(),
-      crlfDelay: Infinity,
-    });
-    let index = 0;
-    for await (const line of iterator) {
-      if (filter(index)) {
-        yield unpackTestCase(JSON.parse(line));
-      }
-      index++;
     }
   } finally {
     await handle.close();
