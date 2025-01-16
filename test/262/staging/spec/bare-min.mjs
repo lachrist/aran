@@ -29,6 +29,7 @@ const { setup, trans, retro } = compileAran(
 export default {
   precursor: ["parsing"],
   negative: [
+    "module-literal-specifier",
     "async-iterator-async-value",
     "arguments-two-way-binding",
     "function-dynamic-property",

@@ -1,0 +1,5 @@
+// https://github.com/davidbonnet/astring/issues/713
+// This is not caught by the parsing phase because undefined is used...
+
+language/module-code/export-expname-from-string-binding.js
+language/module-code/export-expname-import-string-binding.js

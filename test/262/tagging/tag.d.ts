@@ -7,6 +7,7 @@ export type Tag =
   | "function-string-representation"
   | "global-object-access"
   | "invalid-metadata-header"
+  | "module-literal-specifier"
   | "negative-bare-duplicate-super-prototype-access"
   | "negative-bare-early-module-declaration"
   | "negative-bare-missing-iterable-return-in-pattern"
