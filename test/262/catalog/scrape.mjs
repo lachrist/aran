@@ -5,7 +5,7 @@ import { readdir, stat } from "node:fs/promises";
 const { URL } = globalThis;
 
 /**
- * @type {(directory: URL) => AsyncIterable<URL>}
+ * @type {(directory: URL) => AsyncGenerator<URL>}
  */
 export const scrape = async function* (parent) {
   for (const name of (await readdir(parent)).sort()) {

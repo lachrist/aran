@@ -12,25 +12,11 @@ export const show = (value) => {
 };
 
 /**
- * @type {<X>(
- *   array: X[],
- * ) => array is [X, ...X[]]}
- */
-export const isNotEmptyArray = (array) => array.length > 0;
-
-/**
  * @type {(
  *   string: string,
  * ) => string}
  */
 export const trimString = (string) => string.trim();
-
-/**
- * @type {<X, Y>(
- *  pair: [X, Y]
- * ) => X}
- */
-export const getFirst = ([x, _y]) => x;
 
 /**
  * @type {(

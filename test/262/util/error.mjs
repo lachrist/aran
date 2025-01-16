@@ -1,4 +1,4 @@
-import { show } from "./pure.mjs";
+import { show } from "./string.mjs";
 
 const {
   Object: { hasOwn },

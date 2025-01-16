@@ -1,60 +1,71 @@
-import { cleanup, record } from "../record/index.mjs";
+/* eslint-disable logical-assignment-operators */
+import { record } from "../record/index.mjs";
 import { stdout, stderr, argv } from "node:process";
 import { loadCursor } from "./cursor.mjs";
-import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
-import { TEST262, ROOT } from "../layout.mjs";
-import { showTargetPath } from "../fetch.mjs";
-import { compileStage, isStageName } from "../staging/index.mjs";
+import { compileStage } from "../staging/index.mjs";
 import { grabTestCase } from "../catalog/index.mjs";
-import { inspect } from "node:util";
-import { RECORD } from "./layout.mjs";
 import { getStageName } from "./argv.mjs";
+import { onUncaughtException } from "./uncaught.mjs";
 
-const { process } = globalThis;
+const { JSON, URL, process } = globalThis;
+
+const RECORD = new URL("record/", import.meta.url);
 
 /**
  * @type {(
- *   argv: string[],
- * ) => Promise<number>}
+ *   stage: import("../staging/stage-name").StageName,
+ * ) => Promise<{
+ *   cursor: number,
+ *   test: import("../test-case").TestCase,
+ *   result: import("../result").Result
+ * }>}
  */
-const main = async (argv) => {
-  const stage = getStageName(argv);
-  if (stage === null) {
-    stderr.write(
-      "usage: node --experimental-vm-modules --expose-gc test/262/look.mjs <stage>\n",
-    );
-    return 1;
-  }
-  if (!isStageName(stage)) {
-    stderr.write(`invalid stage: ${stage}\n`);
-    return 1;
-  }
+const look = async (stage) => {
   const cursor = await loadCursor();
   const exec = await compileStage(stage, {
     memoization: "none",
     record: (file) => record(file, RECORD),
   });
-  // It is unfortunate but uncaught exception do not necessarily indicate test failure.
-  // test262/test/language/expressions/dynamic-import/syntax/valid/nested-if-nested-imports.js
-  // Uncaught >> Error: ENOENT: no such file or directory, open
-  //   'test262/test/language/expressions/dynamic-import/syntax/valid/[object Promise]'
-  process.on("uncaughtException", (error, _origin) => {
-    stderr.write(
-      `uncaught >> ${inspectErrorName(error)} >> ${inspectErrorMessage(error)}\n`,
-    );
-    stderr.write(
-      `${inspect(error, { showHidden: true, depth: null, colors: true })}\n`,
-    );
-  });
-  await cleanup(RECORD);
-  const test = await grabTestCase(cursor);
-  stdout.write(`STAGE >> ${stage}\n`);
-  stdout.write(`INDEX >> ${cursor}\n`);
-  stdout.write(`PATH  >> ${showTargetPath(test.path, TEST262, ROOT)}\n`);
-  stdout.write(
-    inspect({ test, result: await exec(test) }, { depth: null, colors: true }),
-  );
-  return 0;
+  process.addListener("uncaughtException", onUncaughtException);
+  try {
+    const test = await grabTestCase(cursor);
+    return { cursor, test, result: await exec(test) };
+  } finally {
+    process.removeListener("uncaughtException", onUncaughtException);
+  }
 };
 
-process.exitCode = await main(argv.slice(2));
+/**
+ * @type {(
+ *   argv: string[],
+ * ) => Promise<"usage" | {
+ *   cursor: number,
+ *   test: import("../test-case").TestCase,
+ *   result: import("../result").Result,
+ * }>}
+ */
+const main = async (argv) => {
+  const stage = getStageName(argv);
+  if (stage === null) {
+    return "usage";
+  } else {
+    process.on("uncaughtException", onUncaughtException);
+    try {
+      return await look(stage);
+    } finally {
+      process.removeListener("uncaughtException", onUncaughtException);
+    }
+  }
+};
+
+{
+  const status = await main(argv.slice(2));
+  if (status === "usage") {
+    stderr.write(
+      ">> node --experimental-vm-modules --expose-gc test/262/look.mjs <stage>\n",
+    );
+    process.exitCode ||= 1;
+  } else {
+    stdout.write(JSON.stringify(await main(argv.slice(2))) + "\n");
+  }
+}

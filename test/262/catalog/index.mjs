@@ -1,1 +1,1 @@
-export { enumTestCase, grabTestCase } from "./load.mjs";
+export { loadTestCase, grabTestCase, loadTestCaseFilter } from "./catalog.mjs";

@@ -6,6 +6,8 @@ export type TestSpecifier = `${TestPath}@${Directive}`;
 
 export type Result = ExcludeResult | IncludeResult;
 
+export type ResultEntry = [TestSpecifier, Result];
+
 export type ExcludeResult = [string, ...string[]];
 
 export type IncludeResult = {

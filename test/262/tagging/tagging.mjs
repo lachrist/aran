@@ -1,30 +1,15 @@
-import { readFile } from "fs/promises";
-import { getFirst, trimString } from "../util/index.mjs";
-import { locateTag } from "./layout.mjs";
+import { getFirst } from "../util/index.mjs";
+import { loadTag } from "./load.mjs";
 
 const { Set } = globalThis;
 
 /**
  * @type {(
- *   string: string,
- * ) => boolean}
- */
-export const isNotEmptyLine = (string) =>
-  string.length > 0 && string[0] !== "#";
-
-/**
- * @type {(
- *   content: string,
- * ) => (
  *   specifier: import("../result").TestSpecifier,
- * ) => boolean}
+ * ) => import("../fetch").TestPath}
  */
-const compileTagging = (content) => {
-  const set = new Set(
-    content.split("\n").map(trimString).filter(isNotEmptyLine),
-  );
-  return (specifier) => set.has(specifier) || set.has(specifier.split("@")[0]);
-};
+const getTestPath = (specifier) =>
+  /** @type {import("../fetch").TestPath} */ (specifier.split("@")[0]);
 
 /**
  * @type {(
@@ -33,8 +18,10 @@ const compileTagging = (content) => {
  *   specifier: import("../result").TestSpecifier,
  * ) => boolean>}
  */
-export const loadTagging = async (tag) =>
-  compileTagging(await readFile(locateTag(tag), "utf-8"));
+export const loadTagging = async (tag) => {
+  const set = new Set(await loadTag(tag));
+  return (specifier) => set.has(specifier) || set.has(getTestPath(specifier));
+};
 
 /**
  * @template {import("./tag").Tag} T

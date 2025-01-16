@@ -1,10 +1,5 @@
-import { readdir, readFile } from "node:fs/promises";
-import {
-  isNotEmptyArray,
-  getFirst,
-  trimString,
-  isNotEmptyString,
-} from "../util/index.mjs";
+import { readdir } from "node:fs/promises";
+import { isNotEmptyArray, getFirst } from "../util/index.mjs";
 import { toTestSpecifier } from "../result.mjs";
 import {
   compileFetchHarness,
@@ -15,7 +10,7 @@ import { HARNESS, TEST262 } from "../layout.mjs";
 import { execTestCase } from "../test-case/index.mjs";
 import { loadTaggingList } from "../tagging/index.mjs";
 import { STAGE_ENUM } from "./stage-name.mjs";
-import { locateStageFail } from "./layout.mjs";
+import { loadStageFailure } from "./failure.mjs";
 
 const {
   Set,
@@ -28,15 +23,13 @@ const {
  *   name: import("./stage-name").StageName,
  * ) => Promise<Set<import("../result").TestSpecifier>>}
  */
-const loadPrecursorFailure = async (stage) =>
-  new Set(
-    /** @type {import("../result").TestSpecifier[]} */ (
-      (await readFile(locateStageFail(stage), "utf-8"))
-        .split("\n")
-        .map(trimString)
-        .filter(isNotEmptyString)
-    ),
-  );
+const loadPrecursorFailure = async (stage) => {
+  const failures = new Set();
+  for await (const precursor of loadStageFailure(stage)) {
+    failures.add(precursor);
+  }
+  return failures;
+};
 
 /**
  * @type {(

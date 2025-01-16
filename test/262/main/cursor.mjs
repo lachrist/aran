@@ -1,8 +1,9 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { AranExecError } from "../error.mjs";
-import { CURSOR } from "./layout.mjs";
 
-const { parseInt } = globalThis;
+const { URL, parseInt } = globalThis;
+
+const CURSOR = new URL("cursor.txt", import.meta.url);
 
 /**
  * @type {() => Promise<number>}

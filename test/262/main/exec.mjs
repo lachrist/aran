@@ -1,78 +1,90 @@
-import { open } from "node:fs/promises";
-import { inspectErrorMessage, inspectErrorName } from "../util/index.mjs";
-import { argv, stdout, stderr } from "node:process";
-import {
-  compileStage,
-  locateStageFail,
-  locateStageProd,
-} from "../staging/index.mjs";
-import { isExcludeResult, packResult, toTestSpecifier } from "../result.mjs";
-import { enumTestCase } from "../catalog/index.mjs";
-import { getStageName } from "./argv.mjs";
+/* eslint-disable logical-assignment-operators */
+/* eslint-disable local/no-function */
 
-const { Date, process, JSON } = globalThis;
+import { createSignal } from "../util/index.mjs";
+import { argv, stderr, stdout } from "node:process";
+import { compileStage, saveStageResultEntry } from "../staging/index.mjs";
+import { toTestSpecifier } from "../result.mjs";
+import { loadTestCase } from "../catalog/index.mjs";
+import { getStageName } from "./argv.mjs";
+import { onUncaughtException } from "./uncaught.mjs";
+
+const { process, Date, JSON } = globalThis;
+
+/**
+ * @type {(
+ *   stage: import("../staging/stage-name").StageName,
+ *   sigint: import("../util/signal").Signal<boolean>,
+ * ) => AsyncGenerator<
+ *   import("../result").ResultEntry,
+ *   "done" | "sigint"
+ * >}
+ */
+const exec = async function* (stage, sigint) {
+  const execTestCase = await compileStage(stage, {
+    memoization: "eager",
+    record: null,
+  });
+  let index = 0;
+  for await (const test of loadTestCase()) {
+    if (sigint.get()) {
+      return "sigint";
+    }
+    if (index % 100 === 0) {
+      stdout.write(`${index}\n`);
+    }
+    index++;
+    yield [
+      toTestSpecifier(test.path, test.directive),
+      await execTestCase(test),
+    ];
+  }
+  return "done";
+};
 
 /**
  * @type {(
  *   argv: string[],
- * ) => Promise<0 | 1>}
+ * ) => Promise<"done" | "usage" | "sigint">}
  */
 const main = async (argv) => {
   const stage = getStageName(argv);
   if (stage === null) {
-    stderr.write(
-      "usage: node --experimental-vm-modules --expose-gc test/262/exec.mjs <stage>\n",
-    );
-    return 1;
-  }
-  const start = Date.now();
-  const exec = await compileStage(stage, {
-    memoization: "eager",
-    record: null,
-  });
-  let sigint = false;
-  const onSigint = () => {
-    sigint = true;
-  };
-  process.addListener("SIGINT", onSigint);
-  const onUncaughtException = (/** @type {unknown} */ error) => {
-    stderr.write(
-      `uncaught >> ${inspectErrorName(error)} >> ${inspectErrorMessage(error)}\n`,
-    );
-  };
-  process.addListener("uncaughtException", onUncaughtException);
-  const prod_handle = await open(locateStageProd(stage), "w");
-  const fail_handle = await open(locateStageFail(stage), "w");
-  try {
-    let index = 0;
-    const prod_stream = prod_handle.createWriteStream({
-      encoding: "utf-8",
-    });
-    const fail_stream = fail_handle.createWriteStream({
-      encoding: "utf-8",
-    });
-    for await (const test of enumTestCase()) {
-      if (sigint) {
-        return 1;
-      }
-      if (index % 100 === 0) {
-        stdout.write(`${index}\n`);
-      }
-      const result = await exec(test);
-      prod_stream.write(JSON.stringify(packResult(result)) + "\n");
-      if (isExcludeResult(result) || result.actual !== null) {
-        fail_stream.write(toTestSpecifier(test.path, test.directive) + "\n");
-      }
-      index += 1;
+    return "usage";
+  } else {
+    const sigint = createSignal(false);
+    const onSigint = () => {
+      sigint.value = true;
+    };
+    process.addListener("SIGINT", onSigint);
+    process.addListener("uncaughtException", onUncaughtException);
+    try {
+      await saveStageResultEntry(stage, exec(stage, sigint));
+    } finally {
+      process.removeListener("SIGINT", onSigint);
+      process.removeListener("uncaughtException", onUncaughtException);
     }
-    stdout.write(`Total time: ${Date.now() - start}ms\n`);
-    return 0;
-  } finally {
-    await prod_handle.close();
-    await fail_handle.close();
-    process.removeListener("SIGINT", onSigint);
-    process.removeListener("uncaughtException", onUncaughtException);
+    return sigint.value ? "sigint" : "done";
   }
 };
 
-process.exitCode = await main(argv.slice(2));
+{
+  const now = Date.now();
+  const status = await main(argv.slice(2));
+  if (status === "usage") {
+    stderr.write("USAGE\n");
+    stderr.write(
+      ">> node --experimental-vm-modules --expose-gc test/262/exec.mjs <stage>\n",
+    );
+    process.exitCode ||= 1;
+  } else if (status === "sigint") {
+    stderr.write("SIGINT\n");
+    process.exitCode ||= 1;
+  } else if (status === "done") {
+    stdout.write("SUCCESS\n");
+    stdout.write(`>> ${Date.now() - now}ms\n`);
+  } else {
+    stdout.write("FAILURE\n");
+    stdout.write(JSON.stringify(status, null, 2));
+  }
+}
