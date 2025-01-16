@@ -2,6 +2,7 @@
 
 import { compileAran } from "../aran.mjs";
 import { AranTypeError } from "../../error.mjs";
+import { recreateError } from "../../util/index.mjs";
 
 const {
   Array: {
@@ -157,36 +158,72 @@ const compileFunctionCode = (input) => {
  *   ) => unknown,
  * }}
  */
-const compileAdvice = (intrinsics) => ({
-  eval: weave,
-  apply: (callee, that, input, hash) => {
-    if (callee === intrinsics.eval && input.length > 0) {
-      const code = input[0];
-      if (typeof code === "string") {
-        return intrinsics.eval(
-          retro(weave(trans(`dynamic://eval/global/${hash}`, "eval", code))),
-        );
+const compileAdvice = (intrinsics) => {
+  const globals = {
+    SyntaxError: intrinsics["aran.global"].SyntaxError,
+    eval: intrinsics["aran.global"].eval,
+    Function: intrinsics["aran.global"].Function,
+    evalScript: /** @type {{$262: import("../../$262").$262}} */ (
+      /** @type {unknown} */ (intrinsics["aran.global"])
+    ).$262.evalScript,
+  };
+  const syntax_error_mapping = {
+    SyntaxError: globals.SyntaxError,
+    AranSyntaxError: globals.SyntaxError,
+  };
+  return {
+    eval: weave,
+    apply: (callee, that, input, hash) => {
+      if (callee === globals.eval && input.length > 0) {
+        const code = input[0];
+        if (typeof code === "string") {
+          try {
+            return globals.eval(
+              retro(
+                weave(trans(`dynamic://eval/global/${hash}`, "eval", code)),
+              ),
+            );
+          } catch (error) {
+            throw recreateError(error, syntax_error_mapping);
+          }
+        }
       }
-    }
-    return intrinsics["Reflect.apply"](callee, that, input);
-  },
-  construct: (callee, input, hash) => {
-    if (callee === intrinsics.Function) {
-      return new intrinsics.Function(
-        retro(
-          weave(
-            trans(
-              `dynamic://function/global/${hash}`,
-              "eval",
-              compileFunctionCode(input),
+      if (callee === globals.evalScript && input.length > 0) {
+        const code = String(input[0]);
+        try {
+          return globals.evalScript(
+            retro(
+              weave(trans(`dynamic://script/global/${hash}`, "script", code)),
             ),
-          ),
-        ),
-      );
-    }
-    return intrinsics["Reflect.construct"](callee, input, callee);
-  },
-});
+          );
+        } catch (error) {
+          throw recreateError(error, syntax_error_mapping);
+        }
+      }
+      return intrinsics["Reflect.apply"](callee, that, input);
+    },
+    construct: (callee, input, hash) => {
+      if (callee === globals.Function) {
+        try {
+          return globals.eval(
+            retro(
+              weave(
+                trans(
+                  `dynamic://function/global/${hash}`,
+                  "eval",
+                  compileFunctionCode(input),
+                ),
+              ),
+            ),
+          );
+        } catch (error) {
+          throw recreateError(error, syntax_error_mapping);
+        }
+      }
+      return intrinsics["Reflect.construct"](callee, input, callee);
+    },
+  };
+};
 
 ///////////
 // Visit //
@@ -569,6 +606,7 @@ const { setup, trans, retro } = compileAran(
 export default {
   precursor: ["parsing"],
   negative: [
+    "module-literal-specifier",
     "async-iterator-async-value",
     "arguments-two-way-binding",
     "function-dynamic-property",
@@ -585,7 +623,7 @@ export default {
     const advice = compileAdvice(intrinsics);
     for (let index = 0; index < ADVICE.length; index += 1) {
       const name = ADVICE[index];
-      defineProperty(globalThis, toAdviceGlobal(name), {
+      defineProperty(intrinsics["aran.global"], toAdviceGlobal(name), {
         // @ts-ignore
         __proto__: null,
         value: advice[name],

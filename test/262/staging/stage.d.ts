@@ -9,14 +9,16 @@ import type { File } from "../util/file";
 
 export type Instrument = (source: Source) => File;
 
+export type Setup = (context: Context) => void;
+
 export type ListLateNegative = (
   test_case: TestCase,
   error: ErrorSerial,
 ) => string[];
 
 export type Stage = {
-  setup: (context: Context) => void;
-  instrument: (source: Source) => File;
+  setup: Setup;
+  instrument: Instrument;
   listLateNegative: ListLateNegative;
   precursor: StageName[];
   exclude: Tag[];
@@ -24,7 +26,7 @@ export type Stage = {
 };
 
 export type ReadyStage = {
-  setup: (context: Context) => void;
+  setup: Setup;
   instrument: Instrument;
   listLateNegative: ListLateNegative;
   listExclusionReason: (specifier: TestSpecifier) => (Tag | StageName)[];
