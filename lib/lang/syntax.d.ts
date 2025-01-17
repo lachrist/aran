@@ -16,7 +16,12 @@ export type Atom = {
 // Component //
 ///////////////
 
-export type Primitive = null | boolean | number | string | { bigint: string };
+export type SyntaxPrimitive =
+  | null
+  | boolean
+  | number
+  | string
+  | { bigint: string };
 
 export type RuntimePrimitive = null | boolean | number | string | bigint;
 
@@ -332,7 +337,7 @@ export type Expression<A extends Atom = Atom> =
   // Produce //
   | {
       type: "PrimitiveExpression";
-      primitive: Primitive;
+      primitive: SyntaxPrimitive;
       tag: A["Tag"];
     }
   | {
