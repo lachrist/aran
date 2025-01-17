@@ -36,6 +36,15 @@ export type {
 } from "./trans/source";
 
 export type {
+  ModuleHeader as AranModuleHeader,
+  ImportHeader as AranImportHeader,
+  ExportHeader as AranExportHeader,
+  AggregateHeader as AranAggregateHeader,
+  DeclareHeader as AranDeclareHeader,
+  Header as AranHeader,
+} from "./lang/header";
+
+export type {
   Node as AranNode,
   Program as AranProgram,
   RoutineBlock as AranRoutineBlock,
@@ -54,7 +63,7 @@ export type {
 } from "./lang/syntax";
 
 export {
-  ProgramKind as ProgramKind,
+  ProgramKind as AranProgramKind,
   ClosureKind as AranClosureKind,
   SegmentKind as AranSegmentKind,
   ControlKind as AranControlKind,
@@ -221,6 +230,11 @@ export const weaveFlexible: <
   root: Program<A1>,
   conf?: null | undefined | Partial<FlexibleWeaveConfig<A1>>,
 ) => Program<A2>;
+
+/**
+ * Indicates whether the provided string is a valid block kind.
+ */
+export const isControlKind: (kind: string) => kind is ControlKind;
 
 /**
  * Indicates whether the block refered by the kind is a closure block -- ie: the
