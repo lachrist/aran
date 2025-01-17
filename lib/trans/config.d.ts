@@ -23,7 +23,7 @@ export type LooseEstreeProgram = {
  * A parsed JavaScript program. Represents both static code and dynamically
  * generated code.
  */
-export type File<P> = {
+export type File<file_path> = {
   /**
    * The `estree.Program` node to instrument.
    */
@@ -52,7 +52,7 @@ export type File<P> = {
    * An identifier for the file. It is passed to `conf.digest` to help
    * generating unique node hash.
    */
-  path: P;
+  path: file_path;
 };
 
 /**
@@ -73,17 +73,17 @@ export type File<P> = {
  * @returns The hash of the node. It should be unique for each node in the
  * program `file.root`. It is safe to simply returns `node_path`.
  */
-export type Digest<P, H extends string | number> = (
+export type Digest<file_path, hash extends string | number> = (
   node: object,
   node_path: EstreeNodePath,
-  file_path: P,
+  file_path: file_path,
   node_kind: EstreeNodeKind,
-) => H;
+) => hash;
 
 /**
  * Configuration object for `transpile`.
  */
-export type Config<P, H extends string | number> = {
+export type Config<file_path, hash extends string | number> = {
   /**
    * Indicates whether the global declarative record should be emulated or not.
    * NB: The global declarative record is a scope frame that sits right before
@@ -107,7 +107,7 @@ export type Config<P, H extends string | number> = {
    * Hashing functions for nodes in `file.root`.
    * @defaultValue `(node, node_path, file_path, node_kind) => file_path + "#" + node_path`
    */
-  digest: Digest<P, H>;
+  digest: Digest<file_path, hash>;
 };
 
 export type InternalFile = File<FilePath>;
