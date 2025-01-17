@@ -12,8 +12,8 @@ export type Config<
   atom extends Atom,
   hash extends string | number,
   global_variable extends string,
-  file_path,
-> = TransConfig<file_path, hash> &
+  path,
+> = TransConfig<hash, path> &
   RetroConfig<global_variable> & {
     /**
      * The global variable that refers to the advice object for standard weaving.
@@ -48,5 +48,5 @@ type HashAtom = Atom & { Tag: string | number };
 export type ExternalConfig<
   atom extends HashAtom = HashAtom,
   global_variable extends string = string,
-  file_path = unknown,
-> = Config<atom, atom["Tag"], global_variable, file_path>;
+  path = unknown,
+> = Config<atom, atom["Tag"], global_variable, path>;

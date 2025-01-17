@@ -6,7 +6,10 @@ import type { Atom } from "../../lang/syntax";
 /**
  * Configuration object for both flexible weaving.
  */
-export type Config<A extends Atom> = {
+export type Config<
+  atom extends Atom = Atom,
+  global_variable extends string = string,
+> = {
   /**
    * The initial state passed to advice functions. It will be cloned with JSON
    * serialization.
@@ -17,7 +20,7 @@ export type Config<A extends Atom> = {
    * The pointcut for the standard weaving API.
    * @defaultValue `false`
    */
-  pointcut: Pointcut<A>;
+  pointcut: Pointcut<atom, global_variable>;
 };
 
 export type InternalConfig = Config<ArgAtom>;

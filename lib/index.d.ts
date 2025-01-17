@@ -10,13 +10,7 @@ import type {
   InputErrorCause,
   PointcutErrorCause,
 } from "./error";
-import type { Atom, Parameter, Program } from "./lang/syntax";
-import type {
-  ControlKind,
-  ClosureKind,
-  SegmentKind,
-  ProgramKind,
-} from "./weave/parametrization";
+import type { Atom, Program } from "./lang/syntax";
 import type { Config as SetupConfig } from "./setup";
 import type { Config as RetroConfig } from "./retro/config";
 import type { File, Config as TransConfig } from "./trans/config";
@@ -167,7 +161,7 @@ export class AranPointcutError extends Error {
  * instrumented code. In the standalone mode, the setup code is bundled with the
  * instrumented code and this function should not be used.
  * @template global_variable The branded type for global variables.
- * @param conf The configuration of the setup program.
+ * @param conf Setup generation options.
  * @returns The setup script program. Can be passed to an estree code generator
  * such as `astring`.
  * @throws {@link AranInputError} If the configuration is invalid.
@@ -182,10 +176,11 @@ export const generateSetup: <global_variable extends string = string>(
 
 /**
  * Transpile a JavaScript program to an Aran program.
- * @template P The type of `file.path`.
- * @template H The type of node hashes as returned by `conf.digest`.
+ * @template hash The branded type for the result of `conf.digest`
+ * @template atom The branded types for the leafs of the output program.
+ * @template path The type of `file.path`.
  * @param file The parsed JavaScript program to transpile.
- * @param conf Transpiling options.
+ * @param conf Transpilation options.
  * @returns The transpiled aran program along with warnings.
  * @throws {@link AranInputError} If `conf` is invalid or if the top level
  * properties of `file` are invalid.
@@ -194,19 +189,17 @@ export const generateSetup: <global_variable extends string = string>(
  * not a valid ESTree program.
  */
 export const transpile: <
-  P,
-  H extends number | string,
-  A extends Atom & { Tag: H },
+  hash extends string | number = string | number,
+  atom extends Atom & { Tag: hash } = Atom & { Tag: hash },
+  path = unknown,
 >(
-  file: Partial<File<P>>,
-  conf?: null | undefined | Partial<TransConfig<P, H>>,
-) => Program<A> & { _aran_warning_array: RawWarning[] };
+  file: Partial<File<path>>,
+  conf?: null | undefined | Partial<TransConfig<hash, path>>,
+) => Program<atom> & { _aran_warning_array: RawWarning[] };
 
 ///////////
 // Weave //
 ///////////
-
-type SerialAtom = Atom & { Tag: Json };
 
 /**
  * Insert calls to advice functions in an Aran program with the standard API.
@@ -215,8 +208,10 @@ type SerialAtom = Atom & { Tag: Json };
  * @template res_atom The branded types for the AST leafs of the output program.
  * @template global_variable The branded type for global variables.
  * @param root The Aran program to weave.
- * @param conf Weaving configuration object.
+ * @param conf Standard weaving options.
  * @returns The woven program.
+ * @throws {@link AranPointcutError} If there is a problem with the provided
+ * pointcut.
  */
 export const weaveStandard: <
   tag extends Json = Json,
@@ -233,47 +228,28 @@ export const weaveStandard: <
 
 /**
  * Insert calls to advice functions in an Aran program with the flexible API.
- * @template T The type of node tags.
+ * @template tag The type of node tags.
+ * @template arg_atom The branded types for the AST leafs of the input program.
+ * @template res_atom The branded types for the AST leafs of the output program.
+ * @template global_variable The branded type for global variables.
  * @param root The Aran program to weave.
- * @param conf Weaving configuration object.
+ * @param conf Flexible weaving options.
  * @returns The woven program.
+ * @throws {@link AranPointcutError} If there is a problem with the provided
+ * pointcut.
  */
 export const weaveFlexible: <
-  T,
-  A1 extends Atom & { Tag: T },
-  A2 extends Atom & { Tag: T },
+  tag = unknown,
+  arg_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
+  res_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
+  global_variable extends string = string,
 >(
-  root: Program<A1>,
-  conf?: null | undefined | Partial<FlexibleWeaveConfig<A1>>,
-) => Program<A2>;
-
-/**
- * Indicates whether the provided string is a valid block kind.
- */
-export const isControlKind: (kind: string) => kind is ControlKind;
-
-/**
- * Indicates whether the block refered by the kind is a closure block -- ie: the
- * body of a function, an arrow, a generator, or a method.
- */
-export const isClosureKind: (kind: string) => kind is ClosureKind;
-
-/**
- * Indicates whether the block refered by the kind is a program block -- ie: a
- * the body of a script or a module.
- */
-export const isProgramKind: (kind: string) => kind is ProgramKind;
-
-/**
- * Indicates whether the block refered by the kind is a control block -- ie: a
- * a block which appears in control flow statements such as an if statement.
- */
-export const isSegmentKind: (kind: string) => kind is SegmentKind;
-
-/**
- * List the parameters of a given block kind.
- */
-export const listParameter: (kind: ControlKind) => Parameter[];
+  root: Program<arg_atom>,
+  conf?:
+    | null
+    | undefined
+    | Partial<FlexibleWeaveConfig<arg_atom, global_variable>>,
+) => Program<res_atom>;
 
 ///////////////
 // Retropile //
@@ -297,14 +273,13 @@ export const retropile: (
 // Instrument //
 ////////////////
 
-type HashAtom = Atom & { Tag: string | number };
-
 /**
  * Instrument a parsed JavaScript program. It chains `transpile`,
  * `weaveStandard` or `weaveFlexible`, and `retropile`.
- * @template atom The branded types for the leafs of the output program.
+ * @template hash The type of the result of `conf.digest`.
+ * @template atom The branded types for the leafs of the woven program.
  * @template global_variable The branded type for global variables.
- * @template file_path The type of `file.path`.
+ * @template path The type of `file.path`.
  * @param file The parsed JavaScript program to instrument.
  * @param conf Instrumentation options.
  * @returns The instrumented program along with warnings. Can be fed to a estree
@@ -320,15 +295,16 @@ type HashAtom = Atom & { Tag: string | number };
  * pointcut.
  */
 export const instrument: <
-  atom extends HashAtom = HashAtom,
+  hash extends string | number = string | number,
+  atom extends Atom & { Tag: hash } = Atom & { Tag: hash },
   global_variable extends string = string,
-  file_path = unknown,
+  path = unknown,
 >(
-  file: Partial<File<file_path>>,
+  file: Partial<File<path>>,
   conf?:
     | null
     | undefined
-    | Partial<InstrumentConfig<atom, global_variable, file_path>>,
+    | Partial<InstrumentConfig<atom, global_variable, path>>,
 ) => EstreeProgram<{}> & {
   _aran_warning_array: RawWarning[];
 };

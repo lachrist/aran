@@ -9,9 +9,9 @@ type HashAtom = Atom & { Tag: string | number };
 
 export type StandardConfig<
   atom extends HashAtom = HashAtom,
-  file_path = unknown,
+  path = unknown,
   global_variable extends string = string,
-> = TransConfig<file_path, atom["Tag"]> &
+> = TransConfig<atom["Tag"], path> &
   RetroConfig<string> & {
     /**
      * The global variable that refers to the advice object for standard weaving.
@@ -35,9 +35,9 @@ export type StandardConfig<
 
 export type FlexibleConfig<
   atom extends HashAtom = HashAtom,
-  file_path = unknown,
+  path = unknown,
   global_variable extends string = string,
-> = TransConfig<file_path, atom["Tag"]> &
+> = TransConfig<atom["Tag"], path> &
   RetroConfig<string> & {
     /**
      * The initial state passed to advice functions. It will be cloned with JSON
