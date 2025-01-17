@@ -51,11 +51,11 @@ export type StandaloneFrame<variable extends string, value> = ValueOf<{
 }>;
 
 export type Header<kind extends ProgramKind> = kind extends "module"
-  ? ModuleHeader[]
+  ? ModuleHeader
   : kind extends "script" | "eval.global" | "eval.glocal.root"
-    ? DeclareHeader[]
+    ? DeclareHeader
     : kind extends "eval.local.deep"
-      ? []
+      ? never
       : never;
 
 export type TaggedHead = ValueOf<{
