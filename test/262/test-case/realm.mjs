@@ -1,11 +1,27 @@
 import { createContext, runInContext } from "node:vm";
+import { writeSync } from "node:fs";
+import { inspect } from "node:util";
 import { recreateError } from "../util/index.mjs";
 
-const {
-  gc,
-  Reflect,
-  console: { log, dir },
-} = globalThis;
+const { gc, Reflect } = globalThis;
+
+/**
+ * @type {(
+ *   value: unknown
+ * ) => void}
+ */
+const dir = (value) => {
+  writeSync(1, inspect(value, { depth: null, colors: true }) + "\n");
+};
+
+/**
+ * @type {(
+ *   value: unknown
+ * ) => void}
+ */
+const log = (message) => {
+  writeSync(1, message + "\n");
+};
 
 /**
  * @type {(
