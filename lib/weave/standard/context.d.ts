@@ -1,7 +1,7 @@
 import type { Depth } from "../depth";
-import type { NormalPointcut } from "./aspect";
+import type { NormalInternalPointcut } from "./pointcut";
 
 export type Context = {
   depth: Depth;
-  pointcut: NormalPointcut;
+  pointcut: NormalInternalPointcut;
 };

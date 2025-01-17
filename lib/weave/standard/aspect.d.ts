@@ -1,8 +1,12 @@
 import type { SourceValue, SpecifierValue, SpecifierName } from "estree-sentry";
 import type { DeclareHeader, ModuleHeader } from "../../lang/header";
-import type { Intrinsic, Parameter, RuntimePrimitive } from "../../lang/syntax";
+import type {
+  Atom,
+  Intrinsic,
+  Parameter,
+  RuntimePrimitive,
+} from "../../lang/syntax";
 import type { ValueOf } from "../../util/util";
-import type { ArgVariable, Label, Tag } from "../atom";
 import type {
   ControlKind,
   ProgramKind,
@@ -12,8 +16,6 @@ import type {
   Parametrization,
 } from "../parametrization";
 
-export type Variable = ArgVariable | Parameter;
-
 export type TestKind = "if" | "while" | "conditional";
 
 type Valuation = {
@@ -22,28 +24,37 @@ type Valuation = {
   Other: unknown;
 };
 
-export type Frame<K extends ControlKind, V> = {
-  [key in Variable]?: V;
+export type Frame<kind extends ControlKind, variable extends string, value> = {
+  [key in variable]?: value;
 } & {
-  [key in Parametrization[K]]: V;
+  [key in Parametrization[kind]]: value;
 };
 
-export type PreciseFrame<V> = ValueOf<{
+/**
+ * By including the kind of the block as the type of the frame, we remove its
+ * parametrization on block kind yet retain precise type information about which
+ * parameter is present in the frame.
+ *
+ * ```ts
+ * const standalone_frame: StandaloneFrame = { type: kind, data: frame };
+ * ```
+ */
+export type StandaloneFrame<variable extends string, value> = ValueOf<{
   [K in ControlKind]: {
     type: K;
     data: {
-      [key in Variable | Parameter]?: V;
+      [key in variable]?: variable;
     } & {
-      [key in Parametrization[K]]: V;
+      [key in Parametrization[K]]: value;
     };
   };
 }>;
 
-export type Header<K extends ProgramKind> = K extends "module"
+export type Header<kind extends ProgramKind> = kind extends "module"
   ? ModuleHeader[]
-  : K extends "script" | "eval.global" | "eval.glocal.root"
+  : kind extends "script" | "eval.global" | "eval.glocal.root"
     ? DeclareHeader[]
-    : K extends "eval.local.deep"
+    : kind extends "eval.local.deep"
       ? []
       : never;
 
@@ -60,7 +71,11 @@ export type TaggedHead = ValueOf<{
  * to use than the flexible weaving API but it does let the user define the
  * static information provided to the advice functions.
  */
-export type AspectTyping<T, X, V extends Valuation = Valuation> = {
+export type AspectTyping<
+  state = unknown,
+  atom extends Atom = Atom,
+  valuation extends Valuation = Valuation,
+> = {
   /**
    * The first advice called upon entering any block. It provides an oportunity
    * to overwrite the state that other advices will receive. That is that it
@@ -69,35 +84,44 @@ export type AspectTyping<T, X, V extends Valuation = Valuation> = {
    * -- ie a program block -- it will receive a clone of `config.initial_state`.
    */
   "block@setup": {
-    pointcut: (kind: ControlKind, tag: T) => boolean;
-    advice: (state: X, kind: ControlKind, tag: T) => X;
+    pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
+    advice: (state: state, kind: ControlKind, tag: atom["Tag"]) => state;
   };
   /**
    * Called before entering a program block with the headers of the program.
    */
   "program-block@before": {
-    pointcut: (kind: ProgramKind, tag: T) => boolean;
-    advice: <K extends ProgramKind>(
-      state: X,
-      kind: K,
-      head: Header<K>[],
-      tag: T,
+    pointcut: (kind: ProgramKind, tag: atom["Tag"]) => boolean;
+    advice: <kind extends ProgramKind>(
+      state: state,
+      kind: kind,
+      head: Header<kind>[],
+      tag: atom["Tag"],
     ) => void;
   };
   /**
    * Called before entering a closure block.
    */
   "closure-block@before": {
-    pointcut: (kind: ClosureKind, tag: T) => boolean;
-    advice: <K extends ClosureKind>(state: X, kind: K, tag: T) => void;
+    pointcut: (kind: ClosureKind, tag: atom["Tag"]) => boolean;
+    advice: <kind extends ClosureKind>(
+      state: state,
+      kind: kind,
+      tag: atom["Tag"],
+    ) => void;
   };
   /**
    * Called before entering a segment block with the labels of the current
    * block.
    */
   "segment-block@before": {
-    pointcut: (kind: SegmentKind, tag: T) => boolean;
-    advice: (state: X, kind: SegmentKind, labels: Label[], tag: T) => void;
+    pointcut: (kind: SegmentKind, tag: atom["Tag"]) => boolean;
+    advice: (
+      state: state,
+      kind: SegmentKind,
+      labels: atom["Label"][],
+      tag: atom["Tag"],
+    ) => void;
   };
   /**
    * Called before entering any block. It provides the initial values of the
@@ -106,12 +130,12 @@ export type AspectTyping<T, X, V extends Valuation = Valuation> = {
    * `undefined` or the intrinsic symbol `aran.deadzone`.
    */
   "block@declaration": {
-    pointcut: (kind: ControlKind, tag: T) => boolean;
-    advice: <K extends ControlKind>(
-      state: X,
-      kind: K,
-      frame: Frame<K, V["Scope"]>,
-      tag: T,
+    pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
+    advice: <kind extends ControlKind>(
+      state: state,
+      kind: kind,
+      frame: Frame<kind, atom["Variable"], valuation["Scope"]>,
+      tag: atom["Tag"],
     ) => void;
   };
   /**
@@ -121,13 +145,13 @@ export type AspectTyping<T, X, V extends Valuation = Valuation> = {
    * reasons.
    */
   "block@declaration-overwrite": {
-    pointcut: (kind: ControlKind, tag: T) => boolean;
-    advice: <K extends ControlKind>(
-      state: X,
-      kind: K,
-      frame: Frame<K, V["Scope"]>,
-      tag: T,
-    ) => Frame<K, V["Scope"]>;
+    pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
+    advice: <kind extends ControlKind>(
+      state: state,
+      kind: kind,
+      frame: Frame<kind, atom["Variable"], valuation["Scope"]>,
+      tag: atom["Tag"],
+    ) => Frame<kind, atom["Variable"], valuation["Scope"]>;
   };
   /**
    * Called right before leaving the head of a generator function. That is right
@@ -136,8 +160,8 @@ export type AspectTyping<T, X, V extends Valuation = Valuation> = {
    * body of a generator are considered to be part of the same block.
    */
   "generator-block@suspension": {
-    pointcut: (kind: GeneratorKind, tag: T) => boolean;
-    advice: (state: X, kind: GeneratorKind, tag: T) => void;
+    pointcut: (kind: GeneratorKind, tag: atom["Tag"]) => boolean;
+    advice: (state: state, kind: GeneratorKind, tag: atom["Tag"]) => void;
   };
   /**
    * Called right after the first call to the `next` method of the iterator
@@ -145,93 +169,103 @@ export type AspectTyping<T, X, V extends Valuation = Valuation> = {
    * considered to be part of the same block.
    */
   "generator-block@resumption": {
-    pointcut: (kind: GeneratorKind, tag: T) => boolean;
-    advice: (state: X, kind: GeneratorKind, tag: T) => void;
+    pointcut: (kind: GeneratorKind, tag: atom["Tag"]) => boolean;
+    advice: (state: state, kind: GeneratorKind, tag: atom["Tag"]) => void;
   };
   /**
    * Called before leaving a program block with its return value. If an error
    * was thrown, this advice will not be called.
    */
   "program-block@after": {
-    pointcut: (kind: ProgramKind, tag: T) => boolean;
+    pointcut: (kind: ProgramKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: X,
+      state: state,
       kind: ProgramKind,
-      value: V["Stack"],
-      tag: T,
-    ) => V["Other"];
+      value: valuation["Stack"],
+      tag: atom["Tag"],
+    ) => valuation["Other"];
   };
   /**
    * Called before leaving a closure block with its completion value. If an
    * error was thrown, this advice will not be called.
    */
   "closure-block@after": {
-    pointcut: (kind: ClosureKind, tag: T) => boolean;
+    pointcut: (kind: ClosureKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: X,
+      state: state,
       kind: ClosureKind,
-      value: V["Stack"],
-      tag: T,
-    ) => V["Other"];
+      value: valuation["Stack"],
+      tag: atom["Tag"],
+    ) => valuation["Other"];
   };
   /**
    * Called before leaving a control block. If an error was thrown or if a label
    * was broken onto, this advice will not be called.
    */
   "segment-block@after": {
-    pointcut: (kind: SegmentKind, tag: T) => boolean;
-    advice: (state: X, kind: SegmentKind, tag: T) => void;
+    pointcut: (kind: SegmentKind, tag: atom["Tag"]) => boolean;
+    advice: (state: state, kind: SegmentKind, tag: atom["Tag"]) => void;
   };
   /**
    * Called before leaving any block only if an error was thrown.
    */
   "block@throwing": {
-    pointcut: (kind: ControlKind, tag: T) => boolean;
-    advice: (state: X, kind: ControlKind, value: V["Other"], tag: T) => void;
+    pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
+    advice: (
+      state: state,
+      kind: ControlKind,
+      value: valuation["Other"],
+      tag: atom["Tag"],
+    ) => void;
   };
   /**
    * Called right before leaving any block regardless of how it terminated.
    */
   "block@teardown": {
-    pointcut: (kind: ControlKind, tag: T) => boolean;
-    advice: (state: X, kind: ControlKind, tag: T) => void;
+    pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
+    advice: (state: state, kind: ControlKind, tag: atom["Tag"]) => void;
   };
   /**
    * Called right before evaluating a break statement.
    */
   "break@before": {
-    pointcut: (label: Label, tag: T) => boolean;
-    advice: (state: X, label: Label, tag: T) => void;
+    pointcut: (label: atom["Label"], tag: atom["Tag"]) => boolean;
+    advice: (state: state, label: atom["Label"], tag: atom["Tag"]) => void;
   };
   /**
    * Called right before using a value as a boolean to branch the control flow.
    */
   "test@before": {
-    pointcut: (kind: TestKind, tag: T) => boolean;
-    advice: (state: X, kind: TestKind, value: V["Stack"], tag: T) => boolean;
+    pointcut: (kind: TestKind, tag: atom["Tag"]) => boolean;
+    advice: (
+      state: state,
+      kind: TestKind,
+      value: valuation["Stack"],
+      tag: atom["Tag"],
+    ) => boolean;
   };
   /**
    * Called right after an intrinsic value was read.
    */
   "intrinsic@after": {
-    pointcut: (name: Intrinsic, tag: T) => boolean;
+    pointcut: (name: Intrinsic, tag: atom["Tag"]) => boolean;
     advice: (
-      state: X,
+      state: state,
       name: Intrinsic,
-      value: V["Other"],
-      tag: T,
-    ) => V["Stack"];
+      value: valuation["Other"],
+      tag: atom["Tag"],
+    ) => valuation["Stack"];
   };
   /**
    * Called right after a primitive value was created.
    */
   "primitive@after": {
-    pointcut: (primitive: RuntimePrimitive, tag: T) => boolean;
+    pointcut: (primitive: RuntimePrimitive, tag: atom["Tag"]) => boolean;
     advice: (
-      state: X,
-      value: V["Other"] & RuntimePrimitive,
-      tag: T,
-    ) => V["Stack"];
+      state: state,
+      value: valuation["Other"] & RuntimePrimitive,
+      tag: atom["Tag"],
+    ) => valuation["Stack"];
   };
   /**
    * Called right after a value was imported from another module.
@@ -240,41 +274,44 @@ export type AspectTyping<T, X, V extends Valuation = Valuation> = {
     pointcut: (
       source: SourceValue,
       specifier: SpecifierName | SpecifierValue | null,
-      tag: T,
+      tag: atom["Tag"],
     ) => boolean;
     advice: (
-      state: X,
+      state: state,
       source: SourceValue,
       specifier: SpecifierName | SpecifierValue | null,
-      value: V["Other"],
-      tag: T,
-    ) => V["Stack"];
+      value: valuation["Other"],
+      tag: atom["Tag"],
+    ) => valuation["Stack"];
   };
   /**
    * Called right after a closure was created. We use the term 'closure' because
    * we reserve the term 'function' for actual regular functions.
    */
   "closure@after": {
-    pointcut: (kind: ClosureKind, tag: T) => boolean;
+    pointcut: (kind: ClosureKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: X,
+      state: state,
       kind: ClosureKind,
-      closure: V["Other"] & Function,
-      tag: T,
-    ) => V["Stack"];
+      closure: valuation["Other"] & Function,
+      tag: atom["Tag"],
+    ) => valuation["Stack"];
   };
   /**
    * Called right after a value was read from the current scope. The variable is
    * guaranteed to exist in the current scope.
    */
   "read@after": {
-    pointcut: (variable: Variable, tag: T) => boolean;
+    pointcut: (
+      variable: Parameter | atom["Variable"],
+      tag: atom["Tag"],
+    ) => boolean;
     advice: (
-      state: X,
-      variable: Variable,
-      value: V["Scope"],
-      tag: T,
-    ) => V["Stack"];
+      state: state,
+      variable: Parameter | atom["Variable"],
+      value: valuation["Scope"],
+      tag: atom["Tag"],
+    ) => valuation["Stack"];
   };
   /**
    * Called right before a value will be used as code to a direct eval call.
@@ -282,15 +319,23 @@ export type AspectTyping<T, X, V extends Valuation = Valuation> = {
    * this code will interact very poorly with the surrounding instrumented code.
    */
   "eval@before": {
-    pointcut: (tag: T) => boolean;
-    advice: (state: X, value: V["Stack"], tag: T) => string | V["Stack"];
+    pointcut: (tag: atom["Tag"]) => boolean;
+    advice: (
+      state: state,
+      value: valuation["Stack"],
+      tag: atom["Tag"],
+    ) => string | valuation["Stack"];
   };
   /**
    * Called right after returning from a direct eval call.
    */
   "eval@after": {
-    pointcut: (tag: T) => boolean;
-    advice: (state: X, value: V["Other"], tag: T) => V["Stack"];
+    pointcut: (tag: atom["Tag"]) => boolean;
+    advice: (
+      state: state,
+      value: valuation["Other"],
+      tag: atom["Tag"],
+    ) => valuation["Stack"];
   };
   /**
    * Called right before a value will be used as a promise in a `await`
@@ -298,42 +343,50 @@ export type AspectTyping<T, X, V extends Valuation = Valuation> = {
    * callstack will be stashed away.
    */
   "await@before": {
-    pointcut: (tag: T) => boolean;
-    advice: (state: X, value: V["Stack"], tag: T) => V["Other"];
+    pointcut: (tag: atom["Tag"]) => boolean;
+    advice: (
+      state: state,
+      value: valuation["Stack"],
+      tag: atom["Tag"],
+    ) => valuation["Other"];
   };
   /**
    * Called right after a promise used inside an `await` expression successfully
    * resolved. That is that the asynchronous closure stack will be restored.
    */
   "await@after": {
-    pointcut: (tag: T) => boolean;
-    advice: (state: X, value: V["Other"], tag: T) => V["Stack"];
+    pointcut: (tag: atom["Tag"]) => boolean;
+    advice: (
+      state: state,
+      value: valuation["Other"],
+      tag: atom["Tag"],
+    ) => valuation["Stack"];
   };
   /**
    * Called right before a value will be used as an item in a `yield`
    * expression. That is that the current call will be stashed away.
    */
   "yield@before": {
-    pointcut: (delegate: boolean, tag: T) => boolean;
+    pointcut: (delegate: boolean, tag: atom["Tag"]) => boolean;
     advice: (
-      state: X,
+      state: state,
       delegate: boolean,
-      value: V["Stack"],
-      tag: T,
-    ) => V["Other"];
+      value: valuation["Stack"],
+      tag: atom["Tag"],
+    ) => valuation["Other"];
   };
   /**
    * Called right after calling the `next` method of the iterator returned by a
    * generator. That is that the generator call will be restored.
    */
   "yield@after": {
-    pointcut: (delegate: boolean, tag: T) => boolean;
+    pointcut: (delegate: boolean, tag: atom["Tag"]) => boolean;
     advice: (
-      state: X,
+      state: state,
       delegate: boolean,
-      value: V["Other"],
-      tag: T,
-    ) => V["Stack"];
+      value: valuation["Other"],
+      tag: atom["Tag"],
+    ) => valuation["Stack"];
   };
   /**
    * Called right after a value will actually *not* be used. For instance an
@@ -341,82 +394,98 @@ export type AspectTyping<T, X, V extends Valuation = Valuation> = {
    * expression has no use.
    */
   "drop@before": {
-    pointcut: (tag: T) => boolean;
-    advice: (state: X, value: V["Stack"], tag: T) => V["Other"];
+    pointcut: (tag: atom["Tag"]) => boolean;
+    advice: (
+      state: state,
+      value: valuation["Stack"],
+      tag: atom["Tag"],
+    ) => valuation["Other"];
   };
   /**
    * Called right before a value will be exported from the current module.
    */
   "export@before": {
-    pointcut: (specifier: SpecifierName | SpecifierValue, tag: T) => boolean;
+    pointcut: (specifier: atom["Specifier"], tag: atom["Tag"]) => boolean;
     advice: (
-      state: X,
-      specifier: SpecifierName | SpecifierValue,
-      value: V["Stack"],
-      tag: T,
-    ) => V["Other"];
+      state: state,
+      specifier: atom["Specifier"],
+      value: valuation["Stack"],
+      tag: atom["Tag"],
+    ) => valuation["Other"];
   };
   /**
    * Called right before a value will be used to update the current scope. The
    * variable is guaranteed to exist in the current scope.
    */
   "write@before": {
-    pointcut: (variable: Variable, tag: T) => boolean;
+    pointcut: (
+      variable: Parameter | atom["Variable"],
+      tag: atom["Tag"],
+    ) => boolean;
     advice: (
-      state: X,
-      variable: Variable,
-      value: V["Stack"],
-      tag: T,
-    ) => V["Scope"];
+      state: state,
+      variable: Parameter | atom["Variable"],
+      value: valuation["Stack"],
+      tag: atom["Tag"],
+    ) => valuation["Scope"];
   };
   /**
    * Called in place of a closure regular call. The `this` argument has been
    * made explicit and the operation should be performed with `Reflect.apply`.
    */
   "apply@around": {
-    pointcut: (tag: T) => boolean;
+    pointcut: (tag: atom["Tag"]) => boolean;
     advice: (
-      state: X,
-      callee: V["Stack"],
-      this_: V["Stack"],
-      arguments_: V["Stack"][],
-      tag: T,
-    ) => V["Stack"];
+      state: state,
+      callee: valuation["Stack"],
+      this_: valuation["Stack"],
+      arguments_: valuation["Stack"][],
+      tag: atom["Tag"],
+    ) => valuation["Stack"];
   };
   /**
    * Called in place of a closure construct call. The operation should be
    * performed with `Reflect.construct`.
    */
   "construct@around": {
-    pointcut: (tag: T) => boolean;
+    pointcut: (tag: atom["Tag"]) => boolean;
     advice: (
-      state: X,
-      callee: V["Stack"],
-      arguments_: V["Stack"][],
-      tag: T,
-    ) => V["Stack"];
+      state: state,
+      callee: valuation["Stack"],
+      arguments_: valuation["Stack"][],
+      tag: atom["Tag"],
+    ) => valuation["Stack"];
   };
 };
 
 export type Kind = keyof AspectTyping<never, never, never>;
 
-export type Aspect<T, X, V extends Valuation = Valuation> = {
+export type Aspect<
+  state,
+  atom extends Atom = Atom,
+  valuation extends Valuation = Valuation,
+> = {
   [key in Kind]?:
     | null
     | undefined
-    | AspectTyping<T, X, V>[key]["advice"]
+    | AspectTyping<state, atom, valuation>[key]["advice"]
     | {
-        pointcut: boolean | AspectTyping<T, X, V>[key]["pointcut"];
-        advice: AspectTyping<T, X, V>[key]["advice"];
+        pointcut:
+          | boolean
+          | AspectTyping<state, atom, valuation>[key]["pointcut"];
+        advice: AspectTyping<state, atom, valuation>[key]["advice"];
       };
 };
 
-export type Advice<T, X, V extends Valuation = Valuation> = {
-  [key in Kind]?: null | undefined | AspectTyping<T, X, V>[key]["advice"];
-};
-
-export type NormalPointcut = {
-  [key in Kind]: AspectTyping<Tag, never, never>[key]["pointcut"];
+export type Advice<
+  state = unknown,
+  atom extends Atom = Atom,
+  valuation extends Valuation = Valuation,
+> = {
+  [key in Kind]?:
+    | null
+    | undefined
+    | AspectTyping<state, atom, valuation>[key]["advice"];
 };
 
 export type ObjectPointcut<T> = {
@@ -438,5 +507,3 @@ export type Pointcut<T> =
   | ArrowPointcut<T>
   | ArrayPointcut
   | ConstantPointcut;
-
-export type InternalPointcut = Pointcut<Tag>;
