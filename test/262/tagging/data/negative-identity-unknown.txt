@@ -2,28 +2,28 @@ built-ins/Array/prototype/concat/arg-length-near-integer-limit.js
 built-ins/Date/UTC/fp-evaluation-order.js
 built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js
 built-ins/Function/prototype/toString/built-in-function-object.js
-built-ins/Object/defineProperties/15.2.3.7-2-18.js
-built-ins/Object/defineProperties/15.2.3.7-6-a-24.js
+# built-ins/Object/defineProperties/15.2.3.7-2-18.js
+# built-ins/Object/defineProperties/15.2.3.7-6-a-24.js
 built-ins/Object/internals/DefineOwnProperty/consistent-value-function-arguments.js@none
 built-ins/Object/internals/DefineOwnProperty/consistent-value-function-caller.js@none
 language/eval-code/direct/non-definable-function-with-function.js
 language/eval-code/direct/non-definable-function-with-variable.js
-language/eval-code/direct/non-definable-global-function.js
-language/eval-code/direct/non-definable-global-generator.js
-language/eval-code/direct/var-env-func-init-global-new.js
+# language/eval-code/direct/non-definable-global-function.js
+# language/eval-code/direct/non-definable-global-generator.js
+# language/eval-code/direct/var-env-func-init-global-new.js
 language/eval-code/direct/var-env-func-init-global-update-configurable.js
-language/eval-code/direct/var-env-func-init-global-update-non-configurable.js
+# language/eval-code/direct/var-env-func-init-global-update-non-configurable.js
 language/eval-code/direct/var-env-var-init-global-exstng.js
-language/eval-code/direct/var-env-var-init-global-new.js
+# language/eval-code/direct/var-env-var-init-global-new.js
 language/eval-code/indirect/non-definable-function-with-function.js
 language/eval-code/indirect/non-definable-function-with-variable.js
-language/eval-code/indirect/non-definable-global-function.js
-language/eval-code/indirect/non-definable-global-generator.js
-language/eval-code/indirect/var-env-func-init-global-new.js
+# language/eval-code/indirect/non-definable-global-function.js
+# language/eval-code/indirect/non-definable-global-generator.js
+# language/eval-code/indirect/var-env-func-init-global-new.js
 language/eval-code/indirect/var-env-func-init-global-update-configurable.js
-language/eval-code/indirect/var-env-func-init-global-update-non-configurable.js
+# language/eval-code/indirect/var-env-func-init-global-update-non-configurable.js
 language/eval-code/indirect/var-env-var-init-global-exstng.js
-language/eval-code/indirect/var-env-var-init-global-new.js
+# language/eval-code/indirect/var-env-var-init-global-new.js
 language/expressions/assignment/S11.13.1_A5_T1.js
 language/expressions/assignment/S11.13.1_A5_T2.js
 language/expressions/assignment/S11.13.1_A5_T3.js
@@ -42,3 +42,6 @@ language/statements/generators/generator-created-after-decl-inst.js
 language/statements/variable/binding-resolution.js
 language/statements/with/unscopables-inc
 language/statements/with/unscopables-inc-dec.js
+
+# Regression by updating from 22.3 to 22.13
+intl402/Intl/getCanonicalLocales/unicode-ext-canonicalize-timezone.js

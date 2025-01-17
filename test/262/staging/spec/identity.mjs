@@ -23,6 +23,8 @@ const features = new Set([
   "RegExp.escape",
   "uint8array-base64",
   "source-phase-imports",
+  // regression from node 22.3 to node 22.13
+  "regexp-unicode-property-escapes",
 ]);
 
 /** @type {(feature: string) => boolean} */

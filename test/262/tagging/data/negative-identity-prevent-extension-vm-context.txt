@@ -1,5 +1,5 @@
 language/global-code/decl-func.js
-language/global-code/decl-var.js
+# language/global-code/decl-var.js
 language/global-code/script-decl-func-err-non-configurable.js
 language/global-code/script-decl-func-err-non-extensible.js
 language/global-code/script-decl-func.js
