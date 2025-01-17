@@ -1,3 +1,4 @@
+import { weaveStandard } from "../../../../lib";
 import { compileAran } from "../aran.mjs";
 
 /**
@@ -23,27 +24,33 @@ const { setup, trans, retro } = compileAran(
   toEvalPath,
 );
 
+const ADVICE_VARIABLE = "aran.advice";
+
+/**
+ * @type {import("../../../../lib").StandardWeaveConfig<
+ *   import("../../../../lib").Atom
+ * >}
+ */
+const conf = {
+  advice_variable: ADVICE_VARIABLE,
+  initial_state: null,
+  pointcut: false,
+};
+
 /**
  * @type {import("../stage").Stage}
  */
 export default {
-  precursor: ["parsing"],
-  negative: [
-    "module-literal-specifier",
-    "async-iterator-async-value",
-    "arguments-two-way-binding",
-    "function-dynamic-property",
-    "negative-bare-unknown",
-    "negative-bare-duplicate-super-prototype-access",
-    "negative-bare-early-module-declaration",
-    "negative-bare-missing-iterable-return-in-pattern",
-    "negative-bare-wrong-realm-for-default-prototype",
-  ],
-  exclude: ["function-string-representation"],
+  precursor: ["bare-main"],
+  negative: [],
+  exclude: [],
   listLateNegative: (_test, _error) => [],
   setup,
   instrument: ({ type, kind, path, content }) => ({
     path,
-    content: type === "main" ? retro(trans(path, kind, content)) : content,
+    content:
+      type === "main"
+        ? retro(weaveStandard(trans(path, kind, content), conf))
+        : content,
   }),
 };

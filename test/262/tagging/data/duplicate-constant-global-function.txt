@@ -1,0 +1,7 @@
+# function NaN () {}
+#   >> Early SyntaxError
+#   >> Identifier 'NaN' has already been declared
+# Aran convert `function NaN () {}` into `var NaN` which does not throw.
+
+language/eval-code/direct/non-definable-global-function.js
+language/eval-code/direct/non-definable-global-generator.js

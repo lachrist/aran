@@ -67,6 +67,7 @@ const main = async (argv) => {
 {
   const status = await main(argv.slice(2));
   if (status === "usage") {
+    stderr.write("USAGE\n");
     stderr.write(
       ">> node --experimental-vm-modules --expose-gc test/262/look.mjs <stage>\n",
     );

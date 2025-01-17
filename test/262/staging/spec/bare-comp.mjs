@@ -159,12 +159,15 @@ const compileFunctionCode = (input) => {
  * }}
  */
 const compileAdvice = (intrinsics) => {
+  const global = intrinsics["aran.global"];
   const globals = {
-    SyntaxError: intrinsics["aran.global"].SyntaxError,
-    eval: intrinsics["aran.global"].eval,
-    Function: intrinsics["aran.global"].Function,
+    apply: global.Reflect.apply,
+    construct: global.Reflect.construct,
+    SyntaxError: global.SyntaxError,
+    eval: global.eval,
+    Function: global.Function,
     evalScript: /** @type {{$262: import("../../$262").$262}} */ (
-      /** @type {unknown} */ (intrinsics["aran.global"])
+      /** @type {unknown} */ (global)
     ).$262.evalScript,
   };
   const syntax_error_mapping = {
@@ -200,7 +203,7 @@ const compileAdvice = (intrinsics) => {
           throw recreateError(error, syntax_error_mapping);
         }
       }
-      return intrinsics["Reflect.apply"](callee, that, input);
+      return globals.apply(callee, that, input);
     },
     construct: (callee, input, hash) => {
       if (callee === globals.Function) {
@@ -220,7 +223,7 @@ const compileAdvice = (intrinsics) => {
           throw recreateError(error, syntax_error_mapping);
         }
       }
-      return intrinsics["Reflect.construct"](callee, input, callee);
+      return globals.construct(callee, input, callee);
     },
   };
 };
@@ -606,7 +609,6 @@ const { setup, trans, retro } = compileAran(
 export default {
   precursor: ["parsing"],
   negative: [
-    "module-literal-specifier",
     "async-iterator-async-value",
     "arguments-two-way-binding",
     "function-dynamic-property",
@@ -616,7 +618,13 @@ export default {
     "negative-bare-missing-iterable-return-in-pattern",
     "negative-bare-wrong-realm-for-default-prototype",
   ],
-  exclude: ["function-string-representation"],
+  exclude: [
+    // function-string-representation is flaky
+    "function-string-representation",
+    // module-literal-specifier tests may pass because literal specifier are
+    // consistently replaced with undefined but they should be marked as failure.
+    "module-literal-specifier",
+  ],
   listLateNegative: (_test, _error) => [],
   setup: (context) => {
     const { intrinsics } = setup(context);
