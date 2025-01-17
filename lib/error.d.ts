@@ -64,11 +64,18 @@ export type ComplexSyntaxErrorCause = {
 
 export type SyntaxErrorCause = SimpleSyntaxErrorCause | ComplexSyntaxErrorCause;
 
-export type ClashErrorCause = {
-  name: "intrinsic_variable" | "advice_variable" | "escape_prefix";
-  base: VariableName;
-  meta: VariableName;
-};
+export type ClashErrorCause =
+  | {
+      type: "exact";
+      conf: "intrinsic_variable" | "advice_variable";
+      variable: VariableName;
+    }
+  | {
+      type: "prefix";
+      conf: "escape_prefix";
+      variable: VariableName;
+      prefix: string;
+    };
 
 /**
  * Signals that a join point has been cut multiple times when it was illegal.

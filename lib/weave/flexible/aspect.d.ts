@@ -1,4 +1,3 @@
-import type { VariableName } from "estree-sentry";
 import type {
   Atom,
   Node,
@@ -12,9 +11,6 @@ import type {
 } from "../../lang/syntax";
 import type { Json } from "../../util/util";
 import type { ValueOf } from "../../util/util";
-import type { ArgAtom } from "../atom";
-
-export type GlobalAdviceVariable = string;
 
 export type Block<A extends Atom> = SegmentBlock<A> | RoutineBlock<A>;
 
@@ -169,16 +165,6 @@ export type AspectElement<
   };
 }>;
 
-export type PointcutEntry<atom extends Atom, kind extends AspectKind> = [
-  VariableName,
-  {
-    kind: kind;
-    pointcut: AspectTyping<atom, never, never, Json[]>[kind]["pointcut"];
-  },
-];
-
-export type InternalPointcutEntry = PointcutEntry<ArgAtom, AspectKind>;
-
 export type AdviceElement<
   atom extends Atom,
   state,
@@ -198,8 +184,11 @@ export type HomogeneousAdvice<
   point extends Json[],
 > = AdviceElement<atom, state, value, point>[];
 
-export type Pointcut<atom extends Atom> = {
-  [variable: GlobalAdviceVariable]: ValueOf<{
+export type Pointcut<
+  atom extends Atom = Atom,
+  global_variable extends string = string,
+> = {
+  [variable in global_variable]: ValueOf<{
     [kind in AspectKind]: {
       kind: kind;
       pointcut: AspectTyping<atom, never, never, Json[]>[kind]["pointcut"];
@@ -207,38 +196,22 @@ export type Pointcut<atom extends Atom> = {
   }>;
 };
 
-export type InternalPointcut = Pointcut<ArgAtom>;
-
-export type OptimalPointcut = {
-  [kind in AspectKind]: [
-    VariableName,
-    AspectTyping<ArgAtom, never, never, Json[]>[kind]["pointcut"],
-  ][];
-};
-
-export type OptimalPointcutEntry<kind extends AspectKind> = [
-  VariableName,
-  AspectTyping<ArgAtom, never, never, Json[]>[kind]["pointcut"],
-];
-
 export type HomogeneousAspect<
-  atom extends Atom,
-  state,
-  value,
-  point extends Json[],
+  atom extends Atom = Atom,
+  state = unknown,
+  value = unknown,
+  point extends Json[] = Json[],
+  global_variable extends string = string,
 > = {
-  [variable: GlobalAdviceVariable]: AspectElement<atom, state, value, point>;
+  [variable in global_variable]: AspectElement<atom, state, value, point>;
 };
 
 export type HeterogeneousAspect<
-  atom extends Atom,
-  state,
-  value,
-  point extends { [variable: GlobalAdviceVariable]: Json[] },
+  atom extends Atom = Atom,
+  state = unknown,
+  value = unknown,
+  point extends { [variable in global_variable]: Json[] } = any,
+  global_variable extends string = string,
 > = {
   [variable in keyof point]: AspectElement<atom, state, value, point[variable]>;
-};
-
-export type Aspect<atom extends Atom, state, value> = {
-  [variable: GlobalAdviceVariable]: AspectElement<atom, state, value, any>;
 };

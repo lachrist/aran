@@ -5,14 +5,20 @@ import type { Pointcut as StandardPointcut } from "./weave/standard/aspect";
 import type { Pointcut as FlexiblePointcut } from "./weave/flexible/aspect";
 import type { Atom } from "./lang/syntax";
 
-export type StandardConfig<P, H extends string | number> = TransConfig<P, H> &
+type HashAtom = Atom & { Tag: string | number };
+
+export type StandardConfig<
+  atom extends HashAtom = HashAtom,
+  file_path = unknown,
+  global_variable extends string = string,
+> = TransConfig<file_path, atom["Tag"]> &
   RetroConfig<string> & {
     /**
      * The global variable that refers to the advice object for standard weaving.
      * Make sure it does not clash with other global variables.
      * @defaultValue `"_ARAN_ADVICE_"`
      */
-    advice_variable: string;
+    advice_variable: global_variable;
     /**
      * The initial state passed to advice functions. It will be cloned with JSON
      * serialization.
@@ -24,14 +30,14 @@ export type StandardConfig<P, H extends string | number> = TransConfig<P, H> &
      * `flexible_pointcut` should be defined but not both.
      * @defaultValue `false`
      */
-    pointcut: StandardPointcut<H>;
+    pointcut: StandardPointcut<atom>;
   };
 
 export type FlexibleConfig<
-  P,
-  H extends string | number,
-  A extends Atom & { Tag: H },
-> = TransConfig<P, H> &
+  atom extends HashAtom = HashAtom,
+  file_path = unknown,
+  global_variable extends string = string,
+> = TransConfig<file_path, atom["Tag"]> &
   RetroConfig<string> & {
     /**
      * The initial state passed to advice functions. It will be cloned with JSON
@@ -44,5 +50,5 @@ export type FlexibleConfig<
      * `flexible_pointcut` should be defined but not both.
      * @defaultValue `false`
      */
-    pointcut: FlexiblePointcut<A>;
+    pointcut: FlexiblePointcut<atom, global_variable>;
   };

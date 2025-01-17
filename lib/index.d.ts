@@ -17,8 +17,8 @@ import type {
   SegmentKind,
   ProgramKind,
 } from "./weave/parametrization";
-import type { ExternalConfig as SetupConfig } from "./setup";
-import type { ExternalConfig as RetroConfig } from "./retro/config";
+import type { Config as SetupConfig } from "./setup";
+import type { Config as RetroConfig } from "./retro/config";
 import type { File, Config as TransConfig } from "./trans/config";
 import type { Config as StandardWeaveConfig } from "./weave/standard/config";
 import type { Config as FlexibleWeaveConfig } from "./weave/flexible/config";
@@ -80,7 +80,6 @@ export type {
 
 export type {
   Pointcut as FlexiblePointcut,
-  Aspect as FlexibleAspect,
   HeterogeneousAspect as HeterogeneousFlexibleAspect,
   HomogeneousAspect as HomogeneousFlexibleAspect,
 } from "./weave/flexible/aspect.d.ts";
@@ -167,13 +166,14 @@ export class AranPointcutError extends Error {
  * Generates a `estree.Program` that should be executed before executing any
  * instrumented code. In the standalone mode, the setup code is bundled with the
  * instrumented code and this function should not be used.
+ * @template global_variable The branded type for global variables.
  * @param conf The configuration of the setup program.
  * @returns The setup script program. Can be passed to an estree code generator
  * such as `astring`.
  * @throws {@link AranInputError} If the configuration is invalid.
  */
-export const generateSetup: (
-  conf?: Partial<SetupConfig>,
+export const generateSetup: <global_variable extends string = string>(
+  conf?: Partial<SetupConfig<global_variable>>,
 ) => EstreeScriptProgram<{}>;
 
 ///////////////
@@ -206,17 +206,30 @@ export const transpile: <
 // Weave //
 ///////////
 
+type SerialAtom = Atom & { Tag: Json };
+
 /**
  * Insert calls to advice functions in an Aran program with the standard API.
- * @template T The type of node tags.
+ * @template tag The type of node tags.
+ * @template arg_atom The branded types for the AST leafs of the input program.
+ * @template res_atom The branded types for the AST leafs of the output program.
+ * @template global_variable The branded type for global variables.
  * @param root The Aran program to weave.
  * @param conf Weaving configuration object.
  * @returns The woven program.
  */
-export const weaveStandard: <T extends Json, A extends Atom & { Tag: T }>(
-  root: Program<Atom & { Tag: T }>,
-  conf?: null | undefined | Partial<StandardWeaveConfig<T, A["Variable"]>>,
-) => Program<A>;
+export const weaveStandard: <
+  tag extends Json = Json,
+  arg_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
+  res_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
+  global_variable extends string = string,
+>(
+  root: Program<arg_atom>,
+  conf?:
+    | null
+    | undefined
+    | Partial<StandardWeaveConfig<arg_atom, global_variable>>,
+) => Program<res_atom>;
 
 /**
  * Insert calls to advice functions in an Aran program with the flexible API.
@@ -284,11 +297,14 @@ export const retropile: (
 // Instrument //
 ////////////////
 
+type HashAtom = Atom & { Tag: string | number };
+
 /**
  * Instrument a parsed JavaScript program. It chains `transpile`,
  * `weaveStandard` or `weaveFlexible`, and `retropile`.
- * @template P The type of `file.path`.
- * @template H The type of node hashes as returned by `conf.digest`.
+ * @template atom The branded types for the leafs of the output program.
+ * @template global_variable The branded type for global variables.
+ * @template file_path The type of `file.path`.
  * @param file The parsed JavaScript program to instrument.
  * @param conf Instrumentation options.
  * @returns The instrumented program along with warnings. Can be fed to a estree
@@ -304,12 +320,15 @@ export const retropile: (
  * pointcut.
  */
 export const instrument: <
-  P,
-  H extends number | string,
-  A extends Atom & { Tag: H },
+  atom extends HashAtom = HashAtom,
+  global_variable extends string = string,
+  file_path = unknown,
 >(
-  file: Partial<File<P>>,
-  conf?: null | undefined | Partial<InstrumentConfig<P, H, A>>,
+  file: Partial<File<file_path>>,
+  conf?:
+    | null
+    | undefined
+    | Partial<InstrumentConfig<atom, global_variable, file_path>>,
 ) => EstreeProgram<{}> & {
   _aran_warning_array: RawWarning[];
 };

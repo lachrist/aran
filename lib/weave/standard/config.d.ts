@@ -2,11 +2,17 @@ import type { Pointcut } from "./aspect";
 import type { Json } from "../../util/util";
 import type { ArgAtom } from "../atom";
 import type { Atom } from "../../lang/syntax";
+import type { VariableName } from "estree-sentry";
+
+type SerialAtom = Atom & { Tag: Json };
 
 /**
  * Configuration object for standard weaving.
  */
-export type Config<atom extends Atom = Atom> = {
+export type Config<
+  atom extends SerialAtom = SerialAtom,
+  global_variable extends string = string,
+> = {
   /**
    * The initial state passed to advice functions. It will be cloned with JSON
    * serialization.
@@ -23,7 +29,7 @@ export type Config<atom extends Atom = Atom> = {
    * Make sure it does not clash with other global variables.
    * @defaultValue `"_ARAN_ADVICE_"`
    */
-  advice_variable: atom["Variable"];
+  advice_variable: global_variable;
 };
 
-export type InternalConfig = Config<ArgAtom>;
+export type InternalConfig = Config<ArgAtom, VariableName>;
