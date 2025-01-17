@@ -19,9 +19,9 @@ export type Kind =
   | "function-strict"
   | "function-sloppy-near"
   | "function-sloppy-away"
-  | "error"
+  | "error-complex"
   | "error-simple"
-  | "param"
+  | "param-complex"
   | "param-simple";
 
 export type Clash = "ignore" | "report" | "remove";
