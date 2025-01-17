@@ -20,7 +20,7 @@ import type {
 import type { ExternalConfig as SetupConfig } from "./setup";
 import type { ExternalConfig as RetroConfig } from "./retro/config";
 import type { File, Config as TransConfig } from "./trans/config";
-import type { ExternalConfig as StandardWeaveConfig } from "./weave/standard/config";
+import type { Config as StandardWeaveConfig } from "./weave/standard/config";
 import type { Config as FlexibleWeaveConfig } from "./weave/flexible/config";
 import type { ExternalConfig as InstrumentConfig } from "./instrument";
 
@@ -52,8 +52,8 @@ export type {
   Statement as AranStatement,
   Effect as AranEffect,
   Expression as AranExpression,
-  Primitive as AranPrimitive,
-  RuntimePrimitive as AranRuntimePrimitve,
+  SyntaxPrimitive as AranSyntaxPrimitive,
+  RuntimePrimitive as AranPrimitive,
   IntrinsicRecord as AranIntrinsicRecord,
   RegularIntrinsicRcord as AranRegularIntrinsicRecord,
   AccessorIntrinsicRecord as AranAccessorIntrinsicRecord,
@@ -63,6 +63,7 @@ export type {
 } from "./lang/syntax";
 
 export {
+  GeneratorKind as AranGeneratorKind,
   ProgramKind as AranProgramKind,
   ClosureKind as AranClosureKind,
   SegmentKind as AranSegmentKind,
@@ -70,9 +71,11 @@ export {
 } from "./weave/parametrization";
 
 export type {
+  TestKind as AranTestKind,
   Pointcut as StandardPointcut,
   Aspect as StandardAspect,
   Advice as StandardAdvice,
+  CompleteAdvice as CompleteStandardAdvice,
 } from "./weave/standard/aspect.d.ts";
 
 export type {
@@ -212,7 +215,7 @@ export const transpile: <
  */
 export const weaveStandard: <T extends Json, A extends Atom & { Tag: T }>(
   root: Program<Atom & { Tag: T }>,
-  conf?: null | undefined | Partial<StandardWeaveConfig<T>>,
+  conf?: null | undefined | Partial<StandardWeaveConfig<T, A["Variable"]>>,
 ) => Program<A>;
 
 /**

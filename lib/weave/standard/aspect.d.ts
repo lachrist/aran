@@ -1,9 +1,9 @@
-import type { SourceValue, SpecifierValue, SpecifierName } from "estree-sentry";
 import type { DeclareHeader, ModuleHeader } from "../../lang/header";
 import type {
   Atom,
   Intrinsic,
   Parameter,
+  Program,
   RuntimePrimitive,
 } from "../../lang/syntax";
 import type { ValueOf } from "../../util/util";
@@ -263,7 +263,7 @@ export type AspectTyping<
     pointcut: (primitive: RuntimePrimitive, tag: atom["Tag"]) => boolean;
     advice: (
       state: state,
-      value: valuation["Other"] & RuntimePrimitive,
+      value: RuntimePrimitive,
       tag: atom["Tag"],
     ) => valuation["Stack"];
   };
@@ -272,14 +272,14 @@ export type AspectTyping<
    */
   "import@after": {
     pointcut: (
-      source: SourceValue,
-      specifier: SpecifierName | SpecifierValue | null,
+      source: atom["Source"],
+      specifier: atom["Specifier"] | null,
       tag: atom["Tag"],
     ) => boolean;
     advice: (
       state: state,
-      source: SourceValue,
-      specifier: SpecifierName | SpecifierValue | null,
+      source: atom["Source"],
+      specifier: atom["Specifier"] | null,
       value: valuation["Other"],
       tag: atom["Tag"],
     ) => valuation["Stack"];
@@ -324,7 +324,7 @@ export type AspectTyping<
       state: state,
       value: valuation["Stack"],
       tag: atom["Tag"],
-    ) => string | valuation["Stack"];
+    ) => Program<Atom> & { kind: "eval"; situ: "local.deep" };
   };
   /**
    * Called right after returning from a direct eval call.
@@ -488,12 +488,20 @@ export type Advice<
     | AspectTyping<state, atom, valuation>[key]["advice"];
 };
 
-export type ObjectPointcut<T> = {
+export type CompleteAdvice<
+  state = unknown,
+  atom extends Atom = Atom,
+  valuation extends Valuation = Valuation,
+> = {
+  [key in Kind]: AspectTyping<state, atom, valuation>[key]["advice"];
+};
+
+export type ObjectPointcut<atom extends Atom = Atom> = {
   [key in Kind]?:
     | null
     | undefined
     | boolean
-    | AspectTyping<T, never, never>[key]["pointcut"];
+    | AspectTyping<never, atom, never>[key]["pointcut"];
 };
 
 export type ConstantPointcut = boolean;
@@ -502,8 +510,8 @@ export type ArrayPointcut = Kind[];
 
 export type ArrowPointcut<T> = (kind: Kind, tag: T) => boolean;
 
-export type Pointcut<T> =
-  | ObjectPointcut<T>
-  | ArrowPointcut<T>
+export type Pointcut<atom extends Atom = Atom> =
+  | ObjectPointcut<atom>
+  | ArrowPointcut<atom["Tag"]>
   | ArrayPointcut
   | ConstantPointcut;
