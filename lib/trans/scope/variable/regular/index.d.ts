@@ -6,7 +6,7 @@ import type {
 } from "estree-sentry";
 import type { ConstantMetaVariable } from "../../../variable";
 import type { Tree } from "../../../../util/tree";
-import type { Frame } from "../../../annotation/hoisting";
+import type { Kind } from "../../../annotation/hoisting";
 import type { Link } from "../../../query/link";
 
 export type Write = "perform" | "ignore" | "report";
@@ -58,7 +58,7 @@ export type RegularFrame = {
 // But that does not work because we initialize bindings twice in switches.
 
 export type RawRegularFrame = {
-  frame: Frame;
+  bindings: [VariableName, Kind[]][];
   schrodinger: boolean;
   links: Link[];
 };

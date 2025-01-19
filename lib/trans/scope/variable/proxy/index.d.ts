@@ -6,7 +6,10 @@
 
 import type { VariableName } from "estree-sentry";
 import type { WritableCache } from "../../../cache";
-import type { Binding as RawBinding } from "../../../annotation/hoisting";
+import type { Kind } from "../../../annotation/hoisting";
+
+export type SelfKind = Kind &
+  ("function-self-sloppy" | "function-self-strict" | "class-self");
 
 export type Write = "report" | "ignore" | "perform";
 
@@ -21,9 +24,9 @@ export type Binding = {
 
 export type ProxyFrame = {
   type: "proxy";
-  record: { [k in VariableName]?: Binding };
+  record: { [key in VariableName]?: Binding };
 };
 
 export type RawProxyFrame = {
-  bindings: { proxy: WritableCache; binding: RawBinding }[];
+  bindings: [VariableName, { proxy: WritableCache; kind: SelfKind }][];
 };
