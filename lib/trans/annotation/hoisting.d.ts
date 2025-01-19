@@ -75,6 +75,8 @@ export type Frame = {
   [key in VariableName]?: Kind[];
 };
 
+export type FrameEntry = [VariableName, Kind[]];
+
 export type Hoisting = {
   [key in Hash]?: Frame;
 };
