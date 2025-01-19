@@ -12,8 +12,19 @@ import type { WritableMetaVariable } from "../../../variable";
 import type { Tree } from "../../../../util/tree";
 import type { RootSort, Sort } from "../../../sort";
 import type { Mode } from "../../../mode";
-import type { Binding as RawBinding } from "../../../annotation/hoisting";
+import type { Kind } from "../../../annotation/hoisting";
 import type { GlobalDeclarativeRecord } from "../../../config";
+
+export type RootKind = Kind &
+  (
+    | "var"
+    | "let"
+    | "const"
+    | "class"
+    | "function-strict"
+    | "function-sloppy-away"
+    | "function-sloppy-near"
+  );
 
 export type Write = "perform" | "report";
 
@@ -80,5 +91,5 @@ export type RootBind = AlienBind | ReifyBind;
 export type RawRootFrame = {
   sort: Sort;
   global_declarative_record: GlobalDeclarativeRecord;
-  bindings: RawBinding[];
+  bindings: [VariableName, RootKind[]][];
 };

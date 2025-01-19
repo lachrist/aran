@@ -14,6 +14,7 @@ import type { Meta } from "../../meta";
 import type { Sequence } from "../../../util/sequence";
 import type { Hash } from "../../hash";
 import type { MetaDeclarationPrelude, PrefixPrelude } from "../../prelude";
+import type { Kind } from "../../annotation/hoisting";
 
 export type ClosureFrame = {
   type: "closure";
@@ -82,8 +83,10 @@ export type VariableOperation = {
   mode: Mode;
 };
 
+export type LateDeclareKind = Kind & ("var" | "function-sloppy-away");
+
 export type LateDeclareVariableOperation = VariableOperation & {
-  conflict: "ignore" | "report";
+  kinds: LateDeclareKind[];
 };
 
 export type AssignVariableOperation = VariableOperation & {

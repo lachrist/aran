@@ -2,7 +2,7 @@ import type { VariableName } from "estree-sentry";
 import type { Hash } from "../hash";
 
 export type ReifyExternal = {
-  frame: "aran.global" | "aran.record";
+  conflict_with_global_constant: boolean;
   variable: VariableName;
   origin: Hash;
 };
