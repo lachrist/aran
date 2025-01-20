@@ -72,10 +72,10 @@ export type BindingItem = {
 export type BindingTree = Tree<BindingItem>;
 
 export type Frame = {
-  [key in VariableName]?: Kind[];
+  [key in VariableName]?: [Kind, ...Kind[]];
 };
 
-export type FrameEntry = [VariableName, Kind[]];
+export type FrameEntry = [VariableName, [Kind, ...Kind[]]];
 
 export type Hoisting = {
   [key in Hash]?: Frame;
