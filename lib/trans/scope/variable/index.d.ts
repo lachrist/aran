@@ -83,7 +83,8 @@ export type VariableOperation = {
   mode: Mode;
 };
 
-export type LateDeclareKind = Kind & ("var" | "function-sloppy-away");
+export type LateDeclareKind = Kind &
+  ("var" | "function-sloppy-away" | "function-sloppy-near");
 
 export type LateDeclareVariableOperation = VariableOperation & {
   kinds: LateDeclareKind[];
