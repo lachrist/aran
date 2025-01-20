@@ -12,6 +12,7 @@ export type Kind =
   | "arguments"
   | "function-self-strict"
   | "function-self-sloppy"
+  // Also async and generator!
   | "function-strict"
   | "function-sloppy-near"
   | "function-sloppy-away"
@@ -51,7 +52,9 @@ export type ModuleKind = Kind &
 
 export type ScriptKind = Kind & never;
 
-export type SloppyEvalKind = Kind & ("let" | "const" | "class");
+// Capture function-strict because it also labels async and generators.
+export type SloppyEvalKind = Kind &
+  ("let" | "const" | "class" | "function-strict");
 
 export type StrictEvalKind = Kind &
   ("var" | "let" | "const" | "class" | "function-strict");
