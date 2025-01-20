@@ -74,6 +74,9 @@ export const compileAran = (config, toEvalPath) => {
       };
       intrinsics["aran.retropileEval"] = (root) => {
         try {
+          // const code = generate(retropile(root, config));
+          // console.log(code);
+          // return code;
           return generate(retropile(root, config));
         } catch (error) {
           throw new AranTestError(error);
