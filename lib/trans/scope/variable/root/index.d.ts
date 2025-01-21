@@ -10,7 +10,7 @@
 import type { VariableName } from "estree-sentry";
 import type { WritableMetaVariable } from "../../../variable";
 import type { Tree } from "../../../../util/tree";
-import type { RootSort } from "../../../sort";
+import type { RootSort, Sort } from "../../../sort";
 import type { Mode } from "../../../mode";
 import type { Kind } from "../../../annotation/hoisting";
 import type { GlobalDeclarativeRecord } from "../../../config";
@@ -85,6 +85,7 @@ export type ReifyBind = {
 export type RootBind = AlienBind | ReifyBind;
 
 export type RawRootFrame = {
+  sort: Sort;
   global_declarative_record: GlobalDeclarativeRecord;
   bindings: [VariableName, RootKind[]][];
 };
