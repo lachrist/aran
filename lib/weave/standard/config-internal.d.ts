@@ -1,5 +1,6 @@
 import type { Config } from "./config";
 import type { ArgAtom } from "../atom";
-import type { GlobalPropertyKey } from "../../global_property_key";
+import type { Json } from "../../util/util";
+import type { VariableName } from "estree-sentry";
 
-export type InternalConfig = Config<ArgAtom, GlobalPropertyKey>;
+export type InternalConfig = Config<Json, ArgAtom, VariableName>;

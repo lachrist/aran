@@ -1,10 +1,7 @@
 /**
  * Configuration object for `setup`.
  */
-export type Config<
-  javascript_identifier extends string = string,
-  global_property_key extends string = string,
-> = {
+export type Config<javascript_identifier extends string = string> = {
   /**
    * The global variable that refer to the global object. Only change this if
    * `globalThis` do not refer to the global object for some reason. Must be a
@@ -17,5 +14,5 @@ export type Config<
    * string.
    * @defaultValue `"_ARAN_INTRINSIC_"`
    */
-  intrinsic_global_variable: global_property_key;
+  intrinsic_global_variable: javascript_identifier;
 };

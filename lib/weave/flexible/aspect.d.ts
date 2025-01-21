@@ -152,66 +152,45 @@ export type AspectTyping<
 
 export type AspectKind = keyof AspectTyping<never, never, never, never>;
 
-export type AspectElement<
+export type Aspect<
   atom extends Atom,
-  state,
-  value,
-  point extends Json[],
-> = ValueOf<{
-  [key in AspectKind]: {
-    kind: key;
-    pointcut: AspectTyping<atom, state, value, point>[key]["pointcut"];
-    advice: AspectTyping<atom, state, value, point>[key]["advice"];
-  };
-}>;
-
-export type AdviceElement<
-  atom extends Atom,
-  state,
-  value,
-  point extends Json[],
-> = ValueOf<{
-  [kind in AspectKind]: {
-    kind: kind;
-    advice: AspectTyping<atom, state, value, point>[kind]["advice"];
-  };
-}>;
-
-export type HomogeneousAdvice<
-  atom extends Atom,
-  state,
-  value,
-  point extends Json[],
-> = AdviceElement<atom, state, value, point>[];
-
-export type Pointcut<
-  atom extends Atom = Atom,
-  global_property_key extends string = string,
+  state = unknown,
+  value = unknown,
+  point extends Json[] = Json[],
+  javascript_identifier extends string = string,
 > = {
-  [variable in global_property_key]: ValueOf<{
+  [name in javascript_identifier]: ValueOf<{
     [kind in AspectKind]: {
       kind: kind;
-      pointcut: AspectTyping<atom, never, never, Json[]>[kind]["pointcut"];
+      pointcut: AspectTyping<atom, state, value, point>[kind]["pointcut"];
+      advice: AspectTyping<atom, state, value, point>[kind]["advice"];
     };
   }>;
 };
 
-export type HomogeneousAspect<
-  atom extends Atom = Atom,
+export type Pointcut<
+  atom extends Atom,
+  point extends Json[] = Json[],
+  javascript_identifier extends string = string,
+> = {
+  [name in javascript_identifier]: ValueOf<{
+    [kind in AspectKind]: {
+      kind: kind;
+      pointcut: AspectTyping<atom, never, never, point>[kind]["pointcut"];
+    };
+  }>;
+};
+
+export type Advice<
   state = unknown,
   value = unknown,
   point extends Json[] = Json[],
-  global_property_key extends string = string,
+  javascript_identifier extends string = string,
 > = {
-  [variable in global_property_key]: AspectElement<atom, state, value, point>;
-};
-
-export type HeterogeneousAspect<
-  atom extends Atom = Atom,
-  state = unknown,
-  value = unknown,
-  point extends { [variable in global_property_key]: Json[] } = any,
-  global_property_key extends string = string,
-> = {
-  [variable in keyof point]: AspectElement<atom, state, value, point[variable]>;
+  [name in javascript_identifier]: ValueOf<{
+    [kind in AspectKind]: {
+      kind: kind;
+      advice: AspectTyping<never, state, value, point>[kind]["advice"];
+    };
+  }>;
 };

@@ -1,6 +1,6 @@
-import type { VariableName } from "estree-sentry";
 import type { ClosureKind, SegmentKind, ProgramKind } from "../parametrization";
 import type { Json } from "../../util/util";
+import type { VariableName } from "estree-sentry";
 
 export type ProgramParent = {
   type: "program";

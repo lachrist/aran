@@ -1,26 +1,20 @@
 import type { VariableName } from "estree-sentry";
-import type { Json } from "../../util/util";
+import type { Json, ValueOf } from "../../util/util";
 import type { ArgAtom } from "../atom";
-import type {
-  AspectKind,
-  AspectTyping,
-  Pointcut as GenericPointcut,
-} from "./aspect";
+import type { AspectKind, AspectTyping } from "./aspect";
 
-export type PointcutEntry = [
-  VariableName,
-  {
-    kind: AspectKind;
-    pointcut: AspectTyping<
-      ArgAtom,
-      never,
-      never,
-      Json[]
-    >[AspectKind]["pointcut"];
-  },
-];
+export type PointcutValue = ValueOf<{
+  [kind in AspectKind]: {
+    kind: kind;
+    pointcut: AspectTyping<ArgAtom, never, never, Json[]>[kind]["pointcut"];
+  };
+}>;
 
-export type Pointcut = GenericPointcut<ArgAtom, VariableName>;
+export type Pointcut = {
+  [name in VariableName]: PointcutValue;
+};
+
+export type PointcutEntry = [VariableName, PointcutValue];
 
 export type OptimalPointcut = {
   [kind in AspectKind]: [

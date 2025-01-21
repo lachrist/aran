@@ -8,15 +8,16 @@ type SerialAtom = Atom & { Tag: Json };
  * Configuration object for standard weaving.
  */
 export type Config<
+  state extends Json = Json,
   atom extends SerialAtom = SerialAtom,
-  global_property_key extends string = string,
+  javascript_identifier extends string = string,
 > = {
   /**
    * The initial state passed to advice functions. It will be cloned with JSON
    * serialization.
    * @defaultValue `null`
    */
-  initial_state: Json;
+  initial_state: state;
   /**
    * The pointcut for the standard weaving API.
    * @defaultValue `false`
@@ -27,5 +28,5 @@ export type Config<
    * Make sure it does not clash with other global variables.
    * @defaultValue `"_ARAN_ADVICE_"`
    */
-  advice_global_variable: global_property_key;
+  advice_global_variable: javascript_identifier;
 };

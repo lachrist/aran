@@ -42,7 +42,7 @@ import type { Config as RetroConfig } from "./retro/config";
 import type { File, Config as TransConfig } from "./trans/config";
 import type { Config as StandardWeaveConfig } from "./weave/standard/config";
 import type { Config as FlexibleWeaveConfig } from "./weave/flexible/config";
-import type { ExternalConfig as InstrumentConfig } from "./instrument";
+import type { Config as InstrumentConfig } from "./instrument";
 import type { Digest, LooseEstreeProgram } from "./trans/config";
 import type {
   Situ,
@@ -67,9 +67,9 @@ import type {
 import type {
   AspectTyping as FlexibleAspectTyping,
   AspectKind as FlexibleAspectKind,
+  Aspect as FlexibleAspect,
   Pointcut as FlexiblePointcut,
-  HeterogeneousAspect as HeterogeneousFlexibleAspect,
-  HomogeneousAspect as HomogeneousFlexibleAspect,
+  Advice as FlexibleAdvice,
 } from "./weave/flexible/aspect";
 
 export {
@@ -135,8 +135,8 @@ export {
   StandardAspectTyping,
   FlexibleAspectTyping,
   FlexiblePointcut,
-  HeterogeneousFlexibleAspect,
-  HomogeneousFlexibleAspect,
+  FlexibleAspect,
+  FlexibleAdvice,
 };
 
 ///////////
@@ -208,14 +208,13 @@ export class AranPointcutError extends Error {
  * Generates a `estree.Program` that should be executed before executing any
  * instrumented code. In the standalone mode, the setup code is bundled with the
  * instrumented code and this function should not be used.
- * @template global_variable The branded type for global variables.
  * @param conf Setup generation options.
  * @returns The setup script program. Can be passed to an estree code generator
  * such as `astring`.
  * @throws {@link AranInputError} If the configuration is invalid.
  */
-export const generateSetup: <global_variable extends string = string>(
-  conf?: Partial<SetupConfig<global_variable>>,
+export const generateSetup: (
+  conf?: Partial<SetupConfig<string>>,
 ) => EstreeProgram<null> & { sourceType: "script" };
 
 ///////////////
@@ -243,7 +242,7 @@ export const transpile: <
 >(
   file: Partial<File<path>>,
   conf?: null | undefined | Partial<TransConfig<hash, path>>,
-) => Program<atom> & { _aran_warning_array: Warning[] };
+) => Program<atom> & { warnings: Warning[] };
 
 ///////////
 // Weave //
@@ -254,7 +253,6 @@ export const transpile: <
  * @template tag The type of node tags.
  * @template arg_atom The branded types for the AST leafs of the input program.
  * @template res_atom The branded types for the AST leafs of the output program.
- * @template global_variable The branded type for global variables.
  * @param root The Aran program to weave.
  * @param conf Standard weaving options.
  * @returns The woven program.
@@ -265,13 +263,12 @@ export const weaveStandard: <
   tag extends Json = Json,
   arg_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
   res_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
-  global_variable extends string = string,
 >(
   root: Program<arg_atom>,
   conf?:
     | null
     | undefined
-    | Partial<StandardWeaveConfig<arg_atom, global_variable>>,
+    | Partial<StandardWeaveConfig<Json, arg_atom, string>>,
 ) => Program<res_atom>;
 
 /**
@@ -279,7 +276,6 @@ export const weaveStandard: <
  * @template tag The type of node tags.
  * @template arg_atom The branded types for the AST leafs of the input program.
  * @template res_atom The branded types for the AST leafs of the output program.
- * @template global_variable The branded type for global variables.
  * @param root The Aran program to weave.
  * @param conf Flexible weaving options.
  * @returns The woven program.
@@ -290,13 +286,12 @@ export const weaveFlexible: <
   tag = unknown,
   arg_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
   res_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
-  global_variable extends string = string,
 >(
   root: Program<arg_atom>,
   conf?:
     | null
     | undefined
-    | Partial<FlexibleWeaveConfig<arg_atom, global_variable>>,
+    | Partial<FlexibleWeaveConfig<Json, arg_atom, string, Json[]>>,
 ) => Program<res_atom>;
 
 ///////////////
@@ -345,13 +340,7 @@ export const instrument: <path = string>(
     | null
     | undefined
     | Partial<
-        InstrumentConfig<
-          Json,
-          Atom & { Tag: string | number },
-          string,
-          string,
-          path
-        >
+        InstrumentConfig<Json, Atom & { Tag: string | number }, string, path>
       >,
 ) => EstreeProgram<{}> & {
   warnings: Warning[];

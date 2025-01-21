@@ -14,9 +14,9 @@ const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 const { setup, trans, retro } = compileAran(
   {
     mode: "normal",
-    escape_prefix: "__aran__",
+    escape_prefix: "$aran",
     global_object_variable: "globalThis",
-    intrinsic_global_variable: "__intrinsic__",
+    intrinsic_global_variable: "__aran_intrinsic__",
     global_declarative_record: "builtin",
     digest,
   },

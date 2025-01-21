@@ -1,15 +1,13 @@
 import type { VariableName } from "estree-sentry";
 import type { ArgAtom } from "./weave/atom";
 import type { FilePath, Hash } from "./trans/hash";
-import type { GlobalPropertyKey } from "./global_property_key";
 import type { Json } from "./util/util";
-import type { Config } from "./instrument";
+import type { GenericConfig } from "./instrument";
 
-export type InternalConfig = Config<
+export type InternalConfig = GenericConfig<
   Json,
   ArgAtom,
   Hash,
   VariableName,
-  GlobalPropertyKey,
   FilePath
 >;

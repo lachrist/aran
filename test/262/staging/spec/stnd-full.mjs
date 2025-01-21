@@ -23,7 +23,6 @@ const {
  *   | LocalEvalPath
  * )} FilePath
  * @typedef {string & {__brand: "JavaScriptIdentifier"}} JavaScriptIdentifier
- * @typedef {string & {__brand: "GlobalPropertyKey"}} GlobalPropertyKey
  * @typedef {string & {__brand: "Variable"}} Variable
  * @typedef {string & {__brand: "Label"}} Label
  * @typedef {string & {__brand: "Specifier"}} Specifier
@@ -44,8 +43,7 @@ const {
  * @typedef {"@state"} State
  */
 
-/** @type {GlobalPropertyKey} */
-const ADVICE_VARIABLE = /** @type {any} */ ("aran.advice");
+const ADVICE_VARIABLE = /** @type {JavaScriptIdentifier} */ ("__aran_advice__");
 
 /** @type {State} */
 const STATE = "@state";
@@ -61,7 +59,7 @@ const digest = (_node, node_path, file_path, _kind) =>
  */
 const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
-/** @type {import("aran").StandardWeaveConfig<Atom, GlobalPropertyKey>} */
+/** @type {import("aran").StandardWeaveConfig<State, Atom, JavaScriptIdentifier>} */
 const weave_config = {
   advice_global_variable: ADVICE_VARIABLE,
   initial_state: STATE,
@@ -77,13 +75,15 @@ const trans_config = {
 };
 
 /**
- * @type {import("aran").RetroConfig<JavaScriptIdentifier, GlobalPropertyKey>}
+ * @type {import("aran").RetroConfig<JavaScriptIdentifier>}
  */
 const retro_config = {
   mode: "normal",
-  escape_prefix: /** @type {JavaScriptIdentifier} */ ("__aran__"),
+  escape_prefix: /** @type {JavaScriptIdentifier} */ ("$aran"),
   global_object_variable: /** @type {JavaScriptIdentifier} */ ("globalThis"),
-  intrinsic_global_variable: /** @type {GlobalPropertyKey} */ ("__intrinsic__"),
+  intrinsic_global_variable: /** @type {JavaScriptIdentifier} */ (
+    "__aran_intrinsic__"
+  ),
 };
 
 const { setup, trans, retro } = compileAran(

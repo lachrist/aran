@@ -13,7 +13,8 @@ import { compileAran } from "../aran.mjs";
  *   | import("../../fetch").TestPath
  *   | LocalEvalPath
  * )} FilePath
- * @typedef {string & {__brand: "GlobalVariable"}} GlobalVariable
+ * @typedef {string & {__brand: "JavaScriptIdentifier"}} JavaScriptIdentifier
+ * @typedef {string & {__brand: "GlobalPropertyKey"}} GlobalPropertyKey
  * @typedef {string & {__brand: "Variable"}} Variable
  * @typedef {string & {__brand: "Label"}} Label
  * @typedef {string & {__brand: "Specifier"}} Specifier
@@ -54,9 +55,10 @@ const { setup, trans, retro } = compileAran(
 /**
  * @type {(
  *   kind: import("aran").FlexibleAspectKind,
- * ) => GlobalVariable}
+ * ) => import("./stnd-full.mjs").GlobalPropertyKey}
  */
-const toGlobalVariable = (kind) => {};
+const toGlobalPropertyKey = (kind) =>
+  /** @type {import("./stnd-full.mjs").GlobalPropertyKey} */ (`aran:${kind}`);
 
 /**
  * @type {() => import("aran").HomogeneousFlexibleAdvice<Atom, State, >}
