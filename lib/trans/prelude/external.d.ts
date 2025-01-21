@@ -1,8 +1,9 @@
 import type { VariableName } from "estree-sentry";
 import type { Hash } from "../hash";
+import type { RootKind } from "../scope/variable/root";
 
 export type ReifyExternal = {
-  conflict_with_global_constant: boolean;
+  kinds: RootKind[];
   variable: VariableName;
   origin: Hash;
 };
