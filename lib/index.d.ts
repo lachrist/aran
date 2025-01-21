@@ -3,7 +3,7 @@ import type {
   ScriptProgram as EstreeScriptProgram,
   SyntaxErrorCause,
 } from "estree-sentry";
-import type { RawWarning } from "./trans/prelude/warning";
+import type { Warning } from "./trans/prelude/warning";
 import type { Json } from "./util/util";
 import type {
   ClashErrorCause,
@@ -195,7 +195,7 @@ export const transpile: <
 >(
   file: Partial<File<path>>,
   conf?: null | undefined | Partial<TransConfig<hash, path>>,
-) => Program<atom> & { _aran_warning_array: RawWarning[] };
+) => Program<atom> & { _aran_warning_array: Warning[] };
 
 ///////////
 // Weave //
@@ -306,5 +306,5 @@ export const instrument: <
     | undefined
     | Partial<InstrumentConfig<atom, global_variable, path>>,
 ) => EstreeProgram<{}> & {
-  _aran_warning_array: RawWarning[];
+  warnings: Warning[];
 };
