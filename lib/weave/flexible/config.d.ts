@@ -1,6 +1,5 @@
 import type { Pointcut } from "./aspect";
 import type { Json } from "../../util/util";
-import type { ArgAtom } from "../atom";
 import type { Atom } from "../../lang/syntax";
 
 /**
@@ -8,7 +7,7 @@ import type { Atom } from "../../lang/syntax";
  */
 export type Config<
   atom extends Atom = Atom,
-  global_variable extends string = string,
+  global_property_key extends string = string,
 > = {
   /**
    * The initial state passed to advice functions. It will be cloned with JSON
@@ -20,7 +19,5 @@ export type Config<
    * The pointcut for the standard weaving API.
    * @defaultValue `false`
    */
-  pointcut: Pointcut<atom, global_variable>;
+  pointcut: Pointcut<atom, global_property_key>;
 };
-
-export type InternalConfig = Config<ArgAtom>;

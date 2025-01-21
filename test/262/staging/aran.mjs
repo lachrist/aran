@@ -22,7 +22,7 @@ const parseSitu = parseJson;
  * >(
  *   config: (
  *     & import("aran").TransConfig<hash, path>
- *     & import("aran").RetroConfig
+ *     & import("aran").RetroConfig<string, string>
  *   ),
  *   toEvalPath: (hash: hash) => path,
  * ) => {

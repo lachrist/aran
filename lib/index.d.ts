@@ -59,12 +59,14 @@ import {
 } from "./weave/parametrization";
 import type {
   TestKind,
+  AspectTyping as StandardAspectTyping,
   Pointcut as StandardPointcut,
   Aspect as StandardAspect,
   Advice as StandardAdvice,
-  CompleteAdvice as CompleteStandardAdvice,
 } from "./weave/standard/aspect";
 import type {
+  AspectTyping as FlexibleAspectTyping,
+  AspectKind as FlexibleAspectKind,
   Pointcut as FlexiblePointcut,
   HeterogeneousAspect as HeterogeneousFlexibleAspect,
   HomogeneousAspect as HomogeneousFlexibleAspect,
@@ -120,6 +122,7 @@ export {
   Intrinsic,
   Parameter,
   // Aspect //
+  FlexibleAspectKind,
   GeneratorKind,
   ProgramKind,
   ClosureKind,
@@ -129,7 +132,8 @@ export {
   StandardPointcut,
   StandardAspect,
   StandardAdvice,
-  CompleteStandardAdvice,
+  StandardAspectTyping,
+  FlexibleAspectTyping,
   FlexiblePointcut,
   HeterogeneousFlexibleAspect,
   HomogeneousFlexibleAspect,
@@ -320,9 +324,6 @@ export const retropile: (
 /**
  * Instrument a parsed JavaScript program. It chains `transpile`,
  * `weaveStandard` or `weaveFlexible`, and `retropile`.
- * @template hash The type of the result of `conf.digest`.
- * @template atom The branded types for the leafs of the woven program.
- * @template global_variable The branded type for global variables.
  * @template path The type of `file.path`.
  * @param file The parsed JavaScript program to instrument.
  * @param conf Instrumentation options.
@@ -338,17 +339,20 @@ export const retropile: (
  * @throws {@link AranPointcutError} If there is a problem with the provided
  * pointcut.
  */
-export const instrument: <
-  hash extends string | number = string | number,
-  atom extends Atom & { Tag: hash } = Atom & { Tag: hash },
-  global_variable extends string = string,
-  path = unknown,
->(
+export const instrument: <path = string>(
   file: Partial<File<path>>,
   conf?:
     | null
     | undefined
-    | Partial<InstrumentConfig<atom, global_variable, path>>,
+    | Partial<
+        InstrumentConfig<
+          Json,
+          Atom & { Tag: string | number },
+          string,
+          string,
+          path
+        >
+      >,
 ) => EstreeProgram<{}> & {
   warnings: Warning[];
 };

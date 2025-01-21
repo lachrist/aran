@@ -595,8 +595,8 @@ const { setup, trans, retro } = compileAran(
   {
     mode: "normal",
     escape_prefix: "__aran__",
-    global_variable: "globalThis",
-    intrinsic_variable: "__intrinsic__",
+    global_object_variable: "globalThis",
+    intrinsic_global_variable: "__intrinsic__",
     global_declarative_record: "emulate",
     digest,
   },

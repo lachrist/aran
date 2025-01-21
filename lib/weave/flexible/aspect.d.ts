@@ -186,9 +186,9 @@ export type HomogeneousAdvice<
 
 export type Pointcut<
   atom extends Atom = Atom,
-  global_variable extends string = string,
+  global_property_key extends string = string,
 > = {
-  [variable in global_variable]: ValueOf<{
+  [variable in global_property_key]: ValueOf<{
     [kind in AspectKind]: {
       kind: kind;
       pointcut: AspectTyping<atom, never, never, Json[]>[kind]["pointcut"];
@@ -201,17 +201,17 @@ export type HomogeneousAspect<
   state = unknown,
   value = unknown,
   point extends Json[] = Json[],
-  global_variable extends string = string,
+  global_property_key extends string = string,
 > = {
-  [variable in global_variable]: AspectElement<atom, state, value, point>;
+  [variable in global_property_key]: AspectElement<atom, state, value, point>;
 };
 
 export type HeterogeneousAspect<
   atom extends Atom = Atom,
   state = unknown,
   value = unknown,
-  point extends { [variable in global_variable]: Json[] } = any,
-  global_variable extends string = string,
+  point extends { [variable in global_property_key]: Json[] } = any,
+  global_property_key extends string = string,
 > = {
   [variable in keyof point]: AspectElement<atom, state, value, point[variable]>;
 };

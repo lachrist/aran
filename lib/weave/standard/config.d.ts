@@ -1,8 +1,6 @@
 import type { Pointcut } from "./aspect";
 import type { Json } from "../../util/util";
-import type { ArgAtom } from "../atom";
 import type { Atom } from "../../lang/syntax";
-import type { VariableName } from "estree-sentry";
 
 type SerialAtom = Atom & { Tag: Json };
 
@@ -11,7 +9,7 @@ type SerialAtom = Atom & { Tag: Json };
  */
 export type Config<
   atom extends SerialAtom = SerialAtom,
-  global_variable extends string = string,
+  global_property_key extends string = string,
 > = {
   /**
    * The initial state passed to advice functions. It will be cloned with JSON
@@ -29,7 +27,5 @@ export type Config<
    * Make sure it does not clash with other global variables.
    * @defaultValue `"_ARAN_ADVICE_"`
    */
-  advice_variable: global_variable;
+  advice_global_variable: global_property_key;
 };
-
-export type InternalConfig = Config<ArgAtom, VariableName>;

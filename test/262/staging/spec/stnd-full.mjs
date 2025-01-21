@@ -15,18 +15,19 @@ const {
 
 /**
  * @typedef {`hash:${string}`} Hash
- * @typedef {`dynamic://eval/local${Hash}`} LocalEvalPath
+ * @typedef {`dynamic://eval/local/${Hash}`} LocalEvalPath
  * @typedef {(
  *   | import("../../fetch").HarnessName
  *   | import("../../fetch").DependencyPath
  *   | import("../../fetch").TestPath
  *   | LocalEvalPath
  * )} FilePath
+ * @typedef {string & {__brand: "JavaScriptIdentifier"}} JavaScriptIdentifier
+ * @typedef {string & {__brand: "GlobalPropertyKey"}} GlobalPropertyKey
  * @typedef {string & {__brand: "Variable"}} Variable
  * @typedef {string & {__brand: "Label"}} Label
  * @typedef {string & {__brand: "Specifier"}} Specifier
  * @typedef {string & {__brand: "Source"}} Source
-
  * @typedef {{
  *   Variable: Variable,
  *   Label: Label,
@@ -43,7 +44,7 @@ const {
  * @typedef {"@state"} State
  */
 
-/** @type {Variable} */
+/** @type {GlobalPropertyKey} */
 const ADVICE_VARIABLE = /** @type {any} */ ("aran.advice");
 
 /** @type {State} */
@@ -56,29 +57,39 @@ const digest = (_node, node_path, file_path, _kind) =>
   `hash:${file_path}:${node_path}`;
 
 /**
- * @type {(hash: string) => FilePath}
+ * @type {(hash: Hash) => FilePath}
  */
-const toEvalPath = (hash) =>
-  /** @type {FilePath} */ (`dynamic://eval/local/${hash}`);
+const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
-const { setup, trans, retro } = compileAran(
-  {
-    mode: "normal",
-    escape_prefix: "__aran__",
-    global_variable: "globalThis",
-    intrinsic_variable: "__intrinsic__",
-    global_declarative_record: "builtin",
-    digest,
-  },
-  toEvalPath,
-);
-
-/** @type {import("aran").StandardWeaveConfig<Atom>} */
-const conf = {
-  advice_variable: ADVICE_VARIABLE,
+/** @type {import("aran").StandardWeaveConfig<Atom, GlobalPropertyKey>} */
+const weave_config = {
+  advice_global_variable: ADVICE_VARIABLE,
   initial_state: STATE,
   pointcut: true,
 };
+
+/**
+ * @type {import("aran").TransConfig<Hash, FilePath>}
+ */
+const trans_config = {
+  global_declarative_record: "builtin",
+  digest,
+};
+
+/**
+ * @type {import("aran").RetroConfig<JavaScriptIdentifier, GlobalPropertyKey>}
+ */
+const retro_config = {
+  mode: "normal",
+  escape_prefix: /** @type {JavaScriptIdentifier} */ ("__aran__"),
+  global_object_variable: /** @type {JavaScriptIdentifier} */ ("globalThis"),
+  intrinsic_global_variable: /** @type {GlobalPropertyKey} */ ("__intrinsic__"),
+};
+
+const { setup, trans, retro } = compileAran(
+  { ...trans_config, ...retro_config },
+  toEvalPath,
+);
 
 ///////////////
 // Predicate //
@@ -466,11 +477,10 @@ const assertInput5 = assertInput;
  *       args: Value[],
  *     ) => Value,
  *   },
- * ) => import("aran").CompleteStandardAdvice<
- *   State,
- *   Atom,
- *   Valuation,
- * >}
+ * ) => {
+ *   [key in keyof import("aran").StandardAspectTyping]
+ *     : import("aran").StandardAspectTyping<State, Atom, Valuation>[key]["advice"]
+ * }}
  */
 const compileAdvice = ({ apply, construct }) => ({
   // Block //
@@ -636,7 +646,7 @@ const compileAdvice = ({ apply, construct }) => ({
     /** @type {import("aran").Program<Atom>} */
     const root1 = /** @type {any} */ (input[1]);
     /** @type {import("aran").Program} */
-    const root2 = weaveStandard(root1, conf);
+    const root2 = weaveStandard(root1, weave_config);
     assert(root2.kind === "eval");
     assert(root2.situ === "local.deep");
     return root2;
@@ -698,7 +708,7 @@ export default {
     if (type === "main") {
       /** @type {import("aran").Program<Atom>} */
       const root1 = trans(path, kind, code1);
-      const root2 = weaveStandard(root1, conf);
+      const root2 = weaveStandard(root1, weave_config);
       const code2 = retro(root2);
       return { path, content: code2 };
     } else {

@@ -488,14 +488,6 @@ export type Advice<
     | AspectTyping<state, atom, valuation>[key]["advice"];
 };
 
-export type CompleteAdvice<
-  state = unknown,
-  atom extends Atom = Atom,
-  valuation extends Valuation = Valuation,
-> = {
-  [key in Kind]: AspectTyping<state, atom, valuation>[key]["advice"];
-};
-
 export type ObjectPointcut<atom extends Atom = Atom> = {
   [key in Kind]?:
     | null

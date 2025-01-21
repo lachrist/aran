@@ -1,7 +1,8 @@
+import { weaveFlexible } from "aran";
 import { compileAran } from "../aran.mjs";
 
 /**
- * @type {import("aran").Digest<string, string>}
+ * @type {import("aran").Digest<string>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
   /** @type {string} */ (`${file_path}:${node_path}`);
@@ -24,27 +25,27 @@ const { setup, trans, retro } = compileAran(
 );
 
 /**
+ * @type {import("aran").FlexibleWeaveConfig}
+ */
+const conf = {
+  initial_state: null,
+  pointcut: {},
+};
+
+/**
  * @type {import("../stage").Stage}
  */
 export default {
-  precursor: ["parsing"],
-  negative: [
-    "module-literal-specifier",
-    "async-iterator-async-value",
-    "arguments-two-way-binding",
-    "function-dynamic-property",
-    "duplicate-constant-global-function",
-    "negative-bare-unknown",
-    "negative-bare-duplicate-super-prototype-access",
-    "negative-bare-early-module-declaration",
-    "negative-bare-missing-iterable-return-in-pattern",
-    "negative-bare-wrong-realm-for-default-prototype",
-  ],
-  exclude: ["function-string-representation"],
+  precursor: ["bare-main"],
+  negative: [],
+  exclude: [],
   listLateNegative: (_test, _error) => [],
   setup,
   instrument: ({ type, kind, path, content }) => ({
     path,
-    content: type === "main" ? retro(trans(path, kind, content)) : content,
+    content:
+      type === "main"
+        ? retro(weaveFlexible(trans(path, kind, content), conf))
+        : content,
   }),
 };

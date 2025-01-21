@@ -16,8 +16,8 @@ const { setup, trans, retro } = compileAran(
   {
     mode: "normal",
     escape_prefix: "__aran__",
-    global_variable: "globalThis",
-    intrinsic_variable: "__intrinsic__",
+    global_object_variable: "globalThis",
+    intrinsic_global_variable: "__intrinsic__",
     global_declarative_record: "builtin",
     digest,
   },
@@ -30,7 +30,7 @@ const ADVICE_VARIABLE = "aran.advice";
  * @type {import("aran").StandardWeaveConfig}
  */
 const conf = {
-  advice_variable: ADVICE_VARIABLE,
+  advice_global_variable: ADVICE_VARIABLE,
   initial_state: null,
   pointcut: false,
 };

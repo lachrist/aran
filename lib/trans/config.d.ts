@@ -3,7 +3,6 @@ import type {
   Path as EstreeNodePath,
 } from "estree-sentry";
 import type { Situ } from "./source";
-import type { FilePath, Hash } from "./hash";
 
 export type GlobalDeclarativeRecord = "builtin" | "emulate";
 
@@ -86,7 +85,7 @@ export type Digest<
 /**
  * Configuration object for `transpile`.
  */
-export type Config<hash extends string | number, path> = {
+export type Config<hash extends string | number = string, path = string> = {
   /**
    * Indicates whether the global declarative record should be emulated or not.
    * NB: The global declarative record is a scope frame that sits right before
@@ -112,7 +111,3 @@ export type Config<hash extends string | number, path> = {
    */
   digest: Digest<hash, path>;
 };
-
-export type InternalFile = File<FilePath>;
-export type InternalDigest = Digest<Hash, FilePath>;
-export type InternalConfig = Config<Hash, FilePath>;
