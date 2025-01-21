@@ -17,15 +17,14 @@ const parseSitu = parseJson;
 
 /**
  * @type {<
- *   P extends string,
- *   H extends number | string,
- *   A extends import("aran").Atom & { Tag: H },
+ *   path extends string,
+ *   hash extends number | string,
  * >(
  *   config: (
- *     & import("aran").TransConfig<H, P>
+ *     & import("aran").TransConfig<hash, path>
  *     & import("aran").RetroConfig
  *   ),
- *   toEvalPath: (hash: H) => P,
+ *   toEvalPath: (hash: hash) => path,
  * ) => {
  *   setup: (
  *     context: import("node:vm").Context,
@@ -33,15 +32,13 @@ const parseSitu = parseJson;
  *     intrinsics: import("aran").AranIntrinsicRecord,
  *     $262: import("../$262").$262,
  *   },
- *   trans: (
- *     path: P,
+ *   trans: <atom extends import("aran").Atom & { Tag: hash }>(
+ *     path: path,
  *     kind: "script" | "module" | "eval",
  *     code: string,
- *   ) => import("aran").AranProgram<A>,
+ *   ) => import("aran").AranProgram<atom>,
  *   retro: (
- *     root: import("aran").AranProgram<
- *       import("aran").Atom,
- *     >,
+ *     root: import("aran").AranProgram<import("aran").Atom>,
  *   ) => string,
  * }}
  */

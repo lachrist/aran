@@ -14,7 +14,7 @@ const {
 } = globalThis;
 
 /**
- * @typedef {`hash:${string}:${import("aran").NodePath}`} Hash
+ * @typedef {`hash:${string}`} Hash
  * @typedef {`dynamic://eval/local${Hash}`} LocalEvalPath
  * @typedef {(
  *   | import("../../fetch").HarnessName
@@ -694,11 +694,15 @@ export default {
       configurable: false,
     });
   },
-  instrument: ({ type, kind, path, content }) => ({
-    path,
-    content:
-      type === "main"
-        ? retro(weaveStandard(trans(path, kind, content), conf))
-        : content,
-  }),
+  instrument: ({ type, kind, path, content: code1 }) => {
+    if (type === "main") {
+      /** @type {import("aran").AranProgram<Atom>} */
+      const root1 = trans(path, kind, code1);
+      const root2 = weaveStandard(root1, conf);
+      const code2 = retro(root2);
+      return { path, content: code2 };
+    } else {
+      return { path, content: code1 };
+    }
+  },
 };
