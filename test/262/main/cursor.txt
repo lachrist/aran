@@ -1,14 +1,1 @@
-50351
-{
-  "kind": "script",
-  "path": "language/eval-code/direct/var-env-var-init-global-new.js",
-  "directive": "none",
-  "negative": null,
-  "asynchronous": false,
-  "includes": [
-    "assert.js",
-    "sta.js",
-    "propertyHelper.js"
-  ],
-  "features": []
-}
+53291
