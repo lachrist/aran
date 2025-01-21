@@ -1,6 +1,7 @@
 import type {
   Program as EstreeProgram,
-  ScriptProgram as EstreeScriptProgram,
+  Kind as EstreeNodeKind,
+  Path as EstreeNodePath,
   SyntaxErrorCause,
 } from "estree-sentry";
 import type { Warning } from "./trans/prelude/warning";
@@ -10,85 +11,128 @@ import type {
   InputErrorCause,
   PointcutErrorCause,
 } from "./error";
-import type { Atom, Program } from "./lang/syntax";
+import type {
+  ModuleHeader,
+  ImportHeader,
+  ExportHeader,
+  AggregateHeader,
+  DeclareHeader,
+  Header,
+} from "./lang/header";
+import type {
+  Atom,
+  Node,
+  Program,
+  RoutineBlock,
+  SegmentBlock,
+  Statement,
+  Effect,
+  Expression,
+  SyntaxPrimitive,
+  RuntimePrimitive as Primitive,
+  IntrinsicRecord,
+  RegularIntrinsicRcord,
+  AccessorIntrinsicRecord,
+  ExtraIntrinsicRecord,
+  Intrinsic,
+  Parameter,
+} from "./lang/syntax";
 import type { Config as SetupConfig } from "./setup";
 import type { Config as RetroConfig } from "./retro/config";
 import type { File, Config as TransConfig } from "./trans/config";
 import type { Config as StandardWeaveConfig } from "./weave/standard/config";
 import type { Config as FlexibleWeaveConfig } from "./weave/flexible/config";
 import type { ExternalConfig as InstrumentConfig } from "./instrument";
-
-export type { Digest, LooseEstreeProgram } from "./trans/config";
-
-export type { Kind as NodeKind, Path as NodePath } from "estree-sentry";
-
-export type {
+import type { Digest, LooseEstreeProgram } from "./trans/config";
+import type {
   Situ,
   GlobalSitu,
-  RootLocalSitu as LocalSitu,
-  DeepLocalSitu as AranSitu,
+  RootLocalSitu,
+  DeepLocalSitu,
 } from "./trans/source";
-
-export type {
-  ModuleHeader as AranModuleHeader,
-  ImportHeader as AranImportHeader,
-  ExportHeader as AranExportHeader,
-  AggregateHeader as AranAggregateHeader,
-  DeclareHeader as AranDeclareHeader,
-  Header as AranHeader,
-} from "./lang/header";
-
-export type {
-  Node as AranNode,
-  Program as AranProgram,
-  RoutineBlock as AranRoutineBlock,
-  SegmentBlock as AranSegmentBlock,
-  Statement as AranStatement,
-  Effect as AranEffect,
-  Expression as AranExpression,
-  SyntaxPrimitive as AranSyntaxPrimitive,
-  RuntimePrimitive as AranPrimitive,
-  IntrinsicRecord as AranIntrinsicRecord,
-  RegularIntrinsicRcord as AranRegularIntrinsicRecord,
-  AccessorIntrinsicRecord as AranAccessorIntrinsicRecord,
-  ExtraIntrinsicRecord as AranExtraIntrinsicRecord,
-  Intrinsic as AranIntrinsicName,
-  Parameter as AranParameter,
-} from "./lang/syntax";
-
-export {
-  GeneratorKind as AranGeneratorKind,
-  ProgramKind as AranProgramKind,
-  ClosureKind as AranClosureKind,
-  SegmentKind as AranSegmentKind,
-  ControlKind as AranControlKind,
+import {
+  GeneratorKind,
+  ProgramKind,
+  ClosureKind,
+  SegmentKind,
+  ControlKind,
 } from "./weave/parametrization";
-
-export type {
-  TestKind as AranTestKind,
+import type {
+  TestKind,
   Pointcut as StandardPointcut,
   Aspect as StandardAspect,
   Advice as StandardAdvice,
   CompleteAdvice as CompleteStandardAdvice,
-} from "./weave/standard/aspect.d.ts";
-
-export type {
+} from "./weave/standard/aspect";
+import type {
   Pointcut as FlexiblePointcut,
   HeterogeneousAspect as HeterogeneousFlexibleAspect,
   HomogeneousAspect as HomogeneousFlexibleAspect,
-} from "./weave/flexible/aspect.d.ts";
-
-export type { Json } from "./util/util";
+} from "./weave/flexible/aspect";
 
 export {
-  Atom,
-  File,
-  InstrumentConfig,
+  // Util //
+  Json,
+  // Config //
   SetupConfig,
-  TransConfig,
   RetroConfig,
+  TransConfig,
   StandardWeaveConfig,
   FlexibleWeaveConfig,
+  InstrumentConfig,
+  // Estree //
+  EstreeProgram,
+  EstreeNodeKind,
+  EstreeNodePath,
+  LooseEstreeProgram,
+  // Error //
+  Warning,
+  SyntaxErrorCause,
+  ClashErrorCause,
+  InputErrorCause,
+  PointcutErrorCause,
+  Digest,
+  Situ,
+  GlobalSitu,
+  RootLocalSitu,
+  DeepLocalSitu,
+  // Syntax //
+  Atom,
+  ModuleHeader,
+  ImportHeader,
+  ExportHeader,
+  AggregateHeader,
+  DeclareHeader,
+  Header,
+  Node,
+  Program,
+  RoutineBlock,
+  SegmentBlock,
+  Statement,
+  Effect,
+  Expression,
+  SyntaxPrimitive,
+  Primitive,
+  IntrinsicRecord,
+  RegularIntrinsicRcord,
+  AccessorIntrinsicRecord,
+  ExtraIntrinsicRecord,
+  Intrinsic,
+  Parameter,
+  // Aspect //
+  GeneratorKind,
+  ProgramKind,
+  ClosureKind,
+  SegmentKind,
+  ControlKind,
+  TestKind,
+  StandardPointcut,
+  StandardAspect,
+  StandardAdvice,
+  CompleteStandardAdvice,
+  FlexiblePointcut,
+  HeterogeneousFlexibleAspect,
+  HomogeneousFlexibleAspect,
 };
 
 ///////////
@@ -168,7 +212,7 @@ export class AranPointcutError extends Error {
  */
 export const generateSetup: <global_variable extends string = string>(
   conf?: Partial<SetupConfig<global_variable>>,
-) => EstreeScriptProgram<{}>;
+) => EstreeProgram<null> & { sourceType: "script" };
 
 ///////////////
 // Transpile //
@@ -267,7 +311,7 @@ export const weaveFlexible: <
 export const retropile: (
   root: Program<Atom>,
   conf?: null | undefined | Partial<RetroConfig>,
-) => EstreeProgram<{}>;
+) => EstreeProgram<null>;
 
 ////////////////
 // Instrument //
