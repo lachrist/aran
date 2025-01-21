@@ -80,7 +80,7 @@ const main = async (argv) => {
     process.addListener("uncaughtException", onUncaughtException);
     try {
       const { cursor, failure } = await move(stage, await loadCursor(), sigint);
-      await saveCursor(cursor);
+      await saveCursor(cursor, failure === null ? null : failure.test);
       return sigint.value ? "sigint" : failure === null ? "done" : failure;
     } finally {
       process.removeListener("SIGINT", onSigint);

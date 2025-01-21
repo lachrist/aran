@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { AranExecError } from "../error.mjs";
 
-const { URL, parseInt } = globalThis;
+const { JSON, URL, parseInt } = globalThis;
 
 const CURSOR = new URL("cursor.txt", import.meta.url);
 
@@ -11,7 +11,7 @@ const CURSOR = new URL("cursor.txt", import.meta.url);
 export const loadCursor = async () => {
   let content;
   try {
-    content = (await readFile(CURSOR, "utf-8")).trim();
+    content = await readFile(CURSOR, "utf-8");
   } catch (error) {
     if (
       typeof error === "object" &&
@@ -24,20 +24,33 @@ export const loadCursor = async () => {
       throw error;
     }
   }
-  if (content === "") {
+  const lines = content.split("\n");
+  if (lines.length === 0) {
     return 0;
-  } else if (/^\d+$/.test(content)) {
-    return parseInt(content);
   } else {
-    throw new AranExecError("Invalid cursor content", { content });
+    const head = lines[0].trim();
+    if (head === "") {
+      return 0;
+    } else if (/^\d+$/.test(head)) {
+      return parseInt(head);
+    } else {
+      throw new AranExecError("Invalid cursor content", { content });
+    }
   }
 };
 
 /**
  * @type {(
  *   cursor: number,
+ *   test: null | import("../test-case").TestCase,
  * ) => Promise<void>}
  */
-export const saveCursor = async (cursor) => {
-  await writeFile(CURSOR, `${cursor}\n`, "utf-8");
+export const saveCursor = async (cursor, test) => {
+  await writeFile(
+    CURSOR,
+    test === null
+      ? `${cursor}\n`
+      : `${cursor}\n${JSON.stringify(test, null, 2)}\n`,
+    "utf-8",
+  );
 };
