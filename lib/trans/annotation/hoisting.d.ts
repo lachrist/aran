@@ -42,19 +42,15 @@ export type UnboundScriptKind = Kind &
 
 export type UnboundStrictEvalKind = never;
 
-export type UnboundSloppyEvalKind =
-  | "var"
-  | "sloppy-function-near"
-  | "sloppy-function-away";
+export type UnboundSloppyEvalKind = Kind &
+  ("var" | "function-strict" | "function-sloppy-near" | "function-sloppy-away");
 
 export type ModuleKind = Kind &
   ("import" | "var" | "let" | "const" | "class" | "function-strict");
 
 export type ScriptKind = Kind & never;
 
-// Capture function-strict because it also labels async and generators.
-export type SloppyEvalKind = Kind &
-  ("let" | "const" | "class" | "function-strict");
+export type SloppyEvalKind = Kind & ("let" | "const" | "class");
 
 export type StrictEvalKind = Kind &
   ("var" | "let" | "const" | "class" | "function-strict");
