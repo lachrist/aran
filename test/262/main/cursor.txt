@@ -1,18 +1,14 @@
-50343
+50351
 {
   "kind": "script",
-  "path": "language/eval-code/direct/var-env-global-lex-non-strict.js",
+  "path": "language/eval-code/direct/var-env-var-init-global-new.js",
   "directive": "none",
-  "negative": {
-    "phase": "runtime",
-    "type": "SyntaxError"
-  },
+  "negative": null,
   "asynchronous": false,
   "includes": [
     "assert.js",
-    "sta.js"
+    "sta.js",
+    "propertyHelper.js"
   ],
-  "features": [
-    "let"
-  ]
+  "features": []
 }
