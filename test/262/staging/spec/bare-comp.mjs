@@ -84,7 +84,7 @@ const toAdviceEntry = (name) => [toAdviceVariable(name), "undefined"];
  * @type {(
  *   name: "eval" | "apply" | "construct",
  *   tag: unknown,
- * ) => import("../../../../lib").AranStatement}
+ * ) => import("aran").AranStatement}
  */
 const toAdviceInit = (name, tag) => ({
   type: "EffectStatement",
@@ -140,11 +140,11 @@ const compileFunctionCode = (input) => {
 
 /**
  * @type {(
- *   intrinsic: import("../../../../lib").AranIntrinsicRecord,
+ *   intrinsic: import("aran").AranIntrinsicRecord,
  * ) => {
  *   eval: (
- *     root: import("../../../../lib").AranProgram,
- *   ) => import("../../../../lib").AranProgram,
+ *     root: import("aran").AranProgram,
+ *   ) => import("aran").AranProgram,
  *   apply: (
  *     callee: Function,
  *     that: unknown,
@@ -234,11 +234,11 @@ const compileAdvice = (intrinsics) => {
 
 /**
  * @type {(
- *   node: import("../../../../lib").AranProgram,
- * ) => import("../../../../lib").AranProgram}
+ *   node: import("aran").AranProgram,
+ * ) => import("aran").AranProgram}
  */
 const visitProgram = (node) =>
-  /** @type {import("../../../../lib").AranProgram} */ ({
+  /** @type {import("aran").AranProgram} */ ({
     type: "Program",
     kind: node.kind,
     situ: node.situ,
@@ -249,8 +249,8 @@ const visitProgram = (node) =>
 
 /**
  * @type {(
- *   node: import("../../../../lib").AranRoutineBlock & { head: null },
- * ) => import("../../../../lib").AranRoutineBlock & { head: null }}
+ *   node: import("aran").AranRoutineBlock & { head: null },
+ * ) => import("aran").AranRoutineBlock & { head: null }}
  */
 const visitProgramBlock = (node) => ({
   type: "RoutineBlock",
@@ -266,8 +266,8 @@ const visitProgramBlock = (node) => ({
 
 /**
  * @type {(
- *   node: import("../../../../lib").AranRoutineBlock,
- * ) => import("../../../../lib").AranRoutineBlock & { head: any }}
+ *   node: import("aran").AranRoutineBlock,
+ * ) => import("aran").AranRoutineBlock & { head: any }}
  */
 const visitClosureBlock = (node) => ({
   type: "RoutineBlock",
@@ -280,8 +280,8 @@ const visitClosureBlock = (node) => ({
 
 /**
  * @type {(
- *   node: import("../../../../lib").AranSegmentBlock,
- * ) => import("../../../../lib").AranSegmentBlock}
+ *   node: import("aran").AranSegmentBlock,
+ * ) => import("aran").AranSegmentBlock}
  */
 const visitSegmentBlock = (node) => ({
   type: "SegmentBlock",
@@ -293,8 +293,8 @@ const visitSegmentBlock = (node) => ({
 
 /**
  * @type {(
- *   node: import("../../../../lib").AranStatement,
- * ) => import("../../../../lib").AranStatement}
+ *   node: import("aran").AranStatement,
+ * ) => import("aran").AranStatement}
  */
 export const visitStatement = (node) => {
   const { tag } = node;
@@ -353,8 +353,8 @@ export const visitStatement = (node) => {
 
 /**
  * @type {(
- *   node: import("../../../../lib").AranEffect,
- * ) => import("../../../../lib").AranEffect}
+ *   node: import("aran").AranEffect,
+ * ) => import("aran").AranEffect}
  */
 export const visitEffect = (node) => {
   const { tag } = node;
@@ -399,8 +399,8 @@ export const visitEffect = (node) => {
 
 /**
  * @type {(
- *   node: import("../../../../lib").AranExpression,
- * ) => import("../../../../lib").AranExpression}
+ *   node: import("aran").AranExpression,
+ * ) => import("aran").AranExpression}
  */
 export const visitExpression = (node) => {
   const { tag } = node;
@@ -581,7 +581,7 @@ export const visitExpression = (node) => {
 const weave = visitProgram;
 
 /**
- * @type {import("../../../../lib").Digest<string, string>}
+ * @type {import("aran").Digest<string, string>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
   /** @type {string} */ (`${file_path}:${node_path}`);

@@ -54,6 +54,7 @@
     "@types/source-map": "^0.5.2",
     "@typescript-eslint/parser": "^8.3.0",
     "acorn": "^8.14.0",
+    "aran": "file:./",
     "astring": "^1.9.0",
     "eslint": "^9.9.1",
     "prettier": "^3.0.0",

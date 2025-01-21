@@ -1,6 +1,6 @@
 /* eslint-disable local/no-jsdoc-typedef */
 
-import { weaveStandard } from "../../../../lib";
+import { weaveStandard } from "aran";
 import { AranTestError } from "../../error.mjs";
 import { compileAran } from "../aran.mjs";
 
@@ -14,12 +14,19 @@ const {
 } = globalThis;
 
 /**
- * @typedef {string & {__brand: "FilePath"}} FilePath
+ * @typedef {`hash:${string}:${import("aran").NodePath}`} Hash
+ * @typedef {`dynamic://eval/local${Hash}`} LocalEvalPath
+ * @typedef {(
+ *   | import("../../fetch").HarnessName
+ *   | import("../../fetch").DependencyPath
+ *   | import("../../fetch").TestPath
+ *   | LocalEvalPath
+ * )} FilePath
  * @typedef {string & {__brand: "Variable"}} Variable
  * @typedef {string & {__brand: "Label"}} Label
  * @typedef {string & {__brand: "Specifier"}} Specifier
  * @typedef {string & {__brand: "Source"}} Source
- * @typedef {`hash:${string}`} Hash
+
  * @typedef {{
  *   Variable: Variable,
  *   Label: Label,
@@ -43,7 +50,7 @@ const ADVICE_VARIABLE = /** @type {any} */ ("aran.advice");
 const STATE = "@state";
 
 /**
- * @type {import("../../../../lib").Digest<FilePath, Hash>}
+ * @type {import("aran").Digest<Hash, FilePath>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
   `hash:${file_path}:${node_path}`;
@@ -66,7 +73,7 @@ const { setup, trans, retro } = compileAran(
   toEvalPath,
 );
 
-/** @type {import("../../../../lib").StandardWeaveConfig<Atom>} */
+/** @type {import("aran").StandardWeaveConfig<Atom>} */
 const conf = {
   advice_variable: ADVICE_VARIABLE,
   initial_state: STATE,
@@ -155,7 +162,7 @@ const assertState = (state) => {
 };
 
 /**
- * @type {{[key in import("../../../../lib").AranProgramKind]: null}}
+ * @type {{[key in import("aran").AranProgramKind]: null}}
  */
 const PROGRAM_KIND_ENUM = {
   "deep-local-eval": null,
@@ -167,7 +174,7 @@ const PROGRAM_KIND_ENUM = {
 
 /**
  * @type {(
- *   kind: import("../../../../lib").AranProgramKind,
+ *   kind: import("aran").AranProgramKind,
  * ) => void}
  */
 const assertProgramKind = (kind) => {
@@ -176,7 +183,7 @@ const assertProgramKind = (kind) => {
 };
 
 /**
- * @type {{[key in import("../../../../lib").AranSegmentKind]: null}}
+ * @type {{[key in import("aran").AranSegmentKind]: null}}
  */
 const SEGMENT_KIND_ENUM = {
   bare: null,
@@ -190,7 +197,7 @@ const SEGMENT_KIND_ENUM = {
 
 /**
  * @type {(
- *   kind: import("../../../../lib").AranSegmentKind,
+ *   kind: import("aran").AranSegmentKind,
  * ) => void}
  */
 const assertSegmentKind = (kind) => {
@@ -199,7 +206,7 @@ const assertSegmentKind = (kind) => {
 };
 
 /**
- * @type {{[key in import("../../../../lib").AranClosureKind]: null}}
+ * @type {{[key in import("aran").AranClosureKind]: null}}
  */
 const CLOSURE_KIND_ENUM = {
   "arrow": null,
@@ -214,7 +221,7 @@ const CLOSURE_KIND_ENUM = {
 
 /**
  * @type {(
- *   kind: import("../../../../lib").AranClosureKind,
+ *   kind: import("aran").AranClosureKind,
  * ) => void}
  */
 const assertClosureKind = (kind) => {
@@ -223,7 +230,7 @@ const assertClosureKind = (kind) => {
 };
 
 /**
- * @type {{[key in import("../../../../lib").AranGeneratorKind]: null}}
+ * @type {{[key in import("aran").AranGeneratorKind]: null}}
  */
 const GENERATOR_KIND_ENUM = {
   "async-generator": null,
@@ -232,7 +239,7 @@ const GENERATOR_KIND_ENUM = {
 
 /**
  * @type {(
- *   kind: import("../../../../lib").AranGeneratorKind,
+ *   kind: import("aran").AranGeneratorKind,
  * ) => void}
  */
 const assertGeneratorKind = (kind) => {
@@ -241,7 +248,7 @@ const assertGeneratorKind = (kind) => {
 };
 
 /**
- * @type {{[key in import("../../../../lib").AranControlKind]: null}}
+ * @type {{[key in import("aran").AranControlKind]: null}}
  */
 const CONTROL_KIND_ENUM = {
   ...CLOSURE_KIND_ENUM,
@@ -251,7 +258,7 @@ const CONTROL_KIND_ENUM = {
 
 /**
  * @type {(
- *   kind: import("../../../../lib").AranControlKind,
+ *   kind: import("aran").AranControlKind,
  * ) => void}
  */
 const assertControlKind = (kind) => {
@@ -260,7 +267,7 @@ const assertControlKind = (kind) => {
 };
 
 /**
- * @type {{[key in import("../../../../lib").AranTestKind]: null}}
+ * @type {{[key in import("aran").AranTestKind]: null}}
  */
 const TEST_KIND_ENUM = {
   conditional: null,
@@ -270,7 +277,7 @@ const TEST_KIND_ENUM = {
 
 /**
  * @type {(
- *   kind: import("../../../../lib").AranTestKind,
+ *   kind: import("aran").AranTestKind,
  * ) => void}
  */
 const assertTestKind = (kind) => {
@@ -279,7 +286,7 @@ const assertTestKind = (kind) => {
 };
 
 /**
- * @type {{[key in import("../../../../lib").AranHeader["type"]]: null}}
+ * @type {{[key in import("aran").AranHeader["type"]]: null}}
  */
 const HEADER_TYPE_ENUM = {
   aggregate: null,
@@ -290,7 +297,7 @@ const HEADER_TYPE_ENUM = {
 
 /**
  * @type {(
- *   head: import("../../../../lib").AranHeader[],
+ *   head: import("aran").AranHeader[],
  * ) => void}
  */
 const assertHeaderArray = (headers) => {
@@ -364,7 +371,7 @@ const assertClosure = (closure) => {
 
 /**
  * @type {(
- *   primitive: import("../../../../lib").AranPrimitive,
+ *   primitive: import("aran").AranPrimitive,
  * ) => void}
  */
 const assertPrimitive = (primitive) => {
@@ -378,7 +385,7 @@ const assertPrimitive = (primitive) => {
 
 /**
  * @type {(
- *   intrinsic: import("../../../../lib").AranIntrinsicName,
+ *   intrinsic: import("aran").AranIntrinsicName,
  * ) => void}
  */
 const assertIntrinsicName = (intrinsic) => {
@@ -459,7 +466,7 @@ const assertInput5 = assertInput;
  *       args: Value[],
  *     ) => Value,
  *   },
- * ) => import("../../../../lib").CompleteStandardAdvice<
+ * ) => import("aran").CompleteStandardAdvice<
  *   State,
  *   Atom,
  *   Valuation,
@@ -626,9 +633,9 @@ const compileAdvice = ({ apply, construct }) => ({
   },
   "eval@before": (...input) => {
     assertInput3(input, [assertState, assertValue, assertHash]);
-    /** @type {import("../../../../lib").AranProgram<Atom>} */
+    /** @type {import("aran").AranProgram<Atom>} */
     const root1 = /** @type {any} */ (input[1]);
-    /** @type {import("../../../../lib").AranProgram} */
+    /** @type {import("aran").AranProgram} */
     const root2 = weaveStandard(root1, conf);
     assert(root2.kind === "eval");
     assert(root2.situ === "local.deep");
@@ -691,16 +698,7 @@ export default {
     path,
     content:
       type === "main"
-        ? retro(
-            weaveStandard(
-              trans(
-                /** @type {FilePath} */ (/** @type {string} */ (path)),
-                kind,
-                content,
-              ),
-              conf,
-            ),
-          )
+        ? retro(weaveStandard(trans(path, kind, content), conf))
         : content,
   }),
 };

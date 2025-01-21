@@ -15,7 +15,7 @@ const {
  * @type {(
  *   kind: "script" | "module" | "eval",
  *   code: string
- * ) => import("../../../lib").LooseEstreeProgram}
+ * ) => import("aran").LooseEstreeProgram}
  */
 export const parseGlobal = (kind, code) =>
   parseAcorn(code, {
@@ -28,7 +28,7 @@ export const parseGlobal = (kind, code) =>
  * @type {(
  *   kind: "eval",
  *   code: string,
- * ) => import("../../../lib").LooseEstreeProgram}
+ * ) => import("aran").LooseEstreeProgram}
  */
 const parseAcornLocal = (_kind, code) =>
   parseAcorn(code, {
@@ -46,8 +46,8 @@ const parseAcornLocal = (_kind, code) =>
 
 /**
  * @type {(
- *   root: import("../../../lib").LooseEstreeProgram,
- * ) => import("../../../lib").LooseEstreeProgram}
+ *   root: import("aran").LooseEstreeProgram,
+ * ) => import("aran").LooseEstreeProgram}
  */
 const sanitizeBabel = (root) => {
   /** @type {object[]} */
@@ -93,7 +93,7 @@ const sanitizeBabel = (root) => {
  * @type {(
  *   kind: "eval",
  *   code: string,
- * ) => import("../../../lib").LooseEstreeProgram}
+ * ) => import("aran").LooseEstreeProgram}
  */
 const parseBabelLocal = (_kind, code) =>
   sanitizeBabel(
@@ -123,7 +123,7 @@ const parseBabelLocal = (_kind, code) =>
  * @type {(
  *   kind: "eval",
  *   code: string,
- * ) => import("../../../lib").LooseEstreeProgram}
+ * ) => import("aran").LooseEstreeProgram}
  */
 export const parseLocal = (kind, code) => {
   // We prefer acorn over babel because it is faster respect the estree format.

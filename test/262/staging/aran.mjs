@@ -19,28 +19,28 @@ const parseSitu = parseJson;
  * @type {<
  *   P extends string,
  *   H extends number | string,
- *   A extends import("../../../lib").Atom & { Tag: H },
+ *   A extends import("aran").Atom & { Tag: H },
  * >(
  *   config: (
- *     & import("../../../lib").TransConfig<P, H>
- *     & import("../../../lib").RetroConfig
+ *     & import("aran").TransConfig<H, P>
+ *     & import("aran").RetroConfig
  *   ),
  *   toEvalPath: (hash: H) => P,
  * ) => {
  *   setup: (
  *     context: import("node:vm").Context,
  *   ) => {
- *     intrinsics: import("../../../lib").AranIntrinsicRecord,
+ *     intrinsics: import("aran").AranIntrinsicRecord,
  *     $262: import("../$262").$262,
  *   },
  *   trans: (
  *     path: P,
  *     kind: "script" | "module" | "eval",
  *     code: string,
- *   ) => import("../../../lib").AranProgram<A>,
+ *   ) => import("aran").AranProgram<A>,
  *   retro: (
- *     root: import("../../../lib").AranProgram<
- *       import("../../../lib").Atom,
+ *     root: import("aran").AranProgram<
+ *       import("aran").Atom,
  *     >,
  *   ) => string,
  * }}
@@ -49,7 +49,7 @@ export const compileAran = (config, toEvalPath) => {
   const SETUP = generate(generateSetup(config));
   return {
     setup: (context) => {
-      /** @type {import("../../../lib").AranIntrinsicRecord} */
+      /** @type {import("aran").AranIntrinsicRecord} */
       const intrinsics = /** @type {any} */ (runInContext(SETUP, context));
       /** @type {import("../$262").$262} */
       const $262 = /** @type {any} */ (intrinsics["aran.global"]).$262;

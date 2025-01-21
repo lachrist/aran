@@ -25,7 +25,7 @@ const push = (stack, item) => {
  *       situ: import("../../lib/source").DeepLocalSitu,
  *     ) => string,
  *   },
- * ) => import("../../lib").StandardAdvice<
+ * ) => import("aran").StandardAdvice<
  *   unknown,
  *   State,
  *   { Other: Value, Stack: Value, Scope: Value },

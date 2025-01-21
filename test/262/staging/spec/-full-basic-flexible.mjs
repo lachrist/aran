@@ -10,7 +10,7 @@ const { undefined } = globalThis;
 /**
  * @type {(
  *   membrane: import("../aran/membrane").BasicMembrane,
- * ) => import("../../../../lib").HomogeneousFlexibleAspect<
+ * ) => import("aran").HomogeneousFlexibleAspect<
  *   import("../aran/config").Atom,
  *   null,
  *   unknown,
@@ -20,9 +20,9 @@ const { undefined } = globalThis;
 const makeAspect = ({ intrinsics, weaveLocalEval }) => {
   /**
    * @type {(
-   *   node: import("../../../../lib").AranNode<import("../aran/config").Atom>,
-   *   parent: import("../../../../lib").AranNode<import("../aran/config").Atom>,
-   *   root: import("../../../../lib").AranNode<import("../aran/config").Atom>,
+   *   node: import("aran").AranNode<import("../aran/config").Atom>,
+   *   parent: import("aran").AranNode<import("../aran/config").Atom>,
+   *   root: import("aran").AranNode<import("../aran/config").Atom>,
    * ) => []}
    */
   const pointcut = (_node, _parent, _root) => [];

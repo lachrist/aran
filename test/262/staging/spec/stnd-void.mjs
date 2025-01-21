@@ -1,8 +1,8 @@
-import { weaveStandard } from "../../../../lib";
+import { weaveStandard } from "aran";
 import { compileAran } from "../aran.mjs";
 
 /**
- * @type {import("../../../../lib").Digest<string, string>}
+ * @type {import("aran").Digest<string, string>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
   /** @type {string} */ (`${file_path}:${node_path}`);
@@ -27,8 +27,8 @@ const { setup, trans, retro } = compileAran(
 const ADVICE_VARIABLE = "aran.advice";
 
 /**
- * @type {import("../../../../lib").StandardWeaveConfig<
- *   import("../../../../lib").Atom
+ * @type {import("aran").StandardWeaveConfig<
+ *   import("aran").Atom
  * >}
  */
 const conf = {
