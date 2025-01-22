@@ -24,7 +24,7 @@ const { setup, trans, retro } = compileAran(
   toEvalPath,
 );
 
-const ADVICE_VARIABLE = "aran.advice";
+const ADVICE_VARIABLE = "__aran_advice__";
 
 /**
  * @type {import("aran").StandardWeaveConfig}

@@ -172,7 +172,7 @@ export class AranInputError extends Error {
   cause: InputErrorCause;
 }
 /**
- * Signals a problem within  the syntax of the target code.
+ * Signals a problem within the syntax of the target code.
  */
 export class AranSyntaxError extends SyntaxError {
   constructor(message: string, cause: SyntaxErrorCause);
@@ -191,7 +191,8 @@ export class AranClashError extends Error {
 }
 
 /**
- * Signals a problem with the provided pointcut.
+ * Signals a problem with the provided pointcut such as multiple pointcuts
+ * matching `apply@around` or `construct@around`.
  */
 export class AranPointcutError extends Error {
   constructor(cause: PointcutErrorCause);
@@ -256,7 +257,7 @@ export const transpile: <
  * @param root The Aran program to weave.
  * @param conf Standard weaving options.
  * @returns The woven program.
- * @throws {@link AranPointcutError} If there is a problem with the provided
+ * @throws {@link AranInputError} If `conf` or `root` are invalid.
  * pointcut.
  */
 export const weaveStandard: <
@@ -279,6 +280,7 @@ export const weaveStandard: <
  * @param root The Aran program to weave.
  * @param conf Flexible weaving options.
  * @returns The woven program.
+ * @throws {@link AranInputError} If `conf` or `root` are invalid.
  * @throws {@link AranPointcutError} If there is a problem with the provided
  * pointcut.
  */
@@ -304,6 +306,7 @@ export const weaveFlexible: <
  * @param conf Retropilation options.
  * @returns An ESTree program that can be fed to a estree code generator like
  * `astring`.
+ * @throws {@link AranInputError} If `conf` or `root` are invalid.
  * @throws {@link AranClashError} If there is a clash between Aran variables and
  * the variable in `file.root`.
  */
@@ -331,8 +334,6 @@ export const retropile: (
  * not a valid ESTree program.
  * @throws {@link AranClashError} If there is a clash between Aran variables and
  * the variable in `file.root`.
- * @throws {@link AranPointcutError} If there is a problem with the provided
- * pointcut.
  */
 export const instrument: <path = string>(
   file: Partial<File<path>>,

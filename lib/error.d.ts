@@ -88,16 +88,4 @@ export type DuplicatePointcutErrorCause = {
   tag: Json;
 };
 
-/**
- * Signals that a join point has not been cut when it was required to do so.
- * Only the `eval@before`
- */
-export type MissingPointcutErrorCause = {
-  type: "MissingCut";
-  point: "eval@before";
-  tag: Json;
-};
-
-export type PointcutErrorCause =
-  | DuplicatePointcutErrorCause
-  | MissingPointcutErrorCause;
+export type PointcutErrorCause = DuplicatePointcutErrorCause;

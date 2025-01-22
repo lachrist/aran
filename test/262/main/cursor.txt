@@ -1,1 +1,13 @@
-0
+70
+{
+  "kind": "script",
+  "path": "annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js",
+  "directive": "use-strict",
+  "negative": null,
+  "asynchronous": false,
+  "includes": [
+    "assert.js",
+    "sta.js"
+  ],
+  "features": []
+}
