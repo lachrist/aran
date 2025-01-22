@@ -15,8 +15,8 @@ import type { ValueOf } from "../../util/util";
 export type Block<A extends Atom> = SegmentBlock<A> | RoutineBlock<A>;
 
 export type GenericPointcut<
-  atom extends Atom,
   point extends Json[],
+  atom extends Atom,
   node extends Node<atom>,
 > = (
   node: node,
@@ -34,22 +34,22 @@ export type GenericPointcut<
  * join points of the standard API.
  */
 export type AspectTyping<
-  atom extends Atom,
+  point extends Json[],
   state,
   value,
-  point extends Json[],
+  atom extends Atom,
 > = {
   // block //
   "block@setup": {
-    pointcut: GenericPointcut<atom, point, Block<atom>>;
+    pointcut: GenericPointcut<point, atom, Block<atom>>;
     advice: (parent: state, ...point: point) => state;
   };
   "block@before": {
-    pointcut: GenericPointcut<atom, point, Block<atom>>;
+    pointcut: GenericPointcut<point, atom, Block<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   "block@declaration": {
-    pointcut: GenericPointcut<atom, point, Block<atom>>;
+    pointcut: GenericPointcut<point, atom, Block<atom>>;
     advice: (
       state: state,
       frame: { [variable in atom["Variable"] | Parameter]: value },
@@ -57,7 +57,7 @@ export type AspectTyping<
     ) => void;
   };
   "block@declaration-overwrite": {
-    pointcut: GenericPointcut<atom, point, Block<atom>>;
+    pointcut: GenericPointcut<point, atom, Block<atom>>;
     advice: (
       state: state,
       frame: { [K in atom["Variable"] | Parameter]: value },
@@ -65,57 +65,57 @@ export type AspectTyping<
     ) => { [K in atom["Variable"] | Parameter]: value };
   };
   "program-block@after": {
-    pointcut: GenericPointcut<atom, point, RoutineBlock<atom>>;
+    pointcut: GenericPointcut<point, atom, RoutineBlock<atom>>;
     advice: (state: state, value: value, ...point: point) => value;
   };
   "closure-block@after": {
-    pointcut: GenericPointcut<atom, point, RoutineBlock<atom>>;
+    pointcut: GenericPointcut<point, atom, RoutineBlock<atom>>;
     advice: (state: state, value: value, ...point: point) => value;
   };
   "segment-block@after": {
-    pointcut: GenericPointcut<atom, point, SegmentBlock<atom>>;
+    pointcut: GenericPointcut<point, atom, SegmentBlock<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   "block@throwing": {
-    pointcut: GenericPointcut<atom, point, Block<atom>>;
+    pointcut: GenericPointcut<point, atom, Block<atom>>;
     advice: (state: state, error: value, ...point: point) => value;
   };
   "block@teardown": {
-    pointcut: GenericPointcut<atom, point, Block<atom>>;
+    pointcut: GenericPointcut<point, atom, Block<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   // statement //
   "statement@before": {
-    pointcut: GenericPointcut<atom, point, Statement<atom>>;
+    pointcut: GenericPointcut<point, atom, Statement<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   "statement@after": {
-    pointcut: GenericPointcut<atom, point, Statement<atom>>;
+    pointcut: GenericPointcut<point, atom, Statement<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   // effect //
   "effect@before": {
-    pointcut: GenericPointcut<atom, point, Effect<atom>>;
+    pointcut: GenericPointcut<point, atom, Effect<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   "effect@after": {
-    pointcut: GenericPointcut<atom, point, Effect<atom>>;
+    pointcut: GenericPointcut<point, atom, Effect<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   // expression //
   "expression@before": {
-    pointcut: GenericPointcut<atom, point, Expression<atom>>;
+    pointcut: GenericPointcut<point, atom, Expression<atom>>;
     advice: (state: state, ...point: point) => void;
   };
   "expression@after": {
-    pointcut: GenericPointcut<atom, point, Expression<atom>>;
+    pointcut: GenericPointcut<point, atom, Expression<atom>>;
     advice: (state: state, result: value, ...point: point) => value;
   };
   // eval //
   "eval@before": {
     pointcut: GenericPointcut<
-      atom,
       point,
+      atom,
       Expression<atom> & { type: "EvalExpression" }
     >;
     advice: (state: state, code: value, ...point: point) => value;
@@ -123,8 +123,8 @@ export type AspectTyping<
   // apply - construct //
   "apply@around": {
     pointcut: GenericPointcut<
-      atom,
       point,
+      atom,
       Expression<atom> & { type: "ApplyExpression" }
     >;
     advice: (
@@ -137,8 +137,8 @@ export type AspectTyping<
   };
   "construct@around": {
     pointcut: GenericPointcut<
-      atom,
       point,
+      atom,
       Expression<atom> & { type: "ConstructExpression" }
     >;
     advice: (
@@ -152,45 +152,63 @@ export type AspectTyping<
 
 export type AspectKind = keyof AspectTyping<never, never, never, never>;
 
+export type AspectElement<
+  point extends Json[] = Json[],
+  state extends unknown = unknown,
+  value extends unknown = unknown,
+  atom extends Atom = Atom,
+> = ValueOf<{
+  [kind in AspectKind]: {
+    kind: kind;
+    pointcut: AspectTyping<point, never, never, atom>[kind]["pointcut"];
+    advice: AspectTyping<point, state, value, never>[kind]["advice"];
+  };
+}>;
+
+export type PointcutElement<
+  point extends Json[] = Json[],
+  atom extends Atom = Atom,
+> = ValueOf<{
+  [kind in AspectKind]: {
+    kind: kind;
+    pointcut: AspectTyping<point, never, never, atom>[kind]["pointcut"];
+  };
+}>;
+
+export type AdviceElement<
+  point extends Json[] = Json[],
+  state extends unknown = unknown,
+  value extends unknown = unknown,
+> = ValueOf<{
+  [kind in AspectKind]: {
+    kind: kind;
+    advice: AspectTyping<point, state, value, never>[kind]["advice"];
+  };
+}>;
+
 export type Aspect<
-  atom extends Atom,
+  point extends Json[] = Json[],
   state = unknown,
   value = unknown,
-  point extends Json[] = Json[],
+  atom extends Atom = Atom,
   javascript_identifier extends string = string,
 > = {
-  [name in javascript_identifier]: ValueOf<{
-    [kind in AspectKind]: {
-      kind: kind;
-      pointcut: AspectTyping<atom, state, value, point>[kind]["pointcut"];
-      advice: AspectTyping<atom, state, value, point>[kind]["advice"];
-    };
-  }>;
+  [name in javascript_identifier]: AspectElement<point, state, value, atom>;
 };
 
 export type Pointcut<
-  atom extends Atom,
   point extends Json[] = Json[],
+  atom extends Atom = Atom,
   javascript_identifier extends string = string,
 > = {
-  [name in javascript_identifier]: ValueOf<{
-    [kind in AspectKind]: {
-      kind: kind;
-      pointcut: AspectTyping<atom, never, never, point>[kind]["pointcut"];
-    };
-  }>;
+  [name in javascript_identifier]: PointcutElement<point, atom>;
 };
 
 export type Advice<
+  point extends Json[] = Json[],
   state = unknown,
   value = unknown,
-  point extends Json[] = Json[],
   javascript_identifier extends string = string,
 > = {
-  [name in javascript_identifier]: ValueOf<{
-    [kind in AspectKind]: {
-      kind: kind;
-      advice: AspectTyping<never, state, value, point>[kind]["advice"];
-    };
-  }>;
+  [name in javascript_identifier]: AdviceElement<point, state, value>;
 };

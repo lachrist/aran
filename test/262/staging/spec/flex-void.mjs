@@ -2,6 +2,10 @@ import { weaveFlexible } from "aran";
 import { compileAran } from "../aran.mjs";
 import { record } from "../../record/index.mjs";
 
+const {
+  Reflect: { defineProperty },
+} = globalThis;
+
 /**
  * @type {import("aran").Digest<string>}
  */
@@ -25,12 +29,28 @@ const { setup, trans, retro } = compileAran(
   toEvalPath,
 );
 
+const ADVICE_VARIABLE = "__aran_eval_before__";
+
 /**
- * @type {import("aran").FlexibleWeaveConfig}
+ * @type {import("aran").FlexibleWeaveConfig<[], null>}
  */
 const conf = {
   initial_state: null,
-  pointcut: {},
+  pointcut: {
+    [ADVICE_VARIABLE]: {
+      kind: "eval@before",
+      pointcut: (_node, _parent, _root) => [],
+    },
+  },
+};
+
+/**
+ * @type {import("aran").FlexibleAdviceElement<[], null>}
+ */
+const advice = {
+  kind: "eval@before",
+  advice: (_state, root) =>
+    weaveFlexible(/** @type {import("aran").Program<any>} */ (root), conf),
 };
 
 /**
@@ -41,7 +61,17 @@ export default {
   negative: [],
   exclude: [],
   listLateNegative: (_test, _error) => [],
-  setup,
+  setup: (context) => {
+    const { intrinsics } = setup(context);
+    defineProperty(intrinsics["aran.global"], ADVICE_VARIABLE, {
+      // @ts-ignore
+      __proto__: null,
+      value: advice,
+      enumerable: false,
+      writable: false,
+      configurable: false,
+    });
+  },
   instrument: ({ type, kind, path, content }) =>
     record({
       path,

@@ -15,6 +15,8 @@ export type StageName =
   | "-track-origin"
   | "bare-comp"
   | "bare-main"
+  | "flex-full"
+  | "flex-void"
   | "identity"
   | "parsing"
   | "stnd-full"

@@ -16,6 +16,8 @@ export const STAGE_ENUM = {
   "-track-origin": null,
   "bare-comp": null,
   "bare-main": null,
+  "flex-full": null,
+  "flex-void": null,
   "identity": null,
   "parsing": null,
   "stnd-full": null,

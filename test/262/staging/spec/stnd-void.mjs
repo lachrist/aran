@@ -2,6 +2,10 @@ import { weaveStandard } from "aran";
 import { compileAran } from "../aran.mjs";
 import { record } from "../../record/index.mjs";
 
+const {
+  Reflect: { defineProperty },
+} = globalThis;
+
 /**
  * @type {import("aran").Digest<string>}
  */
@@ -33,7 +37,17 @@ const ADVICE_VARIABLE = "__aran_advice__";
 const conf = {
   advice_global_variable: ADVICE_VARIABLE,
   initial_state: null,
-  pointcut: false,
+  pointcut: ["eval@before"],
+};
+
+/**
+ * @type {import("aran").StandardAdvice}
+ */
+const advice = {
+  "eval@before": (_state, root, _tag) =>
+    /** @type {import("aran").Program & { kind: "eval", situ: "local.deep"}} */ (
+      weaveStandard(/** @type {import("aran").Program<any>} */ (root), conf)
+    ),
 };
 
 /**
@@ -44,7 +58,17 @@ export default {
   negative: [],
   exclude: [],
   listLateNegative: (_test, _error) => [],
-  setup,
+  setup: (context) => {
+    const { intrinsics } = setup(context);
+    defineProperty(intrinsics["aran.global"], ADVICE_VARIABLE, {
+      // @ts-ignore
+      __proto__: null,
+      value: advice,
+      enumerable: false,
+      writable: false,
+      configurable: false,
+    });
+  },
   instrument: ({ type, kind, path, content }) =>
     record({
       path,

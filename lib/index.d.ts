@@ -67,6 +67,9 @@ import type {
 import type {
   AspectTyping as FlexibleAspectTyping,
   AspectKind as FlexibleAspectKind,
+  AspectElement as FlexibleAspectElement,
+  PointcutElement as FlexiblePointcutElement,
+  AdviceElement as FlexibleAdviceElement,
   Aspect as FlexibleAspect,
   Pointcut as FlexiblePointcut,
   Advice as FlexibleAdvice,
@@ -137,6 +140,9 @@ export {
   FlexiblePointcut,
   FlexibleAspect,
   FlexibleAdvice,
+  FlexibleAspectElement,
+  FlexiblePointcutElement,
+  FlexibleAdviceElement,
 };
 
 ///////////
@@ -293,7 +299,7 @@ export const weaveFlexible: <
   conf?:
     | null
     | undefined
-    | Partial<FlexibleWeaveConfig<Json, arg_atom, string, Json[]>>,
+    | Partial<FlexibleWeaveConfig<Json[], Json, arg_atom, string>>,
 ) => Program<res_atom>;
 
 ///////////////

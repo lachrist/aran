@@ -6,7 +6,7 @@ import type { AspectKind, AspectTyping } from "./aspect";
 export type PointcutValue = ValueOf<{
   [kind in AspectKind]: {
     kind: kind;
-    pointcut: AspectTyping<ArgAtom, never, never, Json[]>[kind]["pointcut"];
+    pointcut: AspectTyping<Json[], never, never, ArgAtom>[kind]["pointcut"];
   };
 }>;
 
@@ -19,11 +19,11 @@ export type PointcutEntry = [VariableName, PointcutValue];
 export type OptimalPointcut = {
   [kind in AspectKind]: [
     VariableName,
-    AspectTyping<ArgAtom, never, never, Json[]>[kind]["pointcut"],
+    AspectTyping<Json[], never, never, ArgAtom>[kind]["pointcut"],
   ][];
 };
 
 export type OptimalPointcutEntry<kind extends AspectKind> = [
   VariableName,
-  AspectTyping<ArgAtom, never, never, Json[]>[kind]["pointcut"],
+  AspectTyping<Json[], never, never, ArgAtom>[kind]["pointcut"],
 ];

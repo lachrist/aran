@@ -101,9 +101,9 @@ const { setup, trans, retro } = compileAran(
  *   check: boolean
  * ) => asserts check}
  */
-const assert = (value) => {
-  if (!value) {
-    throw new AranTestError("assertion failure");
+const assert = (check) => {
+  if (!check) {
+    throw new AranTestError({ message: "assertion failure" });
   }
 };
 
@@ -390,6 +390,8 @@ const assertPrimitive = (primitive) => {
   assert(
     primitive == null ||
       typeof primitive === "boolean" ||
+      typeof primitive === "number" ||
+      typeof primitive === "bigint" ||
       typeof primitive === "string" ||
       typeof primitive === "symbol",
   );
@@ -686,7 +688,7 @@ const compileAdvice = ({ apply, construct }) => ({
  * @type {import("../stage").Stage}
  */
 export default {
-  precursor: ["bare-main"],
+  precursor: ["stnd-void"],
   negative: [],
   exclude: [],
   listLateNegative: (_test, _error) => [],
