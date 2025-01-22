@@ -11,7 +11,7 @@ export type PointcutValue = ValueOf<{
 }>;
 
 export type Pointcut = {
-  [name in VariableName]: PointcutValue;
+  [name in VariableName]?: PointcutValue;
 };
 
 export type PointcutEntry = [VariableName, PointcutValue];

@@ -1,13 +1,1 @@
-492
-{
-  "kind": "script",
-  "path": "annexB/language/eval-code/direct/func-block-decl-eval-func-block-scoping.js",
-  "directive": "none",
-  "negative": null,
-  "asynchronous": false,
-  "includes": [
-    "assert.js",
-    "sta.js"
-  ],
-  "features": []
-}
+0

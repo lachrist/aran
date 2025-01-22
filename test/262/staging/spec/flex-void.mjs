@@ -32,25 +32,24 @@ const { setup, trans, retro } = compileAran(
 const ADVICE_VARIABLE = "__aran_eval_before__";
 
 /**
- * @type {import("aran").FlexibleWeaveConfig<[], null>}
+ * @type {import("aran").FlexibleAspect<[], null>}
  */
-const conf = {
-  initial_state: null,
-  pointcut: {
-    [ADVICE_VARIABLE]: {
-      kind: "eval@before",
-      pointcut: (_node, _parent, _root) => [],
-    },
+const aspect = {
+  [ADVICE_VARIABLE]: {
+    kind: "eval@before",
+    pointcut: (_node, _parent, _root) => [],
+    advice: (_state, root) =>
+      // eslint-disable-next-line no-use-before-define
+      weaveFlexible(/** @type {import("aran").Program<any>} */ (root), conf),
   },
 };
 
 /**
- * @type {import("aran").FlexibleAdviceElement<[], null>}
+ * @type {import("aran").FlexibleWeaveConfig<[], null>}
  */
-const advice = {
-  kind: "eval@before",
-  advice: (_state, root) =>
-    weaveFlexible(/** @type {import("aran").Program<any>} */ (root), conf),
+const conf = {
+  initial_state: null,
+  pointcut: aspect,
 };
 
 /**
@@ -66,7 +65,7 @@ export default {
     defineProperty(intrinsics["aran.global"], ADVICE_VARIABLE, {
       // @ts-ignore
       __proto__: null,
-      value: advice.advice,
+      value: /** @type {{advice: Function}} */ (aspect[ADVICE_VARIABLE]).advice,
       enumerable: false,
       writable: false,
       configurable: false,

@@ -193,7 +193,7 @@ export type Aspect<
   atom extends Atom = Atom,
   javascript_identifier extends string = string,
 > = {
-  [name in javascript_identifier]: AspectElement<point, state, value, atom>;
+  [name in javascript_identifier]?: AspectElement<point, state, value, atom>;
 };
 
 export type Pointcut<
@@ -201,7 +201,7 @@ export type Pointcut<
   atom extends Atom = Atom,
   javascript_identifier extends string = string,
 > = {
-  [name in javascript_identifier]: PointcutElement<point, atom>;
+  [name in javascript_identifier]?: PointcutElement<point, atom>;
 };
 
 export type Advice<
@@ -210,5 +210,5 @@ export type Advice<
   value = unknown,
   javascript_identifier extends string = string,
 > = {
-  [name in javascript_identifier]: AdviceElement<point, state, value>;
+  [name in javascript_identifier]?: AdviceElement<point, state, value>;
 };
