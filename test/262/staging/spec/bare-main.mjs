@@ -1,3 +1,4 @@
+import { record } from "../../record/index.mjs";
 import { compileAran } from "../aran.mjs";
 
 /**
@@ -43,8 +44,9 @@ export default {
   exclude: ["function-string-representation"],
   listLateNegative: (_test, _error) => [],
   setup,
-  instrument: ({ type, kind, path, content }) => ({
-    path,
-    content: type === "main" ? retro(trans(path, kind, content)) : content,
-  }),
+  instrument: ({ type, kind, path, content }) =>
+    record({
+      path,
+      content: type === "main" ? retro(trans(path, kind, content)) : content,
+    }),
 };

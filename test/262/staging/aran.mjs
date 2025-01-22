@@ -3,6 +3,7 @@ import { generateSetup, retropile, transpile } from "../../../lib/index.mjs";
 import { recreateError } from "../util/index.mjs";
 import { AranTestError } from "../error.mjs";
 import { generate, parseGlobal, parseLocal } from "./estree.mjs";
+import { record } from "../record/index.mjs";
 
 const {
   JSON: { parse: parseJson },
@@ -71,10 +72,11 @@ export const compileAran = (config, toEvalPath) => {
       };
       intrinsics["aran.retropileEval"] = (root) => {
         try {
-          // const code = generate(retropile(root, config));
-          // console.log(code);
-          // return code;
-          return generate(retropile(root, config));
+          const { content } = record({
+            path: "dynamic://eval/local",
+            content: generate(retropile(root, config)),
+          });
+          return content;
         } catch (error) {
           throw new AranTestError(error);
         }

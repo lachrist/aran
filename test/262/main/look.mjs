@@ -1,5 +1,4 @@
 /* eslint-disable logical-assignment-operators */
-import { cleanup, record } from "../record/index.mjs";
 import { stdout, stderr, argv } from "node:process";
 import { loadCursor } from "./cursor.mjs";
 import { compileStage } from "../staging/index.mjs";
@@ -10,11 +9,9 @@ import { inspect } from "node:util";
 import { showTargetPath } from "../fetch.mjs";
 import { ROOT, TEST262 } from "../layout.mjs";
 
-const { Error, Infinity, URL, process } = globalThis;
+const { Error, Infinity, process } = globalThis;
 
 Error.stackTraceLimit = Infinity;
-
-const RECORD = new URL("record/", import.meta.url);
 
 /**
  * @type {(
@@ -26,11 +23,9 @@ const RECORD = new URL("record/", import.meta.url);
  * }>}
  */
 const look = async (stage) => {
-  await cleanup(RECORD);
   const cursor = await loadCursor();
   const exec = await compileStage(stage, {
     memoization: "none",
-    record: (file) => record(file, RECORD),
   });
   process.addListener("uncaughtException", onUncaughtException);
   try {

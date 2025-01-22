@@ -3,6 +3,7 @@
 import { weaveStandard } from "aran";
 import { AranTestError } from "../../error.mjs";
 import { compileAran } from "../aran.mjs";
+import { record } from "../../record/index.mjs";
 
 const {
   Object: { hasOwn },
@@ -710,9 +711,9 @@ export default {
       const root1 = trans(path, kind, code1);
       const root2 = weaveStandard(root1, weave_config);
       const code2 = retro(root2);
-      return { path, content: code2 };
+      return record({ path, content: code2 });
     } else {
-      return { path, content: code1 };
+      return record({ path, content: code1 });
     }
   },
 };

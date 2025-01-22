@@ -1,3 +1,5 @@
+import { record } from "../../record/index.mjs";
+
 const { Set } = globalThis;
 
 const features = new Set([
@@ -54,5 +56,5 @@ export default {
   listLateNegative: ({ features }, _error) =>
     features.filter(isFeatureExcluded),
   setup: (_context) => {},
-  instrument: (source) => source,
+  instrument: record,
 };

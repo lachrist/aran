@@ -1,8 +1,8 @@
-70
+492
 {
   "kind": "script",
-  "path": "annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js",
-  "directive": "use-strict",
+  "path": "annexB/language/eval-code/direct/func-block-decl-eval-func-block-scoping.js",
+  "directive": "none",
   "negative": null,
   "asynchronous": false,
   "includes": [

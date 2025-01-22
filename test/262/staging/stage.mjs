@@ -156,15 +156,12 @@ const memoizeInstrument = (instrument) => {
  *   name: import("./stage-name").StageName,
  *   options: {
  *     memoization: "none" | "lazy" | "eager",
- *     record: null | ((
- *       file: import("../util/file").File,
- *     ) => import("../util/file").File),
  *   },
  * ) => Promise<(
  *   test: import("../test-case").TestCase,
  * ) => Promise<import("../result").Result>>}
  */
-export const compileStage = async (name, { memoization, record }) => {
+export const compileStage = async (name, { memoization }) => {
   const fetch = {
     resolveDependency,
     fetchHarness: compileFetchHarness(TEST262),
@@ -188,10 +185,6 @@ export const compileStage = async (name, { memoization, record }) => {
         }
       }
     }
-  }
-  if (record) {
-    const { instrument } = stage;
-    stage.instrument = (source) => record(instrument(source));
   }
   return (test) => execStage(test, stage, fetch);
 };

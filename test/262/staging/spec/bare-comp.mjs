@@ -3,6 +3,7 @@
 import { compileAran } from "../aran.mjs";
 import { AranTypeError } from "../../error.mjs";
 import { recreateError } from "../../util/index.mjs";
+import { record } from "../../record/index.mjs";
 
 const {
   Array: {
@@ -181,11 +182,12 @@ const compileAdvice = (intrinsics) => {
         const code = input[0];
         if (typeof code === "string") {
           try {
-            return globals.eval(
-              retro(
-                weave(trans(`dynamic://eval/global/${hash}`, "eval", code)),
-              ),
-            );
+            const path = `dynamic://eval/global/${hash}`;
+            const { content } = record({
+              path,
+              content: retro(weave(trans(path, "eval", code))),
+            });
+            return globals.eval(content);
           } catch (error) {
             throw recreateError(error, syntax_error_mapping);
           }
@@ -194,11 +196,12 @@ const compileAdvice = (intrinsics) => {
       if (callee === globals.evalScript && input.length > 0) {
         const code = String(input[0]);
         try {
-          return globals.evalScript(
-            retro(
-              weave(trans(`dynamic://script/global/${hash}`, "script", code)),
-            ),
-          );
+          const path = `dynamic://script/global/${hash}`;
+          const { content } = record({
+            path,
+            content: retro(weave(trans(path, "script", code))),
+          });
+          return globals.evalScript(content);
         } catch (error) {
           throw recreateError(error, syntax_error_mapping);
         }
@@ -208,17 +211,14 @@ const compileAdvice = (intrinsics) => {
     construct: (callee, input, hash) => {
       if (callee === globals.Function) {
         try {
-          return globals.eval(
-            retro(
-              weave(
-                trans(
-                  `dynamic://function/global/${hash}`,
-                  "eval",
-                  compileFunctionCode(input),
-                ),
-              ),
+          const path = `dynamic://function/global/${hash}`;
+          const { content } = record({
+            path,
+            content: retro(
+              weave(trans(path, "eval", compileFunctionCode(input))),
             ),
-          );
+          });
+          return globals.eval(content);
         } catch (error) {
           throw recreateError(error, syntax_error_mapping);
         }
@@ -641,8 +641,9 @@ export default {
       });
     }
   },
-  instrument: ({ kind, path, content }) => ({
-    path,
-    content: retro(weave(trans(path, kind, content))),
-  }),
+  instrument: ({ kind, path, content }) =>
+    record({
+      path,
+      content: retro(weave(trans(path, kind, content))),
+    }),
 };

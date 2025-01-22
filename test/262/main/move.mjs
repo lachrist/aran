@@ -28,10 +28,7 @@ const { process, Infinity } = globalThis;
  * }>}
  */
 const move = async (stage, cursor, sigint) => {
-  const exec = await compileStage(stage, {
-    memoization: "lazy",
-    record: null,
-  });
+  const exec = await compileStage(stage, { memoization: "lazy" });
   let index = 0;
   for await (const test of loadTestCase()) {
     if (index % 100 === 0) {

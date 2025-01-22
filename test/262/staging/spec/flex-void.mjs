@@ -1,5 +1,6 @@
 import { weaveFlexible } from "aran";
 import { compileAran } from "../aran.mjs";
+import { record } from "../../record/index.mjs";
 
 /**
  * @type {import("aran").Digest<string>}
@@ -41,11 +42,12 @@ export default {
   exclude: [],
   listLateNegative: (_test, _error) => [],
   setup,
-  instrument: ({ type, kind, path, content }) => ({
-    path,
-    content:
-      type === "main"
-        ? retro(weaveFlexible(trans(path, kind, content), conf))
-        : content,
-  }),
+  instrument: ({ type, kind, path, content }) =>
+    record({
+      path,
+      content:
+        type === "main"
+          ? retro(weaveFlexible(trans(path, kind, content), conf))
+          : content,
+    }),
 };

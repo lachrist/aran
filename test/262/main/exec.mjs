@@ -21,10 +21,7 @@ const { process, Date, JSON } = globalThis;
  * >}
  */
 const exec = async function* (stage, sigint) {
-  const execTestCase = await compileStage(stage, {
-    memoization: "eager",
-    record: null,
-  });
+  const execTestCase = await compileStage(stage, { memoization: "eager" });
   let index = 0;
   for await (const test of loadTestCase()) {
     if (sigint.get()) {
