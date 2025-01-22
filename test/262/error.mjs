@@ -24,16 +24,19 @@ export const AranExecError = class extends Error {
   }
 };
 
+export const AranTestError = class extends Error {
+  constructor(/** @type {string} */ message, /** @type {unknown} */ data) {
+    console.log(`AranTestError >> ${message}`);
+    console.dir(data);
+    console.dir(new Error(message));
+    super(message);
+    this.name = "AranTestError";
+  }
+};
+
 export const AranNegativeError = class extends Error {
   constructor(/** @type {string} */ cause) {
     super(cause);
     this.name = "AranNegativeError";
-  }
-};
-
-export const AranTestError = class extends Error {
-  constructor(/** @type {unknown} */ error) {
-    super(inspectErrorMessage(error), { cause: error });
-    this.name = "AranTestError";
   }
 };

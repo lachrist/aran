@@ -148,13 +148,6 @@ const isNode = (node) =>
  *   node: import("aran").Node["type"],
  * ) => boolean}
  */
-const isProgramNodeType = (type) => type === "Program";
-
-/**
- * @type {(
- *   node: import("aran").Node["type"],
- * ) => boolean}
- */
 const isBlockType = (type) =>
   type === "RoutineBlock" || type === "SegmentBlock";
 
@@ -260,7 +253,7 @@ const isValueArray = isArray;
  */
 const assertEqual = (actual, expect) => {
   if (actual !== expect) {
-    throw new AranTestError({ message: "assertion failure", actual, expect });
+    throw new AranTestError("assertion failure", { actual, expect });
   }
 };
 
@@ -272,8 +265,7 @@ const assertEqual = (actual, expect) => {
  */
 const assertPredicate = (predicate, value) => {
   if (!predicate(value)) {
-    throw new AranTestError({
-      message: "assertion failure",
+    throw new AranTestError("assertion failure", {
       predicate: predicate.name,
       value,
     });
@@ -418,7 +410,6 @@ const compileAspect = ({ apply, construct }) => ({
     pointcut: compilePointcut("block@before"),
     advice: (...input) => {
       assertInput4(input, [isState, isAspectKind, isBlockType, isHash]);
-      return STATE;
     },
   },
   [toGlobalVariable("block@declaration")]: {
@@ -456,7 +447,7 @@ const compileAspect = ({ apply, construct }) => ({
         isState,
         isValue,
         isAspectKind,
-        isProgramNodeType,
+        isRoutineBlockType,
         isHash,
       ]);
       return input[1];
@@ -655,11 +646,11 @@ const { setup, trans, retro } = compileAran(
 const weave_config = {
   initial_state: STATE,
   pointcut: compileAspect({
-    apply: () => {
-      throw new AranTestError({ message: "dummy-apply" });
+    apply: (...input) => {
+      throw new AranTestError("dummy-apply", input);
     },
-    construct: () => {
-      throw new AranTestError({ message: "dummy-construct" });
+    construct: (...input) => {
+      throw new AranTestError("dummy-construct", input);
     },
   }),
 };

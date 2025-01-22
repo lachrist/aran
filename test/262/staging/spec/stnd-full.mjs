@@ -103,7 +103,7 @@ const { setup, trans, retro } = compileAran(
  */
 const assert = (check) => {
   if (!check) {
-    throw new AranTestError({ message: "assertion failure" });
+    throw new AranTestError("assertion failure");
   }
 };
 
