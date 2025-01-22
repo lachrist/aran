@@ -195,58 +195,58 @@ export type Parameter =
 // Node //
 //////////
 
-export type Program<A extends Atom = Atom> =
+export type Program<atom extends Atom = Atom> =
   | {
       type: "Program";
       kind: "module";
       situ: "global";
       head: ModuleHeader[];
-      body: HeadlessRoutineBlock<A>;
-      tag: A["Tag"];
+      body: HeadlessRoutineBlock<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "Program";
       kind: "script";
       situ: "global";
       head: DeclareHeader[];
-      body: HeadlessRoutineBlock<A>;
-      tag: A["Tag"];
+      body: HeadlessRoutineBlock<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "Program";
       kind: "eval";
       situ: "global";
       head: DeclareHeader[];
-      body: HeadlessRoutineBlock<A>;
-      tag: A["Tag"];
+      body: HeadlessRoutineBlock<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "Program";
       kind: "eval";
       situ: "local.root";
       head: DeclareHeader[];
-      body: HeadlessRoutineBlock<A>;
-      tag: A["Tag"];
+      body: HeadlessRoutineBlock<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "Program";
       kind: "eval";
       situ: "local.deep";
       head: [];
-      body: HeadlessRoutineBlock<A>;
-      tag: A["Tag"];
+      body: HeadlessRoutineBlock<atom>;
+      tag: atom["Tag"];
     };
 
 ///////////
 // Block //
 ///////////
 
-export type SegmentBlock<A extends Atom = Atom> = {
+export type SegmentBlock<atom extends Atom = Atom> = {
   type: "SegmentBlock";
-  labels: A["Label"][];
-  bindings: [A["Variable"], Intrinsic][];
-  body: Statement<A>[];
-  tag: A["Tag"];
+  labels: atom["Label"][];
+  bindings: [atom["Variable"], Intrinsic][];
+  body: Statement<atom>[];
+  tag: atom["Tag"];
 };
 
 export type RoutineBlock<A extends Atom = Atom> = {
@@ -258,161 +258,163 @@ export type RoutineBlock<A extends Atom = Atom> = {
   tag: A["Tag"];
 };
 
-export type HeadlessRoutineBlock<A extends Atom = Atom> = RoutineBlock<A> & {
-  head: null;
-};
+export type HeadlessRoutineBlock<atom extends Atom = Atom> =
+  RoutineBlock<atom> & {
+    head: null;
+  };
 
-export type HeadfulRoutineBlock<A extends Atom = Atom> = RoutineBlock<A> & {
-  head: Effect<A>[];
-};
+export type HeadfulRoutineBlock<atom extends Atom = Atom> =
+  RoutineBlock<atom> & {
+    head: Effect<atom>[];
+  };
 
-export type Statement<A extends Atom = Atom> =
+export type Statement<atom extends Atom = Atom> =
   | {
       type: "EffectStatement";
-      inner: Effect<A>;
-      tag: A["Tag"];
+      inner: Effect<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "BreakStatement";
-      label: A["Label"];
-      tag: A["Tag"];
+      label: atom["Label"];
+      tag: atom["Tag"];
     }
   | {
       type: "DebuggerStatement";
-      tag: A["Tag"];
+      tag: atom["Tag"];
     }
   | {
       type: "BlockStatement";
-      body: SegmentBlock<A>;
-      tag: A["Tag"];
+      body: SegmentBlock<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "IfStatement";
-      test: Expression<A>;
-      then: SegmentBlock<A>;
-      else: SegmentBlock<A>;
-      tag: A["Tag"];
+      test: Expression<atom>;
+      then: SegmentBlock<atom>;
+      else: SegmentBlock<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "WhileStatement";
-      test: Expression<A>;
-      body: SegmentBlock<A>;
-      tag: A["Tag"];
+      test: Expression<atom>;
+      body: SegmentBlock<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "TryStatement";
-      try: SegmentBlock<A>;
-      catch: SegmentBlock<A>;
-      finally: SegmentBlock<A>;
-      tag: A["Tag"];
+      try: SegmentBlock<atom>;
+      catch: SegmentBlock<atom>;
+      finally: SegmentBlock<atom>;
+      tag: atom["Tag"];
     };
 
-export type Effect<A extends Atom = Atom> =
+export type Effect<atom extends Atom = Atom> =
   | {
       type: "ExpressionEffect";
-      discard: Expression<A>;
-      tag: A["Tag"];
+      discard: Expression<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "ConditionalEffect";
-      test: Expression<A>;
-      positive: Effect<A>[];
-      negative: Effect<A>[];
-      tag: A["Tag"];
+      test: Expression<atom>;
+      positive: Effect<atom>[];
+      negative: Effect<atom>[];
+      tag: atom["Tag"];
     }
   | {
       type: "WriteEffect";
-      variable: Parameter | A["Variable"];
-      value: Expression<A>;
-      tag: A["Tag"];
+      variable: Parameter | atom["Variable"];
+      value: Expression<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "ExportEffect";
-      export: A["Specifier"];
-      value: Expression<A>;
-      tag: A["Tag"];
+      export: atom["Specifier"];
+      value: Expression<atom>;
+      tag: atom["Tag"];
     };
 
-export type Expression<A extends Atom = Atom> =
+export type Expression<atom extends Atom = Atom> =
   // Produce //
   | {
       type: "PrimitiveExpression";
       primitive: SyntaxPrimitive;
-      tag: A["Tag"];
+      tag: atom["Tag"];
     }
   | {
       type: "IntrinsicExpression";
       intrinsic: Intrinsic;
-      tag: A["Tag"];
+      tag: atom["Tag"];
     }
   | {
       type: "ImportExpression";
-      source: A["Source"];
-      import: A["Specifier"] | null;
-      tag: A["Tag"];
+      source: atom["Source"];
+      import: atom["Specifier"] | null;
+      tag: atom["Tag"];
     }
   | {
       type: "ReadExpression";
-      variable: Parameter | A["Variable"];
-      tag: A["Tag"];
+      variable: Parameter | atom["Variable"];
+      tag: atom["Tag"];
     }
   | {
       type: "ClosureExpression";
       kind: HeadlessClosureKind;
       asynchronous: boolean;
-      body: HeadlessRoutineBlock<A>;
-      tag: A["Tag"];
+      body: HeadlessRoutineBlock<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "ClosureExpression";
       kind: HeadfulClosureKind;
       asynchronous: boolean;
-      body: HeadfulRoutineBlock<A>;
-      tag: A["Tag"];
+      body: HeadfulRoutineBlock<atom>;
+      tag: atom["Tag"];
     }
   // Control //
   | {
       type: "AwaitExpression";
-      promise: Expression<A>;
-      tag: A["Tag"];
+      promise: Expression<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "YieldExpression";
       delegate: boolean;
-      item: Expression<A>;
-      tag: A["Tag"];
+      item: Expression<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "SequenceExpression";
-      head: Effect<A>[];
-      tail: Expression<A>;
-      tag: A["Tag"];
+      head: Effect<atom>[];
+      tail: Expression<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "ConditionalExpression";
-      test: Expression<A>;
-      consequent: Expression<A>;
-      alternate: Expression<A>;
-      tag: A["Tag"];
+      test: Expression<atom>;
+      consequent: Expression<atom>;
+      alternate: Expression<atom>;
+      tag: atom["Tag"];
     }
   // Combine //
   | {
       type: "EvalExpression";
-      code: Expression<A>;
-      tag: A["Tag"];
+      code: Expression<atom>;
+      tag: atom["Tag"];
     }
   | {
       type: "ApplyExpression";
-      callee: Expression<A>;
-      this: Expression<A>;
-      arguments: Expression<A>[];
-      tag: A["Tag"];
+      callee: Expression<atom>;
+      this: Expression<atom>;
+      arguments: Expression<atom>[];
+      tag: atom["Tag"];
     }
   | {
       type: "ConstructExpression";
-      callee: Expression<A>;
-      arguments: Expression<A>[];
-      tag: A["Tag"];
+      callee: Expression<atom>;
+      arguments: Expression<atom>[];
+      tag: atom["Tag"];
     };
 
 export type Node<A extends Atom = Atom> =

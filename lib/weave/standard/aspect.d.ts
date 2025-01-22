@@ -6,7 +6,7 @@ import type {
   Program,
   RuntimePrimitive,
 } from "../../lang/syntax";
-import type { ValueOf } from "../../util/util";
+import type { Json, ValueOf } from "../../util/util";
 import type {
   ControlKind,
   ProgramKind,
@@ -72,6 +72,7 @@ export type TaggedHead = ValueOf<{
  * static information provided to the advice functions.
  */
 export type AspectTyping<
+  initial_state extends Json = Json,
   state = unknown,
   atom extends Atom = Atom,
   valuation extends Valuation = Valuation,
@@ -83,9 +84,21 @@ export type AspectTyping<
    * passed to the other advice of this block. If the block is the root block
    * -- ie a program block -- it will receive a clone of `config.initial_state`.
    */
-  "block@setup": {
-    pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
-    advice: (state: state, kind: ControlKind, tag: atom["Tag"]) => state;
+  "program-block@setup": {
+    pointcut: (kind: ProgramKind, tag: atom["Tag"]) => boolean;
+    advice: (
+      initial_state: initial_state,
+      kind: ProgramKind,
+      tag: atom["Tag"],
+    ) => state;
+  };
+  "closure-block@setup": {
+    pointcut: (kind: ClosureKind, tag: atom["Tag"]) => boolean;
+    advice: (state: state, kind: ClosureKind, tag: atom["Tag"]) => state;
+  };
+  "segment-block@setup": {
+    pointcut: (kind: SegmentKind, tag: atom["Tag"]) => boolean;
+    advice: (state: state, kind: SegmentKind, tag: atom["Tag"]) => state;
   };
   /**
    * Called before entering a program block with the headers of the program.
@@ -131,10 +144,12 @@ export type AspectTyping<
    */
   "block@declaration": {
     pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
-    advice: <kind extends ControlKind>(
+    advice: (
       state: state,
-      kind: kind,
-      frame: Frame<kind, atom["Variable"], valuation["Scope"]>,
+      kind: ControlKind,
+      frame: {
+        [identifier in atom["Variable"] | Parameter]?: valuation["Scope"];
+      },
       tag: atom["Tag"],
     ) => void;
   };
@@ -149,9 +164,13 @@ export type AspectTyping<
     advice: <kind extends ControlKind>(
       state: state,
       kind: kind,
-      frame: Frame<kind, atom["Variable"], valuation["Scope"]>,
+      frame: {
+        [identifier in atom["Variable"] | Parameter]?: valuation["Scope"];
+      },
       tag: atom["Tag"],
-    ) => Frame<kind, atom["Variable"], valuation["Scope"]>;
+    ) => {
+      [identifier in atom["Variable"] | Parameter]?: valuation["Scope"];
+    };
   };
   /**
    * Called right before leaving the head of a generator function. That is right
@@ -303,12 +322,12 @@ export type AspectTyping<
    */
   "read@after": {
     pointcut: (
-      variable: Parameter | atom["Variable"],
+      identifier: Parameter | atom["Variable"],
       tag: atom["Tag"],
     ) => boolean;
     advice: (
       state: state,
-      variable: Parameter | atom["Variable"],
+      identifier: Parameter | atom["Variable"],
       value: valuation["Scope"],
       tag: atom["Tag"],
     ) => valuation["Stack"];
@@ -419,12 +438,12 @@ export type AspectTyping<
    */
   "write@before": {
     pointcut: (
-      variable: Parameter | atom["Variable"],
+      identifier: Parameter | atom["Variable"],
       tag: atom["Tag"],
     ) => boolean;
     advice: (
       state: state,
-      variable: Parameter | atom["Variable"],
+      identifier: Parameter | atom["Variable"],
       value: valuation["Stack"],
       tag: atom["Tag"],
     ) => valuation["Scope"];
@@ -458,49 +477,61 @@ export type AspectTyping<
   };
 };
 
-export type Kind = keyof AspectTyping<never, never, never>;
+export type AspectKind = keyof AspectTyping<never, never, never>;
 
 export type Aspect<
-  state,
-  atom extends Atom = Atom,
-  valuation extends Valuation = Valuation,
-> = {
-  [key in Kind]?:
-    | null
-    | undefined
-    | AspectTyping<state, atom, valuation>[key]["advice"]
-    | {
-        pointcut:
-          | boolean
-          | AspectTyping<state, atom, valuation>[key]["pointcut"];
-        advice: AspectTyping<state, atom, valuation>[key]["advice"];
-      };
-};
-
-export type Advice<
+  initial_state extends Json = Json,
   state = unknown,
   atom extends Atom = Atom,
   valuation extends Valuation = Valuation,
 > = {
-  [key in Kind]?:
+  [key in AspectKind]?:
     | null
     | undefined
-    | AspectTyping<state, atom, valuation>[key]["advice"];
+    | AspectTyping<initial_state, state, atom, valuation>[key]["advice"]
+    | {
+        pointcut:
+          | boolean
+          | AspectTyping<
+              initial_state,
+              state,
+              atom,
+              valuation
+            >[key]["pointcut"];
+        advice: AspectTyping<
+          initial_state,
+          state,
+          atom,
+          valuation
+        >[key]["advice"];
+      };
+};
+
+export type Advice<
+  initial_state extends Json = Json,
+  state = unknown,
+  atom extends Atom = Atom,
+  valuation extends Valuation = Valuation,
+> = {
+  [key in AspectKind]?:
+    | null
+    | undefined
+    | AspectTyping<initial_state, state, atom, valuation>[key]["advice"];
 };
 
 export type ObjectPointcut<atom extends Atom = Atom> = {
-  [key in Kind]?:
+  [key in AspectKind]?:
     | null
     | undefined
     | boolean
-    | AspectTyping<never, atom, never>[key]["pointcut"];
+    | AspectTyping<never, never, atom, never>[key]["pointcut"];
 };
 
 export type ConstantPointcut = boolean;
 
-export type ArrayPointcut = Kind[];
+export type ArrayPointcut = AspectKind[];
 
-export type ArrowPointcut<T> = (kind: Kind, tag: T) => boolean;
+export type ArrowPointcut<T> = (kind: AspectKind, tag: T) => boolean;
 
 export type Pointcut<atom extends Atom = Atom> =
   | ObjectPointcut<atom>

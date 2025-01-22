@@ -1,14 +1,20 @@
-import type {
-  AranVariable,
-  AranParameter,
-  AranIntrinsicName,
-  AranSource,
-  AranSpecifier,
-  AranClosureKind,
-} from "../../";
-import type { NodeHash } from "../262/aran/config";
+import { ClosureKind, Intrinsic, Parameter } from "aran";
 
-export type Key = AranVariable | AranParameter;
+export type Variable = string & { __brand: "Variable" };
+export type Label = string & { __brand: "Label" };
+export type Specifier = string & { __brand: "Specifier" };
+export type Source = string & { __brand: "Source" };
+export type Hash = `hash:${string}`;
+
+export type Atom = {
+  Variable: Variable;
+  Label: Label;
+  Specifier: Specifier;
+  Source: Source;
+  Tag: Hash;
+};
+
+export type Identifier = Variable | Parameter;
 
 export type Transit =
   | { type: "void" }
@@ -46,54 +52,54 @@ export type ShadowValue =
   | {
       type: "arguments";
       values: ShadowValue[];
-      hash: NodeHash;
+      hash: Hash;
     }
   | {
       type: "primitive";
       value: number | string | boolean | null | { bigint: string };
-      hash: NodeHash;
+      hash: Hash;
     }
   | {
       type: "closure";
-      kind: AranClosureKind;
-      hash: NodeHash;
+      kind: ClosureKind;
+      hash: Hash;
     }
   | {
       type: "intrinsic";
-      name: AranIntrinsicName;
-      hash: NodeHash;
+      name: Intrinsic;
+      hash: Hash;
     }
   | {
       type: "initial";
-      variable: Key;
-      hash: NodeHash;
+      variable: Identifier;
+      hash: Hash;
     }
   | {
       type: "import";
-      source: AranSource;
-      specifier: AranSpecifier | null;
-      hash: NodeHash;
+      source: Source;
+      specifier: Specifier | null;
+      hash: Hash;
     }
   | {
       type: "apply";
       function: ShadowValue;
       this: ShadowValue;
       arguments: ShadowValue[];
-      hash: NodeHash;
+      hash: Hash;
     }
   | {
       type: "construct";
       function: ShadowValue;
       arguments: ShadowValue[];
-      hash: NodeHash;
+      hash: Hash;
     }
   | {
       type: "resolve";
-      hash: NodeHash;
+      hash: Hash;
     }
   | {
       type: "resume";
-      hash: NodeHash;
+      hash: Hash;
     };
 
 export type Value = unknown & { __brand: "Value" };
@@ -105,7 +111,7 @@ export type Valuation = {
 };
 
 export type ShadowFrame = {
-  [key in Key]?: ShadowValue;
+  [key in Identifier]?: ShadowValue;
 };
 
 export type ShadowState = {

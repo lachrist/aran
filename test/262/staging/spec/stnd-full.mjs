@@ -25,6 +25,7 @@ const {
  * )} FilePath
  * @typedef {string & {__brand: "JavaScriptIdentifier"}} JavaScriptIdentifier
  * @typedef {string & {__brand: "Variable"}} Variable
+ * @typedef {Variable | import("aran").Parameter} Identifier
  * @typedef {string & {__brand: "Label"}} Label
  * @typedef {string & {__brand: "Specifier"}} Specifier
  * @typedef {string & {__brand: "Source"}} Source
@@ -41,6 +42,7 @@ const {
  *   Stack: Value,
  *   Other: Value,
  * }} Valuation
+ * @typedef {"@initial-state"} InitialState
  * @typedef {"@state"} State
  */
 
@@ -48,6 +50,9 @@ const ADVICE_VARIABLE = /** @type {JavaScriptIdentifier} */ ("__aran_advice__");
 
 /** @type {State} */
 const STATE = "@state";
+
+/** @type {InitialState} */
+const INITIAL_STATE = "@initial-state";
 
 /**
  * @type {import("aran").Digest<Hash, FilePath>}
@@ -60,10 +65,16 @@ const digest = (_node, node_path, file_path, _kind) =>
  */
 const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
-/** @type {import("aran").StandardWeaveConfig<State, Atom, JavaScriptIdentifier>} */
+/**
+ * @type {import("aran").StandardWeaveConfig<
+ *   InitialState,
+ *   Atom,
+ *   JavaScriptIdentifier,
+ * >}
+ */
 const weave_config = {
   advice_global_variable: ADVICE_VARIABLE,
-  initial_state: STATE,
+  initial_state: INITIAL_STATE,
   pointcut: true,
 };
 
@@ -118,11 +129,11 @@ const assertLabel = (label) => {
 
 /**
  * @type {(
- *   variable: Variable | import("aran").Parameter,
+ *   identifier: Identifier,
  * ) => void}
  */
-const assertVariable = (variable) => {
-  assert(typeof variable === "string");
+const assertIdentifier = (identifier) => {
+  assert(typeof identifier === "string");
 };
 
 /**
@@ -171,6 +182,15 @@ const assertHash = (hash) => {
  */
 const assertState = (state) => {
   assert(state === STATE);
+};
+
+/**
+ * @type {(
+ *   arg: InitialState,
+ * ) => void}
+ */
+const assertInitialState = (state) => {
+  assert(state === INITIAL_STATE);
 };
 
 /**
@@ -355,7 +375,7 @@ const assertValueArray = (values) => {
 
 /**
  * @type {(
- *   head: { [key in Variable]?: Value },
+ *   head: { [key in Identifier]?: Value },
  * ) => void}
  */
 const assertFrame = (frame) => {
@@ -482,14 +502,27 @@ const assertInput5 = assertInput;
  *   },
  * ) => {
  *   [key in keyof import("aran").StandardAspectTyping]
- *     : import("aran").StandardAspectTyping<State, Atom, Valuation>[key]["advice"]
+ *     : import("aran").StandardAspectTyping<
+ *         InitialState,
+ *         State,
+ *         Atom,
+ *         Valuation,
+ *       >[key]["advice"]
  * }}
  */
 const compileAdvice = ({ apply, construct }) => ({
   // Block //
-  "block@setup": (...input) => {
-    assertInput3(input, [assertState, assertControlKind, assertHash]);
-    return input[0];
+  "program-block@setup": (...input) => {
+    assertInput3(input, [assertInitialState, assertProgramKind, assertHash]);
+    return STATE;
+  },
+  "closure-block@setup": (...input) => {
+    assertInput3(input, [assertState, assertClosureKind, assertHash]);
+    return STATE;
+  },
+  "segment-block@setup": (...input) => {
+    assertInput3(input, [assertState, assertSegmentKind, assertHash]);
+    return STATE;
   },
   "program-block@before": (...input) => {
     assertInput4(input, [
@@ -568,7 +601,12 @@ const compileAdvice = ({ apply, construct }) => ({
   },
   // before || after //
   "write@before": (...input) => {
-    assertInput4(input, [assertState, assertVariable, assertValue, assertHash]);
+    assertInput4(input, [
+      assertState,
+      assertIdentifier,
+      assertValue,
+      assertHash,
+    ]);
     return input[2];
   },
   "import@after": (...input) => {
@@ -586,7 +624,12 @@ const compileAdvice = ({ apply, construct }) => ({
     return /** @type {Value} */ (/** @type {unknown} */ (input[1]));
   },
   "read@after": (...input) => {
-    assertInput4(input, [assertState, assertVariable, assertValue, assertHash]);
+    assertInput4(input, [
+      assertState,
+      assertIdentifier,
+      assertValue,
+      assertHash,
+    ]);
     return input[2];
   },
   "closure@after": (...input) => {

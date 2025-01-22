@@ -6,18 +6,22 @@ import {
   setupAranBasic,
   setupStandardAdvice,
 } from "../aran/index.mjs";
-import { makeTrackOriginAdvice } from "../../../aspects/track-origin.mjs";
+import {
+  pointcut,
+  createTrackOriginAdvice,
+} from "../../../aspects/track-origin.mjs";
 
 const {
   Object: { hasOwn },
 } = globalThis;
 
-const DUMMY_ADVICE = makeTrackOriginAdvice(DUMMY_BASIC_MEMBRANE);
+const ADVICE_VARIABLE = "__aran_advice__";
 
 /**
- * @type {import("../aran/config").Config}
+ * @type {import("../../../../lib").StandardWeaveConfig}
  */
 const config = {
+  advice_global_variable,
   selection: ["main", "local"],
   global_declarative_record: "builtin",
   initial_state: {
@@ -38,7 +42,7 @@ export default {
   setup: (context) => {
     setupStandardAdvice(
       context,
-      makeTrackOriginAdvice(setupAranBasic(context)),
+      createTrackOriginAdvice(setupAranBasic(context)),
     );
   },
   instrument: (source) => instrument(source, config),

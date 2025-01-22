@@ -1,5 +1,8 @@
+import { weaveStandard } from "aran";
+
 const {
   String,
+  Reflect: { ownKeys },
   Object: { hasOwn, is },
 } = globalThis;
 
@@ -16,15 +19,6 @@ class AranExecError extends Error {
   constructor(/** @type {string} */ message) {
     super(message);
     this.name = "AranExecError";
-  }
-}
-/* eslint-enable */
-
-/* eslint-disable */
-class AranTypeError extends Error {
-  constructor(/** @type {never} */ data) {
-    super("type error");
-    this.name = "AranTypeError";
   }
 }
 /* eslint-enable */
@@ -56,49 +50,89 @@ const push = (array, item) => {
 };
 
 /**
+ * @type {import("aran").StandardAspectKind[]}
+ */
+export const pointcut = [
+  "block@setup",
+  "block@declaration",
+  "program-block@after",
+  "closure-block@after",
+  "apply@around",
+  "construct@around",
+  "primitive@after",
+  "intrinsic@after",
+  "import@after",
+  "read@after",
+  "closure@after",
+  "test@before",
+  "write@before",
+  "export@before",
+  "drop@before",
+  "eval@before",
+  "eval@after",
+  "await@before",
+  "await@after",
+  "yield@before",
+  "yield@after",
+];
+
+/**
  * @type {(
- *   membrane: import("../262/aran/membrane").BasicMembrane,
+ *   Reflect: {
+ *     apply: (
+ *       callee: import("./track-origin").Value,
+ *       that: import("./track-origin").Value,
+ *       input: import("./track-origin").Value[],
+ *     ) => import("./track-origin").Value,
+ *     construct: (
+ *       callee: import("./track-origin").Value,
+ *       input: import("./track-origin").Value[],
+ *     ) => import("./track-origin").Value,
+ *   },
+ *   options: {
+ *     advice_global_variable: string,
+ *   },
  * ) => import("../../").StandardAdvice<
- *   import("../262/aran/config").NodeHash,
  *   import("./track-origin").ShadowState,
+ *   import("./track-origin").Atom,
  *   import("./track-origin").Valuation,
  * >}
  */
-export const makeTrackOriginAdvice = ({
-  intrinsics,
-  instrumentLocalEvalCode,
-}) => {
+export const createTrackOriginAdvice = (
+  { apply, construct },
+  { advice_global_variable },
+) => {
   /** @type {import("./track-origin").Transit} */
   let transit = { type: "void" };
   /**
    * @type {import("../../").StandardAdvice<
-   *   import("../262/aran/config").NodeHash,
    *   import("./track-origin").ShadowState,
+   *   import("./track-origin").Atom,
    *   import("./track-origin").Valuation,
    * >}
    */
-  return {
+  const advice = {
     "block@setup": (state, _kind, _hash) => ({
       parent: state,
       frame: { __proto__: null },
       stack: [],
     }),
     "block@declaration": (state, _kind, frame, hash) => {
-      for (const key in frame) {
-        state.frame[/** @type {import("./track-origin").Key} */ (key)] = {
+      for (const identifier in frame) {
+        state.frame[
+          /** @type {import("./track-origin").Identifier} */ (identifier)
+        ] = {
           type: "initial",
-          variable: /** @type {import("./track-origin").Key} */ (key),
+          variable: /** @type {import("./track-origin").Identifier} */ (
+            identifier
+          ),
           hash,
         };
       }
       if (
         (transit.type === "apply" || transit.type === "construct") &&
-        isSame(
-          transit.source.function,
-          /** @type {import("./track-origin").Value} */ (
-            frame["function.callee"]
-          ),
-        )
+        "function.callee" in frame &&
+        isSame(transit.source.function, frame["function.callee"])
       ) {
         state.frame["function.callee"] = transit.shadow.function;
         if (transit.type === "apply") {
@@ -121,9 +155,9 @@ export const makeTrackOriginAdvice = ({
       return value;
     },
     // Call //
-    "apply@around": (state, function_, this_, arguments_, hash) => {
+    "apply@around": (state, callee, that, input, hash) => {
       const shadow_argument_array = [];
-      for (let index = arguments_.length - 1; index >= 0; index -= 1) {
+      for (let index = input.length - 1; index >= 0; index -= 1) {
         shadow_argument_array[index] = pop(state.stack);
       }
       const shadow_this = pop(state.stack);
@@ -131,9 +165,9 @@ export const makeTrackOriginAdvice = ({
       transit = /** @type {import("./track-origin").Transit} */ ({
         type: "apply",
         source: {
-          function: function_,
-          this: this_,
-          arguments: arguments_,
+          function: callee,
+          this: that,
+          arguments: input,
         },
         shadow: {
           function: shadow_function,
@@ -141,13 +175,7 @@ export const makeTrackOriginAdvice = ({
           arguments: shadow_argument_array,
         },
       });
-      const result = /** @type {import("./track-origin").Value} */ (
-        intrinsics["Reflect.apply"](
-          /** @type {any} */ (function_),
-          this_,
-          arguments_,
-        )
-      );
+      const result = apply(callee, that, input);
       if (transit.type === "return" && isSame(transit.source, result)) {
         push(state.stack, transit.shadow);
       } else {
@@ -161,29 +189,24 @@ export const makeTrackOriginAdvice = ({
       }
       return result;
     },
-    "construct@around": (state, function_, arguments_, hash) => {
+    "construct@around": (state, callee, input, hash) => {
       const shadow_argument_array = [];
-      for (let index = arguments_.length - 1; index >= 0; index -= 1) {
+      for (let index = input.length - 1; index >= 0; index -= 1) {
         shadow_argument_array[index] = pop(state.stack);
       }
       const shadow_function = pop(state.stack);
       transit = /** @type {import("./track-origin").Transit} */ ({
         type: "construct",
         source: {
-          function: function_,
-          arguments: arguments_,
+          function: callee,
+          arguments: input,
         },
         shadow: {
           function: shadow_function,
           arguments: shadow_argument_array,
         },
       });
-      const result = /** @type {import("./track-origin").Value} */ (
-        intrinsics["Reflect.construct"](
-          /** @type {any} */ (function_),
-          arguments_,
-        )
-      );
+      const result = construct(callee, input);
       if (transit.type === "return" && isSame(transit.source, result)) {
         push(state.stack, transit.shadow);
       } else {
@@ -202,7 +225,9 @@ export const makeTrackOriginAdvice = ({
         value: typeof value === "bigint" ? { bigint: String(value) } : value,
         hash,
       });
-      return value;
+      return /** @type {import("./track-origin").Value} */ (
+        /** @type {unknown} */ (value)
+      );
     },
     "intrinsic@after": (state, name, value, hash) => {
       push(state.stack, {
@@ -267,15 +292,14 @@ export const makeTrackOriginAdvice = ({
       return value;
     },
     // Jump //
-    "eval@before": (state, reboot, value, _hash) => {
-      if (typeof value === "string") {
-        pop(state.stack);
-        return instrumentLocalEvalCode(value, reboot);
-      } else {
-        transit = { type: "return", source: value, shadow: pop(state.stack) };
-        return value;
-      }
-    },
+    "eval@before": (state, value, _hash) =>
+      /** @type {any} */ (
+        weaveStandard(/** @type {any} */ (value), {
+          initial_state: state,
+          pointcut,
+          advice_global_variable,
+        })
+      ),
     "eval@after": (state, value, _hash) => {
       if (transit.type === "return" && isSame(value, transit.source)) {
         push(state.stack, transit.shadow);
@@ -307,4 +331,14 @@ export const makeTrackOriginAdvice = ({
       return value;
     },
   };
+  if (ownKeys(advice).length !== pointcut.length) {
+    throw new AranExecError("advice-pointcut arity mismathc");
+  }
+  for (let index = 0; index < pointcut.length; index++) {
+    const kind = pointcut[index];
+    if (!hasOwn(advice, kind)) {
+      throw new AranExecError(`advice-pointcut kind mismatch ${kind}`);
+    }
+  }
+  return advice;
 };

@@ -52,7 +52,7 @@ export type AspectTyping<
     pointcut: GenericPointcut<point, atom, Block<atom>>;
     advice: (
       state: state,
-      frame: { [variable in atom["Variable"] | Parameter]: value },
+      frame: { [identifier in atom["Variable"] | Parameter]: value },
       ...point: point
     ) => void;
   };
@@ -60,9 +60,9 @@ export type AspectTyping<
     pointcut: GenericPointcut<point, atom, Block<atom>>;
     advice: (
       state: state,
-      frame: { [K in atom["Variable"] | Parameter]: value },
+      frame: { [identifier in atom["Variable"] | Parameter]: value },
       ...point: point
-    ) => { [K in atom["Variable"] | Parameter]: value };
+    ) => { [identifier in atom["Variable"] | Parameter]: value };
   };
   "program-block@after": {
     pointcut: GenericPointcut<point, atom, RoutineBlock<atom>>;

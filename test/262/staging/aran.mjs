@@ -1,6 +1,6 @@
 import { runInContext } from "node:vm";
 import { generateSetup, retropile, transpile } from "../../../lib/index.mjs";
-import { recreateError } from "../util/index.mjs";
+import { inspectErrorMessage, recreateError } from "../util/index.mjs";
 import { AranTestError } from "../error.mjs";
 import { generate, parseGlobal, parseLocal } from "./estree.mjs";
 import { record } from "../record/index.mjs";
@@ -78,7 +78,7 @@ export const compileAran = (config, toEvalPath) => {
           });
           return content;
         } catch (error) {
-          throw new AranTestError(error);
+          throw new AranTestError(inspectErrorMessage(error), error);
         }
       };
       return { intrinsics, $262 };

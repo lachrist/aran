@@ -59,6 +59,7 @@ import {
 } from "./weave/parametrization";
 import type {
   TestKind,
+  AspectKind as StandardAspectKind,
   AspectTyping as StandardAspectTyping,
   Pointcut as StandardPointcut,
   Aspect as StandardAspect,
@@ -125,6 +126,7 @@ export {
   Intrinsic,
   Parameter,
   // Aspect //
+  StandardAspectKind,
   FlexibleAspectKind,
   GeneratorKind,
   ProgramKind,
