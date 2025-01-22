@@ -53,8 +53,9 @@ const push = (array, item) => {
  * @type {import("aran").StandardAspectKind[]}
  */
 export const pointcut = [
-  "block@setup",
-  "block@declaration",
+  "program-block@setup",
+  "closure-block@setup",
+  "segment-block@setup",
   "program-block@after",
   "closure-block@after",
   "apply@around",
@@ -78,6 +79,17 @@ export const pointcut = [
 
 /**
  * @type {(
+ *   parent: null | import("./track-origin").ShadowState,
+ * ) => import("./track-origin").ShadowState}
+ */
+const extendState = (parent) => ({
+  parent,
+  frame: /** @type {any} */ ({ __proto__: null }),
+  stack: [],
+});
+
+/**
+ * @type {(
  *   Reflect: {
  *     apply: (
  *       callee: import("./track-origin").Value,
@@ -93,6 +105,7 @@ export const pointcut = [
  *     advice_global_variable: string,
  *   },
  * ) => import("../../").StandardAdvice<
+ *   null,
  *   import("./track-origin").ShadowState,
  *   import("./track-origin").Atom,
  *   import("./track-origin").Valuation,
@@ -104,19 +117,32 @@ export const createTrackOriginAdvice = (
 ) => {
   /** @type {import("./track-origin").Transit} */
   let transit = { type: "void" };
+  /** @type {null | import("./track-origin").ShadowState} */
+  let deep_eval_state = null;
   /**
    * @type {import("../../").StandardAdvice<
+   *   null,
    *   import("./track-origin").ShadowState,
    *   import("./track-origin").Atom,
    *   import("./track-origin").Valuation,
    * >}
    */
   const advice = {
-    "block@setup": (state, _kind, _hash) => ({
-      parent: state,
-      frame: { __proto__: null },
-      stack: [],
-    }),
+    "program-block@setup": (_initial_state, kind, _hash) => {
+      if (kind === "deep-local-eval") {
+        if (deep_eval_state === null) {
+          throw new AranExecError("missing deep eval state");
+        } else {
+          const state = extendState(deep_eval_state);
+          deep_eval_state = null;
+          return state;
+        }
+      } else {
+        return extendState(null);
+      }
+    },
+    "closure-block@setup": (state, _kind, _hash) => extendState(state),
+    "segment-block@setup": (state, _kind, _hash) => extendState(state),
     "block@declaration": (state, _kind, frame, hash) => {
       for (const identifier in frame) {
         state.frame[
@@ -292,14 +318,19 @@ export const createTrackOriginAdvice = (
       return value;
     },
     // Jump //
-    "eval@before": (state, value, _hash) =>
-      /** @type {any} */ (
+    "eval@before": (state, value, _hash) => {
+      if (deep_eval_state !== null) {
+        throw new AranExecError("deep eval state clash");
+      }
+      deep_eval_state = state;
+      return /** @type {any} */ (
         weaveStandard(/** @type {any} */ (value), {
-          initial_state: state,
+          initial_state: null,
           pointcut,
           advice_global_variable,
         })
-      ),
+      );
+    },
     "eval@after": (state, value, _hash) => {
       if (transit.type === "return" && isSame(value, transit.source)) {
         push(state.stack, transit.shadow);
