@@ -111,6 +111,15 @@ export type AspectTyping<
     pointcut: GenericPointcut<atom, point, Expression<atom>>;
     advice: (state: state, result: value, ...point: point) => value;
   };
+  // eval //
+  "eval@before": {
+    pointcut: GenericPointcut<
+      atom,
+      point,
+      Expression<atom> & { type: "EvalExpression" }
+    >;
+    advice: (state: state, code: value, ...point: point) => value;
+  };
   // apply - construct //
   "apply@around": {
     pointcut: GenericPointcut<

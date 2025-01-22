@@ -191,8 +191,7 @@ export class AranClashError extends Error {
 }
 
 /**
- * Signals a problem with the provided pointcut such as multiple pointcuts
- * matching `apply@around` or `construct@around`.
+ * Signals a problem with the provided pointcut.
  */
 export class AranPointcutError extends Error {
   constructor(cause: PointcutErrorCause);
@@ -258,6 +257,7 @@ export const transpile: <
  * @param conf Standard weaving options.
  * @returns The woven program.
  * @throws {@link AranInputError} If `conf` or `root` are invalid.
+ * @throws {@link AranPointcutError} If there is a problem with the provided
  * pointcut.
  */
 export const weaveStandard: <
@@ -307,6 +307,8 @@ export const weaveFlexible: <
  * @returns An ESTree program that can be fed to a estree code generator like
  * `astring`.
  * @throws {@link AranInputError} If `conf` or `root` are invalid.
+ * @throws {@link AranPointcutError} If there is a problem with the provided
+ * pointcut.
  * @throws {@link AranClashError} If there is a clash between Aran variables and
  * the variable in `file.root`.
  */
@@ -332,6 +334,8 @@ export const retropile: (
  * @throws {@link AranSyntaxError} If there is problem with the AST at
  * `file.root` either because there is an early syntax error or because it is
  * not a valid ESTree program.
+ * @throws {@link AranPointcutError} If there is a problem with the provided
+ * pointcut.
  * @throws {@link AranClashError} If there is a clash between Aran variables and
  * the variable in `file.root`.
  */
