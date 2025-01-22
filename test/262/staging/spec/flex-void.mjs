@@ -66,7 +66,7 @@ export default {
     defineProperty(intrinsics["aran.global"], ADVICE_VARIABLE, {
       // @ts-ignore
       __proto__: null,
-      value: advice,
+      value: advice.advice,
       enumerable: false,
       writable: false,
       configurable: false,
