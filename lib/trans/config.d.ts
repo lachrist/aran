@@ -22,7 +22,7 @@ export type LooseEstreeProgram = {
  * A parsed JavaScript program. Represents both static code and dynamically
  * generated code.
  */
-export type File<path> = {
+export type File<param extends { FilePath: unknown } = { FilePath: string }> = {
   /**
    * The `estree.Program` node to instrument.
    */
@@ -51,7 +51,17 @@ export type File<path> = {
    * An identifier for the file. It is passed to `conf.digest` to help
    * generating unique node hash.
    */
-  path: path;
+  path: param["FilePath"];
+};
+
+export type DigestParam = {
+  NodeHash: string | number;
+  FilePath: unknown;
+};
+
+export type DefaultDigestParam = {
+  NodeHash: string;
+  FilePath: string;
 };
 
 /**
@@ -72,20 +82,21 @@ export type File<path> = {
  * @returns The hash of the node. It should be unique for each node in the
  * program `file.root`. It is safe to simply returns `node_path`.
  */
-export type Digest<
-  hash extends string | number = string | number,
-  path = unknown,
-> = (
+export type Digest<param extends DigestParam = DefaultDigestParam> = (
   node: object,
   node_path: EstreeNodePath,
-  file_path: path,
+  file_path: param["FilePath"],
   node_kind: EstreeNodeKind,
-) => hash;
+) => param["NodeHash"];
+
+export type ConfigParam = DigestParam;
+
+export type DefaultConfigParam = DefaultDigestParam;
 
 /**
  * Configuration object for `transpile`.
  */
-export type Config<hash extends string | number = string, path = string> = {
+export type Config<param extends ConfigParam = DefaultConfigParam> = {
   /**
    * Indicates whether the global declarative record should be emulated or not.
    * NB: The global declarative record is a scope frame that sits right before
@@ -109,5 +120,5 @@ export type Config<hash extends string | number = string, path = string> = {
    * Hashing functions for nodes in `file.root`.
    * @defaultValue `(node, node_path, file_path, node_kind) => file_path + "#" + node_path`
    */
-  digest: Digest<hash, path>;
+  digest: Digest<param>;
 };

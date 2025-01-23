@@ -62,7 +62,6 @@ import type {
   AspectKind as StandardAspectKind,
   AspectTyping as StandardAspectTyping,
   Pointcut as StandardPointcut,
-  Aspect as StandardAspect,
   Advice as StandardAdvice,
 } from "./weave/standard/aspect";
 import type {
@@ -135,7 +134,6 @@ export {
   ControlKind,
   TestKind,
   StandardPointcut,
-  StandardAspect,
   StandardAdvice,
   StandardAspectTyping,
   FlexibleAspectTyping,
@@ -222,7 +220,7 @@ export class AranPointcutError extends Error {
  * @throws {@link AranInputError} If the configuration is invalid.
  */
 export const generateSetup: (
-  conf?: Partial<SetupConfig<string>>,
+  conf?: Partial<SetupConfig>,
 ) => EstreeProgram<null> & { sourceType: "script" };
 
 ///////////////
@@ -248,8 +246,11 @@ export const transpile: <
   atom extends Atom & { Tag: hash } = Atom & { Tag: hash },
   path = unknown,
 >(
-  file: Partial<File<path>>,
-  conf?: null | undefined | Partial<TransConfig<hash, path>>,
+  file: Partial<File<{ FilePath: path }>>,
+  conf?:
+    | null
+    | undefined
+    | Partial<TransConfig<{ FilePath: path; NodeHash: hash }>>,
 ) => Program<atom> & { warnings: Warning[] };
 
 ///////////
@@ -277,7 +278,11 @@ export const weaveStandard: <
   conf?:
     | null
     | undefined
-    | Partial<StandardWeaveConfig<Json, arg_atom, string>>,
+    | Partial<
+        StandardWeaveConfig<
+          arg_atom & { InitialState: Json; JavaScriptIdentifier: string }
+        >
+      >,
 ) => Program<res_atom>;
 
 /**
@@ -333,6 +338,7 @@ export const retropile: (
  * Instrument a parsed JavaScript program. It chains `transpile`,
  * `weaveStandard` or `weaveFlexible`, and `retropile`.
  * @template path The type of `file.path`.
+ * @template hash The type returned by `conf.digest`.
  * @param file The parsed JavaScript program to instrument.
  * @param conf Instrumentation options.
  * @returns The instrumented program along with warnings. Can be fed to a estree
@@ -347,13 +353,21 @@ export const retropile: (
  * @throws {@link AranClashError} If there is a clash between Aran variables and
  * the variable in `file.root`.
  */
-export const instrument: <path = string>(
-  file: Partial<File<path>>,
+export const instrument: <path = string, hash extends string | number = string>(
+  file: Partial<File<{ FilePath: path }>>,
   conf?:
     | null
     | undefined
     | Partial<
-        InstrumentConfig<Json, Atom & { Tag: string | number }, string, path>
+        InstrumentConfig<
+          Atom & {
+            Tag: hash;
+            InitialState: Json;
+            FilePath: path;
+            NodeHash: hash;
+            JavaScriptIdentifier: string;
+          }
+        >
       >,
 ) => EstreeProgram<{}> & {
   warnings: Warning[];

@@ -7,10 +7,10 @@ const {
 } = globalThis;
 
 /**
- * @type {import("aran").Digest<string>}
+ * @type {import("aran").Digest}
  */
 const digest = (_node, node_path, file_path, _kind) =>
-  /** @type {string} */ (`${file_path}:${node_path}`);
+  `${file_path}:${node_path}`;
 
 /**
  * @type {(hash: string) => string}

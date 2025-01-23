@@ -1,9 +1,16 @@
+/* eslint-disable local/no-jsdoc-typedef */
 /* eslint-disable no-use-before-define */
 
 import { compileAran } from "../aran.mjs";
 import { AranTypeError } from "../../error.mjs";
 import { recreateError } from "../../util/index.mjs";
 import { record } from "../../record/index.mjs";
+
+/**
+ * @typedef {string & {__brand: "NodeHash"}} NodeHash
+ * @typedef {string & {__brand: "FilePath"}} FilePath
+ * @typedef {import("aran").Atom & { Tag: NodeHash }} Atom
+ */
 
 const {
   Array: {
@@ -84,8 +91,8 @@ const toAdviceEntry = (name) => [toAdviceVariable(name), "undefined"];
 /**
  * @type {(
  *   name: "eval" | "apply" | "construct",
- *   tag: unknown,
- * ) => import("aran").Statement}
+ *   tag: NodeHash,
+ * ) => import("aran").Statement<Atom>}
  */
 const toAdviceInit = (name, tag) => ({
   type: "EffectStatement",
@@ -144,8 +151,8 @@ const compileFunctionCode = (input) => {
  *   intrinsic: import("aran").IntrinsicRecord,
  * ) => {
  *   eval: (
- *     root: import("aran").Program,
- *   ) => import("aran").Program,
+ *     root: import("aran").Program<Atom>,
+ *   ) => import("aran").Program<Atom>,
  *   apply: (
  *     callee: Function,
  *     that: unknown,
@@ -182,7 +189,9 @@ const compileAdvice = (intrinsics) => {
         const code = input[0];
         if (typeof code === "string") {
           try {
-            const path = `dynamic://eval/global/${hash}`;
+            const path = /** @type {FilePath} */ (
+              `dynamic://eval/global/${hash}`
+            );
             const { content } = record({
               path,
               content: retro(weave(trans(path, "eval", code))),
@@ -196,7 +205,9 @@ const compileAdvice = (intrinsics) => {
       if (callee === globals.evalScript && input.length > 0) {
         const code = String(input[0]);
         try {
-          const path = `dynamic://script/global/${hash}`;
+          const path = /** @type {FilePath} */ (
+            `dynamic://script/global/${hash}`
+          );
           const { content } = record({
             path,
             content: retro(weave(trans(path, "script", code))),
@@ -211,7 +222,9 @@ const compileAdvice = (intrinsics) => {
     construct: (callee, input, hash) => {
       if (callee === globals.Function) {
         try {
-          const path = `dynamic://function/global/${hash}`;
+          const path = /** @type {FilePath} */ (
+            `dynamic://function/global/${hash}`
+          );
           const { content } = record({
             path,
             content: retro(
@@ -234,11 +247,11 @@ const compileAdvice = (intrinsics) => {
 
 /**
  * @type {(
- *   node: import("aran").Program,
- * ) => import("aran").Program}
+ *   node: import("aran").Program<Atom>,
+ * ) => import("aran").Program<Atom>}
  */
 const visitProgram = (node) =>
-  /** @type {import("aran").Program} */ ({
+  /** @type {import("aran").Program<Atom>} */ ({
     type: "Program",
     kind: node.kind,
     situ: node.situ,
@@ -249,8 +262,8 @@ const visitProgram = (node) =>
 
 /**
  * @type {(
- *   node: import("aran").RoutineBlock & { head: null },
- * ) => import("aran").RoutineBlock & { head: null }}
+ *   node: import("aran").RoutineBlock<Atom> & { head: null },
+ * ) => import("aran").RoutineBlock<Atom> & { head: null }}
  */
 const visitProgramBlock = (node) => ({
   type: "RoutineBlock",
@@ -266,8 +279,8 @@ const visitProgramBlock = (node) => ({
 
 /**
  * @type {(
- *   node: import("aran").RoutineBlock,
- * ) => import("aran").RoutineBlock & { head: any }}
+ *   node: import("aran").RoutineBlock<Atom>,
+ * ) => import("aran").RoutineBlock<Atom> & { head: any }}
  */
 const visitClosureBlock = (node) => ({
   type: "RoutineBlock",
@@ -280,8 +293,8 @@ const visitClosureBlock = (node) => ({
 
 /**
  * @type {(
- *   node: import("aran").SegmentBlock,
- * ) => import("aran").SegmentBlock}
+ *   node: import("aran").SegmentBlock<Atom>,
+ * ) => import("aran").SegmentBlock<Atom>}
  */
 const visitSegmentBlock = (node) => ({
   type: "SegmentBlock",
@@ -293,8 +306,8 @@ const visitSegmentBlock = (node) => ({
 
 /**
  * @type {(
- *   node: import("aran").Statement,
- * ) => import("aran").Statement}
+ *   node: import("aran").Statement<Atom>,
+ * ) => import("aran").Statement<Atom>}
  */
 export const visitStatement = (node) => {
   const { tag } = node;
@@ -353,8 +366,8 @@ export const visitStatement = (node) => {
 
 /**
  * @type {(
- *   node: import("aran").Effect,
- * ) => import("aran").Effect}
+ *   node: import("aran").Effect<Atom>,
+ * ) => import("aran").Effect<Atom>}
  */
 export const visitEffect = (node) => {
   const { tag } = node;
@@ -399,8 +412,8 @@ export const visitEffect = (node) => {
 
 /**
  * @type {(
- *   node: import("aran").Expression,
- * ) => import("aran").Expression}
+ *   node: import("aran").Expression<Atom>,
+ * ) => import("aran").Expression<Atom>}
  */
 export const visitExpression = (node) => {
   const { tag } = node;
@@ -522,7 +535,7 @@ export const visitExpression = (node) => {
           },
           {
             type: "PrimitiveExpression",
-            primitive: /** @type {string} */ (tag),
+            primitive: tag,
             tag,
           },
         ],
@@ -561,7 +574,7 @@ export const visitExpression = (node) => {
           },
           {
             type: "PrimitiveExpression",
-            primitive: /** @type {string} */ (tag),
+            primitive: tag,
             tag,
           },
         ],
@@ -581,15 +594,16 @@ export const visitExpression = (node) => {
 const weave = visitProgram;
 
 /**
- * @type {import("aran").Digest<string, string>}
+ * @type {import("aran").Digest<{NodeHash: NodeHash, FilePath: FilePath}>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
-  /** @type {string} */ (`${file_path}:${node_path}`);
+  /** @type {NodeHash} */ (`${file_path}:${node_path}`);
 
 /**
- * @type {(hash: string) => string}
+ * @type {(hash: NodeHash) => FilePath}
  */
-const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
+const toEvalPath = (hash) =>
+  /** @type {FilePath} */ (`dynamic://eval/local/${hash}`);
 
 const { setup, trans, retro } = compileAran(
   {
@@ -644,6 +658,8 @@ export default {
   instrument: ({ kind, path, content }) =>
     record({
       path,
-      content: retro(weave(trans(path, kind, content))),
+      content: retro(
+        weave(trans(/** @type {FilePath} */ (path), kind, content)),
+      ),
     }),
 };

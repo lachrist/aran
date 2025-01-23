@@ -22,8 +22,8 @@ const parseSitu = parseJson;
  *   hash extends number | string,
  * >(
  *   config: (
- *     & import("aran").TransConfig<hash, path>
- *     & import("aran").RetroConfig<string, string>
+ *     & import("aran").TransConfig<{NodeHash: hash, FilePath: path}>
+ *     & import("aran").RetroConfig
  *   ),
  *   toEvalPath: (hash: hash) => path,
  * ) => {

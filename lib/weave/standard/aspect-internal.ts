@@ -5,9 +5,12 @@ export type InternalPointcut = Pointcut<ArgAtom>;
 
 export type NormalInternalPointcut = {
   [key in AspectKind]: AspectTyping<
-    never,
-    never,
-    ArgAtom,
-    never
+    ArgAtom & {
+      ScopeValue: never;
+      StackValue: never;
+      OtherValue: never;
+      State: never;
+      InitialState: never;
+    }
   >[key]["pointcut"];
 };

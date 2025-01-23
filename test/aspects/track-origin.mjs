@@ -7,6 +7,13 @@ const {
 } = globalThis;
 
 /**
+ * @type {<O>(
+ *   object: O,
+ * ) => (keyof O)[]}
+ */
+const listKey = /** @type {any} */ (ownKeys);
+
+/**
  * @type {(
  *   value1: import("./track-origin").Value,
  *   value2: import("./track-origin").Value,
@@ -49,33 +56,60 @@ const push = (array, item) => {
   array[array.length] = item;
 };
 
+export const ADVICE_GLOBAL_VARIABLE =
+  /** @type {import("./track-origin").JavaScriptIdentifier}*/ (
+    "__aran_track_origin_advice__"
+  );
+
 /**
- * @type {import("aran").StandardAspectKind[]}
+ * @type {{[key in import("./track-origin").AspectKind]: null}}
  */
-export const pointcut = [
-  "program-block@setup",
-  "closure-block@setup",
-  "segment-block@setup",
-  "program-block@after",
-  "closure-block@after",
-  "apply@around",
-  "construct@around",
-  "primitive@after",
-  "intrinsic@after",
-  "import@after",
-  "read@after",
-  "closure@after",
-  "test@before",
-  "write@before",
-  "export@before",
-  "drop@before",
-  "eval@before",
-  "eval@after",
-  "await@before",
-  "await@after",
-  "yield@before",
-  "yield@after",
-];
+const aspect_kind_enum = {
+  "program-block@setup": null,
+  "closure-block@setup": null,
+  "segment-block@setup": null,
+  "block@declaration": null,
+  "program-block@after": null,
+  "closure-block@after": null,
+  "apply@around": null,
+  "construct@around": null,
+  "primitive@after": null,
+  "intrinsic@after": null,
+  "import@after": null,
+  "read@after": null,
+  "closure@after": null,
+  "test@before": null,
+  "write@before": null,
+  "export@before": null,
+  "drop@before": null,
+  "eval@before": null,
+  "eval@after": null,
+  "await@before": null,
+  "await@after": null,
+  "yield@before": null,
+  "yield@after": null,
+};
+
+const pointcut = listKey(aspect_kind_enum);
+
+/**
+ * @type {import("aran").StandardWeaveConfig<import("./track-origin").Atom & {
+ *   InitialState: null,
+ *   JavaScriptIdentifier: import("./track-origin").JavaScriptIdentifier,
+ * }>}
+ */
+const conf = {
+  advice_global_variable: ADVICE_GLOBAL_VARIABLE,
+  initial_state: null,
+  pointcut,
+};
+
+/**
+ * @type {(
+ *   root: import("aran").Program<import("./track-origin").Atom>,
+ * ) => import("aran").Program<import("./track-origin").Atom>}
+ */
+export const weave = (root) => weaveStandard(root, conf);
 
 /**
  * @type {(
@@ -101,33 +135,23 @@ const extendState = (parent) => ({
  *       input: import("./track-origin").Value[],
  *     ) => import("./track-origin").Value,
  *   },
- *   options: {
- *     advice_global_variable: string,
+ * ) => import("aran").StandardAdvice<
+ *   import("./track-origin").AspectKind,
+ *   import("./track-origin").Atom & {
+ *     InitialState: null,
+ *     State: import("./track-origin").ShadowState,
+ *     StackValue: import("./track-origin").Value,
+ *     ScopeValue: import("./track-origin").Value,
+ *     OtherValue: import("./track-origin").Value,
  *   },
- * ) => import("../../").StandardAdvice<
- *   null,
- *   import("./track-origin").ShadowState,
- *   import("./track-origin").Atom,
- *   import("./track-origin").Valuation,
  * >}
  */
-export const createTrackOriginAdvice = (
-  { apply, construct },
-  { advice_global_variable },
-) => {
+export const createTrackOriginAdvice = ({ apply, construct }) => {
   /** @type {import("./track-origin").Transit} */
   let transit = { type: "void" };
   /** @type {null | import("./track-origin").ShadowState} */
   let deep_eval_state = null;
-  /**
-   * @type {import("../../").StandardAdvice<
-   *   null,
-   *   import("./track-origin").ShadowState,
-   *   import("./track-origin").Atom,
-   *   import("./track-origin").Valuation,
-   * >}
-   */
-  const advice = {
+  return {
     "program-block@setup": (_initial_state, kind, _hash) => {
       if (kind === "deep-local-eval") {
         if (deep_eval_state === null) {
@@ -323,13 +347,7 @@ export const createTrackOriginAdvice = (
         throw new AranExecError("deep eval state clash");
       }
       deep_eval_state = state;
-      return /** @type {any} */ (
-        weaveStandard(/** @type {any} */ (value), {
-          initial_state: null,
-          pointcut,
-          advice_global_variable,
-        })
-      );
+      return /** @type {any} */ (weave(/** @type {any} */ (value)));
     },
     "eval@after": (state, value, _hash) => {
       if (transit.type === "return" && isSame(value, transit.source)) {
@@ -362,14 +380,4 @@ export const createTrackOriginAdvice = (
       return value;
     },
   };
-  if (ownKeys(advice).length !== pointcut.length) {
-    throw new AranExecError("advice-pointcut arity mismathc");
-  }
-  for (let index = 0; index < pointcut.length; index++) {
-    const kind = pointcut[index];
-    if (!hasOwn(advice, kind)) {
-      throw new AranExecError(`advice-pointcut kind mismatch ${kind}`);
-    }
-  }
-  return advice;
 };

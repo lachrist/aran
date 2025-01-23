@@ -37,11 +37,6 @@ const {
  *   Tag: Hash,
  * }} Atom
  * @typedef {unknown & {__brand: "Value"}} Value
- * @typedef {{
- *   Scope: Value,
- *   Stack: Value,
- *   Other: Value,
- * }} Valuation
  * @typedef {"@initial-state"} InitialState
  * @typedef {"@state"} State
  */
@@ -55,7 +50,7 @@ const STATE = "@state";
 const INITIAL_STATE = "@initial-state";
 
 /**
- * @type {import("aran").Digest<Hash, FilePath>}
+ * @type {import("aran").Digest<{NodeHash: Hash, FilePath: FilePath}>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
   `hash:${file_path}:${node_path}`;
@@ -66,11 +61,10 @@ const digest = (_node, node_path, file_path, _kind) =>
 const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
 /**
- * @type {import("aran").StandardWeaveConfig<
- *   InitialState,
- *   Atom,
- *   JavaScriptIdentifier,
- * >}
+ * @type {import("aran").StandardWeaveConfig<Atom & {
+ *   JavaScriptIdentifier: JavaScriptIdentifier,
+ *   InitialState: InitialState,
+ * }>}
  */
 const weave_config = {
   advice_global_variable: ADVICE_VARIABLE,
@@ -79,7 +73,10 @@ const weave_config = {
 };
 
 /**
- * @type {import("aran").TransConfig<Hash, FilePath>}
+ * @type {import("aran").TransConfig<{
+ *   NodeHash: Hash,
+ *   FilePath: FilePath,
+ * }>}
  */
 const trans_config = {
   global_declarative_record: "builtin",
@@ -87,7 +84,9 @@ const trans_config = {
 };
 
 /**
- * @type {import("aran").RetroConfig<JavaScriptIdentifier>}
+ * @type {import("aran").RetroConfig<{
+ *   JavaScriptIdentifier: JavaScriptIdentifier,
+ * }>}
  */
 const retro_config = {
   mode: "normal",
@@ -500,15 +499,16 @@ const assertInput5 = assertInput;
  *       args: Value[],
  *     ) => Value,
  *   },
- * ) => {
- *   [key in keyof import("aran").StandardAspectTyping]
- *     : import("aran").StandardAspectTyping<
- *         InitialState,
- *         State,
- *         Atom,
- *         Valuation,
- *       >[key]["advice"]
- * }}
+ * ) => import("aran").StandardAdvice<
+ *   import("aran").StandardAspectKind,
+ *   Atom & {
+ *     InitialState: InitialState,
+ *     State: State,
+ *     ScopeValue: Value,
+ *     StackValue: Value,
+ *     OtherValue: Value,
+ *   },
+ * >}
  */
 const compileAdvice = ({ apply, construct }) => ({
   // Block //

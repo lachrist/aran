@@ -1,49 +1,65 @@
 /* eslint-disable local/no-deep-import */
-
+import { compileAran } from "../aran.mjs";
 import {
-  DUMMY_BASIC_MEMBRANE,
-  instrument,
-  setupAranBasic,
-  setupStandardAdvice,
-} from "../aran/index.mjs";
-import {
-  pointcut,
+  ADVICE_GLOBAL_VARIABLE,
   createTrackOriginAdvice,
+  weave,
 } from "../../../aspects/track-origin.mjs";
+import { record } from "../../record/index.mjs";
 
 const {
-  Object: { hasOwn },
+  Reflect: { defineProperty },
 } = globalThis;
 
-const ADVICE_VARIABLE = "__aran_advice__";
+/**
+ * @type {import("aran").Digest}
+ */
+const digest = (_node, node_path, file_path, _kind) =>
+  `${file_path}:${node_path}`;
 
 /**
- * @type {import("../../../../lib").StandardWeaveConfig}
+ * @type {(hash: string) => string}
  */
-const config = {
-  advice_global_variable,
-  selection: ["main", "local"],
-  global_declarative_record: "builtin",
-  initial_state: {
-    parent: null,
-    frame: { __proto__: null },
-    stack: [],
+const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
+
+const { setup, trans, retro } = compileAran(
+  {
+    mode: "normal",
+    escape_prefix: "__aran__",
+    global_object_variable: "globalThis",
+    intrinsic_global_variable: "__intrinsic__",
+    global_declarative_record: "builtin",
+    digest,
   },
-  standard_pointcut: (kind) => hasOwn(DUMMY_ADVICE, kind),
-  flexible_pointcut: null,
-};
+  toEvalPath,
+);
 
 /** @type {import("../stage").Stage} */
 export default {
-  precursor: ["bare-basic-standard"],
+  precursor: ["stnd-full"],
   negative: [],
   exclude: [],
-  listLateNegative: (_target, _metadata, _error) => [],
+  listLateNegative: (_test, _error) => [],
   setup: (context) => {
-    setupStandardAdvice(
-      context,
-      createTrackOriginAdvice(setupAranBasic(context)),
+    const { intrinsics } = setup(context);
+    const advice = createTrackOriginAdvice(
+      /** @type {{apply: any, construct: any}} */ (
+        intrinsics["aran.global"].Reflect
+      ),
     );
+    defineProperty(intrinsics["aran.global"], ADVICE_GLOBAL_VARIABLE, {
+      // @ts-ignore
+      __proto__: null,
+      value: advice,
+      enumerable: false,
+      writable: false,
+      configurable: false,
+    });
   },
-  instrument: (source) => instrument(source, config),
+  instrument: ({ type, kind, path, content }) =>
+    record({
+      path,
+      content:
+        type === "main" ? retro(weave(trans(path, kind, content))) : content,
+    }),
 };

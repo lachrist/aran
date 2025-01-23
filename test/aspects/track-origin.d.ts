@@ -6,6 +6,31 @@ export type Specifier = string & { __brand: "Specifier" };
 export type Source = string & { __brand: "Source" };
 export type Hash = `hash:${string}`;
 
+export type AspectKind =
+  | "program-block@setup"
+  | "closure-block@setup"
+  | "segment-block@setup"
+  | "block@declaration"
+  | "program-block@after"
+  | "closure-block@after"
+  | "apply@around"
+  | "construct@around"
+  | "primitive@after"
+  | "intrinsic@after"
+  | "import@after"
+  | "read@after"
+  | "closure@after"
+  | "test@before"
+  | "write@before"
+  | "export@before"
+  | "drop@before"
+  | "eval@before"
+  | "eval@after"
+  | "await@before"
+  | "await@after"
+  | "yield@before"
+  | "yield@after";
+
 export type Atom = {
   Variable: Variable;
   Label: Label;
@@ -15,6 +40,8 @@ export type Atom = {
 };
 
 export type Identifier = Variable | Parameter;
+
+export type JavaScriptIdentifier = string & { __brand: "JavaScriptIdentifier" };
 
 export type Transit =
   | { type: "void" }
@@ -103,12 +130,6 @@ export type ShadowValue =
     };
 
 export type Value = unknown & { __brand: "Value" };
-
-export type Valuation = {
-  Other: Value;
-  Stack: Value;
-  Scope: Value;
-};
 
 export type ShadowFrame = {
   [key in Identifier]?: ShadowValue;

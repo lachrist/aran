@@ -2,7 +2,7 @@ import { record } from "../../record/index.mjs";
 import { compileAran } from "../aran.mjs";
 
 /**
- * @type {import("aran").Digest<string, string>}
+ * @type {import("aran").Digest}
  */
 const digest = (_node, node_path, file_path, _kind) =>
   /** @type {string} */ (`${file_path}:${node_path}`);
