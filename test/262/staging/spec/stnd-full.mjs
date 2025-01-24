@@ -37,7 +37,6 @@ const {
  *   Tag: Hash,
  * }} Atom
  * @typedef {unknown & {__brand: "Value"}} Value
- * @typedef {"@initial-state"} InitialState
  * @typedef {"@state"} State
  */
 
@@ -45,9 +44,6 @@ const ADVICE_VARIABLE = /** @type {JavaScriptIdentifier} */ ("__aran_advice__");
 
 /** @type {State} */
 const STATE = "@state";
-
-/** @type {InitialState} */
-const INITIAL_STATE = "@initial-state";
 
 /**
  * @type {import("aran").Digest<{NodeHash: Hash, FilePath: FilePath}>}
@@ -63,12 +59,12 @@ const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 /**
  * @type {import("aran").StandardWeaveConfig<Atom & {
  *   JavaScriptIdentifier: JavaScriptIdentifier,
- *   InitialState: InitialState,
+ *   InitialState: State,
  * }>}
  */
 const weave_config = {
   advice_global_variable: ADVICE_VARIABLE,
-  initial_state: INITIAL_STATE,
+  initial_state: STATE,
   pointcut: true,
 };
 
@@ -181,15 +177,6 @@ const assertHash = (hash) => {
  */
 const assertState = (state) => {
   assert(state === STATE);
-};
-
-/**
- * @type {(
- *   arg: InitialState,
- * ) => void}
- */
-const assertInitialState = (state) => {
-  assert(state === INITIAL_STATE);
 };
 
 /**
@@ -499,29 +486,21 @@ const assertInput5 = assertInput;
  *       args: Value[],
  *     ) => Value,
  *   },
- * ) => import("aran").StandardAdvice<
- *   import("aran").StandardAspectKind,
- *   Atom & {
- *     InitialState: InitialState,
+ * ) => import("aran").StandardAdvice<{
+ *   Kind: import("aran").StandardAspectKind,
+ *   Atom: Atom,
+ *   Runtime: {
  *     State: State,
  *     ScopeValue: Value,
  *     StackValue: Value,
  *     OtherValue: Value,
  *   },
- * >}
+ * }>}
  */
 const compileAdvice = ({ apply, construct }) => ({
   // Block //
-  "program-block@setup": (...input) => {
-    assertInput3(input, [assertInitialState, assertProgramKind, assertHash]);
-    return STATE;
-  },
-  "closure-block@setup": (...input) => {
-    assertInput3(input, [assertState, assertClosureKind, assertHash]);
-    return STATE;
-  },
-  "segment-block@setup": (...input) => {
-    assertInput3(input, [assertState, assertSegmentKind, assertHash]);
+  "block@setup": (...input) => {
+    assertInput3(input, [assertState, assertControlKind, assertHash]);
     return STATE;
   },
   "program-block@before": (...input) => {

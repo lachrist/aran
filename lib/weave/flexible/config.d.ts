@@ -1,25 +1,30 @@
 import type { Pointcut } from "./aspect";
-import type { Json } from "../../util/util";
+import type { GetDefault, Json } from "../../util/util";
 import type { Atom } from "../../lang/syntax";
 
 /**
  * Configuration object for both flexible weaving.
  */
 export type Config<
-  point extends Json[] = Json[],
-  state extends Json = Json,
-  atom extends Atom = Atom,
-  javascript_identifier extends string = string,
+  param extends {
+    Atom?: Atom;
+    Point?: Json[];
+    InitialState?: Json;
+    AdviceGlobalVariable?: string;
+  } = {},
 > = {
   /**
-   * The initial state passed to advice functions. It will be cloned with JSON
-   * serialization.
+   * The initial state passed to advice functions. It will be cloned with JSON.
    * @defaultValue `null`
    */
-  initial_state: state;
+  initial_state: param["InitialState"] & Json;
   /**
    * The pointcut for the standard weaving API.
    * @defaultValue `false`
    */
-  pointcut: Pointcut<point, atom, javascript_identifier>;
+  pointcut: Pointcut<{
+    AdviceGlobalVariable: param["AdviceGlobalVariable"] & string;
+    Atom: GetDefault<param, "Atom", Atom>;
+    Point: GetDefault<param, "Point", Json[]>;
+  }>;
 };

@@ -8,6 +8,7 @@ import type {
   Expression,
   SegmentBlock,
   RoutineBlock,
+  Intrinsic,
 } from "../lang/syntax";
 
 export type Tag = Brand<Json, "weave.Tag">;
@@ -37,6 +38,9 @@ export type ResAtom = {
   Variable: ResVariable;
   Tag: Tag;
 };
+
+export type ArgBinding = [ArgVariable, Intrinsic];
+export type ResBinding = [ResVariable, Intrinsic];
 
 export type ArgNode = Node<ArgAtom>;
 export type ResNode = Node<ResAtom>;

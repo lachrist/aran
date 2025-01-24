@@ -1,3 +1,4 @@
+import type { KeyOfUnion } from "../util/util";
 import type { DeclareHeader, ModuleHeader } from "./header";
 
 //////////
@@ -424,7 +425,5 @@ export type Node<A extends Atom = Atom> =
   | Statement<A>
   | Effect<A>
   | Expression<A>;
-
-type KeyOfUnion<T> = T extends T ? keyof T : never;
 
 export type NodeKey = KeyOfUnion<Node<Atom>>;

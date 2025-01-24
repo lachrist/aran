@@ -6,17 +6,6 @@ const {
   Reflect: { defineProperty },
 } = globalThis;
 
-/**
- * @type {import("aran").Digest<string>}
- */
-const digest = (_node, node_path, file_path, _kind) =>
-  /** @type {string} */ (`${file_path}:${node_path}`);
-
-/**
- * @type {(hash: string) => string}
- */
-const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
-
 const { setup, trans, retro } = compileAran(
   {
     mode: "normal",
@@ -24,28 +13,29 @@ const { setup, trans, retro } = compileAran(
     global_object_variable: "globalThis",
     intrinsic_global_variable: "__intrinsic__",
     global_declarative_record: "builtin",
-    digest,
+    digest: (_node, node_path, file_path, _kind) => `${file_path}:${node_path}`,
   },
-  toEvalPath,
+  (hash) => `dynamic://eval/local/${hash}`,
 );
 
 const ADVICE_VARIABLE = "__aran_eval_before__";
 
 /**
- * @type {import("aran").FlexibleAspect<[], null>}
+ * @type {import("aran").FlexibleAspect}
  */
 const aspect = {
   [ADVICE_VARIABLE]: {
-    kind: "eval@before",
-    pointcut: (_node, _parent, _root) => [],
-    advice: (_state, root) =>
+    kind: "expression@after",
+    pointcut: (_node, parent, _root) =>
+      parent.type === "EvalExpression" ? [] : null,
+    advice: (_state, result) =>
       // eslint-disable-next-line no-use-before-define
-      weaveFlexible(/** @type {import("aran").Program<any>} */ (root), conf),
+      weaveFlexible(/** @type {import("aran").Program<any>} */ (result), conf),
   },
 };
 
 /**
- * @type {import("aran").FlexibleWeaveConfig<[], null>}
+ * @type {import("aran").FlexibleWeaveConfig}
  */
 const conf = {
   initial_state: null,
@@ -65,7 +55,7 @@ export default {
     defineProperty(intrinsics["aran.global"], ADVICE_VARIABLE, {
       // @ts-ignore
       __proto__: null,
-      value: /** @type {{advice: Function}} */ (aspect[ADVICE_VARIABLE]).advice,
+      value: aspect[ADVICE_VARIABLE].advice,
       enumerable: false,
       writable: false,
       configurable: false,

@@ -1,4 +1,4 @@
-import type { DeclareHeader, ModuleHeader } from "../../lang/header";
+import type { DeclareHeader, Header, ModuleHeader } from "../../lang/header";
 import type {
   Atom,
   Intrinsic,
@@ -6,7 +6,7 @@ import type {
   Program,
   RuntimePrimitive,
 } from "../../lang/syntax";
-import type { Json, Merge, ValueOf } from "../../util/util";
+import type { GetDefault, ValueOf } from "../../util/util";
 import type {
   ControlKind,
   ProgramKind,
@@ -18,10 +18,8 @@ import type {
 
 export type TestKind = "if" | "while" | "conditional";
 
-export type Frame<kind extends ControlKind, variable extends string, value> = {
-  [key in variable]?: value;
-} & {
-  [key in Parametrization[kind]]: value;
+export type Frame<variable extends string, value> = {
+  [key in variable | Parameter]?: value;
 };
 
 /**
@@ -33,7 +31,7 @@ export type Frame<kind extends ControlKind, variable extends string, value> = {
  * const standalone_frame: StandaloneFrame = { type: kind, data: frame };
  * ```
  */
-export type StandaloneFrame<variable extends string, value> = ValueOf<{
+export type PreciseFrame<variable extends string, value> = ValueOf<{
   [K in ControlKind]: {
     type: K;
     data: {
@@ -44,7 +42,7 @@ export type StandaloneFrame<variable extends string, value> = ValueOf<{
   };
 }>;
 
-export type Header<kind extends ProgramKind> = kind extends "module"
+export type PreciseHeader<kind extends ProgramKind> = kind extends "module"
   ? ModuleHeader
   : kind extends "script" | "eval.global" | "eval.glocal.root"
     ? DeclareHeader
@@ -52,24 +50,12 @@ export type Header<kind extends ProgramKind> = kind extends "module"
       ? never
       : never;
 
-export type TaggedHead = ValueOf<{
-  [K in ProgramKind]: {
-    type: K;
-    data: Header<K>[];
-  };
-}>;
-
-export type Valuation = {
+export type Runtime = {
+  State: unknown;
   StackValue: unknown;
   ScopeValue: unknown;
   OtherValue: unknown;
 };
-
-export type AspectParam = Atom &
-  Valuation & {
-    InitialState: Json;
-    State: unknown;
-  };
 
 /**
  * The standard weaving API expects a global value at
@@ -77,7 +63,7 @@ export type AspectParam = Atom &
  * to use than the flexible weaving API but it does let the user define the
  * static information provided to the advice functions.
  */
-export type AspectTyping<param extends AspectParam = AspectParam> = {
+export type AspectTyping<atom extends Atom, runtime extends Runtime> = {
   /**
    * The first advice called upon entering any block. It provides an oportunity
    * to overwrite the state that other advices will receive. That is that it
@@ -85,51 +71,35 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    * passed to the other advice of this block. If the block is the root block
    * -- ie a program block -- it will receive a clone of `config.initial_state`.
    */
-  "program-block@setup": {
-    pointcut: (kind: ProgramKind, tag: param["Tag"]) => boolean;
+  "block@setup": {
+    pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
     advice: (
-      initial_state: param["InitialState"],
-      kind: ProgramKind,
-      tag: param["Tag"],
-    ) => param["State"];
-  };
-  "closure-block@setup": {
-    pointcut: (kind: ClosureKind, tag: param["Tag"]) => boolean;
-    advice: (
-      state: param["State"],
-      kind: ClosureKind,
-      tag: param["Tag"],
-    ) => param["State"];
-  };
-  "segment-block@setup": {
-    pointcut: (kind: SegmentKind, tag: param["Tag"]) => boolean;
-    advice: (
-      state: param["State"],
-      kind: SegmentKind,
-      tag: param["Tag"],
-    ) => param["State"];
+      state: runtime["State"],
+      kind: ControlKind,
+      tag: atom["Tag"],
+    ) => runtime["State"];
   };
   /**
    * Called before entering a program block with the headers of the program.
    */
   "program-block@before": {
-    pointcut: (kind: ProgramKind, tag: param["Tag"]) => boolean;
-    advice: <kind extends ProgramKind>(
-      state: param["State"],
-      kind: kind,
-      head: Header<kind>[],
-      tag: param["Tag"],
+    pointcut: (kind: ProgramKind, tag: atom["Tag"]) => boolean;
+    advice: (
+      state: runtime["State"],
+      kind: ProgramKind,
+      head: Header[],
+      tag: atom["Tag"],
     ) => void;
   };
   /**
    * Called before entering a closure block.
    */
   "closure-block@before": {
-    pointcut: (kind: ClosureKind, tag: param["Tag"]) => boolean;
-    advice: <kind extends ClosureKind>(
-      state: param["State"],
-      kind: kind,
-      tag: param["Tag"],
+    pointcut: (kind: ClosureKind, tag: atom["Tag"]) => boolean;
+    advice: (
+      state: runtime["State"],
+      kind: ClosureKind,
+      tag: atom["Tag"],
     ) => void;
   };
   /**
@@ -137,12 +107,12 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    * block.
    */
   "segment-block@before": {
-    pointcut: (kind: SegmentKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: SegmentKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       kind: SegmentKind,
-      labels: param["Label"][],
-      tag: param["Tag"],
+      labels: atom["Label"][],
+      tag: atom["Tag"],
     ) => void;
   };
   /**
@@ -152,14 +122,12 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    * `undefined` or the intrinsic symbol `aran.deadzone`.
    */
   "block@declaration": {
-    pointcut: (kind: ControlKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       kind: ControlKind,
-      frame: {
-        [identifier in param["Variable"] | Parameter]?: param["ScopeValue"];
-      },
-      tag: param["Tag"],
+      frame: Frame<atom["Variable"], runtime["ScopeValue"]>,
+      tag: atom["Tag"],
     ) => void;
   };
   /**
@@ -169,17 +137,13 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    * reasons.
    */
   "block@declaration-overwrite": {
-    pointcut: (kind: ControlKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
     advice: <kind extends ControlKind>(
-      state: param["State"],
+      state: runtime["State"],
       kind: kind,
-      frame: {
-        [identifier in param["Variable"] | Parameter]?: param["ScopeValue"];
-      },
-      tag: param["Tag"],
-    ) => {
-      [identifier in param["Variable"] | Parameter]?: param["ScopeValue"];
-    };
+      frame: Frame<atom["Variable"], runtime["ScopeValue"]>,
+      tag: atom["Tag"],
+    ) => Frame<atom["Variable"], runtime["ScopeValue"]>;
   };
   /**
    * Called right before leaving the head of a generator function. That is right
@@ -188,11 +152,11 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    * body of a generator are considered to be part of the same block.
    */
   "generator-block@suspension": {
-    pointcut: (kind: GeneratorKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: GeneratorKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       kind: GeneratorKind,
-      tag: param["Tag"],
+      tag: atom["Tag"],
     ) => void;
   };
   /**
@@ -201,11 +165,11 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    * considered to be part of the same block.
    */
   "generator-block@resumption": {
-    pointcut: (kind: GeneratorKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: GeneratorKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       kind: GeneratorKind,
-      tag: param["Tag"],
+      tag: atom["Tag"],
     ) => void;
   };
   /**
@@ -213,137 +177,137 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    * was thrown, this advice will not be called.
    */
   "program-block@after": {
-    pointcut: (kind: ProgramKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: ProgramKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       kind: ProgramKind,
-      value: param["StackValue"],
-      tag: param["Tag"],
-    ) => param["OtherValue"];
+      value: runtime["StackValue"],
+      tag: atom["Tag"],
+    ) => runtime["OtherValue"];
   };
   /**
    * Called before leaving a closure block with its completion value. If an
    * error was thrown, this advice will not be called.
    */
   "closure-block@after": {
-    pointcut: (kind: ClosureKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: ClosureKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       kind: ClosureKind,
-      value: param["StackValue"],
-      tag: param["Tag"],
-    ) => param["OtherValue"];
+      value: runtime["StackValue"],
+      tag: atom["Tag"],
+    ) => runtime["OtherValue"];
   };
   /**
    * Called before leaving a control block. If an error was thrown or if a label
    * was broken onto, this advice will not be called.
    */
   "segment-block@after": {
-    pointcut: (kind: SegmentKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: SegmentKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       kind: SegmentKind,
-      tag: param["Tag"],
+      tag: atom["Tag"],
     ) => void;
   };
   /**
    * Called before leaving any block only if an error was thrown.
    */
   "block@throwing": {
-    pointcut: (kind: ControlKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       kind: ControlKind,
-      value: param["OtherValue"],
-      tag: param["Tag"],
+      value: runtime["OtherValue"],
+      tag: atom["Tag"],
     ) => void;
   };
   /**
    * Called right before leaving any block regardless of how it terminated.
    */
   "block@teardown": {
-    pointcut: (kind: ControlKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       kind: ControlKind,
-      tag: param["Tag"],
+      tag: atom["Tag"],
     ) => void;
   };
   /**
    * Called right before evaluating a break statement.
    */
   "break@before": {
-    pointcut: (label: param["Label"], tag: param["Tag"]) => boolean;
+    pointcut: (label: atom["Label"], tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
-      label: param["Label"],
-      tag: param["Tag"],
+      state: runtime["State"],
+      label: atom["Label"],
+      tag: atom["Tag"],
     ) => void;
   };
   /**
    * Called right before using a value as a boolean to branch the control flow.
    */
   "test@before": {
-    pointcut: (kind: TestKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: TestKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       kind: TestKind,
-      value: param["StackValue"],
-      tag: param["Tag"],
+      value: runtime["StackValue"],
+      tag: atom["Tag"],
     ) => boolean;
   };
   /**
    * Called right after an intrinsic value was read.
    */
   "intrinsic@after": {
-    pointcut: (name: Intrinsic, tag: param["Tag"]) => boolean;
+    pointcut: (name: Intrinsic, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       name: Intrinsic,
-      value: param["OtherValue"],
-      tag: param["Tag"],
-    ) => param["StackValue"];
+      value: runtime["OtherValue"],
+      tag: atom["Tag"],
+    ) => runtime["StackValue"];
   };
   /**
    * Called right after a primitive value was created.
    */
   "primitive@after": {
-    pointcut: (primitive: RuntimePrimitive, tag: param["Tag"]) => boolean;
+    pointcut: (primitive: RuntimePrimitive, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       value: RuntimePrimitive,
-      tag: param["Tag"],
-    ) => param["StackValue"];
+      tag: atom["Tag"],
+    ) => runtime["StackValue"];
   };
   /**
    * Called right after a value was imported from another module.
    */
   "import@after": {
     pointcut: (
-      source: param["Source"],
-      specifier: param["Specifier"] | null,
-      tag: param["Tag"],
+      source: atom["Source"],
+      specifier: atom["Specifier"] | null,
+      tag: atom["Tag"],
     ) => boolean;
     advice: (
-      state: param["State"],
-      source: param["Source"],
-      specifier: param["Specifier"] | null,
-      value: param["OtherValue"],
-      tag: param["Tag"],
-    ) => param["StackValue"];
+      state: runtime["State"],
+      source: atom["Source"],
+      specifier: atom["Specifier"] | null,
+      value: runtime["OtherValue"],
+      tag: atom["Tag"],
+    ) => runtime["StackValue"];
   };
   /**
    * Called right after a closure was created. We use the term 'closure' because
    * we reserve the term 'function' for actual regular functions.
    */
   "closure@after": {
-    pointcut: (kind: ClosureKind, tag: param["Tag"]) => boolean;
+    pointcut: (kind: ClosureKind, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       kind: ClosureKind,
-      closure: param["OtherValue"] & Function,
-      tag: param["Tag"],
-    ) => param["StackValue"];
+      closure: runtime["OtherValue"] & Function,
+      tag: atom["Tag"],
+    ) => runtime["StackValue"];
   };
   /**
    * Called right after a value was read from the current scope. The variable is
@@ -351,15 +315,15 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    */
   "read@after": {
     pointcut: (
-      identifier: Parameter | param["Variable"],
-      tag: param["Tag"],
+      identifier: Parameter | atom["Variable"],
+      tag: atom["Tag"],
     ) => boolean;
     advice: (
-      state: param["State"],
-      identifier: Parameter | param["Variable"],
-      value: param["ScopeValue"],
-      tag: param["Tag"],
-    ) => param["StackValue"];
+      state: runtime["State"],
+      identifier: Parameter | atom["Variable"],
+      value: runtime["ScopeValue"],
+      tag: atom["Tag"],
+    ) => runtime["StackValue"];
   };
   /**
    * Called right before a value will be used as code to a direct eval call.
@@ -367,23 +331,23 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    * this code will interact very poorly with the surrounding instrumented code.
    */
   "eval@before": {
-    pointcut: (tag: param["Tag"]) => boolean;
+    pointcut: (tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
-      value: param["StackValue"],
-      tag: param["Tag"],
+      state: runtime["State"],
+      value: runtime["StackValue"],
+      tag: atom["Tag"],
     ) => Program<Atom> & { kind: "eval"; situ: "local.deep" };
   };
   /**
    * Called right after returning from a direct eval call.
    */
   "eval@after": {
-    pointcut: (tag: param["Tag"]) => boolean;
+    pointcut: (tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
-      value: param["OtherValue"],
-      tag: param["Tag"],
-    ) => param["StackValue"];
+      state: runtime["State"],
+      value: runtime["OtherValue"],
+      tag: atom["Tag"],
+    ) => runtime["StackValue"];
   };
   /**
    * Called right before a value will be used as a promise in a `await`
@@ -391,50 +355,50 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    * callstack will be stashed away.
    */
   "await@before": {
-    pointcut: (tag: param["Tag"]) => boolean;
+    pointcut: (tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
-      value: param["StackValue"],
-      tag: param["Tag"],
-    ) => param["OtherValue"];
+      state: runtime["State"],
+      value: runtime["StackValue"],
+      tag: atom["Tag"],
+    ) => runtime["OtherValue"];
   };
   /**
    * Called right after a promise used inside an `await` expression successfully
    * resolved. That is that the asynchronous closure stack will be restored.
    */
   "await@after": {
-    pointcut: (tag: param["Tag"]) => boolean;
+    pointcut: (tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
-      value: param["OtherValue"],
-      tag: param["Tag"],
-    ) => param["StackValue"];
+      state: runtime["State"],
+      value: runtime["OtherValue"],
+      tag: atom["Tag"],
+    ) => runtime["StackValue"];
   };
   /**
    * Called right before a value will be used as an item in a `yield`
    * expression. That is that the current call will be stashed away.
    */
   "yield@before": {
-    pointcut: (delegate: boolean, tag: param["Tag"]) => boolean;
+    pointcut: (delegate: boolean, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       delegate: boolean,
-      value: param["StackValue"],
-      tag: param["Tag"],
-    ) => param["OtherValue"];
+      value: runtime["StackValue"],
+      tag: atom["Tag"],
+    ) => runtime["OtherValue"];
   };
   /**
    * Called right after calling the `next` method of the iterator returned by a
    * generator. That is that the generator call will be restored.
    */
   "yield@after": {
-    pointcut: (delegate: boolean, tag: param["Tag"]) => boolean;
+    pointcut: (delegate: boolean, tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
+      state: runtime["State"],
       delegate: boolean,
-      value: param["OtherValue"],
-      tag: param["Tag"],
-    ) => param["StackValue"];
+      value: runtime["OtherValue"],
+      tag: atom["Tag"],
+    ) => runtime["StackValue"];
   };
   /**
    * Called right after a value will actually *not* be used. For instance an
@@ -442,24 +406,24 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    * expression has no use.
    */
   "drop@before": {
-    pointcut: (tag: param["Tag"]) => boolean;
+    pointcut: (tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
-      value: param["StackValue"],
-      tag: param["Tag"],
-    ) => param["OtherValue"];
+      state: runtime["State"],
+      value: runtime["StackValue"],
+      tag: atom["Tag"],
+    ) => runtime["OtherValue"];
   };
   /**
    * Called right before a value will be exported from the current module.
    */
   "export@before": {
-    pointcut: (specifier: param["Specifier"], tag: param["Tag"]) => boolean;
+    pointcut: (specifier: atom["Specifier"], tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
-      specifier: param["Specifier"],
-      value: param["StackValue"],
-      tag: param["Tag"],
-    ) => param["OtherValue"];
+      state: runtime["State"],
+      specifier: atom["Specifier"],
+      value: runtime["StackValue"],
+      tag: atom["Tag"],
+    ) => runtime["OtherValue"];
   };
   /**
    * Called right before a value will be used to update the current scope. The
@@ -467,59 +431,68 @@ export type AspectTyping<param extends AspectParam = AspectParam> = {
    */
   "write@before": {
     pointcut: (
-      identifier: Parameter | param["Variable"],
-      tag: param["Tag"],
+      identifier: Parameter | atom["Variable"],
+      tag: atom["Tag"],
     ) => boolean;
     advice: (
-      state: param["State"],
-      identifier: Parameter | param["Variable"],
-      value: param["StackValue"],
-      tag: param["Tag"],
-    ) => param["ScopeValue"];
+      state: runtime["State"],
+      identifier: Parameter | atom["Variable"],
+      value: runtime["StackValue"],
+      tag: atom["Tag"],
+    ) => runtime["ScopeValue"];
   };
   /**
    * Called in place of a closure regular call. The `this` argument has been
    * made explicit and the operation should be performed with `Reflect.apply`.
    */
   "apply@around": {
-    pointcut: (tag: param["Tag"]) => boolean;
+    pointcut: (tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
-      callee: param["StackValue"],
-      this_: param["StackValue"],
-      arguments_: param["StackValue"][],
-      tag: param["Tag"],
-    ) => param["StackValue"];
+      state: runtime["State"],
+      callee: runtime["StackValue"],
+      this_: runtime["StackValue"],
+      arguments_: runtime["StackValue"][],
+      tag: atom["Tag"],
+    ) => runtime["StackValue"];
   };
   /**
    * Called in place of a closure construct call. The operation should be
    * performed with `Reflect.construct`.
    */
   "construct@around": {
-    pointcut: (tag: param["Tag"]) => boolean;
+    pointcut: (tag: atom["Tag"]) => boolean;
     advice: (
-      state: param["State"],
-      callee: param["StackValue"],
-      arguments_: param["StackValue"][],
-      tag: param["Tag"],
-    ) => param["StackValue"];
+      state: runtime["State"],
+      callee: runtime["StackValue"],
+      arguments_: runtime["StackValue"][],
+      tag: atom["Tag"],
+    ) => runtime["StackValue"];
   };
 };
 
-export type AspectKind = keyof AspectTyping<never>;
+export type AspectKind = keyof AspectTyping<never, never>;
 
 export type Advice<
-  kind extends AspectKind | unknown = unknown,
-  param extends AspectParam = AspectParam,
-> = kind extends AspectKind
+  param extends {
+    Kind?: AspectKind;
+    Atom?: Atom;
+    Runtime?: Runtime;
+  } = {},
+> = param extends { Kind: AspectKind }
   ? {
-      [key in kind]: AspectTyping<param>[key]["advice"];
+      [key in param["Kind"]]: AspectTyping<
+        GetDefault<param, "Atom", Atom>,
+        GetDefault<param, "Runtime", Runtime>
+      >[key]["advice"];
     }
   : {
       [key in AspectKind]?:
         | null
         | undefined
-        | AspectTyping<param>[key]["advice"];
+        | AspectTyping<
+            GetDefault<param, "Atom", Atom>,
+            GetDefault<param, "Runtime", Runtime>
+          >[key]["advice"];
     };
 
 export type ObjectPointcut<atom extends Atom = Atom> = {
@@ -527,7 +500,7 @@ export type ObjectPointcut<atom extends Atom = Atom> = {
     | null
     | undefined
     | boolean
-    | AspectTyping<Merge<AspectParam, Pick<atom, keyof Atom>>>[key]["pointcut"];
+    | AspectTyping<atom, never>[key]["pointcut"];
 };
 
 export type ConstantPointcut = boolean;

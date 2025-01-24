@@ -67,7 +67,6 @@ import type {
 import type {
   AspectTyping as FlexibleAspectTyping,
   AspectKind as FlexibleAspectKind,
-  AspectElement as FlexibleAspectElement,
   PointcutElement as FlexiblePointcutElement,
   AdviceElement as FlexibleAdviceElement,
   Aspect as FlexibleAspect,
@@ -140,7 +139,6 @@ export {
   FlexiblePointcut,
   FlexibleAspect,
   FlexibleAdvice,
-  FlexibleAspectElement,
   FlexiblePointcutElement,
   FlexibleAdviceElement,
 };
@@ -275,14 +273,7 @@ export const weaveStandard: <
   res_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
 >(
   root: Program<arg_atom>,
-  conf?:
-    | null
-    | undefined
-    | Partial<
-        StandardWeaveConfig<
-          arg_atom & { InitialState: Json; JavaScriptIdentifier: string }
-        >
-      >,
+  conf?: null | undefined | Partial<StandardWeaveConfig<{ Atom: arg_atom }>>,
 ) => Program<res_atom>;
 
 /**
@@ -303,10 +294,7 @@ export const weaveFlexible: <
   res_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
 >(
   root: Program<arg_atom>,
-  conf?:
-    | null
-    | undefined
-    | Partial<FlexibleWeaveConfig<Json[], Json, arg_atom, string>>,
+  conf?: null | undefined | Partial<FlexibleWeaveConfig<{ Atom: arg_atom }>>,
 ) => Program<res_atom>;
 
 ///////////////
@@ -359,15 +347,11 @@ export const instrument: <path = string, hash extends string | number = string>(
     | null
     | undefined
     | Partial<
-        InstrumentConfig<
-          Atom & {
-            Tag: hash;
-            InitialState: Json;
-            FilePath: path;
-            NodeHash: hash;
-            JavaScriptIdentifier: string;
-          }
-        >
+        InstrumentConfig<{
+          Atom: Atom & { Tag: hash };
+          FilePath: path;
+          NodeHash: hash;
+        }>
       >,
 ) => EstreeProgram<{}> & {
   warnings: Warning[];

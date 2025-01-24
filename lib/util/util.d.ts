@@ -8,10 +8,20 @@ export type JsonPrimitive = null | boolean | number | string;
 
 export type Json = JsonPrimitive | Json[] | { [key in string]?: Json };
 
-type Merge<X, Y> = {
+export type Merge<X, Y> = {
   [k in keyof X | keyof Y]: k extends keyof Y
     ? Y[k]
     : k extends keyof X
       ? X[k]
       : never;
 };
+
+export type MergeDefault<X, Y> = {
+  [k in keyof X]: Y extends { [k2 in k]: infer V } ? V : X[k];
+};
+
+export type KeyOfUnion<T> = T extends T ? keyof T : never;
+
+type GetDefault<O, K extends string, D> = O extends { [k in K]: infer V }
+  ? V
+  : D;

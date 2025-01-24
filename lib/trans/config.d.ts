@@ -3,6 +3,7 @@ import type {
   Path as EstreeNodePath,
 } from "estree-sentry";
 import type { Situ } from "./source";
+import type { GetDefault } from "../util/util";
 
 export type GlobalDeclarativeRecord = "builtin" | "emulate";
 
@@ -22,7 +23,7 @@ export type LooseEstreeProgram = {
  * A parsed JavaScript program. Represents both static code and dynamically
  * generated code.
  */
-export type File<param extends { FilePath: unknown } = { FilePath: string }> = {
+export type File<param extends { FilePath?: unknown } = {}> = {
   /**
    * The `estree.Program` node to instrument.
    */
@@ -51,17 +52,7 @@ export type File<param extends { FilePath: unknown } = { FilePath: string }> = {
    * An identifier for the file. It is passed to `conf.digest` to help
    * generating unique node hash.
    */
-  path: param["FilePath"];
-};
-
-export type DigestParam = {
-  NodeHash: string | number;
-  FilePath: unknown;
-};
-
-export type DefaultDigestParam = {
-  NodeHash: string;
-  FilePath: string;
+  path: GetDefault<param, "FilePath", string>;
 };
 
 /**
@@ -82,21 +73,21 @@ export type DefaultDigestParam = {
  * @returns The hash of the node. It should be unique for each node in the
  * program `file.root`. It is safe to simply returns `node_path`.
  */
-export type Digest<param extends DigestParam = DefaultDigestParam> = (
+export type Digest<
+  param extends { FilePath?: unknown; NodePath?: string | number } = {},
+> = (
   node: object,
   node_path: EstreeNodePath,
-  file_path: param["FilePath"],
+  file_path: GetDefault<param, "FilePath", string>,
   node_kind: EstreeNodeKind,
-) => param["NodeHash"];
-
-export type ConfigParam = DigestParam;
-
-export type DefaultConfigParam = DefaultDigestParam;
+) => GetDefault<param, "NodeHash", string>;
 
 /**
  * Configuration object for `transpile`.
  */
-export type Config<param extends ConfigParam = DefaultConfigParam> = {
+export type Config<
+  param extends { FilePath?: unknown; NodePath?: string | number } = {},
+> = {
   /**
    * Indicates whether the global declarative record should be emulated or not.
    * NB: The global declarative record is a scope frame that sits right before

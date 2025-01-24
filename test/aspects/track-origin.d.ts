@@ -7,9 +7,7 @@ export type Source = string & { __brand: "Source" };
 export type Hash = `hash:${string}`;
 
 export type AspectKind =
-  | "program-block@setup"
-  | "closure-block@setup"
-  | "segment-block@setup"
+  | "block@setup"
   | "block@declaration"
   | "program-block@after"
   | "closure-block@after"

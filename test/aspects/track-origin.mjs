@@ -65,9 +65,7 @@ export const ADVICE_GLOBAL_VARIABLE =
  * @type {{[key in import("./track-origin").AspectKind]: null}}
  */
 const aspect_kind_enum = {
-  "program-block@setup": null,
-  "closure-block@setup": null,
-  "segment-block@setup": null,
+  "block@setup": null,
   "block@declaration": null,
   "program-block@after": null,
   "closure-block@after": null,
@@ -93,7 +91,8 @@ const aspect_kind_enum = {
 const pointcut = listKey(aspect_kind_enum);
 
 /**
- * @type {import("aran").StandardWeaveConfig<import("./track-origin").Atom & {
+ * @type {import("aran").StandardWeaveConfig<{
+ *   Atom: import("./track-origin").Atom,
  *   InitialState: null,
  *   JavaScriptIdentifier: import("./track-origin").JavaScriptIdentifier,
  * }>}
@@ -135,16 +134,16 @@ const extendState = (parent) => ({
  *       input: import("./track-origin").Value[],
  *     ) => import("./track-origin").Value,
  *   },
- * ) => import("aran").StandardAdvice<
- *   import("./track-origin").AspectKind,
- *   import("./track-origin").Atom & {
- *     InitialState: null,
+ * ) => import("aran").StandardAdvice<{
+ *   Kind: import("./track-origin").AspectKind,
+ *   Atom: import("./track-origin").Atom,
+ *   Runtime: {
  *     State: import("./track-origin").ShadowState,
  *     StackValue: import("./track-origin").Value,
  *     ScopeValue: import("./track-origin").Value,
  *     OtherValue: import("./track-origin").Value,
  *   },
- * >}
+ * }>}
  */
 export const createTrackOriginAdvice = ({ apply, construct }) => {
   /** @type {import("./track-origin").Transit} */
@@ -152,7 +151,7 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
   /** @type {null | import("./track-origin").ShadowState} */
   let deep_eval_state = null;
   return {
-    "program-block@setup": (_initial_state, kind, _hash) => {
+    "block@setup": (_state, kind, _hash) => {
       if (kind === "deep-local-eval") {
         if (deep_eval_state === null) {
           throw new AranExecError("missing deep eval state");
@@ -165,8 +164,6 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
         return extendState(null);
       }
     },
-    "closure-block@setup": (state, _kind, _hash) => extendState(state),
-    "segment-block@setup": (state, _kind, _hash) => extendState(state),
     "block@declaration": (state, _kind, frame, hash) => {
       for (const identifier in frame) {
         state.frame[

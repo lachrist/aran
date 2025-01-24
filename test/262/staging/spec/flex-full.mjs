@@ -6,19 +6,21 @@ import { AranTestError } from "../../error.mjs";
 import { record } from "../../record/index.mjs";
 
 /**
- * @typedef {`hash:${string}`} Hash
+ * @typedef {`hash:${string}`} NodeHash
  * @typedef {[
  *   import("aran").FlexibleAspectKind,
  *   import("aran").Node["type"],
- *   Hash,
+ *   import("aran").Node["type"],
+ *   NodeHash,
  * ]} Point
- * @typedef {`dynamic://eval/local/${Hash}`} LocalEvalPath
+ * @typedef {`dynamic://eval/local/${NodeHash}`} LocalEvalPath
  * @typedef {(
  *   | import("../../fetch").HarnessName
  *   | import("../../fetch").DependencyPath
  *   | import("../../fetch").TestPath
  *   | LocalEvalPath
  * )} FilePath
+ * @typedef {string & {__brand: "AdviceGlobalVariable"}} AdviceGlobalVariable
  * @typedef {string & {__brand: "JavaScriptIdentifier"}} JavaScriptIdentifier
  * @typedef {string & {__brand: "Variable"}} Variable
  * @typedef {string & {__brand: "Label"}} Label
@@ -29,7 +31,7 @@ import { record } from "../../record/index.mjs";
  *   Label: Label,
  *   Specifier: Specifier,
  *   Source: Source,
- *   Tag: Hash,
+ *   Tag: NodeHash,
  * }} Atom
  * @typedef {unknown & {__brand: "Value"}} Value
  * @typedef {"@state"} State
@@ -61,24 +63,21 @@ const HASH_PREFIX = ["hash:"];
  * }}
  */
 const ASPECT_KIND_ENUM = {
-  "apply@around": null,
-  "construct@around": null,
-  "eval@before": null,
   "block@setup": null,
   "block@before": null,
   "block@declaration": null,
   "block@declaration-overwrite": null,
-  "block@teardown": null,
+  "block@after": null,
   "block@throwing": null,
-  "program-block@after": null,
-  "closure-block@after": null,
-  "segment-block@after": null,
+  "block@teardown": null,
   "statement@before": null,
   "statement@after": null,
   "effect@before": null,
   "effect@after": null,
   "expression@before": null,
   "expression@after": null,
+  "apply@around": null,
+  "construct@around": null,
 };
 
 /**
@@ -128,6 +127,20 @@ const EXPRESSION_NODE_TYPE_ENUM = {
   YieldExpression: null,
 };
 
+/**
+ * @type {{
+ *   [key in import("aran").Node["type"]]: null
+ * }}
+ */
+const NODE_TYPE_ENUM = {
+  Program: null,
+  RoutineBlock: null,
+  SegmentBlock: null,
+  ...STATEMENT_NODE_TYPE_ENUM,
+  ...EFFECT_NODE_TYPE_ENUM,
+  ...EXPRESSION_NODE_TYPE_ENUM,
+};
+
 ///////////////
 // Predicate //
 ///////////////
@@ -148,22 +161,15 @@ const isNode = (node) =>
  *   node: import("aran").Node["type"],
  * ) => boolean}
  */
+const isNodeType = (type) => hasOwn(NODE_TYPE_ENUM, type);
+
+/**
+ * @type {(
+ *   node: import("aran").Node["type"],
+ * ) => boolean}
+ */
 const isBlockType = (type) =>
   type === "RoutineBlock" || type === "SegmentBlock";
-
-/**
- * @type {(
- *   node: import("aran").Node["type"],
- * ) => boolean}
- */
-const isRoutineBlockType = (type) => type === "RoutineBlock";
-
-/**
- * @type {(
- *   node: import("aran").Node["type"],
- * ) => boolean}
- */
-const isSegmentBlockType = (type) => type === "SegmentBlock";
 
 /**
  * @type {(
@@ -191,14 +197,7 @@ const isExpressionType = (type) =>
 
 /**
  * @type {(
- *   node: import("aran").Node["type"],
- * ) => boolean}
- */
-const isEvalExpressionType = (type) => type === "EvalExpression";
-
-/**
- * @type {(
- *   hash: Hash,
+ *   hash: NodeHash,
  * ) => boolean}
  */
 const isHash = (hash) =>
@@ -287,19 +286,6 @@ const assertInput = (input, predicates) => {
 };
 
 /**
- * @type {<X1, X2, X3, X4>(
- *   input: [X1, X2, X3, X4],
- *   predicates: [
- *     (arg: X1) => boolean,
- *     (arg: X2) => boolean,
- *     (arg: X3) => boolean,
- *     (arg: X4) => boolean,
- *   ],
- * ) => void}
- */
-const assertInput4 = assertInput;
-
-/**
  * @type {<X1, X2, X3, X4, X5>(
  *   input: [X1, X2, X3, X4, X5],
  *   predicates: [
@@ -344,6 +330,23 @@ const assertInput6 = assertInput;
  */
 const assertInput7 = assertInput;
 
+/**
+ * @type {<X1, X2, X3, X4, X5, X6, X7, X8>(
+ *   input: [X1, X2, X3, X4, X5, X6, X7, X8],
+ *   predicates: [
+ *     (arg: X1) => boolean,
+ *     (arg: X2) => boolean,
+ *     (arg: X3) => boolean,
+ *     (arg: X4) => boolean,
+ *     (arg: X5) => boolean,
+ *     (arg: X6) => boolean,
+ *     (arg: X7) => boolean,
+ *     (arg: X8) => boolean,
+ *   ],
+ * ) => void}
+ */
+const assertInput8 = assertInput;
+
 ////////////
 // Aspect //
 ////////////
@@ -351,10 +354,10 @@ const assertInput7 = assertInput;
 /**
  * @type {(
  *   kind: import("aran").FlexibleAspectKind,
- * ) => JavaScriptIdentifier}
+ * ) => AdviceGlobalVariable}
  */
-const toGlobalVariable = (kind) =>
-  /** @type {JavaScriptIdentifier} */ (
+const toAdviceGlobalVariable = (kind) =>
+  /** @type {AdviceGlobalVariable} */ (
     `aran_${kind.replaceAll("@", "_").replaceAll("-", "_")}`
   );
 
@@ -372,12 +375,12 @@ const compilePointcut = (kind) => (node, parent, root) => {
   assertPredicate(isNode, parent);
   assertPredicate(isNode, root);
   assertEqual(root.type, "Program");
-  return [kind, node.type, node.tag];
+  return [kind, node.type, parent.type, node.tag];
 };
 
 /**
  * @type {(
- *   reflect: {
+ *   Reflect: {
  *     apply: (
  *       callee: Value,
  *       that: Value,
@@ -388,206 +391,229 @@ const compilePointcut = (kind) => (node, parent, root) => {
  *       input: Value[],
  *     ) => Value,
  *   },
- * ) => import("aran").FlexibleAspect<
- *   Point,
- *   State,
- *   Value,
- *   Atom,
- *   JavaScriptIdentifier,
- * >}
+ * ) => import("aran").FlexibleAspect<{
+ *   AdviceGlobalVariable: AdviceGlobalVariable,
+ *   Atom: Atom,
+ *   Point: Point,
+ *   State: State,
+ *   Value: Value,
+ * }>}
  */
 const compileAspect = ({ apply, construct }) => ({
-  [toGlobalVariable("block@setup")]: {
+  [toAdviceGlobalVariable("block@setup")]: {
     kind: "block@setup",
     pointcut: compilePointcut("block@setup"),
     advice: (...input) => {
-      assertInput4(input, [isState, isAspectKind, isBlockType, isHash]);
+      assertInput5(input, [
+        isState,
+        isAspectKind,
+        isBlockType,
+        isNodeType,
+        isHash,
+      ]);
       return STATE;
     },
   },
-  [toGlobalVariable("block@before")]: {
+  [toAdviceGlobalVariable("block@before")]: {
     kind: "block@before",
     pointcut: compilePointcut("block@before"),
     advice: (...input) => {
-      assertInput4(input, [isState, isAspectKind, isBlockType, isHash]);
+      assertInput5(input, [
+        isState,
+        isAspectKind,
+        isBlockType,
+        isNodeType,
+        isHash,
+      ]);
     },
   },
-  [toGlobalVariable("block@declaration")]: {
+  [toAdviceGlobalVariable("block@declaration")]: {
     kind: "block@declaration",
     pointcut: compilePointcut("block@declaration"),
     advice: (...input) => {
-      assertInput5(input, [
+      assertInput6(input, [
         isState,
         isFrame,
         isAspectKind,
         isBlockType,
+        isNodeType,
         isHash,
       ]);
     },
   },
-  [toGlobalVariable("block@declaration-overwrite")]: {
+  [toAdviceGlobalVariable("block@declaration-overwrite")]: {
     kind: "block@declaration-overwrite",
     pointcut: compilePointcut("block@declaration-overwrite"),
     advice: (...input) => {
-      assertInput5(input, [
+      assertInput6(input, [
         isState,
         isFrame,
         isAspectKind,
         isBlockType,
+        isNodeType,
         isHash,
       ]);
       return input[1];
     },
   },
-  [toGlobalVariable("program-block@after")]: {
-    kind: "program-block@after",
-    pointcut: compilePointcut("program-block@after"),
+  [toAdviceGlobalVariable("block@after")]: {
+    kind: "block@after",
+    pointcut: compilePointcut("block@after"),
     advice: (...input) => {
       assertInput5(input, [
         isState,
-        isValue,
         isAspectKind,
-        isRoutineBlockType,
+        isBlockType,
+        isNodeType,
         isHash,
       ]);
-      return input[1];
     },
   },
-  [toGlobalVariable("closure-block@after")]: {
-    kind: "closure-block@after",
-    pointcut: compilePointcut("closure-block@after"),
-    advice: (...input) => {
-      assertInput5(input, [
-        isState,
-        isValue,
-        isAspectKind,
-        isRoutineBlockType,
-        isHash,
-      ]);
-      return input[1];
-    },
-  },
-  [toGlobalVariable("segment-block@after")]: {
-    kind: "segment-block@after",
-    pointcut: compilePointcut("segment-block@after"),
-    advice: (...input) => {
-      assertInput4(input, [isState, isAspectKind, isSegmentBlockType, isHash]);
-    },
-  },
-  [toGlobalVariable("block@throwing")]: {
+  [toAdviceGlobalVariable("block@throwing")]: {
     kind: "block@throwing",
     pointcut: compilePointcut("block@throwing"),
     advice: (...input) => {
-      assertInput5(input, [
+      assertInput6(input, [
         isState,
         isValue,
         isAspectKind,
         isBlockType,
+        isNodeType,
         isHash,
       ]);
       return input[1];
     },
   },
-  [toGlobalVariable("block@teardown")]: {
+  [toAdviceGlobalVariable("block@teardown")]: {
     kind: "block@teardown",
     pointcut: compilePointcut("block@teardown"),
     advice: (...input) => {
-      assertInput4(input, [isState, isAspectKind, isBlockType, isHash]);
+      assertInput5(input, [
+        isState,
+        isAspectKind,
+        isBlockType,
+        isNodeType,
+        isHash,
+      ]);
     },
   },
-  [toGlobalVariable("statement@before")]: {
+  [toAdviceGlobalVariable("statement@before")]: {
     kind: "statement@before",
     pointcut: compilePointcut("statement@before"),
     advice: (...input) => {
-      assertInput4(input, [isState, isAspectKind, isStatementType, isHash]);
+      assertInput5(input, [
+        isState,
+        isAspectKind,
+        isStatementType,
+        isNodeType,
+        isHash,
+      ]);
     },
   },
-  [toGlobalVariable("statement@after")]: {
+  [toAdviceGlobalVariable("statement@after")]: {
     kind: "statement@after",
     pointcut: compilePointcut("statement@after"),
     advice: (...input) => {
-      assertInput4(input, [isState, isAspectKind, isStatementType, isHash]);
+      assertInput5(input, [
+        isState,
+        isAspectKind,
+        isStatementType,
+        isNodeType,
+        isHash,
+      ]);
     },
   },
-  [toGlobalVariable("effect@before")]: {
+  [toAdviceGlobalVariable("effect@before")]: {
     kind: "effect@before",
     pointcut: compilePointcut("effect@before"),
     advice: (...input) => {
-      assertInput4(input, [isState, isAspectKind, isEffectType, isHash]);
+      assertInput5(input, [
+        isState,
+        isAspectKind,
+        isEffectType,
+        isNodeType,
+        isHash,
+      ]);
     },
   },
-  [toGlobalVariable("effect@after")]: {
+  [toAdviceGlobalVariable("effect@after")]: {
     kind: "effect@after",
     pointcut: compilePointcut("effect@after"),
     advice: (...input) => {
-      assertInput4(input, [isState, isAspectKind, isEffectType, isHash]);
+      assertInput5(input, [
+        isState,
+        isAspectKind,
+        isEffectType,
+        isNodeType,
+        isHash,
+      ]);
     },
   },
-  [toGlobalVariable("expression@before")]: {
+  [toAdviceGlobalVariable("expression@before")]: {
     kind: "expression@before",
     pointcut: compilePointcut("expression@before"),
     advice: (...input) => {
-      assertInput4(input, [isState, isAspectKind, isExpressionType, isHash]);
+      assertInput5(input, [
+        isState,
+        isAspectKind,
+        isExpressionType,
+        isNodeType,
+        isHash,
+      ]);
     },
   },
-  [toGlobalVariable("expression@after")]: {
+  [toAdviceGlobalVariable("expression@after")]: {
     kind: "expression@after",
     pointcut: compilePointcut("expression@after"),
     advice: (...input) => {
-      assertInput5(input, [
+      assertInput6(input, [
         isState,
         isValue,
         isAspectKind,
         isExpressionType,
+        isNodeType,
         isHash,
       ]);
-      return input[1];
+      const { 1: result, 4: parent } = input;
+      if (parent === "EvalExpression") {
+        /** @type {import("aran").Program<Atom>} */
+        const root1 = /** @type {any} */ (result);
+        // eslint-disable-next-line no-use-before-define
+        const root2 = weaveFlexible(root1, weave_config);
+        return /** @type {Value} */ (/** @type {unknown} */ (root2));
+      } else {
+        return result;
+      }
     },
   },
-  [toGlobalVariable("eval@before")]: {
-    kind: "eval@before",
-    pointcut: compilePointcut("eval@before"),
-    advice: (...input) => {
-      assertInput5(input, [
-        isState,
-        isValue,
-        isAspectKind,
-        isEvalExpressionType,
-        isHash,
-      ]);
-      /** @type {import("aran").Program<Atom>} */
-      const root1 = /** @type {any} */ (input[1]);
-      // eslint-disable-next-line no-use-before-define
-      const root2 = weaveFlexible(root1, weave_config);
-      return /** @type {Value} */ (/** @type {unknown} */ (root2));
-    },
-  },
-  [toGlobalVariable("apply@around")]: {
+  [toAdviceGlobalVariable("apply@around")]: {
     kind: "apply@around",
     pointcut: compilePointcut("apply@around"),
     advice: (...input) => {
-      assertInput7(input, [
+      assertInput8(input, [
         isState,
         isValue,
         isValue,
         isValueArray,
         isAspectKind,
         isExpressionType,
+        isNodeType,
         isHash,
       ]);
       return apply(input[1], input[2], input[3]);
     },
   },
-  [toGlobalVariable("construct@around")]: {
+  [toAdviceGlobalVariable("construct@around")]: {
     kind: "construct@around",
     pointcut: compilePointcut("construct@around"),
     advice: (...input) => {
-      assertInput6(input, [
+      assertInput7(input, [
         isState,
         isValue,
         isValueArray,
         isAspectKind,
         isExpressionType,
+        isNodeType,
         isHash,
       ]);
       return construct(input[1], input[2]);
@@ -600,18 +626,24 @@ const compileAspect = ({ apply, construct }) => ({
 ////////////
 
 /**
- * @type {import("aran").Digest<Hash>}
+ * @type {import("aran").Digest<{
+ *   NodeHash: NodeHash,
+ *   FilePath: FilePath,
+ * }>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
   `hash:${file_path}:${node_path}`;
 
 /**
- * @type {(hash: Hash) => FilePath}
+ * @type {(hash: NodeHash) => FilePath}
  */
 const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
 /**
- * @type {import("aran").TransConfig<Hash, FilePath>}
+ * @type {import("aran").TransConfig<{
+ *   NodeHash: NodeHash,
+ *   FilePath: FilePath,
+ * }>}
  */
 const trans_config = {
   global_declarative_record: "builtin",
@@ -619,7 +651,9 @@ const trans_config = {
 };
 
 /**
- * @type {import("aran").RetroConfig<JavaScriptIdentifier>}
+ * @type {import("aran").RetroConfig<{
+ *   JavaScriptIdentifier: JavaScriptIdentifier,
+ * }>}
  */
 const retro_config = {
   mode: "normal",
@@ -636,12 +670,12 @@ const { setup, trans, retro } = compileAran(
 );
 
 /**
- * @type {import("aran").FlexibleWeaveConfig<
- *   Point,
- *   State,
- *   Atom,
- *   JavaScriptIdentifier,
- * >}
+ * @type {import("aran").FlexibleWeaveConfig<{
+ *   InitialState: State,
+ *   AdviceGlobalVariable: AdviceGlobalVariable,
+ *   Atom: Atom,
+ *   Point: Point,
+ * }>}
  */
 const weave_config = {
   initial_state: STATE,
