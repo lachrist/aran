@@ -1,10 +1,4 @@
-import { ClosureKind, Intrinsic, Parameter } from "aran";
-
-export type Variable = string & { __brand: "Variable" };
-export type Label = string & { __brand: "Label" };
-export type Specifier = string & { __brand: "Specifier" };
-export type Source = string & { __brand: "Source" };
-export type Hash = `hash:${string}`;
+import { Atom, ClosureKind, Intrinsic, Parameter, SyntaxPrimitive } from "aran";
 
 export type AspectKind =
   | "block@setup"
@@ -29,19 +23,9 @@ export type AspectKind =
   | "yield@before"
   | "yield@after";
 
-export type Atom = {
-  Variable: Variable;
-  Label: Label;
-  Specifier: Specifier;
-  Source: Source;
-  Tag: Hash;
-};
+export type Identifier<atom extends Atom> = atom["Variable"] | Parameter;
 
-export type Identifier = Variable | Parameter;
-
-export type JavaScriptIdentifier = string & { __brand: "JavaScriptIdentifier" };
-
-export type Transit =
+export type Transit<atom extends Atom> =
   | { type: "void" }
   | {
       type: "apply";
@@ -51,9 +35,9 @@ export type Transit =
         arguments: Value[];
       };
       shadow: {
-        function: ShadowValue;
-        this: ShadowValue;
-        arguments: ShadowValue[];
+        function: ShadowValue<atom>;
+        this: ShadowValue<atom>;
+        arguments: ShadowValue<atom>[];
       };
     }
   | {
@@ -63,78 +47,78 @@ export type Transit =
         arguments: Value[];
       };
       shadow: {
-        function: ShadowValue;
-        arguments: ShadowValue[];
+        function: ShadowValue<atom>;
+        arguments: ShadowValue<atom>[];
       };
     }
   | {
       type: "return";
       source: Value;
-      shadow: ShadowValue;
+      shadow: ShadowValue<atom>;
     };
 
-export type ShadowValue =
+export type ShadowValue<atom extends Atom> =
   | {
       type: "arguments";
-      values: ShadowValue[];
-      hash: Hash;
+      values: ShadowValue<atom>[];
+      location: atom["Tag"];
     }
   | {
       type: "primitive";
-      value: number | string | boolean | null | { bigint: string };
-      hash: Hash;
+      value: SyntaxPrimitive;
+      location: atom["Tag"];
     }
   | {
       type: "closure";
       kind: ClosureKind;
-      hash: Hash;
+      location: atom["Tag"];
     }
   | {
       type: "intrinsic";
       name: Intrinsic;
-      hash: Hash;
+      location: atom["Tag"];
     }
   | {
       type: "initial";
-      variable: Identifier;
-      hash: Hash;
+      identifier: Identifier<atom>;
+      location: Atom["Tag"];
     }
   | {
       type: "import";
-      source: Source;
-      specifier: Specifier | null;
-      hash: Hash;
+      source: atom["Source"];
+      specifier: atom["Specifier"] | null;
+      location: atom["Tag"];
     }
   | {
       type: "apply";
-      function: ShadowValue;
-      this: ShadowValue;
-      arguments: ShadowValue[];
-      hash: Hash;
+      function: ShadowValue<atom>;
+      this: ShadowValue<atom>;
+      arguments: ShadowValue<atom>[];
+      location: atom["Tag"];
     }
   | {
       type: "construct";
-      function: ShadowValue;
-      arguments: ShadowValue[];
-      hash: Hash;
+      function: ShadowValue<atom>;
+      arguments: ShadowValue<atom>[];
+      location: atom["Tag"];
     }
   | {
       type: "resolve";
-      hash: Hash;
+      location: atom["Tag"];
     }
   | {
       type: "resume";
-      hash: Hash;
+      location: atom["Tag"];
     };
 
 export type Value = unknown & { __brand: "Value" };
 
-export type ShadowFrame = {
-  [key in Identifier]?: ShadowValue;
+export type ShadowFrame<atom extends Atom> = {
+  [key in Identifier<atom>]?: ShadowValue<atom>;
 };
 
-export type ShadowState = {
-  parent: ShadowState | null;
-  frame: ShadowFrame;
-  stack: ShadowValue[];
+export type ShadowState<atom extends Atom> = {
+  parent: ShadowState<atom> | null;
+  frame: ShadowFrame<atom>;
+  stack: ShadowValue<atom>[];
 };

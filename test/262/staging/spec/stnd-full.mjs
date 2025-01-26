@@ -36,7 +36,7 @@ const {
  *   Source: Source,
  *   Tag: Hash,
  * }} Atom
- * @typedef {unknown & {__brand: "Value"}} Value
+ * @typedef {{__brand: "Value"}} Value
  * @typedef {"@state"} State
  */
 
@@ -600,7 +600,7 @@ const compileAdvice = ({ apply, construct }) => ({
   },
   "primitive@after": (...input) => {
     assertInput3(input, [assertState, assertPrimitive, assertHash]);
-    return /** @type {Value} */ (/** @type {unknown} */ (input[1]));
+    return input[1];
   },
   "read@after": (...input) => {
     assertInput4(input, [
@@ -622,7 +622,7 @@ const compileAdvice = ({ apply, construct }) => ({
   },
   "test@before": (...input) => {
     assertInput4(input, [assertState, assertTestKind, assertValue, assertHash]);
-    return !!input[2];
+    return input[2];
   },
   "intrinsic@after": (...input) => {
     assertInput4(input, [
@@ -672,9 +672,7 @@ const compileAdvice = ({ apply, construct }) => ({
     const root1 = /** @type {any} */ (input[1]);
     /** @type {import("aran").Program} */
     const root2 = weaveStandard(root1, weave_config);
-    assert(root2.kind === "eval");
-    assert(root2.situ === "local.deep");
-    return root2;
+    return /** @type {Value} */ (/** @type {unknown} */ (root2));
   },
   "eval@after": (...input) => {
     assertInput3(input, [assertState, assertValue, assertHash]);

@@ -1,26 +1,39 @@
+/* eslint-disable local/no-jsdoc-typedef */
 /* eslint-disable local/no-deep-import */
+
 import { compileAran } from "../aran.mjs";
 import {
   ADVICE_GLOBAL_VARIABLE,
-  createTrackOriginAdvice,
+  createTraceAdvice,
   weave,
-} from "../../../aspects/track-origin.mjs";
+} from "../../../aspects/trace.mjs";
 import { record } from "../../record/index.mjs";
+
+/**
+ * @typedef {import("../../../aspects/trace.mjs").FilePath} FilePath
+ * @typedef {import("../../../aspects/trace.mjs").NodeHash} NodeHash
+ */
 
 const {
   Reflect: { defineProperty },
 } = globalThis;
 
 /**
- * @type {import("aran").Digest<{FilePath: string, NodeHash: string}>}
+ * @type {import("aran").Digest<{
+ *   FilePath: FilePath,
+ *   NodeHash: NodeHash,
+ * }>}
  */
 const digest = (_node, node_path, file_path, _kind) =>
-  `${file_path}:${node_path}`;
+  /** @type {NodeHash} */ (`${file_path}:${node_path}`);
 
 /**
- * @type {(hash: string) => string}
+ * @type {(
+ *   hash: NodeHash,
+ * ) => FilePath}
  */
-const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
+const toEvalPath = (hash) =>
+  /** @type {FilePath} */ (`dynamic://eval/local/${hash}`);
 
 const { setup, trans, retro } = compileAran(
   {
@@ -42,7 +55,7 @@ export default {
   listLateNegative: (_test, _error) => [],
   setup: (context) => {
     const { intrinsics } = setup(context);
-    const advice = createTrackOriginAdvice(
+    const advice = createTraceAdvice(
       /** @type {{apply: any, construct: any}} */ (
         intrinsics["aran.global"].Reflect
       ),
@@ -60,6 +73,16 @@ export default {
     record({
       path,
       content:
-        type === "main" ? retro(weave(trans(path, kind, content))) : content,
+        type === "main"
+          ? retro(
+              weave(
+                trans(
+                  /** @type {FilePath} */ (/** @type {string} */ (path)),
+                  kind,
+                  content,
+                ),
+              ),
+            )
+          : content,
     }),
 };

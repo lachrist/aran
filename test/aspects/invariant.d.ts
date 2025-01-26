@@ -1,18 +1,6 @@
-import type {
-  AranLabel,
-  AranVariable,
-  AranParameter,
-  AranControlKind,
-} from "../..";
-import { NodeHash } from "../262/aran/config";
+import type { Parameter, ControlKind } from "aran";
 
 export type Value = { __brand: "Value" };
-
-export type Valuation = {
-  Stack: Value;
-  Scope: Value;
-  Other: Value;
-};
 
 export type ArrayValue = Value & Value[];
 
@@ -99,11 +87,18 @@ export type Suspension = "none" | "eval" | "yield" | "await";
 
 export type State = null | {
   parent: State;
-  kind: AranControlKind;
+  kind: ControlKind;
   hash: NodeHash;
   origin: Transit;
   labeling: AranLabel[];
   scope: Scope;
   stack: Value[];
   suspension: Suspension;
+};
+
+export type Runtime = {
+  State: State;
+  StackValue: Value;
+  ScopeValue: Value;
+  OtherValue: Value;
 };

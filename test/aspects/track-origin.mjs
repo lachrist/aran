@@ -56,10 +56,7 @@ const push = (array, item) => {
   array[array.length] = item;
 };
 
-export const ADVICE_GLOBAL_VARIABLE =
-  /** @type {import("./track-origin").JavaScriptIdentifier}*/ (
-    "__aran_track_origin_advice__"
-  );
+export const ADVICE_GLOBAL_VARIABLE = "__aran_track_origin_advice__";
 
 /**
  * @type {{[key in import("./track-origin").AspectKind]: null}}
@@ -90,13 +87,6 @@ const aspect_kind_enum = {
 
 const pointcut = listKey(aspect_kind_enum);
 
-/**
- * @type {import("aran").StandardWeaveConfig<{
- *   Atom: import("./track-origin").Atom,
- *   InitialState: null,
- *   JavaScriptIdentifier: import("./track-origin").JavaScriptIdentifier,
- * }>}
- */
 const conf = {
   advice_global_variable: ADVICE_GLOBAL_VARIABLE,
   initial_state: null,
@@ -104,16 +94,19 @@ const conf = {
 };
 
 /**
- * @type {(
- *   root: import("aran").Program<import("./track-origin").Atom>,
- * ) => import("aran").Program<import("./track-origin").Atom>}
+ * @type {<
+ *   arg_atom extends import("aran").Atom & { Tag: import("aran").Json },
+ *   res_atom extends import("aran").Atom & { Tag: arg_atom["Tag"] },
+ * >(
+ *   root: import("aran").Program<arg_atom>,
+ * ) => import("aran").Program<res_atom>}
  */
 export const weave = (root) => weaveStandard(root, conf);
 
 /**
- * @type {(
- *   parent: null | import("./track-origin").ShadowState,
- * ) => import("./track-origin").ShadowState}
+ * @type {<atom extends import("aran").Atom>(
+ *   parent: null | import("./track-origin").ShadowState<atom>,
+ * ) => import("./track-origin").ShadowState<atom>}
  */
 const extendState = (parent) => ({
   parent,
@@ -122,23 +115,30 @@ const extendState = (parent) => ({
 });
 
 /**
- * @type {(
- *   Reflect: {
- *     apply: (
- *       callee: import("./track-origin").Value,
- *       that: import("./track-origin").Value,
- *       input: import("./track-origin").Value[],
- *     ) => import("./track-origin").Value,
- *     construct: (
- *       callee: import("./track-origin").Value,
- *       input: import("./track-origin").Value[],
- *     ) => import("./track-origin").Value,
- *   },
- * ) => import("aran").StandardAdvice<{
+ * @type {<atom extends import("aran").Atom>(
+ *   transit: import("./track-origin").Transit<atom>
+ * ) => import("./track-origin").Transit<atom>}
+ */
+const avoidTransitNarrowing = (transit) => transit;
+
+/**
+ * @template {import("aran").Atom} atom
+ * @param {{
+ *   apply: (
+ *     callee: import("./track-origin").Value,
+ *     that: import("./track-origin").Value,
+ *     input: import("./track-origin").Value[],
+ *   ) => import("./track-origin").Value,
+ *   construct: (
+ *     callee: import("./track-origin").Value,
+ *     input: import("./track-origin").Value[],
+ *   ) => import("./track-origin").Value,
+ * }} Reflect
+ * @returns {import("aran").StandardAdvice<{
  *   Kind: import("./track-origin").AspectKind,
- *   Atom: import("./track-origin").Atom,
+ *   Atom: atom,
  *   Runtime: {
- *     State: import("./track-origin").ShadowState,
+ *     State: import("./track-origin").ShadowState<atom>,
  *     StackValue: import("./track-origin").Value,
  *     ScopeValue: import("./track-origin").Value,
  *     OtherValue: import("./track-origin").Value,
@@ -146,12 +146,12 @@ const extendState = (parent) => ({
  * }>}
  */
 export const createTrackOriginAdvice = ({ apply, construct }) => {
-  /** @type {import("./track-origin").Transit} */
+  /** @type {import("./track-origin").Transit<atom>} */
   let transit = { type: "void" };
-  /** @type {null | import("./track-origin").ShadowState} */
+  /** @type {null | import("./track-origin").ShadowState<atom>} */
   let deep_eval_state = null;
   return {
-    "block@setup": (_state, kind, _hash) => {
+    "block@setup": (_state, kind, _location) => {
       if (kind === "deep-local-eval") {
         if (deep_eval_state === null) {
           throw new AranExecError("missing deep eval state");
@@ -164,16 +164,15 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
         return extendState(null);
       }
     },
-    "block@declaration": (state, _kind, frame, hash) => {
-      for (const identifier in frame) {
-        state.frame[
-          /** @type {import("./track-origin").Identifier} */ (identifier)
-        ] = {
+    "block@declaration": (state, _kind, frame, location) => {
+      const identifiers = listKey(frame);
+      const { length } = identifiers;
+      for (let index = 0; index < length; index++) {
+        const identifier = identifiers[index];
+        state.frame[identifier] = {
           type: "initial",
-          variable: /** @type {import("./track-origin").Identifier} */ (
-            identifier
-          ),
-          hash,
+          identifier,
+          location,
         };
       }
       if (
@@ -188,28 +187,28 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
         state.frame["function.arguments"] = {
           type: "arguments",
           values: transit.shadow.arguments,
-          hash,
+          location,
         };
       }
       return frame;
     },
-    "program-block@after": (state, _kind, value, _hash) => {
+    "program-block@after": (state, _kind, value, _location) => {
       transit = { type: "return", source: value, shadow: pop(state.stack) };
       return value;
     },
-    "closure-block@after": (state, _kind, value, _hash) => {
+    "closure-block@after": (state, _kind, value, _location) => {
       transit = { type: "return", source: value, shadow: pop(state.stack) };
       return value;
     },
     // Call //
-    "apply@around": (state, callee, that, input, hash) => {
+    "apply@around": (state, callee, that, input, location) => {
       const shadow_argument_array = [];
       for (let index = input.length - 1; index >= 0; index -= 1) {
         shadow_argument_array[index] = pop(state.stack);
       }
       const shadow_this = pop(state.stack);
       const shadow_function = pop(state.stack);
-      transit = /** @type {import("./track-origin").Transit} */ ({
+      transit = avoidTransitNarrowing({
         type: "apply",
         source: {
           function: callee,
@@ -231,18 +230,18 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
           function: shadow_function,
           this: shadow_this,
           arguments: shadow_argument_array,
-          hash,
+          location,
         });
       }
       return result;
     },
-    "construct@around": (state, callee, input, hash) => {
+    "construct@around": (state, callee, input, location) => {
       const shadow_argument_array = [];
       for (let index = input.length - 1; index >= 0; index -= 1) {
         shadow_argument_array[index] = pop(state.stack);
       }
       const shadow_function = pop(state.stack);
-      transit = /** @type {import("./track-origin").Transit} */ ({
+      transit = avoidTransitNarrowing({
         type: "construct",
         source: {
           function: callee,
@@ -261,40 +260,40 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
           type: "construct",
           function: shadow_function,
           arguments: shadow_argument_array,
-          hash,
+          location,
         });
       }
       return result;
     },
-    "primitive@after": (state, value, hash) => {
+    "primitive@after": (state, value, location) => {
       push(state.stack, {
         type: "primitive",
         value: typeof value === "bigint" ? { bigint: String(value) } : value,
-        hash,
+        location,
       });
       return /** @type {import("./track-origin").Value} */ (
         /** @type {unknown} */ (value)
       );
     },
-    "intrinsic@after": (state, name, value, hash) => {
+    "intrinsic@after": (state, name, value, location) => {
       push(state.stack, {
         type: "intrinsic",
         name,
-        hash,
+        location,
       });
       return value;
     },
-    "import@after": (state, source, specifier, value, hash) => {
+    "import@after": (state, source, specifier, value, location) => {
       push(state.stack, {
         type: "import",
         source,
         specifier,
-        hash,
+        location,
       });
       return value;
     },
-    "read@after": (state, variable, value, _hash) => {
-      /** @type {import("./track-origin").ShadowState | null} */
+    "read@after": (state, variable, value, _location) => {
+      /** @type {import("./track-origin").ShadowState<atom> | null} */
       let current = state;
       while (current !== null) {
         if (hasOwn(current.frame, variable)) {
@@ -305,21 +304,21 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
       }
       throw new AranExecError("missing variable");
     },
-    "closure@after": (state, kind, value, hash) => {
+    "closure@after": (state, kind, value, location) => {
       push(state.stack, {
         type: "closure",
         kind,
-        hash,
+        location,
       });
       return value;
     },
     // Consume //
-    "test@before": (state, _kind, value, _hash) => {
+    "test@before": (state, _kind, value, _location) => {
       pop(state.stack);
-      return !!value;
+      return value;
     },
-    "write@before": (state, variable, value, _hash) => {
-      /** @type {import("./track-origin").ShadowState | null} */
+    "write@before": (state, variable, value, _location) => {
+      /** @type {import("./track-origin").ShadowState<atom> | null} */
       let current = state;
       while (current !== null) {
         if (hasOwn(current.frame, variable)) {
@@ -330,23 +329,23 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
       }
       throw new AranExecError("missing variable");
     },
-    "export@before": (state, _specifier, value, _hash) => {
+    "export@before": (state, _specifier, value, _location) => {
       pop(state.stack);
       return value;
     },
-    "drop@before": (state, value, _hash) => {
+    "drop@before": (state, value, _location) => {
       pop(state.stack);
       return value;
     },
     // Jump //
-    "eval@before": (state, value, _hash) => {
+    "eval@before": (state, value, _location) => {
       if (deep_eval_state !== null) {
         throw new AranExecError("deep eval state clash");
       }
       deep_eval_state = state;
       return /** @type {any} */ (weave(/** @type {any} */ (value)));
     },
-    "eval@after": (state, value, _hash) => {
+    "eval@after": (state, value, _location) => {
       if (transit.type === "return" && isSame(value, transit.source)) {
         push(state.stack, transit.shadow);
       } else {
@@ -354,25 +353,25 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
       }
       return value;
     },
-    "await@before": (state, value, _hash) => {
+    "await@before": (state, value, _location) => {
       pop(state.stack);
       return value;
     },
-    "await@after": (state, value, hash) => {
+    "await@after": (state, value, location) => {
       push(state.stack, {
         type: "resolve",
-        hash,
+        location,
       });
       return value;
     },
-    "yield@before": (state, _delegate, value, _hash) => {
+    "yield@before": (state, _delegate, value, _location) => {
       pop(state.stack);
       return value;
     },
-    "yield@after": (state, _delegate, value, hash) => {
+    "yield@after": (state, _delegate, value, location) => {
       push(state.stack, {
         type: "resume",
-        hash,
+        location,
       });
       return value;
     },
