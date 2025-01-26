@@ -6,12 +6,6 @@ import { AranTypeError } from "../../error.mjs";
 import { recreateError } from "../../util/index.mjs";
 import { record } from "../../record/index.mjs";
 
-/**
- * @typedef {string & {__brand: "NodeHash"}} NodeHash
- * @typedef {string & {__brand: "FilePath"}} FilePath
- * @typedef {import("aran").Atom & { Tag: NodeHash }} Atom
- */
-
 const {
   Array: {
     from: toArray,
@@ -20,6 +14,12 @@ const {
   Reflect: { apply, defineProperty },
   String,
 } = globalThis;
+
+/**
+ * @typedef {string & {__brand: "NodeHash"}} NodeHash
+ * @typedef {string & {__brand: "FilePath"}} FilePath
+ * @typedef {import("aran").Atom & { Tag: NodeHash }} Atom
+ */
 
 //////////
 // Util //

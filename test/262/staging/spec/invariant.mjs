@@ -4,9 +4,9 @@
 import { compileAran } from "../aran.mjs";
 import {
   ADVICE_GLOBAL_VARIABLE,
-  createTraceAdvice,
+  createInvariantAdvice,
   weave,
-} from "../../../aspects/trace.mjs";
+} from "../../../aspects/invariant.mjs";
 import { record } from "../../record/index.mjs";
 
 const {
@@ -55,10 +55,11 @@ export default {
   listLateNegative: (_test, _error) => [],
   setup: (context) => {
     const { intrinsics } = setup(context);
-    const advice = createTraceAdvice(
+    const advice = createInvariantAdvice(
       /** @type {{apply: any, construct: any}} */ (
         intrinsics["aran.global"].Reflect
       ),
+      /** @type {any} */ (intrinsics["aran.global"].TypeError),
     );
     defineProperty(intrinsics["aran.global"], ADVICE_GLOBAL_VARIABLE, {
       // @ts-ignore

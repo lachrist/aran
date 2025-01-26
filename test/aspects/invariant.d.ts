@@ -15,8 +15,6 @@ export type Value = { __brand: "Value" };
 
 export type Identifier = Variable | Parameter;
 
-export type ArrayValue = Value & Value[];
-
 export type ClosureValue = Value & ((...input: Value[]) => Value);
 
 export type ConstructorValue = Value & (new (...input: Value[]) => Value);
@@ -98,8 +96,8 @@ export type Transit =
 
 export type Suspension = "none" | "eval" | "yield" | "await";
 
-export type State = null | {
-  parent: State;
+export type State = {
+  parent: State | null;
   kind: ControlKind;
   hash: NodeHash;
   origin: Transit;
@@ -128,7 +126,7 @@ export type Advice = StandardAdvice<{
   Kind: AspectKind;
   Atom: Atom;
   Runtime: {
-    State: State;
+    State: null | State;
     StackValue: Value;
     ScopeValue: Value;
     OtherValue: Value;

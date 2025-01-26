@@ -5,6 +5,15 @@ import { compileAran } from "../aran.mjs";
 import { AranTestError } from "../../error.mjs";
 import { record } from "../../record/index.mjs";
 
+const {
+  Array: { isArray },
+  Reflect: { apply, getPrototypeOf, defineProperty },
+  String: {
+    prototype: { startsWith },
+  },
+  Object: { hasOwn, keys },
+} = globalThis;
+
 /**
  * @typedef {`hash:${string}`} NodeHash
  * @typedef {[
@@ -36,15 +45,6 @@ import { record } from "../../record/index.mjs";
  * @typedef {unknown & {__brand: "Value"}} Value
  * @typedef {"@state"} State
  */
-
-const {
-  Array: { isArray },
-  Reflect: { apply, getPrototypeOf, defineProperty },
-  String: {
-    prototype: { startsWith },
-  },
-  Object: { hasOwn, keys },
-} = globalThis;
 
 /**
  * @type {<K extends PropertyKey>(

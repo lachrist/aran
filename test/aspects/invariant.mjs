@@ -3,8 +3,15 @@ import { weaveStandard } from "aran";
 const {
   Array: { isArray },
   WeakMap,
-  Object: { is, hasOwn, assign },
+  Object: { is, hasOwn, assign, keys },
 } = globalThis;
+
+/**
+ * @type {<K extends PropertyKey>(
+ *   obj: { [k in K]: unknown },
+ * ) => K[]}
+ */
+const listKey = keys;
 
 /**
  * @type {(
@@ -17,19 +24,22 @@ const isIdentical = is;
 /**
  * @type {(
  *   value: import("./invariant").Value
- * ) => value is import("./invariant").ArrayValue}
+ * ) => value is (
+ *   & import("./invariant").Value
+ *   & import("./invariant").Value[]
+ * )}
  */
 const isArrayValue = /** @type {any} */ (isArray);
 
 /* eslint-disable */
 class AssertionError extends Error {
   /**
-   * @param {object} context
+   * @param {object} cause
    */
-  constructor(context) {
+  constructor(cause) {
     super("assertion failure");
     this.name = "AranAssertionError";
-    this.cause = context;
+    this.cause = cause;
   }
 }
 /* eslint-enable */
@@ -37,12 +47,12 @@ class AssertionError extends Error {
 /* eslint-disable */
 class UnreachableError extends Error {
   /**
-   * @param {never} hole
+   * @param {never} cause
    */
-  constructor(hole) {
+  constructor(cause) {
     super("assertion failure");
     this.name = "AranAssertionError";
-    this.cause = /** @type {any} */ (hole);
+    this.cause = /** @type {any} */ (cause);
   }
 }
 /* eslint-enable */
@@ -111,7 +121,7 @@ const SEGMENT_KIND_ENUM = {
   while: null,
 };
 
-const ADVICE_GLOBAL_VARIABLE = "__aran_advice__";
+export const ADVICE_GLOBAL_VARIABLE = "__aran_advice__";
 
 /**
  * @type {(
@@ -142,6 +152,44 @@ const CLOSURE_KIND_ENUM = {
 const isClosureKind = (kind) => hasOwn(CLOSURE_KIND_ENUM, kind);
 
 /**
+ * @type {{
+ *   [k in import("./invariant").AspectKind]: null
+ * }}
+ */
+const POINTCUT_ENUM = {
+  "block@setup": null,
+  "segment-block@before": null,
+  "block@declaration": null,
+  "generator-block@suspension": null,
+  "generator-block@resumption": null,
+  "segment-block@after": null,
+  "program-block@after": null,
+  "closure-block@after": null,
+  "block@throwing": null,
+  "block@teardown": null,
+  "apply@around": null,
+  "construct@around": null,
+  "break@before": null,
+  "primitive@after": null,
+  "intrinsic@after": null,
+  "import@after": null,
+  "read@after": null,
+  "closure@after": null,
+  "test@before": null,
+  "write@before": null,
+  "export@before": null,
+  "drop@before": null,
+  "eval@before": null,
+  "eval@after": null,
+  "await@before": null,
+  "await@after": null,
+  "yield@before": null,
+  "yield@after": null,
+};
+
+const pointcut = listKey(POINTCUT_ENUM);
+
+/**
  * @type {(
  *   Reflect: {
  *     apply: (
@@ -159,7 +207,7 @@ const isClosureKind = (kind) => hasOwn(CLOSURE_KIND_ENUM, kind);
  *   ) => import("./invariant").Value,
  * ) => import("./invariant").Advice}
  */
-export const makeInvariantAdvice = ({ apply, construct }, TypeError) => {
+export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
   /**
    * @type {WeakMap<
    *   import("./invariant").Value & Function,
@@ -224,7 +272,7 @@ export const makeInvariantAdvice = ({ apply, construct }, TypeError) => {
       assert(state.kind === kind, context);
       assert(state.hash === hash, context);
       // Labels comes from the target realm.
-      // So it is subject to prototype polluation.
+      // So it is subject to prototype pollution.
       // So `state.labeling.push(...labels)` is unsafe
       const { length } = labels;
       for (let index = 0; index < length; index += 1) {
@@ -282,9 +330,7 @@ export const makeInvariantAdvice = ({ apply, construct }, TypeError) => {
           state.origin.type === "construct"
         ) {
           const input1 = frame["function.arguments"];
-          if (
-            !isArrayValue(/** @type {import("./invariant").Value} */ (input1))
-          ) {
+          if (!isArrayValue(input1)) {
             throw new AssertionError(input1);
           }
           const input2 = state.origin.arguments;
@@ -843,7 +889,7 @@ export const makeInvariantAdvice = ({ apply, construct }, TypeError) => {
       return /** @type {any} */ (
         weaveStandard(/** @type {any} */ (value), {
           advice_global_variable: ADVICE_GLOBAL_VARIABLE,
-          pointcut: true,
+          pointcut,
           initial_state: null,
         })
       );
@@ -934,3 +980,15 @@ export const makeInvariantAdvice = ({ apply, construct }, TypeError) => {
     },
   };
 };
+
+/**
+ * @type {(
+ *   root: import("aran").Program<import("./invariant").Atom>,
+ * ) => import("aran").Program<import("./invariant").Atom>}
+ */
+export const weave = (root) =>
+  weaveStandard(root, {
+    advice_global_variable: ADVICE_GLOBAL_VARIABLE,
+    pointcut,
+    initial_state: null,
+  });
