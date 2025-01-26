@@ -1,8 +1,4 @@
-import {
-  isClosureKind,
-  isSegmentKind,
-  isProgramKind,
-} from "../../lib/index.mjs";
+import { weaveStandard } from "aran";
 
 const {
   Array: { isArray },
@@ -25,74 +21,157 @@ const isIdentical = is;
  */
 const isArrayValue = /** @type {any} */ (isArray);
 
+/* eslint-disable */
+class AssertionError extends Error {
+  /**
+   * @param {object} context
+   */
+  constructor(context) {
+    super("assertion failure");
+    this.name = "AranAssertionError";
+    this.cause = context;
+  }
+}
+/* eslint-enable */
+
+/* eslint-disable */
+class UnreachableError extends Error {
+  /**
+   * @param {never} hole
+   */
+  constructor(hole) {
+    super("assertion failure");
+    this.name = "AranAssertionError";
+    this.cause = /** @type {any} */ (hole);
+  }
+}
+/* eslint-enable */
+
 /**
  * @type {(
- *   report: {
- *     AssertionError: new (context: object) => Error,
- *     UnreachableError: new (data: never) => Error,
- *   },
- *   membrane: import("../262/aran/membrane").BasicMembrane,
- * ) => import("../../").StandardAdvice<
- *   import("../262/aran/config").NodeHash,
- *   import("./invariant").State,
- *   import("./invariant").Valuation,
- * >}
+ *   test: boolean,
+ *   context: object,
+ * ) => void}
  */
-export const makeInvariantAdvice = (
-  { AssertionError, UnreachableError },
-  { intrinsics, instrumentLocalEvalCode },
-) => {
-  /**
-   * @type {(
-   *   test: boolean,
-   *   context: object,
-   * ) => void}
-   */
-  const assert = (test, context) => {
-    if (!test) {
-      throw new AssertionError(context);
-    }
-  };
+const assert = (test, context) => {
+  if (!test) {
+    throw new AssertionError(context);
+  }
+};
 
-  /**
-   * @type {<X>(
-   *   value: X | null,
-   *   context: object,
-   * ) => asserts value is X}
-   */
-  const assertNotNull = (value, context) => {
-    assert(value !== null, context);
-  };
+/**
+ * @type {<X>(
+ *   value: X | null,
+ *   context: object,
+ * ) => asserts value is X}
+ */
+const assertNotNull = (value, context) => {
+  assert(value !== null, context);
+};
 
-  /**
-   * @type {<X>(
-   *   array: X[],
-   *   context: object,
-   * ) => X}
-   */
-  const pop = (array, context) => {
-    assert(array.length > 0, context);
-    return /** @type {any} */ (array.pop());
-  };
+/**
+ * @type {<X>(
+ *   array: X[],
+ *   context: object,
+ * ) => X}
+ */
+const pop = (array, context) => {
+  assert(array.length > 0, context);
+  return /** @type {any} */ (array.pop());
+};
 
+/**
+ * @type {{[key in import("aran").ProgramKind]: null}}
+ */
+const PROGRAM_KIND_ENUM = {
+  "deep-local-eval": null,
+  "global-eval": null,
+  "module": null,
+  "root-local-eval": null,
+  "script": null,
+};
+
+/**
+ * @type {(
+ *   kind: import("aran").ControlKind,
+ * ) => kind is import("aran").ProgramKind}
+ */
+const isProgramKind = (kind) => hasOwn(PROGRAM_KIND_ENUM, kind);
+
+/**
+ * @type {{[key in import("aran").SegmentKind]: null}}
+ */
+const SEGMENT_KIND_ENUM = {
+  bare: null,
+  catch: null,
+  else: null,
+  finally: null,
+  then: null,
+  try: null,
+  while: null,
+};
+
+const ADVICE_GLOBAL_VARIABLE = "__aran_advice__";
+
+/**
+ * @type {(
+ *   kind: import("aran").ControlKind,
+ * ) => kind is import("aran").SegmentKind}
+ */
+const isSegmentKind = (kind) => hasOwn(SEGMENT_KIND_ENUM, kind);
+
+/**
+ * @type {{[key in import("aran").ClosureKind]: null}}
+ */
+const CLOSURE_KIND_ENUM = {
+  "arrow": null,
+  "async-arrow": null,
+  "async-function": null,
+  "async-generator": null,
+  "async-method": null,
+  "function": null,
+  "generator": null,
+  "method": null,
+};
+
+/**
+ * @type {(
+ *   kind: import("aran").ControlKind,
+ * ) => kind is import("aran").ClosureKind}
+ */
+const isClosureKind = (kind) => hasOwn(CLOSURE_KIND_ENUM, kind);
+
+/**
+ * @type {(
+ *   Reflect: {
+ *     apply: (
+ *       callee: import("./track-origin").Value,
+ *       that: import("./track-origin").Value,
+ *       input: import("./track-origin").Value[],
+ *     ) => import("./track-origin").Value,
+ *     construct: (
+ *       callee: import("./track-origin").Value,
+ *       input: import("./track-origin").Value[],
+ *     ) => import("./track-origin").Value,
+ *   },
+ *   TypeError: new (
+ *     message: string,
+ *   ) => import("./invariant").Value,
+ * ) => import("./invariant").Advice}
+ */
+export const makeInvariantAdvice = ({ apply, construct }, TypeError) => {
   /**
-   * @type {WeakMap<Function, import("../../").AranClosureKind>}
+   * @type {WeakMap<
+   *   import("./invariant").Value & Function,
+   *   import("../../").ClosureKind
+   * >}
    */
   const closures = new WeakMap();
-
   /**
    * @type {import("./invariant").Transit}
    */
   let transit = { type: "external" };
-
-  /**
-   * @type {import("../../").StandardAdvice<
-   *   import("../262/aran/config").NodeHash,
-   *   import("./invariant").State,
-   *   import("./invariant").Valuation,
-   * >}
-   */
-  const aspect = {
+  return {
     // Block //
     "block@setup": (state, kind, hash) => {
       const context = { type: "block@setup", transit, state, kind, hash };
@@ -416,7 +495,7 @@ export const makeInvariantAdvice = (
       assert(isIdentical(this_, pop(state.stack, context)), context);
       assert(isIdentical(callee, pop(state.stack, context)), context);
       if (closures.has(/** @type {any} */ (callee))) {
-        const kind = /** @type {import("../../").AranClosureKind} */ (
+        const kind = /** @type {import("aran").ClosureKind} */ (
           closures.get(/** @type {any} */ (callee))
         );
         assert(transit.type === "regular", state);
@@ -426,11 +505,7 @@ export const makeInvariantAdvice = (
           this: this_,
           arguments: arguments_,
         });
-        const result = intrinsics["Reflect.apply"](
-          /** @type {any} */ (callee),
-          this_,
-          arguments_,
-        );
+        const result = apply(callee, this_, arguments_);
         const context = {
           type: "apply@after-success",
           transit,
@@ -468,11 +543,7 @@ export const makeInvariantAdvice = (
         assert(transit.type === "regular", context);
         transit = { type: "external" };
         try {
-          const result = intrinsics["Reflect.apply"](
-            /** @type {any} */ (callee),
-            this_,
-            arguments_,
-          );
+          const result = apply(callee, this_, arguments_);
           const context = {
             type: "apply@after-success",
             transit,
@@ -523,7 +594,7 @@ export const makeInvariantAdvice = (
         state,
       });
       if (closures.has(/** @type {any} */ (callee))) {
-        const kind = /** @type {import("../../").AranClosureKind} */ (
+        const kind = /** @type {import("aran").ClosureKind} */ (
           closures.get(/** @type {any} */ (callee))
         );
         if (kind === "function") {
@@ -533,10 +604,7 @@ export const makeInvariantAdvice = (
             callee,
             arguments: arguments_,
           });
-          const result = intrinsics["Reflect.construct"](
-            /** @type {any} */ (callee),
-            arguments_,
-          );
+          const result = construct(callee, arguments_);
           const context = {
             type: "construct@after-success",
             transit,
@@ -560,11 +628,7 @@ export const makeInvariantAdvice = (
           kind === "generator" ||
           kind === "async-generator"
         ) {
-          const error = /** @type {import("./invariant").Value} */ (
-            /** @type {unknown} */ (
-              new intrinsics.TypeError("Not a constructor")
-            )
-          );
+          const error = new TypeError("Not a constructor");
           assert(transit.type === "regular", context);
           transit = { type: "throw", error };
           throw error;
@@ -575,10 +639,7 @@ export const makeInvariantAdvice = (
         assert(transit.type === "regular", context);
         transit = { type: "external" };
         try {
-          const result = intrinsics["Reflect.construct"](
-            /** @type {any} */ (callee),
-            arguments_,
-          );
+          const result = construct(/** @type {any} */ (callee), arguments_);
           const context = {
             type: "construct@after-success",
             transit,
@@ -644,14 +705,6 @@ export const makeInvariantAdvice = (
       };
       // console.dir(context);
       assertNotNull(state, context);
-      assert(
-        name in intrinsics &&
-          isIdentical(
-            /** @type {import("./invariant").Value} */ (intrinsics[name]),
-            value,
-          ),
-        context,
-      );
       state.stack.push(value);
       return value;
     },
@@ -725,7 +778,7 @@ export const makeInvariantAdvice = (
       // console.dir(context);
       assertNotNull(state, context);
       assert(isIdentical(pop(state.stack, context), value), context);
-      return !!value;
+      return value;
     },
     "write@before": (state, variable, value, hash) => {
       const context = {
@@ -772,32 +825,31 @@ export const makeInvariantAdvice = (
       return value;
     },
     // Jump //
-    "eval@before": (state, reboot, value, hash) => {
+    "eval@before": (state, value, hash) => {
       const context = {
         type: "eval@before",
         transit,
         state,
-        reboot,
         value,
         hash,
       };
       // console.dir(context);
       assertNotNull(state, context);
       assert(isIdentical(pop(state.stack, context), value), context);
-      if (typeof value === "string") {
-        assert(state.suspension === "none", context);
-        state.suspension = "eval";
-        assert(transit.type === "regular", context);
-        transit = { type: "external" };
-        return instrumentLocalEvalCode(value, reboot);
-      } else {
-        transit = { type: "eval" };
-        return value;
-      }
+      assert(state.suspension === "none", context);
+      state.suspension = "eval";
+      assert(transit.type === "regular", context);
+      transit = { type: "external" };
+      return /** @type {any} */ (
+        weaveStandard(/** @type {any} */ (value), {
+          advice_global_variable: ADVICE_GLOBAL_VARIABLE,
+          pointcut: true,
+          initial_state: null,
+        })
+      );
     },
     "eval@after": (state, value, hash) => {
       const context = { type: "eval@after", transit, state, value, hash };
-      // console.dir(context);
       assertNotNull(state, context);
       if (transit.type === "external") {
         assert(state.suspension === "eval", context);
@@ -881,6 +933,4 @@ export const makeInvariantAdvice = (
       return value;
     },
   };
-
-  return aspect;
 };

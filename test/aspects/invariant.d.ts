@@ -1,6 +1,19 @@
-import type { Parameter, ControlKind } from "aran";
+import type {
+  StandardAspectKind,
+  Parameter,
+  ControlKind,
+  StandardAdvice,
+} from "aran";
 
+export type NodeHash = string & { __brand: "NodeHash" };
+export type FilePath = string & { __brand: "FilePath" };
+export type Source = string & { __brand: "Source" };
+export type Specifier = string & { __brand: "Specifier" };
+export type Label = string & { __brand: "Label" };
+export type Variable = string & { __brand: "Variable" };
 export type Value = { __brand: "Value" };
+
+export type Identifier = Variable | Parameter;
 
 export type ArrayValue = Value & Value[];
 
@@ -29,13 +42,13 @@ export type Arrival =
     };
 
 export type Frame = {
-  labels: AranLabel[];
+  labels: Label[];
   record: {
-    [key in AranVariable | AranParameter]: Value;
+    [key in Identifier]: Value;
   };
 };
 
-export type Scope = { [key in AranVariable | AranParameter]?: Value };
+export type Scope = { [key in Identifier]?: Value };
 
 export type Transit =
   | {
@@ -65,7 +78,7 @@ export type Transit =
     }
   | {
       type: "break";
-      label: AranLabel;
+      label: Label;
     }
   | {
       type: "apply";
@@ -90,15 +103,34 @@ export type State = null | {
   kind: ControlKind;
   hash: NodeHash;
   origin: Transit;
-  labeling: AranLabel[];
+  labeling: Label[];
   scope: Scope;
   stack: Value[];
   suspension: Suspension;
 };
 
-export type Runtime = {
-  State: State;
-  StackValue: Value;
-  ScopeValue: Value;
-  OtherValue: Value;
+export type Atom = {
+  Variable: Variable;
+  Label: Label;
+  Source: Source;
+  Specifier: Specifier;
+  Tag: NodeHash;
 };
+
+export type AspectKind = Exclude<
+  StandardAspectKind,
+  | "program-block@before"
+  | "closure-block@before"
+  | "block@declaration-overwrite"
+>;
+
+export type Advice = StandardAdvice<{
+  Kind: AspectKind;
+  Atom: Atom;
+  Runtime: {
+    State: State;
+    StackValue: Value;
+    ScopeValue: Value;
+    OtherValue: Value;
+  };
+}>;
