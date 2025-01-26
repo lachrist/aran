@@ -257,7 +257,6 @@ export const transpile: <
 
 /**
  * Insert calls to advice functions in an Aran program with the standard API.
- * @template tag The type of node tags.
  * @template arg_atom The branded types for the AST leafs of the input program.
  * @template res_atom The branded types for the AST leafs of the output program.
  * @param root The Aran program to weave.
@@ -268,9 +267,10 @@ export const transpile: <
  * pointcut.
  */
 export const weaveStandard: <
-  tag extends Json = Json,
-  arg_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
-  res_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
+  arg_atom extends Atom & { Tag: Json } = Atom & { Tag: string },
+  res_atom extends Atom & { Tag: arg_atom["Tag"] } = Atom & {
+    Tag: arg_atom["Tag"];
+  },
 >(
   root: Program<arg_atom>,
   conf?: null | undefined | Partial<StandardWeaveConfig<{ Atom: arg_atom }>>,
@@ -278,7 +278,6 @@ export const weaveStandard: <
 
 /**
  * Insert calls to advice functions in an Aran program with the flexible API.
- * @template tag The type of node tags.
  * @template arg_atom The branded types for the AST leafs of the input program.
  * @template res_atom The branded types for the AST leafs of the output program.
  * @param root The Aran program to weave.
@@ -289,9 +288,10 @@ export const weaveStandard: <
  * pointcut.
  */
 export const weaveFlexible: <
-  tag = unknown,
-  arg_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
-  res_atom extends Atom & { Tag: tag } = Atom & { Tag: tag },
+  arg_atom extends Atom = Atom & { Tag: string },
+  res_atom extends Atom & { Tag: arg_atom["Tag"] } = Atom & {
+    Tag: arg_atom["Tag"];
+  },
 >(
   root: Program<arg_atom>,
   conf?: null | undefined | Partial<FlexibleWeaveConfig<{ Atom: arg_atom }>>,

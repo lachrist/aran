@@ -3,7 +3,6 @@ import type {
   Atom,
   Intrinsic,
   Parameter,
-  Program,
   RuntimePrimitive,
 } from "../../lang/syntax";
 import type { GetDefault, ValueOf } from "../../util/util";
@@ -15,6 +14,8 @@ import type {
   GeneratorKind,
   Parametrization,
 } from "../parametrization";
+
+type DefaultAtom = Atom & { Tag: string };
 
 export type TestKind = "if" | "while" | "conditional";
 
@@ -254,7 +255,7 @@ export type AspectTyping<atom extends Atom, runtime extends Runtime> = {
       kind: TestKind,
       value: runtime["StackValue"],
       tag: atom["Tag"],
-    ) => boolean;
+    ) => runtime["OtherValue"];
   };
   /**
    * Called right after an intrinsic value was read.
@@ -275,7 +276,7 @@ export type AspectTyping<atom extends Atom, runtime extends Runtime> = {
     pointcut: (primitive: RuntimePrimitive, tag: atom["Tag"]) => boolean;
     advice: (
       state: runtime["State"],
-      value: RuntimePrimitive,
+      value: RuntimePrimitive & runtime["OtherValue"],
       tag: atom["Tag"],
     ) => runtime["StackValue"];
   };
@@ -336,7 +337,7 @@ export type AspectTyping<atom extends Atom, runtime extends Runtime> = {
       state: runtime["State"],
       value: runtime["StackValue"],
       tag: atom["Tag"],
-    ) => Program<Atom> & { kind: "eval"; situ: "local.deep" };
+    ) => runtime["OtherValue"];
   };
   /**
    * Called right after returning from a direct eval call.
@@ -481,7 +482,7 @@ export type Advice<
 > = param extends { Kind: AspectKind }
   ? {
       [key in param["Kind"]]: AspectTyping<
-        GetDefault<param, "Atom", Atom>,
+        GetDefault<param, "Atom", DefaultAtom>,
         GetDefault<param, "Runtime", Runtime>
       >[key]["advice"];
     }
@@ -490,7 +491,7 @@ export type Advice<
         | null
         | undefined
         | AspectTyping<
-            GetDefault<param, "Atom", Atom>,
+            GetDefault<param, "Atom", DefaultAtom>,
             GetDefault<param, "Runtime", Runtime>
           >[key]["advice"];
     };
