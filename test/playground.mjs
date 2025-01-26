@@ -1,14 +1,15 @@
-/* eslint-disable no-console */
+/* eslint-disable local/no-deep-import */
 
-import { instrument, generateSetup } from "../lib/index.mjs";
+import { generateSetup, transpile, retropile } from "aran";
 import { parse } from "acorn";
 import { generate } from "astring";
-// eslint-disable-next-line local/no-deep-import
-import { INITIAL_INDENT, makeTraceAdvice } from "./aspects/trace.mjs";
+import {
+  ADVICE_GLOBAL_VARIABLE,
+  createTraceAdvice,
+  weave,
+} from "./aspects/trace.mjs";
 
-const { Error, eval: evalGlobal } = globalThis;
-
-const ADVICE = "__ARAN_ADVICE__";
+const { eval: evalGlobal } = globalThis;
 
 const code = `
   const fac = (n) => n === 0 ? 1 : n * fac(n - 1);
@@ -17,46 +18,32 @@ const code = `
 
 const intrinsics = evalGlobal(generate(generateSetup({})));
 
-/** @type {any} */ (globalThis)[ADVICE] = makeTraceAdvice({
-  intrinsics,
-  report: (_name, message) => new Error(message),
-  instrumentLocalEvalCode: (code, situ) =>
-    generate(
-      instrument(
-        {
-          kind: "eval",
-          situ,
-          path: "dynamic",
-          root: parse(code, {
-            sourceType: "script",
-            ecmaVersion: "latest",
-          }),
-        },
-        {
-          advice_variable: ADVICE,
-          standard_pointcut: true,
-          initial_state: INITIAL_INDENT,
-        },
-      ),
-    ),
-});
+/** @type {any} */ (globalThis)[ADVICE_GLOBAL_VARIABLE] = createTraceAdvice(
+  intrinsics["aran.global"].Reflect,
+);
 
 evalGlobal(
   generate(
-    instrument(
+    retropile(
+      weave(
+        transpile(
+          {
+            kind: "eval",
+            path: "main",
+            root: parse(code, {
+              sourceType: "script",
+              ecmaVersion: "latest",
+            }),
+          },
+          {
+            digest: (_node, node_path, file_path, _node_kind) =>
+              `${file_path}:${node_path}`,
+            global_declarative_record: "builtin",
+          },
+        ),
+      ),
       {
-        kind: "eval",
-        situ: { type: "global" },
-        path: "main",
-        root: parse(code, {
-          sourceType: "script",
-          ecmaVersion: "latest",
-        }),
-      },
-      {
-        advice_variable: ADVICE,
-        standard_pointcut: true,
-        initial_state: INITIAL_INDENT,
+        mode: "normal",
       },
     ),
   ),
