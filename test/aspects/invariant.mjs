@@ -914,6 +914,7 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
       const context = { type: "eval@after", transit, state, value, hash };
       assertNotNull(state, context);
       assert(state.suspension === "eval", context);
+      state.suspension = "none";
       if (transit.type !== "return") {
         throw new AssertionError(context);
       }
