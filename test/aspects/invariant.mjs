@@ -39,6 +39,8 @@ class AssertionError extends Error {
   constructor(cause) {
     super("assertion failure");
     this.name = "AranAssertionError";
+    const { stack } = new Error("assertion failure");
+    console.dir({ stack, cause }, { depth: 3 });
     this.cause = cause;
   }
 }
@@ -241,7 +243,22 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
           context,
         );
       } else if (isProgramKind(kind)) {
-        assert(transit.type === "external", context);
+        assert(state === null, context);
+        if (
+          kind === "module" ||
+          kind === "script" ||
+          kind === "global-eval" ||
+          kind === "root-local-eval"
+        ) {
+          assert(transit.type === "external", context);
+        } else if (kind === "deep-local-eval") {
+          if (transit.type !== "eval") {
+            throw new AssertionError(context);
+          }
+          state = transit.state;
+        } else {
+          throw new UnreachableError(kind);
+        }
       } else {
         throw new UnreachableError(kind);
       }
@@ -468,7 +485,6 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
         state.suspension === "await" ||
         state.suspension === "yield"
       ) {
-        assert(transit.type === "external", context);
         transit = { type: "throw", error: value };
         state.suspension = "none";
       } else {
@@ -885,7 +901,7 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
       assert(state.suspension === "none", context);
       state.suspension = "eval";
       assert(transit.type === "regular", context);
-      transit = { type: "external" };
+      transit = { type: "eval", state };
       return /** @type {any} */ (
         weaveStandard(/** @type {any} */ (value), {
           advice_global_variable: ADVICE_GLOBAL_VARIABLE,
@@ -897,14 +913,11 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
     "eval@after": (state, value, hash) => {
       const context = { type: "eval@after", transit, state, value, hash };
       assertNotNull(state, context);
-      if (transit.type === "external") {
-        assert(state.suspension === "eval", context);
-        state.suspension = "none";
-      } else if (transit.type === "eval") {
-        // noop //
-      } else {
+      assert(state.suspension === "eval", context);
+      if (transit.type !== "return") {
         throw new AssertionError(context);
       }
+      assert(isIdentical(transit.result, value), context);
       transit = { type: "regular" };
       state.stack.push(value);
       return value;

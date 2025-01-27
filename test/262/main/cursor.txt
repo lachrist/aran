@@ -1,7 +1,7 @@
-492
+800
 {
   "kind": "script",
-  "path": "annexB/language/eval-code/direct/func-block-decl-eval-func-block-scoping.js",
+  "path": "annexB/language/eval-code/direct/var-env-lower-lex-catch-non-strict.js",
   "directive": "none",
   "negative": null,
   "asynchronous": false,

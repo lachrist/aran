@@ -57,6 +57,7 @@ export type Transit =
     }
   | {
       type: "eval";
+      state: State;
     }
   | {
       type: "completion";
