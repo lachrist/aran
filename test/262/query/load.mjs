@@ -1,5 +1,5 @@
 import { createInterface } from "node:readline";
-import { isCompactResultEntry, unpackResultEntry } from "../result.mjs";
+import { isCompactResultEntry, unpackResult } from "../result.mjs";
 import { createReadStream } from "node:fs";
 import { AranExecError } from "../error.mjs";
 
@@ -11,19 +11,21 @@ const { URL, JSON, Infinity } = globalThis;
  * ) => Promise<import("../result").ResultEntry[]>}
  */
 export const loadResultArray = async (stage) => {
-  const results = [];
+  /**
+   * @type {import("../result").ResultEntry[]}
+   */
+  const entries = [];
   for await (const line of createInterface({
     input: createReadStream(
       new URL(`../stages/${stage}.jsonl`, import.meta.url),
     ),
     crlfDelay: Infinity,
   })) {
-    const compact_result = JSON.parse(line);
-    if (isCompactResultEntry(compact_result)) {
-      results.push(unpackResultEntry(compact_result));
-    } else {
-      throw new AranExecError("invalid compact result", compact_result);
+    const entry = JSON.parse(line);
+    if (!isCompactResultEntry(entry)) {
+      throw new AranExecError("invalid compact result", { entry });
     }
+    entries.push([entry[0], unpackResult(entry[1])]);
   }
-  return results;
+  return entries;
 };

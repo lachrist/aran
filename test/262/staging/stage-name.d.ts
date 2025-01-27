@@ -1,23 +1,12 @@
-export type StageName = 
-  | "-bare-basic-flexible"
-  | "-bare-basic-standard"
-  | "-bare-patch-flexible"
-  | "-bare-patch-standard"
-  | "-bare-weave-flexible"
-  | "-bare-weave-standard"
-  | "-full-basic-flexible"
-  | "-full-basic-standard"
-  | "-invariant"
-  | "-standard-full"
-  | "-standard-void"
-  | "-state-flexible"
-  | "-trace"
-  | "-track-origin"
+export type StageName =
   | "bare-comp"
   | "bare-main"
   | "flex-full"
   | "flex-void"
   | "identity"
+  | "invariant"
   | "parsing"
   | "stnd-full"
-  | "stnd-void";
+  | "stnd-void"
+  | "trace"
+  | "track-origin";

@@ -1,4 +1,5 @@
-// @ts-ignore
+// @ts-nocheck
+
 const ts_aware_context = context;
 
 const { log, aran, astring, acorn, target } = /**

@@ -385,6 +385,6 @@ export const createTraceAdvice = ({ apply, construct }) => {
 export const weave = (root) =>
   weaveStandard(root, {
     advice_global_variable: ADVICE_GLOBAL_VARIABLE,
-    initial_state: null,
+    initial_state: INITIAL_INDENT,
     pointcut: true,
   });

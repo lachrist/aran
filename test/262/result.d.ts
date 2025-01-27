@@ -32,3 +32,5 @@ export type IncludeCompactResult = [
 export type ExcludeCompactResult = ["ex", string, ...string[]];
 
 export type CompactResult = IncludeCompactResult | ExcludeCompactResult;
+
+export type CompactResultEntry = [TestSpecifier, CompactResult];

@@ -1,27 +1,37 @@
 import { MISSING_ERROR_MESSAGE } from "./util/index.mjs";
-import { AranExecError, AranTypeError } from "./error.mjs";
+import { AranTypeError } from "./error.mjs";
 
 const {
-  JSON,
   Array: { isArray },
 } = globalThis;
 
 /**
  * @type {(
- *   line: string,
- * ) => import("./result").CompactResult}
+ *   data: import("../../lib").Json
+ * ) => data is import("./result").TestSpecifier}
  */
-export const parseCompactResult = (line) => {
-  const data = JSON.parse(line);
-  if (
-    !isArray(data) ||
-    data.length < 1 ||
-    (data[0] !== "in" && data[0] !== "ex")
-  ) {
-    throw new AranExecError("invalid compact result entry", { line, data });
-  }
-  return /** @type {any} */ (data);
-};
+const isTestSpecifier = (data) =>
+  typeof data === "string" &&
+  (data.endsWith("@none") || data.endsWith("@use-strict"));
+
+/**
+ * @type {(
+ *   data: import("../../lib").Json
+ * ) => data is import("./result").ResultEntry}
+ */
+const isCompactResult = (data) =>
+  isArray(data) && data.length > 0 && (data[0] === "in" || data[0] === "ex");
+
+/**
+ * @type {(
+ *   data: import("../../lib").Json
+ * ) => data is import("./result").CompactResultEntry}
+ */
+export const isCompactResultEntry = (data) =>
+  isArray(data) &&
+  data.length === 2 &&
+  isTestSpecifier(data[0]) &&
+  isCompactResult(data[1]);
 
 /**
  * @type {(
