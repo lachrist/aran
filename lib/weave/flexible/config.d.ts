@@ -6,8 +6,7 @@ import type { Atom } from "../../lang/syntax";
  * Configuration object for both flexible weaving.
  */
 export type Config<
-  param extends {
-    Atom?: Atom;
+  param extends Partial<Atom> & {
     Point?: Json[];
     InitialState?: Json;
     AdviceGlobalVariable?: string;
@@ -17,14 +16,10 @@ export type Config<
    * The initial state passed to advice functions. It will be cloned with JSON.
    * @defaultValue `null`
    */
-  initial_state: param["InitialState"] & Json;
+  initial_state: GetDefault<param, "InitialState", Json>;
   /**
    * The pointcut for the standard weaving API.
    * @defaultValue `false`
    */
-  pointcut: Pointcut<{
-    AdviceGlobalVariable: param["AdviceGlobalVariable"] & string;
-    Atom: GetDefault<param, "Atom", Atom>;
-    Point: GetDefault<param, "Point", Json[]>;
-  }>;
+  pointcut: Pointcut<param>;
 };

@@ -6,10 +6,10 @@ import type { Atom } from "../../lang/syntax";
  * Configuration object for standard weaving.
  */
 export type Config<
-  param extends {
+  param extends Partial<Atom> & {
     AdviceGlobalVariable?: string;
     InitialState?: Json;
-    Atom?: Atom & { Tag: Json };
+    Tag?: Json;
   } = {},
 > = {
   /**
@@ -22,11 +22,11 @@ export type Config<
    * The pointcut for the standard weaving API.
    * @defaultValue `false`
    */
-  pointcut: Pointcut<GetDefault<param, "Atom", Atom & { Tag: string }>>;
+  pointcut: Pointcut<param>;
   /**
    * The global variable that refers to the advice object for standard weaving.
    * Make sure it does not clash with other global variables.
    * @defaultValue `"_ARAN_ADVICE_"`
    */
-  advice_global_variable: param["AdviceGlobalVariable"] & string;
+  advice_global_variable: GetDefault<param, "AdviceGlobalVariable", string>;
 };

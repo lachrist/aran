@@ -74,7 +74,7 @@ export type File<param extends { FilePath?: unknown } = {}> = {
  * program `file.root`. It is safe to simply returns `node_path`.
  */
 export type Digest<
-  param extends { FilePath?: unknown; NodePath?: string | number } = {},
+  param extends { FilePath?: unknown; NodeHash?: string | number } = {},
 > = (
   node: object,
   node_path: EstreeNodePath,
@@ -86,7 +86,7 @@ export type Digest<
  * Configuration object for `transpile`.
  */
 export type Config<
-  param extends { FilePath?: unknown; NodePath?: string | number } = {},
+  param extends { FilePath?: unknown; NodeHash?: string | number } = {},
 > = {
   /**
    * Indicates whether the global declarative record should be emulated or not.

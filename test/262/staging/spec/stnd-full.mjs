@@ -486,15 +486,12 @@ const assertInput5 = assertInput;
  *       args: Value[],
  *     ) => Value,
  *   },
- * ) => import("aran").StandardAdvice<{
+ * ) => import("aran").StandardAdvice<Atom & {
  *   Kind: import("aran").StandardAspectKind,
- *   Atom: Atom,
- *   Runtime: {
- *     State: State,
- *     ScopeValue: Value,
- *     StackValue: Value,
- *     OtherValue: Value,
- *   },
+ *   State: State,
+ *   ScopeValue: Value,
+ *   StackValue: Value,
+ *   OtherValue: Value,
  * }>}
  */
 const compileAdvice = ({ apply, construct }) => ({

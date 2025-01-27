@@ -1,4 +1,4 @@
-import type { KeyOfUnion } from "../util/util";
+import type { GetDefault, KeyOfUnion } from "../util/util";
 import type { DeclareHeader, ModuleHeader } from "./header";
 
 //////////
@@ -11,6 +11,14 @@ export type Atom = {
   Source: string;
   Specifier: string;
   Tag: unknown;
+};
+
+export type ResolvePartialAtom<atom extends Partial<Atom>> = {
+  Label: GetDefault<atom, "Label", string>;
+  Variable: GetDefault<atom, "Variable", string>;
+  Source: GetDefault<atom, "Source", string>;
+  Specifier: GetDefault<atom, "Specifier", string>;
+  Tag: GetDefault<atom, "Tag", string>;
 };
 
 ///////////////

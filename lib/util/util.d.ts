@@ -22,6 +22,6 @@ export type MergeDefault<X, Y> = {
 
 export type KeyOfUnion<T> = T extends T ? keyof T : never;
 
-type GetDefault<O, K extends string, D> = O extends { [k in K]: infer V }
+type GetDefault<O, K extends keyof O, D> = O extends { [k in K]: infer V }
   ? V
   : D;

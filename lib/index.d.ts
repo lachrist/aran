@@ -257,6 +257,7 @@ export const transpile: <
 
 /**
  * Insert calls to advice functions in an Aran program with the standard API.
+ * @template conf_param Type parameters for the configuration object.
  * @template arg_atom The branded types for the AST leafs of the input program.
  * @template res_atom The branded types for the AST leafs of the output program.
  * @param root The Aran program to weave.
@@ -267,17 +268,17 @@ export const transpile: <
  * pointcut.
  */
 export const weaveStandard: <
-  arg_atom extends Atom & { Tag: Json } = Atom & { Tag: string },
-  res_atom extends Atom & { Tag: arg_atom["Tag"] } = Atom & {
-    Tag: arg_atom["Tag"];
-  },
+  conf_param extends Atom & { Tag: Json },
+  arg_atom extends Pick<conf_param, keyof Atom>,
+  res_atom extends Atom & { Tag: arg_atom["Tag"] },
 >(
   root: Program<arg_atom>,
-  conf?: null | undefined | Partial<StandardWeaveConfig<{ Atom: arg_atom }>>,
+  conf?: null | undefined | Partial<StandardWeaveConfig<conf_param>>,
 ) => Program<res_atom>;
 
 /**
  * Insert calls to advice functions in an Aran program with the flexible API.
+ * @template conf_param Type parameters for the configuration object.
  * @template arg_atom The branded types for the AST leafs of the input program.
  * @template res_atom The branded types for the AST leafs of the output program.
  * @param root The Aran program to weave.
@@ -288,13 +289,12 @@ export const weaveStandard: <
  * pointcut.
  */
 export const weaveFlexible: <
-  arg_atom extends Atom = Atom & { Tag: string },
-  res_atom extends Atom & { Tag: arg_atom["Tag"] } = Atom & {
-    Tag: arg_atom["Tag"];
-  },
+  conf_param extends Atom,
+  arg_atom extends Pick<conf_param, keyof Atom>,
+  res_atom extends Atom & { Tag: arg_atom["Tag"] },
 >(
   root: Program<arg_atom>,
-  conf?: null | undefined | Partial<FlexibleWeaveConfig<{ Atom: arg_atom }>>,
+  conf?: null | undefined | Partial<FlexibleWeaveConfig<conf_param>>,
 ) => Program<res_atom>;
 
 ///////////////
@@ -348,7 +348,7 @@ export const instrument: <path = string, hash extends string | number = string>(
     | undefined
     | Partial<
         InstrumentConfig<{
-          Atom: Atom & { Tag: hash };
+          Tag: hash;
           FilePath: path;
           NodeHash: hash;
         }>

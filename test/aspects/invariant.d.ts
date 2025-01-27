@@ -122,13 +122,12 @@ export type AspectKind = Exclude<
   | "block@declaration-overwrite"
 >;
 
-export type Advice = StandardAdvice<{
-  Kind: AspectKind;
-  Atom: Atom;
-  Runtime: {
+export type Advice = StandardAdvice<
+  Atom & {
+    Kind: AspectKind;
     State: null | State;
     StackValue: Value;
     ScopeValue: Value;
     OtherValue: Value;
-  };
-}>;
+  }
+>;

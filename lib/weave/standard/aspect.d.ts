@@ -3,6 +3,7 @@ import type {
   Atom,
   Intrinsic,
   Parameter,
+  ResolvePartialAtom,
   RuntimePrimitive,
 } from "../../lang/syntax";
 import type { GetDefault, ValueOf } from "../../util/util";
@@ -14,8 +15,6 @@ import type {
   GeneratorKind,
   Parametrization,
 } from "../parametrization";
-
-type DefaultAtom = Atom & { Tag: string };
 
 export type TestKind = "if" | "while" | "conditional";
 
@@ -471,19 +470,28 @@ export type AspectTyping<atom extends Atom, runtime extends Runtime> = {
   };
 };
 
+type ResolvePartialRuntime<runtime extends Partial<Runtime>> = {
+  State: GetDefault<runtime, "State", null>;
+  StackValue: GetDefault<runtime, "StackValue", unknown>;
+  ScopeValue: GetDefault<runtime, "ScopeValue", unknown>;
+  OtherValue: GetDefault<runtime, "OtherValue", unknown>;
+};
+
 export type AspectKind = keyof AspectTyping<never, never>;
 
 export type Advice<
-  param extends {
+  param extends Partial<Atom> & {
     Kind?: AspectKind;
-    Atom?: Atom;
-    Runtime?: Runtime;
+    State?: unknown;
+    StackValue?: unknown;
+    ScopeValue?: unknown;
+    OtherValue?: unknown;
   } = {},
 > = param extends { Kind: AspectKind }
   ? {
       [key in param["Kind"]]: AspectTyping<
-        GetDefault<param, "Atom", DefaultAtom>,
-        GetDefault<param, "Runtime", Runtime>
+        ResolvePartialAtom<param>,
+        ResolvePartialRuntime<param>
       >[key]["advice"];
     }
   : {
@@ -491,17 +499,17 @@ export type Advice<
         | null
         | undefined
         | AspectTyping<
-            GetDefault<param, "Atom", DefaultAtom>,
-            GetDefault<param, "Runtime", Runtime>
+            ResolvePartialAtom<param>,
+            ResolvePartialRuntime<param>
           >[key]["advice"];
     };
 
-export type ObjectPointcut<atom extends Atom = Atom> = {
+export type ObjectPointcut<atom extends Partial<Atom> = {}> = {
   [key in AspectKind]?:
     | null
     | undefined
     | boolean
-    | AspectTyping<atom, never>[key]["pointcut"];
+    | AspectTyping<ResolvePartialAtom<atom>, never>[key]["pointcut"];
 };
 
 export type ConstantPointcut = boolean;
@@ -510,8 +518,8 @@ export type ArrayPointcut = AspectKind[];
 
 export type ArrowPointcut<T> = (kind: AspectKind, tag: T) => boolean;
 
-export type Pointcut<atom extends Atom = Atom> =
+export type Pointcut<atom extends Partial<Atom> = {}> =
   | ObjectPointcut<atom>
-  | ArrowPointcut<atom["Tag"]>
+  | ArrowPointcut<GetDefault<atom, "Tag", string>>
   | ArrayPointcut
   | ConstantPointcut;

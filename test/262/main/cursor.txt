@@ -1,14 +1,13 @@
-2
+492
 {
   "kind": "script",
-  "path": "annexB/built-ins/Date/prototype/getYear/B.2.4.js",
-  "directive": "use-strict",
+  "path": "annexB/language/eval-code/direct/func-block-decl-eval-func-block-scoping.js",
+  "directive": "none",
   "negative": null,
   "asynchronous": false,
   "includes": [
     "assert.js",
-    "sta.js",
-    "propertyHelper.js"
+    "sta.js"
   ],
   "features": []
 }

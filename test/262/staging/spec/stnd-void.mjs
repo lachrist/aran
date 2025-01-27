@@ -32,7 +32,7 @@ const { setup, trans, retro } = compileAran(
 const ADVICE_VARIABLE = "__aran_advice__";
 
 /**
- * @type {import("aran").StandardWeaveConfig}
+ * @type {import("aran").StandardWeaveConfig<{Tag: import("aran").Json}>}
  */
 const conf = {
   advice_global_variable: ADVICE_VARIABLE,
@@ -45,8 +45,11 @@ const conf = {
  */
 const advice = {
   "eval@before": (_state, root, _tag) =>
-    /** @type {import("aran").Program & { kind: "eval", situ: "local.deep"}} */ (
-      weaveStandard(/** @type {import("aran").Program<any>} */ (root), conf)
+    weaveStandard(
+      /** @type {import("aran").Program<import("aran").Atom & {Tag: string}>} */ (
+        root
+      ),
+      conf,
     ),
 };
 

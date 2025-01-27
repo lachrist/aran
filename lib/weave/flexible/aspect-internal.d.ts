@@ -11,11 +11,12 @@ import type {
   PointcutElement,
 } from "./aspect";
 
-export type Pointcut = GenericPointcut<{
-  GlobalAdiceVariable: VariableName;
-  Atom: ArgAtom;
-  Point: Json[];
-}>;
+export type Pointcut = GenericPointcut<
+  ArgAtom & {
+    AdviceGlobalVariable: VariableName;
+    Point: Json[];
+  }
+>;
 
 export type BlockPointcut = GenericBlockPointcut<ArgAtom, Json[]>;
 

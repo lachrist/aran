@@ -135,14 +135,16 @@ const avoidTransitNarrowing = (transit) => transit;
  *   ) => import("./track-origin").Value,
  * }} Reflect
  * @returns {import("aran").StandardAdvice<{
+ *   Label: atom["Label"],
+ *   Variable: atom["Variable"],
+ *   Specifier: atom["Specifier"],
+ *   Source: atom["Source"],
+ *   Tag: atom["Tag"],
  *   Kind: import("./track-origin").AspectKind,
- *   Atom: atom,
- *   Runtime: {
- *     State: import("./track-origin").ShadowState<atom>,
- *     StackValue: import("./track-origin").Value,
- *     ScopeValue: import("./track-origin").Value,
- *     OtherValue: import("./track-origin").Value,
- *   },
+ *   State: import("./track-origin").ShadowState<atom>,
+ *   StackValue: import("./track-origin").Value,
+ *   ScopeValue: import("./track-origin").Value,
+ *   OtherValue: import("./track-origin").Value,
  * }>}
  */
 export const createTrackOriginAdvice = ({ apply, construct }) => {
@@ -202,12 +204,12 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
     },
     // Call //
     "apply@around": (state, callee, that, input, location) => {
-      const shadow_argument_array = [];
+      const shadow_input = [];
       for (let index = input.length - 1; index >= 0; index -= 1) {
-        shadow_argument_array[index] = pop(state.stack);
+        shadow_input[index] = pop(state.stack);
       }
-      const shadow_this = pop(state.stack);
-      const shadow_function = pop(state.stack);
+      const shadow_that = pop(state.stack);
+      const shadow_callee = pop(state.stack);
       transit = avoidTransitNarrowing({
         type: "apply",
         source: {
@@ -216,9 +218,9 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
           arguments: input,
         },
         shadow: {
-          function: shadow_function,
-          this: shadow_this,
-          arguments: shadow_argument_array,
+          function: shadow_callee,
+          this: shadow_that,
+          arguments: shadow_input,
         },
       });
       const result = apply(callee, that, input);
@@ -227,20 +229,20 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
       } else {
         push(state.stack, {
           type: "apply",
-          function: shadow_function,
-          this: shadow_this,
-          arguments: shadow_argument_array,
+          function: shadow_callee,
+          this: shadow_that,
+          arguments: shadow_input,
           location,
         });
       }
       return result;
     },
     "construct@around": (state, callee, input, location) => {
-      const shadow_argument_array = [];
+      const shadow_input = [];
       for (let index = input.length - 1; index >= 0; index -= 1) {
-        shadow_argument_array[index] = pop(state.stack);
+        shadow_input[index] = pop(state.stack);
       }
-      const shadow_function = pop(state.stack);
+      const shadow_callee = pop(state.stack);
       transit = avoidTransitNarrowing({
         type: "construct",
         source: {
@@ -248,8 +250,8 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
           arguments: input,
         },
         shadow: {
-          function: shadow_function,
-          arguments: shadow_argument_array,
+          function: shadow_callee,
+          arguments: shadow_input,
         },
       });
       const result = construct(callee, input);
@@ -258,8 +260,8 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
       } else {
         push(state.stack, {
           type: "construct",
-          function: shadow_function,
-          arguments: shadow_argument_array,
+          function: shadow_callee,
+          arguments: shadow_input,
           location,
         });
       }

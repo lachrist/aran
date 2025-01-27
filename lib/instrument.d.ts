@@ -5,8 +5,7 @@ import type { Atom } from "./lang/syntax";
 import type { GetDefault, Json } from "./util/util";
 
 export type Config<
-  param extends {
-    Atom?: Atom;
+  param extends Partial<Atom> & {
     FilePath?: unknown;
     NodeHash?: string | number;
     InitialState?: Json;
@@ -20,7 +19,7 @@ export type Config<
      * Make sure it does not clash with other global variables.
      * @defaultValue `"_ARAN_ADVICE_"`
      */
-    advice_global_variable: param["AdviceGlobalVariable"] & string;
+    advice_global_variable: GetDefault<param, "AdviceGlobalVariable", string>;
     /**
      * The initial state passed to advice functions. It will be cloned with JSON
      * serialization.
@@ -32,5 +31,5 @@ export type Config<
      * `flexible_pointcut` should be defined but not both.
      * @defaultValue `null`
      */
-    pointcut: StandardPointcut<GetDefault<param, "Atom", Atom>>;
+    pointcut: StandardPointcut<param>;
   };

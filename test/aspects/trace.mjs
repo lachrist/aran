@@ -24,12 +24,6 @@ const listEntry = Object.entries;
  * }} Atom
  * @typedef {string & {__brand: "Indent"}} Indent
  * @typedef {{__brand: "Value"}} Value
- * @typedef {{
- *   State: Indent,
- *   StackValue: Value,
- *   ScopeValue: Value,
- *   OtherValue: Value,
- * }} Runtime
  * @typedef {(
  *   | "setup"
  *   | "declare"
@@ -191,10 +185,12 @@ const indentControl = (indent) => /** @type {Indent} */ (`${indent}.`);
  *     input: import("./track-origin").Value[],
  *   ) => import("./track-origin").Value,
  * }} Reflect
- * @returns {import("aran").StandardAdvice<{
+ * @returns {import("aran").StandardAdvice<Atom & {
  *   Kind: import("aran").StandardAspectKind,
- *   Atom: Atom,
- *   Runtime: Runtime,
+ *   State: Indent,
+ *   StackValue: Value,
+ *   ScopeValue: Value,
+ *   OtherValue: Value,
  * }>}
  */
 export const createTraceAdvice = ({ apply, construct }) => {

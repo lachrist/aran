@@ -3,8 +3,9 @@ import type { ArgAtom } from "../atom";
 import type { Json } from "../../util/util";
 import type { VariableName } from "estree-sentry";
 
-export type InternalConfig = Config<{
-  Atom: ArgAtom;
-  AdviceGlobalVariable: VariableName;
-  InitialState: Json;
-}>;
+export type InternalConfig = Config<
+  ArgAtom & {
+    AdviceGlobalVariable: VariableName;
+    InitialState: Json;
+  }
+>;

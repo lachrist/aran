@@ -391,9 +391,8 @@ const compilePointcut = (kind) => (node, parent, root) => {
  *       input: Value[],
  *     ) => Value,
  *   },
- * ) => import("aran").FlexibleAspect<{
+ * ) => import("aran").FlexibleAspect<Atom & {
  *   AdviceGlobalVariable: AdviceGlobalVariable,
- *   Atom: Atom,
  *   Point: Point,
  *   State: State,
  *   Value: Value,
@@ -670,23 +669,30 @@ const { setup, trans, retro } = compileAran(
 );
 
 /**
- * @type {import("aran").FlexibleWeaveConfig<{
+ * @type {import("aran").FlexiblePointcut<Atom & {
+ *   AdviceGlobalVariable: AdviceGlobalVariable,
+ *   Point: Point,
+ * }>}
+ */
+const pointcut = compileAspect({
+  apply: (...input) => {
+    throw new AranTestError("dummy-apply", input);
+  },
+  construct: (...input) => {
+    throw new AranTestError("dummy-construct", input);
+  },
+});
+
+/**
+ * @type {import("aran").FlexibleWeaveConfig<Atom & {
  *   InitialState: State,
  *   AdviceGlobalVariable: AdviceGlobalVariable,
- *   Atom: Atom,
  *   Point: Point,
  * }>}
  */
 const weave_config = {
   initial_state: STATE,
-  pointcut: compileAspect({
-    apply: (...input) => {
-      throw new AranTestError("dummy-apply", input);
-    },
-    construct: (...input) => {
-      throw new AranTestError("dummy-construct", input);
-    },
-  }),
+  pointcut,
 };
 
 ////////////

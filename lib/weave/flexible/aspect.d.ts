@@ -8,6 +8,7 @@ import type {
   Statement,
   Effect,
   Expression,
+  ResolvePartialAtom,
 } from "../../lang/syntax";
 import type { GetDefault, Json } from "../../util/util";
 import type { ValueOf } from "../../util/util";
@@ -163,10 +164,7 @@ export type AdviceElement<
   kind extends AspectKind,
   atom extends { Variable: string },
   point extends Json[],
-  runtime extends { State: unknown; Value: unknown } = {
-    State: unknown;
-    Value: unknown;
-  },
+  runtime extends { State: unknown; Value: unknown },
 > = AspectTyping<
   atom & { Label: never; Specifier: never; Source: never; Tag: never },
   point,
@@ -174,11 +172,10 @@ export type AdviceElement<
 >[kind]["advice"];
 
 export type Aspect<
-  param extends {
+  param extends Partial<Atom> & {
     AdviceGlobalVariable?: string;
     State?: unknown;
     Value?: unknown;
-    Atom?: Atom;
     Point?: Json[];
   } = {},
 > = {
@@ -187,16 +184,16 @@ export type Aspect<
       kind: key;
       pointcut: PointcutElement<
         key,
-        GetDefault<param, "Atom", Atom>,
+        ResolvePartialAtom<param>,
         GetDefault<param, "Point", Json[]>
       >;
       advice: AdviceElement<
         key,
-        GetDefault<param, "Atom", Atom>,
+        { Variable: GetDefault<param, "Variable", string> },
         GetDefault<param, "Point", Json[]>,
         {
-          State: param["State"];
-          Value: param["Value"];
+          State: GetDefault<param, "State", null>;
+          Value: GetDefault<param, "Value", unknown>;
         }
       >;
     };
@@ -204,9 +201,8 @@ export type Aspect<
 };
 
 export type Pointcut<
-  param extends {
+  param extends Partial<Atom> & {
     AdviceGlobalVariable?: string;
-    Atom?: Atom;
     Point?: Json[];
   } = {},
 > = {
@@ -215,8 +211,8 @@ export type Pointcut<
       kind: key;
       pointcut: PointcutElement<
         key,
-        GetDefault<param, "Atom", Atom>,
-        GetDefault<param, "Point", Json[][]>
+        ResolvePartialAtom<param>,
+        GetDefault<param, "Point", Json[]>
       >;
     };
   }>;
@@ -227,7 +223,7 @@ export type Advice<
     AdviceGlobalVariable?: string;
     State?: unknown;
     Value?: unknown;
-    Atom?: { Variable: string };
+    Variable?: string;
     Point?: Json[];
   } = {},
 > = {
@@ -236,11 +232,11 @@ export type Advice<
       kind: key;
       advice: AdviceElement<
         key,
-        GetDefault<param, "Atom", { Variable: string }>,
+        { Variable: GetDefault<param, "Variable", string> },
         GetDefault<param, "Point", Json[]>,
         {
-          State: param["State"];
-          Value: param["Value"];
+          State: GetDefault<param, "State", null>;
+          Value: GetDefault<param, "Value", unknown>;
         }
       >;
     };
