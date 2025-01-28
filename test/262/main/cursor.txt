@@ -1,13 +1,1 @@
-800
-{
-  "kind": "script",
-  "path": "annexB/language/eval-code/direct/var-env-lower-lex-catch-non-strict.js",
-  "directive": "none",
-  "negative": null,
-  "asynchronous": false,
-  "includes": [
-    "assert.js",
-    "sta.js"
-  ],
-  "features": []
-}
+73085

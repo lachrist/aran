@@ -1,9 +1,11 @@
+/* eslint-disable local/no-deep-import */
+
 import { fileURLToPath } from "url";
 import { AranExecError } from "../error.mjs";
-import { loadResultArray } from "./load.mjs";
+import { loadStageResult } from "../staging/result.mjs";
 import { spawn } from "node:child_process";
 import { argv, stderr } from "node:process";
-import { isStageName } from "../staging/index.mjs";
+import { isStageName } from "../staging/stage-name-predicate.mjs";
 import { isExcludeResult } from "../result.mjs";
 
 const { process, Promise, URL, JSON } = globalThis;
@@ -14,22 +16,11 @@ const { process, Promise, URL, JSON } = globalThis;
 
 /**
  * @type {(
- *   entry1: import("../result").ResultEntry,
- *   entry2: import("../result").ResultEntry,
+ *   entry1: import("../result").Result,
+ *   entry2: import("../result").Result,
  * ) => number | null}
  */
-const computeSlowdown = (
-  { 0: specifier1, 1: result1 },
-  { 0: specifier2, 1: result2 },
-) => {
-  if (specifier1 !== specifier2) {
-    throw new AranExecError("result path mismatch", {
-      specifier1,
-      specifier2,
-      result1,
-      result2,
-    });
-  }
+const computeSlowdown = (result1, result2) => {
   if (isExcludeResult(result1) || isExcludeResult(result2)) {
     return null;
   }
@@ -54,8 +45,8 @@ const computeSlowdown = (
 
 /**
  * @type {(
- *   base: import("../result").ResultEntry[],
- *   other: import("../result").ResultEntry[],
+ *   base: import("../result").Result[],
+ *   other: import("../result").Result[],
  * ) => number[]}
  */
 const crunchSlowdown = (base, other) => {
@@ -89,10 +80,16 @@ const prepareSlowdownPlot = (base, others) => ({
  *   name: import("../staging/stage-name").StageName,
  * ) => Promise<import("./plot").StageResult>}
  */
-const loadStageResult = async (name) => ({
-  name,
-  results: await loadResultArray(name),
-});
+const loadStageResultArray = async (name) => {
+  /**
+   * @type {import("../result").Result[]}
+   */
+  const results = [];
+  for await (const result of loadStageResult(name)) {
+    results.push(result);
+  }
+  return { name, results };
+};
 
 /**
  * @type {(
@@ -107,10 +104,10 @@ const main = async (argv) => {
     return `invalid stage names: ${argv.filter((arg) => !isStageName(arg))}\n`;
   }
   const [base_stage, ...other_stage_array] = argv;
-  const base = await loadStageResult(base_stage);
+  const base = await loadStageResultArray(base_stage);
   const others = [];
   for (const other_stage of other_stage_array) {
-    others.push(await loadStageResult(other_stage));
+    others.push(await loadStageResultArray(other_stage));
   }
   const plots = [prepareSlowdownPlot(base, others)];
   /**

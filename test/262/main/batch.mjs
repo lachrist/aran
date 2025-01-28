@@ -1,5 +1,7 @@
+/* eslint-disable local/no-deep-import */
+
 import { spawn } from "node:child_process";
-import { isStageName } from "../staging/index.mjs";
+import { isStageName } from "../staging/stage-name-predicate.mjs";
 import { argv, stdout } from "node:process";
 
 const { Date, Promise, Error, setTimeout } = globalThis;

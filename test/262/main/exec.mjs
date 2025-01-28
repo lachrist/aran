@@ -1,9 +1,11 @@
+/* eslint-disable local/no-deep-import */
 /* eslint-disable logical-assignment-operators */
 /* eslint-disable local/no-function */
 
 import { createSignal } from "../util/index.mjs";
 import { argv, stderr, stdout } from "node:process";
-import { compileStage, saveStageResultEntry } from "../staging/index.mjs";
+import { compileStage } from "../staging/stage.mjs";
+import { saveStageResultEntry } from "../staging/result-entry.mjs";
 import { toTestSpecifier } from "../result.mjs";
 import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";

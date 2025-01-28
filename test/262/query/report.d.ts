@@ -1,6 +1,6 @@
 export type Repartition = { [key in string]: number };
 
-export type Summary = {
+export type Report = {
   count: number;
   exclusion: {
     count: number;

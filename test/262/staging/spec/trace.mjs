@@ -59,6 +59,7 @@ export default {
       /** @type {{apply: any, construct: any}} */ (
         intrinsics["aran.global"].Reflect
       ),
+      (_message) => {},
     );
     defineProperty(intrinsics["aran.global"], ADVICE_GLOBAL_VARIABLE, {
       // @ts-ignore

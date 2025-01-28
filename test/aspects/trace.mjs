@@ -1,5 +1,4 @@
 /* eslint-disable local/no-jsdoc-typedef */
-/* eslint-disable no-console */
 
 import { weaveStandard } from "aran";
 
@@ -134,6 +133,7 @@ const padMain = (body, tail) => {
 
 /**
  * @type {(
+ *   log: (message: string) => void,
  *   kind: ">>" | "--" | "<<",
  * ) => (
  *   indent: Indent,
@@ -143,17 +143,11 @@ const padMain = (body, tail) => {
  *   hash: NodeHash,
  * ) => void}
  */
-const compileLog = (kind) => (indent, name, body, tail, hash) => {
-  console.log(
+const compileLog = (log, kind) => (indent, name, body, tail, hash) => {
+  log(
     `${indent}${name.padEnd(NAME_PADDING)} ${kind} ${padMain(body, tail)} @ ${hash}`,
   );
 };
-
-const logProduce = compileLog(">>");
-
-const logConsume = compileLog("<<");
-
-const logNeutral = compileLog("--");
 
 export const INITIAL_INDENT = /** @type {Indent} */ ("");
 
@@ -185,6 +179,7 @@ const indentControl = (indent) => /** @type {Indent} */ (`${indent}.`);
  *     input: import("./track-origin").Value[],
  *   ) => import("./track-origin").Value,
  * }} Reflect
+ * @param {(message: string) => void} log
  * @returns {import("aran").StandardAdvice<Atom & {
  *   Kind: import("aran").StandardAspectKind,
  *   State: Indent,
@@ -193,7 +188,10 @@ const indentControl = (indent) => /** @type {Indent} */ (`${indent}.`);
  *   OtherValue: Value,
  * }>}
  */
-export const createTraceAdvice = ({ apply, construct }) => {
+export const createTraceAdvice = ({ apply, construct }, log) => {
+  const logProduce = compileLog(log, ">>");
+  const logConsume = compileLog(log, "<<");
+  const logNeutral = compileLog(log, "--");
   let transit_indent = INITIAL_INDENT;
   const show = compileShow();
   const showProperty = compileShowProperty(show);

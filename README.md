@@ -1,29 +1,27 @@
 # Aran <img src="img/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
 
 Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting
-JavaScript code. Aran was designed as a generic infra-structure for building
+JavaScript code. Aran was designed as a generic infrastructure for building
 various development-time dynamic program analyses such as: objects and functions
 profiling, debugging, control-flow tracing, taint analysis and concolic testing.
 Aran is a JavaScript library without any dependencies that only export functions
 for manipulating [estree](https://github.com/estree/estree). Hence, additional
-work is required to actually conduct program analysis.
+work is required to deploy program analysis onto projects.
 
 **Disclaimer** Aran started as an academic research project, and is used at
 [SOFT lab](http://soft.vub.ac.be/soft/) to support publications and run
 experiments. Aran extensively supports ECMAScript2024 and has a 99.7% success
 rate against [test262](https://github.com/tc39/test262). However, it has rarely
-been used to instrument large-scale programs. The performance overhead and even
-the increased size of the instrumented code may cause issues.
+been used to instrument large-scale programs and performance overhead may cause
+issues while analyzing time-sensitive programs.
 
 ## Getting Started
 
 Aran is a [npm module](https://www.npmjs.com/package/aran) that can be installed
-as any other npm module with: `npm install aran`. It exports two main functions:
-
-- `generateSetup`: generates an [estree](https://github.com/estree/estree) that
-  should be executed before any instrumented code.
-- `instrument`: instruments an [estree](https://github.com/estree/estree) and
-  expects the advice to be defined as a global variable.
+as any other npm module with: `npm install aran`. The fastest way to get started
+is to use the functions `aran.generateSetup` and `aran.instrument`.
+`generateSetup` creates an [estree.Program](https://github.com/estree/estree)
+that should be evaluated before evaluating any instrumented code.
 
 ```sh
 npm install aran acorn astring
@@ -51,8 +49,8 @@ globalThis.eval(
         root: parse("console.log('Hello!');", { ecmaVersion: 2024 }),
       },
       {
-        advice_variable: "_ARAN_ADVICE_",
-        standard_pointcut: ["apply@around"],
+        advice_global_variable: "_ARAN_ADVICE_",
+        pointcut: ["apply@around"],
       },
     ),
   ),
@@ -63,13 +61,31 @@ globalThis.eval(
 
 [typedoc](https://lachrist.github.io/aran/page/typedoc/modules/index.html)
 
-Of particular interest are:
+Aran simplifies the instrumentation of JavaScript code by transpiling it into a
+minimal variant called AranLang. Instrumentations is performed on AranLang
+before transpiling it back to JavaScript. Aran provides the following functions:
 
-- [instrumentation file input](https://lachrist.github.io/aran/page/typedoc/types/index.File.html)
-- [instrumentation configuration](https://lachrist.github.io/aran/page/typedoc/types/index.Conf.html)
-- [standard aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_standard_aspect.AspectTyping.html)
-- [flexible aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_flexible_aspect.AspectTyping.html)
-- [aran intermediary language](https://lachrist.github.io/aran/page/typedoc/modules/lang_syntax.html)
+- [`generateSetup`](https://lachrist.github.io/aran/page/typedoc/functions/index.generateSetup.html):
+  Creates an `estree.Program` that should be evaluated before any AranLang
+  programs.
+- [`transpile`](https://lachrist.github.io/aran/page/typedoc/functions/index.transpile.html):
+  Transpile an AranLang program to JavaScript.
+- [`weaveStandard`](https://lachrist.github.io/aran/page/typedoc/functions/index.weaveStandard.html):
+  Weave a standard aspect into an AranLang program.
+- [`weaveFlexible`](https://lachrist.github.io/aran/page/typedoc/functions/index.weaveFlexible.html):
+  Weave a flexible aspect into an AranLang program.
+- [`retropile`](https://lachrist.github.io/aran/page/typedoc/functions/index.retropile.html):
+  Transpile an AranLang program back to JavaScript.
+- [`instrument`](https://lachrist.github.io/aran/page/typedoc/functions/index.instrument.html):
+  Chain together `transpile`, `weaveStandard` and `retropile` to instrument a
+  program.
+
+Other types of interest are:
+
+- [AranLang](https://lachrist.github.io/aran/page/typedoc/modules/lang_syntax.html)
+- [Library Interface](file:///Users/lachrist/Desktop/workspace/aran/page/typedoc/modules/index.html)
+- [Standard Aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_standard_aspect.AspectTyping.html)
+- [Flexible Aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_flexible_aspect.AspectTyping.html)
 
 ## Live Demo
 

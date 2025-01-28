@@ -9,7 +9,8 @@ import {
   weave,
 } from "./aspects/trace.mjs";
 
-const { eval: evalGlobal } = globalThis;
+// eslint-disable-next-line local/strict-console
+const { eval: evalGlobal, console } = globalThis;
 
 const code = `
   const fac = (n) => n === 0 ? 1 : n * fac(n - 1);
@@ -20,6 +21,7 @@ const intrinsics = evalGlobal(generate(generateSetup({})));
 
 /** @type {any} */ (globalThis)[ADVICE_GLOBAL_VARIABLE] = createTraceAdvice(
   intrinsics["aran.global"].Reflect,
+  console.log,
 );
 
 evalGlobal(

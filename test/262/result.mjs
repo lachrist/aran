@@ -10,16 +10,16 @@ const {
  *   data: import("../../lib").Json
  * ) => data is import("./result").TestSpecifier}
  */
-const isTestSpecifier = (data) =>
+export const isTestSpecifier = (data) =>
   typeof data === "string" &&
   (data.endsWith("@none") || data.endsWith("@use-strict"));
 
 /**
  * @type {(
  *   data: import("../../lib").Json
- * ) => data is import("./result").ResultEntry}
+ * ) => data is import("./result").CompactResult}
  */
-const isCompactResult = (data) =>
+export const isCompactResult = (data) =>
   isArray(data) && data.length > 0 && (data[0] === "in" || data[0] === "ex");
 
 /**

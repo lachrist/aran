@@ -1,19 +1,21 @@
+/* eslint-disable local/no-deep-import */
+
 import { argv, stdout } from "node:process";
-import { isStageName } from "../staging/index.mjs";
-import { loadResultArray } from "./load.mjs";
+import { isStageName } from "../staging/stage-name-predicate.mjs";
 import { isExcludeResult } from "../result.mjs";
+import { loadStageResult } from "../staging/result.mjs";
 
 const { undefined, Object, Math } = globalThis;
 
 /**
  * @type {(
- *   results: import("../result").ResultEntry[],
- * ) => import("./summary").Summary}
+ *   results: AsyncIterable<import("../result").Result>,
+ * ) => Promise<import("./report").Report>}
  */
-const summarize = (entries) => {
-  /** @type {import("./summary").Summary} */
-  const summary = {
-    count: entries.length,
+const aggregate = async (results) => {
+  /** @type {import("./report").Report} */
+  const report = {
+    count: 0,
     exclusion: {
       count: 0,
       repartition: /** @type {any} */ ({ __proto__: null }),
@@ -33,32 +35,33 @@ const summarize = (entries) => {
       count: 0,
     },
   };
-  for (const [_, result] of entries) {
+  for await (const result of results) {
+    report.count++;
     if (isExcludeResult(result)) {
-      summary.exclusion.count++;
+      report.exclusion.count++;
       for (const tag of result) {
-        summary.exclusion.repartition[tag] =
-          (summary.exclusion.repartition[tag] ?? 0) + 1;
+        report.exclusion.repartition[tag] =
+          (report.exclusion.repartition[tag] ?? 0) + 1;
       }
     } else {
       const { actual, expect } = result;
       if (expect.length > 0) {
         const negative =
-          actual === null ? summary.false_negative : summary.true_negative;
+          actual === null ? report.false_negative : report.true_negative;
         negative.count += 1;
         for (const tag of expect) {
           negative.repartition[tag] = (negative.repartition[tag] ?? 0) + 1;
         }
       } else {
         if (actual === null) {
-          summary.true_positive.count++;
+          report.true_positive.count++;
         } else {
-          summary.false_positive.count++;
+          report.false_positive.count++;
         }
       }
     }
   }
-  return summary;
+  return report;
 };
 
 /**
@@ -102,7 +105,7 @@ const compileShowEntry =
 
 /**
  * @type {(
- *   summary: import("./summary").Summary,
+ *   summary: import("./report").Report,
  * ) => string}
  */
 const showSummary = (summary) =>
@@ -134,7 +137,7 @@ const main = async (argv) => {
   if (argv.length === 1) {
     const stage = argv[0];
     if (isStageName(stage)) {
-      stdout.write(showSummary(summarize(await loadResultArray(stage))));
+      stdout.write(showSummary(await aggregate(loadStageResult(stage))));
       stdout.write("\n");
     } else {
       stdout.write(`invalid stage: ${stage}\n`);
