@@ -86,7 +86,7 @@ globalThis._ARAN_INTRINSIC_ = {
     return object[key];
   },
   ["aran.deadzone"]: globalThis.Symbol("deadzone"),
-  ["aran.listRest"]: ((apply) =>
+  ["aran.listIteratorRest"]: ((apply) =>
     function listRest(iterator, next) {
       const rest = [];
       let step = apply(next, iterator, []);

@@ -162,7 +162,7 @@ export type ExtraIntrinsicRecord = {
     exclusion: { [key in PropertyKey]: null },
   ) => object;
   "aran.listForInKey": (object: unknown) => string[];
-  "aran.listRest": <X>(
+  "aran.listIteratorRest": <X>(
     iterator: Iterator<X>,
     next: (result: unknown) => IteratorResult<X>,
   ) => X[];

@@ -16,7 +16,7 @@ export type IntrinsicFunctionNaming = {
   "aran.sliceObject": "sliceObject";
   "aran.toArgumentList": "toArgumentList";
   "aran.listForInKey": "listForInKey";
-  "aran.listRest": "listIteratorRest";
+  "aran.listIteratorRest": "listIteratorRest";
   "aran.toPropertyKey": "toPropertyKey";
   "aran.retropileEval": "retropileEvalCode";
   "aran.transpileEval": "transpileEvalCode";
