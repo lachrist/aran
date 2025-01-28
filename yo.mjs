@@ -85,7 +85,7 @@ globalThis._ARAN_INTRINSIC_ = {
   ["aran.getValueProperty"]: function get(object, key) {
     return object[key];
   },
-  ["aran.deadzone"]: globalThis.Symbol("deadzone"),
+  ["aran.deadzone_symbol"]: globalThis.Symbol("deadzone"),
   ["aran.listIteratorRest"]: ((apply) =>
     function listRest(iterator, next) {
       const rest = [];

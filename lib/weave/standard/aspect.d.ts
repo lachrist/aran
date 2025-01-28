@@ -119,7 +119,7 @@ export type AspectTyping<atom extends Atom, runtime extends Runtime> = {
    * Called before entering any block. It provides the initial values of the
    * scope frame of the current block. Parameters such as `catch.error` may have
    * an arbitrary initial value but regular variables can initially only be
-   * `undefined` or the intrinsic symbol `aran.deadzone`.
+   * `undefined` or the intrinsic symbol `aran.deadzone_symbol`.
    */
   "block@declaration": {
     pointcut: (kind: ControlKind, tag: atom["Tag"]) => boolean;
