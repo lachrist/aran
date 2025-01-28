@@ -168,14 +168,14 @@ const indentControl = (indent) => /** @type {Indent} */ (`${indent}.`);
 /**
  * @param {{
  *   apply: (
- *     callee: import("./track-origin").Value,
- *     that: import("./track-origin").Value,
- *     input: import("./track-origin").Value[],
- *   ) => import("./track-origin").Value,
+ *     callee: Value,
+ *     that: Value,
+ *     input: Value[],
+ *   ) => Value,
  *   construct: (
- *     callee: import("./track-origin").Value,
- *     input: import("./track-origin").Value[],
- *   ) => import("./track-origin").Value,
+ *     callee: Value,
+ *     input: Value[],
+ *   ) => Value,
  * }} Reflect
  * @param {(message: string) => void} log
  * @returns {import("aran").StandardAdvice<Atom & {

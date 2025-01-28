@@ -20,20 +20,19 @@ globalThis.ADVICE = {
   },
 };
 
-globalThis.eval(astring.generate(aran.generateSetup()));
-
 globalThis.eval(
   astring.generate(
     aran.instrument(
       {
-        kind: "script",
+        kind: "eval",
         situ: { type: "global" },
         path: "main",
         root: acorn.parse(target, { ecmaVersion: 2024, sourceType: "script" }),
       },
       {
-        advice_variable: "ADVICE",
-        standard_pointcut: ["apply@around"],
+        mode: "standalone",
+        advice_global_variable: "ADVICE",
+        pointcut: ["apply@around"],
       },
     ),
   ),
