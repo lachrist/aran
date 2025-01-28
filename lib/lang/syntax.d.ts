@@ -138,7 +138,10 @@ export type ExtraIntrinsicRecord = {
   "aran.writeGlobalStrict": (name: string, value: unknown) => boolean;
   "aran.writeGlobalSloppy": (name: string, value: unknown) => boolean;
   "aran.record": Record<string, unknown>;
-  "aran.unary": (operator: string, argument: unknown) => unknown;
+  "aran.performUnaryOperation": (
+    operator: string,
+    argument: unknown,
+  ) => unknown;
   "aran.binary": (operator: string, left: unknown, right: unknown) => unknown;
   "aran.throw": (value: unknown) => never;
   "aran.get": (object: unknown, key: unknown) => unknown;

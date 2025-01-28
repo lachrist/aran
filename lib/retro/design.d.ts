@@ -62,7 +62,7 @@ export type ObjectDesign = Expression & {
 export type UnaryDesign = Expression & {
   callee: Expression & {
     type: "IntrinsicExpression";
-    intrinsic: "aran.unary";
+    intrinsic: "aran.performUnaryOperation";
   };
   this: Expression & {
     type: "PrimitiveExpression";
@@ -79,7 +79,7 @@ export type UnaryDesign = Expression & {
 export type BinaryDesign = Expression & {
   callee: Expression & {
     type: "IntrinsicExpression";
-    intrinsic: "aran.unary";
+    intrinsic: "aran.performUnaryOperation";
   };
   this: Expression & {
     type: "PrimitiveExpression";

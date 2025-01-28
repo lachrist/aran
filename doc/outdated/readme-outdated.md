@@ -230,7 +230,7 @@ function.
   - `output :: estree.Program | string`: The weaved code whose format depends on
     the `format` option.
 
-- **`result = aran.unary(operator, argument)`**
+- **`result = aran.performUnaryOperation(operator, argument)`**
 
   Performs a unary operation as expected by the `unary` trap. This function can
   be implemented as easily as `eval(operator+" argument")` but we used a boring

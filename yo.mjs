@@ -16,7 +16,7 @@ globalThis._ARAN_INTRINSIC_ = {
         "aran.retropileEval must be overriden to support direct eval calls",
       );
     })(globalThis),
-  ["aran.unary"]: function unary(operator, argument) {
+  ["aran.performUnaryOperation"]: function unary(operator, argument) {
     switch (operator) {
       case "+":
         return +argument;
