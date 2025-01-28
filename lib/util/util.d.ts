@@ -25,3 +25,5 @@ export type KeyOfUnion<T> = T extends T ? keyof T : never;
 type GetDefault<O, K extends keyof O, D> = O extends { [k in K]: infer V }
   ? V
   : D;
+
+export type AssertNever<_X extends never> = never;
