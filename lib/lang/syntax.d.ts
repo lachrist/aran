@@ -131,7 +131,7 @@ export type ExtraIntrinsicRecord = {
     hash: string | number,
   ) => Program<Atom>;
   "aran.retropileEval": (aran: Program<Atom>) => string;
-  "aran.declareGlobal": (name: string) => void;
+  "aran.declareGlobalVariable": (name: string) => void;
   "aran.readGlobalVariable": (name: string) => unknown;
   "aran.typeofGlobalVariable": (name: string) => string;
   "aran.discardGlobalVariable": (name: string) => boolean;

@@ -232,7 +232,7 @@ globalThis._ARAN_INTRINSIC_ = {
     globalThis.Reflect.getPrototypeOf(async function* () {}.prototype),
   ["aran.GeneratorFunction.prototype.prototype"]:
     globalThis.Reflect.getPrototypeOf(function* () {}.prototype),
-  ["aran.declareGlobal"]: (({ eval: global_eval }) =>
+  ["aran.declareGlobalVariable"]: (({ eval: global_eval }) =>
     function declareGlobal(variables) {
       return global_eval("var " + variables + ";");
     })(globalThis),
