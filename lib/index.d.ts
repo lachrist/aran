@@ -219,7 +219,7 @@ export class AranPointcutError extends Error {
  */
 export const generateSetup: (
   conf?: Partial<SetupConfig>,
-) => EstreeProgram<null> & { sourceType: "script" };
+) => EstreeProgram<{}> & { sourceType: "script" };
 
 ///////////////
 // Transpile //
