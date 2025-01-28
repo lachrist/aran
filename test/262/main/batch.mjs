@@ -43,9 +43,7 @@ const main = async (argv) => {
     return "usage: node test/262/batch.mjs <stage>...\n";
   }
   if (!argv.every(isStageName)) {
-    if (!argv.every(isStageName)) {
-      return `invalid stage names: ${argv.filter((arg) => !isStageName(arg))}\n`;
-    }
+    return `invalid stage names: ${argv.filter((arg) => !isStageName(arg))}\n`;
   }
   /** @type {[import("../staging/stage-name").StageName, number][]} */
   const times = [];
