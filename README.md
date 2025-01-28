@@ -8,7 +8,7 @@ testing. Aran is a JavaScript library without any dependencies that only exports
 functions for manipulating [estree](https://github.com/estree/estree). Hence,
 additional work is required to deploy program analysis onto projects.
 
-**Disclaimer** Aran started as an academic research project and is used at
+**Disclaimer:** Aran started as an academic research project and is used at
 [SOFT lab](http://soft.vub.ac.be/soft/) to support publications and run
 experiments. Aran provides extensive support for ECMAScript2024 and achieves a
 99.7% success rate against [test262](https://github.com/tc39/test262). However,
@@ -98,9 +98,9 @@ JavaScript. Aran provides the following functions:
 - [`generateSetup`](https://lachrist.github.io/aran/page/typedoc/functions/index.generateSetup.html):
   When evaluating multiple AranLang programs, the `conf.mode` option of
   `retropile` should be set to `"normal"`. This mode requires evaluating the
-  setup program produced by generateSetup before any AranLang program. If
+  setup program produced by `generateSetup` before any AranLang program. When
   evaluating only a single AranLang program, `conf.mode` can be set to
-  `"standalone"`, which does not require setup code.
+  `"standalone"`, which does not require setup.
 - [`transpile`](https://lachrist.github.io/aran/page/typedoc/functions/index.transpile.html):
   Transpile an JavaScript program to AranLang.
 - [`weaveStandard`](https://lachrist.github.io/aran/page/typedoc/functions/index.weaveStandard.html):
