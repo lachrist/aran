@@ -125,7 +125,7 @@ export type AccessorIntrinsic = keyof AccessorIntrinsicRecord;
 
 export type ExtraIntrinsicRecord = {
   "aran.global_object": typeof globalThis;
-  "aran.record": Record<string, unknown>;
+  "aran.global_declarative_record": Record<string, unknown>;
   "aran.deadzone": symbol;
   "aran.transpileEvalCode": (
     code: string,

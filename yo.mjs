@@ -1,7 +1,7 @@
 globalThis._ARAN_INTRINSIC_ = {
   __proto__: null,
   ["aran.global_object"]: globalThis,
-  ["aran.record"]: {
+  ["aran.global_declarative_record"]: {
     __proto__: null,
   },
   ["aran.transpileEvalCode"]: (({ SyntaxError: SyntaxError }) =>
