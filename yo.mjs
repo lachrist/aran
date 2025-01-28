@@ -259,7 +259,7 @@ globalThis._ARAN_INTRINSIC_ = {
       return object;
     }
   )(globalThis.Reflect.defineProperty),
-  ["aran.readGlobal"]: (({ eval: global_eval }, cache) =>
+  ["aran.readGlobalVariable"]: (({ eval: global_eval }, cache) =>
     function readGlobal(variable, additional, optimization) {
       return optimization
         ? (cache[variable] = optimization)

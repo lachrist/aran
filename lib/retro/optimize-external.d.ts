@@ -6,7 +6,7 @@ export type Target =
   | "scope.writeStrict"
   | "scope.typeof"
   | "scope.discard"
-  | "aran.readGlobal"
+  | "aran.readGlobalVariable"
   | "aran.writeGlobalStrict"
   | "aran.writeGlobalSloppy"
   | "aran.typeofGlobal"
