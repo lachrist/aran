@@ -7,8 +7,8 @@ export type Target =
   | "scope.typeof"
   | "scope.discard"
   | "aran.readGlobalVariable"
-  | "aran.writeGlobalStrict"
-  | "aran.writeGlobalSloppy"
+  | "aran.writeGlobalVariableStrict"
+  | "aran.writeGlobalVariableSloppy"
   | "aran.typeofGlobalVariable"
   | "aran.discardGlobalVariable";
 

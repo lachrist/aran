@@ -270,7 +270,7 @@ globalThis._ARAN_INTRINSIC_ = {
     })(globalThis, {
     __proto__: null,
   }),
-  ["aran.writeGlobalStrict"]: (({ eval: global_eval }, cache) =>
+  ["aran.writeGlobalVariableStrict"]: (({ eval: global_eval }, cache) =>
     function writeGlobalStrict(variable, additional, optimization) {
       return optimization
         ? (cache[variable] = optimization)
@@ -287,7 +287,7 @@ globalThis._ARAN_INTRINSIC_ = {
     })(globalThis, {
     __proto__: null,
   }),
-  ["aran.writeGlobalSloppy"]: (({ eval: global_eval }, cache) =>
+  ["aran.writeGlobalVariableSloppy"]: (({ eval: global_eval }, cache) =>
     function writeGlobalSloppy(variable, additional, optimization) {
       return optimization
         ? (cache[variable] = optimization)

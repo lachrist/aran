@@ -135,8 +135,8 @@ export type ExtraIntrinsicRecord = {
   "aran.readGlobalVariable": (name: string) => unknown;
   "aran.typeofGlobalVariable": (name: string) => string;
   "aran.discardGlobalVariable": (name: string) => boolean;
-  "aran.writeGlobalStrict": (name: string, value: unknown) => boolean;
-  "aran.writeGlobalSloppy": (name: string, value: unknown) => boolean;
+  "aran.writeGlobalVariableStrict": (name: string, value: unknown) => boolean;
+  "aran.writeGlobalVariableSloppy": (name: string, value: unknown) => boolean;
   "aran.record": Record<string, unknown>;
   "aran.performUnaryOperation": (
     operator: string,

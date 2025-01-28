@@ -4,8 +4,8 @@ import type { Intrinsic, Parameter } from "./syntax";
 export type IntrinsicFunctionNaming = {
   "aran.declareGlobal": "declareGlobalVariable";
   "aran.readGlobalVariable": "readGlobalVariable";
-  "aran.writeGlobalSloppy": "writeGlobalVariableSloppy";
-  "aran.writeGlobalStrict": "writeGlobalVariableStrict";
+  "aran.writeGlobalVariableSloppy": "writeGlobalVariableSloppy";
+  "aran.writeGlobalVariableStrict": "writeGlobalVariableStrict";
   "aran.typeofGlobalVariable": "typeofGlobalVariable";
   "aran.discardGlobalVariable": "discardGlobalVariable";
   "aran.performUnaryOperation": "performUnaryOperation";
