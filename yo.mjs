@@ -4,10 +4,10 @@ globalThis._ARAN_INTRINSIC_ = {
   ["aran.record"]: {
     __proto__: null,
   },
-  ["aran.transpileEval"]: (({ SyntaxError: SyntaxError }) =>
+  ["aran.transpileEvalCode"]: (({ SyntaxError: SyntaxError }) =>
     function transpileEval(code, situ) {
       throw new SyntaxError(
-        "aran.transpileEval must be overriden to support direct eval calls",
+        "aran.transpileEvalCode must be overriden to support direct eval calls",
       );
     })(globalThis),
   ["aran.retropileEvalCode"]: (({ SyntaxError: SyntaxError }) =>

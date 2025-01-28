@@ -52,7 +52,7 @@ export const compileAran = (config, toEvalPath) => {
       /** @type {import("../$262").$262} */
       const $262 = /** @type {any} */ (intrinsics["aran.global"]).$262;
       const { SyntaxError } = intrinsics["aran.global"];
-      intrinsics["aran.transpileEval"] = (code, situ, hash) => {
+      intrinsics["aran.transpileEvalCode"] = (code, situ, hash) => {
         try {
           return transpile(
             {
