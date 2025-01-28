@@ -9,7 +9,7 @@ export type Target =
   | "aran.readGlobalVariable"
   | "aran.writeGlobalStrict"
   | "aran.writeGlobalSloppy"
-  | "aran.typeofGlobal"
+  | "aran.typeofGlobalVariable"
   | "aran.discardGlobal";
 
 export type External = {

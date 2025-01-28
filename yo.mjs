@@ -304,7 +304,7 @@ globalThis._ARAN_INTRINSIC_ = {
     })(globalThis, {
     __proto__: null,
   }),
-  ["aran.typeofGlobal"]: (({ eval: global_eval }, cache) =>
+  ["aran.typeofGlobalVariable"]: (({ eval: global_eval }, cache) =>
     function typeofGlobal(variable, additional, optimization) {
       return optimization
         ? (cache[variable] = optimization)
