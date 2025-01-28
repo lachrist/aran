@@ -18,7 +18,7 @@ const code = `
 const intrinsics = evalGlobal(generate(generateSetup({})));
 
 /** @type {any} */ (globalThis)[ADVICE_GLOBAL_VARIABLE] = createTraceAdvice(
-  intrinsics["aran.global"].Reflect,
+  intrinsics["aran.global_object"].Reflect,
   console.log,
 );
 

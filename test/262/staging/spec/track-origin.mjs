@@ -43,10 +43,10 @@ export default {
     const { intrinsics } = setup(context);
     const advice = createTrackOriginAdvice(
       /** @type {{apply: any, construct: any}} */ (
-        intrinsics["aran.global"].Reflect
+        intrinsics["aran.global_object"].Reflect
       ),
     );
-    defineProperty(intrinsics["aran.global"], ADVICE_GLOBAL_VARIABLE, {
+    defineProperty(intrinsics["aran.global_object"], ADVICE_GLOBAL_VARIABLE, {
       // @ts-ignore
       __proto__: null,
       value: advice,

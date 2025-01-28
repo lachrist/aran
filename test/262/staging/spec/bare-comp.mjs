@@ -113,7 +113,7 @@ const toAdviceInit = (name, tag) => ({
       arguments: [
         {
           type: "IntrinsicExpression",
-          intrinsic: "aran.global",
+          intrinsic: "aran.global_object",
           tag,
         },
         {
@@ -166,7 +166,7 @@ const compileFunctionCode = (input) => {
  * }}
  */
 const compileAdvice = (intrinsics) => {
-  const global = intrinsics["aran.global"];
+  const global = intrinsics["aran.global_object"];
   const globals = {
     apply: global.Reflect.apply,
     construct: global.Reflect.construct,
@@ -644,7 +644,7 @@ export default {
     const advice = compileAdvice(intrinsics);
     for (let index = 0; index < ADVICE.length; index += 1) {
       const name = ADVICE[index];
-      defineProperty(intrinsics["aran.global"], toAdviceGlobal(name), {
+      defineProperty(intrinsics["aran.global_object"], toAdviceGlobal(name), {
         // @ts-ignore
         __proto__: null,
         value: advice[name],

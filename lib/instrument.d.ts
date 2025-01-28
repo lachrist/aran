@@ -27,9 +27,8 @@ export type Config<
      */
     initial_state: GetDefault<param, "InitialState", Json>;
     /**
-     * The pointcut for the standard weaving API. Either `standard_pointcut` or
-     * `flexible_pointcut` should be defined but not both.
-     * @defaultValue `null`
+     * The pointcut for the standard weaving API.
+     * @defaultValue `[]`
      */
     pointcut: StandardPointcut<param>;
   };

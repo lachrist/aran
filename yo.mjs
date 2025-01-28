@@ -1,6 +1,6 @@
 globalThis._ARAN_INTRINSIC_ = {
   __proto__: null,
-  ["aran.global"]: globalThis,
+  ["aran.global_object"]: globalThis,
   ["aran.record"]: {
     __proto__: null,
   },

@@ -124,7 +124,9 @@ export type AccessorIntrinsicRecord = {
 export type AccessorIntrinsic = keyof AccessorIntrinsicRecord;
 
 export type ExtraIntrinsicRecord = {
-  "aran.global": typeof globalThis;
+  "aran.global_object": typeof globalThis;
+  "aran.record": Record<string, unknown>;
+  "aran.deadzone": symbol;
   "aran.transpileEvalCode": (
     code: string,
     situ: string,
@@ -137,7 +139,6 @@ export type ExtraIntrinsicRecord = {
   "aran.discardGlobalVariable": (name: string) => boolean;
   "aran.writeGlobalVariableStrict": (name: string, value: unknown) => boolean;
   "aran.writeGlobalVariableSloppy": (name: string, value: unknown) => boolean;
-  "aran.record": Record<string, unknown>;
   "aran.performUnaryOperation": (
     operator: string,
     argument: unknown,
@@ -149,7 +150,6 @@ export type ExtraIntrinsicRecord = {
   ) => unknown;
   "aran.throwException": (value: unknown) => never;
   "aran.getValueProperty": (object: unknown, key: unknown) => unknown;
-  "aran.deadzone": symbol;
   // https://262.ecma-international.org/14.0#sec-topropertykey
   "aran.toPropertyKey": (value: unknown) => string | symbol;
   "aran.isConstructor": (value: unknown) => boolean;

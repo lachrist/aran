@@ -707,7 +707,7 @@ export default {
   listLateNegative: (_test, _error) => [],
   setup: (context) => {
     const { intrinsics } = setup(context);
-    const global = intrinsics["aran.global"];
+    const global = intrinsics["aran.global_object"];
     const aspect = compileAspect(/** @type {any} */ (global.Reflect));
     for (const variable of listKey(aspect)) {
       defineProperty(global, variable, {

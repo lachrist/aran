@@ -50,8 +50,8 @@ export const compileAran = (config, toEvalPath) => {
       /** @type {import("aran").IntrinsicRecord} */
       const intrinsics = /** @type {any} */ (runInContext(SETUP, context));
       /** @type {import("../$262").$262} */
-      const $262 = /** @type {any} */ (intrinsics["aran.global"]).$262;
-      const { SyntaxError } = intrinsics["aran.global"];
+      const $262 = /** @type {any} */ (intrinsics["aran.global_object"]).$262;
+      const { SyntaxError } = intrinsics["aran.global_object"];
       intrinsics["aran.transpileEvalCode"] = (code, situ, hash) => {
         try {
           return transpile(

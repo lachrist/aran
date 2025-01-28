@@ -52,7 +52,7 @@ export default {
   listLateNegative: (_test, _error) => [],
   setup: (context) => {
     const { intrinsics } = setup(context);
-    defineProperty(intrinsics["aran.global"], ADVICE_VARIABLE, {
+    defineProperty(intrinsics["aran.global_object"], ADVICE_VARIABLE, {
       // @ts-ignore
       __proto__: null,
       value: aspect[ADVICE_VARIABLE].advice,
