@@ -10,7 +10,7 @@ export type Target =
   | "aran.writeGlobalStrict"
   | "aran.writeGlobalSloppy"
   | "aran.typeofGlobalVariable"
-  | "aran.discardGlobal";
+  | "aran.discardGlobalVariable";
 
 export type External = {
   target: Target;

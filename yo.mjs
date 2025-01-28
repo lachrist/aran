@@ -315,7 +315,7 @@ globalThis._ARAN_INTRINSIC_ = {
     })(globalThis, {
     __proto__: null,
   }),
-  ["aran.discardGlobal"]: (({ eval: global_eval }, cache) =>
+  ["aran.discardGlobalVariable"]: (({ eval: global_eval }, cache) =>
     function discardGlobal(variable, additional, optimization) {
       return optimization
         ? (cache[variable] = optimization)

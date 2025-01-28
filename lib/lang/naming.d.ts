@@ -7,7 +7,7 @@ export type IntrinsicFunctionNaming = {
   "aran.writeGlobalSloppy": "writeGlobalVariableSloppy";
   "aran.writeGlobalStrict": "writeGlobalVariableStrict";
   "aran.typeofGlobalVariable": "typeofGlobalVariable";
-  "aran.discardGlobal": "discardGlobalVariable";
+  "aran.discardGlobalVariable": "discardGlobalVariable";
   "aran.performUnaryOperation": "performUnaryOperation";
   "aran.performBinaryOperation": "performBinaryOperation";
   "aran.throw": "throwException";
