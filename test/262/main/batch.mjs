@@ -14,7 +14,12 @@ const exec = (stage) =>
     const start = Date.now();
     const child = spawn(
       "node",
-      ["--experimental-vm-modules", "--expose-gc", "test/262/exec.mjs", stage],
+      [
+        "--experimental-vm-modules",
+        "--expose-gc",
+        "test/262/main/exec.mjs",
+        stage,
+      ],
       {
         stdio: ["ignore", "inherit", "inherit"],
       },
