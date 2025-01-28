@@ -47,6 +47,7 @@ globalThis.eval(
     instrument(
       {
         kind: "eval",
+        path: "main.js",
         root: parse("console.log('Hello!');", { ecmaVersion: 2024 }),
       },
       {
@@ -59,34 +60,62 @@ globalThis.eval(
 );
 ```
 
+```
+{
+  callee: [Function: readGlobalVariable],
+  this_arg: undefined,
+  args: [ 'console' ],
+  location: 'main.js#$.body.0.expression.callee.object'
+}
+{
+  callee: [Function: getValueProperty],
+  this_arg: undefined,
+  args: [
+    Object [console],
+    'log'
+  ],
+  location: 'main.js#$.body.0.expression.callee'
+}
+{
+  callee: [Function: log],
+  this_arg: Object [console],
+  args: [ 'Hello!' ],
+  location: 'main.js#$.body.0.expression'
+}
+Hello!
+```
+
 ## API
 
 [typedoc](https://lachrist.github.io/aran/page/typedoc/modules/index.html)
 
 Aran simplifies the instrumentation of JavaScript code by transpiling it into a
-minimal variant called AranLang. Instrumentations is performed on AranLang
-before transpiling it back to JavaScript. Aran provides the following functions:
+minimal variant called
+[AranLang](https://lachrist.github.io/aran/page/typedoc/typedoc/modules/lang_syntax.html).
+Instrumentation is performed on AranLang before transpiling it back to
+JavaScript. Aran provides the following functions:
 
 - [`generateSetup`](https://lachrist.github.io/aran/page/typedoc/functions/index.generateSetup.html):
-  Creates an `estree.Program` that should be evaluated before any AranLang
-  programs.
+  When evaluating multiple AranLang programs, the `conf.mode` option of
+  `retropile` should be set to `"normal"`. This mode requires evaluating the
+  setup program produced by generateSetup before any AranLang program. If
+  evaluating only a single AranLang program, `conf.mode` can be set to
+  `"standalone"`, which does not require setup code.
 - [`transpile`](https://lachrist.github.io/aran/page/typedoc/functions/index.transpile.html):
-  Transpile an AranLang program to JavaScript.
+  Transpile an JavaScript program to AranLang.
 - [`weaveStandard`](https://lachrist.github.io/aran/page/typedoc/functions/index.weaveStandard.html):
-  Weave a standard aspect into an AranLang program.
+  Weave a
+  [standard aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_standard_aspect.AspectTyping.html)
+  into an AranLang program.
 - [`weaveFlexible`](https://lachrist.github.io/aran/page/typedoc/functions/index.weaveFlexible.html):
-  Weave a flexible aspect into an AranLang program.
+  Weave a
+  [flexible aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_flexible_aspect.AspectTyping.html)
+  into an AranLang program.
 - [`retropile`](https://lachrist.github.io/aran/page/typedoc/functions/index.retropile.html):
   Transpile an AranLang program back to JavaScript.
 - [`instrument`](https://lachrist.github.io/aran/page/typedoc/functions/index.instrument.html):
-  Chain together `transpile`, `weaveStandard` and `retropile` to instrument a
-  program.
-
-Other types of interest are:
-
-- [AranLang](https://lachrist.github.io/aran/page/typedoc/modules/lang_syntax.html)
-- [Standard Aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_standard_aspect.AspectTyping.html)
-- [Flexible Aspect](https://lachrist.github.io/aran/page/typedoc/types/weave_flexible_aspect.AspectTyping.html)
+  Instrument a JavaScript program by chaining: `transpile`, `weaveStandard`, and
+  `retropile`.
 
 ## Live Demo
 
