@@ -102,7 +102,7 @@ const toAdviceInit = (name, tag) => ({
       type: "ApplyExpression",
       callee: {
         type: "IntrinsicExpression",
-        intrinsic: "aran.get",
+        intrinsic: "aran.getValueProperty",
         tag,
       },
       this: {

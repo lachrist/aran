@@ -11,7 +11,7 @@ export type IntrinsicFunctionNaming = {
   "aran.performUnaryOperation": "performUnaryOperation";
   "aran.performBinaryOperation": "performBinaryOperation";
   "aran.throwException": "throwException";
-  "aran.get": "getValueProperty";
+  "aran.getValueProperty": "getValueProperty";
   "aran.isConstructor": "isConstructor";
   "aran.sliceObject": "sliceObject";
   "aran.toArgumentList": "toArgumentList";

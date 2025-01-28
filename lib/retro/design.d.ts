@@ -5,7 +5,7 @@ export type MemberDesign = Expression & {
   type: "ApplyExpression";
   callee: Expression & {
     type: "IntrinsicExpression";
-    intrinsic: "aran.get";
+    intrinsic: "aran.getValueProperty";
   };
   this: Expression & {
     type: "PrimitiveExpression";

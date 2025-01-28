@@ -148,7 +148,7 @@ export type ExtraIntrinsicRecord = {
     right: unknown,
   ) => unknown;
   "aran.throwException": (value: unknown) => never;
-  "aran.get": (object: unknown, key: unknown) => unknown;
+  "aran.getValueProperty": (object: unknown, key: unknown) => unknown;
   "aran.deadzone": symbol;
   // https://262.ecma-international.org/14.0#sec-topropertykey
   "aran.toPropertyKey": (value: unknown) => string | symbol;

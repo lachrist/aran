@@ -82,7 +82,7 @@ globalThis._ARAN_INTRINSIC_ = {
         return left ** right;
     }
   },
-  ["aran.get"]: function get(object, key) {
+  ["aran.getValueProperty"]: function get(object, key) {
     return object[key];
   },
   ["aran.deadzone"]: globalThis.Symbol("deadzone"),
