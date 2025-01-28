@@ -10,7 +10,7 @@ export type IntrinsicFunctionNaming = {
   "aran.discardGlobalVariable": "discardGlobalVariable";
   "aran.performUnaryOperation": "performUnaryOperation";
   "aran.performBinaryOperation": "performBinaryOperation";
-  "aran.throw": "throwException";
+  "aran.throwException": "throwException";
   "aran.get": "getValueProperty";
   "aran.isConstructor": "isConstructor";
   "aran.sliceObject": "sliceObject";
