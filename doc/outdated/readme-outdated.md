@@ -240,7 +240,7 @@ function.
   - `arguments :: *`
   - `result :: primitive`
 
-- **`result = aran.binary(operator, left, right)`**
+- **`result = aran.performBinaryOperation(operator, left, right)`**
 
   Performs a binary operation as expected by the `binary` trap. This function
   can be implemented as easily as `eval("left "+operator+" right")` but we used

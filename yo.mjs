@@ -34,7 +34,7 @@ globalThis._ARAN_INTRINSIC_ = {
         return true;
     }
   },
-  ["aran.binary"]: function binary(operator, left, right) {
+  ["aran.performBinaryOperation"]: function binary(operator, left, right) {
     switch (operator) {
       case "==":
         return left == right;

@@ -142,7 +142,11 @@ export type ExtraIntrinsicRecord = {
     operator: string,
     argument: unknown,
   ) => unknown;
-  "aran.binary": (operator: string, left: unknown, right: unknown) => unknown;
+  "aran.performBinaryOperation": (
+    operator: string,
+    left: unknown,
+    right: unknown,
+  ) => unknown;
   "aran.throw": (value: unknown) => never;
   "aran.get": (object: unknown, key: unknown) => unknown;
   "aran.deadzone": symbol;
