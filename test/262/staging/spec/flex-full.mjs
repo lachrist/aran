@@ -1,5 +1,3 @@
-/* eslint-disable local/no-jsdoc-typedef */
-
 import { weaveFlexible } from "aran";
 import { compileAran } from "../aran.mjs";
 import { AranTestError } from "../../error.mjs";

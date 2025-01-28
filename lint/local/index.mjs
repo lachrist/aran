@@ -1,5 +1,3 @@
-/* eslint-disable local/no-deep-import */
-
 import Curly from "./rules/curly.mjs";
 import LiteralLocation from "./rules/literal-location.mjs";
 import LiteralUnique from "./rules/literal-unique.mjs";

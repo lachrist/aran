@@ -1,5 +1,3 @@
-/* eslint-disable local/no-deep-import */
-
 import { argv, stdout } from "node:process";
 import { isStageName } from "../staging/stage-name-predicate.mjs";
 import { isExcludeResult } from "../result.mjs";

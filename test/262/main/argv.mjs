@@ -1,5 +1,3 @@
-/* eslint-disable local/no-deep-import */
-
 import { isStageName } from "../staging/stage-name-predicate.mjs";
 
 /**

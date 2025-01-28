@@ -1,5 +1,3 @@
-/* eslint-disable local/no-deep-import */
-
 import { fileURLToPath } from "url";
 import { AranExecError } from "../error.mjs";
 import { loadStageResult } from "../staging/result.mjs";
@@ -139,7 +137,6 @@ const main = async (argv) => {
   const status = await main(argv.slice(2));
   if (status !== null) {
     stderr.write(status);
-    // eslint-disable-next-line logical-assignment-operators
     process.exitCode ||= 1;
   }
 }

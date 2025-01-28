@@ -1,6 +1,3 @@
-/* eslint-disable local/no-deep-import */
-/* eslint-disable logical-assignment-operators */
-
 import { stdout, stderr, argv } from "node:process";
 import { loadCursor } from "./cursor.mjs";
 import { compileStage } from "../staging/stage.mjs";

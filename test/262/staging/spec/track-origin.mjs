@@ -1,4 +1,3 @@
-/* eslint-disable local/no-deep-import */
 import { compileAran } from "../aran.mjs";
 import {
   ADVICE_GLOBAL_VARIABLE,

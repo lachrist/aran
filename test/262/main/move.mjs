@@ -1,6 +1,3 @@
-/* eslint-disable local/no-deep-import */
-/* eslint-disable logical-assignment-operators */
-
 import { argv, stderr, stdout } from "node:process";
 import { createSignal } from "../util/index.mjs";
 import { loadCursor, saveCursor } from "./cursor.mjs";

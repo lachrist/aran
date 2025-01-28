@@ -1,5 +1,3 @@
-/* eslint-disable local/no-deep-import */
-
 import { generateSetup, transpile, retropile } from "aran";
 import { parse } from "acorn";
 import { generate } from "astring";

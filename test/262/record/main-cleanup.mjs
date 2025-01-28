@@ -1,5 +1,3 @@
-/* eslint-disable logical-assignment-operators */
-
 import { stat } from "node:fs/promises";
 import { ROOT } from "../layout.mjs";
 import { cleanup } from "./record.mjs";

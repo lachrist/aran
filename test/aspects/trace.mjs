@@ -1,5 +1,3 @@
-/* eslint-disable local/no-jsdoc-typedef */
-
 import { weaveStandard } from "aran";
 
 const { WeakMap, String, JSON, Object, undefined } = globalThis;

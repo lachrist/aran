@@ -1,4 +1,3 @@
-/* eslint-disable local/no-jsdoc-typedef */
 /* eslint-disable no-use-before-define */
 
 import { compileAran } from "../aran.mjs";

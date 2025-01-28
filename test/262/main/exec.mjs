@@ -1,5 +1,3 @@
-/* eslint-disable local/no-deep-import */
-/* eslint-disable logical-assignment-operators */
 /* eslint-disable local/no-function */
 
 import { createSignal } from "../util/index.mjs";
