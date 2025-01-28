@@ -10,10 +10,10 @@ globalThis._ARAN_INTRINSIC_ = {
         "aran.transpileEval must be overriden to support direct eval calls",
       );
     })(globalThis),
-  ["aran.retropileEval"]: (({ SyntaxError: SyntaxError }) =>
+  ["aran.retropileEvalCode"]: (({ SyntaxError: SyntaxError }) =>
     function retropileEval(aran) {
       throw new SyntaxError(
-        "aran.retropileEval must be overriden to support direct eval calls",
+        "aran.retropileEvalCode must be overriden to support direct eval calls",
       );
     })(globalThis),
   ["aran.performUnaryOperation"]: function unary(operator, argument) {

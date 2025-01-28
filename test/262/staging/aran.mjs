@@ -70,7 +70,7 @@ export const compileAran = (config, toEvalPath) => {
           });
         }
       };
-      intrinsics["aran.retropileEval"] = (root) => {
+      intrinsics["aran.retropileEvalCode"] = (root) => {
         try {
           const { content } = record({
             path: "dynamic://eval/local",

@@ -130,7 +130,7 @@ export type ExtraIntrinsicRecord = {
     situ: string,
     hash: string | number,
   ) => Program<Atom>;
-  "aran.retropileEval": (aran: Program<Atom>) => string;
+  "aran.retropileEvalCode": (aran: Program<Atom>) => string;
   "aran.declareGlobalVariable": (name: string) => void;
   "aran.readGlobalVariable": (name: string) => unknown;
   "aran.typeofGlobalVariable": (name: string) => string;
