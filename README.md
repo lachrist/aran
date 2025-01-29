@@ -47,7 +47,7 @@ globalThis.eval(
     instrument(
       {
         kind: "eval",
-        path: "main.js",
+        path: "main",
         root: parse("console.log('Hello!');", { ecmaVersion: 2024 }),
       },
       {
@@ -65,7 +65,7 @@ globalThis.eval(
   callee: [Function: readGlobalVariable],
   this_arg: undefined,
   args: [ 'console' ],
-  location: 'main.js#$.body.0.expression.callee.object'
+  location: 'main#$.body.0.expression.callee.object'
 }
 {
   callee: [Function: getValueProperty],
@@ -74,13 +74,13 @@ globalThis.eval(
     Object [console],
     'log'
   ],
-  location: 'main.js#$.body.0.expression.callee'
+  location: 'main#$.body.0.expression.callee'
 }
 {
   callee: [Function: log],
   this_arg: Object [console],
   args: [ 'Hello!' ],
-  location: 'main.js#$.body.0.expression'
+  location: 'main#$.body.0.expression'
 }
 Hello!
 ```

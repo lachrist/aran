@@ -1,31 +1,30 @@
-import { generateSetup, transpile, retropile } from "aran";
+import { generateSetup, transpile, retropile, weaveStandard } from "aran";
 import { parse } from "acorn";
 import { generate } from "astring";
 import {
-  ADVICE_GLOBAL_VARIABLE,
+  weave_config,
+  advice_global_variable,
   createTraceAdvice,
-  weave,
 } from "./aspects/trace.mjs";
 
-// eslint-disable-next-line local/strict-console
-const { eval: evalGlobal, console } = globalThis;
+const { eval: evalGlobal } = globalThis;
 
 const code = `
-  const fac = (n) => n === 0 ? 1 : n * fac(n - 1);
-  fac(3);
+  function* g () { yield 123; yield 456; }
+  Array.from(g());
 `;
 
 const intrinsics = evalGlobal(generate(generateSetup({})));
 
-/** @type {any} */ (globalThis)[ADVICE_GLOBAL_VARIABLE] = createTraceAdvice(
-  intrinsics["aran.global_object"].Reflect,
-  console.log,
+/** @type {any} */ (globalThis)[advice_global_variable] = createTraceAdvice(
+  weaveStandard,
+  /** @type {any} */ (intrinsics["aran.global_object"]),
 );
 
 evalGlobal(
   generate(
     retropile(
-      weave(
+      weaveStandard(
         transpile(
           {
             kind: "eval",
@@ -41,6 +40,7 @@ evalGlobal(
             global_declarative_record: "builtin",
           },
         ),
+        weave_config,
       ),
       {
         mode: "normal",

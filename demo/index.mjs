@@ -21,11 +21,11 @@ import {
 } from "@codemirror/language";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { javascript } from "@codemirror/lang-javascript";
-import apply_analysis_source from "./analysis-apply.txt.mjs";
-import trace_analysis_source from "./analysis-trace.txt.mjs";
-import target_source from "./target.txt.mjs";
+import apply_source from "./apply-source.mjs";
+import trace_source from "./trace-source.mjs";
+import target_source from "./target-source.mjs";
 
-const { document } = globalThis;
+const { document, Worker } = globalThis;
 
 const listExtension = () => [
   lineNumbers(),
@@ -55,8 +55,8 @@ document.getElementById("clear").addEventListener("click", (_event) => {
 });
 
 const analyses = {
-  apply: apply_analysis_source,
-  trace: trace_analysis_source,
+  apply: apply_source,
+  trace: trace_source,
 };
 
 const analysis_select = document.getElementById("analysis-select");

@@ -3,7 +3,7 @@ echo "disable jekyll" > page/.nojekyll
 
 npx typedoc
 
-npx rollup -c demo/rollup.config.js
+npx rollup -c demo/rollup.config.mjs
 cp demo/index.html page/demo
 
 git branch -D page

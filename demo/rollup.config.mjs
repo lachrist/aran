@@ -1,5 +1,4 @@
 import resolve from "@rollup/plugin-node-resolve";
-import { string } from "rollup-plugin-string";
 
 export default [
   {
@@ -8,12 +7,7 @@ export default [
       file: "./page/demo/index.mjs",
       format: "module",
     },
-    plugins: [
-      resolve(),
-      string({
-        include: ["**/*.txt.mjs"],
-      }),
-    ],
+    plugins: [resolve()],
   },
   {
     input: "./demo/worker.mjs",

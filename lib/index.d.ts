@@ -268,9 +268,10 @@ export const transpile: <
  * pointcut.
  */
 export const weaveStandard: <
-  conf_param extends Atom & { Tag: Json },
+  tag extends Json,
+  conf_param extends Atom & { Tag: tag },
   arg_atom extends Pick<conf_param, keyof Atom>,
-  res_atom extends Atom & { Tag: arg_atom["Tag"] },
+  res_atom extends Atom & { Tag: tag },
 >(
   root: Program<arg_atom>,
   conf?: null | undefined | Partial<StandardWeaveConfig<conf_param>>,

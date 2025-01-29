@@ -1,13 +1,32 @@
-import { weaveStandard } from "aran";
-
-const { WeakMap, String, JSON, Object, undefined } = globalThis;
+const {
+  WeakMap,
+  Error,
+  String,
+  JSON: { stringify },
+  Object: { entries },
+  undefined,
+} = globalThis;
 
 /**
  * @type {<K extends PropertyKey, V>(
  *   o: {[k in K]?: V},
  * ) => [K, V][]}
  */
-const listEntry = Object.entries;
+const listEntry = entries;
+
+/**
+ * @type {<X>(
+ *   array: ArrayLike<X>,
+ * ) => X[]}
+ */
+const copyArraylike = (input) => {
+  const copy = [];
+  const { length } = input;
+  for (let index = 0; index < length; index++) {
+    copy.push(input[index]);
+  }
+  return copy;
+};
 
 /**
  * @typedef {string & {__brand: "NodeHash"}} NodeHash
@@ -21,135 +40,233 @@ const listEntry = Object.entries;
  * }} Atom
  * @typedef {string & {__brand: "Indent"}} Indent
  * @typedef {{__brand: "Value"}} Value
+ * @typedef {{
+ *   current: number,
+ *   tagging: WeakMap<Value, number>,
+ *   getSymbolKey: (symbol: symbol) => undefined | string,
+ * }} Registery
  * @typedef {(
- *   | "setup"
- *   | "declare"
- *   | "before"
- *   | "after"
- *   | "suspend"
- *   | "resume"
- *   | "throw"
- *   | "teardown"
- *   | "break"
- *   | "apply"
- *   | "construct"
- *   | "return"
- *   | "test"
- *   | "eval"
- *   | "await"
- *   | "resolve"
- *   | "yield"
- *   | "yield*"
- *   | "read"
- *   | "write"
- *   | "import"
- *   | "export"
- *   | "intrinsic"
- *   | "primitive"
- *   | "drop"
- *   | "closure"
- * )} TrapName
+ *   | Exclude<import("aran").StandardAspectKind, (
+ *       | "apply@around"
+ *       | "construct@around"
+ *       | "block@declaration-overwrite"
+ *       | "program-block@before"
+ *       | "closure-block@before"
+ *       | "segment-block@before"
+ *     )>
+ *   | "apply@before"
+ *   | "apply@after"
+ *   | "construct@before"
+ *   | "construct@after"
+ * )} TraceKind
+ * @typedef {{
+ *   type: "call",
+ *   callee: Value,
+ *   that: Value | undefined,
+ *   input: Value[],
+ * } | {
+ *   type: "intercept",
+ *   target: Value,
+ * } | {
+ *   type: "frame",
+ *   bindings: [string, Value][],
+ * } | {
+ *   type: "void",
+ * }} TracePayload
+ * @typedef {{
+ *   kind: TraceKind,
+ *   info: null | string,
+ *   hash: NodeHash,
+ *   data: TracePayload,
+ * }} Trace
  */
 
-const MAX_STRING_LENGTH = 20;
+const MAX_PRINT_LENGTH = 20;
 
 const NAME_PADDING = 10;
 
-const BODY_PADDING = 20;
+const PREFIX = " ".repeat(NAME_PADDING);
 
-const TAIL_PADDING = 20;
+const BEGIN = ">>";
+const END = "<<";
+const CALL = "->";
+const RETURN = "<-";
+const CONSUME = "--";
+const PRODUCE = "++";
+const SUSPEND = "*>";
+const RESUME = "<*";
+const THROW = "!!";
+const BREAK = "@@";
 
 /**
- * @type {() => (
- *   value: Value,
- * ) => string}
+ * @type {{[k in TraceKind]: {
+ *   name: string,
+ *   sort: string,
+ * }}}
  */
-const compileShow = () => {
-  let current_tag = 1;
-  /**
-   * @type {WeakMap<object, number>}
-   */
-  const tagging = new WeakMap();
-  return (value) => {
-    if (
-      typeof value === "function" ||
-      (typeof value === "object" && value !== null)
-    ) {
-      let tag = tagging.get(value);
-      if (tag === undefined) {
-        tag = current_tag++;
-        tagging.set(value, tag);
-      }
-      return `#${tag}`;
-    } else if (typeof value === "string") {
-      if (/** @type {string} */ (value).length > 20) {
-        return JSON.stringify(value).slice(0, MAX_STRING_LENGTH) + "...";
-      } else {
-        return JSON.stringify(value);
-      }
-    } else if (typeof value === "symbol") {
-      const name = /** @type {symbol} */ (value).description;
-      return typeof name === "string" ? `<symbol ${name}>` : "<symbol>";
-    } else {
-      return String(value);
-    }
-  };
+const PARSING = {
+  "block@setup": { name: "setup", sort: BEGIN },
+  "block@teardown": { name: "teardown", sort: END },
+  "block@declaration": { name: "enter", sort: BEGIN },
+  "segment-block@after": { name: "leave", sort: END },
+  "closure-block@after": { name: "leave", sort: END },
+  "program-block@after": { name: "leave", sort: END },
+  "generator-block@suspension": { name: "suspend", sort: SUSPEND },
+  "generator-block@resumption": { name: "resume", sort: RESUME },
+  "block@throwing": { name: "throw", sort: THROW },
+  "yield@before": { name: "yield", sort: SUSPEND },
+  "yield@after": { name: "resume", sort: RESUME },
+  "await@before": { name: "await", sort: SUSPEND },
+  "await@after": { name: "resolve", sort: RESUME },
+  "break@before": { name: "break", sort: BREAK },
+  "eval@before": { name: "eval", sort: CALL },
+  "eval@after": { name: "return", sort: RETURN },
+  "apply@before": { name: "apply", sort: CALL },
+  "apply@after": { name: "return", sort: RETURN },
+  "construct@before": { name: "construct", sort: CALL },
+  "construct@after": { name: "return", sort: RETURN },
+  "primitive@after": { name: "primitive", sort: PRODUCE },
+  "intrinsic@after": { name: "intrinsic", sort: PRODUCE },
+  "import@after": { name: "import", sort: PRODUCE },
+  "closure@after": { name: "closure", sort: PRODUCE },
+  "read@after": { name: "read", sort: PRODUCE },
+  "test@before": { name: "test", sort: CONSUME },
+  "drop@before": { name: "drop", sort: CONSUME },
+  "export@before": { name: "export", sort: CONSUME },
+  "write@before": { name: "write", sort: CONSUME },
 };
 
 /**
  * @type {(
- *   show: (value: Value) => string,
- * ) => (
- *   entry: [string, Value],
+ *   registery: Registery,
+ *   value: Value,
  * ) => string}
  */
-const compileShowProperty =
-  (show) =>
-  ([key, val]) =>
-    `${key}: ${show(val)}`;
-
-/**
- * @type {(
- *   body: null | string,
- *   tail: null | string,
- * ) => string}
- */
-const padMain = (body, tail) => {
-  body = body ?? "";
-  if (tail === null) {
-    return body.padEnd(BODY_PADDING + TAIL_PADDING + 3);
-  } else {
-    if (body.length < BODY_PADDING) {
-      body = body.padEnd(BODY_PADDING);
-      if (tail.length < TAIL_PADDING) {
-        tail = tail.padEnd(TAIL_PADDING);
+const show = (registery, value) => {
+  if (
+    typeof value === "symbol" ||
+    typeof value === "function" ||
+    (typeof value === "object" && value !== null)
+  ) {
+    let tag = registery.tagging.get(value);
+    if (tag === undefined) {
+      tag = registery.current++;
+      try {
+        registery.tagging.set(value, tag);
+      } catch (error) {
+        // TypeError >> new WeakMap([Symbol.for('foo'), 123]);
+        if (typeof value !== "symbol") {
+          throw error;
+        }
+        const key = registery.getSymbolKey(value);
+        if (key === undefined) {
+          throw error;
+        }
+        return `<symbol ${stringify(key)}>`;
       }
     }
-    return `${body} | ${tail}`;
+    return `#${tag}`;
+  } else if (typeof value === "string") {
+    const print = stringify(value);
+    return print.length > MAX_PRINT_LENGTH
+      ? `${print.slice(0, MAX_PRINT_LENGTH)}..."`
+      : print;
+  } else {
+    return String(value);
   }
 };
 
 /**
  * @type {(
- *   log: (message: string) => void,
- *   kind: ">>" | "--" | "<<",
- * ) => (
- *   indent: Indent,
- *   name: TrapName,
- *   body: null | string,
- *   tail: null | string,
- *   hash: NodeHash,
- * ) => void}
+ *   registery: Registery,
+ *   payload: TracePayload,
+ * ) => string[]}
  */
-const compileLog = (log, kind) => (indent, name, body, tail, hash) => {
-  log(
-    `${indent}${name.padEnd(NAME_PADDING)} ${kind} ${padMain(body, tail)} @ ${hash}`,
-  );
+const formatPayload = (registery, payload) => {
+  switch (payload.type) {
+    case "void": {
+      return [];
+    }
+    case "intercept": {
+      const { target: main } = payload;
+      return [show(registery, main)];
+    }
+    case "call": {
+      const { callee, that, input } = payload;
+      const head =
+        show(registery, callee) +
+        (that === undefined ? "" : `[this=${show(registery, that)}]`);
+      if (input.length < 4) {
+        return [
+          head + "(" + input.map((value) => show(registery, value)).join(","),
+          ")",
+        ];
+      } else {
+        return [
+          head + "(",
+          ...input.map((value) => "  " + show(registery, value) + ","),
+          ")",
+        ];
+      }
+    }
+    case "frame": {
+      const { bindings } = payload;
+      if (bindings.length < 4) {
+        return [
+          "{" +
+            bindings
+              .map(({ 0: key, 1: val }) => key + ": " + show(registery, val))
+              .join(", ") +
+            "}",
+        ];
+      } else {
+        return [
+          "{",
+          ...bindings.map(
+            ({ 0: key, 1: val }) =>
+              "  " + key + ": " + show(registery, val) + ",",
+          ),
+          "}",
+        ];
+      }
+    }
+    default: {
+      throw new Error(`Invalid trace payload type: ${payload}`);
+    }
+  }
 };
 
-export const INITIAL_INDENT = /** @type {Indent} */ ("");
+/**
+ * @type {(
+ *  registery: Registery,
+ *  indent: Indent,
+ *  trace: Trace,
+ * ) => string}
+ */
+const format = (registery, indent, { kind, info, data, hash }) => {
+  const { name, sort } = PARSING[kind];
+  const lines = formatPayload(registery, data);
+  return [
+    name.padEnd(NAME_PADDING) +
+      sort +
+      (info === null ? "" : " [" + info + "]") +
+      (lines.length > 0 ? " " + lines.shift() : ""),
+    ...lines.map((line) => PREFIX + sort + " " + line),
+    PREFIX + sort + " @ " + hash,
+  ]
+    .map((line) => indent + line)
+    .join("\n");
+};
 
-export const ADVICE_GLOBAL_VARIABLE = "__aran_advice__";
+const initial_state = /** @type {Indent} */ ("");
+
+export const advice_global_variable = "__aran_advice__";
+
+export const weave_config = {
+  pointcut: true,
+  advice_global_variable,
+  initial_state,
+};
 
 /**
  * @type {(
@@ -166,19 +283,33 @@ const indentRoutine = (indent) => /** @type {Indent} */ (`${indent}|`);
 const indentControl = (indent) => /** @type {Indent} */ (`${indent}.`);
 
 /**
- * @param {{
- *   apply: (
- *     callee: Value,
- *     that: Value,
- *     input: Value[],
- *   ) => Value,
- *   construct: (
- *     callee: Value,
- *     input: Value[],
- *   ) => Value,
- * }} Reflect
- * @param {(message: string) => void} log
- * @returns {import("aran").StandardAdvice<Atom & {
+ * @type {TracePayload}
+ */
+const VOID = { type: "void" };
+
+/**
+ * @type {(
+ *   weaveStandard: import("aran").weaveStandard,
+ *   global: {
+ *     Reflect: {
+ *       apply: (
+ *         callee: Value,
+ *         that: Value,
+ *         input: Value[],
+ *       ) => Value,
+ *       construct: (
+ *         callee: Value,
+ *         input: Value[],
+ *       ) => Value,
+ *     },
+ *     Symbol: {
+ *       keyFor: (symbol: symbol) => undefined | string,
+ *     },
+ *     console: {
+ *       log: (message: string) => void,
+ *     },
+ *   },
+ * ) => import("aran").StandardAdvice<Atom & {
  *   Kind: import("aran").StandardAspectKind,
  *   State: Indent,
  *   StackValue: Value,
@@ -186,13 +317,17 @@ const indentControl = (indent) => /** @type {Indent} */ (`${indent}.`);
  *   OtherValue: Value,
  * }>}
  */
-export const createTraceAdvice = ({ apply, construct }, log) => {
-  const logProduce = compileLog(log, ">>");
-  const logConsume = compileLog(log, "<<");
-  const logNeutral = compileLog(log, "--");
-  let transit_indent = INITIAL_INDENT;
-  const show = compileShow();
-  const showProperty = compileShowProperty(show);
+export const createTraceAdvice = (
+  weaveStandard,
+  { Reflect: { apply, construct }, Symbol: { keyFor }, console: { log } },
+) => {
+  /** @type {Registery} */
+  const registery = {
+    current: 0,
+    tagging: new WeakMap(),
+    getSymbolKey: keyFor,
+  };
+  let transit_indent = initial_state;
   return {
     "block@setup": (indent, kind, hash) => {
       if (
@@ -209,174 +344,340 @@ export const createTraceAdvice = ({ apply, construct }, log) => {
         indent = indentRoutine(transit_indent);
       }
       indent = indentControl(indent);
-      logNeutral(indent, "setup", null, kind, hash);
+      log(
+        format(registery, indent, {
+          kind: "block@setup",
+          info: kind,
+          data: VOID,
+          hash,
+        }),
+      );
       return indent;
     },
     "block@declaration": (indent, kind, frame, hash) => {
-      logNeutral(
-        indent,
-        "declare",
-        `{${listEntry(frame).map(showProperty).join(", ")}}`,
-        kind,
-        hash,
+      log(
+        format(registery, indent, {
+          kind: "block@declaration",
+          info: kind,
+          data: {
+            type: "frame",
+            bindings: listEntry(frame),
+          },
+          hash,
+        }),
       );
     },
     "block@declaration-overwrite": (_indent, _kind, frame, _hash) => frame,
-    "segment-block@before": (indent, kind, _labels, hash) => {
-      logNeutral(indent, "before", null, kind, hash);
-    },
-    "closure-block@before": (indent, kind, hash) => {
-      logNeutral(indent, "before", null, kind, hash);
-    },
-    "program-block@before": (indent, kind, _head, hash) => {
-      logNeutral(indent, "before", null, kind, hash);
-    },
+    "segment-block@before": (_indent, _kind, _labels, _hash) => {},
+    "closure-block@before": (_indent, _kind, _hash) => {},
+    "program-block@before": (_indent, _kind, _head, _hash) => {},
     "generator-block@suspension": (indent, kind, hash) => {
-      logNeutral(indent, "suspend", null, kind, hash);
+      log(
+        format(registery, indent, {
+          kind: "generator-block@suspension",
+          info: kind,
+          data: VOID,
+          hash,
+        }),
+      );
     },
     "generator-block@resumption": (indent, kind, hash) => {
-      logNeutral(indent, "resume", null, kind, hash);
+      log(
+        format(registery, indent, {
+          kind: "generator-block@resumption",
+          info: kind,
+          data: VOID,
+          hash,
+        }),
+      );
     },
     "segment-block@after": (indent, kind, hash) => {
-      logNeutral(indent, "after", null, kind, hash);
+      log(
+        format(registery, indent, {
+          kind: "segment-block@after",
+          info: kind,
+          data: VOID,
+          hash,
+        }),
+      );
     },
     "closure-block@after": (indent, kind, value, hash) => {
-      logProduce(indent, "after", show(value), kind, hash);
+      log(
+        format(registery, indent, {
+          kind: "closure-block@after",
+          info: kind,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
     "program-block@after": (indent, kind, value, hash) => {
-      logProduce(indent, "after", show(value), kind, hash);
+      log(
+        format(registery, indent, {
+          kind: "program-block@after",
+          info: kind,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
     "block@throwing": (indent, kind, value, hash) => {
-      logProduce(indent, "throw", show(value), kind, hash);
+      log(
+        format(registery, indent, {
+          kind: "block@throwing",
+          info: kind,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
     "block@teardown": (indent, kind, hash) => {
-      logNeutral(indent, "teardown", null, kind, hash);
+      log(
+        format(registery, indent, {
+          kind: "block@teardown",
+          info: kind,
+          data: VOID,
+          hash,
+        }),
+      );
     },
     "break@before": (indent, label, hash) => {
-      logNeutral(indent, "break", null, label, hash);
+      log(
+        format(registery, indent, {
+          kind: "break@before",
+          info: label,
+          data: VOID,
+          hash,
+        }),
+      );
     },
     "apply@around": (indent, callee, that, input, hash) => {
       transit_indent = indent;
-      logConsume(
-        indent,
-        "apply",
-        [
-          show(callee),
-          that === undefined ? "" : `[this=${show(that)}]`,
-          `(${input.map(show).join(", ")})`,
-        ].join(""),
-        null,
-        hash,
+      log(
+        format(registery, indent, {
+          kind: "apply@before",
+          info: null,
+          data: {
+            type: "call",
+            callee,
+            that,
+            // Prevent pollution from guest realm
+            input: copyArraylike(input),
+          },
+          hash,
+        }),
       );
       const result = apply(callee, that, input);
-      logProduce(indent, "return", show(result), null, hash);
+      log(
+        format(registery, indent, {
+          kind: "apply@after",
+          info: null,
+          data: { type: "intercept", target: result },
+          hash,
+        }),
+      );
       return result;
     },
     "construct@around": (indent, callee, input, hash) => {
       transit_indent = indent;
-      logConsume(
-        indent,
-        "construct",
-        `${show(callee)}(${input.map(show).join(", ")})`,
-        null,
-        hash,
+      log(
+        format(registery, indent, {
+          kind: "construct@before",
+          info: null,
+          data: {
+            type: "call",
+            callee,
+            that: undefined,
+            // Prevent pollution from guest realm
+            input: copyArraylike(input),
+          },
+          hash,
+        }),
       );
       const result = construct(callee, input);
-      logProduce(indent, "return", show(result), null, hash);
+      log(
+        format(registery, indent, {
+          kind: "construct@after",
+          info: null,
+          data: { type: "intercept", target: result },
+          hash,
+        }),
+      );
       return result;
     },
     "test@before": (indent, kind, value, hash) => {
-      logConsume(indent, "test", show(value), kind, hash);
+      log(
+        format(registery, indent, {
+          kind: "test@before",
+          info: kind,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
     "eval@before": (indent, root, hash) => {
-      logConsume(indent, "eval", show(root), null, hash);
+      log(
+        format(registery, indent, {
+          kind: "eval@before",
+          info: null,
+          data: { type: "intercept", target: root },
+          hash,
+        }),
+      );
       return /** @type {any} */ (
         weaveStandard(/** @type {any} */ (root), {
-          advice_global_variable: ADVICE_GLOBAL_VARIABLE,
-          initial_state: indent,
           pointcut: true,
+          advice_global_variable,
+          initial_state: indent,
         })
       );
     },
     "eval@after": (indent, value, hash) => {
-      logProduce(indent, "return", show(value), null, hash);
-      return value;
-    },
-    "await@before": (indent, value, hash) => {
-      logConsume(indent, "await", show(value), null, hash);
-      return value;
-    },
-    "await@after": (indent, value, hash) => {
-      logProduce(indent, "return", show(value), null, hash);
-      return value;
-    },
-    "yield@before": (indent, delegate, value, hash) => {
-      logConsume(
-        indent,
-        delegate ? "yield*" : "yield",
-        show(value),
-        null,
-        hash,
+      log(
+        format(registery, indent, {
+          kind: "eval@after",
+          info: null,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
       );
       return value;
     },
-    "yield@after": (indent, _delegate, value, hash) => {
-      logProduce(indent, "resume", show(value), null, hash);
+    "await@before": (indent, value, hash) => {
+      log(
+        format(registery, indent, {
+          kind: "await@before",
+          info: null,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
+      return value;
+    },
+    "await@after": (indent, value, hash) => {
+      log(
+        format(registery, indent, {
+          kind: "await@after",
+          info: null,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
+      return value;
+    },
+    "yield@before": (indent, delegate, value, hash) => {
+      log(
+        format(registery, indent, {
+          kind: "yield@before",
+          info: delegate ? "delegate" : "normal",
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
+      return value;
+    },
+    "yield@after": (indent, delegate, value, hash) => {
+      log(
+        format(registery, indent, {
+          kind: "yield@after",
+          info: delegate ? "delegate" : "normal",
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
     "read@after": (indent, variable, value, hash) => {
-      logProduce(indent, "read", show(value), variable, hash);
+      log(
+        format(registery, indent, {
+          kind: "read@after",
+          info: variable,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
     "write@before": (indent, variable, value, hash) => {
-      logConsume(indent, "write", show(value), variable, hash);
+      log(
+        format(registery, indent, {
+          kind: "write@before",
+          info: variable,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
     "drop@before": (indent, value, hash) => {
-      logConsume(indent, "drop", show(value), null, hash);
+      log(
+        format(registery, indent, {
+          kind: "drop@before",
+          info: null,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
     "export@before": (indent, specifier, value, hash) => {
-      logConsume(indent, "export", show(value), specifier, hash);
+      log(
+        format(registery, indent, {
+          kind: "export@before",
+          info: specifier,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
     "import@after": (indent, source, specifier, value, hash) => {
-      logProduce(
-        indent,
-        "import",
-        show(value),
-        `${specifier} from ${source}`,
-        hash,
+      log(
+        format(registery, indent, {
+          kind: "import@after",
+          info: stringify(specifier) + " from " + stringify(source),
+          data: { type: "intercept", target: value },
+          hash,
+        }),
       );
       return value;
     },
     "intrinsic@after": (indent, name, value, hash) => {
-      logProduce(indent, "intrinsic", show(value), name, hash);
+      log(
+        format(registery, indent, {
+          kind: "intrinsic@after",
+          info: name,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
     "primitive@after": (indent, value, hash) => {
-      logProduce(indent, "primitive", show(value), null, hash);
+      log(
+        format(registery, indent, {
+          kind: "primitive@after",
+          info: null,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
     "closure@after": (indent, kind, value, hash) => {
-      logProduce(indent, "closure", show(value), kind, hash);
+      log(
+        format(registery, indent, {
+          kind: "closure@after",
+          info: kind,
+          data: { type: "intercept", target: value },
+          hash,
+        }),
+      );
       return value;
     },
   };
 };
-
-/**
- * @type {(
- *   root: import("aran").Program<Atom>,
- * ) => import("aran").Program<Atom>}
- */
-export const weave = (root) =>
-  weaveStandard(root, {
-    advice_global_variable: ADVICE_GLOBAL_VARIABLE,
-    initial_state: INITIAL_INDENT,
-    pointcut: true,
-  });

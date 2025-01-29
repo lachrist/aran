@@ -1,8 +1,9 @@
 import { compileAran } from "../aran.mjs";
+import { weaveStandard } from "aran";
 import {
-  ADVICE_GLOBAL_VARIABLE,
+  advice_global_variable,
+  weave_config,
   createTraceAdvice,
-  weave,
 } from "../../../aspects/trace.mjs";
 import { record } from "../../record/index.mjs";
 
@@ -52,13 +53,20 @@ export default {
   listLateNegative: (_test, _error) => [],
   setup: (context) => {
     const { intrinsics } = setup(context);
-    const advice = createTraceAdvice(
-      /** @type {{apply: any, construct: any}} */ (
-        intrinsics["aran.global_object"].Reflect
-      ),
-      (_message) => {},
-    );
-    defineProperty(intrinsics["aran.global_object"], ADVICE_GLOBAL_VARIABLE, {
+    const global = intrinsics["aran.global_object"];
+    const advice = createTraceAdvice(weaveStandard, {
+      Reflect: {
+        apply: /** @type {any} */ (global.Reflect.apply),
+        construct: /** @type {any} */ (global.Reflect.construct),
+      },
+      Symbol: {
+        keyFor: global.Symbol.keyFor,
+      },
+      console: {
+        log: (_message) => {},
+      },
+    });
+    defineProperty(intrinsics["aran.global_object"], advice_global_variable, {
       // @ts-ignore
       __proto__: null,
       value: advice,
@@ -73,12 +81,13 @@ export default {
       content:
         type === "main"
           ? retro(
-              weave(
+              weaveStandard(
                 trans(
                   /** @type {FilePath} */ (/** @type {string} */ (path)),
                   kind,
                   content,
                 ),
+                weave_config,
               ),
             )
           : content,
