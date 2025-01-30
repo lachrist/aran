@@ -101,11 +101,10 @@ Instrumentation is performed on AranLang before transpiling it back to
 JavaScript. Aran provides the following functions:
 
 - [`setupile`](https://lachrist.github.io/aran/page/typedoc/functions/index.setupile.html):
-  When evaluating multiple AranLang programs, the `conf.mode` option of
-  `retropile` should be set to `"normal"`. This mode requires evaluating the
-  setup program produced by `setupile` before any AranLang program. When
-  evaluating only a single AranLang program, `conf.mode` can be set to
-  `"standalone"`, which does not require setup.
+  Generates a setup program (JavaScript) that should be evaluated before any
+  AranLang program. This requirement can be removed by setting `conf.mode` of
+  `retropile` to `"standalone"` instead of `"normal"`. The standalone mode works
+  only with single-source programs.
 - [`transpile`](https://lachrist.github.io/aran/page/typedoc/functions/index.transpile.html):
   Transpile an JavaScript program to AranLang.
 - [`weaveStandard`](https://lachrist.github.io/aran/page/typedoc/functions/index.weaveStandard.html):
