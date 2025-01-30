@@ -17,10 +17,9 @@ overhead may cause issues when analyzing time-sensitive programs.
 
 ## Getting Started
 
-Aran is an [npm module](https://www.npmjs.com/package/aran) that can be
-installed with `npm install aran`. Since Aran exclusively manipulates
-[estree](https://github.com/estree/estree), it requires both a parser and a code
-generator to function. We recommend using
+Aran can be installed with `npm install aran`. Since Aran exclusively
+manipulates [estree](https://github.com/estree/estree), it requires both a
+parser and a code generator to function. We recommend using
 [acorn](https://www.npmjs.com/package/acorn) as the parser and
 [astring](https://www.npmjs.com/package/astring) as the code generator. Below is
 a minimal working example demonstrating the use of `acorn.parse`,
@@ -85,20 +84,24 @@ globalThis.eval(
 Hello!
 ```
 
+## Live Demo
+
+[live-demo](https://lachrist.github.io/aran/page/demo/index.html)
+
 ## API
 
 [typedoc](https://lachrist.github.io/aran/page/typedoc/modules/index.html)
 
 Aran simplifies the instrumentation of JavaScript code by transpiling it into a
 minimal variant called
-[AranLang](https://lachrist.github.io/aran/page/typedoc/typedoc/modules/lang_syntax.html).
+[AranLang](https://lachrist.github.io/aran/page/typedoc/modules/lang_syntax.html).
 Instrumentation is performed on AranLang before transpiling it back to
 JavaScript. Aran provides the following functions:
 
-- [`generateSetup`](https://lachrist.github.io/aran/page/typedoc/functions/index.generateSetup.html):
+- [`setupile`](https://lachrist.github.io/aran/page/typedoc/functions/index.setupile.html):
   When evaluating multiple AranLang programs, the `conf.mode` option of
   `retropile` should be set to `"normal"`. This mode requires evaluating the
-  setup program produced by `generateSetup` before any AranLang program. When
+  setup program produced by `setupile` before any AranLang program. When
   evaluating only a single AranLang program, `conf.mode` can be set to
   `"standalone"`, which does not require setup.
 - [`transpile`](https://lachrist.github.io/aran/page/typedoc/functions/index.transpile.html):
@@ -116,10 +119,6 @@ JavaScript. Aran provides the following functions:
 - [`instrument`](https://lachrist.github.io/aran/page/typedoc/functions/index.instrument.html):
   Instrument a JavaScript program by chaining: `transpile`, `weaveStandard`, and
   `retropile`.
-
-## Live Demo
-
-[live-demo](https://lachrist.github.io/aran/page/demo/index.html)
 
 ## Known Issues
 
@@ -140,16 +139,15 @@ instrumented programs to no behave as their pre-instrumented version.
 - [Wrong realm for default prototype](./doc/issues/wrong-realm-for-default-prototype.md)
 - [Wrong this parameter in with in eval](./doc/issues/wrong-this-parameter-in-with-in-eval.md)
 
-In practice, the issue that is most susceptible to cause a program to behave
-differentially is
-[early script declaration](./doc/issues/early-script-declaration.md). Other
-issues require fairly convoluted code to arise.
+Most of these issues requires fairly convoluted code to arise. In practice, the
+issue that is most susceptible to cause a program to behave differentially is
+[early script declaration](./doc/issues/early-script-declaration.md).
 
 ## Acknowledgments
 
-I'm [Laurent Christophe](http://soft.vub.ac.be/soft/members/lachrist) a phd
+I'm [Laurent Christophe](https://soft.vub.ac.be/soft/members/lachrist) a phd
 student at the [Vrij Universiteit of Brussel](https://www.vub.ac.be). My
-promoters are [Coen De Roover](http://soft.vub.ac.be/soft/members/cderoove) and
-[Wolfgang De Meuter](http://soft.vub.ac.be/soft/members/wdmeuter).
+promoters are [Coen De Roover](https://soft.vub.ac.be/soft/members/cderoove) and
+[Wolfgang De Meuter](https://soft.vub.ac.be/soft/members/wdmeuter).
 
 ![vub](img/vub.png) ![soft](img/soft.png) ![tearless](img/tearless.png)

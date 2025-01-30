@@ -1,4 +1,4 @@
-import { generateSetup, transpile, retropile, weaveStandard } from "aran";
+import { setupile, transpile, retropile, weaveStandard } from "aran";
 import { parse } from "acorn";
 import { generate } from "astring";
 import {
@@ -14,7 +14,7 @@ const code = `
   Array.from(g());
 `;
 
-const intrinsics = evalGlobal(generate(generateSetup({})));
+const intrinsics = evalGlobal(generate(setupile({})));
 
 /** @type {any} */ (globalThis)[advice_global_variable] = createTraceAdvice(
   weaveStandard,

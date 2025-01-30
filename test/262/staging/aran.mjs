@@ -1,5 +1,5 @@
 import { runInContext } from "node:vm";
-import { generateSetup, retropile, transpile } from "../../../lib/index.mjs";
+import { setupile, retropile, transpile } from "../../../lib/index.mjs";
 import { inspectErrorMessage, recreateError } from "../util/index.mjs";
 import { AranTestError } from "../error.mjs";
 import { generate, parseGlobal, parseLocal } from "./estree.mjs";
@@ -44,7 +44,7 @@ const parseSitu = parseJson;
  * }}
  */
 export const compileAran = (config, toEvalPath) => {
-  const SETUP = generate(generateSetup(config));
+  const SETUP = generate(setupile(config));
   return {
     setup: (context) => {
       /** @type {import("aran").IntrinsicRecord} */

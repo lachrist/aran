@@ -217,7 +217,7 @@ export class AranPointcutError extends Error {
  * such as `astring`.
  * @throws {@link AranInputError} If the configuration is invalid.
  */
-export const generateSetup: (
+export const setupile: (
   conf?: Partial<SetupConfig>,
 ) => EstreeProgram<{}> & { sourceType: "script" };
 

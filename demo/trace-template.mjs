@@ -3,7 +3,7 @@ const ts_aware_context = context;
 
 const {
   log,
-  aran: { generateSetup, transpile, retropile, weaveStandard },
+  aran: { setupile, transpile, retropile, weaveStandard },
   astring: { generate },
   acorn: { parse },
   target,
@@ -51,7 +51,7 @@ const {
 const digest = (_node, node_path, file_path, _kind) =>
   /** @type {NodeHash} */ (`${file_path}:${node_path}`);
 
-globalThis.eval(generate(generateSetup({})));
+globalThis.eval(generate(setupile({})));
 
 globalThis.eval(
   generate(
