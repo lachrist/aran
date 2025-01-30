@@ -1,15 +1,1 @@
-11928
-{
-  "kind": "script",
-  "path": "built-ins/FinalizationRegistry/prototype/register/throws-when-target-cannot-be-held-weakly.js",
-  "directive": "use-strict",
-  "negative": null,
-  "asynchronous": false,
-  "includes": [
-    "assert.js",
-    "sta.js"
-  ],
-  "features": [
-    "FinalizationRegistry"
-  ]
-}
+0

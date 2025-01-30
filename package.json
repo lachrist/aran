@@ -1,10 +1,10 @@
 {
   "name": "aran",
-  "description": "Aran is a JavaScript instrumenter for building dynamic analysis tools",
-  "version": "4.1.2",
+  "description": "Aran is a JavaScript instrumenter",
+  "version": "5.0.0",
   "author": {
     "name": "Laurent Christophe",
-    "email": "lachrist@vub.ac.be"
+    "email": "laurent.christophe.terken@gmail.com"
   },
   "files": [
     "/lib/**/*.mjs",
