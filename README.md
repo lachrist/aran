@@ -92,6 +92,8 @@ Hello!
 
 [typedoc](https://lachrist.github.io/aran/page/typedoc/modules/index.html)
 
+![Aran's flowchart](img/flowchart.png)
+
 Aran simplifies the instrumentation of JavaScript code by transpiling it into a
 minimal variant called
 [AranLang](https://lachrist.github.io/aran/page/typedoc/modules/lang_syntax.html).
