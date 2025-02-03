@@ -4,7 +4,6 @@ import { loadStageResult } from "../staging/result.mjs";
 import { spawn } from "node:child_process";
 import { argv, stderr } from "node:process";
 import { isStageName } from "../staging/stage-name-predicate.mjs";
-import { isExcludeResult } from "../result.mjs";
 
 const { process, Promise, URL, JSON } = globalThis;
 
@@ -19,7 +18,7 @@ const { process, Promise, URL, JSON } = globalThis;
  * ) => number | null}
  */
 const computeSlowdown = (result1, result2) => {
-  if (isExcludeResult(result1) || isExcludeResult(result2)) {
+  if (result1.type === "exclude" || result2.type === "exclude") {
     return null;
   }
   if (

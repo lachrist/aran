@@ -44,27 +44,26 @@ export const toTestSpecifier = (path, directive) => `${path}@${directive}`;
 /**
  * @type {(
  *   result: import("./result").Result,
- * ) => result is import("./result").ExcludeResult}
- */
-export const isExcludeResult = /** @type {any} */ (isArray);
-
-/**
- * @type {(
- *   result: import("./result").Result,
  * ) => import("./result").CompactResult}
  */
 export const packResult = (result) => {
-  if (isExcludeResult(result)) {
-    return ["ex", ...result];
-  } else {
-    const { actual, expect, time } = result;
-    return [
-      "in",
-      actual === null ? null : actual.name,
-      time.user,
-      time.system,
-      ...expect,
-    ];
+  switch (result.type) {
+    case "exclude": {
+      return ["ex", ...result.reasons];
+    }
+    case "include": {
+      const { actual, expect, time } = result;
+      return [
+        "in",
+        actual === null ? null : actual.name,
+        time.user,
+        time.system,
+        ...expect,
+      ];
+    }
+    default: {
+      throw new AranTypeError(result);
+    }
   }
 };
 
@@ -77,11 +76,15 @@ export const unpackResult = (result) => {
   switch (result[0]) {
     case "ex": {
       const [_type, ...exclusion] = result;
-      return exclusion;
+      return {
+        type: "exclude",
+        reasons: exclusion,
+      };
     }
     case "in": {
       const [_type, actual, time1, time2, ...expect] = result;
       return {
+        type: "include",
         actual:
           actual === null
             ? null

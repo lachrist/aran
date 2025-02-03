@@ -2,6 +2,8 @@ import { weaveFlexible } from "aran";
 import { compileAran } from "../aran.mjs";
 import { AranTestError } from "../../error.mjs";
 import { record } from "../../record/index.mjs";
+import { listStageFailure } from "../failure.mjs";
+import { toTestSpecifier } from "../../result.mjs";
 
 const {
   Array: { isArray },
@@ -697,15 +699,32 @@ const weave_config = {
 // Export //
 ////////////
 
+const precursor = "flex-void";
+
+const exclusion = await listStageFailure(precursor);
+
 /**
- * @type {import("../stage").Stage}
+ * @type {import("../stage").Stage<null>}
  */
 export default {
-  precursor: ["flex-void"],
-  negative: [],
-  exclude: [],
-  listLateNegative: (_test, _error) => [],
-  setup: (context) => {
+  // eslint-disable-next-line require-await
+  setup: async (test) => {
+    const specifier = toTestSpecifier(test.path, test.directive);
+    if (exclusion.has(specifier)) {
+      return {
+        type: "exclude",
+        reasons: [precursor],
+      };
+    } else {
+      return {
+        type: "include",
+        state: null,
+        flaky: false,
+        negatives: [],
+      };
+    }
+  },
+  prepare: (_state, context) => {
     const { intrinsics } = setup(context);
     const global = intrinsics["aran.global_object"];
     const aspect = compileAspect(/** @type {any} */ (global.Reflect));
@@ -731,4 +750,5 @@ export default {
       return record({ path, content: code1 });
     }
   },
+  teardown: async (_state) => {},
 };

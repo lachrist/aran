@@ -11,4 +11,5 @@ export const STAGE_ENUM = {
   "stnd-void": null,
   "trace": null,
   "track-origin": null,
+  "tree-size": null,
 };

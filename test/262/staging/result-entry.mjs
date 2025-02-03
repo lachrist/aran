@@ -1,6 +1,5 @@
 /* eslint-disable local/no-function */
 
-import { isExcludeResult } from "../result.mjs";
 import {
   closeQueue,
   createQueue,
@@ -28,7 +27,7 @@ const filterFailure = async function* (stage, entries) {
   });
   try {
     for await (const [specifier, result] of entries) {
-      if (isExcludeResult(result) || result.actual !== null) {
+      if (result.type === "exclude" || result.actual !== null) {
         pushQueue(failures, specifier);
       }
       yield result;

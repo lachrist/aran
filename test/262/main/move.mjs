@@ -2,7 +2,6 @@ import { argv, stderr, stdout } from "node:process";
 import { createSignal } from "../util/index.mjs";
 import { loadCursor, saveCursor } from "./cursor.mjs";
 import { compileStage } from "../staging/stage.mjs";
-import { isExcludeResult } from "../result.mjs";
 import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
@@ -37,7 +36,7 @@ const move = async (stage, cursor, sigint) => {
     }
     if (index >= cursor) {
       const result = await exec(test);
-      if (!isExcludeResult(result)) {
+      if (result.type === "include") {
         const { actual, expect } = result;
         if ((actual === null) !== (expect.length === 0)) {
           return { cursor: index, failure: { test, result } };

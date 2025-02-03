@@ -1,4 +1,4 @@
-export type StageName =
+export type StageName = 
   | "bare-comp"
   | "bare-main"
   | "flex-full"
@@ -9,4 +9,5 @@ export type StageName =
   | "stnd-full"
   | "stnd-void"
   | "trace"
-  | "track-origin";
+  | "track-origin"
+  | "tree-size";

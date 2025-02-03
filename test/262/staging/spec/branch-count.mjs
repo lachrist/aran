@@ -1,25 +1,21 @@
 /* eslint-disable no-use-before-define */
 
+import { open } from "node:fs/promises";
 import { compileAran } from "../aran.mjs";
 import { AranTypeError } from "../../error.mjs";
-import { recreateError } from "../../util/index.mjs";
 import { record } from "../../record/index.mjs";
 import { listStageFailure } from "../failure.mjs";
-import { loadTaggingList } from "../../tagging/tagging.mjs";
 import { toTestSpecifier } from "../../result.mjs";
 
 const {
+  URL,
   Object: { keys },
-  Array: {
-    from: toArray,
-    prototype: { pop, join },
-  },
-  Reflect: { apply, defineProperty },
-  String,
+  Array: { from: toArray },
+  Reflect: { defineProperty },
 } = globalThis;
 
 /**
- * @typedef {"eval" | "apply" | "construct"} AdviceName
+ * @typedef {"eval" | "increment"} AdviceName
  * @typedef {string & {__brand: "NodeHash"}} NodeHash
  * @typedef {string & {__brand: "FilePath"}} FilePath
  * @typedef {import("aran").Atom & { Tag: NodeHash }} Atom
@@ -42,13 +38,6 @@ const listKey = /**
  * ) => Y[]}
  */
 const map = toArray;
-
-/**
- * @type {<X>(
- *   array: X[],
- * ) => X[]}
- */
-const copy = toArray;
 
 /**
  * @type {<X>(
@@ -77,8 +66,7 @@ const concat = (array1, array2) => {
  */
 const advice_record = {
   eval: null,
-  apply: null,
-  construct: null,
+  increment: null,
 };
 
 const advice_enum = listKey(advice_record);
@@ -145,117 +133,6 @@ const toAdviceInit = (name, tag) => ({
   },
   tag,
 });
-
-/**
- * @type {(
- *   input: unknown[],
- * ) => string}
- */
-const compileFunctionCode = (input) => {
-  if (input.length === 0) {
-    return "(function anonymous() {\n})";
-  } else {
-    input = copy(input);
-    const body = apply(pop, input, []);
-    const params = apply(join, map(input, String), [","]);
-    return `(function anonymous(${params}\n) {\n${body}\n})`;
-  }
-};
-
-/**
- * @type {(
- *   intrinsic: import("aran").IntrinsicRecord,
- * ) => {
- *   eval: (
- *     root: import("aran").Program<Atom>,
- *   ) => import("aran").Program<Atom>,
- *   apply: (
- *     callee: Function,
- *     that: unknown,
- *     args: unknown[],
- *     hash: string,
- *   ) => unknown,
- *   construct: (
- *     construct: Function,
- *     args: unknown[],
- *     hash: string,
- *   ) => unknown,
- * }}
- */
-const compileAdvice = (intrinsics) => {
-  const global = intrinsics["aran.global_object"];
-  const globals = {
-    apply: global.Reflect.apply,
-    construct: global.Reflect.construct,
-    SyntaxError: global.SyntaxError,
-    eval: global.eval,
-    Function: global.Function,
-    evalScript: /** @type {{$262: import("../../$262").$262}} */ (
-      /** @type {unknown} */ (global)
-    ).$262.evalScript,
-  };
-  const syntax_error_mapping = {
-    SyntaxError: globals.SyntaxError,
-    AranSyntaxError: globals.SyntaxError,
-  };
-  return {
-    eval: weave,
-    apply: (callee, that, input, hash) => {
-      if (callee === globals.eval && input.length > 0) {
-        const code = input[0];
-        if (typeof code === "string") {
-          try {
-            const path = /** @type {FilePath} */ (
-              `dynamic://eval/global/${hash}`
-            );
-            const { content } = record({
-              path,
-              content: retro(weave(trans(path, "eval", code))),
-            });
-            return globals.eval(content);
-          } catch (error) {
-            throw recreateError(error, syntax_error_mapping);
-          }
-        }
-      }
-      if (callee === globals.evalScript && input.length > 0) {
-        const code = String(input[0]);
-        try {
-          const path = /** @type {FilePath} */ (
-            `dynamic://script/global/${hash}`
-          );
-          const { content } = record({
-            path,
-            content: retro(weave(trans(path, "script", code))),
-          });
-          return globals.evalScript(content);
-        } catch (error) {
-          throw recreateError(error, syntax_error_mapping);
-        }
-      }
-      return globals.apply(callee, that, input);
-    },
-    construct: (callee, input, hash) => {
-      if (callee === globals.Function) {
-        try {
-          const path = /** @type {FilePath} */ (
-            `dynamic://function/global/${hash}`
-          );
-          const { content } = record({
-            path,
-            content: retro(
-              weave(trans(path, "eval", compileFunctionCode(input))),
-            ),
-          });
-          return globals.eval(content);
-        } catch (error) {
-          throw recreateError(error, syntax_error_mapping);
-        }
-      }
-      return globals.construct(callee, input, callee);
-    },
-  };
-};
 
 ///////////
 // Visit //
@@ -351,7 +228,21 @@ export const visitStatement = (node) => {
     case "IfStatement": {
       return {
         type: "IfStatement",
-        test: visitExpression(node.test),
+        test: {
+          type: "ApplyExpression",
+          callee: {
+            type: "ReadExpression",
+            variable: toAdviceVariable("increment"),
+            tag,
+          },
+          this: {
+            type: "IntrinsicExpression",
+            intrinsic: "undefined",
+            tag,
+          },
+          arguments: [visitExpression(node.test)],
+          tag,
+        },
         then: visitSegmentBlock(node.then),
         else: visitSegmentBlock(node.else),
         tag,
@@ -360,7 +251,21 @@ export const visitStatement = (node) => {
     case "WhileStatement": {
       return {
         type: "WhileStatement",
-        test: visitExpression(node.test),
+        test: {
+          type: "ApplyExpression",
+          callee: {
+            type: "ReadExpression",
+            variable: toAdviceVariable("increment"),
+            tag,
+          },
+          this: {
+            type: "IntrinsicExpression",
+            intrinsic: "undefined",
+            tag,
+          },
+          arguments: [visitExpression(node.test)],
+          tag,
+        },
         body: visitSegmentBlock(node.body),
         tag,
       };
@@ -391,7 +296,21 @@ export const visitEffect = (node) => {
     case "ConditionalEffect": {
       return {
         type: "ConditionalEffect",
-        test: visitExpression(node.test),
+        test: {
+          type: "ApplyExpression",
+          callee: {
+            type: "ReadExpression",
+            variable: toAdviceVariable("increment"),
+            tag,
+          },
+          this: {
+            type: "IntrinsicExpression",
+            intrinsic: "undefined",
+            tag,
+          },
+          arguments: [visitExpression(node.test)],
+          tag,
+        },
         positive: map(node.positive, visitEffect),
         negative: map(node.negative, visitEffect),
         tag,
@@ -464,7 +383,21 @@ export const visitExpression = (node) => {
     case "ConditionalExpression": {
       return {
         type: "ConditionalExpression",
-        test: visitExpression(node.test),
+        test: {
+          type: "ApplyExpression",
+          callee: {
+            type: "ReadExpression",
+            variable: toAdviceVariable("increment"),
+            tag,
+          },
+          this: {
+            type: "IntrinsicExpression",
+            intrinsic: "undefined",
+            tag,
+          },
+          arguments: [visitExpression(node.test)],
+          tag,
+        },
         consequent: visitExpression(node.consequent),
         alternate: visitExpression(node.alternate),
         tag,
@@ -521,79 +454,17 @@ export const visitExpression = (node) => {
     case "ApplyExpression": {
       return {
         type: "ApplyExpression",
-        callee: {
-          type: "ReadExpression",
-          variable: toAdviceVariable("apply"),
-          tag,
-        },
-        this: {
-          type: "IntrinsicExpression",
-          intrinsic: "undefined",
-          tag,
-        },
-        arguments: [
-          visitExpression(node.callee),
-          visitExpression(node.this),
-          {
-            type: "ApplyExpression",
-            callee: {
-              type: "IntrinsicExpression",
-              intrinsic: "Array.of",
-              tag,
-            },
-            this: {
-              type: "IntrinsicExpression",
-              intrinsic: "undefined",
-              tag,
-            },
-            arguments: map(node.arguments, visitExpression),
-            tag,
-          },
-          {
-            type: "PrimitiveExpression",
-            primitive: tag,
-            tag,
-          },
-        ],
+        callee: visitExpression(node.callee),
+        this: visitExpression(node.this),
+        arguments: map(node.arguments, visitExpression),
         tag,
       };
     }
     case "ConstructExpression": {
       return {
-        type: "ApplyExpression",
-        callee: {
-          type: "ReadExpression",
-          variable: toAdviceVariable("construct"),
-          tag,
-        },
-        this: {
-          type: "IntrinsicExpression",
-          intrinsic: "undefined",
-          tag,
-        },
-        arguments: [
-          visitExpression(node.callee),
-          {
-            type: "ApplyExpression",
-            callee: {
-              type: "IntrinsicExpression",
-              intrinsic: "Array.of",
-              tag,
-            },
-            this: {
-              type: "IntrinsicExpression",
-              intrinsic: "undefined",
-              tag,
-            },
-            arguments: map(node.arguments, visitExpression),
-            tag,
-          },
-          {
-            type: "PrimitiveExpression",
-            primitive: tag,
-            tag,
-          },
-        ],
+        type: "ConstructExpression",
+        callee: visitExpression(node.callee),
+        arguments: map(node.arguments, visitExpression),
         tag,
       };
     }
@@ -633,43 +504,23 @@ const { setup, trans, retro } = compileAran(
   toEvalPath,
 );
 
-const listNegative = await loadTaggingList([
-  "async-iterator-async-value",
-  "arguments-two-way-binding",
-  "function-dynamic-property",
-  "negative-bare-unknown",
-  "negative-bare-duplicate-super-prototype-access",
-  "negative-bare-early-module-declaration",
-  "negative-bare-missing-iterable-return-in-pattern",
-  "negative-bare-wrong-realm-for-default-prototype",
-]);
-
 /**
  * @type {import("../stage-name").StageName}
  */
-const precursor = "parsing";
+const precursor = "bare-comp";
 
 const exclusion = await listStageFailure(precursor);
 
-const listExclusionReason = await loadTaggingList([
-  // function-string-representation is flaky
-  "function-string-representation",
-  // module-literal-specifier tests may pass because literal specifier are
-  // consistently replaced with undefined but they should be marked as failure.
-  "module-literal-specifier",
-]);
+const handle = await open(new URL(import.meta.url, "branch-count.jsonl"), "w");
 
 /**
- * @type {import("../stage").Stage<null>}
+ * @type {import("../stage").Stage<{inner:number}>}
  */
 export default {
   // eslint-disable-next-line require-await
   setup: async (test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
-    const reasons = [
-      ...(exclusion.has(specifier) ? [precursor] : []),
-      ...listExclusionReason(specifier),
-    ];
+    const reasons = exclusion.has(specifier) ? [precursor] : [];
     if (reasons.length > 0) {
       return {
         type: "exclude",
@@ -678,15 +529,22 @@ export default {
     } else {
       return {
         type: "include",
-        state: null,
+        state: { inner: 0 },
         flaky: false,
-        negatives: listNegative(specifier),
+        negatives: [],
       };
     }
   },
-  prepare: (_state, context) => {
+  prepare: (counter, context) => {
     const { intrinsics } = setup(context);
-    const advice = compileAdvice(intrinsics);
+    const advice = {
+      eval: weave,
+      /** @type {<X>(value: X) => X} */
+      increment: (value) => {
+        counter.inner++;
+        return value;
+      },
+    };
     for (let index = 0; index < advice_enum.length; index += 1) {
       const name = advice_enum[index];
       const descriptor = {
@@ -710,5 +568,7 @@ export default {
         weave(trans(/** @type {FilePath} */ (path), kind, content)),
       ),
     }),
-  teardown: async (_state) => {},
+  teardown: async (counter) => {
+    await handle.write(`${counter.inner}\n`);
+  },
 };

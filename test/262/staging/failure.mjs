@@ -3,7 +3,7 @@
 import { open } from "node:fs/promises";
 import { createInterface } from "node:readline";
 
-const { URL, Infinity } = globalThis;
+const { Set, URL, Infinity } = globalThis;
 
 /**
  * @type {(
@@ -33,6 +33,20 @@ export const loadStageFailure = async function* (stage) {
   } finally {
     await handle.close();
   }
+};
+
+/**
+ * @type {(
+ *   stage: import("./stage-name").StageName,
+ * ) => Promise<Set<import("../result").TestSpecifier>>}
+ */
+export const listStageFailure = async (stage) => {
+  /** @type {Set<import("../result").TestSpecifier>} */
+  const set = new Set();
+  for await (const failure of loadStageFailure(stage)) {
+    set.add(failure);
+  }
+  return set;
 };
 
 /**

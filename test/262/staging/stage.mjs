@@ -1,6 +1,4 @@
 import { readdir } from "node:fs/promises";
-import { isNotEmptyArray, getFirst } from "../util/index.mjs";
-import { toTestSpecifier } from "../result.mjs";
 import {
   compileFetchHarness,
   compileFetchTarget,
@@ -8,28 +6,13 @@ import {
 } from "../fetch.mjs";
 import { HARNESS, TEST262 } from "../layout.mjs";
 import { execTestCase } from "../test-case/index.mjs";
-import { loadTaggingList } from "../tagging/index.mjs";
 import { STAGE_ENUM } from "./stage-name.mjs";
-import { loadStageFailure } from "./failure.mjs";
+import { AranTypeError } from "../error.mjs";
 
 const {
-  Set,
   Object: { hasOwn },
   Map,
 } = globalThis;
-
-/**
- * @type {(
- *   name: import("./stage-name").StageName,
- * ) => Promise<Set<import("../result").TestSpecifier>>}
- */
-const loadPrecursorFailure = async (stage) => {
-  const failures = new Set();
-  for await (const precursor of loadStageFailure(stage)) {
-    failures.add(precursor);
-  }
-  return failures;
-};
 
 /**
  * @type {(
@@ -39,86 +22,42 @@ const loadPrecursorFailure = async (stage) => {
 export const isStageName = (value) => hasOwn(STAGE_ENUM, value);
 
 /**
- * @type {(
- *   precursors: import("./stage-name").StageName[],
- *   exclude: import("../tagging/tag").Tag[],
- * ) => Promise<(
- *   specifier: import("../result").TestSpecifier,
- * ) => (import("../tagging/tag").Tag | import("./stage-name").StageName)[]>}
- */
-const compileListExclusionReason = async (precursors, exclude) => {
-  /**
-   * @type {[
-   *   import("./stage-name").StageName,
-   *   Set<import("../result").TestSpecifier>,
-   * ][]}
-   */
-  const entries = [];
-  for (const precursor of precursors) {
-    entries.push([precursor, await loadPrecursorFailure(precursor)]);
-  }
-  const tagging = await loadTaggingList(exclude);
-  return (specifier) => [
-    ...entries
-      .filter(([_precursor, specifiers]) => specifiers.has(specifier))
-      .map(getFirst),
-    ...tagging(specifier),
-  ];
-};
-
-/**
- * @type {(
- *   name: import("./stage-name").StageName,
- * ) => Promise<import("./stage").ReadyStage>}
- */
-const loadStage = async (name) => {
-  const stage = /** @type {{default: import("./stage").Stage}} */ (
-    await import(`./spec/${name}.mjs`)
-  ).default;
-  const { setup, instrument, listLateNegative, precursor, negative, exclude } =
-    stage;
-  return {
-    setup,
-    instrument,
-    listLateNegative,
-    listExclusionReason: await compileListExclusionReason(precursor, exclude),
-    listNegative: await loadTaggingList(negative),
-  };
-};
-
-/**
- * @type {(
+ * @type {<X>(
  *   test: import("../test-case").TestCase,
- *   stage: import("./stage").ReadyStage,
+ *   stage: import("./stage").Stage<X>,
  *   fetch: import("../fetch").Fetch,
  * ) => Promise<import("../result").Result>}
  */
 const execStage = async (
   test,
-  { listLateNegative, instrument, setup, listExclusionReason, listNegative },
+  { setup, prepare, instrument, teardown },
   { resolveDependency, fetchHarness, fetchTarget },
 ) => {
-  const specifier = toTestSpecifier(test.path, test.directive);
-  const exclusion = listExclusionReason(specifier);
-  if (isNotEmptyArray(exclusion)) {
-    return exclusion;
-  } else {
-    const { actual, expect, time } = await execTestCase(test, {
-      resolveDependency,
-      fetchHarness,
-      fetchTarget,
-      setup,
-      instrument,
-    });
-    return {
-      actual,
-      expect: [
-        ...expect,
-        ...listNegative(specifier),
-        ...(actual === null ? [] : listLateNegative(test, actual)),
-      ],
-      time,
-    };
+  const selector = await setup(test);
+  switch (selector.type) {
+    case "exclude": {
+      return selector;
+    }
+    case "include": {
+      const { state, flaky, negatives } = selector;
+      const { actual, expect, time } = await execTestCase(state, test, {
+        resolveDependency,
+        fetchHarness,
+        fetchTarget,
+        prepare,
+        instrument,
+      });
+      await teardown(state);
+      return {
+        type: "include",
+        actual,
+        expect: flaky && actual === null ? [] : [...expect, ...negatives],
+        time,
+      };
+    }
+    default: {
+      throw new AranTypeError(selector);
+    }
   }
 };
 
@@ -152,13 +91,13 @@ const memoizeInstrument = (instrument) => {
 };
 
 /**
- * @type {(
- *   name: import("./stage-name").StageName,
- *   options: {
- *     memoization: "none" | "lazy" | "eager",
- *   },
- * ) => Promise<(
- *   test: import("../test-case").TestCase,
+ * @template X
+ * @param {import("./stage-name").StageName} name
+ * @param {{
+ *   memoization: "none" | "lazy" | "eager",
+ * }} options
+ * @returns {Promise<(
+ *    test: import("../test-case").TestCase,
  * ) => Promise<import("../result").Result>>}
  */
 export const compileStage = async (name, { memoization }) => {
@@ -167,7 +106,8 @@ export const compileStage = async (name, { memoization }) => {
     fetchHarness: compileFetchHarness(TEST262),
     fetchTarget: compileFetchTarget(TEST262),
   };
-  const stage = await loadStage(name);
+  /** @type {import("./stage").Stage<unknown>} */
+  const stage = (await import(`./spec/${name}.mjs`)).default;
   if (memoization !== "none") {
     stage.instrument = memoizeInstrument(stage.instrument);
     if (memoization === "eager") {

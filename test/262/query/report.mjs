@@ -1,7 +1,7 @@
 import { argv, stdout } from "node:process";
 import { isStageName } from "../staging/stage-name-predicate.mjs";
-import { isExcludeResult } from "../result.mjs";
 import { loadStageResult } from "../staging/result.mjs";
+import { AranTypeError } from "../error.mjs";
 
 const { undefined, Object, Math } = globalThis;
 
@@ -35,13 +35,13 @@ const aggregate = async (results) => {
   };
   for await (const result of results) {
     report.count++;
-    if (isExcludeResult(result)) {
+    if (result.type === "exclude") {
       report.exclusion.count++;
-      for (const tag of result) {
+      for (const tag of result.reasons) {
         report.exclusion.repartition[tag] =
           (report.exclusion.repartition[tag] ?? 0) + 1;
       }
-    } else {
+    } else if (result.type === "include") {
       const { actual, expect } = result;
       if (expect.length > 0) {
         const negative =
@@ -57,6 +57,8 @@ const aggregate = async (results) => {
           report.false_positive.count++;
         }
       }
+    } else {
+      throw new AranTypeError(result);
     }
   }
   return report;

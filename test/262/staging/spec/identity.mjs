@@ -1,4 +1,6 @@
 import { record } from "../../record/index.mjs";
+import { toTestSpecifier } from "../../result.mjs";
+import { loadTaggingList } from "../../tagging/tagging.mjs";
 
 const { Set } = globalThis;
 
@@ -29,32 +31,60 @@ const features = new Set([
   "regexp-unicode-property-escapes",
 ]);
 
-/** @type {(feature: string) => boolean} */
-const isFeatureExcluded = (feature) => features.has(feature);
+/**
+ * @type {(
+ *   feature: string,
+ * ) => boolean}
+ */
+const isFeatureFlaky = (feature) => features.has(feature);
 
-/** @type {import("../stage").Stage} */
+const listExclusionReason = await loadTaggingList([
+  "call-async-done-with-module",
+  "invalid-metadata-header",
+]);
+
+const listNegative = await loadTaggingList([
+  "negative-identity-annex-b",
+  "negative-identity-async-iterator-bypass-finally",
+  "negative-identity-atomic-wait-work",
+  "negative-identity-compound-assignment",
+  "negative-identity-date-coercion-order",
+  "negative-identity-eval-arguments-declaration",
+  "negative-identity-flaky-symbol-match",
+  "negative-identity-flaky-symbol-replace",
+  "negative-identity-html-comment",
+  "negative-identity-intl402",
+  "negative-identity-non-enumerable-global-function",
+  "negative-identity-prevent-extension-vm-context",
+  "negative-identity-unknown",
+  "negative-identity-update-inside-with",
+  "negative-identity-wrong-realm-for-dynamic-import",
+]);
+
+/** @type {import("../stage").Stage<null>} */
 export default {
-  precursor: [],
-  exclude: ["call-async-done-with-module", "invalid-metadata-header"],
-  negative: [
-    "negative-identity-annex-b",
-    "negative-identity-async-iterator-bypass-finally",
-    "negative-identity-atomic-wait-work",
-    "negative-identity-compound-assignment",
-    "negative-identity-date-coercion-order",
-    "negative-identity-eval-arguments-declaration",
-    "negative-identity-flaky-symbol-match",
-    "negative-identity-flaky-symbol-replace",
-    "negative-identity-html-comment",
-    "negative-identity-intl402",
-    "negative-identity-non-enumerable-global-function",
-    "negative-identity-prevent-extension-vm-context",
-    "negative-identity-unknown",
-    "negative-identity-update-inside-with",
-    "negative-identity-wrong-realm-for-dynamic-import",
-  ],
-  listLateNegative: ({ features }, _error) =>
-    features.filter(isFeatureExcluded),
-  setup: (_context) => {},
-  instrument: record,
+  // eslint-disable-next-line require-await
+  setup: async (test) => {
+    const specifier = toTestSpecifier(test.path, test.directive);
+    const reasons = listExclusionReason(specifier);
+    if (reasons.length > 0) {
+      return {
+        type: "exclude",
+        reasons,
+      };
+    }
+    const features = test.features.filter(isFeatureFlaky);
+    return {
+      type: "include",
+      state: null,
+      flaky: features.length > 0,
+      negatives:
+        features.length > 0
+          ? /** @type {import("../../tagging/tag").Tag[]} */ (features)
+          : listNegative(specifier),
+    };
+  },
+  prepare: (_state, _context) => {},
+  instrument: (source) => record(source),
+  teardown: async (_state) => {},
 };

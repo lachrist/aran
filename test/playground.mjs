@@ -1,30 +1,33 @@
-import { setupile, transpile, retropile, weaveStandard } from "aran";
+import { setupile, transpile, retropile } from "aran";
 import { parse } from "acorn";
 import { generate } from "astring";
 import {
-  weave_config,
   advice_global_variable,
-  createTraceAdvice,
-} from "./aspects/trace.mjs";
+  weave,
+  createAdvice,
+} from "./aspects/tree-size.mjs";
 
 const { eval: evalGlobal } = globalThis;
 
-const code = `
-  function* g () { yield 123; yield 456; }
-  Array.from(g());
-`;
-
 const intrinsics = evalGlobal(generate(setupile({})));
 
-/** @type {any} */ (globalThis)[advice_global_variable] = createTraceAdvice(
-  weaveStandard,
-  /** @type {any} */ (intrinsics["aran.global_object"]),
+/** @type {any} */ (globalThis)[advice_global_variable] = createAdvice(
+  /** @type {any} */ (intrinsics["aran.global_object"]).Reflect,
+  (kind, size, tag) => {
+    console.dir({ kind, size, tag });
+  },
 );
+
+const code = `{
+  for (let x = 0; x < 10; x++) {
+    console.log(x);
+  }
+}`;
 
 evalGlobal(
   generate(
     retropile(
-      weaveStandard(
+      weave(
         transpile(
           {
             kind: "eval",
@@ -35,12 +38,10 @@ evalGlobal(
             }),
           },
           {
-            digest: (_node, node_path, file_path, _node_kind) =>
-              `${file_path}:${node_path}`,
+            digest: (_node, node_path, _file_path, _node_kind) => node_path,
             global_declarative_record: "builtin",
           },
         ),
-        weave_config,
       ),
       {
         mode: "normal",

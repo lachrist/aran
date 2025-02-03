@@ -8,8 +8,9 @@ import { toTestSpecifier } from "../result.mjs";
 import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
+import { AranTypeError } from "../error.mjs";
 
-const { process, Date, JSON } = globalThis;
+const { process, Date } = globalThis;
 
 /**
  * @type {(
@@ -31,10 +32,17 @@ const exec = async function* (stage, sigint) {
       stdout.write(`${index}\n`);
     }
     index++;
-    yield [
-      toTestSpecifier(test.path, test.directive),
-      await execTestCase(test),
-    ];
+    const specifier = toTestSpecifier(test.path, test.directive);
+    const result = await execTestCase(test);
+    if (result.type === "include") {
+      if (result.actual === null && result.expect.length > 0) {
+        stderr.write(`FALSE NEGATIVE >> ${specifier}\n`);
+      }
+      if (result.actual !== null && result.expect.length === 0) {
+        stderr.write(`FALSE POSITIVE >> ${specifier}\n`);
+      }
+    }
+    yield [specifier, result];
   }
   return "done";
 };
@@ -78,10 +86,9 @@ const main = async (argv) => {
     stderr.write("SIGINT\n");
     process.exitCode ||= 1;
   } else if (status === "done") {
-    stdout.write("SUCCESS\n");
+    stdout.write("DONE\n");
     stdout.write(`>> ${Date.now() - now}ms\n`);
   } else {
-    stdout.write("FAILURE\n");
-    stdout.write(JSON.stringify(status, null, 2));
+    throw new AranTypeError(status);
   }
 }

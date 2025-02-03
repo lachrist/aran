@@ -24,15 +24,16 @@ const log = (message) => {
 };
 
 /**
- * @type {(
+ * @type {<X>(
+ *   state: X,
  *   dependencies: {
  *     print: (message: string) => void,
- *     setup: (context: import("node:vm").Context) => void,
+ *     prepare: import("../staging/stage").Prepare<X>,
  *     signalNegative: (message: string) => Error,
  *   },
  * ) => import("../$262").$262}
  */
-export const createRealm = ({ setup, print, signalNegative }) => {
+export const createRealm = (state, { prepare, print, signalNegative }) => {
   const context = createContext({ __proto__: null });
   /** @type {globalThis} */
   const global = runInContext("this;", context);
@@ -41,7 +42,7 @@ export const createRealm = ({ setup, print, signalNegative }) => {
   const $262 = {
     // @ts-ignore
     __proto__: null,
-    createRealm: () => createRealm({ setup, print, signalNegative }),
+    createRealm: () => createRealm(state, { prepare, print, signalNegative }),
     detachArrayBuffer: () => {
       throw signalNegative("detachArrayBuffer");
     },
@@ -100,6 +101,6 @@ export const createRealm = ({ setup, print, signalNegative }) => {
     writable: true,
     value: print,
   });
-  setup(context);
+  prepare(state, context);
   return $262;
 };

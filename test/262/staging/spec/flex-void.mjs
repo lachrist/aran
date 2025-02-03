@@ -1,6 +1,8 @@
 import { weaveFlexible } from "aran";
 import { compileAran } from "../aran.mjs";
 import { record } from "../../record/index.mjs";
+import { listStageFailure } from "../failure.mjs";
+import { toTestSpecifier } from "../../result.mjs";
 
 const {
   Reflect: { defineProperty },
@@ -42,15 +44,36 @@ const conf = {
   pointcut: aspect,
 };
 
+////////////
+// Export //
+////////////
+
+const precursor = "bare-main";
+
+const exclusion = await listStageFailure(precursor);
+
 /**
- * @type {import("../stage").Stage}
+ * @type {import("../stage").Stage<null>}
  */
 export default {
-  precursor: ["bare-main"],
-  negative: [],
-  exclude: [],
-  listLateNegative: (_test, _error) => [],
-  setup: (context) => {
+  // eslint-disable-next-line require-await
+  setup: async (test) => {
+    const specifier = toTestSpecifier(test.path, test.directive);
+    if (exclusion.has(specifier)) {
+      return {
+        type: "exclude",
+        reasons: [precursor],
+      };
+    } else {
+      return {
+        type: "include",
+        state: null,
+        flaky: false,
+        negatives: [],
+      };
+    }
+  },
+  prepare: (_state, context) => {
     const { intrinsics } = setup(context);
     defineProperty(intrinsics["aran.global_object"], ADVICE_VARIABLE, {
       // @ts-ignore
@@ -69,4 +92,5 @@ export default {
           ? retro(weaveFlexible(trans(path, kind, content), conf))
           : content,
     }),
+  teardown: async (_state) => {},
 };

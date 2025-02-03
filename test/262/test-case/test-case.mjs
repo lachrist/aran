@@ -148,12 +148,13 @@ const applyDirective = (content, directive) => {
 };
 
 /**
- * @type {(
+ * @type {<X>(
+ *   state: X,
  *   test_case: import("../test-case").TestCase,
  *   dependencies: {
- *     setup: (context: import("node:vm").Context) => void,
- *     signalNegative: (cause: string) => Error,
+ *     prepare: import("../staging/stage").Prepare<X>,
  *     instrument: import("../staging/stage").Instrument,
+ *     signalNegative: (cause: string) => Error,
  *     resolveDependency: import("../fetch").ResolveDependency,
  *     fetchHarness: import("../fetch").FetchHarness,
  *     fetchTarget: import("../fetch").FetchTarget,
@@ -161,11 +162,12 @@ const applyDirective = (content, directive) => {
  * ) => Promise<null | import("../util/error-serial").ErrorSerial>}
  */
 export const execTestCaseInner = async (
+  state,
   { kind, directive, path: path1, negative, asynchronous, includes },
   {
-    setup,
-    signalNegative,
+    prepare,
     instrument,
+    signalNegative,
     resolveDependency,
     fetchHarness,
     fetchTarget,
@@ -175,7 +177,11 @@ export const execTestCaseInner = async (
   const { done, print } = asynchronous
     ? makeAsynchronousTermination()
     : termination;
-  const { context } = createRealm({ setup, print, signalNegative }).aran;
+  const { context } = createRealm(state, {
+    prepare,
+    print,
+    signalNegative,
+  }).aran;
   for (const name of includes) {
     try {
       const { path, content } = instrument({
@@ -300,14 +306,15 @@ export const execTestCaseInner = async (
 };
 
 /**
- * @type {(
+ * @type {<X>(
+ *   state: X,
  *   test_case: import("../test-case").TestCase,
  *   dependencies: {
+ *     prepare: import("../staging/stage").Prepare<X>,
+ *     instrument: import("../staging/stage").Instrument,
  *     resolveDependency: import("../fetch").ResolveDependency,
  *     fetchHarness: import("../fetch").FetchHarness,
  *     fetchTarget: import("../fetch").FetchTarget,
- *     setup: (context: import("node:vm").Context) => void,
- *     instrument: import("../staging/stage").Instrument,
  *   },
  * ) => Promise<{
  *   expect: string[],
@@ -315,11 +322,11 @@ export const execTestCaseInner = async (
  *   time: { user: number, system: number },
  * }>}
  */
-export const execTestCase = async (test_case, dependencies) => {
+export const execTestCase = async (state, test_case, dependencies) => {
   /** @type {string[]} */
   const expect = [];
   const time = cpuUsage();
-  const error = await execTestCaseInner(test_case, {
+  const error = await execTestCaseInner(state, test_case, {
     ...dependencies,
     signalNegative: (cause) => {
       expect.push(cause);
