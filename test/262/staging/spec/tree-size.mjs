@@ -5,15 +5,21 @@ import {
   createAdvice,
   weave,
 } from "../../../aspects/tree-size.mjs";
-import { createWriteStream } from "node:fs";
+import { open } from "node:fs/promises";
+import { compileListPrecursorFailure } from "../failure.mjs";
+import { toTestSpecifier } from "../../result.mjs";
 
 const {
+  JSON,
+  Array,
   URL,
   Reflect: { defineProperty },
 } = globalThis;
 
 /**
- * @type {import("aran").Digest}
+ * @type {import("aran").Digest<{
+ *   NodeHash: import("aran").EstreeNodePath,
+ * }>}
  */
 const digest = (_node, node_path, _file_path, _kind) => node_path;
 
@@ -49,28 +55,84 @@ const { setup, trans, retro } = compileAran(
 // Export //
 ////////////
 
-const stream = createWriteStream(new URL("tree-size.log", import.meta.url), {
-  flags: "w",
-  encoding: "utf8",
-});
+const handle = await open(
+  new URL("../output/tree-size.jsonl", import.meta.url),
+  "w",
+);
 
 /**
- * @type {import("../stage").Stage}
+ * @type {(
+ *   content: string,
+ * ) => number}
+ */
+const hashFowler = (content) => {
+  let hash = 2166136261; // FNV offset basis
+  for (let i = 0; i < content.length; i++) {
+    /* eslint-disable no-bitwise */
+    hash ^= content.charCodeAt(i);
+    /* eslint-disable no-bitwise */
+    hash = (hash * 16777619) >>> 0; // Keep it a 32-bit unsigned integer
+  }
+  return hash;
+};
+
+const listPrecursorFailure = await compileListPrecursorFailure([
+  "bare-comp",
+  "stnd-void",
+]);
+
+/**
+ * @type {import("../stage").Stage<[
+ *   number,
+ *   import("aran").EstreeNodePath,
+ * ][]>}
  */
 export default {
-  precursor: ["stnd-void"],
-  negative: [],
-  exclude: [],
-  listLateNegative: (_test, _error) => [],
-  setup: (context) => {
+  // eslint-disable-next-line require-await
+  setup: async ({ path, directive }) => {
+    const specifier = toTestSpecifier(path, directive);
+    const reasons = listPrecursorFailure(specifier);
+    if (reasons.length > 0) {
+      return { type: "exclude", reasons };
+    } else {
+      return {
+        type: "include",
+        state: [],
+        flaky: false,
+        negatives: [],
+      };
+    }
+  },
+  prepare: (buffer, context) => {
     const { intrinsics } = setup(context);
+    /**
+     * @type {(
+     *   kind: import("aran").TestKind,
+     *   size: number,
+     *   tag: import("aran").EstreeNodePath,
+     * ) => void}
+     */
+    const recordBranch = (_kind, size, tag) => {
+      buffer.push([size, tag]);
+    };
+    const {
+      ["aran.global_object"]: {
+        Reflect: { apply, construct },
+      },
+      "aran.getValueProperty": getValueProperty,
+    } = intrinsics;
     const descriptor = {
       __proto__: null,
       value: createAdvice(
-        /** @type {{apply: any, construct: any}} */ (
-          intrinsics["aran.global_object"].Reflect
-        ),
-        (kind, size, tag) => stream.write(`${kind} >> ${size} >> ${tag}\n`),
+        {
+          // eslint-disable-next-line object-shorthand
+          apply: /** @type {any} */ (apply),
+          // eslint-disable-next-line object-shorthand
+          construct: /** @type {any} */ (construct),
+          // eslint-disable-next-line object-shorthand
+          getValueProperty: /** @type {any} */ (getValueProperty),
+        },
+        { recordBranch },
       ),
       enumerable: false,
       writable: false,
@@ -87,5 +149,16 @@ export default {
     const root2 = weave(root1);
     const code2 = retro(root2);
     return record({ path, content: code2 });
+  },
+  teardown: async (buffer) => {
+    const { length } = buffer;
+    /** @type {number[]} */
+    const content = new Array(2 * buffer.length);
+    for (let index = 0; index < length; index++) {
+      const [size, tag] = buffer[index];
+      content[2 * index] = size;
+      content[2 * index + 1] = hashFowler(tag);
+    }
+    await handle.write(JSON.stringify(content) + "\n");
   },
 };

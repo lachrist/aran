@@ -2,6 +2,8 @@ import { weaveStandard } from "aran";
 import { AranTestError } from "../../error.mjs";
 import { compileAran } from "../aran.mjs";
 import { record } from "../../record/index.mjs";
+import { compileListPrecursorFailure } from "../failure.mjs";
+import { toTestSpecifier } from "../../result.mjs";
 
 const {
   Object: { hasOwn },
@@ -699,15 +701,28 @@ const compileAdvice = ({ apply, construct }) => ({
 // Export //
 ////////////
 
+const listPrecursorFailure = await compileListPrecursorFailure(["stnd-void"]);
+
 /**
- * @type {import("../stage").Stage}
+ * @type {import("../stage").Stage<null>}
  */
 export default {
-  precursor: ["stnd-void"],
-  negative: [],
-  exclude: [],
-  listLateNegative: (_test, _error) => [],
-  setup: (context) => {
+  // eslint-disable-next-line require-await
+  setup: async (test) => {
+    const specifier = toTestSpecifier(test.path, test.directive);
+    const reasons = listPrecursorFailure(specifier);
+    if (reasons.length > 0) {
+      return { type: "exclude", reasons };
+    } else {
+      return {
+        type: "include",
+        state: null,
+        flaky: false,
+        negatives: [],
+      };
+    }
+  },
+  prepare: (_state, context) => {
     const { intrinsics } = setup(context);
     defineProperty(intrinsics["aran.global_object"], ADVICE_VARIABLE, {
       // @ts-ignore
@@ -733,4 +748,5 @@ export default {
       return record({ path, content: code1 });
     }
   },
+  teardown: async (_state) => {},
 };

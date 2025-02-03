@@ -1,6 +1,7 @@
 export type StageName = 
   | "bare-comp"
   | "bare-main"
+  | "count-branch"
   | "flex-full"
   | "flex-void"
   | "identity"

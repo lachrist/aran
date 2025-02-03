@@ -1,7 +1,7 @@
 import { weaveFlexible } from "aran";
 import { compileAran } from "../aran.mjs";
 import { record } from "../../record/index.mjs";
-import { listStageFailure } from "../failure.mjs";
+import { compileListPrecursorFailure } from "../failure.mjs";
 import { toTestSpecifier } from "../../result.mjs";
 
 const {
@@ -48,9 +48,7 @@ const conf = {
 // Export //
 ////////////
 
-const precursor = "bare-main";
-
-const exclusion = await listStageFailure(precursor);
+const listPrecursorFailure = await compileListPrecursorFailure(["bare-main"]);
 
 /**
  * @type {import("../stage").Stage<null>}
@@ -59,11 +57,9 @@ export default {
   // eslint-disable-next-line require-await
   setup: async (test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
-    if (exclusion.has(specifier)) {
-      return {
-        type: "exclude",
-        reasons: [precursor],
-      };
+    const reasons = listPrecursorFailure(specifier);
+    if (reasons.length > 0) {
+      return { type: "exclude", reasons };
     } else {
       return {
         type: "include",

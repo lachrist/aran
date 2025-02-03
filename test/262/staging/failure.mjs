@@ -3,7 +3,7 @@
 import { open } from "node:fs/promises";
 import { createInterface } from "node:readline";
 
-const { Set, URL, Infinity } = globalThis;
+const { Map, Set, URL, Infinity } = globalThis;
 
 /**
  * @type {(
@@ -47,6 +47,34 @@ export const listStageFailure = async (stage) => {
     set.add(failure);
   }
   return set;
+};
+
+/**
+ * @type {(
+ *   stages: import("./stage-name").StageName[],
+ * ) => Promise<(
+ *   specifier: import("../result").TestSpecifier,
+ * ) => import("./stage-name").StageName[]>}
+ */
+export const compileListPrecursorFailure = async (stages) => {
+  /**
+   * @type {Map<
+   *   import("../result").TestSpecifier,
+   *   import("./stage-name").StageName[]
+   * >}
+   */
+  const map = new Map();
+  for (const stage of stages) {
+    for await (const failure of loadStageFailure(stage)) {
+      const stages = map.get(failure);
+      if (stages == null) {
+        map.set(failure, [stage]);
+      } else {
+        stages.push(stage);
+      }
+    }
+  }
+  return (specifier) => map.get(specifier) || [];
 };
 
 /**

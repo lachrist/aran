@@ -2,6 +2,7 @@
 export const STAGE_ENUM = {
   "bare-comp": null,
   "bare-main": null,
+  "count-branch": null,
   "flex-full": null,
   "flex-void": null,
   "identity": null,

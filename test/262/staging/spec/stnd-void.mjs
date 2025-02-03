@@ -1,6 +1,8 @@
 import { weaveStandard } from "aran";
 import { compileAran } from "../aran.mjs";
 import { record } from "../../record/index.mjs";
+import { toTestSpecifier } from "../../result.mjs";
+import { compileListPrecursorFailure } from "../failure.mjs";
 
 const {
   Reflect: { defineProperty },
@@ -53,15 +55,28 @@ const advice = {
     ),
 };
 
+const listPrecursorFailure = await compileListPrecursorFailure(["bare-main"]);
+
 /**
- * @type {import("../stage").Stage}
+ * @type {import("../stage").Stage<null>}
  */
 export default {
-  precursor: ["bare-main"],
-  negative: [],
-  exclude: [],
-  listLateNegative: (_test, _error) => [],
-  setup: (context) => {
+  // eslint-disable-next-line require-await
+  setup: async (test) => {
+    const specifier = toTestSpecifier(test.path, test.directive);
+    const reasons = listPrecursorFailure(specifier);
+    if (reasons.length > 0) {
+      return { type: "exclude", reasons };
+    } else {
+      return {
+        type: "include",
+        state: null,
+        flaky: false,
+        negatives: [],
+      };
+    }
+  },
+  prepare: (_state, context) => {
     const { intrinsics } = setup(context);
     defineProperty(intrinsics["aran.global_object"], ADVICE_VARIABLE, {
       // @ts-ignore
@@ -80,4 +95,5 @@ export default {
           ? retro(weaveStandard(trans(path, kind, content), conf))
           : content,
     }),
+  teardown: async (_state) => {},
 };

@@ -4,7 +4,7 @@ import { open } from "node:fs/promises";
 import { compileAran } from "../aran.mjs";
 import { AranTypeError } from "../../error.mjs";
 import { record } from "../../record/index.mjs";
-import { listStageFailure } from "../failure.mjs";
+import { compileListPrecursorFailure } from "../failure.mjs";
 import { toTestSpecifier } from "../../result.mjs";
 
 const {
@@ -498,20 +498,21 @@ const { setup, trans, retro } = compileAran(
     escape_prefix: "$aran",
     global_object_variable: "globalThis",
     intrinsic_global_variable: "__aran_intrinsic__",
-    global_declarative_record: "emulate",
+    global_declarative_record: "builtin",
     digest,
   },
   toEvalPath,
 );
 
-/**
- * @type {import("../stage-name").StageName}
- */
-const precursor = "bare-comp";
+const listPrecursorFailure = await compileListPrecursorFailure([
+  "bare-comp",
+  "bare-main",
+]);
 
-const exclusion = await listStageFailure(precursor);
-
-const handle = await open(new URL(import.meta.url, "branch-count.jsonl"), "w");
+const handle = await open(
+  new URL("../output/branch-count.jsonl", import.meta.url),
+  "w",
+);
 
 /**
  * @type {import("../stage").Stage<{inner:number}>}
@@ -520,12 +521,9 @@ export default {
   // eslint-disable-next-line require-await
   setup: async (test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
-    const reasons = exclusion.has(specifier) ? [precursor] : [];
+    const reasons = listPrecursorFailure(specifier);
     if (reasons.length > 0) {
-      return {
-        type: "exclude",
-        reasons,
-      };
+      return { type: "exclude", reasons };
     } else {
       return {
         type: "include",

@@ -5,6 +5,8 @@ import {
   weave,
 } from "../../../aspects/track-origin.mjs";
 import { record } from "../../record/index.mjs";
+import { toTestSpecifier } from "../../result.mjs";
+import { compileListPrecursorFailure } from "../failure.mjs";
 
 const {
   Reflect: { defineProperty },
@@ -33,13 +35,26 @@ const { setup, trans, retro } = compileAran(
   toEvalPath,
 );
 
-/** @type {import("../stage").Stage} */
+const listPrecursorFailure = await compileListPrecursorFailure(["stnd-full"]);
+
+/** @type {import("../stage").Stage<null>} */
 export default {
-  precursor: ["stnd-full"],
-  negative: [],
-  exclude: [],
-  listLateNegative: (_test, _error) => [],
-  setup: (context) => {
+  // eslint-disable-next-line require-await
+  setup: async (test) => {
+    const specifier = toTestSpecifier(test.path, test.directive);
+    const reasons = listPrecursorFailure(specifier);
+    if (reasons.length > 0) {
+      return { type: "exclude", reasons };
+    } else {
+      return {
+        type: "include",
+        state: null,
+        flaky: false,
+        negatives: [],
+      };
+    }
+  },
+  prepare: (_state, context) => {
     const { intrinsics } = setup(context);
     const advice = createTrackOriginAdvice(
       /** @type {{apply: any, construct: any}} */ (
@@ -61,4 +76,5 @@ export default {
       content:
         type === "main" ? retro(weave(trans(path, kind, content))) : content,
     }),
+  teardown: async (_state) => {},
 };

@@ -2,7 +2,7 @@ import { record } from "../../record/index.mjs";
 import { toTestSpecifier } from "../../result.mjs";
 import { loadTaggingList } from "../../tagging/tagging.mjs";
 import { compileAran } from "../aran.mjs";
-import { listStageFailure } from "../failure.mjs";
+import { compileListPrecursorFailure } from "../failure.mjs";
 
 /**
  * @type {import("aran").Digest}
@@ -40,12 +40,7 @@ const listNegative = await loadTaggingList([
   "negative-bare-wrong-realm-for-default-prototype",
 ]);
 
-/**
- * @type {import("../stage-name").StageName}
- */
-const precursor = "parsing";
-
-const precursor_exclusion = await listStageFailure(precursor);
+const listPrecursorFailure = await compileListPrecursorFailure(["parsing"]);
 
 const listExclusionReason = await loadTaggingList([
   "function-string-representation",
@@ -59,14 +54,11 @@ export default {
   setup: async (test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
     const reasons = [
-      ...(precursor_exclusion.has(specifier) ? [precursor] : []),
+      ...listPrecursorFailure(specifier),
       ...listExclusionReason(specifier),
     ];
     if (reasons.length > 0) {
-      return {
-        type: "exclude",
-        reasons,
-      };
+      return { type: "exclude", reasons };
     } else {
       return {
         type: "include",
