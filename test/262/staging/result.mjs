@@ -1,5 +1,3 @@
-/* eslint-disable local/no-function */
-
 import { open } from "node:fs/promises";
 import { packResult, unpackResult } from "../result.mjs";
 import { createInterface } from "node:readline/promises";

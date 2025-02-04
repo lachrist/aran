@@ -8,6 +8,7 @@ import { HARNESS, TEST262 } from "../layout.mjs";
 import { execTestCase } from "../test-case/index.mjs";
 import { STAGE_ENUM } from "./stage-name.mjs";
 import { AranTypeError } from "../error.mjs";
+import { toTestSpecifier } from "../result.mjs";
 
 const {
   Object: { hasOwn },
@@ -22,25 +23,28 @@ const {
 export const isStageName = (value) => hasOwn(STAGE_ENUM, value);
 
 /**
- * @type {<X>(
+ * @type {<H, X>(
+ *   stage: import("./stage").Stage<H, X>,
+ *   handle: H,
  *   test: import("../test-case").TestCase,
- *   stage: import("./stage").Stage<X>,
  *   fetch: import("../fetch").Fetch,
- * ) => Promise<import("../result").Result>}
+ * ) => Promise<import("../result").ResultEntry>}
  */
 const execStage = async (
-  test,
   { setup, prepare, instrument, teardown },
+  handle,
+  test,
   { resolveDependency, fetchHarness, fetchTarget },
 ) => {
-  const selector = await setup(test);
+  const specifier = toTestSpecifier(test.path, test.directive);
+  const selector = await setup(handle, test);
   switch (selector.type) {
     case "exclude": {
-      return selector;
+      return [specifier, selector];
     }
     case "include": {
       const { state, flaky, negatives } = selector;
-      const { actual, expect, time } = await execTestCase(state, test, {
+      const { actual, expect, time } = await execTestCase(handle, state, test, {
         resolveDependency,
         fetchHarness,
         fetchTarget,
@@ -48,12 +52,15 @@ const execStage = async (
         instrument,
       });
       await teardown(state);
-      return {
-        type: "include",
-        actual,
-        expect: flaky && actual === null ? [] : [...expect, ...negatives],
-        time,
-      };
+      return [
+        specifier,
+        {
+          type: "include",
+          actual,
+          expect: flaky && actual === null ? [] : [...expect, ...negatives],
+          time,
+        },
+      ];
     }
     default: {
       throw new AranTypeError(selector);
@@ -62,9 +69,9 @@ const execStage = async (
 };
 
 /**
- * @type {(
- *   instrument: import("./stage").Instrument,
- * ) => import("./stage").Instrument}
+ * @type {<H>(
+ *   instrument: import("./stage").Instrument<H>,
+ * ) => import("./stage").Instrument<H>}
  */
 const memoizeInstrument = (instrument) => {
   /**
@@ -74,57 +81,73 @@ const memoizeInstrument = (instrument) => {
    * >}
    */
   const cache = new Map();
-  return (source) => {
+  return (handle, source) => {
     if (source.type === "harness") {
       const outcome = cache.get(source.path);
       if (outcome) {
         return outcome;
       } else {
-        const outcome = instrument(source);
+        const outcome = instrument(handle, source);
         cache.set(source.path, outcome);
         return outcome;
       }
     } else {
-      return instrument(source);
+      return instrument(handle, source);
     }
   };
 };
 
 /**
- * @template X
- * @param {import("./stage-name").StageName} name
- * @param {{
- *   memoization: "none" | "lazy" | "eager",
- * }} options
- * @returns {Promise<(
- *    test: import("../test-case").TestCase,
- * ) => Promise<import("../result").Result>>}
+ * @type {(
+ *   name: import("./stage-name").StageName,
+ *   tests: AsyncIterable<import("../test-case").TestCase>,
+ *   config: {
+ *     memoization: "none" | "lazy" | "eager",
+ *     record_directory: null | URL,
+ *   },
+ * ) => AsyncGenerator<import("../result").ResultEntry>}
  */
-export const compileStage = async (name, { memoization }) => {
+export const runStage = async function* (
+  name,
+  tests,
+  { memoization, record_directory },
+) {
   const fetch = {
     resolveDependency,
     fetchHarness: compileFetchHarness(TEST262),
     fetchTarget: compileFetchTarget(TEST262),
   };
-  /** @type {import("./stage").Stage<unknown>} */
+  /**
+   * @type {import("./stage").Stage<
+   *   { __brand: "Handle" },
+   *   { __brand: "State" },
+   * >}
+   */
   const stage = (await import(`./spec/${name}.mjs`)).default;
-  if (memoization !== "none") {
-    stage.instrument = memoizeInstrument(stage.instrument);
-    if (memoization === "eager") {
-      // Fetch all harnesses to cache them and improve timer accuracy
-      for (const name of /** @type {import("../fetch").HarnessName[]} */ (
-        await readdir(HARNESS)
-      )) {
-        if (name.endsWith(".js")) {
-          stage.instrument({
-            type: "harness",
-            kind: "script",
-            path: name,
-            content: await fetch.fetchHarness(name),
-          });
+  const handle = await stage.open({ record_directory });
+  try {
+    if (memoization !== "none") {
+      stage.instrument = memoizeInstrument(stage.instrument);
+      if (memoization === "eager") {
+        // Fetch all harnesses to cache them and improve timer accuracy
+        for (const name of /** @type {import("../fetch").HarnessName[]} */ (
+          await readdir(HARNESS)
+        )) {
+          if (name.endsWith(".js")) {
+            stage.instrument(handle, {
+              type: "harness",
+              kind: "script",
+              path: name,
+              content: await fetch.fetchHarness(name),
+            });
+          }
         }
       }
     }
+    for await (const test of tests) {
+      yield execStage(stage, handle, test, fetch);
+    }
+  } finally {
+    await stage.close(handle);
   }
-  return (test) => execStage(test, stage, fetch);
 };

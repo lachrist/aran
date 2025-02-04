@@ -61,10 +61,18 @@ const listNegative = await loadTaggingList([
   "negative-identity-wrong-realm-for-dynamic-import",
 ]);
 
-/** @type {import("../stage").Stage<null>} */
+/**
+ * @type {import("../stage").Stage<
+ *   import("../stage").Config,
+ *   null,
+ * >}
+ */
 export default {
   // eslint-disable-next-line require-await
-  setup: async (test) => {
+  open: async (config) => config,
+  close: async (_config) => {},
+  // eslint-disable-next-line require-await
+  setup: async (_config, test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
     const reasons = listExclusionReason(specifier);
     if (reasons.length > 0) {
@@ -85,6 +93,7 @@ export default {
     };
   },
   prepare: (_state, _context) => {},
-  instrument: (source) => record(source),
+  instrument: ({ record_directory }, source) =>
+    record(source, record_directory),
   teardown: async (_state) => {},
 };

@@ -23,7 +23,7 @@ const digest = (_node, node_path, file_path, _kind) =>
  */
 const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
-const { setup, trans, retro } = compileAran(
+const { prepare, trans, retro } = compileAran(
   {
     mode: "normal",
     escape_prefix: "__aran__",
@@ -37,10 +37,18 @@ const { setup, trans, retro } = compileAran(
 
 const listPrecursorFailure = await compileListPrecursorFailure(["stnd-full"]);
 
-/** @type {import("../stage").Stage<null>} */
+/**
+ * @type {import("../stage").Stage<
+ *   import("../stage").Config,
+ *   import("../stage").Config,
+ * >}
+ */
 export default {
   // eslint-disable-next-line require-await
-  setup: async (test) => {
+  open: async (config) => config,
+  close: async (_config) => {},
+  // eslint-disable-next-line require-await
+  setup: async (config, test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
     const reasons = listPrecursorFailure(specifier);
     if (reasons.length > 0) {
@@ -48,14 +56,14 @@ export default {
     } else {
       return {
         type: "include",
-        state: null,
+        state: config,
         flaky: false,
         negatives: [],
       };
     }
   },
-  prepare: (_state, context) => {
-    const { intrinsics } = setup(context);
+  prepare: (config, context) => {
+    const { intrinsics } = prepare(context, config);
     const advice = createTrackOriginAdvice(
       /** @type {{apply: any, construct: any}} */ (
         intrinsics["aran.global_object"].Reflect
@@ -70,11 +78,14 @@ export default {
       configurable: false,
     });
   },
-  instrument: ({ type, kind, path, content }) =>
-    record({
-      path,
-      content:
-        type === "main" ? retro(weave(trans(path, kind, content))) : content,
-    }),
+  instrument: ({ record_directory }, { type, kind, path, content }) =>
+    record(
+      {
+        path,
+        content:
+          type === "main" ? retro(weave(trans(path, kind, content))) : content,
+      },
+      record_directory,
+    ),
   teardown: async (_state) => {},
 };

@@ -1,13 +1,15 @@
 import { argv, stderr, stdout } from "node:process";
 import { createSignal } from "../util/index.mjs";
 import { loadCursor, saveCursor } from "./cursor.mjs";
-import { compileStage } from "../staging/stage.mjs";
+import { runStage } from "../staging/stage.mjs";
 import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
 import { inspect } from "node:util";
 import { showTargetPath } from "../fetch.mjs";
 import { ROOT, TEST262 } from "../layout.mjs";
+import { filterIterable, interruptIterable } from "./iterable.mjs";
+import { parseTestSpecifier } from "../result.mjs";
 
 const { process, Infinity } = globalThis;
 
@@ -16,36 +18,36 @@ const { process, Infinity } = globalThis;
  *   stage: import("../staging/stage-name").StageName,
  *   cursor: number,
  *   sigint: import("../util/signal").Signal<boolean>,
- * ) => Promise<{
+ * ) => Promise<null | {
  *   cursor: number,
- *   failure: null | {
- *     test: import("../test-case").TestCase,
- *     result: import("../result").Result,
- *   },
+ *   entry: import("../result").ResultEntry,
  * }>}
  */
 const move = async (stage, cursor, sigint) => {
-  const exec = await compileStage(stage, { memoization: "lazy" });
   let index = 0;
-  for await (const test of loadTestCase()) {
+  for await (const [specifier, result] of runStage(
+    stage,
+    filterIterable(
+      interruptIterable(loadTestCase(), sigint),
+      (_value, index) => index >= cursor,
+    ),
+    {
+      record_directory: null,
+      memoization: "eager",
+    },
+  )) {
+    index++;
     if (index % 100 === 0) {
       stdout.write(`${index}\n`);
     }
-    if (sigint.get()) {
-      return { cursor: index, failure: null };
-    }
-    if (index >= cursor) {
-      const result = await exec(test);
-      if (result.type === "include") {
-        const { actual, expect } = result;
-        if ((actual === null) !== (expect.length === 0)) {
-          return { cursor: index, failure: { test, result } };
-        }
+    if (result.type === "include") {
+      const { actual, expect } = result;
+      if ((actual === null) !== (expect.length === 0)) {
+        return { cursor: index, entry: [specifier, result] };
       }
     }
-    index++;
   }
-  return { cursor: 0, failure: null };
+  return null;
 };
 
 /**
@@ -55,10 +57,7 @@ const move = async (stage, cursor, sigint) => {
  *   | "usage"
  *   | "done"
  *   | "sigint"
- *   | {
- *     test: import("../test-case").TestCase,
- *     result: import("../result").Result,
- *   }
+ *   | import("../result").ResultEntry
  * )>}
  */
 const main = async (argv) => {
@@ -73,9 +72,14 @@ const main = async (argv) => {
     process.addListener("SIGINT", onSigint);
     process.addListener("uncaughtException", onUncaughtException);
     try {
-      const { cursor, failure } = await move(stage, await loadCursor(), sigint);
-      await saveCursor(cursor, failure === null ? null : failure.test);
-      return sigint.value ? "sigint" : failure === null ? "done" : failure;
+      const error = await move(stage, await loadCursor(), sigint);
+      if (error) {
+        const { cursor, entry } = error;
+        await saveCursor(cursor, entry[0]);
+        return entry;
+      } else {
+        return sigint.value ? "sigint" : "done";
+      }
     } finally {
       process.removeListener("SIGINT", onSigint);
       process.removeListener("uncaughtException", onUncaughtException);
@@ -98,7 +102,9 @@ const main = async (argv) => {
     stdout.write("SUCCESS\n");
   } else {
     stdout.write("FAILURE\n");
-    stdout.write(showTargetPath(status.test.path, TEST262, ROOT) + "\n");
+    stdout.write(
+      showTargetPath(parseTestSpecifier(status[0]).path, ROOT, TEST262) + "\n",
+    );
     stdout.write(inspect(status, { depth: Infinity, colors: true }) + "\n");
   }
 }

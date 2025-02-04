@@ -1,16 +1,26 @@
 import { stdout, stderr, argv } from "node:process";
 import { loadCursor } from "./cursor.mjs";
-import { compileStage } from "../staging/stage.mjs";
+import { runStage } from "../staging/stage.mjs";
 import { grabTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
 import { inspect } from "node:util";
 import { showTargetPath } from "../fetch.mjs";
 import { ROOT, TEST262 } from "../layout.mjs";
+import { AranExecError } from "../error.mjs";
 
-const { Error, Infinity, process } = globalThis;
+const { URL, Error, Infinity, process } = globalThis;
 
 Error.stackTraceLimit = Infinity;
+
+/**
+ * @type {<X>(
+ *   item: X,
+ * ) => AsyncGenerator<X>}
+ */
+const wrapItem = async function* (item) {
+  yield item;
+};
 
 /**
  * @type {(
@@ -23,16 +33,18 @@ Error.stackTraceLimit = Infinity;
  */
 const look = async (stage) => {
   const cursor = await loadCursor();
-  const exec = await compileStage(stage, {
+  const test = await grabTestCase(cursor);
+  const results = [];
+  for await (const [, result] of runStage(stage, wrapItem(test), {
     memoization: "none",
-  });
-  process.addListener("uncaughtException", onUncaughtException);
-  try {
-    const test = await grabTestCase(cursor);
-    return { cursor, test, result: await exec(test) };
-  } finally {
-    process.removeListener("uncaughtException", onUncaughtException);
+    record_directory: new URL("record/", import.meta.url),
+  })) {
+    results.push(result);
   }
+  if (results.length !== 1) {
+    throw new AranExecError("result length mismatch", { results });
+  }
+  return { cursor, test, result: results[1] };
 };
 
 /**

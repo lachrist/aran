@@ -1,5 +1,5 @@
 import { MISSING_ERROR_MESSAGE } from "./util/index.mjs";
-import { AranTypeError } from "./error.mjs";
+import { AranExecError, AranTypeError } from "./error.mjs";
 
 const {
   Array: { isArray },
@@ -40,6 +40,34 @@ export const isCompactResultEntry = (data) =>
  * ) => import("./result").TestSpecifier}
  */
 export const toTestSpecifier = (path, directive) => `${path}@${directive}`;
+
+/**
+ * @type {(
+ *   specifier: import("./result").TestSpecifier,
+ * ) => {
+ *   path: import("./fetch").TestPath,
+ *   directive: import("./test-case").Directive,
+ * }}
+ */
+export const parseTestSpecifier = (specifier) => {
+  const parts = specifier.split("@");
+  if (parts.length !== 2) {
+    throw new AranExecError("Invalid test specifier", { specifier });
+  }
+  const [path, directive] = parts;
+  if (directive !== "none" && directive !== "use-strict") {
+    throw new AranExecError("Invalid test directive", {
+      specifier,
+      path,
+      directive,
+    });
+  }
+  return {
+    // eslint-disable-next-line object-shorthand
+    path: /** @type {import("./fetch").TestPath} */ (path),
+    directive,
+  };
+};
 
 /**
  * @type {(

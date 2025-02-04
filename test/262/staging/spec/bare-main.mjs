@@ -15,7 +15,7 @@ const digest = (_node, node_path, file_path, _kind) =>
  */
 const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
-const { setup, trans, retro } = compileAran(
+const { prepare, trans, retro } = compileAran(
   {
     mode: "normal",
     escape_prefix: "$aran",
@@ -47,11 +47,17 @@ const listExclusionReason = await loadTaggingList([
 ]);
 
 /**
- * @type {import("../stage").Stage<null>}
+ * @type {import("../stage").Stage<
+ *   import("../stage").Config,
+ *   import("../stage").Config,
+ * >}
  */
 export default {
   // eslint-disable-next-line require-await
-  setup: async (test) => {
+  open: async (config) => config,
+  close: async (_config) => {},
+  // eslint-disable-next-line require-await
+  setup: async (config, test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
     const reasons = [
       ...listPrecursorFailure(specifier),
@@ -62,19 +68,22 @@ export default {
     } else {
       return {
         type: "include",
-        state: null,
+        state: config,
         flaky: false,
         negatives: listNegative(specifier),
       };
     }
   },
-  prepare: (_state, context) => {
-    setup(context);
+  prepare: (config, context) => {
+    prepare(context, config);
   },
-  instrument: ({ type, kind, path, content }) =>
-    record({
-      path,
-      content: type === "main" ? retro(trans(path, kind, content)) : content,
-    }),
+  instrument: ({ record_directory }, { type, kind, path, content }) =>
+    record(
+      {
+        path,
+        content: type === "main" ? retro(trans(path, kind, content)) : content,
+      },
+      record_directory,
+    ),
   teardown: async (_state) => {},
 };

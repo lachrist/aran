@@ -165,6 +165,9 @@ const compileFunctionCode = (input) => {
 /**
  * @type {(
  *   intrinsic: import("aran").IntrinsicRecord,
+ *   config: {
+ *     record_directory: null | URL,
+ *   },
  * ) => {
  *   eval: (
  *     root: import("aran").Program<Atom>,
@@ -182,7 +185,7 @@ const compileFunctionCode = (input) => {
  *   ) => unknown,
  * }}
  */
-const compileAdvice = (intrinsics) => {
+const compileAdvice = (intrinsics, { record_directory }) => {
   const global = intrinsics["aran.global_object"];
   const globals = {
     apply: global.Reflect.apply,
@@ -208,10 +211,13 @@ const compileAdvice = (intrinsics) => {
             const path = /** @type {FilePath} */ (
               `dynamic://eval/global/${hash}`
             );
-            const { content } = record({
-              path,
-              content: retro(weave(trans(path, "eval", code))),
-            });
+            const { content } = record(
+              {
+                path,
+                content: retro(weave(trans(path, "eval", code))),
+              },
+              record_directory,
+            );
             return globals.eval(content);
           } catch (error) {
             throw recreateError(error, syntax_error_mapping);
@@ -224,10 +230,13 @@ const compileAdvice = (intrinsics) => {
           const path = /** @type {FilePath} */ (
             `dynamic://script/global/${hash}`
           );
-          const { content } = record({
-            path,
-            content: retro(weave(trans(path, "script", code))),
-          });
+          const { content } = record(
+            {
+              path,
+              content: retro(weave(trans(path, "script", code))),
+            },
+            record_directory,
+          );
           return globals.evalScript(content);
         } catch (error) {
           throw recreateError(error, syntax_error_mapping);
@@ -241,12 +250,15 @@ const compileAdvice = (intrinsics) => {
           const path = /** @type {FilePath} */ (
             `dynamic://function/global/${hash}`
           );
-          const { content } = record({
-            path,
-            content: retro(
-              weave(trans(path, "eval", compileFunctionCode(input))),
-            ),
-          });
+          const { content } = record(
+            {
+              path,
+              content: retro(
+                weave(trans(path, "eval", compileFunctionCode(input))),
+              ),
+            },
+            record_directory,
+          );
           return globals.eval(content);
         } catch (error) {
           throw recreateError(error, syntax_error_mapping);
@@ -621,7 +633,7 @@ const digest = (_node, node_path, file_path, _kind) =>
 const toEvalPath = (hash) =>
   /** @type {FilePath} */ (`dynamic://eval/local/${hash}`);
 
-const { setup, trans, retro } = compileAran(
+const { prepare, trans, retro } = compileAran(
   {
     mode: "normal",
     escape_prefix: "$aran",
@@ -655,11 +667,17 @@ const listExclusionReason = await loadTaggingList([
 ]);
 
 /**
- * @type {import("../stage").Stage<null>}
+ * @type {import("../stage").Stage<
+ *   import("../stage").Config,
+ *   import("../stage").Config,
+ * >}
  */
 export default {
   // eslint-disable-next-line require-await
-  setup: async (test) => {
+  open: async (config) => config,
+  close: async (_config) => {},
+  // eslint-disable-next-line require-await
+  setup: async (config, test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
     const reasons = [
       ...listPrecursorFailure(specifier),
@@ -670,15 +688,15 @@ export default {
     } else {
       return {
         type: "include",
-        state: null,
+        state: config,
         flaky: false,
         negatives: listNegative(specifier),
       };
     }
   },
-  prepare: (_state, context) => {
-    const { intrinsics } = setup(context);
-    const advice = compileAdvice(intrinsics);
+  prepare: (config, context) => {
+    const { intrinsics } = prepare(context, config);
+    const advice = compileAdvice(intrinsics, config);
     for (let index = 0; index < advice_enum.length; index += 1) {
       const name = advice_enum[index];
       const descriptor = {
@@ -695,12 +713,15 @@ export default {
       );
     }
   },
-  instrument: ({ kind, path, content }) =>
-    record({
-      path,
-      content: retro(
-        weave(trans(/** @type {FilePath} */ (path), kind, content)),
-      ),
-    }),
+  instrument: (config, { kind, path, content }) =>
+    record(
+      {
+        path,
+        content: retro(
+          weave(trans(/** @type {FilePath} */ (path), kind, content)),
+        ),
+      },
+      config.record_directory,
+    ),
   teardown: async (_state) => {},
 };

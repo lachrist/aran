@@ -492,7 +492,7 @@ const digest = (_node, node_path, file_path, _kind) =>
 const toEvalPath = (hash) =>
   /** @type {FilePath} */ (`dynamic://eval/local/${hash}`);
 
-const { setup, trans, retro } = compileAran(
+const { prepare, trans, retro } = compileAran(
   {
     mode: "normal",
     escape_prefix: "$aran",
@@ -515,11 +515,17 @@ const handle = await open(
 );
 
 /**
- * @type {import("../stage").Stage<{inner:number}>}
+ * @type {import("../stage").Stage<
+ *   import("../stage").Config,
+ *   { record_directory: null | URL, counter: { inner: number } },
+ * >}
  */
 export default {
   // eslint-disable-next-line require-await
-  setup: async (test) => {
+  open: async (config) => config,
+  close: async (_config) => {},
+  // eslint-disable-next-line require-await
+  setup: async (config, test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
     const reasons = listPrecursorFailure(specifier);
     if (reasons.length > 0) {
@@ -527,14 +533,14 @@ export default {
     } else {
       return {
         type: "include",
-        state: { inner: 0 },
+        state: { ...config, counter: { inner: 0 } },
         flaky: false,
         negatives: [],
       };
     }
   },
-  prepare: (counter, context) => {
-    const { intrinsics } = setup(context);
+  prepare: ({ counter, ...config }, context) => {
+    const { intrinsics } = prepare(context, config);
     const advice = {
       eval: weave,
       /** @type {<X>(value: X) => X} */
@@ -559,14 +565,17 @@ export default {
       );
     }
   },
-  instrument: ({ kind, path, content }) =>
-    record({
-      path,
-      content: retro(
-        weave(trans(/** @type {FilePath} */ (path), kind, content)),
-      ),
-    }),
-  teardown: async (counter) => {
+  instrument: ({ record_directory }, { kind, path, content }) =>
+    record(
+      {
+        path,
+        content: retro(
+          weave(trans(/** @type {FilePath} */ (path), kind, content)),
+        ),
+      },
+      record_directory,
+    ),
+  teardown: async ({ counter }) => {
     await handle.write(`${counter.inner}\n`);
   },
 };

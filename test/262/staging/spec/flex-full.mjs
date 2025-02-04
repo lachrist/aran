@@ -663,7 +663,7 @@ const retro_config = {
   ),
 };
 
-const { setup, trans, retro } = compileAran(
+const { prepare, trans, retro } = compileAran(
   { ...trans_config, ...retro_config },
   toEvalPath,
 );
@@ -702,11 +702,17 @@ const weave_config = {
 const listPrecursorFailure = await compileListPrecursorFailure(["flex-void"]);
 
 /**
- * @type {import("../stage").Stage<null>}
+ * @type {import("../stage").Stage<
+ *   import("../stage").Config,
+ *   import("../stage").Config,
+ * >}
  */
 export default {
   // eslint-disable-next-line require-await
-  setup: async (test) => {
+  open: async (config) => config,
+  close: async (_config) => {},
+  // eslint-disable-next-line require-await
+  setup: async (config, test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
     const reasons = listPrecursorFailure(specifier);
     if (reasons.length > 0) {
@@ -714,14 +720,14 @@ export default {
     } else {
       return {
         type: "include",
-        state: null,
+        state: config,
         flaky: false,
         negatives: [],
       };
     }
   },
-  prepare: (_state, context) => {
-    const { intrinsics } = setup(context);
+  prepare: (config, context) => {
+    const { intrinsics } = prepare(context, config);
     const global = intrinsics["aran.global_object"];
     const aspect = compileAspect(/** @type {any} */ (global.Reflect));
     for (const variable of listKey(aspect)) {
@@ -735,15 +741,15 @@ export default {
       });
     }
   },
-  instrument: ({ type, kind, path, content: code1 }) => {
+  instrument: ({ record_directory }, { type, kind, path, content: code1 }) => {
     if (type === "main") {
       /** @type {import("aran").Program<Atom>} */
       const root1 = trans(path, kind, code1);
       const root2 = weaveFlexible(root1, weave_config);
       const code2 = retro(root2);
-      return record({ path, content: code2 });
+      return record({ path, content: code2 }, record_directory);
     } else {
-      return record({ path, content: code1 });
+      return record({ path, content: code1 }, record_directory);
     }
   },
   teardown: async (_state) => {},

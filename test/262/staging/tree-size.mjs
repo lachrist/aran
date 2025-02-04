@@ -46,7 +46,7 @@ const retro_config = {
   intrinsic_global_variable: "__aran_intrinsic__",
 };
 
-const { setup, trans, retro } = compileAran(
+const { prepare, trans, retro } = compileAran(
   { ...trans_config, ...retro_config },
   toEvalPath,
 );
@@ -54,11 +54,6 @@ const { setup, trans, retro } = compileAran(
 ////////////
 // Export //
 ////////////
-
-const handle = await open(
-  new URL("../output/tree-size.jsonl", import.meta.url),
-  "w",
-);
 
 /**
  * @type {(
@@ -86,14 +81,34 @@ const listPrecursorFailure = await compileListPrecursorFailure([
  *   config: {
  *     procedural: "inter" | "intra",
  *   },
- * ) => import("./stage").Stage<[
- *   number,
- *   import("aran").EstreeNodePath,
- * ][]>}
+ * ) => import("./stage").Stage<
+ *   {
+ *     handle: import("node:fs/promises").FileHandle,
+ *     record_directory: null | URL,
+ *   },
+ *   {
+ *     handle: import("node:fs/promises").FileHandle,
+ *     record_directory: null | URL,
+ *     buffer: [
+ *       number,
+ *       import("aran").EstreeNodePath,
+ *     ][],
+ *   },
+ * >}
  */
 export const compileStage = ({ procedural }) => ({
+  open: async ({ record_directory }) => ({
+    record_directory,
+    handle: await open(
+      new URL("../output/tree-size.jsonl", import.meta.url),
+      "w",
+    ),
+  }),
+  close: async ({ handle }) => {
+    await handle.close();
+  },
   // eslint-disable-next-line require-await
-  setup: async ({ path, directive }) => {
+  setup: async ({ handle, record_directory }, { path, directive }) => {
     const specifier = toTestSpecifier(path, directive);
     const reasons = listPrecursorFailure(specifier);
     if (reasons.length > 0) {
@@ -101,14 +116,18 @@ export const compileStage = ({ procedural }) => ({
     } else {
       return {
         type: "include",
-        state: [],
+        state: {
+          handle,
+          record_directory,
+          buffer: [],
+        },
         flaky: false,
         negatives: [],
       };
     }
   },
-  prepare: (buffer, context) => {
-    const { intrinsics } = setup(context);
+  prepare: ({ buffer, record_directory }, context) => {
+    const { intrinsics } = prepare(context, { record_directory });
     /**
      * @type {(
      *   kind: import("aran").TestKind,
@@ -148,13 +167,13 @@ export const compileStage = ({ procedural }) => ({
       descriptor,
     );
   },
-  instrument: ({ kind, path, content: code1 }) => {
+  instrument: ({ record_directory }, { kind, path, content: code1 }) => {
     const root1 = trans(path, kind, code1);
     const root2 = weave(root1);
     const code2 = retro(root2);
-    return record({ path, content: code2 });
+    return record({ path, content: code2 }, record_directory);
   },
-  teardown: async (buffer) => {
+  teardown: async ({ handle, buffer }) => {
     const { length } = buffer;
     /** @type {number[]} */
     const content = new Array(2 * buffer.length);

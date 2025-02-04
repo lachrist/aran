@@ -17,14 +17,23 @@ export type Selector<X> =
       negatives: Tag[];
     };
 
-export type Setup<X> = (test_case: TestCase) => Promise<Selector<X>>;
+export type Config = { record_directory: null | URL };
+
+export type Open<H> = (config: { record_directory: null | URL }) => Promise<H>;
+export type Close<H> = (handle: H) => Promise<void>;
+export type Setup<H, X> = (
+  handle: H,
+  test_case: TestCase,
+) => Promise<Selector<X>>;
 export type Prepare<X> = (state: X, context: Context) => void;
-export type Instrument = (source: Source) => File;
+export type Instrument<H> = (handle: H, source: Source) => File;
 export type Teardown<X> = (state: X) => Promise<void>;
 
-export type Stage<X> = {
-  setup: Setup<X>;
+export type Stage<H, X> = {
+  open: Open<H>;
+  close: Close<H>;
+  setup: Setup<H, X>;
   prepare: Prepare<X>;
-  instrument: Instrument;
+  instrument: Instrument<H>;
   teardown: Teardown<X>;
 };

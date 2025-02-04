@@ -9,20 +9,22 @@ import { recreateError } from "../util/index.mjs";
 const { Error, undefined, Map, JSON } = globalThis;
 
 /**
- * @type {(
+ * @type {<H>(
+ *   handle: H,
  *   dependency: {
  *     path: import("../fetch").DependencyPath,
  *     content: string,
  *   },
  *   options: {
  *     SyntaxError: new (message: string) => unknown,
- *     instrument: import("../staging/stage").Instrument,
+ *     instrument: import("../staging/stage").Instrument<H>,
  *     importModuleDynamically: import("./load").Load,
  *     context: import("node:vm").Context,
  *   },
  * ) => import("node:vm").Module}
  */
 const makeModule = (
+  handle,
   { path: path1, content: content1 },
   { SyntaxError, instrument, importModuleDynamically, context },
 ) => {
@@ -40,7 +42,7 @@ const makeModule = (
       );
       return module;
     } else {
-      const { content: content2, path: path2 } = instrument({
+      const { content: content2, path: path2 } = instrument(handle, {
         type: "dependency",
         kind: "module",
         path: path1,
@@ -62,11 +64,12 @@ const makeModule = (
 };
 
 /**
- * @type {(
+ * @type {<H>(
+ *   handle: H,
  *   context: import("node:vm").Context,
  *   dependencies: {
  *     resolveDependency: import("../fetch").ResolveDependency,
- *     instrument: import("../staging/stage").Instrument,
+ *     instrument: import("../staging/stage").Instrument<H>,
  *     fetchTarget: import("../fetch").FetchTarget,
  *   },
  * ) => {
@@ -79,6 +82,7 @@ const makeModule = (
  * }}
  */
 export const compileLinker = (
+  handle,
   context,
   { resolveDependency, instrument, fetchTarget },
 ) => {
@@ -115,6 +119,7 @@ export const compileLinker = (
       if (module === undefined) {
         const content = await fetchTarget(path);
         const module = makeModule(
+          handle,
           { path, content },
           // eslint-disable-next-line no-use-before-define
           { SyntaxError, instrument, importModuleDynamically, context },

@@ -1,14 +1,12 @@
-/* eslint-disable local/no-function */
-
 import { createSignal } from "../util/index.mjs";
 import { argv, stderr, stdout } from "node:process";
-import { compileStage } from "../staging/stage.mjs";
+import { runStage } from "../staging/stage.mjs";
 import { saveStageResultEntry } from "../staging/result-entry.mjs";
-import { toTestSpecifier } from "../result.mjs";
 import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
 import { AranTypeError } from "../error.mjs";
+import { interruptIterable } from "./iterable.mjs";
 
 const { process, Date } = globalThis;
 
@@ -16,24 +14,22 @@ const { process, Date } = globalThis;
  * @type {(
  *   stage: import("../staging/stage-name").StageName,
  *   sigint: import("../util/signal").Signal<boolean>,
- * ) => AsyncGenerator<
- *   import("../result").ResultEntry,
- *   "done" | "sigint"
- * >}
+ * ) => AsyncGenerator<import("../result").ResultEntry>}
  */
 const exec = async function* (stage, sigint) {
-  const execTestCase = await compileStage(stage, { memoization: "eager" });
   let index = 0;
-  for await (const test of loadTestCase()) {
-    if (sigint.get()) {
-      return "sigint";
-    }
+  for await (const [specifier, result] of runStage(
+    stage,
+    interruptIterable(loadTestCase(), sigint),
+    {
+      record_directory: null,
+      memoization: "eager",
+    },
+  )) {
+    index++;
     if (index % 100 === 0) {
       stdout.write(`${index}\n`);
     }
-    index++;
-    const specifier = toTestSpecifier(test.path, test.directive);
-    const result = await execTestCase(test);
     if (result.type === "include") {
       if (result.actual === null && result.expect.length > 0) {
         stderr.write(`FALSE NEGATIVE >> ${specifier}\n`);
@@ -44,7 +40,6 @@ const exec = async function* (stage, sigint) {
     }
     yield [specifier, result];
   }
-  return "done";
 };
 
 /**

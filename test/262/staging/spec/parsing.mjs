@@ -13,10 +13,18 @@ const listNegative = await loadTaggingList([
   "parsing-unknown",
 ]);
 
-/** @type {import("../stage").Stage<null>} */
+/**
+ * @type {import("../stage").Stage<
+ *   import("../stage").Config,
+ *   null,
+ * >}
+ */
 export default {
   // eslint-disable-next-line require-await
-  setup: async (test) => {
+  open: async (config) => config,
+  close: async (_config) => {},
+  // eslint-disable-next-line require-await
+  setup: async (_config, test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
     const reasons = listPrecursorFailure(specifier);
     if (reasons.length > 0) {
@@ -34,10 +42,13 @@ export default {
     }
   },
   prepare: (_state, _context) => {},
-  instrument: ({ path, content, kind }) =>
-    record({
-      path,
-      content: generate(parseGlobal(kind, content)),
-    }),
+  instrument: ({ record_directory }, { path, content, kind }) =>
+    record(
+      {
+        path,
+        content: generate(parseGlobal(kind, content)),
+      },
+      record_directory,
+    ),
   teardown: async (_state) => {},
 };

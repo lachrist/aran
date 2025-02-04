@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { setupile, transpile, retropile } from "aran";
 import { parse } from "acorn";
 import { generate } from "astring";

@@ -27,8 +27,9 @@ const parseSitu = parseJson;
  *   ),
  *   toEvalPath: (hash: hash) => path,
  * ) => {
- *   setup: (
+ *   prepare: (
  *     context: import("node:vm").Context,
+ *     config: { record_directory: null | URL },
  *   ) => {
  *     intrinsics: import("aran").IntrinsicRecord,
  *     $262: import("../$262").$262,
@@ -46,7 +47,7 @@ const parseSitu = parseJson;
 export const compileAran = (config, toEvalPath) => {
   const SETUP = generate(setupile(config));
   return {
-    setup: (context) => {
+    prepare: (context, { record_directory }) => {
       /** @type {import("aran").IntrinsicRecord} */
       const intrinsics = /** @type {any} */ (runInContext(SETUP, context));
       /** @type {import("../$262").$262} */
@@ -72,10 +73,13 @@ export const compileAran = (config, toEvalPath) => {
       };
       intrinsics["aran.retropileEvalCode"] = (root) => {
         try {
-          const { content } = record({
-            path: "dynamic://eval/local",
-            content: generate(retropile(root, config)),
-          });
+          const { content } = record(
+            {
+              path: "dynamic://eval/local",
+              content: generate(retropile(root, config)),
+            },
+            record_directory,
+          );
           return content;
         } catch (error) {
           throw new AranTestError(inspectErrorMessage(error), error);

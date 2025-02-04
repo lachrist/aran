@@ -148,12 +148,13 @@ const applyDirective = (content, directive) => {
 };
 
 /**
- * @type {<X>(
+ * @type {<H, X>(
+ *   handle: H,
  *   state: X,
  *   test_case: import("../test-case").TestCase,
  *   dependencies: {
  *     prepare: import("../staging/stage").Prepare<X>,
- *     instrument: import("../staging/stage").Instrument,
+ *     instrument: import("../staging/stage").Instrument<H>,
  *     signalNegative: (cause: string) => Error,
  *     resolveDependency: import("../fetch").ResolveDependency,
  *     fetchHarness: import("../fetch").FetchHarness,
@@ -162,6 +163,7 @@ const applyDirective = (content, directive) => {
  * ) => Promise<null | import("../util/error-serial").ErrorSerial>}
  */
 export const execTestCaseInner = async (
+  handle,
   state,
   { kind, directive, path: path1, negative, asynchronous, includes },
   {
@@ -184,7 +186,7 @@ export const execTestCaseInner = async (
   }).aran;
   for (const name of includes) {
     try {
-      const { path, content } = instrument({
+      const { path, content } = instrument(handle, {
         type: "harness",
         kind: "script",
         path: name,
@@ -196,13 +198,14 @@ export const execTestCaseInner = async (
     }
   }
   const { link, importModuleDynamically, registerMain } = compileLinker(
+    handle,
     context,
     { resolveDependency, instrument, fetchTarget },
   );
   const instrument_outcome = applyNegative(
     "instrument",
     wrapOutcome(() =>
-      instrument({
+      instrument(handle, {
         type: "main",
         kind,
         path: path1,
@@ -306,12 +309,13 @@ export const execTestCaseInner = async (
 };
 
 /**
- * @type {<X>(
+ * @type {<H, X>(
+ *   handle: H,
  *   state: X,
  *   test_case: import("../test-case").TestCase,
  *   dependencies: {
  *     prepare: import("../staging/stage").Prepare<X>,
- *     instrument: import("../staging/stage").Instrument,
+ *     instrument: import("../staging/stage").Instrument<H>,
  *     resolveDependency: import("../fetch").ResolveDependency,
  *     fetchHarness: import("../fetch").FetchHarness,
  *     fetchTarget: import("../fetch").FetchTarget,
@@ -322,11 +326,11 @@ export const execTestCaseInner = async (
  *   time: { user: number, system: number },
  * }>}
  */
-export const execTestCase = async (state, test_case, dependencies) => {
+export const execTestCase = async (handle, state, test_case, dependencies) => {
   /** @type {string[]} */
   const expect = [];
   const time = cpuUsage();
-  const error = await execTestCaseInner(state, test_case, {
+  const error = await execTestCaseInner(handle, state, test_case, {
     ...dependencies,
     signalNegative: (cause) => {
       expect.push(cause);

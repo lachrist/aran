@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { AranExecError } from "../error.mjs";
 
-const { JSON, URL, parseInt } = globalThis;
+const { URL, parseInt } = globalThis;
 
 const CURSOR = new URL("cursor.txt", import.meta.url);
 
@@ -42,15 +42,13 @@ export const loadCursor = async () => {
 /**
  * @type {(
  *   cursor: number,
- *   test: null | import("../test-case").TestCase,
+ *   specifier: null | import("../result").TestSpecifier,
  * ) => Promise<void>}
  */
-export const saveCursor = async (cursor, test) => {
+export const saveCursor = async (cursor, specifier) => {
   await writeFile(
     CURSOR,
-    test === null
-      ? `${cursor}\n`
-      : `${cursor}\n${JSON.stringify(test, null, 2)}\n`,
+    specifier === null ? `${cursor}\n` : `${cursor}\n${specifier}\n`,
     "utf-8",
   );
 };

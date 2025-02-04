@@ -1,5 +1,3 @@
-/* eslint-disable local/no-function */
-
 import { open } from "node:fs/promises";
 import { createInterface } from "node:readline";
 

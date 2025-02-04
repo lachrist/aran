@@ -93,7 +93,7 @@ const retro_config = {
   ),
 };
 
-const { setup, trans, retro } = compileAran(
+const { prepare, trans, retro } = compileAran(
   { ...trans_config, ...retro_config },
   toEvalPath,
 );
@@ -704,11 +704,17 @@ const compileAdvice = ({ apply, construct }) => ({
 const listPrecursorFailure = await compileListPrecursorFailure(["stnd-void"]);
 
 /**
- * @type {import("../stage").Stage<null>}
+ * @type {import("../stage").Stage<
+ *   import("../stage").Config,
+ *   import("../stage").Config,
+ * >}
  */
 export default {
   // eslint-disable-next-line require-await
-  setup: async (test) => {
+  open: async (config) => config,
+  close: async (_config) => {},
+  // eslint-disable-next-line require-await
+  setup: async (config, test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
     const reasons = listPrecursorFailure(specifier);
     if (reasons.length > 0) {
@@ -716,14 +722,14 @@ export default {
     } else {
       return {
         type: "include",
-        state: null,
+        state: config,
         flaky: false,
         negatives: [],
       };
     }
   },
-  prepare: (_state, context) => {
-    const { intrinsics } = setup(context);
+  prepare: (config, context) => {
+    const { intrinsics } = prepare(context, config);
     defineProperty(intrinsics["aran.global_object"], ADVICE_VARIABLE, {
       // @ts-ignore
       __proto__: null,
@@ -737,15 +743,15 @@ export default {
       configurable: false,
     });
   },
-  instrument: ({ type, kind, path, content: code1 }) => {
+  instrument: ({ record_directory }, { type, kind, path, content: code1 }) => {
     if (type === "main") {
       /** @type {import("aran").Program<Atom>} */
       const root1 = trans(path, kind, code1);
       const root2 = weaveStandard(root1, weave_config);
       const code2 = retro(root2);
-      return record({ path, content: code2 });
+      return record({ path, content: code2 }, record_directory);
     } else {
-      return record({ path, content: code1 });
+      return record({ path, content: code1 }, record_directory);
     }
   },
   teardown: async (_state) => {},
