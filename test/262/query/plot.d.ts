@@ -1,14 +1,6 @@
-import { Result } from "../result";
-import { StageName } from "../staging/stage-name";
-
-export type Plot = {
+export type BoxPlot = {
   output: string;
   title: string;
-  labels: string[];
-  data: number[][];
-};
-
-export type StageResult = {
-  name: StageName;
-  results: Result[];
+  content: { [k in string]: number[] };
+  show_flier: boolean;
 };

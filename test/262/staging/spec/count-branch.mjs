@@ -510,7 +510,7 @@ const listPrecursorFailure = await compileListPrecursorFailure([
 ]);
 
 const handle = await open(
-  new URL("../output/branch-count.jsonl", import.meta.url),
+  new URL("../output/count-branch.jsonl", import.meta.url),
   "w",
 );
 
