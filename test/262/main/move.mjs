@@ -6,8 +6,6 @@ import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
 import { inspect } from "node:util";
-import { showTargetPath } from "../fetch.mjs";
-import { ROOT, TEST262 } from "../layout.mjs";
 import { interruptIterable, mapIterable } from "../util/iterable.mjs";
 import { parseTestSpecifier } from "../result.mjs";
 
@@ -105,7 +103,7 @@ const main = async (argv) => {
   } else {
     stdout.write("FAILURE\n");
     stdout.write(
-      showTargetPath(parseTestSpecifier(status[0]).path, ROOT, TEST262) + "\n",
+      `test/262/test262/test/${parseTestSpecifier(status[0]).path}\n`,
     );
     stdout.write(inspect(status, { depth: Infinity, colors: true }) + "\n");
   }

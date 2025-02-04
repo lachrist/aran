@@ -5,8 +5,6 @@ import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
 import { inspect } from "node:util";
-import { showTargetPath } from "../fetch.mjs";
-import { ROOT, TEST262 } from "../layout.mjs";
 import { mapIterable } from "../util/iterable.mjs";
 import { parseTestSpecifier } from "../result.mjs";
 
@@ -35,8 +33,7 @@ const look = async (stage) => {
       const [specifier, result] = entry;
       stdout.write("\n");
       stdout.write(
-        showTargetPath(parseTestSpecifier(specifier).path, TEST262, ROOT) +
-          "\n",
+        `test/262/test262/test/${parseTestSpecifier(specifier).path}\n`,
       );
       stdout.write("\n");
       stdout.write(inspect(result, { depth: Infinity, colors: true }) + "\n");

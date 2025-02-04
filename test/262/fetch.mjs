@@ -62,23 +62,3 @@ export const toTestPath = (url, home) => {
     });
   }
 };
-
-/**
- * @type {(
- *   path: import("./fetch").TargetPath,
- *   home: URL,
- *   root: URL,
- * ) => string}
- */
-export const showTargetPath = (path, home, root) => {
-  const url = new URL(`test/${path}`, home);
-  if (url.href.startsWith(root.href)) {
-    return url.href.slice(root.href.length);
-  } else {
-    throw new AranExecError("Not relative url from root", {
-      path,
-      home: home.href,
-      root: root.href,
-    });
-  }
-};
