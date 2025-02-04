@@ -1,5 +1,3 @@
-/* eslint-disable local/no-function */
-
 import { scrape } from "./scrape.mjs";
 import { TEST262 } from "../layout.mjs";
 import { stdout } from "node:process";

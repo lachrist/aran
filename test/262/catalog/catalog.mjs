@@ -1,9 +1,6 @@
-/* eslint-disable local/no-function */
-
 import { createInterface } from "node:readline";
 import { packTestCase, unpackTestCase } from "../test-file/index.mjs";
 import { open } from "node:fs/promises";
-import { AranExecError } from "../error.mjs";
 
 const { URL, Infinity, JSON } = globalThis;
 
@@ -44,27 +41,27 @@ export const loadTestCase = async function* () {
   }
 };
 
-/**
- * @type {(
- *   target: number,
- * ) => Promise<import("../test-case").TestCase>}
- */
-export const grabTestCase = async (target) => {
-  const handle = await open(CATALOG, "r");
-  try {
-    const iterator = createInterface({
-      input: handle.createReadStream(),
-      crlfDelay: Infinity,
-    });
-    let index = 0;
-    for await (const line of iterator) {
-      if (index === target) {
-        return unpackTestCase(JSON.parse(line));
-      }
-      index++;
-    }
-    throw new AranExecError("index out of range", { target, index });
-  } finally {
-    await handle.close();
-  }
-};
+// /**
+//  * @type {(
+//  *   target: number,
+//  * ) => Promise<import("../test-case").TestCase>}
+//  */
+// export const grabTestCase = async (target) => {
+//   const handle = await open(CATALOG, "r");
+//   try {
+//     const iterator = createInterface({
+//       input: handle.createReadStream(),
+//       crlfDelay: Infinity,
+//     });
+//     let index = 0;
+//     for await (const line of iterator) {
+//       if (index === target) {
+//         return unpackTestCase(JSON.parse(line));
+//       }
+//       index++;
+//     }
+//     throw new AranExecError("index out of range", { target, index });
+//   } finally {
+//     await handle.close();
+//   }
+// };

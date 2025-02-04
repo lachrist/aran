@@ -509,21 +509,28 @@ const listPrecursorFailure = await compileListPrecursorFailure([
   "bare-main",
 ]);
 
-const handle = await open(
-  new URL("../output/count-branch.jsonl", import.meta.url),
-  "w",
-);
-
 /**
  * @type {import("../stage").Stage<
- *   import("../stage").Config,
- *   { record_directory: null | URL, counter: { inner: number } },
+ *   import("../stage").Config & {
+ *     handle: import("node:fs/promises").FileHandle,
+ *   },
+ *   import("../stage").Config & {
+ *     handle: import("node:fs/promises").FileHandle,
+ *     counter: { inner: number },
+ *   },
  * >}
  */
 export default {
-  // eslint-disable-next-line require-await
-  open: async (config) => config,
-  close: async (_config) => {},
+  open: async (config) => ({
+    ...config,
+    handle: await open(
+      new URL("../output/count-branch.jsonl", import.meta.url),
+      "w",
+    ),
+  }),
+  close: async ({ handle }) => {
+    await handle.close();
+  },
   // eslint-disable-next-line require-await
   setup: async (config, test) => {
     const specifier = toTestSpecifier(test.path, test.directive);
@@ -575,7 +582,7 @@ export default {
       },
       record_directory,
     ),
-  teardown: async ({ counter }) => {
+  teardown: async ({ handle, counter }) => {
     await handle.write(`${counter.inner}\n`);
   },
 };

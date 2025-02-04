@@ -1,5 +1,4 @@
 /* eslint-disable local/strict-console */
-/* eslint-disable local/no-function */
 /* eslint-disable local/no-class */
 
 const { console, Error } = globalThis;

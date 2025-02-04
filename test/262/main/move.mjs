@@ -8,7 +8,7 @@ import { onUncaughtException } from "./uncaught.mjs";
 import { inspect } from "node:util";
 import { showTargetPath } from "../fetch.mjs";
 import { ROOT, TEST262 } from "../layout.mjs";
-import { filterIterable, interruptIterable } from "./iterable.mjs";
+import { interruptIterable, mapIterable } from "../util/iterable.mjs";
 import { parseTestSpecifier } from "../result.mjs";
 
 const { process, Infinity } = globalThis;
@@ -18,36 +18,38 @@ const { process, Infinity } = globalThis;
  *   stage: import("../staging/stage-name").StageName,
  *   cursor: number,
  *   sigint: import("../util/signal").Signal<boolean>,
- * ) => Promise<null | {
+ * ) => Promise<{
  *   cursor: number,
- *   entry: import("../result").ResultEntry,
+ *   error: null | import("../result").ResultEntry,
  * }>}
  */
 const move = async (stage, cursor, sigint) => {
   let index = 0;
-  for await (const [specifier, result] of runStage(
+  for await (const entry of runStage(
     stage,
-    filterIterable(
-      interruptIterable(loadTestCase(), sigint),
-      (_value, index) => index >= cursor,
+    mapIterable(interruptIterable(loadTestCase(), sigint), (test, index) =>
+      index >= cursor ? test : null,
     ),
     {
       record_directory: null,
       memoization: "eager",
     },
   )) {
-    index++;
     if (index % 100 === 0) {
       stdout.write(`${index}\n`);
     }
-    if (result.type === "include") {
-      const { actual, expect } = result;
-      if ((actual === null) !== (expect.length === 0)) {
-        return { cursor: index, entry: [specifier, result] };
+    if (entry !== null) {
+      const [specifier, result] = entry;
+      if (result.type === "include") {
+        const { actual, expect } = result;
+        if ((actual === null) !== (expect.length === 0)) {
+          return { cursor: index, error: [specifier, result] };
+        }
       }
     }
+    index++;
   }
-  return null;
+  return { cursor: index, error: null };
 };
 
 /**
@@ -72,13 +74,13 @@ const main = async (argv) => {
     process.addListener("SIGINT", onSigint);
     process.addListener("uncaughtException", onUncaughtException);
     try {
-      const error = await move(stage, await loadCursor(), sigint);
-      if (error) {
-        const { cursor, entry } = error;
-        await saveCursor(cursor, entry[0]);
-        return entry;
-      } else {
+      const { cursor, error } = await move(stage, await loadCursor(), sigint);
+      if (error === null) {
+        await saveCursor(sigint.value ? cursor : 0, null);
         return sigint.value ? "sigint" : "done";
+      } else {
+        await saveCursor(cursor, error[0]);
+        return error;
       }
     } finally {
       process.removeListener("SIGINT", onSigint);

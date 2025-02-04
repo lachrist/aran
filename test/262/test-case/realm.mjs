@@ -70,16 +70,13 @@ export const createRealm = (state, { prepare, print, signalNegative }) => {
     },
     global,
     /** @returns {object} */
-    // eslint-disable-next-line local/no-function
     get IsHTMLDDA() {
       throw signalNegative("IsHTMLDDA");
     },
     /** @type {import("../$262").Agent} */
-    // eslint-disable-next-line local/no-function
     get agent() {
       throw signalNegative("agent");
     },
-    // eslint-disable-next-line local/no-function
     get AbstractModuleSource() {
       throw signalNegative("AbstractModuleSource");
     },

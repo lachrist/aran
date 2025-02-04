@@ -1,5 +1,3 @@
-/* eslint-disable local/no-function */
-
 import { readdir, stat } from "node:fs/promises";
 
 const { URL } = globalThis;

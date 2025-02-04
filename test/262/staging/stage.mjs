@@ -100,12 +100,12 @@ const memoizeInstrument = (instrument) => {
 /**
  * @type {(
  *   name: import("./stage-name").StageName,
- *   tests: AsyncIterable<import("../test-case").TestCase>,
+ *   tests: AsyncIterable<null | import("../test-case").TestCase>,
  *   config: {
  *     memoization: "none" | "lazy" | "eager",
  *     record_directory: null | URL,
  *   },
- * ) => AsyncGenerator<import("../result").ResultEntry>}
+ * ) => AsyncGenerator<null | import("../result").ResultEntry>}
  */
 export const runStage = async function* (
   name,
@@ -145,7 +145,7 @@ export const runStage = async function* (
       }
     }
     for await (const test of tests) {
-      yield execStage(stage, handle, test, fetch);
+      yield test && execStage(stage, handle, test, fetch);
     }
   } finally {
     await stage.close(handle);

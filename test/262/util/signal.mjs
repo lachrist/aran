@@ -1,5 +1,3 @@
-/* eslint-disable local/no-function */
-
 /**
  * @type {<X>(
  *   this: { value: X },

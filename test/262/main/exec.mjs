@@ -5,10 +5,26 @@ import { saveStageResultEntry } from "../staging/result-entry.mjs";
 import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
-import { AranTypeError } from "../error.mjs";
-import { interruptIterable } from "./iterable.mjs";
+import { AranExecError, AranTypeError } from "../error.mjs";
+import { interruptIterable } from "../util/iterable.mjs";
 
 const { process, Date } = globalThis;
+
+/**
+ * @type {(
+ *   entry: import("../result").ResultEntry,
+ * ) => void}
+ */
+const logFalsePrediction = ([specifier, result]) => {
+  if (result.type === "include") {
+    if (result.actual === null && result.expect.length > 0) {
+      stderr.write(`FALSE NEGATIVE >> ${specifier}\n`);
+    }
+    if (result.actual !== null && result.expect.length === 0) {
+      stderr.write(`FALSE POSITIVE >> ${specifier}\n`);
+    }
+  }
+};
 
 /**
  * @type {(
@@ -18,7 +34,7 @@ const { process, Date } = globalThis;
  */
 const exec = async function* (stage, sigint) {
   let index = 0;
-  for await (const [specifier, result] of runStage(
+  for await (const entry of runStage(
     stage,
     interruptIterable(loadTestCase(), sigint),
     {
@@ -26,19 +42,15 @@ const exec = async function* (stage, sigint) {
       memoization: "eager",
     },
   )) {
-    index++;
     if (index % 100 === 0) {
       stdout.write(`${index}\n`);
     }
-    if (result.type === "include") {
-      if (result.actual === null && result.expect.length > 0) {
-        stderr.write(`FALSE NEGATIVE >> ${specifier}\n`);
-      }
-      if (result.actual !== null && result.expect.length === 0) {
-        stderr.write(`FALSE POSITIVE >> ${specifier}\n`);
-      }
+    if (entry === null) {
+      throw new AranExecError("entry is null");
     }
-    yield [specifier, result];
+    logFalsePrediction(entry);
+    yield entry;
+    index++;
   }
 };
 

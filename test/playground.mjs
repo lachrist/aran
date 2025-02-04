@@ -16,6 +16,7 @@ const intrinsics = evalGlobal(generate(setupile({})));
 /** @type {any} */ (globalThis)[advice_global_variable] = createAdvice(
   /** @type {any} */ (intrinsics["aran.global_object"]).Reflect,
   (kind, size, tag) => {
+    // eslint-disable-next-line no-console
     console.dir({ kind, size, tag });
   },
 );

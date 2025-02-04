@@ -1,7 +1,7 @@
 /**
  * @type {<X>(
  *   iterable: AsyncIterable<X>,
- *   sigint: import("../util/signal").Signal<Boolean>
+ *   sigint: import("./signal").Signal<Boolean>
  * ) => AsyncIterable<X>}
  */
 export const interruptIterable = async function* (iterable, sigint) {
@@ -10,6 +10,20 @@ export const interruptIterable = async function* (iterable, sigint) {
       break;
     }
     yield value;
+  }
+};
+
+/**
+ * @type {<X, Y>(
+ *   iterable: AsyncIterable<X>,
+ *   transform: (value: X, index: number) => Y,
+ * ) => AsyncIterable<Y>}
+ */
+export const mapIterable = async function* (iterable, transform) {
+  let index = 0;
+  for await (const value of iterable) {
+    yield transform(value, index);
+    index++;
   }
 };
 
