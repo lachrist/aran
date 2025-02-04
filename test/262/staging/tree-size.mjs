@@ -8,6 +8,7 @@ import {
 import { open } from "node:fs/promises";
 import { compileListPrecursorFailure } from "./failure.mjs";
 import { toTestSpecifier } from "./../result.mjs";
+import { hashFowler32, hashXor16 } from "./hash.mjs";
 
 const {
   JSON,
@@ -17,11 +18,10 @@ const {
 } = globalThis;
 
 /**
- * @type {import("aran").Digest<{
- *   NodeHash: import("aran").EstreeNodePath,
- * }>}
+ * @type {import("aran").Digest}
  */
-const digest = (_node, node_path, _file_path, _kind) => node_path;
+const digest = (_node, node_path, file_path, _kind) =>
+  `${file_path}:${node_path}`;
 
 /**
  * @type {(hash: string) => string}
@@ -55,26 +55,12 @@ const { prepare, trans, retro } = compileAran(
 // Export //
 ////////////
 
-/**
- * @type {(
- *   content: string,
- * ) => number}
- */
-const hashFowler = (content) => {
-  let hash = 2166136261; // FNV offset basis
-  for (let i = 0; i < content.length; i++) {
-    /* eslint-disable no-bitwise */
-    hash ^= content.charCodeAt(i);
-    /* eslint-disable no-bitwise */
-    hash = (hash * 16777619) >>> 0; // Keep it a 32-bit unsigned integer
-  }
-  return hash;
-};
-
 const listPrecursorFailure = await compileListPrecursorFailure([
   "bare-comp",
   "bare-main",
 ]);
+
+const max_buffer_length = 512;
 
 /**
  * @type {(
@@ -100,7 +86,7 @@ export const compileStage = ({ procedural }) => ({
   open: async ({ record_directory }) => ({
     record_directory,
     handle: await open(
-      new URL("../output/tree-size.jsonl", import.meta.url),
+      new URL(`output/tree-size-${procedural}.jsonl`, import.meta.url),
       "w",
     ),
   }),
@@ -136,7 +122,9 @@ export const compileStage = ({ procedural }) => ({
      * ) => void}
      */
     const recordBranch = (_kind, size, tag) => {
-      buffer.push([size, tag]);
+      if (buffer.length < max_buffer_length) {
+        buffer.push([size, tag]);
+      }
     };
     const {
       ["aran.global_object"]: {
@@ -180,7 +168,7 @@ export const compileStage = ({ procedural }) => ({
     for (let index = 0; index < length; index++) {
       const [size, tag] = buffer[index];
       content[2 * index] = size;
-      content[2 * index + 1] = hashFowler(tag);
+      content[2 * index + 1] = hashXor16(hashFowler32(tag));
     }
     await handle.write(JSON.stringify(content) + "\n");
   },

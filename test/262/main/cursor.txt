@@ -1,1 +1,2 @@
-2310
+1536
+built-ins/Array/from/source-object-iterator-2.js@use-strict
