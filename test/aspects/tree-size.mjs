@@ -2,8 +2,8 @@ import { weaveStandard } from "aran";
 
 const {
   Error,
+  Array,
   Object: { keys, hasOwn, is },
-  Array: { from: toArray },
   Reflect: { apply },
   WeakMap,
   WeakMap: {
@@ -15,13 +15,22 @@ const listKey = /**
  * @type {<K extends PropertyKey>(record: {[k in K]: unknown}) => K[]}
  */ (keys);
 
+// DO NOT USE toArray because it can be poisned by:
+//   Array.prototype[Symbol.iterator]
 /**
  * @type {<X, Y>(
  *   array: X[],
  *   transform: (element: X) => Y
  * ) => Y[]}
  */
-const map = toArray;
+const map = (array, transform) => {
+  const { length } = array;
+  const result = new Array(length);
+  for (let index = 0; index < length; index++) {
+    result[index] = transform(array[index]);
+  }
+  return result;
+};
 
 /**
  * @type {<X, Y>(
@@ -529,7 +538,7 @@ export const createAdvice = (
         const result = apply(
           leaveValue(callee, primitive_registery),
           leaveValue(that, primitive_registery),
-          toArray(input, (value) => leaveValue(value, primitive_registery)),
+          map(input, (value) => leaveValue(value, primitive_registery)),
         );
         if (isExternalPrimitive(result)) {
           return enterPrimitive(
@@ -548,7 +557,7 @@ export const createAdvice = (
       }
       return construct(
         leaveValue(callee, primitive_registery),
-        toArray(input, (value) => leaveValue(value, primitive_registery)),
+        map(input, (value) => leaveValue(value, primitive_registery)),
       );
     },
   };
