@@ -482,7 +482,7 @@ export const createAdvice = (
         const recovery = recoverInput(input_registery, obj);
         const external = getValueProperty(
           leaveValue(obj, primitive_registery),
-          leaveValue(obj, primitive_registery),
+          leaveValue(key, primitive_registery),
         );
         if (recovery && typeof key === "number" && hasOwn(recovery, key)) {
           const argument = recovery[key];
