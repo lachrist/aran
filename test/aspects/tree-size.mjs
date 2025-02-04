@@ -328,11 +328,13 @@ const registerInput = (registery, input, leaveValue) => {
 /**
  * @type {(
  *   registery: null | InputRegistery,
- *   clean: InternalValue,
+ *   candidate: InternalValue,
  * ) => null | InternalValue[]}
  */
-const recoverInput = (registery, clean) =>
-  registery !== null ? (apply(getWeakMap, registery, [clean]) ?? null) : null;
+const recoverInput = (registery, candidate) =>
+  registery !== null
+    ? (apply(getWeakMap, registery, [candidate]) ?? null)
+    : null;
 
 /**
  * @type {<T extends import("aran").Json>(
@@ -478,24 +480,22 @@ export const createAdvice = (
     // around //
     "apply@around": (_state, callee, that, input, _tag) => {
       if (is(callee, getValueProperty) && input.length === 2) {
-        const { 0: obj, 1: key } = input;
-        const recovery = recoverInput(input_registery, obj);
-        const external = getValueProperty(
-          leaveValue(obj, primitive_registery),
-          leaveValue(key, primitive_registery),
-        );
-        if (recovery && typeof key === "number" && hasOwn(recovery, key)) {
-          const argument = recovery[key];
-          if (is(leaveValue(argument, primitive_registery), external)) {
-            return argument;
-          } else {
-            return enterValue(
-              external,
-              1 + computeInputSize(callee, that, input, primitive_registery),
-              primitive_registery,
-            );
+        const { 0: int_obj, 1: int_key } = input;
+        const obj = leaveValue(int_obj, primitive_registery);
+        const key = leaveValue(int_key, primitive_registery);
+        const args = recoverInput(input_registery, int_obj);
+        const val = getValueProperty(obj, key);
+        if (args && typeof key === "number" && key < args.length) {
+          const arg = args[key];
+          if (is(leaveValue(arg, primitive_registery), val)) {
+            return arg;
           }
         }
+        return enterValue(
+          val,
+          1 + computeInputSize(callee, that, input, primitive_registery),
+          primitive_registery,
+        );
       }
       {
         const kind = getInternalClosureKind(closure_registery, callee);
