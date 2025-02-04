@@ -1,13 +1,13 @@
-import { compileAran } from "../aran.mjs";
-import { record } from "../../record/index.mjs";
+import { compileAran } from "./aran.mjs";
+import { record } from "../record/index.mjs";
 import {
   advice_global_variable,
   createAdvice,
   weave,
-} from "../../../aspects/tree-size.mjs";
+} from "../../aspects/tree-size.mjs";
 import { open } from "node:fs/promises";
-import { compileListPrecursorFailure } from "../failure.mjs";
-import { toTestSpecifier } from "../../result.mjs";
+import { compileListPrecursorFailure } from "./failure.mjs";
+import { toTestSpecifier } from "./../result.mjs";
 
 const {
   JSON,
@@ -78,16 +78,20 @@ const hashFowler = (content) => {
 
 const listPrecursorFailure = await compileListPrecursorFailure([
   "bare-comp",
-  "stnd-void",
+  "bare-main",
 ]);
 
 /**
- * @type {import("../stage").Stage<[
+ * @type {(
+ *   config: {
+ *     procedural: "inter" | "intra",
+ *   },
+ * ) => import("./stage").Stage<[
  *   number,
  *   import("aran").EstreeNodePath,
  * ][]>}
  */
-export default {
+export const compileStage = ({ procedural }) => ({
   // eslint-disable-next-line require-await
   setup: async ({ path, directive }) => {
     const specifier = toTestSpecifier(path, directive);
@@ -132,7 +136,7 @@ export default {
           // eslint-disable-next-line object-shorthand
           getValueProperty: /** @type {any} */ (getValueProperty),
         },
-        { recordBranch },
+        { recordBranch, procedural },
       ),
       enumerable: false,
       writable: false,
@@ -161,4 +165,4 @@ export default {
     }
     await handle.write(JSON.stringify(content) + "\n");
   },
-};
+});

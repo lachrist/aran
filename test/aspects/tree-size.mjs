@@ -39,6 +39,9 @@ const reduce = (array, accumulate, result) => {
 };
 
 /**
+ * @typedef {WeakMap<InternalPrimitive, TreeSize>} PrimitiveRegistery
+ * @typedef {WeakMap<Reference, import("aran").ClosureKind>} ClosureRegistery
+ * @typedef {WeakMap<Reference, InternalValue[]>} InputRegistery
  * @typedef {import("aran").Atom & { Tag: import("aran").Json }} Atom
  * @typedef {import("aran").EstreeNodePath} NodeHash
  * @typedef {(
@@ -55,7 +58,6 @@ const reduce = (array, accumulate, result) => {
  * @typedef {ExternalPrimitive | Reference} ExternalValue
  * @typedef {InternalPrimitive | Reference} InternalValue
  * @typedef {number} TreeSize
- * @typedef {WeakMap<InternalPrimitive, TreeSize>} Registery
  * @typedef {(
  *   | "block@declaration-overwrite"
  *   | "program-block@after"
@@ -99,7 +101,7 @@ const reduce = (array, accumulate, result) => {
  * @type {(
  *   primitive: ExternalPrimitive,
  *   tree_size: TreeSize,
- *   registery: Registery,
+ *   registery: PrimitiveRegistery,
  * ) => InternalPrimitive}
  */
 const enterPrimitive = (primitive, tree_size, registery) => {
@@ -118,7 +120,7 @@ const leavePrimitive = (/** @type {any} */ { __inner }) => __inner;
 /**
  * @type {(
  *   value: InternalValue,
- *   register: Registery,
+ *   register: PrimitiveRegistery,
  * ) => value is InternalPrimitive}
  */
 const isInternalPrimitive = (value, registery) =>
@@ -140,7 +142,7 @@ const isExternalPrimitive = (value) =>
  * @type {(
  *   value: ExternalValue,
  *   tree_size: TreeSize,
- *   registery: Registery,
+ *   registery: PrimitiveRegistery,
  * ) => InternalValue}
  */
 const enterValue = (value, tree_size, registery) =>
@@ -151,7 +153,7 @@ const enterValue = (value, tree_size, registery) =>
 /**
  * @type {(
  *   value: InternalValue,
- *   registery: Registery,
+ *   registery: PrimitiveRegistery,
  * ) => ExternalValue}
  */
 const leaveValue = (value, registery) =>
@@ -160,7 +162,7 @@ const leaveValue = (value, registery) =>
 /**
  * @type {(
  *   value: InternalValue,
- *   registery: Registery,
+ *   registery: PrimitiveRegistery,
  * ) => TreeSize}
  */
 const getTreeSize = (value, registery) => {
@@ -263,7 +265,7 @@ const isExternalResult = (_result, kind) =>
  *   callee: InternalValue,
  *   that: null | InternalValue,
  *   input: InternalValue[],
- *   registery: Registery,
+ *   registery: PrimitiveRegistery,
  * ) => TreeSize}
  */
 const computeInputSize = (callee, that, input, registery) =>
@@ -273,6 +275,64 @@ const computeInputSize = (callee, that, input, registery) =>
     getTreeSize(callee, registery) +
       (that === null ? 0 : getTreeSize(that, registery)),
   );
+
+/**
+ * @type {(
+ *   registery: null | ClosureRegistery,
+ *   closure: ExternalValue & Function,
+ *   kind: import("aran").ClosureKind,
+ * ) => Reference}
+ */
+const registerInternalClosure = (registery, closure, kind) => {
+  if (registery !== null) {
+    apply(setWeakMap, registery, [closure, kind]);
+  }
+  return /** @type {any} */ (closure);
+};
+
+/**
+ * @type {(
+ *   registery: null | ClosureRegistery,
+ *   value: InternalValue,
+ * ) => boolean}
+ */
+const isInternalClosure = (registery, value) =>
+  registery !== null && apply(hasWeakMap, registery, [value]);
+
+/**
+ * @type {(
+ *   registery: null | ClosureRegistery,
+ *   value: InternalValue,
+ * ) => import("aran").ClosureKind | null}
+ */
+const getInternalClosureKind = (registery, value) =>
+  registery !== null ? (apply(getWeakMap, registery, [value]) ?? null) : null;
+
+/**
+ * @type {(
+ *   registery: null | InputRegistery,
+ *   input: InternalValue[],
+ *   leaveValue: (value: InternalValue) => ExternalValue,
+ * ) => Reference}
+ */
+const registerInput = (registery, input, leaveValue) => {
+  if (registery !== null) {
+    /** @type {Reference} */
+    const reference = /** @type {any} */ (map(input, leaveValue));
+    apply(setWeakMap, registery, [reference, input]);
+    return reference;
+  }
+  return /** @type {any} */ (input);
+};
+
+/**
+ * @type {(
+ *   registery: null | InputRegistery,
+ *   clean: InternalValue,
+ * ) => null | InternalValue[]}
+ */
+const recoverInput = (registery, clean) =>
+  registery !== null ? (apply(getWeakMap, registery, [clean]) ?? null) : null;
 
 /**
  * @type {<T extends import("aran").Json>(
@@ -310,6 +370,7 @@ const computeInputSize = (callee, that, input, registery) =>
  *       size: TreeSize,
  *       tag: T,
  *     ) => void,
+ *     procedural: "inter" | "intra",
  *   },
  * ) => import("aran").StandardAdvice<{
  *   Tag: T,
@@ -321,18 +382,14 @@ const computeInputSize = (callee, that, input, registery) =>
  */
 export const createAdvice = (
   { getValueProperty, apply, construct },
-  { recordBranch },
+  { recordBranch, procedural },
 ) => {
-  /** @type {Registery} */
-  const registery = new WeakMap();
-  /**
-   * @type {WeakMap<InternalValue, import("aran").ClosureKind>}
-   */
-  const internals = new WeakMap();
-  /**
-   * @type {WeakMap<InternalValue, InternalValue[]>}
-   */
-  const inputs = new WeakMap();
+  /** @type {PrimitiveRegistery} */
+  const primitive_registery = new WeakMap();
+  /** @type {null | ClosureRegistery} */
+  const closure_registery = procedural === "inter" ? new WeakMap() : null;
+  /** @type {null | InputRegistery} */
+  const input_registery = procedural === "inter" ? new WeakMap() : null;
   let transit = false;
   return {
     "block@declaration-overwrite": (_state, kind, frame, _tag) => {
@@ -350,19 +407,18 @@ export const createAdvice = (
             if (variable === "this") {
               copy[variable] = /** @type {InternalValue} */ (frame[variable]);
             } else if (variable === "function.arguments") {
-              /** @type {InternalValue[]} */
-              const dirty = /** @type {any} */ (frame[variable]);
-              /** @type {Reference} */
-              const clean = /** @type {any} */ (
-                map(dirty, (value) => leaveValue(value, registery))
+              copy[variable] = registerInput(
+                input_registery,
+                /** @type {InternalValue[]} */ (
+                  /** @type {unknown} */ (frame[variable])
+                ),
+                (value) => leaveValue(value, primitive_registery),
               );
-              inputs.set(clean, dirty);
-              copy[variable] = clean;
             } else {
               copy[variable] = enterValue(
                 /** @type {ExternalValue} */ (frame[variable]),
                 INIT_TREE_SIZE,
-                registery,
+                primitive_registery,
               );
             }
           }
@@ -372,7 +428,7 @@ export const createAdvice = (
           copy[variable] = enterValue(
             /** @type {ExternalValue} */ (frame[variable]),
             INIT_TREE_SIZE,
-            registery,
+            primitive_registery,
           );
         }
       }
@@ -380,40 +436,41 @@ export const createAdvice = (
     },
     "program-block@after": (_state, kind, value, _tag) =>
       /** @type {any} */ (
-        kind === "deep-local-eval" ? value : leaveValue(value, registery)
+        kind === "deep-local-eval"
+          ? value
+          : leaveValue(value, primitive_registery)
       ),
-    "closure@after": (_state, kind, value, _tag) => {
-      internals.set(/** @type {Reference} */ (value), kind);
-      return /** @type {Reference} */ (value);
-    },
+    "closure@after": (_state, kind, closure, _tag) =>
+      registerInternalClosure(closure_registery, closure, kind),
     "closure-block@after": (_state, _kind, value, _tag) =>
-      leaveValue(value, registery),
+      leaveValue(value, primitive_registery),
     "import@after": (_state, _source, _specifier, value, _tag) =>
-      enterValue(value, INIT_TREE_SIZE, registery),
+      enterValue(value, INIT_TREE_SIZE, primitive_registery),
     "primitive@after": (_state, primitive, _tag) =>
       enterPrimitive(
         /** @type {ExternalPrimitive} */ (/** @type {unknown} */ (primitive)),
         INIT_TREE_SIZE,
-        registery,
+        primitive_registery,
       ),
     "test@before": (_state, kind, value, tag) => {
-      recordBranch(kind, getTreeSize(value, registery), tag);
-      return leaveValue(value, registery);
+      recordBranch(kind, getTreeSize(value, primitive_registery), tag);
+      return leaveValue(value, primitive_registery);
     },
     "intrinsic@after": (_state, _name, value, _tag) =>
-      enterValue(value, INIT_TREE_SIZE, registery),
-    "await@before": (_state, value, _tag) => leaveValue(value, registery),
+      enterValue(value, INIT_TREE_SIZE, primitive_registery),
+    "await@before": (_state, value, _tag) =>
+      leaveValue(value, primitive_registery),
     "await@after": (_state, value, _tag) =>
-      enterValue(value, INIT_TREE_SIZE, registery),
+      enterValue(value, INIT_TREE_SIZE, primitive_registery),
     "yield@before": (_state, _delegate, value, _tag) =>
-      leaveValue(value, registery),
+      leaveValue(value, primitive_registery),
     "yield@after": (_state, _delegate, value, _tag) =>
-      enterValue(value, INIT_TREE_SIZE, registery),
+      enterValue(value, INIT_TREE_SIZE, primitive_registery),
     "export@before": (_state, _specifier, value, _tag) =>
-      leaveValue(value, registery),
+      leaveValue(value, primitive_registery),
     "eval@before": (_state, value, _tag) => {
       const root1 = /** @type {import("aran").Program<Atom>} */ (
-        /** @type {unknown} */ (leaveValue(value, registery))
+        /** @type {unknown} */ (leaveValue(value, primitive_registery))
       );
       const root2 = weave(root1);
       return /** @type {ExternalValue} */ (/** @type {unknown} */ (root2));
@@ -421,38 +478,38 @@ export const createAdvice = (
     // around //
     "apply@around": (_state, callee, that, input, _tag) => {
       if (is(callee, getValueProperty) && input.length === 2) {
-        const { 0: clean, 1: key } = input;
-        const dirty = inputs.get(clean);
+        const { 0: obj, 1: key } = input;
+        const recovery = recoverInput(input_registery, obj);
         const external = getValueProperty(
-          leaveValue(clean, registery),
-          leaveValue(clean, registery),
+          leaveValue(obj, primitive_registery),
+          leaveValue(obj, primitive_registery),
         );
-        if (dirty && typeof key === "number" && hasOwn(dirty, key)) {
-          const internal = dirty[key];
-          if (is(leaveValue(internal, registery), external)) {
-            return internal;
+        if (recovery && typeof key === "number" && hasOwn(recovery, key)) {
+          const argument = recovery[key];
+          if (is(leaveValue(argument, primitive_registery), external)) {
+            return argument;
           } else {
             return enterValue(
               external,
-              1 + computeInputSize(callee, that, input, registery),
-              registery,
+              1 + computeInputSize(callee, that, input, primitive_registery),
+              primitive_registery,
             );
           }
         }
       }
       {
-        const kind = internals.get(callee);
+        const kind = getInternalClosureKind(closure_registery, callee);
         if (kind != null) {
           transit = true;
           const result = apply(callee, that, input);
           if (isInternalResult(result, kind)) {
-            if (isInternalPrimitive(result, registery)) {
+            if (isInternalPrimitive(result, primitive_registery)) {
               return enterPrimitive(
                 leavePrimitive(result),
                 1 +
-                  getTreeSize(result, registery) +
-                  computeInputSize(callee, that, input, registery),
-                registery,
+                  getTreeSize(result, primitive_registery) +
+                  computeInputSize(callee, that, input, primitive_registery),
+                primitive_registery,
               );
             } else {
               return result;
@@ -470,15 +527,15 @@ export const createAdvice = (
       }
       {
         const result = apply(
-          leaveValue(callee, registery),
-          leaveValue(that, registery),
-          toArray(input, (value) => leaveValue(value, registery)),
+          leaveValue(callee, primitive_registery),
+          leaveValue(that, primitive_registery),
+          toArray(input, (value) => leaveValue(value, primitive_registery)),
         );
         if (isExternalPrimitive(result)) {
           return enterPrimitive(
             result,
-            1 + computeInputSize(callee, that, input, registery),
-            registery,
+            1 + computeInputSize(callee, that, input, primitive_registery),
+            primitive_registery,
           );
         } else {
           return result;
@@ -486,12 +543,12 @@ export const createAdvice = (
       }
     },
     "construct@around": (_state, callee, input, _tag) => {
-      if (internals.has(callee)) {
+      if (isInternalClosure(closure_registery, callee)) {
         return construct(callee, input);
       }
       return construct(
-        leaveValue(callee, registery),
-        toArray(input, (value) => leaveValue(value, registery)),
+        leaveValue(callee, primitive_registery),
+        toArray(input, (value) => leaveValue(value, primitive_registery)),
       );
     },
   };
