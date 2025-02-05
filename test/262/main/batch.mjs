@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { isStageName } from "../staging/stage-name-predicate.mjs";
+import { isStageName } from "../staging/index.mjs";
 import { argv, stdout, stderr } from "node:process";
 
 const { Date, Promise, Error, setTimeout, process } = globalThis;

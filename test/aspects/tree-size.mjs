@@ -281,7 +281,7 @@ const isInternalResult = (_result, kind) => isInternalClosureKind(kind);
  *   kind: import("aran").ClosureKind
  * ) => _result is ExternalValue}
  */
-const isExternalResult = (_result, kind) => isInternalClosureKind(kind);
+const isExternalResult = (_result, kind) => isExternalClosureKind(kind);
 
 /**
  * @type {(
@@ -480,9 +480,9 @@ export const createAdvice = (
         })
       );
       if (transit) {
-        transit = true;
+        transit = false;
         if (!hasOwn(closure_kind_record, kind)) {
-          throw new Error(`transit should only occur in closure ${kind}`);
+          throw new Error(`transit should only occur in closure, got: ${kind}`);
         }
         if (!inter_procedural_tracking) {
           throw new Error(`transit should only occur in inter procedural mode`);
@@ -530,7 +530,7 @@ export const createAdvice = (
         } else if (isExternalClosureKind(kind)) {
           return leaveValue(value, primitive_registery);
         } else {
-          throw new Error(`illegal closure kind: ${kind}`);
+          throw new Error(`illegal closure kind, got: ${kind}`);
         }
       } else {
         return leaveValue(value, primitive_registery);
@@ -640,7 +640,7 @@ export const createAdvice = (
               primitive_registery,
             );
           } else {
-            throw new Error(`unexpected closure kind ${kind}`);
+            throw new Error(`unexpected closure kind, got: ${kind}`);
           }
         }
       }

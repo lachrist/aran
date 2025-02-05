@@ -10,7 +10,7 @@ const { URL, JSON, Infinity } = globalThis;
  * ) => URL}
  */
 const locateResult = (stage) =>
-  new URL(`result/${stage}.jsonl`, import.meta.url);
+  new URL(`spec/${stage}-result.jsonl`, import.meta.url);
 
 /**
  * @type {(

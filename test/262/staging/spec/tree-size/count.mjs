@@ -1,11 +1,11 @@
 /* eslint-disable no-use-before-define */
 
 import { open } from "node:fs/promises";
-import { compileAran } from "../aran.mjs";
-import { AranTypeError } from "../../error.mjs";
-import { record } from "../../record/index.mjs";
-import { compileListPrecursorFailure } from "../failure.mjs";
-import { toTestSpecifier } from "../../result.mjs";
+import { compileAran } from "../../aran.mjs";
+import { AranTypeError } from "../../../error.mjs";
+import { record } from "../../../record/index.mjs";
+import { compileListPrecursorFailure } from "../../failure.mjs";
+import { toTestSpecifier } from "../../../result.mjs";
 
 const {
   URL,
@@ -510,12 +510,13 @@ const listPrecursorFailure = await compileListPrecursorFailure([
 ]);
 
 /**
- * @type {import("../stage").Stage<
- *   import("../stage").Config & {
+ * @type {import("../../stage").Stage<
+ *   import("../../stage").Config & {
  *     handle: import("node:fs/promises").FileHandle,
  *   },
- *   import("../stage").Config & {
+ *   import("../../stage").Config & {
  *     handle: import("node:fs/promises").FileHandle,
+ *     specifier: import("../../../result").TestSpecifier,
  *     counter: { inner: number },
  *   },
  * >}
@@ -523,10 +524,7 @@ const listPrecursorFailure = await compileListPrecursorFailure([
 export default {
   open: async (config) => ({
     ...config,
-    handle: await open(
-      new URL("../output/count-branch.jsonl", import.meta.url),
-      "w",
-    ),
+    handle: await open(new URL("count-output.jsonl", import.meta.url), "w"),
   }),
   close: async ({ handle }) => {
     await handle.close();
@@ -540,7 +538,11 @@ export default {
     } else {
       return {
         type: "include",
-        state: { ...config, counter: { inner: 0 } },
+        state: {
+          ...config,
+          specifier: toTestSpecifier(test.path, test.directive),
+          counter: { inner: 0 },
+        },
         flaky: false,
         negatives: [],
       };
@@ -582,7 +584,7 @@ export default {
       },
       record_directory,
     ),
-  teardown: async ({ handle, counter }) => {
-    await handle.write(`${counter.inner}\n`);
+  teardown: async ({ handle, specifier, counter }) => {
+    await handle.write(`${specifier} >> ${counter.inner}\n`);
   },
 };

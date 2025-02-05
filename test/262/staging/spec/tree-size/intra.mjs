@@ -1,4 +1,4 @@
-import { compileStage } from "../tree-size.mjs";
+import { compileStage } from "./common.mjs";
 
 export default compileStage({
   procedural: "intra",

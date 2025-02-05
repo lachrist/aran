@@ -6,21 +6,10 @@ import {
 } from "../fetch.mjs";
 import { HARNESS, TEST262 } from "../layout.mjs";
 import { execTestCase } from "../test-case/index.mjs";
-import { STAGE_ENUM } from "./stage-name.mjs";
 import { AranTypeError } from "../error.mjs";
 import { toTestSpecifier } from "../result.mjs";
 
-const {
-  Object: { hasOwn },
-  Map,
-} = globalThis;
-
-/**
- * @type {(
- *   value: string,
- * ) => value is import("./stage-name").StageName}
- */
-export const isStageName = (value) => hasOwn(STAGE_ENUM, value);
+const { Map } = globalThis;
 
 /**
  * @type {<H, X>(

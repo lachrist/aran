@@ -9,7 +9,7 @@ const { Map, Set, URL, Infinity } = globalThis;
  * ) => URL}
  */
 const locateFailure = (stage) =>
-  new URL(`failure/${stage}.txt`, import.meta.url);
+  new URL(`spec/${stage}-failure.txt`, import.meta.url);
 
 /**
  * @type {(

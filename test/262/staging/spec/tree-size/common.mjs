@@ -1,14 +1,14 @@
-import { compileAran } from "./aran.mjs";
-import { record } from "../record/index.mjs";
+import { compileAran } from "../../aran.mjs";
+import { record } from "../../../record/index.mjs";
 import {
   advice_global_variable,
   createAdvice,
   weave,
-} from "../../aspects/tree-size.mjs";
+} from "../../../../aspects/tree-size.mjs";
 import { open } from "node:fs/promises";
-import { compileListPrecursorFailure } from "./failure.mjs";
-import { toTestSpecifier } from "./../result.mjs";
-import { hashFowler32, hashXor16 } from "./hash.mjs";
+import { compileListPrecursorFailure } from "../../failure.mjs";
+import { toTestSpecifier } from "../../../result.mjs";
+import { hashFowler32, hashXor16 } from "../../../util/hash.mjs";
 
 const {
   JSON,
@@ -67,7 +67,7 @@ const max_buffer_length = 512;
  *   config: {
  *     procedural: "inter" | "intra",
  *   },
- * ) => import("./stage").Stage<
+ * ) => import("../../stage").Stage<
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,

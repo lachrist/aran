@@ -2,7 +2,7 @@ import { fileURLToPath } from "url";
 import { AranExecError } from "../error.mjs";
 import { loadStageResult } from "../staging/result.mjs";
 import { argv, stderr } from "node:process";
-import { isStageName } from "../staging/stage-name-predicate.mjs";
+import { isStageName } from "../staging/index.mjs";
 import { plotBox } from "./plot.mjs";
 
 const {

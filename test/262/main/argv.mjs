@@ -1,4 +1,4 @@
-import { isStageName } from "../staging/stage-name-predicate.mjs";
+import { isStageName } from "../staging/index.mjs";
 
 /**
  * @type {(

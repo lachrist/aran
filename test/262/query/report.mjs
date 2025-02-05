@@ -1,5 +1,5 @@
 import { argv, stdout } from "node:process";
-import { isStageName } from "../staging/stage-name-predicate.mjs";
+import { isStageName } from "../staging/index.mjs";
 import { loadStageResult } from "../staging/result.mjs";
 import { AranTypeError } from "../error.mjs";
 
