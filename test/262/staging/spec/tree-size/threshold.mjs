@@ -11,6 +11,8 @@ const { Set, URL, isNaN, parseInt } = globalThis;
  * }} Entry
  */
 
+export const threshold = 512;
+
 /**
  * @type {(
  *   line: string,
@@ -44,7 +46,7 @@ const isNotEmptyLine = (line) => line !== "";
  *   entry: Entry,
  * ) => boolean}
  */
-const isEntryBelowThreshold = ({ count }) => count <= 512;
+const isEntryAboveThreshold = ({ count }) => count > threshold;
 
 /**
  * @type {(
@@ -63,7 +65,7 @@ const extractExclusion = (content) =>
     .split("\n")
     .filter(isNotEmptyLine)
     .map(parseLine)
-    .filter(isEntryBelowThreshold)
+    .filter(isEntryAboveThreshold)
     .map(getEntrySpecifier);
 
 const exclusion = new Set(

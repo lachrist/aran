@@ -9,7 +9,8 @@ import { open } from "node:fs/promises";
 import { compileListPrecursorFailure } from "../../failure.mjs";
 import { toTestSpecifier } from "../../../result.mjs";
 import { hashFowler32, hashXor16 } from "../../../util/hash.mjs";
-import { listThresholdExclusion } from "./threshold.mjs";
+import { listThresholdExclusion, threshold } from "./threshold.mjs";
+import { AranExecError } from "../../../error.mjs";
 
 const {
   JSON,
@@ -61,8 +62,6 @@ const listPrecursorFailure = await compileListPrecursorFailure([
   "bare-main",
 ]);
 
-const max_buffer_length = 512;
-
 /**
  * @type {(
  *   config: {
@@ -76,6 +75,7 @@ const max_buffer_length = 512;
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
+ *     specifier: import("../../../result").TestSpecifier,
  *     buffer: [
  *       number,
  *       import("aran").EstreeNodePath,
@@ -87,7 +87,7 @@ export const compileStage = ({ procedural }) => ({
   open: async ({ record_directory }) => ({
     record_directory,
     handle: await open(
-      new URL(`output/tree-size-${procedural}.jsonl`, import.meta.url),
+      new URL(`size/${procedural}.jsonl`, import.meta.url),
       "w",
     ),
   }),
@@ -108,6 +108,7 @@ export const compileStage = ({ procedural }) => ({
         type: "include",
         state: {
           handle,
+          specifier,
           record_directory,
           buffer: [],
         },
@@ -116,7 +117,7 @@ export const compileStage = ({ procedural }) => ({
       };
     }
   },
-  prepare: ({ buffer, record_directory }, context) => {
+  prepare: ({ specifier, buffer, record_directory }, context) => {
     const { intrinsics } = prepare(context, { record_directory });
     /**
      * @type {(
@@ -126,9 +127,14 @@ export const compileStage = ({ procedural }) => ({
      * ) => void}
      */
     const recordBranch = (_kind, size, tag) => {
-      if (buffer.length < max_buffer_length) {
-        buffer.push([size, tag]);
+      if (buffer.length >= threshold) {
+        throw new AranExecError("buffer overflow", {
+          specifier,
+          threshold,
+          buffer,
+        });
       }
+      buffer.push([size, tag]);
     };
     const descriptor = {
       __proto__: null,
