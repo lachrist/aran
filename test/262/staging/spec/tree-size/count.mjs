@@ -524,7 +524,7 @@ const listPrecursorFailure = await compileListPrecursorFailure([
 export default {
   open: async (config) => ({
     ...config,
-    handle: await open(new URL("count-output.jsonl", import.meta.url), "w"),
+    handle: await open(new URL("count/data.txt", import.meta.url), "w"),
   }),
   close: async ({ handle }) => {
     await handle.close();

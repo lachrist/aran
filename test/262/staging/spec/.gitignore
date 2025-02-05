@@ -1,4 +1,5 @@
 *
 !**/
 !*.mjs
+!*.py
 !.gitignore

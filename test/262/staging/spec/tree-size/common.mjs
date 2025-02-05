@@ -9,6 +9,7 @@ import { open } from "node:fs/promises";
 import { compileListPrecursorFailure } from "../../failure.mjs";
 import { toTestSpecifier } from "../../../result.mjs";
 import { hashFowler32, hashXor16 } from "../../../util/hash.mjs";
+import { listThresholdExclusion } from "./threshold.mjs";
 
 const {
   JSON,
@@ -96,7 +97,10 @@ export const compileStage = ({ procedural }) => ({
   // eslint-disable-next-line require-await
   setup: async ({ handle, record_directory }, { path, directive }) => {
     const specifier = toTestSpecifier(path, directive);
-    const reasons = listPrecursorFailure(specifier);
+    const reasons = [
+      ...listPrecursorFailure(specifier),
+      ...listThresholdExclusion(specifier),
+    ];
     if (reasons.length > 0) {
       return { type: "exclude", reasons };
     } else {
