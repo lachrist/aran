@@ -126,22 +126,19 @@ export const compileStage = ({ procedural }) => ({
         buffer.push([size, tag]);
       }
     };
-    const {
-      ["aran.global_object"]: {
-        Reflect: { apply, construct },
-      },
-      "aran.getValueProperty": getValueProperty,
-    } = intrinsics;
     const descriptor = {
       __proto__: null,
       value: createAdvice(
         {
-          // eslint-disable-next-line object-shorthand
-          apply: /** @type {any} */ (apply),
-          // eslint-disable-next-line object-shorthand
-          construct: /** @type {any} */ (construct),
-          // eslint-disable-next-line object-shorthand
-          getValueProperty: /** @type {any} */ (getValueProperty),
+          apply: /** @type {any} */ (
+            intrinsics["aran.global_object"].Reflect.apply
+          ),
+          construct: /** @type {any} */ (
+            intrinsics["aran.global_object"].Reflect.construct
+          ),
+          getValueProperty: /** @type {any} */ (
+            intrinsics["aran.getValueProperty"]
+          ),
         },
         { recordBranch, procedural },
       ),

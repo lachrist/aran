@@ -15,7 +15,7 @@ const listKey = /**
  * @type {<K extends PropertyKey>(record: {[k in K]: unknown}) => K[]}
  */ (keys);
 
-// DO NOT USE toArray because it can be poisned by:
+// DO NOT USE toArray because it can be poisoned by:
 //   Array.prototype[Symbol.iterator]
 /**
  * @type {<X, Y>(
@@ -221,7 +221,7 @@ export const weave = (root) =>
 // Advice //
 ////////////
 
-const INIT_TREE_SIZE = 0;
+const INIT_TREE_SIZE = 1;
 
 /**
  * @type {{[k in InternalClosureKind]: null}}
@@ -244,6 +244,22 @@ const external_closure_kind_record = {
 };
 
 /**
+ * @type {(
+ *   kind: import("aran").ClosureKind,
+ * ) => kind is InternalClosureKind}
+ */
+const isInternalClosureKind = (kind) =>
+  hasOwn(internal_closure_kind_record, kind);
+
+/**
+ * @type {(
+ *   kind: import("aran").ClosureKind,
+ * ) => kind is InternalClosureKind}
+ */
+const isExternalClosureKind = (kind) =>
+  hasOwn(external_closure_kind_record, kind);
+
+/**
  * @type {{[k in import("aran").ClosureKind]: null}}
  */
 const closure_kind_record = {
@@ -257,8 +273,7 @@ const closure_kind_record = {
  *   kind: import("aran").ClosureKind
  * ) => _result is InternalValue}
  */
-const isInternalResult = (_result, kind) =>
-  hasOwn(internal_closure_kind_record, kind);
+const isInternalResult = (_result, kind) => isInternalClosureKind(kind);
 
 /**
  * @type {(
@@ -266,29 +281,12 @@ const isInternalResult = (_result, kind) =>
  *   kind: import("aran").ClosureKind
  * ) => _result is ExternalValue}
  */
-const isExternalResult = (_result, kind) =>
-  hasOwn(external_closure_kind_record, kind);
-
-/**
- * @type {(
- *   callee: InternalValue,
- *   that: null | InternalValue,
- *   input: InternalValue[],
- *   registery: PrimitiveRegistery,
- * ) => TreeSize}
- */
-const computeInputSize = (callee, that, input, registery) =>
-  reduce(
-    input,
-    (size, value) => size + getTreeSize(value, registery),
-    getTreeSize(callee, registery) +
-      (that === null ? 0 : getTreeSize(that, registery)),
-  );
+const isExternalResult = (_result, kind) => isInternalClosureKind(kind);
 
 /**
  * @type {(
  *   registery: null | ClosureRegistery,
- *   closure: ExternalValue & Function,
+ *   closure: Function,
  *   kind: import("aran").ClosureKind,
  * ) => Reference}
  */
@@ -303,19 +301,91 @@ const registerInternalClosure = (registery, closure, kind) => {
  * @type {(
  *   registery: null | ClosureRegistery,
  *   value: InternalValue,
- * ) => boolean}
- */
-const isInternalClosure = (registery, value) =>
-  registery !== null && apply(hasWeakMap, registery, [value]);
-
-/**
- * @type {(
- *   registery: null | ClosureRegistery,
- *   value: InternalValue,
  * ) => import("aran").ClosureKind | null}
  */
 const getInternalClosureKind = (registery, value) =>
   registery !== null ? (apply(getWeakMap, registery, [value]) ?? null) : null;
+
+/**
+ * @type {(
+ *   callee: InternalValue,
+ *   that: InternalValue,
+ *   input: InternalValue[],
+ *   result: InternalValue,
+ *   registery: PrimitiveRegistery,
+ * ) => InternalValue}
+ */
+const updateInternalResultTreeSize = (
+  callee,
+  that,
+  input,
+  result,
+  registery,
+) => {
+  if (isInternalPrimitive(result, registery)) {
+    // console.log({
+    //   type: "internal",
+    //   callee,
+    //   that,
+    //   input,
+    //   result,
+    //   size: TODO,
+    // });
+    return enterPrimitive(
+      leavePrimitive(result),
+      INIT_TREE_SIZE +
+        getTreeSize(callee, registery) +
+        getTreeSize(that, registery) +
+        reduce(
+          input,
+          (size, value) => size + getTreeSize(value, registery),
+          0,
+        ) +
+        getTreeSize(result, registery),
+      registery,
+    );
+  } else {
+    return result;
+  }
+};
+
+/**
+ * @type {(
+ *   callee: InternalValue,
+ *   that: InternalValue,
+ *   input: InternalValue[],
+ *   result: ExternalValue,
+ *   registery: PrimitiveRegistery,
+ * ) => InternalValue}
+ */
+const updateExternalResultTreeSize = (
+  callee,
+  that,
+  input,
+  result,
+  registery,
+) => {
+  if (isExternalPrimitive(result)) {
+    // console.log({
+    //   type: "external",
+    //   callee,
+    //   that,
+    //   input,
+    //   result,
+    //   size: TODO,
+    // });
+    return enterPrimitive(
+      result,
+      INIT_TREE_SIZE +
+        getTreeSize(callee, registery) +
+        getTreeSize(that, registery) +
+        reduce(input, (size, value) => size + getTreeSize(value, registery), 0),
+      registery,
+    );
+  } else {
+    return result;
+  }
+};
 
 /**
  * @type {(
@@ -325,13 +395,12 @@ const getInternalClosureKind = (registery, value) =>
  * ) => Reference}
  */
 const registerInput = (registery, input, leaveValue) => {
+  /** @type {Reference} */
+  const reference = /** @type {any} */ (map(input, leaveValue));
   if (registery !== null) {
-    /** @type {Reference} */
-    const reference = /** @type {any} */ (map(input, leaveValue));
     apply(setWeakMap, registery, [reference, input]);
-    return reference;
   }
-  return /** @type {any} */ (input);
+  return /** @type {any} */ (reference);
 };
 
 /**
@@ -388,19 +457,20 @@ const recoverInput = (registery, candidate) =>
  *   Kind: AspectKind,
  *   ScopeValue: InternalValue,
  *   StackValue: InternalValue,
- *   OtherValue: ExternalValue,
+ *   OtherValue: InternalValue | ExternalValue,
  * }>}
  */
 export const createAdvice = (
   { getValueProperty, apply, construct },
   { recordBranch, procedural },
 ) => {
+  const inter_procedural_tracking = procedural === "inter";
   /** @type {PrimitiveRegistery} */
   const primitive_registery = new WeakMap();
   /** @type {null | ClosureRegistery} */
-  const closure_registery = procedural === "inter" ? new WeakMap() : null;
+  const closure_registery = inter_procedural_tracking ? new WeakMap() : null;
   /** @type {null | InputRegistery} */
-  const input_registery = procedural === "inter" ? new WeakMap() : null;
+  const input_registery = inter_procedural_tracking ? new WeakMap() : null;
   let transit = false;
   return {
     "block@declaration-overwrite": (_state, kind, frame, _tag) => {
@@ -410,28 +480,30 @@ export const createAdvice = (
         })
       );
       if (transit) {
-        transit = false;
+        transit = true;
         if (!hasOwn(closure_kind_record, kind)) {
           throw new Error(`transit should only occur in closure ${kind}`);
-        } else {
-          for (const variable in frame) {
-            if (variable === "this") {
-              copy[variable] = /** @type {InternalValue} */ (frame[variable]);
-            } else if (variable === "function.arguments") {
-              copy[variable] = registerInput(
-                input_registery,
-                /** @type {InternalValue[]} */ (
-                  /** @type {unknown} */ (frame[variable])
-                ),
-                (value) => leaveValue(value, primitive_registery),
-              );
-            } else {
-              copy[variable] = enterValue(
-                /** @type {ExternalValue} */ (frame[variable]),
-                INIT_TREE_SIZE,
-                primitive_registery,
-              );
-            }
+        }
+        if (!inter_procedural_tracking) {
+          throw new Error(`transit should only occur in inter procedural mode`);
+        }
+        for (const variable in frame) {
+          if (variable === "this") {
+            copy[variable] = /** @type {InternalValue} */ (frame[variable]);
+          } else if (variable === "function.arguments") {
+            copy[variable] = registerInput(
+              input_registery,
+              /** @type {InternalValue[]} */ (
+                /** @type {unknown} */ (frame[variable])
+              ),
+              (value) => leaveValue(value, primitive_registery),
+            );
+          } else {
+            copy[variable] = enterValue(
+              /** @type {ExternalValue} */ (frame[variable]),
+              INIT_TREE_SIZE,
+              primitive_registery,
+            );
           }
         }
       } else {
@@ -451,12 +523,27 @@ export const createAdvice = (
           ? value
           : leaveValue(value, primitive_registery)
       ),
+    "closure-block@after": (_state, kind, value, _tag) => {
+      if (inter_procedural_tracking) {
+        if (isInternalClosureKind(kind)) {
+          return value;
+        } else if (isExternalClosureKind(kind)) {
+          return leaveValue(value, primitive_registery);
+        } else {
+          throw new Error(`illegal closure kind: ${kind}`);
+        }
+      } else {
+        return leaveValue(value, primitive_registery);
+      }
+    },
     "closure@after": (_state, kind, closure, _tag) =>
       registerInternalClosure(closure_registery, closure, kind),
-    "closure-block@after": (_state, _kind, value, _tag) =>
-      leaveValue(value, primitive_registery),
     "import@after": (_state, _source, _specifier, value, _tag) =>
-      enterValue(value, INIT_TREE_SIZE, primitive_registery),
+      enterValue(
+        /** @type {ExternalValue} */ (value),
+        INIT_TREE_SIZE,
+        primitive_registery,
+      ),
     "primitive@after": (_state, primitive, _tag) =>
       enterPrimitive(
         /** @type {ExternalPrimitive} */ (/** @type {unknown} */ (primitive)),
@@ -468,15 +555,27 @@ export const createAdvice = (
       return leaveValue(value, primitive_registery);
     },
     "intrinsic@after": (_state, _name, value, _tag) =>
-      enterValue(value, INIT_TREE_SIZE, primitive_registery),
+      enterValue(
+        /** @type {ExternalValue} */ (value),
+        INIT_TREE_SIZE,
+        primitive_registery,
+      ),
     "await@before": (_state, value, _tag) =>
       leaveValue(value, primitive_registery),
     "await@after": (_state, value, _tag) =>
-      enterValue(value, INIT_TREE_SIZE, primitive_registery),
+      enterValue(
+        /** @type {ExternalValue} */ (value),
+        INIT_TREE_SIZE,
+        primitive_registery,
+      ),
     "yield@before": (_state, _delegate, value, _tag) =>
       leaveValue(value, primitive_registery),
     "yield@after": (_state, _delegate, value, _tag) =>
-      enterValue(value, INIT_TREE_SIZE, primitive_registery),
+      enterValue(
+        /** @type {ExternalValue} */ (value),
+        INIT_TREE_SIZE,
+        primitive_registery,
+      ),
     "export@before": (_state, _specifier, value, _tag) =>
       leaveValue(value, primitive_registery),
     "eval@before": (_state, value, _tag) => {
@@ -493,71 +592,80 @@ export const createAdvice = (
         const obj = leaveValue(int_obj, primitive_registery);
         const key = leaveValue(int_key, primitive_registery);
         const args = recoverInput(input_registery, int_obj);
-        const val = getValueProperty(obj, key);
+        const result = getValueProperty(obj, key);
         if (args && typeof key === "number" && key < args.length) {
           const arg = args[key];
-          if (is(leaveValue(arg, primitive_registery), val)) {
-            return arg;
+          // Check for out-of-sync
+          if (is(leaveValue(arg, primitive_registery), result)) {
+            return updateInternalResultTreeSize(
+              callee,
+              that,
+              input,
+              arg,
+              primitive_registery,
+            );
           }
+        } else {
+          return updateExternalResultTreeSize(
+            callee,
+            that,
+            input,
+            result,
+            primitive_registery,
+          );
         }
-        return enterValue(
-          val,
-          1 + computeInputSize(callee, that, input, primitive_registery),
-          primitive_registery,
-        );
       }
       {
         const kind = getInternalClosureKind(closure_registery, callee);
         if (kind != null) {
+          // If callee is an internal closure:
+          //   - Apply cannot throw before reaching block@declaration-overwrite.
+          //   - It cannot be a Proxy as it directly comes from a literal closure.
           transit = true;
           const result = apply(callee, that, input);
           if (isInternalResult(result, kind)) {
-            if (isInternalPrimitive(result, primitive_registery)) {
-              return enterPrimitive(
-                leavePrimitive(result),
-                1 +
-                  getTreeSize(result, primitive_registery) +
-                  computeInputSize(callee, that, input, primitive_registery),
-                primitive_registery,
-              );
-            } else {
-              return result;
-            }
+            return updateInternalResultTreeSize(
+              callee,
+              that,
+              input,
+              result,
+              primitive_registery,
+            );
           } else if (isExternalResult(result, kind)) {
-            if (isExternalPrimitive(result)) {
-              throw new Error(`expect reference result for ${kind}`);
-            } else {
-              return result;
-            }
+            return updateExternalResultTreeSize(
+              callee,
+              that,
+              input,
+              result,
+              primitive_registery,
+            );
           } else {
             throw new Error(`unexpected closure kind ${kind}`);
           }
         }
       }
-      {
-        const result = apply(
+      return updateExternalResultTreeSize(
+        callee,
+        that,
+        input,
+        apply(
           leaveValue(callee, primitive_registery),
           leaveValue(that, primitive_registery),
           map(input, (value) => leaveValue(value, primitive_registery)),
-        );
-        if (isExternalPrimitive(result)) {
-          return enterPrimitive(
-            result,
-            1 + computeInputSize(callee, that, input, primitive_registery),
-            primitive_registery,
-          );
-        } else {
-          return result;
-        }
-      }
+        ),
+        primitive_registery,
+      );
     },
     "construct@around": (_state, callee, input, _tag) => {
-      if (isInternalClosure(closure_registery, callee)) {
-        return construct(callee, input);
+      if (getInternalClosureKind(closure_registery, callee) === "function") {
+        transit = true;
+        return /** @type {Reference} */ (construct(callee, input));
       }
-      return construct(
-        leaveValue(callee, primitive_registery),
-        map(input, (value) => leaveValue(value, primitive_registery)),
+      return /** @type {Reference} */ (
+        construct(
+          leaveValue(callee, primitive_registery),
+          map(input, (value) => leaveValue(value, primitive_registery)),
+        )
       );
     },
   };
