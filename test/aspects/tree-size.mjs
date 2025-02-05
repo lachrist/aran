@@ -68,6 +68,7 @@ const reduce = (array, accumulate, result) => {
  * @typedef {InternalPrimitive | Reference} InternalValue
  * @typedef {number} TreeSize
  * @typedef {(
+ *   | "block@setup"
  *   | "block@declaration-overwrite"
  *   | "program-block@after"
  *   | "closure-block@after"
@@ -185,6 +186,7 @@ export const advice_global_variable = "__aran_advice__";
  * @type {{ [k in AspectKind]: null }}
  */
 const pointcut_record = {
+  "block@setup": null,
   "block@declaration-overwrite": null,
   "program-block@after": null,
   "closure-block@after": null,
@@ -205,6 +207,10 @@ const pointcut_record = {
 
 const pointcut = listKey(pointcut_record);
 
+const external_program_transit = false;
+
+const internal_program_transit = true;
+
 /**
  * @type {(
  *   root: import("aran").Program<Atom>,
@@ -213,7 +219,7 @@ const pointcut = listKey(pointcut_record);
 export const weave = (root) =>
   weaveStandard(root, {
     advice_global_variable,
-    initial_state: null,
+    initial_state: external_program_transit,
     pointcut,
   });
 
@@ -221,7 +227,7 @@ export const weave = (root) =>
 // Advice //
 ////////////
 
-const INIT_TREE_SIZE = 1;
+const init_tree_size = 1;
 
 /**
  * @type {{[k in InternalClosureKind]: null}}
@@ -266,6 +272,13 @@ const closure_kind_record = {
   ...internal_closure_kind_record,
   ...external_closure_kind_record,
 };
+
+/**
+ * @type {(
+ *   kind: import("aran").ControlKind,
+ * ) => kind is import("aran").ClosureKind}
+ */
+const isClosureKind = (kind) => hasOwn(closure_kind_record, kind);
 
 /**
  * @type {(
@@ -333,7 +346,7 @@ const updateInternalResultTreeSize = (
     // });
     return enterPrimitive(
       leavePrimitive(result),
-      INIT_TREE_SIZE +
+      init_tree_size +
         getTreeSize(callee, registery) +
         getTreeSize(that, registery) +
         reduce(
@@ -376,7 +389,7 @@ const updateExternalResultTreeSize = (
     // });
     return enterPrimitive(
       result,
-      INIT_TREE_SIZE +
+      init_tree_size +
         getTreeSize(callee, registery) +
         getTreeSize(that, registery) +
         reduce(input, (size, value) => size + getTreeSize(value, registery), 0),
@@ -453,6 +466,7 @@ const recoverInput = (registery, candidate) =>
  *     procedural: "inter" | "intra",
  *   },
  * ) => import("aran").StandardAdvice<{
+ *   State: boolean,
  *   Tag: T,
  *   Kind: AspectKind,
  *   ScopeValue: InternalValue,
@@ -473,20 +487,25 @@ export const createAdvice = (
   const input_registery = inter_procedural_tracking ? new WeakMap() : null;
   let transit = false;
   return {
-    "block@declaration-overwrite": (_state, kind, frame, _tag) => {
+    "block@setup": (state, kind, _tag) => {
+      if (isClosureKind(kind)) {
+        if (transit) {
+          transit = false;
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return state;
+      }
+    },
+    "block@declaration-overwrite": (transit, kind, frame, _tag) => {
       const copy = /** @type {{[key in string]: InternalValue}} */ (
         /** @type {unknown} */ ({
           __proto__: null,
         })
       );
-      if (transit) {
-        transit = false;
-        if (!hasOwn(closure_kind_record, kind)) {
-          throw new Error(`transit should only occur in closure, got: ${kind}`);
-        }
-        if (!inter_procedural_tracking) {
-          throw new Error(`transit should only occur in inter procedural mode`);
-        }
+      if (transit && isClosureKind(kind)) {
         for (const variable in frame) {
           if (variable === "this") {
             copy[variable] = /** @type {InternalValue} */ (frame[variable]);
@@ -501,7 +520,7 @@ export const createAdvice = (
           } else {
             copy[variable] = enterValue(
               /** @type {ExternalValue} */ (frame[variable]),
-              INIT_TREE_SIZE,
+              init_tree_size,
               primitive_registery,
             );
           }
@@ -510,21 +529,17 @@ export const createAdvice = (
         for (const variable in frame) {
           copy[variable] = enterValue(
             /** @type {ExternalValue} */ (frame[variable]),
-            INIT_TREE_SIZE,
+            init_tree_size,
             primitive_registery,
           );
         }
       }
       return copy;
     },
-    "program-block@after": (_state, kind, value, _tag) =>
-      /** @type {any} */ (
-        kind === "deep-local-eval"
-          ? value
-          : leaveValue(value, primitive_registery)
-      ),
-    "closure-block@after": (_state, kind, value, _tag) => {
-      if (inter_procedural_tracking) {
+    "program-block@after": (transit, _kind, value, _tag) =>
+      transit ? value : leaveValue(value, primitive_registery),
+    "closure-block@after": (transit, kind, value, _tag) => {
+      if (transit) {
         if (isInternalClosureKind(kind)) {
           return value;
         } else if (isExternalClosureKind(kind)) {
@@ -536,57 +551,61 @@ export const createAdvice = (
         return leaveValue(value, primitive_registery);
       }
     },
-    "closure@after": (_state, kind, closure, _tag) =>
+    "closure@after": (_transit, kind, closure, _tag) =>
       registerInternalClosure(closure_registery, closure, kind),
-    "import@after": (_state, _source, _specifier, value, _tag) =>
+    "import@after": (_transit, _source, _specifier, value, _tag) =>
       enterValue(
         /** @type {ExternalValue} */ (value),
-        INIT_TREE_SIZE,
+        init_tree_size,
         primitive_registery,
       ),
-    "primitive@after": (_state, primitive, _tag) =>
+    "primitive@after": (_transit, primitive, _tag) =>
       enterPrimitive(
         /** @type {ExternalPrimitive} */ (/** @type {unknown} */ (primitive)),
-        INIT_TREE_SIZE,
+        init_tree_size,
         primitive_registery,
       ),
-    "test@before": (_state, kind, value, tag) => {
+    "test@before": (_transit, kind, value, tag) => {
       recordBranch(kind, getTreeSize(value, primitive_registery), tag);
       return leaveValue(value, primitive_registery);
     },
-    "intrinsic@after": (_state, _name, value, _tag) =>
+    "intrinsic@after": (_transit, _name, value, _tag) =>
       enterValue(
         /** @type {ExternalValue} */ (value),
-        INIT_TREE_SIZE,
+        init_tree_size,
         primitive_registery,
       ),
-    "await@before": (_state, value, _tag) =>
+    "await@before": (_transit, value, _tag) =>
       leaveValue(value, primitive_registery),
-    "await@after": (_state, value, _tag) =>
+    "await@after": (_transit, value, _tag) =>
       enterValue(
         /** @type {ExternalValue} */ (value),
-        INIT_TREE_SIZE,
+        init_tree_size,
         primitive_registery,
       ),
-    "yield@before": (_state, _delegate, value, _tag) =>
+    "yield@before": (_transit, _delegate, value, _tag) =>
       leaveValue(value, primitive_registery),
-    "yield@after": (_state, _delegate, value, _tag) =>
+    "yield@after": (_transit, _delegate, value, _tag) =>
       enterValue(
         /** @type {ExternalValue} */ (value),
-        INIT_TREE_SIZE,
+        init_tree_size,
         primitive_registery,
       ),
-    "export@before": (_state, _specifier, value, _tag) =>
+    "export@before": (_transit, _specifier, value, _tag) =>
       leaveValue(value, primitive_registery),
-    "eval@before": (_state, value, _tag) => {
+    "eval@before": (_transit, value, _tag) => {
       const root1 = /** @type {import("aran").Program<Atom>} */ (
         /** @type {unknown} */ (leaveValue(value, primitive_registery))
       );
-      const root2 = weave(root1);
+      const root2 = weaveStandard(root1, {
+        advice_global_variable,
+        initial_state: internal_program_transit,
+        pointcut,
+      });
       return /** @type {ExternalValue} */ (/** @type {unknown} */ (root2));
     },
     // around //
-    "apply@around": (_state, callee, that, input, _tag) => {
+    "apply@around": (_transit, callee, that, input, _tag) => {
       if (is(callee, getValueProperty) && input.length === 2) {
         const { 0: int_obj, 1: int_key } = input;
         const obj = leaveValue(int_obj, primitive_registery);
@@ -656,7 +675,7 @@ export const createAdvice = (
         primitive_registery,
       );
     },
-    "construct@around": (_state, callee, input, _tag) => {
+    "construct@around": (_transit, callee, input, _tag) => {
       if (getInternalClosureKind(closure_registery, callee) === "function") {
         transit = true;
         return /** @type {Reference} */ (construct(callee, input));

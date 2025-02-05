@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { AranExecError } from "../../../../error.mjs";
 import { isNotEmptyString } from "../../../../util/string.mjs";
 
@@ -40,13 +40,22 @@ const reduceRepeat = (array) => {
 };
 
 /**
+ * @type {(
+ *   number1: number,
+ *   number2: number,
+ * ) => number}
+ */
+const computeRatio = (number1, number2) =>
+  Math.round((10000 * number1) / number2) / 10000;
+
+/**
  * @typedef {number & { __brand: "Hash" }} Hash
  * @typedef {number & { __brand: "Size" }} Size
  * @typedef {number & { __brand: "BranchIndex" }} BranchIndex
  * @typedef {Record<BranchIndex, Size | Hash>} Test
  * @typedef {number & { __brand: "TestIndex" }} TestIndex
  * @typedef {Record<TestIndex, Test>} Suite
- * @typedef {"tree-size-intra" | "tree-size-inter"} SuiteName
+ * @typedef {"intra" | "inter"} SuiteName
  * @typedef {Record<SuiteName, Suite>} SuiteRecord
  */
 
@@ -58,8 +67,8 @@ const reduceRepeat = (array) => {
  * @type {{[key in SuiteName]: null}}
  */
 const stage_name_record = {
-  "tree-size-intra": null,
-  "tree-size-inter": null,
+  intra: null,
+  inter: null,
 };
 
 const stage_name_enum = /** @type {SuiteName[]} */ (
@@ -74,6 +83,19 @@ const stage_name_enum = /** @type {SuiteName[]} */ (
  */
 const getTestSize = (test, index) =>
   /** @type {Size} */ (test[/** @type {BranchIndex} */ (2 * index)]);
+
+/**
+ * @type {(
+ *   test: Test,
+ * ) => Size}
+ */
+const sumTest = (test) => {
+  let total = 0;
+  for (const branch_index of iterateBranchIndex([test])) {
+    total += getTestSize(test, branch_index);
+  }
+  return /** @type {Size} */ (total);
+};
 
 /**
  * @type {(
@@ -120,35 +142,42 @@ const getTestLength = (test) => /** @type {any} */ (test).length;
 
 /**
  * @type {(
- *   suites: Suite[],
- *   test_index: TestIndex,
+ *   tests: Test[],
  * ) => Iterable<BranchIndex>}
  */
-const iterateBranchIndex = function* (suites, test_index) {
-  const test_length = reduceRepeat(
-    suites.map((suite) => getTestLength(getSuiteTest(suite, test_index))),
-  );
+const iterateBranchIndex = function* (tests) {
+  const test_length = reduceRepeat(tests.map(getTestLength));
   for (let branch_index = 0; branch_index < test_length; branch_index++) {
     yield /** @type {BranchIndex} */ (branch_index);
   }
 };
 
-////////////
-// Crunch //
-////////////
+///////////
+// Ratio //
+///////////
 
 /**
  * @type {(
  *   suite1: Suite,
  *   suite2: Suite,
- *   test_index: TestIndex,
- *   branch_index: BranchIndex,
- * ) => number}
+ * ) => number[]}
  */
-const computeRatio = (suite1, suite2, test_index, branch_index) => {
-  const size1 = getTestSize(getSuiteTest(suite1, test_index), branch_index);
-  const size2 = getTestSize(getSuiteTest(suite2, test_index), branch_index);
-  return Math.round((100 * size1) / size2) / 100;
+const ratioBranch = (suite1, suite2) => {
+  /** @type {number[]} */
+  const ratios = [];
+  for (const test_index of iterateTestIndex([suite1, suite2])) {
+    const test1 = getSuiteTest(suite1, test_index);
+    const test2 = getSuiteTest(suite2, test_index);
+    for (const branch_index of iterateBranchIndex([test1, test2])) {
+      ratios.push(
+        computeRatio(
+          getTestSize(test1, branch_index),
+          getTestSize(test2, branch_index),
+        ),
+      );
+    }
+  }
+  return ratios;
 };
 
 /**
@@ -157,13 +186,18 @@ const computeRatio = (suite1, suite2, test_index, branch_index) => {
  *   suite2: Suite,
  * ) => number[]}
  */
-const crunch = (suite1, suite2) => {
-  const ratio = [];
+const ratioTest = (suite1, suite2) => {
+  const ratios = [];
   const suites = [suite1, suite2];
   for (const test_index of iterateTestIndex(suites)) {
-    for (const branch_index of iterateBranchIndex(suites, test_index)) {
-      ratio.push(computeRatio(suite1, suite2, test_index, branch_index));
-    }
+    const sum1 = sumTest(getSuiteTest(suite1, test_index));
+    const size1 = reduceRepeat(
+      suites.map((suite) => getTestSize(getSuiteTest(suite, test_index), 0)),
+    );
+    const size2 = reduceRepeat(
+      suites.map((suite) => getTestSize(getSuiteTest(suite, test_index), 1)),
+    );
+    ratio.push(Math.round((100 * size1) / size2) / 100);
   }
   return ratio;
 };
@@ -226,17 +260,11 @@ const parseSuite = (content) =>
  * @type {() => Promise<SuiteRecord>}
  */
 const loadSuiteRecord = async () => ({
-  "tree-size-intra": parseSuite(
-    await readFile(
-      new URL("../staging/output/tree-size-intra.jsonl", import.meta.url),
-      "utf-8",
-    ),
+  intra: parseSuite(
+    await readFile(new URL("intra.jsonl", import.meta.url), "utf-8"),
   ),
-  "tree-size-inter": parseSuite(
-    await readFile(
-      new URL("../staging/output/tree-size-inter.jsonl", import.meta.url),
-      "utf-8",
-    ),
+  inter: parseSuite(
+    await readFile(new URL("inter.jsonl", import.meta.url), "utf-8"),
   ),
 });
 
@@ -244,9 +272,47 @@ const loadSuiteRecord = async () => ({
 // Main //
 //////////
 
+/**
+ * @type {(
+ *   suite: Suite,
+ * ) => Size[]}
+ */
+const aggregateBrand = (suite) => {
+  const sizes = [];
+  for (const test_index of iterateTestIndex([suite])) {
+    const test = getSuiteTest(suite, test_index);
+    for (const branch_index of iterateBranchIndex([test])) {
+      sizes.push(getTestSize(test, branch_index));
+    }
+  }
+  return sizes;
+};
+
+/**
+ * @type {(
+ *   suite: Suite,
+ * ) => number[]}
+ */
+const aggregateTest = (suite) => {
+  const sizes = [];
+  for (const test_index of iterateTestIndex([suite])) {
+    const test = getSuiteTest(suite, test_index);
+    sizes.push(sumTest(test));
+  }
+  return sizes;
+};
+
 const main = async () => {
   const suites = await loadSuiteRecord();
   verifySuiteRecord(suites);
+  for (const name of stage_name_enum) {
+    await writeFile(
+      new URL(`${name}-aggregate.txt`, import.meta.url),
+      aggregate(suites[name]).join("\n"),
+      "utf8",
+    );
+  }
+
   console.log(crunch(suites["tree-size-intra"], suites["tree-size-inter"]));
 };
 
