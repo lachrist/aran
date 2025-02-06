@@ -11,7 +11,7 @@ const { Map } = globalThis;
 export const loadStageFailure = async function* (stage) {
   for await (const [index, result] of loadStageResult(stage)) {
     if (result.type === "include") {
-      if (result.actual !== null || result.expect !== null) {
+      if (result.actual !== null || result.expect.length > 0) {
         yield index;
       }
     } else if (result.type === "exclude") {
@@ -47,5 +47,5 @@ export const compileListPrecursorFailure = async (stages) => {
       }
     }
   }
-  return (specifier) => map.get(specifier) || [];
+  return (index) => map.get(index) || [];
 };
