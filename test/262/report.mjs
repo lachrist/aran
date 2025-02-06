@@ -13,7 +13,7 @@ export const printReport = ({ index, test, result }) => {
   if (result.type === "include") {
     return [
       getResultStatus(result).toUpperCase(),
-      `${index} >> test262/test/${test.path} >> @${test.directive}`,
+      `${index} >> test/262/test262/test/${test.path} >> @${test.directive}`,
       "",
       inspect(test, { depth: Infinity, colors: true }),
       inspect(result, { depth: Infinity, colors: true }),

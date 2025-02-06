@@ -11,7 +11,7 @@ const {
   JSON,
   Array,
   URL,
-  Reflect: { defineProperty },
+  Reflect: { apply, defineProperty },
 } = globalThis;
 
 /**
@@ -142,6 +142,10 @@ export const compileStage = ({ procedural }) => ({
           ),
           construct: /** @type {any} */ (
             intrinsics["aran.global_object"].Reflect.construct
+          ),
+          createArray: /** @type {any} */ (
+            (/** @type {any[]} */ values) =>
+              apply(intrinsics["Array.of"], null, values)
           ),
           getValueProperty: /** @type {any} */ (
             intrinsics["aran.getValueProperty"]

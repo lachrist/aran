@@ -47,6 +47,9 @@ const test = (code, procedural) => {
         apply: /** @type {any} */ (Reflect.apply),
         construct: /** @type {any} */ (Reflect.construct),
         getValueProperty: intrinsics["aran.getValueProperty"],
+        createArray: /** @type {any} */ (
+          (/** @type {any[]} */ values) => values
+        ),
       },
       {
         procedural,

@@ -379,14 +379,6 @@ const updateExternalResultTreeSize = (
   registery,
 ) => {
   if (isExternalPrimitive(result)) {
-    // console.log({
-    //   type: "external",
-    //   callee,
-    //   that,
-    //   input,
-    //   result,
-    //   size: TODO,
-    // });
     return enterPrimitive(
       result,
       init_tree_size +
@@ -403,17 +395,14 @@ const updateExternalResultTreeSize = (
 /**
  * @type {(
  *   registery: null | InputRegistery,
+ *   reference: Reference,
  *   input: InternalValue[],
- *   leaveValue: (value: InternalValue) => ExternalValue,
- * ) => Reference}
+ * ) => void}
  */
-const registerInput = (registery, input, leaveValue) => {
-  /** @type {Reference} */
-  const reference = /** @type {any} */ (map(input, leaveValue));
+const registerInput = (registery, reference, input) => {
   if (registery !== null) {
     apply(setWeakMap, registery, [reference, input]);
   }
-  return /** @type {any} */ (reference);
 };
 
 /**
@@ -430,10 +419,6 @@ const recoverInput = (registery, candidate) =>
 /**
  * @type {<T extends import("aran").Json>(
  *   intrinscs: {
- *     getValueProperty: (
- *       object: ExternalValue,
- *       key: ExternalValue,
- *     ) => ExternalValue,
  *     apply: {
  *       (
  *         callee: ExternalValue,
@@ -456,6 +441,11 @@ const recoverInput = (registery, candidate) =>
  *         args: InternalValue[],
  *       ): Reference;
  *     },
+ *     createArray: (values: ExternalValue[]) => Reference,
+ *     getValueProperty: (
+ *       object: ExternalValue,
+ *       key: ExternalValue,
+ *     ) => ExternalValue,
  *   },
  *   config: {
  *     recordBranch: (
@@ -475,7 +465,7 @@ const recoverInput = (registery, candidate) =>
  * }>}
  */
 export const createAdvice = (
-  { getValueProperty, apply, construct },
+  { apply, construct, getValueProperty, createArray },
   { recordBranch, procedural },
 ) => {
   const inter_procedural_tracking = procedural === "inter";
@@ -510,13 +500,14 @@ export const createAdvice = (
           if (variable === "this") {
             copy[variable] = /** @type {InternalValue} */ (frame[variable]);
           } else if (variable === "function.arguments") {
-            copy[variable] = registerInput(
-              input_registery,
-              /** @type {InternalValue[]} */ (
-                /** @type {unknown} */ (frame[variable])
-              ),
-              (value) => leaveValue(value, primitive_registery),
+            const input = /** @type {InternalValue[]} */ (
+              /** @type {unknown} */ (frame[variable])
             );
+            const reference = createArray(
+              map(input, (value) => leaveValue(value, primitive_registery)),
+            );
+            registerInput(input_registery, reference, input);
+            copy[variable] = reference;
           } else {
             copy[variable] = enterValue(
               /** @type {ExternalValue} */ (frame[variable]),
