@@ -123,10 +123,12 @@ export const compileStage = ({ procedural }) => ({
      *   hash: NodeHash,
      * ) => void}
      */
-    const recordBranch = (_kind, size, hash) => {
+    const recordBranch = (kind, size, hash) => {
       if (buffer.length >= threshold) {
         throw new AranExecError("buffer overflow", {
           index,
+          kind,
+          size,
           threshold,
           buffer,
         });

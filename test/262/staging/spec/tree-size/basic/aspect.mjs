@@ -1,4 +1,5 @@
 import { weaveStandard } from "aran";
+import { AranExecError } from "../../../../error.mjs";
 
 const {
   Error,
@@ -336,14 +337,6 @@ const updateInternalResultTreeSize = (
   registery,
 ) => {
   if (isInternalPrimitive(result, registery)) {
-    // console.log({
-    //   type: "internal",
-    //   callee,
-    //   that,
-    //   input,
-    //   result,
-    //   size: TODO,
-    // });
     return enterPrimitive(
       leavePrimitive(result),
       init_tree_size +
@@ -498,7 +491,18 @@ export const createAdvice = (
       if (transit && isClosureKind(kind)) {
         for (const variable in frame) {
           if (variable === "this") {
-            copy[variable] = /** @type {InternalValue} */ (frame[variable]);
+            if (!("new.target" in frame)) {
+              throw new AranExecError("missing new.target", { frame });
+            }
+            copy[variable] = frame["new.target"]
+              ? enterPrimitive(
+                  /** @type {ExternalPrimitive} */ (
+                    /** @type {unknown} */ (frame[variable])
+                  ),
+                  init_tree_size,
+                  primitive_registery,
+                )
+              : /** @type {InternalValue} */ (frame[variable]);
           } else if (variable === "function.arguments") {
             const input = /** @type {InternalValue[]} */ (
               /** @type {unknown} */ (frame[variable])

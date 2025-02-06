@@ -6,6 +6,13 @@ const { Object, Math, URL, JSON, Array } = globalThis;
 
 /**
  * @type {(
+ *   value: unknown,
+ * ) => value is 0}
+ */
+const isZero = (value) => value === 0;
+
+/**
+ * @type {(
  *   array: unknown[],
  * ) => boolean}
  */
@@ -51,12 +58,22 @@ const getCommonLength = (arrays) => {
 
 /**
  * @type {(
- *   number1: number,
- *   number2: number,
+ *   divident: number,
+ *   divisor: number,
  * ) => number}
  */
-const computeRatio = (number1, number2) =>
-  Math.round((10000 * number1) / number2) / 10000;
+const computeRatio = (divident, divisor) => {
+  if (divident === 0 && divisor === 0) {
+    return 0;
+  }
+  if (divident === 0) {
+    throw new AranExecError("divident is zero", { divident, divisor });
+  }
+  if (divisor === 0) {
+    throw new AranExecError("divisor is zero", { divident, divisor });
+  }
+  return Math.round((10000 * divident) / divisor) / 10000;
+};
 
 /**
  * @typedef {number & { __brand: "Hash" }} Hash
@@ -129,7 +146,11 @@ const iterateTestIndex = function* (suites) {
  * ) => Iterable<BranchIndex>}
  */
 const iterateBranchIndex = function* (tests) {
-  const test_length = getCommonLength(tests);
+  const double_test_length = getCommonLength(tests);
+  if (double_test_length % 2 !== 0) {
+    throw new AranExecError("odd double test length", { double_test_length });
+  }
+  const test_length = double_test_length / 2;
   for (let branch_index = 0; branch_index < test_length; branch_index++) {
     yield /** @type {BranchIndex} */ (branch_index);
   }
@@ -175,6 +196,14 @@ const verifySuiteRecord = (suite_record) => {
           branch_index,
         });
       }
+      const sizes = tests.map((test) => getTestSize(test, branch_index));
+      if (sizes.some(isZero) && !sizes.every(isZero)) {
+        throw new AranExecError("zero mixture", {
+          sizes,
+          test_index,
+          branch_index,
+        });
+      }
     }
   }
 };
@@ -185,16 +214,20 @@ const verifySuiteRecord = (suite_record) => {
  * ) => Test}
  */
 const parseTest = (line) => {
-  const data = JSON.parse(line);
-  if (!Array.isArray(data)) {
-    throw new AranExecError("not an array", { data });
-  }
-  for (const item of data) {
-    if (typeof item !== "number") {
-      throw new AranExecError("not a number", { data, item });
+  if (line === "") {
+    return [];
+  } else {
+    const data = JSON.parse(line);
+    if (!Array.isArray(data)) {
+      throw new AranExecError("not an array", { data });
     }
+    for (const item of data) {
+      if (typeof item !== "number") {
+        throw new AranExecError("not a number", { data, item });
+      }
+    }
+    return data;
   }
-  return data;
 };
 
 /**
@@ -206,15 +239,19 @@ const parseSuite = (content) =>
   content.split("\n").filter(isNotEmptyString).map(parseTest);
 
 /**
+ * @type {(
+ *   procedural: "inter" | "intra",
+ * ) => URL}
+ */
+const locateStageOutput = (procedural) =>
+  new URL(`../basic/stage-${procedural}-output.jsonl`, import.meta.url);
+
+/**
  * @type {() => Promise<SuiteRecord>}
  */
 const loadSuiteRecord = async () => ({
-  intra: parseSuite(
-    await readFile(new URL("intra.jsonl", import.meta.url), "utf-8"),
-  ),
-  inter: parseSuite(
-    await readFile(new URL("inter.jsonl", import.meta.url), "utf-8"),
-  ),
+  intra: parseSuite(await readFile(locateStageOutput("intra"), "utf-8")),
+  inter: parseSuite(await readFile(locateStageOutput("inter"), "utf-8")),
 });
 
 ///////////////
@@ -307,23 +344,23 @@ const main = async () => {
   verifySuiteRecord(suites);
   for (const name of stage_name_enum) {
     await writeFile(
-      new URL(`${name}-aggregate-branch.txt`, import.meta.url),
+      new URL(`../output/${name}-aggregate-branch.txt`, import.meta.url),
       aggregateBranch(suites[name]).join("\n") + "\n",
       "utf8",
     );
     await writeFile(
-      new URL(`${name}-aggregate-test.txt`, import.meta.url),
+      new URL(`../output/${name}-aggregate-test.txt`, import.meta.url),
       aggregateTest(suites[name]).join("\n") + "\n",
       "utf8",
     );
   }
   await writeFile(
-    new URL("ratio-branch.txt", import.meta.url),
+    new URL("../output/ratio-branch.txt", import.meta.url),
     ratioBranch(suites.intra, suites.inter).join("\n") + "\n",
     "utf8",
   );
   await writeFile(
-    new URL("ratio-test.txt", import.meta.url),
+    new URL("../output/ratio-test.txt", import.meta.url),
     ratioTest(suites.intra, suites.inter).join("\n") + "\n",
     "utf8",
   );

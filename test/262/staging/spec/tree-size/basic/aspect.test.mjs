@@ -92,6 +92,10 @@ for (const procedural of procedurals) {
   assertDeepEqual(test("(5 ? null : null);", procedural), [
     { kind: "conditional", size: /* 5 */ 1, tag: "$.body.0.expression" },
   ]);
+  // object //
+  assertDeepEqual(test("(({}) ? null : null);", procedural), [
+    { kind: "conditional", size: 0, tag: "$.body.0.expression" },
+  ]);
   // performBinary //
   assertDeepEqual(test("(2 + 3 ? null : null);", procedural), [
     {
