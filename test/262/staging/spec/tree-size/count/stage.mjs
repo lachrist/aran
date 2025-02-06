@@ -1,10 +1,10 @@
 /* eslint-disable no-use-before-define */
 
 import { open } from "node:fs/promises";
-import { compileAran } from "../../aran.mjs";
-import { AranTypeError } from "../../../error.mjs";
-import { record } from "../../../record/index.mjs";
-import { compileListPrecursorFailure } from "../../failure.mjs";
+import { compileAran } from "../../../aran.mjs";
+import { AranTypeError } from "../../../../error.mjs";
+import { record } from "../../../../record/index.mjs";
+import { compileListPrecursorFailure } from "../../../failure.mjs";
 
 const {
   URL,
@@ -509,11 +509,11 @@ const listPrecursorFailure = await compileListPrecursorFailure([
 ]);
 
 /**
- * @type {import("../../stage").Stage<
- *   import("../../stage").Config & {
+ * @type {import("../../../stage").Stage<
+ *   import("../../../stage").Config & {
  *     handle: import("node:fs/promises").FileHandle,
  *   },
- *   import("../../stage").Config & {
+ *   import("../../../stage").Config & {
  *     handle: import("node:fs/promises").FileHandle,
  *     counter: { inner: number },
  *   },
@@ -522,7 +522,7 @@ const listPrecursorFailure = await compileListPrecursorFailure([
 export default {
   open: async (config) => ({
     ...config,
-    handle: await open(new URL("count/data.txt", import.meta.url), "w"),
+    handle: await open(new URL("stage-output.txt", import.meta.url), "w"),
   }),
   close: async ({ handle }) => {
     await handle.close();

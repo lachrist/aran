@@ -2,7 +2,7 @@ import { deepStrictEqual as assertDeepEqual } from "node:assert";
 import { parse } from "acorn";
 import { generate } from "astring";
 import { setupile, transpile, retropile } from "aran";
-import { advice_global_variable, weave, createAdvice } from "./tree-size.mjs";
+import { advice_global_variable, weave, createAdvice } from "./aspect.mjs";
 
 const { Reflect, eval: evalGlobal } = globalThis;
 

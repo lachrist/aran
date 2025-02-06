@@ -11,6 +11,7 @@ export type StageName =
   | "stnd-void"
   | "trace"
   | "track-origin"
-  | "tree-size/count"
-  | "tree-size/inter"
-  | "tree-size/intra";
+  | "tree-size/count/stage"
+  | "tree-size/basic/stage-inter"
+  | "tree-size/basic/stage-intra"
+  | "tree-size/linvail/stage";

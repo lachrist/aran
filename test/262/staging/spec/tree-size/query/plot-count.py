@@ -2,21 +2,20 @@ import numpy
 import os
 import matplotlib.pyplot as plot
 
-def parseLine (line):
-  return int(line.split(" >> ")[1])
-
 def load ():
   file = open(
     os.path.abspath(
       os.path.join(
         __file__,
         "..",
-        "data.txt",
+        "..",
+        "count",
+        "stage-output.txt",
       ),
     ),
   )
   try:
-    return list(map(parseLine, filter(str.strip, file)))
+    return list(map(int, filter(str.strip, file)))
   finally:
     file.close();
 
@@ -36,7 +35,9 @@ def plotBar(data, max):
         os.path.join(
           __file__,
           "..",
-          "histogram-" + str(max) + ".pdf",
+          "..",
+          "output",
+          "count-histogram-" + str(max) + ".pdf",
         ),
       ),
     );
@@ -56,6 +57,8 @@ def plotBox(data):
         os.path.join(
           __file__,
           "..",
+          "..",
+          "output",
           "boxplot.pdf",
         ),
       ),
@@ -66,7 +69,8 @@ def plotBox(data):
 def main ():
   data = load()
   plotBox(data)
-  for threshold in [32, 64, 128, 512, 1024]:
+  for exp in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:
+    threshold = 2 ** exp
     print(
       threshold,
       round(
@@ -74,7 +78,21 @@ def main ():
         2,
       ),
     )
-    plotBar(data, threshold)
+    if threshold <= 1024:
+      plotBar(data, threshold)
 
 if __name__ == "__main__":
   main()
+
+# 32 36.66
+# 64 62.23
+# 128 80.9
+# 256 90.74
+# 512 95.52
+# 1024 97.38
+# 2048 98.0
+# 4096 98.35
+# 8192 98.69
+# 16384 98.93
+# 32768 99.05
+# 65536 99.08

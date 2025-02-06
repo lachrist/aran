@@ -17,7 +17,10 @@ export const threshold = 512;
  * @type {() => Promise<Set<import("../../../test-case").TestIndex>>}
  */
 const loadThresholdExclusion = async () => {
-  const handle = await open(new URL("count/data.txt", import.meta.url), "r");
+  const handle = await open(
+    new URL("count/stage-output.txt", import.meta.url),
+    "r",
+  );
   try {
     const iterable = createInterface({
       input: handle.createReadStream({ encoding: "utf-8" }),

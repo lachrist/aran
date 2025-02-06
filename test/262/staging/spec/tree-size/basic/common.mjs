@@ -1,15 +1,11 @@
-import { compileAran } from "../../aran.mjs";
-import { record } from "../../../record/index.mjs";
-import {
-  advice_global_variable,
-  createAdvice,
-  weave,
-} from "../../../../aspects/tree-size.mjs";
+import { compileAran } from "../../../aran.mjs";
+import { record } from "../../../../record/index.mjs";
+import { advice_global_variable, createAdvice, weave } from "./aspect.mjs";
 import { open } from "node:fs/promises";
-import { compileListPrecursorFailure } from "../../failure.mjs";
-import { hashFowler32, hashXor16 } from "../../../util/hash.mjs";
-import { listThresholdExclusion, threshold } from "./threshold.mjs";
-import { AranExecError } from "../../../error.mjs";
+import { compileListPrecursorFailure } from "../../../failure.mjs";
+import { hashFowler32, hashXor16 } from "../../../../util/hash.mjs";
+import { listThresholdExclusion, threshold } from "../threshold.mjs";
+import { AranExecError } from "../../../../error.mjs";
 
 const {
   JSON,
@@ -66,7 +62,7 @@ const listPrecursorFailure = await compileListPrecursorFailure([
  *   config: {
  *     procedural: "inter" | "intra",
  *   },
- * ) => import("../../stage").Stage<
+ * ) => import("../../../stage").Stage<
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
@@ -74,7 +70,7 @@ const listPrecursorFailure = await compileListPrecursorFailure([
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
- *     index: import("../../../test-case").TestIndex,
+ *     index: import("../../../../test-case").TestIndex,
  *     buffer: [
  *       number,
  *       import("aran").EstreeNodePath,
@@ -86,7 +82,7 @@ export const compileStage = ({ procedural }) => ({
   open: async ({ record_directory }) => ({
     record_directory,
     handle: await open(
-      new URL(`size/${procedural}.jsonl`, import.meta.url),
+      new URL(`size/stage-${procedural}-output.jsonl`, import.meta.url),
       "w",
     ),
   }),
