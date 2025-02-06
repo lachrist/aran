@@ -1,11 +1,16 @@
-import { weaveStandard } from "aran";
-import { compileAran } from "../aran.mjs";
-import { record } from "../../record/index.mjs";
+import { weave } from "../../../../../linvail/lib/instrument/_.mjs";
+import { createRuntime } from "../../../../../linvail/lib/runtime/_.mjs";
 import { compileListPrecursorFailure } from "../failure.mjs";
+import { record } from "../../record/index.mjs";
+import { compileAran } from "../aran.mjs";
 
 const {
   Reflect: { defineProperty },
 } = globalThis;
+
+/**
+ * @typedef {import("../../../../../linvail/lib/advice").Advice} Advice
+ */
 
 /**
  * @type {import("aran").Digest}
@@ -32,29 +37,19 @@ const { prepare, trans, retro } = compileAran(
 
 const advice_global_variable = "__aran_advice__";
 
-/**
- * @type {import("aran").StandardWeaveConfig<{Tag: import("aran").Json}>}
- */
-const conf = {
-  advice_global_variable,
-  initial_state: null,
-  pointcut: ["eval@before"],
-};
+const listPrecursorFailure = await compileListPrecursorFailure(["stnd-full"]);
+
+const global_advice_variable = "__ARAN_ADVICE__";
 
 /**
- * @type {import("aran").StandardAdvice}
+ * @type {(
+ *   advice: Advice,
+ * ) => Advice}
  */
-const advice = {
-  "eval@before": (_state, root, _tag) =>
-    weaveStandard(
-      /** @type {import("aran").Program<import("aran").Atom & {Tag: string}>} */ (
-        root
-      ),
-      conf,
-    ),
-};
-
-const listPrecursorFailure = await compileListPrecursorFailure(["bare-main"]);
+const supportDirectEval = (advice) => ({
+  ...advice,
+  weaveEvalProgram: (root) => weave(root, { advice_global_variable }),
+});
 
 /**
  * @type {import("../stage").Stage<
@@ -82,29 +77,30 @@ export default {
   },
   prepare: (config, context) => {
     const { intrinsics } = prepare(context, config);
+    const { advice } = createRuntime(intrinsics);
     const descriptor = {
       __proto__: null,
-      value: advice,
+      value: supportDirectEval(advice),
       enumerable: false,
       writable: false,
       configurable: false,
     };
     defineProperty(
       intrinsics["aran.global_object"],
-      advice_global_variable,
+      global_advice_variable,
       descriptor,
     );
   },
-  instrument: ({ record_directory }, { type, kind, path, content }) =>
-    record(
-      {
-        path,
-        content:
-          type === "main"
-            ? retro(weaveStandard(trans(path, kind, content), conf))
-            : content,
-      },
-      record_directory,
-    ),
+  instrument: ({ record_directory }, { type, kind, path, content: code1 }) => {
+    if (type === "main") {
+      /** @type {import("aran").Program} */
+      const root1 = trans(path, kind, code1);
+      const root2 = weave(root1, { advice_global_variable });
+      const code2 = retro(root2);
+      return record({ path, content: code2 }, record_directory);
+    } else {
+      return record({ path, content: code1 }, record_directory);
+    }
+  },
   teardown: async (_state) => {},
 };

@@ -39,7 +39,9 @@ const {
  * @typedef {"@state"} State
  */
 
-const ADVICE_VARIABLE = /** @type {JavaScriptIdentifier} */ ("__aran_advice__");
+const advice_global_variable = /** @type {JavaScriptIdentifier} */ (
+  "__aran_advice__"
+);
 
 /** @type {State} */
 const STATE = "@state";
@@ -62,7 +64,7 @@ const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
  * }>}
  */
 const weave_config = {
-  advice_global_variable: ADVICE_VARIABLE,
+  advice_global_variable,
   initial_state: STATE,
   pointcut: true,
 };
@@ -728,8 +730,7 @@ export default {
   },
   prepare: (config, context) => {
     const { intrinsics } = prepare(context, config);
-    defineProperty(intrinsics["aran.global_object"], ADVICE_VARIABLE, {
-      // @ts-ignore
+    const descriptor = {
       __proto__: null,
       value: compileAdvice(
         /** @type {{apply: any, construct: any}} */ (
@@ -739,7 +740,12 @@ export default {
       enumerable: false,
       writable: false,
       configurable: false,
-    });
+    };
+    defineProperty(
+      intrinsics["aran.global_object"],
+      advice_global_variable,
+      descriptor,
+    );
   },
   instrument: ({ record_directory }, { type, kind, path, content: code1 }) => {
     if (type === "main") {
