@@ -1,63 +1,38 @@
-import { open } from "node:fs/promises";
-import { createInterface } from "node:readline";
+import { loadStageResult } from "./result.mjs";
+import { AranTypeError } from "../error.mjs";
 
-const { Map, Set, URL, Infinity } = globalThis;
-
-/**
- * @type {(
- *   name: import("./stage-name").StageName,
- * ) => URL}
- */
-const locateFailure = (stage) =>
-  new URL(`spec/${stage}-failure.txt`, import.meta.url);
+const { Map } = globalThis;
 
 /**
  * @type {(
  *   stage: import("./stage-name").StageName,
- * ) => AsyncGenerator<import("../result").TestSpecifier>}
+ * ) => AsyncGenerator<import("../test-case").TestIndex>}
  */
 export const loadStageFailure = async function* (stage) {
-  const handle = await open(locateFailure(stage), "r");
-  try {
-    const iterable = createInterface({
-      input: handle.createReadStream({ encoding: "utf-8" }),
-      crlfDelay: Infinity,
-    });
-    for await (const line of iterable) {
-      if (line !== "") {
-        yield /** @type {import("../result").TestSpecifier} */ (line);
+  for await (const [index, result] of loadStageResult(stage)) {
+    if (result.type === "include") {
+      if (result.actual !== null || result.expect !== null) {
+        yield index;
       }
+    } else if (result.type === "exclude") {
+      yield index;
+    } else {
+      throw new AranTypeError(result);
     }
-  } finally {
-    await handle.close();
   }
-};
-
-/**
- * @type {(
- *   stage: import("./stage-name").StageName,
- * ) => Promise<Set<import("../result").TestSpecifier>>}
- */
-export const listStageFailure = async (stage) => {
-  /** @type {Set<import("../result").TestSpecifier>} */
-  const set = new Set();
-  for await (const failure of loadStageFailure(stage)) {
-    set.add(failure);
-  }
-  return set;
 };
 
 /**
  * @type {(
  *   stages: import("./stage-name").StageName[],
  * ) => Promise<(
- *   specifier: import("../result").TestSpecifier,
+ *   index: import("../test-case").TestIndex,
  * ) => import("./stage-name").StageName[]>}
  */
 export const compileListPrecursorFailure = async (stages) => {
   /**
    * @type {Map<
-   *   import("../result").TestSpecifier,
+   *   import("../test-case").TestIndex,
    *   import("./stage-name").StageName[]
    * >}
    */
@@ -73,22 +48,4 @@ export const compileListPrecursorFailure = async (stages) => {
     }
   }
   return (specifier) => map.get(specifier) || [];
-};
-
-/**
- * @type {(
- *   stage: import("./stage-name").StageName,
- *   fails: AsyncIterable<import("../result").TestSpecifier>,
- * ) => Promise<void>}
- */
-export const saveStageFailure = async (stage, fails) => {
-  const handle = await open(locateFailure(stage), "w");
-  try {
-    const stream = handle.createWriteStream({ encoding: "utf-8" });
-    for await (const fail of fails) {
-      stream.write(`${fail}\n`);
-    }
-  } finally {
-    await handle.close();
-  }
 };

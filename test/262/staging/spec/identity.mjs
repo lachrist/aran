@@ -72,7 +72,7 @@ export default {
   open: async (config) => config,
   close: async (_config) => {},
   // eslint-disable-next-line require-await
-  setup: async (_config, test) => {
+  setup: async (_config, [_index, test]) => {
     const specifier = toTestSpecifier(test.path, test.directive);
     const reasons = listExclusionReason(specifier);
     if (reasons.length > 0) {

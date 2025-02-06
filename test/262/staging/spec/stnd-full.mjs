@@ -3,7 +3,6 @@ import { AranTestError } from "../../error.mjs";
 import { compileAran } from "../aran.mjs";
 import { record } from "../../record/index.mjs";
 import { compileListPrecursorFailure } from "../failure.mjs";
-import { toTestSpecifier } from "../../result.mjs";
 
 const {
   Object: { hasOwn },
@@ -714,9 +713,8 @@ export default {
   open: async (config) => config,
   close: async (_config) => {},
   // eslint-disable-next-line require-await
-  setup: async (config, test) => {
-    const specifier = toTestSpecifier(test.path, test.directive);
-    const reasons = listPrecursorFailure(specifier);
+  setup: async (config, [index, _test]) => {
+    const reasons = listPrecursorFailure(index);
     if (reasons.length > 0) {
       return { type: "exclude", reasons };
     } else {

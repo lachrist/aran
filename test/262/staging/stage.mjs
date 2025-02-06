@@ -7,7 +7,6 @@ import {
 import { HARNESS, TEST262 } from "../layout.mjs";
 import { execTestCase } from "../test-case/index.mjs";
 import { AranTypeError } from "../error.mjs";
-import { toTestSpecifier } from "../result.mjs";
 
 const { Map } = globalThis;
 
@@ -15,21 +14,23 @@ const { Map } = globalThis;
  * @type {<H, X>(
  *   stage: import("./stage").Stage<H, X>,
  *   handle: H,
- *   test: import("../test-case").TestCase,
+ *   entry: [
+ *     import("../test-case").TestIndex,
+ *     import("../test-case").TestCase
+ *   ],
  *   fetch: import("../fetch").Fetch,
- * ) => Promise<import("../result").ResultEntry>}
+ * ) => Promise<import("../result").Result>}
  */
 const execStage = async (
   { setup, prepare, instrument, teardown },
   handle,
-  test,
+  [index, test],
   { resolveDependency, fetchHarness, fetchTarget },
 ) => {
-  const specifier = toTestSpecifier(test.path, test.directive);
-  const selector = await setup(handle, test);
+  const selector = await setup(handle, [index, test]);
   switch (selector.type) {
     case "exclude": {
-      return [specifier, selector];
+      return selector;
     }
     case "include": {
       const { state, flaky, negatives } = selector;
@@ -41,15 +42,12 @@ const execStage = async (
         instrument,
       });
       await teardown(state);
-      return [
-        specifier,
-        {
-          type: "include",
-          actual,
-          expect: flaky && actual === null ? [] : [...expect, ...negatives],
-          time,
-        },
-      ];
+      return {
+        type: "include",
+        actual,
+        expect: flaky && actual === null ? [] : [...expect, ...negatives],
+        time,
+      };
     }
     default: {
       throw new AranTypeError(selector);
@@ -89,12 +87,15 @@ const memoizeInstrument = (instrument) => {
 /**
  * @type {(
  *   name: import("./stage-name").StageName,
- *   tests: AsyncIterable<null | import("../test-case").TestCase>,
+ *   tests: AsyncIterable<[
+ *     import("../test-case").TestIndex,
+ *     import("../test-case").TestCase
+ *   ]>,
  *   config: {
  *     memoization: "none" | "lazy" | "eager",
  *     record_directory: null | URL,
  *   },
- * ) => AsyncGenerator<null | import("../result").ResultEntry>}
+ * ) => AsyncGenerator<import("../report").TestReport>}
  */
 export const runStage = async function* (
   name,
@@ -133,8 +134,12 @@ export const runStage = async function* (
         }
       }
     }
-    for await (const test of tests) {
-      yield test && execStage(stage, handle, test, fetch);
+    for await (const [index, test] of tests) {
+      yield {
+        index,
+        test,
+        result: await execStage(stage, handle, [index, test], fetch),
+      };
     }
   } finally {
     await stage.close(handle);

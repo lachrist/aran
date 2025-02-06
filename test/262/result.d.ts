@@ -1,14 +1,10 @@
 import type { ErrorSerial } from "./util/error-serial";
 import type { TestPath } from "./fetch";
 import type { Directive } from "./test-case";
-import type { Tag } from "./tagging/tag";
-import type { StageName } from "./staging/stage-name";
 
 export type TestSpecifier = `${TestPath}@${Directive}`;
 
 export type Result = ExcludeResult | IncludeResult;
-
-export type ResultEntry = [TestSpecifier, Result];
 
 export type ExcludeResult = {
   type: "exclude";
@@ -38,5 +34,3 @@ export type IncludeCompactResult = [
 export type ExcludeCompactResult = ["ex", ...string[]];
 
 export type CompactResult = IncludeCompactResult | ExcludeCompactResult;
-
-export type CompactResultEntry = [TestSpecifier, CompactResult];

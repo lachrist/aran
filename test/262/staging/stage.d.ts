@@ -2,8 +2,8 @@ import type { Context } from "node:vm";
 import type { Source } from "../source";
 import type { Tag } from "../tagging/tag";
 import type { StageName } from "./stage-name";
-import type { TestCase } from "../test-case";
 import type { File } from "../util/file";
+import { TestCase, TestIndex } from "../test-case";
 
 export type Selector<X> =
   | {
@@ -23,7 +23,7 @@ export type Open<H> = (config: { record_directory: null | URL }) => Promise<H>;
 export type Close<H> = (handle: H) => Promise<void>;
 export type Setup<H, X> = (
   handle: H,
-  test_case: TestCase,
+  entry: [TestIndex, TestCase],
 ) => Promise<Selector<X>>;
 export type Prepare<X> = (state: X, context: Context) => void;
 export type Instrument<H> = (handle: H, source: Source) => File;

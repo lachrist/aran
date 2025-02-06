@@ -1,12 +1,12 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { AranExecError } from "../error.mjs";
 
-const { URL, parseInt } = globalThis;
+const { JSON, URL, parseInt } = globalThis;
 
 const CURSOR = new URL("cursor.txt", import.meta.url);
 
 /**
- * @type {() => Promise<number>}
+ * @type {() => Promise<import("../test-case").TestIndex>}
  */
 export const loadCursor = async () => {
   let content;
@@ -19,20 +19,20 @@ export const loadCursor = async () => {
       "code" in error &&
       error.code === "ENOENT"
     ) {
-      return 0;
+      return /** @type {import("../test-case").TestIndex} */ (0);
     } else {
       throw error;
     }
   }
   const lines = content.split("\n");
   if (lines.length === 0) {
-    return 0;
+    return /** @type {import("../test-case").TestIndex} */ (0);
   } else {
     const head = lines[0].trim();
     if (head === "") {
-      return 0;
+      return /** @type {import("../test-case").TestIndex} */ (0);
     } else if (/^\d+$/.test(head)) {
-      return parseInt(head);
+      return /** @type {import("../test-case").TestIndex} */ (parseInt(head));
     } else {
       throw new AranExecError("Invalid cursor content", { content });
     }
@@ -42,13 +42,13 @@ export const loadCursor = async () => {
 /**
  * @type {(
  *   cursor: number,
- *   specifier: null | import("../result").TestSpecifier,
+ *   test: null | import("../test-case").TestCase,
  * ) => Promise<void>}
  */
-export const saveCursor = async (cursor, specifier) => {
+export const saveCursor = async (cursor, test) => {
   await writeFile(
     CURSOR,
-    specifier === null ? `${cursor}\n` : `${cursor}\n${specifier}\n`,
+    test === null ? `${cursor}\n` : `${cursor}\n${JSON.stringify(test)}\n`,
     "utf-8",
   );
 };

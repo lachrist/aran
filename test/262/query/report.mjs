@@ -7,7 +7,10 @@ const { undefined, Object, Math } = globalThis;
 
 /**
  * @type {(
- *   results: AsyncIterable<import("../result").Result>,
+ *   results: AsyncIterable<[
+ *     import("../test-case").TestIndex,
+ *     import("../result").Result,
+ *   ]>,
  * ) => Promise<import("./report").Report>}
  */
 const aggregate = async (results) => {
@@ -33,7 +36,7 @@ const aggregate = async (results) => {
       count: 0,
     },
   };
-  for await (const result of results) {
+  for await (const [_index, result] of results) {
     report.count++;
     if (result.type === "exclude") {
       report.exclusion.count++;

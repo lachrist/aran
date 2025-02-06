@@ -1,68 +1,64 @@
 import { createSignal } from "../util/index.mjs";
 import { argv, stderr, stdout } from "node:process";
 import { runStage } from "../staging/stage.mjs";
-import { saveStageResultEntry } from "../staging/result-entry.mjs";
 import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
-import { AranExecError, AranTypeError } from "../error.mjs";
-import { interruptIterable } from "../util/iterable.mjs";
+import { saveStageResult } from "../staging/result.mjs";
+import { printReport } from "../report.mjs";
 
 const { process, Date } = globalThis;
 
 /**
  * @type {(
- *   entry: import("../result").ResultEntry,
- * ) => void}
+ *   result: import("../result").Result,
+ * ) => boolean}
  */
-const logFalsePrediction = ([specifier, result]) => {
-  if (result.type === "include") {
-    if (result.actual === null && result.expect.length > 0) {
-      stderr.write(`FALSE NEGATIVE >> ${specifier}\n`);
-    }
-    if (result.actual !== null && result.expect.length === 0) {
-      stderr.write(`FALSE POSITIVE >> ${specifier}\n`);
-    }
-  }
-};
+const hasFalsePrediction = (result) =>
+  result.type === "include" &&
+  (result.actual === null) !== (result.expect.length === 0);
 
 /**
  * @type {(
  *   stage: import("../staging/stage-name").StageName,
+ *   tests: AsyncIterable<[
+ *     import("../test-case").TestIndex,
+ *     import("../test-case").TestCase,
+ *   ]>,
  *   sigint: import("../util/signal").Signal<boolean>,
- * ) => AsyncGenerator<import("../result").ResultEntry>}
+ * ) => AsyncGenerator<import("../result").Result>}
  */
-const exec = async function* (stage, sigint) {
-  let index = 0;
-  for await (const entry of runStage(
-    stage,
-    interruptIterable(loadTestCase(), sigint),
-    {
-      record_directory: null,
-      memoization: "eager",
-    },
-  )) {
+const exec = async function* (stage, tests, sigint) {
+  for await (const { index, test, result } of runStage(stage, tests, {
+    record_directory: null,
+    memoization: "eager",
+  })) {
     if (index % 100 === 0) {
       stdout.write(`${index}\n`);
     }
-    if (entry === null) {
-      throw new AranExecError("entry is null");
+    if (hasFalsePrediction(result)) {
+      stderr.write(printReport({ index, test, result }) + "\n");
     }
-    logFalsePrediction(entry);
-    yield entry;
-    index++;
+    yield result;
+    if (sigint.get()) {
+      break;
+    }
   }
 };
 
 /**
  * @type {(
  *   argv: string[],
- * ) => Promise<"done" | "usage" | "sigint">}
+ * ) => Promise<0 | 1>}
  */
 const main = async (argv) => {
   const stage = getStageName(argv);
   if (stage === null) {
-    return "usage";
+    stderr.write("USAGE\n");
+    stderr.write(
+      ">> node --experimental-vm-modules --expose-gc test/262/main/exec.mjs <stage>\n",
+    );
+    return 1;
   } else {
     const sigint = createSignal(false);
     const onSigint = () => {
@@ -70,32 +66,22 @@ const main = async (argv) => {
     };
     process.addListener("SIGINT", onSigint);
     process.addListener("uncaughtException", onUncaughtException);
+    const now = Date.now();
     try {
-      await saveStageResultEntry(stage, exec(stage, sigint));
+      await saveStageResult(stage, exec(stage, loadTestCase(), sigint));
     } finally {
       process.removeListener("SIGINT", onSigint);
       process.removeListener("uncaughtException", onUncaughtException);
     }
-    return sigint.value ? "sigint" : "done";
+    if (sigint.value) {
+      stderr.write("SIGINT\n");
+      return 1;
+    } else {
+      stdout.write("DONE\n");
+      stdout.write(`>> ${Date.now() - now}ms\n`);
+      return 0;
+    }
   }
 };
 
-{
-  const now = Date.now();
-  const status = await main(argv.slice(2));
-  if (status === "usage") {
-    stderr.write("USAGE\n");
-    stderr.write(
-      ">> node --experimental-vm-modules --expose-gc test/262/exec.mjs <stage>\n",
-    );
-    process.exitCode ||= 1;
-  } else if (status === "sigint") {
-    stderr.write("SIGINT\n");
-    process.exitCode ||= 1;
-  } else if (status === "done") {
-    stdout.write("DONE\n");
-    stdout.write(`>> ${Date.now() - now}ms\n`);
-  } else {
-    throw new AranTypeError(status);
-  }
-}
+process.exitCode ||= await main(argv.slice(2));

@@ -16,29 +16,25 @@ export const interruptIterable = async function* (iterable, sigint) {
 /**
  * @type {<X, Y>(
  *   iterable: AsyncIterable<X>,
- *   transform: (value: X, index: number) => Y,
+ *   transform: (value: X) => Y,
  * ) => AsyncIterable<Y>}
  */
 export const mapIterable = async function* (iterable, transform) {
-  let index = 0;
   for await (const value of iterable) {
-    yield transform(value, index);
-    index++;
+    yield transform(value);
   }
 };
 
 /**
  * @type {<X>(
  *   iterable: AsyncIterable<X>,
- *   predicate: (value: X, index: number) => boolean,
+ *   predicate: (value: X) => boolean,
  * ) => AsyncIterable<X>}
  */
 export const filterIterable = async function* (iterable, predicate) {
-  let index = 0;
   for await (const value of iterable) {
-    if (predicate(value, index)) {
+    if (predicate(value)) {
       yield value;
     }
-    index++;
   }
 };

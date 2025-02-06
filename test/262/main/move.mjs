@@ -5,65 +5,33 @@ import { runStage } from "../staging/stage.mjs";
 import { loadTestCase } from "../catalog/index.mjs";
 import { getStageName } from "./argv.mjs";
 import { onUncaughtException } from "./uncaught.mjs";
-import { inspect } from "node:util";
-import { interruptIterable, mapIterable } from "../util/iterable.mjs";
-import { parseTestSpecifier } from "../result.mjs";
+import { filterIterable, interruptIterable } from "../util/iterable.mjs";
+import { printReport } from "../report.mjs";
 
-const { process, Infinity } = globalThis;
+const { process } = globalThis;
 
 /**
  * @type {(
- *   stage: import("../staging/stage-name").StageName,
- *   cursor: number,
- *   sigint: import("../util/signal").Signal<boolean>,
- * ) => Promise<{
- *   cursor: number,
- *   error: null | import("../result").ResultEntry,
- * }>}
+ *   result: import("../result").Result,
+ * ) => boolean}
  */
-const move = async (stage, cursor, sigint) => {
-  let index = 0;
-  for await (const entry of runStage(
-    stage,
-    mapIterable(interruptIterable(loadTestCase(), sigint), (test, index) =>
-      index >= cursor ? test : null,
-    ),
-    {
-      record_directory: null,
-      memoization: "eager",
-    },
-  )) {
-    if (index % 100 === 0) {
-      stdout.write(`${index}\n`);
-    }
-    if (entry !== null) {
-      const [specifier, result] = entry;
-      if (result.type === "include") {
-        const { actual, expect } = result;
-        if ((actual === null) !== (expect.length === 0)) {
-          return { cursor: index, error: [specifier, result] };
-        }
-      }
-    }
-    index++;
-  }
-  return { cursor: index, error: null };
-};
+const hasFalsePrediction = (result) =>
+  result.type === "include" &&
+  (result.actual === null) !== (result.expect.length === 0);
 
 /**
  * @type {(
  *   argv: string[],
- * ) => Promise<(
- *   | "usage"
- *   | "done"
- *   | "sigint"
- *   | import("../result").ResultEntry
- * )>}
+ * ) => Promise<0 | 1>}
  */
 const main = async (argv) => {
   const stage = getStageName(argv);
   if (stage === null) {
-    return "usage";
+    stderr.write("USAGE\n");
+    stderr.write(
+      ">> node --experimental-vm-modules --expose-gc test/262/main/move.mjs <stage>\n",
+    );
+    return 1;
   } else {
     const sigint = createSignal(false);
     const onSigint = () => {
@@ -72,14 +40,35 @@ const main = async (argv) => {
     process.addListener("SIGINT", onSigint);
     process.addListener("uncaughtException", onUncaughtException);
     try {
-      const { cursor, error } = await move(stage, await loadCursor(), sigint);
-      if (error === null) {
-        await saveCursor(sigint.value ? cursor : 0, null);
-        return sigint.value ? "sigint" : "done";
-      } else {
-        await saveCursor(cursor, error[0]);
-        return error;
+      const cursor = await loadCursor();
+      for await (const { index, test, result } of runStage(
+        stage,
+        filterIterable(
+          interruptIterable(loadTestCase(), sigint),
+          ([index, _test]) => index >= cursor,
+        ),
+        {
+          record_directory: null,
+          memoization: "eager",
+        },
+      )) {
+        if (index % 100 === 0) {
+          stdout.write(`${index}\n`);
+        }
+        if (hasFalsePrediction(result)) {
+          await saveCursor(index, test);
+          stderr.write("FAILURE\n");
+          stderr.write(printReport({ index, test, result }) + "\n");
+          return 1;
+        }
+        if (sigint.get()) {
+          await saveCursor(index, test);
+          stderr.write("SIGINT\n");
+          return 1;
+        }
       }
+      stdout.write("SUCCESS\n");
+      return 0;
     } finally {
       process.removeListener("SIGINT", onSigint);
       process.removeListener("uncaughtException", onUncaughtException);
@@ -87,24 +76,4 @@ const main = async (argv) => {
   }
 };
 
-{
-  const status = await main(argv.slice(2));
-  if (status === "usage") {
-    stderr.write("USAGE\n");
-    stderr.write(
-      "  node --experimental-vm-modules --expose-gc test/262/move.mjs <stage>\n",
-    );
-    process.exitCode ||= 1;
-  } else if (status === "sigint") {
-    stderr.write("SIGINT\n");
-    process.exitCode ||= 1;
-  } else if (status === "done") {
-    stdout.write("SUCCESS\n");
-  } else {
-    stdout.write("FAILURE\n");
-    stdout.write(
-      `test/262/test262/test/${parseTestSpecifier(status[0]).path}\n`,
-    );
-    stdout.write(inspect(status, { depth: Infinity, colors: true }) + "\n");
-  }
-}
+process.exitCode ||= await main(argv.slice(2));

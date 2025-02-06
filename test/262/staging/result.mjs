@@ -15,7 +15,10 @@ const locateResult = (stage) =>
 /**
  * @type {(
  *   stage: import("./stage-name").StageName,
- * ) => AsyncGenerator<import("../result").Result>}
+ * ) => AsyncGenerator<[
+ *   import("../test-case").TestIndex,
+ *   import("../result").Result,
+ * ]>}
  */
 export const loadStageResult = async function* (stage) {
   const handle = await open(locateResult(stage), "r");
@@ -24,10 +27,15 @@ export const loadStageResult = async function* (stage) {
       input: handle.createReadStream({ encoding: "utf-8" }),
       crlfDelay: Infinity,
     });
+    let index = 0;
     for await (const line of iterable) {
-      if (line !== "") {
-        yield unpackResult(JSON.parse(line));
+      if (line.trim() !== "") {
+        yield [
+          /** @type {import("../test-case").TestIndex} */ (index),
+          unpackResult(JSON.parse(line)),
+        ];
       }
+      index++;
     }
   } finally {
     await handle.close();

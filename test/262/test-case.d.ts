@@ -3,6 +3,8 @@ import type { Feature, Negative } from "./metadata";
 
 export type Directive = "none" | "use-strict";
 
+export type TestIndex = number & { __brand: "TestIndex" };
+
 type Kind = "module" | "script";
 
 type Asynchronous = boolean;

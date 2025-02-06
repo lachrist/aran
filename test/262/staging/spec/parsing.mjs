@@ -24,9 +24,9 @@ export default {
   open: async (config) => config,
   close: async (_config) => {},
   // eslint-disable-next-line require-await
-  setup: async (_config, test) => {
+  setup: async (_config, [index, test]) => {
     const specifier = toTestSpecifier(test.path, test.directive);
-    const reasons = listPrecursorFailure(specifier);
+    const reasons = listPrecursorFailure(index);
     if (reasons.length > 0) {
       return {
         type: "exclude",

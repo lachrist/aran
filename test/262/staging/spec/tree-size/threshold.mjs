@@ -1,8 +1,8 @@
-import { readFile } from "node:fs/promises";
+import { open } from "node:fs/promises";
 import { AranExecError } from "../../../error.mjs";
-import { isTestSpecifier } from "../../../result.mjs";
+import { createInterface } from "node:readline/promises";
 
-const { Set, URL, isNaN, parseInt } = globalThis;
+const { Set, URL, isNaN, parseInt, Infinity } = globalThis;
 
 /**
  * @typedef {{
@@ -14,72 +14,46 @@ const { Set, URL, isNaN, parseInt } = globalThis;
 export const threshold = 512;
 
 /**
- * @type {(
- *   line: string,
- * ) => Entry}
+ * @type {() => Promise<Set<import("../../../test-case").TestIndex>>}
  */
-const parseLine = (line) => {
-  const parts = line.split(" >> ");
-  if (parts.length !== 2) {
-    throw new AranExecError("invalid line", { line });
+const loadThresholdExclusion = async () => {
+  const handle = await open(new URL("count/data.txt", import.meta.url), "r");
+  try {
+    const iterable = createInterface({
+      input: handle.createReadStream({ encoding: "utf-8" }),
+      crlfDelay: Infinity,
+    });
+    let index = 0;
+    /** @type {Set<import("../../../test-case").TestIndex>} */
+    const exclusion = new Set();
+    for await (const line of iterable) {
+      if (line.trim() !== "") {
+        const count = parseInt(line);
+        if (isNaN(count)) {
+          throw new AranExecError("invalid count", { count });
+        }
+        if (count > threshold) {
+          exclusion.add(
+            /** @type {import("../../../test-case").TestIndex} */ (index),
+          );
+        }
+      }
+      index++;
+    }
+    return exclusion;
+  } finally {
+    await handle.close();
   }
-  const specifier = parts[0];
-  if (!isTestSpecifier(specifier)) {
-    throw new AranExecError("invalid specifier", { specifier });
-  }
-  const count = parseInt(parts[1]);
-  if (isNaN(count)) {
-    throw new AranExecError("invalid count", { count });
-  }
-  return { specifier, count };
 };
 
-/**
- * @type {(
- *   line: string,
- * ) => boolean}
- */
-const isNotEmptyLine = (line) => line !== "";
+const exclusion = await loadThresholdExclusion();
 
 /**
  * @type {(
- *   entry: Entry,
- * ) => boolean}
- */
-const isEntryAboveThreshold = ({ count }) => count > threshold;
-
-/**
- * @type {(
- *   entry: Entry,
- * ) => import("../../../result").TestSpecifier}
- */
-const getEntrySpecifier = ({ specifier }) => specifier;
-
-/**
- * @type {(
- *   content: string,
- * ) => import("../../../result").TestSpecifier[]}
- */
-const extractExclusion = (content) =>
-  content
-    .split("\n")
-    .filter(isNotEmptyLine)
-    .map(parseLine)
-    .filter(isEntryAboveThreshold)
-    .map(getEntrySpecifier);
-
-const exclusion = new Set(
-  extractExclusion(
-    await readFile(new URL("count/data.txt", import.meta.url), "utf-8"),
-  ),
-);
-
-/**
- * @type {(
- *   specifier: import("../../../result").TestSpecifier,
+ *   index: import("../../../test-case").TestIndex,
  * ) => import("../../../tagging/tag").Tag[]}
  */
-export const listThresholdExclusion = (specifier) =>
-  exclusion.has(specifier)
+export const listThresholdExclusion = (index) =>
+  exclusion.has(index)
     ? [/** @type {import("../../../tagging/tag").Tag} */ ("threshold")]
     : [];

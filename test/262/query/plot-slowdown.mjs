@@ -110,7 +110,7 @@ const loadStageResultArray = async (name) => {
    * @type {import("../result").Result[]}
    */
   const results = [];
-  for await (const result of loadStageResult(name)) {
+  for await (const [_index, result] of loadStageResult(name)) {
     results.push(result);
   }
   return { name, results };

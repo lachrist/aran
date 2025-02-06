@@ -24,7 +24,10 @@ export const saveTestCase = async (tests) => {
 };
 
 /**
- * @type {() => AsyncGenerator<import("../test-case").TestCase>}
+ * @type {() => AsyncGenerator<[
+ *   import("../test-case").TestIndex,
+ *   import("../test-case").TestCase
+ * ]>}
  */
 export const loadTestCase = async function* () {
   const handle = await open(CATALOG, "r");
@@ -33,8 +36,13 @@ export const loadTestCase = async function* () {
       input: handle.createReadStream(),
       crlfDelay: Infinity,
     });
+    let index = 0;
     for await (const line of iterator) {
-      yield unpackTestCase(JSON.parse(line));
+      yield [
+        /** @type {import("../test-case").TestIndex} */ (index),
+        unpackTestCase(JSON.parse(line)),
+      ];
+      index++;
     }
   } finally {
     await handle.close();

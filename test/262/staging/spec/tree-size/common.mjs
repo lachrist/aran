@@ -7,7 +7,6 @@ import {
 } from "../../../../aspects/tree-size.mjs";
 import { open } from "node:fs/promises";
 import { compileListPrecursorFailure } from "../../failure.mjs";
-import { toTestSpecifier } from "../../../result.mjs";
 import { hashFowler32, hashXor16 } from "../../../util/hash.mjs";
 import { listThresholdExclusion, threshold } from "./threshold.mjs";
 import { AranExecError } from "../../../error.mjs";
@@ -75,7 +74,7 @@ const listPrecursorFailure = await compileListPrecursorFailure([
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
- *     specifier: import("../../../result").TestSpecifier,
+ *     index: import("../../../test-case").TestIndex,
  *     buffer: [
  *       number,
  *       import("aran").EstreeNodePath,
@@ -94,21 +93,20 @@ export const compileStage = ({ procedural }) => ({
   close: async ({ handle }) => {
     await handle.close();
   },
-  // eslint-disable-next-line require-await
-  setup: async ({ handle, record_directory }, { path, directive }) => {
-    const specifier = toTestSpecifier(path, directive);
+  setup: async ({ handle, record_directory }, [index, _test]) => {
     const reasons = [
-      ...listPrecursorFailure(specifier),
-      ...listThresholdExclusion(specifier),
+      ...listPrecursorFailure(index),
+      ...listThresholdExclusion(index),
     ];
     if (reasons.length > 0) {
+      await handle.write("\n");
       return { type: "exclude", reasons };
     } else {
       return {
         type: "include",
         state: {
           handle,
-          specifier,
+          index,
           record_directory,
           buffer: [],
         },
@@ -117,7 +115,7 @@ export const compileStage = ({ procedural }) => ({
       };
     }
   },
-  prepare: ({ specifier, buffer, record_directory }, context) => {
+  prepare: ({ index, buffer, record_directory }, context) => {
     const { intrinsics } = prepare(context, { record_directory });
     /**
      * @type {(
@@ -129,7 +127,7 @@ export const compileStage = ({ procedural }) => ({
     const recordBranch = (_kind, size, tag) => {
       if (buffer.length >= threshold) {
         throw new AranExecError("buffer overflow", {
-          specifier,
+          index,
           threshold,
           buffer,
         });

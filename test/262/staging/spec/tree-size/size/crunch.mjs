@@ -25,18 +25,28 @@ const isRepeatArray = (array) => {
 };
 
 /**
- * @type {<X>(
- *   array: X[],
- * ) => X}
+ * @type {(
+ *   arrays: {length: number}[],
+ * ) => number}
  */
-const reduceRepeat = (array) => {
-  if (array.length === 0) {
-    throw new AranExecError("empty array");
+const getCommonLength = (arrays) => {
+  const { length } = arrays;
+  if (length === 0) {
+    throw new AranExecError("no common length", { arrays });
   }
-  if (!isRepeatArray(array)) {
-    throw new AranExecError("not a repeat array", { array });
+  const base_length = arrays[0].length;
+  for (let index = 0; index < length; index++) {
+    const { length } = arrays[index];
+    if (length !== base_length) {
+      throw new AranExecError("no common length", {
+        index,
+        length,
+        base_length,
+        arrays,
+      });
+    }
   }
-  return array[0];
+  return base_length;
 };
 
 /**
@@ -52,9 +62,9 @@ const computeRatio = (number1, number2) =>
  * @typedef {number & { __brand: "Hash" }} Hash
  * @typedef {number & { __brand: "Size" }} Size
  * @typedef {number & { __brand: "BranchIndex" }} BranchIndex
- * @typedef {Record<BranchIndex, Size | Hash>} Test
- * @typedef {number & { __brand: "TestIndex" }} TestIndex
- * @typedef {Record<TestIndex, Test>} Suite
+ * @typedef {Record<BranchIndex, Size | Hash> & { length: number }} Test
+ * @typedef {import("../../../../test-case").TestIndex} TestIndex
+ * @typedef {Record<TestIndex, Test> & { length: number }} Suite
  * @typedef {"intra" | "inter"} SuiteName
  * @typedef {Record<SuiteName, Suite>} SuiteRecord
  */
@@ -103,18 +113,11 @@ const getSuiteTest = (suite, test_index) => suite[test_index];
 
 /**
  * @type {(
- *   suite: Suite,
- * ) => number}
- */
-const getSuiteLength = (suite) => /** @type {any} */ (suite).length;
-
-/**
- * @type {(
  *   suites: Suite[],
  * ) => Iterable<TestIndex>}
  */
 const iterateTestIndex = function* (suites) {
-  const suite_length = reduceRepeat(suites.map(getSuiteLength));
+  const suite_length = getCommonLength(suites);
   for (let test_index = 0; test_index < suite_length; test_index++) {
     yield /** @type {TestIndex} */ (test_index);
   }
@@ -122,18 +125,11 @@ const iterateTestIndex = function* (suites) {
 
 /**
  * @type {(
- *   test: Test,
- * ) => number}
- */
-const getTestLength = (test) => /** @type {any} */ (test).length;
-
-/**
- * @type {(
  *   tests: Test[],
  * ) => Iterable<BranchIndex>}
  */
 const iterateBranchIndex = function* (tests) {
-  const test_length = reduceRepeat(tests.map(getTestLength));
+  const test_length = getCommonLength(tests);
   for (let branch_index = 0; branch_index < test_length; branch_index++) {
     yield /** @type {BranchIndex} */ (branch_index);
   }
@@ -173,7 +169,11 @@ const verifySuiteRecord = (suite_record) => {
     for (const branch_index of iterateBranchIndex(tests)) {
       const hashes = tests.map((test) => getTestHash(test, branch_index));
       if (!isRepeatArray(hashes)) {
-        throw new AranExecError("hash mismatch", { hashes });
+        throw new AranExecError("hash mismatch", {
+          hashes,
+          test_index,
+          branch_index,
+        });
       }
     }
   }
@@ -308,23 +308,23 @@ const main = async () => {
   for (const name of stage_name_enum) {
     await writeFile(
       new URL(`${name}-aggregate-branch.txt`, import.meta.url),
-      aggregateBranch(suites[name]).join("\n"),
+      aggregateBranch(suites[name]).join("\n") + "\n",
       "utf8",
     );
     await writeFile(
       new URL(`${name}-aggregate-test.txt`, import.meta.url),
-      aggregateTest(suites[name]).join("\n"),
+      aggregateTest(suites[name]).join("\n") + "\n",
       "utf8",
     );
   }
   await writeFile(
     new URL("ratio-branch.txt", import.meta.url),
-    ratioBranch(suites.intra, suites.inter).join("\n"),
+    ratioBranch(suites.intra, suites.inter).join("\n") + "\n",
     "utf8",
   );
   await writeFile(
     new URL("ratio-test.txt", import.meta.url),
-    ratioTest(suites.intra, suites.inter).join("\n"),
+    ratioTest(suites.intra, suites.inter).join("\n") + "\n",
     "utf8",
   );
 };
