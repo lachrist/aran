@@ -15,13 +15,19 @@ const {
 } = globalThis;
 
 /**
- * @type {import("aran").Digest}
+ * @typedef {string & { __brand: "NodeHash" }} NodeHash
  */
-const digest = (_node, node_path, file_path, _kind) =>
-  `${file_path}:${node_path}`;
 
 /**
- * @type {(hash: string) => string}
+ * @type {import("aran").Digest<{
+ *   NodeHash: NodeHash,
+ * }>}
+ */
+const digest = (_node, node_path, file_path, _kind) =>
+  /** @type {NodeHash} */ (`${file_path}:${node_path}`);
+
+/**
+ * @type {(hash: NodeHash) => string}
  */
 const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
@@ -71,10 +77,7 @@ const listPrecursorFailure = await compileListPrecursorFailure([
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
  *     index: import("../../../../test-case").TestIndex,
- *     buffer: [
- *       number,
- *       import("aran").EstreeNodePath,
- *     ][],
+ *     buffer: [number, NodeHash][],
  *   },
  * >}
  */
@@ -82,7 +85,7 @@ export const compileStage = ({ procedural }) => ({
   open: async ({ record_directory }) => ({
     record_directory,
     handle: await open(
-      new URL(`size/stage-${procedural}-output.jsonl`, import.meta.url),
+      new URL(`stage-${procedural}-output.jsonl`, import.meta.url),
       "w",
     ),
   }),
@@ -117,10 +120,10 @@ export const compileStage = ({ procedural }) => ({
      * @type {(
      *   kind: import("aran").TestKind,
      *   size: number,
-     *   tag: import("aran").EstreeNodePath,
+     *   hash: NodeHash,
      * ) => void}
      */
-    const recordBranch = (_kind, size, tag) => {
+    const recordBranch = (_kind, size, hash) => {
       if (buffer.length >= threshold) {
         throw new AranExecError("buffer overflow", {
           index,
@@ -128,7 +131,7 @@ export const compileStage = ({ procedural }) => ({
           buffer,
         });
       }
-      buffer.push([size, tag]);
+      buffer.push([size, hash]);
     };
     const descriptor = {
       __proto__: null,
