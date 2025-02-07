@@ -8,6 +8,8 @@ const {
   Reflect: { defineProperty },
 } = globalThis;
 
+globalThis.Error.stackTraceLimit = 1 / 0;
+
 /**
  * @typedef {import("../../../../../linvail/lib/advice").Advice} Advice
  */
@@ -35,11 +37,9 @@ const { prepare, trans, retro } = compileAran(
   toEvalPath,
 );
 
-const advice_global_variable = "__aran_advice__";
+const advice_global_variable = "__ARAN_ADVICE__";
 
 const listPrecursorFailure = await compileListPrecursorFailure(["stnd-full"]);
-
-const global_advice_variable = "__ARAN_ADVICE__";
 
 /**
  * @type {(
@@ -87,7 +87,7 @@ export default {
     };
     defineProperty(
       intrinsics["aran.global_object"],
-      global_advice_variable,
+      advice_global_variable,
       descriptor,
     );
   },

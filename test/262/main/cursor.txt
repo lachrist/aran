@@ -1,2 +1,2 @@
-856
-{"kind":"script","path":"annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-skip-early-err-for.js","directive":"none","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":[]}
+14
+{"kind":"script","path":"annexB/built-ins/Date/prototype/getYear/this-not-date.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":[]}

@@ -18,8 +18,8 @@ export type $262 = {
   agent: Agent;
   aran: {
     context: Context;
-    log: Console["log"];
-    dir: Console["dir"];
+    log: (message: string) => void;
+    dir: (value: unknown, depth?: number) => void;
     signalNegative: (cause: string) => Error;
   };
 };

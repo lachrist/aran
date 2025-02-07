@@ -7,11 +7,20 @@ const { gc, Reflect } = globalThis;
 
 /**
  * @type {(
- *   value: unknown
+ *   value: unknown,
+ *   depth?: number,
  * ) => void}
  */
-const dir = (value) => {
-  writeSync(1, inspect(value, { depth: null, colors: true }) + "\n");
+const dir = (value, depth) => {
+  writeSync(
+    1,
+    inspect(value, {
+      depth: depth ?? 3,
+      colors: true,
+      showHidden: true,
+      showProxy: true,
+    }) + "\n",
+  );
 };
 
 /**
