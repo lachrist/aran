@@ -62,9 +62,9 @@ const compileFunctionCode = (input) => {
  *     intrinsics: import("aran").IntrinsicRecord,
  *     advice: Pick<
  *       import("../../../../../../linvail/lib/advice").Advice,
- *       "leaveValue" | "apply" | "construct"
+ *       "enterValue" | "leaveValue" | "apply" | "construct"
  *     >,
- *     record_directory: URL,
+ *     record_directory: null | URL,
  *     weave: (root: import("aran").Program) => import("aran").Program,
  *     trans: (
  *       path: string,
@@ -78,7 +78,7 @@ const compileFunctionCode = (input) => {
  * ) => Partial<import("../../../../../../linvail/lib/advice").Advice>}
  */
 const compileCall = ({
-  advice: { construct, apply, leaveValue },
+  advice: { construct, apply, leaveValue, enterValue },
   intrinsics,
   record_directory,
   weave,
@@ -111,7 +111,7 @@ const compileCall = ({
               },
               record_directory,
             );
-            return globals.eval(content);
+            return enterValue(globals.eval(content));
           } catch (error) {
             throw recreateError(error, syntax_error_mapping);
           }
@@ -128,7 +128,11 @@ const compileCall = ({
             },
             record_directory,
           );
-          return globals.evalScript(content);
+          return enterValue(
+            /** @type {import("../../../../../../linvail/lib/runtime/domain").ExternalValue} */ (
+              globals.evalScript(content)
+            ),
+          );
         } catch (error) {
           throw recreateError(error, syntax_error_mapping);
         }
@@ -149,7 +153,9 @@ const compileCall = ({
             },
             record_directory,
           );
-          return globals.eval(content);
+          return /** @type {import("../../../../../../linvail/lib/runtime/domain").InternalReference} */ (
+            enterValue(globals.eval(content))
+          );
         } catch (error) {
           throw recreateError(error, syntax_error_mapping);
         }
@@ -235,8 +241,8 @@ export const createStage = ({ target, instrumentation }) => {
         };
       }
     },
-    prepare: (config, context) => {
-      const { intrinsics } = prepare(context, config);
+    prepare: ({ record_directory }, context) => {
+      const { intrinsics } = prepare(context, { record_directory });
       const { library, advice } = createRuntime(intrinsics, {
         dir: (value) => {
           dir(value, { showHidden: true, showProxy: true });
@@ -263,7 +269,7 @@ export const createStage = ({ target, instrumentation }) => {
           compileCall({
             advice,
             intrinsics,
-            record_directory: context.record_directory,
+            record_directory,
             weave,
             trans,
             retro,

@@ -1,2 +1,2 @@
-76
-{"kind":"script","path":"annexB/built-ins/RegExp/RegExp-trailing-escape.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":[]}
+1918
+{"kind":"script","path":"built-ins/Array/prototype/at/coerced-index-resize.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js","resizableArrayBufferUtils.js"],"features":["resizable-arraybuffer"]}
