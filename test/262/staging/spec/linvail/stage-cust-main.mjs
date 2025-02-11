@@ -1,6 +1,6 @@
-import { createStage } from "./_common.mjs";
+import { createStage } from "./common.mjs";
 
 export default createStage({
   instrumentation: "custom",
-  target: "*",
+  include: "main",
 });

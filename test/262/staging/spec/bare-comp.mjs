@@ -7,7 +7,7 @@ import { record } from "../../record/index.mjs";
 import { compileListPrecursorFailure } from "../failure.mjs";
 import { loadTaggingList } from "../../tagging/tagging.mjs";
 import { toTestSpecifier } from "../../result.mjs";
-import { compileFunctionCode } from "../compile-function-code.mjs";
+import { compileFunctionCode } from "../helper.mjs";
 
 const {
   Object: { keys },

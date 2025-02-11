@@ -13,8 +13,30 @@ const {
  *   transform: (item: X) => Y,
  * ) => Y[]}
  */
-const map = (array, transform) =>
-  toArray({ length: array.length }, (_, index) => transform(array[index]));
+export const map = (array, transform) =>
+  toArray(
+    {
+      // @ts-ignore
+      __proto__: null,
+      length: array.length,
+    },
+    (_, index) => transform(array[index]),
+  );
+
+/**
+ * @type {<X, Y>(
+ *   array: X[],
+ *   accumulate: (result: Y, item: X) => Y,
+ *   initial: Y,
+ * ) => Y}
+ */
+export const reduce = (array, accumulate, result) => {
+  const { length } = array;
+  for (let index = 0; index < length; index++) {
+    result = accumulate(result, array[index]);
+  }
+  return result;
+};
 
 /**
  * @type {(

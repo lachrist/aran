@@ -85,6 +85,7 @@ const test = (code, procedural) => {
         },
       },
       {
+        instrument_dynamic_code: false,
         SyntaxError,
         procedural,
         recordBranch: (kind, size, tag) => {

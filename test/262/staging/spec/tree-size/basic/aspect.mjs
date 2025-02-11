@@ -1,13 +1,12 @@
 import { weaveStandard } from "aran";
 import { AranExecError } from "../../../../error.mjs";
-import { compileFunctionCode } from "../../../compile-function-code.mjs";
+import { compileFunctionCode, map, reduce } from "../../../helper.mjs";
 import { record } from "../../../../record/index.mjs";
 import { recreateError } from "../../../../util/index.mjs";
 
 const {
   String,
   Error,
-  Array,
   Object: { keys, hasOwn, is },
   Reflect: { apply },
   WeakMap,
@@ -19,38 +18,6 @@ const {
 const listKey = /**
  * @type {<K extends PropertyKey>(record: {[k in K]: unknown}) => K[]}
  */ (keys);
-
-// DO NOT USE toArray because it can be poisoned by:
-//   Array.prototype[Symbol.iterator]
-/**
- * @type {<X, Y>(
- *   array: X[],
- *   transform: (element: X) => Y
- * ) => Y[]}
- */
-const map = (array, transform) => {
-  const { length } = array;
-  const result = new Array(length);
-  for (let index = 0; index < length; index++) {
-    result[index] = transform(array[index]);
-  }
-  return result;
-};
-
-/**
- * @type {<X, Y>(
- *   array: X[],
- *   accumulate: (result: Y, item: X) => Y,
- *   initial: Y,
- * ) => Y}
- */
-const reduce = (array, accumulate, result) => {
-  const { length } = array;
-  for (let index = 0; index < length; index++) {
-    result = accumulate(result, array[index]);
-  }
-  return result;
-};
 
 /**
  * @typedef {WeakMap<InternalPrimitive, TreeSize>} PrimitiveRegistery
@@ -448,6 +415,7 @@ const recoverInput = (registery, candidate) =>
  *     ) => ExternalValue,
  *   },
  *   config: {
+ *     instrument_dynamic_code: boolean,
  *     SyntaxError: new (message: string) => unknown,
  *     record_directory: null | URL,
  *     recordBranch: (
@@ -482,7 +450,15 @@ export const createAdvice = (
     getValueProperty,
     createArray,
   },
-  { SyntaxError, record_directory, recordBranch, procedural, trans, retro },
+  {
+    instrument_dynamic_code,
+    SyntaxError,
+    record_directory,
+    recordBranch,
+    procedural,
+    trans,
+    retro,
+  },
 ) => {
   const syntax_error_mapping = {
     SyntaxError,
@@ -656,7 +632,11 @@ export const createAdvice = (
           );
         }
       }
-      if (is(callee, evalGlobal) && input.length > 0) {
+      if (
+        instrument_dynamic_code &&
+        is(callee, evalGlobal) &&
+        input.length > 0
+      ) {
         const code = leaveValue(input[0], primitive_registery);
         if (typeof code === "string") {
           try {
@@ -668,9 +648,11 @@ export const createAdvice = (
               },
               record_directory,
             );
-            return enterValue(
+            return updateExternalResultTreeSize(
+              callee,
+              that,
+              input,
               evalGlobal(content),
-              init_tree_size,
               primitive_registery,
             );
           } catch (error) {
@@ -678,7 +660,11 @@ export const createAdvice = (
           }
         }
       }
-      if (is(callee, evalScript) && input.length > 0) {
+      if (
+        instrument_dynamic_code &&
+        is(callee, evalScript) &&
+        input.length > 0
+      ) {
         const code = String(leaveValue(input[0], primitive_registery));
         try {
           const path = "dynamic://eval/global";
@@ -689,9 +675,11 @@ export const createAdvice = (
             },
             record_directory,
           );
-          return enterValue(
-            evalGlobal(content),
-            init_tree_size,
+          return updateExternalResultTreeSize(
+            callee,
+            that,
+            input,
+            evalScript(content),
             primitive_registery,
           );
         } catch (error) {
@@ -740,7 +728,10 @@ export const createAdvice = (
       );
     },
     "construct@around": (_transit, callee, input, _tag) => {
-      if (getInternalClosureKind(closure_registery, callee) === "function") {
+      if (
+        instrument_dynamic_code &&
+        getInternalClosureKind(closure_registery, callee) === "function"
+      ) {
         transit = true;
         return /** @type {Reference} */ (construct(callee, input));
       }

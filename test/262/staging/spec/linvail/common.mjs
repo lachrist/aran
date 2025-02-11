@@ -10,13 +10,13 @@ import { compileAran } from "../../aran.mjs";
 import { toTestSpecifier } from "../../../result.mjs";
 import { loadTaggingList } from "../../../tagging/index.mjs";
 import { recreateError } from "../../../util/index.mjs";
-import { compileFunctionCode } from "../../compile-function-code.mjs";
+import { compileFunctionCode } from "../../helper.mjs";
 
 const {
   Error,
   String,
   Array: { from: toArray },
-  Object: { is, assign },
+  Object: { assign },
   Reflect: { defineProperty },
   console: { dir },
 } = globalThis;
@@ -48,7 +48,7 @@ const listPrecursorFailure = await compileListPrecursorFailure(["stnd-full"]);
 const listNegative = await loadTaggingList(["proxy"]);
 
 /**
- * @type {(
+ * @type {<atom extends import("aran").Atom>(
  *   config: {
  *     intrinsics: import("aran").IntrinsicRecord,
  *     advice: Pick<
@@ -56,19 +56,21 @@ const listNegative = await loadTaggingList(["proxy"]);
  *       "enterValue" | "leaveValue" | "apply" | "construct"
  *     >,
  *     record_directory: null | URL,
- *     weave: (root: import("aran").Program) => import("aran").Program,
+ *     weave: (
+ *       root: import("aran").Program<atom>,
+ *     ) => import("aran").Program,
  *     trans: (
  *       path: string,
  *       kind: "script" | "module" | "eval",
  *       code: string,
- *     ) => import("aran").Program,
+ *     ) => import("aran").Program<atom>,
  *     retro: (
  *       root: import("aran").Program,
  *     ) => string,
  *   },
- * ) => Partial<import("linvail").Advice>}
+ * ) => Pick<import("linvail").Advice, "apply" | "construct">}
  */
-const compileCall = ({
+export const interceptGlobalEval = ({
   advice: { construct, apply, leaveValue, enterValue },
   intrinsics,
   record_directory,
@@ -77,11 +79,32 @@ const compileCall = ({
   retro,
 }) => {
   const globals = {
-    eval: intrinsics.globalThis.eval,
-    evalScript: /** @type {{$262: import("../../../$262").$262}} */ (
-      /** @type {unknown} */ (intrinsics.globalThis)
-    ).$262.evalScript,
-    Function: intrinsics.globalThis.Function,
+    eval: {
+      external: intrinsics.globalThis.eval,
+      internal: enterValue(
+        /** @type {import("linvail").ExternalValue} */ (
+          /** @type {unknown} */ (intrinsics.globalThis.eval)
+        ),
+      ),
+    },
+    evalScript: {
+      external:
+        /** @type {{$262: { evalScript: (code: string) => import("linvail").ExternalValue}}} */ (
+          /** @type {unknown} */ (intrinsics.globalThis)
+        ).$262.evalScript,
+      internal: enterValue(
+        /** @type {{$262: {evalScript: import("linvail").ExternalValue}}} */ (
+          /** @type {unknown} */ (intrinsics.globalThis)
+        ).$262.evalScript,
+      ),
+    },
+    Function: {
+      internal: enterValue(
+        /** @type {import("linvail").ExternalValue} */ (
+          /** @type {unknown} */ (intrinsics.globalThis.eval)
+        ),
+      ),
+    },
   };
   const syntax_error_mapping = {
     SyntaxError: intrinsics.globalThis.SyntaxError,
@@ -89,8 +112,7 @@ const compileCall = ({
   };
   return {
     apply: (target, that, input) => {
-      const callee = leaveValue(target);
-      if (is(callee, globals.eval) && input.length > 0) {
+      if (target === globals.eval.internal && input.length > 0) {
         const code = leaveValue(input[0]);
         if (typeof code === "string") {
           try {
@@ -102,13 +124,13 @@ const compileCall = ({
               },
               record_directory,
             );
-            return enterValue(globals.eval(content));
+            return enterValue(globals.eval.external(content));
           } catch (error) {
             throw recreateError(error, syntax_error_mapping);
           }
         }
       }
-      if (is(callee, globals.evalScript) && input.length > 0) {
+      if (target === globals.evalScript.internal && input.length > 0) {
         const code = String(leaveValue(input[0]));
         try {
           const path = "dynamic://script/global";
@@ -119,11 +141,7 @@ const compileCall = ({
             },
             record_directory,
           );
-          return enterValue(
-            /** @type {import("linvail").ExternalValue} */ (
-              globals.evalScript(content)
-            ),
-          );
+          return enterValue(globals.evalScript.external(content));
         } catch (error) {
           throw recreateError(error, syntax_error_mapping);
         }
@@ -131,8 +149,7 @@ const compileCall = ({
       return apply(target, that, input);
     },
     construct: (target, input) => {
-      const callee = leaveValue(target);
-      if (is(callee, globals.Function)) {
+      if (target === globals.Function.internal) {
         try {
           const path = "dynamic://function/global";
           const { content } = record(
@@ -151,7 +168,7 @@ const compileCall = ({
             record_directory,
           );
           return /** @type {import("linvail").InternalReference} */ (
-            enterValue(globals.eval(content))
+            enterValue(globals.eval.external(content))
           );
         } catch (error) {
           throw recreateError(error, syntax_error_mapping);
@@ -198,7 +215,7 @@ const compileWeave = (instrumentation) => {
 /**
  * @type {(
  *   config: {
- *     target: "main" | "*",
+ *     include: "main" | "*",
  *     instrumentation: "standard" | "custom",
  *   },
  * ) => import("../../stage").Stage<
@@ -206,14 +223,14 @@ const compileWeave = (instrumentation) => {
  *   import("../../stage").Config,
  * >}
  */
-export const createStage = ({ target, instrumentation }) => {
+export const createStage = ({ include, instrumentation }) => {
   const { prepare, trans, retro } = compileAran(
     {
       mode: "normal",
       escape_prefix: "__aran__",
       global_object_variable: "globalThis",
       intrinsic_global_variable: "__intrinsic__",
-      global_declarative_record: target === "*" ? "emulate" : "builtin",
+      global_declarative_record: include === "*" ? "emulate" : "builtin",
       digest,
     },
     toEvalPath,
@@ -245,7 +262,7 @@ export const createStage = ({ target, instrumentation }) => {
           dir(value, { showHidden: true, showProxy: true });
         },
       });
-      if (target === "*") {
+      if (include === "*") {
         const { leavePlainInternalReference } = advice;
         // intrinsics["aran.global_object"] = /** @type {any} */ (
         //   leavePlainInternalReference(
@@ -263,7 +280,7 @@ export const createStage = ({ target, instrumentation }) => {
         );
         assign(
           advice,
-          compileCall({
+          interceptGlobalEval({
             advice,
             intrinsics,
             record_directory,
@@ -302,7 +319,7 @@ export const createStage = ({ target, instrumentation }) => {
       { record_directory },
       { type, kind, path, content: code1 },
     ) => {
-      if (target === "*" || type === "main") {
+      if (include === "*" || type === "main") {
         /** @type {import("aran").Program} */
         const root1 = trans(path, kind, code1);
         const root2 = weave(root1);
