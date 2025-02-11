@@ -1,0 +1,2 @@
+# https://github.com/nodejs/node/issues/56952
+built-ins/Array/fromAsync/this-constructor-with-readonly-length.js

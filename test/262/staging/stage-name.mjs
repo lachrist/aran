@@ -17,6 +17,7 @@ export const stage_name_record = {
   "trace": null,
   "track-origin": null,
   "linvail": null,
+  "linvail-standard": null,
   "tree-size/count/stage": null,
   "tree-size/basic/stage-inter": null,
   "tree-size/basic/stage-intra": null,

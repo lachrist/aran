@@ -32,4 +32,5 @@ export type Tag =
   | "parsing-function-string-representation"
   | "parsing-import-assertion"
   | "parsing-unknown"
+  | "proxy"
   | "slow";

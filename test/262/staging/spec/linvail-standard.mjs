@@ -1,5 +1,9 @@
-import { weave } from "../../../../../linvail/lib/instrument/_.mjs";
-import { createRuntime } from "../../../../../linvail/lib/runtime/_.mjs";
+import { weaveStandard } from "aran";
+import {
+  createRuntime,
+  standard_pointcut as pointcut,
+  toStandardAdvice,
+} from "../../../../../linvail/lib/runtime/_.mjs";
 import { compileListPrecursorFailure } from "../failure.mjs";
 import { record } from "../../record/index.mjs";
 import { compileAran } from "../aran.mjs";
@@ -46,13 +50,20 @@ const listPrecursorFailure = await compileListPrecursorFailure(["stnd-full"]);
 
 /**
  * @type {(
- *   advice: Advice,
- * ) => Advice}
+ *   root: import("aran").Program,
+ * ) => import("aran").Program}
  */
-const supportDirectEval = (advice) => ({
-  ...advice,
-  weaveEvalProgram: (root) => weave(root, { advice_global_variable }),
-});
+const weave = (root) =>
+  weaveStandard(
+    /** @type {import("aran").Program<import("aran").Atom & { Tag: string }>} */ (
+      root
+    ),
+    {
+      initial_state: null,
+      advice_global_variable,
+      pointcut,
+    },
+  );
 
 const listNegative = await loadTaggingList(["proxy"]);
 
@@ -91,7 +102,10 @@ export default {
     {
       const descriptor = {
         __proto__: null,
-        value: supportDirectEval(advice),
+        value: toStandardAdvice({
+          ...advice,
+          weaveEvalProgram: weave,
+        }),
         enumerable: false,
         writable: false,
         configurable: false,
@@ -117,7 +131,7 @@ export default {
     if (type === "main") {
       /** @type {import("aran").Program} */
       const root1 = trans(path, kind, code1);
-      const root2 = weave(root1, { advice_global_variable });
+      const root2 = weave(root1);
       const code2 = retro(root2);
       return record({ path, content: code2 }, record_directory);
     } else {

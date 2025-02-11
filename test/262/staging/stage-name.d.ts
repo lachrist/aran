@@ -12,6 +12,7 @@ export type StageName =
   | "trace"
   | "track-origin"
   | "linvail"
+  | "linvail-standard"
   | "tree-size/count/stage"
   | "tree-size/basic/stage-inter"
   | "tree-size/basic/stage-intra"

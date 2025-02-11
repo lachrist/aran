@@ -13,8 +13,11 @@
   "main": "lib/index.mjs",
   "types": "lib/index.d.ts",
   "type": "module",
-  "repository": "lachrist/aran",
-  "homepage": "http://github.com/lachrist/aran",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lachrist/aran.git"
+  },
+  "homepage": "https://github.com/lachrist/aran",
   "license": "MIT",
   "scripts": {
     "lint": "npx tsc && npx prettier -c '**/*.(mjs|d.ts)' && npx eslint 'lint/**/*.mjs' 'test/**/*.mjs' 'lib/**/*.mjs'",
