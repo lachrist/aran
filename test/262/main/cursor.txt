@@ -1,2 +1,1 @@
-2
-{"kind":"script","path":"annexB/built-ins/Date/prototype/getYear/B.2.4.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js","propertyHelper.js"],"features":[]}
+0

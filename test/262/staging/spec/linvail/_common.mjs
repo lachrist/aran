@@ -1,25 +1,19 @@
-import { weaveStandard } from "aran";
+import { weave as weaveCustomInner } from "../../../../../../linvail/lib/instrument/_.mjs";
+import { weaveStandard as weaveStandardInner } from "aran";
 import {
   createRuntime,
   standard_pointcut as pointcut,
-  toStandardAdvice,
-} from "../../../../../linvail/lib/runtime/_.mjs";
-import { compileListPrecursorFailure } from "../failure.mjs";
-import { record } from "../../record/index.mjs";
-import { compileAran } from "../aran.mjs";
-import { toTestSpecifier } from "../../result.mjs";
-import { loadTaggingList } from "../../tagging/index.mjs";
+} from "../../../../../../linvail/lib/runtime/_.mjs";
+import { compileListPrecursorFailure } from "../../failure.mjs";
+import { record } from "../../../record/index.mjs";
+import { compileAran } from "../../aran.mjs";
+import { toTestSpecifier } from "../../../result.mjs";
+import { loadTaggingList } from "../../../tagging/index.mjs";
 
 const {
   Reflect: { defineProperty },
   console: { dir },
 } = globalThis;
-
-globalThis.Error.stackTraceLimit = 1 / 0;
-
-/**
- * @typedef {import("../../../../../linvail/lib/advice").Advice} Advice
- */
 
 /**
  * @type {import("aran").Digest}
@@ -49,31 +43,39 @@ const advice_global_variable = "__ARAN_ADVICE__";
 const listPrecursorFailure = await compileListPrecursorFailure(["stnd-full"]);
 
 /**
- * @type {(
+ * @type {{[k in "cust" | "stnd"]: (
  *   root: import("aran").Program,
- * ) => import("aran").Program}
+ * ) => import("aran").Program}}
  */
-const weave = (root) =>
-  weaveStandard(
-    /** @type {import("aran").Program<import("aran").Atom & { Tag: string }>} */ (
-      root
+const weaving = {
+  cust: (root) => weaveCustomInner(root, { advice_global_variable }),
+  stnd: (root) =>
+    weaveStandardInner(
+      /** @type {import("aran").Program<import("aran").Atom & { Tag: string }>} */ (
+        root
+      ),
+      {
+        initial_state: null,
+        advice_global_variable,
+        pointcut,
+      },
     ),
-    {
-      initial_state: null,
-      advice_global_variable,
-      pointcut,
-    },
-  );
+};
 
 const listNegative = await loadTaggingList(["proxy"]);
 
 /**
- * @type {import("../stage").Stage<
- *   import("../stage").Config,
- *   import("../stage").Config,
+ * @type {(
+ *   config: {
+ *     scope: "main" | "comp",
+ *     instrumentation: "stnd" | "cust",
+ *   },
+ * ) => import("../../stage").Stage<
+ *   import("../../stage").Config,
+ *   import("../../stage").Config,
  * >}
  */
-export default {
+export const createStage = ({ scope, instrumentation }) => ({
   // eslint-disable-next-line require-await
   open: async (config) => config,
   close: async (_config) => {},
@@ -102,10 +104,7 @@ export default {
     {
       const descriptor = {
         __proto__: null,
-        value: toStandardAdvice({
-          ...advice,
-          weaveEvalProgram: weave,
-        }),
+        value: { ...advice, weaveEvalProgram: weaving[instrumentation] },
         enumerable: false,
         writable: false,
         configurable: false,
@@ -128,10 +127,10 @@ export default {
     }
   },
   instrument: ({ record_directory }, { type, kind, path, content: code1 }) => {
-    if (type === "main") {
+    if (scope === "comp" || type === "main") {
       /** @type {import("aran").Program} */
       const root1 = trans(path, kind, code1);
-      const root2 = weave(root1);
+      const root2 = weaving[instrumentation](root1);
       const code2 = retro(root2);
       return record({ path, content: code2 }, record_directory);
     } else {
@@ -139,4 +138,4 @@ export default {
     }
   },
   teardown: async (_state) => {},
-};
+});
