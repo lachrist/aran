@@ -18,6 +18,7 @@ const {
   URL,
   Reflect: { apply, defineProperty },
   WeakMap,
+  console: { dir },
   WeakMap: {
     prototype: { get: getWeakMap, set: setWeakMap },
   },
@@ -243,7 +244,7 @@ export default {
   },
   prepare: ({ index, buffer, record_directory }, context) => {
     const { intrinsics } = prepare(context, { record_directory });
-    const { advice } = createRuntime(intrinsics);
+    const { advice } = createRuntime(intrinsics, { dir });
     const descriptor = {
       __proto__: null,
       value: updateAdvice(toStandardAdvice(advice), {
