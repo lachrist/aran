@@ -12,6 +12,7 @@ import { loadTaggingList } from "../../../tagging/index.mjs";
 import { recreateError } from "../../../util/index.mjs";
 
 const {
+  Error,
   String,
   Array: {
     from: toArray,
@@ -33,41 +34,9 @@ const digest = (_node, node_path, file_path, _kind) =>
  */
 const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
-const { prepare, trans, retro } = compileAran(
-  {
-    mode: "normal",
-    escape_prefix: "__aran__",
-    global_object_variable: "globalThis",
-    intrinsic_global_variable: "__intrinsic__",
-    global_declarative_record: "builtin",
-    digest,
-  },
-  toEvalPath,
-);
-
 const advice_global_variable = "__ARAN_ADVICE__";
 
 const listPrecursorFailure = await compileListPrecursorFailure(["stnd-full"]);
-
-/**
- * @type {{[k in "standard" | "custom"]: (
- *   root: import("aran").Program,
- * ) => import("aran").Program}}
- */
-const weaving = {
-  custom: (root) => weaveCustomInner(root, { advice_global_variable }),
-  standard: (root) =>
-    weaveStandardInner(
-      /** @type {import("aran").Program<import("aran").Atom & { Tag: string }>} */ (
-        root
-      ),
-      {
-        initial_state: null,
-        advice_global_variable,
-        pointcut,
-      },
-    ),
-};
 
 const listNegative = await loadTaggingList(["proxy"]);
 
@@ -97,24 +66,24 @@ const compileFunctionCode = (input) => {
  *     >,
  *     record_directory: URL,
  *     weave: (root: import("aran").Program) => import("aran").Program,
+ *     trans: (
+ *       path: string,
+ *       kind: "script" | "module" | "eval",
+ *       code: string,
+ *     ) => import("aran").Program,
+ *     retro: (
+ *       root: import("aran").Program,
+ *     ) => string,
  *   },
- * ) => {
- *   apply: (
- *     target: import("../../../../../../linvail/lib/runtime/domain").InternalValue,
- *     that: import("../../../../../../linvail/lib/runtime/domain").InternalValue,
- *     input: import("../../../../../../linvail/lib/runtime/domain").InternalValue[],
- *   ) => import("../../../../../../linvail/lib/runtime/domain").InternalValue,
- *   construct: (
- *     target: import("../../../../../../linvail/lib/runtime/domain").InternalValue,
- *     input: import("../../../../../../linvail/lib/runtime/domain").InternalValue[],
- *   ) => import("../../../../../../linvail/lib/runtime/domain").InternalReference,
- * }}
+ * ) => Partial<import("../../../../../../linvail/lib/advice").Advice>}
  */
 const compileCall = ({
   advice: { construct, apply, leaveValue },
   intrinsics,
   record_directory,
   weave,
+  trans,
+  retro,
 }) => {
   const globals = {
     eval: intrinsics.globalThis.eval,
@@ -192,6 +161,39 @@ const compileCall = ({
 
 /**
  * @type {(
+ *   instrumentation: "custom" | "standard",
+ * ) => (
+ *   root: import("aran").Program,
+ * ) => import("aran").Program}}
+ */
+const compileWeave = (instrumentation) => {
+  switch (instrumentation) {
+    case "custom": {
+      return (root) => weaveCustomInner(root, { advice_global_variable });
+    }
+    case "standard": {
+      return (root) =>
+        weaveStandardInner(
+          /** @type {import("aran").Program<import("aran").Atom & { Tag: string }>} */ (
+            root
+          ),
+          {
+            initial_state: null,
+            advice_global_variable,
+            pointcut,
+          },
+        );
+    }
+    default: {
+      throw new Error("unknown instrumentation", {
+        cause: { instrumentation },
+      });
+    }
+  }
+};
+
+/**
+ * @type {(
  *   config: {
  *     target: "main" | "*",
  *     instrumentation: "standard" | "custom",
@@ -201,96 +203,112 @@ const compileCall = ({
  *   import("../../stage").Config,
  * >}
  */
-export const createStage = ({ target, instrumentation }) => ({
-  // eslint-disable-next-line require-await
-  open: async (config) => config,
-  close: async (_config) => {},
-  // eslint-disable-next-line require-await
-  setup: async (config, [index, { path, directive }]) => {
-    const reasons = listPrecursorFailure(index);
-    const specifier = toTestSpecifier(path, directive);
-    if (reasons.length > 0) {
-      return { type: "exclude", reasons };
-    } else {
-      return {
-        type: "include",
-        state: config,
-        flaky: false,
-        negatives: listNegative(specifier),
-      };
-    }
-  },
-  prepare: (config, context) => {
-    const { intrinsics } = prepare(context, config);
-    const { library, advice } = createRuntime(intrinsics, {
-      dir: (value) => {
-        dir(value, { showHidden: true, showProxy: true });
-      },
-    });
-    const weave = weaving[instrumentation];
-    if (target === "*") {
-      const { leavePlainInternalReference, enterPlainExternalReference } =
-        advice;
-      intrinsics["aran.global_object"] = /** @type {any} */ (
-        leavePlainInternalReference(
-          /** @type {any} */ ({
-            __proto__: enterPlainExternalReference(
-              /** @type {any} */ (intrinsics["aran.global_object"]),
-            ),
-          }),
-        )
-      );
-      intrinsics["aran.global_declarative_record"] = /** @type {any} */ (
-        leavePlainInternalReference(
-          /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
-        )
-      );
-      assign(
-        advice,
-        compileCall({
+export const createStage = ({ target, instrumentation }) => {
+  const { prepare, trans, retro } = compileAran(
+    {
+      mode: "normal",
+      escape_prefix: "__aran__",
+      global_object_variable: "globalThis",
+      intrinsic_global_variable: "__intrinsic__",
+      global_declarative_record: target === "*" ? "emulate" : "builtin",
+      digest,
+    },
+    toEvalPath,
+  );
+  const weave = compileWeave(instrumentation);
+  return {
+    // eslint-disable-next-line require-await
+    open: async (config) => config,
+    close: async (_config) => {},
+    // eslint-disable-next-line require-await
+    setup: async (config, [index, { path, directive }]) => {
+      const reasons = listPrecursorFailure(index);
+      const specifier = toTestSpecifier(path, directive);
+      if (reasons.length > 0) {
+        return { type: "exclude", reasons };
+      } else {
+        return {
+          type: "include",
+          state: config,
+          flaky: false,
+          negatives: listNegative(specifier),
+        };
+      }
+    },
+    prepare: (config, context) => {
+      const { intrinsics } = prepare(context, config);
+      const { library, advice } = createRuntime(intrinsics, {
+        dir: (value) => {
+          dir(value, { showHidden: true, showProxy: true });
+        },
+      });
+      if (target === "*") {
+        const { leavePlainInternalReference } = advice;
+        // intrinsics["aran.global_object"] = /** @type {any} */ (
+        //   leavePlainInternalReference(
+        //     /** @type {any} */ ({
+        //       __proto__: enterPlainExternalReference(
+        //         /** @type {any} */ (intrinsics["aran.global_object"]),
+        //       ),
+        //     }),
+        //   )
+        // );
+        intrinsics["aran.global_declarative_record"] = /** @type {any} */ (
+          leavePlainInternalReference(
+            /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
+          )
+        );
+        assign(
           advice,
-          intrinsics,
-          record_directory: context.record_directory,
-          weave,
-        }),
-      );
-    }
-    {
-      const descriptor = {
-        __proto__: null,
-        value: { ...advice, weaveEvalProgram: weave },
-        enumerable: false,
-        writable: false,
-        configurable: false,
-      };
-      defineProperty(
-        intrinsics["aran.global_object"],
-        advice_global_variable,
-        descriptor,
-      );
-    }
-    {
-      const descriptor = {
-        __proto__: null,
-        value: library,
-        enumerable: false,
-        writable: false,
-        configurable: false,
-      };
-      defineProperty(intrinsics["aran.global_object"], "Linvail", descriptor);
-    }
-  },
-  instrument: ({ record_directory }, { type, kind, path, content: code1 }) => {
-    if (target === "*" || type === "main") {
-      /** @type {import("aran").Program} */
-      const root1 = trans(path, kind, code1);
-      const weave = weaving[instrumentation];
-      const root2 = weave(root1);
-      const code2 = retro(root2);
-      return record({ path, content: code2 }, record_directory);
-    } else {
-      return record({ path, content: code1 }, record_directory);
-    }
-  },
-  teardown: async (_state) => {},
-});
+          compileCall({
+            advice,
+            intrinsics,
+            record_directory: context.record_directory,
+            weave,
+            trans,
+            retro,
+          }),
+        );
+      }
+      {
+        const descriptor = {
+          __proto__: null,
+          value: { ...advice, weaveEvalProgram: weave },
+          enumerable: false,
+          writable: false,
+          configurable: false,
+        };
+        defineProperty(
+          intrinsics["aran.global_object"],
+          advice_global_variable,
+          descriptor,
+        );
+      }
+      {
+        const descriptor = {
+          __proto__: null,
+          value: library,
+          enumerable: false,
+          writable: false,
+          configurable: false,
+        };
+        defineProperty(intrinsics["aran.global_object"], "Linvail", descriptor);
+      }
+    },
+    instrument: (
+      { record_directory },
+      { type, kind, path, content: code1 },
+    ) => {
+      if (target === "*" || type === "main") {
+        /** @type {import("aran").Program} */
+        const root1 = trans(path, kind, code1);
+        const root2 = weave(root1);
+        const code2 = retro(root2);
+        return record({ path, content: code2 }, record_directory);
+      } else {
+        return record({ path, content: code1 }, record_directory);
+      }
+    },
+    teardown: async (_state) => {},
+  };
+};
