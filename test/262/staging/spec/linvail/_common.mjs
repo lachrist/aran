@@ -16,12 +16,21 @@ const {
   String,
   Array: {
     from: toArray,
-    prototype: { join, pop, map },
+    prototype: { join, pop },
   },
   Object: { is, assign },
   Reflect: { apply, defineProperty },
   console: { dir },
 } = globalThis;
+
+/**
+ * @type {<X, Y>(
+ *   array: X[],
+ *   transform: (item: X) => Y,
+ * ) => Y[]}
+ */
+const map = (array, transform) =>
+  toArray({ length: array.length }, (_, index) => transform(array[index]));
 
 /**
  * @type {import("aran").Digest}
@@ -42,17 +51,16 @@ const listNegative = await loadTaggingList(["proxy"]);
 
 /**
  * @type {(
- *   input: unknown[],
+ *   input: import("../../../../../../linvail/lib/runtime/domain").ExternalValue[],
  * ) => string}
  */
 const compileFunctionCode = (input) => {
   if (input.length === 0) {
     return "(function anonymous() {\n})";
   } else {
-    input = toArray(input);
-    const body = apply(pop, input, []);
-    const params = apply(join, apply(map, input, [String]), [","]);
-    return `(function anonymous(${params}\n) {\n${body}\n})`;
+    const parts = map(input, String);
+    const body = apply(pop, parts, []);
+    return `(function anonymous(${apply(join, parts, [","])}\n) {\n${body}\n})`;
   }
 };
 
@@ -148,7 +156,13 @@ const compileCall = ({
             {
               path,
               content: retro(
-                weave(trans(path, "eval", compileFunctionCode(input))),
+                weave(
+                  trans(
+                    path,
+                    "eval",
+                    compileFunctionCode(map(input, leaveValue)),
+                  ),
+                ),
               ),
             },
             record_directory,
