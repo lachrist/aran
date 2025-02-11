@@ -1,25 +1,23 @@
-import { weave as weaveCustomInner } from "../../../../../../linvail/lib/instrument/_.mjs";
-import { weaveStandard as weaveStandardInner } from "aran";
 import {
   createRuntime,
   standard_pointcut as pointcut,
-} from "../../../../../../linvail/lib/runtime/_.mjs";
+  weave as weaveCustomInner,
+} from "linvail";
+import { weaveStandard as weaveStandardInner } from "aran";
 import { compileListPrecursorFailure } from "../../failure.mjs";
 import { record } from "../../../record/index.mjs";
 import { compileAran } from "../../aran.mjs";
 import { toTestSpecifier } from "../../../result.mjs";
 import { loadTaggingList } from "../../../tagging/index.mjs";
 import { recreateError } from "../../../util/index.mjs";
+import { compileFunctionCode } from "../../compile-function-code.mjs";
 
 const {
   Error,
   String,
-  Array: {
-    from: toArray,
-    prototype: { join, pop },
-  },
+  Array: { from: toArray },
   Object: { is, assign },
-  Reflect: { apply, defineProperty },
+  Reflect: { defineProperty },
   console: { dir },
 } = globalThis;
 
@@ -51,25 +49,10 @@ const listNegative = await loadTaggingList(["proxy"]);
 
 /**
  * @type {(
- *   input: import("../../../../../../linvail/lib/runtime/domain").ExternalValue[],
- * ) => string}
- */
-const compileFunctionCode = (input) => {
-  if (input.length === 0) {
-    return "(function anonymous() {\n})";
-  } else {
-    const parts = map(input, String);
-    const body = apply(pop, parts, []);
-    return `(function anonymous(${apply(join, parts, [","])}\n) {\n${body}\n})`;
-  }
-};
-
-/**
- * @type {(
  *   config: {
  *     intrinsics: import("aran").IntrinsicRecord,
  *     advice: Pick<
- *       import("../../../../../../linvail/lib/advice").Advice,
+ *       import("linvail").Advice,
  *       "enterValue" | "leaveValue" | "apply" | "construct"
  *     >,
  *     record_directory: null | URL,
@@ -83,7 +66,7 @@ const compileFunctionCode = (input) => {
  *       root: import("aran").Program,
  *     ) => string,
  *   },
- * ) => Partial<import("../../../../../../linvail/lib/advice").Advice>}
+ * ) => Partial<import("linvail").Advice>}
  */
 const compileCall = ({
   advice: { construct, apply, leaveValue, enterValue },
@@ -137,7 +120,7 @@ const compileCall = ({
             record_directory,
           );
           return enterValue(
-            /** @type {import("../../../../../../linvail/lib/runtime/domain").ExternalValue} */ (
+            /** @type {import("linvail").ExternalValue} */ (
               globals.evalScript(content)
             ),
           );
@@ -167,7 +150,7 @@ const compileCall = ({
             },
             record_directory,
           );
-          return /** @type {import("../../../../../../linvail/lib/runtime/domain").InternalReference} */ (
+          return /** @type {import("linvail").InternalReference} */ (
             enterValue(globals.eval(content))
           );
         } catch (error) {

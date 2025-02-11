@@ -7,14 +7,12 @@ import { record } from "../../record/index.mjs";
 import { compileListPrecursorFailure } from "../failure.mjs";
 import { loadTaggingList } from "../../tagging/tagging.mjs";
 import { toTestSpecifier } from "../../result.mjs";
+import { compileFunctionCode } from "../compile-function-code.mjs";
 
 const {
   Object: { keys },
-  Array: {
-    from: toArray,
-    prototype: { pop, join },
-  },
-  Reflect: { apply, defineProperty },
+  Array: { from: toArray },
+  Reflect: { defineProperty },
   String,
 } = globalThis;
 
@@ -38,17 +36,11 @@ const listKey = /**
 /**
  * @type {<X, Y>(
  *   array: X[],
- *   transform: (element: X) => Y
+ *   transform: (item: X) => Y,
  * ) => Y[]}
  */
-const map = toArray;
-
-/**
- * @type {<X>(
- *   array: X[],
- * ) => X[]}
- */
-const copy = toArray;
+const map = (array, transform) =>
+  toArray({ length: array.length }, (_, index) => transform(array[index]));
 
 /**
  * @type {<X>(
@@ -145,22 +137,6 @@ const toAdviceInit = (name, tag) => ({
   },
   tag,
 });
-
-/**
- * @type {(
- *   input: unknown[],
- * ) => string}
- */
-const compileFunctionCode = (input) => {
-  if (input.length === 0) {
-    return "(function anonymous() {\n})";
-  } else {
-    input = copy(input);
-    const body = apply(pop, input, []);
-    const params = apply(join, map(input, String), [","]);
-    return `(function anonymous(${params}\n) {\n${body}\n})`;
-  }
-};
 
 /**
  * @type {(

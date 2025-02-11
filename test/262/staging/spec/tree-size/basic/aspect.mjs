@@ -1,7 +1,11 @@
 import { weaveStandard } from "aran";
 import { AranExecError } from "../../../../error.mjs";
+import { compileFunctionCode } from "../../../compile-function-code.mjs";
+import { record } from "../../../../record/index.mjs";
+import { recreateError } from "../../../../util/index.mjs";
 
 const {
+  String,
   Error,
   Array,
   Object: { keys, hasOwn, is },
@@ -412,6 +416,9 @@ const recoverInput = (registery, candidate) =>
 /**
  * @type {<T extends import("aran").Json>(
  *   intrinscs: {
+ *     Function: Reference,
+ *     evalScript: (code: string) => ExternalValue,
+ *     evalGlobal: (code: string) => ExternalValue,
  *     apply: {
  *       (
  *         callee: ExternalValue,
@@ -441,12 +448,20 @@ const recoverInput = (registery, candidate) =>
  *     ) => ExternalValue,
  *   },
  *   config: {
+ *     SyntaxError: new (message: string) => unknown,
+ *     record_directory: null | URL,
  *     recordBranch: (
  *       kind: import("aran").TestKind,
  *       size: TreeSize,
  *       tag: T,
  *     ) => void,
  *     procedural: "inter" | "intra",
+ *     trans: (
+ *       path: string,
+ *       kind: "script" | "module" | "eval",
+ *       code: string,
+ *     ) => import("aran").Program<Atom & { Tag: T }>,
+ *     retro: (root: import("aran").Program) => string,
  *   },
  * ) => import("aran").StandardAdvice<{
  *   State: boolean,
@@ -458,9 +473,21 @@ const recoverInput = (registery, candidate) =>
  * }>}
  */
 export const createAdvice = (
-  { apply, construct, getValueProperty, createArray },
-  { recordBranch, procedural },
+  {
+    Function,
+    evalGlobal,
+    evalScript,
+    apply,
+    construct,
+    getValueProperty,
+    createArray,
+  },
+  { SyntaxError, record_directory, recordBranch, procedural, trans, retro },
 ) => {
+  const syntax_error_mapping = {
+    SyntaxError,
+    AranSyntaxError: SyntaxError,
+  };
   const inter_procedural_tracking = procedural === "inter";
   /** @type {PrimitiveRegistery} */
   const primitive_registery = new WeakMap();
@@ -629,6 +656,48 @@ export const createAdvice = (
           );
         }
       }
+      if (is(callee, evalGlobal) && input.length > 0) {
+        const code = leaveValue(input[0], primitive_registery);
+        if (typeof code === "string") {
+          try {
+            const path = "dynamic://eval/global";
+            const { content } = record(
+              {
+                path,
+                content: retro(weave(trans(path, "eval", code))),
+              },
+              record_directory,
+            );
+            return enterValue(
+              evalGlobal(content),
+              init_tree_size,
+              primitive_registery,
+            );
+          } catch (error) {
+            throw recreateError(error, syntax_error_mapping);
+          }
+        }
+      }
+      if (is(callee, evalScript) && input.length > 0) {
+        const code = String(leaveValue(input[0], primitive_registery));
+        try {
+          const path = "dynamic://eval/global";
+          const { content } = record(
+            {
+              path,
+              content: retro(weave(trans(path, "script", code))),
+            },
+            record_directory,
+          );
+          return enterValue(
+            evalGlobal(content),
+            init_tree_size,
+            primitive_registery,
+          );
+        } catch (error) {
+          throw recreateError(error, syntax_error_mapping);
+        }
+      }
       {
         const kind = getInternalClosureKind(closure_registery, callee);
         if (kind != null) {
@@ -674,6 +743,23 @@ export const createAdvice = (
       if (getInternalClosureKind(closure_registery, callee) === "function") {
         transit = true;
         return /** @type {Reference} */ (construct(callee, input));
+      }
+      if (callee === Function) {
+        try {
+          const path = "dynamic://function/global";
+          const { content } = record(
+            {
+              path,
+              content: retro(
+                weave(trans(path, "eval", compileFunctionCode(input))),
+              ),
+            },
+            record_directory,
+          );
+          return /** @type {Reference} */ (evalGlobal(content));
+        } catch (error) {
+          throw recreateError(error, syntax_error_mapping);
+        }
       }
       return /** @type {Reference} */ (
         construct(

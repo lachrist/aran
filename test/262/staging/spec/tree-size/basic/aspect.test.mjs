@@ -4,7 +4,7 @@ import { generate } from "astring";
 import { setupile, transpile, retropile } from "aran";
 import { advice_global_variable, weave, createAdvice } from "./aspect.mjs";
 
-const { Reflect, eval: evalGlobal } = globalThis;
+const { Error, SyntaxError, Reflect, eval: evalGlobal, Function } = globalThis;
 
 const intrinsics = evalGlobal(generate(setupile({})));
 
@@ -34,6 +34,33 @@ const digest = (_node, node_path, _file_path, _node_kind) => node_path;
 
 /**
  * @type {(
+ *   path: string,
+ *   kind: "script" | "module" | "eval",
+ *   code: string,
+ * ) => import("aran").Program<import("aran").Atom & { Tag: string} >}
+ */
+const trans = (path, kind, code) =>
+  transpile(
+    {
+      kind,
+      path,
+      root: parse(code, {
+        sourceType: kind === "eval" ? "script" : kind,
+        ecmaVersion: "latest",
+      }),
+    },
+    { digest, global_declarative_record: "builtin" },
+  );
+
+/**
+ * @type {(
+ *   root: import("aran").Program,
+ * ) => string}
+ */
+const retro = (root) => generate(retropile(root, { mode: "normal" }));
+
+/**
+ * @type {(
  *   code: string,
  *   procedural: "inter" | "intra",
  * ) => Branch[]}
@@ -50,37 +77,26 @@ const test = (code, procedural) => {
         createArray: /** @type {any} */ (
           (/** @type {any[]} */ values) => values
         ),
+        // eslint-disable-next-line object-shorthand
+        Function: /** @type {any} */ (Function),
+        evalGlobal,
+        evalScript: (_code) => {
+          throw new Error("evalScript");
+        },
       },
       {
+        SyntaxError,
         procedural,
-        recordBranch: (kind, size, /** @type {string} */ tag) => {
+        recordBranch: (kind, size, tag) => {
           branches.push({ kind, size, tag });
         },
+        record_directory: null,
+        trans,
+        retro,
       },
     ),
   );
-  evalGlobal(
-    generate(
-      retropile(
-        weave(
-          transpile(
-            {
-              kind: "eval",
-              path: "main",
-              root: parse(code, {
-                sourceType: "script",
-                ecmaVersion: "latest",
-              }),
-            },
-            { digest, global_declarative_record: "builtin" },
-          ),
-        ),
-        {
-          mode: "normal",
-        },
-      ),
-    ),
-  );
+  evalGlobal(retro(weave(trans("main", "eval", code))));
   return branches;
 };
 

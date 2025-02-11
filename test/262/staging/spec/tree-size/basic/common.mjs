@@ -35,7 +35,7 @@ const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
  * @type {import("aran").TransConfig}
  */
 const trans_config = {
-  global_declarative_record: "builtin",
+  global_declarative_record: "emulate",
   digest,
 };
 
@@ -59,8 +59,7 @@ const { prepare, trans, retro } = compileAran(
 ////////////
 
 const listPrecursorFailure = await compileListPrecursorFailure([
-  "bare-comp",
-  "bare-main",
+  "linvail/stnd-comp",
 ]);
 
 /**
@@ -147,13 +146,27 @@ export const compileStage = ({ procedural }) => ({
           ),
           createArray: /** @type {any} */ (
             (/** @type {any[]} */ values) =>
-              apply(intrinsics["Array.of"], null, values)
+              apply(intrinsics.globalThis.Array.of, null, values)
           ),
           getValueProperty: /** @type {any} */ (
             intrinsics["aran.getValueProperty"]
           ),
+          Function: /** @type {any} */ (intrinsics.globalThis.Function),
+          evalGlobal: /** @type {any} */ (intrinsics.globalThis.eval),
+          evalScript: /** @type {any} */ (
+            /** @type {{$262: import("../../../../$262").$262}} */ (
+              /** @type {unknown} */ (intrinsics.globalThis)
+            ).$262.evalScript
+          ),
         },
-        { recordBranch, procedural },
+        {
+          SyntaxError: intrinsics.globalThis.SyntaxError,
+          record_directory,
+          recordBranch,
+          procedural,
+          trans,
+          retro,
+        },
       ),
       enumerable: false,
       writable: false,

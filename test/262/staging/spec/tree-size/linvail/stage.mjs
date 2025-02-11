@@ -4,7 +4,7 @@ import {
   createRuntime,
   standard_pointcut as pointcut,
   toStandardAdvice,
-} from "../../../../../../../linvail/lib/runtime/_.mjs";
+} from "linvail";
 import { compileAran } from "../../../aran.mjs";
 import { record } from "../../../../record/index.mjs";
 import { compileListPrecursorFailure } from "../../../failure.mjs";
@@ -40,15 +40,10 @@ const reduce = (array, accumulate, result) => {
 };
 
 /**
- * @typedef {import("../../../../../../../linvail/lib/runtime/domain").InternalPrimitive} InternalPrimitive
- * @typedef {import("../../../../../../../linvail/lib/runtime/domain").ExternalPrimitive} ExternalPrimitive
- * @typedef {import("../../../../../../../linvail/lib/runtime/domain").InternalValue} InternalValue
- * @typedef {import("../../../../../../../linvail/lib/runtime/domain").ExternalValue} ExternalValue
  * @typedef {string & { __brand: "NodeHash" }} NodeHash
  * @typedef {import("aran").Atom & { Tag: NodeHash }} Atom
  * @typedef {number & { __brand: "TreeSize" }} TreeSize
- * @typedef {WeakMap<InternalPrimitive, TreeSize>} Registery
- * @typedef {import("../../../../../../../linvail/lib/runtime/standard").StandardAdvice<NodeHash>} StandardAdvice
+ * @typedef {WeakMap<import("linvail").InternalPrimitive, TreeSize>} Registery
  */
 
 const advice_global_variable = "__ARAN_ADVICE__";
@@ -103,7 +98,7 @@ const init_tree_size = /** @type {TreeSize} */ (1);
 /**
  * @type {(
  *   registery: Registery,
- *   value: InternalValue,
+ *   value: import("linvail").InternalValue,
  * ) => TreeSize}
  */
 const getTreeSize = (registery, value) =>
@@ -112,7 +107,7 @@ const getTreeSize = (registery, value) =>
 /**
  * @type {(
  *   registery: Registery,
- *   primitive: InternalPrimitive,
+ *   primitive: import("linvail").InternalPrimitive,
  *   size: TreeSize,
  * ) => void}
  */
@@ -122,24 +117,24 @@ const registerTreeSize = (registery, primitive, size) => {
 
 /**
  * @type {(
- *   advice: StandardAdvice,
+ *   advice: import("linvail").StandardAdvice<NodeHash>,
  *   config: {
  *     isInternalPrimitive: (
- *       value: InternalValue,
- *     ) => value is InternalPrimitive,
+ *       value: import("linvail").InternalValue,
+ *     ) => value is import("linvail").InternalPrimitive,
  *     enterPrimitive: (
- *       primitive: ExternalPrimitive,
- *     ) => InternalPrimitive,
+ *       primitive: import("linvail").ExternalPrimitive,
+ *     ) => import("linvail").InternalPrimitive,
  *     leavePrimitive: (
- *       primitive: InternalPrimitive,
- *     ) => ExternalPrimitive,
+ *       primitive: import("linvail").InternalPrimitive,
+ *     ) => import("linvail").ExternalPrimitive,
  *     recordBranch: (
  *       kind: import("aran").TestKind,
  *       size: TreeSize,
  *       hash: NodeHash,
  *     ) => void
  *   },
- * ) => StandardAdvice}
+ * ) => import("linvail").StandardAdvice<NodeHash>}
  */
 const updateAdvice = (
   {
@@ -168,7 +163,9 @@ const updateAdvice = (
         initial_state: null,
         pointcut,
       });
-      return /** @type {ExternalValue} */ (/** @type {unknown} */ (root2));
+      return /** @type {import("linvail").ExternalValue} */ (
+        /** @type {unknown} */ (root2)
+      );
     },
     "apply@around": (state, callee, that, input, tag) => {
       const result = adviceApplyAround(state, callee, that, input, tag);
