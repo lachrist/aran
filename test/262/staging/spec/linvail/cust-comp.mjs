@@ -1,6 +1,6 @@
 import { createStage } from "./_common.mjs";
 
 export default createStage({
-  scope: "comp",
-  instrumentation: "cust",
+  instrumentation: "custom",
+  target: "*",
 });
