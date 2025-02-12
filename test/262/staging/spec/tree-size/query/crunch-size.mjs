@@ -131,7 +131,12 @@ const computeEachPercentIncrease = (nums1, nums2) => {
  * @typedef {number & { __brand: "Size" }} Size
  * @typedef {Size[]} Test
  * @typedef {Test[]} Suite
- * @typedef {"intra" | "inter"} SuiteName
+ * @typedef {(
+ *   | "intra-main"
+ *   | "intra-comp"
+ *   | "inter-main"
+ *   | "inter-comp"
+ * )} SuiteName
  * @typedef {Record<SuiteName, Suite>} SuiteRecord
  */
 
@@ -227,8 +232,10 @@ const loadSuiteRecord = async (urls) => {
  * @type {{[key in SuiteName]: null}}
  */
 const suite_name_record = {
-  intra: null,
-  inter: null,
+  "intra-main": null,
+  "intra-comp": null,
+  "inter-main": null,
+  "inter-comp": null,
 };
 
 const suite_name_enum = /** @type {SuiteName[]} */ (
@@ -237,7 +244,7 @@ const suite_name_enum = /** @type {SuiteName[]} */ (
 
 /**
  * @type {(
- *   procedural: "inter" | "intra",
+ *   name: SuiteName,
  * ) => URL}
  */
 const locateStageOutput = (procedural) =>

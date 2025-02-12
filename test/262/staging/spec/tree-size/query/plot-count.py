@@ -2,7 +2,7 @@ import numpy
 import os
 import matplotlib.pyplot as plot
 
-def load ():
+def load (include):
   file = open(
     os.path.abspath(
       os.path.join(
@@ -10,7 +10,7 @@ def load ():
         "..",
         "..",
         "count",
-        "stage-output.txt",
+        "stage-" + include + "-output.txt",
       ),
     ),
   )
@@ -19,7 +19,7 @@ def load ():
   finally:
     file.close();
 
-def plotBar(data, max):
+def plotBar(include, data, max):
   try:
     plot.hist(
       list(filter(lambda x: x <= max, data)),
@@ -37,14 +37,14 @@ def plotBar(data, max):
           "..",
           "..",
           "output",
-          "count-histogram-" + str(max) + ".pdf",
+          "count-" + include + "-histogram-" + str(max) + ".pdf",
         ),
       ),
     );
   finally:
     plot.close()
 
-def plotBox(data):
+def plotBox(include, data):
   try:
     plot.boxplot(
       [data],
@@ -59,7 +59,7 @@ def plotBox(data):
           "..",
           "..",
           "output",
-          "boxplot.pdf",
+          "count-" + include + "-boxplot.pdf",
         ),
       ),
     )
@@ -67,19 +67,20 @@ def plotBox(data):
     plot.close()
 
 def main ():
-  data = load()
-  plotBox(data)
-  for exp in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:
-    threshold = 2 ** exp
-    print(
-      threshold,
-      round(
-        100 * len(list(filter(lambda item: item <= threshold, data))) / len(data),
-        2,
-      ),
-    )
-    if threshold <= 1024:
-      plotBar(data, threshold)
+  for include in ["main", "comp"]:
+    data = load(include)
+    plotBox(include, data)
+    for exp in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:
+      threshold = 2 ** exp
+      print(
+        threshold,
+        round(
+          100 * len(list(filter(lambda item: item <= threshold, data))) / len(data),
+          2,
+        ),
+      )
+      if threshold <= 1024:
+        plotBar(include, data, threshold)
 
 if __name__ == "__main__":
   main()
