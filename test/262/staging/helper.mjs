@@ -188,6 +188,23 @@ export const compileInterceptEval = ({
           throw recreateError(error, syntax_error_mapping);
         }
       }
+      if (callee === internals.Function) {
+        const parts = map(map(input, leaveValue), String);
+        try {
+          const path = toEvalPath(hash);
+          const code = compileFunctionCode(parts);
+          const { content } = record(
+            {
+              path,
+              content: retro(weave(trans(path, "script", code))),
+            },
+            record_directory,
+          );
+          return enterValue(evalGlobal(content));
+        } catch (error) {
+          throw recreateError(error, syntax_error_mapping);
+        }
+      }
       return apply(callee, that, input);
     },
     construct: (callee, input, hash) => {
