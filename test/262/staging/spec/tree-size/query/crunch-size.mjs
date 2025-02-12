@@ -1,8 +1,9 @@
 import { open, writeFile } from "node:fs/promises";
 import { AranExecError } from "../../../../error.mjs";
 import { createInterface } from "node:readline/promises";
+import { parseBranching } from "../branching.mjs";
 
-const { Object, Math, URL, JSON, Array, Infinity, Symbol } = globalThis;
+const { Object, Math, URL, Array, Infinity, Symbol } = globalThis;
 
 //////////
 // Util //
@@ -140,28 +141,6 @@ const computeEachPercentIncrease = (nums1, nums2) => {
 
 /**
  * @type {(
- *   line: string,
- * ) => [Size[], Hash[]]}
- */
-const parseLine = (line) => {
-  const data = JSON.parse(line);
-  if (!Array.isArray(data)) {
-    throw new AranExecError("not an array", { data });
-  }
-  if (data.length % 2 !== 0) {
-    throw new AranExecError("odd length", { data });
-  }
-  const sizes = [];
-  const hashes = [];
-  for (let index = 0; index < data.length; index += 2) {
-    sizes.push(data[index]);
-    hashes.push(data[index + 1]);
-  }
-  return [sizes, hashes];
-};
-
-/**
- * @type {(
  *   hashing: Hash[][],
  *   location: number,
  * ) => void}
@@ -211,10 +190,11 @@ const loadSuiteRecord = async (urls) => {
       if (lines.every(isNotNull)) {
         if (lines.every(isNotEmptyString)) {
           let index = 0;
+          /** @type {Hash[][]} */
           const hashing = [];
-          for (const [sizes, hashes] of lines.map(parseLine)) {
-            suites[index].push(sizes);
-            hashing.push(hashes);
+          for (const [sizes, hashes] of lines.map(parseBranching)) {
+            suites[index].push(/** @type {Size[]} */ (sizes));
+            hashing.push(/** @type {Hash[]} */ (hashes));
             index++;
           }
           verifyHashing(hashing, index);

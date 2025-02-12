@@ -8,14 +8,12 @@ import {
 import { compileAran } from "../../../aran.mjs";
 import { record } from "../../../../record/index.mjs";
 import { compileListPrecursorFailure } from "../../../failure.mjs";
-import { hashFowler32, hashXor16 } from "../../../../util/hash.mjs";
 import { listThresholdExclusion, threshold } from "../threshold.mjs";
 import { AranExecError } from "../../../../error.mjs";
 import { compileInterceptEval, reduce } from "../../../helper.mjs";
+import { printBranching } from "../branching.mjs";
 
 const {
-  JSON,
-  Array,
   URL,
   Object: { assign },
   Reflect: { apply, defineProperty },
@@ -291,15 +289,7 @@ export const createStage = async ({ include }) => {
       }
     },
     teardown: async ({ handle, buffer }) => {
-      const { length } = buffer;
-      /** @type {number[]} */
-      const content = new Array(2 * buffer.length);
-      for (let index = 0; index < length; index++) {
-        const [size, tag] = buffer[index];
-        content[2 * index] = size;
-        content[2 * index + 1] = hashXor16(hashFowler32(tag));
-      }
-      await handle.write(JSON.stringify(content) + "\n");
+      await handle.write(printBranching(buffer) + "\n");
     },
   };
 };
