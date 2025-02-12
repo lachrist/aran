@@ -1,2 +1,2 @@
-12674
-{"kind":"script","path":"built-ins/Function/prototype/call/S15.3.4.4_A6_T8.js","directive":"none","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":[]}
+50834
+{"kind":"script","path":"language/expressions/arrow-function/dstr/ary-ptrn-rest-obj-prop-id.js","directive":"none","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":["destructuring-binding"]}
