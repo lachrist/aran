@@ -43,7 +43,7 @@ const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
 const advice_global_variable = "__ARAN_ADVICE__";
 
-const listPrecursorFailure = await compileListPrecursorFailure(["stnd-full"]);
+const listSlow = await loadTaggingList(["slow"]);
 
 const listNegative = await loadTaggingList(["proxy"]);
 
@@ -215,22 +215,25 @@ const compileWeave = (instrumentation) => {
 /**
  * @type {(
  *   config: {
- *     include: "main" | "*",
+ *     include: "main" | "comp",
  *     instrumentation: "standard" | "custom",
  *   },
- * ) => import("../../stage").Stage<
+ * ) => Promise<import("../../stage").Stage<
  *   import("../../stage").Config,
  *   import("../../stage").Config,
- * >}
+ * >>}
  */
-export const createStage = ({ include, instrumentation }) => {
+export const createStage = async ({ include, instrumentation }) => {
+  const listPrecursorFailure = await compileListPrecursorFailure([
+    `bare-${include}`,
+  ]);
   const { prepare, trans, retro } = compileAran(
     {
       mode: "normal",
       escape_prefix: "__aran__",
       global_object_variable: "globalThis",
       intrinsic_global_variable: "__intrinsic__",
-      global_declarative_record: include === "*" ? "emulate" : "builtin",
+      global_declarative_record: include === "comp" ? "emulate" : "builtin",
       digest,
     },
     toEvalPath,
@@ -242,8 +245,8 @@ export const createStage = ({ include, instrumentation }) => {
     close: async (_config) => {},
     // eslint-disable-next-line require-await
     setup: async (config, [index, { path, directive }]) => {
-      const reasons = listPrecursorFailure(index);
       const specifier = toTestSpecifier(path, directive);
+      const reasons = [...listPrecursorFailure(index), ...listSlow(specifier)];
       if (reasons.length > 0) {
         return { type: "exclude", reasons };
       } else {
@@ -262,17 +265,17 @@ export const createStage = ({ include, instrumentation }) => {
           dir(value, { showHidden: true, showProxy: true });
         },
       });
-      if (include === "*") {
+      if (include === "comp") {
         const { leavePlainInternalReference } = advice;
-        // intrinsics["aran.global_object"] = /** @type {any} */ (
-        //   leavePlainInternalReference(
-        //     /** @type {any} */ ({
-        //       __proto__: enterPlainExternalReference(
-        //         /** @type {any} */ (intrinsics["aran.global_object"]),
-        //       ),
-        //     }),
-        //   )
+        // const global_object = leavePlainInternalReference(
+        //   /** @type {any} */ ({
+        //     __proto__: enterPlainExternalReference(
+        //       /** @type {any} */ (intrinsics["aran.global_object"]),
+        //     ),
+        //   }),
         // );
+        // intrinsics["aran.global_object"] = /** @type {any} */ (global_object);
+        // intrinsics.globalThis = /** @type {any} */ (global_object);
         intrinsics["aran.global_declarative_record"] = /** @type {any} */ (
           leavePlainInternalReference(
             /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
@@ -319,7 +322,7 @@ export const createStage = ({ include, instrumentation }) => {
       { record_directory },
       { type, kind, path, content: code1 },
     ) => {
-      if (include === "*" || type === "main") {
+      if (include === "comp" || type === "main") {
         /** @type {import("aran").Program} */
         const root1 = trans(path, kind, code1);
         const root2 = weave(root1);

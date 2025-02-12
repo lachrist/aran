@@ -1,6 +1,6 @@
 import { createStage } from "./common.mjs";
 
-export default createStage({
+export default await createStage({
   instrumentation: "custom",
-  include: "*",
+  include: "comp",
 });

@@ -49,11 +49,6 @@ const digest = (_node, node_path, file_path, _kind) =>
  */
 const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
-const listPrecursorFailure = await compileListPrecursorFailure([
-  "bare-comp",
-  "bare-main",
-]);
-
 const init_tree_size = /** @type {TreeSize} */ (1);
 
 /**
@@ -159,19 +154,9 @@ const updateAdvice = (
 /**
  * @type {(
  *   config: {
- *     include: "main" | "*",
+ *     include: "main" | "comp",
  *   },
- * ) => string}
- */
-const toOutputName = ({ include }) =>
-  `stage-${include === "*" ? "comp" : "main"}-output.jsonl`;
-
-/**
- * @type {(
- *   config: {
- *     include: "main" | "*",
- *   },
- * ) => import("../../../stage").Stage<
+ * ) => Promise<import("../../../stage").Stage<
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
@@ -182,13 +167,16 @@ const toOutputName = ({ include }) =>
  *     index: import("../../../../test-case").TestIndex,
  *     buffer: [TreeSize, NodeHash][],
  *   },
- * >}
+ * >>}
  */
-export const createStage = ({ include }) => {
+export const createStage = async ({ include }) => {
+  const listPrecursorFailure = await compileListPrecursorFailure([
+    `linvail/stage-stnd-${include}`,
+  ]);
   const { prepare, trans, retro } = compileAran(
     {
       digest,
-      global_declarative_record: include === "*" ? "emulate" : "builtin",
+      global_declarative_record: include === "comp" ? "emulate" : "builtin",
       mode: "normal",
       escape_prefix: "$aran",
       global_object_variable: "globalThis",
@@ -211,7 +199,7 @@ export const createStage = ({ include }) => {
     open: async ({ record_directory }) => ({
       record_directory,
       handle: await open(
-        new URL(toOutputName({ include }), import.meta.url),
+        new URL(`stage-${include}-output.jsonl`, import.meta.url),
         "w",
       ),
     }),
@@ -243,7 +231,7 @@ export const createStage = ({ include }) => {
     prepare: ({ index, buffer, record_directory }, context) => {
       const { intrinsics } = prepare(context, { record_directory });
       const { advice } = createRuntime(intrinsics, { dir });
-      if (include === "*") {
+      if (include === "comp") {
         assign(
           advice,
           interceptGlobalEval({
@@ -285,7 +273,7 @@ export const createStage = ({ include }) => {
       { record_directory },
       { type, kind, path, content: code1 },
     ) => {
-      if (include === "*" || type === "main") {
+      if (include === "comp" || type === "main") {
         const root1 = trans(path, kind, code1);
         const root2 = weave(root1);
         const code2 = retro(root2);

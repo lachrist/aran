@@ -722,27 +722,34 @@ export const createAdvice = (
         apply(
           leaveValue(callee, primitive_registery),
           leaveValue(that, primitive_registery),
-          map(input, (value) => leaveValue(value, primitive_registery)),
+          map(input, (argument) => leaveValue(argument, primitive_registery)),
         ),
         primitive_registery,
       );
     },
     "construct@around": (_transit, callee, input, _tag) => {
-      if (
-        instrument_dynamic_code &&
-        getInternalClosureKind(closure_registery, callee) === "function"
-      ) {
+      if (getInternalClosureKind(closure_registery, callee) === "function") {
         transit = true;
         return /** @type {Reference} */ (construct(callee, input));
       }
-      if (callee === Function) {
+      if (instrument_dynamic_code && callee === Function) {
         try {
           const path = "dynamic://function/global";
           const { content } = record(
             {
               path,
               content: retro(
-                weave(trans(path, "eval", compileFunctionCode(input))),
+                weave(
+                  trans(
+                    path,
+                    "eval",
+                    compileFunctionCode(
+                      map(input, (argument) =>
+                        leaveValue(argument, primitive_registery),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             },
             record_directory,

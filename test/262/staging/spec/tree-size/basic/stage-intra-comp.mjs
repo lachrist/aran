@@ -1,6 +1,6 @@
 import { compileStage } from "./common.mjs";
 
-export default compileStage({
+export default await compileStage({
   procedural: "intra",
-  include: "*",
+  include: "comp",
 });

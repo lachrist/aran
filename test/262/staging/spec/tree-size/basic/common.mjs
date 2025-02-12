@@ -31,28 +31,13 @@ const digest = (_node, node_path, file_path, _kind) =>
  */
 const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
-const listPrecursorFailure = await compileListPrecursorFailure([
-  "linvail/stage-stnd-comp",
-]);
-
 /**
  * @type {(
  *   config: {
  *     procedural: "inter" | "intra",
- *     include: "main" | "*",
+ *     include: "main" | "comp",
  *   },
- * ) => string}
- */
-const toOutputName = ({ procedural, include }) =>
-  `stage-${procedural}-${include === "*" ? "comp" : "main"}-output.jsonl`;
-
-/**
- * @type {(
- *   config: {
- *     procedural: "inter" | "intra",
- *     include: "main" | "*",
- *   },
- * ) => import("../../../stage").Stage<
+ * ) => Promise<import("../../../stage").Stage<
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
@@ -63,13 +48,16 @@ const toOutputName = ({ procedural, include }) =>
  *     index: import("../../../../test-case").TestIndex,
  *     buffer: [number, NodeHash][],
  *   },
- * >}
+ * >>}
  */
-export const compileStage = ({ procedural, include }) => {
+export const compileStage = async ({ procedural, include }) => {
+  const listPrecursorFailure = await compileListPrecursorFailure([
+    `linvail/stage-stnd-${include}`,
+  ]);
   const { prepare, trans, retro } = compileAran(
     {
       digest,
-      global_declarative_record: include === "*" ? "emulate" : "builtin",
+      global_declarative_record: include === "comp" ? "emulate" : "builtin",
       mode: "normal",
       escape_prefix: "$aran",
       global_object_variable: "globalThis",
@@ -81,7 +69,7 @@ export const compileStage = ({ procedural, include }) => {
     open: async ({ record_directory }) => ({
       record_directory,
       handle: await open(
-        new URL(toOutputName({ procedural, include }), import.meta.url),
+        new URL(`stage-${procedural}-${include}-output.jsonl`, import.meta.url),
         "w",
       ),
     }),
@@ -157,7 +145,7 @@ export const compileStage = ({ procedural, include }) => {
             ),
           },
           {
-            instrument_dynamic_code: include === "*",
+            instrument_dynamic_code: include === "comp",
             SyntaxError: intrinsics.globalThis.SyntaxError,
             record_directory,
             recordBranch,
@@ -180,7 +168,7 @@ export const compileStage = ({ procedural, include }) => {
       { record_directory },
       { type, kind, path, content: code1 },
     ) => {
-      if (include === "*" || type === "main") {
+      if (include === "comp" || type === "main") {
         const root1 = trans(path, kind, code1);
         const root2 = weave(root1);
         const code2 = retro(root2);
