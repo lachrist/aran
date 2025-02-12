@@ -1,2 +1,1 @@
-45189
-{"kind":"script","path":"built-ins/eval/not-a-constructor.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js","isConstructor.js"],"features":["Reflect.construct","arrow-function"]}
+0

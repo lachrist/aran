@@ -144,7 +144,7 @@ export const compileInterceptEval = ({
   record_directory,
 }) => {
   const syntax_error_mapping = {
-    SyntaxError: globalThis.SyntaxError,
+    SyntaxError,
     AranSyntaxError: SyntaxError,
   };
   const internals = {
