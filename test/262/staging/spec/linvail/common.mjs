@@ -1,6 +1,7 @@
 import {
   createRuntime,
   standard_pointcut as pointcut,
+  toStandardAdvice,
   weave as weaveCustomInner,
 } from "linvail";
 import { weaveStandard as weaveStandardInner } from "aran";
@@ -30,10 +31,6 @@ const digest = (_node, node_path, file_path, _kind) =>
 const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
 const advice_global_variable = "__ARAN_ADVICE__";
-
-const listSlow = await loadTaggingList(["slow"]);
-
-const listNegative = await loadTaggingList(["proxy"]);
 
 /**
  * @type {(
@@ -80,6 +77,10 @@ const compileWeave = (instrumentation) => {
  * >>}
  */
 export const createStage = async ({ include, instrumentation }) => {
+  const listSlow = await loadTaggingList(["slow"]);
+  const listNegative = await loadTaggingList(
+    include === "comp" ? ["proxy", "elusive-dynamic-code"] : ["proxy"],
+  );
   const listPrecursorFailure = await compileListPrecursorFailure([
     `bare-${include}`,
   ]);
@@ -162,6 +163,7 @@ export const createStage = async ({ include, instrumentation }) => {
         const { apply, construct, internalize, enterValue, leaveValue } =
           advice;
         const internal_global = internalize(external_global);
+        /** @type {any} */ (internal_global).globalThis = internal_global;
         intrinsics.globalThis = /** @type {any} */ (internal_global);
         intrinsics["aran.global_object"] = /** @type {any} */ (internal_global);
         intrinsics["aran.global_declarative_record"] = /** @type {any} */ (
@@ -192,7 +194,10 @@ export const createStage = async ({ include, instrumentation }) => {
       {
         const descriptor = {
           __proto__: null,
-          value: { ...advice, weaveEvalProgram: weave },
+          value:
+            instrumentation === "standard"
+              ? toStandardAdvice({ ...advice, weaveEvalProgram: weave })
+              : { ...advice, weaveEvalProgram: weave },
           enumerable: false,
           writable: false,
           configurable: false,

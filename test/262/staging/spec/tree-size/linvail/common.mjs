@@ -8,7 +8,7 @@ import {
 import { compileAran } from "../../../aran.mjs";
 import { record } from "../../../../record/index.mjs";
 import { compileListPrecursorFailure } from "../../../failure.mjs";
-import { listThresholdExclusion, threshold } from "../threshold.mjs";
+import { compileListThresholdExclusion, threshold } from "../threshold.mjs";
 import { AranExecError } from "../../../../error.mjs";
 import { compileInterceptEval, reduce } from "../../../helper.mjs";
 import { printBranching } from "../branching.mjs";
@@ -192,6 +192,7 @@ export const createStage = async ({ include }) => {
       pointcut,
       initial_state: null,
     });
+  const listThresholdExclusion = await compileListThresholdExclusion(include);
   return {
     open: async ({ record_directory }) => ({
       record_directory,

@@ -4,21 +4,16 @@ import { createInterface } from "node:readline/promises";
 
 const { Set, URL, isNaN, parseInt, Infinity } = globalThis;
 
-/**
- * @typedef {{
- *   specifier: import("../../../result").TestSpecifier,
- *   count: number,
- * }} Entry
- */
-
-export const threshold = 512;
+export const threshold = 1024;
 
 /**
- * @type {() => Promise<Set<import("../../../test-case").TestIndex>>}
+ * @type {(
+ *   include: "main" | "comp",
+ * ) => Promise<Set<import("../../../test-case").TestIndex>>}
  */
-const loadThresholdExclusion = async () => {
+const loadThresholdExclusion = async (include) => {
   const handle = await open(
-    new URL("count/stage-output.txt", import.meta.url),
+    new URL(`count/stage-${include}-output.txt`, import.meta.url),
     "r",
   );
   try {
@@ -49,14 +44,17 @@ const loadThresholdExclusion = async () => {
   }
 };
 
-const exclusion = await loadThresholdExclusion();
-
 /**
  * @type {(
+ *   include: "main" | "comp",
+ * ) => Promise<(
  *   index: import("../../../test-case").TestIndex,
- * ) => import("../../../tagging/tag").Tag[]}
+ * ) => import("../../../tagging/tag").Tag[]>}
  */
-export const listThresholdExclusion = (index) =>
-  exclusion.has(index)
-    ? [/** @type {import("../../../tagging/tag").Tag} */ ("threshold")]
-    : [];
+export const compileListThresholdExclusion = async (include) => {
+  const exclusion = await loadThresholdExclusion(include);
+  return (index) =>
+    exclusion.has(index)
+      ? [/** @type {import("../../../tagging/tag").Tag} */ ("threshold")]
+      : [];
+};

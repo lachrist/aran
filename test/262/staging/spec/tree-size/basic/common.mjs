@@ -9,7 +9,7 @@ import {
 } from "./aspect.mjs";
 import { open } from "node:fs/promises";
 import { compileListPrecursorFailure } from "../../../failure.mjs";
-import { listThresholdExclusion, threshold } from "../threshold.mjs";
+import { compileListThresholdExclusion, threshold } from "../threshold.mjs";
 import { AranExecError } from "../../../../error.mjs";
 import { printBranching } from "../branching.mjs";
 
@@ -52,6 +52,7 @@ export const compileStage = async ({ procedural, include }) => {
     },
     toEvalPath,
   );
+  const listThresholdExclusion = await compileListThresholdExclusion(include);
   return {
     open: async ({ record_directory }) => ({
       record_directory,

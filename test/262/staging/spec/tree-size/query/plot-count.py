@@ -73,6 +73,7 @@ def main ():
     for exp in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:
       threshold = 2 ** exp
       print(
+        include,
         threshold,
         round(
           100 * len(list(filter(lambda item: item <= threshold, data))) / len(data),
@@ -85,15 +86,27 @@ def main ():
 if __name__ == "__main__":
   main()
 
-# 32 36.66
-# 64 62.23
-# 128 80.9
-# 256 90.74
-# 512 95.52
-# 1024 97.38
-# 2048 98.0
-# 4096 98.35
-# 8192 98.69
-# 16384 98.93
-# 32768 99.05
-# 65536 99.08
+# main 32 93.19
+# main 64 97.2
+# main 128 98.31
+# main 256 98.97
+# main 512 99.29
+# main 1024 99.54
+# main 2048 99.72
+# main 4096 99.85
+# main 8192 99.93
+# main 16384 99.97
+# main 32768 99.99
+# main 65536 100.0
+# comp 32 0.04
+# comp 64 20.63
+# comp 128 55.61
+# comp 256 80.95
+# comp 512 92.22
+# comp 1024 97.13
+# comp 2048 98.6
+# comp 4096 99.07
+# comp 8192 99.42
+# comp 16384 99.68
+# comp 32768 99.85
+# comp 65536 99.89

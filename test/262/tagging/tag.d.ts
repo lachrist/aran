@@ -1,9 +1,10 @@
-export type Tag =
+export type Tag = 
   | "arguments-two-way-binding"
   | "async-iterator-async-value"
   | "call-async-done-with-module"
   | "duplicate-constant-global-function"
   | "dynamic-function-string-representation"
+  | "elusive-dynamic-code"
   | "function-dynamic-property"
   | "function-string-representation"
   | "invalid-metadata-header"

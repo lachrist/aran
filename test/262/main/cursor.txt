@@ -1,2 +1,2 @@
-641
-{"kind":"script","path":"annexB/language/eval-code/direct/global-block-decl-eval-global-existing-global-init.js","directive":"none","negative":null,"asynchronous":false,"includes":["assert.js","sta.js","fnGlobalObject.js","propertyHelper.js"],"features":[]}
+12674
+{"kind":"script","path":"built-ins/Function/prototype/call/S15.3.4.4_A6_T8.js","directive":"none","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":[]}
