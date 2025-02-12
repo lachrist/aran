@@ -132,18 +132,40 @@ export const createStage = async ({ include, instrumentation }) => {
         },
       });
       if (include === "comp") {
-        const { leavePlainInternalReference } = advice;
-        // const global_object = leavePlainInternalReference(
-        //   /** @type {any} */ ({
-        //     __proto__: enterPlainExternalReference(
-        //       /** @type {any} */ (intrinsics["aran.global_object"]),
-        //     ),
-        //   }),
-        // );
-        // intrinsics["aran.global_object"] = /** @type {any} */ (global_object);
-        // intrinsics.globalThis = /** @type {any} */ (global_object);
+        /**
+         * @type {import("linvail").PlainExternalReference & {
+         *   Function: import("linvail").ExternalValue,
+         *   String: (value: import("linvail").ExternalValue) => string,
+         *   SyntaxError: new (message: string) => unknown,
+         *   $262: {
+         *     evalScript: (
+         *       & import("linvail").ExternalValue
+         *       & ((code: string) => import("linvail").ExternalValue)
+         *     ),
+         *   },
+         *   eval: (
+         *     & ((code: string) => import("linvail").ExternalValue)
+         *     & import("linvail").ExternalValue
+         *   ),
+         * }}
+         */
+        const external_global = /** @type {any} */ (
+          intrinsics["aran.global_object"]
+        );
+        const {
+          eval: evalGlobal,
+          String,
+          Function,
+          SyntaxError,
+          $262: { evalScript },
+        } = external_global;
+        const { apply, construct, internalize, enterValue, leaveValue } =
+          advice;
+        const internal_global = internalize(external_global);
+        intrinsics.globalThis = /** @type {any} */ (internal_global);
+        intrinsics["aran.global_object"] = /** @type {any} */ (internal_global);
         intrinsics["aran.global_declarative_record"] = /** @type {any} */ (
-          leavePlainInternalReference(
+          internalize(
             /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
           )
         );
@@ -154,16 +176,15 @@ export const createStage = async ({ include, instrumentation }) => {
             weave,
             trans,
             retro,
-            evalGlobal: /** @type {any} */ (intrinsics.globalThis.eval),
-            evalScript: /** @type {any} */ (intrinsics.globalThis).$262
-              .evalScript,
-            Function: /** @type {any} */ (intrinsics.globalThis.Function),
-            String: intrinsics.globalThis.String,
-            SyntaxError: intrinsics.globalThis.SyntaxError,
-            enterValue: advice.enterValue,
-            leaveValue: advice.leaveValue,
-            apply: advice.apply,
-            construct: advice.construct,
+            evalGlobal,
+            evalScript,
+            Function,
+            String,
+            SyntaxError,
+            enterValue,
+            leaveValue,
+            apply,
+            construct,
             record_directory,
           }),
         );
