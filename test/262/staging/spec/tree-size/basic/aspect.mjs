@@ -1,11 +1,8 @@
 import { weaveStandard } from "aran";
 import { AranExecError } from "../../../../error.mjs";
-import { compileFunctionCode, map, reduce } from "../../../helper.mjs";
-import { record } from "../../../../record/index.mjs";
-import { recreateError } from "../../../../util/index.mjs";
+import { compileInterceptEval, map, reduce } from "../../../helper.mjs";
 
 const {
-  String,
   Error,
   Object: { keys, hasOwn, is },
   Reflect: { apply },
@@ -23,8 +20,9 @@ const listKey = /**
  * @typedef {WeakMap<InternalPrimitive, TreeSize>} PrimitiveRegistery
  * @typedef {WeakMap<Reference, import("aran").ClosureKind>} ClosureRegistery
  * @typedef {WeakMap<Reference, InternalValue[]>} InputRegistery
- * @typedef {import("aran").Atom & { Tag: import("aran").Json }} Atom
- * @typedef {import("aran").EstreeNodePath} NodeHash
+ * @typedef {string & { __brand: "NodeHash" }} NodeHash
+ * @typedef {import("aran").Atom & { Tag: NodeHash }} Atom
+ * @typedef {string & { __brand: "FilePath" }} FilePath
  * @typedef {(
  *   | undefined
  *   | null
@@ -186,7 +184,7 @@ const internal_program_transit = true;
 /**
  * @type {(
  *   root: import("aran").Program<Atom>,
- * ) => import("aran").Program}
+ * ) => import("aran").Program<Atom>}
  */
 export const weave = (root) =>
   weaveStandard(root, {
@@ -194,6 +192,20 @@ export const weave = (root) =>
     initial_state: external_program_transit,
     pointcut,
   });
+
+/**
+ * @type {import("aran").Digest<{
+ *   NodeHash: NodeHash,
+ * }>}
+ */
+export const digest = (_node, node_path, file_path, _kind) =>
+  /** @type {NodeHash} */ (`${file_path}:${node_path}`);
+
+/**
+ * @type {(hash: NodeHash) => FilePath}
+ */
+export const toEvalPath = (hash) =>
+  /** @type {FilePath} */ (`dynamic://eval/local/${hash}`);
 
 ////////////
 // Advice //
@@ -293,71 +305,6 @@ const getInternalClosureKind = (registery, value) =>
 
 /**
  * @type {(
- *   callee: InternalValue,
- *   that: InternalValue,
- *   input: InternalValue[],
- *   result: InternalValue,
- *   registery: PrimitiveRegistery,
- * ) => InternalValue}
- */
-const updateInternalResultTreeSize = (
-  callee,
-  that,
-  input,
-  result,
-  registery,
-) => {
-  if (isInternalPrimitive(result, registery)) {
-    return enterPrimitive(
-      leavePrimitive(result),
-      init_tree_size +
-        getTreeSize(callee, registery) +
-        getTreeSize(that, registery) +
-        reduce(
-          input,
-          (size, value) => size + getTreeSize(value, registery),
-          0,
-        ) +
-        getTreeSize(result, registery),
-      registery,
-    );
-  } else {
-    return result;
-  }
-};
-
-/**
- * @type {(
- *   callee: InternalValue,
- *   that: InternalValue,
- *   input: InternalValue[],
- *   result: ExternalValue,
- *   registery: PrimitiveRegistery,
- * ) => InternalValue}
- */
-const updateExternalResultTreeSize = (
-  callee,
-  that,
-  input,
-  result,
-  registery,
-) => {
-  if (isExternalPrimitive(result)) {
-    return enterPrimitive(
-      result,
-      init_tree_size +
-        getTreeSize(callee, registery) +
-        getTreeSize(that, registery) +
-        reduce(input, (size, value) => size + getTreeSize(value, registery), 0),
-      registery,
-    );
-  } else {
-    return result;
-  }
-};
-
-/**
- * @type {(
  *   registery: null | InputRegistery,
  *   reference: Reference,
  *   input: InternalValue[],
@@ -381,11 +328,26 @@ const recoverInput = (registery, candidate) =>
     : null;
 
 /**
- * @type {<T extends import("aran").Json>(
- *   intrinscs: {
- *     Function: Reference,
- *     evalScript: (code: string) => ExternalValue,
- *     evalGlobal: (code: string) => ExternalValue,
+ * @type {(
+ *   config: {
+ *     toEvalPath: (hash: NodeHash) => FilePath,
+ *     trans: (
+ *       path: FilePath,
+ *       kind: "eval" | "module" | "script",
+ *       code: string,
+ *     ) => import("aran").Program<Atom>,
+ *     weave: (
+ *       root: import("aran").Program<Atom>,
+ *     ) => import("aran").Program<Atom>,
+ *     retro: (
+ *       root: import("aran").Program<Atom>,
+ *     ) => string,
+ *     evalGlobal: ExternalValue & ((code: string) => ExternalValue),
+ *     evalScript: ExternalValue & ((code: string) => ExternalValue),
+ *     Function: ExternalValue,
+ *     SyntaxError: new (message: string) => unknown,
+ *     String: (external: ExternalValue) => string,
+ *     instrument_dynamic_code: boolean,
  *     apply: {
  *       (
  *         callee: ExternalValue,
@@ -413,57 +375,42 @@ const recoverInput = (registery, candidate) =>
  *       object: ExternalValue,
  *       key: ExternalValue,
  *     ) => ExternalValue,
- *   },
- *   config: {
- *     instrument_dynamic_code: boolean,
- *     SyntaxError: new (message: string) => unknown,
  *     record_directory: null | URL,
  *     recordBranch: (
  *       kind: import("aran").TestKind,
  *       size: TreeSize,
- *       tag: T,
+ *       tag: NodeHash,
  *     ) => void,
  *     procedural: "inter" | "intra",
- *     trans: (
- *       path: string,
- *       kind: "script" | "module" | "eval",
- *       code: string,
- *     ) => import("aran").Program<Atom & { Tag: T }>,
- *     retro: (root: import("aran").Program) => string,
  *   },
  * ) => import("aran").StandardAdvice<{
  *   State: boolean,
- *   Tag: T,
+ *   Tag: NodeHash,
  *   Kind: AspectKind,
  *   ScopeValue: InternalValue,
  *   StackValue: InternalValue,
  *   OtherValue: InternalValue | ExternalValue,
  * }>}
  */
-export const createAdvice = (
-  {
-    Function,
-    evalGlobal,
-    evalScript,
-    apply,
-    construct,
-    getValueProperty,
-    createArray,
-  },
-  {
-    instrument_dynamic_code,
-    SyntaxError,
-    record_directory,
-    recordBranch,
-    procedural,
-    trans,
-    retro,
-  },
-) => {
-  const syntax_error_mapping = {
-    SyntaxError,
-    AranSyntaxError: SyntaxError,
-  };
+export const createAdvice = ({
+  toEvalPath,
+  weave,
+  trans,
+  retro,
+  SyntaxError,
+  String,
+  evalGlobal,
+  evalScript,
+  Function,
+  instrument_dynamic_code,
+  apply: applyInner,
+  construct: constructInner,
+  getValueProperty,
+  createArray,
+  recordBranch,
+  record_directory,
+  procedural,
+}) => {
   const inter_procedural_tracking = procedural === "inter";
   /** @type {PrimitiveRegistery} */
   const primitive_registery = new WeakMap();
@@ -472,6 +419,94 @@ export const createAdvice = (
   /** @type {null | InputRegistery} */
   const input_registery = inter_procedural_tracking ? new WeakMap() : null;
   let transit = false;
+  /**
+   * @type {(
+   *   callee: InternalValue,
+   *   that: InternalValue,
+   *   input: InternalValue[],
+   * ) => InternalValue}
+   */
+  const applyOuter = (callee, that, input) => {
+    if (is(callee, getValueProperty) && input.length === 2) {
+      const { 0: int_obj, 1: int_key } = input;
+      const obj = leaveValue(int_obj, primitive_registery);
+      const key = leaveValue(int_key, primitive_registery);
+      const args = recoverInput(input_registery, int_obj);
+      const result = getValueProperty(obj, key);
+      if (args && typeof key === "number" && key < args.length) {
+        const arg = args[key];
+        return is(leaveValue(arg, primitive_registery), result)
+          ? arg
+          : enterValue(result, init_tree_size, primitive_registery);
+      } else {
+        return enterValue(result, init_tree_size, primitive_registery);
+      }
+    }
+    {
+      const kind = getInternalClosureKind(closure_registery, callee);
+      if (kind != null) {
+        // If callee is an internal closure:
+        //   - Apply cannot throw before reaching block@declaration-overwrite.
+        //   - It cannot be a Proxy as it directly comes from a literal closure.
+        transit = true;
+        const result = applyInner(callee, that, input);
+        if (isInternalResult(result, kind)) {
+          return result;
+        } else if (isExternalResult(result, kind)) {
+          return enterValue(result, init_tree_size, primitive_registery);
+        } else {
+          throw new Error(`unexpected closure kind, got: ${kind}`);
+        }
+      }
+    }
+    return enterValue(
+      applyInner(
+        leaveValue(callee, primitive_registery),
+        leaveValue(that, primitive_registery),
+        map(input, (argument) => leaveValue(argument, primitive_registery)),
+      ),
+      init_tree_size,
+      primitive_registery,
+    );
+  };
+  /**
+   * @type {(
+   *   callee: InternalValue,
+   *   input: InternalValue[],
+   * ) => InternalValue}
+   */
+  const constructOuter = (callee, input) => {
+    if (getInternalClosureKind(closure_registery, callee) === "function") {
+      transit = true;
+      return constructInner(callee, input);
+    }
+    return constructInner(
+      leaveValue(callee, primitive_registery),
+      map(input, (value) => leaveValue(value, primitive_registery)),
+    );
+  };
+  const { apply, construct } = instrument_dynamic_code
+    ? compileInterceptEval({
+        toEvalPath,
+        weave,
+        trans,
+        retro,
+        evalGlobal,
+        evalScript,
+        enterValue: (value) =>
+          enterValue(value, init_tree_size, primitive_registery),
+        leaveValue: (value) => leaveValue(value, primitive_registery),
+        String,
+        SyntaxError,
+        Function,
+        apply: applyOuter,
+        construct: constructOuter,
+        record_directory,
+      })
+    : {
+        apply: applyOuter,
+        construct: constructOuter,
+      };
   return {
     "block@setup": (state, kind, _tag) => {
       if (isClosureKind(kind)) {
@@ -603,168 +638,26 @@ export const createAdvice = (
       return /** @type {ExternalValue} */ (/** @type {unknown} */ (root2));
     },
     // around //
-    "apply@around": (_transit, callee, that, input, _tag) => {
-      if (is(callee, getValueProperty) && input.length === 2) {
-        const { 0: int_obj, 1: int_key } = input;
-        const obj = leaveValue(int_obj, primitive_registery);
-        const key = leaveValue(int_key, primitive_registery);
-        const args = recoverInput(input_registery, int_obj);
-        const result = getValueProperty(obj, key);
-        if (args && typeof key === "number" && key < args.length) {
-          const arg = args[key];
-          // Check for out-of-sync
-          if (is(leaveValue(arg, primitive_registery), result)) {
-            return updateInternalResultTreeSize(
-              callee,
-              that,
-              input,
-              arg,
-              primitive_registery,
-            );
-          }
-        } else {
-          return updateExternalResultTreeSize(
-            callee,
-            that,
+    "apply@around": (_transit, callee, that, input, tag) => {
+      const result = apply(callee, that, input, tag);
+      if (isInternalPrimitive(result, primitive_registery)) {
+        return enterPrimitive(
+          leavePrimitive(result),
+          reduce(
             input,
-            result,
-            primitive_registery,
-          );
-        }
+            (size, value) => size + getTreeSize(value, primitive_registery),
+            1 +
+              getTreeSize(callee, primitive_registery) +
+              getTreeSize(that, primitive_registery) +
+              getTreeSize(result, primitive_registery),
+          ),
+          primitive_registery,
+        );
+      } else {
+        return result;
       }
-      if (
-        instrument_dynamic_code &&
-        is(callee, evalGlobal) &&
-        input.length > 0
-      ) {
-        const code = leaveValue(input[0], primitive_registery);
-        if (typeof code === "string") {
-          try {
-            const path = "dynamic://eval/global";
-            const { content } = record(
-              {
-                path,
-                content: retro(weave(trans(path, "eval", code))),
-              },
-              record_directory,
-            );
-            return updateExternalResultTreeSize(
-              callee,
-              that,
-              input,
-              evalGlobal(content),
-              primitive_registery,
-            );
-          } catch (error) {
-            throw recreateError(error, syntax_error_mapping);
-          }
-        }
-      }
-      if (
-        instrument_dynamic_code &&
-        is(callee, evalScript) &&
-        input.length > 0
-      ) {
-        const code = String(leaveValue(input[0], primitive_registery));
-        try {
-          const path = "dynamic://eval/global";
-          const { content } = record(
-            {
-              path,
-              content: retro(weave(trans(path, "script", code))),
-            },
-            record_directory,
-          );
-          return updateExternalResultTreeSize(
-            callee,
-            that,
-            input,
-            evalScript(content),
-            primitive_registery,
-          );
-        } catch (error) {
-          throw recreateError(error, syntax_error_mapping);
-        }
-      }
-      {
-        const kind = getInternalClosureKind(closure_registery, callee);
-        if (kind != null) {
-          // If callee is an internal closure:
-          //   - Apply cannot throw before reaching block@declaration-overwrite.
-          //   - It cannot be a Proxy as it directly comes from a literal closure.
-          transit = true;
-          const result = apply(callee, that, input);
-          if (isInternalResult(result, kind)) {
-            return updateInternalResultTreeSize(
-              callee,
-              that,
-              input,
-              result,
-              primitive_registery,
-            );
-          } else if (isExternalResult(result, kind)) {
-            return updateExternalResultTreeSize(
-              callee,
-              that,
-              input,
-              result,
-              primitive_registery,
-            );
-          } else {
-            throw new Error(`unexpected closure kind, got: ${kind}`);
-          }
-        }
-      }
-      return updateExternalResultTreeSize(
-        callee,
-        that,
-        input,
-        apply(
-          leaveValue(callee, primitive_registery),
-          leaveValue(that, primitive_registery),
-          map(input, (argument) => leaveValue(argument, primitive_registery)),
-        ),
-        primitive_registery,
-      );
     },
-    "construct@around": (_transit, callee, input, _tag) => {
-      if (getInternalClosureKind(closure_registery, callee) === "function") {
-        transit = true;
-        return /** @type {Reference} */ (construct(callee, input));
-      }
-      if (instrument_dynamic_code && callee === Function) {
-        try {
-          const path = "dynamic://function/global";
-          const { content } = record(
-            {
-              path,
-              content: retro(
-                weave(
-                  trans(
-                    path,
-                    "eval",
-                    compileFunctionCode(
-                      map(input, (argument) =>
-                        leaveValue(argument, primitive_registery),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            },
-            record_directory,
-          );
-          return /** @type {Reference} */ (evalGlobal(content));
-        } catch (error) {
-          throw recreateError(error, syntax_error_mapping);
-        }
-      }
-      return /** @type {Reference} */ (
-        construct(
-          leaveValue(callee, primitive_registery),
-          map(input, (value) => leaveValue(value, primitive_registery)),
-        )
-      );
-    },
+    "construct@around": (_transit, callee, input, tag) =>
+      construct(callee, input, tag),
   };
 };

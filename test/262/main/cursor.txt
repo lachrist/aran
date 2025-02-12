@@ -1,2 +1,2 @@
-25008
-{"kind":"script","path":"built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js","regExpUtils.js"],"features":["String.fromCodePoint"]}
+45189
+{"kind":"script","path":"built-ins/eval/not-a-constructor.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js","isConstructor.js"],"features":["Reflect.construct","arrow-function"]}

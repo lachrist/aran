@@ -1,6 +1,12 @@
 import { compileAran } from "../../../aran.mjs";
 import { record } from "../../../../record/index.mjs";
-import { advice_global_variable, createAdvice, weave } from "./aspect.mjs";
+import {
+  advice_global_variable,
+  createAdvice,
+  digest,
+  toEvalPath,
+  weave,
+} from "./aspect.mjs";
 import { open } from "node:fs/promises";
 import { compileListPrecursorFailure } from "../../../failure.mjs";
 import { hashFowler32, hashXor16 } from "../../../../util/hash.mjs";
@@ -13,23 +19,6 @@ const {
   URL,
   Reflect: { apply, defineProperty },
 } = globalThis;
-
-/**
- * @typedef {string & { __brand: "NodeHash" }} NodeHash
- */
-
-/**
- * @type {import("aran").Digest<{
- *   NodeHash: NodeHash,
- * }>}
- */
-const digest = (_node, node_path, file_path, _kind) =>
-  /** @type {NodeHash} */ (`${file_path}:${node_path}`);
-
-/**
- * @type {(hash: NodeHash) => string}
- */
-const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
 /**
  * @type {(
@@ -46,7 +35,7 @@ const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
  *     index: import("../../../../test-case").TestIndex,
- *     buffer: [number, NodeHash][],
+ *     buffer: [number, import("./aspect.mjs").NodeHash][],
  *   },
  * >>}
  */
@@ -104,7 +93,7 @@ export const compileStage = async ({ procedural, include }) => {
        * @type {(
        *   kind: import("aran").TestKind,
        *   size: number,
-       *   hash: NodeHash,
+       *   hash: import("./aspect.mjs").NodeHash,
        * ) => void}
        */
       const recordBranch = (kind, size, hash) => {
@@ -119,41 +108,41 @@ export const compileStage = async ({ procedural, include }) => {
         }
         buffer.push([size, hash]);
       };
+      const advice = createAdvice({
+        instrument_dynamic_code: include === "comp",
+        toEvalPath,
+        trans,
+        weave,
+        retro,
+        apply: /** @type {any} */ (
+          intrinsics["aran.global_object"].Reflect.apply
+        ),
+        construct: /** @type {any} */ (
+          intrinsics["aran.global_object"].Reflect.construct
+        ),
+        createArray: /** @type {any} */ (
+          (/** @type {any[]} */ values) =>
+            apply(intrinsics.globalThis.Array.of, null, values)
+        ),
+        getValueProperty: /** @type {any} */ (
+          intrinsics["aran.getValueProperty"]
+        ),
+        procedural,
+        record_directory,
+        recordBranch,
+        Function: /** @type {any} */ (intrinsics.globalThis.Function),
+        evalGlobal: /** @type {any} */ (intrinsics.globalThis.eval),
+        evalScript: /** @type {any} */ (
+          /** @type {{$262: import("../../../../$262").$262}} */ (
+            /** @type {unknown} */ (intrinsics.globalThis)
+          ).$262.evalScript
+        ),
+        String: intrinsics.globalThis.String,
+        SyntaxError: intrinsics.globalThis.SyntaxError,
+      });
       const descriptor = {
         __proto__: null,
-        value: createAdvice(
-          {
-            apply: /** @type {any} */ (
-              intrinsics["aran.global_object"].Reflect.apply
-            ),
-            construct: /** @type {any} */ (
-              intrinsics["aran.global_object"].Reflect.construct
-            ),
-            createArray: /** @type {any} */ (
-              (/** @type {any[]} */ values) =>
-                apply(intrinsics.globalThis.Array.of, null, values)
-            ),
-            getValueProperty: /** @type {any} */ (
-              intrinsics["aran.getValueProperty"]
-            ),
-            Function: /** @type {any} */ (intrinsics.globalThis.Function),
-            evalGlobal: /** @type {any} */ (intrinsics.globalThis.eval),
-            evalScript: /** @type {any} */ (
-              /** @type {{$262: import("../../../../$262").$262}} */ (
-                /** @type {unknown} */ (intrinsics.globalThis)
-              ).$262.evalScript
-            ),
-          },
-          {
-            instrument_dynamic_code: include === "comp",
-            SyntaxError: intrinsics.globalThis.SyntaxError,
-            record_directory,
-            recordBranch,
-            procedural,
-            trans,
-            retro,
-          },
-        ),
+        value: advice,
         enumerable: false,
         writable: false,
         configurable: false,
@@ -169,7 +158,11 @@ export const compileStage = async ({ procedural, include }) => {
       { type, kind, path, content: code1 },
     ) => {
       if (include === "comp" || type === "main") {
-        const root1 = trans(path, kind, code1);
+        const root1 = trans(
+          /** @type {import("./aspect.mjs").FilePath} */ (path),
+          kind,
+          code1,
+        );
         const root2 = weave(root1);
         const code2 = retro(root2);
         return record({ path, content: code2 }, record_directory);

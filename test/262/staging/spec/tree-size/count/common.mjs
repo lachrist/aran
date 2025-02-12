@@ -5,13 +5,15 @@ import { compileAran } from "../../../aran.mjs";
 import { AranTypeError } from "../../../../error.mjs";
 import { record } from "../../../../record/index.mjs";
 import { compileListPrecursorFailure } from "../../../failure.mjs";
-import { recreateError } from "../../../../util/error.mjs";
-import { compileFunctionCode, map } from "../../../helper.mjs";
+import {
+  compileInterceptEval,
+  listEntry,
+  listKey,
+  map,
+} from "../../../helper.mjs";
 
 const {
-  String,
   URL,
-  Object: { keys },
   Array: { from: toArray },
   Reflect: { defineProperty },
 } = globalThis;
@@ -27,12 +29,6 @@ const {
  * @typedef {string & {__brand: "FilePath"}} FilePath
  * @typedef {import("aran").Atom & { Tag: NodeHash }} Atom
  */
-
-const listKey = /**
- * @type {<K extends string>(
- *   record: {[k in K]: unknown},
- * ) => K[]}
- */ (keys);
 
 //////////
 // Util //
@@ -484,6 +480,11 @@ const compileWeave = ({ instrument_dynamic_code }) => {
                 arguments: map(node.arguments, visitExpression),
                 tag,
               },
+              {
+                type: "PrimitiveExpression",
+                primitive: node.tag,
+                tag,
+              },
             ],
             tag,
           };
@@ -528,6 +529,11 @@ const compileWeave = ({ instrument_dynamic_code }) => {
                 arguments: map(node.arguments, visitExpression),
                 tag,
               },
+              {
+                type: "PrimitiveExpression",
+                primitive: node.tag,
+                tag,
+              },
             ],
             tag,
           };
@@ -563,129 +569,6 @@ const digest = (_node, node_path, file_path, _kind) =>
  */
 const toEvalPath = (hash) =>
   /** @type {FilePath} */ (`dynamic://eval/local/${hash}`);
-
-/**
- * @type {(
- *   config: {
- *     trans: (
- *       path: FilePath,
- *       kind: "script" | "module" | "eval",
- *       code: string,
- *     ) => import("aran").Program<Atom>,
- *     retro: (
- *       root: import("aran").Program<import("aran").Atom>,
- *     ) => string,
- *     weave: (
- *       root: import("aran").Program<Atom>,
- *     ) => import("aran").Program<Atom>,
- *     global: (
- *       & typeof globalThis
- *       & { $262: import("../../../../$262").$262}
- *     ),
- *     counter: { inner: number },
- *     record_directory: URL | null,
- *   },
- * ) => {
- *   branch: (
- *     test: unknown,
- *   ) => unknown,
- *   eval: (
- *     root: import("aran").Program<Atom>,
- *   ) =>  import("aran").Program<Atom>,
- *   apply: (
- *     callee: unknown,
- *     that: unknown,
- *     input: unknown[],
- *   ) => unknown,
- *   construct: (
- *     callee: unknown,
- *     input: unknown[],
- *   ) => unknown,
- * }}
- */
-const createAdvice = ({
-  trans,
-  retro,
-  weave,
-  record_directory,
-  counter,
-  global: {
-    Reflect: { apply, construct },
-    SyntaxError,
-    eval: evalGlobal,
-    $262: { evalScript },
-    Function,
-  },
-}) => {
-  const syntax_error_mapping = {
-    SyntaxError,
-    AranSyntaxError: SyntaxError,
-  };
-  return {
-    branch: (test) => {
-      counter.inner++;
-      return test;
-    },
-    eval: weave,
-    apply: (callee, that, input) => {
-      if (
-        callee === evalGlobal &&
-        input.length > 1 &&
-        typeof input[0] === "string"
-      ) {
-        try {
-          const path = /** @type {FilePath} */ ("dynamic://eval/global");
-          const { content } = record(
-            {
-              path,
-              content: retro(weave(trans(path, "eval", input[0]))),
-            },
-            record_directory,
-          );
-          return evalGlobal(content);
-        } catch (error) {
-          throw recreateError(error, syntax_error_mapping);
-        }
-      }
-      if (callee === evalScript && input.length > 1) {
-        try {
-          const path = /** @type {FilePath} */ ("dynamic://eval/global");
-          const { content } = record(
-            {
-              path,
-              content: retro(weave(trans(path, "eval", String(input[0])))),
-            },
-            record_directory,
-          );
-          return evalGlobal(content);
-        } catch (error) {
-          throw recreateError(error, syntax_error_mapping);
-        }
-      }
-      return apply(/** @type {Function} */ (callee), that, input);
-    },
-    construct: (callee, input) => {
-      if (callee === Function) {
-        try {
-          const path = /** @type {FilePath} */ ("dynamic://function/global");
-          const { content } = record(
-            {
-              path,
-              content: retro(
-                weave(trans(path, "eval", compileFunctionCode(input))),
-              ),
-            },
-            record_directory,
-          );
-          return evalGlobal(content);
-        } catch (error) {
-          throw recreateError(error, syntax_error_mapping);
-        }
-      }
-      return construct(/** @type {Function} */ (callee), input);
-    },
-  };
-};
 
 /**
  * @type {(
@@ -750,29 +633,43 @@ export const createStage = async ({ include }) => {
     },
     prepare: ({ counter, record_directory }, context) => {
       const { intrinsics } = prepare(context, { record_directory });
-      const advice = createAdvice({
-        weave,
-        trans,
-        retro,
-        record_directory,
-        global: /** @type {any} */ (intrinsics.globalThis),
-        counter,
-      });
-      for (let index = 0; index < advice_enum.length; index += 1) {
-        const name = advice_enum[index];
-        if (include === "main" && (name === "apply" || name === "construct")) {
-          continue;
-        }
+      const advice = {
+        eval: weave,
+        branch: (/** @type {unknown} */ test) => {
+          counter.inner++;
+          return test;
+        },
+        ...(include === "comp"
+          ? compileInterceptEval({
+              toEvalPath,
+              weave,
+              retro,
+              trans,
+              String: intrinsics.globalThis.String,
+              SyntaxError: intrinsics.globalThis.SyntaxError,
+              enterValue: (value) => value,
+              leaveValue: (value) => value,
+              apply: intrinsics.globalThis.Reflect.apply,
+              construct: intrinsics.globalThis.Reflect.construct,
+              evalGlobal: /** @type {any} */ (intrinsics.globalThis.eval),
+              evalScript: /** @type {any} */ (intrinsics.globalThis).$262
+                .evalScript,
+              Function: /** @type {any} */ (intrinsics.globalThis.Function),
+              record_directory,
+            })
+          : {}),
+      };
+      for (const [key, val] of listEntry(advice)) {
         const descriptor = {
           __proto__: null,
-          value: advice[name],
+          value: val,
           writable: false,
           enumerable: false,
           configurable: false,
         };
         defineProperty(
           intrinsics["aran.global_object"],
-          toAdviceGlobal(name),
+          toAdviceGlobal(key),
           descriptor,
         );
       }

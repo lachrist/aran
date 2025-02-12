@@ -11,8 +11,7 @@ import { compileListPrecursorFailure } from "../../../failure.mjs";
 import { hashFowler32, hashXor16 } from "../../../../util/hash.mjs";
 import { listThresholdExclusion, threshold } from "../threshold.mjs";
 import { AranExecError } from "../../../../error.mjs";
-import { interceptGlobalEval } from "../../linvail/common.mjs";
-import { reduce } from "../../../helper.mjs";
+import { compileInterceptEval, reduce } from "../../../helper.mjs";
 
 const {
   JSON,
@@ -234,13 +233,22 @@ export const createStage = async ({ include }) => {
       if (include === "comp") {
         assign(
           advice,
-          interceptGlobalEval({
-            advice,
-            intrinsics,
-            record_directory,
+          compileInterceptEval({
+            toEvalPath,
             trans,
             retro,
             weave,
+            String: intrinsics.globalThis.String,
+            SyntaxError: intrinsics.globalThis.SyntaxError,
+            enterValue: advice.enterValue,
+            leaveValue: advice.leaveValue,
+            apply: advice.apply,
+            construct: advice.construct,
+            evalGlobal: /** @type {any} */ (intrinsics.globalThis.eval),
+            evalScript: /** @type {any} */ (intrinsics.globalThis).$262
+              .evalScript,
+            Function: /** @type {any} */ (intrinsics.globalThis.Function),
+            record_directory,
           }),
         );
       }
