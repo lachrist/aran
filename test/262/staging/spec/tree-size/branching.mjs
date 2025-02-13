@@ -1,5 +1,8 @@
 /* eslint-disable no-bitwise */
 
+import { AranExecError } from "../../../error.mjs";
+import { listEntry, listKey, mapIndex, reduceEntry } from "../../helper.mjs";
+
 const {
   Error,
   JSON,
@@ -36,53 +39,157 @@ const hashFowler32 = (content) => {
 const hashXor16 = (input) => ((input >>> 16) ^ input) & 0xffff;
 
 /**
- * @type {(
- *   input: string,
- * ) => number}
+ * @type {{
+ *   [k in import("aran").EstreeNode<{}>["type"]]: null
+ * }}
  */
-const hash = (input) => hashXor16(hashFowler32(input));
+const node_type_record = {
+  ArrayExpression: null,
+  ArrayPattern: null,
+  ArrowFunctionExpression: null,
+  AssignmentExpression: null,
+  AssignmentPattern: null,
+  AwaitExpression: null,
+  BinaryExpression: null,
+  BlockStatement: null,
+  BreakStatement: null,
+  CallExpression: null,
+  CatchClause: null,
+  ChainExpression: null,
+  ClassBody: null,
+  ClassDeclaration: null,
+  ClassExpression: null,
+  ConditionalExpression: null,
+  ContinueStatement: null,
+  DebuggerStatement: null,
+  DoWhileStatement: null,
+  EmptyStatement: null,
+  ExportAllDeclaration: null,
+  ExportDefaultDeclaration: null,
+  ExportNamedDeclaration: null,
+  ExportSpecifier: null,
+  ExpressionStatement: null,
+  ForInStatement: null,
+  ForOfStatement: null,
+  ForStatement: null,
+  FunctionDeclaration: null,
+  FunctionExpression: null,
+  Identifier: null,
+  IfStatement: null,
+  ImportDeclaration: null,
+  ImportDefaultSpecifier: null,
+  ImportExpression: null,
+  ImportNamespaceSpecifier: null,
+  ImportSpecifier: null,
+  LabeledStatement: null,
+  Literal: null,
+  LogicalExpression: null,
+  MemberExpression: null,
+  MetaProperty: null,
+  MethodDefinition: null,
+  NewExpression: null,
+  ObjectExpression: null,
+  ObjectPattern: null,
+  PrivateIdentifier: null,
+  Program: null,
+  Property: null,
+  PropertyDefinition: null,
+  RestElement: null,
+  ReturnStatement: null,
+  SequenceExpression: null,
+  SpreadElement: null,
+  Super: null,
+  SwitchCase: null,
+  SwitchStatement: null,
+  TaggedTemplateExpression: null,
+  TemplateElement: null,
+  TemplateLiteral: null,
+  ThisExpression: null,
+  ThrowStatement: null,
+  TryStatement: null,
+  StaticBlock: null,
+  UnaryExpression: null,
+  UpdateExpression: null,
+  VariableDeclaration: null,
+  VariableDeclarator: null,
+  WhileStatement: null,
+  WithStatement: null,
+  YieldExpression: null,
+};
+
+const node_type_enum = listKey(node_type_record);
+
+/**
+ * @type {{
+ *   [k in import("aran").EstreeNode<{}>["type"]]: number
+ * }}
+ */
+const node_type_hash = reduceEntry(
+  mapIndex(listEntry(node_type_record), ({ 0: type, 1: _ }, index) => [
+    type,
+    index,
+  ]),
+);
 
 /**
  * @type {(
  *   content: string,
- * ) => [
- *   number[],
- *   number[],
- * ]}
+ * ) => import("./branch").Branch[]}
  */
 export const parseBranching = (content) => {
   const data = JSON.parse(content);
   if (!Array.isArray(data)) {
     throw new Error("not an array", { cause: data });
   }
-  if (data.length % 2 !== 0) {
-    throw new Error("odd length", { cause: data });
+  if (data.length % 3 !== 0) {
+    throw new Error("invalid length", { cause: data });
   }
-  const sizes = [];
-  const hashes = [];
-  for (let index = 0; index < data.length; index += 2) {
-    sizes.push(data[index]);
-    hashes.push(data[index + 1]);
-  }
-  return [sizes, hashes];
+  return toArray(
+    {
+      // @ts-ignore
+      __proto__: null,
+      length: data.length / 3,
+    },
+    (_, index) => ({
+      path: data[index * 3],
+      type: node_type_enum[data[index * 3 + 1]],
+      size: data[index * 3 + 2],
+    }),
+  );
 };
 
 /**
  * @type {(
- *   branching: [number, string][],
+ *   branches: import("./branch").Branch[],
  * ) => string}
  */
-export const printBranching = (branching) =>
+export const printBranching = (branches) =>
   JSON.stringify(
     toArray(
       {
         // @ts-ignore
         __proto__: null,
-        length: 2 * branching.length,
+        length: 3 * branches.length,
       },
-      (_, index) =>
-        index % 2 === 0
-          ? branching[index / 2][0]
-          : hash(branching[(index - 1) / 2][1]),
+      (_, index) => {
+        const rest = index % 3;
+        const { path, type, size } = branches[index - rest / 3];
+        switch (rest) {
+          case 0: {
+            return typeof path === "string"
+              ? hashXor16(hashFowler32(path))
+              : path;
+          }
+          case 1: {
+            return node_type_hash[type];
+          }
+          case 2: {
+            return size;
+          }
+          default: {
+            throw new AranExecError("Invalid rest", { rest });
+          }
+        }
+      },
     ),
   );

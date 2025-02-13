@@ -10,7 +10,7 @@ import { compileListPrecursorFailure } from "../../failure.mjs";
 import { compileListThresholdExclusion, threshold } from "./threshold.mjs";
 import { AranExecError } from "../../../error.mjs";
 import { printBranching } from "./branching.mjs";
-import { digest, toEvalPath } from "./location.mjs";
+import { digest, parseNodeHash, toEvalPath } from "./location.mjs";
 
 const {
   URL,
@@ -32,7 +32,7 @@ const {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
  *     index: import("../../../test-case").TestIndex,
- *     buffer: [number, import("./track-basic-aspect.mjs").NodeHash][],
+ *     buffer: import("./branch").Branch[],
  *   },
  * >>}
  */
@@ -92,7 +92,7 @@ export const compileStage = async ({ tracking, include }) => {
        * @type {(
        *   kind: import("aran").TestKind,
        *   size: number,
-       *   hash: import("./track-basic-aspect.mjs").NodeHash,
+       *   hash: import("./location").NodeHash,
        * ) => void}
        */
       const recordBranch = (kind, size, hash) => {
@@ -105,7 +105,8 @@ export const compileStage = async ({ tracking, include }) => {
             buffer,
           });
         }
-        buffer.push([size, hash]);
+        const { path, type } = parseNodeHash(hash);
+        buffer.push({ path, type, size });
       };
       const {
         "globalThis": {

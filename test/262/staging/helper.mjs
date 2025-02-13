@@ -2,7 +2,7 @@ import { record } from "../record/index.mjs";
 import { recreateError } from "../util/error.mjs";
 
 const {
-  Object: { keys, entries },
+  Object: { keys, entries, fromEntries },
   Array: {
     from: toArray,
     prototype: { join },
@@ -22,6 +22,12 @@ export const listEntry = /**
  * ) => [K, V][]}
  */ (entries);
 
+export const reduceEntry = /**
+ * @type {<K extends string, V>(
+ *   entries: [K, V][],
+ * ) => {[k in K]: V}}
+ */ (fromEntries);
+
 /**
  * @type {<X, Y>(
  *   array: X[],
@@ -36,6 +42,22 @@ export const map = (array, transform) =>
       length: array.length,
     },
     (_, index) => transform(array[index]),
+  );
+
+/**
+ * @type {<X, Y>(
+ *   array: X[],
+ *   transform: (item: X, index: number) => Y,
+ * ) => Y[]}
+ */
+export const mapIndex = (array, transform) =>
+  toArray(
+    {
+      // @ts-ignore
+      __proto__: null,
+      length: array.length,
+    },
+    (_, index) => transform(array[index], index),
   );
 
 /**

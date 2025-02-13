@@ -12,7 +12,7 @@ import { compileListThresholdExclusion, threshold } from "./threshold.mjs";
 import { AranExecError } from "../../../error.mjs";
 import { compileInterceptEval, reduce } from "../../helper.mjs";
 import { printBranching } from "./branching.mjs";
-import { digest, toEvalPath } from "./location.mjs";
+import { digest, parseNodeHash, toEvalPath } from "./location.mjs";
 
 const {
   URL,
@@ -138,7 +138,7 @@ const updateAdvice = (
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
  *     index: import("../../../test-case").TestIndex,
- *     buffer: [TreeSize, NodeHash][],
+ *     buffer: import("./branch").Branch[],
  *   },
  * >>}
  */
@@ -240,7 +240,8 @@ export const createStage = async ({ include }) => {
                 buffer,
               });
             }
-            buffer.push([size, hash]);
+            const { path, type } = parseNodeHash(hash);
+            buffer.push({ path, type, size });
           },
         }),
         enumerable: false,

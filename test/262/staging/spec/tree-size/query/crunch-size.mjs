@@ -192,7 +192,18 @@ const loadSuiteRecord = async (names) => {
           /** @type {Hash[][]} */
           const hashing = [];
           for (let suite_index = 0; suite_index < suite_length; suite_index++) {
-            const [sizes, hashes] = parseBranching(lines[suite_index]);
+            /**
+             * @type {(string | number)[]}
+             */
+            const hashes = [];
+            /**
+             * @type {number[]}
+             */
+            const sizes = [];
+            for (const { path, size } of parseBranching(lines[suite_index])) {
+              hashes.push(path);
+              sizes.push(size);
+            }
             suites[suite_index].push(/** @type {Size[]} */ (sizes));
             hashing.push(/** @type {Hash[]} */ (hashes));
           }

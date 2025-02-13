@@ -1,4 +1,5 @@
 import type {
+  Node as EstreeNode,
   Kind as EstreeNodeKind,
   Path as EstreeNodePath,
 } from "estree-sentry";
@@ -76,7 +77,7 @@ export type File<param extends { FilePath?: unknown } = {}> = {
 export type Digest<
   param extends { FilePath?: unknown; NodeHash?: string | number } = {},
 > = (
-  node: object,
+  node: EstreeNode<{}>,
   node_path: EstreeNodePath,
   file_path: GetDefault<param, "FilePath", string>,
   node_kind: EstreeNodeKind,

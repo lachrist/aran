@@ -1,5 +1,6 @@
 import type {
   Program as EstreeProgram,
+  Node as EstreeNode,
   Kind as EstreeNodeKind,
   Path as EstreeNodePath,
   SyntaxErrorCause,
@@ -85,6 +86,7 @@ export {
   FlexibleWeaveConfig,
   InstrumentConfig,
   // Estree //
+  EstreeNode,
   EstreeProgram,
   EstreeNodeKind,
   EstreeNodePath,
