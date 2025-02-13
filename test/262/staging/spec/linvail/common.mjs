@@ -2,9 +2,9 @@ import {
   createRuntime,
   standard_pointcut as pointcut,
   toStandardAdvice,
-  weave as weaveCustomInner,
+  weave as weaveCustom,
 } from "linvail";
-import { weaveStandard as weaveStandardInner } from "aran";
+import { weaveStandard } from "aran";
 import { compileListPrecursorFailure } from "../../failure.mjs";
 import { record } from "../../../record/index.mjs";
 import { compileAran } from "../../aran.mjs";
@@ -42,11 +42,11 @@ const advice_global_variable = "__ARAN_ADVICE__";
 const compileWeave = (instrumentation) => {
   switch (instrumentation) {
     case "custom": {
-      return (root) => weaveCustomInner(root, { advice_global_variable });
+      return (root) => weaveCustom(root, { advice_global_variable });
     }
     case "standard": {
       return (root) =>
-        weaveStandardInner(
+        weaveStandard(
           /** @type {import("aran").Program<import("aran").Atom & { Tag: string }>} */ (
             root
           ),

@@ -92,7 +92,6 @@ const registerTreeSize = (registery, primitive, size) => {
 const updateAdvice = (
   {
     "test@before": adviceBeforeTest,
-    "eval@before": adviceBeforeEval,
     "apply@around": adviceApplyAround,
     ...advice
   },
@@ -103,22 +102,10 @@ const updateAdvice = (
    */
   const registery = new WeakMap();
   return {
+    ...advice,
     "test@before": (state, kind, value, tag) => {
       recordBranch(kind, getTreeSize(registery, value), tag);
       return adviceBeforeTest(state, kind, value, tag);
-    },
-    "eval@before": (state, value, tag) => {
-      const root1 = /** @type {import("aran").Program<Atom>} */ (
-        /** @type {unknown} */ (adviceBeforeEval(state, value, tag))
-      );
-      const root2 = weaveStandard(root1, {
-        advice_global_variable,
-        initial_state: null,
-        pointcut,
-      });
-      return /** @type {import("linvail").ExternalValue} */ (
-        /** @type {unknown} */ (root2)
-      );
     },
     "apply@around": (state, callee, that, input, tag) => {
       const result = adviceApplyAround(state, callee, that, input, tag);
@@ -128,15 +115,14 @@ const updateAdvice = (
           registery,
           fresh,
           /** @type {TreeSize} */ (
-            init_tree_size +
-              getTreeSize(registery, callee) +
-              getTreeSize(registery, that) +
-              reduce(
-                input,
-                (size, value) => size + getTreeSize(registery, value),
-                0,
-              ) +
-              getTreeSize(registery, result)
+            reduce(
+              input,
+              (size, value) => size + getTreeSize(registery, value),
+              init_tree_size +
+                getTreeSize(registery, callee) +
+                getTreeSize(registery, that) +
+                getTreeSize(registery, result),
+            )
           ),
         );
         return fresh;
@@ -144,7 +130,6 @@ const updateAdvice = (
         return result;
       }
     },
-    ...advice,
   };
 };
 

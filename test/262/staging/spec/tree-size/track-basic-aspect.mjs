@@ -710,7 +710,7 @@ export const createAdvice = ({
           reduce(
             input,
             (size, value) => size + getTreeSize(value, primitive_registery),
-            1 +
+            init_tree_size +
               getTreeSize(callee, primitive_registery) +
               getTreeSize(that, primitive_registery) +
               getTreeSize(result, primitive_registery),
