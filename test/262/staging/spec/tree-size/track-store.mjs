@@ -37,6 +37,8 @@ const advice_global_variable = "__ARAN_ADVICE__";
 
 const init_tree_size = /** @type {TreeSize} */ (1);
 
+const zero_tree_size = /** @type {TreeSize} */ (0);
+
 /**
  * @type {(
  *   registery: Registery,
@@ -44,7 +46,7 @@ const init_tree_size = /** @type {TreeSize} */ (1);
  * ) => TreeSize}
  */
 const getTreeSize = (registery, value) =>
-  apply(getWeakMap, registery, [value]) || init_tree_size;
+  apply(getWeakMap, registery, [value]) ?? zero_tree_size;
 
 /**
  * @type {(

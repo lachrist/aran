@@ -24,6 +24,24 @@ def filterOutliner (data):
   max = numpy.percentile(data, 97.5)
   return list(filter(lambda x: x <= max, data))
 
+def plotBox(title, names):
+  for name in names:
+    try:
+      plot.boxplot(
+        list(
+          map(
+            lambda name: filterOutliner(load(locate(name + ".txt"))),
+            names,
+          ),
+        ),
+        tick_labels=names,
+        showfliers=False,
+      )
+      plot.title(title)
+      plot.savefig(locate(title + ".pdf"));
+    finally:
+      plot.close()
+
 def plotBar(name):
   try:
     data = filterOutliner(load(locate(name + ".txt")))
@@ -46,8 +64,43 @@ names = [
 ]
 
 def main ():
-  for name in names:
-    plotBar(name)
+  for include in ["main", "comp"]:
+    for kind in ["aggr", "flat"]:
+      plotBox(
+        include + "-" + kind,
+        [
+          "stack-" + include + "-" + kind,
+          "intra-" + include + "-" + kind,
+          "inter-" + include + "-" + kind,
+          "store-" + include + "-" + kind,
+        ],
+      )
+  # plotBox("aggr-main", [
+  #   "stack-main-aggr",
+  #   "intra-main-aggr",
+  #   "inter-main-aggr",
+  #   "store-main-aggr",
+  # ]);
+  # plotBox("flat-main", [
+  #   "stack-main-aggr",
+  #   "intra-main-aggr",
+  #   "inter-main-aggr",
+  #   "store-main-aggr",
+  # ]);
+  # plotBox("aggre-main-ratio", [
+  #   "stack-main-aggr-ratio",
+  #   "intra-main-aggr-ratio",
+  #   "inter-main-aggr-ratio",
+  #   # "store-main-aggr-ratio",
+  # ]);
+  # plotBox("flat-main-ratio", [
+  #   "stack-main-flat-ratio",
+  #   "intra-main-flat-ratio",
+  #   "inter-main-flat-ratio",
+  #   # "store-main-flat-ratio",
+  # ]);
+  # for name in names:
+  #   plotBar(name)
 
 if __name__ == "__main__":
   main()

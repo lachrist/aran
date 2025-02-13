@@ -35,6 +35,7 @@
     "batch262": "node test/262/main/batch.mjs identity parsing bare-main bare-comp stnd-void stnd-full flex-void flex-full invariant",
     "report262": "node test/262/query/report.mjs",
     "plot262": "node test/262/query/plot.mjs",
+    "plot": "python3 test/262/staging/spec/tree-size/query/plot-size.py",
     "crunch": "node test/262/staging/spec/tree-size/query/crunch-size.mjs"
   },
   "keywords": [

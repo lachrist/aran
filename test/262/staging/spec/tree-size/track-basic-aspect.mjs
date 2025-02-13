@@ -75,6 +75,10 @@ const {
  * }} KindResult
  */
 
+const init_tree_size = 1;
+
+const zero_tree_size = 0;
+
 /**
  * @type {(
  *   primitive: ExternalPrimitive,
@@ -143,10 +147,8 @@ const leaveValue = (value, registery) =>
  *   registery: PrimitiveRegistery,
  * ) => TreeSize}
  */
-const getTreeSize = (value, registery) => {
-  const size = apply(getWeakMap, registery, [value]);
-  return size == null ? 0 : size;
-};
+const getTreeSize = (value, registery) =>
+  apply(getWeakMap, registery, [value]) ?? zero_tree_size;
 
 export const advice_global_variable = "__aran_advice__";
 
@@ -223,8 +225,6 @@ export const compileWeave = (tracking) => {
 ////////////
 // Advice //
 ////////////
-
-const init_tree_size = 1;
 
 /**
  * @type {{[k in InternalClosureKind]: null}}

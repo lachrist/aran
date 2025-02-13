@@ -3,7 +3,7 @@ import { AranExecError } from "../../../../error.mjs";
 import { createInterface } from "node:readline/promises";
 import { parseBranching } from "../branching.mjs";
 
-const { Math, URL, Array, Infinity, Symbol } = globalThis;
+const { Math, URL, Array, Infinity, Symbol, isNaN } = globalThis;
 
 //////////
 // Util //
@@ -76,16 +76,16 @@ const getCommonLength = (arrays) => {
  * ) => number}
  */
 const computePercentIncrease = (val1, val2) => {
-  if (val1 === 0 && val2 === 0) {
+  const result = Math.round((100 * (val2 - val1)) / val1);
+  if (isNaN(result)) {
     return 0;
+  } else if (result === Infinity) {
+    return 2 ** 32;
+  } else if (result === -Infinity) {
+    return (-2) ** 32;
+  } else {
+    return result;
   }
-  if (val1 === 0) {
-    throw new AranExecError("divident is zero", { val1, val2 });
-  }
-  if (val2 === 0) {
-    throw new AranExecError("divisor is zero", { val1, val2 });
-  }
-  return Math.round((100 * (val2 - val1)) / val1);
 };
 
 /**
@@ -271,21 +271,22 @@ const main = async (include) => {
       "utf8",
     );
   }
-  await writeFile(
-    new URL("../output/ratio-flat.txt", import.meta.url),
-    computeEachPercentIncrease(suites[0][1].flat(1), suites[1][1].flat(1)).join(
-      "\n",
-    ) + "\n",
-    "utf8",
-  );
-  await writeFile(
-    new URL("../output/ratio-aggr.txt", import.meta.url),
-    computeEachPercentIncrease(
-      suites[0][1].map(sum),
-      suites[0][1].map(sum),
-    ).join("\n") + "\n",
-    "utf8",
-  );
+  {
+    const flat = suites[0][1].flat(1);
+    const aggr = suites[0][1].map(sum);
+    for (const [name, suite] of suites) {
+      await writeFile(
+        new URL(`../output/${name}-flat-ratio.txt`, import.meta.url),
+        computeEachPercentIncrease(flat, suite.flat(1)).join("\n") + "\n",
+        "utf8",
+      );
+      await writeFile(
+        new URL(`../output/${name}-aggr-ratio.txt`, import.meta.url),
+        computeEachPercentIncrease(aggr, suite.map(sum)).join("\n") + "\n",
+        "utf8",
+      );
+    }
+  }
 };
 
 await main("main");
