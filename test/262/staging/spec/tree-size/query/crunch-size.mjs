@@ -52,23 +52,18 @@ const isNotEmptyString = (string) => string !== "";
 /**
  * @type {(
  *   arrays: {length: number}[],
- * ) => number}
+ * ) => number | null}
  */
 const getCommonLength = (arrays) => {
   const { length } = arrays;
   if (length === 0) {
-    throw new AranExecError("no common length", { arrays });
+    return null;
   }
   const base_length = arrays[0].length;
-  for (let index = 0; index < length; index++) {
+  for (let index = 1; index < length; index++) {
     const { length } = arrays[index];
     if (length !== base_length) {
-      throw new AranExecError("no common length", {
-        index,
-        length,
-        base_length,
-        arrays,
-      });
+      return null;
     }
   }
   return base_length;
@@ -101,6 +96,9 @@ const computePercentIncrease = (val1, val2) => {
  */
 const computeEachPercentIncrease = (nums1, nums2) => {
   const length = getCommonLength([nums1, nums2]);
+  if (length === null) {
+    throw new AranExecError("no common length", { nums1, nums2 });
+  }
   const result = [];
   for (let index = 0; index < length; index++) {
     result.push(computePercentIncrease(nums1[index], nums2[index]));
@@ -136,23 +134,22 @@ const computeEachPercentIncrease = (nums1, nums2) => {
 /**
  * @type {(
  *   hashing: Hash[][],
- *   location: number,
- * ) => void}
+ * ) => null | string}
  */
-const verifyHashing = (hashing, location) => {
+const verifyHashing = (hashing) => {
   const length = getCommonLength(hashing);
+  if (length === null) {
+    return "length mismatch";
+  }
   for (let index = 0; index < length; index++) {
     const base = hashing[0][index];
     for (const hashes of hashing) {
       if (hashes[index] !== base) {
-        throw new AranExecError("mismatched hashing", {
-          location,
-          index,
-          hashes,
-        });
+        return `hash mismatch at ${index} between ${hashes[index]} and ${base}`;
       }
     }
   }
+  return null;
 };
 
 /**
@@ -179,7 +176,8 @@ const loadSuiteRecord = async (names) => {
      * @type {Suite[]}
      */
     const suites = Array.from({ length: iterators.length }, () => []);
-    let index = 0;
+    let test_index = 0;
+    const suite_length = suites.length;
     while (true) {
       /**
        * @type {(string | null)[]}
@@ -191,20 +189,21 @@ const loadSuiteRecord = async (names) => {
       }
       if (lines.every(isNotNull)) {
         if (lines.every(isNotEmptyString)) {
-          let index = 0;
           /** @type {Hash[][]} */
           const hashing = [];
-          for (const [sizes, hashes] of lines.map(parseBranching)) {
-            suites[index].push(/** @type {Size[]} */ (sizes));
+          for (let suite_index = 0; suite_index < suite_length; suite_index++) {
+            const [sizes, hashes] = parseBranching(lines[suite_index]);
+            suites[suite_index].push(/** @type {Size[]} */ (sizes));
             hashing.push(/** @type {Hash[]} */ (hashes));
-            index++;
           }
-          verifyHashing(hashing, index);
+          const status = verifyHashing(hashing);
+          if (status !== null) {
+            throw new AranExecError(status, { test_index, hashing });
+          }
         } else {
           if (lines.some(isNotEmptyString)) {
             throw new AranExecError("mismatched exclusion", {
-              names,
-              index,
+              test_index,
               lines,
             });
           }
@@ -213,13 +212,13 @@ const loadSuiteRecord = async (names) => {
         if (lines.some(isNotNull)) {
           throw new AranExecError("mismatched suite length", {
             names,
-            index,
+            index: test_index,
             lines,
           });
         }
         break;
       }
-      index++;
+      test_index++;
     }
     return suites.map((_, index) => [names[index], suites[index]]);
   } finally {
@@ -285,4 +284,4 @@ const main = async (include) => {
 };
 
 await main("main");
-await main("comp");
+// await main("comp");
