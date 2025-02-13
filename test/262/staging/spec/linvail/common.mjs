@@ -37,7 +37,7 @@ const advice_global_variable = "__ARAN_ADVICE__";
  *   instrumentation: "custom" | "standard",
  * ) => (
  *   root: import("aran").Program,
- * ) => import("aran").Program}}
+ * ) => import("aran").Program}
  */
 const compileWeave = (instrumentation) => {
   switch (instrumentation) {
@@ -192,12 +192,11 @@ export const createStage = async ({ include, instrumentation }) => {
         );
       }
       {
+        advice.weaveEvalProgram = weave;
         const descriptor = {
           __proto__: null,
           value:
-            instrumentation === "standard"
-              ? toStandardAdvice({ ...advice, weaveEvalProgram: weave })
-              : { ...advice, weaveEvalProgram: weave },
+            instrumentation === "standard" ? toStandardAdvice(advice) : advice,
           enumerable: false,
           writable: false,
           configurable: false,

@@ -281,4 +281,4 @@ const main = async (include) => {
 };
 
 await main("main");
-// await main("comp");
+await main("comp");

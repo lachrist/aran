@@ -229,6 +229,7 @@ export const createStage = async ({ include }) => {
     prepare: ({ index, buffer, record_directory }, context) => {
       const { intrinsics } = prepare(context, { record_directory });
       const { advice } = createRuntime(intrinsics, { dir });
+      advice.weaveEvalProgram = weave;
       if (include === "comp") {
         assign(
           advice,

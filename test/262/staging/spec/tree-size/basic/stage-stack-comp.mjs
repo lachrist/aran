@@ -1,6 +1,6 @@
 import { compileStage } from "./common.mjs";
 
 export default await compileStage({
-  tracking: "inter",
-  include: "main",
+  tracking: "stack",
+  include: "comp",
 });
