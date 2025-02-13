@@ -389,11 +389,6 @@ export const visitExpression = (node) => {
             arguments: map(node.arguments, visitExpression),
             tag,
           },
-          {
-            type: "PrimitiveExpression",
-            primitive: node.tag,
-            tag,
-          },
         ],
         tag,
       };
@@ -428,11 +423,6 @@ export const visitExpression = (node) => {
             arguments: map(node.arguments, visitExpression),
             tag,
           },
-          {
-            type: "PrimitiveExpression",
-            primitive: node.tag,
-            tag,
-          },
         ],
         tag,
       };
@@ -456,7 +446,9 @@ const digest = (_node, node_path, file_path, _kind) =>
   /** @type {NodeHash} */ (`${file_path}:${node_path}`);
 
 /**
- * @type {(hash: NodeHash) => FilePath}
+ * @type {(
+ *   hash: NodeHash | "script" | "eval" | "function",
+ * ) => FilePath}
  */
 const toEvalPath = (hash) =>
   /** @type {FilePath} */ (`dynamic://eval/local/${hash}`);

@@ -12,6 +12,7 @@ import { compileListThresholdExclusion, threshold } from "./threshold.mjs";
 import { AranExecError } from "../../../error.mjs";
 import { compileInterceptEval, reduce } from "../../helper.mjs";
 import { printBranching } from "./branching.mjs";
+import { digest, toEvalPath } from "./location.mjs";
 
 const {
   URL,
@@ -25,26 +26,14 @@ const {
 } = globalThis;
 
 /**
- * @typedef {string & { __brand: "NodeHash" }} NodeHash
- * @typedef {import("aran").Atom & { Tag: NodeHash }} Atom
+ * @typedef {import("./location").NodeHash} NodeHash
+ * @typedef {import("./location").FilePath} FilePath
+ * @typedef {import("./location").Program} Program
  * @typedef {number & { __brand: "TreeSize" }} TreeSize
  * @typedef {WeakMap<import("linvail").InternalPrimitive, TreeSize>} Registery
  */
 
 const advice_global_variable = "__ARAN_ADVICE__";
-
-/**
- * @type {import("aran").Digest<{
- *   NodeHash: NodeHash,
- * }>}
- */
-const digest = (_node, node_path, file_path, _kind) =>
-  /** @type {NodeHash} */ (`${file_path}:${node_path}`);
-
-/**
- * @type {(hash: NodeHash) => string}
- */
-const toEvalPath = (hash) => `dynamic://eval/local/${hash}`;
 
 const init_tree_size = /** @type {TreeSize} */ (1);
 
@@ -168,8 +157,8 @@ export const createStage = async ({ include }) => {
   );
   /**
    * @type {(
-   *   root: import("aran").Program<Atom>
-   * ) => import("aran").Program<Atom>}
+   *   root: Program,
+   * ) => Program}
    */
   const weave = (root) =>
     weaveStandard(root, {
@@ -267,7 +256,7 @@ export const createStage = async ({ include }) => {
       { type, kind, path, content: code1 },
     ) => {
       if (include === "comp" || type === "main") {
-        const root1 = trans(path, kind, code1);
+        const root1 = trans(/** @type {FilePath} */ (path), kind, code1);
         const root2 = weave(root1);
         const code2 = retro(root2);
         return record({ path, content: code2 }, record_directory);

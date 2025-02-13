@@ -1,10 +1,10 @@
 import { weaveStandard } from "aran";
 import { AranExecError } from "../../../error.mjs";
-import { compileInterceptEval, map, reduce } from "../../helper.mjs";
+import { compileInterceptEval, listKey, map, reduce } from "../../helper.mjs";
 
 const {
   Error,
-  Object: { keys, hasOwn, is },
+  Object: { hasOwn, is },
   Reflect: { apply },
   WeakMap,
   WeakMap: {
@@ -12,17 +12,13 @@ const {
   },
 } = globalThis;
 
-const listKey = /**
- * @type {<K extends PropertyKey>(record: {[k in K]: unknown}) => K[]}
- */ (keys);
-
 /**
  * @typedef {WeakMap<InternalPrimitive, TreeSize>} PrimitiveRegistery
  * @typedef {WeakMap<Reference, import("aran").ClosureKind>} ClosureRegistery
  * @typedef {WeakMap<Reference, InternalValue[]>} InputRegistery
- * @typedef {string & { __brand: "NodeHash" }} NodeHash
+ * @typedef {import("./location").NodeHash} NodeHash
  * @typedef {import("aran").Atom & { Tag: NodeHash }} Atom
- * @typedef {string & { __brand: "FilePath" }} FilePath
+ * @typedef {import("./location").FilePath} FilePath
  * @typedef {(
  *   | undefined
  *   | null
@@ -224,20 +220,6 @@ export const compileWeave = (tracking) => {
     });
 };
 
-/**
- * @type {import("aran").Digest<{
- *   NodeHash: NodeHash,
- * }>}
- */
-export const digest = (_node, node_path, file_path, _kind) =>
-  /** @type {NodeHash} */ (`${file_path}:${node_path}`);
-
-/**
- * @type {(hash: NodeHash) => FilePath}
- */
-export const toEvalPath = (hash) =>
-  /** @type {FilePath} */ (`dynamic://eval/local/${hash}`);
-
 ////////////
 // Advice //
 ////////////
@@ -362,7 +344,9 @@ const recoverInput = (registery, candidate) =>
  * @type {(
  *   config: {
  *     tracking: "stack" | "intra" | "inter",
- *     toEvalPath: (hash: NodeHash) => FilePath,
+ *     toEvalPath: (
+ *       hash: NodeHash | "script" | "eval" | "function",
+ *     ) => FilePath,
  *     trans: (
  *       path: FilePath,
  *       kind: "eval" | "module" | "script",
@@ -702,8 +686,8 @@ export const createAdvice = ({
       return /** @type {ExternalValue} */ (/** @type {unknown} */ (root2));
     },
     // around //
-    "apply@around": (_transit, callee, that, input, tag) => {
-      const result = apply(callee, that, input, tag);
+    "apply@around": (_transit, callee, that, input, _tag) => {
+      const result = apply(callee, that, input);
       if (isInternalPrimitive(result, primitive_registery)) {
         return enterPrimitive(
           leavePrimitive(result),
@@ -721,7 +705,7 @@ export const createAdvice = ({
         return result;
       }
     },
-    "construct@around": (_transit, callee, input, tag) =>
-      construct(callee, input, tag),
+    "construct@around": (_transit, callee, input, _tag) =>
+      construct(callee, input),
   };
 };

@@ -11,6 +11,7 @@ import {
   listKey,
   map,
 } from "../../helper.mjs";
+import { digest, toEvalPath } from "./location.mjs";
 
 const {
   URL,
@@ -557,18 +558,6 @@ const compileWeave = ({ instrument_dynamic_code }) => {
 ////////////
 // Config //
 ////////////
-
-/**
- * @type {import("aran").Digest<{NodeHash: NodeHash, FilePath: FilePath}>}
- */
-const digest = (_node, node_path, file_path, _kind) =>
-  /** @type {NodeHash} */ (`${file_path}:${node_path}`);
-
-/**
- * @type {(hash: NodeHash) => FilePath}
- */
-const toEvalPath = (hash) =>
-  /** @type {FilePath} */ (`dynamic://eval/local/${hash}`);
 
 /**
  * @type {(

@@ -198,11 +198,16 @@ const loadSuiteRecord = async (names) => {
           }
           const status = verifyHashing(hashing);
           if (status !== null) {
-            throw new AranExecError(status, { test_index, hashing });
+            throw new AranExecError(status, {
+              names,
+              test_index,
+              hashing,
+            });
           }
         } else {
           if (lines.some(isNotEmptyString)) {
             throw new AranExecError("mismatched exclusion", {
+              names,
               test_index,
               lines,
             });
@@ -284,4 +289,4 @@ const main = async (include) => {
 };
 
 await main("main");
-// await main("comp");
+await main("comp");

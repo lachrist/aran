@@ -3,8 +3,6 @@ import { record } from "../../../record/index.mjs";
 import {
   advice_global_variable,
   createAdvice,
-  digest,
-  toEvalPath,
   compileWeave,
 } from "./track-basic-aspect.mjs";
 import { open } from "node:fs/promises";
@@ -12,6 +10,7 @@ import { compileListPrecursorFailure } from "../../failure.mjs";
 import { compileListThresholdExclusion, threshold } from "./threshold.mjs";
 import { AranExecError } from "../../../error.mjs";
 import { printBranching } from "./branching.mjs";
+import { digest, toEvalPath } from "./location.mjs";
 
 const {
   URL,
@@ -166,7 +165,7 @@ export const compileStage = async ({ tracking, include }) => {
     ) => {
       if (include === "comp" || type === "main") {
         const root1 = trans(
-          /** @type {import("./track-basic-aspect.mjs").FilePath} */ (path),
+          /** @type {import("./location").FilePath} */ (path),
           kind,
           code1,
         );

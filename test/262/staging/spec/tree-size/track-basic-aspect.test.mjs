@@ -6,8 +6,8 @@ import {
   advice_global_variable,
   compileWeave,
   createAdvice,
-  toEvalPath,
 } from "./track-basic-aspect.mjs";
+import { toEvalPath, digest } from "./location.mjs";
 
 const { Error, eval: evalGlobal } = globalThis;
 
@@ -29,11 +29,6 @@ const setAdvice = (advice) => {
 };
 
 setAdvice(null);
-
-/**
- * @type {import("aran").Digest}
- */
-const digest = (_node, node_path, _file_path, _node_kind) => node_path;
 
 /**
  * @type {(

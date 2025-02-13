@@ -95,10 +95,10 @@ export const compileFunctionCode = (parts) => {
 };
 
 /**
- * @type {<I, E, P extends string, atom extends import("aran").Atom, H>(
+ * @type {<I, E, P extends string, atom extends import("aran").Atom>(
  *   config: {
  *     toEvalPath: (
- *       hash: H,
+ *       kind: "script" | "eval" | "function",
  *     ) => P,
  *     weave: (
  *       root: import("aran").Program<atom>,
@@ -123,8 +123,8 @@ export const compileFunctionCode = (parts) => {
  *     record_directory: null | URL,
  *   },
  * ) => {
- *   apply: (callee: I, that: I, input: I[], hash: H) => I,
- *   construct: (callee: I, input: I[], hash: H) => I,
+ *   apply: (callee: I, that: I, input: I[]) => I,
+ *   construct: (callee: I, input: I[]) => I,
  * }}
  */
 export const compileInterceptEval = ({
@@ -153,12 +153,12 @@ export const compileInterceptEval = ({
     Function: enterValue(Function),
   };
   return {
-    apply: (callee, that, input, hash) => {
+    apply: (callee, that, input) => {
       if (callee === internals.evalGlobal && input.length > 0) {
         const code = leaveValue(input[0]);
         if (typeof code === "string") {
           try {
-            const path = toEvalPath(hash);
+            const path = toEvalPath("eval");
             const { content } = record(
               {
                 path,
@@ -175,7 +175,7 @@ export const compileInterceptEval = ({
       if (callee === internals.evalScript && input.length > 0) {
         const code = String(leaveValue(input[0]));
         try {
-          const path = toEvalPath(hash);
+          const path = toEvalPath("script");
           const { content } = record(
             {
               path,
@@ -191,7 +191,7 @@ export const compileInterceptEval = ({
       if (callee === internals.Function) {
         const parts = map(map(input, leaveValue), String);
         try {
-          const path = toEvalPath(hash);
+          const path = toEvalPath("function");
           const code = compileFunctionCode(parts);
           const { content } = record(
             {
@@ -207,11 +207,11 @@ export const compileInterceptEval = ({
       }
       return apply(callee, that, input);
     },
-    construct: (callee, input, hash) => {
+    construct: (callee, input) => {
       if (callee === internals.Function) {
         const parts = map(map(input, leaveValue), String);
         try {
-          const path = toEvalPath(hash);
+          const path = toEvalPath("function");
           const code = compileFunctionCode(parts);
           const { content } = record(
             {
