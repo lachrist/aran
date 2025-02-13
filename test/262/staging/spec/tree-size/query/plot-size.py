@@ -37,12 +37,12 @@ def plotBar(name):
     plot.close()
 
 names = [
-  "inter-aggr",
-  "inter-flat",
-  "intra-aggr",
-  "intra-flat",
-  "ratio-aggr",
-  "ratio-flat",
+  "inter-main-aggr",
+  "inter-main-flat",
+  "intra-main-aggr",
+  "intra-main-flat",
+  "ratio-main-aggr",
+  "ratio-main-flat",
 ]
 
 def main ():

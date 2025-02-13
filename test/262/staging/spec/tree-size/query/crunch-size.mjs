@@ -3,7 +3,7 @@ import { AranExecError } from "../../../../error.mjs";
 import { createInterface } from "node:readline/promises";
 import { parseBranching } from "../branching.mjs";
 
-const { Object, Math, URL, Array, Infinity, Symbol } = globalThis;
+const { Math, URL, Array, Infinity, Symbol } = globalThis;
 
 //////////
 // Util //
@@ -36,13 +36,6 @@ const add = (num1, num2) => num1 + num2;
 const sum = (numbers) => numbers.reduce(add, 0);
 
 /**
- * @type {(
- *   table: number[][],
- * ) => number[]}
- */
-const sumEach = (table) => table.map(sum);
-
-/**
  * @type {<X>(
  *   value: X | null,
  * ) => value is X}
@@ -55,13 +48,6 @@ const isNotNull = (value) => value !== null;
  * ) => boolean}
  */
 const isNotEmptyString = (string) => string !== "";
-
-/**
- * @type {<X>(
- *   table: X[][],
- * ) => X[]}
- */
-const flaten = (table) => table.flat(1);
 
 /**
  * @type {(
@@ -137,7 +123,6 @@ const computeEachPercentIncrease = (nums1, nums2) => {
  *   | "inter-main"
  *   | "inter-comp"
  * )} SuiteName
- * @typedef {Record<SuiteName, Suite>} SuiteRecord
  */
 
 //////////
@@ -168,14 +153,22 @@ const verifyHashing = (hashing, location) => {
 
 /**
  * @type {(
- *   urls: URL[],
- * ) => Promise<Suite[]>}
+ *   name: SuiteName,
+ * ) => URL}
  */
-const loadSuiteRecord = async (urls) => {
+const locateStageOutput = (name) =>
+  new URL(`../basic/stage-${name}-output.jsonl`, import.meta.url);
+
+/**
+ * @type {(
+ *   names: SuiteName[],
+ * ) => Promise<[SuiteName, Suite][]>}
+ */
+const loadSuiteRecord = async (names) => {
   const handles = [];
   try {
-    for (const url of urls) {
-      handles.push(await open(url, "r"));
+    for (const name of names) {
+      handles.push(await open(locateStageOutput(name), "r"));
     }
     const iterators = handles.map(createIterable);
     /**
@@ -205,18 +198,26 @@ const loadSuiteRecord = async (urls) => {
           verifyHashing(hashing, index);
         } else {
           if (lines.some(isNotEmptyString)) {
-            throw new AranExecError("mismatched exclusion", { index, lines });
+            throw new AranExecError("mismatched exclusion", {
+              names,
+              index,
+              lines,
+            });
           }
         }
       } else {
         if (lines.some(isNotNull)) {
-          throw new AranExecError("mismatched suite length", { index, lines });
+          throw new AranExecError("mismatched suite length", {
+            names,
+            index,
+            lines,
+          });
         }
         break;
       }
       index++;
     }
-    return suites;
+    return suites.map((_, index) => [names[index], suites[index]]);
   } finally {
     for (const handle of handles) {
       await handle.close();
@@ -229,57 +230,55 @@ const loadSuiteRecord = async (urls) => {
 //////////
 
 /**
- * @type {{[key in SuiteName]: null}}
+ * @type {["intra", "inter"]}
  */
-const suite_name_record = {
-  "intra-main": null,
-  "intra-comp": null,
-  "inter-main": null,
-  "inter-comp": null,
-};
-
-const suite_name_enum = /** @type {SuiteName[]} */ (
-  Object.keys(suite_name_record)
-);
+const kinds = ["intra", "inter"];
 
 /**
  * @type {(
- *   name: SuiteName,
- * ) => URL}
+ *   kind: "intra" | "inter",
+ *   include: "main" | "comp",
+ * ) => SuiteName}
  */
-const locateStageOutput = (procedural) =>
-  new URL(`../basic/stage-${procedural}-output.jsonl`, import.meta.url);
+const toSuiteName = (kind, include) => `${kind}-${include}`;
 
-const main = async () => {
-  const suites = await loadSuiteRecord(suite_name_enum.map(locateStageOutput));
-  const flatening = suites.map(flaten);
-  const aggregate = suites.map(sumEach);
-  {
-    let index = 0;
-    for (const name of suite_name_enum) {
-      await writeFile(
-        new URL(`../output/${name}-flat.txt`, import.meta.url),
-        flatening[index].join("\n") + "\n",
-        "utf8",
-      );
-      await writeFile(
-        new URL(`../output/${name}-aggr.txt`, import.meta.url),
-        aggregate[index].join("\n") + "\n",
-        "utf8",
-      );
-      index++;
-    }
+/**
+ * @type {(
+ *   include: "main" | "comp",
+ * ) => Promise<void>}
+ */
+const main = async (include) => {
+  const suites = await loadSuiteRecord(
+    kinds.map((kind) => toSuiteName(kind, include)),
+  );
+  for (const [name, suite] of suites) {
+    await writeFile(
+      new URL(`../output/${name}-flat.txt`, import.meta.url),
+      suite.flat(1).join("\n") + "\n",
+      "utf8",
+    );
+    await writeFile(
+      new URL(`../output/${name}-aggr.txt`, import.meta.url),
+      suite.map(sum).join("\n") + "\n",
+      "utf8",
+    );
   }
   await writeFile(
     new URL("../output/ratio-flat.txt", import.meta.url),
-    computeEachPercentIncrease(flatening[0], flatening[1]).join("\n") + "\n",
+    computeEachPercentIncrease(suites[0][1].flat(1), suites[1][1].flat(1)).join(
+      "\n",
+    ) + "\n",
     "utf8",
   );
   await writeFile(
     new URL("../output/ratio-aggr.txt", import.meta.url),
-    computeEachPercentIncrease(aggregate[0], aggregate[1]).join("\n") + "\n",
+    computeEachPercentIncrease(
+      suites[0][1].map(sum),
+      suites[0][1].map(sum),
+    ).join("\n") + "\n",
     "utf8",
   );
 };
 
-await main();
+await main("main");
+// await main("comp");

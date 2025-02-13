@@ -4,7 +4,7 @@ import { generate } from "astring";
 import { setupile, transpile, retropile } from "aran";
 import {
   advice_global_variable,
-  weave,
+  compileWeave,
   createAdvice,
   toEvalPath,
 } from "./aspect.mjs";
@@ -68,13 +68,13 @@ const retro = (root) => generate(retropile(root, { mode: "normal" }));
  * @type {(
  *   code: string,
  *   config: {
- *     include: "*" | "main",
- *     procedural: "inter" | "intra",
+ *     tracking: "stack" | "intra" | "inter",
+ *     include: "main" | "comp",
  *   },
  * ) => Branch[]}
  */
-const test = (code, { procedural, include }) => {
-  const trans = compileTrans(include === "*" ? "emulate" : "builtin");
+const test = (code, { tracking, include }) => {
+  const trans = compileTrans(include === "comp" ? "emulate" : "builtin");
   /** @type {import("aran").IntrinsicRecord} */
   const intrinsics = evalGlobal(generate(setupile({})));
   intrinsics["aran.transpileEvalCode"] = (/** @type {string} */ code) =>
@@ -86,6 +86,7 @@ const test = (code, { procedural, include }) => {
   intrinsics["aran.retropileEvalCode"] = retro;
   /** @type {Branch[]} */
   const branches = [];
+  const weave = compileWeave(tracking);
   setAdvice(
     createAdvice({
       toEvalPath,
@@ -112,10 +113,10 @@ const test = (code, { procedural, include }) => {
           throw new Error("evalScript");
         }
       ),
-      instrument_dynamic_code: include === "*",
+      instrument_dynamic_code: include === "comp",
       SyntaxError: globalThis.SyntaxError,
       String: globalThis.String,
-      procedural,
+      tracking,
       recordBranch: (kind, size, tag) => {
         branches.push({ kind, size, tag });
       },
@@ -139,22 +140,22 @@ const test = (code, { procedural, include }) => {
 /**
  * @type {(
  *   config: {
- *     procedural: "inter" | "intra",
- *     include: "*" | "main",
+ *     tracking: "stack" | "inter" | "intra",
+ *     include: "main" | "comp",
  *   },
  * ) => void}
  */
-const testSuite = ({ procedural, include }) => {
+const testSuite = ({ tracking, include }) => {
   // literal //
-  assertDeepEqual(test("(5 ? null : null);", { procedural, include }), [
+  assertDeepEqual(test("(5 ? null : null);", { tracking, include }), [
     { kind: "conditional", size: /* 5 */ 1, tag: "$.body.0.expression" },
   ]);
   // object //
-  assertDeepEqual(test("(({}) ? null : null);", { procedural, include }), [
+  assertDeepEqual(test("(({}) ? null : null);", { tracking, include }), [
     { kind: "conditional", size: 0, tag: "$.body.0.expression" },
   ]);
   // performBinary //
-  assertDeepEqual(test("(2 + 3 ? null : null);", { procedural, include }), [
+  assertDeepEqual(test("(2 + 3 ? null : null);", { tracking, include }), [
     {
       kind: "conditional",
       size:
@@ -168,7 +169,7 @@ const testSuite = ({ procedural, include }) => {
     },
   ]);
   // performBinary && performBinary //
-  assertDeepEqual(test("(1 + 2 + 3 ? null : null);", { procedural, include }), [
+  assertDeepEqual(test("(1 + 2 + 3 ? null : null);", { tracking, include }), [
     {
       kind: "conditional",
       size:
@@ -191,7 +192,7 @@ const testSuite = ({ procedural, include }) => {
   ]);
   // getValueProperty(object) //
   assertDeepEqual(
-    test("(({foo: 123}).foo ? null : null);", { procedural, include }),
+    test("(({foo: 123}).foo ? null : null);", { tracking, include }),
     [
       {
         kind: "conditional",
@@ -206,7 +207,7 @@ const testSuite = ({ procedural, include }) => {
     ],
   );
   // getValueProperty(array) //
-  assertDeepEqual(test("([123][0] ? null : null);", { procedural, include }), [
+  assertDeepEqual(test("([123][0] ? null : null);", { tracking, include }), [
     {
       kind: "conditional",
       size:
@@ -218,10 +219,10 @@ const testSuite = ({ procedural, include }) => {
       tag: "$.body.0.expression",
     },
   ]);
-  // inter-procedural argument tracking //
+  // inter-tracking argument tracking //
   assertDeepEqual(
     test("{ const f = (x) => (x ? null : null); f(2 + 3); }", {
-      procedural,
+      tracking,
       include,
     }),
     [
@@ -232,74 +233,71 @@ const testSuite = ({ procedural, include }) => {
       },
       {
         kind: "conditional",
-        size: 4 + (procedural === "inter" ? 5 : 0),
+        size: { stack: 1, intra: 4, inter: 9 }[tracking],
         tag: "$.body.0.body.0.declarations.0.init.body",
       },
     ],
   );
-  // inter-procedural result tracking //
+  // inter-tracking result tracking //
   assertDeepEqual(
     test("{ const f = () => 2 + 3; (f() ? null : null); }", {
-      procedural,
+      tracking,
       include,
     }),
     [
       {
         kind: "conditional",
-        size: 3 + (procedural === "inter" ? 5 : 0),
+        size: { stack: 3, intra: 3, inter: 8 }[tracking],
         tag: "$.body.0.body.1.expression",
       },
     ],
   );
-  // inter-procedural result tracking //
+  // inter-tracking result tracking //
   assertDeepEqual(
     test("{ const f = () => 2 + 3; (f() ? null : null); }", {
-      procedural,
+      tracking,
       include,
     }),
     [
       {
         kind: "conditional",
-        size: 3 + (procedural === "inter" ? 5 : 0),
+        size: { stack: 3, intra: 3, inter: 8 }[tracking],
         tag: "$.body.0.body.1.expression",
       },
     ],
   );
   // dynamic code >> local eval //
-  assertDeepEqual(
-    test("eval('(5 ? null : null);');", { procedural, include }),
-    [
-      ...(include === "*"
-        ? [
-            {
-              kind: "conditional",
-              size: /* has declarative record */ 4,
-              tag: "$.body.0.expression",
-            },
-            {
-              kind: "conditional",
-              size: /* has global object */ 4,
-              tag: "$.body.0.expression",
-            },
-          ]
-        : []),
-      {
-        kind: "conditional",
-        size: /* eval === intrinsics.eval */ 4,
-        tag: "$.body.0.expression",
-      },
-      {
-        kind: "conditional",
-        size: /* typeof arg0 === "string" */ 10,
-        tag: "$.body.0.expression",
-      },
-      { kind: "conditional", size: /* 5 */ 1, tag: "$.body.0.expression" },
-    ],
-  );
+  assertDeepEqual(test("eval('(5 ? null : null);');", { tracking, include }), [
+    ...(include === "comp"
+      ? [
+          {
+            kind: "conditional",
+            size: /* has declarative record */ 4,
+            tag: "$.body.0.expression",
+          },
+          {
+            kind: "conditional",
+            size: /* has global object */ 4,
+            tag: "$.body.0.expression",
+          },
+        ]
+      : []),
+    {
+      kind: "conditional",
+      size: /* eval === intrinsics.eval */ 4,
+      tag: "$.body.0.expression",
+    },
+    {
+      kind: "conditional",
+      size: /* typeof arg0 === "string" */ 10,
+      tag: "$.body.0.expression",
+    },
+    { kind: "conditional", size: /* 5 */ 1, tag: "$.body.0.expression" },
+  ]);
   // dynamic code >> global eval //
   assertDeepEqual(
-    test("this.eval('(5 ? null : null);');", { procedural, include }),
-    include === "*"
+    test("this.eval('(5 ? null : null);');", { tracking, include }),
+    include === "comp"
       ? [{ kind: "conditional", size: /* 5 */ 1, tag: "$.body.0.expression" }]
       : [],
   );
@@ -308,7 +306,7 @@ const testSuite = ({ procedural, include }) => {
     test(
       "((new this.Function('x', 'y', 'return x + y;')(2, 3)) ? null : null);",
       {
-        procedural,
+        tracking,
         include,
       },
     ),
@@ -322,14 +320,16 @@ const testSuite = ({ procedural, include }) => {
           { kind: "conditional", size: 1, tag: "$.body.0.expression" },
           {
             kind: "conditional",
-            size: procedural === "inter" ? 16 : 5,
+            size: { stack: 5, intra: 5, inter: 16 }[tracking],
             tag: "$.body.0.expression",
           },
         ],
   );
 };
 
-testSuite({ procedural: "intra", include: "main" });
-testSuite({ procedural: "intra", include: "*" });
-testSuite({ procedural: "inter", include: "main" });
-testSuite({ procedural: "inter", include: "*" });
+testSuite({ tracking: "stack", include: "main" });
+testSuite({ tracking: "stack", include: "comp" });
+testSuite({ tracking: "intra", include: "main" });
+testSuite({ tracking: "intra", include: "comp" });
+testSuite({ tracking: "inter", include: "main" });
+testSuite({ tracking: "inter", include: "comp" });

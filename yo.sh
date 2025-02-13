@@ -5,7 +5,7 @@ caffeinate node test/262/main/batch.mjs \
   bare-comp \
   stnd-void \
   stnd-full \
-  linvali/stage-stnd-main \
+  linvail/stage-stnd-main \
   linvail/stage-stnd-comp \
   tree-size/count/stage-main \
   tree-size/count/stage-comp \

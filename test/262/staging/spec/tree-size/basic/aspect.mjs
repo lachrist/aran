@@ -44,6 +44,8 @@ const listKey = /**
  *   | "closure-block@after"
  *   | "import@after"
  *   | "primitive@after"
+ *   | "read@after"
+ *   | "write@before"
  *   | "test@before"
  *   | "intrinsic@after"
  *   | "closure@after"
@@ -168,6 +170,8 @@ const pointcut_record = {
   "await@before": null,
   "await@after": null,
   "yield@before": null,
+  "read@after": null,
+  "write@before": null,
   "yield@after": null,
   "export@before": null,
   "eval@before": null,
@@ -175,7 +179,29 @@ const pointcut_record = {
   "construct@around": null,
 };
 
-const pointcut = listKey(pointcut_record);
+const remove = {
+  stack: {
+    "block@declaration-overwrite": null,
+    "closure@after": null,
+  },
+  intra: {
+    "closure@after": null,
+    "read@after": null,
+    "write@before": null,
+  },
+  inter: {
+    "read@after": null,
+    "write@before": null,
+  },
+};
+
+/**
+ * @type {(
+ *   tracking: "stack" | "intra" | "inter",
+ * ) => AspectKind[]}
+ */
+export const getPointcut = (tracking) =>
+  listKey(pointcut_record).filter((kind) => !hasOwn(remove[tracking], kind));
 
 const external_program_transit = false;
 
@@ -183,15 +209,20 @@ const internal_program_transit = true;
 
 /**
  * @type {(
+ *   tracking: "stack" | "intra" | "inter",
+ * ) => (
  *   root: import("aran").Program<Atom>,
  * ) => import("aran").Program<Atom>}
  */
-export const weave = (root) =>
-  weaveStandard(root, {
-    advice_global_variable,
-    initial_state: external_program_transit,
-    pointcut,
-  });
+export const compileWeave = (tracking) => {
+  const pointcut = getPointcut(tracking);
+  return (root) =>
+    weaveStandard(root, {
+      advice_global_variable,
+      initial_state: external_program_transit,
+      pointcut,
+    });
+};
 
 /**
  * @type {import("aran").Digest<{
@@ -330,6 +361,7 @@ const recoverInput = (registery, candidate) =>
 /**
  * @type {(
  *   config: {
+ *     tracking: "stack" | "intra" | "inter",
  *     toEvalPath: (hash: NodeHash) => FilePath,
  *     trans: (
  *       path: FilePath,
@@ -381,13 +413,12 @@ const recoverInput = (registery, candidate) =>
  *       size: TreeSize,
  *       tag: NodeHash,
  *     ) => void,
- *     procedural: "inter" | "intra",
  *   },
  * ) => import("aran").StandardAdvice<{
  *   State: boolean,
  *   Tag: NodeHash,
  *   Kind: AspectKind,
- *   ScopeValue: InternalValue,
+ *   ScopeValue: InternalValue | ExternalValue,
  *   StackValue: InternalValue,
  *   OtherValue: InternalValue | ExternalValue,
  * }>}
@@ -409,9 +440,10 @@ export const createAdvice = ({
   createArray,
   recordBranch,
   record_directory,
-  procedural,
+  tracking,
 }) => {
-  const inter_procedural_tracking = procedural === "inter";
+  const pointcut = getPointcut(tracking);
+  const inter_procedural_tracking = tracking === "inter";
   /** @type {PrimitiveRegistery} */
   const primitive_registery = new WeakMap();
   /** @type {null | ClosureRegistery} */
@@ -520,55 +552,68 @@ export const createAdvice = ({
         return state;
       }
     },
-    "block@declaration-overwrite": (transit, kind, frame, _tag) => {
-      const copy = /** @type {{[key in string]: InternalValue}} */ (
-        /** @type {unknown} */ ({
-          __proto__: null,
-        })
-      );
-      if (transit && isClosureKind(kind)) {
-        for (const variable in frame) {
-          if (variable === "this") {
-            if (!("new.target" in frame)) {
-              throw new AranExecError("missing new.target", { frame });
-            }
-            copy[variable] = frame["new.target"]
-              ? enterPrimitive(
-                  /** @type {ExternalPrimitive} */ (
+    "block@declaration-overwrite":
+      tracking === "inter"
+        ? (transit, kind, frame, _tag) => {
+            /** @type {{[key in string]: InternalValue}} */
+            const copy = /** @type {any} */ ({ __proto__: null });
+            if (transit && isClosureKind(kind)) {
+              for (const variable in frame) {
+                if (variable === "this") {
+                  if (!("new.target" in frame)) {
+                    throw new AranExecError("missing new.target", { frame });
+                  }
+                  copy[variable] = frame["new.target"]
+                    ? enterPrimitive(
+                        /** @type {ExternalPrimitive} */ (frame[variable]),
+                        init_tree_size,
+                        primitive_registery,
+                      )
+                    : /** @type {InternalValue} */ (frame[variable]);
+                } else if (variable === "function.arguments") {
+                  const input = /** @type {InternalValue[]} */ (
                     /** @type {unknown} */ (frame[variable])
-                  ),
+                  );
+                  const reference = createArray(
+                    map(input, (value) =>
+                      leaveValue(value, primitive_registery),
+                    ),
+                  );
+                  registerInput(input_registery, reference, input);
+                  copy[variable] = reference;
+                } else {
+                  copy[variable] = enterValue(
+                    /** @type {ExternalValue} */ (frame[variable]),
+                    init_tree_size,
+                    primitive_registery,
+                  );
+                }
+              }
+            } else {
+              for (const variable in frame) {
+                copy[variable] = enterValue(
+                  /** @type {ExternalValue} */ (frame[variable]),
                   init_tree_size,
                   primitive_registery,
-                )
-              : /** @type {InternalValue} */ (frame[variable]);
-          } else if (variable === "function.arguments") {
-            const input = /** @type {InternalValue[]} */ (
-              /** @type {unknown} */ (frame[variable])
-            );
-            const reference = createArray(
-              map(input, (value) => leaveValue(value, primitive_registery)),
-            );
-            registerInput(input_registery, reference, input);
-            copy[variable] = reference;
-          } else {
-            copy[variable] = enterValue(
-              /** @type {ExternalValue} */ (frame[variable]),
-              init_tree_size,
-              primitive_registery,
-            );
+                );
+              }
+            }
+            return copy;
           }
-        }
-      } else {
-        for (const variable in frame) {
-          copy[variable] = enterValue(
-            /** @type {ExternalValue} */ (frame[variable]),
-            init_tree_size,
-            primitive_registery,
-          );
-        }
-      }
-      return copy;
-    },
+        : tracking === "intra"
+          ? (_transit, _kind, frame, _tag) => {
+              /** @type {{[key in string]: InternalValue}} */
+              const copy = /** @type {any} */ ({ __proto__: null });
+              for (const variable in frame) {
+                copy[variable] = enterValue(
+                  /** @type {ExternalValue} */ (frame[variable]),
+                  init_tree_size,
+                  primitive_registery,
+                );
+              }
+              return copy;
+            }
+          : (_transit, _kind, frame, _tag) => frame,
     "program-block@after": (transit, _kind, value, _tag) =>
       transit ? value : leaveValue(value, primitive_registery),
     "closure-block@after": (transit, kind, value, _tag) => {
@@ -584,8 +629,12 @@ export const createAdvice = ({
         return leaveValue(value, primitive_registery);
       }
     },
-    "closure@after": (_transit, kind, closure, _tag) =>
-      registerInternalClosure(closure_registery, closure, kind),
+    "closure@after":
+      tracking === "inter"
+        ? (_transit, kind, closure, _tag) =>
+            registerInternalClosure(closure_registery, closure, kind)
+        : (_transit, _kind, closure, _tag) =>
+            /** @type {Reference} */ (closure),
     "import@after": (_transit, _source, _specifier, value, _tag) =>
       enterValue(
         /** @type {ExternalValue} */ (value),
@@ -624,6 +673,21 @@ export const createAdvice = ({
         init_tree_size,
         primitive_registery,
       ),
+    "write@before":
+      tracking === "stack"
+        ? (_transit, _variable, value, _tag) =>
+            leaveValue(value, primitive_registery)
+        : (_transit, _variable, value, _tag) => value,
+    "read@after":
+      tracking === "stack"
+        ? (_transit, _variable, value, _tag) =>
+            enterValue(
+              /** @type {ExternalValue} */ (value),
+              init_tree_size,
+              primitive_registery,
+            )
+        : (_transit, _variable, value, _tag) =>
+            /** @type {InternalValue} */ (value),
     "export@before": (_transit, _specifier, value, _tag) =>
       leaveValue(value, primitive_registery),
     "eval@before": (_transit, value, _tag) => {

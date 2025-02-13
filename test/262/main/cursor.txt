@@ -1,2 +1,1 @@
-50834
-{"kind":"script","path":"language/expressions/arrow-function/dstr/ary-ptrn-rest-obj-prop-id.js","directive":"none","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":["destructuring-binding"]}
+1872

@@ -5,7 +5,7 @@ import {
   createAdvice,
   digest,
   toEvalPath,
-  weave,
+  compileWeave,
 } from "./aspect.mjs";
 import { open } from "node:fs/promises";
 import { compileListPrecursorFailure } from "../../../failure.mjs";
@@ -15,13 +15,13 @@ import { printBranching } from "../branching.mjs";
 
 const {
   URL,
-  Reflect: { apply, defineProperty },
+  Reflect: { defineProperty },
 } = globalThis;
 
 /**
  * @type {(
  *   config: {
- *     procedural: "inter" | "intra",
+ *     tracking: "stack" | "inter" | "intra",
  *     include: "main" | "comp",
  *   },
  * ) => Promise<import("../../../stage").Stage<
@@ -37,7 +37,7 @@ const {
  *   },
  * >>}
  */
-export const compileStage = async ({ procedural, include }) => {
+export const compileStage = async ({ tracking, include }) => {
   const listPrecursorFailure = await compileListPrecursorFailure([
     `linvail/stage-stnd-${include}`,
   ]);
@@ -52,12 +52,13 @@ export const compileStage = async ({ procedural, include }) => {
     },
     toEvalPath,
   );
+  const weave = compileWeave(tracking);
   const listThresholdExclusion = await compileListThresholdExclusion(include);
   return {
     open: async ({ record_directory }) => ({
       record_directory,
       handle: await open(
-        new URL(`stage-${procedural}-${include}-output.jsonl`, import.meta.url),
+        new URL(`stage-${tracking}-${include}-output.jsonl`, import.meta.url),
         "w",
       ),
     }),
@@ -107,37 +108,44 @@ export const compileStage = async ({ procedural, include }) => {
         }
         buffer.push([size, hash]);
       };
+      const {
+        "globalThis": {
+          String,
+          SyntaxError,
+          Array: { of },
+          Reflect: { apply, construct },
+          Function,
+          eval: evalGlobal,
+          $262: { evalScript },
+        },
+        "aran.getValueProperty": getValueProperty,
+      } = /**
+       * @type {{
+       *   globalThis: (
+       *     & {[key in keyof typeof globalThis]: any}
+       *     & { $262: { evalScript: any } }
+       *   ),
+       *   "aran.getValueProperty": any,
+       * }}
+       */ (/** @type {unknown} */ (intrinsics));
       const advice = createAdvice({
         instrument_dynamic_code: include === "comp",
         toEvalPath,
         trans,
         weave,
         retro,
-        apply: /** @type {any} */ (
-          intrinsics["aran.global_object"].Reflect.apply
-        ),
-        construct: /** @type {any} */ (
-          intrinsics["aran.global_object"].Reflect.construct
-        ),
-        createArray: /** @type {any} */ (
-          (/** @type {any[]} */ values) =>
-            apply(intrinsics.globalThis.Array.of, null, values)
-        ),
-        getValueProperty: /** @type {any} */ (
-          intrinsics["aran.getValueProperty"]
-        ),
-        procedural,
+        apply,
+        construct,
+        createArray: (values) => apply(of, null, values),
+        getValueProperty,
+        tracking,
         record_directory,
         recordBranch,
-        Function: /** @type {any} */ (intrinsics.globalThis.Function),
-        evalGlobal: /** @type {any} */ (intrinsics.globalThis.eval),
-        evalScript: /** @type {any} */ (
-          /** @type {{$262: import("../../../../$262").$262}} */ (
-            /** @type {unknown} */ (intrinsics.globalThis)
-          ).$262.evalScript
-        ),
-        String: intrinsics.globalThis.String,
-        SyntaxError: intrinsics.globalThis.SyntaxError,
+        Function,
+        evalGlobal,
+        evalScript,
+        String,
+        SyntaxError,
       });
       const descriptor = {
         __proto__: null,
