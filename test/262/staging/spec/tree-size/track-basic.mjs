@@ -1,17 +1,17 @@
-import { compileAran } from "../../../aran.mjs";
-import { record } from "../../../../record/index.mjs";
+import { compileAran } from "../../aran.mjs";
+import { record } from "../../../record/index.mjs";
 import {
   advice_global_variable,
   createAdvice,
   digest,
   toEvalPath,
   compileWeave,
-} from "./aspect.mjs";
+} from "./track-basic-aspect.mjs";
 import { open } from "node:fs/promises";
-import { compileListPrecursorFailure } from "../../../failure.mjs";
-import { compileListThresholdExclusion, threshold } from "../threshold.mjs";
-import { AranExecError } from "../../../../error.mjs";
-import { printBranching } from "../branching.mjs";
+import { compileListPrecursorFailure } from "../../failure.mjs";
+import { compileListThresholdExclusion, threshold } from "./threshold.mjs";
+import { AranExecError } from "../../../error.mjs";
+import { printBranching } from "./branching.mjs";
 
 const {
   URL,
@@ -24,7 +24,7 @@ const {
  *     tracking: "stack" | "inter" | "intra",
  *     include: "main" | "comp",
  *   },
- * ) => Promise<import("../../../stage").Stage<
+ * ) => Promise<import("../../stage").Stage<
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
@@ -32,8 +32,8 @@ const {
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
- *     index: import("../../../../test-case").TestIndex,
- *     buffer: [number, import("./aspect.mjs").NodeHash][],
+ *     index: import("../../../test-case").TestIndex,
+ *     buffer: [number, import("./track-basic-aspect.mjs").NodeHash][],
  *   },
  * >>}
  */
@@ -93,7 +93,7 @@ export const compileStage = async ({ tracking, include }) => {
        * @type {(
        *   kind: import("aran").TestKind,
        *   size: number,
-       *   hash: import("./aspect.mjs").NodeHash,
+       *   hash: import("./track-basic-aspect.mjs").NodeHash,
        * ) => void}
        */
       const recordBranch = (kind, size, hash) => {
@@ -166,7 +166,7 @@ export const compileStage = async ({ tracking, include }) => {
     ) => {
       if (include === "comp" || type === "main") {
         const root1 = trans(
-          /** @type {import("./aspect.mjs").FilePath} */ (path),
+          /** @type {import("./track-basic-aspect.mjs").FilePath} */ (path),
           kind,
           code1,
         );

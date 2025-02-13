@@ -1,4 +1,4 @@
-import { createStage } from "./common.mjs";
+import { createStage } from "../count.mjs";
 
 export default await createStage({
   include: "comp",

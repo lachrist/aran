@@ -1,4 +1,4 @@
-import { compileStage } from "./common.mjs";
+import { compileStage } from "../track-basic.mjs";
 
 export default await compileStage({
   tracking: "stack",

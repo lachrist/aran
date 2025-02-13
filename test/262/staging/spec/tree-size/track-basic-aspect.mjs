@@ -1,6 +1,6 @@
 import { weaveStandard } from "aran";
-import { AranExecError } from "../../../../error.mjs";
-import { compileInterceptEval, map, reduce } from "../../../helper.mjs";
+import { AranExecError } from "../../../error.mjs";
+import { compileInterceptEval, map, reduce } from "../../helper.mjs";
 
 const {
   Error,

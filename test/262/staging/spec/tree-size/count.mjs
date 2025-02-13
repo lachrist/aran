@@ -1,16 +1,16 @@
 /* eslint-disable no-use-before-define */
 
 import { open } from "node:fs/promises";
-import { compileAran } from "../../../aran.mjs";
-import { AranTypeError } from "../../../../error.mjs";
-import { record } from "../../../../record/index.mjs";
-import { compileListPrecursorFailure } from "../../../failure.mjs";
+import { compileAran } from "../../aran.mjs";
+import { AranTypeError } from "../../../error.mjs";
+import { record } from "../../../record/index.mjs";
+import { compileListPrecursorFailure } from "../../failure.mjs";
 import {
   compileInterceptEval,
   listEntry,
   listKey,
   map,
-} from "../../../helper.mjs";
+} from "../../helper.mjs";
 
 const {
   URL,
@@ -576,11 +576,11 @@ const toEvalPath = (hash) =>
  *     include: "comp" | "main",
  *   },
  * ) => Promise<
- *   import("../../../stage").Stage<
- *     import("../../../stage").Config & {
+ *   import("../../stage").Stage<
+ *     import("../../stage").Config & {
  *       handle: import("node:fs/promises").FileHandle,
  *     },
- *     import("../../../stage").Config & {
+ *     import("../../stage").Config & {
  *       handle: import("node:fs/promises").FileHandle,
  *       counter: { inner: number },
  *     },

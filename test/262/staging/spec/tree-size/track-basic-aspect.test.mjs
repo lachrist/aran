@@ -7,7 +7,7 @@ import {
   compileWeave,
   createAdvice,
   toEvalPath,
-} from "./aspect.mjs";
+} from "./track-basic-aspect.mjs";
 
 const { Error, eval: evalGlobal } = globalThis;
 
@@ -39,10 +39,10 @@ const digest = (_node, node_path, _file_path, _node_kind) => node_path;
  * @type {(
  *   global_declarative_record: "builtin" | "emulate",
  * ) => (
- *   path: import("./aspect.mjs").FilePath,
+ *   path: import("./track-basic-aspect.mjs").FilePath,
  *   kind: "script" | "module" | "eval",
  *   code: string,
- * ) => import("aran").Program<import("./aspect.mjs").Atom>}
+ * ) => import("aran").Program<import("./track-basic-aspect.mjs").Atom>}
  */
 const compileTrans = (global_declarative_record) => (path, kind, code) =>
   transpile(
@@ -79,7 +79,9 @@ const test = (code, { tracking, include }) => {
   const intrinsics = evalGlobal(generate(setupile({})));
   intrinsics["aran.transpileEvalCode"] = (/** @type {string} */ code) =>
     trans(
-      /** @type {import("./aspect.mjs").FilePath} */ ("dynamic://eval/local"),
+      /** @type {import("./track-basic-aspect.mjs").FilePath} */ (
+        "dynamic://eval/local"
+      ),
       "eval",
       code,
     );
@@ -127,7 +129,7 @@ const test = (code, { tracking, include }) => {
     retro(
       weave(
         trans(
-          /** @type {import("./aspect.mjs").FilePath} */ ("main"),
+          /** @type {import("./track-basic-aspect.mjs").FilePath} */ ("main"),
           "eval",
           code,
         ),

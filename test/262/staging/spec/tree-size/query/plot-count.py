@@ -10,7 +10,7 @@ def load (include):
         "..",
         "..",
         "count",
-        "stage-" + include + "-output.txt",
+        include + "-output.txt",
       ),
     ),
   )

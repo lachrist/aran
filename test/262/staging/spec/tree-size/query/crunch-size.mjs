@@ -118,10 +118,14 @@ const computeEachPercentIncrease = (nums1, nums2) => {
  * @typedef {Size[]} Test
  * @typedef {Test[]} Suite
  * @typedef {(
+ *   | "stack-main"
+ *   | "stack-comp"
  *   | "intra-main"
  *   | "intra-comp"
  *   | "inter-main"
  *   | "inter-comp"
+ *   | "store-main"
+ *   | "store-comp"
  * )} SuiteName
  */
 
@@ -157,7 +161,7 @@ const verifyHashing = (hashing, location) => {
  * ) => URL}
  */
 const locateStageOutput = (name) =>
-  new URL(`../basic/stage-${name}-output.jsonl`, import.meta.url);
+  new URL(`../track/${name}-output.jsonl`, import.meta.url);
 
 /**
  * @type {(
@@ -230,17 +234,17 @@ const loadSuiteRecord = async (names) => {
 //////////
 
 /**
- * @type {["intra", "inter"]}
+ * @type {["stack", "intra", "inter", "store"]}
  */
-const kinds = ["intra", "inter"];
+const trackings = ["stack", "intra", "inter", "store"];
 
 /**
  * @type {(
- *   kind: "intra" | "inter",
+ *   tracking: "stack" | "intra" | "inter" | "store",
  *   include: "main" | "comp",
  * ) => SuiteName}
  */
-const toSuiteName = (kind, include) => `${kind}-${include}`;
+const toSuiteName = (tracking, include) => `${tracking}-${include}`;
 
 /**
  * @type {(
@@ -249,7 +253,7 @@ const toSuiteName = (kind, include) => `${kind}-${include}`;
  */
 const main = async (include) => {
   const suites = await loadSuiteRecord(
-    kinds.map((kind) => toSuiteName(kind, include)),
+    trackings.map((tracking) => toSuiteName(tracking, include)),
   );
   for (const [name, suite] of suites) {
     await writeFile(

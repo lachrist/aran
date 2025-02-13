@@ -5,13 +5,13 @@ import {
   standard_pointcut as pointcut,
   toStandardAdvice,
 } from "linvail";
-import { compileAran } from "../../../aran.mjs";
-import { record } from "../../../../record/index.mjs";
-import { compileListPrecursorFailure } from "../../../failure.mjs";
-import { compileListThresholdExclusion, threshold } from "../threshold.mjs";
-import { AranExecError } from "../../../../error.mjs";
-import { compileInterceptEval, reduce } from "../../../helper.mjs";
-import { printBranching } from "../branching.mjs";
+import { compileAran } from "../../aran.mjs";
+import { record } from "../../../record/index.mjs";
+import { compileListPrecursorFailure } from "../../failure.mjs";
+import { compileListThresholdExclusion, threshold } from "./threshold.mjs";
+import { AranExecError } from "../../../error.mjs";
+import { compileInterceptEval, reduce } from "../../helper.mjs";
+import { printBranching } from "./branching.mjs";
 
 const {
   URL,
@@ -153,7 +153,7 @@ const updateAdvice = (
  *   config: {
  *     include: "main" | "comp",
  *   },
- * ) => Promise<import("../../../stage").Stage<
+ * ) => Promise<import("../../stage").Stage<
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
@@ -161,7 +161,7 @@ const updateAdvice = (
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
- *     index: import("../../../../test-case").TestIndex,
+ *     index: import("../../../test-case").TestIndex,
  *     buffer: [TreeSize, NodeHash][],
  *   },
  * >>}
