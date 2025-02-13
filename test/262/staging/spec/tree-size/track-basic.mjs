@@ -58,7 +58,7 @@ export const compileStage = async ({ tracking, include }) => {
     open: async ({ record_directory }) => ({
       record_directory,
       handle: await open(
-        new URL(`stage-${tracking}-${include}-output.jsonl`, import.meta.url),
+        new URL(`track/${tracking}-${include}-output.jsonl`, import.meta.url),
         "w",
       ),
     }),

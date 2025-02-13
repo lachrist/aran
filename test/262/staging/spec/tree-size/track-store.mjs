@@ -197,7 +197,7 @@ export const createStage = async ({ include }) => {
     open: async ({ record_directory }) => ({
       record_directory,
       handle: await open(
-        new URL(`stage-${include}-output.jsonl`, import.meta.url),
+        new URL(`track/store-${include}-output.jsonl`, import.meta.url),
         "w",
       ),
     }),

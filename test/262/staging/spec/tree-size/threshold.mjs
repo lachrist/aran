@@ -13,7 +13,7 @@ export const threshold = 1024;
  */
 const loadThresholdExclusion = async (include) => {
   const handle = await open(
-    new URL(`count/stage-${include}-output.txt`, import.meta.url),
+    new URL(`count/${include}-output.txt`, import.meta.url),
     "r",
   );
   try {
