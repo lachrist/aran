@@ -91,7 +91,7 @@ export const compileStage = async ({ tracking, include }) => {
       /**
        * @type {(
        *   kind: import("aran").TestKind,
-       *   size: number,
+       *   size: import("./size").Size,
        *   hash: import("./location").NodeHash,
        * ) => void}
        */

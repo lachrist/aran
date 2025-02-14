@@ -10,54 +10,27 @@ import { record } from "../../../record/index.mjs";
 import { compileListPrecursorFailure } from "../../failure.mjs";
 import { compileListThresholdExclusion, threshold } from "./threshold.mjs";
 import { AranExecError } from "../../../error.mjs";
-import { compileInterceptEval, reduce } from "../../helper.mjs";
+import { compileInterceptEval } from "../../helper.mjs";
 import { printBranching } from "./branching.mjs";
 import { digest, parseNodeHash, toEvalPath } from "./location.mjs";
+import { createSizeRegistery, getSize, setSize } from "./size.mjs";
 
 const {
   URL,
   Object: { assign },
-  Reflect: { apply, defineProperty },
-  WeakMap,
+  Reflect: { defineProperty },
   console: { dir },
-  WeakMap: {
-    prototype: { get: getWeakMap, set: setWeakMap },
-  },
 } = globalThis;
 
 /**
  * @typedef {import("./location").NodeHash} NodeHash
  * @typedef {import("./location").FilePath} FilePath
- * @typedef {import("./location").Program} Program
- * @typedef {number & { __brand: "TreeSize" }} TreeSize
- * @typedef {WeakMap<import("linvail").InternalPrimitive, TreeSize>} Registery
+ * @typedef {import("./location").Atom} Atom
+ * @typedef {import("./size").Size} Size
+ * @typedef {import("./size").Registery<import("linvail").InternalValue>} Registery
  */
 
 const advice_global_variable = "__ARAN_ADVICE__";
-
-const init_tree_size = /** @type {TreeSize} */ (1);
-
-const zero_tree_size = /** @type {TreeSize} */ (0);
-
-/**
- * @type {(
- *   registery: Registery,
- *   value: import("linvail").InternalValue,
- * ) => TreeSize}
- */
-const getTreeSize = (registery, value) =>
-  apply(getWeakMap, registery, [value]) ?? zero_tree_size;
-
-/**
- * @type {(
- *   registery: Registery,
- *   primitive: import("linvail").InternalPrimitive,
- *   size: TreeSize,
- * ) => void}
- */
-const registerTreeSize = (registery, primitive, size) => {
-  apply(setWeakMap, registery, [primitive, size]);
-};
 
 /**
  * @type {(
@@ -74,7 +47,7 @@ const registerTreeSize = (registery, primitive, size) => {
  *     ) => import("linvail").ExternalPrimitive,
  *     recordBranch: (
  *       kind: import("aran").TestKind,
- *       size: TreeSize,
+ *       size: Size,
  *       hash: NodeHash,
  *     ) => void
  *   },
@@ -91,31 +64,18 @@ const updateAdvice = (
   /**
    * @type {Registery}
    */
-  const registery = new WeakMap();
+  const registery = createSizeRegistery();
   return {
     ...advice,
     "test@before": (state, kind, value, tag) => {
-      recordBranch(kind, getTreeSize(registery, value), tag);
+      recordBranch(kind, getSize(registery, value), tag);
       return adviceBeforeTest(state, kind, value, tag);
     },
     "apply@around": (state, callee, that, input, tag) => {
       const result = adviceApplyAround(state, callee, that, input, tag);
       if (isInternalPrimitive(result)) {
         const fresh = enterPrimitive(leavePrimitive(result));
-        registerTreeSize(
-          registery,
-          fresh,
-          /** @type {TreeSize} */ (
-            reduce(
-              input,
-              (size, value) => size + getTreeSize(registery, value),
-              init_tree_size +
-                getTreeSize(registery, callee) +
-                getTreeSize(registery, that) +
-                getTreeSize(registery, result),
-            )
-          ),
-        );
+        setSize(registery, fresh, { callee, that, input, result });
         return fresh;
       } else {
         return result;
@@ -159,8 +119,8 @@ export const createStage = async ({ include }) => {
   );
   /**
    * @type {(
-   *   root: Program,
-   * ) => Program}
+   *   root: import("aran").Program<Atom>,
+   * ) => import("aran").Program<Atom>}
    */
   const weave = (root) =>
     weaveStandard(root, {

@@ -14,8 +14,10 @@ const colon = [":"];
  *   NodeHash: import("./location").NodeHash,
  * }>}
  */
-export const digest = ({ type }, node_path, _file_path, _kind) =>
-  /** @type {import("./location").NodeHash} */ (`${type}:${node_path}`);
+export const digest = ({ type }, node_path, file_path, _kind) =>
+  /** @type {import("./location").NodeHash} */ (
+    `${type}:${file_path}:${node_path}`
+  );
 
 /**
  * @type {(

@@ -1,23 +1,29 @@
 import { weaveStandard } from "aran";
 import { AranExecError } from "../../../error.mjs";
-import { compileInterceptEval, listKey, map, reduce } from "../../helper.mjs";
+import { compileInterceptEval, listKey, map } from "../../helper.mjs";
+import { createSizeRegistery, getSize, setSize } from "./size.mjs";
 
 const {
   Error,
   Object: { hasOwn, is },
   Reflect: { apply },
+  WeakSet,
+  WeakSet: {
+    prototype: { has: hasWeakSet, add: addWeakSet },
+  },
   WeakMap,
   WeakMap: {
-    prototype: { set: setWeakMap, get: getWeakMap, has: hasWeakMap },
+    prototype: { set: setWeakMap, get: getWeakMap },
   },
 } = globalThis;
 
 /**
- * @typedef {WeakMap<InternalPrimitive, TreeSize>} PrimitiveRegistery
+ * @typedef {import("./size").Registery<InternalValue>} SizeRegistery
+ * @typedef {WeakSet<InternalPrimitive>} PrimitiveRegistery
  * @typedef {WeakMap<Reference, import("aran").ClosureKind>} ClosureRegistery
  * @typedef {WeakMap<Reference, InternalValue[]>} InputRegistery
  * @typedef {import("./location").NodeHash} NodeHash
- * @typedef {import("aran").Atom & { Tag: NodeHash }} Atom
+ * @typedef {import("./location").Atom} Atom
  * @typedef {import("./location").FilePath} FilePath
  * @typedef {(
  *   | undefined
@@ -32,7 +38,7 @@ const {
  * @typedef {{ __brand: "Reference" }} Reference
  * @typedef {ExternalPrimitive | Reference} ExternalValue
  * @typedef {InternalPrimitive | Reference} InternalValue
- * @typedef {number} TreeSize
+ * @typedef {import("./size").Size} Size
  * @typedef {(
  *   | "block@setup"
  *   | "block@declaration-overwrite"
@@ -75,20 +81,15 @@ const {
  * }} KindResult
  */
 
-const init_tree_size = 1;
-
-const zero_tree_size = 0;
-
 /**
  * @type {(
  *   primitive: ExternalPrimitive,
- *   tree_size: TreeSize,
  *   registery: PrimitiveRegistery,
  * ) => InternalPrimitive}
  */
-const enterPrimitive = (primitive, tree_size, registery) => {
+const enterPrimitive = (primitive, registery) => {
   const wrapper = { __inner: primitive };
-  apply(setWeakMap, registery, [wrapper, tree_size]);
+  apply(addWeakSet, registery, [wrapper]);
   return /** @type {any} */ (wrapper);
 };
 
@@ -106,7 +107,7 @@ const leavePrimitive = (/** @type {any} */ { __inner }) => __inner;
  * ) => value is InternalPrimitive}
  */
 const isInternalPrimitive = (value, registery) =>
-  apply(hasWeakMap, registery, [value]);
+  apply(hasWeakSet, registery, [value]);
 
 /**
  * @type {(
@@ -123,14 +124,11 @@ const isExternalPrimitive = (value) =>
 /**
  * @type {(
  *   value: ExternalValue,
- *   tree_size: TreeSize,
  *   registery: PrimitiveRegistery,
  * ) => InternalValue}
  */
-const enterValue = (value, tree_size, registery) =>
-  isExternalPrimitive(value)
-    ? enterPrimitive(value, tree_size, registery)
-    : value;
+const enterValue = (value, registery) =>
+  isExternalPrimitive(value) ? enterPrimitive(value, registery) : value;
 
 /**
  * @type {(
@@ -140,15 +138,6 @@ const enterValue = (value, tree_size, registery) =>
  */
 const leaveValue = (value, registery) =>
   isInternalPrimitive(value, registery) ? leavePrimitive(value) : value;
-
-/**
- * @type {(
- *   value: InternalValue,
- *   registery: PrimitiveRegistery,
- * ) => TreeSize}
- */
-const getTreeSize = (value, registery) =>
-  apply(getWeakMap, registery, [value]) ?? zero_tree_size;
 
 export const advice_global_variable = "__aran_advice__";
 
@@ -394,7 +383,7 @@ const recoverInput = (registery, candidate) =>
  *     record_directory: null | URL,
  *     recordBranch: (
  *       kind: import("aran").TestKind,
- *       size: TreeSize,
+ *       size: Size,
  *       tag: NodeHash,
  *     ) => void,
  *   },
@@ -428,8 +417,10 @@ export const createAdvice = ({
 }) => {
   const pointcut = getPointcut(tracking);
   const inter_procedural_tracking = tracking === "inter";
+  /**  */
+  const size_registery = createSizeRegistery();
   /** @type {PrimitiveRegistery} */
-  const primitive_registery = new WeakMap();
+  const primitive_registery = new WeakSet();
   /** @type {null | ClosureRegistery} */
   const closure_registery = inter_procedural_tracking ? new WeakMap() : null;
   /** @type {null | InputRegistery} */
@@ -453,9 +444,9 @@ export const createAdvice = ({
         const arg = args[key];
         return is(leaveValue(arg, primitive_registery), result)
           ? arg
-          : enterValue(result, init_tree_size, primitive_registery);
+          : enterValue(result, primitive_registery);
       } else {
-        return enterValue(result, init_tree_size, primitive_registery);
+        return enterValue(result, primitive_registery);
       }
     }
     {
@@ -469,7 +460,7 @@ export const createAdvice = ({
         if (isInternalResult(result, kind)) {
           return result;
         } else if (isExternalResult(result, kind)) {
-          return enterValue(result, init_tree_size, primitive_registery);
+          return enterValue(result, primitive_registery);
         } else {
           throw new Error(`unexpected closure kind, got: ${kind}`);
         }
@@ -481,7 +472,6 @@ export const createAdvice = ({
         leaveValue(that, primitive_registery),
         map(input, (argument) => leaveValue(argument, primitive_registery)),
       ),
-      init_tree_size,
       primitive_registery,
     );
   };
@@ -509,8 +499,7 @@ export const createAdvice = ({
         retro,
         evalGlobal,
         evalScript,
-        enterValue: (value) =>
-          enterValue(value, init_tree_size, primitive_registery),
+        enterValue: (value) => enterValue(value, primitive_registery),
         leaveValue: (value) => leaveValue(value, primitive_registery),
         String,
         SyntaxError,
@@ -550,7 +539,6 @@ export const createAdvice = ({
                   copy[variable] = frame["new.target"]
                     ? enterPrimitive(
                         /** @type {ExternalPrimitive} */ (frame[variable]),
-                        init_tree_size,
                         primitive_registery,
                       )
                     : /** @type {InternalValue} */ (frame[variable]);
@@ -568,7 +556,6 @@ export const createAdvice = ({
                 } else {
                   copy[variable] = enterValue(
                     /** @type {ExternalValue} */ (frame[variable]),
-                    init_tree_size,
                     primitive_registery,
                   );
                 }
@@ -577,7 +564,6 @@ export const createAdvice = ({
               for (const variable in frame) {
                 copy[variable] = enterValue(
                   /** @type {ExternalValue} */ (frame[variable]),
-                  init_tree_size,
                   primitive_registery,
                 );
               }
@@ -591,7 +577,6 @@ export const createAdvice = ({
               for (const variable in frame) {
                 copy[variable] = enterValue(
                   /** @type {ExternalValue} */ (frame[variable]),
-                  init_tree_size,
                   primitive_registery,
                 );
               }
@@ -620,43 +605,26 @@ export const createAdvice = ({
         : (_transit, _kind, closure, _tag) =>
             /** @type {Reference} */ (closure),
     "import@after": (_transit, _source, _specifier, value, _tag) =>
-      enterValue(
-        /** @type {ExternalValue} */ (value),
-        init_tree_size,
-        primitive_registery,
-      ),
+      enterValue(/** @type {ExternalValue} */ (value), primitive_registery),
     "primitive@after": (_transit, primitive, _tag) =>
       enterPrimitive(
         /** @type {ExternalPrimitive} */ (/** @type {unknown} */ (primitive)),
-        init_tree_size,
         primitive_registery,
       ),
     "test@before": (_transit, kind, value, tag) => {
-      recordBranch(kind, getTreeSize(value, primitive_registery), tag);
+      recordBranch(kind, getSize(size_registery, value), tag);
       return leaveValue(value, primitive_registery);
     },
     "intrinsic@after": (_transit, _name, value, _tag) =>
-      enterValue(
-        /** @type {ExternalValue} */ (value),
-        init_tree_size,
-        primitive_registery,
-      ),
+      enterValue(/** @type {ExternalValue} */ (value), primitive_registery),
     "await@before": (_transit, value, _tag) =>
       leaveValue(value, primitive_registery),
     "await@after": (_transit, value, _tag) =>
-      enterValue(
-        /** @type {ExternalValue} */ (value),
-        init_tree_size,
-        primitive_registery,
-      ),
+      enterValue(/** @type {ExternalValue} */ (value), primitive_registery),
     "yield@before": (_transit, _delegate, value, _tag) =>
       leaveValue(value, primitive_registery),
     "yield@after": (_transit, _delegate, value, _tag) =>
-      enterValue(
-        /** @type {ExternalValue} */ (value),
-        init_tree_size,
-        primitive_registery,
-      ),
+      enterValue(/** @type {ExternalValue} */ (value), primitive_registery),
     "write@before":
       tracking === "stack"
         ? (_transit, _variable, value, _tag) =>
@@ -667,7 +635,6 @@ export const createAdvice = ({
         ? (_transit, _variable, value, _tag) =>
             enterValue(
               /** @type {ExternalValue} */ (value),
-              init_tree_size,
               primitive_registery,
             )
         : (_transit, _variable, value, _tag) =>
@@ -689,18 +656,12 @@ export const createAdvice = ({
     "apply@around": (_transit, callee, that, input, _tag) => {
       const result = apply(callee, that, input);
       if (isInternalPrimitive(result, primitive_registery)) {
-        return enterPrimitive(
+        const fresh = enterPrimitive(
           leavePrimitive(result),
-          reduce(
-            input,
-            (size, value) => size + getTreeSize(value, primitive_registery),
-            init_tree_size +
-              getTreeSize(callee, primitive_registery) +
-              getTreeSize(that, primitive_registery) +
-              getTreeSize(result, primitive_registery),
-          ),
           primitive_registery,
         );
+        setSize(size_registery, fresh, { callee, that, input, result });
+        return fresh;
       } else {
         return result;
       }

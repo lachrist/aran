@@ -68,12 +68,12 @@ def main ():
     for kind in ["aggr", "flat"]:
       plotBox(
         include + "-" + kind,
-        [
-          "stack-" + include + "-" + kind,
-          "intra-" + include + "-" + kind,
-          "inter-" + include + "-" + kind,
-          "store-" + include + "-" + kind,
-        ],
+        list(
+          map(
+            lambda tracking: tracking + "-" + include + "-" + kind,
+            ["stack", "intra", "inter", "store"],
+          ),
+        ),
       )
   # plotBox("aggr-main", [
   #   "stack-main-aggr",

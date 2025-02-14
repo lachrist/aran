@@ -44,77 +44,77 @@ const hashXor16 = (input) => ((input >>> 16) ^ input) & 0xffff;
  * }}
  */
 const node_type_record = {
-  ArrayExpression: null,
-  ArrayPattern: null,
-  ArrowFunctionExpression: null,
-  AssignmentExpression: null,
-  AssignmentPattern: null,
-  AwaitExpression: null,
-  BinaryExpression: null,
-  BlockStatement: null,
-  BreakStatement: null,
-  CallExpression: null,
-  CatchClause: null,
-  ChainExpression: null,
-  ClassBody: null,
-  ClassDeclaration: null,
-  ClassExpression: null,
-  ConditionalExpression: null,
-  ContinueStatement: null,
-  DebuggerStatement: null,
-  DoWhileStatement: null,
-  EmptyStatement: null,
-  ExportAllDeclaration: null,
-  ExportDefaultDeclaration: null,
-  ExportNamedDeclaration: null,
-  ExportSpecifier: null,
-  ExpressionStatement: null,
-  ForInStatement: null,
-  ForOfStatement: null,
-  ForStatement: null,
-  FunctionDeclaration: null,
-  FunctionExpression: null,
-  Identifier: null,
-  IfStatement: null,
-  ImportDeclaration: null,
-  ImportDefaultSpecifier: null,
-  ImportExpression: null,
-  ImportNamespaceSpecifier: null,
-  ImportSpecifier: null,
-  LabeledStatement: null,
-  Literal: null,
-  LogicalExpression: null,
-  MemberExpression: null,
-  MetaProperty: null,
-  MethodDefinition: null,
-  NewExpression: null,
-  ObjectExpression: null,
-  ObjectPattern: null,
-  PrivateIdentifier: null,
-  Program: null,
-  Property: null,
-  PropertyDefinition: null,
-  RestElement: null,
-  ReturnStatement: null,
-  SequenceExpression: null,
-  SpreadElement: null,
-  Super: null,
-  SwitchCase: null,
-  SwitchStatement: null,
-  TaggedTemplateExpression: null,
-  TemplateElement: null,
-  TemplateLiteral: null,
-  ThisExpression: null,
-  ThrowStatement: null,
-  TryStatement: null,
-  StaticBlock: null,
-  UnaryExpression: null,
-  UpdateExpression: null,
-  VariableDeclaration: null,
-  VariableDeclarator: null,
-  WhileStatement: null,
-  WithStatement: null,
-  YieldExpression: null,
+  ArrayExpression: null, // 0
+  ArrayPattern: null, // 1
+  ArrowFunctionExpression: null, // 2
+  AssignmentExpression: null, // 3
+  AssignmentPattern: null, // 4
+  AwaitExpression: null, // 5
+  BinaryExpression: null, // 6
+  BlockStatement: null, // 7
+  BreakStatement: null, // 8
+  CallExpression: null, // 9
+  CatchClause: null, // 10
+  ChainExpression: null, // 11
+  ClassBody: null, // 12
+  ClassDeclaration: null, // 13
+  ClassExpression: null, // 14
+  ConditionalExpression: null, // 15
+  ContinueStatement: null, // 16
+  DebuggerStatement: null, // 17
+  DoWhileStatement: null, // 18
+  EmptyStatement: null, // 19
+  ExportAllDeclaration: null, // 20
+  ExportDefaultDeclaration: null, // 21
+  ExportNamedDeclaration: null, // 22
+  ExportSpecifier: null, // 23
+  ExpressionStatement: null, // 24
+  ForInStatement: null, // 25
+  ForOfStatement: null, // 26
+  ForStatement: null, // 27
+  FunctionDeclaration: null, // 28
+  FunctionExpression: null, // 29
+  Identifier: null, // 30
+  IfStatement: null, // 31
+  ImportDeclaration: null, // 32
+  ImportDefaultSpecifier: null, // 33
+  ImportExpression: null, // 34
+  ImportNamespaceSpecifier: null, // 35
+  ImportSpecifier: null, // 36
+  LabeledStatement: null, // 37
+  Literal: null, // 38
+  LogicalExpression: null, // 39
+  MemberExpression: null, // 40
+  MetaProperty: null, // 41
+  MethodDefinition: null, // 42
+  NewExpression: null, // 43
+  ObjectExpression: null, // 44
+  ObjectPattern: null, // 45
+  PrivateIdentifier: null, // 46
+  Program: null, // 47
+  Property: null, // 48
+  PropertyDefinition: null, // 49
+  RestElement: null, // 50
+  ReturnStatement: null, // 51
+  SequenceExpression: null, // 52
+  SpreadElement: null, // 53
+  Super: null, // 54
+  SwitchCase: null, // 55
+  SwitchStatement: null, // 56
+  TaggedTemplateExpression: null, // 57
+  TemplateElement: null, // 58
+  TemplateLiteral: null, // 59
+  ThisExpression: null, // 60
+  ThrowStatement: null, // 61
+  TryStatement: null, // 62
+  StaticBlock: null, // 63
+  UnaryExpression: null, // 64
+  UpdateExpression: null, // 65
+  VariableDeclaration: null, // 66
+  VariableDeclarator: null, // 67
+  WhileStatement: null, // 68
+  WithStatement: null, // 69
+  YieldExpression: null, // 70
 };
 
 const node_type_enum = listKey(node_type_record);
@@ -173,7 +173,7 @@ export const printBranching = (branches) =>
       },
       (_, index) => {
         const rest = index % 3;
-        const { path, type, size } = branches[index - rest / 3];
+        const { path, type, size } = branches[(index - rest) / 3];
         switch (rest) {
           case 0: {
             return typeof path === "string"
