@@ -1,4 +1,7 @@
 built-ins/Array/proto-from-ctor-realm-one.js
+built-ins/Array/proto-from-ctor-realm-two.js
+built-ins/Array/proto-from-ctor-realm-zero.js
+built-ins/Object/proto-from-ctor-realm.js
 
 # When creating a new array from an existing one, we always access
 # constructor[@@species] to determine the constructor to use.
