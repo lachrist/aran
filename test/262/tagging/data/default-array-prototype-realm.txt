@@ -1,0 +1,12 @@
+built-ins/Array/proto-from-ctor-realm-one.js
+
+# When creating a new array from an existing one, we always access
+# constructor[@@species] to determine the constructor to use.
+# This should not happen if the constructor is %Array% from another
+# realm, but I don't think we can detect that reliably.
+
+built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js
+built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js
+built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js
+built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js
+built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js

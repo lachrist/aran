@@ -38,7 +38,7 @@ const {
  */
 export const compileStage = async ({ tracking, include }) => {
   const listPrecursorFailure = await compileListPrecursorFailure([
-    `linvail/stage-stnd-${include}`,
+    `linvail/stnd-${include}`,
   ]);
   const { prepare, trans, retro } = compileAran(
     {

@@ -578,7 +578,7 @@ const compileWeave = ({ instrument_dynamic_code }) => {
  */
 export const createStage = async ({ include }) => {
   const listPrecursorFailure = await compileListPrecursorFailure([
-    `linvail/stage-stnd-${include}`,
+    `linvail/stnd-${include}`,
   ]);
   const weave = compileWeave({ instrument_dynamic_code: include === "comp" });
   const { prepare, trans, retro } = compileAran(

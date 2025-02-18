@@ -54,15 +54,6 @@ def plotBar(name):
   finally:
     plot.close()
 
-names = [
-  "inter-main-aggr",
-  "inter-main-flat",
-  "intra-main-aggr",
-  "intra-main-flat",
-  "ratio-main-aggr",
-  "ratio-main-flat",
-]
-
 def main ():
   for include in ["main", "comp"]:
     for kind in ["aggr", "flat"]:
@@ -71,36 +62,14 @@ def main ():
         list(
           map(
             lambda tracking: tracking + "-" + include + "-" + kind,
-            ["stack", "intra", "inter", "store"],
+            ["stack", "intra", "inter"],
           ),
         ),
       )
-  # plotBox("aggr-main", [
-  #   "stack-main-aggr",
-  #   "intra-main-aggr",
-  #   "inter-main-aggr",
-  #   "store-main-aggr",
-  # ]);
-  # plotBox("flat-main", [
-  #   "stack-main-aggr",
-  #   "intra-main-aggr",
-  #   "inter-main-aggr",
-  #   "store-main-aggr",
-  # ]);
-  # plotBox("aggre-main-ratio", [
-  #   "stack-main-aggr-ratio",
-  #   "intra-main-aggr-ratio",
-  #   "inter-main-aggr-ratio",
-  #   # "store-main-aggr-ratio",
-  # ]);
-  # plotBox("flat-main-ratio", [
-  #   "stack-main-flat-ratio",
-  #   "intra-main-flat-ratio",
-  #   "inter-main-flat-ratio",
-  #   # "store-main-flat-ratio",
-  # ]);
-  # for name in names:
-  #   plotBar(name)
+  for include in ["main", "comp"]:
+    for kind in ["aggr", "flat"]:
+      for tracking in ["stack", "intra", "inter"]:
+        plotBar(tracking + "-" + include + "-" + kind)
 
 if __name__ == "__main__":
   main()

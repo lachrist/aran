@@ -1,22 +1,24 @@
 // @ts-nocheck
+/* eslint-disable */
 
 import { setupile, transpile, retropile } from "aran";
 import { parse } from "acorn";
 import { generate } from "astring";
-import {
-  advice_global_variable,
-  weave,
-  createAdvice,
-} from "./aspects/tree-size.mjs";
+// import {
+//   advice_global_variable,
+//   weave,
+//   createAdvice,
+// } from "./aspects/tree-size.mjs";
 
 const { eval: evalGlobal } = globalThis;
+
+console.log(generate(setupile({})));
 
 const intrinsics = evalGlobal(generate(setupile({})));
 
 /** @type {any} */ (globalThis)[advice_global_variable] = createAdvice(
   /** @type {any} */ (intrinsics["aran.global_object"]).Reflect,
   (kind, size, tag) => {
-    // eslint-disable-next-line no-console
     console.dir({ kind, size, tag });
   },
 );

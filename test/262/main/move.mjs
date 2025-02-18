@@ -67,6 +67,7 @@ const main = async (argv) => {
           return 1;
         }
       }
+      await saveCursor(0, null);
       stdout.write("SUCCESS\n");
       return 0;
     } finally {

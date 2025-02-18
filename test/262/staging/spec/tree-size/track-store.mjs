@@ -104,7 +104,7 @@ const updateAdvice = (
  */
 export const createStage = async ({ include }) => {
   const listPrecursorFailure = await compileListPrecursorFailure([
-    `linvail/stage-stnd-${include}`,
+    `linvail/stnd-${include}`,
   ]);
   const { prepare, trans, retro } = compileAran(
     {

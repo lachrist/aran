@@ -78,9 +78,13 @@ const compileWeave = (instrumentation) => {
  */
 export const createStage = async ({ include, instrumentation }) => {
   const listSlow = await loadTaggingList(["slow"]);
-  const listNegative = await loadTaggingList(
-    include === "comp" ? ["proxy", "elusive-dynamic-code"] : ["proxy"],
-  );
+  const listNegative = await loadTaggingList([
+    "proxy",
+    "default-array-prototype-realm",
+    ...(include === "comp"
+      ? [/** @type {"elusive-dynamic-code"} */ ("elusive-dynamic-code")]
+      : []),
+  ]);
   const listPrecursorFailure = await compileListPrecursorFailure([
     `bare-${include}`,
   ]);

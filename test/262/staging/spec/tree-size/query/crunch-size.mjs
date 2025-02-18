@@ -200,9 +200,13 @@ const loadSuiteRecord = async (names) => {
              * @type {number[]}
              */
             const sizes = [];
-            for (const { path, size } of parseBranching(lines[suite_index])) {
+            for (const { path, type, size } of parseBranching(
+              lines[suite_index],
+            )) {
               hashes.push(path);
-              sizes.push(size);
+              if (type === "IfStatement" || type === "ConditionalExpression") {
+                sizes.push(size);
+              }
             }
             suites[suite_index].push(/** @type {Size[]} */ (sizes));
             hashing.push(/** @type {Hash[]} */ (hashes));

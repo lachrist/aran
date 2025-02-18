@@ -1,1 +1,2 @@
-5968
+1898
+{"kind":"script","path":"built-ins/Array/proto-from-ctor-realm-one.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":["cross-realm","Reflect","Symbol"]}
