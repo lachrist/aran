@@ -30,12 +30,12 @@ def plotBox(title, names):
       plot.boxplot(
         list(
           map(
-            lambda name: filterOutliner(load(locate(name + ".txt"))),
+            lambda name: load(locate(name + ".txt")),
             names,
           ),
         ),
-        tick_labels=names,
-        showfliers=False,
+        tick_labels = names,
+        showfliers = False,
       )
       plot.title(title)
       plot.savefig(locate(title + ".pdf"));
@@ -49,7 +49,7 @@ def plotBar(name):
       data,
       bins = min(100, max(data))
     );
-    plot.grid(axis="y", linestyle="--")
+    plot.grid(axis = "y", linestyle = "--")
     plot.savefig(locate(name + ".pdf"));
   finally:
     plot.close()
