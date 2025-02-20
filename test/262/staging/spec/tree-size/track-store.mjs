@@ -8,8 +8,7 @@ import {
 import { compileAran } from "../../aran.mjs";
 import { record } from "../../../record/index.mjs";
 import { compileListPrecursorFailure } from "../../failure.mjs";
-import { compileListThresholdExclusion, threshold } from "./threshold.mjs";
-import { AranExecError } from "../../../error.mjs";
+import { compileListThresholdExclusion } from "./threshold.mjs";
 import { compileInterceptEval } from "../../helper.mjs";
 import { printBranching } from "./branching.mjs";
 import { digest, parseNodeHash, toEvalPath } from "./location.mjs";
@@ -179,7 +178,7 @@ export const createStage = async ({ include }) => {
         };
       }
     },
-    prepare: ({ index, buffer, record_directory }, context) => {
+    prepare: ({ buffer, record_directory }, context) => {
       const { intrinsics } = prepare(context, { record_directory });
       const { advice } = createRuntime(intrinsics, { dir });
       advice.weaveEvalProgram = weave;
@@ -209,15 +208,7 @@ export const createStage = async ({ include }) => {
         __proto__: null,
         value: updateAdvice(toStandardAdvice(advice), {
           ...advice,
-          recordBranch: (kind, size, hash) => {
-            if (buffer.length >= threshold) {
-              throw new AranExecError("buffer overflow", {
-                index,
-                kind,
-                threshold,
-                buffer,
-              });
-            }
+          recordBranch: (_kind, size, hash) => {
             const { path, type } = parseNodeHash(hash);
             buffer.push({ path, type, size });
           },

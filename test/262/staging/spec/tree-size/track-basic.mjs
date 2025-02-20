@@ -7,8 +7,7 @@ import {
 } from "./track-basic-aspect.mjs";
 import { open } from "node:fs/promises";
 import { compileListPrecursorFailure } from "../../failure.mjs";
-import { compileListThresholdExclusion, threshold } from "./threshold.mjs";
-import { AranExecError } from "../../../error.mjs";
+import { compileListThresholdExclusion } from "./threshold.mjs";
 import { printBranching } from "./branching.mjs";
 import { digest, parseNodeHash, toEvalPath } from "./location.mjs";
 
@@ -86,7 +85,7 @@ export const compileStage = async ({ tracking, include }) => {
         };
       }
     },
-    prepare: ({ index, buffer, record_directory }, context) => {
+    prepare: ({ buffer, record_directory }, context) => {
       const { intrinsics } = prepare(context, { record_directory });
       /**
        * @type {(
@@ -95,16 +94,7 @@ export const compileStage = async ({ tracking, include }) => {
        *   hash: import("./location").NodeHash,
        * ) => void}
        */
-      const recordBranch = (kind, size, hash) => {
-        if (buffer.length >= threshold) {
-          throw new AranExecError("buffer overflow", {
-            index,
-            kind,
-            size,
-            threshold,
-            buffer,
-          });
-        }
+      const recordBranch = (_kind, size, hash) => {
         const { path, type } = parseNodeHash(hash);
         buffer.push({ path, type, size });
       };
