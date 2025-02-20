@@ -154,7 +154,7 @@ export const createStage = async ({ include, instrumentation }) => {
          *   ),
          * }}
          */
-        const external_global = /** @type {any} */ (
+        const plain_external_global = /** @type {any} */ (
           intrinsics["aran.global_object"]
         );
         const {
@@ -163,20 +163,36 @@ export const createStage = async ({ include, instrumentation }) => {
           Function,
           SyntaxError,
           $262: { evalScript },
-        } = external_global;
-        const { apply, construct, internalize, enterValue, leaveValue } =
-          advice;
-        const internal_global = internalize(external_global, {
-          prototype: "global.Object.prototype",
-        });
-        intrinsics.globalThis = /** @type {any} */ (internal_global);
-        intrinsics["aran.global_object"] = /** @type {any} */ (internal_global);
-        intrinsics["aran.global_declarative_record"] = /** @type {any} */ (
-          internalize(
-            /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
-            { prototype: null },
-          )
-        );
+        } = plain_external_global;
+        const {
+          apply,
+          construct,
+          internalize,
+          enterValue,
+          leaveValue,
+          leavePlainInternalReference,
+        } = advice;
+        if (include === "comp") {
+          const plain_internal_global = internalize(plain_external_global, {
+            prototype: "global.Object.prototype",
+          });
+          const external_global = leavePlainInternalReference(
+            plain_internal_global,
+          );
+          intrinsics.globalThis = /** @type {any} */ (external_global);
+          intrinsics["aran.global_object"] = /** @type {any} */ (
+            external_global
+          );
+          intrinsics["aran.global_declarative_record"] =
+            leavePlainInternalReference(
+              internalize(
+                /** @type {any} */ (
+                  intrinsics["aran.global_declarative_record"]
+                ),
+                { prototype: null },
+              ),
+            );
+        }
         assign(
           advice,
           compileInterceptEval({
