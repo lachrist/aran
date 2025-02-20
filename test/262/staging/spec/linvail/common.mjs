@@ -136,6 +136,7 @@ export const createStage = async ({ include, instrumentation }) => {
           dir(value, { showHidden: true, showProxy: true });
         },
       });
+      const actual_global = intrinsics.globalThis;
       if (include === "comp") {
         /**
          * @type {import("linvail").PlainExternalReference & {
@@ -155,7 +156,7 @@ export const createStage = async ({ include, instrumentation }) => {
          * }}
          */
         const plain_external_global = /** @type {any} */ (
-          intrinsics["aran.global_object"]
+          intrinsics.globalThis
         );
         const {
           eval: evalGlobal,
@@ -172,27 +173,21 @@ export const createStage = async ({ include, instrumentation }) => {
           leaveValue,
           leavePlainInternalReference,
         } = advice;
-        if (include === "comp") {
-          const plain_internal_global = internalize(plain_external_global, {
-            prototype: "global.Object.prototype",
-          });
-          const external_global = leavePlainInternalReference(
-            plain_internal_global,
+        const plain_internal_global = internalize(plain_external_global, {
+          prototype: "global.Object.prototype",
+        });
+        const external_global = leavePlainInternalReference(
+          plain_internal_global,
+        );
+        intrinsics.globalThis = /** @type {any} */ (external_global);
+        intrinsics["aran.global_object"] = /** @type {any} */ (external_global);
+        intrinsics["aran.global_declarative_record"] =
+          leavePlainInternalReference(
+            internalize(
+              /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
+              { prototype: null },
+            ),
           );
-          intrinsics.globalThis = /** @type {any} */ (external_global);
-          intrinsics["aran.global_object"] = /** @type {any} */ (
-            external_global
-          );
-          intrinsics["aran.global_declarative_record"] =
-            leavePlainInternalReference(
-              internalize(
-                /** @type {any} */ (
-                  intrinsics["aran.global_declarative_record"]
-                ),
-                { prototype: null },
-              ),
-            );
-        }
         assign(
           advice,
           compileInterceptEval({
@@ -223,11 +218,7 @@ export const createStage = async ({ include, instrumentation }) => {
           writable: false,
           configurable: false,
         };
-        defineProperty(
-          intrinsics["aran.global_object"],
-          advice_global_variable,
-          descriptor,
-        );
+        defineProperty(actual_global, advice_global_variable, descriptor);
       }
       {
         const descriptor = {
@@ -237,7 +228,7 @@ export const createStage = async ({ include, instrumentation }) => {
           writable: false,
           configurable: false,
         };
-        defineProperty(intrinsics["aran.global_object"], "Linvail", descriptor);
+        defineProperty(actual_global, "Linvail", descriptor);
       }
     },
     instrument: (

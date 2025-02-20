@@ -1,1 +1,2 @@
-1000
+367
+{"kind":"script","path":"annexB/built-ins/String/prototype/substr/start-and-length-as-numbers.js","directive":"none","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":[]}
