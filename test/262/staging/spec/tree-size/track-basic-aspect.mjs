@@ -1,27 +1,24 @@
 import { weaveStandard } from "aran";
 import { AranExecError } from "../../../error.mjs";
 import { compileInterceptEval, listKey, map } from "../../helper.mjs";
-import { createSizeRegistery, getSize, setSize } from "./size.mjs";
+import {
+  createSizeRegistery,
+  getSize,
+  setAtomicSize,
+  setCompoundSize,
+} from "./size.mjs";
+import { createWeakMap, createWeakSet } from "./collection.mjs";
 
 const {
   Error,
   Object: { hasOwn, is },
-  Reflect: { apply },
-  WeakSet,
-  WeakSet: {
-    prototype: { has: hasWeakSet, add: addWeakSet },
-  },
-  WeakMap,
-  WeakMap: {
-    prototype: { set: setWeakMap, get: getWeakMap },
-  },
 } = globalThis;
 
 /**
- * @typedef {import("./size").Registery<InternalValue>} SizeRegistery
- * @typedef {WeakSet<InternalPrimitive>} PrimitiveRegistery
- * @typedef {WeakMap<Reference, import("aran").ClosureKind>} ClosureRegistery
- * @typedef {WeakMap<Reference, InternalValue[]>} InputRegistery
+ * @typedef {import("./size").SizeRegistery<InternalValue>} SizeRegistery
+ * @typedef {import("./collection").WeakSet<InternalPrimitive>} PrimitiveRegistery
+ * @typedef {import("./collection").WeakMap<Reference, import("aran").ClosureKind>} ClosureRegistery
+ * @typedef {import("./collection").WeakMap<Reference, InternalValue[]>} InputRegistery
  * @typedef {import("./location").NodeHash} NodeHash
  * @typedef {import("./location").Atom} Atom
  * @typedef {import("./location").FilePath} FilePath
@@ -88,8 +85,9 @@ const {
  * ) => InternalPrimitive}
  */
 const enterPrimitive = (primitive, registery) => {
-  const wrapper = { __inner: primitive };
-  apply(addWeakSet, registery, [wrapper]);
+  /** @type {InternalPrimitive} */
+  const wrapper = /** @type {any} */ ({ __inner: primitive });
+  registery.add(wrapper);
   return /** @type {any} */ (wrapper);
 };
 
@@ -106,8 +104,7 @@ const leavePrimitive = (/** @type {any} */ { __inner }) => __inner;
  *   register: PrimitiveRegistery,
  * ) => value is InternalPrimitive}
  */
-const isInternalPrimitive = (value, registery) =>
-  apply(hasWeakSet, registery, [value]);
+const isInternalPrimitive = (value, registery) => registery.has(value);
 
 /**
  * @type {(
@@ -291,7 +288,7 @@ const isExternalResult = (_result, kind) => isExternalClosureKind(kind);
  */
 const registerInternalClosure = (registery, closure, kind) => {
   if (registery !== null) {
-    apply(setWeakMap, registery, [closure, kind]);
+    registery.set(/** @type {any} */ (closure), kind);
   }
   return /** @type {any} */ (closure);
 };
@@ -303,7 +300,7 @@ const registerInternalClosure = (registery, closure, kind) => {
  * ) => import("aran").ClosureKind | null}
  */
 const getInternalClosureKind = (registery, value) =>
-  registery !== null ? (apply(getWeakMap, registery, [value]) ?? null) : null;
+  registery !== null ? (registery.get(value) ?? null) : null;
 
 /**
  * @type {(
@@ -314,7 +311,7 @@ const getInternalClosureKind = (registery, value) =>
  */
 const registerInput = (registery, reference, input) => {
   if (registery !== null) {
-    apply(setWeakMap, registery, [reference, input]);
+    registery.set(reference, input);
   }
 };
 
@@ -325,9 +322,7 @@ const registerInput = (registery, reference, input) => {
  * ) => null | InternalValue[]}
  */
 const recoverInput = (registery, candidate) =>
-  registery !== null
-    ? (apply(getWeakMap, registery, [candidate]) ?? null)
-    : null;
+  registery !== null ? (registery.get(candidate) ?? null) : null;
 
 /**
  * @type {(
@@ -420,11 +415,11 @@ export const createAdvice = ({
   /**  */
   const size_registery = createSizeRegistery();
   /** @type {PrimitiveRegistery} */
-  const primitive_registery = new WeakSet();
+  const primitive_registery = createWeakSet();
   /** @type {null | ClosureRegistery} */
-  const closure_registery = inter_procedural_tracking ? new WeakMap() : null;
+  const closure_registery = inter_procedural_tracking ? createWeakMap() : null;
   /** @type {null | InputRegistery} */
-  const input_registery = inter_procedural_tracking ? new WeakMap() : null;
+  const input_registery = inter_procedural_tracking ? createWeakMap() : null;
   let transit = false;
   /**
    * @type {(
@@ -606,17 +601,28 @@ export const createAdvice = ({
             /** @type {Reference} */ (closure),
     "import@after": (_transit, _source, _specifier, value, _tag) =>
       enterValue(/** @type {ExternalValue} */ (value), primitive_registery),
-    "primitive@after": (_transit, primitive, _tag) =>
-      enterPrimitive(
+    "primitive@after": (_transit, primitive, _tag) => {
+      const fresh = enterPrimitive(
         /** @type {ExternalPrimitive} */ (/** @type {unknown} */ (primitive)),
         primitive_registery,
-      ),
+      );
+      setAtomicSize(size_registery, fresh);
+      return fresh;
+    },
     "test@before": (_transit, kind, value, tag) => {
       recordBranch(kind, getSize(size_registery, value), tag);
       return leaveValue(value, primitive_registery);
     },
-    "intrinsic@after": (_transit, _name, value, _tag) =>
-      enterValue(/** @type {ExternalValue} */ (value), primitive_registery),
+    "intrinsic@after": (_transit, _name, value, _tag) => {
+      const fresh = enterValue(
+        /** @type {ExternalValue} */ (value),
+        primitive_registery,
+      );
+      if (isInternalPrimitive(fresh, primitive_registery)) {
+        setAtomicSize(size_registery, fresh);
+      }
+      return fresh;
+    },
     "await@before": (_transit, value, _tag) =>
       leaveValue(value, primitive_registery),
     "await@after": (_transit, value, _tag) =>
@@ -660,7 +666,7 @@ export const createAdvice = ({
           leavePrimitive(result),
           primitive_registery,
         );
-        setSize(size_registery, fresh, { callee, that, input, result });
+        setCompoundSize(size_registery, fresh, { callee, that, input, result });
         return fresh;
       } else {
         return result;

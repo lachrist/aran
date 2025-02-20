@@ -62,13 +62,13 @@ def main ():
         list(
           map(
             lambda tracking: tracking + "-" + include + "-" + kind,
-            ["stack", "intra", "inter"],
+            ["stack", "intra", "inter", "store"],
           ),
         ),
       )
   for include in ["main", "comp"]:
     for kind in ["aggr", "flat"]:
-      for tracking in ["stack", "intra", "inter"]:
+      for tracking in ["stack", "intra", "inter", "store"]:
         plotBar(tracking + "-" + include + "-" + kind)
 
 if __name__ == "__main__":

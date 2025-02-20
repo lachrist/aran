@@ -1,34 +1,42 @@
-const {
-  Reflect: { apply },
-  WeakMap,
-  WeakMap: {
-    prototype: { get: getWeakMap, set: setWeakMap },
-  },
-} = globalThis;
+import { createWeakMap } from "./collection.mjs";
 
 /**
- * @type {<V extends object>() => import("./size").Registery<V>}
+ * @type {<V extends object>() => import("./size").SizeRegistery<V>}
  */
-export const createSizeRegistery = () => /** @type {any} */ (new WeakMap());
+export const createSizeRegistery = () => /** @type {any} */ (createWeakMap());
 
 /**
  * @type {<V extends object>(
- *   registery: import("./size").Registery<V>,
+ *   registery: import("./size").SizeRegistery<V>,
  *   value: V,
  * ) => import("./size").Size}
  */
 export const getSize = (registery, value) =>
-  apply(getWeakMap, registery, [value]) ??
+  /** @type {any} */ (registery).get(value) ??
   /** @type {import("./size").Size} */ (0);
 
 /**
  * @type {<V extends object>(
- *   registery: import("./size").Registery<V>,
- *   node: import("./size").Node<V>,
+ *   registery: import("./size").SizeRegistery<V>,
+ *   fresh: V,
+ * ) => void}
+ */
+export const setAtomicSize = (registery, fresh) => {
+  /** @type {any} */ (registery).set(fresh, 1);
+};
+
+/**
+ * @type {<V extends object>(
+ *   registery: import("./size").SizeRegistery<V>,
+ *   node: {
+ *     callee: V;
+ *     that: V;
+ *     input: V[];
+ *     result: V;
+ *   },
  * ) => import("./size").Size}
  */
-const getNodeSize = (registery, { callee, that, input, result }) => {
-  /** @type {number} */
+const getCompoundSize = (registery, { callee, that, input, result }) => {
   let size = 1;
   size += getSize(registery, callee);
   size += getSize(registery, that);
@@ -42,11 +50,16 @@ const getNodeSize = (registery, { callee, that, input, result }) => {
 
 /**
  * @type {<V extends object>(
- *   registery: import("./size").Registery<V>,
+ *   registery: import("./size").SizeRegistery<V>,
  *   fresh: V,
- *   origin: import("./size").Node<V>,
+ *   node: {
+ *     callee: V;
+ *     that: V;
+ *     input: V[];
+ *     result: V;
+ *   },
  * ) => void}
  */
-export const setSize = (registery, fresh, origin) => {
-  apply(setWeakMap, registery, [fresh, getNodeSize(registery, origin)]);
+export const setCompoundSize = (registery, fresh, origin) => {
+  /** @type {any} */ (registery).set(fresh, getCompoundSize(registery, origin));
 };

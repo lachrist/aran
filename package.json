@@ -33,7 +33,7 @@
     "look262-debug": "node --inspect-brk --experimental-vm-modules --expose-gc test/262/main/look.mjs",
     "exec262": "node --experimental-vm-modules --expose-gc test/262/main/exec.mjs",
     "reset262": "git -C test/262/test262 reset --hard",
-    "batch262": "node test/262/main/batch.mjs identity parsing bare-main bare-comp stnd-void stnd-full flex-void flex-full invariant",
+    "batch262": "node test/262/main/batch.mjs",
     "report262": "node test/262/query/report.mjs",
     "plot262": "node test/262/query/plot.mjs",
     "plot": "python3 test/262/staging/spec/tree-size/query/plot-size.py",

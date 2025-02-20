@@ -1,52 +1,36 @@
-// @ts-nocheck
-/* eslint-disable */
+// // @ts-nocheck
+// /* eslint-disable */
 
 import { setupile, transpile, retropile } from "aran";
 import { parse } from "acorn";
 import { generate } from "astring";
-// import {
-//   advice_global_variable,
-//   weave,
-//   createAdvice,
-// } from "./aspects/tree-size.mjs";
 
 const { eval: evalGlobal } = globalThis;
 
-console.log(generate(setupile({})));
-
-const intrinsics = evalGlobal(generate(setupile({})));
-
-/** @type {any} */ (globalThis)[advice_global_variable] = createAdvice(
-  /** @type {any} */ (intrinsics["aran.global_object"]).Reflect,
-  (kind, size, tag) => {
-    console.dir({ kind, size, tag });
-  },
-);
+const _intrinsics = evalGlobal(generate(setupile({})));
 
 const code = `{
-  for (let x = 0; x < 10; x++) {
-    console.log(x);
-  }
+  class Foo extends Map {}
+  const foo = new Foo();
+  foo.has({});
 }`;
 
-evalGlobal(
+console.log(
   generate(
     retropile(
-      weave(
-        transpile(
-          {
-            kind: "eval",
-            path: "main",
-            root: parse(code, {
-              sourceType: "script",
-              ecmaVersion: "latest",
-            }),
-          },
-          {
-            digest: (_node, node_path, _file_path, _node_kind) => node_path,
-            global_declarative_record: "builtin",
-          },
-        ),
+      transpile(
+        {
+          kind: "eval",
+          path: "main",
+          root: parse(code, {
+            sourceType: "script",
+            ecmaVersion: "latest",
+          }),
+        },
+        {
+          digest: (_node, node_path, _file_path, _node_kind) => node_path,
+          global_declarative_record: "builtin",
+        },
       ),
       {
         mode: "normal",

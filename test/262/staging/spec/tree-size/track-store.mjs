@@ -13,7 +13,12 @@ import { AranExecError } from "../../../error.mjs";
 import { compileInterceptEval } from "../../helper.mjs";
 import { printBranching } from "./branching.mjs";
 import { digest, parseNodeHash, toEvalPath } from "./location.mjs";
-import { createSizeRegistery, getSize, setSize } from "./size.mjs";
+import {
+  createSizeRegistery,
+  getSize,
+  setAtomicSize,
+  setCompoundSize,
+} from "./size.mjs";
 
 const {
   URL,
@@ -27,7 +32,7 @@ const {
  * @typedef {import("./location").FilePath} FilePath
  * @typedef {import("./location").Atom} Atom
  * @typedef {import("./size").Size} Size
- * @typedef {import("./size").Registery<import("linvail").InternalValue>} Registery
+ * @typedef {import("./size").SizeRegistery<import("linvail").InternalValue>} Registery
  */
 
 const advice_global_variable = "__ARAN_ADVICE__";
@@ -55,6 +60,8 @@ const advice_global_variable = "__ARAN_ADVICE__";
  */
 const updateAdvice = (
   {
+    "primitive@after": advicePrimitiveAfter,
+    "intrinsic@after": adviceIntrinsicAfter,
     "test@before": adviceBeforeTest,
     "apply@around": adviceApplyAround,
     ...advice
@@ -67,6 +74,16 @@ const updateAdvice = (
   const registery = createSizeRegistery();
   return {
     ...advice,
+    "primitive@after": (state, value, tag) => {
+      const fresh = advicePrimitiveAfter(state, value, tag);
+      setAtomicSize(registery, fresh);
+      return fresh;
+    },
+    "intrinsic@after": (state, name, value, tag) => {
+      const fresh = adviceIntrinsicAfter(state, name, value, tag);
+      setAtomicSize(registery, fresh);
+      return fresh;
+    },
     "test@before": (state, kind, value, tag) => {
       recordBranch(kind, getSize(registery, value), tag);
       return adviceBeforeTest(state, kind, value, tag);
@@ -75,7 +92,7 @@ const updateAdvice = (
       const result = adviceApplyAround(state, callee, that, input, tag);
       if (isInternalPrimitive(result)) {
         const fresh = enterPrimitive(leavePrimitive(result));
-        setSize(registery, fresh, { callee, that, input, result });
+        setCompoundSize(registery, fresh, { callee, that, input, result });
         return fresh;
       } else {
         return result;
@@ -192,10 +209,11 @@ export const createStage = async ({ include }) => {
         __proto__: null,
         value: updateAdvice(toStandardAdvice(advice), {
           ...advice,
-          recordBranch: (_kind, size, hash) => {
+          recordBranch: (kind, size, hash) => {
             if (buffer.length >= threshold) {
               throw new AranExecError("buffer overflow", {
                 index,
+                kind,
                 threshold,
                 buffer,
               });

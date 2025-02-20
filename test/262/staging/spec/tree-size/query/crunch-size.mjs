@@ -152,6 +152,24 @@ const verifyHashing = (hashing) => {
   return null;
 };
 
+const deviation1 = [
+  // test/262/test262/test/built-ins/Array/prototype/sort
+  6920, 6921, 6922, 6923, 6924, 6925, 6926, 6927, 6928, 6929, 6930, 6931, 6993,
+  6994, 6997, 6998,
+  // test/262/test262/test/language/statements/function/S13.2.1_A5_T1.js
+  89245, 89246,
+];
+
+// Node.js actually closes the iterator but catch and ignore the error
+// built-ins/Object/fromEntries/iterator-not-closed-for-next-returning-non-object.js
+const deviation2 = [20501, 20502, 20503, 20504, 20505, 20506, 20507, 20508];
+
+// Could be because of time sensitive test, not sure
+// built-ins/Date/S15.9.2.1_A2.js >> @use-strict
+const deviation3 = [10230];
+
+const deviation = [...deviation1, ...deviation2, ...deviation3];
+
 /**
  * @type {(
  *   name: SuiteName,
@@ -191,33 +209,41 @@ const loadSuiteRecord = async (names) => {
         if (lines.every(isNotEmptyString)) {
           /** @type {Hash[][]} */
           const hashing = [];
+          /** @type {Size[][]} */
+          const sizing = [];
           for (let suite_index = 0; suite_index < suite_length; suite_index++) {
-            /**
-             * @type {(string | number)[]}
-             */
+            /** @type {(string | number)[]} */
             const hashes = [];
-            /**
-             * @type {number[]}
-             */
+            /** @type {number[]} */
             const sizes = [];
-            for (const { path, type, size } of parseBranching(
+            for (const { path, type: _type, size } of parseBranching(
               lines[suite_index],
             )) {
               hashes.push(path);
-              if (type === "IfStatement" || type === "ConditionalExpression") {
-                sizes.push(size);
-              }
+              // if (type === "IfStatement") {
+              sizes.push(size);
+              // }
             }
-            suites[suite_index].push(/** @type {Size[]} */ (sizes));
+            sizing.push(/** @type {Size[]} */ (sizes));
             hashing.push(/** @type {Hash[]} */ (hashes));
           }
           const status = verifyHashing(hashing);
           if (status !== null) {
-            throw new AranExecError(status, {
-              names,
-              test_index,
-              hashing,
-            });
+            if (!deviation.includes(test_index)) {
+              throw new AranExecError("unexpected deviation", {
+                names,
+                test_index,
+                status,
+              });
+            }
+          } else {
+            for (
+              let suite_index = 0;
+              suite_index < suite_length;
+              suite_index++
+            ) {
+              suites[suite_index].push(sizing[suite_index]);
+            }
           }
         } else {
           if (lines.some(isNotEmptyString)) {

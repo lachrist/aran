@@ -1,6 +1,6 @@
 export type Size = number & { __brand: Size };
 
-export type Registery<V extends object> = {
+export type SizeRegistery<V extends object> = {
   __brand: "Registery";
   __value: V;
 };
