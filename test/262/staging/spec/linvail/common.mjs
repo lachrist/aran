@@ -166,13 +166,15 @@ export const createStage = async ({ include, instrumentation }) => {
         } = external_global;
         const { apply, construct, internalize, enterValue, leaveValue } =
           advice;
-        const internal_global = internalize(external_global);
-        /** @type {any} */ (internal_global).globalThis = internal_global;
+        const internal_global = internalize(external_global, {
+          prototype: "global.Object.prototype",
+        });
         intrinsics.globalThis = /** @type {any} */ (internal_global);
         intrinsics["aran.global_object"] = /** @type {any} */ (internal_global);
         intrinsics["aran.global_declarative_record"] = /** @type {any} */ (
           internalize(
             /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
+            { prototype: null },
           )
         );
         assign(
