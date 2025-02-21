@@ -4,7 +4,7 @@ import {
   createRuntime,
   standard_pointcut as pointcut,
   toStandardAdvice,
-} from "linvail";
+} from "linvail/runtime";
 import { compileAran } from "../../aran.mjs";
 import { record } from "../../../record/index.mjs";
 import { compileListPrecursorFailure } from "../../failure.mjs";
@@ -150,7 +150,10 @@ export const createStage = async ({ include, global }) => {
     open: async ({ record_directory }) => ({
       record_directory,
       handle: await open(
-        new URL(`track/store-${include}-output.jsonl`, import.meta.url),
+        new URL(
+          `track/store-${include === "comp" ? `comp-${global}` : include}-output.jsonl`,
+          import.meta.url,
+        ),
         "w",
       ),
     }),
@@ -182,6 +185,7 @@ export const createStage = async ({ include, global }) => {
     prepare: ({ buffer, record_directory }, context) => {
       const { intrinsics } = prepare(context, { record_directory });
       const { advice } = createRuntime(intrinsics, { dir });
+      const actual_global = intrinsics.globalThis;
       advice.weaveEvalProgram = weave;
       if (include === "comp") {
         assign(
@@ -241,11 +245,7 @@ export const createStage = async ({ include, global }) => {
         writable: false,
         configurable: false,
       };
-      defineProperty(
-        intrinsics["aran.global_object"],
-        advice_global_variable,
-        descriptor,
-      );
+      defineProperty(actual_global, advice_global_variable, descriptor);
     },
     instrument: (
       { record_directory },

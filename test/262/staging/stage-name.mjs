@@ -29,7 +29,8 @@ export const stage_name_record = {
   "tree-size/track/inter-main": null,
   "tree-size/track/inter-comp": null,
   "tree-size/track/store-main": null,
-  "tree-size/track/store-comp": null,
+  "tree-size/track/store-comp-internal": null,
+  "tree-size/track/store-comp-external": null,
 };
 
 export const stage_name_enum =

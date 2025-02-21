@@ -24,4 +24,5 @@ export type StageName =
   | "tree-size/track/inter-main"
   | "tree-size/track/inter-comp"
   | "tree-size/track/store-main"
-  | "tree-size/track/store-comp";
+  | "tree-size/track/store-comp-internal"
+  | "tree-size/track/store-comp-external";

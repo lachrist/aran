@@ -2,8 +2,8 @@ import {
   createRuntime,
   standard_pointcut as pointcut,
   toStandardAdvice,
-  weave as weaveCustom,
-} from "linvail";
+} from "linvail/runtime";
+import { weave as weaveCustom } from "linvail/instrument";
 import { weaveStandard } from "aran";
 import { compileListPrecursorFailure } from "../../failure.mjs";
 import { record } from "../../../record/index.mjs";
