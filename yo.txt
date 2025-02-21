@@ -1,8 +1,0 @@
-tree-size/track/stack-main: 1267658ms
-tree-size/track/intra-main: 1217590ms
-tree-size/track/inter-main: 1162973ms
-tree-size/track/store-main: 1271671ms
-tree-size/track/stack-comp: 2590606ms
-tree-size/track/intra-comp: 2704825ms
-tree-size/track/inter-comp: 2697104ms
-tree-size/track/store-comp: 2628144ms
