@@ -135,6 +135,7 @@ export const createStage = async ({ include, instrumentation }) => {
         dir: (value) => {
           dir(value, { showHidden: true, showProxy: true });
         },
+        count: false,
       });
       const actual_global = intrinsics.globalThis;
       if (include === "comp") {
