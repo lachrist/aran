@@ -1,2 +1,4 @@
-*-source.mjs
-trace.mjs
+meta/trace.mjs
+**/*-source.mjs
+**/*-bundle.mjs
+**/*.html

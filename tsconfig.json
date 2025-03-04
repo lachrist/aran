@@ -20,16 +20,8 @@
     "./lib/",
     "./lint/",
     "./test/",
-    "./demo/",
-    "doc/design/state-write.d.ts",
-    "doc/design/state-write.mjs"
+    "./doc/design/state-write.d.ts",
+    "./doc/design/state-write.mjs"
   ],
-  "exclude": [
-    "./test/262/main/record/",
-    "./test/262/test262/",
-    "./demo/target.mjs",
-    "./demo/trace-template.mjs",
-    "./demo/worker.mjs",
-    "./demo/index.mjs"
-  ]
+  "exclude": ["./test/262/main/record/", "./test/262/test262/"]
 }

@@ -1,35 +1,13 @@
-// @ts-ignore
-const ts_aware_context = context;
-
 const {
   log,
   aran: { setupile, transpile, retropile, weaveStandard },
   astring: { generate },
   acorn: { parse },
   target,
-} = /**
- * @type {{
- *   log: (message: string) => void,
- *   aran: import("aran"),
- *   astring: {
- *     generate: (node: object) => string,
- *   },
- *   acorn: {
- *     parse: (
- *       code: string,
- *       options: {
- *         ecmaVersion: number,
- *         sourceType: "script" | "module",
- *       },
- *     ) => {
- *       type: "Program",
- *       sourceType: "script" | "module",
- *       body: object[],
- *     },
- *   },
- *   target: string,
- * }}
- */ (ts_aware_context);
+} = /** @type {import("../context").Context} */ (
+  // @ts-ignore
+  context
+);
 
 /* ASPECT */
 

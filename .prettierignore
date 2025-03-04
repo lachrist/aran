@@ -4,5 +4,6 @@
 /node_modules/
 /test/262/codebase/
 /test/262/test262/
-/demo/*-source.mjs
+/demo/**/*-source.mjs
+/demo/**/*-bundle.mjs
 /demo/trace.mjs
