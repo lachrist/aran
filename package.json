@@ -69,7 +69,7 @@
     "astring": "^1.9.0",
     "eslint": "^9.9.1",
     "http-server": "^14.1.1",
-    "linvail": "^7.2.4",
+    "linvail": "^7.2.5",
     "prettier": "^3.0.0",
     "rollup": "^4.34.9",
     "typedoc": "^0.26.5",

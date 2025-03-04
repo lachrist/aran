@@ -1,5 +1,5 @@
 /** @type {import("linvail").Library} */
-const { dir, is } = /** @type {any} */ (globalThis).Linvail;
+const { dir, is, Map: LinvailMap } = /** @type {any} */ (globalThis).Linvail;
 
 /** @type {(value: unknown) => void} */
 const log = /** @type {any} */ (globalThis).log;
@@ -48,8 +48,23 @@ diff(copy[0], 123);
 const promise = Promise.resolve(num);
 promise.then((res) => diff(res, num));
 
-// Provenance Loss >> ES6 Collections //
-const collection = new Map([["num", num]]);
-diff(collection.get("num"), num);
+// Provenance Loss >> ES6 Collection (both key and value) //
+const map1 = new Map([[num, num]]);
+assert(!map1.has(num));
+map1.forEach((val, key) => {
+  diff(key, num);
+  diff(val, num);
+});
+
+// Provenance Preservation >> Linvail Collection (both key and value) //
+const map2 = new LinvailMap([[num, num]]);
+assert(map2.has(num));
+assert(!map2.has(123));
+map2.forEach((val, key) => {
+  same(key, num);
+  diff(key, 123);
+  same(val, num);
+  diff(val, 123);
+});
 
 log("done");
