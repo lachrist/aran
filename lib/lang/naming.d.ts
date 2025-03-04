@@ -2,6 +2,7 @@ import type { AssertNever, ValueOf } from "../util/util";
 import type { Intrinsic, Parameter } from "./syntax";
 
 export type IntrinsicFunctionNaming = {
+  "aran.createObject": "createObject";
   "aran.declareGlobalVariable": "declareGlobalVariable";
   "aran.readGlobalVariable": "readGlobalVariable";
   "aran.writeGlobalVariableSloppy": "writeGlobalVariableSloppy";
