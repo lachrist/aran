@@ -88,7 +88,7 @@ Hello!
 
 - [apply](https://lachrist.github.io/aran/page/demo/apply.html)
 - [trace](https://lachrist.github.io/aran/page/demo/trace.html)
-- [provenance](https://lachrist.github.io/aran/page/demo/provenance.html)
+- [track](https://lachrist.github.io/aran/page/demo/track.html)
 
 ## API
 

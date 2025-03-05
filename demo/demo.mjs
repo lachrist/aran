@@ -81,15 +81,18 @@ const createButton = (label) => {
 
 /**
  * @type {(
- *   meta_content: string,
- *   base_content: string,
+ *   config: {
+ *     meta: string,
+ *     base: string,
+ *     worker: string,
+ *   },
  * ) => HTMLElement}
  */
-export const createDemo = (meta_content, base_content) => {
+export const createDemo = (config) => {
   /** @type {null | Worker} */
   let worker = null;
-  const meta = createEditor(meta_content);
-  const base = createEditor(base_content);
+  const meta = createEditor(config.meta);
+  const base = createEditor(config.base);
   const play = createButton("Play");
   const stop = createButton("Stop");
   const clear = createButton("Clear");
@@ -103,7 +106,7 @@ export const createDemo = (meta_content, base_content) => {
     if (worker !== null) {
       worker.terminate();
     }
-    worker = new Worker("./worker.mjs", { type: "module" });
+    worker = new Worker(config.worker, { type: "module" });
     worker.postMessage({
       meta: meta.editor.state.doc.toString(),
       base: base.editor.state.doc.toString(),

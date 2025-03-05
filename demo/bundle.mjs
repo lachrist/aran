@@ -15,7 +15,7 @@ const expand = async (name) => {
     "utf8",
   );
   await writeFile(
-    new URL(`./demo/cases/${name}/meta.mjs`, import.meta.url),
+    `./demo/cases/${name}/meta.mjs`,
     template
       .replace("/* ASPECT */", aspect.replaceAll("export const ", "const "))
       .replaceAll(/\n\n\n+/gu, "\n\n"),
@@ -44,20 +44,21 @@ const bundle = async (name) => {
  * ) => Promise<void>}
  */
 const compile = async (name) => {
-  const meta = `./demo/cases/${name}/meta.mjs`;
-  const base = `./demo/cases/${name}/base.mjs`;
+  const meta = await readFile(`./demo/cases/${name}/meta.mjs`, "utf8");
+  const base = await readFile(`./demo/cases/${name}/base.mjs`, "utf8");
   await writeFile(
     `./page/demo/${name}.html`,
     [
       "<!DOCTYPE html>",
-      '<html lang="en">',
-      '<head><meta charset="utf-8"/><title>Aran Demo</title></head>',
+      "<html lang='en'>",
+      "<head><meta charset='utf-8'/><title>Aran Demo</title></head>",
       "<body></body>",
-      "<script>",
-      'import { createDemo } from "./demo.mjs";',
-      `const meta = ${JSON.stringify(await readFile(meta, "utf8"))};`,
-      `const base = ${JSON.stringify(await readFile(base, "utf8"))};`,
-      "document.body.appendChild(createDemo(meta, base));",
+      "<script type='module'>",
+      "import { createDemo } from './demo.mjs';",
+      `const meta = ${JSON.stringify(meta)};`,
+      `const base = ${JSON.stringify(base)};`,
+      "const worker = './worker.mjs';",
+      "document.body.appendChild(createDemo({ meta, base, worker }));",
       "</script>",
       "</html>",
     ].join("\n"),
@@ -65,10 +66,35 @@ const compile = async (name) => {
   );
 };
 
+/**
+ * @type {(
+ *   name: string,
+ * ) => string}
+ */
+const toListItem = (name) => `<li><a href='./${name}.html'>${name}</a></li>`;
+
 await expand("trace");
-await mkdir(new URL("./page/demo", import.meta.url), { recursive: true });
+await mkdir("./page/demo", { recursive: true });
 await bundle("demo");
 await bundle("worker");
-await compile("apply");
-await compile("trace");
-await compile("track");
+/** @type {["apply", "trace", "track"]} */
+const names = ["apply", "trace", "track"];
+for (const name of names) {
+  await compile(name);
+}
+await writeFile(
+  `./page/demo/index.html`,
+  [
+    "<!DOCTYPE html>",
+    "<html lang='en'>",
+    "<head><meta charset='utf-8'/><title>Aran Demo</title></head>",
+    "<body>",
+    "<h1>Aran Demo</h1>",
+    "<ul>",
+    ...names.map(toListItem),
+    "</ul>",
+    "</body>",
+    "</html>",
+  ].join("\n"),
+  "utf8",
+);

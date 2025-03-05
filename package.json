@@ -27,7 +27,7 @@
     "document": "npx typedoc && open page/typedoc/index.html",
     "deploy-page": "sh page.sh",
     "bundle-demo": "node demo/bundle.mjs",
-    "serve-demo": "echo http://127.0.0.1:8080/index.html && npx http-server page/demo",
+    "serve-demo": "npx http-server page/demo",
     "load262": "git clone --filter=tree:0 https://github.com/tc39/test262 test/262/test262",
     "build262": "node test/262/tagging/main-generate.mjs && node test/262/stagging/main-generate.mjs",
     "move262": "node --experimental-vm-modules --expose-gc test/262/main/move.mjs",
