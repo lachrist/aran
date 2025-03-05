@@ -86,9 +86,12 @@ Hello!
 
 ## Live Demo
 
-- [apply](https://lachrist.github.io/aran/page/demo/apply.html)
-- [trace](https://lachrist.github.io/aran/page/demo/trace.html)
-- [track](https://lachrist.github.io/aran/page/demo/track.html)
+- [apply](https://lachrist.github.io/aran/page/demo/apply.html): Basic tracing
+  of functions calls.
+- [trace](https://lachrist.github.io/aran/page/demo/trace.html): Comprehensive
+  tracing showcasing the standard aspect format.
+- [track](https://lachrist.github.io/aran/page/demo/track.html): Provenancial
+  equality with [linvail](https://github.com/lachrist/linvail).
 
 ## API
 
