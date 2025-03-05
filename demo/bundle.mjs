@@ -79,7 +79,7 @@ const toListItem = (name) => `<li><a href='./${name}.html'>${name}</a></li>`;
 await expand("trace");
 await mkdir("./page/demo", { recursive: true });
 await bundle("demo");
-// await bundle("worker");
+await bundle("worker");
 /** @type {["apply", "trace", "track"]} */
 const names = ["apply", "trace", "track"];
 for (const name of names) {
