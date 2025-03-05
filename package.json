@@ -8,7 +8,9 @@
   },
   "files": [
     "/lib/**/*.mjs",
-    "/lib/**/*.d.ts"
+    "/lib/**/*.d.ts",
+    "!/lib/**/*.test.mjs",
+    "!/lib/*.fixture.mjs"
   ],
   "main": "lib/index.mjs",
   "types": "lib/index.d.ts",
