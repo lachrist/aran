@@ -80,22 +80,9 @@ const createButton = (label) => {
 };
 
 /**
- * @type {(
- *   config: {
- *     meta: string,
- *     base: string,
- *     worker: string,
- *   },
- * ) => HTMLElement}
+ * @type {() => HTMLElement}
  */
-export const createDemo = (config) => {
-  /** @type {null | Worker} */
-  let worker = null;
-  const meta = createEditor(config.meta);
-  const base = createEditor(config.base);
-  const play = createButton("Play");
-  const stop = createButton("Stop");
-  const clear = createButton("Clear");
+const createLog = () => {
   const log = document.createElement("pre");
   log.tabIndex = 0; // make it focusable
   log.style.margin = "0px";
@@ -126,6 +113,28 @@ export const createDemo = (config) => {
       }
     }
   });
+  return log;
+};
+
+/**
+ * @type {(
+ *   config: {
+ *     title: string,
+ *     meta: string,
+ *     base: string,
+ *     worker: string,
+ *   },
+ * ) => HTMLElement}
+ */
+export const createDemo = (config) => {
+  /** @type {null | Worker} */
+  let worker = null;
+  const meta = createEditor(config.meta);
+  const base = createEditor(config.base);
+  const play = createButton("Play");
+  const stop = createButton("Stop");
+  const clear = createButton("Clear");
+  const log = createLog();
   stop.disabled = true;
   clear.addEventListener("click", (_event) => {
     log.textContent = "";
@@ -156,9 +165,18 @@ export const createDemo = (config) => {
     const main = document.createElement("div");
     {
       const head = document.createElement("div");
+      head.style.display = "flex";
+      head.style.alignItems = "center";
       head.appendChild(play);
       head.appendChild(stop);
       head.appendChild(clear);
+      {
+        const title = document.createElement("h1");
+        title.style.marginLeft = "10px";
+        title.style.display = "inline";
+        title.textContent = config.title;
+        head.appendChild(title);
+      }
       main.appendChild(head);
     }
     main.appendChild(document.createElement("hr"));

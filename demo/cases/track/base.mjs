@@ -1,3 +1,5 @@
+// Target //
+
 /** @type {(value: unknown) => void} */
 const log = /** @type {any} */ (globalThis).log;
 

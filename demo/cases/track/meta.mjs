@@ -1,3 +1,5 @@
+// Instrumentation //
+
 /** @type {import("../../context").Context} */
 const {
   log,

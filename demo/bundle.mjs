@@ -46,6 +46,7 @@ const bundle = async (name) => {
 const compile = async (name) => {
   const meta = await readFile(`./demo/cases/${name}/meta.mjs`, "utf8");
   const base = await readFile(`./demo/cases/${name}/base.mjs`, "utf8");
+  const title = await readFile(`./demo/cases/${name}/title.txt`, "utf8");
   await writeFile(
     `./page/demo/${name}.html`,
     [
@@ -55,10 +56,12 @@ const compile = async (name) => {
       "<body></body>",
       "<script type='module'>",
       "import { createDemo } from './demo.mjs';",
+      `const title = ${JSON.stringify(title.trim())};`,
+      "const worker = './worker.mjs';",
       `const meta = ${JSON.stringify(meta)};`,
       `const base = ${JSON.stringify(base)};`,
-      "const worker = './worker.mjs';",
-      "document.body.appendChild(createDemo({ meta, base, worker }));",
+      "const config = { title, worker, meta, base };",
+      "document.body.appendChild(createDemo(config));",
       "</script>",
       "</html>",
     ].join("\n"),
@@ -76,7 +79,7 @@ const toListItem = (name) => `<li><a href='./${name}.html'>${name}</a></li>`;
 await expand("trace");
 await mkdir("./page/demo", { recursive: true });
 await bundle("demo");
-await bundle("worker");
+// await bundle("worker");
 /** @type {["apply", "trace", "track"]} */
 const names = ["apply", "trace", "track"];
 for (const name of names) {
