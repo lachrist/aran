@@ -1,24 +1,21 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { rollup } from "rollup";
 import resolve from "@rollup/plugin-node-resolve";
 import terser from "@rollup/plugin-terser";
 
 /**
  * @type {(
- *   name: string,
+ *   name: "trace",
  * ) => Promise<void>}
  */
 const expand = async (name) => {
-  const aspect = await readFile(
-    new URL(`../test/aspects/${name}.mjs`, import.meta.url),
-    "utf8",
-  );
+  const aspect = await readFile(`./test/aspects/${name}.mjs`, "utf8");
   const template = await readFile(
-    new URL(`meta/${name}-template.mjs`, import.meta.url),
+    `./demo/cases/${name}/meta-template.mjs`,
     "utf8",
   );
   await writeFile(
-    new URL(`meta/${name}.mjs`, import.meta.url),
+    new URL(`./demo/cases/${name}/meta.mjs`, import.meta.url),
     template
       .replace("/* ASPECT */", aspect.replaceAll("export const ", "const "))
       .replaceAll(/\n\n\n+/gu, "\n\n"),
@@ -27,20 +24,7 @@ const expand = async (name) => {
 
 /**
  * @type {(
- *   name: string,
- * ) => Promise<void>}
- */
-const sourceify = async (name) => {
-  const code = await readFile(new URL(`${name}.mjs`, import.meta.url), "utf8");
-  await writeFile(
-    new URL(`${name}-source.mjs`, import.meta.url),
-    `export default ${JSON.stringify(code)};\n`,
-  );
-};
-
-/**
- * @type {(
- *   name: string,
+ *   name: "demo" | "worker",
  * ) => Promise<void>}
  */
 const bundle = async (name) => {
@@ -49,53 +33,42 @@ const bundle = async (name) => {
     plugins: [resolve(), terser()],
   });
   await bundle.write({
-    file: `./demo/${name}-bundle.mjs`,
+    file: `./page/demo/${name}.mjs`,
     format: "module",
   });
 };
 
 /**
  * @type {(
- *   name: string,
+ *   name: "apply" | "trace" | "track",
  * ) => Promise<void>}
  */
-const pageify = async (name) => {
-  const main = await readFile(
-    new URL(`${name}-bundle.mjs`, import.meta.url),
-    "utf8",
-  );
+const compile = async (name) => {
+  const meta = `./demo/cases/${name}/meta.mjs`;
+  const base = `./demo/cases/${name}/base.mjs`;
   await writeFile(
-    new URL(`${name}.html`, import.meta.url),
-    `
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="utf-8"/>
-          <title>Aran Demo</title>
-        </head>
-        <body></body>
-        <script>${main}</script>
-      </html>
-    `,
+    `./page/demo/${name}.html`,
+    [
+      "<!DOCTYPE html>",
+      '<html lang="en">',
+      '<head><meta charset="utf-8"/><title>Aran Demo</title></head>',
+      "<body></body>",
+      "<script>",
+      'import { createDemo } from "./demo.mjs";',
+      `const meta = ${JSON.stringify(await readFile(meta, "utf8"))};`,
+      `const base = ${JSON.stringify(await readFile(base, "utf8"))};`,
+      "document.body.appendChild(createDemo(meta, base));",
+      "</script>",
+      "</html>",
+    ].join("\n"),
     "utf8",
   );
 };
 
-await bundle("worker");
-await sourceify("worker-bundle");
-
-await sourceify("base/fac");
-await sourceify("meta/apply");
-await bundle("case/apply");
-await pageify("case/apply");
-
 await expand("trace");
-await sourceify("base/fac");
-await sourceify("meta/trace");
-await bundle("case/trace");
-await pageify("case/trace");
-
-await sourceify("base/provenance");
-await sourceify("meta/provenance");
-await bundle("case/provenance");
-await pageify("case/provenance");
+await mkdir(new URL("./page/demo", import.meta.url), { recursive: true });
+await bundle("demo");
+await bundle("worker");
+await compile("apply");
+await compile("trace");
+await compile("track");

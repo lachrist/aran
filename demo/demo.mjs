@@ -23,13 +23,6 @@ import {
 } from "@codemirror/language";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { javascript } from "@codemirror/lang-javascript";
-import worker_source from "./worker-bundle-source.mjs";
-
-const worker_blob = new Blob([worker_source], {
-  type: "application/javascript",
-});
-
-const worker_url = URL.createObjectURL(worker_blob);
 
 const { document, Worker } = globalThis;
 
@@ -110,9 +103,7 @@ export const createDemo = (meta_content, base_content) => {
     if (worker !== null) {
       worker.terminate();
     }
-    worker = new Worker(worker_url, {
-      type: "module",
-    });
+    worker = new Worker("./worker.mjs", { type: "module" });
     worker.postMessage({
       meta: meta.editor.state.doc.toString(),
       base: base.editor.state.doc.toString(),

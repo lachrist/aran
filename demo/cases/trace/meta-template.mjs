@@ -1,24 +1,28 @@
+/** @type {import("../../context").Context} */
 const {
   log,
   aran: { setupile, transpile, retropile, weaveStandard },
   astring: { generate },
   acorn: { parse },
   target,
-} = /** @type {import("../context").Context} */ (
-  // @ts-ignore
-  context
-);
+} = /** @type {any} */ (globalThis).context;
+
+const {
+  eval: evalGlobal,
+  Symbol,
+  Reflect,
+  Reflect: { defineProperty },
+} = globalThis;
 
 /* ASPECT */
 
-/** @type {any} */ (globalThis)[advice_global_variable] = createTraceAdvice(
-  weaveStandard,
-  {
-    Reflect: /** @type {any} */ (globalThis.Reflect),
-    Symbol: globalThis.Symbol,
-    console: { log },
-  },
-);
+const advice = createTraceAdvice(weaveStandard, {
+  Reflect: /** @type {any} */ (Reflect),
+  Symbol,
+  console: { log },
+});
+
+defineProperty(globalThis, advice_global_variable, { value: advice });
 
 /**
  * @type {import("aran").Digest<{
@@ -29,9 +33,9 @@ const {
 const digest = (_node, node_path, file_path, _kind) =>
   /** @type {NodeHash} */ (`${file_path}:${node_path}`);
 
-globalThis.eval(generate(setupile({})));
+evalGlobal(generate(setupile({})));
 
-globalThis.eval(
+evalGlobal(
   generate(
     retropile(
       weaveStandard(

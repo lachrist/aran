@@ -13,5 +13,5 @@
     "typeRoots": ["../node_modules/@types"],
     "exactOptionalPropertyTypes": true
   },
-  "exclude": ["**/*-bundle.mjs", "./meta/trace-template.mjs"]
+  "exclude": ["**/*-template.mjs"]
 }

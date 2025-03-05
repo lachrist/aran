@@ -1,18 +1,16 @@
+/** @type {import("../../context").Context} */
 const {
   log,
   target,
   aran: { instrument },
   astring: { generate },
   acorn: { parse },
-} = /** @type {import("../context").Context} */ (
-  // @ts-ignore
-  context
-);
+} = /** @type {any} */ (globalThis).context;
 
 /** @type {(value: unknown) => string} */
 const show = (value) => {
   if (typeof value === "function") {
-    return String(value.name ?? "anonynmous");
+    return String(value.name || "anonynmous");
   } else if (typeof value === "object" && value !== null) {
     return "#" + Object.prototype.toString.call(value).slice(8, -1);
   } else if (typeof value === "symbol") {
@@ -24,10 +22,12 @@ const show = (value) => {
   }
 };
 
+const advice_global_variable = "_ARAN_ADVICE_";
+
 let depth = 0;
 
 /** @type {import("aran").StandardAdvice} */
-globalThis._ARAN_ADVICE_ = {
+const advice = {
   "apply@around": (_state, callee, that, input, _location) => {
     depth += 1;
     const indent = "..".repeat(depth);
@@ -49,19 +49,10 @@ globalThis._ARAN_ADVICE_ = {
   },
 };
 
-globalThis.eval(
-  generate(
-    instrument(
-      {
-        kind: "eval",
-        path: "main",
-        root: parse(target, { sourceType: "script", ecmaVersion: 2024 }),
-      },
-      {
-        mode: "standalone",
-        advice_global_variable: "_ARAN_ADVICE_",
-        pointcut: ["apply@around"],
-      },
-    ),
-  ),
+Reflect.defineProperty(globalThis, advice_global_variable, { value: advice });
+const root1 = parse(target, { sourceType: "script", ecmaVersion: 2024 });
+const root2 = instrument(
+  { kind: "eval", path: "main", root: root1 },
+  { mode: "standalone", advice_global_variable, pointcut: ["apply@around"] },
 );
+globalThis.eval(generate(root2));
