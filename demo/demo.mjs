@@ -97,6 +97,35 @@ export const createDemo = (config) => {
   const stop = createButton("Stop");
   const clear = createButton("Clear");
   const log = document.createElement("pre");
+  log.tabIndex = 0; // make it focusable
+  log.style.margin = "0px";
+  log.style.borderWidth = "1px";
+  log.style.borderStyle = "dotted";
+  log.style.borderColor = "transparent";
+  log.style.paddingLeft = "1em";
+  log.addEventListener("focus", () => {
+    log.style.borderColor = "gray";
+  });
+  // When the pre element loses focus
+  log.addEventListener("blur", () => {
+    log.style.borderColor = "transparent";
+  });
+  document.addEventListener("keydown", function (event) {
+    if (
+      (event.metaKey || event.ctrlKey) &&
+      event.key === "a" &&
+      document.activeElement === log
+    ) {
+      const selection = window.getSelection();
+      if (selection) {
+        event.preventDefault();
+        const range = document.createRange();
+        range.selectNodeContents(log);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }
+  });
   stop.disabled = true;
   clear.addEventListener("click", (_event) => {
     log.textContent = "";
@@ -125,15 +154,37 @@ export const createDemo = (config) => {
   });
   {
     const main = document.createElement("div");
-    main.appendChild(play);
-    main.appendChild(stop);
-    main.appendChild(clear);
+    {
+      const head = document.createElement("div");
+      head.appendChild(play);
+      head.appendChild(stop);
+      head.appendChild(clear);
+      main.appendChild(head);
+    }
+    main.appendChild(document.createElement("hr"));
+    {
+      const body = document.createElement("div");
+      body.style.display = "flex";
+      body.style.flexWrap = "wrap";
+      {
+        const column1 = document.createElement("div");
+        column1.style.flex = "1";
+        column1.appendChild(base.element);
+        body.appendChild(column1);
+      }
+      {
+        const column2 = document.createElement("div");
+        column2.style.flex = "1";
+        column2.style.borderLeftColor = "black";
+        column2.style.borderLeftStyle = "solid";
+        column2.style.borderLeftWidth = "1px";
+        column2.appendChild(log);
+        body.appendChild(column2);
+      }
+      main.appendChild(body);
+    }
     main.appendChild(document.createElement("hr"));
     main.appendChild(meta.element);
-    main.appendChild(document.createElement("hr"));
-    main.appendChild(base.element);
-    main.appendChild(document.createElement("hr"));
-    main.appendChild(log);
     return main;
   }
 };
