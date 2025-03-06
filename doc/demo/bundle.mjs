@@ -1,7 +1,8 @@
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readdir, readFile, writeFile, mkdir } from "node:fs/promises";
 import { rollup } from "rollup";
 import resolve from "@rollup/plugin-node-resolve";
 import terser from "@rollup/plugin-terser";
+import { fileURLToPath } from "node:url";
 
 /**
  * @type {(
@@ -32,18 +33,20 @@ const expand = async (name) => {
  */
 const bundle = async (name) => {
   const bundle = await rollup({
-    input: new URL(`${name}.mjs`, import.meta.url).href,
+    input: fileURLToPath(new URL(`${name}.mjs`, import.meta.url).href),
     plugins: [resolve(), terser()],
   });
   await bundle.write({
-    file: new URL(`../src/demo/${name}.mjs`, import.meta.url).href,
+    file: fileURLToPath(
+      new URL(`../out/demo/${name}.mjs`, import.meta.url).href,
+    ),
     format: "module",
   });
 };
 
 /**
  * @type {(
- *   name: "apply" | "trace" | "track",
+ *   name: string,
  * ) => Promise<void>}
  */
 const compile = async (name) => {
@@ -55,53 +58,27 @@ const compile = async (name) => {
     new URL(`cases/${name}/base.mjs`, import.meta.url),
     "utf8",
   );
-  const title = await readFile(
-    new URL(`cases/${name}/title.txt`, import.meta.url),
-    "utf8",
-  );
   await writeFile(
-    new URL(`../src/demo/${name}.md`, import.meta.url),
+    new URL(`../out/demo/${name}.mjs`, import.meta.url),
     [
-      "---",
-      "layout: default",
-      `title: ${title}`,
-      "---",
-      "<script type='module'>",
       "import { createDemo } from './demo.mjs';",
-      `const title = ${JSON.stringify(title.trim())};`,
       "const worker = './worker.mjs';",
       `const meta = ${JSON.stringify(meta)};`,
       `const base = ${JSON.stringify(base)};`,
-      "const config = { title, worker, meta, base };",
-      "document.body.appendChild(createDemo(config));",
-      "</script>",
+      "const header_class = 'wrapper';",
+      "const config = { worker, meta, base, header_class };",
+      "const content = document.getElementsByClassName('page-content')[0];",
+      "content.appendChild(createDemo(config));",
+      "",
     ].join("\n"),
     "utf8",
   );
 };
 
 await expand("trace");
-await mkdir(new URL(""), { recursive: true });
+await mkdir(new URL("../out/demo", import.meta.url), { recursive: true });
 await bundle("demo");
-await bundle("worker");
-/** @type {["apply", "trace", "track"]} */
-const names = ["apply", "trace", "track"];
-for (const name of names) {
+// await bundle("worker");
+for (const name of await readdir(new URL("cases", import.meta.url))) {
   await compile(name);
-}
-
-{
-  const content = ["---", "layout: default", "title: Aran Demo", "---"];
-  for (const name of names) {
-    const title = await readFile(
-      new URL(`cases/${name}/title.txt`, import.meta.url),
-      "utf8",
-    );
-    content.push(`- [${name}](/demo/${name}.html): ${title}.`);
-  }
-  await writeFile(
-    new URL(`../src/demo/index.md`, import.meta.url),
-    content.join("\n"),
-    "utf8",
-  );
 }

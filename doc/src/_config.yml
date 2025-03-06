@@ -1,4 +1,13 @@
 title: Aran Documentation
+author: Laurent Christophe
+email: laurent.christophe.terken@gmail.com
 description: Documentation for Aran, a JavaScript Instrumentation Library
 theme: minima
-destination: ../out
+source: doc/src
+destination: doc/out
+plugins:
+  - jekyll-seo-tag
+header_pages:
+  - demo.md
+  - typedoc.md
+github_username: lachrist

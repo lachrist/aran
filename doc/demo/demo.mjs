@@ -72,10 +72,8 @@ const createEditor = (initial) => {
  */
 const createButton = (label) => {
   const button = document.createElement("button");
+  button.style.marginRight = "1em";
   button.textContent = label;
-  button.style.fontSize = "1.5em";
-  button.style.fontFamily = "monospace";
-  button.style.margin = "0.5em";
   return button;
 };
 
@@ -119,10 +117,10 @@ const createLog = () => {
 /**
  * @type {(
  *   config: {
- *     title: string,
  *     meta: string,
  *     base: string,
  *     worker: string,
+ *     header_class: string,
  *   },
  * ) => HTMLElement}
  */
@@ -165,18 +163,11 @@ export const createDemo = (config) => {
     const main = document.createElement("div");
     {
       const head = document.createElement("div");
-      head.style.display = "flex";
-      head.style.alignItems = "center";
+      head.style.marginBottom = "1em";
+      head.className = config.header_class;
       head.appendChild(play);
       head.appendChild(stop);
       head.appendChild(clear);
-      {
-        const title = document.createElement("h1");
-        title.style.marginLeft = "10px";
-        title.style.display = "inline";
-        title.textContent = config.title;
-        head.appendChild(title);
-      }
       main.appendChild(head);
     }
     main.appendChild(document.createElement("hr"));
