@@ -1,9 +1,3 @@
-mkdir -p page
-mkdir -p page/demo
-echo "disable jekyll" > page/.nojekyll
-
-npx typedoc
-node demo/bundle.mjs
 
 git branch -D page
 git checkout --orphan page

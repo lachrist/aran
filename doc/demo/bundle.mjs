@@ -9,13 +9,16 @@ import terser from "@rollup/plugin-terser";
  * ) => Promise<void>}
  */
 const expand = async (name) => {
-  const aspect = await readFile(`./test/aspects/${name}.mjs`, "utf8");
+  const aspect = await readFile(
+    new URL(`../../test/aspects/${name}.mjs`, import.meta.url),
+    "utf8",
+  );
   const template = await readFile(
-    `./demo/cases/${name}/meta-template.mjs`,
+    new URL(`cases/${name}/meta-template.mjs`, import.meta.url),
     "utf8",
   );
   await writeFile(
-    `./demo/cases/${name}/meta.mjs`,
+    new URL(`cases/${name}/meta.mjs`, import.meta.url),
     template
       .replace("/* ASPECT */", aspect.replaceAll("export const ", "const "))
       .replaceAll(/\n\n\n+/gu, "\n\n"),
@@ -29,11 +32,11 @@ const expand = async (name) => {
  */
 const bundle = async (name) => {
   const bundle = await rollup({
-    input: `./demo/${name}.mjs`,
+    input: new URL(`${name}.mjs`, import.meta.url).href,
     plugins: [resolve(), terser()],
   });
   await bundle.write({
-    file: `./page/demo/${name}.mjs`,
+    file: new URL(`../src/demo/${name}.mjs`, import.meta.url).href,
     format: "module",
   });
 };
@@ -44,16 +47,25 @@ const bundle = async (name) => {
  * ) => Promise<void>}
  */
 const compile = async (name) => {
-  const meta = await readFile(`./demo/cases/${name}/meta.mjs`, "utf8");
-  const base = await readFile(`./demo/cases/${name}/base.mjs`, "utf8");
-  const title = await readFile(`./demo/cases/${name}/title.txt`, "utf8");
+  const meta = await readFile(
+    new URL(`cases/${name}/meta.mjs`, import.meta.url),
+    "utf8",
+  );
+  const base = await readFile(
+    new URL(`cases/${name}/base.mjs`, import.meta.url),
+    "utf8",
+  );
+  const title = await readFile(
+    new URL(`cases/${name}/title.txt`, import.meta.url),
+    "utf8",
+  );
   await writeFile(
-    `./page/demo/${name}.html`,
+    new URL(`../src/demo/${name}.md`, import.meta.url),
     [
-      "<!DOCTYPE html>",
-      "<html lang='en'>",
-      "<head><meta charset='utf-8'/><title>Aran Demo</title></head>",
-      "<body></body>",
+      "---",
+      "layout: default",
+      `title: ${title}`,
+      "---",
       "<script type='module'>",
       "import { createDemo } from './demo.mjs';",
       `const title = ${JSON.stringify(title.trim())};`,
@@ -63,21 +75,13 @@ const compile = async (name) => {
       "const config = { title, worker, meta, base };",
       "document.body.appendChild(createDemo(config));",
       "</script>",
-      "</html>",
     ].join("\n"),
     "utf8",
   );
 };
 
-/**
- * @type {(
- *   name: string,
- * ) => string}
- */
-const toListItem = (name) => `<li><a href='./${name}.html'>${name}</a></li>`;
-
 await expand("trace");
-await mkdir("./page/demo", { recursive: true });
+await mkdir(new URL(""), { recursive: true });
 await bundle("demo");
 await bundle("worker");
 /** @type {["apply", "trace", "track"]} */
@@ -85,19 +89,19 @@ const names = ["apply", "trace", "track"];
 for (const name of names) {
   await compile(name);
 }
-await writeFile(
-  `./page/demo/index.html`,
-  [
-    "<!DOCTYPE html>",
-    "<html lang='en'>",
-    "<head><meta charset='utf-8'/><title>Aran Demo</title></head>",
-    "<body>",
-    "<h1>Aran Demo</h1>",
-    "<ul>",
-    ...names.map(toListItem),
-    "</ul>",
-    "</body>",
-    "</html>",
-  ].join("\n"),
-  "utf8",
-);
+
+{
+  const content = ["---", "layout: default", "title: Aran Demo", "---"];
+  for (const name of names) {
+    const title = await readFile(
+      new URL(`cases/${name}/title.txt`, import.meta.url),
+      "utf8",
+    );
+    content.push(`- [${name}](/demo/${name}.html): ${title}.`);
+  }
+  await writeFile(
+    new URL(`../src/demo/index.md`, import.meta.url),
+    content.join("\n"),
+    "utf8",
+  );
+}

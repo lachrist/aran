@@ -13,5 +13,5 @@
     "typeRoots": ["../node_modules/@types"],
     "exactOptionalPropertyTypes": true
   },
-  "exclude": ["**/*-template.mjs"]
+  "exclude": ["../../demo/**/*-template.mjs"]
 }

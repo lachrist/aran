@@ -1,0 +1,4 @@
+title: Aran Documentation
+description: Documentation for Aran, a JavaScript Instrumentation Library
+theme: minima
+destination: ../out

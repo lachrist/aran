@@ -3,7 +3,7 @@
   "kindSortOrder": ["Class", "Function", "Variable", "TypeAlias"],
   "githubPages": true,
   "readme": "none",
-  "out": "page/typedoc",
+  "out": "doc/out/typedoc",
   "name": "Aran",
   "tsconfig": "tsconfig.json",
   "visibilityFilters": {},
