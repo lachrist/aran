@@ -6,4 +6,3 @@ git add -f docs
 git commit -m "deploy to GitHub pages"
 git push -f origin page
 git checkout -f main
-mv docs doc/out
