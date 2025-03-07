@@ -56,7 +56,7 @@ export const toast = (message) => {
   toast.style.position = "fixed";
   toast.style.bottom = "20px";
   toast.style.right = "20px";
-  toast.style.background = "black";
+  toast.style.backgroundColor = "black";
   toast.style.color = "white";
   toast.style.padding = "10px";
   toast.style.borderRadius = "5px";
@@ -108,6 +108,7 @@ const createLog = () => {
   log.style.borderStyle = "dotted";
   log.style.borderColor = "transparent";
   log.style.paddingLeft = "1em";
+  log.style.backgroundColor = "white";
   log.addEventListener("focus", () => {
     log.style.borderColor = "gray";
   });
