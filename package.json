@@ -24,6 +24,7 @@
   "scripts": {
     "gen-doc": "sh doc/build.sh",
     "dep-doc": "sh doc/deploy.sh",
+    "ser-doc": "sh doc/serve.sh",
     "lint": "npx eslint 'lint/**/*.mjs' 'test/**/*.mjs' 'lib/**/*.mjs'",
     "check-type": "npx tsc -p tsconfig.json && npx tsc -p demo/tsconfig.json",
     "check-format": "npx prettier -c '**/*.(mjs|d.ts)'",

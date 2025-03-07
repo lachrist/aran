@@ -7,7 +7,7 @@ title: TypeDoc
 
 <script type="module" defer>
 const frame = document.createElement("iframe");
-frame.src = "/typedoc/index.html";
+frame.src = "/aran/typedoc/index.html";
 frame.style.width = "100%";
 frame.style.border = "none";
 const content = document.getElementsByClassName("page-content")[0];

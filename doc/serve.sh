@@ -1,1 +1,1 @@
-npx http-server doc/out
+npx http-server doc
