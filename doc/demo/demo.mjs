@@ -93,6 +93,7 @@ const createEditor = (initial) => {
 const createButton = (label) => {
   const button = document.createElement("button");
   button.style.marginRight = "1em";
+  button.style.padding = "0.5em";
   button.textContent = label;
   return button;
 };
