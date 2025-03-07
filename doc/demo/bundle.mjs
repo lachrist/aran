@@ -82,7 +82,7 @@ const compile = async (name) => {
 await expand("trace");
 await mkdir(new URL("../out/demo", import.meta.url), { recursive: true });
 await bundle("demo");
-// await bundle("worker");
+await bundle("worker");
 for (const name of await readdir(new URL("cases", import.meta.url))) {
   await compile(name);
 }
