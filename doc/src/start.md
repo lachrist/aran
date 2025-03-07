@@ -1,9 +1,7 @@
 ---
-layout: default
+layout: default-title
 title: Quick Start
 ---
-
-# Quick Start
 
 Aran can be installed with `npm install aran`. Since Aran exclusively manipulates [estree](https://github.com/estree/estree), it requires both a parser and a code generator to function. We recommend using [acorn](https://www.npmjs.com/package/acorn) as the parser and [astring](https://www.npmjs.com/package/astring) as the code generator. Below is a minimal working example demonstrating the use of `acorn.parse`, `aran.instrument`, and `astring.generate`:
 

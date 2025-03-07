@@ -1,9 +1,7 @@
 ---
-layout: default
+layout: default-title
 title: API
 ---
-
-# API
 
 ![Aran's flowchart](/assets/flowchart.png)
 

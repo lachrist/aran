@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: default-title
 title: Patch Membrane Miss Deep Eval
 ---
 

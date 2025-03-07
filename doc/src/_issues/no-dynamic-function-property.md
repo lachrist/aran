@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: default-title
 title: No Dynamic Function Property
 ---
 

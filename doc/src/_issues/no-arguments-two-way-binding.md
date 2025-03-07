@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: default-title
 title: No Arguments Two-Way Binding
 ---
 

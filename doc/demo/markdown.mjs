@@ -1,36 +1,48 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 
-await mkdir(new URL(`../src/demo`, import.meta.url), { recursive: true });
-const content = [
-  "---",
-  "layout: default",
-  "title: Live Demo",
-  "---",
-  "# Live Demo",
-];
+/**
+ * @type {{name: string, title: string}[]}
+ */
+const demos = [];
 for (const name of await readdir(new URL("cases", import.meta.url))) {
-  const title = await readFile(
-    new URL(`cases/${name}/title.txt`, import.meta.url),
-    "utf8",
-  );
+  demos.push({
+    name,
+    title: (
+      await readFile(
+        new URL(`cases/${name}/title.txt`, import.meta.url),
+        "utf8",
+      )
+    ).trim(),
+  });
+}
+
+await mkdir(new URL(`../src/demo`, import.meta.url), { recursive: true });
+
+for (const { name, title } of demos) {
   await writeFile(
     new URL(`../src/demo/${name}.md`, import.meta.url),
     [
       "---",
-      "layout: default",
+      "layout: default-title",
       `title: ${title}`,
       "---",
-      `# ${title}`,
       `<script type='module' src='./${name}.mjs' defer></script>`,
       "",
     ].join("\n"),
     "utf8",
   );
-  content.push(`- [${name}](/demo/${name}.html): ${title}.`);
 }
-content.push("");
+
 await writeFile(
   new URL(`../src/demo.md`, import.meta.url),
-  content.join("\n"),
+  [
+    "---",
+    "layout: default-title",
+    "title: Live Demo",
+    "---",
+    "",
+    ...demos.map(({ name, title }) => `- [${title}](/demo/${name}.html)`),
+    "",
+  ].join("\n"),
   "utf8",
 );

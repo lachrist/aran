@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: default-title
 title: Corrupt Error Stack
 ---
 

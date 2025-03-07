@@ -1,9 +1,9 @@
 ---
 layout: default
-title: Aran Documentation
+title: Aran
 ---
 
-# Aran <img src="/assets/aran.png" align="right" alt="aran-logo" title="Aran Linvail the shadow master"/>
+# Aran <img src="/assets/aran.png" align="right" alt="aran-logo" title="Aran Linvail, the shadow master"/>
 
 Aran is a [npm module](https://www.npmjs.com/package/aran) for instrumenting JavaScript code. Aran was designed as a generic infrastructure for building various development-time dynamic program analyses such as: object and function profiling, debugging, control-flow tracing, taint analysis, and concolic testing. Aran is a JavaScript library without any dependencies that only exports functions for manipulating [estree](https://github.com/estree/estree). Hence, additional work is required to deploy program analysis onto projects.
 
