@@ -41,7 +41,7 @@ await writeFile(
     "title: Live Demo",
     "---",
     "",
-    ...demos.map(({ name, title }) => `- [${title}](./demo/${name}.html)`),
+    ...demos.map(({ name, title }) => `- [${title}](/aran/demo/${name}.html)`),
     "",
   ].join("\n"),
   "utf8",
