@@ -201,7 +201,7 @@ export const createDemo = (config) => {
   const clear = createButton("Clear");
   const save = createButton("Export \u{1F4CB}");
   save.addEventListener("click", (_event) => {
-    const href = `http://${location.host}/demo/blank.html?${[
+    const href = `http://${location.host}/aran/demo/blank.html?${[
       `version=${encodeURIComponent(config.version)}`,
       `base=${encodeURIComponent(base.editor.state.doc.toString())}`,
       `meta=${encodeURIComponent(meta.editor.state.doc.toString())}`,
