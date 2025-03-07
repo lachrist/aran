@@ -3,8 +3,9 @@ author: Laurent Christophe
 email: laurent.christophe.terken@gmail.com
 description: Documentation for Aran, a JavaScript Instrumentation Library
 theme: minima
+baseurl: /aran
 source: doc/src
-destination: doc/out
+destination: doc/aran
 collections:
   issues:
     output: true

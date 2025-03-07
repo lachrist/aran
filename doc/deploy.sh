@@ -1,4 +1,4 @@
-mv doc/out docs
+mv doc/aran docs
 git branch -D page
 git checkout --orphan page
 git reset

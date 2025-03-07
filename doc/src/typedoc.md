@@ -3,7 +3,7 @@ layout: default
 title: TypeDoc
 ---
 
-# [TypeDoc ⧉](/typedoc/index.html)
+# [TypeDoc ⧉](./typedoc/index.html)
 
 <script type="module" defer>
 const frame = document.createElement("iframe");
