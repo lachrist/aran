@@ -1,8 +1,9 @@
-When a constructor initialize `this`, if the prototype of `new.target` is not a
-proper object, the `Object.prototype` intrinsic of the realm were `new.target`
-was created should be used. Because there is currently no way to resolve the
-realm of an arbitrary value, Aran uses the `Object.prototype` intrinsic of the
-realm where the constructor was created instead.
+---
+layout: default
+title: Wrong Realm for Default Prototype
+---
+
+When a constructor initialize `this`, if the prototype of `new.target` is not a proper object, the `Object.prototype` intrinsic of the realm were `new.target` was created should be used. Because there is currently no way to resolve the realm of an arbitrary value, Aran uses the `Object.prototype` intrinsic of the realm where the constructor was created instead.
 
 ```js
 const local = globalThis;

@@ -1,8 +1,9 @@
-In sloppy mode, functions with simple parameter list have their parameters
-two-way bound with the `arguments` object. This means that changes to the
-arguments object are reflected by the parameter values and vice versa. Aran does
-not preserve this (crazy) behavior. If this becomes a real issue, it could be
-possible to implement it with the `Proxy` API.
+---
+layout: default
+title: No Arguments Two-Way Binding
+---
+
+In sloppy mode, functions with simple parameter list have their parameters two-way bound with the `arguments` object. This means that changes to the arguments object are reflected by the parameter values and vice versa. Aran does not preserve this (crazy) behavior. If this becomes a real issue, it could be possible to implement it with the `Proxy` API.
 
 ```js
 function f(x) {

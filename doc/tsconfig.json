@@ -10,7 +10,7 @@
     "lib": ["DOM", "es2022"],
     "target": "es2022",
     "module": "Preserve",
-    "typeRoots": ["../../node_modules/@types"],
+    "typeRoots": ["../node_modules/@types"],
     "exactOptionalPropertyTypes": true
   },
   "exclude": ["**/*-template.mjs"]

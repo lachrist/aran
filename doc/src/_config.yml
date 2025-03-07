@@ -5,9 +5,16 @@ description: Documentation for Aran, a JavaScript Instrumentation Library
 theme: minima
 source: doc/src
 destination: doc/out
+collections:
+  issues:
+    output: true
+    permalink: /issues/:path
 plugins:
   - jekyll-seo-tag
 header_pages:
-  - demo.md
+  - start.md
+  - api.md
   - typedoc.md
+  - issues.md
+  - demo.md
 github_username: lachrist

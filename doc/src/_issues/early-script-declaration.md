@@ -1,9 +1,9 @@
-Script can declared block-scoped variables (ie: `let`, `const`, and `class`) in
-the global declarative record. If it is not reified (ie: the option
-`global_declarative_record` set to `native`), Aran hoists these declarations at
-the beginning of the file in a `let` declaration. Although the current program
-will honor the deadzone and immutability of these variables, other programs will
-not.
+---
+layout: default
+title: Early Script Declaration
+---
+
+Script can declared block-scoped variables (ie: `let`, `const`, and `class`) in the global declarative record. If it is not reified (ie: the option `global_declarative_record` set to `native`), Aran hoists these declarations at the beginning of the file in a `let` declaration. Although the current program will honor the deadzone and immutability of these variables, other programs will not.
 
 ```js
 try {

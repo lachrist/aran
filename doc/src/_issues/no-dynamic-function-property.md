@@ -1,8 +1,9 @@
-Sloppy functions have two own properties: `caller` and `arguments` which provide
-information about the last call of the function. This (crazy) behavior has been
-deprecated as it prevents optimizations but it is still part of the
-specification. Aran simply assigns these properties to null and never touches
-them again.
+---
+layout: default
+title: No Dynamic Function Property
+---
+
+Sloppy functions have two own properties: `caller` and `arguments` which provide information about the last call of the function. This (crazy) behavior has been deprecated as it prevents optimizations but it is still part of the specification. Aran simply assigns these properties to null and never touches them again.
 
 ```js
 function f() {
