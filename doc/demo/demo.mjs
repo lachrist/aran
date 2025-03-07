@@ -162,13 +162,15 @@ export const parsePreset = ({ location: { search }, version, base, meta }) => {
         );
       }
     }
-    return {
-      base: atob(params.get("base") ?? base),
-      meta: atob(params.get("meta") ?? meta),
-    };
   } else {
-    return { base, meta };
+    if (params.has("meta") || params.has("base")) {
+      toast(`Warning: Missing preset version`);
+    }
   }
+  return {
+    base: params.get("base") ?? base,
+    meta: params.get("meta") ?? meta,
+  };
 };
 
 /**
