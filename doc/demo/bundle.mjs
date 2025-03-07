@@ -66,12 +66,12 @@ const compile = async (name) => {
       "import { createDemo } from './demo.mjs';",
       "const content = document.getElementsByClassName('page-content')[0];",
       "content.appendChild(createDemo({",
-      "  location: globalThis.location",
+      "  location: globalThis.location,",
       `  version: ${JSON.stringify(version)},`,
-      `  base: ${JSON.stringify(base)}`,
-      `  meta: ${JSON.stringify(meta)}`,
-      "  worker: './worker.mjs'",
-      "  header_class: 'wrapper'",
+      `  base: ${JSON.stringify(base)},`,
+      `  meta: ${JSON.stringify(meta)},`,
+      "  worker: './worker.mjs',",
+      "  header_class: 'wrapper',",
       "}));",
       "",
     ].join("\n"),
@@ -82,7 +82,7 @@ const compile = async (name) => {
 await expand("trace");
 await mkdir(new URL("../out/demo", import.meta.url), { recursive: true });
 await bundle("demo");
-// await bundle("worker");
+await bundle("worker");
 for (const name of await readdir(new URL("cases", import.meta.url))) {
   await compile(name);
 }

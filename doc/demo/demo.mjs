@@ -200,9 +200,9 @@ export const createDemo = (config) => {
   const save = createButton("Export \u{1F4CB}");
   save.addEventListener("click", (_event) => {
     const href = `http://${location.host}/demo/blank.html?${[
-      `version=${config.version}`,
-      `base=${btoa(base.editor.state.doc.toString())}`,
-      `meta=${btoa(meta.editor.state.doc.toString())}`,
+      `version=${encodeURIComponent(config.version)}`,
+      `base=${encodeURIComponent(base.editor.state.doc.toString())}`,
+      `meta=${encodeURIComponent(meta.editor.state.doc.toString())}`,
     ].join("&")}`;
     navigator.clipboard.writeText(href).then(() => {
       toast("Preset copied to clipboard");
