@@ -7,7 +7,7 @@ const {
   aran: { instrument },
   astring: { generate },
   acorn: { parse },
-} = /** @type {any} */ (globalThis).context;
+} = /** @type {any} */ (globalThis).__context;
 
 /** @type {(value: unknown) => string} */
 const show = (value) => {

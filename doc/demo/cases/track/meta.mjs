@@ -8,7 +8,7 @@ const {
   astring: { generate },
   aran: { setupile, transpile, retropile },
   linvail: { weave, createRuntime },
-} = /** @type {any} */ (globalThis).context;
+} = /** @type {any} */ (globalThis).__context;
 
 const advice_global_variable = "__LINVAIL_ADVICE__";
 const dir = (/** @type {unknown} */ value) => log(JSON.stringify(value));

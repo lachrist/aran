@@ -48,7 +48,7 @@ const descriptor = {
   configurable: false,
 };
 
-defineProperty(globalThis, "context", descriptor);
+defineProperty(globalThis, "__context", descriptor);
 
 addEventListener("message", ({ data: { meta, base } }) => {
   context.target = base;

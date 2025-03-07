@@ -7,7 +7,7 @@ const {
   astring: { generate },
   acorn: { parse },
   target,
-} = /** @type {any} */ (globalThis).context;
+} = /** @type {any} */ (globalThis).__context;
 
 const {
   eval: evalGlobal,

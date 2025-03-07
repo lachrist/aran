@@ -4,6 +4,8 @@ import resolve from "@rollup/plugin-node-resolve";
 import terser from "@rollup/plugin-terser";
 import { fileURLToPath } from "node:url";
 
+const version = "0.0.0";
+
 /**
  * @type {(
  *   name: "trace",
@@ -62,13 +64,15 @@ const compile = async (name) => {
     new URL(`../out/demo/${name}.mjs`, import.meta.url),
     [
       "import { createDemo } from './demo.mjs';",
-      "const worker = './worker.mjs';",
-      `const meta = ${JSON.stringify(meta)};`,
-      `const base = ${JSON.stringify(base)};`,
-      "const header_class = 'wrapper';",
-      "const config = { worker, meta, base, header_class };",
       "const content = document.getElementsByClassName('page-content')[0];",
-      "content.appendChild(createDemo(config));",
+      "content.appendChild(createDemo({",
+      "  location: globalThis.location",
+      `  version: ${JSON.stringify(version)},`,
+      `  base: ${JSON.stringify(atob(base))}`,
+      `  meta: ${JSON.stringify(atob(meta))}`,
+      "  worker: './worker.mjs'",
+      "  header_class: 'wrapper'",
+      "}));",
       "",
     ].join("\n"),
     "utf8",

@@ -3,28 +3,26 @@ layout: default
 title: TypeDoc
 ---
 
-# TypeDoc
+# [TypeDoc ⧉](/typedoc/index.html)
 
 <script type="module" defer>
 const frame = document.createElement("iframe");
 frame.src = "/typedoc/index.html";
 frame.style.width = "100%";
 frame.style.border = "none";
-frame.scrolling = "no";
-frame.style.overflow = "hidden";
 const content = document.getElementsByClassName("page-content")[0];
 content.appendChild(frame);
-let inner = null;
-const resize = () => {
-  if (inner) {
-    console.log("resize", inner.body.scrollHeight);
-    frame.style.height = inner.body.scrollHeight + "px";
-  }
-};
 frame.addEventListener("load", () => {
-  inner = frame.contentDocument || frame.contentWindow.document;
-  console.log("load");
-  resize();
+  frame.style.height = "0px";
+  const inner = frame.contentDocument || frame.contentWindow.document;
+  if (inner) {
+    const timer = setInterval(() => {
+      const height = inner.body.scrollHeight;
+      if (height > 0) {
+        frame.style.height = `${height}px`;
+        clearInterval(timer);
+      }
+    }, 100);
+  }
 });
-setInterval(resize, 1000);
 </script>

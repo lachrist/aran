@@ -47,6 +47,26 @@ const listExtension = () => [
 
 /**
  * @type {(
+ *   message: string,
+ * ) => void}
+ */
+export const toast = (message) => {
+  const toast = document.createElement("div");
+  toast.textContent = message;
+  toast.style.position = "fixed";
+  toast.style.bottom = "20px";
+  toast.style.right = "20px";
+  toast.style.background = "black";
+  toast.style.color = "white";
+  toast.style.padding = "10px";
+  toast.style.borderRadius = "5px";
+  toast.style.zIndex = "1000";
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+};
+
+/**
+ * @type {(
  *   initial: string,
  * ) => {
  *   editor: EditorView,
@@ -117,6 +137,48 @@ const createLog = () => {
 /**
  * @type {(
  *   config: {
+ *     location: {
+ *       search: string,
+ *     },
+ *     version: string,
+ *     base: string,
+ *     meta: string,
+ *   },
+ * ) => {
+ *   base: string,
+ *   meta: string,
+ * }}
+ */
+export const parsePreset = ({ location: { search }, version, base, meta }) => {
+  const params = new URLSearchParams(search);
+  const preset_version = params.get("version");
+  if (preset_version) {
+    if (preset_version !== version) {
+      const major1 = preset_version.split(".")[0];
+      const major2 = version.split(".")[0];
+      if (major1 !== major2) {
+        toast(
+          `Warning: The preset may not work correctly because it was with an outdated sandbox: ${preset_version} <> ${version}`,
+        );
+      }
+    }
+    return {
+      base: atob(params.get("base") ?? base),
+      meta: atob(params.get("meta") ?? meta),
+    };
+  } else {
+    return { base, meta };
+  }
+};
+
+/**
+ * @type {(
+ *   config: {
+ *     version: string,
+ *     location: {
+ *       host: string,
+ *       search: string,
+ *     },
  *     meta: string,
  *     base: string,
  *     worker: string,
@@ -127,11 +189,23 @@ const createLog = () => {
 export const createDemo = (config) => {
   /** @type {null | Worker} */
   let worker = null;
-  const meta = createEditor(config.meta);
-  const base = createEditor(config.base);
+  const preset = parsePreset(config);
+  const meta = createEditor(preset.meta);
+  const base = createEditor(preset.base);
   const play = createButton("Play");
   const stop = createButton("Stop");
   const clear = createButton("Clear");
+  const save = createButton("Export \u{1F4CB}");
+  save.addEventListener("click", (_event) => {
+    const href = `http://${location.host}/demo/blank.html?${[
+      `version=${config.version}`,
+      `base=${btoa(base.editor.state.doc.toString())}`,
+      `meta=${btoa(meta.editor.state.doc.toString())}`,
+    ].join("&")}`;
+    navigator.clipboard.writeText(href).then(() => {
+      toast("Preset copied to clipboard");
+    });
+  });
   const log = createLog();
   stop.disabled = true;
   clear.addEventListener("click", (_event) => {
@@ -168,6 +242,7 @@ export const createDemo = (config) => {
       head.appendChild(play);
       head.appendChild(stop);
       head.appendChild(clear);
+      head.appendChild(save);
       main.appendChild(head);
     }
     main.appendChild(document.createElement("hr"));
