@@ -7,5 +7,5 @@ Beside performance overhead, Aran has some known issues that may cause instrumen
 
 {% assign demos = site.demos | sort: 'order' %}
 {% for demo in demos %}
-- [{{ demo.title }}]({{ demo.url }})
+- [{{ demo.title }}]({{ demo.url | relative_url }})
 {% endfor %}
