@@ -177,6 +177,27 @@ export const parsePreset = ({ location: { search }, version, base, meta }) => {
 
 /**
  * @type {(
+ *   host: string,
+ *   preset: {
+ *     version: string,
+ *     base: string,
+ *     meta: string,
+ *   },
+ * ) => string}
+ */
+const exportPreset = (host, { version, base, meta }) => {
+  const protocol = host.startsWith("localhost") ? "http" : "https";
+  const path = host.startsWith("localhost") ? "" : "/aran";
+  const search = [
+    `version=${encodeURIComponent(version)}`,
+    `base=${encodeURIComponent(base)}`,
+    `meta=${encodeURIComponent(meta)}`,
+  ].join("&");
+  return `${protocol}://${host}${path}/demos/blank.html?${search}`;
+};
+
+/**
+ * @type {(
  *   config: {
  *     version: string,
  *     location: {
@@ -201,14 +222,17 @@ export const createDemo = (config) => {
   const clear = createButton("Clear");
   const save = createButton("Export \u{1F4CB}");
   save.addEventListener("click", (_event) => {
-    const href = `https://${location.host}/aran/demo/blank.html?${[
-      `version=${encodeURIComponent(config.version)}`,
-      `base=${encodeURIComponent(base.editor.state.doc.toString())}`,
-      `meta=${encodeURIComponent(meta.editor.state.doc.toString())}`,
-    ].join("&")}`;
-    navigator.clipboard.writeText(href).then(() => {
-      toast("Preset copied to clipboard");
-    });
+    navigator.clipboard
+      .writeText(
+        exportPreset(location.host, {
+          version: config.version,
+          base: base.editor.state.doc.toString(),
+          meta: meta.editor.state.doc.toString(),
+        }),
+      )
+      .then(() => {
+        toast("Preset copied to clipboard");
+      });
   });
   const log = createLog();
   stop.disabled = true;

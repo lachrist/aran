@@ -1,4 +1,6 @@
-mv doc/aran docs
+rm -rf doc/out
+source doc/build.sh prod
+mv doc/out docs
 git branch -D page
 git checkout --orphan page
 git reset

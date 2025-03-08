@@ -70,6 +70,8 @@ GEM
       sass-embedded (~> 1.75)
     jekyll-seo-tag (2.8.0)
       jekyll (>= 3.8, < 5.0)
+    jekyll-sitemap (1.4.0)
+      jekyll (>= 3.7, < 5.0)
     jekyll-watch (2.2.1)
       listen (~> 3.0)
     json (2.10.1)
@@ -162,7 +164,8 @@ PLATFORMS
 
 DEPENDENCIES
   jekyll (~> 4.4)
-  jekyll-seo-tag
+  jekyll-seo-tag (~> 2.8)
+  jekyll-sitemap (~> 1.4)
   logger (~> 1.6)
   minima (~> 2.5)
 

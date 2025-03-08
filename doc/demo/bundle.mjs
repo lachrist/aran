@@ -40,7 +40,7 @@ const bundle = async (name) => {
   });
   await bundle.write({
     file: fileURLToPath(
-      new URL(`../aran/demo/${name}.mjs`, import.meta.url).href,
+      new URL(`../out/demos/${name}.mjs`, import.meta.url).href,
     ),
     format: "module",
   });
@@ -61,7 +61,7 @@ const compile = async (name) => {
     "utf8",
   );
   await writeFile(
-    new URL(`../aran/demo/${name}.mjs`, import.meta.url),
+    new URL(`../out/demos/${name}.mjs`, import.meta.url),
     [
       "import { createDemo } from './demo.mjs';",
       "const content = document.getElementsByClassName('page-content')[0];",
@@ -80,9 +80,9 @@ const compile = async (name) => {
 };
 
 await expand("trace");
-await mkdir(new URL("../aran/demo", import.meta.url), { recursive: true });
+await mkdir(new URL("../out/demos", import.meta.url), { recursive: true });
 await bundle("demo");
-await bundle("worker");
+// await bundle("worker");
 for (const name of await readdir(new URL("cases", import.meta.url))) {
   await compile(name);
 }

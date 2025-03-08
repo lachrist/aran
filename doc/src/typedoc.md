@@ -3,11 +3,11 @@ layout: default
 title: TypeDoc
 ---
 
-# [TypeDoc ⧉](/aran/typedoc/index.html)
+# [TypeDoc ⧉]({{ '/typedoc/index.html' | relative_url }})
 
 <script type="module" defer>
 const frame = document.createElement("iframe");
-frame.src = "/aran/typedoc/index.html";
+frame.src = "{{ '/typedoc/index.html' | relative_url }}";
 frame.style.width = "100%";
 frame.style.border = "none";
 const content = document.getElementsByClassName("page-content")[0];
