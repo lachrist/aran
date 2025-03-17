@@ -412,7 +412,6 @@ export const createAdvice = ({
 }) => {
   const pointcut = getPointcut(tracking);
   const inter_procedural_tracking = tracking === "inter";
-  /**  */
   const size_registery = createSizeRegistery();
   /** @type {PrimitiveRegistery} */
   const primitive_registery = createWeakSet();

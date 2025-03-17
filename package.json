@@ -1,7 +1,7 @@
 {
   "name": "aran",
   "description": "Aran is a JavaScript instrumenter",
-  "version": "5.1.0",
+  "version": "5.1.1",
   "author": {
     "name": "Laurent Christophe",
     "email": "laurent.christophe.terken@gmail.com"
