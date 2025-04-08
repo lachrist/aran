@@ -17,7 +17,7 @@ def load (include):
   try:
     return list(map(int, filter(str.strip, file)))
   finally:
-    file.close();
+    file.close()
 
 def plotBar(include, data, max):
   try:
@@ -25,9 +25,9 @@ def plotBar(include, data, max):
       list(filter(lambda x: x <= max, data)),
       bins=numpy.arange(0, max + 1),
       edgecolor="black",
-    );
-    plot.xlabel("Branch Count");
-    plot.title("Branch Count Histogram");
+    )
+    plot.xlabel("Branch Count")
+    plot.title("Branch Count Histogram")
     plot.yscale("log")
     plot.grid(axis="y", linestyle="--")
     plot.savefig(
@@ -40,7 +40,7 @@ def plotBar(include, data, max):
           "count-" + include + "-histogram-" + str(max) + ".pdf",
         ),
       ),
-    );
+    )
   finally:
     plot.close()
 

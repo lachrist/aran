@@ -18,7 +18,7 @@ def load (path):
   try:
     return list(map(int, filter(str.strip, file)))
   finally:
-    file.close();
+    file.close()
 
 def filterOutliner (data):
   max = numpy.percentile(data, 97.5)
@@ -38,7 +38,7 @@ def plotBox(title, names):
         showfliers = False,
       )
       plot.title(title)
-      plot.savefig(locate(title + ".pdf"));
+      plot.savefig(locate(title + ".pdf"))
     finally:
       plot.close()
 
@@ -48,9 +48,9 @@ def plotBar(name):
     plot.hist(
       data,
       bins = min(100, max(data))
-    );
+    )
     plot.grid(axis = "y", linestyle = "--")
-    plot.savefig(locate(name + ".pdf"));
+    plot.savefig(locate(name + ".pdf"))
   finally:
     plot.close()
 

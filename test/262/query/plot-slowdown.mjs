@@ -8,14 +8,14 @@ import { plotBox } from "./plot.mjs";
 const {
   process,
   URL,
-  Object: { entries },
+  Object: { fromEntries },
 } = globalThis;
 
 const reduceEntry = /**
  * @type {<K extends string, V>(
  *   entries: [K, V][],
  * ) => Record<K, V>}
- */ (entries);
+ */ (fromEntries);
 
 /**
  * @typedef {{
