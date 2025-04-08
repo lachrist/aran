@@ -40,7 +40,9 @@ const listNegative = await loadTaggingList([
   "negative-bare-wrong-realm-for-default-prototype",
 ]);
 
-const listPrecursorFailure = await compileListPrecursorFailure(["parsing"]);
+const listPrecursorFailure = await compileListPrecursorFailure([
+  "parsing-main",
+]);
 
 const listExclusionReason = await loadTaggingList([
   "function-string-representation",
