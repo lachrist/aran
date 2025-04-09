@@ -1,5 +1,9 @@
-import type { ClosureKind, SegmentKind, ProgramKind } from "../parametrization";
-import type { Json } from "../../util/util";
+import type {
+  ClosureKind,
+  SegmentKind,
+  ProgramKind,
+} from "../parametrization.d.ts";
+import type { Json } from "../../util/util.d.ts";
 import type { VariableName } from "estree-sentry";
 
 export type ProgramParent = {

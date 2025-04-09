@@ -1,6 +1,6 @@
-import type { Pointcut } from "./aspect";
-import type { GetDefault, Json } from "../../util/util";
-import type { Atom } from "../../lang/syntax";
+import type { Pointcut } from "./aspect.d.ts";
+import type { GetDefault, Json } from "../../util/util.d.ts";
+import type { Atom } from "../../lang/syntax.d.ts";
 
 /**
  * Configuration object for both flexible weaving.

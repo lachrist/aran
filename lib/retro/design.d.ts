@@ -1,5 +1,5 @@
 import type { BinaryOperator, UnaryOperator } from "estree";
-import type { Expression } from "./atom";
+import type { Expression } from "./atom.d.ts";
 
 export type MemberDesign = Expression & {
   type: "ApplyExpression";

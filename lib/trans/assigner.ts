@@ -1,5 +1,5 @@
-import { BinaryOperator, LogicalOperator } from "estree-sentry";
-import { Expression } from "./atom";
+import type { BinaryOperator, LogicalOperator } from "estree-sentry";
+import type { Expression } from "./atom.d.ts";
 
 export type Assigner = {
   result: "old" | "new" | "discard";

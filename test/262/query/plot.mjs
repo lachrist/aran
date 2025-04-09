@@ -12,7 +12,7 @@ const {
 
 /**
  * @type {(
- *   plot: import("./plot").BoxPlot,
+ *   plot: import("./plot.d.ts").BoxPlot,
  * ) => Promise<void>}
  */
 export const plotBox = ({ output, title, content, show_flier }) =>

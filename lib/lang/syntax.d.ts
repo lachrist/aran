@@ -1,5 +1,5 @@
-import type { GetDefault, KeyOfUnion } from "../util/util";
-import type { DeclareHeader, ModuleHeader } from "./header";
+import type { GetDefault, KeyOfUnion } from "../util/util.d.ts";
+import type { DeclareHeader, ModuleHeader } from "./header.d.ts";
 
 //////////
 // Atom //

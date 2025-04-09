@@ -15,13 +15,13 @@ const {
 } = globalThis;
 
 /**
- * @typedef {import("./size").SizeRegistery<InternalValue>} SizeRegistery
- * @typedef {import("./collection").WeakSet<InternalPrimitive>} PrimitiveRegistery
- * @typedef {import("./collection").WeakMap<Reference, import("aran").ClosureKind>} ClosureRegistery
- * @typedef {import("./collection").WeakMap<Reference, InternalValue[]>} InputRegistery
- * @typedef {import("./location").NodeHash} NodeHash
- * @typedef {import("./location").Atom} Atom
- * @typedef {import("./location").FilePath} FilePath
+ * @typedef {import("./size.d.ts").SizeRegistery<InternalValue>} SizeRegistery
+ * @typedef {import("./collection.d.ts").WeakSet<InternalPrimitive>} PrimitiveRegistery
+ * @typedef {import("./collection.d.ts").WeakMap<Reference, import("aran").ClosureKind>} ClosureRegistery
+ * @typedef {import("./collection.d.ts").WeakMap<Reference, InternalValue[]>} InputRegistery
+ * @typedef {import("./location.d.ts").NodeHash} NodeHash
+ * @typedef {import("./location.d.ts").Atom} Atom
+ * @typedef {import("./location.d.ts").FilePath} FilePath
  * @typedef {(
  *   | undefined
  *   | null
@@ -35,7 +35,7 @@ const {
  * @typedef {{ __brand: "Reference" }} Reference
  * @typedef {ExternalPrimitive | Reference} ExternalValue
  * @typedef {InternalPrimitive | Reference} InternalValue
- * @typedef {import("./size").Size} Size
+ * @typedef {import("./size.d.ts").Size} Size
  * @typedef {(
  *   | "block@setup"
  *   | "block@declaration-overwrite"

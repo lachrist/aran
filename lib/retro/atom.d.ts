@@ -1,4 +1,4 @@
-import type { Brand } from "../util/util";
+import type { Brand } from "../util/util.d.ts";
 import type {
   Node as GenericNode,
   Program as GenericProgram,
@@ -7,7 +7,7 @@ import type {
   Statement as GenericStatement,
   Effect as GenericEffect,
   Expression as GenericExpression,
-} from "../lang/syntax";
+} from "../lang/syntax.d.ts";
 import type { SourceValue, SpecifierName, SpecifierValue } from "estree-sentry";
 
 export type Label = Brand<string, "retro.Label">;

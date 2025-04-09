@@ -1,4 +1,4 @@
-import type { RootSort } from "../../sort";
+import type { RootSort } from "../../sort.d.ts";
 
 export type ProgramScope = {
   root: RootSort;

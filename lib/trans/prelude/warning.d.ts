@@ -1,4 +1,4 @@
-import type { Hash } from "../hash";
+import type { Hash } from "../hash.d.ts";
 
 export type WarningName =
   | "ExternalConstant"

@@ -1,4 +1,4 @@
-import type { DependencyPath, HarnessName, TestPath } from "./fetch";
+import type { DependencyPath, HarnessName, TestPath } from "./fetch.d.ts";
 
 export type HarnessSource = {
   type: "harness";

@@ -134,7 +134,7 @@ const node_type_hash = reduceEntry(
 /**
  * @type {(
  *   content: string,
- * ) => import("./branch").Branch[]}
+ * ) => import("./branch.d.ts").Branch[]}
  */
 export const parseBranching = (content) => {
   const data = JSON.parse(content);
@@ -160,7 +160,7 @@ export const parseBranching = (content) => {
 
 /**
  * @type {(
- *   branches: import("./branch").Branch[],
+ *   branches: import("./branch.d.ts").Branch[],
  * ) => string}
  */
 export const printBranching = (branches) =>

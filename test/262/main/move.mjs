@@ -12,7 +12,7 @@ const { process } = globalThis;
 
 /**
  * @type {(
- *   result: import("../result").Result,
+ *   result: import("../result.d.ts").Result,
  * ) => boolean}
  */
 const hasFalsePrediction = (result) =>

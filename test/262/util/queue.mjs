@@ -3,7 +3,7 @@ import { isNotEmptyArray, shift } from "./array.mjs";
 const { Error, Promise, undefined } = globalThis;
 
 /**
- * @type {<X>() => import("./queue").Queue<X>}
+ * @type {<X>() => import("./queue.d.ts").Queue<X>}
  */
 export const createQueue = () => ({
   done: false,
@@ -13,7 +13,7 @@ export const createQueue = () => ({
 
 /**
  * @type {<X>(
- *   queue: import("./queue").Queue<X>,
+ *   queue: import("./queue.d.ts").Queue<X>,
  * ) => void}
  */
 export const closeQueue = (queue) => {
@@ -26,7 +26,7 @@ export const closeQueue = (queue) => {
 
 /**
  * @type {<X>(
- *   queue: import("./queue").Queue<X>,
+ *   queue: import("./queue.d.ts").Queue<X>,
  *   value: X,
  * ) => void}
  */
@@ -44,8 +44,8 @@ export const pushQueue = ({ done, pendings, buffer }, value) => {
 
 /**
  * @type {<X>(
- *   queue: import("./queue").Queue<X>,
- * ) => Promise<import("./queue").Item<X>>}
+ *   queue: import("./queue.d.ts").Queue<X>,
+ * ) => Promise<import("./queue.d.ts").Item<X>>}
  */
 export const pullQueue = ({ done, pendings, buffer }) => {
   if (isNotEmptyArray(buffer)) {

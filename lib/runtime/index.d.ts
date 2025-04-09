@@ -1,4 +1,4 @@
-import type { IntrinsicRecord } from "../lang/syntax";
+import type { IntrinsicRecord } from "../lang/syntax.d.ts";
 
 /**
  * Compile the intrinsic record.

@@ -8,7 +8,7 @@ const CATALOG = new URL("catalog.jsonl", import.meta.url);
 
 /**
  * @type {(
- *   tests: AsyncIterable<import("../test-case").TestCase>,
+ *   tests: AsyncIterable<import("../test-case.d.ts").TestCase>,
  * ) => Promise<void>}
  */
 export const saveTestCase = async (tests) => {
@@ -25,8 +25,8 @@ export const saveTestCase = async (tests) => {
 
 /**
  * @type {() => AsyncGenerator<[
- *   import("../test-case").TestIndex,
- *   import("../test-case").TestCase
+ *   import("../test-case.d.ts").TestIndex,
+ *   import("../test-case.d.ts").TestCase
  * ]>}
  */
 export const loadTestCase = async function* () {
@@ -39,7 +39,7 @@ export const loadTestCase = async function* () {
     let index = 0;
     for await (const line of iterator) {
       yield [
-        /** @type {import("../test-case").TestIndex} */ (index),
+        /** @type {import("../test-case.d.ts").TestIndex} */ (index),
         unpackTestCase(JSON.parse(line)),
       ];
       index++;
@@ -52,7 +52,7 @@ export const loadTestCase = async function* () {
 // /**
 //  * @type {(
 //  *   target: number,
-//  * ) => Promise<import("../test-case").TestCase>}
+//  * ) => Promise<import("../test-case.d.ts").TestCase>}
 //  */
 // export const grabTestCase = async (target) => {
 //   const handle = await open(CATALOG, "r");

@@ -45,7 +45,7 @@ export const inspectErrorStack = (error) => {
 /**
  * @type {(
  *   error: unknown,
- * ) => import("./error-serial").ErrorSerial}
+ * ) => import("./error-serial.d.ts").ErrorSerial}
  */
 export const serializeError = (error) => ({
   name: inspectErrorName(error),

@@ -45,8 +45,8 @@ const main = async (threshold) => {
     let above_count = 0;
     /**
      * @type {Map<
-     *   import("../test-case").TestIndex,
-     *   import("../result").TestSpecifier
+     *   import("../test-case.d.ts").TestIndex,
+     *   import("../result.d.ts").TestSpecifier
      * >}
      */
     const catalog = new Map();

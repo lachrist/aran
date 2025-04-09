@@ -1,5 +1,5 @@
-import type { Completion } from "./completion";
-import type { Hoisting } from "./hoisting";
+import type { Completion } from "./completion.d.ts";
+import type { Hoisting } from "./hoisting.d.ts";
 
 export type Annotation = {
   hoisting: Hoisting;

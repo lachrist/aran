@@ -8,13 +8,13 @@ const { undefined, Object, Math } = globalThis;
 /**
  * @type {(
  *   results: AsyncIterable<[
- *     import("../test-case").TestIndex,
- *     import("../result").Result,
+ *     import("../test-case.d.ts").TestIndex,
+ *     import("../result.d.ts").Result,
  *   ]>,
- * ) => Promise<import("./report").Report>}
+ * ) => Promise<import("./report.d.ts").Report>}
  */
 const aggregate = async (results) => {
-  /** @type {import("./report").Report} */
+  /** @type {import("./report.d.ts").Report} */
   const report = {
     count: 0,
     exclusion: {
@@ -108,7 +108,7 @@ const compileShowEntry =
 
 /**
  * @type {(
- *   summary: import("./report").Report,
+ *   summary: import("./report.d.ts").Report,
  * ) => string}
  */
 const showSummary = (summary) =>

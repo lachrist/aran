@@ -12,14 +12,14 @@ const { Map } = globalThis;
 
 /**
  * @type {<H, X>(
- *   stage: import("./stage").Stage<H, X>,
+ *   stage: import("./stage.d.ts").Stage<H, X>,
  *   handle: H,
  *   entry: [
- *     import("../test-case").TestIndex,
- *     import("../test-case").TestCase
+ *     import("../test-case.d.ts").TestIndex,
+ *     import("../test-case.d.ts").TestCase
  *   ],
- *   fetch: import("../fetch").Fetch,
- * ) => Promise<import("../result").Result>}
+ *   fetch: import("../fetch.d.ts").Fetch,
+ * ) => Promise<import("../result.d.ts").Result>}
  */
 const execStage = async (
   { setup, prepare, instrument, teardown },
@@ -57,14 +57,14 @@ const execStage = async (
 
 /**
  * @type {<H>(
- *   instrument: import("./stage").Instrument<H>,
- * ) => import("./stage").Instrument<H>}
+ *   instrument: import("./stage.d.ts").Instrument<H>,
+ * ) => import("./stage.d.ts").Instrument<H>}
  */
 const memoizeInstrument = (instrument) => {
   /**
    * @type {Map<
-   *   import("../fetch").HarnessName,
-   *   import("../util/file").File
+   *   import("../fetch.d.ts").HarnessName,
+   *   import("../util/file.d.ts").File
    * >}
    */
   const cache = new Map();
@@ -86,16 +86,16 @@ const memoizeInstrument = (instrument) => {
 
 /**
  * @type {(
- *   name: import("./stage-name").StageName,
+ *   name: import("./stage-name.d.ts").StageName,
  *   tests: AsyncIterable<[
- *     import("../test-case").TestIndex,
- *     import("../test-case").TestCase
+ *     import("../test-case.d.ts").TestIndex,
+ *     import("../test-case.d.ts").TestCase
  *   ]>,
  *   config: {
  *     memoization: "none" | "lazy" | "eager",
  *     record_directory: null | URL,
  *   },
- * ) => AsyncGenerator<import("../report").TestReport>}
+ * ) => AsyncGenerator<import("../report.d.ts").TestReport>}
  */
 export const runStage = async function* (
   name,
@@ -108,7 +108,7 @@ export const runStage = async function* (
     fetchTarget: compileFetchTarget(TEST262),
   };
   /**
-   * @type {import("./stage").Stage<
+   * @type {import("./stage.d.ts").Stage<
    *   { __brand: "Handle" },
    *   { __brand: "State" },
    * >}
@@ -120,7 +120,7 @@ export const runStage = async function* (
       stage.instrument = memoizeInstrument(stage.instrument);
       if (memoization === "eager") {
         // Fetch all harnesses to cache them and improve timer accuracy
-        for (const name of /** @type {import("../fetch").HarnessName[]} */ (
+        for (const name of /** @type {import("../fetch.d.ts").HarnessName[]} */ (
           await readdir(HARNESS)
         )) {
           if (name.endsWith(".js")) {

@@ -5,13 +5,13 @@ import type {
   Path as EstreeNodePath,
   SyntaxErrorCause,
 } from "estree-sentry";
-import type { Warning } from "./trans/prelude/warning";
-import type { Json } from "./util/util";
+import type { Warning } from "./trans/prelude/warning.d.ts";
+import type { Json } from "./util/util.d.ts";
 import type {
   ClashErrorCause,
   InputErrorCause,
   PointcutErrorCause,
-} from "./error";
+} from "./error.d.ts";
 import type {
   ModuleHeader,
   ImportHeader,
@@ -19,7 +19,7 @@ import type {
   AggregateHeader,
   DeclareHeader,
   Header,
-} from "./lang/header";
+} from "./lang/header.d.ts";
 import type {
   Atom,
   Node,
@@ -37,34 +37,34 @@ import type {
   ExtraIntrinsicRecord,
   Intrinsic,
   Parameter,
-} from "./lang/syntax";
-import type { Config as SetupConfig } from "./setup/config";
-import type { Config as RetroConfig } from "./retro/config";
-import type { File, Config as TransConfig } from "./trans/config";
-import type { Config as StandardWeaveConfig } from "./weave/standard/config";
-import type { Config as FlexibleWeaveConfig } from "./weave/flexible/config";
-import type { Config as InstrumentConfig } from "./instrument";
-import type { Digest, LooseEstreeProgram } from "./trans/config";
+} from "./lang/syntax.d.ts";
+import type { Config as SetupConfig } from "./setup/config.d.ts";
+import type { Config as RetroConfig } from "./retro/config.d.ts";
+import type { File, Config as TransConfig } from "./trans/config.d.ts";
+import type { Config as StandardWeaveConfig } from "./weave/standard/config.d.ts";
+import type { Config as FlexibleWeaveConfig } from "./weave/flexible/config.d.ts";
+import type { Config as InstrumentConfig } from "./instrument.d.ts";
+import type { Digest, LooseEstreeProgram } from "./trans/config.d.ts";
 import type {
   Situ,
   GlobalSitu,
   RootLocalSitu,
   DeepLocalSitu,
-} from "./trans/source";
-import {
+} from "./trans/source.d.ts";
+import type {
   GeneratorKind,
   ProgramKind,
   ClosureKind,
   SegmentKind,
   ControlKind,
-} from "./weave/parametrization";
+} from "./weave/parametrization.d.ts";
 import type {
   TestKind,
   AspectKind as StandardAspectKind,
   AspectTyping as StandardAspectTyping,
   Pointcut as StandardPointcut,
   Advice as StandardAdvice,
-} from "./weave/standard/aspect";
+} from "./weave/standard/aspect.d.ts";
 import type {
   AspectTyping as FlexibleAspectTyping,
   AspectKind as FlexibleAspectKind,
@@ -73,7 +73,7 @@ import type {
   Aspect as FlexibleAspect,
   Pointcut as FlexiblePointcut,
   Advice as FlexibleAdvice,
-} from "./weave/flexible/aspect";
+} from "./weave/flexible/aspect.d.ts";
 
 export {
   // Util //

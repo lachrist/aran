@@ -1,6 +1,10 @@
-import type { ModuleHeader, DeclareHeader } from "../../lang/header";
-import type { ClosureKind, SegmentKind, ProgramKind } from "../parametrization";
-import type { Json } from "../../util/util";
+import type { ModuleHeader, DeclareHeader } from "../../lang/header.d.ts";
+import type {
+  ClosureKind,
+  SegmentKind,
+  ProgramKind,
+} from "../parametrization.d.ts";
+import type { Json } from "../../util/util.d.ts";
 
 export type ProgramParent = {
   type: "program";

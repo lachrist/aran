@@ -5,17 +5,17 @@ const { Set } = globalThis;
 
 /**
  * @type {(
- *   specifier: import("../result").TestSpecifier,
- * ) => import("../fetch").TestPath}
+ *   specifier: import("../result.d.ts").TestSpecifier,
+ * ) => import("../fetch.d.ts").TestPath}
  */
 const getTestPath = (specifier) =>
-  /** @type {import("../fetch").TestPath} */ (specifier.split("@")[0]);
+  /** @type {import("../fetch.d.ts").TestPath} */ (specifier.split("@")[0]);
 
 /**
  * @type {(
- *   tag: import("./tag").Tag,
+ *   tag: import("./tag.d.ts").Tag,
  * ) => Promise<(
- *   specifier: import("../result").TestSpecifier,
+ *   specifier: import("../result.d.ts").TestSpecifier,
  * ) => boolean>}
  */
 export const loadTagging = async (tag) => {
@@ -24,17 +24,17 @@ export const loadTagging = async (tag) => {
 };
 
 /**
- * @template {import("./tag").Tag} T
+ * @template {import("./tag.d.ts").Tag} T
  * @param {T[]} tags
  * @returns {Promise<(
- *  specifier: import("../result").TestSpecifier,
+ *  specifier: import("../result.d.ts").TestSpecifier,
  * ) => T[]>}
  */
 export const loadTaggingList = async (tags) => {
   /**
    * @type {[
    *   T,
-   *   (specifier: import("../result").TestSpecifier) => boolean,
+   *   (specifier: import("../result.d.ts").TestSpecifier) => boolean,
    * ][]}
    */
   const entries = [];

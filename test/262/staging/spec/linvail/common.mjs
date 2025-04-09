@@ -71,9 +71,9 @@ const compileWeave = (instrumentation) => {
  *     include: "main" | "comp",
  *     instrumentation: "standard" | "custom",
  *   },
- * ) => Promise<import("../../stage").Stage<
- *   import("../../stage").Config,
- *   import("../../stage").Config,
+ * ) => Promise<import("../../stage.d.ts").Stage<
+ *   import("../../stage.d.ts").Config,
+ *   import("../../stage.d.ts").Config,
  * >>}
  */
 export const createStage = async ({ include, instrumentation }) => {
@@ -112,7 +112,7 @@ export const createStage = async ({ include, instrumentation }) => {
         ...listSlow(specifier),
         ...(specifier.startsWith("built-ins/RegExp/property-escapes/generated/")
           ? [
-              /** @type {import("../../../tagging/tag").Tag} */ (
+              /** @type {import("../../../tagging/tag.d.ts").Tag} */ (
                 "regexp-property-escape-generated"
               ),
             ]

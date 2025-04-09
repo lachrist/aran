@@ -1,5 +1,5 @@
 import type { VariableName } from "estree-sentry";
-import type { Key } from "./key";
+import type { Key } from "./key.d.ts";
 
 export type PropertyName = {
   type: "property";

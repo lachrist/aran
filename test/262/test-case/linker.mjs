@@ -12,13 +12,13 @@ const { Error, undefined, Map, JSON } = globalThis;
  * @type {<H>(
  *   handle: H,
  *   dependency: {
- *     path: import("../fetch").DependencyPath,
+ *     path: import("../fetch.d.ts").DependencyPath,
  *     content: string,
  *   },
  *   options: {
  *     SyntaxError: new (message: string) => unknown,
- *     instrument: import("../staging/stage").Instrument<H>,
- *     importModuleDynamically: import("./load").Load,
+ *     instrument: import("../staging/stage.d.ts").Instrument<H>,
+ *     importModuleDynamically: import("./load.d.ts").Load,
  *     context: import("node:vm").Context,
  *   },
  * ) => import("node:vm").Module}
@@ -68,16 +68,16 @@ const makeModule = (
  *   handle: H,
  *   context: import("node:vm").Context,
  *   dependencies: {
- *     resolveDependency: import("../fetch").ResolveDependency,
- *     instrument: import("../staging/stage").Instrument<H>,
- *     fetchTarget: import("../fetch").FetchTarget,
+ *     resolveDependency: import("../fetch.d.ts").ResolveDependency,
+ *     instrument: import("../staging/stage.d.ts").Instrument<H>,
+ *     fetchTarget: import("../fetch.d.ts").FetchTarget,
  *   },
  * ) => {
- *   link: import("./load").Load,
- *   importModuleDynamically: import("./load").Load,
+ *   link: import("./load.d.ts").Load,
+ *   importModuleDynamically: import("./load.d.ts").Load,
  *   registerMain: (
  *     main: import("node:vm").Module | import("node:vm").Script,
- *     path: import("../fetch").TestPath,
+ *     path: import("../fetch.d.ts").TestPath,
  *   ) => void,
  * }}
  */
@@ -95,16 +95,16 @@ export const compileLinker = (
    *   Promise: PromiseConstructor,
    * }}
    */ (runInContext("({ Promise, SyntaxError });", context));
-  /** @type {Map<import("../fetch").TargetPath, import("node:vm").Module>} */
+  /** @type {Map<import("../fetch.d.ts").TargetPath, import("node:vm").Module>} */
   const module_cache = new Map();
   /**
    * @type {Map<
    *   import("node:vm").Module | import("node:vm").Script,
-   *   import("../fetch").TargetPath
+   *   import("../fetch.d.ts").TargetPath
    * >}
    */
   const reverse_module_cache = new Map();
-  /** @type {import("./load").Load} */
+  /** @type {import("./load.d.ts").Load} */
   const link = async (specifier, referrer, _assertions) => {
     const base_path = reverse_module_cache.get(referrer);
     if (base_path === undefined) {
@@ -112,7 +112,7 @@ export const compileLinker = (
     } else {
       // import("") will import self
       const path = resolveDependency(
-        /** @type {import("../fetch").DependencyName} */ (specifier),
+        /** @type {import("../fetch.d.ts").DependencyName} */ (specifier),
         base_path,
       );
       const module = module_cache.get(path);
@@ -138,7 +138,7 @@ export const compileLinker = (
     }
   };
   // https://github.com/nodejs/node/issues/33216#issuecomment-623039235
-  /** @type {import("./load").Load} */
+  /** @type {import("./load.d.ts").Load} */
   const evaluate = async (specifier, referrer, assertions) => {
     const module = await link(specifier, referrer, assertions);
     if (module.status === "unlinked") {
@@ -149,7 +149,7 @@ export const compileLinker = (
     }
     return module;
   };
-  /** @type {import("./load").Load} */
+  /** @type {import("./load.d.ts").Load} */
   const importModuleDynamically = (specifier, referrer, assertions) =>
     new Promise((resolve, reject) => {
       evaluate(specifier, referrer, assertions).then(resolve, reject);

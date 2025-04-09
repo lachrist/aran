@@ -1,6 +1,6 @@
 import type { VariableName } from "estree-sentry";
-import type { Json } from "../../util/util";
-import type { ArgAtom } from "../atom";
+import type { Json } from "../../util/util.d.ts";
+import type { ArgAtom } from "../atom.d.ts";
 import type {
   AspectKind,
   BlockPointcut as GenericBlockPointcut,
@@ -9,7 +9,7 @@ import type {
   ExpressionPointcut as GenericExpressionPointcut,
   Pointcut as GenericPointcut,
   PointcutElement,
-} from "./aspect";
+} from "./aspect.d.ts";
 
 export type Pointcut = GenericPointcut<
   ArgAtom & {

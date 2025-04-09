@@ -1,5 +1,5 @@
-import type { HarnessName, TestPath } from "./fetch";
-import type { Feature, Negative } from "./metadata";
+import type { HarnessName, TestPath } from "./fetch.d.ts";
+import type { Feature, Negative } from "./metadata.d.ts";
 
 export type Directive = "none" | "use-strict";
 

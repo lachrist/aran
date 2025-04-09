@@ -1,8 +1,8 @@
-import type { Effect, Expression } from "../atom";
-import type { Hash } from "../hash";
-import type { Meta } from "../meta";
-import type { Sequence } from "../../util/sequence";
-import type { Tree } from "../../util/tree";
+import type { Effect, Expression } from "../atom.d.ts";
+import type { Hash } from "../hash.d.ts";
+import type { Meta } from "../meta.d.ts";
+import type { Sequence } from "../../util/sequence.d.ts";
+import type { Tree } from "../../util/tree.d.ts";
 
 // Extend //
 

@@ -15,8 +15,8 @@ const listKey = /** @type {any} */ (ownKeys);
 
 /**
  * @type {(
- *   value1: import("./track-origin").Value,
- *   value2: import("./track-origin").Value,
+ *   value1: import("./track-origin.d.ts").Value,
+ *   value2: import("./track-origin.d.ts").Value,
  * ) => boolean}
  */
 const isSame = is;
@@ -59,7 +59,7 @@ const push = (array, item) => {
 export const ADVICE_GLOBAL_VARIABLE = "__aran_track_origin_advice__";
 
 /**
- * @type {{[key in import("./track-origin").AspectKind]: null}}
+ * @type {{[key in import("./track-origin.d.ts").AspectKind]: null}}
  */
 const aspect_kind_enum = {
   "block@setup": null,
@@ -105,8 +105,8 @@ export const weave = (root) => weaveStandard(root, conf);
 
 /**
  * @type {<atom extends import("aran").Atom>(
- *   parent: null | import("./track-origin").ShadowState<atom>,
- * ) => import("./track-origin").ShadowState<atom>}
+ *   parent: null | import("./track-origin.d.ts").ShadowState<atom>,
+ * ) => import("./track-origin.d.ts").ShadowState<atom>}
  */
 const extendState = (parent) => ({
   parent,
@@ -116,8 +116,8 @@ const extendState = (parent) => ({
 
 /**
  * @type {<atom extends import("aran").Atom>(
- *   transit: import("./track-origin").Transit<atom>
- * ) => import("./track-origin").Transit<atom>}
+ *   transit: import("./track-origin.d.ts").Transit<atom>
+ * ) => import("./track-origin.d.ts").Transit<atom>}
  */
 const avoidTransitNarrowing = (transit) => transit;
 
@@ -125,14 +125,14 @@ const avoidTransitNarrowing = (transit) => transit;
  * @template {import("aran").Atom} atom
  * @param {{
  *   apply: (
- *     callee: import("./track-origin").Value,
- *     that: import("./track-origin").Value,
- *     input: import("./track-origin").Value[],
- *   ) => import("./track-origin").Value,
+ *     callee: import("./track-origin.d.ts").Value,
+ *     that: import("./track-origin.d.ts").Value,
+ *     input: import("./track-origin.d.ts").Value[],
+ *   ) => import("./track-origin.d.ts").Value,
  *   construct: (
- *     callee: import("./track-origin").Value,
- *     input: import("./track-origin").Value[],
- *   ) => import("./track-origin").Value,
+ *     callee: import("./track-origin.d.ts").Value,
+ *     input: import("./track-origin.d.ts").Value[],
+ *   ) => import("./track-origin.d.ts").Value,
  * }} Reflect
  * @returns {import("aran").StandardAdvice<{
  *   Label: atom["Label"],
@@ -140,17 +140,17 @@ const avoidTransitNarrowing = (transit) => transit;
  *   Specifier: atom["Specifier"],
  *   Source: atom["Source"],
  *   Tag: atom["Tag"],
- *   Kind: import("./track-origin").AspectKind,
- *   State: import("./track-origin").ShadowState<atom>,
- *   StackValue: import("./track-origin").Value,
- *   ScopeValue: import("./track-origin").Value,
- *   OtherValue: import("./track-origin").Value,
+ *   Kind: import("./track-origin.d.ts").AspectKind,
+ *   State: import("./track-origin.d.ts").ShadowState<atom>,
+ *   StackValue: import("./track-origin.d.ts").Value,
+ *   ScopeValue: import("./track-origin.d.ts").Value,
+ *   OtherValue: import("./track-origin.d.ts").Value,
  * }>}
  */
 export const createTrackOriginAdvice = ({ apply, construct }) => {
-  /** @type {import("./track-origin").Transit<atom>} */
+  /** @type {import("./track-origin.d.ts").Transit<atom>} */
   let transit = { type: "void" };
-  /** @type {null | import("./track-origin").ShadowState<atom>} */
+  /** @type {null | import("./track-origin.d.ts").ShadowState<atom>} */
   let deep_eval_state = null;
   return {
     "block@setup": (_state, kind, _location) => {
@@ -273,7 +273,7 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
         value: typeof value === "bigint" ? { bigint: String(value) } : value,
         location,
       });
-      return /** @type {import("./track-origin").Value} */ (
+      return /** @type {import("./track-origin.d.ts").Value} */ (
         /** @type {unknown} */ (value)
       );
     },
@@ -295,7 +295,7 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
       return value;
     },
     "read@after": (state, variable, value, _location) => {
-      /** @type {import("./track-origin").ShadowState<atom> | null} */
+      /** @type {import("./track-origin.d.ts").ShadowState<atom> | null} */
       let current = state;
       while (current !== null) {
         if (hasOwn(current.frame, variable)) {
@@ -320,7 +320,7 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
       return value;
     },
     "write@before": (state, variable, value, _location) => {
-      /** @type {import("./track-origin").ShadowState<atom> | null} */
+      /** @type {import("./track-origin.d.ts").ShadowState<atom> | null} */
       let current = state;
       while (current !== null) {
         if (hasOwn(current.frame, variable)) {

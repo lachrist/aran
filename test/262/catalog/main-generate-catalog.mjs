@@ -8,7 +8,7 @@ import { saveTestCase } from "./catalog.mjs";
 const { URL } = globalThis;
 
 /**
- * @type {() => AsyncGenerator<import("../test-case").TestCase>}
+ * @type {() => AsyncGenerator<import("../test-case.d.ts").TestCase>}
  */
 const loadTestCase = async function* () {
   const fetchTarget = compileFetchTarget(TEST262);

@@ -1,20 +1,23 @@
 import type { VariableName } from "estree-sentry";
-import type { Expression } from "../../atom";
-import type { Mode } from "../../mode";
-import type { RootSort } from "../../sort";
-import type { EvalFrame, RawEvalFrame } from "./eval";
-import type { ProxyFrame, RawProxyFrame } from "./proxy";
-import type { IllegalFrame, RawIllegalFrame } from "./illegal";
-import type { RawRegularFrame, RegularFrame } from "./regular";
-import type { RawRootFrame, RootBind, RootFrame } from "./root";
-import type { RawWithFrame, WithFrame } from "./with";
-import type { List } from "../../../util/list";
-import type { Intercept, Perform, PerformMaybe } from "../api";
-import type { Meta } from "../../meta";
-import type { Sequence } from "../../../util/sequence";
-import type { Hash } from "../../hash";
-import type { MetaDeclarationPrelude, PrefixPrelude } from "../../prelude";
-import type { Kind } from "../../annotation/hoisting";
+import type { Expression } from "../../atom.d.ts";
+import type { Mode } from "../../mode.d.ts";
+import type { RootSort } from "../../sort.d.ts";
+import type { EvalFrame, RawEvalFrame } from "./eval/index.d.ts";
+import type { ProxyFrame, RawProxyFrame } from "./proxy/index.d.ts";
+import type { IllegalFrame, RawIllegalFrame } from "./illegal/index.d.ts";
+import type { RawRegularFrame, RegularFrame } from "./regular/index.d.ts";
+import type { RawRootFrame, RootBind, RootFrame } from "./root/index.d.ts";
+import type { RawWithFrame, WithFrame } from "./with/index.d.ts";
+import type { List } from "../../../util/list.d.ts";
+import type { Intercept, Perform, PerformMaybe } from "../api.d.ts";
+import type { Meta } from "../../meta.d.ts";
+import type { Sequence } from "../../../util/sequence.d.ts";
+import type { Hash } from "../../hash.d.ts";
+import type {
+  MetaDeclarationPrelude,
+  PrefixPrelude,
+} from "../../prelude/index.d.ts";
+import type { Kind } from "../../annotation/hoisting.d.ts";
 
 export type ClosureFrame = {
   type: "closure";

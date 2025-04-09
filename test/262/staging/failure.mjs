@@ -5,8 +5,8 @@ const { Map } = globalThis;
 
 /**
  * @type {(
- *   stage: import("./stage-name").StageName,
- * ) => AsyncGenerator<import("../test-case").TestIndex>}
+ *   stage: import("./stage-name.d.ts").StageName,
+ * ) => AsyncGenerator<import("../test-case.d.ts").TestIndex>}
  */
 export const loadStageFailure = async function* (stage) {
   for await (const [index, result] of loadStageResult(stage)) {
@@ -24,16 +24,16 @@ export const loadStageFailure = async function* (stage) {
 
 /**
  * @type {(
- *   stages: import("./stage-name").StageName[],
+ *   stages: import("./stage-name.d.ts").StageName[],
  * ) => Promise<(
- *   index: import("../test-case").TestIndex,
- * ) => import("./stage-name").StageName[]>}
+ *   index: import("../test-case.d.ts").TestIndex,
+ * ) => import("./stage-name.d.ts").StageName[]>}
  */
 export const compileListPrecursorFailure = async (stages) => {
   /**
    * @type {Map<
-   *   import("../test-case").TestIndex,
-   *   import("./stage-name").StageName[]
+   *   import("../test-case.d.ts").TestIndex,
+   *   import("./stage-name.d.ts").StageName[]
    * >}
    */
   const map = new Map();

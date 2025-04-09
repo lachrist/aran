@@ -19,8 +19,8 @@ import type {
   SyntaxErrorCause as EstreeSentrySyntaxErrorCause,
 } from "estree-sentry";
 
-import type { Hash } from "./trans/hash";
-import type { Json } from "./util/util";
+import type { Hash } from "./trans/hash.d.ts";
+import type { Json } from "./util/util.d.ts";
 
 export type InputErrorCause = {
   conditions: {

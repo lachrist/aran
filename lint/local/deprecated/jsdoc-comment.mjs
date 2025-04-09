@@ -51,7 +51,7 @@ const keywords = {
 const parseKeyword = /**
  * @type {Record<
  *   import("./jsdoc-comment.d.ts").Keyword,
- *   import("./parser.js").Parser<null>
+ *   import("./parser.d.ts").Parser<null>
  * >}
  */ (
   reduceEntry(

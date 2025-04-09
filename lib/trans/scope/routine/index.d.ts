@@ -1,8 +1,8 @@
-import type { List } from "../../../util/list";
-import type { Expression } from "../../atom";
-import type { Cache, WritableCache } from "../../cache";
-import type { Mode } from "../../mode";
-import type { RootSort } from "../../sort";
+import type { List } from "../../../util/list.d.ts";
+import type { Expression } from "../../atom.d.ts";
+import type { Cache, WritableCache } from "../../cache.d.ts";
+import type { Mode } from "../../mode.d.ts";
+import type { RootSort } from "../../sort.d.ts";
 
 // Closure //
 

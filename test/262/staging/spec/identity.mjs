@@ -62,8 +62,8 @@ const listNegative = await loadTaggingList([
 ]);
 
 /**
- * @type {import("../stage").Stage<
- *   import("../stage").Config,
+ * @type {import("../stage.d.ts").Stage<
+ *   import("../stage.d.ts").Config,
  *   null,
  * >}
  */
@@ -88,7 +88,7 @@ export default {
       flaky: features.length > 0,
       negatives:
         features.length > 0
-          ? /** @type {import("../../tagging/tag").Tag[]} */ (features)
+          ? /** @type {import("../../tagging/tag.d.ts").Tag[]} */ (features)
           : listNegative(specifier),
     };
   },

@@ -11,7 +11,12 @@
     "target": "es2022",
     "module": "Preserve",
     "typeRoots": ["../node_modules/@types"],
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    "paths": {
+      "linvail": ["../node_modules/linvail/lib/index.d.ts"],
+      "aran": ["../lib/index.d.ts"],
+      "aran/runtime": ["../lib/runtime/index.d.ts"]
+    }
   },
   "exclude": ["**/*-template.mjs"]
 }

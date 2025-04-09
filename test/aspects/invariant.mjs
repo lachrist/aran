@@ -15,18 +15,18 @@ const listKey = keys;
 
 /**
  * @type {(
- *   value: import("./invariant").Value,
- *   other: import("./invariant").Value,
+ *   value: import("./invariant.d.ts").Value,
+ *   other: import("./invariant.d.ts").Value,
  * ) => boolean}
  */
 const isIdentical = is;
 
 /**
  * @type {(
- *   value: import("./invariant").Value
+ *   value: import("./invariant.d.ts").Value
  * ) => value is (
- *   & import("./invariant").Value
- *   & import("./invariant").Value[]
+ *   & import("./invariant.d.ts").Value
+ *   & import("./invariant.d.ts").Value[]
  * )}
  */
 const isArrayValue = /** @type {any} */ (isArray);
@@ -155,7 +155,7 @@ const isClosureKind = (kind) => hasOwn(CLOSURE_KIND_ENUM, kind);
 
 /**
  * @type {{
- *   [k in import("./invariant").AspectKind]: null
+ *   [k in import("./invariant.d.ts").AspectKind]: null
  * }}
  */
 const POINTCUT_ENUM = {
@@ -195,30 +195,30 @@ const pointcut = listKey(POINTCUT_ENUM);
  * @type {(
  *   Reflect: {
  *     apply: (
- *       callee: import("./track-origin").Value,
- *       that: import("./track-origin").Value,
- *       input: import("./track-origin").Value[],
- *     ) => import("./track-origin").Value,
+ *       callee: import("./track-origin.d.ts").Value,
+ *       that: import("./track-origin.d.ts").Value,
+ *       input: import("./track-origin.d.ts").Value[],
+ *     ) => import("./track-origin.d.ts").Value,
  *     construct: (
- *       callee: import("./track-origin").Value,
- *       input: import("./track-origin").Value[],
- *     ) => import("./track-origin").Value,
+ *       callee: import("./track-origin.d.ts").Value,
+ *       input: import("./track-origin.d.ts").Value[],
+ *     ) => import("./track-origin.d.ts").Value,
  *   },
  *   TypeError: new (
  *     message: string,
- *   ) => import("./invariant").Value,
- * ) => import("./invariant").Advice}
+ *   ) => import("./invariant.d.ts").Value,
+ * ) => import("./invariant.d.ts").Advice}
  */
 export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
   /**
    * @type {WeakMap<
-   *   import("./invariant").Value & Function,
-   *   import("../../").ClosureKind
+   *   import("./invariant.d.ts").Value & Function,
+   *   import("aran").ClosureKind
    * >}
    */
   const closures = new WeakMap();
   /**
-   * @type {import("./invariant").Transit}
+   * @type {import("./invariant.d.ts").Transit}
    */
   let transit = { type: "external" };
   return {
@@ -561,7 +561,7 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
           closures.get(/** @type {any} */ (callee))
         );
         assert(transit.type === "regular", state);
-        transit = /** @type {import("./invariant").Transit} */ ({
+        transit = /** @type {import("./invariant.d.ts").Transit} */ ({
           type: "apply",
           callee,
           this: this_,
@@ -628,7 +628,7 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
           transit = {
             type: "throw",
             // eslint-disable-next-line object-shorthand
-            error: /** @type {import("./invariant").Value} */ (error),
+            error: /** @type {import("./invariant.d.ts").Value} */ (error),
           };
           throw error;
         }
@@ -661,7 +661,7 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
         );
         if (kind === "function") {
           assert(transit.type === "regular", state);
-          transit = /** @type {import("./invariant").Transit} */ ({
+          transit = /** @type {import("./invariant.d.ts").Transit} */ ({
             type: "construct",
             callee,
             arguments: arguments_,
@@ -725,7 +725,7 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
           transit = {
             type: "throw",
             // eslint-disable-next-line object-shorthand
-            error: /** @type {import("./invariant").Value} */ (error),
+            error: /** @type {import("./invariant.d.ts").Value} */ (error),
           };
           throw error;
         }
@@ -796,7 +796,7 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
       };
       // console.dir(context);
       assertNotNull(state, context);
-      /** @type {import("./invariant").State | null} */
+      /** @type {import("./invariant.d.ts").State | null} */
       let current = state;
       while (current !== null) {
         if (hasOwn(current.scope, variable)) {
@@ -854,7 +854,7 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
       // console.dir(context);
       assertNotNull(state, context);
       assert(isIdentical(pop(state.stack, context), value), context);
-      /** @type {import("./invariant").State | null} */
+      /** @type {import("./invariant.d.ts").State | null} */
       let current = state;
       while (current !== null) {
         if (hasOwn(current.scope, variable)) {
@@ -997,8 +997,8 @@ export const createInvariantAdvice = ({ apply, construct }, TypeError) => {
 
 /**
  * @type {(
- *   root: import("aran").Program<import("./invariant").Atom>,
- * ) => import("aran").Program<import("./invariant").Atom>}
+ *   root: import("aran").Program<import("./invariant.d.ts").Atom>,
+ * ) => import("aran").Program<import("./invariant.d.ts").Atom>}
  */
 export const weave = (root) =>
   weaveStandard(root, {

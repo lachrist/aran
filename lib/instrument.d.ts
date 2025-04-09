@@ -1,8 +1,8 @@
-import type { Config as TransConfig } from "./trans/config";
-import type { Config as RetroConfig } from "./retro/config";
-import type { Pointcut as StandardPointcut } from "./weave/standard/aspect";
-import type { Atom } from "./lang/syntax";
-import type { GetDefault, Json } from "./util/util";
+import type { Config as TransConfig } from "./trans/config.d.ts";
+import type { Config as RetroConfig } from "./retro/config.d.ts";
+import type { Pointcut as StandardPointcut } from "./weave/standard/aspect.d.ts";
+import type { Atom } from "./lang/syntax.d.ts";
+import type { GetDefault, Json } from "./util/util.d.ts";
 
 export type Config<
   param extends Partial<Atom> & {

@@ -27,11 +27,11 @@ const {
 } = globalThis;
 
 /**
- * @typedef {import("./location").NodeHash} NodeHash
- * @typedef {import("./location").FilePath} FilePath
- * @typedef {import("./location").Atom} Atom
- * @typedef {import("./size").Size} Size
- * @typedef {import("./size").SizeRegistery<import("linvail").InternalValue>} Registery
+ * @typedef {import("./location.d.ts").NodeHash} NodeHash
+ * @typedef {import("./location.d.ts").FilePath} FilePath
+ * @typedef {import("./location.d.ts").Atom} Atom
+ * @typedef {import("./size.d.ts").Size} Size
+ * @typedef {import("./size.d.ts").SizeRegistery<import("linvail").InternalValue>} Registery
  */
 
 const advice_global_variable = "__ARAN_ADVICE__";
@@ -106,7 +106,7 @@ const updateAdvice = (
  *     include: "main" | "comp",
  *     global: "internal" | "external",
  *   },
- * ) => Promise<import("../../stage").Stage<
+ * ) => Promise<import("../../stage.d.ts").Stage<
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
@@ -114,8 +114,8 @@ const updateAdvice = (
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
- *     index: import("../../../test-case").TestIndex,
- *     buffer: import("./branch").Branch[],
+ *     index: import("../../../test-case.d.ts").TestIndex,
+ *     buffer: import("./branch.d.ts").Branch[],
  *   },
  * >>}
  */

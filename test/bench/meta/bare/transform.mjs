@@ -27,7 +27,7 @@ const locate = (node) => {
 const _digest = (node, node_path, _file_path, _node_kind) =>
   `${node_path}#${locate(node)}`;
 
-/** @type {import("../../transform").Transform} */
+/** @type {import("../../transform.d.ts").Transform} */
 export default {
   transformBase: (code) =>
     generate(

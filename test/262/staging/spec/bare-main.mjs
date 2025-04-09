@@ -49,9 +49,9 @@ const listExclusionReason = await loadTaggingList([
 ]);
 
 /**
- * @type {import("../stage").Stage<
- *   import("../stage").Config,
- *   import("../stage").Config,
+ * @type {import("../stage.d.ts").Stage<
+ *   import("../stage.d.ts").Config,
+ *   import("../stage.d.ts").Config,
  * >}
  */
 export default {

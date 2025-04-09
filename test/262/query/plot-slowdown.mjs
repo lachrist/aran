@@ -19,8 +19,8 @@ const reduceEntry = /**
 
 /**
  * @typedef {{
- *   name: import("../staging/stage-name").StageName,
- *   results: import("../result").Result[],
+ *   name: import("../staging/stage-name.d.ts").StageName,
+ *   results: import("../result.d.ts").Result[],
  * }} StageResult
  */
 
@@ -30,8 +30,8 @@ const reduceEntry = /**
 
 /**
  * @type {(
- *   entry1: import("../result").Result,
- *   entry2: import("../result").Result,
+ *   entry1: import("../result.d.ts").Result,
+ *   entry2: import("../result.d.ts").Result,
  * ) => number | null}
  */
 const computeSlowdown = (result1, result2) => {
@@ -59,8 +59,8 @@ const computeSlowdown = (result1, result2) => {
 
 /**
  * @type {(
- *   base: import("../result").Result[],
- *   other: import("../result").Result[],
+ *   base: import("../result.d.ts").Result[],
+ *   other: import("../result.d.ts").Result[],
  * ) => number[]}
  */
 const crunchSlowdown = (base, other) => {
@@ -87,7 +87,7 @@ const toSlowdownEntry = (
  * @type {(
  *   base: StageResult,
  *   others: StageResult[],
- * ) => import("./plot").BoxPlot}
+ * ) => import("./plot.d.ts").BoxPlot}
  */
 const prepareSlowdownPlot = (base, others) => ({
   output: fileURLToPath(new URL("slowdown.png", import.meta.url)),
@@ -102,12 +102,12 @@ const prepareSlowdownPlot = (base, others) => ({
 
 /**
  * @type {(
- *   name: import("../staging/stage-name").StageName,
+ *   name: import("../staging/stage-name.d.ts").StageName,
  * ) => Promise<StageResult>}
  */
 const loadStageResultArray = async (name) => {
   /**
-   * @type {import("../result").Result[]}
+   * @type {import("../result.d.ts").Result[]}
    */
   const results = [];
   for await (const [_index, result] of loadStageResult(name)) {

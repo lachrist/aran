@@ -37,17 +37,17 @@ const log = (message) => {
  *   state: X,
  *   dependencies: {
  *     print: (message: string) => void,
- *     prepare: import("../staging/stage").Prepare<X>,
+ *     prepare: import("../staging/stage.d.ts").Prepare<X>,
  *     signalNegative: (message: string) => Error,
  *   },
- * ) => import("../$262").$262}
+ * ) => import("../$262.d.ts").$262}
  */
 export const createRealm = (state, { prepare, print, signalNegative }) => {
   const context = createContext({ __proto__: null });
   /** @type {globalThis} */
   const global = runInContext("this;", context);
   const { SyntaxError } = global;
-  /** @type {import("../$262").$262} */
+  /** @type {import("../$262.d.ts").$262} */
   const $262 = {
     // @ts-ignore
     __proto__: null,
@@ -82,7 +82,7 @@ export const createRealm = (state, { prepare, print, signalNegative }) => {
     get IsHTMLDDA() {
       throw signalNegative("IsHTMLDDA");
     },
-    /** @type {import("../$262").Agent} */
+    /** @type {import("../$262.d.ts").Agent} */
     get agent() {
       throw signalNegative("agent");
     },

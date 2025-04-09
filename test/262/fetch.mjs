@@ -4,21 +4,21 @@ import { AranExecError } from "./error.mjs";
 const { Map, URL } = globalThis;
 
 /**
- * @type {import("./fetch").ResolveDependency}
+ * @type {import("./fetch.d.ts").ResolveDependency}
  */
 export const resolveDependency = (name, base) =>
-  /** @type {import("./fetch").DependencyPath} */ (
+  /** @type {import("./fetch.d.ts").DependencyPath} */ (
     new URL(name, new URL(base, "dummy:///")).pathname.slice(1)
   );
 
 /**
  * @type {(
  *   home: URL,
- * ) => import("./fetch").FetchHarness}
+ * ) => import("./fetch.d.ts").FetchHarness}
  */
 export const compileFetchHarness = (home) => {
   /**
-   * @type {Map<import("./fetch").HarnessName, string>}
+   * @type {Map<import("./fetch.d.ts").HarnessName, string>}
    */
   const cache = new Map();
   return async (name) => {
@@ -35,7 +35,7 @@ export const compileFetchHarness = (home) => {
 /**
  * @type {(
  *   home: URL,
- * ) => import("./fetch").FetchTarget}
+ * ) => import("./fetch.d.ts").FetchTarget}
  */
 export const compileFetchTarget = (home) => (path) =>
   readFile(new URL(`test/${path}`, home), "utf-8");
@@ -44,7 +44,7 @@ export const compileFetchTarget = (home) => (path) =>
  * @type {(
  *   url: URL,
  *   home: URL,
- * ) => null | import("./fetch").TestPath}
+ * ) => null | import("./fetch.d.ts").TestPath}
  */
 export const toTestPath = (url, home) => {
   const base = new URL("test/", home);
@@ -53,7 +53,7 @@ export const toTestPath = (url, home) => {
     if (path.includes("_FIXTURE") || path.endsWith(".md")) {
       return null;
     } else {
-      return /** @type {import("./fetch").TestPath} */ (path);
+      return /** @type {import("./fetch.d.ts").TestPath} */ (path);
     }
   } else {
     throw new AranExecError("Not relative url from home", {

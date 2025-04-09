@@ -1,5 +1,8 @@
-import type { Intrinsic, SyntaxPrimitive } from "../lang/syntax";
-import type { ConstantMetaVariable, WritableMetaVariable } from "./variable";
+import type { Intrinsic, SyntaxPrimitive } from "../lang/syntax.d.ts";
+import type {
+  ConstantMetaVariable,
+  WritableMetaVariable,
+} from "./variable.d.ts";
 
 export type WritableCache = {
   type: "writable";

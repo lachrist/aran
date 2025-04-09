@@ -1,5 +1,5 @@
 import type { VariableName } from "estree-sentry";
-import type { Cache } from "../../../cache";
+import type { Cache } from "../../../cache.d.ts";
 
 export type EvalFrame = {
   type: "eval";

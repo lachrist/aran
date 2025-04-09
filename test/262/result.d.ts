@@ -1,6 +1,6 @@
-import type { ErrorSerial } from "./util/error-serial";
-import type { TestPath } from "./fetch";
-import type { Directive } from "./test-case";
+import type { ErrorSerial } from "./util/error-serial.d.ts";
+import type { TestPath } from "./fetch.d.ts";
+import type { Directive } from "./test-case.d.ts";
 
 export type TestSpecifier = `${TestPath}@${Directive}`;
 

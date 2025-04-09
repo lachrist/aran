@@ -4,10 +4,10 @@ import type {
   SpecifierName,
   VariableName,
 } from "estree-sentry";
-import type { ConstantMetaVariable } from "../../../variable";
-import type { Tree } from "../../../../util/tree";
-import type { Kind } from "../../../annotation/hoisting";
-import type { Link } from "../../../query/link";
+import type { ConstantMetaVariable } from "../../../variable.d.ts";
+import type { Tree } from "../../../../util/tree.d.ts";
+import type { Kind } from "../../../annotation/hoisting.d.ts";
+import type { Link } from "../../../query/link.d.ts";
 
 export type Write = "perform" | "ignore" | "report";
 

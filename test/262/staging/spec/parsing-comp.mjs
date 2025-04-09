@@ -14,8 +14,8 @@ const listNegative = await loadTaggingList([
 ]);
 
 /**
- * @type {import("../stage").Stage<
- *   import("../stage").Config,
+ * @type {import("../stage.d.ts").Stage<
+ *   import("../stage.d.ts").Config,
  *   null,
  * >}
  */

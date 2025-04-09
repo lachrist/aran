@@ -1,6 +1,6 @@
 // Instrumentation //
 
-/** @type {import("../../context").Context} */
+/** @type {import("../../context.d.ts").Context} */
 const {
   log,
   target,

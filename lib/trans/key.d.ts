@@ -3,7 +3,7 @@ import type {
   PublicKeyName,
   PublicKeyValue,
 } from "estree-sentry";
-import type { Expression } from "./atom";
+import type { Expression } from "./atom.d.ts";
 
 export type PublicKey =
   | {

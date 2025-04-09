@@ -11,7 +11,7 @@ const { process, Date } = globalThis;
 
 /**
  * @type {(
- *   result: import("../result").Result,
+ *   result: import("../result.d.ts").Result,
  * ) => boolean}
  */
 const hasFalsePrediction = (result) =>
@@ -20,13 +20,13 @@ const hasFalsePrediction = (result) =>
 
 /**
  * @type {(
- *   stage: import("../staging/stage-name").StageName,
+ *   stage: import("../staging/stage-name.d.ts").StageName,
  *   tests: AsyncIterable<[
- *     import("../test-case").TestIndex,
- *     import("../test-case").TestCase,
+ *     import("../test-case.d.ts").TestIndex,
+ *     import("../test-case.d.ts").TestCase,
  *   ]>,
- *   sigint: import("../util/signal").Signal<boolean>,
- * ) => AsyncGenerator<import("../result").Result>}
+ *   sigint: import("../util/signal.d.ts").Signal<boolean>,
+ * ) => AsyncGenerator<import("../result.d.ts").Result>}
  */
 const exec = async function* (stage, tests, sigint) {
   for await (const { index, test, result } of runStage(stage, tests, {

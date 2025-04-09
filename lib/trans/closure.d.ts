@@ -1,4 +1,4 @@
-import type { Cache } from "./cache.js";
+import type { Cache } from "./cache.d.ts";
 
 export type MethodClosure = {
   type: "method";

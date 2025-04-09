@@ -1,13 +1,13 @@
-import type { Header } from "../../lang/header";
-import type { SyntaxError } from "./syntax-error";
-import type { Condition } from "./condition";
-import type { BaseVariable, MetaVariable } from "../variable";
-import type { Template } from "./template";
-import type { Intrinsic } from "../../lang/syntax";
-import type { Effect } from "../atom";
+import type { Header } from "../../lang/header.d.ts";
+import type { SyntaxError } from "./syntax-error.d.ts";
+import type { Condition } from "./condition.d.ts";
+import type { BaseVariable, MetaVariable } from "../variable.d.ts";
+import type { Template } from "./template.d.ts";
+import type { Intrinsic } from "../../lang/syntax.d.ts";
+import type { Effect } from "../atom.d.ts";
 import type { PrivateKeyName, VariableName } from "estree-sentry";
-import type { ReifyExternal } from "./external";
-import type { RawWarning } from "./warning";
+import type { ReifyExternal } from "./external.d.ts";
+import type { RawWarning } from "./warning.d.ts";
 
 export type ReturnIteratorPrelude = {
   type: "iterator-return";

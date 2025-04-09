@@ -30,7 +30,7 @@ addEventListener("unhandledrejection", (event) => {
   event.preventDefault();
 });
 
-/** @type {import("./context").Context} */
+/** @type {import("./context.d.ts").Context} */
 const context = {
   astring,
   acorn: /** @type {any} */ (acorn),

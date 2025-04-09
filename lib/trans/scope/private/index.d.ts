@@ -1,9 +1,9 @@
 import type { PrivateKeyName } from "estree-sentry";
-import type { Cache, WritableCache } from "../../cache";
-import type { Tree } from "../../../util/tree";
-import type { Expression } from "../../atom";
-import type { RootSort } from "../../sort";
-import type { Mode } from "../../mode";
+import type { Cache, WritableCache } from "../../cache.d.ts";
+import type { Tree } from "../../../util/tree.d.ts";
+import type { Expression } from "../../atom.d.ts";
+import type { RootSort } from "../../sort.d.ts";
+import type { Mode } from "../../mode.d.ts";
 
 // Operation //
 

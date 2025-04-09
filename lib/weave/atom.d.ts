@@ -1,4 +1,4 @@
-import type { Brand, Json } from "../util/util";
+import type { Brand, Json } from "../util/util.d.ts";
 import type { SourceValue, SpecifierValue, SpecifierName } from "estree-sentry";
 import type {
   Node,
@@ -9,7 +9,7 @@ import type {
   SegmentBlock,
   RoutineBlock,
   Intrinsic,
-} from "../lang/syntax";
+} from "../lang/syntax.d.ts";
 
 export type Tag = Brand<Json, "weave.Tag">;
 

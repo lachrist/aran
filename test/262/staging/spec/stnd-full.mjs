@@ -17,9 +17,9 @@ const {
  * @typedef {`hash:${string}`} Hash
  * @typedef {`dynamic://eval/local/${Hash}`} LocalEvalPath
  * @typedef {(
- *   | import("../../fetch").HarnessName
- *   | import("../../fetch").DependencyPath
- *   | import("../../fetch").TestPath
+ *   | import("../../fetch.d.ts").HarnessName
+ *   | import("../../fetch.d.ts").DependencyPath
+ *   | import("../../fetch.d.ts").TestPath
  *   | LocalEvalPath
  * )} FilePath
  * @typedef {string & {__brand: "JavaScriptIdentifier"}} JavaScriptIdentifier
@@ -705,9 +705,9 @@ const compileAdvice = ({ apply, construct }) => ({
 const listPrecursorFailure = await compileListPrecursorFailure(["stnd-void"]);
 
 /**
- * @type {import("../stage").Stage<
- *   import("../stage").Config,
- *   import("../stage").Config,
+ * @type {import("../stage.d.ts").Stage<
+ *   import("../stage.d.ts").Config,
+ *   import("../stage.d.ts").Config,
  * >}
  */
 export default {

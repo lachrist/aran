@@ -1,5 +1,5 @@
-import type { Variable } from "./variable";
-import type { Hash } from "./hash";
+import type { Variable } from "./variable.d.ts";
+import type { Hash } from "./hash.d.ts";
 import type {
   Program as GenericProgram,
   SegmentBlock as GenericSegmentBlock,
@@ -8,10 +8,10 @@ import type {
   Effect as GenericEffect,
   Expression as GenericExpression,
   Intrinsic,
-} from "../lang/syntax";
+} from "../lang/syntax.d.ts";
 import type { SourceValue, SpecifierName } from "estree-sentry";
-import type { Brand } from "../util/util";
-import type { Tree } from "../util/tree";
+import type { Brand } from "../util/util.d.ts";
+import type { Tree } from "../util/tree.d.ts";
 
 export type Label = Brand<string, "trans.Label">;
 

@@ -3,7 +3,7 @@ import { isStageName } from "../staging/index.mjs";
 /**
  * @type {(
  *   argv: string[],
- * ) => null | import("../staging/stage-name").StageName}
+ * ) => null | import("../staging/stage-name.d.ts").StageName}
  */
 export const getStageName = (argv) => {
   if (argv.length !== 1) {

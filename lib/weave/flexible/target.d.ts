@@ -6,7 +6,7 @@ import type {
   ArgProgram,
   ArgRoutineBlock,
   ArgStatement,
-} from "../atom";
+} from "../atom.d.ts";
 
 export type ProgramTarget = {
   origin: ArgProgram;

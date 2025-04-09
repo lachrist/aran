@@ -12,7 +12,7 @@ const {
 /**
  * @type {(
  *   data: string,
- * ) => import("../../../lib/trans/source").DeepLocalSitu}
+ * ) => import("../../../lib/trans/source.d.ts").DeepLocalSitu}
  */
 const parseSitu = parseJson;
 
@@ -32,7 +32,7 @@ const parseSitu = parseJson;
  *     config: { record_directory: null | URL },
  *   ) => {
  *     intrinsics: import("aran").IntrinsicRecord,
- *     $262: import("../$262").$262,
+ *     $262: import("../$262.d.ts").$262,
  *   },
  *   trans: <atom extends import("aran").Atom & { Tag: hash }>(
  *     path: path,
@@ -50,7 +50,7 @@ export const compileAran = (config, toEvalPath) => {
     prepare: (context, { record_directory }) => {
       /** @type {import("aran").IntrinsicRecord} */
       const intrinsics = /** @type {any} */ (runInContext(SETUP, context));
-      /** @type {import("../$262").$262} */
+      /** @type {import("../$262.d.ts").$262} */
       const $262 = /** @type {any} */ (intrinsics["aran.global_object"]).$262;
       const { SyntaxError } = intrinsics["aran.global_object"];
       intrinsics["aran.transpileEvalCode"] = (code, situ, hash) => {

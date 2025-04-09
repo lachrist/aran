@@ -13,17 +13,17 @@ export const isNotEmptyLine = (string) =>
 
 /**
  * @type {(
- *   tag: import("./tag").Tag,
+ *   tag: import("./tag.d.ts").Tag,
  * ) => Promise<(
- *   | import("../fetch").TestPath
- *   | import("../result").TestSpecifier
+ *   | import("../fetch.d.ts").TestPath
+ *   | import("../result.d.ts").TestSpecifier
  * )[]>}
  */
 export const loadTag = async (tag) =>
   /**
    * @type {(
-   *   | import("../fetch").TestPath
-   *   | import("../result").TestSpecifier
+   *   | import("../fetch.d.ts").TestPath
+   *   | import("../result.d.ts").TestSpecifier
    * )[]}
    */ (
     (await readFile(new URL(`data/${tag}.txt`, import.meta.url), "utf-8"))

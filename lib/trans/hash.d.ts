@@ -1,4 +1,4 @@
-import type { Brand } from "../util/util";
+import type { Brand } from "../util/util.d.ts";
 
 export type FilePath = Brand<unknown, "FilePath">;
 

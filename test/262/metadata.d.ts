@@ -1,4 +1,4 @@
-import { HarnessName } from "./fetch";
+import type { HarnessName } from "./fetch.d.ts";
 
 export type Feature = string & { __brand: "Feature" };
 

@@ -1,8 +1,8 @@
 import type { Context } from "node:vm";
-import type { Source } from "../source";
-import type { Tag } from "../tagging/tag";
-import type { StageName } from "./stage-name";
-import type { File } from "../util/file";
+import type { Source } from "../source.d.ts";
+import type { Tag } from "../tagging/tag.d.ts";
+import type { StageName } from "./stage-name.d.ts";
+import type { File } from "../util/file.d.ts";
 import { TestCase, TestIndex } from "../test-case";
 
 export type Selector<X> =

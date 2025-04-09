@@ -3,8 +3,8 @@ import type {
   Kind as EstreeNodeKind,
   Path as EstreeNodePath,
 } from "estree-sentry";
-import type { Situ } from "./source";
-import type { GetDefault } from "../util/util";
+import type { Situ } from "./source.d.ts";
+import type { GetDefault } from "../util/util.d.ts";
 
 export type GlobalDeclarativeRecord = "builtin" | "emulate";
 

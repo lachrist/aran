@@ -1,5 +1,5 @@
-import type { AssertNever, ValueOf } from "../util/util";
-import type { Intrinsic, Parameter } from "./syntax";
+import type { AssertNever, ValueOf } from "../util/util.d.ts";
+import type { Intrinsic, Parameter } from "./syntax.d.ts";
 
 export type IntrinsicFunctionNaming = {
   "aran.createObject": "createObject";

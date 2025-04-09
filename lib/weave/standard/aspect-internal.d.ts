@@ -1,5 +1,5 @@
-import type { ArgAtom } from "../atom";
-import type { AspectTyping, AspectKind, Pointcut } from "./aspect";
+import type { ArgAtom } from "../atom.d.ts";
+import type { AspectTyping, AspectKind, Pointcut } from "./aspect.d.ts";
 
 export type InternalPointcut = Pointcut<ArgAtom>;
 

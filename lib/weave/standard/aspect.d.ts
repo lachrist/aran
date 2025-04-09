@@ -1,12 +1,16 @@
-import type { DeclareHeader, Header, ModuleHeader } from "../../lang/header";
+import type {
+  DeclareHeader,
+  Header,
+  ModuleHeader,
+} from "../../lang/header.d.ts";
 import type {
   Atom,
   Intrinsic,
   Parameter,
   ResolvePartialAtom,
   RuntimePrimitive,
-} from "../../lang/syntax";
-import type { GetDefault, ValueOf } from "../../util/util";
+} from "../../lang/syntax.d.ts";
+import type { GetDefault, ValueOf } from "../../util/util.d.ts";
 import type {
   ControlKind,
   ProgramKind,
@@ -14,7 +18,7 @@ import type {
   SegmentKind,
   GeneratorKind,
   Parametrization,
-} from "../parametrization";
+} from "../parametrization.d.ts";
 
 export type TestKind = "if" | "while" | "conditional";
 

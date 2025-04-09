@@ -1,6 +1,6 @@
-import type { Config } from "./config";
-import type { ArgAtom } from "../atom";
-import type { Json } from "../../util/util";
+import type { Config } from "./config.d.ts";
+import type { ArgAtom } from "../atom.d.ts";
+import type { Json } from "../../util/util.d.ts";
 import type { VariableName } from "estree-sentry";
 
 export type InternalConfig = Config<

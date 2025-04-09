@@ -6,7 +6,7 @@ const { URL, JSON, Infinity } = globalThis;
 
 /**
  * @type {(
- *   name: import("./stage-name").StageName,
+ *   name: import("./stage-name.d.ts").StageName,
  * ) => URL}
  */
 const locateResult = (stage) =>
@@ -14,10 +14,10 @@ const locateResult = (stage) =>
 
 /**
  * @type {(
- *   stage: import("./stage-name").StageName,
+ *   stage: import("./stage-name.d.ts").StageName,
  * ) => AsyncGenerator<[
- *   import("../test-case").TestIndex,
- *   import("../result").Result,
+ *   import("../test-case.d.ts").TestIndex,
+ *   import("../result.d.ts").Result,
  * ]>}
  */
 export const loadStageResult = async function* (stage) {
@@ -31,7 +31,7 @@ export const loadStageResult = async function* (stage) {
     for await (const line of iterable) {
       if (line.trim() !== "") {
         yield [
-          /** @type {import("../test-case").TestIndex} */ (index),
+          /** @type {import("../test-case.d.ts").TestIndex} */ (index),
           unpackResult(JSON.parse(line)),
         ];
       }
@@ -44,8 +44,8 @@ export const loadStageResult = async function* (stage) {
 
 /**
  * @type {(
- *   stage: import("./stage-name").StageName,
- *   results: AsyncIterable<import("../result").Result>,
+ *   stage: import("./stage-name.d.ts").StageName,
+ *   results: AsyncIterable<import("../result.d.ts").Result>,
  * ) => Promise<void>}
  */
 export const saveStageResult = async (stage, results) => {

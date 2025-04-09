@@ -565,11 +565,11 @@ const compileWeave = ({ instrument_dynamic_code }) => {
  *     include: "comp" | "main",
  *   },
  * ) => Promise<
- *   import("../../stage").Stage<
- *     import("../../stage").Config & {
+ *   import("../../stage.d.ts").Stage<
+ *     import("../../stage.d.ts").Config & {
  *       handle: import("node:fs/promises").FileHandle,
  *     },
- *     import("../../stage").Config & {
+ *     import("../../stage.d.ts").Config & {
  *       handle: import("node:fs/promises").FileHandle,
  *       counter: { inner: number },
  *     },

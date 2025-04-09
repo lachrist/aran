@@ -8,10 +8,10 @@ import { cpuUsage } from "node:process";
 const { Promise } = globalThis;
 
 /**
- * @type {() => import("./termination").Termination}
+ * @type {() => import("./termination.d.ts").Termination}
  */
 const makeAsynchronousTermination = () => {
-  /** @type {(error: null | import("../util/error-serial").ErrorSerial) => void} */
+  /** @type {(error: null | import("../util/error-serial.d.ts").ErrorSerial) => void} */
   let resolve;
   return {
     done: new Promise((resolve_) => {
@@ -34,7 +34,7 @@ const makeAsynchronousTermination = () => {
   };
 };
 
-/** @type {import("./termination").Termination} */
+/** @type {import("./termination.d.ts").Termination} */
 const termination = {
   done: Promise.resolve(null),
   print: (_unknown) => {
@@ -45,9 +45,9 @@ const termination = {
 /**
  * @type {<X>(
  *   callback: () => X
- * ) => import("../util/outcome").Outcome<
+ * ) => import("../util/outcome.d.ts").Outcome<
  *   X,
- *   import("../util/error-serial").ErrorSerial,
+ *   import("../util/error-serial.d.ts").ErrorSerial,
  * >}
  */
 export const wrapOutcome = (callback) => {
@@ -65,9 +65,9 @@ export const wrapOutcome = (callback) => {
  * @type {<X>(
  *   callback: () => X
  * ) => Promise<
- *   import("../util/outcome").Outcome<
+ *   import("../util/outcome.d.ts").Outcome<
  *     X,
- *     import("../util/error-serial").ErrorSerial,
+ *     import("../util/error-serial.d.ts").ErrorSerial,
  *   >
  * >}
  */
@@ -85,14 +85,14 @@ export const wrapOutcomeAsync = async (callback) => {
 /**
  * @type {<X>(
  *   phase: "instrument" | "parse" | "resolution" | "runtime",
- *   outcome: import("../util/outcome").Outcome<
+ *   outcome: import("../util/outcome.d.ts").Outcome<
  *     X,
- *     import("../util/error-serial").ErrorSerial,
+ *     import("../util/error-serial.d.ts").ErrorSerial,
  *   >,
- *   negative: null | import("../metadata").Negative,
- * ) => "negative-success" | import("../util/outcome").Outcome<
+ *   negative: null | import("../metadata.d.ts").Negative,
+ * ) => "negative-success" | import("../util/outcome.d.ts").Outcome<
  *   X,
- *   import("../util/error-serial").ErrorSerial,
+ *   import("../util/error-serial.d.ts").ErrorSerial,
  * >}
  */
 const applyNegative = (phase, outcome, negative) => {
@@ -130,7 +130,7 @@ const applyNegative = (phase, outcome, negative) => {
 /**
  * @type {(
  *   content: string,
- *   directive: import("../test-case").Directive,
+ *   directive: import("../test-case.d.ts").Directive,
  * ) => string}
  */
 const applyDirective = (content, directive) => {
@@ -151,16 +151,16 @@ const applyDirective = (content, directive) => {
  * @type {<H, X>(
  *   handle: H,
  *   state: X,
- *   test_case: import("../test-case").TestCase,
+ *   test_case: import("../test-case.d.ts").TestCase,
  *   dependencies: {
- *     prepare: import("../staging/stage").Prepare<X>,
- *     instrument: import("../staging/stage").Instrument<H>,
+ *     prepare: import("../staging/stage.d.ts").Prepare<X>,
+ *     instrument: import("../staging/stage.d.ts").Instrument<H>,
  *     signalNegative: (cause: string) => Error,
- *     resolveDependency: import("../fetch").ResolveDependency,
- *     fetchHarness: import("../fetch").FetchHarness,
- *     fetchTarget: import("../fetch").FetchTarget,
+ *     resolveDependency: import("../fetch.d.ts").ResolveDependency,
+ *     fetchHarness: import("../fetch.d.ts").FetchHarness,
+ *     fetchTarget: import("../fetch.d.ts").FetchTarget,
  *   },
- * ) => Promise<null | import("../util/error-serial").ErrorSerial>}
+ * ) => Promise<null | import("../util/error-serial.d.ts").ErrorSerial>}
  */
 export const execTestCaseInner = async (
   handle,
@@ -312,17 +312,17 @@ export const execTestCaseInner = async (
  * @type {<H, X>(
  *   handle: H,
  *   state: X,
- *   test_case: import("../test-case").TestCase,
+ *   test_case: import("../test-case.d.ts").TestCase,
  *   dependencies: {
- *     prepare: import("../staging/stage").Prepare<X>,
- *     instrument: import("../staging/stage").Instrument<H>,
- *     resolveDependency: import("../fetch").ResolveDependency,
- *     fetchHarness: import("../fetch").FetchHarness,
- *     fetchTarget: import("../fetch").FetchTarget,
+ *     prepare: import("../staging/stage.d.ts").Prepare<X>,
+ *     instrument: import("../staging/stage.d.ts").Instrument<H>,
+ *     resolveDependency: import("../fetch.d.ts").ResolveDependency,
+ *     fetchHarness: import("../fetch.d.ts").FetchHarness,
+ *     fetchTarget: import("../fetch.d.ts").FetchTarget,
  *   },
  * ) => Promise<{
  *   expect: string[],
- *   actual: null | import("../util/error-serial").ErrorSerial,
+ *   actual: null | import("../util/error-serial.d.ts").ErrorSerial,
  *   time: { user: number, system: number },
  * }>}
  */

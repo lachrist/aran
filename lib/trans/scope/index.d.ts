@@ -1,9 +1,9 @@
-import type { Annotation } from "../annotation";
-import type { CatchScope } from "./catch";
-import type { PrivateScope } from "./private";
-import type { ProgramScope } from "./program";
-import type { RoutineScope } from "./routine";
-import type { VariableScope } from "./variable";
+import type { Annotation } from "../annotation/index.d.ts";
+import type { CatchScope } from "./catch/index.d.ts";
+import type { PrivateScope } from "./private/index.d.ts";
+import type { ProgramScope } from "./program/index.d.ts";
+import type { RoutineScope } from "./routine/index.d.ts";
+import type { VariableScope } from "./variable/index.d.ts";
 
 export type Scope = CatchScope &
   PrivateScope &

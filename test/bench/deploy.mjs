@@ -45,7 +45,7 @@ const bundle = async (entry) => {
  * ) => Promise<void>}
  */
 const deploy = async (meta, base) => {
-  /** @type {import("./transform").Transform} */
+  /** @type {import("./transform.d.ts").Transform} */
   const { transformBase, transformMeta } = (
     await import(`./meta/${meta}/transform.mjs`)
   ).default;

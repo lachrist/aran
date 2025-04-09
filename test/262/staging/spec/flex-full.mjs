@@ -23,9 +23,9 @@ const {
  * ]} Point
  * @typedef {`dynamic://eval/local/${NodeHash}`} LocalEvalPath
  * @typedef {(
- *   | import("../../fetch").HarnessName
- *   | import("../../fetch").DependencyPath
- *   | import("../../fetch").TestPath
+ *   | import("../../fetch.d.ts").HarnessName
+ *   | import("../../fetch.d.ts").DependencyPath
+ *   | import("../../fetch.d.ts").TestPath
  *   | LocalEvalPath
  * )} FilePath
  * @typedef {string & {__brand: "AdviceGlobalVariable"}} AdviceGlobalVariable
@@ -701,9 +701,9 @@ const weave_config = {
 const listPrecursorFailure = await compileListPrecursorFailure(["flex-void"]);
 
 /**
- * @type {import("../stage").Stage<
- *   import("../stage").Config,
- *   import("../stage").Config,
+ * @type {import("../stage.d.ts").Stage<
+ *   import("../stage.d.ts").Config,
+ *   import("../stage.d.ts").Config,
  * >}
  */
 export default {

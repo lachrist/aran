@@ -1,6 +1,6 @@
 import type { Expression, Statement } from "estree-sentry";
-import type { Intrinsic } from "../lang/syntax";
-import type { Tree } from "../util/tree";
+import type { Intrinsic } from "../lang/syntax.d.ts";
+import type { Tree } from "../util/tree.d.ts";
 
 export type Dependency =
   | "Boolean"

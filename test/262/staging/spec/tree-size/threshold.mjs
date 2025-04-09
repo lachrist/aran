@@ -9,7 +9,7 @@ export const threshold = 1024;
 /**
  * @type {(
  *   include: "main" | "comp",
- * ) => Promise<Set<import("../../../test-case").TestIndex>>}
+ * ) => Promise<Set<import("../../../test-case.d.ts").TestIndex>>}
  */
 const loadThresholdExclusion = async (include) => {
   const handle = await open(
@@ -22,7 +22,7 @@ const loadThresholdExclusion = async (include) => {
       crlfDelay: Infinity,
     });
     let index = 0;
-    /** @type {Set<import("../../../test-case").TestIndex>} */
+    /** @type {Set<import("../../../test-case.d.ts").TestIndex>} */
     const exclusion = new Set();
     for await (const line of iterable) {
       if (line.trim() !== "") {
@@ -32,7 +32,7 @@ const loadThresholdExclusion = async (include) => {
         }
         if (count > threshold) {
           exclusion.add(
-            /** @type {import("../../../test-case").TestIndex} */ (index),
+            /** @type {import("../../../test-case.d.ts").TestIndex} */ (index),
           );
         }
       }
@@ -48,13 +48,13 @@ const loadThresholdExclusion = async (include) => {
  * @type {(
  *   include: "main" | "comp",
  * ) => Promise<(
- *   index: import("../../../test-case").TestIndex,
- * ) => import("../../../tagging/tag").Tag[]>}
+ *   index: import("../../../test-case.d.ts").TestIndex,
+ * ) => import("../../../tagging/tag.d.ts").Tag[]>}
  */
 export const compileListThresholdExclusion = async (include) => {
   const exclusion = await loadThresholdExclusion(include);
   return (index) =>
     exclusion.has(index)
-      ? [/** @type {import("../../../tagging/tag").Tag} */ ("threshold")]
+      ? [/** @type {import("../../../tagging/tag.d.ts").Tag} */ ("threshold")]
       : [];
 };

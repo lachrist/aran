@@ -6,7 +6,7 @@ const { Infinity } = globalThis;
 
 /**
  * @type {(
- *   report: import("./report").TestReport,
+ *   report: import("./report.d.ts").TestReport,
  * ) => string}
  */
 export const printReport = ({ index, test, result }) => {

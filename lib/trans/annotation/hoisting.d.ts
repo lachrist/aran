@@ -1,6 +1,6 @@
 import type { VariableName } from "estree-sentry";
-import type { Hash } from "../hash";
-import type { Tree } from "../../util/tree";
+import type { Hash } from "../hash.d.ts";
+import type { Tree } from "../../util/tree.d.ts";
 
 export type Kind =
   | "import"

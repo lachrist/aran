@@ -1,7 +1,7 @@
 /**
  * @type {<X>(
  *   iterable: AsyncIterable<X>,
- *   sigint: import("./signal").Signal<Boolean>
+ *   sigint: import("./signal.d.ts").Signal<Boolean>
  * ) => AsyncIterable<X>}
  */
 export const interruptIterable = async function* (iterable, sigint) {

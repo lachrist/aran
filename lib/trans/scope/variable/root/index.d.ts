@@ -8,12 +8,12 @@
 // So only bindings in the global declarative record are represented.
 
 import type { VariableName } from "estree-sentry";
-import type { WritableMetaVariable } from "../../../variable";
-import type { Tree } from "../../../../util/tree";
-import type { RootSort, Sort } from "../../../sort";
-import type { Mode } from "../../../mode";
-import type { Kind } from "../../../annotation/hoisting";
-import type { GlobalDeclarativeRecord } from "../../../config";
+import type { WritableMetaVariable } from "../../../variable.d.ts";
+import type { Tree } from "../../../../util/tree.d.ts";
+import type { RootSort, Sort } from "../../../sort.d.ts";
+import type { Mode } from "../../../mode.d.ts";
+import type { Kind } from "../../../annotation/hoisting.d.ts";
+import type { GlobalDeclarativeRecord } from "../../../config.d.ts";
 
 export type RecordRootKind = Kind & ("let" | "const" | "class");
 

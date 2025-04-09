@@ -9,9 +9,9 @@ import type {
   Effect,
   Expression,
   ResolvePartialAtom,
-} from "../../lang/syntax";
-import type { GetDefault, Json } from "../../util/util";
-import type { ValueOf } from "../../util/util";
+} from "../../lang/syntax.d.ts";
+import type { GetDefault, Json } from "../../util/util.d.ts";
+import type { ValueOf } from "../../util/util.d.ts";
 
 export type BlockPointcut<atom extends Atom, point extends Json[]> = (
   node: SegmentBlock<atom> | RoutineBlock<atom>,

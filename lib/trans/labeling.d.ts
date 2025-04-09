@@ -1,6 +1,6 @@
 import type { LabelName } from "estree-sentry";
-import type { Label } from "./atom";
-import type { Tree } from "../util/tree";
+import type { Label } from "./atom.d.ts";
+import type { Tree } from "../util/tree.d.ts";
 
 export type StatementLabeling = {
   labels: Tree<LabelName>;

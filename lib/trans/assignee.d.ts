@@ -1,5 +1,5 @@
-import type { Object } from "./object.js";
-import type { Key } from "./key.js";
+import type { Object } from "./object.d.ts";
+import type { Key } from "./key.d.ts";
 import type { VariableName } from "estree-sentry";
 
 export type Assignee =

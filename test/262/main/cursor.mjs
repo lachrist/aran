@@ -6,7 +6,7 @@ const { JSON, URL, parseInt } = globalThis;
 const CURSOR = new URL("cursor.txt", import.meta.url);
 
 /**
- * @type {() => Promise<import("../test-case").TestIndex>}
+ * @type {() => Promise<import("../test-case.d.ts").TestIndex>}
  */
 export const loadCursor = async () => {
   let content;
@@ -19,20 +19,22 @@ export const loadCursor = async () => {
       "code" in error &&
       error.code === "ENOENT"
     ) {
-      return /** @type {import("../test-case").TestIndex} */ (0);
+      return /** @type {import("../test-case.d.ts").TestIndex} */ (0);
     } else {
       throw error;
     }
   }
   const lines = content.split("\n");
   if (lines.length === 0) {
-    return /** @type {import("../test-case").TestIndex} */ (0);
+    return /** @type {import("../test-case.d.ts").TestIndex} */ (0);
   } else {
     const head = lines[0].trim();
     if (head === "") {
-      return /** @type {import("../test-case").TestIndex} */ (0);
+      return /** @type {import("../test-case.d.ts").TestIndex} */ (0);
     } else if (/^\d+$/.test(head)) {
-      return /** @type {import("../test-case").TestIndex} */ (parseInt(head));
+      return /** @type {import("../test-case.d.ts").TestIndex} */ (
+        parseInt(head)
+      );
     } else {
       throw new AranExecError("Invalid cursor content", { content });
     }
@@ -42,7 +44,7 @@ export const loadCursor = async () => {
 /**
  * @type {(
  *   cursor: number,
- *   test: null | import("../test-case").TestCase,
+ *   test: null | import("../test-case.d.ts").TestCase,
  * ) => Promise<void>}
  */
 export const saveCursor = async (cursor, test) => {

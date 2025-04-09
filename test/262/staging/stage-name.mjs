@@ -2,7 +2,7 @@ const {
   Object: { keys, hasOwn },
 } = globalThis;
 
-/** @type {{[key in import("./stage-name").StageName]: null}} */
+/** @type {{[key in import("./stage-name.d.ts").StageName]: null}} */
 export const stage_name_record = {
   "bare-comp": null,
   "bare-main": null,
@@ -35,11 +35,13 @@ export const stage_name_record = {
 };
 
 export const stage_name_enum =
-  /** @type {import("./stage-name").StageName[]} */ (keys(stage_name_record));
+  /** @type {import("./stage-name.d.ts").StageName[]} */ (
+    keys(stage_name_record)
+  );
 
 /**
  * @type {(
  *   name: string,
- * ) => name is import("./stage-name").StageName}
+ * ) => name is import("./stage-name.d.ts").StageName}
  */
 export const isStageName = (name) => hasOwn(stage_name_record, name);

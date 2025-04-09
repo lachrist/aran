@@ -22,7 +22,7 @@ const {
  *     tracking: "stack" | "inter" | "intra",
  *     include: "main" | "comp",
  *   },
- * ) => Promise<import("../../stage").Stage<
+ * ) => Promise<import("../../stage.d.ts").Stage<
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
@@ -30,8 +30,8 @@ const {
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
- *     index: import("../../../test-case").TestIndex,
- *     buffer: import("./branch").Branch[],
+ *     index: import("../../../test-case.d.ts").TestIndex,
+ *     buffer: import("./branch.d.ts").Branch[],
  *   },
  * >>}
  */
@@ -90,8 +90,8 @@ export const compileStage = async ({ tracking, include }) => {
       /**
        * @type {(
        *   kind: import("aran").TestKind,
-       *   size: import("./size").Size,
-       *   hash: import("./location").NodeHash,
+       *   size: import("./size.d.ts").Size,
+       *   hash: import("./location.d.ts").NodeHash,
        * ) => void}
        */
       const recordBranch = (_kind, size, hash) => {
@@ -156,7 +156,7 @@ export const compileStage = async ({ tracking, include }) => {
     ) => {
       if (include === "comp" || type === "main") {
         const root1 = trans(
-          /** @type {import("./location").FilePath} */ (path),
+          /** @type {import("./location.d.ts").FilePath} */ (path),
           kind,
           code1,
         );

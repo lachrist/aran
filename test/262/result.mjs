@@ -7,8 +7,8 @@ const {
 
 /**
  * @type {(
- *   data: import("../../lib").Json
- * ) => data is import("./result").TestSpecifier}
+ *   data: import("../../lib/index.d.ts").Json
+ * ) => data is import("./result.d.ts").TestSpecifier}
  */
 export const isTestSpecifier = (data) =>
   typeof data === "string" &&
@@ -16,24 +16,24 @@ export const isTestSpecifier = (data) =>
 
 /**
  * @type {(
- *   data: import("../../lib").Json
- * ) => data is import("./result").CompactResult}
+ *   data: import("../../lib/index.d.ts").Json
+ * ) => data is import("./result.d.ts").CompactResult}
  */
 export const isCompactResult = (data) =>
   isArray(data) && data.length > 0 && (data[0] === "in" || data[0] === "ex");
 
 /**
  * @type {(
- *   path: import("./fetch").TestPath,
- *   directive: import("./test-case").Directive
- * ) => import("./result").TestSpecifier}
+ *   path: import("./fetch.d.ts").TestPath,
+ *   directive: import("./test-case.d.ts").Directive
+ * ) => import("./result.d.ts").TestSpecifier}
  */
 export const toTestSpecifier = (path, directive) => `${path}@${directive}`;
 
 /**
  * @type {(
- *   result: import("./result").Result,
- * ) => import("./result").CompactResult}
+ *   result: import("./result.d.ts").Result,
+ * ) => import("./result.d.ts").CompactResult}
  */
 export const packResult = (result) => {
   switch (result.type) {
@@ -58,8 +58,8 @@ export const packResult = (result) => {
 
 /**
  * @type {(
- *   result: import("./result").CompactResult,
- * ) => import("./result").Result}
+ *   result: import("./result.d.ts").CompactResult,
+ * ) => import("./result.d.ts").Result}
  */
 export const unpackResult = (result) => {
   switch (result[0]) {
@@ -90,7 +90,7 @@ export const unpackResult = (result) => {
 
 /**
  * @type {(
- *   result: import("./result").IncludeResult,
+ *   result: import("./result.d.ts").IncludeResult,
  * ) => (
  *   | "false-positive"
  *   | "false-negative"

@@ -6,7 +6,7 @@ const { Date, Promise, Error, setTimeout, process } = globalThis;
 
 /**
  * @type {(
- *   stage: import("../staging/stage-name").StageName,
+ *   stage: import("../staging/stage-name.d.ts").StageName,
  * ) => Promise<number>}
  */
 const exec = (stage) =>
@@ -50,7 +50,7 @@ const main = async (argv) => {
   if (!argv.every(isStageName)) {
     return `invalid stage names: ${argv.filter((arg) => !isStageName(arg))}\n`;
   }
-  /** @type {[import("../staging/stage-name").StageName, number][]} */
+  /** @type {[import("../staging/stage-name.d.ts").StageName, number][]} */
   const times = [];
   for (const stage of argv) {
     stdout.write(`executing ${stage}...\n`);

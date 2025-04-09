@@ -1,5 +1,5 @@
-// import type { Program } from "../estree";
-// import type { Path } from "../guard/syntax/path";
+// import type { Program } from "../estree.d.ts";
+// import type { Path } from "../guard/syntax/path.d.ts";
 
 // export type Completion = {
 //   type: "program";
