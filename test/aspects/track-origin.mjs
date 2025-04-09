@@ -153,7 +153,7 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
   /** @type {null | import("./track-origin.d.ts").ShadowState<atom>} */
   let deep_eval_state = null;
   return {
-    "block@setup": (_state, kind, _location) => {
+    "block@setup": (state, kind, _location) => {
       if (kind === "deep-local-eval") {
         if (deep_eval_state === null) {
           throw new AranExecError("missing deep eval state");
@@ -163,7 +163,7 @@ export const createTrackOriginAdvice = ({ apply, construct }) => {
           return state;
         }
       } else {
-        return extendState(null);
+        return extendState(state);
       }
     },
     "block@declaration": (state, _kind, frame, location) => {
