@@ -1,18 +1,11 @@
-import { writeFile } from "node:fs/promises";
 import { parse } from "acorn";
 import { generate } from "astring";
-import { transpile, retropile, setupile } from "aran";
+import { transpile, retropile } from "aran";
+import { intrinsic_global_variable } from "./bridge.mjs";
 
 const {
-  URL,
   Object: { hasOwn },
 } = globalThis;
-
-await writeFile(
-  new URL("./setup.mjs", import.meta.url),
-  ["// @ts-nocheck", "/* eslint-disable */", generate(setupile({}))].join("\n"),
-  "utf8",
-);
 
 /** @type {(node: any) => string} */
 const locate = (node) => {
@@ -41,6 +34,7 @@ export default {
             ecmaVersion: 2024,
           }),
         }),
+        { intrinsic_global_variable },
       ),
     ),
   transformMeta: (code) => code,
