@@ -2,6 +2,7 @@ import { parse } from "acorn";
 import { generate } from "astring";
 import { transpile, retropile } from "aran";
 import { intrinsic_global_variable } from "./bridge.mjs";
+import { weave } from "../../../aspects/track-origin.mjs";
 
 const {
   Object: { hasOwn },
@@ -17,7 +18,7 @@ const locate = (node) => {
 };
 
 /** @type {import("aran").Digest} */
-const _digest = (node, node_path, _file_path, _node_kind) =>
+const digest = (node, node_path, _file_path, _node_kind) =>
   `${node_path}#${locate(node)}`;
 
 /** @type {import("../../transform.d.ts").Transform} */
@@ -25,15 +26,20 @@ export default {
   transformBase: ({ path, kind, code }) =>
     generate(
       retropile(
-        transpile({
-          path,
-          kind,
-          root: parse(code, {
-            locations: false,
-            sourceType: kind,
-            ecmaVersion: 2024,
-          }),
-        }),
+        weave(
+          transpile(
+            {
+              path,
+              kind,
+              root: parse(code, {
+                locations: true,
+                sourceType: "module",
+                ecmaVersion: 2024,
+              }),
+            },
+            { digest },
+          ),
+        ),
         { intrinsic_global_variable },
       ),
     ),

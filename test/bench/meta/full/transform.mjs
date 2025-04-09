@@ -1,7 +1,10 @@
 import { parse } from "acorn";
 import { generate } from "astring";
-import { transpile, retropile } from "aran";
-import { intrinsic_global_variable } from "./bridge.mjs";
+import { transpile, retropile, weaveStandard } from "aran";
+import {
+  advice_global_variable,
+  intrinsic_global_variable,
+} from "./bridge.mjs";
 
 const {
   Object: { hasOwn },
@@ -25,15 +28,18 @@ export default {
   transformBase: ({ path, kind, code }) =>
     generate(
       retropile(
-        transpile({
-          path,
-          kind,
-          root: parse(code, {
-            locations: false,
-            sourceType: kind,
-            ecmaVersion: 2024,
+        weaveStandard(
+          transpile({
+            path,
+            kind,
+            root: parse(code, {
+              locations: false,
+              sourceType: kind,
+              ecmaVersion: 2024,
+            }),
           }),
-        }),
+          { advice_global_variable, pointcut: true },
+        ),
         { intrinsic_global_variable },
       ),
     ),

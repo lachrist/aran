@@ -1,4 +1,16 @@
+export type TransformMeta = (file: {
+  path: string;
+  kind: "module";
+  code: string;
+}) => string;
+
+export type TransformBase = (file: {
+  path: string;
+  kind: "script" | "module";
+  code: string;
+}) => string;
+
 export type Transform = {
-  transformBase: (code: string) => string;
-  transformMeta: (code: string) => string;
+  transformBase: TransformBase;
+  transformMeta: TransformMeta;
 };
