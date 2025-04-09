@@ -1,22 +1,27 @@
 {
   "compilerOptions": {
-    // These options only works on .ts files not .d.ts files
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    "declaration": false,
+    // JS //
     "allowJs": true,
     "checkJs": true,
     "noEmit": true,
+    "declaration": false,
+    // Strict //
     "strict": true,
-    "resolveJsonModule": false,
-    "moduleResolution": "bundler",
+    "exactOptionalPropertyTypes": true,
+    "allowUnusedLabels": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    // Target //
     "lib": ["es2022"],
     "target": "es2022",
-    "module": "Preserve",
+    // Module //
+    "resolveJsonModule": false,
+    "resolvePackageJsonImports": true,
+    "resolvePackageJsonExports": true,
+    "moduleResolution": "nodenext",
+    "module": "NodeNext",
     "typeRoots": ["./node_modules/@types"],
-    "exactOptionalPropertyTypes": true,
     "paths": {
-      "linvail": ["./node_modules/linvail/lib/index.d.ts"],
       "aran": ["./lib/index.d.ts"],
       "aran/runtime": ["./lib/runtime/index.d.ts"]
     }

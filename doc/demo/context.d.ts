@@ -1,8 +1,6 @@
 import * as aran from "aran";
 import * as linvail from "linvail";
 
-type foo = (typeof aran)["transpile"];
-
 export type Context = {
   target: string;
   log: (message: string) => void;

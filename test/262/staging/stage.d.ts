@@ -3,7 +3,7 @@ import type { Source } from "../source.d.ts";
 import type { Tag } from "../tagging/tag.d.ts";
 import type { StageName } from "./stage-name.d.ts";
 import type { File } from "../util/file.d.ts";
-import { TestCase, TestIndex } from "../test-case";
+import type { TestCase, TestIndex } from "../test-case.d.ts";
 
 export type Selector<X> =
   | {

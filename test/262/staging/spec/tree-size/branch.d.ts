@@ -1,5 +1,5 @@
-import { EstreeNode } from "../../../../../lib";
-import { Size } from "./size";
+import type { EstreeNode } from "aran";
+import type { Size } from "./size.d.ts";
 
 export type Branch = {
   path: string | number;

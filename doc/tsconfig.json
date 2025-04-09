@@ -13,7 +13,6 @@
     "typeRoots": ["../node_modules/@types"],
     "exactOptionalPropertyTypes": true,
     "paths": {
-      "linvail": ["../node_modules/linvail/lib/index.d.ts"],
       "aran": ["../lib/index.d.ts"],
       "aran/runtime": ["../lib/runtime/index.d.ts"]
     }
