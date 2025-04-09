@@ -10,10 +10,21 @@
     "/lib/**/*.mjs",
     "/lib/**/*.d.ts",
     "!/lib/**/*.test.mjs",
-    "!/lib/*.fixture.mjs"
+    "!/lib/*.fixture.mjs",
+    "!/lib/runtime/generate.mjs"
   ],
-  "main": "lib/index.mjs",
-  "types": "lib/index.d.ts",
+  "main": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/index.mjs",
+      "types": "./lib/index.d.ts"
+    },
+    "./runtime": {
+      "import": "./lib/runtime/index.mjs",
+      "types": "./lib/runtime/index.d.ts"
+    }
+  },
   "type": "module",
   "repository": {
     "type": "git",
@@ -25,12 +36,13 @@
     "gen-doc": "sh doc/build.sh test && npx http-server doc/out -p 8080",
     "dep-doc": "sh doc/deploy.sh",
     "lint": "npx eslint 'lint/**/*.mjs' 'test/**/*.mjs' 'lib/**/*.mjs'",
-    "check-type": "npx tsc -p tsconfig.json && npx tsc -p demo/tsconfig.json",
+    "check-type": "npx tsc -p tsconfig.json && npx tsc -p doc/tsconfig.json",
     "check-format": "npx prettier -c '**/*.(mjs|d.ts)'",
-    "check": "npm run lint && npm run check-type && npm run check-format",
+    "check": "npm run lint && npm run check-type && npm run check-format && node lib/runtime/index.test.mjs",
     "document": "npx typedoc && open page/typedoc/index.html",
     "deploy-page": "sh page.sh",
     "serve-demo": "npx http-server page/demo",
+    "test-runtime": "npx c8 --include lib/runtime/index.mjs -- node lib/runtime/index.test.mjs",
     "load262": "git clone --filter=tree:0 https://github.com/tc39/test262 test/262/test262",
     "build262": "node test/262/tagging/main-generate.mjs && node test/262/stagging/main-generate.mjs",
     "move262": "node --experimental-vm-modules --expose-gc test/262/main/move.mjs",
@@ -72,6 +84,8 @@
     "acorn": "^8.14.0",
     "aran": "file:./",
     "astring": "^1.9.0",
+    "c8": "^10.1.3",
+    "esbuild": "^0.25.2",
     "eslint": "^9.9.1",
     "http-server": "^14.1.1",
     "linvail": "^7.4.0",

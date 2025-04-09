@@ -1,4 +1,4 @@
-import type { GetDefault } from "./util/util";
+import type { GetDefault } from "../util/util.d.ts";
 
 /**
  * Configuration object for `setup`.

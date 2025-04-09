@@ -38,7 +38,7 @@ import type {
   Intrinsic,
   Parameter,
 } from "./lang/syntax";
-import type { Config as SetupConfig } from "./setup";
+import type { Config as SetupConfig } from "./setup/config";
 import type { Config as RetroConfig } from "./retro/config";
 import type { File, Config as TransConfig } from "./trans/config";
 import type { Config as StandardWeaveConfig } from "./weave/standard/config";
@@ -213,7 +213,8 @@ export class AranPointcutError extends Error {
 /**
  * Generates a `estree.Program` that should be executed before executing any
  * instrumented code. In the standalone mode, the setup code is bundled with the
- * instrumented code and this function should not be used.
+ * instrumented code and this function should not be used. Alternatively, the
+ * setup can be directly importated at the entry point aran/runtime.
  * @param conf Setup generation options.
  * @returns The setup script program. Can be passed to an estree code generator
  * such as `astring`.
@@ -359,3 +360,18 @@ export const instrument: <path = string, hash extends string | number = string>(
 ) => EstreeProgram<{}> & {
   warnings: Warning[];
 };
+
+/////////////
+// Runtime //
+/////////////
+
+/**
+ * Compile the intrinsic record. This function is also available at the
+ * aran/runtime entry point which is much lightweight as it does not contain
+ * code related to instrumentation.
+ * @param global The global object.
+ * @returns The intrinsic record.
+ */
+export const compileIntrinsicRecord: (
+  global: typeof globalThis,
+) => IntrinsicRecord;

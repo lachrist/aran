@@ -86,7 +86,6 @@ export type RegularIntrinsicRcord = {
   "Reflect.has": typeof Reflect.has;
   "Reflect.construct": typeof Reflect.construct;
   "Reflect.apply": typeof Reflect.apply;
-  "Reflect.setProtoypeOf": typeof Reflect.setPrototypeOf;
   "Reflect.getPrototypeOf": typeof Reflect.getPrototypeOf;
   "Reflect.ownKeys": typeof Reflect.ownKeys;
   "Reflect.isExtensible": typeof Reflect.isExtensible;
@@ -161,7 +160,7 @@ export type ExtraIntrinsicRecord = {
     object: object,
     exclusion: { [key in PropertyKey]: null },
   ) => object;
-  "aran.listForInKey": (object: unknown) => string[];
+  "aran.listForInKey": (object: unknown) => ArrayLike<string>;
   "aran.listIteratorRest": <X>(
     iterator: Iterator<X>,
     next: (result: unknown) => IteratorResult<X>,
