@@ -5,7 +5,7 @@ export type OctaneBase =
   | "code-load"
   | "crypto"
   | "deltablue"
-  | "early-boyer"
+  | "earley-boyer"
   | "gbemu"
   | "mandreel"
   | "navier-stokes"

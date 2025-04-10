@@ -38,27 +38,28 @@ export const bundleOctane = async (octane) => {
   }
   bundle += `
     BenchmarkSuite.RunSuites({
-      NotifyStart: (...args) => {
-        console.log("NotifyStart", args);
+      NotifyStart: (name) => {
+        console.log("Start", name);
       },
-      NotifyError: (...args) => {
-        console.log("NotifyError", args);
+      NotifyError: (name, error) => {
+        console.log("Error", name, error);
       },
-      NotifyResult: (...args) => {
-        console.log("NotifyResult", args);
+      NotifyResult: (name, score) => {
+        console.log("Result", name, score);
       },
       NotifyScore: (...args) => {
-        console.log("NotifyScore", args);
+        // console.log("NotifyScore", args);
       },
-      NotifyStep: (...args) => {
-        console.log("NotifyStep", args);
+      NotifyStep: (name) => {
+        console.log("Step", name);
       },
     });
-    for (const suite of BenchmarkSuite.suites) {
-      for (const result of suite.results) {
-        console.dir(result, { depth: 1 / 0 });
+    for (const { results } of BenchmarkSuite.suites) {
+      for (const { benchmark: { name }, time, latency } of results) {
+        console.log("Final", name, time, latency);
       }
     }
+    console.log("Done\\n\\n\\n\\n\\n");
   `;
   return bundle;
 };

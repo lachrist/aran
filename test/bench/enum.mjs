@@ -1,5 +1,6 @@
 const {
   Object: { hasOwn },
+  Reflect: { ownKeys },
 } = globalThis;
 
 /**
@@ -12,7 +13,7 @@ export const OCTANE_BASE_RECORD = {
   "code-load": null,
   "crypto": null,
   "deltablue": null,
-  "early-boyer": null,
+  "earley-boyer": null,
   "gbemu": null,
   "mandreel": null,
   "navier-stokes": null,
@@ -24,6 +25,11 @@ export const OCTANE_BASE_RECORD = {
   "typescript": null,
   "zlib": null,
 };
+
+export const OCTANE_BASE_ENUM =
+  /** @type {import("./enum.d.ts").OctaneBase[]} */ (
+    ownKeys(OCTANE_BASE_RECORD)
+  );
 
 /**
  * @type {(

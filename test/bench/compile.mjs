@@ -110,15 +110,16 @@ export const compileOctane = async (meta, base) => {
   const base_path = await compileBaseOctane(meta, base, transformBase);
   const meta_path = await compileMeta(meta, transformMeta);
   await writeFile(
-    new URL(`out/${meta}-${base}-main.cjs`, import.meta.url),
+    new URL(`out/${meta}-${base}-main.mjs`, import.meta.url),
     [
-      `import('../meta/${meta}/setup.mjs').then(() => {`,
-      `  import('../${meta_path}').then(() => {`,
-      `    require('../${base_path}');`,
-      "  });",
-      "});",
+      "import { runInThisContext } from 'node:vm';",
+      "import { readFile } from 'node:fs/promises';",
+      `await import('../meta/${meta}/setup.mjs');`,
+      `await import('../${meta_path}');`,
+      `const code = await readFile(new URL('../${base_path}', import.meta.url), 'utf8');`,
+      `runInThisContext(code, { filename: '../${base_path}' });`,
     ].join("\n"),
     "utf8",
   );
-  return `./out/${meta}-${base}-main.cjs`;
+  return `./out/${meta}-${base}-main.mjs`;
 };
