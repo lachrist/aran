@@ -45,7 +45,7 @@ export const bundleOctane = async (octane) => {
         console.log("Error", name, error);
       },
       NotifyResult: (name, score) => {
-        console.log("Result", name, score);
+        console.log("Score", name, score);
       },
       NotifyScore: (...args) => {
         // console.log("NotifyScore", args);
@@ -56,10 +56,9 @@ export const bundleOctane = async (octane) => {
     });
     for (const { results } of BenchmarkSuite.suites) {
       for (const { benchmark: { name }, time, latency } of results) {
-        console.log("Final", name, time, latency);
+        console.log("Final", name, time / 1000, latency);
       }
     }
-    console.log("Done\\n\\n\\n\\n\\n");
   `;
   return bundle;
 };

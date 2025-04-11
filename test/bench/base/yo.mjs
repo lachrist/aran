@@ -1,1 +1,1 @@
-import "aran";
+globalThis;

@@ -1,4 +1,5 @@
 import { argv } from "node:process";
 import { compile } from "./compile.mjs";
+import { log } from "node:console";
 
-import(await compile(argv[2], argv[3]));
+log(await compile(argv[2], argv[3]));

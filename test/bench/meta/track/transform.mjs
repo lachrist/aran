@@ -33,7 +33,7 @@ export default {
               kind,
               root: parse(code, {
                 locations: true,
-                sourceType: "module",
+                sourceType: kind,
                 ecmaVersion: 2024,
               }),
             },

@@ -62,10 +62,10 @@ export const isModuleBase = (name) => hasOwn(MODULE_BASE_RECORD, name);
  * }}
  */
 export const META_RECORD = {
-  "bare": null,
-  "full": null,
-  "identity": null,
-  "track-origin": null,
+  none: null,
+  bare: null,
+  full: null,
+  track: null,
 };
 
 /**
